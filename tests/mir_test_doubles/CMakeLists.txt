@@ -22,6 +22,7 @@ set(
   platform_factory.cpp
   triggered_main_loop.cpp
   stub_buffer.cpp
+  nested_mock_egl.cpp
 )
 
 set(
@@ -31,8 +32,13 @@ set(
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_gl.cpp
 )
 
-if (MIR_BUILD_PLATFORM_MESA)
-  include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
+if (MIR_BUILD_PLATFORM_MESA_KMS)
+  include_directories(
+    ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
+    ${DRM_INCLUDE_DIRS}
+    ${GBM_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}
+  )
   list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/mock_drm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mock_gbm.cpp

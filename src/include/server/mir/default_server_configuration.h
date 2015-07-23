@@ -31,9 +31,6 @@ class EventHubInterface;
 class InputReaderInterface;
 class InputReaderPolicyInterface;
 class InputListenerInterface;
-class InputDispatcherInterface;
-class InputEnumerator;
-class InputDispatcherPolicyInterface;
 }
 
 namespace droidinput = android;
@@ -83,6 +80,7 @@ class FocusController;
 class DisplayLayout;
 class HostLifecycleEventListener;
 class Shell;
+class PersistentSurfaceStore;
 namespace detail { class FrontendShell; }
 }
 namespace time
@@ -128,11 +126,13 @@ namespace input
 class InputReport;
 class Scene;
 class InputManager;
+class SurfaceInputDispatcher;
 class Platform;
 class InputDeviceRegistry;
 class InputDeviceHub;
 class DefaultInputDeviceHub;
 class CompositeEventFilter;
+class EventFilterChainDispatcher;
 class InputChannelFactory;
 class CursorListener;
 class TouchVisualizer;
@@ -142,6 +142,7 @@ class InputSendObserver;
 class NestedInputRelay;
 class EventHandler;
 class CursorImages;
+class LegacyInputDispatchable;
 namespace android
 {
 class InputRegistrar;
@@ -261,12 +262,12 @@ public:
      *  @{ */
     virtual auto the_shell() -> std::shared_ptr<shell::Shell>;
     virtual auto the_window_manager_builder() -> shell::WindowManagerBuilder;
-    virtual std::shared_ptr<scene::PlacementStrategy>   the_placement_strategy();
     virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     virtual std::shared_ptr<scene::PromptSessionListener> the_prompt_session_listener();
     virtual std::shared_ptr<scene::PromptSessionManager>  the_prompt_session_manager();
     virtual std::shared_ptr<shell::HostLifecycleEventListener> the_host_lifecycle_event_listener();
+    virtual std::shared_ptr<shell::PersistentSurfaceStore> the_persistent_surface_store();
 
     /** @} */
 
@@ -303,6 +304,9 @@ public:
      *  @{ */
     virtual std::shared_ptr<input::InputReport> the_input_report();
     virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
+
+    virtual std::shared_ptr<input::EventFilterChainDispatcher> the_event_filter_chain_dispatcher();
+
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
     virtual std::shared_ptr<input::Scene>  the_input_scene();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
@@ -310,6 +314,7 @@ public:
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
     virtual std::shared_ptr<input::InputSender>    the_input_sender();
     virtual std::shared_ptr<input::InputSendObserver> the_input_send_observer();
+    virtual std::shared_ptr<input::LegacyInputDispatchable> the_legacy_input_dispatchable();
     virtual std::shared_ptr<droidinput::EventHubInterface> the_event_hub();
     virtual std::shared_ptr<droidinput::InputReaderInterface> the_input_reader();
     virtual std::shared_ptr<droidinput::InputReaderPolicyInterface> the_input_reader_policy();
@@ -320,6 +325,7 @@ public:
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
     virtual std::shared_ptr<input::InputDeviceRegistry> the_input_device_registry();
     virtual std::shared_ptr<input::InputDeviceHub> the_input_device_hub();
+    virtual std::shared_ptr<input::SurfaceInputDispatcher> the_surface_input_dispatcher();
     /** @} */
 
     /** @name logging configuration - customization
@@ -341,14 +347,6 @@ protected:
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> new_ipc_factory(
         std::shared_ptr<frontend::SessionAuthorizer> const& session_authorizer);
 
-    /** @name input dispatcher related configuration
-     *  @{ */
-    virtual std::shared_ptr<input::android::InputRegistrar> the_input_registrar();
-    virtual std::shared_ptr<droidinput::InputDispatcherInterface> the_android_input_dispatcher();
-    virtual std::shared_ptr<droidinput::InputEnumerator> the_input_target_enumerator();
-    virtual std::shared_ptr<input::android::InputThread> the_dispatcher_thread();
-    virtual std::shared_ptr<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
-    virtual bool is_key_repeat_enabled() const;
     /** @} */
 
     /** @Convenience wrapper functions
@@ -363,22 +361,20 @@ protected:
         std::shared_ptr<input::CursorListener> const& wrapped);
 /** @} */
 
-    CachedPtr<input::android::InputRegistrar> input_registrar;
-    CachedPtr<input::android::InputThread> dispatcher_thread;
-    CachedPtr<droidinput::InputDispatcherInterface> android_input_dispatcher;
-    CachedPtr<droidinput::InputEnumerator> input_target_enumerator;
-    CachedPtr<droidinput::InputDispatcherPolicyInterface> android_dispatcher_policy;
     CachedPtr<droidinput::EventHubInterface> event_hub;
     CachedPtr<droidinput::InputReaderPolicyInterface> input_reader_policy;
     CachedPtr<droidinput::InputReaderInterface> input_reader;
     CachedPtr<droidinput::InputListenerInterface> input_translator;
+    CachedPtr<input::LegacyInputDispatchable> legacy_input_dispatchable;
 
     CachedPtr<frontend::Connector>   connector;
     CachedPtr<frontend::Connector>   prompt_connector;
 
     CachedPtr<input::InputReport> input_report;
+    CachedPtr<input::EventFilterChainDispatcher> event_filter_chain_dispatcher;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
+    CachedPtr<input::SurfaceInputDispatcher>    surface_input_dispatcher;
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub; // currently not used by default
     CachedPtr<input::Platform>    input_platform; // currently not used by default
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;
@@ -437,6 +433,7 @@ protected:
     CachedPtr<scene::CoordinateTranslator> coordinate_translator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
     CachedPtr<shell::HostLifecycleEventListener> host_lifecycle_event_listener;
+    CachedPtr<shell::PersistentSurfaceStore> surface_store;
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
     CachedPtr<shell::Shell> shell;
 

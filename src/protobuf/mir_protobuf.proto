@@ -67,8 +67,8 @@ message SurfaceSpecification {
   optional int32 height_inc = 18;
   optional SurfaceAspectRatio min_aspect = 19;
   optional SurfaceAspectRatio max_aspect = 20;
+  repeated StreamConfiguration stream = 21; 
 }
-
 
 message SurfaceModifications {
   required SurfaceId surface_id = 1;
@@ -224,6 +224,7 @@ message EventSequence {
   repeated Event event = 1;
   optional DisplayConfiguration display_configuration = 2;
   optional LifecycleEvent lifecycle_event = 3;
+
   optional string error = 127;
 }
 
@@ -315,6 +316,12 @@ service DisplayServer {
   rpc start_prompt_session(PromptSessionParameters) returns (Void);
   rpc stop_prompt_session(Void) returns (Void);
   rpc exchange_buffer(BufferRequest) returns (Buffer);
+
+  rpc submit_buffer(BufferRequest) returns (Void);
+  rpc allocate_buffers(BufferAllocation) returns (Void);
+  rpc release_buffers(BufferRelease) returns (Void);
+
+  rpc request_persistent_surface_id(SurfaceId) returns (PersistentSurfaceId);
 }
 
 message CoordinateTranslationRequest {
@@ -333,3 +340,24 @@ message CoordinateTranslationResponse {
 service Debug {
   rpc translate_surface_to_screen(CoordinateTranslationRequest) returns (CoordinateTranslationResponse);
 }
+
+message StreamConfiguration {
+  optional BufferStreamId id = 1;
+  optional int32 displacement_x = 2;
+  optional int32 displacement_y = 3;
+};
+
+message PersistentSurfaceId {
+  optional string value = 1;
+
+  optional string error = 127;
+};
+
+message BufferAllocation {
+  optional BufferStreamId id = 1;
+  repeated BufferStreamParameters buffer_requests = 2;  
+};
+
+message BufferRelease {
+  repeated Buffer buffers = 1;  
+};

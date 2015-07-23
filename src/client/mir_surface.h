@@ -39,7 +39,7 @@ namespace mir
 {
 namespace dispatch
 {
-class SimpleDispatchThread;
+class ThreadedDispatcher;
 }
 namespace input
 {
@@ -97,6 +97,18 @@ struct MirSurfaceSpec
     mir::optional_value<int> height_inc;
     mir::optional_value<AspectRatio> min_aspect;
     mir::optional_value<AspectRatio> max_aspect;
+    mir::optional_value<std::vector<MirBufferStreamInfo>> streams;
+};
+
+struct MirPersistentId
+{
+public:
+    MirPersistentId(std::string const& string_id);
+
+    std::string const& as_string();
+
+private:
+    std::string const string_id;
 };
 
 struct MirSurface
@@ -153,18 +165,21 @@ public:
     MirWaitHandle* modify(MirSurfaceSpec const& changes);
 
     static bool is_valid(MirSurface* query);
+
+    MirWaitHandle* request_persistent_id(mir_surface_id_callback callback, void* context);
 private:
     mutable std::mutex mutex; // Protects all members of *this
 
     void on_configured();
     void on_cursor_configured();
     void created(mir_surface_callback callback, void* context);
+    void acquired_persistent_id(mir_surface_id_callback callback, void* context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
 
     mir::protobuf::DisplayServer::Stub* server{nullptr};
     mir::protobuf::Debug::Stub* debug{nullptr};
     std::unique_ptr<mir::protobuf::Surface> surface;
-    std::unique_ptr<mir::protobuf::BufferRequest> buffer_request;
+    std::unique_ptr<mir::protobuf::PersistentSurfaceId> persistent_id;
     std::string error_message;
     std::string name;
     std::unique_ptr<mir::protobuf::Void> void_response;
@@ -178,6 +193,7 @@ private:
     MirWaitHandle create_wait_handle;
     MirWaitHandle configure_wait_handle;
     MirWaitHandle configure_cursor_wait_handle;
+    MirWaitHandle persistent_id_wait_handle;
 
     std::shared_ptr<mir::client::ClientBufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
@@ -191,7 +207,7 @@ private:
     MirOrientation orientation = mir_orientation_normal;
 
     std::function<void(MirEvent const*)> handle_event_callback;
-    std::shared_ptr<mir::dispatch::SimpleDispatchThread> input_thread;
+    std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

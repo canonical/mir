@@ -27,6 +27,7 @@
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_renderer.h"
 #include "mir_test_doubles/stub_input_sender.h"
+#include "mir_test_doubles/stub_legacy_input_dispatchable.h"
 
 #include "mir/compositor/renderer_factory.h"
 #include "src/server/input/null_input_manager.h"
@@ -50,7 +51,7 @@ namespace
 class StubRendererFactory : public mc::RendererFactory
 {
 public:
-    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&, mc::DestinationAlpha)
+    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
     {
         return std::unique_ptr<mc::Renderer>(new mtd::StubRenderer());
     }
@@ -126,16 +127,6 @@ std::shared_ptr<msh::InputTargeter> mtf::StubbedServerConfiguration::the_input_t
         return std::make_shared<mi::NullInputTargeter>();
 }
 
-std::shared_ptr<mi::InputDispatcher> mtf::StubbedServerConfiguration::the_input_dispatcher()
-{
-    auto options = the_options();
-
-    if (options->get<bool>("tests-use-real-input"))
-        return DefaultServerConfiguration::the_input_dispatcher();
-    else
-        return std::make_shared<mi::NullInputDispatcher>();
-}
-
 std::shared_ptr<mi::InputSender> mtf::StubbedServerConfiguration::the_input_sender()
 {
     auto options = the_options();
@@ -144,6 +135,16 @@ std::shared_ptr<mi::InputSender> mtf::StubbedServerConfiguration::the_input_send
         return DefaultServerConfiguration::the_input_sender();
     else
         return std::make_shared<mtd::StubInputSender>();
+}
+
+std::shared_ptr<mi::LegacyInputDispatchable> mtf::StubbedServerConfiguration::the_legacy_input_dispatchable()
+{
+    auto options = the_options();
+
+    if (options->get<bool>("tests-use-real-input"))
+        return DefaultServerConfiguration::the_legacy_input_dispatchable();
+    else
+        return std::make_shared<mtd::StubLegacyInputDispatchable>();
 }
 
 std::shared_ptr<mg::Cursor> mtf::StubbedServerConfiguration::the_cursor()

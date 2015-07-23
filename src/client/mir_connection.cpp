@@ -20,13 +20,13 @@
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
 #include "default_client_buffer_stream_factory.h"
-#include "make_protobuf_object.h"
 #include "mir_toolkit/mir_platform_message.h"
 #include "mir/client_platform.h"
 #include "mir/client_platform_factory.h"
+#include "mir/make_protobuf_object.h"
 #include "rpc/mir_basic_rpc_channel.h"
 #include "mir/dispatch/dispatchable.h"
-#include "mir/dispatch/simple_dispatch_thread.h"
+#include "mir/dispatch/threaded_dispatcher.h"
 #include "connection_configuration.h"
 #include "display_configuration.h"
 #include "connection_surface_map.h"
@@ -47,6 +47,7 @@ namespace md = mir::dispatch;
 namespace mircv = mir::input::receiver;
 namespace mev = mir::events;
 namespace gp = google::protobuf;
+namespace mf = mir::frontend;
 
 namespace
 {
@@ -107,20 +108,20 @@ MirConnection::MirConnection(
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         debug(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         logger(conf.the_logger()),
-        void_response{mcl::make_protobuf_object<mir::protobuf::Void>()},
-        connect_result{mcl::make_protobuf_object<mir::protobuf::Connection>()},
+        void_response{mir::make_protobuf_object<mir::protobuf::Void>()},
+        connect_result{mir::make_protobuf_object<mir::protobuf::Connection>()},
         connect_done{false},
-        ignored{mcl::make_protobuf_object<mir::protobuf::Void>()},
-        connect_parameters{mcl::make_protobuf_object<mir::protobuf::ConnectParameters>()},
-        platform_operation_reply{mcl::make_protobuf_object<mir::protobuf::PlatformOperationMessage>()},
-        display_configuration_response{mcl::make_protobuf_object<mir::protobuf::DisplayConfiguration>()},
+        ignored{mir::make_protobuf_object<mir::protobuf::Void>()},
+        connect_parameters{mir::make_protobuf_object<mir::protobuf::ConnectParameters>()},
+        platform_operation_reply{mir::make_protobuf_object<mir::protobuf::PlatformOperationMessage>()},
+        display_configuration_response{mir::make_protobuf_object<mir::protobuf::DisplayConfiguration>()},
         client_platform_factory(conf.the_client_platform_factory()),
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
         lifecycle_control(conf.the_lifecycle_control()),
         surface_map(conf.the_surface_map()),
         event_handler_register(conf.the_event_handler_register()),
-        eventloop{new md::SimpleDispatchThread{std::dynamic_pointer_cast<md::Dispatchable>(channel)}}
+        eventloop{new md::ThreadedDispatcher{"RPC Thread", std::dynamic_pointer_cast<md::Dispatchable>(channel)}}
 {
     connect_result->set_error("connect not called");
     {
@@ -150,7 +151,7 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_callback callback,
     void * context)
 {
-    auto surface = new MirSurface(this, server, &debug, get_client_buffer_stream_factory(),
+    auto surface = new MirSurface(this, server, &debug, buffer_stream_factory,
         input_platform, spec, callback, context);
 
     return surface->get_create_wait_handle();
@@ -174,19 +175,36 @@ void MirConnection::set_error_message(std::string const& error)
 }
 
 
-/* struct exists to work around google protobuf being able to bind
+/* these structs exists to work around google protobuf being able to bind
  "only 0, 1, or 2 arguments in the NewCallback function */
 struct MirConnection::SurfaceRelease
 {
-    MirSurface * surface;
-    MirWaitHandle * handle;
+    MirSurface* surface;
+    MirWaitHandle* handle;
     mir_surface_callback callback;
-    void * context;
+    void* context;
 };
+
+struct MirConnection::StreamRelease
+{
+    mcl::ClientBufferStream* stream;
+    MirWaitHandle* handle;
+    mir_buffer_stream_callback callback;
+    void* context;
+};
+
+void MirConnection::released(StreamRelease data)
+{
+    surface_map->erase(mf::BufferStreamId(data.stream->rpc_id()));
+    if (data.callback)
+        data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
+    data.handle->result_received();
+    delete data.stream;
+}
 
 void MirConnection::released(SurfaceRelease data)
 {
-    surface_map->erase(data.surface->id());
+    surface_map->erase(mf::SurfaceId(data.surface->id()));
 
     // Erasing this surface from surface_map means that it will no longer receive events
     // If it's still focused, send an unfocused event before we kill it entirely
@@ -209,7 +227,7 @@ MirWaitHandle* MirConnection::release_surface(
 
     SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
 
-    auto message = mcl::make_protobuf_object<mir::protobuf::SurfaceId>();
+    auto message = mir::make_protobuf_object<mir::protobuf::SurfaceId>();
     message->set_value(surface->id());
 
     {
@@ -269,6 +287,8 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
             };
 
         platform = client_platform_factory->create_client_platform(this);
+        buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(
+            platform, the_logger());
         native_display = platform->create_egl_native_display();
         display_configuration->set_configuration(connect_result->display_configuration());
         lifecycle_control->set_lifecycle_event_handler(default_lifecycle_event_handler);
@@ -366,7 +386,7 @@ MirWaitHandle* MirConnection::platform_operation(
         return nullptr;
     }
 
-    auto protobuf_request = mcl::make_protobuf_object<mir::protobuf::PlatformOperationMessage>();
+    auto protobuf_request = mir::make_protobuf_object<mir::protobuf::PlatformOperationMessage>();
 
     protobuf_request->set_opcode(mir_platform_message_get_opcode(request));
     auto const request_data = mir_platform_message_get_data(request);
@@ -467,11 +487,27 @@ std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform(
     return platform;
 }
 
-std::shared_ptr<mir::client::ClientBufferStreamFactory> MirConnection::get_client_buffer_stream_factory()
+
+mir::client::ClientBufferStream* MirConnection::create_client_buffer_stream(
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage buffer_usage,
+    mir_buffer_stream_callback callback,
+    void *context)
 {
-    if (!buffer_stream_factory)
-        buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(platform, the_logger());
-    return buffer_stream_factory;
+    auto params = mir::make_protobuf_object<mir::protobuf::BufferStreamParameters>();
+    params->set_width(width);
+    params->set_height(height);
+    params->set_pixel_format(format);
+    params->set_buffer_usage(buffer_usage);
+
+    return buffer_stream_factory->make_producer_stream(this, server, *params, callback, context);
+}
+
+std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
+   mir::protobuf::BufferStream const& protobuf_bs, std::string const& surface_name)
+{
+    return buffer_stream_factory->make_consumer_stream(this, server, protobuf_bs, surface_name);
 }
 
 EGLNativeDisplayType MirConnection::egl_native_display()
@@ -481,9 +517,14 @@ EGLNativeDisplayType MirConnection::egl_native_display()
     return *native_display;
 }
 
+void MirConnection::on_stream_created(int id, mcl::ClientBufferStream* stream)
+{
+    surface_map->insert(mf::BufferStreamId(id), stream);
+}
+
 void MirConnection::on_surface_created(int id, MirSurface* surface)
 {
-    surface_map->insert(id, surface);
+    surface_map->insert(mf::SurfaceId(id), surface);
 }
 
 void MirConnection::register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context)
@@ -540,7 +581,7 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
         return NULL;
     }
 
-    auto request = mcl::make_protobuf_object<mir::protobuf::DisplayConfiguration>();
+    auto request = mir::make_protobuf_object<mir::protobuf::DisplayConfiguration>();
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
 
@@ -574,4 +615,33 @@ mir::protobuf::DisplayServer& MirConnection::display_server()
 std::shared_ptr<mir::logging::Logger> const& MirConnection::the_logger() const
 {
     return logger;
+}
+
+MirWaitHandle* MirConnection::release_buffer_stream(
+    mir::client::ClientBufferStream* stream,
+    mir_buffer_stream_callback callback,
+    void *context)
+{
+    auto new_wait_handle = new MirWaitHandle;
+
+    StreamRelease stream_release{stream, new_wait_handle, callback, context};
+
+    auto buffer_stream_id = mir::make_protobuf_object<mir::protobuf::BufferStreamId>();
+    buffer_stream_id->set_value(stream->rpc_id().as_value());
+
+    {
+        std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
+        release_wait_handles.push_back(new_wait_handle);
+    }
+
+    new_wait_handle->expect_result();
+    server.release_buffer_stream(
+        nullptr, buffer_stream_id.get(), void_response.get(),
+        google::protobuf::NewCallback(this, &MirConnection::released, stream_release));
+    return new_wait_handle;
+}
+
+void MirConnection::release_consumer_stream(mir::client::ClientBufferStream* stream)
+{
+    surface_map->erase(stream->rpc_id());
 }

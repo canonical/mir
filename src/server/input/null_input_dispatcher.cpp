@@ -20,16 +20,9 @@
 
 namespace mi = mir::input;
 
-void mi::NullInputDispatcher::configuration_changed(std::chrono::nanoseconds /*when*/)
+bool mi::NullInputDispatcher::dispatch(MirEvent const& /*event*/)
 {
-}
-
-void mi::NullInputDispatcher::device_reset(int32_t /*device_id*/, std::chrono::nanoseconds /*when*/)
-{
-}
-
-void mi::NullInputDispatcher::dispatch(MirEvent const& /*event*/)
-{
+    return true;
 }
 
 void mi::NullInputDispatcher::start()
@@ -39,4 +32,3 @@ void mi::NullInputDispatcher::start()
 void mi::NullInputDispatcher::stop()
 {
 }
-

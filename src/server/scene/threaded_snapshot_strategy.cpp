@@ -18,7 +18,7 @@
 
 #include "threaded_snapshot_strategy.h"
 #include "pixel_buffer.h"
-#include "mir/scene/surface_buffer_access.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir/thread_name.h"
 
 #include <deque>
@@ -35,7 +35,7 @@ namespace scene
 
 struct WorkItem
 {
-    std::shared_ptr<SurfaceBufferAccess> const surface_buffer_access;
+    std::shared_ptr<compositor::BufferStream> const stream;
     ms::SnapshotCallback const snapshot_taken;
 };
 
@@ -73,12 +73,9 @@ public:
 
     void take_snapshot(WorkItem const& wi)
     {
-        wi.surface_buffer_access->with_most_recent_buffer_do(
-            [this](graphics::Buffer& buffer)
-            {
-                pixels->fill_from(buffer);
-            });
-
+        wi.stream->with_most_recent_buffer_do([this](mir::graphics::Buffer& buffer) {
+            pixels->fill_from(buffer);
+        });
 
         wi.snapshot_taken(
             ms::Snapshot{pixels->size(),
@@ -126,7 +123,7 @@ ms::ThreadedSnapshotStrategy::~ThreadedSnapshotStrategy() noexcept
 }
 
 void ms::ThreadedSnapshotStrategy::take_snapshot_of(
-    std::shared_ptr<SurfaceBufferAccess> const& surface_buffer_access,
+    std::shared_ptr<compositor::BufferStream> const& surface_buffer_access,
     SnapshotCallback const& snapshot_taken)
 {
     functor->schedule_snapshot(WorkItem{surface_buffer_access, snapshot_taken});

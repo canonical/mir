@@ -23,6 +23,8 @@
 
 #include "mir/geometry/displacement.h"
 
+#include <atomic>
+
 ///\example server_example_canonical_window_manager.h
 // Based on "Mir and Unity: Surfaces, input, and displays (v0.3)"
 
@@ -43,21 +45,46 @@ struct CanonicalSurfaceInfoCopy
         std::shared_ptr<scene::Surface> const& surface,
         scene::SurfaceCreationParameters const& params);
 
+    bool can_be_active() const;
+
+    bool can_morph_to(MirSurfaceType new_type) const;
+    bool must_have_parent() const;
+    bool must_not_have_parent() const;
+
+    void constrain_resize(
+        std::shared_ptr<scene::Surface> const& surface,
+        geometry::Point& requested_pos,
+        geometry::Size& requested_size,
+        const bool left_resize,
+        const bool top_resize,
+        geometry::Rectangle const& bounds) const;
+
+    MirSurfaceType type;
     MirSurfaceState state;
     geometry::Rectangle restore_rect;
     std::weak_ptr<scene::Session> session;
     std::weak_ptr<scene::Surface> parent;
     std::vector<std::weak_ptr<scene::Surface>> children;
     std::shared_ptr<scene::Surface> titlebar;
+    frontend::SurfaceId titlebar_id;
     bool is_titlebar = false;
-    optional_value<geometry::Width> min_width;
-    optional_value<geometry::Height> min_height;
-    optional_value<geometry::Width> max_width;
-    optional_value<geometry::Height> max_height;
+    geometry::Width min_width;
+    geometry::Height min_height;
+    geometry::Width max_width;
+    geometry::Height max_height;
     mir::optional_value<geometry::DeltaX> width_inc;
     mir::optional_value<geometry::DeltaY> height_inc;
     mir::optional_value<shell::SurfaceAspectRatio> min_aspect;
     mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
+
+    void init_titlebar(std::shared_ptr<scene::Surface> const& surface);
+    void paint_titlebar(int intensity);
+
+private:
+
+    struct PaintingImpl;
+
+    std::shared_ptr<PaintingImpl> painting_impl;
 };
 
 // standard window management algorithm:
@@ -113,7 +140,7 @@ public:
 
     void generate_decorations_for(
         std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface,
-        CanonicalSurfaceInfoMap& surface_info);
+        CanonicalSurfaceInfoMap& surface_map);
 
 private:
     static const int modifier_mask =
@@ -134,13 +161,11 @@ private:
     bool drag(std::shared_ptr<scene::Surface> surface, geometry::Point to, geometry::Point from, geometry::Rectangle bounds);
     void move_tree(std::shared_ptr<scene::Surface> const& root, geometry::Displacement movement) const;
     void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
-    bool constrained_resize(
-        std::shared_ptr<scene::Surface> const& surface,
-        geometry::Point const& requested_pos,
-        geometry::Size const& requested_size,
-        const bool left_resize,
-        const bool top_resize,
-        geometry::Rectangle const& bounds);
+    void apply_resize(
+        std::shared_ptr<mir::scene::Surface> const& surface,
+        std::shared_ptr<mir::scene::Surface> const& titlebar,
+        geometry::Point const& new_pos,
+        geometry::Size const& new_size) const;
 
     Tools* const tools;
     std::shared_ptr<shell::DisplayLayout> const display_layout;

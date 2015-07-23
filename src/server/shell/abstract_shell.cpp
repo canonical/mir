@@ -169,35 +169,41 @@ void msh::AbstractShell::set_focus_to_locked(
     std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<ms::Surface> const& surface)
 {
-    if (surface)
-    {
-        auto current_focus = focus_surface.lock();
+    auto const current_focus = focus_surface.lock();
 
-        if (surface != current_focus)
+    if (surface != current_focus)
+    {
+        focus_surface = surface;
+
+        if (current_focus)
+            current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
+
+        if (surface)
         {
             // Ensure the surface has really taken the focus before notifying it that it is focused
             input_targeter->set_focus(surface);
-            if (current_focus)
-                current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
-
             surface->configure(mir_surface_attrib_focus, mir_surface_focused);
-            focus_surface = surface;
+        }
+        else
+        {
+            input_targeter->clear_focus();
         }
     }
-    else
-    {
-        input_targeter->clear_focus();
-    }
 
-    focus_session = session;
+    auto const current_session = focus_session.lock();
 
-    if (session)
+    if (session != current_session)
     {
-        session_coordinator->set_focus_to(session);
-    }
-    else
-    {
-        session_coordinator->unset_focus();
+        focus_session = session;
+
+        if (session)
+        {
+            session_coordinator->set_focus_to(session);
+        }
+        else
+        {
+            session_coordinator->unset_focus();
+        }
     }
 }
 

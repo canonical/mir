@@ -21,6 +21,7 @@
 
 #include "mir/graphics/android/fence.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/geometry/displacement.h"
 #include "hwc_layers.h"
 #include <hardware/hwcomposer.h>
 #include <memory>
@@ -51,8 +52,9 @@ class LayerList
 public:
     LayerList(
         std::shared_ptr<LayerAdapter> const& layer_adapter,
-        RenderableList const& renderlist);
-    void update_list(RenderableList const& renderlist);
+        RenderableList const& renderlist,
+        geometry::Displacement list_offset);
+    void update_list(RenderableList const& renderlist, geometry::Displacement list_offset);
 
     std::list<HwcLayerEntry>::iterator begin();
     std::list<HwcLayerEntry>::iterator end();

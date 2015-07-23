@@ -40,13 +40,15 @@ char const* const env_no_file = "MIR_SERVER_NO_FILE";
 mtf::ServerRunner::ServerRunner() :
     old_env(getenv(env_no_file))
 {
+    //Initialize atomically
+    display_server = nullptr;
     if (!old_env) setenv(env_no_file, "", true);
 }
 
 void mtf::ServerRunner::start_server()
 {
     display_server = start_mir_server();
-    if (display_server == nullptr)
+    if (display_server.load() == nullptr)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to start server thread"});
     }
@@ -68,11 +70,12 @@ std::string mtf::ServerRunner::new_prompt_connection()
 
 void mtf::ServerRunner::stop_server()
 {
-    if (display_server == nullptr)
+    if (display_server.load() == nullptr)
     {
         BOOST_THROW_EXCEPTION(std::logic_error{"stop_server() called without calling start_server()?"});
     }
-    display_server->stop();
+    display_server.load()->stop();
+    if (server_thread.joinable()) server_thread.join();
 }
 
 mtf::ServerRunner::~ServerRunner()

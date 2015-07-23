@@ -1,11 +1,8 @@
-MIRPLATFORM_7 {
+MIRPLATFORM_8 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mirplatform public" | sed "s/mirplatform public: /    /" | sort  
-    mir::fatal_error*;
-    mir::fatal_error_abort*;
-    mir::fatal_error_except*;
     mir::graphics::BufferBasic::BufferBasic*;
     mir::graphics::Buffer::Buffer*;
     mir::graphics::Buffer::gl_bind_to_texture*;
@@ -33,7 +30,6 @@ MIRPLATFORM_7 {
     mir::graphics::DisplayBuffer::orientation*;
     mir::graphics::DisplayBuffer::post_renderables_if_optimizable*;
     mir::graphics::DisplayBuffer::release_current*;
-    mir::graphics::DisplayBuffer::uses_alpha*;
     mir::graphics::DisplayBuffer::view_area*;
     mir::graphics::Display::configuration*;
     mir::graphics::DisplayConfiguration::DisplayConfiguration*;
@@ -120,6 +116,7 @@ MIRPLATFORM_7 {
     mir::options::debug_opt*;
     mir::options::nbuffers_opt*;
     mir::options::enable_input_opt*;
+    mir::options::enable_key_repeat_opt*;
     mir::options::fatal_abort_opt*;
     mir::options::frontend_threads_opt*;
     mir::options::glog*;

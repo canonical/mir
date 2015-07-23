@@ -120,7 +120,7 @@ public:
     // device_id must be > 0 or input publisher will reject
     static const int32_t filler_device_id = 1;
     // event_action_move is necessary to engage batching behavior
-    static const int32_t motion_event_action_flags = mir_motion_action_move;
+    static const int32_t motion_event_action_flags = AMOTION_EVENT_ACTION_MOVE;
     // We have to have at least 1 pointer or the publisher will fail to marshal a motion event
     static const int32_t default_pointer_count = 1;
 };
@@ -220,7 +220,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
     EXPECT_FALSE(mt::fd_is_readable(receiver.watch_fd()));
 }
 
-TEST_F(AndroidInputReceiverSetup, DISABLED_slow_raw_input_doesnt_cause_frameskipping)
+TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
 {  // Regression test for LP: #1372300
     using namespace testing;
     using namespace std::chrono;
@@ -283,6 +283,29 @@ TEST_F(AndroidInputReceiverSetup, DISABLED_slow_raw_input_doesnt_cause_frameskip
 
     EXPECT_TRUE(handler_called);
     EXPECT_EQ(mir_event_type_motion, ev.type);
+}
+
+TEST_F(AndroidInputReceiverSetup, finish_signalled_after_handler)
+{
+    bool handler_called = false;
+
+    TestingInputProducer producer(server_fd);
+    mircva::InputReceiver receiver{
+        client_fd,
+        std::make_shared<mircv::XKBMapper>(),
+        [&handler_called, &producer](MirEvent*)
+        {
+            EXPECT_FALSE(producer.must_receive_handled_signal());
+            handler_called = true;
+        },
+        std::make_shared<mircv::NullInputReceiverReport>()
+    };
+
+    producer.produce_a_key_event();
+    flush_channels();
+    receiver.dispatch(md::FdEvent::readable);
+    EXPECT_TRUE(handler_called);
+    EXPECT_TRUE(producer.must_receive_handled_signal());
 }
 
 TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)

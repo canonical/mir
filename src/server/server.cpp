@@ -16,7 +16,6 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_LOG_COMPONENT "Server"
 #include "mir/server.h"
 
 #include "mir/emergency_cleanup.h"
@@ -62,6 +61,7 @@ namespace mo = mir::options;
     MACRO(shell)
 
 #define FOREACH_ACCESSOR(MACRO)\
+    MACRO(the_buffer_stream_factory)\
     MACRO(the_compositor)\
     MACRO(the_composite_event_filter)\
     MACRO(the_cursor_listener)\
@@ -77,6 +77,7 @@ namespace mo = mir::options;
     MACRO(the_session_authorizer)\
     MACRO(the_session_coordinator)\
     MACRO(the_session_listener)\
+    MACRO(the_surface_factory)\
     MACRO(the_prompt_session_manager)\
     MACRO(the_shell)\
     MACRO(the_shell_display_layout)\
@@ -171,7 +172,7 @@ public:
 class StubRendererFactory : public mir::compositor::RendererFactory
 {
 public:
-    auto create_renderer_for(mir::geometry::Rectangle const&, mir::compositor::DestinationAlpha)
+    auto create_renderer_for(mir::geometry::Rectangle const&)
     -> std::unique_ptr<mir::compositor::Renderer>
     {
         return std::make_unique<StubRenderer>();
@@ -223,36 +224,18 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 
 namespace
 {
-class ConfigurationOptions : public mo::DefaultConfiguration
-{
-public:
-    using mo::DefaultConfiguration::DefaultConfiguration;
-
-    std::string config_file;
-
-    void parse_config_file(
-        boost::program_options::options_description& options_description,
-        mo::ProgramOption& options) const override
-    {
-        if (!config_file.empty())
-            options.parse_file(options_description, config_file);
-    }
-};
-
 std::shared_ptr<mo::DefaultConfiguration> configuration_options(
     int argc,
     char const** argv,
     std::function<void(int argc, char const* const* argv)> const& command_line_hander,
     std::string const& config_file)
 {
-    std::shared_ptr<ConfigurationOptions> result;
+    std::shared_ptr<mo::DefaultConfiguration> result;
 
     if (command_line_hander)
-        result = std::make_shared<ConfigurationOptions>(argc, argv, command_line_hander);
+        result = std::make_shared<mo::DefaultConfiguration>(argc, argv, command_line_hander, config_file);
     else
-        result = std::make_shared<ConfigurationOptions>(argc, argv);
-
-    result->config_file = config_file;
+        result = std::make_shared<mo::DefaultConfiguration>(argc, argv, config_file);
 
     return result;
 }

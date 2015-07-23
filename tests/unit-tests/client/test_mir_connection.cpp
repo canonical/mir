@@ -39,6 +39,8 @@
 
 #include <google/protobuf/descriptor.h>
 
+#include <sys/eventfd.h>
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -57,8 +59,9 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
                         public mir::dispatch::Dispatchable
 {
     MockRpcChannel()
+        : pollable_fd{eventfd(0, EFD_CLOEXEC)}
     {
-        ON_CALL(*this, watch_fd()).WillByDefault(testing::Return(mir::Fd{}));
+        ON_CALL(*this, watch_fd()).WillByDefault(testing::Return(pollable_fd));
     }
 
     void CallMethod(const google::protobuf::MethodDescriptor* method,
@@ -94,6 +97,8 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());
     MOCK_METHOD1(dispatch, bool(md::FdEvents));
     MOCK_CONST_METHOD0(relevant_events, md::FdEvents());
+private:
+    mir::Fd pollable_fd;
 };
 
 struct MockClientPlatform : public mcl::ClientPlatform

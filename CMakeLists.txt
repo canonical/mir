@@ -27,8 +27,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 13) # This should change at least with every MIRSERVER_ABI
-set(MIR_VERSION_PATCH 3)
+set(MIR_VERSION_MINOR 14) # This should change at least with every MIRSERVER_ABI
+set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
 add_definitions(-DMIR_VERSION_MINOR=${MIR_VERSION_MINOR})
@@ -143,20 +143,20 @@ endif(MIR_DISABLE_EPOLL_REACTOR)
 
 add_definitions(-DMESA_EGL_NO_X11_HEADERS)
 
-# Default to mesa backend, but build all of them
+# Default to KMS backend, but build all of them
 set(
   MIR_PLATFORM
-  mesa;android
+  mesa-kms;android
   CACHE
   STRING
-  "a list of graphics backends to build (options are 'mesa' or 'android')"
+  "a list of graphics backends to build (options are 'mesa-kms' or 'android')"
 )
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
 
 foreach(platform IN LISTS MIR_PLATFORM)
-  if (platform STREQUAL "mesa")
-    set(MIR_BUILD_PLATFORM_MESA TRUE)
+  if (platform STREQUAL "mesa-kms")
+    set(MIR_BUILD_PLATFORM_MESA_KMS TRUE)
   endif()
   if (platform STREQUAL "android")
      set(MIR_BUILD_PLATFORM_ANDROID TRUE)
@@ -173,6 +173,7 @@ find_package(XKBCOMMON REQUIRED)
 find_package(LTTngUST REQUIRED)
 pkg_check_modules(UDEV REQUIRED libudev)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
+pkg_check_modules(UUID REQUIRED uuid)
 
 include_directories (${GLESv2_INCLUDE_DIRS})
 include_directories (${EGL_INCLUDE_DIRS})
@@ -183,7 +184,7 @@ if (MIR_BUILD_PLATFORM_ANDROID)
   find_package(LibHardware REQUIRED)
 endif()
 
-if (MIR_BUILD_PLATFORM_MESA)
+if (MIR_BUILD_PLATFORM_MESA_KMS)
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )
@@ -215,6 +216,7 @@ add_subdirectory(cmake/)
 
 if (MIR_ENABLE_TESTS)
   find_package(GtestGmock REQUIRED)
+  pkg_check_modules(LIBEVDEV REQUIRED libevdev)
   include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
   add_subdirectory(tests/)
 

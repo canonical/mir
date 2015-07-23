@@ -138,7 +138,6 @@ ms::BasicSurface::BasicSurface(
     surface_name(name),
     surface_rect(rect),
     surface_alpha(1.0f),
-    first_frame_posted(false),
     hidden(false),
     input_mode(mi::InputReceptionMode::normal),
     nonrectangular(nonrectangular),
@@ -148,7 +147,8 @@ ms::BasicSurface::BasicSurface(
     input_sender(input_sender),
     cursor_image_(cursor_image),
     report(report),
-    parent_(parent)
+    parent_(parent),
+    layers({StreamInfo{buffer_stream, {0,0}}})
 {
     report->surface_created(this, surface_name);
 }
@@ -167,17 +167,9 @@ ms::BasicSurface::BasicSurface(
 {
 }
 
-void ms::BasicSurface::force_requests_to_complete()
-{
-    surface_buffer_stream->force_requests_to_complete();
-}
-
 ms::BasicSurface::~BasicSurface() noexcept
 {
     report->surface_deleted(this, surface_name);
-
-    if (surface_buffer_stream) // some tests use null for surface_buffer_stream
-        surface_buffer_stream->drop_client_requests();
 }
 
 std::shared_ptr<mc::BufferStream> ms::BasicSurface::buffer_stream() const
@@ -226,40 +218,9 @@ mir::geometry::Size ms::BasicSurface::client_size() const
     return size();
 }
 
-MirPixelFormat ms::BasicSurface::pixel_format() const
+std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() const
 {
-    return surface_buffer_stream->get_stream_pixel_format();
-}
-
-void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(mg::Buffer* new_buffer)> complete)
-{
-    if (old_buffer)
-    {
-        surface_buffer_stream->release_client_buffer(old_buffer);
-        {
-            std::unique_lock<std::mutex> lk(guard);
-            first_frame_posted = true;
-        }
-
-        /*
-         * TODO: In future frame_posted() could be made parameterless.
-         *       The new method of catching up on buffer backlogs is to
-         *       query buffers_ready_for_compositor() or Scene::frames_pending
-         */
-        observers.frame_posted(1);
-    }
-
-    surface_buffer_stream->acquire_client_buffer(complete);
-}
-
-void ms::BasicSurface::allow_framedropping(bool allow)
-{
-    surface_buffer_stream->allow_framedropping(allow);
-}
-
-std::shared_ptr<mg::Buffer> ms::BasicSurface::snapshot_buffer() const
-{
-    return surface_buffer_stream->lock_snapshot_buffer();
+    return surface_buffer_stream;
 }
 
 bool ms::BasicSurface::supports_input() const
@@ -384,7 +345,10 @@ bool ms::BasicSurface::visible() const
 
 bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
 {
-    return !hidden && first_frame_posted;
+    bool visible{false};
+    for (auto const& info : layers)
+        visible |= info.stream->has_submitted_buffer();
+    return !hidden && visible;
 }
 
 mi::InputReceptionMode ms::BasicSurface::reception_mode() const
@@ -400,14 +364,6 @@ void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
     }
     observers.reception_mode_set_to(mode);
 }
-
-void ms::BasicSurface::with_most_recent_buffer_do(
-    std::function<void(mg::Buffer&)> const& exec)
-{
-    auto buf = snapshot_buffer();
-    exec(*buf);
-}
-
 
 MirSurfaceType ms::BasicSurface::type() const
 {    
@@ -452,8 +408,6 @@ MirSurfaceState ms::BasicSurface::set_state(MirSurfaceState s)
     {
         state_ = s;
         lg.unlock();
-        set_hidden(s == mir_surface_state_hidden);
-        
         observers.attrib_changed(mir_surface_attrib_state, s);
     }
 
@@ -472,7 +426,8 @@ int ms::BasicSurface::set_swap_interval(int interval)
     {
         swapinterval_ = interval;
         bool allow_dropping = (interval == 0);
-        allow_framedropping(allow_dropping);
+        for (auto& info : layers) 
+            info.stream->allow_framedropping(allow_dropping);
 
         lg.unlock();
         observers.attrib_changed(mir_surface_attrib_swapinterval, interval);
@@ -662,12 +617,10 @@ struct CursorStreamImageAdapter
                              geom::Displacement const& hotspot)
         : surface(surface),
           stream(stream),
+          observer{std::make_shared<FramePostObserver>(
+            [this](){ post_cursor_image_from_current_buffer(); })},
           hotspot(hotspot)
     {
-        post_cursor_image_from_current_buffer();
-        observer = std::make_shared<FramePostObserver>([&](){
-                post_cursor_image_from_current_buffer();
-            });
         stream->add_observer(observer);
     }
 
@@ -716,6 +669,9 @@ void ms::BasicSurface::set_cursor_stream(std::shared_ptr<mf::BufferStream> const
     std::unique_lock<std::mutex> lock(guard);
 
     cursor_stream_adapter = std::make_unique<ms::CursorStreamImageAdapter>(*this, stream, hotspot);
+    stream->with_most_recent_buffer_do([this, &hotspot](mg::Buffer& buffer) {
+        cursor_image_ = std::make_shared<CursorImageFromBuffer>(buffer, hotspot); 
+    });
 }
 
 void ms::BasicSurface::request_client_surface_close()
@@ -761,7 +717,10 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
         visibility_ = new_visibility;
         lg.unlock();
         if (new_visibility == mir_surface_visibility_exposed)
-            surface_buffer_stream->drop_old_buffers();
+        {
+            for (auto& info : layers)
+                info.stream->drop_old_buffers();
+        }
         observers.attrib_changed(mir_surface_attrib_visibility, visibility_);
     }
 
@@ -771,6 +730,8 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
 void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
 {
     observers.add(observer);
+    for (auto& info : layers) 
+        info.stream->add_observer(observer);
 }
 
 void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& observer)
@@ -779,6 +740,8 @@ void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& obs
     if (!o)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (previously destroyed)"));
     observers.remove(o);
+    for (auto& info : layers) 
+        info.stream->remove_observer(observer);
 }
 
 std::shared_ptr<ms::Surface> ms::BasicSurface::parent() const
@@ -849,24 +812,13 @@ private:
 };
 }
 
-std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const* compositor_id) const
-{
-    std::unique_lock<std::mutex> lk(guard);
-
-    return std::make_unique<SurfaceSnapshot>(
-        surface_buffer_stream,
-        compositor_id,
-        surface_rect,
-        transformation_matrix,
-        surface_alpha,
-        nonrectangular,
-        this);
-}
-
 int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 {
     std::unique_lock<std::mutex> lk(guard);
-    return surface_buffer_stream->buffers_ready_for_compositor(id);
+    auto max_buf = 0;
+    for (auto const& info : layers)
+        max_buf = std::max(max_buf, info.stream->buffers_ready_for_compositor(id));
+    return max_buf;
 }
 
 void ms::BasicSurface::consume(MirEvent const& event)
@@ -886,4 +838,37 @@ void ms::BasicSurface::rename(std::string const& title)
         surface_name = title;
         observers.renamed(surface_name.c_str());
     }
+}
+
+void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
+{
+    {
+        std::unique_lock<std::mutex> lk(guard);
+
+        if (s.end() == std::find_if(s.begin(), s.end(),
+            [this] (ms::StreamInfo const& info) { return info.stream == surface_buffer_stream; }))
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error("cannot remove the created-with buffer stream yet"));
+        }
+
+        layers = s;
+    }
+    observers.moved_to(surface_rect.top_left);
+}
+
+mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
+{
+    std::unique_lock<std::mutex> lk(guard);
+    mg::RenderableList list;
+    for (auto const& info : layers)
+    {
+        if (info.stream->has_submitted_buffer())
+        {
+            list.emplace_back(std::make_shared<SurfaceSnapshot>(
+                info.stream, id,
+                geom::Rectangle{surface_rect.top_left + info.displacement, surface_rect.size},
+                transformation_matrix, surface_alpha, nonrectangular, info.stream.get()));
+        }
+    }
+    return list;
 }

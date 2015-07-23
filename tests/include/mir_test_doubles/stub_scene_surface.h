@@ -62,7 +62,8 @@ public:
     geometry::Rectangle input_bounds() const override { return {{},{}}; }
     bool input_area_contains(mir::geometry::Point const&) const override { return false; }
 
-    virtual std::unique_ptr<graphics::Renderable> compositor_snapshot(void const*) const override { return nullptr; }
+    void set_streams(std::list<scene::StreamInfo> const&) override {}
+    graphics::RenderableList generate_renderables(compositor::CompositorID) const override { return {}; }
     int buffers_ready_for_compositor(void const*) const override { return 0; }
 
     float alpha() const override { return 0.0f;}
@@ -74,12 +75,10 @@ public:
     bool visible() const override { return true; }
     void move_to(geometry::Point const&) override {}
     void set_input_region(std::vector<geometry::Rectangle> const&) override {}
-    void allow_framedropping(bool) override {}
     void resize(geometry::Size const&) override {}
     void set_transformation(glm::mat4 const&) override {}
     void set_alpha(float) override {}
     void set_orientation(MirOrientation) {}
-    void force_requests_to_complete() override {}
 
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const&) override {}
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const&) override {}
@@ -92,15 +91,11 @@ public:
 
     void request_client_surface_close() override {}
 
-    MirPixelFormat pixel_format() const override { return mir_pixel_format_xrgb_8888; }
-
-    void swap_buffers(graphics::Buffer*, std::function<void(graphics::Buffer*)>) override {}
-
     bool supports_input() const override { return true;}
     int client_input_fd() const override { return fd;}
     int configure(MirSurfaceAttrib, int) override { return 0; }
     int query(MirSurfaceAttrib) const override { return 0; }
-    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& ) override {}
+    void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const&) {}
 
     std::shared_ptr<mir::scene::Surface> parent() const override { return nullptr; }
 
@@ -108,6 +103,7 @@ public:
 
     void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&) {}
     void rename(std::string const&) {}
+    std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override { return nullptr; }
 };
 
 }

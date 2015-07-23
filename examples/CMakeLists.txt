@@ -13,6 +13,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra"
 
 add_library(eglapp STATIC
   eglapp.c
+  client_helpers.cpp
 )
 
 add_library(exampleserverconfig STATIC
@@ -87,6 +88,13 @@ mir_add_wrapped_executable(mir_demo_client_tooltip
   tooltip.c
 )
 target_link_libraries(mir_demo_client_tooltip
+  eglapp
+  )
+
+mir_add_wrapped_executable(mir_demo_client_touch_validator
+  client_touch_validator.cpp
+)
+target_link_libraries(mir_demo_client_touch_validator
   eglapp
 )
 
@@ -183,6 +191,32 @@ target_link_libraries(mir_demo_server
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}
   ${Boost_LIBRARIES}
+)
+
+add_library(mir_demo_server_loadable MODULE
+  server_example.cpp
+  glog_logger.cpp
+  server_example_test_client.cpp
+)
+
+target_link_libraries(mir_demo_server_loadable
+  mirserver
+  exampleserverconfig
+  ${GLog_LIBRARY}
+  ${GFlags_LIBRARY}
+  ${Boost_LIBRARIES}
+)
+
+install(TARGETS mir_demo_server_loadable
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+mir_add_wrapped_executable(mir_demo_server_loader
+  mir_demo_server_loader.cpp
+)
+
+target_link_libraries(mir_demo_server_loader
+  dl
 )
 
 mir_add_wrapped_executable(mir_demo_server_minimal server_minimal.cpp)

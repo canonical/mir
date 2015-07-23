@@ -16,14 +16,12 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test_framework/connected_client_with_a_surface.h"
-
 #include "mir/events/event_builders.h"
-#include "mir/shell/shell_wrapper.h"
-#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/null_surface_observer.h"
 
+#include "mir_test_doubles/wrap_shell_to_track_latest_surface.h"
+#include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/signal.h"
 
@@ -36,6 +34,7 @@ namespace mtf = mir_test_framework;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 using namespace mir::geometry;
 using namespace testing;
@@ -49,33 +48,17 @@ public:
     MOCK_METHOD1(resized_to, void(Size const& size));
 };
 
-struct StubShell : msh::ShellWrapper
-{
-    using msh::ShellWrapper::ShellWrapper;
-
-    mf::SurfaceId create_surface(
-        std::shared_ptr<ms::Session> const& session,
-        ms::SurfaceCreationParameters const& params) override
-    {
-        auto const surface = msh::ShellWrapper::create_surface(session, params);
-        latest_surface = session->surface(surface);
-        return surface;
-    }
-
-    std::weak_ptr<ms::Surface> latest_surface;
-};
-
 struct SurfaceModifications : mtf::ConnectedClientWithASurface
 {
     SurfaceModifications() { add_to_environment("MIR_SERVER_ENABLE_INPUT", "OFF"); }
 
     void SetUp() override
     {
-        std::shared_ptr<StubShell> shell;
+        std::shared_ptr<mtd::WrapShellToTrackLatestSurface> shell;
 
         server.wrap_shell([&](std::shared_ptr<msh::Shell> const& wrapped)
         {
-            auto const msc = std::make_shared<StubShell>(wrapped);
+            auto const msc = std::make_shared<mtd::WrapShellToTrackLatestSurface>(wrapped);
             shell = msc;
             return msc;
         });
@@ -92,10 +75,7 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
 
     void generate_alt_click_at(Point const& click_position)
     {
-        MirInputDeviceId const device_id{7};
-        int64_t const timestamp{39};
         auto const modifiers = mir_input_event_modifier_alt;
-        std::vector<MirPointerButton> depressed_buttons{mir_pointer_button_tertiary};
 
         auto const x_axis_value = click_position.x.as_float();
         auto const y_axis_value = click_position.y.as_float();
@@ -104,17 +84,14 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
         auto const action = mir_pointer_action_button_down;
 
         auto const click_event = mev::make_event(device_id, timestamp, modifiers,
-            action, depressed_buttons, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
+            action, mir_pointer_button_tertiary, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
 
         server.the_shell()->handle(*click_event);
     }
 
     void generate_alt_move_to(Point const& drag_position)
     {
-        MirInputDeviceId const device_id{7};
-        int64_t const timestamp{39};
         auto const modifiers = mir_input_event_modifier_alt;
-        std::vector<MirPointerButton> depressed_buttons{mir_pointer_button_tertiary};
 
         auto const x_axis_value = drag_position.x.as_float();
         auto const y_axis_value = drag_position.y.as_float();
@@ -123,7 +100,7 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
         auto const action = mir_pointer_action_motion;
 
         auto const drag_event = mev::make_event(device_id, timestamp, modifiers,
-            action, depressed_buttons, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
+            action, mir_pointer_button_tertiary, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
 
         server.the_shell()->handle(*drag_event);
     }
@@ -156,6 +133,8 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
         mir_surface_spec_release(spec);
     }
 
+    MirInputDeviceId const device_id = MirInputDeviceId(7);
+    std::chrono::nanoseconds const timestamp = std::chrono::nanoseconds(39);
     MockSurfaceObserver surface_observer;
     std::weak_ptr<ms::Surface> shell_surface;
 };

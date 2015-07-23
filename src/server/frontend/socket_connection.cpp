@@ -21,6 +21,7 @@
 #include "message_receiver.h"
 #include "mir/frontend/message_processor.h"
 #include "mir/frontend/session_credentials.h"
+#include "mir/make_protobuf_object.h"
 
 #include "mir_protobuf_wire.pb.h"
 
@@ -95,16 +96,16 @@ try
         BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
 
-    mir::protobuf::wire::Invocation invocation;
-    invocation.ParseFromArray(body.data(), body.size());
+    auto invocation = mir::make_protobuf_object<mir::protobuf::wire::Invocation>();
+    invocation->ParseFromArray(body.data(), body.size());
 
-    if (!invocation.has_protocol_version() || invocation.protocol_version() != 1)
+    if (!invocation->has_protocol_version() || invocation->protocol_version() != 1)
         BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported protocol version"));
 
     std::vector<mir::Fd> fds;
-    if (invocation.side_channel_fds() > 0)
+    if (invocation->side_channel_fds() > 0)
     {
-        fds.resize(invocation.side_channel_fds());
+        fds.resize(invocation->side_channel_fds());
         message_receiver->receive_fds(fds);
     }
 
@@ -114,7 +115,7 @@ try
         processor->client_pid(client_pid);
     }
 
-    if (processor->dispatch(invocation, fds))
+    if (processor->dispatch(*invocation, fds))
     {
         read_next_message();
     }

@@ -66,7 +66,15 @@ class Screencast;
 class PromptSession;
 class BufferStream;
 
-// SessionMediator relays requests from the client process into the server.
+/**
+ * SessionMediator relays requests from the client process into the server.
+ *
+ * Each SessionMediator is associated with exactly one client socket connection, and
+ * visa versa.
+ *
+ * \note SessionMediator is *not* reentrant. If two threads want to process events on a client
+ *       socket at the same time they must perform their own locking.
+ */
 class SessionMediator : public detail::DisplayServer, public mir::protobuf::Debug
 {
 public:
@@ -109,6 +117,24 @@ public:
         google::protobuf::RpcController* controller,
         mir::protobuf::BufferRequest const* request,
         mir::protobuf::Buffer* response,
+        google::protobuf::Closure* done) override;
+
+    void submit_buffer(
+        google::protobuf::RpcController* controller,
+        mir::protobuf::BufferRequest const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
+
+    void allocate_buffers( 
+        google::protobuf::RpcController* controller,
+        mir::protobuf::BufferAllocation const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
+
+    void release_buffers(
+        google::protobuf::RpcController* controller,
+        mir::protobuf::BufferRelease const* request,
+        mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
 
     void release_surface(google::protobuf::RpcController* controller,
@@ -200,6 +226,12 @@ public:
         ::mir::protobuf::CoordinateTranslationResponse* response,
         ::google::protobuf::Closure *done) override;
 
+    void request_persistent_surface_id(
+        ::google::protobuf::RpcController* controller,
+        ::mir::protobuf::SurfaceId const* request,
+        ::mir::protobuf::PersistentSurfaceId* response,
+        ::google::protobuf::Closure* done) override;
+
 private:
     void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,
                               graphics::Buffer* graphics_buffer,
@@ -209,7 +241,6 @@ private:
         BufferStreamId surf_id,
         BufferStream& buffer_stream,
         graphics::Buffer* old_buffer,
-        std::unique_lock<std::mutex>& lock,
         std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete);
 
     virtual std::function<void(std::shared_ptr<Session> const&)> prompt_session_connect_handler() const;
@@ -231,7 +262,6 @@ private:
 
     BufferStreamTracker buffer_stream_tracker;
 
-    std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;
     std::weak_ptr<PromptSession> weak_prompt_session;
 };

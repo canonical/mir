@@ -18,7 +18,7 @@
 
 #include "mir_prompt_session.h"
 #include "event_handler_register.h"
-#include "make_protobuf_object.h"
+#include "mir/make_protobuf_object.h"
 
 namespace mp = mir::protobuf;
 namespace mcl = mir::client;
@@ -27,10 +27,10 @@ MirPromptSession::MirPromptSession(
     mp::DisplayServer& server,
     std::shared_ptr<mcl::EventHandlerRegister> const& event_handler_register) :
     server(server),
-    parameters(mcl::make_protobuf_object<mir::protobuf::PromptSessionParameters>()),
-    add_result(mcl::make_protobuf_object<mir::protobuf::Void>()),
-    protobuf_void(mcl::make_protobuf_object<mir::protobuf::Void>()),
-    socket_fd_response(mcl::make_protobuf_object<mir::protobuf::SocketFD>()),
+    parameters(mir::make_protobuf_object<mir::protobuf::PromptSessionParameters>()),
+    add_result(mir::make_protobuf_object<mir::protobuf::Void>()),
+    protobuf_void(mir::make_protobuf_object<mir::protobuf::Void>()),
+    socket_fd_response(mir::make_protobuf_object<mir::protobuf::SocketFD>()),
     event_handler_register(event_handler_register),
     event_handler_register_id{event_handler_register->register_event_handler(
         [this](MirEvent const& event)
@@ -39,7 +39,7 @@ MirPromptSession::MirPromptSession(
                 set_state(mir_prompt_session_event_get_state(mir_event_get_prompt_session_event(&event)));
         })},
     state(mir_prompt_session_state_stopped),
-    session(mcl::make_protobuf_object<mir::protobuf::Void>()),
+    session(mir::make_protobuf_object<mir::protobuf::Void>()),
     handle_prompt_session_state_change{[](MirPromptSessionState){}}
 {
 }
@@ -146,7 +146,7 @@ MirWaitHandle* MirPromptSession::new_fds_for_prompt_providers(
     mir_client_fd_callback callback,
     void * context)
 {
-    auto request = mcl::make_protobuf_object<mir::protobuf::SocketFDRequest>();
+    auto request = mir::make_protobuf_object<mir::protobuf::SocketFDRequest>();
     request->set_number(no_of_fds);
 
     fds_for_prompt_providers_wait_handle.expect_result();

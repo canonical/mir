@@ -29,9 +29,8 @@ namespace input
 class NullInputDispatcher : public mir::input::InputDispatcher
 {
 public:
-    void configuration_changed(std::chrono::nanoseconds when) override;
-    void device_reset(int32_t device_id, std::chrono::nanoseconds when) override;
-    void dispatch(MirEvent const& event) override;
+    bool dispatch(MirEvent const& event) override;
+
     void start() override;
     void stop() override;
 };

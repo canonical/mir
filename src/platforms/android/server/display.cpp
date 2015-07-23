@@ -36,6 +36,7 @@
 #include <boost/throw_exception.hpp>
 #include <fcntl.h>
 
+#include "mir/geometry/dimensions.h"
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
@@ -110,6 +111,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
     mg::DisplayConfigurationOutput const& config,
     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
     mga::PbufferGLContext const& gl_context,
+    geom::Displacement displacement,
     mga::OverlayOptimization overlay_option)
 {
     std::shared_ptr<mga::FramebufferBundle> fbs{display_buffer_builder.create_framebuffers(config)};
@@ -125,6 +127,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
         gl_context,
         *gl_program_factory,
         mir_orientation_normal,
+        displacement,
         overlay_option));
 }
 }
@@ -159,6 +162,7 @@ mga::Display::Display(
             config.primary(),
             gl_program_factory,
             gl_context,
+            geom::Displacement{0,0},
             overlay_option))
 {
     //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
@@ -174,7 +178,8 @@ mga::Display::Display(
                 config.external(),
                 gl_program_factory,
                 gl_context,
-                mga::OverlayOptimization::disabled));
+                geom::Displacement{0,0},
+                mga::OverlayOptimization::enabled));
     }
 
     display_report->report_successful_setup_of_native_resources();
@@ -222,7 +227,8 @@ void mga::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
                 config.external(),
                 gl_program_factory,
                 gl_context,
-                mga::OverlayOptimization::disabled));
+                config.external().top_left - origin,
+                mga::OverlayOptimization::enabled));
     if ((!config.external().connected) && displays.display_present(mga::DisplayName::external))
         displays.remove(mga::DisplayName::external);
 
@@ -238,6 +244,7 @@ std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
 
 void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
 {
+    using namespace geometry;
     if (!new_configuration.valid())
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid or inconsistent display configuration"));
 
@@ -249,15 +256,19 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
             BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
 
         config[output.id].orientation = output.orientation;
+
+        geom::Displacement offset(output.top_left - origin);
+        config[output.id].top_left = output.top_left;
+
         if (config.primary().id == output.id)
         {
             power_mode(mga::DisplayName::primary, *hwc_config, config.primary(), output.power_mode);
-            displays.configure(mga::DisplayName::primary, output.power_mode, output.orientation);
+            displays.configure(mga::DisplayName::primary, output.power_mode, output.orientation, offset);
         }
         else if (config.external().connected)
         {
             power_mode(mga::DisplayName::external, *hwc_config, config.external(), output.power_mode);
-            displays.configure(mga::DisplayName::external, output.power_mode, output.orientation);
+            displays.configure(mga::DisplayName::external, output.power_mode, output.orientation, offset);
         }
     });
 }

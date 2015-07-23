@@ -19,7 +19,7 @@ packages="\
     mir-client-platform-android:MIR_CLIENT_PLATFORM_ABI \
     mir-client-platform-mesa:MIR_CLIENT_PLATFORM_ABI \
     mir-platform-graphics-android:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
-    mir-platform-graphics-mesa:MIR_SERVER_GRAPHICS_PLATFORM_ABI"
+    mir-platform-graphics-mesa-kms:MIR_SERVER_GRAPHICS_PLATFORM_ABI"
 
 package_name()
 {
@@ -210,7 +210,11 @@ check_for_unknown_packages()
         local result="$(echo "${packages}" | grep -v "\b${p}:")"
         if [ -n "$result" ];
         then
-            report_unknown_package "debian/control contains versioned package ${p} but it is unknown to this script"
+            local replaces_pkgs="$(grep "Replaces:" debian/control | cut -d ":" -f 2 | cut -d " " -f 2 | grep "[[:digit:]]" | tr -d ' [0-9]')"
+            if [ -z "$replaces_pkgs" ];
+            then
+                report_unknown_package "debian/control contains versioned package ${p} but it is unknown to this script"
+            fi
         fi
     done
 

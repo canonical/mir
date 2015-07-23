@@ -36,16 +36,16 @@ set(
   stubbed_server_configuration.cpp
   testing_process_manager.cpp
   testing_client_options.cpp
-  display_server_test_fixture.cpp
   process.cpp
   using_stub_client_platform.cpp
   stub_client_platform_factory.cpp
   stub_server_platform_factory.cpp
   udev_environment.cpp
-  declarative_placement_strategy.cpp
+  declarative_placement_window_manage_policy.cpp
   fake_event_hub_server_configuration.cpp
   any_surface.cpp
   headless_nested_server_runner.cpp
+  placement_applying_shell.cpp
 )
 
 list(APPEND TEST_FRAMEWORK_SRCS
@@ -104,6 +104,10 @@ add_library(
   fake_input_device_impl.cpp
   stub_input_platform.cpp
   )
+
+target_link_libraries(mirplatforminputstub
+  mirclient
+)
 
 set_target_properties(
   mirplatforminputstub PROPERTIES

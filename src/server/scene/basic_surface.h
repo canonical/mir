@@ -21,7 +21,7 @@
 
 #include "mir/scene/surface.h"
 #include "mir/basic_observers.h"
-#include "mir/scene/surface_observer.h"
+#include "mir/scene/surface_observers.h"
 
 #include "mir/geometry/rectangle.h"
 
@@ -29,6 +29,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -55,27 +56,6 @@ namespace scene
 {
 class SceneReport;
 class CursorStreamImageAdapter;
-
-class SurfaceObservers : public SurfaceObserver, BasicObservers<SurfaceObserver>
-{
-public:
-    using BasicObservers<SurfaceObserver>::add;
-    using BasicObservers<SurfaceObserver>::remove;
-
-    void attrib_changed(MirSurfaceAttrib attrib, int value) override;
-    void resized_to(geometry::Size const& size) override;
-    void moved_to(geometry::Point const& top_left) override;
-    void hidden_set_to(bool hide) override;
-    void frame_posted(int frames_available) override;
-    void alpha_set_to(float alpha) override;
-    void orientation_set_to(MirOrientation orientation) override;
-    void transformation_set_to(glm::mat4 const& t) override;
-    void reception_mode_set_to(input::InputReceptionMode mode) override;
-    void cursor_image_set_to(graphics::CursorImage const& image) override;
-    void client_surface_close_requested() override;
-    void keymap_changed(xkb_rule_names const& names) override;
-    void renamed(char const*) override;
-};
 
 class BasicSurface : public Surface
 {
@@ -111,15 +91,11 @@ public:
     geometry::Size size() const override;
     geometry::Size client_size() const override;
 
-    MirPixelFormat pixel_format() const override;
-
-    std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
-    void swap_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
-    void force_requests_to_complete() override;
+    std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
+    void set_streams(std::list<scene::StreamInfo> const& streams) override;
 
     bool supports_input() const override;
     int client_input_fd() const override;
-    void allow_framedropping(bool) override;
     std::shared_ptr<input::InputChannel> input_channel() const override;
     input::InputReceptionMode reception_mode() const override;
     void set_reception_mode(input::InputReceptionMode mode) override;
@@ -139,11 +115,8 @@ public:
 
     bool visible() const override;
     
-    std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const override;
+    graphics::RenderableList generate_renderables(compositor::CompositorID id) const override;
     int buffers_ready_for_compositor(void const* compositor_id) const override;
-
-    void with_most_recent_buffer_do(
-        std::function<void(graphics::Buffer&)> const& exec) override;
 
     MirSurfaceType type() const override;
     MirSurfaceState state() const override;
@@ -189,7 +162,6 @@ private:
     geometry::Rectangle surface_rect;
     glm::mat4 transformation_matrix;
     float surface_alpha;
-    bool first_frame_posted;
     bool hidden;
     input::InputReceptionMode input_mode;
     const bool nonrectangular;
@@ -201,6 +173,7 @@ private:
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
 
+    std::list<StreamInfo> layers;
     // Surface attributes:
     MirSurfaceType type_ = mir_surface_type_normal;
     MirSurfaceState state_ = mir_surface_state_restored;

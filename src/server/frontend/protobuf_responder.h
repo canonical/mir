@@ -52,7 +52,7 @@ private:
     std::shared_ptr<ResourceCache> const resource_cache;
 
     std::mutex result_guard;
-    mir::protobuf::wire::Result send_response_result;
+    std::unique_ptr<mir::protobuf::wire::Result> send_response_result;
 };
 }
 }

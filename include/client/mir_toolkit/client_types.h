@@ -43,6 +43,7 @@ typedef struct MirSurfaceSpec MirSurfaceSpec;
 typedef struct MirScreencast MirScreencast;
 typedef struct MirPromptSession MirPromptSession;
 typedef struct MirBufferStream MirBufferStream;
+typedef struct MirPersistentId MirPersistentId;
 
 /**
  * Returned by asynchronous functions. Must not be free'd by
@@ -75,11 +76,11 @@ typedef void (*mir_surface_callback)(MirSurface *surface, void *client_context);
 /**
  * Callback to be passed when calling:
  *  - mir_buffer_stream_* functions requiring a callback.
- *   \param [in] surface             the buffer stream being updated
+ *   \param [in] stream              the buffer stream being updated
  *   \param [in,out] client_context  context provided by client in calling
  *                                   mir_connect
  */
-typedef void (*mir_buffer_stream_callback)(MirBufferStream *surface, void *client_context);
+typedef void (*mir_buffer_stream_callback)(MirBufferStream *stream, void *client_context);
 
 /**
  * Callback for handling of surface events.
@@ -122,6 +123,10 @@ typedef void (*mir_display_config_callback)(
 
 typedef void (*mir_client_fd_callback)(
     MirPromptSession *prompt_session, size_t count, int const* fds, void* context);
+
+
+typedef void (*mir_surface_id_callback)(
+    MirSurface* surface, MirPersistentId* id, void* context);
 
 /**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"
@@ -277,6 +282,16 @@ typedef struct MirDisplayConfiguration
     uint32_t num_cards;
     MirDisplayCard *cards;
 } MirDisplayConfiguration;
+
+/**
+ * The displacement from the top-left corner of the surface.
+ */
+typedef struct MirBufferStreamInfo
+{
+    MirBufferStream* stream;
+    int displacement_x;
+    int displacement_y;
+} MirBufferStreamInfo;
 
 typedef struct MirRectangle
 {

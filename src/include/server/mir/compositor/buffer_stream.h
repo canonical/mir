@@ -21,6 +21,7 @@
 #define MIR_COMPOSITOR_BUFFER_STREAM_H_
 
 #include "mir/geometry/size.h"
+#include "mir/frontend/buffer_stream.h"
 #include "mir_toolkit/common.h"
 #include "mir/graphics/buffer_id.h"
 
@@ -36,25 +37,20 @@ class Buffer;
 namespace compositor
 {
 
-class BufferStream
+class BufferStream : public frontend::BufferStream
 {
 public:
     virtual ~BufferStream() = default;
 
-    virtual void acquire_client_buffer(
-        std::function<void(graphics::Buffer* buffer)> complete) = 0;
-    virtual void release_client_buffer(graphics::Buffer* buf) = 0;
     virtual std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(void const* user_id) = 0;
-    virtual std::shared_ptr<graphics::Buffer> lock_snapshot_buffer() = 0;
-    virtual MirPixelFormat get_stream_pixel_format() = 0;
     virtual geometry::Size stream_size() = 0;
     virtual void resize(geometry::Size const& size) = 0;
     virtual void allow_framedropping(bool) = 0;
     virtual void force_requests_to_complete() = 0;
     virtual int buffers_ready_for_compositor(void const* user_id) const = 0;
     virtual void drop_old_buffers() = 0;
-    virtual void drop_client_requests() = 0;
+    virtual bool has_submitted_buffer() const = 0;
 };
 
 }

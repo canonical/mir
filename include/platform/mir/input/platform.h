@@ -20,6 +20,8 @@
 #ifndef MIR_INPUT_PLATFORM_H_
 #define MIR_INPUT_PLATFORM_H_
 
+#include "mir/module_properties.h"
+
 #include <mir/options/option.h>
 #include <mir/module_deleter.h>
 
@@ -41,6 +43,7 @@ namespace input
 class InputDevice;
 class InputReport;
 class InputDeviceRegistry;
+class InputPlatformPolicy;
 
 enum class PlatformPriority : uint32_t
 {
@@ -98,6 +101,7 @@ extern "C" typedef mir::UniqueModulePtr<Platform>(*CreatePlatform)(
  * \param [in] emergency_cleanup_registry object to register emergency shutdown handlers with
  * \param [in] input_device_registry object to register input devices handled by this platform
  * \param [in] report the object to use to report interesting events from the input subsystem
+ * \param [in] platform_policy object to use to obtain input related configuration and input event filtering interfaces
  *
  * This factory function needs to be implemented by each platform.
  *
@@ -135,6 +139,15 @@ extern "C" typedef PlatformPriority(*ProbePlatform)(
  */
 extern "C" PlatformPriority probe_input_platform(
     options::Option const& options);
+extern "C" typedef ModuleProperties const*(*DescribeModule)();
+/**
+ * describe_input_module should return a description of the input platform.
+ *
+ * This function needs to be implemented by each platform.
+ *
+ * \ingroup platform_enablement
+ */
+extern "C" ModuleProperties const* describe_input_module();
 }
 }
 

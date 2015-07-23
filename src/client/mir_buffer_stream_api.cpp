@@ -23,7 +23,6 @@
 #include "mir_connection.h"
 #include "buffer_stream.h"
 #include "client_buffer_stream_factory.h"
-#include "make_protobuf_object.h"
 
 #include "mir/client_buffer.h"
 
@@ -37,19 +36,6 @@ namespace mp = mir::protobuf;
 
 namespace
 {
-struct ReleaseData
-{
-    mir_buffer_stream_callback callback;
-    void *context;
-};
-void finish_release(MirBufferStream *stream, void *context)
-{
-    auto data = reinterpret_cast<ReleaseData*>(context);
-    data->callback(stream, data->context);
-    delete data;
-    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(stream);
-    delete bs;
-}
 // assign_result is compatible with all 2-parameter callbacks
 void assign_result(void* result, void** context)
 {
@@ -69,14 +55,9 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     void *context)
 try
 {
-    auto params = mcl::make_protobuf_object<mp::BufferStreamParameters>();
-    params->set_width(width);
-    params->set_height(height);
-    params->set_pixel_format(format);
-    params->set_buffer_usage(buffer_usage);
-
-    return connection->get_client_buffer_stream_factory()->make_producer_stream(connection->display_server(), *params, callback, context)
-        ->get_create_wait_handle();
+    auto stream = connection->create_client_buffer_stream(
+        width, height, format, buffer_usage, callback, context);
+    return stream->get_create_wait_handle();
 }
 catch (std::exception const& ex)
 {
@@ -106,16 +87,13 @@ MirWaitHandle *mir_buffer_stream_release(
     mir_buffer_stream_callback callback,
     void *context)
 {
-    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
-    auto data = new ReleaseData{callback, context};
-    return bs->release(finish_release, data);
+    auto *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    return bs->release(callback, context);
 }
 
 void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
 {
-    mcl::ClientBufferStream *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
-    bs->release(nullptr, nullptr)->wait_for_all();
-    delete bs;
+    mir_buffer_stream_release(buffer_stream, nullptr, nullptr)->wait_for_all();
 }
 
 void mir_buffer_stream_get_current_buffer(MirBufferStream* buffer_stream, MirNativeBuffer** buffer_package_out)

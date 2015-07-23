@@ -23,8 +23,8 @@
 #include "src/platforms/android/server/display_component_factory.h"
 #include "src/platforms/android/server/configurable_display_buffer.h"
 #include "src/platforms/android/server/hwc_configuration.h"
-#include "stub_display_configuration.h"
-#include "mock_display_device.h"
+#include "mir_test_doubles/stub_display_configuration.h"
+#include "mir_test_doubles/mock_display_device.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -97,7 +97,8 @@ struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
     std::unique_ptr<graphics::android::LayerList> create_layer_list()
     {
         return std::unique_ptr<graphics::android::LayerList>(
-            new graphics::android::LayerList(std::make_shared<graphics::android::IntegerSourceCrop>(), {}));
+            new graphics::android::LayerList(
+                std::make_shared<graphics::android::IntegerSourceCrop>(), {}, geometry::Displacement{0,0}));
     }
 
     std::unique_ptr<graphics::android::FramebufferBundle> create_framebuffers(graphics::DisplayConfigurationOutput const&) override

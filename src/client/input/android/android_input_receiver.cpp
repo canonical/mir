@@ -146,7 +146,6 @@ static void map_key_event(std::shared_ptr<mircv::XKBMapper> const& xkb_mapper, M
 
 void mircva::InputReceiver::process_and_maybe_send_event()
 {
-    MirEvent ev;
     droidinput::InputEvent *android_event;
     uint32_t event_sequence_id;
 
@@ -181,16 +180,15 @@ void mircva::InputReceiver::process_and_maybe_send_event()
                                           &android_event);
     if (result == droidinput::OK)
     {
-        mia::Lexicon::translate(android_event, ev);
+        auto ev = mia::Lexicon::translate(android_event);
+        map_key_event(xkb_mapper, *ev);
+        report->received_event(*ev);
+        handler(ev.get());
 
-        map_key_event(xkb_mapper, ev);
-
+        // TODO: It would be handy in future if handler returned a bool
+        //       indicating whether the event was used so that if not it might
+        //       get passed on to someone else - passed into here:
         input_consumer->sendFinishedSignal(event_sequence_id, true);
-
-        report->received_event(ev);
-
-        // Send the event on its merry way.
-        handler(&ev);
     }
     if (input_consumer->hasDeferredEvent())
     {

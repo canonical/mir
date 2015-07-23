@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -32,19 +32,19 @@
 #include "mir_test/wait_condition.h"
 #include "mir_test/spin_wait.h"
 
-#include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/nested_mock_egl.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <mutex>
-#include <condition_variable>
-
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace mtf = mir_test_framework;
 namespace msh = mir::shell;
+namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
+namespace mtf = mir_test_framework;
+
 using namespace testing;
 
 namespace
@@ -83,51 +83,6 @@ struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
 {
     MOCK_METHOD1(lifecycle_event_occurred, void (MirLifecycleState));
 };
-
-struct NestedMockEGL : NiceMock<mir::test::doubles::MockEGL>
-{
-    NestedMockEGL()
-    {
-        {
-            InSequence init_before_terminate;
-            EXPECT_CALL(*this, eglGetDisplay(_)).Times(1);
-            EXPECT_CALL(*this, eglTerminate(_)).Times(1);
-        }
-
-        EXPECT_CALL(*this, eglCreateWindowSurface(_, _, _, _)).Times(AnyNumber());
-        EXPECT_CALL(*this, eglMakeCurrent(_, _, _, _)).Times(AnyNumber());
-        EXPECT_CALL(*this, eglDestroySurface(_, _)).Times(AnyNumber());
-
-        EXPECT_CALL(*this, eglQueryString(_, _)).Times(AnyNumber());
-
-        provide_egl_extensions();
-
-        EXPECT_CALL(*this, eglChooseConfig(_, _, _, _, _)).Times(AnyNumber()).WillRepeatedly(
-            DoAll(WithArgs<2, 4>(Invoke(this, &NestedMockEGL::egl_choose_config)), Return(EGL_TRUE)));
-
-        EXPECT_CALL(*this, eglGetCurrentContext()).Times(AnyNumber());
-        EXPECT_CALL(*this, eglCreatePbufferSurface(_, _, _)).Times(AnyNumber());
-
-        EXPECT_CALL(*this, eglGetProcAddress(StrEq("eglCreateImageKHR"))).Times(AnyNumber());
-        EXPECT_CALL(*this, eglGetProcAddress(StrEq("eglDestroyImageKHR"))).Times(AnyNumber());
-        EXPECT_CALL(*this, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES"))).Times(AnyNumber());
-
-        {
-            InSequence context_lifecycle;
-            EXPECT_CALL(*this, eglCreateContext(_, _, _, _)).Times(AnyNumber()).WillRepeatedly(Return((EGLContext)this));
-            EXPECT_CALL(*this, eglDestroyContext(_, _)).Times(AnyNumber()).WillRepeatedly(Return(EGL_TRUE));
-        }
-    }
-
-private:
-    void egl_initialize(EGLint* major, EGLint* minor) { *major = 1; *minor = 4; }
-    void egl_choose_config(EGLConfig* config, EGLint*  num_config)
-    {
-        *config = this;
-        *num_config = 1;
-    }
-};
-
 
 std::vector<geom::Rectangle> const display_geometry
 {
@@ -171,7 +126,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
 {
     NestedServer() { add_to_environment("MIR_SERVER_ENABLE_INPUT","off"); }
 
-    NestedMockEGL mock_egl;
+    mtd::NestedMockEGL mock_egl;
     mtf::UsingStubClientPlatform using_stub_client_platform;
 
     std::shared_ptr<MockSessionMediatorReport> mock_session_mediator_report;
@@ -288,4 +243,52 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
 
     mir_surface_release_sync(surface);
     mir_connection_release(c);
+}
+
+TEST_F(NestedServer, posts_when_scene_has_visible_changes)
+{
+    // No post on surface creation
+    EXPECT_CALL(*mock_session_mediator_report, session_exchange_buffer_called(_)).Times(0);
+    NestedMirRunner nested_mir{new_connection()};
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto const surface = mtf::make_any_surface(connection);
+
+    // NB there is no synchronization to guarantee that a spurious post on surface creation will have 
+    // been seen by this point (although in testing it was invariably the case). However, any missed post
+    // would be included in one of the later counts and cause a test failure.
+    Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
+
+    // One post when surface drawn
+    {
+        mt::WaitCondition wait;
+
+        EXPECT_CALL(*mock_session_mediator_report, session_exchange_buffer_called(_)).Times(1)
+                .WillOnce(InvokeWithoutArgs([&] { wait.wake_up_everyone(); }));
+
+        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+
+        wait.wait_for_at_most_seconds(1);
+        Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
+    }
+
+    // One post when surface released
+    {
+        mt::WaitCondition wait;
+
+        EXPECT_CALL(*mock_session_mediator_report, session_exchange_buffer_called(_)).Times(1)
+                .WillOnce(InvokeWithoutArgs([&] { wait.wake_up_everyone(); }));
+
+        mir_surface_release_sync(surface);
+        mir_connection_release(connection);
+
+        wait.wait_for_at_most_seconds(1);
+        Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
+    }
+
+    // No post during shutdown
+    EXPECT_CALL(*mock_session_mediator_report, session_exchange_buffer_called(_)).Times(0);
+
+    // Ignore other shutdown events
+    EXPECT_CALL(*mock_session_mediator_report, session_release_surface_called(_)).Times(AnyNumber());
+    EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(AnyNumber());
 }

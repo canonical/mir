@@ -21,11 +21,10 @@
 
 #include "mir_test/fake_event_hub.h"
 
-#include "mir/shell/default_window_manager.h"
-
 namespace mtf = mir_test_framework;
 namespace mi = mir::input;
-namespace ms = mir::shell;
+namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace mia = mir::input::android;
 
 std::shared_ptr<mi::InputManager> mtf::FakeEventHubServerConfiguration::the_input_manager()
@@ -33,7 +32,7 @@ std::shared_ptr<mi::InputManager> mtf::FakeEventHubServerConfiguration::the_inpu
     return DefaultServerConfiguration::the_input_manager();
 }
 
-std::shared_ptr<ms::InputTargeter> mtf::FakeEventHubServerConfiguration::the_input_targeter()
+std::shared_ptr<msh::InputTargeter> mtf::FakeEventHubServerConfiguration::the_input_targeter()
 {
     return DefaultServerConfiguration::the_input_targeter();
 }
@@ -48,7 +47,17 @@ std::shared_ptr<mi::InputSender> mtf::FakeEventHubServerConfiguration::the_input
     return DefaultServerConfiguration::the_input_sender();
 }
 
+std::shared_ptr<mi::LegacyInputDispatchable> mtf::FakeEventHubServerConfiguration::the_legacy_input_dispatchable()
+{
+    return DefaultServerConfiguration::the_legacy_input_dispatchable();
+}
+
 std::shared_ptr<droidinput::EventHubInterface> mtf::FakeEventHubServerConfiguration::the_event_hub()
+{
+    return the_fake_event_hub();
+}
+
+std::shared_ptr<mia::FakeEventHub> mtf::FakeEventHubServerConfiguration::the_fake_event_hub()
 {
     if (!fake_event_hub)
     {
@@ -62,13 +71,3 @@ std::shared_ptr<droidinput::EventHubInterface> mtf::FakeEventHubServerConfigurat
 
     return fake_event_hub;
 }
-
-auto mtf::FakeEventHubServerConfiguration::the_window_manager_builder() -> shell::WindowManagerBuilder
-{
-    return [&](ms::FocusController* focus_controller)
-        { return std::make_shared<ms::DefaultWindowManager>(
-            focus_controller,
-            the_placement_strategy(),
-            the_session_coordinator()); };
-}
-

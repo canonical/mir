@@ -123,6 +123,18 @@ TEST_F(ServerConfigurationOptions, unknown_command_line_options_are_passed_to_ha
     server.apply_settings();
 }
 
+TEST_F(ServerConfigurationOptions, empty_command_line_is_allowed)
+{
+    const int argc = 0;
+    char const** argv = 0;
+
+    server.set_command_line(argc, argv);
+
+    EXPECT_CALL(*this, command_line_handler(_)).Times(0);
+
+    server.apply_settings();
+}
+
 TEST_F(ServerConfigurationOptions, are_read_from_xdg_config_home)
 {
     create_config_file_in(fake_xdg_config_home);

@@ -16,10 +16,10 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "canonical_window_manager.h"
+#include "mir/shell/canonical_window_manager.h"
 
 #include "mir/scene/surface.h"
-#include "mir/scene/null_surface_observer.h"
+#include "mir/shell/surface_ready_observer.h"
 #include "mir/shell/display_layout.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/geometry/displacement.h"
@@ -42,20 +42,113 @@ msh::CanonicalSurfaceInfo::CanonicalSurfaceInfo(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
     scene::SurfaceCreationParameters const& params) :
-    state{mir_surface_state_restored},
+    type{surface->type()},
+    state{surface->state()},
     restore_rect{surface->top_left(), surface->size()},
     session{session},
     parent{params.parent},
-    min_width{params.min_width},
-    min_height{params.min_height},
-    max_width{params.max_width},
-    max_height{params.max_height},
+    min_width{params.min_width.is_set() ? params.min_width.value()  : Width{}},
+    min_height{params.min_height.is_set() ? params.min_height.value() : Height{}},
+    max_width{params.max_width.is_set() ? params.max_width.value() : Width{std::numeric_limits<int>::max()}},
+    max_height{params.max_height.is_set() ? params.max_height.value() : Height{std::numeric_limits<int>::max()}},
     width_inc{params.width_inc},
     height_inc{params.height_inc},
     min_aspect{params.min_aspect},
     max_aspect{params.max_aspect}
 {
 }
+
+bool msh::CanonicalSurfaceInfo::can_be_active() const
+{
+    switch (type)
+    {
+    case mir_surface_type_normal:       /**< AKA "regular"                       */
+    case mir_surface_type_utility:      /**< AKA "floating"                      */
+    case mir_surface_type_dialog:
+    case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
+    case mir_surface_type_freestyle:
+    case mir_surface_type_menu:
+    case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+        return true;
+
+    case mir_surface_type_gloss:
+    case mir_surface_type_tip:          /**< AKA "tooltip"                       */
+    default:
+        // Cannot have input focus
+        return false;
+    }
+}
+
+bool msh::CanonicalSurfaceInfo::must_have_parent() const
+{
+    switch (type)
+    {
+    case mir_surface_type_overlay:;
+    case mir_surface_type_inputmethod:
+    case mir_surface_type_satellite:
+    case mir_surface_type_tip:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+bool msh::CanonicalSurfaceInfo::can_morph_to(MirSurfaceType new_type) const
+{
+    switch (new_type)
+    {
+    case mir_surface_type_normal:
+    case mir_surface_type_utility:
+    case mir_surface_type_satellite:
+        switch (type)
+        {
+        case mir_surface_type_normal:
+        case mir_surface_type_utility:
+        case mir_surface_type_dialog:
+        case mir_surface_type_satellite:
+            return true;
+
+        default:
+            break;
+        }
+        break;
+
+    case mir_surface_type_dialog:
+        switch (type)
+        {
+        case mir_surface_type_normal:
+        case mir_surface_type_utility:
+        case mir_surface_type_dialog:
+        case mir_surface_type_popover:
+        case mir_surface_type_satellite:
+            return true;
+
+        default:
+            break;
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    return false;
+}
+
+bool msh::CanonicalSurfaceInfo::must_not_have_parent() const
+{
+    switch (type)
+    {
+    case mir_surface_type_normal:
+    case mir_surface_type_utility:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
 
 msh::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(
     Tools* const tools,
@@ -95,6 +188,9 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
 -> ms::SurfaceCreationParameters
 {
     auto parameters = request_parameters;
+
+    if (!parameters.state.is_set())
+        parameters.state = mir_surface_state_restored;
 
     auto const active_display = tools->active_display();
 
@@ -147,7 +243,7 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
         auto const top_right= aux_rect.top_right()  -Point{} + parent_top_left;
         auto const bot_left = aux_rect.bottom_left()-Point{} + parent_top_left;
 
-        if (edge_attachment && mir_edge_attachment_vertical)
+        if (edge_attachment & mir_edge_attachment_vertical)
         {
             if (active_display.contains(top_right + Displacement{width, height}))
             {
@@ -161,7 +257,7 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
             }
         }
 
-        if (edge_attachment && mir_edge_attachment_horizontal)
+        if (edge_attachment & mir_edge_attachment_horizontal)
         {
             if (active_display.contains(bot_left + Displacement{width, height}))
             {
@@ -175,13 +271,53 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
             }
         }
     }
+    else if (parent)
+    {
+        //  o Otherwise, if the dialog is not the same as any previous dialog for the
+        //    same parent window, and/or it does not have user-customized position:
+        //      o It should be optically centered relative to its parent, unless this
+        //        would overlap or cover the title bar of the parent.
+        //      o Otherwise, it should be cascaded vertically (but not horizontally)
+        //        relative to its parent, unless, this would cause at least part of
+        //        it to extend into shell space.
+        auto const parent_top_left = parent->top_left();
+        auto const centred = parent_top_left
+             + 0.5*(as_displacement(parent->size()) - as_displacement(parameters.size))
+             - DeltaY{(parent->size().height.as_int()-height)/6};
+
+        parameters.top_left = centred;
+        positioned = true;
+    }
 
     if (!positioned)
     {
-        auto centred = active_display.top_left + 0.5*(
-            as_displacement(active_display.size) - as_displacement(parameters.size));
+        auto const centred = active_display.top_left
+            + 0.5*(as_displacement(active_display.size) - as_displacement(parameters.size))
+            - DeltaY{(active_display.size.height.as_int()-height)/6};
 
-        parameters.top_left = centred - DeltaY{(active_display.size.height.as_int()-height)/6};
+        switch (parameters.state.value())
+        {
+        case mir_surface_state_fullscreen:
+        case mir_surface_state_maximized:
+            parameters.top_left = active_display.top_left;
+            parameters.size = active_display.size;
+            break;
+
+        case mir_surface_state_vertmaximized:
+            parameters.top_left = centred;
+            parameters.top_left.y = active_display.top_left.y;
+            parameters.size.height = active_display.size.height;
+            break;
+
+        case mir_surface_state_horizmaximized:
+            parameters.top_left = centred;
+            parameters.top_left.x = active_display.top_left.x;
+            parameters.size.width = active_display.size.width;
+            break;
+
+        default:
+            parameters.top_left = centred;
+        }
 
         if (parameters.top_left.y < display_area.top_left.y)
             parameters.top_left.y = display_area.top_left.y;
@@ -190,40 +326,9 @@ auto msh::CanonicalWindowManagerPolicy::handle_place_new_surface(
     return parameters;
 }
 
-namespace
-{
-class SurfaceReadyObserver : public ms::NullSurfaceObserver,
-    public std::enable_shared_from_this<SurfaceReadyObserver>
-{
-public:
-    SurfaceReadyObserver(
-        msh::CanonicalWindowManagerPolicy::Tools* const focus_controller,
-        std::shared_ptr<ms::Session> const& session,
-        std::shared_ptr<ms::Surface> const& surface) :
-        focus_controller{focus_controller},
-        session{session},
-        surface{surface}
-    {
-    }
-
-private:
-    void frame_posted(int) override
-    {
-        if (auto const s = surface.lock())
-        {
-            focus_controller->set_focus_to(session.lock(), s);
-            s->remove_observer(shared_from_this());
-        }
-    }
-
-    msh::CanonicalWindowManagerPolicy::Tools* const focus_controller;
-    std::weak_ptr<ms::Session> const session;
-    std::weak_ptr<ms::Surface> const surface;
-};
-}
-
 void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
 {
+    auto& surface_info = tools->info_for(surface);
     if (auto const parent = surface->parent())
     {
         tools->info_for(parent).children.push_back(surface);
@@ -231,40 +336,62 @@ void msh::CanonicalWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::S
 
     tools->info_for(session).surfaces++;
 
-    switch (surface->type())
+    if (surface_info.can_be_active())
     {
-    case mir_surface_type_normal:       /**< AKA "regular"                       */
-    case mir_surface_type_utility:      /**< AKA "floating"                      */
-    case mir_surface_type_dialog:
-    case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
-    case mir_surface_type_freestyle:
-    case mir_surface_type_menu:
-    case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
-        // TODO There's currently no way to insert surfaces into an active (or inactive)
-        // TODO window tree while keeping the order stable or consistent with spec.
-        // TODO Nor is there a way to update the "default surface" when appropriate!!
-        surface->add_observer(std::make_shared<SurfaceReadyObserver>(tools, session, surface));
-        active_surface_ = surface;
-        break;
-
-    case mir_surface_type_gloss:
-    case mir_surface_type_tip:          /**< AKA "tooltip"                       */
-    default:
-        // Cannot have input focus
-        break;
+        surface->add_observer(std::make_shared<shell::SurfaceReadyObserver>(
+            [this](std::shared_ptr<scene::Session> const& /*session*/,
+                   std::shared_ptr<scene::Surface> const& surface)
+                {
+                    select_active_surface(surface);
+                },
+            session,
+            surface));
     }
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
-    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
     SurfaceSpecification const& modifications)
 {
-    auto& surface_info = tools->info_for(surface);
+    auto& surface_info_old = tools->info_for(surface);
+
+    auto surface_info = surface_info_old;
+
+    if (modifications.parent.is_set())
+        surface_info.parent = modifications.parent.value();
+
+    if (modifications.type.is_set() &&
+        surface_info.type != modifications.type.value())
+    {
+        auto const new_type = modifications.type.value();
+
+        if (!surface_info.can_morph_to(new_type))
+        {
+            throw std::runtime_error("Unsupported surface type change");
+        }
+
+        surface_info.type = new_type;
+
+        if (surface_info.must_not_have_parent())
+        {
+            if (modifications.parent.is_set())
+                throw std::runtime_error("Target surface type does not support parent");
+
+            surface_info.parent.reset();
+        }
+        else if (surface_info.must_have_parent())
+        {
+            if (!surface_info.parent.lock())
+                throw std::runtime_error("Target surface type requires parent");
+        }
+
+        surface->configure(mir_surface_attrib_type, new_type);
+    }
 
     #define COPY_IF_SET(field)\
         if (modifications.field.is_set())\
-        surface_info.field = modifications.field
+            surface_info.field = modifications.field.value()
 
     COPY_IF_SET(min_width);
     COPY_IF_SET(min_height);
@@ -278,8 +405,17 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 
     #undef COPY_IF_SET
 
+    std::swap(surface_info, surface_info_old);
+
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
+
+    if (modifications.streams.is_set())
+    {
+        auto v = modifications.streams.value();
+        std::vector<shell::StreamSpecification> l (v.begin(), v.end());
+        session->configure_streams(*surface, l);
+    }
 
     if (modifications.width.is_set() || modifications.height.is_set())
     {
@@ -291,19 +427,25 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
         if (modifications.height.is_set())
             new_size.height = modifications.height.value();
 
-        constrained_resize(
+        auto top_left = surface->top_left();
+
+        surface_info.constrain_resize(
             surface,
-            surface->top_left(),
+            top_left,
             new_size,
             false,
             false,
             display_area);
+
+        apply_resize(surface, top_left, new_size);
     }
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
-    if (auto const parent = tools->info_for(surface).parent.lock())
+    auto& info = tools->info_for(surface);
+
+    if (auto const parent = info.parent.lock())
     {
         auto& siblings = tools->info_for(parent).children;
 
@@ -317,12 +459,11 @@ void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms
         }
     }
 
-
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
+        active_surface_.reset();
         tools->focus_next_session();
-        if (auto const surface = tools->focused_surface())
-            tools->raise({surface});
+        select_active_surface(tools->focused_surface());
     }
 }
 
@@ -337,6 +478,8 @@ int msh::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surf
     case mir_surface_state_vertmaximized:
     case mir_surface_state_horizmaximized:
     case mir_surface_state_fullscreen:
+    case mir_surface_state_hidden:
+    case mir_surface_state_minimized:
         break;
 
     default:
@@ -384,7 +527,13 @@ int msh::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surf
         display_layout->size_to_output(rect);
         movement = rect.top_left - old_pos;
         surface->resize(rect.size);
+        break;
     }
+
+    case mir_surface_state_hidden:
+    case mir_surface_state_minimized:
+        surface->hide();
+        return info.state = value;
 
     default:
         break;
@@ -413,7 +562,7 @@ bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent c
 
     if (action == mir_keyboard_action_down && scan_code == KEY_F11)
     {
-        switch (modifiers & modifier_mask)
+        switch (modifiers)
         {
         case mir_input_event_modifier_alt:
             toggle(mir_surface_state_maximized);
@@ -435,7 +584,7 @@ bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent c
     {
         if (auto const session = tools->focused_session())
         {
-            switch (modifiers & modifier_mask)
+            switch (modifiers)
             {
             case mir_input_event_modifier_alt:
                 kill(session->process_id(), SIGTERM);
@@ -452,6 +601,28 @@ bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent c
                 break;
             }
         }
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_TAB)
+    {
+        tools->focus_next_session();
+        if (auto const surface = tools->focused_surface())
+            select_active_surface(surface);
+
+        return true;
+    }
+    else if (action == mir_keyboard_action_down &&
+            modifiers == mir_input_event_modifier_alt &&
+            scan_code == KEY_GRAVE)
+    {
+        if (auto const prev = tools->focused_surface())
+        {
+            if (auto const app = tools->focused_session())
+                select_active_surface(app->surface_after(prev));
+        }
+
+        return true;
     }
 
     return false;
@@ -550,33 +721,26 @@ void msh::CanonicalWindowManagerPolicy::select_active_surface(std::shared_ptr<ms
 {
     if (!surface)
     {
+        if (active_surface_.lock())
+            tools->set_focus_to({}, {});
+
         active_surface_.reset();
         return;
     }
 
     auto const& info_for = tools->info_for(surface);
 
-    switch (surface->type())
+    if (info_for.can_be_active())
     {
-    case mir_surface_type_normal:       /**< AKA "regular"                       */
-    case mir_surface_type_utility:      /**< AKA "floating"                      */
-    case mir_surface_type_dialog:
-    case mir_surface_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
-    case mir_surface_type_freestyle:
-    case mir_surface_type_menu:
-    case mir_surface_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
         tools->set_focus_to(info_for.session.lock(), surface);
         raise_tree(surface);
         active_surface_ = surface;
-        break;
-
-    case mir_surface_type_gloss:
-    case mir_surface_type_tip:          /**< AKA "tooltip"                       */
-    default:
+    }
+    else
+    {
         // Cannot have input focus - try the parent
         if (auto const parent = info_for.parent.lock())
             select_active_surface(parent);
-        break;
     }
 }
 
@@ -628,32 +792,30 @@ bool msh::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> cons
 
     Point new_pos = top_left + left_resize*delta.dx + top_resize*delta.dy;
 
-    return constrained_resize(surface, new_pos, new_size, left_resize, top_resize, bounds);
-}
 
-bool msh::CanonicalWindowManagerPolicy::constrained_resize(
-    std::shared_ptr<ms::Surface> const& surface,
-    Point const& requested_pos,
-    Size const& requested_size,
-    bool const left_resize,
-    bool const top_resize,
-    Rectangle const& /*bounds*/)
-{
     auto const& surface_info = tools->info_for(surface);
 
-    auto const min_width  = surface_info.min_width.is_set()  ? surface_info.min_width.value()  : Width{};
-    auto const min_height = surface_info.min_height.is_set() ? surface_info.min_height.value() : Height{};
-    auto const max_width  = surface_info.max_width.is_set()  ?
-        surface_info.max_width.value()  : Width{std::numeric_limits<int>::max()};
-    auto const max_height = surface_info.max_height.is_set() ?
-        surface_info.max_height.value() : Height{std::numeric_limits<int>::max()};
+    surface_info.constrain_resize(surface, new_pos, new_size, left_resize, top_resize, bounds);
 
+    apply_resize(surface, new_pos, new_size);
+
+    return true;
+}
+
+void msh::CanonicalSurfaceInfo::constrain_resize(
+    std::shared_ptr<ms::Surface> const& surface,
+    Point& requested_pos,
+    Size& requested_size,
+    bool const left_resize,
+    bool const top_resize,
+    Rectangle const& /*bounds*/) const
+{
     Point new_pos = requested_pos;
     Size new_size = requested_size;
 
-    if (surface_info.min_aspect.is_set())
+    if (min_aspect.is_set())
     {
-        auto const ar = surface_info.min_aspect.value();
+        auto const ar = min_aspect.value();
 
         auto const error = new_size.height.as_int()*long(ar.width) - new_size.width.as_int()*long(ar.height);
 
@@ -674,9 +836,9 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
         }
     }
 
-    if (surface_info.max_aspect.is_set())
+    if (max_aspect.is_set())
     {
-        auto const ar = surface_info.max_aspect.value();
+        auto const ar = max_aspect.value();
 
         auto const error = new_size.width.as_int()*long(ar.height) - new_size.height.as_int()*long(ar.width);
 
@@ -709,18 +871,18 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
     if (max_height < new_size.height)
         new_size.height = max_height;
 
-    if (surface_info.width_inc.is_set())
+    if (width_inc.is_set())
     {
         auto const width = new_size.width.as_int() - min_width.as_int();
-        auto inc = surface_info.width_inc.value().as_int();
+        auto inc = width_inc.value().as_int();
         if (width % inc)
             new_size.width = min_width + DeltaX{inc*(((2L*width + inc)/2)/inc)};
     }
 
-    if (surface_info.height_inc.is_set())
+    if (height_inc.is_set())
     {
         auto const height = new_size.height.as_int() - min_height.as_int();
-        auto inc = surface_info.height_inc.value().as_int();
+        auto inc = height_inc.value().as_int();
         if (height % inc)
             new_size.height = min_height + DeltaY{inc*(((2L*height + inc)/2)/inc)};
     }
@@ -733,7 +895,7 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
 
     // placeholder - constrain onscreen
 
-    switch (surface_info.state)
+    switch (state)
     {
     case mir_surface_state_restored:
         break;
@@ -757,33 +919,71 @@ bool msh::CanonicalWindowManagerPolicy::constrained_resize(
     // the left-edge of the surface is anchored to the right-edge of the launcher."
     case mir_surface_state_maximized:
     default:
-        return true;
+        new_pos.x = surface->top_left().x;
+        new_pos.y = surface->top_left().y;
+        new_size.width = surface->size().width;
+        new_size.height = surface->size().height;
+        break;
     }
 
+    requested_pos = new_pos;
+    requested_size = new_size;
+}
+
+void msh::CanonicalWindowManagerPolicy::apply_resize(
+    std::shared_ptr<ms::Surface> const& surface,
+    Point const& new_pos,
+    Size const& new_size) const
+{
     surface->resize(new_size);
 
     // TODO It is rather simplistic to move a tree WRT the top_left of the root
     // TODO when resizing. But for more sophistication we would need to encode
     // TODO some sensible layout rules.
     move_tree(surface, new_pos-surface->top_left());
-
-    return true;
 }
 
 bool msh::CanonicalWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle /*bounds*/)
 {
-    if (surface && surface->input_area_contains(from))
+    if (!surface)
+        return false;
+
+    if (!surface->input_area_contains(from))
+        return false;
+
+    auto movement = to - from;
+
+    // placeholder - constrain onscreen
+
+    switch (tools->info_for(surface).state)
     {
-        auto movement = to - from;
+    case mir_surface_state_restored:
+        break;
 
-        // placeholder - constrain onscreen
+    // "A vertically maximised surface is anchored to the top and bottom of
+    // the available workspace and can have any width."
+    case mir_surface_state_vertmaximized:
+        movement.dy = DeltaY(0);
+        break;
 
-        move_tree(surface, movement);
+    // "A horizontally maximised surface is anchored to the left and right of
+    // the available workspace and can have any height"
+    case mir_surface_state_horizmaximized:
+        movement.dx = DeltaX(0);
+        break;
 
+    // "A maximised surface is anchored to the top, bottom, left and right of the
+    // available workspace. For example, if the launcher is always-visible then
+    // the left-edge of the surface is anchored to the right-edge of the launcher."
+    case mir_surface_state_maximized:
+    case mir_surface_state_fullscreen:
+    default:
         return true;
     }
 
-    return false;
+    move_tree(surface, movement);
+
+    return true;
 }
 
 void msh::CanonicalWindowManagerPolicy::move_tree(std::shared_ptr<ms::Surface> const& root, Displacement movement) const

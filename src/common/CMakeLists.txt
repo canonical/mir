@@ -17,9 +17,11 @@ add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
 add_subdirectory(time)
 add_subdirectory(dispatch)
+add_subdirectory(fatal)
 
 list(APPEND MIR_COMMON_SOURCES
   $<TARGET_OBJECTS:mirtime>
+  $<TARGET_OBJECTS:mirfatal>
   ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
   )
 
@@ -43,7 +45,7 @@ target_link_libraries(mircommon
 )
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
-set(MIRCOMMON_ABI 4)
+set(MIRCOMMON_ABI 5)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(mircommon

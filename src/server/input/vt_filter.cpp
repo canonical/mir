@@ -38,9 +38,9 @@ void set_active_vt(int vt)
 bool mir::input::VTFilter::handle(MirEvent const& event)
 {
     if (event.type == mir_event_type_key &&
-        event.key.action == mir_key_action_down &&
-        (event.key.modifiers & mir_key_modifier_alt) &&
-        (event.key.modifiers & mir_key_modifier_ctrl))
+        event.key.action == mir_keyboard_action_down &&
+        (event.key.modifiers & mir_input_event_modifier_alt) &&
+        (event.key.modifiers & mir_input_event_modifier_ctrl))
     {
         switch (event.key.scan_code)
         {
