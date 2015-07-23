@@ -27,7 +27,6 @@
 
 #include "protobuf_ipc_factory.h"
 #include "mir/frontend/session_authorizer.h"
-#include "mir/protobuf/google_protobuf_guard.h"
 
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
