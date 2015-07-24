@@ -83,17 +83,19 @@ void mc::Stream::remove_observer(std::weak_ptr<ms::SurfaceObserver> const& obser
 
 std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const* id)
 {
+    std::lock_guard<decltype(mutex)> lk(mutex); 
     return std::make_shared<mc::TemporaryCompositorBuffer>(arbiter, id);
 }
 
 geom::Size mc::Stream::stream_size()
 {
+    std::lock_guard<decltype(mutex)> lk(mutex);
     return size;
 }
 
 void mc::Stream::resize(geom::Size const& new_size)
 {
-    //TODO: implement resize, or root out the concept of size from streams
+    //TODO: the client should be resizing itself via the buffer creation/destruction rpc calls
     std::lock_guard<decltype(mutex)> lk(mutex);
     size = new_size; 
 }
@@ -132,6 +134,7 @@ void mc::Stream::force_requests_to_complete()
 
 int mc::Stream::buffers_ready_for_compositor(void const*) const
 {
+    std::lock_guard<decltype(mutex)> lk(mutex); 
     if (schedule->anything_scheduled())
         return 1;
     return 0;
