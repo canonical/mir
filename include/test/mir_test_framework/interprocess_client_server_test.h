@@ -65,7 +65,7 @@ private:
     pid_t server_process_id{0};
     pid_t client_process_id{0};
     std::shared_ptr<Process> server_process;
-    mir::test::CrossProcessSync shutdown_sync;
+    std::unique_ptr<mir::test::CrossProcessSync> shutdown_sync{new mir::test::CrossProcessSync()};
     char const* process_tag = "test";
     std::function<void()> server_setup = []{};
     bool server_signal_expected{false};
