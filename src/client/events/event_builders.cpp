@@ -183,7 +183,8 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     MirInputEventModifiers modifiers, MirPointerAction action,
     MirPointerButtons buttons_pressed,                               
     float x_axis_value, float y_axis_value,
-    float hscroll_value, float vscroll_value)
+    float hscroll_value, float vscroll_value,
+    float relative_x_value, float relative_y_value)
 {
     auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
@@ -201,10 +202,22 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     mev.pointer_coordinates[0].action = action;
     pc.x = x_axis_value;
     pc.y = y_axis_value;
+    pc.dx = relative_x_value;
+    pc.dy = relative_y_value;
     pc.hscroll = hscroll_value;
     pc.vscroll = vscroll_value;
     
     return make_event_uptr(e);
+}
+
+mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    MirInputEventModifiers modifiers, MirPointerAction action,
+    MirPointerButtons buttons_pressed,                               
+    float x_axis_value, float y_axis_value,
+    float hscroll_value, float vscroll_value)
+{
+    return make_event(device_id, timestamp, modifiers, action, buttons_pressed,
+                      x_axis_value, y_axis_value, hscroll_value, vscroll_value, 0, 0);
 }
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, xkb_rule_names const& rules)

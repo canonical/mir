@@ -21,7 +21,7 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
-#include "android_format_conversion-inl.h"
+#include "mir/graphics/android/android_format_conversion-inl.h"
 #include "buffer.h"
 
 #include <system/window.h>

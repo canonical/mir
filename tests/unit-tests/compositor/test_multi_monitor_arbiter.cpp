@@ -223,18 +223,18 @@ TEST_F(MultiMonitorArbiter, multimonitor_compositor_buffer_syncs_to_fastest_with
 
     schedule.set_schedule({buffers[0],buffers[1],buffers[2],buffers[3],buffers[4]});
 
-    auto cbuffer1 = arbiter.compositor_acquire(&comp_id1); //1
-    auto cbuffer2 = arbiter.compositor_acquire(&comp_id2); //1
+    auto cbuffer1 = arbiter.compositor_acquire(&comp_id1); //buffer[0]
+    auto cbuffer2 = arbiter.compositor_acquire(&comp_id2); //buffer[0]
 
-    auto cbuffer3 = arbiter.compositor_acquire(&comp_id1); //2
+    auto cbuffer3 = arbiter.compositor_acquire(&comp_id1); //buffer[1]
 
-    auto cbuffer4 = arbiter.compositor_acquire(&comp_id1); //3
-    auto cbuffer5 = arbiter.compositor_acquire(&comp_id2); //3
+    auto cbuffer4 = arbiter.compositor_acquire(&comp_id1); //buffer[2]
+    auto cbuffer5 = arbiter.compositor_acquire(&comp_id2); //buffer[2]
 
-    auto cbuffer6 = arbiter.compositor_acquire(&comp_id2); //4
+    auto cbuffer6 = arbiter.compositor_acquire(&comp_id2); //buffer[3]
 
-    auto cbuffer7 = arbiter.compositor_acquire(&comp_id2); //5
-    auto cbuffer8 = arbiter.compositor_acquire(&comp_id1); //5
+    auto cbuffer7 = arbiter.compositor_acquire(&comp_id2); //buffer[4]
+    auto cbuffer8 = arbiter.compositor_acquire(&comp_id1); //buffer[4]
 
     EXPECT_THAT(cbuffer1, Eq(buffers[0]));
     EXPECT_THAT(cbuffer2, Eq(buffers[0]));

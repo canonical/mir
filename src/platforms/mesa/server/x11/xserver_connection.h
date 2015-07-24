@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,28 +13,35 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#ifndef MIR_PROTOBUF_GOOGLE_PROTOBUF_GUARD_H_
-#define MIR_PROTOBUF_GOOGLE_PROTOBUF_GUARD_H_
+#ifndef MIR_X_XSERVER_CONNECTION_H_
+#define MIR_X_XSERVER_CONNECTION_H_
+
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
 
 namespace mir
 {
-
-/// subsystem dealing with Google protobuf protocol.
-namespace protobuf
+namespace X
 {
-void google_protobuf_guard();
-}
-}
 
-// Any translation unit that includes this header will get this as part
-// of its initialization, and, in turn, this ensures that protobuf gets
-// initialized (and cleaned up) in a sensible sequence.
-namespace
+struct X11Connection
 {
-bool force_google_protobuf_init{(mir::protobuf::google_protobuf_guard(), true)};
-}
+    X11Connection()
+    {
+        dpy = XOpenDisplay(nullptr);
+    }
 
-#endif /* MIR_PROTOBUF_GOOGLE_PROTOBUF_GUARD_H_ */
+    ~X11Connection()
+    {
+        XCloseDisplay(dpy);
+    }
+
+    ::Display *dpy;
+};
+
+}
+}
+#endif /* MIR_X_XSERVER_CONNECTION_H_ */

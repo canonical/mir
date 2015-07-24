@@ -133,6 +133,18 @@ std::unique_ptr<mir::protobuf::SurfaceParameters> MirSurfaceSpec::serialize() co
         message->mutable_max_aspect()->set_height(max_aspect.value().height);
     }
 
+    if (input_shape.is_set())
+    {
+        for (auto const& rect : input_shape.value())
+        {
+            auto const new_shape = message->add_input_shape();
+            new_shape->set_left(rect.left);
+            new_shape->set_top(rect.top);
+            new_shape->set_width(rect.width);
+            new_shape->set_height(rect.height);
+        }
+    }
+
     return message;
 }
 
@@ -693,6 +705,18 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
             new_stream->set_displacement_y(stream.displacement_y);
             new_stream->mutable_id()->set_value(
                 reinterpret_cast<mcl::ClientBufferStream*>(stream.stream)->rpc_id().as_value());
+        }
+    }
+
+    if (spec.input_shape.is_set())
+    {
+        for (auto const& rect : spec.input_shape.value())
+        {
+            auto const new_shape = surface_specification->add_input_shape();
+            new_shape->set_left(rect.left);
+            new_shape->set_top(rect.top);
+            new_shape->set_width(rect.width);
+            new_shape->set_height(rect.height);
         }
     }
 
