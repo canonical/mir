@@ -13,6 +13,7 @@ set(
   test_client_header_version.cpp
   test_client_input.cpp
   test_client_library.cpp
+  test_client_library_callbacks.cpp
   test_client_library_errors.cpp
   test_client_library_old.cpp
   test_client_surface_events.cpp
