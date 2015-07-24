@@ -85,9 +85,9 @@ void mtf::InterprocessClientServerTest::run_in_server(std::function<void()> cons
 
 void mtf::InterprocessClientServerTest::run_in_client(std::function<void()> const& client_code)
 {
-    auto const client_process = new_client_process(client_code);
-
     if (test_process_id != getpid()) return;
+
+    auto const client_process = new_client_process(client_code);
 
     Result result = client_process->wait_for_termination();
     EXPECT_THAT(result.exit_code, Eq(EXIT_SUCCESS));

@@ -22,6 +22,7 @@
 #include "mir/test/event_matchers.h"
 
 #include "mir_test_framework/interprocess_client_server_test.h"
+#include "mir_test_framework/process.h"
 #include "mir/test/cross_process_sync.h"
 
 #include <gtest/gtest.h>
@@ -142,6 +143,7 @@ TEST_F(ClientFocusNotification, two_surfaces_are_notified_of_gaining_and_losing_
 
     auto const client_two = new_client_process([&]
         {
+            client_one->detach();
             ready_for_second_client.wait_for_signal_ready_for();
 
             EXPECT_CALL(observer, see(
@@ -154,4 +156,10 @@ TEST_F(ClientFocusNotification, two_surfaces_are_notified_of_gaining_and_losing_
 
             connect_and_create_surface();
         });
+
+    if (is_test_process())
+    {
+        EXPECT_THAT(client_one->wait_for_termination().exit_code, Eq(EXIT_SUCCESS));
+        EXPECT_THAT(client_two->wait_for_termination().exit_code, Eq(EXIT_SUCCESS));
+    }
 }
