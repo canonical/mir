@@ -72,9 +72,9 @@ struct StubBufferMap : mf::ClientBuffers
     mf::EventSink& sink;
 };
 
-struct StreamTest : Test
+struct Stream : Test
 {
-    StreamTest() :
+    Stream() :
         buffers{
             std::make_shared<mtd::StubBuffer>(),
             std::make_shared<mtd::StubBuffer>(),
@@ -90,14 +90,14 @@ struct StreamTest : Test
 };
 }
 
-TEST_F(StreamTest, swapping_returns_null_via_callback)
+TEST_F(Stream, swapping_returns_null_via_callback)
 {
     stream.swap_buffers(buffers[0].get(), [](mg::Buffer* buffer) {
         EXPECT_THAT(buffer, IsNull());
     });
 }
 
-TEST_F(StreamTest, transitions_from_queuing_to_framedropping)
+TEST_F(Stream, transitions_from_queuing_to_framedropping)
 {
     EXPECT_CALL(mock_sink, send_buffer(_,_,_)).Times(buffers.size() - 1);
     for(auto& buffer : buffers)
@@ -111,7 +111,7 @@ TEST_F(StreamTest, transitions_from_queuing_to_framedropping)
     EXPECT_THAT(cbuffers[0]->id(), Eq(buffers.back()->id()));
 }
 
-TEST_F(StreamTest, transitions_from_framedropping_to_queuing)
+TEST_F(Stream, transitions_from_framedropping_to_queuing)
 {
     stream.allow_framedropping(true);
     Mock::VerifyAndClearExpectations(&mock_sink);
@@ -132,7 +132,7 @@ TEST_F(StreamTest, transitions_from_framedropping_to_queuing)
     EXPECT_THAT(cbuffers, SizeIs(buffers.size()));
 }
 
-TEST_F(StreamTest, indicates_buffers_ready_when_queueing)
+TEST_F(Stream, indicates_buffers_ready_when_queueing)
 {
     for(auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
@@ -146,7 +146,7 @@ TEST_F(StreamTest, indicates_buffers_ready_when_queueing)
     EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(0));
 }
 
-TEST_F(StreamTest, indicates_buffers_ready_when_dropping)
+TEST_F(Stream, indicates_buffers_ready_when_dropping)
 {
     stream.allow_framedropping(true);
 
@@ -158,14 +158,14 @@ TEST_F(StreamTest, indicates_buffers_ready_when_dropping)
     EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(0));
 }
 
-TEST_F(StreamTest, tracks_has_buffer)
+TEST_F(Stream, tracks_has_buffer)
 {
     EXPECT_FALSE(stream.has_submitted_buffer());
     stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
     EXPECT_TRUE(stream.has_submitted_buffer());
 }
 
-TEST_F(StreamTest, calls_observers_after_scheduling_on_submissions)
+TEST_F(Stream, calls_observers_after_scheduling_on_submissions)
 {
     auto observer = std::make_shared<MockSurfaceObserver>();
     EXPECT_CALL(*observer, frame_posted(1));
@@ -175,7 +175,7 @@ TEST_F(StreamTest, calls_observers_after_scheduling_on_submissions)
     stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
 }
 
-TEST_F(StreamTest, calls_observers_call_doesnt_hold_lock)
+TEST_F(Stream, calls_observers_call_doesnt_hold_lock)
 {
     auto observer = std::make_shared<MockSurfaceObserver>();
     EXPECT_CALL(*observer, frame_posted(1))
@@ -187,7 +187,7 @@ TEST_F(StreamTest, calls_observers_call_doesnt_hold_lock)
     stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
 }
 
-TEST_F(StreamTest, flattens_queue_out_when_told_to_drop)
+TEST_F(Stream, flattens_queue_out_when_told_to_drop)
 {
     for(auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
@@ -198,7 +198,7 @@ TEST_F(StreamTest, flattens_queue_out_when_told_to_drop)
     EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(0));
 }
 
-TEST_F(StreamTest, ignores_nullptr_submissions) //legacy behavior
+TEST_F(Stream, ignores_nullptr_submissions) //legacy behavior
 {
     auto observer = std::make_shared<MockSurfaceObserver>();
     EXPECT_CALL(*observer, frame_posted(_)).Times(0);
@@ -211,7 +211,7 @@ TEST_F(StreamTest, ignores_nullptr_submissions) //legacy behavior
 
 //it doesnt quite make sense that the stream has a size, esp given that there could be different-sized buffers
 //in the stream, and the surface has the onscreen size info
-TEST_F(StreamTest, reports_size)
+TEST_F(Stream, reports_size)
 {
     geom::Size new_size{333,139};
     EXPECT_THAT(stream.stream_size(), Eq(initial_size));
@@ -220,7 +220,7 @@ TEST_F(StreamTest, reports_size)
 }
 
 //Likewise, no reason buffers couldn't all be a different pixel format
-TEST_F(StreamTest, reports_format)
+TEST_F(Stream, reports_format)
 {
     EXPECT_THAT(stream.pixel_format(), Eq(construction_format));
 }
