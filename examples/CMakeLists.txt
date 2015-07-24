@@ -237,7 +237,7 @@ if (MIR_ENABLE_TESTS)
   # To see reasons for failure:  ctest -V -R Clients-only-use-client-symbols
   mir_add_test(NAME Clients-only-use-client-symbols
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    COMMAND /bin/sh -c "!(nm -u .mir_demo_client_* mir_demo_client* | grep -v @@MIR_CLIENT | grep 'U mir_')"
+    COMMAND /bin/sh -c "!(nm -u mir_demo_client* | grep -v @@MIR_CLIENT | grep 'U mir_')"
   )
 
 # We use a slightly weaker version of the test with clang as that generates spurious NEEDED
@@ -245,13 +245,13 @@ if (NOT "${CMAKE_CXX_COMPILER}" MATCHES "clang")
   # To see reasons for failure:  ctest -V -R Clients-only-use-client-ABI
   mir_add_test(NAME Clients-only-use-client-ABI
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    COMMAND /bin/sh -c "!(objdump -p .mir_demo_client_* mir_demo_client*  | grep NEEDED | grep libmir | grep -v libmirclient)"
+    COMMAND /bin/sh -c "!(objdump -p mir_demo_client*  | grep NEEDED | grep libmir | grep -v libmirclient)"
   )
 else()
   # To see reasons for failure:  ctest -V -R Clients-only-use-client-ABI
   mir_add_test(NAME Clients-only-use-client-ABI
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    COMMAND /bin/sh -c "!(nm -u .mir_demo_client_* mir_demo_client* | grep -v @@MIR_CLIENT | grep @@MIR_)"
+    COMMAND /bin/sh -c "!(nm -u mir_demo_client* | grep -v @@MIR_CLIENT | grep @@MIR_)"
   )
 endif ()
 endif ()
