@@ -35,12 +35,13 @@ enum class mc::Stream::ScheduleMode {
     Dropping
 };
 
-mc::Stream::Stream(std::unique_ptr<frontend::ClientBuffers> map, geom::Size size) :
+mc::Stream::Stream(std::unique_ptr<frontend::ClientBuffers> map, geom::Size size, MirPixelFormat pf) :
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
     buffers(std::move(map)),
     arbiter(std::make_shared<mc::MultiMonitorArbiter>(buffers, schedule)),
     size(size),
+    pf(pf),
     first_frame_posted(false)
 {
 }
@@ -66,7 +67,7 @@ void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> con
 
 MirPixelFormat mc::Stream::pixel_format() const
 {
-    return mir_pixel_format_abgr_8888;
+    return pf;
 }
 
 void mc::Stream::add_observer(std::shared_ptr<ms::SurfaceObserver> const& observer)

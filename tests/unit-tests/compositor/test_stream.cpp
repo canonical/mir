@@ -85,11 +85,12 @@ struct StreamTest : Test
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
     NiceMock<mtd::MockEventSink> mock_sink;
     geom::Size initial_size{44,2};
-    mc::Stream stream{std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size};
+    MirPixelFormat construction_format{mir_pixel_format_rgb_565};
+    mc::Stream stream{std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
 };
 }
 
-TEST_F(StreamTest, swapping_doesnt_make_sense_in_the_new_world)
+TEST_F(StreamTest, swapping_returns_null_via_callback)
 {
     stream.swap_buffers(buffers[0].get(), [](mg::Buffer* buffer) {
         EXPECT_THAT(buffer, IsNull());
@@ -131,7 +132,7 @@ TEST_F(StreamTest, transitions_from_framedropping_to_queuing)
     EXPECT_THAT(cbuffers, SizeIs(buffers.size()));
 }
 
-TEST_F(StreamTest, flubs_buffers_ready_for_queueing)
+TEST_F(StreamTest, indicates_buffers_ready_when_queueing)
 {
     for(auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
@@ -145,7 +146,7 @@ TEST_F(StreamTest, flubs_buffers_ready_for_queueing)
     EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(0));
 }
 
-TEST_F(StreamTest, flubs_buffers_ready_for_dropping)
+TEST_F(StreamTest, indicates_buffers_ready_when_dropping)
 {
     stream.allow_framedropping(true);
 
@@ -186,7 +187,7 @@ TEST_F(StreamTest, calls_observers_call_doesnt_hold_lock)
     stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
 }
 
-TEST_F(StreamTest, flattens_queue)
+TEST_F(StreamTest, flattens_queue_out_when_told_to_drop)
 {
     for(auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
@@ -216,4 +217,10 @@ TEST_F(StreamTest, reports_size)
     EXPECT_THAT(stream.stream_size(), Eq(initial_size));
     stream.resize(new_size);
     EXPECT_THAT(stream.stream_size(), Eq(new_size));
+}
+
+//Likewise, no reason buffers couldn't all be a different pixel format
+TEST_F(StreamTest, reports_format)
+{
+    EXPECT_THAT(stream.pixel_format(), Eq(construction_format));
 }

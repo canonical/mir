@@ -37,7 +37,7 @@ class Schedule;
 class Stream : public BufferStream
 {
 public:
-    Stream(std::unique_ptr<frontend::ClientBuffers>, geometry::Size sz);
+    Stream(std::unique_ptr<frontend::ClientBuffers>, geometry::Size sz, MirPixelFormat format);
 
     void swap_buffers(
         graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
@@ -65,6 +65,7 @@ private:
     std::shared_ptr<frontend::ClientBuffers> buffers;
     std::shared_ptr<MultiMonitorArbiter> arbiter;
     geometry::Size size; 
+    MirPixelFormat const pf;
     bool first_frame_posted;
 
     scene::SurfaceObservers observers;
