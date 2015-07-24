@@ -19,6 +19,7 @@ set(
   recently_used_cache.cpp
   multi_monitor_arbiter.cpp
   buffer_map.cpp
+  queueing_schedule.cpp
 )
 
 ADD_LIBRARY(
