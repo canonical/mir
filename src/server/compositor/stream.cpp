@@ -58,6 +58,7 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
 
 void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const&)
 {
+    //TODO: implement snapshotting
 }
 
 MirPixelFormat mc::Stream::pixel_format() const
@@ -88,7 +89,7 @@ geom::Size mc::Stream::stream_size()
 
 void mc::Stream::resize(geom::Size const& new_size)
 {
-    //obviously resize isn't fully implemented yet
+    //TODO: implement resize, or root out the concept of size from streams
     std::lock_guard<decltype(mutex)> lk(mutex);
     size = new_size; 
 }
