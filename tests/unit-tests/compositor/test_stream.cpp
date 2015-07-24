@@ -202,8 +202,10 @@ TEST_F(StreamTest, ignores_nullptr_submissions) //legacy behavior
     auto observer = std::make_shared<MockSurfaceObserver>();
     EXPECT_CALL(*observer, frame_posted(_)).Times(0);
     stream.add_observer(observer);
-    stream.swap_buffers(nullptr, [](mg::Buffer*){});
+    bool was_called = false;
+    stream.swap_buffers(nullptr, [&](mg::Buffer*){ was_called = true; });
     EXPECT_FALSE(stream.has_submitted_buffer());
+    EXPECT_TRUE(was_called);
 }
 
 //it doesnt quite make sense that the stream has a size, esp given that there could be different-sized buffers

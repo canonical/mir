@@ -47,13 +47,16 @@ mc::Stream::Stream(std::unique_ptr<frontend::ClientBuffers> map, geom::Size size
 
 void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer* new_buffer)> fn)
 {
-    if (!buffer) return;
-    std::lock_guard<decltype(mutex)> lk(mutex); 
-    first_frame_posted = true;
-    observers.frame_posted(1);
-
-    schedule->schedule((*buffers)[buffer->id()]);
-    fn(nullptr); //bit of legacy support
+    if (buffer)
+    {
+        {
+            std::lock_guard<decltype(mutex)> lk(mutex); 
+            first_frame_posted = true;
+            schedule->schedule((*buffers)[buffer->id()]);
+        }
+        observers.frame_posted(1);
+    }
+    fn(nullptr); //legacy support
 }
 
 void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const&)
