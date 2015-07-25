@@ -33,6 +33,9 @@
 #include "mir/client_platform.h"
 #include "mir/client_context.h"
 
+#include "lifecycle_control.h"
+#include "ping_handler.h"
+
 #include "mir_wait_handle.h"
 
 #include <memory>
@@ -50,7 +53,6 @@ class ClientBufferStream;
 class ClientBufferStreamFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
-class LifecycleControl;
 class EventHandlerRegister;
 
 namespace rpc
@@ -114,6 +116,9 @@ public:
         mir_platform_operation_callback callback, void* context);
 
     void register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context);
+
+    void register_ping_event_callback(mir_ping_event_callback callback, void* context);
+    void pong(int32_t serial);
 
     void register_display_change_callback(mir_display_config_callback callback, void* context);
 
@@ -203,6 +208,8 @@ private:
     std::shared_ptr<mir::client::DisplayConfiguration> const display_configuration;
 
     std::shared_ptr<mir::client::LifecycleControl> const lifecycle_control;
+
+    std::shared_ptr<mir::client::PingHandler> const ping_handler;
 
     std::shared_ptr<mir::client::ConnectionSurfaceMap> const surface_map;
 

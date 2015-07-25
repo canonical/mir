@@ -20,6 +20,8 @@
 #define MIR_CLIENT_CONNECTION_CONFIGURATION_H_
 
 #include <memory>
+#include "lifecycle_control.h"
+#include "ping_handler.h"
 
 namespace google { namespace protobuf { class RpcChannel; } }
 
@@ -45,7 +47,6 @@ class ConnectionSurfaceMap;
 class Logger;
 class ClientPlatformFactory;
 class DisplayConfiguration;
-class LifecycleControl;
 class EventSink;
 class EventHandlerRegister;
 
@@ -61,6 +62,7 @@ public:
     virtual std::shared_ptr<input::receiver::InputPlatform> the_input_platform() = 0;
     virtual std::shared_ptr<DisplayConfiguration> the_display_configuration() = 0;
     virtual std::shared_ptr<LifecycleControl> the_lifecycle_control() = 0;
+    virtual std::shared_ptr<PingHandler> the_ping_handler() = 0;
     virtual std::shared_ptr<EventSink> the_event_sink() = 0;
     virtual std::shared_ptr<EventHandlerRegister> the_event_handler_register() = 0;
 

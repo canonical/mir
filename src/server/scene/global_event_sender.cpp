@@ -46,6 +46,11 @@ void ms::GlobalEventSender::handle_display_config_change(mg::DisplayConfiguratio
     });
 }
 
+void ms::GlobalEventSender::send_ping(int32_t)
+{
+    // Ping events are per-application session.
+}
+
 void ms::GlobalEventSender::send_buffer(mir::frontend::BufferStreamId, mg::Buffer&, mg::BufferIpcMsgType)
 {
 }

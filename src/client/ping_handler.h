@@ -16,18 +16,18 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_CLIENT_LIFECYCLE_CONTROL_H_
-#define MIR_CLIENT_LIFECYCLE_CONTROL_H_
+#ifndef MIR_CLIENT_PING_HANDLER_H_
+#define MIR_CLIENT_PING_HANDLER_H_
 
-#include "mir_toolkit/common.h"
 #include "atomic_callback.h"
 
 namespace mir
 {
 namespace client
 {
-using LifecycleControl = AtomicCallback<MirLifecycleState>;
+using PingHandler = AtomicCallback<int32_t>;
 }
 }
 
-#endif // MIR_CLIENT_LIFECYCLE_CONTROL_H_
+
+#endif // MIR_CLIENT_PING_HANDLER_H_

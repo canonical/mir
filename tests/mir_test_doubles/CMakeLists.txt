@@ -19,6 +19,7 @@ set(
   test_protobuf_client.cpp
   test_protobuf_socket_server.cpp
   triggered_main_loop.cpp
+  fake_alarm_factory.cpp
 )
 
 set(

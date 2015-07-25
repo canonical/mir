@@ -22,6 +22,7 @@
 #include "src/client/display_configuration.h"
 #include "src/client/rpc/null_rpc_report.h"
 #include "src/client/lifecycle_control.h"
+#include "src/client/ping_handler.h"
 
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
@@ -221,6 +222,7 @@ public:
                   std::make_shared<mcl::DisplayConfiguration>(),
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
+                  std::make_shared<mir::client::PingHandler>(),
                   std::make_shared<mtd::NullClientEventSink>()}}
     {
     }
@@ -372,6 +374,7 @@ TEST_F(MirProtobufRpcChannelTest, notifies_streams_of_disconnect)
                   std::make_shared<mcl::DisplayConfiguration>(),
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
+                  std::make_shared<mir::client::PingHandler>(),
                   std::make_shared<mtd::NullClientEventSink>()};
     channel.on_disconnected();
 }
@@ -382,7 +385,7 @@ TEST_F(MirProtobufRpcChannelTest, notifies_of_disconnect_on_write_error)
 
     bool disconnected{false};
 
-    lifecycle->set_lifecycle_event_handler([&disconnected](MirLifecycleState state)
+    lifecycle->set_callback([&disconnected](MirLifecycleState state)
     {
         if (state == mir_lifecycle_connection_lost)
         {
@@ -410,7 +413,7 @@ TEST_F(MirProtobufRpcChannelTest, forwards_disconnect_notification)
 
     bool disconnected{false};
 
-    lifecycle->set_lifecycle_event_handler([&disconnected](MirLifecycleState state)
+    lifecycle->set_callback([&disconnected](MirLifecycleState state)
     {
         if (state == mir_lifecycle_connection_lost)
         {
@@ -432,7 +435,7 @@ TEST_F(MirProtobufRpcChannelTest, notifies_of_disconnect_only_once)
 
     bool disconnected{false};
 
-    lifecycle->set_lifecycle_event_handler([&disconnected](MirLifecycleState state)
+    lifecycle->set_callback([&disconnected](MirLifecycleState state)
     {
         if (state == mir_lifecycle_connection_lost)
         {

@@ -162,6 +162,8 @@ MIR_CLIENT_9 {
 
 MIR_CLIENT_9.1 {  # New functions in Mir 0.15
   global:
+    mir_connection_pong;
+    mir_connection_set_ping_event_callback;
     mir_keyboard_event_input_event;
     mir_persistent_id_as_string;
     mir_persistent_id_from_string;
@@ -198,6 +200,7 @@ MIR_CLIENT_DETAIL_9 {
       mir::client::DefaultConnectionConfiguration::the_input_platform*;
       mir::client::DefaultConnectionConfiguration::the_display_configuration*;
       mir::client::DefaultConnectionConfiguration::the_lifecycle_control*;
+      mir::client::DefaultConnectionConfiguration::the_ping_handler*;
       mir::client::DefaultConnectionConfiguration::the_event_sink*;
       mir::client::DefaultConnectionConfiguration::the_event_handler_register*;
       mir::client::DefaultConnectionConfiguration::the_socket_file*;
