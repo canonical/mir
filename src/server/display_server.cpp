@@ -178,30 +178,35 @@ mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
  * can define the 'p' member variable as a unique_ptr to an
  * incomplete type (DisplayServerPrivate) in the header.
  */
-mir::DisplayServer::~DisplayServer() = default;
+mir::DisplayServer::~DisplayServer()
+{
+    delete p.load();
+}
 
 void mir::DisplayServer::run()
 {
     mir::log_info("Mir version " MIR_VERSION);
 
-    p->compositor->start();
-    p->input_manager->start();
-    p->input_dispatcher->start();
-    p->prompt_connector->start();
-    p->connector->start();
+    auto const& server = *p.load();
 
-    p->server_status_listener->started();
+    server.compositor->start();
+    server.input_manager->start();
+    server.input_dispatcher->start();
+    server.prompt_connector->start();
+    server.connector->start();
 
-    p->main_loop->run();
+    server.server_status_listener->started();
 
-    p->connector->stop();
-    p->prompt_connector->stop();
-    p->input_dispatcher->stop();
-    p->input_manager->stop();
-    p->compositor->stop();
+    server.main_loop->run();
+
+    server.connector->stop();
+    server.prompt_connector->stop();
+    server.input_dispatcher->stop();
+    server.input_manager->stop();
+    server.compositor->stop();
 }
 
 void mir::DisplayServer::stop()
 {
-    p->main_loop->stop();
+    p.load()->main_loop->stop();
 }

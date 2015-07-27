@@ -142,6 +142,7 @@ MIR_SERVER_33 {
     mir::Server::get_options*;
     mir::Server::open_client_socket*;
     mir::Server::open_prompt_socket*;
+    mir::Server::override_the_application_not_responding_detector*;
     mir::Server::override_the_compositor*;
     mir::Server::override_the_display_buffer_compositor_factory*;
     mir::Server::override_the_gl_config*;
@@ -170,6 +171,7 @@ MIR_SERVER_33 {
     mir::ServerStatusListener::ServerStatusListener*;
     mir::Server::stop*;
     mir::Server::supported_pixel_formats*;
+    mir::Server::the_application_not_responding_detector*;
     mir::Server::the_buffer_stream_factory*;
     mir::Server::the_composite_event_filter*;
     mir::Server::the_compositor*;
@@ -582,6 +584,7 @@ MIR_SERVER_33 {
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
     mir::DefaultServerConfiguration::new_ipc_factory*;
     mir::DefaultServerConfiguration::the_android_input_dispatcher*;
+    mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
     mir::DefaultServerConfiguration::the_buffer_stream_factory*;
     mir::DefaultServerConfiguration::the_clock*;

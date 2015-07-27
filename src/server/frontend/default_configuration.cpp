@@ -166,5 +166,6 @@ mir::DefaultServerConfiguration::new_ipc_factory(
                 the_screencast(),
                 session_authorizer,
                 the_cursor_images(),
-                translator);
+                translator,
+                the_application_not_responding_detector());
 }
