@@ -1,9 +1,91 @@
-mir (0.15.0) UNRELEASED; urgency=medium
+mir (0.14.0+15.10.20150723.1-0ubuntu1) wily; urgency=medium
 
-  * TODO
+  [ Andreas Pokorny ]
+  * Fix missing ABI renaming in Mirplatform
+  * Bump Mirserver platform graphics to 3
+  * Fix mirprotobuf ABI break
+  * Fix g++-5.0 compilation (LP: #1475994)
 
- -- Alan Griffiths <alan@Octopull-desktop>  Fri, 24 Jul 2015 15:25:56 +0100
+  [ CI Train Bot ]
+  * New rebuild forced.
 
+ -- CI Train Bot <ci-train-bot@canonical.com>  Thu, 23 Jul 2015 16:33:09 +0000
+
+mir (0.14.0+15.10.20150715-0ubuntu1) wily; urgency=medium
+
+  [ Andreas Pokorny ]
+  * New upstream release 0.14.0 (https://launchpad.net/mir/+milestone/0.14.0)
+    - ABI summary: All clients and all servers need building;
+      . Mirclient ABI bumped to 9
+      . Mirserver ABI bumped to 32
+      . Mircommon ABI bumped to 5
+      . Mirplatform ABI bumped to 8
+    - Enhancements:
+      . mir_demo_server: tweaks, features and improvements 
+      . More MirEvent-2.0 related changes and unifications
+      . New SurfaceInputDispatcher to replace the android InputDispatcher
+      . New Threaded dispatcher for Dispatchable added
+      . Rework of the relationship of surfaces and buffer streams to allow
+        attaching multiple buffer streams to a surface.
+      . Preparation work for new buffer semantics
+      . fd leaks in tests eliminated and leak check activated for unit and
+        integration tests
+      . Further TSAN reported issues removed
+      . Preparation work for mir-on-x: splitting of mesa platform in common
+        and KMS parts
+      . Further rework of input stack focused on test infrastructure
+      . Persistent id request for surfaces added
+      . Integration-tests cleaning: switch tests to in-process server
+      . A first end-to-end input test added in privileged-tests
+      . "mesa" platform renamed to "mesa-kms" (LP: #1381330)
+      . [enhancement] Mir servers should allow client connections only after
+        server start-up has finished  (LP: #1451844)
+      . build-dependency on g++-4.9 dropped (LP: #1452320)
+    - Bug fixes:
+      . Crash because uncaught exception in mir::events::add_touch 
+        (LP: #1437357)
+      . [vegetahd] android buffer allocator does consider hwc alignment
+        constraints  (LP: #1461314)
+      . [regression] Touch input does not work at all any more  (LP: #1464174)
+      . Mir emits a mir_motion_action_hover_exit event before of a 
+        mir_motion_action_pointer_down  (LP: #1419048)
+      . [testsfail] NestedInput.nested_event_filter_receives_keyboard_from_host
+        failure in CI  (LP: #1462033)
+      . [testsfail] InputEvents.reach_nested_client in CI  (LP: #1463315)
+      . [regression] titlebar in "canonical" example WM + KeyRepeatDispatcher
+        causes deadlock  (LP: #1464690)
+      . CI failure in
+        TestClientInput.clients_receive_many_button_events_inside_window
+        (LP: #1465231)
+      . mir-client-platform-mesa-dev package dependency is incorrect
+        (LP: #1465642)
+      . Repeat input events keep being emitted even when user switches to
+        different VT  (LP: #1465669)
+      . libmirprotobuf's ABI can be broken when modifying protobuf message
+        definitions  (LP: #1465883)
+      . Spurious Failure in ClientLibrary.highly_threaded_client
+        (LP: #1466492)
+      . failure in CI in BufferStreamArrangement.arrangements_are_applied
+        (LP: #1466594)
+      . [arale] software buffers have flickering line artefacts  (LP: #1418035)
+      . can't load app purchase UI without a U1 account  (LP: #1450377)
+      . [arale] Software cursor appears slightly corrupt on arale (black
+        spots in place of white)  (LP: #1451309)
+      . [regression] Dragging windows by the titlebar is incredibly slow
+        and laggy  (LP: #1454128)
+      . [regression] Opacity controls (Alt+mousewheel) don't work any more
+        (LP: #1454518)
+      . [regression] No API for creating freestyle surfaces  (LP: #1457987)
+      . [vivid-overlay] input-stub.so fails to load on i386  (LP: #1458689)
+      . client API version has wrong version  (LP: #1461312)
+      . abi-dump-base make target is broken  (LP: #1461697)
+      . Stopping input in a nested server stops VT switching  (LP: #1465585)
+      . Pointer events are not mapped to correct output by nested Mir
+        (LP: #1465692)
+      . Loading libmirclient.so twice leads to a segfault in libmirprotobuf.so
+        (LP: #1391976)
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Wed, 15 Jul 2015 12:05:19 +0000
 
 mir (0.13.3+15.10.20150617-0ubuntu1) wily; urgency=medium
 
