@@ -39,6 +39,7 @@ MIR_CLIENT_9 {
     mir_connection_set_lifecycle_event_callback;
     mir_connect_sync;
     mir_create_surface_spec;
+    mir_crosshair_cursor_name;
     mir_cursor_configuration_destroy;
     mir_cursor_configuration_from_buffer_stream;
     mir_cursor_configuration_from_name;
