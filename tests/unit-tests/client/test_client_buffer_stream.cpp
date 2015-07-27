@@ -530,3 +530,53 @@ TEST_F(ClientBufferStreamTest, waiting_client_can_unblock_on_shutdown)
         bs->request_and_wait_for_next_buffer();
     }, std::runtime_error);
 }
+
+TEST_F(ClientBufferStreamTest, invokes_callback_on_buffer_available_before_wait_handle_has_result)
+{
+    using namespace ::testing;
+
+    MirWaitHandle* wh{nullptr};
+    bool wait_handle_has_result_in_callback = false;
+
+    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
+        .WillOnce(RunProtobufClosure());
+
+    auto const protobuf_bs = a_protobuf_buffer_stream(
+        default_pixel_format, default_buffer_usage, a_buffer_package());
+    auto const bs = make_buffer_stream(protobuf_bs);
+
+    wh = bs->next_buffer(
+        [&]
+        {
+            wait_handle_has_result_in_callback = wh->has_result();
+        });
+
+    bs->buffer_available(mp::Buffer{});
+
+    EXPECT_FALSE(wait_handle_has_result_in_callback);
+}
+
+TEST_F(ClientBufferStreamTest, invokes_callback_on_buffer_unavailable_before_wait_handle_has_result)
+{
+    using namespace ::testing;
+
+    MirWaitHandle* wh{nullptr};
+    bool wait_handle_has_result_in_callback = false;
+
+    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
+        .WillOnce(RunProtobufClosure());
+
+    auto const protobuf_bs = a_protobuf_buffer_stream(
+        default_pixel_format, default_buffer_usage, a_buffer_package());
+    auto const bs = make_buffer_stream(protobuf_bs);
+
+    wh = bs->next_buffer(
+        [&]
+        {
+            wait_handle_has_result_in_callback = wh->has_result();
+        });
+
+    bs->buffer_unavailable();
+
+    EXPECT_FALSE(wait_handle_has_result_in_callback);
+}

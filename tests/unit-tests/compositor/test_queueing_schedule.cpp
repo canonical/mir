@@ -83,13 +83,3 @@ TEST_F(QueueingSchedule, queuing_the_same_buffer_moves_it_to_front_of_queue)
     EXPECT_THAT(drain_queue(),
         ElementsAre(buffers[1], buffers[2], buffers[3], buffers[4], buffers[0]));
 }
-
-TEST_F(QueueingSchedule, cancelling_a_buffer_removes_it_from_queue)
-{
-    for(auto i = 0u; i < num_buffers; i++)
-        schedule.schedule(buffers[i]);
-    schedule.cancel(buffers[2]);
-
-    EXPECT_THAT(drain_queue(),
-        ElementsAre(buffers[0], buffers[1], buffers[3], buffers[4]));
-}

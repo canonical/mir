@@ -38,13 +38,6 @@ void mc::DroppingSchedule::schedule(std::shared_ptr<mg::Buffer> const& buffer)
     the_only_buffer = buffer;
 }
 
-void mc::DroppingSchedule::cancel(std::shared_ptr<mg::Buffer> const& buffer)
-{
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    if (the_only_buffer == buffer)
-        the_only_buffer = nullptr;
-}
-
 bool mc::DroppingSchedule::anything_scheduled()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);

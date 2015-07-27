@@ -32,7 +32,6 @@ class QueueingSchedule : public Schedule
 {
 public:
     void schedule(std::shared_ptr<graphics::Buffer> const& buffer);
-    void cancel(std::shared_ptr<graphics::Buffer> const& buffer);
     bool anything_scheduled();
     std::shared_ptr<graphics::Buffer> next_buffer();
 

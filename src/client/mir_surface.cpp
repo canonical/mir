@@ -338,6 +338,11 @@ void MirSurface::created(mir_surface_callback callback, void * context)
     }
     catch (std::exception const& error)
     {
+        // failed to create buffer_stream, so clean up FDs it doesn't own
+        if (!buffer_stream)
+            for (int i = 0; i < surface->buffer_stream().buffer().fd_size(); i++)
+                ::close(surface->buffer_stream().buffer().fd(i));
+
         surface->set_error(std::string{"Error processing Surface creating response:"} +
                           boost::diagnostic_information(error));
     }
