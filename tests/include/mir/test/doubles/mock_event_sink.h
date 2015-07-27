@@ -21,6 +21,7 @@
 
 #include "mir/frontend/event_sink.h"
 #include "mir/events/event_private.h"
+#include "mir/graphics/display_configuration.h"
 
 #include <gmock/gmock.h>
 
@@ -35,6 +36,7 @@ struct MockEventSink : public frontend::EventSink
     MOCK_METHOD1(handle_event, void(MirEvent const&));
     MOCK_METHOD1(handle_lifecycle_event, void(MirLifecycleState));
     MOCK_METHOD1(handle_display_config_change, void(graphics::DisplayConfiguration const&));
+    MOCK_METHOD1(send_ping, void(int32_t));
     MOCK_METHOD3(send_buffer, void(frontend::BufferStreamId, graphics::Buffer&, graphics::BufferIpcMsgType));
 };
 }

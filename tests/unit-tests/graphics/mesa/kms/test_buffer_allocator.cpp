@@ -63,7 +63,7 @@ protected:
 
         platform = mtd::create_mesa_platform_with_null_dependencies();
         allocator.reset(new mgm::BufferAllocator(
-            platform->gbm.device, mgm::BypassOption::allowed));
+            platform->gbm.device, mgm::BypassOption::allowed, mgm::BufferImportMethod::gbm_native_pixmap));
     }
 
     // Defaults
@@ -145,7 +145,8 @@ TEST_F(MesaBufferAllocatorTest, bypass_disables_when_option_is_disabled)
 
     mgm::BufferAllocator alloc(
         platform->gbm.device,
-        mgm::BypassOption::prohibited);
+        mgm::BypassOption::prohibited,
+        mgm::BufferImportMethod::gbm_native_pixmap);
     auto buf = alloc.alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
     EXPECT_FALSE(buf->native_buffer_handle()->flags & mir_buffer_flag_can_scanout);

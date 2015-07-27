@@ -39,6 +39,7 @@ public:
     virtual void handle_event(MirEvent const& e) = 0;
     virtual void handle_lifecycle_event(MirLifecycleState state) = 0;
     virtual void handle_display_config_change(graphics::DisplayConfiguration const& config) = 0;
+    virtual void send_ping(int32_t serial) = 0;
 
 protected:
     EventSink() = default;

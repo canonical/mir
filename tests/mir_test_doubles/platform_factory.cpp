@@ -22,6 +22,8 @@
 
 #ifdef MESA_KMS
 #include "src/platforms/mesa/server/kms/platform.h"
+#elif MESA_X11
+#include "src/platforms/mesa/server/x11/platform.h"
 #endif
 
 #include "src/server/report/null_report_factory.h"
@@ -41,7 +43,7 @@ auto mtd::create_platform_with_null_dependencies()
         report::null_display_report());
 }
 
-#else
+#elif MESA_KMS
 auto mtd::create_platform_with_null_dependencies()
     -> std::shared_ptr<graphics::Platform>
 {
@@ -56,5 +58,11 @@ auto mtd::create_mesa_platform_with_null_dependencies()
         std::make_shared<NullVirtualTerminal>(),
         *std::make_shared<NullEmergencyCleanup>(),
         graphics::mesa::BypassOption::allowed);
+}
+#elif MESA_X11
+auto mtd::create_platform_with_null_dependencies()
+    -> std::shared_ptr<graphics::Platform>
+{
+    return std::make_shared<graphics::X::Platform>();
 }
 #endif

@@ -33,6 +33,9 @@
 #include "mir/client_platform.h"
 #include "mir/client_context.h"
 
+#include "lifecycle_control.h"
+#include "ping_handler.h"
+
 #include "mir_wait_handle.h"
 
 #include <memory>
@@ -50,7 +53,6 @@ class ClientBufferStream;
 class ClientBufferStreamFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
-class LifecycleControl;
 class EventHandlerRegister;
 
 namespace rpc
@@ -115,6 +117,9 @@ public:
 
     void register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context);
 
+    void register_ping_event_callback(mir_ping_event_callback callback, void* context);
+    void pong(int32_t serial);
+
     void register_display_change_callback(mir_display_config_callback callback, void* context);
 
     void populate(MirPlatformPackage& platform_package);
@@ -143,6 +148,7 @@ public:
     static bool is_valid(MirConnection *connection);
 
     EGLNativeDisplayType egl_native_display();
+    MirPixelFormat       egl_pixel_format(EGLDisplay, EGLConfig) const;
 
     void on_surface_created(int id, MirSurface* surface);
     void on_stream_created(int id, mir::client::ClientBufferStream* stream);
@@ -168,7 +174,7 @@ private:
     // from a shared library, e.g., the ClientPlatform* objects.
     std::shared_ptr<mir::SharedLibrary> const platform_library;
 
-    std::mutex mutex; // Protects all members of *this (except release_wait_handles)
+    mutable std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
     std::shared_ptr<google::protobuf::RpcChannel> const channel;
     mir::protobuf::DisplayServer::Stub server;
@@ -202,6 +208,8 @@ private:
     std::shared_ptr<mir::client::DisplayConfiguration> const display_configuration;
 
     std::shared_ptr<mir::client::LifecycleControl> const lifecycle_control;
+
+    std::shared_ptr<mir::client::PingHandler> const ping_handler;
 
     std::shared_ptr<mir::client::ConnectionSurfaceMap> const surface_map;
 

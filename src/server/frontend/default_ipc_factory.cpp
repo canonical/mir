@@ -29,6 +29,7 @@
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
+namespace ms = mir::scene;
 
 mf::DefaultIpcFactory::DefaultIpcFactory(
     std::shared_ptr<Shell> const& shell,
@@ -39,7 +40,8 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     std::shared_ptr<Screencast> const& screencast,
     std::shared_ptr<SessionAuthorizer> const& session_authorizer,
     std::shared_ptr<mi::CursorImages> const& cursor_images,
-    std::shared_ptr<scene::CoordinateTranslator> const& translator) :
+    std::shared_ptr<scene::CoordinateTranslator> const& translator,
+    std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector) :
     shell(shell),
     no_prompt_shell(std::make_shared<NoPromptShell>(shell)),
     sm_report(sm_report),
@@ -50,7 +52,8 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     screencast(screencast),
     session_authorizer(session_authorizer),
     cursor_images(cursor_images),
-    translator{translator}
+    translator{translator},
+    anr_detector{anr_detector}
 {
 }
 
@@ -123,5 +126,6 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
         effective_screencast,
         connection_context,
         cursor_images,
-        translator);
+        translator,
+        anr_detector);
 }

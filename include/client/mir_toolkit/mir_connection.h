@@ -103,6 +103,35 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
 void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
     mir_lifecycle_event_callback callback, void* context);
 
+
+/**
+ * Register a callback for server ping events.
+ *
+ * The server may send ping requests to detect unresponsive applications. Clients should
+ * process this with their regular event handling, and call mir_connection_pong() in response.
+ *
+ * The shell may treat a client which fails to pong in a timely fashion differently; a common
+ * response is to overlay the surface with an unresponsive application message.
+ *
+ * A default implementation that immediately calls pong is provided; toolkits SHOULD override
+ * this default implementation to more accurately reflect the state of their event processing
+ * loop.
+ *
+ * \param [in] connection       The connection
+ * \param [in] callback         The function to be called on ping events.
+ * \param [in] context          User data passed to the callback function
+ */
+void mir_connection_set_ping_event_callback(MirConnection* connection,
+    mir_ping_event_callback callback, void* context);
+
+
+/**
+ * Respond to a ping event
+ * \param [in] connection       The connection
+ * \param [in] serial           Serial from the ping event
+ */
+void mir_connection_pong(MirConnection* connection, int32_t serial);
+
 /**
  * Query the display
  *   \warning return value must be destroyed via mir_display_config_destroy()
@@ -153,6 +182,17 @@ MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, Mi
  *   \return                 An EGLNativeDisplayType that the client can use
  */
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection);
+
+/**
+ * Get the exact MirPixelFormat to use in creating a surface for a chosen
+ * EGLConfig.
+ *   \param [in] connection  The connection
+ *   \param [in] egldisplay  The EGLDisplay for the given config
+ *   \param [in] eglconfig   The EGLConfig you have chosen to use
+ *   \return                 The MirPixelFormat to use in surface creation
+ */
+MirPixelFormat mir_connection_get_egl_pixel_format(
+    MirConnection *connection, void *egldisplay, void *eglconfig);
 
 /**
  * Get the list of possible formats that a surface can be created with.

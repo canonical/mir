@@ -20,7 +20,6 @@
 #define MIR_TEST_DOUBLES_MOCK_SESSION_H_
 
 #include "mir/frontend/session.h"
-#include "mir/scene/surface_creation_parameters.h"
 
 #include <gmock/gmock.h>
 
@@ -33,18 +32,13 @@ namespace doubles
 
 struct MockSession : public frontend::Session
 {
-    MOCK_METHOD1(create_surface, frontend::SurfaceId(scene::SurfaceCreationParameters const&));
-    MOCK_METHOD1(destroy_surface, void(frontend::SurfaceId));
     MOCK_CONST_METHOD1(get_surface, std::shared_ptr<frontend::Surface>(frontend::SurfaceId));
 
+    MOCK_CONST_METHOD1(get_buffer_stream, std::shared_ptr<frontend::BufferStream>(frontend::BufferStreamId));
+    MOCK_METHOD1(create_buffer_stream, frontend::BufferStreamId(graphics::BufferProperties const&));
+    MOCK_METHOD1(destroy_buffer_stream, void(frontend::BufferStreamId));
+
     MOCK_CONST_METHOD0(name, std::string());
-    MOCK_METHOD0(force_requests_to_complete, void());
-
-    MOCK_METHOD0(hide, void());
-    MOCK_METHOD0(show, void());
-
-    MOCK_METHOD1(send_display_config, void(graphics::DisplayConfiguration const&));
-    MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirSurfaceAttrib, int));
 };
 
 }

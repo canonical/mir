@@ -78,6 +78,16 @@ void mfd::EventSender::handle_lifecycle_event(
     send_event_sequence(seq, {});
 }
 
+void mfd::EventSender::send_ping(int32_t serial)
+{
+    mp::EventSequence seq;
+
+    auto protobuf_ping_event = seq.mutable_ping_event();
+    protobuf_ping_event->set_serial(serial);
+
+    send_event_sequence(seq, {});
+}
+
 void mfd::EventSender::send_event_sequence(mp::EventSequence& seq, FdSets const& fds)
 {
     mir::VariableLengthArray<frontend::serialization_buffer_size>

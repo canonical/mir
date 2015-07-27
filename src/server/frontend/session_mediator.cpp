@@ -25,6 +25,7 @@
 #include "mir/shell/surface_specification.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/coordinate_translator.h"
+#include "mir/scene/application_not_responding_detector.h"
 #include "mir/frontend/display_changer.h"
 #include "resource_cache.h"
 #include "mir_toolkit/common.h"
@@ -86,7 +87,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<Screencast> const& screencast,
     ConnectionContext const& connection_context,
     std::shared_ptr<mi::CursorImages> const& cursor_images,
-    std::shared_ptr<scene::CoordinateTranslator> const& translator) :
+    std::shared_ptr<scene::CoordinateTranslator> const& translator,
+    std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -99,6 +101,7 @@ mf::SessionMediator::SessionMediator(
     connection_context(connection_context),
     cursor_images(cursor_images),
     translator{translator},
+    anr_detector{anr_detector},
     buffer_stream_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
@@ -165,6 +168,27 @@ void mf::SessionMediator::advance_buffer(
             else
                 complete(new_buffer, mg::BufferIpcMsgType::full_msg);
         });
+}
+
+namespace
+{
+template<typename T>
+std::vector<geom::Rectangle>
+extract_input_shape_from(T const& params)
+{
+    std::vector<geom::Rectangle> shapes;
+    if (params->input_shape_size() > 0)
+    {
+        for (auto& rect : params->input_shape())
+        {
+            shapes.push_back(geom::Rectangle(
+                geom::Point{rect.left(), rect.top()},
+                geom::Size{rect.width(), rect.height()})
+            );
+        }
+    }
+    return shapes;
+}
 }
 
 void mf::SessionMediator::create_surface(
@@ -239,6 +263,8 @@ void mf::SessionMediator::create_surface(
 
     if (request->has_max_aspect())
         params.max_aspect = { request->max_aspect().width(), request->max_aspect().height()};
+
+    params.input_shape = extract_input_shape_from(request);
 
     auto const surf_id = shell->create_surface(session, params);
     auto stream_id = mf::BufferStreamId(surf_id.as_value());
@@ -530,6 +556,8 @@ void mf::SessionMediator::modify_surface(
             surface_specification.max_aspect().height()
         };
 
+    mods.input_shape = extract_input_shape_from(&surface_specification);
+
     auto const id = mf::SurfaceId(request->surface_id().value());
 
     shell->modify_surface(session, id, mods);
@@ -789,6 +817,21 @@ void mf::SessionMediator::new_fds_for_prompt_providers(
         resource_cache->save_fd(response, mir::Fd{fd});
     }
 
+    done->Run();
+}
+
+void mf::SessionMediator::pong(
+    ::google::protobuf::RpcController* ,
+    ::mir::protobuf::PingEvent const* /*request*/,
+    ::mir::protobuf::Void* /* response */,
+    ::google::protobuf::Closure* done)
+{
+    auto session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    anr_detector->pong_received(session.get());
     done->Run();
 }
 

@@ -204,6 +204,7 @@ std::map<int, int> MockServerPackageGenerator::sent_surface_attributes = {
     { mir_surface_attrib_preferred_orientation, mir_orientation_mode_any }
 };
 
+// TODO: Deduplicate this class?
 struct StubClientPlatform : public mcl::ClientPlatform
 {
     MirPlatformType platform_type() const
@@ -239,6 +240,11 @@ struct StubClientPlatform : public mcl::ClientPlatform
     MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer*) const
     {
         return nullptr;
+    }
+
+    MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override
+    {
+        return mir_pixel_format_invalid;
     }
 };
 

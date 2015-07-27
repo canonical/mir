@@ -19,6 +19,7 @@ set(
   test_protobuf_client.cpp
   test_protobuf_socket_server.cpp
   triggered_main_loop.cpp
+  fake_alarm_factory.cpp
 )
 
 set(
@@ -27,6 +28,12 @@ set(
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_egl.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_gl.cpp
 )
+
+if (MIR_BUILD_PLATFORM_MESA_X11)
+  list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
+    ${CMAKE_CURRENT_SOURCE_DIR}/mock_x11.cpp
+  )
+endif()
 
 if (MIR_BUILD_PLATFORM_MESA_KMS)
   include_directories(

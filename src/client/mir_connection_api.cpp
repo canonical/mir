@@ -195,6 +195,21 @@ void mir_connection_set_lifecycle_event_callback(
         connection->register_lifecycle_event_callback(callback, context);
 }
 
+void mir_connection_set_ping_event_callback(
+    MirConnection* connection,
+    mir_ping_event_callback callback,
+    void* context)
+{
+    if (!mcl::ErrorConnections::instance().contains(connection))
+        connection->register_ping_event_callback(callback, context);
+}
+
+void mir_connection_pong(MirConnection *connection, int32_t serial)
+{
+    if (!mcl::ErrorConnections::instance().contains(connection))
+        connection->pong(serial);
+}
+
 MirDisplayConfiguration* mir_connection_create_display_config(
     MirConnection* connection)
 {
@@ -236,6 +251,12 @@ MirEGLNativeDisplayType mir_connection_get_egl_native_display(
     MirConnection* connection)
 {
     return connection->egl_native_display();
+}
+
+MirPixelFormat mir_connection_get_egl_pixel_format(MirConnection* connection,
+    EGLDisplay disp, EGLConfig conf)
+{
+    return connection->egl_pixel_format(disp, conf);
 }
 
 void mir_connection_get_available_surface_formats(
