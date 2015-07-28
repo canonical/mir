@@ -39,7 +39,6 @@ MIR_CLIENT_9 {
     mir_connection_set_lifecycle_event_callback;
     mir_connect_sync;
     mir_create_surface_spec;
-    mir_crosshair_cursor_name;
     mir_cursor_configuration_destroy;
     mir_cursor_configuration_from_buffer_stream;
     mir_cursor_configuration_from_name;
@@ -165,6 +164,7 @@ MIR_CLIENT_9.1 {  # New functions in Mir 0.15
   global:
     mir_connection_pong;
     mir_connection_set_ping_event_callback;
+    mir_crosshair_cursor_name;
     mir_keyboard_event_input_event;
     mir_persistent_id_as_string;
     mir_persistent_id_from_string;
