@@ -1,0 +1,26 @@
+{
+   Suppress Conditional jump or move depends on uninitialised value(s) in protobuf
+   Memcheck:Cond
+   ...
+   fun:_ZN3mir6client3rpc21MirProtobufRpcChannel10CallMethodEPKN6google8protobuf16MethodDescriptorEPNS4_13RpcControllerEPKNS4_7MessageEPSA_PNS4_7ClosureE
+}
+{
+   Suppress Use of uninitialised value in protobuf
+   Memcheck:Value8
+   ...
+   fun:_ZN3mir6client3rpc21MirProtobufRpcChannel10CallMethodEPKN6google8protobuf16MethodDescriptorEPNS4_13RpcControllerEPKNS4_7MessageEPSA_PNS4_7ClosureE
+}
+{
+   Suppress Syscall param sendto(len) contains uninitialised byte(s) in protobuf
+   Memcheck:Param
+   sendto(len)
+   ...
+   fun:_ZN3mir6client3rpc21MirProtobufRpcChannel10CallMethodEPKN6google8protobuf16MethodDescriptorEPNS4_13RpcControllerEPKNS4_7MessageEPSA_PNS4_7ClosureE
+}
+{
+   Suppress Syscall param socketcall.sendto(msg) contains uninitialised byte(s) in protobuf
+   Memcheck:Param
+   socketcall.sendto(msg)
+   ...
+   fun:_ZN3mir6client3rpc21MirProtobufRpcChannel10CallMethodEPKN6google8protobuf16MethodDescriptorEPNS4_13RpcControllerEPKNS4_7MessageEPSA_PNS4_7ClosureE
+}
