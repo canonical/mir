@@ -62,7 +62,8 @@ ms::TimeoutApplicationNotRespondingDetector::TimeoutApplicationNotRespondingDete
                   std::lock_guard<std::mutex> lock{session_mutex};
                   for (auto const& session_pair : sessions)
                   {
-                      if (!session_pair.second->replied_since_last_ping)
+                      if (!session_pair.second->replied_since_last_ping &&
+                          !session_pair.second->flagged_as_unresponsive)
                       {
                           session_pair.second->flagged_as_unresponsive = true;
                           unresponsive_sessions_temporary.push_back(session_pair.first);

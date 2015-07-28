@@ -393,7 +393,13 @@ TEST(TimeoutApplicationNotRespondingDetector, sends_unresponsive_notification_on
 
     ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
 
-    NiceMock<mtd::MockSceneSession> session;
+    NiceMock<mtd::MockSceneSession> session_one;
+    NiceMock<mtd::MockSceneSession> session_two;
+    auto delayed_dispatch_pong = fake_alarms.create_alarm(
+        [&detector, &session_two]()
+        {
+            detector.pong_received(&session_two);
+        });
     int unresponsive_notifications{0};
 
     auto observer = std::make_shared<NiceMock<MockObserver>>();
@@ -404,7 +410,16 @@ TEST(TimeoutApplicationNotRespondingDetector, sends_unresponsive_notification_on
     }));
     detector.register_observer(observer);
 
-    detector.register_session(&session, [](){});
+    detector.register_session(&session_one, [](){});
+    // We need a responsive session to ensure the ANRDetector keeps rescheduling wakeups.
+    //
+    // We need the delayed_dispatch_pong so that we can do the pong outside of the
+    // ping callback; otherwise this would deadlock.
+    detector.register_session(&session_two,
+        [&delayed_dispatch_pong]()
+        {
+            delayed_dispatch_pong->reschedule_in(1ms);
+        });
 
     fake_alarms.advance_smoothly_by(5000ms);
 
