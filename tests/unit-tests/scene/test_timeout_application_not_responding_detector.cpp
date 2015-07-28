@@ -305,7 +305,8 @@ TEST(TimeoutApplicationNotRespondingDetector, does_not_schedule_alarm_when_no_se
 
     fake_alarms.advance_smoothly_by(5000ms);
 
-    EXPECT_THAT(fake_alarms.wakeup_count(), Eq(previous_wakeup_count));
+    // We allow one extra wakeup to notice there are no active sessions.
+    EXPECT_THAT(fake_alarms.wakeup_count(), Le(previous_wakeup_count + 1));
 }
 
 TEST(TimeoutApplicationNotRespondingDetector, does_not_schedule_alarm_when_all_sessions_are_unresponsive)

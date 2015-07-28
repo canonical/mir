@@ -109,16 +109,13 @@ void ms::TimeoutApplicationNotRespondingDetector::unregister_session(
 {
     std::lock_guard<std::mutex> lock{session_mutex};
     sessions.erase(dynamic_cast<Session const*>(session));
-    if (sessions.empty())
-    {
-        alarm->cancel();
-    }
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::pong_received(
    frontend::Session const* received_for)
 {
     bool needs_now_responsive_notification{false};
+    bool alarm_needs_rescheduling;
     {
         std::lock_guard<std::mutex> lock{session_mutex};
 
@@ -130,15 +127,15 @@ void ms::TimeoutApplicationNotRespondingDetector::pong_received(
         }
         session_ctx->replied_since_last_ping = true;
 
-        // Restart the alarm cycle if it was stopped because everything was unresponsive
-        if (alarm->state() != mt::Alarm::State::pending)
-        {
-            alarm->reschedule_in(period);
-        }
+        alarm_needs_rescheduling = alarm->state() != mt::Alarm::State::pending;
     }
     if (needs_now_responsive_notification)
     {
         observers.session_now_responsive(dynamic_cast<Session const*>(received_for));
+    }
+    if (alarm_needs_rescheduling)
+    {
+        alarm->reschedule_in(period);
     }
 }
 
