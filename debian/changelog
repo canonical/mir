@@ -24,7 +24,7 @@ mir (0.15.0-0ubuntu1) UNRELEASED; urgency=medium
       . Added application-not-responding detection
       . Added client API for specifying input region shape.
       . Fixed the remaining threading flaws identified by ThreadSanitizer and
-        turned it on permantently for all continuous integration in future.
+        turned it on permanently for all continuous integration in future.
       . Added support for relative pointer motion events (e.g. for gaming).
     - Bug fixes:
       . TODO: Fill this in after branching lp:mir/0.15
