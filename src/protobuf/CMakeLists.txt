@@ -24,7 +24,7 @@ target_link_libraries(
   ${PROTOBUF_LITE_LIBRARIES}
 )
 
-set(MIRPROTOBUF_ABI 0)
+set(MIRPROTOBUF_ABI 1)
 
 set_target_properties(
   mirprotobuf
