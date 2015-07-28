@@ -50,7 +50,9 @@ TEST_F(ServerShutdown, normal_exit_removes_endpoint)
     }
 }
 
-TEST_F(ServerShutdown, abort_removes_endpoint)
+using ServerShutdownDeathTest = ServerShutdown;
+
+TEST_F(ServerShutdownDeathTest, abort_removes_endpoint)
 {
     mt::CrossProcessSync sync;
 
@@ -77,7 +79,7 @@ TEST_F(ServerShutdown, abort_removes_endpoint)
     }
 }
 
-TEST_F(ServerShutdown, fatal_error_abort_causes_abort_on_fatal_error)
+TEST_F(ServerShutdownDeathTest, fatal_error_abort_causes_abort_on_fatal_error)
 {
     // Change the fatal error strategy before starting the Mir server
     mir::FatalErrorStrategy on_error{mir::fatal_error_abort};
@@ -103,7 +105,7 @@ TEST_F(ServerShutdown, fatal_error_abort_causes_abort_on_fatal_error)
     }
 }
 
-TEST_F(ServerShutdown, fatal_error_abort_removes_endpoint)
+TEST_F(ServerShutdownDeathTest, fatal_error_abort_removes_endpoint)
 {   // Even fatal errors sometimes need to be caught for critical cleanup...
     mir::FatalErrorStrategy on_error{mir::fatal_error_abort};
 
@@ -127,7 +129,7 @@ TEST_F(ServerShutdown, fatal_error_abort_removes_endpoint)
     };
 }
 
-TEST_F(ServerShutdown, on_fatal_error_abort_option_causes_abort_on_fatal_error)
+TEST_F(ServerShutdownDeathTest, on_fatal_error_abort_option_causes_abort_on_fatal_error)
 {
     add_to_environment( "MIR_SERVER_ON_FATAL_ERROR_ABORT", "");
 
@@ -152,7 +154,7 @@ TEST_F(ServerShutdown, on_fatal_error_abort_option_causes_abort_on_fatal_error)
     }
 }
 
-TEST_F(ServerShutdown, mir_fatal_error_during_init_removes_endpoint)
+TEST_F(ServerShutdownDeathTest, mir_fatal_error_during_init_removes_endpoint)
 {   // Even fatal errors sometimes need to be caught for critical cleanup...
 
     add_to_environment("MIR_SERVER_FILE", mir_test_socket);
@@ -179,9 +181,9 @@ TEST_F(ServerShutdown, mir_fatal_error_during_init_removes_endpoint)
     }
 }
 
-struct OnSignal : ServerShutdown, ::testing::WithParamInterface<int> {};
+struct OnSignalDeathTest : ServerShutdown, ::testing::WithParamInterface<int> {};
 
-TEST_P(OnSignal, removes_endpoint)
+TEST_P(OnSignalDeathTest, removes_endpoint)
 {
     mt::CrossProcessSync sync;
 
@@ -209,6 +211,6 @@ TEST_P(OnSignal, removes_endpoint)
 }
 
 INSTANTIATE_TEST_CASE_P(ServerShutdown,
-    OnSignal,
+    OnSignalDeathTest,
     ::testing::Values(SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS));
 
