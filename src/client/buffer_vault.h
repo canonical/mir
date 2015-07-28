@@ -16,29 +16,53 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#ifndef MIR_CLIENT_BUFFER_VAULT_H_
+#define MIR_CLIENT_BUFFER_VAULT_H_
+
+#include "mir/geometry/size.h"
+#include "mir_toolkit/common.h"
+#include "mir_toolkit/mir_native_buffer.h"
 #include <memory>
 #include <future>
+#include <vector>
 
 namespace mir
 {
 namespace protobuf { class Buffer; }
-namespace graphics { class BufferProperties; }
 namespace client
 {
-class ServerBufferRequests;
+class ServerBufferRequests
+{
+public:
+    virtual void allocate_buffer(geometry::Size size, MirPixelFormat format, int usage) = 0;
+    virtual void free_buffer() = 0;
+    virtual void submit_buffer() = 0;
+    virtual ~ServerBufferRequests() = default;
+protected:
+    ServerBufferRequests() = default;
+    ServerBufferRequests(ServerBufferRequests const&) = delete;
+    ServerBufferRequests& operator=(ServerBufferRequests const&) = delete;
+};
+
 class ClientBufferFactory;
 class ClientBuffer;
 class BufferVault
 {
 public:
     BufferVault(
-        std::shared_ptr<ClientBufferFactory> const&, std::shared_ptr<ServerBufferRequests> const&,
-        unsigned int initial_nbuffers, graphics::BufferProperties const& initial_properties);
+        std::shared_ptr<ClientBufferFactory> const&,
+        std::shared_ptr<ServerBufferRequests> const&,
+        geometry::Size size, MirPixelFormat format, int usage,
+        unsigned int initial_nbuffers);
 
     std::future<std::shared_ptr<ClientBuffer>> withdraw();
     void deposit(std::shared_ptr<ClientBuffer> const& buffer);
-    void wire_transfer_inbound(protobuf::Buffer const&);
+    void wire_transfer_inbound(protobuf::Buffer const&, MirPixelFormat format);
     void wire_transfer_outbound(std::shared_ptr<ClientBuffer> const& buffer);
+private:
+    std::shared_ptr<ClientBufferFactory> const factory;
+    std::shared_ptr<ServerBufferRequests> const server_requests;
 };
 }
 }
+#endif /* MIR_CLIENT_BUFFER_VAULT_H_ */

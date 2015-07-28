@@ -102,42 +102,28 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
     std::weak_ptr<mcl::ClientBuffer> first_allocated_buffer;
 };
 
-
-#include <future>
-
-namespace mir
-{
-namespace client
-{
-class ServerBufferRequests
-{
-public:
-    virtual void allocate_buffer() = 0;
-    virtual void free_buffer() = 0;
-    virtual void submit_buffer() = 0;
-    virtual ~ServerBufferRequests() = default;
-protected:
-    ServerBufferRequests() = default;
-    ServerBufferRequests(ServerBufferRequests const&) = delete;
-    ServerBufferRequests& operator=(ServerBufferRequests const&) = delete;
-};
-}
-}
-
 struct MockServerRequests : mcl::ServerBufferRequests
 {
-    MOCK_METHOD0(allocate_buffer, void());
+    MOCK_METHOD3(allocate_buffer, void(geom::Size size, MirPixelFormat format, int usage));
     MOCK_METHOD0(free_buffer, void());
     MOCK_METHOD0(submit_buffer, void());
 };
 
 struct BufferVault : public testing::Test
 {
+    BufferVault()
+    {
+        package.set_width(size.width.as_int());
+        package.set_height(size.height.as_int());
+    }
     unsigned int initial_nbuffers {3};
+    geom::Size size{271, 314};
+    MirPixelFormat format{mir_pixel_format_abgr_8888};
+    int usage{0};
     mg::BufferProperties initial_properties{
         geom::Size{271,314}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
-    MockClientBufferFactory mock_factory;
-    MockServerRequests mock_requests;
+    NiceMock<MockClientBufferFactory> mock_factory;
+    NiceMock<MockServerRequests> mock_requests;
     mp::Buffer package;
 };
 
@@ -148,23 +134,23 @@ struct StartedBufferVault : BufferVault
     }
     mcl::BufferVault vault{
         mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
-        initial_nbuffers, initial_properties};
+        size, format, usage, initial_nbuffers};
 };
 
 TEST_F(BufferVault, creates_all_buffers_on_start)
 {
-    EXPECT_CALL(mock_requests, allocate_buffer())
+    EXPECT_CALL(mock_requests, allocate_buffer(size, format, usage))
         .Times(initial_nbuffers);
     mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
-        initial_nbuffers, initial_properties);
+        size, format, usage, initial_nbuffers);
 }
 
 TEST_F(BufferVault, creates_buffer_on_first_insertion)
 {
     EXPECT_CALL(mock_factory, create_buffer(_,initial_properties.size,initial_properties.format));
     mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
-        initial_nbuffers, initial_properties);
-    vault.wire_transfer_inbound(package);
+        size, format, usage, initial_nbuffers);
+    vault.wire_transfer_inbound(package, format);
 }
 
 TEST_F(BufferVault, withdrawing_and_never_filling_up_will_timeout)
@@ -172,12 +158,13 @@ TEST_F(BufferVault, withdrawing_and_never_filling_up_will_timeout)
     using namespace std::literals::chrono_literals;
 
     mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
-        initial_nbuffers, initial_properties);
+        size, format, usage, initial_nbuffers);
     auto buffer_future = vault.withdraw();
     ASSERT_TRUE(buffer_future.valid());
     EXPECT_THAT(buffer_future.wait_for(20ms), Eq(std::future_status::timeout));
 }
 
+#if 0
 TEST_F(StartedBufferVault, withdrawing_gives_a_valid_future)
 {
     auto buffer_future = vault.withdraw();
@@ -200,6 +187,43 @@ TEST_F(StartedBufferVault, cant_transfer_if_not_in_acct)
         vault.wire_transfer_outbound(buffer);
     }, std::logic_error);
 }
+
+
+
+
+
+
+#endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #if 0
 TEST_F(StartedBufferVault, ages_buffers_on_deposit)
