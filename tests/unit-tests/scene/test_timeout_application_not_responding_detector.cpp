@@ -383,3 +383,30 @@ TEST(TimeoutApplicationNotRespondingDetector, session_switches_between_responsiv
     detector.pong_received(&session);
     EXPECT_FALSE(session_unresponsive);
 }
+
+TEST(TimeoutApplicationNotRespondingDetector, sends_unresponsive_notification_only_once)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mtd::FakeAlarmFactory fake_alarms;
+
+    ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
+
+    NiceMock<mtd::MockSceneSession> session;
+    int unresponsive_notifications{0};
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    ON_CALL(*observer, session_unresponsive(_))
+        .WillByDefault(Invoke([&unresponsive_notifications](auto /*session*/)
+    {
+        ++unresponsive_notifications;
+    }));
+    detector.register_observer(observer);
+
+    detector.register_session(&session, [](){});
+
+    fake_alarms.advance_smoothly_by(5000ms);
+
+    EXPECT_THAT(unresponsive_notifications, Eq(1));
+}
