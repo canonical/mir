@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -18,6 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "src/client/client_buffer_depository.h"
+#include "src/client/buffer_vault.h"
 #include "mir/client_buffer_factory.h"
 #include "mir/aging_buffer.h"
 #include "mir_toolkit/common.h"
@@ -119,36 +120,6 @@ protected:
     ServerBufferRequests() = default;
     ServerBufferRequests(ServerBufferRequests const&) = delete;
     ServerBufferRequests& operator=(ServerBufferRequests const&) = delete;
-};
-class BufferVault
-{
-public:
-    BufferVault(
-        std::shared_ptr<ClientBufferFactory> const&, std::shared_ptr<ServerBufferRequests> const&,
-        unsigned int initial_nbuffers, graphics::BufferProperties const& initial_properties)
-    {
-        (void) initial_nbuffers;
-        (void) initial_properties;
-    }
-
-    std::future<std::shared_ptr<mcl::ClientBuffer>> withdraw()
-    {
-        std::promise<std::shared_ptr<mcl::ClientBuffer>> promise;
-        promise.set_value(nullptr);
-        return promise.get_future();
-    }
-    void deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
-    {
-        (void) buffer;
-    }
-
-    void wire_transfer_inbound(protobuf::Buffer const&)
-    {
-    }
-    void wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer> const& buffer)
-    {
-        (void) buffer;
-    }
 };
 }
 }
