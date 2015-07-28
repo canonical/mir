@@ -54,12 +54,15 @@ void ms::TimeoutApplicationNotRespondingDetector::ANRObservers::session_now_resp
 ms::TimeoutApplicationNotRespondingDetector::TimeoutApplicationNotRespondingDetector(
     mt::AlarmFactory& alarms,
     std::chrono::milliseconds period)
-    : alarm{alarms.create_alarm([this, period]()
+    : period{period},
+      alarm{alarms.create_alarm([this]()
           {
+              bool needs_rearm{false};
               {
                   std::lock_guard<std::mutex> lock{session_mutex};
                   for (auto const& session_pair : sessions)
                   {
+                      needs_rearm = true;
                       if (!session_pair.second->replied_since_last_ping)
                       {
                           session_pair.second->flagged_as_unresponsive = true;
@@ -81,10 +84,12 @@ ms::TimeoutApplicationNotRespondingDetector::TimeoutApplicationNotRespondingDete
 
               unresponsive_sessions_temporary.clear();
 
-              this->alarm->reschedule_in(period);
+              if (needs_rearm)
+              {
+                  this->alarm->reschedule_in(this->period);
+              }
           })}
 {
-    alarm->reschedule_in(period);
 }
 
 ms::TimeoutApplicationNotRespondingDetector::~TimeoutApplicationNotRespondingDetector()
@@ -96,6 +101,7 @@ void ms::TimeoutApplicationNotRespondingDetector::register_session(
 {
     std::lock_guard<std::mutex> lock{session_mutex};
     sessions[dynamic_cast<Session const*>(session)] = std::make_unique<ANRContext>(pinger);
+    alarm->reschedule_in(period);
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::unregister_session(
@@ -103,6 +109,10 @@ void ms::TimeoutApplicationNotRespondingDetector::unregister_session(
 {
     std::lock_guard<std::mutex> lock{session_mutex};
     sessions.erase(dynamic_cast<Session const*>(session));
+    if (sessions.empty())
+    {
+        alarm->cancel();
+    }
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::pong_received(

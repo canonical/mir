@@ -80,6 +80,7 @@ private:
     std::unordered_map<Session const*, std::unique_ptr<ANRContext>> sessions;
     std::vector<Session const*> unresponsive_sessions_temporary;
 
+    std::chrono::milliseconds const period;
     std::unique_ptr<time::Alarm> const alarm;
 };
 }

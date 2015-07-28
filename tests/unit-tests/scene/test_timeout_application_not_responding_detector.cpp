@@ -277,3 +277,33 @@ TEST(TimeoutApplicationNotRespondingDetector, does_not_generate_signals_after_un
     // Notification should not have been generated
     EXPECT_FALSE(session_not_responding);
 }
+
+TEST(TimeoutApplicationNotRespondingDetector, does_not_schedule_alarm_when_no_sessions)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mtd::FakeAlarmFactory fake_alarms;
+
+    ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
+
+    // Go through several ping cycles.
+    fake_alarms.advance_smoothly_by(5000ms);
+
+    EXPECT_THAT(fake_alarms.wakeup_count(), Eq(0));
+
+    NiceMock<mtd::MockSceneSession> session;
+
+    detector.register_session(&session, [](){});
+
+    fake_alarms.advance_smoothly_by(5000ms);
+    EXPECT_THAT(fake_alarms.wakeup_count(), Gt(0));
+
+    int const previous_wakeup_count{fake_alarms.wakeup_count()};
+
+    detector.unregister_session(&session);
+
+    fake_alarms.advance_smoothly_by(5000ms);
+
+    EXPECT_THAT(fake_alarms.wakeup_count(), Eq(previous_wakeup_count));
+}
