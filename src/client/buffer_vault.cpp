@@ -19,6 +19,7 @@
 #include "mir/client_buffer_factory.h"
 #include "buffer_vault.h"
 #include "mir_protobuf.pb.h"
+#include <algorithm>
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
@@ -36,11 +37,31 @@ mcl::BufferVault::BufferVault(
         server_requests->allocate_buffer(size, format, usage);
 }
 
+mcl::BufferVault::~BufferVault()
+{
+    for(auto& promise : promises)
+    {
+        printf("blow up.\n");
+        promise.set_exception(make_exception_ptr(
+            std::future_error(std::future_errc::broken_promise)));
+    }
+}
+
 std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
 {
     std::promise<std::shared_ptr<mcl::ClientBuffer>> promise;
-    promise.set_value(nullptr);
-    return promise.get_future();
+
+    auto it = std::find_if(buffers.begin(), buffers.end(),
+        [](std::pair<int, BufferEntry> const& entry) {
+            return !entry.second.server_owned;
+        });
+
+    auto the_future = promise.get_future();
+    if (it != buffers.end())
+        promise.set_value(it->second.buffer);
+    else
+        promises.emplace_back(std::move(promise));
+    return the_future;
 }
 
 void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
@@ -51,6 +72,7 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 void mcl::BufferVault::wire_transfer_inbound(
     mp::Buffer const& protobuf_buffer, MirPixelFormat pf)
 {
+    //first track buffer
     auto buffer_package = std::make_shared<MirBufferPackage>();
     buffer_package->data_items = protobuf_buffer.data_size();
     buffer_package->fd_items = protobuf_buffer.fd_size();
@@ -65,7 +87,17 @@ void mcl::BufferVault::wire_transfer_inbound(
     buffer_package->width = protobuf_buffer.width();
     buffer_package->height = protobuf_buffer.height();
 
-    factory->create_buffer(buffer_package, geom::Size{buffer_package->width, buffer_package->height}, pf);
+    buffers[protobuf_buffer.buffer_id()] = 
+        BufferEntry{
+            factory->create_buffer(buffer_package, geom::Size{buffer_package->width, buffer_package->height}, pf),
+        false 
+        };
+
+    if (!promises.empty())
+    {
+        promises.front().set_value(buffers[protobuf_buffer.buffer_id()].buffer);
+        promises.pop_front();
+    }
 }
 
 void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer> const& buffer)

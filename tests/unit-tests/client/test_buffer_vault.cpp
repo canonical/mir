@@ -125,6 +125,7 @@ struct BufferVault : public testing::Test
     NiceMock<MockClientBufferFactory> mock_factory;
     NiceMock<MockServerRequests> mock_requests;
     mp::Buffer package;
+    mp::Buffer package2;
 };
 
 struct StartedBufferVault : BufferVault
@@ -164,7 +165,6 @@ TEST_F(BufferVault, withdrawing_and_never_filling_up_will_timeout)
     EXPECT_THAT(buffer_future.wait_for(20ms), Eq(std::future_status::timeout));
 }
 
-#if 0
 TEST_F(StartedBufferVault, withdrawing_gives_a_valid_future)
 {
     auto buffer_future = vault.withdraw();
@@ -188,16 +188,41 @@ TEST_F(StartedBufferVault, cant_transfer_if_not_in_acct)
     }, std::logic_error);
 }
 
+TEST_F(StartedBufferVault, multiple_draws_get_different_buffer)
+{
+    auto buffer1 = vault.withdraw().get();
+    auto buffer2 = vault.withdraw().get();
+    EXPECT_THAT(buffer1, Ne(buffer2));
+}
 
+TEST_F(BufferVault, multiple_during_wait_period_gets_same_buffer)
+{
+    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+        size, format, usage, initial_nbuffers);
 
+    auto f_buffer1 = vault.withdraw();
+    auto f_buffer2 = vault.withdraw();
+    vault.wire_transfer_inbound(package, format);
+    vault.wire_transfer_inbound(package2, format);
 
+    auto buffer1 = f_buffer1.get();
+    auto buffer2 = f_buffer2.get();
+    EXPECT_THAT(buffer1, Ne(buffer2));
+}
 
+TEST_F(BufferVault, destruction_signals_futures)
+{
+    std::future<std::shared_ptr<mcl::ClientBuffer>> fbuffer;
+    {
+        mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+            size, format, usage, initial_nbuffers);
+        fbuffer = vault.withdraw();
+    }
 
-#endif
-
-
-
-
+    EXPECT_THROW({
+        fbuffer.get();
+    }, std::future_error);
+}
 
 
 

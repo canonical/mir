@@ -24,7 +24,8 @@
 #include "mir_toolkit/mir_native_buffer.h"
 #include <memory>
 #include <future>
-#include <vector>
+#include <deque>
+#include <map>
 
 namespace mir
 {
@@ -54,6 +55,7 @@ public:
         std::shared_ptr<ServerBufferRequests> const&,
         geometry::Size size, MirPixelFormat format, int usage,
         unsigned int initial_nbuffers);
+    ~BufferVault();
 
     std::future<std::shared_ptr<ClientBuffer>> withdraw();
     void deposit(std::shared_ptr<ClientBuffer> const& buffer);
@@ -62,6 +64,14 @@ public:
 private:
     std::shared_ptr<ClientBufferFactory> const factory;
     std::shared_ptr<ServerBufferRequests> const server_requests;
+
+    struct BufferEntry
+    {
+        std::shared_ptr<ClientBuffer> buffer;
+        bool server_owned;
+    };
+    std::map<int, BufferEntry> buffers;
+    std::deque<std::promise<std::shared_ptr<ClientBuffer>>> promises;
 };
 }
 }
