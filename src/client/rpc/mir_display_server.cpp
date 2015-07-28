@@ -196,3 +196,10 @@ void mclr::DisplayServer::request_persistent_surface_id(
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
+void mclr::DisplayServer::pong(
+    mir::protobuf::PingEvent const* request,
+    mir::protobuf::Void* response,
+    google::protobuf::Closure* done)
+{
+    channel->call_method(std::string(__func__), request, response, done);
+}

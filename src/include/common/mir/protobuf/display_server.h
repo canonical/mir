@@ -127,6 +127,10 @@ public:
         mir::protobuf::SurfaceId const* request,
         mir::protobuf::PersistentSurfaceId* response,
         google::protobuf::Closure* done) = 0;
+    virtual void pong(
+        mir::protobuf::PingEvent const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) = 0;
 
 protected:
     DisplayServer() = default;

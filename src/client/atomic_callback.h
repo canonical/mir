@@ -16,29 +16,46 @@
  * Authored by: Ricardo Mendoza <ricardo.mendoza@canonical.com>
  */
 
-#include "lifecycle_control.h"
+#ifndef MIR_CLIENT_ATOMIC_CALLBACK_H_
+#define MIR_CLIENT_ATOMIC_CALLBACK_H_
 
-namespace mcl = mir::client;
+#include <functional>
+#include <mutex>
 
-mcl::LifecycleControl::LifecycleControl()
-    : handle_lifecycle_event([](MirLifecycleState){})
+namespace mir
 {
+namespace client
+{
+template<typename... Args>
+class AtomicCallback
+{
+public:
+    AtomicCallback()
+        : callback{[](Args...){}}
+    {
+    }
+
+    ~AtomicCallback() = default;
+
+    void set_callback(std::function<void(Args...)> const& fn)
+    {
+        std::lock_guard<std::mutex> lk(guard);
+
+        callback = fn;
+    }
+
+    void operator()(Args&&... args) const
+    {
+        std::lock_guard<std::mutex> lk(guard);
+
+        callback(std::forward<Args>(args)...);
+    }
+
+private:
+    std::mutex mutable guard;
+    std::function<void(Args...)> callback;
+};
+}
 }
 
-mcl::LifecycleControl::~LifecycleControl()
-{
-}
-
-void mcl::LifecycleControl::set_lifecycle_event_handler(std::function<void(MirLifecycleState)> const& fn)
-{
-    std::unique_lock<std::mutex> lk(guard);
-
-    handle_lifecycle_event = fn;
-}
-
-void mcl::LifecycleControl::call_lifecycle_event_handler(uint32_t state)
-{
-    std::unique_lock<std::mutex> lk(guard);
-
-    handle_lifecycle_event(static_cast<MirLifecycleState>(state));
-}
+#endif /* MIR_CLIENT_ATOMIC_CALLBACK_H_ */

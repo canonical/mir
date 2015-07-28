@@ -422,9 +422,9 @@ void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
     if (on_incoming_buffer)
     {
         process_buffer(buffer, lock);
-        next_buffer_wait_handle.result_received();
         on_incoming_buffer();
         on_incoming_buffer = std::function<void()>{};
+        next_buffer_wait_handle.result_received();
     }
     else
     {
@@ -436,10 +436,10 @@ void mcl::BufferStream::buffer_unavailable()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     server_connection_lost = true;
-    next_buffer_wait_handle.result_received();
     if (on_incoming_buffer)
     {
         on_incoming_buffer();
         on_incoming_buffer = std::function<void()>{};
     }
+    next_buffer_wait_handle.result_received();
 }

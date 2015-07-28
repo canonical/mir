@@ -52,12 +52,14 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     std::shared_ptr<DisplayConfiguration> const& disp_config,
     std::shared_ptr<RpcReport> const& rpc_report,
     std::shared_ptr<LifecycleControl> const& lifecycle_control,
+    std::shared_ptr<PingHandler> const& ping_handler,
     std::shared_ptr<EventSink> const& event_sink) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
+    ping_handler{ping_handler},
     event_sink(event_sink),
     disconnected(false),
     transport{std::move(transport)},
@@ -81,7 +83,7 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
 {
     if (!disconnected.exchange(true))
     {
-        lifecycle_control->call_lifecycle_event_handler(mir_lifecycle_connection_lost);
+        (*lifecycle_control)(mir_lifecycle_connection_lost);
     }
     pending_calls.force_completion();
     surface_map->with_all_streams_do(
@@ -250,7 +252,12 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
 
     if (seq->has_lifecycle_event())
     {
-        lifecycle_control->call_lifecycle_event_handler(seq->lifecycle_event().new_state());
+        (*lifecycle_control)(static_cast<MirLifecycleState>(seq->lifecycle_event().new_state()));
+    }
+
+    if (seq->has_ping_event())
+    {
+        (*ping_handler)(seq->ping_event().serial());
     }
 
     if (seq->has_buffer_request())

@@ -369,6 +369,7 @@ MIR_PROTOBUF_1 {
     mir::protobuf::EventSequence::kErrorFieldNumber*;
     mir::protobuf::EventSequence::kEventFieldNumber*;
     mir::protobuf::EventSequence::kLifecycleEventFieldNumber*;
+    mir::protobuf::EventSequence::kPingEventFieldNumber*;
     mir::protobuf::EventSequence::MergeFrom*;
     mir::protobuf::EventSequence::MergePartialFromCodedStream*;
     mir::protobuf::EventSequence::New*;
@@ -410,6 +411,22 @@ MIR_PROTOBUF_1 {
     mir::protobuf::PersistentSurfaceId::PersistentSurfaceId*;
     mir::protobuf::PersistentSurfaceId::SerializeWithCachedSizes*;
     mir::protobuf::PersistentSurfaceId::Swap*;
+    mir::protobuf::PingEvent::ByteSize*;
+    mir::protobuf::PingEvent::CheckTypeAndMergeFrom*;
+    mir::protobuf::PingEvent::Clear*;
+    mir::protobuf::PingEvent::CopyFrom*;
+    mir::protobuf::PingEvent::default_instance*;
+    mir::protobuf::PingEvent::DiscardUnknownFields*;
+    mir::protobuf::PingEvent::GetTypeName*;
+    mir::protobuf::PingEvent::IsInitialized*;
+    mir::protobuf::PingEvent::kSerialFieldNumber*;
+    mir::protobuf::PingEvent::MergeFrom*;
+    mir::protobuf::PingEvent::MergePartialFromCodedStream*;
+    mir::protobuf::PingEvent::New*;
+    mir::protobuf::PingEvent::?PingEvent*;
+    mir::protobuf::PingEvent::PingEvent*;
+    mir::protobuf::PingEvent::SerializeWithCachedSizes*;
+    mir::protobuf::PingEvent::Swap*;
     mir::protobuf::Platform::ByteSize*;
     mir::protobuf::Platform::CheckTypeAndMergeFrom*;
     mir::protobuf::Platform::Clear*;
@@ -844,6 +861,7 @@ MIR_PROTOBUF_1 {
     non-virtual?thunk?to?mir::protobuf::EventSequence::?EventSequence*;
     non-virtual?thunk?to?mir::protobuf::LifecycleEvent::?LifecycleEvent*;
     non-virtual?thunk?to?mir::protobuf::PersistentSurfaceId::?PersistentSurfaceId*;
+    non-virtual?thunk?to?mir::protobuf::PingEvent::?PingEvent*;
     non-virtual?thunk?to?mir::protobuf::PlatformOperationMessage::?PlatformOperationMessage*;
     non-virtual?thunk?to?mir::protobuf::Platform::?Platform*;
     non-virtual?thunk?to?mir::protobuf::PromptSessionParameters::?PromptSessionParameters*;
@@ -886,6 +904,7 @@ MIR_PROTOBUF_1 {
     typeinfo?for?mir::protobuf::EventSequence;
     typeinfo?for?mir::protobuf::LifecycleEvent;
     typeinfo?for?mir::protobuf::PersistentSurfaceId;
+    typeinfo?for?mir::protobuf::PingEvent;
     typeinfo?for?mir::protobuf::Platform;
     typeinfo?for?mir::protobuf::PlatformOperationMessage;
     typeinfo?for?mir::protobuf::PromptSessionParameters;
@@ -930,6 +949,7 @@ MIR_PROTOBUF_1 {
     vtable?for?mir::protobuf::EventSequence;
     vtable?for?mir::protobuf::LifecycleEvent;
     vtable?for?mir::protobuf::PersistentSurfaceId;
+    vtable?for?mir::protobuf::PingEvent;
     vtable?for?mir::protobuf::Platform;
     vtable?for?mir::protobuf::PlatformOperationMessage;
     vtable?for?mir::protobuf::PromptSessionParameters;

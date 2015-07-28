@@ -25,6 +25,9 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 
+#include "../lifecycle_control.h"
+#include "../ping_handler.h"
+
 #include "mir_protobuf_wire.pb.h"
 
 #include <thread>
@@ -38,7 +41,6 @@ namespace client
 {
 class DisplayConfiguration;
 class SurfaceMap;
-class LifecycleControl;
 class EventSink;
 namespace rpc
 {
@@ -56,6 +58,7 @@ public:
                           std::shared_ptr<DisplayConfiguration> const& disp_config,
                           std::shared_ptr<RpcReport> const& rpc_report,
                           std::shared_ptr<LifecycleControl> const& lifecycle_control,
+                          std::shared_ptr<PingHandler> const& ping_handler,
                           std::shared_ptr<EventSink> const& event_sink);
 
     ~MirProtobufRpcChannel() = default;
@@ -112,6 +115,7 @@ private:
     std::shared_ptr<SurfaceMap> surface_map;
     std::shared_ptr<DisplayConfiguration> display_configuration;
     std::shared_ptr<LifecycleControl> lifecycle_control;
+    std::shared_ptr<PingHandler> const ping_handler;
     std::shared_ptr<EventSink> event_sink;
     std::atomic<bool> disconnected;
     std::mutex read_mutex;

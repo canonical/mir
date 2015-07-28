@@ -131,6 +131,10 @@ public:
         mir::protobuf::SurfaceId const* request,
         mir::protobuf::PersistentSurfaceId* response,
         google::protobuf::Closure* done) override;
+    void pong(
+        mir::protobuf::PingEvent const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
 private:
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const channel;
 };

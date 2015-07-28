@@ -30,6 +30,7 @@ mtf::InterprocessClientServerTest::~InterprocessClientServerTest()
 {
     if (getpid() != test_process_id)
     {
+        shutdown_sync.reset();
         auto const status = ::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS;
         exit(status);
     }
@@ -128,7 +129,7 @@ void mtf::InterprocessClientServerTest::TearDown()
 {
     if (server_process_id == getpid())
     {
-        shutdown_sync.wait_for_signal_ready_for();
+        shutdown_sync->wait_for_signal_ready_for();
     }
 
     stop_server();
@@ -143,7 +144,7 @@ void mtf::InterprocessClientServerTest::stop_server()
 
     if (test_process_id != getpid()) return;
 
-    shutdown_sync.signal_ready();
+    shutdown_sync->signal_ready();
 
     if (server_process)
     {

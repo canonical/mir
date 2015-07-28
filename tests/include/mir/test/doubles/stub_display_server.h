@@ -126,6 +126,10 @@ struct StubDisplayServer : public mir::frontend::detail::DisplayServer
         mir::protobuf::SurfaceId const* /*request*/,
         mir::protobuf::PersistentSurfaceId* /*response*/,
         google::protobuf::Closure* /*done*/) {}
+    void pong(
+        mir::protobuf::PingEvent const* /*request*/,
+        mir::protobuf::Void* /*response*/,
+        google::protobuf::Closure* /*done*/) {}
 };
 
 }

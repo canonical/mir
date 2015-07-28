@@ -119,6 +119,7 @@ MirConnection::MirConnection(
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
         lifecycle_control(conf.the_lifecycle_control()),
+        ping_handler{conf.the_ping_handler()},
         surface_map(conf.the_surface_map()),
         event_handler_register(conf.the_event_handler_register()),
         eventloop{new md::ThreadedDispatcher{"RPC Thread", std::dynamic_pointer_cast<md::Dispatchable>(channel)}}
@@ -291,7 +292,11 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
             platform, the_logger());
         native_display = platform->create_egl_native_display();
         display_configuration->set_configuration(connect_result->display_configuration());
-        lifecycle_control->set_lifecycle_event_handler(default_lifecycle_event_handler);
+        lifecycle_control->set_callback(default_lifecycle_event_handler);
+        ping_handler->set_callback([this](int32_t serial)
+        {
+            this->pong(serial);
+        });
     }
     catch (std::exception const& e)
     {
@@ -334,7 +339,7 @@ void MirConnection::done_disconnect()
     }
 
     // Ensure no racy lifecycle notifications can happen after disconnect completes
-    lifecycle_control->set_lifecycle_event_handler([](MirLifecycleState){});
+    lifecycle_control->set_callback([](MirLifecycleState){});
     disconnect_wait_handle.result_received();
 }
 
@@ -533,7 +538,19 @@ void MirConnection::on_surface_created(int id, MirSurface* surface)
 
 void MirConnection::register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context)
 {
-    lifecycle_control->set_lifecycle_event_handler(std::bind(callback, this, std::placeholders::_1, context));
+    lifecycle_control->set_callback(std::bind(callback, this, std::placeholders::_1, context));
+}
+
+void MirConnection::register_ping_event_callback(mir_ping_event_callback callback, void* context)
+{
+    ping_handler->set_callback(std::bind(callback, this, std::placeholders::_1, context));
+}
+
+void MirConnection::pong(int32_t serial)
+{
+    auto pong = mcl::make_protobuf_object<mir::protobuf::PingEvent>();
+    pong->set_serial(serial);
+    server.pong(pong.get(), void_response.get(), google::protobuf::NewCallback(&google::protobuf::DoNothing));
 }
 
 void MirConnection::register_display_change_callback(mir_display_config_callback callback, void* context)

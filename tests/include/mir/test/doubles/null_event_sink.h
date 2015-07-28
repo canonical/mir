@@ -32,6 +32,7 @@ struct NullEventSink : public frontend::EventSink
     void handle_event(MirEvent const&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
     void handle_display_config_change(graphics::DisplayConfiguration const&) {}
+    void send_ping(int32_t) {}
     void send_buffer(frontend::BufferStreamId, graphics::Buffer&, graphics::BufferIpcMsgType) {}
 };
 }

@@ -50,6 +50,7 @@ class CursorImages;
 namespace scene
 {
 class CoordinateTranslator;
+class ApplicationNotRespondingDetector;
 }
 
 /// Frontend interface. Mediates the interaction between client
@@ -92,7 +93,8 @@ public:
         std::shared_ptr<Screencast> const& screencast,
         ConnectionContext const& connection_context,
         std::shared_ptr<input::CursorImages> const& cursor_images,
-        std::shared_ptr<scene::CoordinateTranslator> const& translator);
+        std::shared_ptr<scene::CoordinateTranslator> const& translator,
+        std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector);
 
     ~SessionMediator() noexcept;
 
@@ -194,8 +196,12 @@ public:
         mir::protobuf::SurfaceId const* request,
         mir::protobuf::PersistentSurfaceId* response,
         google::protobuf::Closure* done) override;
+    void pong(
+        mir::protobuf::PingEvent const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
 
-    //TODO: split this into a separate thing
+    // TODO: Split this into a separate thing
     void translate_surface_to_screen(
         mir::protobuf::CoordinateTranslationRequest const* request,
         mir::protobuf::CoordinateTranslationResponse* response,
@@ -228,6 +234,7 @@ private:
     ConnectionContext const connection_context;
     std::shared_ptr<input::CursorImages> const cursor_images;
     std::shared_ptr<scene::CoordinateTranslator> const translator;
+    std::shared_ptr<scene::ApplicationNotRespondingDetector> const anr_detector;
 
     BufferStreamTracker buffer_stream_tracker;
 

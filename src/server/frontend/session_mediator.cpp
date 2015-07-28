@@ -25,6 +25,7 @@
 #include "mir/shell/surface_specification.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/coordinate_translator.h"
+#include "mir/scene/application_not_responding_detector.h"
 #include "mir/frontend/display_changer.h"
 #include "resource_cache.h"
 #include "mir_toolkit/common.h"
@@ -86,7 +87,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<Screencast> const& screencast,
     ConnectionContext const& connection_context,
     std::shared_ptr<mi::CursorImages> const& cursor_images,
-    std::shared_ptr<scene::CoordinateTranslator> const& translator) :
+    std::shared_ptr<scene::CoordinateTranslator> const& translator,
+    std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -99,6 +101,7 @@ mf::SessionMediator::SessionMediator(
     connection_context(connection_context),
     cursor_images(cursor_images),
     translator{translator},
+    anr_detector{anr_detector},
     buffer_stream_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
@@ -797,6 +800,20 @@ void mf::SessionMediator::new_fds_for_prompt_providers(
         resource_cache->save_fd(response, mir::Fd{fd});
     }
 
+    done->Run();
+}
+
+void mf::SessionMediator::pong(
+    mir::protobuf::PingEvent const* /*request*/,
+    mir::protobuf::Void* /* response */,
+    google::protobuf::Closure* done)
+{
+    auto session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    anr_detector->pong_received(session.get());
     done->Run();
 }
 
