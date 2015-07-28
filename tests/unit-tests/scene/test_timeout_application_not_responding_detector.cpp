@@ -341,3 +341,44 @@ TEST(TimeoutApplicationNotRespondingDetector, does_not_schedule_alarm_when_all_s
     fake_alarms.advance_smoothly_by(5000ms);
     EXPECT_THAT(fake_alarms.wakeup_count(), Eq(previous_wakeup_count));
 }
+
+TEST(TimeoutApplicationNotRespondingDetector, session_switches_between_responsive_and_unresponsive)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mtd::FakeAlarmFactory fake_alarms;
+
+    ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
+
+    NiceMock<mtd::MockSceneSession> session;
+    bool session_unresponsive{false};
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    ON_CALL(*observer, session_unresponsive(_))
+        .WillByDefault(Invoke([&session_unresponsive](auto /*session*/)
+    {
+        session_unresponsive = true;
+    }));
+    ON_CALL(*observer, session_now_responsive(_))
+        .WillByDefault(Invoke([&session_unresponsive](auto /*session*/)
+    {
+        session_unresponsive = false;
+    }));
+    detector.register_observer(observer);
+
+    detector.register_session(&session, [](){});
+
+    fake_alarms.advance_smoothly_by(5000ms);
+
+    EXPECT_TRUE(session_unresponsive);
+
+    detector.pong_received(&session);
+    EXPECT_FALSE(session_unresponsive);
+
+    fake_alarms.advance_smoothly_by(5000ms);
+    EXPECT_TRUE(session_unresponsive);
+
+    detector.pong_received(&session);
+    EXPECT_FALSE(session_unresponsive);
+}

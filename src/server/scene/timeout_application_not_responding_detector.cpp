@@ -129,6 +129,12 @@ void ms::TimeoutApplicationNotRespondingDetector::pong_received(
             needs_now_responsive_notification = true;
         }
         session_ctx->replied_since_last_ping = true;
+
+        // Restart the alarm cycle if it was stopped because everything was unresponsive
+        if (alarm->state() != mt::Alarm::State::pending)
+        {
+            alarm->reschedule_in(period);
+        }
     }
     if (needs_now_responsive_notification)
     {
