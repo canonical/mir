@@ -118,7 +118,7 @@ int demo_client(const char* server, int buffer_swap_count)
     }
 
     // Identify a supported pixel format
-    MirPixelFormat pixel_format;
+    MirPixelFormat pixel_format = mir_pixel_format_invalid;
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(mcd.connection, &pixel_format, 1, &valid_formats);
 
