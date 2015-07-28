@@ -268,7 +268,7 @@ TEST_F(GLibMainLoopTest, propagates_exception_from_signal_handler)
             int const signum{SIGUSR1};
             ml.register_signal_handler(
                 {signum},
-                [&] (int) { throw std::runtime_error(""); });
+                [&] (int) { throw std::runtime_error("signal handler error"); });
 
             kill(getpid(), signum);
 
@@ -512,7 +512,7 @@ TEST_F(GLibMainLoopTest, propagates_exception_from_fd_handler)
             ml.register_fd_handler(
                 {p.read_fd()},
                 this,
-                [] (int) { throw std::runtime_error(""); });
+                [] (int) { throw std::runtime_error("fd handler error"); });
 
             EXPECT_EQ(1, write(p.write_fd(), &data_to_write, 1));
 
@@ -753,7 +753,7 @@ TEST_F(GLibMainLoopTest, propagates_exception_from_server_action)
     execute_in_forked_process(this,
         [&]
         {
-            ml.enqueue(this, [] { throw std::runtime_error(""); });
+            ml.enqueue(this, [] { throw std::runtime_error("server action error"); });
 
             EXPECT_THROW({ ml.run(); }, std::runtime_error);
         },
@@ -771,7 +771,7 @@ TEST_F(GLibMainLoopTest, can_be_rerun_after_exception)
     execute_in_forked_process(this,
         [&]
         {
-            ml.enqueue(this, [] { throw std::runtime_error(""); });
+            ml.enqueue(this, [] { throw std::runtime_error("server action error"); });
 
             EXPECT_THROW({
                 ml.run();
@@ -1061,7 +1061,7 @@ TEST_F(GLibMainLoopAlarmTest, propagates_exception_from_alarm)
     execute_in_forked_process(this,
         [&]
         {
-            auto alarm = ml.create_alarm([] { throw std::runtime_error(""); });
+            auto alarm = ml.create_alarm([] { throw std::runtime_error("alarm error"); });
             alarm->reschedule_in(std::chrono::milliseconds{0});
 
             EXPECT_THROW({ ml.run(); }, std::runtime_error);

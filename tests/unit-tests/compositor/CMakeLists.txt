@@ -13,6 +13,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_timeout_frame_dropping_policy.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_multi_monitor_arbiter.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_buffers.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_dropping_schedule.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_queueing_schedule.cpp
 )
 

@@ -137,6 +137,10 @@ xcursor_name_for_mir_cursor(std::string const& mir_cursor_name)
     {
         return "h_double_arrow";
     }
+    else if (mir_cursor_name == mir_crosshair_cursor_name)
+    {
+        return "crosshair";
+    }
     else
     {
         return mir_cursor_name;

@@ -38,7 +38,8 @@ void configure_cursor(MirSurface *surface, unsigned int cursor_index)
         mir_diagonal_resize_top_to_bottom_cursor_name,
         mir_omnidirectional_resize_cursor_name,
         mir_vsplit_resize_cursor_name,
-        mir_hsplit_resize_cursor_name
+        mir_hsplit_resize_cursor_name,
+        mir_crosshair_cursor_name
     };
 
     size_t num_cursors = sizeof(cursors)/sizeof(*cursors);
