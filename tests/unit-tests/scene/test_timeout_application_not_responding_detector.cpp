@@ -307,3 +307,37 @@ TEST(TimeoutApplicationNotRespondingDetector, does_not_schedule_alarm_when_no_se
 
     EXPECT_THAT(fake_alarms.wakeup_count(), Eq(previous_wakeup_count));
 }
+
+TEST(TimeoutApplicationNotRespondingDetector, does_not_schedule_alarm_when_all_sessions_are_unresponsive)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mtd::FakeAlarmFactory fake_alarms;
+
+    ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
+
+    NiceMock<mtd::MockSceneSession> session;
+    bool session_unresponsive{false};
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    ON_CALL(*observer, session_unresponsive(_))
+        .WillByDefault(Invoke([&session_unresponsive](auto /*session*/)
+    {
+        session_unresponsive = true;
+    }));
+    detector.register_observer(observer);
+
+    detector.register_session(&session, [](){});
+
+    fake_alarms.advance_smoothly_by(5000ms);
+
+    ASSERT_TRUE(session_unresponsive);
+    EXPECT_THAT(fake_alarms.wakeup_count(), Gt(0));
+
+    int const previous_wakeup_count{fake_alarms.wakeup_count()};
+
+    // All the sessions are now unresponsive, so we shouldn't be triggering wakeups
+    fake_alarms.advance_smoothly_by(5000ms);
+    EXPECT_THAT(fake_alarms.wakeup_count(), Eq(previous_wakeup_count));
+}

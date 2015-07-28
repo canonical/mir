@@ -62,7 +62,6 @@ ms::TimeoutApplicationNotRespondingDetector::TimeoutApplicationNotRespondingDete
                   std::lock_guard<std::mutex> lock{session_mutex};
                   for (auto const& session_pair : sessions)
                   {
-                      needs_rearm = true;
                       if (!session_pair.second->replied_since_last_ping)
                       {
                           session_pair.second->flagged_as_unresponsive = true;
@@ -72,6 +71,7 @@ ms::TimeoutApplicationNotRespondingDetector::TimeoutApplicationNotRespondingDete
                       {
                           session_pair.second->pinger();
                           session_pair.second->replied_since_last_ping = false;
+                          needs_rearm = true;
                       }
                   }
               }
