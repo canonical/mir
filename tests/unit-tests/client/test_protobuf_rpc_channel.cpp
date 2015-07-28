@@ -18,6 +18,7 @@
 
 #include "src/client/rpc/mir_protobuf_rpc_channel.h"
 #include "src/client/rpc/stream_transport.h"
+#include "src/client/rpc/mir_display_server.h"
 #include "src/client/surface_map.h"
 #include "src/client/display_configuration.h"
 #include "src/client/rpc/null_rpc_report.h"
@@ -278,22 +279,22 @@ TEST_F(MirProtobufRpcChannelTest, reads_all_queued_messages)
 
 TEST_F(MirProtobufRpcChannelTest, sends_messages_atomically)
 {
-    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mclr::DisplayServer channel_user{channel};
     mir::protobuf::ConnectParameters message;
     message.set_application_name("I'm a little teapot!");
 
-    channel_user.connect(nullptr, &message, nullptr, nullptr);
+    channel_user.connect(&message, nullptr, nullptr);
 
     EXPECT_EQ(transport->sent_messages.size(), 1);
 }
 
 TEST_F(MirProtobufRpcChannelTest, sets_correct_size_when_sending_message)
 {
-    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mclr::DisplayServer channel_user{channel};
     mir::protobuf::ConnectParameters message;
     message.set_application_name("I'm a little teapot!");
 
-    channel_user.connect(nullptr, &message, nullptr, nullptr);
+    channel_user.connect(&message, nullptr, nullptr);
 
     uint16_t message_header = *reinterpret_cast<uint16_t*>(transport->sent_messages.front().data());
     message_header = be16toh(message_header);
@@ -302,11 +303,11 @@ TEST_F(MirProtobufRpcChannelTest, sets_correct_size_when_sending_message)
 
 TEST_F(MirProtobufRpcChannelTest, reads_fds)
 {
-    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mclr::DisplayServer channel_user{channel};
     mir::protobuf::Buffer reply;
     mir::protobuf::BufferRequest request;
 
-    channel_user.exchange_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){}));
+    channel_user.exchange_buffer(&request, &reply, google::protobuf::NewCallback([](){}));
 
     std::initializer_list<mir::Fd> fds = {mir::Fd{open("/dev/null", O_RDONLY)},
                                           mir::Fd{open("/dev/null", O_RDONLY)},
@@ -393,12 +394,12 @@ TEST_F(MirProtobufRpcChannelTest, notifies_of_disconnect_on_write_error)
     EXPECT_CALL(*transport, send_message(_,_))
         .WillOnce(Throw(std::runtime_error("Eaten by giant space goat")));
 
-    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mclr::DisplayServer channel_user{channel};
     mir::protobuf::Buffer reply;
     mir::protobuf::BufferRequest request;
 
     EXPECT_THROW(
-        channel_user.exchange_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){})),
+        channel_user.exchange_buffer(&request, &reply, google::protobuf::NewCallback([](){})),
         std::runtime_error);
 
     EXPECT_TRUE(disconnected);
@@ -454,12 +455,12 @@ TEST_F(MirProtobufRpcChannelTest, notifies_of_disconnect_only_once)
         }
     })));
 
-    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mclr::DisplayServer channel_user{channel};
     mir::protobuf::Buffer reply;
     mir::protobuf::BufferRequest request;
 
     EXPECT_THROW(
-        channel_user.exchange_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){})),
+        channel_user.exchange_buffer(&request, &reply, google::protobuf::NewCallback([](){})),
         std::runtime_error);
 
     EXPECT_TRUE(disconnected);
@@ -479,20 +480,18 @@ TEST_F(MirProtobufRpcChannelTest, delays_messages_not_requested)
 
     auto typed_channel = std::dynamic_pointer_cast<mclr::MirProtobufRpcChannel>(channel);
 
-    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mclr::DisplayServer channel_user{channel};
     mir::protobuf::DRMMagic request;
     mir::protobuf::DRMAuthMagicStatus reply;
 
     bool first_response_called{false};
     bool second_response_called{false};
-    channel_user.drm_auth_magic(nullptr,
-                                &request,
+    channel_user.drm_auth_magic(&request,
                                 &reply,
                                 google::protobuf::NewCallback(&set_flag, &first_response_called));
 
     typed_channel->process_next_request_first();
-    channel_user.drm_auth_magic(nullptr,
-                                &request,
+    channel_user.drm_auth_magic(&request,
                                 &reply,
                                 google::protobuf::NewCallback(&set_flag, &second_response_called));
 
@@ -555,7 +554,7 @@ TEST_F(MirProtobufRpcChannelTest, delays_messages_with_fds_not_requested)
 
     auto typed_channel = std::dynamic_pointer_cast<mclr::MirProtobufRpcChannel>(channel);
 
-    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mclr::DisplayServer channel_user{channel};
     mir::protobuf::DRMMagic drm_request;
     mir::protobuf::DRMAuthMagicStatus drm_reply;
 
@@ -566,14 +565,12 @@ TEST_F(MirProtobufRpcChannelTest, delays_messages_with_fds_not_requested)
     bool second_response_called{false};
 
 
-    channel_user.exchange_buffer(nullptr,
-                                 &buffer_request,
+    channel_user.exchange_buffer(&buffer_request,
                                  &buffer_reply,
                                  google::protobuf::NewCallback(&set_flag, &first_response_called));
 
     typed_channel->process_next_request_first();
-    channel_user.drm_auth_magic(nullptr,
-                                &drm_request,
+    channel_user.drm_auth_magic(&drm_request,
                                 &drm_reply,
                                 google::protobuf::NewCallback(&set_flag, &second_response_called));
 

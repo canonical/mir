@@ -24,7 +24,7 @@
 #include "mir_test_framework/deferred_in_process_server.h"
 
 #include "mir/test/doubles/stub_ipc_factory.h"
-
+#include "mir/test/doubles/stub_display_server.h"
 #include "src/server/frontend/display_server.h"
 #include "src/server/frontend/protobuf_ipc_factory.h"
 #include "src/server/frontend/resource_cache.h"
@@ -44,22 +44,23 @@ namespace
 
 std::string const test_exception_text{"test exception text"};
 
-struct ConnectionErrorServer : mf::detail::DisplayServer
+struct StubDisplayServer : mf::detail::DisplayServer
 {
-    void client_pid(int /*pid*/) override {}
+    void client_pid(int /*pid*/) override {};
 
+};
+struct ConnectionErrorServer : mtd::StubDisplayServer
+{
     void connect(
-        ::google::protobuf::RpcController*,
-        const ::mir::protobuf::ConnectParameters*,
-        ::mir::protobuf::Connection*,
-        ::google::protobuf::Closure*)
+        mir::protobuf::ConnectParameters const*,
+        mir::protobuf::Connection*,
+        google::protobuf::Closure*)
     {
         throw std::runtime_error(test_exception_text);
     }
 
     void disconnect(
-        google::protobuf::RpcController*,
-        const mir::protobuf::Void*,
+        mir::protobuf::Void const*,
         mir::protobuf::Void*,
         google::protobuf::Closure*)
     {
