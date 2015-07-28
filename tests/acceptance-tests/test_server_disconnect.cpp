@@ -155,7 +155,9 @@ TEST_F(ServerDisconnect, doesnt_stop_client_calling_API_functions)
     }
 }
 
-TEST_F(ServerDisconnect, causes_client_to_terminate_by_default)
+using ServerDisconnectDeathTest = ServerDisconnect;
+
+TEST_F(ServerDisconnectDeathTest, causes_client_to_terminate_by_default)
 {
     mt::CrossProcessAction connect;
     mt::CrossProcessSync create_surface_sync;
