@@ -1,6 +1,33 @@
 mir (0.15.0-0ubuntu1) UNRELEASED; urgency=medium
 
-  * TODO
+  * New upstream release 0.15.0 (https://launchpad.net/mir/+milestone/0.15.0)
+    - ABI summary: Only servers and graphics drivers need rebuilding;
+      . Mirclient ABI unchanged at 9
+      . Mirserver ABI bumped to 33
+      . Mircommon ABI unchanged at 5
+      . Mirplatform ABI bumped to 9
+    - Enhancements:
+      . Add support for Mir-on-X11.
+      . Latency reduction optimizations (around ~15ms reduction in total):
+        Reduced input event resampling latency by 5ms. Reduced output latency
+        (in system compositors) by around 10ms with the introduction of
+        "predictive bypass". And we're not finished; future Mir releases
+        should reduce latency further.
+      . Introduced a python3-based Mir performance framework.
+      . Lots of preparation for an architectural overhaul of buffer swapping,
+        required in the least to support future optimizations like nested
+        bypass.
+      . Added a new cursor: crosshair
+      . Added support for 15/16-bit client pixel formats ("high colour").
+      . Added a new client function to make picking the right pixel format
+        for a given EGLConfig super simple: mir_connection_get_egl_pixel_format
+      . Added application-not-responding detection
+      . Added client API for specifying input region shape.
+      . Fixed the remaining threading flaws identified by ThreadSanitizer and
+        turned it on permantently for all continuous integration in future.
+      . Added support for relative pointer motion events (e.g. for gaming).
+    - Bug fixes:
+      . TODO: Fill this in after branching lp:mir/0.15
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 27 Jul 2015 12:02:19 +0800
 
