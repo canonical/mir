@@ -26,11 +26,14 @@ target_link_libraries(
 
 set(MIRPROTOBUF_ABI 1)
 
+set(symbol_map ${CMAKE_SOURCE_DIR}/src/protobuf/symbols.map)
+
 set_target_properties(
   mirprotobuf
 
   PROPERTIES
   SOVERSION ${MIRPROTOBUF_ABI}
+  LINK_FLAGS "-Wl,--version-script,${symbol_map}"
 )
 
 # Export the include directories
