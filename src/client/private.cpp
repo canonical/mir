@@ -20,7 +20,7 @@
 #include "mir_connection.h"
 
 auto mir::client::the_rpc_channel(MirConnection *connection)
--> std::shared_ptr<google::protobuf::RpcChannel>
+-> std::shared_ptr<mir::client::rpc::MirBasicRpcChannel>
 {
     return connection->rpc_channel();
 }

@@ -111,7 +111,7 @@ void mclr::MirProtobufRpcChannel::receive_any_file_descriptors_for(MessageType* 
     }
 }
 
-void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Message* response)
+void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::MessageLite* response)
 {
     auto const message_type = response->GetTypeName();
 
@@ -170,11 +170,10 @@ void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Mes
     receive_any_file_descriptors_for(platform_operation_message);
 }
 
-void mclr::MirProtobufRpcChannel::CallMethod(
-    const google::protobuf::MethodDescriptor* method,
-    google::protobuf::RpcController*,
-    const google::protobuf::Message* parameters,
-    google::protobuf::Message* response,
+void mclr::MirProtobufRpcChannel::call_method(
+    std::string method_name,
+    google::protobuf::MessageLite const* parameters,
+    google::protobuf::MessageLite* response,
     google::protobuf::Closure* complete)
 {
     // Only send message when details saved for handling response
@@ -193,7 +192,7 @@ void mclr::MirProtobufRpcChannel::CallMethod(
             fds.emplace_back(mir::Fd{IntOwnedFd{fd}});
     }
 
-    auto const& invocation = invocation_for(method, parameters, fds.size());
+    auto const& invocation = invocation_for(method_name, parameters, fds.size());
 
     rpc_report->invocation_requested(invocation);
 

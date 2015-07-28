@@ -34,7 +34,7 @@ class ProtobufMessageSender
 public:
     virtual void send_response(
             ::google::protobuf::uint32 call_id,
-            ::google::protobuf::Message* message,
+            ::google::protobuf::MessageLite* message,
             FdSets const& fd_sets) = 0;
 
 protected:

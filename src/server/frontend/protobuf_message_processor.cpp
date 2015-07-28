@@ -22,6 +22,7 @@
 #include "mir/frontend/protobuf_message_sender.h"
 #include "mir/frontend/template_protobuf_message_processor.h"
 #include "mir/frontend/unsupported_feature_exception.h"
+#include <mir/protobuf/display_server_debug.h>
 
 #include "mir_protobuf_wire.pb.h"
 
@@ -107,7 +108,6 @@ void invoke(
     std::shared_ptr<ProtobufMessageProcessor> const& mp,
     DisplayServer* server,
     void (mir::protobuf::DisplayServer::*function)(
-        ::google::protobuf::RpcController* controller,
         const RequestType* request,
         ResponseType* response,
         ::google::protobuf::Closure* done),
@@ -131,7 +131,6 @@ void invoke(
     try
     {
         (server->*function)(
-            0,
             request,
             result_message.get(),
             callback);
@@ -151,8 +150,7 @@ void invoke(
     Self* self,
     std::string* error,
     void (ServerX::*/*function*/)(
-        ::google::protobuf::RpcController* controller,
-        const ParameterMessage* request,
+        ParameterMessage const* request,
         ResultMessage* response,
         ::google::protobuf::Closure* done),
         Invocation const& invocation)
@@ -308,15 +306,15 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             try
             {
-                auto debug_interface = dynamic_cast<mir::protobuf::Debug*>(display_server.get());
-                invoke(this, debug_interface, &mir::protobuf::Debug::translate_surface_to_screen, invocation);
+                auto debug_interface = dynamic_cast<mir::protobuf::DisplayServerDebug*>(display_server.get());
+                invoke(this, debug_interface, &mir::protobuf::DisplayServerDebug::translate_surface_to_screen, invocation);
             }
             catch (mir::frontend::unsupported_feature const&)
             {
                 std::string message{"Server does not support the client debugging interface"};
                 invoke(this,
                        &message,
-                       &mir::protobuf::Debug::translate_surface_to_screen,
+                       &mir::protobuf::DisplayServerDebug::translate_surface_to_screen,
                        invocation);
                 std::runtime_error err{"Client attempted to use unavailable debug interface"};
                 report->exception_handled(display_server.get(), invocation.id(), err);
@@ -343,7 +341,7 @@ bool mfd::ProtobufMessageProcessor::dispatch(
     return result;
 }
 
-void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response)
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ::google::protobuf::MessageLite* response)
 {
     sender->send_response(id, response, {});
 }

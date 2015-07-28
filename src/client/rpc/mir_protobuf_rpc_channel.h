@@ -27,9 +27,6 @@
 
 #include "mir_protobuf_wire.pb.h"
 
-#include <google/protobuf/service.h>
-#include <google/protobuf/descriptor.h>
-
 #include <thread>
 #include <atomic>
 #include <experimental/optional>
@@ -85,11 +82,14 @@ public:
      * No messages are discarded, only delayed.
      */
     void process_next_request_first();
-private:
-    virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
-        const google::protobuf::Message* parameters, google::protobuf::Message* response,
+
+    void call_method(
+        std::string method_name,
+        google::protobuf::MessageLite const* parameters,
+        google::protobuf::MessageLite* response,
         google::protobuf::Closure* complete) override;
 
+private:
     std::shared_ptr<RpcReport> const rpc_report;
     detail::PendingCallCache pending_calls;
 
@@ -97,7 +97,7 @@ private:
     detail::SendBuffer header_bytes;
     detail::SendBuffer body_bytes;
 
-    void receive_file_descriptors(google::protobuf::Message* response);
+    void receive_file_descriptors(google::protobuf::MessageLite* response);
     template<class MessageType>
     void receive_any_file_descriptors_for(MessageType* response);
     void send_message(mir::protobuf::wire::Invocation const& body,

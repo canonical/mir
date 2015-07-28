@@ -17,14 +17,15 @@
  */
 
 #include "mir_surface.h"
+#include "mir_connection.h"
 #include "cursor_configuration.h"
+#include "client_buffer_stream.h"
 #include "client_buffer_stream_factory.h"
 #include "make_protobuf_object.h"
+
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/client_buffer.h"
-#include "mir_connection.h"
-#include "client_buffer_stream.h"
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/input/input_platform.h"
 #include "mir/input/xkb_mapper.h"
@@ -36,6 +37,7 @@
 
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
+namespace mclr = mir::client::rpc;
 namespace mircv = mir::input::receiver;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
@@ -169,8 +171,8 @@ MirSurface::MirSurface(std::string const& error)
 
 MirSurface::MirSurface(
     MirConnection *allocating_connection,
-    mp::DisplayServer::Stub& the_server,
-    mp::Debug::Stub* debug,
+    mclr::DisplayServer& the_server,
+    mclr::DisplayServerDebug* debug,
     std::shared_ptr<mcl::ClientBufferStreamFactory> const& buffer_stream_factory,
     std::shared_ptr<mircv::InputPlatform> const& input_platform,
     MirSurfaceSpec const& spec,
@@ -195,7 +197,7 @@ MirSurface::MirSurface(
     create_wait_handle.expect_result();
     try 
     {
-        server->create_surface(0, message.get(), surface.get(), gp::NewCallback(this, &MirSurface::created, callback, context));
+        server->create_surface(message.get(), surface.get(), gp::NewCallback(this, &MirSurface::created, callback, context));
     }
     catch (std::exception const& ex)
     {
@@ -283,7 +285,7 @@ MirWaitHandle* MirSurface::request_persistent_id(mir_surface_id_callback callbac
     persistent_id_wait_handle.expect_result();
     try
     {
-        server->request_persistent_surface_id(0, &surface->id(), persistent_id.get(), gp::NewCallback(this, &MirSurface::acquired_persistent_id, callback, context));
+        server->request_persistent_surface_id(&surface->id(), persistent_id.get(), gp::NewCallback(this, &MirSurface::acquired_persistent_id, callback, context));
     }
     catch (std::exception const& ex)
     {
@@ -397,7 +399,7 @@ MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor
     }
     
     configure_cursor_wait_handle.expect_result();
-    server->configure_cursor(0, setting.get(), void_response.get(),
+    server->configure_cursor(setting.get(), void_response.get(),
         google::protobuf::NewCallback(this, &MirSurface::on_cursor_configured));
     
     return &configure_cursor_wait_handle;
@@ -424,7 +426,7 @@ MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
     lock.unlock();
 
     configure_wait_handle.expect_result();
-    server->configure_surface(0, setting.get(), configure_result.get(),
+    server->configure_surface(setting.get(), configure_result.get(),
               google::protobuf::NewCallback(this, &MirSurface::on_configured));
 
     return &configure_wait_handle;
@@ -460,7 +462,6 @@ bool MirSurface::translate_to_screen_coordinates(int x, int y,
         std::lock_guard<decltype(mutex)> lock(mutex);
 
         debug->translate_surface_to_screen(
-            nullptr,
             request.get(),
             response.get(),
             google::protobuf::NewCallback(&signal_response_received, &signal));
@@ -721,7 +722,7 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
     }
 
     modify_wait_handle.expect_result();
-    server->modify_surface(0, mods.get(), modify_result.get(),
+    server->modify_surface(mods.get(), modify_result.get(),
               google::protobuf::NewCallback(this, &MirSurface::on_modified));
 
     return &modify_wait_handle;

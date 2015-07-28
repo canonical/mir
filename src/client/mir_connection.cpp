@@ -95,8 +95,8 @@ MirConnection::Deregisterer::~Deregisterer()
 MirConnection::MirConnection(std::string const& error_message) :
     deregisterer{this},
     channel(),
-    server(0),
-    debug(0),
+    server(nullptr),
+    debug(nullptr),
     error_message(error_message)
 {
 }
@@ -105,8 +105,8 @@ MirConnection::MirConnection(
     mir::client::ConnectionConfiguration& conf) :
         deregisterer{this},
         channel(conf.the_rpc_channel()),
-        server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
-        debug(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
+        server(channel),
+        debug(channel),
         logger(conf.the_logger()),
         void_response{mcl::make_protobuf_object<mir::protobuf::Void>()},
         connect_result{mcl::make_protobuf_object<mir::protobuf::Connection>()},
@@ -236,7 +236,7 @@ MirWaitHandle* MirConnection::release_surface(
     }
 
     new_wait_handle->expect_result();
-    server.release_surface(0, message.get(), void_response.get(),
+    server.release_surface(message.get(), void_response.get(),
                            gp::NewCallback(this, &MirConnection::released, surf_release));
 
 
@@ -316,7 +316,6 @@ MirWaitHandle* MirConnection::connect(
     }
 
     server.connect(
-        0,
         connect_parameters.get(),
         connect_result.get(),
         google::protobuf::NewCallback(
@@ -346,7 +345,7 @@ MirWaitHandle* MirConnection::disconnect()
         disconnecting = true;
     }
     disconnect_wait_handle.expect_result();
-    server.disconnect(0, ignored.get(), ignored.get(),
+    server.disconnect(ignored.get(), ignored.get(),
                       google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
     return &disconnect_wait_handle;
@@ -398,7 +397,6 @@ MirWaitHandle* MirConnection::platform_operation(
 
     platform_operation_wait_handle.expect_result();
     server.platform_operation(
-        0,
         protobuf_request.get(),
         platform_operation_reply.get(),
         google::protobuf::NewCallback(this, &MirConnection::done_platform_operation,
@@ -607,13 +605,13 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
     }
 
     configure_display_wait_handle.expect_result();
-    server.configure_display(0, request.get(), display_configuration_response.get(),
+    server.configure_display(request.get(), display_configuration_response.get(),
         google::protobuf::NewCallback(this, &MirConnection::done_display_configure));
 
     return &configure_display_wait_handle;
 }
 
-mir::protobuf::DisplayServer& MirConnection::display_server()
+mir::client::rpc::DisplayServer& MirConnection::display_server()
 {
     return server;
 }
@@ -642,7 +640,7 @@ MirWaitHandle* MirConnection::release_buffer_stream(
 
     new_wait_handle->expect_result();
     server.release_buffer_stream(
-        nullptr, buffer_stream_id.get(), void_response.get(),
+        buffer_stream_id.get(), void_response.get(),
         google::protobuf::NewCallback(this, &MirConnection::released, stream_release));
     return new_wait_handle;
 }

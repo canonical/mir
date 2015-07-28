@@ -19,13 +19,20 @@
 #ifndef MIR_CLIENT_RPC_MIR_BASIC_RPC_CHANNEL_H_
 #define MIR_CLIENT_RPC_MIR_BASIC_RPC_CHANNEL_H_
 
-#include <google/protobuf/service.h>
-#include <google/protobuf/descriptor.h>
-
 #include <memory>
 #include <map>
 #include <mutex>
 #include <atomic>
+#include <vector>
+
+namespace google
+{
+namespace protobuf
+{
+class Closure;
+class MessageLite;
+}
+}
 
 namespace mir
 {
@@ -56,11 +63,11 @@ public:
 
     void save_completion_details(
         mir::protobuf::wire::Invocation const& invoke,
-        google::protobuf::Message* response,
+        google::protobuf::MessageLite* response,
         google::protobuf::Closure* complete);
 
 
-    google::protobuf::Message* message_for_result(mir::protobuf::wire::Result& result);
+    google::protobuf::MessageLite* message_for_result(mir::protobuf::wire::Result& result);
 
     void complete_response(mir::protobuf::wire::Result& result);
 
@@ -73,14 +80,14 @@ private:
     struct PendingCall
     {
         PendingCall(
-            google::protobuf::Message* response,
+            google::protobuf::MessageLite* response,
             google::protobuf::Closure* target)
         : response(response), complete(target) {}
 
         PendingCall()
         : response(0), complete() {}
 
-        google::protobuf::Message* response;
+        google::protobuf::MessageLite* response;
         google::protobuf::Closure* complete;
     };
 
@@ -90,16 +97,22 @@ private:
 };
 }
 
-class MirBasicRpcChannel : public google::protobuf::RpcChannel
+class MirBasicRpcChannel
 {
 public:
-    MirBasicRpcChannel();
-    ~MirBasicRpcChannel();
+    virtual ~MirBasicRpcChannel();
+
+    virtual void call_method(
+        std::string method_name,
+        google::protobuf::MessageLite const* parameters,
+        google::protobuf::MessageLite* response,
+        google::protobuf::Closure* complete) = 0;
 
 protected:
+    MirBasicRpcChannel();
     mir::protobuf::wire::Invocation invocation_for(
-        google::protobuf::MethodDescriptor const* method,
-        google::protobuf::Message const* request,
+        std::string method_name,
+        google::protobuf::MessageLite const* request,
         size_t num_side_channel_fds);
     int next_id();
 

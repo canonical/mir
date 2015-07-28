@@ -37,7 +37,7 @@ mclrd::PendingCallCache::PendingCallCache(
 
 void mclrd::PendingCallCache::save_completion_details(
     mir::protobuf::wire::Invocation const& invoke,
-    google::protobuf::Message* response,
+    google::protobuf::MessageLite* response,
     google::protobuf::Closure* complete)
 {
     std::unique_lock<std::mutex> lock(mutex);
@@ -45,7 +45,7 @@ void mclrd::PendingCallCache::save_completion_details(
     pending_calls[invoke.id()] = PendingCall(response, complete);
 }
 
-google::protobuf::Message* mclrd::PendingCallCache::message_for_result(mir::protobuf::wire::Result& result)
+google::protobuf::MessageLite* mclrd::PendingCallCache::message_for_result(mir::protobuf::wire::Result& result)
 {
     std::unique_lock<std::mutex> lock(mutex);
     return pending_calls.at(result.id()).response;
@@ -103,14 +103,11 @@ mclr::MirBasicRpcChannel::MirBasicRpcChannel() :
 {
 }
 
-mclr::MirBasicRpcChannel::~MirBasicRpcChannel()
-{
-}
-
+mclr::MirBasicRpcChannel::~MirBasicRpcChannel() = default;
 
 mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
-    google::protobuf::MethodDescriptor const* method,
-    google::protobuf::Message const* request,
+    std::string method_name,
+    google::protobuf::MessageLite const* request,
     size_t num_side_channel_fds)
 {
     mir::VariableLengthArray<mir::frontend::serialization_buffer_size>
@@ -121,7 +118,7 @@ mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     mir::protobuf::wire::Invocation invoke;
 
     invoke.set_id(next_id());
-    invoke.set_method_name(method->name());
+    invoke.set_method_name(method_name);
     invoke.set_parameters(buffer.data(), buffer.size());
     invoke.set_protocol_version(1);
     invoke.set_side_channel_fds(num_side_channel_fds);

@@ -19,12 +19,14 @@
 #include "mir_prompt_session.h"
 #include "event_handler_register.h"
 #include "make_protobuf_object.h"
+#include "rpc/mir_display_server.h"
 
 namespace mp = mir::protobuf;
 namespace mcl = mir::client;
+namespace mclr = mir::client::rpc;
 
 MirPromptSession::MirPromptSession(
-    mp::DisplayServer& server,
+    mclr::DisplayServer& server,
     std::shared_ptr<mcl::EventHandlerRegister> const& event_handler_register) :
     server(server),
     parameters(mcl::make_protobuf_object<mir::protobuf::PromptSessionParameters>()),
@@ -75,7 +77,6 @@ MirWaitHandle* MirPromptSession::start(pid_t application_pid, mir_prompt_session
 
     start_wait_handle.expect_result();
     server.start_prompt_session(
-        0,
         parameters.get(),
         session.get(),
         google::protobuf::NewCallback(this, &MirPromptSession::done_start,
@@ -89,7 +90,6 @@ MirWaitHandle* MirPromptSession::stop(mir_prompt_session_callback callback, void
     stop_wait_handle.expect_result();
 
     server.stop_prompt_session(
-        0,
         protobuf_void.get(),
         protobuf_void.get(),
         google::protobuf::NewCallback(this, &MirPromptSession::done_stop,
@@ -152,7 +152,6 @@ MirWaitHandle* MirPromptSession::new_fds_for_prompt_providers(
     fds_for_prompt_providers_wait_handle.expect_result();
 
     server.new_fds_for_prompt_providers(
-        nullptr,
         request.get(),
         socket_fd_response.get(),
         google::protobuf::NewCallback(this, &MirPromptSession::done_fds_for_prompt_providers,

@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_DETAIL_DISPLAY_SERVER_H_
 #define MIR_FRONTEND_DETAIL_DISPLAY_SERVER_H_
 
-#include "mir_protobuf.pb.h"
+#include <mir/protobuf/display_server.h>
 
 namespace mir
 {
@@ -30,8 +30,6 @@ namespace detail
 class DisplayServer : public mir::protobuf::DisplayServer
 {
 public:
-    using mir::protobuf::DisplayServer::DisplayServer;
-
     virtual void client_pid(int pid) = 0;
 };
 }

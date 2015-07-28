@@ -20,18 +20,16 @@
 
 #include "buffer_stream.h"
 #include "make_protobuf_object.h"
-
 #include "mir_connection.h"
-#include "mir/frontend/client_constants.h"
-
-#include "mir/log.h"
-
-#include "mir_toolkit/mir_native_buffer.h"
-#include "mir/client_platform.h"
-#include "mir/egl_native_window_factory.h"
-
 #include "perf_report.h"
 #include "logging/perf_report.h"
+#include "rpc/mir_display_server.h"
+
+#include "mir/log.h"
+#include "mir/client_platform.h"
+#include "mir/egl_native_window_factory.h"
+#include "mir/frontend/client_constants.h"
+#include "mir_toolkit/mir_native_buffer.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/diagnostic_information.hpp>
@@ -39,6 +37,7 @@
 #include <stdexcept>
 
 namespace mcl = mir::client;
+namespace mclr = mir::client::rpc;
 namespace mf = mir::frontend;
 namespace ml = mir::logging;
 namespace mp = mir::protobuf;
@@ -88,7 +87,7 @@ void populate_buffer_package(
 
 mcl::BufferStream::BufferStream(
     MirConnection* connection,
-    mp::DisplayServer& server,
+    mclr::DisplayServer& server,
     mcl::BufferStreamMode mode,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
     mp::BufferStream const& protobuf_bs,
@@ -110,7 +109,7 @@ mcl::BufferStream::BufferStream(
 
 mcl::BufferStream::BufferStream(
     MirConnection* connection,
-    mp::DisplayServer& server,
+    mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
     mp::BufferStreamParameters const& parameters,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
@@ -131,7 +130,7 @@ mcl::BufferStream::BufferStream(
     create_wait_handle.expect_result();
     try
     {
-        server.create_buffer_stream(0, &parameters, protobuf_bs.get(), gp::NewCallback(this, &mcl::BufferStream::created, callback,
+        server.create_buffer_stream(&parameters, protobuf_bs.get(), gp::NewCallback(this, &mcl::BufferStream::created, callback,
             context));
     }
     catch (std::exception const& ex)
@@ -207,7 +206,7 @@ MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std:
     request->mutable_buffer()->set_buffer_id(buffer_depository.current_buffer_id());
     lock.unlock();
 
-    display_server.submit_buffer(nullptr, request.get(), protobuf_void.get(),
+    display_server.submit_buffer(request.get(), protobuf_void.get(),
         google::protobuf::NewCallback(google::protobuf::DoNothing));
 
     lock.lock();
@@ -249,7 +248,6 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
         next_buffer_wait_handle.expect_result();
 
         display_server.screencast_buffer(
-            nullptr,
             screencast_id.get(),
             protobuf_bs->mutable_buffer(),
             google::protobuf::NewCallback(
@@ -347,7 +345,7 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
     lock.unlock();
 
     configure_wait_handle.expect_result();
-    display_server.configure_surface(0, setting.get(), result.get(),
+    display_server.configure_surface(setting.get(), result.get(),
         google::protobuf::NewCallback(this, &mcl::BufferStream::on_configured));
 
     configure_wait_handle.wait_for_all();
