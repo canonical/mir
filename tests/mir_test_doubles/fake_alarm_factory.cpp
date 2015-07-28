@@ -18,12 +18,15 @@
 
 #include "mir/test/doubles/fake_alarm_factory.h"
 
+#include <numeric>
+
 namespace mtd = mir::test::doubles;
 
 mtd::FakeAlarm::FakeAlarm(
     std::function<void()> const& callback,
     std::shared_ptr<mir::time::Clock> const& clock)
-    : callback{callback},
+    : triggered_count{0},
+      callback{callback},
       alarm_state{State::cancelled},
       triggers_at{mir::time::Timestamp::max()},
       clock{clock}
@@ -37,7 +40,13 @@ void mtd::FakeAlarm::time_updated()
         triggers_at = mir::time::Timestamp::max();
         alarm_state = State::triggered;
         callback();
+        ++triggered_count;
     }
+}
+
+int mtd::FakeAlarm::wakeup_count() const
+{
+    return triggered_count;
 }
 
 bool mtd::FakeAlarm::cancel()
@@ -107,4 +116,27 @@ void mtd::FakeAlarmFactory::advance_by(mt::Duration step)
     {
         alarm->time_updated();
     }
+}
+
+void mtd::FakeAlarmFactory::advance_smoothly_by(mt::Duration step)
+{
+    using namespace std::literals::chrono_literals;
+    auto const step_by = 1ms;
+    while (step.count() > 0)
+    {
+        advance_by(step_by);
+        step -= step_by;
+    }
+}
+
+int mtd::FakeAlarmFactory::wakeup_count() const
+{
+    return std::accumulate(
+        alarms.begin(),
+        alarms.end(),
+        0,
+        [](int count, FakeAlarm const* alarm)
+        {
+            return count + alarm->wakeup_count();
+        });
 }

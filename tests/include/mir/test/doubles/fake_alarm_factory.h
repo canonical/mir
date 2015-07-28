@@ -41,6 +41,7 @@ public:
         std::shared_ptr<mir::time::Clock> const& clock);
 
     void time_updated();
+    int wakeup_count() const;
 
     bool cancel() override;
     State state() const override;
@@ -49,6 +50,7 @@ public:
     bool reschedule_for(mir::time::Timestamp timeout) override;
 
 private:
+    int triggered_count;
     std::function<void()> const callback;
     State alarm_state;
     mir::time::Timestamp triggers_at;
@@ -66,6 +68,8 @@ public:
         std::shared_ptr<mir::LockableCallback> const& callback) override;
 
     void advance_by(mt::Duration step);
+    void advance_smoothly_by(mt::Duration step);
+    int wakeup_count() const;
 
 private:
     std::vector<FakeAlarm*> alarms;
