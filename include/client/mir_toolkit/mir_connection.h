@@ -213,7 +213,7 @@ MirPixelFormat mir_connection_get_egl_pixel_format(
  *       created successfully with more formats than this function reveals.
  *       In the more distant future this function will be modified to more
  *       accurately return the full list of supported pixel formats for
- *       software usage. And it may no longer have any relation to hardare
+ *       software usage. And it may no longer have any relation to hardware
  *       surfaces' pixel formats.
  */
 void mir_connection_get_available_surface_formats(
