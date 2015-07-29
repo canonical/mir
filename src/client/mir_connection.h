@@ -221,8 +221,6 @@ private:
     
     std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
 
-    std::unique_ptr<google::protobuf::Closure> const pong_callback;
-
     struct SurfaceRelease;
     struct StreamRelease;
 
