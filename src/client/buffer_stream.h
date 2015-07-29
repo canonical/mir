@@ -157,6 +157,9 @@ private:
     std::shared_ptr<MemoryRegion> secured_region;
     
     geometry::Size cached_buffer_size;
+
+    void deposit(std::unique_lock<std::mutex> const&,
+        std::shared_ptr<MirBufferPackage> const&, int id, geometry::Size, MirPixelFormat);
 };
 
 }

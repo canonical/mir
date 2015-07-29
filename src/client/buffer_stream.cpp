@@ -178,7 +178,7 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
     process_buffer(buffer, lock);
 }
 
-void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&)
+void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const& lk)
 {
     auto buffer_package = std::make_shared<MirBufferPackage>();
     populate_buffer_package(*buffer_package, buffer);
@@ -196,7 +196,8 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
     try
     {
         auto pixel_format = static_cast<MirPixelFormat>(protobuf_bs->pixel_format());
-        buffer_depository->deposit_package(buffer_package,
+        deposit(lk,
+            buffer_package,
             buffer.buffer_id(),
             cached_buffer_size, pixel_format);
         perf_report->begin_frame(buffer.buffer_id());
@@ -364,18 +365,10 @@ std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
     std::unique_lock<decltype(mutex)> lock(mutex);
     return get_current_buffer(lock);
 }
-std::shared_ptr<mir::client::ClientBuffer> mcl::BufferStream::get_current_buffer(std::unique_lock<std::mutex> const&)
-{
-    return buffer_depository->current_buffer();
-}
 uint32_t mcl::BufferStream::get_current_buffer_id()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     return get_current_buffer_id(lock);
-}
-uint32_t mcl::BufferStream::get_current_buffer_id(std::unique_lock<std::mutex> const&)
-{
-    return buffer_depository->current_buffer_id();
 }
 
 int mcl::BufferStream::swap_interval() const
@@ -428,12 +421,6 @@ bool mcl::BufferStream::valid() const
     return protobuf_bs->has_id() && !protobuf_bs->has_error();
 }
 
-void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
-{
-    if (buffer_depository)
-        buffer_depository->set_max_buffers(cache_size);
-}
-
 void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -461,4 +448,63 @@ void mcl::BufferStream::buffer_unavailable()
         on_incoming_buffer = std::function<void()>{};
     }
     next_buffer_wait_handle.result_received();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
+{
+    buffer_depository->set_max_buffers(cache_size);
+}
+
+std::shared_ptr<mir::client::ClientBuffer> mcl::BufferStream::get_current_buffer(std::unique_lock<std::mutex> const&)
+{
+    return buffer_depository->current_buffer();
+}
+
+uint32_t mcl::BufferStream::get_current_buffer_id(std::unique_lock<std::mutex> const&)
+{
+    return buffer_depository->current_buffer_id();
+}
+void mcl::BufferStream::deposit(std::unique_lock<std::mutex> const&,
+        std::shared_ptr<MirBufferPackage> const& p, int id, geometry::Size sz, MirPixelFormat pf)
+{
+    buffer_depository->deposit_package(p, id, sz, pf);
 }
