@@ -200,6 +200,14 @@ MirPixelFormat mir_connection_get_egl_pixel_format(
  *   \param [out] formats           List of valid formats to create surfaces with
  *   \param [in]  formats_size      size of formats list
  *   \param [out] num_valid_formats number of valid formats returned in formats
+ *
+ * \note Users of EGL should call mir_connection_get_egl_pixel_format instead,
+ *       as it will take the guesswork out of choosing between similar pixel
+ *       formats. At the moment, this function returns a compatible list of
+ *       formats likely to work for either software or hardware rendering.
+ *       However it is not the full or accurate list and will be replaced in
+ *       future by a function that takes the intended MirBufferUsage into
+ *       account.
  */
 void mir_connection_get_available_surface_formats(
     MirConnection* connection, MirPixelFormat* formats,
