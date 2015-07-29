@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include <google/protobuf/descriptor.h>
+#include <google/protobuf/stubs/common.h>
 
 extern "C" int __attribute__((constructor))
 init_google_protobuf()

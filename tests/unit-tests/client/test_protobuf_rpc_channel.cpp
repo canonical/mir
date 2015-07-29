@@ -40,8 +40,6 @@
 
 #include <boost/throw_exception.hpp>
 
-#include <google/protobuf/descriptor.h>
-
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 

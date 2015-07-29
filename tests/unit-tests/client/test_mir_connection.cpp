@@ -37,8 +37,6 @@
 
 #include "mir_protobuf.pb.h"
 
-#include <google/protobuf/descriptor.h>
-
 #include <sys/eventfd.h>
 
 #include <gtest/gtest.h>

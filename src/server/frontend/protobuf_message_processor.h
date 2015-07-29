@@ -21,11 +21,12 @@
 #define MIR_FRONTEND_PROTOBUF_MESSAGE_PROCESSOR_H_
 
 #include "mir/frontend/message_processor.h"
-
 #include "mir_protobuf.pb.h"
+#include <google/protobuf/stubs/common.h>
 
 #include <memory>
 
+namespace google { namespace protobuf { class MessageLite; } }
 namespace mir
 {
 namespace frontend
@@ -50,15 +51,15 @@ public:
 
     void client_pid(int pid) override;
 
-    void send_response(::google::protobuf::uint32 id, ::google::protobuf::MessageLite* response);
-    void send_response(::google::protobuf::uint32 id, protobuf::Buffer* response);
-    void send_response(::google::protobuf::uint32 id, protobuf::Connection* response);
-    void send_response(::google::protobuf::uint32 id, protobuf::Surface* response);
-    void send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::Buffer> response);
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::Screencast* response);
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::BufferStream* response);
-    void send_response(::google::protobuf::uint32 id, mir::protobuf::SocketFD* response);
-    void send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::PlatformOperationMessage> response);
+    void send_response(google::protobuf::uint32 id, google::protobuf::MessageLite* response);
+    void send_response(google::protobuf::uint32 id, protobuf::Buffer* response);
+    void send_response(google::protobuf::uint32 id, protobuf::Connection* response);
+    void send_response(google::protobuf::uint32 id, protobuf::Surface* response);
+    void send_response(google::protobuf::uint32 id, std::shared_ptr<protobuf::Buffer> response);
+    void send_response(google::protobuf::uint32 id, mir::protobuf::Screencast* response);
+    void send_response(google::protobuf::uint32 id, mir::protobuf::BufferStream* response);
+    void send_response(google::protobuf::uint32 id, mir::protobuf::SocketFD* response);
+    void send_response(google::protobuf::uint32 id, std::shared_ptr<protobuf::PlatformOperationMessage> response);
 
 private:
     bool dispatch(Invocation const& invocation, std::vector<mir::Fd> const& side_channel_fds) override;
