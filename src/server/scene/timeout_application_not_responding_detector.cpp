@@ -68,7 +68,10 @@ void ms::TimeoutApplicationNotRespondingDetector::register_session(
 {
     std::lock_guard<std::mutex> lock{session_mutex};
     sessions[dynamic_cast<Session const*>(session)] = std::make_unique<ANRContext>(pinger);
-    alarm->reschedule_in(period);
+    if (alarm->state() != mt::Alarm::State::pending)
+    {
+        alarm->reschedule_in(period);
+    }
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::unregister_session(

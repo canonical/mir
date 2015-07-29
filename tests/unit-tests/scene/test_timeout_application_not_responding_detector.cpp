@@ -425,3 +425,47 @@ TEST(TimeoutApplicationNotRespondingDetector, sends_unresponsive_notification_on
 
     EXPECT_THAT(unresponsive_notifications, Eq(1));
 }
+
+TEST(TimeoutApplicationNotRespondingDetector, sends_pings_on_schedule_as_sessions_are_connecting)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mtd::FakeAlarmFactory fake_alarms;
+
+    auto const cycle_time = 1s;
+    ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, cycle_time};
+
+    NiceMock<mtd::MockSceneSession> session;
+    std::atomic<int> ping_count{0};
+    auto delayed_dispatch_pong = fake_alarms.create_alarm(
+        [&detector, &session, &ping_count]()
+        {
+            detector.pong_received(&session);
+            ++ping_count;
+        });
+
+    detector.register_session(&session,
+        [&delayed_dispatch_pong]()
+        {
+            delayed_dispatch_pong->reschedule_in(1ms);
+        });
+
+
+    auto duration = 0ms;
+    auto const step = 500ms;
+
+    // <= ensures we go past the threshold for the cycle
+    while (duration <= 5s)
+    {
+        NiceMock<mtd::MockSceneSession> dummy_session;
+        detector.register_session(&dummy_session, [](){});
+
+        fake_alarms.advance_smoothly_by(step);
+        duration += step;
+
+        detector.unregister_session(&dummy_session);
+    }
+
+    EXPECT_THAT(ping_count, Ge(duration / cycle_time));
+}
