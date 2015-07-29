@@ -98,7 +98,7 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
 
     it->second.owner = Owner::Server;
     it->second.buffer->mark_as_submitted();
-    server_requests->submit_buffer();
+    server_requests->submit_buffer(*it->second.buffer);
 }
 
 void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
