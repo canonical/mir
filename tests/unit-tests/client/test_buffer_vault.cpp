@@ -38,11 +38,12 @@ namespace mg = mir::graphics;
 namespace mp = mir::protobuf;
 using namespace testing;
 
+namespace
+{
 struct MockBuffer : public mcl::AgingBuffer
 {
     MockBuffer()
     {
-        using namespace testing;
         ON_CALL(*this, mark_as_submitted())
             .WillByDefault(Invoke([this](){this->AgingBuffer::mark_as_submitted();}));
     }
@@ -55,51 +56,21 @@ struct MockBuffer : public mcl::AgingBuffer
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mir::graphics::NativeBuffer>());
     MOCK_METHOD1(update_from, void(MirBufferPackage const&));
     MOCK_METHOD1(fill_update_msg, void(MirBufferPackage&));
+    MOCK_METHOD0(increment_age, void());
+    MOCK_CONST_METHOD0(age, uint32_t());
 };
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory
 {
-    MockClientBufferFactory() :
-        alloc_count(0),
-        free_count(0)
+    MockClientBufferFactory()
     {
-        using namespace testing;
         ON_CALL(*this, create_buffer(_,_,_))
-            .WillByDefault(InvokeWithoutArgs([this]()
-            {
-                alloc_count++;
-                auto buffer = std::shared_ptr<mcl::ClientBuffer>(
-                    new NiceMock<MockBuffer>(),
-                    [this](mcl::ClientBuffer* buffer)
-                    {
-                        free_count++;
-                        delete buffer;
-                    });
-                if (alloc_count == 1)
-                    first_allocated_buffer = buffer;
-                return buffer;
-            }));
-    }
-
-    ~MockClientBufferFactory()
-    {
-        EXPECT_THAT(alloc_count, testing::Eq(free_count));
+            .WillByDefault(InvokeWithoutArgs([] { return std::make_shared<MockBuffer>(); }));
     }
 
     MOCK_METHOD3(create_buffer,
                  std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage> const&,
                                                     geom::Size, MirPixelFormat));
-
-    bool first_buffer_allocated_and_then_freed()
-    {
-        if ((alloc_count >= 1) && (first_allocated_buffer.lock() == nullptr))
-            return true;
-        return false;
-    }
-
-    int alloc_count;
-    int free_count;
-    std::weak_ptr<mcl::ClientBuffer> first_allocated_buffer;
 };
 
 struct MockServerRequests : mcl::ServerBufferRequests
@@ -145,6 +116,7 @@ struct StartedBufferVault : BufferVault
         mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
         size, format, usage, initial_nbuffers};
 };
+}
 
 TEST_F(BufferVault, creates_all_buffers_on_start)
 {
@@ -193,6 +165,24 @@ TEST_F(StartedBufferVault, cant_transfer_if_not_in_acct)
     auto buffer = vault.withdraw().get();
     EXPECT_THROW({ 
         vault.wire_transfer_outbound(buffer);
+    }, std::logic_error);
+}
+
+TEST_F(StartedBufferVault, depositing_external_buffer_throws)
+{
+    auto buffer = std::make_shared<MockBuffer>(); 
+    EXPECT_THROW({ 
+        vault.deposit(buffer);
+    }, std::logic_error);
+}
+
+TEST_F(StartedBufferVault, attempt_to_redeposit_throws)
+{
+    auto buffer = vault.withdraw().get();
+    vault.deposit(buffer);
+    vault.wire_transfer_outbound(buffer);
+    EXPECT_THROW({
+        vault.deposit(buffer);
     }, std::logic_error);
 }
 
@@ -250,7 +240,34 @@ TEST_F(BufferVault, destruction_signals_futures)
     }, std::future_error);
 }
 
+TEST_F(BufferVault, ages_buffer_on_deposit)
+{
+    auto mock_buffer = std::make_shared<MockBuffer>();
+    EXPECT_CALL(*mock_buffer, increment_age());
+    ON_CALL(mock_factory, create_buffer(_,_,_))
+        .WillByDefault(Return(mock_buffer));
 
+    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+        size, format, usage, initial_nbuffers);
+    vault.wire_transfer_inbound(package, format);
+    vault.deposit(vault.withdraw().get());
+}
+
+TEST_F(BufferVault, marks_as_submitted_on_transfer)
+{
+    auto mock_buffer = std::make_shared<MockBuffer>();
+    EXPECT_CALL(*mock_buffer, mark_as_submitted());
+    ON_CALL(mock_factory, create_buffer(_,_,_))
+        .WillByDefault(Return(mock_buffer));
+
+    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+        size, format, usage, initial_nbuffers);
+    vault.wire_transfer_inbound(package, format);
+
+    auto buffer = vault.withdraw().get();
+    vault.deposit(buffer);
+    vault.wire_transfer_outbound(buffer);
+}
 
 
 

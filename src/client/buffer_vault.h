@@ -61,17 +61,19 @@ public:
     void deposit(std::shared_ptr<ClientBuffer> const& buffer);
     void wire_transfer_inbound(protobuf::Buffer const&, MirPixelFormat format);
     void wire_transfer_outbound(std::shared_ptr<ClientBuffer> const& buffer);
+
 private:
     std::shared_ptr<ClientBufferFactory> const factory;
     std::shared_ptr<ServerBufferRequests> const server_requests;
 
+    enum class Owner;
     struct BufferEntry
     {
         std::shared_ptr<ClientBuffer> buffer;
-        bool server_owned;
-        bool deposited;
-        bool driver_used;
+        Owner owner;
     };
+
+    std::mutex mutex;
     std::map<int, BufferEntry> buffers;
     std::deque<std::promise<std::shared_ptr<ClientBuffer>>> promises;
 };

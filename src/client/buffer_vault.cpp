@@ -27,6 +27,13 @@ namespace mp = mir::protobuf;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 
+enum class mcl::BufferVault::Owner
+{
+    Server,
+    Driver,
+    Self
+};
+
 mcl::BufferVault::BufferVault(
     std::shared_ptr<ClientBufferFactory> const& client_buffer_factory,
     std::shared_ptr<ServerBufferRequests> const& server_requests,
@@ -49,93 +56,76 @@ std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
 {
     std::promise<std::shared_ptr<mcl::ClientBuffer>> promise;
 
-    printf("BUFFER SIZE %i\n", (int) buffers.size());
     auto it = std::find_if(buffers.begin(), buffers.end(),
-        [](std::pair<int, BufferEntry> const& entry) {
-            printf("SCAN.\n");
-            return !entry.second.server_owned && !entry.second.driver_used;
-        });
+        [](std::pair<int, BufferEntry> const& entry) { return entry.second.owner == Owner::Self; });
 
-    auto the_future = promise.get_future();
+    auto future = promise.get_future();
     if (it != buffers.end())
     {
-        it->second.driver_used = true;
+        it->second.owner = Owner::Driver;
         promise.set_value(it->second.buffer);
     }
     else
     {
-        printf("DIDNT FIND.\n");
         promises.emplace_back(std::move(promise));
     }
-    return the_future;
+    return future;
 }
 
 void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 {
     auto it = std::find_if(buffers.begin(), buffers.end(),
-        [&buffer](std::pair<int, BufferEntry> const& entry) {
-            return buffer == entry.second.buffer;
-        });
-    if (it == buffers.end())
-    {
-        //throw?
-    }
+        [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
+    if (it == buffers.end() || it->second.owner != Owner::Driver)
+        BOOST_THROW_EXCEPTION(std::logic_error("no."));
     else
-    {
-        it->second.deposited = true;
-    }
-    (void) buffer;
+        it->second.owner = Owner::Self;
 }
 
 void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 {
     auto it = std::find_if(buffers.begin(), buffers.end(),
-        [&buffer](std::pair<int, BufferEntry> const& entry) {
+            [&buffer](std::pair<int, BufferEntry> const& entry) {
             return buffer == entry.second.buffer;
-        });
-    if (it == buffers.end() || !it->second.deposited)
-        BOOST_THROW_EXCEPTION(std::logic_error("no.\n"));
+            });
+    if (it == buffers.end() || it->second.owner != Owner::Self)
+        BOOST_THROW_EXCEPTION(std::logic_error("no."));
 
-    it->second.server_owned = true;
+    it->second.owner = Owner::Server;
     server_requests->submit_buffer();
 }
 
 void mcl::BufferVault::wire_transfer_inbound(
-    mp::Buffer const& protobuf_buffer, MirPixelFormat pf)
+        mp::Buffer const& protobuf_buffer, MirPixelFormat pf)
 {
-    //first track buffer
-    auto buffer_package = std::make_shared<MirBufferPackage>();
-    buffer_package->data_items = protobuf_buffer.data_size();
-    buffer_package->fd_items = protobuf_buffer.fd_size();
-
-    for (int i = 0; i != protobuf_buffer.data_size(); ++i)
-        buffer_package->data[i] = protobuf_buffer.data(i);
-    for (int i = 0; i != protobuf_buffer.fd_size(); ++i)
-        buffer_package->fd[i] = protobuf_buffer.fd(i);
-
-    buffer_package->stride = protobuf_buffer.stride();
-    buffer_package->flags = protobuf_buffer.flags();
-    buffer_package->width = protobuf_buffer.width();
-    buffer_package->height = protobuf_buffer.height();
-
     auto it = buffers.find(protobuf_buffer.buffer_id());
     if (it == buffers.end())
     {
-        buffers[protobuf_buffer.buffer_id()] = 
-            BufferEntry{
-                factory->create_buffer(buffer_package, geom::Size{buffer_package->width, buffer_package->height}, pf),
-            false, false, false 
-        };
+        auto buffer_package = std::make_shared<MirBufferPackage>();
+        buffer_package->data_items = protobuf_buffer.data_size();
+        buffer_package->fd_items = protobuf_buffer.fd_size();
+
+        for (int i = 0; i != protobuf_buffer.data_size(); ++i)
+            buffer_package->data[i] = protobuf_buffer.data(i);
+        for (int i = 0; i != protobuf_buffer.fd_size(); ++i)
+            buffer_package->fd[i] = protobuf_buffer.fd(i);
+
+        buffer_package->stride = protobuf_buffer.stride();
+        buffer_package->flags = protobuf_buffer.flags();
+        buffer_package->width = protobuf_buffer.width();
+        buffer_package->height = protobuf_buffer.height();
+        auto buffer = factory->create_buffer(
+            buffer_package, geom::Size{buffer_package->width, buffer_package->height}, pf);
+        buffers[protobuf_buffer.buffer_id()] = BufferEntry{ buffer, Owner::Self };
     }
     else
     {
-        it->second.server_owned = false;
-        it->second.deposited = false;
-        it->second.driver_used = false;
+        it->second.owner = Owner::Self;
     }
 
     if (!promises.empty())
     {
+        buffers[protobuf_buffer.buffer_id()].owner = Owner::Driver;
         promises.front().set_value(buffers[protobuf_buffer.buffer_id()].buffer);
         promises.pop_front();
     }
