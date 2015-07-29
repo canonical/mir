@@ -118,8 +118,7 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     auto it = buffers.find(protobuf_buffer.buffer_id());
     if (it == buffers.end())
     {
-        auto buffer = factory->create_buffer(
-            package, geom::Size{package->width, package->height}, format);
+        auto buffer = factory->create_buffer(package, geom::Size{package->width, package->height}, format);
         buffers[protobuf_buffer.buffer_id()] = BufferEntry{ buffer, Owner::Self };
     }
     else

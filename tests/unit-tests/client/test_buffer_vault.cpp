@@ -294,6 +294,7 @@ TEST_F(BufferVault, marks_as_submitted_on_transfer)
     vault.wire_transfer_outbound(buffer);
 }
 
+//handy for android's cancelbuffer
 TEST_F(StartedBufferVault, can_withdraw_and_deposit)
 {
     auto a_few_times = 5u;
