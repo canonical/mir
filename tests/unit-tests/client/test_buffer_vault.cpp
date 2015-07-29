@@ -121,11 +121,18 @@ TEST_F(BufferVault, creates_all_buffers_on_start)
 {
     EXPECT_CALL(mock_requests, allocate_buffer(size, format, usage))
         .Times(initial_nbuffers);
-    EXPECT_CALL(mock_requests, free_buffer(package.buffer_id());
-    EXPECT_CALL(mock_requests, free_buffer(package2.buffer_id());
-    EXPECT_CALL(mock_requests, free_buffer(package3.buffer_id());
     mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
         size, format, usage, initial_nbuffers);
+}
+
+TEST_F(BufferVault, frees_the_buffers_we_actually_got)
+{
+    EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
+    EXPECT_CALL(mock_requests, free_buffer(package2.buffer_id()));
+    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+        size, format, usage, initial_nbuffers);
+    vault.wire_transfer_inbound(package);
+    vault.wire_transfer_inbound(package2);
 }
 
 TEST_F(BufferVault, creates_buffer_on_first_insertion)
