@@ -114,6 +114,8 @@ protected:
     BufferStream& operator=(BufferStream const&) = delete;
 
 private:
+    uint32_t get_current_buffer_id(std::unique_lock<std::mutex> const&);
+    std::shared_ptr<mir::client::ClientBuffer> get_current_buffer(std::unique_lock<std::mutex> const&);
     void created(mir_buffer_stream_callback callback, void* context);
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&);
@@ -136,7 +138,9 @@ private:
     std::shared_ptr<ClientPlatform> const client_platform;
 
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
-    mir::client::ClientBufferDepository buffer_depository;
+
+    bool old_buffer = true;
+    std::unique_ptr<mir::client::ClientBufferDepository> buffer_depository;
     
     int swap_interval_;
 

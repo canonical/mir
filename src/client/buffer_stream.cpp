@@ -99,7 +99,6 @@ mcl::BufferStream::BufferStream(
       mode(mode),
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(protobuf_bs)},
-      buffer_depository{client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size},
       swap_interval_(1),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
@@ -121,7 +120,6 @@ mcl::BufferStream::BufferStream(
       mode(BufferStreamMode::Producer),
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>()},
-      buffer_depository{client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size},
       swap_interval_(1),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
@@ -146,10 +144,20 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
 {
     if (!protobuf_bs->has_id() || protobuf_bs->has_error())
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
-    if (!protobuf_bs->has_buffer())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Buffer stream did not come with a buffer"));
 
-    process_buffer(protobuf_bs->buffer());
+    if (protobuf_bs->has_buffer())
+    {
+        old_buffer = true;
+        buffer_depository = std::make_unique<mcl::ClientBufferDepository>(
+            client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size);
+        process_buffer(protobuf_bs->buffer());
+    }
+    else
+    {
+        old_buffer = false;
+    }
+
+
     egl_native_window_ = client_platform->create_egl_native_window(this);
 
     if (connection)
@@ -188,7 +196,7 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
     try
     {
         auto pixel_format = static_cast<MirPixelFormat>(protobuf_bs->pixel_format());
-        buffer_depository.deposit_package(buffer_package,
+        buffer_depository->deposit_package(buffer_package,
             buffer.buffer_id(),
             cached_buffer_size, pixel_format);
         perf_report->begin_frame(buffer.buffer_id());
@@ -204,7 +212,7 @@ MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std:
     //always submit what we have, whether we have a buffer, or will have to wait for an async reply
     auto request = mcl::make_protobuf_object<mp::BufferRequest>();
     request->mutable_id()->set_value(protobuf_bs->id().value());
-    request->mutable_buffer()->set_buffer_id(buffer_depository.current_buffer_id());
+    request->mutable_buffer()->set_buffer_id(get_current_buffer_id(lock));
     lock.unlock();
 
     display_server.submit_buffer(nullptr, request.get(), protobuf_void.get(),
@@ -228,7 +236,7 @@ MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std:
 MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    perf_report->end_frame(buffer_depository.current_buffer_id());
+    perf_report->end_frame(get_current_buffer_id());
 
     secured_region.reset();
 
@@ -261,11 +269,6 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
     return &next_buffer_wait_handle;
 }
 
-std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    return buffer_depository.current_buffer();
-}
 
 EGLNativeWindowType mcl::BufferStream::egl_native_window()
 {
@@ -282,7 +285,7 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
 
-    secured_region = buffer_depository.current_buffer()->secure_for_cpu_write();
+    secured_region = get_current_buffer(lock)->secure_for_cpu_write();
     return secured_region;
 }
 
@@ -356,10 +359,23 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
     swap_interval_ = result->ivalue();
 }
 
+std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    return get_current_buffer(lock);
+}
+std::shared_ptr<mir::client::ClientBuffer> mcl::BufferStream::get_current_buffer(std::unique_lock<std::mutex> const&)
+{
+    return buffer_depository->current_buffer();
+}
 uint32_t mcl::BufferStream::get_current_buffer_id()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    return buffer_depository.current_buffer_id();
+    return get_current_buffer_id(lock);
+}
+uint32_t mcl::BufferStream::get_current_buffer_id(std::unique_lock<std::mutex> const&)
+{
+    return buffer_depository->current_buffer_id();
 }
 
 int mcl::BufferStream::swap_interval() const
@@ -414,7 +430,8 @@ bool mcl::BufferStream::valid() const
 
 void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
 {
-    buffer_depository.set_max_buffers(cache_size);
+    if (buffer_depository)
+        buffer_depository->set_max_buffers(cache_size);
 }
 
 void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
