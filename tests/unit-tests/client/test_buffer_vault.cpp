@@ -196,6 +196,24 @@ TEST_F(StartedBufferVault, cant_transfer_if_not_in_acct)
     }, std::logic_error);
 }
 
+TEST_F(BufferVault, can_transfer_again_when_we_get_the_buffer)
+{
+    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+        size, format, usage, initial_nbuffers);
+
+    EXPECT_CALL(mock_factory, create_buffer(_,initial_properties.size,initial_properties.format))
+        .Times(Exactly(1));
+    vault.wire_transfer_inbound(package, format);
+    auto buffer = vault.withdraw().get();
+    vault.deposit(buffer);
+    vault.wire_transfer_outbound(buffer);
+
+    //should just activate, not create the buffer
+    vault.wire_transfer_inbound(package, format);
+    auto buffer2 = vault.withdraw().get();
+    EXPECT_THAT(buffer, Eq(buffer2)); 
+}
+
 TEST_F(StartedBufferVault, multiple_draws_get_different_buffer)
 {
     auto buffer1 = vault.withdraw().get();

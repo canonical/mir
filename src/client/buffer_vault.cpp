@@ -103,7 +103,6 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
 void mcl::BufferVault::wire_transfer_inbound(
     mp::Buffer const& protobuf_buffer, MirPixelFormat pf)
 {
-    printf("TRACK INBOUND\n");
     //first track buffer
     auto buffer_package = std::make_shared<MirBufferPackage>();
     buffer_package->data_items = protobuf_buffer.data_size();
@@ -119,12 +118,21 @@ void mcl::BufferVault::wire_transfer_inbound(
     buffer_package->width = protobuf_buffer.width();
     buffer_package->height = protobuf_buffer.height();
 
-    buffers[protobuf_buffer.buffer_id()] = 
-        BufferEntry{
-            factory->create_buffer(buffer_package, geom::Size{buffer_package->width, buffer_package->height}, pf),
-        false, false, false 
+    auto it = buffers.find(protobuf_buffer.buffer_id());
+    if (it == buffers.end())
+    {
+        buffers[protobuf_buffer.buffer_id()] = 
+            BufferEntry{
+                factory->create_buffer(buffer_package, geom::Size{buffer_package->width, buffer_package->height}, pf),
+            false, false, false 
         };
-    printf("INBOUND SIZE %i\n", (int) buffers.size());
+    }
+    else
+    {
+        it->second.server_owned = false;
+        it->second.deposited = false;
+        it->second.driver_used = false;
+    }
 
     if (!promises.empty())
     {
