@@ -115,6 +115,10 @@ struct BufferVault : public testing::Test
     {
         package.set_width(size.width.as_int());
         package.set_height(size.height.as_int());
+
+        package.set_buffer_id(1);
+        package2.set_buffer_id(2);
+        package3.set_buffer_id(3);
     }
     unsigned int initial_nbuffers {3};
     geom::Size size{271, 314};
@@ -126,12 +130,16 @@ struct BufferVault : public testing::Test
     NiceMock<MockServerRequests> mock_requests;
     mp::Buffer package;
     mp::Buffer package2;
+    mp::Buffer package3;
 };
 
 struct StartedBufferVault : BufferVault
 {
     StartedBufferVault()
     {
+        vault.wire_transfer_inbound(package, format);
+        vault.wire_transfer_inbound(package2, format);
+        vault.wire_transfer_inbound(package3, format);
     }
     mcl::BufferVault vault{
         mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),

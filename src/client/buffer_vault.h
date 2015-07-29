@@ -69,6 +69,8 @@ private:
     {
         std::shared_ptr<ClientBuffer> buffer;
         bool server_owned;
+        bool deposited;
+        bool driver_used;
     };
     std::map<int, BufferEntry> buffers;
     std::deque<std::promise<std::shared_ptr<ClientBuffer>>> promises;

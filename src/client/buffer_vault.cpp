@@ -20,6 +20,7 @@
 #include "buffer_vault.h"
 #include "mir_protobuf.pb.h"
 #include <algorithm>
+#include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
@@ -40,38 +41,69 @@ mcl::BufferVault::BufferVault(
 mcl::BufferVault::~BufferVault()
 {
     for(auto& promise : promises)
-    {
-        printf("blow up.\n");
         promise.set_exception(make_exception_ptr(
             std::future_error(std::future_errc::broken_promise)));
-    }
 }
 
 std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
 {
     std::promise<std::shared_ptr<mcl::ClientBuffer>> promise;
 
+    printf("BUFFER SIZE %i\n", (int) buffers.size());
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [](std::pair<int, BufferEntry> const& entry) {
-            return !entry.second.server_owned;
+            printf("SCAN.\n");
+            return !entry.second.server_owned && !entry.second.driver_used;
         });
 
     auto the_future = promise.get_future();
     if (it != buffers.end())
+    {
+        it->second.driver_used = true;
         promise.set_value(it->second.buffer);
+    }
     else
+    {
+        printf("DIDNT FIND.\n");
         promises.emplace_back(std::move(promise));
+    }
     return the_future;
 }
 
 void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 {
+    auto it = std::find_if(buffers.begin(), buffers.end(),
+        [&buffer](std::pair<int, BufferEntry> const& entry) {
+            return buffer == entry.second.buffer;
+        });
+    if (it == buffers.end())
+    {
+        //throw?
+    }
+    else
+    {
+        it->second.deposited = true;
+    }
     (void) buffer;
+}
+
+void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer> const& buffer)
+{
+    auto it = std::find_if(buffers.begin(), buffers.end(),
+        [&buffer](std::pair<int, BufferEntry> const& entry) {
+            return buffer == entry.second.buffer;
+        });
+    if (it == buffers.end() || !it->second.deposited)
+        BOOST_THROW_EXCEPTION(std::logic_error("no.\n"));
+
+    it->second.server_owned = true;
+    server_requests->submit_buffer();
 }
 
 void mcl::BufferVault::wire_transfer_inbound(
     mp::Buffer const& protobuf_buffer, MirPixelFormat pf)
 {
+    printf("TRACK INBOUND\n");
     //first track buffer
     auto buffer_package = std::make_shared<MirBufferPackage>();
     buffer_package->data_items = protobuf_buffer.data_size();
@@ -90,8 +122,9 @@ void mcl::BufferVault::wire_transfer_inbound(
     buffers[protobuf_buffer.buffer_id()] = 
         BufferEntry{
             factory->create_buffer(buffer_package, geom::Size{buffer_package->width, buffer_package->height}, pf),
-        false 
+        false, false, false 
         };
+    printf("INBOUND SIZE %i\n", (int) buffers.size());
 
     if (!promises.empty())
     {
@@ -100,7 +133,3 @@ void mcl::BufferVault::wire_transfer_inbound(
     }
 }
 
-void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer> const& buffer)
-{
-    (void) buffer;
-}
