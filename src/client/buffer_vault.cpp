@@ -17,6 +17,7 @@
  */
 
 #include "mir/client_buffer_factory.h"
+#include "mir/client_buffer.h"
 #include "buffer_vault.h"
 #include "mir_protobuf.pb.h"
 #include <algorithm>
@@ -54,6 +55,7 @@ mcl::BufferVault::~BufferVault()
 
 std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
 {
+    std::lock_guard<std::mutex> lk(mutex);
     std::promise<std::shared_ptr<mcl::ClientBuffer>> promise;
 
     auto it = std::find_if(buffers.begin(), buffers.end(),
@@ -74,30 +76,35 @@ std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
 
 void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 {
+    std::lock_guard<std::mutex> lk(mutex);
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
     if (it == buffers.end() || it->second.owner != Owner::Driver)
-        BOOST_THROW_EXCEPTION(std::logic_error("no."));
-    else
-        it->second.owner = Owner::Self;
+        BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be deposited"));
+
+    it->second.owner = Owner::Self;
+    it->second.buffer->increment_age();
 }
 
 void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 {
+    std::lock_guard<std::mutex> lk(mutex);
     auto it = std::find_if(buffers.begin(), buffers.end(),
             [&buffer](std::pair<int, BufferEntry> const& entry) {
             return buffer == entry.second.buffer;
             });
     if (it == buffers.end() || it->second.owner != Owner::Self)
-        BOOST_THROW_EXCEPTION(std::logic_error("no."));
+        BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be transferred"));
 
     it->second.owner = Owner::Server;
+    it->second.buffer->mark_as_submitted();
     server_requests->submit_buffer();
 }
 
 void mcl::BufferVault::wire_transfer_inbound(
         mp::Buffer const& protobuf_buffer, MirPixelFormat pf)
 {
+    std::lock_guard<std::mutex> lk(mutex);
     auto it = buffers.find(protobuf_buffer.buffer_id());
     if (it == buffers.end())
     {

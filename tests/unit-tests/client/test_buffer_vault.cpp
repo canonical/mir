@@ -65,12 +65,11 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
     MockClientBufferFactory()
     {
         ON_CALL(*this, create_buffer(_,_,_))
-            .WillByDefault(InvokeWithoutArgs([] { return std::make_shared<MockBuffer>(); }));
+            .WillByDefault(InvokeWithoutArgs([] { return std::make_shared<NiceMock<MockBuffer>>(); }));
     }
 
-    MOCK_METHOD3(create_buffer,
-                 std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage> const&,
-                                                    geom::Size, MirPixelFormat));
+    MOCK_METHOD3(create_buffer, std::shared_ptr<mcl::ClientBuffer>(
+        std::shared_ptr<MirBufferPackage> const&, geom::Size, MirPixelFormat));
 };
 
 struct MockServerRequests : mcl::ServerBufferRequests
@@ -242,7 +241,7 @@ TEST_F(BufferVault, destruction_signals_futures)
 
 TEST_F(BufferVault, ages_buffer_on_deposit)
 {
-    auto mock_buffer = std::make_shared<MockBuffer>();
+    auto mock_buffer = std::make_shared<NiceMock<MockBuffer>>();
     EXPECT_CALL(*mock_buffer, increment_age());
     ON_CALL(mock_factory, create_buffer(_,_,_))
         .WillByDefault(Return(mock_buffer));
@@ -255,7 +254,7 @@ TEST_F(BufferVault, ages_buffer_on_deposit)
 
 TEST_F(BufferVault, marks_as_submitted_on_transfer)
 {
-    auto mock_buffer = std::make_shared<MockBuffer>();
+    auto mock_buffer = std::make_shared<NiceMock<MockBuffer>>();
     EXPECT_CALL(*mock_buffer, mark_as_submitted());
     ON_CALL(mock_factory, create_buffer(_,_,_))
         .WillByDefault(Return(mock_buffer));
@@ -268,64 +267,3 @@ TEST_F(BufferVault, marks_as_submitted_on_transfer)
     vault.deposit(buffer);
     vault.wire_transfer_outbound(buffer);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#if 0
-TEST_F(StartedBufferVault, ages_buffers_on_deposit)
-{
-    auto buffer = vault.withdraw();
-    auto buffer_age = buffer->age(); 
-    vault.deposit(buffer);
-    EXPECT_THAT(buffer->age, Eq(buffer_age + 1));
-}
-
-TEST_F(StartedBufferVault, selects_first_given_buffer_if_its_got_a_surplus)
-{
-    auto buffer = vault.withdraw();
-//    auto buffer = vault.withdraw();
-
-    
-}
-
-TEST_F(BufferSlots, can_access_last_inserted_buffer)
-{
-    mcl::BufferVault vault(mock_factory, mock_requests);
-    vault.insert(package);
-
-    auto buffer = vault.access();
-    EXPECT_THAT(buffer, NotNull());
-}
-
-TEST_F(BufferSlots, can_get_buffer_back)
-{
-    mcl::BufferVault vault(mock_factory, mock_requests);
-    vault.insert(package);
-
-    vault.mark_as_submitted(package->id);
-    vault.insert(package);
-
-}
-#endif
