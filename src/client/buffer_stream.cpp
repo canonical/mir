@@ -24,6 +24,7 @@
 #include "perf_report.h"
 #include "logging/perf_report.h"
 #include "rpc/mir_display_server.h"
+#include "mir_protobuf.pb.h"
 
 #include "mir/log.h"
 #include "mir/client_platform.h"
@@ -201,12 +202,12 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
 MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std::unique_lock<std::mutex> lock)
 {
     //always submit what we have, whether we have a buffer, or will have to wait for an async reply
-    auto request = mcl::make_protobuf_object<mp::BufferRequest>();
-    request->mutable_id()->set_value(protobuf_bs->id().value());
-    request->mutable_buffer()->set_buffer_id(buffer_depository.current_buffer_id());
+    mp::BufferRequest request;
+    request.mutable_id()->set_value(protobuf_bs->id().value());
+    request.mutable_buffer()->set_buffer_id(buffer_depository.current_buffer_id());
     lock.unlock();
 
-    display_server.submit_buffer(request.get(), protobuf_void.get(),
+    display_server.submit_buffer(&request, protobuf_void.get(),
         google::protobuf::NewCallback(google::protobuf::DoNothing));
 
     lock.lock();
@@ -241,14 +242,14 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
     }
     else
     {
-        auto screencast_id = mcl::make_protobuf_object<mp::ScreencastId>();
-        screencast_id->set_value(protobuf_bs->id().value());
+        mp::ScreencastId screencast_id;
+        screencast_id.set_value(protobuf_bs->id().value());
 
         lock.unlock();
         next_buffer_wait_handle.expect_result();
 
         display_server.screencast_buffer(
-            screencast_id.get(),
+            &screencast_id,
             protobuf_bs->mutable_buffer(),
             google::protobuf::NewCallback(
             this, &mcl::BufferStream::next_buffer_received,
@@ -337,21 +338,21 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
         BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
     }
 
-    auto setting = mcl::make_protobuf_object<mp::SurfaceSetting>();
-    auto result = mcl::make_protobuf_object<mp::SurfaceSetting>();
-    setting->mutable_surfaceid()->set_value(protobuf_bs->id().value());
-    setting->set_attrib(attrib);
-    setting->set_ivalue(value);
+    mp::SurfaceSetting setting;
+    mp::SurfaceSetting result;
+    setting.mutable_surfaceid()->set_value(protobuf_bs->id().value());
+    setting.set_attrib(attrib);
+    setting.set_ivalue(value);
     lock.unlock();
 
     configure_wait_handle.expect_result();
-    display_server.configure_surface(setting.get(), result.get(),
+    display_server.configure_surface(&setting, &result,
         google::protobuf::NewCallback(this, &mcl::BufferStream::on_configured));
 
     configure_wait_handle.wait_for_all();
 
     lock.lock();
-    swap_interval_ = result->ivalue();
+    swap_interval_ = result.ivalue();
 }
 
 uint32_t mcl::BufferStream::get_current_buffer_id()

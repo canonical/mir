@@ -18,7 +18,6 @@
 #ifndef MIR_CLIENT_MIR_CONNECTION_H_
 #define MIR_CLIENT_MIR_CONNECTION_H_
 
-#include "mir_protobuf.pb.h"
 #include "mir_wait_handle.h"
 #include "lifecycle_control.h"
 #include "ping_handler.h"
@@ -39,7 +38,14 @@
 namespace mir
 {
 class SharedLibrary;
-
+namespace protobuf
+{
+class BufferStream;
+class Connection;
+class ConnectParameters;
+class PlatformOperationMessage;
+class DisplayConfiguration;
+}
 /// The client-side library implementation namespace
 namespace client
 {

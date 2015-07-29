@@ -21,7 +21,6 @@
 
 #include "mir_wait_handle.h"
 #include "mir_toolkit/client_types.h"
-#include "mir_protobuf.pb.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
 
@@ -31,6 +30,11 @@
 
 namespace mir
 {
+namespace protobuf
+{
+class Screencast;
+class Void;
+}
 namespace client
 {
 namespace rpc
