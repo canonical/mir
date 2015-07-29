@@ -143,6 +143,22 @@ TEST_F(BufferVault, creates_buffer_on_first_insertion)
     vault.wire_transfer_inbound(package);
 }
 
+TEST_F(BufferVault, updates_buffer_on_subsequent_insertions)
+{
+    auto mock_buffer = std::make_shared<MockBuffer>();
+    EXPECT_CALL(*mock_buffer, update_from(_));
+    ON_CALL(mock_factory, create_buffer(_,_,_))
+        .WillByDefault(Return(mock_buffer));
+
+    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+        size, format, usage, initial_nbuffers);
+    vault.wire_transfer_inbound(package);
+    auto b = vault.withdraw().get();
+    vault.deposit(b);
+    vault.wire_transfer_outbound(b)
+    vault.wire_transfer_inbound(package);
+}
+
 TEST_F(BufferVault, withdrawing_and_never_filling_up_will_timeout)
 {
     using namespace std::literals::chrono_literals;

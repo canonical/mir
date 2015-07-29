@@ -59,7 +59,6 @@ std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
 {
     std::lock_guard<std::mutex> lk(mutex);
     std::promise<std::shared_ptr<mcl::ClientBuffer>> promise;
-
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [](std::pair<int, BufferEntry> const& entry) { return entry.second.owner == Owner::Self; });
 
@@ -125,6 +124,7 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     else
     {
         it->second.owner = Owner::Self;
+
     }
 
     if (!promises.empty())
