@@ -44,11 +44,6 @@ namespace
 
 std::string const test_exception_text{"test exception text"};
 
-struct StubDisplayServer : mf::detail::DisplayServer
-{
-    void client_pid(int /*pid*/) override {};
-
-};
 struct ConnectionErrorServer : mtd::StubDisplayServer
 {
     void connect(
