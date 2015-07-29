@@ -36,7 +36,7 @@ class ServerBufferRequests
 {
 public:
     virtual void allocate_buffer(geometry::Size size, MirPixelFormat format, int usage) = 0;
-    virtual void free_buffer() = 0;
+    virtual void free_buffer(int buffer_id) = 0;
     virtual void submit_buffer() = 0;
     virtual ~ServerBufferRequests() = default;
 protected:
@@ -59,12 +59,13 @@ public:
 
     std::future<std::shared_ptr<ClientBuffer>> withdraw();
     void deposit(std::shared_ptr<ClientBuffer> const& buffer);
-    void wire_transfer_inbound(protobuf::Buffer const&, MirPixelFormat format);
+    void wire_transfer_inbound(protobuf::Buffer const&);
     void wire_transfer_outbound(std::shared_ptr<ClientBuffer> const& buffer);
 
 private:
     std::shared_ptr<ClientBufferFactory> const factory;
     std::shared_ptr<ServerBufferRequests> const server_requests;
+    MirPixelFormat const format;
 
     enum class Owner;
     struct BufferEntry

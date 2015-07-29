@@ -40,7 +40,8 @@ mcl::BufferVault::BufferVault(
     std::shared_ptr<ServerBufferRequests> const& server_requests,
     geom::Size size, MirPixelFormat format, int usage, unsigned int initial_nbuffers) :
     factory(client_buffer_factory),
-    server_requests(server_requests)
+    server_requests(server_requests),
+    format(format)
 {
     for (auto i = 0u; i < initial_nbuffers; i++)
         server_requests->allocate_buffer(size, format, usage);
@@ -49,8 +50,7 @@ mcl::BufferVault::BufferVault(
 mcl::BufferVault::~BufferVault()
 {
     for(auto& promise : promises)
-        promise.set_exception(make_exception_ptr(
-            std::future_error(std::future_errc::broken_promise)));
+        promise.set_exception(make_exception_ptr(std::future_error(std::future_errc::broken_promise)));
 }
 
 std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
@@ -90,9 +90,7 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
 {
     std::lock_guard<std::mutex> lk(mutex);
     auto it = std::find_if(buffers.begin(), buffers.end(),
-            [&buffer](std::pair<int, BufferEntry> const& entry) {
-            return buffer == entry.second.buffer;
-            });
+        [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
     if (it == buffers.end() || it->second.owner != Owner::Self)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be transferred"));
 
@@ -101,8 +99,7 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
     server_requests->submit_buffer();
 }
 
-void mcl::BufferVault::wire_transfer_inbound(
-        mp::Buffer const& protobuf_buffer, MirPixelFormat pf)
+void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 {
     std::lock_guard<std::mutex> lk(mutex);
     auto it = buffers.find(protobuf_buffer.buffer_id());
@@ -111,18 +108,16 @@ void mcl::BufferVault::wire_transfer_inbound(
         auto buffer_package = std::make_shared<MirBufferPackage>();
         buffer_package->data_items = protobuf_buffer.data_size();
         buffer_package->fd_items = protobuf_buffer.fd_size();
-
         for (int i = 0; i != protobuf_buffer.data_size(); ++i)
             buffer_package->data[i] = protobuf_buffer.data(i);
         for (int i = 0; i != protobuf_buffer.fd_size(); ++i)
             buffer_package->fd[i] = protobuf_buffer.fd(i);
-
         buffer_package->stride = protobuf_buffer.stride();
         buffer_package->flags = protobuf_buffer.flags();
         buffer_package->width = protobuf_buffer.width();
         buffer_package->height = protobuf_buffer.height();
         auto buffer = factory->create_buffer(
-            buffer_package, geom::Size{buffer_package->width, buffer_package->height}, pf);
+            buffer_package, geom::Size{buffer_package->width, buffer_package->height}, format);
         buffers[protobuf_buffer.buffer_id()] = BufferEntry{ buffer, Owner::Self };
     }
     else
@@ -137,4 +132,3 @@ void mcl::BufferVault::wire_transfer_inbound(
         promises.pop_front();
     }
 }
-
