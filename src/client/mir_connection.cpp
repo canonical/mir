@@ -124,6 +124,7 @@ MirConnection::MirConnection(
         ping_handler{conf.the_ping_handler()},
         surface_map(conf.the_surface_map()),
         event_handler_register(conf.the_event_handler_register()),
+        pong_callback(google::protobuf::NewPermanentCallback(&google::protobuf::DoNothing)),
         eventloop{new md::ThreadedDispatcher{"RPC Thread", std::dynamic_pointer_cast<md::Dispatchable>(channel)}}
 {
     connect_result->set_error("connect not called");
@@ -552,7 +553,7 @@ void MirConnection::pong(int32_t serial)
 {
     mp::PingEvent pong;
     pong.set_serial(serial);
-    server.pong(&pong, void_response.get(), google::protobuf::NewCallback(&google::protobuf::DoNothing));
+    server.pong(&pong, void_response.get(), pong_callback.get());
 }
 
 void MirConnection::register_display_change_callback(mir_display_config_callback callback, void* context)

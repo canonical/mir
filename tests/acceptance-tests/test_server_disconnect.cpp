@@ -32,6 +32,7 @@
 
 namespace mtf = mir_test_framework;
 namespace mt = mir::test;
+using namespace testing;
 
 namespace
 {
@@ -97,6 +98,7 @@ TEST_F(ServerDisconnect, is_detected_by_client)
     {
         sync.wait_for_signal_ready_for();
         stop_server();
+        EXPECT_THAT(client->wait_for_termination().exit_code, Eq(EXIT_SUCCESS));
     }
 }
 
@@ -152,10 +154,14 @@ TEST_F(ServerDisconnect, doesnt_stop_client_calling_API_functions)
         configure_display();
         /* Trying to disconnect at this point shouldn't block */
         disconnect();
+
+        EXPECT_THAT(client->wait_for_termination().exit_code, Eq(EXIT_SUCCESS));
     }
 }
 
-TEST_F(ServerDisconnect, causes_client_to_terminate_by_default)
+using ServerDisconnectDeathTest = ServerDisconnect;
+
+TEST_F(ServerDisconnectDeathTest, causes_client_to_terminate_by_default)
 {
     mt::CrossProcessAction connect;
     mt::CrossProcessSync create_surface_sync;
