@@ -64,6 +64,8 @@ public:
     void register_observer(std::shared_ptr<Observer> const& observer) override;
     void unregister_observer(std::shared_ptr<Observer> const& observer) override;
 private:
+    void handle_ping_cycle();
+
     struct ANRContext;
 
     class ANRObservers : public Observer, private BasicObservers<Observer>
