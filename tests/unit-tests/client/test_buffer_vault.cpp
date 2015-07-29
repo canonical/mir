@@ -145,7 +145,7 @@ TEST_F(BufferVault, creates_buffer_on_first_insertion)
 
 TEST_F(BufferVault, updates_buffer_on_subsequent_insertions)
 {
-    auto mock_buffer = std::make_shared<MockBuffer>();
+    auto mock_buffer = std::make_shared<NiceMock<MockBuffer>>();
     EXPECT_CALL(*mock_buffer, update_from(_));
     ON_CALL(mock_factory, create_buffer(_,_,_))
         .WillByDefault(Return(mock_buffer));
@@ -155,7 +155,7 @@ TEST_F(BufferVault, updates_buffer_on_subsequent_insertions)
     vault.wire_transfer_inbound(package);
     auto b = vault.withdraw().get();
     vault.deposit(b);
-    vault.wire_transfer_outbound(b)
+    vault.wire_transfer_outbound(b);
     vault.wire_transfer_inbound(package);
 }
 

@@ -102,29 +102,30 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
 
 void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 {
+    auto package = std::make_shared<MirBufferPackage>();
+    package->data_items = protobuf_buffer.data_size();
+    package->fd_items = protobuf_buffer.fd_size();
+    for (int i = 0; i != protobuf_buffer.data_size(); ++i)
+        package->data[i] = protobuf_buffer.data(i);
+    for (int i = 0; i != protobuf_buffer.fd_size(); ++i)
+        package->fd[i] = protobuf_buffer.fd(i);
+    package->stride = protobuf_buffer.stride();
+    package->flags = protobuf_buffer.flags();
+    package->width = protobuf_buffer.width();
+    package->height = protobuf_buffer.height();
+
     std::lock_guard<std::mutex> lk(mutex);
     auto it = buffers.find(protobuf_buffer.buffer_id());
     if (it == buffers.end())
     {
-        auto buffer_package = std::make_shared<MirBufferPackage>();
-        buffer_package->data_items = protobuf_buffer.data_size();
-        buffer_package->fd_items = protobuf_buffer.fd_size();
-        for (int i = 0; i != protobuf_buffer.data_size(); ++i)
-            buffer_package->data[i] = protobuf_buffer.data(i);
-        for (int i = 0; i != protobuf_buffer.fd_size(); ++i)
-            buffer_package->fd[i] = protobuf_buffer.fd(i);
-        buffer_package->stride = protobuf_buffer.stride();
-        buffer_package->flags = protobuf_buffer.flags();
-        buffer_package->width = protobuf_buffer.width();
-        buffer_package->height = protobuf_buffer.height();
         auto buffer = factory->create_buffer(
-            buffer_package, geom::Size{buffer_package->width, buffer_package->height}, format);
+            package, geom::Size{package->width, package->height}, format);
         buffers[protobuf_buffer.buffer_id()] = BufferEntry{ buffer, Owner::Self };
     }
     else
     {
         it->second.owner = Owner::Self;
-
+        it->second.buffer->update_from(*package);
     }
 
     if (!promises.empty())
