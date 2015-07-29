@@ -106,7 +106,7 @@ mclr::MirBasicRpcChannel::MirBasicRpcChannel() :
 mclr::MirBasicRpcChannel::~MirBasicRpcChannel() = default;
 
 mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
-    std::string method_name,
+    std::string const& method_name,
     google::protobuf::MessageLite const* request,
     size_t num_side_channel_fds)
 {

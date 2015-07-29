@@ -173,7 +173,7 @@ void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Mes
 }
 
 void mclr::MirProtobufRpcChannel::call_method(
-    std::string method_name,
+    std::string const& method_name,
     google::protobuf::MessageLite const* parameters,
     google::protobuf::MessageLite* response,
     google::protobuf::Closure* complete)

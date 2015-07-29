@@ -293,7 +293,7 @@ public:
 struct FakeRpcChannel : public mir::client::rpc::MirBasicRpcChannel
 {
     void call_method(
-        std::string,
+        std::string const&,
         google::protobuf::MessageLite const*,
         google::protobuf::MessageLite*,
         google::protobuf::Closure* closure) override

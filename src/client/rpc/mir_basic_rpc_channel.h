@@ -103,7 +103,7 @@ public:
     virtual ~MirBasicRpcChannel();
 
     virtual void call_method(
-        std::string method_name,
+        std::string const& method_name,
         google::protobuf::MessageLite const* parameters,
         google::protobuf::MessageLite* response,
         google::protobuf::Closure* complete) = 0;
@@ -111,7 +111,7 @@ public:
 protected:
     MirBasicRpcChannel();
     mir::protobuf::wire::Invocation invocation_for(
-        std::string method_name,
+        std::string const& method_name,
         google::protobuf::MessageLite const* request,
         size_t num_side_channel_fds);
     int next_id();

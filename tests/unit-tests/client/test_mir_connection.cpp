@@ -63,7 +63,7 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
         ON_CALL(*this, watch_fd()).WillByDefault(testing::Return(pollable_fd));
     }
 
-    void call_method(std::string name,
+    void call_method(std::string const& name,
                     google::protobuf::MessageLite const* parameters,
                     google::protobuf::MessageLite* response,
                     google::protobuf::Closure* complete)
