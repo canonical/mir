@@ -55,6 +55,16 @@ Producer, // As in surfaces
 Consumer // As in screencasts
 };
 
+struct Amorphous
+{
+    virtual void deposit(
+        std::shared_ptr<MirBufferPackage> const&, int id, geometry::Size, MirPixelFormat) = 0;
+    virtual void set_buffer_cache_size(unsigned int) = 0;
+    virtual std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() = 0;
+    virtual uint32_t get_current_buffer_id() = 0;
+    virtual ~Amorphous() = default;
+};
+
 class BufferStream : public EGLNativeSurface, public ClientBufferStream
 {
 public:
@@ -114,8 +124,6 @@ protected:
     BufferStream& operator=(BufferStream const&) = delete;
 
 private:
-    uint32_t get_current_buffer_id(std::unique_lock<std::mutex> const&);
-    std::shared_ptr<mir::client::ClientBuffer> get_current_buffer(std::unique_lock<std::mutex> const&);
     void created(mir_buffer_stream_callback callback, void* context);
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&);
@@ -139,9 +147,6 @@ private:
 
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 
-    bool old_buffer = true;
-    std::unique_ptr<mir::client::ClientBufferDepository> buffer_depository;
-    
     int swap_interval_;
 
     std::shared_ptr<mir::client::PerfReport> const perf_report;
@@ -158,8 +163,10 @@ private:
     
     geometry::Size cached_buffer_size;
 
-    void deposit(std::unique_lock<std::mutex> const&,
-        std::shared_ptr<MirBufferPackage> const&, int id, geometry::Size, MirPixelFormat);
+    bool old_buffer = true;
+    std::unique_ptr<Amorphous> buffer_depository;
+    
+    //CENTRALIZE
 };
 
 }

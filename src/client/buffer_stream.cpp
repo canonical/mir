@@ -84,6 +84,32 @@ void populate_buffer_package(
     }
 }
 
+
+
+struct OldBufferSemantics : mcl::Amorphous
+{
+    OldBufferSemantics(std::shared_ptr<mcl::ClientBufferFactory> const& factory, int max_buffers) :
+        wrapped{factory, max_buffers}
+    {
+    }
+    void deposit(std::shared_ptr<MirBufferPackage> const& pack, int id, geom::Size sz, MirPixelFormat pf) override
+    {
+        wrapped.deposit_package(pack, id, sz, pf);
+    }
+    void set_buffer_cache_size(unsigned int sz) override
+    {
+        wrapped.set_max_buffers(sz);
+    }
+    std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override
+    {
+        return wrapped.current_buffer();
+    }
+    uint32_t get_current_buffer_id() override
+    {
+        return wrapped.current_buffer_id();
+    }
+    mcl::ClientBufferDepository wrapped;
+};
 }
 
 mcl::BufferStream::BufferStream(
@@ -103,6 +129,8 @@ mcl::BufferStream::BufferStream(
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
 {
+    buffer_depository = std::make_unique<OldBufferSemantics>(
+        client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size);
     created(nullptr, nullptr);
     perf_report->name_surface(surface_name.c_str());
 }
@@ -124,6 +152,8 @@ mcl::BufferStream::BufferStream(
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
 {
+    buffer_depository = std::make_unique<OldBufferSemantics>(
+        client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size);
     perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
 
     create_wait_handle.expect_result();
@@ -147,14 +177,11 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
 
     if (protobuf_bs->has_buffer())
     {
-        old_buffer = true;
-        buffer_depository = std::make_unique<mcl::ClientBufferDepository>(
-            client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size);
         process_buffer(protobuf_bs->buffer());
     }
     else
     {
-        old_buffer = false;
+        throw std::runtime_error("");
     }
 
 
@@ -178,7 +205,7 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
     process_buffer(buffer, lock);
 }
 
-void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const& lk)
+void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&)
 {
     auto buffer_package = std::make_shared<MirBufferPackage>();
     populate_buffer_package(*buffer_package, buffer);
@@ -196,7 +223,7 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
     try
     {
         auto pixel_format = static_cast<MirPixelFormat>(protobuf_bs->pixel_format());
-        deposit(lk,
+        buffer_depository->deposit(
             buffer_package,
             buffer.buffer_id(),
             cached_buffer_size, pixel_format);
@@ -213,7 +240,7 @@ MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std:
     //always submit what we have, whether we have a buffer, or will have to wait for an async reply
     auto request = mcl::make_protobuf_object<mp::BufferRequest>();
     request->mutable_id()->set_value(protobuf_bs->id().value());
-    request->mutable_buffer()->set_buffer_id(get_current_buffer_id(lock));
+    request->mutable_buffer()->set_buffer_id(buffer_depository->get_current_buffer_id());
     lock.unlock();
 
     display_server.submit_buffer(nullptr, request.get(), protobuf_void.get(),
@@ -237,7 +264,7 @@ MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std:
 MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    perf_report->end_frame(get_current_buffer_id());
+    perf_report->end_frame(buffer_depository->get_current_buffer_id());
 
     secured_region.reset();
 
@@ -286,7 +313,7 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
 
-    secured_region = get_current_buffer(lock)->secure_for_cpu_write();
+    secured_region = buffer_depository->get_current_buffer()->secure_for_cpu_write();
     return secured_region;
 }
 
@@ -363,12 +390,12 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
 std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    return get_current_buffer(lock);
+    return buffer_depository->get_current_buffer();
 }
 uint32_t mcl::BufferStream::get_current_buffer_id()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    return get_current_buffer_id(lock);
+    return buffer_depository->get_current_buffer_id();
 }
 
 int mcl::BufferStream::swap_interval() const
@@ -450,46 +477,51 @@ void mcl::BufferStream::buffer_unavailable()
     next_buffer_wait_handle.result_received();
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    buffer_depository->set_buffer_cache_size(cache_size);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#if 0
+void mcl::BufferStream::set_buffer_cache_size(std::unique_lock<std::mutex> const&, unsigned int cache_size)
 {
     buffer_depository->set_max_buffers(cache_size);
 }
@@ -504,7 +536,8 @@ uint32_t mcl::BufferStream::get_current_buffer_id(std::unique_lock<std::mutex> c
     return buffer_depository->current_buffer_id();
 }
 void mcl::BufferStream::deposit(std::unique_lock<std::mutex> const&,
-        std::shared_ptr<MirBufferPackage> const& p, int id, geometry::Size sz, MirPixelFormat pf)
+        std::shared_ptr<MirBufferPackage> const& p, int id, geom::Size sz, MirPixelFormat pf)
 {
     buffer_depository->deposit_package(p, id, sz, pf);
 }
+#endif
