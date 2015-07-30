@@ -211,6 +211,9 @@ MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std:
         google::protobuf::NewCallback(google::protobuf::DoNothing));
 
     lock.lock();
+    if (server_connection_lost)
+        BOOST_THROW_EXCEPTION(std::runtime_error("disconnected: no new buffers"));
+
     if (incoming_buffers.empty())
     {
         next_buffer_wait_handle.expect_result();
@@ -443,5 +446,7 @@ void mcl::BufferStream::buffer_unavailable()
         on_incoming_buffer();
         on_incoming_buffer = std::function<void()>{};
     }
-    next_buffer_wait_handle.result_received();
+
+    if (next_buffer_wait_handle.is_pending())
+        next_buffer_wait_handle.result_received();
 }
