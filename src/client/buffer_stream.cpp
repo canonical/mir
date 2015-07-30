@@ -180,7 +180,7 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
     }
     else
     {
-//        throw std::runtime_error("");
+        throw std::runtime_error("");
     }
 
 
