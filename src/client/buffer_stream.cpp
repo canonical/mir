@@ -110,6 +110,7 @@ struct OldBufferSemantics : mcl::Amorphous
     }
     mcl::ClientBufferDepository wrapped;
 };
+
 }
 
 mcl::BufferStream::BufferStream(
@@ -129,8 +130,6 @@ mcl::BufferStream::BufferStream(
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
 {
-    buffer_depository = std::make_unique<OldBufferSemantics>(
-        client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size);
     created(nullptr, nullptr);
     perf_report->name_surface(surface_name.c_str());
 }
@@ -152,8 +151,6 @@ mcl::BufferStream::BufferStream(
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
 {
-    buffer_depository = std::make_unique<OldBufferSemantics>(
-        client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size);
     perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
 
     create_wait_handle.expect_result();
@@ -177,11 +174,13 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
 
     if (protobuf_bs->has_buffer())
     {
+        buffer_depository = std::make_unique<OldBufferSemantics>(
+            client_platform->create_buffer_factory(), mir::frontend::client_buffer_cache_size);
         process_buffer(protobuf_bs->buffer());
     }
     else
     {
-        throw std::runtime_error("");
+//        throw std::runtime_error("");
     }
 
 

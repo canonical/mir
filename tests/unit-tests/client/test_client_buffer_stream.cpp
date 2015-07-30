@@ -40,12 +40,23 @@ namespace geom = mir::geometry;
 
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
+using namespace testing;
 
 namespace
 {
 
+ACTION(RunProtobufClosure)
+{
+    arg3->Run();
+}
+
 struct MockProtobufServer : public mp::DisplayServer
 {
+    MockProtobufServer()
+    {
+        ON_CALL(*this, submit_buffer(_,_,_,_))
+            .WillByDefault(RunProtobufClosure());
+    }
     MOCK_METHOD4(screencast_buffer,
                  void(google::protobuf::RpcController* /*controller*/,
                       mp::ScreencastId const* /*request*/,
@@ -122,31 +133,20 @@ struct MockClientBuffer : public mtd::NullClientBuffer
 EGLNativeWindowType StubClientPlatform::egl_native_window{
     reinterpret_cast<EGLNativeWindowType>(&StubClientPlatform::egl_native_window)};
 
-struct ClientBufferStreamTest : public testing::Test
+MirBufferPackage a_buffer_package()
 {
-    testing::NiceMock<mtd::MockClientBufferFactory> mock_client_buffer_factory;
-    mtd::StubClientBufferFactory stub_client_buffer_factory;
-
-    testing::NiceMock<MockProtobufServer> mock_protobuf_server;
-
-    MirPixelFormat const default_pixel_format = mir_pixel_format_argb_8888;
-    MirBufferUsage const default_buffer_usage = mir_buffer_usage_hardware;
-
-    std::shared_ptr<mcl::PerfReport> const perf_report = std::make_shared<mcl::NullPerfReport>();
-
-    std::shared_ptr<mcl::BufferStream> make_buffer_stream(mp::BufferStream const& protobuf_bs,
-        mcl::BufferStreamMode mode=mcl::BufferStreamMode::Producer)
-    {
-        return make_buffer_stream(protobuf_bs, stub_client_buffer_factory, mode);
-    }
-    std::shared_ptr<mcl::BufferStream> make_buffer_stream(mp::BufferStream const& protobuf_bs,
-        mcl::ClientBufferFactory& buffer_factory,
-        mcl::BufferStreamMode mode=mcl::BufferStreamMode::Producer)
-    {
-        return std::make_shared<mcl::BufferStream>(nullptr, mock_protobuf_server, mode,
-            std::make_shared<StubClientPlatform>(mt::fake_shared(buffer_factory)), protobuf_bs, perf_report, "");
-    }
-};
+    MirBufferPackage bp;
+    bp.fd_items = 1;
+    bp.fd[0] = 16;
+    bp.data_items = 2;
+    bp.data[0] = 100;
+    bp.data[1] = 234;
+    bp.stride = 768;
+    bp.width = 90;
+    bp.height = 30;
+    
+    return bp;
+}
 
  // Just ensure we have a unique ID in order to not confuse the buffer depository caching logic...
 std::atomic<int> unique_buffer_id{1};
@@ -170,23 +170,6 @@ void fill_protobuf_buffer_from_package(mp::Buffer* mb, MirBufferPackage const& b
     mb->set_height(buffer_package.height);
 }
     
-MirBufferPackage a_buffer_package()
-{
-    MirBufferPackage bp;
-    
-    // Could be randomized
-    bp.fd_items = 1;
-    bp.fd[0] = 16;
-    bp.data_items = 2;
-    bp.data[0] = 100;
-    bp.data[1] = 234;
-    bp.stride = 768;
-    bp.width = 90;
-    bp.height = 30;
-    
-    return bp;
-}
-
 mp::BufferStream a_protobuf_buffer_stream(MirPixelFormat format, MirBufferUsage usage, MirBufferPackage const& package)
 {
     mp::BufferStream protobuf_bs;
@@ -200,6 +183,42 @@ mp::BufferStream a_protobuf_buffer_stream(MirPixelFormat format, MirBufferUsage 
     fill_protobuf_buffer_from_package(protobuf_bs.mutable_buffer(), package);
     return protobuf_bs;
 }
+
+struct CurrentBufferStream : public testing::Test
+{
+    testing::NiceMock<mtd::MockClientBufferFactory> mock_factory;
+    mtd::StubClientBufferFactory stub_factory;
+
+    testing::NiceMock<MockProtobufServer> mock_protobuf_server;
+
+    MirPixelFormat const default_pixel_format = mir_pixel_format_argb_8888;
+    MirBufferUsage const default_buffer_usage = mir_buffer_usage_hardware;
+
+    std::shared_ptr<mcl::PerfReport> const perf_report = std::make_shared<mcl::NullPerfReport>();
+
+    mcl::BufferStreamMode mode = mcl::BufferStreamMode::Producer;
+    MirBufferPackage buffer_package = a_buffer_package();
+    mp::BufferStream response = a_protobuf_buffer_stream(
+        default_pixel_format, default_buffer_usage, buffer_package);
+#if 0
+    std::shared_ptr<mcl::BufferStream> make_buffer_stream()
+    {
+        return make_buffer_stream(stub_factory);
+    }
+    std::shared_ptr<mcl::BufferStream> make_buffer_stream(mcl::ClientBufferFactory& buffer_factory)
+    {
+        MirBufferPackage buffer_package = a_buffer_package();
+        auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, buffer_package);
+        return std::make_shared<mcl::BufferStream>(nullptr, mock_protobuf_server, mode,
+            std::make_shared<StubClientPlatform>(mt::fake_shared(buffer_factory)), protobuf_bs, perf_report, "");
+    }
+#endif
+    mcl::BufferStream bs{
+        nullptr, mock_protobuf_server, mode,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        response, perf_report, ""};
+
+};
 
 MATCHER_P(BufferPackageMatches, package, "")
 {
@@ -218,11 +237,6 @@ MATCHER_P(BufferPackageMatches, package, "")
     return true;
 }
 
-ACTION(RunProtobufClosure)
-{
-    arg3->Run();
-}
-
 ACTION_P(SetBufferInfoFromPackage, buffer_package)
 {
     arg2->set_buffer_id(unique_buffer_id++);
@@ -237,108 +251,97 @@ ACTION_P(SetPartialBufferInfoFromPackage, buffer_package)
 
 }
 
-TEST_F(ClientBufferStreamTest, protobuf_requirements)
+TEST_F(CurrentBufferStream, protobuf_requirements)
 {
     auto valid_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, a_buffer_package());
-    
     EXPECT_NO_THROW({
-        make_buffer_stream(valid_bs);
+        mcl::BufferStream bs(
+            nullptr, mock_protobuf_server, mode,
+            std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+            valid_bs, perf_report, "");
     });
-    
+
+    valid_bs.clear_buffer();
+    EXPECT_NO_THROW({
+        mcl::BufferStream bs(
+            nullptr, mock_protobuf_server, mode,
+            std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+            valid_bs, perf_report, "");
+    });
+ 
     auto error_bs = valid_bs;
     error_bs.set_error("An error");
     EXPECT_THROW({
-        make_buffer_stream(error_bs);
+        mcl::BufferStream bs(
+            nullptr, mock_protobuf_server, mode,
+            std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+            error_bs, perf_report, "");
     }, std::runtime_error);
     
     auto no_id_bs = valid_bs;
     no_id_bs.clear_id();
     EXPECT_THROW({
-        make_buffer_stream(no_id_bs);
-    }, std::runtime_error);
-
-
-    auto no_buffer_bs = valid_bs;
-    no_buffer_bs.clear_buffer();
-    EXPECT_THROW({
-        make_buffer_stream(no_buffer_bs);
+        mcl::BufferStream bs(
+            nullptr, mock_protobuf_server, mode,
+            std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+            no_id_bs, perf_report, "");
     }, std::runtime_error);
 }
 
-TEST_F(ClientBufferStreamTest, uses_buffer_message_from_server)
+TEST_F(CurrentBufferStream, uses_buffer_message_from_server)
 {
-    using namespace ::testing;
-
-    MirBufferPackage buffer_package = a_buffer_package();
-    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
-        buffer_package);
-
-    EXPECT_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillOnce(Return(std::make_shared<mtd::NullClientBuffer>()));
-
-    auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
+    mcl::BufferStream bs(
+        nullptr, mock_protobuf_server, mode,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        response, perf_report, "");
 }
 
-TEST_F(ClientBufferStreamTest, producer_streams_call_submit_buffer_on_next_buffer)
+TEST_F(CurrentBufferStream, producer_streams_call_submit_buffer_on_next_buffer)
 {
-    using namespace ::testing;
-
-    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
-        a_buffer_package());
-
     EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
         .WillOnce(RunProtobufClosure());
-
-    auto bs = make_buffer_stream(protobuf_bs, mcl::BufferStreamMode::Producer);
-    
-    bs->next_buffer([]{});
+    bs.next_buffer([]{});
 }
 
-TEST_F(ClientBufferStreamTest, consumer_streams_call_screencast_buffer_on_next_buffer)
+
+TEST_F(CurrentBufferStream, consumer_streams_call_screencast_buffer_on_next_buffer)
 {
-    using namespace ::testing;
-
-    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
-        a_buffer_package());
-
     EXPECT_CALL(mock_protobuf_server, screencast_buffer(_,_,_,_))
         .WillOnce(RunProtobufClosure());
-
-    auto bs = make_buffer_stream(protobuf_bs, mcl::BufferStreamMode::Consumer);
-    
-    bs->next_buffer([]{});
+    mcl::BufferStream bs(
+        nullptr, mock_protobuf_server, mcl::BufferStreamMode::Consumer,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        response, perf_report, "");
+    bs.next_buffer([]{});
 }
 
-TEST_F(ClientBufferStreamTest, invokes_callback_on_next_buffer)
+TEST_F(CurrentBufferStream, invokes_callback_on_next_buffer)
 {
-    using namespace ::testing;
-    
-    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
-        a_buffer_package());
-
     mp::Buffer buffer;
-    auto bs = make_buffer_stream(protobuf_bs, mcl::BufferStreamMode::Producer);
-    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
-        .WillOnce(DoAll(
+    ON_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
+        .WillByDefault(DoAll(
             RunProtobufClosure(),
-            InvokeWithoutArgs([&bs, &buffer]{ bs->buffer_available(buffer);})));
+            InvokeWithoutArgs([this, &buffer]{ bs.buffer_available(buffer);})));
 
     bool callback_invoked = false;
-    bs->next_buffer([&callback_invoked](){ callback_invoked = true; })->wait_for_all();
+    bs.next_buffer([&callback_invoked](){ callback_invoked = true; })->wait_for_all();
     EXPECT_EQ(callback_invoked, true);
 }
 
-TEST_F(ClientBufferStreamTest, returns_correct_surface_parameters)
+TEST_F(CurrentBufferStream, returns_correct_surface_parameters)
 {
-   int const width = 73, height = 32;
+    int const width = 73;
+    int const height = 32;
+    response.mutable_buffer()->set_width(width);
+    response.mutable_buffer()->set_height(height);
 
-    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
-        a_buffer_package());
-    protobuf_bs.mutable_buffer()->set_width(width);
-    protobuf_bs.mutable_buffer()->set_height(height);
-
-    auto bs = make_buffer_stream(protobuf_bs);
-    auto params = bs->get_parameters();
+    mcl::BufferStream bs(
+        nullptr, mock_protobuf_server, mode,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        response, perf_report, "");
+    auto params = bs.get_parameters();
 
     EXPECT_STREQ("", params.name);
     EXPECT_EQ(width, params.width);
@@ -347,12 +350,8 @@ TEST_F(ClientBufferStreamTest, returns_correct_surface_parameters)
     EXPECT_EQ(default_buffer_usage, params.buffer_usage);
 }
 
-TEST_F(ClientBufferStreamTest, returns_current_client_buffer)
+TEST_F(CurrentBufferStream, returns_current_client_buffer)
 {
-    using namespace ::testing;
-    ON_CALL(mock_protobuf_server, submit_buffer(_, _, _, _))
-        .WillByDefault(RunProtobufClosure());
-
     auto const client_buffer_1 = std::make_shared<mtd::NullClientBuffer>();
     auto const client_buffer_2 = std::make_shared<mtd::NullClientBuffer>();
     auto buffer_package_1 = a_buffer_package();
@@ -364,143 +363,117 @@ TEST_F(ClientBufferStreamTest, returns_current_client_buffer)
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
         buffer_package_1);
     
-    {
-        InSequence seq;
-        EXPECT_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package_1),_,_))
-            .Times(1).WillOnce(Return(client_buffer_1));
-        EXPECT_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package_2),_,_))
-            .Times(1).WillOnce(Return(client_buffer_2));
-    }
+    Sequence seq;
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package_1),_,_))
+        .InSequence(seq)
+        .WillOnce(Return(client_buffer_1));
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package_2),_,_))
+        .InSequence(seq)
+        .WillOnce(Return(client_buffer_2));
 
-    auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
-    EXPECT_EQ(client_buffer_1, bs->get_current_buffer());
-    bs->buffer_available(protobuf_buffer_2);
-    bs->next_buffer([]{});
-    EXPECT_EQ(client_buffer_2, bs->get_current_buffer());
+    mcl::BufferStream bs(
+        nullptr, mock_protobuf_server, mode,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        protobuf_bs, perf_report, "");
+    EXPECT_EQ(client_buffer_1, bs.get_current_buffer());
+    bs.buffer_available(protobuf_buffer_2);
+    bs.next_buffer([]{});
+    EXPECT_EQ(client_buffer_2, bs.get_current_buffer());
 }
 
-TEST_F(ClientBufferStreamTest, caches_width_and_height_in_case_of_partial_updates)
+TEST_F(CurrentBufferStream, caches_width_and_height_in_case_of_partial_updates)
 {
-    using namespace ::testing;
-
-    auto const client_buffer_1 = std::make_shared<mtd::NullClientBuffer>(),
-        client_buffer_2 = std::make_shared<mtd::NullClientBuffer>();
-
+    auto const client_buffer_1 = std::make_shared<mtd::NullClientBuffer>();
+    auto const client_buffer_2 = std::make_shared<mtd::NullClientBuffer>();
     auto buffer_package_1 = a_buffer_package();
     auto buffer_package_2 = a_buffer_package();
-    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
-        buffer_package_1);
+    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, buffer_package_1);
     mp::Buffer protobuf_buffer_2;
     fill_protobuf_buffer_from_package(&protobuf_buffer_2, buffer_package_2);
-        
-    // Here we us SetPartialBufferInfoFromPackage and do not fill in width and height
-    EXPECT_CALL(mock_protobuf_server, submit_buffer(_, _, _, _))
-        .WillOnce(RunProtobufClosure());
-
     auto expected_size = geom::Size{buffer_package_1.width, buffer_package_1.height};
 
-    {
-        InSequence seq;
-        EXPECT_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package_1), expected_size, _))
-            .Times(1).WillOnce(Return(client_buffer_1));
-        EXPECT_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package_2), expected_size, _))
-            .Times(1).WillOnce(Return(client_buffer_2));
-   }
+    Sequence seq;
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package_1),expected_size,_))
+        .InSequence(seq)
+        .WillOnce(Return(client_buffer_1));
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package_2),expected_size,_))
+        .InSequence(seq)
+        .WillOnce(Return(client_buffer_2));
 
-    auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
-
-    EXPECT_EQ(client_buffer_1, bs->get_current_buffer());
-    bs->buffer_available(protobuf_buffer_2);
-    bs->next_buffer([]{});
-    EXPECT_EQ(client_buffer_2, bs->get_current_buffer());
+    mcl::BufferStream bs(
+        nullptr, mock_protobuf_server, mode,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        protobuf_bs, perf_report, "");
+    EXPECT_EQ(client_buffer_1, bs.get_current_buffer());
+    bs.buffer_available(protobuf_buffer_2);
+    bs.next_buffer([]{});
+    EXPECT_EQ(client_buffer_2, bs.get_current_buffer());
 }
 
-TEST_F(ClientBufferStreamTest, gets_egl_native_window)
+TEST_F(CurrentBufferStream, gets_egl_native_window)
 {
-    using namespace ::testing;
-
-    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
-        a_buffer_package());
-
-    auto bs = make_buffer_stream(protobuf_bs);
-    auto egl_native_window = bs->egl_native_window();
-
-    EXPECT_EQ(StubClientPlatform::egl_native_window, egl_native_window);
+    EXPECT_EQ(StubClientPlatform::egl_native_window, bs.egl_native_window());
 }
 
-TEST_F(ClientBufferStreamTest, map_graphics_region)
+TEST_F(CurrentBufferStream, map_graphics_region)
 {
-    using namespace ::testing;
-
     MockClientBuffer mock_client_buffer;
-
-    MirBufferPackage buffer_package = a_buffer_package();
-    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
-        buffer_package);
-
-    EXPECT_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
 
-    auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
+    mcl::BufferStream bs(
+        nullptr, mock_protobuf_server, mode,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        response, perf_report, "");
 
     mcl::MemoryRegion expected_memory_region;
-    EXPECT_CALL(mock_client_buffer, secure_for_cpu_write()).Times(1)
+    EXPECT_CALL(mock_client_buffer, secure_for_cpu_write())
         .WillOnce(Return(mt::fake_shared(expected_memory_region)));
-     
-    EXPECT_EQ(&expected_memory_region, bs->secure_for_cpu_write().get());
+    EXPECT_EQ(&expected_memory_region, bs.secure_for_cpu_write().get());
 }
 
-TEST_F(ClientBufferStreamTest, passes_name_to_perf_report)
+TEST_F(CurrentBufferStream, passes_name_to_perf_report)
 {
-    using namespace ::testing;
-
-    MirBufferPackage buffer_package = a_buffer_package();
-    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, buffer_package);
-
     NiceMock<MockPerfReport> mock_perf_report;
     std::string const name = "a_unique_surface_name";
-
-    EXPECT_CALL(mock_perf_report, name_surface(StrEq(name))).Times(1);
-
-    auto bs = std::make_shared<mcl::BufferStream>(
-        nullptr, mock_protobuf_server, mcl::BufferStreamMode::Producer,
-        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_client_buffer_factory)),
-        protobuf_bs, mt::fake_shared(mock_perf_report), name);
+    EXPECT_CALL(mock_perf_report, name_surface(StrEq(name)));
+    mcl::BufferStream bs(
+        nullptr, mock_protobuf_server, mode,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        response, mt::fake_shared(mock_perf_report), name);
 }
 
-TEST_F(ClientBufferStreamTest, receives_unsolicited_buffer)
+TEST_F(CurrentBufferStream, receives_unsolicited_buffer)
 {
-    using namespace ::testing;
     int id = 88;
     MockClientBuffer mock_client_buffer;
     MockClientBuffer second_mock_client_buffer;
-    MirBufferPackage buffer_package = a_buffer_package();
-    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, buffer_package);
-    EXPECT_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
-    auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
+
+    mcl::BufferStream bs(
+        nullptr, mock_protobuf_server, mode,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        response, perf_report, "");
 
     mir::protobuf::Buffer another_buffer_package;
     another_buffer_package.set_buffer_id(id);
-    EXPECT_CALL(mock_client_buffer_factory, create_buffer(_,_,_))
+    EXPECT_CALL(mock_factory, create_buffer(_,_,_))
         .WillOnce(Return(mt::fake_shared(second_mock_client_buffer)));
     EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
         .WillOnce(RunProtobufClosure());
-    bs->buffer_available(another_buffer_package);
-    bs->next_buffer([]{});
+    bs.buffer_available(another_buffer_package);
+    bs.next_buffer([]{});
 
-    EXPECT_THAT(bs->get_current_buffer().get(), Eq(&second_mock_client_buffer));
-    EXPECT_THAT(bs->get_current_buffer_id(), Eq(id));
+    EXPECT_THAT(bs.get_current_buffer().get(), Eq(&second_mock_client_buffer));
+    EXPECT_THAT(bs.get_current_buffer_id(), Eq(id));
 }
 
-TEST_F(ClientBufferStreamTest, waiting_client_can_unblock_on_shutdown)
+TEST_F(CurrentBufferStream, waiting_client_can_unblock_on_shutdown)
 {
-    using namespace ::testing;
     using namespace std::literals::chrono_literals;
     MockClientBuffer mock_client_buffer;
-    MirBufferPackage buffer_package = a_buffer_package();
-    auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, buffer_package);
-    ON_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+    ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
     ON_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
         .WillByDefault(RunProtobufClosure());
@@ -509,74 +482,52 @@ TEST_F(ClientBufferStreamTest, waiting_client_can_unblock_on_shutdown)
     std::condition_variable cv;
     bool started{false};
 
-    auto bs = make_buffer_stream(protobuf_bs, mock_client_buffer_factory);
+    mcl::BufferStream bs(
+        nullptr, mock_protobuf_server, mode,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        response, perf_report, "");
+
     auto never_serviced_request = std::async(std::launch::async,[&] {
         {
             std::unique_lock<decltype(mutex)> lk(mutex);
             started = true;
             cv.notify_all();
         }
-        bs->request_and_wait_for_next_buffer();
+        bs.request_and_wait_for_next_buffer();
     });
 
     std::unique_lock<decltype(mutex)> lk(mutex);
     EXPECT_TRUE(cv.wait_for(lk, 4s, [&]{ return started; }));
 
-    bs->buffer_unavailable();
+    bs.buffer_unavailable();
 
     EXPECT_THAT(never_serviced_request.wait_for(4s), Ne(std::future_status::timeout));
 
     EXPECT_THROW({
-        bs->request_and_wait_for_next_buffer();
+        bs.request_and_wait_for_next_buffer();
     }, std::runtime_error);
 }
 
-TEST_F(ClientBufferStreamTest, invokes_callback_on_buffer_available_before_wait_handle_has_result)
+TEST_F(CurrentBufferStream, invokes_callback_on_buffer_available_before_wait_handle_has_result)
 {
-    using namespace ::testing;
-
     MirWaitHandle* wh{nullptr};
     bool wait_handle_has_result_in_callback = false;
-
-    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
-        .WillOnce(RunProtobufClosure());
-
-    auto const protobuf_bs = a_protobuf_buffer_stream(
-        default_pixel_format, default_buffer_usage, a_buffer_package());
-    auto const bs = make_buffer_stream(protobuf_bs);
-
-    wh = bs->next_buffer(
-        [&]
-        {
+    wh = bs.next_buffer([&] {
             wait_handle_has_result_in_callback = wh->has_result();
         });
 
-    bs->buffer_available(mp::Buffer{});
+    bs.buffer_available(mp::Buffer{});
 
     EXPECT_FALSE(wait_handle_has_result_in_callback);
 }
 
-TEST_F(ClientBufferStreamTest, invokes_callback_on_buffer_unavailable_before_wait_handle_has_result)
+TEST_F(CurrentBufferStream, invokes_callback_on_buffer_unavailable_before_wait_handle_has_result)
 {
-    using namespace ::testing;
-
     MirWaitHandle* wh{nullptr};
     bool wait_handle_has_result_in_callback = false;
-
-    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
-        .WillOnce(RunProtobufClosure());
-
-    auto const protobuf_bs = a_protobuf_buffer_stream(
-        default_pixel_format, default_buffer_usage, a_buffer_package());
-    auto const bs = make_buffer_stream(protobuf_bs);
-
-    wh = bs->next_buffer(
-        [&]
-        {
+    wh = bs.next_buffer([&] {
             wait_handle_has_result_in_callback = wh->has_result();
         });
-
-    bs->buffer_unavailable();
-
+    bs.buffer_unavailable();
     EXPECT_FALSE(wait_handle_has_result_in_callback);
 }
