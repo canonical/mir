@@ -22,6 +22,7 @@
 
 #include "mir_protobuf.pb.h"
 #include "mir/test/wait_condition.h"
+#include "src/client/rpc/mir_display_server.h"
 
 #include <gmock/gmock.h>
 
@@ -30,6 +31,7 @@
 
 namespace mir
 {
+namespace client { namespace rpc {class MirBasicRpcChannel;}}
 namespace dispatch
 {
 class ThreadedDispatcher;
@@ -45,9 +47,9 @@ struct TestProtobufClient
     TestProtobufClient(std::string socket_file, int timeout_ms);
 
     std::shared_ptr<doubles::MockRpcReport> rpc_report;
-    std::shared_ptr<google::protobuf::RpcChannel> channel;
+    std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
     std::shared_ptr<dispatch::ThreadedDispatcher> eventloop;
-    mir::protobuf::DisplayServer::Stub display_server;
+    mir::client::rpc::DisplayServer display_server;
     mir::protobuf::ConnectParameters connect_parameters;
     mir::protobuf::SurfaceParameters surface_parameters;
     mir::protobuf::Surface surface;

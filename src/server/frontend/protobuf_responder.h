@@ -44,7 +44,7 @@ public:
 
     void send_response(
             ::google::protobuf::uint32 id,
-            ::google::protobuf::Message* response,
+            ::google::protobuf::MessageLite* response,
             FdSets const& fd_sets) override;
 
 private:

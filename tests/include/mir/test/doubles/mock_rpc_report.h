@@ -65,7 +65,7 @@ public:
                       std::exception const& ex));
 
     MOCK_METHOD2(file_descriptors_received,
-                 void(google::protobuf::Message const&,
+                 void(google::protobuf::MessageLite const&,
                       std::vector<Fd> const&));
 };
 

@@ -19,16 +19,18 @@
 #define MIR_CLIENT_MIR_SURFACE_H_
 
 #include "mir_protobuf.pb.h"
-
-#include "mir/geometry/dimensions.h"
-#include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/common.h"
-#include "mir/graphics/native_buffer.h"
-#include "mir/optional_value.h"
 #include "client_buffer_depository.h"
-#include "mir_wait_handle.h"
-#include "mir/client_platform.h"
 #include "client_buffer_stream.h"
+#include "mir_wait_handle.h"
+#include "rpc/mir_display_server.h"
+#include "rpc/mir_display_server_debug.h"
+
+#include "mir/client_platform.h"
+#include "mir/optional_value.h"
+#include "mir/geometry/dimensions.h"
+#include "mir_toolkit/common.h"
+#include "mir_toolkit/mir_client_library.h"
+#include "mir/graphics/native_buffer.h"
 
 #include <memory>
 #include <functional>
@@ -51,6 +53,12 @@ class XKBMapper;
 }
 namespace client
 {
+namespace rpc
+{
+class DisplayServer;
+class DisplayServerDebug;
+}
+
 class ClientBuffer;
 class ClientBufferStream;
 class ClientBufferStreamFactory;
@@ -123,8 +131,8 @@ public:
 
     MirSurface(
         MirConnection *allocating_connection,
-        mir::protobuf::DisplayServer::Stub& server,
-        mir::protobuf::Debug::Stub* debug,
+        mir::client::rpc::DisplayServer& server,
+        mir::client::rpc::DisplayServerDebug* debug,
         std::shared_ptr<mir::client::ClientBufferStreamFactory> const& buffer_stream_factory,
         std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
         MirSurfaceSpec const& spec,
@@ -178,8 +186,8 @@ private:
     void acquired_persistent_id(mir_surface_id_callback callback, void* context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
 
-    mir::protobuf::DisplayServer::Stub* server{nullptr};
-    mir::protobuf::Debug::Stub* debug{nullptr};
+    mir::client::rpc::DisplayServer* server{nullptr};
+    mir::client::rpc::DisplayServerDebug* debug{nullptr};
     std::unique_ptr<mir::protobuf::Surface> surface;
     std::unique_ptr<mir::protobuf::PersistentSurfaceId> persistent_id;
     std::string error_message;

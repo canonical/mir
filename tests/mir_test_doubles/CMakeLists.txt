@@ -74,7 +74,6 @@ target_link_libraries(mir-test-doubles-static
 
   mirserver
 
-  ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}

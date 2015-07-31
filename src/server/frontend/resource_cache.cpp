@@ -19,7 +19,7 @@
 #include "resource_cache.h"
 
 void mir::frontend::ResourceCache::save_resource(
-    google::protobuf::Message* key,
+    google::protobuf::MessageLite* key,
     std::shared_ptr<void> const& value)
 {
     std::lock_guard<std::mutex> lock(guard);
@@ -27,14 +27,14 @@ void mir::frontend::ResourceCache::save_resource(
 }
 
 void mir::frontend::ResourceCache::save_fd(
-    google::protobuf::Message* key,
+    google::protobuf::MessageLite* key,
     mir::Fd const& fd)
 {
     std::lock_guard<std::mutex> lock(guard);
     fd_resources.emplace(key, fd);
 }
 
-void mir::frontend::ResourceCache::free_resource(google::protobuf::Message* key)
+void mir::frontend::ResourceCache::free_resource(google::protobuf::MessageLite* key)
 {
     std::shared_ptr<void> value;
     {

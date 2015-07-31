@@ -716,6 +716,8 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
 
 TEST_P(WithAnyNumberOfBuffers, compositor_inflates_ready_count_for_slow_clients)
 {
+    queue.set_scaling_delay(3);
+
     for (int frame = 0; frame < 10; frame++)
     {
         ASSERT_EQ(0, queue.buffers_ready_for_compositor(&consumer));
@@ -724,7 +726,7 @@ TEST_P(WithAnyNumberOfBuffers, compositor_inflates_ready_count_for_slow_clients)
         // Detecting a slow client requires scheduling at least one extra
         // frame...
         int nready = queue.buffers_ready_for_compositor(&consumer);
-        ASSERT_EQ(2, nready);
+        ASSERT_THAT(nready, Ge(2));
         for (int i = 0; i < nready; ++i)
             consumer.consume();
     }
@@ -933,7 +935,8 @@ TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
 TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
 {
     //BufferQueue specific for now
-    auto discard = queue.scaling_delay();
+    int const discard = 3;
+    queue.set_scaling_delay(discard);
 
     for (int frame = 0; frame < 20; frame++)
     {
@@ -942,6 +945,7 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     }
     // Expect double-buffers as the steady state for fast clients
     auto log = producer.production_log();
+    ASSERT_THAT(log.size(), Gt(discard));  // avoid the below erase crashing
     log.erase(log.begin(), log.begin() + discard);
     EXPECT_THAT(unique_ids_in(log), Eq(2));
     producer.reset_log();

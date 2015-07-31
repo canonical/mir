@@ -80,3 +80,9 @@ bool MirWaitHandle::has_result()
 
     return received > 0;
 }
+
+bool MirWaitHandle::is_pending()
+{
+    std::unique_lock<std::mutex> lock(guard);
+    return expecting > 0 && received != expecting;
+}

@@ -43,6 +43,10 @@ class Logger;
 }
 namespace client
 {
+namespace rpc
+{
+class DisplayServer;
+}
 class ClientBufferFactory;
 class ClientBuffer;
 class ClientPlatform;
@@ -61,7 +65,7 @@ class BufferStream : public EGLNativeSurface, public ClientBufferStream
 public:
     BufferStream(
         MirConnection* connection,
-        mir::protobuf::DisplayServer& server,
+        mir::client::rpc::DisplayServer& server,
         BufferStreamMode mode,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
         mir::protobuf::BufferStream const& protobuf_bs,
@@ -70,7 +74,7 @@ public:
     // For surfaceless buffer streams
     BufferStream(
         MirConnection* connection,
-        mir::protobuf::DisplayServer& server,
+        mir::client::rpc::DisplayServer& server,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
         mir::protobuf::BufferStreamParameters const& parameters,
         std::shared_ptr<PerfReport> const& perf_report,
@@ -128,7 +132,7 @@ private:
     bool server_connection_lost {false};
 
     MirConnection* connection;
-    mir::protobuf::DisplayServer& display_server;
+    mir::client::rpc::DisplayServer& display_server;
 
     BufferStreamMode const mode;
     std::shared_ptr<ClientPlatform> const client_platform;
