@@ -488,6 +488,27 @@ TEST_P(WithAnyNumberOfBuffers, compositor_can_acquire_and_release)
     EXPECT_NO_THROW(q.compositor_release(comp_buffer));
 }
 
+TEST_P(WithAnyNumberOfBuffers, clients_get_new_buffers_on_compositor_release)
+{
+    q.allow_framedropping(false);
+
+    auto onscreen = q.compositor_acquire(this);
+
+    std::shared_ptr<AcquireWaitHandle> handle;
+    bool blocking;
+    do
+    {
+        handle = client_acquire_async(q);
+        blocking = !handle->has_acquired_buffer();
+        if (!blocking)
+            handle->release_buffer();
+    } while (!blocking);
+
+    EXPECT_FALSE(handle->has_acquired_buffer());
+    q.compositor_release(onscreen);
+    EXPECT_TRUE(handle->has_acquired_buffer());
+}
+
 TEST_P(WithAnyNumberOfBuffers, multiple_compositors_are_in_sync)
 {
     auto handle = client_acquire_async(q);
