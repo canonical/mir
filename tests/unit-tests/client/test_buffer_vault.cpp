@@ -253,16 +253,14 @@ TEST_F(BufferVault, multiple_withdrawals_during_wait_period_get_differing_buffer
 
 TEST_F(BufferVault, destruction_signals_futures)
 {
+    using namespace std::literals::chrono_literals;
     std::future<std::shared_ptr<mcl::ClientBuffer>> fbuffer;
     {
         mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
             size, format, usage, initial_nbuffers);
         fbuffer = vault.withdraw();
     }
-
-    EXPECT_THROW({
-        fbuffer.get();
-    }, std::future_error);
+    EXPECT_THAT(fbuffer.wait_for(5s), Ne(std::future_status::timeout));
 }
 
 TEST_F(BufferVault, ages_buffer_on_deposit)
