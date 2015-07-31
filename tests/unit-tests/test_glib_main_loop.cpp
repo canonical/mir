@@ -1095,6 +1095,40 @@ TEST_F(GLibMainLoopAlarmTest, can_reschedule_alarm_from_within_alarm_callback)
     EXPECT_THAT(num_triggers, Eq(expected_triggers));
 }
 
+TEST_F(GLibMainLoopAlarmTest, rescheduling_alarm_from_within_alarm_callback_doesnt_deadlock_with_external_reschedule)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mt::Signal in_alarm;
+    mt::Signal alarm_rescheduled;
+
+    std::shared_ptr<mir::time::Alarm> alarm = ml.create_alarm(
+        [&]
+        {
+            // Ensure that the external thread reschedules us while we're
+            // in the callback.
+            in_alarm.raise();
+            ASSERT_TRUE(alarm_rescheduled.wait_for(5s));
+
+            alarm->reschedule_in(0ms);
+
+            ml.stop();
+        });
+
+    alarm->reschedule_in(0ms);
+
+    mt::AutoJoinThread rescheduler{
+        [alarm, &in_alarm, &alarm_rescheduled]()
+        {
+            ASSERT_TRUE(in_alarm.wait_for(5s));
+            alarm->reschedule_in(0ms);
+            alarm_rescheduled.raise();
+        }};
+
+    ml.run();
+}
+
 // More targeted regression test for LP: #1381925
 TEST_F(GLibMainLoopTest, stress_emits_alarm_notification_with_zero_timeout)
 {

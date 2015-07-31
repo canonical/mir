@@ -251,8 +251,7 @@ md::GSourceHandle md::add_timer_gsource(
         std::shared_ptr<LockableCallback> handler;
         std::function<void()> exception_handler;
         time::Timestamp target_time;
-        bool enabled;
-        std::recursive_mutex mutex;
+        std::atomic<bool> enabled;
     };
 
     struct TimerGSource
@@ -294,7 +293,6 @@ md::GSourceHandle md::add_timer_gsource(
                 // so we acquire the caller's lock before our own.
                 auto& handler = *ctx.handler;
                 std::lock_guard<LockableCallback> handler_lock{handler};
-                std::lock_guard<decltype(ctx.mutex)> lock{ctx.mutex};
                 if (ctx.enabled)
                     handler();
             }
@@ -316,7 +314,6 @@ md::GSourceHandle md::add_timer_gsource(
         static void disable(GSource* source)
         {
             auto& ctx = reinterpret_cast<TimerGSource*>(source)->ctx;
-            std::lock_guard<decltype(ctx.mutex)> lock{ctx.mutex};
             ctx.enabled = false;
         }
     };
