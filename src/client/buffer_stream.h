@@ -132,7 +132,6 @@ private:
         std::function<void()> done);
     void on_configured();
     void release_cpu_region();
-//    MirWaitHandle* submit(std::function<void()> const& done, std::unique_lock<std::mutex> lk);
 
     mutable std::mutex mutex; // Protects all members of *this
 
@@ -165,7 +164,6 @@ private:
     std::unique_ptr<Amorphous> buffer_depository;
     
     MirWaitHandle screencast_wait_handle;
-    //CENTRALIZE
 };
 
 }
