@@ -48,6 +48,23 @@ namespace geom = mir::geometry;
 
 namespace gp = google::protobuf;
 
+namespace mir
+{
+namespace client
+{
+struct Amorphous
+{
+    virtual void deposit(
+        protobuf::Buffer const&, geometry::Size, MirPixelFormat) = 0;
+    virtual void set_buffer_cache_size(unsigned int) = 0;
+    virtual std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() = 0;
+    virtual uint32_t get_current_buffer_id() = 0;
+    virtual MirWaitHandle* submit(std::function<void()> const&, geometry::Size sz, int stream_id) = 0;
+    virtual ~Amorphous() = default;
+};
+}
+}
+
 namespace
 {
 
@@ -85,7 +102,6 @@ void populate_buffer_package(
         buffer_package.height = 0;
     }
 }
-
 
 
 struct OldBufferSemantics : mcl::Amorphous

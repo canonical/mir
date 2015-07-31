@@ -55,17 +55,7 @@ Producer, // As in surfaces
 Consumer // As in screencasts
 };
 
-struct Amorphous
-{
-    virtual void deposit(
-        protobuf::Buffer const&, geometry::Size, MirPixelFormat) = 0;
-    virtual void set_buffer_cache_size(unsigned int) = 0;
-    virtual std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() = 0;
-    virtual uint32_t get_current_buffer_id() = 0;
-    virtual MirWaitHandle* submit(std::function<void()> const&, geometry::Size sz, int stream_id) = 0;
-    virtual ~Amorphous() = default;
-};
-
+class Amorphous;
 class BufferStream : public EGLNativeSurface, public ClientBufferStream
 {
 public:
@@ -160,7 +150,6 @@ private:
     
     geometry::Size cached_buffer_size;
 
-    bool old_buffer = true;
     std::unique_ptr<Amorphous> buffer_depository;
     
     MirWaitHandle screencast_wait_handle;
