@@ -246,7 +246,6 @@ TEST_P(ClientBufferStream, protobuf_requirements)
             valid_bs, perf_report, "");
     });
 
-/*
     valid_bs.clear_buffer();
     EXPECT_NO_THROW({
         mcl::BufferStream bs(
@@ -254,7 +253,7 @@ TEST_P(ClientBufferStream, protobuf_requirements)
             std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
             valid_bs, perf_report, "");
     });
-*/ 
+
     auto error_bs = valid_bs;
     error_bs.set_error("An error");
     EXPECT_THROW({
