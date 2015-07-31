@@ -488,7 +488,7 @@ TEST_P(WithAnyNumberOfBuffers, compositor_can_acquire_and_release)
     EXPECT_NO_THROW(q.compositor_release(comp_buffer));
 }
 
-TEST_P(WithAnyNumberOfBuffers, clients_get_new_buffers_on_compositor_release)
+TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
 {
     q.allow_framedropping(false);
 
