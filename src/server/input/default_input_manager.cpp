@@ -128,7 +128,7 @@ void mi::DefaultInputManager::stop()
     if (!state.compare_exchange_strong(expected, State::stopping))
         return;
 
-    auto reset_to_stopped_on_failure = on_unwind([this]{state = State::started;});
+    auto reset_to_started_on_failure = on_unwind([this]{state = State::started;});
 
     auto const stop_promise = std::make_shared<std::promise<void>>();
 
