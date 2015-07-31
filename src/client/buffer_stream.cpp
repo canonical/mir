@@ -117,10 +117,9 @@ struct OldBufferSemantics : mcl::Amorphous
 
     void deposit(mp::Buffer const& buffer, geom::Size size, MirPixelFormat pf)
     {
-        printf("DEPOSIT\n");
+        std::unique_lock<std::mutex> lock(mutex);
         if (first || (on_incoming_buffer))
         {
-            printf("RECEIVE?  A RESULT.\n");
             first = false;
             auto buffer_package = std::make_shared<MirBufferPackage>();
             populate_buffer_package(*buffer_package, buffer);
@@ -134,21 +133,23 @@ struct OldBufferSemantics : mcl::Amorphous
         }
         else
         {
-            printf("JPUSH\n");
             incoming_buffers.push(buffer);
         }
     }
 
     void set_buffer_cache_size(unsigned int sz) override
     {
+        std::unique_lock<std::mutex> lock(mutex);
         wrapped.set_max_buffers(sz);
     }
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override
     {
+        std::unique_lock<std::mutex> lock(mutex);
         return wrapped.current_buffer();
     }
     uint32_t get_current_buffer_id() override
     {
+        std::unique_lock<std::mutex> lock(mutex);
         if (incoming_buffers.size())
             return incoming_buffers.front().buffer_id();
         return wrapped.current_buffer_id();
@@ -156,25 +157,24 @@ struct OldBufferSemantics : mcl::Amorphous
 
     MirWaitHandle* submit(std::function<void()> const& done, geom::Size sz, int stream_id) override
     {
+        std::unique_lock<std::mutex> lock(mutex);
         //always submit what we have, whether we have a buffer, or will have to wait for an async reply
         auto request = mcl::make_protobuf_object<mp::BufferRequest>();
         request->mutable_id()->set_value(stream_id);
         request->mutable_buffer()->set_buffer_id(wrapped.current_buffer_id());
-        //lock.unlock();
+        lock.unlock();
 
         display_server.submit_buffer(nullptr, request.get(), protobuf_void.get(),
             google::protobuf::NewCallback(google::protobuf::DoNothing));
 
-        //lock.lock();
+        lock.lock();
         if (incoming_buffers.empty())
         {
-            printf("EXPECT A RESULT.\n");
             next_buffer_wait_handle.expect_result();
             on_incoming_buffer = done; 
         }
         else
         {
-            printf("DONT EXPECT A RESULT.\n");
             auto buffer_package = std::make_shared<MirBufferPackage>();
             populate_buffer_package(*buffer_package, incoming_buffers.front());
             wrapped.deposit_package(buffer_package, incoming_buffers.front().buffer_id(), sz, mir_pixel_format_abgr_8888);
@@ -186,6 +186,7 @@ struct OldBufferSemantics : mcl::Amorphous
 
     void lost_connection() override
     {
+        std::unique_lock<std::mutex> lock(mutex);
         if (on_incoming_buffer)
         {
             on_incoming_buffer();
@@ -194,6 +195,7 @@ struct OldBufferSemantics : mcl::Amorphous
         next_buffer_wait_handle.result_received();
     }
 
+    std::mutex mutex;
     mcl::ClientBufferDepository wrapped;
     mir::protobuf::DisplayServer& display_server;
     std::function<void()> on_incoming_buffer;
@@ -204,6 +206,30 @@ struct OldBufferSemantics : mcl::Amorphous
 };
 
 #if 0
+namespace
+{
+class Requests : public mcl::ServerBufferRequests
+{
+public:
+    void allocate_buffer(geom::Size size, MirPixelFormat format, int usage) override
+    {
+        (void) size; (void) format; (void) usage;
+    }
+    void free_buffer(int buffer_id) override
+    {
+        (void) buffer_id;
+    }
+    void submit_buffer(mcl::ClientBuffer&) override
+    {
+    }
+};
+}
+        /*int initial_nbuffers = 3u;
+        buffer_depository = std::make_unique<NewBufferSemantics>(
+            client_platform->create_buffer_factory(),
+            std::make_shared<Requests>(),
+            geom::Size{0,0}, mir_pixel_format_abgr_8888, 0, initial_nbuffers);*/
+
 struct NewBufferSemantics : mcl::Amorphous
 {
     NewBufferSemantics(
@@ -297,26 +323,6 @@ mcl::BufferStream::BufferStream(
         
 }
 
-namespace
-{
-class Requests : public mcl::ServerBufferRequests
-{
-public:
-    void allocate_buffer(geom::Size size, MirPixelFormat format, int usage) override
-    {
-        (void) size; (void) format; (void) usage;
-    }
-    void free_buffer(int buffer_id) override
-    {
-        (void) buffer_id;
-    }
-    void submit_buffer(mcl::ClientBuffer&) override
-    {
-    }
-};
-}
-
-
 void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *context)
 {
     if (!protobuf_bs->has_id() || protobuf_bs->has_error())
@@ -331,11 +337,6 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
     else
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
-        /*int initial_nbuffers = 3u;
-        buffer_depository = std::make_unique<NewBufferSemantics>(
-            client_platform->create_buffer_factory(),
-            std::make_shared<Requests>(),
-            geom::Size{0,0}, mir_pixel_format_abgr_8888, 0, initial_nbuffers);*/
     }
 
 
@@ -383,10 +384,6 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
     }
 }
 
-//MirWaitHandle* mcl::BufferStream::submit(std::function<void()> const& done, std::unique_lock<std::mutex> lock)
-//{
-//}
-
 MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -394,7 +391,6 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 
     secured_region.reset();
 
-    printf("NEXT BUFFER\n");
     // TODO: We can fix the strange "ID casting" used below in the second phase
     // of buffer stream which generalizes and clarifies the server side logic.
     if (mode == mcl::BufferStreamMode::Producer)
@@ -575,9 +571,7 @@ bool mcl::BufferStream::valid() const
 void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    printf("BUFFER AVAILABLE\n");
     process_buffer(buffer, lock);
-    printf("RETURN.\n");
 }
 
 void mcl::BufferStream::buffer_unavailable()
