@@ -37,7 +37,6 @@ target_link_libraries(frame_uniformity_test_client
   # needed for vsync_simulating_graphics_platform.cpp
   mir-test-doubles-static
 
-  ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}

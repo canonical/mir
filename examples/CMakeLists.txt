@@ -111,7 +111,6 @@ target_link_libraries(mir_demo_client_basic
   mirclient
 
   ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
@@ -141,7 +140,6 @@ target_link_libraries(mir_demo_client_flicker
   mirclient
 
   ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
@@ -154,7 +152,6 @@ target_link_libraries(mir_demo_client_scroll
   mirclient
 
   ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${EGL_LIBRARIES}
   ${GLESv2_LIBRARIES}

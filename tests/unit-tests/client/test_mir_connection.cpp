@@ -37,14 +37,13 @@
 
 #include "mir_protobuf.pb.h"
 
-#include <google/protobuf/descriptor.h>
-
 #include <sys/eventfd.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mcl = mir::client;
+namespace mclr = mir::client::rpc;
 namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
 namespace mev = mir::events;
@@ -64,23 +63,22 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
         ON_CALL(*this, watch_fd()).WillByDefault(testing::Return(pollable_fd));
     }
 
-    void CallMethod(const google::protobuf::MethodDescriptor* method,
-                    google::protobuf::RpcController*,
-                    const google::protobuf::Message* parameters,
-                    google::protobuf::Message* response,
+    void call_method(std::string const& name,
+                    google::protobuf::MessageLite const* parameters,
+                    google::protobuf::MessageLite* response,
                     google::protobuf::Closure* complete)
     {
-        if (method->name() == "connect")
+        if (name == "connect")
         {
             static_cast<mp::Connection*>(response)->clear_error();
             connect(static_cast<mp::ConnectParameters const*>(parameters),
                     static_cast<mp::Connection*>(response));
         }
-        else if (method->name() == "configure_display")
+        else if (name == "configure_display")
         {
             configure_display_sent(static_cast<mp::DisplayConfiguration const*>(parameters));
         }
-        else if (method->name() == "platform_operation")
+        else if (name == "platform_operation")
         {
             platform_operation(static_cast<mp::PlatformOperationMessage const*>(parameters),
                                static_cast<mp::PlatformOperationMessage*>(response));
@@ -166,7 +164,7 @@ class TestConnectionConfiguration : public mcl::DefaultConnectionConfiguration
 public:
     TestConnectionConfiguration(
         std::shared_ptr<mcl::ClientPlatform> const& platform,
-        std::shared_ptr<mcl::rpc::MirBasicRpcChannel> const& channel)
+        std::shared_ptr<mclr::MirBasicRpcChannel> const& channel)
         : DefaultConnectionConfiguration(""),
           disp_config(std::make_shared<mcl::DisplayConfiguration>()),
           platform{platform},
@@ -174,7 +172,7 @@ public:
     {
     }
 
-    std::shared_ptr<::google::protobuf::RpcChannel> the_rpc_channel() override
+    std::shared_ptr<mclr::MirBasicRpcChannel> the_rpc_channel() override
     {
         return channel;
     }
@@ -191,7 +189,7 @@ public:
 private:
     std::shared_ptr<mcl::DisplayConfiguration> disp_config;
     std::shared_ptr<mcl::ClientPlatform> const platform;
-    std::shared_ptr<mcl::rpc::MirBasicRpcChannel> const channel;
+    std::shared_ptr<mclr::MirBasicRpcChannel> const channel;
 };
 
 }

@@ -1,4 +1,4 @@
-option cc_generic_services = true;
+option optimize_for = LITE_RUNTIME;
 
 package mir.protobuf;
 
@@ -6,13 +6,8 @@ message Parameters {
   required string name = 1;
 }
 
-
 message Result {
   optional string error = 127;
   optional string value = 1;
-}
-
-service MirServer {
-  rpc function(Parameters) returns (Result);
 }
 
