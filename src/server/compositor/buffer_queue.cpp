@@ -335,7 +335,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     if (buffer_to_release)
         release(buffer_to_release, std::move(lock));
 
-    mir::log_info("%p: compositor acquired %p", this, acquired_buffer.get());
+    //mir::log_info("%p: compositor acquired %p", this, acquired_buffer.get());
     return acquired_buffer;
 }
 
@@ -343,7 +343,7 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
 {
     std::unique_lock<decltype(guard)> lock(guard);
 
-    mir::log_info("%p: compositor release1 %p", this, buffer.get());
+    //mir::log_info("%p: compositor release1 %p", this, buffer.get());
 
     if (!remove(buffer.get(), buffers_sent_to_compositor))
     {
@@ -366,7 +366,8 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
      * us to call back the client with a buffer where otherwise we couldn't.
      */
     if (current_compositor_buffer == buffer.get() &&
-        !ready_to_composite_queue.empty())
+        !ready_to_composite_queue.empty() &&
+        buffers_owned_by_client.empty())
     {
         current_compositor_buffer = pop(ready_to_composite_queue);
 
@@ -377,7 +378,7 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
         current_buffer_users.push_back(impossible_user_id);
     }
 
-    mir::log_info("%p: compositor release2 %p", this, buffer.get());
+    //mir::log_info("%p: compositor release2 %p", this, buffer.get());
     if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
 }
@@ -535,7 +536,7 @@ void mc::BufferQueue::give_buffer_to_client(
 
     buffers_owned_by_client.push_back(buffer);
 
-    mir::log_info("%p: compositor release4 %p", this, buffer);
+    //mir::log_info("%p: compositor release4 %p", this, buffer);
 
     lock.unlock();
     try
@@ -561,7 +562,7 @@ void mc::BufferQueue::release(
     mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
 {
-    mir::log_info("%p: compositor release3 %p", this, buffer);
+    //mir::log_info("%p: compositor release3 %p", this, buffer);
     if (!pending_client_notifications.empty() && !client_ahead_of_compositor())
     {
         framedrop_policy->swap_unblocked();
