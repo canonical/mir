@@ -43,6 +43,7 @@ mcl::BufferVault::BufferVault(
     server_requests(server_requests),
     format(format)
 {
+    printf("CREATE BUFFERS!\n");
     for (auto i = 0u; i < initial_nbuffers; i++)
         server_requests->allocate_buffer(size, format, usage);
 }

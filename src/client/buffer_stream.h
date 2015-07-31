@@ -58,10 +58,11 @@ Consumer // As in screencasts
 struct Amorphous
 {
     virtual void deposit(
-        std::shared_ptr<MirBufferPackage> const&, int id, geometry::Size, MirPixelFormat) = 0;
+        protobuf::Buffer const&, geometry::Size, MirPixelFormat) = 0;
     virtual void set_buffer_cache_size(unsigned int) = 0;
     virtual std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() = 0;
     virtual uint32_t get_current_buffer_id() = 0;
+    virtual MirWaitHandle* submit(std::function<void()> const&, geometry::Size sz, int stream_id) = 0;
     virtual ~Amorphous() = default;
 };
 
@@ -131,12 +132,10 @@ private:
         std::function<void()> done);
     void on_configured();
     void release_cpu_region();
-    MirWaitHandle* submit(std::function<void()> const& done, std::unique_lock<std::mutex> lk);
+//    MirWaitHandle* submit(std::function<void()> const& done, std::unique_lock<std::mutex> lk);
 
     mutable std::mutex mutex; // Protects all members of *this
 
-    std::function<void()> on_incoming_buffer;
-    std::queue<mir::protobuf::Buffer> incoming_buffers;
     bool server_connection_lost {false};
 
     MirConnection* connection;
@@ -155,7 +154,6 @@ private:
 
     MirWaitHandle create_wait_handle;
     MirWaitHandle release_wait_handle;
-    MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle configure_wait_handle;
     std::unique_ptr<mir::protobuf::Void> protobuf_void;
     
@@ -166,6 +164,7 @@ private:
     bool old_buffer = true;
     std::unique_ptr<Amorphous> buffer_depository;
     
+    MirWaitHandle screencast_wait_handle;
     //CENTRALIZE
 };
 
