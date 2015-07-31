@@ -58,7 +58,7 @@ public:
     void result_processing_failed(mir::protobuf::wire::Result const& result,
                                   std::exception const& ex) override;
 
-    void file_descriptors_received(google::protobuf::Message const& response,
+    void file_descriptors_received(google::protobuf::MessageLite const& response,
                                    std::vector<Fd> const& fds) override;
 
 private:

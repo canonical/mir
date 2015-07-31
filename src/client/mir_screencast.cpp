@@ -34,7 +34,7 @@ MirScreencast::MirScreencast(
     geom::Rectangle const& region,
     geom::Size const& size,
     MirPixelFormat pixel_format,
-    mir::protobuf::DisplayServer& server,
+    mir::client::rpc::DisplayServer& server,
     MirConnection* connection,
     mir_screencast_callback callback, void* context)
     : server(server),
@@ -65,7 +65,6 @@ MirScreencast::MirScreencast(
 
     create_screencast_wait_handle.expect_result();
     server.create_screencast(
-        nullptr,
         parameters.get(),
         protobuf_screencast.get(),
         google::protobuf::NewCallback(
@@ -91,7 +90,6 @@ MirWaitHandle* MirScreencast::release(
     
     release_wait_handle.expect_result();
     server.release_screencast(
-        nullptr,
         screencast_id.get(),
         protobuf_void.get(),
         google::protobuf::NewCallback(

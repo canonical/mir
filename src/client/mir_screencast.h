@@ -31,9 +31,12 @@
 
 namespace mir
 {
-namespace protobuf { class DisplayServer; }
 namespace client
 {
+namespace rpc
+{
+class DisplayServer;
+}
 class ClientBufferStreamFactory;
 class ClientBufferStream;
 }
@@ -46,7 +49,7 @@ public:
         mir::geometry::Rectangle const& region,
         mir::geometry::Size const& size,
         MirPixelFormat pixel_format,
-        mir::protobuf::DisplayServer& server,
+        mir::client::rpc::DisplayServer& server,
         MirConnection* connection,
         mir_screencast_callback callback, void* context);
 
@@ -68,7 +71,7 @@ private:
     void released(
         mir_screencast_callback callback, void* context);
 
-    mir::protobuf::DisplayServer& server;
+    mir::client::rpc::DisplayServer& server;
     MirConnection* connection;
     mir::geometry::Size const output_size;
     std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;

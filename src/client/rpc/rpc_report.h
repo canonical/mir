@@ -20,9 +20,18 @@
 #define MIR_CLIENT_RPC_RPC_REPORT_H_
 
 #include "mir_toolkit/event.h"
-#include <boost/system/error_code.hpp>
-#include <google/protobuf/message.h>
 #include "mir/fd.h"
+
+#include <exception>
+#include <vector>
+
+namespace google
+{
+namespace protobuf
+{
+class MessageLite;
+}
+}
 
 namespace mir
 {
@@ -63,7 +72,7 @@ public:
     virtual void result_processing_failed(mir::protobuf::wire::Result const& result,
                                           std::exception const& ex) = 0;
 
-    virtual void file_descriptors_received(google::protobuf::Message const& response,
+    virtual void file_descriptors_received(google::protobuf::MessageLite const& response,
                                            std::vector<mir::Fd> const& fds) = 0;
 
 protected:
