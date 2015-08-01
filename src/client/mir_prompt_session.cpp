@@ -20,6 +20,7 @@
 #include "event_handler_register.h"
 #include "make_protobuf_object.h"
 #include "rpc/mir_display_server.h"
+#include "mir_protobuf.pb.h"
 
 namespace mp = mir::protobuf;
 namespace mcl = mir::client;
@@ -146,13 +147,13 @@ MirWaitHandle* MirPromptSession::new_fds_for_prompt_providers(
     mir_client_fd_callback callback,
     void * context)
 {
-    auto request = mcl::make_protobuf_object<mir::protobuf::SocketFDRequest>();
-    request->set_number(no_of_fds);
+    mp::SocketFDRequest request;
+    request.set_number(no_of_fds);
 
     fds_for_prompt_providers_wait_handle.expect_result();
 
     server.new_fds_for_prompt_providers(
-        request.get(),
+        &request,
         socket_fd_response.get(),
         google::protobuf::NewCallback(this, &MirPromptSession::done_fds_for_prompt_providers,
                                               callback, context));

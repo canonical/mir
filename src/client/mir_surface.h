@@ -18,7 +18,6 @@
 #ifndef MIR_CLIENT_MIR_SURFACE_H_
 #define MIR_CLIENT_MIR_SURFACE_H_
 
-#include "mir_protobuf.pb.h"
 #include "client_buffer_depository.h"
 #include "client_buffer_stream.h"
 #include "mir_wait_handle.h"
@@ -51,6 +50,14 @@ class InputPlatform;
 class XKBMapper;
 }
 }
+namespace protobuf
+{
+class PersistentSurfaceId;
+class Surface;
+class SurfaceParameters;
+class SurfaceSetting;
+class Void;
+}
 namespace client
 {
 namespace rpc
@@ -72,8 +79,6 @@ struct MirSurfaceSpec
     MirSurfaceSpec();
     MirSurfaceSpec(MirConnection* connection, int width, int height, MirPixelFormat format);
     MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters const& params);
-
-    std::unique_ptr<mir::protobuf::SurfaceParameters> serialize() const;
 
     struct AspectRatio { unsigned width; unsigned height; };
 
