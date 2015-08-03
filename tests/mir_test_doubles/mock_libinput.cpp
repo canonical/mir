@@ -16,7 +16,7 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir_test_doubles/mock_libinput.h"
+#include "mir/test/doubles/mock_libinput.h"
 
 namespace mtd = mir::test::doubles;
 
