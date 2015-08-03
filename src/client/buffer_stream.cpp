@@ -20,7 +20,6 @@
 
 #include "buffer_stream.h"
 #include "make_protobuf_object.h"
-#include "buffer_vault.h"
 #include "mir_connection.h"
 #include "perf_report.h"
 #include "logging/perf_report.h"
@@ -51,6 +50,8 @@ namespace mir
 {
 namespace client
 {
+//An internal interface useful in transitioning buffer exchange semantics based on
+//the BufferStream response provided by the server
 struct ServerBufferSemantics
 {
     virtual void deposit(
@@ -61,6 +62,9 @@ struct ServerBufferSemantics
     virtual MirWaitHandle* submit(std::function<void()> const&, geometry::Size sz, int stream_id) = 0;
     virtual void lost_connection() = 0;
     virtual ~ServerBufferSemantics() = default;
+    ServerBufferSemantics() = default;
+    ServerBufferSemantics(ServerBufferSemantics const&) = delete;
+    ServerBufferSemantics& operator=(ServerBufferSemantics const&) = delete;
 };
 }
 }
@@ -368,6 +372,11 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
     return &screencast_wait_handle;
 }
 
+std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    return buffer_depository->get_current_buffer();
+}
 
 EGLNativeWindowType mcl::BufferStream::egl_native_window()
 {
@@ -453,11 +462,6 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
     swap_interval_ = result.ivalue();
 }
 
-std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    return buffer_depository->get_current_buffer();
-}
 uint32_t mcl::BufferStream::get_current_buffer_id()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -514,6 +518,12 @@ bool mcl::BufferStream::valid() const
     return protobuf_bs->has_id() && !protobuf_bs->has_error();
 }
 
+void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    buffer_depository->set_buffer_cache_size(cache_size);
+}
+
 void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -524,10 +534,4 @@ void mcl::BufferStream::buffer_unavailable()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     buffer_depository->lost_connection(); 
-}
-
-void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
-{
-    std::unique_lock<std::mutex> lock(mutex);
-    buffer_depository->set_buffer_cache_size(cache_size);
 }
