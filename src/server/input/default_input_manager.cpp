@@ -29,6 +29,8 @@
 #include "mir/thread_name.h"
 #include "mir/unwind_helpers.h"
 #include "mir/terminate_with_current_exception.h"
+#define MIR_LOG_COMPONENT "Input Manager"
+#include "mir/log.h"
 
 #include <condition_variable>
 #include <mutex>
@@ -98,7 +100,18 @@ void mi::DefaultInputManager::start()
                         legacy_dispatchable->dispatch(dispatch::FdEvent::readable);
                         auto const started_promise =
                             std::shared_ptr<std::promise<void>>(weak_started_promise);
-                        started_promise->set_value();
+                        try
+                        {
+                            started_promise->set_value();
+                        }
+                        catch(std::future_error const& error)
+                        {
+                            //An exception could have already occurred in the input thread below
+                            //in which case started_future.wait() will be unblocked by started_promise->set_exception
+                            //in the exception handler of the input thread
+                            if (error.code() != std::future_errc::promise_already_satisfied)
+                                throw;
+                        }
                    });
 
     input_thread = std::make_unique<dispatch::ThreadedDispatcher>(
@@ -111,7 +124,20 @@ void mi::DefaultInputManager::start()
             multiplexer->remove_watch(legacy_dispatchable);
             state = State::stopped;
             if (auto started_promise = weak_started_promise.lock())
-                started_promise->set_exception(std::current_exception());
+            {
+                try
+                {
+                    started_promise->set_exception(std::current_exception());
+                }
+                catch(std::future_error const& error)
+                {
+                    //The action above could have run already and this exception may have triggered
+                    //before the end of scope of DefaultInputManager::start
+                    //in which case started_future.wait() will be unblocked by started_promise->set_value above
+                    if (error.code() != std::future_errc::promise_already_satisfied)
+                        mir::log_error("started_promise->set_exception threw %s", error.what());
+                }
+            }
             mir::terminate_with_current_exception();
         });
 
