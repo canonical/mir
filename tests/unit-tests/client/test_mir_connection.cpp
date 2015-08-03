@@ -31,13 +31,11 @@
 #include "mir/geometry/rectangle.h"
 
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
-#include "mir_test/test_protobuf_server.h"
-#include "mir_test/stub_server_tool.h"
-#include "mir_test_doubles/stub_client_buffer_factory.h"
+#include "mir/test/test_protobuf_server.h"
+#include "mir/test/stub_server_tool.h"
+#include "mir/test/doubles/stub_client_buffer_factory.h"
 
 #include "mir_protobuf.pb.h"
-
-#include <google/protobuf/descriptor.h>
 
 #include <sys/eventfd.h>
 
@@ -45,6 +43,7 @@
 #include <gmock/gmock.h>
 
 namespace mcl = mir::client;
+namespace mclr = mir::client::rpc;
 namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
 namespace mev = mir::events;
@@ -64,23 +63,22 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
         ON_CALL(*this, watch_fd()).WillByDefault(testing::Return(pollable_fd));
     }
 
-    void CallMethod(const google::protobuf::MethodDescriptor* method,
-                    google::protobuf::RpcController*,
-                    const google::protobuf::Message* parameters,
-                    google::protobuf::Message* response,
+    void call_method(std::string const& name,
+                    google::protobuf::MessageLite const* parameters,
+                    google::protobuf::MessageLite* response,
                     google::protobuf::Closure* complete)
     {
-        if (method->name() == "connect")
+        if (name == "connect")
         {
             static_cast<mp::Connection*>(response)->clear_error();
             connect(static_cast<mp::ConnectParameters const*>(parameters),
                     static_cast<mp::Connection*>(response));
         }
-        else if (method->name() == "configure_display")
+        else if (name == "configure_display")
         {
             configure_display_sent(static_cast<mp::DisplayConfiguration const*>(parameters));
         }
-        else if (method->name() == "platform_operation")
+        else if (name == "platform_operation")
         {
             platform_operation(static_cast<mp::PlatformOperationMessage const*>(parameters),
                                static_cast<mp::PlatformOperationMessage*>(response));
@@ -136,6 +134,8 @@ struct MockClientPlatform : public mcl::ClientPlatform
     MOCK_METHOD0(create_buffer_factory, std::shared_ptr<mcl::ClientBufferFactory>());
     MOCK_METHOD1(create_egl_native_window, std::shared_ptr<EGLNativeWindowType>(mcl::EGLNativeSurface*));
     MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());
+    MOCK_CONST_METHOD2(get_egl_pixel_format,
+        MirPixelFormat(EGLDisplay, EGLConfig));
 
     mcl::ClientContext* client_context = nullptr;
 };
@@ -164,7 +164,7 @@ class TestConnectionConfiguration : public mcl::DefaultConnectionConfiguration
 public:
     TestConnectionConfiguration(
         std::shared_ptr<mcl::ClientPlatform> const& platform,
-        std::shared_ptr<mcl::rpc::MirBasicRpcChannel> const& channel)
+        std::shared_ptr<mclr::MirBasicRpcChannel> const& channel)
         : DefaultConnectionConfiguration(""),
           disp_config(std::make_shared<mcl::DisplayConfiguration>()),
           platform{platform},
@@ -172,7 +172,7 @@ public:
     {
     }
 
-    std::shared_ptr<::google::protobuf::RpcChannel> the_rpc_channel() override
+    std::shared_ptr<mclr::MirBasicRpcChannel> the_rpc_channel() override
     {
         return channel;
     }
@@ -189,7 +189,7 @@ public:
 private:
     std::shared_ptr<mcl::DisplayConfiguration> disp_config;
     std::shared_ptr<mcl::ClientPlatform> const platform;
-    std::shared_ptr<mcl::rpc::MirBasicRpcChannel> const channel;
+    std::shared_ptr<mclr::MirBasicRpcChannel> const channel;
 };
 
 }

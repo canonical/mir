@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/android/sync_fence.h"
-#include "mir_test_doubles/mock_fence.h"
+#include "mir/test/doubles/mock_fence.h"
 
 #include <android/linux/sync.h>
 #include <sys/ioctl.h>

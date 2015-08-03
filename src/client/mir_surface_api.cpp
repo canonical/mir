@@ -29,6 +29,7 @@
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <functional>
+#include <algorithm>
 
 namespace mcl = mir::client;
 
@@ -534,6 +535,23 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+void mir_surface_spec_set_input_shape(MirSurfaceSpec *spec, MirRectangle const* rectangles,
+                                      size_t n_rects)
+try
+{
+    mir::require(spec);
+
+    std::vector<MirRectangle> copy;
+    for (auto i = 0u; i < n_rects; i++)
+    {
+        copy.emplace_back(rectangles[i]);
+    }
+    spec->input_shape = copy;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
 
 void mir_surface_spec_set_parent(MirSurfaceSpec* spec, MirSurface* parent)
 try
@@ -631,4 +649,34 @@ bool mir_persistent_id_is_valid(MirPersistentId* id)
 void mir_persistent_id_release(MirPersistentId* id)
 {
     delete id;
+}
+
+bool mir_surface_spec_attach_to_foreign_parent(MirSurfaceSpec* spec,
+                                               MirPersistentId* parent,
+                                               MirRectangle* attachment_rect,
+                                               MirEdgeAttachment edge)
+{
+    mir::require(mir_persistent_id_is_valid(parent));
+    mir::require(attachment_rect != nullptr);
+
+    if (!spec->type.is_set() ||
+        spec->type.value() != mir_surface_type_inputmethod)
+    {
+        return false;
+    }
+
+    spec->parent_id = std::make_unique<MirPersistentId>(*parent);
+    spec->aux_rect = *attachment_rect;
+    spec->edge_attachment = edge;
+    return true;
+}
+
+char const* mir_persistent_id_as_string(MirPersistentId *id)
+{
+    return id->as_string().c_str();
+}
+
+MirPersistentId* mir_persistent_id_from_string(char const* id_string)
+{
+    return new MirPersistentId{id_string};
 }

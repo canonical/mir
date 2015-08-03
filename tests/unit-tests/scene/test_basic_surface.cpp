@@ -27,11 +27,11 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/events/event_builders.h"
 
-#include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/mock_input_sender.h"
-#include "mir_test_doubles/stub_input_sender.h"
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/doubles/mock_buffer_stream.h"
+#include "mir/test/doubles/mock_input_sender.h"
+#include "mir/test/doubles/stub_input_sender.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/fake_shared.h"
 
 #include "src/server/report/null_report_factory.h"
 

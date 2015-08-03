@@ -18,16 +18,18 @@
 
 #include "src/client/mir_prompt_session.h"
 #include "src/client/mir_event_distributor.h"
+#include "src/client/rpc/mir_display_server.h"
 
 #include "mir/events/event_builders.h"
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <thread>
 
 namespace mcl = mir::client;
+namespace mclr = mir::client::rpc;
 namespace mev = mir::events;
 namespace mt = mir::test;
 
@@ -42,29 +44,31 @@ class RpcController;
 namespace
 {
 
-struct MockProtobufServer : mir::protobuf::DisplayServer
+struct MockProtobufServer : mclr::DisplayServer
 {
+    MockProtobufServer() : mclr::DisplayServer(nullptr) {}
+    MOCK_METHOD3(start_prompt_session,
+                 void(
+                      mir::protobuf::PromptSessionParameters const* /*request*/,
+                      mir::protobuf::Void* /*response*/,
+                      google::protobuf::Closure* /*done*/));
 
-    MOCK_METHOD4(start_prompt_session,
-                 void(::google::protobuf::RpcController* /*controller*/,
-                      ::mir::protobuf::PromptSessionParameters const* /*request*/,
-                      ::mir::protobuf::Void* /*response*/,
-                      ::google::protobuf::Closure* /*done*/));
-
-    MOCK_METHOD4(stop_prompt_session,
-                 void(::google::protobuf::RpcController* /*controller*/,
-                      ::mir::protobuf::Void const* /*request*/,
-                      ::mir::protobuf::Void* /*response*/,
-                      ::google::protobuf::Closure* /*done*/));
+    MOCK_METHOD3(stop_prompt_session,
+                 void(
+                      mir::protobuf::Void const* /*request*/,
+                      mir::protobuf::Void* /*response*/,
+                      google::protobuf::Closure* /*done*/));
 };
 
-class StubProtobufServer : public mir::protobuf::DisplayServer
+class StubProtobufServer : public mclr::DisplayServer
 {
 public:
-    void start_prompt_session(::google::protobuf::RpcController* /*controller*/,
-                             ::mir::protobuf::PromptSessionParameters const* /*request*/,
-                             ::mir::protobuf::Void* response,
-                             ::google::protobuf::Closure* done) override
+    StubProtobufServer() : mclr::DisplayServer(nullptr) {}
+
+    void start_prompt_session(
+        mir::protobuf::PromptSessionParameters const* /*request*/,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override
     {
         if (server_thread.joinable())
             server_thread.join();
@@ -76,18 +80,14 @@ public:
             }};
     }
 
-    void stop_prompt_session(::google::protobuf::RpcController* /*controller*/,
-                            mir::protobuf::Void const* /*request*/,
-                            ::mir::protobuf::Void* /*response*/,
-                            ::google::protobuf::Closure* done) override
+    void stop_prompt_session(
+        mir::protobuf::Void const* /*request*/,
+        mir::protobuf::Void* /*response*/,
+        google::protobuf::Closure* done) override
     {
         if (server_thread.joinable())
             server_thread.join();
         server_thread = std::thread{[done, this] { done->Run(); }};
-    }
-
-    StubProtobufServer()
-    {
     }
 
     ~StubProtobufServer()
@@ -137,7 +137,7 @@ void null_callback_func(MirPromptSession*, void*)
 
 ACTION(RunClosure)
 {
-    arg3->Run();
+    arg2->Run();
 }
 
 }
@@ -147,7 +147,7 @@ TEST_F(MirPromptSessionTest, start_prompt_session)
     using namespace testing;
 
     EXPECT_CALL(mock_server,
-                start_prompt_session(_,_,_,_))
+                start_prompt_session(_,_,_))
         .WillOnce(RunClosure());
 
     MirPromptSession prompt_session{
@@ -161,7 +161,7 @@ TEST_F(MirPromptSessionTest, stop_prompt_session)
     using namespace testing;
 
     EXPECT_CALL(mock_server,
-                stop_prompt_session(_,_,_,_))
+                stop_prompt_session(_,_,_))
         .WillOnce(RunClosure());
 
     MirPromptSession prompt_session{

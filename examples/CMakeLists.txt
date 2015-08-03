@@ -100,13 +100,17 @@ target_link_libraries(mir_demo_client_touch_validator
 
 mir_add_wrapped_executable(mir_demo_client_basic
   basic.c
-)
+  )
+
+mir_add_wrapped_executable(mir_demo_client_input_shapes
+  input_shapes.cpp
+  )
+target_link_libraries(mir_demo_client_input_shapes eglapp)
 
 target_link_libraries(mir_demo_client_basic
   mirclient
 
   ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
@@ -136,7 +140,6 @@ target_link_libraries(mir_demo_client_flicker
   mirclient
 
   ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
@@ -149,7 +152,6 @@ target_link_libraries(mir_demo_client_scroll
   mirclient
 
   ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${EGL_LIBRARIES}
   ${GLESv2_LIBRARIES}
@@ -237,7 +239,7 @@ if (MIR_ENABLE_TESTS)
   # To see reasons for failure:  ctest -V -R Clients-only-use-client-symbols
   mir_add_test(NAME Clients-only-use-client-symbols
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    COMMAND /bin/sh -c "!(nm -u .mir_demo_client_* mir_demo_client* | grep -v @@MIR_CLIENT | grep 'U mir_')"
+    COMMAND /bin/sh -c "!(nm -u mir_demo_client* | grep -v @@MIR_CLIENT | grep 'U mir_')"
   )
 
 # We use a slightly weaker version of the test with clang as that generates spurious NEEDED
@@ -245,13 +247,13 @@ if (NOT "${CMAKE_CXX_COMPILER}" MATCHES "clang")
   # To see reasons for failure:  ctest -V -R Clients-only-use-client-ABI
   mir_add_test(NAME Clients-only-use-client-ABI
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    COMMAND /bin/sh -c "!(objdump -p .mir_demo_client_* mir_demo_client*  | grep NEEDED | grep libmir | grep -v libmirclient)"
+    COMMAND /bin/sh -c "!(objdump -p mir_demo_client*  | grep NEEDED | grep libmir | grep -v libmirclient)"
   )
 else()
   # To see reasons for failure:  ctest -V -R Clients-only-use-client-ABI
   mir_add_test(NAME Clients-only-use-client-ABI
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    COMMAND /bin/sh -c "!(nm -u .mir_demo_client_* mir_demo_client* | grep -v @@MIR_CLIENT | grep @@MIR_)"
+    COMMAND /bin/sh -c "!(nm -u mir_demo_client* | grep -v @@MIR_CLIENT | grep @@MIR_)"
   )
 endif ()
 endif ()

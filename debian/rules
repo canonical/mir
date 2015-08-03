@@ -8,7 +8,7 @@ EXACT_PACKAGE_VERSION = $(shell dpkg-parsechangelog | grep Version | cut -d' ' -
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
 %:
-	dh $@ --parallel --fail-missing
+	dh $@ --parallel --fail-missing --with python3
 
 # Enable verbose debugging output from the testsuite
 export MIR_SERVER_LOGGING = on

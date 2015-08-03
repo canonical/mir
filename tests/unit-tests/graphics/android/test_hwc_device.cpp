@@ -22,19 +22,19 @@
 #include "src/platforms/android/server/hwc_layerlist.h"
 #include "src/platforms/android/server/gl_context.h"
 #include "src/platforms/android/server/hwc_configuration.h"
-#include "mir_test_doubles/mock_android_native_buffer.h"
-#include "mir_test_doubles/stub_renderable.h"
-#include "mir_test_doubles/mock_framebuffer_bundle.h"
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/mock_hwc_device_wrapper.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/doubles/mock_android_native_buffer.h"
+#include "mir/test/doubles/stub_renderable.h"
+#include "mir/test/doubles/mock_framebuffer_bundle.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/mock_hwc_device_wrapper.h"
+#include "mir/test/fake_shared.h"
 #include "hwc_struct_helpers.h"
-#include "mir_test_doubles/mock_swapping_gl_context.h"
-#include "mir_test_doubles/stub_swapping_gl_context.h"
-#include "mir_test_doubles/stub_renderable_list_compositor.h"
-#include "mir_test_doubles/mock_renderable_list_compositor.h"
-#include "mir_test_doubles/mock_renderable.h"
-#include "mir_test_doubles/stub_renderable.h"
+#include "mir/test/doubles/mock_swapping_gl_context.h"
+#include "mir/test/doubles/stub_swapping_gl_context.h"
+#include "mir/test/doubles/stub_renderable_list_compositor.h"
+#include "mir/test/doubles/mock_renderable_list_compositor.h"
+#include "mir/test/doubles/mock_renderable.h"
+#include "mir/test/doubles/stub_renderable.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <gmock/gmock.h>
@@ -437,6 +437,49 @@ TEST_F(HwcDevice, owns_overlay_buffers_until_next_set)
     list.update_list({stub_renderable1}, geom::Displacement{});
     device.commit({content});
     EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
+}
+
+TEST_F(HwcDevice, overlays_are_throttled_per_predictive_bypass)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, prepare(_))
+        .WillRepeatedly(Invoke(set_all_layers_to_overlay));
+
+    mga::HwcDevice device(mock_device);
+
+    mga::LayerList list(layer_adapter, {stub_renderable1}, {0,0});
+    mga::DisplayContents content{primary, list, offset, stub_context,
+                                 stub_compositor};
+
+    for (int frame = 0; frame < 5; ++frame)
+    {
+        device.commit({content});
+        ASSERT_THAT(device.recommended_sleep().count(), Ge(8));
+    }
+}
+
+TEST_F(HwcDevice, compositing_disables_predictive_bypass)
+{
+    using namespace testing;
+
+    NiceMock<mtd::MockSwappingGLContext> mock_context;
+    ON_CALL(mock_context, last_rendered_buffer())
+        .WillByDefault(Return(stub_fb_buffer));
+    EXPECT_CALL(mock_context, swap_buffers())
+        .Times(AtLeast(5));
+
+    mga::LayerList list(layer_adapter, {}, geom::Displacement{});
+    mtd::MockRenderableListCompositor mock_compositor;
+    mga::DisplayContents content{primary, list, offset, mock_context,
+                                 mock_compositor};
+
+    mga::HwcDevice device(mock_device);
+    device.commit({content});
+    for (int frame = 0; frame < 5; ++frame)
+    {
+        device.commit({content});
+        ASSERT_EQ(0, device.recommended_sleep().count());
+    }
 }
 
 TEST_F(HwcDevice, does_not_set_acquirefences_when_it_has_set_them_previously_without_update)

@@ -17,7 +17,7 @@
  * Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir_test_doubles/mock_drm.h"
+#include "mir/test/doubles/mock_drm.h"
 #include "mir/geometry/size.h"
 #include <gtest/gtest.h>
 
@@ -216,6 +216,11 @@ drmModeModeInfo mtd::FakeDRMResources::create_mode(uint16_t hdisplay, uint16_t v
     mode.clock = clock;
     mode.htotal = htotal;
     mode.vtotal = vtotal;
+
+    uint32_t total = htotal;
+    total *= vtotal;  // extend to 32 bits
+    mode.vrefresh = clock * 1000UL / total;
+
     if (preferred)
         mode.type |= DRM_MODE_TYPE_PREFERRED;
 

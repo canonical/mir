@@ -16,8 +16,8 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir_test_doubles/triggered_main_loop.h"
-#include "mir_test_doubles/stub_alarm.h"
+#include "mir/test/doubles/triggered_main_loop.h"
+#include "mir/test/doubles/stub_alarm.h"
 
 #include <algorithm>
 #include <sys/select.h>

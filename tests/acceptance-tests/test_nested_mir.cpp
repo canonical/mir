@@ -29,10 +29,10 @@
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test/wait_condition.h"
-#include "mir_test/spin_wait.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/spin_wait.h"
 
-#include "mir_test_doubles/nested_mock_egl.h"
+#include "mir/test/doubles/nested_mock_egl.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -60,13 +60,16 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
         EXPECT_CALL(*this, session_create_surface_called(_)).Times(AnyNumber());
         EXPECT_CALL(*this, session_release_surface_called(_)).Times(AnyNumber());
         EXPECT_CALL(*this, session_next_buffer_called(_)).Times(AnyNumber());
-        EXPECT_CALL(*this, session_exchange_buffer_called(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, session_submit_buffer_called(_)).Times(AnyNumber());
     }
 
     MOCK_METHOD1(session_connect_called, void (std::string const&));
     MOCK_METHOD1(session_create_surface_called, void (std::string const&));
     MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_exchange_buffer_called, void (std::string const&));
+    MOCK_METHOD1(session_submit_buffer_called, void (std::string const&));
+    MOCK_METHOD1(session_allocate_buffers_called, void (std::string const&));
+    MOCK_METHOD1(session_release_buffers_called, void (std::string const&));
     MOCK_METHOD1(session_release_surface_called, void (std::string const&));
     MOCK_METHOD1(session_disconnect_called, void (std::string const&));
     MOCK_METHOD2(session_start_prompt_session_called, void (std::string const&, pid_t));
@@ -248,7 +251,7 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
 TEST_F(NestedServer, posts_when_scene_has_visible_changes)
 {
     // No post on surface creation
-    EXPECT_CALL(*mock_session_mediator_report, session_exchange_buffer_called(_)).Times(0);
+    EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(0);
     NestedMirRunner nested_mir{new_connection()};
     auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
     auto const surface = mtf::make_any_surface(connection);
@@ -262,7 +265,7 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
     {
         mt::WaitCondition wait;
 
-        EXPECT_CALL(*mock_session_mediator_report, session_exchange_buffer_called(_)).Times(1)
+        EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(1)
                 .WillOnce(InvokeWithoutArgs([&] { wait.wake_up_everyone(); }));
 
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
@@ -275,7 +278,7 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
     {
         mt::WaitCondition wait;
 
-        EXPECT_CALL(*mock_session_mediator_report, session_exchange_buffer_called(_)).Times(1)
+        EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(1)
                 .WillOnce(InvokeWithoutArgs([&] { wait.wake_up_everyone(); }));
 
         mir_surface_release_sync(surface);
@@ -286,7 +289,7 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
     }
 
     // No post during shutdown
-    EXPECT_CALL(*mock_session_mediator_report, session_exchange_buffer_called(_)).Times(0);
+    EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(0);
 
     // Ignore other shutdown events
     EXPECT_CALL(*mock_session_mediator_report, session_release_surface_called(_)).Times(AnyNumber());

@@ -19,7 +19,6 @@
 #include "mir_protobuf_rpc_channel.h"
 #include "rpc_report.h"
 
-#include "mir/protobuf/google_protobuf_guard.h"
 #include "../surface_map.h"
 #include "../mir_surface.h"
 #include "../display_configuration.h"
@@ -41,6 +40,7 @@ namespace mf = mir::frontend;
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
 namespace md = mir::dispatch;
+namespace mp = mir::protobuf;
 
 namespace
 {
@@ -53,12 +53,14 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     std::shared_ptr<DisplayConfiguration> const& disp_config,
     std::shared_ptr<RpcReport> const& rpc_report,
     std::shared_ptr<LifecycleControl> const& lifecycle_control,
+    std::shared_ptr<PingHandler> const& ping_handler,
     std::shared_ptr<EventSink> const& event_sink) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
+    ping_handler{ping_handler},
     event_sink(event_sink),
     disconnected(false),
     transport{std::move(transport)},
@@ -82,9 +84,13 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
 {
     if (!disconnected.exchange(true))
     {
-        lifecycle_control->call_lifecycle_event_handler(mir_lifecycle_connection_lost);
+        (*lifecycle_control)(mir_lifecycle_connection_lost);
     }
     pending_calls.force_completion();
+    surface_map->with_all_streams_do(
+        [](mcl::ClientBufferStream* stream) {
+            if (stream) stream->buffer_unavailable();
+        });
 }
 
 template<class MessageType>
@@ -108,7 +114,7 @@ void mclr::MirProtobufRpcChannel::receive_any_file_descriptors_for(MessageType* 
     }
 }
 
-void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Message* response)
+void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::MessageLite* response)
 {
     auto const message_type = response->GetTypeName();
 
@@ -167,11 +173,10 @@ void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Mes
     receive_any_file_descriptors_for(platform_operation_message);
 }
 
-void mclr::MirProtobufRpcChannel::CallMethod(
-    const google::protobuf::MethodDescriptor* method,
-    google::protobuf::RpcController*,
-    const google::protobuf::Message* parameters,
-    google::protobuf::Message* response,
+void mclr::MirProtobufRpcChannel::call_method(
+    std::string const& method_name,
+    google::protobuf::MessageLite const* parameters,
+    google::protobuf::MessageLite* response,
     google::protobuf::Closure* complete)
 {
     // Only send message when details saved for handling response
@@ -190,7 +195,7 @@ void mclr::MirProtobufRpcChannel::CallMethod(
             fds.emplace_back(mir::Fd{IntOwnedFd{fd}});
     }
 
-    auto const& invocation = invocation_for(method, parameters, fds.size());
+    auto const& invocation = invocation_for(method_name, parameters, fds.size());
 
     rpc_report->invocation_requested(invocation);
 
@@ -237,24 +242,48 @@ void mclr::MirProtobufRpcChannel::send_message(
 
 void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& event)
 {
-    auto seq = mcl::make_protobuf_object<mir::protobuf::EventSequence>();
+    mp::EventSequence seq;
 
-    seq->ParseFromString(event);
+    seq.ParseFromString(event);
 
-    if (seq->has_display_configuration())
+    if (seq.has_display_configuration())
     {
-        display_configuration->update_configuration(seq->display_configuration());
+        display_configuration->update_configuration(seq.display_configuration());
     }
 
-    if (seq->has_lifecycle_event())
+    if (seq.has_lifecycle_event())
     {
-        lifecycle_control->call_lifecycle_event_handler(seq->lifecycle_event().new_state());
+        (*lifecycle_control)(static_cast<MirLifecycleState>(seq.lifecycle_event().new_state()));
     }
 
-    int const nevents = seq->event_size();
+    if (seq.has_ping_event())
+    {
+        (*ping_handler)(seq.ping_event().serial());
+    }
+
+    if (seq.has_buffer_request())
+    {
+        std::array<char, 1> dummy;
+        auto const num_fds = seq.mutable_buffer_request()->mutable_buffer()->fds_on_side_channel();
+        std::vector<mir::Fd> fds(num_fds);
+        if (num_fds > 0)
+        {
+            transport->receive_data(dummy.data(), dummy.size(), fds);
+            seq.mutable_buffer_request()->mutable_buffer()->clear_fd();
+            for(auto& fd : fds)
+                seq.mutable_buffer_request()->mutable_buffer()->add_fd(fd);
+        }
+
+        surface_map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
+        [&] (mcl::ClientBufferStream* stream) {
+            stream->buffer_available(seq.buffer_request().buffer());
+        });
+    }
+
+    int const nevents = seq.event_size();
     for (int i = 0; i != nevents; ++i)
     {
-        mir::protobuf::Event const& event = seq->event(i);
+        mp::Event const& event = seq.event(i);
         if (event.has_raw())
         {
             std::string const& raw_event = event.raw();
@@ -321,7 +350,7 @@ void mclr::MirProtobufRpcChannel::on_data_available()
      */
     std::lock_guard<decltype(read_mutex)> lock(read_mutex);
 
-    auto result = mcl::make_protobuf_object<mir::protobuf::wire::Result>();
+    auto result = mcl::make_protobuf_object<mp::wire::Result>();
     try
     {
         uint16_t message_size;
@@ -365,7 +394,7 @@ void mclr::MirProtobufRpcChannel::on_data_available()
                 {
                     // It's too difficult to convince C++ to move this lambda everywhere, so
                     // just give up and let it pretend its a shared_ptr.
-                    std::shared_ptr<mir::protobuf::wire::Result> appeaser{std::move(result)};
+                    std::shared_ptr<mp::wire::Result> appeaser{std::move(result)};
                     delayed_processor->enqueue([delayed_result = std::move(appeaser), this]() mutable
                     {
                         pending_calls.complete_response(*delayed_result);

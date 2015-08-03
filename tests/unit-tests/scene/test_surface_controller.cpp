@@ -19,12 +19,11 @@
 #include "src/server/scene/surface_controller.h"
 #include "src/server/scene/surface_stack_model.h"
 #include "mir/scene/surface_factory.h"
-#include "mir/scene/placement_strategy.h"
 #include "mir/scene/surface_creation_parameters.h"
-#include "mir_test_doubles/stub_scene_session.h"
+#include "mir/test/doubles/stub_scene_session.h"
 
-#include "mir_test_doubles/mock_surface.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/doubles/mock_surface.h"
+#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

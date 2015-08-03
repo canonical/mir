@@ -24,17 +24,17 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/geometry/rectangle.h"
 
-#include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/null_display_buffer_compositor_factory.h"
-#include "mir_test_doubles/stub_display_configuration.h"
-#include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/stub_scene.h"
-#include "mir_test_doubles/stub_scene_element.h"
-#include "mir_test_doubles/mock_scene.h"
+#include "mir/test/doubles/null_display.h"
+#include "mir/test/doubles/null_display_buffer_compositor_factory.h"
+#include "mir/test/doubles/stub_display_configuration.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/stub_scene.h"
+#include "mir/test/doubles/stub_scene_element.h"
+#include "mir/test/doubles/mock_scene.h"
 
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
 
 #include <boost/throw_exception.hpp>
 

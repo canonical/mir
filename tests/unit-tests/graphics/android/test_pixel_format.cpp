@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platforms/android/server/android_format_conversion-inl.h"
+#include "src/include/common/mir/graphics/android/android_format_conversion-inl.h"
 
 #include <gtest/gtest.h>
 
@@ -27,9 +27,11 @@ TEST(PixelFormatConversion, conversion_to_android_test)
     EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, mga::to_android_format(mir_pixel_format_abgr_8888));
     EXPECT_EQ(HAL_PIXEL_FORMAT_RGBX_8888, mga::to_android_format(mir_pixel_format_xbgr_8888));
     EXPECT_EQ(HAL_PIXEL_FORMAT_BGRA_8888, mga::to_android_format(mir_pixel_format_argb_8888));
-    //note X to A conversion!
+    // Note X to A conversion! We resolve this during compositing.
     EXPECT_EQ(HAL_PIXEL_FORMAT_BGRA_8888, mga::to_android_format(mir_pixel_format_xrgb_8888));
-    EXPECT_EQ(HAL_PIXEL_FORMAT_RGB_888, mga::to_android_format(mir_pixel_format_bgr_888));
+    EXPECT_EQ(HAL_PIXEL_FORMAT_RGB_888, mga::to_android_format(mir_pixel_format_rgb_888));
+    EXPECT_EQ(0, mga::to_android_format(mir_pixel_format_bgr_888));
+    EXPECT_EQ(HAL_PIXEL_FORMAT_RGB_565, mga::to_android_format(mir_pixel_format_rgb_565));
 }
 
 TEST(PixelFormatConversion, conversion_to_mir_test)
@@ -37,5 +39,6 @@ TEST(PixelFormatConversion, conversion_to_mir_test)
     EXPECT_EQ(mir_pixel_format_abgr_8888, mga::to_mir_format(HAL_PIXEL_FORMAT_RGBA_8888));
     EXPECT_EQ(mir_pixel_format_xbgr_8888, mga::to_mir_format(HAL_PIXEL_FORMAT_RGBX_8888));
     EXPECT_EQ(mir_pixel_format_argb_8888, mga::to_mir_format(HAL_PIXEL_FORMAT_BGRA_8888));
-    EXPECT_EQ(mir_pixel_format_bgr_888, mga::to_mir_format(HAL_PIXEL_FORMAT_RGB_888));
+    EXPECT_EQ(mir_pixel_format_rgb_888, mga::to_mir_format(HAL_PIXEL_FORMAT_RGB_888));
+    EXPECT_EQ(mir_pixel_format_rgb_565, mga::to_mir_format(HAL_PIXEL_FORMAT_RGB_565));
 }

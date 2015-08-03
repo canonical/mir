@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_doubles/fd_matcher.h"
+#include "mir/test/doubles/fd_matcher.h"
 #include "src/server/frontend/protobuf_buffer_packer.h"
 #include "src/server/frontend/resource_cache.h"
 

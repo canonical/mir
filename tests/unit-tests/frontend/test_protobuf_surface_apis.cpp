@@ -22,10 +22,10 @@
 
 #include "mir_protobuf.pb.h"
 
-#include "mir_test_doubles/stub_ipc_factory.h"
-#include "mir_test/stub_server_tool.h"
-#include "mir_test/test_protobuf_client.h"
-#include "mir_test/test_protobuf_server.h"
+#include "mir/test/doubles/stub_ipc_factory.h"
+#include "mir/test/stub_server_tool.h"
+#include "mir/test/test_protobuf_client.h"
+#include "mir/test/test_protobuf_server.h"
 #include "mir_test_framework/testing_server_configuration.h"
 
 #include <gtest/gtest.h>
@@ -52,16 +52,16 @@ struct StubServerSurfaceCounter : public StubServerTool
     {
     }
 
-    void create_surface(google::protobuf::RpcController* controller,
+    void create_surface(
                  const mir::protobuf::SurfaceParameters* request,
                  mir::protobuf::Surface* response,
-                 google::protobuf::Closure* done)
+                 google::protobuf::Closure* done) override
     {
         {
             std::unique_lock<std::mutex> lock(guard);
             ++surface_count;
         }
-        StubServerTool::create_surface(controller, request, response, done);
+        StubServerTool::create_surface(request, response, done);
     }
 
     void expect_surface_count(int expected_count)
@@ -105,7 +105,6 @@ TEST_F(ProtobufSurfaceCounter, server_creates_surface_on_create_surface_call)
     EXPECT_CALL(*stub_client, create_surface_done()).Times(testing::AtLeast(1));
 
     stub_client->display_server.create_surface(
-        0,
         &stub_client->surface_parameters,
         &stub_client->surface,
         google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::create_surface_done));
@@ -120,7 +119,6 @@ TEST_F(ProtobufSurfaceCounter, surface_count_is_zero_after_connection)
     EXPECT_CALL(*stub_client, connect_done()).Times(AtLeast(0));
 
     stub_client->display_server.connect(
-        0,
         &stub_client->connect_parameters,
         &stub_client->connection,
         google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::connect_done));
@@ -139,7 +137,6 @@ TEST_F(ProtobufSurfaceCounter,
     for (int i = 0; i != surface_count; ++i)
     {
         stub_client->display_server.create_surface(
-            0,
             &stub_client->surface_parameters,
             &stub_client->surface,
             google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::create_surface_done));
@@ -160,7 +157,6 @@ TEST_F(ProtobufSurfaceCounter,
     for (int i = 0; i != surface_count; ++i)
     {
         stub_client->display_server.create_surface(
-            0,
             &stub_client->surface_parameters,
             &stub_client->surface,
             google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::create_surface_done));
@@ -211,7 +207,6 @@ TEST_F(ProtobufSocketMultiClientCommunicator,
     {
         EXPECT_CALL(*clients[i], create_surface_done()).Times(1);
         clients[i]->display_server.create_surface(
-            0,
             &clients[i]->surface_parameters,
             &clients[i]->surface,
             google::protobuf::NewCallback(clients[i].get(), &mt::TestProtobufClient::create_surface_done));
@@ -224,7 +219,6 @@ TEST_F(ProtobufSocketMultiClientCommunicator,
     {
         EXPECT_CALL(*clients[i], disconnect_done()).Times(1);
         clients[i]->display_server.disconnect(
-            0,
             &clients[i]->ignored,
             &clients[i]->ignored,
             google::protobuf::NewCallback(clients[i].get(), &mt::TestProtobufClient::disconnect_done));
@@ -241,7 +235,6 @@ TEST_F(ProtobufSocketMultiClientCommunicator,
     {
         EXPECT_CALL(*clients[i], create_surface_done()).Times(1);
         clients[i]->display_server.create_surface(
-            0,
             &clients[i]->surface_parameters,
             &clients[i]->surface,
             google::protobuf::NewCallback(clients[i].get(), &mt::TestProtobufClient::create_surface_done));
@@ -258,7 +251,6 @@ TEST_F(ProtobufSocketMultiClientCommunicator,
     {
         EXPECT_CALL(*clients[i], disconnect_done()).Times(1);
         clients[i]->display_server.disconnect(
-            0,
             &clients[i]->ignored,
             &clients[i]->ignored,
             google::protobuf::NewCallback(clients[i].get(), &mt::TestProtobufClient::disconnect_done));

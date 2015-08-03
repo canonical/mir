@@ -28,7 +28,8 @@ namespace geom = mir::geometry;
 mga::DisplayGroup::DisplayGroup(
     std::shared_ptr<mga::DisplayDevice> const& device,
     std::unique_ptr<mga::ConfigurableDisplayBuffer> primary_buffer) :
-    device(device)
+    device(device),
+    hotplugging(false)
 {
     dbs.emplace(std::make_pair(mga::DisplayName::primary, std::move(primary_buffer)));
 }
@@ -76,8 +77,32 @@ void mga::DisplayGroup::configure(
 void mga::DisplayGroup::post()
 {
     std::list<DisplayContents> contents;
+    {
+        std::unique_lock<decltype(guard)> lk(guard);
+        for(auto const& db : dbs)
+            contents.emplace_back(db.second->contents());
+        hotplugging = false;
+    }
+
+    try
+    {
+        device->commit(contents);
+    }
+    catch (std::runtime_error& e)
+    {
+        std::unique_lock<decltype(guard)> lk(guard);
+        if (!hotplugging)
+            throw e;
+    }
+}
+
+std::chrono::milliseconds mga::DisplayGroup::recommended_sleep() const
+{
+    return device->recommended_sleep();
+}
+
+void mga::DisplayGroup::hotplug_occurred()
+{
     std::unique_lock<decltype(guard)> lk(guard);
-    for(auto const& db : dbs)
-        contents.emplace_back(db.second->contents());
-    device->commit(contents); 
+    hotplugging = true;
 }

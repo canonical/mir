@@ -32,6 +32,7 @@ struct MockKMSOutput : public graphics::mesa::KMSOutput
     MOCK_METHOD0(reset, void());
     MOCK_METHOD2(configure, void(geometry::Displacement, size_t));
     MOCK_CONST_METHOD0(size, geometry::Size());
+    MOCK_CONST_METHOD0(max_refresh_rate, int());
 
     MOCK_METHOD1(set_crtc, bool(uint32_t));
     MOCK_METHOD0(clear_crtc, void());

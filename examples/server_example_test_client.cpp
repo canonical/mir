@@ -107,14 +107,22 @@ void me::add_test_client_option_to(mir::Server& server, std::atomic<bool>& test_
             }
             else if (pid > 0)
             {
-                static auto const kill_action = server.the_main_loop()->create_alarm(
-                    [pid]{ kill(pid, SIGTERM); });
+                //FIXME: These alarm objects outlive the server - their destructor is called after the server is destroyed.
+                //The alarm destructor implementation reference glib objects that are assumed to exist which leads to crashes.
+                //For now, as a workaround, canceling the alarm will release such internal resources
+                static std::unique_ptr<mir::time::Alarm> const kill_action = server.the_main_loop()->create_alarm(
+                    [pid]
+                    {
+                        kill_action->cancel();
+                        kill(pid, SIGTERM);
+                    });
 
-                static auto const exit_action = server.the_main_loop()->create_alarm(
+                static std::unique_ptr<mir::time::Alarm> const exit_action = server.the_main_loop()->create_alarm(
                     [pid, &server, &test_failed]
                     {
                         if (!exit_success(pid))
                             test_failed = true;
+                        exit_action->cancel();
                         server.stop();
                     });
 

@@ -18,19 +18,19 @@
 
 #include "src/platforms/android/server/hwc_fb_device.h"
 #include "src/platforms/android/server/hwc_configuration.h"
-#include "mir_test_doubles/stub_android_native_buffer.h"
-#include "mir_test_doubles/mock_display_device.h"
-#include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_android_native_buffer.h"
-#include "mir_test_doubles/mock_framebuffer_bundle.h"
-#include "mir_test_doubles/mock_fb_hal_device.h"
-#include "mir_test_doubles/stub_renderable.h"
-#include "mir_test_doubles/stub_swapping_gl_context.h"
-#include "mir_test_doubles/mock_swapping_gl_context.h"
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test/auto_unblock_thread.h"
-#include "mir_test_doubles/mock_hwc_device_wrapper.h"
-#include "mir_test_doubles/stub_renderable_list_compositor.h"
+#include "mir/test/doubles/stub_android_native_buffer.h"
+#include "mir/test/doubles/mock_display_device.h"
+#include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/mock_android_native_buffer.h"
+#include "mir/test/doubles/mock_framebuffer_bundle.h"
+#include "mir/test/doubles/mock_fb_hal_device.h"
+#include "mir/test/doubles/stub_renderable.h"
+#include "mir/test/doubles/stub_swapping_gl_context.h"
+#include "mir/test/doubles/mock_swapping_gl_context.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/auto_unblock_thread.h"
+#include "mir/test/doubles/mock_hwc_device_wrapper.h"
+#include "mir/test/doubles/stub_renderable_list_compositor.h"
 #include "src/platforms/android/server/hwc_fallback_gl_renderer.h"
 #include "hwc_struct_helpers.h"
 #include <gtest/gtest.h>
@@ -174,4 +174,7 @@ TEST_F(HwcFbDevice, hwc10_post)
 
     mga::DisplayContents content{primary, list, geom::Displacement{}, mock_context, stub_compositor};
     device.commit({content});
+
+    // Predictive bypass not enabled in HwcFbDevice
+    EXPECT_EQ(0, device.recommended_sleep().count());
 }

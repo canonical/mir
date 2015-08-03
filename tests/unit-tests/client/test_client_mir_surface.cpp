@@ -30,26 +30,28 @@
 #include "src/client/mir_connection.h"
 #include "src/client/default_connection_configuration.h"
 #include "src/client/rpc/null_rpc_report.h"
+#include "src/client/rpc/mir_display_server.h"
+#include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/dispatch/threaded_dispatcher.h"
 
 #include "mir/frontend/connector.h"
 #include "mir/input/input_platform.h"
 
-#include "mir_test/test_protobuf_server.h"
-#include "mir_test/stub_server_tool.h"
-#include "mir_test/gmock_fixes.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/pipe.h"
-#include "mir_test/signal.h"
-#include "mir_test_doubles/stub_client_buffer.h"
-#include "mir_test/test_dispatchable.h"
+#include "mir/test/test_protobuf_server.h"
+#include "mir/test/stub_server_tool.h"
+#include "mir/test/gmock_fixes.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/pipe.h"
+#include "mir/test/signal.h"
+#include "mir/test/doubles/stub_client_buffer.h"
+#include "mir/test/test_dispatchable.h"
 
 #include <boost/throw_exception.hpp>
-#include "mir_test_doubles/stub_client_buffer_factory.h"
-#include "mir_test_doubles/stub_client_buffer_stream_factory.h"
-#include "mir_test_doubles/mock_client_buffer_stream_factory.h"
-#include "mir_test_doubles/mock_client_buffer_stream.h"
+#include "mir/test/doubles/stub_client_buffer_factory.h"
+#include "mir/test/doubles/stub_client_buffer_stream_factory.h"
+#include "mir/test/doubles/mock_client_buffer_stream_factory.h"
+#include "mir/test/doubles/mock_client_buffer_stream.h"
 
 #include <cstring>
 #include <map>
@@ -58,6 +60,7 @@
 #include <fcntl.h>
 
 namespace mcl = mir::client;
+namespace mclr = mir::client::rpc;
 namespace mircv = mir::input::receiver;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -85,10 +88,10 @@ struct MockServerPackageGenerator : public mt::StubServerTool
         close_server_package_fds();
     }
 
-    void create_surface(google::protobuf::RpcController*,
-                 const mir::protobuf::SurfaceParameters* request,
-                 mir::protobuf::Surface* response,
-                 google::protobuf::Closure* done) override
+    void create_surface(
+        mir::protobuf::SurfaceParameters const* request,
+        mir::protobuf::Surface* response,
+        google::protobuf::Closure* done) override
     {
         create_surface_response(response);
         surface_name = request->surface_name();
@@ -96,10 +99,9 @@ struct MockServerPackageGenerator : public mt::StubServerTool
     }
 
     void exchange_buffer(
-        ::google::protobuf::RpcController* /*controller*/,
-        ::mir::protobuf::BufferRequest const* /*request*/,
-        ::mir::protobuf::Buffer* response,
-        ::google::protobuf::Closure* done) override
+        mir::protobuf::BufferRequest const* /*request*/,
+        mir::protobuf::Buffer* response,
+        google::protobuf::Closure* done) override
     {
         create_buffer_response(response);
         done->Run();
@@ -204,6 +206,7 @@ std::map<int, int> MockServerPackageGenerator::sent_surface_attributes = {
     { mir_surface_attrib_preferred_orientation, mir_orientation_mode_any }
 };
 
+// TODO: Deduplicate this class?
 struct StubClientPlatform : public mcl::ClientPlatform
 {
     MirPlatformType platform_type() const
@@ -239,6 +242,11 @@ struct StubClientPlatform : public mcl::ClientPlatform
     MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer*) const
     {
         return nullptr;
+    }
+
+    MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override
+    {
+        return mir_pixel_format_invalid;
     }
 };
 
@@ -282,13 +290,13 @@ public:
     }
 };
 
-struct FakeRpcChannel : public ::google::protobuf::RpcChannel
+struct FakeRpcChannel : public mir::client::rpc::MirBasicRpcChannel
 {
-    void CallMethod(const google::protobuf::MethodDescriptor*,
-                    google::protobuf::RpcController*,
-                    const google::protobuf::Message*,
-                    google::protobuf::Message*,
-                    google::protobuf::Closure* closure) override
+    void call_method(
+        std::string const&,
+        google::protobuf::MessageLite const*,
+        google::protobuf::MessageLite*,
+        google::protobuf::Closure* closure) override
     {
         delete closure;
     }
@@ -343,12 +351,10 @@ struct MirClientSurfaceTest : public testing::Test
         MirWaitHandle* wait_handle = connection->connect("MirClientSurfaceTest",
                                                          null_connected_callback, 0);
         wait_handle->wait_for_all();
-        client_comm_channel = std::make_shared<mir::protobuf::DisplayServer::Stub>(
-                                  conf.the_rpc_channel().get());
+        client_comm_channel = std::make_shared<mclr::DisplayServer>(conf.the_rpc_channel());
     }
 
-    std::shared_ptr<MirSurface> create_surface_with(
-        mir::protobuf::DisplayServer::Stub& server_stub)
+    std::shared_ptr<MirSurface> create_surface_with(mclr::DisplayServer& server_stub)
     {
         return std::make_shared<MirSurface>(
             connection.get(),
@@ -362,7 +368,7 @@ struct MirClientSurfaceTest : public testing::Test
     }
 
     std::shared_ptr<MirSurface> create_surface_with(
-        mir::protobuf::DisplayServer::Stub& server_stub,
+        mclr::DisplayServer& server_stub,
         std::shared_ptr<mcl::ClientBufferStreamFactory> const& buffer_stream_factory)
     {
         return std::make_shared<MirSurface>(
@@ -377,7 +383,7 @@ struct MirClientSurfaceTest : public testing::Test
     }
 
     std::shared_ptr<MirSurface> create_and_wait_for_surface_with(
-        mir::protobuf::DisplayServer::Stub& server_stub)
+        mclr::DisplayServer& server_stub)
     {
         auto surface = create_surface_with(server_stub);
         surface->get_create_wait_handle()->wait_for_all();
@@ -385,7 +391,7 @@ struct MirClientSurfaceTest : public testing::Test
     }
 
     std::shared_ptr<MirSurface> create_and_wait_for_surface_with(
-        mir::protobuf::DisplayServer::Stub& server_stub,
+        mclr::DisplayServer& server_stub,
         std::shared_ptr<mcl::ClientBufferStreamFactory> const& buffer_stream_factory)
     {
         auto surface = create_surface_with(server_stub, buffer_stream_factory);
@@ -404,7 +410,7 @@ struct MirClientSurfaceTest : public testing::Test
         std::make_shared<MockServerPackageGenerator>();
 
     std::shared_ptr<mt::TestProtobufServer> test_server;
-    std::shared_ptr<mir::protobuf::DisplayServer::Stub> client_comm_channel;
+    std::shared_ptr<mclr::DisplayServer> client_comm_channel;
 
     std::chrono::milliseconds const pause_time{10};
 };
@@ -428,7 +434,7 @@ TEST_F(MirClientSurfaceTest, create_wait_handle_really_blocks)
     using namespace testing;
 
     FakeRpcChannel fake_channel;
-    mir::protobuf::DisplayServer::Stub unresponsive_server{&fake_channel};
+    mclr::DisplayServer unresponsive_server{mt::fake_shared(fake_channel)};
 
     auto const surface = create_surface_with(unresponsive_server);
     auto wait_handle = surface->get_create_wait_handle();
@@ -515,7 +521,7 @@ TEST_F(MirClientSurfaceTest, configure_cursor_wait_handle_really_blocks)
     using namespace testing;
 
     FakeRpcChannel fake_channel;
-    mir::protobuf::DisplayServer::Stub unresponsive_server{&fake_channel};
+    mclr::DisplayServer unresponsive_server{mt::fake_shared(fake_channel)};
 
     auto const surface = create_surface_with(unresponsive_server);
 
@@ -535,7 +541,7 @@ TEST_F(MirClientSurfaceTest, configure_wait_handle_really_blocks)
     using namespace testing;
 
     FakeRpcChannel fake_channel;
-    mir::protobuf::DisplayServer::Stub unresponsive_server{&fake_channel};
+    mclr::DisplayServer unresponsive_server{mt::fake_shared(fake_channel)};
 
     auto const surface = create_surface_with(unresponsive_server);
 

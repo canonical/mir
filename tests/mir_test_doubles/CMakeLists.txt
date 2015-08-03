@@ -12,17 +12,14 @@ include_directories(
 set(
   TEST_UTILS_SRCS
 
-  test_protobuf_client.cpp
-  event_factory.cpp
-  fake_event_hub.cpp
-  test_protobuf_socket_server.cpp
-  mock_timer.cpp
   mock_frame_dropping_policy_factory.cpp
-  null_logger.cpp
+  mock_timer.cpp
   platform_factory.cpp
-  triggered_main_loop.cpp
   stub_buffer.cpp
-  nested_mock_egl.cpp
+  test_protobuf_client.cpp
+  test_protobuf_socket_server.cpp
+  triggered_main_loop.cpp
+  fake_alarm_factory.cpp
 )
 
 set(
@@ -32,6 +29,12 @@ set(
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_egl.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_gl.cpp
 )
+
+if (MIR_BUILD_PLATFORM_MESA_X11)
+  list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
+    ${CMAKE_CURRENT_SOURCE_DIR}/mock_x11.cpp
+  )
+endif()
 
 if (MIR_BUILD_PLATFORM_MESA_KMS)
   include_directories(
@@ -53,29 +56,39 @@ if (MIR_BUILD_PLATFORM_ANDROID)
   )
 endif()
 
-add_library(
-  mir-test-doubles-static STATIC
-  ${TEST_UTILS_SRCS})
+add_library(mir-public-test-doubles OBJECT
+  fake_event_hub.cpp
+  nested_mock_egl.cpp
+  null_logger.cpp
+)
+
+add_library(mir-test-doubles-static STATIC
+  $<TARGET_OBJECTS:mir-public-test-doubles>
+  ${TEST_UTILS_SRCS}
+)
 
 add_dependencies(mir-test-doubles-static GMock)
 
-uses_android_input(mir-test-doubles-static)
+uses_android_input(mir-public-test-doubles)
 
-target_link_libraries(
-  mir-test-doubles-static
+target_link_libraries(mir-test-doubles-static
 
   mirserver
 
-  ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
+add_library(mir-public-test-doubles-platform OBJECT
+  ${MIR_TEST_DOUBLES_PLATFORM_SRCS}
+)
+
 add_library(
   mir-test-doubles-platform-static STATIC
-  ${MIR_TEST_DOUBLES_PLATFORM_SRCS})
+  $<TARGET_OBJECTS:mir-public-test-doubles-platform>
+)
 
 target_link_libraries(
   mir-test-doubles-platform-static

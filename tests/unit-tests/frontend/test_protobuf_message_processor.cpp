@@ -20,7 +20,8 @@
 #include "mir/frontend/message_processor_report.h"
 #include "src/server/frontend/display_server.h"
 #include "src/server/frontend/protobuf_message_processor.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/doubles/stub_display_server.h"
 #include "mir_protobuf_wire.pb.h"
 
 #include <gtest/gtest.h>
@@ -29,6 +30,7 @@
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 namespace gp = google::protobuf;
 namespace mp = mir::protobuf;
 namespace mpw = mir::protobuf::wire;
@@ -36,7 +38,7 @@ namespace
 {
 struct StubProtobufMessageSender : mfd::ProtobufMessageSender
 {
-    void send_response(gp::uint32, gp::Message*, mfd::FdSets const&) override
+    void send_response(gp::uint32, gp::MessageLite*, mfd::FdSets const&) override
     {
     }
 };
@@ -60,10 +62,9 @@ struct StubMessageProcessorReport : mf::MessageProcessorReport
     }
 };
 
-struct StubDisplayServer : mfd::DisplayServer
+struct StubDisplayServer : mtd::StubDisplayServer
 {
     void exchange_buffer(
-        gp::RpcController*,
         mp::BufferRequest const*,
         mp::Buffer* response,
         gp::Closure* closure) override
@@ -71,9 +72,7 @@ struct StubDisplayServer : mfd::DisplayServer
         exchange_buffer_response = response;
         exchange_closure = closure;
     }
-    void client_pid(int) override
-    {
-    }
+
     mp::Buffer* exchange_buffer_response;
     gp::Closure* exchange_closure;
 };

@@ -14,7 +14,7 @@ tests are available in the 'mir-test-tools' debian package.
 
 ###Mir Client Software Rendering###
 
-    mir_integration_tests --gtest-filter="TestClientIPCRender.test_render_double"
+    mir_integration_tests --gtest-filter="AndroidHardwareSanity.client_can_draw_with_cpu"
 
 This test checks that a buffer can travel from the server to the client accross
 the interprocess communication channel. It then renders some pixels using
@@ -22,7 +22,7 @@ software and the server will check that the pixels are present in the buffer.
 
 ###Mir Client OpenGLES 2.0 Rendering (Android EGLNativeWindowType test)###
 
-    mir_integration_tests --gtest-filter="TestClientIPCRender.test_accelerated_render_double"
+    mir_integration_tests --gtest-filter="AndroidHardwareSanity.client_can_draw_with_gpu"
 
 This test checks that a buffer can travel from the server to the client accross
 the interprocess communication channel. It then renders some pixels using
@@ -31,7 +31,8 @@ buffer.
 
 ###Mir Display posting (HWC tests)###
 
-    mir_integration_tests --gtest-filter="AndroidDisplay.display_can_post"
+    mir_integration_tests --gtest-filter="AndroidHardwareSanity.display_can_post"
+    mir_integration_tests --gtest-filter="AndroidHardwareSanity.display_can_post_overlay"
 
 This test checks that the display can post content to the screen. It should
 flash the screen briefly and run without error. Since it is important that
@@ -40,7 +41,8 @@ mir_demo_standalone_render_to_fb
 
 ###Mir GPU buffer allocations (gralloc tests)###
 
-    mir_integration_tests --gtest-filter="AndroidBufferIntegration.*"
+    mir_integration_tests --gtest-filter="AndroidHardwareSanity.can_allocate_sw_buffer"
+    mir_integration_tests --gtest-filter="AndroidHardwareSanity.can_allocate_hw_buffer"
 
 This will test that Mir can access the gralloc module and allocate GPU buffers.
 

@@ -20,11 +20,11 @@
 #include "src/platforms/android/server/buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/native_buffer.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/mock_fence.h"
-#include "mir_test_doubles/mock_android_hw.h"
-#include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_fence.h"
+#include "mir/test/doubles/mock_android_hw.h"
+#include "mir/test/doubles/mock_android_native_buffer.h"
 
 #include <hardware/gralloc.h>
 #include <gtest/gtest.h>

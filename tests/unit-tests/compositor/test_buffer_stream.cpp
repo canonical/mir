@@ -19,9 +19,9 @@
 #include "src/server/compositor/buffer_stream_surfaces.h"
 #include "src/server/scene/legacy_surface_change_notification.h"
 
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
-#include "mir_test/gmock_fixes.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/mock_buffer_bundle.h"
+#include "mir/test/gmock_fixes.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

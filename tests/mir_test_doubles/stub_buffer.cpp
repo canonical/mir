@@ -16,12 +16,12 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test_doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_buffer.h"
 
 #ifdef ANDROID
-#include "mir_test_doubles/stub_android_native_buffer.h"
-#else
-#include "mir_test_doubles/stub_gbm_native_buffer.h"
+#include "mir/test/doubles/stub_android_native_buffer.h"
+#elif defined(MESA_KMS) || defined(MESA_X11)
+#include "mir/test/doubles/stub_gbm_native_buffer.h"
 #endif
 
 namespace mtd=mir::test::doubles;
@@ -29,9 +29,9 @@ namespace mtd=mir::test::doubles;
 auto mtd::StubBuffer::create_native_buffer()
 -> std::shared_ptr<graphics::NativeBuffer>
 {
-#ifndef ANDROID
+#if defined(MESA_KMS) || defined(MESA_X11)
     return std::make_shared<StubGBMNativeBuffer>(geometry::Size{0,0});
-#else
+#elif ANDROID
     return std::make_shared<StubAndroidNativeBuffer>();
 #endif
 }

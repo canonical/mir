@@ -27,7 +27,6 @@
 
 #include "protobuf_ipc_factory.h"
 #include "mir/frontend/session_authorizer.h"
-#include "mir/protobuf/google_protobuf_guard.h"
 
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
@@ -36,9 +35,11 @@ namespace ba = boost::asio;
 mf::ProtobufConnectionCreator::ProtobufConnectionCreator(
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
     std::shared_ptr<SessionAuthorizer> const& session_authorizer,
+    std::shared_ptr<mir::graphics::PlatformIpcOperations> const& operations,
     std::shared_ptr<MessageProcessorReport> const& report)
 :   ipc_factory(ipc_factory),
     session_authorizer(session_authorizer),
+    operations(operations),
     report(report),
     next_session_id(0),
     connections(std::make_shared<mfd::Connections<mfd::SocketConnection>>())
@@ -68,7 +69,7 @@ void mf::ProtobufConnectionCreator::create_connection_for(
             messenger,
             ipc_factory->resource_cache());
 
-        auto const event_sink = std::make_shared<detail::EventSender>(messenger);
+        auto const event_sink = std::make_shared<detail::EventSender>(messenger, operations);
         auto const msg_processor = create_processor(
             message_sender,
             ipc_factory->make_ipc_server(creds, event_sink, connection_context),

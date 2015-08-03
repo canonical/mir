@@ -20,7 +20,7 @@
 
 #include "mir/egl_native_surface.h"
 
-#include "mir_test_doubles/mock_egl.h"
+#include "mir/test/doubles/mock_egl.h"
 #include <gtest/gtest.h>
 
 namespace mtd = mir::test::doubles;

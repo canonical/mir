@@ -21,7 +21,7 @@
 #define MIR_TEST_TESTING_SERVER_CONFIGURATION_H_
 
 #include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test/cross_process_sync.h"
+#include "mir/test/cross_process_sync.h"
 
 namespace mir_test_framework
 {

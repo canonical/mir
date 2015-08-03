@@ -18,7 +18,7 @@
 
 #include "gl_context.h"
 #include "framebuffer_bundle.h"
-#include "android_format_conversion-inl.h"
+#include "mir/graphics/android/android_format_conversion-inl.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"

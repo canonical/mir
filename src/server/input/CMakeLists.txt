@@ -21,6 +21,7 @@ set(
   builtin_cursor_images.cpp
   touchspot_controller.cpp
   key_repeat_dispatcher.cpp
+  validator.cpp
 )
 
 add_subdirectory(android)

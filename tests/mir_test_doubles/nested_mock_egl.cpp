@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir_test_doubles/nested_mock_egl.h"
+#include "mir/test/doubles/nested_mock_egl.h"
 
 namespace mtd = mir::test::doubles;
 

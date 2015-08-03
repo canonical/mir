@@ -24,6 +24,8 @@
 #include "message_sender.h"
 #include "protobuf_buffer_packer.h"
 
+#include "mir/graphics/buffer.h"
+
 #include "mir_protobuf_wire.pb.h"
 #include "mir_protobuf.pb.h"
 
@@ -31,8 +33,11 @@ namespace mg = mir::graphics;
 namespace mfd = mir::frontend::detail;
 namespace mp = mir::protobuf;
 
-mfd::EventSender::EventSender(std::shared_ptr<MessageSender> const& socket_sender)
- : sender(socket_sender)
+mfd::EventSender::EventSender(
+    std::shared_ptr<MessageSender> const& socket_sender,
+    std::shared_ptr<mg::PlatformIpcOperations> const& buffer_packer) :
+    sender(socket_sender),
+    buffer_packer(buffer_packer)
 {
 }
 
@@ -47,7 +52,7 @@ void mfd::EventSender::handle_event(MirEvent const& e)
         mp::Event *ev = seq.add_event();
         ev->set_raw(&e, sizeof(MirEvent));
 
-        send_event_sequence(seq);
+        send_event_sequence(seq, {});
     }
 }
 
@@ -59,7 +64,7 @@ void mfd::EventSender::handle_display_config_change(
     auto protobuf_config = seq.mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, display_config);
 
-    send_event_sequence(seq);
+    send_event_sequence(seq, {});
 }
 
 void mfd::EventSender::handle_lifecycle_event(
@@ -70,10 +75,20 @@ void mfd::EventSender::handle_lifecycle_event(
     auto protobuf_life_event = seq.mutable_lifecycle_event();
     protobuf_life_event->set_new_state(state);
 
-    send_event_sequence(seq);
+    send_event_sequence(seq, {});
 }
 
-void mfd::EventSender::send_event_sequence(mp::EventSequence& seq)
+void mfd::EventSender::send_ping(int32_t serial)
+{
+    mp::EventSequence seq;
+
+    auto protobuf_ping_event = seq.mutable_ping_event();
+    protobuf_ping_event->set_serial(serial);
+
+    send_event_sequence(seq, {});
+}
+
+void mfd::EventSender::send_event_sequence(mp::EventSequence& seq, FdSets const& fds)
 {
     mir::VariableLengthArray<frontend::serialization_buffer_size>
         send_buffer{static_cast<size_t>(seq.ByteSize())};
@@ -87,11 +102,29 @@ void mfd::EventSender::send_event_sequence(mp::EventSequence& seq)
 
     try
     {
-        sender->send(reinterpret_cast<char*>(send_buffer.data()), send_buffer.size(), {});
+        sender->send(reinterpret_cast<char*>(send_buffer.data()), send_buffer.size(), fds);
     }
     catch (std::exception const& error)
     {
         // TODO: We should report this state.
         (void) error;
     }
+}
+
+void mfd::EventSender::send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer, mg::BufferIpcMsgType type)
+{
+    mp::EventSequence seq;
+    auto request = seq.mutable_buffer_request();
+    request->mutable_id()->set_value(id.as_value()); 
+    request->mutable_buffer()->set_buffer_id(buffer.id().as_value());
+
+    mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(request->mutable_buffer())};
+    buffer_packer->pack_buffer(request_msg, buffer, type);
+
+    std::vector<mir::Fd> set;
+    for(auto& fd : request->buffer().fd())
+        set.emplace_back(mir::Fd(IntOwnedFd{fd}));
+
+    request->mutable_buffer()->set_fds_on_side_channel(set.size());
+    send_event_sequence(seq, {set});
 }

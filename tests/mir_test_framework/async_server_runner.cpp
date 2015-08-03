@@ -23,7 +23,7 @@
 #include "mir/main_loop.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/options/option.h"
-#include "mir_test_doubles/null_logger.h"
+#include "mir/test/doubles/null_logger.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -108,9 +108,9 @@ void mtf::AsyncServerRunner::start_server()
 
 void mtf::AsyncServerRunner::stop_server()
 {
-    connections.clear();
     server.stop();
     wait_for_server_exit();
+    connections.clear();
 }
 
 void mtf::AsyncServerRunner::wait_for_server_exit()

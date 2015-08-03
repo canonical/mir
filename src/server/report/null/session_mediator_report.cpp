@@ -34,6 +34,18 @@ void mir::report::null::SessionMediatorReport::session_exchange_buffer_called(st
 {
 }
 
+void mir::report::null::SessionMediatorReport::session_submit_buffer_called(std::string const&)
+{
+}
+
+void mir::report::null::SessionMediatorReport::session_allocate_buffers_called(std::string const&)
+{
+}
+
+void mir::report::null::SessionMediatorReport::session_release_buffers_called(std::string const&)
+{
+}
+
 void mir::report::null::SessionMediatorReport::session_release_surface_called(std::string const&)
 {
 }

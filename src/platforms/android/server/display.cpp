@@ -126,7 +126,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
         native_window,
         gl_context,
         *gl_program_factory,
-        mir_orientation_normal,
+        config.orientation,
         displacement,
         overlay_option));
 }
@@ -278,6 +278,7 @@ void mga::Display::on_hotplug()
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     configuration_dirty = true;
+    displays.hotplug_occurred();
     display_change_pipe->notify_change();
 }
 

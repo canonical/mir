@@ -137,7 +137,7 @@ mc::BufferQueue::BufferQueue(
     graphics::BufferProperties const& props,
     mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
-      frame_deadlines_threshold{3},
+      frame_deadlines_threshold{-1},  // Disable scaling by default
       frame_deadlines_met{0},
       frame_dropping_enabled{false},
       current_compositor_buffer_valid{false},
@@ -222,7 +222,10 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
      * buffering) for minimal latency.
      */
     if (client_ahead_of_compositor())
+    {
+        framedrop_policy->swap_now_blocking();
         return;
+    }
 
     if (auto buf = get_a_free_buffer())
     {

@@ -24,17 +24,22 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/fake_input_server_configuration.h"
+#include "mir_test_framework/fake_input_device.h"
+#include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test_framework/fake_input_server_configuration.h"
 #include "mir_test_framework/server_runner.h"
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 
-#include "mir_test_doubles/null_display_buffer_compositor_factory.h"
-#include "mir_test_doubles/stub_frame_dropping_policy_factory.h"
+#include "mir/test/doubles/null_display_buffer_compositor_factory.h"
+#include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 
-#include "mir_test_doubles/stub_renderer.h"
-#include "mir_test/fake_event_hub.h"
+#include "mir/test/doubles/stub_renderer.h"
+
+#include "mir/dispatch/action_queue.h"
+#include "mir/input/input_device.h"
+#include "mir/input/input_device_info.h"
+#include "mir/input/input_device_registry.h"
 
 #include "mir/dispatch/action_queue.h"
 #include "mir/input/input_device.h"
@@ -278,9 +283,6 @@ TEST(ServerShutdownWithThreadException,
      server_releases_resources_on_abnormal_input_thread_termination)
 {
     auto server_config = std::make_shared<mtf::FakeInputServerConfiguration>();
-    auto dev = std::make_shared<ThrowingInputDevice>();
-    std::weak_ptr<ThrowingInputDevice> weak_dev = dev;
-    auto device_registry = server_config->the_input_device_registry();
 
     std::thread server{
         [&server_config]
@@ -290,10 +292,13 @@ TEST(ServerShutdownWithThreadException,
                 std::runtime_error);
         }};
 
-    device_registry->add_device(dev);
-    server.join();
-    dev.reset();
-    device_registry.reset();
+    {
+        auto dev = mtf::add_fake_input_device(mir::input::InputDeviceInfo{0, "throwing device", "throwing-device-0",
+                                                                          mir::input::DeviceCapability::unknown});
+        dev->emit_runtime_error();
+        server.join();
+        dev.reset();
+    }
 
     std::weak_ptr<mir::graphics::Display> display = server_config->the_display();
     std::weak_ptr<mir::compositor::Compositor> compositor = server_config->the_compositor();

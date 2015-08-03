@@ -16,9 +16,9 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test/test_protobuf_client.h"
-#include "mir_test_doubles/mock_rpc_report.h"
-#include "mir_test_doubles/null_client_event_sink.h"
+#include "mir/test/test_protobuf_client.h"
+#include "mir/test/doubles/mock_rpc_report.h"
+#include "mir/test/doubles/null_client_event_sink.h"
 
 #include "src/client/connection_surface_map.h"
 #include "src/client/display_configuration.h"
@@ -45,9 +45,10 @@ mir::test::TestProtobufClient::TestProtobufClient(
         std::make_shared<mir::client::DisplayConfiguration>(),
         rpc_report,
         std::make_shared<mir::client::LifecycleControl>(),
+        std::make_shared<mir::client::AtomicCallback<int32_t>>(),
         std::make_shared<mtd::NullClientEventSink>())),
     eventloop{std::make_shared<md::ThreadedDispatcher>("Mir/TestIPC", std::dynamic_pointer_cast<md::Dispatchable>(channel))},
-    display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
+    display_server(channel),
     maxwait(timeout_ms),
     connect_done_called(false),
     create_surface_called(false),

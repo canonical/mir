@@ -20,10 +20,10 @@
 #include "mir/frontend/connector.h"
 #include "src/server/frontend/resource_cache.h"
 
-#include "mir_test/stub_server_tool.h"
-#include "mir_test/test_protobuf_server.h"
-#include "mir_test_doubles/stub_ipc_factory.h"
-#include "mir_test/test_protobuf_client.h"
+#include "mir/test/stub_server_tool.h"
+#include "mir/test/test_protobuf_server.h"
+#include "mir/test/doubles/stub_ipc_factory.h"
+#include "mir/test/test_protobuf_client.h"
 
 namespace mt = mir::test;
 
@@ -37,38 +37,34 @@ struct ErrorServer : StubServerTool
     static std::string const test_exception_text;
 
     void create_surface(
-        google::protobuf::RpcController*,
         const protobuf::SurfaceParameters*,
         protobuf::Surface*,
-        google::protobuf::Closure*)
+        google::protobuf::Closure*) override
     {
         throw std::runtime_error(test_exception_text);
     }
 
     void release_surface(
-        google::protobuf::RpcController*,
         const protobuf::SurfaceId*,
         protobuf::Void*,
-        google::protobuf::Closure*)
+        google::protobuf::Closure*) override
     {
         throw std::runtime_error(test_exception_text);
     }
 
 
     void connect(
-        ::google::protobuf::RpcController*,
         const ::mir::protobuf::ConnectParameters*,
         ::mir::protobuf::Connection*,
-        ::google::protobuf::Closure*)
+        ::google::protobuf::Closure*) override
     {
         throw std::runtime_error(test_exception_text);
     }
 
     void disconnect(
-        google::protobuf::RpcController*,
         const protobuf::Void*,
         protobuf::Void*,
-        google::protobuf::Closure*)
+        google::protobuf::Closure*) override
     {
         throw std::runtime_error(test_exception_text);
     }
@@ -106,7 +102,6 @@ TEST_F(ProtobufErrorTestFixture, connect_exception)
 
     mir::protobuf::Connection result;
     client->display_server.connect(
-        0,
         &client->connect_parameters,
         &result,
         google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::connect_done));
@@ -122,7 +117,6 @@ TEST_F(ProtobufErrorTestFixture, create_surface_exception)
     EXPECT_CALL(*client, create_surface_done()).Times(1);
 
     client->display_server.create_surface(
-        0,
         &client->surface_parameters,
         &client->surface,
         google::protobuf::NewCallback(client.get(), &mt::TestProtobufClient::create_surface_done));

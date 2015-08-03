@@ -29,7 +29,7 @@ namespace mir
 namespace compositor
 {
 
-class BufferBundle;
+class BufferAcquisition;
 class BackBufferStrategy;
 
 class TemporaryBuffer : public mg::Buffer
@@ -53,22 +53,22 @@ class TemporaryCompositorBuffer : public TemporaryBuffer
 {
 public:
     explicit TemporaryCompositorBuffer(
-        std::shared_ptr<BufferBundle> const& bun, void const* user_id);
+        std::shared_ptr<BufferAcquisition> const& acquisition, void const* user_id);
     ~TemporaryCompositorBuffer();
 
 private:
-    std::shared_ptr<BufferBundle> const bundle;
+    std::shared_ptr<BufferAcquisition> const acquisition;
 };
 
 class TemporarySnapshotBuffer : public TemporaryBuffer
 {
 public:
     explicit TemporarySnapshotBuffer(
-        std::shared_ptr<BufferBundle> const& bun);
+        std::shared_ptr<BufferAcquisition> const& acquisition);
     ~TemporarySnapshotBuffer();
 
 private:
-    std::shared_ptr<BufferBundle> const bundle;
+    std::shared_ptr<BufferAcquisition> const acquisition;
 };
 
 }

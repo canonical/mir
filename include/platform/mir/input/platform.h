@@ -48,6 +48,7 @@ class InputPlatformPolicy;
 enum class PlatformPriority : uint32_t
 {
     unsupported = 0,
+    dummy = 1,
     supported = 128,
     best = 256,
 };
@@ -89,11 +90,25 @@ private:
     Platform& operator=(Platform const&) = delete;
 };
 
-extern "C" typedef mir::UniqueModulePtr<Platform>(*CreatePlatform)(
+typedef mir::UniqueModulePtr<Platform>(*CreatePlatform)(
     std::shared_ptr<options::Option> const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<InputReport> const& report);
+
+typedef void(*AddPlatformOptions)(
+    boost::program_options::options_description& config);
+
+typedef PlatformPriority(*ProbePlatform)(
+    options::Option const& options);
+
+typedef ModuleProperties const*(*DescribeModule)();
+
+}
+}
+
+extern "C"
+{
 /**
  * Function used to initialize an input platform.
  *
@@ -107,13 +122,12 @@ extern "C" typedef mir::UniqueModulePtr<Platform>(*CreatePlatform)(
  *
  * \ingroup platform_enablement
  */
-extern "C" mir::UniqueModulePtr<Platform> create_input_platform(
-    std::shared_ptr<options::Option> const& options,
-    std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
-    std::shared_ptr<InputReport> const& report);
-extern "C" typedef void(*AddPlatformOptions)(
-    boost::program_options::options_description& config);
+mir::UniqueModulePtr<mir::input::Platform> create_input_platform(
+    std::shared_ptr<mir::options::Option> const& options,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry,
+    std::shared_ptr<mir::input::InputReport> const& report);
+
 /**
  * Function used to add additional configuration options
  *
@@ -123,10 +137,8 @@ extern "C" typedef void(*AddPlatformOptions)(
  *
  * \ingroup platform_enablement
  */
-extern "C" void add_input_platform_options(
-    boost::program_options::options_description& config);
-extern "C" typedef PlatformPriority(*ProbePlatform)(
-    options::Option const& options);
+void add_input_platform_options(boost::program_options::options_description& config);
+
 /**
  * probe_platform should indicate whether the platform is able to work within
  * the current environment.
@@ -137,9 +149,8 @@ extern "C" typedef PlatformPriority(*ProbePlatform)(
  *
  * \ingroup platform_enablement
  */
-extern "C" PlatformPriority probe_input_platform(
-    options::Option const& options);
-extern "C" typedef ModuleProperties const*(*DescribeModule)();
+mir::input::PlatformPriority probe_input_platform(mir::options::Option const& options);
+
 /**
  * describe_input_module should return a description of the input platform.
  *
@@ -147,8 +158,6 @@ extern "C" typedef ModuleProperties const*(*DescribeModule)();
  *
  * \ingroup platform_enablement
  */
-extern "C" ModuleProperties const* describe_input_module();
+mir::ModuleProperties const* describe_input_module();
 }
-}
-
 #endif // MIR_INPUT_PLATFORM_H_

@@ -20,7 +20,6 @@
 #include "vsync_simulating_graphics_platform.h"
 #include "mir/input/input_device_info.h"
 
-#include "mir_test/event_factory.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir/geometry/displacement.h"
 

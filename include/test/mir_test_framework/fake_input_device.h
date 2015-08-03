@@ -20,7 +20,7 @@
 #define MIR_TEST_FRAMEWORK_FAKE_INPUT_DEVICE_H_
 
 #include "mir_toolkit/events/event.h"
-#include "mir_test/event_factory.h"
+#include "mir/test/event_factory.h"
 
 namespace mir_test_framework
 {
@@ -41,6 +41,7 @@ public:
     FakeInputDevice() = default;
     virtual ~FakeInputDevice() = default;
 
+    virtual void emit_runtime_error() = 0;
     virtual void emit_event(synthesis::KeyParameters const& key) = 0;
     virtual void emit_event(synthesis::ButtonParameters const& button) = 0;
     virtual void emit_event(synthesis::MotionParameters const& motion) = 0;

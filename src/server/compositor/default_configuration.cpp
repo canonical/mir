@@ -84,12 +84,16 @@ mir::DefaultServerConfiguration::the_compositor()
     return compositor(
         [this]()
         {
+            std::chrono::milliseconds const composite_delay(
+                the_options()->get<int>(options::composite_delay_opt));
+
             return std::make_shared<mc::MultiThreadedCompositor>(
                 the_display(),
                 the_scene(),
                 the_display_buffer_compositor_factory(),
                 the_shell(),
                 the_compositor_report(),
+                composite_delay,
                 !the_options()->is_set(options::host_socket_opt));
         });
 }

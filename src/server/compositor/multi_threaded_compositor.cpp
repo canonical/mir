@@ -29,6 +29,7 @@
 #include "mir/scene/surface.h"
 #include "mir/terminate_with_current_exception.h"
 #include "mir/raii.h"
+#include "mir/unwind_helpers.h"
 #include "mir/thread_name.h"
 
 #include <thread>
@@ -41,32 +42,6 @@ using namespace std::literals::chrono_literals;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
-
-namespace
-{
-
-class ApplyIfUnwinding
-{
-public:
-    ApplyIfUnwinding(std::function<void()> const& apply)
-        : apply{apply}
-    {
-    }
-
-    ~ApplyIfUnwinding()
-    {
-        if (std::uncaught_exception())
-            apply();
-    }
-
-private:
-    ApplyIfUnwinding(ApplyIfUnwinding const&) = delete;
-    ApplyIfUnwinding& operator=(ApplyIfUnwinding const&) = delete;
-
-    std::function<void()> const apply;
-};
-
-}
 
 namespace mir
 {
@@ -101,12 +76,14 @@ public:
         mg::DisplaySyncGroup& group,
         std::shared_ptr<mc::Scene> const& scene,
         std::shared_ptr<DisplayListener> const& display_listener,
+        std::chrono::milliseconds fixed_composite_delay,
         std::shared_ptr<CompositorReport> const& report) :
         compositor_factory{db_compositor_factory},
         group(group),
         scene(scene),
         running{true},
         frames_scheduled{0},
+        force_sleep{fixed_composite_delay},
         display_listener{display_listener},
         report{report},
         started_future{started.get_future()}
@@ -116,12 +93,12 @@ public:
     void operator()() noexcept  // noexcept is important! (LP: #1237332)
     try
     {
-        ApplyIfUnwinding on_startup_failure{
+        auto on_startup_failure = on_unwind(
             [this]
             {
                 if (started_future.wait_for(0s) != std::future_status::ready)
                     started.set_exception(std::current_exception());
-            }};
+            });
 
         mir::set_thread_name("Mir/Comp");
 
@@ -182,6 +159,17 @@ public:
                 }
                 group.post();
 
+                /*
+                 * "Predictive bypass" optimization: If the last frame was
+                 * bypassed/overlayed or you simply have a fast GPU, it is
+                 * beneficial to sleep for most of the next frame. This reduces
+                 * the latency between snapshotting the scene and post()
+                 * completing by almost a whole frame.
+                 */
+                auto delay = force_sleep >= std::chrono::milliseconds::zero() ?
+                             force_sleep : group.recommended_sleep();
+                std::this_thread::sleep_for(delay);
+
                 lock.lock();
 
                 /*
@@ -231,6 +219,7 @@ private:
     std::shared_ptr<mc::Scene> const scene;
     bool running;
     int frames_scheduled;
+    std::chrono::milliseconds force_sleep{-1};
     std::mutex run_mutex;
     std::condition_variable run_cv;
     std::shared_ptr<DisplayListener> const display_listener;
@@ -248,6 +237,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory,
     std::shared_ptr<DisplayListener> const& display_listener,
     std::shared_ptr<CompositorReport> const& compositor_report,
+    std::chrono::milliseconds fixed_composite_delay,
     bool compose_on_start)
     : display{display},
       scene{scene},
@@ -255,6 +245,7 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       display_listener{display_listener},
       report{compositor_report},
       state{CompositorState::stopped},
+      fixed_composite_delay{fixed_composite_delay},
       compose_on_start{compose_on_start},
       thread_pool{1}
 {
@@ -276,8 +267,6 @@ mc::MultiThreadedCompositor::~MultiThreadedCompositor()
 
 void mc::MultiThreadedCompositor::schedule_compositing(int num)
 {
-    std::unique_lock<std::mutex> lk(state_guard);
-
     report->scheduled();
     for (auto& f : thread_functors)
         f->schedule_compositing(num);
@@ -285,57 +274,44 @@ void mc::MultiThreadedCompositor::schedule_compositing(int num)
 
 void mc::MultiThreadedCompositor::start()
 {
-    std::unique_lock<std::mutex> lk(state_guard);
-    if (state != CompositorState::stopped)
-    {
+    auto stopped = CompositorState::stopped;
+    
+    if (!state.compare_exchange_strong(stopped, CompositorState::starting))
         return;
-    }
 
-    state = CompositorState::starting;
     report->started();
 
     /* To cleanup state if any code below throws */
-    ApplyIfUnwinding cleanup_if_unwinding{
-        [this, &lk]{
-            destroy_compositing_threads(lk);
-        }};
-
-    lk.unlock();
-    scene->add_observer(observer);
-    lk.lock();
+    auto cleanup_if_unwinding = on_unwind(
+        [this]{ destroy_compositing_threads(); });
 
     create_compositing_threads();
 
+    /* Add the observer after we have created the compositing threads */
+    scene->add_observer(observer);
+
     /* Optional first render */
     if (compose_on_start)
-    {
-        lk.unlock();
         schedule_compositing(1);
-    }
 }
 
 void mc::MultiThreadedCompositor::stop()
 {
-    std::unique_lock<std::mutex> lk(state_guard);
-    if (state != CompositorState::started)
-    {
+    auto started = CompositorState::started;
+
+    if (!state.compare_exchange_strong(started, CompositorState::stopping))
         return;
-    }
 
     state = CompositorState::stopping;
 
     /* To cleanup state if any code below throws */
-    ApplyIfUnwinding cleanup_if_unwinding{
-        [this, &lk]{
-            if(!lk.owns_lock()) lk.lock();
-            state = CompositorState::started;
-        }};
+    auto cleanup_if_unwinding = on_unwind(
+        [this]{ state = CompositorState::started; });
 
-    lk.unlock();
+    /* Remove the observer before destroying the compositing threads */
     scene->remove_observer(observer);
-    lk.lock();
 
-    destroy_compositing_threads(lk);
+    destroy_compositing_threads();
 
     // If the compositor is restarted we've likely got clients blocked
     // so we will need to schedule compositing immediately
@@ -348,7 +324,8 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
     display->for_each_display_sync_group([this](mg::DisplaySyncGroup& group)
     {
         auto thread_functor = std::make_unique<mc::CompositingFunctor>(
-            display_buffer_compositor_factory, group, scene, display_listener, report);
+            display_buffer_compositor_factory, group, scene, display_listener,
+            fixed_composite_delay, report);
 
         futures.push_back(thread_pool.run(std::ref(*thread_functor), &group));
         thread_functors.push_back(std::move(thread_functor));
@@ -362,14 +339,8 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
     state = CompositorState::started;
 }
 
-void mc::MultiThreadedCompositor::destroy_compositing_threads(std::unique_lock<std::mutex>& lock)
+void mc::MultiThreadedCompositor::destroy_compositing_threads()
 {
-    /* Could be called during unwinding,
-     * ensure the lock is held before changing state
-     */
-    if(!lock.owns_lock())
-        lock.lock();
-
     for (auto& f : thread_functors)
         f->stop();
 

@@ -20,7 +20,7 @@
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 
-#include "default_display_configuration_policy.h"
+#include "mir/graphics/default_display_configuration_policy.h"
 #include "nested/mir_client_host_connection.h"
 #include "nested/cursor.h"
 #include "nested/display.h"
@@ -62,7 +62,7 @@ mir::DefaultServerConfiguration::the_display_configuration_policy()
         [this]
         {
             return wrap_display_configuration_policy(
-                std::make_shared<mg::DefaultDisplayConfigurationPolicy>());
+                std::make_shared<mg::CloneDisplayConfigurationPolicy>());
         });
 }
 
@@ -92,7 +92,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                     auto msg = "Failed to find any platform plugins in: " + path;
                     throw std::runtime_error(msg.c_str());
                 }
-                platform_library = mir::graphics::module_for_device(platforms);
+                platform_library = mir::graphics::module_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()));
             }
             auto create_host_platform = platform_library->load_function<mg::CreateHostPlatform>(
                 "create_host_platform",

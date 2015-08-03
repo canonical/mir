@@ -53,6 +53,7 @@
 #include "mir/main_loop.h"
 #include "mir/shared_library.h"
 #include "mir/glib_main_loop.h"
+#include "mir/dispatch/action_queue.h"
 
 #include "mir_toolkit/cursors.h"
 
@@ -66,6 +67,7 @@ namespace mr = mir::report;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace msh = mir::shell;
+namespace md = mir::dispatch;
 
 std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
 {
@@ -161,14 +163,15 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
     return input_dispatcher(
         [this]()
         {
-            std::chrono::milliseconds const key_repeat_timeout{20};
+            std::chrono::milliseconds const key_repeat_timeout{500};
+            std::chrono::milliseconds const key_repeat_delay{50};
 
             auto const options = the_options();
             auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
                 the_event_filter_chain_dispatcher(), the_main_loop(), enable_repeat,
-                key_repeat_timeout);
+                key_repeat_timeout, key_repeat_delay);
         });
 }
 
@@ -331,6 +334,21 @@ mir::DefaultServerConfiguration::the_input_platform()
         });
 }
 
+namespace
+{
+class NullLegacyInputDispatchable : public mi::LegacyInputDispatchable
+{
+public:
+    void start() override {};
+    mir::Fd watch_fd() const override { return aq.watch_fd();};
+    bool dispatch(md::FdEvents events) override { return aq.dispatch(events); }
+    md::FdEvents relevant_events() const override{ return aq.relevant_events(); }
+
+private:
+    md::ActionQueue aq;
+};
+}
+
 std::shared_ptr<mi::InputManager>
 mir::DefaultServerConfiguration::the_input_manager()
 {
@@ -362,8 +380,28 @@ mir::DefaultServerConfiguration::the_input_manager()
                 if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
                     mr::legacy_input::initialize(the_logger());
 
-                auto ret = std::make_shared<mi::DefaultInputManager>(
-                    the_input_reading_multiplexer(), the_legacy_input_dispatchable());
+                std::shared_ptr<mi::InputManager> ret;
+
+                if (options->is_set(options::platform_input_lib))
+                {
+                    auto lib = std::make_shared<mir::SharedLibrary>(
+                        options->get<std::string>(options::platform_input_lib));
+
+                    auto describe = lib->load_function<mi::DescribeModule>(
+                        "describe_input_module",
+                        MIR_SERVER_INPUT_PLATFORM_VERSION);
+
+                    auto props = describe();
+                    ret = std::make_shared<mi::DefaultInputManager>(
+                        the_input_reading_multiplexer(),
+                        strcmp(props->name, "x11-input") ? the_legacy_input_dispatchable() :
+                                                           std::make_shared<NullLegacyInputDispatchable>());
+                }
+                else
+                {
+                    ret = std::make_shared<mi::DefaultInputManager>(
+                        the_input_reading_multiplexer(), the_legacy_input_dispatchable());
+                }
 
                 auto platform = the_input_platform();
                 if (platform)

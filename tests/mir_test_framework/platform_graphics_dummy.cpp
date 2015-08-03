@@ -18,9 +18,17 @@
 
 #include "mir/graphics/platform.h"
 
-extern "C" mir::graphics::PlatformPriority probe_graphics_platform()
+namespace mir
 {
-    return mir::graphics::supported;
+namespace options
+{
+class ProgramOption;
+}
+}
+
+mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOption const& /*options*/)
+{
+    return mir::graphics::PlatformPriority::dummy;
 }
 
 mir::ModuleProperties const description {
@@ -30,7 +38,7 @@ mir::ModuleProperties const description {
     MIR_VERSION_MICRO
 };
 
-extern "C" mir::ModuleProperties const* describe_graphics_module()
+mir::ModuleProperties const* describe_graphics_module()
 {
     return &description;
 }

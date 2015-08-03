@@ -49,6 +49,14 @@ mtf::FakeInputDeviceImpl::FakeInputDeviceImpl(mi::InputDeviceInfo const& info)
     mtf::StubInputPlatform::add(device);
 }
 
+void mtf::FakeInputDeviceImpl::emit_runtime_error()
+{
+    queue->enqueue([]()
+                   {
+                       throw std::runtime_error("runtime error in input device");
+                   });
+}
+
 void mtf::FakeInputDeviceImpl::emit_event(synthesis::KeyParameters const& key)
 {
     queue->enqueue([this, key]()
@@ -163,7 +171,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
                                                  pos.x.as_float(),
                                                  pos.y.as_float(),
                                                  scroll.x.as_float(),
-                                                 scroll.y.as_float());
+                                                 scroll.y.as_float(),
+                                                 pointer.rel_x,
+                                                 pointer.rel_y);
 
     sink->handle_input(*pointer_event);
 }

@@ -195,6 +195,7 @@ public:
      * for an example.
      */
     auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) override final;
+    std::shared_ptr<scene::ApplicationNotRespondingDetector> the_application_not_responding_detector() override;
     /** @} */
 
     /** @name graphics configuration - customization
@@ -436,6 +437,7 @@ protected:
     CachedPtr<shell::PersistentSurfaceStore> surface_store;
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
     CachedPtr<shell::Shell> shell;
+    CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

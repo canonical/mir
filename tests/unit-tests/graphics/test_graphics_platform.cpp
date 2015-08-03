@@ -21,15 +21,15 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/platform_ipc_operations.h"
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/platform_factory.h"
-#ifndef ANDROID
-#include "mir_test_doubles/mock_drm.h"
-#include "mir_test_doubles/mock_gbm.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/platform_factory.h"
+#ifdef MESA_KMS
+#include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/mock_gbm.h"
 #include "mir_test_framework/udev_environment.h"
 #else
-#include "mir_test_doubles/mock_android_hw.h"
+#include "mir/test/doubles/mock_android_hw.h"
 #endif
 #include "mir/logging/dumb_console_logger.h"
 
@@ -41,7 +41,7 @@ namespace ml = mir::logging;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mo = mir::options;
-#ifndef ANDROID
+#ifdef MESA_KMS
 namespace mtf = mir_test_framework;
 #endif
 
@@ -52,13 +52,15 @@ public:
     {
         using namespace testing;
 
-#ifndef ANDROID
+#ifdef MESA_KMS
         ON_CALL(mock_gbm, gbm_bo_get_width(_))
         .WillByDefault(Return(320));
 
         ON_CALL(mock_gbm, gbm_bo_get_height(_))
         .WillByDefault(Return(240));
 
+        // FIXME: This format needs to match Mesa's first supported pixel
+        //        format or tests will fail. The coupling is presently loose.
         ON_CALL(mock_gbm, gbm_bo_get_format(_))
         .WillByDefault(Return(GBM_FORMAT_ARGB8888));
 
@@ -77,7 +79,7 @@ public:
     ::testing::NiceMock<mtd::MockGL> mock_gl;
 #ifdef ANDROID
     ::testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
-#else
+#elif MESA_KMS
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     mtf::UdevEnvironment fake_devices;

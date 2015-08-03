@@ -23,8 +23,8 @@
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/deferred_in_process_server.h"
 
-#include "mir_test_doubles/stub_ipc_factory.h"
-
+#include "mir/test/doubles/stub_ipc_factory.h"
+#include "mir/test/doubles/stub_display_server.h"
 #include "src/server/frontend/display_server.h"
 #include "src/server/frontend/protobuf_ipc_factory.h"
 #include "src/server/frontend/resource_cache.h"
@@ -32,8 +32,8 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "mir_test/gmock_fixes.h"
-#include "mir_test/validity_matchers.h"
+#include "mir/test/gmock_fixes.h"
+#include "mir/test/validity_matchers.h"
 
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
@@ -44,22 +44,18 @@ namespace
 
 std::string const test_exception_text{"test exception text"};
 
-struct ConnectionErrorServer : mf::detail::DisplayServer
+struct ConnectionErrorServer : mtd::StubDisplayServer
 {
-    void client_pid(int /*pid*/) override {}
-
     void connect(
-        ::google::protobuf::RpcController*,
-        const ::mir::protobuf::ConnectParameters*,
-        ::mir::protobuf::Connection*,
-        ::google::protobuf::Closure*)
+        mir::protobuf::ConnectParameters const*,
+        mir::protobuf::Connection*,
+        google::protobuf::Closure*)
     {
         throw std::runtime_error(test_exception_text);
     }
 
     void disconnect(
-        google::protobuf::RpcController*,
-        const mir::protobuf::Void*,
+        mir::protobuf::Void const*,
         mir::protobuf::Void*,
         google::protobuf::Closure*)
     {

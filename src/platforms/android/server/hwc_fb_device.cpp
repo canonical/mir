@@ -19,11 +19,11 @@
 
 #include "hwc_fb_device.h"
 #include "framebuffer_bundle.h"
-#include "android_format_conversion-inl.h"
 #include "hwc_wrapper.h"
 #include "hwc_fallback_gl_renderer.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
+#include "mir/graphics/android/android_format_conversion-inl.h"
 #include "swapping_gl_context.h"
 #include "hwc_layerlist.h"
 
@@ -112,4 +112,9 @@ bool mga::HwcFbDevice::compatible_renderlist(RenderableList const&)
 
 void mga::HwcFbDevice::content_cleared()
 {
+}
+
+std::chrono::milliseconds mga::HwcFbDevice::recommended_sleep() const
+{
+    return std::chrono::milliseconds::zero();
 }

@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir_test/signal.h"
+#include "mir/test/signal.h"
 
 namespace mt = mir::test;
 

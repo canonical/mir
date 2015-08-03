@@ -22,18 +22,18 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface_factory.h"
 #include "mir/scene/null_session_listener.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_surface_coordinator.h"
-#include "mir_test_doubles/mock_surface.h"
-#include "mir_test_doubles/mock_session_listener.h"
-#include "mir_test_doubles/stub_display_configuration.h"
-#include "mir_test_doubles/stub_surface_factory.h"
-#include "mir_test_doubles/stub_buffer_stream_factory.h"
-#include "mir_test_doubles/stub_buffer_stream.h"
-#include "mir_test_doubles/null_snapshot_strategy.h"
-#include "mir_test_doubles/null_event_sink.h"
-#include "mir_test_doubles/mock_event_sink.h"
-#include "mir_test_doubles/null_prompt_session.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/doubles/mock_surface_coordinator.h"
+#include "mir/test/doubles/mock_surface.h"
+#include "mir/test/doubles/mock_session_listener.h"
+#include "mir/test/doubles/stub_display_configuration.h"
+#include "mir/test/doubles/stub_surface_factory.h"
+#include "mir/test/doubles/stub_buffer_stream_factory.h"
+#include "mir/test/doubles/stub_buffer_stream.h"
+#include "mir/test/doubles/null_snapshot_strategy.h"
+#include "mir/test/doubles/null_event_sink.h"
+#include "mir/test/doubles/mock_event_sink.h"
+#include "mir/test/doubles/null_prompt_session.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -56,8 +56,10 @@ static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 
 struct MockBufferStreamFactory : public ms::BufferStreamFactory
 {
-    MOCK_METHOD1(create_buffer_stream, std::shared_ptr<mc::BufferStream>(mg::BufferProperties const&));
-    MOCK_METHOD2(create_buffer_stream, std::shared_ptr<mc::BufferStream>(int, mg::BufferProperties const&));
+    MOCK_METHOD3(create_buffer_stream, std::shared_ptr<mc::BufferStream>(
+        mf::BufferStreamId, std::shared_ptr<mf::BufferSink> const&, mg::BufferProperties const&));
+    MOCK_METHOD4(create_buffer_stream, std::shared_ptr<mc::BufferStream>(
+        mf::BufferStreamId, std::shared_ptr<mf::BufferSink> const&, int, mg::BufferProperties const&));
 };
 
 
@@ -412,7 +414,7 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
     NiceMock<MockSurfaceFactory> surface_factory;
     MockBufferStreamFactory mock_buffer_stream_factory;
     std::shared_ptr<mc::BufferStream> const mock_stream = std::make_shared<mtd::MockBufferStream>();
-    ON_CALL(mock_buffer_stream_factory, create_buffer_stream(_)).WillByDefault(Return(mock_stream));
+    ON_CALL(mock_buffer_stream_factory, create_buffer_stream(_,_,_)).WillByDefault(Return(mock_stream));
     ON_CALL(surface_factory, create_surface(_,_)).WillByDefault(Return(mock_surface));
     NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
 
@@ -481,7 +483,7 @@ TEST_F(ApplicationSession, surface_ids_are_bufferstream_ids)
     NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
     std::shared_ptr<ms::Surface> mock_surface = make_mock_surface();
     auto stub_bstream = std::make_shared<mtd::StubBufferStream>();
-    EXPECT_CALL(mock_bufferstream_factory, create_buffer_stream(_))
+    EXPECT_CALL(mock_bufferstream_factory, create_buffer_stream(_,_,_))
         .WillOnce(Return(stub_bstream));
     EXPECT_CALL(mock_surface_factory, create_surface(std::shared_ptr<mc::BufferStream>(stub_bstream),_))
         .WillOnce(Return(mock_surface));
@@ -536,7 +538,7 @@ TEST_F(ApplicationSession, sets_and_looks_up_surface_streams)
         std::make_shared<mtd::StubBufferStream>(),
         std::make_shared<mtd::StubBufferStream>()
     }};
-    EXPECT_CALL(mock_bufferstream_factory, create_buffer_stream(_))
+    EXPECT_CALL(mock_bufferstream_factory, create_buffer_stream(_,_,_))
         .WillOnce(Return(streams[0]))
         .WillOnce(Return(streams[1]))
         .WillOnce(Return(streams[2]));
@@ -573,7 +575,7 @@ TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
 
     mg::BufferProperties properties(buffer_size, mir_pixel_format_argb_8888, mg::BufferUsage::software);
     
-    EXPECT_CALL(factory, create_buffer_stream(properties)).Times(1)
+    EXPECT_CALL(factory, create_buffer_stream(_,_,properties)).Times(1)
         .WillOnce(Return(mt::fake_shared(stream)));
 
     auto session = make_application_session_with_buffer_stream_factory(mt::fake_shared(factory));
@@ -586,6 +588,43 @@ TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
     EXPECT_THROW({
             session->get_buffer_stream(id);
     }, std::runtime_error);
+}
+
+TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
+{
+    using namespace testing;
+
+    mtd::StubBufferStreamFactory bufferstream_factory;
+    NiceMock<MockSurfaceFactory> mock_surface_factory;
+
+    geom::Size const buffer_size{geom::Width{1}, geom::Height{1}};
+
+    mg::BufferProperties properties(buffer_size, mir_pixel_format_argb_8888, mg::BufferUsage::software);
+
+    auto session = make_application_session(
+        mt::fake_shared(bufferstream_factory),
+        mt::fake_shared(mock_surface_factory));
+
+    auto id = session->create_buffer_stream(properties);
+
+    EXPECT_CALL(mock_surface_factory, create_surface(Eq(session->get_buffer_stream(id)),_))
+        .WillOnce(Invoke([&](auto bs, auto)
+    {
+        auto surface = std::make_shared<NiceMock<mtd::MockSurface>>();
+        ON_CALL(*surface, primary_buffer_stream())
+            .WillByDefault(Return(bs));
+        return surface;
+    }));
+
+    ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
+        .of_name("Aardavks")
+        .of_type(mir_surface_type_normal)
+        .with_buffer_stream(id);
+
+    auto surface_id = session->create_surface(params);
+    auto surface = session->get_surface(surface_id);
+
+    EXPECT_THAT(surface->primary_buffer_stream(), Eq(session->get_buffer_stream(id)));
 }
 
 namespace

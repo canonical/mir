@@ -21,21 +21,19 @@
 #include "mir/graphics/cursor_image.h"
 #include "mir/input/cursor_images.h"
 #include "mir/input/input_device_info.h"
-#include "mir/shell/canonical_window_manager.h"
-#include "mir/scene/placement_strategy.h"
 
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/fake_input_server_configuration.h"
-#include "mir_test_framework/declarative_placement_strategy.h"
+#include "mir_test_framework/declarative_placement_window_manage_policy.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
-#include "mir_test_doubles/mock_egl.h"
+#include "mir/test/doubles/mock_egl.h"
 
-#include "mir_test/fake_shared.h"
-#include "mir_test/spin_wait.h"
-#include "mir_test/wait_condition.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/spin_wait.h"
+#include "mir/test/wait_condition.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -216,47 +214,18 @@ struct NamedCursorClient : CursorClient
     std::string const cursor_name;
 };
 
-class PlacementWindowManagerPolicy : public msh::CanonicalWindowManagerPolicy
-{
-public:
-    PlacementWindowManagerPolicy(
-        Tools* const tools,
-        std::shared_ptr<ms::PlacementStrategy> const& placement_strategy,
-        std::shared_ptr<msh::DisplayLayout> const& display_layout) :
-        msh::CanonicalWindowManagerPolicy{tools, display_layout},
-        placement_strategy{placement_strategy}
-    {}
-
-    auto handle_place_new_surface(
-        std::shared_ptr<ms::Session> const& session,
-        ms::SurfaceCreationParameters const& request_parameters)
-        -> ms::SurfaceCreationParameters
-    {
-        return placement_strategy->place(*session, request_parameters);
-    }
-
-
-private:
-    std::shared_ptr<ms::PlacementStrategy> const placement_strategy;
-};
-
 struct TestServerConfiguration : mtf::FakeInputServerConfiguration
 {
-    std::shared_ptr<mir::scene::PlacementStrategy> the_placement_strategy()
-    {
-        return std::make_shared<mtf::DeclarativePlacementStrategy>(
-            client_geometries, client_depths);
-    }
-
     auto the_window_manager_builder() -> msh::WindowManagerBuilder override
     {
-        using PlacementWindowManager = msh::BasicWindowManager<PlacementWindowManagerPolicy, msh::CanonicalSessionInfo, msh::CanonicalSurfaceInfo>;
+        using PlacementWindowManager = msh::BasicWindowManager<mtf::DeclarativePlacementWindowManagerPolicy, msh::CanonicalSessionInfo, msh::CanonicalSurfaceInfo>;
 
         return [&](msh::FocusController* focus_controller)
             {
                 return std::make_shared<PlacementWindowManager>(
                     focus_controller,
-                    the_placement_strategy(),
+                    client_geometries,
+                    client_depths,
                     the_shell_display_layout());
             };
     }

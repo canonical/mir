@@ -19,8 +19,8 @@
 #include "src/server/graphics/nested/cursor.h"
 #include "mir/graphics/cursor_image.h"
 
-#include "mir_test/fake_shared.h"
-#include "mir_test_doubles/stub_host_connection.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/doubles/stub_host_connection.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

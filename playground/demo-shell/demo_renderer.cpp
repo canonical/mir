@@ -228,9 +228,12 @@ void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
     if (d != decor_map.end())
     {
         auto& decor = d->second;
-        tessellate_shadow(primitives, renderable, shadow_radius);
-        tessellate_frame(primitives, renderable, titlebar_height,
-                         decor->name.c_str());
+        if (decor->type != Decoration::Type::none)
+        {
+            tessellate_shadow(primitives, renderable, shadow_radius);
+            tessellate_frame(primitives, renderable, titlebar_height,
+                             decor->name.c_str());
+        }
     }
 }
 
@@ -377,34 +380,6 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
     text_prim.vertices[1] = {{text_right, text_top, 0.0f}, {text_u, 0.0f}};
     text_prim.vertices[2] = {{text_right, text_bot, 0.0f}, {text_u, 1.0f}};
     text_prim.vertices[3] = {{text_left,  text_bot, 0.0f}, {0.0f, 1.0f}};
-}
-
-bool DemoRenderer::would_embellish(
-    graphics::Renderable const& renderable,
-    Rectangle const& display_area) const
-{
-    auto const& window = renderable.screen_position();
-    Height const full_height{2*shadow_radius + titlebar_height + window.size.height.as_int()}; 
-    Width const side_trim{shadow_radius};
-    Y const topmost_y{window.top_left.y.as_int() - shadow_radius - titlebar_height};
-    X const leftmost_x{window.top_left.x.as_int() - shadow_radius};
-    Rectangle const left{
-        Point{leftmost_x, topmost_y},
-        Size{side_trim, full_height}};
-    Rectangle const right{
-        Point{window.top_right().x, topmost_y},
-        Size{side_trim, full_height}};
-    Rectangle const bottom{
-        window.bottom_left(),
-        Size{window.size.width.as_int(), shadow_radius}};
-    Rectangle const top{
-        Point{window.top_left.x, topmost_y},
-        Size{window.size.width.as_int(), shadow_radius + titlebar_height}};
-
-    return (display_area.overlaps(left) ||
-            display_area.overlaps(right) ||
-            display_area.overlaps(top) ||
-            display_area.overlaps(bottom));
 }
 
 void DemoRenderer::set_colour_effect(ColourEffect e)

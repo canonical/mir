@@ -58,7 +58,8 @@ namespace mo = mir::options;
     MACRO(session_authorizer)\
     MACRO(session_listener)\
     MACRO(session_mediator_report)\
-    MACRO(shell)
+    MACRO(shell)\
+    MACRO(application_not_responding_detector)
 
 #define FOREACH_ACCESSOR(MACRO)\
     MACRO(the_buffer_stream_factory)\
@@ -83,7 +84,8 @@ namespace mo = mir::options;
     MACRO(the_shell_display_layout)\
     MACRO(the_surface_coordinator)\
     MACRO(the_touch_visualizer)\
-    MACRO(the_input_device_hub)
+    MACRO(the_input_device_hub)\
+    MACRO(the_application_not_responding_detector)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder;
