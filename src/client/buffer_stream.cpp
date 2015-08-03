@@ -401,6 +401,7 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 void mcl::BufferStream::next_buffer_received(std::function<void()> done)
 {
     process_buffer(protobuf_bs->buffer());
+
     done();
     screencast_wait_handle.expect_result();
 }
