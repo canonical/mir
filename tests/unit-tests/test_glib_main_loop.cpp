@@ -24,6 +24,7 @@
 #include "mir/test/pipe.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/auto_unblock_thread.h"
+#include "mir/test/barrier.h"
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/doubles/mock_lockable_callback.h"
 #include "mir_test_framework/process.h"
@@ -1125,6 +1126,63 @@ TEST_F(GLibMainLoopAlarmTest, rescheduling_alarm_from_within_alarm_callback_does
             alarm->reschedule_in(0ms);
             alarm_rescheduled.raise();
         }};
+
+    ml.run();
+}
+
+TEST_F(GLibMainLoopAlarmTest, cancel_blocks_until_definitely_cancelled)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    auto waiting_in_lock = std::make_shared<mt::Barrier>(2);
+    auto has_been_called = std::make_shared<mt::Signal>();
+
+    class WaitsOnLock : public mir::LockableCallback
+    {
+    public:
+        WaitsOnLock(
+            std::shared_ptr<mt::Barrier> const& lock_barrier,
+            std::shared_ptr<mt::Signal> const& done_signal)
+            : lock_barrier{lock_barrier},
+              done_signal{done_signal}
+        {
+        }
+
+        void lock() override
+        {
+            lock_barrier->ready();
+        }
+
+        void operator()() override
+        {
+            std::this_thread::sleep_for(1s);
+        }
+
+        void unlock() override
+        {
+            done_signal->raise();
+        }
+    private:
+        std::shared_ptr<mt::Barrier> const lock_barrier;
+        std::shared_ptr<mt::Signal> const done_signal;
+    };
+
+    auto callback = std::make_shared<WaitsOnLock>(waiting_in_lock, has_been_called);
+
+    std::shared_ptr<mir::time::Alarm> alarm = ml.create_alarm(callback);
+
+    alarm->reschedule_in(0ms);
+
+    mt::AutoJoinThread canceller{
+        [waiting_in_lock, has_been_called, alarm, this]()
+        {
+            waiting_in_lock->ready();
+            alarm->cancel();
+            EXPECT_TRUE(has_been_called->raised());
+            ml.stop();
+        }
+    };
 
     ml.run();
 }
