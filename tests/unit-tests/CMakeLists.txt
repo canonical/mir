@@ -134,11 +134,15 @@ target_link_libraries(
   ${XKBCOMMON_LIBRARIES}
 )
 
-if (MIR_BUILD_PLATFORM_MESA)
+if ((MIR_BUILD_PLATFORM_MESA_KMS) OR (MIR_BUILD_PLATFORM_MESA_X11))
 target_link_libraries(mir_unit_tests
-  mirsharedmesaservercommon-static
-  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
+  mirsharedmesaservercommon-static)
+endif()
+
+if (MIR_BUILD_PLATFORM_MESA_KMS)
+target_link_libraries(mir_unit_tests
+  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )
 endif()
 
