@@ -28,8 +28,6 @@
 #include "../lifecycle_control.h"
 #include "../ping_handler.h"
 
-#include "mir_protobuf_wire.pb.h"
-
 #include <thread>
 #include <atomic>
 #include <experimental/optional>
