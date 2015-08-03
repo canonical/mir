@@ -257,7 +257,7 @@ MATCHER_P3(ButtonDownEventWithButton, x, y, button, "")
         return false;
     if (mir_pointer_event_action(pev) != mir_pointer_action_button_down)
         return false;
-    if (mir_pointer_event_button_state(pev, button) == false)
+    if (mir_pointer_event_button_state(pev, static_cast<MirPointerButton>(button)) == false)
         return false;
     if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
@@ -290,6 +290,18 @@ MATCHER_P3(ButtonUpEventWithButton, x, y, button, "")
     if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
     if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
+        return false;
+    return true;
+}
+
+MATCHER_P2(PointerAxisChange, scroll_axis, value, "")
+{
+    auto pev = maybe_pointer_event(to_address(arg));
+    if (pev == nullptr)
+        return false;
+    if (mir_pointer_event_action(pev) != mir_pointer_action_motion)
+        return false;
+    if (mir_pointer_event_axis_value(pev, scroll_axis) != value)
         return false;
     return true;
 }
