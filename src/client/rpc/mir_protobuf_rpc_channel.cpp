@@ -40,6 +40,7 @@ namespace mf = mir::frontend;
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
 namespace md = mir::dispatch;
+namespace mp = mir::protobuf;
 
 namespace
 {
@@ -241,48 +242,48 @@ void mclr::MirProtobufRpcChannel::send_message(
 
 void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& event)
 {
-    auto seq = mcl::make_protobuf_object<mir::protobuf::EventSequence>();
+    mp::EventSequence seq;
 
-    seq->ParseFromString(event);
+    seq.ParseFromString(event);
 
-    if (seq->has_display_configuration())
+    if (seq.has_display_configuration())
     {
-        display_configuration->update_configuration(seq->display_configuration());
+        display_configuration->update_configuration(seq.display_configuration());
     }
 
-    if (seq->has_lifecycle_event())
+    if (seq.has_lifecycle_event())
     {
-        (*lifecycle_control)(static_cast<MirLifecycleState>(seq->lifecycle_event().new_state()));
+        (*lifecycle_control)(static_cast<MirLifecycleState>(seq.lifecycle_event().new_state()));
     }
 
-    if (seq->has_ping_event())
+    if (seq.has_ping_event())
     {
-        (*ping_handler)(seq->ping_event().serial());
+        (*ping_handler)(seq.ping_event().serial());
     }
 
-    if (seq->has_buffer_request())
+    if (seq.has_buffer_request())
     {
         std::array<char, 1> dummy;
-        auto const num_fds = seq->mutable_buffer_request()->mutable_buffer()->fds_on_side_channel();
+        auto const num_fds = seq.mutable_buffer_request()->mutable_buffer()->fds_on_side_channel();
         std::vector<mir::Fd> fds(num_fds);
         if (num_fds > 0)
         {
             transport->receive_data(dummy.data(), dummy.size(), fds);
-            seq->mutable_buffer_request()->mutable_buffer()->clear_fd();
+            seq.mutable_buffer_request()->mutable_buffer()->clear_fd();
             for(auto& fd : fds)
-                seq->mutable_buffer_request()->mutable_buffer()->add_fd(fd);
+                seq.mutable_buffer_request()->mutable_buffer()->add_fd(fd);
         }
 
-        surface_map->with_stream_do(mf::BufferStreamId(seq->buffer_request().id().value()),
+        surface_map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
         [&] (mcl::ClientBufferStream* stream) {
-            stream->buffer_available(seq->buffer_request().buffer());
+            stream->buffer_available(seq.buffer_request().buffer());
         });
     }
 
-    int const nevents = seq->event_size();
+    int const nevents = seq.event_size();
     for (int i = 0; i != nevents; ++i)
     {
-        mir::protobuf::Event const& event = seq->event(i);
+        mp::Event const& event = seq.event(i);
         if (event.has_raw())
         {
             std::string const& raw_event = event.raw();
@@ -349,7 +350,7 @@ void mclr::MirProtobufRpcChannel::on_data_available()
      */
     std::lock_guard<decltype(read_mutex)> lock(read_mutex);
 
-    auto result = mcl::make_protobuf_object<mir::protobuf::wire::Result>();
+    auto result = mcl::make_protobuf_object<mp::wire::Result>();
     try
     {
         uint16_t message_size;
@@ -393,7 +394,7 @@ void mclr::MirProtobufRpcChannel::on_data_available()
                 {
                     // It's too difficult to convince C++ to move this lambda everywhere, so
                     // just give up and let it pretend its a shared_ptr.
-                    std::shared_ptr<mir::protobuf::wire::Result> appeaser{std::move(result)};
+                    std::shared_ptr<mp::wire::Result> appeaser{std::move(result)};
                     delayed_processor->enqueue([delayed_result = std::move(appeaser), this]() mutable
                     {
                         pending_calls.complete_response(*delayed_result);

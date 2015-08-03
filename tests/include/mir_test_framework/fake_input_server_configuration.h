@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -17,41 +17,31 @@
  *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_FAKE_EVENT_HUB_SERVER_CONFIGURATION_H_
-#define MIR_TEST_FAKE_EVENT_HUB_SERVER_CONFIGURATION_H_
+#ifndef MIR_TEST_FAKE_INPUT_SERVER_CONFIGURATION_H_
+#define MIR_TEST_FAKE_INPUT_SERVER_CONFIGURATION_H_
 
 #include "mir_test_framework/testing_server_configuration.h"
-
-namespace mir
-{
-namespace input
-{
-namespace android
-{
-class FakeEventHub;
-}
-}
-}
+#include "mir_test_framework/temporary_environment_value.h"
+#include "mir_test_framework/executable_path.h"
 
 namespace mir_test_framework
 {
 
-class FakeEventHubServerConfiguration : public TestingServerConfiguration
+class FakeInputServerConfiguration : public TestingServerConfiguration
 {
 public:
-    using TestingServerConfiguration::TestingServerConfiguration;
+    FakeInputServerConfiguration();
+    FakeInputServerConfiguration(std::vector<mir::geometry::Rectangle> const& display_rects);
 
-    std::shared_ptr<droidinput::EventHubInterface> the_event_hub() override;
     std::shared_ptr<mir::input::InputManager> the_input_manager() override;
     std::shared_ptr<mir::input::InputDispatcher> the_input_dispatcher() override;
+    std::shared_ptr<mir::input::LegacyInputDispatchable> the_legacy_input_dispatchable() override;
     std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override;
     std::shared_ptr<mir::input::InputSender> the_input_sender() override;
-    std::shared_ptr<mir::input::LegacyInputDispatchable> the_legacy_input_dispatchable() override;
-    std::shared_ptr<mir::input::android::FakeEventHub> the_fake_event_hub();
-
-    std::shared_ptr<mir::input::android::FakeEventHub> fake_event_hub;
+private:
+    TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", server_platform("input-stub.so").c_str()};
 };
 
 }
 
-#endif /* MIR_TEST_FAKE_EVENT_HUB_SERVER_CONFIGURATION_H_ */
+#endif /* MIR_TEST_FAKE_INPUT_SERVER_CONFIGURATION_H_ */

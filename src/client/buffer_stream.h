@@ -19,8 +19,6 @@
 #ifndef MIR_CLIENT_BUFFER_STREAM_H
 #define MIR_CLIENT_BUFFER_STREAM_H
 
-#include "mir_protobuf.pb.h"
-
 #include "mir_wait_handle.h"
 #include "mir/egl_native_surface.h"
 #include "mir/client_buffer.h"
@@ -41,6 +39,12 @@ namespace logging
 {
 class Logger;
 }
+namespace protobuf
+{
+class BufferStream;
+class BufferStreamParameters;
+class Void;
+}
 namespace client
 {
 namespace rpc
@@ -59,7 +63,7 @@ Producer, // As in surfaces
 Consumer // As in screencasts
 };
 
-class Amorphous;
+class ServerBufferSemantics;
 class BufferStream : public EGLNativeSurface, public ClientBufferStream
 {
 public:
@@ -129,8 +133,6 @@ private:
 
     mutable std::mutex mutex; // Protects all members of *this
 
-    bool server_connection_lost {false};
-
     MirConnection* connection;
     mir::client::rpc::DisplayServer& display_server;
 
@@ -147,6 +149,7 @@ private:
 
     MirWaitHandle create_wait_handle;
     MirWaitHandle release_wait_handle;
+    MirWaitHandle screencast_wait_handle;
     MirWaitHandle configure_wait_handle;
     std::unique_ptr<mir::protobuf::Void> protobuf_void;
     
@@ -154,9 +157,7 @@ private:
     
     geometry::Size cached_buffer_size;
 
-    std::unique_ptr<Amorphous> buffer_depository;
-    
-    MirWaitHandle screencast_wait_handle;
+    std::unique_ptr<ServerBufferSemantics> buffer_depository;
 };
 
 }

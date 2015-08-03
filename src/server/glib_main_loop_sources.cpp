@@ -106,9 +106,9 @@ md::GSourceHandle::~GSourceHandle()
     if (gsource)
     {
         pre_destruction_hook(gsource);
-        g_source_destroy(gsource);
 
 #ifdef GLIB_HAS_FIXED_LP_1401488
+        g_source_destroy(gsource);
         g_source_unref(gsource);
 #else
         /*
@@ -118,13 +118,22 @@ md::GSourceHandle::~GSourceHandle()
          * and so the main loop might be mid-iteration of the same source
          * making callbacks. And glib lacks protection to prevent sources
          * getting fully free()'d mid-callback (TODO: fix glib?). So we defer
-         * the final unref of the source to a point in the loop when it's safe:
+         * the final unref of the source to a point in the loop when it's safe.
          */
-        auto main_context = g_source_get_context(gsource);
-        auto idler = g_idle_source_new();
-        g_source_set_callback(idler, idle_callback, gsource, destroy_idler);
-        g_source_attach(idler, main_context);
-        g_source_unref(idler);
+        if (!g_source_is_destroyed(gsource))
+        {
+            auto main_context = g_source_get_context(gsource);
+            g_source_destroy(gsource);
+            auto idler = g_idle_source_new();
+            g_source_set_callback(idler, idle_callback, gsource, destroy_idler);
+            g_source_attach(idler, main_context);
+            g_source_unref(idler);
+        }
+        else
+        {
+            // The source is already destroyed so it's safe to unref now
+            g_source_unref(gsource);
+        }
 #endif
     }
 }
