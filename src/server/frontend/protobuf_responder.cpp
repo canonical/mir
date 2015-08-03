@@ -35,7 +35,7 @@ mfd::ProtobufResponder::ProtobufResponder(
 
 void mfd::ProtobufResponder::send_response(
     ::google::protobuf::uint32 id,
-    google::protobuf::Message* response,
+    google::protobuf::MessageLite* response,
     FdSets const& fd_sets)
 {
     mir::VariableLengthArray<serialization_buffer_size>

@@ -34,6 +34,7 @@
 #include "src/client/rpc/null_rpc_report.h"
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
+#include "src/client/rpc/mir_display_server.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -56,8 +57,8 @@ struct StubProtobufClient
     StubProtobufClient(std::string socket_file, int timeout_ms);
 
     std::shared_ptr<mir::client::rpc::RpcReport> rpc_report;
-    std::shared_ptr<google::protobuf::RpcChannel> channel;
-    mir::protobuf::DisplayServer::Stub display_server;
+    std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
+    mir::client::rpc::DisplayServer display_server;
     mir::protobuf::ConnectParameters connect_parameters;
     mir::protobuf::SurfaceParameters surface_parameters;
     mir::protobuf::Surface surface;
@@ -146,7 +147,6 @@ std::shared_ptr<mt::TestProtobufServer> StressProtobufCommunicator::stub_server;
 TEST_F(StressProtobufCommunicator, DISABLED_stress_exchange_buffer)
 {
     client->display_server.create_surface(
-        0,
         &client->surface_parameters,
         &client->surface,
         google::protobuf::NewCallback(client.get(), &StubProtobufClient::create_surface_done));
@@ -160,7 +160,6 @@ TEST_F(StressProtobufCommunicator, DISABLED_stress_exchange_buffer)
         request.mutable_id()->set_value(client->surface.id().value());
         *request.mutable_buffer() = client->surface.buffer();
         client->display_server.exchange_buffer(
-            0,
             &request,
             client->surface.mutable_buffer(),
             google::protobuf::NewCallback(client.get(), &StubProtobufClient::exchange_buffer_done));
@@ -169,7 +168,6 @@ TEST_F(StressProtobufCommunicator, DISABLED_stress_exchange_buffer)
     }
 
     client->display_server.disconnect(
-        0,
         &client->ignored,
         &client->ignored,
         google::protobuf::NewCallback(client.get(), &StubProtobufClient::disconnect_done));
@@ -189,7 +187,7 @@ StubProtobufClient::StubProtobufClient(
         std::make_shared<mir::client::LifecycleControl>(),
         std::make_shared<mir::client::PingHandler>(),
         std::make_shared<mtd::NullClientEventSink>())),
-    display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
+    display_server(channel),
     maxwait(timeout_ms),
     connect_done_called(false),
     create_surface_called(false),

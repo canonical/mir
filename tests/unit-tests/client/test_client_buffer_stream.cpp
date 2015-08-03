@@ -18,6 +18,7 @@
 
 #include "src/client/buffer_stream.h"
 #include "src/client/perf_report.h"
+#include "src/client/rpc/mir_display_server.h"
 
 #include "mir/client_platform.h"
 
@@ -36,6 +37,7 @@ namespace mp = mir::protobuf;
 namespace ml = mir::logging;
 namespace mg = mir::graphics;
 namespace mcl = mir::client;
+namespace mclr = mir::client::rpc;
 namespace geom = mir::geometry;
 
 namespace mt = mir::test;
@@ -44,20 +46,22 @@ namespace mtd = mt::doubles;
 namespace
 {
 
-struct MockProtobufServer : public mp::DisplayServer
+struct MockProtobufServer : public mclr::DisplayServer
 {
-    MOCK_METHOD4(screencast_buffer,
-                 void(google::protobuf::RpcController* /*controller*/,
+    MockProtobufServer() : mclr::DisplayServer(nullptr) {}
+
+    MOCK_METHOD3(screencast_buffer,
+                 void(
                       mp::ScreencastId const* /*request*/,
                       mp::Buffer* /*response*/,
                       google::protobuf::Closure* /*done*/));
-    MOCK_METHOD4(submit_buffer,
-                 void(google::protobuf::RpcController* /*controller*/,
+    MOCK_METHOD3(submit_buffer,
+                 void(
                       mp::BufferRequest const* /*request*/,
                       mp::Void* /*response*/,
                       google::protobuf::Closure* /*done*/));
-    MOCK_METHOD4(exchange_buffer,
-                 void(google::protobuf::RpcController* /*controller*/,
+    MOCK_METHOD3(exchange_buffer,
+                 void(
                       mp::BufferRequest const* /*request*/,
                       mp::Buffer* /*response*/,
                       google::protobuf::Closure* /*done*/));
@@ -220,7 +224,7 @@ MATCHER_P(BufferPackageMatches, package, "")
 
 ACTION(RunProtobufClosure)
 {
-    arg3->Run();
+    arg2->Run();
 }
 
 ACTION_P(SetBufferInfoFromPackage, buffer_package)
@@ -286,7 +290,7 @@ TEST_F(ClientBufferStreamTest, producer_streams_call_submit_buffer_on_next_buffe
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
         a_buffer_package());
 
-    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
+    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillOnce(RunProtobufClosure());
 
     auto bs = make_buffer_stream(protobuf_bs, mcl::BufferStreamMode::Producer);
@@ -301,7 +305,7 @@ TEST_F(ClientBufferStreamTest, consumer_streams_call_screencast_buffer_on_next_b
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage,
         a_buffer_package());
 
-    EXPECT_CALL(mock_protobuf_server, screencast_buffer(_,_,_,_))
+    EXPECT_CALL(mock_protobuf_server, screencast_buffer(_,_,_))
         .WillOnce(RunProtobufClosure());
 
     auto bs = make_buffer_stream(protobuf_bs, mcl::BufferStreamMode::Consumer);
@@ -318,7 +322,7 @@ TEST_F(ClientBufferStreamTest, invokes_callback_on_next_buffer)
 
     mp::Buffer buffer;
     auto bs = make_buffer_stream(protobuf_bs, mcl::BufferStreamMode::Producer);
-    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
+    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillOnce(DoAll(
             RunProtobufClosure(),
             InvokeWithoutArgs([&bs, &buffer]{ bs->buffer_available(buffer);})));
@@ -350,7 +354,7 @@ TEST_F(ClientBufferStreamTest, returns_correct_surface_parameters)
 TEST_F(ClientBufferStreamTest, returns_current_client_buffer)
 {
     using namespace ::testing;
-    ON_CALL(mock_protobuf_server, submit_buffer(_, _, _, _))
+    ON_CALL(mock_protobuf_server, submit_buffer( _, _, _))
         .WillByDefault(RunProtobufClosure());
 
     auto const client_buffer_1 = std::make_shared<mtd::NullClientBuffer>();
@@ -394,7 +398,7 @@ TEST_F(ClientBufferStreamTest, caches_width_and_height_in_case_of_partial_update
     fill_protobuf_buffer_from_package(&protobuf_buffer_2, buffer_package_2);
         
     // Here we us SetPartialBufferInfoFromPackage and do not fill in width and height
-    EXPECT_CALL(mock_protobuf_server, submit_buffer(_, _, _, _))
+    EXPECT_CALL(mock_protobuf_server, submit_buffer( _, _, _))
         .WillOnce(RunProtobufClosure());
 
     auto expected_size = geom::Size{buffer_package_1.width, buffer_package_1.height};
@@ -484,7 +488,7 @@ TEST_F(ClientBufferStreamTest, receives_unsolicited_buffer)
     another_buffer_package.set_buffer_id(id);
     EXPECT_CALL(mock_client_buffer_factory, create_buffer(_,_,_))
         .WillOnce(Return(mt::fake_shared(second_mock_client_buffer)));
-    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
+    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillOnce(RunProtobufClosure());
     bs->buffer_available(another_buffer_package);
     bs->next_buffer([]{});
@@ -502,7 +506,7 @@ TEST_F(ClientBufferStreamTest, waiting_client_can_unblock_on_shutdown)
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, buffer_package);
     ON_CALL(mock_client_buffer_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
-    ON_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
+    ON_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillByDefault(RunProtobufClosure());
 
     std::mutex mutex;
@@ -538,7 +542,7 @@ TEST_F(ClientBufferStreamTest, invokes_callback_on_buffer_available_before_wait_
     MirWaitHandle* wh{nullptr};
     bool wait_handle_has_result_in_callback = false;
 
-    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
+    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillOnce(RunProtobufClosure());
 
     auto const protobuf_bs = a_protobuf_buffer_stream(
@@ -563,7 +567,7 @@ TEST_F(ClientBufferStreamTest, invokes_callback_on_buffer_unavailable_before_wai
     MirWaitHandle* wh{nullptr};
     bool wait_handle_has_result_in_callback = false;
 
-    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_,_))
+    EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillOnce(RunProtobufClosure());
 
     auto const protobuf_bs = a_protobuf_buffer_stream(

@@ -23,18 +23,14 @@
 
 #include <memory>
 
-namespace google
-{
-namespace protobuf
-{
-class RpcChannel;
-}
-}
-
 namespace mir
 {
 namespace client
 {
+namespace rpc
+{
+class MirBasicRpcChannel;
+}
 /**
  * Get the the RpcChannel associated with the connection.
  * This is a "private" function to support development of client-side protobuf RPC calls
@@ -44,7 +40,7 @@ namespace client
  * @param connection - a connection to a Mir server
  * @return the RpcChannel associated with the connection
  */
-std::shared_ptr<google::protobuf::RpcChannel> the_rpc_channel(MirConnection* connection);
+std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> the_rpc_channel(MirConnection* connection);
 }
 }
 

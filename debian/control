@@ -49,7 +49,7 @@ Homepage: https://launchpad.net/mir
 # just go ahead. ~mir-team will notice and sync up the code again.
 Vcs-Bzr: https://code.launchpad.net/~mir-team/mir/trunk
 
-Package: libmirprotobuf0
+Package: libmirprotobuf1
 Section: libs
 Architecture: linux-any
 Multi-Arch: same

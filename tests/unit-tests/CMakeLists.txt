@@ -119,7 +119,7 @@ target_link_libraries(
   android-input-static
   xcursorloader-static
 
-  ${PROTOBUF_LIBRARIES}
+  ${PROTOBUF_LITE_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}

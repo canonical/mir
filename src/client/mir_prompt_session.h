@@ -21,7 +21,6 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_protobuf.pb.h"
 #include "mir_wait_handle.h"
 
 #include <mutex>
@@ -30,17 +29,27 @@
 
 namespace mir
 {
+namespace protobuf
+{
+class PromptSessionParameters;
+class SocketFD;
+class Void;
+}
 /// The client-side library implementation namespace
 namespace client
 {
 class EventHandlerRegister;
+namespace rpc
+{
+class DisplayServer;
+}
 }
 }
 
 struct MirPromptSession
 {
 public:
-    MirPromptSession(mir::protobuf::DisplayServer& server,
+    MirPromptSession(mir::client::rpc::DisplayServer& server,
                      std::shared_ptr<mir::client::EventHandlerRegister> const& event_handler_register);
 
     ~MirPromptSession();
@@ -59,7 +68,7 @@ public:
 
 private:
     std::mutex mutable mutex; // Protects parameters, wait_handles & results
-    mir::protobuf::DisplayServer& server;
+    mir::client::rpc::DisplayServer& server;
     std::unique_ptr<mir::protobuf::PromptSessionParameters> parameters;
     std::unique_ptr<mir::protobuf::Void> add_result;
     std::unique_ptr<mir::protobuf::Void> protobuf_void;
