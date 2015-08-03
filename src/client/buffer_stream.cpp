@@ -59,7 +59,7 @@ struct ServerBufferSemantics
     virtual void set_buffer_cache_size(unsigned int) = 0;
     virtual std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() = 0;
     virtual uint32_t get_current_buffer_id() = 0;
-    virtual MirWaitHandle* submit(std::function<void()> const&, geometry::Size sz, int stream_id) = 0;
+    virtual MirWaitHandle* submit(std::function<void()> const&, geometry::Size sz, MirPixelFormat, int stream_id) = 0;
     virtual void lost_connection() = 0;
     virtual ~ServerBufferSemantics() = default;
     ServerBufferSemantics() = default;
@@ -161,7 +161,7 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         return wrapped.current_buffer_id();
     }
 
-    MirWaitHandle* submit(std::function<void()> const& done, geom::Size sz, int stream_id) override
+    MirWaitHandle* submit(std::function<void()> const& done, geom::Size sz, MirPixelFormat pf, int stream_id) override
     {
         std::unique_lock<std::mutex> lock(mutex);
         if (server_connection_lost)
@@ -187,7 +187,7 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         {
             auto buffer_package = std::make_shared<MirBufferPackage>();
             populate_buffer_package(*buffer_package, incoming_buffers.front());
-            wrapped.deposit_package(buffer_package, incoming_buffers.front().buffer_id(), sz, mir_pixel_format_abgr_8888);
+            wrapped.deposit_package(buffer_package, incoming_buffers.front().buffer_id(), sz, pf);
             incoming_buffers.pop();
             done();
         }
@@ -286,7 +286,7 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
             mir::frontend::client_buffer_cache_size,
             protobuf_bs->buffer(),
             cached_buffer_size,
-            mir_pixel_format_abgr_8888);
+            static_cast<MirPixelFormat>(protobuf_bs->pixel_format()));
     }
     else
     {
@@ -351,7 +351,8 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
     if (mode == mcl::BufferStreamMode::Producer)
     {
         lock.unlock();
-        return buffer_depository->submit(done, cached_buffer_size, protobuf_bs->id().value());
+        return buffer_depository->submit(done, cached_buffer_size,
+            static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), protobuf_bs->id().value());
     }
     else
     {
