@@ -66,9 +66,13 @@ ms::TimeoutApplicationNotRespondingDetector::~TimeoutApplicationNotRespondingDet
 void ms::TimeoutApplicationNotRespondingDetector::register_session(
     frontend::Session const* session, std::function<void()> const& pinger)
 {
-    std::lock_guard<std::mutex> lock{session_mutex};
-    sessions[dynamic_cast<Session const*>(session)] = std::make_unique<ANRContext>(pinger);
-    if (alarm->state() != mt::Alarm::State::pending)
+    bool alarm_needs_schedule;
+    {
+        std::lock_guard<std::mutex> lock{session_mutex};
+        sessions[dynamic_cast<Session const*>(session)] = std::make_unique<ANRContext>(pinger);
+        alarm_needs_schedule = alarm->state() != mt::Alarm::State::pending;
+    }
+    if (alarm_needs_schedule)
     {
         alarm->reschedule_in(period);
     }
