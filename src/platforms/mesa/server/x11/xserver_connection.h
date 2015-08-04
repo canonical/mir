@@ -27,8 +27,9 @@ namespace mir
 namespace X
 {
 
-struct X11Connection
+class X11Connection
 {
+public:
     X11Connection()
     {
         dpy = XOpenDisplay(nullptr);
@@ -39,6 +40,12 @@ struct X11Connection
         XCloseDisplay(dpy);
     }
 
+    operator ::Display*() const
+    {
+        return dpy;
+    }
+
+private:
     ::Display *dpy;
 };
 

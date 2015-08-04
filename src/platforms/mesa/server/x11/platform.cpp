@@ -20,7 +20,6 @@
 #include "display.h"
 #include "buffer_allocator.h"
 #include "ipc_operations.h"
-#include "xserver_connection.h"
 #include "mir/udev/wrapper.h"
 
 #include <boost/throw_exception.hpp>
@@ -31,21 +30,13 @@ namespace mgx = mg::X;
 namespace mo = mir::options;
 namespace mx = mir::X;
 
-//TODO: Remove this global by allowing input and graphics drivers to share
-//     some context like the x11 display handle.
-std::shared_ptr<mx::X11Connection> x11_connection;
-
-mgx::Platform::Platform()
-    : udev{std::make_shared<mir::udev::Context>()},
-       drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render)}
+mgx::Platform::Platform(std::shared_ptr<mx::X11Connection> const& conn)
+    : x11_connection{conn},
+      udev{std::make_shared<mir::udev::Context>()},
+      drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render)}
 {
-    if (x11_connection)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Cannot create x11 platform more than once"));
-
-    x11_connection.reset(new mx::X11Connection());
-
-    if (!x11_connection->dpy)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Cannot open x11 display"));
+    if (!x11_connection)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
 
     drm->setup(udev);
     gbm.setup(*drm);
@@ -61,7 +52,7 @@ std::shared_ptr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<GLProgramFactory> const&,
     std::shared_ptr<GLConfig> const& /*gl_config*/)
 {
-    return std::make_shared<mgx::Display>(x11_connection->dpy);
+    return std::make_shared<mgx::Display>(*x11_connection);
 }
 
 std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const
@@ -71,19 +62,26 @@ std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() 
 
 EGLNativeDisplayType mgx::Platform::egl_native_display() const
 {
-    return eglGetDisplay(x11_connection->dpy);
+    return eglGetDisplay(*x11_connection);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Platform module entry points below
 ////////////////////////////////////////////////////////////////////////////////////
 
+std::shared_ptr<mx::X11Connection> x11_connection;
+
+__attribute__((constructor)) static void OpenDisplay()
+{
+    x11_connection = std::make_shared<mx::X11Connection>();
+}
+
 std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
-    return std::make_shared<mgx::Platform>();
+    return std::make_shared<mgx::Platform>(x11_connection);
 }
 
 std::shared_ptr<mg::Platform> create_guest_platform(

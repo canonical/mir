@@ -20,6 +20,7 @@
 #define MIR_INPUT_X_INPUT_DEVICE_H_
 
 #include "mir/input/input_device.h"
+#include "../xserver_connection.h"
 
 #include <X11/Xlib.h>
 
@@ -41,7 +42,7 @@ class XDispatchable;
 class XInputDevice : public input::InputDevice
 {
 public:
-    XInputDevice();
+    XInputDevice(std::shared_ptr<mir::X::X11Connection> const& conn);
     ~XInputDevice() = default;
 
     std::shared_ptr<dispatch::Dispatchable> dispatchable() override;

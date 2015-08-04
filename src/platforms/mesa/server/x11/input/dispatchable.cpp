@@ -17,7 +17,6 @@
  */
 
 #include "dispatchable.h"
-#include "../xserver_connection.h"
 #include "mir/events/event_private.h"
 #include "mir/events/event_builders.h"
 
@@ -40,10 +39,12 @@ namespace md = mir::dispatch;
 namespace mx = mir::X;
 namespace mev = mir::events;
 
-extern std::shared_ptr<mx::X11Connection> x11_connection;
-
-mix::XDispatchable::XDispatchable(int raw_fd)
-    : fd(raw_fd), sink(nullptr)
+mix::XDispatchable::XDispatchable(
+    std::shared_ptr<mir::X::X11Connection> const& conn,
+    int raw_fd)
+    : x11_connection(conn),
+      fd(raw_fd),
+      sink(nullptr)
 {
 }
 
@@ -65,7 +66,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
         // https://tronche.com/gui/x/xlib/events/keyboard-pointer/keyboard-pointer.html
         XEvent xev;
 
-        XNextEvent(x11_connection->dpy, &xev);
+        XNextEvent(*x11_connection, &xev);
 
         if (sink)
         {

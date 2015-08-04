@@ -40,7 +40,9 @@ class XInputDevice;
 class XInputPlatform : public input::Platform
 {
 public:
-    explicit XInputPlatform(std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry);
+    explicit XInputPlatform(
+        std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry,
+        std::shared_ptr<mir::X::X11Connection> const& conn);
     ~XInputPlatform() = default;
 
     std::shared_ptr<dispatch::Dispatchable> dispatchable() override;
