@@ -29,8 +29,6 @@
 #include "mir/thread_name.h"
 #include "mir/unwind_helpers.h"
 #include "mir/terminate_with_current_exception.h"
-#define MIR_LOG_COMPONENT "Input Manager"
-#include "mir/log.h"
 
 #include <condition_variable>
 #include <mutex>
@@ -88,56 +86,35 @@ void mi::DefaultInputManager::start()
 
     legacy_dispatchable->start();
 
-    auto const started_promise = std::make_shared<std::promise<void>>();
-    auto const weak_started_promise = std::weak_ptr<std::promise<void>>(started_promise);
+    auto started_promise = std::make_shared<std::promise<void>>();
     auto started_future = started_promise->get_future();
 
-    queue->enqueue([this,weak_started_promise]()
+    queue->enqueue([this,started_promise]()
                    {
                         start_platforms();
                         // TODO: Udev monitoring is still not separated yet - an initial scan is necessary to open
                         // devices, this will be triggered through the first call to dispatch->InputReader->loopOnce.
                         legacy_dispatchable->dispatch(dispatch::FdEvent::readable);
-                        auto const started_promise =
-                            std::shared_ptr<std::promise<void>>(weak_started_promise);
-                        try
-                        {
-                            started_promise->set_value();
-                        }
-                        catch(std::future_error const& error)
-                        {
-                            //An exception could have already occurred in the input thread below
-                            //in which case started_future.wait() will be unblocked by started_promise->set_exception
-                            //in the exception handler of the input thread
-                            if (error.code() != std::future_errc::promise_already_satisfied)
-                                throw;
-                        }
+                        started_promise->set_value();
                    });
+                   
+    /* Emulate move-semantics for started_promise.
+     *
+     * We need the starting-lambda to own started_promise so that it is guaranteed that
+     * started_future gets signalled; either by ->set_value in the success path or
+     * by the destruction of started_promise generating a broken_promise exception.
+     */
+    started_promise.reset();
 
     input_thread = std::make_unique<dispatch::ThreadedDispatcher>(
         "Mir/Input Reader",
         multiplexer,
-        [this,weak_started_promise]()
+        [this]()
         {
             stop_platforms();
             multiplexer->remove_watch(queue);
             multiplexer->remove_watch(legacy_dispatchable);
             state = State::stopped;
-            if (auto started_promise = weak_started_promise.lock())
-            {
-                try
-                {
-                    started_promise->set_exception(std::current_exception());
-                }
-                catch(std::future_error const& error)
-                {
-                    //The action above could have run already and this exception may have triggered
-                    //before the end of scope of DefaultInputManager::start
-                    //in which case started_future.wait() will be unblocked by started_promise->set_value above
-                    if (error.code() != std::future_errc::promise_already_satisfied)
-                        mir::log_error("started_promise->set_exception threw %s", error.what());
-                }
-            }
             mir::terminate_with_current_exception();
         });
 
