@@ -89,22 +89,19 @@ void mi::DefaultInputManager::start()
     auto started_promise = std::make_shared<std::promise<void>>();
     auto started_future = started_promise->get_future();
 
-    queue->enqueue([this,started_promise]()
+    /*
+     * We need the starting-lambda to own started_promise so that it is guaranteed that
+     * started_future gets signalled; either by ->set_value in the success path or
+     * by the destruction of started_promise generating a broken_promise exception.
+     */
+    queue->enqueue([this,promise = std::move(started_promise)]()
                    {
                         start_platforms();
                         // TODO: Udev monitoring is still not separated yet - an initial scan is necessary to open
                         // devices, this will be triggered through the first call to dispatch->InputReader->loopOnce.
                         legacy_dispatchable->dispatch(dispatch::FdEvent::readable);
-                        started_promise->set_value();
+                        promise->set_value();
                    });
-                   
-    /* Emulate move-semantics for started_promise.
-     *
-     * We need the starting-lambda to own started_promise so that it is guaranteed that
-     * started_future gets signalled; either by ->set_value in the success path or
-     * by the destruction of started_promise generating a broken_promise exception.
-     */
-    started_promise.reset();
 
     input_thread = std::make_unique<dispatch::ThreadedDispatcher>(
         "Mir/Input Reader",
