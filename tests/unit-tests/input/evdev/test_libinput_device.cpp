@@ -23,11 +23,13 @@
 #include "mir/input/input_sink.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/rectangle.h"
-#include "mir_test_doubles/mock_libinput.h"
-#include "mir_test/event_matchers.h"
+#include "mir/event_printer.h"
+#include "mir/test/event_matchers.h"
+#include "mir/test/doubles/mock_libinput.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <linux/input.h>
 
 namespace mi = mir::input;
 namespace mie = mi::evdev;
@@ -76,6 +78,7 @@ struct LibInputDevice : public ::testing::Test
         ON_CALL(mock_libinput, libinput_device_unref(fake_device))
             .WillByDefault(Return(nullptr));
     }
+
 };
 
 }
@@ -130,6 +133,31 @@ TEST_F(LibInputDevice, process_event_converts_pointer_event)
     dev.process_event(fake_event);
 }
 
+TEST_F(LibInputDevice, process_event_provides_relative_coordinates)
+{
+    using namespace ::testing;
+    mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput(), "dev");
+
+    uint32_t event_time = 14;
+    float x = -5;
+    float y = 20;
+
+    EXPECT_CALL(mock_libinput, libinput_event_get_type(fake_event))
+        .WillOnce(Return(LIBINPUT_EVENT_POINTER_MOTION));
+    EXPECT_CALL(mock_libinput, libinput_event_get_pointer_event(fake_event))
+        .WillOnce(Return(fake_pointer_event));
+    EXPECT_CALL(mock_libinput, libinput_event_pointer_get_time(fake_pointer_event))
+        .WillOnce(Return(event_time));
+    EXPECT_CALL(mock_libinput, libinput_event_pointer_get_dx(fake_pointer_event))
+        .WillOnce(Return(x));
+    EXPECT_CALL(mock_libinput, libinput_event_pointer_get_dy(fake_pointer_event))
+        .WillOnce(Return(y));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x,y)));
+
+    dev.start(&mock_sink);
+    dev.process_event(fake_event);
+}
+
 TEST_F(LibInputDevice, process_event_accumulates_pointer_movement)
 {
     using namespace ::testing;
@@ -173,10 +201,10 @@ TEST_F(LibInputDevice, process_event_handles_press_and_release)
     EXPECT_CALL(mock_libinput, libinput_event_pointer_get_time(fake_pointer_event))
         .WillRepeatedly(Return(event_time));
     EXPECT_CALL(mock_libinput, libinput_event_pointer_get_button(fake_pointer_event))
-        .WillOnce(Return(1))
-        .WillOnce(Return(2))
-        .WillOnce(Return(2))
-        .WillOnce(Return(1));
+        .WillOnce(Return(BTN_LEFT))
+        .WillOnce(Return(BTN_RIGHT))
+        .WillOnce(Return(BTN_RIGHT))
+        .WillOnce(Return(BTN_LEFT));
     EXPECT_CALL(mock_libinput, libinput_event_pointer_get_button_state(fake_pointer_event))
         .WillOnce(Return(LIBINPUT_BUTTON_STATE_PRESSED))
         .WillOnce(Return(LIBINPUT_BUTTON_STATE_PRESSED))

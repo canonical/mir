@@ -27,7 +27,11 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_report.h"
 
+#define MIR_LOG_COMPONENT "evdev-input"
+#include "mir/log.h"
+
 #include <libinput.h>
+
 
 namespace mi = mir::input;
 namespace mo = mir::options;
@@ -142,11 +146,15 @@ void mie::Platform::device_added(mu::Device const& dev)
     if (!device_ptr)
     {
         report->failed_to_open_input_device(dev.devnode(), description.name);
+        log_info("libinput refused to open device %s", dev.devnode());
         return;
     }
 
     if (end(devices) != find_device(libinput_device_get_device_group(device_ptr.get())))
+    {
+        mir::log_debug("Device %s is part of an already opened device group", dev.devnode());
         return;
+    }
 
     try
     {
@@ -155,9 +163,11 @@ void mie::Platform::device_added(mu::Device const& dev)
         input_device_registry->add_device(input_dev);
         devices.emplace_back(dev.devnode(), input_dev);
 
+        mir::log_info("Input device %s opened", dev.devnode());
         report->opened_input_device(dev.devnode(), description.name);
     } catch(...)
     {
+        mir::log_error("Failure opening device %s", dev.devnode());
         report->failed_to_open_input_device(dev.devnode(), description.name);
     }
 }
@@ -174,6 +184,7 @@ void mie::Platform::device_removed(mu::Device const& dev)
     if (known_device_pos == end(devices))
         return;
 
+    mir::log_info("Input device %s removed", dev.devnode());
     input_device_registry->remove_device(known_device_pos->second);
     devices.erase(known_device_pos);
 }
@@ -212,6 +223,11 @@ void mie::Platform::device_changed(mu::Device const& /*dev*/)
 
 void mie::Platform::stop()
 {
+    while (!devices.empty())
+    {
+        input_device_registry->remove_device(devices.back().second);
+        devices.pop_back();
+    }
 }
 
 extern "C" mir::UniqueModulePtr<mi::Platform> create_input_platform(

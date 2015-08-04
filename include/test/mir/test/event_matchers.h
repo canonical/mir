@@ -21,6 +21,7 @@
 #define MIR_TEST_CLIENT_EVENT_MATCHERS_H_
 
 #include "mir_toolkit/event.h"
+#include "mir/event_printer.h"
 
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -296,7 +297,9 @@ MATCHER_P3(ButtonUpEventWithButton, x, y, button, "")
 
 MATCHER_P2(PointerAxisChange, scroll_axis, value, "")
 {
-    auto pev = maybe_pointer_event(to_address(arg));
+    auto parg = to_address(arg);
+    using mir::operator<<;
+    auto pev = maybe_pointer_event(parg);
     if (pev == nullptr)
         return false;
     if (mir_pointer_event_action(pev) != mir_pointer_action_motion)

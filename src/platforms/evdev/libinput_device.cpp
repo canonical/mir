@@ -91,7 +91,10 @@ mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& repo
                 libinput_dispatch(lib.get());
                 process_event(libinput_get_event(lib.get()));
             })},
-      accumulated_touch_event(nullptr, null_deleter)
+      accumulated_touch_event(nullptr, null_deleter),
+      pointer_pos{0, 0},
+      modifier_state{0},
+      button_state{0}
 {
 }
 
@@ -187,21 +190,26 @@ mir::EventUPtr mie::LibInputDevice::convert_event(libinput_event_keyboard* keybo
 mir::EventUPtr mie::LibInputDevice::convert_button_event(libinput_event_pointer* pointer)
 {
     auto time = std::chrono::nanoseconds(libinput_event_pointer_get_time(pointer));
+    auto button = libinput_event_pointer_get_button(pointer);
     auto action = (libinput_event_pointer_get_button_state(pointer) == LIBINPUT_BUTTON_STATE_PRESSED)?
         mir_pointer_action_button_down : mir_pointer_action_button_up;
 
-    auto button = libinput_event_pointer_get_button(pointer);
+
     auto pointer_button = mie::to_pointer_button(button);
+    auto relative_x_value = 0.0f;
+    auto relative_y_value = 0.0f;
+    auto hscroll_value = 0.0f;
+    auto vscroll_value = 0.0f;
 
     std::cout << "pointer_button: " << pointer_button << std::endl;
     std::cout << "button: " << button << std::endl;
 
     report->received_event_from_kernel(time.count(), EV_KEY, pointer_button, action);
 
-    if (libinput_event_pointer_get_button_state(pointer) == LIBINPUT_BUTTON_STATE_PRESSED)
-        button_state = MirPointerButton(uint32_t(button_state) | button);
+    if (action == mir_pointer_action_button_down)
+        button_state = MirPointerButton(button_state | uint32_t(pointer_button));
     else
-        button_state = MirPointerButton(uint32_t(button_state) & ~button);
+        button_state = MirPointerButton(button_state & ~uint32_t(pointer_button));
 
     auto event = mir::events::make_event(unknown_device_id,
                                          time,
@@ -209,7 +217,9 @@ mir::EventUPtr mie::LibInputDevice::convert_button_event(libinput_event_pointer*
                                          action,
                                          button_state,
                                          pointer_pos.x.as_float(), pointer_pos.y.as_float(),
-                                         0, 0);
+                                         hscroll_value, vscroll_value,
+                                         relative_x_value,
+                                         relative_y_value);
 
     return event;
 }
@@ -218,15 +228,15 @@ mir::EventUPtr mie::LibInputDevice::convert_motion_event(libinput_event_pointer*
 {
     auto time = std::chrono::nanoseconds(libinput_event_pointer_get_time(pointer));
     auto action = mir_pointer_action_motion;
+    auto hscroll_value = 0.0f;
+    auto vscroll_value = 0.0f;
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
-    // TODO we convert accelerated motion vectors to absolute coordinates here.
-    // For viewport/per surface confinement support or sticky edges and per
-    // user & device pointer accelerations, we should forward the unacclerated
-    // vector instead.
-    pointer_pos = pointer_pos + mir::geometry::Displacement{
+
+    mir::geometry::Displacement movement{
         libinput_event_pointer_get_dx(pointer),
         libinput_event_pointer_get_dy(pointer)};
+    pointer_pos = pointer_pos + movement;
 
     sink->confine_pointer(pointer_pos);
 
@@ -236,7 +246,8 @@ mir::EventUPtr mie::LibInputDevice::convert_motion_event(libinput_event_pointer*
                                          action,
                                          button_state,
                                          pointer_pos.x.as_float(), pointer_pos.y.as_float(),
-                                         0, 0);
+                                         hscroll_value, vscroll_value,
+                                         movement.dx.as_float(), movement.dy.as_float());
 
     return event;
 }
@@ -246,11 +257,15 @@ mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event
     // a pointing device that emits absolute coordinates
     auto time = std::chrono::nanoseconds(libinput_event_pointer_get_time(pointer));
     auto action = mir_pointer_action_motion;
+    auto hscroll_value = 0.0f;
+    auto vscroll_value = 0.0f;
 
     report->received_event_from_kernel(time.count(), EV_ABS, 0, 0);
+    auto old_pointer_pos = pointer_pos;
     pointer_pos = mir::geometry::Point{
         libinput_event_pointer_get_absolute_x(pointer),
         libinput_event_pointer_get_absolute_y(pointer)};
+    auto movement = pointer_pos - old_pointer_pos;
 
     sink->confine_pointer(pointer_pos);
 
@@ -260,7 +275,8 @@ mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event
                                          action,
                                          button_state,
                                          pointer_pos.x.as_float(), pointer_pos.y.as_float(),
-                                         0, 0);
+                                         hscroll_value, vscroll_value,
+                                         movement.dx.as_float(), movement.dy.as_float());
     return event;
 }
 
@@ -268,17 +284,21 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
 {
     auto time = std::chrono::nanoseconds(libinput_event_pointer_get_time(pointer));
     auto action = mir_pointer_action_motion;
+    auto relative_x_value = 0.0f;
+    auto relative_y_value = 0.0f;
+    auto hscroll_value = libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)
+        ? libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)
+        : 0.0f;
+    auto vscroll_value = libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)
+        ? libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)
+        : 0.0f;
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
     auto event = mir::events::make_event(
         unknown_device_id, time, mie::expand_modifiers(modifier_state), action, button_state, pointer_pos.x.as_float(),
-        pointer_pos.y.as_float(), 
-        libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)
-        ? libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)
-        : 0,
-        libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)
-        ? libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)
-        : 0);
+        pointer_pos.y.as_float(),
+        hscroll_value, vscroll_value,
+        relative_x_value, relative_y_value);
     return event;
 }
 
