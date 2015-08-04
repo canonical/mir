@@ -141,9 +141,8 @@ private:
 
     void init_pixel_format()
     {
-        unsigned int valid_formats
-        { 0 };
-        MirPixelFormat pixel_formats[mir_pixel_formats];
+        unsigned int valid_formats{0};
+        MirPixelFormat pixel_formats[mir_pixel_formats] = { mir_pixel_format_invalid };
         mir_connection_get_available_surface_formats(connection, pixel_formats, mir_pixel_formats, &valid_formats);
         //select an 8 bit opaque format if we can
         for (auto i = 0u; i < valid_formats; i++)
