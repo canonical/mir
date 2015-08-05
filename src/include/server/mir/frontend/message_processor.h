@@ -19,7 +19,8 @@
 #ifndef MIR_FRONTEND_MESSAGE_PROCESSOR_H_
 #define MIR_FRONTEND_MESSAGE_PROCESSOR_H_
 
-#include <google/protobuf/service.h>
+#include <google/protobuf/stubs/common.h>
+
 #include <mir/fd.h>
 #include <vector>
 
@@ -44,7 +45,7 @@ public:
 
     const ::std::string& method_name() const;
     const ::std::string& parameters() const;
-    ::google::protobuf::uint32 id() const;
+    google::protobuf::uint32 id() const;
 private:
     mir::protobuf::wire::Invocation const& invocation;
 };

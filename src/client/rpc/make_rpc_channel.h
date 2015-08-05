@@ -18,12 +18,10 @@
 #ifndef MIR_CLIENT_RPC_MAKE_RPC_CHANNEL_H_
 #define MIR_CLIENT_RPC_MAKE_RPC_CHANNEL_H_
 
-#include <memory>
-
 #include "../lifecycle_control.h"
 #include "../ping_handler.h"
 
-namespace google { namespace protobuf { class RpcChannel; } }
+#include <memory>
 
 namespace mir
 {
@@ -35,9 +33,10 @@ class EventSink;
 
 namespace rpc
 {
+class MirBasicRpcChannel;
 class RpcReport;
 
-std::shared_ptr<google::protobuf::RpcChannel>
+std::shared_ptr<mir::client::rpc::MirBasicRpcChannel>
 make_rpc_channel(std::string const& name,
                  std::shared_ptr<SurfaceMap> const& map,
                  std::shared_ptr<DisplayConfiguration> const& disp_conf,
