@@ -184,6 +184,7 @@ struct ClientBufferStream : TestWithParam<bool>
 
         protobuf_bs.set_pixel_format(format);
         protobuf_bs.set_buffer_usage(usage);
+        bool const legacy_exchange_buffer = GetParam();
         if (legacy_exchange_buffer)
             fill_protobuf_buffer_from_package(protobuf_bs.mutable_buffer(), package);
         return protobuf_bs;
@@ -203,7 +204,6 @@ struct ClientBufferStream : TestWithParam<bool>
     MirBufferPackage buffer_package = a_buffer_package();
     mp::BufferStream response = a_protobuf_buffer_stream(
         default_pixel_format, default_buffer_usage, buffer_package);
-    bool const legacy_exchange_buffer = GetParam();
 };
 
 MATCHER_P(BufferPackageMatches, package, "")
@@ -546,4 +546,4 @@ TEST_P(ClientBufferStream, invokes_callback_on_buffer_unavailable_before_wait_ha
     EXPECT_FALSE(wait_handle_has_result_in_callback);
 }
 
-INSTANTIATE_TEST_CASE_P(TT, ClientBufferStream, Values(true));
+INSTANTIATE_TEST_CASE_P(BufferSemanticsMode, ClientBufferStream, Values(true));
