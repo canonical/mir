@@ -26,6 +26,7 @@
 #include "logging/perf_report.h"
 #include "rpc/mir_display_server.h"
 #include "mir_protobuf.pb.h"
+#include "buffer_vault.h"
 
 #include "mir/log.h"
 #include "mir/client_platform.h"
@@ -218,12 +219,14 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
     bool server_connection_lost{false};
 };
 
-#if 0
-namespace
-{
 class Requests : public mcl::ServerBufferRequests
 {
 public:
+    Requests(mclr::DisplayServer& server) :
+        server(server)
+    {
+    }
+
     void allocate_buffer(geom::Size size, MirPixelFormat format, int usage) override
     {
         (void) size; (void) format; (void) usage;
@@ -234,16 +237,18 @@ public:
     }
     void submit_buffer(mcl::ClientBuffer&) override
     {
+        auto request = mcl::make_protobuf_object<mp::BufferRequest>();
+//        request->mutable_id()->set_value(stream_id);
+//        request->mutable_buffer()->set_buffer_id(wrapped.current_buffer_id());
+        server.submit_buffer(request.get(), &protobuf_void,
+            google::protobuf::NewCallback(google::protobuf::DoNothing));
     }
+private:
+    mclr::DisplayServer& server;
+    mp::Void protobuf_void;
 };
-}
-        /*int initial_nbuffers = 3u;
-        buffer_depository = std::make_unique<NewBufferSemantics>(
-            client_platform->create_buffer_factory(),
-            std::make_shared<Requests>(),
-            geom::Size{0,0}, mir_pixel_format_abgr_8888, 0, initial_nbuffers);*/
 
-struct NewBufferSemantics : mcl::Amorphous
+struct NewBufferSemantics : mcl::ServerBufferSemantics
 {
     NewBufferSemantics(
         std::shared_ptr<mcl::ClientBufferFactory> const& factory,
@@ -256,30 +261,51 @@ struct NewBufferSemantics : mcl::Amorphous
 
     void deposit(mp::Buffer const& buffer, geom::Size, MirPixelFormat)
     {
+        printf("DEPOSIT!\n");
         vault.wire_transfer_inbound(buffer);
-    }
-    void set_buffer_cache_size(unsigned int) override
-    {
+        printf("DEPOSIT2!\n");
+        current_buffer = vault.withdraw().get();
+
+
+
     }
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override
     {
-        //vault.withdraw_buffer();
-        throw std::logic_error("if a cat is a tabby, all tabbies are cats");
+        if (!current_buffer)
+            current_buffer = vault.withdraw().get();
+        return current_buffer;
     }
+
     uint32_t get_current_buffer_id() override
     {
-        throw std::logic_error("if a cat is a tabby, all tabbies are cats");
+        return 0;
     }
-    MirWaitHandle* submit(std::function<void()> const&, geom::Size, int) override
+
+    MirWaitHandle* submit(std::function<void()> const& done, geom::Size, MirPixelFormat, int) override
     {
-        throw std::logic_error("if a cat is a tabby, all tabbies are cats");
+        vault.deposit(current_buffer);
+        vault.wire_transfer_outbound(current_buffer);
+        done();
+        return &next_buffer_wait_handle;
+    }
+
+
+
+
+    void lost_connection() override
+    {
+    }
+
+    void set_buffer_cache_size(unsigned int) override
+    {
     }
 
     mcl::BufferVault vault;
     std::shared_ptr<mcl::ClientBuffer> current_buffer;
     int current_buffer_id;
+    MirWaitHandle next_buffer_wait_handle;
+    std::function<void()> done;
 };
-#endif
 }
 
 mcl::BufferStream::BufferStream(
@@ -354,8 +380,11 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
     }
     else
     {
-        //TODO: use the submission semantics here
-        BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
+        int initial_nbuffers = 3u;
+        buffer_depository = std::make_unique<NewBufferSemantics>(
+            client_platform->create_buffer_factory(),
+            std::make_shared<Requests>(display_server),
+            geom::Size{0,0}, mir_pixel_format_abgr_8888, 0, initial_nbuffers);
     }
 
 
