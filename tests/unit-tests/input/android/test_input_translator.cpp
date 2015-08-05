@@ -143,7 +143,7 @@ MATCHER(EndOfTouchGesture, "")
 }
 
 TEST_F(InputTranslator, translates_multifinger_release_correctly)
-{
+{   // Regression test for LP: #1481570
     using namespace ::testing;
 
     EXPECT_CALL(dispatcher, dispatch(EndOfTouchGesture()))

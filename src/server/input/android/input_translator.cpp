@@ -139,20 +139,16 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
         auto masked_action = action & AMOTION_EVENT_ACTION_MASK;
         for (unsigned i = 0; i < args->pointerCount; i++)
         {
-#if 1
-            auto action = (i == index_with_action) ? mia::mir_touch_action_from_masked_android(masked_action) :
-                mir_touch_action_change;
-#else
             MirTouchAction action;
             if (masked_action == AMOTION_EVENT_ACTION_UP)
-                action = mir_touch_action_up;  // irrespective of index
+                action = mir_touch_action_up;   // irrespective of index
             else if (masked_action == AMOTION_EVENT_ACTION_DOWN)
                 action = mir_touch_action_down; // irrespective of index
             else if (i == index_with_action)
                 action = mir_touch_action_from_masked_android(masked_action);
             else
                 action = mir_touch_action_change;
-#endif
+
             mev::add_touch(*mir_event, args->pointerProperties[i].id, action,
                            mia::mir_tool_type_from_android(args->pointerProperties[i].toolType),
                            args->pointerCoords[i].getX(),
