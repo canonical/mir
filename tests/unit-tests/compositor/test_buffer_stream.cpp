@@ -236,3 +236,15 @@ TEST_F(BufferStreamTest, notifies_on_swap)
     buffer_stream.swap_buffers(buffer, complete);
     buffer_stream.swap_buffers(buffer, complete);
 }
+
+TEST_F(BufferStreamTest, allocate_and_release_not_supported)
+{
+    mg::BufferProperties properties;
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
+    EXPECT_THROW({
+        buffer_stream.allocate_buffer(properties);
+    }, std::runtime_error);
+    EXPECT_THROW({
+        buffer_stream.remove_buffer(mg::BufferID{3});
+    }, std::runtime_error);
+}

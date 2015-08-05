@@ -54,6 +54,8 @@ public:
     int buffers_ready_for_compositor(void const* user_id) const override;
     void drop_old_buffers() override;
     bool has_submitted_buffer() const override;
+    void allocate_buffer(graphics::BufferProperties const&) override;
+    void remove_buffer(graphics::BufferID) override;
 
 private:
     enum class ScheduleMode;

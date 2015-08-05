@@ -22,6 +22,7 @@
 #include "mir/graphics/buffer_properties.h"
 
 #include "temporary_buffers.h"
+#include <boost/throw_exception.hpp>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -134,4 +135,14 @@ void mc::BufferStreamSurfaces::remove_observer(std::weak_ptr<scene::SurfaceObser
 {
     if (auto o = observer.lock())
         observers.remove(o);
+}
+
+void mc::BufferStreamSurfaces::allocate_buffer(graphics::BufferProperties const&)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not_supported"));
+}
+
+void mc::BufferStreamSurfaces::remove_buffer(graphics::BufferID)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not_supported"));
 }

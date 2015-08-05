@@ -79,6 +79,8 @@ public:
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const&) {}
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const&) {}
     bool has_submitted_buffer() const { return true; }
+    void allocate_buffer(graphics::BufferProperties const&) {}
+    void remove_buffer(graphics::BufferID) {}
 
     StubBuffer stub_client_buffer;
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
