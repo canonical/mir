@@ -32,15 +32,6 @@ struct LegacyInputDispatchable : mir::dispatch::Dispatchable
     virtual void start() = 0;
 };
 
-struct NullLegacyInputDispatchable : LegacyInputDispatchable
-{
-    void start() override {};
-    mir::Fd watch_fd() const override { return aq.watch_fd();};
-    bool dispatch(mir::dispatch::FdEvents events) override { return aq.dispatch(events); }
-    mir::dispatch::FdEvents relevant_events() const override{ return aq.relevant_events(); }
-    mir::dispatch::ActionQueue aq;
-};
-
 }
 }
 
