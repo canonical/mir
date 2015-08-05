@@ -222,14 +222,23 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
 class Requests : public mcl::ServerBufferRequests
 {
 public:
-    Requests(mclr::DisplayServer& server) :
-        server(server)
+    Requests(mclr::DisplayServer& server, int stream_id) :
+        server(server),
+        stream_id(stream_id)
     {
     }
 
     void allocate_buffer(geom::Size size, MirPixelFormat format, int usage) override
     {
-        (void) size; (void) format; (void) usage;
+        auto request = mcl::make_protobuf_object<mp::BufferAllocation>();
+        request->mutable_id()->set_value(stream_id);
+        auto buf_params = request->add_buffer_requests();
+        buf_params->set_width(size.width.as_int());
+        buf_params->set_height(size.height.as_int());
+        buf_params->set_pixel_format(format);
+        buf_params->set_buffer_usage(usage);
+        server.allocate_buffers(request.get(), &protobuf_void, 
+            google::protobuf::NewCallback(google::protobuf::DoNothing));
     }
     void free_buffer(int buffer_id) override
     {
@@ -238,7 +247,7 @@ public:
     void submit_buffer(mcl::ClientBuffer&) override
     {
         auto request = mcl::make_protobuf_object<mp::BufferRequest>();
-//        request->mutable_id()->set_value(stream_id);
+        request->mutable_id()->set_value(stream_id);
 //        request->mutable_buffer()->set_buffer_id(wrapped.current_buffer_id());
         server.submit_buffer(request.get(), &protobuf_void,
             google::protobuf::NewCallback(google::protobuf::DoNothing));
@@ -246,6 +255,7 @@ public:
 private:
     mclr::DisplayServer& server;
     mp::Void protobuf_void;
+    int stream_id;
 };
 
 struct NewBufferSemantics : mcl::ServerBufferSemantics
@@ -265,9 +275,6 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         vault.wire_transfer_inbound(buffer);
         printf("DEPOSIT2!\n");
         current_buffer = vault.withdraw().get();
-
-
-
     }
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override
     {
@@ -383,7 +390,7 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
         int initial_nbuffers = 3u;
         buffer_depository = std::make_unique<NewBufferSemantics>(
             client_platform->create_buffer_factory(),
-            std::make_shared<Requests>(display_server),
+            std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
             geom::Size{0,0}, mir_pixel_format_abgr_8888, 0, initial_nbuffers);
     }
 
