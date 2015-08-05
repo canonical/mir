@@ -17,7 +17,7 @@ add_library(mirplatforminputevdevobjects OBJECT
     libinput_ptr.cpp
     )
 
-add_library(mirplatforminputevdev SHARED
+add_library(mirplatforminputevdev MODULE
   platform.cpp
   $<TARGET_OBJECTS:mirplatforminputevdevobjects>
   $<TARGET_OBJECTS:mirevdevutilsobjects>
