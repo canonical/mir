@@ -1157,11 +1157,11 @@ TEST_F(GLibMainLoopAlarmTest, cancel_blocks_until_definitely_cancelled)
         void operator()() override
         {
             std::this_thread::sleep_for(1s);
+            done_signal->raise();
         }
 
         void unlock() override
         {
-            done_signal->raise();
         }
     private:
         std::shared_ptr<mt::Barrier> const lock_barrier;
