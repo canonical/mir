@@ -612,20 +612,16 @@ TEST_F(SurfaceInputDispatcher, touch_target_switches_on_finger_down)
 
     InSequence seq;
 
-    EXPECT_CALL(*left_surface, consume(mt::TouchEvent(0, 0))).Times(1);
-    EXPECT_CALL(*left_surface, consume(mt::TouchMovementEvent())).Times(1);
+    EXPECT_CALL(*left_surface, consume(_)).Times(1);
     // Note: No TouchUpEvent expected
-    EXPECT_CALL(*right_surface, consume(mt::TouchEvent(5, 5))).Times(1);
-    EXPECT_CALL(*right_surface, consume(mt::TouchMovementEvent())).Times(1);
+    EXPECT_CALL(*right_surface, consume(_)).Times(1);
 
     dispatcher.start();
     
     FakeToucher toucher;
     EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({0, 0})));
-    EXPECT_TRUE(dispatcher.dispatch(*toucher.move_to({2, 2})));
     // Note: No touch release event produced
     EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({5, 5})));
-    EXPECT_TRUE(dispatcher.dispatch(*toucher.move_to({7, 7})));
 }
 
 TEST_F(SurfaceInputDispatcher, touch_gestures_terminated_by_device_reset)
