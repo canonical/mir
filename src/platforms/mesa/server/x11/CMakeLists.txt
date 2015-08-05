@@ -16,6 +16,7 @@ include_directories(
 add_library(
   mirplatformservermesax11objects OBJECT
 
+  graphics.cpp
   platform.cpp
   display.cpp
   display_configuration.cpp

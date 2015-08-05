@@ -20,15 +20,13 @@
 #include "display.h"
 #include "buffer_allocator.h"
 #include "ipc_operations.h"
-#include "mir/udev/wrapper.h"
 
 #include <boost/throw_exception.hpp>
 
+namespace mx = mir::X;
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 namespace mgx = mg::X;
-namespace mo = mir::options;
-namespace mx = mir::X;
 
 mgx::Platform::Platform(std::shared_ptr<mx::X11Connection> const& conn)
     : x11_connection{conn},
@@ -63,71 +61,4 @@ std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() 
 EGLNativeDisplayType mgx::Platform::egl_native_display() const
 {
     return eglGetDisplay(*x11_connection);
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-// Platform module entry points below
-////////////////////////////////////////////////////////////////////////////////////
-
-std::shared_ptr<mx::X11Connection> x11_connection;
-
-__attribute__((constructor)) static void OpenDisplay()
-{
-    x11_connection = std::make_shared<mx::X11Connection>();
-}
-
-std::shared_ptr<mg::Platform> create_host_platform(
-    std::shared_ptr<mo::Option> const& /*options*/,
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
-    std::shared_ptr<mg::DisplayReport> const& /*report*/)
-{
-    return std::make_shared<mgx::Platform>(x11_connection);
-}
-
-std::shared_ptr<mg::Platform> create_guest_platform(
-    std::shared_ptr<mg::DisplayReport> const& /*report*/,
-    std::shared_ptr<mg::NestedContext> const&)
-{
-    BOOST_THROW_EXCEPTION(std::runtime_error("Guest platform isn't supported under X"));
-    return nullptr;
-}
-
-void add_graphics_platform_options(boost::program_options::options_description& /*config*/)
-{
-}
-
-mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*/)
-{
-    auto dpy = XOpenDisplay(nullptr);
-    if (dpy)
-    {
-        XCloseDisplay(dpy);
-
-        auto udev = std::make_shared<mir::udev::Context>();
-
-        mir::udev::Enumerator drm_devices{udev};
-        drm_devices.match_subsystem("drm");
-        drm_devices.match_sysname("renderD[0-9]*");
-        drm_devices.scan_devices();
-
-        for (auto& device : drm_devices)
-        {
-            static_cast<void>(device);
-
-            return mg::PlatformPriority::best;
-        }
-    }
-    return mg::PlatformPriority::unsupported;
-}
-
-mir::ModuleProperties const description = {
-    "mesa-x11",
-    MIR_VERSION_MAJOR,
-    MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
-};
-
-mir::ModuleProperties const* describe_graphics_module()
-{
-    return &description;
 }
