@@ -477,12 +477,9 @@ bool any_touches_went_down(MirTouchEvent const* tev)
 bool last_touch_released(MirTouchEvent const* tev)
 {
     auto count = mir_touch_event_point_count(tev);
-    for (unsigned i = 0; i < count; ++i)
-    {
-        if (mir_touch_event_action(tev, i) != mir_touch_action_up)
-            return false;
-    }
-    return true;
+    if (count > 1)
+        return false;
+    return mir_touch_event_action(tev, 0) == mir_touch_action_up;
 }
 }
 
@@ -494,15 +491,6 @@ bool me::WindowManager::handle_touch_event(MirTouchEvent const* tev)
     auto const& modifiers = mir_touch_event_modifiers(tev);
 
     int fingers = mir_touch_event_point_count(tev);
-
-    fprintf(stderr, "---- Touch event (%d fingers) ----\n", fingers);
-    for (int f = 0; f < fingers; ++f)
-    {
-        static const char* const action_str[3] = { "up", "down", "change"};
-        fprintf(stderr, "%d:%-7s",
-                f, action_str[mir_touch_event_action(tev,f)]);
-    }
-    fprintf(stderr, "\n");
 
     if (fingers > max_fingers)
         max_fingers = fingers;
