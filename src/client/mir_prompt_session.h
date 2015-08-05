@@ -21,7 +21,6 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_protobuf.pb.h"
 #include "mir_wait_handle.h"
 
 #include <mutex>
@@ -30,6 +29,12 @@
 
 namespace mir
 {
+namespace protobuf
+{
+class PromptSessionParameters;
+class SocketFD;
+class Void;
+}
 /// The client-side library implementation namespace
 namespace client
 {

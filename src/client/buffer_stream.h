@@ -19,8 +19,6 @@
 #ifndef MIR_CLIENT_BUFFER_STREAM_H
 #define MIR_CLIENT_BUFFER_STREAM_H
 
-#include "mir_protobuf.pb.h"
-
 #include "mir_wait_handle.h"
 #include "mir/egl_native_surface.h"
 #include "mir/client_buffer.h"
@@ -40,6 +38,12 @@ namespace mir
 namespace logging
 {
 class Logger;
+}
+namespace protobuf
+{
+class BufferStream;
+class BufferStreamParameters;
+class Void;
 }
 namespace client
 {
