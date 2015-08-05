@@ -119,39 +119,38 @@ target_link_libraries(
   android-input-static
   xcursorloader-static
 
-  ${PROTOBUF_LIBRARIES}
+  ${PROTOBUF_LITE_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
   ${UMOCKDEV_LIBRARIES}
-  # Mesa platform dependencies
-  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
-  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
-  # Android platform dependencies
-  ${LIBHARDWARE_LIBRARIES}
-  ${ANDROID_PROPERTIES_LIBRARIES}
-  # Shared platform dependencies
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
-  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${MIR_PLATFORM_REFERENCES}
   ${MIR_COMMON_REFERENCES}
   ${MIR_SERVER_REFERENCES}
   ${XKBCOMMON_LIBRARIES}
 )
 
+if ((MIR_BUILD_PLATFORM_MESA_KMS) OR (MIR_BUILD_PLATFORM_MESA_X11))
 target_link_libraries(mir_unit_tests
-  mirsharedmesaservercommon-static
+  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
+  mirsharedmesaservercommon-static)
+endif()
+
+if (MIR_BUILD_PLATFORM_MESA_KMS)
+target_link_libraries(mir_unit_tests
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )
+endif()
 
 if (MIR_BUILD_PLATFORM_ANDROID)
 target_link_libraries(mir_unit_tests 
   mirsharedandroid-static
-  ${ANDROID_PROPERTIES_LDFLAGS}
+  ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
+  ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
 )
 endif()
 

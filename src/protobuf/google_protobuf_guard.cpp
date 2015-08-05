@@ -16,22 +16,12 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include <google/protobuf/descriptor.h>
-#include <dlfcn.h>
+#include <google/protobuf/stubs/common.h>
 
 extern "C" int __attribute__((constructor))
 init_google_protobuf()
 {
-    // Leak libmirprotobuf.so.X
-    // This will stop it getting unloaded/reloaded and work around LP: #1391976
-    Dl_info self;
-    if (dladdr(reinterpret_cast<void*>(&init_google_protobuf), &self))
-    {
-        dlopen(self.dli_fname, RTLD_LAZY | RTLD_NODELETE);
-    }
-
     GOOGLE_PROTOBUF_VERIFY_VERSION;
-
     return 0;
 }
 

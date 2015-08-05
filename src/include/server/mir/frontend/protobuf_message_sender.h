@@ -20,9 +20,9 @@
 #define MIR_FRONTEND_PROTOBUF_MESSAGE_SENDER_H_
 
 #include "mir/frontend/fd_sets.h"
+#include <google/protobuf/stubs/common.h>
 
-#include <google/protobuf/generated_message_reflection.h>
-
+namespace google { namespace protobuf { class MessageLite; } }
 namespace mir
 {
 namespace frontend
@@ -33,9 +33,9 @@ class ProtobufMessageSender
 {
 public:
     virtual void send_response(
-            ::google::protobuf::uint32 call_id,
-            ::google::protobuf::Message* message,
-            FdSets const& fd_sets) = 0;
+    google::protobuf::uint32 call_id,
+    google::protobuf::MessageLite* message,
+    FdSets const& fd_sets) = 0;
 
 protected:
     ProtobufMessageSender() = default;

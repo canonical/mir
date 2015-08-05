@@ -110,6 +110,14 @@ mtf::FakeInputDeviceImpl::FakeInputDeviceImpl(mi::InputDeviceInfo const& info)
     mtf::StubInputPlatform::add(device);
 }
 
+void mtf::FakeInputDeviceImpl::emit_runtime_error()
+{
+    queue->enqueue([]()
+                   {
+                       throw std::runtime_error("runtime error in input device");
+                   });
+}
+
 void mtf::FakeInputDeviceImpl::emit_event(synthesis::KeyParameters const& key)
 {
     queue->enqueue([this, key]()

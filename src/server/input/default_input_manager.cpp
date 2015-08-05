@@ -27,6 +27,7 @@
 
 #include "mir/main_loop.h"
 #include "mir/thread_name.h"
+#include "mir/unwind_helpers.h"
 #include "mir/terminate_with_current_exception.h"
 
 #include <condition_variable>
@@ -49,7 +50,7 @@ mi::DefaultInputManager::~DefaultInputManager()
 
 void mi::DefaultInputManager::add_platform(std::shared_ptr<Platform> const& platform)
 {
-    if (state == State::running)
+    if (state == State::started)
     {
         queue->enqueue([this, platform]()
                        {
@@ -70,74 +71,107 @@ void mi::DefaultInputManager::add_platform(std::shared_ptr<Platform> const& plat
 
 void mi::DefaultInputManager::start()
 {
-    if (state == State::running)
+    auto expected = State::stopped;
+
+    if (!state.compare_exchange_strong(expected, State::starting))
         return;
 
-    state = State::running;
+    auto reset_to_stopped_on_failure = on_unwind([this]{state = State::stopped;});
 
     multiplexer->add_watch(queue);
+    auto unregister_queue = on_unwind([this]{multiplexer->remove_watch(queue);});
+
     multiplexer->add_watch(legacy_dispatchable);
+    auto unregister_legacy_dispatchable = on_unwind([this]{multiplexer->remove_watch(legacy_dispatchable);});
+
     legacy_dispatchable->start();
 
-    auto const started_promise = std::make_shared<std::promise<void>>();
-    auto const weak_started_promise = std::weak_ptr<std::promise<void>>(started_promise);
+    auto started_promise = std::make_shared<std::promise<void>>();
     auto started_future = started_promise->get_future();
 
-    queue->enqueue([this,weak_started_promise]()
+    /*
+     * We need the starting-lambda to own started_promise so that it is guaranteed that
+     * started_future gets signalled; either by ->set_value in the success path or
+     * by the destruction of started_promise generating a broken_promise exception.
+     */
+    queue->enqueue([this,promise = std::move(started_promise)]()
                    {
-                        for (auto const& platform : platforms)
-                        {
-                            platform->start();
-                            multiplexer->add_watch(platform->dispatchable());
-                        }
+                        start_platforms();
                         // TODO: Udev monitoring is still not separated yet - an initial scan is necessary to open
                         // devices, this will be triggered through the first call to dispatch->InputReader->loopOnce.
                         legacy_dispatchable->dispatch(dispatch::FdEvent::readable);
-                        auto const started_promise =
-                            std::shared_ptr<std::promise<void>>(weak_started_promise);
-                        started_promise->set_value();
+                        promise->set_value();
                    });
 
     input_thread = std::make_unique<dispatch::ThreadedDispatcher>(
         "Mir/Input Reader",
         multiplexer,
-        [this,weak_started_promise]()
+        [this]()
         {
+            stop_platforms();
+            multiplexer->remove_watch(queue);
+            multiplexer->remove_watch(legacy_dispatchable);
             state = State::stopped;
-            if (auto started_promise = weak_started_promise.lock())
-                started_promise->set_exception(std::current_exception());
             mir::terminate_with_current_exception();
         });
 
     started_future.wait();
+
+    expected = State::starting;
+    state.compare_exchange_strong(expected, State::started);
 }
 
 void mi::DefaultInputManager::stop()
 {
-    if (state == State::stopped)
+    auto expected = State::started;
+
+    if (!state.compare_exchange_strong(expected, State::stopping))
         return;
-    std::mutex m;
-    std::unique_lock<std::mutex> lock(m);
-    std::condition_variable cv;
-    bool done = false;
 
-    queue->enqueue([&]()
+    auto reset_to_started_on_failure = on_unwind([this]{state = State::started;});
+
+    auto const stop_promise = std::make_shared<std::promise<void>>();
+
+    queue->enqueue([stop_promise,this]()
                    {
-                       for (auto const platform : platforms)
-                       {
-                           multiplexer->remove_watch(platform->dispatchable());
-                           platform->stop();
-                       }
-
-                       std::unique_lock<std::mutex> lock(m);
-                       done = true;
-                       cv.notify_one();
+                       stop_platforms();
+                       stop_promise->set_value();
                    });
-    cv.wait(lock, [&]{return done;});
-    state = State::stopped;
+
+    stop_promise->get_future().wait();
+
+    auto restore_platforms = on_unwind(
+        [this]
+        {
+            queue->enqueue([this](){ start_platforms(); });
+        });
+
+    multiplexer->remove_watch(queue);
+    auto register_queue = on_unwind([this]{multiplexer->add_watch(queue);});
+
+    multiplexer->remove_watch(legacy_dispatchable);
+
+    auto register_legacy_dispatchable= on_unwind([this]{multiplexer->add_watch(legacy_dispatchable);});
 
     input_thread.reset();
 
-    multiplexer->remove_watch(legacy_dispatchable);
-    multiplexer->remove_watch(queue);
+    state = State::stopped;
+}
+
+void mi::DefaultInputManager::start_platforms()
+{
+    for (auto const& platform : platforms)
+    {
+        platform->start();
+        multiplexer->add_watch(platform->dispatchable());
+    }
+}
+
+void mi::DefaultInputManager::stop_platforms()
+{
+    for (auto const& platform : platforms)
+    {
+        multiplexer->remove_watch(platform->dispatchable());
+        platform->stop();
+    }
 }
