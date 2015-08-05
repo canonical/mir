@@ -29,9 +29,13 @@ namespace dispatch
 class ActionQueue;
 }
 
+namespace X
+{
+class X11Connection;
+}
+
 namespace input
 {
-class InputDevice;
 
 namespace X
 {

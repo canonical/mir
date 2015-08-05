@@ -19,6 +19,7 @@
 #include "mir/input/input_device_info.h"
 #include "input_device.h"
 #include "dispatchable.h"
+#include "../xserver_connection.h"
 
 namespace mi = mir::input;
 namespace mix = mi::X;

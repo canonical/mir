@@ -19,6 +19,7 @@
 #include "dispatchable.h"
 #include "mir/events/event_private.h"
 #include "mir/events/event_builders.h"
+#include "../xserver_connection.h"
 
 #include <boost/throw_exception.hpp>
 #include <chrono>

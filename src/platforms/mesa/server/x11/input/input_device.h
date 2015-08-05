@@ -20,7 +20,6 @@
 #define MIR_INPUT_X_INPUT_DEVICE_H_
 
 #include "mir/input/input_device.h"
-#include "../xserver_connection.h"
 
 #include <X11/Xlib.h>
 
@@ -30,6 +29,11 @@ namespace mir
 namespace dispatch
 {
 class Dispatchable;
+}
+
+namespace X
+{
+class X11Connection;
 }
 
 namespace input

@@ -21,10 +21,15 @@
 
 #include "mir/dispatch/dispatchable.h"
 #include "mir/input/input_sink.h"
-#include "../xserver_connection.h"
 
 namespace mir
 {
+
+namespace X
+{
+class X11Connection;
+}
+
 namespace input
 {
 namespace X
