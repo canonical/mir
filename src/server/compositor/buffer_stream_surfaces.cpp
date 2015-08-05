@@ -137,12 +137,17 @@ void mc::BufferStreamSurfaces::remove_observer(std::weak_ptr<scene::SurfaceObser
         observers.remove(o);
 }
 
-void mc::BufferStreamSurfaces::allocate_buffer(graphics::BufferProperties const&)
+mg::BufferID mc::BufferStreamSurfaces::allocate_buffer(graphics::BufferProperties const&)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("not_supported"));
 }
 
 void mc::BufferStreamSurfaces::remove_buffer(graphics::BufferID)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not_supported"));
+}
+
+void mc::BufferStreamSurfaces::with_buffer(mg::BufferID, std::function<void(mg::Buffer&)> const&)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("not_supported"));
 }

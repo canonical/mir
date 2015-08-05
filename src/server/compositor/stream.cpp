@@ -156,12 +156,19 @@ bool mc::Stream::has_submitted_buffer() const
     return first_frame_posted;
 }
 
-void mc::Stream::allocate_buffer(mg::BufferProperties const& properties)
+mg::BufferID mc::Stream::allocate_buffer(mg::BufferProperties const& properties)
 {
     buffers->add_buffer(properties);
+    return mg::BufferID{0};
 }
 
 void mc::Stream::remove_buffer(mg::BufferID id)
 {
     buffers->remove_buffer(id);
+}
+
+void mc::Stream::with_buffer(mg::BufferID id, std::function<void(mg::Buffer&)> const& fn)
+{
+    auto buffer = (*buffers)[id];
+    fn(*buffer);
 }

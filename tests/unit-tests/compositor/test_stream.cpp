@@ -47,10 +47,14 @@ struct StubBufferMap : mf::ClientBuffers
         sink{sink}
     {
     }
-    void add_buffer(mg::BufferProperties const&)
+    mg::BufferID add_buffer(mg::BufferProperties const&)
     {
+        return mg::BufferID{};
     }
     void remove_buffer(mg::BufferID)
+    {
+    }
+    void with_buffer(mg::BufferID, std::function<void(mg::Buffer&)> const&)
     {
     }
     void send_buffer(mg::BufferID id)
@@ -230,7 +234,7 @@ TEST_F(Stream, can_access_buffer_after_allocation)
     auto called = false;
     mg::BufferProperties properties;
     auto id = stream.allocate_buffer(properties);
-    stream.with_buffer(id, [](mg::Buffer& buffer)
+    stream.with_buffer(id, [&](mg::Buffer& buffer)
     {
         called = true;
         EXPECT_THAT(buffer.id(), Eq(id));
