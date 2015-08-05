@@ -23,8 +23,6 @@ add_library(mirplatforminputevdev MODULE
   $<TARGET_OBJECTS:mirevdevutilsobjects>
 )
 
-message(status "-> ${MIR_INPUT_PLATFORM_VERSION_SCRIPT} howdie ")
-
 set_target_properties(
   mirplatforminputevdev PROPERTIES
   OUTPUT_NAME input-evdev

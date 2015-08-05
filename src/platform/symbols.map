@@ -119,7 +119,6 @@ MIRPLATFORM_9 {
     mir::options::nbuffers_opt*;
     mir::options::enable_input_opt*;
     mir::options::enable_key_repeat_opt*;
-    mir::options::enable_legacy_input_stack*;
     mir::options::fatal_abort_opt*;
     mir::options::frontend_threads_opt*;
     mir::options::glog*;

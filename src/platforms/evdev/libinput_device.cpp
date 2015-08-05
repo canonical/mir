@@ -36,7 +36,6 @@
 
 #include <cstring>
 #include <vector>
-#include <iostream>
 #include <chrono>
 #include <sstream>
 
@@ -200,9 +199,6 @@ mir::EventUPtr mie::LibInputDevice::convert_button_event(libinput_event_pointer*
     auto relative_y_value = 0.0f;
     auto hscroll_value = 0.0f;
     auto vscroll_value = 0.0f;
-
-    std::cout << "pointer_button: " << pointer_button << std::endl;
-    std::cout << "button: " << button << std::endl;
 
     report->received_event_from_kernel(time.count(), EV_KEY, pointer_button, action);
 

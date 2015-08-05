@@ -191,11 +191,7 @@ mir::DefaultServerConfiguration::the_legacy_input_dispatchable()
     return legacy_input_dispatchable(
         [this]() -> std::shared_ptr<mi::LegacyInputDispatchable>
         {
-            bool enable_legacy_input_stack = the_options()->get<bool>(options::enable_legacy_input_stack);
-            if (enable_legacy_input_stack)
-                return std::make_shared<mia::InputReaderDispatchable>(the_event_hub(), the_input_reader());
-            else
-                return std::make_shared<mi::NullLegacyInputDispatchable>();
+            return std::make_shared<mia::InputReaderDispatchable>(the_event_hub(), the_input_reader());
         });
 }
 
