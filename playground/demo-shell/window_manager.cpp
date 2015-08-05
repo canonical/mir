@@ -477,12 +477,9 @@ bool any_touches_went_down(MirTouchEvent const* tev)
 bool last_touch_released(MirTouchEvent const* tev)
 {
     auto count = mir_touch_event_point_count(tev);
-    for (unsigned i = 0; i < count; ++i)
-    {
-        if (mir_touch_event_action(tev, i) != mir_touch_action_up)
-            return false;
-    }
-    return true;
+    if (count > 1)
+        return false;
+    return mir_touch_event_action(tev, 0) == mir_touch_action_up;
 }
 }
 
