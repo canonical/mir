@@ -346,6 +346,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     ok = eglInitialize(egldisplay, NULL, NULL);
     CHECK(ok, "Can't eglInitialize");
 
+    EGLint alpha_bits = mir_eglapp_background_opacity == 1.0f ? 0 : rgb_bits;
     const EGLint attribs[] =
     {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -354,7 +355,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         EGL_RED_SIZE, rgb_bits,
         EGL_GREEN_SIZE, rgb_bits,
         EGL_BLUE_SIZE, rgb_bits,
-        EGL_ALPHA_SIZE, mir_eglapp_background_opacity == 1.0f ? 0 : rgb_bits,
+        EGL_ALPHA_SIZE, alpha_bits,
         EGL_NONE
     };
 
@@ -365,7 +366,22 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     MirPixelFormat pixel_format =
         mir_connection_get_egl_pixel_format(connection, egldisplay, eglconfig);
 
-    printf("Using Mir pixel format %d.\n", pixel_format);
+    printf("Mir chose pixel format %d.\n", pixel_format);
+    if (alpha_bits == 0)
+    {
+        /*
+         * If we are opaque then it's OK to switch pixel format slightly,
+         * to enable bypass/overlays to work. Otherwise the presence of an
+         * alpha channel would prevent them from being used.
+         * It would be really nice if Mesa just gave us the right answer in
+         * the first place though. (LP: #1480755)
+         */
+        if (pixel_format == mir_pixel_format_abgr_8888)
+            pixel_format = mir_pixel_format_xbgr_8888;
+        else if (pixel_format == mir_pixel_format_argb_8888)
+            pixel_format = mir_pixel_format_xrgb_8888;
+    }
+    printf("Using pixel format %d.\n", pixel_format);
 
     /* eglapps are interested in the screen size, so
        use mir_connection_create_display_config */

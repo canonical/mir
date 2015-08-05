@@ -19,12 +19,18 @@
 #ifndef MIR_FRONTEND_RESOURCE_CACHE_H_
 #define MIR_FRONTEND_RESOURCE_CACHE_H_
 
-#include "mir_protobuf.pb.h"
 #include "mir/fd.h"
 
 #include <map>
 #include <memory>
 #include <mutex>
+
+namespace google {
+namespace protobuf
+{
+class MessageLite;
+}
+}
 
 namespace mir
 {
@@ -34,9 +40,9 @@ namespace frontend
 class MessageResourceCache
 {
 public:
-    virtual void save_resource(google::protobuf::Message* key, std::shared_ptr<void> const& value) = 0;
-    virtual void free_resource(google::protobuf::Message* key) = 0;
-    virtual void save_fd(google::protobuf::Message* key, Fd const& fd) = 0;
+    virtual void save_resource(google::protobuf::MessageLite* key, std::shared_ptr<void> const& value) = 0;
+    virtual void free_resource(google::protobuf::MessageLite* key) = 0;
+    virtual void save_fd(google::protobuf::MessageLite* key, Fd const& fd) = 0;
 
     virtual ~MessageResourceCache() = default;
     MessageResourceCache() = default;
@@ -48,13 +54,13 @@ public:
 class ResourceCache : public MessageResourceCache
 {
 public:
-    void save_resource(google::protobuf::Message* key, std::shared_ptr<void> const& value);
-    void save_fd(google::protobuf::Message* key, Fd const& fd);
-    void free_resource(google::protobuf::Message* key);
+    void save_resource(google::protobuf::MessageLite* key, std::shared_ptr<void> const& value);
+    void save_fd(google::protobuf::MessageLite* key, Fd const& fd);
+    void free_resource(google::protobuf::MessageLite* key);
 
 private:
-    typedef std::map<google::protobuf::Message*, std::shared_ptr<void>> Resources;
-    typedef std::multimap<google::protobuf::Message*, mir::Fd> FdResources;
+    typedef std::map<google::protobuf::MessageLite*, std::shared_ptr<void>> Resources;
+    typedef std::multimap<google::protobuf::MessageLite*, mir::Fd> FdResources;
 
     std::mutex guard;
     Resources resources;

@@ -48,7 +48,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
         std::make_shared<mir::client::AtomicCallback<int32_t>>(),
         std::make_shared<mtd::NullClientEventSink>())),
     eventloop{std::make_shared<md::ThreadedDispatcher>("Mir/TestIPC", std::dynamic_pointer_cast<md::Dispatchable>(channel))},
-    display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
+    display_server(channel),
     maxwait(timeout_ms),
     connect_done_called(false),
     create_surface_called(false),
