@@ -464,6 +464,7 @@ bool me::WindowManager::handle_pointer_event(MirPointerEvent const* pev)
 
 namespace
 {
+
 bool any_touches_went_down(MirTouchEvent const* tev)
 {
     auto count = mir_touch_event_point_count(tev);
@@ -474,13 +475,21 @@ bool any_touches_went_down(MirTouchEvent const* tev)
     }
     return false;
 }
-bool last_touch_released(MirTouchEvent const* tev)
+
+int touches_released(MirTouchEvent const* tev)
 {
-    auto count = mir_touch_event_point_count(tev);
-    if (count > 1)
-        return false;
-    return mir_touch_event_action(tev, 0) == mir_touch_action_up;
+    int nfingers = mir_touch_event_point_count(tev);
+    int nfingers_up = 0;
+
+    for (int f = 0; f < nfingers; ++f)
+    {
+        if (mir_touch_event_action(tev, f) == mir_touch_action_up)
+            ++nfingers_up;
+    }
+
+    return nfingers_up;
 }
+
 }
 
 bool me::WindowManager::handle_touch_event(MirTouchEvent const* tev)
@@ -551,10 +560,10 @@ bool me::WindowManager::handle_touch_event(MirTouchEvent const* tev)
         old_pinch_diam = pinch_diam;
     }
 
-    auto gesture_ended = last_touch_released(tev);
+    int fingers_up = touches_released(tev);
 
-    if (max_fingers == 4 && gesture_ended)
-    { // Four fingers released
+    if (max_fingers == 4 && fingers_up > 0)
+    { // Four fingers were down and any number released
         geometry::Displacement dir = cursor - click;
         if (abs(dir.dx.as_int()) >= min_swipe_distance)
         {
@@ -565,7 +574,7 @@ bool me::WindowManager::handle_touch_event(MirTouchEvent const* tev)
         }
     }
 
-    if (fingers == 1 && gesture_ended)
+    if (fingers == 1 && fingers_up >= 1)
         max_fingers = 0;
 
     old_cursor = cursor;
