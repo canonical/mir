@@ -224,3 +224,16 @@ TEST_F(Stream, reports_format)
 {
     EXPECT_THAT(stream.pixel_format(), Eq(construction_format));
 }
+
+TEST_F(Stream, can_access_buffer_after_allocation)
+{
+    auto called = false;
+    mg::BufferProperties properties;
+    auto id = stream.allocate_buffer(properties);
+    stream.with_buffer(id, [](mg::Buffer& buffer)
+    {
+        called = true;
+        EXPECT_THAT(buffer.id(), Eq(id));
+    });
+    EXPECT_TRUE(called);
+}
