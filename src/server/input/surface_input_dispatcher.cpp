@@ -315,16 +315,6 @@ bool mi::SurfaceInputDispatcher::dispatch_touch(MirInputDeviceId id, MirTouchEve
     auto point_count = mir_touch_event_point_count(tev);
     
     auto& touch_state = ensure_touch_state(id);
-    if (touch_state.gesture_owner)
-    {
-        deliver(touch_state.gesture_owner, tev);
-        if (point_count == 1 && mir_touch_event_action(tev, 0) == mir_touch_action_up)
-        {
-            // Last touch is coming up. Gesture is over.
-            touch_state.gesture_owner = nullptr;
-        }
-        return true;
-    }
 
     // In this case where there is no gesture owner we will only deliver events if they signify the start of a new
     // gesture (as detected by this conditional). This prevents gesture ownership from transfering in the event
@@ -332,6 +322,7 @@ bool mi::SurfaceInputDispatcher::dispatch_touch(MirInputDeviceId id, MirTouchEve
     // to receive events).
     if (point_count == 1 && mir_touch_event_action(tev, 0) == mir_touch_action_down)
     {
+        // First finger has gone down. The previous gesture_owner is irrelevant.
         geom::Point event_x_y = { mir_touch_event_axis_value(tev, 0, mir_touch_axis_x),
                                   mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) };
 
@@ -342,6 +333,17 @@ bool mi::SurfaceInputDispatcher::dispatch_touch(MirInputDeviceId id, MirTouchEve
             deliver(target, tev);
             return true;
         }
+    }
+
+    if (touch_state.gesture_owner)
+    {
+        deliver(touch_state.gesture_owner, tev);
+        if (point_count == 1 && mir_touch_event_action(tev, 0) == mir_touch_action_up)
+        {
+            // Last touch is coming up. Gesture is over.
+            touch_state.gesture_owner = nullptr;
+        }
+        return true;
     }
         
     return false;
