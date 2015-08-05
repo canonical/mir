@@ -32,6 +32,10 @@
 
 namespace mir
 {
+namespace protobuf
+{
+class Buffer;
+}
 namespace client
 {
 class ClientBuffer;

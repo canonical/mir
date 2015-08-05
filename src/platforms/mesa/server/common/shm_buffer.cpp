@@ -45,8 +45,8 @@ bool get_gl_pixel_format(MirPixelFormat mir_format,
     // TODO: Big endian support
     GLenum const argb = GL_INVALID_ENUM;
     GLenum const abgr = GL_INVALID_ENUM;
-    GLenum const rgba = GL_RGBA;
-    GLenum const bgra = GL_BGRA_EXT;
+    //GLenum const rgba = GL_RGBA;
+    //GLenum const bgra = GL_BGRA_EXT;
 #endif
 
     static const struct
