@@ -244,11 +244,11 @@ public:
     {
         (void) buffer_id;
     }
-    void submit_buffer(mcl::ClientBuffer&) override
+    void submit_buffer(int id, mcl::ClientBuffer&) override
     {
         auto request = mcl::make_protobuf_object<mp::BufferRequest>();
         request->mutable_id()->set_value(stream_id);
-//        request->mutable_buffer()->set_buffer_id(wrapped.current_buffer_id());
+        request->mutable_buffer()->set_buffer_id(id);
         server.submit_buffer(request.get(), &protobuf_void,
             google::protobuf::NewCallback(google::protobuf::DoNothing));
     }
