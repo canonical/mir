@@ -293,12 +293,12 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-Description: Display server for Ubuntu - platform library for x11 Mesa
+Description: Display server for Ubuntu - platform library for X11 Mesa
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
  Contains the shared libraries required for the Mir server to interact with
- the x11 platform using the Mesa drivers.
+ the X11 platform using the Mesa drivers.
 
 Package: mir-platform-graphics-mesa-kms4
 Section: libs
