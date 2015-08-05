@@ -31,7 +31,7 @@ mgx::Platform::Platform(std::shared_ptr<mx::X11Connection> const& conn)
       udev{std::make_shared<mir::udev::Context>()},
       drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render)}
 {
-    if (!x11_connection)
+    if (!*x11_connection)
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
 
     drm->setup(udev);

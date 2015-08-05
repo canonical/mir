@@ -32,7 +32,7 @@ std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
     x11_connection = std::make_shared<mx::X11Connection>();
-    if (!x11_connection)
+    if (!*x11_connection)
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
 
     return std::make_shared<mgx::Platform>(x11_connection);
