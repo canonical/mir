@@ -20,7 +20,6 @@
 #define MIR_INPUT_LEGACY_INPUT_DISPATCHABLE_H_
 
 #include "mir/dispatch/dispatchable.h"
-#include "mir/dispatch/action_queue.h"
 
 namespace mir
 {
