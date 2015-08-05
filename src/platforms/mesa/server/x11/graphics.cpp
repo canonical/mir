@@ -26,16 +26,15 @@ namespace mgx = mg::X;
 
 std::shared_ptr<mx::X11Connection> x11_connection;
 
-__attribute__((constructor)) static void OpenDisplay()
-{
-    x11_connection = std::make_shared<mx::X11Connection>();
-}
-
 std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
+    x11_connection = std::make_shared<mx::X11Connection>();
+    if (!x11_connection)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
+
     return std::make_shared<mgx::Platform>(x11_connection);
 }
 

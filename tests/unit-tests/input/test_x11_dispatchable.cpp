@@ -30,23 +30,11 @@ namespace mtd = mir::test::doubles;
 
 using namespace ::testing;
 
-//extern std::shared_ptr<mir::X::X11Connection> x11_connection;
-
 namespace
 {
 
 struct X11DispatchableTest : ::testing::Test
 {
-    X11DispatchableTest()
-    {
-//        x11_connection.reset(new mir::X::X11Connection());
-    }
-
-    ~X11DispatchableTest()
-    {
-//        x11_connection.reset();
-    }
-
     NiceMock<mtd::MockInputSink> mock_input_sink;
     NiceMock<mtd::MockX11> mock_x11;
     mir::input::X::XDispatchable x11_dispatchable{std::make_shared<mir::X::X11Connection>(), 0};

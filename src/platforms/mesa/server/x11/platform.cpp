@@ -21,8 +21,6 @@
 #include "buffer_allocator.h"
 #include "ipc_operations.h"
 
-#include <boost/throw_exception.hpp>
-
 namespace mx = mir::X;
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -33,9 +31,6 @@ mgx::Platform::Platform(std::shared_ptr<mx::X11Connection> const& conn)
       udev{std::make_shared<mir::udev::Context>()},
       drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render)}
 {
-    if (!x11_connection)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
-
     drm->setup(udev);
     gbm.setup(*drm);
 }
