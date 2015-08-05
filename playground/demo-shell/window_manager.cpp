@@ -495,6 +495,15 @@ bool me::WindowManager::handle_touch_event(MirTouchEvent const* tev)
 
     int fingers = mir_touch_event_point_count(tev);
 
+    fprintf(stderr, "---- Touch event (%d fingers) ----\n", fingers);
+    for (int f = 0; f < fingers; ++f)
+    {
+        static const char* const action_str[3] = { "up", "down", "change"};
+        fprintf(stderr, "%d:%-7s",
+                f, action_str[mir_touch_event_action(tev,f)]);
+    }
+    fprintf(stderr, "\n");
+
     if (fingers > max_fingers)
         max_fingers = fingers;
 
