@@ -1040,7 +1040,8 @@ TEST_F(SessionMediator, allocates_from_the_correct_stream)
 
     auto mock_stream = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
     EXPECT_CALL(*mock_stream, allocate_buffer(properties))
-        .Times(num_requests);
+        .Times(num_requests)
+        .WillRepeatedly(Return(mg::BufferID{}));
 
     mediator.allocate_buffers(&request, &null, null_callback.get());
 }

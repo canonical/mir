@@ -158,8 +158,7 @@ bool mc::Stream::has_submitted_buffer() const
 
 mg::BufferID mc::Stream::allocate_buffer(mg::BufferProperties const& properties)
 {
-    buffers->add_buffer(properties);
-    return mg::BufferID{0};
+    return buffers->add_buffer(properties);
 }
 
 void mc::Stream::remove_buffer(mg::BufferID id)

@@ -233,7 +233,7 @@ TEST_F(Stream, can_access_buffer_after_allocation)
 {
     auto called = false;
     mg::BufferProperties properties;
-    auto id = stream.allocate_buffer(properties);
+    auto id = buffers.front()->id(); 
     stream.with_buffer(id, [&](mg::Buffer& buffer)
     {
         called = true;
