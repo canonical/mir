@@ -101,10 +101,12 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                     modifiers |=  mir_input_event_modifier_ctrl;
                 if (xkev.state & Mod1Mask)
                     modifiers |=  mir_input_event_modifier_alt;
+                if (xkev.state & Mod4Mask)
+                    modifiers |=  mir_input_event_modifier_meta;
 
-                std::chrono::time_point<std::chrono::steady_clock> tp{std::chrono::milliseconds{xkev.time}};
                 auto event_time =
-                    std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch());
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::milliseconds{xkev.time});
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                 for (int i=0; i<count; i++)
@@ -143,10 +145,6 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                     xbev.subwindow, xbev.time, xbev.x, xbev.y, xbev.x_root,
                     xbev.y_root, xbev.state, xbev.button, xbev.same_screen);
 #endif
-                std::chrono::time_point<std::chrono::steady_clock> tp{std::chrono::milliseconds{xbev.time}};
-                auto event_time =
-                    std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch());
-
                 MirInputEventModifiers modifiers = mir_input_event_modifier_none;
                 if (xbev.state & ShiftMask)
                     modifiers |= mir_input_event_modifier_shift;
@@ -154,6 +152,12 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                     modifiers |=  mir_input_event_modifier_ctrl;
                 if (xbev.state & Mod1Mask)
                     modifiers |=  mir_input_event_modifier_alt;
+                if (xbev.state & Mod4Mask)
+                    modifiers |=  mir_input_event_modifier_meta;
+
+                auto event_time =
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::milliseconds{xbev.time});
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                 mir::log_info("Mir button event : x=%d, y=%d, "
@@ -191,10 +195,6 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                     xmev.root, xmev.subwindow, xmev.time, xmev.x, xmev.y, xmev.x_root,
                     xmev.y_root, xmev.state, xmev.is_hint == NotifyNormal ? "no" : "yes", xmev.same_screen);
 #endif
-                std::chrono::time_point<std::chrono::steady_clock> tp{std::chrono::milliseconds{xmev.time}};
-                auto event_time =
-                    std::chrono::duration_cast<std::chrono::nanoseconds>(tp.time_since_epoch());
-
                 MirInputEventModifiers modifiers = mir_input_event_modifier_none;
                 if (xmev.state & ShiftMask)
                     modifiers |= mir_input_event_modifier_shift;
@@ -202,6 +202,12 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                     modifiers |=  mir_input_event_modifier_ctrl;
                 if (xmev.state & Mod1Mask)
                     modifiers |=  mir_input_event_modifier_alt;
+                if (xmev.state & Mod4Mask)
+                    modifiers |=  mir_input_event_modifier_meta;
+
+                auto event_time =
+                    std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::chrono::milliseconds{xmev.time});
 
                 MirPointerButtons buttons_pressed = 0;
                 if (xmev.state & Button1Mask)
