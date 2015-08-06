@@ -322,7 +322,6 @@ bool mi::SurfaceInputDispatcher::dispatch_touch(MirInputDeviceId id, MirTouchEve
     // to receive events).
     if (point_count == 1 && mir_touch_event_action(tev, 0) == mir_touch_action_down)
     {
-        // First finger has gone down. The previous gesture_owner is irrelevant.
         geom::Point event_x_y = { mir_touch_event_axis_value(tev, 0, mir_touch_axis_x),
                                   mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) };
 
