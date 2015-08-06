@@ -20,6 +20,7 @@
 
 #include "mir/input/platform.h"
 #include <memory>
+#include <X11/Xlib.h>
 
 namespace mir
 {
@@ -27,11 +28,6 @@ namespace mir
 namespace dispatch
 {
 class ActionQueue;
-}
-
-namespace X
-{
-class X11Connection;
 }
 
 namespace input
@@ -46,7 +42,7 @@ class XInputPlatform : public input::Platform
 public:
     explicit XInputPlatform(
         std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry,
-        std::shared_ptr<mir::X::X11Connection> const& conn);
+        std::shared_ptr<::Display> const& conn);
     ~XInputPlatform() = default;
 
     std::shared_ptr<dispatch::Dispatchable> dispatchable() override;

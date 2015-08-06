@@ -21,14 +21,10 @@
 
 #include "mir/dispatch/dispatchable.h"
 #include "mir/input/input_sink.h"
+#include <X11/Xlib.h>
 
 namespace mir
 {
-
-namespace X
-{
-class X11Connection;
-}
 
 namespace input
 {
@@ -38,7 +34,7 @@ struct XDispatchable : public dispatch::Dispatchable
 {
 public:
     XDispatchable(
-        std::shared_ptr<mir::X::X11Connection> const& conn,
+        std::shared_ptr<::Display> const& conn,
         int raw_fd);
 
     mir::Fd watch_fd() const override;
@@ -49,7 +45,7 @@ public:
     void unset_input_sink();
 
 private:
-    std::shared_ptr<mir::X::X11Connection> const x11_connection;
+    std::shared_ptr<::Display> const x11_connection;
     mir::Fd fd;
     InputSink *sink;
 };

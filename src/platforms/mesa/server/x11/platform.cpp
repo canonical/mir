@@ -21,17 +21,16 @@
 #include "buffer_allocator.h"
 #include "ipc_operations.h"
 
-namespace mx = mir::X;
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 namespace mgx = mg::X;
 
-mgx::Platform::Platform(std::shared_ptr<mx::X11Connection> const& conn)
+mgx::Platform::Platform(std::shared_ptr<::Display> const& conn)
     : x11_connection{conn},
       udev{std::make_shared<mir::udev::Context>()},
       drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render)}
 {
-    if (!*x11_connection)
+    if (!x11_connection)
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
 
     drm->setup(udev);
@@ -48,7 +47,7 @@ std::shared_ptr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<GLProgramFactory> const&,
     std::shared_ptr<GLConfig> const& /*gl_config*/)
 {
-    return std::make_shared<mgx::Display>(*x11_connection);
+    return std::make_shared<mgx::Display>(x11_connection.get());
 }
 
 std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const
@@ -58,5 +57,5 @@ std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() 
 
 EGLNativeDisplayType mgx::Platform::egl_native_display() const
 {
-    return eglGetDisplay(*x11_connection);
+    return eglGetDisplay(x11_connection.get());
 }

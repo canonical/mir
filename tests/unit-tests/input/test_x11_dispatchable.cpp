@@ -19,7 +19,6 @@
 #include "mir/events/event_private.h"
 #include "mir_toolkit/event.h"
 #include "src/platforms/mesa/server/x11/input/dispatchable.h"
-#include "src/platforms/mesa/server/x11/xserver_connection.h"
 #include "mir/test/doubles/mock_input_sink.h"
 #include "mir/test/doubles/mock_x11.h"
 
@@ -37,7 +36,10 @@ struct X11DispatchableTest : ::testing::Test
 {
     NiceMock<mtd::MockInputSink> mock_input_sink;
     NiceMock<mtd::MockX11> mock_x11;
-    mir::input::X::XDispatchable x11_dispatchable{std::make_shared<mir::X::X11Connection>(), 0};
+    mir::input::X::XDispatchable x11_dispatchable{
+        std::shared_ptr<::Display>(
+            XOpenDisplay(nullptr),
+            [](::Display* display) { XCloseDisplay(display); }), 0};
 };
 
 }

@@ -31,11 +31,6 @@ namespace dispatch
 class Dispatchable;
 }
 
-namespace X
-{
-class X11Connection;
-}
-
 namespace input
 {
 
@@ -46,7 +41,7 @@ class XDispatchable;
 class XInputDevice : public input::InputDevice
 {
 public:
-    XInputDevice(std::shared_ptr<mir::X::X11Connection> const& conn);
+    XInputDevice(std::shared_ptr<::Display> const& conn);
     ~XInputDevice() = default;
 
     std::shared_ptr<dispatch::Dispatchable> dispatchable() override;

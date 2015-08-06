@@ -17,15 +17,13 @@
  */
 
 #include "input_platform.h"
-#include "../xserver_connection.h"
 #include "mir/module_properties.h"
 
 namespace mo = mir::options;
 namespace mi = mir::input;
 namespace mix = mi::X;
-namespace mx = mir::X;
 
-extern std::shared_ptr<mx::X11Connection> x11_connection;
+extern std::shared_ptr<::Display> x11_connection;
 
 mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
