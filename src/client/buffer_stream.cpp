@@ -271,9 +271,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
     void deposit(mp::Buffer const& buffer, geom::Size, MirPixelFormat)
     {
-        printf("DEPOSIT!\n");
         vault.wire_transfer_inbound(buffer);
-        printf("DEPOSIT2!\n");
         current_buffer = vault.withdraw().get();
     }
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override
