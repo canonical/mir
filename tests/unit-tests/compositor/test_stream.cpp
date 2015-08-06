@@ -231,13 +231,14 @@ TEST_F(Stream, reports_format)
 
 TEST_F(Stream, can_access_buffer_after_allocation)
 {
-    auto called = false;
-    mg::BufferProperties properties;
-    auto id = buffers.front()->id(); 
-    stream.with_buffer(id, [&](mg::Buffer& buffer)
+    struct Callback
     {
-        called = true;
-        EXPECT_THAT(buffer.id(), Eq(id));
-    });
-    EXPECT_TRUE(called);
+        MOCK_METHOD1(called, void(mg::Buffer&));
+        void operator()(mg::Buffer& b)
+        {
+            called(b);
+        }
+    } mock_callback;
+    EXPECT_CALL(mock_callback, called(testing::Ref(*buffers.front())));
+    stream.with_buffer(buffers.front()->id(), std::ref(mock_callback));
 }
