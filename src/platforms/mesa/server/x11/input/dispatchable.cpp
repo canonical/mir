@@ -99,6 +99,8 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                     modifiers |=  mir_input_event_modifier_ctrl;
                 if (xkev.state & Mod1Mask)
                     modifiers |=  mir_input_event_modifier_alt;
+                if (xkev.state & Mod4Mask)
+                    modifiers |=  mir_input_event_modifier_meta;
 
                 auto event_time =
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -148,6 +150,8 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                     modifiers |=  mir_input_event_modifier_ctrl;
                 if (xbev.state & Mod1Mask)
                     modifiers |=  mir_input_event_modifier_alt;
+                if (xbev.state & Mod4Mask)
+                    modifiers |=  mir_input_event_modifier_meta;
 
                 auto event_time =
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -196,6 +200,8 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                     modifiers |=  mir_input_event_modifier_ctrl;
                 if (xmev.state & Mod1Mask)
                     modifiers |=  mir_input_event_modifier_alt;
+                if (xmev.state & Mod4Mask)
+                    modifiers |=  mir_input_event_modifier_meta;
 
                 auto event_time =
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
