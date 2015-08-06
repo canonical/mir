@@ -51,8 +51,6 @@ mcl::BufferVault::~BufferVault()
 {
     for(auto& it : buffers)
         server_requests->free_buffer(it.first);
-    for(auto& promise : promises)
-        promise.set_exception(make_exception_ptr(std::future_error(std::future_errc::broken_promise)));
 }
 
 std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
