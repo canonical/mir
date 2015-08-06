@@ -66,12 +66,8 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*
         drm_devices.match_sysname("renderD[0-9]*");
         drm_devices.scan_devices();
 
-        for (auto& device : drm_devices)
-        {
-            static_cast<void>(device);
-
+        if (drm_devices.begin() != drm_devices.end())
             return mg::PlatformPriority::best;
-        }
     }
     return mg::PlatformPriority::unsupported;
 }
