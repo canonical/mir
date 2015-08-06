@@ -310,16 +310,16 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirPointe
 bool mi::SurfaceInputDispatcher::dispatch_touch(MirInputDeviceId id, MirTouchEvent const* tev)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
-    // Either we have a gesture owner or a gesture is just beginning
 
     auto point_count = mir_touch_event_point_count(tev);
     
     auto& touch_state = ensure_touch_state(id);
 
-    // In this case where there is no gesture owner we will only deliver events if they signify the start of a new
-    // gesture (as detected by this conditional). This prevents gesture ownership from transfering in the event
-    // a gesture receiver closes mid gesture (e.g. when a surface closes mid swipe we do not want the surface under
-    // to receive events).
+    // We will only deliver events if they signify the start of a new
+    // gesture (as detected by this conditional). This prevents gesture
+    // ownership from transfering in the event a gesture receiver closes mid
+    // gesture (e.g. when a surface closes mid swipe we do not want the
+    // surface under to receive events).
     if (point_count == 1 && mir_touch_event_action(tev, 0) == mir_touch_action_down)
     {
         geom::Point event_x_y = { mir_touch_event_axis_value(tev, 0, mir_touch_axis_x),
