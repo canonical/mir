@@ -79,9 +79,10 @@ struct StubDisplayServer : mtd::StubDisplayServer
         google::protobuf::Closure* closure)
     {
         response->mutable_buffer_stream();
-        EXPECT_FALSE(response->buffer_stream().has_buffer());
+        auto before = response->buffer_stream().has_buffer();
         closure->Run();
-        EXPECT_FALSE(response->buffer_stream().has_buffer());
+        auto after = response->buffer_stream().has_buffer();
+        changed_during_create_surface_closure = before != after;
     }
 
     void create_buffer_stream(
@@ -89,13 +90,16 @@ struct StubDisplayServer : mtd::StubDisplayServer
         mp::BufferStream* response,
         google::protobuf::Closure* closure)
     {
-        EXPECT_FALSE(response->has_buffer());
+        auto before = response->has_buffer();
         closure->Run();
-        EXPECT_FALSE(response->has_buffer());
+        auto after = response->has_buffer();
+        changed_during_create_bstream_closure = before != after;
     }
 
     mp::Buffer* exchange_buffer_response;
     gp::Closure* exchange_closure;
+    bool changed_during_create_surface_closure;
+    bool changed_during_create_bstream_closure;
 };
 }
 
@@ -160,6 +164,7 @@ TEST(ProtobufMessageProcessor, doesnt_inject_buffers_when_creating_surface)
 
     std::vector<mir::Fd> fds;
     mp->dispatch(invocation, fds);
+    EXPECT_FALSE(stub_display_server.changed_during_create_surface_closure);
 }
 
 TEST(ProtobufMessageProcessor, doesnt_inject_buffers_when_creating_bstream)
@@ -189,4 +194,5 @@ TEST(ProtobufMessageProcessor, doesnt_inject_buffers_when_creating_bstream)
 
     std::vector<mir::Fd> fds;
     mp->dispatch(invocation, fds);
+    EXPECT_FALSE(stub_display_server.changed_during_create_bstream_closure);
 }
