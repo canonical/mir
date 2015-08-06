@@ -53,7 +53,6 @@ void invoke(
         ::google::protobuf::Closure* done),
         Invocation const& invocation)
 {
-    printf("WTF?\n");
     ParameterMessage parameter_message;
     if (!parameter_message.ParseFromString(invocation.parameters()))
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to parse message parameters!"));
@@ -71,7 +70,6 @@ void invoke(
                     invocation.id(),
                     &result_message));
 
-        printf("aabababb\n");
         (server->*function)(
             &parameter_message,
             &result_message,
