@@ -320,7 +320,8 @@ mcl::BufferStream::BufferStream(
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
     mp::BufferStream const& protobuf_bs,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
-    std::string const& surface_name)
+    std::string const& surface_name,
+    geom::Size ideal_size)
     : connection(connection),
       display_server(server),
       mode(mode),
@@ -328,7 +329,8 @@ mcl::BufferStream::BufferStream(
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(protobuf_bs)},
       swap_interval_(1),
       perf_report(perf_report),
-      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
+      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
+      ideal_buffer_size(ideal_size)
 {
     created(nullptr, nullptr);
     perf_report->name_surface(surface_name.c_str());
@@ -349,7 +351,8 @@ mcl::BufferStream::BufferStream(
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>()},
       swap_interval_(1),
       perf_report(perf_report),
-      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
+      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
+      ideal_buffer_size(parameters.width(), parameters.height())
 {
     perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
 
