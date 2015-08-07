@@ -358,24 +358,17 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     if (nbuffers <= 1)
         return;
 
-    /*
-     * We can't release the current_compositor_buffer because we need to keep
-     * a compositor buffer always-available. But there might be a new
-     * compositor buffer available to take its place immediately. Moving to
-     * that one immediately will free up the old compositor buffer, allowing
-     * us to call back the client with a buffer where otherwise we couldn't.
-     */
-    if (current_compositor_buffer == buffer.get() &&
-        !ready_to_composite_queue.empty() &&
-        buffers_owned_by_client.empty())
-    {
-        current_compositor_buffer = pop(ready_to_composite_queue);
-        current_buffer_users.clear();
-    }
 
     //mir::log_info("%p: compositor release2 %p", this, buffer.get());
     if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
+    else if (!ready_to_composite_queue.empty() &&
+             buffers_owned_by_client.empty())
+    {
+        current_compositor_buffer = pop(ready_to_composite_queue);
+        current_buffer_users.clear();
+        release(buffer.get(), std::move(lock));
+    }
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferQueue::snapshot_acquire()
