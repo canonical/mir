@@ -1015,3 +1015,59 @@ TEST_F(SessionMediator, sends_a_buffer_when_submit_buffer_is_called)
 
     mediator.submit_buffer(&request, &null, null_callback.get());
 }
+
+TEST_F(SessionMediator, allocates_from_the_correct_stream)
+{
+    using namespace testing;
+    auto num_requests = 3u;
+    mp::Void null;
+    mp::BufferStreamId id;
+    id.set_value(0);
+    mp::BufferAllocation request;
+    *request.mutable_id() = id;
+    mg::BufferProperties properties(geom::Size{34, 84}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware);
+    for(auto i = 0u; i < num_requests; i++)
+    {
+        auto buffer_request = request.add_buffer_requests();
+        buffer_request->set_width(properties.size.width.as_int());
+        buffer_request->set_height(properties.size.height.as_int());
+        buffer_request->set_pixel_format(properties.format);
+        buffer_request->set_buffer_usage((int)properties.usage);
+    }
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
+
+    auto mock_stream = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
+    EXPECT_CALL(*mock_stream, allocate_buffer(properties))
+        .Times(num_requests)
+        .WillRepeatedly(Return(mg::BufferID{}));
+
+    mediator.allocate_buffers(&request, &null, null_callback.get());
+}
+
+TEST_F(SessionMediator, removes_buffer_from_the_correct_stream)
+{
+    using namespace testing;
+    auto num_requests = 3u;
+    mp::Void null;
+    mp::BufferStreamId id;
+    id.set_value(0);
+    mp::BufferRelease request;
+    *request.mutable_id() = id;
+    auto buffer_id = 442u;
+    for(auto i = 0u; i < num_requests; i++)
+    {
+        auto buffer_request = request.add_buffers();
+        buffer_request->set_buffer_id(buffer_id);
+    }
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
+
+    auto mock_stream = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
+    EXPECT_CALL(*mock_stream, remove_buffer(mg::BufferID{buffer_id}))
+        .Times(num_requests);
+
+    mediator.release_buffers(&request, &null, null_callback.get());
+}

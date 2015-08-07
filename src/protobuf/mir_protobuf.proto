@@ -117,6 +117,7 @@ message BufferAllocation {
 
 message BufferRelease {
   repeated Buffer buffers = 1;  
+  optional BufferStreamId id = 2;
 };
 
 message BufferRequest {

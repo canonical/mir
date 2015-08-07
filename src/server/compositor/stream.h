@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -17,47 +17,36 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_BUFFER_STREAM_SCENE_H_
-#define MIR_COMPOSITOR_BUFFER_STREAM_SCENE_H_
+#ifndef MIR_COMPOSITOR_STREAM_H_
+#define MIR_COMPOSITOR_STREAM_H_
 
 #include "mir/compositor/buffer_stream.h"
 #include "mir/scene/surface_observers.h"
-
+#include "mir/frontend/buffer_stream_id.h"
+#include "mir/geometry/size.h"
+#include "multi_monitor_arbiter.h"
 #include <mutex>
+#include <memory>
 
 namespace mir
 {
+namespace frontend { class ClientBuffers; }
 namespace compositor
 {
-
-class BufferIDUniqueGenerator;
-class BufferBundle;
-class BackBufferStrategy;
-
-class BufferStreamSurfaces : public BufferStream
+class Schedule;
+class Stream : public BufferStream
 {
 public:
-    BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& swapper);
-    ~BufferStreamSurfaces();
+    Stream(std::unique_ptr<frontend::ClientBuffers>, geometry::Size sz, MirPixelFormat format);
 
-    //from mf::BufferStream
     void swap_buffers(
         graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
     void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec) override;
     MirPixelFormat pixel_format() const override;
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer) override;
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) override;
-    graphics::BufferID allocate_buffer(graphics::BufferProperties const&) override;
-    void remove_buffer(graphics::BufferID) override;
-    void with_buffer(graphics::BufferID id, std::function<void(graphics::Buffer&)> const& fn) override;
-
-    //from mc::BufferStream
-    void acquire_client_buffer(std::function<void(graphics::Buffer* buffer)> complete);
-    void release_client_buffer(graphics::Buffer* buf);
-
     std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(void const* user_id) override;
-
     geometry::Size stream_size() override;
     void resize(geometry::Size const& size) override;
     void allow_framedropping(bool) override;
@@ -65,19 +54,26 @@ public:
     int buffers_ready_for_compositor(void const* user_id) const override;
     void drop_old_buffers() override;
     bool has_submitted_buffer() const override;
-
-protected:
-    BufferStreamSurfaces(const BufferStreamSurfaces&) = delete;
-    BufferStreamSurfaces& operator=(const BufferStreamSurfaces&) = delete;
+    graphics::BufferID allocate_buffer(graphics::BufferProperties const&) override;
+    void remove_buffer(graphics::BufferID) override;
+    void with_buffer(graphics::BufferID id, std::function<void(graphics::Buffer&)> const& fn) override;
 
 private:
+    enum class ScheduleMode;
+    void transition_schedule(std::shared_ptr<Schedule>&& new_schedule, std::lock_guard<std::mutex> const&);
+
     std::mutex mutable mutex;
-    std::shared_ptr<BufferBundle> const buffer_bundle;
-    scene::SurfaceObservers observers;
+    ScheduleMode schedule_mode;
+    std::shared_ptr<Schedule> schedule;
+    std::shared_ptr<frontend::ClientBuffers> buffers;
+    std::shared_ptr<MultiMonitorArbiter> arbiter;
+    geometry::Size size; 
+    MirPixelFormat const pf;
     bool first_frame_posted;
+
+    scene::SurfaceObservers observers;
 };
-
 }
 }
 
-#endif /* MIR_COMPOSITOR_BUFFER_STREAM_SCENE_H_ */
+#endif /* MIR_COMPOSITOR_STREAM_H_ */
