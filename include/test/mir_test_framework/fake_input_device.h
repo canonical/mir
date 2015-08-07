@@ -41,6 +41,7 @@ public:
     FakeInputDevice() = default;
     virtual ~FakeInputDevice() = default;
 
+    virtual void emit_runtime_error() = 0;
     virtual void emit_event(synthesis::KeyParameters const& key) = 0;
     virtual void emit_event(synthesis::ButtonParameters const& button) = 0;
     virtual void emit_event(synthesis::MotionParameters const& motion) = 0;

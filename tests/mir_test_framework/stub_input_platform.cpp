@@ -46,9 +46,9 @@ void mtf::StubInputPlatform::start()
     for (auto const& dev : device_store)
     {
         auto device = dev.lock();
-        registry->add_device(device);
+        if (device)
+            registry->add_device(device);
     }
-    device_store.clear();
 }
 
 std::shared_ptr<mir::dispatch::Dispatchable> mtf::StubInputPlatform::dispatchable()
@@ -58,6 +58,12 @@ std::shared_ptr<mir::dispatch::Dispatchable> mtf::StubInputPlatform::dispatchabl
 
 void mtf::StubInputPlatform::stop()
 {
+    for (auto const& dev : device_store)
+    {
+        auto device = dev.lock();
+        if (device)
+            registry->remove_device(device);
+    }
 }
 
 void mtf::StubInputPlatform::add(std::shared_ptr<mir::input::InputDevice> const& dev)
