@@ -489,7 +489,7 @@ TEST_P(WithAnyNumberOfBuffers, compositor_can_acquire_and_release)
 }
 
 TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
-{
+{   // Regression test for LP: #1480164
     q.allow_framedropping(false);
 
     auto onscreen = q.compositor_acquire(this);
