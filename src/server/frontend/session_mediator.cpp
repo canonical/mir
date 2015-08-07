@@ -162,10 +162,13 @@ void mf::SessionMediator::advance_buffer(
         old_buffer,
         [this, stream_id, complete](mg::Buffer* new_buffer)
         {
-            if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
-                complete(new_buffer, mg::BufferIpcMsgType::update_msg);
-            else
-                complete(new_buffer, mg::BufferIpcMsgType::full_msg);
+            if (new_buffer)
+            {
+                if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
+                    complete(new_buffer, mg::BufferIpcMsgType::update_msg);
+                else
+                    complete(new_buffer, mg::BufferIpcMsgType::full_msg);
+            }
         });
 }
 
@@ -297,11 +300,9 @@ void mf::SessionMediator::create_surface(
         [this, surf_id, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
-            response->mutable_buffer_stream()->mutable_id()->set_value(
-               surf_id.as_value());
-            pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(),
-                         client_buffer,
-                         msg_type);
+            response->mutable_buffer_stream()->mutable_id()->set_value(surf_id.as_value());
+            if (client_buffer)
+                pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(), client_buffer, msg_type);
 
             done->Run();
         });
@@ -369,56 +370,35 @@ void mf::SessionMediator::submit_buffer(
 {
     auto const session = weak_session.lock();
     if (!session) BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    report->session_submit_buffer_called(session->name());
     
     mf::BufferStreamId const stream_id{request->id().value()};
     mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
-
     auto stream = session->get_buffer_stream(stream_id);
-    stream->with_buffer(buffer_id, [&, this](mg::Buffer& buffer)
-    {
-        mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
-        ipc_operations->unpack_buffer(request_msg, *buffer_stream_tracker.last_buffer(stream_id));
-        stream->swap_buffers(&buffer,
-            [this, stream_id, done](mg::Buffer* new_buffer)
-            { //legacy behavior
-                if (new_buffer)
-                {
-                    if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
-                        event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::update_msg);
-                    else
-                        event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::full_msg);
-                }
-            });
-    });
 
-    done->Run();
-
-
-#if 0
-    mf::BufferStreamId const stream_id{request->id().value()};
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
-    ipc_operations->unpack_buffer(request_msg, *buffer_stream_tracker.last_buffer(stream_id));
-
-    mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
-    auto old_buffer = buffer_stream_tracker.buffer_from(buffer_id);
-
-    auto const session = weak_session.lock();
-    if (!session) BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-    report->session_submit_buffer_called(session->name());
-
-    auto stream = session->get_buffer_stream(stream_id);
-    stream->swap_buffers(old_buffer,
-        [this, stream_id, done](mg::Buffer* new_buffer)
+    if (mg::Buffer* buffer = buffer_stream_tracker.last_buffer(stream_id))
+    {
+        ipc_operations->unpack_buffer(request_msg, *buffer);
+        stream->swap_buffers(buffer,
+            [this, stream_id](mg::Buffer* new_buffer)
+            {
+                if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
+                    event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::update_msg);
+                else
+                    event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::full_msg);
+            });
+    }
+    else
+    {
+        stream->with_buffer(buffer_id, [&, this](mg::Buffer& buffer)
         {
-            if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
-                event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::update_msg);
-            else
-                event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::full_msg);
+            ipc_operations->unpack_buffer(request_msg, buffer);
+            stream->swap_buffers(&buffer, [](mg::Buffer*) {});
         });
+    }
 
     done->Run();
-#endif
-
 }
 
 void mf::SessionMediator::allocate_buffers( 
