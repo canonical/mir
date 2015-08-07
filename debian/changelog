@@ -27,6 +27,7 @@ mir (0.15.0-0ubuntu1) UNRELEASED; urgency=medium
         turned it on permanently for all continuous integration in future.
       . Added support for relative pointer motion events (e.g. for gaming).
     - Bug fixes:
+      . Fix focus issues breaking autopilot tests entering text (LP: #1468029)
       . Fix mir tests failure on armhf with GCC5 (LP: #1478213)
       . mir_buffer_stream_swap_buffers_sync can hang constraints (LP: #1479899)
       . Loading libmirclient.so twice leads to a segfault in libmirprotobuf.so 
@@ -41,10 +42,16 @@ mir (0.15.0-0ubuntu1) UNRELEASED; urgency=medium
         (LP: #1473869)
       . USC crash on multimonitor unplug [std::exception::what: error during
         hwc prepare()] (LP: #1474891)
+      . [regression] Input focus delay after switching app back into focus
+        (LP: #1480654)
+      . GLibMainLoopTest.propagates_exception_from_server_action fails with 
+        GCC 5 in armhf (LP: #1482274)
       . [enhancement] Mir lacks relative mouse support (LP: #1276322)
       . ShmBuffer ignores pixel_format (LP: #1424909)
       . Fullscreen bypassed clients stutter with double buffers when other
         clients are running (LP: #1447896)
+      . [regression] Demo servers crash on start-up if MIR_ENABLE_TESTS=OFF
+        (LP: #1439078)
       . [regression] The software cursor has a rectangular shadow around it
         in mir_proving_server (LP: #1447911)
       . TestClientCursorAPI.cursor_passed_through_nested_server fails 
@@ -56,6 +63,10 @@ mir (0.15.0-0ubuntu1) UNRELEASED; urgency=medium
         is hot-plugged (LP: #1471858)
       . [regression] Clients are blocked in swap buffers when the screen turns
         off (LP: #1475120)
+      . [regression] Some Mir EGL demos don't get bypassed any more in
+        fullscreen (LP: #1480755)
+      . [regression] Multi-finger gestures are often not detected as finished
+        (LP: #1481570)
       . Connection error when no client-platform (drivers) installed is
         confusing (LP: #1473268)
       . Compositor report shows overlays ("bypass") is never used by
