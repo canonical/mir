@@ -162,13 +162,10 @@ void mf::SessionMediator::advance_buffer(
         old_buffer,
         [this, stream_id, complete](mg::Buffer* new_buffer)
         {
-            if (new_buffer)
-            {
-                if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
-                    complete(new_buffer, mg::BufferIpcMsgType::update_msg);
-                else
-                    complete(new_buffer, mg::BufferIpcMsgType::full_msg);
-            }
+            if (!new_buffer || buffer_stream_tracker.track_buffer(stream_id, new_buffer))
+                complete(new_buffer, mg::BufferIpcMsgType::update_msg);
+            else
+                complete(new_buffer, mg::BufferIpcMsgType::full_msg);
         });
 }
 
