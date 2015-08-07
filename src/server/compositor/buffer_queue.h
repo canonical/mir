@@ -114,6 +114,7 @@ private:
     graphics::BufferProperties the_properties;
     bool force_new_compositor_buffer;
     bool callbacks_allowed;
+    bool single_monitor;
 
     std::condition_variable snapshot_released;
     std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
