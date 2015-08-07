@@ -42,10 +42,10 @@ public:
 
     std::shared_ptr<ClientBufferStream> make_consumer_stream(
         MirConnection*, rpc::DisplayServer& server,
-        protobuf::BufferStream const& protobuf_bs, std::string const& surface_name) override;
+        protobuf::BufferStream const& protobuf_bs, std::string const& surface_name, geometry::Size) override;
     std::shared_ptr<ClientBufferStream> make_producer_stream(
         MirConnection*, rpc::DisplayServer& server,
-        protobuf::BufferStream const& protobuf_bs, std::string const& surface_name) override;
+        protobuf::BufferStream const& protobuf_bs, std::string const& surface_name, geometry::Size) override;
 
     ClientBufferStream* make_producer_stream(
         MirConnection*,
