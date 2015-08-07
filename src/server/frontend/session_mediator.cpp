@@ -722,7 +722,8 @@ void mf::SessionMediator::create_buffer_stream(
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
             auto buffer = response->mutable_buffer();
-            pack_protobuf_buffer(*buffer, client_buffer, msg_type);
+            if (client_buffer)
+                pack_protobuf_buffer(*buffer, client_buffer, msg_type);
 
             done->Run();
         });
