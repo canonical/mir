@@ -358,8 +358,6 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     if (nbuffers <= 1)
         return;
 
-
-    //mir::log_info("%p: compositor release2 %p", this, buffer.get());
     if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
     else if (!ready_to_composite_queue.empty() &&
@@ -369,6 +367,7 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
         current_buffer_users.clear();
         release(buffer.get(), std::move(lock));
     }
+    //mir::log_info("%p: compositor release2 %p", this, buffer.get());
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferQueue::snapshot_acquire()
