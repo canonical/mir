@@ -32,23 +32,10 @@
 
 #include <libinput.h>
 
-
 namespace mi = mir::input;
-namespace mo = mir::options;
 namespace md = mir::dispatch;
 namespace mu = mir::udev;
 namespace mie = mi::evdev;
-
-namespace
-{
-char const* const host_socket_opt = "host-socket";
-mir::ModuleProperties const description = {
-    "evdev-input",
-    MIR_VERSION_MAJOR,
-    MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
-};
-}
 
 struct mie::MonitorDispatchable : md::Dispatchable
 {
@@ -80,15 +67,27 @@ struct mie::MonitorDispatchable : md::Dispatchable
     mir::Fd fd;
 };
 
+mie::Platform::DeviceInfo::DeviceInfo(char const* device_path,
+                                      LibInputDevicePtr ptr,
+                                      std::shared_ptr<LibInputDevice> const& device)
+    : first_device{std::move(ptr)}, group{libinput_device_get_device_group(first_device.get())}, device(device)
+{
+    open_nodes.emplace_back(device_path);
+}
+
+void mie::Platform::DeviceInfo::add_to_group(char const* path)
+{
+    open_nodes.emplace_back(path);
+    device->open_device_of_group(path);
+}
+
 mie::Platform::Platform(std::shared_ptr<InputDeviceRegistry> const& registry,
-                        std::shared_ptr<InputReport> const& report,
-                        std::unique_ptr<udev::Context>&& udev_context,
-                        std::unique_ptr<udev::Monitor>&& monitor) :
-    report(report),
-    udev_context(std::move(udev_context)),
-    monitor(std::move(monitor)),
-    input_device_registry(registry),
-    monitor_dispatchable(std::make_shared<MonitorDispatchable>(*this, this->monitor->fd()))
+                              std::shared_ptr<InputReport> const& report,
+                              std::unique_ptr<udev::Context>&& udev_context,
+                              std::unique_ptr<udev::Monitor>&& monitor)
+    : report(report), udev_context(std::move(udev_context)), monitor(std::move(monitor)),
+      input_device_registry(registry),
+      monitor_dispatchable(std::make_shared<MonitorDispatchable>(*this, this->monitor->fd())), lib{make_libinput()}
 {
     this->monitor->filter_by_subsystem("input");
     this->monitor->enable();
@@ -138,37 +137,37 @@ void mie::Platform::device_added(mu::Device const& dev)
     if (end(devices) != find_device(dev.devnode()))
         return;
 
-    auto lib = make_libinput();
     auto device_ptr = make_libinput_device(lib, dev.devnode());
 
     // libinput might refuse to open certain devices nodes like /dev/input/mice
     // or ignore devices with odd evdev bits/capabilities set
     if (!device_ptr)
     {
-        report->failed_to_open_input_device(dev.devnode(), description.name);
+        report->failed_to_open_input_device(dev.devnode(), "evdev-input");
         log_info("libinput refused to open device %s", dev.devnode());
         return;
     }
 
-    if (end(devices) != find_device(libinput_device_get_device_group(device_ptr.get())))
+    auto device_it = find_device(libinput_device_get_device_group(device_ptr.get()));
+    if (end(devices) != device_it)
     {
+        device_it->add_to_group(dev.devnode());
         mir::log_debug("Device %s is part of an already opened device group", dev.devnode());
         return;
     }
 
     try
     {
-        auto input_dev = create_device(dev);
+        devices.emplace_back(dev.devnode(), std::move(device_ptr), create_device(dev));
 
-        input_device_registry->add_device(input_dev);
-        devices.emplace_back(dev.devnode(), input_dev);
+        input_device_registry->add_device(devices.back().device);
 
         mir::log_info("Input device %s opened", dev.devnode());
-        report->opened_input_device(dev.devnode(), description.name);
+        report->opened_input_device(dev.devnode(), "evdev-input");
     } catch(...)
     {
         mir::log_error("Failure opening device %s", dev.devnode());
-        report->failed_to_open_input_device(dev.devnode(), description.name);
+        report->failed_to_open_input_device(dev.devnode(), "evdev-input");
     }
 }
 
@@ -185,7 +184,7 @@ void mie::Platform::device_removed(mu::Device const& dev)
         return;
 
     mir::log_info("Input device %s removed", dev.devnode());
-    input_device_registry->remove_device(known_device_pos->second);
+    input_device_registry->remove_device(known_device_pos->device);
     devices.erase(known_device_pos);
 }
 
@@ -195,9 +194,9 @@ auto mie::Platform::find_device(char const* devnode) -> decltype(devices)::itera
     return std::find_if(
         begin(devices),
         end(devices),
-        [devnode](decltype(devices)::value_type const& item)
+        [devnode](auto const& item)
         {
-            return devnode == item.first;
+            return end(item.open_nodes) != find(begin(item.open_nodes), end(item.open_nodes), std::string{devnode});
         }
         );
 }
@@ -209,57 +208,24 @@ auto mie::Platform::find_device(libinput_device_group const* devgroup) -> declty
     return std::find_if(
         begin(devices),
         end(devices),
-        [devgroup](decltype(devices)::value_type const& item)
+        [devgroup](auto const& item)
         {
-            return devgroup == libinput_device_get_device_group(item.second->device());
+            return devgroup == item.group;
         }
         );
 }
 
-void mie::Platform::device_changed(mu::Device const& /*dev*/)
+void mie::Platform::device_changed(mu::Device const& dev)
 {
-    // TODO shall we reopen the device?
+    device_removed(dev);
+    device_added(dev);
 }
 
 void mie::Platform::stop()
 {
     while (!devices.empty())
     {
-        input_device_registry->remove_device(devices.back().second);
+        input_device_registry->remove_device(devices.back().device);
         devices.pop_back();
     }
 }
-
-extern "C" mir::UniqueModulePtr<mi::Platform> create_input_platform(
-    std::shared_ptr<mo::Option> const& /*options*/,
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
-    std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
-    std::shared_ptr<mi::InputReport> const& report)
-{
-    auto ctx = std::make_unique<mu::Context>();
-    auto monitor = std::make_unique<mu::Monitor>(*ctx.get());
-    return mir::make_module_ptr<mie::Platform>(input_device_registry, report, std::move(ctx), std::move(monitor));
-}
-
-extern "C" void add_input_platform_options(
-    boost::program_options::options_description& /*config*/)
-{
-    // no options to add yet
-}
-
-extern "C" mi::PlatformPriority probe_input_platform(
-    mo::Option const& options)
-{
-    if (options.is_set(host_socket_opt))
-    {
-        return mi::PlatformPriority::unsupported;
-    }
-    return mi::PlatformPriority::supported;
-}
-
-extern "C" mir::ModuleProperties const* describe_input_module()
-{
-    return &description;
-}
-
-

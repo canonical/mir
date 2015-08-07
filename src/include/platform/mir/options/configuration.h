@@ -54,7 +54,6 @@ extern char const* const name_opt;
 extern char const* const offscreen_opt;
 
 extern char const* const enable_key_repeat_opt;
-extern char const* const enable_legacy_input_stack;
 
 extern char const* const off_opt_value;
 extern char const* const log_opt_value;

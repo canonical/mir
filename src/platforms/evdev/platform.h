@@ -19,7 +19,11 @@
 #ifndef MIR_INPUT_EVDEV_PLATFORM_H_
 #define MIR_INPUT_EVDEV_PLATFORM_H_
 
+#include "libinput_ptr.h"
+#include "libinput_device_ptr.h"
+
 #include "mir/input/platform.h"
+
 #include <vector>
 
 struct libinput_device_group;
@@ -46,8 +50,8 @@ class Platform : public input::Platform
 public:
     Platform(std::shared_ptr<InputDeviceRegistry> const& registry,
              std::shared_ptr<InputReport> const& report,
-             std::unique_ptr<udev::Context> && udev_context,
-             std::unique_ptr<udev::Monitor> && monitor);
+             std::unique_ptr<udev::Context>&& udev_context,
+             std::unique_ptr<udev::Monitor>&& monitor);
     std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
     void start() override;
     void stop() override;
@@ -66,13 +70,23 @@ private:
     std::shared_ptr<InputDeviceRegistry> const input_device_registry;
     std::shared_ptr<MonitorDispatchable> const monitor_dispatchable;
 
-    std::vector<std::pair<std::string,std::shared_ptr<LibInputDevice>>> devices;
+    LibInputPtr const lib;
+    struct DeviceInfo
+    {
+        DeviceInfo(char const* device_path, LibInputDevicePtr ptr, std::shared_ptr<LibInputDevice> const& device);
+        void add_to_group(char const* device_path);
+
+        std::vector<std::string> open_nodes;
+        LibInputDevicePtr first_device;
+        libinput_device_group* group;
+        std::shared_ptr<LibInputDevice> device;
+    };
+    std::vector<DeviceInfo> devices;
     auto find_device(char const* devnode) -> decltype(devices)::iterator;
     auto find_device(libinput_device_group const* group) -> decltype(devices)::iterator;
 
     friend class MonitorDispatchable;
 };
-
 }
 }
 }

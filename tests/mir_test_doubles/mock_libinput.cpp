@@ -288,3 +288,8 @@ char const* libinput_device_get_sysname(libinput_device* device)
 {
     return global_libinput->libinput_device_get_sysname(device);
 }
+
+libinput_device_group* libinput_device_get_device_group(libinput_device* device)
+{
+    return global_libinput->libinput_device_get_device_group(device);
+}

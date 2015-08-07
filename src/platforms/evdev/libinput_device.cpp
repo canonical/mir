@@ -81,8 +81,6 @@ void null_deleter(MirEvent *) {}
 mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& report,
                                     LibInputPtr library, char const* path)
     : report{report}, lib{std::move(library)},
-      path(path),
-      dev(mie::make_libinput_device(lib, path)),
       dispatchable_fd{std::make_shared<DispatchableFd>(
             mir::Fd(mir::IntOwnedFd{libinput_get_fd(lib.get())}),
             [this]()
@@ -95,6 +93,8 @@ mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& repo
       modifier_state{0},
       button_state{0}
 {
+      paths.emplace_back(path);
+      devices.emplace_back(mie::make_libinput_device(lib, paths.back().c_str()));
 }
 
 mie::LibInputDevice::~LibInputDevice() = default;
@@ -107,13 +107,12 @@ std::shared_ptr<mir::dispatch::Dispatchable> mie::LibInputDevice::dispatchable()
 void mie::LibInputDevice::start(InputSink* sink)
 {
     this->sink = sink;
-    // maybe do the add path only here, hence delay device open till here?
 }
 
 void mie::LibInputDevice::stop()
 {
     sink = nullptr;
-    // how to stop??? hmm we could stop and then reopen..
+    devices.clear();
 }
 
 void mie::LibInputDevice::process_event(libinput_event* event)
@@ -367,12 +366,16 @@ void mie::LibInputDevice::add_touch_motion_event(libinput_event_touch* touch)
 
 mi::InputDeviceInfo mie::LibInputDevice::get_device_info()
 {
+    auto const& dev = devices.front();
     std::string name = libinput_device_get_name(dev.get());
     std::stringstream unique_id(name);
     unique_id << '-' << libinput_device_get_sysname(dev.get()) << '-' <<
         libinput_device_get_id_vendor(dev.get()) << '-' <<
         libinput_device_get_id_product(dev.get());
-    mi::DeviceCapabilities caps = mie::detect_device_capabilities(path.c_str());
+    mi::DeviceCapabilities caps;
+
+    for (auto const& path : paths)
+        caps |= mie::detect_device_capabilities(path.c_str());
 
     return mi::InputDeviceInfo{0, name, unique_id.str(), caps};
 }
@@ -380,5 +383,11 @@ mi::InputDeviceInfo mie::LibInputDevice::get_device_info()
 
 libinput_device*  mie::LibInputDevice::device()
 {
-    return dev.get();
+    return devices.front().get();
+}
+
+void mie::LibInputDevice::open_device_of_group(char const* path)
+{
+    paths.emplace_back(path);
+    devices.emplace_back(mie::make_libinput_device(lib, path));
 }

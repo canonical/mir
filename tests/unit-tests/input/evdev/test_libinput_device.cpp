@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -94,6 +94,24 @@ TEST_F(LibInputDevice, start_creates_and_unrefs_libinput_device_from_path)
     EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device))
         .Times(1);
     mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput(), path);
+    dev.start(&mock_sink);
+}
+
+TEST_F(LibInputDevice, open_device_of_grou)
+{
+    using namespace ::testing;
+    char const* first_dev = "/path/to/dev1";
+    char const* second_dev = "/path/to/dev2";
+    InSequence seq;
+    EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(first_dev)));
+    // according to manual libinput_path_add_device creates a temporary device with a ref count 0.
+    // hence it needs a manual ref call
+    EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device));
+    EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(second_dev)));
+    EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device));
+
+    mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput(), first_dev);
+    dev.open_device_of_group(second_dev);
     dev.start(&mock_sink);
 }
 

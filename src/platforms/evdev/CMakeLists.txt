@@ -15,10 +15,11 @@ add_library(mirplatforminputevdevobjects OBJECT
     libinput_device.cpp
     libinput_device_ptr.cpp
     libinput_ptr.cpp
+    platform.cpp
     )
 
 add_library(mirplatforminputevdev MODULE
-  platform.cpp
+  platform_factory.cpp
   $<TARGET_OBJECTS:mirplatforminputevdevobjects>
   $<TARGET_OBJECTS:mirevdevutilsobjects>
 )

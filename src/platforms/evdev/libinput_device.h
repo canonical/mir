@@ -27,6 +27,8 @@
 #include "mir_toolkit/event.h"
 #include "mir/events/event_builders.h"
 
+#include <vector>
+
 struct libinput_event;
 struct libinput_event_keyboard;
 struct libinput_event_touch;
@@ -54,6 +56,7 @@ public:
 
     void process_event(libinput_event* event);
     ::libinput_device* device();
+    void open_device_of_group(char const* path);
 private:
     EventUPtr convert_event(libinput_event_keyboard* keyboard);
     EventUPtr convert_button_event(libinput_event_pointer* pointer);
@@ -67,8 +70,8 @@ private:
 
     std::shared_ptr<InputReport> report;
     LibInputPtr lib;
-    std::string path;
-    LibInputDevicePtr dev;
+    std::vector<std::string> paths;
+    std::vector<LibInputDevicePtr> devices;
     std::shared_ptr<dispatch::Dispatchable> dispatchable_fd;
 
     InputSink *sink{nullptr};

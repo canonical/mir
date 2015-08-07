@@ -91,7 +91,7 @@ public:
     MOCK_METHOD1(libinput_device_get_id_product, unsigned int(libinput_device*));
     MOCK_METHOD1(libinput_device_get_id_vendor, unsigned int(libinput_device*));
     MOCK_METHOD1(libinput_device_get_sysname, char const*(libinput_device*));
-
+    MOCK_METHOD1(libinput_device_get_device_group, libinput_device_group*(libinput_device*));
 };
 
 }
