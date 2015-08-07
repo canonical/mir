@@ -392,7 +392,7 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
         buffer_depository = std::make_unique<NewBufferSemantics>(
             client_platform->create_buffer_factory(),
             std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
-            geom::Size{0,0}, mir_pixel_format_abgr_8888, 0, initial_nbuffers);
+            ideal_buffer_size, mir_pixel_format_abgr_8888, 0, initial_nbuffers);
     }
 
 
