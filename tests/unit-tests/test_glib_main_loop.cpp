@@ -74,7 +74,7 @@ void execute_in_forked_process(
         mir_test_framework::Process child{pid};
         // Note: valgrind on armhf can very slow when dealing with forks,
         // so give it enough time.
-        auto const result = child.wait_for_termination(std::chrono::seconds{10});
+        auto const result = child.wait_for_termination(std::chrono::seconds{30});
         EXPECT_TRUE(result.succeeded());
     }
 }
@@ -771,7 +771,7 @@ TEST_F(GLibMainLoopTest, can_be_rerun_after_exception)
     execute_in_forked_process(this,
         [&]
         {
-            ml.enqueue(this, [] { throw std::runtime_error("server action error"); });
+            ml.enqueue(this, [] { throw std::runtime_error("server action exception"); });
 
             EXPECT_THROW({
                 ml.run();
