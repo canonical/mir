@@ -635,6 +635,22 @@ TEST_F(SurfaceInputDispatcher, touch_target_switches_on_fingers_down)
     EXPECT_TRUE(dispatcher.dispatch(*toucher.touches_at({5, 5}, {6, 6})));
 }
 
+TEST_F(SurfaceInputDispatcher, touch_gestures_terminated_by_release_all_touches)
+{
+    auto right_surface = scene.add_surface({{5, 5}, {2, 2}});
+
+    InSequence seq;
+
+    EXPECT_CALL(*right_surface, consume(_)).Times(2);
+
+    dispatcher.start();
+
+    FakeToucher toucher;
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.touches_at({5, 5}, {6, 6})));
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.releases_at({5, 5}, {6, 6})));
+    EXPECT_FALSE(dispatcher.dispatch(*toucher.move_to({5, 6})));
+}
+
 TEST_F(SurfaceInputDispatcher, touch_gestures_terminated_by_device_reset)
 {
     auto left_surface = scene.add_surface({{0, 0}, {1, 1}});
