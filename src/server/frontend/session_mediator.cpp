@@ -367,7 +367,6 @@ void mf::SessionMediator::submit_buffer(
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
-#if 0
     auto const session = weak_session.lock();
     if (!session) BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
     
@@ -379,12 +378,23 @@ void mf::SessionMediator::submit_buffer(
     {
         mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
         ipc_operations->unpack_buffer(request_msg, *buffer_stream_tracker.last_buffer(stream_id));
-        stream->swap_buffers(&buffer, [](mg::Buffer*){});
-    }
+        stream->swap_buffers(&buffer,
+            [this, stream_id, done](mg::Buffer* new_buffer)
+            { //legacy behavior
+                if (new_buffer)
+                {
+                    if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
+                        event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::update_msg);
+                    else
+                        event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::full_msg);
+                }
+            });
+    });
 
     done->Run();
-#endif
-#if 1
+
+
+#if 0
     mf::BufferStreamId const stream_id{request->id().value()};
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
     ipc_operations->unpack_buffer(request_msg, *buffer_stream_tracker.last_buffer(stream_id));
@@ -408,6 +418,7 @@ void mf::SessionMediator::submit_buffer(
 
     done->Run();
 #endif
+
 }
 
 void mf::SessionMediator::allocate_buffers( 
