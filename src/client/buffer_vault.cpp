@@ -31,7 +31,7 @@ namespace mp = mir::protobuf;
 enum class mcl::BufferVault::Owner
 {
     Server,
-    Driver,
+    ContentProducer,
     Self
 };
 
@@ -51,8 +51,6 @@ mcl::BufferVault::~BufferVault()
 {
     for(auto& it : buffers)
         server_requests->free_buffer(it.first);
-    for(auto& promise : promises)
-        promise.set_exception(make_exception_ptr(std::future_error(std::future_errc::broken_promise)));
 }
 
 std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
@@ -65,13 +63,11 @@ std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
     auto future = promise.get_future();
     if (it != buffers.end())
     {
-        printf("GIVEOUT\n");
-        it->second.owner = Owner::Driver;
+        it->second.owner = Owner::ContentProducer;
         promise.set_value(it->second.buffer);
     }
     else
     {
-        printf("PROMISE.\n");
         //TODO: We'll eventually overallocate a limited number of buffers here instead of promising.
         promises.emplace_back(std::move(promise));
     }
@@ -83,7 +79,7 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
     std::lock_guard<std::mutex> lk(mutex);
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
-    if (it == buffers.end() || it->second.owner != Owner::Driver)
+    if (it == buffers.end() || it->second.owner != Owner::ContentProducer)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be deposited"));
 
     it->second.owner = Owner::Self;
@@ -138,7 +134,7 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 
     if (!promises.empty())
     {
-        buffers[protobuf_buffer.buffer_id()].owner = Owner::Driver;
+        buffers[protobuf_buffer.buffer_id()].owner = Owner::ContentProducer;
         promises.front().set_value(buffers[protobuf_buffer.buffer_id()].buffer);
         promises.pop_front();
     }

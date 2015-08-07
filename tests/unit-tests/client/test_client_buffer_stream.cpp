@@ -176,6 +176,39 @@ void fill_protobuf_buffer_from_package(mp::Buffer* mb, MirBufferPackage const& b
     mb->set_height(buffer_package.height);
 }
     
+struct ClientBufferStream : TestWithParam<bool>
+{
+    mp::BufferStream a_protobuf_buffer_stream(MirPixelFormat format, MirBufferUsage usage, MirBufferPackage const& package)
+    {
+        mp::BufferStream protobuf_bs;
+        mp::BufferStreamId bs_id;
+        
+        bs_id.set_value(1);
+        *protobuf_bs.mutable_id() = bs_id;
+
+        protobuf_bs.set_pixel_format(format);
+        protobuf_bs.set_buffer_usage(usage);
+        bool const legacy_exchange_buffer = GetParam();
+        if (legacy_exchange_buffer)
+            fill_protobuf_buffer_from_package(protobuf_bs.mutable_buffer(), package);
+        return protobuf_bs;
+    }
+
+    testing::NiceMock<mtd::MockClientBufferFactory> mock_factory;
+    mtd::StubClientBufferFactory stub_factory;
+
+    testing::NiceMock<MockProtobufServer> mock_protobuf_server;
+
+    MirPixelFormat const default_pixel_format = mir_pixel_format_argb_8888;
+    MirBufferUsage const default_buffer_usage = mir_buffer_usage_hardware;
+
+    std::shared_ptr<mcl::PerfReport> const perf_report = std::make_shared<mcl::NullPerfReport>();
+
+    mcl::BufferStreamMode mode = mcl::BufferStreamMode::Producer;
+    MirBufferPackage buffer_package = a_buffer_package();
+    mp::BufferStream response = a_protobuf_buffer_stream(
+        default_pixel_format, default_buffer_usage, buffer_package);
+};
 MATCHER_P(BufferPackageMatches, package, "")
 {
     if (package.data_items != arg->data_items)
@@ -206,40 +239,6 @@ ACTION_P(SetPartialBufferInfoFromPackage, buffer_package)
 }
 
 }
-
-struct ClientBufferStream : TestWithParam<bool>
-{
-    mp::BufferStream a_protobuf_buffer_stream(MirPixelFormat format, MirBufferUsage usage, MirBufferPackage const& package)
-    {
-        mp::BufferStream protobuf_bs;
-        mp::BufferStreamId bs_id;
-        
-        bs_id.set_value(1);
-        *protobuf_bs.mutable_id() = bs_id;
-
-        protobuf_bs.set_pixel_format(format);
-        protobuf_bs.set_buffer_usage(usage);
-        if (GetParam())
-            fill_protobuf_buffer_from_package(protobuf_bs.mutable_buffer(), package);
-        return protobuf_bs;
-    }
-
-    testing::NiceMock<mtd::MockClientBufferFactory> mock_factory;
-    mtd::StubClientBufferFactory stub_factory;
-
-    testing::NiceMock<MockProtobufServer> mock_protobuf_server;
-
-    MirPixelFormat const default_pixel_format = mir_pixel_format_argb_8888;
-    MirBufferUsage const default_buffer_usage = mir_buffer_usage_hardware;
-
-    std::shared_ptr<mcl::PerfReport> const perf_report = std::make_shared<mcl::NullPerfReport>();
-
-    mcl::BufferStreamMode mode = mcl::BufferStreamMode::Producer;
-    MirBufferPackage buffer_package = a_buffer_package();
-    mp::BufferStream response = a_protobuf_buffer_stream(
-        default_pixel_format, default_buffer_usage, buffer_package);
-};
-
 
 TEST_P(ClientBufferStream, protobuf_requirements)
 {
@@ -340,9 +339,7 @@ TEST_P(ClientBufferStream, invokes_callback_on_next_buffer)
     ON_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillByDefault(DoAll(
             RunProtobufClosure(),
-            InvokeWithoutArgs([&bs, &buffer]{
-        printf("RUN RUN\n");
-        bs.buffer_available(buffer);}))); 
+            InvokeWithoutArgs([&bs, &buffer]{ bs.buffer_available(buffer);})));
 
     bool callback_invoked = false;
     bs.next_buffer([&callback_invoked](){ callback_invoked = true; })->wait_for_all();
@@ -560,7 +557,6 @@ TEST_P(ClientBufferStream, waiting_client_can_unblock_on_shutdown)
         bs.request_and_wait_for_next_buffer();
     }, std::exception);
 }
-
 #if 0
 TEST_P(ClientBufferStream, invokes_callback_on_buffer_available_before_wait_handle_has_result)
 {
@@ -579,6 +575,7 @@ TEST_P(ClientBufferStream, invokes_callback_on_buffer_available_before_wait_hand
     wh = bs.next_buffer([&] {
             wait_handle_has_result_in_callback = wh->has_result();
         });
+
     bs.buffer_available(mp::Buffer{});
     EXPECT_FALSE(wait_handle_has_result_in_callback);
 }
@@ -587,6 +584,9 @@ TEST_P(ClientBufferStream, invokes_callback_on_buffer_unavailable_before_wait_ha
 {
 //    MirWaitHandle* wh{nullptr};
 //    bool wait_handle_has_result_in_callback = false;
+    MirWaitHandle* wh{nullptr};
+    bool wait_handle_has_result_in_callback = false;
+
     mcl::BufferStream bs{
         nullptr, mock_protobuf_server, mode,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
@@ -604,6 +604,15 @@ TEST_P(ClientBufferStream, invokes_callback_on_buffer_unavailable_before_wait_ha
 //        printf("OK>.\n");
 //    bs.buffer_unavailable();
 //    EXPECT_FALSE(wait_handle_has_result_in_callback);
+
+    wh = bs.next_buffer(
+        [&]
+        {
+            wait_handle_has_result_in_callback = wh->has_result();
+        });
+
+    bs.buffer_unavailable();
+    EXPECT_FALSE(wait_handle_has_result_in_callback);
 }
 #endif
 INSTANTIATE_TEST_CASE_P(TT, ClientBufferStream, Bool());
