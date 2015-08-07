@@ -390,7 +390,6 @@ mir::DefaultServerConfiguration::the_input_manager()
                     ret = std::make_shared<mi::DefaultInputManager>(
                         the_input_reading_multiplexer(), the_legacy_input_dispatchable());
                 }
-
                 return ret;
             }
             else
