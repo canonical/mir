@@ -16,7 +16,7 @@
  */
 
 #include "buffer_queue.h"
-#include "mir/log.h"
+
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/lockable_callback.h"
@@ -338,15 +338,12 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     if (buffer_to_release)
         release(buffer_to_release, std::move(lock));
 
-    //mir::log_info("%p: compositor acquired %p", this, acquired_buffer.get());
     return acquired_buffer;
 }
 
 void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const& buffer)
 {
     std::unique_lock<decltype(guard)> lock(guard);
-
-    //mir::log_info("%p: compositor release1 %p", this, buffer.get());
 
     if (!remove(buffer.get(), buffers_sent_to_compositor))
     {
@@ -376,7 +373,6 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
         current_buffer_users.clear();
         release(buffer.get(), std::move(lock));
     }
-    //mir::log_info("%p: compositor release2 %p", this, buffer.get());
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferQueue::snapshot_acquire()
@@ -532,8 +528,6 @@ void mc::BufferQueue::give_buffer_to_client(
 
     buffers_owned_by_client.push_back(buffer);
 
-    //mir::log_info("%p: compositor release4 %p", this, buffer);
-
     lock.unlock();
     try
     {
@@ -558,7 +552,6 @@ void mc::BufferQueue::release(
     mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
 {
-    //mir::log_info("%p: compositor release3 %p", this, buffer);
     if (!pending_client_notifications.empty() && !client_ahead_of_compositor())
     {
         framedrop_policy->swap_unblocked();

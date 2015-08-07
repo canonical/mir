@@ -502,7 +502,6 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
 
     auto onscreen = q.compositor_acquire(this);
 
-    //std::shared_ptr<AcquireWaitHandle> handle;
     bool blocking;
     do
     {
