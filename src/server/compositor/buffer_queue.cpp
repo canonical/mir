@@ -370,12 +370,7 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
         buffers_owned_by_client.empty())
     {
         current_compositor_buffer = pop(ready_to_composite_queue);
-
-        // Ensure current_compositor_buffer gets reused by the next
-        // compositor_acquire:
         current_buffer_users.clear();
-        void const* const impossible_user_id = this;
-        current_buffer_users.push_back(impossible_user_id);
     }
 
     //mir::log_info("%p: compositor release2 %p", this, buffer.get());
