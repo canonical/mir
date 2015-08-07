@@ -103,7 +103,8 @@ mgx::X11Window::X11Window(::Display *x_dpy, EGLDisplay egl_dpy, int width, int h
                       KeyPressMask        |
                       KeyReleaseMask      |
                       ButtonPressMask     |
-                      ButtonReleaseMask;
+                      ButtonReleaseMask   |
+                      PointerMotionMask;
 
     auto mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
 
