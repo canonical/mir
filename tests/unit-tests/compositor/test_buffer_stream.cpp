@@ -243,8 +243,8 @@ TEST_F(BufferStreamTest, allocate_and_release_not_supported)
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
     EXPECT_THROW({
         buffer_stream.allocate_buffer(properties);
-    }, std::runtime_error);
+    }, std::logic_error);
     EXPECT_THROW({
         buffer_stream.remove_buffer(mg::BufferID{3});
-    }, std::runtime_error);
+    }, std::logic_error);
 }
