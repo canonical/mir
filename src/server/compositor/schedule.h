@@ -30,7 +30,6 @@ class Schedule
 {
 public:
     virtual void schedule(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
-    virtual void cancel(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
     virtual bool anything_scheduled() = 0;
     virtual std::shared_ptr<graphics::Buffer> next_buffer() = 0;
 
