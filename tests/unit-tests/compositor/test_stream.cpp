@@ -86,6 +86,8 @@ struct Stream : Test
     {
     }
     
+    MOCK_METHOD1(called, void(mg::Buffer&));
+
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
     NiceMock<mtd::MockEventSink> mock_sink;
     geom::Size initial_size{44,2};
@@ -231,14 +233,6 @@ TEST_F(Stream, reports_format)
 
 TEST_F(Stream, can_access_buffer_after_allocation)
 {
-    struct Callback
-    {
-        MOCK_METHOD1(called, void(mg::Buffer&));
-        void operator()(mg::Buffer& b)
-        {
-            called(b);
-        }
-    } mock_callback;
-    EXPECT_CALL(mock_callback, called(testing::Ref(*buffers.front())));
-    stream.with_buffer(buffers.front()->id(), std::ref(mock_callback));
+    EXPECT_CALL(*this, called(testing::Ref(*buffers.front())));
+    stream.with_buffer(buffers.front()->id(), [this](mg::Buffer& b) { called(b); });
 }
