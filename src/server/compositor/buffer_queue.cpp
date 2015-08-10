@@ -144,7 +144,7 @@ mc::BufferQueue::BufferQueue(
       the_properties{props},
       force_new_compositor_buffer{false},
       callbacks_allowed{true},
-      single_monitor{false},  // When true we can optimize performance
+      single_compositor{false},  // When true we can optimize performance
       gralloc{gralloc}
 {
     if (nbuffers < 1)
@@ -276,7 +276,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     bool use_current_buffer = false;
     if (is_a_current_buffer_user(user_id))   // Primary/fastest display
     {
-        single_monitor = current_compositor_buffer_valid &&
+        single_compositor = current_compositor_buffer_valid &&
                          current_buffer_users.size() <= 1;  // might be zero
         if (ready_to_composite_queue.empty())
             frame_deadlines_met = 0;
@@ -362,7 +362,7 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
         release(buffer.get(), std::move(lock));
     else if (!ready_to_composite_queue.empty() &&
              buffers_owned_by_client.empty() &&
-             single_monitor)
+             single_compositor)
     {
         /*
          * The "early release" optimization:
