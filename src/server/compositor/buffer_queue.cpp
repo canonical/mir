@@ -277,7 +277,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     if (is_a_current_buffer_user(user_id))   // Primary/fastest display
     {
         single_compositor = current_compositor_buffer_valid &&
-                         current_buffer_users.size() <= 1;  // might be zero
+                            current_buffer_users.size() <= 1;  // might be zero
         if (ready_to_composite_queue.empty())
             frame_deadlines_met = 0;
         else if (frame_deadlines_met < frame_deadlines_threshold)
