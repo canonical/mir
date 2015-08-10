@@ -88,6 +88,15 @@ void mc::MultiMonitorArbiter::clean_onscreen_buffers(std::lock_guard<std::mutex>
     }
 }
 
+std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("not yet implemented"));
+}
+
+void mc::MultiMonitorArbiter::snapshot_release(std::shared_ptr<mg::Buffer> const&)
+{
+}
+
 void mc::MultiMonitorArbiter::set_schedule(std::shared_ptr<Schedule> const& new_schedule)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
