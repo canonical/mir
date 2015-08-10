@@ -1138,39 +1138,13 @@ TEST_F(GLibMainLoopAlarmTest, cancel_blocks_until_definitely_cancelled)
     auto waiting_in_lock = std::make_shared<mt::Barrier>(2);
     auto has_been_called = std::make_shared<mt::Signal>();
 
-    class WaitsOnLock : public mir::LockableCallback
-    {
-    public:
-        WaitsOnLock(
-            std::shared_ptr<mt::Barrier> const& lock_barrier,
-            std::shared_ptr<mt::Signal> const& done_signal)
-            : lock_barrier{lock_barrier},
-              done_signal{done_signal}
+    std::shared_ptr<mir::time::Alarm> alarm = ml.create_alarm(
+        [waiting_in_lock, has_been_called]()
         {
-        }
-
-        void lock() override
-        {
-            lock_barrier->ready();
-        }
-
-        void operator()() override
-        {
-            std::this_thread::sleep_for(1s);
-            done_signal->raise();
-        }
-
-        void unlock() override
-        {
-        }
-    private:
-        std::shared_ptr<mt::Barrier> const lock_barrier;
-        std::shared_ptr<mt::Signal> const done_signal;
-    };
-
-    auto callback = std::make_shared<WaitsOnLock>(waiting_in_lock, has_been_called);
-
-    std::shared_ptr<mir::time::Alarm> alarm = ml.create_alarm(callback);
+            waiting_in_lock->ready();
+            std::this_thread::sleep_for(500ms);
+            has_been_called->raise();
+        });
 
     alarm->reschedule_in(0ms);
 

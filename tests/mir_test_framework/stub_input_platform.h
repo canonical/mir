@@ -19,7 +19,7 @@
 #define MIR_TEST_FRAMEWORK_STUB_INPUT_PLATFORM_H_
 
 #include "mir/input/platform.h"
-#include <mutex>
+#include <atomic>
 #include <memory>
 #include <vector>
 
@@ -53,7 +53,7 @@ public:
 private:
     std::shared_ptr<mir::dispatch::ActionQueue> const platform_queue;
     std::shared_ptr<mir::input::InputDeviceRegistry> const registry;
-    static StubInputPlatform* stub_input_platform;
+    static std::atomic<StubInputPlatform*> stub_input_platform;
     static std::vector<std::weak_ptr<mir::input::InputDevice>> device_store;
 };
 
