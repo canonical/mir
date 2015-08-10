@@ -32,20 +32,17 @@ mtf::StubInputPlatform::StubInputPlatform(
     : platform_queue{mir::make_module_ptr<mir::dispatch::ActionQueue>()},
     registry(input_device_registry)
 {
-    std::lock_guard<std::mutex> lock{platform_mutex};
     stub_input_platform = this;
 }
 
 mtf::StubInputPlatform::~StubInputPlatform()
 {
-    std::lock_guard<std::mutex> lock{platform_mutex};
     device_store.clear();
     stub_input_platform = nullptr;
 }
 
 void mtf::StubInputPlatform::start()
 {
-    std::lock_guard<std::mutex> lock{platform_mutex};
     for (auto const& dev : device_store)
     {
         auto device = dev.lock();
@@ -61,7 +58,6 @@ std::shared_ptr<mir::dispatch::Dispatchable> mtf::StubInputPlatform::dispatchabl
 
 void mtf::StubInputPlatform::stop()
 {
-    std::lock_guard<std::mutex> lock{platform_mutex};
     for (auto const& dev : device_store)
     {
         auto device = dev.lock();
@@ -72,7 +68,6 @@ void mtf::StubInputPlatform::stop()
 
 void mtf::StubInputPlatform::add(std::shared_ptr<mir::input::InputDevice> const& dev)
 {
-    std::lock_guard<std::mutex> lock{platform_mutex};
     if (!stub_input_platform)
     {
         device_store.push_back(dev);
@@ -88,7 +83,6 @@ void mtf::StubInputPlatform::add(std::shared_ptr<mir::input::InputDevice> const&
 
 void mtf::StubInputPlatform::remove(std::shared_ptr<mir::input::InputDevice> const& dev)
 {
-    std::lock_guard<std::mutex> lock{platform_mutex};
     if (!stub_input_platform)
         BOOST_THROW_EXCEPTION(std::runtime_error("No stub input platform available"));
 
@@ -99,6 +93,5 @@ void mtf::StubInputPlatform::remove(std::shared_ptr<mir::input::InputDevice> con
         });
 }
 
-std::mutex mtf::StubInputPlatform::platform_mutex;
 mtf::StubInputPlatform* mtf::StubInputPlatform::stub_input_platform = nullptr;
 std::vector<std::weak_ptr<mir::input::InputDevice>> mtf::StubInputPlatform::device_store;

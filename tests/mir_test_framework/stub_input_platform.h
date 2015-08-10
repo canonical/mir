@@ -53,8 +53,6 @@ public:
 private:
     std::shared_ptr<mir::dispatch::ActionQueue> const platform_queue;
     std::shared_ptr<mir::input::InputDeviceRegistry> const registry;
-
-    static std::mutex platform_mutex;
     static StubInputPlatform* stub_input_platform;
     static std::vector<std::weak_ptr<mir::input::InputDevice>> device_store;
 };

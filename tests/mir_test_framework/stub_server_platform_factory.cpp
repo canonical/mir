@@ -26,7 +26,6 @@
 #include "mir_test_framework/fake_input_device.h"
 
 #include <vector>
-#include <mutex>
 
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
@@ -36,13 +35,11 @@ namespace
 {
 // NOTE: Raw pointer, deliberately leaked to bypass all the fun
 //       issues around global destructor ordering.
-std::mutex library_mutex;
 mir::SharedLibrary* platform_graphics_lib{nullptr};
 mir::SharedLibrary* platform_input_lib{nullptr};
 
 void ensure_platform_library()
 {
-    std::lock_guard<std::mutex> lock{library_mutex};
     if (!platform_graphics_lib)
     {
         platform_graphics_lib = new mir::SharedLibrary{mtf::server_platform("graphics-dummy.so")};
