@@ -502,6 +502,7 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
 
     auto onscreen = q.compositor_acquire(this);
 
+    // This is what tests should do instead of using buffers_free_for_client()
     bool blocking;
     do
     {
@@ -511,9 +512,15 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
             handle->release_buffer();
     } while (!blocking);
 
-    EXPECT_FALSE(handle->has_acquired_buffer());
-    q.compositor_release(onscreen);
-    EXPECT_TRUE(handle->has_acquired_buffer());
+    for (int f = 0; f < 100; ++f)
+    {
+        ASSERT_FALSE(handle->has_acquired_buffer());
+        q.compositor_release(onscreen);
+        ASSERT_TRUE(handle->has_acquired_buffer()) << "frame# " << f;
+        handle->release_buffer();
+        onscreen = q.compositor_acquire(this);
+        handle = client_acquire_async(q);
+    }
 }
 
 TEST_P(WithAnyNumberOfBuffers, multiple_compositors_are_in_sync)
