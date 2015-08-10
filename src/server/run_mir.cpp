@@ -114,6 +114,11 @@ void mir::run_mir(
     init(server);
     server.run();
 
+    check_for_termination_exception();
+}
+
+void mir::check_for_termination_exception()
+{
     std::lock_guard<std::mutex> lock{termination_exception_mutex};
     if (termination_exception)
         std::rethrow_exception(termination_exception);
