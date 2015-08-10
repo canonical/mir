@@ -59,8 +59,8 @@ struct ServerBufferSemantics
     virtual void deposit(
         protobuf::Buffer const&, geometry::Size, MirPixelFormat) = 0;
     virtual void set_buffer_cache_size(unsigned int) = 0;
-    virtual std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() = 0;
-    virtual uint32_t get_current_buffer_id() = 0;
+    virtual std::shared_ptr<mir::client::ClientBuffer> current_buffer() = 0;
+    virtual uint32_t current_buffer_id() = 0;
     virtual MirWaitHandle* submit(std::function<void()> const&, geometry::Size sz, MirPixelFormat, int stream_id) = 0;
     virtual void lost_connection() = 0;
     virtual ~ServerBufferSemantics() = default;
@@ -150,12 +150,12 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         std::unique_lock<std::mutex> lock(mutex);
         wrapped.set_max_buffers(sz);
     }
-    std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override
+    std::shared_ptr<mir::client::ClientBuffer> current_buffer() override
     {
         std::unique_lock<std::mutex> lock(mutex);
         return wrapped.current_buffer();
     }
-    uint32_t get_current_buffer_id() override
+    uint32_t current_buffer_id() override
     {
         std::unique_lock<std::mutex> lock(mutex);
         if (incoming_buffers.size())
@@ -273,23 +273,23 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     {
         vault.wire_transfer_inbound(buffer);
     }
-    std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override
+    std::shared_ptr<mir::client::ClientBuffer> current_buffer() override
     {
-        if (!current_buffer)
-            current_buffer = vault.withdraw().get();
-        return current_buffer;
+        if (!current_buffer_)
+            current_buffer_ = vault.withdraw().get();
+        return current_buffer_;
     }
 
-    uint32_t get_current_buffer_id() override
+    uint32_t current_buffer_id() override
     {
         return 0;
     }
 
     MirWaitHandle* submit(std::function<void()> const& done, geom::Size, MirPixelFormat, int) override
     {
-        vault.deposit(current_buffer);
-        vault.wire_transfer_outbound(current_buffer);
-        current_buffer = vault.withdraw().get();
+        vault.deposit(current_buffer_);
+        vault.wire_transfer_outbound(current_buffer_);
+        current_buffer_ = vault.withdraw().get();
         done();
         return &next_buffer_wait_handle;
     }
@@ -306,8 +306,8 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     }
 
     mcl::BufferVault vault;
-    std::shared_ptr<mcl::ClientBuffer> current_buffer;
-    int current_buffer_id;
+    std::shared_ptr<mcl::ClientBuffer> current_buffer_;
+    int current_buffer_id_;
     MirWaitHandle next_buffer_wait_handle;
     std::function<void()> done;
 };
@@ -443,7 +443,7 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
 MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    perf_report->end_frame(buffer_depository->get_current_buffer_id());
+    perf_report->end_frame(buffer_depository->current_buffer_id());
 
     secured_region.reset();
 
@@ -477,7 +477,7 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    return buffer_depository->get_current_buffer();
+    return buffer_depository->current_buffer();
 }
 
 EGLNativeWindowType mcl::BufferStream::egl_native_window()
@@ -495,7 +495,7 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
 
-    secured_region = buffer_depository->get_current_buffer()->secure_for_cpu_write();
+    secured_region = buffer_depository->current_buffer()->secure_for_cpu_write();
     return secured_region;
 }
 
@@ -567,7 +567,7 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
 uint32_t mcl::BufferStream::get_current_buffer_id()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    return buffer_depository->get_current_buffer_id();
+    return buffer_depository->current_buffer_id();
 }
 
 int mcl::BufferStream::swap_interval() const

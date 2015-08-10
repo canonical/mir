@@ -18,6 +18,7 @@
 
 #ifndef MIR_COMPOSITOR_QUEUEING_SCHEDULE_H_
 #define MIR_COMPOSITOR_QUEUEING_SCHEDULE_H_
+#include "schedule.h"
 #include <memory>
 #include <deque>
 #include <mutex>
@@ -27,7 +28,7 @@ namespace mir
 namespace graphics { class Buffer; }
 namespace compositor
 {
-class QueueingSchedule
+class QueueingSchedule : public Schedule
 {
 public:
     void schedule(std::shared_ptr<graphics::Buffer> const& buffer);
