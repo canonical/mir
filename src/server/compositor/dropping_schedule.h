@@ -18,6 +18,7 @@
 
 #ifndef MIR_COMPOSITOR_DROPPING_SCHEDULE_H_
 #define MIR_COMPOSITOR_DROPPING_SCHEDULE_H_
+#include "schedule.h"
 #include <memory>
 #include <mutex>
 
@@ -27,7 +28,7 @@ namespace graphics { class Buffer; }
 namespace frontend { class ClientBuffers; }
 namespace compositor
 {
-class DroppingSchedule
+class DroppingSchedule : public Schedule
 {
 public:
     DroppingSchedule(std::shared_ptr<frontend::ClientBuffers> const&);
