@@ -771,7 +771,7 @@ TEST_F(GLibMainLoopTest, can_be_rerun_after_exception)
     execute_in_forked_process(this,
         [&]
         {
-            ml.enqueue(this, [] { throw std::runtime_error("server action error"); });
+            ml.enqueue(this, [] { throw std::runtime_error("server action exception"); });
 
             EXPECT_THROW({
                 ml.run();
