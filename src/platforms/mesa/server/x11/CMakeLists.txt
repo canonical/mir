@@ -37,6 +37,7 @@ add_library(
 target_link_libraries(
   mirplatformservermesax11
   PRIVATE
+  mirclient
   mirplatform
   EGL
   GLESv2
@@ -55,7 +56,7 @@ set_target_properties(
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   PREFIX ""
   SUFFIX ".so.${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
-  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
+  LINK_FLAGS "-Wl,--no-undefined -Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
 install(TARGETS mirplatformservermesax11 LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
