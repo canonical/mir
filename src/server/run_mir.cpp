@@ -111,30 +111,3 @@ void mir::run_mir(
 
     check_for_termination_exception();
 }
-
-std::exception_ptr termination_exception;
-std::mutex termination_exception_mutex;
-
-void mir::clear_termination_exception()
-{
-    std::lock_guard<std::mutex> lock{termination_exception_mutex};
-    termination_exception = nullptr;
-}
-
-
-void mir::check_for_termination_exception()
-{
-    std::lock_guard<std::mutex> lock{termination_exception_mutex};
-    if (termination_exception)
-        std::rethrow_exception(termination_exception);
-}
-
-void mir::terminate_with_current_exception()
-{
-    std::lock_guard<std::mutex> lock{termination_exception_mutex};
-    if (!termination_exception)
-    {
-        termination_exception = std::current_exception();
-        kill(getpid(), SIGTERM);
-    }
-}

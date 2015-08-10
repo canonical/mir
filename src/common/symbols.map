@@ -65,6 +65,9 @@ MIR_COMMON_5 {
     mir::logging::Logger::Logger*;
     mir::logging::Logger::operator*;
     mir::logging::set_logger*;
+    mir::check_for_termination_exception*;
+    mir::clear_termination_exception*;
+    mir::terminate_with_current_exception*;
     non-virtual?thunk?to?mir::dispatch::ActionQueue::?ActionQueue*;
     non-virtual?thunk?to?mir::dispatch::Dispatchable::?Dispatchable*;
     non-virtual?thunk?to?mir::dispatch::MultiplexingDispatchable::dispatch*;

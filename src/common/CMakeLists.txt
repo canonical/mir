@@ -23,6 +23,7 @@ list(APPEND MIR_COMMON_SOURCES
   $<TARGET_OBJECTS:mirtime>
   $<TARGET_OBJECTS:mirfatal>
   ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/terminate_with_current_exception.cpp
   )
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
