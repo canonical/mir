@@ -49,7 +49,7 @@ mcl::BufferVault::BufferVault(
 
 mcl::BufferVault::~BufferVault()
 {
-    for(auto& it : buffers)
+    for (auto& it : buffers)
         server_requests->free_buffer(it.first);
 }
 

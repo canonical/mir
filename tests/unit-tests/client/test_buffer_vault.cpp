@@ -297,7 +297,7 @@ TEST_F(StartedBufferVault, can_withdraw_and_deposit)
 {
     auto a_few_times = 5u;
     std::vector<std::shared_ptr<mcl::ClientBuffer>> buffers(a_few_times);
-    for(auto i = 0u; i < a_few_times; i++)
+    for (auto i = 0u; i < a_few_times; i++)
     {
         buffers[i] = vault.withdraw().get();
         vault.deposit(buffers[i]);
