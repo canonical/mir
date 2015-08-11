@@ -155,7 +155,8 @@ Description: Display server for Ubuntu - test development headers and library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
- Contains header files and static library for testing of server and/or client development.
+ Contains header files and static library for testing of server and/or client
+ development.
 
 Package: libmirclient9
 Section: libs
