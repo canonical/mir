@@ -54,8 +54,7 @@ namespace client
 //the BufferStream response provided by the server
 struct ServerBufferSemantics
 {
-    virtual void deposit(
-        protobuf::Buffer const&, geometry::Size, MirPixelFormat) = 0;
+    virtual void deposit(protobuf::Buffer const&, geometry::Size, MirPixelFormat) = 0;
     virtual void set_buffer_cache_size(unsigned int) = 0;
     virtual std::shared_ptr<mir::client::ClientBuffer> current_buffer() = 0;
     virtual uint32_t current_buffer_id() = 0;
