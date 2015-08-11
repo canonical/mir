@@ -38,6 +38,8 @@ thread_local int dummy_tls[2];
 int main(int argc, char const* argv[])
 try
 {
+    dummy_tls[0] = 0;  //avoid unused warning/error
+
     auto const so = dlopen(library, RTLD_NOW|RTLD_LOCAL);
     if (!so) throw std::runtime_error(dlerror());
 
