@@ -55,14 +55,6 @@ add_library(
   ${UTIL_SOURCES}
   )
 
-#we don't have binder or skia available on hybris/linux platforms
-if(MIR_USE_BIONIC)
-  target_link_libraries(
-    android-input-static
-    binder
-    skia)
-endif()
-
 target_link_libraries(
   android-input-static
 
