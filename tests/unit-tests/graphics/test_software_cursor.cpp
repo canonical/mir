@@ -313,3 +313,18 @@ TEST_F(SoftwareCursor, new_buffer_on_each_show)
     cursor.show(another_stub_cursor_image);
     cursor.show(stub_cursor_image);
 }
+
+//lp: 1483779
+TEST_F(SoftwareCursor, doesnt_try_to_remove_after_hiding)
+{
+    using namespace testing;
+
+    EXPECT_CALL(mock_input_scene, add_input_visualization(_))
+        .Times(2);
+    EXPECT_CALL(mock_input_scene, remove_input_visualization(_))
+        .Times(1);
+    cursor.show(stub_cursor_image);
+    cursor.hide(); //should remove here
+    cursor.show(stub_cursor_image); //should add, but not remove a second time
+    Mock::VerifyAndClearExpectations(&mock_input_scene);
+}
