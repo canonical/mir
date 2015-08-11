@@ -316,14 +316,18 @@ void mie::LibInputDevice::add_touch_down_event(libinput_event_touch* touch)
     MirTouchId id = libinput_event_touch_get_slot(touch);
     auto action = mir_touch_action_down;
     auto tool = mir_touch_tooltype_finger; // TODO make libinput indicate tool type
-    float size = 5.0f;
-    // TODO extend for touch screens that provide orientation and major/minor
+    float size = 1.0f;
+    float pressure = 1.0f;  // TODO libinput_event_touch_get_pressure(touch),
+    float major = 1.0f; // TODO libinput_event_touch_get_major(touch),
+    float minor = 1.0f; // TODO libinput_event_touch_get_minor(touch),
+
+    // TODO extend for touch screens that provide orientation
     mir::events::add_touch(event, id, action, tool,
                            libinput_event_touch_get_x(touch),
                            libinput_event_touch_get_y(touch),
-                           libinput_event_touch_get_pressure(touch),
-                           libinput_event_touch_get_major(touch),
-                           libinput_event_touch_get_minor(touch),
+                           pressure,
+                           major,
+                           minor,
                            size);
 }
 
@@ -334,14 +338,18 @@ void mie::LibInputDevice::add_touch_up_event(libinput_event_touch* touch)
     MirTouchId id = libinput_event_touch_get_slot(touch);
     auto action = mir_touch_action_up;
     auto tool = mir_touch_tooltype_finger; // TODO make libinput indicate tool type
-    float size = 5.0f;
+
+    float pressure = 0.0f;
+    float major = 0.0f;
+    float minor = 0.0f;
+    float size = 0.0f;
     // TODO extend for touch screens that provide orientation and major/minor
     mir::events::add_touch(event, id, action, tool,
                            libinput_event_touch_get_x(touch),
                            libinput_event_touch_get_y(touch),
-                           libinput_event_touch_get_pressure(touch),
-                           libinput_event_touch_get_major(touch),
-                           libinput_event_touch_get_minor(touch),
+                           pressure,
+                           major,
+                           minor,
                            size);
 }
 
@@ -353,14 +361,18 @@ void mie::LibInputDevice::add_touch_motion_event(libinput_event_touch* touch)
     MirTouchId id = libinput_event_touch_get_slot(touch);
     auto action = mir_touch_action_change;
     auto tool = mir_touch_tooltype_finger; // TODO make libinput indicate tool type
-    float size = 5.0f;
-    // TODO extend for touch screens that provide orientation and major/minor
+    float size = 1.0f;
+    float pressure = 1.0f;  // TODO libinput_event_touch_get_pressure(touch),
+    float major = 1.0f; // TODO libinput_event_touch_get_major(touch),
+    float minor = 1.0f; // TODO libinput_event_touch_get_minor(touch),
+
+    // TODO extend for touch screens that provide orientation
     mir::events::add_touch(event, id, action, tool,
                            libinput_event_touch_get_x(touch),
                            libinput_event_touch_get_y(touch),
-                           libinput_event_touch_get_pressure(touch),
-                           libinput_event_touch_get_major(touch),
-                           libinput_event_touch_get_minor(touch),
+                           pressure,
+                           major,
+                           minor,
                            size);
 }
 
