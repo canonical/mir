@@ -319,10 +319,13 @@ TEST_F(SoftwareCursor, doesnt_try_to_remove_after_hiding)
 {
     using namespace testing;
 
+    Sequence seq;
     EXPECT_CALL(mock_input_scene, add_input_visualization(_))
-        .Times(2);
+        .InSequence(seq);
     EXPECT_CALL(mock_input_scene, remove_input_visualization(_))
-        .Times(1);
+        .InSequence(seq);
+    EXPECT_CALL(mock_input_scene, add_input_visualization(_))
+        .InSequence(seq);
     cursor.show(stub_cursor_image);
     cursor.hide(); //should remove here
     cursor.show(stub_cursor_image); //should add, but not remove a second time
