@@ -17,27 +17,25 @@
  */
 
 #include "platform.h"
+#include "lazy_connection.h"
 #include <boost/throw_exception.hpp>
 
 namespace mo = mir::options;
 namespace mg = mir::graphics;
+namespace mx = mir::X;
 namespace mgx = mg::X;
 
-std::shared_ptr<::Display> x11_connection;
+mx::LazyConnection x11_connection;
 
 std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
-    x11_connection = std::shared_ptr<::Display>(
-        XOpenDisplay(nullptr),
-        [](::Display* display) { XCloseDisplay(display); });
-
-    if (!x11_connection)
+    if (!x11_connection.get())
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
 
-    return std::make_shared<mgx::Platform>(x11_connection);
+    return std::make_shared<mgx::Platform>(x11_connection.get());
 }
 
 std::shared_ptr<mg::Platform> create_guest_platform(
