@@ -111,6 +111,7 @@ elseif(cmake_build_type_lower MATCHES "threadsanitizer")
 else()
   # AddressSanitizer builds fail if we disallow undefined symbols
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--no-undefined")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 endif()
 
