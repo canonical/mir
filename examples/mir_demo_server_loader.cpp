@@ -24,22 +24,11 @@ namespace
 {
 const char* const library = "libmir_demo_server_loadable.so";
 const char* const entry = "main";
-
-/* On devices with android based openGL drivers, the vendor dispatcher table
- * may be optimized if USE_FAST_TLS_KEY is set, which hardcodes a TLS slot where
- * the vendor opengl function pointers live. Since glibc is not aware of this
- * use, collisions may happen.
- * Allocating a thread_local array helps avoid collisions by any thread_local usage
- * in async/future implementations.
- */
-thread_local int dummy_tls[2];
 }
 
 int main(int argc, char const* argv[])
 try
 {
-    dummy_tls[0] = 0;  //avoid unused warning/error
-
     auto const so = dlopen(library, RTLD_NOW|RTLD_LOCAL);
     if (!so) throw std::runtime_error(dlerror());
 
