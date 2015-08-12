@@ -19,17 +19,14 @@
 #include "mir/input/input_device_info.h"
 #include "input_device.h"
 #include "dispatchable.h"
-#include "../xserver_connection.h"
 
 namespace mi = mir::input;
 namespace mix = mi::X;
 namespace md = mir::dispatch;
-namespace mx = mir::X;
 
-extern std::shared_ptr<mx::X11Connection> x11_connection;
-
-mix::XInputDevice::XInputDevice()
-    : fd(XConnectionNumber(x11_connection->dpy)), x_dispatchable(std::make_shared<mix::XDispatchable>(fd))
+mix::XInputDevice::XInputDevice(std::shared_ptr<::Display> const& conn)
+    : fd(XConnectionNumber(conn.get())),
+      x_dispatchable(std::make_shared<mix::XDispatchable>(conn, fd))
 {
 }
 

@@ -181,6 +181,19 @@ bool me::CanonicalSurfaceInfoCopy::must_not_have_parent() const
     }
 }
 
+bool me::CanonicalSurfaceInfoCopy::is_visible() const
+{
+    switch (state)
+    {
+    case mir_surface_state_hidden:
+    case mir_surface_state_minimized:
+        return false;
+    default:
+        break;
+    }
+    return true;
+}
+
 
 me::CanonicalWindowManagerPolicyCopy::CanonicalWindowManagerPolicyCopy(
     Tools* const tools,
@@ -555,6 +568,12 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
 
         apply_resize(surface, surface_info.titlebar, top_left, new_size);
     }
+
+    if (modifications.state.is_set())
+    {
+        auto const state = handle_set_state(surface, modifications.state.value());
+        surface->configure(mir_surface_attrib_state, state);
+    }
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
@@ -682,7 +701,12 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
     // TODO some sensible layout rules.
     move_tree(surface, movement);
 
-    return info.state = value;
+    info.state = value;
+
+    if (info.is_visible())
+        surface->show();
+
+    return info.state;
 }
 
 void me::CanonicalWindowManagerPolicyCopy::drag(Point cursor)
