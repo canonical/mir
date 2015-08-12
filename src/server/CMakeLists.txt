@@ -69,7 +69,6 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirnestedgraphics>
   $<TARGET_OBJECTS:miroffscreengraphics>
   $<TARGET_OBJECTS:mirthread>
-  $<TARGET_OBJECTS:android-input-platform>
 )
 
 set(MIR_SERVER_REFERENCES

@@ -278,3 +278,10 @@ MIRPLATFORM_9 {
   };
  local: *;
 };
+
+MIR_CLIENT_DETAIL_9 {
+  global:
+    extern "C++" {
+      android::EventHub::EventHub*;
+    };
+} MIRPLATFORM_9;
