@@ -70,6 +70,20 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
         {
             switch (xev.type)
             {
+            case FocusIn:
+            {
+                XFocusInEvent &xfiev = (XFocusInEvent &)xev;
+                XGrabKeyboard(xfiev.display, xfiev.window, true, GrabModeAsync, GrabModeAsync, CurrentTime);
+                break;
+            }
+
+            case FocusOut:
+            {
+                XFocusOutEvent &xfoev = (XFocusOutEvent &)xev;
+                XUngrabKeyboard(xfoev.display, CurrentTime);
+                break;
+            }
+
             case KeyPress:
             case KeyRelease:
             {
@@ -248,13 +262,13 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
 
             default:
 #ifdef MIR_ON_X11_INPUT_VERBOSE
-                mir::log_info("Uninteresting event");
+                mir::log_info("Uninteresting event : %08X", xev.type);
 #endif
                 break;
             }
         }
         else
-            mir::log_info("input event detected with no sink to handle it");
+            mir::log_error("input event received with no sink to handle it");
     }
 
     return ret;

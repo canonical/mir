@@ -104,6 +104,7 @@ mgx::X11Window::X11Window(::Display *x_dpy, EGLDisplay egl_dpy, int width, int h
                       KeyReleaseMask      |
                       ButtonPressMask     |
                       ButtonReleaseMask   |
+                      FocusChangeMask     |
                       PointerMotionMask;
 
     auto mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
@@ -120,6 +121,13 @@ mgx::X11Window::X11Window(::Display *x_dpy, EGLDisplay egl_dpy, int width, int h
     XFree(visInfo);
 
     XMapWindow(x_dpy, win);
+
+    XEvent xev;
+    do 
+    {
+        XNextEvent(x_dpy, &xev);
+    }
+    while (xev.type != Expose);
 }
 
 mgx::X11Window::~X11Window()
