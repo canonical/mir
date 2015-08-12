@@ -362,6 +362,7 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
         release(buffer.get(), std::move(lock));
     else if (!ready_to_composite_queue.empty() &&
              buffers_owned_by_client.empty() &&
+             !client_ahead_of_compositor() &&
              single_compositor)
     {
         /*
