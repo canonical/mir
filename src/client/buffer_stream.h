@@ -24,6 +24,7 @@
 #include "mir/client_buffer.h"
 #include "client_buffer_stream.h"
 #include "client_buffer_depository.h"
+#include "mir/geometry/size.h"
 
 #include "mir_toolkit/client_types.h"
 
@@ -74,7 +75,8 @@ public:
         std::shared_ptr<ClientPlatform> const& native_window_factory,
         mir::protobuf::BufferStream const& protobuf_bs,
         std::shared_ptr<PerfReport> const& perf_report,
-        std::string const& surface_name);
+        std::string const& surface_name,
+        geometry::Size ideal_size);
     // For surfaceless buffer streams
     BufferStream(
         MirConnection* connection,
@@ -158,6 +160,7 @@ private:
     geometry::Size cached_buffer_size;
 
     std::unique_ptr<ServerBufferSemantics> buffer_depository;
+    geometry::Size ideal_buffer_size;
 };
 
 }
