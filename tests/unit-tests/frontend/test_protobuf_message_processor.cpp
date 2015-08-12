@@ -73,8 +73,33 @@ struct StubDisplayServer : mtd::StubDisplayServer
         exchange_closure = closure;
     }
 
+    void create_surface(
+        mp::SurfaceParameters const*,
+        mp::Surface* response,
+        google::protobuf::Closure* closure)
+    {
+        response->mutable_buffer_stream();
+        auto before = response->buffer_stream().has_buffer();
+        closure->Run();
+        auto after = response->buffer_stream().has_buffer();
+        changed_during_create_surface_closure = before != after;
+    }
+
+    void create_buffer_stream(
+        mp::BufferStreamParameters const*,
+        mp::BufferStream* response,
+        google::protobuf::Closure* closure)
+    {
+        auto before = response->has_buffer();
+        closure->Run();
+        auto after = response->has_buffer();
+        changed_during_create_bstream_closure = before != after;
+    }
+
     mp::Buffer* exchange_buffer_response;
     gp::Closure* exchange_closure;
+    bool changed_during_create_surface_closure;
+    bool changed_during_create_bstream_closure;
 };
 }
 
@@ -110,4 +135,64 @@ TEST(ProtobufMessageProcessor, preserves_response_resource_for_exchange_buffer)
 
     EXPECT_THAT(stub_display_server.exchange_buffer_response->data().size(), Eq(num_data));
     stub_display_server.exchange_closure->Run();
+}
+
+TEST(ProtobufMessageProcessor, doesnt_inject_buffers_when_creating_surface)
+{
+    using namespace testing;
+    StubProtobufMessageSender stub_msg_sender;
+    StubMessageProcessorReport stub_report;
+    StubDisplayServer stub_display_server;
+    mfd::ProtobufMessageProcessor pb_message_processor(
+        mt::fake_shared(stub_msg_sender),
+        mt::fake_shared(stub_display_server),
+        mt::fake_shared(stub_report));
+    std::shared_ptr<mfd::MessageProcessor> mp = mt::fake_shared(pb_message_processor);
+
+    mpw::Invocation raw_invocation;
+    mp::SurfaceParameters request;
+    request.set_width(1);
+    request.set_height(1);
+    request.set_pixel_format(1);
+    request.set_buffer_usage(1);
+    std::string str_parameters;
+    request.SerializeToString(&str_parameters);
+    str_parameters.shrink_to_fit();
+    raw_invocation.set_parameters(str_parameters.c_str());
+    raw_invocation.set_method_name("create_surface");
+    mfd::Invocation invocation(raw_invocation);
+
+    std::vector<mir::Fd> fds;
+    mp->dispatch(invocation, fds);
+    EXPECT_FALSE(stub_display_server.changed_during_create_surface_closure);
+}
+
+TEST(ProtobufMessageProcessor, doesnt_inject_buffers_when_creating_bstream)
+{
+    using namespace testing;
+    StubProtobufMessageSender stub_msg_sender;
+    StubMessageProcessorReport stub_report;
+    StubDisplayServer stub_display_server;
+    mfd::ProtobufMessageProcessor pb_message_processor(
+        mt::fake_shared(stub_msg_sender),
+        mt::fake_shared(stub_display_server),
+        mt::fake_shared(stub_report));
+    std::shared_ptr<mfd::MessageProcessor> mp = mt::fake_shared(pb_message_processor);
+
+    mpw::Invocation raw_invocation;
+    mp::BufferStreamParameters request;
+    request.set_width(1);
+    request.set_height(1);
+    request.set_pixel_format(1);
+    request.set_buffer_usage(1);
+    std::string str_parameters;
+    request.SerializeToString(&str_parameters);
+    str_parameters.shrink_to_fit();
+    raw_invocation.set_parameters(str_parameters.c_str());
+    raw_invocation.set_method_name("create_buffer_stream");
+    mfd::Invocation invocation(raw_invocation);
+
+    std::vector<mir::Fd> fds;
+    mp->dispatch(invocation, fds);
+    EXPECT_FALSE(stub_display_server.changed_during_create_bstream_closure);
 }

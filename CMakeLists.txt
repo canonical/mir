@@ -27,7 +27,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 16) # This should change at least with every MIRSERVER_ABI
+set(MIR_VERSION_MINOR 16)
 set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
@@ -111,6 +111,7 @@ elseif(cmake_build_type_lower MATCHES "threadsanitizer")
 else()
   # AddressSanitizer builds fail if we disallow undefined symbols
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--no-undefined")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 endif()
 

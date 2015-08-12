@@ -47,10 +47,16 @@ public:
     {
     }
 
+    ~AlarmImpl() override
+    {
+        gsource.ensure_no_further_dispatch();
+    }
+
     bool cancel() override
     {
         std::lock_guard<std::mutex> lock{alarm_mutex};
 
+        gsource.ensure_no_further_dispatch();
         gsource = mir::detail::GSourceHandle{};
         state_ = State::cancelled;
         return true;
