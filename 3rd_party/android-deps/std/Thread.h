@@ -32,11 +32,10 @@
 #include <pthread.h>
 #endif
 
-namespace mir
-{
-void terminate_with_current_exception();
-void set_thread_name(std::string const&);
-}
+#ifdef MIR_INPUT_THREAD_RUN_IMPLEMENTATION
+#include "mir/thread_name.h"
+#include "mir/terminate_with_current_exception.h"
+#endif
 
 namespace mir_input
 {
@@ -54,6 +53,10 @@ public:
         const char* name = 0,
         int32_t priority = PRIORITY_DEFAULT,
         size_t stack = 0)
+#ifndef MIR_INPUT_THREAD_RUN_IMPLEMENTATION
+        = 0;
+#else
+
     {
         (void)priority; (void)stack;
         std::string const name_str{name};
@@ -91,6 +94,7 @@ public:
 
         return OK;
     }
+#endif
 
     // Ask this object's thread to exit. This function is asynchronous, when the
     // function returns the thread might still be running. Of course, this

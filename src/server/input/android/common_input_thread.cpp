@@ -18,7 +18,6 @@
 
 #include "common_input_thread.h"
 
-#include <std/Thread.h>
 
 namespace mia = mir::input::android;
 
