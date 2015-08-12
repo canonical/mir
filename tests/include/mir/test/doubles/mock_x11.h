@@ -40,7 +40,8 @@ public:
     Display *display;
     Window window;
     XVisualInfo visual_info;
-    XEvent event_return;
+    XEvent keypress_event_return;
+    XEvent expose_event_return;
 };
 
 class MockX11
@@ -67,6 +68,10 @@ public:
     MOCK_METHOD5(XLookupString, int(XKeyEvent*, char*, int, KeySym*, XComposeStatus*));
     MOCK_METHOD1(XRefreshKeyboardMapping, int(XMappingEvent*));
     MOCK_METHOD1(XDefaultRootWindow, Window(Display*));
+    MOCK_METHOD6(XGrabKeyboard, int(Display*, Window, Bool, int, int, Time));
+    MOCK_METHOD2(XUngrabKeyboard, int(Display*, Time));
+    MOCK_METHOD4(XGetErrorText, int(Display*, int, char*, int ));
+    MOCK_METHOD1(XSetErrorHandler, XErrorHandler(XErrorHandler));
 
     FakeX11Resources fake_x11;
 };

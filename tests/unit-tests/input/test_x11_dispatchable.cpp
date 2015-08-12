@@ -47,7 +47,7 @@ struct X11DispatchableTest : ::testing::Test
 TEST_F(X11DispatchableTest, dispatches_input_events_to_sink)
 {
     ON_CALL(mock_x11, XNextEvent(_,_))
-    .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.event_return),
+    .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.keypress_event_return),
                    Return(1)));
 
     EXPECT_CALL(mock_input_sink, handle_input(_));
