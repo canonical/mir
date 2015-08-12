@@ -63,6 +63,11 @@ auto mtd::create_mesa_platform_with_null_dependencies()
 auto mtd::create_platform_with_null_dependencies()
     -> std::shared_ptr<graphics::Platform>
 {
-    return std::make_shared<graphics::X::Platform>();
+    return std::make_shared<graphics::X::Platform>(std::shared_ptr<::Display>(
+                                                       XOpenDisplay(nullptr),
+                                                       [](::Display* display)
+                                                       {
+                                                           XCloseDisplay(display);
+                                                       }));
 }
 #endif
