@@ -94,7 +94,6 @@ target_link_libraries(mirserver LINK_PUBLIC
   mircommon
   mirprotobuf
 
-  android-input-static
   xcursorloader-static
 
   ${GLog_LIBRARY}

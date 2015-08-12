@@ -20,7 +20,6 @@ mir_add_wrapped_executable(input-reader-perf NOINSTALL
 target_link_libraries(
   input-reader-perf
 
-  android-input-static
   mir-test-assist
   mirserver
  )

@@ -14,7 +14,7 @@ add_definitions(
   -DANDROID_SMP=1
   )
 
-add_library(android-input-static STATIC
+add_library(android-input-common OBJECT
   frameworks/base/services/input/InputDevice.cpp
   frameworks/base/services/input/InputListener.cpp
   frameworks/base/services/input/InputReader.cpp
@@ -39,15 +39,8 @@ add_library(android-input-platform OBJECT
   frameworks/base/services/input/EventHub.cpp
 )
 
-target_link_libraries(
-  android-input-static
-
-  mircommon
-  ${Boost_LIBRARIES}
-)
-
 set_target_properties(
-  android-input-static
+  android-input-common
   PROPERTIES
   COMPILE_FLAGS ${ANDROID_INPUT_COMPILE_FLAGS}
 )
