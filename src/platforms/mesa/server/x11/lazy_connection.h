@@ -16,32 +16,36 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#ifndef MIR_X_XSERVER_CONNECTION_H_
-#define MIR_X_XSERVER_CONNECTION_H_
+#ifndef MIR_X_LAZY_CONNECTION_H_
+#define MIR_X_LAZY_CONNECTION_H_
 
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
 
 namespace mir
 {
 namespace X
 {
 
-struct X11Connection
+class LazyConnection
 {
-    X11Connection()
+public:
+    std::shared_ptr<::Display> get()
     {
-        dpy = XOpenDisplay(nullptr);
+        if (auto conn = connection.lock())
+            return conn;
+
+        std::shared_ptr<::Display> new_conn{
+            XOpenDisplay(nullptr),
+            [](::Display* display) { XCloseDisplay(display); }};
+
+        connection = new_conn;
+        return new_conn;
     }
 
-    ~X11Connection()
-    {
-        XCloseDisplay(dpy);
-    }
-
-    ::Display *dpy;
+private:
+    std::weak_ptr<::Display> connection;
 };
 
 }
 }
-#endif /* MIR_X_XSERVER_CONNECTION_H_ */
+#endif /* MIR_X_LAZY_CONNECTION_H_ */

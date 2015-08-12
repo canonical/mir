@@ -80,24 +80,24 @@ md::GSourceHandle::GSourceHandle()
 
 md::GSourceHandle::GSourceHandle(
     GSource* gsource,
-    std::function<void(GSource*)> const& pre_destruction_hook)
+    std::function<void(GSource*)> const& terminate_dispatch)
     : gsource(gsource),
-      pre_destruction_hook(pre_destruction_hook)
+      terminate_dispatch(terminate_dispatch)
 {
 }
 
 md::GSourceHandle::GSourceHandle(GSourceHandle&& other)
     : gsource(std::move(other.gsource)),
-      pre_destruction_hook(std::move(other.pre_destruction_hook))
+      terminate_dispatch(std::move(other.terminate_dispatch))
 {
     other.gsource = nullptr;
-    other.pre_destruction_hook = [](GSource*){};
+    other.terminate_dispatch = [](GSource*){};
 }
 
 md::GSourceHandle& md::GSourceHandle::operator=(GSourceHandle other)
 {
     std::swap(other.gsource, gsource);
-    std::swap(other.pre_destruction_hook, pre_destruction_hook);
+    std::swap(other.terminate_dispatch, terminate_dispatch);
     return *this;
 }
 
@@ -105,8 +105,6 @@ md::GSourceHandle::~GSourceHandle()
 {
     if (gsource)
     {
-        pre_destruction_hook(gsource);
-
 #ifdef GLIB_HAS_FIXED_LP_1401488
         g_source_destroy(gsource);
         g_source_unref(gsource);
@@ -135,6 +133,14 @@ md::GSourceHandle::~GSourceHandle()
             g_source_unref(gsource);
         }
 #endif
+    }
+}
+
+void md::GSourceHandle::ensure_no_further_dispatch()
+{
+    if (gsource)
+    {
+        terminate_dispatch(gsource);
     }
 }
 
@@ -260,8 +266,8 @@ md::GSourceHandle md::add_timer_gsource(
         std::shared_ptr<LockableCallback> handler;
         std::function<void()> exception_handler;
         time::Timestamp target_time;
+        std::mutex mutex;
         bool enabled;
-        std::recursive_mutex mutex;
     };
 
     struct TimerGSource
@@ -393,6 +399,11 @@ private:
 
 struct md::FdSources::FdSource
 {
+    ~FdSource()
+    {
+        gsource.ensure_no_further_dispatch();
+    }
+
     GSourceHandle gsource;
     void const* const owner;
 };

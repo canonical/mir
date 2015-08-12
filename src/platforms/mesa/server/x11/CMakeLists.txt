@@ -16,6 +16,7 @@ include_directories(
 add_library(
   mirplatformservermesax11objects OBJECT
 
+  graphics.cpp
   platform.cpp
   display.cpp
   display_configuration.cpp
@@ -38,6 +39,7 @@ target_link_libraries(
   mirplatformservermesax11
   PRIVATE
   mirplatform
+  mirclient   # for make_event(). TODO: move make_event out of libmirclient?
   EGL
   GLESv2
   X11

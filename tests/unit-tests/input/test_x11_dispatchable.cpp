@@ -19,7 +19,6 @@
 #include "mir/events/event_private.h"
 #include "mir_toolkit/event.h"
 #include "src/platforms/mesa/server/x11/input/dispatchable.h"
-#include "src/platforms/mesa/server/x11/xserver_connection.h"
 #include "mir/test/doubles/mock_input_sink.h"
 #include "mir/test/doubles/mock_x11.h"
 
@@ -30,27 +29,17 @@ namespace mtd = mir::test::doubles;
 
 using namespace ::testing;
 
-extern std::shared_ptr<mir::X::X11Connection> x11_connection;
-
 namespace
 {
 
 struct X11DispatchableTest : ::testing::Test
 {
-    X11DispatchableTest()
-    {
-        // X11Connection freed in the (external) shared_ptr destruction.
-        x11_connection.reset(new mir::X::X11Connection());
-    }
-
-    ~X11DispatchableTest()
-    {
-        x11_connection.reset();
-    }
-
-    mir::input::X::XDispatchable x11_dispatchable{0};
     NiceMock<mtd::MockInputSink> mock_input_sink;
     NiceMock<mtd::MockX11> mock_x11;
+    mir::input::X::XDispatchable x11_dispatchable{
+        std::shared_ptr<::Display>(
+            XOpenDisplay(nullptr),
+            [](::Display* display) { XCloseDisplay(display); }), 0};
 };
 
 }

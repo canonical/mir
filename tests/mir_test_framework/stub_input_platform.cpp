@@ -68,14 +68,15 @@ void mtf::StubInputPlatform::stop()
 
 void mtf::StubInputPlatform::add(std::shared_ptr<mir::input::InputDevice> const& dev)
 {
-    if (!stub_input_platform)
+    auto input_platform = stub_input_platform.load();
+    if (!input_platform)
     {
         device_store.push_back(dev);
         return;
     }
 
-    stub_input_platform->platform_queue->enqueue(
-        [registry=stub_input_platform->registry,dev]
+    input_platform->platform_queue->enqueue(
+        [registry=input_platform->registry,dev]
         {
             registry->add_device(dev);
         });
@@ -83,15 +84,16 @@ void mtf::StubInputPlatform::add(std::shared_ptr<mir::input::InputDevice> const&
 
 void mtf::StubInputPlatform::remove(std::shared_ptr<mir::input::InputDevice> const& dev)
 {
-    if (!stub_input_platform)
+    auto input_platform = stub_input_platform.load();
+    if (!input_platform)
         BOOST_THROW_EXCEPTION(std::runtime_error("No stub input platform available"));
 
-    stub_input_platform->platform_queue->enqueue(
-        [registry=stub_input_platform->registry,dev]
+    input_platform->platform_queue->enqueue(
+        [registry=input_platform->registry,dev]
         {
             registry->remove_device(dev);
         });
 }
 
-mtf::StubInputPlatform* mtf::StubInputPlatform::stub_input_platform = nullptr;
+std::atomic<mtf::StubInputPlatform*> mtf::StubInputPlatform::stub_input_platform{nullptr};
 std::vector<std::weak_ptr<mir::input::InputDevice>> mtf::StubInputPlatform::device_store;

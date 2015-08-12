@@ -50,16 +50,18 @@ class GSourceHandle
 {
 public:
     GSourceHandle();
-    GSourceHandle(GSource* gsource, std::function<void(GSource*)> const& pre_destruction_hook);
+    GSourceHandle(GSource* gsource, std::function<void(GSource*)> const& terminate_dispatch);
     GSourceHandle(GSourceHandle&& other);
     GSourceHandle& operator=(GSourceHandle other);
     ~GSourceHandle();
+
+    void ensure_no_further_dispatch();
 
     operator GSource*() const;
 
 private:
     GSource* gsource;
-    std::function<void(GSource*)> pre_destruction_hook;
+    std::function<void(GSource*)> terminate_dispatch;
 };
 
 void add_idle_gsource(
