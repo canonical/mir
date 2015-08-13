@@ -33,7 +33,6 @@
 #include <std/Errors.h>
 #include <std/Mutex.h>
 #include <std/RWLock.h>
-#include <std/Thread.h>
 #endif
 
 #endif // _LIBS_UTILS_THREADS_H
