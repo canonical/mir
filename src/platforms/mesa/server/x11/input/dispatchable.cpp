@@ -17,13 +17,11 @@
  */
 
 #include "dispatchable.h"
-#include "../xserver_connection.h"
 #include "mir/events/event_private.h"
 #include "mir/events/event_builders.h"
 
 #include <boost/throw_exception.hpp>
 #include <chrono>
-#include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <linux/input.h>
 #include <inttypes.h>
@@ -37,13 +35,14 @@
 namespace mi = mir::input;
 namespace mix = mi::X;
 namespace md = mir::dispatch;
-namespace mx = mir::X;
 namespace mev = mir::events;
 
-extern std::shared_ptr<mx::X11Connection> x11_connection;
-
-mix::XDispatchable::XDispatchable(int raw_fd)
-    : fd(raw_fd), sink(nullptr)
+mix::XDispatchable::XDispatchable(
+    std::shared_ptr<::Display> const& conn,
+    int raw_fd)
+    : x11_connection(conn),
+      fd(raw_fd),
+      sink(nullptr)
 {
 }
 
@@ -65,7 +64,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
         // https://tronche.com/gui/x/xlib/events/keyboard-pointer/keyboard-pointer.html
         XEvent xev;
 
-        XNextEvent(x11_connection->dpy, &xev);
+        XNextEvent(x11_connection.get(), &xev);
 
         if (sink)
         {
