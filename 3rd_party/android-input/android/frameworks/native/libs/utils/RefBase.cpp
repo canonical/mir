@@ -19,7 +19,6 @@
 
 #include <utils/RefBase.h>
 
-#include <utils/CallStack.h>
 #include <std/Log.h>
 
 #include <stdlib.h>
