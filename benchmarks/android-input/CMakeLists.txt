@@ -8,11 +8,6 @@ include_directories(
   ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES}
 )
 
-add_definitions(-DMIR_INPUT_THREAD_RUN_IMPLEMENTATION)
-include_directories(
-  ${Mir_SOURCE_DIR}/src/include/common
-)
-
 mir_add_wrapped_executable(input-reader-perf NOINSTALL
   input_reader_perf.cpp
 )
