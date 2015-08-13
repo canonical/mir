@@ -3,7 +3,6 @@ project(android-input-perf)
 include_directories(
   ${Mir_SOURCE_DIR}/include/test
   ${Mir_SOURCE_DIR}/include/platform
-  ${Mir_SOURCE_DIR}/include/server
   ${MIR_ANDROID_INCLUDE_DIRECTORIES}
   ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES}
 )
@@ -17,7 +16,6 @@ target_link_libraries(
 
   android-input-static
   mir-test-assist
-  mirserver
  )
 
 uses_android_input(input-reader-perf)
