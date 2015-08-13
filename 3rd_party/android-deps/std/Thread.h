@@ -32,11 +32,6 @@
 #include <pthread.h>
 #endif
 
-#ifdef MIR_INPUT_THREAD_RUN_IMPLEMENTATION
-#include "mir/thread_name.h"
-#include "mir/terminate_with_current_exception.h"
-#endif
-
 namespace mir_input
 {
 class Thread : virtual public RefBase
@@ -52,49 +47,7 @@ public:
     virtual status_t    run(
         const char* name = 0,
         int32_t priority = PRIORITY_DEFAULT,
-        size_t stack = 0)
-#ifndef MIR_INPUT_THREAD_RUN_IMPLEMENTATION
-        = 0;
-#else
-
-    {
-        (void)priority; (void)stack;
-        std::string const name_str{name};
-
-        status.store(NO_ERROR);
-        exit_pending.store(false);
-
-        // Avoid data races by doing a move capture instead of copy capture,
-        // since libstdc++ is using a copy-on-write implementation of std::string
-        // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=21334#c45
-        thread = std::thread([name_str = std::move(name_str),this]
-            {
-                mir::set_thread_name(name_str);
-                try
-                {
-                    if (auto result = readyToRun()) status.store(result);
-                    else while (!exitPending() && threadLoop());
-                }
-                catch (...)
-                {
-                    mir::terminate_with_current_exception();
-                }
-            });
-
-#ifdef HAVE_PTHREADS
-        if (priority != PRIORITY_DEFAULT)
-        {
-            sched_param param;
-            int policy;
-            pthread_getschedparam(thread.native_handle(), &policy, &param);
-            param.sched_priority = priority;
-            pthread_setschedparam(thread.native_handle(), policy, &param);
-        }
-#endif
-
-        return OK;
-    }
-#endif
+        size_t stack = 0) = 0;
 
     // Ask this object's thread to exit. This function is asynchronous, when the
     // function returns the thread might still be running. Of course, this
