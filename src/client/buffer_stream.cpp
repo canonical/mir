@@ -368,7 +368,7 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
             &screencast_id,
             protobuf_bs->mutable_buffer(),
             google::protobuf::NewCallback(
-            this, &mcl::BufferStream::next_buffer_received,
+            this, &mcl::BufferStream::screencast_buffer_received,
             done));
     }
 
@@ -400,7 +400,7 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
     return secured_region;
 }
 
-void mcl::BufferStream::next_buffer_received(std::function<void()> done)
+void mcl::BufferStream::screencast_buffer_received(std::function<void()> done)
 {
     process_buffer(protobuf_bs->buffer());
 
