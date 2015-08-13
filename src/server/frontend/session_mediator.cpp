@@ -374,7 +374,7 @@ void mf::SessionMediator::submit_buffer(
     auto stream = session->get_buffer_stream(stream_id);
 
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
-    if (mg::Buffer* buffer = buffer_stream_tracker.last_buffer(stream_id))
+    if (auto* buffer = buffer_stream_tracker.last_buffer(stream_id))
     {
         ipc_operations->unpack_buffer(request_msg, *buffer);
         stream->swap_buffers(buffer,
