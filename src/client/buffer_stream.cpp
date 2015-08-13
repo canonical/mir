@@ -405,7 +405,7 @@ void mcl::BufferStream::next_buffer_received(std::function<void()> done)
     process_buffer(protobuf_bs->buffer());
 
     done();
-    screencast_wait_handle.expect_result();
+    screencast_wait_handle.result_received();
 }
 
 /* mcl::EGLNativeSurface interface for EGLNativeWindow integration */
