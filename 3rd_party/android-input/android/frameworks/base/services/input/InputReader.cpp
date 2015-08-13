@@ -878,22 +878,6 @@ EventHubInterface* InputReader::ContextImpl::getEventHub() {
     return mReader->mEventHub.get();
 }
 
-
-// --- InputReaderThread ---
-
-InputReaderThread::InputReaderThread(std::shared_ptr<InputReaderInterface> const& reader) :
-        Thread(/*canCallJava*/ true), mReader(reader) {
-}
-
-InputReaderThread::~InputReaderThread() {
-}
-
-bool InputReaderThread::threadLoop() {
-    mReader->loopOnce();
-    return true;
-}
-
-
 // --- InputDevice ---
 
 InputDevice::InputDevice(InputReaderContext* context, int32_t id, int32_t generation,
