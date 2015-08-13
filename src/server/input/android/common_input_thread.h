@@ -21,8 +21,6 @@
 
 #include "android_input_thread.h"
 
-#define MIR_SERVER_INTERNALS_USAGE
-
 #include <utils/StrongPointer.h>
 #include <std/Thread.h>
 
