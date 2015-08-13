@@ -123,6 +123,7 @@ private:
     X11EGLSurface egl_surface;
     MirPixelFormat pf;
     std::unique_ptr<DisplayGroup> display_group;
+    MirOrientation orientation; //TODO: keep entire current display configuration
 };
 
 }

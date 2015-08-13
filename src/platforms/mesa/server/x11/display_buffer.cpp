@@ -29,8 +29,13 @@ namespace geom=mir::geometry;
 mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
                                   EGLDisplay const d,
                                   EGLSurface const s,
-                                  EGLContext const c)
-                                  : size{sz}, egl_dpy{d}, egl_surf{s}, egl_ctx{c}
+                                  EGLContext const c,
+                                  MirOrientation const o)
+                                  : size{sz},
+                                    egl_dpy{d},
+                                    egl_surf{s},
+                                    egl_ctx{c},
+                                    orientation_{o}
 {
 }
 
@@ -64,5 +69,10 @@ void mgx::DisplayBuffer::gl_swap_buffers()
 
 MirOrientation mgx::DisplayBuffer::orientation() const
 {
-    return mir_orientation_normal;
+    return orientation_;
+}
+
+void mgx::DisplayBuffer::set_orientation(MirOrientation const new_orientation)
+{
+    orientation_ = new_orientation;
 }
