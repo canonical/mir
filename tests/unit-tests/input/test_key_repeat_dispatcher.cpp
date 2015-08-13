@@ -88,11 +88,11 @@ namespace
 {
 mir::EventUPtr a_key_down_event()
 {
-    return mev::make_event(0, std::chrono::nanoseconds(0), mir_keyboard_action_down, 0, 0, mir_input_event_modifier_alt);
+    return mev::make_event(0, std::chrono::nanoseconds(0), 0, mir_keyboard_action_down, 0, 0, mir_input_event_modifier_alt);
 }
 mir::EventUPtr a_key_up_event()
 {
-    return mev::make_event(0, std::chrono::nanoseconds(0), mir_keyboard_action_up, 0, 0, mir_input_event_modifier_alt);
+    return mev::make_event(0, std::chrono::nanoseconds(0), 0, mir_keyboard_action_up, 0, 0, mir_input_event_modifier_alt);
 }
 }
 

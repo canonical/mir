@@ -259,8 +259,9 @@ TEST_F(InputTranslator, forwards_all_key_event_paramters_correctly)
 
     int32_t const device_id = 2, scan_code = 4, key_code = 5;
     std::chrono::nanoseconds event_time(1);
+    auto msg_auth_code = 0;
 
-    auto expected = mev::make_event(MirInputDeviceId(device_id), event_time,
+    auto expected = mev::make_event(MirInputDeviceId(device_id), event_time, msg_auth_code,
                                     mir_keyboard_action_down, key_code, scan_code,
                                     mir_input_event_modifier_shift);
 
@@ -286,11 +287,12 @@ TEST_F(InputTranslator, forwards_all_motion_event_paramters_correctly)
     using namespace ::testing;
 
     std::chrono::nanoseconds event_time(2);
+    auto msg_auth_code = 0;
     int32_t device_id = 3;
     int32_t touch_id = 17;
     float x = 7, y = 8, pres = 9, tmaj = 10, tmin = 11, size = 12;
 
-    auto expected = mev::make_event(MirInputDeviceId(device_id), event_time, mir_input_event_modifier_none);
+    auto expected = mev::make_event(MirInputDeviceId(device_id), event_time, msg_auth_code, mir_input_event_modifier_none);
     mev::add_touch(*expected,  MirTouchId(touch_id), mir_touch_action_change,
                    mir_touch_tooltype_finger, x, y, pres, tmaj, tmin, size);
 
