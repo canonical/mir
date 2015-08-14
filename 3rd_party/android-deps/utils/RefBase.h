@@ -31,9 +31,6 @@
 // ---------------------------------------------------------------------------
 namespace android {
 
-class TextOutput;
-TextOutput& printWeakPointer(TextOutput& to, const void* val);
-
 // ---------------------------------------------------------------------------
 
 #define COMPARE_WEAK(_op_)                                      \
@@ -285,9 +282,6 @@ private:
     weakref_type*   m_refs;
 };
 
-template <typename T>
-TextOutput& operator<<(TextOutput& to, const wp<T>& val);
-
 #undef COMPARE_WEAK
 
 // ---------------------------------------------------------------------------
@@ -444,12 +438,6 @@ void wp<T>::clear()
         m_refs->decWeak(this);
         m_ptr = 0;
     }
-}
-
-template <typename T>
-inline TextOutput& operator<<(TextOutput& to, const wp<T>& val)
-{
-    return printWeakPointer(to, val.unsafe_get());
 }
 
 // ---------------------------------------------------------------------------

@@ -27,9 +27,6 @@
 // ---------------------------------------------------------------------------
 namespace android {
 
-class TextOutput;
-TextOutput& printStrongPointer(TextOutput& to, const void* val);
-
 template<typename T> class wp;
 
 // ---------------------------------------------------------------------------
@@ -110,9 +107,6 @@ private:
 };
 
 #undef COMPARE
-
-template <typename T>
-TextOutput& operator<<(TextOutput& to, const sp<T>& val);
 
 // ---------------------------------------------------------------------------
 // No user serviceable parts below here.
@@ -206,12 +200,6 @@ void sp<T>::clear()
 template<typename T>
 void sp<T>::set_pointer(T* ptr) {
     m_ptr = ptr;
-}
-
-template <typename T>
-inline TextOutput& operator<<(TextOutput& to, const sp<T>& val)
-{
-    return printStrongPointer(to, val.get());
 }
 
 } // namespace android
