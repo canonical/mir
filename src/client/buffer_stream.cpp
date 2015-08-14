@@ -20,7 +20,6 @@
 
 #include "buffer_stream.h"
 #include "make_protobuf_object.h"
-#include "buffer_vault.h"
 #include "mir_connection.h"
 #include "perf_report.h"
 #include "logging/perf_report.h"
@@ -56,8 +55,7 @@ namespace client
 //the BufferStream response provided by the server
 struct ServerBufferSemantics
 {
-    virtual void deposit(
-        protobuf::Buffer const&, geometry::Size, MirPixelFormat) = 0;
+    virtual void deposit(protobuf::Buffer const&, geometry::Size, MirPixelFormat) = 0;
     virtual void set_buffer_cache_size(unsigned int) = 0;
     virtual std::shared_ptr<mir::client::ClientBuffer> current_buffer() = 0;
     virtual uint32_t current_buffer_id() = 0;
@@ -124,7 +122,7 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         wrapped.deposit_package(buffer_package, first_buffer.buffer_id(), first_size, first_pf);
     }
 
-    void deposit(mp::Buffer const& buffer, geom::Size size, MirPixelFormat pf)
+    void deposit(mp::Buffer const& buffer, geom::Size size, MirPixelFormat pf) override
     {
         std::unique_lock<std::mutex> lock(mutex);
         if (on_incoming_buffer)
@@ -216,7 +214,7 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
     std::queue<mir::protobuf::Buffer> incoming_buffers;
     std::unique_ptr<mir::protobuf::Void> protobuf_void{std::make_unique<mp::Void>()};
     MirWaitHandle next_buffer_wait_handle;
-    bool server_connection_lost{false};
+    bool server_connection_lost {false};
 };
 
 class Requests : public mcl::ServerBufferRequests
@@ -240,10 +238,17 @@ public:
         server.allocate_buffers(request.get(), &protobuf_void, 
             google::protobuf::NewCallback(google::protobuf::DoNothing));
     }
+
     void free_buffer(int buffer_id) override
     {
-        (void) buffer_id;
+        auto request = mcl::make_protobuf_object<mp::BufferRelease>();
+//      needed by service-alloc-requests
+//      request->mutable_id()->set_value(stream_id);
+        request->add_buffers()->set_buffer_id(buffer_id);
+        server.release_buffers(request.get(), &protobuf_void,
+            google::protobuf::NewCallback(google::protobuf::DoNothing));
     }
+
     void submit_buffer(int id, mcl::ClientBuffer&) override
     {
         auto request = mcl::make_protobuf_object<mp::BufferRequest>();
@@ -252,6 +257,7 @@ public:
         server.submit_buffer(request.get(), &protobuf_void,
             google::protobuf::NewCallback(google::protobuf::DoNothing));
     }
+
 private:
     mclr::DisplayServer& server;
     mp::Void protobuf_void;
@@ -273,6 +279,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     {
         vault.wire_transfer_inbound(buffer);
     }
+
     std::shared_ptr<mir::client::ClientBuffer> current_buffer() override
     {
         if (!current_buffer_)
@@ -293,9 +300,6 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         done();
         return &next_buffer_wait_handle;
     }
-
-
-
 
     void lost_connection() override
     {
@@ -467,7 +471,7 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
             &screencast_id,
             protobuf_bs->mutable_buffer(),
             google::protobuf::NewCallback(
-            this, &mcl::BufferStream::next_buffer_received,
+            this, &mcl::BufferStream::screencast_buffer_received,
             done));
     }
 
@@ -499,11 +503,12 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
     return secured_region;
 }
 
-void mcl::BufferStream::next_buffer_received(std::function<void()> done)
+void mcl::BufferStream::screencast_buffer_received(std::function<void()> done)
 {
     process_buffer(protobuf_bs->buffer());
+
     done();
-    screencast_wait_handle.expect_result();
+    screencast_wait_handle.result_received();
 }
 
 /* mcl::EGLNativeSurface interface for EGLNativeWindow integration */

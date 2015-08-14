@@ -28,7 +28,6 @@
 #include <std/Looper.h>
 #include <std/atomic.h>
 #include <std/Condition.h>
-#include <std/Thread.h>
 #include <std/Mutex.h>
 
 #include <stddef.h>

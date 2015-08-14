@@ -49,7 +49,7 @@ mcl::BufferVault::BufferVault(
 
 mcl::BufferVault::~BufferVault()
 {
-    for(auto& it : buffers)
+    for (auto& it : buffers)
         server_requests->free_buffer(it.first);
 }
 
@@ -88,10 +88,9 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 
 void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 {
-    std::shared_ptr<mcl::ClientBuffer> submit_buffer;
     int id;
-    {
-    std::lock_guard<std::mutex> lk(mutex);
+    std::shared_ptr<mcl::ClientBuffer> submit_buffer;
+    std::unique_lock<std::mutex> lk(mutex);
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
     if (it == buffers.end() || it->second.owner != Owner::Self)
@@ -101,7 +100,7 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
     it->second.buffer->mark_as_submitted();
     submit_buffer = it->second.buffer;
     id = it->first;
-    }
+    lk.unlock();
     server_requests->submit_buffer(id, *submit_buffer);
 }
 

@@ -20,7 +20,6 @@
 
 #include "mir/events/event_private.h"
 #include "android/android_input_reader_policy.h"
-#include "android/common_input_thread.h"
 #include "android/android_input_reader_policy.h"
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
