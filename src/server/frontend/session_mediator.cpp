@@ -400,6 +400,7 @@ void mf::SessionMediator::allocate_buffers(
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
+    report->session_allocate_buffers_called(session->name());
     mf::BufferStreamId stream_id{request->id().value()};
     auto stream = session->get_buffer_stream(stream_id);
     for (auto i = 0; i < request->buffer_requests().size(); i++)
@@ -423,6 +424,7 @@ void mf::SessionMediator::release_buffers(
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
+    report->session_release_buffers_called(session->name());
     mf::BufferStreamId stream_id{request->id().value()};
     auto stream = session->get_buffer_stream(stream_id);
     for (auto i = 0; i < request->buffers().size(); i++)
