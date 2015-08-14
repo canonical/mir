@@ -121,7 +121,7 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         wrapped.deposit_package(buffer_package, first_buffer.buffer_id(), first_size, first_pf);
     }
 
-    void deposit(mp::Buffer const& buffer, geom::Size size, MirPixelFormat pf)
+    void deposit(mp::Buffer const& buffer, geom::Size size, MirPixelFormat pf) override
     {
         std::unique_lock<std::mutex> lock(mutex);
         if (on_incoming_buffer)
