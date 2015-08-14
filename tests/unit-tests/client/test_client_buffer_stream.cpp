@@ -60,6 +60,8 @@ struct MockProtobufServer : public mclr::DisplayServer
             .WillByDefault(RunProtobufClosure());
         ON_CALL(*this, allocate_buffers(_,_,_))
             .WillByDefault(RunProtobufClosure());
+        ON_CALL(*this, release_buffers(_,_,_))
+            .WillByDefault(RunProtobufClosure());
     }
 
     MOCK_METHOD3(screencast_buffer, void(
@@ -68,6 +70,10 @@ struct MockProtobufServer : public mclr::DisplayServer
         google::protobuf::Closure* /*done*/));
     MOCK_METHOD3(allocate_buffers, void(
         mir::protobuf::BufferAllocation const*,
+        mir::protobuf::Void*,
+        google::protobuf::Closure*));
+    MOCK_METHOD3(release_buffers, void(
+        mir::protobuf::BufferRelease const*,
         mir::protobuf::Void*,
         google::protobuf::Closure*));
     MOCK_METHOD3(submit_buffer, void(
@@ -309,8 +315,13 @@ TEST_P(ClientBufferStream, producer_streams_call_submit_buffer_on_next_buffer)
         mp::Buffer buffer;
         fill_protobuf_buffer_from_package(&buffer, a_buffer_package());
         bs.buffer_available(buffer);
+        mp::Buffer buffer1;
+        fill_protobuf_buffer_from_package(&buffer1, a_buffer_package());
+        bs.buffer_available(buffer1);
     }
-    bs.next_buffer([]{});
+
+   bs.get_current_buffer();
+   bs.next_buffer([]{});
 }
 
 TEST_P(ClientBufferStream, consumer_streams_call_screencast_buffer_on_next_buffer)
@@ -346,6 +357,7 @@ TEST_P(ClientBufferStream, invokes_callback_on_next_buffer)
             InvokeWithoutArgs([&bs, &buffer]{ bs.buffer_available(buffer);})));
 
     bool callback_invoked = false;
+    bs.get_current_buffer();
     bs.next_buffer([&callback_invoked](){ callback_invoked = true; })->wait_for_all();
     EXPECT_EQ(callback_invoked, true);
 }
@@ -510,6 +522,7 @@ TEST_P(ClientBufferStream, receives_unsolicited_buffer)
         .WillOnce(Return(mt::fake_shared(second_mock_client_buffer)));
     EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillOnce(RunProtobufClosure());
+    bs.get_current_buffer();
     bs.buffer_available(another_buffer_package);
     bs.next_buffer([]{});
 
@@ -561,7 +574,7 @@ TEST_P(ClientBufferStream, waiting_client_can_unblock_on_shutdown)
         bs.request_and_wait_for_next_buffer();
     }, std::exception);
 }
-#if 0
+
 TEST_P(ClientBufferStream, invokes_callback_on_buffer_available_before_wait_handle_has_result)
 {
     MirWaitHandle* wh{nullptr};
@@ -575,19 +588,22 @@ TEST_P(ClientBufferStream, invokes_callback_on_buffer_available_before_wait_hand
         mp::Buffer buffer;
         fill_protobuf_buffer_from_package(&buffer, a_buffer_package());
         bs.buffer_available(buffer);
+        mp::Buffer buffer1;
+        fill_protobuf_buffer_from_package(&buffer1, a_buffer_package());
+        bs.buffer_available(buffer1);
     }
+    bs.get_current_buffer();
+    bs.buffer_available(mp::Buffer{});
     wh = bs.next_buffer([&] {
-            wait_handle_has_result_in_callback = wh->has_result();
+            if (wh)
+                wait_handle_has_result_in_callback = wh->has_result();
         });
 
-    bs.buffer_available(mp::Buffer{});
     EXPECT_FALSE(wait_handle_has_result_in_callback);
 }
 
 TEST_P(ClientBufferStream, invokes_callback_on_buffer_unavailable_before_wait_handle_has_result)
 {
-//    MirWaitHandle* wh{nullptr};
-//    bool wait_handle_has_result_in_callback = false;
     MirWaitHandle* wh{nullptr};
     bool wait_handle_has_result_in_callback = false;
 
@@ -600,23 +616,21 @@ TEST_P(ClientBufferStream, invokes_callback_on_buffer_unavailable_before_wait_ha
         mp::Buffer buffer;
         fill_protobuf_buffer_from_package(&buffer, a_buffer_package());
         bs.buffer_available(buffer);
+        mp::Buffer buffer1;
+        fill_protobuf_buffer_from_package(&buffer1, a_buffer_package());
+        bs.buffer_available(buffer1);
     }
-//    wh = bs.next_buffer([&] {
-//            printf("HHH\n");
-//            wait_handle_has_result_in_callback = wh->has_result();
-//        });
-//        printf("OK>.\n");
-//    bs.buffer_unavailable();
-//    EXPECT_FALSE(wait_handle_has_result_in_callback);
 
+    bs.get_current_buffer();
     wh = bs.next_buffer(
         [&]
         {
-            wait_handle_has_result_in_callback = wh->has_result();
+            if (wh)
+                wait_handle_has_result_in_callback = wh->has_result();
         });
 
     bs.buffer_unavailable();
     EXPECT_FALSE(wait_handle_has_result_in_callback);
 }
-#endif
+
 INSTANTIATE_TEST_CASE_P(TT, ClientBufferStream, Bool());

@@ -278,6 +278,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     void deposit(mp::Buffer const& buffer, geom::Size, MirPixelFormat)
     {
         vault.wire_transfer_inbound(buffer);
+        current_buffer_id_ = buffer.buffer_id();
     }
 
     std::shared_ptr<mir::client::ClientBuffer> current_buffer() override
@@ -289,7 +290,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
     uint32_t current_buffer_id() override
     {
-        return 0;
+        return current_buffer_id_;
     }
 
     MirWaitHandle* submit(std::function<void()> const& done, geom::Size, MirPixelFormat, int) override
