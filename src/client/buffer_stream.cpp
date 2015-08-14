@@ -295,6 +295,9 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
     MirWaitHandle* submit(std::function<void()> const& done, geom::Size, MirPixelFormat, int) override
     {
+        if (!current_buffer_)
+            current_buffer_ = vault.withdraw().get();
+
         vault.deposit(current_buffer_);
         vault.wire_transfer_outbound(current_buffer_);
         current_buffer_ = vault.withdraw().get();
