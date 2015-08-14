@@ -31,7 +31,7 @@
 #ifdef HAVE_PTHREADS
 #include <pthread.h>
 #endif
-#include <cutils/uio.h>
+#include <sys/uio.h>
 #include <stdarg.h>
 
 #ifdef __cplusplus
