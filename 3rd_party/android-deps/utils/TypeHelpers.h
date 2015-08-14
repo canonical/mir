@@ -173,50 +173,6 @@ void splat_type(TYPE* where, const TYPE* what, size_t n) {
     }
 }
 
-template<typename TYPE> inline
-void move_forward_type(TYPE* d, const TYPE* s, size_t n = 1) {
-    if ((traits<TYPE>::has_trivial_dtor && traits<TYPE>::has_trivial_copy) 
-            || traits<TYPE>::has_trivial_move) 
-    {
-        memmove(d,s,n*sizeof(TYPE));
-    } else {
-        d += n;
-        s += n;
-        while (n--) {
-            --d, --s;
-            if (!traits<TYPE>::has_trivial_copy) {
-                new(d) TYPE(*s);
-            } else {
-                *d = *s;   
-            }
-            if (!traits<TYPE>::has_trivial_dtor) {
-                s->~TYPE();
-            }
-        }
-    }
-}
-
-template<typename TYPE> inline
-void move_backward_type(TYPE* d, const TYPE* s, size_t n = 1) {
-    if ((traits<TYPE>::has_trivial_dtor && traits<TYPE>::has_trivial_copy) 
-            || traits<TYPE>::has_trivial_move) 
-    {
-        memmove(d,s,n*sizeof(TYPE));
-    } else {
-        while (n--) {
-            if (!traits<TYPE>::has_trivial_copy) {
-                new(d) TYPE(*s);
-            } else {
-                *d = *s;   
-            }
-            if (!traits<TYPE>::has_trivial_dtor) {
-                s->~TYPE();
-            }
-            d++, s++;
-        }
-    }
-}
-
 // ---------------------------------------------------------------------------
 
 /*
