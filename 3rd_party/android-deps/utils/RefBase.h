@@ -158,40 +158,6 @@ private:
 
 // ---------------------------------------------------------------------------
 
-template <class T>
-class LightRefBase
-{
-public:
-    inline LightRefBase() : mCount(0) { }
-    inline void incStrong(const void* /* id */) const {
-        android_atomic_inc(&mCount);
-    }
-    inline void decStrong(const void* /* id */) const {
-        if (android_atomic_dec(&mCount) == 1) {
-            delete static_cast<const T*>(this);
-        }
-    }
-    //! DEBUGGING ONLY: Get current strong ref count.
-    inline int32_t getStrongCount() const {
-        return mCount;
-    }
-
-    typedef LightRefBase<T> basetype;
-
-protected:
-    inline ~LightRefBase() { }
-
-private:
-    friend class ReferenceMover;
-    inline static void moveReferences(void* /* d */, void const* /* s */, size_t /* n */,
-            const ReferenceConverterBase& /* caster */) { }
-
-private:
-    mutable android_atomic_int32_t mCount;
-};
-
-// ---------------------------------------------------------------------------
-
 template <typename T>
 class wp
 {
