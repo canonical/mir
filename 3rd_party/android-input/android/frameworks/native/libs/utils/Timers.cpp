@@ -91,12 +91,6 @@ void DurationTimer::stop(void)
     gettimeofday(&mStopWhen, NULL);
 }
 
-// Get the duration in microseconds.
-long long DurationTimer::durationUsecs(void) const
-{
-    return (long) subtractTimevals(&mStopWhen, &mStartWhen);
-}
-
 // Subtract two timevals.  Returns the difference (ptv1-ptv2) in
 // microseconds.
 /*static*/ long long DurationTimer::subtractTimevals(const struct timeval* ptv1,

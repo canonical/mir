@@ -82,8 +82,6 @@ public:
     void start();
     // Stop the timer.
     void stop();
-    // Get the duration in microseconds.
-    long long durationUsecs() const;
 
     // Subtract two timevals.  Returns the difference (ptv1-ptv2) in
     // microseconds.

@@ -77,9 +77,6 @@ public:
     template<typename U> sp& operator = (const sp<U>& other);
     template<typename U> sp& operator = (U* other);
 
-    //! Special optimization for use by ProcessState (and nobody else).
-    void force_set(T* other);
-
     // Reset
 
     void clear();
@@ -179,13 +176,6 @@ sp<T>& sp<T>::operator = (U* other)
     if (m_ptr) m_ptr->decStrong(this);
     m_ptr = other;
     return *this;
-}
-
-template<typename T>    
-void sp<T>::force_set(T* other)
-{
-    other->forceIncStrong(this);
-    m_ptr = other;
 }
 
 template<typename T>
