@@ -430,9 +430,7 @@ struct MirClientSurfaceTest : public testing::Test
     std::shared_ptr<mclr::DisplayServer> client_comm_channel;
 
     std::chrono::milliseconds const pause_time{10};
-
 };
-
 
 }
 
