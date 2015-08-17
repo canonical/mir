@@ -355,7 +355,7 @@ TEST_F(StartedBufferVault, frees_incoming_buffers_of_incorrect_size_with_delayed
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
-TEST_F(StartedBufferVault, newly_sized_buffers_come_immediately)
+TEST_F(StartedBufferVault, withdraw_gives_only_newly_sized_buffers_after_resize)
 {
     mp::Buffer package4;
     geom::Size new_size{80, 100};
