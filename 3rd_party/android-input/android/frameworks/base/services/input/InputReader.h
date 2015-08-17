@@ -26,7 +26,6 @@
 #include <androidfw/VelocityControl.h>
 #include <androidfw/VelocityTracker.h>
 #include <std/KeyedVector.h>
-#include <std/Thread.h>
 #include <std/Condition.h>
 #include <std/Timers.h>
 #include <std/RefBase.h>
@@ -447,19 +446,6 @@ private:
             GetStateFunc getStateFunc);
     bool markSupportedKeyCodesLocked(int32_t deviceId, uint32_t sourceMask, size_t numCodes,
             const int32_t* keyCodes, uint8_t* outFlags);
-};
-
-
-/* Reads raw events from the event hub and processes them, endlessly. */
-class InputReaderThread : public Thread {
-public:
-    InputReaderThread(std::shared_ptr<InputReaderInterface> const& reader);
-    virtual ~InputReaderThread();
-
-private:
-    std::shared_ptr<InputReaderInterface> mReader;
-
-    virtual bool threadLoop();
 };
 
 
