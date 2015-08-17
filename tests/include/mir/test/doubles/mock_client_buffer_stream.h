@@ -47,6 +47,7 @@ struct MockClientBufferStream : public client::ClientBufferStream
     MOCK_CONST_METHOD0(valid, bool(void));
     MOCK_METHOD1(buffer_available, void(mir::protobuf::Buffer const&));
     MOCK_METHOD0(buffer_unavailable, void());
+    MOCK_METHOD1(set_size, void(geometry::Size));
 };
 
 }

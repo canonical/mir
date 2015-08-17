@@ -210,6 +210,7 @@ MirSurface::MirSurface(
 MirSurface::~MirSurface()
 {
     {
+        printf("GO!\n");
         std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
         valid_surfaces.erase(this);
     }
@@ -220,6 +221,7 @@ MirSurface::~MirSurface()
 
     for (auto i = 0, end = surface->fd_size(); i != end; ++i)
         close(surface->fd(i));
+    printf("EGO\n");
 }
 
 MirSurfaceParameters MirSurface::get_parameters() const
@@ -356,6 +358,7 @@ MirWaitHandle* MirSurface::release_surface(
         mir_surface_callback callback,
         void * context)
 {
+    printf("RELEASE.\n");
     bool was_valid = false;
     {
         std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
