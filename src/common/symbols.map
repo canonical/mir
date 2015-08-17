@@ -1,5 +1,5 @@
 MIR_COMMON_5 {
- global: mir_*;
+ global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mircommon public" | sed "s/mircommon public: /    /" | sort  
