@@ -89,7 +89,6 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
     pending_calls.force_completion();
     surface_map->with_all_streams_do(
         [](mcl::ClientBufferStream* stream) {
-            printf("SSSS %X\n", (int)(long)stream);
             if (stream) stream->buffer_unavailable();
         });
 }
