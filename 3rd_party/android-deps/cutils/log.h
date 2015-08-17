@@ -37,7 +37,7 @@
 #endif
 #include <stdarg.h>
 
-#include <cutils/uio.h>
+#include <sys/uio.h>
 #include <cutils/logd.h>
 
 #ifdef __cplusplus
@@ -448,14 +448,6 @@ typedef enum {
     assert(false && #cond)
 #endif // HAVE_ANDROID_OS
 
-#define android_writeLog(prio, tag, text) \
-    __android_log_write(prio, tag, text)
-
-#define android_bWriteLog(tag, payload, len) \
-    __android_log_bwrite(tag, payload, len)
-#define android_btWriteLog(tag, type, payload, len) \
-    __android_log_btwrite(tag, type, payload, len)
-
 // TODO: remove these prototypes and their users
 #define android_testLog(prio, tag) (1)
 #define android_writevLog(vec,num) do{}while(0)
@@ -477,7 +469,6 @@ typedef enum {
 /*
  * Send a simple string to the log.
  */
-int __android_log_buf_write(int bufID, int prio, const char *tag, const char *text);
 int __android_log_buf_print(int bufID, int prio, const char *tag, const char *fmt, ...);
 
 
