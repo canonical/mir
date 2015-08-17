@@ -185,6 +185,11 @@ struct _XcursorFile {
     int	    (*seek)  (XcursorFile *file, long offset, int whence);
 };
 
+typedef struct _XcursorComments {
+    int		    ncomment;	/* number of comments */
+    XcursorComment  **comments;	/* array of XcursorComment pointers */
+} XcursorComments;
+
 /*
  * From libXcursor/src/file.c
  */
