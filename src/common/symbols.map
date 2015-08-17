@@ -144,7 +144,7 @@ MIR_COMMON_5 {
 };
 
 MIR_COMMON_5.1 {
-  global: mir_*;
+ global:
     extern "C++" {
       android::InputChannel::InputChannel*;
       android::InputChannel::openInputFdPair*;
