@@ -130,7 +130,7 @@ void KeyEvent::initialize(
         int32_t scanCode,
         int32_t metaState,
         int32_t repeatCount,
-        uint64_t msgAuthCode,
+        uint64_t mac,
         std::chrono::nanoseconds downTime,
         std::chrono::nanoseconds eventTime) {
     InputEvent::initialize(deviceId, source);
@@ -140,7 +140,7 @@ void KeyEvent::initialize(
     mScanCode = scanCode;
     mMetaState = metaState;
     mRepeatCount = repeatCount;
-    mMsgAuthCode = msgAuthCode;
+    mMac = mac;
     mDownTime = downTime;
     mEventTime = eventTime;
 }
@@ -153,7 +153,7 @@ void KeyEvent::initialize(const KeyEvent& from) {
     mScanCode = from.mScanCode;
     mMetaState = from.mMetaState;
     mRepeatCount = from.mRepeatCount;
-    mMsgAuthCode = from.mMsgAuthCode;
+    mMac = from.mMac;
     mDownTime = from.mDownTime;
     mEventTime = from.mEventTime;
 }
@@ -297,7 +297,7 @@ void MotionEvent::initialize(
         float yOffset,
         float xPrecision,
         float yPrecision,
-        uint64_t msgAuthCode,
+        uint64_t mac,
         std::chrono::nanoseconds downTime,
         std::chrono::nanoseconds eventTime,
         size_t pointerCount,
@@ -313,7 +313,7 @@ void MotionEvent::initialize(
     mYOffset = yOffset;
     mXPrecision = xPrecision;
     mYPrecision = yPrecision;
-    mMsgAuthCode = mMsgAuthCode;
+    mMac = mMac;
     mDownTime = downTime;
     mPointerProperties.clear();
     mPointerProperties.appendArray(pointerProperties, pointerCount);
@@ -333,7 +333,7 @@ void MotionEvent::copyFrom(const MotionEvent* other, bool keepHistory) {
     mYOffset = other->mYOffset;
     mXPrecision = other->mXPrecision;
     mYPrecision = other->mYPrecision;
-    mMsgAuthCode = other->mMsgAuthCode;
+    mMac = other->mMac;
     mDownTime = other->mDownTime;
     mPointerProperties = other->mPointerProperties;
 

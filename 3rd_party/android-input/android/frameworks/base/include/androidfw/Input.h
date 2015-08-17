@@ -276,7 +276,7 @@ public:
 
     inline int32_t getRepeatCount() const { return mRepeatCount; }
 
-    inline uint64_t getMsgAuthCode() const { return mMsgAuthCode; }
+    inline uint64_t getMac() const { return mMac; }
 
     inline std::chrono::nanoseconds getDownTime() const { return mDownTime; }
 
@@ -311,7 +311,7 @@ protected:
     int32_t mScanCode;
     int32_t mMetaState;
     int32_t mRepeatCount;
-    uint64_t mMsgAuthCode;
+    uint64_t mMac;
     std::chrono::nanoseconds mDownTime;
     std::chrono::nanoseconds mEventTime;
 };
@@ -358,7 +358,7 @@ public:
 
     inline float getYPrecision() const { return mYPrecision; }
 
-    inline uint64_t getMsgAuthCode() const { return mMsgAuthCode; }
+    inline uint64_t getMac() const { return mMac; }
 
     inline std::chrono::nanoseconds getDownTime() const { return mDownTime; }
 
@@ -561,7 +561,7 @@ protected:
     float mYOffset;
     float mXPrecision;
     float mYPrecision;
-    uint64_t mMsgAuthCode;
+    uint64_t mMac;
     std::chrono::nanoseconds mDownTime;
     Vector<PointerProperties> mPointerProperties;
     Vector<std::chrono::nanoseconds> mSampleEventTimes;

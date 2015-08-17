@@ -42,7 +42,7 @@ void NotifyConfigurationChangedArgs::notify(InputListenerInterface& listener) co
 
 // --- NotifyKeyArgs ---
 
-NotifyKeyArgs::NotifyKeyArgs(std::chrono::nanoseconds eventTime, uint64_t msgAuthCode,
+NotifyKeyArgs::NotifyKeyArgs(std::chrono::nanoseconds eventTime, uint64_t mac,
         int32_t deviceId, uint32_t source, uint32_t policyFlags,
         int32_t action, int32_t flags, int32_t keyCode, int32_t scanCode,
         int32_t metaState, std::chrono::nanoseconds downTime) :
@@ -52,7 +52,7 @@ NotifyKeyArgs::NotifyKeyArgs(std::chrono::nanoseconds eventTime, uint64_t msgAut
 }
 
 NotifyKeyArgs::NotifyKeyArgs(const NotifyKeyArgs& other) :
-        eventTime(other.eventTime), msgAuthCode(other.msgAuthCode),
+        eventTime(other.eventTime), mac(other.mac),
         deviceId(other.deviceId), source(other.source),
         policyFlags(other.policyFlags),
         action(other.action), flags(other.flags),
@@ -67,13 +67,13 @@ void NotifyKeyArgs::notify(InputListenerInterface& listener) const {
 
 // --- NotifyMotionArgs ---
 
-NotifyMotionArgs::NotifyMotionArgs(std::chrono::nanoseconds eventTime, uint64_t msgAuthCode,
+NotifyMotionArgs::NotifyMotionArgs(std::chrono::nanoseconds eventTime, uint64_t mac,
         int32_t deviceId, uint32_t source, uint32_t policyFlags,
         int32_t action, int32_t flags, int32_t metaState, int32_t buttonState,
         int32_t edgeFlags, uint32_t pointerCount,
         const PointerProperties* pointerProperties, const PointerCoords* pointerCoords,
         float xPrecision, float yPrecision, std::chrono::nanoseconds downTime) :
-        eventTime(eventTime), msgAuthCode(msgAuthCode), deviceId(deviceId), source(source),
+        eventTime(eventTime), mac(mac), deviceId(deviceId), source(source),
         policyFlags(policyFlags), action(action), flags(flags), metaState(metaState),
         buttonState(buttonState), edgeFlags(edgeFlags), pointerCount(pointerCount),
         xPrecision(xPrecision), yPrecision(yPrecision), downTime(downTime) {
@@ -84,7 +84,7 @@ NotifyMotionArgs::NotifyMotionArgs(std::chrono::nanoseconds eventTime, uint64_t 
 }
 
 NotifyMotionArgs::NotifyMotionArgs(const NotifyMotionArgs& other) :
-        eventTime(other.eventTime), msgAuthCode(other.msgAuthCode),
+        eventTime(other.eventTime), mac(other.mac),
         deviceId(other.deviceId), source(other.source),
         policyFlags(other.policyFlags),
         action(other.action), flags(other.flags),
