@@ -74,6 +74,7 @@ public:
     MOCK_METHOD2(XUngrabKeyboard, int(Display*, Time));
     MOCK_METHOD4(XGetErrorText, int(Display*, int, char*, int ));
     MOCK_METHOD1(XSetErrorHandler, XErrorHandler(XErrorHandler));
+    MOCK_METHOD0(XInitThreads, Status());
 
     FakeX11Resources fake_x11;
 };

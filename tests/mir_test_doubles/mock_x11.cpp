@@ -53,6 +53,9 @@ mtd::MockX11::MockX11()
 
     ON_CALL(*this, XCreateWindow_wrapper(fake_x11.display,_,_,_,_,_,_,_,_,_))
     .WillByDefault(Return(fake_x11.window));
+
+    ON_CALL(*this, XInitThreads())
+    .WillByDefault(Return(1));
 }
 
 mtd::MockX11::~MockX11()
@@ -153,4 +156,9 @@ int XGetErrorText(Display* display, int code, char* buffer_return, int length)
 XErrorHandler XSetErrorHandler(XErrorHandler handler)
 {
     return global_mock->XSetErrorHandler(handler);
+}
+
+Status XInitThreads()
+{
+    return global_mock->XInitThreads();
 }
