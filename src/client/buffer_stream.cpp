@@ -452,3 +452,7 @@ void mcl::BufferStream::buffer_unavailable()
     if (next_buffer_wait_handle.is_pending())
         next_buffer_wait_handle.result_received();
 }
+
+void mcl::BufferStream::set_size(geom::Size) 
+{
+}

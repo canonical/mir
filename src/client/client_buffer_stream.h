@@ -70,6 +70,7 @@ public:
     virtual bool valid() const = 0;
     virtual void buffer_available(mir::protobuf::Buffer const& buffer) = 0;
     virtual void buffer_unavailable() = 0;
+    virtual void set_size(geometry::Size) = 0;
 
 protected:
     ClientBufferStream() = default;

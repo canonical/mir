@@ -210,7 +210,6 @@ MirSurface::MirSurface(
 MirSurface::~MirSurface()
 {
     {
-        printf("GO!\n");
         std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
         valid_surfaces.erase(this);
     }
@@ -221,7 +220,6 @@ MirSurface::~MirSurface()
 
     for (auto i = 0, end = surface->fd_size(); i != end; ++i)
         close(surface->fd(i));
-    printf("EGO\n");
 }
 
 MirSurfaceParameters MirSurface::get_parameters() const
@@ -358,7 +356,6 @@ MirWaitHandle* MirSurface::release_surface(
         mir_surface_callback callback,
         void * context)
 {
-    printf("RELEASE.\n");
     bool was_valid = false;
     {
         std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
@@ -580,6 +577,17 @@ void MirSurface::handle_event(MirEvent const& e)
         keymapper->set_rules(names);
         break;
     }
+    case mir_event_type_resize:
+    {
+        if (auto_resize_stream)
+        {
+            auto resize_event = mir_event_get_resize_event(&e);
+            buffer_stream->set_size(geom::Size{
+                mir_resize_event_get_width(resize_event),
+                mir_resize_event_get_height(resize_event)});
+        }
+        break;
+    }
     default:
         break;
     };
@@ -706,6 +714,7 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 
     if (spec.streams.is_set())
     {
+        auto_resize_stream = false;
         for(auto const& stream : spec.streams.value())
         {
             auto const new_stream = surface_specification->add_stream();

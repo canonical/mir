@@ -577,11 +577,16 @@ TEST_F(MirClientSurfaceTest, configure_wait_handle_really_blocks)
     EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
 }
 
+MATCHER(EventOfTypeResize, "")
+{
+    return mir_event_get_type(arg) == mir_event_type_resize;
+}
+
 TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_no_customized_streams)
 {
     using namespace testing;
     auto mock_stream = std::make_shared<mtd::MockClientBufferStream>(); 
-    auto mock_stream_factory = std::make_shared<mtd::MockClientBufferStreamFactory>();
+    auto mock_stream_factory = std::make_shared<NiceMock<mtd::MockClientBufferStreamFactory>>();
     auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
     ON_CALL(*mock_stream_factory, make_producer_stream(_,_,_,_,An<void*>()))
         .WillByDefault(Return(mock_stream.get()));
@@ -593,7 +598,7 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_no_customized
 
     geom::Size size(120, 124);
     EXPECT_CALL(*mock_stream, set_size(size));
-    EXPECT_CALL(*this, event_callback(_,_,_));
+    EXPECT_CALL(*this, event_callback(_,EventOfTypeResize(),_));
     auto ev = mir::events::make_event(mir::frontend::SurfaceId(2), size);
 
     std::shared_ptr<MirSurface> surface(
@@ -607,13 +612,14 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_no_customized
     surface->get_create_wait_handle()->wait_for_all();
     surface->set_event_handler(&MirClientSurfaceTest::mock_event_callback , this);
     surface->handle_event(*ev);
+    Mock::VerifyAndClearExpectations(this);
 }
 
 TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_customized_streams)
 {
     using namespace testing;
-    auto mock_stream = std::make_shared<mtd::MockClientBufferStream>(); 
-    auto mock_stream_factory = std::make_shared<mtd::MockClientBufferStreamFactory>();
+    auto mock_stream = std::make_shared<NiceMock<mtd::MockClientBufferStream>>();
+    auto mock_stream_factory = std::make_shared<NiceMock<mtd::MockClientBufferStreamFactory>>();
     auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
     ON_CALL(*mock_stream, rpc_id()).WillByDefault(Return(mir::frontend::BufferStreamId(2)));
     ON_CALL(*mock_stream_factory, make_producer_stream(_,_,_,_,An<void*>()))
@@ -645,50 +651,5 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_customized_st
     surface->modify(spec)->wait_for_all();
 
     surface->handle_event(*ev);
-
+    Mock::VerifyAndClearExpectations(this);
 }
- #if 0
-TEST_F(MirClientSurfaceTest, ignores_stream_resize_if_user_set_streams)
-{
-    using namespace testing;
-    auto mock_stream = std::make_shared<mtd::MockClientBufferStream>(); 
-    auto mock_stream_factory = std::make_shared<mtd::MockClientBufferStreamFactory>();
-    auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
-    ON_CALL(*mock_stream, rpc_id()).WillByDefault(Return(mir::frontend::BufferStreamId(2)));
-    ON_CALL(*mock_stream_factory, make_producer_stream(_,_,_,_,An<void*>()))
-        .WillByDefault(Return(mock_stream.get()));
-    ON_CALL(*mock_stream_factory, make_producer_stream(_,_,_,_,An<geom::Size>()))
-        .WillByDefault(Return(mock_stream));
-    ON_CALL(*mock_input_platform, create_input_receiver(_,_,_))
-        .WillByDefault(Return(std::make_shared<mt::TestDispatchable>([]{})));
-
-    printf("MOCK ST %X\n", (int)(long)mock_stream.get());
-
-    geom::Size size(120, 124);
-    EXPECT_CALL(*mock_stream, set_size(_))
-        .Times(0);
-    EXPECT_CALL(*this, event_callback(_,_,_));
-    auto ev = mir::events::make_event(mir::frontend::SurfaceId(2), size);
-    MirSurface surface{connection.get(), *client_comm_channel, nullptr,
-        mock_stream_factory, mock_input_platform, spec, &null_surface_callback, nullptr};
-    auto wait_handle = surface.get_create_wait_handle();
-    wait_handle->wait_for_all();
-    surface.set_event_handler(&MirClientSurfaceTest::mock_event_callback , this);
-
-    //MirSurfaceSpec spec;
-
-    //MirBufferStreamInfo info{dynamic_cast<MirBufferStream*>(surface.get_buffer_stream()), 0, 1 };
-//    MirBufferStreamInfo info{nullptr, 0, 1 };
-    //mcl::ClientBufferStream* s = surface.get_buffer_stream();
-    //printf("NNN %X\n", (int)(long) s);
-    //MirBufferStream* str = reinterpret_cast<MirBufferStream*>(s); 
-    //std::vector<MirBufferStreamInfo> info = {{str, 0, 1 }};
-    //spec.streams = info;
-    //auto wh2 = surface.modify(spec);
-    //wh2->wait_for_all();
-
-    surface.handle_event(*ev);
-
-    printf("END!\n");
-}
-#endif
