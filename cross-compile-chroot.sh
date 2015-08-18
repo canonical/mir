@@ -21,7 +21,7 @@ NUM_JOBS=$(( $(grep -c ^processor /proc/cpuinfo) + 1 ))
 _do_update_chroot=0
 dist=vivid
 
-while getopts "cuh" OPTNAME
+while getopts "cduh" OPTNAME
 do
     case $OPTNAME in
       c )
