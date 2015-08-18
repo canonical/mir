@@ -13,6 +13,11 @@ if [ ! -d ${1} ]; then
     mkdir -p ${1} 
 fi
 
+dist=vivid
+if [ ! -z "$2" ]; then
+    dist=$2
+fi
+
 DEBCONTROL=$(pwd)/../debian/control
 
 pushd ${1} > /dev/null
@@ -41,7 +46,7 @@ builddeps=$(echo ${builddeps} | sed 's/([^)]*)//g')
 builddeps=$(echo ${builddeps} | sed 's/ /,/g')
 builddeps=$(echo ${builddeps} | sed -e 's/abi-compliance-checker//g')
 
-fakeroot debootstrap --include=${builddeps} --arch=armhf --download-only --variant=buildd vivid .
+fakeroot debootstrap --include=${builddeps} --arch=armhf --download-only --variant=buildd $dist .
 
 # Remove libc libraries that confuse the cross-compiler
 rm var/cache/apt/archives/libc-dev*.deb

@@ -4,10 +4,11 @@
 set -e
 
 usage() {
-  echo "usage: $(basename $0) [-c] [-u]"
-  echo "-c clean before building"
-  echo "-u update partial chroot directory"
-  echo "-h this message"
+  echo "usage: $(basename $0) [-c] [-u] [-d <dist>]"
+  echo "  -c         Clean before building"
+  echo "  -d <dist>  Select the distribution to build for"
+  echo "  -u         Update partial chroot directory"
+  echo "  -h         This message"
 }
 
 clean_build_dir() {
@@ -18,12 +19,18 @@ clean_build_dir() {
 BUILD_DIR=build-android-arm
 NUM_JOBS=$(( $(grep -c ^processor /proc/cpuinfo) + 1 ))
 _do_update_chroot=0
+dist=vivid
 
 while getopts "cuh" OPTNAME
 do
     case $OPTNAME in
       c )
         clean_build_dir ${BUILD_DIR}
+        shift
+        ;;
+      d )
+        shift
+        dist=$1
         shift
         ;;
       u )
@@ -44,7 +51,7 @@ done
 
 
 if [ "${MIR_NDK_PATH}" = "" ]; then
-    export MIR_NDK_PATH=~/.cache/mir-armhf-chroot
+    export MIR_NDK_PATH=~/.cache/mir-armhf-chroot-$dist
 fi
 
 if [ ! -d ${MIR_NDK_PATH} ]; then 
@@ -64,7 +71,15 @@ if [ ${_do_update_chroot} -eq 1 ] ; then
     clean_build_dir ${BUILD_DIR}
 fi
 
+echo "Building for distro: $dist"
 echo "Using MIR_NDK_PATH: ${MIR_NDK_PATH}"
+
+CC=arm-linux-gnueabihf-gcc
+CXX=arm-linux-gnueabihf-g++
+if [ "$dist" = "vivid" ]; then
+    CC=arm-linux-gnueabihf-gcc-4.9
+    CXX=arm-linux-gnueabihf-g++-4.9
+fi
 
 pushd ${BUILD_DIR} > /dev/null 
 
@@ -77,6 +92,8 @@ pushd ${BUILD_DIR} > /dev/null
     echo "Using PKG_CONFIG_EXECUTABLE: $PKG_CONFIG_EXECUTABLE"
     cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake \
       -DBoost_COMPILER=-gcc \
+      -DCMAKE_C_COMPILER=$CC \
+      -DCMAKE_CXX_COMPILER=$CXX \
       -DMIR_PLATFORM=android\;mesa-kms \
       .. 
 
