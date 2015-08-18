@@ -47,7 +47,7 @@ builddeps=$(echo ${builddeps} | sed 's/([^)]*)//g')
 builddeps=$(echo ${builddeps} | sed 's/ /,/g')
 builddeps=$(echo ${builddeps} | sed -e 's/abi-compliance-checker//g')
 
-fakeroot debootstrap --include=${builddeps} --arch=armhf --download-only --variant=buildd $dist .
+fakeroot debootstrap --include=${builddeps} --arch=armhf --download-only --variant=buildd ${dist} .
 
 # Remove libc libraries that confuse the cross-compiler
 rm var/cache/apt/archives/libc-dev*.deb

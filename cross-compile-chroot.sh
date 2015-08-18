@@ -51,13 +51,13 @@ do
     esac
 done
 
-BUILD_DIR=build-android-arm-$dist
+BUILD_DIR=build-android-arm-${dist}
 if [ ${clean} -ne 0 ]; then
     clean_build_dir ${BUILD_DIR}
 fi
 
 if [ "${MIR_NDK_PATH}" = "" ]; then
-    export MIR_NDK_PATH=~/.cache/mir-armhf-chroot-$dist
+    export MIR_NDK_PATH=~/.cache/mir-armhf-chroot-${dist}
 fi
 
 if [ ! -d ${MIR_NDK_PATH} ]; then 
@@ -81,7 +81,7 @@ if [ ${_do_update_chroot} -eq 1 ] ; then
 fi
 
 cc_variant=
-if [ "$dist" = "vivid" ]; then
+if [ "${dist}" = "vivid" ]; then
     cc_variant=-4.9
 fi
 
