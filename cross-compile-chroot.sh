@@ -16,18 +16,18 @@ clean_build_dir() {
     mkdir ${1}
 }
 
-BUILD_DIR=build-android-arm
 NUM_JOBS=$(( $(grep -c ^processor /proc/cpuinfo) + 1 ))
 _do_update_chroot=0
 
 # Default to vivid while the wily phone images mostly don't work
 dist=vivid
+clean=0
 
 while getopts "cduh" OPTNAME
 do
     case $OPTNAME in
       c )
-        clean_build_dir ${BUILD_DIR}
+        clean=1
         shift
         ;;
       d )
@@ -51,6 +51,10 @@ do
     esac
 done
 
+BUILD_DIR=build-android-arm-$dist
+if [ ${clean} -ne 0 ]; then
+    clean_build_dir ${BUILD_DIR}
+fi
 
 if [ "${MIR_NDK_PATH}" = "" ]; then
     export MIR_NDK_PATH=~/.cache/mir-armhf-chroot-$dist
@@ -65,6 +69,9 @@ if [ ! -d ${BUILD_DIR} ]; then
     mkdir ${BUILD_DIR}
 fi
 
+echo "Building for distro: $dist"
+echo "Using MIR_NDK_PATH: ${MIR_NDK_PATH}"
+
 if [ ${_do_update_chroot} -eq 1 ] ; then
     pushd tools > /dev/null
         ./setup-partial-armhf-chroot.sh ${MIR_NDK_PATH} ${dist}
@@ -72,9 +79,6 @@ if [ ${_do_update_chroot} -eq 1 ] ; then
     # force a clean build after an update, since CMake cache maybe out of date
     clean_build_dir ${BUILD_DIR}
 fi
-
-echo "Building for distro: $dist"
-echo "Using MIR_NDK_PATH: ${MIR_NDK_PATH}"
 
 CC=arm-linux-gnueabihf-gcc
 CXX=arm-linux-gnueabihf-g++
