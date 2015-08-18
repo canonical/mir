@@ -22,25 +22,26 @@ _do_update_chroot=0
 dist=wily
 clean=0
 
-while getopts "cduh" OPTNAME
+while getopts "cuhd:" OPTNAME
 do
     case $OPTNAME in
       c )
         clean=1
-        shift
         ;;
       d )
-        shift
-        dist=$1
-        shift
+        dist=${OPTARG}
         ;;
       u )
         _do_update_chroot=1
-        shift
         ;;
       h )
         usage
         exit 0
+        ;;
+      : )
+        echo "Parameter -${OPTARG} needs an argument"
+        usage
+        exit 1;
         ;;
       * )
         echo "invalid option specified"
@@ -49,6 +50,8 @@ do
         ;;
     esac
 done
+
+shift $((${OPTIND}-1))
 
 BUILD_DIR=build-android-arm-${dist}
 if [ ${clean} -ne 0 ]; then
