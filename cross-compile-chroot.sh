@@ -80,11 +80,9 @@ if [ ${_do_update_chroot} -eq 1 ] ; then
     clean_build_dir ${BUILD_DIR}
 fi
 
-CC=arm-linux-gnueabihf-gcc
-CXX=arm-linux-gnueabihf-g++
+cc_variant=
 if [ "$dist" = "vivid" ]; then
-    CC=arm-linux-gnueabihf-gcc-4.9
-    CXX=arm-linux-gnueabihf-g++-4.9
+    cc_variant=-4.9
 fi
 
 pushd ${BUILD_DIR} > /dev/null 
@@ -97,9 +95,7 @@ pushd ${BUILD_DIR} > /dev/null
     echo "Using PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
     echo "Using PKG_CONFIG_EXECUTABLE: $PKG_CONFIG_EXECUTABLE"
     cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake \
-      -DBoost_COMPILER=-gcc \
-      -DCMAKE_C_COMPILER=$CC \
-      -DCMAKE_CXX_COMPILER=$CXX \
+      -DCC_VARIANT=${cc_variant} \
       -DMIR_PLATFORM=android\;mesa-kms \
       .. 
 
