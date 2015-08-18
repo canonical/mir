@@ -714,10 +714,11 @@ _XcursorBuildFullname (const char *dir, const char *subdir, const char *file)
         return NULL;
 
     /*
-     * add space for any needed directory separators, one per component,
-     * and one for the trailing null
+     * Following the g++5 transition the strlen() in _XcursorAddPathElt() can
+     * trigger valgrind. We add some padding as a workaround.
      */
-    full = malloc (1 + strlen (dir) + 1 + strlen (subdir) + 1 + strlen (file) + 1);
+    size_t padding = 4;
+    full = malloc (padding + strlen (dir) + 1 + strlen (subdir) + 1 + strlen (file) + 1);
     if (!full)
 	return NULL;
     full[0] = '\0';
