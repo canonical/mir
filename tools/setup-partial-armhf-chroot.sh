@@ -13,7 +13,9 @@ if [ ! -d ${1} ]; then
     mkdir -p ${1} 
 fi
 
-dist=wily
+# Default to vivid as we don't seem to have any working wily devices right now.
+# Also Jenkins expects this script to default to vivid (TODO: update CI?)
+dist=vivid
 if [ ! -z "$2" ]; then
     dist=$2
 fi

@@ -19,7 +19,8 @@ clean_build_dir() {
 NUM_JOBS=$(( $(grep -c ^processor /proc/cpuinfo) + 1 ))
 _do_update_chroot=0
 
-dist=wily
+# Default to vivid as we don't seem to have any working wily devices right now 
+dist=vivid
 clean=0
 
 while getopts "cuhd:" OPTNAME
