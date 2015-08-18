@@ -22,6 +22,7 @@ add_subdirectory(fatal)
 list(APPEND MIR_COMMON_SOURCES
   $<TARGET_OBJECTS:mirtime>
   $<TARGET_OBJECTS:mirfatal>
+  $<TARGET_OBJECTS:android-input-common>
   ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
   )
 
