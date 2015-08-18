@@ -19,8 +19,7 @@ clean_build_dir() {
 NUM_JOBS=$(( $(grep -c ^processor /proc/cpuinfo) + 1 ))
 _do_update_chroot=0
 
-# Default to vivid while the wily phone images mostly don't work
-dist=vivid
+dist=wily
 clean=0
 
 while getopts "cduh" OPTNAME
