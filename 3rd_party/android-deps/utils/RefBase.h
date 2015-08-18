@@ -31,9 +31,6 @@
 // ---------------------------------------------------------------------------
 namespace android {
 
-class TextOutput;
-TextOutput& printWeakPointer(TextOutput& to, const void* val);
-
 // ---------------------------------------------------------------------------
 
 #define COMPARE_WEAK(_op_)                                      \
@@ -161,40 +158,6 @@ private:
 
 // ---------------------------------------------------------------------------
 
-template <class T>
-class LightRefBase
-{
-public:
-    inline LightRefBase() : mCount(0) { }
-    inline void incStrong(const void* /* id */) const {
-        android_atomic_inc(&mCount);
-    }
-    inline void decStrong(const void* /* id */) const {
-        if (android_atomic_dec(&mCount) == 1) {
-            delete static_cast<const T*>(this);
-        }
-    }
-    //! DEBUGGING ONLY: Get current strong ref count.
-    inline int32_t getStrongCount() const {
-        return mCount;
-    }
-
-    typedef LightRefBase<T> basetype;
-
-protected:
-    inline ~LightRefBase() { }
-
-private:
-    friend class ReferenceMover;
-    inline static void moveReferences(void* /* d */, void const* /* s */, size_t /* n */,
-            const ReferenceConverterBase& /* caster */) { }
-
-private:
-    mutable android_atomic_int32_t mCount;
-};
-
-// ---------------------------------------------------------------------------
-
 template <typename T>
 class wp
 {
@@ -284,9 +247,6 @@ private:
     T*              m_ptr;
     weakref_type*   m_refs;
 };
-
-template <typename T>
-TextOutput& operator<<(TextOutput& to, const wp<T>& val);
 
 #undef COMPARE_WEAK
 
@@ -445,83 +405,6 @@ void wp<T>::clear()
         m_ptr = 0;
     }
 }
-
-template <typename T>
-inline TextOutput& operator<<(TextOutput& to, const wp<T>& val)
-{
-    return printWeakPointer(to, val.unsafe_get());
-}
-
-// ---------------------------------------------------------------------------
-
-// this class just serves as a namespace so TYPE::moveReferences can stay
-// private.
-
-class ReferenceMover {
-    // StrongReferenceCast and WeakReferenceCast do the impedance matching
-    // between the generic (void*) implementation in Refbase and the strongly typed
-    // template specializations below.
-
-    template <typename TYPE>
-    struct StrongReferenceCast : public ReferenceConverterBase {
-        virtual size_t getReferenceTypeSize() const { return sizeof( sp<TYPE> ); }
-        virtual void* getReferenceBase(void const* p) const {
-            sp<TYPE> const* sptr(reinterpret_cast<sp<TYPE> const*>(p));
-            return static_cast<typename TYPE::basetype *>(sptr->get());
-        }
-    };
-
-    template <typename TYPE>
-    struct WeakReferenceCast : public ReferenceConverterBase {
-        virtual size_t getReferenceTypeSize() const { return sizeof( wp<TYPE> ); }
-        virtual void* getReferenceBase(void const* p) const {
-            wp<TYPE> const* sptr(reinterpret_cast<wp<TYPE> const*>(p));
-            return static_cast<typename TYPE::basetype *>(sptr->unsafe_get());
-        }
-    };
-
-public:
-    template<typename TYPE> static inline
-    void move_references(sp<TYPE>* d, sp<TYPE> const* s, size_t n) {
-        memmove(d, s, n*sizeof(sp<TYPE>));
-        StrongReferenceCast<TYPE> caster;
-        TYPE::moveReferences(d, s, n, caster);
-    }
-    template<typename TYPE> static inline
-    void move_references(wp<TYPE>* d, wp<TYPE> const* s, size_t n) {
-        memmove(d, s, n*sizeof(wp<TYPE>));
-        WeakReferenceCast<TYPE> caster;
-        TYPE::moveReferences(d, s, n, caster);
-    }
-};
-
-// specialization for moving sp<> and wp<> types.
-// these are used by the [Sorted|Keyed]Vector<> implementations
-// sp<> and wp<> need to be handled specially, because they do not
-// have trivial copy operation in the general case (see RefBase.cpp
-// when DEBUG ops are enabled), but can be implemented very
-// efficiently in most cases.
-
-template<typename TYPE> inline
-void move_forward_type(sp<TYPE>* d, sp<TYPE> const* s, size_t n) {
-    ReferenceMover::move_references(d, s, n);
-}
-
-template<typename TYPE> inline
-void move_backward_type(sp<TYPE>* d, sp<TYPE> const* s, size_t n) {
-    ReferenceMover::move_references(d, s, n);
-}
-
-template<typename TYPE> inline
-void move_forward_type(wp<TYPE>* d, wp<TYPE> const* s, size_t n) {
-    ReferenceMover::move_references(d, s, n);
-}
-
-template<typename TYPE> inline
-void move_backward_type(wp<TYPE>* d, wp<TYPE> const* s, size_t n) {
-    ReferenceMover::move_references(d, s, n);
-}
-
 
 } // namespace android
 

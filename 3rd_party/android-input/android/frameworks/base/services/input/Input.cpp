@@ -17,9 +17,6 @@
 #define LOG_TAG "Input"
 //#define LOG_NDEBUG 0
 
-#include <math.h>
-#include <limits.h>
-
 #include <androidfw/Input.h>
 #include <std/Log.h>
 

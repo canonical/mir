@@ -193,7 +193,6 @@ void mc::GLRenderer::draw(mg::Renderable const& renderable,
     if (prog.alpha_uniform >= 0)
         glUniform1f(prog.alpha_uniform, renderable.alpha());
 
-    /* Draw */
     glEnableVertexAttribArray(prog.position_attr);
     glEnableVertexAttribArray(prog.texcoord_attr);
 
@@ -204,13 +203,10 @@ void mc::GLRenderer::draw(mg::Renderable const& renderable,
 
     for (auto const& p : primitives)
     {
-        // Note a primitive tex_id of zero means use the surface texture,
-        // which is what you normally want. Other textures could be used
-        // in decorations etc.
-        if (p.tex_id) //tessalate() can be overridden, and that code can set to nonzero  
-            glBindTexture(GL_TEXTURE_2D, p.tex_id);
-        else
+        if (p.tex_id == 0)   // The client surface texture
             surface_tex->bind();
+        else   // Some other texture from the shell (e.g. decorations)
+            glBindTexture(GL_TEXTURE_2D, p.tex_id);
 
         glVertexAttribPointer(prog.position_attr, 3, GL_FLOAT,
                               GL_FALSE, sizeof(mg::GLVertex),
@@ -232,10 +228,13 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
         return;
 
     /*
-     * Create and set screen_to_gl_coords transformation matrix.
-     * The screen_to_gl_coords matrix transforms from the screen coordinate system
-     * (top-left is (0,0), bottom-right is (W,H)) to the normalized GL coordinate system
-     * (top-left is (-1,1), bottom-right is (1,-1))
+     * Here we provide a 3D perspective projection with a default 30 degrees
+     * vertical field of view. This projection matrix is carefully designed
+     * such that any vertices at depth z=0 will fit the screen coordinates. So
+     * client texels will fit screen pixels perfectly as long as the surface is
+     * at depth zero. But if you want to do anything fancy, you can also choose
+     * a different depth and it will appear to come out of or go into the
+     * screen.
      */
     screen_to_gl_coords = glm::translate(glm::mat4(1.0f), glm::vec3{-1.0f, 1.0f, 0.0f});
 
@@ -273,6 +272,13 @@ void mc::GLRenderer::set_rotation(float degrees)
     float rad = degrees * M_PI / 180.0f;
     GLfloat cos = cosf(rad);
     GLfloat sin = sinf(rad);
+
+    /*
+     * Transposed rotation matrix. You're reading it as transposed just
+     * because the C language is row-major. OpenGL however will load it as
+     * column-major. This is necessary because glUniformMatrix4fv in ES
+     * does not support the 'transpose' parameter, requiring it be GL_FALSE.
+     */
     screen_rotation = {cos,  sin,  0.0f, 0.0f,
                        -sin, cos,  0.0f, 0.0f,
                        0.0f, 0.0f, 1.0f, 0.0f,
