@@ -76,11 +76,6 @@ static const size_t MAX_SLOTS = 32;
 // --- Static Functions ---
 
 template<typename T>
-inline static T abs(const T& value) {
-    return value < 0 ? - value : value;
-}
-
-template<typename T>
 inline static T min(const T& a, const T& b) {
     return a < b ? a : b;
 }
