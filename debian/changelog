@@ -1,5 +1,6 @@
-mir (0.15.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.15.0+15.10.20150818-0ubuntu1) wily; urgency=medium
 
+  [ Daniel van Vugt ]
   * New upstream release 0.15.0 (https://launchpad.net/mir/+milestone/0.15.0)
     - ABI summary: Only servers and graphics drivers need rebuilding;
       . Mirclient ABI unchanged at 9
@@ -73,7 +74,7 @@ mir (0.15.0-0ubuntu1) UNRELEASED; urgency=medium
         mir_proving_server on Android, even for fullscreen surfaces
         (LP: #1474231)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 27 Jul 2015 12:02:19 +0800
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 18 Aug 2015 21:42:12 +0000
 
 mir (0.14.0+15.10.20150723.1-0ubuntu1) wily; urgency=medium
 
