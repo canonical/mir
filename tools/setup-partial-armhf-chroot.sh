@@ -13,6 +13,7 @@ if [ ! -d ${1} ]; then
     mkdir -p ${1} 
 fi
 
+# Default to vivid while the wily phone images mostly don't work
 dist=vivid
 if [ ! -z "$2" ]; then
     dist=$2
