@@ -136,6 +136,12 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_edge_attachme
     return *this;
 }
 
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_buffer_stream(mf::BufferStreamId const& id)
+{
+    content_id = id;
+    return *this;
+}
+
 bool ms::operator==(
     const SurfaceCreationParameters& lhs,
     const ms::SurfaceCreationParameters& rhs)
@@ -151,7 +157,8 @@ bool ms::operator==(
         lhs.state == rhs.state &&
         lhs.type == rhs.type &&
         lhs.preferred_orientation == rhs.preferred_orientation &&
-        lhs.parent_id == rhs.parent_id;
+        lhs.parent_id == rhs.parent_id &&
+        lhs.content_id == rhs.content_id;
 }
 
 bool ms::operator!=(

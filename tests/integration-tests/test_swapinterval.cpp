@@ -19,7 +19,7 @@
 
 #include "mir/scene/buffer_stream_factory.h"
 
-#include "mir_test_doubles/stub_buffer_stream.h"
+#include "mir/test/doubles/stub_buffer_stream.h"
 
 #include "mir_test_framework/any_surface.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
@@ -36,7 +36,7 @@ namespace mtd = mir::test::doubles;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
-
+namespace mf = mir::frontend;
 namespace
 {
 
@@ -66,12 +66,14 @@ public:
     }
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
+        mf::BufferStreamId id, std::shared_ptr<mf::BufferSink> const& sink,
         int, mg::BufferProperties const& p) override
     {
-        return create_buffer_stream(p);
+        return create_buffer_stream(id, sink, p);
     }
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
+        mf::BufferStreamId, std::shared_ptr<mf::BufferSink> const&,
         mg::BufferProperties const&) override
     {
         return std::make_shared<StubBufferStream>(framedropping_enabled);

@@ -51,12 +51,13 @@ public:
     DefaultConnectionConfiguration(std::string const& socket_file);
 
     std::shared_ptr<ConnectionSurfaceMap> the_surface_map() override;
-    std::shared_ptr<google::protobuf::RpcChannel> the_rpc_channel() override;
+    std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> the_rpc_channel() override;
     std::shared_ptr<mir::logging::Logger> the_logger() override;
     std::shared_ptr<ClientPlatformFactory> the_client_platform_factory() override;
     std::shared_ptr<input::receiver::InputPlatform> the_input_platform() override;
     std::shared_ptr<DisplayConfiguration> the_display_configuration() override;
     std::shared_ptr<LifecycleControl> the_lifecycle_control() override;
+    std::shared_ptr<PingHandler> the_ping_handler() override;
     std::shared_ptr<EventSink> the_event_sink() override;
     std::shared_ptr<EventHandlerRegister> the_event_handler_register() override;
     std::shared_ptr<mir::SharedLibraryProberReport> the_shared_library_prober_report();
@@ -66,13 +67,14 @@ public:
     virtual std::shared_ptr<input::receiver::InputReceiverReport> the_input_receiver_report();
 
 protected:
-    CachedPtr<google::protobuf::RpcChannel> rpc_channel;
+    CachedPtr<mir::client::rpc::MirBasicRpcChannel> rpc_channel;
     CachedPtr<mir::logging::Logger> logger;
     CachedPtr<ClientPlatformFactory> client_platform_factory;
     CachedPtr<input::receiver::InputPlatform> input_platform;
     CachedPtr<ConnectionSurfaceMap> surface_map;
     CachedPtr<DisplayConfiguration> display_configuration;
     CachedPtr<LifecycleControl> lifecycle_control;
+    CachedPtr<PingHandler> ping_handler;
     CachedPtr<EventDistributor> event_distributor;
 
     CachedPtr<rpc::RpcReport> rpc_report;

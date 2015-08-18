@@ -19,8 +19,8 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
-#include "mir_test_doubles/null_display_buffer_compositor_factory.h"
-#include "mir_test/signal.h"
+#include "mir/test/doubles/null_display_buffer_compositor_factory.h"
+#include "mir/test/signal.h"
 
 #include <gtest/gtest.h>
 
@@ -64,6 +64,6 @@ TEST_F(SurfaceSwapBuffers, does_not_block_when_surface_is_not_composited)
          * ASSERT instead of EXPECT, since if we continue we will block in future
          * mir client calls (e.g mir_connection_release).
          */
-        ASSERT_TRUE(buffers_swapped.wait_for(std::chrono::seconds{5}));
+        ASSERT_TRUE(buffers_swapped.wait_for(std::chrono::seconds{20}));
     }
 }

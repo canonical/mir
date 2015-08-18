@@ -32,6 +32,10 @@
 
 namespace mir
 {
+namespace protobuf
+{
+class Buffer;
+}
 namespace client
 {
 class ClientBuffer;
@@ -63,7 +67,9 @@ public:
     virtual MirWaitHandle* release(mir_buffer_stream_callback callback, void* context) = 0;
 
     virtual bool valid() const = 0;
-    
+    virtual void buffer_available(mir::protobuf::Buffer const& buffer) = 0;
+    virtual void buffer_unavailable() = 0;
+
 protected:
     ClientBufferStream() = default;
     ClientBufferStream(const ClientBufferStream&) = delete;

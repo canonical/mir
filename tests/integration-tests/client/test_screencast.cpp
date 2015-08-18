@@ -18,14 +18,16 @@
 
 #include "mir_protobuf.pb.h"
 #include "src/client/default_connection_configuration.h"
+#include "src/client/rpc/mir_display_server.h"
+#include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/dispatch/dispatchable.h"
 
 #include "mir/frontend/connector.h"
-#include "mir_test/test_protobuf_server.h"
-#include "mir_test/stub_server_tool.h"
-#include "mir_test/pipe.h"
-#include "mir_test/wait_object.h"
+#include "mir/test/test_protobuf_server.h"
+#include "mir/test/stub_server_tool.h"
+#include "mir/test/pipe.h"
+#include "mir/test/wait_object.h"
 
 #include <gtest/gtest.h>
 
@@ -41,8 +43,7 @@ namespace
 struct StubScreencastServerTool : mt::StubServerTool
 {
     void create_screencast(
-        google::protobuf::RpcController*,
-        const mir::protobuf::ScreencastParameters*,
+        mir::protobuf::ScreencastParameters const*,
         mir::protobuf::Screencast* response,
         google::protobuf::Closure* done) override
     {
@@ -51,10 +52,9 @@ struct StubScreencastServerTool : mt::StubServerTool
     }
 
     void screencast_buffer(
-        ::google::protobuf::RpcController*,
-        ::mir::protobuf::ScreencastId const*,
-        ::mir::protobuf::Buffer* response,
-        ::google::protobuf::Closure* done) override
+        mir::protobuf::ScreencastId const*,
+        mir::protobuf::Buffer* response,
+        google::protobuf::Closure* done) override
     {
         response->add_fd(pipe.read_fd());
         done->Run();
@@ -76,7 +76,7 @@ struct MirScreencastTest : public testing::Test
         rpc_channel =
             mcl::DefaultConnectionConfiguration{test_socket}.the_rpc_channel();
         protobuf_server =
-            std::make_shared<mir::protobuf::DisplayServer::Stub>(rpc_channel.get());
+            std::make_shared<mir::client::rpc::DisplayServer>(rpc_channel);
         eventloop =
             std::make_shared<md::ThreadedDispatcher>(
                 "Mir/Client IPC",
@@ -86,7 +86,7 @@ struct MirScreencastTest : public testing::Test
     char const* const test_socket = "./test_socket_screencast";
     std::shared_ptr<StubScreencastServerTool> const server_tool;
     std::shared_ptr<mt::TestProtobufServer> test_server;
-    std::shared_ptr<google::protobuf::RpcChannel> rpc_channel;
+    std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> rpc_channel;
     std::shared_ptr<mir::protobuf::DisplayServer> protobuf_server;
     std::shared_ptr<mir::dispatch::ThreadedDispatcher> eventloop;
 };
@@ -113,7 +113,6 @@ TEST_F(MirScreencastTest, gets_buffer_fd_when_creating_screencast)
     mt::WaitObject wait_rpc;
 
     protobuf_server->create_screencast(
-        nullptr,
         &protobuf_parameters,
         &protobuf_screencast,
         google::protobuf::NewCallback(&wait_rpc, &mt::WaitObject::notify_ready));
@@ -145,7 +144,6 @@ TEST_F(MirScreencastTest, gets_buffer_fd_when_getting_screencast_buffer)
     mt::WaitObject wait_rpc;
 
     protobuf_server->screencast_buffer(
-        nullptr,
         &protobuf_screencast_id,
         &protobuf_buffer,
         google::protobuf::NewCallback(&wait_rpc, &mt::WaitObject::notify_ready));

@@ -21,9 +21,9 @@
 #include "mir/events/event_private.h"
 #include "mir/events/event_builders.h"
 
-#include "mir_test_doubles/mock_input_dispatcher.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/event_matchers.h"
+#include "mir/test/doubles/mock_input_dispatcher.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/event_matchers.h"
 
 #include "InputListener.h"
 #include "androidfw/Input.h"
@@ -125,6 +125,55 @@ TEST_F(InputTranslator, accepts_motion_action_with_existing_index)
     translator.notifyMotion(&motion);
 }
 
+MATCHER(EndOfTouchGesture, "")
+{
+    MirEvent const& ev = arg;
+    if (mir_event_get_type(&ev) != mir_event_type_input)
+        return false;
+
+    auto iev = mir_event_get_input_event(&ev);
+    if (mir_input_event_get_type(iev) != mir_input_event_type_touch)
+        return false;
+
+    auto tev = mir_input_event_get_touch_event(iev);
+    if (mir_touch_event_point_count(tev) < 1)
+        return false;
+
+    return mir_touch_event_action(tev, 0) == mir_touch_action_up;
+}
+
+TEST_F(InputTranslator, translates_multifinger_release_correctly)
+{   // Regression test for LP: #1481570
+    using namespace ::testing;
+
+    EXPECT_CALL(dispatcher, dispatch(EndOfTouchGesture()))
+        .Times(1);
+
+    /*
+     * Android often provides old indices on AMOTION_EVENT_ACTION_UP.
+     * But that doesn't matter at all because AMOTION_EVENT_ACTION_UP means
+     * that all fingers were released. (LP: #1481570).
+     */
+    int32_t const invalid_id = 7;
+    int32_t const end_of_gesture = AMOTION_EVENT_ACTION_UP
+                    | (invalid_id << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
+
+    /*
+     * A multifinger test with only one finger? Yep, that's right. That's
+     * what we see in production. A dummy single finger event used to indicate
+     * all fingers (regardless of number) were released.
+     */
+    properties[0].id = 1;
+    properties[0].toolType = AMOTION_EVENT_TOOL_TYPE_FINGER;
+
+    droidinput::NotifyMotionArgs motion(
+        some_time, device_id, source_id, 0, end_of_gesture,
+        no_flags, meta_state, button_state, edge_flags, 1, properties,
+        coords, x_precision, y_precision, later_time);
+
+    translator.notifyMotion(&motion);
+}
+
 TEST_F(InputTranslator, ignores_motion_with_duplicated_pointerids)
 {
     using namespace ::testing;
@@ -167,13 +216,19 @@ TEST_F(InputTranslator, forwards_pointer_positions)
 
     const float x_pos = 12.0f;
     const float y_pos = 30.0f;
-    EXPECT_CALL(dispatcher, dispatch(mt::PointerEventWithPosition(x_pos, y_pos))).Times(1);
+    const float dx = 7.0f;
+    const float dy = 9.3f;
+    EXPECT_CALL(dispatcher, dispatch(AllOf(
+        mt::PointerEventWithPosition(x_pos, y_pos),
+        mt::PointerEventWithDiff(dx, dy)))).Times(1);
 
     const uint32_t one_pointer = 1;
 
     properties[0].id = 23;
     coords[0].setAxisValue(AMOTION_EVENT_AXIS_X, x_pos);
     coords[0].setAxisValue(AMOTION_EVENT_AXIS_Y, y_pos);
+    coords[0].setAxisValue(AMOTION_EVENT_AXIS_RX, dx);
+    coords[0].setAxisValue(AMOTION_EVENT_AXIS_RY, dy);
     
     droidinput::NotifyMotionArgs motion(some_time, device_id, AINPUT_SOURCE_MOUSE, 0, motion_action, no_flags,
                                         meta_state, button_state, edge_flags, one_pointer, properties, coords,

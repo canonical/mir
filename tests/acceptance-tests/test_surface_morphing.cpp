@@ -19,10 +19,10 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/scene/surface.h"
 
-#include "mir_test_doubles/wrap_shell_to_track_latest_surface.h"
+#include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
 #include "mir_test_framework/connected_client_headless_server.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/signal.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/signal.h"
 #include "mir_toolkit/common.h"
 
 namespace mf = mir::frontend;
@@ -45,7 +45,7 @@ public:
     ~SurfaceHandle() { if (surface) mir_surface_release_sync(surface); }
 
     operator MirSurface*() const { return surface; }
-    SurfaceHandle(SurfaceHandle const&& that) : surface{that.surface} { surface = nullptr; }
+    SurfaceHandle(SurfaceHandle&& that) : surface{that.surface} { that.surface = nullptr; }
 private:
     SurfaceHandle(SurfaceHandle const&) = delete;
     MirSurface* surface;
@@ -150,10 +150,7 @@ private:
     void init_pixel_format()
     {
         unsigned int valid_formats{0};
-        MirPixelFormat pixel_formats[mir_pixel_formats];
-        mir_connection_get_available_surface_formats(connection, pixel_formats, mir_pixel_formats, &valid_formats);
-
-        pixel_format = pixel_formats[0];
+        mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &valid_formats);
     }
 };
 

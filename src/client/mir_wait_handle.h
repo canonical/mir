@@ -40,6 +40,9 @@ public:
     void wait_for_one();
     void wait_for_pending(std::chrono::milliseconds limit);
 
+    bool has_result();
+    bool is_pending();
+
 private:
     std::mutex guard;
     std::condition_variable wait_condition;

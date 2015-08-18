@@ -23,7 +23,7 @@
 #include "mir_test_framework/stub_platform_helpers.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test/validity_matchers.h"
+#include "mir/test/validity_matchers.h"
 
 #include "src/include/client/mir/client_buffer.h"
 
@@ -39,6 +39,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <atomic>
 #include <chrono>
 #include <thread>
 #include <cstring>
@@ -60,7 +61,7 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
     std::set<MirSurface*> surfaces;
     MirConnection* connection = nullptr;
     MirSurface* surface  = nullptr;
-    int buffers = 0;
+    std::atomic<int> buffers{0};
 
     static void connection_callback(MirConnection* connection, void* context)
     {
@@ -361,7 +362,7 @@ TEST_F(ClientLibrary, receives_surface_dpi_value)
     mir_connection_release(connection);
 }
 
-#ifndef ANDROID
+#ifdef MESA_KMS
 TEST_F(ClientLibrary, surface_scanout_flag_toggles)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -420,7 +421,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
 }
 #endif
 
-#ifdef ANDROID
+#if defined(ANDROID) || defined(MESA_X11)
 // Mir's Android test infrastructure isn't quite ready for this yet.
 TEST_F(ClientLibrary, DISABLED_gets_buffer_dimensions)
 #else
@@ -645,10 +646,10 @@ TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
  * trying to marshall stub buffers causes crashes.
  */
 
-#ifndef ANDROID
-TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
-#else
+#if defined(ANDROID) || defined(MESA_X11)
 TEST_F(ClientLibrary, DISABLED_create_simple_normal_surface_from_spec)
+#else
+TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
 #endif
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -676,10 +677,10 @@ TEST_F(ClientLibrary, DISABLED_create_simple_normal_surface_from_spec)
     mir_connection_release(connection);
 }
 
-#ifndef ANDROID
-TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
-#else
+#if defined(ANDROID) || defined(MESA_X11)
 TEST_F(ClientLibrary, DISABLED_create_simple_normal_surface_from_spec_async)
+#else
+TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
 #endif
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -743,10 +744,10 @@ TEST_F(ClientLibrary, DISABLED_can_specify_all_normal_surface_parameters_from_sp
     mir_connection_release(connection);
 }
 
-#ifndef ANDROID
-TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
-#else
+#if defined(ANDROID) || defined(MESA_X11)
 TEST_F(ClientLibrary, DISABLED_set_fullscreen_on_output_makes_fullscreen_surface)
+#else
+TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
 #endif
 {
     using namespace testing;
@@ -912,4 +913,49 @@ TEST_F(ClientLibrary, can_get_persistent_surface_id)
     mir_surface_release_sync(surface);
     mir_persistent_id_release(surface_id);
     mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, input_method_can_specify_foreign_surface_id)
+{
+    auto first_client = mir_connect_sync(new_connection().c_str(), "Regular Client");
+
+    auto surface_spec = mir_connection_create_spec_for_normal_surface(first_client,
+                                                                      800, 600,
+                                                                      mir_pixel_format_argb_8888);
+    auto main_surface = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    ASSERT_THAT(main_surface, IsValid());
+
+    auto main_surface_id = mir_surface_request_persistent_id_sync(main_surface);
+    ASSERT_TRUE(mir_persistent_id_is_valid(main_surface_id));
+
+    // Serialise & deserialise the ID
+    auto im_parent_id = mir_persistent_id_from_string(mir_persistent_id_as_string(main_surface_id));
+
+    auto im_client = mir_connect_sync(new_connection().c_str(), "IM Client");
+    surface_spec = mir_connection_create_spec_for_input_method(im_client,
+                                                               200, 20,
+                                                               mir_pixel_format_argb_8888);
+    MirRectangle attachment_rect {
+        200,
+        200,
+        10,
+        10
+    };
+    mir_surface_spec_attach_to_foreign_parent(surface_spec,
+                                              im_parent_id,
+                                              &attachment_rect,
+                                              mir_edge_attachment_any);
+    auto im_surface = mir_surface_create_sync(surface_spec);
+
+    EXPECT_THAT(im_surface, IsValid());
+
+    mir_surface_spec_release(surface_spec);
+    mir_persistent_id_release(main_surface_id);
+    mir_persistent_id_release(im_parent_id);
+    mir_surface_release_sync(main_surface);
+    mir_surface_release_sync(im_surface);
+    mir_connection_release(first_client);
+    mir_connection_release(im_client);
 }

@@ -53,8 +53,7 @@ struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
 };
 }
 
-mgm::IpcOperations::IpcOperations(std::shared_ptr<DRMAuthentication> const& drm_auth) :
-    drm_auth{drm_auth}
+mgm::IpcOperations::IpcOperations(std::shared_ptr<DRMAuthentication> const& drm) : drm{drm}
 {
 }
 
@@ -103,7 +102,7 @@ mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
 
         try
         {
-            drm_auth->auth_magic(auth_magic_request.magic);
+            drm->auth_magic(auth_magic_request.magic);
             auth_magic_response.status = 0;
         }
         catch (std::exception const& e)
@@ -129,7 +128,7 @@ mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
                 std::runtime_error("Invalid request message for auth_fd platform operation"));
         }
 
-        return mg::PlatformOperationMessage{{},{drm_auth->authenticated_fd()}};
+        return mg::PlatformOperationMessage{{},{drm->authenticated_fd()}};
     }
     else
     {
@@ -140,5 +139,5 @@ mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_package()
 {
-    return std::make_shared<MesaPlatformIPCPackage>(drm_auth->authenticated_fd());
+    return std::make_shared<MesaPlatformIPCPackage>(drm->authenticated_fd());
 }

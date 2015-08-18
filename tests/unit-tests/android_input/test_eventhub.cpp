@@ -23,8 +23,8 @@
 #include "mir/udev/wrapper.h"
 #include <umockdev.h>
 #include "mir_test_framework/udev_environment.h"
-#include "mir_test/wait_condition.h"
-#include "mir_test/auto_unblock_thread.h"
+#include "mir/test/wait_condition.h"
+#include "mir/test/auto_unblock_thread.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

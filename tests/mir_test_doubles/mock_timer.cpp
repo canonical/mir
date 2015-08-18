@@ -17,7 +17,7 @@
  *              Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
-#include "mir_test_doubles/mock_timer.h"
+#include "mir/test/doubles/mock_timer.h"
 
 #include "mir/lockable_callback.h"
 #include "mir/basic_callback.h"

@@ -20,7 +20,7 @@
 #include "mir/udev/wrapper.h"
 
 #include "mir_test_framework/udev_environment.h"
-#include "mir_test_doubles/mock_drm.h"
+#include "mir/test/doubles/mock_drm.h"
 
 #include <fcntl.h>
 
@@ -50,7 +50,7 @@ public:
 protected:       
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     mtf::UdevEnvironment fake_devices;
-    mgm::helpers::DRMHelper drm_helper;
+    mgm::helpers::DRMHelper drm_helper{mgm::helpers::DRMNodeToUse::card};
 };
 
 }

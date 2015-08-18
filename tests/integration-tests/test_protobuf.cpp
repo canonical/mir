@@ -17,6 +17,7 @@
  */
 
 #include "test_protobuf.pb.h"
+#include "src/client/rpc/mir_basic_rpc_channel.h"
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/client/private.h"
@@ -27,6 +28,7 @@
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
+#include "mir/test/doubles/null_platform_ipc_operations.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -45,7 +47,7 @@ namespace mtf = mir_test_framework;
 /*************************************************************************/
 namespace
 {
-struct DemoMirServer : mir::protobuf::MirServer
+struct DemoMirServer
 {
     MOCK_CONST_METHOD1(on_call, std::string(std::string));
 
@@ -56,14 +58,30 @@ struct DemoMirServer : mir::protobuf::MirServer
     }
 
     void function(
-        ::google::protobuf::RpcController* ,
-        ::mir::protobuf::Parameters const* parameters,
-        ::mir::protobuf::Result* response,
-        ::google::protobuf::Closure* done)
+        mir::protobuf::Parameters const* parameters,
+        mir::protobuf::Result* response,
+        google::protobuf::Closure* done)
     {
         response->set_value(on_call(parameters->name()));
         done->Run();
     }
+};
+
+struct AMirServer
+{
+    AMirServer(std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const& channel)
+        : channel{channel}
+    {
+    }
+
+    void function(
+        mir::protobuf::Parameters const* parameters,
+        mir::protobuf::Result* response,
+        google::protobuf::Closure* done)
+    {
+        channel->call_method(std::string(__func__), parameters, response, done);
+    }
+    std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
 };
 
 // using a global for easy access from tests and DemoMessageProcessor::dispatch()
@@ -94,7 +112,7 @@ struct DemoMessageProcessor : mfd::MessageProcessor
         return wrapped->dispatch(invocation, fds);
     }
 
-    void send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response)
+    void send_response(::google::protobuf::uint32 id, ::google::protobuf::MessageLite* response)
     {
         sender->send_response(id, response, {});
     }
@@ -147,6 +165,7 @@ struct DemoServerConfiguration : mtf::StubbedServerConfiguration
                 return std::make_shared<DemoConnectionCreator>(
                     new_ipc_factory(the_session_authorizer()),
                     the_session_authorizer(),
+                    std::make_shared<mir::test::doubles::NullPlatformIpcOperations>(),
                     the_message_processor_report());
             });
     }
@@ -196,7 +215,7 @@ TEST_F(DemoPrivateProtobuf, client_calls_server)
     using namespace mir::protobuf;
     using namespace google::protobuf;
 
-    MirServer::Stub server(rpc_channel.get());
+    AMirServer server(rpc_channel);
 
     Parameters parameters;
     parameters.set_name(__PRETTY_FUNCTION__);
@@ -219,7 +238,6 @@ TEST_F(DemoPrivateProtobuf, client_calls_server)
     // As the default server won't recognise this call it drops the connection
     // resulting in a callback when the connection drops (but result being unchanged)
     server.function(
-        nullptr,
         &parameters,
         &result,
         NewCallback(&callback, &called_back));
@@ -256,7 +274,7 @@ TEST_F(DemoPrivateProtobuf, server_receives_function_call)
     using namespace mir::protobuf;
     using namespace google::protobuf;
 
-    MirServer::Stub server(rpc_channel.get());
+    AMirServer server(rpc_channel);
 
     Parameters parameters;
     Result result;
@@ -264,7 +282,7 @@ TEST_F(DemoPrivateProtobuf, server_receives_function_call)
 
     EXPECT_CALL(demo_mir_server, on_call(__PRETTY_FUNCTION__)).Times(1);
 
-    server.function(nullptr, &parameters, &result, NewCallback([]{}));
+    server.function(&parameters, &result, NewCallback([]{}));
 
     mir_connection_release(connection);
 }
@@ -285,13 +303,13 @@ TEST_F(DemoPrivateProtobuf, client_receives_result)
     using namespace mir::protobuf;
     using namespace google::protobuf;
 
-    MirServer::Stub server(rpc_channel.get());
+    AMirServer server(rpc_channel);
 
     Parameters parameters;
     Result result;
     parameters.set_name(__PRETTY_FUNCTION__);
 
-    server.function(nullptr, &parameters, &result, NewCallback([]{}));
+    server.function(&parameters, &result, NewCallback([]{}));
 
     mir_connection_release(connection);
 

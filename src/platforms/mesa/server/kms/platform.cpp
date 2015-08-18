@@ -24,6 +24,7 @@
 #include "ipc_operations.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/options/option.h"
+#include "mir/options/program_option.h"
 #include "mir/graphics/native_buffer.h"
 #include "mir/emergency_cleanup_registry.h"
 #include "mir/udev/wrapper.h"
@@ -38,6 +39,7 @@
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
+namespace mgmh = mgm::helpers;
 namespace mo = mir::options;
 
 namespace
@@ -127,7 +129,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                         EmergencyCleanupRegistry& emergency_cleanup_registry,
                         BypassOption bypass_option)
     : udev{std::make_shared<mir::udev::Context>()},
-      drm{std::make_shared<helpers::DRMHelper>()},
+      drm{std::make_shared<mgmh::DRMHelper>(mgmh::DRMNodeToUse::card)},
       listener{listener},
       vt{vt},
       bypass_option_{bypass_option}
@@ -136,7 +138,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
     gbm.setup(*drm);
 
     std::weak_ptr<VirtualTerminal> weak_vt = vt;
-    std::weak_ptr<helpers::DRMHelper> weak_drm = drm;
+    std::weak_ptr<mgmh::DRMHelper> weak_drm = drm;
     emergency_cleanup_registry.add(
         [weak_vt,weak_drm]
         {
@@ -150,7 +152,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator()
 {
-    return std::make_shared<mgm::BufferAllocator>(gbm.device, bypass_option_);
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, bypass_option_, mgm::BufferImportMethod::gbm_native_pixmap);
 }
 
 std::shared_ptr<mg::Display> mgm::Platform::create_display(
@@ -180,10 +182,10 @@ mgm::BypassOption mgm::Platform::bypass_option() const
     return bypass_option_;
 }
 
-extern "C" std::shared_ptr<mg::Platform> create_host_platform(
+std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<mir::graphics::DisplayReport> const& report)
+    std::shared_ptr<mg::DisplayReport> const& report)
 {
     auto real_fops = std::make_shared<RealVTFileOperations>();
     auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});
@@ -201,7 +203,7 @@ extern "C" std::shared_ptr<mg::Platform> create_host_platform(
         report, vt, *emergency_cleanup_registry, bypass_option);
 }
 
-extern "C" void add_graphics_platform_options(boost::program_options::options_description& config)
+void add_graphics_platform_options(boost::program_options::options_description& config)
 {
     config.add_options()
         (vt_option_name,
@@ -212,8 +214,20 @@ extern "C" void add_graphics_platform_options(boost::program_options::options_de
          "[platform-specific] utilize the bypass optimization for fullscreen surfaces.");
 }
 
-extern "C" mg::PlatformPriority probe_graphics_platform()
+mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
 {
+    auto const unparsed_arguments = options.unparsed_command_line();
+    auto platform_option_used = false;
+
+    for (auto const& token : unparsed_arguments)
+    {
+        if (token == (std::string("--") + vt_option_name))
+            platform_option_used = true;
+    }
+
+    if (options.is_set(vt_option_name))
+        platform_option_used = true;
+
     auto udev = std::make_shared<mir::udev::Context>();
 
     mir::udev::Enumerator drm_devices{udev};
@@ -224,7 +238,10 @@ extern "C" mg::PlatformPriority probe_graphics_platform()
     for (auto& device : drm_devices)
     {
         static_cast<void>(device);
-        return mg::PlatformPriority::best;
+        if (platform_option_used)
+            return mg::PlatformPriority::best;
+        else
+            return mg::PlatformPriority::supported;
     }
 
     return mg::PlatformPriority::unsupported;
@@ -237,7 +254,7 @@ mir::ModuleProperties const description = {
     MIR_VERSION_MICRO
 };
 
-extern "C" mir::ModuleProperties const* describe_graphics_module()
+mir::ModuleProperties const* describe_graphics_module()
 {
     return &description;
 }

@@ -38,10 +38,17 @@ struct EGLExtensions;
 
 namespace mesa
 {
+
+enum class BufferImportMethod
+{
+    gbm_native_pixmap,
+    dma_buf
+};
+
 class BufferAllocator: public graphics::GraphicBufferAllocator
 {
 public:
-    BufferAllocator(gbm_device* device, BypassOption bypass_option);
+    BufferAllocator(gbm_device* device, BypassOption bypass_option, BufferImportMethod const buffer_import_method);
 
     virtual std::shared_ptr<Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties);
@@ -51,7 +58,6 @@ public:
     std::vector<MirPixelFormat> supported_pixel_formats();
 
 private:
-    bool is_pixel_format_supported(MirPixelFormat format);
     std::shared_ptr<Buffer> alloc_hardware_buffer(
         graphics::BufferProperties const& buffer_properties);
     std::shared_ptr<Buffer> alloc_software_buffer(
@@ -61,6 +67,7 @@ private:
     std::shared_ptr<EGLExtensions> const egl_extensions;
 
     BypassOption const bypass_option;
+    BufferImportMethod const buffer_import_method;
 };
 
 }

@@ -19,15 +19,16 @@
 #ifndef TOUCH_PRODUCING_SERVER_H_
 #define TOUCH_PRODUCING_SERVER_H_
 
-#include "mir_test_framework/fake_event_hub_server_configuration.h"
-#include "mir_test/barrier.h"
+#include "mir_test_framework/fake_input_server_configuration.h"
+#include "mir_test_framework/fake_input_device.h"
+#include "mir/test/barrier.h"
 
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/point.h"
 
 #include <thread>
 
-class TouchProducingServer : public mir_test_framework::FakeEventHubServerConfiguration
+class TouchProducingServer : public mir_test_framework::FakeInputServerConfiguration
 {
 public:
     TouchProducingServer(mir::geometry::Rectangle screen_dimensions, mir::geometry::Point touch_start, mir::geometry::Point touch_end, std::chrono::high_resolution_clock::duration touch_duration, mir::test::Barrier& client_ready);
@@ -59,6 +60,8 @@ private:
     
     void synthesize_event_at(mir::geometry::Point const& point);
     void thread_function();
+
+    std::unique_ptr<mir_test_framework::FakeInputDevice> const touch_screen;
 };
 
 #endif

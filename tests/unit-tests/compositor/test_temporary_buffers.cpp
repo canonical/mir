@@ -17,9 +17,9 @@
  */
 
 #include "src/server/compositor/temporary_buffers.h"
-#include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/mock_buffer_bundle.h"
+#include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/mock_buffer_bundle.h"
 #include <gtest/gtest.h>
 #include <stdexcept>
 
@@ -39,6 +39,14 @@ public:
     }
 };
 
+struct MockBufferAcquisition : mc::BufferAcquisition
+{
+    MOCK_METHOD1(compositor_acquire, std::shared_ptr<mg::Buffer>(void const*));
+    MOCK_METHOD1(compositor_release, void(std::shared_ptr<mg::Buffer> const&));
+    MOCK_METHOD0(snapshot_acquire, std::shared_ptr<mg::Buffer>());
+    MOCK_METHOD1(snapshot_release, void(std::shared_ptr<mg::Buffer> const&));
+};
+
 class TemporaryBuffersTest : public ::testing::Test
 {
 public:
@@ -48,13 +56,10 @@ public:
           buffer_pixel_format{mir_pixel_format_abgr_8888},
           mock_buffer{std::make_shared<testing::NiceMock<mtd::MockBuffer>>(
                           buffer_size, buffer_stride, buffer_pixel_format)},
-          mock_bundle{std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>()}
+          mock_acquisition{std::make_shared<testing::NiceMock<MockBufferAcquisition>>()}
     {
         using namespace testing;
-
-        ON_CALL(*mock_bundle, client_acquire(_))
-            .WillByDefault(InvokeArgument<0>(mock_buffer.get()));
-        ON_CALL(*mock_bundle, compositor_acquire(_))
+        ON_CALL(*mock_acquisition, compositor_acquire(_))
             .WillByDefault(Return(mock_buffer));
     }
 
@@ -62,30 +67,30 @@ public:
     geom::Stride const buffer_stride;
     MirPixelFormat const buffer_pixel_format;
     std::shared_ptr<mtd::MockBuffer> const mock_buffer;
-    std::shared_ptr<mtd::MockBufferBundle> mock_bundle;
+    std::shared_ptr<MockBufferAcquisition> mock_acquisition;
 };
 }
 
 TEST_F(TemporaryBuffersTest, compositor_buffer_acquires_and_releases)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_bundle, compositor_acquire(_))
+    EXPECT_CALL(*mock_acquisition, compositor_acquire(_))
         .WillOnce(Return(mock_buffer));
-    EXPECT_CALL(*mock_bundle, compositor_release(_))
+    EXPECT_CALL(*mock_acquisition, compositor_release(_))
         .Times(1);
 
-    mc::TemporaryCompositorBuffer proxy_buffer(mock_bundle, 0);
+    mc::TemporaryCompositorBuffer proxy_buffer(mock_acquisition, 0);
 }
 
 TEST_F(TemporaryBuffersTest, snapshot_buffer_acquires_and_releases)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_bundle, snapshot_acquire())
+    EXPECT_CALL(*mock_acquisition, snapshot_acquire())
         .WillOnce(Return(mock_buffer));
-    EXPECT_CALL(*mock_bundle, snapshot_release(_))
+    EXPECT_CALL(*mock_acquisition, snapshot_release(_))
         .Times(1);
 
-    mc::TemporarySnapshotBuffer proxy_buffer(mock_bundle);
+    mc::TemporarySnapshotBuffer proxy_buffer(mock_acquisition);
 }
 
 TEST_F(TemporaryBuffersTest, base_test_size)

@@ -19,20 +19,20 @@
 #include <boost/throw_exception.hpp>
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display.h"
-#include "src/server/graphics/default_display_configuration_policy.h"
+#include "mir/graphics//default_display_configuration_policy.h"
 #include "src/platforms/mesa/server/kms/platform.h"
 #include "src/platforms/mesa/server/kms/kms_display_configuration.h"
 
-#include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/stub_gl_config.h"
-#include "mir_test_doubles/stub_gl_program_factory.h"
-#include "mir_test_doubles/platform_factory.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/stub_gl_config.h"
+#include "mir/test/doubles/stub_gl_program_factory.h"
+#include "mir/test/doubles/platform_factory.h"
 
 #include "mir_test_framework/udev_environment.h"
 
-#include "mir_test_doubles/mock_drm.h"
-#include "mir_test_doubles/mock_gbm.h"
+#include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/mock_gbm.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -93,7 +93,7 @@ public:
         std::shared_ptr<mg::Platform> const& platform)
     {
         return platform->create_display(
-            std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+            std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
     }

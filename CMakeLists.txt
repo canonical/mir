@@ -27,7 +27,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 14) # This should change at least with every MIRSERVER_ABI
+set(MIR_VERSION_MINOR 15) # This should change at least with every MIRSERVER_ABI
 set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
@@ -106,15 +106,13 @@ elseif(cmake_build_type_lower MATCHES "threadsanitizer")
     # Linking everything with tsan is harmless and simple, so do that.
     link_libraries(tsan)
   endif()
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=thread")
 else()
   # AddressSanitizer builds fail if we disallow undefined symbols
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 endif()
-
-set(CMAKE_MODULE_LINKER_FLAGS_THREADSANITIZER "-fsanitize=thread")
-set(CMAKE_SHARED_LINKER_FLAGS_THREADSANITZIER "-fsanitize=thread")
-set(CMAKE_EXE_LINKER_FLAGS_THREADSANITIZER "-pie")
 
 # Define LOG_NDEBUG=1 to ensure Android ALOGV calls are not compiled in to
 # consume CPU time...
@@ -146,10 +144,10 @@ add_definitions(-DMESA_EGL_NO_X11_HEADERS)
 # Default to KMS backend, but build all of them
 set(
   MIR_PLATFORM
-  mesa-kms;android
+  mesa-kms;android;mesa-x11
   CACHE
   STRING
-  "a list of graphics backends to build (options are 'mesa-kms' or 'android')"
+  "a list of graphics backends to build (options are 'mesa-kms', 'android' or 'mesa-x11')"
 )
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
@@ -160,6 +158,9 @@ foreach(platform IN LISTS MIR_PLATFORM)
   endif()
   if (platform STREQUAL "android")
      set(MIR_BUILD_PLATFORM_ANDROID TRUE)
+  endif()
+  if (platform STREQUAL "mesa-x11")
+     set(MIR_BUILD_PLATFORM_MESA_X11 TRUE)
   endif()
 endforeach(platform)
 
@@ -184,7 +185,7 @@ if (MIR_BUILD_PLATFORM_ANDROID)
   find_package(LibHardware REQUIRED)
 endif()
 
-if (MIR_BUILD_PLATFORM_MESA_KMS)
+if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )

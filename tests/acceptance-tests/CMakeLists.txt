@@ -10,9 +10,11 @@ set(
   server_configuration_wrapping.cpp
   server_configuration_options.cpp
   server_signal_handling.cpp
+  test_application_not_responding_detection.cpp
   test_client_header_version.cpp
   test_client_input.cpp
   test_client_library.cpp
+  test_client_library_callbacks.cpp
   test_client_library_errors.cpp
   test_client_library_old.cpp
   test_client_surface_events.cpp
@@ -46,6 +48,7 @@ set(
   test_surface_modifications.cpp
   test_surface_placement.cpp
   test_surface_morphing.cpp
+  test_surface_specification.cpp
   test_system_compositor_window_manager.cpp
   test_session_mediator_report.cpp
 )
@@ -68,10 +71,10 @@ mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompi
 add_dependencies(mir_acceptance_tests GMock)
 
 target_link_libraries(mir_acceptance_tests
-  mir-test-static
+  mir-test-assist
+
+  # needed for 'throwback' tests that use private APIs
   mir-test-framework-static
-  mir-test-doubles-static
-  mir-test-doubles-platform-static
 
   mirclient
   mirclient-debug-extension
@@ -88,5 +91,5 @@ CMAKE_DEPENDENT_OPTION(
   OFF)
 
 if (MIR_RUN_ACCEPTANCE_TESTS)
-  mir_discover_tests(mir_acceptance_tests)
+  mir_discover_tests_with_fd_leak_detection(mir_acceptance_tests)
 endif (MIR_RUN_ACCEPTANCE_TESTS)

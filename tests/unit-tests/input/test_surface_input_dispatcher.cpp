@@ -23,10 +23,10 @@
 #include "mir/scene/observer.h"
 #include "mir/thread_safe_list.h"
 
-#include "mir_test/event_matchers.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test_doubles/stub_input_scene.h"
-#include "mir_test_doubles/mock_surface.h"
+#include "mir/test/event_matchers.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/doubles/stub_input_scene.h"
+#include "mir/test/doubles/mock_surface.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -601,6 +601,27 @@ TEST_F(SurfaceInputDispatcher, gestures_persist_over_touch_down)
     EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({0, 0})));
     EXPECT_TRUE(dispatcher.dispatch(*toucher.move_to({2, 2})));
     EXPECT_TRUE(dispatcher.dispatch(*toucher.release_at({2, 2})));
+}
+
+TEST_F(SurfaceInputDispatcher, touch_target_switches_on_finger_down)
+{   // Regression test for LP: #1480654
+    using namespace ::testing;
+    
+    auto left_surface = scene.add_surface({{0, 0}, {1, 1}});
+    auto right_surface = scene.add_surface({{5, 5}, {1, 1}});
+
+    InSequence seq;
+
+    EXPECT_CALL(*left_surface, consume(_)).Times(1);
+    // Note: No TouchUpEvent expected
+    EXPECT_CALL(*right_surface, consume(_)).Times(1);
+
+    dispatcher.start();
+    
+    FakeToucher toucher;
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({0, 0})));
+    // Note: No touch release event produced
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({5, 5})));
 }
 
 TEST_F(SurfaceInputDispatcher, touch_gestures_terminated_by_device_reset)

@@ -29,12 +29,14 @@ target_link_libraries(frame_uniformity_test_client
   mirclient
   mirplatform
   
-  mir-test-static
-  mir-test-framework-static
-  mir-test-doubles-static
-  mir-test-doubles-platform-static
+  mir-test-assist
 
-  ${PROTOBUF_LIBRARIES}
+  # needed for fake_event_hub_server_configuration.h (which relies on private APIs)
+  mir-test-framework-static
+
+  # needed for vsync_simulating_graphics_platform.cpp
+  mir-test-doubles-static
+
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}

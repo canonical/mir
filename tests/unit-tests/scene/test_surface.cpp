@@ -26,15 +26,15 @@
 #include "mir/scene/surface_event_source.h"
 #include "mir/input/input_channel.h"
 
-#include "mir_test_doubles/mock_buffer_stream.h"
-#include "mir_test_doubles/mock_input_surface.h"
-#include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/mock_input_sender.h"
-#include "mir_test_doubles/stub_input_channel.h"
-#include "mir_test_doubles/stub_input_sender.h"
-#include "mir_test_doubles/null_event_sink.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/event_matchers.h"
+#include "mir/test/doubles/mock_buffer_stream.h"
+#include "mir/test/doubles/mock_input_surface.h"
+#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/mock_input_sender.h"
+#include "mir/test/doubles/stub_input_channel.h"
+#include "mir/test/doubles/stub_input_sender.h"
+#include "mir/test/doubles/null_event_sink.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/event_matchers.h"
 
 #include "gmock_set_arg.h"
 #include <gmock/gmock.h>
@@ -408,7 +408,7 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
                                      mir_keyboard_action_down, 0, 0, mir_input_event_modifier_none);
     auto touch_event = mev::make_event(MirInputDeviceId(0), std::chrono::nanoseconds(0),
                                        mir_input_event_modifier_none);
-    mev::add_touch(*touch_event, 0, mir_touch_action_change, mir_touch_tooltype_finger, 0, 0,
+    mev::add_touch(*touch_event, 0, mir_touch_action_down, mir_touch_tooltype_finger, 0, 0,
         0, 0, 0, 0);
 
     EXPECT_CALL(mock_sender, send_event(mt::MirKeyEventMatches(*key_event), _)).Times(1);

@@ -18,8 +18,9 @@
 
 #include "mir_screencast.h"
 #include "mir_connection.h"
+#include "mir_protobuf.pb.h"
+#include "make_protobuf_object.h"
 #include "client_buffer_stream.h"
-#include "mir/make_protobuf_object.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir/egl_native_window_factory.h"
@@ -34,14 +35,14 @@ MirScreencast::MirScreencast(
     geom::Rectangle const& region,
     geom::Size const& size,
     MirPixelFormat pixel_format,
-    mir::protobuf::DisplayServer& server,
+    mir::client::rpc::DisplayServer& server,
     MirConnection* connection,
     mir_screencast_callback callback, void* context)
     : server(server),
       connection{connection},
       output_size{size},
-      protobuf_screencast{mir::make_protobuf_object<mir::protobuf::Screencast>()},
-      protobuf_void{mir::make_protobuf_object<mir::protobuf::Void>()}
+      protobuf_screencast{mcl::make_protobuf_object<mir::protobuf::Screencast>()},
+      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
 {
     if (output_size.width.as_int()  == 0 ||
         output_size.height.as_int() == 0 ||
@@ -53,20 +54,19 @@ MirScreencast::MirScreencast(
     }
     protobuf_screencast->set_error("Not initialized");
 
-    auto parameters = mir::make_protobuf_object<mir::protobuf::ScreencastParameters>();
+    mp::ScreencastParameters parameters;
 
-    parameters->mutable_region()->set_left(region.top_left.x.as_int());
-    parameters->mutable_region()->set_top(region.top_left.y.as_int());
-    parameters->mutable_region()->set_width(region.size.width.as_uint32_t());
-    parameters->mutable_region()->set_height(region.size.height.as_uint32_t());
-    parameters->set_width(output_size.width.as_uint32_t());
-    parameters->set_height(output_size.height.as_uint32_t());
-    parameters->set_pixel_format(pixel_format);
+    parameters.mutable_region()->set_left(region.top_left.x.as_int());
+    parameters.mutable_region()->set_top(region.top_left.y.as_int());
+    parameters.mutable_region()->set_width(region.size.width.as_uint32_t());
+    parameters.mutable_region()->set_height(region.size.height.as_uint32_t());
+    parameters.set_width(output_size.width.as_uint32_t());
+    parameters.set_height(output_size.height.as_uint32_t());
+    parameters.set_pixel_format(pixel_format);
 
     create_screencast_wait_handle.expect_result();
     server.create_screencast(
-        nullptr,
-        parameters.get(),
+        &parameters,
         protobuf_screencast.get(),
         google::protobuf::NewCallback(
             this, &MirScreencast::screencast_created,
@@ -86,13 +86,12 @@ bool MirScreencast::valid()
 MirWaitHandle* MirScreencast::release(
         mir_screencast_callback callback, void* context)
 {
-    auto screencast_id = mir::make_protobuf_object<mir::protobuf::ScreencastId>();
-    screencast_id->set_value(protobuf_screencast->screencast_id().value());
+    mp::ScreencastId screencast_id;
+    screencast_id.set_value(protobuf_screencast->screencast_id().value());
     
     release_wait_handle.expect_result();
     server.release_screencast(
-        nullptr,
-        screencast_id.get(),
+        &screencast_id,
         protobuf_void.get(),
         google::protobuf::NewCallback(
             this, &MirScreencast::released, callback, context));

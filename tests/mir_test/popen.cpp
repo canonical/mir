@@ -17,7 +17,7 @@
  *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include <mir_test/popen.h>
+#include <mir/test/popen.h>
 
 #include <system_error>
 

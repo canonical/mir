@@ -22,7 +22,7 @@
 #include "mir/frontend/protobuf_message_sender.h"
 #include "mir/frontend/template_protobuf_message_processor.h"
 #include "mir/frontend/unsupported_feature_exception.h"
-#include "mir/make_protobuf_object.h"
+#include <mir/protobuf/display_server_debug.h>
 
 #include "mir_protobuf_wire.pb.h"
 
@@ -69,10 +69,10 @@ template<> struct result_ptr_t<mir::protobuf::PlatformOperationMessage> { typede
 //The exchange_buffer and next_buffer calls can complete on a different thread than the
 //one the invocation was called on. Make sure to preserve the result resource. 
 template<class ParameterMessage>
-auto parse_parameter(Invocation const& invocation)
+ParameterMessage parse_parameter(Invocation const& invocation)
 {
-    auto request = mir::make_protobuf_object<ParameterMessage>();
-    if (!request->ParseFromString(invocation.parameters()))
+    ParameterMessage request;
+    if (!request.ParseFromString(invocation.parameters()))
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to parse message parameters!"));
     return request;
 }
@@ -108,7 +108,6 @@ void invoke(
     std::shared_ptr<ProtobufMessageProcessor> const& mp,
     DisplayServer* server,
     void (mir::protobuf::DisplayServer::*function)(
-        ::google::protobuf::RpcController* controller,
         const RequestType* request,
         ResponseType* response,
         ::google::protobuf::Closure* done),
@@ -132,14 +131,15 @@ void invoke(
     try
     {
         (server->*function)(
-            0,
             request,
             result_message.get(),
             callback);
     }
     catch (std::exception const& x)
     {
-        result_message->set_error(boost::diagnostic_information(x));
+        using namespace std::literals;
+        result_message->set_error("Error processing request: "s +
+            x.what() + "\nInternal error details: " + boost::diagnostic_information(x));
         callback->Run();
     }
 }
@@ -150,8 +150,7 @@ void invoke(
     Self* self,
     std::string* error,
     void (ServerX::*/*function*/)(
-        ::google::protobuf::RpcController* controller,
-        const ParameterMessage* request,
+        ParameterMessage const* request,
         ResultMessage* response,
         ::google::protobuf::Closure* done),
         Invocation const& invocation)
@@ -209,15 +208,15 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         else if ("next_buffer" == invocation.method_name())
         {
             auto request = parse_parameter<mir::protobuf::SurfaceId>(invocation);
-            invoke(shared_from_this(), display_server.get(), &DisplayServer::next_buffer, invocation.id(), request.get());
+            invoke(shared_from_this(), display_server.get(), &DisplayServer::next_buffer, invocation.id(), &request);
         }
         else if ("exchange_buffer" == invocation.method_name())
         {
             auto request = parse_parameter<mir::protobuf::BufferRequest>(invocation);
-            request->mutable_buffer()->clear_fd();
+            request.mutable_buffer()->clear_fd();
             for (auto& fd : side_channel_fds)
-                request->mutable_buffer()->add_fd(fd);
-            invoke(shared_from_this(), display_server.get(), &DisplayServer::exchange_buffer, invocation.id(), request.get());
+                request.mutable_buffer()->add_fd(fd);
+            invoke(shared_from_this(), display_server.get(), &DisplayServer::exchange_buffer, invocation.id(), &request);
         }
         else if ("submit_buffer" == invocation.method_name())
         {
@@ -243,12 +242,12 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             auto request = parse_parameter<mir::protobuf::PlatformOperationMessage>(invocation);
 
-            request->clear_fd();
+            request.clear_fd();
             for (auto& fd : side_channel_fds)
-                request->add_fd(fd);
+                request.add_fd(fd);
 
             invoke(shared_from_this(), display_server.get(), &DisplayServer::platform_operation,
-                   invocation.id(), request.get());
+                   invocation.id(), &request);
         }
         else if ("configure_display" == invocation.method_name())
         {
@@ -303,19 +302,23 @@ bool mfd::ProtobufMessageProcessor::dispatch(
             invoke(this, display_server.get(), &DisplayServer::disconnect, invocation);
             result = false;
         }
+        else if ("pong" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::pong, invocation);
+        }
         else if ("translate_surface_to_screen" == invocation.method_name())
         {
             try
             {
-                auto debug_interface = dynamic_cast<mir::protobuf::Debug*>(display_server.get());
-                invoke(this, debug_interface, &mir::protobuf::Debug::translate_surface_to_screen, invocation);
+                auto debug_interface = dynamic_cast<mir::protobuf::DisplayServerDebug*>(display_server.get());
+                invoke(this, debug_interface, &mir::protobuf::DisplayServerDebug::translate_surface_to_screen, invocation);
             }
             catch (mir::frontend::unsupported_feature const&)
             {
                 std::string message{"Server does not support the client debugging interface"};
                 invoke(this,
                        &message,
-                       &mir::protobuf::Debug::translate_surface_to_screen,
+                       &mir::protobuf::DisplayServerDebug::translate_surface_to_screen,
                        invocation);
                 std::runtime_error err{"Client attempted to use unavailable debug interface"};
                 report->exception_handled(display_server.get(), invocation.id(), err);
@@ -342,7 +345,7 @@ bool mfd::ProtobufMessageProcessor::dispatch(
     return result;
 }
 
-void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response)
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, ::google::protobuf::MessageLite* response)
 {
     sender->send_response(id, response, {});
 }

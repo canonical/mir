@@ -187,6 +187,21 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev)
     }
 }
 
+MirInputEvent const* mir_pointer_event_input_event(MirPointerEvent const* event)
+{
+    return reinterpret_cast<MirInputEvent const*>(event);
+}
+
+MirInputEvent const* mir_keyboard_event_input_event(MirKeyboardEvent const* event)
+{
+    return reinterpret_cast<MirInputEvent const*>(event);
+}
+
+MirInputEvent const* mir_touch_event_input_event(MirTouchEvent const* event)
+{
+    return reinterpret_cast<MirInputEvent const*>(event);
+}
+
 /* Key event accessors */
 
 MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* ev)
@@ -384,6 +399,10 @@ float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis ax
        return old_mev.pointer_coordinates[0].x;
    case mir_pointer_axis_y:
        return old_mev.pointer_coordinates[0].y;
+   case mir_pointer_axis_relative_x:
+       return old_mev.pointer_coordinates[0].dx;
+   case mir_pointer_axis_relative_y:
+       return old_mev.pointer_coordinates[0].dy;
    case mir_pointer_axis_vscroll:
        return old_mev.pointer_coordinates[0].vscroll;
    case mir_pointer_axis_hscroll:

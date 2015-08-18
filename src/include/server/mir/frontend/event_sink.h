@@ -20,16 +20,18 @@
 #define MIR_EVENTS_EVENT_SINK_H_
 
 #include "mir_toolkit/event.h"
+#include "mir/frontend/buffer_sink.h"
 
 namespace mir
 {
 namespace graphics
 {
 class DisplayConfiguration;
+class Buffer;
 }
 namespace frontend
 {
-class EventSink
+class EventSink : public BufferSink
 {
 public:
     virtual ~EventSink() = default;
@@ -37,6 +39,7 @@ public:
     virtual void handle_event(MirEvent const& e) = 0;
     virtual void handle_lifecycle_event(MirLifecycleState state) = 0;
     virtual void handle_display_config_change(graphics::DisplayConfiguration const& config) = 0;
+    virtual void send_ping(int32_t serial) = 0;
 
 protected:
     EventSink() = default;

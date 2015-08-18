@@ -19,11 +19,11 @@
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/fd.h"
-#include "mir_test/pipe.h"
-#include "mir_test/signal.h"
-#include "mir_test/test_dispatchable.h"
+#include "mir/test/pipe.h"
+#include "mir/test/signal.h"
+#include "mir/test/test_dispatchable.h"
 #include "mir_test_framework/process.h"
-#include "mir_test/cross_process_action.h"
+#include "mir/test/cross_process_action.h"
 
 #include <fcntl.h>
 
@@ -364,7 +364,7 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
             }
         });
 
-    auto const result = child->wait_for_termination(10s);
+    auto const result = child->wait_for_termination(30s);
     EXPECT_TRUE(result.succeeded());
 }
 

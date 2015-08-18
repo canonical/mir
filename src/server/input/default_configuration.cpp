@@ -53,6 +53,7 @@
 #include "mir/main_loop.h"
 #include "mir/shared_library.h"
 #include "mir/glib_main_loop.h"
+#include "mir/dispatch/action_queue.h"
 
 #include "mir_toolkit/cursors.h"
 
@@ -66,6 +67,7 @@ namespace mr = mir::report;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace msh = mir::shell;
+namespace md = mir::dispatch;
 
 std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
 {
@@ -328,6 +330,21 @@ mir::DefaultServerConfiguration::the_input_platform()
         });
 }
 
+namespace
+{
+class NullLegacyInputDispatchable : public mi::LegacyInputDispatchable
+{
+public:
+    void start() override {};
+    mir::Fd watch_fd() const override { return aq.watch_fd();};
+    bool dispatch(md::FdEvents events) override { return aq.dispatch(events); }
+    md::FdEvents relevant_events() const override{ return aq.relevant_events(); }
+
+private:
+    md::ActionQueue aq;
+};
+}
+
 std::shared_ptr<mi::InputManager>
 mir::DefaultServerConfiguration::the_input_manager()
 {
@@ -359,12 +376,20 @@ mir::DefaultServerConfiguration::the_input_manager()
                 if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
                     mr::legacy_input::initialize(the_logger());
 
-                auto ret = std::make_shared<mi::DefaultInputManager>(
-                    the_input_reading_multiplexer(), the_legacy_input_dispatchable());
+                std::shared_ptr<mi::InputManager> ret;
 
                 auto platform = the_input_platform();
                 if (platform)
+                {
+                    ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(),
+                                                                    std::make_shared<NullLegacyInputDispatchable>());
                     ret->add_platform(platform);
+                }
+                else
+                {
+                    ret = std::make_shared<mi::DefaultInputManager>(
+                        the_input_reading_multiplexer(), the_legacy_input_dispatchable());
+                }
                 return ret;
             }
             else

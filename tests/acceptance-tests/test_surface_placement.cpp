@@ -19,10 +19,13 @@
 #include "mir/events/event_builders.h"
 #include "mir/scene/surface.h"
 
-#include "mir_test_doubles/wrap_shell_to_track_latest_surface.h"
+#include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
 #include "mir_test_framework/connected_client_headless_server.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test/signal.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/signal.h"
+
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace mev = mir::events;
 namespace mf = mir::frontend;
@@ -138,9 +141,8 @@ private:
 
     void init_pixel_format()
     {
-        unsigned int valid_formats
-        { 0 };
-        MirPixelFormat pixel_formats[mir_pixel_formats];
+        unsigned int valid_formats{0};
+        MirPixelFormat pixel_formats[mir_pixel_formats] = { mir_pixel_format_invalid };
         mir_connection_get_available_surface_formats(connection, pixel_formats, mir_pixel_formats, &valid_formats);
         //select an 8 bit opaque format if we can
         for (auto i = 0u; i < valid_formats; i++)

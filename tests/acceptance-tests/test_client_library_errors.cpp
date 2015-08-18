@@ -23,13 +23,13 @@
 #include "src/include/client/mir/client_platform.h"
 #include "src/include/client/mir/client_buffer_factory.h"
 
-#include "mir_test/validity_matchers.h"
+#include "mir/test/validity_matchers.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/stub_client_connection_configuration.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test_doubles/stub_client_buffer_factory.h"
+#include "mir/test/doubles/stub_client_buffer_factory.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -103,6 +103,10 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         return nullptr;
+    }
+    MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override
+    {
+        return mir_pixel_format_invalid;
     }
 };
 
@@ -247,10 +251,42 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
     mir_connection_release(connection);
 }
 
+TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
+{
+    using namespace testing;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    ASSERT_THAT(connection, IsValid());
+
+    // An ID that parses as valid, but doesn't correspond to any
+    auto invalid_id = mir_persistent_id_from_string("05f223a2-39e5-48b9-9416-b0ce837351b6");
+
+    auto spec = mir_connection_create_spec_for_input_method(connection,
+                                                            200, 200,
+                                                            mir_pixel_format_argb_8888);
+    MirRectangle rect{
+        100,
+        100,
+        10,
+        10
+    };
+    mir_surface_spec_attach_to_foreign_parent(spec, invalid_id, &rect, mir_edge_attachment_any);
+
+    auto surface = mir_surface_create_sync(spec);
+    EXPECT_THAT(surface, Not(IsValid()));
+    EXPECT_THAT(mir_surface_get_error_message(surface), MatchesRegex(".*Lookup.*failed.*"));
+
+    mir_persistent_id_release(invalid_id);
+    mir_surface_spec_release(spec);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
 using ClientLibraryErrorsDeathTest = ClientLibraryErrors;
 
 
-TEST_F(ClientLibraryErrorsDeathTest, createing_surface_on_garbage_connection_is_fatal)
+TEST_F(ClientLibraryErrorsDeathTest, creating_surface_on_garbage_connection_is_fatal)
 {
     mtf::UsingStubClientPlatform stubby;
 
@@ -285,5 +321,36 @@ TEST_F(ClientLibraryErrorsDeathTest, creating_surface_synchronosly_on_invalid_co
     ASSERT_FALSE(mir_connection_is_valid(connection));
     EXPECT_DEATH(mtf::make_any_surface(connection), "");
 
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_parent_id)
+{
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto spec = mir_connection_create_spec_for_input_method(connection, 100, 100, mir_pixel_format_argb_8888);
+
+    MirRectangle rect{
+        100,
+        100,
+        10,
+        10
+    };
+    EXPECT_DEATH(mir_surface_spec_attach_to_foreign_parent(spec, nullptr, &rect, mir_edge_attachment_any), "");
+
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_rectangle)
+{
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto spec = mir_connection_create_spec_for_input_method(connection, 100, 100, mir_pixel_format_argb_8888);
+
+    auto id = mir_persistent_id_from_string("fa69b2e9-d507-4005-be61-5068f40a5aec");
+
+    EXPECT_DEATH(mir_surface_spec_attach_to_foreign_parent(spec, id, nullptr, mir_edge_attachment_any), "");
+
+    mir_persistent_id_release(id);
     mir_connection_release(connection);
 }

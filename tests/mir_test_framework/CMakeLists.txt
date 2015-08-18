@@ -18,54 +18,55 @@ add_definitions(
     -DMIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
     )
 
-set(
-  TEST_FRAMEWORK_SRCS
-
+add_library(mir-public-test-framework OBJECT
+  any_surface.cpp
   async_server_runner.cpp
-  executable_path.cpp
   command_line_server_configuration.cpp
   connected_client_headless_server.cpp
   connected_client_with_a_surface.cpp
+  declarative_placement_window_manage_policy.cpp
+  executable_path.cpp
   headless_in_process_server.cpp
+  headless_nested_server_runner.cpp
   headless_test.cpp
   interprocess_client_server_test.cpp
-  server_runner.cpp
-  temporary_environment_value.cpp
-  testing_server_options.cpp
-  input_testing_server_options.cpp
-  stubbed_server_configuration.cpp
-  testing_process_manager.cpp
-  testing_client_options.cpp
+  main.cpp
+  placement_applying_shell.cpp
   process.cpp
-  using_stub_client_platform.cpp
+  server_runner.cpp
+  socket_detect_server.cpp
   stub_client_platform_factory.cpp
   stub_server_platform_factory.cpp
-  udev_environment.cpp
-  declarative_placement_window_manage_policy.cpp
-  fake_event_hub_server_configuration.cpp
-  any_surface.cpp
-  headless_nested_server_runner.cpp
-  placement_applying_shell.cpp
-)
-
-list(APPEND TEST_FRAMEWORK_SRCS
-  socket_detect_server.cpp
+  stubbed_server_configuration.cpp
+  testing_client_options.cpp
+  testing_server_options.cpp
+  temporary_environment_value.cpp
+  using_stub_client_platform.cpp
 )
 
 # Umockdev uses glib, which uses the deprecated "register" storage qualifier
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
+add_library(mir-protected-test-framework OBJECT
+
+  fake_input_server_configuration.cpp
+  input_testing_server_options.cpp
+  testing_process_manager.cpp
+  udev_environment.cpp
+)
+
+
 add_library(mir-test-framework-static STATIC
-  ${TEST_FRAMEWORK_SRCS}
+  $<TARGET_OBJECTS:mir-public-test-framework>
+  $<TARGET_OBJECTS:mir-protected-test-framework>
 )
 
 add_dependencies(mir-test-framework-static GMock)
 
-uses_android_input(mir-test-framework-static)
+uses_android_input(mir-protected-test-framework)
 
 target_link_libraries(mir-test-framework-static
 
-  ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
@@ -103,6 +104,7 @@ add_library(
   stub_input.cpp
   fake_input_device_impl.cpp
   stub_input_platform.cpp
+  $<TARGET_OBJECTS:mirevdevutilsobjects>
   )
 
 target_link_libraries(mirplatforminputstub

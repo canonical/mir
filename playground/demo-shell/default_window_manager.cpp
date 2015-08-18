@@ -103,7 +103,6 @@ void me::DefaultWindowManager::modify_surface(
         surface->rename(modifications.name.value());
 }
 
-
 void me::DefaultWindowManager::remove_surface(
     std::shared_ptr<scene::Session> const& /*session*/,
     std::weak_ptr<scene::Surface> const& /*surface*/)

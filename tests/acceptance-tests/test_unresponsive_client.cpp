@@ -22,13 +22,15 @@
 
 #include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir_test_framework/any_surface.h"
+#include "mir_test_framework/process.h"
 
-#include "mir_test/cross_process_action.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/cross_process_action.h"
+#include "mir/test/fake_shared.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include <string>
 #include <future>
@@ -119,7 +121,7 @@ TEST_F(UnresponsiveClient, does_not_hang_server)
             });
     };
 
-    auto client_runner = std::async(std::launch::async, [&]{ run_in_client(client_code); });
+    auto client_process = new_client_process(client_code);
 
     if (is_test_process())
     {
@@ -136,5 +138,8 @@ TEST_F(UnresponsiveClient, does_not_hang_server)
         kill(client_pid(), SIGCONT);
         client_release();
         server_finish();
+
+        auto const result = client_process->wait_for_termination();
+        EXPECT_THAT(result.exit_code, testing::Eq(EXIT_SUCCESS));
     }
 }

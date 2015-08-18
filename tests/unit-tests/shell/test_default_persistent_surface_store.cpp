@@ -22,7 +22,7 @@
 
 #include "src/server/shell/default_persistent_surface_store.h"
 
-#include "mir_test_doubles/mock_surface.h"
+#include "mir/test/doubles/mock_surface.h"
 
 
 #include <gmock/gmock.h>

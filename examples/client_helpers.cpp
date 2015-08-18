@@ -45,8 +45,8 @@ me::Connection::operator MirConnection*()
     return connection;
 }
 
-me::NormalSurface::NormalSurface(me::Connection& connection, unsigned int width, unsigned int height) :
-    surface{create_surface(connection, width, height), surface_deleter}
+me::NormalSurface::NormalSurface(me::Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha) :
+    surface{create_surface(connection, width, height, prefers_alpha), surface_deleter}
 {
 }
 
@@ -55,7 +55,7 @@ me::NormalSurface::operator MirSurface*() const
     return surface.get();
 }
 
-MirSurface* me::NormalSurface::create_surface(MirConnection* connection, unsigned int width, unsigned int height)
+MirSurface* me::NormalSurface::create_surface(MirConnection* connection, unsigned int width, unsigned int height, bool prefers_alpha)
 {
     MirPixelFormat selected_format;
     unsigned int valid_formats{0};
@@ -65,16 +65,19 @@ MirSurface* me::NormalSurface::create_surface(MirConnection* connection, unsigne
         throw std::runtime_error("no pixel formats for surface");
     selected_format = pixel_formats[0]; 
     //select an 8 bit opaque format if we can
-    for(auto i = 0u; i < valid_formats; i++)
+    if (!prefers_alpha)
     {
-        if (pixel_formats[i] == mir_pixel_format_xbgr_8888 ||
-            pixel_formats[i] == mir_pixel_format_xrgb_8888)
+        for(auto i = 0u; i < valid_formats; i++)
         {
-            selected_format = pixel_formats[i];
-            break;
+            if (pixel_formats[i] == mir_pixel_format_xbgr_8888 ||
+                pixel_formats[i] == mir_pixel_format_xrgb_8888)
+            {
+                selected_format = pixel_formats[i];
+                break;
+            }
         }
     }
-
+    
     auto deleter = [](MirSurfaceSpec *spec) { mir_surface_spec_release(spec); };
     std::unique_ptr<MirSurfaceSpec, decltype(deleter)> spec{
         mir_connection_create_spec_for_normal_surface(connection, width, height, selected_format),

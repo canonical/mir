@@ -19,9 +19,15 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 
+#include "mir/test/doubles/mock_window_manager.h"
+
+#include "mir/scene/session.h"
+#include "mir/geometry/rectangle.h"
+
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test/validity_matchers.h"
+#include "mir/test/validity_matchers.h"
+#include "mir/test/fake_shared.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -30,6 +36,11 @@
 #include <mutex>
 
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
+namespace msh = mir::shell;
+namespace ms = mir::scene;
+namespace mt = mir::test;
+namespace mg = mir::geometry;
 
 namespace
 {
@@ -79,6 +90,17 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
         mir_buffer_usage_hardware,
         mir_display_output_id_invalid
     };
+
+    void SetUp() override
+    {
+        server.override_the_window_manager_builder([this](msh::FocusController*)
+        {
+            return mt::fake_shared(window_manager);
+        });
+        ConnectedClientHeadlessServer::SetUp();
+    }
+
+    testing::NiceMock<mtd::MockWindowManager> window_manager;
 };
 
 extern "C" void create_surface_callback(MirSurface* surface, void * context)
@@ -327,4 +349,56 @@ TEST_F(ClientSurfaces, can_be_renamed)
     mir_surface_spec_release(spec);
 
     mir_surface_release_sync(surf);
+}
+
+TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
+{
+    using namespace testing;
+
+    mg::Rectangle const server_rect{mg::Point{100, 100}, mg::Size{10, 10}};
+    MirRectangle client_rect{ 100, 100, 10, 10 };
+
+    auto const edge_attachment = mir_edge_attachment_vertical;
+
+    std::shared_ptr<ms::Surface> parent_surface;
+    InSequence seq;
+    EXPECT_CALL(window_manager, add_surface(_,_,_)).WillOnce(Invoke([&parent_surface](auto session, auto params, auto builder)
+    {
+        auto id = builder(session, params);
+        parent_surface = session->surface(id);
+        return id;
+    }));
+    EXPECT_CALL(window_manager, add_surface(_,_,_)).WillOnce(Invoke([&parent_surface, server_rect, edge_attachment](auto session, auto params, auto builder)
+    {
+        EXPECT_THAT(params.parent.lock(), Eq(parent_surface));
+        EXPECT_TRUE(params.aux_rect.is_set());
+        EXPECT_THAT(params.aux_rect.value(), Eq(server_rect));
+        EXPECT_TRUE(params.edge_attachment.is_set());
+        EXPECT_THAT(params.edge_attachment.value(), Eq(edge_attachment));
+
+        return builder(session, params);
+    }));
+
+    auto surface = mtf::make_any_surface(connection);
+
+    auto parent_id = mir_surface_request_persistent_id_sync(surface);
+
+    auto im_connection = mir_connect_sync(new_connection().c_str(), "Mock IM connection");
+    ASSERT_THAT(im_connection, IsValid());
+
+    auto spec = mir_connection_create_spec_for_input_method(im_connection, 100, 20,
+        mir_pixel_format_abgr_8888);
+    ASSERT_THAT(spec, NotNull());
+
+    mir_surface_spec_attach_to_foreign_parent(spec, parent_id, &client_rect, edge_attachment);
+
+    mir_persistent_id_release(parent_id);
+
+    auto im = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    mir_surface_release_sync(im);
+    mir_surface_release_sync(surface);
+
+    mir_connection_release(im_connection);
 }

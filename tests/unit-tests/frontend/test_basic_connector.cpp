@@ -18,8 +18,8 @@
 
 #include "src/server/frontend/published_socket_connector.h"
 #include "src/server/report/null/connector_report.h"
-#include "mir_test/current_thread_name.h"
-#include "mir_test/fake_shared.h"
+#include "mir/test/current_thread_name.h"
+#include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

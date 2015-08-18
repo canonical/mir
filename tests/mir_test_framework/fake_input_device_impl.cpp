@@ -25,89 +25,36 @@
 #include "mir/dispatch/action_queue.h"
 #include "mir/geometry/displacement.h"
 #include "mir/module_deleter.h"
+#include "src/platforms/evdev/input_modifier_utils.h"
 
 #include "boost/throw_exception.hpp"
-#include "linux/input.h"
 
 #include "mir/events/event_builders.h"
 
 #include <chrono>
 
 namespace mi = mir::input;
+namespace mie = mi::evdev;
 namespace md = mir::dispatch;
 namespace mtf = mir_test_framework;
 
 namespace
 {
 const int64_t device_id_unknown = 0;
-
-MirPointerButton to_pointer_button(int button)
-{
-    switch(button)
-    {
-    case BTN_LEFT: return mir_pointer_button_primary;
-    case BTN_RIGHT: return mir_pointer_button_secondary;
-    case BTN_MIDDLE: return mir_pointer_button_tertiary;
-    case BTN_BACK: return mir_pointer_button_back;
-    case BTN_FORWARD: return mir_pointer_button_forward;
-    }
-    BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mouse button"));
-}
-
-uint32_t to_modifier(int32_t scan_code)
-{
-    switch(scan_code)
-    {
-    case KEY_LEFTALT:
-        return mir_input_event_modifier_alt_left;
-    case KEY_RIGHTALT:
-        return mir_input_event_modifier_alt_right;
-    case KEY_RIGHTCTRL:
-        return mir_input_event_modifier_ctrl_right;
-    case KEY_LEFTCTRL:
-        return mir_input_event_modifier_ctrl_left;
-    case KEY_CAPSLOCK:
-        return mir_input_event_modifier_caps_lock;
-    case KEY_LEFTMETA:
-        return mir_input_event_modifier_meta_left;
-    case KEY_RIGHTMETA:
-        return mir_input_event_modifier_meta_right;
-    case KEY_SCROLLLOCK:
-        return mir_input_event_modifier_scroll_lock;
-    case KEY_NUMLOCK:
-        return mir_input_event_modifier_num_lock;
-    case KEY_LEFTSHIFT:
-        return mir_input_event_modifier_shift_left;
-    case KEY_RIGHTSHIFT:
-        return mir_input_event_modifier_shift_right;
-    default:
-        return mir_input_event_modifier_none;
-    }
-}
-
-uint32_t expand_modifier(uint32_t modifiers)
-{
-    if ((modifiers & mir_input_event_modifier_alt_left) || (modifiers & mir_input_event_modifier_alt_right))
-        modifiers |= mir_input_event_modifier_alt;
-
-    if ((modifiers & mir_input_event_modifier_ctrl_left) || (modifiers & mir_input_event_modifier_ctrl_right))
-        modifiers |= mir_input_event_modifier_ctrl;
-
-    if ((modifiers & mir_input_event_modifier_shift_left) || (modifiers & mir_input_event_modifier_shift_right))
-        modifiers |= mir_input_event_modifier_shift;
-
-    if ((modifiers & mir_input_event_modifier_meta_left) || (modifiers & mir_input_event_modifier_meta_right))
-        modifiers |= mir_input_event_modifier_meta;
-
-    return modifiers;
-}
-
 }
 
 mtf::FakeInputDeviceImpl::FakeInputDeviceImpl(mi::InputDeviceInfo const& info)
     : queue{mir::make_module_ptr<md::ActionQueue>()}, device{mir::make_module_ptr<InputDevice>(info, queue)}
 {
     mtf::StubInputPlatform::add(device);
+}
+
+void mtf::FakeInputDeviceImpl::emit_runtime_error()
+{
+    queue->enqueue([]()
+                   {
+                       throw std::runtime_error("runtime error in input device");
+                   });
 }
 
 void mtf::FakeInputDeviceImpl::emit_event(synthesis::KeyParameters const& key)
@@ -158,14 +105,14 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
     auto input_action =
         (key_params.action == synthesis::EventAction::Down) ? mir_keyboard_action_down : mir_keyboard_action_up;
 
-    auto event_modifiers = expand_modifier(modifiers);
+    auto event_modifiers = mie::expand_modifiers(modifiers);
     auto key_event = mir::events::make_event(
         device_id_unknown, event_time, input_action, key_code, key_params.scancode, event_modifiers);
 
     if (key_params.action == synthesis::EventAction::Down)
-        modifiers |= to_modifier(key_params.scancode);
+        modifiers |= mie::to_modifier(key_params.scancode);
     else
-        modifiers &= ~to_modifier(key_params.scancode);
+        modifiers &= ~mie::to_modifier(key_params.scancode);
 
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
@@ -176,8 +123,8 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonP
 {
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::system_clock::now().time_since_epoch());
-    auto action = update_buttons(button.action, to_pointer_button(button.button));
-    auto event_modifiers = expand_modifier(modifiers);
+    auto action = update_buttons(button.action, mie::to_pointer_button(button.button));
+    auto event_modifiers = mie::expand_modifiers(modifiers);
     auto button_event = mir::events::make_event(device_id_unknown,
                                                 event_time,
                                                 event_modifiers,
@@ -214,7 +161,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
 
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::system_clock::now().time_since_epoch());
-    auto event_modifiers = expand_modifier(modifiers);
+    auto event_modifiers = mie::expand_modifiers(modifiers);
     update_position(pointer.rel_x, pointer.rel_y);
     auto pointer_event = mir::events::make_event(device_id_unknown,
                                                  event_time,
@@ -224,7 +171,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
                                                  pos.x.as_float(),
                                                  pos.y.as_float(),
                                                  scroll.x.as_float(),
-                                                 scroll.y.as_float());
+                                                 scroll.y.as_float(),
+                                                 pointer.rel_x,
+                                                 pointer.rel_y);
 
     sink->handle_input(*pointer_event);
 }
@@ -242,7 +191,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
 
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::system_clock::now().time_since_epoch());
-    auto event_modifiers = expand_modifier(modifiers);
+    auto event_modifiers = mie::expand_modifiers(modifiers);
 
     auto touch_event = mir::events::make_event(device_id_unknown, event_time, event_modifiers);
 

@@ -9,8 +9,6 @@ include_directories(
 add_library(acceptance-test-throwback OBJECT
 
   test_client_cursor_api.cpp
-  test_focus_selection.cpp
-  test_touchspot_visualization.cpp
 )
 
 uses_android_input(acceptance-test-throwback)

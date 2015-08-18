@@ -61,7 +61,12 @@ typedef enum {
 /* Relative axis containing ticks reported by the vertical scroll wheel */
     mir_pointer_axis_vscroll = 2,
 /* Relative axis containing ticks reported by the horizontal scroll wheel */
-    mir_pointer_axis_hscroll = 3
+    mir_pointer_axis_hscroll = 3,
+/* Relative axis containing the last reported x differential from the pointer */
+    mir_pointer_axis_relative_x = 4,
+/* Relative axis containing the last reported y differential from the pointer */
+    mir_pointer_axis_relative_y = 5
+
 } MirPointerAxis;
 
 /* 
@@ -121,6 +126,14 @@ MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* event);
  */
 float mir_pointer_event_axis_value(MirPointerEvent const* event, 
     MirPointerAxis axis);
+
+/*
+ * Retrieve the corresponding input event.
+ *
+ * \param [in] event The pointer event
+ * \return           The input event
+ */
+MirInputEvent const* mir_pointer_event_input_event(MirPointerEvent const* event);
 
 #ifdef __cplusplus
 }

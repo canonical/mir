@@ -22,6 +22,7 @@
 #define MIR_DISPLAY_SERVER_H_
 
 #include <memory>
+#include <atomic>
 
 /// All things Mir
 namespace mir
@@ -40,7 +41,9 @@ public:
 
 private:
     struct Private;
-    std::unique_ptr<Private> p;
+    // This gets dereferenced in stop(), called across thread boundaries,
+    // so gets (correctly, if harmlessly) detected as a data race if it's not atomic.
+    std::atomic<Private*> const p;
 
     DisplayServer() = delete;
     DisplayServer(const DisplayServer&) = delete;

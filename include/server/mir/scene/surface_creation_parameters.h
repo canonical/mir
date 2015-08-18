@@ -73,6 +73,8 @@ struct SurfaceCreationParameters
 
     SurfaceCreationParameters& with_edge_attachment(MirEdgeAttachment edge);
 
+    SurfaceCreationParameters& with_buffer_stream(frontend::BufferStreamId const& id);
+
     std::string name;
     geometry::Size size;
     geometry::Point top_left;
@@ -86,6 +88,7 @@ struct SurfaceCreationParameters
     mir::optional_value<MirSurfaceType> type;
     mir::optional_value<MirOrientationMode> preferred_orientation;
     mir::optional_value<frontend::SurfaceId> parent_id;
+    mir::optional_value<frontend::BufferStreamId> content_id;
     mir::optional_value<geometry::Rectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
 
@@ -99,6 +102,8 @@ struct SurfaceCreationParameters
     mir::optional_value<geometry::DeltaY> height_inc;
     mir::optional_value<shell::SurfaceAspectRatio> min_aspect;
     mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
+
+    mir::optional_value<std::vector<geometry::Rectangle>> input_shape;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);

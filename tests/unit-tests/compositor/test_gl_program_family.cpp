@@ -17,8 +17,8 @@
  */
 
 #include "mir/compositor/gl_program_family.h"
-#include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/mock_egl.h"
+#include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/mock_egl.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

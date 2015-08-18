@@ -20,14 +20,14 @@
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/options/program_option.h"
 #include "src/platforms/android/server/platform.h"
-#include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_android_hw.h"
-#include "mir_test_doubles/mock_buffer_ipc_message.h"
-#include "mir_test_doubles/mock_display_report.h"
-#include "mir_test_doubles/stub_display_builder.h"
-#include "mir_test_doubles/fd_matcher.h"
-#include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/mock_android_hw.h"
+#include "mir/test/doubles/mock_buffer_ipc_message.h"
+#include "mir/test/doubles/mock_display_report.h"
+#include "mir/test/doubles/stub_display_builder.h"
+#include "mir/test/doubles/fd_matcher.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/doubles/mock_android_native_buffer.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir/shared_library.h"
 #include <system/window.h>
@@ -240,21 +240,23 @@ TEST(AndroidGraphicsPlatform, probe_returns_unsupported_when_no_hwaccess)
 {
     using namespace testing;
     NiceMock<mtd::HardwareAccessMock> hwaccess;
+    mir::options::ProgramOption options;
 
     ON_CALL(hwaccess, hw_get_module(_,_)).WillByDefault(Return(-1));
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-android")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::unsupported, probe());
+    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(options));
 }
 
 TEST(AndroidGraphicsPlatform, probe_returns_best_when_hwaccess_succeeds)
 {
     testing::NiceMock<mtd::HardwareAccessMock> hwaccess;
+    mir::options::ProgramOption options;
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-android")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::best, probe());
+    EXPECT_EQ(mg::PlatformPriority::best, probe(options));
 }
 
 TEST(NestedPlatformCreation, doesnt_access_display_hardware)

@@ -20,9 +20,9 @@
 #include "src/client/rpc/stream_socket_transport.h"
 #include "mir/fd.h"
 
-#include "mir_test/auto_unblock_thread.h"
-#include "mir_test/signal.h"
-#include "mir_test/fd_utils.h"
+#include "mir/test/auto_unblock_thread.h"
+#include "mir/test/signal.h"
+#include "mir/test/fd_utils.h"
 #include "mir/raii.h"
 
 #include <sys/socket.h>

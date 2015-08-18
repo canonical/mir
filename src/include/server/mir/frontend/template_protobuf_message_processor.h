@@ -22,11 +22,11 @@
 
 #include "mir/frontend/message_processor.h"
 
-#include <google/protobuf/service.h>
-
+#include <google/protobuf/stubs/common.h>
 #include <boost/exception/diagnostic_information.hpp>
 
 #include <memory>
+#include <string>
 
 namespace mir
 {
@@ -39,7 +39,7 @@ namespace detail
 // "send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response)"
 // Client code may specialize result_ptr_t to resolve to another overload.
 template<typename ResultType> struct result_ptr_t
-{ typedef ::google::protobuf::Message* type; };
+{ typedef ::google::protobuf::MessageLite* type; };
 
 // Boiler plate for unpacking a parameter message, invoking a server function, and
 // sending the result message. Assumes the existence of Self::send_response().
@@ -48,8 +48,7 @@ void invoke(
     Self* self,
     Server* server,
     void (ServerX::*function)(
-        ::google::protobuf::RpcController* controller,
-        const ParameterMessage* request,
+        ParameterMessage const* request,
         ResultMessage* response,
         ::google::protobuf::Closure* done),
         Invocation const& invocation)
@@ -72,14 +71,15 @@ void invoke(
                     &result_message));
 
         (server->*function)(
-            0,
             &parameter_message,
             &result_message,
             callback.get());
     }
     catch (std::exception const& x)
     {
-        result_message.set_error(boost::diagnostic_information(x));
+        using namespace std::literals::string_literals;
+        result_message.set_error("Error processing request: "s +
+            x.what() + "\nInternal error details: " + boost::diagnostic_information(x));
         self->send_response(invocation.id(), &result_message);
     }
 }

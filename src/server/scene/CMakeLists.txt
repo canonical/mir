@@ -25,4 +25,5 @@ ADD_LIBRARY(
   prompt_session_manager_impl.cpp
   rendering_tracker.cpp
   default_coordinate_translator.cpp
+  timeout_application_not_responding_detector.cpp
 )
