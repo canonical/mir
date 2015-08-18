@@ -67,7 +67,7 @@ fi
 
 if [ ${_do_update_chroot} -eq 1 ] ; then
     pushd tools > /dev/null
-        ./setup-partial-armhf-chroot.sh ${MIR_NDK_PATH}
+        ./setup-partial-armhf-chroot.sh ${MIR_NDK_PATH} ${dist}
     popd > /dev/null
     # force a clean build after an update, since CMake cache maybe out of date
     clean_build_dir ${BUILD_DIR}
