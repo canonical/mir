@@ -713,7 +713,11 @@ _XcursorBuildFullname (const char *dir, const char *subdir, const char *file)
     if (!dir || !subdir || !file)
         return NULL;
 
-    full = malloc (strlen (dir) + 1 + strlen (subdir) + 1 + strlen (file) + 1);
+    /*
+     * add space for any needed directory separators, one per component,
+     * and one for the trailing null
+     */
+    full = malloc (1 + strlen (dir) + 1 + strlen (subdir) + 1 + strlen (file) + 1);
     if (!full)
 	return NULL;
     full[0] = '\0';
