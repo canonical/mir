@@ -299,7 +299,7 @@ public:
             int32_t scanCode,
             int32_t metaState,
             int32_t repeatCount,
-            uint64_t msgAuthCode,
+            uint64_t mac,
             std::chrono::nanoseconds downTime,
             std::chrono::nanoseconds eventTime);
     void initialize(const KeyEvent& from);
@@ -513,7 +513,7 @@ public:
             float yOffset,
             float xPrecision,
             float yPrecision,
-            uint64_t msgAuthCode,
+            uint64_t mac,
             std::chrono::nanoseconds downTime,
             std::chrono::nanoseconds eventTime,
             size_t pointerCount,
