@@ -306,5 +306,20 @@ TEST_F(MultiMonitorArbiter, releasing_doesnt_advance_buffer_for_compositors)
 TEST_F(MultiMonitorArbiter, no_buffers_available_throws_on_snapshot)
 {
     schedule.set_schedule({});
-
+    EXPECT_THROW({
+        arbiter.snapshot_acquire();
+    }, std::logic_error);
 }
+
+TEST_F(MultiMonitorArbiter, snapshotting_will_release_buffer_if_it_was_the_last_owner)
+{
+    EXPECT_CALL(mock_map, send_buffer(_)).Times(0);
+    schedule.set_schedule({buffers[3],buffers[4]});
+    auto cbuffer1 = arbiter.compositor_acquire(this);
+    auto sbuffer1 = arbiter.snapshot_acquire();
+    arbiter.compositor_release(cbuffer1);
+
+    Mock::VerifyAndClearExpectations(&mock_map);
+    EXPECT_CALL(mock_map, send_buffer(sbuffer1->id()));
+    arbiter.snapshot_release(sbuffer1);
+} 
