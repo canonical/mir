@@ -93,7 +93,7 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
     std::lock_guard<decltype(mutex)> lk(mutex);
 
     if (onscreen_buffers.empty() && !schedule->anything_scheduled())
-        BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to compositor"));
+        BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to snapshotter"));
 
     if (onscreen_buffers.empty())
     {
