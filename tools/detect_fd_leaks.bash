@@ -20,6 +20,15 @@ process_fd_leak_backtrace_line()
         return
     fi
 
+    # Ignore fd leaks from UdevEnvironment code, since they are only caused by the
+    # umockdev library and we cannot avoid or work around them.
+    local has_udev=$(echo "${1}" | grep "mir_test_framework::UdevEnvironment::add_standard_device")
+    if [ -n "$has_udev" ];
+    then
+        echo "ignore"
+        return
+    fi
+
     # Ignore fd leaks from ~GSourceHandle; when this is called after the
     # GMainLoop has been torn down the the glib-internal eventfd isn't
     # cleaned up.

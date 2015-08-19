@@ -47,7 +47,7 @@ Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
 # just go ahead. ~mir-team will notice and sync up the code again.
-Vcs-Bzr: https://code.launchpad.net/~mir-team/mir/trunk
+Vcs-Bzr: https://code.launchpad.net/mir
 
 Package: libmirprotobuf1
 Section: libs
