@@ -292,6 +292,7 @@ TEST_F(MultiMonitorArbiter, basic_snapshot_equals_latest_compositor_buffer)
 
 TEST_F(MultiMonitorArbiter, releasing_doesnt_advance_buffer_for_compositors)
 {
+    schedule.set_schedule({buffers[3],buffers[4]});
     auto that = 4;
     auto a_few_times = 5u;
     auto cbuffer1 = arbiter.compositor_acquire(this);
@@ -300,4 +301,10 @@ TEST_F(MultiMonitorArbiter, releasing_doesnt_advance_buffer_for_compositors)
     auto cbuffer2 = arbiter.compositor_acquire(&that);
 
     EXPECT_THAT(cbuffer1, Eq(cbuffer2));
+}
+
+TEST_F(MultiMonitorArbiter, no_buffers_available_throws_on_snapshot)
+{
+    schedule.set_schedule({});
+
 }
