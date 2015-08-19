@@ -91,7 +91,6 @@ target_link_libraries(
   mirclientrpc-static
   mirclientlttng-static
 
-  android-input-static
   xcursorloader-static
 
   ${PROTOBUF_LITE_LIBRARIES}
