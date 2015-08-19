@@ -73,7 +73,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
             case FocusIn:
             {
                 XFocusInEvent &xfiev = (XFocusInEvent &)xev;
-                XGrabKeyboard(xfiev.display, xfiev.window, true, GrabModeAsync, GrabModeAsync, CurrentTime);
+                XGrabKeyboard(xfiev.display, xfiev.window, True, GrabModeAsync, GrabModeAsync, CurrentTime);
                 break;
             }
 
