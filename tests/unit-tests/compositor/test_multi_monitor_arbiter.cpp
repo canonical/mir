@@ -296,11 +296,17 @@ TEST_F(MultiMonitorArbiter, releasing_doesnt_advance_buffer_for_compositors)
     auto that = 4;
     auto a_few_times = 5u;
     auto cbuffer1 = arbiter.compositor_acquire(this);
+    std::vector<std::shared_ptr<mg::Buffer>> snapshot_buffers(a_few_times);
     for(auto i = 0u; i < a_few_times; i++)
-        arbiter.snapshot_release(arbiter.snapshot_acquire());
+    {
+        auto b = arbiter.snapshot_acquire();
+        arbiter.snapshot_release(b);
+        snapshot_buffers[i] = b;
+    }
     auto cbuffer2 = arbiter.compositor_acquire(&that);
 
     EXPECT_THAT(cbuffer1, Eq(cbuffer2));
+    EXPECT_THAT(snapshot_buffers, Each(cbuffer1));
 }
 
 TEST_F(MultiMonitorArbiter, no_buffers_available_throws_on_snapshot)
