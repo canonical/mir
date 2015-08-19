@@ -335,17 +335,6 @@ TEST_F(PublishedSocketConnector, drm_auth_magic_is_processed_by_the_server)
     EXPECT_EQ(magic.magic(), stub_server_tool->drm_magic);
 }
 
-namespace
-{
-
-class MockForceRequests
-{
-public:
-    MOCK_METHOD0(force_requests_to_complete, void());
-};
-
-}
-
 TEST_F(PublishedSocketConnector, disorderly_disconnection_handled)
 {
     using namespace testing;
