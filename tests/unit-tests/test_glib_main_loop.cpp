@@ -1161,6 +1161,35 @@ TEST_F(GLibMainLoopAlarmTest, cancel_blocks_until_definitely_cancelled)
     ml.run();
 }
 
+TEST_F(GLibMainLoopAlarmTest, can_cancel_from_callback)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mir::time::Alarm* raw_alarm;
+    auto cancel_didnt_deadlock = std::make_shared<mt::Signal>();
+    auto alarm = ml.create_alarm(
+        [&raw_alarm, cancel_didnt_deadlock]()
+        {
+            raw_alarm->cancel();
+            cancel_didnt_deadlock->raise();
+        });
+
+    raw_alarm = alarm.get();
+
+    UnblockMainLoop unblocker{ml};
+
+    alarm->reschedule_in(0ms);
+
+    EXPECT_TRUE(cancel_didnt_deadlock->wait_for(10s));
+    if (!cancel_didnt_deadlock->raised())
+    {
+        // Deadlocking is no fun. There's nothing we can sensibly do,
+        // so die rather than wait for the build to timeout.
+        std::terminate();
+    }
+}
+
 // More targeted regression test for LP: #1381925
 TEST_F(GLibMainLoopTest, stress_emits_alarm_notification_with_zero_timeout)
 {
