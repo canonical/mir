@@ -142,3 +142,57 @@ MIR_COMMON_5 {
   };
  local: *;
 };
+
+MIR_COMMON_5.1 {
+ global:
+    extern "C++" {
+      android::InputChannel::InputChannel*;
+      android::InputChannel::openInputFdPair*;
+      android::InputConsumer::consume*;
+      android::InputConsumer::hasDeferredEvent*;
+      android::InputConsumer::hasPendingBatch*;
+      android::InputConsumer::?InputConsumer*;
+      android::InputConsumer::InputConsumer*;
+      android::InputConsumer::sendFinishedSignal*;
+      android::InputPublisher::?InputPublisher*;
+      android::InputPublisher::InputPublisher*;
+      android::InputPublisher::publishKeyEvent*;
+      android::InputPublisher::publishMotionEvent*;
+      android::InputPublisher::receiveFinishedSignal*;
+      android::InputReaderConfiguration::setDisplayInfo*;
+      android::IntSet::contains*;
+      android::IntSet::indexOf*;
+      android::IntSet::?IntSet*;
+      android::IntSet::IntSet*;
+      android::IntSet::operator*;
+      android::IntSet::remove*;
+      android::KeyEvent::initialize*;
+      __android_log_assert*;
+      __android_log_print*;
+      android::MotionEvent::getAxisValue*;
+      android::MotionEvent::getAxisValue*;
+      android::MotionEvent::getHistoricalAxisValue*;
+      android::MotionEvent::getRawAxisValue*;
+      android::MotionEvent::getRawAxisValue*;
+      android::PointerCoords::copyFrom*;
+      android::PointerCoords::getAxisValue*;
+      android::PointerCoords::operator*;
+      android::PointerCoords::setAxisValue*;
+      android::PointerProperties::copyFrom*;
+      android::PointerProperties::operator*;
+      android::RefBase::decStrong*;
+      android::RefBase::incStrong*;
+      android::RefBase::onFirstRef*;
+      android::RefBase::onIncStrongAttempted*;
+      android::RefBase::onLastStrongRef*;
+      android::RefBase::onLastWeakRef*;
+      android::RefBase::?RefBase*;
+      android::RefBase::RefBase*;
+      mir::write_to_log;
+      systemTime;
+      toMillisecondTimeoutDelay*;
+      typeinfo?for?android::RefBase;
+      vtable?for?android::IntSet;
+    };
+  local: *;
+} MIR_COMMON_5;

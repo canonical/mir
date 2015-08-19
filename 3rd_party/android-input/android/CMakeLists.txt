@@ -7,7 +7,6 @@ include_directories(
   system/extras/ext4_utils
 
   ${PROJECT_SOURCE_DIR}/include/server
-  ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/include/platform
 )
 
@@ -15,54 +14,39 @@ add_definitions(
   -DANDROID_SMP=1
   )
 
-# This is stuff for which we want non-android versions
-set(
-  UTIL_SOURCES
-
-  frameworks/native/libs/utils/Looper.cpp     # used by InputDispatcher.cpp
+add_library(android-input-common OBJECT
+  frameworks/base/services/input/InputTransport.cpp
+  frameworks/base/services/input/Input.cpp
+  frameworks/base/services/input/IntSet.cpp
+  frameworks/base/services/input/MirLog.cpp
   frameworks/native/libs/utils/RefBase.cpp    # used a lot
   frameworks/native/libs/utils/Timers.cpp     # used by KeyCharacterMap.cpp, InputReader.cpp, InputDispatcher.cpp, Looper.cpp
 )
 
-
-add_library(
-  android-input-static STATIC
-  # The stuff that we want
+add_library(android-input-platform OBJECT
   frameworks/base/services/input/EventHub.cpp
-  frameworks/base/services/input/InputApplication.cpp
-  frameworks/base/services/input/InputDispatcher.cpp
+  frameworks/base/services/input/InputDevice.cpp
   frameworks/base/services/input/InputListener.cpp
   frameworks/base/services/input/InputReader.cpp
-  frameworks/base/services/input/InputTransport.cpp
-  frameworks/base/services/input/InputWindow.cpp
-  frameworks/base/services/input/IntSet.cpp
-  frameworks/base/services/input/PointerController.cpp
-  # Keyboard/keymap handling
   frameworks/base/services/input/GenericKeyMap.cpp
-  # The stuff that is used internally by the implementation above.
-  # We're not directly interested in those:
-  frameworks/base/services/input/Input.cpp
-  frameworks/base/services/input/InputDevice.cpp
   frameworks/base/services/input/Keyboard.cpp
   frameworks/base/services/input/KeyCharacterMap.cpp
   frameworks/base/services/input/KeyLayoutMap.cpp
+  frameworks/native/libs/utils/Tokenizer.cpp
   frameworks/base/services/input/VelocityControl.cpp
   frameworks/base/services/input/VelocityTracker.cpp
   frameworks/base/services/input/VirtualKeyMap.cpp
-  frameworks/base/services/input/MirLog.cpp
-  frameworks/native/libs/utils/Tokenizer.cpp
   frameworks/native/libs/utils/FileMap.cpp
-  ${UTIL_SOURCES}
-  )
-
-target_link_libraries(
-  android-input-static
-
-  ${Boost_LIBRARIES}
 )
 
 set_target_properties(
-  android-input-static
+  android-input-common
+  PROPERTIES
+  COMPILE_FLAGS ${ANDROID_INPUT_COMPILE_FLAGS}
+)
+
+set_target_properties(
+  android-input-platform
   PROPERTIES
   COMPILE_FLAGS ${ANDROID_INPUT_COMPILE_FLAGS}
 )
