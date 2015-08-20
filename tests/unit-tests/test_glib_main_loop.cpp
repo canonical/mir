@@ -1242,6 +1242,43 @@ TEST_F(GLibMainLoopAlarmTest, cancelling_a_triggered_alarm_has_no_effect)
     EXPECT_THAT(alarm->state(), Eq(mir::time::Alarm::State::triggered));
 }
 
+TEST_F(GLibMainLoopAlarmTest, reschedule_returns_true_when_it_resets_a_previous_schedule)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    UnblockMainLoop unblocker{ml};
+
+    auto alarm_triggered = std::make_shared<mt::Signal>();
+    auto alarm = ml.create_alarm([](){});
+
+    ASSERT_FALSE(alarm_triggered->raised());
+    alarm->reschedule_in(10min);
+
+    EXPECT_TRUE(alarm->reschedule_in(5s));
+}
+
+TEST_F(GLibMainLoopAlarmTest, reschedule_returns_false_when_it_didnt_reset_a_previous_schedule)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    UnblockMainLoop unblocker{ml};
+
+    auto alarm_triggered = std::make_shared<mt::Signal>();
+    auto alarm = ml.create_alarm(
+        [alarm_triggered]()
+        {
+            alarm_triggered->raise();
+        });
+
+    alarm->reschedule_in(0ms);
+
+    EXPECT_TRUE(alarm_triggered->wait_for(10s));
+
+    EXPECT_FALSE(alarm->reschedule_in(10s));
+}
+
 // More targeted regression test for LP: #1381925
 TEST_F(GLibMainLoopTest, stress_emits_alarm_notification_with_zero_timeout)
 {

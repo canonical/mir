@@ -80,6 +80,7 @@ public:
     {
         std::lock_guard<std::mutex> lock{alarm_mutex};
 
+        auto old_state = state_;
         state_ = State::pending;
         gsource = mir::detail::add_timer_gsource(
             main_context,
@@ -88,7 +89,7 @@ public:
             exception_handler,
             time_point);
 
-        return true;
+        return old_state == State::pending;
     }
 
 private:
