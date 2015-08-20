@@ -1161,6 +1161,124 @@ TEST_F(GLibMainLoopAlarmTest, cancel_blocks_until_definitely_cancelled)
     ml.run();
 }
 
+TEST_F(GLibMainLoopAlarmTest, can_cancel_from_callback)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mir::time::Alarm* raw_alarm;
+    auto cancel_didnt_deadlock = std::make_shared<mt::Signal>();
+    auto alarm = ml.create_alarm(
+        [&raw_alarm, cancel_didnt_deadlock]()
+        {
+            raw_alarm->cancel();
+            cancel_didnt_deadlock->raise();
+        });
+
+    raw_alarm = alarm.get();
+
+    UnblockMainLoop unblocker{ml};
+
+    alarm->reschedule_in(0ms);
+
+    EXPECT_TRUE(cancel_didnt_deadlock->wait_for(10s));
+    if (!cancel_didnt_deadlock->raised())
+    {
+        // Deadlocking is no fun. There's nothing we can sensibly do,
+        // so die rather than wait for the build to timeout.
+        std::terminate();
+    }
+}
+
+TEST_F(GLibMainLoopAlarmTest, can_destroy_alarm_from_callback)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mir::time::Alarm* raw_alarm;
+    auto cancel_didnt_deadlock = std::make_shared<mt::Signal>();
+    auto alarm = ml.create_alarm(
+        [&raw_alarm, cancel_didnt_deadlock]()
+        {
+            delete raw_alarm;
+            cancel_didnt_deadlock->raise();
+        });
+
+    alarm->reschedule_in(0ms);
+    raw_alarm = alarm.release();
+
+    UnblockMainLoop unblocker{ml};
+
+
+    EXPECT_TRUE(cancel_didnt_deadlock->wait_for(10s));
+    if (!cancel_didnt_deadlock->raised())
+    {
+        // Deadlocking is no fun. There's nothing we can sensibly do,
+        // so die rather than wait for the build to timeout.
+        std::terminate();
+    }
+}
+
+TEST_F(GLibMainLoopAlarmTest, cancelling_a_triggered_alarm_has_no_effect)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    UnblockMainLoop unblocker{ml};
+
+    auto alarm_triggered = std::make_shared<mt::Signal>();
+    auto alarm = ml.create_alarm(
+        [alarm_triggered]()
+        {
+            alarm_triggered->raise();
+        });
+
+    alarm->reschedule_in(0ms);
+
+    EXPECT_TRUE(alarm_triggered->wait_for(10s));
+    EXPECT_THAT(alarm->state(), Eq(mir::time::Alarm::State::triggered));
+
+    EXPECT_FALSE(alarm->cancel());
+    EXPECT_THAT(alarm->state(), Eq(mir::time::Alarm::State::triggered));
+}
+
+TEST_F(GLibMainLoopAlarmTest, reschedule_returns_true_when_it_resets_a_previous_schedule)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    UnblockMainLoop unblocker{ml};
+
+    auto alarm_triggered = std::make_shared<mt::Signal>();
+    auto alarm = ml.create_alarm([](){});
+
+    ASSERT_FALSE(alarm_triggered->raised());
+    alarm->reschedule_in(10min);
+
+    EXPECT_TRUE(alarm->reschedule_in(5s));
+}
+
+TEST_F(GLibMainLoopAlarmTest, reschedule_returns_false_when_it_didnt_reset_a_previous_schedule)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    UnblockMainLoop unblocker{ml};
+
+    auto alarm_triggered = std::make_shared<mt::Signal>();
+    auto alarm = ml.create_alarm(
+        [alarm_triggered]()
+        {
+            alarm_triggered->raise();
+        });
+
+    alarm->reschedule_in(0ms);
+
+    EXPECT_TRUE(alarm_triggered->wait_for(10s));
+
+    EXPECT_FALSE(alarm->reschedule_in(10s));
+}
+
 // More targeted regression test for LP: #1381925
 TEST_F(GLibMainLoopTest, stress_emits_alarm_notification_with_zero_timeout)
 {
