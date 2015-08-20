@@ -53,6 +53,8 @@
 #include "mir/test/doubles/mock_client_buffer_stream_factory.h"
 #include "mir/test/doubles/mock_client_buffer_stream.h"
 
+#include "mir_test_framework/stub_client_platform_factory.h"
+
 #include <cstring>
 #include <map>
 #include <atomic>
@@ -206,58 +208,6 @@ std::map<int, int> MockServerPackageGenerator::sent_surface_attributes = {
     { mir_surface_attrib_preferred_orientation, mir_orientation_mode_any }
 };
 
-// TODO: Deduplicate this class?
-struct StubClientPlatform : public mcl::ClientPlatform
-{
-    MirPlatformType platform_type() const
-    {
-        return mir_platform_type_android;
-    }
-
-    void populate(MirPlatformPackage&) const override
-    {
-    }
-
-    MirPlatformMessage* platform_operation(
-        MirPlatformMessage const*) override
-    {
-        return nullptr;
-    }
-
-    std::shared_ptr<mcl::ClientBufferFactory> create_buffer_factory()
-    {
-        return std::make_shared<mtd::StubClientBufferFactory>();
-    }
-
-    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::EGLNativeSurface* /*surface*/)
-    {
-        return std::shared_ptr<EGLNativeWindowType>();
-    }
-
-    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
-    {
-        return std::shared_ptr<EGLNativeDisplayType>();
-    }
-
-    MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer*) const
-    {
-        return nullptr;
-    }
-
-    MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override
-    {
-        return mir_pixel_format_invalid;
-    }
-};
-
-struct StubClientPlatformFactory : public mcl::ClientPlatformFactory
-{
-    std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* /*context*/)
-    {
-        return std::make_shared<StubClientPlatform>();
-    }
-};
-
 struct StubClientInputPlatform : public mircv::InputPlatform
 {
     std::shared_ptr<mir::dispatch::Dispatchable> create_input_receiver(int /* fd */, std::shared_ptr<mircv::XKBMapper> const&, std::function<void(MirEvent*)> const& /* callback */)
@@ -286,7 +236,7 @@ public:
 
     std::shared_ptr<mcl::ClientPlatformFactory> the_client_platform_factory() override
     {
-        return std::make_shared<StubClientPlatformFactory>();
+        return std::make_shared<mir_test_framework::StubClientPlatformFactory>();
     }
 };
 

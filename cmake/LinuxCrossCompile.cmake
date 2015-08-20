@@ -4,8 +4,8 @@ set(CMAKE_SYSTEM_VERSION 1)
 set(MIR_NDK_PATH $ENV{MIR_NDK_PATH} CACHE STRING "path of mir android bundle")
 set(MIR_ARM_EABI "arm-linux-gnueabihf")
 
-set(CMAKE_C_COMPILER   /usr/bin/${MIR_ARM_EABI}-gcc)
-set(CMAKE_CXX_COMPILER /usr/bin/${MIR_ARM_EABI}-g++)
+set(CMAKE_C_COMPILER   /usr/bin/${MIR_ARM_EABI}-gcc${CC_VARIANT})
+set(CMAKE_CXX_COMPILER /usr/bin/${MIR_ARM_EABI}-g++${CC_VARIANT})
 
 # where to look to find dependencies in the target environment
 set(CMAKE_FIND_ROOT_PATH  "${MIR_NDK_PATH}")

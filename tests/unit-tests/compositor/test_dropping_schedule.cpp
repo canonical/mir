@@ -33,7 +33,7 @@ namespace
 
 struct MockBufferMap : mf::ClientBuffers
 {
-    MOCK_METHOD1(add_buffer, void(mg::BufferProperties const&));
+    MOCK_METHOD1(add_buffer, mg::BufferID(mg::BufferProperties const&));
     MOCK_METHOD1(remove_buffer, void(mg::BufferID id));
     MOCK_METHOD1(send_buffer, void(mg::BufferID id));
     MOCK_METHOD1(at, std::shared_ptr<mg::Buffer>&(mg::BufferID));

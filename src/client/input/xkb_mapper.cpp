@@ -19,8 +19,6 @@
 #include "mir/input/xkb_mapper.h"
 #include "mir/events/event_private.h"
 
-#include <string.h>
-
 namespace mircv = mir::input::receiver;
 
 namespace
@@ -86,7 +84,7 @@ static xkb_keysym_t keysym_for_scan_code(xkb_state *state, uint32_t xkb_scan_cod
 
 void mircv::XKBMapper::update_state_and_map_event(MirEvent &ev)
 {
-    std::unique_lock<std::mutex> lg(guard);
+    std::lock_guard<std::mutex> lg(guard);
     
     auto &key_ev = ev.key;
                               
@@ -109,7 +107,7 @@ void mircv::XKBMapper::update_state_and_map_event(MirEvent &ev)
 
 void mircv::XKBMapper::set_rules(xkb_rule_names const& names)
 {
-    std::unique_lock<std::mutex> lg(guard);
+    std::lock_guard<std::mutex> lg(guard);
 
     context = std::shared_ptr<xkb_context>(xkb_context_new(xkb_context_flags(0)), XKBContextDeleter());
     map = std::shared_ptr<xkb_keymap>(xkb_map_new_from_names(context.get(), &names, xkb_map_compile_flags(0)), XKBKeymapDeleter());

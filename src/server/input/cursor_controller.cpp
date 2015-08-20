@@ -25,11 +25,8 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/scene/surface.h"
 
-#include <functional>
 #include <mutex>
 #include <map>
-
-#include <assert.h>
 
 namespace mi = mir::input;
 namespace mg = mir::graphics;

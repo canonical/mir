@@ -47,6 +47,9 @@ public:
     MirPixelFormat pixel_format() const override;
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer) override;
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) override;
+    graphics::BufferID allocate_buffer(graphics::BufferProperties const&) override;
+    void remove_buffer(graphics::BufferID) override;
+    void with_buffer(graphics::BufferID id, std::function<void(graphics::Buffer&)> const& fn) override;
 
     //from mc::BufferStream
     void acquire_client_buffer(std::function<void(graphics::Buffer* buffer)> complete);
