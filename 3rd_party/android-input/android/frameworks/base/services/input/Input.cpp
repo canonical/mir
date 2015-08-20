@@ -310,7 +310,7 @@ void MotionEvent::initialize(
     mYOffset = yOffset;
     mXPrecision = xPrecision;
     mYPrecision = yPrecision;
-    mMac = mMac;
+    mMac = mac;
     mDownTime = downTime;
     mPointerProperties.clear();
     mPointerProperties.appendArray(pointerProperties, pointerCount);
