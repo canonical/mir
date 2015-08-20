@@ -29,6 +29,7 @@ namespace time
 /**
  * A one-shot, resettable handle to trigger a callback at a later time
  * \note All members of Alarm are threadsafe
+ * \note All members of Alarm are safe to call from the Alarm's callback
  */
 class Alarm
 {
@@ -61,7 +62,7 @@ public:
     /**
      * Reschedule the alarm
      * \param delay    Delay, in milliseconds, before the Alarm will be triggered
-     * \return         True if this reschedule supercedes a previous not-yet-triggered timeout
+     * \return         True if this reschedule supersedes a previous not-yet-triggered timeout
      *
      * \note This cancels any previous timeout set.
      */
@@ -70,7 +71,7 @@ public:
     /**
      * Reschedule the alarm
      * \param timeout  Time point when the alarm should be triggered
-     * \return         True if this reschedule supercedes a previous not-yet-triggered timeout
+     * \return         True if this reschedule supersedes a previous not-yet-triggered timeout
      *
      * \note This cancels any previous timeout set.
      */

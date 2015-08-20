@@ -392,21 +392,46 @@ void mf::SessionMediator::submit_buffer(
 }
 
 void mf::SessionMediator::allocate_buffers( 
-    mir::protobuf::BufferAllocation const*,
+    mir::protobuf::BufferAllocation const* request,
     mir::protobuf::Void*,
-    google::protobuf::Closure*)
+    google::protobuf::Closure* done)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not supported yet"));
-}
+    auto session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
+    report->session_allocate_buffers_called(session->name());
+    mf::BufferStreamId stream_id{request->id().value()};
+    auto stream = session->get_buffer_stream(stream_id);
+    for (auto i = 0; i < request->buffer_requests().size(); i++)
+    {
+        auto const& req = request->buffer_requests(i);
+        mg::BufferProperties properties(
+            geom::Size{req.width(), req.height()},
+            static_cast<MirPixelFormat>(req.pixel_format()),
+           static_cast<mg::BufferUsage>(req.buffer_usage()));
+        stream->allocate_buffer(properties);
+    }
+    done->Run();
+}
+ 
 void mf::SessionMediator::release_buffers(
-    mir::protobuf::BufferRelease const*,
+    mir::protobuf::BufferRelease const* request,
     mir::protobuf::Void*,
-    google::protobuf::Closure*)
+    google::protobuf::Closure* done)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not supported yet"));
-}
+    auto session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
+    report->session_release_buffers_called(session->name());
+    mf::BufferStreamId stream_id{request->id().value()};
+    auto stream = session->get_buffer_stream(stream_id);
+    for (auto i = 0; i < request->buffers().size(); i++)
+        stream->remove_buffer(mg::BufferID{static_cast<uint32_t>(request->buffers(i).buffer_id())});
+   done->Run();
+}
+ 
 void mf::SessionMediator::release_surface(
     const mir::protobuf::SurfaceId* request,
     mir::protobuf::Void*,

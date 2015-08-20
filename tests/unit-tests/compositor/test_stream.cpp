@@ -47,10 +47,14 @@ struct StubBufferMap : mf::ClientBuffers
         sink{sink}
     {
     }
-    void add_buffer(mg::BufferProperties const&)
+    mg::BufferID add_buffer(mg::BufferProperties const&)
     {
+        return mg::BufferID{};
     }
     void remove_buffer(mg::BufferID)
+    {
+    }
+    void with_buffer(mg::BufferID, std::function<void(mg::Buffer&)> const&)
     {
     }
     void send_buffer(mg::BufferID id)
@@ -82,6 +86,8 @@ struct Stream : Test
     {
     }
     
+    MOCK_METHOD1(called, void(mg::Buffer&));
+
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
     NiceMock<mtd::MockEventSink> mock_sink;
     geom::Size initial_size{44,2};
@@ -223,4 +229,10 @@ TEST_F(Stream, reports_size)
 TEST_F(Stream, reports_format)
 {
     EXPECT_THAT(stream.pixel_format(), Eq(construction_format));
+}
+
+TEST_F(Stream, can_access_buffer_after_allocation)
+{
+    EXPECT_CALL(*this, called(testing::Ref(*buffers.front())));
+    stream.with_buffer(buffers.front()->id(), [this](mg::Buffer& b) { called(b); });
 }
