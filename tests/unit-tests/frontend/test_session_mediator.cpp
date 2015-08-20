@@ -83,23 +83,6 @@ struct MockResourceCache : public mf::MessageResourceCache
     MOCK_METHOD1(free_resource, void(google::protobuf::MessageLite*));
 };
 
-struct StubConfig : public mtd::NullDisplayConfiguration
-{
-    StubConfig(std::shared_ptr<mg::DisplayConfigurationOutput> const& conf)
-       : outputs{conf, conf}
-    {
-    }
-    virtual void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const override
-    {
-        for(auto const& disp : outputs)
-        {
-            f(*disp);
-        }
-    }
-
-    std::vector<std::shared_ptr<mg::DisplayConfigurationOutput>> outputs;
-};
-
 struct MockConfig : public mg::DisplayConfiguration
 {
     MOCK_CONST_METHOD1(for_each_card, void(std::function<void(mg::DisplayConfigurationCard const&)>));
@@ -200,18 +183,6 @@ public:
 };
 
 int const StubbedSession::testing_client_input_fd{11};
-
-class MockGraphicBufferAllocator : public mtd::StubBufferAllocator
-{
-public:
-    MockGraphicBufferAllocator()
-    {
-        ON_CALL(*this, supported_pixel_formats())
-            .WillByDefault(testing::Return(std::vector<MirPixelFormat>()));
-    }
-
-    MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>());
-};
 
 struct StubScreencast : mtd::NullScreencast
 {
