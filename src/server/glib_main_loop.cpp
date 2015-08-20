@@ -57,9 +57,12 @@ public:
         std::lock_guard<std::mutex> lock{alarm_mutex};
 
         gsource.ensure_no_further_dispatch();
-        gsource = mir::detail::GSourceHandle{};
-        state_ = State::cancelled;
-        return true;
+        if (state_ ==  State::pending)
+        {
+            gsource = mir::detail::GSourceHandle{};
+            state_ = State::cancelled;
+        }
+        return state_ == State::cancelled;
     }
 
     State state() const override

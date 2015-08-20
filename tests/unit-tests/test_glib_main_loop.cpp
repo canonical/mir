@@ -1219,6 +1219,28 @@ TEST_F(GLibMainLoopAlarmTest, can_destroy_alarm_from_callback)
     }
 }
 
+TEST_F(GLibMainLoopAlarmTest, cancelling_a_triggered_alarm_has_no_effect)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    UnblockMainLoop unblocker{ml};
+
+    auto alarm_triggered = std::make_shared<mt::Signal>();
+    auto alarm = ml.create_alarm(
+        [alarm_triggered]()
+        {
+            alarm_triggered->raise();
+        });
+
+    alarm->reschedule_in(0ms);
+
+    EXPECT_TRUE(alarm_triggered->wait_for(10s));
+    EXPECT_THAT(alarm->state(), Eq(mir::time::Alarm::State::triggered));
+
+    EXPECT_FALSE(alarm->cancel());
+    EXPECT_THAT(alarm->state(), Eq(mir::time::Alarm::State::triggered));
+}
 
 // More targeted regression test for LP: #1381925
 TEST_F(GLibMainLoopTest, stress_emits_alarm_notification_with_zero_timeout)
