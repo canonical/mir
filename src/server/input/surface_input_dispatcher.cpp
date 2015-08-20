@@ -220,6 +220,7 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
     
     deliver(surface, &*mev::make_event(mir_input_event_get_device_id(iev),
         std::chrono::nanoseconds(mir_input_event_get_event_time(iev)),
+        0, /* mac */
         mir_pointer_event_modifiers(pev),
         action, mir_pointer_event_buttons(pev),
         mir_pointer_event_axis_value(pev,mir_pointer_axis_x),

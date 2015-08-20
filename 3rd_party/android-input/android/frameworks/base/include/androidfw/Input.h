@@ -276,6 +276,8 @@ public:
 
     inline int32_t getRepeatCount() const { return mRepeatCount; }
 
+    inline uint64_t getMac() const { return mMac; }
+
     inline std::chrono::nanoseconds getDownTime() const { return mDownTime; }
 
     inline std::chrono::nanoseconds getEventTime() const { return mEventTime; }
@@ -297,6 +299,7 @@ public:
             int32_t scanCode,
             int32_t metaState,
             int32_t repeatCount,
+            uint64_t mac,
             std::chrono::nanoseconds downTime,
             std::chrono::nanoseconds eventTime);
     void initialize(const KeyEvent& from);
@@ -308,6 +311,7 @@ protected:
     int32_t mScanCode;
     int32_t mMetaState;
     int32_t mRepeatCount;
+    uint64_t mMac;
     std::chrono::nanoseconds mDownTime;
     std::chrono::nanoseconds mEventTime;
 };
@@ -353,6 +357,8 @@ public:
     inline float getXPrecision() const { return mXPrecision; }
 
     inline float getYPrecision() const { return mYPrecision; }
+
+    inline uint64_t getMac() const { return mMac; }
 
     inline std::chrono::nanoseconds getDownTime() const { return mDownTime; }
 
@@ -507,6 +513,7 @@ public:
             float yOffset,
             float xPrecision,
             float yPrecision,
+            uint64_t mac,
             std::chrono::nanoseconds downTime,
             std::chrono::nanoseconds eventTime,
             size_t pointerCount,
@@ -554,6 +561,7 @@ protected:
     float mYOffset;
     float mXPrecision;
     float mYPrecision;
+    uint64_t mMac;
     std::chrono::nanoseconds mDownTime;
     Vector<PointerProperties> mPointerProperties;
     Vector<std::chrono::nanoseconds> mSampleEventTimes;
