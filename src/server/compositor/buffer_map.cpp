@@ -35,12 +35,13 @@ mc::BufferMap::BufferMap(
 {
 }
 
-void mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
+mg::BufferID mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto buffer = allocator->alloc_buffer(properties);
     buffers[buffer->id()] = buffer;
     sink->send_buffer(stream_id, *buffer, mg::BufferIpcMsgType::full_msg);
+    return buffer->id();
 }
 
 void mc::BufferMap::remove_buffer(mg::BufferID id)

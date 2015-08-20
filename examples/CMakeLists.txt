@@ -111,7 +111,6 @@ target_link_libraries(mir_demo_client_basic
   mirclient
 
   ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
@@ -141,7 +140,6 @@ target_link_libraries(mir_demo_client_flicker
   mirclient
 
   ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
@@ -154,7 +152,6 @@ target_link_libraries(mir_demo_client_scroll
   mirclient
 
   ${Boost_LIBRARIES}
-  ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${EGL_LIBRARIES}
   ${GLESv2_LIBRARIES}
@@ -184,20 +181,6 @@ target_link_libraries(mir_demo_standalone_render_to_fb
     ${Boost_LIBRARIES}
 )
 
-mir_add_wrapped_executable(mir_demo_server
-  server_example.cpp
-  glog_logger.cpp
-  server_example_test_client.cpp
-)
-
-target_link_libraries(mir_demo_server
-  mirserver
-  exampleserverconfig
-  ${GLog_LIBRARY}
-  ${GFlags_LIBRARY}
-  ${Boost_LIBRARIES}
-)
-
 add_library(mir_demo_server_loadable MODULE
   server_example.cpp
   glog_logger.cpp
@@ -216,11 +199,11 @@ install(TARGETS mir_demo_server_loadable
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-mir_add_wrapped_executable(mir_demo_server_loader
+mir_add_wrapped_executable(mir_demo_server
   mir_demo_server_loader.cpp
 )
 
-target_link_libraries(mir_demo_server_loader
+target_link_libraries(mir_demo_server
   dl
 )
 
@@ -242,7 +225,7 @@ if (MIR_ENABLE_TESTS)
   # To see reasons for failure:  ctest -V -R Clients-only-use-client-symbols
   mir_add_test(NAME Clients-only-use-client-symbols
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    COMMAND /bin/sh -c "!(nm -u .mir_demo_client_* mir_demo_client* | grep -v @@MIR_CLIENT | grep 'U mir_')"
+    COMMAND /bin/sh -c "!(nm -u mir_demo_client* | grep -v @@MIR_CLIENT | grep 'U mir_')"
   )
 
 # We use a slightly weaker version of the test with clang as that generates spurious NEEDED
@@ -250,13 +233,13 @@ if (NOT "${CMAKE_CXX_COMPILER}" MATCHES "clang")
   # To see reasons for failure:  ctest -V -R Clients-only-use-client-ABI
   mir_add_test(NAME Clients-only-use-client-ABI
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    COMMAND /bin/sh -c "!(objdump -p .mir_demo_client_* mir_demo_client*  | grep NEEDED | grep libmir | grep -v libmirclient)"
+    COMMAND /bin/sh -c "!(objdump -p mir_demo_client*  | grep NEEDED | grep libmir | grep -v libmirclient)"
   )
 else()
   # To see reasons for failure:  ctest -V -R Clients-only-use-client-ABI
   mir_add_test(NAME Clients-only-use-client-ABI
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    COMMAND /bin/sh -c "!(nm -u .mir_demo_client_* mir_demo_client* | grep -v @@MIR_CLIENT | grep @@MIR_)"
+    COMMAND /bin/sh -c "!(nm -u mir_demo_client* | grep -v @@MIR_CLIENT | grep @@MIR_)"
   )
 endif ()
 endif ()

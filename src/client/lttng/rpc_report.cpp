@@ -88,7 +88,7 @@ void mcl::lttng::RpcReport::result_processing_failed(
 }
 
 void mcl::lttng::RpcReport::file_descriptors_received(
-    google::protobuf::Message const& /*response*/,
+    google::protobuf::MessageLite const& /*response*/,
     std::vector<Fd> const& fds)
 {
     auto handles = std::make_unique<int[]>(fds.size());

@@ -1588,8 +1588,8 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
 
     std::unordered_set<mg::Buffer *> buffers_acquired;
 
-    int const delay = q.scaling_delay();
-    EXPECT_EQ(3, delay);  // expect a sane default
+    int const delay = 3;
+    q.set_scaling_delay(delay);
 
     for (int frame = 0; frame < 10; frame++)
     {
@@ -1741,6 +1741,8 @@ TEST_P(WithTwoOrMoreBuffers, compositor_double_rate_of_slow_client)
 {
     mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
     q.allow_framedropping(false);
+
+    q.set_scaling_delay(3);
 
     for (int frame = 0; frame < 10; frame++)
     {

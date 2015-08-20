@@ -184,10 +184,7 @@ private:
     void init_pixel_format()
     {
         unsigned int valid_formats{0};
-        MirPixelFormat pixel_formats[mir_pixel_formats];
-        mir_connection_get_available_surface_formats(connection, pixel_formats, mir_pixel_formats, &valid_formats);
-
-        pixel_format = pixel_formats[0];
+        mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &valid_formats);
     }
 };
 

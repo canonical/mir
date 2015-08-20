@@ -21,9 +21,12 @@
 #include "mir/run_mir.h"
 #include "mir/main_loop.h"
 
+#include "mir_toolkit/mir_client_library.h"
+
+#include "mir_test_framework/fake_input_server_configuration.h"
+#include "mir_test_framework/fake_input_device.h"
+#include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir_test_framework/fake_event_hub_server_configuration.h"
-#include "mir_test_framework/fake_event_hub_server_configuration.h"
 #include "mir_test_framework/server_runner.h"
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_framework/using_stub_client_platform.h"
@@ -31,7 +34,12 @@
 #include "mir/test/doubles/null_display_buffer_compositor_factory.h"
 #include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 
-#include "mir/test/fake_event_hub.h"
+#include "mir/test/doubles/stub_renderer.h"
+
+#include "mir/dispatch/action_queue.h"
+#include "mir/input/input_device.h"
+#include "mir/input/input_device_info.h"
+#include "mir/input/input_device_registry.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -41,6 +49,7 @@ namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace mi = mir::input;
 
 namespace
 {
@@ -159,7 +168,7 @@ TEST_F(ServerShutdown, server_releases_resources_on_shutdown_with_connected_clie
     std::weak_ptr<mir::graphics::Display> display = server_configuration->the_display();
     std::weak_ptr<mir::compositor::Compositor> compositor = server_configuration->the_compositor();
     std::weak_ptr<mir::frontend::Connector> connector = server_configuration->the_connector();
-    std::weak_ptr<mir::input::InputManager> input_manager = server_configuration->the_input_manager();
+    std::weak_ptr<mi::InputManager> input_manager = server_configuration->the_input_manager();
 
     server_configuration.reset();
 
@@ -224,7 +233,8 @@ TEST(ServerShutdownWithThreadException,
     std::weak_ptr<mir::graphics::Display> display = server_config->the_display();
     std::weak_ptr<mir::compositor::Compositor> compositor = server_config->the_compositor();
     std::weak_ptr<mir::frontend::Connector> connector = server_config->the_connector();
-    std::weak_ptr<mir::input::InputManager> input_manager = server_config->the_input_manager();
+    std::weak_ptr<mi::InputManager> input_manager = server_config->the_input_manager();
+    std::weak_ptr<mi::InputDeviceHub> hub = server_config->the_input_device_hub();
 
     server_config.reset();
 
@@ -232,13 +242,13 @@ TEST(ServerShutdownWithThreadException,
     EXPECT_EQ(0, compositor.use_count());
     EXPECT_EQ(0, connector.use_count());
     EXPECT_EQ(0, input_manager.use_count());
+    EXPECT_EQ(0, hub.use_count());
 }
 
 TEST(ServerShutdownWithThreadException,
      server_releases_resources_on_abnormal_input_thread_termination)
 {
-    auto server_config = std::make_shared<mtf::FakeEventHubServerConfiguration>();
-    auto fake_event_hub = server_config->the_fake_event_hub();
+    auto server_config = std::make_shared<mtf::FakeInputServerConfiguration>();
 
     std::thread server{
         [&server_config]
@@ -248,13 +258,19 @@ TEST(ServerShutdownWithThreadException,
                 std::runtime_error);
         }};
 
-    fake_event_hub->throw_exception_in_next_get_events();
-    server.join();
+    {
+        auto dev = mtf::add_fake_input_device(mir::input::InputDeviceInfo{0, "throwing device", "throwing-device-0",
+                                                                          mir::input::DeviceCapability::unknown});
+        dev->emit_runtime_error();
+        server.join();
+        dev.reset();
+    }
 
     std::weak_ptr<mir::graphics::Display> display = server_config->the_display();
     std::weak_ptr<mir::compositor::Compositor> compositor = server_config->the_compositor();
     std::weak_ptr<mir::frontend::Connector> connector = server_config->the_connector();
-    std::weak_ptr<mir::input::InputManager> input_manager = server_config->the_input_manager();
+    std::weak_ptr<mi::InputManager> input_manager = server_config->the_input_manager();
+    std::weak_ptr<mi::InputDeviceHub> hub = server_config->the_input_device_hub();
 
     server_config.reset();
 
@@ -262,15 +278,15 @@ TEST(ServerShutdownWithThreadException,
     EXPECT_EQ(0, compositor.use_count());
     EXPECT_EQ(0, connector.use_count());
     EXPECT_EQ(0, input_manager.use_count());
-}
+    EXPECT_EQ(0, hub.use_count());
+    }
 
 // This also acts as a regression test for LP: #1378740
 TEST(ServerShutdownWithThreadException,
      server_releases_resources_on_abnormal_main_thread_termination)
 {
-    // Use the FakeEventHubServerConfiguration to get the production input components
-    // (with the exception of EventHub, of course).
-    auto server_config = std::make_shared<mtf::FakeEventHubServerConfiguration>();
+    // Use the FakeInputServerConfiguration to get the production input components
+    auto server_config = std::make_shared<mtf::FakeInputServerConfiguration>();
 
     std::thread server{
         [&]
@@ -291,7 +307,8 @@ TEST(ServerShutdownWithThreadException,
     std::weak_ptr<mir::graphics::Display> display = server_config->the_display();
     std::weak_ptr<mir::compositor::Compositor> compositor = server_config->the_compositor();
     std::weak_ptr<mir::frontend::Connector> connector = server_config->the_connector();
-    std::weak_ptr<mir::input::InputManager> input_manager = server_config->the_input_manager();
+    std::weak_ptr<mi::InputManager> input_manager = server_config->the_input_manager();
+    std::weak_ptr<mi::InputDeviceHub> hub = server_config->the_input_device_hub();
 
     server_config.reset();
 
@@ -299,4 +316,5 @@ TEST(ServerShutdownWithThreadException,
     EXPECT_EQ(0, compositor.use_count());
     EXPECT_EQ(0, connector.use_count());
     EXPECT_EQ(0, input_manager.use_count());
+    EXPECT_EQ(0, hub.use_count());
 }

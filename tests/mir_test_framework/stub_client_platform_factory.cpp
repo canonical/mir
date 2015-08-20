@@ -33,8 +33,6 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-
-// TODO: Deduplicate this class (at least two other copies exist)
 struct StubClientPlatform : public mcl::ClientPlatform
 {
     StubClientPlatform(mcl::ClientContext* context)

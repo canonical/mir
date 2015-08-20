@@ -24,6 +24,7 @@
 #include "mir/test/pipe.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/auto_unblock_thread.h"
+#include "mir/test/barrier.h"
 #include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/doubles/mock_lockable_callback.h"
 #include "mir_test_framework/process.h"
@@ -74,7 +75,7 @@ void execute_in_forked_process(
         mir_test_framework::Process child{pid};
         // Note: valgrind on armhf can very slow when dealing with forks,
         // so give it enough time.
-        auto const result = child.wait_for_termination(std::chrono::seconds{10});
+        auto const result = child.wait_for_termination(std::chrono::seconds{30});
         EXPECT_TRUE(result.succeeded());
     }
 }
@@ -268,7 +269,7 @@ TEST_F(GLibMainLoopTest, propagates_exception_from_signal_handler)
             int const signum{SIGUSR1};
             ml.register_signal_handler(
                 {signum},
-                [&] (int) { throw std::runtime_error(""); });
+                [&] (int) { throw std::runtime_error("signal handler error"); });
 
             kill(getpid(), signum);
 
@@ -512,7 +513,7 @@ TEST_F(GLibMainLoopTest, propagates_exception_from_fd_handler)
             ml.register_fd_handler(
                 {p.read_fd()},
                 this,
-                [] (int) { throw std::runtime_error(""); });
+                [] (int) { throw std::runtime_error("fd handler error"); });
 
             EXPECT_EQ(1, write(p.write_fd(), &data_to_write, 1));
 
@@ -753,7 +754,7 @@ TEST_F(GLibMainLoopTest, propagates_exception_from_server_action)
     execute_in_forked_process(this,
         [&]
         {
-            ml.enqueue(this, [] { throw std::runtime_error(""); });
+            ml.enqueue(this, [] { throw std::runtime_error("server action error"); });
 
             EXPECT_THROW({ ml.run(); }, std::runtime_error);
         },
@@ -771,7 +772,7 @@ TEST_F(GLibMainLoopTest, can_be_rerun_after_exception)
     execute_in_forked_process(this,
         [&]
         {
-            ml.enqueue(this, [] { throw std::runtime_error(""); });
+            ml.enqueue(this, [] { throw std::runtime_error("server action exception"); });
 
             EXPECT_THROW({
                 ml.run();
@@ -1061,7 +1062,7 @@ TEST_F(GLibMainLoopAlarmTest, propagates_exception_from_alarm)
     execute_in_forked_process(this,
         [&]
         {
-            auto alarm = ml.create_alarm([] { throw std::runtime_error(""); });
+            auto alarm = ml.create_alarm([] { throw std::runtime_error("alarm error"); });
             alarm->reschedule_in(std::chrono::milliseconds{0});
 
             EXPECT_THROW({ ml.run(); }, std::runtime_error);
@@ -1093,6 +1094,71 @@ TEST_F(GLibMainLoopAlarmTest, can_reschedule_alarm_from_within_alarm_callback)
     ml.run();
 
     EXPECT_THAT(num_triggers, Eq(expected_triggers));
+}
+
+TEST_F(GLibMainLoopAlarmTest, rescheduling_alarm_from_within_alarm_callback_doesnt_deadlock_with_external_reschedule)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mt::Signal in_alarm;
+    mt::Signal alarm_rescheduled;
+
+    std::shared_ptr<mir::time::Alarm> alarm = ml.create_alarm(
+        [&]
+        {
+            // Ensure that the external thread reschedules us while we're
+            // in the callback.
+            in_alarm.raise();
+            ASSERT_TRUE(alarm_rescheduled.wait_for(5s));
+
+            alarm->reschedule_in(0ms);
+
+            ml.stop();
+        });
+
+    alarm->reschedule_in(0ms);
+
+    mt::AutoJoinThread rescheduler{
+        [alarm, &in_alarm, &alarm_rescheduled]()
+        {
+            ASSERT_TRUE(in_alarm.wait_for(5s));
+            alarm->reschedule_in(0ms);
+            alarm_rescheduled.raise();
+        }};
+
+    ml.run();
+}
+
+TEST_F(GLibMainLoopAlarmTest, cancel_blocks_until_definitely_cancelled)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    auto waiting_in_lock = std::make_shared<mt::Barrier>(2);
+    auto has_been_called = std::make_shared<mt::Signal>();
+
+    std::shared_ptr<mir::time::Alarm> alarm = ml.create_alarm(
+        [waiting_in_lock, has_been_called]()
+        {
+            waiting_in_lock->ready();
+            std::this_thread::sleep_for(500ms);
+            has_been_called->raise();
+        });
+
+    alarm->reschedule_in(0ms);
+
+    mt::AutoJoinThread canceller{
+        [waiting_in_lock, has_been_called, alarm, this]()
+        {
+            waiting_in_lock->ready();
+            alarm->cancel();
+            EXPECT_TRUE(has_been_called->raised());
+            ml.stop();
+        }
+    };
+
+    ml.run();
 }
 
 // More targeted regression test for LP: #1381925

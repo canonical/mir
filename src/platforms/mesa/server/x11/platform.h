@@ -35,7 +35,7 @@ namespace X
 class Platform : public graphics::Platform
 {
 public:
-    explicit Platform();
+    explicit Platform(std::shared_ptr<::Display> const& conn);
     ~Platform() = default;
 
     /* From Platform */
@@ -50,6 +50,7 @@ public:
 
     EGLNativeDisplayType egl_native_display() const override;
 private:
+    std::shared_ptr<::Display> const x11_connection;
     std::shared_ptr<mir::udev::Context> udev;
     std::shared_ptr<mesa::helpers::DRMHelper> const drm;
     mesa::helpers::GBMHelper gbm;

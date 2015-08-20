@@ -195,6 +195,21 @@ void mir_connection_set_lifecycle_event_callback(
         connection->register_lifecycle_event_callback(callback, context);
 }
 
+void mir_connection_set_ping_event_callback(
+    MirConnection* connection,
+    mir_ping_event_callback callback,
+    void* context)
+{
+    if (!mcl::ErrorConnections::instance().contains(connection))
+        connection->register_ping_event_callback(callback, context);
+}
+
+void mir_connection_pong(MirConnection *connection, int32_t serial)
+{
+    if (!mcl::ErrorConnections::instance().contains(connection))
+        connection->pong(serial);
+}
+
 MirDisplayConfiguration* mir_connection_create_display_config(
     MirConnection* connection)
 {

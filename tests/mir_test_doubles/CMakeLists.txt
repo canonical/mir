@@ -19,6 +19,7 @@ set(
   test_protobuf_client.cpp
   test_protobuf_socket_server.cpp
   triggered_main_loop.cpp
+  fake_alarm_factory.cpp
 )
 
 set(
@@ -73,7 +74,6 @@ target_link_libraries(mir-test-doubles-static
 
   mirserver
 
-  ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}

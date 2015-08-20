@@ -44,6 +44,7 @@ configure_file(
 add_library(mirserverobjects OBJECT
   run_mir.cpp
   report_exception.cpp
+  terminate_with_current_exception.cpp
   display_server.cpp
   default_server_configuration.cpp
   glib_main_loop.cpp
@@ -93,7 +94,6 @@ target_link_libraries(mirserver LINK_PUBLIC
   mircommon
   mirprotobuf
 
-  android-input-static
   xcursorloader-static
 
   ${GLog_LIBRARY}

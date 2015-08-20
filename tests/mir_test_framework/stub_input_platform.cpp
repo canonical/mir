@@ -46,9 +46,9 @@ void mtf::StubInputPlatform::start()
     for (auto const& dev : device_store)
     {
         auto device = dev.lock();
-        registry->add_device(device);
+        if (device)
+            registry->add_device(device);
     }
-    device_store.clear();
 }
 
 std::shared_ptr<mir::dispatch::Dispatchable> mtf::StubInputPlatform::dispatchable()
@@ -58,18 +58,25 @@ std::shared_ptr<mir::dispatch::Dispatchable> mtf::StubInputPlatform::dispatchabl
 
 void mtf::StubInputPlatform::stop()
 {
+    for (auto const& dev : device_store)
+    {
+        auto device = dev.lock();
+        if (device)
+            registry->remove_device(device);
+    }
 }
 
 void mtf::StubInputPlatform::add(std::shared_ptr<mir::input::InputDevice> const& dev)
 {
-    if (!stub_input_platform)
+    auto input_platform = stub_input_platform.load();
+    if (!input_platform)
     {
         device_store.push_back(dev);
         return;
     }
 
-    stub_input_platform->platform_queue->enqueue(
-        [registry=stub_input_platform->registry,dev]
+    input_platform->platform_queue->enqueue(
+        [registry=input_platform->registry,dev]
         {
             registry->add_device(dev);
         });
@@ -77,15 +84,16 @@ void mtf::StubInputPlatform::add(std::shared_ptr<mir::input::InputDevice> const&
 
 void mtf::StubInputPlatform::remove(std::shared_ptr<mir::input::InputDevice> const& dev)
 {
-    if (!stub_input_platform)
+    auto input_platform = stub_input_platform.load();
+    if (!input_platform)
         BOOST_THROW_EXCEPTION(std::runtime_error("No stub input platform available"));
 
-    stub_input_platform->platform_queue->enqueue(
-        [registry=stub_input_platform->registry,dev]
+    input_platform->platform_queue->enqueue(
+        [registry=input_platform->registry,dev]
         {
             registry->remove_device(dev);
         });
 }
 
-mtf::StubInputPlatform* mtf::StubInputPlatform::stub_input_platform = nullptr;
+std::atomic<mtf::StubInputPlatform*> mtf::StubInputPlatform::stub_input_platform{nullptr};
 std::vector<std::weak_ptr<mir::input::InputDevice>> mtf::StubInputPlatform::device_store;

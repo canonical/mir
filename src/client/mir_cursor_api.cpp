@@ -42,6 +42,7 @@ extern "C" char const* const mir_diagonal_resize_top_to_bottom_cursor_name = "di
 extern "C" char const* const mir_omnidirectional_resize_cursor_name = "omnidirectional-resize";
 extern "C" char const* const mir_vsplit_resize_cursor_name = "vsplit-resize";
 extern "C" char const* const mir_hsplit_resize_cursor_name = "hsplit-resize";
+extern "C" char const* const mir_crosshair_cursor_name = "crosshair";
 
 MirCursorConfiguration::MirCursorConfiguration(char const* name) :
     name{name ? name : std::string()},

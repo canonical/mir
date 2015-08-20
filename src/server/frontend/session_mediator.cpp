@@ -25,6 +25,7 @@
 #include "mir/shell/surface_specification.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/coordinate_translator.h"
+#include "mir/scene/application_not_responding_detector.h"
 #include "mir/frontend/display_changer.h"
 #include "resource_cache.h"
 #include "mir_toolkit/common.h"
@@ -86,7 +87,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<Screencast> const& screencast,
     ConnectionContext const& connection_context,
     std::shared_ptr<mi::CursorImages> const& cursor_images,
-    std::shared_ptr<scene::CoordinateTranslator> const& translator) :
+    std::shared_ptr<scene::CoordinateTranslator> const& translator,
+    std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -99,6 +101,7 @@ mf::SessionMediator::SessionMediator(
     connection_context(connection_context),
     cursor_images(cursor_images),
     translator{translator},
+    anr_detector{anr_detector},
     buffer_stream_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
@@ -118,7 +121,6 @@ void mf::SessionMediator::client_pid(int pid)
 }
 
 void mf::SessionMediator::connect(
-    ::google::protobuf::RpcController*,
     const ::mir::protobuf::ConnectParameters* request,
     ::mir::protobuf::Connection* response,
     ::google::protobuf::Closure* done)
@@ -189,7 +191,6 @@ extract_input_shape_from(T const& params)
 }
 
 void mf::SessionMediator::create_surface(
-    google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceParameters* request,
     mir::protobuf::Surface* response,
     google::protobuf::Closure* done)
@@ -307,7 +308,6 @@ void mf::SessionMediator::create_surface(
 }
 
 void mf::SessionMediator::next_buffer(
-    ::google::protobuf::RpcController* /*controller*/,
     ::mir::protobuf::SurfaceId const* request,
     ::mir::protobuf::Buffer* response,
     ::google::protobuf::Closure* done)
@@ -335,7 +335,6 @@ void mf::SessionMediator::next_buffer(
 }
 
 void mf::SessionMediator::exchange_buffer(
-    google::protobuf::RpcController*,
     mir::protobuf::BufferRequest const* request,
     mir::protobuf::Buffer* response,
     google::protobuf::Closure* done)
@@ -364,7 +363,6 @@ void mf::SessionMediator::exchange_buffer(
 }
 
 void mf::SessionMediator::submit_buffer(
-    google::protobuf::RpcController*,
     mir::protobuf::BufferRequest const* request,
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
@@ -394,25 +392,47 @@ void mf::SessionMediator::submit_buffer(
 }
 
 void mf::SessionMediator::allocate_buffers( 
-    google::protobuf::RpcController*,
-    mir::protobuf::BufferAllocation const*,
+    mir::protobuf::BufferAllocation const* request,
     mir::protobuf::Void*,
-    google::protobuf::Closure*)
+    google::protobuf::Closure* done)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not supported yet"));
-}
+    auto session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
+    report->session_allocate_buffers_called(session->name());
+    mf::BufferStreamId stream_id{request->id().value()};
+    auto stream = session->get_buffer_stream(stream_id);
+    for (auto i = 0; i < request->buffer_requests().size(); i++)
+    {
+        auto const& req = request->buffer_requests(i);
+        mg::BufferProperties properties(
+            geom::Size{req.width(), req.height()},
+            static_cast<MirPixelFormat>(req.pixel_format()),
+           static_cast<mg::BufferUsage>(req.buffer_usage()));
+        stream->allocate_buffer(properties);
+    }
+    done->Run();
+}
+ 
 void mf::SessionMediator::release_buffers(
-    google::protobuf::RpcController*,
-    mir::protobuf::BufferRelease const*,
+    mir::protobuf::BufferRelease const* request,
     mir::protobuf::Void*,
-    google::protobuf::Closure*)
+    google::protobuf::Closure* done)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not supported yet"));
-}
+    auto session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
+    report->session_release_buffers_called(session->name());
+    mf::BufferStreamId stream_id{request->id().value()};
+    auto stream = session->get_buffer_stream(stream_id);
+    for (auto i = 0; i < request->buffers().size(); i++)
+        stream->remove_buffer(mg::BufferID{static_cast<uint32_t>(request->buffers(i).buffer_id())});
+   done->Run();
+}
+ 
 void mf::SessionMediator::release_surface(
-    google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceId* request,
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
@@ -434,7 +454,6 @@ void mf::SessionMediator::release_surface(
 }
 
 void mf::SessionMediator::disconnect(
-    google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::Void* /*request*/,
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
@@ -453,7 +472,6 @@ void mf::SessionMediator::disconnect(
 }
 
 void mf::SessionMediator::configure_surface(
-    google::protobuf::RpcController*, // controller,
     const mir::protobuf::SurfaceSetting* request,
     mir::protobuf::SurfaceSetting* response,
     google::protobuf::Closure* done)
@@ -481,7 +499,6 @@ void mf::SessionMediator::configure_surface(
 }
 
 void mf::SessionMediator::modify_surface(
-    google::protobuf::RpcController*, // controller,
     const mir::protobuf::SurfaceModifications* request,
     mir::protobuf::Void* /*response*/,
     google::protobuf::Closure* done)
@@ -563,7 +580,6 @@ void mf::SessionMediator::modify_surface(
 }
 
 void mf::SessionMediator::configure_display(
-    ::google::protobuf::RpcController*,
     const ::mir::protobuf::DisplayConfiguration* request,
     ::mir::protobuf::DisplayConfiguration* response,
     ::google::protobuf::Closure* done)
@@ -607,7 +623,6 @@ void mf::SessionMediator::configure_display(
 }
 
 void mf::SessionMediator::create_screencast(
-    google::protobuf::RpcController*,
     const mir::protobuf::ScreencastParameters* parameters,
     mir::protobuf::Screencast* protobuf_screencast,
     google::protobuf::Closure* done)
@@ -637,7 +652,6 @@ void mf::SessionMediator::create_screencast(
 }
 
 void mf::SessionMediator::release_screencast(
-    google::protobuf::RpcController*,
     const mir::protobuf::ScreencastId* protobuf_screencast_id,
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
@@ -649,7 +663,6 @@ void mf::SessionMediator::release_screencast(
 }
 
 void mf::SessionMediator::screencast_buffer(
-    google::protobuf::RpcController*,
     const mir::protobuf::ScreencastId* protobuf_screencast_id,
     mir::protobuf::Buffer* protobuf_buffer,
     google::protobuf::Closure* done)
@@ -667,7 +680,7 @@ void mf::SessionMediator::screencast_buffer(
     done->Run();
 }
 
-void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
+void mf::SessionMediator::create_buffer_stream(
     mir::protobuf::BufferStreamParameters const* request,
     mir::protobuf::BufferStream* response,
     google::protobuf::Closure* done)
@@ -707,7 +720,7 @@ void mf::SessionMediator::create_buffer_stream(google::protobuf::RpcController*,
         });
 }
 
-void mf::SessionMediator::release_buffer_stream(google::protobuf::RpcController*,
+void mf::SessionMediator::release_buffer_stream(
     const mir::protobuf::BufferStreamId* request,
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
@@ -750,7 +763,6 @@ void throw_if_unsuitable_for_cursor(mf::BufferStream& stream)
 }
 
 void mf::SessionMediator::configure_cursor(
-    google::protobuf::RpcController*,
     mir::protobuf::CursorSetting const* cursor_request,
     mir::protobuf::Void* /* void_response */,
     google::protobuf::Closure* done)
@@ -789,7 +801,6 @@ void mf::SessionMediator::configure_cursor(
 }
 
 void mf::SessionMediator::new_fds_for_prompt_providers(
-    ::google::protobuf::RpcController* ,
     ::mir::protobuf::SocketFDRequest const* parameters,
     ::mir::protobuf::SocketFD* response,
     ::google::protobuf::Closure* done)
@@ -817,8 +828,21 @@ void mf::SessionMediator::new_fds_for_prompt_providers(
     done->Run();
 }
 
+void mf::SessionMediator::pong(
+    mir::protobuf::PingEvent const* /*request*/,
+    mir::protobuf::Void* /* response */,
+    google::protobuf::Closure* done)
+{
+    auto session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    anr_detector->pong_received(session.get());
+    done->Run();
+}
+
 void mf::SessionMediator::translate_surface_to_screen(
-    ::google::protobuf::RpcController* ,
     ::mir::protobuf::CoordinateTranslationRequest const* request,
     ::mir::protobuf::CoordinateTranslationResponse* response,
     ::google::protobuf::Closure *done)
@@ -841,7 +865,6 @@ void mf::SessionMediator::translate_surface_to_screen(
 }
 
 void mf::SessionMediator::drm_auth_magic(
-    google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::DRMMagic* request,
     mir::protobuf::DRMAuthMagicStatus* response,
     google::protobuf::Closure* done)
@@ -872,7 +895,6 @@ void mf::SessionMediator::drm_auth_magic(
 }
 
 void mf::SessionMediator::platform_operation(
-    google::protobuf::RpcController* /*controller*/,
     mir::protobuf::PlatformOperationMessage const* request,
     mir::protobuf::PlatformOperationMessage* response,
     google::protobuf::Closure* done)
@@ -904,7 +926,6 @@ void mf::SessionMediator::platform_operation(
 }
 
 void mf::SessionMediator::start_prompt_session(
-    ::google::protobuf::RpcController*,
     const ::mir::protobuf::PromptSessionParameters* request,
     ::mir::protobuf::Void* /*response*/,
     ::google::protobuf::Closure* done)
@@ -928,7 +949,6 @@ void mf::SessionMediator::start_prompt_session(
 }
 
 void mf::SessionMediator::stop_prompt_session(
-    ::google::protobuf::RpcController*,
     const ::mir::protobuf::Void*,
     ::mir::protobuf::Void*,
     ::google::protobuf::Closure* done)
@@ -953,7 +973,6 @@ void mf::SessionMediator::stop_prompt_session(
 }
 
 void mf::SessionMediator::request_persistent_surface_id(
-    ::google::protobuf::RpcController*,
     mir::protobuf::SurfaceId const* request,
     mir::protobuf::PersistentSurfaceId* response,
     google::protobuf::Closure* done)

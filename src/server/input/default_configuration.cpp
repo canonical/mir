@@ -18,9 +18,6 @@
 
 #include "mir/default_server_configuration.h"
 
-#include "mir/events/event_private.h"
-#include "android/android_input_reader_policy.h"
-#include "android/common_input_thread.h"
 #include "android/android_input_reader_policy.h"
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
@@ -58,8 +55,6 @@
 #include "mir_toolkit/cursors.h"
 
 #include <EventHub.h>
-#include <InputReader.h>
-
 
 namespace mi = mir::input;
 namespace mia = mi::android;
@@ -378,30 +373,18 @@ mir::DefaultServerConfiguration::the_input_manager()
 
                 std::shared_ptr<mi::InputManager> ret;
 
-                if (options->is_set(options::platform_input_lib))
+                auto platform = the_input_platform();
+                if (platform)
                 {
-                    auto lib = std::make_shared<mir::SharedLibrary>(
-                        options->get<std::string>(options::platform_input_lib));
-
-                    auto describe = lib->load_function<mi::DescribeModule>(
-                        "describe_input_module",
-                        MIR_SERVER_INPUT_PLATFORM_VERSION);
-
-                    auto props = describe();
-                    ret = std::make_shared<mi::DefaultInputManager>(
-                        the_input_reading_multiplexer(),
-                        strcmp(props->name, "x11-input") ? the_legacy_input_dispatchable() :
-                                                           std::make_shared<NullLegacyInputDispatchable>());
+                    ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(),
+                                                                    std::make_shared<NullLegacyInputDispatchable>());
+                    ret->add_platform(platform);
                 }
                 else
                 {
                     ret = std::make_shared<mi::DefaultInputManager>(
                         the_input_reading_multiplexer(), the_legacy_input_dispatchable());
                 }
-
-                auto platform = the_input_platform();
-                if (platform)
-                    ret->add_platform(platform);
                 return ret;
             }
             else

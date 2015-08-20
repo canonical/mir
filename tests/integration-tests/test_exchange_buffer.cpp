@@ -36,6 +36,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 #include "src/client/mir_connection.h"
+#include "src/client/rpc/mir_display_server.h"
 #include <chrono>
 #include <mutex>
 #include <stdio.h>
@@ -53,6 +54,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace mf = mir::frontend;
+namespace mclr = mir::client::rpc;
 
 namespace
 {
@@ -274,11 +276,11 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         cv.notify_all();
     }
 
-    bool exchange_buffer(mp::DisplayServer& server)
+    bool exchange_buffer(mclr::DisplayServer& server)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Buffer next;
-        server.exchange_buffer(0, &buffer_request, &next,
+        server.exchange_buffer(&buffer_request, &next,
             google::protobuf::NewCallback(this, &ExchangeBufferTest::request_completed));
 
 
@@ -292,33 +294,33 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         return completed;
     }
 
-    bool submit_buffer(mp::DisplayServer& server, mp::BufferRequest& request)
+    bool submit_buffer(mclr::DisplayServer& server, mp::BufferRequest& request)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Void v;
-        server.submit_buffer(0, &request, &v,
+        server.submit_buffer(&request, &v,
             google::protobuf::NewCallback(this, &ExchangeBufferTest::request_completed));
         
         arrived = false;
         return cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
     }
 
-    bool allocate_buffers(mp::DisplayServer& server, mp::BufferAllocation& request)
+    bool allocate_buffers(mclr::DisplayServer& server, mp::BufferAllocation& request)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Void v;
-        server.allocate_buffers(0, &request, &v,
+        server.allocate_buffers(&request, &v,
             google::protobuf::NewCallback(this, &ExchangeBufferTest::request_completed));
         
         arrived = false;
         return cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
     }
 
-    bool release_buffers(mp::DisplayServer& server, mp::BufferRelease& request)
+    bool release_buffers(mclr::DisplayServer& server, mp::BufferRelease& request)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Void v;
-        server.release_buffers(0, &request, &v,
+        server.release_buffers(&request, &v,
             google::protobuf::NewCallback(this, &ExchangeBufferTest::request_completed));
         
         arrived = false;
@@ -339,8 +341,7 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
     auto surface = mtf::make_any_surface(connection);
 
     auto rpc_channel = connection->rpc_channel();
-    mp::DisplayServer::Stub server(
-        rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
+    mclr::DisplayServer server(rpc_channel);
     buffer_request.mutable_buffer()->set_buffer_id(buffer_id_exchange_seq.begin()->as_value());
     for (auto i = 0; i < buffer_request.buffer().fd().size(); i++)
         ::close(buffer_request.buffer().fd(i));
@@ -373,8 +374,7 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
     auto surface = mtf::make_any_surface(connection);
 
     auto rpc_channel = connection->rpc_channel();
-    mp::DisplayServer::Stub server(
-            rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
+    mclr::DisplayServer server(rpc_channel);
     for (auto i = 0; i < buffer_request.buffer().fd().size(); i++)
         ::close(buffer_request.buffer().fd(i));
 
@@ -400,8 +400,7 @@ TEST_F(ExchangeBufferTest, submissions_happen)
     auto surface = mtf::make_any_surface(connection);
 
     auto rpc_channel = connection->rpc_channel();
-    mp::DisplayServer::Stub server(
-        rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
+    mclr::DisplayServer server(rpc_channel);
 
     mp::BufferRequest request;
     for (auto const& id : buffer_id_exchange_seq)
@@ -452,8 +451,7 @@ TEST_F(ExchangeBufferTest, allocate_buffers_doesnt_time_out)
     auto surface = mtf::make_any_surface(connection);
 
     auto rpc_channel = connection->rpc_channel();
-    mp::DisplayServer::Stub server(
-        rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
+    mclr::DisplayServer server(rpc_channel);
 
     mp::BufferAllocation request;
     EXPECT_THAT(allocate_buffers(server, request), DidNotTimeOut());
@@ -468,8 +466,7 @@ TEST_F(ExchangeBufferTest, release_buffers_doesnt_time_out)
     auto surface = mtf::make_any_surface(connection);
 
     auto rpc_channel = connection->rpc_channel();
-    mp::DisplayServer::Stub server(
-        rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
+    mclr::DisplayServer server(rpc_channel);
 
     mp::BufferRelease request;
     EXPECT_THAT(release_buffers(server, request), DidNotTimeOut());

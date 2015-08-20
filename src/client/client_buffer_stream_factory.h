@@ -22,6 +22,7 @@
 #include "mir_protobuf.pb.h"
 
 #include "mir_toolkit/client_types.h"
+#include "mir/geometry/size.h"
 
 #include <memory>
 
@@ -30,22 +31,27 @@ namespace mir
 {
 namespace client
 {
+namespace rpc
+{
+class DisplayServer;
+}
 class ClientBufferStream;
 class BufferStream;
+
 class ClientBufferStreamFactory
 {
 public:
     virtual std::shared_ptr<ClientBufferStream> make_consumer_stream(
-        MirConnection*, protobuf::DisplayServer& server,
-        protobuf::BufferStream const& protobuf_bs, std::string const& surface_name) = 0;
+        MirConnection*, client::rpc::DisplayServer& server,
+        protobuf::BufferStream const& protobuf_bs, std::string const& surface_name, geometry::Size) = 0;
     virtual std::shared_ptr<ClientBufferStream> make_producer_stream(
-        MirConnection*, protobuf::DisplayServer& server,
-        protobuf::BufferStream const& protobuf_bs, std::string const& surface_name) = 0;
+        MirConnection*, client::rpc::DisplayServer& server,
+        protobuf::BufferStream const& protobuf_bs, std::string const& surface_name, geometry::Size) = 0;
 
     // For creating buffer stream owned by client.
     virtual ClientBufferStream* make_producer_stream(
         MirConnection*,
-        protobuf::DisplayServer& server,
+        client::rpc::DisplayServer& server,
         protobuf::BufferStreamParameters const& params,
         mir_buffer_stream_callback callback, void* context) = 0;
 

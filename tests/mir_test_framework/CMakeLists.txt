@@ -49,7 +49,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
 add_library(mir-protected-test-framework OBJECT
 
-  fake_event_hub_server_configuration.cpp
+  fake_input_server_configuration.cpp
   input_testing_server_options.cpp
   testing_process_manager.cpp
   udev_environment.cpp
@@ -104,6 +104,7 @@ add_library(
   stub_input.cpp
   fake_input_device_impl.cpp
   stub_input_platform.cpp
+  $<TARGET_OBJECTS:mirevdevutilsobjects>
   )
 
 target_link_libraries(mirplatforminputstub

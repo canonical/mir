@@ -17,28 +17,31 @@
  */
 
 #include "input_platform.h"
+#include "../lazy_connection.h"
 #include "mir/module_properties.h"
-#include "mir/input/platform.h"
 
 namespace mo = mir::options;
 namespace mi = mir::input;
+namespace mx = mir::X;
 namespace mix = mi::X;
 
-extern "C" mir::UniqueModulePtr<mi::Platform> create_input_platform(
+extern mx::LazyConnection x11_connection;
+
+mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<mi::InputReport> const& /*report*/)
 {
-    return mir::make_module_ptr<mix::XInputPlatform>(input_device_registry);
+    return mir::make_module_ptr<mix::XInputPlatform>(input_device_registry, x11_connection.get());
 }
 
-extern "C" void add_input_platform_options(
+void add_input_platform_options(
     boost::program_options::options_description& /*config*/)
 {
 }
 
-extern "C" mi::PlatformPriority probe_input_platform(
+mi::PlatformPriority probe_input_platform(
     mo::Option const& /*options*/)
 {
     return mi::PlatformPriority::best;
@@ -54,7 +57,7 @@ mir::ModuleProperties const description = {
 };
 }
 
-extern "C" mir::ModuleProperties const* describe_input_module()
+mir::ModuleProperties const* describe_input_module()
 {
     return &description;
 }

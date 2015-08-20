@@ -1,4 +1,4 @@
-option cc_generic_services = true;
+option optimize_for = LITE_RUNTIME;
 
 package mir.protobuf;
 
@@ -117,6 +117,7 @@ message BufferAllocation {
 
 message BufferRelease {
   repeated Buffer buffers = 1;  
+  optional BufferStreamId id = 2;
 };
 
 message BufferRequest {
@@ -249,11 +250,16 @@ message LifecycleEvent {
   optional string error = 127;
 }
 
+message PingEvent {
+  optional int32 serial = 1;  // Identifier for this ping
+}
+
 message EventSequence {
   repeated Event event = 1;
   optional DisplayConfiguration display_configuration = 2;
   optional LifecycleEvent lifecycle_event = 3;
   optional BufferRequest buffer_request = 4;
+  optional PingEvent ping_event = 5;
 
   optional string error = 127;
 }
@@ -317,43 +323,6 @@ message PlatformOperationMessage {
   optional string error = 127;
 }
 
-service DisplayServer {
-  // Platform independent requests
-  rpc connect(ConnectParameters) returns (Connection);
-  rpc disconnect(Void) returns (Void);
-  rpc create_surface(SurfaceParameters) returns (Surface);
-  rpc modify_surface(SurfaceModifications) returns (Void);
-  rpc next_buffer(SurfaceId) returns (Buffer);
-  rpc release_surface(SurfaceId) returns (Void);
-
-  // Platform specific requests
-  rpc drm_auth_magic(DRMMagic) returns (DRMAuthMagicStatus);
-  rpc platform_operation(PlatformOperationMessage) returns (PlatformOperationMessage);
-
-  rpc configure_surface(SurfaceSetting) returns (SurfaceSetting);
-  rpc configure_display(DisplayConfiguration) returns (DisplayConfiguration);
-
-  rpc create_screencast(ScreencastParameters) returns (Screencast);
-  rpc screencast_buffer(ScreencastId) returns (Buffer);
-  rpc release_screencast(ScreencastId) returns (Void);
-
-  rpc create_buffer_stream(BufferStreamParameters) returns (BufferStream);
-  rpc release_buffer_stream(BufferStreamId) returns (Void);
-
-  rpc configure_cursor(CursorSetting) returns (Void);
-  rpc new_fds_for_prompt_providers(SocketFDRequest) returns (SocketFD);
-
-  rpc start_prompt_session(PromptSessionParameters) returns (Void);
-  rpc stop_prompt_session(Void) returns (Void);
-  rpc exchange_buffer(BufferRequest) returns (Buffer);
-
-  rpc submit_buffer(BufferRequest) returns (Void);
-  rpc allocate_buffers(BufferAllocation) returns (Void);
-  rpc release_buffers(BufferRelease) returns (Void);
-
-  rpc request_persistent_surface_id(SurfaceId) returns (PersistentSurfaceId);
-}
-
 message CoordinateTranslationRequest {
   required SurfaceId surfaceid = 1;
   required int32 x = 2;
@@ -365,8 +334,4 @@ message CoordinateTranslationResponse {
   optional int32 y = 2;
 
   optional string error = 127;
-}
-
-service Debug {
-  rpc translate_surface_to_screen(CoordinateTranslationRequest) returns (CoordinateTranslationResponse);
 }

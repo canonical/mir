@@ -25,10 +25,8 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 
-#include "mir_protobuf_wire.pb.h"
-
-#include <google/protobuf/service.h>
-#include <google/protobuf/descriptor.h>
+#include "../lifecycle_control.h"
+#include "../ping_handler.h"
 
 #include <thread>
 #include <atomic>
@@ -41,7 +39,6 @@ namespace client
 {
 class DisplayConfiguration;
 class SurfaceMap;
-class LifecycleControl;
 class EventSink;
 namespace rpc
 {
@@ -59,6 +56,7 @@ public:
                           std::shared_ptr<DisplayConfiguration> const& disp_config,
                           std::shared_ptr<RpcReport> const& rpc_report,
                           std::shared_ptr<LifecycleControl> const& lifecycle_control,
+                          std::shared_ptr<PingHandler> const& ping_handler,
                           std::shared_ptr<EventSink> const& event_sink);
 
     ~MirProtobufRpcChannel() = default;
@@ -85,11 +83,14 @@ public:
      * No messages are discarded, only delayed.
      */
     void process_next_request_first();
-private:
-    virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
-        const google::protobuf::Message* parameters, google::protobuf::Message* response,
+
+    void call_method(
+        std::string const& method_name,
+        google::protobuf::MessageLite const* parameters,
+        google::protobuf::MessageLite* response,
         google::protobuf::Closure* complete) override;
 
+private:
     std::shared_ptr<RpcReport> const rpc_report;
     detail::PendingCallCache pending_calls;
 
@@ -97,7 +98,7 @@ private:
     detail::SendBuffer header_bytes;
     detail::SendBuffer body_bytes;
 
-    void receive_file_descriptors(google::protobuf::Message* response);
+    void receive_file_descriptors(google::protobuf::MessageLite* response);
     template<class MessageType>
     void receive_any_file_descriptors_for(MessageType* response);
     void send_message(mir::protobuf::wire::Invocation const& body,
@@ -112,6 +113,7 @@ private:
     std::shared_ptr<SurfaceMap> surface_map;
     std::shared_ptr<DisplayConfiguration> display_configuration;
     std::shared_ptr<LifecycleControl> lifecycle_control;
+    std::shared_ptr<PingHandler> const ping_handler;
     std::shared_ptr<EventSink> event_sink;
     std::atomic<bool> disconnected;
     std::mutex read_mutex;

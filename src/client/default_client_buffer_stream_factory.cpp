@@ -22,6 +22,7 @@
 #include "lttng/perf_report.h"
 
 namespace mcl = mir::client;
+namespace mclr = mir::client::rpc;
 namespace ml = mir::logging;
 namespace mp = mir::protobuf;
 
@@ -58,26 +59,26 @@ mcl::DefaultClientBufferStreamFactory::DefaultClientBufferStreamFactory(
 }
 
 std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::make_consumer_stream(
-    MirConnection* connection, mp::DisplayServer& server,
-    mp::BufferStream const& protobuf_bs, std::string const& surface_name)
+    MirConnection* connection, mclr::DisplayServer& server,
+    mp::BufferStream const& protobuf_bs, std::string const& surface_name, geometry::Size size)
 {
     return std::make_shared<mcl::BufferStream>(
         connection, server, mcl::BufferStreamMode::Consumer, client_platform,
-        protobuf_bs, make_perf_report(logger), surface_name);
+        protobuf_bs, make_perf_report(logger), surface_name, size);
 }
 
 std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::make_producer_stream(
-    MirConnection* connection, mp::DisplayServer& server,
-    mp::BufferStream const& protobuf_bs, std::string const& surface_name)
+    MirConnection* connection, mclr::DisplayServer& server,
+    mp::BufferStream const& protobuf_bs, std::string const& surface_name, geometry::Size size)
 {
     return std::make_shared<mcl::BufferStream>(
         connection, server, mcl::BufferStreamMode::Producer, client_platform,
-        protobuf_bs, make_perf_report(logger), surface_name);
+        protobuf_bs, make_perf_report(logger), surface_name, size);
 }
 
 
 mcl::ClientBufferStream* mcl::DefaultClientBufferStreamFactory::make_producer_stream(
-    MirConnection* connection, mp::DisplayServer& server,
+    MirConnection* connection, mclr::DisplayServer& server,
     mp::BufferStreamParameters const& params, mir_buffer_stream_callback callback, void* context)
 {
     return new mcl::BufferStream(

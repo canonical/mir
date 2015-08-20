@@ -80,24 +80,24 @@ md::GSourceHandle::GSourceHandle()
 
 md::GSourceHandle::GSourceHandle(
     GSource* gsource,
-    std::function<void(GSource*)> const& pre_destruction_hook)
+    std::function<void(GSource*)> const& terminate_dispatch)
     : gsource(gsource),
-      pre_destruction_hook(pre_destruction_hook)
+      terminate_dispatch(terminate_dispatch)
 {
 }
 
 md::GSourceHandle::GSourceHandle(GSourceHandle&& other)
     : gsource(std::move(other.gsource)),
-      pre_destruction_hook(std::move(other.pre_destruction_hook))
+      terminate_dispatch(std::move(other.terminate_dispatch))
 {
     other.gsource = nullptr;
-    other.pre_destruction_hook = [](GSource*){};
+    other.terminate_dispatch = [](GSource*){};
 }
 
 md::GSourceHandle& md::GSourceHandle::operator=(GSourceHandle other)
 {
     std::swap(other.gsource, gsource);
-    std::swap(other.pre_destruction_hook, pre_destruction_hook);
+    std::swap(other.terminate_dispatch, terminate_dispatch);
     return *this;
 }
 
@@ -105,10 +105,8 @@ md::GSourceHandle::~GSourceHandle()
 {
     if (gsource)
     {
-        pre_destruction_hook(gsource);
-        g_source_destroy(gsource);
-
 #ifdef GLIB_HAS_FIXED_LP_1401488
+        g_source_destroy(gsource);
         g_source_unref(gsource);
 #else
         /*
@@ -118,14 +116,31 @@ md::GSourceHandle::~GSourceHandle()
          * and so the main loop might be mid-iteration of the same source
          * making callbacks. And glib lacks protection to prevent sources
          * getting fully free()'d mid-callback (TODO: fix glib?). So we defer
-         * the final unref of the source to a point in the loop when it's safe:
+         * the final unref of the source to a point in the loop when it's safe.
          */
-        auto main_context = g_source_get_context(gsource);
-        auto idler = g_idle_source_new();
-        g_source_set_callback(idler, idle_callback, gsource, destroy_idler);
-        g_source_attach(idler, main_context);
-        g_source_unref(idler);
+        if (!g_source_is_destroyed(gsource))
+        {
+            auto main_context = g_source_get_context(gsource);
+            g_source_destroy(gsource);
+            auto idler = g_idle_source_new();
+            g_source_set_callback(idler, idle_callback, gsource, destroy_idler);
+            g_source_attach(idler, main_context);
+            g_source_unref(idler);
+        }
+        else
+        {
+            // The source is already destroyed so it's safe to unref now
+            g_source_unref(gsource);
+        }
 #endif
+    }
+}
+
+void md::GSourceHandle::ensure_no_further_dispatch()
+{
+    if (gsource)
+    {
+        terminate_dispatch(gsource);
     }
 }
 
@@ -251,8 +266,8 @@ md::GSourceHandle md::add_timer_gsource(
         std::shared_ptr<LockableCallback> handler;
         std::function<void()> exception_handler;
         time::Timestamp target_time;
+        std::mutex mutex;
         bool enabled;
-        std::recursive_mutex mutex;
     };
 
     struct TimerGSource
@@ -384,6 +399,11 @@ private:
 
 struct md::FdSources::FdSource
 {
+    ~FdSource()
+    {
+        gsource.ensure_no_further_dispatch();
+    }
+
     GSourceHandle gsource;
     void const* const owner;
 };

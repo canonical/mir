@@ -112,7 +112,7 @@ void mcll::RpcReport::orphaned_result(
     mir::protobuf::wire::Result const& result)
 {
     std::stringstream ss;
-    ss << "Orphaned result: " << result.ShortDebugString();
+    ss << "Orphaned result: " << result.id();
 
     logger->log(ml::Severity::error, ss.str(), component);
 }
@@ -137,7 +137,7 @@ void mcll::RpcReport::result_processing_failed(
 }
 
 void mcll::RpcReport::file_descriptors_received(
-    google::protobuf::Message const& /*response*/,
+    google::protobuf::MessageLite const& /*response*/,
     std::vector<Fd> const& fds)
 {
     std::stringstream ss;

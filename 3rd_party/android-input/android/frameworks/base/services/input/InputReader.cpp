@@ -76,11 +76,6 @@ static const size_t MAX_SLOTS = 32;
 // --- Static Functions ---
 
 template<typename T>
-inline static T abs(const T& value) {
-    return value < 0 ? - value : value;
-}
-
-template<typename T>
 inline static T min(const T& a, const T& b) {
     return a < b ? a : b;
 }
@@ -208,6 +203,39 @@ static void synthesizeButtonKeys(InputReaderContext* context, int32_t action,
             AMOTION_EVENT_BUTTON_FORWARD, AKEYCODE_FORWARD);
 }
 
+// --- Global Functions ---
+
+uint32_t getAbsAxisUsage(int32_t axis, uint32_t deviceClasses) {
+    // Touch devices get dibs on touch-related axes.
+    if (deviceClasses & INPUT_DEVICE_CLASS_TOUCH) {
+        switch (axis) {
+        case ABS_X:
+        case ABS_Y:
+        case ABS_PRESSURE:
+        case ABS_TOOL_WIDTH:
+        case ABS_DISTANCE:
+        case ABS_TILT_X:
+        case ABS_TILT_Y:
+        case ABS_MT_SLOT:
+        case ABS_MT_TOUCH_MAJOR:
+        case ABS_MT_TOUCH_MINOR:
+        case ABS_MT_WIDTH_MAJOR:
+        case ABS_MT_WIDTH_MINOR:
+        case ABS_MT_ORIENTATION:
+        case ABS_MT_POSITION_X:
+        case ABS_MT_POSITION_Y:
+        case ABS_MT_TOOL_TYPE:
+        case ABS_MT_BLOB_ID:
+        case ABS_MT_TRACKING_ID:
+        case ABS_MT_PRESSURE:
+        case ABS_MT_DISTANCE:
+            return INPUT_DEVICE_CLASS_TOUCH;
+        }
+    }
+
+    // Joystick devices get the rest.
+    return deviceClasses & INPUT_DEVICE_CLASS_JOYSTICK;
+}
 
 // --- InputReaderConfiguration ---
 
@@ -844,22 +872,6 @@ InputListenerInterface* InputReader::ContextImpl::getListener() {
 EventHubInterface* InputReader::ContextImpl::getEventHub() {
     return mReader->mEventHub.get();
 }
-
-
-// --- InputReaderThread ---
-
-InputReaderThread::InputReaderThread(std::shared_ptr<InputReaderInterface> const& reader) :
-        Thread(/*canCallJava*/ true), mReader(reader) {
-}
-
-InputReaderThread::~InputReaderThread() {
-}
-
-bool InputReaderThread::threadLoop() {
-    mReader->loopOnce();
-    return true;
-}
-
 
 // --- InputDevice ---
 

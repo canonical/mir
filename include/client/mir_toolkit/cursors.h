@@ -113,6 +113,12 @@ extern char const* const mir_vsplit_resize_cursor_name;
  */
 extern char const* const mir_hsplit_resize_cursor_name;
 
+/**
+ *  The cursor used for crosshair, which may be used for picking colors or
+ *  finer precision.
+ */
+extern char const* const mir_crosshair_cursor_name;
+
 #ifdef __cplusplus
 }
 #endif

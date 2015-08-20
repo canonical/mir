@@ -39,8 +39,9 @@ namespace mi = mir::input;
 namespace mev = mir::events;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
-
 namespace geom = mir::geometry;
+
+using namespace ::testing;
 
 namespace
 {
@@ -214,6 +215,19 @@ struct FakeToucher
                        1.0, 1.0, 1.0, 1.0);
         return ev;
     }
+    mir::EventUPtr touches_at(geom::Point const& point1, geom::Point const& point2)
+    {
+        touched = true;
+
+        auto ev = mev::make_event(id, std::chrono::nanoseconds(0), 0);
+        mev::add_touch(*ev, 0, mir_touch_action_down,
+                       mir_touch_tooltype_finger, point1.x.as_int(), point1.y.as_int(),
+                       1.0, 1.0, 1.0, 1.0);
+        mev::add_touch(*ev, 0, mir_touch_action_down,
+                       mir_touch_tooltype_finger, point2.x.as_int(), point2.y.as_int(),
+                       1.0, 1.0, 1.0, 1.0);
+        return ev;
+    }
     mir::EventUPtr release_at(geom::Point const& point)
     {
         touched = false;
@@ -224,6 +238,19 @@ struct FakeToucher
                        0.0, 0.0, 0.0, 0.0);
         return ev;
     }
+    mir::EventUPtr releases_at(geom::Point const& point1, geom::Point const& point2)
+    {
+        touched = false;
+
+        auto ev = mev::make_event(id, std::chrono::nanoseconds(0), 0);
+        mev::add_touch(*ev, 0, mir_touch_action_up,
+                       mir_touch_tooltype_finger, point1.x.as_int(), point1.y.as_int(),
+                       1.0, 1.0, 1.0, 1.0);
+        mev::add_touch(*ev, 0, mir_touch_action_up,
+                       mir_touch_tooltype_finger, point2.x.as_int(), point2.y.as_int(),
+                       1.0, 1.0, 1.0, 1.0);
+        return ev;
+    }
     bool touched = false;
     MirInputDeviceId const id;
 };
@@ -232,8 +259,6 @@ struct FakeToucher
 
 TEST_F(SurfaceInputDispatcher, key_event_delivered_to_focused_surface)
 {
-    using namespace ::testing;
-    
     auto surface = scene.add_surface();
 
     FakeKeyboard keyboard;
@@ -249,8 +274,6 @@ TEST_F(SurfaceInputDispatcher, key_event_delivered_to_focused_surface)
 
 TEST_F(SurfaceInputDispatcher, key_event_dropped_if_no_surface_focused)
 {
-    using namespace ::testing;
-    
     auto surface = scene.add_surface();
     
     EXPECT_CALL(*surface, consume(_)).Times(0);
@@ -263,8 +286,6 @@ TEST_F(SurfaceInputDispatcher, key_event_dropped_if_no_surface_focused)
 
 TEST_F(SurfaceInputDispatcher, inconsistent_key_events_dropped)
 {
-    using namespace ::testing;
-
     auto surface = scene.add_surface();
 
     EXPECT_CALL(*surface, consume(_)).Times(0);
@@ -279,8 +300,6 @@ TEST_F(SurfaceInputDispatcher, inconsistent_key_events_dropped)
 
 TEST_F(SurfaceInputDispatcher, key_state_is_consistent_per_client)
 {
-    using namespace ::testing;
-
     auto surface_1 = scene.add_surface();
     auto surface_2 = scene.add_surface();
 
@@ -301,8 +320,6 @@ TEST_F(SurfaceInputDispatcher, key_state_is_consistent_per_client)
 
 TEST_F(SurfaceInputDispatcher, inconsistent_key_down_dropped)
 {
-    using namespace ::testing;
-    
     auto surface = scene.add_surface();
 
     FakeKeyboard keyboard;
@@ -321,8 +338,6 @@ TEST_F(SurfaceInputDispatcher, inconsistent_key_down_dropped)
 
 TEST_F(SurfaceInputDispatcher, device_reset_resets_key_state_consistency)
 {
-    using namespace ::testing;
-
     auto surface = scene.add_surface();
 
     auto device_id = MirInputDeviceId{1};
@@ -341,8 +356,6 @@ TEST_F(SurfaceInputDispatcher, device_reset_resets_key_state_consistency)
 
 TEST_F(SurfaceInputDispatcher, key_input_target_may_disappear_and_things_remain_quote_a_unquote_ok)
 {
-    using namespace ::testing;
-    
     auto surface_2 = scene.add_surface();
     auto surface_1 = scene.add_surface();
 
@@ -364,8 +377,6 @@ TEST_F(SurfaceInputDispatcher, key_input_target_may_disappear_and_things_remain_
 
 TEST_F(SurfaceInputDispatcher, pointer_motion_delivered_to_client_under_pointer)
 {
-    using namespace ::testing;
-
     auto surface = scene.add_surface({{0, 0}, {5, 5}});
 
     FakePointer pointer;
@@ -385,8 +396,6 @@ TEST_F(SurfaceInputDispatcher, pointer_motion_delivered_to_client_under_pointer)
 
 TEST_F(SurfaceInputDispatcher, pointer_delivered_only_to_top_surface)
 {
-    using namespace ::testing;
-
     auto surface = scene.add_surface({{0, 0}, {5, 5}});
     auto top_surface = scene.add_surface({{0, 0}, {5, 5}});
 
@@ -407,8 +416,6 @@ TEST_F(SurfaceInputDispatcher, pointer_delivered_only_to_top_surface)
 
 TEST_F(SurfaceInputDispatcher, pointer_may_move_between_adjacent_surfaces)
 {
-    using namespace ::testing;
-    
     auto surface = scene.add_surface({{0, 0}, {5, 5}});
     auto another_surface = scene.add_surface({{5, 5}, {5, 5}});
 
@@ -435,8 +442,6 @@ TEST_F(SurfaceInputDispatcher, pointer_may_move_between_adjacent_surfaces)
 // until the pointer comes up.
 TEST_F(SurfaceInputDispatcher, gestures_persist_over_button_down)
 {
-    using namespace ::testing;
-    
     auto surface = scene.add_surface({{0, 0}, {5, 5}});
     auto another_surface = scene.add_surface({{5, 5}, {5, 5}});
 
@@ -462,8 +467,6 @@ TEST_F(SurfaceInputDispatcher, gestures_persist_over_button_down)
 
 TEST_F(SurfaceInputDispatcher, gestures_terminated_by_device_reset)
 {
-    using namespace ::testing;
-    
     auto surface = scene.add_surface({{0, 0}, {5, 5}});
     auto another_surface = scene.add_surface({{5, 5}, {5, 5}});
 
@@ -488,8 +491,6 @@ TEST_F(SurfaceInputDispatcher, gestures_terminated_by_device_reset)
 
 TEST_F(SurfaceInputDispatcher, pointer_gestures_may_transfer_over_buttons)
 {
-    using namespace ::testing;
-    
     auto surface = scene.add_surface({{0, 0}, {5, 5}});
     auto another_surface = scene.add_surface({{5, 5}, {5, 5}});
 
@@ -521,8 +522,6 @@ TEST_F(SurfaceInputDispatcher, pointer_gestures_may_transfer_over_buttons)
 
 TEST_F(SurfaceInputDispatcher, pointer_gesture_target_may_vanish_and_the_situation_remains_hunky_dorey)
 {
-    using namespace ::testing;
-    
     auto surface = scene.add_surface({{0, 0}, {5, 5}});
     auto another_surface = scene.add_surface({{5, 5}, {5, 5}});
 
@@ -547,8 +546,6 @@ TEST_F(SurfaceInputDispatcher, pointer_gesture_target_may_vanish_and_the_situati
 
 TEST_F(SurfaceInputDispatcher, touch_delivered_to_surface)
 {
-    using namespace ::testing;
-    
     auto surface = scene.add_surface({{1, 1}, {1, 1}});
 
     InSequence seq;
@@ -564,8 +561,6 @@ TEST_F(SurfaceInputDispatcher, touch_delivered_to_surface)
 
 TEST_F(SurfaceInputDispatcher, touch_delivered_only_to_top_surface)
 {
-    using namespace ::testing;
-    
     auto bottom_surface = scene.add_surface({{1, 1}, {3, 3}});
     auto surface = scene.add_surface({{1, 1}, {3, 3}});
 
@@ -584,8 +579,6 @@ TEST_F(SurfaceInputDispatcher, touch_delivered_only_to_top_surface)
 
 TEST_F(SurfaceInputDispatcher, gestures_persist_over_touch_down)
 {
-    using namespace ::testing;
-    
     auto left_surface = scene.add_surface({{0, 0}, {1, 1}});
     auto right_surface = scene.add_surface({{1, 1}, {1, 1}});
 
@@ -603,10 +596,63 @@ TEST_F(SurfaceInputDispatcher, gestures_persist_over_touch_down)
     EXPECT_TRUE(dispatcher.dispatch(*toucher.release_at({2, 2})));
 }
 
+TEST_F(SurfaceInputDispatcher, touch_target_switches_on_finger_down)
+{   // Regression test for LP: #1480654
+
+    auto left_surface = scene.add_surface({{0, 0}, {1, 1}});
+    auto right_surface = scene.add_surface({{5, 5}, {1, 1}});
+
+    InSequence seq;
+
+    EXPECT_CALL(*left_surface, consume(_)).Times(1);
+    // Note: No TouchUpEvent expected
+    EXPECT_CALL(*right_surface, consume(_)).Times(1);
+
+    dispatcher.start();
+    
+    FakeToucher toucher;
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({0, 0})));
+    // Note: No touch release event produced
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({5, 5})));
+}
+
+TEST_F(SurfaceInputDispatcher, touch_target_switches_on_fingers_down)
+{
+    auto left_surface = scene.add_surface({{0, 0}, {1, 1}});
+    auto right_surface = scene.add_surface({{5, 5}, {2, 2}});
+
+    InSequence seq;
+
+    EXPECT_CALL(*left_surface, consume(_)).Times(1);
+    // Note: No TouchUpEvent expected
+    EXPECT_CALL(*right_surface, consume(_)).Times(1);
+
+    dispatcher.start();
+
+    FakeToucher toucher;
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.touch_at({0, 0})));
+    // Note: No touch release event produced
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.touches_at({5, 5}, {6, 6})));
+}
+
+TEST_F(SurfaceInputDispatcher, touch_gestures_terminated_by_release_all_touches)
+{
+    auto right_surface = scene.add_surface({{5, 5}, {2, 2}});
+
+    InSequence seq;
+
+    EXPECT_CALL(*right_surface, consume(_)).Times(2);
+
+    dispatcher.start();
+
+    FakeToucher toucher;
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.touches_at({5, 5}, {6, 6})));
+    EXPECT_TRUE(dispatcher.dispatch(*toucher.releases_at({5, 5}, {6, 6})));
+    EXPECT_FALSE(dispatcher.dispatch(*toucher.move_to({5, 6})));
+}
+
 TEST_F(SurfaceInputDispatcher, touch_gestures_terminated_by_device_reset)
 {
-    using namespace ::testing;
-    
     auto left_surface = scene.add_surface({{0, 0}, {1, 1}});
     auto right_surface = scene.add_surface({{1, 1}, {1, 1}});
 
@@ -627,8 +673,6 @@ TEST_F(SurfaceInputDispatcher, touch_gestures_terminated_by_device_reset)
 
 TEST_F(SurfaceInputDispatcher, touch_gesture_target_may_vanish_but_things_continue_to_function_as_intended)
 {
-    using namespace ::testing;
-    
     auto surface_1 = scene.add_surface({{0, 0}, {1, 1}});
     auto surface_2 = scene.add_surface({{0, 0}, {1, 1}});
 

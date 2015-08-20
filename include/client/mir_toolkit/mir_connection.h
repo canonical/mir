@@ -103,6 +103,35 @@ void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *
 void mir_connection_set_lifecycle_event_callback(MirConnection* connection,
     mir_lifecycle_event_callback callback, void* context);
 
+
+/**
+ * Register a callback for server ping events.
+ *
+ * The server may send ping requests to detect unresponsive applications. Clients should
+ * process this with their regular event handling, and call mir_connection_pong() in response.
+ *
+ * The shell may treat a client which fails to pong in a timely fashion differently; a common
+ * response is to overlay the surface with an unresponsive application message.
+ *
+ * A default implementation that immediately calls pong is provided; toolkits SHOULD override
+ * this default implementation to more accurately reflect the state of their event processing
+ * loop.
+ *
+ * \param [in] connection       The connection
+ * \param [in] callback         The function to be called on ping events.
+ * \param [in] context          User data passed to the callback function
+ */
+void mir_connection_set_ping_event_callback(MirConnection* connection,
+    mir_ping_event_callback callback, void* context);
+
+
+/**
+ * Respond to a ping event
+ * \param [in] connection       The connection
+ * \param [in] serial           Serial from the ping event
+ */
+void mir_connection_pong(MirConnection* connection, int32_t serial);
+
 /**
  * Query the display
  *   \warning return value must be destroyed via mir_display_config_destroy()
@@ -171,6 +200,14 @@ MirPixelFormat mir_connection_get_egl_pixel_format(
  *   \param [out] formats           List of valid formats to create surfaces with
  *   \param [in]  formats_size      size of formats list
  *   \param [out] num_valid_formats number of valid formats returned in formats
+ *
+ * \note Users of EGL should call mir_connection_get_egl_pixel_format instead,
+ *       as it will take the guesswork out of choosing between similar pixel
+ *       formats. At the moment, this function returns a compatible list of
+ *       formats likely to work for either software or hardware rendering.
+ *       However it is not the full or accurate list and will be replaced in
+ *       future by a function that takes the intended MirBufferUsage into
+ *       account.
  */
 void mir_connection_get_available_surface_formats(
     MirConnection* connection, MirPixelFormat* formats,

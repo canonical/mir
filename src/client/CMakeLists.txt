@@ -56,7 +56,6 @@ add_library(mirclientobjects OBJECT
   logging/perf_report.cpp
   default_connection_configuration.cpp
   surface_map.cpp
-  lifecycle_control.cpp
   private.cpp
   mir_screencast.cpp
   mir_screencast_api.cpp
@@ -68,6 +67,7 @@ add_library(mirclientobjects OBJECT
   periodic_perf_report.cpp
   mir_platform_message_api.cpp
   buffer_stream.cpp
+  buffer_vault.cpp
   mir_buffer_stream_api.cpp
   default_client_buffer_stream_factory.cpp
   ${MIR_CLIENT_SOURCES}

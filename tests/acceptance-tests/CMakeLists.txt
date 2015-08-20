@@ -10,9 +10,11 @@ set(
   server_configuration_wrapping.cpp
   server_configuration_options.cpp
   server_signal_handling.cpp
+  test_application_not_responding_detection.cpp
   test_client_header_version.cpp
   test_client_input.cpp
   test_client_library.cpp
+  test_client_library_callbacks.cpp
   test_client_library_errors.cpp
   test_client_library_old.cpp
   test_client_surface_events.cpp
@@ -89,5 +91,5 @@ CMAKE_DEPENDENT_OPTION(
   OFF)
 
 if (MIR_RUN_ACCEPTANCE_TESTS)
-  mir_discover_tests(mir_acceptance_tests)
+  mir_discover_tests_with_fd_leak_detection(mir_acceptance_tests)
 endif (MIR_RUN_ACCEPTANCE_TESTS)
