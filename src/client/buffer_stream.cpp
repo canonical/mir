@@ -316,7 +316,6 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     std::shared_ptr<mcl::ClientBuffer> current_buffer_;
     int current_buffer_id_;
     MirWaitHandle next_buffer_wait_handle;
-    std::function<void()> done;
 };
 }
 
