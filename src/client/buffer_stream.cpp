@@ -242,8 +242,7 @@ public:
     void free_buffer(int buffer_id) override
     {
         auto request = mcl::make_protobuf_object<mp::BufferRelease>();
-//      needed by service-alloc-requests
-//      request->mutable_id()->set_value(stream_id);
+        request->mutable_id()->set_value(stream_id);
         request->add_buffers()->set_buffer_id(buffer_id);
         server.release_buffers(request.get(), &protobuf_void,
             google::protobuf::NewCallback(google::protobuf::DoNothing));
