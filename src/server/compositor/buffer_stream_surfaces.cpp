@@ -22,6 +22,7 @@
 #include "mir/graphics/buffer_properties.h"
 
 #include "temporary_buffers.h"
+#include <boost/throw_exception.hpp>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -134,4 +135,19 @@ void mc::BufferStreamSurfaces::remove_observer(std::weak_ptr<scene::SurfaceObser
 {
     if (auto o = observer.lock())
         observers.remove(o);
+}
+
+mg::BufferID mc::BufferStreamSurfaces::allocate_buffer(graphics::BufferProperties const&)
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("buffer allocation cannot happen with an exchange-based buffer client"));
+}
+
+void mc::BufferStreamSurfaces::remove_buffer(graphics::BufferID)
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("buffer removal cannot happen with an exchange-based buffer client"));
+}
+
+void mc::BufferStreamSurfaces::with_buffer(mg::BufferID, std::function<void(mg::Buffer&)> const&)
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("buffer lookup cannot happen with an exchange-based buffer client"));
 }

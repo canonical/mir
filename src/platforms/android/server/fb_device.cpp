@@ -53,10 +53,12 @@ void mga::FbControl::power_mode(DisplayName display, MirPowerMode mode)
         fb_device->enableScreen(fb_device.get(), enable);
 }
 
-mg::DisplayConfigurationOutput mga::FbControl::active_config_for(DisplayName)
+mg::DisplayConfigurationOutput mga::FbControl::active_config_for(DisplayName display_name)
 {
+    auto const connected = (display_name == DisplayName::primary);
+
     return {
-        mg::DisplayConfigurationOutputId{0},
+        static_cast<mg::DisplayConfigurationOutputId>(display_name),
         mg::DisplayConfigurationCardId{0},
         mg::DisplayConfigurationOutputType::lvds,
         std::vector<MirPixelFormat>{mga::to_mir_format(fb_device->format)},
@@ -65,11 +67,11 @@ mg::DisplayConfigurationOutput mga::FbControl::active_config_for(DisplayName)
         },
         0,
         {0,0},
-        true,
-        false,
+        connected,
+        connected,
         {0,0},
         0,
-        mir_pixel_format_abgr_8888,
+        mga::to_mir_format(fb_device->format),
         mir_power_mode_on,
         mir_orientation_normal
     };

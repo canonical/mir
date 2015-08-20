@@ -30,8 +30,6 @@
 #include "mir/unwind_helpers.h"
 #include "mir/terminate_with_current_exception.h"
 
-#include <condition_variable>
-#include <mutex>
 #include <future>
 
 namespace mi = mir::input;
