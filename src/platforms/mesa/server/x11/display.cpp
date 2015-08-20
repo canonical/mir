@@ -64,9 +64,9 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, int width, int h
 {
     EGLint const att[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RED_SIZE, 5,
-        EGL_GREEN_SIZE, 5,
-        EGL_BLUE_SIZE, 5,
+        EGL_RED_SIZE, 1,
+        EGL_GREEN_SIZE, 1,
+        EGL_BLUE_SIZE, 1,
         EGL_ALPHA_SIZE, 0,
         EGL_DEPTH_SIZE, 0,
         EGL_STENCIL_SIZE, 0,
@@ -80,8 +80,10 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, int width, int h
     if (!eglChooseConfig(egl_dpy, att, &config, 1, &num_configs))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get an EGL config"));
 
-    assert(config);
-    assert(num_configs > 0);
+    mir::log_info("%d configs found", num_configs);
+
+    if (num_configs <= 0)
+        BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get an EGL config"));
 
     EGLint vid;
     if (!eglGetConfigAttrib(egl_dpy, config, EGL_NATIVE_VISUAL_ID, &vid))
@@ -93,6 +95,8 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, int width, int h
     auto visInfo = XGetVisualInfo(x_dpy, VisualIDMask, &visTemplate, &num_visuals);
     if (!visInfo)
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get visual info"));
+
+    mir::log_info("%d visuals found", num_visuals);
 
     XSetWindowAttributes attr;
     attr.background_pixel = 0;
@@ -107,16 +111,15 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, int width, int h
                       FocusChangeMask     |
                       PointerMotionMask;
 
+    depth = visInfo->depth;
+
     auto mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
 
     win = XCreateWindow(x_dpy, root, 0, 0, width, height,
-                        0, visInfo->depth, InputOutput,
+                        0, depth, InputOutput,
                         visInfo->visual, mask, &attr);
 
-    mir::log_info("Pixel depth = %d", visInfo->depth);
-
-    //TODO: handle others
-    assert(visInfo->depth==24);
+    mir::log_info("Pixel depth = %d", depth);
 
     XFree(visInfo);
 
@@ -143,6 +146,11 @@ mgx::X11Window::operator Window() const
 EGLConfig mgx::X11Window::egl_config() const
 {
     return config;
+}
+
+unsigned int mgx::X11Window::color_depth() const
+{
+    return depth;
 }
 
 mgx::X11EGLContext::X11EGLContext(EGLDisplay egl_dpy, EGLConfig config)
@@ -200,8 +208,10 @@ mgx::Display::Display(::Display* dpy)
                                 win)},
                                 orientation{mir_orientation_normal}
 {
-    // TODO: read from the chosen config
-    pf = mir_pixel_format_bgr_888;
+    if (win.color_depth() == 24)
+        pf = mir_pixel_format_bgr_888;
+    else
+        BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported pixel format"));
 
     // Make window nonresizeable
     // TODO: Make sizing possible
@@ -215,6 +225,8 @@ mgx::Display::Display(::Display* dpy)
         sizehints.base_height = display_height;
         sizehints.min_width  = display_width;
         sizehints.min_height = display_height;
+        sizehints.min_width  = 0;
+        sizehints.min_height = 0;
         sizehints.max_width = display_width;
         sizehints.max_height = display_height;
         sizehints.flags = USSize | USPosition | PMinSize | PMaxSize;
@@ -222,7 +234,7 @@ mgx::Display::Display(::Display* dpy)
         XSetNormalHints(x_dpy, win, &sizehints);
         XSetStandardProperties(x_dpy, win, title, title, None, (char **)NULL, 0, &sizehints);
     }
-
+    
     display_group = std::make_unique<mgx::DisplayGroup>(
         std::make_unique<mgx::DisplayBuffer>(geom::Size{display_width, display_height},
                                              egl_display,

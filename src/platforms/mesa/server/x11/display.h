@@ -54,11 +54,13 @@ public:
 
     operator Window() const;
     EGLConfig egl_config() const;
+    unsigned int color_depth() const;
 
 private:
     ::Display* const x_dpy;
     Window win;
     EGLConfig config;
+    unsigned int depth;
 };
 
 class X11EGLContext
