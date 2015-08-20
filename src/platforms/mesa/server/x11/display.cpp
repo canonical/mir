@@ -197,7 +197,8 @@ mgx::Display::Display(::Display* dpy)
                                 win.egl_config())},
       egl_surface{X11EGLSurface(egl_display,
                                 win.egl_config(),
-                                win)}
+                                win)},
+                                orientation{mir_orientation_normal}
 {
     // TODO: read from the chosen config
     pf = mir_pixel_format_bgr_888;
@@ -226,7 +227,8 @@ mgx::Display::Display(::Display* dpy)
         std::make_unique<mgx::DisplayBuffer>(geom::Size{display_width, display_height},
                                              egl_display,
                                              egl_surface,
-                                             egl_context));
+                                             egl_context,
+                                             orientation));
 }
 
 mgx::Display::~Display() noexcept
@@ -241,12 +243,20 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
-    return std::make_unique<mgx::DisplayConfiguration>(pf, display_width, display_height);
+    return std::make_unique<mgx::DisplayConfiguration>(pf, display_width, display_height, orientation);
 }
 
-void mgx::Display::configure(mg::DisplayConfiguration const& /*new_configuration*/)
+void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("'Display::configure()' not yet supported on x11 platform"));
+    MirOrientation o = mir_orientation_normal;
+
+    new_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+    {
+        o = conf_output.orientation;
+    });
+
+    orientation = o;
+    display_group->set_orientation(orientation);
 }
 
 void mgx::Display::register_configuration_change_handler(

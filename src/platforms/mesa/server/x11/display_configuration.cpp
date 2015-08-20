@@ -24,7 +24,7 @@ namespace mg = mir::graphics;
 namespace mgx = mg::X;
 namespace geom = mir::geometry;
 
-mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, int width, int height) :
+mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, int width, int height, MirOrientation orientation) :
     configuration{
             mg::DisplayConfigurationOutputId{1},
             mg::DisplayConfigurationCardId{0},
@@ -41,7 +41,7 @@ mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, int width, in
             0,
             pf,
             mir_power_mode_on,
-            mir_orientation_normal},
+            orientation},
     card{mg::DisplayConfigurationCardId{0}, 1}
 {
 }
