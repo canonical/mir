@@ -315,7 +315,7 @@ TEST_F(StartedBufferVault, can_withdraw_and_deposit)
 }
 
 
-TEST_F(StartedBufferVault, frees_incoming_buffers_of_incorrect_size_with_immediate_response)
+TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_immediate_response)
 {
     mp::Buffer package4;
     geom::Size new_size{80, 100}; 
@@ -335,7 +335,7 @@ TEST_F(StartedBufferVault, frees_incoming_buffers_of_incorrect_size_with_immedia
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
-TEST_F(StartedBufferVault, frees_incoming_buffers_of_incorrect_size_with_delayed_response)
+TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_delayed_response)
 {
     geom::Size new_size{80, 100}; 
     mp::Buffer package4;
