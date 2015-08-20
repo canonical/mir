@@ -290,7 +290,7 @@ TEST_F(MultiMonitorArbiter, basic_snapshot_equals_latest_compositor_buffer)
     EXPECT_EQ(cbuffer2, sbuffer2);
 }
 
-TEST_F(MultiMonitorArbiter, releasing_doesnt_advance_buffer_for_compositors)
+TEST_F(MultiMonitorArbiter, snapshot_cycling_doesnt_advance_buffer_for_compositors)
 {
     schedule.set_schedule({buffers[3],buffers[4]});
     auto that = 4;
