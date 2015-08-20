@@ -36,7 +36,7 @@ namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace geom=mir::geometry;
 
-mgx::X11EGLDisplay::X11EGLDisplay(::Display *x_dpy)
+mgx::X11EGLDisplay::X11EGLDisplay(::Display* x_dpy)
     : egl_dpy{eglGetDisplay(x_dpy)}
 {
     if (!egl_dpy)
@@ -59,7 +59,7 @@ mgx::X11EGLDisplay::operator EGLDisplay() const
     return egl_dpy;
 }
 
-mgx::X11Window::X11Window(::Display *x_dpy, EGLDisplay egl_dpy, int width, int height)
+mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, int width, int height)
     : x_dpy{x_dpy}
 {
     EGLint const att[] = {
@@ -104,6 +104,7 @@ mgx::X11Window::X11Window(::Display *x_dpy, EGLDisplay egl_dpy, int width, int h
                       KeyReleaseMask      |
                       ButtonPressMask     |
                       ButtonReleaseMask   |
+                      FocusChangeMask     |
                       PointerMotionMask;
 
     auto mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
@@ -120,6 +121,13 @@ mgx::X11Window::X11Window(::Display *x_dpy, EGLDisplay egl_dpy, int width, int h
     XFree(visInfo);
 
     XMapWindow(x_dpy, win);
+
+    XEvent xev;
+    do 
+    {
+        XNextEvent(x_dpy, &xev);
+    }
+    while (xev.type != Expose);
 }
 
 mgx::X11Window::~X11Window()
@@ -176,7 +184,7 @@ mgx::X11EGLSurface::operator EGLSurface() const
     return egl_surf;
 }
 
-mgx::Display::Display(::Display *dpy)
+mgx::Display::Display(::Display* dpy)
     : x_dpy{dpy},
       egl_display{X11EGLDisplay(dpy)},
       display_width{1280},

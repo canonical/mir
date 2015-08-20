@@ -47,10 +47,41 @@ struct X11DispatchableTest : ::testing::Test
 TEST_F(X11DispatchableTest, dispatches_input_events_to_sink)
 {
     ON_CALL(mock_x11, XNextEvent(_,_))
-    .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.event_return),
-                   Return(1)));
+        .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.keypress_event_return),
+                       Return(1)));
 
-    EXPECT_CALL(mock_input_sink, handle_input(_));
+    EXPECT_CALL(mock_input_sink, handle_input(_))
+        .Times(Exactly(1));
+
+    x11_dispatchable.set_input_sink(&mock_input_sink);
+    x11_dispatchable.dispatch(mir::dispatch::FdEvent::readable);
+}
+
+TEST_F(X11DispatchableTest, grabs_keyboard)
+{
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.focus_in_event_return),
+                       Return(1)));
+
+    EXPECT_CALL(mock_x11, XGrabKeyboard(_,_,_,_,_,_))
+        .Times(Exactly(1));
+    EXPECT_CALL(mock_input_sink, handle_input(_))
+        .Times(Exactly(0));
+
+    x11_dispatchable.set_input_sink(&mock_input_sink);
+    x11_dispatchable.dispatch(mir::dispatch::FdEvent::readable);
+}
+
+TEST_F(X11DispatchableTest, ungrabs_keyboard)
+{
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.focus_out_event_return),
+                       Return(1)));
+
+    EXPECT_CALL(mock_x11, XUngrabKeyboard(_,_))
+        .Times(Exactly(1));
+    EXPECT_CALL(mock_input_sink, handle_input(_))
+        .Times(Exactly(0));
 
     x11_dispatchable.set_input_sink(&mock_input_sink);
     x11_dispatchable.dispatch(mir::dispatch::FdEvent::readable);
