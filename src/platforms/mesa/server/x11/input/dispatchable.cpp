@@ -272,6 +272,10 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                 XRefreshKeyboardMapping((XMappingEvent*)&xev);
                 break;
 
+            case ConfigureNotify:
+                mir::log_info("ConfigureNotify");
+                break;
+
             default:
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                 mir::log_info("Uninteresting event : %08X", xev.type);

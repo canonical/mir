@@ -113,15 +113,43 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, int width, int h
 
     depth = visInfo->depth;
 
+    mir::log_info("Pixel depth = %d", depth);
+
     auto mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
 
     win = XCreateWindow(x_dpy, root, 0, 0, width, height,
                         0, depth, InputOutput,
                         visInfo->visual, mask, &attr);
 
-    mir::log_info("Pixel depth = %d", depth);
-
     XFree(visInfo);
+
+    {
+        char const * const title = "Mir On X";
+        XSizeHints sizehints;
+
+        sizehints.base_width = width;
+        sizehints.base_height = height;
+        sizehints.min_width = width>>2;
+        sizehints.min_height = height>>2;
+        sizehints.flags = PSize | PMinSize;
+
+        XSetNormalHints(x_dpy, win, &sizehints);
+        XSetStandardProperties(x_dpy, win, title, title, None, (char **)NULL, 0, &sizehints);
+
+        XWMHints wm_hints = {
+            (InputHint|StateHint), // fields in this structure that are defined
+            True,                  // does this application rely on the window manager
+                                   //     to get keyboard input?
+            NormalState,           // initial_state
+            0,                     // icon_pixmap
+            0,                     // icon_window
+            0, 0,                  // initial position of icon
+            0,                     // pixmap to be used as mask for icon_pixmap
+            0                      // id of related window_group
+        };
+
+        XSetWMHints(x_dpy, win, &wm_hints);
+    }
 
     XMapWindow(x_dpy, win);
 
@@ -213,28 +241,6 @@ mgx::Display::Display(::Display* dpy)
     else
         BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported pixel format"));
 
-    // Make window nonresizeable
-    // TODO: Make sizing possible
-    {
-        char const * const title = "Mir On X";
-        XSizeHints sizehints;
-
-        sizehints.x = 0;
-        sizehints.y = 0;
-        sizehints.base_width = display_width;
-        sizehints.base_height = display_height;
-        sizehints.min_width  = display_width;
-        sizehints.min_height = display_height;
-        sizehints.min_width  = 0;
-        sizehints.min_height = 0;
-        sizehints.max_width = display_width;
-        sizehints.max_height = display_height;
-        sizehints.flags = USSize | USPosition | PMinSize | PMaxSize;
-
-        XSetNormalHints(x_dpy, win, &sizehints);
-        XSetStandardProperties(x_dpy, win, title, title, None, (char **)NULL, 0, &sizehints);
-    }
-    
     display_group = std::make_unique<mgx::DisplayGroup>(
         std::make_unique<mgx::DisplayBuffer>(geom::Size{display_width, display_height},
                                              egl_display,
