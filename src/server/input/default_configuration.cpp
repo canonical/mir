@@ -18,8 +18,6 @@
 
 #include "mir/default_server_configuration.h"
 
-#include "mir/events/event_private.h"
-#include "android/android_input_reader_policy.h"
 #include "android/android_input_reader_policy.h"
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
@@ -57,8 +55,6 @@
 #include "mir_toolkit/cursors.h"
 
 #include <EventHub.h>
-#include <InputReader.h>
-
 
 namespace mi = mir::input;
 namespace mia = mi::android;

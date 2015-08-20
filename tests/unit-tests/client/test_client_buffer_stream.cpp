@@ -87,7 +87,6 @@ struct MockProtobufServer : public mclr::DisplayServer
     unsigned int alloc_count{0};
 };
 
-// TODO: Deduplicate this class
 struct StubClientPlatform : public mcl::ClientPlatform
 {
     StubClientPlatform(

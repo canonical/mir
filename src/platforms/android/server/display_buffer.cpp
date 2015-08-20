@@ -80,7 +80,9 @@ void mga::DisplayBuffer::release_current()
 
 bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderlist)
 {
-    if (!overlay_enabled || !display_device->compatible_renderlist(renderlist))
+    if (!overlay_enabled ||
+        !display_device->compatible_renderlist(renderlist) ||
+        orientation_ != mir_orientation_normal)
         return false;
 
     layer_list->update_list(renderlist, offset_from_origin);
