@@ -34,7 +34,7 @@ struct InputDeviceInfo
     int32_t id;
     std::string name;
     std::string unique_id;
-    mir::input::DeviceCapabilities capabilities;
+    DeviceCapabilities capabilities;
 };
 
 }
