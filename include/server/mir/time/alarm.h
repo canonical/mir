@@ -29,6 +29,7 @@ namespace time
 /**
  * A one-shot, resettable handle to trigger a callback at a later time
  * \note All members of Alarm are threadsafe
+ * \note All members of Alarm are safe to call from the Alarm's callback
  */
 class Alarm
 {
