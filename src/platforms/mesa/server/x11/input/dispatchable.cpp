@@ -72,14 +72,14 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
             {
             case FocusIn:
             {
-                XFocusInEvent &xfiev = (XFocusInEvent &)xev;
+                auto const& xfiev = (XFocusInEvent&)xev;
                 XGrabKeyboard(xfiev.display, xfiev.window, True, GrabModeAsync, GrabModeAsync, CurrentTime);
                 break;
             }
 
             case FocusOut:
             {
-                XFocusOutEvent &xfoev = (XFocusOutEvent &)xev;
+                auto const& xfoev = (XFocusOutEvent&)xev;
                 XUngrabKeyboard(xfoev.display, CurrentTime);
                 break;
             }
@@ -87,7 +87,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
             case KeyPress:
             case KeyRelease:
             {
-                XKeyEvent &xkev = (XKeyEvent &)xev;
+                auto& xkev = (XKeyEvent&)xev;
                 static const int STRMAX = 32;
                 char str[STRMAX];
                 KeySym keysym;
@@ -144,7 +144,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
             case ButtonPress:
             case ButtonRelease:
             {
-                XButtonEvent &xbev = (XButtonEvent &)xev;
+                auto const& xbev = (XButtonEvent&)xev;
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                 mir::log_info("X11 button event :"
@@ -207,7 +207,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
 
             case MotionNotify:
             {
-                XMotionEvent &xmev = (XMotionEvent &)xev;
+                auto const& xmev = (XMotionEvent&)xev;
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                 mir::log_info("X11 motion event :"
