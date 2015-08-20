@@ -319,7 +319,6 @@ TEST_F(StartedBufferVault, frees_incoming_buffers_of_incorrect_size_with_immedia
 {
     mp::Buffer package4;
     geom::Size new_size{80, 100}; 
-    InSequence seq;
     EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
     EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_))
         .WillOnce(Invoke(
@@ -344,7 +343,6 @@ TEST_F(StartedBufferVault, frees_incoming_buffers_of_incorrect_size_with_delayed
     package4.set_height(new_size.height.as_int());
     package4.set_buffer_id(4);
 
-    InSequence seq;
     EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
     EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_));
 
