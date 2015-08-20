@@ -138,7 +138,7 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, int width, int h
 
         XWMHints wm_hints = {
             (InputHint|StateHint), // fields in this structure that are defined
-            True,                  // does this application rely on the window manager
+            False,                 // does this application rely on the window manager
                                    //     to get keyboard input?
             NormalState,           // initial_state
             0,                     // icon_pixmap
