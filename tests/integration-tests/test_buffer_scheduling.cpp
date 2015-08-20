@@ -714,6 +714,60 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
     }
 }
 
+TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
+{   // Regression test for LP: #1480164
+    mtd::MockFrameDroppingPolicyFactory policy_factory;
+    mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory),
+                          properties, policy_factory};
+    queue.allow_framedropping(false);
+
+    mg::Buffer* client_buffer = nullptr;
+    auto callback = [&](mg::Buffer* buffer)
+    {
+        client_buffer = buffer;
+    };
+
+    auto client_try_acquire = [&]() -> bool
+    {
+        queue.client_acquire(callback);
+        return client_buffer != nullptr;
+    };
+
+    auto client_release = [&]()
+    {
+        EXPECT_TRUE(client_buffer);
+        queue.client_release(client_buffer);
+        client_buffer = nullptr;
+    };
+
+    // Skip over the first frame. The early release optimization is too
+    // conservative to allow it to happen right at the start (so as to
+    // maintain correct multimonitor frame rates if required).
+    ASSERT_TRUE(client_try_acquire());
+    client_release();
+    queue.compositor_release(queue.compositor_acquire(this));
+
+    auto onscreen = queue.compositor_acquire(this);
+
+    bool blocking;
+    do
+    {
+        blocking = !client_try_acquire();
+        if (!blocking)
+            client_release();
+    } while (!blocking);
+
+    for (int f = 0; f < 100; ++f)
+    {
+        ASSERT_FALSE(client_buffer);
+        queue.compositor_release(onscreen);
+        ASSERT_TRUE(client_buffer) << "frame# " << f;
+        client_release();
+        onscreen = queue.compositor_acquire(this);
+        client_try_acquire();
+    }
+}
+
 TEST_P(WithAnyNumberOfBuffers, compositor_inflates_ready_count_for_slow_clients)
 {
     queue.set_scaling_delay(3);
