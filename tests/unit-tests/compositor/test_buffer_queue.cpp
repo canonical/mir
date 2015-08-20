@@ -1330,7 +1330,8 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_count_tapers_off)
 {  // Another test related to QtMir's style of doing things (LP: #1476201)
     mc::BufferQueue q{nbuffers, allocator, basic_properties, policy_factory};
 
-    ASSERT_TRUE(q.scaling_delay() > 0);
+    q.set_scaling_delay(3);
+
     ASSERT_THAT(q.buffers_ready_for_compositor(this), Eq(0));
 
     // Produce one frame
@@ -1375,7 +1376,8 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
         // Extra consume to account for the additional frames that
         // buffers_ready_for_compositor adds to do dynamic performance
         // detection.
-        for (int flush = 0; flush < q.scaling_delay(); ++flush)
+        int const nflush = (q.scaling_delay() > 0) ? q.scaling_delay() : 1;
+        for (int flush = 0; flush < nflush; ++flush)
             q.compositor_release(q.compositor_acquire(&monitor[m]));
 
         ASSERT_EQ(0, q.buffers_ready_for_compositor(&monitor[m]));
@@ -1655,7 +1657,8 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance2)
 
     std::unordered_set<mg::Buffer *> buffers_acquired;
 
-    int const delay = q.scaling_delay();
+    int const delay = 3;
+    q.set_scaling_delay(delay);
 
     for (int frame = 0; frame < delay*3; frame++)
     {
