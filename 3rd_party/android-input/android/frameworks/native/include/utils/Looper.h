@@ -21,7 +21,6 @@
 
 #include <std/Mutex.h>
 #include <std/Condition.h>
-#include <std/Thread.h>
 #include <std/RefBase.h>
 #include <std/KeyedVector.h>
 #include <std/Timers.h>

@@ -16,9 +16,8 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir/events/event_private.h"
-
 #include "input_sender.h"
+
 #include "input_send_entry.h"
 
 #include "mir/input/android/event_conversion_helpers.h"
@@ -28,11 +27,6 @@
 #include "mir/scene/surface.h"
 #include "mir/compositor/scene.h"
 #include "mir/main_loop.h"
-
-#include "androidfw/Input.h"
-#include "androidfw/InputTransport.h"
-#include "std/Errors.h"
-#include "std/String8.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>

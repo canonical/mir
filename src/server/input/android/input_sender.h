@@ -21,6 +21,8 @@
 
 #include "mir/input/input_sender.h"
 #include "mir/scene/null_observer.h"
+#include "mir_toolkit/event.h"
+#include "mir/events/event_private.h"
 
 #include "androidfw/InputTransport.h"
 

@@ -72,14 +72,14 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
             {
             case FocusIn:
             {
-                XFocusInEvent &xfiev = (XFocusInEvent &)xev;
-                XGrabKeyboard(xfiev.display, xfiev.window, true, GrabModeAsync, GrabModeAsync, CurrentTime);
+                auto const& xfiev = (XFocusInEvent&)xev;
+                XGrabKeyboard(xfiev.display, xfiev.window, True, GrabModeAsync, GrabModeAsync, CurrentTime);
                 break;
             }
 
             case FocusOut:
             {
-                XFocusOutEvent &xfoev = (XFocusOutEvent &)xev;
+                auto const& xfoev = (XFocusOutEvent&)xev;
                 XUngrabKeyboard(xfoev.display, CurrentTime);
                 break;
             }
@@ -87,7 +87,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
             case KeyPress:
             case KeyRelease:
             {
-                XKeyEvent &xkev = (XKeyEvent &)xev;
+                auto& xkev = (XKeyEvent&)xev;
                 static const int STRMAX = 32;
                 char str[STRMAX];
                 KeySym keysym;
@@ -144,7 +144,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
             case ButtonPress:
             case ButtonRelease:
             {
-                XButtonEvent &xbev = (XButtonEvent &)xev;
+                auto const& xbev = (XButtonEvent&)xev;
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                 mir::log_info("X11 button event :"
@@ -170,10 +170,22 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
                         std::chrono::milliseconds{xbev.time});
 
+                MirPointerButtons buttons_pressed = 0;
+                if (xbev.state & Button1Mask)
+                    buttons_pressed |= mir_pointer_button_primary;
+                if (xbev.state & Button2Mask) // tertiary (middle) button is Button2 in X
+                    buttons_pressed |= mir_pointer_button_tertiary;
+                if (xbev.state & Button3Mask)
+                    buttons_pressed |= mir_pointer_button_secondary;
+                if (xbev.state & Button4Mask)
+                    buttons_pressed |= mir_pointer_button_back;
+                if (xbev.state & Button5Mask)
+                    buttons_pressed |= mir_pointer_button_forward;
+
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                 mir::log_info("Mir button event : x=%d, y=%d, "
                     "buttons_pressed=%0X, modifiers=%0X, event_time=%" PRId64,
-                    xbev.x, xbev.y, 1 << (xbev.button-1), modifiers, event_time);
+                    xbev.x, xbev.y, buttons_pressed, modifiers, event_time);
 #endif
                 sink->handle_input(
                     *mev::make_event(
@@ -183,7 +195,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                         xbev.type == ButtonPress ?
                             mir_pointer_action_button_down :
                             mir_pointer_action_button_up,
-                        1 << (xbev.button-1),
+                        buttons_pressed,
                         xbev.x,
                         xbev.y,
                         0,
@@ -195,7 +207,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
 
             case MotionNotify:
             {
-                XMotionEvent &xmev = (XMotionEvent &)xev;
+                auto const& xmev = (XMotionEvent&)xev;
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                 mir::log_info("X11 motion event :"
@@ -223,10 +235,10 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                 MirPointerButtons buttons_pressed = 0;
                 if (xmev.state & Button1Mask)
                     buttons_pressed |= mir_pointer_button_primary;
-                if (xmev.state & Button2Mask)
-                    buttons_pressed |= mir_pointer_button_secondary;
-                if (xmev.state & Button3Mask)
+                if (xmev.state & Button2Mask) // tertiary (middle) button is Button2 in X
                     buttons_pressed |= mir_pointer_button_tertiary;
+                if (xmev.state & Button3Mask)
+                    buttons_pressed |= mir_pointer_button_secondary;
                 if (xmev.state & Button4Mask)
                     buttons_pressed |= mir_pointer_button_back;
                 if (xmev.state & Button5Mask)

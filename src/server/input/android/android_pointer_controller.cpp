@@ -23,8 +23,6 @@
 
 #include "android_pointer_controller.h"
 
-#include <algorithm>
-
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace geom = mir::geometry;

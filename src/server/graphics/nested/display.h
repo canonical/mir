@@ -151,7 +151,6 @@ private:
 
     std::mutex outputs_mutex;
     std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::DisplaySyncGroup>> outputs;
-    DisplayConfigurationChangeHandler my_conf_change_handler;
     void create_surfaces(mir::graphics::DisplayConfiguration const& configuration);
     void apply_to_connection(mir::graphics::DisplayConfiguration const& configuration);
     void complete_display_initialization(MirPixelFormat format);

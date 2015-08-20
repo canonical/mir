@@ -39,6 +39,8 @@ public:
         if (auto conn = connection.lock())
             return conn;
 
+        XInitThreads();
+
         XSetErrorHandler(mir_x11_error_handler);
 
         std::shared_ptr<::Display> new_conn{
