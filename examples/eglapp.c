@@ -209,6 +209,9 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
             if (arg[0] == '-')
             {
+                if (arg[1] == '-' && arg[2] == '\0')
+                    break;
+
                 switch (arg[1])
                 {
                 case 'b':
@@ -330,6 +333,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                        "  -s WIDTHxHEIGHT  Force surface size\n"
                        "  -c name          Request cursor image by name\n"
                        "  -q               Quiet mode (no messages output)\n"
+                       "  --               Ignore all arguments that follow\n"
                        , argv[0]);
                 return 0;
             }
@@ -351,7 +355,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
         EGL_RED_SIZE, rgb_bits,
         EGL_GREEN_SIZE, rgb_bits,
         EGL_BLUE_SIZE, rgb_bits,

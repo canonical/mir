@@ -38,7 +38,7 @@ public:
         std::shared_ptr<frontend::EventSink> const& sink,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
-    void add_buffer(graphics::BufferProperties const& properties) override;
+    graphics::BufferID add_buffer(graphics::BufferProperties const& properties) override;
     void remove_buffer(graphics::BufferID id) override;
     void send_buffer(graphics::BufferID id) override;
     std::shared_ptr<graphics::Buffer>& operator[](graphics::BufferID) override;
