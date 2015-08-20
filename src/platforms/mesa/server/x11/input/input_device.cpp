@@ -47,9 +47,5 @@ void mix::XInputDevice::stop()
 
 mi::InputDeviceInfo mix::XInputDevice::get_device_info()
 {
-    return mi::InputDeviceInfo{0,
-                               "x11-device",
-                               "x11-dev-1",
-                               mi::DeviceCapability::keyboard |
-                               mi::DeviceCapability::pointer};
+    return mi::InputDeviceInfo{0,"x11-keyboard-device","x11-key-dev-1", mi::DeviceCapability::keyboard};
 }
