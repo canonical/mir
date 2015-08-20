@@ -76,7 +76,6 @@ struct MockProtobufServer : public mclr::DisplayServer
                       google::protobuf::Closure* /*done*/));
 };
 
-// TODO: Deduplicate this class
 struct StubClientPlatform : public mcl::ClientPlatform
 {
     StubClientPlatform(

@@ -16,8 +16,6 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#define MIR_INCLUDE_DEPRECATED_EVENT_HEADER
-
 #include "default_input_device_hub.h"
 
 #include "mir/input/input_dispatcher.h"
@@ -150,7 +148,6 @@ int32_t mi::DefaultInputDeviceHub::RegisteredDevice::id()
 void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(MirEvent& event)
 {
     // we attach the device id here, since this instance the first being able to maintains the uniqueness of the ids..
-    // TODO avoid the MIR_INCLUDE_DEPRECATED_EVENT_HEADER in some way
     if (event.type == mir_event_type_key)
     {
         event.key.device_id = device_id;
