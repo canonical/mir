@@ -23,7 +23,7 @@
 #ifdef MESA_KMS
 #include "src/platforms/mesa/server/kms/platform.h"
 #elif MESA_X11
-#include "src/platforms/mesa/server/x11/platform.h"
+#include "src/platforms/mesa/server/x11/graphics/platform.h"
 #endif
 
 #include "src/server/report/null_report_factory.h"

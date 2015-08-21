@@ -17,7 +17,7 @@
  */
 
 #include "mir/options/program_option.h"
-#include "src/platforms/mesa/server/x11/platform.h"
+#include "src/platforms/mesa/server/x11/graphics/platform.h"
 
 #include "mir/test/doubles/platform_factory.h"
 #include "mir/test/doubles/mock_drm.h"

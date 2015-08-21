@@ -67,7 +67,9 @@ set(
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
 list(APPEND UNIT_TEST_SOURCES
-  $<TARGET_OBJECTS:mirplatformservermesax11objects>
+  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/x11/X11_resources.cpp
+  $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
+  $<TARGET_OBJECTS:mirplatforminputmesax11objects>
 )
 endif()
 
