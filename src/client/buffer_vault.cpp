@@ -53,27 +53,40 @@ mcl::BufferVault::~BufferVault()
         server_requests->free_buffer(it.first);
 }
 
-std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
+mcl::NoTLSFuture<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
+try
 {
     std::lock_guard<std::mutex> lk(mutex);
-    std::promise<std::shared_ptr<mcl::ClientBuffer>> promise;
+    mcl::NoTLSPromise<std::shared_ptr<mcl::ClientBuffer>> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [](std::pair<int, BufferEntry> const& entry) { return entry.second.owner == Owner::Self; });
 
     auto future = promise.get_future();
     if (it != buffers.end())
     {
+        printf("NOPROM\n");
         it->second.owner = Owner::ContentProducer;
         promise.set_value(it->second.buffer);
     }
     else
     {
+        printf("PROMISE.\n");
         //TODO: We'll eventually overallocate a limited number of buffers here instead of promising.
         promises.emplace_back(std::move(promise));
     }
+    printf("GOT THERE\n");
     return future;
 }
-
+catch (std::exception& e)
+{
+    printf("e.what() %s\n", e.what());
+    throw e;
+}
+catch (...)
+{
+    printf("huh?\n");
+    return mcl::NoTLSPromise<std::shared_ptr<mcl::ClientBuffer>>().get_future();
+}
 void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 {
     std::lock_guard<std::mutex> lk(mutex);
@@ -128,8 +141,10 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 
     if (!promises.empty())
     {
+        printf("POPIT\n");
         buffers[protobuf_buffer.buffer_id()].owner = Owner::ContentProducer;
         promises.front().set_value(buffers[protobuf_buffer.buffer_id()].buffer);
         promises.pop_front();
     }
+    printf("INBOUND.\n");
 }
