@@ -136,6 +136,8 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
     
     mtf::UsingStubClientPlatform using_stub_client_platform;
 };
+
+auto const* const protocol_version_override = "MIR_CLIENT_TEST_OVERRRIDE_PROTOCOL_VERSION";
 }
 
 using namespace testing;
@@ -162,6 +164,49 @@ TEST_F(ClientLibrary, synchronous_connection)
     EXPECT_THAT(mir_connection_get_error_message(connection), StrEq(""));
 
     mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, connects_when_protobuf_protocol_oldest_supported)
+{
+    std::ostringstream buffer;
+    buffer << ((MIR_CLIENT_MAJOR_VERSION) << 10);
+
+    std::cerr << "DEBUG: " << buffer.str() << std::endl;
+    add_to_environment(protocol_version_override, buffer.str().c_str());
+
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    EXPECT_THAT(connection, NotNull());
+    EXPECT_TRUE(mir_connection_is_valid(connection));
+    EXPECT_THAT(mir_connection_get_error_message(connection), StrEq(""));
+
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_obsolete)
+{
+    std::ostringstream buffer;
+    buffer << ((MIR_CLIENT_MAJOR_VERSION-1) << 10);
+    add_to_environment(protocol_version_override, buffer.str().c_str());
+
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    EXPECT_THAT(connection, NotNull());
+    EXPECT_FALSE(mir_connection_is_valid(connection));
+    EXPECT_THAT(mir_connection_get_error_message(connection), Not(StrEq("")));
+}
+
+TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_too_new)
+{
+    std::ostringstream buffer;
+    buffer << ((MIR_CLIENT_MAJOR_VERSION) << 10) + MIR_CLIENT_MINOR_VERSION+1;
+    add_to_environment(protocol_version_override, buffer.str().c_str());
+
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    EXPECT_THAT(connection, NotNull());
+    EXPECT_FALSE(mir_connection_is_valid(connection));
+    EXPECT_THAT(mir_connection_get_error_message(connection), Not(StrEq("")));
 }
 
 TEST_F(ClientLibrary, creates_surface)
