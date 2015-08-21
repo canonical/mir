@@ -1584,6 +1584,9 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
         handle->wait_for(std::chrono::seconds(1));
         ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
 
+        fprintf(stderr, "FIXME frame[%d]: id %p\n",
+            frame, (void*)handle->buffer());
+
         if (frame > delay)
             buffers_acquired.insert(handle->buffer());
         handle->release_buffer();
