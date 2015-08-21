@@ -127,6 +127,9 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, int width, int h
         char const * const title = "Mir On X";
         XSizeHints sizehints;
 
+        // TODO: Due to a bug, resize doesn't work after XGrabKeyboard under Unity.
+        //       For now, make window unresizeable.
+        //     http://stackoverflow.com/questions/14555703/x11-unable-to-move-window-after-xgrabkeyboard
         sizehints.base_width = width;
         sizehints.base_height = height;
         sizehints.min_width = width;
@@ -140,8 +143,9 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, int width, int h
 
         XWMHints wm_hints = {
             (InputHint|StateHint), // fields in this structure that are defined
-            False,                 // does this application rely on the window manager
-                                   //     to get keyboard input?
+            True,                  // does this application rely on the window manager
+                                   // to get keyboard input? Yes, if this is False,
+                                   // XGrabKeyboard doesn't work reliably.
             NormalState,           // initial_state
             0,                     // icon_pixmap
             0,                     // icon_window
