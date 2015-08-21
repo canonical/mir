@@ -274,7 +274,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     {
     }
 
-    void deposit(mp::Buffer const& buffer, geom::Size, MirPixelFormat)
+    void deposit(mp::Buffer const& buffer, geom::Size, MirPixelFormat) override
     {
         vault.wire_transfer_inbound(buffer);
         current_buffer_id_ = buffer.buffer_id();
