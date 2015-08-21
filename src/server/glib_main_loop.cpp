@@ -38,7 +38,7 @@ public:
         std::shared_ptr<mir::time::Clock> const& clock,
         std::shared_ptr<mir::LockableCallback> const& callback,
         std::function<void()> const& exception_handler)
-        : main_context{main_context},
+        : main_context{g_main_context_ref(main_context)},
           clock{clock},
           state_{State::cancelled},
           exception_handler{exception_handler},
@@ -50,6 +50,7 @@ public:
     ~AlarmImpl() override
     {
         gsource.ensure_no_further_dispatch();
+        g_main_context_unref(main_context);
     }
 
     bool cancel() override
