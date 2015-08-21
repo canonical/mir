@@ -34,7 +34,7 @@
 
 // Due to a bug in Unity when keyboard is grabbed,
 // client cannot be resized. This helps in debugging.
-//#define GRAB_KBD
+#define GRAB_KBD
 
 namespace mi = mir::input;
 namespace mix = mi::X;
@@ -273,9 +273,9 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
             case ConfigureNotify:
             {
                 auto const& xcev = (XConfigureEvent&)xev;
-//#ifdef MIR_ON_X11_INPUT_VERBOSE
-                mir::log_info("Window may have been resized to %dx%d", xcev.width, xcev.height);
-//#endif
+#ifdef MIR_ON_X11_INPUT_VERBOSE
+                mir::log_info("Window size : %dx%d", xcev.width, xcev.height);
+#endif
                 break;
             }
 
