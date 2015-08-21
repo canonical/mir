@@ -272,8 +272,8 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
 
             case ConfigureNotify:
             {
-                auto const& xcev = (XConfigureEvent&)xev;
 #ifdef MIR_ON_X11_INPUT_VERBOSE
+                auto const& xcev = (XConfigureEvent&)xev;
                 mir::log_info("Window size : %dx%d", xcev.width, xcev.height);
 #endif
                 break;
