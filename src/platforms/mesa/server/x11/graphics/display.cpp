@@ -129,9 +129,11 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, int width, int h
 
         sizehints.base_width = width;
         sizehints.base_height = height;
-        sizehints.min_width = width>>2;
-        sizehints.min_height = height>>2;
-        sizehints.flags = PSize | PMinSize;
+        sizehints.min_width = width;
+        sizehints.min_height = height;
+        sizehints.max_width = width;
+        sizehints.max_height = height;
+        sizehints.flags = PSize | PMinSize | PMaxSize;
 
         XSetNormalHints(x_dpy, win, &sizehints);
         XSetStandardProperties(x_dpy, win, title, title, None, (char **)NULL, 0, &sizehints);
