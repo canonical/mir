@@ -16,8 +16,8 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#ifndef MIR_X_LAZY_CONNECTION_H_
-#define MIR_X_LAZY_CONNECTION_H_
+#ifndef MIR_X11_RESOURCES_H_
+#define MIR_X11_RESOURCES_H_
 
 #include <X11/Xlib.h>
 
@@ -31,10 +31,10 @@ namespace X
 
 int mir_x11_error_handler(Display* dpy, XErrorEvent* eev);
 
-class LazyConnection
+class X11Resources
 {
 public:
-    std::shared_ptr<::Display> get()
+    std::shared_ptr<::Display> get_conn()
     {
         if (auto conn = connection.lock())
             return conn;
@@ -60,4 +60,4 @@ private:
 
 }
 }
-#endif /* MIR_X_LAZY_CONNECTION_H_ */
+#endif /* MIR_X11_RESOURCES_H_ */
