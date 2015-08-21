@@ -40,6 +40,7 @@ mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_eve
             auto kev = static_cast<const droidinput::KeyEvent*>(android_event);
             return mev::make_event(MirInputDeviceId(android_event->getDeviceId()),
                                    kev->getEventTime(),
+                                   kev->getMac(),
                                    mia::mir_keyboard_action_from_android(kev->getAction(), kev->getRepeatCount()),
                                    kev->getKeyCode(),
                                    kev->getScanCode(),
@@ -52,6 +53,7 @@ mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_eve
                 auto mev = static_cast<const droidinput::MotionEvent*>(android_event);
                 return mev::make_event(MirInputDeviceId(android_event->getDeviceId()),
                                        mev->getEventTime(),
+                                       mev->getMac(),
                                        mia::mir_modifiers_from_android(mev->getMetaState()),
                                        mia::mir_pointer_action_from_masked_android(mev->getAction() & AMOTION_EVENT_ACTION_MASK),
                                        mia::mir_pointer_buttons_from_android(mev->getButtonState()),
@@ -66,6 +68,7 @@ mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_eve
                 auto mev = static_cast<const droidinput::MotionEvent*>(android_event);
                 auto ev = mev::make_event(MirInputDeviceId(android_event->getDeviceId()),
                                           mev->getEventTime(),
+                                          mev->getMac(),
                                           mia::mir_modifiers_from_android(mev->getMetaState()));
                 auto action = mev->getAction();
                 size_t index_with_action = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;

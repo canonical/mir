@@ -37,7 +37,7 @@ namespace X
 class X11EGLDisplay
 {
 public:
-    X11EGLDisplay(::Display *x_dpy);
+    X11EGLDisplay(::Display* x_dpy);
     ~X11EGLDisplay();
 
     operator EGLDisplay() const;
@@ -90,7 +90,7 @@ private:
 class Display : public graphics::Display
 {
 public:
-    explicit Display(::Display *dpy);
+    explicit Display(::Display* dpy);
     ~Display() noexcept;
 
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
@@ -114,7 +114,7 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
-    ::Display *x_dpy;
+    ::Display* x_dpy;
     X11EGLDisplay const egl_display;
     int const display_width;
     int const display_height;
@@ -123,6 +123,7 @@ private:
     X11EGLSurface egl_surface;
     MirPixelFormat pf;
     std::unique_ptr<DisplayGroup> display_group;
+    MirOrientation orientation; //TODO: keep entire current display configuration
 };
 
 }

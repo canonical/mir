@@ -54,6 +54,7 @@ struct NotifyConfigurationChangedArgs : public NotifyArgs {
 /* Describes a key event. */
 struct NotifyKeyArgs : public NotifyArgs {
     std::chrono::nanoseconds eventTime;
+    uint64_t mac;
     int32_t deviceId;
     uint32_t source;
     uint32_t policyFlags;
@@ -66,9 +67,9 @@ struct NotifyKeyArgs : public NotifyArgs {
 
     inline NotifyKeyArgs() { }
 
-    NotifyKeyArgs(std::chrono::nanoseconds eventTime, int32_t deviceId, uint32_t source, uint32_t policyFlags,
-            int32_t action, int32_t flags, int32_t keyCode, int32_t scanCode,
-            int32_t metaState, std::chrono::nanoseconds downTime);
+    NotifyKeyArgs(std::chrono::nanoseconds eventTime, uint64_t mac, int32_t deviceId, uint32_t source,
+            uint32_t policyFlags, int32_t action, int32_t flags, int32_t keyCode,
+            int32_t scanCode, int32_t metaState, std::chrono::nanoseconds downTime);
 
     NotifyKeyArgs(const NotifyKeyArgs& other);
 
@@ -81,6 +82,7 @@ struct NotifyKeyArgs : public NotifyArgs {
 /* Describes a motion event. */
 struct NotifyMotionArgs : public NotifyArgs {
     std::chrono::nanoseconds eventTime;
+    uint64_t mac;
     int32_t deviceId;
     uint32_t source;
     uint32_t policyFlags;
@@ -98,9 +100,9 @@ struct NotifyMotionArgs : public NotifyArgs {
 
     inline NotifyMotionArgs() { }
 
-    NotifyMotionArgs(std::chrono::nanoseconds eventTime, int32_t deviceId, uint32_t source, uint32_t policyFlags,
-            int32_t action, int32_t flags, int32_t metaState, int32_t buttonState,
-            int32_t edgeFlags, uint32_t pointerCount,
+    NotifyMotionArgs(std::chrono::nanoseconds eventTime, uint64_t mac, int32_t deviceId, uint32_t source,
+            uint32_t policyFlags, int32_t action, int32_t flags, int32_t metaState,
+            int32_t buttonState, int32_t edgeFlags, uint32_t pointerCount,
             const PointerProperties* pointerProperties, const PointerCoords* pointerCoords,
             float xPrecision, float yPrecision, std::chrono::nanoseconds downTime);
 
