@@ -145,7 +145,6 @@ mc::BufferQueue::BufferQueue(
       the_properties{props},
       force_new_compositor_buffer{false},
       callbacks_allowed{true},
-      single_compositor{false},  // When true we can optimize performance
       gralloc{gralloc}
 {
     if (nbuffers < 1)
@@ -294,8 +293,6 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         if (scheduled_ghost_frames > 0)
             --scheduled_ghost_frames;
 
-        single_compositor = current_compositor_buffer_valid &&
-                            current_buffer_users.size() <= 1;  // might be zero
         if (ready_to_composite_queue.empty())
             frame_deadlines_met = 0;
         else if (frame_deadlines_met < frame_deadlines_threshold)
@@ -378,20 +375,6 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
 
     if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
-    else if (!ready_to_composite_queue.empty() &&
-             buffers_owned_by_client.empty() &&
-             !client_ahead_of_compositor() &&
-             single_compositor)
-    {
-        /*
-         * The "early release" optimization:
-         * This is fundamentally incompatible with multi-monitor frame sync
-         * so we need to be sure there's only one compositor.
-         */
-        current_compositor_buffer = pop(ready_to_composite_queue);
-        current_buffer_users.clear();
-        release(buffer.get(), std::move(lock));
-    }
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferQueue::snapshot_acquire()
