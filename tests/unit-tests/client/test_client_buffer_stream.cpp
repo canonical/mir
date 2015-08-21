@@ -298,13 +298,16 @@ TEST_P(ClientBufferStream, producer_streams_call_submit_buffer_on_next_buffer)
 
 TEST_P(ClientBufferStream, consumer_streams_call_screencast_buffer_on_next_buffer)
 {
+    using namespace testing;
     EXPECT_CALL(mock_protobuf_server, screencast_buffer(_,_,_))
         .WillOnce(RunProtobufClosure());
     mcl::BufferStream bs(
         nullptr, mock_protobuf_server, mcl::BufferStreamMode::Consumer,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
         response, perf_report, "", size);
-    bs.next_buffer([]{});
+    auto wh = bs.next_buffer([]{});
+    ASSERT_THAT(wh, NotNull());
+    EXPECT_FALSE(wh->is_pending());
 }
 
 TEST_P(ClientBufferStream, invokes_callback_on_next_buffer)
