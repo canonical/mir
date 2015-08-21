@@ -165,7 +165,7 @@ char const * MirConnection::get_error_message()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    if (connect_result && connect_result->has_error())
+    if (error_message.empty() && connect_result)
     {
         return connect_result->error().c_str();
     }

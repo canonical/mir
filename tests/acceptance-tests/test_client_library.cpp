@@ -193,7 +193,7 @@ TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_obsolete)
 
     EXPECT_THAT(connection, NotNull());
     EXPECT_FALSE(mir_connection_is_valid(connection));
-    EXPECT_THAT(mir_connection_get_error_message(connection), Not(StrEq("")));
+    EXPECT_THAT(mir_connection_get_error_message(connection), StrEq("Connect failed"));
 }
 
 TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_too_new)
@@ -206,7 +206,7 @@ TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_too_new)
 
     EXPECT_THAT(connection, NotNull());
     EXPECT_FALSE(mir_connection_is_valid(connection));
-    EXPECT_THAT(mir_connection_get_error_message(connection), Not(StrEq("")));
+    EXPECT_THAT(mir_connection_get_error_message(connection), StrEq("Connect failed"));
 }
 
 TEST_F(ClientLibrary, creates_surface)
