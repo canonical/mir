@@ -14,13 +14,10 @@ include_directories(
 )
 
 add_library(
-  mirplatformgraphicsmesax11objects OBJECT
+  mirplatforminputmesax11objects OBJECT
 
-  graphics.cpp
-  platform.cpp
-  display.cpp
-  display_configuration.cpp
-  gl_context.cpp
-  display_group.cpp
-  display_buffer.cpp
+  input.cpp
+  input_platform.cpp
+  input_device.cpp
+  dispatchable.cpp
 )

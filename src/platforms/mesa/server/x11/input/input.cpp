@@ -17,7 +17,7 @@
  */
 
 #include "input_platform.h"
-#include "../graphics/X11_resources.h"
+#include "../X11_resources.h"
 #include "mir/module_properties.h"
 
 namespace mo = mir::options;

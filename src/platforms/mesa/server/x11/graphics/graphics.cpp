@@ -17,7 +17,7 @@
  */
 
 #include "platform.h"
-#include "X11_resources.h"
+#include "../X11_resources.h"
 #include <boost/throw_exception.hpp>
 
 namespace mo = mir::options;
