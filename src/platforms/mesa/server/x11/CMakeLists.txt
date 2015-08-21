@@ -23,6 +23,7 @@ add_library(
   gl_context.cpp
   display_group.cpp
   display_buffer.cpp
+  X11_resources.cpp
   input/input.cpp
   input/input_platform.cpp
   input/input_device.cpp
