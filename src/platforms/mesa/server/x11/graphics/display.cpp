@@ -226,12 +226,11 @@ mgx::X11EGLSurface::operator EGLSurface() const
     return egl_surf;
 }
 
-mgx::Display::Display(::Display* dpy)
-    : x_dpy{dpy},
-      egl_display{X11EGLDisplay(dpy)},
+mgx::Display::Display(::Display* x_dpy)
+    : egl_display{X11EGLDisplay(x_dpy)},
       display_width{1280},
       display_height{1024},
-      win{X11Window(dpy,
+      win{X11Window(x_dpy,
                     egl_display,
                     display_width,
                     display_height)},

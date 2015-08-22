@@ -92,7 +92,7 @@ private:
 class Display : public graphics::Display
 {
 public:
-    explicit Display(::Display* dpy);
+    explicit Display(::Display* x_dpy);
     ~Display() noexcept;
 
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
@@ -116,7 +116,6 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
-    ::Display* x_dpy;
     X11EGLDisplay const egl_display;
     int const display_width;
     int const display_height;
