@@ -171,7 +171,6 @@ TEST_F(ClientLibrary, connects_when_protobuf_protocol_oldest_supported)
     std::ostringstream buffer;
     buffer << ((MIR_CLIENT_MAJOR_VERSION) << 10);
 
-    std::cerr << "DEBUG: " << buffer.str() << std::endl;
     add_to_environment(protocol_version_override, buffer.str().c_str());
 
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
