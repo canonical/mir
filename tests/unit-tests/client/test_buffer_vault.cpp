@@ -145,7 +145,6 @@ TEST_F(BufferVault, creates_buffer_on_first_insertion)
 
 TEST_F(BufferVault, updates_buffer_on_subsequent_insertions)
 {
-    try{
     auto mock_buffer = std::make_shared<NiceMock<MockBuffer>>();
     EXPECT_CALL(*mock_buffer, update_from(_));
     ON_CALL(mock_factory, create_buffer(_,_,_))
@@ -158,8 +157,6 @@ TEST_F(BufferVault, updates_buffer_on_subsequent_insertions)
     vault.deposit(b);
     vault.wire_transfer_outbound(b);
     vault.wire_transfer_inbound(package);
-    } catch (std::exception& e) { printf("EWHAT %s\n", e.what()); }
-    catch (...) { printf("UNKWON\n"); }
 }
 
 TEST_F(BufferVault, withdrawing_and_never_filling_up_will_timeout)
@@ -170,7 +167,7 @@ TEST_F(BufferVault, withdrawing_and_never_filling_up_will_timeout)
         size, format, usage, initial_nbuffers);
     auto buffer_future = vault.withdraw();
     ASSERT_TRUE(buffer_future.valid());
-//    EXPECT_THAT(buffer_future.wait_for(20ms), Eq(std::future_status::timeout));
+    EXPECT_THAT(buffer_future.wait_for(20ms), Eq(std::future_status::timeout));
 }
 
 TEST_F(StartedBufferVault, withdrawing_gives_a_valid_future)
@@ -263,7 +260,7 @@ TEST_F(BufferVault, destruction_signals_futures)
             size, format, usage, initial_nbuffers);
         fbuffer = vault.withdraw();
     }
-//    EXPECT_THAT(fbuffer.wait_for(5s), Ne(std::future_status::timeout));
+    EXPECT_THAT(fbuffer.wait_for(5s), Ne(std::future_status::timeout));
 }
 
 TEST_F(BufferVault, ages_buffer_on_deposit)
