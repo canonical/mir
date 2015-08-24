@@ -1524,7 +1524,7 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     int const delay = 3;
     q.set_scaling_delay(delay);
 
-    for (int frame = 0; frame < 10; frame++)
+    for (int frame = 0; frame < 10;)
     {
         std::shared_ptr<AcquireWaitHandle> client;
         do
@@ -1540,7 +1540,10 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
         } while (!client);
 
         while (q.buffers_ready_for_compositor(nullptr))
+        {
             q.compositor_release(q.compositor_acquire(nullptr));
+            ++frame;
+        }
 
         if (client->has_acquired_buffer())
         {
@@ -1555,7 +1558,7 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
 
     // Now check what happens if the client becomes slow...
     buffers_acquired.clear();
-    for (int frame = 0; frame < 10; frame++)
+    for (int frame = 0; frame < 10;)
     {
         std::shared_ptr<AcquireWaitHandle> client;
         do
@@ -1571,7 +1574,10 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
         } while (!client);
 
         while (q.buffers_ready_for_compositor(nullptr))
+        {
             q.compositor_release(q.compositor_acquire(nullptr));
+            ++frame;
+        }
 
         if (client->has_acquired_buffer())
         {
@@ -1583,17 +1589,21 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
 
         // Balance compositor consumption with client production:
         while (q.buffers_ready_for_compositor(nullptr))
+        {
             q.compositor_release(q.compositor_acquire(nullptr));
+            ++frame;
+        }
 
         // Imbalance: Compositor is now requesting more than the client does:
         q.compositor_release(q.compositor_acquire(nullptr));
+        ++frame;
     }
     // Expect at least triple buffers for sluggish clients
     EXPECT_THAT(buffers_acquired.size(), Ge(3));
 
     // And what happens if the client becomes fast again?...
     buffers_acquired.clear();
-    for (int frame = 0; frame < 10; frame++)
+    for (int frame = 0; frame < 10;)
     {
         std::shared_ptr<AcquireWaitHandle> client;
         do
@@ -1609,7 +1619,10 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
         } while (!client);
 
         while (q.buffers_ready_for_compositor(nullptr))
+        {
             q.compositor_release(q.compositor_acquire(nullptr));
+            ++frame;
+        }
 
         if (client->has_acquired_buffer())
         {
