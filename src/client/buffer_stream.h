@@ -64,6 +64,7 @@ Producer, // As in surfaces
 Consumer // As in screencasts
 };
 
+class ServerBufferSemantics;
 class BufferStream : public EGLNativeSurface, public ClientBufferStream
 {
 public:
@@ -127,17 +128,11 @@ private:
     void created(mir_buffer_stream_callback callback, void* context);
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&);
-    void next_buffer_received(
-        std::function<void()> done);
+    void screencast_buffer_received(std::function<void()> done);
     void on_configured();
     void release_cpu_region();
-    MirWaitHandle* submit(std::function<void()> const& done, std::unique_lock<std::mutex> lk);
 
     mutable std::mutex mutex; // Protects all members of *this
-
-    std::function<void()> on_incoming_buffer;
-    std::queue<mir::protobuf::Buffer> incoming_buffers;
-    bool server_connection_lost {false};
 
     MirConnection* connection;
     mir::client::rpc::DisplayServer& display_server;
@@ -146,8 +141,7 @@ private:
     std::shared_ptr<ClientPlatform> const client_platform;
 
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
-    mir::client::ClientBufferDepository buffer_depository;
-    
+
     int swap_interval_;
 
     std::shared_ptr<mir::client::PerfReport> const perf_report;
@@ -156,13 +150,15 @@ private:
 
     MirWaitHandle create_wait_handle;
     MirWaitHandle release_wait_handle;
-    MirWaitHandle next_buffer_wait_handle;
+    MirWaitHandle screencast_wait_handle;
     MirWaitHandle configure_wait_handle;
     std::unique_ptr<mir::protobuf::Void> protobuf_void;
     
     std::shared_ptr<MemoryRegion> secured_region;
     
     geometry::Size cached_buffer_size;
+
+    std::unique_ptr<ServerBufferSemantics> buffer_depository;
     geometry::Size ideal_buffer_size;
 };
 
