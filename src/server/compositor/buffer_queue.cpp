@@ -184,7 +184,7 @@ int mc::BufferQueue::scaling_delay() const
 
 bool mc::BufferQueue::client_ahead_of_compositor() const
 {
-    return false && nbuffers > 1 &&
+    return nbuffers > 1 &&
            !frame_dropping_enabled &&  // Never throttle frame droppers
            frame_deadlines_threshold >= 0 &&  // Queue scaling enabled
            !ready_to_composite_queue.empty() &&  // At least one frame is ready
