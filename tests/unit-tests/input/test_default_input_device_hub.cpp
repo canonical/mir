@@ -86,7 +86,7 @@ struct MockInputDevice : public mi::InputDevice
 {
     mir::dispatch::ActionQueue queue;
     std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() { return mt::fake_shared(queue);}
-    MOCK_METHOD1(start, void(mi::InputSink* destination));
+    MOCK_METHOD2(start, void(mi::InputSink* destination, mi::EventBuilder* builder));
     MOCK_METHOD0(stop, void());
     MOCK_METHOD0(get_device_info, mi::InputDeviceInfo());
 };
@@ -125,13 +125,14 @@ struct InputDeviceHubTest : ::testing::Test
             .WillByDefault(Return(mi::InputDeviceInfo{0,"third_device","dev-3", mi::DeviceCapability::keyboard}));
     }
 
-    void capture_input_sink(Nice<MockInputDevice>& dev, mi::InputSink*& sink)
+    void capture_input_sink(Nice<MockInputDevice>& dev, mi::InputSink*& sink, mi::EventBuilder*& builder)
     {
         using namespace ::testing;
-        ON_CALL(dev,start(_))
-            .WillByDefault(Invoke([&sink](mi::InputSink* input_sink)
+        ON_CALL(dev,start(_,_))
+            .WillByDefault(Invoke([&sink,&builder](mi::InputSink* input_sink, mi::EventBuilder* event_builder)
                                   {
                                       sink = input_sink;
+                                      builder = event_builder;
                                   }
                                  ));
     }
@@ -141,7 +142,7 @@ TEST_F(InputDeviceHubTest, input_device_hub_starts_device)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(device,start(_));
+    EXPECT_CALL(device,start(_,_));
 
     hub.add_device(mt::fake_shared(device));
 }
@@ -160,7 +161,7 @@ TEST_F(InputDeviceHubTest, input_device_hub_ignores_removal_of_unknown_devices)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(device,start(_)).Times(0);
+    EXPECT_CALL(device,start(_,_)).Times(0);
     EXPECT_CALL(device,stop()).Times(0);
 
     EXPECT_THROW(hub.remove_device(mt::fake_shared(device));, std::logic_error);
@@ -171,9 +172,9 @@ TEST_F(InputDeviceHubTest, input_device_hub_start_stop_happens_in_order)
     using namespace ::testing;
 
     InSequence seq;
-    EXPECT_CALL(device, start(_));
-    EXPECT_CALL(another_device, start(_));
-    EXPECT_CALL(third_device, start(_));
+    EXPECT_CALL(device, start(_,_));
+    EXPECT_CALL(another_device, start(_,_));
+    EXPECT_CALL(third_device, start(_,_));
     EXPECT_CALL(another_device, stop());
     EXPECT_CALL(device, stop());
     EXPECT_CALL(third_device, stop());
@@ -253,15 +254,12 @@ TEST_F(InputDeviceHubTest, observers_receive_device_changes)
 TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
 {
     using namespace ::testing;
-    int64_t unset_input_device_id = 0;
-    auto mac = 0;
-    auto event = mir::events::make_event(unset_input_device_id, arbitrary_timestamp, mac,
-                                         mir_keyboard_action_down, 0, KEY_A, mir_input_event_modifier_none);
 
     mi::InputSink* sink;
+    mi::EventBuilder* builder;
     mi::InputDeviceInfo info;
 
-    capture_input_sink(device, sink);
+    capture_input_sink(device, sink, builder);
 
     EXPECT_CALL(mock_observer,device_added(_))
         .WillOnce(SaveArg<0>(&info));
@@ -271,6 +269,9 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
 
     observer_loop.trigger_server_actions();
 
+    auto event = builder->key_event(arbitrary_timestamp, mir_keyboard_action_down, 0,
+                                    KEY_A, mir_input_event_modifier_none);
+
     EXPECT_CALL(mock_dispatcher, dispatch(AllOf(mt::InputDeviceIdMatches(info.id), mt::MirKeyEventMatches(event.get()))));
 
     sink->handle_input(*event);
@@ -279,35 +280,36 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
 TEST_F(InputDeviceHubTest, forwards_touch_spots_to_visualizer)
 {
     using namespace ::testing;
-    auto mac = 0;
-    auto touch_event_1 = mir::events::make_event(0, arbitrary_timestamp, mac, mir_input_event_modifier_none);
-    mir::events::add_touch(*touch_event_1, 0, mir_touch_action_down, mir_touch_tooltype_finger,
-                           21.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f);
-
-    auto touch_event_2 = mir::events::make_event(0, arbitrary_timestamp, mac, mir_input_event_modifier_none);
-    mir::events::add_touch(*touch_event_2, 0, mir_touch_action_change, mir_touch_tooltype_finger,
-                           24.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f);
-    mir::events::add_touch(*touch_event_2, 1, mir_touch_action_down, mir_touch_tooltype_finger,
-                           60.0f, 34.0f, 50.0f, 15.0f, 5.0f, 4.0f);
-
-    auto touch_event_3 = mir::events::make_event(0, arbitrary_timestamp, mac, mir_input_event_modifier_none);
-    mir::events::add_touch(*touch_event_3, 0, mir_touch_action_up, mir_touch_tooltype_finger, 24.0f,
-                           34.0f, 50.0f, 15.0f, 5.0f, 4.0f);
-    mir::events::add_touch(*touch_event_3, 1, mir_touch_action_change, mir_touch_tooltype_finger,
-                           70.0f, 30.0f, 50.0f, 15.0f, 5.0f, 4.0f);
-
-    auto touch_event_4 = mir::events::make_event(0, arbitrary_timestamp, mac, mir_input_event_modifier_none);
-    mir::events::add_touch(*touch_event_4, 1, mir_touch_action_up, mir_touch_tooltype_finger, 70.0f,
-                           35.0f, 50.0f, 15.0f, 5.0f, 4.0f);
-
     mi::InputSink* sink;
     mi::InputDeviceInfo info;
+    mi::EventBuilder* builder;
 
-    capture_input_sink(device, sink);
+    capture_input_sink(device, sink, builder);
 
     hub.add_device(mt::fake_shared(device));
 
     observer_loop.trigger_server_actions();
+
+    auto touch_event_1 = builder->touch_event(arbitrary_timestamp, mir_input_event_modifier_none);
+    builder->add_touch(*touch_event_1, 0, mir_touch_action_down, mir_touch_tooltype_finger, 21.0f, 34.0f, 50.0f, 15.0f,
+                       5.0f, 4.0f);
+
+    auto touch_event_2 = builder->touch_event(arbitrary_timestamp, mir_input_event_modifier_none);
+    builder->add_touch(*touch_event_2, 0, mir_touch_action_change, mir_touch_tooltype_finger, 24.0f, 34.0f, 50.0f,
+                       15.0f, 5.0f, 4.0f);
+    builder->add_touch(*touch_event_2, 1, mir_touch_action_down, mir_touch_tooltype_finger, 60.0f, 34.0f, 50.0f, 15.0f,
+                       5.0f, 4.0f);
+
+    auto touch_event_3 = builder->touch_event(arbitrary_timestamp, mir_input_event_modifier_none);
+    builder->add_touch(*touch_event_3, 0, mir_touch_action_up, mir_touch_tooltype_finger, 24.0f, 34.0f, 50.0f, 15.0f,
+                       5.0f, 4.0f);
+    builder->add_touch(*touch_event_3, 1, mir_touch_action_change, mir_touch_tooltype_finger, 70.0f, 30.0f, 50.0f,
+                       15.0f, 5.0f, 4.0f);
+
+    auto touch_event_4 = builder->touch_event(arbitrary_timestamp, mir_input_event_modifier_none);
+    builder->add_touch(*touch_event_4, 1, mir_touch_action_up, mir_touch_tooltype_finger, 70.0f, 35.0f, 50.0f, 15.0f,
+                       5.0f, 4.0f);
+
 
     using Spot = mi::TouchVisualizer::Spot;
 
@@ -332,7 +334,8 @@ TEST_F(InputDeviceHubTest, tracks_pointer_position)
     EXPECT_CALL(mock_region,confine(third));
 
     mi::InputSink* sink;
-    capture_input_sink(device, sink);
+    mi::EventBuilder* builder;
+    capture_input_sink(device, sink, builder);
 
     hub.add_device(mt::fake_shared(device));
 
@@ -353,7 +356,8 @@ TEST_F(InputDeviceHubTest, confines_pointer_movement)
         .WillByDefault(SetArgReferee<0>(confined_pos));
 
     mi::InputSink* sink;
-    capture_input_sink(device, sink);
+    mi::EventBuilder* builder;
+    capture_input_sink(device, sink, builder);
     hub.add_device(mt::fake_shared(device));
 
     geom::Point pos1{10,20};
@@ -379,7 +383,8 @@ TEST_F(InputDeviceHubTest, forwards_pointer_updates_to_cursor_listener)
     EXPECT_CALL(mock_cursor_listener, cursor_moved_to(x, y)).Times(1);
 
     mi::InputSink* sink;
-    capture_input_sink(device, sink);
+    mi::EventBuilder* builder;
+    capture_input_sink(device, sink, builder);
     hub.add_device(mt::fake_shared(device));
 
     sink->handle_input(*event);

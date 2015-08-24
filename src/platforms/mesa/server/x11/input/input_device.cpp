@@ -35,9 +35,9 @@ std::shared_ptr<md::Dispatchable> mix::XInputDevice::dispatchable()
     return x_dispatchable;
 }
 
-void mix::XInputDevice::start(mi::InputSink* destination)
+void mix::XInputDevice::start(mi::InputSink* destination, EventBuilder* builder)
 {
-    x_dispatchable->set_input_sink(destination);
+    x_dispatchable->set_input_sink(destination, builder);
 }
 
 void mix::XInputDevice::stop()

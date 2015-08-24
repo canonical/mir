@@ -28,6 +28,7 @@ namespace mir
 
 namespace input
 {
+class EventBuilder;
 namespace X
 {
 struct XDispatchable : public dispatch::Dispatchable
@@ -41,13 +42,14 @@ public:
     bool dispatch(dispatch::FdEvents events) override;
     dispatch::FdEvents relevant_events() const override;
 
-    void set_input_sink(InputSink *input_sink);
+    void set_input_sink(InputSink *input_sink, EventBuilder* builder);
     void unset_input_sink();
 
 private:
     std::shared_ptr<::Display> const x11_connection;
     mir::Fd fd;
     InputSink* sink;
+    EventBuilder* builder;
 };
 
 }
