@@ -418,7 +418,7 @@ namespace
 template<class Clock>
 bool spin_wait_for_id(mg::BufferID id, MirSurface* surface, std::chrono::time_point<Clock> const& pt)
 {
-    while(std::chrono::steady_clock::now() < pt)
+    while(Clock::now() < pt)
     {
         if (mir_debug_surface_current_buffer_id(surface) == id.as_value())
             return true;
