@@ -46,7 +46,15 @@ public:
         return std::future_status::timeout;
     }
 
-    void set_value(T val)
+    void set_value(T const& val)
+    {
+        std::lock_guard<std::mutex> lk(mutex);
+        set = true;
+        value = val;
+        cv.notify_all();
+    }
+
+    void set_value(T && val)
     {
         std::lock_guard<std::mutex> lk(mutex);
         set = true;
@@ -112,14 +120,24 @@ struct NoTLSFuture
     NoTLSFuture(NoTLSFuture const&) = delete;
     NoTLSFuture& operator=(NoTLSFuture const&) = delete;
 
+    void validate_state() const
+    {
+        if (!valid())
+            throw std::logic_error("state was not valid");
+    }
+
     T get()
     {
-        return state->get_value();
+        validate_state();
+        auto value = state->get_value();
+        state = nullptr;
+        return value;
     }
 
     template<class Rep, class Period>
     std::future_status wait_for(std::chrono::duration<Rep, Period> const& timeout_duration) const
     {
+        validate_state();
         return state->wait_for(timeout_duration);
     }
 
