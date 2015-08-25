@@ -136,11 +136,11 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
         }
         else
         {
-            lk.unlock();
-            server_requests->free_buffer(it->first);
-            server_requests->allocate_buffer(size, format, usage);
-            lk.lock();
+            int id = it->first;
             buffers.erase(it);
+            lk.unlock();
+            server_requests->free_buffer(id);
+            server_requests->allocate_buffer(size, format, usage);
             return;
         }
     }
