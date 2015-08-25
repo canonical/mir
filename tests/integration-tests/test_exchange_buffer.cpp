@@ -413,32 +413,43 @@ TEST_F(ExchangeBufferTest, submissions_happen)
     mir_connection_release(connection);
 }
 
+namespace
+{
+template<class Clock>
+bool spin_wait_for_id(mg::BufferID id, MirSurface* surface, std::chrono::time_point<Clock> const& pt)
+{
+    while(Clock::now() < pt)
+    {
+        if (mir_debug_surface_current_buffer_id(surface) == id.as_value())
+            return true;
+        std::this_thread::yield();
+    }
+    return false;
+}
+}
+
 TEST_F(ExchangeBufferTest, server_can_send_buffer)
 {
     using namespace testing;
     using namespace std::literals::chrono_literals;
-    mtd::StubBuffer stub_buffer;
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     auto surface = mtf::make_any_surface(connection);
     auto sink = server_configuration.coordinator->last_sink.lock();
-    sink->send_buffer(mf::BufferStreamId{0}, stub_buffer, mg::BufferIpcMsgType::full_msg);
+
+    //first wait for the last id in the exchange sequence to be seen. Avoids lp: #1487967, where
+    //the stub sink could send before the server sends its sequence.
+    auto timeout = std::chrono::steady_clock::now() + 5s;
+    EXPECT_TRUE(spin_wait_for_id(buffer_id_exchange_seq.back(), surface, timeout))
+        << "failed to see the last scheduled buffer become the current one";
 
     //spin-wait for the id to become the current one.
     //The notification doesn't generate a client-facing callback on the stream yet
-    //(although probably should, seems something a media decoder would need
-    bool buffer_arrived = false;
-    auto timeout = std::chrono::steady_clock::now() + 5s;
-    while(!buffer_arrived && std::chrono::steady_clock::now() < timeout)
-    {
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
-        if (mir_debug_surface_current_buffer_id(surface) == stub_buffer.id().as_value())
-        {
-            buffer_arrived = true;
-            break;
-        }
-        std::this_thread::yield();
-    }
-    EXPECT_THAT(buffer_arrived, Eq(true)) << "failed to see the sent buffer become the current one";
+    //(although probably should, seems like something a media decoder would need)
+    mtd::StubBuffer stub_buffer;
+    timeout = std::chrono::steady_clock::now() + 5s;
+    sink->send_buffer(mf::BufferStreamId{0}, stub_buffer, mg::BufferIpcMsgType::full_msg);
+    EXPECT_TRUE(spin_wait_for_id(stub_buffer.id(), surface, timeout))
+        << "failed to see the sent buffer become the current one";
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);

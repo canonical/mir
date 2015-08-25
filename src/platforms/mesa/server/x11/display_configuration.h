@@ -32,7 +32,7 @@ namespace X
 class DisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
-    DisplayConfiguration(MirPixelFormat pf, int width, int height);
+    DisplayConfiguration(MirPixelFormat pf, int width, int height, MirOrientation orientation);
 
     virtual ~DisplayConfiguration() = default;
 
