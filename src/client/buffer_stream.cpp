@@ -228,32 +228,32 @@ public:
 
     void allocate_buffer(geom::Size size, MirPixelFormat format, int usage) override
     {
-        auto request = mcl::make_protobuf_object<mp::BufferAllocation>();
-        request->mutable_id()->set_value(stream_id);
-        auto buf_params = request->add_buffer_requests();
+        mp::BufferAllocation request;
+        request.mutable_id()->set_value(stream_id);
+        auto buf_params = request.add_buffer_requests();
         buf_params->set_width(size.width.as_int());
         buf_params->set_height(size.height.as_int());
         buf_params->set_pixel_format(format);
         buf_params->set_buffer_usage(usage);
-        server.allocate_buffers(request.get(), &protobuf_void, 
+        server.allocate_buffers(&request, &protobuf_void, 
             google::protobuf::NewCallback(google::protobuf::DoNothing));
     }
 
     void free_buffer(int buffer_id) override
     {
-        auto request = mcl::make_protobuf_object<mp::BufferRelease>();
-        request->mutable_id()->set_value(stream_id);
-        request->add_buffers()->set_buffer_id(buffer_id);
-        server.release_buffers(request.get(), &protobuf_void,
+        mp::BufferRelease request;
+        request.mutable_id()->set_value(stream_id);
+        request.add_buffers()->set_buffer_id(buffer_id);
+        server.release_buffers(&request, &protobuf_void,
             google::protobuf::NewCallback(google::protobuf::DoNothing));
     }
 
     void submit_buffer(int id, mcl::ClientBuffer&) override
     {
-        auto request = mcl::make_protobuf_object<mp::BufferRequest>();
-        request->mutable_id()->set_value(stream_id);
-        request->mutable_buffer()->set_buffer_id(id);
-        server.submit_buffer(request.get(), &protobuf_void,
+        mp::BufferRequest request;
+        request.mutable_id()->set_value(stream_id);
+        request.mutable_buffer()->set_buffer_id(id);
+        server.submit_buffer(&request, &protobuf_void,
             google::protobuf::NewCallback(google::protobuf::DoNothing));
     }
 
