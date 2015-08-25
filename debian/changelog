@@ -1,3 +1,19 @@
+mir (0.16.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.16.0 (https://launchpad.net/mir/+milestone/0.16.0)
+    - ABI summary: TODO: these will change before release
+      . Mirclient ABI unchanged at 9
+      . Mirserver ABI unchanged at 33
+      . Mircommon ABI unchanged at 5
+      . Mirplatform ABI unchanged at 9
+      . Mirprotobuf ABI bumped to 2
+    - Enhancements:
+      . TODO
+    - Buf fixes:
+      . TODO
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 24 Aug 2015 16:38:28 +0800
+
 mir (0.15.0+15.10.20150818-0ubuntu1) wily; urgency=medium
 
   [ Daniel van Vugt ]
