@@ -263,3 +263,69 @@ TEST_F(MultiMonitorArbiter, can_set_a_new_schedule)
     EXPECT_THAT(cbuffer1, Eq(buffers[3]));
     EXPECT_THAT(cbuffer2, Eq(buffers[0])); 
 }
+
+TEST_F(MultiMonitorArbiter, basic_snapshot_equals_compositor_buffer)
+{
+    schedule.set_schedule({buffers[3],buffers[4]});
+
+    auto cbuffer1 = arbiter.compositor_acquire(this);
+    auto sbuffer1 = arbiter.snapshot_acquire();
+    EXPECT_EQ(cbuffer1, sbuffer1);
+}
+
+TEST_F(MultiMonitorArbiter, basic_snapshot_equals_latest_compositor_buffer)
+{
+    schedule.set_schedule({buffers[3],buffers[4]});
+    int that = 4;
+
+    auto cbuffer1 = arbiter.compositor_acquire(this);
+    auto cbuffer2 = arbiter.compositor_acquire(&that);
+    auto sbuffer1 = arbiter.snapshot_acquire();
+    arbiter.snapshot_release(sbuffer1);
+    arbiter.compositor_release(cbuffer2);
+    cbuffer2 = arbiter.compositor_acquire(&that);
+
+    auto sbuffer2 = arbiter.snapshot_acquire();
+    EXPECT_EQ(cbuffer1, sbuffer1);
+    EXPECT_EQ(cbuffer2, sbuffer2);
+}
+
+TEST_F(MultiMonitorArbiter, snapshot_cycling_doesnt_advance_buffer_for_compositors)
+{
+    schedule.set_schedule({buffers[3],buffers[4]});
+    auto that = 4;
+    auto a_few_times = 5u;
+    auto cbuffer1 = arbiter.compositor_acquire(this);
+    std::vector<std::shared_ptr<mg::Buffer>> snapshot_buffers(a_few_times);
+    for(auto i = 0u; i < a_few_times; i++)
+    {
+        auto b = arbiter.snapshot_acquire();
+        arbiter.snapshot_release(b);
+        snapshot_buffers[i] = b;
+    }
+    auto cbuffer2 = arbiter.compositor_acquire(&that);
+
+    EXPECT_THAT(cbuffer1, Eq(cbuffer2));
+    EXPECT_THAT(snapshot_buffers, Each(cbuffer1));
+}
+
+TEST_F(MultiMonitorArbiter, no_buffers_available_throws_on_snapshot)
+{
+    schedule.set_schedule({});
+    EXPECT_THROW({
+        arbiter.snapshot_acquire();
+    }, std::logic_error);
+}
+
+TEST_F(MultiMonitorArbiter, snapshotting_will_release_buffer_if_it_was_the_last_owner)
+{
+    EXPECT_CALL(mock_map, send_buffer(_)).Times(0);
+    schedule.set_schedule({buffers[3],buffers[4]});
+    auto cbuffer1 = arbiter.compositor_acquire(this);
+    auto sbuffer1 = arbiter.snapshot_acquire();
+    arbiter.compositor_release(cbuffer1);
+
+    Mock::VerifyAndClearExpectations(&mock_map);
+    EXPECT_CALL(mock_map, send_buffer(sbuffer1->id()));
+    arbiter.snapshot_release(sbuffer1);
+} 
