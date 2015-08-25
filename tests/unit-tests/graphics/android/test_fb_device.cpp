@@ -146,3 +146,30 @@ TEST_F(FBDevice, bundle_from_fb)
     EXPECT_EQ(display_size, attribs.modes[attribs.current_mode_index].size);
     EXPECT_EQ(mir_pixel_format_abgr_8888, attribs.current_format);
 }
+
+TEST_F(FBDevice, supports_primary_display)
+{
+    mga::FbControl fb_control(fb_hal_mock);
+    auto const primary = fb_control.active_config_for(mga::DisplayName::primary);
+
+    EXPECT_TRUE(primary.connected);
+    EXPECT_TRUE(primary.used);
+}
+
+TEST_F(FBDevice, does_not_support_external_display)
+{
+    mga::FbControl fb_control(fb_hal_mock);
+    auto const external = fb_control.active_config_for(mga::DisplayName::external);
+
+    EXPECT_FALSE(external.connected);
+    EXPECT_FALSE(external.used);
+}
+
+TEST_F(FBDevice, assigns_different_output_ids_to_displays)
+{
+    mga::FbControl fb_control(fb_hal_mock);
+    auto const primary = fb_control.active_config_for(mga::DisplayName::primary);
+    auto const external = fb_control.active_config_for(mga::DisplayName::external);
+
+    EXPECT_NE(primary.id, external.id);
+}
