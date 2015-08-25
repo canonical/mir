@@ -97,7 +97,8 @@ TEST_F(EventSender, never_sends_input_events)
 {
     using namespace testing;
 
-    auto ev = mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(0), MirKeyboardAction(),
+    auto mac = 0;
+    auto ev = mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(0), mac, MirKeyboardAction(),
                               0, 0, MirInputEventModifiers());
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))

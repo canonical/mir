@@ -47,7 +47,7 @@ public:
 private:
     std::shared_ptr<::Display> const x11_connection;
     mir::Fd fd;
-    InputSink *sink;
+    InputSink* sink;
 };
 
 }

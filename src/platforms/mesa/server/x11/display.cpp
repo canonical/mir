@@ -36,7 +36,7 @@ namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace geom=mir::geometry;
 
-mgx::X11EGLDisplay::X11EGLDisplay(::Display *x_dpy)
+mgx::X11EGLDisplay::X11EGLDisplay(::Display* x_dpy)
     : egl_dpy{eglGetDisplay(x_dpy)}
 {
     if (!egl_dpy)
@@ -59,7 +59,7 @@ mgx::X11EGLDisplay::operator EGLDisplay() const
     return egl_dpy;
 }
 
-mgx::X11Window::X11Window(::Display *x_dpy, EGLDisplay egl_dpy, int width, int height)
+mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, int width, int height)
     : x_dpy{x_dpy}
 {
     EGLint const att[] = {
@@ -104,6 +104,7 @@ mgx::X11Window::X11Window(::Display *x_dpy, EGLDisplay egl_dpy, int width, int h
                       KeyReleaseMask      |
                       ButtonPressMask     |
                       ButtonReleaseMask   |
+                      FocusChangeMask     |
                       PointerMotionMask;
 
     auto mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
@@ -120,6 +121,13 @@ mgx::X11Window::X11Window(::Display *x_dpy, EGLDisplay egl_dpy, int width, int h
     XFree(visInfo);
 
     XMapWindow(x_dpy, win);
+
+    XEvent xev;
+    do 
+    {
+        XNextEvent(x_dpy, &xev);
+    }
+    while (xev.type != Expose);
 }
 
 mgx::X11Window::~X11Window()
@@ -176,7 +184,7 @@ mgx::X11EGLSurface::operator EGLSurface() const
     return egl_surf;
 }
 
-mgx::Display::Display(::Display *dpy)
+mgx::Display::Display(::Display* dpy)
     : x_dpy{dpy},
       egl_display{X11EGLDisplay(dpy)},
       display_width{1280},
@@ -189,7 +197,8 @@ mgx::Display::Display(::Display *dpy)
                                 win.egl_config())},
       egl_surface{X11EGLSurface(egl_display,
                                 win.egl_config(),
-                                win)}
+                                win)},
+                                orientation{mir_orientation_normal}
 {
     // TODO: read from the chosen config
     pf = mir_pixel_format_bgr_888;
@@ -218,7 +227,8 @@ mgx::Display::Display(::Display *dpy)
         std::make_unique<mgx::DisplayBuffer>(geom::Size{display_width, display_height},
                                              egl_display,
                                              egl_surface,
-                                             egl_context));
+                                             egl_context,
+                                             orientation));
 }
 
 mgx::Display::~Display() noexcept
@@ -233,12 +243,20 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
-    return std::make_unique<mgx::DisplayConfiguration>(pf, display_width, display_height);
+    return std::make_unique<mgx::DisplayConfiguration>(pf, display_width, display_height, orientation);
 }
 
-void mgx::Display::configure(mg::DisplayConfiguration const& /*new_configuration*/)
+void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("'Display::configure()' not yet supported on x11 platform"));
+    MirOrientation o = mir_orientation_normal;
+
+    new_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+    {
+        o = conf_output.orientation;
+    });
+
+    orientation = o;
+    display_group->set_orientation(orientation);
 }
 
 void mgx::Display::register_configuration_change_handler(
