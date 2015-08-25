@@ -11,7 +11,7 @@ mir_add_wrapped_executable(mirping ping.c)
 target_link_libraries(mirping mirclient)
 
 mir_add_wrapped_executable(mirout out.c)
-target_link_libraries(mirout mirclient)
+target_link_libraries(mirout mirclient m)
 
 mir_add_wrapped_executable(mirscreencast screencast.cpp)
 

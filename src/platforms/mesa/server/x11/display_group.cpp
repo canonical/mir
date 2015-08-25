@@ -40,3 +40,8 @@ std::chrono::milliseconds mgx::DisplayGroup::recommended_sleep() const
 {
     return std::chrono::milliseconds::zero();
 }
+
+void mgx::DisplayGroup::set_orientation(MirOrientation orientation)
+{
+    display_buffer->set_orientation(orientation);
+}

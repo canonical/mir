@@ -16,9 +16,8 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir/events/event_private.h"
-
 #include "input_sender.h"
+
 #include "input_send_entry.h"
 
 #include "mir/input/android/event_conversion_helpers.h"
@@ -28,11 +27,6 @@
 #include "mir/scene/surface.h"
 #include "mir/compositor/scene.h"
 #include "mir/main_loop.h"
-
-#include "androidfw/Input.h"
-#include "androidfw/InputTransport.h"
-#include "std/Errors.h"
-#include "std/String8.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -258,6 +252,7 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t s
         event.scan_code,
         mia::android_modifiers_from_mir(event.modifiers),
         repeat_count,
+        event.mac,
         event.event_time,
         event.event_time
         );
@@ -303,6 +298,7 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_motion_event(uint32_
         0.0f,  // event.x_offset,
         0.0f,  // event.y_offset,
         0, 0, /* unused x/y precision */
+        event.mac,
         event.event_time,
         event.event_time,
         event.pointer_count,

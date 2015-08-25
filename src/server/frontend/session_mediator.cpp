@@ -162,7 +162,7 @@ void mf::SessionMediator::advance_buffer(
         old_buffer,
         [this, stream_id, complete](mg::Buffer* new_buffer)
         {
-            if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
+            if (!new_buffer || buffer_stream_tracker.track_buffer(stream_id, new_buffer))
                 complete(new_buffer, mg::BufferIpcMsgType::update_msg);
             else
                 complete(new_buffer, mg::BufferIpcMsgType::full_msg);
@@ -297,11 +297,9 @@ void mf::SessionMediator::create_surface(
         [this, surf_id, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
-            response->mutable_buffer_stream()->mutable_id()->set_value(
-               surf_id.as_value());
-            pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(),
-                         client_buffer,
-                         msg_type);
+            response->mutable_buffer_stream()->mutable_id()->set_value(surf_id.as_value());
+            if (client_buffer)
+                pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(), client_buffer, msg_type);
 
             done->Run();
         });
@@ -367,46 +365,80 @@ void mf::SessionMediator::submit_buffer(
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
-    mf::BufferStreamId const stream_id{request->id().value()};
-    mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
-    ipc_operations->unpack_buffer(request_msg, *buffer_stream_tracker.last_buffer(stream_id));
-
-    mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
-    auto old_buffer = buffer_stream_tracker.buffer_from(buffer_id);
-
     auto const session = weak_session.lock();
     if (!session) BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
     report->session_submit_buffer_called(session->name());
-
+    
+    mf::BufferStreamId const stream_id{request->id().value()};
+    mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
     auto stream = session->get_buffer_stream(stream_id);
-    stream->swap_buffers(old_buffer,
-        [this, stream_id, done](mg::Buffer* new_buffer)
+
+    mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
+    if (auto* buffer = buffer_stream_tracker.last_buffer(stream_id))
+    {
+        ipc_operations->unpack_buffer(request_msg, *buffer);
+        stream->swap_buffers(buffer,
+            [this, stream_id](mg::Buffer* new_buffer)
+            {
+                if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
+                    event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::update_msg);
+                else
+                    event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::full_msg);
+            });
+    }
+    else
+    {
+        stream->with_buffer(buffer_id, [&, this](mg::Buffer& buffer)
         {
-            if (buffer_stream_tracker.track_buffer(stream_id, new_buffer))
-                event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::update_msg);
-            else
-                event_sink->send_buffer(stream_id, *new_buffer, mg::BufferIpcMsgType::full_msg);
+            ipc_operations->unpack_buffer(request_msg, buffer);
+            stream->swap_buffers(&buffer, [](mg::Buffer*) {});
         });
+    }
 
     done->Run();
 }
 
 void mf::SessionMediator::allocate_buffers( 
-    mir::protobuf::BufferAllocation const*,
+    mir::protobuf::BufferAllocation const* request,
     mir::protobuf::Void*,
-    google::protobuf::Closure*)
+    google::protobuf::Closure* done)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not supported yet"));
-}
+    auto session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
+    report->session_allocate_buffers_called(session->name());
+    mf::BufferStreamId stream_id{request->id().value()};
+    auto stream = session->get_buffer_stream(stream_id);
+    for (auto i = 0; i < request->buffer_requests().size(); i++)
+    {
+        auto const& req = request->buffer_requests(i);
+        mg::BufferProperties properties(
+            geom::Size{req.width(), req.height()},
+            static_cast<MirPixelFormat>(req.pixel_format()),
+           static_cast<mg::BufferUsage>(req.buffer_usage()));
+        stream->allocate_buffer(properties);
+    }
+    done->Run();
+}
+ 
 void mf::SessionMediator::release_buffers(
-    mir::protobuf::BufferRelease const*,
+    mir::protobuf::BufferRelease const* request,
     mir::protobuf::Void*,
-    google::protobuf::Closure*)
+    google::protobuf::Closure* done)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not supported yet"));
-}
+    auto session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
+    report->session_release_buffers_called(session->name());
+    mf::BufferStreamId stream_id{request->id().value()};
+    auto stream = session->get_buffer_stream(stream_id);
+    for (auto i = 0; i < request->buffers().size(); i++)
+        stream->remove_buffer(mg::BufferID{static_cast<uint32_t>(request->buffers(i).buffer_id())});
+   done->Run();
+}
+ 
 void mf::SessionMediator::release_surface(
     const mir::protobuf::SurfaceId* request,
     mir::protobuf::Void*,
@@ -689,7 +721,8 @@ void mf::SessionMediator::create_buffer_stream(
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
             auto buffer = response->mutable_buffer();
-            pack_protobuf_buffer(*buffer, client_buffer, msg_type);
+            if (client_buffer)
+                pack_protobuf_buffer(*buffer, client_buffer, msg_type);
 
             done->Run();
         });

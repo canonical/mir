@@ -21,10 +21,15 @@
 
 #include <X11/Xlib.h>
 
+//Force synchronous Xlib operation - for debugging
+//#define FORCE_SYNCHRONOUS
+
 namespace mir
 {
 namespace X
 {
+
+int mir_x11_error_handler(Display* dpy, XErrorEvent* eev);
 
 class LazyConnection
 {
@@ -34,10 +39,17 @@ public:
         if (auto conn = connection.lock())
             return conn;
 
+        XInitThreads();
+
+        XSetErrorHandler(mir_x11_error_handler);
+
         std::shared_ptr<::Display> new_conn{
             XOpenDisplay(nullptr),
             [](::Display* display) { XCloseDisplay(display); }};
 
+#ifdef FORCE_SYNCHRONOUS
+        XSynchronize(new_conn.get(), True);
+#endif
         connection = new_conn;
         return new_conn;
     }
