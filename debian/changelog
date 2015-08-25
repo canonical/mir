@@ -1,11 +1,15 @@
-mir (0.15.1) UNRELEASED; urgency=medium
+mir (0.15.1+15.10.20150825-0ubuntu1) wily; urgency=medium
 
+  [ Alberto Aguirre ]
   * New upstream release 0.15.1 (https://launchpad.net/mir/+milestone/0.15.1)
     - Bug fixes:
       . Client API minor version was not updated (LP: #1488542)
       . [regression] ubuntu-emulator fails to start Mir demos (LP: #1486535)
 
- -- Alberto Aguirre <alberto.aguirre@canonical.com>  Tue, 25 Aug 2015 10:24:22 -0500
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 25 Aug 2015 16:02:43 +0000
 
 mir (0.15.0+15.10.20150818-0ubuntu1) wily; urgency=medium
 
