@@ -34,7 +34,7 @@ namespace mir
 namespace client
 {
 template<typename T>
-class State
+class PromiseState
 {
 public:
     template<class Rep, class Period>
@@ -79,11 +79,11 @@ public:
         cv.notify_all();
     }
 
-    State() = default;
-    State(State const&) = delete;
-    State(State &&) = delete;
-    State& operator=(State const&) = delete;
-    State& operator=(State &&) = delete;
+    PromiseState() = default;
+    PromiseState(PromiseState const&) = delete;
+    PromiseState(PromiseState &&) = delete;
+    PromiseState& operator=(PromiseState const&) = delete;
+    PromiseState& operator=(PromiseState &&) = delete;
 
 private:
     std::mutex mutable mutex;
@@ -101,7 +101,7 @@ struct NoTLSFuture
     {
     }
 
-    NoTLSFuture(std::shared_ptr<State<T>> const& state) :
+    NoTLSFuture(std::shared_ptr<PromiseState<T>> const& state) :
         state(state)
     {
     }
@@ -147,7 +147,7 @@ struct NoTLSFuture
     }
 
 private:
-    std::shared_ptr<State<T>> state;
+    std::shared_ptr<PromiseState<T>> state;
 };
 
 template<typename T>
@@ -155,7 +155,7 @@ class NoTLSPromise
 {
 public:
     NoTLSPromise():
-        state(std::make_shared<State<T>>())
+        state(std::make_shared<PromiseState<T>>())
     {
     }
 
@@ -189,7 +189,7 @@ public:
     }
 
 private:
-    std::shared_ptr<State<T>> state; 
+    std::shared_ptr<PromiseState<T>> state; 
 };
 }
 }
