@@ -127,8 +127,9 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
         auto const hscroll_value = 0.0;
         auto const vscroll_value = 0.0;
         auto const action = mir_pointer_action_button_down;
+        auto const mac = 0;
 
-        auto const click_event = mev::make_event(device_id, std::chrono::nanoseconds(1), modifiers,
+        auto const click_event = mev::make_event(device_id, std::chrono::nanoseconds(1), mac, modifiers,
             action, depressed_buttons, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
 
         server.the_shell()->handle(*click_event);

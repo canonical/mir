@@ -61,12 +61,13 @@ public:
     void deposit(std::shared_ptr<ClientBuffer> const& buffer);
     void wire_transfer_inbound(protobuf::Buffer const&);
     void wire_transfer_outbound(std::shared_ptr<ClientBuffer> const& buffer);
-    //TODO: class will handle allocation, transition, and destruction around resize notification
+    void set_size(geometry::Size);
 
 private:
     std::shared_ptr<ClientBufferFactory> const factory;
     std::shared_ptr<ServerBufferRequests> const server_requests;
     MirPixelFormat const format;
+    int const usage;
 
     enum class Owner;
     struct BufferEntry
@@ -78,6 +79,7 @@ private:
     std::mutex mutex;
     std::map<int, BufferEntry> buffers;
     std::deque<std::promise<std::shared_ptr<ClientBuffer>>> promises;
+    geometry::Size size;
 };
 }
 }

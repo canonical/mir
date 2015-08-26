@@ -488,41 +488,6 @@ TEST_P(WithAnyNumberOfBuffers, compositor_can_acquire_and_release)
     EXPECT_NO_THROW(q.compositor_release(comp_buffer));
 }
 
-TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
-{   // Regression test for LP: #1480164
-    q.allow_framedropping(false);
-
-    // Skip over the first frame. The early release optimization is too
-    // conservative to allow it to happen right at the start (so as to
-    // maintain correct multimonitor frame rates if required).
-    auto handle = client_acquire_async(q);
-    ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
-    handle->release_buffer();
-    q.compositor_release(q.compositor_acquire(this));
-
-    auto onscreen = q.compositor_acquire(this);
-
-    // This is what tests should do instead of using buffers_free_for_client()
-    bool blocking;
-    do
-    {
-        handle = client_acquire_async(q);
-        blocking = !handle->has_acquired_buffer();
-        if (!blocking)
-            handle->release_buffer();
-    } while (!blocking);
-
-    for (int f = 0; f < 100; ++f)
-    {
-        ASSERT_FALSE(handle->has_acquired_buffer());
-        q.compositor_release(onscreen);
-        ASSERT_TRUE(handle->has_acquired_buffer()) << "frame# " << f;
-        handle->release_buffer();
-        onscreen = q.compositor_acquire(this);
-        handle = client_acquire_async(q);
-    }
-}
-
 TEST_P(WithAnyNumberOfBuffers, multiple_compositors_are_in_sync)
 {
     auto handle = client_acquire_async(q);

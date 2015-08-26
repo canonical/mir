@@ -139,8 +139,14 @@ int demo_client(const char* server, int buffer_swap_count)
     // we expect it to be valid; and,
     // we don't expect an error description
     assert(mcd.surface != NULL);
-    assert(mir_surface_is_valid(mcd.surface));
-    assert(strcmp(mir_surface_get_error_message(mcd.surface), "") == 0);
+    if(!mir_surface_is_valid(mcd.surface))
+    {
+        fprintf(stderr, "Failed to create surface: %s",
+                mir_surface_get_error_message(mcd.surface));
+        return 1;
+    }
+    else
+        assert(strcmp(mir_surface_get_error_message(mcd.surface), "") == 0);
 
     MirBufferStream *bs =
         mir_surface_get_buffer_stream(mcd.surface);
