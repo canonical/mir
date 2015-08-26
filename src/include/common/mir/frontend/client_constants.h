@@ -27,7 +27,8 @@ namespace frontend
 /// Number of buffers the client library will keep.
 
 /// mir::client::ClientBufferDepository and mir::frontend::ClientBufferTracker need to use the same value
-// TODO this ought to be 3 - but is 4 as a workaround for issues with overallocation (lp:1441553)
+// TODO proxy for "however many buffers are in this stream" and could be 2-4. Using the maximum
+// TODO is safe but potentially holds unnecessary resources (lp:1441553)
 // (this should become moot with "new Buffer Semantics")
 unsigned int const client_buffer_cache_size = 4;
 
