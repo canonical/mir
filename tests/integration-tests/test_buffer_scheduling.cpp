@@ -587,13 +587,6 @@ TEST_P(WithAnyNumberOfBuffers, all_buffers_consumed_in_interleaving_pattern)
     auto consumption_log = consumer->consumption_log();
     EXPECT_THAT(production_log, Not(IsEmpty()));
     EXPECT_THAT(consumption_log, Not(IsEmpty()));
-
-
-    for(auto i : production_log)
-        printf("BID %i\n", i.id.as_value());
-    for(auto i : consumption_log)
-        printf("CID %i\n", i.id.as_value());
-
     EXPECT_THAT(consumption_log, ContainerEq(production_log));
 }
 
