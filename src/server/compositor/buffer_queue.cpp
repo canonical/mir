@@ -16,7 +16,7 @@
  */
 
 #include "buffer_queue.h"
-
+#include "mir/log.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/lockable_callback.h"
@@ -24,6 +24,12 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <algorithm>
+
+#if 1
+#define DPRINTF(_arglist) mir::log_info _arglist
+#else
+#define DPRINTF(_arglist)
+#endif
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -338,12 +344,15 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     if (buffer_to_release)
         release(buffer_to_release, std::move(lock));
 
+    DPRINTF(("%p: compositor acquired %p", this, acquired_buffer.get()));
     return acquired_buffer;
 }
 
 void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const& buffer)
 {
     std::unique_lock<decltype(guard)> lock(guard);
+
+    DPRINTF(("%p: compositor release1 %p", this, buffer.get()));
 
     if (!remove(buffer.get(), buffers_sent_to_compositor))
     {
@@ -358,6 +367,7 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     if (nbuffers <= 1)
         return;
 
+    DPRINTF(("%p: compositor release2 %p", this, buffer.get()));
     if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
     else if (!ready_to_composite_queue.empty() &&
@@ -529,6 +539,8 @@ void mc::BufferQueue::give_buffer_to_client(
 
     buffers_owned_by_client.push_back(buffer);
 
+    DPRINTF(("%p: compositor release4 %p", this, buffer));
+
     lock.unlock();
     try
     {
@@ -553,6 +565,7 @@ void mc::BufferQueue::release(
     mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
 {
+    DPRINTF(("%p: compositor release3 %p", this, buffer));
     if (!pending_client_notifications.empty() && !client_ahead_of_compositor())
     {
         framedrop_policy->swap_unblocked();
