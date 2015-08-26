@@ -43,3 +43,23 @@ TEST(GMock, return_by_move)
     mi.function();
 }
 
+TEST(GMock, return_by_move_with_deleter_function)
+{
+    struct Interface
+    {
+        virtual ~Interface() = default;
+        virtual std::unique_ptr<int, void(*)(int*)> function() const = 0;
+    };
+
+    struct MockImplementation : Interface
+    {
+        MOCK_CONST_METHOD0(function, std::unique_ptr<int, void(*)(int*)>());
+        ~MockImplementation() noexcept {}
+    };
+
+    MockImplementation mi;
+
+    EXPECT_CALL(mi, function());
+
+    mi.function();
+}
