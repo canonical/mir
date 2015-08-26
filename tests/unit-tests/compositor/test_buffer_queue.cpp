@@ -512,6 +512,41 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
     }
 }
 
+TEST_P(WithThreeOrMoreBuffers, greedy_clients_get_new_buffers_on_compositor_release)
+{
+    q.allow_framedropping(false);
+
+    // Skip over the first frame. The early release optimization is too
+    // conservative to allow it to happen right at the start (so as to
+    // maintain correct multimonitor frame rates if required).
+    auto handle = client_acquire_async(q);
+    ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+    handle->release_buffer();
+    q.compositor_release(q.compositor_acquire(this));
+
+    auto onscreen = q.compositor_acquire(this);
+    auto old_handle = handle;
+    old_handle.reset();
+    bool blocking;
+    do
+    {
+        handle = client_acquire_async(q);
+        blocking = !handle->has_acquired_buffer();
+        if (!blocking)
+        {
+            if (old_handle)
+                old_handle->release_buffer();
+            old_handle = handle;
+            handle.reset();
+        }
+    } while (!blocking);
+
+    ASSERT_TRUE(old_handle->has_acquired_buffer());
+    ASSERT_FALSE(handle->has_acquired_buffer());
+    q.compositor_release(onscreen);
+    ASSERT_TRUE(handle->has_acquired_buffer());
+}
+
 TEST_P(WithAnyNumberOfBuffers, multiple_compositors_are_in_sync)
 {
     auto handle = client_acquire_async(q);
