@@ -18,6 +18,7 @@
 
 #include "src/platforms/evdev/libinput_device.h"
 #include "src/server/report/null_report_factory.h"
+#include "src/server/input/default_event_builder.h"
 
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_sink.h"
@@ -26,6 +27,7 @@
 #include "mir/event_printer.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/mock_libinput.h"
+#include "mir/test/gmock_fixes.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -46,18 +48,32 @@ public:
     void remove_device(std::shared_ptr<mi::InputDevice> const&) override {}
 };
 
-class MockInputSink : public mi::InputSink
+struct MockInputSink : mi::InputSink
 {
-public:
     MOCK_METHOD1(handle_input,void(MirEvent &));
     MOCK_METHOD1(confine_pointer, void(mir::geometry::Point&));
     MOCK_CONST_METHOD0(bounding_rectangle, mir::geometry::Rectangle());
+};
+
+struct MockEventBuilder : mi::EventBuilder
+{
+    using EventBuilder::Timestamp;
+    MOCK_METHOD5(key_event, mir::EventUPtr(Timestamp, MirKeyboardAction, xkb_keysym_t, int, MirInputEventModifiers));
+
+    MOCK_METHOD2(touch_event, mir::EventUPtr(Timestamp, MirInputEventModifiers));
+    MOCK_METHOD10(add_touch, void(MirEvent&, MirTouchId, MirTouchAction, MirTouchTooltype, float, float, float, float,
+                                  float, float));
+
+    MOCK_METHOD10(pointer_event, mir::EventUPtr(Timestamp, MirInputEventModifiers, MirPointerAction, MirPointerButtons,
+                                                float, float, float, float, float, float));
+    MOCK_METHOD2(configuration_event, mir::EventUPtr(Timestamp, MirInputConfigurationAction));
 };
 
 struct LibInputDevice : public ::testing::Test
 {
     ::testing::NiceMock<mir::test::doubles::MockLibInput> mock_libinput;
     ::testing::NiceMock<MockInputSink> mock_sink;
+    mi::DefaultEventBuilder builder{MirInputDeviceId{3}};
 
     libinput* fake_input = reinterpret_cast<libinput*>(0xF4C3);
     libinput_device* fake_device = reinterpret_cast<libinput_device*>(0xF4C4);
@@ -94,7 +110,7 @@ TEST_F(LibInputDevice, start_creates_and_unrefs_libinput_device_from_path)
     EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device))
         .Times(1);
     mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput(), path);
-    dev.start(&mock_sink);
+    dev.start(&mock_sink, &builder);
 }
 
 TEST_F(LibInputDevice, open_device_of_grou)
@@ -112,7 +128,7 @@ TEST_F(LibInputDevice, open_device_of_grou)
 
     mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput(), first_dev);
     dev.open_device_of_group(second_dev);
-    dev.start(&mock_sink);
+    dev.start(&mock_sink, &builder);
 }
 
 TEST_F(LibInputDevice, stop_unrefs_libinput_device)
@@ -122,7 +138,7 @@ TEST_F(LibInputDevice, stop_unrefs_libinput_device)
     EXPECT_CALL(mock_libinput, libinput_device_unref(fake_device))
         .Times(1);
     mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput(), path);
-    dev.start(&mock_sink);
+    dev.start(&mock_sink, &builder);
     dev.stop();
 }
 
@@ -147,7 +163,7 @@ TEST_F(LibInputDevice, process_event_converts_pointer_event)
         .WillOnce(Return(y));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithPosition(x,y)));
 
-    dev.start(&mock_sink);
+    dev.start(&mock_sink, &builder);
     dev.process_event(fake_event);
 }
 
@@ -172,7 +188,7 @@ TEST_F(LibInputDevice, process_event_provides_relative_coordinates)
         .WillOnce(Return(y));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x,y)));
 
-    dev.start(&mock_sink);
+    dev.start(&mock_sink, &builder);
     dev.process_event(fake_event);
 }
 
@@ -200,7 +216,7 @@ TEST_F(LibInputDevice, process_event_accumulates_pointer_movement)
     EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithPosition(x1,y1)));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithPosition(x1+x2,y1+y2)));
 
-    dev.start(&mock_sink);
+    dev.start(&mock_sink, &builder);
     dev.process_event(fake_event);
     dev.process_event(fake_event);
 }
@@ -236,7 +252,7 @@ TEST_F(LibInputDevice, process_event_handles_press_and_release)
         EXPECT_CALL(mock_sink, handle_input(mt::ButtonUpEvent(0,0)));
     }
 
-    dev.start(&mock_sink);
+    dev.start(&mock_sink, &builder);
     dev.process_event(fake_event);
     dev.process_event(fake_event);
     dev.process_event(fake_event);
@@ -273,7 +289,7 @@ TEST_F(LibInputDevice, process_event_handles_scoll)
         EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 5.0f)));
     }
 
-    dev.start(&mock_sink);
+    dev.start(&mock_sink, &builder);
     dev.process_event(fake_event);
     dev.process_event(fake_event);
 }

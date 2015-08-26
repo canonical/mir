@@ -21,11 +21,10 @@
 
 #include "libinput_ptr.h"
 #include "libinput_device_ptr.h"
+
+#include "mir/input/event_builder.h"
 #include "mir/input/input_device.h"
 #include "mir/geometry/point.h"
-
-#include "mir_toolkit/event.h"
-#include "mir/events/event_builders.h"
 
 #include <vector>
 
@@ -50,7 +49,7 @@ public:
     LibInputDevice(std::shared_ptr<InputReport> const& report, LibInputPtr lib, char const* path);
     ~LibInputDevice();
     std::shared_ptr<dispatch::Dispatchable> dispatchable() override;
-    void start(InputSink* sink) override;
+    void start(InputSink* sink, EventBuilder* builder) override;
     void stop() override;
     virtual InputDeviceInfo get_device_info() override;
 
@@ -74,7 +73,8 @@ private:
     std::vector<LibInputDevicePtr> devices;
     std::shared_ptr<dispatch::Dispatchable> dispatchable_fd;
 
-    InputSink *sink{nullptr};
+    InputSink* sink{nullptr};
+    EventBuilder* builder{nullptr};
     EventUPtr accumulated_touch_event;
 
     mir::geometry::Point pointer_pos;

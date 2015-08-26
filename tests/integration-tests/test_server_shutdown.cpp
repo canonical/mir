@@ -205,35 +205,6 @@ public:
     }
 };
 
-struct ThrowingInputDevice : mi::InputDevice
-{
-    ThrowingInputDevice()
-        : queue{std::make_shared<mir::dispatch::ActionQueue>()}
-    {
-    }
-
-    std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override
-    {
-        return queue;
-    }
-    void start(mi::InputSink*) override
-    {
-        queue->enqueue([](){throw std::runtime_error("InputDevice dispatch exception");});
-    }
-    void stop() override
-    {
-    }
-
-    mi::InputDeviceInfo get_device_info() override
-    {
-        return info;
-    }
-
-
-    mi::InputDeviceInfo info{0, "keyboard", "keyboard-uid", mi::DeviceCapability::keyboard};
-    std::shared_ptr<mir::dispatch::ActionQueue> queue;
-};
-
 }
 
 TEST(ServerShutdownWithThreadException,
