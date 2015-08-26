@@ -38,12 +38,8 @@ struct X11DispatchableTest : ::testing::Test
 {
     NiceMock<mtd::MockInputSink> mock_input_sink;
     NiceMock<mtd::MockX11> mock_x11;
-    std::unique_ptr<mir::input::DefaultEventBuilder> builder;
-
-    X11DispatchableTest()
-    {
-        builder = std::make_unique<mir::input::DefaultEventBuilder>(0);
-    }
+    std::unique_ptr<mir::input::DefaultEventBuilder> builder =
+        std::make_unique<mir::input::DefaultEventBuilder>(0);
 
     mir::input::X::XDispatchable x11_dispatchable{
         std::shared_ptr<::Display>(
