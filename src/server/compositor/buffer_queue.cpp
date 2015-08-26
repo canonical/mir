@@ -25,7 +25,7 @@
 #include <stdexcept>
 #include <algorithm>
 
-#if 1
+#if 0
 #define DPRINTF(_arglist) mir::log_info _arglist
 #else
 #define DPRINTF(_arglist)
