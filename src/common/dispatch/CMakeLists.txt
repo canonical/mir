@@ -20,6 +20,7 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/utils.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/action_queue.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/threaded_dispatcher.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/readable_fd.cpp
 )
 
 set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)

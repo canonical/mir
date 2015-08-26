@@ -16,39 +16,27 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#ifndef MIR_INPUT_X_INPUT_DEVICE_H_
-#define MIR_INPUT_X_INPUT_DEVICE_H_
+#ifndef MIR_X11_RESOURCES_H_
+#define MIR_X11_RESOURCES_H_
 
-#include "mir/input/input_device.h"
-#include "mir/input/input_device_info.h"
+#include <X11/Xlib.h>
 
 namespace mir
 {
-namespace input
-{
-
 namespace X
 {
 
-class XInputDevice : public input::InputDevice
+int mir_x11_error_handler(Display* dpy, XErrorEvent* eev);
+
+class X11Resources
 {
 public:
-    XInputDevice(InputDeviceInfo const& info);
+    std::shared_ptr<::Display> get_conn();
 
-    std::shared_ptr<dispatch::Dispatchable> dispatchable();
-    void start(input::InputSink* destination, EventBuilder* builder) override;
-    void stop() override;
-    InputDeviceInfo get_device_info() override;
-
-    input::InputSink* sink{nullptr};
-    EventBuilder* builder{nullptr};
 private:
-    InputDeviceInfo info;
+    std::weak_ptr<::Display> connection;
 };
 
 }
-
 }
-}
-
-#endif // MIR_INPUT_X_INPUT_DEVICE_H_
+#endif /* MIR_X11_RESOURCES_H_ */

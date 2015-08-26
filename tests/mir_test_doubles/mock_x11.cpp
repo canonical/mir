@@ -162,3 +162,8 @@ Status XInitThreads()
 {
     return global_mock->XInitThreads();
 }
+
+int XSetWMHints(Display* display, Window window, XWMHints* wmhints)
+{
+    return global_mock->XSetWMHints(display, window, wmhints);
+}
