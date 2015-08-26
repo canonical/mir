@@ -414,6 +414,11 @@ char* drmGetBusid(int fd)
     return global_mock->drmGetBusid(fd);
 }
 
+void drmFreeBusid(const char *busid)
+{
+    return global_mock->drmFreeBusid(busid);
+}
+
 // We need to wrap open as we sometimes open() the DRM device
 // We need to explicitly mark this as C because we don't match the
 // libc header; we only care about the three-parameter version

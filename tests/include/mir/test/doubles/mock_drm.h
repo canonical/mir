@@ -133,6 +133,7 @@ public:
 
     MOCK_METHOD2(drmSetInterfaceVersion, int (int fd, drmSetVersion* sv));
     MOCK_METHOD1(drmGetBusid, char* (int fd));
+    MOCK_METHOD1(drmFreeBusid, void (const char*));
 
     FakeDRMResources fake_drm;
 };
