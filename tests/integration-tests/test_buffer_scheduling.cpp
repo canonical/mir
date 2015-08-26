@@ -267,6 +267,17 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
             throw std::runtime_error("NO");
         }
     }
+
+    void allow_framedropping()
+    {
+        queue.allow_framedropping(true);
+    }
+
+    void disallow_framedropping()
+    {
+        queue.allow_framedropping(false);
+    }
+
     mtd::MockClientBufferFactory client_buffer_factory;
     mtd::StubBufferAllocator server_buffer_factory;
     mtd::StubFrameDroppingPolicyFactory stub_policy;
@@ -311,7 +322,7 @@ TEST_P(WithAnyNumberOfBuffers, all_buffers_consumed_in_interleaving_pattern)
 
 TEST_P(WithTwoOrMoreBuffers, framedropping_producers_dont_block)
 {
-    queue.allow_framedropping(true);
+    allow_framedropping();
     std::vector<ScheduleEntry> schedule = {
         {0_t,  {producer.get()}, {}},
         {61_t, {producer.get()}, {}},
@@ -511,7 +522,7 @@ TEST_P(WithThreeOrMoreBuffers, multiple_fast_compositors_are_in_sync)
 
 TEST_P(WithTwoOrMoreBuffers, framedropping_clients_get_all_buffers_and_dont_block)
 {
-    queue.allow_framedropping(true);
+    allow_framedropping();
     std::vector<ScheduleEntry> schedule;
     for (auto i = 0; i < nbuffers * 3; i++)
         schedule.emplace_back(ScheduleEntry{1_t, {producer.get()}, {}}); 
@@ -813,7 +824,7 @@ TEST_P(WithThreeOrMoreBuffers, slow_client_framerate_matches_compositor)
     // BufferQueue can only satify this for nbuffers >= 3
     // since a client can only own up to nbuffers - 1 at any one time
     auto const iterations = 10u;
-    queue.allow_framedropping(false);
+    disallow_framedropping();
 
     //fill up queue at first
     for(auto i = 0; i < nbuffers - 1; i++)
@@ -845,7 +856,7 @@ TEST_P(WithThreeOrMoreBuffers, slow_client_framerate_matches_compositor)
 //regression test for LP: #1396006, LP: #1379685
 TEST_P(WithTwoOrMoreBuffers, framedropping_surface_never_drops_newest_frame)
 {
-    queue.allow_framedropping(true);
+    allow_framedropping();
 
     for (int f = 0; f < nbuffers; ++f)
         producer->produce();
@@ -872,7 +883,7 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_surface_never_drops_newest_frame)
 /* Regression test for LP: #1306464 */
 TEST_P(WithThreeBuffers, framedropping_client_acquire_does_not_block_when_no_available_buffers)
 {
-    queue.allow_framedropping(true);
+    allow_framedropping();
 
     /* The client can never own this acquired buffer */
     auto comp_buffer = consumer->consume_resource();
@@ -1002,7 +1013,7 @@ TEST_P(WithThreeOrMoreBuffers, greedy_compositors_scale_to_triple_buffers)
      * the same client simultaneously or a single buffer for a long time.
      * This usually means bypass/overlays, but can also mean multi-monitor.
      */
-    queue.allow_framedropping(false);
+    disallow_framedropping();
 
     for (auto i = 0u; i < 20u; i++)
     {
