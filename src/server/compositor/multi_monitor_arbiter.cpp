@@ -41,6 +41,7 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
 
+    printf("COM AC %i %i\n", (int) schedule->anything_scheduled(), (int)(long) onscreen_buffers.size());
     if (onscreen_buffers.empty() && !schedule->anything_scheduled())
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to compositor"));
 
@@ -59,6 +60,7 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
 
 void mc::MultiMonitorArbiter::compositor_release(std::shared_ptr<mg::Buffer> const& buffer)
 {
+    printf("RELEASE\n");
     std::lock_guard<decltype(mutex)> lk(mutex);
 
     auto it = std::find_if(onscreen_buffers.begin(), onscreen_buffers.end(),

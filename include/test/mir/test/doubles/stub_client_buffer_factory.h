@@ -35,6 +35,7 @@ struct StubClientBufferFactory : public client::ClientBufferFactory
         std::shared_ptr<MirBufferPackage> const& package,
         geometry::Size size, MirPixelFormat pf)
     {
+        printf("MCLINET %i %i\n", size.width.as_int(), size.height.as_int());
         return std::make_shared<StubClientBuffer>(package, size, pf);
     }
 };

@@ -30,17 +30,20 @@ void mc::QueueingSchedule::schedule(std::shared_ptr<graphics::Buffer> const& buf
     if (it != queue.end())
         queue.erase(it);
     queue.emplace_back(buffer);
+        printf("%X popitin, sz %i\n", (int)(long)this, (int)(long)queue.size());
 }
 
 bool mc::QueueingSchedule::anything_scheduled()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
+        printf("%X popitoot, sz %i\n", (int)(long)this, (int)(long)queue.size());
     return !queue.empty();
 }
 
 std::shared_ptr<mg::Buffer> mc::QueueingSchedule::next_buffer()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
+    printf("NEXT BUFFER>\n");
     if (queue.empty())
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer scheduled"));
     auto buffer = queue.front();

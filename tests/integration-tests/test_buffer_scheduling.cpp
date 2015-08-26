@@ -25,10 +25,11 @@
 #include "src/server/compositor/stream.h"
 #include "src/server/compositor/buffer_map.h"
 #include "src/server/compositor/buffer_stream_surfaces.h"
-#include "mir/test/doubles/mock_client_buffer_factory.h"
+#include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include "mir/test/doubles/mock_frame_dropping_policy_factory.h"
+#include "mir/test/doubles/mock_client_buffer_factory.h"
 #include "mir/test/fake_shared.h"
 #include "mir_protobuf.pb.h"
 #include <gtest/gtest.h>
@@ -209,22 +210,48 @@ struct StubIpcSystem
     void on_client_bound_transfer(std::function<void(mp::Buffer&)> fn)
     {
         client_bound_fn = fn;
+        for(auto& b : buffers)
+            client_bound_fn(b);
+        buffers.clear();
+    }
+
+    void on_allocate(std::function<void(geom::Size)> fn)
+    {
+        allocate_fn = fn;
     }
 
     void server_bound_transfer(mp::Buffer& buffer)
     {
         if (server_bound_fn)
             server_bound_fn(buffer);
+        last_submit = buffer.buffer_id();
+    }
+
+    int last_transferred_to_server()
+    {
+        return last_submit;
     }
 
     void client_bound_transfer(mp::Buffer& buffer)
     {
         if (client_bound_fn)
             client_bound_fn(buffer);
+        else
+            buffers.push_back(buffer);
     }
 
+    void allocate(geom::Size sz)
+    {
+        if (allocate_fn)
+            allocate_fn(sz);
+    }
+
+    std::function<void(geom::Size)> allocate_fn;
     std::function<void(mp::Buffer&)> client_bound_fn;
     std::function<void(mp::Buffer&)> server_bound_fn;
+
+    std::vector<mp::Buffer> buffers;
+    int last_submit{0};
 };
 
 struct StubEventSink : public mf::EventSink
@@ -238,6 +265,8 @@ struct StubEventSink : public mf::EventSink
     {
         mp::Buffer protobuffer;
         protobuffer.set_buffer_id(buffer.id().as_value());
+        protobuffer.set_width(buffer.size().width.as_int());
+        protobuffer.set_height(buffer.size().height.as_int());
         ipc->client_bound_transfer(protobuffer);
     }
     void handle_event(MirEvent const&) {}
@@ -262,9 +291,17 @@ struct ScheduledConsumer : ConsumerSystem
         ipc_stub->on_server_bound_transfer(
             [this](mp::Buffer& buffer)
             {
-                (void) buffer;
+                printf("SERVERBOUND.\n");
                 mtd::StubBuffer b(mg::BufferID{static_cast<unsigned int>(buffer.buffer_id())});
                 stream.swap_buffers(&b, [](mg::Buffer*){});
+                printf("done serverbound.\n");
+            });
+        printf("popin.\n");
+        ipc_stub->on_allocate(
+            [this](geom::Size sz)
+            {
+                printf("ALLLOsaurus %i %i\n", sz.width.as_int(), sz.height.as_int());
+                stream.allocate_buffer(mg::BufferProperties{sz, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware});
             });
     }
 
@@ -303,54 +340,69 @@ struct ScheduledConsumer : ConsumerSystem
 
 
 
-
-struct ServerRequests
+struct ServerRequests : mcl::ServerBufferRequests
 {
-    ServerRequests(std::shared_ptr<StubIpcSystem> const stub_ipc) : stub_ipc(stub_ipc)
+    ServerRequests(std::shared_ptr<StubIpcSystem> const stub_ipc) :
+        ipc(stub_ipc)
     {
     }
 
-    void allocate_buffer(geometry::Size size, MirPixelFormat format, int usage)
+    void allocate_buffer(geom::Size sz, MirPixelFormat, int)
+    {
+        ipc->allocate(sz);
+    }
+
+    void free_buffer(int)
     {
     }
 
-    void free_buffer(int buffer_id)
+    void submit_buffer(int buffer_id, mcl::ClientBuffer&)
     {
+        mp::Buffer buffer;
+        buffer.set_buffer_id(buffer_id);
+        ipc->server_bound_transfer(buffer);   
     }
-
-    void submit_buffer(ClientBuffer& buffer)
-    {
-        ipc->server_bound_buffer(buffer);   
-    }
+    std::shared_ptr<StubIpcSystem> ipc;
 };
 
-#if 0
 struct ScheduledProducer : ProducerSystem
 {
-    ScheduledProducer()
+    ScheduledProducer(std::shared_ptr<StubIpcSystem> const& ipc_stub, int nbuffers) :
+        ipc(ipc_stub),
+        vault(
+            std::make_shared<mtd::StubClientBufferFactory>(),
+            std::make_shared<ServerRequests>(ipc),
+            geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers) 
     {
-        ipc_stub.subscribe_to_buffer_events(new_buffer);
+        printf("NBUFFER! %i\n", nbuffers);
+        ipc->on_client_bound_transfer([this](mp::Buffer& buffer){
+            printf("CBTRANSFER FN\n");
+            available++;
+            printf("CBTRAN2\n");
+            vault.wire_transfer_inbound(buffer);
+            printf("exit.\n");
+        });
     }
 
     bool can_produce()
     {
-
-        return true;
+        return available > 0;
     }
 
     mg::BufferID current_id()
     {
-        return mg::BufferID{INT_MAX};
+        return current_id_;
     }
 
     void produce()
     {
+        printf("PRODUCE.\n");
         auto buffer = vault.withdraw().get();
-
-        entries.push_back(buffer->id().as_value, whatever);
-
         vault.deposit(buffer);
-        vault.wire_transfer_outbound(buffer); 
+        vault.wire_transfer_outbound(buffer);
+
+        entries.emplace_back(BufferEntry{mg::BufferID{(unsigned int)ipc->last_transferred_to_server()}, 0, Access::unblocked});
+        available--;
     }
 
     std::vector<BufferEntry> production_log()
@@ -365,19 +417,18 @@ struct ScheduledProducer : ProducerSystem
 
     void reset_log()
     {
+        entries.clear();
     }
 
-    void new_buffer(mp::Buffer b)
-    {
-        vault.deposit_buffer(b);
-    }
+
 
     std::vector<BufferEntry> entries;
-
-    mcl::BufferVault vault(factory, blah, blah, blah);
-
+    std::shared_ptr<StubIpcSystem> ipc;
+    mcl::BufferVault vault;
+    int available{0};
+    mg::BufferID current_id_;
 };
-#endif
+
 //schedule helpers
 using tick = std::chrono::duration<int, std::ratio<27182818, 31415926>>;
 constexpr tick operator ""_t(unsigned long long t)
@@ -453,11 +504,10 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
         }
         else
         {
-    /*
-            producer = std::make_unique<ScheduledProducer>();
-            consumer = std::make_unique<ScheduledConsumer>();
-            second_consumer = std::make_unique<ScheduledConsumer>();
-    */
+            auto ipc = std::make_shared<StubIpcSystem>();
+            consumer = std::make_unique<ScheduledConsumer>(ipc);
+//            second_consumer = std::make_unique<ScheduledConsumer>(ipc);
+            producer = std::make_unique<ScheduledProducer>(ipc, std::get<0>(GetParam()));
         }
     }
     mtd::MockClientBufferFactory client_buffer_factory;
@@ -499,10 +549,16 @@ TEST_P(WithAnyNumberOfBuffers, all_buffers_consumed_in_interleaving_pattern)
     auto consumption_log = consumer->consumption_log();
     EXPECT_THAT(production_log, Not(IsEmpty()));
     EXPECT_THAT(consumption_log, Not(IsEmpty()));
+
+
+    for(auto i : production_log)
+        printf("BID %i\n", i.id.as_value());
+    for(auto i : consumption_log)
+        printf("CID %i\n", i.id.as_value());
+
     EXPECT_THAT(consumption_log, ContainerEq(production_log));
 }
 
-#if 0
 TEST_P(WithTwoOrMoreBuffers, framedropping_producers_dont_block)
 {
     queue.allow_framedropping(true);
@@ -525,6 +581,7 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_producers_dont_block)
     ASSERT_THAT(production_log, SizeIs(9));
     EXPECT_THAT(consumption_log, SizeIs(2));
 }
+#if 0
 
 TEST_P(WithThreeOrMoreBuffers, synchronous_overproducing_producers_has_all_buffers_consumed)
 {
