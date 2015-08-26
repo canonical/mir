@@ -60,9 +60,11 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
     fn(nullptr); //legacy support
 }
 
-void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const&)
+void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const& fn)
 {
-    //TODO: implement snapshotting
+    std::lock_guard<decltype(mutex)> lk(mutex); 
+    TemporarySnapshotBuffer buffer(arbiter);
+    fn(buffer);
 }
 
 MirPixelFormat mc::Stream::pixel_format() const
