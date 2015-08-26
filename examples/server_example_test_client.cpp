@@ -81,7 +81,7 @@ bool exit_success(pid_t pid)
 }
 }
 
-void me::add_test_client_option_to(mir::Server& server, std::atomic<bool>& test_failed)
+void me::add_test_client_option_to(mir::Server& server, me::ClientContext& context)
 {
     static const char* const test_client_opt = "test-client";
     static const char* const test_client_descr = "client executable";
@@ -92,11 +92,14 @@ void me::add_test_client_option_to(mir::Server& server, std::atomic<bool>& test_
     server.add_configuration_option(test_client_opt, test_client_descr, mir::OptionType::string);
     server.add_configuration_option(test_timeout_opt, test_timeout_descr, 10);
 
-    server.add_init_callback([&]
+    server.add_init_callback([&server, &context]
     {
         const auto options = server.get_options();
+
         if (options->is_set(test_client_opt))
         {
+            context.test_failed = true;
+
             auto const pid = fork();
 
             if (pid == 0)
@@ -107,32 +110,30 @@ void me::add_test_client_option_to(mir::Server& server, std::atomic<bool>& test_
             }
             else if (pid > 0)
             {
-                //FIXME: These alarm objects outlive the server - their destructor is called after the server is destroyed.
-                //The alarm destructor implementation reference glib objects that are assumed to exist which leads to crashes.
-                //For now, as a workaround, canceling the alarm will release such internal resources
-                static std::unique_ptr<mir::time::Alarm> const kill_action = server.the_main_loop()->create_alarm(
+                context.client_kill_action = server.the_main_loop()->create_alarm(
                     [pid]
                     {
-                        kill_action->cancel();
                         kill(pid, SIGTERM);
                     });
 
-                static std::unique_ptr<mir::time::Alarm> const exit_action = server.the_main_loop()->create_alarm(
-                    [pid, &server, &test_failed]
+                context.server_stop_action = server.the_main_loop()->create_alarm(
+                    [pid, &server, &context]()
                     {
-                        if (!exit_success(pid))
-                            test_failed = true;
-                        exit_action->cancel();
+                        context.test_failed = !exit_success(pid);
                         server.stop();
                     });
 
-                kill_action->reschedule_in(std::chrono::seconds(options->get<int>(test_timeout_opt)));
-                exit_action->reschedule_in(std::chrono::seconds(options->get<int>(test_timeout_opt)+1));
+                context.client_kill_action->reschedule_in(std::chrono::seconds(options->get<int>(test_timeout_opt)));
+                context.server_stop_action->reschedule_in(std::chrono::seconds(options->get<int>(test_timeout_opt)+1));
             }
             else
             {
                 BOOST_THROW_EXCEPTION(std::runtime_error("Client failed to launch"));
             }
+        }
+        else
+        {
+            context.test_failed = false;
         }
     });
 }

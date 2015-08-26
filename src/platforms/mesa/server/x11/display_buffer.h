@@ -35,13 +35,19 @@ namespace X
 class DisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-    DisplayBuffer(geometry::Size const sz, EGLDisplay const d, EGLSurface const s, EGLContext const c);
+    DisplayBuffer(
+            geometry::Size const sz,
+            EGLDisplay const d,
+            EGLSurface const s,
+            EGLContext const c,
+            MirOrientation const o);
 
     geometry::Rectangle view_area() const override;
     void make_current() override;
     void release_current() override;
     void gl_swap_buffers() override;
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
+    void set_orientation(MirOrientation const new_orientation);
 
     MirOrientation orientation() const override;
 
@@ -50,6 +56,7 @@ private:
     EGLDisplay const egl_dpy;
     EGLSurface const egl_surf;
     EGLContext const egl_ctx;
+    MirOrientation orientation_;
 };
 
 }

@@ -16,32 +16,48 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#ifndef MIR_X_XSERVER_CONNECTION_H_
-#define MIR_X_XSERVER_CONNECTION_H_
+#ifndef MIR_X_LAZY_CONNECTION_H_
+#define MIR_X_LAZY_CONNECTION_H_
 
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
+
+//Force synchronous Xlib operation - for debugging
+//#define FORCE_SYNCHRONOUS
 
 namespace mir
 {
 namespace X
 {
 
-struct X11Connection
+int mir_x11_error_handler(Display* dpy, XErrorEvent* eev);
+
+class LazyConnection
 {
-    X11Connection()
+public:
+    std::shared_ptr<::Display> get()
     {
-        dpy = XOpenDisplay(nullptr);
+        if (auto conn = connection.lock())
+            return conn;
+
+        XInitThreads();
+
+        XSetErrorHandler(mir_x11_error_handler);
+
+        std::shared_ptr<::Display> new_conn{
+            XOpenDisplay(nullptr),
+            [](::Display* display) { XCloseDisplay(display); }};
+
+#ifdef FORCE_SYNCHRONOUS
+        XSynchronize(new_conn.get(), True);
+#endif
+        connection = new_conn;
+        return new_conn;
     }
 
-    ~X11Connection()
-    {
-        XCloseDisplay(dpy);
-    }
-
-    ::Display *dpy;
+private:
+    std::weak_ptr<::Display> connection;
 };
 
 }
 }
-#endif /* MIR_X_XSERVER_CONNECTION_H_ */
+#endif /* MIR_X_LAZY_CONNECTION_H_ */

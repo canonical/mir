@@ -28,10 +28,11 @@ namespace md = mir::dispatch;
 namespace mix = mi::X;
 
 mix::XInputPlatform::XInputPlatform(
-    std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry)
+    std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
+    std::shared_ptr<::Display> const& conn)
     : platform_queue(mir::make_module_ptr<md::ActionQueue>()),
       registry(input_device_registry),
-      device(std::make_shared<mix::XInputDevice>())
+      device(std::make_shared<mix::XInputDevice>(conn))
 {
 }
 

@@ -41,11 +41,11 @@ class XDispatchable;
 class XInputDevice : public input::InputDevice
 {
 public:
-    XInputDevice();
+    XInputDevice(std::shared_ptr<::Display> const& conn);
     ~XInputDevice() = default;
 
     std::shared_ptr<dispatch::Dispatchable> dispatchable() override;
-    void start(input::InputSink* destination) override;
+    void start(input::InputSink* destination, EventBuilder* builder) override;
     void stop() override;
     InputDeviceInfo get_device_info() override;
 

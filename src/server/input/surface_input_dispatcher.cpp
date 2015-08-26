@@ -220,6 +220,7 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
     
     deliver(surface, &*mev::make_event(mir_input_event_get_device_id(iev),
         std::chrono::nanoseconds(mir_input_event_get_event_time(iev)),
+        0, /* mac */
         mir_pointer_event_modifiers(pev),
         action, mir_pointer_event_buttons(pev),
         mir_pointer_event_axis_value(pev,mir_pointer_axis_x),
@@ -307,22 +308,44 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirPointe
     return false;
 }
 
+namespace
+{
+bool is_gesture_start(MirTouchEvent const* tev)
+{
+    auto const point_count = mir_touch_event_point_count(tev);
+
+    for (auto i = 0u; i != point_count; ++i)
+        if (mir_touch_event_action(tev, i) != mir_touch_action_down)
+            return false;
+
+    return true;
+}
+
+bool is_gesture_end(MirTouchEvent const* tev)
+{
+    auto const point_count = mir_touch_event_point_count(tev);
+
+    for (auto i = 0u; i != point_count; ++i)
+        if (mir_touch_event_action(tev, i) != mir_touch_action_up)
+            return false;
+
+    return true;
+}
+}
+
 bool mi::SurfaceInputDispatcher::dispatch_touch(MirInputDeviceId id, MirTouchEvent const* tev)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
 
-    auto const point_count = mir_touch_event_point_count(tev);
-    
     auto& gesture_owner = ensure_touch_state(id).gesture_owner;
 
     // We record the gesture_owner if the event signifies the start of a new
-    // gesture (as detected by this conditional). This prevents gesture
-    // ownership from transfering in the event a gesture receiver closes mid
-    // gesture (e.g. when a surface closes mid swipe we do not want the
-    // surface under to receive events). This also allows a gesture to continue
-    // outside of the target surface, providing it started in the target
-    // surface.
-    if (point_count == 1 && mir_touch_event_action(tev, 0) == mir_touch_action_down)
+    // gesture. This prevents gesture ownership from transfering in the event
+    // a gesture receiver closes mid gesture (e.g. when a surface closes mid
+    // swipe we do not want the surface under to receive events). This also
+    // allows a gesture to continue outside of the target surface, providing
+    // it started in the target surface.
+    if (is_gesture_start(tev))
     {
         geom::Point event_x_y = { mir_touch_event_axis_value(tev, 0, mir_touch_axis_x),
                                   mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) };
@@ -333,11 +356,10 @@ bool mi::SurfaceInputDispatcher::dispatch_touch(MirInputDeviceId id, MirTouchEve
     if (gesture_owner)
     {
         deliver(gesture_owner, tev);
-        if (point_count == 1 && mir_touch_event_action(tev, 0) == mir_touch_action_up)
-        {
-            // Last touch is coming up. Gesture is over.
+
+        if (is_gesture_end(tev))
             gesture_owner.reset();
-        }
+
         return true;
     }
         

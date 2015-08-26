@@ -47,13 +47,22 @@ public:
     {
     }
 
+    ~AlarmImpl() override
+    {
+        gsource.ensure_no_further_dispatch();
+    }
+
     bool cancel() override
     {
         std::lock_guard<std::mutex> lock{alarm_mutex};
 
-        gsource = mir::detail::GSourceHandle{};
-        state_ = State::cancelled;
-        return true;
+        gsource.ensure_no_further_dispatch();
+        if (state_ ==  State::pending)
+        {
+            gsource = mir::detail::GSourceHandle{};
+            state_ = State::cancelled;
+        }
+        return state_ == State::cancelled;
     }
 
     State state() const override
@@ -71,6 +80,7 @@ public:
     {
         std::lock_guard<std::mutex> lock{alarm_mutex};
 
+        auto old_state = state_;
         state_ = State::pending;
         gsource = mir::detail::add_timer_gsource(
             main_context,
@@ -79,7 +89,7 @@ public:
             exception_handler,
             time_point);
 
-        return true;
+        return old_state == State::pending;
     }
 
 private:

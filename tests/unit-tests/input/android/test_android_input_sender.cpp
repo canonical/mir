@@ -103,9 +103,9 @@ public:
     float test_y_coord[2] = {17, 9};
     
     AndroidInputSender()
-       : key_event(mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(1), mir_keyboard_action_down,
+       : key_event(mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(1), 0, mir_keyboard_action_down,
                                     7, test_scan_code, mir_input_event_modifier_none)),
-          motion_event(mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(-1), mir_input_event_modifier_none))
+          motion_event(mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(-1), 0, mir_input_event_modifier_none))
     {
         using namespace ::testing;
 
@@ -327,7 +327,7 @@ TEST_F(AndroidInputSender, unordered_finish_signal_triggers_the_right_callback)
 {
     register_surface();
 
-    auto another_key_event = mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(1), mir_keyboard_action_down,
+    auto another_key_event = mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(1), 0, mir_keyboard_action_down,
                                              9, test_scan_code, mir_input_event_modifier_none);
 
     sender.send_event(*key_event, channel);

@@ -17,13 +17,10 @@
  */
 
 #include "dispatchable.h"
-#include "../xserver_connection.h"
-#include "mir/events/event_private.h"
-#include "mir/events/event_builders.h"
+#include "mir/input/event_builder.h"
 
 #include <boost/throw_exception.hpp>
 #include <chrono>
-#include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <linux/input.h>
 #include <inttypes.h>
@@ -37,13 +34,14 @@
 namespace mi = mir::input;
 namespace mix = mi::X;
 namespace md = mir::dispatch;
-namespace mx = mir::X;
-namespace mev = mir::events;
 
-extern std::shared_ptr<mx::X11Connection> x11_connection;
-
-mix::XDispatchable::XDispatchable(int raw_fd)
-    : fd(raw_fd), sink(nullptr)
+mix::XDispatchable::XDispatchable(
+    std::shared_ptr<::Display> const& conn,
+    int raw_fd)
+    : x11_connection(conn),
+      fd(raw_fd),
+      sink(nullptr),
+      builder(nullptr)
 {
 }
 
@@ -65,16 +63,30 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
         // https://tronche.com/gui/x/xlib/events/keyboard-pointer/keyboard-pointer.html
         XEvent xev;
 
-        XNextEvent(x11_connection->dpy, &xev);
+        XNextEvent(x11_connection.get(), &xev);
 
         if (sink)
         {
             switch (xev.type)
             {
+            case FocusIn:
+            {
+                auto const& xfiev = (XFocusInEvent&)xev;
+                XGrabKeyboard(xfiev.display, xfiev.window, True, GrabModeAsync, GrabModeAsync, CurrentTime);
+                break;
+            }
+
+            case FocusOut:
+            {
+                auto const& xfoev = (XFocusOutEvent&)xev;
+                XUngrabKeyboard(xfoev.display, CurrentTime);
+                break;
+            }
+
             case KeyPress:
             case KeyRelease:
             {
-                XKeyEvent &xkev = (XKeyEvent &)xev;
+                auto& xkev = (XKeyEvent&)xev;
                 static const int STRMAX = 32;
                 char str[STRMAX];
                 KeySym keysym;
@@ -114,8 +126,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                     keysym, xkev.keycode-8, modifiers, event_time);
 #endif
                 sink->handle_input(
-                    *mev::make_event(
-                        MirInputDeviceId(0),
+                    *builder->key_event(
                         event_time,
                         xkev.type == KeyPress ?
                             mir_keyboard_action_down :
@@ -131,7 +142,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
             case ButtonPress:
             case ButtonRelease:
             {
-                XButtonEvent &xbev = (XButtonEvent &)xev;
+                auto const& xbev = (XButtonEvent&)xev;
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                 mir::log_info("X11 button event :"
@@ -157,24 +168,37 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
                         std::chrono::milliseconds{xbev.time});
 
+                MirPointerButtons buttons_pressed = 0;
+                if (xbev.state & Button1Mask)
+                    buttons_pressed |= mir_pointer_button_primary;
+                if (xbev.state & Button2Mask) // tertiary (middle) button is Button2 in X
+                    buttons_pressed |= mir_pointer_button_tertiary;
+                if (xbev.state & Button3Mask)
+                    buttons_pressed |= mir_pointer_button_secondary;
+                if (xbev.state & Button4Mask)
+                    buttons_pressed |= mir_pointer_button_back;
+                if (xbev.state & Button5Mask)
+                    buttons_pressed |= mir_pointer_button_forward;
+
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                 mir::log_info("Mir button event : x=%d, y=%d, "
                     "buttons_pressed=%0X, modifiers=%0X, event_time=%" PRId64,
-                    xbev.x, xbev.y, 1 << (xbev.button-1), modifiers, event_time);
+                    xbev.x, xbev.y, buttons_pressed, modifiers, event_time);
 #endif
                 sink->handle_input(
-                    *mev::make_event(
-                        MirInputDeviceId(0),
+                    *builder->pointer_event(
                         event_time,
                         modifiers,
                         xbev.type == ButtonPress ?
                             mir_pointer_action_button_down :
                             mir_pointer_action_button_up,
-                        1 << (xbev.button-1),
+                        buttons_pressed,
                         xbev.x,
                         xbev.y,
-                        0,
-                        0
+                        0.0f,
+                        0.0f,
+                        0.0f,
+                        0.0f
                     )
                 );
                 break;
@@ -182,7 +206,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
 
             case MotionNotify:
             {
-                XMotionEvent &xmev = (XMotionEvent &)xev;
+                auto const& xmev = (XMotionEvent&)xev;
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                 mir::log_info("X11 motion event :"
@@ -210,10 +234,10 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                 MirPointerButtons buttons_pressed = 0;
                 if (xmev.state & Button1Mask)
                     buttons_pressed |= mir_pointer_button_primary;
-                if (xmev.state & Button2Mask)
-                    buttons_pressed |= mir_pointer_button_secondary;
-                if (xmev.state & Button3Mask)
+                if (xmev.state & Button2Mask) // tertiary (middle) button is Button2 in X
                     buttons_pressed |= mir_pointer_button_tertiary;
+                if (xmev.state & Button3Mask)
+                    buttons_pressed |= mir_pointer_button_secondary;
                 if (xmev.state & Button4Mask)
                     buttons_pressed |= mir_pointer_button_back;
                 if (xmev.state & Button5Mask)
@@ -225,16 +249,17 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                     xmev.x, xmev.y, buttons_pressed, modifiers, event_time);
 #endif
                 sink->handle_input(
-                    *mev::make_event(
-                        MirInputDeviceId(0),
+                    *builder->pointer_event(
                         event_time,
                         modifiers,
                         mir_pointer_action_motion,
                         buttons_pressed,
                         xmev.x,
                         xmev.y,
-                        0,
-                        0
+                        0.0f,
+                        0.0f,
+                        0.0f,
+                        0.0f
                     )
                 );
                 break;
@@ -249,13 +274,13 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
 
             default:
 #ifdef MIR_ON_X11_INPUT_VERBOSE
-                mir::log_info("Uninteresting event");
+                mir::log_info("Uninteresting event : %08X", xev.type);
 #endif
                 break;
             }
         }
         else
-            mir::log_info("input event detected with no sink to handle it");
+            mir::log_error("input event received with no sink to handle it");
     }
 
     return ret;
@@ -266,12 +291,14 @@ md::FdEvents mix::XDispatchable::relevant_events() const
     return md::FdEvent::readable | md::FdEvent::error | md::FdEvent::remote_closed;
 }
 
-void mix::XDispatchable::set_input_sink(mi::InputSink *input_sink)
+void mix::XDispatchable::set_input_sink(mi::InputSink* input_sink, mi::EventBuilder* event_builder)
 {
     sink = input_sink;
+    builder = event_builder;
 }
 
 void mix::XDispatchable::unset_input_sink()
 {
     sink = nullptr;
+    builder = nullptr;
 }

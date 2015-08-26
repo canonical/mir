@@ -53,6 +53,7 @@ public:
     }
     std::chrono::nanoseconds const some_time = std::chrono::nanoseconds(13);
     std::chrono::nanoseconds const later_time = std::chrono::nanoseconds(14);
+    const uint64_t mac = 16;
     const int32_t device_id = 13;
     const uint32_t source_id = 13;
     const uint32_t default_flags = 0;
@@ -118,7 +119,7 @@ TEST_F(InputTranslator, accepts_motion_action_with_existing_index)
     properties[1].id = 2;
     properties[2].id = 3;
 
-    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, 0, valid_motion_action,
+    droidinput::NotifyMotionArgs motion(some_time, mac, device_id, source_id, 0, valid_motion_action,
                                         no_flags, meta_state, button_state, edge_flags, three_pointers, properties,
                                         coords, x_precision, y_precision, later_time);
 
@@ -167,7 +168,7 @@ TEST_F(InputTranslator, translates_multifinger_release_correctly)
     properties[0].toolType = AMOTION_EVENT_TOOL_TYPE_FINGER;
 
     droidinput::NotifyMotionArgs motion(
-        some_time, device_id, source_id, 0, end_of_gesture,
+        some_time, mac, device_id, source_id, 0, end_of_gesture,
         no_flags, meta_state, button_state, edge_flags, 1, properties,
         coords, x_precision, y_precision, later_time);
 
@@ -186,7 +187,7 @@ TEST_F(InputTranslator, ignores_motion_with_duplicated_pointerids)
     properties[1].id = 1;
     properties[2].id = 3;
 
-    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, 0, motion_action, no_flags,
+    droidinput::NotifyMotionArgs motion(some_time, mac, device_id, source_id, 0, motion_action, no_flags,
                                         meta_state, button_state, edge_flags, three_pointers, properties, coords,
                                         x_precision, y_precision, later_time);
     translator.notifyMotion(&motion);
@@ -204,7 +205,7 @@ TEST_F(InputTranslator, ignores_motion_with_invalid_pointerids)
     properties[1].id = 1;
     properties[2].id = 3;
 
-    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, 0, motion_action, no_flags,
+    droidinput::NotifyMotionArgs motion(some_time, mac, device_id, source_id, 0, motion_action, no_flags,
                                         meta_state, button_state, edge_flags, three_pointers, properties, coords,
                                         x_precision, y_precision, later_time);
     translator.notifyMotion(&motion);
@@ -230,7 +231,7 @@ TEST_F(InputTranslator, forwards_pointer_positions)
     coords[0].setAxisValue(AMOTION_EVENT_AXIS_RX, dx);
     coords[0].setAxisValue(AMOTION_EVENT_AXIS_RY, dy);
     
-    droidinput::NotifyMotionArgs motion(some_time, device_id, AINPUT_SOURCE_MOUSE, 0, motion_action, no_flags,
+    droidinput::NotifyMotionArgs motion(some_time, mac, device_id, AINPUT_SOURCE_MOUSE, 0, motion_action, no_flags,
                                         meta_state, button_state, edge_flags, one_pointer, properties, coords,
                                         x_precision, y_precision, later_time);
     translator.notifyMotion(&motion);
@@ -244,9 +245,9 @@ TEST_F(InputTranslator, forwards_and_converts_up_down_key_notifications)
     EXPECT_CALL(dispatcher, dispatch(mt::KeyDownEvent())).Times(1);
     EXPECT_CALL(dispatcher, dispatch(mt::KeyUpEvent())).Times(1);
 
-    droidinput::NotifyKeyArgs down(some_time, device_id, source_id, 0, AKEY_EVENT_ACTION_DOWN,
+    droidinput::NotifyKeyArgs down(some_time, mac, device_id, source_id, 0, AKEY_EVENT_ACTION_DOWN,
                                    no_flags, arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
-    droidinput::NotifyKeyArgs up(some_time, device_id, source_id, 0, AKEY_EVENT_ACTION_UP,
+    droidinput::NotifyKeyArgs up(some_time, mac, device_id, source_id, 0, AKEY_EVENT_ACTION_UP,
                                  no_flags, arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
 
     translator.notifyKey(&down);
@@ -259,8 +260,9 @@ TEST_F(InputTranslator, forwards_all_key_event_paramters_correctly)
 
     int32_t const device_id = 2, scan_code = 4, key_code = 5;
     std::chrono::nanoseconds event_time(1);
+    auto mac = 0;
 
-    auto expected = mev::make_event(MirInputDeviceId(device_id), event_time,
+    auto expected = mev::make_event(MirInputDeviceId(device_id), event_time, mac,
                                     mir_keyboard_action_down, key_code, scan_code,
                                     mir_input_event_modifier_shift);
 
@@ -268,6 +270,7 @@ TEST_F(InputTranslator, forwards_all_key_event_paramters_correctly)
     EXPECT_CALL(dispatcher, dispatch(mt::MirKeyEventMatches(*expected))).Times(1);
 
     droidinput::NotifyKeyArgs notified(event_time,
+                                       mac,
                                        device_id,
                                        AINPUT_SOURCE_KEYBOARD,
                                        default_policy_flags,
@@ -286,11 +289,12 @@ TEST_F(InputTranslator, forwards_all_motion_event_paramters_correctly)
     using namespace ::testing;
 
     std::chrono::nanoseconds event_time(2);
+    auto mac = 0;
     int32_t device_id = 3;
     int32_t touch_id = 17;
     float x = 7, y = 8, pres = 9, tmaj = 10, tmin = 11, size = 12;
 
-    auto expected = mev::make_event(MirInputDeviceId(device_id), event_time, mir_input_event_modifier_none);
+    auto expected = mev::make_event(MirInputDeviceId(device_id), event_time, mac, mir_input_event_modifier_none);
     mev::add_touch(*expected,  MirTouchId(touch_id), mir_touch_action_change,
                    mir_touch_tooltype_finger, x, y, pres, tmaj, tmin, size);
 
@@ -306,6 +310,7 @@ TEST_F(InputTranslator, forwards_all_motion_event_paramters_correctly)
     EXPECT_CALL(dispatcher, dispatch(mt::MirTouchEventMatches(*expected))).Times(1);
 
     droidinput::NotifyMotionArgs notified(std::chrono::nanoseconds(event_time),
+                                          mac,
                                           device_id,
                                           AINPUT_SOURCE_TOUCHSCREEN,
                                           default_policy_flags,
@@ -333,7 +338,7 @@ TEST_P(InputTranslatorWithPolicyParam, forwards_policy_modifiers_as_flags_and_mo
                     )
                 ).Times(1);
 
-    droidinput::NotifyKeyArgs tester(some_time, device_id, source_id,
+    droidinput::NotifyKeyArgs tester(some_time, mac, device_id, source_id,
                                      GetParam().policy_flag, AKEY_EVENT_ACTION_DOWN,
                                      no_flags, arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
 
