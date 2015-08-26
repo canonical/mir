@@ -83,6 +83,8 @@ struct ConsumerSystem
     virtual std::shared_ptr<mg::Buffer> consume_resource() = 0;
     virtual geom::Size last_size()  = 0;
 
+    virtual void set_framedropping(bool) = 0;
+
     virtual std::vector<BufferEntry> consumption_log() = 0;
     ConsumerSystem() = default;
     virtual ~ConsumerSystem() = default;
@@ -194,6 +196,11 @@ struct BufferQueueConsumer : ConsumerSystem
         return last_size_;
     }
     
+    void set_framedropping(bool allow) override
+    {
+        stream.allow_framedropping(allow);
+    }
+
     mc::BufferStream& stream;
     std::vector<BufferEntry> entries;
     geom::Size last_size_;
@@ -322,6 +329,11 @@ struct ScheduledConsumer : ConsumerSystem
         return last_size_;
     }
     
+    void set_framedropping(bool allow) override
+    {
+        stream.allow_framedropping(allow);
+    }
+
     std::vector<BufferEntry> entries;
     geom::Size last_size_;
     mc::Stream stream;    
@@ -513,12 +525,12 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
 
     void allow_framedropping()
     {
-        queue.allow_framedropping(true);
+        consumer->set_framedropping(true);
     }
 
     void disallow_framedropping()
     {
-        queue.allow_framedropping(false);
+        consumer->set_framedropping(false);
     }
 
     mtd::MockClientBufferFactory client_buffer_factory;
@@ -592,7 +604,6 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_producers_dont_block)
     ASSERT_THAT(production_log, SizeIs(9));
     EXPECT_THAT(consumption_log, SizeIs(2));
 }
-#if 0
 
 TEST_P(WithThreeOrMoreBuffers, synchronous_overproducing_producers_has_all_buffers_consumed)
 {
@@ -614,6 +625,7 @@ TEST_P(WithThreeOrMoreBuffers, synchronous_overproducing_producers_has_all_buffe
 }
 
 
+#if 0
 MATCHER_P(EachBufferIdIs, value, "")
 {
     auto id_matcher = [](BufferEntry const& a, BufferEntry const& b){ return a.id == b.id; };
