@@ -27,7 +27,10 @@ namespace frontend
 /// Number of buffers the client library will keep.
 
 /// mir::client::ClientBufferDepository and mir::frontend::ClientBufferTracker need to use the same value
-unsigned int const client_buffer_cache_size = 3;
+// TODO proxy for "however many buffers are in this stream" and could be 2-4. Using the maximum
+// TODO is safe but potentially holds unnecessary resources (lp:1441553)
+// (this should become moot with "new Buffer Semantics")
+unsigned int const client_buffer_cache_size = 4;
 
 /// Buffers need to be big enough to support messages
 unsigned int const serialization_buffer_size = 2048;
