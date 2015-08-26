@@ -919,13 +919,17 @@ TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
 
     comp_buffer1.reset();
 
-    /* An async client should still be able to cycle through all the available buffers */
+    /* An async client should still be able to cycle through all the available
+     * buffers. "async" means any pattern other than "produce,consume,..."
+     */
     int const max_ownable_buffers = nbuffers - 1;
     producer.reset_log();
     for (int frame = 0; frame < max_ownable_buffers * 2; frame++)
     {
-        producer.produce();
-        consumers[0]->consume();
+        for (int drain = 0; drain < nbuffers; ++drain)
+            consumers[0]->consume();
+        while (producer.can_produce())
+            producer.produce();
     }
 
     EXPECT_THAT(unique_ids_in(producer.production_log()), Eq(nbuffers));
