@@ -18,11 +18,9 @@
 
 #include "mir/input/input_device_info.h"
 #include "input_device.h"
-#include "dispatchable.h"
 
 namespace mi = mir::input;
 namespace mix = mi::X;
-namespace md = mir::dispatch;
 
 mix::XInputDevice::XInputDevice(InputDeviceInfo const& info)
     : info{info}
