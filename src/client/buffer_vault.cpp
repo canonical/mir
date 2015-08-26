@@ -61,21 +61,16 @@ std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
     std::promise<std::shared_ptr<mcl::ClientBuffer>> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [this](std::pair<int, BufferEntry> const& entry) {
-            printf("SIZE %i,%i vs %i,%i\n", size.width.as_int(), size.height.as_int(), 
-                entry.second.buffer->size().width.as_int(),
-                entry.second.buffer->size().height.as_int());
             return ((entry.second.owner == Owner::Self) && (size == entry.second.buffer->size())); });
 
     auto future = promise.get_future();
     if (it != buffers.end())
     {
-        printf("GOT IT.\n");
         it->second.owner = Owner::ContentProducer;
         promise.set_value(it->second.buffer);
     }
     else
     {
-        printf("HAVE TO PROMISE IT.\n");
         promises.emplace_back(std::move(promise));
     }
     return future;
@@ -113,7 +108,6 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
 
 void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 {
-    printf("INBOUND!\n");
     auto package = std::make_shared<MirBufferPackage>();
     package->data_items = protobuf_buffer.data_size();
     package->fd_items = protobuf_buffer.fd_size();
@@ -127,11 +121,9 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     package->height = protobuf_buffer.height();
 
     std::unique_lock<std::mutex> lk(mutex);
-    printf("IBOUND LOK\n");
     auto it = buffers.find(protobuf_buffer.buffer_id());
     if (it == buffers.end())
     {
-            printf("create it.\n");
         auto buffer = factory->create_buffer(package, geom::Size{package->width, package->height}, format);
         buffers[protobuf_buffer.buffer_id()] = BufferEntry{ buffer, Owner::Self };
     }
@@ -144,7 +136,6 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
         }
         else
         {
-            printf("RESIZE MADNESS\n");
             int id = it->first;
             buffers.erase(it);
             lk.unlock();
@@ -156,7 +147,6 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 
     if (!promises.empty())
     {
-        printf("SERVICE PROMISE.\n");
         buffers[protobuf_buffer.buffer_id()].owner = Owner::ContentProducer;
         promises.front().set_value(buffers[protobuf_buffer.buffer_id()].buffer);
         promises.pop_front();

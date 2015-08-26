@@ -41,14 +41,12 @@ void mc::DroppingSchedule::schedule(std::shared_ptr<mg::Buffer> const& buffer)
 bool mc::DroppingSchedule::anything_scheduled()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-        printf("NONOONO\n");
     return static_cast<bool>(the_only_buffer);
 }
 
 std::shared_ptr<mg::Buffer> mc::DroppingSchedule::next_buffer()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-        printf("ZNONOONO\n");
     if (!the_only_buffer)
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer scheduled"));
     auto buffer = the_only_buffer;
