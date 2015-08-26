@@ -290,7 +290,6 @@ struct ScheduledConsumer : ConsumerSystem
     mc::Stream stream;    
 };
 
-#if 0
 
 
 
@@ -307,7 +306,7 @@ struct ScheduledConsumer : ConsumerSystem
 
 struct ServerRequests
 {
-    ServerRequests(std::shared_ptr<> const stub_ipc) : stub_ipc(stub_ipc)
+    ServerRequests(std::shared_ptr<StubIpcSystem> const stub_ipc) : stub_ipc(stub_ipc)
     {
     }
 
@@ -319,16 +318,13 @@ struct ServerRequests
     {
     }
 
-    void submit_buffer(ClientBuffer&)
+    void submit_buffer(ClientBuffer& buffer)
     {
         ipc->server_bound_buffer(buffer);   
     }
 };
 
-
-
-
-
+#if 0
 struct ScheduledProducer : ProducerSystem
 {
     ScheduledProducer()
