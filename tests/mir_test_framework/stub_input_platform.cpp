@@ -20,6 +20,7 @@
 
 #include "mir/input/input_device_registry.h"
 #include "mir/dispatch/action_queue.h"
+#include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/module_deleter.h"
 
 #include <algorithm>
@@ -29,10 +30,12 @@ namespace mi = mir::input;
 
 mtf::StubInputPlatform::StubInputPlatform(
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry)
-    : platform_queue{mir::make_module_ptr<mir::dispatch::ActionQueue>()},
+    : platform_dispatchable{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
+    platform_queue{std::make_shared<mir::dispatch::ActionQueue>()},
     registry(input_device_registry)
 {
     stub_input_platform = this;
+    platform_dispatchable->add_watch(platform_queue);
 }
 
 mtf::StubInputPlatform::~StubInputPlatform()
@@ -53,7 +56,7 @@ void mtf::StubInputPlatform::start()
 
 std::shared_ptr<mir::dispatch::Dispatchable> mtf::StubInputPlatform::dispatchable()
 {
-    return platform_queue;
+    return platform_dispatchable;
 }
 
 void mtf::StubInputPlatform::stop()
@@ -93,6 +96,24 @@ void mtf::StubInputPlatform::remove(std::shared_ptr<mir::input::InputDevice> con
         {
             registry->remove_device(dev);
         });
+}
+
+void mtf::StubInputPlatform::register_dispatchable(std::shared_ptr<mir::dispatch::Dispatchable> const& queue)
+{
+    auto input_platform = stub_input_platform.load();
+    if (!input_platform)
+        BOOST_THROW_EXCEPTION(std::runtime_error("No stub input platform available"));
+
+    input_platform->platform_dispatchable->add_watch(queue);
+}
+
+void mtf::StubInputPlatform::unregister_dispatchable(std::shared_ptr<mir::dispatch::Dispatchable> const& queue)
+{
+    auto input_platform = stub_input_platform.load();
+    if (!input_platform)
+        BOOST_THROW_EXCEPTION(std::runtime_error("No stub input platform available"));
+
+    input_platform->platform_dispatchable->remove_watch(queue);
 }
 
 std::atomic<mtf::StubInputPlatform*> mtf::StubInputPlatform::stub_input_platform{nullptr};

@@ -204,12 +204,10 @@ bool mi::DefaultInputDeviceHub::RegisteredDevice::device_matches(std::shared_ptr
 void mi::DefaultInputDeviceHub::RegisteredDevice::start()
 {
     device->start(this, &builder);
-    multiplexer->add_watch(device->dispatchable());
 }
 
 void mi::DefaultInputDeviceHub::RegisteredDevice::stop()
 {
-    multiplexer->remove_watch(device->dispatchable());
     device->stop();
 }
 
