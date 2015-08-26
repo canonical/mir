@@ -32,6 +32,7 @@ namespace mir
 namespace protobuf { class Buffer; }
 namespace client
 {
+class ClientBuffer;
 class ServerBufferRequests
 {
 public:
@@ -46,7 +47,6 @@ protected:
 };
 
 class ClientBufferFactory;
-class ClientBuffer;
 class BufferVault
 {
 public:
