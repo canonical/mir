@@ -8,7 +8,7 @@ MIR_GRAPHICS_PLATFORM_4 {
   local: *;
 };
 
-MIR_INPUT_PLATFORM_1 {
+MIR_INPUT_PLATFORM_2 {
   global: 
    add_input_platform_options;
    create_input_platform;
