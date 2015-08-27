@@ -1096,6 +1096,7 @@ TEST_P(WithAnyNumberOfBuffers, first_user_is_recorded)
 
 TEST_P(WithThreeBuffers, gives_compositor_a_valid_buffer_after_dropping_old_buffers_without_clients)
 {
+    producer->produce();
     istream->drop_old_buffers();
     consumer->consume();
     EXPECT_THAT(consumer->consumption_log(), SizeIs(1));
