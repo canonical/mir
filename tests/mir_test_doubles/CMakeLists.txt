@@ -30,7 +30,13 @@ set(
 )
 
 if (MIR_BUILD_PLATFORM_MESA_X11)
+  include_directories(
+    ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
+    ${DRM_INCLUDE_DIRS}
+  )
   list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
+    ${CMAKE_CURRENT_SOURCE_DIR}/mock_drm.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mock_gbm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mock_x11.cpp
   )
 endif()
