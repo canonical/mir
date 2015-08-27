@@ -47,13 +47,16 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
     if (current_buffer_users.find(id) != current_buffer_users.end() || onscreen_buffers.empty())
     {
         if (schedule->anything_scheduled())
+        {
             onscreen_buffers.emplace_front(schedule->next_buffer(), 0);
+        }
         current_buffer_users.clear();
     }
     current_buffer_users.insert(id);
 
     auto& last_entry = onscreen_buffers.front();
     last_entry.use_count++;
+
     return last_entry.buffer;
 }
 

@@ -71,6 +71,7 @@ std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
     }
     else
     {
+        printf("promise.\n");
         promises.emplace_back(std::move(promise));
     }
     return future;
@@ -121,6 +122,7 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     package->height = protobuf_buffer.height();
 
     std::unique_lock<std::mutex> lk(mutex);
+    printf("INBOUND.\n");
     auto it = buffers.find(protobuf_buffer.buffer_id());
     if (it == buffers.end())
     {
@@ -136,6 +138,7 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
         }
         else
         {
+            printf("resize INBOUND BUFFER.\n");
             int id = it->first;
             buffers.erase(it);
             lk.unlock();
@@ -156,5 +159,6 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 void mcl::BufferVault::set_size(geom::Size sz)
 {
     std::lock_guard<std::mutex> lk(mutex);
+    printf("SIZE SET %i %i\n", sz.width.as_int(), sz.height.as_int());
     size = sz;
 }
