@@ -16,25 +16,30 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVDEV_LIBINPUT_DEVICE_PTR_H_
-#define MIR_INPUT_EVDEV_LIBINPUT_DEVICE_PTR_H_
+#include "mir/dispatch/readable_fd.h"
 
-#include <memory>
-
-struct libinput_device;
-struct libinput;
-
-namespace mir
+mir::dispatch::ReadableFd::ReadableFd(Fd fd, std::function<void()> const& on_readable)
+    : fd{fd}, readable{on_readable}
 {
-namespace input
-{
-namespace evdev
-{
-using LibInputDevicePtr = std::unique_ptr<libinput_device, libinput_device*(*)(libinput_device*)>;
-
-LibInputDevicePtr make_libinput_device(libinput* lib, char const* path);
-}
-}
 }
 
-#endif
+mir::Fd mir::dispatch::ReadableFd::watch_fd() const
+{
+    return fd;
+}
+
+bool mir::dispatch::ReadableFd::dispatch(FdEvents events)
+{
+    if (events&FdEvent::error)
+        return false;
+
+    if (events&FdEvent::readable)
+        readable();
+
+    return true;
+}
+
+mir::dispatch::FdEvents mir::dispatch::ReadableFd::relevant_events() const
+{
+    return FdEvent::readable;
+}

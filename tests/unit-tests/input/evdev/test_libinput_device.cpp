@@ -81,6 +81,9 @@ struct LibInputDevice : public ::testing::Test
     libinput_event_keyboard* fake_keyboard_event = reinterpret_cast<libinput_event_keyboard*>(0xF46C);
     libinput_event_pointer* fake_pointer_event = reinterpret_cast<libinput_event_pointer*>(0xF4C6);
     libinput_event_touch* fake_touch_event = reinterpret_cast<libinput_event_touch*>(0xF4C7);
+    libinput_device* second_fake_device = reinterpret_cast<libinput_device*>(0xF4C9);
+
+    char const* path = "/path/to/dev";
 
     LibInputDevice()
     {
@@ -98,54 +101,59 @@ struct LibInputDevice : public ::testing::Test
 };
 
 }
+using namespace ::testing;
 
 TEST_F(LibInputDevice, start_creates_and_unrefs_libinput_device_from_path)
 {
-    using namespace ::testing;
-    char const* path = "/path/to/dev";
     EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(path)))
         .Times(1);
     // according to manual libinput_path_add_device creates a temporary device with a ref count 0.
     // hence it needs a manual ref call
     EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device))
         .Times(1);
-    mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput(), path);
+    std::shared_ptr<libinput> lib = mie::make_libinput();
+    mie::LibInputDevice dev(mir::report::null_input_report(),
+                            path,
+                            mie::make_libinput_device(lib.get(), path));
     dev.start(&mock_sink, &builder);
 }
 
-TEST_F(LibInputDevice, open_device_of_grou)
+TEST_F(LibInputDevice, open_device_of_group)
 {
-    using namespace ::testing;
     char const* first_dev = "/path/to/dev1";
     char const* second_dev = "/path/to/dev2";
+    std::shared_ptr<libinput> lib = mie::make_libinput();
+
     InSequence seq;
     EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(first_dev)));
     // according to manual libinput_path_add_device creates a temporary device with a ref count 0.
     // hence it needs a manual ref call
     EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device));
-    EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(second_dev)));
-    EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device));
+    EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(second_dev)))
+        .WillOnce(Return(second_fake_device));
+    EXPECT_CALL(mock_libinput, libinput_device_ref(second_fake_device));
 
-    mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput(), first_dev);
-    dev.open_device_of_group(second_dev);
+    mie::LibInputDevice dev(mir::report::null_input_report(),
+                            first_dev,
+                            mie::make_libinput_device(lib.get(), first_dev));
+    dev.add_device_of_group(second_dev, mie::make_libinput_device(lib.get(), second_dev));
     dev.start(&mock_sink, &builder);
 }
 
-TEST_F(LibInputDevice, stop_unrefs_libinput_device)
+TEST_F(LibInputDevice, removal_unrefs_libinput_device)
 {
-    using namespace ::testing;
-    char const* path = "/path/to/dev";
+    std::shared_ptr<libinput> lib = mie::make_libinput();
+
     EXPECT_CALL(mock_libinput, libinput_device_unref(fake_device))
         .Times(1);
-    mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput(), path);
-    dev.start(&mock_sink, &builder);
-    dev.stop();
+
+    mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 }
 
 TEST_F(LibInputDevice, process_event_converts_pointer_event)
 {
-    using namespace ::testing;
-    mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput(), "dev");
+    std::shared_ptr<libinput> lib = mie::make_libinput();
+    mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
     uint32_t event_time = 14;
     float x = 15;
@@ -169,8 +177,8 @@ TEST_F(LibInputDevice, process_event_converts_pointer_event)
 
 TEST_F(LibInputDevice, process_event_provides_relative_coordinates)
 {
-    using namespace ::testing;
-    mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput(), "dev");
+    std::shared_ptr<libinput> lib = mie::make_libinput();
+    mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
     uint32_t event_time = 14;
     float x = -5;
@@ -194,8 +202,8 @@ TEST_F(LibInputDevice, process_event_provides_relative_coordinates)
 
 TEST_F(LibInputDevice, process_event_accumulates_pointer_movement)
 {
-    using namespace ::testing;
-    mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput(), "dev");
+    std::shared_ptr<libinput> lib = mie::make_libinput();
+    mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
     uint32_t event_time = 14;
     float x1 = 15, x2 = 23;
@@ -223,8 +231,8 @@ TEST_F(LibInputDevice, process_event_accumulates_pointer_movement)
 
 TEST_F(LibInputDevice, process_event_handles_press_and_release)
 {
-    using namespace ::testing;
-    mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput(), "dev");
+    std::shared_ptr<libinput> lib = mie::make_libinput();
+    mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
     uint32_t event_time = 14;
 
@@ -261,8 +269,8 @@ TEST_F(LibInputDevice, process_event_handles_press_and_release)
 
 TEST_F(LibInputDevice, process_event_handles_scoll)
 {
-    using namespace ::testing;
-    mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput(), "dev");
+    std::shared_ptr<libinput> lib = mie::make_libinput();
+    mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
     uint32_t event_time = 14;
 

@@ -32,6 +32,7 @@ struct libinput_event;
 struct libinput_event_keyboard;
 struct libinput_event_touch;
 struct libinput_event_pointer;
+struct libinput_device_group;
 
 namespace mir
 {
@@ -46,16 +47,17 @@ struct KeyboardState;
 class LibInputDevice : public input::InputDevice
 {
 public:
-    LibInputDevice(std::shared_ptr<InputReport> const& report, LibInputPtr lib, char const* path);
+    LibInputDevice(std::shared_ptr<InputReport> const& report, char const* path, LibInputDevicePtr dev);
     ~LibInputDevice();
-    std::shared_ptr<dispatch::Dispatchable> dispatchable() override;
     void start(InputSink* sink, EventBuilder* builder) override;
     void stop() override;
     virtual InputDeviceInfo get_device_info() override;
 
     void process_event(libinput_event* event);
     ::libinput_device* device();
-    void open_device_of_group(char const* path);
+    ::libinput_device_group* group();
+    void add_device_of_group(char const* path, LibInputDevicePtr ptr);
+    bool is_in_group(char const* path);
 private:
     EventUPtr convert_event(libinput_event_keyboard* keyboard);
     EventUPtr convert_button_event(libinput_event_pointer* pointer);
@@ -68,7 +70,7 @@ private:
     MirEvent& get_accumulated_touch_event(std::chrono::nanoseconds timestamp);
 
     std::shared_ptr<InputReport> report;
-    LibInputPtr lib;
+    std::shared_ptr<::libinput> lib;
     std::vector<std::string> paths;
     std::vector<LibInputDevicePtr> devices;
     std::shared_ptr<dispatch::Dispatchable> dispatchable_fd;

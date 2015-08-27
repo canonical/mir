@@ -16,44 +16,27 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#ifndef MIR_INPUT_X_DISPATCHABLE_H_
-#define MIR_INPUT_X_DISPATCHABLE_H_
+#ifndef MIR_X11_RESOURCES_H_
+#define MIR_X11_RESOURCES_H_
 
-#include "mir/dispatch/dispatchable.h"
-#include "mir/input/input_sink.h"
 #include <X11/Xlib.h>
 
 namespace mir
 {
-
-namespace input
-{
-class EventBuilder;
 namespace X
 {
-struct XDispatchable : public dispatch::Dispatchable
+
+int mir_x11_error_handler(Display* dpy, XErrorEvent* eev);
+
+class X11Resources
 {
 public:
-    XDispatchable(
-        std::shared_ptr<::Display> const& conn,
-        int raw_fd);
-
-    mir::Fd watch_fd() const override;
-    bool dispatch(dispatch::FdEvents events) override;
-    dispatch::FdEvents relevant_events() const override;
-
-    void set_input_sink(InputSink *input_sink, EventBuilder* builder);
-    void unset_input_sink();
+    std::shared_ptr<::Display> get_conn();
 
 private:
-    std::shared_ptr<::Display> const x11_connection;
-    mir::Fd fd;
-    InputSink* sink;
-    EventBuilder* builder;
+    std::weak_ptr<::Display> connection;
 };
 
 }
 }
-}
-
-#endif // MIR_INPUT_X_DISPATCHABLE_H_
+#endif /* MIR_X11_RESOURCES_H_ */

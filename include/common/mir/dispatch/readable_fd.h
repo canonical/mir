@@ -13,42 +13,35 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_X_INPUT_DEVICE_H_
-#define MIR_INPUT_X_INPUT_DEVICE_H_
+#ifndef MIR_DISPATCH_READABLE_FD_H_
+#define MIR_DISPATCH_READABLE_FD_H_
 
-#include "mir/input/input_device.h"
-#include "mir/input/input_device_info.h"
+#include "mir/dispatch/dispatchable.h"
+#include "mir/fd.h"
+
+#include <functional>
 
 namespace mir
 {
-namespace input
+namespace dispatch
 {
 
-namespace X
-{
-
-class XInputDevice : public input::InputDevice
+class ReadableFd : public Dispatchable
 {
 public:
-    XInputDevice(InputDeviceInfo const& info);
+    ReadableFd(Fd fd, std::function<void()> const& on_readable);
+    Fd watch_fd() const override;
 
-    std::shared_ptr<dispatch::Dispatchable> dispatchable();
-    void start(input::InputSink* destination, EventBuilder* builder) override;
-    void stop() override;
-    InputDeviceInfo get_device_info() override;
-
-    input::InputSink* sink{nullptr};
-    EventBuilder* builder{nullptr};
+    bool dispatch(FdEvents events) override;
+    FdEvents relevant_events() const override;
 private:
-    InputDeviceInfo info;
+    mir::Fd fd;
+    std::function<void()> readable;
 };
-
-}
-
 }
 }
 
-#endif // MIR_INPUT_X_INPUT_DEVICE_H_
+#endif // MIR_DISPATCH_READABLE_FD_H_

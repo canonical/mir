@@ -36,6 +36,11 @@ class Device;
 class Monitor;
 class Context;
 }
+namespace dispatch
+{
+class MultiplexingDispatchable;
+class ReadableFd;
+}
 namespace input
 {
 class InputDeviceRegistry;
@@ -62,27 +67,22 @@ private:
     void device_added(udev::Device const& dev);
     void device_removed(udev::Device const& dev);
     void device_changed(udev::Device const& dev);
+    void process_input_events();
 
     std::shared_ptr<LibInputDevice> create_device(udev::Device const& dev) const;
+
     std::shared_ptr<InputReport> const report;
     std::shared_ptr<udev::Context> const udev_context;
     std::unique_ptr<udev::Monitor> const monitor;
     std::shared_ptr<InputDeviceRegistry> const input_device_registry;
-    std::shared_ptr<MonitorDispatchable> const monitor_dispatchable;
+    std::shared_ptr<dispatch::MultiplexingDispatchable> const platform_dispatchable;
+    std::shared_ptr<dispatch::ReadableFd> const monitor_dispatchable;
+    std::shared_ptr<::libinput> const lib;
+    std::shared_ptr<dispatch::ReadableFd> const libinput_dispatchable;
 
-    LibInputPtr const lib;
-    struct DeviceInfo
-    {
-        DeviceInfo(char const* device_path, LibInputDevicePtr ptr, std::shared_ptr<LibInputDevice> const& device);
-        void add_to_group(char const* device_path);
-
-        std::vector<std::string> open_nodes;
-        LibInputDevicePtr first_device;
-        libinput_device_group* group;
-        std::shared_ptr<LibInputDevice> device;
-    };
-    std::vector<DeviceInfo> devices;
+    std::vector<std::shared_ptr<LibInputDevice>> devices;
     auto find_device(char const* devnode) -> decltype(devices)::iterator;
+    auto find_device(libinput_device *) -> decltype(devices)::iterator;
     auto find_device(libinput_device_group const* group) -> decltype(devices)::iterator;
 
     friend class MonitorDispatchable;

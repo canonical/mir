@@ -35,9 +35,9 @@
 #include <linux/input.h>  // only used to get constants for input reports
 
 #include <cstring>
-#include <vector>
 #include <chrono>
 #include <sstream>
+#include <algorithm>
 
 namespace md = mir::dispatch;
 namespace mi = mir::input;
@@ -46,63 +46,31 @@ using namespace std::literals::chrono_literals;
 
 namespace
 {
-const auto unknown_device_id = MirInputDeviceId{0};
-
-struct DispatchableFd : md::Dispatchable
-{
-    DispatchableFd(mir::Fd fd, std::function<void()> const& handler)
-        : source{fd}, callback{handler}
-    {}
-    mir::Fd source;
-    std::function<void()> callback;
-    mir::Fd watch_fd() const override
-    {
-        return source;
-    }
-
-    bool dispatch(md::FdEvents events) override
-    {
-        if (events & md::FdEvent::error)
-            return false;
-        if (events & md::FdEvent::readable)
-            callback();
-        return true;
-    }
-    md::FdEvents relevant_events() const override
-    {
-        return md::FdEvent::readable;
-    }
-
-};
 
 void null_deleter(MirEvent *) {}
+
 }
 
-mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& report,
-                                    LibInputPtr library, char const* path)
-    : report{report}, lib{std::move(library)},
-      dispatchable_fd{std::make_shared<DispatchableFd>(
-            mir::Fd(mir::IntOwnedFd{libinput_get_fd(lib.get())}),
-            [this]()
-            {
-                libinput_dispatch(lib.get());
-                process_event(libinput_get_event(lib.get()));
-            })},
-      accumulated_touch_event(nullptr, null_deleter),
-      pointer_pos{0, 0},
-      modifier_state{0},
+mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& report, char const* path,
+                                    LibInputDevicePtr dev)
+    : report{report}, accumulated_touch_event{nullptr, null_deleter}, pointer_pos{0, 0}, modifier_state{0},
       button_state{0}
 {
-      paths.emplace_back(path);
-      devices.emplace_back(mie::make_libinput_device(lib, paths.back().c_str()));
+    add_device_of_group(path, std::move(dev));
+}
+
+void mie::LibInputDevice::add_device_of_group(char const* path, LibInputDevicePtr dev)
+{
+    paths.emplace_back(path);
+    devices.emplace_back(std::move(dev));
+}
+
+bool mie::LibInputDevice::is_in_group(char const* path)
+{
+    return end(paths) != find(begin(paths), end(paths), std::string{path});
 }
 
 mie::LibInputDevice::~LibInputDevice() = default;
-
-std::shared_ptr<mir::dispatch::Dispatchable> mie::LibInputDevice::dispatchable()
-{
-    return dispatchable_fd;
-}
 
 void mie::LibInputDevice::start(InputSink* sink, EventBuilder* builder)
 {
@@ -114,7 +82,6 @@ void mie::LibInputDevice::stop()
 {
     sink = nullptr;
     builder = nullptr;
-    devices.clear();
 }
 
 void mie::LibInputDevice::process_event(libinput_event* event)
@@ -346,12 +313,12 @@ void mie::LibInputDevice::add_touch_motion_event(libinput_event_touch* touch)
 
 mi::InputDeviceInfo mie::LibInputDevice::get_device_info()
 {
-    auto const& dev = devices.front();
-    std::string name = libinput_device_get_name(dev.get());
+    auto dev = device();
+    std::string name = libinput_device_get_name(dev);
     std::stringstream unique_id(name);
-    unique_id << '-' << libinput_device_get_sysname(dev.get()) << '-' <<
-        libinput_device_get_id_vendor(dev.get()) << '-' <<
-        libinput_device_get_id_product(dev.get());
+    unique_id << '-' << libinput_device_get_sysname(dev) << '-' <<
+        libinput_device_get_id_vendor(dev) << '-' <<
+        libinput_device_get_id_product(dev);
     mi::DeviceCapabilities caps;
 
     for (auto const& path : paths)
@@ -360,14 +327,13 @@ mi::InputDeviceInfo mie::LibInputDevice::get_device_info()
     return mi::InputDeviceInfo{0, name, unique_id.str(), caps};
 }
 
+libinput_device_group* mie::LibInputDevice::group()
+{
+    return libinput_device_get_device_group(device());
+}
 
-libinput_device*  mie::LibInputDevice::device()
+libinput_device* mie::LibInputDevice::device()
 {
     return devices.front().get();
 }
 
-void mie::LibInputDevice::open_device_of_group(char const* path)
-{
-    paths.emplace_back(path);
-    devices.emplace_back(mie::make_libinput_device(lib, path));
-}
