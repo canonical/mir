@@ -25,14 +25,15 @@ namespace mir
 {
 namespace protobuf
 {
-inline constexpr int protocol_version(int major, int minor)
+// For the present we use the client API protocol_version as a proxy for the protocol
+// version as the protocol is typically updated to support API changes.
+// If we need to break protocol without a corresponding ABI break then we need to bump "epoch"
+inline constexpr int protocol_version(int major, int minor, int epoch = 0)
 {
-    return (major << 10) + minor;
+    return MIR_VERSION_NUMBER(epoch, major, minor);
 }
 
-// For the present we use the client API protocol_version as a proxy for the protocol
-//  protocol_version as the protocol is typically updated to support API changes.
-inline constexpr int current_protocol_version() 
+inline constexpr int current_protocol_version()
 { 
     return protocol_version(MIR_CLIENT_MAJOR_VERSION, MIR_CLIENT_MINOR_VERSION); 
 }
