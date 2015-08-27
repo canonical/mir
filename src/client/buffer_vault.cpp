@@ -55,10 +55,10 @@ mcl::BufferVault::~BufferVault()
         server_requests->free_buffer(it.first);
 }
 
-std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
+mcl::NoTLSFuture<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
 {
     std::lock_guard<std::mutex> lk(mutex);
-    std::promise<std::shared_ptr<mcl::ClientBuffer>> promise;
+    mcl::NoTLSPromise<std::shared_ptr<mcl::ClientBuffer>> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [this](std::pair<int, BufferEntry> const& entry) { 
             return ((entry.second.owner == Owner::Self) && (size == entry.second.buffer->size())); });

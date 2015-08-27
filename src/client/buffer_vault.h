@@ -23,7 +23,7 @@
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/mir_native_buffer.h"
 #include <memory>
-#include <future>
+#include "no_tls_future-inl.h"
 #include <deque>
 #include <map>
 
@@ -57,7 +57,7 @@ public:
         unsigned int initial_nbuffers);
     ~BufferVault();
 
-    std::future<std::shared_ptr<ClientBuffer>> withdraw();
+    NoTLSFuture<std::shared_ptr<ClientBuffer>> withdraw();
     void deposit(std::shared_ptr<ClientBuffer> const& buffer);
     void wire_transfer_inbound(protobuf::Buffer const&);
     void wire_transfer_outbound(std::shared_ptr<ClientBuffer> const& buffer);
@@ -78,7 +78,7 @@ private:
 
     std::mutex mutex;
     std::map<int, BufferEntry> buffers;
-    std::deque<std::promise<std::shared_ptr<ClientBuffer>>> promises;
+    std::deque<NoTLSPromise<std::shared_ptr<ClientBuffer>>> promises;
     geometry::Size size;
 };
 }
