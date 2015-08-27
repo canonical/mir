@@ -13,7 +13,6 @@ target_link_libraries(
   mirplatformservermesax11
   PRIVATE
   mirplatform
-  mirclient   # for make_event(). TODO: move make_event out of libmirclient?
   EGL
   GLESv2
   X11
