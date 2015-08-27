@@ -194,17 +194,6 @@ void unthrottled_compositor_thread(mc::BufferQueue &bundle,
    }
 }
 
-std::chrono::milliseconds const throttled_compositor_rate(10);
-void throttled_compositor_thread(mc::BufferQueue &bundle,
-                                 std::atomic<bool> &done)
-{
-   while (!done)
-   {
-       bundle.compositor_release(bundle.compositor_acquire(nullptr));
-       std::this_thread::sleep_for(throttled_compositor_rate);
-   }
-}
-
 void overlapping_compositor_thread(mc::BufferQueue &bundle,
                                    std::atomic<bool> &done)
 {
@@ -216,7 +205,7 @@ void overlapping_compositor_thread(mc::BufferQueue &bundle,
    {
        b[i^1] = bundle.compositor_acquire(nullptr);
        bundle.compositor_release(b[i]);
-       std::this_thread::sleep_for(throttled_compositor_rate);
+       std::this_thread::sleep_for(std::chrono::milliseconds(10));
        i ^= 1;
    }
 
@@ -1530,62 +1519,118 @@ TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
 TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
 {
     q.allow_framedropping(false);
-
-    std::atomic<bool> done(false);
-    auto unblock = [&done] { done = true; };
-
-    // To emulate a "fast" client we use a "slow" compositor
-    mt::AutoUnblockThread compositor(unblock,
-       throttled_compositor_thread, std::ref(q), std::ref(done));
-
     std::unordered_set<mg::Buffer *> buffers_acquired;
 
     int const delay = 3;
     q.set_scaling_delay(delay);
 
-    for (int frame = 0; frame < 10; frame++)
+    for (int frame = 0; frame < 10;)
     {
-        auto handle = client_acquire_async(q);
-        handle->wait_for(std::chrono::seconds(1));
-        ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+        std::shared_ptr<AcquireWaitHandle> client;
+        do
+        {
+            client = client_acquire_async(q);
+            if (client->has_acquired_buffer())
+            {
+                if (frame > delay)
+                    buffers_acquired.insert(client->buffer());
+                client->release_buffer();
+                client.reset();
+            }
+        } while (!client);
 
-        if (frame > delay)
-            buffers_acquired.insert(handle->buffer());
-        handle->release_buffer();
+        while (q.buffers_ready_for_compositor(nullptr))
+        {
+            q.compositor_release(q.compositor_acquire(nullptr));
+            ++frame;
+        }
+
+        if (client->has_acquired_buffer())
+        {
+            if (frame > delay)
+                buffers_acquired.insert(client->buffer());
+            client->release_buffer();
+            client.reset();
+        }
     }
     // Expect double-buffers for fast clients
     EXPECT_THAT(buffers_acquired.size(), Eq(2));
 
     // Now check what happens if the client becomes slow...
     buffers_acquired.clear();
-    for (int frame = 0; frame < 10; frame++)
+    for (int frame = 0; frame < 10;)
     {
-        auto handle = client_acquire_async(q);
-        handle->wait_for(std::chrono::seconds(1));
-        ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+        std::shared_ptr<AcquireWaitHandle> client;
+        do
+        {
+            client = client_acquire_async(q);
+            if (client->has_acquired_buffer())
+            {
+                if (frame > delay)
+                    buffers_acquired.insert(client->buffer());
+                client->release_buffer();
+                client.reset();
+            }
+        } while (!client);
 
-        if (frame > delay)
-            buffers_acquired.insert(handle->buffer());
+        while (q.buffers_ready_for_compositor(nullptr))
+        {
+            q.compositor_release(q.compositor_acquire(nullptr));
+            ++frame;
+        }
 
-        // Client is just too slow to keep up:
-        std::this_thread::sleep_for(throttled_compositor_rate * 1.5);
+        if (client->has_acquired_buffer())
+        {
+            if (frame > delay)
+                buffers_acquired.insert(client->buffer());
+            client->release_buffer();
+            client.reset();
+        }
 
-        handle->release_buffer();
+        // Balance compositor consumption with client production:
+        while (q.buffers_ready_for_compositor(nullptr))
+        {
+            q.compositor_release(q.compositor_acquire(nullptr));
+            ++frame;
+        }
+
+        // Imbalance: Compositor is now requesting more than the client does:
+        q.compositor_release(q.compositor_acquire(nullptr));
+        ++frame;
     }
     // Expect at least triple buffers for sluggish clients
     EXPECT_THAT(buffers_acquired.size(), Ge(3));
 
     // And what happens if the client becomes fast again?...
     buffers_acquired.clear();
-    for (int frame = 0; frame < 10; frame++)
+    for (int frame = 0; frame < 10;)
     {
-        auto handle = client_acquire_async(q);
-        handle->wait_for(std::chrono::seconds(1));
-        ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+        std::shared_ptr<AcquireWaitHandle> client;
+        do
+        {
+            client = client_acquire_async(q);
+            if (client->has_acquired_buffer())
+            {
+                if (frame > delay)
+                    buffers_acquired.insert(client->buffer());
+                client->release_buffer();
+                client.reset();
+            }
+        } while (!client);
 
-        if (frame > delay)
-            buffers_acquired.insert(handle->buffer());
-        handle->release_buffer();
+        while (q.buffers_ready_for_compositor(nullptr))
+        {
+            q.compositor_release(q.compositor_acquire(nullptr));
+            ++frame;
+        }
+
+        if (client->has_acquired_buffer())
+        {
+            if (frame > delay)
+                buffers_acquired.insert(client->buffer());
+            client->release_buffer();
+            client.reset();
+        }
     }
     // Expect double-buffers for fast clients
     EXPECT_THAT(buffers_acquired.size(), Eq(2));
