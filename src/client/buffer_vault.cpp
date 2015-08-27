@@ -151,9 +151,6 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
         promises.front().set_value(buffers[protobuf_buffer.buffer_id()].buffer);
         promises.pop_front();
     }
-    else
-    {
-    }
 }
 
 void mcl::BufferVault::set_size(geom::Size sz)
