@@ -33,7 +33,9 @@ bool mir::dispatch::ReadableFd::dispatch(FdEvents events)
     if (events&FdEvent::error)
         return false;
 
-    readable();
+    if (events&FdEvent::readable)
+        readable();
+
     return true;
 }
 
