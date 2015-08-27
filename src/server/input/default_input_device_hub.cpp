@@ -23,7 +23,6 @@
 #include "mir/input/input_device_observer.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/input_region.h"
-#include "mir/events/event_private.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/server_action_queue.h"
 #define MIR_LOG_COMPONENT "Input"
@@ -121,8 +120,9 @@ mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
     std::shared_ptr<InputDevice> const& dev,
     std::shared_ptr<InputDispatcher> const& dispatcher,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
-    DefaultInputDeviceHub *hub)
-    : device_id(create_new_device_id()), device(dev), dispatcher(dispatcher), multiplexer(multiplexer), hub(hub)
+    DefaultInputDeviceHub* hub)
+    : device_id(create_new_device_id()), builder(device_id), device(dev), dispatcher(dispatcher),
+      multiplexer(multiplexer), hub(hub)
 {
 }
 
@@ -147,15 +147,6 @@ int32_t mi::DefaultInputDeviceHub::RegisteredDevice::id()
 
 void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(MirEvent& event)
 {
-    // we attach the device id here, since this instance the first being able to maintains the uniqueness of the ids..
-    if (event.type == mir_event_type_key)
-    {
-        event.key.device_id = device_id;
-    }
-    if (event.type == mir_event_type_motion)
-    {
-        event.motion.device_id = device_id;
-    }
     auto type = mir_event_get_type(&event);
 
     if (type != mir_event_type_input)
@@ -212,7 +203,7 @@ bool mi::DefaultInputDeviceHub::RegisteredDevice::device_matches(std::shared_ptr
 
 void mi::DefaultInputDeviceHub::RegisteredDevice::start()
 {
-    device->start(this);
+    device->start(this, &builder);
     multiplexer->add_watch(device->dispatchable());
 }
 
