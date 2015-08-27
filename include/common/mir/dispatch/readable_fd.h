@@ -19,8 +19,8 @@
 #ifndef MIR_DISPATCH_READABLE_FD_H_
 #define MIR_DISPATCH_READABLE_FD_H_
 
-#include "mir/fd.h"
 #include "mir/dispatch/dispatchable.h"
+#include "mir/fd.h"
 
 #include <functional>
 
@@ -44,4 +44,4 @@ private:
 }
 }
 
-#endif // MIR_DISPATCH_ACTION_QUEUE_H_
+#endif // MIR_DISPATCH_READABLE_FD_H_
