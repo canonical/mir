@@ -59,7 +59,7 @@ bool greater_soname_version(boost::filesystem::path const& lhs, boost::filesyste
     if (!rhbuf) return lhbuf;
     if (!lhbuf) return false;
 
-    return atoi(++lhbuf) > atoi(++rhbuf);
+    return strtol(++lhbuf, 0, 0) > strtol(++rhbuf, 0, 0);
 }
 }
 
