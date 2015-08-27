@@ -370,10 +370,7 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     DPRINTF(("%p: compositor release2 %p", this, buffer.get()));
     if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
-    else if (!ready_to_composite_queue.empty() &&
-             buffers_owned_by_client.empty() &&
-             !client_ahead_of_compositor() &&
-             single_compositor)
+    else if (!ready_to_composite_queue.empty() && single_compositor)
     {
         /*
          * The "early release" optimization:
