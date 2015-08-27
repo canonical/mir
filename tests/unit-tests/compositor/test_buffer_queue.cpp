@@ -485,7 +485,7 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
     // conservative to allow it to happen right at the start (so as to
     // maintain correct multimonitor frame rates if required).
     auto handle = client_acquire_async(q);
-    ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+    ASSERT_TRUE(handle->has_acquired_buffer());
     handle->release_buffer();
     q.compositor_release(q.compositor_acquire(this));
 
@@ -520,7 +520,7 @@ TEST_P(WithThreeOrMoreBuffers, greedy_clients_get_new_buffers_on_compositor_rele
     // conservative to allow it to happen right at the start (so as to
     // maintain correct multimonitor frame rates if required).
     auto handle = client_acquire_async(q);
-    ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+    ASSERT_TRUE(handle->has_acquired_buffer());
     handle->release_buffer();
     q.compositor_release(q.compositor_acquire(this));
 
