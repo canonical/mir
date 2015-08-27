@@ -512,8 +512,50 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
     }
 }
 
+TEST_P(WithTwoOrMoreBuffers, short_buffer_holds_dont_overclock_multimonitor)
+{   // Regression test related to LP: #1480164
+    q.allow_framedropping(false);
+
+    // Skip over the first frame. The early release optimization is too
+    // conservative to allow it to happen right at the start (so as to
+    // maintain correct multimonitor frame rates if required).
+    auto handle = client_acquire_async(q);
+    ASSERT_TRUE(handle->has_acquired_buffer());
+    handle->release_buffer();
+
+    const void* const leftid = "left";
+    const void* const rightid = "right";
+    auto left = q.compositor_acquire(leftid);
+    q.compositor_release(left);
+    left = q.compositor_acquire(leftid);
+    auto right = q.compositor_acquire(rightid);
+
+    // This is what tests should do instead of using buffers_free_for_client()
+    bool blocking;
+    do
+    {
+        handle = client_acquire_async(q);
+        blocking = !handle->has_acquired_buffer();
+        if (!blocking)
+            handle->release_buffer();
+    } while (!blocking);
+
+    for (int f = 0; f < 100; ++f)
+    {
+        ASSERT_FALSE(handle->has_acquired_buffer());
+        q.compositor_release(left);
+        q.compositor_release(right);
+        ASSERT_FALSE(handle->has_acquired_buffer());
+        left = q.compositor_acquire(leftid);
+        right = q.compositor_acquire(rightid);
+        ASSERT_TRUE(handle->has_acquired_buffer());
+        handle->release_buffer();
+        handle = client_acquire_async(q);
+    }
+}
+
 TEST_P(WithThreeOrMoreBuffers, greedy_clients_get_new_buffers_on_compositor_release)
-{
+{   // Regression test for LP: #1480164
     q.allow_framedropping(false);
 
     // Skip over the first frame. The early release optimization is too
