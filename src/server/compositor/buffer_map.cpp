@@ -37,9 +37,7 @@ mc::BufferMap::BufferMap(
 
 mg::BufferID mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
 {
-    printf("add bufferlk.\n");
     std::unique_lock<decltype(mutex)> lk(mutex);
-    printf("add buffer.\n");
     auto buffer = allocator->alloc_buffer(properties);
     buffers[buffer->id()] = buffer;
     sink->send_buffer(stream_id, *buffer, mg::BufferIpcMsgType::full_msg);

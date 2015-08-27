@@ -236,7 +236,6 @@ struct StubIpcSystem
     {
         if (resize_fn)
             resize_fn(sz);
-        else printf("hmm||/\n");
     }
     void server_bound_transfer(mp::Buffer& buffer)
     {
@@ -358,13 +357,11 @@ struct ServerRequests : mcl::ServerBufferRequests
 
     void allocate_buffer(geom::Size sz, MirPixelFormat, int)
     {
-        printf("alloca\n");
         ipc->allocate(sz);
     }
 
     void free_buffer(int)
     {
-        printf("FREE\n");
     }
 
     void submit_buffer(int buffer_id, mcl::ClientBuffer&)
@@ -391,7 +388,6 @@ struct ScheduledProducer : ProducerSystem
         });
         ipc->on_resize_event([this](geom::Size sz)
         {
-            printf("on resize.\n");
             vault.set_size(sz);
         });
     }
@@ -408,7 +404,6 @@ struct ScheduledProducer : ProducerSystem
 
     void produce()
     {
-        printf("PRODUCES!||\n");
         auto buffer = vault.withdraw().get();
         vault.deposit(buffer);
         vault.wire_transfer_outbound(buffer);
@@ -538,7 +533,6 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
             ipc->on_allocate(
                 [stream](geom::Size sz)
                 {
-                    printf("ALLOCA %i %i\n", sz.width.as_int(), sz.height.as_int());
                     stream->allocate_buffer(
                         mg::BufferProperties{sz, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware});
                 });
@@ -562,7 +556,6 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
         }
         else
         {
-            printf("RESIZE %i %i\n", sz.width.as_int(), sz.height.as_int());
             ipc->resize_event(sz);
         }
     }
@@ -822,13 +815,6 @@ TEST_P(WithThreeOrMoreBuffers, multiple_fast_compositors_are_in_sync)
     auto consumption_log_1 = consumer->consumption_log();
     auto consumption_log_2 = second_consumer->consumption_log();
 
-    for(auto &i : production_log)
-        printf("plog %i\n", i.id.as_value());
-    for(auto &i : consumption_log_1)
-        printf("clog %i\n", i.id.as_value());
-    for(auto &i : consumption_log_2)
-        printf("cl2g %i\n", i.id.as_value());
-
     EXPECT_THAT(consumption_log_1, Eq(production_log));
     EXPECT_THAT(consumption_log_2, Eq(production_log));
 }
@@ -1061,7 +1047,6 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
 
     for (auto consumer : consumers)
     {
-        printf("AA\n");
         ASSERT_NE(0, istream->buffers_ready_for_compositor(consumer));
 
         // Double consume to account for the +1 that
