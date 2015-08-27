@@ -408,6 +408,7 @@ struct ScheduledProducer : ProducerSystem
 
     void produce()
     {
+        printf("PRODUCES!||\n");
         auto buffer = vault.withdraw().get();
         vault.deposit(buffer);
         vault.wire_transfer_outbound(buffer);
@@ -893,18 +894,21 @@ TEST_P(WithAnyNumberOfBuffers, compositor_acquires_resized_frames)
     for(auto i = 0u; i < sizes_to_test; i++)
     {
         new_size = new_size * 2;
-        resize(new_size);
 
         std::vector<ScheduleEntry> schedule = {
             {1_t,  {producer.get()}, {}},
             {2_t,  {}, {consumer.get()}},
             {3_t,  {producer.get()}, {}},
-            {2_t,  {}, {consumer.get()}},
         };
+
         run_system(schedule);
+        resize(new_size);
+
+        consumer->consume();
+        producer->produce();
 
         int attempt_count = 0;
-        schedule = {{2_t,  {}, {consumer.get()}}};
+        schedule = std::vector<ScheduleEntry>{{2_t,  {}, {consumer.get()}}};
         repeat_system_until(schedule, [&] {
             return (consumer->last_size() != new_size) && (attempt_count++ < attempt_limit); });
 

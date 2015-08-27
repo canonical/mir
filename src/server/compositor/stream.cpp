@@ -160,6 +160,7 @@ bool mc::Stream::has_submitted_buffer() const
 
 mg::BufferID mc::Stream::allocate_buffer(mg::BufferProperties const& properties)
 {
+    printf("add..a\n");
     return buffers->add_buffer(properties);
 }
 

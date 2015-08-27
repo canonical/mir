@@ -37,7 +37,9 @@ mc::BufferMap::BufferMap(
 
 mg::BufferID mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
 {
+    printf("add bufferlk.\n");
     std::unique_lock<decltype(mutex)> lk(mutex);
+    printf("add buffer.\n");
     auto buffer = allocator->alloc_buffer(properties);
     buffers[buffer->id()] = buffer;
     sink->send_buffer(stream_id, *buffer, mg::BufferIpcMsgType::full_msg);
@@ -52,10 +54,15 @@ void mc::BufferMap::remove_buffer(mg::BufferID id)
 
 void mc::BufferMap::send_buffer(mg::BufferID id)
 {
+    std::shared_ptr<mg::Buffer> buffer;
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = buffers.find(id);
     if (it != buffers.end())
-        sink->send_buffer(stream_id, *it->second, mg::BufferIpcMsgType::update_msg);
+    {
+        auto buffer = it->second;
+        lk.unlock();
+        sink->send_buffer(stream_id, *buffer, mg::BufferIpcMsgType::update_msg);
+    }
 }
 
 std::shared_ptr<mg::Buffer>& mc::BufferMap::operator[](mg::BufferID id)

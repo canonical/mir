@@ -66,6 +66,7 @@ std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
     auto future = promise.get_future();
     if (it != buffers.end())
     {
+        printf("gotit.\n");
         it->second.owner = Owner::ContentProducer;
         promise.set_value(it->second.buffer);
     }
@@ -122,10 +123,11 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     package->height = protobuf_buffer.height();
 
     std::unique_lock<std::mutex> lk(mutex);
-    printf("INBOUND.\n");
+    printf("INBOUND. %i %i\n", package->width, package->height);
     auto it = buffers.find(protobuf_buffer.buffer_id());
     if (it == buffers.end())
     {
+        printf("makeabuffer\n");
         auto buffer = factory->create_buffer(package, geom::Size{package->width, package->height}, format);
         buffers[protobuf_buffer.buffer_id()] = BufferEntry{ buffer, Owner::Self };
     }
@@ -133,6 +135,7 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     {
         if (size == it->second.buffer->size())
         { 
+            printf("reclaim.\n");
             it->second.owner = Owner::Self;
             it->second.buffer->update_from(*package);
         }
@@ -150,9 +153,14 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 
     if (!promises.empty())
     {
+        printf("SERVICE!\n");
         buffers[protobuf_buffer.buffer_id()].owner = Owner::ContentProducer;
         promises.front().set_value(buffers[protobuf_buffer.buffer_id()].buffer);
         promises.pop_front();
+    }
+    else
+    {
+        printf("NO PROMISES.\n");
     }
 }
 
