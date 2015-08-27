@@ -1350,9 +1350,10 @@ TEST_P(WithThreeOrMoreBuffers, greedy_compositors_scale_to_triple_buffers)
 
     for (auto i = 0u; i < 20u; i++)
     {
+        producer->produce();
+        producer->produce();
         auto first = consumer->consume_resource();
         auto second = consumer->consume_resource();
-        producer->produce();
     }
 
     EXPECT_THAT(unique_ids_in(producer->production_log()), Eq(3));
