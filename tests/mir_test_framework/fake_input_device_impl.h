@@ -53,7 +53,7 @@ private:
                     std::shared_ptr<mir::dispatch::Dispatchable> const& dispatchable);
         std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
 
-        void start(mir::input::InputSink* destination) override;
+        void start(mir::input::InputSink* destination, mir::input::EventBuilder* builder) override;
         void stop() override;
 
         void synthesize_events(synthesis::KeyParameters const& key_params);
@@ -71,6 +71,7 @@ private:
         void map_touch_coordinates(float& x, float& y);
 
         mir::input::InputSink* sink{nullptr};
+        mir::input::EventBuilder* builder{nullptr};
         mir::input::InputDeviceInfo info;
         std::shared_ptr<mir::dispatch::Dispatchable> const queue;
         uint32_t modifiers{0};
