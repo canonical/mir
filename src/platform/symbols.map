@@ -7,6 +7,7 @@ MIRPLATFORM_9 {
     mir::graphics::Buffer::Buffer*;
     mir::graphics::Buffer::gl_bind_to_texture*;
     mir::graphics::Buffer::id*;
+    mir::graphics::Buffer::native_buffer_base*;
     mir::graphics::Buffer::native_buffer_handle*;
     mir::graphics::Buffer::pixel_format*;
     mir::graphics::Buffer::size*;
