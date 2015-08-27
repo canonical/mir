@@ -373,12 +373,22 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     else if (!ready_to_composite_queue.empty() && single_compositor)
     {
         /*
-         * The "early release" optimization:
-         * This is fundamentally incompatible with multi-monitor frame sync
-         * so we need to be sure there's only one compositor.
+         * The "early release" optimisation: Note "single_compositor" above
+         * is because this path will break (actually just overclock) the
+         * multi-monitor frame sync algorithm. For the moment we prefer
+         * /perfect/ multi-monitor frame sync all the time. But if you so
+         * choose that overclocking with multi-monitors is acceptable then
+         * you could remove the above "single_compositor" check and get this
+         * optimised code path with multi-monitors too...
          */
         current_compositor_buffer = pop(ready_to_composite_queue);
         current_buffer_users.clear();
+
+        /*
+         * As we have now caused the next compositor_acquire() to skip the
+         * frame_deadlines_met update, we need to do it here:
+         */
+        ++frame_deadlines_met;
         release(buffer.get(), std::move(lock));
     }
 }
