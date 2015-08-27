@@ -276,8 +276,6 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     bool use_current_buffer = false;
     if (is_a_current_buffer_user(user_id))   // Primary/fastest display
     {
-        single_compositor = current_compositor_buffer_valid &&
-                            current_buffer_users.size() <= 1;  // might be zero
         if (ready_to_composite_queue.empty())
             frame_deadlines_met = 0;
         else if (frame_deadlines_met < frame_deadlines_threshold)
@@ -288,6 +286,9 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         use_current_buffer = true;
         current_buffer_users.push_back(user_id);
     }
+
+    single_compositor = current_compositor_buffer_valid &&
+                        current_buffer_users.size() <= 1;  // might be zero
 
     if (ready_to_composite_queue.empty())
     {
