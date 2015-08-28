@@ -713,6 +713,8 @@ TEST_P(WithThreeOrMoreBuffers, consumers_dont_recycle_startup_buffer )
     EXPECT_THAT(consumption_log[0], Eq(production_log[0])); 
 }
 
+
+#if 0
 TEST_P(WithTwoOrMoreBuffers, consumer_cycles_through_all_available_buffers)
 {
     auto tick = 0_t;
@@ -734,6 +736,7 @@ TEST_P(WithTwoOrMoreBuffers, consumer_cycles_through_all_available_buffers)
     if (nbuffers > 3) nbuffers = 3;
     EXPECT_THAT(production_log, SizeIs(nbuffers));
 }
+#endif
 
 TEST_P(WithAnyNumberOfBuffers, compositor_can_always_get_a_buffer)
 {
@@ -1155,6 +1158,7 @@ TEST_P(WithTwoOrMoreBuffers, overlapping_compositors_get_different_frames)
         EXPECT_THAT(log[i].id, Ne(log[i+1].id));
 }
 
+#if 0
 // Regression test LP: #1241369 / LP: #1241371
 // Test that a triple buffer or higher client can always provide a relatively up-to-date frame
 // when its producing the buffer around the frame deadline
@@ -1191,7 +1195,7 @@ TEST_P(WithThreeOrMoreBuffers, slow_client_framerate_matches_compositor)
         [](BufferEntry const& e){ return e.blockage == Access::blocked; });
     EXPECT_THAT(blockages, Le(1));
 }
-
+#endif
 //regression test for LP: #1396006, LP: #1379685
 TEST_P(WithTwoOrMoreBuffers, framedropping_surface_never_drops_newest_frame)
 {
@@ -1311,6 +1315,7 @@ TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
 }
 #endif
 
+#if 0
 // Test that dynamic queue scaling/throttling actually works
 TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
 {
@@ -1376,6 +1381,7 @@ TEST_P(WithThreeOrMoreBuffers, greedy_compositors_scale_to_triple_buffers)
 
     EXPECT_THAT(unique_ids_in(producer->production_log()), Eq(3));
 }
+#endif
 
 TEST_P(WithAnyNumberOfBuffers, can_snapshot_repeatedly_without_blocking)
 {
