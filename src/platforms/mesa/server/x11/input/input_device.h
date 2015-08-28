@@ -36,11 +36,11 @@ public:
     XInputDevice(InputDeviceInfo const& info);
 
     std::shared_ptr<dispatch::Dispatchable> dispatchable();
-    void start(input::InputSink* destination, EventBuilder* builder) override;
+    void start(InputSink* destination, EventBuilder* builder) override;
     void stop() override;
     InputDeviceInfo get_device_info() override;
 
-    input::InputSink* sink{nullptr};
+    InputSink* sink{nullptr};
     EventBuilder* builder{nullptr};
 private:
     InputDeviceInfo info;

@@ -257,6 +257,9 @@ mtd::MockDRM::MockDRM()
 
     ON_CALL(*this, drmGetBusid(_))
     .WillByDefault(WithoutArgs(Invoke([]{ return static_cast<char*>(malloc(10)); })));
+
+    ON_CALL(*this, drmFreeBusid(_))
+    .WillByDefault(WithArg<0>(Invoke([&](const char* busid){ free(const_cast<char*>(busid)); })));
 }
 
 mtd::MockDRM::~MockDRM() noexcept
@@ -414,7 +417,7 @@ char* drmGetBusid(int fd)
     return global_mock->drmGetBusid(fd);
 }
 
-void drmFreeBusid(const char *busid)
+void drmFreeBusid(const char* busid)
 {
     return global_mock->drmFreeBusid(busid);
 }
