@@ -194,7 +194,7 @@ TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_obsolete)
 
     EXPECT_THAT(connection, NotNull());
     EXPECT_FALSE(mir_connection_is_valid(connection));
-    EXPECT_THAT(mir_connection_get_error_message(connection), StrEq("Connect failed"));
+    EXPECT_THAT(mir_connection_get_error_message(connection), HasSubstr("not accepted by server"));
 
     mir_connection_release(connection);
 }
@@ -209,7 +209,7 @@ TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_too_new)
 
     EXPECT_THAT(connection, NotNull());
     EXPECT_FALSE(mir_connection_is_valid(connection));
-    EXPECT_THAT(mir_connection_get_error_message(connection), StrEq("Connect failed"));
+    EXPECT_THAT(mir_connection_get_error_message(connection), HasSubstr("not accepted by server"));
 
     mir_connection_release(connection);
 }
@@ -224,7 +224,7 @@ TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_epoch_too_new)
 
     EXPECT_THAT(connection, NotNull());
     EXPECT_FALSE(mir_connection_is_valid(connection));
-    EXPECT_THAT(mir_connection_get_error_message(connection), StrEq("Connect failed"));
+    EXPECT_THAT(mir_connection_get_error_message(connection), HasSubstr("not accepted by server"));
 
     mir_connection_release(connection);
 }
