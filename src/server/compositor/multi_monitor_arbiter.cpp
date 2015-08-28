@@ -42,7 +42,7 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
     std::lock_guard<decltype(mutex)> lk(mutex);
 
     if (onscreen_buffers.empty() && !schedule->anything_scheduled())
-        BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give"));
+        BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to compositor"));
 
     if (current_buffer_users.find(id) != current_buffer_users.end() || onscreen_buffers.empty())
     {
@@ -90,11 +90,25 @@ void mc::MultiMonitorArbiter::clean_onscreen_buffers(std::lock_guard<std::mutex>
 
 std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
 {
-    BOOST_THROW_EXCEPTION(std::logic_error("not yet implemented"));
+    std::lock_guard<decltype(mutex)> lk(mutex);
+
+    if (onscreen_buffers.empty() && !schedule->anything_scheduled())
+        BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to snapshotter"));
+
+    if (onscreen_buffers.empty())
+    {
+        if (schedule->anything_scheduled())
+            onscreen_buffers.emplace_front(schedule->next_buffer(), 0);
+    }
+
+    auto& last_entry = onscreen_buffers.front();
+    last_entry.use_count++;
+    return last_entry.buffer;
 }
 
-void mc::MultiMonitorArbiter::snapshot_release(std::shared_ptr<mg::Buffer> const&)
+void mc::MultiMonitorArbiter::snapshot_release(std::shared_ptr<mg::Buffer> const& buffer)
 {
+    compositor_release(buffer);
 }
 
 void mc::MultiMonitorArbiter::set_schedule(std::shared_ptr<Schedule> const& new_schedule)

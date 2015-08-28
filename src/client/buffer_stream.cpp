@@ -303,7 +303,11 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
             current_buffer_ = vault.withdraw().get();
 
         vault.deposit(current_buffer_);
+
+        next_buffer_wait_handle.expect_result();
         vault.wire_transfer_outbound(current_buffer_);
+        next_buffer_wait_handle.result_received();
+
         current_buffer_ = vault.withdraw().get();
         done();
         return &next_buffer_wait_handle;
