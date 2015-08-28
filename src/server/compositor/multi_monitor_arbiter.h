@@ -60,7 +60,8 @@ public:
     void set_guarantee(PresentationGuarantee guarantee);
 
 private:
-    void clean_onscreen_buffers(std::lock_guard<std::mutex> const&);
+    void clean_onscreen_buffers_acquire(std::lock_guard<std::mutex> const&);
+    void clean_onscreen_buffers_release(std::lock_guard<std::mutex> const&);
     void advance_buffer(std::lock_guard<std::mutex> const&);
 
     std::mutex mutable mutex;
