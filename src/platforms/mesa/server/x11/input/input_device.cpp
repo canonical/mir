@@ -22,12 +22,12 @@
 namespace mi = mir::input;
 namespace mix = mi::X;
 
-mix::XInputDevice::XInputDevice(InputDeviceInfo const& info)
-    : info{info}
+mix::XInputDevice::XInputDevice(InputDeviceInfo const& device_info)
+    : info(device_info)
 {
 }
 
-void mix::XInputDevice::start(mi::InputSink* input_sink, EventBuilder* event_builder)
+void mix::XInputDevice::start(InputSink* input_sink, EventBuilder* event_builder)
 {
     sink = input_sink;
     builder = event_builder;
