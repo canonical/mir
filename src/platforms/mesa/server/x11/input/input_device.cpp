@@ -23,7 +23,7 @@ namespace mi = mir::input;
 namespace mix = mi::X;
 
 mix::XInputDevice::XInputDevice(InputDeviceInfo const& device_info)
-    : info{device_info}
+    : info(device_info)
 {
 }
 
