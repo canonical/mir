@@ -83,9 +83,7 @@ void mc::MultiMonitorArbiter::compositor_release(std::shared_ptr<mg::Buffer> con
     for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end();)
     {
         if (buffer == it->buffer)
-        {
             it->use_count--;
-        }
 
         if ((it->use_count == 0) &&
             (current != it->buffer || (schedule->anything_scheduled())) &&
@@ -121,13 +119,14 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
 
 void mc::MultiMonitorArbiter::snapshot_release(std::shared_ptr<mg::Buffer> const& buffer)
 {
+    std::lock_guard<decltype(mutex)> lk(mutex);
     for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end();)
     {
         if (buffer == it->buffer)
             it->use_count--;
 
-        if ((it->use_count == 0)
-            && (schedule->anything_scheduled()))
+        if ((it->use_count == 0) &&
+            (current != it->buffer || (schedule->anything_scheduled())))
         {
             map->send_buffer(it->buffer->id());
             it = onscreen_buffers.erase(it);
