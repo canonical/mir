@@ -92,7 +92,7 @@ void log_configuration(mg::DisplayConfiguration const& conf)
                           inches, width_mm, height_mm);
             if (out.used)
             {
-                mir::log_info("%*cCurrent mode %dx%d %.1fHz",
+                mir::log_info("%*cCurrent mode %dx%d %.2fHz",
                               indent, ' ', width, height, hz);
                 mir::log_info("%*cLogical position %+d%+d",
                               indent, ' ',
