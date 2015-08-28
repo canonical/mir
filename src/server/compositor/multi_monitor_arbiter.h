@@ -32,10 +32,23 @@ namespace frontend { class ClientBuffers; }
 namespace compositor
 {
 class Schedule;
+
+enum class PresentationGuarantee
+{
+    //guarantees that all frames will be presented on the fastest monitor (highest frequency vsync)
+    //slower monitors will present the latest-available frame, but might not present all frames
+    all_frames_on_fastest_monitor,
+    //guarantees that all frames will be presented on a monitor, but doesn't guarantee that any
+    //single monitor will present all frames. This is a weaker guarantee that provides for some
+    //optimizations, especially if there's only one monitor available 
+    frames_on_any_monitor
+};
+
 class MultiMonitorArbiter : public BufferAcquisition 
 {
 public:
     MultiMonitorArbiter(
+        PresentationGuarantee guarantee,
         std::shared_ptr<frontend::ClientBuffers> const& map,
         std::shared_ptr<Schedule> const& schedule);
 
@@ -44,11 +57,14 @@ public:
     std::shared_ptr<graphics::Buffer> snapshot_acquire() override;
     void snapshot_release(std::shared_ptr<graphics::Buffer> const&) override;
     void set_schedule(std::shared_ptr<Schedule> const& schedule);
+    void set_guarantee(PresentationGuarantee guarantee);
 
 private:
     void clean_onscreen_buffers(std::lock_guard<std::mutex> const&);
+    void advance_buffer(std::lock_guard<std::mutex> const&);
 
     std::mutex mutable mutex;
+    PresentationGuarantee guarantee;
     std::shared_ptr<frontend::ClientBuffers> const map;
     struct ScheduleEntry
     {
@@ -62,6 +78,8 @@ private:
     };
     std::deque<ScheduleEntry> onscreen_buffers;
     std::set<compositor::CompositorID> current_buffer_users;
+
+    std::shared_ptr<graphics::Buffer> current;
     std::shared_ptr<Schedule> schedule;
 };
 

@@ -83,7 +83,8 @@ struct MultiMonitorArbiter : Test
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
     NiceMock<MockBufferMap> mock_map;
     FixedSchedule schedule;
-    mc::MultiMonitorArbiter arbiter{mt::fake_shared(mock_map), mt::fake_shared(schedule)};
+    mc::PresentationGuarantee guarantee;
+    mc::MultiMonitorArbiter arbiter{guarantee, mt::fake_shared(mock_map), mt::fake_shared(schedule)};
 };
 }
 
@@ -107,15 +108,16 @@ TEST_F(MultiMonitorArbiter, compositor_access)
     EXPECT_THAT(cbuffer, Eq(buffers[0]));
 }
 
-TEST_F(MultiMonitorArbiter, compositor_release_sends_buffer_back)
+TEST_F(MultiMonitorArbiter, compositor_acquire_sends_buffer_back)
 {
     EXPECT_CALL(mock_map, send_buffer(buffers[0]->id()));
 
-    schedule.set_schedule({buffers[0]});
+    schedule.set_schedule({buffers[0], buffers[1]});
 
     auto cbuffer = arbiter.compositor_acquire(this);
     schedule.set_schedule({buffers[1]});
     arbiter.compositor_release(cbuffer);
+    cbuffer = arbiter.compositor_acquire(this);
 }
 
 TEST_F(MultiMonitorArbiter, compositor_can_acquire_different_buffers_if_submission_happens)
@@ -133,12 +135,14 @@ TEST_F(MultiMonitorArbiter, compositor_can_acquire_different_buffers_if_submissi
 
 TEST_F(MultiMonitorArbiter, compositor_can_acquire_a_few_times_and_only_sends_on_the_last_release)
 {
-    schedule.set_schedule({buffers[0]});
-    auto cbuffer1 = arbiter.compositor_acquire(this);
-    auto cbuffer2 = arbiter.compositor_acquire(this);
+    int comp_id1{0};
+    int comp_id2{0};
+    schedule.set_schedule({buffers[0], buffers[1]});
+    auto cbuffer1 = arbiter.compositor_acquire(&comp_id1);
+    auto cbuffer2 = arbiter.compositor_acquire(&comp_id2);
     EXPECT_THAT(cbuffer1, Eq(cbuffer2));
     EXPECT_CALL(mock_map, send_buffer(buffers[0]->id())).Times(Exactly(1));
-    schedule.set_schedule({buffers[1]});
+    auto cbuffer3 = arbiter.compositor_acquire(&comp_id1);
     arbiter.compositor_release(cbuffer2);
     arbiter.compositor_release(cbuffer1);
 }
@@ -248,6 +252,24 @@ TEST_F(MultiMonitorArbiter, multimonitor_compositor_buffer_syncs_to_fastest_with
 
     EXPECT_THAT(cbuffer7, Eq(buffers[4]));
     EXPECT_THAT(cbuffer8, Eq(buffers[4]));
+}
+
+TEST_F(MultiMonitorArbiter, advance_on_fastest)
+{
+    int comp_id1{0};
+    int comp_id2{0};
+    schedule.set_schedule({buffers[0],buffers[1]});
+
+    auto cbuffer1 = arbiter.compositor_acquire(&comp_id1); //buffer[0]
+    arbiter.compositor_release(cbuffer1);
+    auto cbuffer2 = arbiter.compositor_acquire(&comp_id2); //buffer[0]
+
+    printf("last, should s\n");
+    auto cbuffer3 = arbiter.compositor_acquire(&comp_id1); //buffer[1]
+ 
+    EXPECT_THAT(cbuffer1, Eq(cbuffer2));
+    EXPECT_THAT(cbuffer1, Eq(buffers[0]));
+    EXPECT_THAT(cbuffer3, Eq(buffers[1]));
 }
 
 TEST_F(MultiMonitorArbiter, can_set_a_new_schedule)

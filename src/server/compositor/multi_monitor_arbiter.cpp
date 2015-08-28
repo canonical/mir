@@ -30,8 +30,10 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 
 mc::MultiMonitorArbiter::MultiMonitorArbiter(
+    PresentationGuarantee guarantee,
     std::shared_ptr<frontend::ClientBuffers> const& map,
     std::shared_ptr<Schedule> const& schedule) :
+    guarantee(guarantee),
     map(map),
     schedule(schedule)
 {
@@ -41,20 +43,30 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
 
-    if (onscreen_buffers.empty() && !schedule->anything_scheduled())
+    if (!current && !schedule->anything_scheduled())
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to compositor"));
 
-    if (current_buffer_users.find(id) != current_buffer_users.end() || onscreen_buffers.empty())
+    if (current_buffer_users.find(id) != current_buffer_users.end() || !current)
     {
-        if (schedule->anything_scheduled())
-            onscreen_buffers.emplace_front(schedule->next_buffer(), 0);
-        current_buffer_users.clear();
+        advance_buffer(lk);
     }
     current_buffer_users.insert(id);
 
-    auto& last_entry = onscreen_buffers.front();
-    last_entry.use_count++;
-    return last_entry.buffer;
+    auto it = std::find_if(onscreen_buffers.begin(), onscreen_buffers.end(),
+        [this](ScheduleEntry const& s) { return s.buffer->id() == current->id(); });
+    it->use_count++;
+    clean_onscreen_buffers(lk);
+    return current;
+}
+
+void mc::MultiMonitorArbiter::advance_buffer(std::lock_guard<std::mutex> const&)
+{
+    if (schedule->anything_scheduled())
+    {
+        current_buffer_users.clear();
+        current = schedule->next_buffer();
+        onscreen_buffers.emplace_front(current, 0);
+    }
 }
 
 void mc::MultiMonitorArbiter::compositor_release(std::shared_ptr<mg::Buffer> const& buffer)
@@ -76,7 +88,7 @@ void mc::MultiMonitorArbiter::clean_onscreen_buffers(std::lock_guard<std::mutex>
     for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end();)
     {
         if ((it->use_count == 0) &&
-            (it != onscreen_buffers.begin() || schedule->anything_scheduled())) //ensure monitors always have a buffer
+            (it->buffer != current || schedule->anything_scheduled())) //ensure monitors always have a buffer
         {
             map->send_buffer(it->buffer->id());
             it = onscreen_buffers.erase(it);
