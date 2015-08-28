@@ -19,6 +19,8 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_LIBINPUT_H_
 #define MIR_TEST_DOUBLES_MOCK_LIBINPUT_H_
 
+#include "mir/dispatch/action_queue.h"
+
 #include <gmock/gmock.h>
 
 #include <libinput.h>
@@ -35,6 +37,7 @@ class MockLibInput
 public:
     MockLibInput();
     ~MockLibInput() noexcept;
+    void wake();
 
     MOCK_METHOD1(libinput_ref, libinput*(libinput*));
     MOCK_METHOD1(libinput_unref, libinput*(libinput*));
@@ -92,6 +95,9 @@ public:
     MOCK_METHOD1(libinput_device_get_id_vendor, unsigned int(libinput_device*));
     MOCK_METHOD1(libinput_device_get_sysname, char const*(libinput_device*));
     MOCK_METHOD1(libinput_device_get_device_group, libinput_device_group*(libinput_device*));
+
+private:
+    dispatch::ActionQueue libinput_simulation_queue;
 };
 
 }

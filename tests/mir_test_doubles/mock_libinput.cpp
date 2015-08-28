@@ -32,6 +32,12 @@ mtd::MockLibInput::MockLibInput()
     global_libinput = this;
 
     ON_CALL(*this, libinput_device_ref(_)).WillByDefault(ReturnArg<0>());
+    ON_CALL(*this, libinput_get_fd(_)).WillByDefault(Return(int(libinput_simulation_queue.watch_fd())));
+}
+
+void mtd::MockLibInput::wake()
+{
+    libinput_simulation_queue.enqueue([]{});
 }
 
 mtd::MockLibInput::~MockLibInput()

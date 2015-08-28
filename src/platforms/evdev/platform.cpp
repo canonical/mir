@@ -65,8 +65,6 @@ mie::Platform::Platform(std::shared_ptr<InputDeviceRegistry> const& registry,
     this->monitor->filter_by_subsystem("input");
     this->monitor->enable();
 
-    platform_dispatchable->add_watch(monitor_dispatchable);
-    platform_dispatchable->add_watch(libinput_dispatchable);
 }
 
 std::shared_ptr<mir::dispatch::Dispatchable> mie::Platform::dispatchable()
@@ -76,6 +74,8 @@ std::shared_ptr<mir::dispatch::Dispatchable> mie::Platform::dispatchable()
 
 void mie::Platform::start()
 {
+    platform_dispatchable->add_watch(monitor_dispatchable);
+    platform_dispatchable->add_watch(libinput_dispatchable);
     scan_for_devices();
 }
 
@@ -221,6 +221,8 @@ void mie::Platform::device_changed(mu::Device const& dev)
 
 void mie::Platform::stop()
 {
+    platform_dispatchable->remove_watch(monitor_dispatchable);
+    platform_dispatchable->remove_watch(libinput_dispatchable);
     while (!devices.empty())
     {
         input_device_registry->remove_device(devices.back());
