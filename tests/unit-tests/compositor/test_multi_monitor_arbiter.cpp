@@ -72,9 +72,9 @@ private:
     std::vector<std::shared_ptr<mg::Buffer>> sched;
 };
 
-struct MultiMonitorArbiter : Test
+struct MultiMonitorArbiterBase : Test
 {
-    MultiMonitorArbiter()
+    MultiMonitorArbiterBase()
     {
         for(auto i = 0u; i < num_buffers; i++)
             buffers.emplace_back(std::make_shared<mtd::StubBuffer>());
@@ -83,7 +83,17 @@ struct MultiMonitorArbiter : Test
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
     NiceMock<MockBufferMap> mock_map;
     FixedSchedule schedule;
-    mc::PresentationGuarantee guarantee;
+};
+
+struct MultiMonitorArbiter : MultiMonitorArbiterBase
+{
+    mc::PresentationGuarantee guarantee{mc::PresentationGuarantee::all_frames_on_fastest_monitor};
+    mc::MultiMonitorArbiter arbiter{guarantee, mt::fake_shared(mock_map), mt::fake_shared(schedule)};
+};
+
+struct MultiMonitorArbiterWithAnyFrameGuarantee : MultiMonitorArbiterBase
+{
+    mc::PresentationGuarantee guarantee{mc::PresentationGuarantee::frames_on_any_monitor};
     mc::MultiMonitorArbiter arbiter{guarantee, mt::fake_shared(mock_map), mt::fake_shared(schedule)};
 };
 }
@@ -108,21 +118,46 @@ TEST_F(MultiMonitorArbiter, compositor_access)
     EXPECT_THAT(cbuffer, Eq(buffers[0]));
 }
 
-TEST_F(MultiMonitorArbiter, compositor_acquire_sends_buffer_back)
+TEST_F(MultiMonitorArbiterWithAnyFrameGuarantee, compositor_release_sends_buffer_back_with_any_monitor_guarantee)
 {
     EXPECT_CALL(mock_map, send_buffer(buffers[0]->id()));
 
-    schedule.set_schedule({buffers[0], buffers[1]});
+    schedule.set_schedule({buffers[0]});
 
     auto cbuffer = arbiter.compositor_acquire(this);
     schedule.set_schedule({buffers[1]});
     arbiter.compositor_release(cbuffer);
-    cbuffer = arbiter.compositor_acquire(this);
 }
 
-TEST_F(MultiMonitorArbiter, compositor_buffer_syncs_to_fastest_compositor)
+TEST_F(MultiMonitorArbiterWithAnyFrameGuarantee, compositor_can_acquire_a_few_times_and_only_sends_on_the_last_release)
 {
-    arbiter.set_guarantee(mc::PresentationGuarantee::frames_on_any_monitor);
+    int comp_id1{0};
+    int comp_id2{0};
+    schedule.set_schedule({buffers[0], buffers[1]});
+    auto cbuffer1 = arbiter.compositor_acquire(&comp_id1);
+    auto cbuffer2 = arbiter.compositor_acquire(&comp_id2);
+    EXPECT_THAT(cbuffer1, Eq(cbuffer2));
+    EXPECT_CALL(mock_map, send_buffer(buffers[0]->id())).Times(Exactly(1));
+    auto cbuffer3 = arbiter.compositor_acquire(&comp_id1);
+    arbiter.compositor_release(cbuffer2);
+    arbiter.compositor_release(cbuffer1);
+}
+
+TEST_F(MultiMonitorArbiterWithAnyFrameGuarantee, compositor_can_acquire_different_buffers)
+{
+    EXPECT_CALL(mock_map, send_buffer(buffers[0]->id()));
+
+    schedule.set_schedule({buffers[0]});
+    auto cbuffer1 = arbiter.compositor_acquire(this);
+    schedule.set_schedule({buffers[1]});
+    auto cbuffer2 = arbiter.compositor_acquire(this);
+    EXPECT_THAT(cbuffer1, Ne(cbuffer2));
+    arbiter.compositor_release(cbuffer2);
+    arbiter.compositor_release(cbuffer1);
+}
+
+TEST_F(MultiMonitorArbiterWithAnyFrameGuarantee, compositor_buffer_syncs_to_fastest_compositor)
+{
     int comp_id1{0};
     int comp_id2{0};
 
@@ -196,7 +231,6 @@ TEST_F(MultiMonitorArbiter, compositor_consumes_all_buffers_when_operating_as_a_
 
 TEST_F(MultiMonitorArbiter, multimonitor_compositor_buffer_syncs_to_fastest_with_more_queueing)
 {
-    arbiter.set_guarantee(mc::PresentationGuarantee::frames_on_any_monitor);
     int comp_id1{0};
     int comp_id2{0};
 
@@ -309,30 +343,8 @@ TEST_F(MultiMonitorArbiter, snapshotting_will_release_buffer_if_it_was_the_last_
     arbiter.snapshot_release(sbuffer1);
 }
 
-#if 0
-TEST_F(MultiMonitorArbiter, advance_on_fastest_releases)
-{
-    arbiter.set_guarantee(mc::PresentationGuarantee::all_frames_on_fastest_monitor);
-    int comp_id1{0};
-    int comp_id2{0};
-    schedule.set_schedule({buffers[0],buffers[1]});
-
-    auto cbuffer1 = arbiter.compositor_acquire(&comp_id1); //buffer[0]
-    arbiter.compositor_release(cbuffer1);
-    auto cbuffer2 = arbiter.compositor_acquire(&comp_id2); //buffer[0]
-    arbiter.compositor_release(cbuffer2);
-
-    auto cbuffer3 = arbiter.compositor_acquire(&comp_id1); //buffer[1]
- 
-    EXPECT_THAT(cbuffer1, Eq(cbuffer2));
-    EXPECT_THAT(cbuffer1, Eq(buffers[0]));
-    EXPECT_THAT(cbuffer3, Eq(buffers[1]));
-}
-#endif
-
 TEST_F(MultiMonitorArbiter, advance_on_fastest_has_same_buffer)
 {
-    arbiter.set_guarantee(mc::PresentationGuarantee::all_frames_on_fastest_monitor);
     int comp_id1{0};
     int comp_id2{0};
     schedule.set_schedule({buffers[0],buffers[1]});
@@ -349,32 +361,14 @@ TEST_F(MultiMonitorArbiter, advance_on_fastest_has_same_buffer)
     EXPECT_THAT(cbuffer3, Eq(buffers[1]));
 }
 
-TEST_F(MultiMonitorArbiter, compositor_can_acquire_a_few_times_and_only_sends_on_the_last_release)
+TEST_F(MultiMonitorArbiter, compositor_acquire_sends_buffer_back_with_fastest_guarantee)
 {
-    arbiter.set_guarantee(mc::PresentationGuarantee::frames_on_any_monitor);
-    int comp_id1{0};
-    int comp_id2{0};
-    schedule.set_schedule({buffers[0], buffers[1]});
-    auto cbuffer1 = arbiter.compositor_acquire(&comp_id1);
-    auto cbuffer2 = arbiter.compositor_acquire(&comp_id2);
-    EXPECT_THAT(cbuffer1, Eq(cbuffer2));
-    EXPECT_CALL(mock_map, send_buffer(buffers[0]->id())).Times(Exactly(1));
-    auto cbuffer3 = arbiter.compositor_acquire(&comp_id1);
-    arbiter.compositor_release(cbuffer2);
-    arbiter.compositor_release(cbuffer1);
-}
-
-TEST_F(MultiMonitorArbiter, compositor_can_acquire_different_buffers)
-{
-    arbiter.set_guarantee(mc::PresentationGuarantee::frames_on_any_monitor);
-
     EXPECT_CALL(mock_map, send_buffer(buffers[0]->id()));
 
-    schedule.set_schedule({buffers[0]});
-    auto cbuffer1 = arbiter.compositor_acquire(this);
+    schedule.set_schedule({buffers[0], buffers[1]});
+
+    auto cbuffer = arbiter.compositor_acquire(this);
     schedule.set_schedule({buffers[1]});
-    auto cbuffer2 = arbiter.compositor_acquire(this);
-    EXPECT_THAT(cbuffer1, Ne(cbuffer2));
-    arbiter.compositor_release(cbuffer2);
-    arbiter.compositor_release(cbuffer1);
+    arbiter.compositor_release(cbuffer);
+    cbuffer = arbiter.compositor_acquire(this);
 }

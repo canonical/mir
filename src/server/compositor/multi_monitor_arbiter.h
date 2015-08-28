@@ -19,6 +19,7 @@
 #define MIR_COMPOSITOR_MULTI_MONITOR_ARBITER_H_
 
 #include "mir/compositor/compositor_id.h"
+#include "mir/graphics/buffer_id.h"
 #include "buffer_bundle.h"
 #include <memory>
 #include <mutex>
@@ -60,9 +61,8 @@ public:
     void set_guarantee(PresentationGuarantee guarantee);
 
 private:
-    void clean_onscreen_buffers_acquire(std::lock_guard<std::mutex> const&);
-    void clean_onscreen_buffers_release(std::lock_guard<std::mutex> const&);
-    void advance_buffer(std::lock_guard<std::mutex> const&);
+    void decrease_refcount_for(graphics::BufferID id, std::lock_guard<std::mutex> const&);
+    void clean_onscreen_buffers(std::lock_guard<std::mutex> const&);
 
     std::mutex mutable mutex;
     PresentationGuarantee guarantee;
@@ -80,7 +80,6 @@ private:
     std::deque<ScheduleEntry> onscreen_buffers;
     std::set<compositor::CompositorID> current_buffer_users;
 
-    std::shared_ptr<graphics::Buffer> current;
     std::shared_ptr<Schedule> schedule;
 };
 

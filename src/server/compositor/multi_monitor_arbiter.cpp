@@ -43,26 +43,26 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
 
-    if (!current && !schedule->anything_scheduled())
+    if (onscreen_buffers.empty() && !schedule->anything_scheduled())
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to compositor"));
 
-    if (current_buffer_users.find(id) != current_buffer_users.end() || !current)
+    if (current_buffer_users.find(id) != current_buffer_users.end() || onscreen_buffers.empty())
     {
         if (schedule->anything_scheduled())
-        {
-        current = schedule->next_buffer();
-        onscreen_buffers.emplace_front(current, 0);
+            onscreen_buffers.emplace_front(schedule->next_buffer(), 0);
         current_buffer_users.clear();
-        }
     }
     current_buffer_users.insert(id);
 
+    auto& last_entry = onscreen_buffers.front();
+    last_entry.use_count++;
+
+    if (guarantee != mc::PresentationGuarantee::all_frames_on_fastest_monitor)
+        return last_entry.buffer;
+
     for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end();)
     {
-        if (it->buffer == current)
-            it->use_count++;
-
-        if ((it->use_count == 0) && (guarantee != mc::PresentationGuarantee::frames_on_any_monitor))
+        if (it->use_count == 0)
         {
             map->send_buffer(it->buffer->id());
             it = onscreen_buffers.erase(it);
@@ -73,23 +73,34 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
         }
     }
 
-    return current;
+    return last_entry.buffer;
 }
 
 void mc::MultiMonitorArbiter::compositor_release(std::shared_ptr<mg::Buffer> const& buffer)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
 
+    decrease_refcount_for(buffer->id(), lk);
+
+    if (guarantee == mc::PresentationGuarantee::frames_on_any_monitor)
+        clean_onscreen_buffers(lk);
+}
+
+void mc::MultiMonitorArbiter::decrease_refcount_for(mg::BufferID id, std::lock_guard<std::mutex> const&)
+{
+    auto it = std::find_if(onscreen_buffers.begin(), onscreen_buffers.end(),
+        [&id](ScheduleEntry const& s) { return s.buffer->id() == id; });
+    if (it == onscreen_buffers.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("buffer not scheduled"));
+    it->use_count--;
+}
+
+void mc::MultiMonitorArbiter::clean_onscreen_buffers(std::lock_guard<std::mutex> const&)
+{
     for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end();)
     {
-        if (buffer == it->buffer)
-        {
-            it->use_count--;
-        }
-
         if ((it->use_count == 0) &&
-            (current != it->buffer || (schedule->anything_scheduled())) &&
-            (guarantee == mc::PresentationGuarantee::frames_on_any_monitor))
+            (it != onscreen_buffers.begin() || schedule->anything_scheduled())) //ensure monitors always have a buffer
         {
             map->send_buffer(it->buffer->id());
             it = onscreen_buffers.erase(it);
@@ -121,22 +132,9 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
 
 void mc::MultiMonitorArbiter::snapshot_release(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end();)
-    {
-        if (buffer == it->buffer)
-            it->use_count--;
-
-        if ((it->use_count == 0)
-            && (schedule->anything_scheduled()))
-        {
-            map->send_buffer(it->buffer->id());
-            it = onscreen_buffers.erase(it);
-        }
-        else
-        {
-            it++;
-        } 
-    }
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    decrease_refcount_for(buffer->id(), lk);
+    clean_onscreen_buffers(lk);
 }
 
 void mc::MultiMonitorArbiter::set_schedule(std::shared_ptr<Schedule> const& new_schedule)
