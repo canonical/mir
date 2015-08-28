@@ -73,15 +73,6 @@ void log_configuration(mg::DisplayConfiguration const& conf)
 
         if (out.connected)
         {
-            int width = 0, height = 0;
-            double hz = 0.0;
-            if (out.current_mode_index < out.modes.size())
-            {
-                auto const& mode = out.modes[out.current_mode_index];
-                width = mode.size.width.as_int();
-                height = mode.size.height.as_int();
-                hz = mode.vrefresh_hz;
-            }
             int width_mm = out.physical_size_mm.width.as_int();
             int height_mm = out.physical_size_mm.height.as_int();
             float inches =
@@ -92,8 +83,24 @@ void log_configuration(mg::DisplayConfiguration const& conf)
                           inches, width_mm, height_mm);
             if (out.used)
             {
-                mir::log_info("%*cCurrent mode %dx%d %.2fHz",
-                              indent, ' ', width, height, hz);
+                if (out.current_mode_index < out.modes.size())
+                {
+                    auto const& mode = out.modes[out.current_mode_index];
+                    mir::log_info("%*cCurrent mode %dx%d %.2fHz",
+                                  indent, ' ',
+                                  mode.size.width.as_int(),
+                                  mode.size.height.as_int(),
+                                  mode.vrefresh_hz);
+                }
+                if (out.preferred_mode_index < out.modes.size())
+                {
+                    auto const& mode = out.modes[out.preferred_mode_index];
+                    mir::log_info("%*cPreferred mode %dx%d %.2fHz",
+                                  indent, ' ',
+                                  mode.size.width.as_int(),
+                                  mode.size.height.as_int(),
+                                  mode.vrefresh_hz);
+                }
                 mir::log_info("%*cLogical position %+d%+d",
                               indent, ' ',
                               out.top_left.x.as_int(),
