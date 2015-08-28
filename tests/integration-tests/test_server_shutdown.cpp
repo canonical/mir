@@ -41,11 +41,6 @@
 #include "mir/input/input_device_info.h"
 #include "mir/input/input_device_registry.h"
 
-#include "mir/dispatch/action_queue.h"
-#include "mir/input/input_device.h"
-#include "mir/input/input_device_info.h"
-#include "mir/input/input_device_registry.h"
-
 #include "mir_toolkit/mir_client_library.h"
 
 #include <gtest/gtest.h>
@@ -284,7 +279,7 @@ TEST(ServerShutdownWithThreadException,
     EXPECT_EQ(0, connector.use_count());
     EXPECT_EQ(0, input_manager.use_count());
     EXPECT_EQ(0, hub.use_count());
-}
+    }
 
 // This also acts as a regression test for LP: #1378740
 TEST(ServerShutdownWithThreadException,
