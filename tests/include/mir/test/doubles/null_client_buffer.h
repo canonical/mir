@@ -31,11 +31,15 @@ namespace doubles
 class NullClientBuffer : public client::ClientBuffer
 {
 public:
+    NullClientBuffer() : NullClientBuffer(geometry::Size()) {}
+    NullClientBuffer(geometry::Size sz) : sz(sz)
+    {
+    }
     std::shared_ptr<client::MemoryRegion> secure_for_cpu_write()
     {
         return std::make_shared<client::MemoryRegion>();
     }
-    geometry::Size size() const { return geometry::Size(); }
+    geometry::Size size() const { return sz; }
     geometry::Stride stride() const { return geometry::Stride(); }
     MirPixelFormat pixel_format() const { return mir_pixel_format_invalid; }
     uint32_t age() const { return 0; }
@@ -47,6 +51,7 @@ public:
     {
         return nullptr;
     }
+    geometry::Size sz;
 };
 
 }
