@@ -83,7 +83,7 @@ struct MultiMonitorArbiter : Test
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
     NiceMock<MockBufferMap> mock_map;
     FixedSchedule schedule;
-    mc::PresentationGuarantee guarantee;
+    mc::PresentationGuarantee guarantee{mc::PresentationGuarantee::all_frames_on_fastest_monitor};
     mc::MultiMonitorArbiter arbiter{guarantee, mt::fake_shared(mock_map), mt::fake_shared(schedule)};
 };
 }
@@ -308,27 +308,6 @@ TEST_F(MultiMonitorArbiter, snapshotting_will_release_buffer_if_it_was_the_last_
     EXPECT_CALL(mock_map, send_buffer(sbuffer1->id()));
     arbiter.snapshot_release(sbuffer1);
 }
-
-#if 0
-TEST_F(MultiMonitorArbiter, advance_on_fastest_releases)
-{
-    arbiter.set_guarantee(mc::PresentationGuarantee::all_frames_on_fastest_monitor);
-    int comp_id1{0};
-    int comp_id2{0};
-    schedule.set_schedule({buffers[0],buffers[1]});
-
-    auto cbuffer1 = arbiter.compositor_acquire(&comp_id1); //buffer[0]
-    arbiter.compositor_release(cbuffer1);
-    auto cbuffer2 = arbiter.compositor_acquire(&comp_id2); //buffer[0]
-    arbiter.compositor_release(cbuffer2);
-
-    auto cbuffer3 = arbiter.compositor_acquire(&comp_id1); //buffer[1]
- 
-    EXPECT_THAT(cbuffer1, Eq(cbuffer2));
-    EXPECT_THAT(cbuffer1, Eq(buffers[0]));
-    EXPECT_THAT(cbuffer3, Eq(buffers[1]));
-}
-#endif
 
 TEST_F(MultiMonitorArbiter, advance_on_fastest_has_same_buffer)
 {
