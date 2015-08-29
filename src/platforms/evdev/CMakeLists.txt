@@ -36,7 +36,7 @@ set_target_properties(
 target_link_libraries(mirplatforminputevdev
   mirplatform
   mirclient
-  ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  ${Boost_PROGRAM_OPTIONS_LIBRARY}G
   ${LIBINPUT_LDFLAGS} ${LIBINPUT_LIBRARIES}
 )
 
