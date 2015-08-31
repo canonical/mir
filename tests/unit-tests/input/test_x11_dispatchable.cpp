@@ -38,8 +38,7 @@ struct X11DispatchableTest : ::testing::Test
 {
     NiceMock<mtd::MockInputSink> mock_input_sink;
     NiceMock<mtd::MockX11> mock_x11;
-    std::unique_ptr<mir::input::DefaultEventBuilder> builder =
-        std::make_unique<mir::input::DefaultEventBuilder>(0);
+    mir::input::DefaultEventBuilder builder{0};
 
     mir::input::X::XDispatchable x11_dispatchable{
         std::shared_ptr<::Display>(
@@ -58,7 +57,7 @@ TEST_F(X11DispatchableTest, dispatches_input_events_to_sink)
     EXPECT_CALL(mock_input_sink, handle_input(_))
         .Times(Exactly(1));
 
-    x11_dispatchable.set_input_sink(&mock_input_sink, builder.get());
+    x11_dispatchable.set_input_sink(&mock_input_sink, &builder);
     x11_dispatchable.dispatch(mir::dispatch::FdEvent::readable);
 }
 
@@ -73,7 +72,7 @@ TEST_F(X11DispatchableTest, grabs_keyboard)
     EXPECT_CALL(mock_input_sink, handle_input(_))
         .Times(Exactly(0));
 
-    x11_dispatchable.set_input_sink(&mock_input_sink, builder.get());
+    x11_dispatchable.set_input_sink(&mock_input_sink, &builder);
     x11_dispatchable.dispatch(mir::dispatch::FdEvent::readable);
 }
 
@@ -88,6 +87,6 @@ TEST_F(X11DispatchableTest, ungrabs_keyboard)
     EXPECT_CALL(mock_input_sink, handle_input(_))
         .Times(Exactly(0));
 
-    x11_dispatchable.set_input_sink(&mock_input_sink, builder.get());
+    x11_dispatchable.set_input_sink(&mock_input_sink, &builder);
     x11_dispatchable.dispatch(mir::dispatch::FdEvent::readable);
 }
