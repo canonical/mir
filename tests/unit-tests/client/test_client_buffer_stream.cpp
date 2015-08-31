@@ -139,6 +139,10 @@ struct MockPerfReport : public mcl::PerfReport
 
 struct MockClientBuffer : public mtd::NullClientBuffer
 {
+    MockClientBuffer(geom::Size size) :
+        mtd::NullClientBuffer(size)
+    {
+    }
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
 };
 
@@ -212,6 +216,8 @@ struct ClientBufferStream : TestWithParam<bool>
         {
             mp::Buffer buffer;
             fill_protobuf_buffer_from_package(&buffer, a_buffer_package());
+            buffer.set_width(size.width.as_int());
+            buffer.set_height(size.height.as_int());
             bs.buffer_available(buffer);
         }
     }
@@ -228,7 +234,7 @@ struct ClientBufferStream : TestWithParam<bool>
 
     mcl::BufferStreamMode mode = mcl::BufferStreamMode::Producer;
     MirBufferPackage buffer_package = a_buffer_package();
-    geom::Size size{1,2};
+    geom::Size size{buffer_package.width, buffer_package.height};
     mp::BufferStream response = a_protobuf_buffer_stream(
         default_pixel_format, default_buffer_usage, buffer_package);
 };
@@ -380,10 +386,11 @@ TEST_P(ClientBufferStream, returns_correct_surface_parameters)
 
 TEST_P(ClientBufferStream, returns_current_client_buffer)
 {
-    auto const client_buffer_1 = std::make_shared<mtd::NullClientBuffer>();
-    auto const client_buffer_2 = std::make_shared<mtd::NullClientBuffer>();
+    auto const client_buffer_1 = std::make_shared<mtd::NullClientBuffer>(size);
+    auto const client_buffer_2 = std::make_shared<mtd::NullClientBuffer>(size);
     auto buffer_package_1 = a_buffer_package();
     auto buffer_package_2 = a_buffer_package();
+
     mp::Buffer protobuf_buffer_1;
     mp::Buffer protobuf_buffer_2;
     fill_protobuf_buffer_from_package(&protobuf_buffer_1, buffer_package_1);
@@ -412,8 +419,8 @@ TEST_P(ClientBufferStream, returns_current_client_buffer)
 
 TEST_P(ClientBufferStream, caches_width_and_height_in_case_of_partial_updates)
 {
-    auto const client_buffer_1 = std::make_shared<mtd::NullClientBuffer>();
-    auto const client_buffer_2 = std::make_shared<mtd::NullClientBuffer>();
+    auto const client_buffer_1 = std::make_shared<mtd::NullClientBuffer>(size);
+    auto const client_buffer_2 = std::make_shared<mtd::NullClientBuffer>(size);
     auto buffer_package_1 = a_buffer_package();
     auto buffer_package_2 = a_buffer_package();
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage, buffer_package_1);
@@ -451,7 +458,7 @@ TEST_P(ClientBufferStream, gets_egl_native_window)
 
 TEST_P(ClientBufferStream, map_graphics_region)
 {
-    MockClientBuffer mock_client_buffer;
+    MockClientBuffer mock_client_buffer(size);
     EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
 
@@ -481,8 +488,8 @@ TEST_P(ClientBufferStream, passes_name_to_perf_report)
 TEST_P(ClientBufferStream, receives_unsolicited_buffer)
 {
     int id = 88;
-    MockClientBuffer mock_client_buffer;
-    MockClientBuffer second_mock_client_buffer;
+    MockClientBuffer mock_client_buffer(size);
+    MockClientBuffer second_mock_client_buffer(size);
     EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
 
@@ -508,7 +515,7 @@ TEST_P(ClientBufferStream, receives_unsolicited_buffer)
 TEST_P(ClientBufferStream, waiting_client_can_unblock_on_shutdown)
 {
     using namespace std::literals::chrono_literals;
-    MockClientBuffer mock_client_buffer;
+    MockClientBuffer mock_client_buffer(size);
     ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
     ON_CALL(mock_protobuf_server, submit_buffer(_,_,_))

@@ -56,23 +56,8 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
 
     auto& last_entry = onscreen_buffers.front();
     last_entry.use_count++;
-
-    if (guarantee != mc::PresentationGuarantee::all_frames_on_fastest_monitor)
-        return last_entry.buffer;
-
-    for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end();)
-    {
-        if (it->use_count == 0)
-        {
-            map->send_buffer(it->buffer->id());
-            it = onscreen_buffers.erase(it);
-        }
-        else
-        {
-            it++;
-        }
-    }
-
+    if (guarantee == mc::PresentationGuarantee::all_frames_on_fastest_monitor)
+        clean_onscreen_buffers(lk);
     return last_entry.buffer;
 }
 

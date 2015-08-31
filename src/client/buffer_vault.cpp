@@ -130,12 +130,14 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     else
     {
         if (size == it->second.buffer->size())
-        { 
+        {
+            printf("okay, good size, liar\n"); 
             it->second.owner = Owner::Self;
             it->second.buffer->update_from(*package);
         }
         else
         {
+            printf("SIZE MISMATCH\n");
             int id = it->first;
             buffers.erase(it);
             lk.unlock();
@@ -155,6 +157,7 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 
 void mcl::BufferVault::set_size(geom::Size sz)
 {
+    printf("A SIZE HAS BEEN SET\n");
     std::lock_guard<std::mutex> lk(mutex);
     size = sz;
 }

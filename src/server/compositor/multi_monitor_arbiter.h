@@ -79,7 +79,6 @@ private:
     };
     std::deque<ScheduleEntry> onscreen_buffers;
     std::set<compositor::CompositorID> current_buffer_users;
-
     std::shared_ptr<Schedule> schedule;
 };
 
