@@ -1067,6 +1067,7 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
 
     for (auto consumer : consumers)
     {
+        printf("AAAA\n");
         ASSERT_NE(0, istream->buffers_ready_for_compositor(consumer));
 
         // Double consume to account for the +1 that
