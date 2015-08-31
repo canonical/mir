@@ -54,7 +54,7 @@ public:
         std::shared_ptr<ClientBufferFactory> const&,
         std::shared_ptr<ServerBufferRequests> const&,
         geometry::Size size, MirPixelFormat format, int usage,
-        unsigned int initial_nbuffers);
+        unsigned int initial_nbuffers, unsigned int max_nbuffers);
     ~BufferVault();
 
     NoTLSFuture<std::shared_ptr<ClientBuffer>> withdraw();

@@ -270,7 +270,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         std::shared_ptr<mcl::ServerBufferRequests> const& requests,
         geom::Size size, MirPixelFormat format, int usage,
         unsigned int initial_nbuffers) :
-        vault(factory, requests, size, format, usage, initial_nbuffers)
+        vault(factory, requests, size, format, usage, initial_nbuffers, initial_nbuffers)
     {
     }
 
