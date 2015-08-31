@@ -372,3 +372,24 @@ TEST_F(MultiMonitorArbiter, compositor_acquire_sends_buffer_back_with_fastest_gu
     arbiter.compositor_release(cbuffer);
     cbuffer = arbiter.compositor_acquire(this);
 }
+
+TEST_F(MultiMonitorArbiter, buffers_are_sent_back)
+{
+    EXPECT_CALL(mock_map, send_buffer(_)).Times(3);
+    int comp_id1{0};
+    int comp_id2{0};
+    schedule.set_schedule({buffers[0], buffers[1], buffers[2], buffers[3]});
+
+    auto b1 = arbiter.compositor_acquire(&comp_id1);
+    arbiter.compositor_release(b1);
+    auto b2 = arbiter.compositor_acquire(&comp_id1);
+    arbiter.compositor_release(b2);
+    auto b3 = arbiter.compositor_acquire(&comp_id1);
+    auto b5 = arbiter.compositor_acquire(&comp_id2);
+    arbiter.compositor_release(b3);
+    auto b4 = arbiter.compositor_acquire(&comp_id1);
+    arbiter.compositor_release(b5);
+    arbiter.compositor_release(b4);
+    auto b6 = arbiter.compositor_acquire(&comp_id1);
+    arbiter.compositor_release(b6);
+}
