@@ -39,14 +39,19 @@ mcl::BufferVault::BufferVault(
     std::shared_ptr<ClientBufferFactory> const& client_buffer_factory,
     std::shared_ptr<ServerBufferRequests> const& server_requests,
     geom::Size size, MirPixelFormat format, int usage,
-    unsigned int initial_nbuffers, unsigned int) :
+    unsigned int ideal_nbuffers, unsigned int max_nbuffers) :
     factory(client_buffer_factory),
     server_requests(server_requests),
     format(format),
     usage(usage),
-    size(size)
+    size(size),
+    ideal_nbuffers(ideal_nbuffers),
+    max_nbuffers(max_nbuffers),
+    nbuffers(ideal_nbuffers)
 {
-    for (auto i = 0u; i < initial_nbuffers; i++)
+    if (ideal_nbuffers > max_nbuffers)
+        BOOST_THROW_EXCEPTION(std::logic_error("ideal nbuffers was greater than max nbuffers"));
+    for (auto i = 0u; i < ideal_nbuffers; i++)
         server_requests->allocate_buffer(size, format, usage);
 }
 
@@ -69,6 +74,11 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw(
     {
         it->second.owner = Owner::ContentProducer;
         promise.set_value(it->second.buffer);
+    }
+    else if (nbuffers < max_nbuffers)
+    {
+        server_requests->allocate_buffer(size, format, usage);
+        nbuffers++;
     }
     else
     {
