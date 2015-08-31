@@ -64,16 +64,20 @@ void fill_device_info(DeviceInfo& info, int fd)
     get_bitmask(EV_SW, sizeof info.sw_bit_mask, info.sw_bit_mask);
 
     if (ioctl(fd, EVIOCGPROP(sizeof info.property_bit_mask), info.property_bit_mask) < 1)
-            BOOST_THROW_EXCEPTION(
-                std::system_error(std::error_code(errno, std::system_category()),
-                                  "Failed to query devices properties"));
-
+        BOOST_THROW_EXCEPTION(
+            std::system_error(std::error_code(errno, std::system_category()), "Failed to query devices properties"));
 }
 
-constexpr size_t index_of_bit(size_t bit)
+constexpr size_t end_index_of(size_t bit)
 {
     return (bit + 7) / 8;
 }
+
+constexpr size_t start_index_of(size_t bit)
+{
+    return bit / 8;
+}
+
 inline bool get_bit(uint8_t const* array, size_t bit)
 {
     return array[bit/8] & (1<<(bit%8));
@@ -82,39 +86,51 @@ inline bool get_bit(uint8_t const* array, size_t bit)
 inline size_t get_num_bits(uint8_t const* array, std::initializer_list<size_t> bits)
 {
     size_t ret = 0;
-    for( auto const bit : bits)
+    for (auto const bit : bits)
         ret += get_bit(array, bit);
     return ret;
+}
+
+bool contains_non_zero(uint8_t const* array, int first, int last)
+{
+    return std::any_of(array + first, array + last, [](uint8_t item) { return item!=0;});
+}
+
+bool all_bits_set(uint8_t const* array, int first, int last)
+{
+    for (auto index = first; index != last; ++ index)
+        if (!get_bit(array, index))
+            return false;
+    return true;
 }
 
 mi::DeviceCapabilities evaluate_device_capabilities(DeviceInfo const& info)
 {
     mi::DeviceCapabilities caps;
 
-    auto const contains_non_zero = [](uint8_t const* array, int first, int last) -> bool
-    {
-        return std::any_of(array + first, array + last, [](uint8_t item) { return item!=0;});
-    };
+    bool const has_keys = contains_non_zero(info.key_bit_mask, 0, end_index_of(BTN_MISC))
+        || contains_non_zero(info.key_bit_mask, start_index_of(KEY_OK), sizeof info.key_bit_mask);
 
-    bool const has_keys = contains_non_zero(info.key_bit_mask, 0, index_of_bit(BTN_MISC))
-        || contains_non_zero(info.key_bit_mask, index_of_bit(KEY_OK), sizeof info.key_bit_mask);
+    bool const has_alpha_numeric =
+        all_bits_set(info.key_bit_mask, KEY_1, KEY_EQUAL) && all_bits_set(info.key_bit_mask, KEY_Q, KEY_P) &&
+        all_bits_set(info.key_bit_mask, KEY_A, KEY_L) && all_bits_set(info.key_bit_mask, KEY_Z, KEY_M);
 
     bool const has_gamepad_buttons =
-        contains_non_zero(info.key_bit_mask, index_of_bit(BTN_MISC), index_of_bit(BTN_MOUSE))
-        || contains_non_zero(info.key_bit_mask, index_of_bit(BTN_JOYSTICK), index_of_bit(BTN_DIGI));
+        contains_non_zero(info.key_bit_mask, start_index_of(BTN_MISC), end_index_of(BTN_MOUSE)) ||
+        contains_non_zero(info.key_bit_mask, start_index_of(BTN_JOYSTICK), end_index_of(BTN_DIGI));
 
-    bool const has_coordinates = get_bit(info.abs_bit_mask, ABS_X) &&
-        get_bit(info.abs_bit_mask, ABS_Y);
+    bool const has_coordinates = get_bit(info.abs_bit_mask, ABS_X) && get_bit(info.abs_bit_mask, ABS_Y);
 
-    bool const has_mt_coordinates = get_bit(info.abs_bit_mask, ABS_MT_POSITION_X) &&
-        get_bit(info.abs_bit_mask, ABS_MT_POSITION_Y);
+    bool const has_mt_coordinates =
+        get_bit(info.abs_bit_mask, ABS_MT_POSITION_X) && get_bit(info.abs_bit_mask, ABS_MT_POSITION_Y);
 
     bool const is_direct = get_bit(info.property_bit_mask, INPUT_PROP_DIRECT);
 
-    bool const finger_but_no_pen = get_bit(info.key_bit_mask, BTN_TOOL_FINGER)
-        && !get_bit(info.key_bit_mask, BTN_TOOL_PEN);
+    bool const finger_but_no_pen =
+        get_bit(info.key_bit_mask, BTN_TOOL_FINGER) && !get_bit(info.key_bit_mask, BTN_TOOL_PEN);
 
     bool const has_touch = get_bit(info.key_bit_mask, BTN_TOUCH);
+    bool const is_pointer = get_bit(info.key_bit_mask, BTN_MOUSE) && get_bit(info.rel_bit_mask, REL_X) && get_bit(info.rel_bit_mask, REL_Y);
 
     bool const has_joystick_axis = 0 < get_num_bits(
         info.abs_bit_mask, {ABS_Z,
@@ -127,13 +143,15 @@ mi::DeviceCapabilities evaluate_device_capabilities(DeviceInfo const& info)
     if (has_keys || has_gamepad_buttons)
         caps = caps | mi::DeviceCapability::keyboard;
 
-    if (get_bit(info.key_bit_mask, BTN_MOUSE) && get_bit(info.rel_bit_mask, REL_X) && get_bit(info.rel_bit_mask, REL_Y))
+    if (has_alpha_numeric)
+        caps = caps | mi::DeviceCapability::alpha_numeric;
+
+    if (is_pointer)
         caps = caps | mi::DeviceCapability::pointer;
 
-    if (finger_but_no_pen && !is_direct && (has_coordinates|| has_mt_coordinates))
+    if (finger_but_no_pen && !is_direct && (has_coordinates || has_mt_coordinates))
         caps = caps | mi::DeviceCapability::touchpad;
-    else if (has_touch && ((has_mt_coordinates && !has_gamepad_buttons)
-                           || has_coordinates))
+    else if (has_touch && ((has_mt_coordinates && !has_gamepad_buttons) || has_coordinates))
         caps = caps | mi::DeviceCapability::touchscreen;
 
     if (has_joystick_axis || (!has_touch && has_coordinates))
@@ -144,7 +162,6 @@ mi::DeviceCapabilities evaluate_device_capabilities(DeviceInfo const& info)
 
     return caps;
 }
-
 }
 
 mi::DeviceCapabilities mie::detect_device_capabilities(char const* device)
