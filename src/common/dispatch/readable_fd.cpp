@@ -18,8 +18,9 @@
 
 #include "mir/dispatch/readable_fd.h"
 
-mir::dispatch::ReadableFd::ReadableFd(Fd fd, std::function<void()> const& on_readable)
-    : fd{fd}, readable{on_readable}
+mir::dispatch::ReadableFd::ReadableFd(Fd fd, std::function<void()> const& on_readable) :
+    fd{fd},
+    readable{on_readable}
 {
 }
 
@@ -30,10 +31,10 @@ mir::Fd mir::dispatch::ReadableFd::watch_fd() const
 
 bool mir::dispatch::ReadableFd::dispatch(FdEvents events)
 {
-    if (events&FdEvent::error)
+    if (events & FdEvent::error)
         return false;
 
-    if (events&FdEvent::readable)
+    if (events & FdEvent::readable)
         readable();
 
     return true;
