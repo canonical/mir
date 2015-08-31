@@ -1524,7 +1524,9 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     int const delay = 3;
     q.set_scaling_delay(delay);
 
-    for (int frame = 0; frame < 10;)
+    int const nframes = 100;
+
+    for (int frame = 0; frame < nframes;)
     {
         std::shared_ptr<AcquireWaitHandle> client;
         do
@@ -1558,7 +1560,7 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
 
     // Now check what happens if the client becomes slow...
     buffers_acquired.clear();
-    for (int frame = 0; frame < 10;)
+    for (int frame = 0; frame < nframes;)
     {
         std::shared_ptr<AcquireWaitHandle> client;
         do
@@ -1603,7 +1605,7 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
 
     // And what happens if the client becomes fast again?...
     buffers_acquired.clear();
-    for (int frame = 0; frame < 10;)
+    for (int frame = 0; frame < nframes;)
     {
         std::shared_ptr<AcquireWaitHandle> client;
         do
