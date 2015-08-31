@@ -411,17 +411,15 @@ struct ScheduledProducer : ProducerSystem
     {
         if (can_produce())
         {
+            auto buffer = vault.withdraw().get();
+            vault.deposit(buffer);
+            vault.wire_transfer_outbound(buffer);
+            last_size_ = buffer->size();
 
-
-        auto buffer = vault.withdraw().get();
-        vault.deposit(buffer);
-        vault.wire_transfer_outbound(buffer);
-        last_size_ = buffer->size();
-
-//        age++;
-        //buffer->write(reinterpret_cast<unsigned char const*>(&age), sizeof(age));
-        entries.emplace_back(BufferEntry{mg::BufferID{(unsigned int)ipc->last_transferred_to_server()}, age, Access::unblocked});
-        available--;
+    //        age++;
+            //buffer->write(reinterpret_cast<unsigned char const*>(&age), sizeof(age));
+            entries.emplace_back(BufferEntry{mg::BufferID{(unsigned int)ipc->last_transferred_to_server()}, age, Access::unblocked});
+            available--;
         }
         else
         {
@@ -517,15 +515,16 @@ inline size_t unique_ids_in(std::vector<BufferEntry> log)
 }
 
 //test infrastructure
-struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<int, bool>>
+struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<bool, int>>
 {
     BufferScheduling()
     {
-        if (std::get<1>(GetParam()))
+        if (std::get<0>(GetParam()))
         {
             producer = std::make_unique<BufferQueueProducer>(stream);
             consumer = std::make_unique<BufferQueueConsumer>(stream);
             second_consumer = std::make_unique<BufferQueueConsumer>(stream);
+            third_consumer = std::make_unique<BufferQueueConsumer>(stream);
             istream = &stream;
         }
         else
@@ -554,7 +553,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
             consumer = std::make_unique<ScheduledConsumer>(stream);
             second_consumer = std::make_unique<ScheduledConsumer>(stream);
             third_consumer = std::make_unique<ScheduledConsumer>(stream);
-            producer = std::make_unique<ScheduledProducer>(ipc, std::get<0>(GetParam()));
+            producer = std::make_unique<ScheduledProducer>(ipc, std::get<1>(GetParam()));
 
             istream = stream.get();
         }
@@ -564,7 +563,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
 
     void resize(geom::Size sz)
     {
-        if (std::get<1>(GetParam()))
+        if (std::get<0>(GetParam()))
         {
             istream->resize(sz);
         }
@@ -588,7 +587,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
     mtd::StubBufferAllocator server_buffer_factory;
     mtd::StubFrameDroppingPolicyFactory stub_policy;
     mg::BufferProperties properties{geom::Size{3,3}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
-    int nbuffers = std::get<0>(GetParam());
+    int nbuffers = std::get<1>(GetParam());
 
     mcl::ClientBufferDepository depository{mt::fake_shared(client_buffer_factory), nbuffers};
     mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory), properties, stub_policy};
@@ -628,8 +627,6 @@ TEST_P(WithAnyNumberOfBuffers, all_buffers_consumed_in_interleaving_pattern)
     EXPECT_THAT(consumption_log, ContainerEq(production_log));
 }
 
-///////////NOT VALID IF NBUFFERS==2. NEED FEATURE, 2->3 scaling
-#if 1
 TEST_P(WithTwoOrMoreBuffers, framedropping_producers_dont_block)
 {
     allow_framedropping();
@@ -652,7 +649,6 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_producers_dont_block)
     ASSERT_THAT(production_log, SizeIs(9));
     EXPECT_THAT(consumption_log, SizeIs(2));
 }
-#endif
 
 TEST_P(WithThreeOrMoreBuffers, synchronous_overproducing_producers_has_all_buffers_consumed)
 {
@@ -672,45 +668,6 @@ TEST_P(WithThreeOrMoreBuffers, synchronous_overproducing_producers_has_all_buffe
     EXPECT_THAT(consumption_log, Not(IsEmpty()));
     EXPECT_THAT(consumption_log, ContainerEq(production_log));
 }
-
-
-#if 0
-MATCHER_P(EachBufferIdIs, value, "")
-{
-    auto id_matcher = [](BufferEntry const& a, BufferEntry const& b){ return a.id == b.id; };
-    return std::search_n(arg.begin(), arg.end(), arg.size(), value, id_matcher) != std::end(arg);
-}
-
-MATCHER(HasIncreasingAge, "")
-{
-    return std::is_sorted(arg.begin(), arg.end(),
-        [](BufferEntry const& a, BufferEntry const& b) {
-            return a.age < b.age;
-        });
-}
-
-TEST_P(WithOneBuffer, client_and_server_get_concurrent_access)
-{
-    std::vector<ScheduleEntry> schedule = {
-        {1_t, {producer.get()}, {consumer.get()}},
-        {2_t, {producer.get()}, {consumer.get()}},
-        {3_t, {producer.get()}, {}},
-        {4_t,          {}, {consumer.get()}},
-    };
-    run_system(schedule);
-
-    auto production_log = producer->production_log();
-    auto consumption_log = consumer->consumption_log();
-    EXPECT_THAT(production_log, Not(IsEmpty()));
-    EXPECT_THAT(consumption_log, Not(IsEmpty()));
-    EXPECT_THAT(consumption_log, ContainerEq(production_log));
-
-    EXPECT_THAT(consumption_log, EachBufferIdIs(consumption_log[0]));
-    EXPECT_THAT(production_log, EachBufferIdIs(consumption_log[0]));
-    EXPECT_THAT(consumption_log, HasIncreasingAge());
-} 
-#endif
-
 
 /* Regression test for LP: #1210042 */
 TEST_P(WithThreeOrMoreBuffers, consumers_dont_recycle_startup_buffer )
@@ -866,13 +823,12 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_clients_get_all_buffers_and_dont_bloc
         [](BufferEntry const& a, BufferEntry const& b) { return a.id == b.id; });
     production_log.erase(last, production_log.end());
 
-    if (!std::get<1>(GetParam()) && (std::get<0>(GetParam()) == 4))
+    if (!std::get<0>(GetParam()) && (std::get<1>(GetParam()) == 4))
         EXPECT_THAT(production_log.size(), Ge(nbuffers - 1)); //Ge is to accommodate overallocation
     else
         EXPECT_THAT(production_log.size(), Ge(nbuffers)); //Ge is to accommodate overallocation
 }
 
-#if 1 //hangs, unsure why 
 TEST_P(WithTwoOrMoreBuffers, nonframedropping_client_throttles_to_compositor_rate)
 {
     unsigned int reps = 50;
@@ -887,8 +843,6 @@ TEST_P(WithTwoOrMoreBuffers, nonframedropping_client_throttles_to_compositor_rat
         [](BufferEntry const& e) { return e.blockage == Access::blocked; });
     EXPECT_THAT(block_count, Ge(expected_blocks));
 }
-#endif
-
 
 TEST_P(WithAnyNumberOfBuffers, resize_affects_client_acquires_immediately)
 {
@@ -1016,7 +970,6 @@ TEST_P(WithTwoBuffers, client_is_not_blocked_prematurely)
     EXPECT_TRUE(producer->can_produce());
 }
 
-#if 0
 // Extended regression test for LP: #1319765
 TEST_P(WithTwoBuffers, composite_on_demand_never_deadlocks)
 {
@@ -1077,8 +1030,6 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
 
     queue.compositor_release(c);
 }
-#endif
-
 
 //THIS is an actual missing feature. secondary compositors have to get update messages
 TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
@@ -1127,14 +1078,6 @@ TEST_P(WithAnyNumberOfBuffers, compositor_inflates_ready_count_for_slow_clients)
             consumer->consume();
     }
 }
-
-#if 0 //SPECIFIC TO OLD WAY ---- REMOVe
-TEST_P(WithAnyNumberOfBuffers, first_user_is_recorded)
-{
-    consumer->consume();
-    EXPECT_TRUE(queue.is_a_current_buffer_user(consumer.get()));
-}
-#endif
 
 TEST_P(WithThreeBuffers, gives_compositor_a_valid_buffer_after_dropping_old_buffers_without_clients)
 {
@@ -1294,7 +1237,6 @@ TEST_P(WithTwoOrMoreBuffers, client_never_owns_compositor_buffers_and_vice_versa
     }
 }
 
-#if 0
 /* Regression test for an issue brought up at:
  * http://code.launchpad.net/~albaguirre/mir/
  * alternative-switching-bundle-implementation/+merge/216606/comments/517048
@@ -1330,20 +1272,14 @@ TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
     producer->reset_log();
     for (int frame = 0; frame < max_ownable_buffers * 2; frame++)
     {
-<<<<<<< TREE
-        producer->produce();
-        consumers[0]->consume();
-=======
         for (int drain = 0; drain < nbuffers; ++drain)
             consumers[0]->consume();
-        while (producer.can_produce())
-            producer.produce();
->>>>>>> MERGE-SOURCE
+        while (producer->can_produce())
+            producer->produce();
     }
 
     EXPECT_THAT(unique_ids_in(producer->production_log()), Eq(nbuffers));
 }
-#endif
 
 // Test that dynamic queue scaling/throttling actually works
 TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
@@ -1391,7 +1327,6 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     EXPECT_THAT(unique_ids_in(log), Eq(2));
 }
 
-#if 0
 //NOTE: compositors need 2 buffers in overlay/bypass cases, as they 
 //briefly need to arrange the next buffer while the previous one is still held onscreen
 TEST_P(WithThreeOrMoreBuffers, greedy_compositors_scale_to_triple_buffers)
@@ -1413,7 +1348,6 @@ TEST_P(WithThreeOrMoreBuffers, greedy_compositors_scale_to_triple_buffers)
 
     EXPECT_THAT(unique_ids_in(producer->production_log()), Eq(3));
 }
-#endif
 
 TEST_P(WithAnyNumberOfBuffers, can_snapshot_repeatedly_without_blocking)
 {
@@ -1435,58 +1369,23 @@ TEST_P(WithAnyNumberOfBuffers, can_snapshot_repeatedly_without_blocking)
 }
 
 int const max_buffers_to_test{5};
-#if 0
-//TODO: unibuffers are not valid cases
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithAnyNumberOfBuffers,
-    Combine(Range(2, max_buffers_to_test), Bool()));
-//    Combine(Range(1, max_buffers_to_test), Bool()));
-//INSTANTIATE_TEST_CASE_P(
-//    BufferScheduling,
-//    WithOneBuffer,
-//    Combine(Values(1), Bool()));
+    Combine(Bool(), Range(2, max_buffers_to_test)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoOrMoreBuffers,
-    Combine(Range(2, max_buffers_to_test), Bool()));
+    Combine(Bool(), Range(2, max_buffers_to_test)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeOrMoreBuffers,
-    Combine(Range(3, max_buffers_to_test), Bool()));
+    Combine(Bool(), Range(3, max_buffers_to_test)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoBuffers,
-    Combine(Values(2), Bool()));
+    Combine(Bool(), Values(2)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeBuffers,
-    Combine(Values(3), Bool()));
-#endif
-
-//TODO: unibuffers are not valid cases
-INSTANTIATE_TEST_CASE_P(
-    BufferScheduling,
-    WithAnyNumberOfBuffers,
-    Combine(Range(2, max_buffers_to_test), Values(false)));
-//    Combine(Range(1, max_buffers_to_test), Values(false)));
-//INSTANTIATE_TEST_CASE_P(
-//    BufferScheduling,
-//    WithOneBuffer,
-//    Combine(Values(1), Values(false)));
-INSTANTIATE_TEST_CASE_P(
-    BufferScheduling,
-    WithTwoOrMoreBuffers,
-    Combine(Range(2, max_buffers_to_test), Values(false)));
-INSTANTIATE_TEST_CASE_P(
-    BufferScheduling,
-    WithThreeOrMoreBuffers,
-    Combine(Range(3, max_buffers_to_test), Values(false)));
-INSTANTIATE_TEST_CASE_P(
-    BufferScheduling,
-    WithTwoBuffers,
-    Combine(Values(2), Values(false)));
-INSTANTIATE_TEST_CASE_P(
-    BufferScheduling,
-    WithThreeBuffers,
-    Combine(Values(3), Values(false)));
+    Combine(Bool(), Values(3)));
