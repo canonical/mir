@@ -382,7 +382,7 @@ struct ScheduledProducer : ProducerSystem
         vault(
             std::make_shared<mtd::StubClientBufferFactory>(),
             std::make_shared<ServerRequests>(ipc),
-            geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers) 
+            geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers, 3) 
     {
         ipc->on_client_bound_transfer([this](mp::Buffer& buffer){
             printf("INBOUND %i %i\n", buffer.width(), buffer.height());
@@ -409,6 +409,10 @@ struct ScheduledProducer : ProducerSystem
 
     void produce()
     {
+        if (can_produce())
+        {
+
+
         auto buffer = vault.withdraw().get();
         vault.deposit(buffer);
         vault.wire_transfer_outbound(buffer);
@@ -418,6 +422,11 @@ struct ScheduledProducer : ProducerSystem
         //buffer->write(reinterpret_cast<unsigned char const*>(&age), sizeof(age));
         entries.emplace_back(BufferEntry{mg::BufferID{(unsigned int)ipc->last_transferred_to_server()}, age, Access::unblocked});
         available--;
+        }
+        else
+        {
+            entries.emplace_back(BufferEntry{mg::BufferID{2}, 0u, Access::blocked});
+        }
     }
 
     std::vector<BufferEntry> production_log()
@@ -557,12 +566,10 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
     {
         if (std::get<1>(GetParam()))
         {
-            printf("HHHHH\n");
             istream->resize(sz);
         }
         else
         {
-            printf("GO\n");
             ipc->resize_event(sz);
         }
     }
@@ -622,7 +629,7 @@ TEST_P(WithAnyNumberOfBuffers, all_buffers_consumed_in_interleaving_pattern)
 }
 
 ///////////NOT VALID IF NBUFFERS==2. NEED FEATURE, 2->3 scaling
-#if 0
+#if 1
 TEST_P(WithTwoOrMoreBuffers, framedropping_producers_dont_block)
 {
     allow_framedropping();
@@ -865,8 +872,8 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_clients_get_all_buffers_and_dont_bloc
         EXPECT_THAT(production_log.size(), Ge(nbuffers)); //Ge is to accommodate overallocation
 }
 
-#if 0 //hangs, unsure why 
-//TEST_P(WithTwoOrMoreBuffers, nonframedropping_client_throttles_to_compositor_rate)
+#if 1 //hangs, unsure why 
+TEST_P(WithTwoOrMoreBuffers, nonframedropping_client_throttles_to_compositor_rate)
 {
     unsigned int reps = 50;
     auto const expected_blocks = reps - nbuffers;

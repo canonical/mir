@@ -38,14 +38,20 @@ enum class mcl::BufferVault::Owner
 mcl::BufferVault::BufferVault(
     std::shared_ptr<ClientBufferFactory> const& client_buffer_factory,
     std::shared_ptr<ServerBufferRequests> const& server_requests,
-    geom::Size size, MirPixelFormat format, int usage, unsigned int initial_nbuffers) :
+    geom::Size size, MirPixelFormat format, int usage,
+    unsigned int ideal_nbuffers, unsigned int max_nbuffers) :
     factory(client_buffer_factory),
     server_requests(server_requests),
     format(format),
     usage(usage),
-    size(size)
+    size(size),
+    ideal_nbuffers(ideal_nbuffers),
+    max_nbuffers(max_nbuffers),
+    nbuffers(ideal_nbuffers)
 {
-    for (auto i = 0u; i < initial_nbuffers; i++)
+    if (ideal_nbuffers > max_nbuffers)
+        BOOST_THROW_EXCEPTION(std::logic_error("ideal nbuffers was greater than max nbuffers"));
+    for (auto i = 0u; i < ideal_nbuffers; i++)
         server_requests->allocate_buffer(size, format, usage);
 }
 
@@ -57,7 +63,7 @@ mcl::BufferVault::~BufferVault()
 
 mcl::NoTLSFuture<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
 {
-    std::lock_guard<std::mutex> lk(mutex);
+    std::unique_lock<std::mutex> lk(mutex);
     mcl::NoTLSPromise<std::shared_ptr<mcl::ClientBuffer>> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [this](std::pair<int, BufferEntry> const& entry) {
@@ -72,6 +78,14 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw(
     else
     {
         promises.emplace_back(std::move(promise));
+        if (nbuffers < max_nbuffers)
+        {
+            auto sz = size;
+            auto pf = format;
+            auto use = usage;
+            lk.unlock();
+            server_requests->allocate_buffer(sz, pf, use);
+        }
     }
     return future;
 }
@@ -131,13 +145,11 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     {
         if (size == it->second.buffer->size())
         {
-            printf("okay, good size, liar\n"); 
             it->second.owner = Owner::Self;
             it->second.buffer->update_from(*package);
         }
         else
         {
-            printf("SIZE MISMATCH\n");
             int id = it->first;
             buffers.erase(it);
             lk.unlock();
@@ -157,7 +169,6 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 
 void mcl::BufferVault::set_size(geom::Size sz)
 {
-    printf("A SIZE HAS BEEN SET\n");
     std::lock_guard<std::mutex> lk(mutex);
     size = sz;
 }
