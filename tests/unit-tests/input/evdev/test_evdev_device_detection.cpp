@@ -52,12 +52,12 @@ INSTANTIATE_TEST_CASE_P(InputDeviceCapabilityDetection,
                             std::make_tuple(
                                 "laptop-keyboard",
                                 "/dev/input/event4",
-                                mi::DeviceCapability::keyboard
+                                mi::DeviceCapability::keyboard|mi::DeviceCapability::alpha_numeric
                                 ),
                             std::make_tuple(
                                 "usb-keyboard",
                                 "/dev/input/event14",
-                                mi::DeviceCapability::keyboard
+                                mi::DeviceCapability::keyboard|mi::DeviceCapability::alpha_numeric
                                 ),
                             std::make_tuple(
                                 "usb-mouse",
