@@ -109,7 +109,6 @@ auto mir::DefaultServerConfiguration::the_display_configuration_report() -> std:
         });
 }
 
-
 auto mir::DefaultServerConfiguration::the_input_report() -> std::shared_ptr<mi::InputReport>
 {
     return input_report(
