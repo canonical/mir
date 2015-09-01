@@ -11,7 +11,7 @@ set(
   compositor_report.cpp
   scene_report.cpp
   logging_report_factory.cpp
-)
+        display_configuration_report.cpp display_configuration_report.h)
 
 add_library(
   mirlogging OBJECT
