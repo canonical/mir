@@ -19,8 +19,7 @@
 #include "display_configuration_report.h"
 #include "mir/graphics/display_configuration.h"
 
-//#include "mir/logging/logger.h"
-#include "mir/log.h" // TODO use the logger
+#include "mir/logging/logger.h"
 
 #include <cmath>
 
@@ -39,19 +38,19 @@ mrl::DisplayConfigurationReport::~DisplayConfigurationReport()
 
 void mrl::DisplayConfigurationReport::initial_configuration(mg::DisplayConfiguration const& configuration)
 {
-    mir::log_info("Initial display configuration:");
+    logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational, "Initial display configuration:");
     log_configuration(configuration);
 }
 
 void mrl::DisplayConfigurationReport::new_configuration(mg::DisplayConfiguration const& configuration)
 {
-    mir::log_info("New display configuration:");
+    logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational, "New display configuration:");
     log_configuration(configuration);
 }
 
 void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration const& configuration) const
 {
-    configuration.for_each_output([](mg::DisplayConfigurationOutput const& out)
+    configuration.for_each_output([this](mg::DisplayConfigurationOutput const& out)
     {
         static const char* const type_str[] =
             {"Unknown", "VGA", "DVI-I", "DVI-D", "DVI-A", "Composite",
@@ -70,42 +69,51 @@ void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration
                 sqrtf(width_mm * width_mm + height_mm * height_mm) / 25.4;
             int indent = 0;
 
-            mir::log_info("%s%d.%d: %n%s %.1f\" %dx%dmm",
-                          prefix, card_id, out_id, &indent, type,
-                          inches, width_mm, height_mm);
+            logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational, 
+                        "%s%d.%d: %n%s %.1f\" %dx%dmm",
+                        prefix, card_id, out_id, &indent, type,
+                        inches, width_mm, height_mm);
+            
             if (out.used)
             {
                 if (out.current_mode_index < out.modes.size())
                 {
                     auto const& mode = out.modes[out.current_mode_index];
-                    mir::log_info("%*cCurrent mode %dx%d %.2fHz",
-                                  indent, ' ',
-                                  mode.size.width.as_int(),
-                                  mode.size.height.as_int(),
-                                  mode.vrefresh_hz);
+                    logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational,
+                                "%*cCurrent mode %dx%d %.2fHz",
+                                indent, ' ',
+                                mode.size.width.as_int(),
+                                mode.size.height.as_int(),
+                                mode.vrefresh_hz);
                 }
+                
                 if (out.preferred_mode_index < out.modes.size())
                 {
                     auto const& mode = out.modes[out.preferred_mode_index];
-                    mir::log_info("%*cPreferred mode %dx%d %.2fHz",
-                                  indent, ' ',
-                                  mode.size.width.as_int(),
-                                  mode.size.height.as_int(),
-                                  mode.vrefresh_hz);
+                    logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational,
+                                "%*cPreferred mode %dx%d %.2fHz",
+                                indent, ' ',
+                                mode.size.width.as_int(),
+                                mode.size.height.as_int(),
+                                mode.vrefresh_hz);
                 }
-                mir::log_info("%*cLogical position %+d%+d",
-                              indent, ' ',
-                              out.top_left.x.as_int(),
-                              out.top_left.y.as_int());
+                
+                logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational,
+                            "%*cLogical position %+d%+d",
+                            indent, ' ',
+                            out.top_left.x.as_int(),
+                            out.top_left.y.as_int());
             }
             else
             {
-                mir::log_info("%*cDisabled", indent, ' ');
+                logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational,
+                            "%*cDisabled", indent, ' ');
             }
         }
         else
         {
-            mir::log_info("%s%d.%d: unused %s", prefix, card_id, out_id, type);
+            logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational,
+                        "%s%d.%d: unused %s", prefix, card_id, out_id, type);
         }
     });
 }
