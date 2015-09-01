@@ -135,7 +135,11 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
     }
     
     mtf::UsingStubClientPlatform using_stub_client_platform;
+
+    static auto constexpr current_protocol_epoch = 0;
 };
+
+auto const* const protocol_version_override = "MIR_CLIENT_TEST_OVERRRIDE_PROTOCOL_VERSION";
 }
 
 using namespace testing;
@@ -160,6 +164,67 @@ TEST_F(ClientLibrary, synchronous_connection)
     EXPECT_THAT(connection, NotNull());
     EXPECT_TRUE(mir_connection_is_valid(connection));
     EXPECT_THAT(mir_connection_get_error_message(connection), StrEq(""));
+
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, connects_when_protobuf_protocol_oldest_supported)
+{
+    std::ostringstream buffer;
+    buffer << MIR_VERSION_NUMBER(current_protocol_epoch, MIR_CLIENT_MAJOR_VERSION, 0);
+
+    add_to_environment(protocol_version_override, buffer.str().c_str());
+
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    EXPECT_THAT(connection, NotNull());
+    EXPECT_TRUE(mir_connection_is_valid(connection));
+    EXPECT_THAT(mir_connection_get_error_message(connection), StrEq(""));
+
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_obsolete)
+{
+    std::ostringstream buffer;
+    buffer << MIR_VERSION_NUMBER(current_protocol_epoch, MIR_CLIENT_MAJOR_VERSION-1, 0);
+    add_to_environment(protocol_version_override, buffer.str().c_str());
+
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    EXPECT_THAT(connection, NotNull());
+    EXPECT_FALSE(mir_connection_is_valid(connection));
+    EXPECT_THAT(mir_connection_get_error_message(connection), HasSubstr("not accepted by server"));
+
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_too_new)
+{
+    std::ostringstream buffer;
+    buffer << MIR_VERSION_NUMBER(current_protocol_epoch, MIR_CLIENT_MAJOR_VERSION, MIR_CLIENT_MINOR_VERSION+1);
+    add_to_environment(protocol_version_override, buffer.str().c_str());
+
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    EXPECT_THAT(connection, NotNull());
+    EXPECT_FALSE(mir_connection_is_valid(connection));
+    EXPECT_THAT(mir_connection_get_error_message(connection), HasSubstr("not accepted by server"));
+
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_epoch_too_new)
+{
+    std::ostringstream buffer;
+    buffer << MIR_VERSION_NUMBER(current_protocol_epoch+1, MIR_CLIENT_MAJOR_VERSION, MIR_CLIENT_MINOR_VERSION);
+    add_to_environment(protocol_version_override, buffer.str().c_str());
+
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    EXPECT_THAT(connection, NotNull());
+    EXPECT_FALSE(mir_connection_is_valid(connection));
+    EXPECT_THAT(mir_connection_get_error_message(connection), HasSubstr("not accepted by server"));
 
     mir_connection_release(connection);
 }
