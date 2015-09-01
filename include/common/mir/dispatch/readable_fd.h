@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2015 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,27 +16,32 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_DEVICE_INFO_H_
-#define MIR_INPUT_INPUT_DEVICE_INFO_H_
+#ifndef MIR_DISPATCH_READABLE_FD_H_
+#define MIR_DISPATCH_READABLE_FD_H_
 
-#include "mir/input/device_capability.h"
+#include "mir/dispatch/dispatchable.h"
+#include "mir/fd.h"
 
-#include <cstdint>
-#include <string>
+#include <functional>
 
 namespace mir
 {
-namespace input
+namespace dispatch
 {
 
-struct InputDeviceInfo
+class ReadableFd : public Dispatchable
 {
-    int32_t id;
-    std::string name;
-    std::string unique_id;
-    DeviceCapabilities capabilities;
+public:
+    ReadableFd(Fd fd, std::function<void()> const& on_readable);
+    Fd watch_fd() const override;
+
+    bool dispatch(FdEvents events) override;
+    FdEvents relevant_events() const override;
+private:
+    mir::Fd fd;
+    std::function<void()> readable;
 };
+}
+}
 
-}
-}
-#endif
+#endif // MIR_DISPATCH_READABLE_FD_H_

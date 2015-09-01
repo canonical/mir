@@ -31,6 +31,10 @@
 // Uncomment for verbose output with log_info.
 //#define MIR_ON_X11_INPUT_VERBOSE
 
+// Due to a bug in Unity when keyboard is grabbed,
+// client cannot be resized. This helps in debugging.
+#define GRAB_KBD
+
 namespace mi = mir::input;
 namespace mix = mi::X;
 namespace md = mir::dispatch;
@@ -69,6 +73,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
         {
             switch (xev.type)
             {
+#ifdef GRAB_KBD
             case FocusIn:
             {
                 auto const& xfiev = (XFocusInEvent&)xev;
@@ -82,7 +87,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                 XUngrabKeyboard(xfoev.display, CurrentTime);
                 break;
             }
-
+#endif
             case KeyPress:
             case KeyRelease:
             {
@@ -262,6 +267,15 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                         0.0f
                     )
                 );
+                break;
+            }
+
+            case ConfigureNotify:
+            {
+#ifdef MIR_ON_X11_INPUT_VERBOSE
+                auto const& xcev = (XConfigureEvent&)xev;
+                mir::log_info("Window size : %dx%d", xcev.width, xcev.height);
+#endif
                 break;
             }
 
