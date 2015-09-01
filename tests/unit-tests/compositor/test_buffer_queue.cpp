@@ -1706,13 +1706,12 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
         } while (!client);
 
         // Imbalance: Compositor is now requesting more than the client does:
-        while (q.buffers_ready_for_compositor(nullptr))
+        int nready = q.buffers_ready_for_compositor(nullptr);
+        for (int r = 0; r <= nready; ++r)
         {
             q.compositor_release(q.compositor_acquire(nullptr));
             ++frame;
         }
-        q.compositor_release(q.compositor_acquire(nullptr));
-        ++frame;
     }
     // Expect at least triple buffers for sluggish clients
     EXPECT_THAT(buffers_acquired.size(), Ge(3));
