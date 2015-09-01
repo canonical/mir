@@ -134,6 +134,7 @@ struct BufferQueueProducer : ProducerSystem
         }
         else
         {
+            printf("BLOCKED.\n");
             entries.emplace_back(BufferEntry{mg::BufferID{2}, 0u, Access::blocked});
         }
     }
@@ -388,6 +389,7 @@ struct ScheduledProducer : ProducerSystem
             geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers, max_buffers(nbuffers)) 
     {
         ipc->on_client_bound_transfer([this](mp::Buffer& buffer){
+            printf("transfer inbound\n");
             available++;
             vault.wire_transfer_inbound(buffer);
         });
@@ -423,6 +425,7 @@ struct ScheduledProducer : ProducerSystem
         }
         else
         {
+            printf("BLOCKED.\n");
             entries.emplace_back(BufferEntry{mg::BufferID{2}, 0u, Access::blocked});
         }
     }
@@ -1008,29 +1011,31 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
     // Produce frame 1
     producer->produce();
     // Acquire frame 1
-    auto a = queue.compositor_acquire(this);
+    auto a = istream->lock_compositor_buffer(this);
 
     // Produce frame 2
     producer->produce();
-    // Acquire frame 2
-    auto b = queue.compositor_acquire(this);
 
     // Release frame 1
-    queue.compositor_release(a);
+    a.reset();
+
+    //slightchange--kdub
+    // Acquire frame 2
+    auto b = istream->lock_compositor_buffer(this);
     // Produce frame 3
     producer->produce();
     // Release frame 2
-    queue.compositor_release(b);
+    b.reset();
 
     // Verify frame 3 is ready for the first compositor
-    EXPECT_THAT(queue.buffers_ready_for_compositor(this), Ge(1));
-    auto c = queue.compositor_acquire(this);
+    EXPECT_THAT(istream->buffers_ready_for_compositor(this), Ge(1));
+    auto c = istream->lock_compositor_buffer(this);
 
     // Verify frame 3 is ready for a second compositor
     int const other_compositor_id = 0;
-    ASSERT_THAT(queue.buffers_ready_for_compositor(&other_compositor_id), Ge(1));
+    ASSERT_THAT(istream->buffers_ready_for_compositor(&other_compositor_id), Ge(1));
 
-    queue.compositor_release(c);
+    c.reset();
 }
 
 //THIS is an actual missing feature. secondary compositors have to get update messages
@@ -1062,6 +1067,121 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
         consumer->consume();
 
         ASSERT_EQ(0, istream->buffers_ready_for_compositor(consumer));
+    }
+}
+
+TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
+{   // Regression test for LP: #1480164
+    mtd::MockFrameDroppingPolicyFactory policy_factory;
+    mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory),
+                          properties, policy_factory};
+    queue.allow_framedropping(false);
+
+    mg::Buffer* client_buffer = nullptr;
+    auto callback = [&](mg::Buffer* buffer)
+    {
+        client_buffer = buffer;
+    };
+
+    auto client_try_acquire = [&]() -> bool
+    {
+        queue.client_acquire(callback);
+        return client_buffer != nullptr;
+    };
+
+    auto client_release = [&]()
+    {
+        EXPECT_TRUE(client_buffer);
+        queue.client_release(client_buffer);
+        client_buffer = nullptr;
+    };
+
+    // Skip over the first frame. The early release optimization is too
+    // conservative to allow it to happen right at the start (so as to
+    // maintain correct multimonitor frame rates if required).
+    ASSERT_TRUE(client_try_acquire());
+    client_release();
+    queue.compositor_release(queue.compositor_acquire(this));
+
+    auto onscreen = queue.compositor_acquire(this);
+
+    bool blocking;
+    do
+    {
+        blocking = !client_try_acquire();
+        if (!blocking)
+            client_release();
+    } while (!blocking);
+
+    for (int f = 0; f < 100; ++f)
+    {
+        ASSERT_FALSE(client_buffer);
+        queue.compositor_release(onscreen);
+        ASSERT_TRUE(client_buffer) << "frame# " << f;
+        client_release();
+        onscreen = queue.compositor_acquire(this);
+        client_try_acquire();
+    }
+}
+
+TEST_P(WithTwoOrMoreBuffers, short_buffer_holds_dont_overclock_multimonitor)
+{   // Regression test related to LP: #1480164
+    mtd::MockFrameDroppingPolicyFactory policy_factory;
+    mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory),
+                          properties, policy_factory};
+    queue.allow_framedropping(false);
+
+    const void* const leftid = "left";
+    const void* const rightid = "right";
+
+    mg::Buffer* client_buffer = nullptr;
+    auto callback = [&](mg::Buffer* buffer)
+    {
+        client_buffer = buffer;
+    };
+
+    auto client_try_acquire = [&]() -> bool
+    {
+        queue.client_acquire(callback);
+        return client_buffer != nullptr;
+    };
+
+    auto client_release = [&]()
+    {
+        EXPECT_TRUE(client_buffer);
+        queue.client_release(client_buffer);
+        client_buffer = nullptr;
+    };
+
+    // Skip over the first frame. The early release optimization is too
+    // conservative to allow it to happen right at the start (so as to
+    // maintain correct multimonitor frame rates if required).
+    ASSERT_TRUE(client_try_acquire());
+    client_release();
+    queue.compositor_release(queue.compositor_acquire(leftid));
+
+    auto left = queue.compositor_acquire(leftid);
+    auto right = queue.compositor_acquire(rightid);
+
+    bool blocking;
+    do
+    {
+        blocking = !client_try_acquire();
+        if (!blocking)
+            client_release();
+    } while (!blocking);
+
+    for (int f = 0; f < 100; ++f)
+    {
+        ASSERT_FALSE(client_buffer);
+        queue.compositor_release(left);
+        queue.compositor_release(right);
+        ASSERT_FALSE(client_buffer);
+        left = queue.compositor_acquire(leftid);
+        right = queue.compositor_acquire(rightid);
+        ASSERT_TRUE(client_buffer);
+        client_release();
+        client_try_acquire();
     }
 }
 
@@ -1204,6 +1324,7 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_surface_never_drops_newest_frame)
 TEST_P(WithThreeBuffers, framedropping_client_acquire_does_not_block_when_no_available_buffers)
 {
     allow_framedropping();
+    producer->produce();
 
     /* The client can never own this acquired buffer */
     auto comp_buffer = consumer->consume_resource();

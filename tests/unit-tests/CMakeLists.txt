@@ -13,6 +13,10 @@ if (MIR_BUILD_PLATFORM_MESA_KMS)
   add_definitions(-DMIR_BUILD_PLATFORM_MESA_KMS)
 endif()
 
+if (MIR_BUILD_PLATFORM_MESA_X11)
+  add_definitions(-DMIR_BUILD_PLATFORM_MESA_X11)
+endif()
+
 include_directories(
   ${CMAKE_SOURCE_DIR}
 
@@ -67,7 +71,9 @@ set(
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
 list(APPEND UNIT_TEST_SOURCES
-  $<TARGET_OBJECTS:mirplatformservermesax11objects>
+  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/x11/X11_resources.cpp
+  $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
+  $<TARGET_OBJECTS:mirplatforminputmesax11objects>
 )
 endif()
 

@@ -196,3 +196,14 @@ MIR_COMMON_5.1 {
     };
   local: *;
 } MIR_COMMON_5;
+
+MIR_COMMON_5.2 {
+  global:
+    extern "C++" {
+      mir::dispatch::ReadableFd::ReadableFd*;
+      mir::dispatch::ReadableFd::?ReadableFd*;
+      mir::dispatch::ReadableFd::watch_fd*;
+      mir::dispatch::ReadableFd::dispatch*;
+      mir::dispatch::ReadableFd::relevant_events*;
+    };
+} MIR_COMMON_5.1;

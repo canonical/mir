@@ -75,6 +75,7 @@ public:
     MOCK_METHOD4(XGetErrorText, int(Display*, int, char*, int ));
     MOCK_METHOD1(XSetErrorHandler, XErrorHandler(XErrorHandler));
     MOCK_METHOD0(XInitThreads, Status());
+    MOCK_METHOD3(XSetWMHints, int(Display*, Window, XWMHints*));
 
     FakeX11Resources fake_x11;
 };

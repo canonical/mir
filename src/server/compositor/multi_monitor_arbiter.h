@@ -59,6 +59,7 @@ public:
     void snapshot_release(std::shared_ptr<graphics::Buffer> const&) override;
     void set_schedule(std::shared_ptr<Schedule> const& schedule);
     void set_guarantee(PresentationGuarantee guarantee);
+    bool buffer_ready_for(compositor::CompositorID id);
 
 private:
     void decrease_refcount_for(graphics::BufferID id, std::lock_guard<std::mutex> const&);
