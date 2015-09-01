@@ -42,8 +42,10 @@ namespace
 {
 struct MockBuffer : public mcl::AgingBuffer
 {
-    MockBuffer()
+    MockBuffer(geom::Size sz)
     {
+        ON_CALL(*this, size())
+            .WillByDefault(Return(sz));
         ON_CALL(*this, mark_as_submitted())
             .WillByDefault(Invoke([this](){this->AgingBuffer::mark_as_submitted();}));
     }
@@ -65,9 +67,12 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
     MockClientBufferFactory()
     {
         ON_CALL(*this, create_buffer(_,_,_))
-            .WillByDefault(InvokeWithoutArgs([] { return std::make_shared<NiceMock<MockBuffer>>(); }));
+            .WillByDefault(Invoke([](
+                    std::shared_ptr<MirBufferPackage> const&, geom::Size size, MirPixelFormat)
+                {
+                    return std::make_shared<NiceMock<MockBuffer>>(size);
+                }));
     }
-
     MOCK_METHOD3(create_buffer, std::shared_ptr<mcl::ClientBuffer>(
         std::shared_ptr<MirBufferPackage> const&, geom::Size, MirPixelFormat));
 };
@@ -76,7 +81,7 @@ struct MockServerRequests : mcl::ServerBufferRequests
 {
     MOCK_METHOD3(allocate_buffer, void(geom::Size size, MirPixelFormat format, int usage));
     MOCK_METHOD1(free_buffer, void(int));
-    MOCK_METHOD1(submit_buffer, void(mcl::ClientBuffer&));
+    MOCK_METHOD2(submit_buffer, void(int, mcl::ClientBuffer&));
 };
 
 struct BufferVault : public testing::Test
@@ -85,6 +90,10 @@ struct BufferVault : public testing::Test
     {
         package.set_width(size.width.as_int());
         package.set_height(size.height.as_int());
+        package2.set_width(size.width.as_int());
+        package2.set_height(size.height.as_int());
+        package3.set_width(size.width.as_int());
+        package3.set_height(size.height.as_int());
 
         package.set_buffer_id(1);
         package2.set_buffer_id(2);
@@ -145,7 +154,7 @@ TEST_F(BufferVault, creates_buffer_on_first_insertion)
 
 TEST_F(BufferVault, updates_buffer_on_subsequent_insertions)
 {
-    auto mock_buffer = std::make_shared<NiceMock<MockBuffer>>();
+    auto mock_buffer = std::make_shared<NiceMock<MockBuffer>>(size);
     EXPECT_CALL(*mock_buffer, update_from(_));
     ON_CALL(mock_factory, create_buffer(_,_,_))
         .WillByDefault(Return(mock_buffer));
@@ -180,7 +189,7 @@ TEST_F(StartedBufferVault, withdrawing_gives_a_valid_future)
 TEST_F(StartedBufferVault, can_deposit_buffer)
 {
     auto buffer = vault.withdraw().get();
-    EXPECT_CALL(mock_requests, submit_buffer(Ref(*buffer)));
+    EXPECT_CALL(mock_requests, submit_buffer(_,Ref(*buffer)));
     vault.deposit(buffer);
     vault.wire_transfer_outbound(buffer);
 }
@@ -195,7 +204,7 @@ TEST_F(StartedBufferVault, cant_transfer_if_not_in_acct)
 
 TEST_F(StartedBufferVault, depositing_external_buffer_throws)
 {
-    auto buffer = std::make_shared<MockBuffer>(); 
+    auto buffer = std::make_shared<MockBuffer>(size); 
     EXPECT_THROW({ 
         vault.deposit(buffer);
     }, std::logic_error);
@@ -254,7 +263,7 @@ TEST_F(BufferVault, multiple_withdrawals_during_wait_period_get_differing_buffer
 TEST_F(BufferVault, destruction_signals_futures)
 {
     using namespace std::literals::chrono_literals;
-    std::future<std::shared_ptr<mcl::ClientBuffer>> fbuffer;
+    mcl::NoTLSFuture<std::shared_ptr<mcl::ClientBuffer>> fbuffer;
     {
         mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
             size, format, usage, initial_nbuffers);
@@ -265,7 +274,7 @@ TEST_F(BufferVault, destruction_signals_futures)
 
 TEST_F(BufferVault, ages_buffer_on_deposit)
 {
-    auto mock_buffer = std::make_shared<NiceMock<MockBuffer>>();
+    auto mock_buffer = std::make_shared<NiceMock<MockBuffer>>(size);
     EXPECT_CALL(*mock_buffer, increment_age());
     ON_CALL(mock_factory, create_buffer(_,_,_))
         .WillByDefault(Return(mock_buffer));
@@ -278,7 +287,7 @@ TEST_F(BufferVault, ages_buffer_on_deposit)
 
 TEST_F(BufferVault, marks_as_submitted_on_transfer)
 {
-    auto mock_buffer = std::make_shared<NiceMock<MockBuffer>>();
+    auto mock_buffer = std::make_shared<NiceMock<MockBuffer>>(size);
     EXPECT_CALL(*mock_buffer, mark_as_submitted());
     ON_CALL(mock_factory, create_buffer(_,_,_))
         .WillByDefault(Return(mock_buffer));
@@ -303,4 +312,72 @@ TEST_F(StartedBufferVault, can_withdraw_and_deposit)
         vault.deposit(buffers[i]);
     }
     EXPECT_THAT(buffers, Each(buffers[0]));
+}
+
+
+TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_immediate_response)
+{
+    mp::Buffer package4;
+    geom::Size new_size{80, 100}; 
+    EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
+    EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_))
+        .WillOnce(Invoke(
+        [&, this](geom::Size sz, MirPixelFormat, int)
+        {
+            package4.set_width(sz.width.as_int());
+            package4.set_height(sz.height.as_int());
+            package4.set_buffer_id(4);
+            vault.wire_transfer_inbound(package4);
+        }));
+
+    vault.set_size(new_size);
+    vault.wire_transfer_inbound(package);
+    Mock::VerifyAndClearExpectations(&mock_requests);
+}
+
+TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_delayed_response)
+{
+    geom::Size new_size{80, 100}; 
+    mp::Buffer package4;
+    package4.set_width(new_size.width.as_int());
+    package4.set_height(new_size.height.as_int());
+    package4.set_buffer_id(4);
+
+    EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
+    EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_));
+
+    vault.set_size(new_size);
+    vault.wire_transfer_inbound(package);
+    vault.wire_transfer_inbound(package4);
+    EXPECT_THAT(vault.withdraw().get()->size(), Eq(new_size));
+    Mock::VerifyAndClearExpectations(&mock_requests);
+}
+
+TEST_F(StartedBufferVault, withdraw_gives_only_newly_sized_buffers_after_resize)
+{
+    mp::Buffer package4;
+    geom::Size new_size{80, 100};
+    package4.set_width(new_size.width.as_int());
+    package4.set_height(new_size.height.as_int());
+    package4.set_buffer_id(4);
+ 
+    vault.set_size(new_size);
+    vault.wire_transfer_inbound(package4);
+
+    EXPECT_THAT(vault.withdraw().get()->size(), Eq(new_size));
+    Mock::VerifyAndClearExpectations(&mock_requests);
+}
+
+TEST_F(StartedBufferVault, simply_setting_size_triggers_no_server_interations)
+{
+    EXPECT_CALL(mock_requests, free_buffer(_)).Times(0);
+    EXPECT_CALL(mock_requests, allocate_buffer(_,_,_)).Times(0);
+    auto const cycles = 30u;
+    geom::Size new_size(80, 100);
+    for(auto i = 0u; i < cycles; i++)
+    {
+        new_size = geom::Size(geom::Width(i), new_size.height);
+        vault.set_size(new_size);
+    }
+    Mock::VerifyAndClearExpectations(&mock_requests);
 }

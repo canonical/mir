@@ -41,7 +41,9 @@ mcl::BufferVault::BufferVault(
     geom::Size size, MirPixelFormat format, int usage, unsigned int initial_nbuffers) :
     factory(client_buffer_factory),
     server_requests(server_requests),
-    format(format)
+    format(format),
+    usage(usage),
+    size(size)
 {
     for (auto i = 0u; i < initial_nbuffers; i++)
         server_requests->allocate_buffer(size, format, usage);
@@ -53,12 +55,13 @@ mcl::BufferVault::~BufferVault()
         server_requests->free_buffer(it.first);
 }
 
-std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
+mcl::NoTLSFuture<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
 {
     std::lock_guard<std::mutex> lk(mutex);
-    std::promise<std::shared_ptr<mcl::ClientBuffer>> promise;
+    mcl::NoTLSPromise<std::shared_ptr<mcl::ClientBuffer>> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
-        [](std::pair<int, BufferEntry> const& entry) { return entry.second.owner == Owner::Self; });
+        [this](std::pair<int, BufferEntry> const& entry) { 
+            return ((entry.second.owner == Owner::Self) && (size == entry.second.buffer->size())); });
 
     auto future = promise.get_future();
     if (it != buffers.end())
@@ -68,7 +71,6 @@ std::future<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
     }
     else
     {
-        //TODO: We'll eventually overallocate a limited number of buffers here instead of promising.
         promises.emplace_back(std::move(promise));
     }
     return future;
@@ -88,7 +90,9 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 
 void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 {
-    std::lock_guard<std::mutex> lk(mutex);
+    int id;
+    std::shared_ptr<mcl::ClientBuffer> submit_buffer;
+    std::unique_lock<std::mutex> lk(mutex);
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
     if (it == buffers.end() || it->second.owner != Owner::Self)
@@ -96,7 +100,10 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
 
     it->second.owner = Owner::Server;
     it->second.buffer->mark_as_submitted();
-    server_requests->submit_buffer(*it->second.buffer);
+    submit_buffer = it->second.buffer;
+    id = it->first;
+    lk.unlock();
+    server_requests->submit_buffer(id, *submit_buffer);
 }
 
 void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
@@ -113,7 +120,7 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     package->width = protobuf_buffer.width();
     package->height = protobuf_buffer.height();
 
-    std::lock_guard<std::mutex> lk(mutex);
+    std::unique_lock<std::mutex> lk(mutex);
     auto it = buffers.find(protobuf_buffer.buffer_id());
     if (it == buffers.end())
     {
@@ -122,8 +129,20 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     }
     else
     {
-        it->second.owner = Owner::Self;
-        it->second.buffer->update_from(*package);
+        if (size == it->second.buffer->size())
+        { 
+            it->second.owner = Owner::Self;
+            it->second.buffer->update_from(*package);
+        }
+        else
+        {
+            int id = it->first;
+            buffers.erase(it);
+            lk.unlock();
+            server_requests->free_buffer(id);
+            server_requests->allocate_buffer(size, format, usage);
+            return;
+        }
     }
 
     if (!promises.empty())
@@ -132,4 +151,10 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
         promises.front().set_value(buffers[protobuf_buffer.buffer_id()].buffer);
         promises.pop_front();
     }
+}
+
+void mcl::BufferVault::set_size(geom::Size sz)
+{
+    std::lock_guard<std::mutex> lk(mutex);
+    size = sz;
 }

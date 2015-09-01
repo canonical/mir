@@ -19,8 +19,10 @@
 #include "mir/shared_library_prober.h"
 #include "mir/shared_library.h"
 
-#include <system_error>
 #include <boost/filesystem.hpp>
+
+#include <system_error>
+#include <cstring>
 
 namespace
 {
@@ -47,6 +49,20 @@ bool path_has_library_extension(boost::filesystem::path const& path)
 
 }
 
+namespace
+{
+bool greater_soname_version(boost::filesystem::path const& lhs, boost::filesystem::path const& rhs)
+{
+    auto lhbuf = strrchr(lhs.c_str(), '.');
+    auto rhbuf = strrchr(rhs.c_str(), '.');
+
+    if (!rhbuf) return lhbuf;
+    if (!lhbuf) return false;
+
+    return strtol(++lhbuf, 0, 0) > strtol(++rhbuf, 0, 0);
+}
+}
+
 std::vector<std::shared_ptr<mir::SharedLibrary>>
 mir::libraries_for_path(std::string const& path, mir::SharedLibraryProberReport& report)
 {
@@ -62,21 +78,29 @@ mir::libraries_for_path(std::string const& path, mir::SharedLibraryProberReport&
         throw error;
     }
 
-    std::vector<std::shared_ptr<mir::SharedLibrary>> libraries;
+    std::vector<boost::filesystem::path> libraries;
     for (; iterator != boost::filesystem::directory_iterator() ; ++iterator)
     {
         if (path_has_library_extension(iterator->path()))
+            libraries.push_back(iterator->path().string());
+    }
+
+    std::sort(libraries.begin(), libraries.end(), &greater_soname_version);
+
+    std::vector<std::shared_ptr<mir::SharedLibrary>> result;
+
+    for(auto& lib : libraries)
+    {
+        try
         {
-            try
-            {
-                report.loading_library(iterator->path());
-                libraries.emplace_back(std::make_shared<mir::SharedLibrary>(iterator->path().string()));
-            }
-            catch (std::runtime_error const& err)
-            {
-                report.loading_failed(iterator->path(), err);
-            }
+            report.loading_library(lib);
+            result.emplace_back(std::make_shared<mir::SharedLibrary>(lib.string()));
+        }
+        catch (std::runtime_error const& err)
+        {
+            report.loading_failed(lib, err);
         }
     }
-    return libraries;
+
+    return result;
 }

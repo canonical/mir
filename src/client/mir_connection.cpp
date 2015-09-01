@@ -165,7 +165,7 @@ char const * MirConnection::get_error_message()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    if (connect_result && connect_result->has_error())
+    if (error_message.empty() && connect_result)
     {
         return connect_result->error().c_str();
     }
@@ -254,21 +254,12 @@ MirPromptSession* MirConnection::create_prompt_session()
 
 void MirConnection::connected(mir_connected_callback callback, void * context)
 {
-    bool safe_to_callback = true;
     try
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
 
         if (!connect_result->has_platform() || !connect_result->has_display_configuration())
-        {
-            if (!connect_result->has_error())
-            {
-                // We're handling an error scenario that means we're not sync'd
-                // with the client code - a callback isn't safe (or needed)
-                safe_to_callback = false;
-                set_error_message("Connect failed");
-            }
-        }
+            set_error_message("Failed to connect: not accepted by server");
 
         connect_done = true;
 
@@ -307,7 +298,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
                                  boost::diagnostic_information(e));
     }
 
-    if (safe_to_callback) callback(this, context);
+    callback(this, context);
     connect_wait_handle.result_received();
 }
 

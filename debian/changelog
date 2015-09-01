@@ -1,5 +1,22 @@
-mir (0.15.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.16.0-0ubuntu1) UNRELEASED; urgency=medium
 
+  * New upstream release 0.16.0 (https://launchpad.net/mir/+milestone/0.16.0)
+    - ABI summary: TODO: these will change before release
+      . Mirclient ABI unchanged at 9
+      . Mirserver ABI unchanged at 33
+      . Mircommon ABI unchanged at 5
+      . Mirplatform ABI unchanged at 9
+      . Mirprotobuf ABI bumped to 2
+    - Enhancements:
+      . TODO
+    - Buf fixes:
+      . TODO
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 24 Aug 2015 16:38:28 +0800
+
+mir (0.15.0+15.10.20150818-0ubuntu1) wily; urgency=medium
+
+  [ Daniel van Vugt ]
   * New upstream release 0.15.0 (https://launchpad.net/mir/+milestone/0.15.0)
     - ABI summary: Only servers and graphics drivers need rebuilding;
       . Mirclient ABI unchanged at 9
@@ -27,9 +44,53 @@ mir (0.15.0-0ubuntu1) UNRELEASED; urgency=medium
         turned it on permanently for all continuous integration in future.
       . Added support for relative pointer motion events (e.g. for gaming).
     - Bug fixes:
-      . TODO: Fill this in after branching lp:mir/0.15
+      . Fix focus issues breaking autopilot tests entering text (LP: #1468029)
+      . Fix mir tests failure on armhf with GCC5 (LP: #1478213)
+      . mir_buffer_stream_swap_buffers_sync can hang constraints (LP: #1479899)
+      . Loading libmirclient.so twice leads to a segfault in libmirprotobuf.so 
+        (LP: #1391976)
+      . Visible corruption in SDL apps (LP: #1460149)
+      . MultiThreadedCompositor::destroy_compositing_threads hangs/deadlocks on
+        shutdown or display reconfiguration  (LP: #1471909)
+      . ctest/"make test" reports 100% tests pass even when some fail. 
+        (LP: #1472911)
+      . Mir server crashed - GLib-CRITICAL **: g_source_get_context: assertion
+       'source->context != NULL || !SOURCE_DESTROYED (source)' failed
+        (LP: #1473869)
+      . USC crash on multimonitor unplug [std::exception::what: error during
+        hwc prepare()] (LP: #1474891)
+      . [regression] Input focus delay after switching app back into focus
+        (LP: #1480654)
+      . GLibMainLoopTest.propagates_exception_from_server_action fails with 
+        GCC 5 in armhf (LP: #1482274)
+      . [enhancement] Mir lacks relative mouse support (LP: #1276322)
+      . ShmBuffer ignores pixel_format (LP: #1424909)
+      . Fullscreen bypassed clients stutter with double buffers when other
+        clients are running (LP: #1447896)
+      . [regression] Demo servers crash on start-up if MIR_ENABLE_TESTS=OFF
+        (LP: #1439078)
+      . [regression] The software cursor has a rectangular shadow around it
+        in mir_proving_server (LP: #1447911)
+      . TestClientCursorAPI.cursor_passed_through_nested_server fails 
+        intermittently (LP: #1462088)
+      . [enhancement] Add support for high colour (15/16-bit colour) clients
+        (LP: #1469673)
+      . android-input logs are not flushed as soon as they happen (LP #1470204)
+      . Android: rotated display config not applied when an external monitor
+        is hot-plugged (LP: #1471858)
+      . [regression] Clients are blocked in swap buffers when the screen turns
+        off (LP: #1475120)
+      . [regression] Some Mir EGL demos don't get bypassed any more in
+        fullscreen (LP: #1480755)
+      . [regression] Multi-finger gestures are often not detected as finished
+        (LP: #1481570)
+      . Connection error when no client-platform (drivers) installed is
+        confusing (LP: #1473268)
+      . Compositor report shows overlays ("bypass") is never used by
+        mir_proving_server on Android, even for fullscreen surfaces
+        (LP: #1474231)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 27 Jul 2015 12:02:19 +0800
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 18 Aug 2015 21:42:12 +0000
 
 mir (0.14.0+15.10.20150723.1-0ubuntu1) wily; urgency=medium
 

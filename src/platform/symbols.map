@@ -304,5 +304,6 @@ MIRPLATFORM_9.1 {
       __android_log_print;
       android::VirtualKeyMap::load*;
       android::VirtualKeyMap::?VirtualKeyMap*;
+      mir::graphics::Buffer::native_buffer_base*;
     };
 } MIRPLATFORM_9;

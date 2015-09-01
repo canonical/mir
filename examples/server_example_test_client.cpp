@@ -104,8 +104,9 @@ void me::add_test_client_option_to(mir::Server& server, me::ClientContext& conte
 
             if (pid == 0)
             {
-                auto const client = options->get<std::string>(test_client_opt).c_str();
-                execl(client, client, static_cast<char const*>(nullptr));
+                auto const client = options->get<std::string>(test_client_opt);
+                execl(client.c_str(), client.c_str(), static_cast<char const*>(nullptr));
+                ml::log(ml::Severity::critical, "Failed to execute client", component);
                 abort(); // If execl() returns then something is badly wrong
             }
             else if (pid > 0)

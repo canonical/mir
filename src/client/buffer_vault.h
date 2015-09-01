@@ -23,7 +23,7 @@
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/mir_native_buffer.h"
 #include <memory>
-#include <future>
+#include "no_tls_future-inl.h"
 #include <deque>
 #include <map>
 
@@ -37,7 +37,7 @@ class ServerBufferRequests
 public:
     virtual void allocate_buffer(geometry::Size size, MirPixelFormat format, int usage) = 0;
     virtual void free_buffer(int buffer_id) = 0;
-    virtual void submit_buffer(ClientBuffer&) = 0;
+    virtual void submit_buffer(int buffer_id, ClientBuffer&) = 0;
     virtual ~ServerBufferRequests() = default;
 protected:
     ServerBufferRequests() = default;
@@ -57,16 +57,17 @@ public:
         unsigned int initial_nbuffers);
     ~BufferVault();
 
-    std::future<std::shared_ptr<ClientBuffer>> withdraw();
+    NoTLSFuture<std::shared_ptr<ClientBuffer>> withdraw();
     void deposit(std::shared_ptr<ClientBuffer> const& buffer);
     void wire_transfer_inbound(protobuf::Buffer const&);
     void wire_transfer_outbound(std::shared_ptr<ClientBuffer> const& buffer);
-    //TODO: class will handle allocation, transition, and destruction around resize notification
+    void set_size(geometry::Size);
 
 private:
     std::shared_ptr<ClientBufferFactory> const factory;
     std::shared_ptr<ServerBufferRequests> const server_requests;
     MirPixelFormat const format;
+    int const usage;
 
     enum class Owner;
     struct BufferEntry
@@ -77,7 +78,8 @@ private:
 
     std::mutex mutex;
     std::map<int, BufferEntry> buffers;
-    std::deque<std::promise<std::shared_ptr<ClientBuffer>>> promises;
+    std::deque<NoTLSPromise<std::shared_ptr<ClientBuffer>>> promises;
+    geometry::Size size;
 };
 }
 }
