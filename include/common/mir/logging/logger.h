@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -44,6 +44,8 @@ public:
     virtual void log(Severity severity,
                      const std::string& message,
                      const std::string& component) = 0;
+
+    virtual void log(char const* component, Severity severity, char const* format, ...);
 
 protected:
     Logger() {}
