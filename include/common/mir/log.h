@@ -1,5 +1,4 @@
 /*
- *
  * Convenience functions to make logging in Mir easy
  * ~~~
  * Copyright © 2014 Canonical Ltd.
@@ -75,8 +74,6 @@ inline void log_debug(char const* fmt, Args&&... args)
     ::mir::log(::mir::logging::Severity::debug,
                MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
 }
-
-
 
 inline void log_critical(std::string const& message)
 {
