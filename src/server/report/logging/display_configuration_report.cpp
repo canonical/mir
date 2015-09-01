@@ -27,6 +27,12 @@ namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace mrl= mir::report::logging;
 
+namespace 
+{
+auto const component = MIR_LOG_COMPONENT_FALLBACK;
+auto const severity  = ml::Severity::informational;
+}
+
 mrl::DisplayConfigurationReport::DisplayConfigurationReport(std::shared_ptr<ml::Logger> const& logger) :
     logger{logger}
 {
@@ -38,13 +44,13 @@ mrl::DisplayConfigurationReport::~DisplayConfigurationReport()
 
 void mrl::DisplayConfigurationReport::initial_configuration(mg::DisplayConfiguration const& configuration)
 {
-    logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational, "Initial display configuration:");
+    logger->log(component, severity, "Initial display configuration:");
     log_configuration(configuration);
 }
 
 void mrl::DisplayConfigurationReport::new_configuration(mg::DisplayConfiguration const& configuration)
 {
-    logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational, "New display configuration:");
+    logger->log(component, severity, "New display configuration:");
     log_configuration(configuration);
 }
 
@@ -69,7 +75,7 @@ void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration
                 sqrtf(width_mm * width_mm + height_mm * height_mm) / 25.4;
             int indent = 0;
 
-            logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational, 
+            logger->log(component, severity, 
                         "%s%d.%d: %n%s %.1f\" %dx%dmm",
                         prefix, card_id, out_id, &indent, type,
                         inches, width_mm, height_mm);
@@ -79,7 +85,7 @@ void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration
                 if (out.current_mode_index < out.modes.size())
                 {
                     auto const& mode = out.modes[out.current_mode_index];
-                    logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational,
+                    logger->log(component, severity,
                                 "%*cCurrent mode %dx%d %.2fHz",
                                 indent, ' ',
                                 mode.size.width.as_int(),
@@ -90,7 +96,7 @@ void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration
                 if (out.preferred_mode_index < out.modes.size())
                 {
                     auto const& mode = out.modes[out.preferred_mode_index];
-                    logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational,
+                    logger->log(component, severity,
                                 "%*cPreferred mode %dx%d %.2fHz",
                                 indent, ' ',
                                 mode.size.width.as_int(),
@@ -98,7 +104,7 @@ void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration
                                 mode.vrefresh_hz);
                 }
                 
-                logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational,
+                logger->log(component, severity,
                             "%*cLogical position %+d%+d",
                             indent, ' ',
                             out.top_left.x.as_int(),
@@ -106,13 +112,13 @@ void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration
             }
             else
             {
-                logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational,
+                logger->log(component, severity,
                             "%*cDisabled", indent, ' ');
             }
         }
         else
         {
-            logger->log(MIR_LOG_COMPONENT_FALLBACK, ml::Severity::informational,
+            logger->log(component, severity,
                         "%s%d.%d: unused %s", prefix, card_id, out_id, type);
         }
     });
