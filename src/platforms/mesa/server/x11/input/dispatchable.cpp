@@ -113,11 +113,11 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                 if (xkev.state & ShiftMask)
                     modifiers |= mir_input_event_modifier_shift;
                 if (xkev.state & ControlMask)
-                    modifiers |=  mir_input_event_modifier_ctrl;
+                    modifiers |= mir_input_event_modifier_ctrl;
                 if (xkev.state & Mod1Mask)
-                    modifiers |=  mir_input_event_modifier_alt;
+                    modifiers |= mir_input_event_modifier_alt;
                 if (xkev.state & Mod4Mask)
-                    modifiers |=  mir_input_event_modifier_meta;
+                    modifiers |= mir_input_event_modifier_meta;
 
                 auto event_time =
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -163,11 +163,11 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                 if (xbev.state & ShiftMask)
                     modifiers |= mir_input_event_modifier_shift;
                 if (xbev.state & ControlMask)
-                    modifiers |=  mir_input_event_modifier_ctrl;
+                    modifiers |= mir_input_event_modifier_ctrl;
                 if (xbev.state & Mod1Mask)
-                    modifiers |=  mir_input_event_modifier_alt;
+                    modifiers |= mir_input_event_modifier_alt;
                 if (xbev.state & Mod4Mask)
-                    modifiers |=  mir_input_event_modifier_meta;
+                    modifiers |= mir_input_event_modifier_meta;
 
                 auto event_time =
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -226,11 +226,11 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                 if (xmev.state & ShiftMask)
                     modifiers |= mir_input_event_modifier_shift;
                 if (xmev.state & ControlMask)
-                    modifiers |=  mir_input_event_modifier_ctrl;
+                    modifiers |= mir_input_event_modifier_ctrl;
                 if (xmev.state & Mod1Mask)
-                    modifiers |=  mir_input_event_modifier_alt;
+                    modifiers |= mir_input_event_modifier_alt;
                 if (xmev.state & Mod4Mask)
-                    modifiers |=  mir_input_event_modifier_meta;
+                    modifiers |= mir_input_event_modifier_meta;
 
                 auto event_time =
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -275,9 +275,20 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                 auto const& xcev = (XConfigureEvent&)xev;
                 mir::log_info("Window size : %dx%d", xcev.width, xcev.height);
+                XWindowAttributes wa;
+                if (!XGetWindowAttributes(x11_connection.get(), xcev.window, &wa))
+                    mir::log_error("Cannot query display window size");
+                else
+                    mir::log_info("X11 reports display window size of : %dx%d", wa.width, wa.height);
 #endif
                 break;
             }
+
+            case Expose:
+#ifdef MIR_ON_X11_INPUT_VERBOSE
+                mir::log_info("Expose event occured.");
+#endif
+                break;
 
             case MappingNotify:
 #ifdef MIR_ON_X11_INPUT_VERBOSE
