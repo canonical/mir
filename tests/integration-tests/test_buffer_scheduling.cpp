@@ -1046,11 +1046,14 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
     for (auto const& consumer : consumers)
         EXPECT_EQ(0, istream->buffers_ready_for_compositor(consumer));
 
+    printf("produce.\n");
     producer->produce();
-
+    printf("done prod\n");
     for (auto consumer : consumers)
     {
+        printf("C1\n");
         ASSERT_NE(0, istream->buffers_ready_for_compositor(consumer));
+        printf("C2\n");
 
         // Double consume to account for the +1 that
         // buffers_ready_for_compositor adds to do dynamic performance
