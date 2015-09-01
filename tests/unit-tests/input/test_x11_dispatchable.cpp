@@ -33,13 +33,14 @@ using namespace ::testing;
 namespace
 {
 
-struct X11DispatchableTest : ::testing::Test
+struct X11PlatformTest : ::testing::Test
 {
     NiceMock<mtd::MockInputSink> mock_input_sink;
     NiceMock<mtd::MockX11> mock_x11;
+    NiceMock<mtd::MockInputDeviceRegistry> mock_x11;
     mir::input::DefaultEventBuilder builder{0};
 
-    mir::input::X::XDispatchable x11_dispatchable{
+    mir::input::X::XInputPlatform x11_platform{
         std::shared_ptr<::Display>(
             XOpenDisplay(nullptr),
             [](::Display* display) { XCloseDisplay(display); }), 0};
@@ -47,7 +48,7 @@ struct X11DispatchableTest : ::testing::Test
 
 }
 
-TEST_F(X11DispatchableTest, dispatches_input_events_to_sink)
+TEST_F(X11PlatformTest, dispatches_input_events_to_sink)
 {
     ON_CALL(mock_x11, XNextEvent(_,_))
         .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.keypress_event_return),
@@ -60,7 +61,7 @@ TEST_F(X11DispatchableTest, dispatches_input_events_to_sink)
     x11_dispatchable.dispatch(mir::dispatch::FdEvent::readable);
 }
 
-TEST_F(X11DispatchableTest, grabs_keyboard)
+TEST_F(X11PlatformTest, grabs_keyboard)
 {
     ON_CALL(mock_x11, XNextEvent(_,_))
         .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.focus_in_event_return),
@@ -75,7 +76,7 @@ TEST_F(X11DispatchableTest, grabs_keyboard)
     x11_dispatchable.dispatch(mir::dispatch::FdEvent::readable);
 }
 
-TEST_F(X11DispatchableTest, ungrabs_keyboard)
+TEST_F(X11PlatformTest, ungrabs_keyboard)
 {
     ON_CALL(mock_x11, XNextEvent(_,_))
         .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.focus_out_event_return),
