@@ -386,7 +386,9 @@ struct ScheduledProducer : ProducerSystem
         vault(
             std::make_shared<mtd::StubClientBufferFactory>(),
             std::make_shared<ServerRequests>(ipc),
-            geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers, max_buffers(nbuffers)) 
+            geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers, max_buffers(nbuffers)),
+        max(max_buffers(nbuffers)),
+        cur(nbuffers)
     {
         ipc->on_client_bound_transfer([this](mp::Buffer& buffer){
             printf("transfer inbound\n");
@@ -399,9 +401,10 @@ struct ScheduledProducer : ProducerSystem
         });
     }
 
+
     bool can_produce()
     {
-        return available > 0;
+        return available > 0 || cur < max;
     }
 
     mg::BufferID current_id()
@@ -450,6 +453,7 @@ struct ScheduledProducer : ProducerSystem
     std::vector<BufferEntry> entries;
     std::shared_ptr<StubIpcSystem> ipc;
     mcl::BufferVault vault;
+    int max, cur;
     int available{0};
     unsigned int age{0};
     mg::BufferID current_id_;
