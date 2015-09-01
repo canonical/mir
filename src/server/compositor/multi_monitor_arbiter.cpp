@@ -117,8 +117,10 @@ void mc::MultiMonitorArbiter::set_schedule(std::shared_ptr<Schedule> const& new_
     schedule = new_schedule;
 }
 
-size_t mc::MultiMonitorArbiter::buffers_ready_for(mc::CompositorID id)
+bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
 {
-    (void) id;
-    return 0;
+    if (schedule->anything_scheduled() ||
+       ((current_buffer_users.find(id) == current_buffer_users.end()) && !onscreen_buffers.empty()))
+    return true;
+    return false;
 }

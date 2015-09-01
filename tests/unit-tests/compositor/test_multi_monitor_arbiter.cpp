@@ -336,16 +336,46 @@ TEST_F(MultiMonitorArbiter, can_check_if_buffers_are_ready)
     int comp_id2{0};
     schedule.set_schedule({buffers[3]});
 
-    EXPECT_THAT(arbiter.buffers_ready_for(&comp_id1), Eq(1));
-    EXPECT_THAT(arbiter.buffers_ready_for(&comp_id2), Eq(1));
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id2));
 
     auto b1 = arbiter.compositor_acquire(&comp_id1);
-    EXPECT_THAT(arbiter.buffers_ready_for(&comp_id1), Eq(0));
-    EXPECT_THAT(arbiter.buffers_ready_for(&comp_id2), Eq(1));
+    EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id2));
     arbiter.compositor_release(b1);
 
     auto b2 = arbiter.compositor_acquire(&comp_id2);
-    EXPECT_THAT(arbiter.buffers_ready_for(&comp_id1), Eq(0));
-    EXPECT_THAT(arbiter.buffers_ready_for(&comp_id2), Eq(0));
+    EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id2));
     arbiter.compositor_release(b2);
+} 
+
+TEST_F(MultiMonitorArbiter, other_compositor_ready_status_advances_with_fastest_compositor)
+{
+    int comp_id1{0};
+    int comp_id2{0};
+    schedule.set_schedule({buffers[0], buffers[1], buffers[2]});
+
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id2));
+
+    auto b1 = arbiter.compositor_acquire(&comp_id1);
+    arbiter.compositor_release(b1);
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id2));
+
+    b1 = arbiter.compositor_acquire(&comp_id1);
+    arbiter.compositor_release(b1);
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id2));
+
+    b1 = arbiter.compositor_acquire(&comp_id1);
+    arbiter.compositor_release(b1);
+    EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id2));
+
+    b1 = arbiter.compositor_acquire(&comp_id2);
+    arbiter.compositor_release(b1);
+    EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id2));
 } 
