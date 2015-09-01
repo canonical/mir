@@ -191,3 +191,8 @@ void mga::Buffer::read(std::function<void(unsigned char const*)> const& do_with_
 
     hw_module->unlock(hw_module, native_buffer->handle());
 }
+
+mg::NativeBufferBase* mga::Buffer::native_buffer_base()
+{
+    return this;
+}

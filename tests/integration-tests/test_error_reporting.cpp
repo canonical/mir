@@ -100,7 +100,7 @@ TEST_F(ErrorReporting, c_api_returns_connection_error)
 
     ASSERT_TRUE(connection != NULL);
     EXPECT_FALSE(mir_connection_is_valid(connection));
-    EXPECT_THAT(mir_connection_get_error_message(connection), testing::HasSubstr(test_exception_text));
+    EXPECT_THAT(mir_connection_get_error_message(connection), testing::HasSubstr("Failed to connect"));
 
     mir_connection_release(connection);
 }
