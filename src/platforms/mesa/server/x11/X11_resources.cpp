@@ -16,48 +16,41 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#ifndef MIR_X_LAZY_CONNECTION_H_
-#define MIR_X_LAZY_CONNECTION_H_
+#define MIR_LOG_COMPONENT "x11-error"
+#include "mir/log.h"
 
-#include <X11/Xlib.h>
+#include "X11_resources.h"
+
+namespace mx = mir::X;
 
 //Force synchronous Xlib operation - for debugging
 //#define FORCE_SYNCHRONOUS
 
-namespace mir
+int mx::mir_x11_error_handler(Display* dpy, XErrorEvent* eev)
 {
-namespace X
+    char msg[80];
+    XGetErrorText(dpy, eev->error_code, msg, sizeof(msg));
+    log_error("X11 error %d (%s): request %d.%d\n",
+        eev->error_code, msg, eev->request_code, eev->minor_code);
+    return 0;
+}
+
+std::shared_ptr<::Display> mx::X11Resources::get_conn()
 {
+    if (auto conn = connection.lock())
+        return conn;
 
-int mir_x11_error_handler(Display* dpy, XErrorEvent* eev);
+    XInitThreads();
 
-class LazyConnection
-{
-public:
-    std::shared_ptr<::Display> get()
-    {
-        if (auto conn = connection.lock())
-            return conn;
+    XSetErrorHandler(mir_x11_error_handler);
 
-        XInitThreads();
-
-        XSetErrorHandler(mir_x11_error_handler);
-
-        std::shared_ptr<::Display> new_conn{
-            XOpenDisplay(nullptr),
-            [](::Display* display) { XCloseDisplay(display); }};
+    std::shared_ptr<::Display> new_conn{
+        XOpenDisplay(nullptr),
+        [](::Display* display) { XCloseDisplay(display); }};
 
 #ifdef FORCE_SYNCHRONOUS
-        XSynchronize(new_conn.get(), True);
+    XSynchronize(new_conn.get(), True);
 #endif
-        connection = new_conn;
-        return new_conn;
-    }
-
-private:
-    std::weak_ptr<::Display> connection;
-};
-
+    connection = new_conn;
+    return new_conn;
 }
-}
-#endif /* MIR_X_LAZY_CONNECTION_H_ */

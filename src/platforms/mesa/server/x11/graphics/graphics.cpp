@@ -17,37 +17,25 @@
  */
 
 #include "platform.h"
-#include "lazy_connection.h"
+#include "../X11_resources.h"
 #include <boost/throw_exception.hpp>
-
-#define MIR_LOG_COMPONENT "x11-error"
-#include "mir/log.h"
 
 namespace mo = mir::options;
 namespace mg = mir::graphics;
 namespace mx = mir::X;
 namespace mgx = mg::X;
 
-mx::LazyConnection x11_connection;
-
-int mx::mir_x11_error_handler(Display* dpy, XErrorEvent* eev)
-{
-    char msg[80];
-    XGetErrorText(dpy, eev->error_code, msg, sizeof(msg));
-    log_error("X11 error %d (%s): request %d.%d\n",
-        eev->error_code, msg, eev->request_code, eev->minor_code);
-    return 0; //What to return here?
-}
+mx::X11Resources x11_resources;
 
 std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
-    if (!x11_connection.get())
+    if (!x11_resources.get_conn())
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
 
-    return std::make_shared<mgx::Platform>(x11_connection.get());
+    return std::make_shared<mgx::Platform>(x11_resources.get_conn());
 }
 
 std::shared_ptr<mg::Platform> create_guest_platform(

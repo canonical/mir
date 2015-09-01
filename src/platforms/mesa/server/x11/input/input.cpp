@@ -17,7 +17,7 @@
  */
 
 #include "input_platform.h"
-#include "../lazy_connection.h"
+#include "../X11_resources.h"
 #include "mir/module_properties.h"
 
 namespace mo = mir::options;
@@ -25,7 +25,7 @@ namespace mi = mir::input;
 namespace mx = mir::X;
 namespace mix = mi::X;
 
-extern mx::LazyConnection x11_connection;
+extern mx::X11Resources x11_resources;
 
 mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
@@ -33,7 +33,7 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<mi::InputReport> const& /*report*/)
 {
-    return mir::make_module_ptr<mix::XInputPlatform>(input_device_registry, x11_connection.get());
+    return mir::make_module_ptr<mix::XInputPlatform>(input_device_registry, x11_resources.get_conn());
 }
 
 void add_input_platform_options(
