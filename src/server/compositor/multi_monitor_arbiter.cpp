@@ -82,11 +82,14 @@ void mc::MultiMonitorArbiter::decrease_refcount_for(mg::BufferID id, std::lock_g
 
 void mc::MultiMonitorArbiter::clean_onscreen_buffers(std::lock_guard<std::mutex> const&)
 {
+    printf("start cleaning\n");
     for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end();)
     {
+        printf("uc %i\n", it->use_count);
         if ((it->use_count == 0) &&
             (it != onscreen_buffers.begin() || schedule->anything_scheduled())) //ensure monitors always have a buffer
         {
+            printf("RELEASE.\n");
             map->send_buffer(it->buffer->id());
             it = onscreen_buffers.erase(it);
         }

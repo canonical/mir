@@ -576,6 +576,13 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
         }
     }
 
+
+    void set_scaling_delay(int delay)
+    {
+        if (std::get<0>(GetParam()))
+            queue.set_scaling_delay(delay);
+    }
+
     void allow_framedropping()
     {
         consumer->set_framedropping(true);
@@ -1370,19 +1377,23 @@ TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
 {
     // This test is technically not valid with dynamic queue scaling on
     // BufferQueue specific setup
-    queue.set_scaling_delay(-1);
+    set_scaling_delay(-1);
 
     const int nmonitors = 2;
-    std::array<std::shared_ptr<BufferQueueConsumer>, nmonitors> consumers { {
-        std::make_shared<BufferQueueConsumer>(stream),
-        std::make_shared<BufferQueueConsumer>(stream)
+    std::array<ConsumerSystem*, nmonitors> consumers { {
+        consumer.get(),
+        second_consumer.get(),
     } };
+    producer->produce();
 
     /* Hold a reference to current compositor buffer*/
     auto comp_buffer1 = consumers[0]->consume_resource();
 
     while (producer->can_produce())
+    {
+        printf("prod..\n");
         producer->produce();
+    }
 
     /* Have a second compositor advance the current compositor buffer at least twice */
     for (int acquires = 0; acquires < nbuffers; ++acquires)
@@ -1397,10 +1408,18 @@ TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
     producer->reset_log();
     for (int frame = 0; frame < max_ownable_buffers * 2; frame++)
     {
+        printf("go. %i\n", nbuffers);
         for (int drain = 0; drain < nbuffers; ++drain)
+        {
+            printf("in here\n");
             consumers[0]->consume();
+        }
+
         while (producer->can_produce())
+        {
+            printf("prod.\n");
             producer->produce();
+        }
     }
 
     EXPECT_THAT(unique_ids_in(producer->production_log()), Eq(nbuffers));
