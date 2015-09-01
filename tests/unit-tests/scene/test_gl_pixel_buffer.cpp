@@ -19,7 +19,7 @@
 #include "src/server/scene/gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
 
-#include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/mock_gl_buffer.h"
 #include "mir/test/doubles/mock_gl.h"
 
 #include <gmock/gmock.h>
@@ -68,7 +68,7 @@ public:
     }
 
     testing::NiceMock<mtd::MockGL> mock_gl;
-    testing::NiceMock<mtd::MockBuffer> mock_buffer;
+    testing::NiceMock<mtd::MockGLBuffer> mock_buffer;
     MockGLContext mock_context;
     std::unique_ptr<WrappingGLContext> context;
 };
