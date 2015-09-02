@@ -27,13 +27,13 @@ dist=vivid
 clean=0
 update_build_dir=0
 
-target_machine=armhf
+target_arch=armhf
 
 while getopts "a:cd:hu" OPTNAME
 do
     case $OPTNAME in
       a )
-        target_machine=${OPTARG}
+        target_arch=${OPTARG}
         update_build_dir=1
         ;;
       c )
@@ -70,11 +70,11 @@ if [ ${clean} -ne 0 ]; then
 fi
 
 if [ ${update_build_dir} -eq 1 ]; then
-    BUILD_DIR=build-${target_machine}-${dist}
+    BUILD_DIR=build-${target_arch}-${dist}
 fi
 
 if [ "${MIR_NDK_PATH}" = "" ]; then
-    export MIR_NDK_PATH=~/.cache/mir-${target_machine}-chroot-${dist}
+    export MIR_NDK_PATH=~/.cache/mir-${target_arch}-chroot-${dist}
 fi
 
 if [ ! -d ${MIR_NDK_PATH} ]; then 
@@ -91,7 +91,7 @@ echo "Using MIR_NDK_PATH: ${MIR_NDK_PATH}"
 
 if [ ${_do_update_chroot} -eq 1 ] ; then
     pushd tools > /dev/null
-        ./setup-partial-armhf-chroot.sh ${MIR_NDK_PATH} ${dist} ${target_machine}
+        ./setup-partial-armhf-chroot.sh ${MIR_NDK_PATH} ${dist} ${target_arch}
     popd > /dev/null
     # force a clean build after an update, since CMake cache maybe out of date
     clean_build_dir ${BUILD_DIR}
@@ -104,7 +104,7 @@ fi
 
 gcc_family=gcc
 mir_platform="android;mesa-kms"
-case ${target_machine} in
+case ${target_arch} in
     armhf )
         gcc_family=arm-linux-gnueabihf-gcc
         ;;
@@ -113,23 +113,24 @@ case ${target_machine} in
         mir_platform=mesa-kms
         ;;
     * )
-        echo "Unknown architecture ${target_machine}"
+        echo "Unknown architecture ${target_arch}"
         usage
         exit 1
 esac
 cc="${gcc_family}${gcc_variant}"
 
-target_arch=`$cc -dumpmachine`
-echo "Target architecture: ${target_arch}  (according to ${cc})"
+target_machine=`$cc -dumpmachine`
+echo "Target achitecture: ${target_arch}"
+echo "Target machine: ${target_machine}  (according to ${cc})"
 
 pushd ${BUILD_DIR} > /dev/null 
 
-    export PKG_CONFIG_PATH="${MIR_NDK_PATH}/usr/lib/pkgconfig:${MIR_NDK_PATH}/usr/lib/${target_arch}/pkgconfig"
+    export PKG_CONFIG_PATH="${MIR_NDK_PATH}/usr/lib/pkgconfig:${MIR_NDK_PATH}/usr/lib/${target_machine}/pkgconfig"
     export PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1
     export PKG_CONFIG_ALLOW_SYSTEM_LIBS=1
     export PKG_CONFIG_SYSROOT_DIR=$MIR_NDK_PATH
     export PKG_CONFIG_EXECUTABLE=`which pkg-config`
-    export MIR_TARGET_ARCH=${target_arch}
+    export MIR_TARGET_MACHINE=${target_machine}
     export MIR_GCC_VARIANT=${gcc_variant}
     echo "Using PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
     echo "Using PKG_CONFIG_EXECUTABLE: $PKG_CONFIG_EXECUTABLE"
