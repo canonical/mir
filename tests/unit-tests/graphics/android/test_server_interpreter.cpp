@@ -101,7 +101,7 @@ TEST_F(ServerRenderWindow, returns_usage_bits_for_fb)
 {
     using namespace testing;
     auto bits = GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_FB;
-    EXPECT_THAT(render_window.driver_requests_info(NATIVE_WINDOW_FORMAT), Eq(bits));
+    EXPECT_THAT(render_window.driver_requests_info(NATIVE_WINDOW_CONSUMER_USAGE_BITS), Eq(bits));
 }
 
 TEST_F(ServerRenderWindow, returns_different_format_if_format_changes)
