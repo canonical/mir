@@ -97,19 +97,19 @@ if [ ${_do_update_chroot} -eq 1 ] ; then
     clean_build_dir ${BUILD_DIR}
 fi
 
-cc_variant=
+gcc_variant=
 if [ "${dist}" = "vivid" ]; then
-    cc_variant=-4.9
+    gcc_variant=-4.9
 fi
 
-cc_family=gcc
+gcc_family=gcc
 mir_platform="android;mesa-kms"
 case ${target_machine} in
     armhf )
-        cc_family=arm-linux-gnueabihf-gcc
+        gcc_family=arm-linux-gnueabihf-gcc
         ;;
     powerpc )
-        cc_family=powerpc-linux-gnu-gcc
+        gcc_family=powerpc-linux-gnu-gcc
         mir_platform=mesa-kms
         ;;
     * )
@@ -117,7 +117,7 @@ case ${target_machine} in
         usage
         exit 1
 esac
-cc="${cc_family}${cc_variant}"
+cc="${gcc_family}${gcc_variant}"
 
 target_arch=`$cc -dumpmachine`
 echo "Target architecture: ${target_arch}  (according to ${cc})"
@@ -129,11 +129,11 @@ pushd ${BUILD_DIR} > /dev/null
     export PKG_CONFIG_ALLOW_SYSTEM_LIBS=1
     export PKG_CONFIG_SYSROOT_DIR=$MIR_NDK_PATH
     export PKG_CONFIG_EXECUTABLE=`which pkg-config`
+    export MIR_TARGET_ARCH=${target_arch}
+    export MIR_GCC_VARIANT=${gcc_variant}
     echo "Using PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
     echo "Using PKG_CONFIG_EXECUTABLE: $PKG_CONFIG_EXECUTABLE"
     cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake \
-      -DCC_VARIANT=${cc_variant} \
-      -DTARGET_ARCH=${target_arch} \
       -DMIR_PLATFORM=${mir_platform} \
       .. 
 
