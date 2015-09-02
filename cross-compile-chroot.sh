@@ -103,7 +103,7 @@ if [ "${dist}" = "vivid" ]; then
 fi
 
 cc_family=gcc
-mir_platform="android\;mesa-kms"
+mir_platform="android;mesa-kms"
 case ${target_machine} in
     armhf )
         cc_family=arm-linux-gnueabihf-gcc
