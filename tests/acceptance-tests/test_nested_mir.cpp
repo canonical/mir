@@ -32,6 +32,7 @@
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/wait_condition.h"
 #include "mir/test/spin_wait.h"
+#include "mir/test/display_config_matchers.h"
 
 #include "mir/test/doubles/nested_mock_egl.h"
 
@@ -318,7 +319,7 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
     EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(AnyNumber());
 }
 
-TEST_F(NestedServer, host_server_reports_display_configuration_changes)
+TEST_F(NestedServer, display_configuration_changes_are_forwarded_to_host)
 {
     NestedMirRunner nested_mir{new_connection()};
 
@@ -331,8 +332,47 @@ TEST_F(NestedServer, host_server_reports_display_configuration_changes)
 
     configuration->outputs->used = false;
 
-    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_)).Times(1);
+    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_));
     mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+
+    mir_display_config_destroy(configuration);
+    mir_surface_release_sync(painted_surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
+{
+    NestedMirRunner nested_mir{new_connection()};
+
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    // Need a painted surface to have focus
+    auto const painted_surface = make_and_paint_surface(connection);
+
+    auto const configuration = mir_connection_create_display_config(connection);
+
+    for (auto new_orientation : {mir_orientation_left, mir_orientation_right, mir_orientation_inverted, mir_orientation_normal})
+    {
+        // Allow for the egl context getting rebuilt as a side-effect
+        {
+            InSequence context_lifecycle;
+            EXPECT_CALL(mock_egl, eglCreateContext(_, _, _, _)).Times(AnyNumber()).WillRepeatedly(Return((EGLContext)this));
+            EXPECT_CALL(mock_egl, eglDestroyContext(_, _)).Times(AnyNumber()).WillRepeatedly(Return(EGL_TRUE));
+        }
+
+        mt::WaitCondition condition;
+
+        for(auto* output = configuration->outputs; output != configuration->outputs+configuration->num_outputs; ++ output)
+            output->orientation = new_orientation;
+
+        EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(mt::DisplayConfigMatches(configuration)))
+            .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+
+        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+
+        condition.wait_for_at_most_seconds(1);
+        Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
+    }
 
     mir_display_config_destroy(configuration);
     mir_surface_release_sync(painted_surface);
