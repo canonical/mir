@@ -120,7 +120,7 @@ esac
 cc="${gcc_family}${gcc_variant}"
 
 target_machine=`$cc -dumpmachine`
-echo "Target achitecture: ${target_arch}"
+echo "Target architecture: ${target_arch}"
 echo "Target machine: ${target_machine}  (according to ${cc})"
 
 pushd ${BUILD_DIR} > /dev/null 
