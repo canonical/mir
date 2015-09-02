@@ -102,14 +102,13 @@ if [ "${dist}" = "vivid" ]; then
     gcc_variant=-4.9
 fi
 
-gcc_family=gcc
-mir_platform="android;mesa-kms"
 case ${target_arch} in
     armhf )
-        gcc_family=arm-linux-gnueabihf-gcc
+        target_machine=arm-linux-gnueabihf
+        mir_platform="android;mesa-kms"
         ;;
     powerpc )
-        gcc_family=powerpc-linux-gnu-gcc
+        target_machine=powerpc-linux-gnu
         mir_platform=mesa-kms
         ;;
     * )
@@ -117,11 +116,9 @@ case ${target_arch} in
         usage
         exit 1
 esac
-cc="${gcc_family}${gcc_variant}"
 
-target_machine=`$cc -dumpmachine`
 echo "Target architecture: ${target_arch}"
-echo "Target machine: ${target_machine}  (according to ${cc})"
+echo "Target machine: ${target_machine}"
 
 pushd ${BUILD_DIR} > /dev/null 
 
