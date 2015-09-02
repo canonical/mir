@@ -166,7 +166,6 @@ struct NestedServer : mtf::HeadlessInProcessServer
         }
     }
 
-
     std::shared_ptr<MockDisplayConfigurationReport> the_mock_display_configuration_report()
     {
         return mock_display_configuration_report([]
@@ -174,6 +173,13 @@ struct NestedServer : mtf::HeadlessInProcessServer
     }
 
     mir::CachedPtr<MockDisplayConfigurationReport> mock_display_configuration_report;
+
+    MirSurface* make_and_paint_surface(MirConnection* connection) const
+    {
+        auto const surface = mtf::make_any_surface(connection);
+        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        return surface;
+    }
 };
 }
 
@@ -320,18 +326,16 @@ TEST_F(NestedServer, host_server_reports_display_configuration_changes)
     auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
 
     // Need a painted surface to have focus
-    auto const surface = mtf::make_any_surface(connection);
-    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+    auto const painted_surface = make_and_paint_surface(connection);
 
     auto const configuration = mir_connection_create_display_config(connection);
 
-    for (auto* output = configuration->outputs; output != configuration->outputs+configuration->num_outputs; ++output)
-        output->used = false;
+    configuration->outputs->used = false;
 
     EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_)).Times(1);
     mir_wait_for(mir_connection_apply_display_config(connection, configuration));
 
     mir_display_config_destroy(configuration);
-    mir_surface_release_sync(surface);
+    mir_surface_release_sync(painted_surface);
     mir_connection_release(connection);
 }
