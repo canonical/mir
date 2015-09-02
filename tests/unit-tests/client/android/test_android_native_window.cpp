@@ -28,7 +28,6 @@
 
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
-using namespace testing;
 
 namespace
 {
@@ -39,6 +38,7 @@ public:
     MockAndroidDriverInterpreter()
      : buffer(std::make_shared<mtd::StubAndroidNativeBuffer>())
     {
+        using namespace testing;
         ON_CALL(*this, driver_requests_buffer())
             .WillByDefault(Return(buffer.get()));
     }
@@ -66,6 +66,8 @@ protected:
 
 TEST_F(AndroidNativeWindowTest, native_window_swapinterval)
 {
+    using namespace testing;
+
     ASSERT_NE(nullptr, window.setSwapInterval);
     EXPECT_CALL(*mock_driver_interpreter, sync_to_display(true))
         .Times(1);
@@ -85,6 +87,8 @@ TEST_F(AndroidNativeWindowTest, native_window_swapinterval)
 /* Query hook tests */
 TEST_F(AndroidNativeWindowTest, native_window_query_hook)
 {
+    using namespace testing;
+
     int returned_width;
     int const width = 271828;
 
@@ -139,6 +143,8 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_hook_callable)
 
 TEST_F(AndroidNativeWindowTest, native_window_dequeue_returns_right_buffer)
 {
+    using namespace testing;
+
     int fake_fd = 4948;
     auto mock_buffer = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
     EXPECT_CALL(*mock_buffer, copy_fence())
@@ -158,6 +164,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_returns_right_buffer)
 
 TEST_F(AndroidNativeWindowTest, native_window_dequeue_returns_previously_cancelled_buffer)
 {
+    using namespace testing;
     ANativeWindowBuffer buffer;
     int fence_fd = 33;
 
@@ -183,6 +190,8 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_hook_callable)
 
 TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_right_buffer)
 {
+    using namespace testing;
+
     ANativeWindowBuffer* returned_buffer;
     auto mock_buffer = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
 
@@ -200,6 +209,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_right_b
 
 TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_previously_cancelled_buffer)
 {
+    using namespace testing;
     ANativeWindowBuffer buffer;
 
     auto rc = window.cancelBuffer_DEPRECATED(&window, &buffer);
@@ -225,6 +235,7 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_hook_callable)
 
 TEST_F(AndroidNativeWindowTest, native_window_queue_passes_buffer_back)
 {
+    using namespace testing;
     ANativeWindowBuffer buffer;
     int fence_fd = 33;
 
@@ -244,6 +255,7 @@ TEST_F(AndroidNativeWindowTest, native_window_queue_deprecated_hook_callable)
 
 TEST_F(AndroidNativeWindowTest, native_window_queue_deprecated_passes_buffer_back)
 {
+    using namespace testing;
     ANativeWindowBuffer buffer;
 
     EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(&buffer,_))
@@ -303,6 +315,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_has_proper_rc)
 
 TEST_F(AndroidNativeWindowTest, native_window_cancel_hook_does_not_call_driver_interpreter)
 {
+    using namespace testing;
     ANativeWindowBuffer buffer;
     int fence_fd = 33;
 
@@ -315,6 +328,8 @@ TEST_F(AndroidNativeWindowTest, native_window_cancel_hook_does_not_call_driver_i
 
 TEST_F(AndroidNativeWindowTest, returns_error_on_dequeue_buffer_failure)
 {
+    using namespace testing;
+
     EXPECT_CALL(*mock_driver_interpreter, driver_requests_buffer())
         .WillOnce(Throw(std::runtime_error("")))
         .WillOnce(Throw(std::runtime_error("")));
@@ -325,6 +340,8 @@ TEST_F(AndroidNativeWindowTest, returns_error_on_dequeue_buffer_failure)
 
 TEST_F(AndroidNativeWindowTest, returns_error_on_queue_buffer_failure)
 {
+    using namespace testing;
+
     EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(_, _))
         .WillOnce(Throw(std::runtime_error("")))
         .WillOnce(Throw(std::runtime_error("")));
@@ -335,6 +352,8 @@ TEST_F(AndroidNativeWindowTest, returns_error_on_queue_buffer_failure)
 
 TEST_F(AndroidNativeWindowTest, returns_error_on_query_failure)
 {
+    using namespace testing;
+
     EXPECT_CALL(*mock_driver_interpreter, driver_requests_info(_))
         .WillOnce(Throw(std::runtime_error("")));
 
@@ -343,6 +362,8 @@ TEST_F(AndroidNativeWindowTest, returns_error_on_query_failure)
 
 TEST_F(AndroidNativeWindowTest, returns_error_on_perform_failure)
 {
+    using namespace testing;
+
     EXPECT_CALL(*mock_driver_interpreter, dispatch_driver_request_format(_))
         .WillOnce(Throw(std::runtime_error("")));
 
