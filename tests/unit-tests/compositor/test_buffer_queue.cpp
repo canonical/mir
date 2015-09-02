@@ -1739,6 +1739,91 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     EXPECT_THAT(buffers_acquired.size(), Eq(2));
 }
 
+TEST_P(WithThreeOrMoreBuffers, queue_size_scales_up_without_accumulator)
+{   // A regression test similar to above but designed to mimic QtMir
+    // for LP: #1476201.
+   
+    q.allow_framedropping(false);
+    std::unordered_set<mg::Buffer *> buffers_acquired;
+
+    int const delay = 3;
+    q.set_scaling_delay(delay);
+
+    int const nframes = 100;
+
+    std::shared_ptr<AcquireWaitHandle> client;
+
+    for (int frame = 0; frame < nframes; ++frame)
+    {
+        do
+        {
+            if (!client)
+                client = client_acquire_async(q);
+            if (client->has_acquired_buffer())
+            {
+                if (frame > delay)
+                    buffers_acquired.insert(client->buffer());
+                client->release_buffer();
+                client.reset();
+            }
+        } while (!client);
+
+        q.compositor_release(q.compositor_acquire(nullptr));
+    }
+    // Expect double-buffers for fast clients
+    EXPECT_THAT(buffers_acquired.size(), Eq(2));
+
+    // Now check what happens if the client becomes slow...
+    buffers_acquired.clear();
+    for (int frame = 0; frame < nframes;)
+    {
+        do
+        {
+            if (!client)
+                client = client_acquire_async(q);
+            if (client->has_acquired_buffer())
+            {
+                if (frame > delay)
+                    buffers_acquired.insert(client->buffer());
+                client->release_buffer();
+                client.reset();
+            }
+        } while (!client);
+
+        // Mimic QtMir in that it tests buffers ready as a boolean and does
+        // not keep its own accumulator in the compositor:
+        while (q.buffers_ready_for_compositor(nullptr))
+        {
+            q.compositor_release(q.compositor_acquire(nullptr));
+            ++frame;
+        }
+    }
+    // Expect at least triple buffers for sluggish clients
+    EXPECT_THAT(buffers_acquired.size(), Ge(3));
+
+    // And what happens if the client becomes fast again?...
+    buffers_acquired.clear();
+    for (int frame = 0; frame < nframes; ++frame)
+    {
+        do
+        {
+            if (!client)
+                client = client_acquire_async(q);
+            if (client->has_acquired_buffer())
+            {
+                if (frame > delay)
+                    buffers_acquired.insert(client->buffer());
+                client->release_buffer();
+                client.reset();
+            }
+        } while (!client);
+
+        q.compositor_release(q.compositor_acquire(nullptr));
+    }
+    // Expect double-buffers for fast clients
+    EXPECT_THAT(buffers_acquired.size(), Eq(2));
+}
+
 TEST_P(WithThreeOrMoreBuffers, greedy_compositors_need_triple_buffers)
 {
     /*

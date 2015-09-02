@@ -485,8 +485,13 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
      * idle is the extra frame wasted. Sounds like a reasonable price to pay
      * for dynamic performance monitoring.
      */
+#if 0
     if (frame_deadlines_threshold >= 0 && scheduled_ghost_frames > 0)
         count += scheduled_ghost_frames;
+#else
+    if (count && frame_deadlines_threshold >= 0)
+        ++count;
+#endif
 
     return count;
 }
