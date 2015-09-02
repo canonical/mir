@@ -254,8 +254,7 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
     NestedMirRunner nested_mir{new_connection()};
 
     auto c = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto surface = mtf::make_any_surface(c);
-    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+    auto surface = make_and_paint_surface(c);
 
     bool became_exposed_and_focused = mir::test::spin_wait_for_condition_or_timeout(
         [surface]
