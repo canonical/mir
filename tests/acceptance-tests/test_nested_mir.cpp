@@ -181,6 +181,13 @@ struct NestedServer : mtf::HeadlessInProcessServer
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
         return surface;
     }
+
+    void ignore_rebuild_of_egl_context()
+    {
+        InSequence context_lifecycle;
+        EXPECT_CALL(mock_egl, eglCreateContext(_, _, _, _)).Times(AnyNumber()).WillRepeatedly(Return((EGLContext)this));
+        EXPECT_CALL(mock_egl, eglDestroyContext(_, _)).Times(AnyNumber()).WillRepeatedly(Return(EGL_TRUE));
+    }
 };
 }
 
@@ -351,14 +358,12 @@ TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
 
     auto const configuration = mir_connection_create_display_config(connection);
 
-    for (auto new_orientation : {mir_orientation_left, mir_orientation_right, mir_orientation_inverted, mir_orientation_normal})
+    for (auto new_orientation :
+        {mir_orientation_left, mir_orientation_right, mir_orientation_inverted, mir_orientation_normal,
+         mir_orientation_inverted, mir_orientation_right, mir_orientation_left, mir_orientation_normal})
     {
-        // Allow for the egl context getting rebuilt as a side-effect
-        {
-            InSequence context_lifecycle;
-            EXPECT_CALL(mock_egl, eglCreateContext(_, _, _, _)).Times(AnyNumber()).WillRepeatedly(Return((EGLContext)this));
-            EXPECT_CALL(mock_egl, eglDestroyContext(_, _)).Times(AnyNumber()).WillRepeatedly(Return(EGL_TRUE));
-        }
+        // Allow for the egl context getting rebuilt as a side-effect each iteration
+        ignore_rebuild_of_egl_context();
 
         mt::WaitCondition condition;
 
