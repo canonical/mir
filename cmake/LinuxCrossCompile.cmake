@@ -3,6 +3,9 @@ set(CMAKE_SYSTEM_VERSION 1)
 
 set(MIR_NDK_PATH $ENV{MIR_NDK_PATH} CACHE STRING "path of mir android bundle")
 
+# FIXME: This should not be required:
+set(TARGET_ARCH "arm-linux-gnueabihf")
+
 set(CMAKE_C_COMPILER   /usr/bin/${TARGET_ARCH}-gcc${CC_VARIANT})
 set(CMAKE_CXX_COMPILER /usr/bin/${TARGET_ARCH}-g++${CC_VARIANT})
 
