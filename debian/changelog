@@ -1,3 +1,10 @@
+mir (0.15.1+15.10.20150903-0ubuntu1) wily; urgency=medium
+
+  [ Kevin Gunn ]
+  * released-rebuild-for-vivid-overlay
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Thu, 03 Sep 2015 18:50:01 +0000
+
 mir (0.15.1+15.10.20150825-0ubuntu1) wily; urgency=medium
 
   [ Alberto Aguirre ]
