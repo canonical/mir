@@ -92,7 +92,7 @@ private:
 class Display : public graphics::Display
 {
 public:
-    explicit Display(::Display* x_dpy);
+    explicit Display(::Display* x_dpy, int const width, int const height);
     ~Display() noexcept;
 
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override;

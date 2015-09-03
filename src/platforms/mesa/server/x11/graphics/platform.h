@@ -35,7 +35,7 @@ namespace X
 class Platform : public graphics::Platform
 {
 public:
-    explicit Platform(std::shared_ptr<::Display> const& conn);
+    explicit Platform(std::shared_ptr<::Display> const& conn, int const width, int const height);
     ~Platform() = default;
 
     /* From Platform */
@@ -54,6 +54,8 @@ private:
     std::shared_ptr<mir::udev::Context> udev;
     std::shared_ptr<mesa::helpers::DRMHelper> const drm;
     mesa::helpers::GBMHelper gbm;
+    int const display_width;
+    int const display_height;
 };
 
 }

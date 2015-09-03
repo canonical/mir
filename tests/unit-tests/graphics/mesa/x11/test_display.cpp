@@ -77,7 +77,7 @@ public:
 
     std::shared_ptr<mgx::Display> create_display()
     {
-        return std::make_shared<mgx::Display>(mock_x11.fake_x11.display);
+        return std::make_shared<mgx::Display>(mock_x11.fake_x11.display, window_width, window_height);
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
