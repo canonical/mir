@@ -34,7 +34,6 @@
 #include "mir/test/wait_condition.h"
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_blob.h"
 
 #include <atomic>
 

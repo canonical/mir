@@ -26,6 +26,7 @@ set(
   test_server_shutdown.cpp
   test_client_focus_notification.cpp
   test_client_authorization.cpp
+  test_mirblob.cpp
   test_nested_mir.cpp
   test_nested_input.cpp
   test_display_configuration.cpp
