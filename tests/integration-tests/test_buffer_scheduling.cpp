@@ -704,14 +704,14 @@ TEST_P(WithTwoOrMoreBuffers, consumer_cycles_through_all_available_buffers)
 {
     auto tick = 0_t;
     std::vector<ScheduleEntry> schedule;
-    for(auto i = 0; i < nbuffers-2; i++)
+    for(auto i = 0; i < nbuffers-1; i++)
         schedule.emplace_back(ScheduleEntry{tick++, {producer.get()}, {}});
     run_system(schedule);
  
     for(auto i = 0; i < nbuffers; i++)
     {
-        schedule.emplace_back(ScheduleEntry{tick++, {}, {consumer.get()}});
         schedule.emplace_back(ScheduleEntry{tick++, {producer.get()}, {}});
+        schedule.emplace_back(ScheduleEntry{tick++, {}, {consumer.get()}});
     }
     run_system(schedule);
 
@@ -721,7 +721,7 @@ TEST_P(WithTwoOrMoreBuffers, consumer_cycles_through_all_available_buffers)
     auto it = std::unique(production_log.begin(), production_log.end());
     production_log.erase(it, production_log.end());
 
-    if (nbuffers > 3) nbuffers = 3;
+   // if (nbuffers > 3) nbuffers = 3;
     EXPECT_THAT(production_log, SizeIs(nbuffers));
 }
 
