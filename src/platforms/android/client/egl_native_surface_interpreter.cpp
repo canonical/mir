@@ -21,6 +21,7 @@
 #include "mir/frontend/client_constants.h"
 #include "mir/client_buffer.h"
 #include <system/window.h>
+#include <hardware/gralloc.h>
 #include <stdexcept>
 
 namespace mcla=mir::client::android;
@@ -29,8 +30,11 @@ namespace mga=mir::graphics::android;
 mcla::EGLNativeSurfaceInterpreter::EGLNativeSurfaceInterpreter(EGLNativeSurface& surface)
  :  surface(surface),
     driver_pixel_format(-1),
-    sync_ops(std::make_shared<mga::RealSyncFileOps>())
-
+    sync_ops(std::make_shared<mga::RealSyncFileOps>()),
+    hardware_bits( GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER ),
+    software_bits(
+        GRALLOC_USAGE_SW_WRITE_OFTEN | GRALLOC_USAGE_SW_READ_OFTEN |
+        GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE )
 {
 }
 
@@ -76,6 +80,11 @@ int mcla::EGLNativeSurfaceInterpreter::driver_requests_info(int key) const
             return 2;
         case NATIVE_WINDOW_CONCRETE_TYPE:
             return NATIVE_WINDOW_SURFACE;
+        case NATIVE_WINDOW_CONSUMER_USAGE_BITS:
+            if (surface.get_parameters().buffer_usage ==  mir_buffer_usage_hardware)
+                return hardware_bits;
+            else
+                return software_bits;
         default:
             throw std::runtime_error("driver requested unsupported query");
     }
