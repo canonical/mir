@@ -32,6 +32,15 @@ namespace mir
 namespace graphics
 {
 
+class NativeBufferBase
+{
+protected:
+    NativeBufferBase() = default;
+    virtual ~NativeBufferBase() = default;
+    NativeBufferBase(NativeBuffer const&) = delete;
+    NativeBufferBase operator=(NativeBuffer const&) = delete;
+};
+
 class Buffer
 {
 public:
@@ -48,6 +57,8 @@ public:
     //       copy the data into the buffer)
     virtual void write(unsigned char const* pixels, size_t size) = 0;
     virtual void read(std::function<void(unsigned char const*)> const& do_with_pixels) = 0;
+
+    virtual NativeBufferBase* native_buffer_base() = 0;
 
 protected:
     Buffer() = default;

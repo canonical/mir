@@ -45,7 +45,7 @@ enum : uint32_t { invalid_gbm_format = std::numeric_limits<uint32_t>::max() };
 
 class BufferTextureBinder;
 
-class GBMBuffer: public BufferBasic
+class GBMBuffer: public BufferBasic, public NativeBufferBase
 {
 public:
     GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
@@ -68,6 +68,8 @@ public:
 
     void write(unsigned char const* pixels, size_t size) override;
     void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
+
+    NativeBufferBase* native_buffer_base() override;
 
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;

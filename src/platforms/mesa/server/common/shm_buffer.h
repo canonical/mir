@@ -34,7 +34,7 @@ namespace mesa
 
 class ShmFile;
 
-class ShmBuffer : public BufferBasic
+class ShmBuffer : public BufferBasic, public NativeBufferBase
 {
 public:
     static bool supports(MirPixelFormat);
@@ -51,6 +51,7 @@ public:
     void gl_bind_to_texture() override;
     void write(unsigned char const* data, size_t size) override;
     void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
+    NativeBufferBase* native_buffer_base() override;
 
 private:
     ShmBuffer(ShmBuffer const&) = delete;

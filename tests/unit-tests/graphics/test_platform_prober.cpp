@@ -31,13 +31,13 @@
 
 #ifdef MIR_BUILD_PLATFORM_ANDROID
 #include "mir/test/doubles/mock_android_hw.h"
+namespace mtd = mir::test::doubles;
 #endif
 
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/executable_path.h"
 
 namespace mtf = mir_test_framework;
-namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -182,6 +182,7 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     EXPECT_THAT(description->name, HasSubstr("dummy"));
 }
 
+#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_ANDROID)
 TEST(ServerPlatformProbe, LoadsMesaOrAndroidInPreferenceToDummy)
 {
     using namespace testing;
@@ -200,6 +201,7 @@ TEST(ServerPlatformProbe, LoadsMesaOrAndroidInPreferenceToDummy)
 
     EXPECT_THAT(description->name, Not(HasSubstr("dummy")));
 }
+#endif
 
 TEST(ServerPlatformProbe, IgnoresNonPlatformModules)
 {

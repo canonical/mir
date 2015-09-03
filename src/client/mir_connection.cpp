@@ -165,7 +165,7 @@ char const * MirConnection::get_error_message()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    if (connect_result && connect_result->has_error())
+    if (error_message.empty() && connect_result)
     {
         return connect_result->error().c_str();
     }
@@ -259,7 +259,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
         std::lock_guard<decltype(mutex)> lock(mutex);
 
         if (!connect_result->has_platform() || !connect_result->has_display_configuration())
-            set_error_message("Connect failed");
+            set_error_message("Failed to connect: not accepted by server");
 
         connect_done = true;
 

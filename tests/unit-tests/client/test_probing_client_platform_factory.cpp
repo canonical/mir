@@ -35,7 +35,7 @@ std::vector<std::shared_ptr<mir::SharedLibrary>>
 all_available_modules()
 {
     std::vector<std::shared_ptr<mir::SharedLibrary>> modules;
-#ifdef MIR_BUILD_PLATFORM_MESA_KMS
+#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
     modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::client_platform("mesa")));
 #endif
 #ifdef MIR_BUILD_PLATFORM_ANDROID
