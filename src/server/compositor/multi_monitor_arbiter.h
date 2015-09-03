@@ -34,22 +34,20 @@ namespace compositor
 {
 class Schedule;
 
-enum class PresentationGuarantee
+enum class MultiMonitorMode
 {
-    //guarantees that all frames will be presented on the fastest monitor (highest frequency vsync)
+    //modes that all frames will be presented on the fastest monitor (highest frequency vsync)
     //slower monitors will present the latest-available frame, but might not present all frames
-    all_frames_on_fastest_monitor,
-    //guarantees that all frames will be presented on a monitor, but doesn't guarantee that any
-    //single monitor will present all frames. This is a weaker guarantee that provides for some
-    //optimizations, especially if there's only one monitor available 
-    frames_on_any_monitor
+    multi_monitor,
+    //this will present all frames on the only monitor
+    single_monitor
 };
 
 class MultiMonitorArbiter : public BufferAcquisition 
 {
 public:
     MultiMonitorArbiter(
-        PresentationGuarantee guarantee,
+        MultiMonitorMode mode,
         std::shared_ptr<frontend::ClientBuffers> const& map,
         std::shared_ptr<Schedule> const& schedule);
 
@@ -58,14 +56,14 @@ public:
     std::shared_ptr<graphics::Buffer> snapshot_acquire() override;
     void snapshot_release(std::shared_ptr<graphics::Buffer> const&) override;
     void set_schedule(std::shared_ptr<Schedule> const& schedule);
-    void set_guarantee(PresentationGuarantee guarantee);
+    void set_mode(MultiMonitorMode mode);
 
 private:
     void decrease_refcount_for(graphics::BufferID id, std::lock_guard<std::mutex> const&);
     void clean_onscreen_buffers(std::lock_guard<std::mutex> const&);
 
     std::mutex mutable mutex;
-    PresentationGuarantee guarantee;
+    MultiMonitorMode mode;
     std::shared_ptr<frontend::ClientBuffers> const map;
     struct ScheduleEntry
     {
