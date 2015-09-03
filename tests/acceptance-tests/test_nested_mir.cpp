@@ -339,8 +339,14 @@ TEST_F(NestedServer, display_configuration_changes_are_forwarded_to_host)
 
     configuration->outputs->used = false;
 
-    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_));
+    mt::WaitCondition condition;
+
+    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
+        .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+
     mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+
+    condition.wait_for_at_most_seconds(1);
 
     mir_display_config_destroy(configuration);
     mir_surface_release_sync(painted_surface);
