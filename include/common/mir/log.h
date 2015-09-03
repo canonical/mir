@@ -85,14 +85,14 @@ inline void log_error(std::string const& message)
                MIR_LOG_COMPONENT, message);
 }
 
-inline void log_warn(std::string const& message)
+inline void log_warning(std::string const& message)
 {
     ::mir::log(::mir::logging::Severity::warning,
                MIR_LOG_COMPONENT, message);
 }
 
 template<typename... Args>
-void log_warn(char const* fmt, Args&&... args)
+void log_warning(char const* fmt, Args&&... args)
 {
     ::mir::log(::mir::logging::Severity::warning,
                MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
