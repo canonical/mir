@@ -27,25 +27,31 @@
 
 #include <cstring>
 
-namespace mtf = mir_test_framework;
-namespace mt = mir::test;
-
-using MirBlobAPI = mtf::ConnectedClientWithASurface;
+using MirBlobAPI = mir_test_framework::ConnectedClientWithASurface;
+using mir::test::DisplayConfigMatches;
 
 TEST_F(MirBlobAPI, can_serialize_display_configuration)
 {
+    std::vector<uint8_t> buffer;
+
     auto const save_display_config = mir_connection_create_display_config(connection);
-    auto const save_blob = mir_blob_from_display_configuration(save_display_config);
 
-    std::vector<uint8_t> buffer(mir_blob_size(save_blob));
-    memcpy(buffer.data(), mir_blob_data(save_blob), buffer.size());
-    mir_blob_release(save_blob);
+    {
+        auto const save_blob = mir_blob_from_display_configuration(save_display_config);
 
-    auto const restore_blob = mir_blob_onto_buffer(buffer.data(), buffer.size());
-    auto const restore_display_config = mir_blob_to_display_configuration(restore_blob);
-    mir_blob_release(restore_blob);
+        buffer.resize(mir_blob_size(save_blob));
+        memcpy(buffer.data(), mir_blob_data(save_blob), buffer.size());
+        mir_blob_release(save_blob);
+    }
 
-    EXPECT_THAT(save_display_config, mt::DisplayConfigMatches(restore_display_config));
+    MirDisplayConfiguration* restore_display_config;
+    {
+        auto const restore_blob = mir_blob_onto_buffer(buffer.data(), buffer.size());
+        restore_display_config = mir_blob_to_display_configuration(restore_blob);
+        mir_blob_release(restore_blob);
+    }
+
+    EXPECT_THAT(save_display_config, DisplayConfigMatches(restore_display_config));
 
     mir_display_config_destroy(restore_display_config);
     mir_display_config_destroy(save_display_config);
