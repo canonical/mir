@@ -29,12 +29,12 @@ mc::ScreencastDisplayBuffer::ScreencastDisplayBuffer(
     geom::Rectangle const& rect,
     mg::Buffer& buffer)
     : rect(rect), buffer(buffer),
-      texture_bindable(
-          dynamic_cast<mir::renderer::gl::TextureBindable*>(
+      texture_source(
+          dynamic_cast<mir::renderer::gl::TextureSource*>(
               buffer.native_buffer_base())),
       old_fbo(), old_viewport()
 {
-    if (!texture_bindable)
+    if (!texture_source)
         BOOST_THROW_EXCEPTION(std::logic_error("Buffer does not support GL rendering"));
     glGetIntegerv(GL_VIEWPORT, old_viewport);
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &old_fbo);
@@ -74,7 +74,7 @@ geom::Rectangle mc::ScreencastDisplayBuffer::view_area() const
 void mc::ScreencastDisplayBuffer::make_current()
 {
     glBindTexture(GL_TEXTURE_2D, color_tex);
-    texture_bindable->gl_bind_to_texture();
+    texture_source->gl_bind_to_texture();
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                            GL_TEXTURE_2D, color_tex, 0);
 

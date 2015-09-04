@@ -19,7 +19,7 @@
 #include "gl_pixel_buffer.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/buffer.h"
-#include "mir/renderer/gl/texture_bindable.h"
+#include "mir/renderer/gl/texture_source.h"
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
@@ -104,12 +104,12 @@ void ms::GLPixelBuffer::fill_from(graphics::Buffer& buffer)
 
     prepare();
 
-    auto const texture_bindable =
-        dynamic_cast<mir::renderer::gl::TextureBindable*>(
+    auto const texture_source =
+        dynamic_cast<mir::renderer::gl::TextureSource*>(
             buffer.native_buffer_base());
-    if (!texture_bindable)
+    if (!texture_source)
         BOOST_THROW_EXCEPTION(std::logic_error("Buffer does not support GL rendering"));
-    texture_bindable->gl_bind_to_texture();
+    texture_source->gl_bind_to_texture();
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
 

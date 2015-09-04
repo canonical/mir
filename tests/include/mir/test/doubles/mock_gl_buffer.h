@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_GL_BUFFER_H_
 
 #include "mock_buffer.h"
-#include "mir/renderer/gl/texture_bindable.h"
+#include "mir/renderer/gl/texture_source.h"
 
 namespace mir
 {
@@ -30,7 +30,7 @@ namespace doubles
 {
 
 struct MockGLBuffer : public MockBuffer,
-                      public renderer::gl::TextureBindable
+                      public renderer::gl::TextureSource
 {
  public:
     using MockBuffer::MockBuffer;

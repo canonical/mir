@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_RENDERER_GL_TEXTURE_BINDABLE_H_
-#define MIR_RENDERER_GL_TEXTURE_BINDABLE_H_
+#ifndef MIR_RENDERER_GL_TEXTURE_SOURCE_H_
+#define MIR_RENDERER_GL_TEXTURE_SOURCE_H_
 
 namespace mir
 {
@@ -26,17 +26,17 @@ namespace renderer
 namespace gl
 {
 
-class TextureBindable
+class TextureSource
 {
 public:
-    virtual ~TextureBindable() = default;
+    virtual ~TextureSource() = default;
 
     virtual void gl_bind_to_texture() = 0;
 
 protected:
-    TextureBindable() = default;
-    TextureBindable(TextureBindable const&) = delete;
-    TextureBindable& operator=(TextureBindable const&) = delete;
+    TextureSource() = default;
+    TextureSource(TextureSource const&) = delete;
+    TextureSource& operator=(TextureSource const&) = delete;
 };
 
 }

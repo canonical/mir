@@ -21,7 +21,7 @@
 #define MIR_GRAPHICS_ANDROID_BUFFER_H_
 
 #include "mir/graphics/buffer_basic.h"
-#include "mir/renderer/gl/texture_bindable.h"
+#include "mir/renderer/gl/texture_source.h"
 #include "buffer_usage.h"
 
 #include <hardware/gralloc.h>
@@ -44,7 +44,7 @@ namespace android
 {
 
 class Buffer: public BufferBasic, public NativeBufferBase,
-              public renderer::gl::TextureBindable
+              public renderer::gl::TextureSource
 {
 public:
     Buffer(gralloc_module_t const* hw_module,

@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_GL_BUFFER_H_
 
 #include "stub_buffer.h"
-#include "mir/renderer/gl/texture_bindable.h"
+#include "mir/renderer/gl/texture_source.h"
 
 namespace mir
 {
@@ -30,7 +30,7 @@ namespace doubles
 {
 
 class StubGLBuffer : public StubBuffer,
-                     public renderer::gl::TextureBindable
+                     public renderer::gl::TextureSource
 {
 public:
     using StubBuffer::StubBuffer;

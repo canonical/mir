@@ -24,7 +24,7 @@
 #include "mir/geometry/dimensions.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
-#include "mir/renderer/gl/texture_bindable.h"
+#include "mir/renderer/gl/texture_source.h"
 
 namespace mir
 {
@@ -36,7 +36,7 @@ namespace mesa
 class ShmFile;
 
 class ShmBuffer : public BufferBasic, public NativeBufferBase,
-                  public renderer::gl::TextureBindable
+                  public renderer::gl::TextureSource
 {
 public:
     static bool supports(MirPixelFormat);
