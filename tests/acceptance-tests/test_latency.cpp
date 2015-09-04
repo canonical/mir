@@ -96,6 +96,14 @@ public:
          */
         stats.post();
 
+        /*
+         * Sleep a little to make the test more realistic. This way the
+         * client will actually fill the buffer queue. If we don't do this,
+         * then it's like having an infinite refresh rate and the measured
+         * latency would never exceed 1.0.  (LP: #1447947)
+         */
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+
         //the surface will be the frontmost of the renderables
         if (!renderables.empty())
             last = renderables.front()->buffer()->id();
@@ -194,11 +202,6 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
     float const error_margin = 0.1f;
     auto observed_latency = display.group.average_latency();
 
-    // FIXME: LP: #1447947: This actually doesn't work as intended. Raising
-    //        the queue length isn't affecting the measured latency for some
-    //        reason. But latency too low is better than too high.
-    //EXPECT_THAT(observed_latency, AllOf(Gt(expected_latency-error_margin),
-    //                                    Lt(expected_latency+error_margin)));
-
+    EXPECT_THAT(observed_latency, Gt(expected_latency-error_margin));
     EXPECT_THAT(observed_latency, Lt(expected_latency+error_margin));
 }
