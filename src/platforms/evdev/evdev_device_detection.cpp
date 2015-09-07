@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -40,6 +40,7 @@ namespace
 
 struct DeviceInfo
 {
+    DeviceInfo(mir::Fd const& fd);
     uint8_t key_bit_mask[(KEY_MAX+1)/8];
     uint8_t abs_bit_mask[(ABS_MAX+1)/8];
     uint8_t rel_bit_mask[(REL_MAX+1)/8];
@@ -47,10 +48,8 @@ struct DeviceInfo
     uint8_t property_bit_mask[(INPUT_PROP_MAX+1)/8];
 };
 
-void fill_device_info(DeviceInfo& info, int fd)
+DeviceInfo::DeviceInfo(mir::Fd const& fd)
 {
-    std::memset(&info, 0, sizeof info);
-
     auto const get_bitmask = [&](int bit, size_t size, uint8_t* buf) -> void
     {
         if(ioctl(fd, EVIOCGBIT(bit, size), buf) < 1)
@@ -58,12 +57,12 @@ void fill_device_info(DeviceInfo& info, int fd)
                 std::system_error(std::error_code(errno, std::system_category()),
                                   "Failed to query input device"));
     };
-    get_bitmask(EV_KEY, sizeof info.key_bit_mask, info.key_bit_mask);
-    get_bitmask(EV_REL, sizeof info.rel_bit_mask, info.rel_bit_mask);
-    get_bitmask(EV_ABS, sizeof info.abs_bit_mask, info.abs_bit_mask);
-    get_bitmask(EV_SW, sizeof info.sw_bit_mask, info.sw_bit_mask);
+    get_bitmask(EV_KEY, sizeof key_bit_mask, key_bit_mask);
+    get_bitmask(EV_REL, sizeof rel_bit_mask, rel_bit_mask);
+    get_bitmask(EV_ABS, sizeof abs_bit_mask, abs_bit_mask);
+    get_bitmask(EV_SW, sizeof sw_bit_mask, sw_bit_mask);
 
-    if (ioctl(fd, EVIOCGPROP(sizeof info.property_bit_mask), info.property_bit_mask) < 1)
+    if (ioctl(fd, EVIOCGPROP(sizeof property_bit_mask), property_bit_mask) < 1)
         BOOST_THROW_EXCEPTION(
             std::system_error(std::error_code(errno, std::system_category()), "Failed to query devices properties"));
 }
@@ -80,7 +79,7 @@ constexpr size_t start_index_of(size_t bit)
 
 inline bool get_bit(uint8_t const* array, size_t bit)
 {
-    return array[bit/8] & (1<<(bit%8));
+    return array[bit / 8] & (1 << (bit % 8));
 }
 
 inline size_t get_num_bits(uint8_t const* array, std::initializer_list<size_t> bits)
@@ -99,8 +98,10 @@ bool contains_non_zero(uint8_t const* array, int first, int last)
 bool all_bits_set(uint8_t const* array, int first, int last)
 {
     for (auto index = first; index != last; ++ index)
+    {
         if (!get_bit(array, index))
             return false;
+    }
     return true;
 }
 
@@ -172,9 +173,8 @@ mi::DeviceCapabilities mie::detect_device_capabilities(char const* device)
             std::system_error(std::error_code(errno, std::system_category()),
                               "Failed to open input device"));
 
-    DeviceInfo info;
+    DeviceInfo info(input_device);
 
-    fill_device_info(info, input_device);
     return evaluate_device_capabilities(info);
 }
 
