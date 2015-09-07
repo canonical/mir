@@ -5,7 +5,7 @@ set -e
 
 usage() {
   echo "usage: $(basename $0) [-a <arch>] [-c] [-h] [-d <dist>] [-u]"
-  echo "  -a <arch>  Specify target architecture (armhf/powerpc)"
+  echo "  -a <arch>  Specify target architecture (armhf/arm64/powerpc/ppc64el)"
   echo "  -c         Clean before building"
   echo "  -d <dist>  Select the distribution to build for (wily/vivid)"
   echo "  -h         This message"
@@ -106,6 +106,14 @@ case ${target_arch} in
     armhf )
         target_machine=arm-linux-gnueabihf
         mir_platform="android;mesa-kms"
+        ;;
+    arm64 )
+        target_machine=aarch64-linux-gnu
+        mir_platform=mesa-kms
+        ;;
+    ppc64el )
+        target_machine=powerpc64le-linux-gnu
+        mir_platform=mesa-kms
         ;;
     powerpc )
         target_machine=powerpc-linux-gnu
