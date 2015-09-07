@@ -93,8 +93,6 @@ private:
 class IdCollectingDB : public mtd::NullDisplayBuffer
 {
 public:
-    IdCollectingDB(Stats& stats) : stats{stats} {}
-
     mir::geometry::Rectangle view_area() const override
     {
         return {{0,0}, {1920, 1080}};
@@ -113,14 +111,13 @@ public:
         return last;
     }
 private:
-    Stats& stats;
     mg::BufferID last{0};
 };
 
 class TimeTrackingGroup : public mtd::NullDisplaySyncGroup
 {
 public:
-    TimeTrackingGroup(Stats& stats) : stats{stats}, db{stats} {}
+    TimeTrackingGroup(Stats& stats) : stats{stats} {}
 
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
     {
