@@ -454,7 +454,11 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
     void const* owner{nullptr};
 
     EXPECT_CALL(mock_server_action_queue, enqueue(_, _))
-        .WillOnce(SaveArg<0>(&owner));
+        .WillOnce(DoAll(SaveArg<0>(&owner), InvokeArgument<1>()));
+    session_event_sink.handle_focus_change(session1);
+    Mock::VerifyAndClearExpectations(&mock_server_action_queue);
+
+    EXPECT_CALL(mock_server_action_queue, enqueue(owner, _));
     display_changer.configure(session1, conf);
     Mock::VerifyAndClearExpectations(&mock_server_action_queue);
 
@@ -462,10 +466,6 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
     display_changer.configure_for_hardware_change(
         conf,
         mir::DisplayChanger::PauseResumeSystem);
-    Mock::VerifyAndClearExpectations(&mock_server_action_queue);
-
-    EXPECT_CALL(mock_server_action_queue, enqueue(owner, _));
-    session_event_sink.handle_focus_change(session1);
     Mock::VerifyAndClearExpectations(&mock_server_action_queue);
 
     EXPECT_CALL(mock_server_action_queue, enqueue(owner, _));
