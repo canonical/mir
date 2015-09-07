@@ -81,7 +81,7 @@ struct MockServerRequests : mcl::ServerBufferRequests
 {
     MOCK_METHOD3(allocate_buffer, void(geom::Size size, MirPixelFormat format, int usage));
     MOCK_METHOD1(free_buffer, void(int));
-    MOCK_METHOD1(submit_buffer, void(mcl::ClientBuffer&));
+    MOCK_METHOD2(submit_buffer, void(int, mcl::ClientBuffer&));
 };
 
 struct BufferVault : public testing::Test
@@ -189,7 +189,7 @@ TEST_F(StartedBufferVault, withdrawing_gives_a_valid_future)
 TEST_F(StartedBufferVault, can_deposit_buffer)
 {
     auto buffer = vault.withdraw().get();
-    EXPECT_CALL(mock_requests, submit_buffer(Ref(*buffer)));
+    EXPECT_CALL(mock_requests, submit_buffer(_,Ref(*buffer)));
     vault.deposit(buffer);
     vault.wire_transfer_outbound(buffer);
 }

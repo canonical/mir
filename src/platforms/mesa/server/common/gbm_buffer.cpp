@@ -29,6 +29,7 @@
 
 #include <stdexcept>
 
+namespace mg=mir::graphics;
 namespace mgm=mir::graphics::mesa;
 namespace geom=mir::geometry;
 
@@ -190,4 +191,9 @@ void mgm::GBMBuffer::write(unsigned char const* /* pixels */, size_t /* size */)
 void mgm::GBMBuffer::read(std::function<void(unsigned char const*)> const& /* do_with_pixels */)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("Direct read from GBM hardware allocated buffer not supported"));
+}
+
+mg::NativeBufferBase* mgm::GBMBuffer::native_buffer_base()
+{
+    return this;
 }

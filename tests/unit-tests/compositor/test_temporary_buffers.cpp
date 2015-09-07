@@ -152,3 +152,12 @@ TEST_F(TemporaryBuffersTest, base_test_native_buffer_handle)
 
     proxy_buffer.native_buffer_handle();
 }
+
+TEST_F(TemporaryBuffersTest, forwards_native_buffer_base_to_wrapped_buffer)
+{
+    TemporaryTestBuffer proxy_buffer(mock_buffer);
+    EXPECT_CALL(*mock_buffer, native_buffer_base())
+        .Times(1);
+
+    proxy_buffer.native_buffer_base();
+}

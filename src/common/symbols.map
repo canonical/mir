@@ -205,5 +205,6 @@ MIR_COMMON_5.2 {
       mir::dispatch::ReadableFd::watch_fd*;
       mir::dispatch::ReadableFd::dispatch*;
       mir::dispatch::ReadableFd::relevant_events*;
+      mir::logger::Logger::log*;
     };
 } MIR_COMMON_5.1;

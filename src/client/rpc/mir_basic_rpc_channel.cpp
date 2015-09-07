@@ -23,11 +23,32 @@
 #include "mir_protobuf_wire.pb.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/variable_length_array.h"
+#include "mir/protobuf/protocol_version.h"
+#include "mir/log.h"
 
 #include <sstream>
 
 namespace mclr = mir::client::rpc;
 namespace mclrd = mir::client::rpc::detail;
+
+namespace
+{
+int get_protocol_version()
+{
+    auto protocol_version = mir::protobuf::current_protocol_version();
+
+    if (auto const protocol_version_override = getenv("MIR_CLIENT_TEST_OVERRRIDE_PROTOCOL_VERSION"))
+    {
+        int const new_protcol_version = strtol(protocol_version_override, nullptr, 0);
+        mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT,
+                 "Overriding protocol version 0x%x with 0x%x", protocol_version, new_protcol_version);
+
+        protocol_version = new_protcol_version;
+    }
+
+    return protocol_version;
+}
+}
 
 mclrd::PendingCallCache::PendingCallCache(
     std::shared_ptr<RpcReport> const& rpc_report)
@@ -99,7 +120,8 @@ bool mclrd::PendingCallCache::empty() const
 
 
 mclr::MirBasicRpcChannel::MirBasicRpcChannel() :
-    next_message_id(0)
+    next_message_id(0),
+    protocol_version{get_protocol_version()}
 {
 }
 
@@ -120,7 +142,7 @@ mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     invoke.set_id(next_id());
     invoke.set_method_name(method_name);
     invoke.set_parameters(buffer.data(), buffer.size());
-    invoke.set_protocol_version(1);
+    invoke.set_protocol_version(protocol_version);
     invoke.set_side_channel_fds(num_side_channel_fds);
 
     return invoke;

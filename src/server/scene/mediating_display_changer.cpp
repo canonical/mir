@@ -24,6 +24,7 @@
 #include "mir/compositor/compositor.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/display_configuration_report.h"
 #include "mir/server_action_queue.h"
 
 namespace mf = mir::frontend;
@@ -55,7 +56,6 @@ private:
 
     std::function<void()> const revert;
 };
-
 }
 
 ms::MediatingDisplayChanger::MediatingDisplayChanger(
@@ -64,13 +64,15 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& display_configuration_policy,
     std::shared_ptr<SessionContainer> const& session_container,
     std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
-    std::shared_ptr<ServerActionQueue> const& server_action_queue)
+    std::shared_ptr<ServerActionQueue> const& server_action_queue,
+    std::shared_ptr<mg::DisplayConfigurationReport> const& report)
     : display{display},
       compositor{compositor},
       display_configuration_policy{display_configuration_policy},
       session_container{session_container},
       session_event_handler_register{session_event_handler_register},
       server_action_queue{server_action_queue},
+      report{report},
       base_configuration{display->configuration()},
       base_configuration_applied{true}
 {
@@ -107,6 +109,8 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
                         session_stopping_handler(session);
                 });
         });
+
+    report->initial_configuration(*base_configuration);
 }
 
 void ms::MediatingDisplayChanger::configure(
@@ -177,6 +181,7 @@ void ms::MediatingDisplayChanger::apply_config(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf,
     SystemStateHandling pause_resume_system)
 {
+    report->new_configuration(*conf);
     if (pause_resume_system)
     {
         ApplyNowAndRevertOnScopeExit comp{

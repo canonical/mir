@@ -22,6 +22,7 @@
 #include "mir/frontend/message_processor.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/fd.h"
+#include "mir/protobuf/protocol_version.h"
 
 #include "mir/test/fake_shared.h"
 
@@ -145,7 +146,7 @@ struct SocketConnection : public Test
         invocation.set_id(1);
         invocation.set_method_name("");
         invocation.set_parameters(buffer, 0);
-        invocation.set_protocol_version(1);
+        invocation.set_protocol_version(mir::protobuf::current_protocol_version());
         invocation.set_side_channel_fds(2);
         auto const body_size = invocation.ByteSize();
         buffer[0] = body_size / 0x100;

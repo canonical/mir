@@ -42,7 +42,7 @@ struct EGLExtensions;
 namespace android
 {
 
-class Buffer: public BufferBasic
+class Buffer: public BufferBasic, public NativeBufferBase
 {
 public:
     Buffer(gralloc_module_t const* hw_module,
@@ -60,6 +60,8 @@ public:
 
     void write(unsigned char const* pixels, size_t size) override;
     void read(std::function<void(unsigned char const*)> const&) override;
+
+    NativeBufferBase* native_buffer_base() override;
 
 private:
     gralloc_module_t const* hw_module;

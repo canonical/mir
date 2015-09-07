@@ -33,7 +33,7 @@ namespace test
 namespace doubles
 {
 
-class StubBuffer : public graphics::BufferBasic
+class StubBuffer : public graphics::BufferBasic, public graphics::NativeBufferBase
 {
 public:
     StubBuffer()
@@ -114,6 +114,11 @@ public:
             memset(written_pixels.data(), 0, length);
         }
         do_with_pixels(written_pixels.data());
+    }
+
+    NativeBufferBase* native_buffer_base() override
+    {
+        return this;
     }
 
     std::shared_ptr<graphics::NativeBuffer> const native_buffer;
