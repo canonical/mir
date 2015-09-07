@@ -1638,12 +1638,14 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
 
     int const nframes = 100;
 
-    for (int frame = 0; frame < nframes;)
+    std::shared_ptr<AcquireWaitHandle> client;
+
+    for (int frame = 0; frame < nframes; ++frame)
     {
-        std::shared_ptr<AcquireWaitHandle> client;
         do
         {
-            client = client_acquire_async(q);
+            if (!client)
+                client = client_acquire_async(q);
             if (client->has_acquired_buffer())
             {
                 if (frame > delay)
@@ -1653,19 +1655,7 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
             }
         } while (!client);
 
-        while (q.buffers_ready_for_compositor(nullptr))
-        {
-            q.compositor_release(q.compositor_acquire(nullptr));
-            ++frame;
-        }
-
-        if (client->has_acquired_buffer())
-        {
-            if (frame > delay)
-                buffers_acquired.insert(client->buffer());
-            client->release_buffer();
-            client.reset();
-        }
+        q.compositor_release(q.compositor_acquire(nullptr));
     }
     // Expect double-buffers for fast clients
     EXPECT_THAT(buffers_acquired.size(), Eq(2));
@@ -1674,10 +1664,10 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     buffers_acquired.clear();
     for (int frame = 0; frame < nframes;)
     {
-        std::shared_ptr<AcquireWaitHandle> client;
         do
         {
-            client = client_acquire_async(q);
+            if (!client)
+                client = client_acquire_async(q);
             if (client->has_acquired_buffer())
             {
                 if (frame > delay)
@@ -1687,42 +1677,25 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
             }
         } while (!client);
 
-        while (q.buffers_ready_for_compositor(nullptr))
-        {
-            q.compositor_release(q.compositor_acquire(nullptr));
-            ++frame;
-        }
-
-        if (client->has_acquired_buffer())
-        {
-            if (frame > delay)
-                buffers_acquired.insert(client->buffer());
-            client->release_buffer();
-            client.reset();
-        }
-
-        // Balance compositor consumption with client production:
-        while (q.buffers_ready_for_compositor(nullptr))
-        {
-            q.compositor_release(q.compositor_acquire(nullptr));
-            ++frame;
-        }
-
         // Imbalance: Compositor is now requesting more than the client does:
-        q.compositor_release(q.compositor_acquire(nullptr));
-        ++frame;
+        int nready = q.buffers_ready_for_compositor(nullptr);
+        for (int r = 0; r <= nready; ++r)
+        {
+            q.compositor_release(q.compositor_acquire(nullptr));
+            ++frame;
+        }
     }
     // Expect at least triple buffers for sluggish clients
     EXPECT_THAT(buffers_acquired.size(), Ge(3));
 
     // And what happens if the client becomes fast again?...
     buffers_acquired.clear();
-    for (int frame = 0; frame < nframes;)
+    for (int frame = 0; frame < nframes; ++frame)
     {
-        std::shared_ptr<AcquireWaitHandle> client;
         do
         {
-            client = client_acquire_async(q);
+            if (!client)
+                client = client_acquire_async(q);
             if (client->has_acquired_buffer())
             {
                 if (frame > delay)
@@ -1732,19 +1705,7 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
             }
         } while (!client);
 
-        while (q.buffers_ready_for_compositor(nullptr))
-        {
-            q.compositor_release(q.compositor_acquire(nullptr));
-            ++frame;
-        }
-
-        if (client->has_acquired_buffer())
-        {
-            if (frame > delay)
-                buffers_acquired.insert(client->buffer());
-            client->release_buffer();
-            client.reset();
-        }
+        q.compositor_release(q.compositor_acquire(nullptr));
     }
     // Expect double-buffers for fast clients
     EXPECT_THAT(buffers_acquired.size(), Eq(2));
