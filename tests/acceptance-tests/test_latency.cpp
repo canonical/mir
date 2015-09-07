@@ -212,9 +212,16 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
     //       nbuffers instead of nbuffers-1. After dynamic queue scaling is
     //       enabled, the average will be lower than this.
     float const expected_max_latency = expected_client_buffers;
+    float const expected_min_latency = expected_client_buffers - 1;
+
     auto observed_latency = display.group.average_latency();
 
-    // Low latency is good. But too low is a bug in the test:
-    EXPECT_THAT(observed_latency, Ge(1.0f));
-    EXPECT_THAT(observed_latency, Le(expected_max_latency));
+    // We still have a margin for error here. The client and server will
+    // be scheduled somewhat unpredictably which affects results. Also
+    // affecting results will be the first few frames before the buffer
+    // quere is full (during which there will be no buffer latency).
+    float const error_margin = 0.1f;
+
+    EXPECT_THAT(observed_latency, Gt(expected_min_latency-error_margin));
+    EXPECT_THAT(observed_latency, Lt(expected_max_latency+error_margin));
 }
