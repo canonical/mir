@@ -1,5 +1,6 @@
 include_directories(
   ${PROJECT_SOURCE_DIR}/src/renderers/gl/include
+  ${PROJECT_SOURCE_DIR}/src/renderers/gl/
 )
 
 set(
@@ -10,9 +11,6 @@ set(
   temporary_buffers.cpp
   buffer_stream_factory.cpp
   buffer_stream_surfaces.cpp
-  gl_renderer.cpp
-  gl_renderer_factory.cpp
-  gl_program_family.cpp
   multi_threaded_compositor.cpp
   occlusion.cpp
   default_configuration.cpp

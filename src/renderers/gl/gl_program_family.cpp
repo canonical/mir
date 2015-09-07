@@ -16,12 +16,17 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/compositor/gl_program_family.h"
+#include "gl_program_family.h"
 
 #include <mutex>
 #include <EGL/egl.h>
 
-namespace mir { namespace compositor {
+namespace mir
+{
+namespace renderer
+{
+namespace gl
+{
 
 void GLProgramFamily::Shader::init(GLenum type, const GLchar* src)
 {
@@ -117,4 +122,6 @@ GLuint GLProgramFamily::add_program(const GLchar* const vshader_src,
     return p.id;
 }
 
-}} // namespace mir::compositor
+}
+}
+}
