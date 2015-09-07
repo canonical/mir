@@ -19,6 +19,7 @@
 #include "src/server/scene/mediating_display_changer.h"
 #include "src/server/scene/session_container.h"
 #include "mir/graphics/display_configuration_policy.h"
+#include "mir/graphics/display_configuration_report.h"
 #include "src/server/scene/broadcasting_session_event_sink.h"
 #include "mir/server_action_queue.h"
 
@@ -120,6 +121,13 @@ struct MockServerActionQueue : mir::ServerActionQueue
     MOCK_METHOD1(resume_processing_for, void(void const*));
 };
 
+struct StubDisplayConfigurationReport : mg::DisplayConfigurationReport
+{
+    void initial_configuration(mg::DisplayConfiguration const&) override {}
+    void new_configuration(mg::DisplayConfiguration const&) override {}
+};
+
+
 struct MediatingDisplayChangerTest : public ::testing::Test
 {
     MediatingDisplayChangerTest()
@@ -132,7 +140,8 @@ struct MediatingDisplayChangerTest : public ::testing::Test
                       mt::fake_shared(mock_conf_policy),
                       mt::fake_shared(stub_session_container),
                       mt::fake_shared(session_event_sink),
-                      mt::fake_shared(server_action_queue));
+                      mt::fake_shared(server_action_queue),
+                      mt::fake_shared(display_configuration_report));
     }
 
     testing::NiceMock<MockDisplay> mock_display;
@@ -142,6 +151,7 @@ struct MediatingDisplayChangerTest : public ::testing::Test
     ms::BroadcastingSessionEventSink session_event_sink;
     mtd::StubDisplayConfig base_config;
     StubServerActionQueue server_action_queue;
+    StubDisplayConfigurationReport display_configuration_report;
     std::shared_ptr<ms::MediatingDisplayChanger> changer;
 };
 
@@ -438,7 +448,8 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
       mt::fake_shared(mock_conf_policy),
       mt::fake_shared(stub_session_container),
       mt::fake_shared(session_event_sink),
-      mt::fake_shared(mock_server_action_queue));
+      mt::fake_shared(mock_server_action_queue),
+      mt::fake_shared(display_configuration_report));
 
     void const* owner{nullptr};
 
