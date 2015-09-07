@@ -90,7 +90,9 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 
 void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 {
-    std::lock_guard<std::mutex> lk(mutex);
+    int id;
+    std::shared_ptr<mcl::ClientBuffer> submit_buffer;
+    std::unique_lock<std::mutex> lk(mutex);
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
     if (it == buffers.end() || it->second.owner != Owner::Self)
@@ -98,7 +100,10 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
 
     it->second.owner = Owner::Server;
     it->second.buffer->mark_as_submitted();
-    server_requests->submit_buffer(*it->second.buffer);
+    submit_buffer = it->second.buffer;
+    id = it->first;
+    lk.unlock();
+    server_requests->submit_buffer(id, *submit_buffer);
 }
 
 void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)

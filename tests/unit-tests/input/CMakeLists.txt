@@ -18,7 +18,7 @@ list(APPEND UNIT_TEST_SOURCES
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
   list(APPEND UNIT_TEST_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_x11_dispatchable.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_x11_platform.cpp
   )
 endif()
 

@@ -52,6 +52,8 @@ private:
     EGLNativeSurface& surface;
     int driver_pixel_format;
     std::shared_ptr<graphics::android::SyncFileOps> const sync_ops;
+    unsigned int const hardware_bits;
+    unsigned int const software_bits;
 };
 
 }

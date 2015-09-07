@@ -37,7 +37,7 @@ class ServerBufferRequests
 public:
     virtual void allocate_buffer(geometry::Size size, MirPixelFormat format, int usage) = 0;
     virtual void free_buffer(int buffer_id) = 0;
-    virtual void submit_buffer(ClientBuffer&) = 0;
+    virtual void submit_buffer(int buffer_id, ClientBuffer&) = 0;
     virtual ~ServerBufferRequests() = default;
 protected:
     ServerBufferRequests() = default;
