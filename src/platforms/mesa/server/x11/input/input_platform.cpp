@@ -42,19 +42,23 @@
 // client cannot be resized. This helps in debugging.
 #define GRAB_KBD
 
-
-
 namespace mi = mir::input;
 namespace md = mir::dispatch;
 namespace mix = mi::X;
 
 mix::XInputPlatform::XInputPlatform(std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
-                                    std::shared_ptr<::Display> const& conn)
-    : x11_connection{conn}, xcon_dispatchable(std::make_shared<md::ReadableFd>(mir::Fd{mir::IntOwnedFd{XConnectionNumber(conn.get())}},[this](){process_input_event();})),
-      registry(input_device_registry), core_keyboard(std::make_shared<mix::XInputDevice>(mi::InputDeviceInfo{
-                                           0, "x11-keyboard-device", "x11-key-dev-1", mi::DeviceCapability::keyboard})),
-      core_pointer(std::make_shared<mix::XInputDevice>(
-          mi::InputDeviceInfo{0, "x11-mouse-device", "x11-mouse-dev-1", mi::DeviceCapability::pointer}))
+                                    std::shared_ptr<::Display> const& conn) :
+    x11_connection{conn},
+    xcon_dispatchable(std::make_shared<md::ReadableFd>(
+                                mir::Fd{mir::IntOwnedFd{XConnectionNumber(conn.get())}}, [this]()
+                                {
+                                    process_input_event();
+                                })),
+    registry(input_device_registry),
+    core_keyboard(std::make_shared<mix::XInputDevice>(
+            mi::InputDeviceInfo{0, "x11-keyboard-device", "x11-key-dev-1", mi::DeviceCapability::keyboard})),
+    core_pointer(std::make_shared<mix::XInputDevice>(
+            mi::InputDeviceInfo{0, "x11-mouse-device", "x11-mouse-dev-1", mi::DeviceCapability::pointer}))
 {
 }
 
