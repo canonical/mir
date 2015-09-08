@@ -30,10 +30,12 @@
 namespace mg = mir::graphics;
 namespace mgn = mg::nested;
 
+#include <iostream>
 mgn::NestedDisplayConfiguration::NestedDisplayConfiguration(
     std::shared_ptr<MirDisplayConfiguration> const& display_config)
     : display_config{display_config}
 {
+    std::cerr << "DEBUG display_config->outputs->orientation=" << display_config->outputs->orientation << std::endl;
 }
 
 void mgn::NestedDisplayConfiguration::for_each_card(

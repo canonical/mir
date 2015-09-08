@@ -25,6 +25,7 @@ namespace mfd = mir::frontend::detail;
 namespace mg = mir::graphics;
 namespace mp = mir::protobuf;
 
+#include <iostream>
 namespace
 {
 
@@ -67,6 +68,7 @@ void pack_protobuf_display_output(mp::DisplayOutput& protobuf_output,
     protobuf_output.set_current_format(static_cast<uint32_t>(display_output.current_format));
     protobuf_output.set_power_mode(static_cast<uint32_t>(display_output.power_mode));
     protobuf_output.set_orientation(display_output.orientation);
+    std::cerr << "DEBUG display_output.orientation=" << display_output.orientation << std::endl;
 }
 
 }

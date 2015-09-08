@@ -109,6 +109,11 @@ void mrl::DisplayConfigurationReport::log_configuration(mg::DisplayConfiguration
                             indent, ' ',
                             out.top_left.x.as_int(),
                             out.top_left.y.as_int());
+
+                logger->log(component, severity,
+                            "%*cOrientation %+d",
+                            indent, ' ',
+                            out.orientation);
             }
             else
             {

@@ -577,6 +577,7 @@ bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config
     return true;
 }
 
+#include <iostream>
 void MirConnection::done_display_configure()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
@@ -584,7 +585,10 @@ void MirConnection::done_display_configure()
     set_error_message(display_configuration_response->error());
 
     if (!display_configuration_response->has_error())
+    {
+        std::cerr << "DEBUG setting result configuration\n";
         display_configuration->set_configuration(*display_configuration_response);
+    }
 
     return configure_display_wait_handle.result_received();
 }

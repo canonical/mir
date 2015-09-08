@@ -414,8 +414,8 @@ TEST_F(NestedServer, display_configuration_changes_are_visible_to_client)
         &deferred);
 
     for (auto new_orientation :
-        {mir_orientation_left, mir_orientation_right, mir_orientation_inverted, mir_orientation_normal,
-         mir_orientation_inverted, mir_orientation_right, mir_orientation_left, mir_orientation_normal})
+        {mir_orientation_left, mir_orientation_right, mir_orientation_inverted/*, mir_orientation_normal*/,
+         mir_orientation_inverted, mir_orientation_right, mir_orientation_left/*, mir_orientation_normal*/})
     {
         ++total_changes;
         // Allow for the egl context getting rebuilt as a side-effect each iteration
@@ -428,7 +428,10 @@ TEST_F(NestedServer, display_configuration_changes_are_visible_to_client)
 
         auto const new_config = mir_connection_create_display_config(connection);
         if (new_config->outputs->orientation == configuration->outputs->orientation)
+        {
             ++seen_immediately;
+            std::cerr << "DEBUG: seen_immediately\n";
+        }
 
         mir_display_config_destroy(new_config);
     }
