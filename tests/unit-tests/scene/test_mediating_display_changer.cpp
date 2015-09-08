@@ -453,6 +453,9 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
 
     void const* owner{nullptr};
 
+    ON_CALL(mock_server_action_queue, enqueue(_, _))
+        .WillByDefault(InvokeArgument<1>());
+
     EXPECT_CALL(mock_server_action_queue, enqueue(_, _))
         .WillOnce(DoAll(SaveArg<0>(&owner), InvokeArgument<1>()));
     session_event_sink.handle_focus_change(session1);

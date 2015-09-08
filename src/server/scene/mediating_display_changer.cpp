@@ -118,9 +118,10 @@ void ms::MediatingDisplayChanger::configure(
     std::shared_ptr<mf::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
-    std::unique_lock<std::mutex> lg{configuration_mutex};
-
-    config_map[session] = conf;
+    {
+        std::lock_guard<std::mutex> lg{configuration_mutex};
+        config_map[session] = conf;
+    }
 
     if (focused_session.lock() == session)
     {
@@ -145,6 +146,7 @@ void ms::MediatingDisplayChanger::configure(
                 cv.notify_one();
             });
 
+        std::unique_lock<std::mutex> lg{configuration_mutex};
         cv.wait(lg, [&done] { return done; });
     }
 }
