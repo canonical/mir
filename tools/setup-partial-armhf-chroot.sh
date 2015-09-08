@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# TODO: Rename this file without "armhf" when it's safe to do so.
+#
 
 set -e
 
@@ -20,6 +23,11 @@ if [ ! -z "$2" ]; then
     dist=$2
 fi
 
+arch=armhf
+if [ ! -z "$3" ]; then
+    arch=$3
+fi
+
 DEBCONTROL=$(pwd)/../debian/control
 
 pushd ${1} > /dev/null
@@ -32,7 +40,7 @@ set +e
 
 # Parse dependencies from debian/control
 # dpkg-checkbuilddeps returns 1 when dependencies are not met and the list is sent to stderr
-builddeps=$(dpkg-checkbuilddeps -a armhf --admindir=. ${DEBCONTROL} 2>&1 )
+builddeps=$(dpkg-checkbuilddeps -a ${arch} --admindir=. ${DEBCONTROL} 2>&1 )
 if [ $? -ne 1 ] ; then
     echo "${builddeps}"
     exit 2
@@ -48,7 +56,7 @@ builddeps=$(echo ${builddeps} | sed 's/([^)]*)//g')
 builddeps=$(echo ${builddeps} | sed 's/ /,/g')
 builddeps=$(echo ${builddeps} | sed -e 's/abi-compliance-checker//g')
 
-fakeroot debootstrap --include=${builddeps} --arch=armhf --download-only --variant=buildd ${dist} .
+fakeroot debootstrap --include=${builddeps} --arch=${arch} --download-only --variant=buildd ${dist} .
 
 # Remove libc libraries that confuse the cross-compiler
 rm var/cache/apt/archives/libc-dev*.deb

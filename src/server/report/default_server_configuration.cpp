@@ -24,6 +24,7 @@
 #include "null_report_factory.h"
 
 #include "mir/abnormal_exit.h"
+#include "logging/display_configuration_report.h"
 
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
@@ -97,6 +98,14 @@ auto mir::DefaultServerConfiguration::the_display_report() -> std::shared_ptr<mg
         [this]()->std::shared_ptr<mg::DisplayReport>
         {
             return report_factory(options::display_report_opt)->create_display_report();
+        });
+}
+
+auto mir::DefaultServerConfiguration::the_display_configuration_report() -> std::shared_ptr<mg::DisplayConfigurationReport>
+{
+    return display_configuration_report([this]() -> std::shared_ptr<mg::DisplayConfigurationReport>
+        {
+            return std::make_shared<mir::report::logging::DisplayConfigurationReport>(the_logger());
         });
 }
 
