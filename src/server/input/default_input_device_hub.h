@@ -19,6 +19,8 @@
 #ifndef MIR_INPUT_DEFAULT_INPUT_DEVICE_HUB_H_
 #define MIR_INPUT_DEFAULT_INPUT_DEVICE_HUB_H_
 
+#include "default_event_builder.h"
+
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_sink.h"
 #include "mir/input/input_device_hub.h"
@@ -95,6 +97,7 @@ private:
         void notify_cursor_listener(MirInputEvent const* event);
         static int32_t create_new_device_id();
         int32_t device_id;
+        DefaultEventBuilder builder;
         std::shared_ptr<InputDevice> const device;
         std::shared_ptr<InputDispatcher> const dispatcher;
         std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;

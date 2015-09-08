@@ -140,40 +140,6 @@ static void setDescriptor(InputDeviceIdentifier& identifier) {
         c_str(identifier.descriptor));
 }
 
-// --- Global Functions ---
-
-uint32_t getAbsAxisUsage(int32_t axis, uint32_t deviceClasses) {
-    // Touch devices get dibs on touch-related axes.
-    if (deviceClasses & INPUT_DEVICE_CLASS_TOUCH) {
-        switch (axis) {
-        case ABS_X:
-        case ABS_Y:
-        case ABS_PRESSURE:
-        case ABS_TOOL_WIDTH:
-        case ABS_DISTANCE:
-        case ABS_TILT_X:
-        case ABS_TILT_Y:
-        case ABS_MT_SLOT:
-        case ABS_MT_TOUCH_MAJOR:
-        case ABS_MT_TOUCH_MINOR:
-        case ABS_MT_WIDTH_MAJOR:
-        case ABS_MT_WIDTH_MINOR:
-        case ABS_MT_ORIENTATION:
-        case ABS_MT_POSITION_X:
-        case ABS_MT_POSITION_Y:
-        case ABS_MT_TOOL_TYPE:
-        case ABS_MT_BLOB_ID:
-        case ABS_MT_TRACKING_ID:
-        case ABS_MT_PRESSURE:
-        case ABS_MT_DISTANCE:
-            return INPUT_DEVICE_CLASS_TOUCH;
-        }
-    }
-
-    // Joystick devices get the rest.
-    return deviceClasses & INPUT_DEVICE_CLASS_JOYSTICK;
-}
-
 // --- EventHub::Device ---
 
 EventHub::Device::Device(int fd, int32_t id, const String8& path,

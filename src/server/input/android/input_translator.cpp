@@ -97,6 +97,7 @@ void mia::InputTranslator::notifyKey(const droidinput::NotifyKeyArgs* args)
     auto mir_event = mev::make_event(
         MirInputDeviceId(args->deviceId),
         args->eventTime,
+        0, /* mac */
         mia::mir_keyboard_action_from_android(args->action, 0 /* repeat_count */),
         args->keyCode,
         args->scanCode,
@@ -115,6 +116,7 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
         auto const& pc = args->pointerCoords[0];
         auto mir_event = mev::make_event(MirInputDeviceId(args->deviceId),
             args->eventTime,
+            0, /* mac */
             mia::mir_modifiers_from_android(args->metaState),
             mia::mir_pointer_action_from_masked_android(args->action & AMOTION_EVENT_ACTION_MASK),
             mia::mir_pointer_buttons_from_android(args->buttonState),
@@ -133,14 +135,23 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
     {
         auto mir_event = mev::make_event(MirInputDeviceId(args->deviceId),
                                          args->eventTime,
+                                         0, /* mac */
                                          mia::mir_modifiers_from_android(args->metaState));
         auto action = args->action;
         size_t index_with_action = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
         auto masked_action = action & AMOTION_EVENT_ACTION_MASK;
         for (unsigned i = 0; i < args->pointerCount; i++)
         {
-            auto action = (i == index_with_action) ? mia::mir_touch_action_from_masked_android(masked_action) :
-                mir_touch_action_change;
+            MirTouchAction action;
+            if (masked_action == AMOTION_EVENT_ACTION_UP)
+                action = mir_touch_action_up;   // irrespective of index
+            else if (masked_action == AMOTION_EVENT_ACTION_DOWN)
+                action = mir_touch_action_down; // irrespective of index
+            else if (i == index_with_action)
+                action = mir_touch_action_from_masked_android(masked_action);
+            else
+                action = mir_touch_action_change;
+
             mev::add_touch(*mir_event, args->pointerProperties[i].id, action,
                            mia::mir_tool_type_from_android(args->pointerProperties[i].toolType),
                            args->pointerCoords[i].getX(),

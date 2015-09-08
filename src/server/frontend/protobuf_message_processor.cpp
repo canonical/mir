@@ -370,7 +370,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
 {
-    if (response->has_buffer_stream())
+    if (response->has_buffer_stream() && response->buffer_stream().has_buffer()) 
         sender->send_response(id, response,
             {extract_fds_from(response), extract_fds_from(response->mutable_buffer_stream()->mutable_buffer())});
     else
@@ -379,7 +379,11 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::BufferStream* response)
 {
-    sender->send_response(id, response, {extract_fds_from(response->mutable_buffer())});
+    if (response->has_buffer())
+        sender->send_response(id, response, {extract_fds_from(response->mutable_buffer())});
+    else
+        sender->send_response(id, response, {});
+
 }
 
 void mfd::ProtobufMessageProcessor::send_response(

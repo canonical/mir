@@ -50,6 +50,7 @@ struct CanonicalSurfaceInfoCopy
     bool can_morph_to(MirSurfaceType new_type) const;
     bool must_have_parent() const;
     bool must_not_have_parent() const;
+    bool is_visible() const;
 
     void constrain_resize(
         std::shared_ptr<scene::Surface> const& surface,

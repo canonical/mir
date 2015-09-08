@@ -945,3 +945,40 @@ TEST(MultiThreadedCompositor, does_not_block_in_start_when_compositor_thread_fai
 
     compositor.start();
 }
+
+//LP: 1481418
+TEST(MultiThreadedCompositor, can_schedule_from_display_observer_when_adding_display)
+{
+    using namespace testing;
+    unsigned int const nbuffers{3};
+    auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
+    auto stub_scene = std::make_shared<NiceMock<StubScene>>();
+    auto mock_display_listener = std::make_shared<NiceMock<MockDisplayListener>>();
+    auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
+    auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
+
+    ON_CALL(*mock_display_listener, add_display(_))
+        .WillByDefault(InvokeWithoutArgs([&]{ stub_scene->emit_change_event(); }));
+
+    mc::MultiThreadedCompositor compositor{
+        display, stub_scene, db_compositor_factory, mock_display_listener, mock_report, default_delay, true};
+    compositor.start();
+}
+
+TEST(MultiThreadedCompositor, can_schedule_from_display_observer_when_removing_display)
+{
+    using namespace testing;
+    unsigned int const nbuffers{3};
+    auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
+    auto stub_scene = std::make_shared<NiceMock<StubScene>>();
+    auto mock_display_listener = std::make_shared<NiceMock<MockDisplayListener>>();
+    auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
+    auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
+
+    ON_CALL(*mock_display_listener, remove_display(_))
+        .WillByDefault(InvokeWithoutArgs([&]{ stub_scene->emit_change_event(); }));
+
+    mc::MultiThreadedCompositor compositor{
+        display, stub_scene, db_compositor_factory, mock_display_listener, mock_report, default_delay, true};
+    compositor.start();
+}

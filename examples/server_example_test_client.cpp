@@ -81,13 +81,7 @@ bool exit_success(pid_t pid)
 }
 }
 
-namespace
-{
-mir::time::Alarm* leaked_kill_action;
-mir::time::Alarm* leaked_exit_action;
-}
-
-void me::add_test_client_option_to(mir::Server& server, std::atomic<bool>& test_failed)
+void me::add_test_client_option_to(mir::Server& server, me::ClientContext& context)
 {
     static const char* const test_client_opt = "test-client";
     static const char* const test_client_descr = "client executable";
@@ -98,55 +92,49 @@ void me::add_test_client_option_to(mir::Server& server, std::atomic<bool>& test_
     server.add_configuration_option(test_client_opt, test_client_descr, mir::OptionType::string);
     server.add_configuration_option(test_timeout_opt, test_timeout_descr, 10);
 
-    server.add_init_callback([&]
+    server.add_init_callback([&server, &context]
     {
         const auto options = server.get_options();
+
         if (options->is_set(test_client_opt))
         {
+            context.test_failed = true;
+
             auto const pid = fork();
 
             if (pid == 0)
             {
-                auto const client = options->get<std::string>(test_client_opt).c_str();
-                execl(client, client, static_cast<char const*>(nullptr));
+                auto const client = options->get<std::string>(test_client_opt);
+                execl(client.c_str(), client.c_str(), static_cast<char const*>(nullptr));
+                ml::log(ml::Severity::critical, "Failed to execute client", component);
                 abort(); // If execl() returns then something is badly wrong
             }
             else if (pid > 0)
             {
-                std::unique_ptr<mir::time::Alarm> kill_action = server.the_main_loop()->create_alarm(
+                context.client_kill_action = server.the_main_loop()->create_alarm(
                     [pid]
                     {
                         kill(pid, SIGTERM);
                     });
 
-                std::unique_ptr<mir::time::Alarm> exit_action = server.the_main_loop()->create_alarm(
-                    [pid, &server, &test_failed]
+                context.server_stop_action = server.the_main_loop()->create_alarm(
+                    [pid, &server, &context]()
                     {
-                        if (!exit_success(pid))
-                            test_failed = true;
+                        context.test_failed = !exit_success(pid);
                         server.stop();
                     });
 
-                kill_action->reschedule_in(std::chrono::seconds(options->get<int>(test_timeout_opt)));
-                exit_action->reschedule_in(std::chrono::seconds(options->get<int>(test_timeout_opt)+1));
-
-                /* FIXME: These alarm objects outlive the server
-                 *
-                 * Trying to tie them to the server lifetime seems to lead to memory corruption, probably
-                 * via TLS madness, on Android.
-                 *
-                 * The alarm destructor implementation reference glib objects that are assumed to exist
-                 * which leads to crashes.
-                 *
-                 * Just leak them; there's no need to run their destructors.
-                 */
-                leaked_kill_action = kill_action.release();
-                leaked_exit_action = exit_action.release();
+                context.client_kill_action->reschedule_in(std::chrono::seconds(options->get<int>(test_timeout_opt)));
+                context.server_stop_action->reschedule_in(std::chrono::seconds(options->get<int>(test_timeout_opt)+1));
             }
             else
             {
                 BOOST_THROW_EXCEPTION(std::runtime_error("Client failed to launch"));
             }
+        }
+        else
+        {
+            context.test_failed = false;
         }
     });
 }

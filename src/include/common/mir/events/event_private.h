@@ -61,6 +61,7 @@ typedef struct
     int32_t scan_code;
 
     std::chrono::nanoseconds event_time;
+    uint64_t mac;
 } MirKeyEvent;
 
 typedef struct
@@ -98,6 +99,7 @@ typedef struct
 
     MirPointerButtons buttons;
     std::chrono::nanoseconds event_time;
+    uint64_t mac;
 
     size_t pointer_count;
     MirMotionPointer pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];

@@ -714,6 +714,121 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
     }
 }
 
+TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
+{   // Regression test for LP: #1480164
+    mtd::MockFrameDroppingPolicyFactory policy_factory;
+    mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory),
+                          properties, policy_factory};
+    queue.allow_framedropping(false);
+
+    mg::Buffer* client_buffer = nullptr;
+    auto callback = [&](mg::Buffer* buffer)
+    {
+        client_buffer = buffer;
+    };
+
+    auto client_try_acquire = [&]() -> bool
+    {
+        queue.client_acquire(callback);
+        return client_buffer != nullptr;
+    };
+
+    auto client_release = [&]()
+    {
+        EXPECT_TRUE(client_buffer);
+        queue.client_release(client_buffer);
+        client_buffer = nullptr;
+    };
+
+    // Skip over the first frame. The early release optimization is too
+    // conservative to allow it to happen right at the start (so as to
+    // maintain correct multimonitor frame rates if required).
+    ASSERT_TRUE(client_try_acquire());
+    client_release();
+    queue.compositor_release(queue.compositor_acquire(this));
+
+    auto onscreen = queue.compositor_acquire(this);
+
+    bool blocking;
+    do
+    {
+        blocking = !client_try_acquire();
+        if (!blocking)
+            client_release();
+    } while (!blocking);
+
+    for (int f = 0; f < 100; ++f)
+    {
+        ASSERT_FALSE(client_buffer);
+        queue.compositor_release(onscreen);
+        ASSERT_TRUE(client_buffer) << "frame# " << f;
+        client_release();
+        onscreen = queue.compositor_acquire(this);
+        client_try_acquire();
+    }
+}
+
+TEST_P(WithTwoOrMoreBuffers, short_buffer_holds_dont_overclock_multimonitor)
+{   // Regression test related to LP: #1480164
+    mtd::MockFrameDroppingPolicyFactory policy_factory;
+    mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory),
+                          properties, policy_factory};
+    queue.allow_framedropping(false);
+
+    const void* const leftid = "left";
+    const void* const rightid = "right";
+
+    mg::Buffer* client_buffer = nullptr;
+    auto callback = [&](mg::Buffer* buffer)
+    {
+        client_buffer = buffer;
+    };
+
+    auto client_try_acquire = [&]() -> bool
+    {
+        queue.client_acquire(callback);
+        return client_buffer != nullptr;
+    };
+
+    auto client_release = [&]()
+    {
+        EXPECT_TRUE(client_buffer);
+        queue.client_release(client_buffer);
+        client_buffer = nullptr;
+    };
+
+    // Skip over the first frame. The early release optimization is too
+    // conservative to allow it to happen right at the start (so as to
+    // maintain correct multimonitor frame rates if required).
+    ASSERT_TRUE(client_try_acquire());
+    client_release();
+    queue.compositor_release(queue.compositor_acquire(leftid));
+
+    auto left = queue.compositor_acquire(leftid);
+    auto right = queue.compositor_acquire(rightid);
+
+    bool blocking;
+    do
+    {
+        blocking = !client_try_acquire();
+        if (!blocking)
+            client_release();
+    } while (!blocking);
+
+    for (int f = 0; f < 100; ++f)
+    {
+        ASSERT_FALSE(client_buffer);
+        queue.compositor_release(left);
+        queue.compositor_release(right);
+        ASSERT_FALSE(client_buffer);
+        left = queue.compositor_acquire(leftid);
+        right = queue.compositor_acquire(rightid);
+        ASSERT_TRUE(client_buffer);
+        client_release();
+        client_try_acquire();
+    }
+}
+
 TEST_P(WithAnyNumberOfBuffers, compositor_inflates_ready_count_for_slow_clients)
 {
     queue.set_scaling_delay(3);
@@ -919,13 +1034,17 @@ TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
 
     comp_buffer1.reset();
 
-    /* An async client should still be able to cycle through all the available buffers */
+    /* An async client should still be able to cycle through all the available
+     * buffers. "async" means any pattern other than "produce,consume,..."
+     */
     int const max_ownable_buffers = nbuffers - 1;
     producer.reset_log();
     for (int frame = 0; frame < max_ownable_buffers * 2; frame++)
     {
-        producer.produce();
-        consumers[0]->consume();
+        for (int drain = 0; drain < nbuffers; ++drain)
+            consumers[0]->consume();
+        while (producer.can_produce())
+            producer.produce();
     }
 
     EXPECT_THAT(unique_ids_in(producer.production_log()), Eq(nbuffers));

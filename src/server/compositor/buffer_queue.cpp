@@ -144,6 +144,7 @@ mc::BufferQueue::BufferQueue(
       the_properties{props},
       force_new_compositor_buffer{false},
       callbacks_allowed{true},
+      single_compositor{false},  // When true we can optimize performance
       gralloc{gralloc}
 {
     if (nbuffers < 1)
@@ -286,6 +287,9 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         current_buffer_users.push_back(user_id);
     }
 
+    single_compositor = current_compositor_buffer_valid &&
+                        current_buffer_users.size() <= 1;  // might be zero
+
     if (ready_to_composite_queue.empty())
     {
         use_current_buffer = true;
@@ -357,6 +361,26 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
 
     if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
+    else if (!ready_to_composite_queue.empty() && single_compositor)
+    {
+        /*
+         * The "early release" optimisation: Note "single_compositor" above
+         * is because this path will break (actually just overclock) the
+         * multi-monitor frame sync algorithm. For the moment we prefer
+         * /perfect/ multi-monitor frame sync all the time. But if you so
+         * choose that overclocking with multi-monitors is acceptable then
+         * you could remove the above "single_compositor" check and get this
+         * optimised code path with multi-monitors too...
+         */
+        current_compositor_buffer = pop(ready_to_composite_queue);
+        current_buffer_users.clear();
+        /*
+         * As we have now caused the next compositor_acquire() to skip the
+         * frame_deadlines_met update, we need to do it here:
+         */
+        ++frame_deadlines_met;
+        release(buffer.get(), std::move(lock));
+    }
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferQueue::snapshot_acquire()

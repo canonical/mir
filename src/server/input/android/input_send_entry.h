@@ -20,6 +20,8 @@
 #define MIR_INPUT_ANDROID_INPUT_SEND_ENTRY_H_
 
 #include "mir_toolkit/event.h"
+#include "mir/events/event_private.h"
+
 #include <memory>
 
 namespace mir

@@ -47,9 +47,9 @@ Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
 # just go ahead. ~mir-team will notice and sync up the code again.
-Vcs-Bzr: https://code.launchpad.net/~mir-team/mir/trunk
+Vcs-Bzr: https://code.launchpad.net/mir
 
-Package: libmirprotobuf1
+Package: libmirprotobuf2
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -155,7 +155,8 @@ Description: Display server for Ubuntu - test development headers and library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
- Contains header files and static library for testing of server and/or client development.
+ Contains header files and static library for testing of server and/or client
+ development.
 
 Package: libmirclient9
 Section: libs
@@ -286,6 +287,20 @@ Description: Display server for Ubuntu - shared library
  Contains the shared libraries required for the Mir server and client.
 
 # Longer-term these drivers should move out-of-tree
+Package: mir-platform-graphics-mesa-x4
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - platform library for X11 Mesa
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains the shared libraries required for the Mir server to interact with
+ the X11 platform using the Mesa drivers.
+
 Package: mir-platform-graphics-mesa-kms4
 Section: libs
 Architecture: linux-any
@@ -363,6 +378,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          mir-platform-graphics-mesa-kms4,
+         mir-platform-graphics-mesa-x4,
          mir-client-platform-mesa3,
 Description: Display server for Ubuntu - desktop driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,

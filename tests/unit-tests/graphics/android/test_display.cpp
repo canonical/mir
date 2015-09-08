@@ -31,6 +31,7 @@
 #include "mir/test/doubles/mock_gl_config.h"
 #include "mir/test/doubles/stub_gl_program_factory.h"
 #include "mir/test/doubles/stub_display_configuration.h"
+#include "mir/test/doubles/stub_renderable.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/test/doubles/stub_driver_interpreter.h"
 
@@ -894,6 +895,33 @@ TEST_F(Display, applying_orientation_after_hotplug)
     display.for_each_display_sync_group([orientation](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([orientation](mg::DisplayBuffer& db) {
             EXPECT_THAT(db.orientation(), Eq(orientation)); 
+        });
+    });
+}
+
+//lp:1484638
+TEST_F(Display, display_buffers_respect_overlay_option)
+{
+    using namespace testing;
+    stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
+    {
+        ON_CALL(mock_config, active_config_for(_))
+            .WillByDefault(InvokeWithoutArgs([]
+            {
+                return mtd::StubDisplayConfigurationOutput{mg::DisplayConfigurationOutputId{1},
+                    {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, true};
+            }));
+    });
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::disabled);
+
+    display.for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
+        group.for_each_display_buffer([](mg::DisplayBuffer& db) {
+            EXPECT_FALSE(db.post_renderables_if_optimizable({std::make_shared<mtd::StubRenderable>()}));
         });
     });
 }

@@ -166,6 +166,19 @@ bool msh::CanonicalSurfaceInfo::must_not_have_parent() const
     return ::must_not_have_parent(type);
 }
 
+bool msh::CanonicalSurfaceInfo::is_visible() const
+{
+    switch (state)
+    {
+    case mir_surface_state_hidden:
+    case mir_surface_state_minimized:
+        return false;
+    default:
+        break;
+    }
+    return true;
+}
+
 
 msh::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(
     Tools* const tools,
@@ -468,6 +481,12 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 
     if (modifications.input_shape.is_set())
         surface->set_input_region(modifications.input_shape.value());
+
+    if (modifications.state.is_set())
+    {
+        auto const state = handle_set_state(surface, modifications.state.value());
+        surface->configure(mir_surface_attrib_state, state);
+    }
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
@@ -573,7 +592,12 @@ int msh::CanonicalWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surf
     // TODO some sensible layout rules.
     move_tree(surface, movement);
 
-    return info.state = value;
+    info.state = value;
+
+    if (info.is_visible())
+        surface->show();
+
+    return info.state;
 }
 
 void msh::CanonicalWindowManagerPolicy::drag(Point cursor)

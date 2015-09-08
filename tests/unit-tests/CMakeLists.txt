@@ -13,6 +13,10 @@ if (MIR_BUILD_PLATFORM_MESA_KMS)
   add_definitions(-DMIR_BUILD_PLATFORM_MESA_KMS)
 endif()
 
+if (MIR_BUILD_PLATFORM_MESA_X11)
+  add_definitions(-DMIR_BUILD_PLATFORM_MESA_X11)
+endif()
+
 include_directories(
   ${CMAKE_SOURCE_DIR}
 
@@ -67,7 +71,9 @@ set(
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
 list(APPEND UNIT_TEST_SOURCES
-  $<TARGET_OBJECTS:mirplatformservermesax11objects>
+  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/x11/X11_resources.cpp
+  $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
+  $<TARGET_OBJECTS:mirplatforminputmesax11objects>
 )
 endif()
 
@@ -116,7 +122,6 @@ target_link_libraries(
   mir-test-doubles-static
   mir-test-doubles-platform-static
 
-  android-input-static
   xcursorloader-static
 
   ${PROTOBUF_LITE_LIBRARIES}
@@ -125,33 +130,32 @@ target_link_libraries(
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
   ${UMOCKDEV_LIBRARIES}
-  # Mesa platform dependencies
-  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
-  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
-  # Android platform dependencies
-  ${LIBHARDWARE_LIBRARIES}
-  ${ANDROID_PROPERTIES_LIBRARIES}
-  # Shared platform dependencies
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
-  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${MIR_PLATFORM_REFERENCES}
   ${MIR_COMMON_REFERENCES}
   ${MIR_SERVER_REFERENCES}
   ${XKBCOMMON_LIBRARIES}
 )
 
+if ((MIR_BUILD_PLATFORM_MESA_KMS) OR (MIR_BUILD_PLATFORM_MESA_X11))
 target_link_libraries(mir_unit_tests
-  mirsharedmesaservercommon-static
+  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
+  mirsharedmesaservercommon-static)
+endif()
+
+if (MIR_BUILD_PLATFORM_MESA_KMS)
+target_link_libraries(mir_unit_tests
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )
+endif()
 
 if (MIR_BUILD_PLATFORM_ANDROID)
 target_link_libraries(mir_unit_tests 
   mirsharedandroid-static
-  ${ANDROID_PROPERTIES_LDFLAGS}
+  ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
+  ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
 )
 endif()
 

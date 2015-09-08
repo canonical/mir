@@ -266,7 +266,7 @@ md::GSourceHandle md::add_timer_gsource(
         std::shared_ptr<LockableCallback> handler;
         std::function<void()> exception_handler;
         time::Timestamp target_time;
-        std::mutex mutex;
+        std::recursive_mutex mutex;
         bool enabled;
     };
 

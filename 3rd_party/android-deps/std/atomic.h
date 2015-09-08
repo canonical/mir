@@ -44,26 +44,7 @@ typedef std::atomic<int32_t> android_atomic_int32_t;
 inline int32_t android_atomic_inc(android_atomic_int32_t* addr) { return addr->fetch_add(1); }
 inline int32_t android_atomic_dec(android_atomic_int32_t* addr) { return addr->fetch_add(-1); }
 inline int32_t android_atomic_add(int32_t value, android_atomic_int32_t* addr) { return addr->fetch_add(value); }
-//int32_t android_atomic_and(int32_t value, volatile int32_t* addr);
 inline int32_t android_atomic_or(int32_t value, android_atomic_int32_t* addr) { return addr->fetch_or(value); }
-
-/*
- * Perform an atomic load with "acquire" or "release" ordering.
- *
- * This is only necessary if you need the memory barrier.  A 32-bit read
- * from a 32-bit aligned address is atomic on all supported platforms.
- */
-//int32_t android_atomic_acquire_load(volatile const int32_t* addr);
-//int32_t android_atomic_release_load(volatile const int32_t* addr);
-
-/*
- * Perform an atomic store with "acquire" or "release" ordering.
- *
- * This is only necessary if you need the memory barrier.  A 32-bit write
- * to a 32-bit aligned address is atomic on all supported platforms.
- */
-//void android_atomic_acquire_store(int32_t value, volatile int32_t* addr);
-//void android_atomic_release_store(int32_t value, volatile int32_t* addr);
 
 /*
  * Compare-and-set operation with "acquire" or "release" ordering.
@@ -77,8 +58,6 @@ inline int32_t android_atomic_or(int32_t value, android_atomic_int32_t* addr) { 
  * Implementations that use the release CAS in a loop may be less efficient
  * than possible, because we re-issue the memory barrier on each iteration.
  */
-//int android_atomic_acquire_cas(int32_t oldvalue, int32_t newvalue,
-//        volatile int32_t* addr);
 inline int android_atomic_release_cas(int32_t oldvalue, int32_t newvalue,
     android_atomic_int32_t* addr) { return !addr->compare_exchange_strong(oldvalue, newvalue); }
 }
@@ -88,7 +67,6 @@ inline int android_atomic_release_cas(int32_t oldvalue, int32_t newvalue,
  * deprecated and should not be used.  The definitions will be removed
  * in a future release.
  */
-//#define android_atomic_write android_atomic_release_store
 #define android_atomic_cmpxchg android_atomic_release_cas
 
 using mir_input::android_atomic_int32_t;

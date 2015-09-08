@@ -38,9 +38,9 @@ if(ENABLE_MEMCHECK_OPTION)
 endif(ENABLE_MEMCHECK_OPTION)
 
 if(CMAKE_CROSSCOMPILING)
-    set(SYSYEM_SUPPORTS_O_TMPFILE 0)
+    set(SYSTEM_SUPPORTS_O_TMPFILE 0)
 else()
-    try_run(SYSYEM_SUPPORTS_O_TMPFILE SYSTEM_HEADERS_SUPPORT_O_TMPFILE
+    try_run(SYSTEM_SUPPORTS_O_TMPFILE SYSTEM_HEADERS_SUPPORT_O_TMPFILE
       ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/cmake/src/mir/mir_test_tmpfile.cpp
       )
 endif()
@@ -79,7 +79,7 @@ function (mir_discover_tests_internal EXECUTABLE DETECT_FD_LEAKS)
     set(test_exclusion_filter "UnresponsiveClient.does_not_hang_server:DemoInProcessServerWithStubClientPlatform.surface_creation_does_not_leak_fds:StreamTransportTest/0.SendsFullMessagesWhenInterrupted:BufferQueue/WithTwoOrMoreBuffers.client_framerate_matches_compositor*:BufferQueue/WithThreeOrMoreBuffers.slow_client_framerate_matches_compositor*:BufferQueue/WithThreeOrMoreBuffers.queue_size_scales_with_client_performance*")
   endif()
 
-  if(SYSYEM_SUPPORTS_O_TMPFILE EQUAL 1)
+  if(SYSTEM_SUPPORTS_O_TMPFILE EQUAL 1)
       set(test_exclusion_filter "${test_exclusion_filter}:AnonymousShmFile.*:MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer")
   endif()
 

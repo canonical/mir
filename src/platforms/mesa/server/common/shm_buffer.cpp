@@ -30,6 +30,7 @@
 #include <string.h>
 #include <endian.h>
 
+namespace mg=mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
@@ -169,4 +170,9 @@ void mgm::ShmBuffer::write(unsigned char const* data, size_t data_size)
 void mgm::ShmBuffer::read(std::function<void(unsigned char const*)> const& do_with_pixels)
 {
     do_with_pixels(static_cast<unsigned char const*>(pixels));
+}
+
+mg::NativeBufferBase* mgm::ShmBuffer::native_buffer_base()
+{
+    return this;
 }

@@ -67,6 +67,7 @@ add_library(mirclientobjects OBJECT
   periodic_perf_report.cpp
   mir_platform_message_api.cpp
   buffer_stream.cpp
+  buffer_vault.cpp
   mir_buffer_stream_api.cpp
   default_client_buffer_stream_factory.cpp
   ${MIR_CLIENT_SOURCES}

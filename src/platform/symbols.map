@@ -278,3 +278,32 @@ MIRPLATFORM_9 {
   };
  local: *;
 };
+
+MIRPLATFORM_9.1 {
+  global:
+    extern "C++" {
+      android::EventHub::EventHub*;
+      android::getAbsAxisUsage*;
+      android::getInputDeviceConfigurationFilePathByDeviceIdentifier*;
+      android::InputDeviceInfo::?InputDeviceInfo*;
+      android::InputDeviceInfo::InputDeviceInfo*;
+      android::InputReaderConfiguration::setDisplayInfo*;
+      android::InputReader::InputReader*;
+      android::isEligibleBuiltInKeyboard*;
+      android::KeyCharacterMap::combine*;
+      android::KeyCharacterMap::empty*;
+      android::KeyCharacterMap::mapKey*;
+      android::KeyLayoutMap::findScanCodesForKey*;
+      android::KeyLayoutMap::mapAxis*;
+      android::KeyLayoutMap::mapKey*;
+      android::KeyMap::?KeyMap*;
+      android::KeyMap::KeyMap*;
+      android::KeyMap::load*;
+      android::KeyMap::loadGenericMaps*;
+      __android_log_assert;
+      __android_log_print;
+      android::VirtualKeyMap::load*;
+      android::VirtualKeyMap::?VirtualKeyMap*;
+      mir::graphics::Buffer::native_buffer_base*;
+    };
+} MIRPLATFORM_9;

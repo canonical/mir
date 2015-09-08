@@ -104,11 +104,10 @@ add_library(
   stub_input.cpp
   fake_input_device_impl.cpp
   stub_input_platform.cpp
+  $<TARGET_OBJECTS:mirevdevutilsobjects>
   )
 
-target_link_libraries(mirplatforminputstub
-  mirclient
-)
+target_link_libraries(mirplatforminputstub mircommon)
 
 set_target_properties(
   mirplatforminputstub PROPERTIES

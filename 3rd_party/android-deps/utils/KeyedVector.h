@@ -91,30 +91,6 @@ private:
             SortedVector< key_value_pair_t<KEY, VALUE> >    mVector;
 };
 
-// KeyedVector<KEY, VALUE> can be trivially moved using memcpy() because its
-// underlying SortedVector can be trivially moved.
-template<typename KEY, typename VALUE> struct trait_trivial_move<KeyedVector<KEY, VALUE> > {
-    enum { value = trait_trivial_move<SortedVector< key_value_pair_t<KEY, VALUE> > >::value };
-};
-
-
-// ---------------------------------------------------------------------------
-
-/**
- * Variation of KeyedVector that holds a default value to return when
- * valueFor() is called with a key that doesn't exist.
- */
-template <typename KEY, typename VALUE>
-class DefaultKeyedVector : public KeyedVector<KEY, VALUE>
-{
-public:
-    inline                  DefaultKeyedVector(const VALUE& defValue = VALUE());
-            const VALUE&    valueFor(const KEY& key) const;
-
-private:
-            VALUE                                           mDefault;
-};
-
 // ---------------------------------------------------------------------------
 
 template<typename KEY, typename VALUE> inline
@@ -185,20 +161,6 @@ ssize_t KeyedVector<KEY,VALUE>::removeItem(const KEY& key) {
 template<typename KEY, typename VALUE> inline
 ssize_t KeyedVector<KEY, VALUE>::removeItemsAt(size_t index, size_t count) {
     return mVector.removeItemsAt(index, count);
-}
-
-// ---------------------------------------------------------------------------
-
-template<typename KEY, typename VALUE> inline
-DefaultKeyedVector<KEY,VALUE>::DefaultKeyedVector(const VALUE& defValue)
-    : mDefault(defValue)
-{
-}
-
-template<typename KEY, typename VALUE> inline
-const VALUE& DefaultKeyedVector<KEY,VALUE>::valueFor(const KEY& key) const {
-    ssize_t i = this->indexOfKey(key);
-    return i >= 0 ? KeyedVector<KEY,VALUE>::valueAt(i) : mDefault;
 }
 
 } // namespace android

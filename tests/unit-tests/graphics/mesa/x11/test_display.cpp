@@ -15,7 +15,7 @@
  *
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
-#include "src/platforms/mesa/server/x11/display.h"
+#include "src/platforms/mesa/server/x11/graphics/display.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_x11.h"
 
@@ -68,6 +68,11 @@ public:
                                              _))
             .WillByDefault(DoAll(SetArgPointee<3>(EGL_WINDOW_BIT),
                             Return(EGL_TRUE)));
+
+        ON_CALL(mock_x11, XNextEvent(mock_x11.fake_x11.display,
+                                     _))
+            .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.expose_event_return),
+                       Return(1)));
     }
 
     std::shared_ptr<mgx::Display> create_display()
@@ -95,6 +100,12 @@ TEST_F(X11DisplayTest, creates_display_successfully)
         .Times(Exactly(1));
 
     EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display,_, mock_x11.fake_x11.window, nullptr))
+        .Times(Exactly(1));
+
+    EXPECT_CALL(mock_x11, XNextEvent(mock_x11.fake_x11.display,_))
+        .Times(AtLeast(1));
+
+    EXPECT_CALL(mock_x11, XMapWindow(mock_x11.fake_x11.display,_))
         .Times(Exactly(1));
 
     auto display = create_display();

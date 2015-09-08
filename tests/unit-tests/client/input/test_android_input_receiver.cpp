@@ -69,6 +69,7 @@ public:
                                          testing_key_event_scan_code,
                                          0 /* meta_state */,
                                          0 /* repeat_count */,
+                                         0 /* mac */,
                                          std::chrono::nanoseconds(0) /* down_time */,
                                          std::chrono::nanoseconds(0) /* event_time */);
     }
@@ -95,6 +96,7 @@ public:
                                             0 /* y_offset */,
                                             0 /* x_precision */,
                                             0 /* y_precision */,
+                                            0 /* mac */,
                                             std::chrono::nanoseconds(0) /* down_time */,
                                             t,
                                             default_pointer_count,

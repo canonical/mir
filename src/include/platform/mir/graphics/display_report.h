@@ -45,7 +45,7 @@ public:
 
 protected:
     DisplayReport() = default;
-    virtual ~DisplayReport() { /* TODO: make nothrow */ }
+    virtual ~DisplayReport() = default;
     DisplayReport(const DisplayReport&) = delete;
     DisplayReport& operator=(const DisplayReport&) = delete;
 };

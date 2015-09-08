@@ -49,12 +49,12 @@ EventUPtr make_event(frontend::SurfaceId const& surface_id, xkb_rule_names const
 
 // Key event
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    MirKeyboardAction action, xkb_keysym_t key_code,
+    uint64_t mac, MirKeyboardAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers);
 
 // Touch event
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers);
+    uint64_t mac, MirInputEventModifiers modifiers);
 void add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
     MirTouchTooltype tooltype, float x_axis_value, float y_axis_value,
     float pressure_value, float touch_major_value, float touch_minor_value, float size_value);
@@ -62,13 +62,13 @@ void add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
 // Pointer event
 // Deprecated version without relative axis
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers, MirPointerAction action,
+    uint64_t mac, MirInputEventModifiers modifiers, MirPointerAction action,
     MirPointerButtons buttons_pressed,
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value);
 
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers, MirPointerAction action,
+    uint64_t mac, MirInputEventModifiers modifiers, MirPointerAction action,
     MirPointerButtons buttons_pressed,
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value,

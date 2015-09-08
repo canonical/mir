@@ -22,11 +22,6 @@
 #include "mir/events/event_private.h"
 #include "mir/log.h"
 
-#include "mir_toolkit/events/input/input_event.h"
-
-#include <assert.h>
-#include <stdlib.h>
-
 namespace ml = mir::logging;
 
 namespace

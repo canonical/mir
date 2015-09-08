@@ -209,7 +209,6 @@ void mi::Validator::ensure_stream_validity_locked(std::lock_guard<std::mutex> co
     }
 
     // Insert missing touch releases
-    TouchSet missing;
     auto last_ev_copy =
         remove_old_releases_from(reinterpret_cast<MirEvent const*>(last_ev));
     for (auto const& expected_id : expected)
@@ -221,7 +220,6 @@ void mi::Validator::ensure_stream_validity_locked(std::lock_guard<std::mutex> co
             last_ev_copy = remove_old_releases_from(inject_ev.get());
         }
     }
-    
 
     for (size_t i = 0; i < mir_touch_event_point_count(ev); i++)
     {
@@ -235,7 +233,6 @@ void mi::Validator::ensure_stream_validity_locked(std::lock_guard<std::mutex> co
             last_ev_copy = std::move(inject_ev);
         }
     }
-
 }
 
 
@@ -247,7 +244,7 @@ void mi::Validator::handle_touch_event(MirInputDeviceId id, MirTouchEvent const*
     MirTouchEvent const* last_ev = nullptr;
     auto default_ev = mev::make_event(id,
         std::chrono::high_resolution_clock::now().time_since_epoch(),
-        mir_input_event_modifier_none); 
+        0 /*mac*/, mir_input_event_modifier_none); 
 
     if (it == last_event_by_device.end())
     {

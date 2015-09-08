@@ -28,7 +28,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <unordered_map>
+#include <deque>
 
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
@@ -49,7 +49,7 @@ public:
     void record_submission(uint32_t submission_id)
     {
         std::lock_guard<std::mutex> lock{mutex};
-        timestamps[submission_id] = post_count;
+        submissions.push_back({submission_id, post_count});
     }
 
     auto latency_for(uint32_t submission_id)
@@ -57,10 +57,16 @@ public:
         std::lock_guard<std::mutex> lock{mutex};
 
         mir::optional_value<uint32_t> latency;
-        auto const it = timestamps.find(submission_id);
 
-        if (it != timestamps.end())
-            latency = post_count - it->second;
+        for (auto i = submissions.begin(); i != submissions.end(); i++)
+        {
+            if (i->buffer_id == submission_id)
+            {
+                latency = post_count - i->time;
+                submissions.erase(i);
+                break;
+            }
+        }
 
         return latency;
     }
@@ -68,7 +74,16 @@ public:
 private:
     std::mutex mutex;
     unsigned int post_count{0};
-    std::unordered_map<uint32_t, uint32_t> timestamps;
+
+    // Note that a buffer_id may appear twice in the list as the client is
+    // faster than the compositor and can produce a new frame before the
+    // compositor has measured the previous submisson of the same buffer id.
+    struct Submission
+    {
+        uint32_t buffer_id;
+        uint32_t time;
+    };
+    std::deque<Submission> submissions;
 };
 /*
  * Note: we're not aiming to check performance in terms of CPU or GPU time processing
@@ -78,8 +93,6 @@ private:
 class IdCollectingDB : public mtd::NullDisplayBuffer
 {
 public:
-    IdCollectingDB(Stats& stats) : stats{stats} {}
-
     mir::geometry::Rectangle view_area() const override
     {
         return {{0,0}, {1920, 1080}};
@@ -87,15 +100,6 @@ public:
 
     bool post_renderables_if_optimizable(mg::RenderableList const& renderables) override
     {
-        /*
-         * Clients are blocked only until the below buffer() goes out of
-         * scope. Thereafter we'll be racing the client thread. So we need
-         * to increment the post_count (represents universal time) here
-         * where the client thread is predictably blocked in its call to
-         * mir_buffer_stream_swap_buffers_sync().
-         */
-        stats.post();
-
         //the surface will be the frontmost of the renderables
         if (!renderables.empty())
             last = renderables.front()->buffer()->id();
@@ -107,14 +111,13 @@ public:
         return last;
     }
 private:
-    Stats& stats;
     mg::BufferID last{0};
 };
 
 class TimeTrackingGroup : public mtd::NullDisplaySyncGroup
 {
 public:
-    TimeTrackingGroup(Stats& stats) : stats{stats}, db{stats} {}
+    TimeTrackingGroup(Stats& stats) : stats{stats} {}
 
     void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
     {
@@ -129,6 +132,16 @@ public:
             std::lock_guard<std::mutex> lock{mutex};
             latency_list.push_back(latency.value());
         }
+
+        stats.post();
+
+        /*
+         * Sleep a little to make the test more realistic. This way the
+         * client will actually fill the buffer queue. If we don't do this,
+         * then it's like having an infinite refresh rate and the measured
+         * latency would never exceed 1.0.  (LP: #1447947)
+         */
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
     }
 
     float average_latency()
@@ -188,17 +201,27 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
         mir_buffer_stream_swap_buffers_sync(stream);
     }
 
-    unsigned int const expected_client_buffers = 3;
-    unsigned int const expected_latency = expected_client_buffers - 1;
+    // Wait for the compositor to finish rendering all those frames,
+    // or else we'll be missing some samples and get a spurious average.
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-    float const error_margin = 0.1f;
+    unsigned int const expected_client_buffers = 3;
+
+    // Note: Using the "early release" optimization without dynamic queue
+    //       scaling enabled makes the expected latency possibly up to
+    //       nbuffers instead of nbuffers-1. After dynamic queue scaling is
+    //       enabled, the average will be lower than this.
+    float const expected_max_latency = expected_client_buffers;
+    float const expected_min_latency = expected_client_buffers - 1;
+
     auto observed_latency = display.group.average_latency();
 
-    // FIXME: LP: #1447947: This actually doesn't work as intended. Raising
-    //        the queue length isn't affecting the measured latency for some
-    //        reason. But latency too low is better than too high.
-    //EXPECT_THAT(observed_latency, AllOf(Gt(expected_latency-error_margin),
-    //                                    Lt(expected_latency+error_margin)));
+    // We still have a margin for error here. The client and server will
+    // be scheduled somewhat unpredictably which affects results. Also
+    // affecting results will be the first few frames before the buffer
+    // quere is full (during which there will be no buffer latency).
+    float const error_margin = 0.1f;
 
-    EXPECT_THAT(observed_latency, Lt(expected_latency+error_margin));
+    EXPECT_THAT(observed_latency, Gt(expected_min_latency-error_margin));
+    EXPECT_THAT(observed_latency, Lt(expected_max_latency+error_margin));
 }

@@ -95,6 +95,7 @@ private:
     std::unique_ptr<DisplayChangePipe> display_change_pipe;
     std::shared_ptr<GLProgramFactory> const gl_program_factory;
     DisplayGroup mutable displays;
+    OverlayOptimization const overlay_option;
 
     void update_configuration(std::lock_guard<decltype(configuration_mutex)> const&) const;
 };

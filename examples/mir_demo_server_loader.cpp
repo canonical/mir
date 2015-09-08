@@ -29,7 +29,7 @@ const char* const entry = "main";
 int main(int argc, char const* argv[])
 try
 {
-    auto const so = dlopen(library, RTLD_NOW|RTLD_LOCAL);
+    auto const so = dlopen(library, RTLD_LAZY|RTLD_LOCAL);
     if (!so) throw std::runtime_error(dlerror());
 
     int (*loaded_main)(int, char const*[]){nullptr};

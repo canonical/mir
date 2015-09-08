@@ -18,10 +18,11 @@
 
 #include "mir/events/event_private.h"
 #include "mir_toolkit/event.h"
+#include "mir_toolkit/events/input/input_event.h"
 #include "src/platforms/mesa/server/x11/input/dispatchable.h"
-#include "src/platforms/mesa/server/x11/xserver_connection.h"
 #include "mir/test/doubles/mock_input_sink.h"
 #include "mir/test/doubles/mock_x11.h"
+#include "src/server/input/default_event_builder.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -30,27 +31,19 @@ namespace mtd = mir::test::doubles;
 
 using namespace ::testing;
 
-extern std::shared_ptr<mir::X::X11Connection> x11_connection;
-
 namespace
 {
 
 struct X11DispatchableTest : ::testing::Test
 {
-    X11DispatchableTest()
-    {
-        // X11Connection freed in the (external) shared_ptr destruction.
-        x11_connection.reset(new mir::X::X11Connection());
-    }
-
-    ~X11DispatchableTest()
-    {
-        x11_connection.reset();
-    }
-
-    mir::input::X::XDispatchable x11_dispatchable{0};
     NiceMock<mtd::MockInputSink> mock_input_sink;
     NiceMock<mtd::MockX11> mock_x11;
+    mir::input::DefaultEventBuilder builder{0};
+
+    mir::input::X::XDispatchable x11_dispatchable{
+        std::shared_ptr<::Display>(
+            XOpenDisplay(nullptr),
+            [](::Display* display) { XCloseDisplay(display); }), 0};
 };
 
 }
@@ -58,11 +51,42 @@ struct X11DispatchableTest : ::testing::Test
 TEST_F(X11DispatchableTest, dispatches_input_events_to_sink)
 {
     ON_CALL(mock_x11, XNextEvent(_,_))
-    .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.event_return),
-                   Return(1)));
+        .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.keypress_event_return),
+                       Return(1)));
 
-    EXPECT_CALL(mock_input_sink, handle_input(_));
+    EXPECT_CALL(mock_input_sink, handle_input(_))
+        .Times(Exactly(1));
 
-    x11_dispatchable.set_input_sink(&mock_input_sink);
+    x11_dispatchable.set_input_sink(&mock_input_sink, &builder);
+    x11_dispatchable.dispatch(mir::dispatch::FdEvent::readable);
+}
+
+TEST_F(X11DispatchableTest, grabs_keyboard)
+{
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.focus_in_event_return),
+                       Return(1)));
+
+    EXPECT_CALL(mock_x11, XGrabKeyboard(_,_,_,_,_,_))
+        .Times(Exactly(1));
+    EXPECT_CALL(mock_input_sink, handle_input(_))
+        .Times(Exactly(0));
+
+    x11_dispatchable.set_input_sink(&mock_input_sink, &builder);
+    x11_dispatchable.dispatch(mir::dispatch::FdEvent::readable);
+}
+
+TEST_F(X11DispatchableTest, ungrabs_keyboard)
+{
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.focus_out_event_return),
+                       Return(1)));
+
+    EXPECT_CALL(mock_x11, XUngrabKeyboard(_,_))
+        .Times(Exactly(1));
+    EXPECT_CALL(mock_input_sink, handle_input(_))
+        .Times(Exactly(0));
+
+    x11_dispatchable.set_input_sink(&mock_input_sink, &builder);
     x11_dispatchable.dispatch(mir::dispatch::FdEvent::readable);
 }

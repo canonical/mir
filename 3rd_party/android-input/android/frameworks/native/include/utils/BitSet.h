@@ -103,8 +103,6 @@ struct BitSet32 {
     inline bool operator!= (const BitSet32& other) const { return value != other.value; }
 };
 
-ANDROID_BASIC_TYPES_TRAITS(BitSet32)
-
 } // namespace android
 
 #endif // UTILS_BITSET_H
