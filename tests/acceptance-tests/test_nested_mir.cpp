@@ -404,20 +404,10 @@ TEST_F(NestedServer, display_configuration_changes_are_visible_to_client)
 
     auto const configuration = mir_connection_create_display_config(connection);
 
-    int total_changes{0};
-    int seen_immediately{0};
-    std::atomic<int> deferred{0};
-
-    mir_connection_set_display_config_change_callback(
-        connection,
-        [](MirConnection*, void* context) { static_cast<std::atomic<int>*>(context)->fetch_add(1); },
-        &deferred);
-
     for (auto new_orientation :
         {mir_orientation_left, mir_orientation_right, mir_orientation_inverted, mir_orientation_normal,
          mir_orientation_inverted, mir_orientation_right, mir_orientation_left, mir_orientation_normal})
     {
-        ++total_changes;
         // Allow for the egl context getting rebuilt as a side-effect each iteration
         ignore_rebuild_of_egl_context();
 
@@ -427,16 +417,9 @@ TEST_F(NestedServer, display_configuration_changes_are_visible_to_client)
         mir_wait_for(mir_connection_apply_display_config(connection, configuration));
 
         auto const new_config = mir_connection_create_display_config(connection);
-        if (new_config->outputs->orientation == configuration->outputs->orientation)
-            ++seen_immediately;
-
+        EXPECT_THAT(new_config->outputs->orientation, Eq(configuration->outputs->orientation));
         mir_display_config_destroy(new_config);
     }
-
-    mt::spin_wait_for_condition_or_timeout([&] { return seen_immediately+deferred == total_changes; }, 1s);
-
-    EXPECT_THAT(seen_immediately + deferred, Eq(total_changes))
-        << "seen_immediately=" << seen_immediately << ", deferred=" << deferred;
 
     mir_display_config_destroy(configuration);
     mir_surface_release_sync(painted_surface);
