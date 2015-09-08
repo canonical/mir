@@ -285,3 +285,10 @@ bool mt::compare_display_configurations(MirDisplayConfiguration const& client_co
     TestDisplayConfiguration config2{protobuf_config};
     return compare_display_configurations(config1, config2);
 }
+
+bool mt::compare_display_configurations(graphics::DisplayConfiguration const& display_config1,
+                                        MirDisplayConfiguration const* display_config2)
+{
+    TestDisplayConfiguration config2{*display_config2};
+    return compare_display_configurations(display_config1, config2);
+}
