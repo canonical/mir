@@ -26,6 +26,7 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_android_native_buffer.h"
 #include "mir_toolkit/common.h"
+#include <hardware/gralloc.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <stdexcept>
@@ -94,6 +95,13 @@ TEST_F(ServerRenderWindow, updates_fences_and_returns_buffer_on_queue)
 TEST_F(ServerRenderWindow, returns_format)
 {
     EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, render_window.driver_requests_info(NATIVE_WINDOW_FORMAT));
+}
+
+TEST_F(ServerRenderWindow, returns_usage_bits_for_fb)
+{
+    using namespace testing;
+    auto bits = GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_FB;
+    EXPECT_THAT(render_window.driver_requests_info(NATIVE_WINDOW_CONSUMER_USAGE_BITS), Eq(bits));
 }
 
 TEST_F(ServerRenderWindow, returns_different_format_if_format_changes)

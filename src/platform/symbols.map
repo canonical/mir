@@ -1,4 +1,4 @@
-MIRPLATFORM_9 {
+MIRPLATFORM_10 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
@@ -7,6 +7,7 @@ MIRPLATFORM_9 {
     mir::graphics::Buffer::Buffer*;
     mir::graphics::Buffer::gl_bind_to_texture*;
     mir::graphics::Buffer::id*;
+    mir::graphics::Buffer::native_buffer_base*;
     mir::graphics::Buffer::native_buffer_handle*;
     mir::graphics::Buffer::pixel_format*;
     mir::graphics::Buffer::size*;
@@ -275,35 +276,30 @@ MIRPLATFORM_9 {
     mir::udev::Monitor::Monitor*;
     mir::udev::Monitor::process_events*;
     mir::udev::operator*;
+
+    # Android input platform symbols
+    android::EventHub::EventHub*;
+    android::getAbsAxisUsage*;
+    android::getInputDeviceConfigurationFilePathByDeviceIdentifier*;
+    android::InputDeviceInfo::?InputDeviceInfo*;
+    android::InputDeviceInfo::InputDeviceInfo*;
+    android::InputReaderConfiguration::setDisplayInfo*;
+    android::InputReader::InputReader*;
+    android::isEligibleBuiltInKeyboard*;
+    android::KeyCharacterMap::combine*;
+    android::KeyCharacterMap::empty*;
+    android::KeyCharacterMap::mapKey*;
+    android::KeyLayoutMap::findScanCodesForKey*;
+    android::KeyLayoutMap::mapAxis*;
+    android::KeyLayoutMap::mapKey*;
+    android::KeyMap::?KeyMap*;
+    android::KeyMap::KeyMap*;
+    android::KeyMap::load*;
+    android::KeyMap::loadGenericMaps*;
+    __android_log_assert;
+    __android_log_print;
+    android::VirtualKeyMap::load*;
+    android::VirtualKeyMap::?VirtualKeyMap*;
   };
  local: *;
 };
-
-MIRPLATFORM_9.1 {
-  global:
-    extern "C++" {
-      android::EventHub::EventHub*;
-      android::getAbsAxisUsage*;
-      android::getInputDeviceConfigurationFilePathByDeviceIdentifier*;
-      android::InputDeviceInfo::?InputDeviceInfo*;
-      android::InputDeviceInfo::InputDeviceInfo*;
-      android::InputReaderConfiguration::setDisplayInfo*;
-      android::InputReader::InputReader*;
-      android::isEligibleBuiltInKeyboard*;
-      android::KeyCharacterMap::combine*;
-      android::KeyCharacterMap::empty*;
-      android::KeyCharacterMap::mapKey*;
-      android::KeyLayoutMap::findScanCodesForKey*;
-      android::KeyLayoutMap::mapAxis*;
-      android::KeyLayoutMap::mapKey*;
-      android::KeyMap::?KeyMap*;
-      android::KeyMap::KeyMap*;
-      android::KeyMap::load*;
-      android::KeyMap::loadGenericMaps*;
-      __android_log_assert;
-      __android_log_print;
-      android::VirtualKeyMap::load*;
-      android::VirtualKeyMap::?VirtualKeyMap*;
-      mir::graphics::Buffer::native_buffer_base*;
-    };
-} MIRPLATFORM_9;

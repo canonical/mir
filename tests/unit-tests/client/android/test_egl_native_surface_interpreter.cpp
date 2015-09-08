@@ -25,6 +25,7 @@
 #include "mir/test/doubles/stub_android_native_buffer.h"
 #include "mir/test/fake_shared.h"
 #include <system/window.h>
+#include <hardware/gralloc.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -266,4 +267,26 @@ TEST_F(AndroidInterpreter, does_not_set_lower_than_mir_frontend_cache_size)
         .Times(0);
     mcla::EGLNativeSurfaceInterpreter interpreter(mock_surface);
     interpreter.dispatch_driver_request_buffer_count(new_size); 
+}
+
+TEST_F(AndroidInterpreter, returns_proper_usage_bits_based_on_surface)
+{
+    using namespace testing;
+    MirSurfaceParameters const software = { "", 1, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_software, 0 };
+    MirSurfaceParameters const hardware = { "", 1, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, 0 };
+
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
+    mcla::EGLNativeSurfaceInterpreter interpreter(mock_surface);
+
+    EXPECT_CALL(mock_surface, get_parameters())
+        .Times(2)
+        .WillOnce(Return(software))
+        .WillOnce(Return(hardware));
+
+    auto const hardware_bits = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
+    auto const software_bits =
+        GRALLOC_USAGE_SW_WRITE_OFTEN | GRALLOC_USAGE_SW_READ_OFTEN |
+        GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE;
+    EXPECT_THAT(interpreter.driver_requests_info(NATIVE_WINDOW_CONSUMER_USAGE_BITS), Eq(software_bits));
+    EXPECT_THAT(interpreter.driver_requests_info(NATIVE_WINDOW_CONSUMER_USAGE_BITS), Eq(hardware_bits));
 }

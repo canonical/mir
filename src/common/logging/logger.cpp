@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -20,8 +20,23 @@
 #include "mir/logging/logger.h"
 
 #include <mutex>
+#include <cstdarg>
+#include <cstdio>
 
 namespace ml = mir::logging;
+
+void ml::Logger::log(char const* component, Severity severity, char const* format, ...)
+{
+    auto const bufsize = 4096;
+    va_list va;
+    va_start(va, format);
+    char message[bufsize];
+    vsnprintf(message, bufsize, format, va);
+    va_end(va);
+
+    // Inefficient, but maintains API: Constructing a std::string for message/component.
+    log(severity, std::string{message}, std::string{component});
+}
 
 namespace
 {

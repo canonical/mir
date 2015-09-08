@@ -52,20 +52,25 @@ inline void log_info(std::string const& message)
                MIR_LOG_COMPONENT, message);
 }
 
-// TODO later as required: error, critical, warning, debug
-
 template<typename... Args>
-void log_info(char const* fmt, Args... args)
+void log_info(char const* fmt, Args&&... args)
 {
     ::mir::log(::mir::logging::Severity::informational,
-               MIR_LOG_COMPONENT, fmt, args...);
+               MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
 }
 
 template<typename... Args>
-void log_error(char const* fmt, Args... args)
+void log_error(char const* fmt, Args&&... args)
 {
     ::mir::log(::mir::logging::Severity::error,
-               MIR_LOG_COMPONENT, fmt, args...);
+               MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
+}
+
+template<typename... Args>
+inline void log_debug(char const* fmt, Args&&... args)
+{
+    ::mir::log(::mir::logging::Severity::debug,
+               MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
 }
 
 inline void log_critical(std::string const& message)
@@ -74,11 +79,23 @@ inline void log_critical(std::string const& message)
                MIR_LOG_COMPONENT, message);
 }
 
-
 inline void log_error(std::string const& message)
 {
     ::mir::log(::mir::logging::Severity::error,
                MIR_LOG_COMPONENT, message);
+}
+
+inline void log_warning(std::string const& message)
+{
+    ::mir::log(::mir::logging::Severity::warning,
+               MIR_LOG_COMPONENT, message);
+}
+
+template<typename... Args>
+void log_warning(char const* fmt, Args&&... args)
+{
+    ::mir::log(::mir::logging::Severity::warning,
+               MIR_LOG_COMPONENT, fmt, std::forward<Args>(args)...);
 }
 
 } // (nested anonymous) namespace
