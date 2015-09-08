@@ -217,6 +217,14 @@ void fill_vector_with_random_data(std::vector<uint8_t>& buffer)
     /* We want to block until *some* entropy exists on boot, then use urandom once we have some */
     retval = select(random_fd + 1, &rfds, NULL, NULL, &tv);
 
+    /* We are done with /dev/random at this point, and it is either an error or ready to be read */
+    if (close(random_fd) == -1)
+    {
+        int error = errno;
+        BOOST_THROW_EXCEPTION(std::system_error(error, std::system_category(),
+                                                "close failed on device " + std::string(RANDOM_DEVICE_PATH)));
+    }
+
     if (retval == -1)
     {
         int error = errno;
