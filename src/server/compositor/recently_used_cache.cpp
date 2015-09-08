@@ -19,6 +19,10 @@
 
 #include "mir/compositor/recently_used_cache.h"
 #include "mir/graphics/buffer.h"
+#include "mir/renderer/gl/texture_source.h"
+
+#include <stdexcept>
+#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -33,7 +37,13 @@ std::shared_ptr<mg::GLTexture> mc::RecentlyUsedCache::load(mg::Renderable const&
 
     if ((texture.last_bound_buffer != buffer_id) || (!texture.valid_binding))
     {
-        buffer->gl_bind_to_texture();
+        auto const texture_source =
+            dynamic_cast<mir::renderer::gl::TextureSource*>(
+                    buffer->native_buffer_base());
+        if (!texture_source)
+            BOOST_THROW_EXCEPTION(std::logic_error("Buffer does not support GL rendering"));
+
+        texture_source->gl_bind_to_texture();
         texture.resource = buffer;
         texture.last_bound_buffer = buffer_id;
     }
