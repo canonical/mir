@@ -1,4 +1,4 @@
-MIR_GRAPHICS_PLATFORM_4 {
+MIR_GRAPHICS_PLATFORM_5 {
   global: 
    add_graphics_platform_options;
    probe_graphics_platform;
