@@ -79,6 +79,13 @@ public:
     /// This must remain valid while apply_settings() and run() are called.
     void set_command_line(int argc, char const* argv[]);
 
+    /// set the cookie-verification secret.
+    /// This secret is used to generate timestamps that can be attested to by
+    /// libmircookie. Any process this secret is shared with can verify Mir-generated
+    /// cookies, or produce their own.
+    /// \note If not explicitly set, a random secret will be chosen.
+    void set_cookie_secret(std::vector<uint8_t> const& secret);
+
     /// Applies any configuration options, hooks, or custom implementations.
     /// Must be called before calling run() or accessing any mir subsystems.
     void apply_settings();
@@ -381,6 +388,7 @@ public:
     /// using the format "fd://%d".
     auto open_prompt_socket() -> Fd;
 /** @} */
+
 private:
     struct ServerConfiguration;
     struct Self;

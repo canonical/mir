@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -24,6 +24,7 @@
 #include "mir/default_server_status_listener.h"
 #include "mir/emergency_cleanup.h"
 #include "mir/default_configuration.h"
+#include "mir/cookie_factory.h"
 
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/options/program_option.h"
@@ -41,6 +42,18 @@
 #include "mir/scene/null_prompt_session_listener.h"
 #include "default_emergency_cleanup.h"
 
+#include <boost/throw_exception.hpp>
+
+#include <vector>
+#include <array>
+#include <linux/random.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
@@ -50,6 +63,12 @@ namespace mo = mir::options;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
+
+namespace
+{
+    char const* RANDOM_DEVICE_PATH = "/dev/random";
+    int const WAIT_SECONDS = 30;
+}
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
         DefaultServerConfiguration(std::make_shared<mo::DefaultConfiguration>(argc, argv))
@@ -170,6 +189,66 @@ std::shared_ptr<mir::EmergencyCleanup> mir::DefaultServerConfiguration::the_emer
         []()
         {
             return std::make_shared<DefaultEmergencyCleanup>();
+        });
+}
+
+namespace
+{
+void fill_vector_with_random_data(std::vector<uint8_t>& buffer)
+{
+    int random_fd;
+    int retval;
+    fd_set rfds;
+
+    struct timeval tv;
+    tv.tv_sec  = WAIT_SECONDS;
+    tv.tv_usec = 0;
+
+    if ((random_fd = open(RANDOM_DEVICE_PATH, O_RDONLY)) == -1)
+    {
+        int error = errno;
+        BOOST_THROW_EXCEPTION(std::system_error(error, std::system_category(),
+                                                "open failed on device " + std::string(RANDOM_DEVICE_PATH)));
+    }
+
+    FD_ZERO(&rfds);
+    FD_SET(random_fd, &rfds);
+
+    /* We want to block until *some* entropy exists on boot, then use urandom once we have some */
+    retval = select(random_fd + 1, &rfds, NULL, NULL, &tv);
+
+    if (retval == -1)
+    {
+        int error = errno;
+        BOOST_THROW_EXCEPTION(std::system_error(error, std::system_category(),
+                                                "select failed on file descriptor " + std::to_string(random_fd) +
+                                                " from device " + std::string(RANDOM_DEVICE_PATH)));
+    }
+    else if (retval && FD_ISSET(random_fd, &rfds))
+    {
+        std::uniform_int_distribution<uint8_t> dist;
+        std::random_device rand_dev("/dev/urandom");
+
+        std::generate(std::begin(buffer), std::end(buffer), [&]() {
+            return dist(rand_dev);
+        });
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to read from device: " + std::string(RANDOM_DEVICE_PATH) +
+                                                 " after: " + std::to_string(WAIT_SECONDS) + " seconds"));
+    }
+}
+}
+
+std::shared_ptr<mir::CookieFactory> mir::DefaultServerConfiguration::the_cookie_factory()
+{
+    return cookie_factory(
+        []()
+        {
+            std::vector<uint8_t> seed(16);
+            fill_vector_with_random_data(seed);
+            return std::make_shared<mir::CookieFactory>(seed);
         });
 }
 

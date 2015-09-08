@@ -29,6 +29,7 @@
 #include "mir/main_loop.h"
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
+#include "mir/cookie_factory.h"
 
 // TODO these are used to frig a stub renderer when running headless
 #include "mir/compositor/renderer.h"
@@ -101,6 +102,7 @@ struct mir::Server::Self
     std::weak_ptr<options::Option> options;
     std::string config_file;
     std::shared_ptr<ServerConfiguration> server_config;
+    std::shared_ptr<CookieFactory> cookie_factory;
 
     std::function<void()> init_callback{[]{}};
     int argc{0};
@@ -207,6 +209,15 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
         return mir::DefaultServerConfiguration::the_renderer_factory();
     }
 
+    auto the_cookie_factory() -> std::shared_ptr<CookieFactory> override
+    {
+        if (self->cookie_factory)
+        {
+            return self->cookie_factory;
+        }
+        return mir::DefaultServerConfiguration::the_cookie_factory();
+    }
+
     using mir::DefaultServerConfiguration::the_options;
 
     FOREACH_OVERRIDE(MIR_SERVER_CONFIG_OVERRIDE)
@@ -275,6 +286,12 @@ void mir::Server::set_command_line(int argc, char const* argv[])
     verify_setting_allowed(self->server_config);
     self->argc = argc;
     self->argv = argv;
+}
+
+void mir::Server::set_cookie_secret(std::vector<uint8_t> const& secret)
+{
+    verify_setting_allowed(self->server_config);
+    self->cookie_factory = std::make_shared<CookieFactory>(secret);
 }
 
 void mir::Server::add_init_callback(std::function<void()> const& init_callback)

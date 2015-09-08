@@ -43,6 +43,7 @@ Build-Depends: cmake,
                uuid-dev,
                python3,
                dh-python,
+               nettle-dev,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
@@ -401,6 +402,33 @@ Description: Display server for Ubuntu - android driver metapackage
  .
  This package depends on a full set of graphics drivers for running Mir on top
  of an existing Android driver stack.
+
+Package: libmircookie1
+Section: libs
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+Description: Produce and verify spoof-resistant timestamps - runtime library
+ libmircookie provides a simple mechanism for a group of cooperating processes
+ to hand out and verify difficult-to-forge timestamps to untrusted 3rd parties.
+ .
+ This package contains the runtime library for generating and verifying the
+ attestable timestamps.
+
+Package: libmircookie-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libmircookie1 (= ${binary:Version}),
+         ${misc:Depends},
+Description: Produce and verify spoof-resistant timestamps - development headers
+ libmircookie provides a simple mechanism for a group of cooperating processes
+ to hand out and verify difficult-to-forge timestamps to untrusted 3rd parties.
+ .
+ This package contains the development headers for building programs that
+ generate or verify the attestable timestamps.
 
 Package: python3-mir-perf-framework
 Section: python

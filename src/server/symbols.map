@@ -135,6 +135,7 @@ MIR_SERVER_33 {
     mir::ServerActionQueue::?ServerActionQueue*;
     mir::ServerActionQueue::ServerActionQueue*;
     mir::Server::add_configuration_option*;
+    mir::Server::set_cookie_secret*;
     mir::Server::add_emergency_cleanup*;
     mir::Server::add_init_callback*;
     mir::Server::apply_settings*;
@@ -590,6 +591,7 @@ MIR_SERVER_33 {
     mir::DefaultServerConfiguration::the_buffer_stream_factory*;
     mir::DefaultServerConfiguration::the_clock*;
     mir::DefaultServerConfiguration::the_composite_event_filter*;
+    mir::DefaultServerConfiguration::the_cookie_factory*;
     mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
     mir::DefaultServerConfiguration::the_surface_input_dispatcher;
     mir::DefaultServerConfiguration::the_compositor*;
