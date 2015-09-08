@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include <condition_variable>
 #include "mediating_display_changer.h"
 #include "session_container.h"
 #include "mir/scene/session.h"
@@ -117,16 +118,19 @@ void ms::MediatingDisplayChanger::configure(
     std::shared_ptr<mf::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
-    std::lock_guard<std::mutex> lg{configuration_mutex};
+    std::unique_lock<std::mutex> lg{configuration_mutex};
 
     config_map[session] = conf;
 
     if (focused_session.lock() == session)
     {
         std::weak_ptr<mf::Session> const weak_session{session};
+        std::condition_variable cv;
+        bool done{false};
+
         server_action_queue->enqueue(
             this,
-            [this, weak_session, conf]
+            [this, weak_session, conf, &done, &cv]
             {
                 if (auto const session = weak_session.lock())
                 {
@@ -134,11 +138,14 @@ void ms::MediatingDisplayChanger::configure(
 
                     /* If the session is focused, apply the configuration */
                     if (focused_session.lock() == session)
-                    {
                         apply_config(conf, PauseResumeSystem);
-                    }
                 }
+
+                done = true;
+                cv.notify_one();
             });
+
+        cv.wait(lg, [&done] { return done; });
     }
 }
 
