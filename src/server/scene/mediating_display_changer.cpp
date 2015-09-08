@@ -133,10 +133,10 @@ void ms::MediatingDisplayChanger::configure(
             this,
             [this, weak_session, conf, &done, &cv]
             {
+                std::lock_guard<std::mutex> lg{configuration_mutex};
+
                 if (auto const session = weak_session.lock())
                 {
-                    std::lock_guard<std::mutex> lg{configuration_mutex};
-
                     /* If the session is focused, apply the configuration */
                     if (focused_session.lock() == session)
                         apply_config(conf, PauseResumeSystem);
