@@ -424,13 +424,24 @@ TEST_F(NestedServer, display_configuration_changes_are_visible_to_client)
     mir_connection_release(connection);
 }
 
+namespace
+{
+void config_update(MirConnection* /*connection*/, void* context)
+{
+    static_cast<mt::WaitCondition*>(context)->wake_up_everyone();
+}
+}
+
 // lp:1493741
-TEST_F(NestedServer, display_configuration_changes_are_visible_to_non_active_client)
+TEST_F(NestedServer, display_configuration_changes_are_visible_to_client_when_it_becomes_active)
 {
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
 
     auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    mt::WaitCondition condition;
+    mir_connection_set_display_config_change_callback(connection, &config_update, &condition);
 
     auto const configuration = mir_connection_create_display_config(connection);
 
@@ -441,6 +452,8 @@ TEST_F(NestedServer, display_configuration_changes_are_visible_to_non_active_cli
 
     // Need a painted surface to have focus
     auto const painted_surface = make_and_paint_surface(connection);
+
+    condition.wait_for_at_most_seconds(1);
 
     auto const new_config = mir_connection_create_display_config(connection);
     EXPECT_THAT(new_config->outputs->orientation, Eq(configuration->outputs->orientation));
