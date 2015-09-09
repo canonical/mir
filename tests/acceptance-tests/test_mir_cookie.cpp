@@ -34,11 +34,6 @@ namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace msh = mir::shell;
 
-namespace
-{
-  int const MAX_WAIT = 4;
-}
-
 TEST(MirCookieFactory, attests_real_timestamp)
 {
     std::vector<uint8_t> secret{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
