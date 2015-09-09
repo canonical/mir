@@ -119,7 +119,7 @@ public:
     
     void buffer_available(mir::protobuf::Buffer const& buffer) override;
     void buffer_unavailable() override;
- 
+    void set_size(geometry::Size) override;
 protected:
     BufferStream(BufferStream const&) = delete;
     BufferStream& operator=(BufferStream const&) = delete;

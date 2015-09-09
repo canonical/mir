@@ -4,11 +4,12 @@
 set -e
 
 usage() {
-  echo "usage: $(basename $0) [-c] [-u] [-d <dist>]"
+  echo "usage: $(basename $0) [-a <arch>] [-c] [-h] [-d <dist>] [-u]"
+  echo "  -a <arch>  Specify target architecture (armhf/arm64/powerpc/ppc64el)"
   echo "  -c         Clean before building"
-  echo "  -d <dist>  Select the distribution to build for"
-  echo "  -u         Update partial chroot directory"
+  echo "  -d <dist>  Select the distribution to build for (wily/vivid)"
   echo "  -h         This message"
+  echo "  -u         Update partial chroot directory"
 }
 
 clean_build_dir() {
@@ -24,16 +25,23 @@ _do_update_chroot=0
 # Default to vivid as we don't seem to have any working wily devices right now 
 dist=vivid
 clean=0
+update_build_dir=0
 
-while getopts "cuhd:" OPTNAME
+target_arch=armhf
+
+while getopts "a:cd:hu" OPTNAME
 do
     case $OPTNAME in
+      a )
+        target_arch=${OPTARG}
+        update_build_dir=1
+        ;;
       c )
         clean=1
         ;;
       d )
         dist=${OPTARG}
-        BUILD_DIR=${BUILD_DIR}-${dist}
+        update_build_dir=1
         ;;
       u )
         _do_update_chroot=1
@@ -61,8 +69,12 @@ if [ ${clean} -ne 0 ]; then
     clean_build_dir ${BUILD_DIR}
 fi
 
+if [ ${update_build_dir} -eq 1 ]; then
+    BUILD_DIR=build-${target_arch}-${dist}
+fi
+
 if [ "${MIR_NDK_PATH}" = "" ]; then
-    export MIR_NDK_PATH=~/.cache/mir-armhf-chroot-${dist}
+    export MIR_NDK_PATH=~/.cache/mir-${target_arch}-chroot-${dist}
 fi
 
 if [ ! -d ${MIR_NDK_PATH} ]; then 
@@ -79,29 +91,56 @@ echo "Using MIR_NDK_PATH: ${MIR_NDK_PATH}"
 
 if [ ${_do_update_chroot} -eq 1 ] ; then
     pushd tools > /dev/null
-        ./setup-partial-armhf-chroot.sh ${MIR_NDK_PATH} ${dist}
+        ./setup-partial-armhf-chroot.sh ${MIR_NDK_PATH} ${dist} ${target_arch}
     popd > /dev/null
     # force a clean build after an update, since CMake cache maybe out of date
     clean_build_dir ${BUILD_DIR}
 fi
 
-cc_variant=
+gcc_variant=
 if [ "${dist}" = "vivid" ]; then
-    cc_variant=-4.9
+    gcc_variant=-4.9
 fi
+
+case ${target_arch} in
+    armhf )
+        target_machine=arm-linux-gnueabihf
+        mir_platform="android;mesa-kms"
+        ;;
+    arm64 )
+        target_machine=aarch64-linux-gnu
+        mir_platform=mesa-kms
+        ;;
+    ppc64el )
+        target_machine=powerpc64le-linux-gnu
+        mir_platform=mesa-kms
+        ;;
+    powerpc )
+        target_machine=powerpc-linux-gnu
+        mir_platform=mesa-kms
+        ;;
+    * )
+        echo "Unknown architecture ${target_arch}"
+        usage
+        exit 1
+esac
+
+echo "Target architecture: ${target_arch}"
+echo "Target machine: ${target_machine}"
 
 pushd ${BUILD_DIR} > /dev/null 
 
-    export PKG_CONFIG_PATH="${MIR_NDK_PATH}/usr/lib/pkgconfig:${MIR_NDK_PATH}/usr/lib/arm-linux-gnueabihf/pkgconfig"
+    export PKG_CONFIG_PATH="${MIR_NDK_PATH}/usr/lib/pkgconfig:${MIR_NDK_PATH}/usr/lib/${target_machine}/pkgconfig"
     export PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1
     export PKG_CONFIG_ALLOW_SYSTEM_LIBS=1
     export PKG_CONFIG_SYSROOT_DIR=$MIR_NDK_PATH
     export PKG_CONFIG_EXECUTABLE=`which pkg-config`
+    export MIR_TARGET_MACHINE=${target_machine}
+    export MIR_GCC_VARIANT=${gcc_variant}
     echo "Using PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
     echo "Using PKG_CONFIG_EXECUTABLE: $PKG_CONFIG_EXECUTABLE"
     cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake \
-      -DCC_VARIANT=${cc_variant} \
-      -DMIR_PLATFORM=android\;mesa-kms \
+      -DMIR_PLATFORM=${mir_platform} \
       .. 
 
     make -j${NUM_JOBS} $@

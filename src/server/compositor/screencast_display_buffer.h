@@ -20,6 +20,7 @@
 #define MIR_COMPOSITOR_SCREENCAST_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
+#include "mir/renderer/gl/texture_source.h"
 
 #include <GLES2/gl2.h>
 
@@ -68,6 +69,7 @@ public:
 private:
     geometry::Rectangle const rect;
     graphics::Buffer& buffer;
+    renderer::gl::TextureSource* texture_source;
     GLint old_fbo;
     GLint old_viewport[4];
     detail::GLResource<glGenTextures,glDeleteTextures> const color_tex;
