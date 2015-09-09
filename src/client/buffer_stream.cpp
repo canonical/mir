@@ -61,6 +61,7 @@ struct ServerBufferSemantics
     virtual uint32_t current_buffer_id() = 0;
     virtual MirWaitHandle* submit(std::function<void()> const&, geometry::Size sz, MirPixelFormat, int stream_id) = 0;
     virtual void lost_connection() = 0;
+    virtual void set_size(geom::Size) = 0;
     virtual ~ServerBufferSemantics() = default;
     ServerBufferSemantics() = default;
     ServerBufferSemantics(ServerBufferSemantics const&) = delete;
@@ -207,6 +208,10 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
             next_buffer_wait_handle.result_received();
     }
 
+    void set_size(geom::Size) override
+    {
+    }
+
     std::mutex mutex;
     mcl::ClientBufferDepository wrapped;
     mir::protobuf::DisplayServer& display_server;
@@ -306,6 +311,11 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         current_buffer_ = vault.withdraw().get();
         done();
         return &next_buffer_wait_handle;
+    }
+
+    void set_size(geom::Size size) override
+    {
+        vault.set_size(size);
     }
 
     void lost_connection() override
@@ -647,4 +657,9 @@ void mcl::BufferStream::buffer_unavailable()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     buffer_depository->lost_connection(); 
+}
+
+void mcl::BufferStream::set_size(geom::Size sz)
+{
+    buffer_depository->set_size(sz);
 }

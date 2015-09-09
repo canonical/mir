@@ -116,3 +116,10 @@ void mc::MultiMonitorArbiter::set_schedule(std::shared_ptr<Schedule> const& new_
     std::lock_guard<decltype(mutex)> lk(mutex);
     schedule = new_schedule;
 }
+
+bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
+{
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    return schedule->anything_scheduled() ||
+       ((current_buffer_users.find(id) == current_buffer_users.end()) && !onscreen_buffers.empty());
+}

@@ -99,7 +99,6 @@ public:
     virtual MirPixelFormat pixel_format() const override { return buf_pixel_format; }
 
     virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override { return native_buffer; }
-    virtual void gl_bind_to_texture() override {}
 
     void write(unsigned char const* pixels, size_t len) override
     {

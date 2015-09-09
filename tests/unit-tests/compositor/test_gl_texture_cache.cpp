@@ -18,7 +18,7 @@
  */
 
 #include "mir/compositor/recently_used_cache.h"
-#include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/mock_gl_buffer.h"
 #include "mir/test/doubles/mock_renderable.h"
 #include "mir/test/doubles/mock_gl.h"
 #include <gtest/gtest.h>
@@ -29,13 +29,14 @@ namespace mg=mir::graphics;
 
 namespace
 {
+
 class RecentlyUsedCache : public testing::Test
 {
 public:
     RecentlyUsedCache()
     {
         using namespace testing;
-        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
+        mock_buffer = std::make_shared<NiceMock<mtd::MockGLBuffer>>();
         renderable = std::make_shared<NiceMock<mtd::MockRenderable>>();
         ON_CALL(*renderable, buffer())
             .WillByDefault(Return(mock_buffer));
@@ -44,7 +45,7 @@ public:
     }
 
     testing::NiceMock<mtd::MockGL> mock_gl;
-    std::shared_ptr<mtd::MockBuffer> mock_buffer;
+    std::shared_ptr<mtd::MockGLBuffer> mock_buffer;
     std::shared_ptr<testing::NiceMock<mtd::MockRenderable>> renderable;
     GLuint const stub_texture{1};
 };
