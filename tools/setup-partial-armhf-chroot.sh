@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# TODO: Rename this file without "armhf" when it's safe to do so.
+#
 
 set -e
 
@@ -66,6 +69,11 @@ if [ ! -d ${directory} ]; then
     mkdir -p ${directory} 
 fi
 
+arch=armhf
+if [ ! -z "$3" ]; then
+    arch=$3
+fi
+
 DEBCONTROL=$(pwd)/../debian/control
 
 pushd ${directory} > /dev/null
@@ -78,7 +86,7 @@ set +e
 
 # Parse dependencies from debian/control
 # dpkg-checkbuilddeps returns 1 when dependencies are not met and the list is sent to stderr
-builddeps=$(dpkg-checkbuilddeps -a armhf --admindir=. ${DEBCONTROL} 2>&1 )
+builddeps=$(dpkg-checkbuilddeps -a ${arch} --admindir=. ${DEBCONTROL} 2>&1 )
 if [ $? -ne 1 ] ; then
     echo "${builddeps}"
     exit 2
@@ -121,8 +129,8 @@ done
 
 multistrap -f mstrap.conf 
 
-# this kept coming up in my tests.
 rm -f var/cache/apt/archives/lock
+
 # Remove libc libraries that confuse the cross-compiler
 rm -f var/cache/apt/archives/libc-dev*.deb
 rm -f var/cache/apt/archives/libc6*.deb
