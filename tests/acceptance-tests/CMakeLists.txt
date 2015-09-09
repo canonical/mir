@@ -53,7 +53,7 @@ set(
   test_session_mediator_report.cpp
 )
 
-if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
+if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
   list(APPEND SOURCES test_symbols_required_by_mesa.cpp)
 endif()
 
