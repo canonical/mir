@@ -100,6 +100,7 @@ set -e
 builddeps=$(echo ${builddeps} | sed -e 's/dpkg-checkbuilddeps://g' -e 's/Unmet build dependencies://g' -e 's/build-essential:native//g')
 builddeps=$(echo ${builddeps} | sed 's/([^)]*)//g')
 builddeps=$(echo ${builddeps} | sed -e 's/abi-compliance-checker//g')
+builddeps=$(echo ${builddeps} | sed -e 's/multistrap//g')
 
 echo "[General]
 arch=${arch}

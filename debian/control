@@ -43,7 +43,6 @@ Build-Depends: cmake,
                uuid-dev,
                python3,
                dh-python,
-               multistrap,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
