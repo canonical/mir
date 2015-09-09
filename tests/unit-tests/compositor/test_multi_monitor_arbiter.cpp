@@ -329,3 +329,53 @@ TEST_F(MultiMonitorArbiter, snapshotting_will_release_buffer_if_it_was_the_last_
     EXPECT_CALL(mock_map, send_buffer(sbuffer1->id()));
     arbiter.snapshot_release(sbuffer1);
 } 
+
+TEST_F(MultiMonitorArbiter, can_check_if_buffers_are_ready)
+{
+    int comp_id1{0};
+    int comp_id2{0};
+    schedule.set_schedule({buffers[3]});
+
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id2));
+
+    auto b1 = arbiter.compositor_acquire(&comp_id1);
+    EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id2));
+    arbiter.compositor_release(b1);
+
+    auto b2 = arbiter.compositor_acquire(&comp_id2);
+    EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id2));
+    arbiter.compositor_release(b2);
+} 
+
+TEST_F(MultiMonitorArbiter, other_compositor_ready_status_advances_with_fastest_compositor)
+{
+    int comp_id1{0};
+    int comp_id2{0};
+    schedule.set_schedule({buffers[0], buffers[1], buffers[2]});
+
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id2));
+
+    auto b1 = arbiter.compositor_acquire(&comp_id1);
+    arbiter.compositor_release(b1);
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id2));
+
+    b1 = arbiter.compositor_acquire(&comp_id1);
+    arbiter.compositor_release(b1);
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id2));
+
+    b1 = arbiter.compositor_acquire(&comp_id1);
+    arbiter.compositor_release(b1);
+    EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_TRUE(arbiter.buffer_ready_for(&comp_id2));
+
+    b1 = arbiter.compositor_acquire(&comp_id2);
+    arbiter.compositor_release(b1);
+    EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id1));
+    EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id2));
+} 

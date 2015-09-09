@@ -20,6 +20,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/display_configuration_report.h"
 #include "mir/main_loop.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
@@ -31,6 +32,7 @@
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/wait_condition.h"
 #include "mir/test/spin_wait.h"
+#include "mir/test/display_config_matchers.h"
 
 #include "mir/test/doubles/nested_mock_egl.h"
 
@@ -46,6 +48,7 @@ namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
 using namespace testing;
+using namespace std::chrono_literals;
 
 namespace
 {
@@ -87,6 +90,12 @@ struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
     MOCK_METHOD1(lifecycle_event_occurred, void (MirLifecycleState));
 };
 
+struct MockDisplayConfigurationReport : public mg::DisplayConfigurationReport
+{
+    MOCK_METHOD1(initial_configuration, void (mg::DisplayConfiguration const& configuration));
+    MOCK_METHOD1(new_configuration, void (mg::DisplayConfiguration const& configuration));
+};
+
 std::vector<geom::Rectangle> const display_geometry
 {
     {{  0, 0}, { 640,  480}},
@@ -102,9 +111,8 @@ public:
         : mtf::HeadlessNestedServerRunner(connection_string)
     {
         server.override_the_host_lifecycle_event_listener([this]
-           {
-               return the_mock_host_lifecycle_event_listener();
-           });
+            { return the_mock_host_lifecycle_event_listener(); });
+
         start_server();
     }
 
@@ -115,10 +123,8 @@ public:
 
     std::shared_ptr<MockHostLifecycleEventListener> the_mock_host_lifecycle_event_listener()
     {
-        return mock_host_lifecycle_event_listener([this]
-            {
-                return std::make_shared<NiceMock<MockHostLifecycleEventListener>>();
-            });
+        return mock_host_lifecycle_event_listener([]
+            { return std::make_shared<NiceMock<MockHostLifecycleEventListener>>(); });
     }
 
 private:
@@ -143,6 +149,9 @@ struct NestedServer : mtf::HeadlessInProcessServer
                 return mock_session_mediator_report;
             });
 
+        server.override_the_display_configuration_report([this]
+            { return the_mock_display_configuration_report(); });
+
         mtf::HeadlessInProcessServer::SetUp();
     }
 
@@ -156,6 +165,28 @@ struct NestedServer : mtf::HeadlessInProcessServer
         {
            app->set_lifecycle_state(lifecycle_state);
         }
+    }
+
+    std::shared_ptr<MockDisplayConfigurationReport> the_mock_display_configuration_report()
+    {
+        return mock_display_configuration_report([]
+            { return std::make_shared<NiceMock<MockDisplayConfigurationReport>>(); });
+    }
+
+    mir::CachedPtr<MockDisplayConfigurationReport> mock_display_configuration_report;
+
+    MirSurface* make_and_paint_surface(MirConnection* connection) const
+    {
+        auto const surface = mtf::make_any_surface(connection);
+        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        return surface;
+    }
+
+    void ignore_rebuild_of_egl_context()
+    {
+        InSequence context_lifecycle;
+        EXPECT_CALL(mock_egl, eglCreateContext(_, _, _, _)).Times(AnyNumber()).WillRepeatedly(Return((EGLContext)this));
+        EXPECT_CALL(mock_egl, eglDestroyContext(_, _)).Times(AnyNumber()).WillRepeatedly(Return(EGL_TRUE));
     }
 };
 }
@@ -231,8 +262,7 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
     NestedMirRunner nested_mir{new_connection()};
 
     auto c = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto surface = mtf::make_any_surface(c);
-    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+    auto surface = make_and_paint_surface(c);
 
     bool became_exposed_and_focused = mir::test::spin_wait_for_condition_or_timeout(
         [surface]
@@ -294,4 +324,68 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
     // Ignore other shutdown events
     EXPECT_CALL(*mock_session_mediator_report, session_release_surface_called(_)).Times(AnyNumber());
     EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(AnyNumber());
+}
+
+TEST_F(NestedServer, display_configuration_changes_are_forwarded_to_host)
+{
+    NestedMirRunner nested_mir{new_connection()};
+
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    // Need a painted surface to have focus
+    auto const painted_surface = make_and_paint_surface(connection);
+
+    auto const configuration = mir_connection_create_display_config(connection);
+
+    configuration->outputs->used = false;
+
+    mt::WaitCondition condition;
+
+    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
+        .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+
+    mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+
+    condition.wait_for_at_most_seconds(1);
+
+    mir_display_config_destroy(configuration);
+    mir_surface_release_sync(painted_surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
+{
+    NestedMirRunner nested_mir{new_connection()};
+
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    // Need a painted surface to have focus
+    auto const painted_surface = make_and_paint_surface(connection);
+
+    auto const configuration = mir_connection_create_display_config(connection);
+
+    for (auto new_orientation :
+        {mir_orientation_left, mir_orientation_right, mir_orientation_inverted, mir_orientation_normal,
+         mir_orientation_inverted, mir_orientation_right, mir_orientation_left, mir_orientation_normal})
+    {
+        // Allow for the egl context getting rebuilt as a side-effect each iteration
+        ignore_rebuild_of_egl_context();
+
+        mt::WaitCondition condition;
+
+        for(auto* output = configuration->outputs; output != configuration->outputs+configuration->num_outputs; ++ output)
+            output->orientation = new_orientation;
+
+        EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(mt::DisplayConfigMatches(configuration)))
+            .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+
+        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+
+        condition.wait_for_at_most_seconds(1);
+        Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
+    }
+
+    mir_display_config_destroy(configuration);
+    mir_surface_release_sync(painted_surface);
+    mir_connection_release(connection);
 }

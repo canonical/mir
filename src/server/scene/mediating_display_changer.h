@@ -33,6 +33,7 @@ namespace graphics
 {
     class Display;
     class DisplayConfigurationPolicy;
+    class DisplayConfigurationReport;
 }
 namespace compositor { class Compositor; }
 namespace scene
@@ -51,7 +52,8 @@ public:
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const& display_configuration_policy,
         std::shared_ptr<SessionContainer> const& session_container,
         std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
-        std::shared_ptr<ServerActionQueue> const& server_action_queue);
+        std::shared_ptr<ServerActionQueue> const& server_action_queue,
+        std::shared_ptr<graphics::DisplayConfigurationReport> const& report);
 
     /* From mir::frontend::DisplayChanger */
     std::shared_ptr<graphics::DisplayConfiguration> active_configuration() override;
@@ -83,6 +85,7 @@ private:
     std::shared_ptr<SessionContainer> const session_container;
     std::shared_ptr<SessionEventHandlerRegister> const session_event_handler_register;
     std::shared_ptr<ServerActionQueue> const server_action_queue;
+    std::shared_ptr<graphics::DisplayConfigurationReport> const report;
     std::mutex configuration_mutex;
     std::map<std::weak_ptr<frontend::Session>,
              std::shared_ptr<graphics::DisplayConfiguration>,

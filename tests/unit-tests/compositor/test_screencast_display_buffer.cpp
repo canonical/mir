@@ -18,8 +18,8 @@
 
 #include "src/server/compositor/screencast_display_buffer.h"
 
-#include "mir/test/doubles/mock_buffer.h"
-#include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/mock_gl_buffer.h"
+#include "mir/test/doubles/stub_gl_buffer.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/stub_renderable.h"
 
@@ -60,7 +60,7 @@ TEST_F(ScreencastDisplayBufferTest, cleans_up_gl_resources)
     EXPECT_CALL(mock_gl, glDeleteFramebuffers(1,Pointee(framebuffer)));
 
     geom::Rectangle const rect{{100,100}, {800,600}};
-    mtd::StubBuffer stub_buffer;
+    mtd::StubGLBuffer stub_buffer;
 
     mc::ScreencastDisplayBuffer db{rect, stub_buffer};
 }
@@ -87,7 +87,7 @@ TEST_F(ScreencastDisplayBufferTest, cleans_up_gl_resources_on_construction_failu
     EXPECT_CALL(mock_gl, glDeleteFramebuffers(1,Pointee(framebuffer)));
 
     geom::Rectangle const rect{{100,100}, {800,600}};
-    mtd::StubBuffer stub_buffer;
+    mtd::StubGLBuffer stub_buffer;
 
     EXPECT_THROW({
         mc::ScreencastDisplayBuffer db(rect, stub_buffer);
@@ -99,7 +99,7 @@ TEST_F(ScreencastDisplayBufferTest, sets_render_buffer_size_to_supplied_buffer_s
     using namespace testing;
 
     geom::Rectangle const rect{{100,100}, {800,600}};
-    testing::NiceMock<mtd::MockBuffer> mock_buffer{
+    testing::NiceMock<mtd::MockGLBuffer> mock_buffer{
         rect.size, geom::Stride{100}, mir_pixel_format_xbgr_8888};
 
     /* Set the buffer as rendering target */
@@ -116,7 +116,7 @@ TEST_F(ScreencastDisplayBufferTest, renders_to_supplied_buffer)
     using namespace testing;
 
     geom::Rectangle const rect{{100,100}, {800,600}};
-    testing::NiceMock<mtd::MockBuffer> mock_buffer{
+    testing::NiceMock<mtd::MockGLBuffer> mock_buffer{
         rect.size, geom::Stride{100}, mir_pixel_format_xbgr_8888};
 
     InSequence s;
@@ -138,7 +138,7 @@ TEST_F(ScreencastDisplayBufferTest, forces_rendering_to_complete_on_swap)
     using namespace testing;
 
     geom::Rectangle const rect{{100,100}, {800,600}};
-    mtd::StubBuffer stub_buffer;
+    mtd::StubGLBuffer stub_buffer;
 
     mc::ScreencastDisplayBuffer db{rect, stub_buffer};
 
@@ -151,7 +151,7 @@ TEST_F(ScreencastDisplayBufferTest, forces_rendering_to_complete_on_swap)
 TEST_F(ScreencastDisplayBufferTest, rejects_attempt_to_optimize)
 {
     geom::Rectangle const rect{{100,100}, {800,600}};
-    mtd::StubBuffer stub_buffer;
+    mtd::StubGLBuffer stub_buffer;
 
     mg::RenderableList renderables{
         std::make_shared<mtd::StubRenderable>(),
