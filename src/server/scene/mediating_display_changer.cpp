@@ -123,32 +123,29 @@ void ms::MediatingDisplayChanger::configure(
         config_map[session] = conf;
     }
 
-    if (focused_session.lock() == session)
-    {
-        std::weak_ptr<mf::Session> const weak_session{session};
-        std::condition_variable cv;
-        bool done{false};
+    std::weak_ptr<mf::Session> const weak_session{session};
+    std::condition_variable cv;
+    bool done{false};
 
-        server_action_queue->enqueue(
-            this,
-            [this, weak_session, conf, &done, &cv]
+    server_action_queue->enqueue(
+        this,
+        [this, weak_session, conf, &done, &cv]
+        {
+            std::lock_guard<std::mutex> lg{configuration_mutex};
+
+            if (auto const session = weak_session.lock())
             {
-                std::lock_guard<std::mutex> lg{configuration_mutex};
+                /* If the session is focused, apply the configuration */
+                if (focused_session.lock() == session)
+                    apply_config(conf, PauseResumeSystem);
+            }
 
-                if (auto const session = weak_session.lock())
-                {
-                    /* If the session is focused, apply the configuration */
-                    if (focused_session.lock() == session)
-                        apply_config(conf, PauseResumeSystem);
-                }
+            done = true;
+            cv.notify_one();
+        });
 
-                done = true;
-                cv.notify_one();
-            });
-
-        std::unique_lock<std::mutex> lg{configuration_mutex};
-        cv.wait(lg, [&done] { return done; });
-    }
+    std::unique_lock<std::mutex> lg{configuration_mutex};
+    cv.wait(lg, [&done] { return done; });
 }
 
 std::shared_ptr<mg::DisplayConfiguration>
