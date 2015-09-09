@@ -389,3 +389,37 @@ TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
     mir_surface_release_sync(painted_surface);
     mir_connection_release(connection);
 }
+
+// lp:1491937
+TEST_F(NestedServer, display_configuration_changes_are_visible_to_client)
+{
+    NestedMirRunner nested_mir{new_connection()};
+
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    // Need a painted surface to have focus
+    auto const painted_surface = make_and_paint_surface(connection);
+
+    auto const configuration = mir_connection_create_display_config(connection);
+
+    for (auto new_orientation :
+        {mir_orientation_left, mir_orientation_right, mir_orientation_inverted, mir_orientation_normal,
+         mir_orientation_inverted, mir_orientation_right, mir_orientation_left, mir_orientation_normal})
+    {
+        // Allow for the egl context getting rebuilt as a side-effect each iteration
+        ignore_rebuild_of_egl_context();
+
+        for(auto* output = configuration->outputs; output != configuration->outputs+configuration->num_outputs; ++ output)
+            output->orientation = new_orientation;
+
+        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+
+        auto const new_config = mir_connection_create_display_config(connection);
+        EXPECT_THAT(new_config->outputs->orientation, Eq(configuration->outputs->orientation));
+        mir_display_config_destroy(new_config);
+    }
+
+    mir_display_config_destroy(configuration);
+    mir_surface_release_sync(painted_surface);
+    mir_connection_release(connection);
+}
