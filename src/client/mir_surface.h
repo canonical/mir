@@ -113,6 +113,13 @@ struct MirSurfaceSpec
     mir::optional_value<AspectRatio> max_aspect;
     mir::optional_value<std::vector<MirBufferStreamInfo>> streams;
     mir::optional_value<std::vector<MirRectangle>> input_shape;
+
+    struct EventHandler
+    {
+        mir_surface_event_callback callback;
+        void* context;
+    };
+    mir::optional_value<EventHandler> event_handler;
 };
 
 struct MirPersistentId
