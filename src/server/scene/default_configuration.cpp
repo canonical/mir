@@ -135,7 +135,8 @@ mir::DefaultServerConfiguration::the_mediating_display_changer()
                 the_display_configuration_policy(),
                 the_session_container(),
                 the_session_event_handler_register(),
-                the_server_action_queue());
+                the_server_action_queue(),
+                the_display_configuration_report());
         });
 
 }

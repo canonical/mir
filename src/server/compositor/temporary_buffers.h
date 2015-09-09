@@ -39,10 +39,10 @@ public:
     geometry::Stride stride() const override;
     MirPixelFormat pixel_format() const override;
     mg::BufferID id() const override;
-    void gl_bind_to_texture() override;
     std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override;
     void write (unsigned char const* data, size_t size) override;
     void read (std::function<void(unsigned char const*)> const& do_with_pixels) override;
+    graphics::NativeBufferBase* native_buffer_base() override;
 
 protected:
     explicit TemporaryBuffer(std::shared_ptr<mg::Buffer> const& real_buffer);

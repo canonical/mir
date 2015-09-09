@@ -24,7 +24,7 @@
 #include <mir/graphics/gl_texture.h>
 #include <mir/compositor/gl_renderer.h>
 #include <mir/test/fake_shared.h>
-#include <mir/test/doubles/mock_buffer.h>
+#include <mir/test/doubles/mock_gl_buffer.h>
 #include <mir/test/doubles/mock_renderable.h>
 #include <mir/test/doubles/mock_buffer_stream.h>
 #include <mir/compositor/buffer_stream.h>
@@ -114,7 +114,7 @@ public:
         EXPECT_CALL(mock_gl, glDrawArrays(_, _, _)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glDisableVertexAttribArray(_)).Times(AnyNumber());
 
-        mock_buffer = std::make_shared<mtd::MockBuffer>();
+        mock_buffer = std::make_shared<mtd::MockGLBuffer>();
         EXPECT_CALL(*mock_buffer, gl_bind_to_texture()).Times(AnyNumber());
         EXPECT_CALL(*mock_buffer, id())
             .WillRepeatedly(Return(mir::graphics::BufferID(789)));
@@ -144,7 +144,7 @@ public:
 
     testing::NiceMock<mtd::MockGL> mock_gl;
     testing::NiceMock<mtd::MockEGL> mock_egl;
-    std::shared_ptr<mtd::MockBuffer> mock_buffer;
+    std::shared_ptr<mtd::MockGLBuffer> mock_buffer;
     mir::geometry::Rectangle display_area;
     std::shared_ptr<testing::NiceMock<mtd::MockRenderable>> renderable;
     mg::RenderableList renderable_list;

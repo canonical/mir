@@ -17,8 +17,7 @@
  */
 
 #include "dispatchable.h"
-#include "mir/events/event_private.h"
-#include "mir/events/event_builders.h"
+#include "mir/input/event_builder.h"
 
 #include <boost/throw_exception.hpp>
 #include <chrono>
@@ -32,17 +31,21 @@
 // Uncomment for verbose output with log_info.
 //#define MIR_ON_X11_INPUT_VERBOSE
 
+// Due to a bug in Unity when keyboard is grabbed,
+// client cannot be resized. This helps in debugging.
+#define GRAB_KBD
+
 namespace mi = mir::input;
 namespace mix = mi::X;
 namespace md = mir::dispatch;
-namespace mev = mir::events;
 
 mix::XDispatchable::XDispatchable(
     std::shared_ptr<::Display> const& conn,
     int raw_fd)
     : x11_connection(conn),
       fd(raw_fd),
-      sink(nullptr)
+      sink(nullptr),
+      builder(nullptr)
 {
 }
 
@@ -70,6 +73,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
         {
             switch (xev.type)
             {
+#ifdef GRAB_KBD
             case FocusIn:
             {
                 auto const& xfiev = (XFocusInEvent&)xev;
@@ -83,7 +87,7 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                 XUngrabKeyboard(xfoev.display, CurrentTime);
                 break;
             }
-
+#endif
             case KeyPress:
             case KeyRelease:
             {
@@ -127,10 +131,8 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                     keysym, xkev.keycode-8, modifiers, event_time);
 #endif
                 sink->handle_input(
-                    *mev::make_event(
-                        MirInputDeviceId(0),
+                    *builder->key_event(
                         event_time,
-                        0, /* mac */
                         xkev.type == KeyPress ?
                             mir_keyboard_action_down :
                             mir_keyboard_action_up,
@@ -189,10 +191,8 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                     xbev.x, xbev.y, buttons_pressed, modifiers, event_time);
 #endif
                 sink->handle_input(
-                    *mev::make_event(
-                        MirInputDeviceId(0),
+                    *builder->pointer_event(
                         event_time,
-                        0, /* mac */
                         modifiers,
                         xbev.type == ButtonPress ?
                             mir_pointer_action_button_down :
@@ -200,8 +200,10 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                         buttons_pressed,
                         xbev.x,
                         xbev.y,
-                        0,
-                        0
+                        0.0f,
+                        0.0f,
+                        0.0f,
+                        0.0f
                     )
                 );
                 break;
@@ -252,19 +254,28 @@ bool mix::XDispatchable::dispatch(md::FdEvents events)
                     xmev.x, xmev.y, buttons_pressed, modifiers, event_time);
 #endif
                 sink->handle_input(
-                    *mev::make_event(
-                        MirInputDeviceId(0),
+                    *builder->pointer_event(
                         event_time,
-                        0, /* mac */
                         modifiers,
                         mir_pointer_action_motion,
                         buttons_pressed,
                         xmev.x,
                         xmev.y,
-                        0,
-                        0
+                        0.0f,
+                        0.0f,
+                        0.0f,
+                        0.0f
                     )
                 );
+                break;
+            }
+
+            case ConfigureNotify:
+            {
+#ifdef MIR_ON_X11_INPUT_VERBOSE
+                auto const& xcev = (XConfigureEvent&)xev;
+                mir::log_info("Window size : %dx%d", xcev.width, xcev.height);
+#endif
                 break;
             }
 
@@ -294,12 +305,14 @@ md::FdEvents mix::XDispatchable::relevant_events() const
     return md::FdEvent::readable | md::FdEvent::error | md::FdEvent::remote_closed;
 }
 
-void mix::XDispatchable::set_input_sink(mi::InputSink *input_sink)
+void mix::XDispatchable::set_input_sink(mi::InputSink* input_sink, mi::EventBuilder* event_builder)
 {
     sink = input_sink;
+    builder = event_builder;
 }
 
 void mix::XDispatchable::unset_input_sink()
 {
     sink = nullptr;
+    builder = nullptr;
 }

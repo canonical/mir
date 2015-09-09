@@ -25,6 +25,7 @@
 #include "logging/perf_report.h"
 #include "rpc/mir_display_server.h"
 #include "mir_protobuf.pb.h"
+#include "buffer_vault.h"
 
 #include "mir/log.h"
 #include "mir/client_platform.h"
@@ -60,6 +61,7 @@ struct ServerBufferSemantics
     virtual uint32_t current_buffer_id() = 0;
     virtual MirWaitHandle* submit(std::function<void()> const&, geometry::Size sz, MirPixelFormat, int stream_id) = 0;
     virtual void lost_connection() = 0;
+    virtual void set_size(geom::Size) = 0;
     virtual ~ServerBufferSemantics() = default;
     ServerBufferSemantics() = default;
     ServerBufferSemantics(ServerBufferSemantics const&) = delete;
@@ -206,6 +208,10 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
             next_buffer_wait_handle.result_received();
     }
 
+    void set_size(geom::Size) override
+    {
+    }
+
     std::mutex mutex;
     mcl::ClientBufferDepository wrapped;
     mir::protobuf::DisplayServer& display_server;
@@ -214,6 +220,116 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
     std::unique_ptr<mir::protobuf::Void> protobuf_void{std::make_unique<mp::Void>()};
     MirWaitHandle next_buffer_wait_handle;
     bool server_connection_lost {false};
+};
+
+class Requests : public mcl::ServerBufferRequests
+{
+public:
+    Requests(mclr::DisplayServer& server, int stream_id) :
+        server(server),
+        stream_id(stream_id)
+    {
+    }
+
+    void allocate_buffer(geom::Size size, MirPixelFormat format, int usage) override
+    {
+        mp::BufferAllocation request;
+        request.mutable_id()->set_value(stream_id);
+        auto buf_params = request.add_buffer_requests();
+        buf_params->set_width(size.width.as_int());
+        buf_params->set_height(size.height.as_int());
+        buf_params->set_pixel_format(format);
+        buf_params->set_buffer_usage(usage);
+        server.allocate_buffers(&request, &protobuf_void, 
+            google::protobuf::NewCallback(google::protobuf::DoNothing));
+    }
+
+    void free_buffer(int buffer_id) override
+    {
+        mp::BufferRelease request;
+        request.mutable_id()->set_value(stream_id);
+        request.add_buffers()->set_buffer_id(buffer_id);
+        server.release_buffers(&request, &protobuf_void,
+            google::protobuf::NewCallback(google::protobuf::DoNothing));
+    }
+
+    void submit_buffer(int id, mcl::ClientBuffer&) override
+    {
+        mp::BufferRequest request;
+        request.mutable_id()->set_value(stream_id);
+        request.mutable_buffer()->set_buffer_id(id);
+        server.submit_buffer(&request, &protobuf_void,
+            google::protobuf::NewCallback(google::protobuf::DoNothing));
+    }
+
+private:
+    mclr::DisplayServer& server;
+    mp::Void protobuf_void;
+    int stream_id;
+};
+
+struct NewBufferSemantics : mcl::ServerBufferSemantics
+{
+    NewBufferSemantics(
+        std::shared_ptr<mcl::ClientBufferFactory> const& factory,
+        std::shared_ptr<mcl::ServerBufferRequests> const& requests,
+        geom::Size size, MirPixelFormat format, int usage,
+        unsigned int initial_nbuffers) :
+        vault(factory, requests, size, format, usage, initial_nbuffers)
+    {
+    }
+
+    void deposit(mp::Buffer const& buffer, geom::Size, MirPixelFormat) override
+    {
+        vault.wire_transfer_inbound(buffer);
+        current_buffer_id_ = buffer.buffer_id();
+    }
+
+    std::shared_ptr<mir::client::ClientBuffer> current_buffer() override
+    {
+        if (!current_buffer_)
+            current_buffer_ = vault.withdraw().get();
+        return current_buffer_;
+    }
+
+    uint32_t current_buffer_id() override
+    {
+        return current_buffer_id_;
+    }
+
+    MirWaitHandle* submit(std::function<void()> const& done, geom::Size, MirPixelFormat, int) override
+    {
+        if (!current_buffer_)
+            current_buffer_ = vault.withdraw().get();
+
+        vault.deposit(current_buffer_);
+
+        next_buffer_wait_handle.expect_result();
+        vault.wire_transfer_outbound(current_buffer_);
+        next_buffer_wait_handle.result_received();
+
+        current_buffer_ = vault.withdraw().get();
+        done();
+        return &next_buffer_wait_handle;
+    }
+
+    void set_size(geom::Size size) override
+    {
+        vault.set_size(size);
+    }
+
+    void lost_connection() override
+    {
+    }
+
+    void set_buffer_cache_size(unsigned int) override
+    {
+    }
+
+    mcl::BufferVault vault;
+    std::shared_ptr<mcl::ClientBuffer> current_buffer_;
+    int current_buffer_id_;
+    MirWaitHandle next_buffer_wait_handle;
 };
 }
 
@@ -292,8 +408,11 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
     }
     else
     {
-        //TODO: use the submission semantics here
-        BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
+        int initial_nbuffers = 3u;
+        buffer_depository = std::make_unique<NewBufferSemantics>(
+            client_platform->create_buffer_factory(),
+            std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
+            ideal_buffer_size, mir_pixel_format_abgr_8888, 0, initial_nbuffers);
     }
 
 
@@ -538,4 +657,9 @@ void mcl::BufferStream::buffer_unavailable()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     buffer_depository->lost_connection(); 
+}
+
+void mcl::BufferStream::set_size(geom::Size sz)
+{
+    buffer_depository->set_size(sz);
 }

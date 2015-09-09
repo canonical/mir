@@ -32,6 +32,7 @@ namespace input
 {
 class InputSink;
 class InputDeviceInfo;
+class EventBuilder;
 
 /**
  * Represents an input device.
@@ -46,7 +47,7 @@ public:
     /*!
      * Allow the input device to provide its input events to the given InputSink
      */
-    virtual void start(InputSink* destination) = 0;
+    virtual void start(InputSink* destination, EventBuilder* builder) = 0;
     /*!
      * Stop the input device from sending input events, to the InputSink.
      */

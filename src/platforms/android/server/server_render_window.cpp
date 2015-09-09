@@ -84,6 +84,8 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
             return 1;
         case NATIVE_WINDOW_CONCRETE_TYPE:
             return NATIVE_WINDOW_FRAMEBUFFER;
+        case NATIVE_WINDOW_CONSUMER_USAGE_BITS:
+            return GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_FB;
         default:
             {
             std::stringstream sstream;
