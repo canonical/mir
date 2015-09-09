@@ -135,9 +135,7 @@ rm -f var/cache/apt/archives/lock
 rm -f var/cache/apt/archives/libc-dev*.deb
 rm -f var/cache/apt/archives/libc6*.deb
 
-for deb in var/cache/apt/archives/* ;
-do
-    echo $deb
+for deb in var/cache/apt/archives/* ; do
     if [ ! -d ${deb} ] ; then
         echo "unpacking: ${deb}"
         dpkg -x ${deb} .
