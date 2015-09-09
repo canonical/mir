@@ -264,7 +264,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
         }
         else
         {
-            throw std::runtime_error("NO");
+            throw std::runtime_error("new classes not integrated yet");
         }
     }
 
