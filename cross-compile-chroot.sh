@@ -91,7 +91,7 @@ echo "Using MIR_NDK_PATH: ${MIR_NDK_PATH}"
 
 additional_repositories=
 if [ ${dist} == "vivid" ] ; then
-    additional_repositories=-r http://ppa.launchpad.net/ci-train-ppa-service/stable-phone-overlay/ubuntu
+    additional_repositories="-r http://ppa.launchpad.net/ci-train-ppa-service/stable-phone-overlay/ubuntu"
 fi
 
 
