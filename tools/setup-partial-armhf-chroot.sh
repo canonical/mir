@@ -97,9 +97,6 @@ set -e
 
 # Sanitize dependencies list for submission to multistrap
 # build-essential is not needed as we are cross-compiling
-# but multistrap might install it anyhow - maybe there is
-# a way to filter - or we dont let it unpack and remove it
-# after download?
 builddeps=$(echo ${builddeps} | sed -e 's/dpkg-checkbuilddeps://g' -e 's/Unmet build dependencies://g' -e 's/build-essential:native//g')
 builddeps=$(echo ${builddeps} | sed 's/([^)]*)//g')
 builddeps=$(echo ${builddeps} | sed -e 's/abi-compliance-checker//g')
