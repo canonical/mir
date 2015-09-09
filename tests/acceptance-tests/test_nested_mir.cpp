@@ -423,3 +423,30 @@ TEST_F(NestedServer, display_configuration_changes_are_visible_to_client)
     mir_surface_release_sync(painted_surface);
     mir_connection_release(connection);
 }
+
+// lp:1493741
+TEST_F(NestedServer, display_configuration_changes_are_visible_to_non_active_client)
+{
+    NestedMirRunner nested_mir{new_connection()};
+    ignore_rebuild_of_egl_context();
+
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto const configuration = mir_connection_create_display_config(connection);
+
+    for(auto* output = configuration->outputs; output != configuration->outputs+configuration->num_outputs; ++ output)
+        output->orientation = mir_orientation_left;
+
+    mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+
+    // Need a painted surface to have focus
+    auto const painted_surface = make_and_paint_surface(connection);
+
+    auto const new_config = mir_connection_create_display_config(connection);
+    EXPECT_THAT(new_config->outputs->orientation, Eq(configuration->outputs->orientation));
+    mir_display_config_destroy(new_config);
+
+    mir_display_config_destroy(configuration);
+    mir_surface_release_sync(painted_surface);
+    mir_connection_release(connection);
+}
