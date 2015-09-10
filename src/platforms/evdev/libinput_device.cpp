@@ -38,7 +38,6 @@
 #include <chrono>
 #include <sstream>
 #include <algorithm>
-#include <iostream>
 
 namespace md = mir::dispatch;
 namespace mi = mir::input;
