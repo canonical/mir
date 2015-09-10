@@ -16,15 +16,17 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_GL_RENDERER_H_
-#define MIR_COMPOSITOR_GL_RENDERER_H_
+#ifndef MIR_RENDERER_GL_GL_RENDERER_H_
+#define MIR_RENDERER_GL_GL_RENDERER_H_
 
-#include <mir/compositor/gl_program_family.h>
+#include "gl_program_family.h"
+
 #include <mir/compositor/renderer.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
 #include <mir/graphics/gl_primitive.h>
+
 #include <GLES2/gl2.h>
 #include <unordered_map>
 #include <unordered_set>
@@ -34,10 +36,12 @@ namespace mir
 {
 namespace graphics { class GLTextureCache; }
 
-namespace compositor
+namespace renderer
+{
+namespace gl
 {
 
-class GLRenderer : public Renderer
+class GLRenderer : public compositor::Renderer
 {
 public:
     GLRenderer(geometry::Rectangle const& display_area);
@@ -109,6 +113,7 @@ private:
     std::vector<graphics::GLPrimitive> mutable primitives;
 };
 
+}
 }
 }
 
