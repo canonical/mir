@@ -1,4 +1,5 @@
 add_subdirectory(android)
+add_subdirectory(evdev)
 
 list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_event_filter_chain_dispatcher.cpp
