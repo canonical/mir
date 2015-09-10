@@ -50,6 +50,17 @@ public:
     {
     }
 
+    void configure(graphics::DisplayConfiguration const& new_config)  override
+    {
+        auto current = begin(config.outputs);
+        auto const end = std::end(config.outputs);
+        new_config.for_each_output([&current, end] (graphics::DisplayConfigurationOutput const& output)
+            {
+                if (current == end) abort();
+                *current++ = output;
+            });
+    }
+
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override
     {
         for (auto& group : groups)
@@ -59,12 +70,15 @@ public:
     std::unique_ptr<graphics::DisplayConfiguration> configuration() const override
     {
         return std::unique_ptr<graphics::DisplayConfiguration>(
-            new StubDisplayConfig(output_rects)
+            new StubDisplayConfig(config)
         );
     }
 
     std::vector<geometry::Rectangle> const output_rects;
 private:
+
+    StubDisplayConfig config{output_rects};
+
     std::vector<geometry::Rectangle> generate_stub_rects(unsigned int nbuffers)
     {
         std::vector<geometry::Rectangle> rects;
