@@ -41,7 +41,7 @@ Build-Depends: cmake,
                abi-compliance-checker,
                libevdev-dev,
                uuid-dev,
-               python3,
+               python3:any,
                dh-python,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
