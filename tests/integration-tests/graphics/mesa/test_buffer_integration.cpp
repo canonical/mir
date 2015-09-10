@@ -104,7 +104,7 @@ class MesaBufferIntegration : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        auto options = config.the_options();
+        auto options = mtf::TestingServerConfiguration().the_options();
 
         if (options->get<bool>("tests-use-real-graphics"))
         {
@@ -130,7 +130,6 @@ protected:
         buffer_properties = mg::BufferProperties{size, pf, usage};
     }
 
-    mtf::TestingServerConfiguration config;
     std::shared_ptr<mg::Platform> platform;
     std::shared_ptr<mg::Display> display;
     std::shared_ptr<mg::GraphicBufferAllocator> allocator;
