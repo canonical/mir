@@ -32,6 +32,7 @@
 #include "mir/options/program_option.h"
 
 namespace mtd = mir::test::doubles;
+namespace geom=mir::geometry;
 
 #ifdef ANDROID
 auto mtd::create_platform_with_null_dependencies()
@@ -68,6 +69,6 @@ auto mtd::create_platform_with_null_dependencies()
                                                        [](::Display* display)
                                                        {
                                                            XCloseDisplay(display);
-                                                       }), 1280, 1024);
+                                                       }), geom::Size{1280,1024});
 }
 #endif
