@@ -43,7 +43,6 @@ public:
     InputDevice() = default;
     virtual ~InputDevice() = default;
 
-    virtual std::shared_ptr<dispatch::Dispatchable> dispatchable() = 0;
     /*!
      * Allow the input device to provide its input events to the given InputSink
      */

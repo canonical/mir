@@ -28,6 +28,7 @@ namespace mir
 namespace dispatch
 {
 class ActionQueue;
+class MultiplexingDispatchable;
 }
 namespace input
 {
@@ -49,8 +50,11 @@ public:
 
     static void add(std::shared_ptr<mir::input::InputDevice> const& dev);
     static void remove(std::shared_ptr<mir::input::InputDevice> const& dev);
+    static void register_dispatchable(std::shared_ptr<mir::dispatch::Dispatchable> const& queue);
+    static void unregister_dispatchable(std::shared_ptr<mir::dispatch::Dispatchable> const& queue);
 
 private:
+    std::shared_ptr<mir::dispatch::MultiplexingDispatchable> const platform_dispatchable;
     std::shared_ptr<mir::dispatch::ActionQueue> const platform_queue;
     std::shared_ptr<mir::input::InputDeviceRegistry> const registry;
     static std::atomic<StubInputPlatform*> stub_input_platform;
