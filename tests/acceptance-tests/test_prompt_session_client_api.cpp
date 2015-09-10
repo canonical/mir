@@ -328,6 +328,34 @@ TEST_F(PromptSessionClientAPI, can_start_and_stop_a_prompt_session)
     mir_prompt_session_release_sync(prompt_session);
 }
 
+TEST_F(PromptSessionClientAPI, can_start_and_stop_prompt_sessions)
+{
+    const int sessions = 10;
+
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+
+    MirPromptSession* prompt_sessions[sessions] = {nullptr };
+
+    for (auto& prompt_session : prompt_sessions)
+    {
+        prompt_session = mir_connection_create_prompt_session_sync(
+            connection, application_session_pid, null_state_change_callback, this);
+    }
+
+    for (auto& prompt_session : prompt_sessions)
+    {
+        ASSERT_THAT(prompt_session, Ne(nullptr));
+        EXPECT_THAT(mir_prompt_session_is_valid(prompt_session), Eq(true));
+        EXPECT_THAT(mir_prompt_session_error_message(prompt_session), StrEq(""));
+    }
+
+    for (auto& prompt_session : prompt_sessions)
+    {
+        mir_prompt_session_release_sync(prompt_session);
+    }
+}
+
 TEST_F(PromptSessionClientAPI, notifies_start_and_stop)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
