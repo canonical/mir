@@ -20,6 +20,7 @@
 #define MIR_CLIENT_CLIENT_BUFFER_STREAM_H_
 
 #include "mir/frontend/buffer_stream_id.h"
+#include "mir/geometry/size.h"
 
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/mir_native_buffer.h"
@@ -69,6 +70,7 @@ public:
     virtual bool valid() const = 0;
     virtual void buffer_available(mir::protobuf::Buffer const& buffer) = 0;
     virtual void buffer_unavailable() = 0;
+    virtual void set_size(geometry::Size) = 0;
 
 protected:
     ClientBufferStream() = default;
