@@ -18,9 +18,9 @@
 
 #include "mir/compositor/display_listener.h"
 #include "mir/scene/surface_creation_parameters.h"
+#include "src/renderers/gl/gl_renderer_factory.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/surface_stack.h"
-#include "src/server/compositor/gl_renderer_factory.h"
 #include "src/server/compositor/buffer_stream_surfaces.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"

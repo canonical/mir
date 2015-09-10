@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include <condition_variable>
 #include "mediating_display_changer.h"
 #include "session_container.h"
 #include "mir/scene/session.h"
@@ -24,9 +25,8 @@
 #include "mir/compositor/compositor.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/display_configuration_report.h"
 #include "mir/server_action_queue.h"
-#include "mir/log.h"
-#include <cmath>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -57,67 +57,6 @@ private:
 
     std::function<void()> const revert;
 };
-
-void log_configuration(mg::DisplayConfiguration const& conf)
-{
-    conf.for_each_output([](mg::DisplayConfigurationOutput const& out)
-    {
-        static const char* const type_str[] =
-            {"Unknown", "VGA", "DVI-I", "DVI-D", "DVI-A", "Composite",
-             "S-Video", "LVDS", "Component", "9-pin-DIN", "DisplayPort",
-             "HDMI-A", "HDMI-B", "TV", "eDP"};
-        auto type = type_str[static_cast<int>(out.type)];
-        int out_id = out.id.as_value();
-        int card_id = out.card_id.as_value();
-        const char prefix[] = "  ";
-
-        if (out.connected)
-        {
-            int width_mm = out.physical_size_mm.width.as_int();
-            int height_mm = out.physical_size_mm.height.as_int();
-            float inches =
-                sqrtf(width_mm * width_mm + height_mm * height_mm) / 25.4;
-            int indent = 0;
-            mir::log_info("%s%d.%d: %n%s %.1f\" %dx%dmm",
-                          prefix, card_id, out_id, &indent, type,
-                          inches, width_mm, height_mm);
-            if (out.used)
-            {
-                if (out.current_mode_index < out.modes.size())
-                {
-                    auto const& mode = out.modes[out.current_mode_index];
-                    mir::log_info("%*cCurrent mode %dx%d %.2fHz",
-                                  indent, ' ',
-                                  mode.size.width.as_int(),
-                                  mode.size.height.as_int(),
-                                  mode.vrefresh_hz);
-                }
-                if (out.preferred_mode_index < out.modes.size())
-                {
-                    auto const& mode = out.modes[out.preferred_mode_index];
-                    mir::log_info("%*cPreferred mode %dx%d %.2fHz",
-                                  indent, ' ',
-                                  mode.size.width.as_int(),
-                                  mode.size.height.as_int(),
-                                  mode.vrefresh_hz);
-                }
-                mir::log_info("%*cLogical position %+d%+d",
-                              indent, ' ',
-                              out.top_left.x.as_int(),
-                              out.top_left.y.as_int());
-            }
-            else
-            {
-                mir::log_info("%*cDisabled", indent, ' ');
-            }
-        }
-        else
-        {
-            mir::log_info("%s%d.%d: unused %s", prefix, card_id, out_id, type);
-        }
-    });
-}
-
 }
 
 ms::MediatingDisplayChanger::MediatingDisplayChanger(
@@ -126,13 +65,15 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& display_configuration_policy,
     std::shared_ptr<SessionContainer> const& session_container,
     std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
-    std::shared_ptr<ServerActionQueue> const& server_action_queue)
+    std::shared_ptr<ServerActionQueue> const& server_action_queue,
+    std::shared_ptr<mg::DisplayConfigurationReport> const& report)
     : display{display},
       compositor{compositor},
       display_configuration_policy{display_configuration_policy},
       session_container{session_container},
       session_event_handler_register{session_event_handler_register},
       server_action_queue{server_action_queue},
+      report{report},
       base_configuration{display->configuration()},
       base_configuration_applied{true}
 {
@@ -169,28 +110,42 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
                         session_stopping_handler(session);
                 });
         });
-    mir::log_info("Initial display configuration:");
-    log_configuration(*base_configuration);
+
+    report->initial_configuration(*base_configuration);
 }
 
 void ms::MediatingDisplayChanger::configure(
     std::shared_ptr<mf::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
+    {
+        std::lock_guard<std::mutex> lg{configuration_mutex};
+        config_map[session] = conf;
+    }
+
+    std::weak_ptr<mf::Session> const weak_session{session};
+    std::condition_variable cv;
+    bool done{false};
+
     server_action_queue->enqueue(
         this,
-        [this, session, conf]
+        [this, weak_session, conf, &done, &cv]
         {
             std::lock_guard<std::mutex> lg{configuration_mutex};
 
-            config_map[session] = conf;
-
-            /* If the session is focused, apply the configuration */
-            if (focused_session.lock() == session)
+            if (auto const session = weak_session.lock())
             {
-                apply_config(conf, PauseResumeSystem);
+                /* If the session is focused, apply the configuration */
+                if (focused_session.lock() == session)
+                    apply_config(conf, PauseResumeSystem);
             }
+
+            done = true;
+            cv.notify_one();
         });
+
+    std::unique_lock<std::mutex> lg{configuration_mutex};
+    cv.wait(lg, [&done] { return done; });
 }
 
 std::shared_ptr<mg::DisplayConfiguration>
@@ -241,8 +196,7 @@ void ms::MediatingDisplayChanger::apply_config(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf,
     SystemStateHandling pause_resume_system)
 {
-    mir::log_info("New display configuration:");
-    log_configuration(*conf);
+    report->new_configuration(*conf);
     if (pause_resume_system)
     {
         ApplyNowAndRevertOnScopeExit comp{
@@ -292,10 +246,12 @@ void ms::MediatingDisplayChanger::focus_change_handler(
     if (it != config_map.end())
     {
         apply_config(it->second, PauseResumeSystem);
+        session->send_display_config(*it->second);
     }
     else if (!base_configuration_applied)
     {
         apply_base_config(PauseResumeSystem);
+        session->send_display_config(*base_configuration);
     }
 }
 

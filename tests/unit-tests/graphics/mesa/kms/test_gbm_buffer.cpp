@@ -75,6 +75,11 @@ protected:
         allocator.reset(new mgm::BufferAllocator(platform->gbm.device, mgm::BypassOption::allowed, mgm::BufferImportMethod::gbm_native_pixmap));
     }
 
+    mir::renderer::gl::TextureSource* as_texture_source(std::shared_ptr<mg::Buffer> const& buffer)
+    {
+        return dynamic_cast<mir::renderer::gl::TextureSource*>(buffer->native_buffer_base());
+    }
+
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
@@ -196,7 +201,7 @@ TEST_F(GBMBufferTest, gl_bind_to_texture_egl_image_creation_failed)
 
     EXPECT_THROW({
         auto buffer = allocator->alloc_buffer(buffer_properties);
-        buffer->gl_bind_to_texture();
+        as_texture_source(buffer)->gl_bind_to_texture();
     }, std::runtime_error);
 }
 
@@ -219,6 +224,6 @@ TEST_F(GBMBufferTest, gl_bind_to_texture_uses_egl_image)
 
     EXPECT_NO_THROW({
         auto buffer = allocator->alloc_buffer(buffer_properties);
-        buffer->gl_bind_to_texture();
+        as_texture_source(buffer)->gl_bind_to_texture();
     });
 }

@@ -277,3 +277,195 @@ TEST(TimeoutApplicationNotRespondingDetector, does_not_generate_signals_after_un
     // Notification should not have been generated
     EXPECT_FALSE(session_not_responding);
 }
+
+TEST(TimeoutApplicationNotRespondingDetector, does_not_schedule_alarm_when_no_sessions)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mtd::FakeAlarmFactory fake_alarms;
+
+    ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
+
+    // Go through several ping cycles.
+    fake_alarms.advance_smoothly_by(5000ms);
+
+    EXPECT_THAT(fake_alarms.wakeup_count(), Eq(0));
+
+    NiceMock<mtd::MockSceneSession> session;
+
+    detector.register_session(&session, [](){});
+
+    fake_alarms.advance_smoothly_by(5000ms);
+    EXPECT_THAT(fake_alarms.wakeup_count(), Gt(0));
+
+    int const previous_wakeup_count{fake_alarms.wakeup_count()};
+
+    detector.unregister_session(&session);
+
+    fake_alarms.advance_smoothly_by(5000ms);
+
+    // We allow one extra wakeup to notice there are no active sessions.
+    EXPECT_THAT(fake_alarms.wakeup_count(), Le(previous_wakeup_count + 1));
+}
+
+TEST(TimeoutApplicationNotRespondingDetector, does_not_schedule_alarm_when_all_sessions_are_unresponsive)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mtd::FakeAlarmFactory fake_alarms;
+
+    ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
+
+    NiceMock<mtd::MockSceneSession> session;
+    bool session_unresponsive{false};
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    ON_CALL(*observer, session_unresponsive(_))
+        .WillByDefault(Invoke([&session_unresponsive](auto /*session*/)
+    {
+        session_unresponsive = true;
+    }));
+    detector.register_observer(observer);
+
+    detector.register_session(&session, [](){});
+
+    fake_alarms.advance_smoothly_by(5000ms);
+
+    ASSERT_TRUE(session_unresponsive);
+    EXPECT_THAT(fake_alarms.wakeup_count(), Gt(0));
+
+    int const previous_wakeup_count{fake_alarms.wakeup_count()};
+
+    // All the sessions are now unresponsive, so we shouldn't be triggering wakeups
+    fake_alarms.advance_smoothly_by(5000ms);
+    EXPECT_THAT(fake_alarms.wakeup_count(), Eq(previous_wakeup_count));
+}
+
+TEST(TimeoutApplicationNotRespondingDetector, session_switches_between_responsive_and_unresponsive)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mtd::FakeAlarmFactory fake_alarms;
+
+    ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
+
+    NiceMock<mtd::MockSceneSession> session;
+    bool session_unresponsive{false};
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    ON_CALL(*observer, session_unresponsive(_))
+        .WillByDefault(Invoke([&session_unresponsive](auto /*session*/)
+    {
+        session_unresponsive = true;
+    }));
+    ON_CALL(*observer, session_now_responsive(_))
+        .WillByDefault(Invoke([&session_unresponsive](auto /*session*/)
+    {
+        session_unresponsive = false;
+    }));
+    detector.register_observer(observer);
+
+    detector.register_session(&session, [](){});
+
+    fake_alarms.advance_smoothly_by(5000ms);
+
+    EXPECT_TRUE(session_unresponsive);
+
+    detector.pong_received(&session);
+    EXPECT_FALSE(session_unresponsive);
+
+    fake_alarms.advance_smoothly_by(5000ms);
+    EXPECT_TRUE(session_unresponsive);
+
+    detector.pong_received(&session);
+    EXPECT_FALSE(session_unresponsive);
+}
+
+TEST(TimeoutApplicationNotRespondingDetector, sends_unresponsive_notification_only_once)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mtd::FakeAlarmFactory fake_alarms;
+
+    ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, 1s};
+
+    NiceMock<mtd::MockSceneSession> session_one;
+    NiceMock<mtd::MockSceneSession> session_two;
+    auto delayed_dispatch_pong = fake_alarms.create_alarm(
+        [&detector, &session_two]()
+        {
+            detector.pong_received(&session_two);
+        });
+    int unresponsive_notifications{0};
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    ON_CALL(*observer, session_unresponsive(_))
+        .WillByDefault(Invoke([&unresponsive_notifications](auto /*session*/)
+    {
+        ++unresponsive_notifications;
+    }));
+    detector.register_observer(observer);
+
+    detector.register_session(&session_one, [](){});
+    // We need a responsive session to ensure the ANRDetector keeps rescheduling wakeups.
+    //
+    // We need the delayed_dispatch_pong so that we can do the pong outside of the
+    // ping callback; otherwise this would deadlock.
+    detector.register_session(&session_two,
+        [&delayed_dispatch_pong]()
+        {
+            delayed_dispatch_pong->reschedule_in(1ms);
+        });
+
+    fake_alarms.advance_smoothly_by(5000ms);
+
+    EXPECT_THAT(unresponsive_notifications, Eq(1));
+}
+
+TEST(TimeoutApplicationNotRespondingDetector, sends_pings_on_schedule_as_sessions_are_connecting)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    mtd::FakeAlarmFactory fake_alarms;
+
+    auto const cycle_time = 1s;
+    ms::TimeoutApplicationNotRespondingDetector detector{fake_alarms, cycle_time};
+
+    NiceMock<mtd::MockSceneSession> session;
+    std::atomic<int> ping_count{0};
+    auto delayed_dispatch_pong = fake_alarms.create_alarm(
+        [&detector, &session, &ping_count]()
+        {
+            detector.pong_received(&session);
+            ++ping_count;
+        });
+
+    detector.register_session(&session,
+        [&delayed_dispatch_pong]()
+        {
+            delayed_dispatch_pong->reschedule_in(1ms);
+        });
+
+
+    auto duration = 0ms;
+    auto const step = 500ms;
+
+    // <= ensures we go past the threshold for the cycle
+    while (duration <= 5s)
+    {
+        NiceMock<mtd::MockSceneSession> dummy_session;
+        detector.register_session(&dummy_session, [](){});
+
+        fake_alarms.advance_smoothly_by(step);
+        duration += step;
+
+        detector.unregister_session(&dummy_session);
+    }
+
+    EXPECT_THAT(ping_count, Ge(duration / cycle_time));
+}

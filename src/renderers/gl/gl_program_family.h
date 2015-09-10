@@ -16,15 +16,20 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_GL_PROGRAM_FAMILY_H_
-#define MIR_COMPOSITOR_GL_PROGRAM_FAMILY_H_
+#ifndef MIR_RENDERER_GL_GL_PROGRAM_FAMILY_H_
+#define MIR_RENDERER_GL_GL_PROGRAM_FAMILY_H_
 
 #include <GLES2/gl2.h>
 #include <utility>
 #include <map>
 #include <unordered_map>
 
-namespace mir { namespace compositor {
+namespace mir
+{
+namespace renderer
+{
+namespace gl
+{
 
 /**
  * GLProgramFamily represents a set of GLSL programs that are closely
@@ -62,6 +67,8 @@ private:
     std::map<ShaderPair, Program> program;
 };
 
-}}  // namespace mir::compositor
+}
+}
+}
 
-#endif // MIR_COMPOSITOR_GL_PROGRAM_FAMILY_H_
+#endif // MIR_RENDERER_GL_GL_PROGRAM_FAMILY_H_

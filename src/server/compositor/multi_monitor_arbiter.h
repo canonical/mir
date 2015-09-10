@@ -44,6 +44,7 @@ public:
     std::shared_ptr<graphics::Buffer> snapshot_acquire() override;
     void snapshot_release(std::shared_ptr<graphics::Buffer> const&) override;
     void set_schedule(std::shared_ptr<Schedule> const& schedule);
+    bool buffer_ready_for(compositor::CompositorID id);
 
 private:
     void clean_onscreen_buffers(std::lock_guard<std::mutex> const&);

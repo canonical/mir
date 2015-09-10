@@ -18,34 +18,28 @@
 
 #include "mir/input/input_device_info.h"
 #include "input_device.h"
-#include "dispatchable.h"
 
 namespace mi = mir::input;
 namespace mix = mi::X;
-namespace md = mir::dispatch;
 
-mix::XInputDevice::XInputDevice(std::shared_ptr<::Display> const& conn)
-    : fd(XConnectionNumber(conn.get())),
-      x_dispatchable(std::make_shared<mix::XDispatchable>(conn, fd))
+mix::XInputDevice::XInputDevice(InputDeviceInfo const& device_info)
+    : info(device_info)
 {
 }
 
-std::shared_ptr<md::Dispatchable> mix::XInputDevice::dispatchable()
+void mix::XInputDevice::start(InputSink* input_sink, EventBuilder* event_builder)
 {
-    return x_dispatchable;
-}
-
-void mix::XInputDevice::start(mi::InputSink* destination, EventBuilder* builder)
-{
-    x_dispatchable->set_input_sink(destination, builder);
+    sink = input_sink;
+    builder = event_builder;
 }
 
 void mix::XInputDevice::stop()
 {
-    x_dispatchable->unset_input_sink();
+    sink = nullptr;
+    builder = nullptr;
 }
 
 mi::InputDeviceInfo mix::XInputDevice::get_device_info()
 {
-    return mi::InputDeviceInfo{0,"x11-keyboard-device","x11-key-dev-1", mi::DeviceCapability::keyboard};
+    return info;
 }

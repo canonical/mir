@@ -19,7 +19,7 @@
 #ifndef MIR_EXAMPLES_DEMO_RENDERER_H_
 #define MIR_EXAMPLES_DEMO_RENDERER_H_
 
-#include "mir/compositor/gl_renderer.h"
+#include "gl_renderer.h"
 #include "mir/compositor/decoration.h"
 #include "typo_glcache.h"
 
@@ -41,7 +41,7 @@ enum ColourEffect
 typedef std::unordered_map<graphics::Renderable::ID,
                            std::unique_ptr<compositor::Decoration>> DecorMap;
 
-class DemoRenderer : public compositor::GLRenderer
+class DemoRenderer : public renderer::gl::GLRenderer
 {
 public:
     DemoRenderer(
