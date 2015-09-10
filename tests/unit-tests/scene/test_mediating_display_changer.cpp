@@ -43,6 +43,8 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 
+using namespace testing;
+
 namespace
 {
 
@@ -104,6 +106,10 @@ struct StubServerActionQueue : mir::ServerActionQueue
 
 struct MockServerActionQueue : mir::ServerActionQueue
 {
+    MockServerActionQueue()
+    {
+        ON_CALL(*this, enqueue(_, _)).WillByDefault(InvokeArgument<1>());
+    }
     MOCK_METHOD2(enqueue, void(void const*, mir::ServerAction const&));
     MOCK_METHOD1(pause_processing_for, void(void const*));
     MOCK_METHOD1(resume_processing_for, void(void const*));
@@ -412,9 +418,6 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
 
     void const* owner{nullptr};
 
-    ON_CALL(mock_server_action_queue, enqueue(_, _))
-        .WillByDefault(InvokeArgument<1>());
-
     EXPECT_CALL(mock_server_action_queue, enqueue(_, _))
         .WillOnce(DoAll(SaveArg<0>(&owner), InvokeArgument<1>()));
     session_event_sink.handle_focus_change(session1);
@@ -468,12 +471,7 @@ TEST_F(MediatingDisplayChangerTest, does_not_block_IPC_thread_for_inactive_sessi
         mt::fake_shared(mock_server_action_queue),
         mt::fake_shared(display_configuration_report));
 
-    ON_CALL(mock_server_action_queue, enqueue(_, _))
-        .WillByDefault(InvokeArgument<1>());
-
-    EXPECT_CALL(mock_server_action_queue, enqueue(_, _));
     session_event_sink.handle_focus_change(active_session);
-    Mock::VerifyAndClearExpectations(&mock_server_action_queue);
 
     EXPECT_CALL(mock_server_action_queue, enqueue(_, _)).Times(0);
 
