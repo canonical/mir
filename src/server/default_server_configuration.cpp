@@ -66,8 +66,8 @@ namespace mi = mir::input;
 
 namespace
 {
-    char const* random_device_path{"/dev/random"};
-    char const* urandom_device_path{"/dev/urandom"};
+    std::string const random_device_path{"/dev/random"};
+    std::string const urandom_device_path{"/dev/urandom"};
     int const wait_seconds{30};
 }
 
@@ -195,8 +195,9 @@ std::shared_ptr<mir::EmergencyCleanup> mir::DefaultServerConfiguration::the_emer
 
 namespace
 {
-void fill_vector_with_random_data(std::vector<uint8_t>& buffer)
+std::vector<uint8_t> fill_vector_with_random_data(uint8_t size)
 {
+    std::vector<uint8_t> buffer(size);
     int random_fd;
     int retval;
     fd_set rfds;
@@ -205,11 +206,11 @@ void fill_vector_with_random_data(std::vector<uint8_t>& buffer)
     tv.tv_sec  = wait_seconds;
     tv.tv_usec = 0;
 
-    if ((random_fd = open(random_device_path, O_RDONLY)) == -1)
+    if ((random_fd = open(random_device_path.c_str(), O_RDONLY)) == -1)
     {
         int error = errno;
         BOOST_THROW_EXCEPTION(std::system_error(error, std::system_category(),
-                                                "open failed on device " + std::string(random_device_path)));
+                                                "open failed on device " + random_device_path));
     }
 
     FD_ZERO(&rfds);
@@ -223,7 +224,7 @@ void fill_vector_with_random_data(std::vector<uint8_t>& buffer)
     {
         int error = errno;
         BOOST_THROW_EXCEPTION(std::system_error(error, std::system_category(),
-                                                "close failed on device " + std::string(random_device_path)));
+                                                "close failed on device " + random_device_path));
     }
 
     if (retval == -1)
@@ -231,7 +232,7 @@ void fill_vector_with_random_data(std::vector<uint8_t>& buffer)
         int error = errno;
         BOOST_THROW_EXCEPTION(std::system_error(error, std::system_category(),
                                                 "select failed on file descriptor " + std::to_string(random_fd) +
-                                                " from device " + std::string(random_device_path)));
+                                                " from device " + random_device_path));
     }
     else if (retval && FD_ISSET(random_fd, &rfds))
     {
@@ -244,9 +245,11 @@ void fill_vector_with_random_data(std::vector<uint8_t>& buffer)
     }
     else
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to read from device: " + std::string(random_device_path) +
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to read from device: " + random_device_path +
                                                  " after: " + std::to_string(wait_seconds) + " seconds"));
     }
+
+    return buffer;
 }
 }
 
@@ -255,9 +258,7 @@ std::shared_ptr<mir::CookieFactory> mir::DefaultServerConfiguration::the_cookie_
     return cookie_factory(
         []()
         {
-            std::vector<uint8_t> seed(16);
-            fill_vector_with_random_data(seed);
-            return std::make_shared<mir::CookieFactory>(seed);
+            return std::make_shared<mir::CookieFactory>(fill_vector_with_random_data(16));
         });
 }
 

@@ -95,5 +95,5 @@ CMAKE_DEPENDENT_OPTION(
   OFF)
 
 if (MIR_RUN_ACCEPTANCE_TESTS)
-  mir_discover_tests_with_fd_leak_detection(mir_acceptance_tests LD_PRELOAD=libumockdev-preload.so.0 G_SLICE=always-malloc G_DEBUG=gc-friendly)
+  mir_discover_tests_with_fd_leak_detection(mir_acceptance_tests)
 endif (MIR_RUN_ACCEPTANCE_TESTS)
