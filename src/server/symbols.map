@@ -1,4 +1,4 @@
-MIR_SERVER_33 {
+MIR_SERVER_34 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -550,19 +550,19 @@ MIR_SERVER_33 {
     virtual?thunk?to?mir::shell::ShellWrapper::remove_display*;
 
 # these symbols are needed by mir_proving_server but are not intended to be public
-    mir::compositor::GLProgramFamily::*;
-    mir::compositor::GLRenderer::GLRenderer*;
-    mir::compositor::GLRenderer::?GLRenderer*;
-    mir::compositor::GLRenderer::Program::Program*;
-    mir::compositor::GLRenderer::draw*;
-    mir::compositor::GLRenderer::render*;
-    mir::compositor::GLRenderer::set_rotation*;
-    mir::compositor::GLRenderer::set_viewport*;
-    mir::compositor::GLRenderer::suspend*;
-    mir::compositor::GLRenderer::tessellate*;
-    mir::compositor::GLRenderer::vshader;
-    typeinfo?for?mir::compositor::GLRenderer;
-    vtable?for?mir::compositor::GLRenderer;
+    mir::renderer::gl::GLProgramFamily::*;
+    mir::renderer::gl::GLRenderer::GLRenderer*;
+    mir::renderer::gl::GLRenderer::?GLRenderer*;
+    mir::renderer::gl::GLRenderer::Program::Program*;
+    mir::renderer::gl::GLRenderer::draw*;
+    mir::renderer::gl::GLRenderer::render*;
+    mir::renderer::gl::GLRenderer::set_rotation*;
+    mir::renderer::gl::GLRenderer::set_viewport*;
+    mir::renderer::gl::GLRenderer::suspend*;
+    mir::renderer::gl::GLRenderer::tessellate*;
+    mir::renderer::gl::GLRenderer::vshader;
+    typeinfo?for?mir::renderer::gl::GLRenderer;
+    vtable?for?mir::renderer::gl::GLRenderer;
 
 # these symbols are needed by the test framework but are not intended to be public
     mir::shell::CanonicalWindowManagerPolicy::handle_set_state*;
