@@ -246,10 +246,12 @@ void ms::MediatingDisplayChanger::focus_change_handler(
     if (it != config_map.end())
     {
         apply_config(it->second, PauseResumeSystem);
+        session->send_display_config(*it->second);
     }
     else if (!base_configuration_applied)
     {
         apply_base_config(PauseResumeSystem);
+        session->send_display_config(*base_configuration);
     }
 }
 
