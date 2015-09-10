@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/gl_program_family.h"
+#include "src/renderers/gl/gl_program_family.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/mock_egl.h"
 
@@ -24,7 +24,7 @@
 #include <gmock/gmock.h>
 
 namespace mtd = mir::test::doubles;
-namespace mc = mir::compositor;
+namespace mrg = mir::renderer::gl;
 
 // Regression test for LP: #1454201
 TEST(GLProgramFamily, releases_gl_context_before_deleting_shader_objects)
@@ -38,7 +38,7 @@ TEST(GLProgramFamily, releases_gl_context_before_deleting_shader_objects)
     ON_CALL(mock_gl, glCreateProgram()).WillByDefault(Return(1));
 
     {
-        mc::GLProgramFamily family;
+        mrg::GLProgramFamily family;
         family.add_program("vertex shader", "fragment shader");
 
         InSequence seq;

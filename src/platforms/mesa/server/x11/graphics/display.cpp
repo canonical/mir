@@ -242,7 +242,7 @@ mgx::Display::Display(::Display* x_dpy)
                                 orientation{mir_orientation_normal}
 {
     if (win.color_depth() == 24)
-        pf = mir_pixel_format_bgr_888;
+        pf = mir_pixel_format_xrgb_8888;
     else
         BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported pixel format"));
 

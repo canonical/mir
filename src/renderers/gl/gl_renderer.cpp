@@ -16,7 +16,9 @@
  *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/compositor/gl_renderer.h"
+#define MIR_LOG_COMPONENT "GLRenderer"
+
+#include "gl_renderer.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/compositor/recently_used_cache.h"
 #include "mir/graphics/renderable.h"
@@ -36,9 +38,10 @@
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
+namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
 
-const GLchar* const mc::GLRenderer::vshader =
+const GLchar* const mrg::GLRenderer::vshader =
 {
     "attribute vec3 position;\n"
     "attribute vec2 texcoord;\n"
@@ -55,7 +58,7 @@ const GLchar* const mc::GLRenderer::vshader =
     "}\n"
 };
 
-const GLchar* const mc::GLRenderer::alpha_fshader =
+const GLchar* const mrg::GLRenderer::alpha_fshader =
 {
     "precision mediump float;\n"
     "uniform sampler2D tex;\n"
@@ -67,7 +70,7 @@ const GLchar* const mc::GLRenderer::alpha_fshader =
     "}\n"
 };
 
-const GLchar* const mc::GLRenderer::default_fshader =
+const GLchar* const mrg::GLRenderer::default_fshader =
 {   // This is the fastest fragment shader. Use it when you can.
     "precision mediump float;\n"
     "uniform sampler2D tex;\n"
@@ -77,7 +80,7 @@ const GLchar* const mc::GLRenderer::default_fshader =
     "}\n"
 };
 
-mc::GLRenderer::Program::Program(GLuint program_id)
+mrg::GLRenderer::Program::Program(GLuint program_id)
 {
     id = program_id;
     position_attr = glGetAttribLocation(id, "position");
@@ -90,11 +93,11 @@ mc::GLRenderer::Program::Program(GLuint program_id)
     alpha_uniform = glGetUniformLocation(id, "alpha");
 }
 
-mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
+mrg::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
     : clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
-      texture_cache(std::make_unique<RecentlyUsedCache>()),
+      texture_cache(std::make_unique<mc::RecentlyUsedCache>()),
       rotation(NAN) // ensure the first set_rotation succeeds
 {
     struct {GLenum id; char const* label;} const glstrings[] =
@@ -132,16 +135,16 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
     set_rotation(0.0f);
 }
 
-mc::GLRenderer::~GLRenderer() = default;
+mrg::GLRenderer::~GLRenderer() = default;
 
-void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
+void mrg::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
                                 mg::Renderable const& renderable) const
 {
     primitives.resize(1);
     primitives[0] = mg::tessellate_renderable_into_rectangle(renderable, geom::Displacement{0,0});
 }
 
-void mc::GLRenderer::render(mg::RenderableList const& renderables) const
+void mrg::GLRenderer::render(mg::RenderableList const& renderables) const
 {
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -154,7 +157,7 @@ void mc::GLRenderer::render(mg::RenderableList const& renderables) const
     texture_cache->drop_unused();
 }
 
-void mc::GLRenderer::draw(mg::Renderable const& renderable,
+void mrg::GLRenderer::draw(mg::Renderable const& renderable,
                           GLRenderer::Program const& prog) const
 {
     if (renderable.alpha() < 1.0f || renderable.shaped())
@@ -222,7 +225,7 @@ void mc::GLRenderer::draw(mg::Renderable const& renderable,
     glDisableVertexAttribArray(prog.position_attr);
 }
 
-void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
+void mrg::GLRenderer::set_viewport(geometry::Rectangle const& rect)
 {
     if (rect == viewport)
         return;
@@ -264,7 +267,7 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
     viewport = rect;
 }
 
-void mc::GLRenderer::set_rotation(float degrees)
+void mrg::GLRenderer::set_rotation(float degrees)
 {
     if (degrees == rotation)
         return;
@@ -287,7 +290,7 @@ void mc::GLRenderer::set_rotation(float degrees)
     rotation = degrees;
 }
 
-void mc::GLRenderer::suspend()
+void mrg::GLRenderer::suspend()
 {
     texture_cache->invalidate();
 }

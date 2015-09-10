@@ -22,14 +22,14 @@
 #include <gmock/gmock.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/gl_texture.h>
-#include <mir/compositor/gl_renderer.h>
 #include <mir/test/fake_shared.h>
-#include <mir/test/doubles/mock_buffer.h>
+#include <mir/test/doubles/mock_gl_buffer.h>
 #include <mir/test/doubles/mock_renderable.h>
 #include <mir/test/doubles/mock_buffer_stream.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/test/doubles/mock_gl.h>
 #include <mir/test/doubles/mock_egl.h>
+#include <src/renderers/gl/gl_renderer.h>
 
 using testing::SetArgPointee;
 using testing::InSequence;
@@ -42,8 +42,8 @@ using testing::_;
 
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
-namespace mc=mir::compositor;
 namespace mg=mir::graphics;
+namespace mrg = mir::renderer::gl;
 
 namespace
 {
@@ -114,7 +114,7 @@ public:
         EXPECT_CALL(mock_gl, glDrawArrays(_, _, _)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glDisableVertexAttribArray(_)).Times(AnyNumber());
 
-        mock_buffer = std::make_shared<mtd::MockBuffer>();
+        mock_buffer = std::make_shared<mtd::MockGLBuffer>();
         EXPECT_CALL(*mock_buffer, gl_bind_to_texture()).Times(AnyNumber());
         EXPECT_CALL(*mock_buffer, id())
             .WillRepeatedly(Return(mir::graphics::BufferID(789)));
@@ -144,7 +144,7 @@ public:
 
     testing::NiceMock<mtd::MockGL> mock_gl;
     testing::NiceMock<mtd::MockEGL> mock_egl;
-    std::shared_ptr<mtd::MockBuffer> mock_buffer;
+    std::shared_ptr<mtd::MockGLBuffer> mock_buffer;
     mir::geometry::Rectangle display_area;
     std::shared_ptr<testing::NiceMock<mtd::MockRenderable>> renderable;
     mg::RenderableList renderable_list;
@@ -160,14 +160,14 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
         .WillOnce(Return(false));
     EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
 
-    mc::GLRenderer renderer(display_area);
+    mrg::GLRenderer renderer(display_area);
     renderer.render(renderable_list);
 }
 
 TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
 {
     //'listening to the tests', it would be a bit easier to use a tessellator mock of some sort
-    struct OverriddenTessellateRenderer : public mc::GLRenderer
+    struct OverriddenTessellateRenderer : public mrg::GLRenderer
     {
         OverriddenTessellateRenderer(
             mir::geometry::Rectangle const& display_area, unsigned int num_primitives) :
@@ -206,7 +206,7 @@ TEST_F(GLRenderer, clears_all_channels_zero)
     EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
     EXPECT_CALL(mock_gl, glClear(_));
 
-    mc::GLRenderer renderer(display_area);
+    mrg::GLRenderer renderer(display_area);
 
     renderer.render(renderable_list);
 }
