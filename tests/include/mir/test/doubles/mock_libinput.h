@@ -52,11 +52,13 @@ public:
     MOCK_METHOD1(libinput_event_get_touch_event, libinput_event_touch*(libinput_event*));
 
     MOCK_METHOD1(libinput_event_keyboard_get_time, uint32_t(libinput_event_keyboard*));
+    MOCK_METHOD1(libinput_event_keyboard_get_time_usec, uint64_t(libinput_event_keyboard*));
     MOCK_METHOD1(libinput_event_keyboard_get_key, uint32_t(libinput_event_keyboard*));
     MOCK_METHOD1(libinput_event_keyboard_get_key_state, libinput_key_state(libinput_event_keyboard*));
     MOCK_METHOD1(libinput_event_keyboard_get_seat_key_count, uint32_t(libinput_event_keyboard*));
 
     MOCK_METHOD1(libinput_event_pointer_get_time, uint32_t(libinput_event_pointer*));
+    MOCK_METHOD1(libinput_event_pointer_get_time_usec, uint64_t(libinput_event_pointer*));
     MOCK_METHOD1(libinput_event_pointer_get_dx, double(libinput_event_pointer*));
     MOCK_METHOD1(libinput_event_pointer_get_dy, double(libinput_event_pointer*));
     MOCK_METHOD1(libinput_event_pointer_get_absolute_x, double(libinput_event_pointer*));
@@ -71,6 +73,7 @@ public:
     MOCK_METHOD2(libinput_event_pointer_has_axis,int(libinput_event_pointer *,libinput_pointer_axis));
 
     MOCK_METHOD1(libinput_event_touch_get_time, uint32_t(libinput_event_touch*));
+    MOCK_METHOD1(libinput_event_touch_get_time_usec, uint64_t(libinput_event_touch*));
     MOCK_METHOD1(libinput_event_touch_get_slot, int32_t(libinput_event_touch*));
     MOCK_METHOD1(libinput_event_touch_get_seat_slot, int32_t(libinput_event_touch*));
     MOCK_METHOD1(libinput_event_touch_get_x, double(libinput_event_touch*));

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -80,6 +80,11 @@ uint32_t libinput_event_keyboard_get_time(libinput_event_keyboard* event)
     return global_libinput->libinput_event_keyboard_get_time(event);
 }
 
+uint64_t libinput_event_keyboard_get_time_usec(libinput_event_keyboard* event)
+{
+    return global_libinput->libinput_event_keyboard_get_time_usec(event);
+}
+
 uint32_t libinput_event_keyboard_get_key(libinput_event_keyboard* event)
 {
     return global_libinput->libinput_event_keyboard_get_key(event);
@@ -98,6 +103,11 @@ uint32_t libinput_event_keyboard_get_seat_key_count(libinput_event_keyboard* eve
 uint32_t libinput_event_pointer_get_time(libinput_event_pointer* event)
 {
     return global_libinput->libinput_event_pointer_get_time(event);
+}
+
+uint64_t libinput_event_pointer_get_time_usec(libinput_event_pointer* event)
+{
+    return global_libinput->libinput_event_pointer_get_time_usec(event);
 }
 
 double libinput_event_pointer_get_dx(libinput_event_pointer* event)
@@ -163,6 +173,11 @@ int libinput_event_pointer_has_axis(libinput_event_pointer* event, libinput_poin
 uint32_t libinput_event_touch_get_time(libinput_event_touch* event)
 {
     return global_libinput->libinput_event_touch_get_time(event);
+}
+
+uint64_t libinput_event_touch_get_time_usec(libinput_event_touch* event)
+{
+    return global_libinput->libinput_event_touch_get_time_usec(event);
 }
 
 int32_t libinput_event_touch_get_slot(libinput_event_touch* event)
