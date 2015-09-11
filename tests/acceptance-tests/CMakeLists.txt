@@ -43,7 +43,6 @@ set(
   test_debug_api.cpp
   test_unresponsive_client.cpp
   test_client_platform_operation.cpp
-  test_mir_cookie.cpp
   test_input_device_hub.cpp
   test_latency.cpp
   test_shell_control_of_surface_configuration.cpp
