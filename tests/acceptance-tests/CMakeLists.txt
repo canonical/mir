@@ -32,6 +32,7 @@ set(
   test_surfaces_with_output_id.cpp
   test_server_disconnect.cpp
   test_prompt_session_client_api.cpp
+  test_client_scaling.cpp
   test_client_screencast.cpp
   test_client_surface_visibility.cpp
   test_buffer_stream_arrangement.cpp
