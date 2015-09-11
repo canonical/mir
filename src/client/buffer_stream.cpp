@@ -663,3 +663,8 @@ void mcl::BufferStream::set_size(geom::Size sz)
 {
     buffer_depository->set_size(sz);
 }
+
+void mcl::BufferStream::set_scale(float scale)
+{
+    (void)scale;
+}
