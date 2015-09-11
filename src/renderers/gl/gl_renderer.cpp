@@ -31,6 +31,7 @@
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <EGL/egl.h>
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -100,19 +101,36 @@ mrg::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
       texture_cache(std::make_unique<mc::RecentlyUsedCache>()),
       rotation(NAN) // ensure the first set_rotation succeeds
 {
+    EGLDisplay disp = eglGetCurrentDisplay();
+    if (disp != EGL_NO_DISPLAY)
+    {
+        struct {GLint id; char const* label;} const eglstrings[] =
+        {
+            {EGL_VENDOR,      "EGL vendor"},
+            {EGL_VERSION,     "EGL version"},
+            {EGL_CLIENT_APIS, "EGL client APIs"},
+            {EGL_EXTENSIONS,  "EGL extensions"},
+        };
+        for (auto& s : eglstrings)
+        {
+            auto val = eglQueryString(disp, s.id);
+            mir::log_info(std::string(s.label) + ": " + (val ? val : ""));
+        }
+    }
+
     struct {GLenum id; char const* label;} const glstrings[] =
     {
         {GL_VENDOR,   "GL vendor"},
         {GL_RENDERER, "GL renderer"},
         {GL_VERSION,  "GL version"},
         {GL_SHADING_LANGUAGE_VERSION,  "GLSL version"},
+        {GL_EXTENSIONS, "GL extensions"},
     };
 
     for (auto& s : glstrings)
     {
         auto val = reinterpret_cast<char const*>(glGetString(s.id));
-        if (!val) val = "";
-        mir::log_info("%s: %s", s.label, val);
+        mir::log_info(std::string(s.label) + ": " + (val ? val : ""));
     }
 
     GLint max_texture_size = 0;
