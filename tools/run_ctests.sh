@@ -59,4 +59,4 @@ then
     cp "$run_cost_file" "$cost_file"
 fi
 
-exit "$test_result"
+exit $test_result
