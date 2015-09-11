@@ -78,5 +78,5 @@ TEST(MirCookieFactory, throw_when_secret_size_to_small)
     std::vector<uint8_t> bob{ 0x01 };
     EXPECT_THROW({
         mir::CookieFactory factory{bob};
-    }, std::runtime_error);
+    }, std::logic_error);
 }
