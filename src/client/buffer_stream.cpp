@@ -590,9 +590,10 @@ int mcl::BufferStream::swap_interval() const
     return swap_interval_;
 }
 
-void mcl::BufferStream::set_swap_interval(int interval)
+MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
 {
     request_and_wait_for_configure(mir_surface_attrib_swapinterval, interval);
+    return &configure_wait_handle;
 }
 
 MirNativeBuffer* mcl::BufferStream::get_current_buffer_package()

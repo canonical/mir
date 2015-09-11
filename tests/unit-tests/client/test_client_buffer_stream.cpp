@@ -68,7 +68,7 @@ struct MockProtobufServer : public mclr::DisplayServer
 
     MOCK_METHOD3(configure_buffer_stream, void(
         mir::protobuf::StreamConfiguration const*, 
-        mir::protobuf::StreamConfiguration*, 
+        mp::Void*,
         google::protobuf::Closure*));
     MOCK_METHOD3(screencast_buffer, void(
         mp::ScreencastId const* /*request*/,

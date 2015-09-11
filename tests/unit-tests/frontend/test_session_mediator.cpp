@@ -1119,7 +1119,7 @@ TEST_F(SessionMediator, configures_swap_intervals_on_streams)
     using namespace testing;
     mf::SurfaceId surf_id{0};
     mp::StreamConfiguration request;
-    mp::StreamConfiguration response;
+    mp::Void response;
 
     auto interval = 0u;
     mtd::StubBuffer buffer;
