@@ -51,7 +51,7 @@ private:
     std::unique_ptr<CookieImpl> impl;
 };
 
-extern std::vector<uint8_t> get_random_data(unsigned size);
+std::vector<uint8_t> get_random_data(unsigned size);
 
 }
 #endif // MIR_COOKIE_FACTORY_H_
