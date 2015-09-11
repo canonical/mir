@@ -271,6 +271,12 @@ std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 
 void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
 {
+    if (!new_configuration.valid())
+    {
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("Invalid or inconsistent display configuration"));
+    }
+
     MirOrientation o = mir_orientation_normal;
 
     new_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)
