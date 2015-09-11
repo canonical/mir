@@ -129,8 +129,9 @@ private:
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&);
     void screencast_buffer_received(std::function<void()> done);
-    void on_configured();
+    void on_configured(int interval);
     void release_cpu_region();
+    MirWaitHandle* set_swap_interval(int interval, std::unique_lock<std::mutex>&);
 
     mutable std::mutex mutex; // Protects all members of *this
 
