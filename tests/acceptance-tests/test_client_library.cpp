@@ -486,7 +486,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
 }
 #endif
 
-#if defined(ANDROID) || defined(MESA_X11)
+#if defined(ANDROID)
 // Mir's Android test infrastructure isn't quite ready for this yet.
 TEST_F(ClientLibrary, DISABLED_gets_buffer_dimensions)
 #else
@@ -497,7 +497,7 @@ TEST_F(ClientLibrary, gets_buffer_dimensions)
 
     auto const spec =
         mir_connection_create_spec_for_normal_surface(
-            connection, 0, 0, mir_pixel_format_abgr_8888);
+            connection, 0, 0, mir_pixel_format_xrgb_8888);
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
     struct {int width, height;} const sizes[] =
@@ -711,7 +711,7 @@ TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
  * trying to marshall stub buffers causes crashes.
  */
 
-#if defined(ANDROID) || defined(MESA_X11)
+#if defined(ANDROID)
 TEST_F(ClientLibrary, DISABLED_create_simple_normal_surface_from_spec)
 #else
 TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
@@ -742,7 +742,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
     mir_connection_release(connection);
 }
 
-#if defined(ANDROID) || defined(MESA_X11)
+#if defined(ANDROID)
 TEST_F(ClientLibrary, DISABLED_create_simple_normal_surface_from_spec_async)
 #else
 TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
@@ -809,7 +809,7 @@ TEST_F(ClientLibrary, DISABLED_can_specify_all_normal_surface_parameters_from_sp
     mir_connection_release(connection);
 }
 
-#if defined(ANDROID) || defined(MESA_X11)
+#if defined(ANDROID)
 TEST_F(ClientLibrary, DISABLED_set_fullscreen_on_output_makes_fullscreen_surface)
 #else
 TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
