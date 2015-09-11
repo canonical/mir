@@ -1013,8 +1013,16 @@ void mf::SessionMediator::pack_protobuf_buffer(
 
 void mf::SessionMediator::configure_buffer_stream(
     mir::protobuf::StreamConfiguration const* request,
-    mir::protobuf::StreamConfiguration* response,
+    mir::protobuf::StreamConfiguration*,
     google::protobuf::Closure* done)
 {
-    (void) request; (void) response; (void) done;
+    auto const session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
+    if (request->has_swapinterval())
+        stream->allow_framedropping(request->swapinterval() == 0);
+
+    done->Run();
 }
