@@ -219,6 +219,13 @@ void mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrienta
     spec->pref_orientation = mode;
 }
 
+void mir_surface_spec_set_event_handler(MirSurfaceSpec* spec,
+    mir_surface_event_callback callback,
+    void* context)
+{
+    spec->event_handler = MirSurfaceSpec::EventHandler { callback, context};
+}
+
 void mir_surface_spec_release(MirSurfaceSpec* spec)
 {
     delete spec;
