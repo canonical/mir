@@ -102,8 +102,8 @@ public:
     CookieImpl(std::vector<uint8_t> const& secret)
     {
         if (secret.size() < min_secret_size)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Secret size " + std::to_string(secret.size()) + " is to small, require " +
-                                                     std::to_string(min_secret_size) + " or greater."));
+            BOOST_THROW_EXCEPTION(std::logic_error("Secret size " + std::to_string(secret.size()) + " is to small, require " +
+                                                   std::to_string(min_secret_size) + " or greater."));
 
         hmac_sha1_set_key(&ctx, secret.size(), secret.data());
     }
