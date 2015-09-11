@@ -29,7 +29,7 @@
 #include <mir/compositor/buffer_stream.h>
 #include <mir/test/doubles/mock_gl.h>
 #include <mir/test/doubles/mock_egl.h>
-#include <src/renderers/gl/gl_renderer.h>
+#include <src/renderers/gl/renderer.h>
 
 using testing::SetArgPointee;
 using testing::InSequence;
@@ -160,18 +160,18 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
         .WillOnce(Return(false));
     EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
 
-    mrg::GLRenderer renderer(display_area);
+    mrg::Renderer renderer(display_area);
     renderer.render(renderable_list);
 }
 
 TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
 {
     //'listening to the tests', it would be a bit easier to use a tessellator mock of some sort
-    struct OverriddenTessellateRenderer : public mrg::GLRenderer
+    struct OverriddenTessellateRenderer : public mrg::Renderer
     {
         OverriddenTessellateRenderer(
             mir::geometry::Rectangle const& display_area, unsigned int num_primitives) :
-            GLRenderer(display_area),
+            Renderer(display_area),
             num_primitives(num_primitives)
         {
         }
@@ -206,7 +206,7 @@ TEST_F(GLRenderer, clears_all_channels_zero)
     EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
     EXPECT_CALL(mock_gl, glClear(_));
 
-    mrg::GLRenderer renderer(display_area);
+    mrg::Renderer renderer(display_area);
 
     renderer.render(renderable_list);
 }

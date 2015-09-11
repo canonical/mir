@@ -18,7 +18,7 @@
 
 #define MIR_LOG_COMPONENT "GLRenderer"
 
-#include "gl_renderer.h"
+#include "renderer.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/compositor/recently_used_cache.h"
 #include "mir/graphics/renderable.h"
@@ -41,7 +41,7 @@ namespace mc = mir::compositor;
 namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
 
-const GLchar* const mrg::GLRenderer::vshader =
+const GLchar* const mrg::Renderer::vshader =
 {
     "attribute vec3 position;\n"
     "attribute vec2 texcoord;\n"
@@ -58,7 +58,7 @@ const GLchar* const mrg::GLRenderer::vshader =
     "}\n"
 };
 
-const GLchar* const mrg::GLRenderer::alpha_fshader =
+const GLchar* const mrg::Renderer::alpha_fshader =
 {
     "precision mediump float;\n"
     "uniform sampler2D tex;\n"
@@ -70,7 +70,7 @@ const GLchar* const mrg::GLRenderer::alpha_fshader =
     "}\n"
 };
 
-const GLchar* const mrg::GLRenderer::default_fshader =
+const GLchar* const mrg::Renderer::default_fshader =
 {   // This is the fastest fragment shader. Use it when you can.
     "precision mediump float;\n"
     "uniform sampler2D tex;\n"
@@ -80,7 +80,7 @@ const GLchar* const mrg::GLRenderer::default_fshader =
     "}\n"
 };
 
-mrg::GLRenderer::Program::Program(GLuint program_id)
+mrg::Renderer::Program::Program(GLuint program_id)
 {
     id = program_id;
     position_attr = glGetAttribLocation(id, "position");
@@ -93,7 +93,7 @@ mrg::GLRenderer::Program::Program(GLuint program_id)
     alpha_uniform = glGetUniformLocation(id, "alpha");
 }
 
-mrg::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
+mrg::Renderer::Renderer(geom::Rectangle const& display_area)
     : clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
@@ -135,16 +135,16 @@ mrg::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
     set_rotation(0.0f);
 }
 
-mrg::GLRenderer::~GLRenderer() = default;
+mrg::Renderer::~Renderer() = default;
 
-void mrg::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
+void mrg::Renderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
                                 mg::Renderable const& renderable) const
 {
     primitives.resize(1);
     primitives[0] = mg::tessellate_renderable_into_rectangle(renderable, geom::Displacement{0,0});
 }
 
-void mrg::GLRenderer::render(mg::RenderableList const& renderables) const
+void mrg::Renderer::render(mg::RenderableList const& renderables) const
 {
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -157,8 +157,8 @@ void mrg::GLRenderer::render(mg::RenderableList const& renderables) const
     texture_cache->drop_unused();
 }
 
-void mrg::GLRenderer::draw(mg::Renderable const& renderable,
-                          GLRenderer::Program const& prog) const
+void mrg::Renderer::draw(mg::Renderable const& renderable,
+                          Renderer::Program const& prog) const
 {
     if (renderable.alpha() < 1.0f || renderable.shaped())
     {
@@ -225,7 +225,7 @@ void mrg::GLRenderer::draw(mg::Renderable const& renderable,
     glDisableVertexAttribArray(prog.position_attr);
 }
 
-void mrg::GLRenderer::set_viewport(geometry::Rectangle const& rect)
+void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
 {
     if (rect == viewport)
         return;
@@ -267,7 +267,7 @@ void mrg::GLRenderer::set_viewport(geometry::Rectangle const& rect)
     viewport = rect;
 }
 
-void mrg::GLRenderer::set_rotation(float degrees)
+void mrg::Renderer::set_rotation(float degrees)
 {
     if (degrees == rotation)
         return;
@@ -290,7 +290,7 @@ void mrg::GLRenderer::set_rotation(float degrees)
     rotation = degrees;
 }
 
-void mrg::GLRenderer::suspend()
+void mrg::Renderer::suspend()
 {
     texture_cache->invalidate();
 }
