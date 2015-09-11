@@ -37,8 +37,9 @@ std::string const random_device_path{"/dev/random"};
 std::string const urandom_device_path{"/dev/urandom"};
 int const wait_seconds{30};
 unsigned const min_secret_size{8};
+}
 
-std::vector<uint8_t> fill_vector_with_random_data(unsigned size)
+std::vector<uint8_t> mir::get_random_data(unsigned size)
 {
     std::vector<uint8_t> buffer(size);
     int random_fd;
@@ -94,23 +95,11 @@ std::vector<uint8_t> fill_vector_with_random_data(unsigned size)
 
     return buffer;
 }
-}
 
 class mir::CookieFactory::CookieImpl
 {
 public:
-    CookieImpl(unsigned secret_size)
-    {
-        auto secret = fill_vector_with_random_data(secret_size);
-        init_cookie_impl(secret);
-    }
-
     CookieImpl(std::vector<uint8_t> const& secret)
-    {
-        init_cookie_impl(secret);
-    }
-
-    void init_cookie_impl(std::vector<uint8_t> const& secret)
     {
         if (secret.size() < min_secret_size)
             BOOST_THROW_EXCEPTION(std::runtime_error("Secret size " + std::to_string(secret.size()) + " is to small, require " +
@@ -138,11 +127,6 @@ public:
 private:
     struct hmac_sha1_ctx ctx;
 };
-
-mir::CookieFactory::CookieFactory(unsigned secret_size)
-    : impl(std::make_unique<CookieImpl>(secret_size))
-{
-}
 
 mir::CookieFactory::CookieFactory(std::vector<uint8_t> const& secret)
     : impl(std::make_unique<CookieImpl>(secret))

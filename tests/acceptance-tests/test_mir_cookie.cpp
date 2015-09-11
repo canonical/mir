@@ -75,7 +75,8 @@ TEST(MirCookieFactory, timestamp_trusted_with_different_secret_doesnt_attest)
 
 TEST(MirCookieFactory, throw_when_secret_size_to_small)
 {
+    std::vector<uint8_t> bob{ 0x01 };
     EXPECT_THROW({
-        mir::CookieFactory factory{0};
+        mir::CookieFactory factory{bob};
     }, std::runtime_error);
 }
