@@ -107,7 +107,7 @@ public:
     // mcl::EGLNativeSurface interface
     MirSurfaceParameters get_parameters() const override;
     void request_and_wait_for_next_buffer() override;
-    // TODO: In this context it seems like a wart that this is a "SurfaceAttribute"
+
     void request_and_wait_for_configure(MirSurfaceAttrib attrib, int) override;
 
     MirNativeBuffer* get_current_buffer_package() override;
