@@ -200,6 +200,10 @@ public:
         mir::protobuf::PingEvent const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
+    void configure_buffer_stream(
+        mir::protobuf::StreamConfiguration const* request,
+        mir::protobuf::StreamConfiguration* response,
+        google::protobuf::Closure* done) override;
 
     // TODO: Split this into a separate thing
     void translate_surface_to_screen(

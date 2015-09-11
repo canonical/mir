@@ -130,6 +130,10 @@ struct StubDisplayServer : public mir::frontend::detail::DisplayServer
         mir::protobuf::PingEvent const* /*request*/,
         mir::protobuf::Void* /*response*/,
         google::protobuf::Closure* /*done*/) {}
+    void configure_buffer_stream(
+        mir::protobuf::StreamConfiguration const* /*request*/,
+        mir::protobuf::StreamConfiguration* /*response*/,
+        google::protobuf::Closure* /*done*/) {}
 };
 
 }

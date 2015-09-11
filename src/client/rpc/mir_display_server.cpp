@@ -203,3 +203,10 @@ void mclr::DisplayServer::pong(
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
+void mclr::DisplayServer::configure_buffer_stream(
+    mir::protobuf::StreamConfiguration const* request,
+    mir::protobuf::StreamConfiguration* response,
+    google::protobuf::Closure* done)
+{
+    channel->call_method(std::string(__func__), request, response, done);
+}

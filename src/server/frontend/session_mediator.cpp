@@ -1010,3 +1010,11 @@ void mf::SessionMediator::pack_protobuf_buffer(
     for(auto const& fd : packer.fds())
         resource_cache->save_fd(&protobuf_buffer, fd);
 }
+
+void mf::SessionMediator::configure_buffer_stream(
+    mir::protobuf::StreamConfiguration const* request,
+    mir::protobuf::StreamConfiguration* response,
+    google::protobuf::Closure* done)
+{
+    (void) request; (void) response; (void) done;
+}
