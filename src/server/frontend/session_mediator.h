@@ -202,7 +202,7 @@ public:
         google::protobuf::Closure* done) override;
     void configure_buffer_stream(
         mir::protobuf::StreamConfiguration const* request,
-        mir::protobuf::StreamConfiguration* response,
+        mir::protobuf::Void*,
         google::protobuf::Closure* done) override;
 
     // TODO: Split this into a separate thing

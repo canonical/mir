@@ -1013,7 +1013,7 @@ void mf::SessionMediator::pack_protobuf_buffer(
 
 void mf::SessionMediator::configure_buffer_stream(
     mir::protobuf::StreamConfiguration const* request,
-    mir::protobuf::StreamConfiguration*,
+    mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
     auto const session = weak_session.lock();

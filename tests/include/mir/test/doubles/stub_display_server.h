@@ -132,7 +132,7 @@ struct StubDisplayServer : public mir::frontend::detail::DisplayServer
         google::protobuf::Closure* /*done*/) {}
     void configure_buffer_stream(
         mir::protobuf::StreamConfiguration const* /*request*/,
-        mir::protobuf::StreamConfiguration* /*response*/,
+        mir::protobuf::Void* /*response*/,
         google::protobuf::Closure* /*done*/) {}
 };
 

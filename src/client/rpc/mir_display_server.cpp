@@ -205,7 +205,7 @@ void mclr::DisplayServer::pong(
 }
 void mclr::DisplayServer::configure_buffer_stream(
     mir::protobuf::StreamConfiguration const* request,
-    mir::protobuf::StreamConfiguration* response,
+    mir::protobuf::Void* response,
     google::protobuf::Closure* done)
 {
     channel->call_method(std::string(__func__), request, response, done);
