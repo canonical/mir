@@ -497,7 +497,7 @@ TEST_F(ClientLibrary, gets_buffer_dimensions)
 
     auto const spec =
         mir_connection_create_spec_for_normal_surface(
-            connection, 0, 0, mir_pixel_format_xrgb_8888);
+            connection, 0, 0, mir_pixel_format_abgr_8888);
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
     struct {int width, height;} const sizes[] =
