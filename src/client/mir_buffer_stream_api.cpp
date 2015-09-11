@@ -180,3 +180,9 @@ bool mir_buffer_stream_is_valid(MirBufferStream* opaque_stream)
     auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(opaque_stream);
     return buffer_stream->valid();
 }
+
+void mir_buffer_stream_set_scale(MirBufferStream* stream, float scale)
+{
+    (void) stream;
+    (void) scale;
+}
