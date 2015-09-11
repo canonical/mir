@@ -39,7 +39,6 @@ namespace mir
 class CookieFactory
 {
 public:
-    CookieFactory(unsigned secret_size);
     CookieFactory(std::vector<uint8_t> const& secret);
     ~CookieFactory() noexcept;
 
