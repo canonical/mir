@@ -35,11 +35,11 @@ namespace mir
  * Some spoofing protection is desirable; experience with X clients shows that they will go to some effort
  * to attempt to bypass focus stealing prevention.
  *
- * This is not in any way cryptographically secure. This DOES NOT provide security.
  */
 class CookieFactory
 {
 public:
+    CookieFactory(unsigned secret_size);
     CookieFactory(std::vector<uint8_t> const& secret);
     ~CookieFactory() noexcept;
 

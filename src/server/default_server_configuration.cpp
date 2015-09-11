@@ -42,18 +42,6 @@
 #include "mir/scene/null_prompt_session_listener.h"
 #include "default_emergency_cleanup.h"
 
-#include <boost/throw_exception.hpp>
-
-#include <vector>
-#include <array>
-#include <linux/random.h>
-#include <sys/syscall.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
@@ -66,9 +54,7 @@ namespace mi = mir::input;
 
 namespace
 {
-    std::string const random_device_path{"/dev/random"};
-    std::string const urandom_device_path{"/dev/urandom"};
-    int const wait_seconds{30};
+    unsigned const secret_size{64};
 }
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
@@ -193,72 +179,12 @@ std::shared_ptr<mir::EmergencyCleanup> mir::DefaultServerConfiguration::the_emer
         });
 }
 
-namespace
-{
-std::vector<uint8_t> fill_vector_with_random_data(uint8_t size)
-{
-    std::vector<uint8_t> buffer(size);
-    int random_fd;
-    int retval;
-    fd_set rfds;
-
-    struct timeval tv;
-    tv.tv_sec  = wait_seconds;
-    tv.tv_usec = 0;
-
-    if ((random_fd = open(random_device_path.c_str(), O_RDONLY)) == -1)
-    {
-        int error = errno;
-        BOOST_THROW_EXCEPTION(std::system_error(error, std::system_category(),
-                                                "open failed on device " + random_device_path));
-    }
-
-    FD_ZERO(&rfds);
-    FD_SET(random_fd, &rfds);
-
-    /* We want to block until *some* entropy exists on boot, then use urandom once we have some */
-    retval = select(random_fd + 1, &rfds, NULL, NULL, &tv);
-
-    /* We are done with /dev/random at this point, and it is either an error or ready to be read */
-    if (close(random_fd) == -1)
-    {
-        int error = errno;
-        BOOST_THROW_EXCEPTION(std::system_error(error, std::system_category(),
-                                                "close failed on device " + random_device_path));
-    }
-
-    if (retval == -1)
-    {
-        int error = errno;
-        BOOST_THROW_EXCEPTION(std::system_error(error, std::system_category(),
-                                                "select failed on file descriptor " + std::to_string(random_fd) +
-                                                " from device " + random_device_path));
-    }
-    else if (retval && FD_ISSET(random_fd, &rfds))
-    {
-        std::uniform_int_distribution<uint8_t> dist;
-        std::random_device rand_dev(urandom_device_path);
-
-        std::generate(std::begin(buffer), std::end(buffer), [&]() {
-            return dist(rand_dev);
-        });
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to read from device: " + random_device_path +
-                                                 " after: " + std::to_string(wait_seconds) + " seconds"));
-    }
-
-    return buffer;
-}
-}
-
 std::shared_ptr<mir::CookieFactory> mir::DefaultServerConfiguration::the_cookie_factory()
 {
     return cookie_factory(
         []()
         {
-            return std::make_shared<mir::CookieFactory>(fill_vector_with_random_data(16));
+            return std::make_shared<mir::CookieFactory>(secret_size);
         });
 }
 

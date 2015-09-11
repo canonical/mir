@@ -72,3 +72,10 @@ TEST(MirCookieFactory, timestamp_trusted_with_different_secret_doesnt_attest)
     EXPECT_FALSE(alices_factory.attest_timestamp(bobs_cookie));
     EXPECT_FALSE(bobs_factory.attest_timestamp(alices_cookie));
 }
+
+TEST(MirCookieFactory, throw_when_secret_size_to_small)
+{
+    EXPECT_THROW({
+        mir::CookieFactory factory{0};
+    }, std::runtime_error);
+}

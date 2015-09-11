@@ -47,13 +47,13 @@ std::string mir_test_framework::library_path()
 
 std::string mir_test_framework::udev_recordings_path()
 {
-    std::string share_path = MIR_INSTALL_PREFIX"/share/udev_recordings";
     std::string bin_path   = MIR_BUILD_PREFIX"/bin/udev_recordings";
+    std::string share_path = MIR_INSTALL_PREFIX"/share/udev_recordings";
 
-    if (boost::filesystem::exists(share_path))
-        return share_path;
-    else if (boost::filesystem::exists(bin_path))
+    if (boost::filesystem::exists(bin_path))
         return bin_path;
+    else if (boost::filesystem::exists(share_path))
+        return share_path;
 
     BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find udev_recordings in standard search locations"));
 }
