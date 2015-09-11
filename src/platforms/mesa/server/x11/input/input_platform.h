@@ -27,7 +27,7 @@ namespace mir
 
 namespace dispatch
 {
-class ActionQueue;
+class ReadableFd;
 }
 
 namespace input
@@ -50,9 +50,12 @@ public:
     void stop() override;
 
 private:
-    std::shared_ptr<dispatch::ActionQueue> const platform_queue;
+    void process_input_event();
+    std::shared_ptr<::Display> x11_connection;
+    std::shared_ptr<dispatch::ReadableFd> const xcon_dispatchable;
     std::shared_ptr<input::InputDeviceRegistry> const registry;
-    std::shared_ptr<XInputDevice> const device;
+    std::shared_ptr<XInputDevice> const core_keyboard;
+    std::shared_ptr<XInputDevice> const core_pointer;
 };
 
 }

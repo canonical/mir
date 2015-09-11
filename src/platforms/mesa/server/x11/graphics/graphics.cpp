@@ -17,6 +17,7 @@
  */
 
 #include "platform.h"
+#include "guest_platform.h"
 #include "../X11_resources.h"
 #include <boost/throw_exception.hpp>
 
@@ -40,10 +41,9 @@ std::shared_ptr<mg::Platform> create_host_platform(
 
 std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const& /*report*/,
-    std::shared_ptr<mg::NestedContext> const&)
+    std::shared_ptr<mg::NestedContext> const& nested_context)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Guest platform isn't supported under X"));
-    return nullptr;
+    return std::make_shared<mgx::GuestPlatform>(nested_context);
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& /*config*/)

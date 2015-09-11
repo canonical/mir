@@ -18,6 +18,7 @@ add_library(
 
   graphics.cpp
   platform.cpp
+  guest_platform.cpp
   display.cpp
   display_configuration.cpp
   gl_context.cpp
