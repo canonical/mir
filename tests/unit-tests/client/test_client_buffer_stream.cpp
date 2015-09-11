@@ -618,8 +618,6 @@ TEST_P(ClientBufferStream, configures_scale)
     auto scale_as_int = reinterpret_cast<int*>(&scale);
     mp::SurfaceSetting expected_setting;
 
-//    expected_setting.mutable_surface_id().set_value(0);
-//    expected_setting.mutable_buffer_stream_id().set_value(0);
     expected_setting.set_attrib(mir_surface_attrib_scale);
     expected_setting.set_ivalue(*scale_as_int);
 
