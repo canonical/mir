@@ -1023,6 +1023,8 @@ void mf::SessionMediator::configure_buffer_stream(
     auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
     if (request->has_swapinterval())
         stream->allow_framedropping(request->swapinterval() == 0);
+    if (request->has_scale())
+        printf("haz scale\n");
 
     done->Run();
 }
