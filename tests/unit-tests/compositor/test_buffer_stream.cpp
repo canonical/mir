@@ -248,12 +248,9 @@ TEST_F(BufferStreamTest, scale_resizes_and_sets_size_appropriately)
 {
     using namespace testing;
     auto const scale = 2.0f; 
-    geom::Size size{4, 5};
     auto scaled_size = scale * size;
 
     mg::BufferProperties non_scaled{size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
-    mg::BufferProperties scaled{scaled_size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
-
     Sequence seq;
     EXPECT_CALL(*mock_bundle, properties())
         .InSequence(seq)
@@ -267,21 +264,17 @@ TEST_F(BufferStreamTest, scale_resizes_and_sets_size_appropriately)
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
     buffer_stream.set_scale(scale);
     EXPECT_THAT(buffer_stream.stream_size(), Eq(size));
-//    EXPECT_THAT(buffer_stream.lock_compositor_buffer(this)->size(), Eq(scaled_size));
 }
 
 TEST_F(BufferStreamTest, scaled_resizes_appropriately)
 {
     using namespace testing;
     auto const scale = 2.0f; 
-    geom::Size size{4, 5};
     auto scaled_size = scale * size;
 
+    mg::BufferProperties non_scaled{size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
     geom::Size logical_resize_request{10, 20};
     geom::Size physical_resize_request{5, 10};
-
-    mg::BufferProperties non_scaled{size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
-    mg::BufferProperties scaled{scaled_size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
     
     InSequence seq;
     EXPECT_CALL(*mock_bundle, properties())
@@ -294,4 +287,15 @@ TEST_F(BufferStreamTest, scaled_resizes_appropriately)
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
     buffer_stream.set_scale(scale);
     buffer_stream.resize(logical_resize_request);
+}
+
+TEST_F(BufferStreamTest, cannot_set_silly_scale_values)
+{
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
+    EXPECT_THROW(
+        buffer_stream.set_scale(0.0f);
+    , std::logic_error);
+    EXPECT_THROW(
+        buffer_stream.set_scale(-1.0f);
+    , std::logic_error);
 }

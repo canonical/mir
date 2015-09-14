@@ -159,6 +159,9 @@ void mc::BufferStreamSurfaces::with_buffer(mg::BufferID, std::function<void(mg::
 
 void mc::BufferStreamSurfaces::set_scale(float new_scale)
 {
+    if (new_scale <= 0.0f)
+        BOOST_THROW_EXCEPTION(std::logic_error("invalid scale (must be greater than zero)"));
+
     std::unique_lock<std::mutex> lk(mutex);
     scale = new_scale;
     auto physical_size = buffer_bundle->properties().size * scale;
