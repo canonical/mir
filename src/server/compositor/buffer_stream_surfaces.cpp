@@ -151,3 +151,9 @@ void mc::BufferStreamSurfaces::with_buffer(mg::BufferID, std::function<void(mg::
 {
     BOOST_THROW_EXCEPTION(std::logic_error("buffer lookup cannot happen with an exchange-based buffer client"));
 }
+
+void mc::BufferStreamSurfaces::set_scale(float scale)
+{
+    (void)scale;
+//    resize(
+}

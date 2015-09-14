@@ -65,6 +65,7 @@ public:
     int buffers_ready_for_compositor(void const* user_id) const override;
     void drop_old_buffers() override;
     bool has_submitted_buffer() const override;
+    void set_scale(float scale) override;
 
 protected:
     BufferStreamSurfaces(const BufferStreamSurfaces&) = delete;

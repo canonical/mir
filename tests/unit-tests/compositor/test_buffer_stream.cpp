@@ -248,3 +248,25 @@ TEST_F(BufferStreamTest, allocate_and_release_not_supported)
         buffer_stream.remove_buffer(mg::BufferID{3});
     }, std::logic_error);
 }
+
+TEST_F(BufferStreamTest, scale_resizes_and_sets_size_appropriately)
+{
+    using namespace testing;
+    auto const scale = 2.0f; 
+    geom::Size size{4, 5};
+    auto scaled_size = scale * size;
+    mg::BufferProperties non_scaled{size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
+    mg::BufferProperties scaled{scaled_size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
+
+    InSequence seq;
+    EXPECT_CALL(*mock_bundle, properties())
+        .WillOnce(testing::Return(non_scaled));
+    EXPECT_CALL(*mock_bundle, resize(scaled_size));
+    EXPECT_CALL(*mock_bundle, properties())
+        .WillOnce(testing::Return(scaled));
+
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
+    buffer_stream.set_scale(scale);
+    EXPECT_THAT(buffer_stream.stream_size(), Eq(size));
+    EXPECT_THAT(buffer_stream.lock_compositor_buffer(this)->size(), Eq(scaled_size));
+}
