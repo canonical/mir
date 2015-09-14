@@ -185,7 +185,7 @@ std::shared_ptr<mir::cookie::CookieFactory> mir::DefaultServerConfiguration::the
         []()
         {
             auto secret = mir::cookie::get_random_data(secret_size);
-            return std::make_shared<mir::cookie::CookieFactory>(secret);
+            return std::make_shared<mir::cookie::CookieFactoryNettle>(secret);
         });
 }
 

@@ -22,6 +22,7 @@
 #include <vector>
 #include <memory>
 #include "mir_toolkit/common.h"
+#include <nettle/hmac.h>
 
 namespace mir
 {
@@ -38,22 +39,38 @@ namespace cookie
  * to attempt to bypass focus stealing prevention.
  *
  */
+
+// Using the NVI Idiom
 class CookieFactory
 {
 public:
-    CookieFactory(std::vector<uint8_t> const& secret);
-    ~CookieFactory() noexcept;
+    CookieFactory() = default;
+    virtual ~CookieFactory() noexcept = default;
 
     MirCookie timestamp_to_cookie(uint64_t const& timestamp);
 
     bool attest_timestamp(MirCookie const& cookie);
 
 private:
-    class CookieImpl;
-    std::unique_ptr<CookieImpl> impl;
+    virtual void calculate_mac(MirCookie& cookie) = 0;
+    virtual bool verify_mac(MirCookie const& cookie) = 0;
+};
+
+class CookieFactoryNettle : public CookieFactory
+{
+public:
+    CookieFactoryNettle(std::vector<uint8_t> const& secret);
+    virtual ~CookieFactoryNettle() noexcept;
+
+private:
+    virtual void calculate_mac(MirCookie& cookie) override;
+    virtual bool verify_mac(MirCookie const& cookie) override;
 
     // The minimum secret size for which a resonable mac can be generated
     static unsigned const minimum_secret_size;
+
+    // hmac context used to generate macs from libnettle
+    struct hmac_sha1_ctx ctx;
 };
 
 std::vector<uint8_t> get_random_data(unsigned size);

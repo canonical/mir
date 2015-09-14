@@ -291,7 +291,7 @@ void mir::Server::set_command_line(int argc, char const* argv[])
 void mir::Server::override_the_cookie_factory(std::vector<uint8_t> const& secret)
 {
     verify_setting_allowed(self->server_config);
-    self->cookie_factory = std::make_shared<cookie::CookieFactory>(secret);
+    self->cookie_factory = std::make_shared<cookie::CookieFactoryNettle>(secret);
 }
 
 void mir::Server::add_init_callback(std::function<void()> const& init_callback)

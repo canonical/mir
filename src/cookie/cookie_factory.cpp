@@ -22,7 +22,6 @@
 #include <random>
 #include <system_error>
 
-#include <nettle/hmac.h>
 #include <linux/random.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -96,57 +95,45 @@ std::vector<uint8_t> mir::cookie::get_random_data(unsigned size)
     return buffer;
 }
 
-class mir::cookie::CookieFactory::CookieImpl
+unsigned const mir::cookie::CookieFactoryNettle::minimum_secret_size = min_secret_size;
+
+mir::cookie::CookieFactoryNettle::CookieFactoryNettle(std::vector<uint8_t> const& secret)
 {
-public:
-    CookieImpl(std::vector<uint8_t> const& secret)
-    {
-        if (secret.size() < minimum_secret_size)
-            BOOST_THROW_EXCEPTION(std::logic_error("Secret size " + std::to_string(secret.size()) + " is to small, require " +
-                                                   std::to_string(minimum_secret_size) + " or greater."));
+    if (secret.size() < minimum_secret_size)
+        BOOST_THROW_EXCEPTION(std::logic_error("Secret size " + std::to_string(secret.size()) + " is to small, require " +
+                                               std::to_string(minimum_secret_size) + " or greater."));
 
-        hmac_sha1_set_key(&ctx, secret.size(), secret.data());
-    }
+    hmac_sha1_set_key(&ctx, secret.size(), secret.data());
+}
 
-    void calculate_mac(MirCookie& cookie)
-    {
-        hmac_sha1_update(&ctx, sizeof(cookie.timestamp), reinterpret_cast<uint8_t*>(&cookie.timestamp));
-        hmac_sha1_digest(&ctx, sizeof(cookie.mac), reinterpret_cast<uint8_t*>(&cookie.mac));
-    }
-
-    bool verify_mac(MirCookie const& cookie)
-    {
-        decltype(cookie.mac) calculated_mac;
-        uint8_t* message = reinterpret_cast<uint8_t*>(const_cast<decltype(cookie.timestamp)*>(&cookie.timestamp));
-        hmac_sha1_update(&ctx, sizeof(cookie.timestamp), message);
-        hmac_sha1_digest(&ctx, sizeof(calculated_mac), reinterpret_cast<uint8_t*>(&calculated_mac));
-
-        return calculated_mac == cookie.mac;
-    }
-
-private:
-    struct hmac_sha1_ctx ctx;
-};
-
-unsigned const mir::cookie::CookieFactory::minimum_secret_size = min_secret_size;
-
-mir::cookie::CookieFactory::CookieFactory(std::vector<uint8_t> const& secret)
-    : impl(std::make_unique<CookieImpl>(secret))
+mir::cookie::CookieFactoryNettle::~CookieFactoryNettle() noexcept
 {
 }
 
-mir::cookie::CookieFactory::~CookieFactory() noexcept
+void mir::cookie::CookieFactoryNettle::calculate_mac(MirCookie& cookie)
 {
+    hmac_sha1_update(&ctx, sizeof(cookie.timestamp), reinterpret_cast<uint8_t*>(&cookie.timestamp));
+    hmac_sha1_digest(&ctx, sizeof(cookie.mac), reinterpret_cast<uint8_t*>(&cookie.mac));
+}
+
+bool mir::cookie::CookieFactoryNettle::verify_mac(MirCookie const& cookie)
+{
+    decltype(cookie.mac) calculated_mac;
+    uint8_t* message = reinterpret_cast<uint8_t*>(const_cast<decltype(cookie.timestamp)*>(&cookie.timestamp));
+    hmac_sha1_update(&ctx, sizeof(cookie.timestamp), message);
+    hmac_sha1_digest(&ctx, sizeof(calculated_mac), reinterpret_cast<uint8_t*>(&calculated_mac));
+
+    return calculated_mac == cookie.mac;
 }
 
 MirCookie mir::cookie::CookieFactory::timestamp_to_cookie(uint64_t const& timestamp)
 {
     MirCookie cookie { timestamp, 0 };
-    impl->calculate_mac(cookie);
+    calculate_mac(cookie);
     return cookie;
 }
 
 bool mir::cookie::CookieFactory::attest_timestamp(MirCookie const& cookie)
 {
-    return impl->verify_mac(cookie);
+    return verify_mac(cookie);
 }
