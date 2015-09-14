@@ -153,11 +153,20 @@ TEST_F(SurfaceScaling, compositor_sees_size_different_when_scaled)
     auto scale = 2.0f;
     auto stream = mir_surface_get_buffer_stream(surface);
     mir_buffer_stream_set_scale(stream, scale);
+
+    //submits original size, gets scaled size
+    mir_buffer_stream_swap_buffers_sync(stream);
+    //submits scaled size
     mir_buffer_stream_swap_buffers_sync(stream);
 
     auto entries = watch->size_entries();
-    ASSERT_THAT(entries, SizeIs(1));
+    ASSERT_THAT(entries, SizeIs(2));
     auto& entry = entries.front();
+    ASSERT_THAT(entry.physical_sizes, SizeIs(1));
+    ASSERT_THAT(entry.composited_sizes, SizeIs(1));
+    EXPECT_THAT(entry.composited_sizes.front(), Eq(entry.physical_sizes.front()));
+
+    entry = entries.back();
     ASSERT_THAT(entry.physical_sizes, SizeIs(1));
     ASSERT_THAT(entry.composited_sizes, SizeIs(1));
     EXPECT_THAT(entry.composited_sizes.front(), Ne(entry.physical_sizes.front()));
