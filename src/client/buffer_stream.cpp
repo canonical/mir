@@ -545,17 +545,14 @@ void mcl::BufferStream::request_and_wait_for_next_buffer()
     next_buffer([](){})->wait_for_all();
 }
 
-void mcl::BufferStream::on_configured()
+void mcl::BufferStream::on_configured(int interval)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     configure_wait_handle.result_received();
+    swap_interval_ = interval;
 }
 
-// TODO: It's a little strange that we use SurfaceAttrib here for the swap interval
-// we take advantage of the confusion between buffer stream ids and surface ids...
-// this should be resolved in the second phase of buffer stream which introduces the
-// new server support.
-void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int value)
+void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     if (attrib != mir_surface_attrib_swapinterval)
@@ -563,26 +560,8 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
         BOOST_THROW_EXCEPTION(std::logic_error("Attempt to configure surface attribute " + std::to_string(attrib) +
         " on BufferStream but only mir_surface_attrib_swapinterval is supported")); 
     }
-    if (mode != mcl::BufferStreamMode::Producer)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
-    }
-
-    mp::SurfaceSetting setting;
-    mp::SurfaceSetting result;
-    setting.mutable_surfaceid()->set_value(protobuf_bs->id().value());
-    setting.set_attrib(attrib);
-    setting.set_ivalue(value);
-    lock.unlock();
-
-    configure_wait_handle.expect_result();
-    display_server.configure_surface(&setting, &result,
-        google::protobuf::NewCallback(this, &mcl::BufferStream::on_configured));
-
+    set_swap_interval(interval, lock);
     configure_wait_handle.wait_for_all();
-
-    lock.lock();
-    swap_interval_ = result.ivalue();
 }
 
 uint32_t mcl::BufferStream::get_current_buffer_id()
@@ -597,9 +576,27 @@ int mcl::BufferStream::swap_interval() const
     return swap_interval_;
 }
 
-void mcl::BufferStream::set_swap_interval(int interval)
+MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
 {
-    request_and_wait_for_configure(mir_surface_attrib_swapinterval, interval);
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    return set_swap_interval(interval, lock);
+}
+
+MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval, std::unique_lock<std::mutex>& lock)
+{
+    if (mode != mcl::BufferStreamMode::Producer)
+        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
+
+    mp::StreamConfiguration configuration;
+    configuration.mutable_id()->set_value(protobuf_bs->id().value());
+    configuration.set_swapinterval(interval);
+    lock.unlock();
+
+    configure_wait_handle.expect_result();
+    display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
+        google::protobuf::NewCallback(this, &mcl::BufferStream::on_configured, interval));
+
+    return &configure_wait_handle;
 }
 
 MirNativeBuffer* mcl::BufferStream::get_current_buffer_package()

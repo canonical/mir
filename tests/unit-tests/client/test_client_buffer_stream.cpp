@@ -56,19 +56,19 @@ struct MockProtobufServer : public mclr::DisplayServer
 {
     MockProtobufServer() : mclr::DisplayServer(nullptr)
     {
+        ON_CALL(*this, configure_buffer_stream(_,_,_))
+            .WillByDefault(RunProtobufClosure());
         ON_CALL(*this, submit_buffer(_,_,_))
             .WillByDefault(RunProtobufClosure());
         ON_CALL(*this, allocate_buffers(_,_,_))
             .WillByDefault(DoAll(InvokeWithoutArgs([this]{ alloc_count++; }), RunProtobufClosure()));
         ON_CALL(*this, release_buffers(_,_,_))
             .WillByDefault(RunProtobufClosure());
-        ON_CALL(*this, configure_surface(_,_,_))
-            .WillByDefault(RunProtobufClosure());
     }
 
-    MOCK_METHOD3(configure_surface, void(
-        mir::protobuf::SurfaceSetting const*,
-        mir::protobuf::SurfaceSetting*,
+    MOCK_METHOD3(configure_buffer_stream, void(
+        mir::protobuf::StreamConfiguration const*, 
+        mp::Void*,
         google::protobuf::Closure*));
     MOCK_METHOD3(screencast_buffer, void(
         mp::ScreencastId const* /*request*/,
@@ -601,14 +601,32 @@ TEST_P(ClientBufferStream, invokes_callback_on_buffer_unavailable_before_wait_ha
     EXPECT_FALSE(wait_handle_has_result_in_callback);
 }
 
-MATCHER_P(SurfaceSettingIs, val, "")
+TEST_P(ClientBufferStream, configures_swap_interval)
 {
-    return ((arg->attrib() == val.attrib()) && (arg->ivalue() == val.ivalue()));
+    mcl::BufferStream bs{
+        nullptr, mock_protobuf_server, mode,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        response, perf_report, "", size};
+    service_requests_for(bs, mock_protobuf_server.alloc_count);
+
+    EXPECT_CALL(mock_protobuf_server, configure_buffer_stream(_,_,_));
+    bs.set_swap_interval(0);
+}
+
+MATCHER_P(StreamConfigScaleIs, val, "")
+{
+    if (!arg->has_scale() || !val.has_scale())
+        return false;
+    auto const id_matches = arg->id().value() == val.id().value();
+    auto const tolerance = 0.01f; 
+    auto const scale_matches = 
+        ((arg->scale() + tolerance < val.scale()) &&
+         (arg->scale() - tolerance > val.scale()));
+    return id_matches && scale_matches; 
 }
 
 TEST_P(ClientBufferStream, configures_scale)
 {
-#if 0
     mcl::BufferStream bs{
         nullptr, mock_protobuf_server, mode,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
@@ -616,15 +634,11 @@ TEST_P(ClientBufferStream, configures_scale)
     service_requests_for(bs, mock_protobuf_server.alloc_count);
 
     float scale = 2.1;
-    auto scale_as_int = reinterpret_cast<int*>(&scale);
-    mp::SurfaceSetting expected_setting;
-
-    expected_setting.set_attrib(mir_surface_attrib_scale);
-    expected_setting.set_ivalue(*scale_as_int);
-
-    EXPECT_CALL(mock_protobuf_server, configure_surface(SurfaceSettingIs(expected_setting),_,_));
+    mp::StreamConfiguration expected_config;
+    expected_config.set_scale(scale);
+    expected_config.mutable_id()->set_value(1);
+    EXPECT_CALL(mock_protobuf_server, configure_buffer_stream(StreamConfigScaleIs(expected_config),_,_));
     bs.set_scale(scale);
-#endif
 }
 
 INSTANTIATE_TEST_CASE_P(BufferSemanticsMode, ClientBufferStream, Bool());
