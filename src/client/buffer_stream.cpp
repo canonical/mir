@@ -558,14 +558,14 @@ void mcl::BufferStream::on_configured()
 void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int value)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    if ((attrib != mir_surface_attrib_swapinterval) && (attrib != mir_surface_attrib_scale))
+    if (attrib != mir_surface_attrib_swapinterval)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Attempt to configure surface attribute " + std::to_string(attrib) +
         " on BufferStream but only mir_surface_attrib_swapinterval is supported")); 
     }
     if (mode != mcl::BufferStreamMode::Producer)
     {
-        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set attribute on screencast is invalid"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
     }
 
     mp::SurfaceSetting setting;
@@ -666,5 +666,5 @@ void mcl::BufferStream::set_size(geom::Size sz)
 
 void mcl::BufferStream::set_scale(float scale)
 {
-    request_and_wait_for_configure(mir_surface_attrib_scale, *reinterpret_cast<unsigned int*>(&scale));
+    (void) scale;
 }

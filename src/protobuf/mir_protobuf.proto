@@ -231,8 +231,7 @@ message SurfaceSetting {
   optional SurfaceId surfaceid = 1;
   optional int32     attrib = 2;
   optional int32     ivalue = 3;
-  optional BufferStreamId id = 4;
-  // optional string    svalue = 5;  // Expected for future use
+  // optional string    svalue = 4;  // Expected for future use
   optional string error = 127;
 }
 
