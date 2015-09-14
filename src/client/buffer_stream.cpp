@@ -348,6 +348,7 @@ mcl::BufferStream::BufferStream(
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(protobuf_bs)},
       swap_interval_(1),
+      scale_(1.0f),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
       ideal_buffer_size(ideal_size)
@@ -545,11 +546,18 @@ void mcl::BufferStream::request_and_wait_for_next_buffer()
     next_buffer([](){})->wait_for_all();
 }
 
-void mcl::BufferStream::on_configured(int interval)
+void mcl::BufferStream::on_swap_interval_set(int interval)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    configure_wait_handle.result_received();
+    interval_wait_handle.result_received();
     swap_interval_ = interval;
+}
+
+void mcl::BufferStream::on_scale_set(float scale)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    scale_wait_handle.result_received();
+    scale_ = scale;
 }
 
 void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
@@ -561,7 +569,7 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
         " on BufferStream but only mir_surface_attrib_swapinterval is supported")); 
     }
     set_swap_interval(interval, lock);
-    configure_wait_handle.wait_for_all();
+    interval_wait_handle.wait_for_all();
 }
 
 uint32_t mcl::BufferStream::get_current_buffer_id()
@@ -592,11 +600,11 @@ MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval, std::unique_lo
     configuration.set_swapinterval(interval);
     lock.unlock();
 
-    configure_wait_handle.expect_result();
+    interval_wait_handle.expect_result();
     display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
-        google::protobuf::NewCallback(this, &mcl::BufferStream::on_configured, interval));
+        google::protobuf::NewCallback(this, &mcl::BufferStream::on_swap_interval_set, interval));
 
-    return &configure_wait_handle;
+    return &interval_wait_handle;
 }
 
 MirNativeBuffer* mcl::BufferStream::get_current_buffer_package()
@@ -661,7 +669,16 @@ void mcl::BufferStream::set_size(geom::Size sz)
     buffer_depository->set_size(sz);
 }
 
-void mcl::BufferStream::set_scale(float scale)
+MirWaitHandle* mcl::BufferStream::set_scale(float scale)
 {
-    (void) scale;
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    mp::StreamConfiguration configuration;
+    configuration.mutable_id()->set_value(protobuf_bs->id().value());
+    configuration.set_scale(scale);
+    scale_wait_handle.expect_result();
+    lock.unlock();
+
+    display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
+        google::protobuf::NewCallback(this, &mcl::BufferStream::on_scale_set, scale));
+    return &scale_wait_handle;
 }

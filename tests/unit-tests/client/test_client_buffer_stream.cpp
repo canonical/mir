@@ -618,10 +618,10 @@ MATCHER_P(StreamConfigScaleIs, val, "")
     if (!arg->has_scale() || !val.has_scale())
         return false;
     auto const id_matches = arg->id().value() == val.id().value();
-    auto const tolerance = 0.01f; 
+    auto const tolerance = 0.01f;
     auto const scale_matches = 
-        ((arg->scale() + tolerance < val.scale()) &&
-         (arg->scale() - tolerance > val.scale()));
+        ((arg->scale() + tolerance >= val.scale()) &&
+         (arg->scale() - tolerance <= val.scale()));
     return id_matches && scale_matches; 
 }
 
