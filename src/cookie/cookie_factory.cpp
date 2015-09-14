@@ -39,7 +39,7 @@ int const wait_seconds{30};
 unsigned const min_secret_size{8};
 }
 
-std::vector<uint8_t> mir::get_random_data(unsigned size)
+std::vector<uint8_t> mir::cookie::get_random_data(unsigned size)
 {
     std::vector<uint8_t> buffer(size);
     int random_fd;
@@ -96,7 +96,7 @@ std::vector<uint8_t> mir::get_random_data(unsigned size)
     return buffer;
 }
 
-class mir::CookieFactory::CookieImpl
+class mir::cookie::CookieFactory::CookieImpl
 {
 public:
     CookieImpl(std::vector<uint8_t> const& secret)
@@ -128,25 +128,25 @@ private:
     struct hmac_sha1_ctx ctx;
 };
 
-unsigned const mir::CookieFactory::minimum_secret_size = min_secret_size;
+unsigned const mir::cookie::CookieFactory::minimum_secret_size = min_secret_size;
 
-mir::CookieFactory::CookieFactory(std::vector<uint8_t> const& secret)
+mir::cookie::CookieFactory::CookieFactory(std::vector<uint8_t> const& secret)
     : impl(std::make_unique<CookieImpl>(secret))
 {
 }
 
-mir::CookieFactory::~CookieFactory() noexcept
+mir::cookie::CookieFactory::~CookieFactory() noexcept
 {
 }
 
-MirCookie mir::CookieFactory::timestamp_to_cookie(uint64_t const& timestamp)
+MirCookie mir::cookie::CookieFactory::timestamp_to_cookie(uint64_t const& timestamp)
 {
     MirCookie cookie { timestamp, 0 };
     impl->calculate_mac(cookie);
     return cookie;
 }
 
-bool mir::CookieFactory::attest_timestamp(MirCookie const& cookie)
+bool mir::cookie::CookieFactory::attest_timestamp(MirCookie const& cookie)
 {
     return impl->verify_mac(cookie);
 }

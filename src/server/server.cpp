@@ -102,7 +102,7 @@ struct mir::Server::Self
     std::weak_ptr<options::Option> options;
     std::string config_file;
     std::shared_ptr<ServerConfiguration> server_config;
-    std::shared_ptr<CookieFactory> cookie_factory;
+    std::shared_ptr<cookie::CookieFactory> cookie_factory;
 
     std::function<void()> init_callback{[]{}};
     int argc{0};
@@ -209,7 +209,7 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
         return mir::DefaultServerConfiguration::the_renderer_factory();
     }
 
-    auto the_cookie_factory() -> std::shared_ptr<CookieFactory> override
+    auto the_cookie_factory() -> std::shared_ptr<cookie::CookieFactory> override
     {
         if (self->cookie_factory)
         {
@@ -291,7 +291,7 @@ void mir::Server::set_command_line(int argc, char const* argv[])
 void mir::Server::override_the_cookie_factory(std::vector<uint8_t> const& secret)
 {
     verify_setting_allowed(self->server_config);
-    self->cookie_factory = std::make_shared<CookieFactory>(secret);
+    self->cookie_factory = std::make_shared<cookie::CookieFactory>(secret);
 }
 
 void mir::Server::add_init_callback(std::function<void()> const& init_callback)

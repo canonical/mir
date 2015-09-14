@@ -37,7 +37,7 @@ namespace msh = mir::shell;
 TEST(MirCookieFactory, attests_real_timestamp)
 {
     std::vector<uint8_t> secret{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
-    mir::CookieFactory factory{secret};
+    mir::cookie::CookieFactory factory{secret};
 
     uint64_t mock_timestamp{0x322322322332};
 
@@ -49,7 +49,7 @@ TEST(MirCookieFactory, attests_real_timestamp)
 TEST(MirCookieFactory, doesnt_attest_faked_timestamp)
 {
     std::vector<uint8_t> secret{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
-    mir::CookieFactory factory{secret};
+    mir::cookie::CookieFactory factory{secret};
 
     MirCookie bad_client_no_biscuit{ 0x33221100, 0x33221100 };
 
@@ -61,8 +61,8 @@ TEST(MirCookieFactory, timestamp_trusted_with_different_secret_doesnt_attest)
     std::vector<uint8_t> alice{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
     std::vector<uint8_t> bob{ 0x01, 0x02, 0x44, 0xd8, 0xee, 0x0f, 0xde, 0x01 };
 
-    mir::CookieFactory alices_factory{alice};
-    mir::CookieFactory bobs_factory{bob};
+    mir::cookie::CookieFactory alices_factory{alice};
+    mir::cookie::CookieFactory bobs_factory{bob};
 
     uint64_t mock_timestamp{0x01020304};
 
@@ -77,6 +77,6 @@ TEST(MirCookieFactory, throw_when_secret_size_to_small)
 {
     std::vector<uint8_t> bob{ 0x01 };
     EXPECT_THROW({
-        mir::CookieFactory factory{bob};
+        mir::cookie::CookieFactory factory{bob};
     }, std::logic_error);
 }

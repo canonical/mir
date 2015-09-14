@@ -1,11 +1,11 @@
 MIR_COOKIE_1 {
  global:
   extern "C++" {
-    mir::CookieFactory::CookieFactory*;
-    mir::CookieFactory::?CookieFactory*;
-    mir::CookieFactory::timestamp_to_cookie*;
-    mir::CookieFactory::attest_timestamp*;
-    mir::get_random_data*;
+    mir::cookie::CookieFactory::CookieFactory*;
+    mir::cookie::CookieFactory::?CookieFactory*;
+    mir::cookie::CookieFactory::timestamp_to_cookie*;
+    mir::cookie::CookieFactory::attest_timestamp*;
+    mir::cookie::get_random_data*;
   };
  local: *;
 };

@@ -179,13 +179,13 @@ std::shared_ptr<mir::EmergencyCleanup> mir::DefaultServerConfiguration::the_emer
         });
 }
 
-std::shared_ptr<mir::CookieFactory> mir::DefaultServerConfiguration::the_cookie_factory()
+std::shared_ptr<mir::cookie::CookieFactory> mir::DefaultServerConfiguration::the_cookie_factory()
 {
     return cookie_factory(
         []()
         {
-            auto secret = mir::get_random_data(secret_size);
-            return std::make_shared<mir::CookieFactory>(secret);
+            auto secret = mir::cookie::get_random_data(secret_size);
+            return std::make_shared<mir::cookie::CookieFactory>(secret);
         });
 }
 
