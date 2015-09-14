@@ -70,7 +70,7 @@ void mc::BufferStreamSurfaces::resize(geom::Size const& size)
 {
     std::unique_lock<std::mutex> lk(mutex);
     logical_size = size;
-    buffer_bundle->resize(size * (1.0f / scale));
+    buffer_bundle->resize(logical_size * scale);
 }
 
 void mc::BufferStreamSurfaces::force_requests_to_complete()
@@ -164,6 +164,5 @@ void mc::BufferStreamSurfaces::set_scale(float new_scale)
 
     std::unique_lock<std::mutex> lk(mutex);
     scale = new_scale;
-    auto physical_size = buffer_bundle->properties().size * scale;
-    buffer_bundle->resize(physical_size);
+    buffer_bundle->resize(logical_size * scale);
 }

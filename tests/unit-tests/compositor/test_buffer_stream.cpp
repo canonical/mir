@@ -255,9 +255,6 @@ TEST_F(BufferStreamTest, scale_resizes_and_sets_size_appropriately)
     EXPECT_CALL(*mock_bundle, properties())
         .InSequence(seq)
         .WillOnce(testing::Return(non_scaled));
-    EXPECT_CALL(*mock_bundle, properties())
-        .InSequence(seq)
-        .WillOnce(testing::Return(non_scaled));
     EXPECT_CALL(*mock_bundle, resize(scaled_size))
         .InSequence(seq);
 
@@ -274,11 +271,9 @@ TEST_F(BufferStreamTest, scaled_resizes_appropriately)
 
     mg::BufferProperties non_scaled{size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
     geom::Size logical_resize_request{10, 20};
-    geom::Size physical_resize_request{5, 10};
+    geom::Size physical_resize_request{20, 40};
     
     InSequence seq;
-    EXPECT_CALL(*mock_bundle, properties())
-        .WillOnce(testing::Return(non_scaled));
     EXPECT_CALL(*mock_bundle, properties())
         .WillOnce(testing::Return(non_scaled));
     EXPECT_CALL(*mock_bundle, resize(scaled_size));
