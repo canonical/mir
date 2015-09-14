@@ -36,6 +36,13 @@ using namespace testing;
 
 namespace
 {
+
+enum class TestType
+{
+    ExchangeSemantics,
+    SubmitSemantics
+};
+
 enum class Access
 {
     blocked,
@@ -252,11 +259,11 @@ size_t unique_ids_in(std::vector<BufferEntry> log)
 }
 
 //test infrastructure
-struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<int, bool>>
+struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<int, TestType>>
 {
     BufferScheduling()
     {
-        if (std::get<1>(GetParam()))
+        if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
         {
             producer = std::make_unique<BufferQueueProducer>(stream);
             consumer = std::make_unique<BufferQueueConsumer>(stream);
@@ -1172,24 +1179,24 @@ int const max_buffers_to_test{5};
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithAnyNumberOfBuffers,
-    Combine(Range(1, max_buffers_to_test), Values(true)));
+    Combine(Range(1, max_buffers_to_test), Values(TestType::ExchangeSemantics)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoOrMoreBuffers,
-    Combine(Range(2, max_buffers_to_test), Values(true)));
+    Combine(Range(2, max_buffers_to_test), Values(TestType::ExchangeSemantics)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeOrMoreBuffers,
-    Combine(Range(3, max_buffers_to_test), Values(true)));
+    Combine(Range(3, max_buffers_to_test), Values(TestType::ExchangeSemantics)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithOneBuffer,
-    Combine(Values(1), Values(true)));
+    Combine(Values(1), Values(TestType::ExchangeSemantics)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoBuffers,
-    Combine(Values(2), Values(true)));
+    Combine(Values(2), Values(TestType::ExchangeSemantics)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeBuffers,
-    Combine(Values(3), Values(true)));
+    Combine(Values(3), Values(TestType::ExchangeSemantics)));
