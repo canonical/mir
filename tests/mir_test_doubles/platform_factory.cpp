@@ -68,6 +68,6 @@ auto mtd::create_platform_with_null_dependencies()
                                                        [](::Display* display)
                                                        {
                                                            XCloseDisplay(display);
-                                                       }));
+                                                       }), mir::geometry::Size{1280,1024});
 }
 #endif
