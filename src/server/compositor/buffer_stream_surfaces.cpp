@@ -30,7 +30,9 @@ namespace geom = mir::geometry;
 
 mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& buffer_bundle) :
     buffer_bundle(buffer_bundle),
-    first_frame_posted{false}
+    first_frame_posted{false},
+    logical_size(buffer_bundle->properties().size),
+    scale{1.0f}
 {
 }
 
@@ -60,12 +62,15 @@ void mc::BufferStreamSurfaces::release_client_buffer(graphics::Buffer* buf)
 
 geom::Size mc::BufferStreamSurfaces::stream_size()
 {
-    return buffer_bundle->properties().size;
+    std::unique_lock<std::mutex> lk(mutex);
+    return logical_size;
 }
 
 void mc::BufferStreamSurfaces::resize(geom::Size const& size)
 {
-    buffer_bundle->resize(size);
+    std::unique_lock<std::mutex> lk(mutex);
+    logical_size = size;
+    buffer_bundle->resize(size * (1.0f / scale));
 }
 
 void mc::BufferStreamSurfaces::force_requests_to_complete()
@@ -152,8 +157,10 @@ void mc::BufferStreamSurfaces::with_buffer(mg::BufferID, std::function<void(mg::
     BOOST_THROW_EXCEPTION(std::logic_error("buffer lookup cannot happen with an exchange-based buffer client"));
 }
 
-void mc::BufferStreamSurfaces::set_scale(float scale)
+void mc::BufferStreamSurfaces::set_scale(float new_scale)
 {
-    (void)scale;
-//    resize(
+    std::unique_lock<std::mutex> lk(mutex);
+    scale = new_scale;
+    auto physical_size = buffer_bundle->properties().size * scale;
+    buffer_bundle->resize(physical_size);
 }

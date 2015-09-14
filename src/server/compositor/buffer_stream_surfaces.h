@@ -76,6 +76,8 @@ private:
     std::shared_ptr<BufferBundle> const buffer_bundle;
     scene::SurfaceObservers observers;
     bool first_frame_posted;
+    geometry::Size logical_size; //physical size is maintained in the buffer_bundle
+    float scale;
 };
 
 }
