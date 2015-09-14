@@ -611,6 +611,7 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_policy_never_drops_newest_frame)
     ASSERT_THAT(production_log, SizeIs(nbuffers + 1));
     EXPECT_THAT(production_log[nbuffers], Not(Eq(production_log[nbuffers - 1]))); 
 }
+
 TEST_P(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
 {
     mtd::MockFrameDroppingPolicyFactory policy_factory;
