@@ -135,7 +135,7 @@ MIR_SERVER_34 {
     mir::ServerActionQueue::?ServerActionQueue*;
     mir::ServerActionQueue::ServerActionQueue*;
     mir::Server::add_configuration_option*;
-    mir::Server::set_cookie_secret*;
+    mir::Server::override_the_cookie_factory*;
     mir::Server::add_emergency_cleanup*;
     mir::Server::add_init_callback*;
     mir::Server::apply_settings*;

@@ -49,6 +49,9 @@ public:
 private:
     class CookieImpl;
     std::unique_ptr<CookieImpl> impl;
+
+    // The minimum secret size for which a resonable mac can be generated
+    static unsigned const minimum_secret_size;
 };
 
 std::vector<uint8_t> get_random_data(unsigned size);

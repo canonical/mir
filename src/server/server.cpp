@@ -288,7 +288,7 @@ void mir::Server::set_command_line(int argc, char const* argv[])
     self->argv = argv;
 }
 
-void mir::Server::set_cookie_secret(std::vector<uint8_t> const& secret)
+void mir::Server::override_the_cookie_factory(std::vector<uint8_t> const& secret)
 {
     verify_setting_allowed(self->server_config);
     self->cookie_factory = std::make_shared<CookieFactory>(secret);

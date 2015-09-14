@@ -101,9 +101,9 @@ class mir::CookieFactory::CookieImpl
 public:
     CookieImpl(std::vector<uint8_t> const& secret)
     {
-        if (secret.size() < min_secret_size)
+        if (secret.size() < minimum_secret_size)
             BOOST_THROW_EXCEPTION(std::logic_error("Secret size " + std::to_string(secret.size()) + " is to small, require " +
-                                                   std::to_string(min_secret_size) + " or greater."));
+                                                   std::to_string(minimum_secret_size) + " or greater."));
 
         hmac_sha1_set_key(&ctx, secret.size(), secret.data());
     }
@@ -127,6 +127,8 @@ public:
 private:
     struct hmac_sha1_ctx ctx;
 };
+
+unsigned const mir::CookieFactory::minimum_secret_size = min_secret_size;
 
 mir::CookieFactory::CookieFactory(std::vector<uint8_t> const& secret)
     : impl(std::make_unique<CookieImpl>(secret))
