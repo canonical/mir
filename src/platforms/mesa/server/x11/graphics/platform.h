@@ -21,6 +21,7 @@
 
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
+#include "mir/geometry/size.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -35,7 +36,7 @@ namespace X
 class Platform : public graphics::Platform
 {
 public:
-    explicit Platform(std::shared_ptr<::Display> const& conn);
+    explicit Platform(std::shared_ptr<::Display> const& conn, mir::geometry::Size const size);
     ~Platform() = default;
 
     /* From Platform */
@@ -54,6 +55,7 @@ private:
     std::shared_ptr<mir::udev::Context> udev;
     std::shared_ptr<mesa::helpers::DRMHelper> const drm;
     mesa::helpers::GBMHelper gbm;
+    mir::geometry::Size const size;
 };
 
 }
