@@ -19,7 +19,7 @@
 #ifndef MIR_EXAMPLES_DEMO_RENDERER_H_
 #define MIR_EXAMPLES_DEMO_RENDERER_H_
 
-#include "gl_renderer.h"
+#include "gl/renderer.h"
 #include "mir/compositor/decoration.h"
 #include "typo_glcache.h"
 
@@ -41,7 +41,7 @@ enum ColourEffect
 typedef std::unordered_map<graphics::Renderable::ID,
                            std::unique_ptr<compositor::Decoration>> DecorMap;
 
-class DemoRenderer : public renderer::gl::GLRenderer
+class DemoRenderer : public renderer::gl::Renderer
 {
 public:
     DemoRenderer(
@@ -58,7 +58,7 @@ protected:
                     graphics::Renderable const& renderable) const override;
 
     void draw(graphics::Renderable const& renderable,
-              GLRenderer::Program const& prog) const override;
+              Renderer::Program const& prog) const override;
 
 private:
     void tessellate_shadow(
