@@ -9,7 +9,7 @@ include_directories(
 ADD_LIBRARY(
   mirrenderergl OBJECT
 
-  gl_program_family.cpp
-  gl_renderer.cpp
-  gl_renderer_factory.cpp
+  program_family.cpp
+  renderer.cpp
+  renderer_factory.cpp
 )

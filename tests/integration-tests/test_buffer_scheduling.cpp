@@ -36,6 +36,13 @@ using namespace testing;
 
 namespace
 {
+
+enum class TestType
+{
+    ExchangeSemantics,
+    SubmitSemantics
+};
+
 enum class Access
 {
     blocked,
@@ -58,6 +65,9 @@ struct ProducerSystem
     virtual bool can_produce() = 0;
     virtual void produce() = 0;
     virtual std::vector<BufferEntry> production_log() = 0;
+    virtual void reset_log() = 0;
+    virtual geom::Size last_size()  = 0;
+    virtual mg::BufferID current_id() = 0;
     virtual ~ProducerSystem() = default;
     ProducerSystem() = default;
     ProducerSystem(ProducerSystem const&) = delete;
@@ -68,6 +78,7 @@ struct ConsumerSystem
 {
     virtual void consume() { consume_resource(); }
     virtual std::shared_ptr<mg::Buffer> consume_resource() = 0;
+    virtual geom::Size last_size()  = 0;
 
     virtual std::vector<BufferEntry> consumption_log() = 0;
     ConsumerSystem() = default;
@@ -248,20 +259,46 @@ size_t unique_ids_in(std::vector<BufferEntry> log)
 }
 
 //test infrastructure
-struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
+struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<int, TestType>>
 {
+    BufferScheduling()
+    {
+        if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
+        {
+            producer = std::make_unique<BufferQueueProducer>(stream);
+            consumer = std::make_unique<BufferQueueConsumer>(stream);
+            second_consumer = std::make_unique<BufferQueueConsumer>(stream);
+        }
+        else
+        {
+            throw std::runtime_error("new classes not integrated yet");
+        }
+    }
+
+    void allow_framedropping()
+    {
+        queue.allow_framedropping(true);
+    }
+
+    void disallow_framedropping()
+    {
+        queue.allow_framedropping(false);
+    }
+
     mtd::MockClientBufferFactory client_buffer_factory;
     mtd::StubBufferAllocator server_buffer_factory;
     mtd::StubFrameDroppingPolicyFactory stub_policy;
     mg::BufferProperties properties{geom::Size{3,3}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
-    int nbuffers = GetParam();
+    int nbuffers = std::get<0>(GetParam());
+
     mcl::ClientBufferDepository depository{mt::fake_shared(client_buffer_factory), nbuffers};
     mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory), properties, stub_policy};
     mc::BufferStreamSurfaces stream{mt::fake_shared(queue)};
-    BufferQueueProducer producer{stream};
-    BufferQueueConsumer consumer{stream};
-    BufferQueueConsumer second_consumer{stream};
+    std::unique_ptr<ProducerSystem> producer;
+    std::unique_ptr<ConsumerSystem> consumer;
+    std::unique_ptr<ConsumerSystem> second_consumer;
 };
+
 struct WithAnyNumberOfBuffers : BufferScheduling {};
 struct WithTwoOrMoreBuffers   : BufferScheduling {};
 struct WithThreeOrMoreBuffers : BufferScheduling {};
@@ -274,17 +311,17 @@ struct WithThreeBuffers : BufferScheduling {};
 TEST_P(WithAnyNumberOfBuffers, all_buffers_consumed_in_interleaving_pattern)
 {
     std::vector<ScheduleEntry> schedule = {
-        {1_t,   {&producer}, {}},
-        {60_t,           {}, {&consumer}},
-        {61_t,  {&producer}, {}},
-        {120_t,          {}, {&consumer}},
-        {121_t, {&producer}, {}},
-        {180_t,          {}, {&consumer}},
+        {1_t,   {producer.get()}, {}},
+        {60_t,           {}, {consumer.get()}},
+        {61_t,  {producer.get()}, {}},
+        {120_t,          {}, {consumer.get()}},
+        {121_t, {producer.get()}, {}},
+        {180_t,          {}, {consumer.get()}},
     };
     run_system(schedule);
 
-    auto production_log = producer.production_log();
-    auto consumption_log = consumer.consumption_log();
+    auto production_log = producer->production_log();
+    auto consumption_log = consumer->consumption_log();
     EXPECT_THAT(production_log, Not(IsEmpty()));
     EXPECT_THAT(consumption_log, Not(IsEmpty()));
     EXPECT_THAT(consumption_log, ContainerEq(production_log));
@@ -292,23 +329,23 @@ TEST_P(WithAnyNumberOfBuffers, all_buffers_consumed_in_interleaving_pattern)
 
 TEST_P(WithTwoOrMoreBuffers, framedropping_producers_dont_block)
 {
-    queue.allow_framedropping(true);
+    allow_framedropping();
     std::vector<ScheduleEntry> schedule = {
-        {0_t,  {&producer}, {}},
-        {61_t, {&producer}, {}},
-        {62_t, {&producer}, {}},
-        {63_t, {&producer}, {}},
-        {64_t, {&producer}, {}},
-        {90_t,          {}, {&consumer}},
-        {91_t, {&producer}, {}},
-        {92_t, {&producer}, {}},
-        {93_t, {&producer}, {}},
-        {94_t, {&producer}, {}},
-        {120_t,         {}, {&consumer}},
+        {0_t,  {producer.get()}, {}},
+        {61_t, {producer.get()}, {}},
+        {62_t, {producer.get()}, {}},
+        {63_t, {producer.get()}, {}},
+        {64_t, {producer.get()}, {}},
+        {90_t,          {}, {consumer.get()}},
+        {91_t, {producer.get()}, {}},
+        {92_t, {producer.get()}, {}},
+        {93_t, {producer.get()}, {}},
+        {94_t, {producer.get()}, {}},
+        {120_t,         {}, {consumer.get()}},
     };
     run_system(schedule);
-    auto production_log = producer.production_log();
-    auto consumption_log = consumer.consumption_log();
+    auto production_log = producer->production_log();
+    auto consumption_log = consumer->consumption_log();
     ASSERT_THAT(production_log, SizeIs(9));
     EXPECT_THAT(consumption_log, SizeIs(2));
 }
@@ -316,17 +353,17 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_producers_dont_block)
 TEST_P(WithThreeOrMoreBuffers, synchronous_overproducing_producers_has_all_buffers_consumed)
 {
     std::vector<ScheduleEntry> schedule = {
-        {1_t,   {&producer}, {}},
-        {60_t,           {}, {&consumer}},
-        {61_t,  {&producer}, {}},
-        {62_t,  {&producer}, {}},
-        {120_t,          {}, {&consumer}},
-        {180_t,          {}, {&consumer}},
+        {1_t,   {producer.get()}, {}},
+        {60_t,           {}, {consumer.get()}},
+        {61_t,  {producer.get()}, {}},
+        {62_t,  {producer.get()}, {}},
+        {120_t,          {}, {consumer.get()}},
+        {180_t,          {}, {consumer.get()}},
     };
     run_system(schedule);
 
-    auto production_log = producer.production_log();
-    auto consumption_log = consumer.consumption_log();
+    auto production_log = producer->production_log();
+    auto consumption_log = consumer->consumption_log();
     EXPECT_THAT(production_log, Not(IsEmpty()));
     EXPECT_THAT(consumption_log, Not(IsEmpty()));
     EXPECT_THAT(consumption_log, ContainerEq(production_log));
@@ -350,15 +387,15 @@ MATCHER(HasIncreasingAge, "")
 TEST_P(WithOneBuffer, client_and_server_get_concurrent_access)
 {
     std::vector<ScheduleEntry> schedule = {
-        {1_t, {&producer}, {&consumer}},
-        {2_t, {&producer}, {&consumer}},
-        {3_t, {&producer}, {}},
-        {4_t,          {}, {&consumer}},
+        {1_t, {producer.get()}, {consumer.get()}},
+        {2_t, {producer.get()}, {consumer.get()}},
+        {3_t, {producer.get()}, {}},
+        {4_t,          {}, {consumer.get()}},
     };
     run_system(schedule);
 
-    auto production_log = producer.production_log();
-    auto consumption_log = consumer.consumption_log();
+    auto production_log = producer->production_log();
+    auto consumption_log = consumer->consumption_log();
     EXPECT_THAT(production_log, Not(IsEmpty()));
     EXPECT_THAT(consumption_log, Not(IsEmpty()));
     EXPECT_THAT(consumption_log, ContainerEq(production_log));
@@ -373,14 +410,14 @@ TEST_P(WithOneBuffer, client_and_server_get_concurrent_access)
 TEST_P(WithThreeOrMoreBuffers, consumers_dont_recycle_startup_buffer )
 {
     std::vector<ScheduleEntry> schedule = {
-        {1_t, {&producer}, {}},
-        {2_t, {&producer}, {}},
-        {3_t,          {}, {&consumer}},
+        {1_t, {producer.get()}, {}},
+        {2_t, {producer.get()}, {}},
+        {3_t,          {}, {consumer.get()}},
     };
     run_system(schedule);
 
-    auto production_log = producer.production_log();
-    auto consumption_log = consumer.consumption_log();
+    auto production_log = producer->production_log();
+    auto consumption_log = consumer->consumption_log();
     ASSERT_THAT(production_log, SizeIs(2)); 
     ASSERT_THAT(consumption_log, SizeIs(1));
     EXPECT_THAT(consumption_log[0], Eq(production_log[0])); 
@@ -391,10 +428,10 @@ TEST_P(WithTwoOrMoreBuffers, consumer_cycles_through_all_available_buffers)
     auto tick = 0_t;
     std::vector<ScheduleEntry> schedule;
     for(auto i = 0; i < nbuffers; i++)
-        schedule.emplace_back(ScheduleEntry{tick++, {&producer}, {&consumer}});
+        schedule.emplace_back(ScheduleEntry{tick++, {producer.get()}, {consumer.get()}});
     run_system(schedule);
 
-    auto production_log = producer.production_log();
+    auto production_log = producer->production_log();
     std::sort(production_log.begin(), production_log.end(),
         [](BufferEntry const& a, BufferEntry const& b) { return a.id.as_value() > b.id.as_value(); });
     auto it = std::unique(production_log.begin(), production_log.end());
@@ -405,35 +442,35 @@ TEST_P(WithTwoOrMoreBuffers, consumer_cycles_through_all_available_buffers)
 TEST_P(WithAnyNumberOfBuffers, compositor_can_always_get_a_buffer)
 {
     std::vector<ScheduleEntry> schedule = {
-        {0_t, {&producer}, {}},
-        {1_t, {},          {&consumer}},
-        {2_t, {},          {&consumer}},
-        {3_t, {},          {&consumer}},
-        {5_t, {},          {&consumer}},
-        {6_t, {},          {&consumer}},
+        {0_t, {producer.get()}, {}},
+        {1_t, {},          {consumer.get()}},
+        {2_t, {},          {consumer.get()}},
+        {3_t, {},          {consumer.get()}},
+        {5_t, {},          {consumer.get()}},
+        {6_t, {},          {consumer.get()}},
     };
     run_system(schedule);
 
-    auto consumption_log = consumer.consumption_log();
+    auto consumption_log = consumer->consumption_log();
     ASSERT_THAT(consumption_log, SizeIs(5));
 }
 
 TEST_P(WithTwoOrMoreBuffers, compositor_doesnt_starve_from_slow_client)
 {
     std::vector<ScheduleEntry> schedule = {
-        {1_t,   {},          {&consumer}},
-        {60_t,  {},          {&consumer}},
-        {120_t, {},          {&consumer}},
-        {150_t, {&producer}, {}},
-        {180_t, {},          {&consumer}},
-        {240_t, {},          {&consumer}},
-        {270_t, {&producer}, {}},
-        {300_t, {},          {&consumer}},
-        {360_t, {},          {&consumer}},
+        {1_t,   {},          {consumer.get()}},
+        {60_t,  {},          {consumer.get()}},
+        {120_t, {},          {consumer.get()}},
+        {150_t, {producer.get()}, {}},
+        {180_t, {},          {consumer.get()}},
+        {240_t, {},          {consumer.get()}},
+        {270_t, {producer.get()}, {}},
+        {300_t, {},          {consumer.get()}},
+        {360_t, {},          {consumer.get()}},
     };
     run_system(schedule);
 
-    auto consumption_log = consumer.consumption_log();
+    auto consumption_log = consumer->consumption_log();
     ASSERT_THAT(consumption_log, SizeIs(7));
     EXPECT_THAT(std::count(consumption_log.begin(), consumption_log.end(), consumption_log[0]), Eq(3));
     EXPECT_THAT(std::count(consumption_log.begin(), consumption_log.end(), consumption_log[3]), Eq(2));
@@ -443,22 +480,22 @@ TEST_P(WithTwoOrMoreBuffers, compositor_doesnt_starve_from_slow_client)
 TEST_P(WithTwoOrMoreBuffers, multiple_consumers_are_in_sync)
 {
     std::vector<ScheduleEntry> schedule = {
-        {0_t,     {&producer}, {}},
-        {1_t,     {},          {&consumer}},
-        {60_t,    {},          {&consumer, &second_consumer}},
-        {119_t,   {},          {&consumer}},
-        {120_t,   {},          {&second_consumer}},
-        {130_t,   {&producer}, {}},
-        {178_t,   {},          {&consumer}},
-        {180_t,   {},          {&second_consumer}},
-        {237_t,   {},          {&consumer}},
-        {240_t,   {},          {&second_consumer}},
+        {0_t,     {producer.get()}, {}},
+        {1_t,     {},          {consumer.get()}},
+        {60_t,    {},          {consumer.get(), second_consumer.get()}},
+        {119_t,   {},          {consumer.get()}},
+        {120_t,   {},          {second_consumer.get()}},
+        {130_t,   {producer.get()}, {}},
+        {178_t,   {},          {consumer.get()}},
+        {180_t,   {},          {second_consumer.get()}},
+        {237_t,   {},          {consumer.get()}},
+        {240_t,   {},          {second_consumer.get()}},
     };
     run_system(schedule);
 
-    auto production_log = producer.production_log();
-    auto consumption_log_1 = consumer.consumption_log();
-    auto consumption_log_2 = second_consumer.consumption_log();
+    auto production_log = producer->production_log();
+    auto consumption_log_1 = consumer->consumption_log();
+    auto consumption_log_2 = second_consumer->consumption_log();
     ASSERT_THAT(consumption_log_1, SizeIs(5));
     ASSERT_THAT(consumption_log_2, SizeIs(4));
     ASSERT_THAT(production_log, SizeIs(2));
@@ -476,29 +513,29 @@ TEST_P(WithTwoOrMoreBuffers, multiple_consumers_are_in_sync)
 TEST_P(WithThreeOrMoreBuffers, multiple_fast_compositors_are_in_sync)
 { 
     std::vector<ScheduleEntry> schedule = {
-        {0_t,     {&producer}, {}},
-        {1_t,     {&producer}, {}},
-        {60_t,    {},          {&consumer, &second_consumer}},
-        {61_t,    {},          {&consumer, &second_consumer}},
+        {0_t,     {producer.get()}, {}},
+        {1_t,     {producer.get()}, {}},
+        {60_t,    {},          {consumer.get(), second_consumer.get()}},
+        {61_t,    {},          {consumer.get(), second_consumer.get()}},
     };
     run_system(schedule);
 
-    auto production_log = producer.production_log();
-    auto consumption_log_1 = consumer.consumption_log();
-    auto consumption_log_2 = second_consumer.consumption_log();
+    auto production_log = producer->production_log();
+    auto consumption_log_1 = consumer->consumption_log();
+    auto consumption_log_2 = second_consumer->consumption_log();
     EXPECT_THAT(consumption_log_1, Eq(production_log));
     EXPECT_THAT(consumption_log_2, Eq(production_log));
 }
 
 TEST_P(WithTwoOrMoreBuffers, framedropping_clients_get_all_buffers_and_dont_block)
 {
-    queue.allow_framedropping(true);
+    allow_framedropping();
     std::vector<ScheduleEntry> schedule;
     for (auto i = 0; i < nbuffers * 3; i++)
-        schedule.emplace_back(ScheduleEntry{1_t, {&producer}, {}}); 
+        schedule.emplace_back(ScheduleEntry{1_t, {producer.get()}, {}}); 
     run_system(schedule);
 
-    auto production_log = producer.production_log();
+    auto production_log = producer->production_log();
     std::sort(production_log.begin(), production_log.end(),
         [](BufferEntry const& a, BufferEntry const& b) { return a.id.as_value() > b.id.as_value(); });
     auto last = std::unique(production_log.begin(), production_log.end(),
@@ -513,11 +550,11 @@ TEST_P(WithTwoOrMoreBuffers, nonframedropping_client_throttles_to_compositor_rat
     unsigned int reps = 50;
     auto const expected_blocks = reps - nbuffers;
     std::vector<ScheduleEntry> schedule = {
-        {1_t,  {&producer, &producer}, {&consumer}},
+        {1_t,  {producer.get(), producer.get()}, {consumer.get()}},
     };
     repeat_system_until(schedule, [&reps]{ return --reps != 0; });
 
-    auto log = producer.production_log();
+    auto log = producer->production_log();
     auto block_count = std::count_if(log.begin(), log.end(),
         [](BufferEntry const& e) { return e.blockage == Access::blocked; });
     EXPECT_THAT(block_count, Ge(expected_blocks));
@@ -532,9 +569,9 @@ TEST_P(WithAnyNumberOfBuffers, resize_affects_client_acquires_immediately)
         new_size = new_size * 2;
         queue.resize(new_size);
 
-        std::vector<ScheduleEntry> schedule = {{1_t,  {&producer}, {&consumer}}};
+        std::vector<ScheduleEntry> schedule = {{1_t,  {producer.get()}, {consumer.get()}}};
         run_system(schedule);
-        EXPECT_THAT(producer.last_size(), Eq(new_size));
+        EXPECT_THAT(producer->last_size(), Eq(new_size));
     }
 }
 
@@ -549,16 +586,16 @@ TEST_P(WithAnyNumberOfBuffers, compositor_acquires_resized_frames)
         queue.resize(new_size);
 
         std::vector<ScheduleEntry> schedule = {
-            {1_t,  {&producer}, {}},
-            {2_t,  {}, {&consumer}},
-            {3_t,  {&producer}, {}},
+            {1_t,  {producer.get()}, {}},
+            {2_t,  {}, {consumer.get()}},
+            {3_t,  {producer.get()}, {}},
         };
         run_system(schedule);
 
         int attempt_count = 0;
-        schedule = {{2_t,  {}, {&consumer}}};
+        schedule = {{2_t,  {}, {consumer.get()}}};
         repeat_system_until(schedule, [&] {
-            return (consumer.last_size() != new_size) && (attempt_count++ < attempt_limit); });
+            return (consumer->last_size() != new_size) && (attempt_count++ < attempt_limit); });
 
         ASSERT_THAT(attempt_count, Lt(attempt_limit)) << "consumer never got the new size";
     }
@@ -603,15 +640,15 @@ TEST_P(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
 // Regression test for LP: #1319765
 TEST_P(WithTwoBuffers, client_is_not_blocked_prematurely)
 {
-    producer.produce();
+    producer->produce();
     auto a = queue.compositor_acquire(this);
-    producer.produce();
+    producer->produce();
     auto b = queue.compositor_acquire(this);
 
     ASSERT_NE(a.get(), b.get());
 
     queue.compositor_release(a);
-    producer.produce();
+    producer->produce();
     queue.compositor_release(b);
 
     /*
@@ -622,7 +659,7 @@ TEST_P(WithTwoBuffers, client_is_not_blocked_prematurely)
         queue.compositor_release(queue.compositor_acquire(this));
 
     // With the fix, a buffer will be available instantaneously:
-    EXPECT_TRUE(producer.can_produce());
+    EXPECT_TRUE(producer->can_produce());
 }
 
 // Extended regression test for LP: #1319765
@@ -630,15 +667,15 @@ TEST_P(WithTwoBuffers, composite_on_demand_never_deadlocks)
 {
     for (int i = 0; i < 100; ++i)
     {
-        producer.produce();
+        producer->produce();
         auto a = queue.compositor_acquire(this);
-        producer.produce();
+        producer->produce();
         auto b = queue.compositor_acquire(this);
     
         ASSERT_NE(a.get(), b.get());
     
         queue.compositor_release(a);
-        producer.produce();
+        producer->produce();
         queue.compositor_release(b);
 
         /*
@@ -648,10 +685,10 @@ TEST_P(WithTwoBuffers, composite_on_demand_never_deadlocks)
         if (queue.buffers_ready_for_compositor(this))
             queue.compositor_release(queue.compositor_acquire(this));
 
-        EXPECT_TRUE(producer.can_produce());
+        EXPECT_TRUE(producer->can_produce());
 
-        consumer.consume();
-        consumer.consume();
+        consumer->consume();
+        consumer->consume();
     }
 }
 
@@ -659,19 +696,19 @@ TEST_P(WithTwoBuffers, composite_on_demand_never_deadlocks)
 TEST_P(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
 {
     // Produce frame 1
-    producer.produce();
+    producer->produce();
     // Acquire frame 1
     auto a = queue.compositor_acquire(this);
 
     // Produce frame 2
-    producer.produce();
+    producer->produce();
     // Acquire frame 2
     auto b = queue.compositor_acquire(this);
 
     // Release frame 1
     queue.compositor_release(a);
     // Produce frame 3
-    producer.produce();
+    producer->produce();
     // Release frame 2
     queue.compositor_release(b);
 
@@ -698,7 +735,7 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
     for (auto const& consumer : consumers)
         EXPECT_EQ(0, queue.buffers_ready_for_compositor(consumer.get()));
 
-    producer.produce();
+    producer->produce();
 
     for (auto const& consumer : consumers)
     {
@@ -835,43 +872,43 @@ TEST_P(WithAnyNumberOfBuffers, compositor_inflates_ready_count_for_slow_clients)
 
     for (int frame = 0; frame < 10; frame++)
     {
-        ASSERT_EQ(0, queue.buffers_ready_for_compositor(&consumer));
-        producer.produce();
+        ASSERT_EQ(0, queue.buffers_ready_for_compositor(consumer.get()));
+        producer->produce();
 
         // Detecting a slow client requires scheduling at least one extra
         // frame...
-        int nready = queue.buffers_ready_for_compositor(&consumer);
+        int nready = queue.buffers_ready_for_compositor(consumer.get());
         ASSERT_THAT(nready, Ge(2));
         for (int i = 0; i < nready; ++i)
-            consumer.consume();
+            consumer->consume();
     }
 }
 
 TEST_P(WithAnyNumberOfBuffers, first_user_is_recorded)
 {
-    consumer.consume();
-    EXPECT_TRUE(queue.is_a_current_buffer_user(&consumer));
+    consumer->consume();
+    EXPECT_TRUE(queue.is_a_current_buffer_user(consumer.get()));
 }
 
 TEST_P(WithThreeBuffers, gives_compositor_a_valid_buffer_after_dropping_old_buffers_without_clients)
 {
     queue.drop_old_buffers();
-    consumer.consume();
-    EXPECT_THAT(consumer.consumption_log(), SizeIs(1));
+    consumer->consume();
+    EXPECT_THAT(consumer->consumption_log(), SizeIs(1));
 }
 
 TEST_P(WithThreeBuffers, gives_new_compositor_the_newest_buffer_after_dropping_old_buffers)
 {
-    producer.produce();
-    consumer.consume();
-    producer.produce();
+    producer->produce();
+    consumer->consume();
+    producer->produce();
     queue.drop_old_buffers();
 
     void const* const new_compositor_id{&nbuffers};
     auto comp2 = queue.compositor_acquire(new_compositor_id);
 
-    auto production_log = producer.production_log();
-    auto consumption_log = consumer.consumption_log();
+    auto production_log = producer->production_log();
+    auto consumption_log = consumer->consumption_log();
     ASSERT_THAT(production_log, SizeIs(2));
     ASSERT_THAT(consumption_log, SizeIs(1));
 
@@ -892,12 +929,12 @@ TEST_P(WithTwoOrMoreBuffers, overlapping_compositors_get_different_frames)
         // One of the compositors (the oldest one) gets a new buffer...
         int oldest = i & 1;
         compositor_resources[oldest].reset();
-        producer.produce();
-        compositor_resources[oldest] = consumer.consume_resource();
+        producer->produce();
+        compositor_resources[oldest] = consumer->consume_resource();
     }
 
     // Two compositors acquired, and they're always different...
-    auto log = consumer.consumption_log();
+    auto log = consumer->consumption_log();
     for(auto i = 0u; i < log.size() - 1; i++)
         EXPECT_THAT(log[i].id, Ne(log[i+1].id));
 }
@@ -910,30 +947,30 @@ TEST_P(WithThreeOrMoreBuffers, slow_client_framerate_matches_compositor)
     // BufferQueue can only satify this for nbuffers >= 3
     // since a client can only own up to nbuffers - 1 at any one time
     auto const iterations = 10u;
-    queue.allow_framedropping(false);
+    disallow_framedropping();
 
     //fill up queue at first
     for(auto i = 0; i < nbuffers - 1; i++)
-        producer.produce();
+        producer->produce();
 
     //a schedule that would block once per iteration for double buffering, but only once for >3 buffers
     std::vector<ScheduleEntry> schedule = {
-        {0_t,  {}, {&consumer}},
-        {59_t,  {&producer}, {}},
-        {60_t,  {}, {&consumer}},
-        {120_t,  {}, {&consumer}},
-        {121_t,  {&producer}, {}},
-        {179_t,  {&producer}, {}},
-        {180_t,  {}, {&consumer}},
-        {240_t,  {}, {&consumer}},
-        {241_t,  {&producer}, {}},
-        {300_t,  {}, {&consumer}},
+        {0_t,  {}, {consumer.get()}},
+        {59_t,  {producer.get()}, {}},
+        {60_t,  {}, {consumer.get()}},
+        {120_t,  {}, {consumer.get()}},
+        {121_t,  {producer.get()}, {}},
+        {179_t,  {producer.get()}, {}},
+        {180_t,  {}, {consumer.get()}},
+        {240_t,  {}, {consumer.get()}},
+        {241_t,  {producer.get()}, {}},
+        {300_t,  {}, {consumer.get()}},
     };
 
     auto count = 0u;
     repeat_system_until(schedule, [&]{ return count++ < schedule.size() * iterations; });
 
-    auto log = producer.production_log();
+    auto log = producer->production_log();
     auto blockages = std::count_if(log.begin(), log.end(),
         [](BufferEntry const& e){ return e.blockage == Access::blocked; });
     EXPECT_THAT(blockages, Le(1));
@@ -942,50 +979,50 @@ TEST_P(WithThreeOrMoreBuffers, slow_client_framerate_matches_compositor)
 //regression test for LP: #1396006, LP: #1379685
 TEST_P(WithTwoOrMoreBuffers, framedropping_surface_never_drops_newest_frame)
 {
-    queue.allow_framedropping(true);
+    allow_framedropping();
 
     for (int f = 0; f < nbuffers; ++f)
-        producer.produce();
+        producer->produce();
 
     for (int n = 0; n < nbuffers - 1; ++n)
-        consumer.consume();
+        consumer->consume();
 
     // Ensure it's not the newest frame that gets dropped to satisfy the
     // client.
-    producer.produce();
-    consumer.consume();
+    producer->produce();
+    consumer->consume();
 
     // The queue could solve this problem a few ways. It might choose to
     // defer framedropping till it's safe, or even allocate additional
     // buffers. We don't care which, just verify it's not losing the
     // latest frame. Because the screen could be indefinitely out of date
     // if that happens...
-    auto producer_log = producer.production_log();
-    auto consumer_log = consumer.consumption_log();
-    EXPECT_TRUE(!producer.can_produce() || 
+    auto producer_log = producer->production_log();
+    auto consumer_log = consumer->consumption_log();
+    EXPECT_TRUE(!producer->can_produce() || 
         (!producer_log.empty() && !consumer_log.empty() && producer_log.back() == consumer_log.back()));
 }
 
 /* Regression test for LP: #1306464 */
 TEST_P(WithThreeBuffers, framedropping_client_acquire_does_not_block_when_no_available_buffers)
 {
-    queue.allow_framedropping(true);
+    allow_framedropping();
 
     /* The client can never own this acquired buffer */
-    auto comp_buffer = consumer.consume_resource();
+    auto comp_buffer = consumer->consume_resource();
 
     /* Let client release all possible buffers so they go into
      * the ready queue
      */
     for (int i = 0; i < nbuffers; ++i)
     {
-        producer.produce();
-        EXPECT_THAT(comp_buffer->id(), Ne(producer.current_id()));
+        producer->produce();
+        EXPECT_THAT(comp_buffer->id(), Ne(producer->current_id()));
     }
 
     /* Let the compositor acquire all ready buffers */
     for (int i = 0; i < nbuffers; ++i)
-        consumer.consume();
+        consumer->consume();
 
     /* At this point the queue has 0 free buffers and 0 ready buffers
      * so the next client request should not be satisfied until
@@ -993,16 +1030,16 @@ TEST_P(WithThreeBuffers, framedropping_client_acquire_does_not_block_when_no_ava
     /* ... unless the BufferQueue is overallocating. In that case it will
      * have succeeding in acquiring immediately.
      */
-    EXPECT_TRUE(producer.can_produce());
+    EXPECT_TRUE(producer->can_produce());
 }
 
 TEST_P(WithTwoOrMoreBuffers, client_never_owns_compositor_buffers_and_vice_versa)
 {
     for (int i = 0; i < 100; ++i)
     {
-        auto buffer = consumer.consume_resource();
-        producer.produce();
-        EXPECT_THAT(buffer->id(), Ne(producer.current_id()));
+        auto buffer = consumer->consume_resource();
+        producer->produce();
+        EXPECT_THAT(buffer->id(), Ne(producer->current_id()));
     }
 }
 
@@ -1025,8 +1062,8 @@ TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
     /* Hold a reference to current compositor buffer*/
     auto comp_buffer1 = consumers[0]->consume_resource();
 
-    while (producer.can_produce())
-        producer.produce();
+    while (producer->can_produce())
+        producer->produce();
 
     /* Have a second compositor advance the current compositor buffer at least twice */
     for (int acquires = 0; acquires < nbuffers; ++acquires)
@@ -1038,16 +1075,16 @@ TEST_P(WithThreeOrMoreBuffers, buffers_are_not_lost)
      * buffers. "async" means any pattern other than "produce,consume,..."
      */
     int const max_ownable_buffers = nbuffers - 1;
-    producer.reset_log();
+    producer->reset_log();
     for (int frame = 0; frame < max_ownable_buffers * 2; frame++)
     {
         for (int drain = 0; drain < nbuffers; ++drain)
             consumers[0]->consume();
-        while (producer.can_produce())
-            producer.produce();
+        while (producer->can_produce())
+            producer->produce();
     }
 
-    EXPECT_THAT(unique_ids_in(producer.production_log()), Eq(nbuffers));
+    EXPECT_THAT(unique_ids_in(producer->production_log()), Eq(nbuffers));
 }
 
 // Test that dynamic queue scaling/throttling actually works
@@ -1059,37 +1096,37 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
 
     for (int frame = 0; frame < 20; frame++)
     {
-        producer.produce();
-        consumer.consume();
+        producer->produce();
+        consumer->consume();
     }
     // Expect double-buffers as the steady state for fast clients
-    auto log = producer.production_log();
+    auto log = producer->production_log();
     ASSERT_THAT(log.size(), Gt(discard));  // avoid the below erase crashing
     log.erase(log.begin(), log.begin() + discard);
     EXPECT_THAT(unique_ids_in(log), Eq(2));
-    producer.reset_log();
+    producer->reset_log();
 
     // Now check what happens if the client becomes slow...
     for (int frame = 0; frame < 20; frame++)
     {
-        producer.produce();
-        consumer.consume();
-        consumer.consume();
+        producer->produce();
+        consumer->consume();
+        consumer->consume();
     }
 
-    log = producer.production_log();
+    log = producer->production_log();
     log.erase(log.begin(), log.begin() + discard);
     EXPECT_THAT(unique_ids_in(log), Ge(3));
-    producer.reset_log();
+    producer->reset_log();
 
     // And what happens if the client becomes fast again?...
     for (int frame = 0; frame < 20; frame++)
     {
-        producer.produce();
-        consumer.consume();
+        producer->produce();
+        consumer->consume();
     }
     // Expect double-buffers as the steady state for fast clients
-    log = producer.production_log();
+    log = producer->production_log();
     log.erase(log.begin(), log.begin() + discard);
     EXPECT_THAT(unique_ids_in(log), Eq(2));
 }
@@ -1103,16 +1140,16 @@ TEST_P(WithThreeOrMoreBuffers, greedy_compositors_scale_to_triple_buffers)
      * the same client simultaneously or a single buffer for a long time.
      * This usually means bypass/overlays, but can also mean multi-monitor.
      */
-    queue.allow_framedropping(false);
+    disallow_framedropping();
 
     for (auto i = 0u; i < 20u; i++)
     {
-        auto first = consumer.consume_resource();
-        auto second = consumer.consume_resource();
-        producer.produce();
+        auto first = consumer->consume_resource();
+        auto second = consumer->consume_resource();
+        producer->produce();
     }
 
-    EXPECT_THAT(unique_ids_in(producer.production_log()), Eq(3));
+    EXPECT_THAT(unique_ids_in(producer->production_log()), Eq(3));
 }
 
 MATCHER_P(BufferIdIs, val, "")
@@ -1123,8 +1160,8 @@ MATCHER_P(BufferIdIs, val, "")
 
 TEST_P(WithAnyNumberOfBuffers, can_snapshot_repeatedly_without_blocking)
 {
-    producer.produce();
-    consumer.consume();
+    producer->produce();
+    consumer->consume();
     auto const num_snapshots = nbuffers * 2u;
     std::vector<std::shared_ptr<mg::Buffer>> snaps(num_snapshots);
     for(auto i = 0u; i < num_snapshots; i++)
@@ -1133,7 +1170,7 @@ TEST_P(WithAnyNumberOfBuffers, can_snapshot_repeatedly_without_blocking)
         queue.snapshot_release(snaps[i]);
     }
 
-    auto production_log = producer.production_log();
+    auto production_log = producer->production_log();
     ASSERT_THAT(production_log, SizeIs(1));
     EXPECT_THAT(snaps, Each(BufferIdIs(production_log.back().id)));
 }
@@ -1142,24 +1179,24 @@ int const max_buffers_to_test{5};
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithAnyNumberOfBuffers,
-    Range(1, max_buffers_to_test));
+    Combine(Range(1, max_buffers_to_test), Values(TestType::ExchangeSemantics)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoOrMoreBuffers,
-    Range(2, max_buffers_to_test));
+    Combine(Range(2, max_buffers_to_test), Values(TestType::ExchangeSemantics)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeOrMoreBuffers,
-    Range(3, max_buffers_to_test));
+    Combine(Range(3, max_buffers_to_test), Values(TestType::ExchangeSemantics)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithOneBuffer,
-    Values(1));
+    Combine(Values(1), Values(TestType::ExchangeSemantics)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoBuffers,
-    Values(2));
+    Combine(Values(2), Values(TestType::ExchangeSemantics)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeBuffers,
-    Values(3));
+    Combine(Values(3), Values(TestType::ExchangeSemantics)));
