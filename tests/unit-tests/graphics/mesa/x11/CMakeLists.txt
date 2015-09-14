@@ -1,5 +1,6 @@
 list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_platform.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_guest_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
 )
 

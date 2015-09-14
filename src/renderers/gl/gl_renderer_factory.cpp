@@ -17,14 +17,14 @@
  */
 
 #include "gl_renderer_factory.h"
-#include "mir/compositor/gl_renderer.h"
+#include "gl_renderer.h"
 
-namespace mg = mir::graphics;
+namespace mrg = mir::renderer::gl;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
 std::unique_ptr<mc::Renderer>
-mc::GLRendererFactory::create_renderer_for(geom::Rectangle const& rect)
+mrg::GLRendererFactory::create_renderer_for(geom::Rectangle const& rect)
 {
     return std::make_unique<GLRenderer>(rect);
 }

@@ -24,11 +24,13 @@
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 namespace mgx = mg::X;
+namespace geom = mir::geometry;
 
-mgx::Platform::Platform(std::shared_ptr<::Display> const& conn)
+mgx::Platform::Platform(std::shared_ptr<::Display> const& conn, geom::Size const size)
     : x11_connection{conn},
       udev{std::make_shared<mir::udev::Context>()},
-      drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render)}
+      drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render)},
+      size{size}
 {
     if (!x11_connection)
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
@@ -47,7 +49,7 @@ std::shared_ptr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<GLProgramFactory> const&,
     std::shared_ptr<GLConfig> const& /*gl_config*/)
 {
-    return std::make_shared<mgx::Display>(x11_connection.get());
+    return std::make_shared<mgx::Display>(x11_connection.get(), size);
 }
 
 std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const

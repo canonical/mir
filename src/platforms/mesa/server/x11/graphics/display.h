@@ -22,6 +22,7 @@
 #include "mir/graphics/display.h"
 #include "mir_toolkit/common.h"
 #include "display_group.h"
+#include "mir/geometry/size.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -49,7 +50,7 @@ private:
 class X11Window
 {
 public:
-    X11Window(::Display* const x_dpy, EGLDisplay egl_dpy, int width, int height);
+    X11Window(::Display* const x_dpy, EGLDisplay egl_dpy, mir::geometry::Size const size);
     ~X11Window();
 
     operator Window() const;
@@ -92,7 +93,7 @@ private:
 class Display : public graphics::Display
 {
 public:
-    explicit Display(::Display* x_dpy);
+    explicit Display(::Display* x_dpy, mir::geometry::Size const size);
     ~Display() noexcept;
 
     void for_each_display_sync_group(std::function<void(graphics::DisplaySyncGroup&)> const& f) override;
@@ -117,8 +118,7 @@ public:
 
 private:
     X11EGLDisplay const egl_display;
-    int const display_width;
-    int const display_height;
+    mir::geometry::Size const size;
     X11Window const win;
     X11EGLContext egl_context;
     X11EGLSurface egl_surface;
