@@ -97,14 +97,16 @@ std::vector<uint8_t> mir::cookie::get_random_data(unsigned size)
     return buffer;
 }
 
+unsigned const mir::cookie::CookieFactory::minimum_secret_size = min_secret_size;
+
 class CookieFactoryNettle : public mir::cookie::CookieFactory
 {
 public:
     CookieFactoryNettle(std::vector<uint8_t> const& secret)
     {
-        if (secret.size() < min_secret_size)
+        if (secret.size() < minimum_secret_size)
             BOOST_THROW_EXCEPTION(std::logic_error("Secret size " + std::to_string(secret.size()) + " is to small, require " +
-                                                   std::to_string(min_secret_size) + " or greater."));
+                                                   std::to_string(minimum_secret_size) + " or greater."));
 
         hmac_sha1_set_key(&ctx, secret.size(), secret.data());
     }

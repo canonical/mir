@@ -42,16 +42,56 @@ namespace cookie
 class CookieFactory
 {
 public:
-    CookieFactory() = default;
-    virtual ~CookieFactory() noexcept = default;
-
+    /**
+    *   Contruction function used to create a CookieFactory. The secret size must be
+    *   greater then minimum_secret_size otherwise an expection will be thrown
+    *
+    *   \param [in] secret  A filled in secret used to set the key for the hash function
+    *   \return             A unique_ptr CookieFactory
+    */
     static std::unique_ptr<CookieFactory> create(std::vector<uint8_t> const& secret);
+
+    /**
+    *   Contruction function used to create a CookieFactory as well as a secret.
+    *   The secret size must be greater then minimum_secret_size otherwise an expection will be thrown
+    *
+    *   \param [in]  secret_size  The size of the secret to create, must be larger then minimum_secret_size
+    *   \param [out] save_secret  The secret that was created.
+    *   \return                   A unique_ptr CookieFactory
+    */
     static std::unique_ptr<CookieFactory> create(unsigned secret_size, std::vector<uint8_t>& save_secret);
 
+    virtual ~CookieFactory() noexcept = default;
+
+    /**
+    *   Turns a timestamp into a MAC and returns a MirCookie.
+    *
+    *   \param [in] timestamp The timestamp
+    *   \return               MirCookie with the stored MAC and timestamp
+    */
     virtual MirCookie timestamp_to_cookie(uint64_t const& timestamp) = 0;
+
+    /**
+    *   Checks that a MirCookie is a valid MirCookie.
+    *
+    *   \param [in] cookie  A created MirCookie
+    *   \return             True when the MirCookie is valid, False when the MirCookie is not valid
+    */
     virtual bool attest_timestamp(MirCookie const& cookie) = 0;
+
+protected:
+    CookieFactory() = default;
+
+    static unsigned const minimum_secret_size;
 };
 
+/**
+*   Checks entropy exists on the system, then fills in a vector with random numbers
+*   up to size.
+*
+*   \param [in] size  The number of random numbers to generate.
+*   \return           A filled in vector with random numbers up to size
+*/
 std::vector<uint8_t> get_random_data(unsigned size);
 
 }
