@@ -1,5 +1,5 @@
 include_directories(
-  ${PROJECT_SOURCE_DIR}/src/renderers/gl/include
+  ${PROJECT_SOURCE_DIR}/include/renderers/gl
 )
 
 ADD_LIBRARY(
