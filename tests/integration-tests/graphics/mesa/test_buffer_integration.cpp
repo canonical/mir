@@ -114,7 +114,17 @@ protected:
         if (need_to_clear_env)
             unsetenv(graphics_lib_env);
 
-        platform = std::make_shared<StubGraphicPlatform>();
+        if (options->get<bool>("tests-use-real-graphics"))
+        {
+            platform = create_host_platform(
+                options,
+                std::make_shared<mtd::NullEmergencyCleanup>(),
+                mr::null_display_report());
+        }
+        else
+        {
+            platform = std::make_shared<StubGraphicPlatform>();
+        }
 
         auto conf_policy = std::make_shared<mg::CloneDisplayConfigurationPolicy>();
         display = platform->create_display(
