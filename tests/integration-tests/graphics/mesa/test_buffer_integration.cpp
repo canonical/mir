@@ -104,16 +104,6 @@ class MesaBufferIntegration : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        static const char* const graphics_lib_env = "MIR_SERVER_PLATFORM_GRAPHICS_LIB";
-
-        // Avoid loading options for unused graphics platform
-        bool const need_to_clear_env = setenv(graphics_lib_env, "anything", 0);
-
-        auto options = mtf::TestingServerConfiguration().the_options();
-
-        if (need_to_clear_env)
-            unsetenv(graphics_lib_env);
-
         platform = std::make_shared<StubGraphicPlatform>();
 
         auto conf_policy = std::make_shared<mg::CloneDisplayConfigurationPolicy>();
