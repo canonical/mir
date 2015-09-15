@@ -37,23 +37,23 @@ namespace msh = mir::shell;
 TEST(MirCookieFactory, attests_real_timestamp)
 {
     std::vector<uint8_t> secret{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
-    mir::cookie::CookieFactoryNettle factory{secret};
+    auto factory = mir::cookie::CookieFactory::create(secret);
 
     uint64_t mock_timestamp{0x322322322332};
 
-    auto cookie = factory.timestamp_to_cookie(mock_timestamp);
+    auto cookie = factory->timestamp_to_cookie(mock_timestamp);
 
-    EXPECT_TRUE(factory.attest_timestamp(cookie));
+    EXPECT_TRUE(factory->attest_timestamp(cookie));
 }
 
 TEST(MirCookieFactory, doesnt_attest_faked_timestamp)
 {
     std::vector<uint8_t> secret{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
-    mir::cookie::CookieFactoryNettle factory{secret};
+    auto factory = mir::cookie::CookieFactory::create(secret);
 
     MirCookie bad_client_no_biscuit{ 0x33221100, 0x33221100 };
 
-    EXPECT_FALSE(factory.attest_timestamp(bad_client_no_biscuit));
+    EXPECT_FALSE(factory->attest_timestamp(bad_client_no_biscuit));
 }
 
 TEST(MirCookieFactory, timestamp_trusted_with_different_secret_doesnt_attest)
@@ -61,22 +61,22 @@ TEST(MirCookieFactory, timestamp_trusted_with_different_secret_doesnt_attest)
     std::vector<uint8_t> alice{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
     std::vector<uint8_t> bob{ 0x01, 0x02, 0x44, 0xd8, 0xee, 0x0f, 0xde, 0x01 };
 
-    mir::cookie::CookieFactoryNettle alices_factory{alice};
-    mir::cookie::CookieFactoryNettle bobs_factory{bob};
+    auto alices_factory = mir::cookie::CookieFactory::create(alice);
+    auto bobs_factory   = mir::cookie::CookieFactory::create(bob);
 
     uint64_t mock_timestamp{0x01020304};
 
-    auto alices_cookie = alices_factory.timestamp_to_cookie(mock_timestamp);
-    auto bobs_cookie = bobs_factory.timestamp_to_cookie(mock_timestamp);
+    auto alices_cookie = alices_factory->timestamp_to_cookie(mock_timestamp);
+    auto bobs_cookie = bobs_factory->timestamp_to_cookie(mock_timestamp);
 
-    EXPECT_FALSE(alices_factory.attest_timestamp(bobs_cookie));
-    EXPECT_FALSE(bobs_factory.attest_timestamp(alices_cookie));
+    EXPECT_FALSE(alices_factory->attest_timestamp(bobs_cookie));
+    EXPECT_FALSE(bobs_factory->attest_timestamp(alices_cookie));
 }
 
 TEST(MirCookieFactory, throw_when_secret_size_to_small)
 {
     std::vector<uint8_t> bob{ 0x01 };
     EXPECT_THROW({
-        mir::cookie::CookieFactoryNettle factory{bob};
+        auto factory = mir::cookie::CookieFactory::create(bob);
     }, std::logic_error);
 }

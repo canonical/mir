@@ -1,10 +1,9 @@
 MIR_COOKIE_1 {
  global:
   extern "C++" {
-    mir::cookie::CookieFactoryNettle::CookieFactoryNettle*;
-    mir::cookie::CookieFactoryNettle::?CookieFactoryNettle*;
     mir::cookie::CookieFactory::CookieFactory*;
     mir::cookie::CookieFactory::?CookieFactory*;
+    mir::cookie::CookieFactory::create*;
     mir::cookie::CookieFactory::timestamp_to_cookie*;
     mir::cookie::CookieFactory::attest_timestamp*;
     mir::cookie::get_random_data*;
