@@ -47,7 +47,7 @@ std::string mir_test_framework::library_path()
 
 std::string mir_test_framework::udev_recordings_path()
 {
-    std::string run_path     = executable_path() + "/bin/udev_recordings";
+    std::string run_path     = executable_path() + "/udev_recordings";
     std::string install_path = MIR_INSTALL_PREFIX"/share/udev_recordings";
 
     if (boost::filesystem::exists(run_path))
