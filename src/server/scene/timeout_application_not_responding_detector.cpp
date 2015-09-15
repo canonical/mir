@@ -54,37 +54,9 @@ void ms::TimeoutApplicationNotRespondingDetector::ANRObservers::session_now_resp
 ms::TimeoutApplicationNotRespondingDetector::TimeoutApplicationNotRespondingDetector(
     mt::AlarmFactory& alarms,
     std::chrono::milliseconds period)
-    : alarm{alarms.create_alarm([this, period]()
-          {
-              {
-                  std::lock_guard<std::mutex> lock{session_mutex};
-                  for (auto const& session_pair : sessions)
-                  {
-                      if (!session_pair.second->replied_since_last_ping)
-                      {
-                          session_pair.second->flagged_as_unresponsive = true;
-                          unresponsive_sessions_temporary.push_back(session_pair.first);
-                      }
-                      else
-                      {
-                          session_pair.second->pinger();
-                          session_pair.second->replied_since_last_ping = false;
-                      }
-                  }
-              }
-
-              // Dispatch notifications outside the lock.
-              for (auto const& unresponsive_session : unresponsive_sessions_temporary)
-              {
-                  observers.session_unresponsive(unresponsive_session);
-              }
-
-              unresponsive_sessions_temporary.clear();
-
-              this->alarm->reschedule_in(period);
-          })}
+    : period{period},
+      alarm{alarms.create_alarm(std::bind(&TimeoutApplicationNotRespondingDetector::handle_ping_cycle, this))}
 {
-    alarm->reschedule_in(period);
 }
 
 ms::TimeoutApplicationNotRespondingDetector::~TimeoutApplicationNotRespondingDetector()
@@ -94,8 +66,16 @@ ms::TimeoutApplicationNotRespondingDetector::~TimeoutApplicationNotRespondingDet
 void ms::TimeoutApplicationNotRespondingDetector::register_session(
     frontend::Session const* session, std::function<void()> const& pinger)
 {
-    std::lock_guard<std::mutex> lock{session_mutex};
-    sessions[dynamic_cast<Session const*>(session)] = std::make_unique<ANRContext>(pinger);
+    bool alarm_needs_schedule;
+    {
+        std::lock_guard<std::mutex> lock{session_mutex};
+        sessions[dynamic_cast<Session const*>(session)] = std::make_unique<ANRContext>(pinger);
+        alarm_needs_schedule = alarm->state() != mt::Alarm::State::pending;
+    }
+    if (alarm_needs_schedule)
+    {
+        alarm->reschedule_in(period);
+    }
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::unregister_session(
@@ -109,6 +89,7 @@ void ms::TimeoutApplicationNotRespondingDetector::pong_received(
    frontend::Session const* received_for)
 {
     bool needs_now_responsive_notification{false};
+    bool alarm_needs_rescheduling;
     {
         std::lock_guard<std::mutex> lock{session_mutex};
 
@@ -119,10 +100,16 @@ void ms::TimeoutApplicationNotRespondingDetector::pong_received(
             needs_now_responsive_notification = true;
         }
         session_ctx->replied_since_last_ping = true;
+
+        alarm_needs_rescheduling = alarm->state() != mt::Alarm::State::pending;
     }
     if (needs_now_responsive_notification)
     {
         observers.session_now_responsive(dynamic_cast<Session const*>(received_for));
+    }
+    if (alarm_needs_rescheduling)
+    {
+        alarm->reschedule_in(period);
     }
 }
 
@@ -136,4 +123,45 @@ void ms::TimeoutApplicationNotRespondingDetector::unregister_observer(
     std::shared_ptr<Observer> const& observer)
 {
     observers.remove(observer);
+}
+
+void ms::TimeoutApplicationNotRespondingDetector::handle_ping_cycle()
+{
+    bool needs_rearm{false};
+    {
+        std::lock_guard<std::mutex> lock{session_mutex};
+        for (auto const& session_pair : sessions)
+        {
+            bool const newly_unresponsive =
+                !session_pair.second->replied_since_last_ping &&
+                !session_pair.second->flagged_as_unresponsive;
+            bool const needs_ping =
+                session_pair.second->replied_since_last_ping;
+
+            if (newly_unresponsive)
+            {
+                session_pair.second->flagged_as_unresponsive = true;
+                unresponsive_sessions_temporary.push_back(session_pair.first);
+            }
+            else if (needs_ping)
+            {
+                session_pair.second->pinger();
+                session_pair.second->replied_since_last_ping = false;
+                needs_rearm = true;
+            }
+        }
+    }
+
+    // Dispatch notifications outside the lock.
+    for (auto const& unresponsive_session : unresponsive_sessions_temporary)
+    {
+        observers.session_unresponsive(unresponsive_session);
+    }
+
+    unresponsive_sessions_temporary.clear();
+
+    if (needs_rearm)
+    {
+        this->alarm->reschedule_in(this->period);
+    }
 }

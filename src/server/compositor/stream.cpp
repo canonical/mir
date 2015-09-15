@@ -135,10 +135,10 @@ void mc::Stream::force_requests_to_complete()
     //we dont block any requests in this system, nothing to force
 }
 
-int mc::Stream::buffers_ready_for_compositor(void const*) const
+int mc::Stream::buffers_ready_for_compositor(void const* id) const
 {
     std::lock_guard<decltype(mutex)> lk(mutex); 
-    if (schedule->anything_scheduled())
+    if (arbiter->buffer_ready_for(id))
         return 1;
     return 0;
 }

@@ -1,0 +1,6 @@
+includedir=@INCLUDEDIR@/mirrenderer
+
+Name: mir-renderer-gl-dev
+Description: Mir GL renderer development files
+Version: @MIR_VERSION@
+Cflags: -I${includedir}

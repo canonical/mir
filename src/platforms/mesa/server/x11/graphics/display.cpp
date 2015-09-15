@@ -59,7 +59,7 @@ mgx::X11EGLDisplay::operator EGLDisplay() const
     return egl_dpy;
 }
 
-mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, int width, int height)
+mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, geom::Size const size)
     : x_dpy{x_dpy}
 {
     EGLint const att[] = {
@@ -117,7 +117,8 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, int width, int h
 
     auto mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
 
-    win = XCreateWindow(x_dpy, root, 0, 0, width, height,
+    win = XCreateWindow(x_dpy, root, 0, 0,
+                        size.width.as_int(), size.height.as_int(),
                         0, depth, InputOutput,
                         visInfo->visual, mask, &attr);
 
@@ -130,12 +131,12 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, int width, int h
         // TODO: Due to a bug, resize doesn't work after XGrabKeyboard under Unity.
         //       For now, make window unresizeable.
         //     http://stackoverflow.com/questions/14555703/x11-unable-to-move-window-after-xgrabkeyboard
-        sizehints.base_width = width;
-        sizehints.base_height = height;
-        sizehints.min_width = width;
-        sizehints.min_height = height;
-        sizehints.max_width = width;
-        sizehints.max_height = height;
+        sizehints.base_width = size.width.as_int();
+        sizehints.base_height = size.height.as_int();
+        sizehints.min_width = size.width.as_int();
+        sizehints.min_height = size.height.as_int();
+        sizehints.max_width = size.width.as_int();
+        sizehints.max_height = size.height.as_int();
         sizehints.flags = PSize | PMinSize | PMaxSize;
 
         XSetNormalHints(x_dpy, win, &sizehints);
@@ -226,14 +227,12 @@ mgx::X11EGLSurface::operator EGLSurface() const
     return egl_surf;
 }
 
-mgx::Display::Display(::Display* x_dpy)
+mgx::Display::Display(::Display* x_dpy, geom::Size const size)
     : egl_display{X11EGLDisplay(x_dpy)},
-      display_width{1280},
-      display_height{1024},
+      size{size},
       win{X11Window(x_dpy,
                     egl_display,
-                    display_width,
-                    display_height)},
+                    size)},
       egl_context{X11EGLContext(egl_display,
                                 win.egl_config())},
       egl_surface{X11EGLSurface(egl_display,
@@ -242,12 +241,12 @@ mgx::Display::Display(::Display* x_dpy)
                                 orientation{mir_orientation_normal}
 {
     if (win.color_depth() == 24)
-        pf = mir_pixel_format_bgr_888;
+        pf = mir_pixel_format_xrgb_8888;
     else
         BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported pixel format"));
 
     display_group = std::make_unique<mgx::DisplayGroup>(
-        std::make_unique<mgx::DisplayBuffer>(geom::Size{display_width, display_height},
+        std::make_unique<mgx::DisplayBuffer>(size,
                                              egl_display,
                                              egl_surface,
                                              egl_context,
@@ -266,11 +265,17 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
-    return std::make_unique<mgx::DisplayConfiguration>(pf, display_width, display_height, orientation);
+    return std::make_unique<mgx::DisplayConfiguration>(pf, size, orientation);
 }
 
 void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
 {
+    if (!new_configuration.valid())
+    {
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("Invalid or inconsistent display configuration"));
+    }
+
     MirOrientation o = mir_orientation_normal;
 
     new_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)

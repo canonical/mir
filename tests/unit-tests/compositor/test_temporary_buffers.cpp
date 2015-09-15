@@ -126,15 +126,6 @@ TEST_F(TemporaryBuffersTest, base_test_pixel_format)
     EXPECT_EQ(buffer_pixel_format, pixel_format);
 }
 
-TEST_F(TemporaryBuffersTest, base_gl_bind_to_texture)
-{
-    TemporaryTestBuffer proxy_buffer(mock_buffer);
-    EXPECT_CALL(*mock_buffer, gl_bind_to_texture())
-        .Times(1);
-
-    proxy_buffer.gl_bind_to_texture();
-}
-
 TEST_F(TemporaryBuffersTest, base_test_id)
 {
     TemporaryTestBuffer proxy_buffer(mock_buffer);
