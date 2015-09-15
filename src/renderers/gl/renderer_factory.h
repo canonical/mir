@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,15 +16,27 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "gl_renderer_factory.h"
-#include "gl_renderer.h"
+#ifndef MIR_RENDERER_GL_RENDERER_FACTORY_H_
+#define MIR_RENDERER_GL_RENDERER_FACTORY_H_
 
-namespace mrg = mir::renderer::gl;
-namespace mc = mir::compositor;
-namespace geom = mir::geometry;
+#include "mir/compositor/renderer_factory.h"
 
-std::unique_ptr<mc::Renderer>
-mrg::GLRendererFactory::create_renderer_for(geom::Rectangle const& rect)
+namespace mir
 {
-    return std::make_unique<GLRenderer>(rect);
+namespace renderer
+{
+namespace gl
+{
+
+class RendererFactory : public compositor::RendererFactory
+{
+public:
+    std::unique_ptr<compositor::Renderer> create_renderer_for(
+        geometry::Rectangle const& rect) override;
+};
+
 }
+}
+}
+
+#endif

@@ -550,19 +550,19 @@ MIR_SERVER_34 {
     virtual?thunk?to?mir::shell::ShellWrapper::remove_display*;
 
 # these symbols are needed by mir_proving_server but are not intended to be public
-    mir::renderer::gl::GLProgramFamily::*;
-    mir::renderer::gl::GLRenderer::GLRenderer*;
-    mir::renderer::gl::GLRenderer::?GLRenderer*;
-    mir::renderer::gl::GLRenderer::Program::Program*;
-    mir::renderer::gl::GLRenderer::draw*;
-    mir::renderer::gl::GLRenderer::render*;
-    mir::renderer::gl::GLRenderer::set_rotation*;
-    mir::renderer::gl::GLRenderer::set_viewport*;
-    mir::renderer::gl::GLRenderer::suspend*;
-    mir::renderer::gl::GLRenderer::tessellate*;
-    mir::renderer::gl::GLRenderer::vshader;
-    typeinfo?for?mir::renderer::gl::GLRenderer;
-    vtable?for?mir::renderer::gl::GLRenderer;
+    mir::renderer::gl::ProgramFamily::*;
+    mir::renderer::gl::Renderer::Renderer*;
+    mir::renderer::gl::Renderer::?Renderer*;
+    mir::renderer::gl::Renderer::Program::Program*;
+    mir::renderer::gl::Renderer::draw*;
+    mir::renderer::gl::Renderer::render*;
+    mir::renderer::gl::Renderer::set_rotation*;
+    mir::renderer::gl::Renderer::set_viewport*;
+    mir::renderer::gl::Renderer::suspend*;
+    mir::renderer::gl::Renderer::tessellate*;
+    mir::renderer::gl::Renderer::vshader;
+    typeinfo?for?mir::renderer::gl::Renderer;
+    vtable?for?mir::renderer::gl::Renderer;
 
 # these symbols are needed by the test framework but are not intended to be public
     mir::shell::CanonicalWindowManagerPolicy::handle_set_state*;

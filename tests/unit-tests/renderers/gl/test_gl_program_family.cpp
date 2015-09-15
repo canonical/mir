@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/renderers/gl/gl_program_family.h"
+#include "src/renderers/gl/program_family.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/mock_egl.h"
 
@@ -38,7 +38,7 @@ TEST(GLProgramFamily, releases_gl_context_before_deleting_shader_objects)
     ON_CALL(mock_gl, glCreateProgram()).WillByDefault(Return(1));
 
     {
-        mrg::GLProgramFamily family;
+        mrg::ProgramFamily family;
         family.add_program("vertex shader", "fragment shader");
 
         InSequence seq;
