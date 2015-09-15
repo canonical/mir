@@ -40,7 +40,7 @@ void mtd::MockLibInput::wake()
     libinput_simulation_queue.enqueue([]{});
 }
 
-mtd::MockLibInput::~MockLibInput()
+mtd::MockLibInput::~MockLibInput() noexcept
 {
     global_libinput = nullptr;
 }
