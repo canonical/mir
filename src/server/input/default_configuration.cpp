@@ -184,7 +184,7 @@ std::shared_ptr<mir::input::LegacyInputDispatchable>
 mir::DefaultServerConfiguration::the_legacy_input_dispatchable()
 {
     return legacy_input_dispatchable(
-        [this]() -> std::shared_ptr<mi::LegacyInputDispatchable>
+        [this]()
         {
             return std::make_shared<mia::InputReaderDispatchable>(the_event_hub(), the_input_reader());
         });

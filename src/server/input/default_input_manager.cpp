@@ -33,11 +33,11 @@
 #include <future>
 
 namespace mi = mir::input;
+namespace mia = mi::android;
 
 mi::DefaultInputManager::DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
-                                             std::shared_ptr<LegacyInputDispatchable> const& legacy_dispatchable)
-    : multiplexer{multiplexer}, legacy_dispatchable{legacy_dispatchable},
-      queue{std::make_shared<mir::dispatch::ActionQueue>()}, state{State::stopped}
+                                             std::shared_ptr<LegacyInputDispatchable>  const& legacy_dispatchable)
+    : multiplexer{multiplexer}, legacy_dispatchable{legacy_dispatchable}, queue{std::make_shared<mir::dispatch::ActionQueue>()}, state{State::stopped}
 {
 }
 
