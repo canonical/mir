@@ -1,3 +1,21 @@
+set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/mir-renderer-gl-dev.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/mir-renderer-gl-dev.pc
+  @ONLY
+)
+
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/mir
+  DESTINATION "include/mirrenderer"
+)
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/mir-renderer-gl-dev.pc
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+)
+
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/common
   ${PROJECT_SOURCE_DIR}/include/platform
