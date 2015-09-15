@@ -21,6 +21,7 @@
 #define MIR_GRAPHICS_MESA_GBM_BUFFER_H_
 
 #include "mir/graphics/buffer_basic.h"
+#include "mir/renderer/gl/texture_source.h"
 
 #include <gbm.h>
 
@@ -45,7 +46,8 @@ enum : uint32_t { invalid_gbm_format = std::numeric_limits<uint32_t>::max() };
 
 class BufferTextureBinder;
 
-class GBMBuffer: public BufferBasic, public NativeBufferBase
+class GBMBuffer: public BufferBasic, public NativeBufferBase,
+                 public renderer::gl::TextureSource
 {
 public:
     GBMBuffer(std::shared_ptr<gbm_bo> const& handle,

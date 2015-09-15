@@ -125,17 +125,17 @@ void mix::XInputPlatform::process_input_event()
                               xkev.y_root, xkev.state, xkev.keycode, xkev.same_screen);
                 auto count =
 #endif
-                    XLookupString(&xkev, str, STRMAX, &keysym, NULL);
+                XLookupString(&xkev, str, STRMAX, &keysym, NULL);
 
                 MirInputEventModifiers modifiers = mir_input_event_modifier_none;
                 if (xkev.state & ShiftMask)
                     modifiers |= mir_input_event_modifier_shift;
                 if (xkev.state & ControlMask)
-                    modifiers |=  mir_input_event_modifier_ctrl;
+                    modifiers |= mir_input_event_modifier_ctrl;
                 if (xkev.state & Mod1Mask)
-                    modifiers |=  mir_input_event_modifier_alt;
+                    modifiers |= mir_input_event_modifier_alt;
                 if (xkev.state & Mod4Mask)
-                    modifiers |=  mir_input_event_modifier_meta;
+                    modifiers |= mir_input_event_modifier_meta;
 
                 auto event_time =
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -152,8 +152,8 @@ void mix::XInputPlatform::process_input_event()
                     *core_keyboard->builder->key_event(
                         event_time,
                         xkev.type == KeyPress ?
-                        mir_keyboard_action_down :
-                        mir_keyboard_action_up,
+                            mir_keyboard_action_down :
+                            mir_keyboard_action_up,
                         keysym,
                         xkev.keycode-8,
                         modifiers
@@ -212,8 +212,8 @@ void mix::XInputPlatform::process_input_event()
                         event_time,
                         modifiers,
                         xbev.type == ButtonPress ?
-                        mir_pointer_action_button_down :
-                        mir_pointer_action_button_up,
+                            mir_pointer_action_button_down :
+                            mir_pointer_action_button_up,
                         buttons_pressed,
                         xbev.x,
                         xbev.y,

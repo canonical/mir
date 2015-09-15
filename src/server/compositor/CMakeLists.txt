@@ -1,3 +1,7 @@
+include_directories(
+  ${PROJECT_SOURCE_DIR}/src/renderers/gl/include
+)
+
 set(
   MIR_COMPOSITOR_SRCS
 
