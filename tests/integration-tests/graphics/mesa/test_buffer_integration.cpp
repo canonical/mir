@@ -104,19 +104,7 @@ class MesaBufferIntegration : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        auto options = mtf::TestingServerConfiguration().the_options();
-
-        if (options->get<bool>("tests-use-real-graphics"))
-        {
-            platform = create_host_platform(
-                options,
-                std::make_shared<mtd::NullEmergencyCleanup>(),
-                mr::null_display_report());
-        }
-        else
-        {
-            platform = std::make_shared<StubGraphicPlatform>();
-        }
+        platform = std::make_shared<StubGraphicPlatform>();
 
         auto conf_policy = std::make_shared<mg::CloneDisplayConfigurationPolicy>();
         display = platform->create_display(

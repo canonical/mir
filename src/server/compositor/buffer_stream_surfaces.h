@@ -65,6 +65,7 @@ public:
     int buffers_ready_for_compositor(void const* user_id) const override;
     void drop_old_buffers() override;
     bool has_submitted_buffer() const override;
+    void set_scale(float scale) override;
 
 protected:
     BufferStreamSurfaces(const BufferStreamSurfaces&) = delete;
@@ -75,6 +76,8 @@ private:
     std::shared_ptr<BufferBundle> const buffer_bundle;
     scene::SurfaceObservers observers;
     bool first_frame_posted;
+    geometry::Size logical_size; //physical size is maintained in the buffer_bundle
+    float scale;
 };
 
 }

@@ -44,18 +44,20 @@ protected:
         // Two of the tests care about this, the rest should not...
         EXPECT_CALL(*mock_bundle, force_requests_to_complete())
             .Times(::testing::AnyNumber());
+        ON_CALL(*mock_bundle, properties())
+            .WillByDefault(testing::Return(properties));
     }
 
     std::shared_ptr<mtd::StubBuffer> mock_buffer;
     std::shared_ptr<mtd::MockBufferBundle> mock_bundle;
+    geom::Size size{4, 5};
+    MirPixelFormat format{mir_pixel_format_abgr_8888};
+    mg::BufferProperties properties {size, format, mg::BufferUsage::hardware};
 };
 
 TEST_F(BufferStreamTest, size_query)
 {
-    geom::Size size{4, 5};
-    mg::BufferProperties properties {size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
     EXPECT_CALL(*mock_bundle, properties())
-        .Times(1)
         .WillOnce(testing::Return(properties));
 
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
@@ -65,15 +67,8 @@ TEST_F(BufferStreamTest, size_query)
 
 TEST_F(BufferStreamTest, pixel_format_query)
 {
-    MirPixelFormat format{mir_pixel_format_abgr_8888};
-    mg::BufferProperties properties {geom::Size{4, 5}, format, mg::BufferUsage::hardware};
-    EXPECT_CALL(*mock_bundle, properties())
-        .Times(1)
-        .WillOnce(testing::Return(properties));
-
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
-    auto returned_pf = buffer_stream.pixel_format();
-    EXPECT_EQ(format, returned_pf);
+    EXPECT_THAT(buffer_stream.pixel_format(), testing::Eq(format));
 }
 
 TEST_F(BufferStreamTest, force_requests_to_complete)
@@ -247,4 +242,55 @@ TEST_F(BufferStreamTest, allocate_and_release_not_supported)
     EXPECT_THROW({
         buffer_stream.remove_buffer(mg::BufferID{3});
     }, std::logic_error);
+}
+
+TEST_F(BufferStreamTest, scale_resizes_and_sets_size_appropriately)
+{
+    using namespace testing;
+    auto const scale = 2.0f; 
+    auto scaled_size = scale * size;
+
+    mg::BufferProperties non_scaled{size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
+    Sequence seq;
+    EXPECT_CALL(*mock_bundle, properties())
+        .InSequence(seq)
+        .WillOnce(testing::Return(non_scaled));
+    EXPECT_CALL(*mock_bundle, resize(scaled_size))
+        .InSequence(seq);
+
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
+    buffer_stream.set_scale(scale);
+    EXPECT_THAT(buffer_stream.stream_size(), Eq(size));
+}
+
+TEST_F(BufferStreamTest, scaled_resizes_appropriately)
+{
+    using namespace testing;
+    auto const scale = 2.0f; 
+    auto scaled_size = scale * size;
+
+    mg::BufferProperties non_scaled{size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
+    geom::Size logical_resize_request{10, 20};
+    geom::Size physical_resize_request{20, 40};
+    
+    InSequence seq;
+    EXPECT_CALL(*mock_bundle, properties())
+        .WillOnce(testing::Return(non_scaled));
+    EXPECT_CALL(*mock_bundle, resize(scaled_size));
+    EXPECT_CALL(*mock_bundle, resize(physical_resize_request));
+
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
+    buffer_stream.set_scale(scale);
+    buffer_stream.resize(logical_resize_request);
+}
+
+TEST_F(BufferStreamTest, cannot_set_silly_scale_values)
+{
+    mc::BufferStreamSurfaces buffer_stream(mock_bundle);
+    EXPECT_THROW(
+        buffer_stream.set_scale(0.0f);
+    , std::logic_error);
+    EXPECT_THROW(
+        buffer_stream.set_scale(-1.0f);
+    , std::logic_error);
 }

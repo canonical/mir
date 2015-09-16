@@ -22,7 +22,7 @@
 #include "buffer_stream_factory.h"
 #include "default_display_buffer_compositor_factory.h"
 #include "multi_threaded_compositor.h"
-#include "gl_renderer_factory.h"
+#include "gl/renderer_factory.h"
 #include "compositing_screencast.h"
 #include "timeout_frame_dropping_policy_factory.h"
 #include "mir/main_loop.h"
@@ -103,7 +103,7 @@ std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_render
     return renderer_factory(
         [this]()
         {
-            return std::make_shared<mc::GLRendererFactory>();
+            return std::make_shared<mir::renderer::gl::RendererFactory>();
         });
 }
 
