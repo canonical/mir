@@ -43,6 +43,22 @@ namespace mc = mir::compositor;
 namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
 
+mrg::RenderingTarget::RenderingTarget(mg::DisplayBuffer* buffer)
+    : buffer{buffer}
+{
+    ensure_current();
+}
+
+mrg::RenderingTarget::~RenderingTarget()
+{
+    buffer->release_current();
+}
+
+void mrg::RenderingTarget::ensure_current()
+{
+    buffer->make_current();
+}
+
 const GLchar* const mrg::Renderer::vshader =
 {
     "attribute vec3 position;\n"
@@ -96,7 +112,9 @@ mrg::Renderer::Program::Program(GLuint program_id)
 }
 
 mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
-    : clear_color{0.0f, 0.0f, 0.0f, 0.0f},
+    : rendering_target(&display_buffer),
+      display_buffer(display_buffer),
+      clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
       texture_cache(std::make_unique<mc::RecentlyUsedCache>()),
@@ -165,6 +183,8 @@ void mrg::Renderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
 
 void mrg::Renderer::render(mg::RenderableList const& renderables) const
 {
+    rendering_target.ensure_current();
+
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);

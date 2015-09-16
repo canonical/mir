@@ -31,6 +31,7 @@
 #include <mir/test/doubles/mock_egl.h>
 #include <src/renderers/gl/renderer.h>
 #include <mir/test/doubles/stub_display_buffer.h>
+#include <mir/test/doubles/mock_display_buffer.h>
 
 using testing::SetArgPointee;
 using testing::InSequence;
@@ -105,7 +106,7 @@ public:
         EXPECT_CALL(mock_gl, glUseProgram(_)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glActiveTexture(_)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glUniformMatrix4fv(_, _, GL_FALSE, _))
-            .Times(AtLeast(1));
+            .Times(AnyNumber());
         EXPECT_CALL(mock_gl, glUniform1f(_, _)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glUniform2f(_, _, _)).Times(AnyNumber());
         EXPECT_CALL(mock_gl, glBindBuffer(_, _)).Times(AnyNumber());
@@ -117,6 +118,7 @@ public:
 
         mock_buffer = std::make_shared<mtd::MockGLBuffer>();
         EXPECT_CALL(*mock_buffer, gl_bind_to_texture()).Times(AnyNumber());
+        EXPECT_CALL(*mock_buffer, native_buffer_base()).Times(AnyNumber());
         EXPECT_CALL(*mock_buffer, id())
             .WillRepeatedly(Return(mir::graphics::BufferID(789)));
         EXPECT_CALL(*mock_buffer, size())
@@ -145,6 +147,7 @@ public:
     testing::NiceMock<mtd::MockEGL> mock_egl;
     std::shared_ptr<mtd::MockGLBuffer> mock_buffer;
     mtd::StubDisplayBuffer display_buffer{{{1, 2}, {3, 4}}};
+    testing::NiceMock<mtd::MockDisplayBuffer> mock_display_buffer;
     std::shared_ptr<testing::NiceMock<mtd::MockRenderable>> renderable;
     mg::RenderableList renderable_list;
     glm::mat4 trans;
@@ -206,6 +209,31 @@ TEST_F(GLRenderer, clears_all_channels_zero)
     EXPECT_CALL(mock_gl, glClear(_));
 
     mrg::Renderer renderer(display_buffer);
+
+    renderer.render(renderable_list);
+}
+
+TEST_F(GLRenderer, makes_display_buffer_current_when_created)
+{
+    EXPECT_CALL(mock_display_buffer, make_current());
+
+    mrg::Renderer renderer(mock_display_buffer);
+}
+
+TEST_F(GLRenderer, releases_display_buffer_current_when_destroyed)
+{
+    mrg::Renderer renderer(mock_display_buffer);
+
+    EXPECT_CALL(mock_display_buffer, release_current());
+}
+
+TEST_F(GLRenderer, makes_display_buffer_current_before_rendering)
+{
+    mrg::Renderer renderer(mock_display_buffer);
+
+    InSequence seq;
+    EXPECT_CALL(mock_display_buffer, make_current());
+    EXPECT_CALL(mock_gl, glClear(_));
 
     renderer.render(renderable_list);
 }
