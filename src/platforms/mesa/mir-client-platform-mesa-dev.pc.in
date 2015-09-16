@@ -1,4 +1,4 @@
-includedir=@INCLUDEDIR@/mirclient
+includedir=@INCLUDEDIR@/mirplatform
 common_includedir=@INCLUDEDIR@/mircommon
 
 Name: mir-client-platform-mesa-dev
