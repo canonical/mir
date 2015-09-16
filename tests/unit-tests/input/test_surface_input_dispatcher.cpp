@@ -162,7 +162,7 @@ struct FakePointer
         return mev::make_event(id, std::chrono::nanoseconds(0), 0,
             0, mir_pointer_action_motion, buttons,
             location.x.as_int(), location.y.as_int(),
-            0, 0);
+            0, 0, 0, 0);
     }
     mir::EventUPtr release_button(geom::Point const& location, MirPointerButton button = mir_pointer_button_primary)
     {
@@ -171,7 +171,7 @@ struct FakePointer
         return mev::make_event(id, std::chrono::nanoseconds(0), 0,
             0, mir_pointer_action_button_up, buttons,
             location.x.as_int(), location.y.as_int(),
-            0, 0);
+            0, 0, 0, 0);
     }
     mir::EventUPtr press_button(geom::Point const& location, MirPointerButton button = mir_pointer_button_primary)
     {
@@ -180,7 +180,7 @@ struct FakePointer
         return mev::make_event(id, std::chrono::nanoseconds(0), 0,
             0, mir_pointer_action_button_down, buttons,
             location.x.as_int(), location.y.as_int(),
-            0, 0);
+            0, 0, 0, 0);
     }
 
     MirInputDeviceId const id;

@@ -375,10 +375,10 @@ TEST_F(InputDeviceHubTest, forwards_pointer_updates_to_cursor_listener)
     using namespace ::testing;
 
     auto x = 12.2f, y = 14.3f;
-    auto mac = 0;
+    auto const mac = 0;
 
     auto event = mir::events::make_event(0, 0ns, mac, mir_input_event_modifier_none, mir_pointer_action_motion, 0,
-        x, y, 0.0f, 0.0f);
+        x, y, 0.0f, 0.0f, 0.0f, 0.0f);
 
     EXPECT_CALL(mock_cursor_listener, cursor_moved_to(x, y)).Times(1);
 
