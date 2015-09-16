@@ -113,7 +113,6 @@ mrg::Renderer::Program::Program(GLuint program_id)
 
 mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
     : rendering_target(&display_buffer),
-      display_buffer(display_buffer),
       clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),

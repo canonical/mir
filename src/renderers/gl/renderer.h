@@ -74,7 +74,6 @@ public:
 
 private:
     mutable RenderingTarget rendering_target;
-    graphics::DisplayBuffer& display_buffer;
 
 protected:
     /**
