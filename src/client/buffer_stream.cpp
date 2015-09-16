@@ -548,8 +548,8 @@ void mcl::BufferStream::request_and_wait_for_next_buffer()
 void mcl::BufferStream::on_configured(int interval)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    configure_wait_handle.result_received();
     swap_interval_ = interval;
+    configure_wait_handle.result_received();
 }
 
 void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
