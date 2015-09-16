@@ -32,7 +32,7 @@ class RendererFactory : public compositor::RendererFactory
 {
 public:
     std::unique_ptr<compositor::Renderer> create_renderer_for(
-        geometry::Rectangle const& rect) override;
+        graphics::DisplayBuffer& display_buffer) override;
 };
 
 }

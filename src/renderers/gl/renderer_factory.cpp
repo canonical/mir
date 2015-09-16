@@ -18,13 +18,15 @@
 
 #include "renderer_factory.h"
 #include "renderer.h"
+#include "mir/graphics/display_buffer.h"
 
 namespace mrg = mir::renderer::gl;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
 std::unique_ptr<mc::Renderer>
-mrg::RendererFactory::create_renderer_for(geom::Rectangle const& rect)
+mrg::RendererFactory::create_renderer_for(
+    graphics::DisplayBuffer& display_buffer)
 {
-    return std::make_unique<Renderer>(rect);
+    return std::make_unique<Renderer>(display_buffer.view_area());
 }
