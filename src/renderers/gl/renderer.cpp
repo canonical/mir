@@ -23,6 +23,7 @@
 #include "mir/compositor/recently_used_cache.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/graphics/gl_texture_cache.h"
 #include "mir/graphics/gl_texture.h"
 #include "mir/graphics/tessellation_helpers.h"
@@ -94,7 +95,7 @@ mrg::Renderer::Program::Program(GLuint program_id)
     alpha_uniform = glGetUniformLocation(id, "alpha");
 }
 
-mrg::Renderer::Renderer(geom::Rectangle const& display_area)
+mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
     : clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
@@ -149,7 +150,7 @@ mrg::Renderer::Renderer(geom::Rectangle const& display_area)
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    set_viewport(display_area);
+    set_viewport(display_buffer.view_area());
     set_rotation(0.0f);
 }
 

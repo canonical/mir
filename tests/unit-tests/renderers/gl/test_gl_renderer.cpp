@@ -30,6 +30,7 @@
 #include <mir/test/doubles/mock_gl.h>
 #include <mir/test/doubles/mock_egl.h>
 #include <src/renderers/gl/renderer.h>
+#include <mir/test/doubles/stub_display_buffer.h>
 
 using testing::SetArgPointee;
 using testing::InSequence;
@@ -138,14 +139,12 @@ public:
 
         EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
             .WillRepeatedly(Return(screen_to_gl_coords_uniform_location));
-
-        display_area = {{1, 2}, {3, 4}};
     }
 
     testing::NiceMock<mtd::MockGL> mock_gl;
     testing::NiceMock<mtd::MockEGL> mock_egl;
     std::shared_ptr<mtd::MockGLBuffer> mock_buffer;
-    mir::geometry::Rectangle display_area;
+    mtd::StubDisplayBuffer display_buffer{{{1, 2}, {3, 4}}};
     std::shared_ptr<testing::NiceMock<mtd::MockRenderable>> renderable;
     mg::RenderableList renderable_list;
     glm::mat4 trans;
@@ -160,7 +159,7 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
         .WillOnce(Return(false));
     EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
 
-    mrg::Renderer renderer(display_area);
+    mrg::Renderer renderer(display_buffer);
     renderer.render(renderable_list);
 }
 
@@ -170,8 +169,8 @@ TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
     struct OverriddenTessellateRenderer : public mrg::Renderer
     {
         OverriddenTessellateRenderer(
-            mir::geometry::Rectangle const& display_area, unsigned int num_primitives) :
-            Renderer(display_area),
+            mg::DisplayBuffer& display_buffer, unsigned int num_primitives) :
+            Renderer(display_buffer),
             num_primitives(num_primitives)
         {
         }
@@ -195,7 +194,7 @@ TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, _))
         .Times(AtLeast(bind_count));
 
-    OverriddenTessellateRenderer renderer(display_area, bind_count);
+    OverriddenTessellateRenderer renderer(display_buffer, bind_count);
     renderer.render(renderable_list);
 }
 
@@ -206,7 +205,7 @@ TEST_F(GLRenderer, clears_all_channels_zero)
     EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
     EXPECT_CALL(mock_gl, glClear(_));
 
-    mrg::Renderer renderer(display_area);
+    mrg::Renderer renderer(display_buffer);
 
     renderer.render(renderable_list);
 }

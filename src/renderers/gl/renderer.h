@@ -34,7 +34,12 @@
 
 namespace mir
 {
-namespace graphics { class GLTextureCache; }
+
+namespace graphics
+{
+class GLTextureCache;
+class DisplayBuffer;
+}
 
 namespace renderer
 {
@@ -44,7 +49,7 @@ namespace gl
 class Renderer : public compositor::Renderer
 {
 public:
-    Renderer(geometry::Rectangle const& display_area);
+    Renderer(graphics::DisplayBuffer& display_buffer);
     virtual ~Renderer();
 
     // These are called with a valid GL context:

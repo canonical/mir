@@ -28,5 +28,5 @@ std::unique_ptr<mc::Renderer>
 mrg::RendererFactory::create_renderer_for(
     graphics::DisplayBuffer& display_buffer)
 {
-    return std::make_unique<Renderer>(display_buffer.view_area());
+    return std::make_unique<Renderer>(display_buffer);
 }
