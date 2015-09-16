@@ -556,8 +556,8 @@ void mcl::BufferStream::on_swap_interval_set(int interval)
 void mcl::BufferStream::on_scale_set(float scale)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    scale_wait_handle.result_received();
     scale_ = scale;
+    scale_wait_handle.result_received();
 }
 
 void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
