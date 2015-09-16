@@ -82,6 +82,7 @@ public:
     graphics::BufferID allocate_buffer(graphics::BufferProperties const&) { return graphics::BufferID{}; }
     void remove_buffer(graphics::BufferID) {}
     void with_buffer(graphics::BufferID, std::function<void(graphics::Buffer&)> const&) {}
+    void set_scale(float) {}
 
     StubBuffer stub_client_buffer;
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
