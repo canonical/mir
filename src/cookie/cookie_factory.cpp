@@ -110,26 +110,26 @@ public:
 
     virtual ~CookieFactoryNettle() noexcept = default;
 
-    MirCookie timestamp_to_cookie(uint64_t const& timestamp) override
+    mir::cookie::MirCookie timestamp_to_cookie(uint64_t const& timestamp) override
     {
-        MirCookie cookie { timestamp, 0 };
+        mir::cookie::MirCookie cookie { timestamp, 0 };
         calculate_mac(cookie);
         return cookie;
     }
 
-    bool attest_timestamp(MirCookie const& cookie) override
+    bool attest_timestamp(mir::cookie::MirCookie const& cookie) override
     {
         return verify_mac(cookie);
     }
 
 private:
-    void calculate_mac(MirCookie& cookie)
+    void calculate_mac(mir::cookie::MirCookie& cookie)
     {
         hmac_sha1_update(&ctx, sizeof(cookie.timestamp), reinterpret_cast<uint8_t*>(&cookie.timestamp));
         hmac_sha1_digest(&ctx, sizeof(cookie.mac), reinterpret_cast<uint8_t*>(&cookie.mac));
     }
 
-    bool verify_mac(MirCookie const& cookie)
+    bool verify_mac(mir::cookie::MirCookie const& cookie)
     {
         decltype(cookie.mac) calculated_mac;
         uint8_t* message = reinterpret_cast<uint8_t*>(const_cast<decltype(cookie.timestamp)*>(&cookie.timestamp));

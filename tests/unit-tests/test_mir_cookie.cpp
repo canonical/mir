@@ -51,7 +51,7 @@ TEST(MirCookieFactory, doesnt_attest_faked_timestamp)
     std::vector<uint8_t> secret{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
     auto factory = mir::cookie::CookieFactory::create_from_secret(secret);
 
-    MirCookie bad_client_no_biscuit{ 0x33221100, 0x33221100 };
+    mir::cookie::MirCookie bad_client_no_biscuit{ 0x33221100, 0x33221100 };
 
     EXPECT_FALSE(factory->attest_timestamp(bad_client_no_biscuit));
 }

@@ -21,7 +21,6 @@
 
 #include <vector>
 #include <memory>
-#include "mir_toolkit/common.h"
 
 namespace mir
 {
@@ -40,6 +39,12 @@ namespace cookie
  */
 
 using Secret = std::vector<uint8_t>;
+
+typedef struct MirCookie
+{
+    uint64_t timestamp;
+    uint64_t mac;
+} MirCookie;
 
 class CookieFactory
 {
