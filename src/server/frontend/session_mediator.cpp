@@ -50,7 +50,7 @@
 // Temporary include to ease client transition from mir_connection_drm* APIs
 // to mir_connection_platform_operation().
 // TODO: Remove when transition is complete
-#include "../../src/platforms/mesa/include/mir_toolkit/mesa/platform_operation.h"
+#include "../../../include/platforms/mesa/mir_toolkit/mesa/platform_operation.h"
 
 #include "mir/geometry/rectangles.h"
 #include "buffer_stream_tracker.h"

@@ -54,7 +54,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/common
   ${PROJECT_SOURCE_DIR}/include/test
-  ${PROJECT_SOURCE_DIR}/src/renderers/gl/include
+  ${PROJECT_SOURCE_DIR}/include/renderers/gl
 )
 
 option(MIR_BUILD_ACCEPTANCE_TESTS "Build acceptance tests" ON)

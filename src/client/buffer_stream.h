@@ -133,7 +133,6 @@ private:
     void on_swap_interval_set(int interval);
     void on_scale_set(float scale);
     void release_cpu_region();
-    MirWaitHandle* set_swap_interval(int interval, std::unique_lock<std::mutex>&);
 
     mutable std::mutex mutex; // Protects all members of *this
 
