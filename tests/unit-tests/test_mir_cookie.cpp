@@ -97,8 +97,9 @@ TEST(MirCookieFactory, timestamp_trusted_with_saved_secret_does_attest)
     unsigned secret_size = 64;
     std::vector<uint8_t> secret;
 
-    auto factory = mir::cookie::CookieFactory::create_saving_secret(secret, secret_size);
-    auto cookie  = factory->timestamp_to_cookie(timestamp);
+    auto source_factory = mir::cookie::CookieFactory::create_saving_secret(secret, secret_size);
+    auto sink_factory   = mir::cookie::CookieFactory::create_from_secret(secret);
+    auto cookie = source_factory->timestamp_to_cookie(timestamp);
 
-    EXPECT_TRUE(factory->attest_timestamp(cookie));
+    EXPECT_TRUE(sink_factory->attest_timestamp(cookie));
 }
