@@ -138,6 +138,7 @@ catch (std::exception const& x)
 }
 
 MirDisplayConfiguration* mir_blob_to_display_configuration(MirBlob* blob)
+try
 {
     mp::DisplayConfiguration protobuf_config;
 
@@ -205,6 +206,11 @@ MirDisplayConfiguration* mir_blob_to_display_configuration(MirBlob* blob)
     }
 
     return new_config;
+}
+catch (std::exception const& x)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(x);
+    abort();
 }
 
 size_t mir_blob_size(MirBlob* blob)
