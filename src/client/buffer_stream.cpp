@@ -665,12 +665,10 @@ void mcl::BufferStream::set_size(geom::Size sz)
 
 MirWaitHandle* mcl::BufferStream::set_scale(float scale)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
     mp::StreamConfiguration configuration;
     configuration.mutable_id()->set_value(protobuf_bs->id().value());
     configuration.set_scale(scale);
     scale_wait_handle.expect_result();
-    lock.unlock();
 
     display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
         google::protobuf::NewCallback(this, &mcl::BufferStream::on_scale_set, scale));
