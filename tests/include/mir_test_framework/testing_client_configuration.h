@@ -30,13 +30,6 @@ struct TestingClientConfiguration
 
     // Code to run in client process
     virtual void exec() = 0;
-
-    //clients respect the tests-use-real-graphics option by default. use
-    //this function to force the use of the default client configuraiton
-    virtual bool use_real_graphics(mir::options::Option const& options)
-    {
-        return options.get<bool>("tests-use-real-graphics");
-    }
 };
 
 }
