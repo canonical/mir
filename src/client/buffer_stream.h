@@ -131,7 +131,6 @@ private:
     void screencast_buffer_received(std::function<void()> done);
     void on_configured(int interval);
     void release_cpu_region();
-    MirWaitHandle* set_swap_interval(int interval, std::unique_lock<std::mutex>&);
 
     mutable std::mutex mutex; // Protects all members of *this
 
