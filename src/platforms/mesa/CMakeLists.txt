@@ -7,7 +7,7 @@ configure_file(
 )
 
 include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/include/platforms/mesa
 )
 
 add_subdirectory(server/)
@@ -15,8 +15,8 @@ add_subdirectory(client/)
 
 
 install(
-  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/mir_toolkit
-  DESTINATION "include/mirclient"
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/platforms/mesa/mir_toolkit
+  DESTINATION "include/mirplatform"
 )
 
 install(
