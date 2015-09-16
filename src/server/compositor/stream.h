@@ -57,6 +57,7 @@ public:
     graphics::BufferID allocate_buffer(graphics::BufferProperties const&) override;
     void remove_buffer(graphics::BufferID) override;
     void with_buffer(graphics::BufferID id, std::function<void(graphics::Buffer&)> const& fn) override;
+    void set_scale(float scale) override;
 
 private:
     enum class ScheduleMode;

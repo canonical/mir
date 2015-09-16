@@ -1,6 +1,7 @@
 include_directories(
-  ${PROJECT_SOURCE_DIR}/src/renderers/gl/include
-  ${PROJECT_SOURCE_DIR}/src/renderers/gl/
+  ${PROJECT_SOURCE_DIR}/include/renderers/gl/
+  # TODO: This is a temporary dependency until renderers become proper plugins
+  ${PROJECT_SOURCE_DIR}/src/renderers/ 
 )
 
 set(

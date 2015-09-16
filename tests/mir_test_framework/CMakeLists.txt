@@ -53,7 +53,6 @@ add_library(mir-protected-test-framework OBJECT
 
   fake_input_server_configuration.cpp
   input_testing_server_options.cpp
-  testing_process_manager.cpp
   udev_environment.cpp
 )
 

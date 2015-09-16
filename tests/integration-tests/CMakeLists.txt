@@ -54,7 +54,7 @@ if (MIR_TEST_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
 endif()
 
-if(MIR_TEST_PLATFORM STREQUAL "mesa-kms")
+if(MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
   include_directories(
     ${DRM_INCLUDE_DIRS}
     ${GBM_INCLUDE_DIRS}
@@ -109,17 +109,23 @@ target_link_libraries(
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
-  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
   ${LIBHARDWARE_LIBRARIES}
   ${MIR_PLATFORM_REFERENCES}
   ${MIR_COMMON_REFERENCES}
   ${MIR_SERVER_REFERENCES}
 )
 
-if (MIR_BUILD_PLATFORM_MESA_KMS)
+if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
 target_link_libraries(mir_integration_tests
   mirsharedmesaservercommon-static
+  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
+  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
+)
+endif()
+
+if (MIR_BUILD_PLATFORM_MESA_X11)
+target_link_libraries(mir_integration_tests
+  X11
 )
 endif()
 

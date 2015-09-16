@@ -16,7 +16,7 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "gl_program_family.h"
+#include "program_family.h"
 
 #include <mutex>
 #include <EGL/egl.h>
@@ -28,7 +28,7 @@ namespace renderer
 namespace gl
 {
 
-void GLProgramFamily::Shader::init(GLenum type, const GLchar* src)
+void ProgramFamily::Shader::init(GLenum type, const GLchar* src)
 {
     if (!id)
     {
@@ -53,7 +53,7 @@ void GLProgramFamily::Shader::init(GLenum type, const GLchar* src)
     }
 }
 
-GLProgramFamily::~GLProgramFamily() noexcept
+ProgramFamily::~ProgramFamily() noexcept
 {
     // shader and program lifetimes are managed manually, so that we don't
     // need any reference counting or to worry about how many copy constructions
@@ -82,7 +82,7 @@ GLProgramFamily::~GLProgramFamily() noexcept
     }
 }
 
-GLuint GLProgramFamily::add_program(const GLchar* const vshader_src,
+GLuint ProgramFamily::add_program(const GLchar* const vshader_src,
                                     const GLchar* const fshader_src)
 {
     // Serialize calls - avoids segfault on multimonitor (see lp:1416482)
