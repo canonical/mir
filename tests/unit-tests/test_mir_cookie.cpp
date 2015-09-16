@@ -37,7 +37,7 @@ namespace msh = mir::shell;
 TEST(MirCookieFactory, attests_real_timestamp)
 {
     std::vector<uint8_t> secret{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
-    auto factory = mir::cookie::CookieFactory::create(secret);
+    auto factory = mir::cookie::CookieFactory::create_from_secret(secret);
 
     uint64_t mock_timestamp{0x322322322332};
 
@@ -49,7 +49,7 @@ TEST(MirCookieFactory, attests_real_timestamp)
 TEST(MirCookieFactory, doesnt_attest_faked_timestamp)
 {
     std::vector<uint8_t> secret{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
-    auto factory = mir::cookie::CookieFactory::create(secret);
+    auto factory = mir::cookie::CookieFactory::create_from_secret(secret);
 
     MirCookie bad_client_no_biscuit{ 0x33221100, 0x33221100 };
 
@@ -61,8 +61,8 @@ TEST(MirCookieFactory, timestamp_trusted_with_different_secret_doesnt_attest)
     std::vector<uint8_t> alice{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
     std::vector<uint8_t> bob{ 0x01, 0x02, 0x44, 0xd8, 0xee, 0x0f, 0xde, 0x01 };
 
-    auto alices_factory = mir::cookie::CookieFactory::create(alice);
-    auto bobs_factory   = mir::cookie::CookieFactory::create(bob);
+    auto alices_factory = mir::cookie::CookieFactory::create_from_secret(alice);
+    auto bobs_factory   = mir::cookie::CookieFactory::create_from_secret(bob);
 
     uint64_t mock_timestamp{0x01020304};
 
@@ -75,8 +75,30 @@ TEST(MirCookieFactory, timestamp_trusted_with_different_secret_doesnt_attest)
 
 TEST(MirCookieFactory, throw_when_secret_size_to_small)
 {
-    std::vector<uint8_t> bob{ 0x01 };
+    std::vector<uint8_t> bob(mir::cookie::CookieFactory::minimum_secret_size - 1);
     EXPECT_THROW({
-        auto factory = mir::cookie::CookieFactory::create(bob);
+        auto factory = mir::cookie::CookieFactory::create_from_secret(bob);
     }, std::logic_error);
+}
+
+TEST(MirCookieFactory, saves_a_secret)
+{
+    std::vector<uint8_t> secret;
+    unsigned secret_size = 64;
+
+    mir::cookie::CookieFactory::create_saving_secret(secret, secret_size);
+
+    EXPECT_EQ(secret.size(), secret_size);
+}
+
+TEST(MirCookieFactory, timestamp_trusted_with_saved_secret_does_attest)
+{
+    uint64_t timestamp   = 23;
+    unsigned secret_size = 64;
+    std::vector<uint8_t> secret;
+
+    auto factory = mir::cookie::CookieFactory::create_saving_secret(secret, secret_size);
+    auto cookie  = factory->timestamp_to_cookie(timestamp);
+
+    EXPECT_TRUE(factory->attest_timestamp(cookie));
 }

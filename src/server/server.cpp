@@ -288,10 +288,10 @@ void mir::Server::set_command_line(int argc, char const* argv[])
     self->argv = argv;
 }
 
-void mir::Server::override_the_cookie_factory(std::vector<uint8_t> const& secret)
+void mir::Server::override_the_cookie_factory(mir::cookie::Secret const& secret)
 {
     verify_setting_allowed(self->server_config);
-    self->cookie_factory = mir::cookie::CookieFactory::create(secret);
+    self->cookie_factory = mir::cookie::CookieFactory::create_from_secret(secret);
 }
 
 void mir::Server::add_init_callback(std::function<void()> const& init_callback)

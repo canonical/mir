@@ -39,28 +39,42 @@ namespace cookie
  *
  */
 
+using Secret = std::vector<uint8_t>;
+
 class CookieFactory
 {
 public:
     /**
     *   Contruction function used to create a CookieFactory. The secret size must be
-    *   greater then minimum_secret_size otherwise an expection will be thrown
+    *   no less then minimum_secret_size otherwise an expection will be thrown
     *
     *   \param [in] secret  A filled in secret used to set the key for the hash function
     *   \return             A unique_ptr CookieFactory
     */
-    static std::unique_ptr<CookieFactory> create(std::vector<uint8_t> const& secret);
+    static std::unique_ptr<CookieFactory> create_from_secret(Secret const& secret);
 
     /**
     *   Contruction function used to create a CookieFactory as well as a secret.
-    *   The secret size must be greater then minimum_secret_size otherwise an expection will be thrown
+    *   The secret size must be no less then minimum_secret_size otherwise an expection will be thrown
     *
     *   \param [in]  secret_size  The size of the secret to create, must be larger then minimum_secret_size
     *   \param [out] save_secret  The secret that was created.
     *   \return                   A unique_ptr CookieFactory
     */
-    static std::unique_ptr<CookieFactory> create(unsigned secret_size, std::vector<uint8_t>& save_secret);
+    static std::unique_ptr<CookieFactory> create_saving_secret(Secret& save_secret,
+                                                               unsigned secret_size = 2 * minimum_secret_size);
 
+    /**
+    *   Contruction function used to create a CookieFactory and a secret which it keeps internally.
+    *   The secret size must be no less then minimum_secret_size otherwise an expection will be thrown
+    *
+    *   \param [in]  secret_size  The size of the secret to create, must be larger then minimum_secret_size
+    *   \return                   A unique_ptr CookieFactory
+    */
+    static std::unique_ptr<CookieFactory> create_keeping_secret(unsigned secret_size = 2 * minimum_secret_size);
+
+    CookieFactory(CookieFactory const& factory) = delete;
+    CookieFactory& operator=(CookieFactory const& factory) = delete;
     virtual ~CookieFactory() noexcept = default;
 
     /**
@@ -79,20 +93,11 @@ public:
     */
     virtual bool attest_timestamp(MirCookie const& cookie) = 0;
 
+    static unsigned const minimum_secret_size = 8;
+
 protected:
     CookieFactory() = default;
-
-    static unsigned const minimum_secret_size;
 };
-
-/**
-*   Checks entropy exists on the system, then fills in a vector with random numbers
-*   up to size.
-*
-*   \param [in] size  The number of random numbers to generate.
-*   \return           A filled in vector with random numbers up to size
-*/
-std::vector<uint8_t> get_random_data(unsigned size);
 
 }
 }

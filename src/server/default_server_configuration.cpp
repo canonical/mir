@@ -42,6 +42,8 @@
 #include "mir/scene/null_prompt_session_listener.h"
 #include "default_emergency_cleanup.h"
 
+#include <type_traits>
+
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
@@ -184,8 +186,10 @@ std::shared_ptr<mir::cookie::CookieFactory> mir::DefaultServerConfiguration::the
     return cookie_factory(
         []()
         {
-            auto secret = mir::cookie::get_random_data(secret_size);
-            return mir::cookie::CookieFactory::create(secret);
+            static_assert(secret_size >= mir::cookie::CookieFactory::minimum_secret_size,
+                          "Secret size is smaller then the minimum secret size");
+
+            return mir::cookie::CookieFactory::create_keeping_secret(secret_size);
         });
 }
 

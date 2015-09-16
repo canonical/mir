@@ -34,6 +34,10 @@ namespace graphics { class Cursor; class Platform; class Display; class GLConfig
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; class InputDeviceHub;}
 namespace logging { class Logger; }
 namespace options { class Option; }
+namespace cookie
+{
+using Secret = std::vector<uint8_t>;
+}
 namespace shell
 {
 class DisplayLayout;
@@ -84,7 +88,7 @@ public:
     /// libmircookie. Any process this secret is shared with can verify Mir-generated
     /// cookies, or produce their own.
     /// \note If not explicitly set, a random secret will be chosen.
-    void override_the_cookie_factory(std::vector<uint8_t> const& secret);
+    void override_the_cookie_factory(mir::cookie::Secret const& secret);
 
     /// Applies any configuration options, hooks, or custom implementations.
     /// Must be called before calling run() or accessing any mir subsystems.

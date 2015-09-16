@@ -37,12 +37,11 @@ namespace
 std::string const random_device_path{"/dev/random"};
 std::string const urandom_device_path{"/dev/urandom"};
 int const wait_seconds{30};
-unsigned const min_secret_size{8};
 }
 
-std::vector<uint8_t> mir::cookie::get_random_data(unsigned size)
+static mir::cookie::Secret get_random_data(unsigned size)
 {
-    std::vector<uint8_t> buffer(size);
+    mir::cookie::Secret buffer(size);
     int random_fd;
     int retval;
     fd_set rfds;
@@ -97,12 +96,10 @@ std::vector<uint8_t> mir::cookie::get_random_data(unsigned size)
     return buffer;
 }
 
-unsigned const mir::cookie::CookieFactory::minimum_secret_size = min_secret_size;
-
 class CookieFactoryNettle : public mir::cookie::CookieFactory
 {
 public:
-    CookieFactoryNettle(std::vector<uint8_t> const& secret)
+    CookieFactoryNettle(mir::cookie::Secret const& secret)
     {
         if (secret.size() < minimum_secret_size)
             BOOST_THROW_EXCEPTION(std::logic_error("Secret size " + std::to_string(secret.size()) + " is to small, require " +
@@ -145,14 +142,20 @@ private:
     struct hmac_sha1_ctx ctx;
 };
 
-std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create(std::vector<uint8_t> const& secret)
+std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_from_secret(mir::cookie::Secret const& secret)
 {
   return std::make_unique<CookieFactoryNettle>(secret);
 }
 
-std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create(unsigned secret_size,
-                                                                               std::vector<uint8_t>& save_secret)
+std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_saving_secret(mir::cookie::Secret& save_secret,
+                                                                                             unsigned secret_size)
 {
   save_secret = get_random_data(secret_size);
   return std::make_unique<CookieFactoryNettle>(save_secret);
+}
+
+std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_keeping_secret(unsigned secret_size)
+{
+  auto secret = get_random_data(secret_size);
+  return std::make_unique<CookieFactoryNettle>(secret);
 }
