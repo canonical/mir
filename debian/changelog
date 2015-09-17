@@ -10,7 +10,9 @@ mir (0.16.0-0ubuntu1) UNRELEASED; urgency=medium
       . Mirplatformgraphics ABI bumped to 5
       . Mirclientplatform ABI unchanged at 3
     - Enhancements:
-      . TODO
+      . TODO: List more
+      . Significantly shortened buffer holding time for system compositors
+        should yield higher/smoother frame rates.
     - Bug fixes:
       . [regression] ubuntu-emulator fails to start Mir demos (LP: #1486535)
       . Overlayed framedropping clients freeze on mako (LP: #1391261)
