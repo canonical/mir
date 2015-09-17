@@ -22,6 +22,10 @@
 
 namespace mir
 {
+namespace cookie
+{
+class CookieFactory;
+}
 namespace compositor
 {
 class Compositor;
@@ -75,6 +79,7 @@ public:
     virtual std::shared_ptr<DisplayChanger> the_display_changer() = 0;
     virtual std::shared_ptr<graphics::Platform>  the_graphics_platform() = 0;
     virtual std::shared_ptr<EmergencyCleanup> the_emergency_cleanup() = 0;
+    virtual std::shared_ptr<cookie::CookieFactory> the_cookie_factory() = 0;
     virtual auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) = 0;
     virtual std::shared_ptr<scene::ApplicationNotRespondingDetector> the_application_not_responding_detector() = 0;
 
