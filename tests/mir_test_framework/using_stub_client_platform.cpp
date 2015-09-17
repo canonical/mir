@@ -43,9 +43,8 @@ mcl::ConfigurationFactory mtf::StubMirConnectionAPI::configuration_factory()
     return factory;
 }
 
-using ImplBase = mtf::UsingClientPlatform<mtf::StubConnectionConfiguration>;
-
-class mtf::UsingStubClientPlatform::Impl : public ImplBase {};
+class mtf::UsingStubClientPlatform::Impl :
+    public UsingClientPlatform<StubConnectionConfiguration> {};
 
 mtf::UsingStubClientPlatform::UsingStubClientPlatform() :
     impl{std::make_unique<Impl>()}
