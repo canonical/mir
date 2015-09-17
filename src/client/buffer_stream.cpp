@@ -561,7 +561,9 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
         " on BufferStream but only mir_surface_attrib_swapinterval is supported")); 
     }
 
-    set_swap_interval(interval);
+    auto i = interval;
+    lock.unlock();
+    set_swap_interval(i);
     configure_wait_handle.wait_for_all();
 }
 
