@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include <condition_variable>
 #include "mediating_display_changer.h"
 #include "session_container.h"
 #include "mir/scene/session.h"
@@ -117,20 +118,39 @@ void ms::MediatingDisplayChanger::configure(
     std::shared_ptr<mf::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
-    server_action_queue->enqueue(
-        this,
-        [this, session, conf]
-        {
-            std::lock_guard<std::mutex> lg{configuration_mutex};
+    bool is_active_session{false};
+    {
+        std::lock_guard<std::mutex> lg{configuration_mutex};
+        config_map[session] = conf;
+        is_active_session = session == focused_session.lock();
+    }
 
-            config_map[session] = conf;
+    if (is_active_session)
+    {
+        std::weak_ptr<mf::Session> const weak_session{session};
+        std::condition_variable cv;
+        bool done{false};
 
-            /* If the session is focused, apply the configuration */
-            if (focused_session.lock() == session)
+        server_action_queue->enqueue(
+            this,
+            [this, weak_session, conf, &done, &cv]
             {
-                apply_config(conf, PauseResumeSystem);
-            }
-        });
+                std::lock_guard<std::mutex> lg{configuration_mutex};
+
+                if (auto const session = weak_session.lock())
+                {
+                    /* If the session is focused, apply the configuration */
+                    if (focused_session.lock() == session)
+                        apply_config(conf, PauseResumeSystem);
+                }
+
+                done = true;
+                cv.notify_one();
+            });
+
+        std::unique_lock<std::mutex> lg{configuration_mutex};
+        cv.wait(lg, [&done] { return done; });
+    }
 }
 
 std::shared_ptr<mg::DisplayConfiguration>
@@ -231,10 +251,12 @@ void ms::MediatingDisplayChanger::focus_change_handler(
     if (it != config_map.end())
     {
         apply_config(it->second, PauseResumeSystem);
+        session->send_display_config(*it->second);
     }
     else if (!base_configuration_applied)
     {
         apply_base_config(PauseResumeSystem);
+        session->send_display_config(*base_configuration);
     }
 }
 

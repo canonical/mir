@@ -191,6 +191,15 @@ MirSurface::MirSurface(
     for (int i = 0; i < mir_surface_attribs; i++)
         attrib_cache[i] = -1;
 
+    if (spec.event_handler.is_set())
+    {
+        handle_event_callback = std::bind(
+            spec.event_handler.value().callback,
+            this,
+            std::placeholders::_1,
+            spec.event_handler.value().context);
+    }
+
     auto const message = serialize_spec(spec);
     create_wait_handle.expect_result();
     try 
@@ -346,6 +355,14 @@ void MirSurface::created(mir_surface_callback callback, void * context)
 
         surface->set_error(std::string{"Error processing Surface creating response:"} +
                           boost::diagnostic_information(error));
+    }
+
+    if (surface->fd_size() > 0 && handle_event_callback)
+    {
+        auto input_dispatcher = input_platform->create_input_receiver(surface->fd(0),
+                                                                      keymapper,
+                                                                      handle_event_callback);
+        input_thread = std::make_shared<md::ThreadedDispatcher>("Input dispatch", input_dispatcher);
     }
 
     callback(this, context);

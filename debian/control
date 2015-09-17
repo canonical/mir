@@ -42,7 +42,7 @@ Build-Depends: cmake,
                libevdev-dev,
                libinput-dev (>= 0.21),
                uuid-dev,
-               python3,
+               python3:any,
                dh-python,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
@@ -66,7 +66,7 @@ Description: Display server for Ubuntu - RPC definitions
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
-Package: libmirserver33
+Package: libmirserver34
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -132,7 +132,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver33 (= ${binary:Version}),
+Depends: libmirserver34 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -419,3 +419,16 @@ Description: Display server for Ubuntu - performance testing framework
  This package contains a python3 framework to facilitate writing performance
  tests for Mir. It also contains a few interesting performance tests written
  using the framework.
+
+Package: mir-renderer-gl-dev
+Section: libdevel
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+Description: Display server for Ubuntu - GL Renderer development files
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains header files that define the interfaces through which platforms and
+ renderers access the functionality needed to render with GL.
