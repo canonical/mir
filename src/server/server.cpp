@@ -22,6 +22,7 @@
 #include "mir/fd.h"
 #include "mir/frontend/connector.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/options/default_configuration.h"
 #include "mir/default_server_configuration.h"
 #include "mir/logging/logger.h"
@@ -156,29 +157,40 @@ auto wrap_##name(decltype(Self::name##_wrapper)::result_type const& wrapped)\
 // TODO these are used to frig a stub renderer when running headless
 namespace
 {
-class StubRenderer : public mir::compositor::Renderer
+class StubGLRenderer : public mir::compositor::Renderer
 {
 public:
+    StubGLRenderer(mir::graphics::DisplayBuffer& display_buffer)
+        : display_buffer{display_buffer}
+    {
+    }
+
     void set_viewport(mir::geometry::Rectangle const&) override {}
 
     void set_rotation(float) override {}
 
     void render(mir::graphics::RenderableList const& renderables) const override
     {
+        display_buffer.make_current();
+
         for (auto const& r : renderables)
             r->buffer(); // We need to consume a buffer to unblock client tests
+
+        display_buffer.gl_swap_buffers();
     }
 
     void suspend() override {}
+
+    mir::graphics::DisplayBuffer& display_buffer;
 };
 
-class StubRendererFactory : public mir::compositor::RendererFactory
+class StubGLRendererFactory : public mir::compositor::RendererFactory
 {
 public:
-    auto create_renderer_for(mir::graphics::DisplayBuffer&)
+    auto create_renderer_for(mir::graphics::DisplayBuffer& display_buffer)
     -> std::unique_ptr<mir::compositor::Renderer>
     {
-        return std::make_unique<StubRenderer>();
+        return std::make_unique<StubGLRenderer>(display_buffer);
     }
 };
 }
@@ -202,7 +214,7 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
             auto const graphics_lib = options->get<std::string>(options::platform_graphics_lib);
 
             if (graphics_lib.find("graphics-dummy.so") != std::string::npos)
-                return std::make_shared<StubRendererFactory>();
+                return std::make_shared<StubGLRendererFactory>();
         }
         return mir::DefaultServerConfiguration::the_renderer_factory();
     }
