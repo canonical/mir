@@ -14,6 +14,26 @@ mir (0.16.0-0ubuntu1) UNRELEASED; urgency=medium
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 24 Aug 2015 16:38:28 +0800
 
+mir (0.15.1+15.10.20150903-0ubuntu1) wily; urgency=medium
+
+  [ Kevin Gunn ]
+  * released-rebuild-for-vivid-overlay
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Thu, 03 Sep 2015 18:50:01 +0000
+
+mir (0.15.1+15.10.20150825-0ubuntu1) wily; urgency=medium
+
+  [ Alberto Aguirre ]
+  * New upstream release 0.15.1 (https://launchpad.net/mir/+milestone/0.15.1)
+    - Bug fixes:
+      . Client API minor version was not updated (LP: #1488542)
+      . [regression] ubuntu-emulator fails to start Mir demos (LP: #1486535)
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 25 Aug 2015 16:02:43 +0000
+
 mir (0.15.0+15.10.20150818-0ubuntu1) wily; urgency=medium
 
   [ Daniel van Vugt ]
