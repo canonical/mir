@@ -16,9 +16,15 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef COOKIE_FACTORY_H_
-#define COOKIE_FACTORY_H_
+#ifndef MIR_TOOLKIT_COOKIE_FACTORY_H_
+#define MIR_TOOLKIT_COOKIE_FACTORY_H_
 
+#include <stdint.h>
+
+/**
+ * \addtogroup mir_toolkit
+ * @{
+ */
 /* This is C code. Not C++. */
 #ifdef __cplusplus
 extern "C" {
@@ -35,4 +41,4 @@ typedef struct MirCookie
 #endif
 /**@}*/
 
-#endif // COOKIE_FACTORY_H_
+#endif // MIR_TOOLKIT_COOKIE_FACTORY_H_

@@ -190,7 +190,6 @@ typedef enum MirEdgeAttachment
     mir_edge_attachment_any = mir_edge_attachment_vertical |
                               mir_edge_attachment_horizontal
 } MirEdgeAttachment;
-
 /**@}*/
 
 #endif

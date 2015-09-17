@@ -16,18 +16,20 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_COOKIE_FACTORY_H_
-#define MIR_COOKIE_FACTORY_H_
+#ifndef MIR_COOKIE_COOKIE_FACTORY_H_
+#define MIR_COOKIE_COOKIE_FACTORY_H_
+
+#include "mir_toolkit/cookie.h"
 
 #include <vector>
 #include <memory>
-
-#include "mir_toolkit/cookie.h"
 
 namespace mir
 {
 namespace cookie
 {
+using Secret = std::vector<uint8_t>;
+
 /**
  * \brief A source of moderately-difficult-to-spoof cookies.
  *
@@ -39,9 +41,6 @@ namespace cookie
  * to attempt to bypass focus stealing prevention.
  *
  */
-
-using Secret = std::vector<uint8_t>;
-
 class CookieFactory
 {
 public:
@@ -102,4 +101,4 @@ protected:
 
 }
 }
-#endif // MIR_COOKIE_FACTORY_H_
+#endif // MIR_COOKIE_COOKIE_FACTORY_H_
