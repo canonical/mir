@@ -341,6 +341,7 @@ TEST_F(NestedServer, display_configuration_changes_are_forwarded_to_host)
 
     mt::WaitCondition condition;
 
+    ignore_rebuild_of_egl_context();
     EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
         .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 

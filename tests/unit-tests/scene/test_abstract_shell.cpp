@@ -293,6 +293,8 @@ TEST_F(AbstractShell, pointer_input_events_are_handled_by_window_manager)
     float const y_axis_value{0.0};
     float const hscroll_value{0.0};
     float const vscroll_value{0.0};
+    float const relative_x_value{0.0};
+    float const relative_y_value{0.0};
 
     auto const event = mir::events::make_event(
         mir_input_event_type_pointer,
@@ -304,7 +306,9 @@ TEST_F(AbstractShell, pointer_input_events_are_handled_by_window_manager)
         x_axis_value,
         y_axis_value,
         hscroll_value,
-        vscroll_value);
+        vscroll_value,
+        relative_x_value,
+        relative_y_value);
 
     EXPECT_CALL(*wm, handle_pointer_event(_))
         .WillOnce(Return(false))
