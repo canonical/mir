@@ -53,6 +53,32 @@ public:
      */
     void add_standard_device(std::string const& name);
 
+    /**
+     * Load an ioctl recording for a UMockdev device
+     *
+     * Looks for a <tt>name</tt>.ioctl file recorded with umockdev-record --ioctl
+     * and adds it to the associated device in the testbed.
+     *
+     * The udev records for the device these ioctl records will be associated with
+     * must already exist in the testbed
+     *
+     * @param name The unadorned filename for the ioctl records to add
+     */
+    void load_device_ioctls(std::string const& name);
+
+    /**
+     * Load an evemu evdev recording for a UMockdev device
+     *
+     * Looks for a <tt>name</tt>.evemu file recorded with umockdev-record --evemu
+     * (or evemu-record) and associates it with the udev device it was recorded from.
+     *
+     * The udev records for the device this recording is associated with
+     * must already exist in the testbed
+     *
+     * @param name The unadorned filename for the ioctl records to add
+     */
+    void load_device_evemu(std::string const& name);
+
     UMockdevTestbed *testbed;
     std::string const recordings_path;
 };
