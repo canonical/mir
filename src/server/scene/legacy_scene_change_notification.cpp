@@ -80,20 +80,17 @@ void ms::LegacySceneChangeNotification::surface_removed(ms::Surface* surface)
         }
     }
 
-    printf("OOT\n");
     if (surface->visible())
         scene_notify_change();
 }
 
 void ms::LegacySceneChangeNotification::surfaces_reordered()
 {
-    printf("OOT\n");
     scene_notify_change();
 }
 
 void ms::LegacySceneChangeNotification::scene_changed()
 {
-    printf("OOT\n");
     scene_notify_change();
 }
 

@@ -33,31 +33,26 @@ ms::LegacySurfaceChangeNotification::LegacySurfaceChangeNotification(
 
 void ms::LegacySurfaceChangeNotification::resized_to(geom::Size const& /*size*/)
 {
-    printf("OTHER\n");
     notify_scene_change();
 }
 
 void ms::LegacySurfaceChangeNotification::moved_to(geom::Point const& /*top_left*/)
 {
-    printf("OTHER\n");
     notify_scene_change();
 }
 
 void ms::LegacySurfaceChangeNotification::hidden_set_to(bool /*hide*/)
 {
-    printf("OTHER\n");
     notify_scene_change();
 }
 
 void ms::LegacySurfaceChangeNotification::frame_posted(int frames_available)
 {
-    printf("FRAME P\n");
     notify_buffer_change(frames_available);
 }
 
 void ms::LegacySurfaceChangeNotification::alpha_set_to(float /*alpha*/)
 {
-    printf("OTHER\n");
     notify_scene_change();
 }
 
@@ -68,7 +63,6 @@ void ms::LegacySurfaceChangeNotification::orientation_set_to(MirOrientation /*or
 
 void ms::LegacySurfaceChangeNotification::transformation_set_to(glm::mat4 const& /*t*/)
 {
-    printf("OTHER\n");
     notify_scene_change();
 }
 
@@ -84,7 +78,6 @@ void ms::LegacySurfaceChangeNotification::cursor_image_set_to(mg::CursorImage co
 
 void ms::LegacySurfaceChangeNotification::reception_mode_set_to(mi::InputReceptionMode /*mode*/)
 {
-    printf("OTHER\n");
     notify_scene_change();
 }
 
@@ -100,6 +93,5 @@ void ms::LegacySurfaceChangeNotification::keymap_changed(xkb_rule_names const&)
 
 void ms::LegacySurfaceChangeNotification::renamed(char const*)
 {
-    printf("OTHER\n");
     notify_scene_change();
 }
