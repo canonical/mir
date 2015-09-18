@@ -60,8 +60,7 @@ public:
             entry.physical_sizes.push_back(element->renderable()->buffer()->size());
         }
         entries.emplace_back(std::move(entry));
-        if (seq.empty())
-            cv.notify_all();
+        cv.notify_all();
     }
 
     std::vector<SizeEntry> size_entries()
@@ -76,6 +75,13 @@ public:
         auto pred = [this] { return !entries.empty() && entries.back().physical_sizes.empty(); };
         if (!cv.wait_for(lk, std::chrono::seconds(2), pred))
             throw std::runtime_error("timeout waiting for empty composition");
+    }
+
+    void wait_until_entries_number_at_least(unsigned int number, std::chrono::seconds timeout)
+    {
+        std::unique_lock<std::mutex> lk(mutex);
+        if (!cv.wait_for(lk, timeout, [this, number] { return entries.size() >= number; }))
+            throw std::runtime_error("timeout waiting for a certain number of entries");
     }
 
     void clear_record()
@@ -150,6 +156,7 @@ struct SurfaceScaling : mtf::ConnectedClientWithASurface
 
 TEST_F(SurfaceScaling, compositor_sees_size_different_when_scaled)
 {
+    using namespace std::literals::chrono_literals;
     auto scale = 2.0f;
     auto stream = mir_surface_get_buffer_stream(surface);
     mir_buffer_stream_set_scale(stream, scale);
@@ -159,15 +166,21 @@ TEST_F(SurfaceScaling, compositor_sees_size_different_when_scaled)
     //submits scaled size
     mir_buffer_stream_swap_buffers_sync(stream);
 
+    watch->wait_until_entries_number_at_least(2, 5s);
     auto entries = watch->size_entries();
-    ASSERT_THAT(entries, SizeIs(2));
-    auto& entry = entries.front();
-    ASSERT_THAT(entry.physical_sizes, SizeIs(1));
-    ASSERT_THAT(entry.composited_sizes, SizeIs(1));
-    EXPECT_THAT(entry.composited_sizes.front(), Eq(entry.physical_sizes.front()));
+    ASSERT_THAT(entries, SizeIs(Ge(2)));
 
-    entry = entries.back();
-    ASSERT_THAT(entry.physical_sizes, SizeIs(1));
-    ASSERT_THAT(entry.composited_sizes, SizeIs(1));
-    EXPECT_THAT(entry.composited_sizes.front(), Ne(entry.physical_sizes.front()));
+    bool an_entry_with_same_size {false};
+    bool an_entry_with_differing_size {false};
+    for(auto &entry : entries)
+    {
+        if (entry.physical_sizes.empty() || entry.composited_sizes.empty())
+            continue;
+        if (entry.composited_sizes.front() == entry.physical_sizes.front())
+            an_entry_with_same_size = true;
+        if (entry.composited_sizes.front() != entry.physical_sizes.front())
+            an_entry_with_differing_size = true;
+    }
+    EXPECT_TRUE(an_entry_with_same_size);
+    EXPECT_TRUE(an_entry_with_differing_size);
 }
