@@ -51,7 +51,7 @@ namespace
 class StubRendererFactory : public mc::RendererFactory
 {
 public:
-    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
+    std::unique_ptr<mc::Renderer> create_renderer_for(mg::DisplayBuffer&)
     {
         return std::unique_ptr<mc::Renderer>(new mtd::StubRenderer());
     }

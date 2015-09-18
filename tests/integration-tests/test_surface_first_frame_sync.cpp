@@ -148,7 +148,7 @@ struct ServerConfig : mtf::TestingServerConfiguration
             {
             }
 
-            std::unique_ptr<mc::Renderer> create_renderer_for(mir::geometry::Rectangle const&)
+            std::unique_ptr<mc::Renderer> create_renderer_for(mg::DisplayBuffer&)
             {
                 auto raw = new StubRenderer{render_operations};
                 return std::unique_ptr<StubRenderer>(raw);

@@ -449,7 +449,6 @@ TEST(MultiThreadedCompositor, reports_in_the_right_places)
 
     display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
     {
-        EXPECT_CALL(mock_buf, make_current()).Times(1);
         EXPECT_CALL(mock_buf, view_area()).Times(AtLeast(1))
             .WillRepeatedly(Return(geom::Rectangle()));
     });
@@ -458,11 +457,6 @@ TEST(MultiThreadedCompositor, reports_in_the_right_places)
         .Times(1);
     EXPECT_CALL(*mock_report, scheduled())
         .Times(2);
-
-    display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
-    {
-        EXPECT_CALL(mock_buf, release_current()).Times(1);
-    });
 
     EXPECT_CALL(*mock_report, stopped())
         .Times(AtLeast(1));
@@ -742,29 +736,6 @@ TEST(MultiThreadedCompositor, surface_update_from_render_doesnt_deadlock)
     while (!db_compositor_factory->enough_renders_happened())
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-    compositor.stop();
-}
-
-TEST(MultiThreadedCompositor, makes_and_releases_display_buffer_current_target)
-{
-    using namespace testing;
-
-    unsigned int const nbuffers{3};
-
-    auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
-    auto scene = std::make_shared<StubScene>();
-    auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
-    mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_display_listener, null_report, default_delay, true};
-
-    display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
-    {
-        EXPECT_CALL(mock_buf, view_area()).Times(AtLeast(1))
-            .WillRepeatedly(Return(geom::Rectangle()));
-        EXPECT_CALL(mock_buf, make_current()).Times(1);
-        EXPECT_CALL(mock_buf, release_current()).Times(1);
-    });
-
-    compositor.start();
     compositor.stop();
 }
 
