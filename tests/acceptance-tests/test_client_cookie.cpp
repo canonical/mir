@@ -32,7 +32,7 @@ namespace mc  = mir::cookie;
 
 namespace
 {
-  int const MAX_WAIT = 4;
+int const max_wait{4};
 }
 
 static void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx);
@@ -98,7 +98,7 @@ TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
 {
     mock_devices.load_device_evemu("laptop-keyboard-hello");
 
-    udev_read_recording.wait_for_at_most_seconds(MAX_WAIT);
+    udev_read_recording.wait_for_at_most_seconds(max_wait);
     if (!udev_read_recording.woken())
         BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for udev to read the recording 'laptop-keyboard-hello'"));
 

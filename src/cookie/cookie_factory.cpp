@@ -83,9 +83,7 @@ static mir::cookie::Secret get_random_data(unsigned size)
         std::uniform_int_distribution<uint8_t> dist;
         std::random_device rand_dev(urandom_device_path);
 
-        std::generate(std::begin(buffer), std::end(buffer), [&]() {
-            return dist(rand_dev);
-        });
+        std::generate(std::begin(buffer), std::end(buffer), [&]() { return dist(rand_dev); });
     }
     else
     {
