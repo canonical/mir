@@ -29,6 +29,7 @@
 #include "mir/main_loop.h"
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
+#include "mir/cookie_factory.h"
 
 // TODO these are used to frig a stub renderer when running headless
 #include "mir/compositor/renderer.h"
@@ -101,6 +102,7 @@ struct mir::Server::Self
     std::weak_ptr<options::Option> options;
     std::string config_file;
     std::shared_ptr<ServerConfiguration> server_config;
+    std::shared_ptr<cookie::CookieFactory> cookie_factory;
 
     std::function<void()> init_callback{[]{}};
     int argc{0};
@@ -175,7 +177,7 @@ public:
 class StubRendererFactory : public mir::compositor::RendererFactory
 {
 public:
-    auto create_renderer_for(mir::geometry::Rectangle const&)
+    auto create_renderer_for(mir::graphics::DisplayBuffer&)
     -> std::unique_ptr<mir::compositor::Renderer>
     {
         return std::make_unique<StubRenderer>();
@@ -205,6 +207,15 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
                 return std::make_shared<StubRendererFactory>();
         }
         return mir::DefaultServerConfiguration::the_renderer_factory();
+    }
+
+    auto the_cookie_factory() -> std::shared_ptr<cookie::CookieFactory> override
+    {
+        if (self->cookie_factory)
+        {
+            return self->cookie_factory;
+        }
+        return mir::DefaultServerConfiguration::the_cookie_factory();
     }
 
     using mir::DefaultServerConfiguration::the_options;
@@ -275,6 +286,12 @@ void mir::Server::set_command_line(int argc, char const* argv[])
     verify_setting_allowed(self->server_config);
     self->argc = argc;
     self->argv = argv;
+}
+
+void mir::Server::override_the_cookie_factory(mir::cookie::Secret const& secret)
+{
+    verify_setting_allowed(self->server_config);
+    self->cookie_factory = mir::cookie::CookieFactory::create_from_secret(secret);
 }
 
 void mir::Server::add_init_callback(std::function<void()> const& init_callback)
