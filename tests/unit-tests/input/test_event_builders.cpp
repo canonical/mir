@@ -30,7 +30,7 @@ struct InputEventBuilder : public testing::Test
 {
     MirInputDeviceId const device_id = 7;
     std::chrono::nanoseconds const timestamp = std::chrono::nanoseconds(39);
-    uint64_t const mac = 0;
+    uint64_t const mac = 12;
     MirInputEventModifiers const modifiers = mir_input_event_modifier_meta;
 };
 }
