@@ -82,6 +82,8 @@ message StreamConfiguration {
   optional BufferStreamId id = 1;
   optional int32 displacement_x = 2;
   optional int32 displacement_y = 3;
+  optional int32 swapinterval = 4;
+  optional string error = 127;
 };
 
 message SurfaceModifications {

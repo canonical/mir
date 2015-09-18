@@ -135,6 +135,10 @@ public:
         mir::protobuf::PingEvent const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
+    void configure_buffer_stream(
+        mir::protobuf::StreamConfiguration const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
 private:
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const channel;
 };
