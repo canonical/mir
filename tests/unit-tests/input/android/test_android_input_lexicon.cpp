@@ -17,6 +17,7 @@
  */
 
 #include "mir/input/android/android_input_lexicon.h"
+#include "mir/cookie_factory.h"
 
 #include <androidfw/Input.h>
 
@@ -61,6 +62,8 @@ TEST(AndroidInputLexicon, translates_key_events)
 
     EXPECT_EQ(key_code, mir_keyboard_event_key_code(kev));
     EXPECT_EQ(scan_code, mir_keyboard_event_scan_code(kev));
+
+    EXPECT_EQ(mac, mir_keyboard_event_get_cookie(kev).mac);
 
     delete android_key_ev;
 }
@@ -128,6 +131,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
 
     auto tev = mir_input_event_get_touch_event(iev);
     EXPECT_EQ(pointer_count, mir_touch_event_point_count(tev));
+    EXPECT_EQ(mac, mir_touch_event_get_cookie(tev).mac);
     
     EXPECT_EQ(pointer_id, mir_touch_event_id(tev, 0));
     // Notice these two coordinates are offset by x/y offset
@@ -215,6 +219,7 @@ TEST(AndroidInputLexicon, translates_multi_pointer_motion_events)
 
     auto tev = mir_input_event_get_touch_event(iev);
     EXPECT_EQ(pointer_count, mir_touch_event_point_count(tev));
+    EXPECT_EQ(mac, mir_touch_event_get_cookie(tev).mac);
 
     for (unsigned i = 0; i < pointer_count; i++)
     {
