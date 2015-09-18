@@ -23,6 +23,7 @@
 #include "mir/compositor/recently_used_cache.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/graphics/gl_texture_cache.h"
 #include "mir/graphics/gl_texture.h"
 #include "mir/graphics/tessellation_helpers.h"
@@ -41,6 +42,22 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
+
+mrg::RenderingTarget::RenderingTarget(mg::DisplayBuffer* buffer)
+    : buffer{buffer}
+{
+    ensure_current();
+}
+
+mrg::RenderingTarget::~RenderingTarget()
+{
+    buffer->release_current();
+}
+
+void mrg::RenderingTarget::ensure_current()
+{
+    buffer->make_current();
+}
 
 const GLchar* const mrg::Renderer::vshader =
 {
@@ -94,8 +111,9 @@ mrg::Renderer::Program::Program(GLuint program_id)
     alpha_uniform = glGetUniformLocation(id, "alpha");
 }
 
-mrg::Renderer::Renderer(geom::Rectangle const& display_area)
-    : clear_color{0.0f, 0.0f, 0.0f, 0.0f},
+mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
+    : rendering_target(&display_buffer),
+      clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
       texture_cache(std::make_unique<mc::RecentlyUsedCache>()),
@@ -149,7 +167,7 @@ mrg::Renderer::Renderer(geom::Rectangle const& display_area)
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    set_viewport(display_area);
+    set_viewport(display_buffer.view_area());
     set_rotation(0.0f);
 }
 
@@ -164,6 +182,8 @@ void mrg::Renderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
 
 void mrg::Renderer::render(mg::RenderableList const& renderables) const
 {
+    rendering_target.ensure_current();
+
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
