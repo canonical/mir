@@ -92,7 +92,7 @@ void mie::Platform::process_input_events()
         return EventType(libinput_get_event(lilib), libinput_event_destroy);
     };
 
-    for(auto ev = next_event(); ev; ev = next_event())
+    while(auto ev = next_event())
     {
         auto dev = find_device(
             libinput_device_get_device_group(
@@ -111,11 +111,20 @@ void mie::Platform::process_changes()
             if (!dev.devnode())
                 return;
             if (event == mu::Monitor::ADDED)
+            {
+                log_info("udev:device added %s", dev.devnode());
                 device_added(dev);
+            }
             if (event == mu::Monitor::REMOVED)
+            {
+                log_info("udev:device removed %s", dev.devnode());
                 device_removed(dev);
+            }
             if (event == mu::Monitor::CHANGED)
+            {
+                log_info("udev:device changed %s", dev.devnode());
                 device_changed(dev);
+            }
         });
 }
 
@@ -128,13 +137,15 @@ void mie::Platform::scan_for_devices()
     for (auto& device : input_enumerator)
     {
         if (device.devnode() != nullptr)
+        {
+            log_info("udev:device added %s", device.devnode());
             device_added(device);
+        }
     }
 }
 
 void mie::Platform::device_added(mu::Device const& dev)
 {
-    log_info("device added %s", dev.devnode());
     if (end(devices) != find_device(dev.devnode()))
         return;
 
@@ -153,7 +164,7 @@ void mie::Platform::device_added(mu::Device const& dev)
     if (end(devices) != device_it)
     {
         (*device_it)->add_device_of_group(dev.devnode(), move(device_ptr));
-        mir::log_debug("Device %s is part of an already opened device group", dev.devnode());
+        log_debug("Device %s is part of an already opened device group", dev.devnode());
         return;
     }
 
@@ -163,7 +174,6 @@ void mie::Platform::device_added(mu::Device const& dev)
 
         input_device_registry->add_device(devices.back());
 
-        mir::log_info("Input device %s opened", dev.devnode());
         report->opened_input_device(dev.devnode(), "evdev-input");
     } catch(...)
     {
@@ -174,13 +184,11 @@ void mie::Platform::device_added(mu::Device const& dev)
 
 void mie::Platform::device_removed(mu::Device const& dev)
 {
-    log_info("device added %s", dev.devnode());
     auto known_device_pos = find_device(dev.devnode());
 
     if (known_device_pos == end(devices))
         return;
 
-    mir::log_info("Input device %s removed", dev.devnode());
     input_device_registry->remove_device(*known_device_pos);
     devices.erase(known_device_pos);
 }
@@ -214,7 +222,6 @@ auto mie::Platform::find_device(libinput_device_group const* devgroup) -> declty
 
 void mie::Platform::device_changed(mu::Device const& dev)
 {
-    log_info("device changed %s", dev.devnode());
     device_removed(dev);
     device_added(dev);
 }

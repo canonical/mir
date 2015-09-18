@@ -415,8 +415,8 @@ TEST_F(LibInputDevice, process_event_handles_press_and_release)
     InSequence seq;
     EXPECT_CALL(mock_sink, handle_input(mt::ButtonDownEventWithButton(pos, mir_pointer_button_primary)));
     EXPECT_CALL(mock_sink, handle_input(mt::ButtonDownEventWithButton(pos, mir_pointer_button_secondary)));
-    EXPECT_CALL(mock_sink, handle_input(mt::ButtonUpEvent(x, y)));
-    EXPECT_CALL(mock_sink, handle_input(mt::ButtonUpEvent(x, y)));
+    EXPECT_CALL(mock_sink, handle_input(mt::ButtonUpEventWithButton(pos, mir_pointer_button_secondary)));
+    EXPECT_CALL(mock_sink, handle_input(mt::ButtonUpEventWithButton(pos, mir_pointer_button_primary)));
 
     dev.start(&mock_sink, &mock_builder);
     dev.process_event(fake_event_1);
