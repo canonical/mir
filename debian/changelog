@@ -10,9 +10,24 @@ mir (0.16.0-0ubuntu1) UNRELEASED; urgency=medium
       . Mirplatformgraphics ABI bumped to 5
       . Mirclientplatform ABI unchanged at 3
     - Enhancements:
-      . TODO: List more
       . Significantly shortened buffer holding time for system compositors
         should yield higher/smoother frame rates.
+      . Progress on new buffer semantics work.
+      . Mir-on-x platform refinements, including support for guest platform,
+        key combinations, rotation, display window size.
+      . Enhanced cross-compilation, including multi-distro, and multi-arch
+        support.
+      . Added message auth code to make_event functions. Older implementations
+        are now marked as deprecated.
+      . Added EventBuilder for input platforms to use to construct events.
+      . Improved logging.
+      . Added protobuf versioning support.
+      . Support for the NATIVE_WINDOW_CONSUMER_USAGE_BITS query.
+      . Added utilities to detect the capabilities of an input device.
+      . Initial refactoring to support renderers other than GL.
+      . Optimized ANR logic to decide less frequent wakeups.
+      . Allow clients to set their surface event handler up front.
+      . Added ability to provide for setting a scale on BufferStream.
     - Bug fixes:
       . [regression] ubuntu-emulator fails to start Mir demos (LP: #1486535)
       . Overlayed framedropping clients freeze on mako (LP: #1391261)
