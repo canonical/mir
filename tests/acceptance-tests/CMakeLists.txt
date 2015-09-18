@@ -53,6 +53,7 @@ set(
   test_surface_specification.cpp
   test_system_compositor_window_manager.cpp
   test_session_mediator_report.cpp
+  test_client_cookie.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
@@ -94,5 +95,5 @@ CMAKE_DEPENDENT_OPTION(
   OFF)
 
 if (MIR_RUN_ACCEPTANCE_TESTS)
-  mir_discover_tests_with_fd_leak_detection(mir_acceptance_tests)
+  mir_discover_tests_with_fd_leak_detection(mir_acceptance_tests LD_PRELOAD=libumockdev-preload.so.0 G_SLICE=always-malloc G_DEBUG=gc-friendly)
 endif (MIR_RUN_ACCEPTANCE_TESTS)

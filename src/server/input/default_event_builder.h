@@ -25,12 +25,17 @@
 
 namespace mir
 {
+namespace cookie
+{
+class CookieFactory;
+}
 namespace input
 {
 class DefaultEventBuilder : public EventBuilder
 {
 public:
-    explicit DefaultEventBuilder(MirInputDeviceId device_id);
+    explicit DefaultEventBuilder(MirInputDeviceId device_id,
+                                 std::shared_ptr<cookie::CookieFactory> const& c_factory);
 
     EventUPtr key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code, int scan_code,
                         MirInputEventModifiers modifiers) override;
@@ -48,7 +53,8 @@ public:
     EventUPtr configuration_event(Timestamp timestamp, MirInputConfigurationAction action) override;
 
 private:
-    MirInputDeviceId device_id;
+    MirInputDeviceId const device_id;
+    std::shared_ptr<cookie::CookieFactory> const cookie_factory;
 };
 }
 }

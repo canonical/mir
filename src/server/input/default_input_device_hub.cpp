@@ -25,6 +25,7 @@
 #include "mir/input/input_region.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/server_action_queue.h"
+#include "mir/cookie_factory.h"
 #define MIR_LOG_COMPONENT "Input"
 #include "mir/log.h"
 
@@ -34,6 +35,7 @@
 #include <atomic>
 
 namespace mi = mir::input;
+namespace mc = mir::cookie;
 
 mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mi::InputDispatcher> const& input_dispatcher,
@@ -41,9 +43,11 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mir::ServerActionQueue> const& observer_queue,
     std::shared_ptr<TouchVisualizer> const& touch_visualizer,
     std::shared_ptr<CursorListener> const& cursor_listener,
-    std::shared_ptr<InputRegion> const& input_region)
+    std::shared_ptr<InputRegion> const& input_region,
+    std::shared_ptr<mc::CookieFactory> const& c_factory)
     : input_dispatcher(input_dispatcher), input_dispatchable{input_multiplexer}, observer_queue(observer_queue),
-      touch_visualizer(touch_visualizer), cursor_listener(cursor_listener), input_region(input_region)
+      touch_visualizer(touch_visualizer), cursor_listener(cursor_listener), input_region(input_region),
+      cookie_factory(c_factory)
 {
 }
 
@@ -61,7 +65,7 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
 
     if (it == end(devices))
     {
-        devices.push_back(std::make_unique<RegisteredDevice>(device, input_dispatcher, input_dispatchable, this));
+        devices.push_back(std::make_unique<RegisteredDevice>(device, input_dispatcher, input_dispatchable, cookie_factory, this));
 
         auto info = devices.back()->get_device_info();
 
@@ -120,8 +124,9 @@ mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
     std::shared_ptr<InputDevice> const& dev,
     std::shared_ptr<InputDispatcher> const& dispatcher,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
+    std::shared_ptr<mc::CookieFactory> const& c_factory,
     DefaultInputDeviceHub* hub)
-    : device_id(create_new_device_id()), builder(device_id), device(dev), dispatcher(dispatcher),
+    : device_id(create_new_device_id()), builder(device_id, c_factory), device(dev), dispatcher(dispatcher),
       multiplexer(multiplexer), hub(hub)
 {
 }

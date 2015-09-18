@@ -98,6 +98,14 @@ MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* even
  */
 MirInputEvent const* mir_keyboard_event_input_event(MirKeyboardEvent const* event);
 
+/**
+ * Retrieves the timestamp cookie of a keyboard event.
+ *
+ * \param [in] event The keyboard event
+ * \return           A MirCookie
+ */
+MirCookie mir_keyboard_event_get_cookie(MirKeyboardEvent const* event);
+
 #ifdef __cplusplus
 }
 /**@}*/

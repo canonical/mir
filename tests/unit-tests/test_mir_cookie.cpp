@@ -16,23 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir_toolkit/mir_client_library.h"
 #include "mir/cookie_factory.h"
-
-#include "mir_test_framework/headless_test.h"
-#include "mir_test_framework/connected_client_with_a_surface.h"
-#include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
-#include "mir/shell/shell_wrapper.h"
-#include "mir/test/validity_matchers.h"
-#include "mir/test/wait_condition.h"
-
-#include "boost/throw_exception.hpp"
-
-#include <gtest/gtest.h>
-
-namespace mtf = mir_test_framework;
-namespace mtd = mir::test::doubles;
-namespace msh = mir::shell;
 
 TEST(MirCookieFactory, attests_real_timestamp)
 {

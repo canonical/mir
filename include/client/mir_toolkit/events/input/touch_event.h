@@ -149,6 +149,14 @@ float mir_touch_event_axis_value(MirTouchEvent const* event,
  */
 MirInputEvent const* mir_touch_event_input_event(MirTouchEvent const* event);
 
+/**
+ * Retrieves the timestamp cookie of a touch event.
+ *
+ * \param [in] event The touch event
+ * \return           A MirCookie
+ */
+MirCookie mir_touch_event_get_cookie(MirTouchEvent const* event);
+
 #ifdef __cplusplus
 }
 /**@}*/

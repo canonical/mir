@@ -19,24 +19,29 @@
 
 #include "default_event_builder.h"
 #include "mir/events/event_builders.h"
+#include "mir/cookie_factory.h"
 
 namespace me = mir::events;
 namespace mi = mir::input;
+namespace mc = mir::cookie;
 
-mi::DefaultEventBuilder::DefaultEventBuilder(MirInputDeviceId device_id) : device_id(device_id)
+mi::DefaultEventBuilder::DefaultEventBuilder(MirInputDeviceId device_id,
+                                             std::shared_ptr<mc::CookieFactory> const& c_factory)
+    : device_id(device_id)
+    , cookie_factory(c_factory)
 {
 }
 
 mir::EventUPtr mi::DefaultEventBuilder::key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code,
                                                   int scan_code, MirInputEventModifiers modifiers)
 {
-    uint64_t mac = 0;
+    uint64_t mac = cookie_factory->timestamp_to_cookie(timestamp.count()).mac;
     return me::make_event(device_id, timestamp, mac, action, key_code, scan_code, modifiers);
 }
 
 mir::EventUPtr mi::DefaultEventBuilder::touch_event(Timestamp timestamp, MirInputEventModifiers modifiers)
 {
-    uint64_t mac = 0;
+    uint64_t mac = cookie_factory->timestamp_to_cookie(timestamp.count()).mac;
     return me::make_event(device_id, timestamp, mac, modifiers);
 }
 
@@ -55,7 +60,7 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp, MirIn
                                                       float vscroll_value, float relative_x_value,
                                                       float relative_y_value)
 {
-    uint64_t mac = 0;
+    uint64_t mac = cookie_factory->timestamp_to_cookie(timestamp.count()).mac;
     return me::make_event(device_id, timestamp, mac, modifiers, action, buttons_pressed, x_axis_value, y_axis_value,
                           hscroll_value, vscroll_value, relative_x_value, relative_y_value);
 }

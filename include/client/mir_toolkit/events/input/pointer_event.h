@@ -135,6 +135,14 @@ float mir_pointer_event_axis_value(MirPointerEvent const* event,
  */
 MirInputEvent const* mir_pointer_event_input_event(MirPointerEvent const* event);
 
+/**
+ * Retrieves the timestamp cookie of a pointer event.
+ *
+ * \param [in] event The pointer event
+ * \return           A MirCookie
+ */
+MirCookie mir_pointer_event_get_cookie(MirPointerEvent const* event);
+
 #ifdef __cplusplus
 }
 /**@}*/

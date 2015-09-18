@@ -21,6 +21,7 @@
 #include "mir/input/android/event_conversion_helpers.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
+#include "mir/cookie_factory.h"
 
 #include "androidfw/Input.h"
 
@@ -28,6 +29,7 @@
 
 namespace mia = mir::input::android;
 namespace mev = mir::events;
+namespace mc  = mir::cookie;
 
 namespace
 {
@@ -53,8 +55,10 @@ bool valid_motion_event(MirMotionEvent const& motion)
 
 }
 
-mia::InputTranslator::InputTranslator(std::shared_ptr<InputDispatcher> const& dispatcher)
+mia::InputTranslator::InputTranslator(std::shared_ptr<InputDispatcher> const& dispatcher,
+                                      std::shared_ptr<mc::CookieFactory> const& c_factory)
     : dispatcher(dispatcher)
+    , cookie_factory(c_factory)
 {
 }
 
@@ -76,6 +80,7 @@ void mia::InputTranslator::notifyKey(const droidinput::NotifyKeyArgs* args)
         return;
     uint32_t policy_flags = args->policyFlags;
     MirInputEventModifiers mir_modifiers = mia::mir_modifiers_from_android(args->metaState);
+    MirCookie cookie = cookie_factory->timestamp_to_cookie(args->eventTime.count());
 
     if (policy_flags & droidinput::POLICY_FLAG_ALT)
         mir_modifiers |= mir_input_event_modifier_alt | mir_input_event_modifier_alt_left;
@@ -97,7 +102,7 @@ void mia::InputTranslator::notifyKey(const droidinput::NotifyKeyArgs* args)
     auto mir_event = mev::make_event(
         MirInputDeviceId(args->deviceId),
         args->eventTime,
-        0, /* mac */
+        cookie.mac,
         mia::mir_keyboard_action_from_android(args->action, 0 /* repeat_count */),
         args->keyCode,
         args->scanCode,
@@ -111,12 +116,14 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
     if (!args)
         return;
 
+    MirCookie cookie = cookie_factory->timestamp_to_cookie(args->eventTime.count());
+
     if (mia::android_source_id_is_pointer_device(args->source))
     {
         auto const& pc = args->pointerCoords[0];
         auto mir_event = mev::make_event(MirInputDeviceId(args->deviceId),
             args->eventTime,
-            0, /* mac */
+            cookie.mac,
             mia::mir_modifiers_from_android(args->metaState),
             mia::mir_pointer_action_from_masked_android(args->action & AMOTION_EVENT_ACTION_MASK),
             mia::mir_pointer_buttons_from_android(args->buttonState),
@@ -135,7 +142,7 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
     {
         auto mir_event = mev::make_event(MirInputDeviceId(args->deviceId),
                                          args->eventTime,
-                                         0, /* mac */
+                                         cookie.mac,
                                          mia::mir_modifiers_from_android(args->metaState));
         auto action = args->action;
         size_t index_with_action = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
