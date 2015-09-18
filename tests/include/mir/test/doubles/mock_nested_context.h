@@ -47,7 +47,6 @@ namespace doubles
 struct MockNestedContext : graphics::NestedContext
 {
     MOCK_METHOD0(platform_fd_items, std::vector<int>());
-    MOCK_METHOD1(drm_auth_magic, void(int magic));
     MOCK_METHOD2(platform_operation, graphics::PlatformOperationMessage(
         unsigned int, graphics::PlatformOperationMessage const&));
 };

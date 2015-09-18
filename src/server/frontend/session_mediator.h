@@ -124,10 +124,6 @@ public:
         mir::protobuf::SurfaceId const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
-    void drm_auth_magic(
-        mir::protobuf::DRMMagic const* request,
-        mir::protobuf::DRMAuthMagicStatus* response,
-        google::protobuf::Closure* done) override;
     void platform_operation(
         mir::protobuf::PlatformOperationMessage const* request,
         mir::protobuf::PlatformOperationMessage* response,

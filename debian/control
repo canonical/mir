@@ -50,7 +50,7 @@ Homepage: https://launchpad.net/mir
 # just go ahead. ~mir-team will notice and sync up the code again.
 Vcs-Bzr: https://code.launchpad.net/mir
 
-Package: libmirprotobuf3
+Package: libmirprotobuf4
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -66,7 +66,7 @@ Description: Display server for Ubuntu - RPC definitions
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
-Package: libmirserver34
+Package: libmirserver35
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -132,7 +132,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver34 (= ${binary:Version}),
+Depends: libmirserver35 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,

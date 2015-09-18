@@ -234,10 +234,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::release_surface, invocation);
         }
-        else if ("drm_auth_magic" == invocation.method_name())
-        {
-            invoke(this, display_server.get(), &DisplayServer::drm_auth_magic, invocation);
-        }
         else if ("platform_operation" == invocation.method_name())
         {
             auto request = parse_parameter<mir::protobuf::PlatformOperationMessage>(invocation);

@@ -482,19 +482,19 @@ TEST_F(MirProtobufRpcChannelTest, delays_messages_not_requested)
     auto typed_channel = std::dynamic_pointer_cast<mclr::MirProtobufRpcChannel>(channel);
 
     mclr::DisplayServer channel_user{channel};
-    mir::protobuf::DRMMagic request;
-    mir::protobuf::DRMAuthMagicStatus reply;
+    mir::protobuf::PingEvent request;
+    mir::protobuf::Void reply;
 
     bool first_response_called{false};
     bool second_response_called{false};
-    channel_user.drm_auth_magic(&request,
-                                &reply,
-                                google::protobuf::NewCallback(&set_flag, &first_response_called));
+    channel_user.pong(&request,
+                      &reply,
+                      google::protobuf::NewCallback(&set_flag, &first_response_called));
 
     typed_channel->process_next_request_first();
-    channel_user.drm_auth_magic(&request,
-                                &reply,
-                                google::protobuf::NewCallback(&set_flag, &second_response_called));
+    channel_user.pong(&request,
+                      &reply,
+                      google::protobuf::NewCallback(&set_flag, &second_response_called));
 
     mir::protobuf::wire::Invocation wire_request;
     mir::protobuf::wire::Result wire_reply;
@@ -556,8 +556,8 @@ TEST_F(MirProtobufRpcChannelTest, delays_messages_with_fds_not_requested)
     auto typed_channel = std::dynamic_pointer_cast<mclr::MirProtobufRpcChannel>(channel);
 
     mclr::DisplayServer channel_user{channel};
-    mir::protobuf::DRMMagic drm_request;
-    mir::protobuf::DRMAuthMagicStatus drm_reply;
+    mir::protobuf::PingEvent pong_request;
+    mir::protobuf::Void pong_reply;
 
     mir::protobuf::Buffer buffer_reply;
     mir::protobuf::BufferRequest buffer_request;
@@ -571,9 +571,9 @@ TEST_F(MirProtobufRpcChannelTest, delays_messages_with_fds_not_requested)
                                  google::protobuf::NewCallback(&set_flag, &first_response_called));
 
     typed_channel->process_next_request_first();
-    channel_user.drm_auth_magic(&drm_request,
-                                &drm_reply,
-                                google::protobuf::NewCallback(&set_flag, &second_response_called));
+    channel_user.pong(&pong_request,
+                      &pong_reply,
+                      google::protobuf::NewCallback(&set_flag, &second_response_called));
 
 
     std::initializer_list<mir::Fd> fds = {mir::Fd{open("/dev/null", O_RDONLY)},
@@ -613,7 +613,7 @@ TEST_F(MirProtobufRpcChannelTest, delays_messages_with_fds_not_requested)
     }
 
     {
-        mir::protobuf::DRMAuthMagicStatus reply;
+        mir::protobuf::Void reply;
 
         mir::protobuf::wire::Invocation wire_request;
         mir::protobuf::wire::Result wire_reply;

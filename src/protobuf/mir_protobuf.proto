@@ -215,16 +215,6 @@ message Surface {
   optional string error = 127;
 }
 
-message DRMMagic {
-  optional uint32 magic = 1;
-  optional string error = 127;
-}
-
-message DRMAuthMagicStatus {
-  optional int32 status_code = 1;
-  optional string error = 127;
-}
-
 message Void {
   optional string error = 127;
 }

@@ -70,13 +70,6 @@ void mclr::DisplayServer::release_surface(
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
-void mclr::DisplayServer::drm_auth_magic(
-    mir::protobuf::DRMMagic const* request,
-    mir::protobuf::DRMAuthMagicStatus* response,
-    google::protobuf::Closure* done)
-{
-    channel->call_method(std::string(__func__), request, response, done);
-}
 void mclr::DisplayServer::platform_operation(
     mir::protobuf::PlatformOperationMessage const* request,
     mir::protobuf::PlatformOperationMessage* response,
