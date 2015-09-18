@@ -1,11 +1,5 @@
 include(CMakeDependentOption)
 
-include_directories(
-  ${CMAKE_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/include/cookie
-  ${UMOCKDEV_INCLUDE_DIRS}
-)
-
 set(
   SOURCES
 
@@ -17,7 +11,6 @@ set(
   test_client_input.cpp
   test_client_library.cpp
   test_client_library_callbacks.cpp
-  test_client_library_errors.cpp
   test_client_library_old.cpp
   test_client_surface_events.cpp
   test_client_surface_swap_buffers.cpp
@@ -45,7 +38,6 @@ set(
   test_client_platform_operation.cpp
   test_input_device_hub.cpp
   test_latency.cpp
-  test_shell_control_of_surface_configuration.cpp
   test_render_override.cpp
   test_surface_modifications.cpp
   test_surface_placement.cpp
