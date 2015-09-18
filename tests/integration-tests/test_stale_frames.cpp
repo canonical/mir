@@ -84,7 +84,7 @@ class StubRendererFactory : public mc::RendererFactory
 {
 public:
     std::unique_ptr<mc::Renderer> create_renderer_for(
-        geom::Rectangle const&) override
+        mg::DisplayBuffer&) override
     {
         std::lock_guard<std::mutex> lock{mutex};
         renderer_ = new StubRenderer();

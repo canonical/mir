@@ -37,7 +37,7 @@ me::DemoCompositor::DemoCompositor(
     viewport(display_buffer.view_area()),
     zoom_mag{1.0f},
     renderer(
-        display_buffer.view_area(),
+        display_buffer,
         30.0f, //titlebar_height
         80.0f) //shadow_radius
 {

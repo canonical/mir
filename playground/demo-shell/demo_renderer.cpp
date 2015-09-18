@@ -178,10 +178,10 @@ static const GLchar contrast_fshader[] =
 } // namespace
 
 DemoRenderer::DemoRenderer(
-    Rectangle const& display_area,
+    graphics::DisplayBuffer& display_buffer,
     float const titlebar_height,
     float const shadow_radius) :
-    gl::Renderer(display_area),
+    gl::Renderer(display_buffer),
     titlebar_height{titlebar_height},
     shadow_radius{shadow_radius},
     corner_radius{0.5f},

@@ -58,7 +58,7 @@ public:
     virtual std::shared_ptr<MemoryRegion> secure_for_cpu_write() = 0;
 
     virtual int swap_interval() const = 0;
-    virtual void set_swap_interval(int interval) = 0;
+    virtual MirWaitHandle* set_swap_interval(int interval) = 0;
 
     virtual MirNativeBuffer* get_current_buffer_package() = 0;
     virtual MirPlatformType platform_type() = 0;

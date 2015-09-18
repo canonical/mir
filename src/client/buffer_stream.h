@@ -98,7 +98,7 @@ public:
     uint32_t get_current_buffer_id() override;
     
     int swap_interval() const override;
-    void set_swap_interval(int interval) override;
+    MirWaitHandle* set_swap_interval(int interval) override;
     void set_buffer_cache_size(unsigned int) override;
 
     EGLNativeWindowType egl_native_window() override;
@@ -107,7 +107,7 @@ public:
     // mcl::EGLNativeSurface interface
     MirSurfaceParameters get_parameters() const override;
     void request_and_wait_for_next_buffer() override;
-    // TODO: In this context it seems like a wart that this is a "SurfaceAttribute"
+
     void request_and_wait_for_configure(MirSurfaceAttrib attrib, int) override;
 
     MirNativeBuffer* get_current_buffer_package() override;
@@ -129,7 +129,7 @@ private:
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&);
     void screencast_buffer_received(std::function<void()> done);
-    void on_configured();
+    void on_configured(int interval);
     void release_cpu_region();
 
     mutable std::mutex mutex; // Protects all members of *this
