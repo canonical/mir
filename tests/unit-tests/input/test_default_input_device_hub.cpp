@@ -32,6 +32,7 @@
 #include "mir/dispatch/action_queue.h"
 #include "mir/events/event_builders.h"
 #include "mir/input/cursor_listener.h"
+#include "mir/cookie_factory.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -41,6 +42,7 @@
 namespace mi = mir::input;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
+namespace mc = mir::cookie;
 namespace geom = mir::geometry;
 using namespace std::literals::chrono_literals;
 
@@ -99,12 +101,13 @@ struct InputDeviceHubTest : ::testing::Test
     mtd::TriggeredMainLoop observer_loop;
     Nice<mtd::MockInputDispatcher> mock_dispatcher;
     Nice<mtd::MockInputRegion> mock_region;
+    std::shared_ptr<mc::CookieFactory> cookie_factory = mc::CookieFactory::create_keeping_secret();
     Nice<MockCursorListener> mock_cursor_listener;
     Nice<MockTouchVisualizer> mock_visualizer;
     mir::dispatch::MultiplexingDispatchable multiplexer;
     mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_dispatcher), mt::fake_shared(multiplexer),
                                   mt::fake_shared(observer_loop), mt::fake_shared(mock_visualizer),
-                                  mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region)};
+                                  mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region), cookie_factory};
     Nice<MockInputDeviceObserver> mock_observer;
     Nice<MockInputDevice> device;
     Nice<MockInputDevice> another_device;
