@@ -22,12 +22,10 @@
 #include "mir/events/event_builders.h"
 #include "mir/time/alarm.h"
 #include "mir/time/alarm_factory.h"
-#include "mir/test/fake_shared.h"
 #include "mir/cookie_factory.h"
 
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
-#include "mir/test/doubles/mock_cookie_factory.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -36,7 +34,6 @@ namespace mi = mir::input;
 namespace mev = mir::events;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
-namespace mt = mir::test;
 namespace mc = mir::cookie;
 
 namespace
