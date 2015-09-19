@@ -113,6 +113,7 @@ mrg::Renderer::Program::Program(GLuint program_id)
 
 mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
     : rendering_target(&display_buffer),
+      display_buffer(display_buffer),
       clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
@@ -193,6 +194,8 @@ void mrg::Renderer::render(mg::RenderableList const& renderables) const
         draw(*r, r->alpha() < 1.0f ? alpha_program : default_program);
 
     texture_cache->drop_unused();
+
+    display_buffer.gl_swap_buffers();
 }
 
 void mrg::Renderer::draw(mg::Renderable const& renderable,

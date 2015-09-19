@@ -122,8 +122,6 @@ TEST_F(DefaultDisplayBufferCompositor, render)
         .Times(1);
     EXPECT_CALL(display_buffer, view_area())
         .Times(AtLeast(1));
-    EXPECT_CALL(display_buffer, gl_swap_buffers())
-        .Times(1);
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
@@ -203,8 +201,6 @@ TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
         .InSequence(render_seq);
     EXPECT_CALL(mock_renderer, render(ContainerEq(mg::RenderableList{big, small})))
         .InSequence(render_seq);
-    EXPECT_CALL(display_buffer, gl_swap_buffers())
-        .InSequence(render_seq);
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
@@ -236,8 +232,6 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
         .InSequence(seq);
     EXPECT_CALL(mock_renderer, render(IsEmpty()))
         .InSequence(seq);
-    EXPECT_CALL(display_buffer, gl_swap_buffers())
-        .InSequence(seq);
 
     EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
         .InSequence(seq)
@@ -252,8 +246,6 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
     EXPECT_CALL(mock_renderer, set_rotation(mir_orientation_normal))
         .InSequence(seq);
     EXPECT_CALL(mock_renderer, render(IsEmpty()))
-        .InSequence(seq);
-    EXPECT_CALL(display_buffer, gl_swap_buffers())
         .InSequence(seq);
 
     mc::DefaultDisplayBufferCompositor compositor(
@@ -285,11 +277,7 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
 
     mg::RenderableList const visible{window0, window3};
 
-    Sequence seq;
-    EXPECT_CALL(mock_renderer, render(ContainerEq(visible)))
-        .InSequence(seq);
-    EXPECT_CALL(display_buffer, gl_swap_buffers())
-        .InSequence(seq);
+    EXPECT_CALL(mock_renderer, render(ContainerEq(visible)));
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
