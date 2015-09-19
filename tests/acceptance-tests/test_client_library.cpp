@@ -25,8 +25,6 @@
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/validity_matchers.h"
 
-#include "src/include/client/mir/client_buffer.h"
-
 #include "mir_protobuf.pb.h"
 
 #ifdef ANDROID
@@ -52,7 +50,6 @@
 
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
-namespace mcl = mir::client;
 namespace mtf = mir_test_framework;
 namespace
 {
