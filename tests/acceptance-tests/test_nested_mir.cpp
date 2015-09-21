@@ -21,6 +21,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_report.h"
+#include "mir/cached_ptr.h"
 #include "mir/main_loop.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
@@ -78,7 +79,6 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
     MOCK_METHOD2(session_start_prompt_session_called, void (std::string const&, pid_t));
     MOCK_METHOD1(session_stop_prompt_session_called, void (std::string const&));
 
-    void session_drm_auth_magic_called(const std::string&) override {};
     void session_configure_surface_called(std::string const&) override {};
     void session_configure_surface_cursor_called(std::string const&) override {};
     void session_configure_display_called(std::string const&) override {};

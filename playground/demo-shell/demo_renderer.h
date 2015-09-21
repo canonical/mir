@@ -45,7 +45,7 @@ class DemoRenderer : public renderer::gl::Renderer
 {
 public:
     DemoRenderer(
-        geometry::Rectangle const& display_area,
+        graphics::DisplayBuffer& display_buffer,
         float const titlebar_height,
         float const shadow_radius);
     ~DemoRenderer();

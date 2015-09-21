@@ -47,11 +47,6 @@
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
 
-// Temporary include to ease client transition from mir_connection_drm* APIs
-// to mir_connection_platform_operation().
-// TODO: Remove when transition is complete
-#include "../../../include/platforms/mesa/mir_toolkit/mesa/platform_operation.h"
-
 #include "mir/geometry/rectangles.h"
 #include "buffer_stream_tracker.h"
 #include "client_buffer_tracker.h"
@@ -872,36 +867,6 @@ void mf::SessionMediator::translate_surface_to_screen(
     done->Run();
 }
 
-void mf::SessionMediator::drm_auth_magic(
-    const mir::protobuf::DRMMagic* request,
-    mir::protobuf::DRMAuthMagicStatus* response,
-    google::protobuf::Closure* done)
-{
-    auto session = weak_session.lock();
-
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-    report->session_drm_auth_magic_called(session->name());
-
-    auto const magic = request->magic();
-
-    MirMesaAuthMagicRequest const auth_magic_request{magic};
-    mg::PlatformOperationMessage platform_request;
-    platform_request.data.resize(sizeof(auth_magic_request));
-    std::memcpy(platform_request.data.data(), &auth_magic_request, sizeof(auth_magic_request));
-
-    auto const platform_response = ipc_operations->platform_operation(
-        MirMesaPlatformOperation::auth_magic, platform_request);
-
-    MirMesaAuthMagicResponse auth_magic_response{-1};
-    std::memcpy(&auth_magic_response, platform_response.data.data(),
-                platform_response.data.size());
-    response->set_status_code(auth_magic_response.status);
-
-    done->Run();
-}
-
 void mf::SessionMediator::platform_operation(
     mir::protobuf::PlatformOperationMessage const* request,
     mir::protobuf::PlatformOperationMessage* response,
@@ -1009,4 +974,22 @@ void mf::SessionMediator::pack_protobuf_buffer(
 
     for(auto const& fd : packer.fds())
         resource_cache->save_fd(&protobuf_buffer, fd);
+}
+
+void mf::SessionMediator::configure_buffer_stream(
+    mir::protobuf::StreamConfiguration const* request,
+    mir::protobuf::Void*,
+    google::protobuf::Closure* done)
+{
+    auto const session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
+    if (request->has_swapinterval())
+        stream->allow_framedropping(request->swapinterval() == 0);
+    if (request->has_scale())
+        stream->set_scale(request->scale());
+
+    done->Run();
 }
