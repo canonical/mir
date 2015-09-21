@@ -27,8 +27,8 @@ namespace mc = mir::cookie;
 
 mi::DefaultEventBuilder::DefaultEventBuilder(MirInputDeviceId device_id,
                                              std::shared_ptr<mc::CookieFactory> const& c_factory)
-    : device_id(device_id)
-    , cookie_factory(c_factory)
+    : device_id(device_id),
+      cookie_factory(c_factory)
 {
 }
 
