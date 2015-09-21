@@ -180,3 +180,25 @@ bool mir_buffer_stream_is_valid(MirBufferStream* opaque_stream)
     auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(opaque_stream);
     return buffer_stream->valid();
 }
+
+MirWaitHandle* mir_buffer_stream_set_scale(MirBufferStream* opaque_stream, float scale)
+try
+{
+    auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(opaque_stream);
+    if (!buffer_stream)
+        return nullptr;
+
+    return buffer_stream->set_scale(scale);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
+void mir_buffer_stream_set_scale_sync(MirBufferStream* opaque_stream, float scale)
+{
+    auto wh = mir_buffer_stream_set_scale(opaque_stream, scale);
+    if (wh)
+        wh->wait_for_all();
+}

@@ -36,6 +36,8 @@ public:
     {
         ON_CALL(*this, buffers_ready_for_compositor(testing::_))
             .WillByDefault(testing::Return(1));
+        ON_CALL(*this, properties())
+            .WillByDefault(testing::Return(graphics::BufferProperties()));
     }
 
     MOCK_METHOD1(client_acquire,     void(std::function<void(graphics::Buffer*)>));
