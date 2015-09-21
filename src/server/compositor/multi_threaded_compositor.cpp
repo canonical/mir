@@ -82,13 +82,15 @@ public:
 
         mir::set_thread_name("Mir/Comp");
 
-        auto const comp_id = this;
-        std::vector<std::tuple<mg::DisplayBuffer*, std::unique_ptr<mc::DisplayBufferCompositor>>> compositors;
+        int comp_count = 0;
+        std::vector<std::tuple<mg::DisplayBuffer*, std::unique_ptr<mc::DisplayBufferCompositor>, void *>> compositors;
         group.for_each_display_buffer(
-        [this, &compositors, &comp_id](mg::DisplayBuffer& buffer)
+        [this, &compositors, &comp_count](mg::DisplayBuffer& buffer)
         {
+            auto const comp_id = this + comp_count;
             compositors.emplace_back(
-                std::make_tuple(&buffer, compositor_factory->create_compositor_for(buffer)));
+                std::make_tuple(&buffer, compositor_factory->create_compositor_for(buffer), comp_id));
+            comp_count++;
 
             const auto& r = buffer.view_area();
             report->added_display(r.size.width.as_int(), r.size.height.as_int(),
@@ -103,8 +105,15 @@ public:
                 { display_listener->remove_display(buffer.view_area()); });});
 
         auto compositor_registration = mir::raii::paired_calls(
-            [this,&comp_id]{scene->register_compositor(comp_id);},
-            [this,&comp_id]{scene->unregister_compositor(comp_id);});
+            [this,&compositors]
+            {
+                for (auto& compositor : compositors)
+                    scene->register_compositor(std::get<2>(compositor));
+            },
+            [this,&compositors]{
+                for (auto& compositor : compositors)
+                    scene->unregister_compositor(std::get<2>(compositor));
+            });
 
         started.set_value();
 
@@ -131,8 +140,10 @@ public:
                 lock.unlock();
 
                 for (auto& compositor : compositors)
+                {
+                    auto const comp_id = std::get<2>(compositor);
                     std::get<1>(compositor)->composite(scene->scene_elements_for(comp_id));
-
+                }
                 group.post();
 
                 /*
@@ -154,7 +165,15 @@ public:
                  * important to re-count number of frames pending, separately
                  * to the initial scene_elements_for()...
                  */
-                int pending = scene->frames_pending(comp_id);
+                int pending = 0;
+                for (auto& compositor : compositors)
+                {
+                    auto const comp_id = std::get<2>(compositor);
+                    int pend = scene->frames_pending(comp_id);
+                    if (pend > pending)
+                        pending = pend;
+                }
+
                 if (pending > frames_scheduled)
                     frames_scheduled = pending;
             }
