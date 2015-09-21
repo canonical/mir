@@ -40,7 +40,7 @@ mc::Stream::Stream(std::unique_ptr<frontend::ClientBuffers> map, geom::Size size
     schedule(std::make_shared<mc::QueueingSchedule>()),
     buffers(std::move(map)),
     arbiter(std::make_shared<mc::MultiMonitorArbiter>(
-        mc::PresentationGuarantee::all_frames_on_fastest_monitor, buffers, schedule)),
+        mc::MultiMonitorMode::multi_monitor_sync, buffers, schedule)),
     size(size),
     pf(pf),
     first_frame_posted(false)

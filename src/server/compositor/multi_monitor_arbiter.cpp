@@ -30,10 +30,10 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 
 mc::MultiMonitorArbiter::MultiMonitorArbiter(
-    PresentationGuarantee guarantee,
+    MultiMonitorMode mode,
     std::shared_ptr<frontend::ClientBuffers> const& map,
     std::shared_ptr<Schedule> const& schedule) :
-    guarantee(guarantee),
+    mode(mode),
     map(map),
     schedule(schedule)
 {
@@ -56,7 +56,7 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
 
     auto& last_entry = onscreen_buffers.front();
     last_entry.use_count++;
-    if (guarantee == mc::PresentationGuarantee::all_frames_on_fastest_monitor)
+    if (mode == mc::MultiMonitorMode::multi_monitor_sync)
         clean_onscreen_buffers(lk);
     return last_entry.buffer;
 }
@@ -67,7 +67,7 @@ void mc::MultiMonitorArbiter::compositor_release(std::shared_ptr<mg::Buffer> con
 
     decrease_refcount_for(buffer->id(), lk);
 
-    if (guarantee == mc::PresentationGuarantee::frames_on_any_monitor)
+    if (mode == mc::MultiMonitorMode::single_monitor_fast)
         clean_onscreen_buffers(lk);
 }
 
@@ -128,10 +128,10 @@ void mc::MultiMonitorArbiter::set_schedule(std::shared_ptr<Schedule> const& new_
     schedule = new_schedule;
 }
 
-void mc::MultiMonitorArbiter::set_guarantee(PresentationGuarantee new_guarantee)
+void mc::MultiMonitorArbiter::set_mode(MultiMonitorMode new_mode)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-    guarantee = new_guarantee;
+    mode = new_mode;
 }
 
 bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
