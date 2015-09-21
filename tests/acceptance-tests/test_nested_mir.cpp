@@ -392,7 +392,7 @@ TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
 }
 
 // lp:1491937
-TEST_F(NestedServer, display_configuration_changes_are_visible_to_client)
+TEST_F(NestedServer, DISABLED_display_configuration_changes_are_visible_to_client)
 {
     NestedMirRunner nested_mir{new_connection()};
 
