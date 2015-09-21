@@ -54,4 +54,5 @@ override_dh_install:
 # Delete the symlink so that --fail-missing doesn't think we've missed it
 # accidentally.
 	-rm debian/tmp/usr/lib/*/libmirprotobuf.so
-	dh_install --fail-missing
+	dh_install -p libmirplatform-dev -Xmesa --fail-missing
+	dh_install --remaining-packages --fail-missing

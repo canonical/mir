@@ -48,26 +48,6 @@ namespace mir
 namespace compositor
 {
 
-class CurrentRenderingTarget
-{
-public:
-    CurrentRenderingTarget() = default;
-    void ensure_current(mg::DisplayBuffer* buffer)
-    {
-        if ((buffer) && (buffer != current_buffer))
-            buffer->make_current();
-        current_buffer = buffer;
-    }
-
-    ~CurrentRenderingTarget()
-    {
-        if (current_buffer) current_buffer->release_current();
-    }
-
-private:
-    mg::DisplayBuffer* current_buffer{nullptr};
-};
-
 class CompositingFunctor
 {
 public:
@@ -102,13 +82,11 @@ public:
 
         mir::set_thread_name("Mir/Comp");
 
-        CurrentRenderingTarget target;
         auto const comp_id = this;
         std::vector<std::tuple<mg::DisplayBuffer*, std::unique_ptr<mc::DisplayBufferCompositor>>> compositors;
         group.for_each_display_buffer(
-        [this, &compositors, &comp_id, &target](mg::DisplayBuffer& buffer)
+        [this, &compositors, &comp_id](mg::DisplayBuffer& buffer)
         {
-            target.ensure_current(&buffer);
             compositors.emplace_back(
                 std::make_tuple(&buffer, compositor_factory->create_compositor_for(buffer)));
 
@@ -153,10 +131,8 @@ public:
                 lock.unlock();
 
                 for (auto& compositor : compositors)
-                {
-                    target.ensure_current(std::get<0>(compositor));
                     std::get<1>(compositor)->composite(scene->scene_elements_for(comp_id));
-                }
+
                 group.post();
 
                 /*

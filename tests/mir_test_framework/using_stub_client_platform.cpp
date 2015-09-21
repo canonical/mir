@@ -17,6 +17,7 @@
  */
 
 #include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test_framework/using_client_platform.h"
 #include "mir_toolkit/mir_client_library.h"
 
 namespace mtf = mir_test_framework;
@@ -40,4 +41,16 @@ void mtf::StubMirConnectionAPI::release(MirConnection* connection)
 mcl::ConfigurationFactory mtf::StubMirConnectionAPI::configuration_factory()
 {
     return factory;
+}
+
+class mtf::UsingStubClientPlatform::Impl :
+    public UsingClientPlatform<StubConnectionConfiguration> {};
+
+mtf::UsingStubClientPlatform::UsingStubClientPlatform() :
+    impl{std::make_unique<Impl>()}
+{
+}
+
+mtf::UsingStubClientPlatform::~UsingStubClientPlatform()
+{
 }

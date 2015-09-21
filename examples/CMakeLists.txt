@@ -3,6 +3,7 @@ mir_add_wrapped_executable(mir_demo_standalone_render_surfaces
   buffer_render_target.cpp
   image_renderer.cpp
 )
+
 target_link_libraries(mir_demo_standalone_render_surfaces
   mirserver
   exampleserverconfig
@@ -168,6 +169,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/platform
+  ${PROJECT_SOURCE_DIR}/include/renderers/gl
   ${GLESv2_INCLUDE_DIRS}
 )
 

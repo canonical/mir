@@ -494,6 +494,11 @@ void mir_surface_spec_set_input_shape(MirSurfaceSpec* spec,
                                       MirRectangle const *rectangles,
                                       size_t n_rects);
 
+void mir_surface_spec_set_event_handler(
+    MirSurfaceSpec* spec,
+    mir_surface_event_callback callback,
+    void* context);
+
 /**
  * Set the event handler to be called when events arrive for a surface.
  *   \warning event_handler could be called from another thread. You must do

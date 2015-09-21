@@ -52,8 +52,6 @@ public:
 
     virtual void session_disconnect_called(std::string const& app_name) = 0;
 
-    virtual void session_drm_auth_magic_called(std::string const& app_name) = 0;
-
     virtual void session_configure_surface_called(std::string const& app_name) = 0;
 
     virtual void session_configure_surface_cursor_called(std::string const& app_name) = 0;

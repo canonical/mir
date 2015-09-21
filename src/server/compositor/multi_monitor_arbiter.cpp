@@ -139,9 +139,7 @@ void mc::MultiMonitorArbiter::set_guarantee(PresentationGuarantee new_guarantee)
 
 bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
 {
-    printf("ANTHYNIG %i\n", schedule->anything_scheduled());
-    if (schedule->anything_scheduled() ||
-       ((current_buffer_users.find(id) == current_buffer_users.end()) && !onscreen_buffers.empty()))
-    return true;
-    return false;
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    return schedule->anything_scheduled() ||
+       ((current_buffer_users.find(id) == current_buffer_users.end()) && !onscreen_buffers.empty());
 }

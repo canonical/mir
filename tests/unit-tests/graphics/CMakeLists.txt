@@ -11,14 +11,9 @@ list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_program_factory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_platform_prober.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_software_cursor.cpp
-)
-
-if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "android")
-  list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
-  )
-endif()
+)
 
 add_subdirectory(nested/)
 add_subdirectory(offscreen/)

@@ -24,15 +24,18 @@
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/platform_factory.h"
-#ifdef MESA_KMS
+#if defined(MESA_KMS) || defined(MESA_X11)
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir_test_framework/udev_environment.h"
-#else
+#elif ANDROID
 #include "mir/test/doubles/mock_android_hw.h"
 #endif
-#include "mir/logging/dumb_console_logger.h"
+#ifdef MESA_X11
+#include "mir/test/doubles/mock_x11.h"
+#endif
 
+#include "mir/logging/dumb_console_logger.h"
 
 #include <gtest/gtest.h>
 
@@ -41,7 +44,7 @@ namespace ml = mir::logging;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mo = mir::options;
-#ifdef MESA_KMS
+#if defined(MESA_KMS) || defined(MESA_X11)
 namespace mtf = mir_test_framework;
 #endif
 
@@ -52,7 +55,7 @@ public:
     {
         using namespace testing;
 
-#ifdef MESA_KMS
+#if defined(MESA_KMS) || defined(MESA_X11)
         ON_CALL(mock_gbm, gbm_bo_get_width(_))
         .WillByDefault(Return(320));
 
@@ -64,7 +67,11 @@ public:
         ON_CALL(mock_gbm, gbm_bo_get_format(_))
         .WillByDefault(Return(GBM_FORMAT_ARGB8888));
 
+#ifdef MESA_KMS
         fake_devices.add_standard_device("standard-drm-devices");
+#else
+        fake_devices.add_standard_device("standard-drm-render-nodes");
+#endif
 #endif
     }
 
@@ -79,10 +86,13 @@ public:
     ::testing::NiceMock<mtd::MockGL> mock_gl;
 #ifdef ANDROID
     ::testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
-#elif MESA_KMS
+#else
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     mtf::UdevEnvironment fake_devices;
+#endif
+#ifdef MESA_X11
+    ::testing::NiceMock<mtd::MockX11> mock_x11;
 #endif
 };
 
@@ -96,7 +106,6 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
 
         EXPECT_TRUE(allocator.get());
     );
-
 }
 
 TEST_F(GraphicsPlatform, buffer_creation)
@@ -117,8 +126,7 @@ TEST_F(GraphicsPlatform, buffer_creation)
     ASSERT_TRUE(buffer.get() != NULL);
 
     EXPECT_EQ(buffer->size(), size);
-    EXPECT_EQ(buffer->pixel_format(), pf );
-
+    EXPECT_EQ(buffer->pixel_format(), pf);
 }
 
 TEST_F(GraphicsPlatform, connection_ipc_package)

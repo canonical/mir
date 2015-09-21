@@ -143,7 +143,7 @@ MIR_COMMON_5 {
  local: *;
 };
 
-MIR_COMMON_5.1 {
+MIR_COMMON_5.1 {  # New functions in Mir 0.16
  global:
     extern "C++" {
       android::InputChannel::InputChannel*;
@@ -193,6 +193,12 @@ MIR_COMMON_5.1 {
       toMillisecondTimeoutDelay*;
       typeinfo?for?android::RefBase;
       vtable?for?android::IntSet;
+      mir::dispatch::ReadableFd::ReadableFd*;
+      mir::dispatch::ReadableFd::?ReadableFd*;
+      mir::dispatch::ReadableFd::watch_fd*;
+      mir::dispatch::ReadableFd::dispatch*;
+      mir::dispatch::ReadableFd::relevant_events*;
+      mir::logger::Logger::log*;
     };
   local: *;
 } MIR_COMMON_5;

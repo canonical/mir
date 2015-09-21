@@ -348,6 +348,7 @@ mcl::BufferStream::BufferStream(
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(protobuf_bs)},
       swap_interval_(1),
+      scale_(1.0f),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
       ideal_buffer_size(ideal_size)
@@ -545,17 +546,21 @@ void mcl::BufferStream::request_and_wait_for_next_buffer()
     next_buffer([](){})->wait_for_all();
 }
 
-void mcl::BufferStream::on_configured()
+void mcl::BufferStream::on_swap_interval_set(int interval)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    configure_wait_handle.result_received();
+    swap_interval_ = interval;
+    interval_wait_handle.result_received();
 }
 
-// TODO: It's a little strange that we use SurfaceAttrib here for the swap interval
-// we take advantage of the confusion between buffer stream ids and surface ids...
-// this should be resolved in the second phase of buffer stream which introduces the
-// new server support.
-void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int value)
+void mcl::BufferStream::on_scale_set(float scale)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    scale_ = scale;
+    scale_wait_handle.result_received();
+}
+
+void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     if (attrib != mir_surface_attrib_swapinterval)
@@ -563,26 +568,11 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
         BOOST_THROW_EXCEPTION(std::logic_error("Attempt to configure surface attribute " + std::to_string(attrib) +
         " on BufferStream but only mir_surface_attrib_swapinterval is supported")); 
     }
-    if (mode != mcl::BufferStreamMode::Producer)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
-    }
 
-    mp::SurfaceSetting setting;
-    mp::SurfaceSetting result;
-    setting.mutable_surfaceid()->set_value(protobuf_bs->id().value());
-    setting.set_attrib(attrib);
-    setting.set_ivalue(value);
+    auto i = interval;
     lock.unlock();
-
-    configure_wait_handle.expect_result();
-    display_server.configure_surface(&setting, &result,
-        google::protobuf::NewCallback(this, &mcl::BufferStream::on_configured));
-
-    configure_wait_handle.wait_for_all();
-
-    lock.lock();
-    swap_interval_ = result.ivalue();
+    set_swap_interval(i);
+    interval_wait_handle.wait_for_all();
 }
 
 uint32_t mcl::BufferStream::get_current_buffer_id()
@@ -597,9 +587,20 @@ int mcl::BufferStream::swap_interval() const
     return swap_interval_;
 }
 
-void mcl::BufferStream::set_swap_interval(int interval)
+MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
 {
-    request_and_wait_for_configure(mir_surface_attrib_swapinterval, interval);
+    if (mode != mcl::BufferStreamMode::Producer)
+        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
+
+    mp::StreamConfiguration configuration;
+    configuration.mutable_id()->set_value(protobuf_bs->id().value());
+    configuration.set_swapinterval(interval);
+
+    interval_wait_handle.expect_result();
+    display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
+        google::protobuf::NewCallback(this, &mcl::BufferStream::on_swap_interval_set, interval));
+
+    return &interval_wait_handle;
 }
 
 MirNativeBuffer* mcl::BufferStream::get_current_buffer_package()
@@ -662,4 +663,16 @@ void mcl::BufferStream::buffer_unavailable()
 void mcl::BufferStream::set_size(geom::Size sz)
 {
     buffer_depository->set_size(sz);
+}
+
+MirWaitHandle* mcl::BufferStream::set_scale(float scale)
+{
+    mp::StreamConfiguration configuration;
+    configuration.mutable_id()->set_value(protobuf_bs->id().value());
+    configuration.set_scale(scale);
+    scale_wait_handle.expect_result();
+
+    display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
+        google::protobuf::NewCallback(this, &mcl::BufferStream::on_scale_set, scale));
+    return &scale_wait_handle;
 }

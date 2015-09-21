@@ -64,6 +64,8 @@ public:
     void register_observer(std::shared_ptr<Observer> const& observer) override;
     void unregister_observer(std::shared_ptr<Observer> const& observer) override;
 private:
+    void handle_ping_cycle();
+
     struct ANRContext;
 
     class ANRObservers : public Observer, private BasicObservers<Observer>
@@ -80,6 +82,7 @@ private:
     std::unordered_map<Session const*, std::unique_ptr<ANRContext>> sessions;
     std::vector<Session const*> unresponsive_sessions_temporary;
 
+    std::chrono::milliseconds const period;
     std::unique_ptr<time::Alarm> const alarm;
 };
 }

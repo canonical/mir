@@ -174,3 +174,7 @@ void mc::Stream::with_buffer(mg::BufferID id, std::function<void(mg::Buffer&)> c
     auto buffer = (*buffers)[id];
     fn(*buffer);
 }
+
+void mc::Stream::set_scale(float)
+{
+}

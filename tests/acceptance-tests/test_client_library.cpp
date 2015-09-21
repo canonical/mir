@@ -25,8 +25,6 @@
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/validity_matchers.h"
 
-#include "src/include/client/mir/client_buffer.h"
-
 #include "mir_protobuf.pb.h"
 
 #ifdef ANDROID
@@ -52,7 +50,6 @@
 
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
-namespace mcl = mir::client;
 namespace mtf = mir_test_framework;
 namespace
 {
@@ -427,7 +424,7 @@ TEST_F(ClientLibrary, receives_surface_dpi_value)
     mir_connection_release(connection);
 }
 
-#ifdef MESA_KMS
+#if defined(MESA_KMS) || defined(MESA_X11)
 TEST_F(ClientLibrary, surface_scanout_flag_toggles)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -486,7 +483,7 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
 }
 #endif
 
-#if defined(ANDROID) || defined(MESA_X11)
+#ifdef ANDROID
 // Mir's Android test infrastructure isn't quite ready for this yet.
 TEST_F(ClientLibrary, DISABLED_gets_buffer_dimensions)
 #else
@@ -711,7 +708,7 @@ TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
  * trying to marshall stub buffers causes crashes.
  */
 
-#if defined(ANDROID) || defined(MESA_X11)
+#ifdef ANDROID
 TEST_F(ClientLibrary, DISABLED_create_simple_normal_surface_from_spec)
 #else
 TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
@@ -742,7 +739,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
     mir_connection_release(connection);
 }
 
-#if defined(ANDROID) || defined(MESA_X11)
+#ifdef ANDROID
 TEST_F(ClientLibrary, DISABLED_create_simple_normal_surface_from_spec_async)
 #else
 TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
@@ -773,10 +770,10 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
     mir_connection_release(connection);
 }
 
-#ifndef ANDROID
-TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
-#else
+#ifdef ANDROID
 TEST_F(ClientLibrary, DISABLED_can_specify_all_normal_surface_parameters_from_spec)
+#else
+TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
 #endif
 {
     using namespace testing;
@@ -809,7 +806,7 @@ TEST_F(ClientLibrary, DISABLED_can_specify_all_normal_surface_parameters_from_sp
     mir_connection_release(connection);
 }
 
-#if defined(ANDROID) || defined(MESA_X11)
+#ifdef ANDROID
 TEST_F(ClientLibrary, DISABLED_set_fullscreen_on_output_makes_fullscreen_surface)
 #else
 TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)

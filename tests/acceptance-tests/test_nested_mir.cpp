@@ -21,6 +21,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_report.h"
+#include "mir/cached_ptr.h"
 #include "mir/main_loop.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
@@ -78,7 +79,6 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
     MOCK_METHOD2(session_start_prompt_session_called, void (std::string const&, pid_t));
     MOCK_METHOD1(session_stop_prompt_session_called, void (std::string const&));
 
-    void session_drm_auth_magic_called(const std::string&) override {};
     void session_configure_surface_called(std::string const&) override {};
     void session_configure_surface_cursor_called(std::string const&) override {};
     void session_configure_display_called(std::string const&) override {};
@@ -341,6 +341,7 @@ TEST_F(NestedServer, display_configuration_changes_are_forwarded_to_host)
 
     mt::WaitCondition condition;
 
+    ignore_rebuild_of_egl_context();
     EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
         .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
@@ -384,6 +385,80 @@ TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
         condition.wait_for_at_most_seconds(1);
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
     }
+
+    mir_display_config_destroy(configuration);
+    mir_surface_release_sync(painted_surface);
+    mir_connection_release(connection);
+}
+
+// lp:1491937
+TEST_F(NestedServer, display_configuration_changes_are_visible_to_client)
+{
+    NestedMirRunner nested_mir{new_connection()};
+
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    // Need a painted surface to have focus
+    auto const painted_surface = make_and_paint_surface(connection);
+
+    auto const configuration = mir_connection_create_display_config(connection);
+
+    for (auto new_orientation :
+        {mir_orientation_left, mir_orientation_right, mir_orientation_inverted, mir_orientation_normal,
+         mir_orientation_inverted, mir_orientation_right, mir_orientation_left, mir_orientation_normal})
+    {
+        // Allow for the egl context getting rebuilt as a side-effect each iteration
+        ignore_rebuild_of_egl_context();
+
+        for(auto* output = configuration->outputs; output != configuration->outputs+configuration->num_outputs; ++ output)
+            output->orientation = new_orientation;
+
+        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+
+        auto const new_config = mir_connection_create_display_config(connection);
+        EXPECT_THAT(new_config->outputs->orientation, Eq(configuration->outputs->orientation));
+        mir_display_config_destroy(new_config);
+    }
+
+    mir_display_config_destroy(configuration);
+    mir_surface_release_sync(painted_surface);
+    mir_connection_release(connection);
+}
+
+namespace
+{
+void config_update(MirConnection* /*connection*/, void* context)
+{
+    static_cast<mt::WaitCondition*>(context)->wake_up_everyone();
+}
+}
+
+// lp:1493741
+TEST_F(NestedServer, display_configuration_changes_are_visible_to_client_when_it_becomes_active)
+{
+    NestedMirRunner nested_mir{new_connection()};
+    ignore_rebuild_of_egl_context();
+
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    mt::WaitCondition condition;
+    mir_connection_set_display_config_change_callback(connection, &config_update, &condition);
+
+    auto const configuration = mir_connection_create_display_config(connection);
+
+    for(auto* output = configuration->outputs; output != configuration->outputs+configuration->num_outputs; ++ output)
+        output->orientation = mir_orientation_left;
+
+    mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+
+    // Need a painted surface to have focus
+    auto const painted_surface = make_and_paint_surface(connection);
+
+    condition.wait_for_at_most_seconds(1);
+
+    auto const new_config = mir_connection_create_display_config(connection);
+    EXPECT_THAT(new_config->outputs->orientation, Eq(configuration->outputs->orientation));
+    mir_display_config_destroy(new_config);
 
     mir_display_config_destroy(configuration);
     mir_surface_release_sync(painted_surface);
