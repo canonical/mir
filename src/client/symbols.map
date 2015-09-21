@@ -179,9 +179,6 @@ MIR_CLIENT_9.1 {  # New functions in Mir 0.15
 MIR_CLIENT_9.2 {  # New functions in Mir 0.16
   global:
     mir_surface_spec_set_event_handler;
-    mir_keyboard_event_get_cookie;
-    mir_pointer_event_get_cookie;
-    mir_touch_event_get_cookie;
   local: *;
 } MIR_CLIENT_9.1;
 
@@ -195,6 +192,9 @@ MIR_CLIENT_9v17 {
     mir_blob_release;
     mir_buffer_stream_set_scale;
     mir_buffer_stream_set_scale_sync;
+    mir_keyboard_event_get_cookie;
+    mir_pointer_event_get_cookie;
+    mir_touch_event_get_cookie;
 } MIR_CLIENT_9.2;
 
 MIR_CLIENT_DETAIL_9 {
