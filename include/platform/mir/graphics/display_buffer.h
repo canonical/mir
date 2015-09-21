@@ -32,13 +32,22 @@ namespace graphics
 
 class Buffer;
 
+class NativeDisplayBuffer
+{
+protected:
+    NativeDisplayBuffer() = default;
+    virtual ~NativeDisplayBuffer() = default;
+    NativeDisplayBuffer(NativeDisplayBuffer const&) = delete;
+    NativeDisplayBuffer operator=(NativeDisplayBuffer const&) = delete;
+};
+
 /**
  * Interface to an output framebuffer.
  */
 class DisplayBuffer
 {
 public:
-    virtual ~DisplayBuffer() {}
+    virtual ~DisplayBuffer() = default;
 
     /** The area the DisplayBuffer occupies in the virtual screen space. */
     virtual geometry::Rectangle view_area() const = 0;
@@ -80,6 +89,14 @@ public:
      *  amount of rotation the renderer must do to make things "look right".
      */
     virtual MirOrientation orientation() const = 0;
+
+    /** Returns a pointer to the native display buffer object backing this
+     *  display buffer.
+     *
+     *  The pointer to the native display buffer remains valid as long as the
+     *  display buffer object is valid.
+     */
+    virtual NativeDisplayBuffer* native_display_buffer() = 0;
 
 protected:
     DisplayBuffer() = default;

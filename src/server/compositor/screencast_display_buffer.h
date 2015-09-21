@@ -46,7 +46,8 @@ private:
 };
 }
 
-class ScreencastDisplayBuffer : public graphics::DisplayBuffer
+class ScreencastDisplayBuffer : public graphics::DisplayBuffer,
+                                public graphics::NativeDisplayBuffer
 {
 public:
     ScreencastDisplayBuffer(
@@ -65,6 +66,8 @@ public:
     void gl_swap_buffers() override;
 
     MirOrientation orientation() const override;
+
+    NativeDisplayBuffer* native_display_buffer() override;
 
 private:
     geometry::Rectangle const rect;
