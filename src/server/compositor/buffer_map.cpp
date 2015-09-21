@@ -52,7 +52,6 @@ void mc::BufferMap::remove_buffer(mg::BufferID id)
 
 void mc::BufferMap::send_buffer(mg::BufferID id)
 {
-    std::shared_ptr<mg::Buffer> buffer;
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = buffers.find(id);
     if (it != buffers.end())
