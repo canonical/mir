@@ -36,11 +36,8 @@ class Schedule;
 
 enum class MultiMonitorMode
 {
-    //modes that all frames will be presented on the fastest monitor (highest frequency vsync)
-    //slower monitors will present the latest-available frame, but might not present all frames
-    multi_monitor,
-    //this will present all frames on the only monitor
-    single_monitor
+    multi_monitor_sync,
+    single_monitor_fast
 };
 
 class MultiMonitorArbiter : public BufferAcquisition 

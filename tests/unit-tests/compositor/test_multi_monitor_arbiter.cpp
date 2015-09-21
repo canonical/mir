@@ -87,13 +87,13 @@ struct MultiMonitorArbiterBase : Test
 
 struct MultiMonitorArbiter : MultiMonitorArbiterBase
 {
-    mc::MultiMonitorMode guarantee{mc::MultiMonitorMode::multi_monitor};
+    mc::MultiMonitorMode guarantee{mc::MultiMonitorMode::multi_monitor_sync};
     mc::MultiMonitorArbiter arbiter{guarantee, mt::fake_shared(mock_map), mt::fake_shared(schedule)};
 };
 
 struct MultiMonitorArbiterWithAnyFrameGuarantee : MultiMonitorArbiterBase
 {
-    mc::MultiMonitorMode guarantee{mc::MultiMonitorMode::single_monitor};
+    mc::MultiMonitorMode guarantee{mc::MultiMonitorMode::single_monitor_fast};
     mc::MultiMonitorArbiter arbiter{guarantee, mt::fake_shared(mock_map), mt::fake_shared(schedule)};
 };
 }
