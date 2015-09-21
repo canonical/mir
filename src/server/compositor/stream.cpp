@@ -86,7 +86,7 @@ void mc::Stream::remove_observer(std::weak_ptr<ms::SurfaceObserver> const& obser
 
 std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const* id)
 {
-    std::lock_guard<decltype(mutex)> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex); 
     return std::make_shared<mc::TemporaryCompositorBuffer>(arbiter, id);
 }
 
