@@ -20,7 +20,13 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/buffer_sink.h"
 #include "src/client/buffer_vault.h"
+#include "mir/frontend/client_buffers.h"
+#include "mir/frontend/event_sink.h"
+#include "mir/frontend/buffer_sink.h"
+#include "src/client/buffer_vault.h"
 #include "src/client/client_buffer_depository.h"
+#include "src/server/compositor/stream.h"
+#include "src/server/compositor/buffer_map.h"
 #include "src/server/compositor/buffer_queue.h"
 #include "src/server/compositor/stream.h"
 #include "src/server/compositor/buffer_map.h"
@@ -29,6 +35,7 @@
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include "mir/test/doubles/mock_frame_dropping_policy_factory.h"
+#include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/mock_client_buffer_factory.h"
 #include "mir/test/fake_shared.h"
 #include "mir_protobuf.pb.h"
@@ -46,6 +53,13 @@ using namespace testing;
 
 namespace
 {
+
+enum class TestType
+{
+    ExchangeSemantics,
+    SubmitSemantics
+};
+
 enum class Access
 {
     blocked,
@@ -397,6 +411,7 @@ struct ScheduledProducer : ProducerSystem
         });
         ipc->on_resize_event([this](geom::Size sz)
         {
+            printf("RESIZE event. vault sized\n");
             vault.set_size(sz);
         });
     }
@@ -489,7 +504,7 @@ void run_system(std::vector<ScheduleEntry>& schedule)
     }
 }
 
-inline void repeat_system_until(
+void repeat_system_until(
     std::vector<ScheduleEntry>& schedule,
     std::function<bool()> const& predicate)
 {
@@ -512,7 +527,7 @@ inline void repeat_system_until(
     }
 }
 
-inline size_t unique_ids_in(std::vector<BufferEntry> log)
+size_t unique_ids_in(std::vector<BufferEntry> log)
 {
     std::sort(log.begin(), log.end(),
         [](BufferEntry const& a, BufferEntry const& b) { return a.id < b.id; });
@@ -522,11 +537,11 @@ inline size_t unique_ids_in(std::vector<BufferEntry> log)
 }
 
 //test infrastructure
-struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<bool, int>>
+struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<int, TestType>>
 {
     BufferScheduling()
     {
-        if (std::get<0>(GetParam()))
+        if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
         {
             producer = std::make_unique<BufferQueueProducer>(stream);
             consumer = std::make_unique<BufferQueueConsumer>(stream);
@@ -560,7 +575,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
             consumer = std::make_unique<ScheduledConsumer>(stream);
             second_consumer = std::make_unique<ScheduledConsumer>(stream);
             third_consumer = std::make_unique<ScheduledConsumer>(stream);
-            producer = std::make_unique<ScheduledProducer>(ipc, std::get<1>(GetParam()));
+            producer = std::make_unique<ScheduledProducer>(ipc, std::get<0>(GetParam()));
 
             istream = stream.get();
         }
@@ -570,7 +585,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
 
     void resize(geom::Size sz)
     {
-        if (std::get<0>(GetParam()))
+        if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
         {
             istream->resize(sz);
         }
@@ -583,7 +598,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
 
     void set_scaling_delay(int delay)
     {
-        if (std::get<0>(GetParam()))
+        if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
             queue.set_scaling_delay(delay);
     }
 
@@ -601,7 +616,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
     mtd::StubBufferAllocator server_buffer_factory;
     mtd::StubFrameDroppingPolicyFactory stub_policy;
     mg::BufferProperties properties{geom::Size{3,3}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
-    int nbuffers = std::get<1>(GetParam());
+    int nbuffers = std::get<0>(GetParam());
 
     mcl::ClientBufferDepository depository{mt::fake_shared(client_buffer_factory), nbuffers};
     mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory), properties, stub_policy};
@@ -758,11 +773,12 @@ TEST_P(WithTwoOrMoreBuffers, compositor_doesnt_starve_from_slow_client)
     run_system(schedule);
 
     auto consumption_log = consumer->consumption_log();
+
     ASSERT_THAT(consumption_log, SizeIs(7));
-    //age is messed up, affects counting
-//    EXPECT_THAT(std::count(consumption_log.begin(), consumption_log.end(), consumption_log[0]), Eq(3));
-//    EXPECT_THAT(std::count(consumption_log.begin(), consumption_log.end(), consumption_log[3]), Eq(2));
-//    EXPECT_THAT(std::count(consumption_log.begin(), consumption_log.end(), consumption_log[5]), Eq(2));
+    EXPECT_THAT(consumption_log[1], Eq(consumption_log[0]));
+    EXPECT_THAT(consumption_log[2], Eq(consumption_log[0]));
+    EXPECT_THAT(consumption_log[4], Eq(consumption_log[3]));
+    EXPECT_THAT(consumption_log[6], Eq(consumption_log[5]));
 }
 
 TEST_P(WithTwoOrMoreBuffers, multiple_consumers_are_in_sync)
@@ -837,7 +853,7 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_clients_get_all_buffers_and_dont_bloc
         [](BufferEntry const& a, BufferEntry const& b) { return a.id == b.id; });
     production_log.erase(last, production_log.end());
 
-    if (!std::get<0>(GetParam()) && (std::get<1>(GetParam()) == 4))
+    if (!(std::get<1>(GetParam()) == TestType::ExchangeSemantics) && (std::get<0>(GetParam()) == 4))
         EXPECT_THAT(production_log.size(), Ge(nbuffers - 1)); //Ge is to accommodate overallocation
     else
         EXPECT_THAT(production_log.size(), Ge(nbuffers)); //Ge is to accommodate overallocation
@@ -860,30 +876,25 @@ TEST_P(WithTwoOrMoreBuffers, nonframedropping_client_throttles_to_compositor_rat
 
 TEST_P(WithAnyNumberOfBuffers, resize_affects_client_acquires_immediately)
 {
-    if (nbuffers == 2)
-        return;
-
-//    unsigned int const sizes_to_test{4};
     unsigned int const sizes_to_test{1};
+//    unsigned int const sizes_to_test{4};
     geom::Size new_size = properties.size;
     for(auto i = 0u; i < sizes_to_test; i++)
     {
+        producer->produce();
+        producer->produce();
+
         new_size = new_size * 2;
 
-        for(auto i = 0; i < nbuffers - 1; i++)
-            producer->produce();
-
-        consumer->consume();
-//        std::vector<ScheduleEntry> schedule = {{1_t,  {producer.get()}, {consumer.get()}}};
-//        run_system(schedule);
-
-
+    printf("SIZE SET TO %i %i\n", new_size.width.as_int(), new_size.height.as_int());
         resize(new_size);
 
         consumer->consume();
-        producer->produce();
-//        consumer.get();
-//        run_system(schedule);
+        consumer->consume();
+
+        std::vector<ScheduleEntry> schedule = {{1_t,  {producer.get()}, {consumer.get()}}};
+        run_system(schedule);
+
         EXPECT_THAT(producer->last_size(), Eq(new_size));
     }
 }
@@ -968,7 +979,6 @@ TEST_P(WithTwoBuffers, client_is_not_blocked_prematurely)
     producer->produce();
     auto b = queue.compositor_acquire(this);
 
-//functional difference
 //    ASSERT_NE(a, b);
 
     queue.compositor_release(a);
@@ -1519,23 +1529,23 @@ TEST_P(WithAnyNumberOfBuffers, can_snapshot_repeatedly_without_blocking)
 }
 
 int const max_buffers_to_test{5};
-INSTANTIATE_TEST_CASE_P(
+ INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithAnyNumberOfBuffers,
-    Combine(Bool(), Range(2, max_buffers_to_test)));
-INSTANTIATE_TEST_CASE_P(
+    Combine(Range(2, max_buffers_to_test), Values(TestType::ExchangeSemantics, TestType::SubmitSemantics)));
+ INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoOrMoreBuffers,
-    Combine(Bool(), Range(2, max_buffers_to_test)));
+    Combine(Range(2, max_buffers_to_test), Values(TestType::ExchangeSemantics, TestType::SubmitSemantics)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeOrMoreBuffers,
-    Combine(Bool(), Range(3, max_buffers_to_test)));
+    Combine(Range(3, max_buffers_to_test), Values(TestType::ExchangeSemantics, TestType::SubmitSemantics)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoBuffers,
-    Combine(Bool(), Values(2)));
+    Combine(Values(2), Values(TestType::ExchangeSemantics, TestType::SubmitSemantics)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeBuffers,
-    Combine(Bool(), Values(3)));
+    Combine(Values(3), Values(TestType::ExchangeSemantics, TestType::SubmitSemantics)));
