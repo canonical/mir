@@ -131,6 +131,10 @@ public:
         mir::protobuf::PingEvent const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) = 0;
+    virtual void configure_buffer_stream(
+        mir::protobuf::StreamConfiguration const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) = 0;
 
 protected:
     DisplayServer() = default;

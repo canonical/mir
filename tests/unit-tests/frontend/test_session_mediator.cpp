@@ -1113,3 +1113,24 @@ TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_bstream_cr
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
 }
+
+TEST_F(SessionMediator, configures_swap_intervals_on_streams)
+{
+    using namespace testing;
+    mf::SurfaceId surf_id{0};
+    mp::StreamConfiguration request;
+    mp::Void response;
+
+    auto interval = 0u;
+    mtd::StubBuffer buffer;
+
+    auto stream = stubbed_session->mock_primary_stream_at(surf_id);
+    EXPECT_CALL(*stream, allow_framedropping(true));
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
+
+    request.mutable_id()->set_value(surf_id.as_value());
+    request.set_swapinterval(interval);
+    mediator.configure_buffer_stream(&request, &response, null_callback.get());
+}

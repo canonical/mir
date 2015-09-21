@@ -21,6 +21,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_report.h"
+#include "mir/cached_ptr.h"
 #include "mir/main_loop.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"

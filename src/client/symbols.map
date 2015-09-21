@@ -182,6 +182,16 @@ MIR_CLIENT_9.2 {  # New functions in Mir 0.16
   local: *;
 } MIR_CLIENT_9.1;
 
+MIR_CLIENT_9v17 {
+    mir_blob_from_display_configuration;
+    mir_blob_size;
+    mir_blob_data;
+    mir_blob_release;
+    mir_blob_onto_buffer;
+    mir_blob_to_display_configuration;
+    mir_blob_release;
+} MIR_CLIENT_9.2;
+
 MIR_CLIENT_DETAIL_9 {
   global:
     extern "C++" { 

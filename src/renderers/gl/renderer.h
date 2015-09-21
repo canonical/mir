@@ -34,17 +34,34 @@
 
 namespace mir
 {
-namespace graphics { class GLTextureCache; }
+
+namespace graphics
+{
+class GLTextureCache;
+class DisplayBuffer;
+}
 
 namespace renderer
 {
 namespace gl
 {
 
+class RenderingTarget
+{
+public:
+    RenderingTarget(graphics::DisplayBuffer* buffer);
+    ~RenderingTarget();
+
+    void ensure_current();
+
+private:
+    graphics::DisplayBuffer* const buffer;
+};
+
 class Renderer : public compositor::Renderer
 {
 public:
-    Renderer(geometry::Rectangle const& display_area);
+    Renderer(graphics::DisplayBuffer& display_buffer);
     virtual ~Renderer();
 
     // These are called with a valid GL context:
@@ -54,6 +71,10 @@ public:
 
     // This is called _without_ a GL context:
     void suspend() override;
+
+private:
+    mutable RenderingTarget rendering_target;
+    graphics::DisplayBuffer& display_buffer;
 
 protected:
     /**
