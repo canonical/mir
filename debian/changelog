@@ -87,6 +87,8 @@ mir (0.16.0-0ubuntu1) UNRELEASED; urgency=medium
       . SYSYEM_SUPPORTS_O_TMPFILE - typo (LP: #1483797)
       . sbuild cross compile encounters difficulties with our python dependency
         (LP: #1494317)
+      . touchpad produces mouse events with zeroed relative_x and relative_y axes
+        (LP: #1496814)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 24 Aug 2015 16:38:28 +0800
 
