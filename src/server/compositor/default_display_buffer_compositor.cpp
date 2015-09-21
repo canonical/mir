@@ -82,7 +82,6 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         renderer->set_rotation(display_buffer.orientation());
         renderer->render(renderable_list);
 
-        display_buffer.gl_swap_buffers();
         report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);
 

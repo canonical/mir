@@ -237,3 +237,14 @@ TEST_F(GLRenderer, makes_display_buffer_current_before_rendering)
 
     renderer.render(renderable_list);
 }
+
+TEST_F(GLRenderer, swaps_buffers_after_rendering)
+{
+    mrg::Renderer renderer(mock_display_buffer);
+
+    InSequence seq;
+    EXPECT_CALL(mock_gl, glDrawArrays(_, _, _)).Times(AnyNumber());
+    EXPECT_CALL(mock_display_buffer, gl_swap_buffers());
+
+    renderer.render(renderable_list);
+}
