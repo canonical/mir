@@ -113,6 +113,13 @@ struct MirSurfaceSpec
     mir::optional_value<AspectRatio> max_aspect;
     mir::optional_value<std::vector<MirBufferStreamInfo>> streams;
     mir::optional_value<std::vector<MirRectangle>> input_shape;
+
+    struct EventHandler
+    {
+        mir_surface_event_callback callback;
+        void* context;
+    };
+    mir::optional_value<EventHandler> event_handler;
 };
 
 struct MirPersistentId
@@ -223,6 +230,7 @@ private:
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;
+    bool auto_resize_stream{true};
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

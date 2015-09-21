@@ -1,5 +1,5 @@
 # We need MIRPLATFORM_ABI in both libmirplatform and the platform implementations.
-set(MIRPLATFORM_ABI 9)
+set(MIRPLATFORM_ABI 10)
 
 # We need MIR_CLIENT_PLATFORM_PATH in both libmirclient and the platform
 # implementations
@@ -21,6 +21,7 @@ add_subdirectory(platform/)
 add_subdirectory(server/)
 add_subdirectory(client/)
 add_subdirectory(utils/)
+add_subdirectory(renderers/)
 
 add_executable(wrapper wrapper.c)
 set_property(TARGET wrapper

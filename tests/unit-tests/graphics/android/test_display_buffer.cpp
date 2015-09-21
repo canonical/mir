@@ -313,3 +313,18 @@ TEST_F(DisplayBuffer, reports_position_correctly)
     db.configure(mir_power_mode_on, orientation, offset);
     EXPECT_THAT(db.view_area().top_left, Eq(geom::Point{origin + offset}));
 }
+
+//lp: #1485070. Could alternitvely rotate all the renderables, once rotation is supported
+TEST_F(DisplayBuffer, rejects_lists_if_db_is_rotated)
+{
+    ON_CALL(*mock_display_device, compatible_renderlist(testing::_))
+        .WillByDefault(testing::Return(true));
+    mg::RenderableList const renderlist{
+        std::make_shared<mtd::StubRenderable>(),
+        std::make_shared<mtd::StubRenderable>()};
+
+    db.configure(mir_power_mode_on, mir_orientation_inverted, geom::Displacement{0,0});
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
+    db.configure(mir_power_mode_on, mir_orientation_normal, geom::Displacement{0,0});
+    EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist));
+}

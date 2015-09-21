@@ -19,6 +19,7 @@
 #define MIR_COMPOSITOR_MULTI_MONITOR_ARBITER_H_
 
 #include "mir/compositor/compositor_id.h"
+#include "buffer_bundle.h"
 #include <memory>
 #include <mutex>
 #include <deque>
@@ -31,16 +32,19 @@ namespace frontend { class ClientBuffers; }
 namespace compositor
 {
 class Schedule;
-class MultiMonitorArbiter
+class MultiMonitorArbiter : public BufferAcquisition 
 {
 public:
     MultiMonitorArbiter(
         std::shared_ptr<frontend::ClientBuffers> const& map,
         std::shared_ptr<Schedule> const& schedule);
 
-    std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id);
-    void compositor_release(std::shared_ptr<graphics::Buffer> const&);
+    std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id) override;
+    void compositor_release(std::shared_ptr<graphics::Buffer> const&) override;
+    std::shared_ptr<graphics::Buffer> snapshot_acquire() override;
+    void snapshot_release(std::shared_ptr<graphics::Buffer> const&) override;
     void set_schedule(std::shared_ptr<Schedule> const& schedule);
+    bool buffer_ready_for(compositor::CompositorID id);
 
 private:
     void clean_onscreen_buffers(std::lock_guard<std::mutex> const&);

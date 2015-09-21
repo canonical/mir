@@ -47,6 +47,9 @@ public:
     MirPixelFormat pixel_format() const override;
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer) override;
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) override;
+    graphics::BufferID allocate_buffer(graphics::BufferProperties const&) override;
+    void remove_buffer(graphics::BufferID) override;
+    void with_buffer(graphics::BufferID id, std::function<void(graphics::Buffer&)> const& fn) override;
 
     //from mc::BufferStream
     void acquire_client_buffer(std::function<void(graphics::Buffer* buffer)> complete);
@@ -62,6 +65,7 @@ public:
     int buffers_ready_for_compositor(void const* user_id) const override;
     void drop_old_buffers() override;
     bool has_submitted_buffer() const override;
+    void set_scale(float scale) override;
 
 protected:
     BufferStreamSurfaces(const BufferStreamSurfaces&) = delete;
@@ -72,6 +76,8 @@ private:
     std::shared_ptr<BufferBundle> const buffer_bundle;
     scene::SurfaceObservers observers;
     bool first_frame_posted;
+    geometry::Size logical_size; //physical size is maintained in the buffer_bundle
+    float scale;
 };
 
 }

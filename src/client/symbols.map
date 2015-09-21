@@ -176,6 +176,12 @@ MIR_CLIENT_9.1 {  # New functions in Mir 0.15
   local: *;
 } MIR_CLIENT_9;
 
+MIR_CLIENT_9.2 {  # New functions in Mir 0.16
+  global:
+    mir_surface_spec_set_event_handler;
+  local: *;
+} MIR_CLIENT_9.1;
+
 MIR_CLIENT_DETAIL_9 {
   global:
     extern "C++" { 

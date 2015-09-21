@@ -19,9 +19,7 @@
 
 #include <utils/RefBase.h>
 
-#include <utils/CallStack.h>
 #include <std/Log.h>
-#include <std/TextOutput.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -608,20 +606,5 @@ void RefBase::moveReferences(void* dst, void const* src, size_t n,
     }
 #endif
 }
-
-// ---------------------------------------------------------------------------
-
-TextOutput& printStrongPointer(TextOutput& to, const void* val)
-{
-    to << "sp<>(" << val << ")";
-    return to;
-}
-
-TextOutput& printWeakPointer(TextOutput& to, const void* val)
-{
-    to << "wp<>(" << val << ")";
-    return to;
-}
-
 
 }; // namespace android

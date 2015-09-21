@@ -163,7 +163,8 @@ mga::Display::Display(
             gl_program_factory,
             gl_context,
             geom::Displacement{0,0},
-            overlay_option))
+            overlay_option)),
+    overlay_option(overlay_option)
 {
     //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
     set_powermode_all_displays(*hwc_config, config, mir_power_mode_on);
@@ -179,7 +180,7 @@ mga::Display::Display(
                 gl_program_factory,
                 gl_context,
                 geom::Displacement{0,0},
-                mga::OverlayOptimization::enabled));
+                overlay_option));
     }
 
     display_report->report_successful_setup_of_native_resources();
@@ -228,7 +229,7 @@ void mga::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
                 gl_program_factory,
                 gl_context,
                 config.external().top_left - origin,
-                mga::OverlayOptimization::enabled));
+                overlay_option));
     if ((!config.external().connected) && displays.display_present(mga::DisplayName::external))
         displays.remove(mga::DisplayName::external);
 

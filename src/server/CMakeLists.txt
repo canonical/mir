@@ -44,6 +44,7 @@ configure_file(
 add_library(mirserverobjects OBJECT
   run_mir.cpp
   report_exception.cpp
+  terminate_with_current_exception.cpp
   display_server.cpp
   default_server_configuration.cpp
   glib_main_loop.cpp
@@ -69,6 +70,8 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirnestedgraphics>
   $<TARGET_OBJECTS:miroffscreengraphics>
   $<TARGET_OBJECTS:mirthread>
+
+  $<TARGET_OBJECTS:mirrenderergl>
 )
 
 set(MIR_SERVER_REFERENCES
@@ -93,7 +96,6 @@ target_link_libraries(mirserver LINK_PUBLIC
   mircommon
   mirprotobuf
 
-  android-input-static
   xcursorloader-static
 
   ${GLog_LIBRARY}
@@ -115,7 +117,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
 )
 
-set(MIRSERVER_ABI 33) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 34) # Be sure to increment MIR_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(

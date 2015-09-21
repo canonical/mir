@@ -209,6 +209,9 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
             if (arg[0] == '-')
             {
+                if (arg[1] == '-' && arg[2] == '\0')
+                    break;
+
                 switch (arg[1])
                 {
                 case 'b':
@@ -330,6 +333,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                        "  -s WIDTHxHEIGHT  Force surface size\n"
                        "  -c name          Request cursor image by name\n"
                        "  -q               Quiet mode (no messages output)\n"
+                       "  --               Ignore all arguments that follow\n"
                        , argv[0]);
                 return 0;
             }

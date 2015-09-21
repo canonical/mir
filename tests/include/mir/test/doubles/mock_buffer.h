@@ -33,16 +33,20 @@ namespace test
 namespace doubles
 {
 
-struct MockBuffer : public graphics::Buffer
+struct MockBuffer : public graphics::Buffer, public graphics::NativeBufferBase
 {
  public:
     MockBuffer()
     {
+        using namespace testing;
+        ON_CALL(*this, native_buffer_base())
+                .WillByDefault(Return(this));
     }
 
     MockBuffer(geometry::Size size,
                geometry::Stride s,
                MirPixelFormat pf)
+        : MockBuffer{}
     {
         using namespace testing;
         ON_CALL(*this, size())
@@ -63,11 +67,11 @@ struct MockBuffer : public graphics::Buffer
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<graphics::NativeBuffer>());
 
-    MOCK_METHOD0(gl_bind_to_texture, void());
     MOCK_CONST_METHOD0(id, graphics::BufferID());
 
     MOCK_METHOD2(write, void(unsigned char const*, size_t));
     MOCK_METHOD1(read, void(std::function<void(unsigned char const*)> const&));
+    MOCK_METHOD0(native_buffer_base, graphics::NativeBufferBase*());
 };
 
 }

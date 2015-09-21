@@ -13,6 +13,10 @@ if (MIR_BUILD_PLATFORM_MESA_KMS)
   add_definitions(-DMIR_BUILD_PLATFORM_MESA_KMS)
 endif()
 
+if (MIR_BUILD_PLATFORM_MESA_X11)
+  add_definitions(-DMIR_BUILD_PLATFORM_MESA_X11)
+endif()
+
 include_directories(
   ${CMAKE_SOURCE_DIR}
 
@@ -67,7 +71,9 @@ set(
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
 list(APPEND UNIT_TEST_SOURCES
-  $<TARGET_OBJECTS:mirplatformservermesax11objects>
+  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/x11/X11_resources.cpp
+  $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
+  $<TARGET_OBJECTS:mirplatforminputmesax11objects>
 )
 endif()
 
@@ -84,6 +90,7 @@ add_subdirectory(android_input/)
 add_subdirectory(scene/)
 add_subdirectory(thread/)
 add_subdirectory(dispatch/)
+add_subdirectory(renderers/gl)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
@@ -116,7 +123,6 @@ target_link_libraries(
   mir-test-doubles-static
   mir-test-doubles-platform-static
 
-  android-input-static
   xcursorloader-static
 
   ${PROTOBUF_LITE_LIBRARIES}

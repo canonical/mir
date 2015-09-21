@@ -24,7 +24,7 @@ target_link_libraries(
   ${PROTOBUF_LITE_LIBRARIES}
 )
 
-set(MIRPROTOBUF_ABI 1)
+set(MIRPROTOBUF_ABI 2)
 
 set(symbol_map ${CMAKE_SOURCE_DIR}/src/protobuf/symbols.map)
 

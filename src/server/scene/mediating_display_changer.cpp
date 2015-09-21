@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include <condition_variable>
 #include "mediating_display_changer.h"
 #include "session_container.h"
 #include "mir/scene/session.h"
@@ -24,6 +25,7 @@
 #include "mir/compositor/compositor.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/display_configuration_report.h"
 #include "mir/server_action_queue.h"
 
 namespace mf = mir::frontend;
@@ -55,7 +57,6 @@ private:
 
     std::function<void()> const revert;
 };
-
 }
 
 ms::MediatingDisplayChanger::MediatingDisplayChanger(
@@ -64,13 +65,15 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& display_configuration_policy,
     std::shared_ptr<SessionContainer> const& session_container,
     std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
-    std::shared_ptr<ServerActionQueue> const& server_action_queue)
+    std::shared_ptr<ServerActionQueue> const& server_action_queue,
+    std::shared_ptr<mg::DisplayConfigurationReport> const& report)
     : display{display},
       compositor{compositor},
       display_configuration_policy{display_configuration_policy},
       session_container{session_container},
       session_event_handler_register{session_event_handler_register},
       server_action_queue{server_action_queue},
+      report{report},
       base_configuration{display->configuration()},
       base_configuration_applied{true}
 {
@@ -107,26 +110,47 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
                         session_stopping_handler(session);
                 });
         });
+
+    report->initial_configuration(*base_configuration);
 }
 
 void ms::MediatingDisplayChanger::configure(
     std::shared_ptr<mf::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
-    server_action_queue->enqueue(
-        this,
-        [this, session, conf]
-        {
-            std::lock_guard<std::mutex> lg{configuration_mutex};
+    bool is_active_session{false};
+    {
+        std::lock_guard<std::mutex> lg{configuration_mutex};
+        config_map[session] = conf;
+        is_active_session = session == focused_session.lock();
+    }
 
-            config_map[session] = conf;
+    if (is_active_session)
+    {
+        std::weak_ptr<mf::Session> const weak_session{session};
+        std::condition_variable cv;
+        bool done{false};
 
-            /* If the session is focused, apply the configuration */
-            if (focused_session.lock() == session)
+        server_action_queue->enqueue(
+            this,
+            [this, weak_session, conf, &done, &cv]
             {
-                apply_config(conf, PauseResumeSystem);
-            }
-        });
+                std::lock_guard<std::mutex> lg{configuration_mutex};
+
+                if (auto const session = weak_session.lock())
+                {
+                    /* If the session is focused, apply the configuration */
+                    if (focused_session.lock() == session)
+                        apply_config(conf, PauseResumeSystem);
+                }
+
+                done = true;
+                cv.notify_one();
+            });
+
+        std::unique_lock<std::mutex> lg{configuration_mutex};
+        cv.wait(lg, [&done] { return done; });
+    }
 }
 
 std::shared_ptr<mg::DisplayConfiguration>
@@ -177,6 +201,7 @@ void ms::MediatingDisplayChanger::apply_config(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf,
     SystemStateHandling pause_resume_system)
 {
+    report->new_configuration(*conf);
     if (pause_resume_system)
     {
         ApplyNowAndRevertOnScopeExit comp{
@@ -226,10 +251,12 @@ void ms::MediatingDisplayChanger::focus_change_handler(
     if (it != config_map.end())
     {
         apply_config(it->second, PauseResumeSystem);
+        session->send_display_config(*it->second);
     }
     else if (!base_configuration_applied)
     {
         apply_base_config(PauseResumeSystem);
+        session->send_display_config(*base_configuration);
     }
 }
 

@@ -97,6 +97,7 @@ void mia::InputTranslator::notifyKey(const droidinput::NotifyKeyArgs* args)
     auto mir_event = mev::make_event(
         MirInputDeviceId(args->deviceId),
         args->eventTime,
+        0, /* mac */
         mia::mir_keyboard_action_from_android(args->action, 0 /* repeat_count */),
         args->keyCode,
         args->scanCode,
@@ -115,6 +116,7 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
         auto const& pc = args->pointerCoords[0];
         auto mir_event = mev::make_event(MirInputDeviceId(args->deviceId),
             args->eventTime,
+            0, /* mac */
             mia::mir_modifiers_from_android(args->metaState),
             mia::mir_pointer_action_from_masked_android(args->action & AMOTION_EVENT_ACTION_MASK),
             mia::mir_pointer_buttons_from_android(args->buttonState),
@@ -133,6 +135,7 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
     {
         auto mir_event = mev::make_event(MirInputDeviceId(args->deviceId),
                                          args->eventTime,
+                                         0, /* mac */
                                          mia::mir_modifiers_from_android(args->metaState));
         auto action = args->action;
         size_t index_with_action = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;

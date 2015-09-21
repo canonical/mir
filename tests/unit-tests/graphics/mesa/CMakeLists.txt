@@ -1,5 +1,5 @@
 include_directories(
-  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/include
+  ${PROJECT_SOURCE_DIR}/include/platforms/mesa
   ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
 )
 

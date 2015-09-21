@@ -33,7 +33,7 @@ namespace test
 namespace doubles
 {
 
-class StubBuffer : public graphics::BufferBasic
+class StubBuffer : public graphics::BufferBasic, public graphics::NativeBufferBase
 {
 public:
     StubBuffer()
@@ -99,7 +99,6 @@ public:
     virtual MirPixelFormat pixel_format() const override { return buf_pixel_format; }
 
     virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override { return native_buffer; }
-    virtual void gl_bind_to_texture() override {}
 
     void write(unsigned char const* pixels, size_t len) override
     {
@@ -114,6 +113,11 @@ public:
             memset(written_pixels.data(), 0, length);
         }
         do_with_pixels(written_pixels.data());
+    }
+
+    NativeBufferBase* native_buffer_base() override
+    {
+        return this;
     }
 
     std::shared_ptr<graphics::NativeBuffer> const native_buffer;

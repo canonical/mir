@@ -136,7 +136,7 @@ void mg::SoftwareCursor::show(CursorImage const& cursor_image)
 {
     std::shared_ptr<detail::CursorRenderable> new_renderable;
     std::shared_ptr<detail::CursorRenderable> old_renderable;
-
+    bool old_visibility = false;
     // Do a lock dance to make this function threadsafe,
     // while avoiding calling scene methods under lock
     {
@@ -145,6 +145,7 @@ void mg::SoftwareCursor::show(CursorImage const& cursor_image)
         if (renderable)
             position = renderable->screen_position().top_left;
         new_renderable = create_renderable_for(cursor_image, position);
+        old_visibility = visible;
         visible = true;
     }
 
@@ -160,7 +161,7 @@ void mg::SoftwareCursor::show(CursorImage const& cursor_image)
         hotspot = cursor_image.hotspot();
     }
 
-    if (old_renderable)
+    if (old_renderable && old_visibility)
         scene->remove_input_visualization(old_renderable);
 }
 

@@ -23,7 +23,7 @@
 #ifdef MESA_KMS
 #include "src/platforms/mesa/server/kms/platform.h"
 #elif MESA_X11
-#include "src/platforms/mesa/server/x11/platform.h"
+#include "src/platforms/mesa/server/x11/graphics/platform.h"
 #endif
 
 #include "src/server/report/null_report_factory.h"
@@ -63,6 +63,11 @@ auto mtd::create_mesa_platform_with_null_dependencies()
 auto mtd::create_platform_with_null_dependencies()
     -> std::shared_ptr<graphics::Platform>
 {
-    return std::make_shared<graphics::X::Platform>();
+    return std::make_shared<graphics::X::Platform>(std::shared_ptr<::Display>(
+                                                       XOpenDisplay(nullptr),
+                                                       [](::Display* display)
+                                                       {
+                                                           XCloseDisplay(display);
+                                                       }), mir::geometry::Size{1280,1024});
 }
 #endif

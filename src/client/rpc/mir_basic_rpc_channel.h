@@ -118,6 +118,7 @@ protected:
 
 private:
     std::atomic<int> next_message_id;
+    int const protocol_version;
 };
 
 }

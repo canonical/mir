@@ -20,7 +20,7 @@
 #define MIR_FRONTEND_BUFFER_STREAM_H_
 
 #include <mir_toolkit/common.h>
-
+#include "mir/graphics/buffer_id.h"
 #include <functional>
 #include <memory>
 
@@ -29,6 +29,7 @@ namespace mir
 namespace graphics
 {
 class Buffer;
+class BufferProperties;
 }
 namespace scene
 {
@@ -53,6 +54,10 @@ public:
 
     virtual MirPixelFormat pixel_format() const = 0;
 
+    virtual graphics::BufferID allocate_buffer(graphics::BufferProperties const&) = 0;
+    virtual void remove_buffer(graphics::BufferID) = 0;
+    virtual void with_buffer(graphics::BufferID id, std::function<void(graphics::Buffer&)> const& fn) = 0;
+    virtual void set_scale(float scale) = 0;
 protected:
     BufferStream() = default;
     BufferStream(BufferStream const&) = delete;

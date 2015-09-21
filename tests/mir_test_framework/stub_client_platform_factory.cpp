@@ -33,8 +33,6 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-
-// TODO: Deduplicate this class (at least two other copies exist)
 struct StubClientPlatform : public mcl::ClientPlatform
 {
     StubClientPlatform(mcl::ClientContext* context)
@@ -77,7 +75,7 @@ struct StubClientPlatform : public mcl::ClientPlatform
     MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer* buf) const
     {
         static_cast<void>(buf);
-#ifdef MESA_KMS
+#if defined(MESA_KMS) || defined(MESA_X11)
         return buf;
 #else
         return nullptr;

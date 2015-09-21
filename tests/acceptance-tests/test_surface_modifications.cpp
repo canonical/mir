@@ -46,6 +46,7 @@ class MockSurfaceObserver : public ms::NullSurfaceObserver
 public:
     MOCK_METHOD1(renamed, void(char const*));
     MOCK_METHOD1(resized_to, void(Size const& size));
+    MOCK_METHOD1(hidden_set_to, void(bool));
 };
 
 struct SurfaceModifications : mtf::ConnectedClientWithASurface
@@ -82,9 +83,13 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
         auto const hscroll_value = 0.0;
         auto const vscroll_value = 0.0;
         auto const action = mir_pointer_action_button_down;
+        auto const mac = 0;
+        auto const relative_x_value = 0.0;
+        auto const relative_y_value = 0.0;
 
-        auto const click_event = mev::make_event(device_id, timestamp, modifiers,
-            action, mir_pointer_button_tertiary, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
+        auto const click_event = mev::make_event(device_id, timestamp, mac, modifiers,
+            action, mir_pointer_button_tertiary, x_axis_value, y_axis_value,
+            hscroll_value, vscroll_value, relative_x_value, relative_y_value);
 
         server.the_shell()->handle(*click_event);
     }
@@ -98,9 +103,13 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
         auto const hscroll_value = 0.0;
         auto const vscroll_value = 0.0;
         auto const action = mir_pointer_action_motion;
+        auto const mac = 0;
+        auto const relative_x_value = 0.0;
+        auto const relative_y_value = 0.0;
 
-        auto const drag_event = mev::make_event(device_id, timestamp, modifiers,
-            action, mir_pointer_button_tertiary, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
+        auto const drag_event = mev::make_event(device_id, timestamp, mac, modifiers,
+            action, mir_pointer_button_tertiary, x_axis_value, y_axis_value,
+            hscroll_value, vscroll_value, relative_x_value, relative_y_value);
 
         server.the_shell()->handle(*drag_event);
     }
@@ -135,7 +144,7 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
 
     MirInputDeviceId const device_id = MirInputDeviceId(7);
     std::chrono::nanoseconds const timestamp = std::chrono::nanoseconds(39);
-    MockSurfaceObserver surface_observer;
+    NiceMock<MockSurfaceObserver> surface_observer;
     std::weak_ptr<ms::Surface> shell_surface;
 };
 
@@ -149,6 +158,30 @@ MATCHER_P(HeightEq, value, "")
     return Height(value) == arg.height;
 }
 
+struct StatePair
+{
+    MirSurfaceState from;
+    MirSurfaceState to;
+
+    friend std::ostream& operator<<(std::ostream& out, StatePair const& types)
+        { return out << "from:" << types.from << ", to:" << types.to; }
+};
+
+bool is_visible(MirSurfaceState state)
+{
+    switch (state)
+    {
+    case mir_surface_state_hidden:
+    case mir_surface_state_minimized:
+        return false;
+    default:
+        break;
+    }
+    return true;
+}
+
+struct SurfaceStateCase : SurfaceModifications, ::testing::WithParamInterface<StatePair> {};
+struct SurfaceSpecStateCase : SurfaceModifications, ::testing::WithParamInterface<StatePair> {};
 }
 
 TEST_F(SurfaceModifications, surface_spec_name_is_notified)
@@ -486,3 +519,74 @@ TEST_F(SurfaceModifications, surface_spec_with_fixed_aspect_ratio_and_size_range
         EXPECT_THAT(actual, Eq(expected_size));
     };
 }
+
+TEST_F(SurfaceModifications, surface_spec_state_affects_surface_visibility)
+{
+    auto const new_state = mir_surface_state_hidden;
+
+    EXPECT_CALL(surface_observer, hidden_set_to(true));
+
+    apply_changes([&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_state(spec, new_state);
+        });
+}
+
+TEST_P(SurfaceSpecStateCase, set_state_affects_surface_visibility)
+{
+    auto const initial_state = GetParam().from;
+    auto const new_state = GetParam().to;
+
+    EXPECT_CALL(surface_observer, hidden_set_to(is_visible(initial_state)));
+    EXPECT_CALL(surface_observer, hidden_set_to(is_visible(new_state)));
+
+    apply_changes([&](MirSurfaceSpec* spec)
+        {
+            mir_surface_spec_set_state(spec, initial_state);
+        });
+
+    apply_changes([&](MirSurfaceSpec* spec)
+       {
+           mir_surface_spec_set_state(spec, new_state);
+       });
+}
+
+INSTANTIATE_TEST_CASE_P(SurfaceModifications, SurfaceSpecStateCase,
+    Values(
+        StatePair{mir_surface_state_hidden, mir_surface_state_restored},
+        StatePair{mir_surface_state_hidden, mir_surface_state_maximized},
+        StatePair{mir_surface_state_hidden, mir_surface_state_vertmaximized},
+        StatePair{mir_surface_state_hidden, mir_surface_state_horizmaximized},
+        StatePair{mir_surface_state_hidden, mir_surface_state_fullscreen},
+        StatePair{mir_surface_state_minimized, mir_surface_state_restored},
+        StatePair{mir_surface_state_minimized, mir_surface_state_maximized},
+        StatePair{mir_surface_state_minimized, mir_surface_state_vertmaximized},
+        StatePair{mir_surface_state_minimized, mir_surface_state_horizmaximized},
+        StatePair{mir_surface_state_minimized, mir_surface_state_fullscreen}
+    ));
+
+TEST_P(SurfaceStateCase, set_state_affects_surface_visibility)
+{
+    auto const initial_state = GetParam().from;
+    auto const new_state = GetParam().to;
+
+    EXPECT_CALL(surface_observer, hidden_set_to(is_visible(initial_state)));
+    EXPECT_CALL(surface_observer, hidden_set_to(is_visible(new_state)));
+
+    mir_wait_for(mir_surface_set_state(surface, initial_state));
+    mir_wait_for(mir_surface_set_state(surface, new_state));
+}
+
+INSTANTIATE_TEST_CASE_P(SurfaceModifications, SurfaceStateCase,
+    Values(
+        StatePair{mir_surface_state_hidden, mir_surface_state_restored},
+        StatePair{mir_surface_state_hidden, mir_surface_state_maximized},
+        StatePair{mir_surface_state_hidden, mir_surface_state_vertmaximized},
+        StatePair{mir_surface_state_hidden, mir_surface_state_horizmaximized},
+        StatePair{mir_surface_state_hidden, mir_surface_state_fullscreen},
+        StatePair{mir_surface_state_minimized, mir_surface_state_restored},
+        StatePair{mir_surface_state_minimized, mir_surface_state_maximized},
+        StatePair{mir_surface_state_minimized, mir_surface_state_vertmaximized},
+        StatePair{mir_surface_state_minimized, mir_surface_state_horizmaximized},
+        StatePair{mir_surface_state_minimized, mir_surface_state_fullscreen}
+    ));

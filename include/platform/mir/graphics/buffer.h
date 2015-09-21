@@ -32,6 +32,15 @@ namespace mir
 namespace graphics
 {
 
+class NativeBufferBase
+{
+protected:
+    NativeBufferBase() = default;
+    virtual ~NativeBufferBase() = default;
+    NativeBufferBase(NativeBuffer const&) = delete;
+    NativeBufferBase operator=(NativeBuffer const&) = delete;
+};
+
 class Buffer
 {
 public:
@@ -42,12 +51,13 @@ public:
     virtual geometry::Size size() const = 0;
     virtual geometry::Stride stride() const = 0;
     virtual MirPixelFormat pixel_format() const = 0;
-    virtual void gl_bind_to_texture() = 0;
     //FIXME: correct mg::Buffer::write, it requires that the user does too much to use it correctly,
     //       (ie, it forces them to figure out what size is proper, alloc a buffer, fill it, and then
     //       copy the data into the buffer)
     virtual void write(unsigned char const* pixels, size_t size) = 0;
     virtual void read(std::function<void(unsigned char const*)> const& do_with_pixels) = 0;
+
+    virtual NativeBufferBase* native_buffer_base() = 0;
 
 protected:
     Buffer() = default;

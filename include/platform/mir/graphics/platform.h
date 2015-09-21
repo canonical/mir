@@ -71,7 +71,7 @@ public:
     Platform(const Platform& p) = delete;
     Platform& operator=(const Platform& p) = delete;
 
-    virtual ~Platform() { /* TODO: make nothrow */ }
+    virtual ~Platform() = default;
 
     /**
      * Creates the buffer allocator subsystem.

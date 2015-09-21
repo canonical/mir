@@ -64,15 +64,18 @@ struct ClientCredsTestFixture : mtf::InterprocessClientServerTest
     struct SharedRegion
     {
         sem_t client_creds_set;
-        pid_t client_pid;
-        uid_t client_uid;
-        gid_t client_gid;
+        pid_t client_pid = -1;
+        uid_t client_uid = -1;
+        gid_t client_gid = -1;
 
         bool matches_client_process_creds(mf::SessionCredentials const& creds)
         {
+            // A perfect match is perfect. But sometimes it's not a perfect
+            // match and that's OK too. Because fakeroot (used in deb builds)
+            // returns 0 unconditionally, even for non-root users.
             return client_pid == creds.pid() &&
-                   client_uid == creds.uid() &&
-                   client_gid == creds.gid();
+                   (client_uid == 0 || client_uid == creds.uid()) &&
+                   (client_gid == 0 || client_gid == creds.gid());
         }
 
         bool wait_for_client_creds()

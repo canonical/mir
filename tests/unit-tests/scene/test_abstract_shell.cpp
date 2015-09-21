@@ -136,6 +136,7 @@ struct AbstractShell : Test
     }
 
     std::chrono::nanoseconds const event_timestamp = std::chrono::nanoseconds(0);
+    uint64_t const mac = 0;
 };
 }
 
@@ -251,6 +252,7 @@ TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
     auto const event = mir::events::make_event(
         mir_input_event_type_key,
         event_timestamp,
+        mac,
         action,
         key_code,
         scan_code,
@@ -271,6 +273,7 @@ TEST_F(AbstractShell, touch_input_events_are_handled_by_window_manager)
     auto const event = mir::events::make_event(
         mir_input_event_type_touch,
         event_timestamp,
+        mac,
         modifiers);
 
     EXPECT_CALL(*wm, handle_touch_event(_))
@@ -290,17 +293,22 @@ TEST_F(AbstractShell, pointer_input_events_are_handled_by_window_manager)
     float const y_axis_value{0.0};
     float const hscroll_value{0.0};
     float const vscroll_value{0.0};
+    float const relative_x_value{0.0};
+    float const relative_y_value{0.0};
 
     auto const event = mir::events::make_event(
         mir_input_event_type_pointer,
         event_timestamp,
+        mac,
         modifiers,
         action,
         buttons_pressed,
         x_axis_value,
         y_axis_value,
         hscroll_value,
-        vscroll_value);
+        vscroll_value,
+        relative_x_value,
+        relative_y_value);
 
     EXPECT_CALL(*wm, handle_pointer_event(_))
         .WillOnce(Return(false))

@@ -19,6 +19,7 @@
 #include "src/server/scene/mediating_display_changer.h"
 #include "src/server/scene/session_container.h"
 #include "mir/graphics/display_configuration_policy.h"
+#include "mir/graphics/display_configuration_report.h"
 #include "src/server/scene/broadcasting_session_event_sink.h"
 #include "mir/server_action_queue.h"
 
@@ -41,6 +42,8 @@ namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
+
+using namespace testing;
 
 namespace
 {
@@ -92,33 +95,32 @@ struct MockDisplay : public mtd::MockDisplay
 
 struct StubServerActionQueue : mir::ServerActionQueue
 {
-    void flush()
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        for (auto const& action : actions)
-            action();
-        actions.clear();
-    }
-
     void enqueue(void const* /*owner*/, mir::ServerAction const& action) override
     {
-        std::lock_guard<std::mutex> lock{mutex};
-        actions.push_back(action);
+        action();
     }
 
     void pause_processing_for(void const* /*owner*/) override {}
     void resume_processing_for(void const* /*owner*/) override {}
-
-    std::vector<mir::ServerAction> actions;
-    std::mutex mutex;
 };
 
 struct MockServerActionQueue : mir::ServerActionQueue
 {
+    MockServerActionQueue()
+    {
+        ON_CALL(*this, enqueue(_, _)).WillByDefault(InvokeArgument<1>());
+    }
     MOCK_METHOD2(enqueue, void(void const*, mir::ServerAction const&));
     MOCK_METHOD1(pause_processing_for, void(void const*));
     MOCK_METHOD1(resume_processing_for, void(void const*));
 };
+
+struct StubDisplayConfigurationReport : mg::DisplayConfigurationReport
+{
+    void initial_configuration(mg::DisplayConfiguration const&) override {}
+    void new_configuration(mg::DisplayConfiguration const&) override {}
+};
+
 
 struct MediatingDisplayChangerTest : public ::testing::Test
 {
@@ -132,7 +134,8 @@ struct MediatingDisplayChangerTest : public ::testing::Test
                       mt::fake_shared(mock_conf_policy),
                       mt::fake_shared(stub_session_container),
                       mt::fake_shared(session_event_sink),
-                      mt::fake_shared(server_action_queue));
+                      mt::fake_shared(server_action_queue),
+                      mt::fake_shared(display_configuration_report));
     }
 
     testing::NiceMock<MockDisplay> mock_display;
@@ -142,6 +145,7 @@ struct MediatingDisplayChangerTest : public ::testing::Test
     ms::BroadcastingSessionEventSink session_event_sink;
     mtd::StubDisplayConfig base_config;
     StubServerActionQueue server_action_queue;
+    StubDisplayConfigurationReport display_configuration_report;
     std::shared_ptr<ms::MediatingDisplayChanger> changer;
 };
 
@@ -171,8 +175,6 @@ TEST_F(MediatingDisplayChangerTest, pauses_system_when_applying_new_configuratio
     session_event_sink.handle_focus_change(session);
     changer->configure(session,
                        mt::fake_shared(conf));
-
-    server_action_queue.flush();
 }
 
 TEST_F(MediatingDisplayChangerTest, doesnt_apply_config_for_unfocused_session)
@@ -186,8 +188,6 @@ TEST_F(MediatingDisplayChangerTest, doesnt_apply_config_for_unfocused_session)
 
     changer->configure(std::make_shared<mtd::StubSceneSession>(),
                        mt::fake_shared(conf));
-
-    server_action_queue.flush();
 }
 
 TEST_F(MediatingDisplayChangerTest, handles_hardware_change_properly_when_pausing_system)
@@ -204,8 +204,6 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_properly_when_pausin
 
     changer->configure_for_hardware_change(mt::fake_shared(conf),
                                            mir::DisplayChanger::PauseResumeSystem);
-
-    server_action_queue.flush();
 }
 
 TEST_F(MediatingDisplayChangerTest, handles_hardware_change_properly_when_retaining_system_state)
@@ -222,8 +220,6 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_properly_when_retain
 
     changer->configure_for_hardware_change(mt::fake_shared(conf),
                                            mir::DisplayChanger::RetainSystemState);
-
-    server_action_queue.flush();
 }
 
 TEST_F(MediatingDisplayChangerTest, hardware_change_doesnt_apply_base_config_if_per_session_config_is_active)
@@ -238,7 +234,6 @@ TEST_F(MediatingDisplayChangerTest, hardware_change_doesnt_apply_base_config_if_
 
     session_event_sink.handle_focus_change(session1);
 
-    server_action_queue.flush();
     Mock::VerifyAndClearExpectations(&mock_compositor);
     Mock::VerifyAndClearExpectations(&mock_display);
 
@@ -249,8 +244,6 @@ TEST_F(MediatingDisplayChangerTest, hardware_change_doesnt_apply_base_config_if_
 
     changer->configure_for_hardware_change(conf,
                                            mir::DisplayChanger::PauseResumeSystem);
-
-    server_action_queue.flush();
 }
 
 TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_hardware_config_change)
@@ -268,8 +261,6 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_hardware_config_cha
 
     changer->configure_for_hardware_change(mt::fake_shared(conf),
                                            mir::DisplayChanger::PauseResumeSystem);
-
-    server_action_queue.flush();
 }
 
 TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_attached_config_applies_config)
@@ -287,8 +278,6 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_attached_config_appl
     EXPECT_CALL(mock_compositor, start());
 
     session_event_sink.handle_focus_change(session1);
-
-    server_action_queue.flush();
 }
 
 TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_applies_base_config)
@@ -303,7 +292,6 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_a
 
     session_event_sink.handle_focus_change(session1);
 
-    server_action_queue.flush();
     Mock::VerifyAndClearExpectations(&mock_compositor);
     Mock::VerifyAndClearExpectations(&mock_display);
 
@@ -313,8 +301,6 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_a
     EXPECT_CALL(mock_compositor, start());
 
     session_event_sink.handle_focus_change(session2);
-
-    server_action_queue.flush();
 }
 
 TEST_F(MediatingDisplayChangerTest, losing_focus_applies_base_config)
@@ -328,7 +314,6 @@ TEST_F(MediatingDisplayChangerTest, losing_focus_applies_base_config)
 
     session_event_sink.handle_focus_change(session1);
 
-    server_action_queue.flush();
     Mock::VerifyAndClearExpectations(&mock_compositor);
     Mock::VerifyAndClearExpectations(&mock_display);
 
@@ -338,8 +323,6 @@ TEST_F(MediatingDisplayChangerTest, losing_focus_applies_base_config)
     EXPECT_CALL(mock_compositor, start());
 
     session_event_sink.handle_no_focus();
-
-    server_action_queue.flush();
 }
 
 TEST_F(MediatingDisplayChangerTest, base_config_is_not_applied_if_already_active)
@@ -359,8 +342,6 @@ TEST_F(MediatingDisplayChangerTest, base_config_is_not_applied_if_already_active
     session_event_sink.handle_focus_change(session1);
     session_event_sink.handle_focus_change(session2);
     session_event_sink.handle_no_focus();
-
-    server_action_queue.flush();
 }
 
 TEST_F(MediatingDisplayChangerTest, hardware_change_invalidates_session_configs)
@@ -375,7 +356,6 @@ TEST_F(MediatingDisplayChangerTest, hardware_change_invalidates_session_configs)
     changer->configure_for_hardware_change(conf,
                                            mir::DisplayChanger::PauseResumeSystem);
 
-    server_action_queue.flush();
     Mock::VerifyAndClearExpectations(&mock_compositor);
     Mock::VerifyAndClearExpectations(&mock_display);
 
@@ -388,8 +368,6 @@ TEST_F(MediatingDisplayChangerTest, hardware_change_invalidates_session_configs)
     EXPECT_CALL(mock_compositor, start()).Times(0);
 
     session_event_sink.handle_focus_change(session1);
-
-    server_action_queue.flush();
 }
 
 TEST_F(MediatingDisplayChangerTest, session_stopping_invalidates_session_config)
@@ -403,7 +381,6 @@ TEST_F(MediatingDisplayChangerTest, session_stopping_invalidates_session_config)
 
     session_event_sink.handle_session_stopping(session1);
 
-    server_action_queue.flush();
     Mock::VerifyAndClearExpectations(&mock_compositor);
     Mock::VerifyAndClearExpectations(&mock_display);
 
@@ -416,8 +393,6 @@ TEST_F(MediatingDisplayChangerTest, session_stopping_invalidates_session_config)
     EXPECT_CALL(mock_compositor, start()).Times(0);
 
     session_event_sink.handle_focus_change(session1);
-
-    server_action_queue.flush();
 }
 
 TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_actions)
@@ -438,12 +413,17 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
       mt::fake_shared(mock_conf_policy),
       mt::fake_shared(stub_session_container),
       mt::fake_shared(session_event_sink),
-      mt::fake_shared(mock_server_action_queue));
+      mt::fake_shared(mock_server_action_queue),
+      mt::fake_shared(display_configuration_report));
 
     void const* owner{nullptr};
 
     EXPECT_CALL(mock_server_action_queue, enqueue(_, _))
-        .WillOnce(SaveArg<0>(&owner));
+        .WillOnce(DoAll(SaveArg<0>(&owner), InvokeArgument<1>()));
+    session_event_sink.handle_focus_change(session1);
+    Mock::VerifyAndClearExpectations(&mock_server_action_queue);
+
+    EXPECT_CALL(mock_server_action_queue, enqueue(owner, _));
     display_changer.configure(session1, conf);
     Mock::VerifyAndClearExpectations(&mock_server_action_queue);
 
@@ -451,10 +431,6 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
     display_changer.configure_for_hardware_change(
         conf,
         mir::DisplayChanger::PauseResumeSystem);
-    Mock::VerifyAndClearExpectations(&mock_server_action_queue);
-
-    EXPECT_CALL(mock_server_action_queue, enqueue(owner, _));
-    session_event_sink.handle_focus_change(session1);
     Mock::VerifyAndClearExpectations(&mock_server_action_queue);
 
     EXPECT_CALL(mock_server_action_queue, enqueue(owner, _));
@@ -472,4 +448,34 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
     EXPECT_CALL(mock_server_action_queue, resume_processing_for(owner));
     display_changer.resume_display_config_processing();
     Mock::VerifyAndClearExpectations(&mock_server_action_queue);
+}
+
+TEST_F(MediatingDisplayChangerTest, does_not_block_IPC_thread_for_inactive_sessions)
+{
+    using namespace testing;
+
+    auto const conf = std::make_shared<mtd::NullDisplayConfiguration>();
+    auto const active_session = std::make_shared<mtd::StubSceneSession>();
+    auto const inactive_session = std::make_shared<mtd::StubSceneSession>();
+    MockServerActionQueue mock_server_action_queue;
+
+    stub_session_container.insert_session(active_session);
+    stub_session_container.insert_session(inactive_session);
+
+    ms::MediatingDisplayChanger display_changer(
+        mt::fake_shared(mock_display),
+        mt::fake_shared(mock_compositor),
+        mt::fake_shared(mock_conf_policy),
+        mt::fake_shared(stub_session_container),
+        mt::fake_shared(session_event_sink),
+        mt::fake_shared(mock_server_action_queue),
+        mt::fake_shared(display_configuration_report));
+
+    EXPECT_CALL(mock_server_action_queue, enqueue(_, _));
+    session_event_sink.handle_focus_change(active_session);
+    Mock::VerifyAndClearExpectations(&mock_server_action_queue);
+
+    EXPECT_CALL(mock_server_action_queue, enqueue(_, _)).Times(0);
+
+    display_changer.configure(inactive_session, conf);
 }

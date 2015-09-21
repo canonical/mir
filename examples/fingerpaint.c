@@ -359,6 +359,9 @@ int main(int argc, char *argv[])
 
             if (arg[0] == '-')
             {
+                if (arg[1] == '-' && arg[2] == '\0')
+                    break;
+
                 switch (arg[1])
                 {
                 case 'm':
@@ -384,6 +387,7 @@ int main(int argc, char *argv[])
                        "  -h               Show this help text\n"
                        "  -m socket        Mir server socket\n"
                        "  -w               Wait for vblank (don't drop frames)\n"
+                       "  --               Ignore further arguments\n"
                        , argv[0]);
                 return 0;
             }

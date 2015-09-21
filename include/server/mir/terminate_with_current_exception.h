@@ -22,6 +22,11 @@
 namespace mir
 {
 void terminate_with_current_exception();
+
+/// called by main thread to rethrow any termination exception
+void check_for_termination_exception();
+
+void clear_termination_exception();
 }
 
 #endif /* MIR_TERMINATE_WITH_CURRENT_EXCEPTION_H_ */

@@ -34,47 +34,6 @@ extern "C" {
 
 typedef int64_t nsecs_t;
 
-static inline std::chrono::nanoseconds seconds_to_nanoseconds(std::chrono::nanoseconds secs)
-{
-    return secs*1000000000;
-}
-
-static inline std::chrono::nanoseconds milliseconds_to_nanoseconds(std::chrono::nanoseconds secs)
-{
-    return secs*1000000;
-}
-
-static inline std::chrono::nanoseconds microseconds_to_nanoseconds(std::chrono::nanoseconds secs)
-{
-    return secs*1000;
-}
-
-static inline std::chrono::nanoseconds nanoseconds_to_seconds(std::chrono::nanoseconds secs)
-{
-    return secs/1000000000;
-}
-
-static inline std::chrono::nanoseconds nanoseconds_to_milliseconds(std::chrono::nanoseconds secs)
-{
-    return secs/1000000;
-}
-
-static inline std::chrono::nanoseconds nanoseconds_to_microseconds(std::chrono::nanoseconds secs)
-{
-    return secs/1000;
-}
-
-static inline std::chrono::nanoseconds s2ns(std::chrono::nanoseconds v)  {return seconds_to_nanoseconds(v);}
-static inline std::chrono::nanoseconds ms2ns(std::chrono::nanoseconds v) {return milliseconds_to_nanoseconds(v);}
-static inline std::chrono::nanoseconds us2ns(std::chrono::nanoseconds v) {return microseconds_to_nanoseconds(v);}
-static inline std::chrono::nanoseconds ns2s(std::chrono::nanoseconds v)  {return nanoseconds_to_seconds(v);}
-static inline std::chrono::nanoseconds ns2ms(std::chrono::nanoseconds v) {return nanoseconds_to_milliseconds(v);}
-static inline std::chrono::nanoseconds ns2us(std::chrono::nanoseconds v) {return nanoseconds_to_microseconds(v);}
-
-static inline std::chrono::nanoseconds seconds(std::chrono::nanoseconds v)      { return s2ns(v); }
-static inline std::chrono::nanoseconds milliseconds(std::chrono::nanoseconds v) { return ms2ns(v); }
-static inline std::chrono::nanoseconds microseconds(std::chrono::nanoseconds v) { return us2ns(v); }
-
 enum {
     SYSTEM_TIME_REALTIME = 0,  // system-wide realtime clock
     SYSTEM_TIME_MONOTONIC = 1, // monotonic time since unspecified starting point
@@ -102,44 +61,5 @@ int toMillisecondTimeoutDelay(std::chrono::nanoseconds referenceTime, std::chron
 #ifdef __cplusplus
 } // extern "C"
 #endif
-
-// ------------------------------------------------------------------
-// C++ API
-
-#ifdef __cplusplus
-
-namespace android {
-/*
- * Time the duration of something.
- *
- * Includes some timeval manipulation functions.
- */
-class DurationTimer {
-public:
-    DurationTimer() {}
-    ~DurationTimer() {}
-
-    // Start the timer.
-    void start();
-    // Stop the timer.
-    void stop();
-    // Get the duration in microseconds.
-    long long durationUsecs() const;
-
-    // Subtract two timevals.  Returns the difference (ptv1-ptv2) in
-    // microseconds.
-    static long long subtractTimevals(const struct timeval* ptv1,
-        const struct timeval* ptv2);
-
-    // Add the specified amount of time to the timeval.
-    static void addToTimeval(struct timeval* ptv, long usec);
-
-private:
-    struct timeval  mStartWhen;
-    struct timeval  mStopWhen;
-};
-
-} // android
-#endif // def __cplusplus
 
 #endif // _LIBS_UTILS_TIMERS_H

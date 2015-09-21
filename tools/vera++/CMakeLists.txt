@@ -13,5 +13,5 @@ if(VERA_EXECUTABLE)
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     )
 else()
-  message(WARNING "vera++ not available - disabling make target style_check")
+  message(STATUS "vera++ not available - disabling make target style_check")
 endif(VERA_EXECUTABLE)

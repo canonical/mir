@@ -18,7 +18,6 @@
 
 #include "android_input_receiver.h"
 
-#include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/input/xkb_mapper.h"
 #include "mir/input/input_receiver_report.h"
 #include "mir/input/android/android_input_lexicon.h"
@@ -28,7 +27,6 @@
 
 #include <androidfw/InputTransport.h>
 
-#include <sys/epoll.h>
 #include <sys/timerfd.h>
 #include <system_error>
 #include <cstdlib>

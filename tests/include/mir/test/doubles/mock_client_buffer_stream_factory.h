@@ -34,12 +34,12 @@ namespace doubles
 
 struct MockClientBufferStreamFactory : public client::ClientBufferStreamFactory
 {
-    MOCK_METHOD4(make_consumer_stream, std::shared_ptr<client::ClientBufferStream>(
+    MOCK_METHOD5(make_consumer_stream, std::shared_ptr<client::ClientBufferStream>(
         MirConnection*, client::rpc::DisplayServer&,
-        protobuf::BufferStream const&, std::string const&));
-    MOCK_METHOD4(make_producer_stream, std::shared_ptr<client::ClientBufferStream>(
+        protobuf::BufferStream const&, std::string const&, geometry::Size));
+    MOCK_METHOD5(make_producer_stream, std::shared_ptr<client::ClientBufferStream>(
         MirConnection*, client::rpc::DisplayServer&,
-        protobuf::BufferStream const&, std::string const&));
+        protobuf::BufferStream const&, std::string const&, geometry::Size));
     MOCK_METHOD5(make_producer_stream, client::ClientBufferStream*(
         MirConnection*, client::rpc::DisplayServer&,
         protobuf::BufferStreamParameters const&, mir_buffer_stream_callback callback, void* context));

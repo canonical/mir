@@ -35,6 +35,11 @@ namespace doubles
 class MockDisplayDevice : public graphics::android::DisplayDevice
 {
 public:
+    MockDisplayDevice()
+    {
+        ON_CALL(*this, compatible_renderlist(testing::_))
+            .WillByDefault(testing::Return(true));
+    }
     ~MockDisplayDevice() noexcept {}
     MOCK_METHOD0(content_cleared, void());
     MOCK_METHOD1(commit, void(std::list<graphics::android::DisplayContents> const&));

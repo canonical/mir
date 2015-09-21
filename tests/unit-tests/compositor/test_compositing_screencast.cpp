@@ -27,7 +27,7 @@
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/null_display_buffer_compositor_factory.h"
 #include "mir/test/doubles/stub_display_configuration.h"
-#include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_gl_buffer_allocator.h"
 #include "mir/test/doubles/mock_buffer.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/stub_scene.h"
@@ -170,7 +170,7 @@ struct CompositingScreencastTest : testing::Test
     testing::NiceMock<mtd::MockGL> mock_gl;
     mtd::StubScene stub_scene;
     StubDisplay stub_display;
-    mtd::StubBufferAllocator stub_buffer_allocator;
+    mtd::StubGLBufferAllocator stub_buffer_allocator;
     mtd::NullDisplayBufferCompositorFactory stub_db_compositor_factory;
     mc::CompositingScreencast screencast;
     geom::Size const default_size;
@@ -250,7 +250,7 @@ TEST_F(CompositingScreencastTest, allocates_and_uses_buffer_with_provided_size)
     using namespace testing;
 
     MockBufferAllocator mock_buffer_allocator;
-    mtd::StubBuffer stub_buffer;
+    mtd::StubGLBuffer stub_buffer;
 
     InSequence s;
     EXPECT_CALL(mock_buffer_allocator,
@@ -274,8 +274,8 @@ TEST_F(CompositingScreencastTest, uses_one_buffer_per_session)
     using namespace testing;
 
     MockBufferAllocator mock_buffer_allocator;
-    mtd::StubBuffer stub_buffer1;
-    mtd::StubBuffer stub_buffer2;
+    mtd::StubGLBuffer stub_buffer1;
+    mtd::StubGLBuffer stub_buffer2;
 
     EXPECT_CALL(mock_buffer_allocator, alloc_buffer(_))
         .WillOnce(Return(mt::fake_shared(stub_buffer1)))
@@ -306,7 +306,7 @@ TEST_F(CompositingScreencastTest, registers_and_unregisters_from_scene)
     NiceMock<mtd::MockScene> mock_scene;
     NiceMock<MockBufferAllocator> mock_buffer_allocator;
     ON_CALL(mock_buffer_allocator, alloc_buffer(_))
-        .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
+        .WillByDefault(Return(std::make_shared<mtd::StubGLBuffer>()));
 
     EXPECT_CALL(mock_scene, register_compositor(_))
         .Times(1);

@@ -444,7 +444,7 @@ void KeyCharacterMap::addKey(Vector<KeyEvent>& outEvents,
     KeyEvent& event = outEvents.editTop();
     event.initialize(deviceId, AINPUT_SOURCE_KEYBOARD,
             down ? AKEY_EVENT_ACTION_DOWN : AKEY_EVENT_ACTION_UP,
-            0, keyCode, 0, metaState, 0, time, time);
+            0, keyCode, 0, metaState, 0, 0, time, time);
 }
 
 void KeyCharacterMap::addMetaKeys(Vector<KeyEvent>& outEvents,

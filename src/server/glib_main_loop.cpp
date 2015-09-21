@@ -38,7 +38,7 @@ public:
         std::shared_ptr<mir::time::Clock> const& clock,
         std::shared_ptr<mir::LockableCallback> const& callback,
         std::function<void()> const& exception_handler)
-        : main_context{main_context},
+        : main_context{g_main_context_ref(main_context)},
           clock{clock},
           state_{State::cancelled},
           exception_handler{exception_handler},
@@ -47,13 +47,23 @@ public:
     {
     }
 
+    ~AlarmImpl() override
+    {
+        gsource.ensure_no_further_dispatch();
+        g_main_context_unref(main_context);
+    }
+
     bool cancel() override
     {
         std::lock_guard<std::mutex> lock{alarm_mutex};
 
-        gsource = mir::detail::GSourceHandle{};
-        state_ = State::cancelled;
-        return true;
+        gsource.ensure_no_further_dispatch();
+        if (state_ ==  State::pending)
+        {
+            gsource = mir::detail::GSourceHandle{};
+            state_ = State::cancelled;
+        }
+        return state_ == State::cancelled;
     }
 
     State state() const override
@@ -71,6 +81,7 @@ public:
     {
         std::lock_guard<std::mutex> lock{alarm_mutex};
 
+        auto old_state = state_;
         state_ = State::pending;
         gsource = mir::detail::add_timer_gsource(
             main_context,
@@ -79,7 +90,7 @@ public:
             exception_handler,
             time_point);
 
-        return true;
+        return old_state == State::pending;
     }
 
 private:

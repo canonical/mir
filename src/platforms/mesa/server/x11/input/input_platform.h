@@ -20,18 +20,18 @@
 
 #include "mir/input/platform.h"
 #include <memory>
+#include <X11/Xlib.h>
 
 namespace mir
 {
 
 namespace dispatch
 {
-class ActionQueue;
+class ReadableFd;
 }
 
 namespace input
 {
-class InputDevice;
 
 namespace X
 {
@@ -40,7 +40,9 @@ class XInputDevice;
 class XInputPlatform : public input::Platform
 {
 public:
-    explicit XInputPlatform(std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry);
+    explicit XInputPlatform(
+        std::shared_ptr<input::InputDeviceRegistry> const& input_device_registry,
+        std::shared_ptr<::Display> const& conn);
     ~XInputPlatform() = default;
 
     std::shared_ptr<dispatch::Dispatchable> dispatchable() override;
@@ -48,9 +50,12 @@ public:
     void stop() override;
 
 private:
-    std::shared_ptr<dispatch::ActionQueue> const platform_queue;
+    void process_input_event();
+    std::shared_ptr<::Display> x11_connection;
+    std::shared_ptr<dispatch::ReadableFd> const xcon_dispatchable;
     std::shared_ptr<input::InputDeviceRegistry> const registry;
-    std::shared_ptr<XInputDevice> const device;
+    std::shared_ptr<XInputDevice> const core_keyboard;
+    std::shared_ptr<XInputDevice> const core_pointer;
 };
 
 }

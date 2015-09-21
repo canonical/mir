@@ -18,6 +18,7 @@
 
 #include "buffer_render_target.h"
 #include "mir/graphics/buffer.h"
+#include "mir/renderer/gl/texture_source.h"
 
 #include <GLES2/gl2ext.h>
 #include <stdexcept>
@@ -71,13 +72,18 @@ void mt::BufferRenderTarget::Resources::setup(mg::Buffer& buffer)
 
     if (fbo == 0)
     {
+        auto const texture_source =
+            dynamic_cast<mir::renderer::gl::TextureSource*>(buffer.native_buffer_base());
+        if (!texture_source)
+            throw std::logic_error("Buffer does not support GL rendering");
+
         glGenFramebuffers(1, &fbo);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
         /* Set up color buffer... */
         glGenTextures(1, &color_tex);
         glBindTexture(GL_TEXTURE_2D, color_tex);
-        buffer.gl_bind_to_texture();
+        texture_source->gl_bind_to_texture();
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                GL_TEXTURE_2D, color_tex, 0);
 

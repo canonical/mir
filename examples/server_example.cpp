@@ -94,8 +94,8 @@ try
     add_launcher_option_to(server);
     add_timeout_option_to(server);
 
-    std::atomic<bool> test_failed{false};
-    me::add_test_client_option_to(server, test_failed);
+    me::ClientContext context;
+    me::add_test_client_option_to(server, context);
 
     // Create some input filters (we need to keep them or they deactivate)
     auto const quit_filter = me::make_quit_filter_for(server);
@@ -108,7 +108,10 @@ try
     server.run();
 
     // Propagate any test failure
-    if (test_failed) return EXIT_FAILURE;
+    if (context.test_failed)
+    {
+        return EXIT_FAILURE;
+    }
 
     return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
 }

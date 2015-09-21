@@ -20,6 +20,11 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
 #include "mir/compositor/scene_element.h"
+#include "mir/renderer/gl/texture_source.h"
+
+#include <stdexcept>
+#include <boost/throw_exception.hpp>
+
 #include <GLES2/gl2.h>
 
 namespace me = mir::examples;
@@ -150,7 +155,13 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
-        renderable->buffer()->gl_bind_to_texture();
+
+        auto const texture_source =
+            dynamic_cast<mir::renderer::gl::TextureSource*>(
+                renderable->buffer()->native_buffer_base());
+        if (!texture_source)
+            BOOST_THROW_EXCEPTION(std::logic_error("Buffer does not support GL rendering"));
+        texture_source->gl_bind_to_texture();
 
         glEnableVertexAttribArray(vPositionAttr);
         glEnableVertexAttribArray(uvCoord);

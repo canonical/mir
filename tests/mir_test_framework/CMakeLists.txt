@@ -51,7 +51,6 @@ add_library(mir-protected-test-framework OBJECT
 
   fake_input_server_configuration.cpp
   input_testing_server_options.cpp
-  testing_process_manager.cpp
   udev_environment.cpp
 )
 
@@ -107,9 +106,7 @@ add_library(
   $<TARGET_OBJECTS:mirevdevutilsobjects>
   )
 
-target_link_libraries(mirplatforminputstub
-  mirclient
-)
+target_link_libraries(mirplatforminputstub mircommon)
 
 set_target_properties(
   mirplatforminputstub PROPERTIES

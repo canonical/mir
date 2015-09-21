@@ -28,6 +28,7 @@
 #include "mir/test/doubles/stub_gl_program_factory.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "mir/graphics/default_display_configuration_policy.h"
+#include "mir/renderer/gl/texture_source.h"
 #include "src/server/report/null_report_factory.h"
 
 #include "mir_test_framework/testing_server_configuration.h"
@@ -46,7 +47,15 @@ namespace mr = mir::report;
 namespace mir
 {
 
-class StubBufferThread : public mtd::StubBuffer
+mir::renderer::gl::TextureSource* as_texture_source(
+    std::shared_ptr<mg::Buffer> const& buffer)
+{
+    return dynamic_cast<mir::renderer::gl::TextureSource*>(
+        buffer->native_buffer_base());
+}
+
+class StubBufferThread : public mtd::StubBuffer,
+                         public mir::renderer::gl::TextureSource
 {
 public:
     StubBufferThread() :
@@ -95,19 +104,7 @@ class MesaBufferIntegration : public ::testing::Test
 protected:
     virtual void SetUp()
     {
-        auto options = mtf::TestingServerConfiguration().the_options();
-
-        if (options->get<bool>("tests-use-real-graphics"))
-        {
-            platform = create_host_platform(
-                options,
-                std::make_shared<mtd::NullEmergencyCleanup>(),
-                mr::null_display_report());
-        }
-        else
-        {
-            platform = std::make_shared<StubGraphicPlatform>();
-        }
+        platform = std::make_shared<StubGraphicPlatform>();
 
         auto conf_policy = std::make_shared<mg::CloneDisplayConfigurationPolicy>();
         display = platform->create_display(
@@ -179,7 +176,7 @@ struct BufferTextureInstantiatorThread
 
         try
         {
-            buffer->gl_bind_to_texture();
+            as_texture_source(buffer)->gl_bind_to_texture();
         }
         catch(std::runtime_error const&)
         {
@@ -211,7 +208,7 @@ TEST_F(MesaBufferIntegration, buffer_destruction_from_arbitrary_thread_works)
 
     EXPECT_NO_THROW({
         auto buffer = allocator->alloc_buffer(buffer_properties);
-        buffer->gl_bind_to_texture();
+        as_texture_source(buffer)->gl_bind_to_texture();
         ASSERT_EQ(EGL_SUCCESS, eglGetError());
 
         BufferDestructorThread destructor{std::move(buffer)};

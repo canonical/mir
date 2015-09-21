@@ -40,8 +40,6 @@ namespace
 auto const intercepted = { SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS };
 
 std::weak_ptr<mir::EmergencyCleanup> weak_emergency_cleanup;
-std::exception_ptr termination_exception;
-std::mutex termination_exception_mutex;
 
 extern "C" void perform_emergency_cleanup()
 {
@@ -76,10 +74,7 @@ void mir::run_mir(
     std::function<void(int)> const& terminator)
 {
     DisplayServer* server_ptr{nullptr};
-    {
-        std::lock_guard<std::mutex> lock{termination_exception_mutex};
-        termination_exception = nullptr;
-    }
+    clear_termination_exception();
 
     auto const main_loop = config.the_main_loop();
 
@@ -114,17 +109,5 @@ void mir::run_mir(
     init(server);
     server.run();
 
-    std::lock_guard<std::mutex> lock{termination_exception_mutex};
-    if (termination_exception)
-        std::rethrow_exception(termination_exception);
-}
-
-void mir::terminate_with_current_exception()
-{
-    std::lock_guard<std::mutex> lock{termination_exception_mutex};
-    if (!termination_exception)
-    {
-        termination_exception = std::current_exception();
-        kill(getpid(), SIGTERM);
-    }
+    check_for_termination_exception();
 }
