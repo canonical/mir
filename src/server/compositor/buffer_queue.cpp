@@ -469,7 +469,6 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
      */
     if (count && frame_deadlines_threshold >= 0)
     {
-        printf("GO\n");
         ++count;
     }
 
