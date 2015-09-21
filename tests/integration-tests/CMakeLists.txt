@@ -123,12 +123,6 @@ target_link_libraries(mir_integration_tests
 )
 endif()
 
-if (MIR_BUILD_PLATFORM_MESA_X11)
-target_link_libraries(mir_integration_tests
-  X11
-)
-endif()
-
 if (MIR_BUILD_PLATFORM_ANDROID)
 target_link_libraries(mir_integration_tests
   mirsharedandroid-static
