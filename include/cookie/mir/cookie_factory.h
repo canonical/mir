@@ -46,7 +46,7 @@ class CookieFactory
 public:
     /**
     *   Construction function used to create a CookieFactory. The secret size must be
-    *   no less then minimum_secret_size otherwise an expection will be thrown
+    *   no less then minimum_secret_size otherwise an exception will be thrown
     *
     *   \param [in] secret  A filled in secret used to set the key for the hash function
     *   \return             A unique_ptr CookieFactory
