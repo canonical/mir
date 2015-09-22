@@ -83,6 +83,8 @@ message StreamConfiguration {
   optional int32 displacement_x = 2;
   optional int32 displacement_y = 3;
   optional int32 swapinterval = 4;
+  optional float scale = 5;
+
   optional string error = 127;
 };
 

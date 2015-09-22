@@ -1,5 +1,11 @@
 include(CMakeDependentOption)
 
+include_directories(
+  ${CMAKE_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/include/cookie
+  ${UMOCKDEV_INCLUDE_DIRS}
+)
+
 set(
   SOURCES
 
@@ -28,6 +34,7 @@ set(
   test_surfaces_with_output_id.cpp
   test_server_disconnect.cpp
   test_prompt_session_client_api.cpp
+  test_client_scaling.cpp
   test_client_screencast.cpp
   test_client_surface_visibility.cpp
   test_buffer_stream_arrangement.cpp
@@ -68,13 +75,11 @@ add_dependencies(mir_acceptance_tests GMock)
 target_link_libraries(mir_acceptance_tests
   mir-test-assist
 
-  # needed for 'throwback' tests that use private APIs
-  mir-test-framework-static
-
   mirclient
   mirclient-debug-extension
   mirserver
 
+  ${UMOCKDEV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 

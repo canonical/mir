@@ -120,6 +120,7 @@ public:
     void buffer_available(mir::protobuf::Buffer const& buffer) override;
     void buffer_unavailable() override;
     void set_size(geometry::Size) override;
+    MirWaitHandle* set_scale(float scale) override;
 protected:
     BufferStream(BufferStream const&) = delete;
     BufferStream& operator=(BufferStream const&) = delete;
@@ -129,7 +130,8 @@ private:
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&);
     void screencast_buffer_received(std::function<void()> done);
-    void on_configured(int interval);
+    void on_swap_interval_set(int interval);
+    void on_scale_set(float scale);
     void release_cpu_region();
 
     mutable std::mutex mutex; // Protects all members of *this
@@ -143,6 +145,7 @@ private:
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 
     int swap_interval_;
+    float scale_;
 
     std::shared_ptr<mir::client::PerfReport> const perf_report;
     
@@ -151,7 +154,8 @@ private:
     MirWaitHandle create_wait_handle;
     MirWaitHandle release_wait_handle;
     MirWaitHandle screencast_wait_handle;
-    MirWaitHandle configure_wait_handle;
+    MirWaitHandle interval_wait_handle;
+    MirWaitHandle scale_wait_handle;
     std::unique_ptr<mir::protobuf::Void> protobuf_void;
     
     std::shared_ptr<MemoryRegion> secured_region;

@@ -613,4 +613,32 @@ TEST_P(ClientBufferStream, configures_swap_interval)
     bs.set_swap_interval(0);
 }
 
+MATCHER_P(StreamConfigScaleIs, val, "")
+{
+    if (!arg->has_scale() || !val.has_scale())
+        return false;
+    auto const id_matches = arg->id().value() == val.id().value();
+    auto const tolerance = 0.01f;
+    auto const scale_matches = 
+        ((arg->scale() + tolerance >= val.scale()) &&
+         (arg->scale() - tolerance <= val.scale()));
+    return id_matches && scale_matches; 
+}
+
+TEST_P(ClientBufferStream, configures_scale)
+{
+    mcl::BufferStream bs{
+        nullptr, mock_protobuf_server, mode,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        response, perf_report, "", size};
+    service_requests_for(bs, mock_protobuf_server.alloc_count);
+
+    float scale = 2.1;
+    mp::StreamConfiguration expected_config;
+    expected_config.set_scale(scale);
+    expected_config.mutable_id()->set_value(1);
+    EXPECT_CALL(mock_protobuf_server, configure_buffer_stream(StreamConfigScaleIs(expected_config),_,_));
+    bs.set_scale(scale);
+}
+
 INSTANTIATE_TEST_CASE_P(BufferSemanticsMode, ClientBufferStream, Bool());
