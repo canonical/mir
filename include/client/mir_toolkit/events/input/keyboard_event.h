@@ -20,6 +20,7 @@
 #define MIR_TOOLKIT_KEYBOARD_EVENT_H_
 
 #include <xkbcommon/xkbcommon.h>
+#include <mir_toolkit/cookie.h>
 
 #ifdef __cplusplus
 /**

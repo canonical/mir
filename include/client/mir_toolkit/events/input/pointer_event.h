@@ -20,6 +20,7 @@
 #define MIR_TOOLKIT_POINTER_EVENT_H_
 
 #include <stdbool.h>
+#include <mir_toolkit/cookie.h>
 
 #ifdef __cplusplus
 /**
