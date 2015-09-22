@@ -27,6 +27,7 @@
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/mock_libinput.h"
 #include "mir/test/gmock_fixes.h"
+#include "mir/cookie_factory.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -39,6 +40,7 @@ namespace mie = mi::evdev;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace geom = mir::geometry;
+namespace cookie = mir::cookie;
 
 namespace
 {
@@ -66,7 +68,8 @@ struct MockInputSink : mi::InputSink
 
 struct MockEventBuilder : mi::EventBuilder
 {
-    mi::DefaultEventBuilder builder{MirInputDeviceId{3}};
+    std::shared_ptr<cookie::CookieFactory> const cookie_factory = cookie::CookieFactory::create_keeping_secret();
+    mi::DefaultEventBuilder builder{MirInputDeviceId{3}, cookie_factory};
     MockEventBuilder()
     {
         ON_CALL(*this, key_event(_,_,_,_,_))
