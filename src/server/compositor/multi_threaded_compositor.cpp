@@ -82,17 +82,15 @@ public:
 
         mir::set_thread_name("Mir/Comp");
 
-        int comp_count = 0;
-        std::vector<std::tuple<mg::DisplayBuffer*, std::unique_ptr<mc::DisplayBufferCompositor>, void *>> compositors;
+        std::vector<std::tuple<mg::DisplayBuffer*, std::unique_ptr<mc::DisplayBufferCompositor>>> compositors;
         group.for_each_display_buffer(
-        [this, &compositors, &comp_count](mg::DisplayBuffer& buffer)
+        [this, &compositors](mg::DisplayBuffer& buffer)
         {
-            auto const comp_id = this + comp_count;
             compositors.emplace_back(
-                std::make_tuple(&buffer, compositor_factory->create_compositor_for(buffer), comp_id));
-            comp_count++;
+                std::make_tuple(&buffer, compositor_factory->create_compositor_for(buffer)));
 
-            const auto& r = buffer.view_area();
+            auto const& r = buffer.view_area();
+            auto const comp_id = std::get<1>(compositors.back()).get();
             report->added_display(r.size.width.as_int(), r.size.height.as_int(),
                                   r.top_left.x.as_int(), r.top_left.y.as_int(),
                                   CompositorReport::SubCompositorId{comp_id});
@@ -108,11 +106,11 @@ public:
             [this,&compositors]
             {
                 for (auto& compositor : compositors)
-                    scene->register_compositor(std::get<2>(compositor));
+                    scene->register_compositor(std::get<1>(compositor).get());
             },
             [this,&compositors]{
                 for (auto& compositor : compositors)
-                    scene->unregister_compositor(std::get<2>(compositor));
+                    scene->unregister_compositor(std::get<1>(compositor).get());
             });
 
         started.set_value();
@@ -139,10 +137,10 @@ public:
                 frames_scheduled--;
                 lock.unlock();
 
-                for (auto& compositor : compositors)
+                for (auto& tuple : compositors)
                 {
-                    auto const comp_id = std::get<2>(compositor);
-                    std::get<1>(compositor)->composite(scene->scene_elements_for(comp_id));
+                    auto& compositor = std::get<1>(tuple);
+                    compositor->composite(scene->scene_elements_for(compositor.get()));
                 }
                 group.post();
 
@@ -168,7 +166,7 @@ public:
                 int pending = 0;
                 for (auto& compositor : compositors)
                 {
-                    auto const comp_id = std::get<2>(compositor);
+                    auto const comp_id = std::get<1>(compositor).get();
                     int pend = scene->frames_pending(comp_id);
                     if (pend > pending)
                         pending = pend;
