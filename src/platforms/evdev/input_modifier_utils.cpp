@@ -40,7 +40,7 @@ MirPointerButton mie::to_pointer_button(int button)
     BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mouse button"));
 }
 
-MirInputEventModifier mie::to_modifier(int32_t scan_code)
+MirInputEventModifiers mie::to_modifiers(int32_t scan_code)
 {
     switch(scan_code)
     {
@@ -67,12 +67,15 @@ MirInputEventModifier mie::to_modifier(int32_t scan_code)
     case KEY_RIGHTSHIFT:
         return mir_input_event_modifier_shift_right;
     default:
-        return mir_input_event_modifier_none;
+        return MirInputEventModifiers{0};
     }
 }
 
 MirInputEventModifiers mie::expand_modifiers(MirInputEventModifiers modifiers)
 {
+    if (modifiers == 0)
+        return mir_input_event_modifier_none;
+
     if ((modifiers & mir_input_event_modifier_alt_left) || (modifiers & mir_input_event_modifier_alt_right))
         modifiers |= mir_input_event_modifier_alt;
 

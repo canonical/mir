@@ -50,6 +50,8 @@ namespace cookie = mir::cookie;
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
+    MACRO(cursor)\
+    MACRO(cursor_images)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_report)\
     MACRO(gl_config)\

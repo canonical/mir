@@ -31,7 +31,7 @@ namespace mir
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; }
 namespace frontend { class SessionAuthorizer; class Session; class SessionMediatorReport; }
 namespace graphics { class Cursor; class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationReport; }
-namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; class InputDeviceHub;}
+namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class CursorImages; class TouchVisualizer; class InputDeviceHub;}
 namespace logging { class Logger; }
 namespace options { class Option; }
 namespace cookie
@@ -222,6 +222,12 @@ public:
 
     /// Sets an override functor for creating the compositor.
     void override_the_compositor(Builder<compositor::Compositor> const& compositor_builder);
+
+    /// Sets an override functor for creating the cursor.
+    void override_the_cursor(Builder<graphics::Cursor> const& cursor_builder);
+
+    /// Sets an override functor for creating the cursor images.
+    void override_the_cursor_images(Builder<input::CursorImages> const& cursor_images_builder);
 
     /// Sets an override functor for creating the per-display rendering code.
     void override_the_display_buffer_compositor_factory(
