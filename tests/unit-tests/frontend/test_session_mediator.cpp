@@ -241,8 +241,6 @@ struct SessionMediator : public ::testing::Test
     mp::Surface surface_response;
     mp::SurfaceId surface_id_request;
     mp::Buffer buffer_response;
-    mp::DRMMagic drm_request;
-    mp::DRMAuthMagicStatus drm_response;
     mp::BufferRequest buffer_request;
 };
 }
@@ -303,10 +301,6 @@ TEST_F(SessionMediator, calling_methods_before_connect_throws)
     }, std::logic_error);
 
     EXPECT_THROW({
-        mediator.drm_auth_magic(&drm_request, &drm_response, null_callback.get());
-    }, std::logic_error);
-
-    EXPECT_THROW({
         mediator.disconnect(nullptr, nullptr, null_callback.get());
     }, std::logic_error);
 }
@@ -346,10 +340,6 @@ TEST_F(SessionMediator, calling_methods_after_disconnect_throws)
 
     EXPECT_THROW({
         mediator.release_surface(&surface_id_request, nullptr, null_callback.get());
-    }, std::logic_error);
-
-    EXPECT_THROW({
-        mediator.drm_auth_magic(&drm_request, &drm_response, null_callback.get());
     }, std::logic_error);
 
     EXPECT_THROW({
@@ -851,33 +841,6 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
     mediator.exchange_buffer(&buffer_request, &exchanged_buffer, null_callback.get());
     buffer_request.mutable_buffer()->set_buffer_id(exchanged_buffer.buffer_id());
     buffer_request.mutable_buffer()->clear_fd();
-}
-
-//FIXME: we have an platform specific request in the protocol!
-TEST_F(SessionMediator, drm_auth_magic_calls_platform_operation_abstraction)
-{
-    using namespace testing;
-
-    int magic{0x3248};
-    int test_response{4};
-    mg::PlatformOperationMessage response;
-    response.data.resize(sizeof(int));
-    *(reinterpret_cast<int*>(response.data.data())) = test_response;
-
-    mg::PlatformOperationMessage request;
-    drm_request.set_magic(magic);
-
-    EXPECT_CALL(mock_ipc_operations, platform_operation(_, _))
-        .Times(1)
-        .WillOnce(DoAll(SaveArg<1>(&request), Return(response)));
-
-    mediator.connect(&connect_parameters, &connection, null_callback.get());
-    mediator.drm_auth_magic(&drm_request, &drm_response, null_callback.get());
-    mediator.disconnect(nullptr, nullptr, null_callback.get());
-
-    ASSERT_THAT(request.data.size(), Eq(sizeof(int)));
-    EXPECT_THAT(*(reinterpret_cast<int*>(request.data.data())), Eq(magic));
-    EXPECT_THAT(drm_response.status_code(), Eq(test_response));
 }
 
 // Regression test for LP: #1441759

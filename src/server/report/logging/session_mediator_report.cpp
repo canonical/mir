@@ -78,11 +78,6 @@ void mrl::SessionMediatorReport::session_disconnect_called(std::string const& ap
     log->log(ml::Severity::informational, "session_disconnect_called(\"" + app_name + "\")", component);
 }
 
-void mrl::SessionMediatorReport::session_drm_auth_magic_called(std::string const& app_name)
-{
-    log->log(ml::Severity::informational, "session_drm_auth_magic_called(\"" + app_name + "\")", component);
-}
-
 void mrl::SessionMediatorReport::session_configure_surface_called(std::string const& app_name)
 {
     log->log(ml::Severity::informational, "session_configure_surface_called(\"" + app_name + "\")", component);
