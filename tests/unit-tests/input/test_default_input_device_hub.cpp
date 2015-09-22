@@ -42,7 +42,7 @@
 namespace mi = mir::input;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
-namespace mc = mir::cookie;
+namespace cookie = mir::cookie;
 namespace geom = mir::geometry;
 using namespace std::literals::chrono_literals;
 
@@ -101,7 +101,7 @@ struct InputDeviceHubTest : ::testing::Test
     mtd::TriggeredMainLoop observer_loop;
     Nice<mtd::MockInputDispatcher> mock_dispatcher;
     Nice<mtd::MockInputRegion> mock_region;
-    std::shared_ptr<mc::CookieFactory> cookie_factory = mc::CookieFactory::create_keeping_secret();
+    std::shared_ptr<cookie::CookieFactory> cookie_factory = cookie::CookieFactory::create_keeping_secret();
     Nice<MockCursorListener> mock_cursor_listener;
     Nice<MockTouchVisualizer> mock_visualizer;
     mir::dispatch::MultiplexingDispatchable multiplexer;

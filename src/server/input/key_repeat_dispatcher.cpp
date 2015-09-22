@@ -29,12 +29,12 @@
 #include <string.h>
 
 namespace mi = mir::input;
-namespace mc = mir::cookie;
+namespace cookie = mir::cookie;
 
 mi::KeyRepeatDispatcher::KeyRepeatDispatcher(
     std::shared_ptr<mi::InputDispatcher> const& next_dispatcher,
     std::shared_ptr<mir::time::AlarmFactory> const& factory,
-    std::shared_ptr<mc::CookieFactory> const& c_factory,
+    std::shared_ptr<cookie::CookieFactory> const& c_factory,
     bool repeat_enabled,
     std::chrono::milliseconds repeat_timeout,
     std::chrono::milliseconds repeat_delay)

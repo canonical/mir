@@ -2,8 +2,6 @@ include(CMakeDependentOption)
 
 include_directories(
   ${CMAKE_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/include/cookie
-  ${UMOCKDEV_INCLUDE_DIRS}
 )
 
 set(
@@ -53,7 +51,6 @@ set(
   test_surface_specification.cpp
   test_system_compositor_window_manager.cpp
   test_session_mediator_report.cpp
-  test_client_cookie.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
@@ -83,7 +80,6 @@ target_link_libraries(mir_acceptance_tests
   mirclient-debug-extension
   mirserver
 
-  ${UMOCKDEV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
@@ -95,5 +91,5 @@ CMAKE_DEPENDENT_OPTION(
   OFF)
 
 if (MIR_RUN_ACCEPTANCE_TESTS)
-  mir_discover_tests_with_fd_leak_detection(mir_acceptance_tests LD_PRELOAD=libumockdev-preload.so.0 G_SLICE=always-malloc G_DEBUG=gc-friendly)
+  mir_discover_tests_with_fd_leak_detection(mir_acceptance_tests)
 endif (MIR_RUN_ACCEPTANCE_TESTS)

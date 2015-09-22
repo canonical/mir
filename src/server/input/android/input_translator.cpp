@@ -29,7 +29,7 @@
 
 namespace mia = mir::input::android;
 namespace mev = mir::events;
-namespace mc  = mir::cookie;
+namespace cookie = mir::cookie;
 
 namespace
 {
@@ -56,7 +56,7 @@ bool valid_motion_event(MirMotionEvent const& motion)
 }
 
 mia::InputTranslator::InputTranslator(std::shared_ptr<InputDispatcher> const& dispatcher,
-                                      std::shared_ptr<mc::CookieFactory> const& c_factory)
+                                      std::shared_ptr<cookie::CookieFactory> const& c_factory)
     : dispatcher(dispatcher),
       cookie_factory(c_factory)
 {

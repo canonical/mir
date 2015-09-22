@@ -37,19 +37,19 @@ namespace mev = mir::events;
 namespace mia = mir::input::android;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
-namespace mc = mir::cookie;
+namespace cookie = mir::cookie;
 
 namespace
 {
 class InputTranslator : public ::testing::Test
 {
 public:
-    std::shared_ptr<mc::CookieFactory> cookie_factory;
+    std::shared_ptr<cookie::CookieFactory> cookie_factory;
     ::testing::NiceMock<mtd::MockInputDispatcher> dispatcher;
     mia::InputTranslator translator;
 
     InputTranslator()
-        : cookie_factory(mc::CookieFactory::create_keeping_secret())
+        : cookie_factory(cookie::CookieFactory::create_keeping_secret())
         , translator(mt::fake_shared(dispatcher), cookie_factory)
     {
         std::memset(coords, 0, sizeof(coords));

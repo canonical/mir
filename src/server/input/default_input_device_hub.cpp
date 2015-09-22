@@ -35,7 +35,7 @@
 #include <atomic>
 
 namespace mi = mir::input;
-namespace mc = mir::cookie;
+namespace cookie = mir::cookie;
 
 mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mi::InputDispatcher> const& input_dispatcher,
@@ -44,7 +44,7 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<TouchVisualizer> const& touch_visualizer,
     std::shared_ptr<CursorListener> const& cursor_listener,
     std::shared_ptr<InputRegion> const& input_region,
-    std::shared_ptr<mc::CookieFactory> const& c_factory)
+    std::shared_ptr<cookie::CookieFactory> const& c_factory)
     : input_dispatcher(input_dispatcher), input_dispatchable{input_multiplexer}, observer_queue(observer_queue),
       touch_visualizer(touch_visualizer), cursor_listener(cursor_listener), input_region(input_region),
       cookie_factory(c_factory)
@@ -124,7 +124,7 @@ mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
     std::shared_ptr<InputDevice> const& dev,
     std::shared_ptr<InputDispatcher> const& dispatcher,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
-    std::shared_ptr<mc::CookieFactory> const& c_factory,
+    std::shared_ptr<cookie::CookieFactory> const& c_factory,
     DefaultInputDeviceHub* hub)
     : device_id(create_new_device_id()), builder(device_id, c_factory), device(dev), dispatcher(dispatcher),
       multiplexer(multiplexer), hub(hub)

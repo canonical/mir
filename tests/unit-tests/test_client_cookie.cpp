@@ -28,14 +28,13 @@
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace msh = mir::shell;
-namespace mc  = mir::cookie;
+namespace cookie = mir::cookie;
 
 namespace
 {
 int const max_wait{4};
+extern void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx);
 }
-
-static void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx);
 
 class ClientCookies : public mtf::ConnectedClientWithASurface
 {
@@ -45,7 +44,7 @@ public:
     {
         add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", nullptr);
         server.override_the_cookie_factory([this] ()
-            { return mc::CookieFactory::create_saving_secret(cookie_secret); });
+            { return cookie::CookieFactory::create_saving_secret(cookie_secret); });
 
         mock_devices.add_standard_device("laptop-keyboard");
     }
@@ -69,7 +68,7 @@ public:
 
     void TearDown() override
     {
-        mtf::ConnectedClientHeadlessServer::TearDown();
+        mtf::ConnectedClientWithASurface::TearDown();
     }
 
     std::vector<uint8_t> cookie_secret;
@@ -78,6 +77,8 @@ public:
     mir::test::WaitCondition udev_read_recording;
 };
 
+namespace
+{
 void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
 {
     auto client = reinterpret_cast<ClientCookies*>(ctx);
@@ -94,6 +95,7 @@ void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
         }
     }
 }
+}
 
 TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
 {
@@ -103,7 +105,7 @@ TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
     if (!udev_read_recording.woken())
         BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for udev to read the recording 'laptop-keyboard-hello'"));
 
-    auto factory = mc::CookieFactory::create_from_secret(cookie_secret);
+    auto factory = cookie::CookieFactory::create_from_secret(cookie_secret);
 
     EXPECT_TRUE(factory->attest_timestamp(out_cookie));
 }
