@@ -54,17 +54,6 @@ if (MIR_TEST_PLATFORM STREQUAL "android")
   add_subdirectory(graphics/android)
 endif()
 
-if(MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
-  include_directories(
-    ${DRM_INCLUDE_DIRS}
-    ${GBM_INCLUDE_DIRS}
-    ${EGL_INCLUDE_DIRS}
-    ${GLESv2_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}
-  )
-  add_subdirectory(graphics/mesa)
-endif()
-
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 mir_add_wrapped_executable(
   mir_integration_tests
@@ -136,6 +125,17 @@ CMAKE_DEPENDENT_OPTION(
   ON
   "MIR_BUILD_INTEGRATION_TESTS"
   OFF)
+
+if(MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
+  include_directories(
+    ${DRM_INCLUDE_DIRS}
+    ${GBM_INCLUDE_DIRS}
+    ${EGL_INCLUDE_DIRS}
+    ${GLESv2_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}
+  )
+  add_subdirectory(graphics/mesa)
+endif()
 
 if (MIR_RUN_INTEGRATION_TESTS)
   mir_discover_tests_with_fd_leak_detection(mir_integration_tests)
