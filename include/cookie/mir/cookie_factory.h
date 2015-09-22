@@ -55,23 +55,18 @@ public:
 
     /**
     *   Construction function used to create a CookieFactory as well as a secret.
-    *   The secret size must be no less then minimum_secret_size otherwise an expection will be thrown
     *
-    *   \param [in]  secret_size  The size of the secret to create, must be larger then minimum_secret_size
     *   \param [out] save_secret  The secret that was created.
     *   \return                   A unique_ptr CookieFactory
     */
-    static std::unique_ptr<CookieFactory> create_saving_secret(Secret& save_secret,
-                                                               unsigned secret_size = 2 * minimum_secret_size);
+    static std::unique_ptr<CookieFactory> create_saving_secret(Secret& save_secret);
 
     /**
     *   Construction function used to create a CookieFactory and a secret which it keeps internally.
-    *   The secret size must be no less then minimum_secret_size otherwise an expection will be thrown
     *
-    *   \param [in]  secret_size  The size of the secret to create, must be larger then minimum_secret_size
     *   \return                   A unique_ptr CookieFactory
     */
-    static std::unique_ptr<CookieFactory> create_keeping_secret(unsigned secret_size = 2 * minimum_secret_size);
+    static std::unique_ptr<CookieFactory> create_keeping_secret();
 
     CookieFactory(CookieFactory const& factory) = delete;
     CookieFactory& operator=(CookieFactory const& factory) = delete;

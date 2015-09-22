@@ -37,6 +37,7 @@ namespace
 std::string const random_device_path{"/dev/random"};
 std::string const urandom_device_path{"/dev/urandom"};
 int const wait_seconds{30};
+int const hmac_sha1_block_size{64};
 }
 
 static mir::cookie::Secret get_random_data(unsigned size)
@@ -147,15 +148,14 @@ std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_f
   return std::make_unique<CookieFactoryNettle>(secret);
 }
 
-std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_saving_secret(mir::cookie::Secret& save_secret,
-                                                                                             unsigned secret_size)
+std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_saving_secret(mir::cookie::Secret& save_secret)
 {
-  save_secret = get_random_data(secret_size);
+  save_secret = get_random_data(hmac_sha1_block_size);
   return std::make_unique<CookieFactoryNettle>(save_secret);
 }
 
-std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_keeping_secret(unsigned secret_size)
+std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_keeping_secret()
 {
-  auto secret = get_random_data(secret_size);
+  auto secret = get_random_data(hmac_sha1_block_size);
   return std::make_unique<CookieFactoryNettle>(secret);
 }
