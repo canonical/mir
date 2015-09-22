@@ -1,5 +1,7 @@
 include_directories(
-  ${PROJECT_SOURCE_DIR}/src/renderers/gl/include
+  ${PROJECT_SOURCE_DIR}/include/renderers/gl/
+  # TODO: This is a temporary dependency until renderers become proper plugins
+  ${PROJECT_SOURCE_DIR}/src/renderers/ 
 )
 
 set(
@@ -10,9 +12,6 @@ set(
   temporary_buffers.cpp
   buffer_stream_factory.cpp
   buffer_stream_surfaces.cpp
-  gl_renderer.cpp
-  gl_renderer_factory.cpp
-  gl_program_family.cpp
   multi_threaded_compositor.cpp
   occlusion.cpp
   default_configuration.cpp

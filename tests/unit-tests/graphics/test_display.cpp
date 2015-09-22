@@ -28,7 +28,7 @@
 #include "mir/test/doubles/stub_gl_program_factory.h"
 #include "mir/test/doubles/platform_factory.h"
 #include "mir/graphics/default_display_configuration_policy.h"
-#ifdef MESA_KMS
+#if defined(MESA_KMS) || defined(MESA_X11)
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir_test_framework/udev_environment.h"
@@ -36,13 +36,16 @@
 #include "mir/test/doubles/mock_android_hw.h"
 #include "mir/test/doubles/mock_display_device.h"
 #endif
+#ifdef MESA_X11
+#include "mir/test/doubles/mock_x11.h"
+#endif
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
-#ifdef MESA_KMS
+#if defined(MESA_KMS) || defined(MESA_X11)
 namespace mtf = mir_test_framework;
 #endif
 
@@ -52,6 +55,43 @@ public:
     DisplayTest()
     {
         using namespace testing;
+
+#ifdef MESA_X11
+        EGLint const client_version = 2;
+
+        ON_CALL(mock_egl, eglQueryContext(mock_egl.fake_egl_display,
+                                          mock_egl.fake_egl_context,
+                                          EGL_CONTEXT_CLIENT_VERSION,
+                                          _))
+            .WillByDefault(DoAll(SetArgPointee<3>(client_version),
+                            Return(EGL_TRUE)));
+
+        ON_CALL(mock_egl, eglQuerySurface(mock_egl.fake_egl_display,
+                                          mock_egl.fake_egl_surface,
+                                          EGL_WIDTH,
+                                          _))
+            .WillByDefault(DoAll(SetArgPointee<3>(1280),
+                            Return(EGL_TRUE)));
+
+        ON_CALL(mock_egl, eglQuerySurface(mock_egl.fake_egl_display,
+                                          mock_egl.fake_egl_surface,
+                                          EGL_HEIGHT,
+                                          _))
+            .WillByDefault(DoAll(SetArgPointee<3>(1024),
+                            Return(EGL_TRUE)));
+
+        ON_CALL(mock_egl, eglGetConfigAttrib(mock_egl.fake_egl_display,
+                                             _,
+                                             _,
+                                             _))
+            .WillByDefault(DoAll(SetArgPointee<3>(EGL_WINDOW_BIT),
+                            Return(EGL_TRUE)));
+
+        ON_CALL(mock_x11, XNextEvent(mock_x11.fake_x11.display,
+                                     _))
+            .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.expose_event_return),
+                       Return(1)));
+#endif
 
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
             .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
@@ -63,6 +103,8 @@ public:
 
 #ifdef MESA_KMS
         fake_devices.add_standard_device("standard-drm-devices");
+#elif MESA_X11
+        fake_devices.add_standard_device("standard-drm-render-nodes");
 #endif
     }
 
@@ -79,10 +121,13 @@ public:
     ::testing::NiceMock<mtd::MockGL> mock_gl;
 #ifdef ANDROID
     ::testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
-#elif MESA_KMS
+#else
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     mtf::UdevEnvironment fake_devices;
+#endif
+#ifdef MESA_X11
+    ::testing::NiceMock<mtd::MockX11> mock_x11;
 #endif
 };
 
@@ -118,7 +163,11 @@ TEST_F(DisplayTest, configure_disallows_invalid_configuration)
     // platform-dependent exercise, so won't be tested here.
 }
 
+#ifdef MESA_X11
+TEST_F(DisplayTest, DISABLED_gl_context_make_current_uses_shared_context)
+#else
 TEST_F(DisplayTest, gl_context_make_current_uses_shared_context)
+#endif
 {
     using namespace testing;
     EGLContext const shared_context{reinterpret_cast<EGLContext>(0x111)};
@@ -185,7 +234,11 @@ TEST_F(DisplayTest, gl_context_releases_context)
         .Times(AtLeast(0));
 }
 
+#ifdef MESA_X11
+TEST_F(DisplayTest, DISABLED_does_not_expose_display_buffer_for_output_with_power_mode_off)
+#else
 TEST_F(DisplayTest, does_not_expose_display_buffer_for_output_with_power_mode_off)
+#endif
 {
     using namespace testing;
     auto display = create_display();

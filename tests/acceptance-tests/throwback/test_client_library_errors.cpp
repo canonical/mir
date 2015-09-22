@@ -26,6 +26,7 @@
 #include "mir/test/validity_matchers.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
+#include "mir_test_framework/using_client_platform.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/stub_client_connection_configuration.h"
 #include "mir_test_framework/any_surface.h"

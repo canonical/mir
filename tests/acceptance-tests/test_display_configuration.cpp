@@ -316,8 +316,6 @@ TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_
 
 TEST_F(DisplayConfigurationTest, changing_focus_from_client_with_config_to_client_without_config_configures_display)
 {
-    EXPECT_CALL(mock_display, configure(_)).Times(1);
-
     DisplayClient display_client{new_connection()};
     SimpleClient simple_client{new_connection()};
 
@@ -326,8 +324,10 @@ TEST_F(DisplayConfigurationTest, changing_focus_from_client_with_config_to_clien
 
     /* Connect the display config client and apply a display config. */
     display_client.connect();
-    display_client.apply_config();
 
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    EXPECT_CALL(mock_display, configure(_)).Times(1);
+    display_client.apply_config();
     wait_for_server_actions_to_finish(*server.the_main_loop());
     testing::Mock::VerifyAndClearExpectations(&mock_display);
 

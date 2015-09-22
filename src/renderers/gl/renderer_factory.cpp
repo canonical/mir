@@ -16,15 +16,17 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "gl_renderer_factory.h"
-#include "mir/compositor/gl_renderer.h"
+#include "renderer_factory.h"
+#include "renderer.h"
+#include "mir/graphics/display_buffer.h"
 
-namespace mg = mir::graphics;
+namespace mrg = mir::renderer::gl;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
 std::unique_ptr<mc::Renderer>
-mc::GLRendererFactory::create_renderer_for(geom::Rectangle const& rect)
+mrg::RendererFactory::create_renderer_for(
+    graphics::DisplayBuffer& display_buffer)
 {
-    return std::make_unique<GLRenderer>(rect);
+    return std::make_unique<Renderer>(display_buffer);
 }

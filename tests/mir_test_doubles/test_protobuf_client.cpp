@@ -56,7 +56,6 @@ mir::test::TestProtobufClient::TestProtobufClient(
     exchange_buffer_called(false),
     release_surface_called(false),
     disconnect_done_called(false),
-    drm_auth_magic_done_called(false),
     configure_display_done_called(false),
     tfd_done_called(false),
     connect_done_count(0),
@@ -83,8 +82,6 @@ mir::test::TestProtobufClient::TestProtobufClient(
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_release_surface_done));
     ON_CALL(*this, disconnect_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_disconnect_done));
-    ON_CALL(*this, drm_auth_magic_done())
-        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_drm_auth_magic_done));
     ON_CALL(*this, display_configure_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_configure_display_done));
     ON_CALL(*this, prompt_session_start_done())
@@ -133,11 +130,6 @@ void mir::test::TestProtobufClient::on_disconnect_done()
     auto old = disconnect_done_count.load();
 
     while (!disconnect_done_count.compare_exchange_weak(old, old+1));
-}
-
-void mir::test::TestProtobufClient::on_drm_auth_magic_done()
-{
-    drm_auth_magic_done_called.store(true);
 }
 
 void mir::test::TestProtobufClient::on_configure_display_done()
@@ -215,16 +207,6 @@ void mir::test::TestProtobufClient::wait_for_disconnect_done()
         std::this_thread::yield();
     }
     disconnect_done_called.store(false);
-}
-
-void mir::test::TestProtobufClient::wait_for_drm_auth_magic_done()
-{
-    for (int i = 0; !drm_auth_magic_done_called.load() && i < maxwait; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::this_thread::yield();
-    }
-    drm_auth_magic_done_called.store(false);
 }
 
 void mir::test::TestProtobufClient::wait_for_surface_count(int count)

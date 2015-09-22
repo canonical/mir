@@ -31,6 +31,7 @@ using namespace mir;
 using namespace mir::examples;
 using namespace mir::geometry;
 using namespace mir::compositor;
+using namespace mir::renderer;
 
 namespace
 {
@@ -177,10 +178,10 @@ static const GLchar contrast_fshader[] =
 } // namespace
 
 DemoRenderer::DemoRenderer(
-    Rectangle const& display_area,
+    graphics::DisplayBuffer& display_buffer,
     float const titlebar_height,
     float const shadow_radius) :
-    GLRenderer(display_area),
+    gl::Renderer(display_buffer),
     titlebar_height{titlebar_height},
     shadow_radius{shadow_radius},
     corner_radius{0.5f},
@@ -223,7 +224,7 @@ void DemoRenderer::begin(DecorMap&& d) const
 void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
                               graphics::Renderable const& renderable) const
 {
-    GLRenderer::tessellate(primitives, renderable);
+    gl::Renderer::tessellate(primitives, renderable);
     auto d = decor_map.find(renderable.id());
     if (d != decor_map.end())
     {
@@ -388,14 +389,14 @@ void DemoRenderer::set_colour_effect(ColourEffect e)
 }
 
 void DemoRenderer::draw(graphics::Renderable const& renderable,
-                        GLRenderer::Program const& current_program) const
+                        gl::Renderer::Program const& current_program) const
 {
-    const GLRenderer::Program* const programs[ColourEffect::neffects] =
+    const gl::Renderer::Program* const programs[ColourEffect::neffects] =
     {
         &current_program,
         &inverse_program,
         &contrast_program
     };
 
-    GLRenderer::draw(renderable, *programs[colour_effect]);
+    gl::Renderer::draw(renderable, *programs[colour_effect]);
 }

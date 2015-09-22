@@ -234,10 +234,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::release_surface, invocation);
         }
-        else if ("drm_auth_magic" == invocation.method_name())
-        {
-            invoke(this, display_server.get(), &DisplayServer::drm_auth_magic, invocation);
-        }
         else if ("platform_operation" == invocation.method_name())
         {
             auto request = parse_parameter<mir::protobuf::PlatformOperationMessage>(invocation);
@@ -305,6 +301,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         else if ("pong" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::pong, invocation);
+        }
+        else if ("configure_buffer_stream" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::configure_buffer_stream, invocation);
         }
         else if ("translate_surface_to_screen" == invocation.method_name())
         {

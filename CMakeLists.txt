@@ -176,6 +176,7 @@ find_package(LTTngUST REQUIRED)
 pkg_check_modules(UDEV REQUIRED libudev)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
 pkg_check_modules(LIBINPUT REQUIRED libinput)
+pkg_check_modules(NETTLE REQUIRED nettle)
 pkg_check_modules(UUID REQUIRED uuid)
 
 include_directories (${GLESv2_INCLUDE_DIRS})

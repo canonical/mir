@@ -16,15 +16,17 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_GL_RENDERER_H_
-#define MIR_COMPOSITOR_GL_RENDERER_H_
+#ifndef MIR_RENDERER_GL_RENDERER_H_
+#define MIR_RENDERER_GL_RENDERER_H_
 
-#include <mir/compositor/gl_program_family.h>
+#include "program_family.h"
+
 #include <mir/compositor/renderer.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
 #include <mir/graphics/gl_primitive.h>
+
 #include <GLES2/gl2.h>
 #include <unordered_map>
 #include <unordered_set>
@@ -32,16 +34,35 @@
 
 namespace mir
 {
-namespace graphics { class GLTextureCache; }
 
-namespace compositor
+namespace graphics
+{
+class GLTextureCache;
+class DisplayBuffer;
+}
+
+namespace renderer
+{
+namespace gl
 {
 
-class GLRenderer : public Renderer
+class RenderingTarget
 {
 public:
-    GLRenderer(geometry::Rectangle const& display_area);
-    virtual ~GLRenderer();
+    RenderingTarget(graphics::DisplayBuffer* buffer);
+    ~RenderingTarget();
+
+    void ensure_current();
+
+private:
+    graphics::DisplayBuffer* const buffer;
+};
+
+class Renderer : public compositor::Renderer
+{
+public:
+    Renderer(graphics::DisplayBuffer& display_buffer);
+    virtual ~Renderer();
 
     // These are called with a valid GL context:
     void set_viewport(geometry::Rectangle const& rect) override;
@@ -50,6 +71,10 @@ public:
 
     // This is called _without_ a GL context:
     void suspend() override;
+
+private:
+    mutable RenderingTarget rendering_target;
+    graphics::DisplayBuffer& display_buffer;
 
 protected:
     /**
@@ -62,9 +87,9 @@ protected:
      *                            grown and/or modified.
      * \param [in]     renderable The renderable surface being tessellated.
      *
-     * \note The cohesion of this function to GLRenderer is quite loose and it
+     * \note The cohesion of this function to gl::Renderer is quite loose and it
      *       does not strictly need to reside here.
-     *       However it seems a good choice under GLRenderer while this remains
+     *       However it seems a good choice under gl::Renderer while this remains
      *       the only OpenGL-specific class in the display server, and
      *       tessellation is very much OpenGL-specific.
      */
@@ -75,7 +100,7 @@ protected:
 
     mutable long long frameno = 0;
 
-    GLProgramFamily family;
+    ProgramFamily family;
     struct Program
     {
        GLuint id = 0;
@@ -98,7 +123,7 @@ protected:
     static const GLchar* const alpha_fshader;
 
     virtual void draw(graphics::Renderable const& renderable,
-                      GLRenderer::Program const& prog) const;
+                      Renderer::Program const& prog) const;
 
 private:
     std::unique_ptr<graphics::GLTextureCache> const texture_cache;
@@ -111,5 +136,6 @@ private:
 
 }
 }
+}
 
-#endif // MIR_COMPOSITOR_GL_RENDERER_H_
+#endif // MIR_RENDERER_GL_RENDERER_H_

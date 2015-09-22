@@ -169,6 +169,22 @@ void mir_buffer_stream_get_graphics_region(
  */
 MirEGLNativeWindowType mir_buffer_stream_get_egl_native_window(MirBufferStream *buffer_stream);
 
+/**
+ * Set the scale associated with all buffers in the stream
+ * \param [in] buffer_stream The buffer stream
+ * \param [in] scale         The scale
+ * \return                  A handle that can be passed to mir_wait_for
+ */
+MirWaitHandle *mir_buffer_stream_set_scale(MirBufferStream* stream, float scale);
+
+/**
+ * Set the scale as in mir_buffer_stream_set_scale(), but also wait for the
+ * operation to complete.
+ * \param [in] buffer_stream The buffer stream
+ * \param [in] scale         The scale
+ */
+void mir_buffer_stream_set_scale_sync(MirBufferStream* stream, float scale);
+
 #ifdef __cplusplus
 }
 /**@}*/

@@ -1,0 +1,6 @@
+list(APPEND UNIT_TEST_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_gl_program_family.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_gl_renderer.cpp
+)
+
+set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

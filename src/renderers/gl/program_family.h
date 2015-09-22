@@ -16,31 +16,36 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_GL_PROGRAM_FAMILY_H_
-#define MIR_COMPOSITOR_GL_PROGRAM_FAMILY_H_
+#ifndef MIR_RENDERER_GL_PROGRAM_FAMILY_H_
+#define MIR_RENDERER_GL_PROGRAM_FAMILY_H_
 
 #include <GLES2/gl2.h>
 #include <utility>
 #include <map>
 #include <unordered_map>
 
-namespace mir { namespace compositor {
+namespace mir
+{
+namespace renderer
+{
+namespace gl
+{
 
 /**
- * GLProgramFamily represents a set of GLSL programs that are closely
+ * ProgramFamily represents a set of GLSL programs that are closely
  * related. Programs which point to the same shader source strings will be
  * made to share the same compiled shader objects.
  *   A secondary intention is that this class may be extended to allow the
  * different programs within the family to share common patterns of uniform
  * usage too.
  */
-class GLProgramFamily
+class ProgramFamily
 {
 public:
-    GLProgramFamily() = default;
-    GLProgramFamily(GLProgramFamily const&) = delete;
-    GLProgramFamily& operator=(GLProgramFamily const&) = delete;
-    ~GLProgramFamily() noexcept;
+    ProgramFamily() = default;
+    ProgramFamily(ProgramFamily const&) = delete;
+    ProgramFamily& operator=(ProgramFamily const&) = delete;
+    ~ProgramFamily() noexcept;
 
     GLuint add_program(const GLchar* const static_vshader_src,
                        const GLchar* const static_fshader_src);
@@ -62,6 +67,8 @@ private:
     std::map<ShaderPair, Program> program;
 };
 
-}}  // namespace mir::compositor
+}
+}
+}
 
-#endif // MIR_COMPOSITOR_GL_PROGRAM_FAMILY_H_
+#endif // MIR_RENDERER_GL_PROGRAM_FAMILY_H_

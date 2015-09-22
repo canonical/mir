@@ -16,22 +16,27 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_GL_RENDERER_FACTORY_H_
-#define MIR_COMPOSITOR_GL_RENDERER_FACTORY_H_
+#ifndef MIR_RENDERER_GL_RENDERER_FACTORY_H_
+#define MIR_RENDERER_GL_RENDERER_FACTORY_H_
 
 #include "mir/compositor/renderer_factory.h"
 
 namespace mir
 {
-namespace compositor
+namespace renderer
+{
+namespace gl
 {
 
-class GLRendererFactory : public RendererFactory
+class RendererFactory : public compositor::RendererFactory
 {
 public:
-    std::unique_ptr<Renderer> create_renderer_for(geometry::Rectangle const& rect);
+    std::unique_ptr<compositor::Renderer> create_renderer_for(
+        graphics::DisplayBuffer& display_buffer) override;
 };
+
+}
 }
 }
 
-#endif /* MIR_COMPOSITOR_GL_RENDERER_FACTORY_H_ */
+#endif

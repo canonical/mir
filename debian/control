@@ -42,15 +42,16 @@ Build-Depends: cmake,
                libevdev-dev,
                libinput-dev (>= 0.21),
                uuid-dev,
-               python3,
+               python3:any,
                dh-python,
+               nettle-dev,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
 # just go ahead. ~mir-team will notice and sync up the code again.
 Vcs-Bzr: https://code.launchpad.net/mir
 
-Package: libmirprotobuf2
+Package: libmirprotobuf4
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -66,7 +67,7 @@ Description: Display server for Ubuntu - RPC definitions
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
-Package: libmirserver33
+Package: libmirserver35
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -132,7 +133,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver33 (= ${binary:Version}),
+Depends: libmirserver35 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -417,6 +418,33 @@ Description: Display server for Ubuntu - android driver metapackage
  This package depends on a full set of graphics drivers for running Mir on top
  of an existing Android driver stack.
 
+Package: libmircookie1
+Section: libs
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+Description: Produce and verify spoof-resistant timestamps - runtime library
+ libmircookie provides a simple mechanism for a group of cooperating processes
+ to hand out and verify difficult-to-forge timestamps to untrusted 3rd parties.
+ .
+ This package contains the runtime library for generating and verifying the
+ attestable timestamps.
+
+Package: libmircookie-dev
+Section: libdevel
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libmircookie1 (= ${binary:Version}),
+         ${misc:Depends},
+Description: Produce and verify spoof-resistant timestamps - development headers
+ libmircookie provides a simple mechanism for a group of cooperating processes
+ to hand out and verify difficult-to-forge timestamps to untrusted 3rd parties.
+ .
+ This package contains the development headers for building programs that
+ generate or verify the attestable timestamps.
+
 Package: python3-mir-perf-framework
 Section: python
 Architecture: all
@@ -433,3 +461,16 @@ Description: Display server for Ubuntu - performance testing framework
  This package contains a python3 framework to facilitate writing performance
  tests for Mir. It also contains a few interesting performance tests written
  using the framework.
+
+Package: mir-renderer-gl-dev
+Section: libdevel
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+Description: Display server for Ubuntu - GL Renderer development files
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains header files that define the interfaces through which platforms and
+ renderers access the functionality needed to render with GL.

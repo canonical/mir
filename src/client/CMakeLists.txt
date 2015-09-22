@@ -45,6 +45,7 @@ add_library(mirclientobjects OBJECT
   error_connections.cpp
   event.cpp
   event_printer.cpp
+  mir_blob.cpp
   mir_connection.cpp
   mir_connection_api.cpp
   mir_wait_handle.cpp

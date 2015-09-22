@@ -16,11 +16,14 @@
  *              Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/compositor/gl_renderer.h"
+#define MIR_LOG_COMPONENT "GLRenderer"
+
+#include "renderer.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/compositor/recently_used_cache.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/graphics/gl_texture_cache.h"
 #include "mir/graphics/gl_texture.h"
 #include "mir/graphics/tessellation_helpers.h"
@@ -29,6 +32,7 @@
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <EGL/egl.h>
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -36,9 +40,26 @@
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
+namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
 
-const GLchar* const mc::GLRenderer::vshader =
+mrg::RenderingTarget::RenderingTarget(mg::DisplayBuffer* buffer)
+    : buffer{buffer}
+{
+    ensure_current();
+}
+
+mrg::RenderingTarget::~RenderingTarget()
+{
+    buffer->release_current();
+}
+
+void mrg::RenderingTarget::ensure_current()
+{
+    buffer->make_current();
+}
+
+const GLchar* const mrg::Renderer::vshader =
 {
     "attribute vec3 position;\n"
     "attribute vec2 texcoord;\n"
@@ -55,7 +76,7 @@ const GLchar* const mc::GLRenderer::vshader =
     "}\n"
 };
 
-const GLchar* const mc::GLRenderer::alpha_fshader =
+const GLchar* const mrg::Renderer::alpha_fshader =
 {
     "precision mediump float;\n"
     "uniform sampler2D tex;\n"
@@ -67,7 +88,7 @@ const GLchar* const mc::GLRenderer::alpha_fshader =
     "}\n"
 };
 
-const GLchar* const mc::GLRenderer::default_fshader =
+const GLchar* const mrg::Renderer::default_fshader =
 {   // This is the fastest fragment shader. Use it when you can.
     "precision mediump float;\n"
     "uniform sampler2D tex;\n"
@@ -77,7 +98,7 @@ const GLchar* const mc::GLRenderer::default_fshader =
     "}\n"
 };
 
-mc::GLRenderer::Program::Program(GLuint program_id)
+mrg::Renderer::Program::Program(GLuint program_id)
 {
     id = program_id;
     position_attr = glGetAttribLocation(id, "position");
@@ -90,26 +111,45 @@ mc::GLRenderer::Program::Program(GLuint program_id)
     alpha_uniform = glGetUniformLocation(id, "alpha");
 }
 
-mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
-    : clear_color{0.0f, 0.0f, 0.0f, 0.0f},
+mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
+    : rendering_target(&display_buffer),
+      display_buffer(display_buffer),
+      clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
-      texture_cache(std::make_unique<RecentlyUsedCache>()),
+      texture_cache(std::make_unique<mc::RecentlyUsedCache>()),
       rotation(NAN) // ensure the first set_rotation succeeds
 {
+    EGLDisplay disp = eglGetCurrentDisplay();
+    if (disp != EGL_NO_DISPLAY)
+    {
+        struct {GLint id; char const* label;} const eglstrings[] =
+        {
+            {EGL_VENDOR,      "EGL vendor"},
+            {EGL_VERSION,     "EGL version"},
+            {EGL_CLIENT_APIS, "EGL client APIs"},
+            {EGL_EXTENSIONS,  "EGL extensions"},
+        };
+        for (auto& s : eglstrings)
+        {
+            auto val = eglQueryString(disp, s.id);
+            mir::log_info(std::string(s.label) + ": " + (val ? val : ""));
+        }
+    }
+
     struct {GLenum id; char const* label;} const glstrings[] =
     {
         {GL_VENDOR,   "GL vendor"},
         {GL_RENDERER, "GL renderer"},
         {GL_VERSION,  "GL version"},
         {GL_SHADING_LANGUAGE_VERSION,  "GLSL version"},
+        {GL_EXTENSIONS, "GL extensions"},
     };
 
     for (auto& s : glstrings)
     {
         auto val = reinterpret_cast<char const*>(glGetString(s.id));
-        if (!val) val = "";
-        mir::log_info("%s: %s", s.label, val);
+        mir::log_info(std::string(s.label) + ": " + (val ? val : ""));
     }
 
     GLint max_texture_size = 0;
@@ -128,21 +168,23 @@ mc::GLRenderer::GLRenderer(geom::Rectangle const& display_area)
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    set_viewport(display_area);
+    set_viewport(display_buffer.view_area());
     set_rotation(0.0f);
 }
 
-mc::GLRenderer::~GLRenderer() = default;
+mrg::Renderer::~Renderer() = default;
 
-void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
+void mrg::Renderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
                                 mg::Renderable const& renderable) const
 {
     primitives.resize(1);
     primitives[0] = mg::tessellate_renderable_into_rectangle(renderable, geom::Displacement{0,0});
 }
 
-void mc::GLRenderer::render(mg::RenderableList const& renderables) const
+void mrg::Renderer::render(mg::RenderableList const& renderables) const
 {
+    rendering_target.ensure_current();
+
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -152,10 +194,12 @@ void mc::GLRenderer::render(mg::RenderableList const& renderables) const
         draw(*r, r->alpha() < 1.0f ? alpha_program : default_program);
 
     texture_cache->drop_unused();
+
+    display_buffer.gl_swap_buffers();
 }
 
-void mc::GLRenderer::draw(mg::Renderable const& renderable,
-                          GLRenderer::Program const& prog) const
+void mrg::Renderer::draw(mg::Renderable const& renderable,
+                          Renderer::Program const& prog) const
 {
     if (renderable.alpha() < 1.0f || renderable.shaped())
     {
@@ -222,7 +266,7 @@ void mc::GLRenderer::draw(mg::Renderable const& renderable,
     glDisableVertexAttribArray(prog.position_attr);
 }
 
-void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
+void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
 {
     if (rect == viewport)
         return;
@@ -264,7 +308,7 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
     viewport = rect;
 }
 
-void mc::GLRenderer::set_rotation(float degrees)
+void mrg::Renderer::set_rotation(float degrees)
 {
     if (degrees == rotation)
         return;
@@ -287,7 +331,7 @@ void mc::GLRenderer::set_rotation(float degrees)
     rotation = degrees;
 }
 
-void mc::GLRenderer::suspend()
+void mrg::Renderer::suspend()
 {
     texture_cache->invalidate();
 }

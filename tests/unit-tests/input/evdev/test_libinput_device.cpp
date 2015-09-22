@@ -38,6 +38,7 @@ namespace mi = mir::input;
 namespace mie = mi::evdev;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -56,11 +57,11 @@ struct MockInputSink : mi::InputSink
     MockInputSink()
     {
         ON_CALL(*this, bounding_rectangle())
-            .WillByDefault(Return(mir::geometry::Rectangle({0,0}, {100,100})));
+            .WillByDefault(Return(geom::Rectangle({0,0}, {100,100})));
     }
     MOCK_METHOD1(handle_input,void(MirEvent &));
-    MOCK_METHOD1(confine_pointer, void(mir::geometry::Point&));
-    MOCK_CONST_METHOD0(bounding_rectangle, mir::geometry::Rectangle());
+    MOCK_METHOD1(confine_pointer, void(geom::Point&));
+    MOCK_CONST_METHOD0(bounding_rectangle, geom::Rectangle());
 };
 
 struct MockEventBuilder : mi::EventBuilder
@@ -402,6 +403,9 @@ TEST_F(LibInputDevice, process_event_handles_press_and_release)
 {
     std::shared_ptr<libinput> lib = mie::make_libinput();
     mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
+    float const x = 0;
+    float const y = 0;
+    geom::Point const pos{x,y};
 
     setup_button_event(fake_event_1, event_time_1, BTN_LEFT, LIBINPUT_BUTTON_STATE_PRESSED);
     setup_button_event(fake_event_2, event_time_2, BTN_RIGHT, LIBINPUT_BUTTON_STATE_PRESSED);
@@ -409,10 +413,10 @@ TEST_F(LibInputDevice, process_event_handles_press_and_release)
     setup_button_event(fake_event_4, event_time_4, BTN_LEFT, LIBINPUT_BUTTON_STATE_RELEASED);
 
     InSequence seq;
-    EXPECT_CALL(mock_sink, handle_input(mt::ButtonDownEventWithButton(0,0,1)));
-    EXPECT_CALL(mock_sink, handle_input(mt::ButtonDownEvent(0,0)));
-    EXPECT_CALL(mock_sink, handle_input(mt::ButtonUpEvent(0,0)));
-    EXPECT_CALL(mock_sink, handle_input(mt::ButtonUpEvent(0,0)));
+    EXPECT_CALL(mock_sink, handle_input(mt::ButtonDownEventWithButton(pos, mir_pointer_button_primary)));
+    EXPECT_CALL(mock_sink, handle_input(mt::ButtonDownEventWithButton(pos, mir_pointer_button_secondary)));
+    EXPECT_CALL(mock_sink, handle_input(mt::ButtonUpEventWithButton(pos, mir_pointer_button_secondary)));
+    EXPECT_CALL(mock_sink, handle_input(mt::ButtonUpEventWithButton(pos, mir_pointer_button_primary)));
 
     dev.start(&mock_sink, &mock_builder);
     dev.process_event(fake_event_1);

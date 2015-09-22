@@ -33,11 +33,6 @@ namespace test
 
 struct StubServerTool : doubles::StubDisplayServer
 {
-    StubServerTool()
-        : drm_magic{0}
-    {
-    }
-
     virtual void create_surface(
         mir::protobuf::SurfaceParameters const* request,
         mir::protobuf::Surface* response,
@@ -105,18 +100,6 @@ struct StubServerTool : doubles::StubDisplayServer
         done->Run();
     }
 
-    virtual void drm_auth_magic(
-        mir::protobuf::DRMMagic const* request,
-        mir::protobuf::DRMAuthMagicStatus* response,
-        google::protobuf::Closure* done) override
-    {
-        std::unique_lock<std::mutex> lock(guard);
-        drm_magic = request->magic();
-        response->set_status_code(0);
-        wait_condition.notify_one();
-        done->Run();
-    }
-
     virtual void configure_display(
         mir::protobuf::DisplayConfiguration const*,
         mir::protobuf::DisplayConfiguration*,
@@ -129,7 +112,6 @@ struct StubServerTool : doubles::StubDisplayServer
     std::string surface_name;
     std::condition_variable wait_condition;
     std::string app_name;
-    unsigned int drm_magic;
 };
 
 }

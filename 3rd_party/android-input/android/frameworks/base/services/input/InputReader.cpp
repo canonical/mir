@@ -4583,13 +4583,15 @@ bool TouchInputMapper::preparePointerGestures(std::chrono::nanoseconds when,
             }
         }
 
+        float deltaX = 0.0f;
+        float deltaY = 0.0f;
         if (activeTouchId >= 0 && mLastFingerIds.contains(activeTouchId)) {
             const RawPointerData::Pointer& currentPointer =
                     mCurrentRawPointerData.pointerForId(activeTouchId);
             const RawPointerData::Pointer& lastPointer =
                     mLastRawPointerData.pointerForId(activeTouchId);
-            float deltaX = (currentPointer.x - lastPointer.x) * mPointerXMovementScale;
-            float deltaY = (currentPointer.y - lastPointer.y) * mPointerYMovementScale;
+            deltaX = (currentPointer.x - lastPointer.x) * mPointerXMovementScale;
+            deltaY = (currentPointer.y - lastPointer.y) * mPointerYMovementScale;
 
             rotateDelta(mSurfaceOrientation, &deltaX, &deltaY);
             mPointerVelocityControl.move(when, &deltaX, &deltaY);
@@ -4614,6 +4616,8 @@ bool TouchInputMapper::preparePointerGestures(std::chrono::nanoseconds when,
         mPointerGesture.currentGestureCoords[0].clear();
         mPointerGesture.currentGestureCoords[0].setAxisValue(AMOTION_EVENT_AXIS_X, x);
         mPointerGesture.currentGestureCoords[0].setAxisValue(AMOTION_EVENT_AXIS_Y, y);
+        mPointerGesture.currentGestureCoords[0].setAxisValue(AMOTION_EVENT_AXIS_RX, deltaX);
+        mPointerGesture.currentGestureCoords[0].setAxisValue(AMOTION_EVENT_AXIS_RY, deltaY);
         mPointerGesture.currentGestureCoords[0].setAxisValue(AMOTION_EVENT_AXIS_PRESSURE, 1.0f);
     } else if (currentFingerCount == 0) {
         // Case 3. No fingers down and button is not pressed. (NEUTRAL)
@@ -4716,14 +4720,17 @@ bool TouchInputMapper::preparePointerGestures(std::chrono::nanoseconds when,
             mPointerGesture.currentGestureMode = PointerGesture::TAP_DRAG;
         }
 
+        float deltaX = 0.0f;
+        float deltaY = 0.0f;
+
         if (mLastFingerIds.contains(activeTouchId)) {
             const RawPointerData::Pointer& currentPointer =
                     mCurrentRawPointerData.pointerForId(activeTouchId);
             const RawPointerData::Pointer& lastPointer =
                     mLastRawPointerData.pointerForId(activeTouchId);
-            float deltaX = (currentPointer.x - lastPointer.x)
+            deltaX = (currentPointer.x - lastPointer.x)
                     * mPointerXMovementScale;
-            float deltaY = (currentPointer.y - lastPointer.y)
+            deltaY = (currentPointer.y - lastPointer.y)
                     * mPointerYMovementScale;
 
             rotateDelta(mSurfaceOrientation, &deltaX, &deltaY);
@@ -4765,6 +4772,8 @@ bool TouchInputMapper::preparePointerGestures(std::chrono::nanoseconds when,
         mPointerGesture.currentGestureCoords[0].clear();
         mPointerGesture.currentGestureCoords[0].setAxisValue(AMOTION_EVENT_AXIS_X, x);
         mPointerGesture.currentGestureCoords[0].setAxisValue(AMOTION_EVENT_AXIS_Y, y);
+        mPointerGesture.currentGestureCoords[0].setAxisValue(AMOTION_EVENT_AXIS_RX, deltaX);
+        mPointerGesture.currentGestureCoords[0].setAxisValue(AMOTION_EVENT_AXIS_RY, deltaY);
         mPointerGesture.currentGestureCoords[0].setAxisValue(AMOTION_EVENT_AXIS_PRESSURE,
                 down ? 1.0f : 0.0f);
 
@@ -5011,6 +5020,8 @@ bool TouchInputMapper::preparePointerGestures(std::chrono::nanoseconds when,
                     mPointerGesture.referenceGestureX);
             mPointerGesture.currentGestureCoords[0].setAxisValue(AMOTION_EVENT_AXIS_Y,
                     mPointerGesture.referenceGestureY);
+            mPointerGesture.currentGestureCoords[0].setAxisValue(AMOTION_EVENT_AXIS_RX, commonDeltaX);
+            mPointerGesture.currentGestureCoords[0].setAxisValue(AMOTION_EVENT_AXIS_RY, commonDeltaY);
             mPointerGesture.currentGestureCoords[0].setAxisValue(AMOTION_EVENT_AXIS_PRESSURE, 1.0f);
         } else if (mPointerGesture.currentGestureMode == PointerGesture::FREEFORM) {
             // FREEFORM mode.
@@ -5107,6 +5118,10 @@ bool TouchInputMapper::preparePointerGestures(std::chrono::nanoseconds when,
                         AMOTION_EVENT_AXIS_X, mPointerGesture.referenceGestureX + deltaX);
                 mPointerGesture.currentGestureCoords[i].setAxisValue(
                         AMOTION_EVENT_AXIS_Y, mPointerGesture.referenceGestureY + deltaY);
+                mPointerGesture.currentGestureCoords[i].setAxisValue(
+                        AMOTION_EVENT_AXIS_RX, deltaX);
+                mPointerGesture.currentGestureCoords[i].setAxisValue(
+                        AMOTION_EVENT_AXIS_RY, deltaY);
                 mPointerGesture.currentGestureCoords[i].setAxisValue(
                         AMOTION_EVENT_AXIS_PRESSURE, 1.0f);
 

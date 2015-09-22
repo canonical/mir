@@ -1,6 +1,9 @@
 # We need MIRPLATFORM_ABI in both libmirplatform and the platform implementations.
 set(MIRPLATFORM_ABI 10)
 
+# Add the cookie implementation before exposing any APIs
+add_subdirectory(cookie/)
+
 # We need MIR_CLIENT_PLATFORM_PATH in both libmirclient and the platform
 # implementations
 set(MIR_CLIENT_PLATFORM_PATH
@@ -21,6 +24,7 @@ add_subdirectory(platform/)
 add_subdirectory(server/)
 add_subdirectory(client/)
 add_subdirectory(utils/)
+add_subdirectory(renderers/)
 
 add_executable(wrapper wrapper.c)
 set_property(TARGET wrapper

@@ -21,6 +21,7 @@
 #define MIR_GRAPHICS_X_DISPLAY_CONFIGURATION_H_
 
 #include "mir/graphics/display_configuration.h"
+#include "mir/geometry/size.h"
 
 namespace mir
 {
@@ -32,7 +33,7 @@ namespace X
 class DisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
-    DisplayConfiguration(MirPixelFormat pf, int width, int height, MirOrientation orientation);
+    DisplayConfiguration(MirPixelFormat pf, mir::geometry::Size const size, MirOrientation orientation);
 
     virtual ~DisplayConfiguration() = default;
 
