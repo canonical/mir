@@ -33,7 +33,7 @@ namespace cookie = mir::cookie;
 namespace
 {
 int const max_wait{4};
-extern void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx);
+void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx);
 }
 
 class ClientCookies : public mtf::ConnectedClientWithASurface
