@@ -25,6 +25,7 @@ set(
 set(
   MIR_TEST_DOUBLES_PLATFORM_SRCS
 
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_libinput.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_egl.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_gl.cpp
 )
