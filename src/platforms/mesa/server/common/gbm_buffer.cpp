@@ -142,7 +142,7 @@ mgm::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
 
 mgm::GBMBuffer::~GBMBuffer()
 {
-    if (prime_fd > 0)
+    if (prime_fd >= 0)
         close(prime_fd);
 }
 
