@@ -102,14 +102,16 @@ public:
         {
             mir_buffer_stream_get_graphics_region(cursor, &g);
 
-            if (image_width != g.width || image_height != g.height)
+            if (image_width != g.width || image_height != g.height || cursor_hotspot != image.hotspot())
             {
                 mir_buffer_stream_release_sync(cursor);
                 cursor = nullptr;
             }
         }
 
-        if (!cursor)
+        bool const new_cursor{!cursor};
+
+        if (new_cursor)
         {
             cursor = mir_connection_create_buffer_stream_sync(
                 mir_connection,
@@ -118,17 +120,27 @@ public:
                 mir_pixel_format_argb_8888,
                 mir_buffer_usage_software);
 
+            cursor_hotspot = image.hotspot();
+
+            mir_buffer_stream_get_graphics_region(cursor, &g);
+
+            // push an extra frame for host to display correctly (not sure why)
+            memcpy(g.vaddr, image.as_argb_8888(), pixels_size);
+            mir_buffer_stream_swap_buffers_sync(cursor);
             mir_buffer_stream_get_graphics_region(cursor, &g);
         }
 
         memcpy(g.vaddr, image.as_argb_8888(), pixels_size);
         mir_buffer_stream_swap_buffers_sync(cursor);
 
-        auto conf = mir_cursor_configuration_from_buffer_stream(cursor,
-            image.hotspot().dx.as_int(), image.hotspot().dy.as_int());
-        
-        mir_surface_configure_cursor(mir_surface, conf);
-        mir_cursor_configuration_destroy(conf);
+        if (new_cursor)
+        {
+            auto conf = mir_cursor_configuration_from_buffer_stream(
+                cursor, image.hotspot().dx.as_int(), image.hotspot().dy.as_int());
+
+            mir_surface_configure_cursor(mir_surface, conf);
+            mir_cursor_configuration_destroy(conf);
+        }
     }
 
     void hide_cursor()
@@ -144,6 +156,7 @@ private:
     MirConnection* const mir_connection;
     MirSurface* const mir_surface;
     MirBufferStream* cursor{nullptr};
+    mir::geometry::Displacement cursor_hotspot;
 };
 
 }
