@@ -45,7 +45,7 @@ class CookieFactory
 {
 public:
     /**
-    *   Contruction function used to create a CookieFactory. The secret size must be
+    *   Construction function used to create a CookieFactory. The secret size must be
     *   no less then minimum_secret_size otherwise an expection will be thrown
     *
     *   \param [in] secret  A filled in secret used to set the key for the hash function
@@ -54,7 +54,7 @@ public:
     static std::unique_ptr<CookieFactory> create_from_secret(Secret const& secret);
 
     /**
-    *   Contruction function used to create a CookieFactory as well as a secret.
+    *   Construction function used to create a CookieFactory as well as a secret.
     *   The secret size must be no less then minimum_secret_size otherwise an expection will be thrown
     *
     *   \param [in]  secret_size  The size of the secret to create, must be larger then minimum_secret_size
@@ -65,7 +65,7 @@ public:
                                                                unsigned secret_size = 2 * minimum_secret_size);
 
     /**
-    *   Contruction function used to create a CookieFactory and a secret which it keeps internally.
+    *   Construction function used to create a CookieFactory and a secret which it keeps internally.
     *   The secret size must be no less then minimum_secret_size otherwise an expection will be thrown
     *
     *   \param [in]  secret_size  The size of the secret to create, must be larger then minimum_secret_size
