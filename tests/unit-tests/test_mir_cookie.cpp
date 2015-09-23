@@ -18,6 +18,8 @@
 
 #include "mir/cookie_factory.h"
 
+#include <gtest/gtest.h>
+
 TEST(MirCookieFactory, attests_real_timestamp)
 {
     std::vector<uint8_t> secret{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
