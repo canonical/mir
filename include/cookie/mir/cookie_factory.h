@@ -45,6 +45,15 @@ class CookieFactory
 {
 public:
     /**
+     * Optimal size for the provided Secret.
+     *
+     * This is the maximum useful size of the secret key. Keys of greater size
+     * will be reduced to this size, and keys of smaller size may be internally
+     * extended to this size.
+     */
+    static size_t optimal_secret_size();
+
+    /**
     *   Construction function used to create a CookieFactory. The secret size must be
     *   no less then minimum_secret_size otherwise an exception will be thrown
     *
@@ -88,8 +97,13 @@ public:
     */
     virtual bool attest_timestamp(MirCookie const& cookie) = 0;
 
+    /**
+     * Absolute minimum size of secret key the CookieFactory will accept.
+     *
+     * Code should be using optimum_secret_size(); this minimum size is provided
+     * as a user convenience to guard against catastrophically bad initialisation.
+     */
     static unsigned const minimum_secret_size = 8;
-
 protected:
     CookieFactory() = default;
 };

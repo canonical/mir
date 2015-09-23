@@ -37,7 +37,6 @@ namespace
 std::string const random_device_path{"/dev/random"};
 std::string const urandom_device_path{"/dev/urandom"};
 int const wait_seconds{30};
-int const hmac_sha1_block_size{64};
 }
 
 static mir::cookie::Secret get_random_data(unsigned size)
@@ -143,6 +142,14 @@ private:
     struct hmac_sha1_ctx ctx;
 };
 
+size_t mir::cookie::CookieFactory::optimal_secret_size()
+{
+    // Secret keys smaller than this are internally zero-extended to this size.
+    // Secret keys larger than this are internally hashed to this size.
+    size_t const hmac_sha1_block_size{64};
+    return hmac_sha1_block_size;
+}
+
 std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_from_secret(mir::cookie::Secret const& secret)
 {
   return std::make_unique<CookieFactoryNettle>(secret);
@@ -150,12 +157,12 @@ std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_f
 
 std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_saving_secret(mir::cookie::Secret& save_secret)
 {
-  save_secret = get_random_data(hmac_sha1_block_size);
+  save_secret = get_random_data(optimal_secret_size());
   return std::make_unique<CookieFactoryNettle>(save_secret);
 }
 
 std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_keeping_secret()
 {
-  auto secret = get_random_data(hmac_sha1_block_size);
+  auto secret = get_random_data(optimal_secret_size());
   return std::make_unique<CookieFactoryNettle>(secret);
 }

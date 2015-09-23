@@ -102,3 +102,21 @@ TEST(MirCookieFactory, timestamp_trusted_with_saved_secret_does_attest)
 
     EXPECT_TRUE(sink_factory->attest_timestamp(cookie));
 }
+
+TEST(MirCookieFactory, internally_generated_secret_has_optimum_size)
+{
+    using namespace testing;
+    std::vector<uint8_t> secret;
+
+    mir::cookie::CookieFactory::create_saving_secret(secret);
+
+    EXPECT_THAT(secret.size(), Eq(mir::cookie::CookieFactory::optimal_secret_size()));
+}
+
+TEST(MirCookieFactory, optimal_secret_size_is_larger_than_minimum_size)
+{
+    using namespace testing;
+
+    EXPECT_THAT(mir::cookie::CookieFactory::optimal_secret_size(),
+        Ge(mir::cookie::CookieFactory::minimum_secret_size));
+}
