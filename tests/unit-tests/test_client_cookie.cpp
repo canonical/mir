@@ -68,7 +68,8 @@ public:
 
     void TearDown() override
     {
-        mtf::ConnectedClientWithASurface::TearDown();
+        //mtf::ConnectedClientWithASurface::TearDown();
+        mtf::ConnectedClientHeadlessServer::TearDown();
     }
 
     std::vector<uint8_t> cookie_secret;
