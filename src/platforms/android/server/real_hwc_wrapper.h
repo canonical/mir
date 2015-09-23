@@ -73,6 +73,8 @@ public:
     void vsync(DisplayName, std::chrono::nanoseconds) noexcept;
     void hotplug(DisplayName, bool) noexcept;
     void invalidate() noexcept;
+
+    bool display_connected(DisplayName) const;
 private:
     std::shared_ptr<hwc_composer_device_1> const hwc_device;
     std::shared_ptr<HwcReport> const report;
