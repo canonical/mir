@@ -67,7 +67,6 @@ public:
 
     void TearDown() override
     {
-        //mtf::ConnectedClientWithASurface::TearDown();
         mtf::ConnectedClientHeadlessServer::TearDown();
     }
 
