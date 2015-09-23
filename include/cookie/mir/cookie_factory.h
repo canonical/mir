@@ -48,8 +48,8 @@ public:
      * Optimal size for the provided Secret.
      *
      * This is the maximum useful size of the secret key. Keys of greater size
-     * will be reduced to this size, and keys of smaller size may be internally
-     * extended to this size.
+     * will be reduced to this size internally, and keys of smaller size may be
+     * internally extended to this size.
      */
     static size_t optimal_secret_size();
 
