@@ -34,7 +34,6 @@ namespace mi = mir::input;
 namespace mev = mir::events;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
-namespace cookie = mir::cookie;
 
 namespace
 {
@@ -68,7 +67,7 @@ struct KeyRepeatDispatcher : public testing::Test
     }
     std::shared_ptr<mtd::MockInputDispatcher> mock_next_dispatcher = std::make_shared<mtd::MockInputDispatcher>();
     std::shared_ptr<MockAlarmFactory> mock_alarm_factory = std::make_shared<MockAlarmFactory>();
-    std::shared_ptr<cookie::CookieFactory> cookie_factory = cookie::CookieFactory::create_keeping_secret();
+    std::shared_ptr<mir::cookie::CookieFactory> cookie_factory = mir::cookie::CookieFactory::create_keeping_secret();
     std::chrono::milliseconds const repeat_time{2};
     std::chrono::milliseconds const repeat_delay{1};
     mi::KeyRepeatDispatcher dispatcher;

@@ -40,7 +40,6 @@
 #include <iostream>
 
 namespace mo = mir::options;
-namespace cookie = mir::cookie;
 
 #define FOREACH_WRAPPER(MACRO)\
     MACRO(cursor_listener)\
@@ -106,7 +105,7 @@ struct mir::Server::Self
     std::weak_ptr<options::Option> options;
     std::string config_file;
     std::shared_ptr<ServerConfiguration> server_config;
-    std::shared_ptr<cookie::CookieFactory> cookie_factory;
+    std::shared_ptr<mir::cookie::CookieFactory> cookie_factory;
 
     std::function<void()> init_callback{[]{}};
     int argc{0};
@@ -304,7 +303,7 @@ void mir::Server::set_command_line(int argc, char const* argv[])
 }
 
 void mir::Server::override_the_cookie_factory(
-    std::function<std::shared_ptr<cookie::CookieFactory>()> const& cookie_factory_builder)
+    std::function<std::shared_ptr<mir::cookie::CookieFactory>()> const& cookie_factory_builder)
 {
     verify_setting_allowed(self->server_config);
     self->cookie_factory = cookie_factory_builder();

@@ -28,7 +28,6 @@
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace msh = mir::shell;
-namespace cookie = mir::cookie;
 
 namespace
 {
@@ -44,7 +43,7 @@ public:
     {
         add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", nullptr);
         server.override_the_cookie_factory([this] ()
-            { return cookie::CookieFactory::create_saving_secret(cookie_secret); });
+            { return mir::cookie::CookieFactory::create_saving_secret(cookie_secret); });
 
         mock_devices.add_standard_device("laptop-keyboard");
     }
@@ -106,7 +105,7 @@ TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
     if (!udev_read_recording.woken())
         BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for udev to read the recording 'laptop-keyboard-hello'"));
 
-    auto factory = cookie::CookieFactory::create_from_secret(cookie_secret);
+    auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
 
     EXPECT_TRUE(factory->attest_timestamp(out_cookie));
 }

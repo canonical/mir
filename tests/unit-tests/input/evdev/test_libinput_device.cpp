@@ -40,7 +40,6 @@ namespace mie = mi::evdev;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace geom = mir::geometry;
-namespace cookie = mir::cookie;
 
 namespace
 {
@@ -68,7 +67,7 @@ struct MockInputSink : mi::InputSink
 
 struct MockEventBuilder : mi::EventBuilder
 {
-    std::shared_ptr<cookie::CookieFactory> const cookie_factory = cookie::CookieFactory::create_keeping_secret();
+    std::shared_ptr<mir::cookie::CookieFactory> const cookie_factory = mir::cookie::CookieFactory::create_keeping_secret();
     mi::DefaultEventBuilder builder{MirInputDeviceId{3}, cookie_factory};
     MockEventBuilder()
     {
