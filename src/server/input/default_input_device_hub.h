@@ -49,6 +49,7 @@ class InputDeviceObserver;
 class TouchVisualizer;
 class InputRegion;
 class CursorListener;
+class DefaultDeviceHandle;
 
 class DefaultInputDeviceHub : public InputDeviceRegistry, public InputDeviceHub
 {
@@ -70,8 +71,8 @@ public:
 
 private:
     void update_spots();
-    void add_device_info(InputDeviceInfo const& info);
-    void remove_device_info(int32_t id);
+    void add_device_handle(std::shared_ptr<DefaultDeviceHandle> const& handle);
+    void remove_device_handle(MirInputDeviceId id);
     std::shared_ptr<InputDispatcher> const input_dispatcher;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const input_dispatchable;
     std::shared_ptr<ServerActionQueue> const observer_queue;
@@ -89,13 +90,12 @@ private:
         bool device_matches(std::shared_ptr<InputDevice> const& dev) const;
         void start();
         void stop();
-        int32_t id();
-        InputDeviceInfo get_device_info();
+        MirInputDeviceId id();
         std::vector<TouchVisualizer::Spot> const& spots() const;
     private:
         void update_spots(MirInputEvent const* event);
         void notify_cursor_listener(MirInputEvent const* event);
-        static int32_t create_new_device_id();
+        static MirInputDeviceId create_new_device_id();
         int32_t device_id;
         DefaultEventBuilder builder;
         std::shared_ptr<InputDevice> const device;
@@ -106,7 +106,7 @@ private:
         friend class DefaultInputDeviceHub;
     };
 
-    std::vector<InputDeviceInfo> infos;
+    std::vector<std::shared_ptr<DefaultDeviceHandle>> handles;
     std::vector<std::unique_ptr<RegisteredDevice>> devices;
     std::vector<std::shared_ptr<InputDeviceObserver>> observers;
 };

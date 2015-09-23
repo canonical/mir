@@ -19,11 +19,13 @@
 #ifndef MIR_INPUT_INPUT_DEVICE_OBSERVER_H_
 #define MIR_INPUT_INPUT_DEVICE_OBSERVER_H_
 
+#include <memory>
+
 namespace mir
 {
 namespace input
 {
-class InputDeviceInfo;
+class DeviceHandle;
 
 class InputDeviceObserver
 {
@@ -31,9 +33,9 @@ public:
     InputDeviceObserver() = default;
     virtual ~InputDeviceObserver() = default;
 
-    virtual void device_added(InputDeviceInfo const& device) = 0;
-    virtual void device_changed(InputDeviceInfo const& device) = 0;
-    virtual void device_removed(InputDeviceInfo const& device) = 0;
+    virtual void device_added(std::weak_ptr<DeviceHandle> const& device) = 0;
+    virtual void device_changed(std::weak_ptr<DeviceHandle> const& device) = 0;
+    virtual void device_removed(std::weak_ptr<DeviceHandle> const& device) = 0;
     /*!
      * Called after every group of changes.
      */
