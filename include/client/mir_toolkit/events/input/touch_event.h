@@ -19,7 +19,7 @@
 #ifndef MIR_TOOLKIT_TOUCH_EVENT_H_
 #define MIR_TOOLKIT_TOUCH_EVENT_H_
 
-#include <mir_toolkit/cookie.h>
+//#include <mir_toolkit/cookie.h>
 
 #ifdef __cplusplus
 /**
