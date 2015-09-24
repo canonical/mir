@@ -22,6 +22,12 @@ set(
   default_configuration.cpp
   default_ipc_factory.cpp
   unsupported_coordinate_translator.cpp
+  protobuf_ipc_factory.h
+  display_server.h
+  message_receiver.h
+  message_sender.h
+  buffering_message_sender.cpp
+  buffering_message_sender.h
 )
 
 add_library(
