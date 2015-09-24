@@ -19,6 +19,8 @@
 #include "src/server/frontend/message_sender.h"
 #include "src/server/frontend/buffering_message_sender.h"
 
+#include <fcntl.h>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -146,4 +148,70 @@ TEST(BufferingMessageSender, calling_uncorked_twice_is_harmless)
     sender.uncork();
 
     EXPECT_THAT(messages_sent, ElementsAreArray(messages.data(), messages.size()));
+}
+
+TEST(BufferingMessageSender, messages_with_fds_are_sent)
+{
+    using namespace testing;
+    auto mock_sender = std::make_shared<NiceMock<MockMessageSender>>();
+
+    struct Message
+    {
+        std::vector<char> data;
+        mf::FdSets fds;
+    };
+
+    std::vector<Message> messages_sent;
+    ON_CALL(*mock_sender, send(_,_,_))
+        .WillByDefault(Invoke(
+            [&messages_sent](char const* data, size_t length, auto fds)
+            {
+                messages_sent.emplace_back(
+                    Message {
+                        std::vector<char>(data, data + length),
+                        mf::FdSets{fds}
+                    });
+            }));
+
+    std::array<mf::FdSets, 3> fdsets;
+    for (auto& fds : fdsets)
+    {
+        fds = { {mir::Fd{::open("/dev/null", O_RDONLY)}, mir::Fd{::open("/dev/null", O_RDONLY)}},
+                {mir::Fd{::open("/dev/null", O_RDONLY)}}
+        };
+    }
+
+    std::array<std::vector<char>, 3> datas;
+    for (auto& data : datas)
+    {
+        data = { 'a', 'b', 'c' };
+    }
+
+    mf::BufferingMessageSender sender{mock_sender};
+
+    for (size_t i = 0; i < datas.size(); ++i)
+    {
+        sender.send(datas[i].data(), datas[i].size(), fdsets[i]);
+    }
+
+    EXPECT_THAT(messages_sent, IsEmpty());
+
+    sender.uncork();
+
+    for (size_t i = 0; i < datas.size(); ++i)
+    {
+        EXPECT_THAT(messages_sent[i].data, Eq(datas[i]));
+        EXPECT_THAT(messages_sent[i].fds, Eq(fdsets[i]));
+    }
+
+    for (size_t i = 0; i < datas.size(); ++i)
+    {
+        sender.send(datas[i].data(), datas[i].size(), fdsets[i]);
+    }
+
+    for (size_t i = 0; i < datas.size(); ++i)
+    {
+        EXPECT_THAT(messages_sent[i + datas.size()].data, Eq(datas[i]));
+        EXPECT_THAT(messages_sent[i + datas.size()].fds, Eq(fdsets[i]));
+    }
 }

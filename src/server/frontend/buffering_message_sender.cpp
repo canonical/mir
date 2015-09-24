@@ -51,7 +51,7 @@ void mf::BufferingMessageSender::uncork()
     std::lock_guard<decltype(uncorked_lock)> lock{uncorked_lock};
     for (auto const& message : buffered_messages)
     {
-        sink->send(message.data.data(), message.data.size(), {});
+        sink->send(message.data.data(), message.data.size(), message.fds);
     }
     buffered_messages.clear();
     corked = false;
