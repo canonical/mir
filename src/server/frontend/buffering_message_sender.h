@@ -39,6 +39,15 @@ public:
 
     void send(char const* data, size_t length, FdSets const& fds) override;
 
+    /**
+     * Send all the messages buffered while this BufferingMessageSender was corked.
+     */
+    void drain();
+
+    /**
+     * Stop diverting messages into the buffer. Mesasges sent after uncork() is called
+     * will be sent directly to the underlying MessageSender.
+     */
     void uncork();
 private:
     struct Message
@@ -46,7 +55,7 @@ private:
         std::vector<char> data;
         FdSets fds;
     };
-    std::mutex uncorked_lock;
+    std::mutex message_lock;
     bool corked;
     std::vector<Message> buffered_messages;
     std::shared_ptr<MessageSender> const sink;

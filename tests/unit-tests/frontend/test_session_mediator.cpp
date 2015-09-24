@@ -1144,9 +1144,9 @@ MATCHER(IsReplyWithEvents, "")
     return num_events > 0;
 }
 
-void fail_if_signal_raised(std::shared_ptr<mt::Signal> signal)
+void send_non_event(std::shared_ptr<mtd::MockMessageSender> sender)
 {
-    EXPECT_FALSE(signal->raised());
+    sender->send("hello", 5, {});
 }
 }
 
@@ -1178,17 +1178,15 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
                        return session->create_surface(params);
                    }));
 
-    auto event_sent = std::make_shared<mt::Signal>();
-
+    InSequence seq;
     EXPECT_CALL(*mock_sender, send(_,_,_))
-        .With(Args<0, 1>(IsReplyWithEvents()))
-        .WillOnce(InvokeWithoutArgs([event_sent]() { event_sent->raise(); }));
+        .With(Args<0, 1>(Not(IsReplyWithEvents())));
+    EXPECT_CALL(*mock_sender, send(_,_,_))
+        .With(Args<0, 1>(IsReplyWithEvents()));
 
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(
         &surface_parameters,
         &surface_response,
-        google::protobuf::NewCallback(&fail_if_signal_raised, event_sent));
-
-    EXPECT_TRUE(event_sent->raised());
+        google::protobuf::NewCallback(&send_non_event, mock_sender));
 }

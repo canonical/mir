@@ -303,11 +303,14 @@ void mf::SessionMediator::create_surface(
             if (client_buffer)
                 pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(), client_buffer, msg_type);
 
-            // Send the surface creation reply first...
+            // Uncork the message sender, so that...
+            buffering_sender->uncork();
+
+            // ...we can send the surface creation reply first...
             done->Run();
 
-            // ...then send any events queued up for the surface.
-            buffering_sender->uncork();
+            // ...and then send any events queued up for the surface.
+            buffering_sender->drain();
         });
 }
 

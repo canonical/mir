@@ -49,7 +49,7 @@ TEST(BufferingMessageSender, sends_no_message_before_being_uncorked)
     EXPECT_FALSE(messages_sent);
 }
 
-TEST(BufferingMessageSender, sends_messages_in_order_when_uncorked)
+TEST(BufferingMessageSender, sends_messages_in_order_when_drained)
 {
     using namespace testing;
     auto mock_sender = std::make_shared<NiceMock<MockMessageSender>>();
@@ -78,7 +78,7 @@ TEST(BufferingMessageSender, sends_messages_in_order_when_uncorked)
 
     ASSERT_THAT(messages_sent, IsEmpty());
 
-    sender.uncork();
+    sender.drain();
 
     EXPECT_THAT(messages_sent, ElementsAreArray(messages.data(), messages.size()));
 }
@@ -115,7 +115,7 @@ TEST(BufferingMessageSender, messages_sent_after_uncork_proceed_normally)
     }
 }
 
-TEST(BufferingMessageSender, calling_uncorked_twice_is_harmless)
+TEST(BufferingMessageSender, calling_drain_twice_is_harmless)
 {
     using namespace testing;
     auto mock_sender = std::make_shared<NiceMock<MockMessageSender>>();
@@ -144,8 +144,8 @@ TEST(BufferingMessageSender, calling_uncorked_twice_is_harmless)
 
     ASSERT_THAT(messages_sent, IsEmpty());
 
-    sender.uncork();
-    sender.uncork();
+    sender.drain();
+    sender.drain();
 
     EXPECT_THAT(messages_sent, ElementsAreArray(messages.data(), messages.size()));
 }
@@ -196,13 +196,15 @@ TEST(BufferingMessageSender, messages_with_fds_are_sent)
 
     EXPECT_THAT(messages_sent, IsEmpty());
 
-    sender.uncork();
+    sender.drain();
 
     for (size_t i = 0; i < datas.size(); ++i)
     {
         EXPECT_THAT(messages_sent[i].data, Eq(datas[i]));
         EXPECT_THAT(messages_sent[i].fds, Eq(fdsets[i]));
     }
+
+    sender.uncork();
 
     for (size_t i = 0; i < datas.size(); ++i)
     {

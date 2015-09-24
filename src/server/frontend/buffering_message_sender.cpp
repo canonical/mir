@@ -33,7 +33,7 @@ void mf::BufferingMessageSender::send(
 {
     bool needs_buffering;
     {
-        std::lock_guard<decltype(uncorked_lock)> lock{uncorked_lock};
+        std::lock_guard<decltype(message_lock)> lock{message_lock};
         needs_buffering = corked;
     }
     if (needs_buffering)
@@ -46,13 +46,18 @@ void mf::BufferingMessageSender::send(
     }
 }
 
-void mf::BufferingMessageSender::uncork()
+void mf::BufferingMessageSender::drain()
 {
-    std::lock_guard<decltype(uncorked_lock)> lock{uncorked_lock};
+    std::lock_guard<decltype(message_lock)> lock{message_lock};
     for (auto const& message : buffered_messages)
     {
         sink->send(message.data.data(), message.data.size(), message.fds);
     }
     buffered_messages.clear();
+}
+
+void mf::BufferingMessageSender::uncork()
+{
+    std::lock_guard<decltype(message_lock)> lock{message_lock};
     corked = false;
 }
