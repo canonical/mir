@@ -53,5 +53,6 @@ void mf::BufferingMessageSender::uncork()
     {
         sink->send(message.data.data(), message.data.size(), {});
     }
+    buffered_messages.clear();
     corked = false;
 }
