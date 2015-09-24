@@ -60,7 +60,7 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
 
 std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_server(
     SessionCredentials const &creds,
-    EventSinkFactory const& sink_factory,
+    std::shared_ptr<EventSinkFactory> const& sink_factory,
     std::shared_ptr<mf::MessageSender> const& message_sender,
     ConnectionContext const &connection_context)
 {
@@ -113,7 +113,7 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
     std::shared_ptr<DisplayChanger> const& changer,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionMediatorReport> const& sm_report,
-    mf::EventSinkFactory const& sink_factory,
+    std::shared_ptr<mf::EventSinkFactory> const& sink_factory,
     std::shared_ptr<mf::MessageSender> const& message_sender,
     std::shared_ptr<Screencast> const& effective_screencast,
     ConnectionContext const& connection_context,

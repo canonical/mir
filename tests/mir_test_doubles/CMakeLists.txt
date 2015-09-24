@@ -20,10 +20,12 @@ set(
   test_protobuf_socket_server.cpp
   triggered_main_loop.cpp
   fake_alarm_factory.cpp
-  mock_event_sink.cpp
-  null_event_sink.cpp
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_message_sender.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_message_sender.h
+  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_event_sink_factory.h
+  null_event_sink_factory.cpp
+  mock_event_sink_factory.cpp
+  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_event_sink_factory.h
 )
 
 set(

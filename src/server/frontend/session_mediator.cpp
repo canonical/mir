@@ -18,6 +18,7 @@
 
 #include "session_mediator.h"
 #include "reordering_message_sender.h"
+#include "event_sink_factory.h"
 
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/shell.h"
@@ -78,7 +79,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
     std::vector<MirPixelFormat> const& surface_pixel_formats,
     std::shared_ptr<SessionMediatorReport> const& report,
-    mf::EventSinkFactory const& sink_factory,
+    std::shared_ptr<mf::EventSinkFactory> const& sink_factory,
     std::shared_ptr<mf::MessageSender> const& message_sender,
     std::shared_ptr<MessageResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast,
@@ -93,7 +94,7 @@ mf::SessionMediator::SessionMediator(
     display_changer(display_changer),
     report(report),
     sink_factory{sink_factory},
-    event_sink{sink_factory(message_sender)},
+    event_sink{sink_factory->create_sink(message_sender)},
     message_sender{message_sender},
     resource_cache(resource_cache),
     screencast(screencast),
@@ -264,7 +265,7 @@ void mf::SessionMediator::create_surface(
     params.input_shape = extract_input_shape_from(request);
 
     auto buffering_sender = std::make_shared<mf::ReorderingMessageSender>(message_sender);
-    std::shared_ptr<mf::EventSink> sink = sink_factory(buffering_sender);
+    std::shared_ptr<mf::EventSink> sink = sink_factory->create_sink(buffering_sender);
 
     auto const surf_id = shell->create_surface(session, params, sink);
     auto stream_id = mf::BufferStreamId(surf_id.as_value());

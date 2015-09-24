@@ -66,6 +66,7 @@ class Surface;
 class MessageResourceCache;
 class SessionMediatorReport;
 class EventSink;
+class EventSinkFactory;
 class MessageSender;
 class DisplayChanger;
 class Screencast;
@@ -91,7 +92,7 @@ public:
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
         std::vector<MirPixelFormat> const& surface_pixel_formats,
         std::shared_ptr<SessionMediatorReport> const& report,
-        EventSinkFactory const& sink_factory,
+        std::shared_ptr<EventSinkFactory> const& sink_factory,
         std::shared_ptr<MessageSender> const& message_sender,
         std::shared_ptr<MessageResourceCache> const& resource_cache,
         std::shared_ptr<Screencast> const& screencast,
@@ -232,7 +233,7 @@ private:
 
     std::shared_ptr<frontend::DisplayChanger> const display_changer;
     std::shared_ptr<SessionMediatorReport> const report;
-    EventSinkFactory const sink_factory;
+    std::shared_ptr<EventSinkFactory> const sink_factory;
     std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<MessageSender> const message_sender;
     std::shared_ptr<MessageResourceCache> const resource_cache;

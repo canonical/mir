@@ -16,6 +16,14 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir/graphics/buffer.h"
-#include "mir/test/doubles/mock_event_sink.h"
+#include "mir/test/doubles/null_event_sink_factory.h"
+#include "mir/test/doubles/null_event_sink.h"
 
+namespace mf = mir::frontend;
+namespace mtd = mir::test::doubles;
+
+std::unique_ptr<mf::EventSink>
+mtd::NullEventSinkFactory::create_sink(std::shared_ptr<mf::MessageSender> const&)
+{
+    return std::make_unique<mtd::NullEventSink>();
+}

@@ -16,6 +16,28 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir/graphics/buffer.h"
-#include "mir/test/doubles/mock_event_sink.h"
+#ifndef MIR_FRONTEND_EVENT_SINK_FACTORY_H_
+#define MIR_FRONTEND_EVENT_SINK_FACTORY_H_
 
+#include <memory>
+
+namespace mir
+{
+namespace frontend
+{
+class EventSink;
+class MessageSender;
+
+class EventSinkFactory
+{
+public:
+    virtual ~EventSinkFactory() = default;
+
+    virtual std::unique_ptr<EventSink>
+        create_sink(std::shared_ptr<MessageSender> const& sender) = 0;
+};
+
+}
+}
+
+#endif //MIR_FRONTEND_EVENT_SINK_FACTORY_H_

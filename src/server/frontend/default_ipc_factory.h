@@ -46,6 +46,7 @@ class SessionMediatorReport;
 class DisplayChanger;
 class Screencast;
 class SessionAuthorizer;
+class EventSinkFactory;
 
 class DefaultIpcFactory : public ProtobufIpcFactory
 {
@@ -64,7 +65,7 @@ public:
 
     std::shared_ptr<detail::DisplayServer> make_ipc_server(
         SessionCredentials const &creds,
-        EventSinkFactory const& sink_factory,
+        std::shared_ptr<EventSinkFactory> const& sink_factory,
         std::shared_ptr<MessageSender> const& message_sender,
         ConnectionContext const &connection_context) override;
 
@@ -76,7 +77,7 @@ public:
         std::shared_ptr<DisplayChanger> const& changer,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<SessionMediatorReport> const& sm_report,
-        EventSinkFactory const& sink_factory,
+        std::shared_ptr<EventSinkFactory> const& sink_factory,
         std::shared_ptr<MessageSender> const& message_sender,
         std::shared_ptr<Screencast> const& effective_screencast,
         ConnectionContext const& connection_context,
