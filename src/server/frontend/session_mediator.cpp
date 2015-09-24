@@ -261,7 +261,7 @@ void mf::SessionMediator::create_surface(
 
     params.input_shape = extract_input_shape_from(request);
 
-    auto const surf_id = shell->create_surface(session, params);
+    auto const surf_id = shell->create_surface(session, params, event_sink);
     auto stream_id = mf::BufferStreamId(surf_id.as_value());
 
     auto surface = session->get_surface(surf_id);

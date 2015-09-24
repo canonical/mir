@@ -218,7 +218,7 @@ struct SessionMediator : public ::testing::Test
 
         ON_CALL(*shell, open_session(_, _, _)).WillByDefault(Return(stubbed_session));
 
-        ON_CALL(*shell, create_surface( _, _)).WillByDefault(
+        ON_CALL(*shell, create_surface( _, _, _)).WillByDefault(
             WithArg<1>(Invoke(stubbed_session.get(), &StubbedSession::create_surface)));
 
         ON_CALL(*shell, destroy_surface( _, _)).WillByDefault(

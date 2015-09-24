@@ -434,7 +434,7 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
         .of_buffer_usage(mir::graphics::BufferUsage::software)
         .of_position(titlebar_position_for_window(surface->top_left()))
         .of_type(mir_surface_type_gloss);
-    auto id = session->create_surface(params);
+    auto id = session->create_surface(params, nullptr);
     auto titlebar = session->surface(id);
     titlebar->set_alpha(0.9);
 

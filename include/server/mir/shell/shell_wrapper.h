@@ -61,7 +61,10 @@ public:
 
     void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& prompt_session) override;
 
-    frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) override;
+    frontend::SurfaceId create_surface(
+        std::shared_ptr<scene::Session> const& session,
+        scene::SurfaceCreationParameters const& params,
+        std::shared_ptr<frontend::EventSink> const& sink) override;
 
     void modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, SurfaceSpecification const& modifications) override;
 
