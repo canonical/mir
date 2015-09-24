@@ -49,7 +49,7 @@ TEST(ReorderingMessageSender, sends_no_message_before_being_uncorked)
     EXPECT_FALSE(messages_sent);
 }
 
-TEST(ReorderingMessageSender, sends_messages_in_order_when_drained)
+TEST(ReorderingMessageSender, sends_messages_in_order_when_uncorked)
 {
     using namespace testing;
     auto mock_sender = std::make_shared<NiceMock<MockMessageSender>>();
@@ -78,7 +78,7 @@ TEST(ReorderingMessageSender, sends_messages_in_order_when_drained)
 
     ASSERT_THAT(messages_sent, IsEmpty());
 
-    sender.drain();
+    sender.uncork();
 
     EXPECT_THAT(messages_sent, ElementsAreArray(messages.data(), messages.size()));
 }
@@ -115,51 +115,7 @@ TEST(ReorderingMessageSender, messages_sent_after_uncork_proceed_normally)
     }
 }
 
-TEST(ReorderingMessageSender, messages_sent_after_uncork_preceed_those_drained)
-{
-    using namespace testing;
-    auto mock_sender = std::make_shared<NiceMock<MockMessageSender>>();
-
-    std::vector<std::vector<char>> messages_sent;
-    ON_CALL(*mock_sender, send(_,_,_))
-        .WillByDefault(Invoke(
-            [&messages_sent](char const* data, size_t length, auto)
-            {
-                messages_sent.emplace_back(std::vector<char>(data, data + length));
-            }));
-
-    mf::ReorderingMessageSender sender{mock_sender};
-
-    std::array<std::vector<char>, 10> messages;
-    for (auto& message : messages)
-    {
-        auto content = std::to_string(reinterpret_cast<intptr_t>(&message));
-        message = std::vector<char>(content.begin(), content.end());
-    }
-
-    // What I'd *really* like here is a slice interface. Since we don't have one,
-    // send the second half of the messages array first, before we uncork()...
-    for (size_t i = messages.size() / 2 ; i < messages.size(); ++i)
-    {
-        sender.send(messages[i].data(), messages[i].size(), {});
-    }
-
-    sender.uncork();
-
-    // ...and then the first half of the messages array, so that...
-    for (size_t i = 0; i < messages.size() / 2; ++i)
-    {
-        sender.send(messages[i].data(), messages[i].size(), {});
-    }
-
-    // ...when we drain the second half of the messages array will get pushed
-    // onto the back of the first half, recreating the expected order.
-    sender.drain();
-
-    EXPECT_THAT(messages_sent, ElementsAreArray(messages.data(), messages.size()));
-}
-
-TEST(ReorderingMessageSender, calling_drain_twice_is_harmless)
+TEST(ReorderingMessageSender, calling_uncork_twice_is_harmless)
 {
     using namespace testing;
     auto mock_sender = std::make_shared<NiceMock<MockMessageSender>>();
@@ -188,8 +144,8 @@ TEST(ReorderingMessageSender, calling_drain_twice_is_harmless)
 
     ASSERT_THAT(messages_sent, IsEmpty());
 
-    sender.drain();
-    sender.drain();
+    sender.uncork();
+    sender.uncork();
 
     EXPECT_THAT(messages_sent, ElementsAreArray(messages.data(), messages.size()));
 }
@@ -240,19 +196,17 @@ TEST(ReorderingMessageSender, messages_with_fds_are_sent)
 
     EXPECT_THAT(messages_sent, IsEmpty());
 
-    sender.drain();
-
-    for (size_t i = 0; i < datas.size(); ++i)
-    {
-        EXPECT_THAT(messages_sent[i].data, Eq(datas[i]));
-        EXPECT_THAT(messages_sent[i].fds, Eq(fdsets[i]));
-    }
-
     sender.uncork();
 
     for (size_t i = 0; i < datas.size(); ++i)
     {
         sender.send(datas[i].data(), datas[i].size(), fdsets[i]);
+    }
+
+    for (size_t i = 0; i < datas.size(); ++i)
+    {
+        EXPECT_THAT(messages_sent[i].data, Eq(datas[i]));
+        EXPECT_THAT(messages_sent[i].fds, Eq(fdsets[i]));
     }
 
     for (size_t i = 0; i < datas.size(); ++i)

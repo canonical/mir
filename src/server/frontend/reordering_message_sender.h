@@ -40,13 +40,10 @@ public:
     void send(char const* data, size_t length, FdSets const& fds) override;
 
     /**
-     * Send all the messages buffered while this ReorderingMessageSender was corked.
-     */
-    void drain();
-
-    /**
-     * Stop diverting messages into the buffer. Mesasges sent after uncork() is called
-     * will be sent directly to the underlying MessageSender.
+     * Stop diverting messages into the buffer.
+     *
+     * All messages sent prior to uncork() will be sent to the underlying MessageSender,
+     * and all subsequent messages will be sent directly to the underlying MessageSender.
      */
     void uncork();
 private:

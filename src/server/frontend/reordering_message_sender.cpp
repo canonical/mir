@@ -46,18 +46,13 @@ void mf::ReorderingMessageSender::send(
     }
 }
 
-void mf::ReorderingMessageSender::drain()
+void mf::ReorderingMessageSender::uncork()
 {
     std::lock_guard<decltype(message_lock)> lock{message_lock};
+    corked = false;
     for (auto const& message : buffered_messages)
     {
         sink->send(message.data.data(), message.data.size(), message.fds);
     }
     buffered_messages.clear();
-}
-
-void mf::ReorderingMessageSender::uncork()
-{
-    std::lock_guard<decltype(message_lock)> lock{message_lock};
-    corked = false;
 }

@@ -21,6 +21,7 @@
 namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
 
+
 std::unique_ptr<mir::frontend::EventSink>
 mtd::null_sink_factory(std::shared_ptr<mf::MessageSender> const&)
 {
