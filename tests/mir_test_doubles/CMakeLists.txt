@@ -23,6 +23,7 @@ set(
   mock_event_sink.cpp
   null_event_sink.cpp
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_message_sender.h
+  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_message_sender.h
 )
 
 set(

@@ -234,6 +234,7 @@ private:
     std::shared_ptr<SessionMediatorReport> const report;
     EventSinkFactory const sink_factory;
     std::shared_ptr<EventSink> const event_sink;
+    std::shared_ptr<MessageSender> const message_sender;
     std::shared_ptr<MessageResourceCache> const resource_cache;
     std::shared_ptr<Screencast> const screencast;
     ConnectionContext const connection_context;

@@ -17,6 +17,7 @@
  */
 
 #include "session_mediator.h"
+#include "buffering_message_sender.h"
 
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/shell.h"
@@ -93,6 +94,7 @@ mf::SessionMediator::SessionMediator(
     report(report),
     sink_factory{sink_factory},
     event_sink{sink_factory(message_sender)},
+    message_sender{message_sender},
     resource_cache(resource_cache),
     screencast(screencast),
     connection_context(connection_context),
@@ -261,7 +263,10 @@ void mf::SessionMediator::create_surface(
 
     params.input_shape = extract_input_shape_from(request);
 
-    auto const surf_id = shell->create_surface(session, params, event_sink);
+    auto buffering_sender = std::make_shared<mf::BufferingMessageSender>(message_sender);
+    std::shared_ptr<mf::EventSink> sink = sink_factory(buffering_sender);
+
+    auto const surf_id = shell->create_surface(session, params, sink);
     auto stream_id = mf::BufferStreamId(surf_id.as_value());
 
     auto surface = session->get_surface(surf_id);
@@ -291,14 +296,18 @@ void mf::SessionMediator::create_surface(
     }
 
     advance_buffer(stream_id, *stream, buffer_stream_tracker.last_buffer(stream_id),
-        [this, surf_id, response, done, session]
+        [this, buffering_sender, surf_id, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
             response->mutable_buffer_stream()->mutable_id()->set_value(surf_id.as_value());
             if (client_buffer)
                 pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(), client_buffer, msg_type);
 
+            // Send the surface creation reply first...
             done->Run();
+
+            // ...then send any events queued up for the surface.
+            buffering_sender->uncork();
         });
 }
 

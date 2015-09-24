@@ -21,6 +21,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "src/server/frontend/resource_cache.h"
 #include "src/server/scene/application_session.h"
+#include "src/server/frontend/event_sender.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
@@ -49,11 +50,14 @@
 #include "mir/test/doubles/null_application_not_responding_detector.h"
 #include "mir/test/doubles/mock_platform_ipc_operations.h"
 #include "mir/test/doubles/null_message_sender.h"
+#include "mir/test/doubles/mock_message_sender.h"
 #include "mir/test/display_config_matchers.h"
 #include "mir/test/fake_shared.h"
+#include "mir/test/signal.h"
 #include "mir/frontend/connector.h"
 #include "mir/frontend/event_sink.h"
 #include "mir_protobuf.pb.h"
+#include "mir_protobuf_wire.pb.h"
 
 #include "gmock_set_arg.h"
 #include <boost/exception/errinfo_errno.hpp>
@@ -1112,4 +1116,79 @@ TEST_F(SessionMediator, configures_swap_intervals_on_streams)
     request.mutable_id()->set_value(surf_id.as_value());
     request.set_swapinterval(interval);
     mediator.configure_buffer_stream(&request, &response, null_callback.get());
+}
+
+namespace
+{
+MATCHER(IsReplyWithEvents, "")
+{
+    auto buffer = std::get<0>(arg);
+    auto buffer_len = std::get<1>(arg);
+
+    mir::protobuf::wire::Result result;
+    if (!result.ParseFromArray(buffer, buffer_len))
+    {
+        *result_listener << "is not a protobuf Result";
+        return false;
+    }
+
+    auto num_events = result.events_size();
+    if (num_events > 0)
+    {
+        *result_listener << "has " << num_events << " events";
+    }
+    else
+    {
+        *result_listener << "has no events";
+    }
+    return num_events > 0;
+}
+
+void fail_if_signal_raised(std::shared_ptr<mt::Signal> signal)
+{
+    EXPECT_FALSE(signal->raised());
+}
+}
+
+TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
+{
+    using namespace testing;
+
+    auto mock_sender = std::make_shared<mtd::MockMessageSender>();
+    mf::EventSinkFactory sink_factory =
+        [this](auto sender)
+        {
+            return std::make_unique<mf::detail::EventSender>(
+                sender,
+                mt::fake_shared(mock_ipc_operations));
+        };
+
+    mf::SessionMediator mediator{
+        shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
+        surface_pixel_formats, report, sink_factory,
+        mock_sender,
+        resource_cache, stub_screencast, nullptr, nullptr, nullptr,
+        std::make_shared<mtd::NullANRDetector>()};
+
+    ON_CALL(*shell, create_surface( _, _, _))
+        .WillByDefault(
+            Invoke([session = stubbed_session.get()](auto, auto params, auto sink)
+                   {
+                       sink->send_ping(0xdeadbeef);
+                       return session->create_surface(params);
+                   }));
+
+    auto event_sent = std::make_shared<mt::Signal>();
+
+    EXPECT_CALL(*mock_sender, send(_,_,_))
+        .With(Args<0, 1>(IsReplyWithEvents()))
+        .WillOnce(InvokeWithoutArgs([event_sent]() { event_sent->raise(); }));
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(
+        &surface_parameters,
+        &surface_response,
+        google::protobuf::NewCallback(&fail_if_signal_raised, event_sent));
+
+    EXPECT_TRUE(event_sent->raised());
 }
