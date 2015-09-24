@@ -4,7 +4,7 @@ mir (0.17.0-0ubuntu1) UNRELEASED; urgency=medium
   * New upstream release 0.17.0 (https://launchpad.net/mir/+milestone/0.17.0)
     - ABI summary: Only servers and graphics drivers need rebuilding;
       . Mirclient ABI unchanged at 9
-      . Mirserver ABI unchanged at 34
+      . Mirserver ABI bumped to 35
       . Mircommon ABI unchanged at 5
       . Mirplatform ABI unchanged at 10
       . Mirprotobuf ABI bumped to 3
