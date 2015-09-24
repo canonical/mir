@@ -21,7 +21,8 @@
 namespace mf = mir::frontend;
 
 mf::BufferingMessageSender::BufferingMessageSender(std::shared_ptr<MessageSender> const& sink)
-    : sink{sink}
+    : corked{true},
+      sink{sink}
 {
 }
 
@@ -30,13 +31,27 @@ void mf::BufferingMessageSender::send(
     size_t length,
     mf::FdSets const& fds)
 {
-    buffered_messages.emplace_back(Message { std::vector<char>(data, data + length), FdSets(fds) });
+    bool needs_buffering;
+    {
+        std::lock_guard<decltype(uncorked_lock)> lock{uncorked_lock};
+        needs_buffering = corked;
+    }
+    if (needs_buffering)
+    {
+        buffered_messages.emplace_back(Message {std::vector<char>(data, data + length), FdSets(fds)});
+    }
+    else
+    {
+        sink->send(data, length, fds);
+    }
 }
 
 void mf::BufferingMessageSender::uncork()
 {
+    std::lock_guard<decltype(uncorked_lock)> lock{uncorked_lock};
     for (auto const& message : buffered_messages)
     {
         sink->send(message.data.data(), message.data.size(), {});
     }
+    corked = false;
 }

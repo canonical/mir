@@ -80,3 +80,35 @@ TEST(BufferingMessageSender, sends_messages_in_order_when_uncorked)
 
     EXPECT_THAT(messages_sent, ElementsAreArray(messages.data(), messages.size()));
 }
+
+TEST(BufferingMessageSender, messages_sent_after_uncork_proceed_normally)
+{
+    using namespace testing;
+    auto mock_sender = std::make_shared<NiceMock<MockMessageSender>>();
+
+    std::vector<std::vector<char>> messages_sent;
+    ON_CALL(*mock_sender, send(_,_,_))
+        .WillByDefault(Invoke(
+            [&messages_sent](char const* data, size_t length, auto)
+            {
+                messages_sent.emplace_back(std::vector<char>(data, data + length));
+            }));
+
+    mf::BufferingMessageSender sender{mock_sender};
+
+    std::array<std::vector<char>, 9> messages;
+    for (auto& message : messages)
+    {
+        auto content = std::to_string(reinterpret_cast<intptr_t>(&message));
+        message = std::vector<char>(content.begin(), content.end());
+    }
+
+    sender.uncork();
+
+    for (auto const& message : messages)
+    {
+        sender.send(message.data(), message.size(), {});
+
+        EXPECT_THAT(messages_sent.back(), Eq(message));
+    }
+}

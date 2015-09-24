@@ -21,6 +21,8 @@
 
 #include "message_sender.h"
 
+#include <mutex>
+
 namespace mir
 {
 namespace frontend
@@ -44,6 +46,8 @@ private:
         std::vector<char> data;
         FdSets fds;
     };
+    std::mutex uncorked_lock;
+    bool corked;
     std::vector<Message> buffered_messages;
     std::shared_ptr<MessageSender> const sink;
 };
