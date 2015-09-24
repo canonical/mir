@@ -91,6 +91,7 @@ void set_xcursor_path()
         old_xcursor_path = strdup(old);
     auto test_cursor_path =mir_test_framework::executable_path() + std::string("/testing-cursor-theme");
     setenv("XCURSOR_PATH", test_cursor_path.c_str(), 1);
+    std::cerr << "PATH: " << test_cursor_path << std::endl;
 }
 
 void restore_xcursor_path()
