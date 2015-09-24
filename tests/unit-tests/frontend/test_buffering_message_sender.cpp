@@ -17,7 +17,7 @@
  */
 
 #include "src/server/frontend/message_sender.h"
-#include "src/server/frontend/buffering_message_sender.h"
+#include "src/server/frontend/reordering_message_sender.h"
 
 #include <fcntl.h>
 
@@ -32,12 +32,12 @@ public:
     MOCK_METHOD3(send, void(char const*, size_t, mf::FdSets const&));
 };
 
-TEST(BufferingMessageSender, sends_no_message_before_being_uncorked)
+TEST(ReorderingMessageSender, sends_no_message_before_being_uncorked)
 {
     using namespace testing;
     auto mock_sender = std::make_shared<NiceMock<MockMessageSender>>();
 
-    mf::BufferingMessageSender sender{mock_sender};
+    mf::ReorderingMessageSender sender{mock_sender};
 
     bool messages_sent{false};
     ON_CALL(*mock_sender, send(_,_,_))
@@ -49,7 +49,7 @@ TEST(BufferingMessageSender, sends_no_message_before_being_uncorked)
     EXPECT_FALSE(messages_sent);
 }
 
-TEST(BufferingMessageSender, sends_messages_in_order_when_drained)
+TEST(ReorderingMessageSender, sends_messages_in_order_when_drained)
 {
     using namespace testing;
     auto mock_sender = std::make_shared<NiceMock<MockMessageSender>>();
@@ -62,7 +62,7 @@ TEST(BufferingMessageSender, sends_messages_in_order_when_drained)
                 messages_sent.emplace_back(std::vector<char>(data, data + length));
             }));
 
-    mf::BufferingMessageSender sender{mock_sender};
+    mf::ReorderingMessageSender sender{mock_sender};
 
     std::array<std::vector<char>, 9> messages;
     for (auto& message : messages)
@@ -83,7 +83,7 @@ TEST(BufferingMessageSender, sends_messages_in_order_when_drained)
     EXPECT_THAT(messages_sent, ElementsAreArray(messages.data(), messages.size()));
 }
 
-TEST(BufferingMessageSender, messages_sent_after_uncork_proceed_normally)
+TEST(ReorderingMessageSender, messages_sent_after_uncork_proceed_normally)
 {
     using namespace testing;
     auto mock_sender = std::make_shared<NiceMock<MockMessageSender>>();
@@ -96,7 +96,7 @@ TEST(BufferingMessageSender, messages_sent_after_uncork_proceed_normally)
                 messages_sent.emplace_back(std::vector<char>(data, data + length));
             }));
 
-    mf::BufferingMessageSender sender{mock_sender};
+    mf::ReorderingMessageSender sender{mock_sender};
 
     std::array<std::vector<char>, 9> messages;
     for (auto& message : messages)
@@ -115,7 +115,7 @@ TEST(BufferingMessageSender, messages_sent_after_uncork_proceed_normally)
     }
 }
 
-TEST(BufferingMessageSender, calling_drain_twice_is_harmless)
+TEST(ReorderingMessageSender, calling_drain_twice_is_harmless)
 {
     using namespace testing;
     auto mock_sender = std::make_shared<NiceMock<MockMessageSender>>();
@@ -128,7 +128,7 @@ TEST(BufferingMessageSender, calling_drain_twice_is_harmless)
                 messages_sent.emplace_back(std::vector<char>(data, data + length));
             }));
 
-    mf::BufferingMessageSender sender{mock_sender};
+    mf::ReorderingMessageSender sender{mock_sender};
 
     std::array<std::vector<char>, 9> messages;
     for (auto& message : messages)
@@ -150,7 +150,7 @@ TEST(BufferingMessageSender, calling_drain_twice_is_harmless)
     EXPECT_THAT(messages_sent, ElementsAreArray(messages.data(), messages.size()));
 }
 
-TEST(BufferingMessageSender, messages_with_fds_are_sent)
+TEST(ReorderingMessageSender, messages_with_fds_are_sent)
 {
     using namespace testing;
     auto mock_sender = std::make_shared<NiceMock<MockMessageSender>>();
@@ -187,7 +187,7 @@ TEST(BufferingMessageSender, messages_with_fds_are_sent)
         data = { 'a', 'b', 'c' };
     }
 
-    mf::BufferingMessageSender sender{mock_sender};
+    mf::ReorderingMessageSender sender{mock_sender};
 
     for (size_t i = 0; i < datas.size(); ++i)
     {

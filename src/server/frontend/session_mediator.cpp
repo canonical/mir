@@ -17,7 +17,7 @@
  */
 
 #include "session_mediator.h"
-#include "buffering_message_sender.h"
+#include "reordering_message_sender.h"
 
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/shell.h"
@@ -263,7 +263,7 @@ void mf::SessionMediator::create_surface(
 
     params.input_shape = extract_input_shape_from(request);
 
-    auto buffering_sender = std::make_shared<mf::BufferingMessageSender>(message_sender);
+    auto buffering_sender = std::make_shared<mf::ReorderingMessageSender>(message_sender);
     std::shared_ptr<mf::EventSink> sink = sink_factory(buffering_sender);
 
     auto const surf_id = shell->create_surface(session, params, sink);

@@ -26,8 +26,8 @@ set(
   display_server.h
   message_receiver.h
   message_sender.h
-  buffering_message_sender.cpp
-  buffering_message_sender.h
+  reordering_message_sender.cpp
+  reordering_message_sender.h
 )
 
 add_library(

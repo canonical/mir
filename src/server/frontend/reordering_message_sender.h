@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_BUFFERING_MESSAGE_SENDER_H_
-#define MIR_FRONTEND_BUFFERING_MESSAGE_SENDER_H_
+#ifndef MIR_FRONTEND_REORDERING_MESSAGE_SENDER_H_
+#define MIR_FRONTEND_REORDERING_MESSAGE_SENDER_H_
 
 #include "message_sender.h"
 
@@ -32,15 +32,15 @@ namespace frontend
  * A MessageSender that buffers all messages until triggered,
  * then forwards all messages to an underlying MessageSender
  */
-class BufferingMessageSender : public MessageSender
+class ReorderingMessageSender : public MessageSender
 {
 public:
-    explicit BufferingMessageSender(std::shared_ptr<MessageSender> const& sink);
+    explicit ReorderingMessageSender(std::shared_ptr<MessageSender> const& sink);
 
     void send(char const* data, size_t length, FdSets const& fds) override;
 
     /**
-     * Send all the messages buffered while this BufferingMessageSender was corked.
+     * Send all the messages buffered while this ReorderingMessageSender was corked.
      */
     void drain();
 
@@ -64,4 +64,4 @@ private:
 }
 }
 
-#endif //MIR_FRONTEND_BUFFERING_MESSAGE_SENDER_H_
+#endif //MIR_FRONTEND_REORDERING_MESSAGE_SENDER_H_

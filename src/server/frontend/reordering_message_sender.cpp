@@ -16,17 +16,17 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "buffering_message_sender.h"
+#include "reordering_message_sender.h"
 
 namespace mf = mir::frontend;
 
-mf::BufferingMessageSender::BufferingMessageSender(std::shared_ptr<MessageSender> const& sink)
+mf::ReorderingMessageSender::ReorderingMessageSender(std::shared_ptr<MessageSender> const& sink)
     : corked{true},
       sink{sink}
 {
 }
 
-void mf::BufferingMessageSender::send(
+void mf::ReorderingMessageSender::send(
     char const* data,
     size_t length,
     mf::FdSets const& fds)
@@ -46,7 +46,7 @@ void mf::BufferingMessageSender::send(
     }
 }
 
-void mf::BufferingMessageSender::drain()
+void mf::ReorderingMessageSender::drain()
 {
     std::lock_guard<decltype(message_lock)> lock{message_lock};
     for (auto const& message : buffered_messages)
@@ -56,7 +56,7 @@ void mf::BufferingMessageSender::drain()
     buffered_messages.clear();
 }
 
-void mf::BufferingMessageSender::uncork()
+void mf::ReorderingMessageSender::uncork()
 {
     std::lock_guard<decltype(message_lock)> lock{message_lock};
     corked = false;
