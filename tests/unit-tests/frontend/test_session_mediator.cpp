@@ -48,6 +48,7 @@
 #include "mir/test/doubles/null_screencast.h"
 #include "mir/test/doubles/null_application_not_responding_detector.h"
 #include "mir/test/doubles/mock_platform_ipc_operations.h"
+#include "mir/test/doubles/null_message_sender.h"
 #include "mir/test/display_config_matchers.h"
 #include "mir/test/fake_shared.h"
 #include "mir/frontend/connector.h"
@@ -208,7 +209,8 @@ struct SessionMediator : public ::testing::Test
           mediator{
             shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
             surface_pixel_formats, report,
-            std::make_shared<mtd::NullEventSink>(),
+            &mtd::null_sink_factory,
+            std::make_shared<mtd::NullMessageSender>(),
             resource_cache, stub_screencast, &connector, nullptr, nullptr,
             std::make_shared<mtd::NullANRDetector>()}
     {
@@ -269,7 +271,8 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
     mf::SessionMediator mediator{
         shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
         surface_pixel_formats, report,
-        std::make_shared<mtd::NullEventSink>(),
+        &mtd::null_sink_factory,
+        std::make_shared<mtd::NullMessageSender>(),
         resource_cache, stub_screencast, context, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>()};
 
@@ -366,7 +369,8 @@ TEST_F(SessionMediator, connect_packs_display_configuration)
     mf::SessionMediator mediator(
         shell, mt::fake_shared(mock_ipc_operations), mock_display,
         surface_pixel_formats, report,
-        std::make_shared<mtd::NullEventSink>(),
+        &mtd::null_sink_factory,
+        std::make_shared<mtd::NullMessageSender>(),
         resource_cache, std::make_shared<mtd::NullScreencast>(),
         nullptr, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>());
@@ -570,7 +574,9 @@ TEST_F(SessionMediator, display_config_request)
     mf::SessionMediator mediator{
         shell, mt::fake_shared(mock_ipc_operations), mock_display_selector,
         surface_pixel_formats, report,
-        std::make_shared<mtd::NullEventSink>(), resource_cache,
+        &mtd::null_sink_factory,
+        std::make_shared<mtd::NullMessageSender>(),
+        resource_cache,
         std::make_shared<mtd::NullScreencast>(),
          nullptr, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>()};
@@ -825,7 +831,8 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
     mf::SessionMediator mediator{
         shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
         surface_pixel_formats, report,
-        std::make_shared<mtd::NullEventSink>(),
+        &mtd::null_sink_factory,
+        std::make_shared<mtd::NullMessageSender>(),
         mt::fake_shared(mock_cache), stub_screencast, &connector, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>()};
 
@@ -923,12 +930,21 @@ TEST_F(SessionMediator, arranges_bufferstreams_via_shell)
 TEST_F(SessionMediator, sends_a_buffer_when_submit_buffer_is_called)
 {
     using namespace testing;
-    auto mock_sink = std::make_shared<mtd::MockEventSink>();
+    auto mock_sink = mtd::the_mock_sink();
     auto buffer1 = std::make_shared<mtd::StubBuffer>();
     mf::SessionMediator mediator{
-        shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
-        surface_pixel_formats, report, mock_sink,
-        resource_cache, stub_screencast, nullptr, nullptr, nullptr,
+        shell,
+        mt::fake_shared(mock_ipc_operations),
+        graphics_changer,
+        surface_pixel_formats,
+        report,
+        &mtd::mock_sink_factory,
+        std::make_shared<mtd::NullMessageSender>(),
+        resource_cache,
+        stub_screencast,
+        nullptr,
+        nullptr,
+        nullptr,
         std::make_shared<mtd::NullANRDetector>()};
 
     mp::Void null;
@@ -1012,11 +1028,11 @@ TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_submit)
     auto mock_stream = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
     ON_CALL(*mock_stream, swap_buffers(_,_))
         .WillByDefault(InvokeArgument<1>(nullptr));
-    auto mock_sink = std::make_shared<mtd::MockEventSink>();
     auto buffer1 = std::make_shared<mtd::StubBuffer>();
     mf::SessionMediator mediator{
         shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
-        surface_pixel_formats, report, mock_sink,
+        surface_pixel_formats, report, &mtd::null_sink_factory,
+        std::make_shared<mtd::NullMessageSender>(),
         resource_cache, stub_screencast, nullptr, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>()};
 

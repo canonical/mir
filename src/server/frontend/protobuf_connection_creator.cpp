@@ -69,10 +69,14 @@ void mf::ProtobufConnectionCreator::create_connection_for(
             messenger,
             ipc_factory->resource_cache());
 
-        auto const event_sink = std::make_shared<detail::EventSender>(messenger, operations);
+        auto const event_factory =
+            [ops = operations](std::shared_ptr<mf::MessageSender> const& messenger)
+            {
+                return std::make_unique<detail::EventSender>(messenger, ops);
+            };
         auto const msg_processor = create_processor(
             message_sender,
-            ipc_factory->make_ipc_server(creds, event_sink, connection_context),
+            ipc_factory->make_ipc_server(creds, event_factory, messenger, connection_context),
             report);
 
         auto const& connection = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connections, msg_processor);

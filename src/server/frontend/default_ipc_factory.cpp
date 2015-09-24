@@ -24,6 +24,7 @@
 #include "unauthorized_screencast.h"
 #include "resource_cache.h"
 #include "mir/frontend/session_authorizer.h"
+#include "mir/frontend/event_sink.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 
 namespace mf = mir::frontend;
@@ -58,9 +59,10 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
 }
 
 std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_server(
-    SessionCredentials const& creds,
-    std::shared_ptr<EventSink> const& sink,
-    ConnectionContext const& connection_context)
+    SessionCredentials const &creds,
+    EventSinkFactory const& sink_factory,
+    std::shared_ptr<mf::MessageSender> const& message_sender,
+    ConnectionContext const &connection_context)
 {
     std::shared_ptr<DisplayChanger> changer;
     std::shared_ptr<Screencast> effective_screencast;
@@ -94,7 +96,8 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_serve
         changer,
         buffer_allocator,
         sm_report,
-        sink,
+        sink_factory,
+        message_sender,
         effective_screencast,
         connection_context, cursor_images);
 }
@@ -110,7 +113,8 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
     std::shared_ptr<DisplayChanger> const& changer,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionMediatorReport> const& sm_report,
-    std::shared_ptr<EventSink> const& sink,
+    mf::EventSinkFactory const& sink_factory,
+    std::shared_ptr<mf::MessageSender> const& message_sender,
     std::shared_ptr<Screencast> const& effective_screencast,
     ConnectionContext const& connection_context,
     std::shared_ptr<mi::CursorImages> const& cursor_images)
@@ -121,7 +125,8 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
         changer,
         buffer_allocator->supported_pixel_formats(),
         sm_report,
-        sink,
+        sink_factory,
+        message_sender,
         resource_cache(),
         effective_screencast,
         connection_context,

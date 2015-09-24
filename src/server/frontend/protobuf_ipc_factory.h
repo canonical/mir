@@ -35,14 +35,18 @@ class ConnectionContext;
 class EventSink;
 class ResourceCache;
 class SessionCredentials;
+class MessageSender;
+
+typedef std::function<std::unique_ptr<EventSink>(std::shared_ptr<MessageSender>)> EventSinkFactory;
 
 class ProtobufIpcFactory
 {
 public:
     virtual std::shared_ptr<detail::DisplayServer> make_ipc_server(
-        SessionCredentials const& creds,
-        std::shared_ptr<EventSink> const& sink,
-        ConnectionContext const& connection_context) = 0;
+        SessionCredentials const &creds,
+        EventSinkFactory const& sink_factory,
+        std::shared_ptr<MessageSender> const& message_sender,
+        ConnectionContext const &connection_context) = 0;
 
     virtual std::shared_ptr<ResourceCache> resource_cache() = 0;
 

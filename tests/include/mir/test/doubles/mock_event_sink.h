@@ -28,6 +28,11 @@
 
 namespace mir
 {
+namespace frontend
+{
+class MessageSender;
+}
+
 namespace test
 {
 namespace doubles
@@ -40,6 +45,28 @@ struct MockEventSink : public frontend::EventSink
     MOCK_METHOD1(send_ping, void(int32_t));
     MOCK_METHOD3(send_buffer, void(frontend::BufferStreamId, graphics::Buffer&, graphics::BufferIpcMsgType));
 };
+
+class GloballyUniqueMockEventSink : public frontend::EventSink
+{
+public:
+    GloballyUniqueMockEventSink();
+    ~GloballyUniqueMockEventSink() override;
+
+    void handle_event(MirEvent const& ev) override;
+    void handle_lifecycle_event(MirLifecycleState state) override;
+    void handle_display_config_change(graphics::DisplayConfiguration const& conf) override;
+    void send_ping(int32_t serial) override;
+    void send_buffer(frontend::BufferStreamId id, graphics::Buffer& buf, graphics::BufferIpcMsgType type) override;
+
+    MockEventSink* as_mock() const;
+
+private:
+    std::shared_ptr<MockEventSink> underlying_sink;
+    static std::weak_ptr<MockEventSink> global_sink;
+};
+
+std::unique_ptr<frontend::EventSink> mock_sink_factory(std::shared_ptr<frontend::MessageSender> const&);
+std::shared_ptr<MockEventSink> the_mock_sink();
 }
 }
 }
