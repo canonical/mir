@@ -53,11 +53,6 @@ public:
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
     }
 
-    void TearDown() override
-    {
-        mtf::ConnectedClientWithASurface::TearDown();
-    }
-
     std::vector<uint8_t> cookie_secret;
     mtf::UdevEnvironment mock_devices;
     MirCookie out_cookie;
