@@ -250,6 +250,22 @@ MATCHER_P2(ButtonDownEvent, x, y, "")
     return button_event_matches(pev, x, y, mir_pointer_action_button_down, 0, true, false);
 }
 
+MATCHER_P2(ButtonDownEventWithButton, pos, button, "")
+{
+    auto pev = maybe_pointer_event(to_address(arg));
+    if (pev == nullptr)
+        return false;
+    if (mir_pointer_event_action(pev) != mir_pointer_action_button_down)
+        return false;
+    if (mir_pointer_event_button_state(pev, static_cast<MirPointerButton>(button)) == false)
+        return false;
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_float())
+        return false;
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_float())
+        return false;
+    return true;
+}
+
 MATCHER_P2(ButtonUpEvent, x, y, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
@@ -260,6 +276,35 @@ MATCHER_P3(ButtonsDown, x, y, buttons, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
     return button_event_matches(pev, x, y, mir_pointer_action_button_down, buttons, false);
+}
+
+MATCHER_P2(ButtonUpEventWithButton, pos, button, "")
+{
+    auto pev = maybe_pointer_event(to_address(arg));
+    if (pev == nullptr)
+        return false;
+    if (mir_pointer_event_action(pev) != mir_pointer_action_button_up)
+        return false;
+    if (mir_pointer_event_button_state(pev, button) == true)
+        return false;
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_float())
+        return false;
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_float())
+        return false;
+    return true;
+}
+
+MATCHER_P2(PointerAxisChange, scroll_axis, value, "")
+{
+    auto parg = to_address(arg);
+    auto pev = maybe_pointer_event(parg);
+    if (pev == nullptr)
+        return false;
+    if (mir_pointer_event_action(pev) != mir_pointer_action_motion)
+        return false;
+    if (mir_pointer_event_axis_value(pev, scroll_axis) != value)
+        return false;
+    return true;
 }
 
 MATCHER_P2(TouchEvent, x, y, "")
