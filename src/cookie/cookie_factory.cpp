@@ -142,20 +142,27 @@ private:
     struct hmac_sha1_ctx ctx;
 };
 
+size_t mir::cookie::CookieFactory::optimal_secret_size()
+{
+    // Secret keys smaller than this are internally zero-extended to this size.
+    // Secret keys larger than this are internally hashed to this size.
+    size_t const hmac_sha1_block_size{64};
+    return hmac_sha1_block_size;
+}
+
 std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_from_secret(mir::cookie::Secret const& secret)
 {
   return std::make_unique<CookieFactoryNettle>(secret);
 }
 
-std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_saving_secret(mir::cookie::Secret& save_secret,
-                                                                                             unsigned secret_size)
+std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_saving_secret(mir::cookie::Secret& save_secret)
 {
-  save_secret = get_random_data(secret_size);
+  save_secret = get_random_data(optimal_secret_size());
   return std::make_unique<CookieFactoryNettle>(save_secret);
 }
 
-std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_keeping_secret(unsigned secret_size)
+std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_keeping_secret()
 {
-  auto secret = get_random_data(secret_size);
+  auto secret = get_random_data(optimal_secret_size());
   return std::make_unique<CookieFactoryNettle>(secret);
 }
