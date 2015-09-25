@@ -1,4 +1,4 @@
-MIR_PROTOBUF_4 {
+MIR_PROTOBUF_3 {
  global:
   extern "C++" {
     mir::protobuf::BufferAllocation::?BufferAllocation*;

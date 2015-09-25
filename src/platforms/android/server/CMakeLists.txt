@@ -8,6 +8,7 @@ include_directories(
     ${GLESv2_INCLUDE_DIRS}
     ${ANDROID_PROPERTIES_INCLUDE_DIRS}
 )
+include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/3rd_party/android-deps)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
 add_definitions( -DANDROID )
