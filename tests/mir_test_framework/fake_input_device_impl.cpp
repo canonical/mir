@@ -104,9 +104,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
     auto key_event = builder->key_event(event_time, input_action, key_code, key_params.scancode, event_modifiers);
 
     if (key_params.action == synthesis::EventAction::Down)
-        modifiers |= mie::to_modifier(key_params.scancode);
+        modifiers |= mie::to_modifiers(key_params.scancode);
     else
-        modifiers &= ~mie::to_modifier(key_params.scancode);
+        modifiers &= ~mie::to_modifiers(key_params.scancode);
 
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
