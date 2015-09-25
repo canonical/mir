@@ -20,6 +20,8 @@
 #define MIR_TEST_DOUBLES_STUB_CURSOR_H_
 
 #include "mir/graphics/cursor.h"
+#include "mir/graphics/cursor_image.h"
+#include "mir/input/cursor_images.h"
 
 namespace mir
 {
@@ -34,6 +36,25 @@ struct StubCursor : public graphics::Cursor
     void show(graphics::CursorImage const&) override {}
     void hide() override {}
     void move_to(geometry::Point) override {}
+};
+
+struct StubCursorImage : public graphics::CursorImage
+{
+    StubCursorImage(std::string const& /* name */)
+    { }
+
+    void const* as_argb_8888() const override { return this; }
+    geometry::Size size() const  override { return geometry::Size{}; }
+    geometry::Displacement hotspot() const  override{ return geometry::Displacement{0, 0}; }
+};
+
+struct StubCursorImages : public input::CursorImages
+{
+   std::shared_ptr<graphics::CursorImage>
+       image(std::string const& name, geometry::Size const& /* size */) override
+   {
+       return std::make_shared<StubCursorImage>(name);
+   }
 };
 
 }
