@@ -45,8 +45,17 @@ class CookieFactory
 {
 public:
     /**
-    *   Contruction function used to create a CookieFactory. The secret size must be
-    *   no less then minimum_secret_size otherwise an expection will be thrown
+     * Optimal size for the provided Secret.
+     *
+     * This is the maximum useful size of the secret key. Keys of greater size
+     * will be reduced to this size internally, and keys of smaller size may be
+     * internally extended to this size.
+     */
+    static size_t optimal_secret_size();
+
+    /**
+    *   Construction function used to create a CookieFactory. The secret size must be
+    *   no less then minimum_secret_size otherwise an exception will be thrown
     *
     *   \param [in] secret  A filled in secret used to set the key for the hash function
     *   \return             A unique_ptr CookieFactory
@@ -54,24 +63,19 @@ public:
     static std::unique_ptr<CookieFactory> create_from_secret(Secret const& secret);
 
     /**
-    *   Contruction function used to create a CookieFactory as well as a secret.
-    *   The secret size must be no less then minimum_secret_size otherwise an expection will be thrown
+    *   Construction function used to create a CookieFactory as well as a secret.
     *
-    *   \param [in]  secret_size  The size of the secret to create, must be larger then minimum_secret_size
     *   \param [out] save_secret  The secret that was created.
     *   \return                   A unique_ptr CookieFactory
     */
-    static std::unique_ptr<CookieFactory> create_saving_secret(Secret& save_secret,
-                                                               unsigned secret_size = 2 * minimum_secret_size);
+    static std::unique_ptr<CookieFactory> create_saving_secret(Secret& save_secret);
 
     /**
-    *   Contruction function used to create a CookieFactory and a secret which it keeps internally.
-    *   The secret size must be no less then minimum_secret_size otherwise an expection will be thrown
+    *   Construction function used to create a CookieFactory and a secret which it keeps internally.
     *
-    *   \param [in]  secret_size  The size of the secret to create, must be larger then minimum_secret_size
     *   \return                   A unique_ptr CookieFactory
     */
-    static std::unique_ptr<CookieFactory> create_keeping_secret(unsigned secret_size = 2 * minimum_secret_size);
+    static std::unique_ptr<CookieFactory> create_keeping_secret();
 
     CookieFactory(CookieFactory const& factory) = delete;
     CookieFactory& operator=(CookieFactory const& factory) = delete;
@@ -93,8 +97,13 @@ public:
     */
     virtual bool attest_timestamp(MirCookie const& cookie) = 0;
 
+    /**
+     * Absolute minimum size of secret key the CookieFactory will accept.
+     *
+     * Code should be using optimum_secret_size(); this minimum size is provided
+     * as a user convenience to guard against catastrophically bad initialisation.
+     */
     static unsigned const minimum_secret_size = 8;
-
 protected:
     CookieFactory() = default;
 };
