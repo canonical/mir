@@ -27,8 +27,6 @@
  */
 /* This is C code. Not C++. */
 
-typedef struct MirCookie MirCookie;
-
 /**
  * Attributes of a surface that the client and server/shell may wish to
  * get or set over the wire.
