@@ -28,25 +28,29 @@
 
 namespace
 {
-char const* get_library_name(void *address)
+std::shared_ptr<mir::SharedLibrary> get_shared_library(void *address)
 {
-    Dl_info info{nullptr, nullptr, nullptr, nullptr};
-    dladdr(address, &info);
-    return info.dli_fname;
-}
-}
+    if (!address)
+        return nullptr;
 
+    Dl_info library_info{nullptr, nullptr, nullptr, nullptr};
+    Dl_info executable_info{nullptr, nullptr, nullptr, nullptr};
+    
+    dladdr(dlsym(nullptr, "main"), &executable_info);
+    dladdr(address, &library_info);
+    
+    if (library_info.dli_fbase == executable_info.dli_fbase)
+        return nullptr;
+            
+    return std::make_shared<mir::SharedLibrary>(library_info.dli_fname);
+}
+}
 // this class serves two purposes, supporting default construction of
 // UniqueModulePtr and ensuring that platform modules do not inline
 // any of the shared_ptr<mir::SharedLibrary> which would be unmapped from
 // the process during destruction.
 mir::detail::RefCountedLibrary::RefCountedLibrary(void* address)
-    : internal_state(
-        address ?
-        std::make_shared<mir::SharedLibrary>(
-            get_library_name(address)
-            ) :
-        nullptr)
+    : internal_state(get_shared_library(address))
 {
 }
 
