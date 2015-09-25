@@ -25,6 +25,7 @@
 #include "mir/input/input_sink.h"
 #include "mir/input/input_report.h"
 #include "mir/input/device_capability.h"
+#include "mir/input/pointer_settings.h"
 #include "mir/input/input_device_info.h"
 #include "mir/events/event_builders.h"
 #include "mir/geometry/displacement.h"
@@ -159,7 +160,8 @@ mir::EventUPtr mie::LibInputDevice::convert_button_event(libinput_event_pointer*
     auto const action = (libinput_event_pointer_get_button_state(pointer) == LIBINPUT_BUTTON_STATE_PRESSED)?
         mir_pointer_action_button_down : mir_pointer_action_button_up;
 
-    auto const pointer_button = mie::to_pointer_button(button);
+    auto const do_not_swap_buttons = mir_pointer_button_primary;
+    auto const pointer_button = mie::to_pointer_button(button, do_not_swap_buttons);
     auto const relative_x_value = 0.0f;
     auto const relative_y_value = 0.0f;
     auto const hscroll_value = 0.0f;
@@ -232,10 +234,12 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
     auto const relative_x_value = 0.0f;
     auto const relative_y_value = 0.0f;
     auto const hscroll_value = libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)
-        ? libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)
+        ? horizontal_scroll_speed * libinput_event_pointer_get_axis_value(pointer,
+                                                                          LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)
         : 0.0f;
     auto const vscroll_value = libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)
-        ? libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)
+        ? vertical_scroll_speed * libinput_event_pointer_get_axis_value(pointer,
+                                                                        LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)
         : 0.0f;
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
@@ -351,3 +355,32 @@ libinput_device* mie::LibInputDevice::device() const
     return devices.front().get();
 }
 
+mir::UniqueModulePtr<mi::PointerSettings> mie::LibInputDevice::get_pointer_settings() const
+{
+    mir::UniqueModulePtr<PointerSettings> ret;
+    if (!contains(info.capabilities, mi::DeviceCapability::pointer))
+        return ret;
+
+    auto dev = device();
+    auto accel_speed = libinput_device_config_accel_get_speed(dev);
+    auto left_handed = (libinput_device_config_left_handed_get(dev) == 1);
+
+    ret = make_module_ptr<mi::PointerSettings>();
+    ret->cursor_speed = accel_speed;
+    ret->vertical_scroll_speed = vertical_scroll_speed;
+    ret->horizontal_scroll_speed = horizontal_scroll_speed;
+    ret->primary_button = left_handed? mir_pointer_button_secondary : mir_pointer_button_primary;
+    return ret;
+}
+
+void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& settings)
+{
+    if (!contains(info.capabilities, mi::DeviceCapability::pointer))
+        return;
+
+    auto dev = device();
+    libinput_device_config_accel_set_speed(dev, settings.cursor_speed);
+    libinput_device_config_left_handed_set(dev, mir_pointer_button_primary != settings.primary_button);
+    vertical_scroll_speed = settings.vertical_scroll_speed;
+    horizontal_scroll_speed = settings.horizontal_scroll_speed;
+}

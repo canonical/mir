@@ -27,7 +27,7 @@ namespace input
 {
 namespace evdev
 {
-MirPointerButton to_pointer_button(int button);
+MirPointerButton to_pointer_button(int button, MirPointerButton primary);
 MirInputEventModifiers to_modifiers(int32_t scan_code);
 MirInputEventModifiers expand_modifiers(MirInputEventModifiers modifiers);
 }

@@ -16,8 +16,11 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "mir/input/input_device_info.h"
 #include "input_device.h"
+
+#include "mir/input/pointer_settings.h"
+#include "mir/input/input_device_info.h"
+#include "mir/input/device_capability.h"
 
 namespace mi = mir::input;
 namespace mix = mi::X;
@@ -42,4 +45,23 @@ void mix::XInputDevice::stop()
 mi::InputDeviceInfo mix::XInputDevice::get_device_info()
 {
     return info;
+}
+
+mir::UniqueModulePtr<mi::PointerSettings> mix::XInputDevice::get_pointer_settings() const
+{
+    UniqueModulePtr<PointerSettings> ret;
+    if (!contains(info.capabilities, DeviceCapability::pointer))
+        return ret;
+
+    ret = make_module_ptr<PointerSettings>();
+    ret->primary_button = mir_pointer_button_primary;
+    ret->cursor_speed = 0.0;
+    ret->horizontal_scroll_speed = 1.0;
+    ret->vertical_scroll_speed = 1.0;
+
+    return std::move(ret);
+}
+
+void mix::XInputDevice::apply_settings(PointerSettings const&)
+{
 }

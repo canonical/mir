@@ -21,6 +21,7 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
+#include "mir/module_deleter.h"
 
 namespace mir
 {
@@ -39,6 +40,9 @@ public:
     void start(InputSink* destination, EventBuilder* builder) override;
     void stop() override;
     InputDeviceInfo get_device_info() override;
+
+    UniqueModulePtr<PointerSettings> get_pointer_settings() const override;
+    void apply_settings(PointerSettings const& settings) override;
 
     InputSink* sink{nullptr};
     EventBuilder* builder{nullptr};

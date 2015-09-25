@@ -27,12 +27,16 @@
 
 namespace mie = mir::input::evdev;
 
-MirPointerButton mie::to_pointer_button(int button)
+MirPointerButton mie::to_pointer_button(int button, MirPointerButton primary_button)
 {
     switch(button)
     {
-    case BTN_LEFT: return mir_pointer_button_primary;
-    case BTN_RIGHT: return mir_pointer_button_secondary;
+    case BTN_LEFT: return (primary_button == mir_pointer_button_primary)
+            ? mir_pointer_button_primary
+            : mir_pointer_button_secondary;
+    case BTN_RIGHT: return (primary_button == mir_pointer_button_primary)
+            ? mir_pointer_button_secondary
+            : mir_pointer_button_primary;
     case BTN_MIDDLE: return mir_pointer_button_tertiary;
     case BTN_BACK: return mir_pointer_button_back;
     case BTN_FORWARD: return mir_pointer_button_forward;
