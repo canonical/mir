@@ -343,52 +343,37 @@ private:
 std::shared_ptr<mi::InputManager>
 mir::DefaultServerConfiguration::the_input_manager()
 {
-    // As the input configuration is structured now, if there is no
-    // InputReader (as in the nested case) there will be nothing to instate
-    // and keep alive the cursor and its controller.
-    // We use the CursorControllingInputManager for this purpose.
-    struct CursorControllingInputManager : public mi::NullInputManager
-    {
-        CursorControllingInputManager(
-            std::shared_ptr<mi::CursorListener> const& cursor_listener)
-            : cursor_listener(cursor_listener)
-        {
-        }
-
-        std::shared_ptr<mi::CursorListener> const cursor_listener;
-    };
-
     return input_manager(
         [this]() -> std::shared_ptr<mi::InputManager>
         {
             auto const options = the_options();
             bool input_opt = options->get<bool>(options::enable_input_opt);
-            bool host_platform = input_opt && !options->is_set(options::host_socket_opt);
-            // TODO nested input handling (== host_socket) should fold into a platform
 
-            if (host_platform)
+            // TODO nested input handling (== host_socket) should fold into a platform
+            if (!input_opt || options->is_set(options::host_socket_opt))
+            {
+                return std::make_shared<mi::NullInputManager>();
+            }
+            else
             {
                 if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
                     mr::legacy_input::initialize(the_logger());
 
-                std::shared_ptr<mi::InputManager> ret;
-
-                auto platform = the_input_platform();
-                if (platform)
+                if (auto platform = the_input_platform())
                 {
-                    ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(),
-                                                                    std::make_shared<NullLegacyInputDispatchable>());
+                    auto const ret = std::make_shared<mi::DefaultInputManager>(
+                        the_input_reading_multiplexer(),
+                        std::make_shared<NullLegacyInputDispatchable>());
+
                     ret->add_platform(platform);
+                    return ret;
                 }
                 else
                 {
-                    ret = std::make_shared<mi::DefaultInputManager>(
+                    return std::make_shared<mi::DefaultInputManager>(
                         the_input_reading_multiplexer(), the_legacy_input_dispatchable());
                 }
-                return ret;
             }
-            else
-                return std::make_shared<mi::NullInputManager>();
         }
     );
 }
