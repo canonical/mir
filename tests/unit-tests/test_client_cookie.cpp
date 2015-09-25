@@ -18,15 +18,12 @@
 
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
-#include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
-#include "mir/shell/shell_wrapper.h"
 #include "mir/cookie_factory.h"
 #include "mir/test/wait_condition.h"
 
 #include "boost/throw_exception.hpp"
 
 namespace mtf = mir_test_framework;
-namespace mtd = mir::test::doubles;
 namespace msh = mir::shell;
 
 namespace
@@ -50,15 +47,6 @@ public:
 
     void SetUp() override
     {
-        std::shared_ptr<mtd::WrapShellToTrackLatestSurface> shell;
-
-        server.wrap_shell([&](std::shared_ptr<msh::Shell> const& wrapped)
-        {
-            auto const msc = std::make_shared<mtd::WrapShellToTrackLatestSurface>(wrapped);
-            shell = msc;
-            return msc;
-        });
-
         mtf::ConnectedClientWithASurface::SetUp();
 
         mir_surface_set_event_handler(surface, &cookie_capturing_callback, this);
@@ -67,7 +55,7 @@ public:
 
     void TearDown() override
     {
-        mtf::ConnectedClientHeadlessServer::TearDown();
+        mtf::ConnectedClientWithASurface::TearDown();
     }
 
     std::vector<uint8_t> cookie_secret;
