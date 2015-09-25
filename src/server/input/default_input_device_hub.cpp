@@ -17,6 +17,7 @@
  */
 
 #include "default_input_device_hub.h"
+#include "default_device_handle.h"
 
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/input_device.h"
@@ -63,13 +64,16 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
     {
         devices.push_back(std::make_unique<RegisteredDevice>(device, input_dispatcher, input_dispatchable, this));
 
-        auto info = devices.back()->get_device_info();
+        auto const & dev = devices.back();
 
-        // send input device info to observer loop..
+        auto handle = std::make_shared<DefaultDeviceHandle>(
+            dev->id(), device->get_device_info());
+
+        // pass input device handle to observer loop..
         observer_queue->enqueue(this,
-                                [this,info]()
+                                [this, handle]()
                                 {
-                                    add_device_info(info);
+                                    add_device_handle(handle);
                                 });
 
         // TODO let shell decide if device should be observed / exposed to clients.
@@ -101,7 +105,7 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
                     this,
                     [this,id = item->id()]()
                     {
-                        remove_device_info(id);
+                        remove_device_handle(id);
                     });
                 return true;
             }
@@ -126,21 +130,13 @@ mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
 {
 }
 
-mi::InputDeviceInfo mi::DefaultInputDeviceHub::RegisteredDevice::get_device_info()
+MirInputDeviceId mi::DefaultInputDeviceHub::RegisteredDevice::create_new_device_id()
 {
-    InputDeviceInfo ret = device->get_device_info();
-    // TODO consider storing device id outside of InputDeviceInfo
-    ret.id = device_id;
-    return ret;
-}
-
-int32_t mi::DefaultInputDeviceHub::RegisteredDevice::create_new_device_id()
-{
-    static int32_t device_id{0};
+    static MirInputDeviceId device_id{0};
     return ++device_id;
 }
 
-int32_t mi::DefaultInputDeviceHub::RegisteredDevice::id()
+MirInputDeviceId mi::DefaultInputDeviceHub::RegisteredDevice::id()
 {
     return device_id;
 }
@@ -229,7 +225,7 @@ void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver
         [observer,this]
         {
             observers.push_back(observer);
-            for (auto const& item : infos)
+            for (auto const& item : handles)
             {
                 observer->device_added(item);
             }
@@ -249,30 +245,32 @@ void mi::DefaultInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserve
                             });
 }
 
-void mi::DefaultInputDeviceHub::add_device_info(InputDeviceInfo const& info)
+void mi::DefaultInputDeviceHub::add_device_handle(std::shared_ptr<DefaultDeviceHandle> const& handle)
 {
-    infos.push_back(info);
+    handles.push_back(handle);
 
     for (auto const& observer : observers)
     {
-        observer->device_added(infos.back());
+        observer->device_added(handles.back());
         observer->changes_complete();
     }
 }
 
-void mi::DefaultInputDeviceHub::remove_device_info(int32_t id)
+void mi::DefaultInputDeviceHub::remove_device_handle(MirInputDeviceId id)
 {
-    auto info_it = remove_if(begin(infos), end(infos), [&id](auto const& info){return info.id == id;});
+    auto handle_it = remove_if(begin(handles),
+                               end(handles),
+                               [&id](auto const& handle){return handle->id() == id;});
 
-    if (info_it == end(infos))
+    if (handle_it == end(handles))
         return;
     for (auto const& observer : observers)
     {
-        observer->device_removed(*info_it);
+        observer->device_removed(*handle_it);
         observer->changes_complete();
     }
 
-    infos.erase(info_it, end(infos));
+    handles.erase(handle_it, end(handles));
 }
 
 void mi::DefaultInputDeviceHub::update_spots()

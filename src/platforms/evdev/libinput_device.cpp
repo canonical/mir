@@ -338,7 +338,7 @@ void mie::LibInputDevice::update_device_info()
     for (auto const& path : paths)
         caps |= mie::detect_device_capabilities(path.c_str());
 
-    info = mi::InputDeviceInfo{0, name, unique_id.str(), caps};
+    info = mi::InputDeviceInfo{name, unique_id.str(), caps};
 }
 
 libinput_device_group* mie::LibInputDevice::group()
