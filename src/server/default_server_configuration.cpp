@@ -189,7 +189,7 @@ std::shared_ptr<mir::cookie::CookieFactory> mir::DefaultServerConfiguration::the
             static_assert(secret_size >= mir::cookie::CookieFactory::minimum_secret_size,
                           "Secret size is smaller then the minimum secret size");
 
-            return mir::cookie::CookieFactory::create_keeping_secret(secret_size);
+            return mir::cookie::CookieFactory::create_keeping_secret();
         });
 }
 
