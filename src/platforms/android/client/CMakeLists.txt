@@ -1,5 +1,7 @@
 include_directories(${client_common_include_dirs})
 include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
+include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/3rd_party/android-deps)
+
 add_definitions(-DANDROID)
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
