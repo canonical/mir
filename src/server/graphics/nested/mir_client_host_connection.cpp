@@ -130,7 +130,8 @@ public:
         {
             cursor_hotspot = image.hotspot();
 
-            // push an extra frame for host to display correctly (not sure why)
+            // push an extra frame for host to display correctly
+            // TODO remove this workaround for lp:1308133
             mir_buffer_stream_get_graphics_region(cursor, &g);
             memcpy(g.vaddr, image.as_argb_8888(), pixels_size);
             mir_buffer_stream_swap_buffers_sync(cursor);
