@@ -33,11 +33,34 @@ mtd::MockLibInput::MockLibInput()
 
     ON_CALL(*this, libinput_device_ref(_)).WillByDefault(ReturnArg<0>());
     ON_CALL(*this, libinput_get_fd(_)).WillByDefault(Return(int(libinput_simulation_queue.watch_fd())));
+    ON_CALL(*this, libinput_device_config_left_handed_set(_, _))
+        .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
+    ON_CALL(*this, libinput_device_config_accel_set_speed(_, _))
+        .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
 }
 
 void mtd::MockLibInput::wake()
 {
     libinput_simulation_queue.enqueue([]{});
+}
+
+void mtd::MockLibInput::setup_device(libinput* ptr, libinput_device* dev, char const* path, char const* name, unsigned int vendor, unsigned int product)
+{
+    using namespace ::testing;
+    ON_CALL(*this, libinput_path_add_device(ptr, StrEq(path)))
+        .WillByDefault(Return(dev));
+    ON_CALL(*this, libinput_device_get_name(dev))
+        .WillByDefault(Return(name));
+    ON_CALL(*this, libinput_device_get_sysname(dev))
+        .WillByDefault(Return(name));
+    ON_CALL(*this, libinput_device_get_id_product(dev))
+        .WillByDefault(Return(product));
+    ON_CALL(*this, libinput_device_ref(dev))
+        .WillByDefault(Return(dev));
+    ON_CALL(*this, libinput_device_get_id_vendor(dev))
+        .WillByDefault(Return(vendor));
+    ON_CALL(*this, libinput_device_unref(dev))
+        .WillByDefault(Return(nullptr));
 }
 
 mtd::MockLibInput::~MockLibInput() noexcept
@@ -313,4 +336,235 @@ char const* libinput_device_get_sysname(libinput_device* device)
 libinput_device_group* libinput_device_get_device_group(libinput_device* device)
 {
     return global_libinput->libinput_device_get_device_group(device);
+}
+
+int libinput_device_config_tap_get_finger_count(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_tap_get_finger_count(device);
+}
+
+libinput_config_status libinput_device_config_tap_set_enabled(libinput_device *device, libinput_config_tap_state enable)
+{
+    return libinput_device_config_tap_set_enabled(device, enable);
+}
+
+libinput_config_tap_state libinput_device_config_tap_get_enabled(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_tap_get_enabled(device);
+}
+
+
+libinput_config_tap_state libinput_device_config_tap_get_default_enabled(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_tap_get_default_enabled(device);
+}
+
+libinput_config_status libinput_device_config_tap_set_drag_lock_enabled(libinput_device *device, libinput_config_drag_lock_state enable)
+{
+    return libinput_device_config_tap_set_drag_lock_enabled(device, enable);
+}
+
+libinput_config_drag_lock_state libinput_device_config_tap_get_drag_lock_enabled(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_tap_get_drag_lock_enabled(device);
+}
+
+libinput_config_drag_lock_state libinput_device_config_tap_get_default_drag_lock_enabled(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_tap_get_default_drag_lock_enabled(device);
+}
+
+int libinput_device_config_calibration_has_matrix(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_calibration_has_matrix(device);
+}
+
+libinput_config_status libinput_device_config_calibration_set_matrix(libinput_device *device, const float matrix[6])
+{
+    return libinput_device_config_calibration_set_matrix(device, matrix);
+}
+
+int libinput_device_config_calibration_get_matrix(libinput_device *device, float matrix[6])
+{
+    return libinput_device_config_calibration_get_matrix(device, matrix);
+}
+
+int libinput_device_config_calibration_get_default_matrix(libinput_device *device, float matrix[6])
+{
+    return libinput_device_config_calibration_get_default_matrix(device, matrix);
+}
+
+uint32_t libinput_device_config_send_events_get_modes(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_send_events_get_modes(device);
+}
+
+libinput_config_status libinput_device_config_send_events_set_mode(libinput_device *device, uint32_t mode)
+{
+    return libinput_device_config_send_events_set_mode(device, mode);
+}
+
+uint32_t libinput_device_config_send_events_get_mode(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_send_events_get_mode(device);
+}
+
+uint32_t libinput_device_config_send_events_get_default_mode(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_send_events_get_default_mode(device);
+}
+
+int libinput_device_config_accel_is_available(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_accel_is_available(device);
+}
+
+libinput_config_status libinput_device_config_accel_set_speed(libinput_device *device, double speed)
+{
+    return global_libinput->libinput_device_config_accel_set_speed(device, speed);
+}
+
+double libinput_device_config_accel_get_speed(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_accel_get_speed(device);
+}
+
+double libinput_device_config_accel_get_default_speed(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_accel_get_default_speed(device);
+}
+
+int libinput_device_config_scroll_has_natural_scroll(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_scroll_has_natural_scroll(device);
+}
+
+libinput_config_status libinput_device_config_scroll_set_natural_scroll_enabled(libinput_device *device, int enable)
+{
+    return global_libinput->libinput_device_config_scroll_set_natural_scroll_enabled(device, enable);
+}
+
+int libinput_device_config_scroll_get_natural_scroll_enabled(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_scroll_get_natural_scroll_enabled(device);
+}
+
+int libinput_device_config_scroll_get_default_natural_scroll_enabled(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_scroll_get_default_natural_scroll_enabled(device);
+}
+
+int libinput_device_config_left_handed_is_available(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_left_handed_is_available(device);
+}
+
+libinput_config_status libinput_device_config_left_handed_set(libinput_device *device, int left_handed)
+{
+    return global_libinput->libinput_device_config_left_handed_set(device, left_handed);
+}
+
+int libinput_device_config_left_handed_get(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_left_handed_get(device);
+}
+
+int libinput_device_config_left_handed_get_default(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_left_handed_get_default(device);
+}
+
+uint32_t libinput_device_config_click_get_methods(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_click_get_methods(device);
+}
+
+libinput_config_status libinput_device_config_click_set_method(libinput_device *device, libinput_config_click_method method)
+{
+    return global_libinput->libinput_device_config_click_set_method(device, method);
+}
+
+libinput_config_click_method libinput_device_config_click_get_method(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_click_get_method(device);
+}
+
+libinput_config_click_method libinput_device_config_click_get_default_method(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_click_get_default_method(device);
+}
+
+int libinput_device_config_middle_emulation_is_available(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_middle_emulation_is_available(device);
+}
+
+libinput_config_status libinput_device_config_middle_emulation_set_enabled(libinput_device *device, libinput_config_middle_emulation_state enable)
+{
+    return global_libinput->libinput_device_config_middle_emulation_set_enabled(device, enable);
+}
+
+libinput_config_middle_emulation_state libinput_device_config_middle_emulation_get_enabled(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_middle_emulation_get_enabled(device);
+}
+
+libinput_config_middle_emulation_state libinput_device_config_middle_emulation_get_default_enabled(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_middle_emulation_get_default_enabled(device);
+}
+
+uint32_t libinput_device_config_scroll_get_methods(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_scroll_get_methods(device);
+}
+
+libinput_config_status libinput_device_config_scroll_set_method(libinput_device *device, libinput_config_scroll_method method)
+{
+    return global_libinput->libinput_device_config_scroll_set_method(device, method);
+}
+
+libinput_config_scroll_method libinput_device_config_scroll_get_method(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_scroll_get_method(device);
+}
+
+libinput_config_scroll_method libinput_device_config_scroll_get_default_method(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_scroll_get_default_method(device);
+}
+
+libinput_config_status libinput_device_config_scroll_set_button(libinput_device *device, uint32_t button)
+{
+    return global_libinput->libinput_device_config_scroll_set_button(device, button);
+}
+
+uint32_t libinput_device_config_scroll_get_button(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_scroll_get_button(device);
+}
+
+uint32_t libinput_device_config_scroll_get_default_button(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_scroll_get_default_button(device);
+}
+
+int libinput_device_config_dwt_is_available(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_dwt_is_available(device);
+}
+
+libinput_config_status libinput_device_config_dwt_set_enabled(libinput_device *device, libinput_config_dwt_state enable)
+{
+    return global_libinput->libinput_device_config_dwt_set_enabled(device, enable);
+}
+
+libinput_config_dwt_state libinput_device_config_dwt_get_enabled(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_dwt_get_enabled(device);
+}
+
+libinput_config_dwt_state libinput_device_config_dwt_get_default_enabled(libinput_device *device)
+{
+    return global_libinput->libinput_device_config_dwt_get_default_enabled(device);
 }

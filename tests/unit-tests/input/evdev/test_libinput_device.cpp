@@ -27,6 +27,7 @@
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/mock_libinput.h"
 #include "mir/test/gmock_fixes.h"
+#include "mir_test_framework/udev_environment.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -37,6 +38,7 @@
 namespace mi = mir::input;
 namespace mie = mi::evdev;
 namespace mt = mir::test;
+namespace mtf = mir_test_framework;
 namespace mtd = mt::doubles;
 namespace geom = mir::geometry;
 
@@ -116,6 +118,7 @@ struct MockEventBuilder : mi::EventBuilder
 
 struct LibInputDevice : public ::testing::Test
 {
+    mtf::UdevEnvironment env;
     ::testing::NiceMock<mir::test::doubles::MockLibInput> mock_libinput;
     ::testing::NiceMock<MockInputSink> mock_sink;
     ::testing::NiceMock<MockEventBuilder> mock_builder;
@@ -137,18 +140,29 @@ struct LibInputDevice : public ::testing::Test
     const uint64_t event_time_4 = 4000;
     const mi::EventBuilder::Timestamp time_stamp_4{std::chrono::microseconds{event_time_4}};
 
-    char const* path = "/path/to/dev";
+    char const* laptop_keyboard_device_path = "/dev/input/event4";
+    char const* path{laptop_keyboard_device_path};
 
     LibInputDevice()
     {
+        setup_device(fake_device, path, "laptop-keyboard", 5252, 3113);
+
         ON_CALL(mock_libinput, libinput_path_create_context(_,_))
             .WillByDefault(Return(fake_input));
-        ON_CALL(mock_libinput, libinput_path_add_device(fake_input,_))
-            .WillByDefault(Return(fake_device));
-        ON_CALL(mock_libinput, libinput_device_ref(fake_device))
-            .WillByDefault(Return(fake_device));
-        ON_CALL(mock_libinput, libinput_device_unref(fake_device))
-            .WillByDefault(Return(nullptr));
+    }
+
+    void setup_device(libinput_device* dev, char const* device_path, char const* umock_name, unsigned int vendor_id, unsigned int product_id)
+    {
+        env.add_standard_device(umock_name);
+        mock_libinput.setup_device(fake_input, dev, device_path, umock_name, vendor_id, product_id);
+    }
+
+    void setup_pointer_configuration(libinput_device* dev, double accel_speed, MirPointerButton primary)
+    {
+        EXPECT_CALL(mock_libinput, libinput_device_config_accel_get_speed(dev))
+            .WillRepeatedly(Return(accel_speed));
+        EXPECT_CALL(mock_libinput, libinput_device_config_left_handed_get(dev))
+            .WillRepeatedly(Return(primary == mir_pointer_button_secondary));
     }
 
     void setup_key_event(libinput_event* event, uint64_t event_time, uint32_t key, libinput_key_state state)
@@ -265,30 +279,50 @@ TEST_F(LibInputDevice, start_creates_and_unrefs_libinput_device_from_path)
     std::shared_ptr<libinput> lib = mie::make_libinput();
     mie::LibInputDevice dev(mir::report::null_input_report(),
                             path,
-                            mie::make_libinput_device(lib.get(), path));
+                            std::move(mie::make_libinput_device(lib.get(), path)));
     dev.start(&mock_sink, &mock_builder);
 }
 
 TEST_F(LibInputDevice, open_device_of_group)
 {
-    char const* first_dev = "/path/to/dev1";
-    char const* second_dev = "/path/to/dev2";
     std::shared_ptr<libinput> lib = mie::make_libinput();
+    char const* second_dev = "/dev/input/event13";
+    char const* second_umock_dev_name = "bluetooth-magic-trackpad";
+    
+    setup_device(second_fake_device, second_dev, second_umock_dev_name, 9663, 1234);
 
     InSequence seq;
-    EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(first_dev)));
+    EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(path))).Times(1);
     // according to manual libinput_path_add_device creates a temporary device with a ref count 0.
     // hence it needs a manual ref call
-    EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device));
-    EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(second_dev)))
-        .WillOnce(Return(second_fake_device));
-    EXPECT_CALL(mock_libinput, libinput_device_ref(second_fake_device));
+    EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device)).Times(1);
+    EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(second_dev))).Times(1);
+    EXPECT_CALL(mock_libinput, libinput_device_ref(second_fake_device)).Times(1);
 
     mie::LibInputDevice dev(mir::report::null_input_report(),
-                            first_dev,
-                            mie::make_libinput_device(lib.get(), first_dev));
+                            path,
+                            std::move(mie::make_libinput_device(lib.get(), path)));
     dev.add_device_of_group(second_dev, mie::make_libinput_device(lib.get(), second_dev));
     dev.start(&mock_sink, &mock_builder);
+}
+
+TEST_F(LibInputDevice, input_info_combines_capabilities)
+{
+    std::shared_ptr<libinput> lib = mie::make_libinput();
+    char const* second_dev = "/dev/input/event13";
+    char const* second_umock_dev_name = "bluetooth-magic-trackpad";
+    
+    setup_device(second_fake_device, second_dev, second_umock_dev_name, 9663, 1234);
+
+    mie::LibInputDevice dev(mir::report::null_input_report(),
+                            path,
+                            mie::make_libinput_device(lib.get(), path));
+    dev.add_device_of_group(second_dev, mie::make_libinput_device(lib.get(), second_dev));
+    auto info = dev.get_device_info();
+
+    EXPECT_THAT(info.capabilities, Eq(mi::DeviceCapability::touchpad|
+                                      mi::DeviceCapability::keyboard|
+                                      mi::DeviceCapability::alpha_numeric));
 }
 
 TEST_F(LibInputDevice, removal_unrefs_libinput_device)
