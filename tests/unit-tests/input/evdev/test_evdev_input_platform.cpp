@@ -128,8 +128,9 @@ struct EvdevInputPlatform : public ::testing::TestWithParam<std::string>
         if (end(devices) == it)
         {
             auto dev_ptr = get_next_fake_ptr<libinput_device*>(devices);
-            mock_libinput.setup_device(li_context, dev_ptr, path, path, 123, 456);
             devices.emplace_back(path, dev_ptr);
+            auto const& dev_entry = devices.back();
+            mock_libinput.setup_device(li_context, dev_ptr, dev_entry.first.c_str(), dev_entry.first.c_str(), 123, 456);
             return devices.back().second;
         }
 
