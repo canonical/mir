@@ -102,6 +102,7 @@ MATCHER(IsSolidBlack, "")
 {
     return cursor_image_is_solid_color(arg, 0xff000000);
 }
+}
 
 TEST_F(XCursorLoaderTest, loads_cursors_from_testing_theme)
 {
@@ -143,5 +144,4 @@ TEST_F(XCursorLoaderTest, symbolic_names_which_are_not_present_resolve_to_defaul
     auto image_with_made_up_name = loader.image("Artickrumbulis", size);
 
     EXPECT_EQ(default_image, image_with_made_up_name);
-}
 }
