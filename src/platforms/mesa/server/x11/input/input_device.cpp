@@ -53,13 +53,7 @@ mir::UniqueModulePtr<mi::PointerSettings> mix::XInputDevice::get_pointer_setting
     if (!contains(info.capabilities, DeviceCapability::pointer))
         return ret;
 
-    ret = make_module_ptr<PointerSettings>();
-    ret->primary_button = mir_pointer_button_primary;
-    ret->cursor_speed = 0.0;
-    ret->horizontal_scroll_speed = 1.0;
-    ret->vertical_scroll_speed = 1.0;
-
-    return std::move(ret);
+    return make_module_ptr<PointerSettings>();
 }
 
 void mix::XInputDevice::apply_settings(PointerSettings const&)
