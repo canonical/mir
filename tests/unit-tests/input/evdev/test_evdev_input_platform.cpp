@@ -106,7 +106,7 @@ struct EvdevInputPlatform : public ::testing::TestWithParam<std::string>
         return reinterpret_cast<PtrT>(number);
     }
 
-    template<typename PtrT,typename Container>
+    template<typename PtrT, typename Container>
     PtrT get_next_fake_ptr(Container const& container)
     {
         return to_fake_ptr<PtrT>(container.size()+1);
