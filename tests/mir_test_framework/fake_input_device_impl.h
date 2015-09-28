@@ -82,7 +82,7 @@ private:
         uint32_t modifiers{0};
         mir::geometry::Point pos, scroll;
         MirPointerButtons buttons;
-        mir::input::PointerSettings settings{mir_pointer_button_primary, 0.0, 1.0, 1.0};
+        mir::input::PointerSettings settings;
     };
     std::shared_ptr<mir::dispatch::ActionQueue> queue;
     std::shared_ptr<InputDevice> device;

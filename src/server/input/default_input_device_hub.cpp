@@ -44,7 +44,7 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<CursorListener> const& cursor_listener,
     std::shared_ptr<InputRegion> const& input_region)
     : input_dispatcher(input_dispatcher), input_dispatchable{input_multiplexer}, observer_queue(observer_queue),
-      touch_visualizer(touch_visualizer), cursor_listener(cursor_listener), input_region(input_region)
+      touch_visualizer(touch_visualizer), cursor_listener(cursor_listener), input_region(input_region), device_id_generator{0}
 {
 }
 
@@ -62,9 +62,10 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
 
     if (it == end(devices))
     {
-        devices.push_back(std::make_unique<RegisteredDevice>(device, input_dispatcher, input_dispatchable, this));
+        devices.push_back(std::make_unique<RegisteredDevice>(
+            device, create_new_device_id(), input_dispatcher, input_dispatchable, this));
 
-        auto const & dev = devices.back();
+        auto const& dev = devices.back();
 
         auto handle = std::make_shared<DefaultDeviceHandle>(
             dev->id(), device->get_device_info());
@@ -122,18 +123,18 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
 
 mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
     std::shared_ptr<InputDevice> const& dev,
+    MirInputDeviceId device_id,
     std::shared_ptr<InputDispatcher> const& dispatcher,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
     DefaultInputDeviceHub* hub)
-    : device_id(create_new_device_id()), builder(device_id), device(dev), dispatcher(dispatcher),
+    : device_id(device_id), builder(device_id), device(dev), dispatcher(dispatcher),
       multiplexer(multiplexer), hub(hub)
 {
 }
 
-MirInputDeviceId mi::DefaultInputDeviceHub::RegisteredDevice::create_new_device_id()
+MirInputDeviceId mi::DefaultInputDeviceHub::create_new_device_id()
 {
-    static MirInputDeviceId device_id{0};
-    return ++device_id;
+    return ++device_id_generator;
 }
 
 MirInputDeviceId mi::DefaultInputDeviceHub::RegisteredDevice::id()
