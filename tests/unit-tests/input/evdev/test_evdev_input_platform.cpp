@@ -262,3 +262,15 @@ TEST_F(EvdevInputPlatform, ignore_devices_from_same_group)
     env.add_standard_device("usb-keyboard");
     run_dispatchable(*platform);
 }
+
+TEST_F(EvdevInputPlatform, ignore_non_input_devices)
+{
+    auto platform = create_input_platform();
+    platform->start();
+
+    EXPECT_CALL(mock_registry, add_device(_)).Times(0);
+    EXPECT_CALL(mock_libinput, libinput_path_add_device(_,_)).Times(0);
+
+    env.add_standard_device("standard-drm-devices");
+    run_dispatchable(*platform);
+}
