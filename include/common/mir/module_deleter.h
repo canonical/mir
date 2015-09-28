@@ -30,7 +30,7 @@ namespace detail
 class RefCountedLibrary
 {
 public:
-    RefCountedLibrary(void* adrress);
+    RefCountedLibrary(void* address);
     RefCountedLibrary(RefCountedLibrary const&);
     ~RefCountedLibrary();
     RefCountedLibrary& operator=(RefCountedLibrary const&);
