@@ -26,17 +26,17 @@ mi::DefaultDeviceHandle::DefaultDeviceHandle(MirInputDeviceId id, mi::InputDevic
 {
 }
 
-mi::DeviceCapabilities mi::DefaultDeviceHandle::get_device_classes() const
+mi::DeviceCapabilities mi::DefaultDeviceHandle::capabilities() const
 {
     return info.capabilities;
 }
 
-std::string mi::DefaultDeviceHandle::get_name() const
+std::string mi::DefaultDeviceHandle::name() const
 {
     return info.name;
 }
 
-std::string mi::DefaultDeviceHandle::get_unique_id() const
+std::string mi::DefaultDeviceHandle::unique_id() const
 {
     return info.unique_id;
 }
@@ -45,4 +45,3 @@ MirInputDeviceId mi::DefaultDeviceHandle::id() const
 {
     return device_id;
 }
-

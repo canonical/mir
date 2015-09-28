@@ -186,7 +186,7 @@ MATCHER_P(WithName, name,
           std::string(negation?"isn't":"is") +
           " name:" + std::string(name))
 {
-    return arg.lock()->get_name() == name;
+    return arg.lock()->name() == name;
 }
 
 TEST_F(InputDeviceHubTest, observers_receive_devices_on_add)
@@ -209,7 +209,7 @@ TEST_F(InputDeviceHubTest, observers_receive_devices_on_add)
     auto device_1 = handle_1.lock();
     auto device_2 = handle_2.lock();
     EXPECT_THAT(device_1,Ne(device_2));
-    EXPECT_THAT(device_1->get_unique_id(),Ne(device_2->get_unique_id()));
+    EXPECT_THAT(device_1->unique_id(),Ne(device_2->unique_id()));
 }
 
 TEST_F(InputDeviceHubTest, throws_on_duplicate_add)
