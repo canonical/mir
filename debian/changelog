@@ -13,8 +13,7 @@ mir (0.17.0-0ubuntu1) UNRELEASED; urgency=medium
 
  -- Andreas Pokorny <andreas.pokorny@canonical.com>  Thu, 24 Sep 2015 17:32:39 +0200
 
-mir (0.16.0-0ubuntu1) wily; urgency=medium
-
+mir (0.16.0+15.10.20150921.1-0ubuntu1) wily; urgency=medium
   [ Daniel van Vugt ]
   * New upstream release 0.16.0 (https://launchpad.net/mir/+milestone/0.16.0)
     - ABI summary: Only servers and graphics drivers need rebuilding;
