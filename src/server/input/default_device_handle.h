@@ -37,9 +37,9 @@ class DefaultDeviceHandle : public DeviceHandle
 public:
     DefaultDeviceHandle(MirInputDeviceId id, InputDeviceInfo const& info);
     MirInputDeviceId id() const override;
-    DeviceCapabilities get_device_classes() const override;
-    std::string get_name() const override;
-    std::string get_unique_id() const override;
+    DeviceCapabilities capabilities() const override;
+    std::string name() const override;
+    std::string unique_id() const override;
 private:
     MirInputDeviceId device_id;
     InputDeviceInfo info;
