@@ -37,6 +37,7 @@ class InputDeviceInfo;
 class EventBuilder;
 
 class PointerSettings;
+class TouchPadSettings;
 
 /**
  * Represents an input device.
@@ -61,6 +62,8 @@ public:
     virtual UniqueModulePtr<PointerSettings> get_pointer_settings() const = 0;
     virtual void apply_settings(PointerSettings const&) = 0;
 
+    virtual UniqueModulePtr<TouchPadSettings> get_touch_pad_settings() const = 0;
+    virtual void apply_settings(TouchPadSettings const&) = 0;
 protected:
     InputDevice(InputDevice const&) = delete;
     InputDevice& operator=(InputDevice const&) = delete;

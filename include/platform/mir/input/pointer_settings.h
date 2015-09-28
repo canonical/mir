@@ -34,16 +34,16 @@ struct PointerSettings
      *   - mir_pointer_button_primary -> right handed
      *   - mir_pointer_button_secondary -> left handed
      */
-    MirPointerButton primary_button;
+    MirPointerButton primary_button{mir_pointer_button_primary};
     /**
      * Scale cursor accelaration.
      *   - 0: default acceleration
      *   - [-1, 0[: reduced acceleration
      *   - ]0, 1]: increased acceleration
      */
-    double cursor_speed;
-    double horizontal_scroll_speed;
-    double vertical_scroll_speed;
+    double cursor_speed{0.0};
+    double horizontal_scroll_speed{1.0};
+    double vertical_scroll_speed{1.0};
 };
 
 }

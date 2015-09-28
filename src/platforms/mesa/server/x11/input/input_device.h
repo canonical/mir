@@ -43,6 +43,8 @@ public:
 
     UniqueModulePtr<PointerSettings> get_pointer_settings() const override;
     void apply_settings(PointerSettings const& settings) override;
+    UniqueModulePtr<TouchPadSettings> get_touch_pad_settings() const override;
+    void apply_settings(TouchPadSettings const& settings) override;
 
     InputSink* sink{nullptr};
     EventBuilder* builder{nullptr};

@@ -26,6 +26,7 @@
 #include "mir/input/input_report.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/pointer_settings.h"
+#include "mir/input/touch_pad_settings.h"
 #include "mir/input/input_device_info.h"
 #include "mir/events/event_builders.h"
 #include "mir/geometry/displacement.h"
@@ -383,4 +384,44 @@ void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& sett
     libinput_device_config_left_handed_set(dev, mir_pointer_button_primary != settings.primary_button);
     vertical_scroll_speed = settings.vertical_scroll_speed;
     horizontal_scroll_speed = settings.horizontal_scroll_speed;
+}
+
+mir::UniqueModulePtr<mi::TouchPadSettings> mie::LibInputDevice::get_touch_pad_settings() const
+{
+    mir::UniqueModulePtr<TouchPadSettings> ret;
+    if (!contains(info.capabilities, mi::DeviceCapability::touchpad))
+        return ret;
+
+    auto dev = device();
+    auto click_modes = libinput_device_config_click_get_method(dev);
+    auto scroll_modes = libinput_device_config_scroll_get_method(dev);
+        
+    ret = make_module_ptr<TouchPadSettings>();
+    
+    ret->click_mode = mir_touch_pad_click_mode_none;
+    if (click_modes & LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS)
+        ret->click_mode |= mir_touch_pad_click_mode_area_to_click;
+    if (click_modes & LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER)
+        ret->click_mode |= mir_touch_pad_click_mode_finger_count;
+
+    ret->scroll_mode = mir_touch_pad_scroll_mode_none;
+    if (scroll_modes & LIBINPUT_CONFIG_SCROLL_2FG)
+        ret->scroll_mode |= mir_touch_pad_scroll_mode_two_finger_scroll;
+    if (scroll_modes & LIBINPUT_CONFIG_SCROLL_EDGE)
+        ret->scroll_mode |= mir_touch_pad_scroll_mode_edge_scroll;
+    if (scroll_modes & LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN)
+        ret->scroll_mode |= mir_touch_pad_scroll_mode_button_down_scroll;
+
+    ret->tap_to_click = libinput_device_config_tap_get_enabled(dev) == LIBINPUT_CONFIG_TAP_ENABLED;
+    ret->disable_while_typing = libinput_device_config_dwt_get_enabled(dev) == LIBINPUT_CONFIG_DWT_ENABLED;
+    ret->disable_with_mouse =
+        libinput_device_config_send_events_get_mode(dev) == LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE;
+    ret->middle_mouse_button_emulation =
+        libinput_device_config_middle_emulation_get_enabled(dev) == LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED;
+
+    return ret;
+}
+
+void mie::LibInputDevice::apply_settings(mi::TouchPadSettings const&)
+{
 }

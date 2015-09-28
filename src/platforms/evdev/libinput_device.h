@@ -55,6 +55,8 @@ public:
     InputDeviceInfo get_device_info() override;
     UniqueModulePtr<PointerSettings> get_pointer_settings() const override;
     void apply_settings(PointerSettings const&) override;
+    UniqueModulePtr<TouchPadSettings> get_touch_pad_settings() const override;
+    void apply_settings(TouchPadSettings const&) override;
 
     void process_event(libinput_event* event);
     ::libinput_device* device() const;

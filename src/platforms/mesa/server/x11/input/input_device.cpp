@@ -19,6 +19,7 @@
 #include "input_device.h"
 
 #include "mir/input/pointer_settings.h"
+#include "mir/input/touch_pad_settings.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/device_capability.h"
 
@@ -63,5 +64,20 @@ mir::UniqueModulePtr<mi::PointerSettings> mix::XInputDevice::get_pointer_setting
 }
 
 void mix::XInputDevice::apply_settings(PointerSettings const&)
+{
+}
+
+mir::UniqueModulePtr<mi::TouchPadSettings> mix::XInputDevice::get_touch_pad_settings() const
+{
+    UniqueModulePtr<TouchPadSettings> ret;
+    if (!contains(info.capabilities, DeviceCapability::touchpad))
+        return ret;
+
+    ret = make_module_ptr<TouchPadSettings>();
+
+    return std::move(ret);
+}
+
+void mix::XInputDevice::apply_settings(TouchPadSettings const&)
 {
 }

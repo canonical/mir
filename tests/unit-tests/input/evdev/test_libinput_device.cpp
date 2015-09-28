@@ -23,16 +23,20 @@
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_sink.h"
 #include "mir/input/pointer_settings.h"
+#include "mir/input/touch_pad_settings.h"
+#include "mir/flags.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/mock_libinput.h"
 #include "mir/test/gmock_fixes.h"
+#include "mir/udev/wrapper.h"
 #include "mir_test_framework/udev_environment.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <linux/input.h>
+#include <libinput.h>
 
 #include <chrono>
 
@@ -142,20 +146,61 @@ struct LibInputDevice : public ::testing::Test
     const mi::EventBuilder::Timestamp time_stamp_4{std::chrono::microseconds{event_time_4}};
 
     char const* laptop_keyboard_device_path = "/dev/input/event4";
-    char const* path{laptop_keyboard_device_path};
+    char const* trackpad_dev_path = "/dev/input/event13";
+    char const* touch_screen_dev_path = "/dev/input/event4";
+    char const* usb_mouse_dev_path = "/dev/input/event13";
+    char const* touch_pad_dev_path = "/dev/input/event12";
 
     LibInputDevice()
     {
-        setup_device(fake_device, path, "laptop-keyboard", 5252, 3113);
-
         ON_CALL(mock_libinput, libinput_path_create_context(_,_))
             .WillByDefault(Return(fake_input));
     }
 
-    void setup_device(libinput_device* dev, char const* device_path, char const* umock_name, unsigned int vendor_id, unsigned int product_id)
+    char const* setup_laptop_keyboard(libinput_device* dev)
+    {
+        return setup_device(dev, laptop_keyboard_device_path, "laptop-keyboard", 5252, 3113);
+    }
+
+    char const* setup_trackpad(libinput_device* dev)
+    {
+        return setup_device(dev, trackpad_dev_path, "bluetooth-magic-trackpad", 9663, 1234);
+    }
+
+    char const* setup_touch_screen(libinput_device* dev)
+    {
+        return setup_device(dev, touch_screen_dev_path, "mt-screen-detection", 858, 484);
+    }
+
+    char const* setup_touch_pad(libinput_device* dev)
+    {
+        return setup_device(dev, touch_pad_dev_path, "synaptics-touchpad", 858, 484);
+    }
+
+    char const* setup_mouse(libinput_device* dev)
+    {
+        return setup_device(dev, usb_mouse_dev_path, "usb-mouse", 858, 484);
+    }
+
+    void remove_devices()
+    {
+        mir::udev::Enumerator devices{std::make_shared<mir::udev::Context>()};
+        devices.scan_devices();
+
+        for (auto& device : devices)
+        {
+            if (device.devnode() && (std::string(device.devnode()).find("input/event") != std::string::npos))
+            {
+                env.remove_device((std::string("/sys") + device.devpath()).c_str());
+            }
+        }
+    }
+
+    char const* setup_device(libinput_device* dev, char const* device_path, char const* umock_name, unsigned int vendor_id, unsigned int product_id)
     {
         env.add_standard_device(umock_name);
         mock_libinput.setup_device(fake_input, dev, device_path, umock_name, vendor_id, product_id);
+        return device_path;
     }
 
     void setup_pointer_configuration(libinput_device* dev, double accel_speed, MirPointerButton primary)
@@ -164,6 +209,54 @@ struct LibInputDevice : public ::testing::Test
             .WillRepeatedly(Return(accel_speed));
         EXPECT_CALL(mock_libinput, libinput_device_config_left_handed_get(dev))
             .WillRepeatedly(Return(primary == mir_pointer_button_secondary));
+    }
+
+    void setup_touch_pad_configuration(libinput_device* dev,
+                                       MirTouchPadClickMode click_mode,
+                                       MirTouchPadScrollMode scroll_mode,
+                                       int scroll_button,
+                                       bool tap_to_click,
+                                       bool disable_while_typing,
+                                       bool disable_with_mouse,
+                                       bool middle_button_emulation)
+    {
+        mir::Flags<libinput_config_click_method> click_method = LIBINPUT_CONFIG_CLICK_METHOD_NONE;
+        if (click_mode & mir_touch_pad_click_mode_finger_count)
+            click_method |= LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER;
+        if (click_mode & mir_touch_pad_click_mode_area_to_click)
+            click_method |= LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS;
+        
+        mir::Flags<libinput_config_scroll_method> scroll_method = LIBINPUT_CONFIG_SCROLL_NO_SCROLL;
+        if (scroll_mode & mir_touch_pad_scroll_mode_two_finger_scroll)
+            scroll_method |= LIBINPUT_CONFIG_SCROLL_2FG;
+        if (scroll_mode & mir_touch_pad_scroll_mode_edge_scroll)
+            scroll_method |= LIBINPUT_CONFIG_SCROLL_EDGE;
+        if (scroll_mode & mir_touch_pad_scroll_mode_button_down_scroll)
+            scroll_method |= LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN;
+
+        EXPECT_CALL(mock_libinput, libinput_device_config_click_get_method(dev))
+            .WillRepeatedly(Return(static_cast<libinput_config_click_method>(click_method.value())));
+        EXPECT_CALL(mock_libinput, libinput_device_config_scroll_get_method(dev))
+            .WillRepeatedly(Return(static_cast<libinput_config_scroll_method>(scroll_method.value())));
+        EXPECT_CALL(mock_libinput, libinput_device_config_scroll_get_button(dev))
+            .WillRepeatedly(Return(scroll_button));
+        EXPECT_CALL(mock_libinput, libinput_device_config_tap_get_enabled(dev))
+            .WillRepeatedly(Return(tap_to_click?
+                                   LIBINPUT_CONFIG_TAP_ENABLED:
+                                   LIBINPUT_CONFIG_TAP_DISABLED));
+        EXPECT_CALL(mock_libinput, libinput_device_config_dwt_get_enabled(dev))
+            .WillRepeatedly(Return(disable_while_typing?
+                                   LIBINPUT_CONFIG_DWT_ENABLED:
+                                   LIBINPUT_CONFIG_DWT_DISABLED));
+        EXPECT_CALL(mock_libinput, libinput_device_config_send_events_get_mode(dev))
+            .WillRepeatedly(Return(disable_with_mouse?
+                                   LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE:
+                                   LIBINPUT_CONFIG_SEND_EVENTS_ENABLED));
+        EXPECT_CALL(mock_libinput, libinput_device_config_middle_emulation_get_enabled(dev))
+            .WillRepeatedly(Return(middle_button_emulation?
+                                   LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED:
+                                   LIBINPUT_CONFIG_MIDDLE_EMULATION_DISABLED));
+            
     }
 
     void setup_key_event(libinput_event* event, uint64_t event_time, uint32_t key, libinput_key_state state)
@@ -271,12 +364,15 @@ struct LibInputDevice : public ::testing::Test
 
 TEST_F(LibInputDevice, start_creates_and_unrefs_libinput_device_from_path)
 {
+    char const * path = setup_laptop_keyboard(fake_device);
+    
     EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(path)))
         .Times(1);
     // according to manual libinput_path_add_device creates a temporary device with a ref count 0.
     // hence it needs a manual ref call
     EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device))
         .Times(1);
+    
     std::shared_ptr<libinput> lib = mie::make_libinput();
     mie::LibInputDevice dev(mir::report::null_input_report(),
                             path,
@@ -287,37 +383,35 @@ TEST_F(LibInputDevice, start_creates_and_unrefs_libinput_device_from_path)
 TEST_F(LibInputDevice, open_device_of_group)
 {
     std::shared_ptr<libinput> lib = mie::make_libinput();
-    char const* second_dev = "/dev/input/event13";
-    char const* second_umock_dev_name = "bluetooth-magic-trackpad";
     
-    setup_device(second_fake_device, second_dev, second_umock_dev_name, 9663, 1234);
+    char const* first_path = setup_laptop_keyboard(fake_device);
+    char const* second_path = setup_trackpad(second_fake_device);
 
     InSequence seq;
-    EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(path))).Times(1);
+    EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(first_path))).Times(1);
     // according to manual libinput_path_add_device creates a temporary device with a ref count 0.
     // hence it needs a manual ref call
     EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device)).Times(1);
-    EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(second_dev))).Times(1);
+    EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(second_path))).Times(1);
     EXPECT_CALL(mock_libinput, libinput_device_ref(second_fake_device)).Times(1);
 
     mie::LibInputDevice dev(mir::report::null_input_report(),
-                            path,
-                            std::move(mie::make_libinput_device(lib.get(), path)));
-    dev.add_device_of_group(second_dev, mie::make_libinput_device(lib.get(), second_dev));
+                            first_path,
+                            std::move(mie::make_libinput_device(lib.get(), first_path)));
+    dev.add_device_of_group(second_path, mie::make_libinput_device(lib.get(), second_path));
     dev.start(&mock_sink, &mock_builder);
 }
 
 TEST_F(LibInputDevice, input_info_combines_capabilities)
 {
     std::shared_ptr<libinput> lib = mie::make_libinput();
-    char const* second_dev = "/dev/input/event13";
-    char const* second_umock_dev_name = "bluetooth-magic-trackpad";
     
-    setup_device(second_fake_device, second_dev, second_umock_dev_name, 9663, 1234);
+    char const* first_dev = setup_laptop_keyboard(fake_device);
+    char const* second_dev = setup_trackpad(second_fake_device);
 
     mie::LibInputDevice dev(mir::report::null_input_report(),
-                            path,
-                            mie::make_libinput_device(lib.get(), path));
+                            first_dev,
+                            mie::make_libinput_device(lib.get(), first_dev));
     dev.add_device_of_group(second_dev, mie::make_libinput_device(lib.get(), second_dev));
     auto info = dev.get_device_info();
 
@@ -328,6 +422,7 @@ TEST_F(LibInputDevice, input_info_combines_capabilities)
 
 TEST_F(LibInputDevice, removal_unrefs_libinput_device)
 {
+    char const* path = setup_laptop_keyboard(fake_device);
     std::shared_ptr<libinput> lib = mie::make_libinput();
 
     EXPECT_CALL(mock_libinput, libinput_device_unref(fake_device))
@@ -339,6 +434,7 @@ TEST_F(LibInputDevice, removal_unrefs_libinput_device)
 
 TEST_F(LibInputDevice, process_event_converts_key_event)
 {
+    char const* path = setup_laptop_keyboard(fake_device);
     std::shared_ptr<libinput> lib = mie::make_libinput();
     mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
@@ -357,6 +453,7 @@ TEST_F(LibInputDevice, process_event_converts_key_event)
 
 TEST_F(LibInputDevice, process_event_accumulates_key_state)
 {
+    char const* path = setup_laptop_keyboard(fake_device);
     std::shared_ptr<libinput> lib = mie::make_libinput();
     mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
@@ -387,6 +484,7 @@ TEST_F(LibInputDevice, process_event_accumulates_key_state)
 
 TEST_F(LibInputDevice, process_event_converts_pointer_event)
 {
+    char const* path = setup_mouse(fake_device);
     std::shared_ptr<libinput> lib = mie::make_libinput();
     mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
@@ -402,6 +500,7 @@ TEST_F(LibInputDevice, process_event_converts_pointer_event)
 
 TEST_F(LibInputDevice, process_event_provides_relative_coordinates)
 {
+    char const* path = setup_mouse(fake_device);
     std::shared_ptr<libinput> lib = mie::make_libinput();
     mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
@@ -417,6 +516,7 @@ TEST_F(LibInputDevice, process_event_provides_relative_coordinates)
 
 TEST_F(LibInputDevice, process_event_accumulates_pointer_movement)
 {
+    char const* path = setup_mouse(fake_device);
     std::shared_ptr<libinput> lib = mie::make_libinput();
     mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
@@ -436,6 +536,7 @@ TEST_F(LibInputDevice, process_event_accumulates_pointer_movement)
 
 TEST_F(LibInputDevice, process_event_handles_press_and_release)
 {
+    char const* path = setup_mouse(fake_device);
     std::shared_ptr<libinput> lib = mie::make_libinput();
     mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
     float const x = 0;
@@ -462,6 +563,7 @@ TEST_F(LibInputDevice, process_event_handles_press_and_release)
 
 TEST_F(LibInputDevice, process_event_handles_scroll)
 {
+    char const* path = setup_mouse(fake_device);
     std::shared_ptr<libinput> lib = mie::make_libinput();
     mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
@@ -470,9 +572,11 @@ TEST_F(LibInputDevice, process_event_handles_scroll)
 
     InSequence seq;
     // expect two scroll events..
-    EXPECT_CALL(mock_builder, pointer_event(time_stamp_1, mir_input_event_modifier_none, mir_pointer_action_motion, 0, 0.0f, 0.0f, 0.0f, 20.0f, 0.0f, 0.0f));
+    EXPECT_CALL(mock_builder, pointer_event(time_stamp_1, mir_input_event_modifier_none, mir_pointer_action_motion, 0,
+                                            0.0f, 0.0f, 0.0f, 20.0f, 0.0f, 0.0f));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 20.0f)));
-    EXPECT_CALL(mock_builder, pointer_event(time_stamp_2, mir_input_event_modifier_none, mir_pointer_action_motion, 0, 0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f));
+    EXPECT_CALL(mock_builder, pointer_event(time_stamp_2, mir_input_event_modifier_none, mir_pointer_action_motion, 0,
+                                            0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 5.0f)));
 
     dev.start(&mock_sink, &mock_builder);
@@ -482,6 +586,7 @@ TEST_F(LibInputDevice, process_event_handles_scroll)
 
 TEST_F(LibInputDevice, process_event_handles_touch_down_events)
 {
+    char const* path = setup_touch_screen(fake_device);
     std::shared_ptr<libinput> lib = mie::make_libinput();
     mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
@@ -508,6 +613,7 @@ TEST_F(LibInputDevice, process_event_handles_touch_down_events)
 
 TEST_F(LibInputDevice, process_event_handles_touch_move_events)
 {
+    char const* path = setup_touch_screen(fake_device);
     std::shared_ptr<libinput> lib = mie::make_libinput();
     mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
@@ -534,12 +640,9 @@ TEST_F(LibInputDevice, process_event_handles_touch_move_events)
 
 TEST_F(LibInputDevice, provides_no_pointer_settings_for_non_pointing_devices)
 {
-    char const keyboard_name[] = "usb-keyboard";
-    char const keyboard_device_path[] = "/dev/input/event14";
-    setup_device(second_fake_device, keyboard_device_path, keyboard_name, 1231, 4124);
-    
+    char const* path = setup_laptop_keyboard(fake_device);
     std::shared_ptr<libinput> lib = mie::make_libinput();
-    mie::LibInputDevice dev(mir::report::null_input_report(), keyboard_device_path, mie::make_libinput_device(lib.get(), keyboard_device_path));
+    mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
     auto ptr = dev.get_pointer_settings();
     EXPECT_THAT(ptr.get(), Eq(nullptr));
@@ -547,12 +650,9 @@ TEST_F(LibInputDevice, provides_no_pointer_settings_for_non_pointing_devices)
 
 TEST_F(LibInputDevice, reads_pointer_settings_from_libinput)
 {
-    char const mouse_device_path[] = "/dev/input/event13";
-    char const mouse_name[] = "usb-mouse";
-    setup_device(second_fake_device, mouse_device_path, mouse_name, 1231, 4124);
-    
+    char const* path = setup_mouse(fake_device);
     std::shared_ptr<libinput> lib = mie::make_libinput();
-    mie::LibInputDevice dev(mir::report::null_input_report(), mouse_device_path, mie::make_libinput_device(lib.get(), mouse_device_path));
+    mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
     setup_pointer_configuration(dev.device(), 1, mir_pointer_button_primary);
     auto ptr = dev.get_pointer_settings();
@@ -571,12 +671,9 @@ TEST_F(LibInputDevice, reads_pointer_settings_from_libinput)
 
 TEST_F(LibInputDevice, applies_pointer_settings)
 {
-    char const mouse_device_path[] = "/dev/input/event13";
-    char const mouse_name[] = "usb-mouse";
-    setup_device(second_fake_device, mouse_device_path, mouse_name, 1231, 4124);
- 
+    char const* path = setup_mouse(fake_device);
     std::shared_ptr<libinput> lib = mie::make_libinput();
-    mie::LibInputDevice dev(mir::report::null_input_report(), mouse_device_path, mie::make_libinput_device(lib.get(), path));
+    mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
     setup_pointer_configuration(dev.device(), 1, mir_pointer_button_primary);
     auto ptr = dev.get_pointer_settings();
@@ -591,13 +688,12 @@ TEST_F(LibInputDevice, applies_pointer_settings)
 
 TEST_F(LibInputDevice, denies_pointer_settings_on_keyboards)
 {
-    char const mouse_device_path[] = "/dev/input/event13";
-    char const mouse_name[] = "usb-mouse";
-    setup_device(second_fake_device, mouse_device_path, mouse_name, 1231, 4124);
+    char const* keyboard_path = setup_laptop_keyboard(fake_device);
+    char const* mouse_path = setup_mouse(second_fake_device);
     
     std::shared_ptr<libinput> lib = mie::make_libinput();
-    mie::LibInputDevice keyboard_dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
-    mie::LibInputDevice mouse_dev(mir::report::null_input_report(), mouse_device_path, mie::make_libinput_device(lib.get(), path));
+    mie::LibInputDevice keyboard_dev(mir::report::null_input_report(), keyboard_path, mie::make_libinput_device(lib.get(), keyboard_path));
+    mie::LibInputDevice mouse_dev(mir::report::null_input_report(), mouse_path, mie::make_libinput_device(lib.get(), mouse_path));
 
     auto settings_from_mouse = mouse_dev.get_pointer_settings();
     
@@ -609,12 +705,9 @@ TEST_F(LibInputDevice, denies_pointer_settings_on_keyboards)
 
 TEST_F(LibInputDevice, scroll_speed_scales_scroll_events)
 {
-    char const mouse_device_path[] = "/dev/input/event13";
-    char const mouse_name[] = "usb-mouse";
-    setup_device(second_fake_device, mouse_device_path, mouse_name, 1231, 4124);
-    
+    char const* mouse_path = setup_mouse(fake_device);
     std::shared_ptr<libinput> lib = mie::make_libinput();
-    mie::LibInputDevice dev(mir::report::null_input_report(), mouse_device_path, mie::make_libinput_device(lib.get(), mouse_device_path));
+    mie::LibInputDevice dev(mir::report::null_input_report(), mouse_path, mie::make_libinput_device(lib.get(), mouse_path));
 
     setup_axis_event(fake_event_1, event_time_1, 0.0, 3.0);
     setup_axis_event(fake_event_2, event_time_2, -2.0, 0.0);
@@ -633,4 +726,39 @@ TEST_F(LibInputDevice, scroll_speed_scales_scroll_events)
     dev.start(&mock_sink, &mock_builder);
     dev.process_event(fake_event_1);
     dev.process_event(fake_event_2);
+}
+
+TEST_F(LibInputDevice, provides_no_touch_pad_settings_for_non_touchpad_devices)
+{
+    char const* mouse_path = setup_mouse(fake_device);
+    char const* keyboard_path = setup_laptop_keyboard(second_fake_device);
+    std::shared_ptr<libinput> lib = mie::make_libinput();
+    mie::LibInputDevice keyboard(mir::report::null_input_report(), keyboard_path,
+                                 mie::make_libinput_device(lib.get(), keyboard_path));
+    mie::LibInputDevice mouse(mir::report::null_input_report(), mouse_path,
+                              mie::make_libinput_device(lib.get(), mouse_path));
+
+    auto ptr = keyboard.get_touch_pad_settings();
+    EXPECT_THAT(ptr.get(), Eq(nullptr));
+    ptr = mouse.get_touch_pad_settings();
+    EXPECT_THAT(ptr.get(), Eq(nullptr));
+}
+
+TEST_F(LibInputDevice, reads_touch_pad_settings_from_libinput)
+{
+    auto touch_pad_path = setup_touch_pad(fake_device);
+
+    setup_touch_pad_configuration(fake_device, mir_touch_pad_click_mode_finger_count,
+                                  mir_touch_pad_scroll_mode_edge_scroll, 0, true, false, true, false);
+    std::shared_ptr<libinput> lib = mie::make_libinput();
+    mie::LibInputDevice dev(mir::report::null_input_report(), touch_pad_path,
+                            mie::make_libinput_device(lib.get(), touch_pad_path));
+
+    auto ptr = dev.get_touch_pad_settings();
+    EXPECT_THAT(ptr->click_mode, Eq(mir_touch_pad_click_mode_finger_count));
+    EXPECT_THAT(ptr->scroll_mode, Eq(mir_touch_pad_scroll_mode_edge_scroll));
+    EXPECT_THAT(ptr->tap_to_click, Eq(true));
+    EXPECT_THAT(ptr->disable_while_typing, Eq(false));
+    EXPECT_THAT(ptr->disable_with_mouse, Eq(true));
+    EXPECT_THAT(ptr->middle_mouse_button_emulation, Eq(false));
 }

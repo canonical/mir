@@ -67,6 +67,8 @@ private:
 
         mir::UniqueModulePtr<mir::input::PointerSettings> get_pointer_settings() const override;
         void apply_settings(mir::input::PointerSettings const& settings) override;
+        mir::UniqueModulePtr<mir::input::TouchPadSettings> get_touch_pad_settings() const override;
+        void apply_settings(mir::input::TouchPadSettings const& settings) override;
 
     private:
         MirPointerAction update_buttons(synthesis::EventAction action, MirPointerButton button);
