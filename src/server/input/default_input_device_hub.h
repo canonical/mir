@@ -73,6 +73,7 @@ private:
     void update_spots();
     void add_device_handle(std::shared_ptr<DefaultDeviceHandle> const& handle);
     void remove_device_handle(MirInputDeviceId id);
+    MirInputDeviceId create_new_device_id();
     std::shared_ptr<InputDispatcher> const input_dispatcher;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const input_dispatchable;
     std::shared_ptr<ServerActionQueue> const observer_queue;
@@ -83,7 +84,7 @@ private:
     struct RegisteredDevice : public InputSink
     {
     public:
-        RegisteredDevice(std::shared_ptr<InputDevice> const& dev, std::shared_ptr<InputDispatcher> const& dispatcher, std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer, DefaultInputDeviceHub * hub);
+        RegisteredDevice(std::shared_ptr<InputDevice> const& dev, MirInputDeviceId dev_id, std::shared_ptr<InputDispatcher> const& dispatcher, std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer, DefaultInputDeviceHub * hub);
         void handle_input(MirEvent& event) override;
         void confine_pointer(mir::geometry::Point& position) override;
         mir::geometry::Rectangle bounding_rectangle() const override;
@@ -95,8 +96,7 @@ private:
     private:
         void update_spots(MirInputEvent const* event);
         void notify_cursor_listener(MirInputEvent const* event);
-        static MirInputDeviceId create_new_device_id();
-        int32_t device_id;
+        MirInputDeviceId device_id;
         DefaultEventBuilder builder;
         std::shared_ptr<InputDevice> const device;
         std::shared_ptr<InputDispatcher> const dispatcher;
@@ -109,6 +109,8 @@ private:
     std::vector<std::shared_ptr<DefaultDeviceHandle>> handles;
     std::vector<std::unique_ptr<RegisteredDevice>> devices;
     std::vector<std::shared_ptr<InputDeviceObserver>> observers;
+    
+    MirInputDeviceId device_id_generator;
 };
 
 }

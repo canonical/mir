@@ -30,9 +30,6 @@ namespace mir
 namespace input
 {
 
-template<typename T>
-using SettingsPtr = std::unique_ptr<T, void (*)(T*)>;
-
 class PointerSettings;
 class TouchPadSettings;
 
@@ -42,9 +39,9 @@ public:
     DeviceHandle() = default;
     virtual ~DeviceHandle() = default;
     virtual MirInputDeviceId id() const = 0;
-    virtual DeviceCapabilities get_device_classes() const = 0;
-    virtual std::string get_name() const = 0;
-    virtual std::string get_unique_id() const = 0;
+    virtual DeviceCapabilities capabilities() const = 0;
+    virtual std::string name() const = 0;
+    virtual std::string unique_id() const = 0;
 
 private:
     DeviceHandle(DeviceHandle const&) = delete;
