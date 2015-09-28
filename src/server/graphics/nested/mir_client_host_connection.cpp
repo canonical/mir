@@ -109,7 +109,9 @@ public:
             }
         }
 
-        if (!cursor)
+        bool const new_cursor{!cursor};
+
+        if (new_cursor)
         {
             cursor = mir_connection_create_buffer_stream_sync(
                 mir_connection,
@@ -124,11 +126,22 @@ public:
         memcpy(g.vaddr, image.as_argb_8888(), pixels_size);
         mir_buffer_stream_swap_buffers_sync(cursor);
 
-        auto conf = mir_cursor_configuration_from_buffer_stream(cursor,
-            image.hotspot().dx.as_int(), image.hotspot().dy.as_int());
-        
-        mir_surface_configure_cursor(mir_surface, conf);
-        mir_cursor_configuration_destroy(conf);
+        if (new_cursor || cursor_hotspot != image.hotspot())
+        {
+            cursor_hotspot = image.hotspot();
+
+            // push an extra frame for host to display correctly
+            // TODO remove this workaround for lp:1308133
+            mir_buffer_stream_get_graphics_region(cursor, &g);
+            memcpy(g.vaddr, image.as_argb_8888(), pixels_size);
+            mir_buffer_stream_swap_buffers_sync(cursor);
+
+            auto conf = mir_cursor_configuration_from_buffer_stream(
+                cursor, cursor_hotspot.dx.as_int(), cursor_hotspot.dy.as_int());
+
+            mir_surface_configure_cursor(mir_surface, conf);
+            mir_cursor_configuration_destroy(conf);
+        }
     }
 
     void hide_cursor()
@@ -144,6 +157,7 @@ private:
     MirConnection* const mir_connection;
     MirSurface* const mir_surface;
     MirBufferStream* cursor{nullptr};
+    mir::geometry::Displacement cursor_hotspot;
 };
 
 }
