@@ -83,23 +83,40 @@ TEST(MirCookieFactory, throw_when_secret_size_to_small)
 
 TEST(MirCookieFactory, saves_a_secret)
 {
+    using namespace testing;
     std::vector<uint8_t> secret;
-    unsigned secret_size = 64;
 
-    mir::cookie::CookieFactory::create_saving_secret(secret, secret_size);
+    mir::cookie::CookieFactory::create_saving_secret(secret);
 
-    EXPECT_EQ(secret.size(), secret_size);
+    EXPECT_THAT(secret.size(), Ge(mir::cookie::CookieFactory::minimum_secret_size));
 }
 
 TEST(MirCookieFactory, timestamp_trusted_with_saved_secret_does_attest)
 {
     uint64_t timestamp   = 23;
-    unsigned secret_size = 64;
     std::vector<uint8_t> secret;
 
-    auto source_factory = mir::cookie::CookieFactory::create_saving_secret(secret, secret_size);
+    auto source_factory = mir::cookie::CookieFactory::create_saving_secret(secret);
     auto sink_factory   = mir::cookie::CookieFactory::create_from_secret(secret);
     auto cookie = source_factory->timestamp_to_cookie(timestamp);
 
     EXPECT_TRUE(sink_factory->attest_timestamp(cookie));
+}
+
+TEST(MirCookieFactory, internally_generated_secret_has_optimum_size)
+{
+    using namespace testing;
+    std::vector<uint8_t> secret;
+
+    mir::cookie::CookieFactory::create_saving_secret(secret);
+
+    EXPECT_THAT(secret.size(), Eq(mir::cookie::CookieFactory::optimal_secret_size()));
+}
+
+TEST(MirCookieFactory, optimal_secret_size_is_larger_than_minimum_size)
+{
+    using namespace testing;
+
+    EXPECT_THAT(mir::cookie::CookieFactory::optimal_secret_size(),
+        Ge(mir::cookie::CookieFactory::minimum_secret_size));
 }
