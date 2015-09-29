@@ -66,9 +66,9 @@ struct MockTouchVisualizer : public mi::TouchVisualizer
 
 struct MockInputDeviceObserver : public mi::InputDeviceObserver
 {
-    MOCK_METHOD1(device_added, void(std::weak_ptr<mi::DeviceHandle> const& device));
-    MOCK_METHOD1(device_changed, void(std::weak_ptr<mi::DeviceHandle> const& device));
-    MOCK_METHOD1(device_removed, void(std::weak_ptr<mi::DeviceHandle> const& device));
+    MOCK_METHOD1(device_added, void(std::shared_ptr<mi::DeviceHandle> const& device));
+    MOCK_METHOD1(device_changed, void(std::shared_ptr<mi::DeviceHandle> const& device));
+    MOCK_METHOD1(device_removed, void(std::shared_ptr<mi::DeviceHandle> const& device));
     MOCK_METHOD0(changes_complete, void());
 };
 
@@ -186,14 +186,14 @@ MATCHER_P(WithName, name,
           std::string(negation?"isn't":"is") +
           " name:" + std::string(name))
 {
-    return arg.lock()->name() == name;
+    return arg->name() == name;
 }
 
 TEST_F(InputDeviceHubTest, observers_receive_devices_on_add)
 {
     using namespace ::testing;
 
-    std::weak_ptr<mi::DeviceHandle> handle_1, handle_2;
+    std::shared_ptr<mi::DeviceHandle> handle_1, handle_2;
 
     InSequence seq;
     EXPECT_CALL(mock_observer,device_added(WithName("device"))).WillOnce(SaveArg<0>(&handle_1));
@@ -206,10 +206,8 @@ TEST_F(InputDeviceHubTest, observers_receive_devices_on_add)
 
     observer_loop.trigger_server_actions();
 
-    auto device_1 = handle_1.lock();
-    auto device_2 = handle_2.lock();
-    EXPECT_THAT(device_1,Ne(device_2));
-    EXPECT_THAT(device_1->unique_id(),Ne(device_2->unique_id()));
+    EXPECT_THAT(handle_1,Ne(handle_2));
+    EXPECT_THAT(handle_1->unique_id(),Ne(handle_2->unique_id()));
 }
 
 TEST_F(InputDeviceHubTest, throws_on_duplicate_add)
@@ -260,7 +258,7 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
     capture_input_sink(device, sink, builder);
 
     EXPECT_CALL(mock_observer,device_added(_))
-        .WillOnce(Invoke([&handle](auto device) { handle = device.lock();}));
+        .WillOnce(SaveArg<0>(&handle));
 
     hub.add_observer(mt::fake_shared(mock_observer));
     hub.add_device(mt::fake_shared(device));
