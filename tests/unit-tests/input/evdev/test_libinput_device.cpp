@@ -789,7 +789,9 @@ TEST_F(LibInputDevice, applies_touch_pad_settings)
     EXPECT_CALL(mock_libinput, libinput_device_config_click_set_method(dev.device(), LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER));
     EXPECT_CALL(mock_libinput, libinput_device_config_scroll_set_button(dev.device(), KEY_A));
     EXPECT_CALL(mock_libinput, libinput_device_config_tap_set_enabled(dev.device(), LIBINPUT_CONFIG_TAP_ENABLED));
-    EXPECT_CALL(mock_libinput, libinput_device_config_dwt_set_enabled(dev.device(), LIBINPUT_CONFIG_DWT_ENABLED));
+    EXPECT_CALL(mock_libinput, libinput_device_config_dwt_set_enabled(dev.device(), LIBINPUT_CONFIG_DWT_DISABLED));
+    EXPECT_CALL(mock_libinput, libinput_device_config_send_events_set_mode(
+                                   dev.device(), LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE));
 
     dev.apply_settings(*settings);
 }
