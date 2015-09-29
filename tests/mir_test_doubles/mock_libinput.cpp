@@ -49,6 +49,8 @@ mtd::MockLibInput::MockLibInput()
         .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
     ON_CALL(*this, libinput_device_config_send_events_set_mode(_, _))
         .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
+    ON_CALL(*this, libinput_device_config_middle_emulation_set_enabled(_, _))
+        .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
 }
 
 void mtd::MockLibInput::wake()
