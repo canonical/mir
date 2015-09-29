@@ -37,6 +37,16 @@ mtd::MockLibInput::MockLibInput()
         .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
     ON_CALL(*this, libinput_device_config_accel_set_speed(_, _))
         .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
+    ON_CALL(*this, libinput_device_config_dwt_set_enabled(_, _))
+        .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
+    ON_CALL(*this, libinput_device_config_scroll_set_button(_, _))
+        .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
+    ON_CALL(*this, libinput_device_config_scroll_set_method(_, _))
+        .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
+    ON_CALL(*this, libinput_device_config_click_set_method(_, _))
+        .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
+    ON_CALL(*this, libinput_device_config_tap_set_enabled(_, _))
+        .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
 }
 
 void mtd::MockLibInput::wake()
@@ -345,7 +355,7 @@ int libinput_device_config_tap_get_finger_count(libinput_device *device)
 
 libinput_config_status libinput_device_config_tap_set_enabled(libinput_device *device, libinput_config_tap_state enable)
 {
-    return libinput_device_config_tap_set_enabled(device, enable);
+    return global_libinput->libinput_device_config_tap_set_enabled(device, enable);
 }
 
 libinput_config_tap_state libinput_device_config_tap_get_enabled(libinput_device *device)
@@ -361,7 +371,7 @@ libinput_config_tap_state libinput_device_config_tap_get_default_enabled(libinpu
 
 libinput_config_status libinput_device_config_tap_set_drag_lock_enabled(libinput_device *device, libinput_config_drag_lock_state enable)
 {
-    return libinput_device_config_tap_set_drag_lock_enabled(device, enable);
+    return global_libinput->libinput_device_config_tap_set_drag_lock_enabled(device, enable);
 }
 
 libinput_config_drag_lock_state libinput_device_config_tap_get_drag_lock_enabled(libinput_device *device)
@@ -381,17 +391,17 @@ int libinput_device_config_calibration_has_matrix(libinput_device *device)
 
 libinput_config_status libinput_device_config_calibration_set_matrix(libinput_device *device, const float matrix[6])
 {
-    return libinput_device_config_calibration_set_matrix(device, matrix);
+    return global_libinput->libinput_device_config_calibration_set_matrix(device, matrix);
 }
 
 int libinput_device_config_calibration_get_matrix(libinput_device *device, float matrix[6])
 {
-    return libinput_device_config_calibration_get_matrix(device, matrix);
+    return global_libinput->libinput_device_config_calibration_get_matrix(device, matrix);
 }
 
 int libinput_device_config_calibration_get_default_matrix(libinput_device *device, float matrix[6])
 {
-    return libinput_device_config_calibration_get_default_matrix(device, matrix);
+    return global_libinput->libinput_device_config_calibration_get_default_matrix(device, matrix);
 }
 
 uint32_t libinput_device_config_send_events_get_modes(libinput_device *device)
@@ -401,7 +411,7 @@ uint32_t libinput_device_config_send_events_get_modes(libinput_device *device)
 
 libinput_config_status libinput_device_config_send_events_set_mode(libinput_device *device, uint32_t mode)
 {
-    return libinput_device_config_send_events_set_mode(device, mode);
+    return global_libinput->libinput_device_config_send_events_set_mode(device, mode);
 }
 
 uint32_t libinput_device_config_send_events_get_mode(libinput_device *device)
