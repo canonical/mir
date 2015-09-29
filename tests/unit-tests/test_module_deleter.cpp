@@ -22,6 +22,14 @@
 
 #include <gtest/gtest.h>
 
+namespace
+{
+mir::UniqueModulePtr<std::string> function_in_executable()
+{
+    return mir::make_module_ptr<std::string>("foo");
+}
+}
+
 TEST(ModuleDeleter, module_ptr_may_outlive_local_library)
 {
     mir::UniqueModulePtr<SomeInterface> module_object;
@@ -44,3 +52,7 @@ TEST(ModuleDeleter, shared_ptr_can_keep_library_alive)
     module_object->can_be_executed();
 }
 
+TEST(ModuleDeleter, module_ptr_can_work_in_executables)
+{
+    EXPECT_NO_THROW(function_in_executable());
+}
