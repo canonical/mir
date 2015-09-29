@@ -52,7 +52,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 set(
   UNIT_TEST_SOURCES
 
-  test_client_cookie.cpp
   test_gmock_fixes.cpp
   test_recursive_read_write_mutex.cpp
   test_glib_main_loop.cpp
@@ -70,6 +69,7 @@ set(
   test_lockable_callback.cpp
   test_module_deleter.cpp
   test_mir_cookie.cpp
+  test_client_cookie.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")

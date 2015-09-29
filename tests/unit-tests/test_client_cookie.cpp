@@ -42,6 +42,7 @@ public:
     ClientCookies()
         : out_cookie{0, 0}
     {
+        // Needed because the headless server sets stub_input.so
         add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", nullptr);
 
         server.override_the_cursor([this]() { return mt::fake_shared(cursor); });
