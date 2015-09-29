@@ -617,12 +617,13 @@ struct CursorStreamImageAdapter
     CursorStreamImageAdapter(ms::BasicSurface &surface, std::shared_ptr<mf::BufferStream> const& stream,
                              geom::Displacement const& hotspot)
         : surface(surface),
-          stream(stream),
+          stream(std::dynamic_pointer_cast<mc::BufferStream>(stream)),
           observer{std::make_shared<FramePostObserver>(
             [this](){ post_cursor_image_from_current_buffer(); })},
           hotspot(hotspot)
     {
         stream->add_observer(observer);
+        post_cursor_image_from_current_buffer();
     }
 
     ~CursorStreamImageAdapter()
@@ -630,19 +631,19 @@ struct CursorStreamImageAdapter
         stream->remove_observer(observer);
     }
 
-    void post_cursor_image_from_current_buffer()
+    void post_cursor_image_from_current_buffer() const
     {
-        stream->with_most_recent_buffer_do([&](mg::Buffer &buffer)
-            {
-                surface.set_cursor_from_buffer(buffer, hotspot);
-            });
+        std::lock_guard<std::mutex> _(serialize_post_cursor_image_from_current_buffer);
+        surface.set_cursor_from_buffer(*stream->lock_compositor_buffer(this), hotspot);
     }
 
     ms::BasicSurface &surface;
 
-    std::shared_ptr<mf::BufferStream> const stream;
-    std::shared_ptr<FramePostObserver> observer;
-    geom::Displacement const hotspot;
+    std::shared_ptr<mc::BufferStream> const stream;
+    std::shared_ptr<FramePostObserver> const observer;
+
+    std::mutex mutable serialize_post_cursor_image_from_current_buffer;
+    geom::Displacement hotspot;
 }; 
 }
 }
@@ -667,12 +668,29 @@ void ms::BasicSurface::set_cursor_from_buffer(mg::Buffer& buffer, geom::Displace
 void ms::BasicSurface::set_cursor_stream(std::shared_ptr<mf::BufferStream> const& stream,
                                          geom::Displacement const& hotspot)
 {
-    std::unique_lock<std::mutex> lock(guard);
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        if (cursor_stream_adapter && stream == cursor_stream_adapter->stream)
+        {
+            if (hotspot != cursor_stream_adapter->hotspot)
+            {
+                cursor_stream_adapter->hotspot = hotspot;
+                lock.unlock();
+                cursor_stream_adapter->post_cursor_image_from_current_buffer();
+            }
 
-    cursor_stream_adapter = std::make_unique<ms::CursorStreamImageAdapter>(*this, stream, hotspot);
-    stream->with_most_recent_buffer_do([this, &hotspot](mg::Buffer& buffer) {
-        cursor_image_ = std::make_shared<CursorImageFromBuffer>(buffer, hotspot); 
-    });
+            return;
+        }
+        else
+        {
+            cursor_stream_adapter.reset();
+        }
+    }
+
+    auto new_adapter = std::make_unique<ms::CursorStreamImageAdapter>(*this, stream, hotspot);
+
+    std::unique_lock<std::mutex> lock(guard);
+    swap(cursor_stream_adapter, new_adapter);
 }
 
 void ms::BasicSurface::request_client_surface_close()
