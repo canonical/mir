@@ -53,7 +53,7 @@ public:
     void start(InputSink* sink, EventBuilder* builder) override;
     void stop() override;
     InputDeviceInfo get_device_info() override;
-    UniqueModulePtr<PointerSettings> get_pointer_settings() const override;
+    mir::optional_value<PointerSettings> get_pointer_settings() const override;
     void apply_settings(PointerSettings const&) override;
 
     void process_event(libinput_event* event);

@@ -21,7 +21,7 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
-#include "mir/module_deleter.h"
+#include "mir/optional_value.h"
 
 namespace mir
 {
@@ -41,7 +41,7 @@ public:
     void stop() override;
     InputDeviceInfo get_device_info() override;
 
-    UniqueModulePtr<PointerSettings> get_pointer_settings() const override;
+    mir::optional_value<PointerSettings> get_pointer_settings() const override;
     void apply_settings(PointerSettings const& settings) override;
 
     InputSink* sink{nullptr};

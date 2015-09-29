@@ -229,13 +229,14 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
     sink->handle_input(*touch_event);
 }
 
-mir::UniqueModulePtr<mi::PointerSettings> mtf::FakeInputDeviceImpl::InputDevice::get_pointer_settings() const
+mir::optional_value<mi::PointerSettings> mtf::FakeInputDeviceImpl::InputDevice::get_pointer_settings() const
 {
-    mir::UniqueModulePtr<mi::PointerSettings> ret;
+    mir::optional_value<mi::PointerSettings> ret;
     if (!contains(info.capabilities, mi::DeviceCapability::pointer))
         return ret;
 
-    return mir::make_module_ptr<mi::PointerSettings>(settings);
+    ret = mi::PointerSettings();
+    return ret;
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::PointerSettings const& settings)

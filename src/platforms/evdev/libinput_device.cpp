@@ -355,9 +355,9 @@ libinput_device* mie::LibInputDevice::device() const
     return devices.front().get();
 }
 
-mir::UniqueModulePtr<mi::PointerSettings> mie::LibInputDevice::get_pointer_settings() const
+mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settings() const
 {
-    mir::UniqueModulePtr<PointerSettings> ret;
+    mir::optional_value<PointerSettings> ret;
     if (!contains(info.capabilities, mi::DeviceCapability::pointer))
         return ret;
 
@@ -365,7 +365,7 @@ mir::UniqueModulePtr<mi::PointerSettings> mie::LibInputDevice::get_pointer_setti
     auto accel_speed = libinput_device_config_accel_get_speed(dev);
     auto left_handed = (libinput_device_config_left_handed_get(dev) == 1);
 
-    ret = make_module_ptr<mi::PointerSettings>();
+    ret = mi::PointerSettings();
     ret->cursor_speed = accel_speed;
     ret->vertical_scroll_speed = vertical_scroll_speed;
     ret->horizontal_scroll_speed = horizontal_scroll_speed;
