@@ -139,7 +139,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
     add_options()
         (host_socket_opt, po::value<std::string>(),
             "Host socket filename")
-        (server_socket_opt, po::value<std::string>()->default_value(::mir::default_server_socket),
+        (server_socket_opt, po::value<std::string>()->default_value(::mir::default_server_socket()),
             "Socket filename [string:default=$XDG_RUNTIME_DIR/mir_socket or /tmp/mir_socket]")
         (no_server_socket_opt, "Do not provide a socket filename for client connections")
         (arw_server_socket_opt, "Make socket filename globally rw (equivalent to chmod a=rw)")

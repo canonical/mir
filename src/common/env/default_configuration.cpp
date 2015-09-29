@@ -21,9 +21,7 @@
 #include <cstdlib>
 #include <sstream>
 
-namespace
-{
-const char* init()
+char const* mir::default_server_socket()
 {
     std::ostringstream formatter;
 
@@ -35,7 +33,3 @@ const char* init()
     static auto result = formatter.str();
     return result.c_str();
 }
-}
-
-const char *const mir::default_server_socket = init();
-

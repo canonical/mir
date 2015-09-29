@@ -64,7 +64,7 @@ public:
                 if (socket_env)
                     sock = socket_env;
                 else
-                    sock = mir::default_server_socket;
+                    sock = mir::default_server_socket();
             }
 
             auto const conf = configuration(sock);

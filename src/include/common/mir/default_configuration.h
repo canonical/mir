@@ -23,7 +23,7 @@
 
 namespace mir
 {
-extern const char *const default_server_socket;
+extern char const*default_server_socket();
 }
 
 #endif
