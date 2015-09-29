@@ -212,6 +212,7 @@ mi::CursorController::~CursorController()
     }
 }
 
+#include <iostream>
 void mi::CursorController::set_cursor_image_locked(std::unique_lock<std::mutex>& lock,
     std::shared_ptr<mg::CursorImage> const& image)
 {
@@ -232,13 +233,16 @@ void mi::CursorController::set_cursor_image_locked(std::unique_lock<std::mutex>&
 
 void mi::CursorController::update_cursor_image_locked(std::unique_lock<std::mutex>& lock)
 {
-    auto surface = topmost_surface_containing_point(input_targets, cursor_location);
-    if (surface)
+    if (auto surface = topmost_surface_containing_point(input_targets, cursor_location))
     {
+        if (current_cursor != surface->cursor_image())
+            std::cerr << "DEBUG update_cursor_image() for " << surface->name() << "\n";
         set_cursor_image_locked(lock, surface->cursor_image());
     }
     else
     {
+        if (current_cursor != default_cursor_image)
+            std::cerr << "DEBUG update_cursor_image() for (no surface)\n";
         set_cursor_image_locked(lock, default_cursor_image);
     }
 }

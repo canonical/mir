@@ -189,7 +189,8 @@ bool mfd::ProtobufMessageProcessor::dispatch(
     Invocation const& invocation,
     std::vector<mir::Fd> const& side_channel_fds)
 {
-    report->received_invocation(display_server.get(), invocation.id(), invocation.method_name());
+    if ("pong" != invocation.method_name()) // DEBUG
+        report->received_invocation(display_server.get(), invocation.id(), invocation.method_name());
 
     bool result = true;
 
@@ -336,11 +337,13 @@ bool mfd::ProtobufMessageProcessor::dispatch(
     }
     catch (std::exception const& error)
     {
-        report->exception_handled(display_server.get(), invocation.id(), error);
+        if ("pong" != invocation.method_name()) // DEBUG
+            report->exception_handled(display_server.get(), invocation.id(), error);
         result = false;
     }
 
-    report->completed_invocation(display_server.get(), invocation.id(), result);
+    if ("pong" != invocation.method_name()) // DEBUG
+        report->completed_invocation(display_server.get(), invocation.id(), result);
 
     return result;
 }

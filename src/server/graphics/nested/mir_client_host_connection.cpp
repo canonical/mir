@@ -31,6 +31,8 @@
 
 #include <string.h>
 
+#include <iostream>
+
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 
@@ -126,19 +128,30 @@ public:
         memcpy(g.vaddr, image.as_argb_8888(), pixels_size);
         mir_buffer_stream_swap_buffers_sync(cursor);
 
+        auto uniform_cursor = true;
+
+        auto const begin = (char const*)image.as_argb_8888();
+        auto const end = begin + pixels_size;
+        for (auto pixel = begin; pixel != end; ++pixel)
+            if (*pixel != *begin)
+                uniform_cursor = false;
+
+        std::cerr << "DEBUG: sending new " <<
+            (uniform_cursor ? "uniform" : "non-uniform") << " cursor\n";
+
         if (new_cursor || cursor_hotspot != image.hotspot())
         {
             cursor_hotspot = image.hotspot();
 
-            // push an extra frame for host to display correctly (not sure why)
-            mir_buffer_stream_get_graphics_region(cursor, &g);
-            memcpy(g.vaddr, image.as_argb_8888(), pixels_size);
-            mir_buffer_stream_swap_buffers_sync(cursor);
+//            // push an extra frame for host to display correctly (not sure why)
+//            mir_buffer_stream_get_graphics_region(cursor, &g);
+//            memcpy(g.vaddr, image.as_argb_8888(), pixels_size);
+//            mir_buffer_stream_swap_buffers_sync(cursor);
 
             auto conf = mir_cursor_configuration_from_buffer_stream(
                 cursor, cursor_hotspot.dx.as_int(), cursor_hotspot.dy.as_int());
 
-            mir_surface_configure_cursor(mir_surface, conf);
+            mir_wait_for(mir_surface_configure_cursor(mir_surface, conf));
             mir_cursor_configuration_destroy(conf);
         }
     }

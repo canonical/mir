@@ -608,6 +608,7 @@ struct CursorImageFromBuffer : public mg::CursorImage
 };
 }
 
+#include <iostream>
 namespace mir
 {
 namespace scene
@@ -623,6 +624,7 @@ struct CursorStreamImageAdapter
           hotspot(hotspot)
     {
         stream->add_observer(observer);
+//        post_cursor_image_from_current_buffer();
     }
 
     ~CursorStreamImageAdapter()
@@ -641,14 +643,34 @@ struct CursorStreamImageAdapter
     ms::BasicSurface &surface;
 
     std::shared_ptr<mf::BufferStream> const stream;
-    std::shared_ptr<FramePostObserver> observer;
-    geom::Displacement const hotspot;
+    std::shared_ptr<FramePostObserver> const observer;
+    geom::Displacement hotspot;
 }; 
 }
 }
 
 void ms::BasicSurface::set_cursor_from_buffer(mg::Buffer& buffer, geom::Displacement const& hotspot)
 {
+    auto const buffer_size_bytes = buffer.size().width.as_int() * buffer.size().height.as_int()
+                               * MIR_BYTES_PER_PIXEL(buffer.pixel_format());
+
+    auto uniform_cursor = true;
+
+    buffer.read([&](unsigned char const* buffer_pixels)
+        {
+            for (auto pixel = buffer_pixels; pixel != buffer_pixels+buffer_size_bytes; ++pixel)
+                if (*pixel != *buffer_pixels)
+                    uniform_cursor = false;
+        });
+
+    if (surface_name.size() && ('M' == surface_name[0]))
+    {
+        if (uniform_cursor)
+            std::cerr << "DEBUG uniform cursor size=" << buffer_size_bytes << "\n";
+        else
+            std::cerr << "DEBUG non-uniform cursor size=" << buffer_size_bytes << "\n";
+    }
+
     auto image = std::make_shared<CursorImageFromBuffer>(buffer, hotspot);
     {
         std::unique_lock<std::mutex> lock(guard);
@@ -667,11 +689,58 @@ void ms::BasicSurface::set_cursor_from_buffer(mg::Buffer& buffer, geom::Displace
 void ms::BasicSurface::set_cursor_stream(std::shared_ptr<mf::BufferStream> const& stream,
                                          geom::Displacement const& hotspot)
 {
+//    {
+//        std::unique_lock<std::mutex> lock(guard);
+//        if (cursor_stream_adapter && stream == cursor_stream_adapter->stream)
+//        {
+//            if (hotspot != cursor_stream_adapter->hotspot)
+//            {
+//                if (surface_name.size() && ('M' == surface_name[0]))
+//                    std::cerr << "DEBUG surface=\"" << surface_name << "\" set_cursor_stream(same, new)\n";
+//                cursor_stream_adapter->hotspot = hotspot;
+//            }
+//            else
+//            {
+//                if (surface_name.size() && ('M' == surface_name[0]))
+//                    std::cerr << "DEBUG surface=\"" << surface_name << "\" set_cursor_stream(same, same)\n";
+//            }
+//            return;
+//        }
+//        else
+//        {
+//            cursor_stream_adapter.reset();
+//        }
+//    }
+//
+//    if (surface_name.size() && ('M' == surface_name[0]))
+//        std::cerr << "DEBUG surface=\"" << surface_name << "\" set_cursor_stream(new, new)\n";
+//    auto new_adapter = std::make_unique<ms::CursorStreamImageAdapter>(*this, stream, hotspot);
+//
     std::unique_lock<std::mutex> lock(guard);
-
+//    swap(cursor_stream_adapter, new_adapter);
     cursor_stream_adapter = std::make_unique<ms::CursorStreamImageAdapter>(*this, stream, hotspot);
     stream->with_most_recent_buffer_do([this, &hotspot](mg::Buffer& buffer) {
-        cursor_image_ = std::make_shared<CursorImageFromBuffer>(buffer, hotspot); 
+        cursor_image_ = std::make_shared<CursorImageFromBuffer>(buffer, hotspot);
+
+        auto const buffer_size_bytes = buffer.size().width.as_int() * buffer.size().height.as_int()
+                                       * MIR_BYTES_PER_PIXEL(buffer.pixel_format());
+
+        auto uniform_cursor = true;
+
+        buffer.read([&](unsigned char const* buffer_pixels)
+                        {
+                        for (auto pixel = buffer_pixels; pixel != buffer_pixels+buffer_size_bytes; ++pixel)
+                            if (*pixel != *buffer_pixels)
+                                uniform_cursor = false;
+                        });
+
+        if (surface_name.size() && ('M' == surface_name[0]))
+        {
+            if (uniform_cursor)
+                std::cerr << "DEBUG uniform cursor size=" << buffer_size_bytes << "\n";
+            else
+                std::cerr << "DEBUG non-uniform cursor size=" << buffer_size_bytes << "\n";
+        }
     });
 }
 
