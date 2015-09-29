@@ -356,9 +356,9 @@ libinput_device* mie::LibInputDevice::device() const
     return devices.front().get();
 }
 
-mir::UniqueModulePtr<mi::PointerSettings> mie::LibInputDevice::get_pointer_settings() const
+mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settings() const
 {
-    mir::UniqueModulePtr<PointerSettings> ret;
+    mir::optional_value<PointerSettings> ret;
     if (!contains(info.capabilities, mi::DeviceCapability::pointer))
         return ret;
 
@@ -366,7 +366,7 @@ mir::UniqueModulePtr<mi::PointerSettings> mie::LibInputDevice::get_pointer_setti
     auto accel_speed = libinput_device_config_accel_get_speed(dev);
     auto left_handed = (libinput_device_config_left_handed_get(dev) == 1);
 
-    ret = make_module_ptr<mi::PointerSettings>();
+    ret = mi::PointerSettings();
     ret->cursor_speed = accel_speed;
     ret->vertical_scroll_speed = vertical_scroll_speed;
     ret->horizontal_scroll_speed = horizontal_scroll_speed;
@@ -386,18 +386,18 @@ void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& sett
     horizontal_scroll_speed = settings.horizontal_scroll_speed;
 }
 
-mir::UniqueModulePtr<mi::TouchPadSettings> mie::LibInputDevice::get_touch_pad_settings() const
+mir::optional_value<mi::TouchPadSettings> mie::LibInputDevice::get_touch_pad_settings() const
 {
-    mir::UniqueModulePtr<TouchPadSettings> ret;
+    mir::optional_value<TouchPadSettings> ret;
     if (!contains(info.capabilities, mi::DeviceCapability::touchpad))
         return ret;
 
     auto dev = device();
     auto click_modes = libinput_device_config_click_get_method(dev);
     auto scroll_modes = libinput_device_config_scroll_get_method(dev);
-        
-    ret = make_module_ptr<TouchPadSettings>();
-    
+
+    ret = TouchPadSettings();
+
     ret->click_mode = mir_touch_pad_click_mode_none;
     if (click_modes & LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS)
         ret->click_mode |= mir_touch_pad_click_mode_area_to_click;
@@ -422,6 +422,41 @@ mir::UniqueModulePtr<mi::TouchPadSettings> mie::LibInputDevice::get_touch_pad_se
     return ret;
 }
 
-void mie::LibInputDevice::apply_settings(mi::TouchPadSettings const&)
+void mie::LibInputDevice::apply_settings(mi::TouchPadSettings const& settings)
 {
+    auto dev = device();
+
+    uint32_t click_method = LIBINPUT_CONFIG_CLICK_METHOD_NONE;
+    if (settings.click_mode & mir_touch_pad_click_mode_area_to_click)
+        click_method |= LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS;
+    if (settings.click_mode & mir_touch_pad_click_mode_finger_count)
+        click_method |= LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER;
+
+    uint32_t scroll_method = LIBINPUT_CONFIG_CLICK_METHOD_NONE;
+    if (settings.scroll_mode & mir_touch_pad_scroll_mode_button_down_scroll)
+    {
+        scroll_method |= LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN;
+        libinput_device_config_scroll_set_button(dev, settings.button_down_scroll_button);
+    }
+    if (settings.scroll_mode & mir_touch_pad_scroll_mode_edge_scroll)
+        scroll_method |= LIBINPUT_CONFIG_SCROLL_EDGE;
+    if (settings.scroll_mode & mir_touch_pad_scroll_mode_two_finger_scroll)
+        scroll_method |= LIBINPUT_CONFIG_SCROLL_2FG;
+
+    libinput_device_config_click_set_method(dev, static_cast<libinput_config_click_method>(click_method));
+    libinput_device_config_scroll_set_method(dev, static_cast<libinput_config_scroll_method>(scroll_method));
+
+    libinput_device_config_tap_set_enabled(
+        dev, settings.tap_to_click ? LIBINPUT_CONFIG_TAP_ENABLED : LIBINPUT_CONFIG_TAP_DISABLED);
+
+    libinput_device_config_dwt_set_enabled(
+        dev, settings.disable_while_typing ? LIBINPUT_CONFIG_DWT_ENABLED : LIBINPUT_CONFIG_DWT_DISABLED);
+
+    libinput_device_config_send_events_set_mode(dev, settings.disable_with_mouse ?
+                                                         LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE :
+                                                         LIBINPUT_CONFIG_SEND_EVENTS_ENABLED);
+
+    libinput_device_config_middle_emulation_set_enabled(dev, settings.middle_mouse_button_emulation ?
+                                                                 LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED :
+                                                                 LIBINPUT_CONFIG_MIDDLE_EMULATION_DISABLED);
 }

@@ -38,6 +38,13 @@ public:
     }
 
     bool is_set() const { return is_set_; }
+
+    constexpr explicit operator bool() const { return is_set_; }
+    constexpr const T* operator->() const { return &value_; }
+    constexpr T* operator->() { return &value_; }
+    constexpr const T& operator*() const { return value_; }
+    constexpr T& operator*() { return value_; }
+
     T value() const
     {
         if (!is_set())

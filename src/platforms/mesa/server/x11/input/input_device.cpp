@@ -48,28 +48,27 @@ mi::InputDeviceInfo mix::XInputDevice::get_device_info()
     return info;
 }
 
-mir::UniqueModulePtr<mi::PointerSettings> mix::XInputDevice::get_pointer_settings() const
+mir::optional_value<mi::PointerSettings> mix::XInputDevice::get_pointer_settings() const
 {
-    UniqueModulePtr<PointerSettings> ret;
-    if (!contains(info.capabilities, DeviceCapability::pointer))
-        return ret;
+    mir::optional_value<PointerSettings> ret;
+    if (contains(info.capabilities, DeviceCapability::pointer))
+        ret = PointerSettings();
 
-    return make_module_ptr<PointerSettings>();
+    return ret;
 }
 
 void mix::XInputDevice::apply_settings(PointerSettings const&)
 {
+    // TODO Make use if X11-XInput2
 }
 
-mir::UniqueModulePtr<mi::TouchPadSettings> mix::XInputDevice::get_touch_pad_settings() const
+mir::optional_value<mi::TouchPadSettings> mix::XInputDevice::get_touch_pad_settings() const
 {
-    UniqueModulePtr<TouchPadSettings> ret;
-    if (!contains(info.capabilities, DeviceCapability::touchpad))
-        return ret;
+    optional_value<TouchPadSettings> ret;
+    if (contains(info.capabilities, DeviceCapability::touchpad))
+        ret = TouchPadSettings();
 
-    ret = make_module_ptr<TouchPadSettings>();
-
-    return std::move(ret);
+    return ret;
 }
 
 void mix::XInputDevice::apply_settings(TouchPadSettings const&)

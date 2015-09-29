@@ -21,6 +21,7 @@
 #define MIR_INPUT_INPUT_DEVICE_H_
 
 #include "mir/module_deleter.h"
+#include "mir/optional_value.h"
 
 #include <memory>
 
@@ -59,10 +60,10 @@ public:
 
     virtual InputDeviceInfo get_device_info() = 0;
 
-    virtual UniqueModulePtr<PointerSettings> get_pointer_settings() const = 0;
+    virtual optional_value<PointerSettings> get_pointer_settings() const = 0;
     virtual void apply_settings(PointerSettings const&) = 0;
 
-    virtual UniqueModulePtr<TouchPadSettings> get_touch_pad_settings() const = 0;
+    virtual optional_value<TouchPadSettings> get_touch_pad_settings() const = 0;
     virtual void apply_settings(TouchPadSettings const&) = 0;
 protected:
     InputDevice(InputDevice const&) = delete;

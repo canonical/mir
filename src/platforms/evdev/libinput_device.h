@@ -53,9 +53,9 @@ public:
     void start(InputSink* sink, EventBuilder* builder) override;
     void stop() override;
     InputDeviceInfo get_device_info() override;
-    UniqueModulePtr<PointerSettings> get_pointer_settings() const override;
+    optional_value<PointerSettings> get_pointer_settings() const override;
     void apply_settings(PointerSettings const&) override;
-    UniqueModulePtr<TouchPadSettings> get_touch_pad_settings() const override;
+    optional_value<TouchPadSettings> get_touch_pad_settings() const override;
     void apply_settings(TouchPadSettings const&) override;
 
     void process_event(libinput_event* event);
