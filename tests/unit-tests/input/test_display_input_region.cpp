@@ -42,7 +42,7 @@ std::vector<geom::Rectangle> const rects{
 
 TEST(DisplayInputRegionTest, returns_correct_bounding_rectangle)
 {
-    geom::Rectangle const expected_bounding_rect{geom::Point{0,0}, geom::Size{900,700}};
+    geom::Rectangle const expected_bounding_rect{geom::Point{0,0}, geom::Size{800,600}};
     auto stub_display = std::make_shared<mtd::StubDisplay>(rects);
 
     mi::DisplayInputRegion input_region{stub_display};
