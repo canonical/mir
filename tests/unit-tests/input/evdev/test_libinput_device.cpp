@@ -762,3 +762,30 @@ TEST_F(LibInputDevice, reads_touch_pad_settings_from_libinput)
     EXPECT_THAT(ptr->disable_with_mouse, Eq(true));
     EXPECT_THAT(ptr->middle_mouse_button_emulation, Eq(false));
 }
+
+TEST_F(LibInputDevice, applies_touch_pad_settings)
+{
+    char const* path = setup_touch_pad(fake_device);
+    setup_touch_pad_configuration(fake_device, mir_touch_pad_click_mode_finger_count,
+                                  mir_touch_pad_scroll_mode_two_finger_scroll, 0, true, false, true, false);
+    
+    std::shared_ptr<libinput> lib = mie::make_libinput();
+    mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
+
+    auto ptr = dev.get_touch_pad_settings();
+    ptr->scroll_modes = mir_touch_pad_scroll_mode_button_down_scroll;
+    ptr->click_modes = mir_touch_pad_click_mode_finger_count;
+    ptr->scroll_button = KEY_A;
+    ptr->tap_to_click = true;
+    ptr->disable_while_typing = false;
+    ptr->disable_with_mouse = true;
+    ptr->middle_mouse_button_emulation = true;
+
+    EXPECT_CALL(mock_libinput, libinput_device_config_scroll_set_method(dev.device(), LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN));
+    EXPECT_CALL(mock_libinput, libinput_device_config_click_set_method(dev.device(), LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER));
+    EXPECT_CALL(mock_libinput, libinput_device_config_scroll_set_button(dev.device(), KEY_A));
+    EXPECT_CALL(mock_libinput, libinput_device_config_tap_set_enabled(dev.device(), LIBINPUT_CONFIG_TAP_ENABLED));
+    EXPECT_CALL(mock_libinput, libinput_device_config_dwt_set_enabled(dev.device(), LIBINPUT_CONFIG_DWT_ENABLED));
+    
+    dev.apply_settings(*ptr);
+}
