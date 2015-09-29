@@ -792,6 +792,8 @@ TEST_F(LibInputDevice, applies_touch_pad_settings)
     EXPECT_CALL(mock_libinput, libinput_device_config_dwt_set_enabled(dev.device(), LIBINPUT_CONFIG_DWT_DISABLED));
     EXPECT_CALL(mock_libinput, libinput_device_config_send_events_set_mode(
                                    dev.device(), LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE));
+    EXPECT_CALL(mock_libinput, libinput_device_config_middle_emulation_set_enabled(
+                                   dev.device(), LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED));
 
     dev.apply_settings(*settings);
 }
