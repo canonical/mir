@@ -31,7 +31,7 @@
 namespace mir
 {
 namespace frontend { class EventSink; }
-namespace geometry { class Rectangle; }
+namespace geometry { struct Rectangle; }
 namespace scene
 {
 class PromptSession;
