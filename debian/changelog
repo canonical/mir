@@ -1,5 +1,6 @@
-mir (0.16.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.16.0+15.10.20150921.1-0ubuntu1) wily; urgency=medium
 
+  [ Daniel van Vugt ]
   * New upstream release 0.16.0 (https://launchpad.net/mir/+milestone/0.16.0)
     - ABI summary: Only servers and graphics drivers need rebuilding;
       . Mirclient ABI unchanged at 9
@@ -90,7 +91,10 @@ mir (0.16.0-0ubuntu1) UNRELEASED; urgency=medium
       . touchpad produces mouse events with zeroed relative_x and relative_y axes
         (LP: #1496814)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 24 Aug 2015 16:38:28 +0800
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Mon, 21 Sep 2015 16:03:27 +0000
 
 mir (0.15.1+15.10.20150903-0ubuntu1) wily; urgency=medium
 
