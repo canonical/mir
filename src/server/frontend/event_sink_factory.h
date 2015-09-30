@@ -31,7 +31,11 @@ class MessageSender;
 class EventSinkFactory
 {
 public:
+    EventSinkFactory() = default;
     virtual ~EventSinkFactory() = default;
+
+    EventSinkFactory(EventSinkFactory const&) = delete;
+    EventSinkFactory& operator=(EventSinkFactory const&) = delete;
 
     virtual std::unique_ptr<EventSink>
         create_sink(std::shared_ptr<MessageSender> const& sender) = 0;
