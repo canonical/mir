@@ -67,7 +67,7 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
 
         auto const& dev = devices.back();
 
-        auto handle = std::make_shared<DefaultDeviceHandle>(
+        auto handle = std::make_shared<DefaultDevice>(
             dev->id(), device->get_device_info());
 
         // pass input device handle to observer loop..
@@ -246,7 +246,7 @@ void mi::DefaultInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserve
                             });
 }
 
-void mi::DefaultInputDeviceHub::add_device_handle(std::shared_ptr<DefaultDeviceHandle> const& handle)
+void mi::DefaultInputDeviceHub::add_device_handle(std::shared_ptr<DefaultDevice> const& handle)
 {
     handles.push_back(handle);
 

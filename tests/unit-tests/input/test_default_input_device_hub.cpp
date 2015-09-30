@@ -66,9 +66,9 @@ struct MockTouchVisualizer : public mi::TouchVisualizer
 
 struct MockInputDeviceObserver : public mi::InputDeviceObserver
 {
-    MOCK_METHOD1(device_added, void(std::shared_ptr<mi::DeviceHandle> const& device));
-    MOCK_METHOD1(device_changed, void(std::shared_ptr<mi::DeviceHandle> const& device));
-    MOCK_METHOD1(device_removed, void(std::shared_ptr<mi::DeviceHandle> const& device));
+    MOCK_METHOD1(device_added, void(std::shared_ptr<mi::Device> const& device));
+    MOCK_METHOD1(device_changed, void(std::shared_ptr<mi::Device> const& device));
+    MOCK_METHOD1(device_removed, void(std::shared_ptr<mi::Device> const& device));
     MOCK_METHOD0(changes_complete, void());
 };
 
@@ -193,7 +193,7 @@ TEST_F(InputDeviceHubTest, observers_receive_devices_on_add)
 {
     using namespace ::testing;
 
-    std::shared_ptr<mi::DeviceHandle> handle_1, handle_2;
+    std::shared_ptr<mi::Device> handle_1, handle_2;
 
     InSequence seq;
     EXPECT_CALL(mock_observer,device_added(WithName("device"))).WillOnce(SaveArg<0>(&handle_1));
@@ -253,7 +253,7 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
 
     mi::InputSink* sink;
     mi::EventBuilder* builder;
-    std::shared_ptr<mi::DeviceHandle> handle;
+    std::shared_ptr<mi::Device> handle;
 
     capture_input_sink(device, sink, builder);
 

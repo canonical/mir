@@ -17,38 +17,31 @@
  *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_DEVICE_HANDLE_H_
-#define MIR_INPUT_DEVICE_HANDLE_H_
+#include "default_device_handle.h"
 
-#include "mir/input/device_capability.h"
-#include "mir_toolkit/event.h"
+namespace mi = mir::input;
 
-#include <memory>
-
-namespace mir
+mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, mi::InputDeviceInfo const& info) :
+    device_id{id}, info(info)
 {
-namespace input
-{
-
-class PointerSettings;
-class TouchPadSettings;
-
-class DeviceHandle
-{
-public:
-    DeviceHandle() = default;
-    virtual ~DeviceHandle() = default;
-    virtual MirInputDeviceId id() const = 0;
-    virtual DeviceCapabilities capabilities() const = 0;
-    virtual std::string name() const = 0;
-    virtual std::string unique_id() const = 0;
-
-private:
-    DeviceHandle(DeviceHandle const&) = delete;
-    DeviceHandle& operator=(DeviceHandle const&) = delete;
-};
-
-}
 }
 
-#endif
+mi::DeviceCapabilities mi::DefaultDevice::capabilities() const
+{
+    return info.capabilities;
+}
+
+std::string mi::DefaultDevice::name() const
+{
+    return info.name;
+}
+
+std::string mi::DefaultDevice::unique_id() const
+{
+    return info.unique_id;
+}
+
+MirInputDeviceId mi::DefaultDevice::id() const
+{
+    return device_id;
+}

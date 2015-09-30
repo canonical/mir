@@ -32,10 +32,10 @@ namespace mir
 namespace input
 {
 
-class DefaultDeviceHandle : public DeviceHandle
+class DefaultDevice : public Device
 {
 public:
-    DefaultDeviceHandle(MirInputDeviceId id, InputDeviceInfo const& info);
+    DefaultDevice(MirInputDeviceId id, InputDeviceInfo const& info);
     MirInputDeviceId id() const override;
     DeviceCapabilities capabilities() const override;
     std::string name() const override;
