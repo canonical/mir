@@ -31,6 +31,7 @@
 #include <chrono>
 #include <thread>
 
+namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
@@ -458,3 +459,7 @@ void mgm::DisplayBuffer::schedule_set_crtc()
     needs_set_crtc = true;
 }
 
+mg::NativeDisplayBuffer* mgm::DisplayBuffer::native_display_buffer()
+{
+    return this;
+}
