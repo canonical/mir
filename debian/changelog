@@ -1,5 +1,6 @@
-mir (0.16.1-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.16.1+15.10.20150930.1-0ubuntu1) wily; urgency=medium
 
+  [ Daniel van Vugt ]
   * New upstream release 0.16.1 (https://launchpad.net/mir/+milestone/0.16.1)
     - No ABI changes. Bug fix release only.
     - Bugs fixed:
@@ -7,7 +8,10 @@ mir (0.16.1-0ubuntu1) UNRELEASED; urgency=medium
         /usr/include/EGL/eglplatform.h:100:35: fatal error:
         android/native_window.h: No such file or directory (LP: #1499134)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 29 Sep 2015 13:55:06 +0800
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Wed, 30 Sep 2015 14:38:36 +0000
 
 mir (0.16.0+15.10.20150921.1-0ubuntu1) wily; urgency=medium
 
