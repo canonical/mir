@@ -421,11 +421,12 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
                 mir_buffer_usage_software);
             auto conf = mir_cursor_configuration_from_buffer_stream(stream, hotspot_x, hotspot_y);
 
+            mir_buffer_stream_swap_buffers_sync(stream);
+
             mir_wait_for(mir_surface_configure_cursor(surface, conf));
             
             mir_cursor_configuration_destroy(conf);            
             
-            mir_buffer_stream_swap_buffers_sync(stream);
             mir_buffer_stream_swap_buffers_sync(stream);
             mir_buffer_stream_swap_buffers_sync(stream);
 
