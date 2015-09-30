@@ -50,13 +50,11 @@ public:
     void remove(DisplayName name);
     void configure(DisplayName name, MirPowerMode, MirOrientation, geometry::Displacement);
     bool display_present(DisplayName name) const;
-    void hotplug_occurred();
 
 private:
     std::mutex mutable guard;
     std::shared_ptr<DisplayDevice> const device;
     std::map<DisplayName, std::unique_ptr<ConfigurableDisplayBuffer>> dbs;
-    bool hotplugging;
 };
 
 }

@@ -32,7 +32,7 @@ class Cursor : public graphics::Cursor
 {
 public:
     Cursor(std::shared_ptr<HostConnection> const& host_connection, std::shared_ptr<CursorImage> const& default_image);
-    ~Cursor() = default;
+    ~Cursor();
 
     void show(CursorImage const& image) override;
     void show() override;

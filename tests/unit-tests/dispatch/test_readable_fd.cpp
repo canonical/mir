@@ -19,6 +19,7 @@
 #include "mir/dispatch/readable_fd.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace md = mir::dispatch;
 

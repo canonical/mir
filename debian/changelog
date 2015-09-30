@@ -1,18 +1,135 @@
-mir (0.16.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.17.0-0ubuntu1) UNRELEASED; urgency=medium
 
-  * New upstream release 0.16.0 (https://launchpad.net/mir/+milestone/0.16.0)
-    - ABI summary: TODO: these will change before release
+  [ Andreas Pokorny ]
+  * New upstream release 0.17.0 (https://launchpad.net/mir/+milestone/0.17.0)
+    - ABI summary: Only servers and graphics drivers need rebuilding;
       . Mirclient ABI unchanged at 9
-      . Mirserver ABI unchanged at 33
+      . Mirserver ABI bumped to 35
       . Mircommon ABI unchanged at 5
-      . Mirplatform ABI unchanged at 9
-      . Mirprotobuf ABI bumped to 2
-    - Enhancements:
-      . TODO
-    - Buf fixes:
-      . TODO
+      . Mirplatform ABI unchanged at 10
+      . Mirprotobuf ABI bumped to 3
+      . Mirplatformgraphics ABI unchanged at 5
+      . Mirclientplatform ABI unchanged at 3
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 24 Aug 2015 16:38:28 +0800
+ -- Andreas Pokorny <andreas.pokorny@canonical.com>  Thu, 24 Sep 2015 17:32:39 +0200
+
+mir (0.16.0+15.10.20150921.1-0ubuntu1) wily; urgency=medium
+
+  [ Daniel van Vugt ]
+  * New upstream release 0.16.0 (https://launchpad.net/mir/+milestone/0.16.0)
+    - ABI summary: Only servers and graphics drivers need rebuilding;
+      . Mirclient ABI unchanged at 9
+      . Mirserver ABI bumped to 34
+      . Mircommon ABI unchanged at 5
+      . Mirplatform ABI bumped to 10
+      . Mirprotobuf ABI bumped to 2
+      . Mirplatformgraphics ABI bumped to 5
+      . Mirclientplatform ABI unchanged at 3
+    - Enhancements:
+      . Significantly shortened buffer holding time for system compositors
+        should yield higher/smoother frame rates.
+      . Progress on new buffer semantics work.
+      . Mir-on-x platform refinements, including support for guest platform,
+        key combinations, rotation, display window size.
+      . Enhanced cross-compilation, including multi-distro, and multi-arch
+        support.
+      . Added message auth code to make_event functions. Older implementations
+        are now marked as deprecated.
+      . Added EventBuilder for input platforms to use to construct events.
+      . Improved logging.
+      . Added protobuf versioning support.
+      . Support for the NATIVE_WINDOW_CONSUMER_USAGE_BITS query.
+      . Added utilities to detect the capabilities of an input device.
+      . Initial refactoring to support renderers other than GL.
+      . Optimized ANR logic to decide less frequent wakeups.
+      . Allow clients to set their surface event handler up front.
+      . Added ability to provide for setting a scale on BufferStream.
+    - Bug fixes:
+      . [regression] ubuntu-emulator fails to start Mir demos (LP: #1486535)
+      . Overlayed framedropping clients freeze on mako (LP: #1391261)
+      . [regression] Screen flickering and error messages on Android overlay
+        surfaces: <ERROR> MirBufferStream: Error processing incoming buffer
+        error registering graphics buffer for client use (LP: #1441553)
+      . [silo0] exception thrown in cursor management code around monitor
+        removals/additions (LP: #1483779)
+      . mirclient.pc lists protobuf in Requires.private (LP: #1483876)
+      . Overlays don't rotate when mga::DisplayBuffer is rotated (LP: #1485070)
+      . cross-compile-chroot.sh fails on wily since the archive transition to
+        GCC 5 (LP: #1486823)
+      . [ FAILED ] ExchangeBufferTest.server_can_send_buffer
+        (tests/integration-tests/test_exchange_buffer.cpp:441: Failure)
+        (LP: #1487967)
+      . Client fails to work with multiple client platform versions installed
+        (LP: #1488500)
+      . CI test failure in ClientLatency.triple_buffered_client_uses_all_buffers
+        (LP: #1491876)
+      . Intermittent CI failure in 
+        DisplayConfigurationTest.changing_focus_from_client_with_config_to_client_without_config_configures_display
+        (LP: #1494663)
+      . acceptance test ClientLatency.double_buffered_client_uses_all_buffers
+        does not measure latency accurately (reports low latency when we know
+        it's higher) (LP: #1447947)
+      . make ptest returns 0 when tests fail (LP: #1454250)
+      . [regression] Mir is holding buffers much longer than it used to
+        (LP: #1480164)
+      . Acceptance test fails under debuild: 
+        ClientCredsTestFixture.session_authorizer_receives_pid_of_connecting_clients
+        (LP: #1483097)
+      . dpkg-shlibdeps: warning: 
+        debian/mir-platform-graphics-mesa-x4/usr/lib/x86_64-linux-gnu/mir/server-platform/server-mesa-x11.so.4
+        contains an unresolvable reference to symbol
+        _ZN3mir6events10make_eventElNSt6chrono8durationIlSt5ratioILl1ELl1000000000EEEE17MirKeyboardActionjij:
+        (LP: #1483469)
+      . [regression] surface remains invisible when changing from state
+        minimized/hidden to any other (LP: #1483909)
+      . android external monitor doesn't respect overlay disable option
+        (LP: #1484638)
+      . [regression] Clients hang without explanation when connecting to older
+        servers since r2730 (LP: #1486496)
+      . [regression] Intermittent test failure
+        BufferQueue/WithThreeOrMoreBuffers.queue_size_scales_with_client_performance
+        (LP: #1487197)
+      . client api minor version was not updated in mir 0.15 (LP: #1488542)
+      . On Wily/mesa-kms starting a server with a "test client" crashes the
+        server (LP: #1489806)
+      . The MirDisplayConfiguration returned on the client can be incorrect
+        (LP: #1491937)
+      . The MirDisplayConfiguration returned on the client can be incorrect
+         - part 2 (LP: #1493741)
+      . sbuild cross compile broken (LP: #1493895)
+      . Segmentation fault in MesaBufferIntegration.* (LP: #1495459)
+      . lintian says: W: mirtest-dev: extended-description-line-too-long
+        (LP: #1483470)
+      . SYSYEM_SUPPORTS_O_TMPFILE - typo (LP: #1483797)
+      . sbuild cross compile encounters difficulties with our python dependency
+        (LP: #1494317)
+      . touchpad produces mouse events with zeroed relative_x and relative_y axes
+        (LP: #1496814)
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Mon, 21 Sep 2015 16:03:27 +0000
+
+mir (0.15.1+15.10.20150903-0ubuntu1) wily; urgency=medium
+
+  [ Kevin Gunn ]
+  * released-rebuild-for-vivid-overlay
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Thu, 03 Sep 2015 18:50:01 +0000
+
+mir (0.15.1+15.10.20150825-0ubuntu1) wily; urgency=medium
+
+  [ Alberto Aguirre ]
+  * New upstream release 0.15.1 (https://launchpad.net/mir/+milestone/0.15.1)
+    - Bug fixes:
+      . Client API minor version was not updated (LP: #1488542)
+      . [regression] ubuntu-emulator fails to start Mir demos (LP: #1486535)
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- CI Train Bot <ci-train-bot@canonical.com>  Tue, 25 Aug 2015 16:02:43 +0000
 
 mir (0.15.0+15.10.20150818-0ubuntu1) wily; urgency=medium
 
