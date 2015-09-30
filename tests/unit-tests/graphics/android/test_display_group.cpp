@@ -18,6 +18,7 @@
 
 #include "src/platforms/android/server/configurable_display_buffer.h"
 #include "src/platforms/android/server/display_group.h"
+#include "src/platforms/android/server/display_disconnected_exception.h"
 #include "mir/test/doubles/mock_display_device.h"
 #include "mir/test/doubles/stub_renderable_list_compositor.h"
 #include "mir/test/doubles/stub_swapping_gl_context.h"
@@ -84,7 +85,7 @@ TEST(DisplayGroup, db_additions_and_removals)
     group.post();
 }
 
-//lp: 1474891: If the driver is processing the external display in set,
+//lp: 1474891, 1498550: If the driver is processing the external display in set,
 //and it gets a hotplug event removing the external display, set() will throw, which we should ignore
 TEST(DisplayGroup, group_ignores_throws_during_hotplug)
 {
@@ -92,16 +93,8 @@ TEST(DisplayGroup, group_ignores_throws_during_hotplug)
     NiceMock<mtd::MockDisplayDevice> mock_device;
     mga::DisplayGroup group(mt::fake_shared(mock_device), std::make_unique<StubConfigurableDB>());
     EXPECT_CALL(mock_device, commit(_))
-        .WillOnce(Throw(std::runtime_error("")))
-        .WillOnce(InvokeWithoutArgs([&]{
-            group.hotplug_occurred();
-            throw std::runtime_error("");
-        }))
+        .WillOnce(Throw(mga::DisplayDisconnectedException()))
         .WillOnce(Throw(std::runtime_error("")));
-
-    EXPECT_THROW({
-        group.post();
-    }, std::runtime_error);
 
     EXPECT_NO_THROW({group.post();});
 

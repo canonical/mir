@@ -33,9 +33,9 @@ public:
     InputDeviceObserver() = default;
     virtual ~InputDeviceObserver() = default;
 
-    virtual void device_added(std::weak_ptr<DeviceHandle> const& device) = 0;
-    virtual void device_changed(std::weak_ptr<DeviceHandle> const& device) = 0;
-    virtual void device_removed(std::weak_ptr<DeviceHandle> const& device) = 0;
+    virtual void device_added(std::shared_ptr<DeviceHandle> const& device) = 0;
+    virtual void device_changed(std::shared_ptr<DeviceHandle> const& device) = 0;
+    virtual void device_removed(std::shared_ptr<DeviceHandle> const& device) = 0;
     /*!
      * Called after every group of changes.
      */

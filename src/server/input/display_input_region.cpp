@@ -46,7 +46,12 @@ geom::Rectangle mi::DisplayInputRegion::bounding_rectangle()
             });
     });
 
-    return rectangles.bounding_rectangle();
+    //TODO: This region is mainly used for scaling touchscreen coordinates, so the caller
+    // probably wants the full list of rectangles. Additional work is needed
+    // to group a touchscreen with a display. So for now, just return the view area
+    // of the first display, as that matches the most common systems (laptops with touchscreens,
+    // phone/tablets with touchscreens).
+    return *rectangles.begin();
 }
 
 void mi::DisplayInputRegion::confine(geom::Point& point)
