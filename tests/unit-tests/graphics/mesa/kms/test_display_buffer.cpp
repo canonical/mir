@@ -15,6 +15,9 @@
  *
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
+#include "mir/test/doubles/null_emergency_cleanup.h"
+#include "src/server/report/null_report_factory.h"
+#include "mir/test/doubles/null_virtual_terminal.h"
 #include "src/platforms/mesa/server/kms/platform.h"
 #include "src/platforms/mesa/server/kms/display_buffer.h"
 #include "src/server/report/null_report_factory.h"
@@ -24,7 +27,6 @@
 #include "mir/test/doubles/mock_buffer.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/stub_gl_config.h"
-#include "mir/test/doubles/platform_factory.h"
 #include "mir/test/doubles/stub_gbm_native_buffer.h"
 #include "mir_test_framework/udev_environment.h"
 #include "mir/test/doubles/fake_renderable.h"
@@ -41,6 +43,7 @@ using namespace mir::test;
 using namespace mir::test::doubles;
 using namespace mir_test_framework;
 using namespace mir::graphics;
+using namespace mir::graphics::mesa;
 using mir::report::null_display_report;
 
 class MesaDisplayBufferTest : public Test
@@ -94,7 +97,11 @@ public:
     // reconstructed locally to ensure its lifetime is shorter than mock_gbm.
     shared_ptr<graphics::mesa::Platform> create_platform()
     {
-        return mir::test::doubles::create_mesa_platform_with_null_dependencies();
+        return make_shared<graphics::mesa::Platform>(
+               report::null_display_report(),
+               make_shared<NullVirtualTerminal>(),
+               *make_shared<NullEmergencyCleanup>(),
+               graphics::mesa::BypassOption::allowed);
     }
 
 protected:

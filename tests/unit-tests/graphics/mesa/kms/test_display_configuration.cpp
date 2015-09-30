@@ -22,12 +22,14 @@
 #include "mir/graphics//default_display_configuration_policy.h"
 #include "src/platforms/mesa/server/kms/platform.h"
 #include "src/platforms/mesa/server/kms/kms_display_configuration.h"
+#include "mir/test/doubles/null_emergency_cleanup.h"
+#include "src/server/report/null_report_factory.h"
+#include "mir/test/doubles/null_virtual_terminal.h"
 
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/stub_gl_program_factory.h"
-#include "mir/test/doubles/platform_factory.h"
 
 #include "mir_test_framework/udev_environment.h"
 
@@ -86,7 +88,11 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-        return mtd::create_platform_with_null_dependencies();
+        return std::make_shared<mgm::Platform>(
+               mir::report::null_display_report(),
+               std::make_shared<mtd::NullVirtualTerminal>(),
+               *std::make_shared<mtd::NullEmergencyCleanup>(),
+               mgm::BypassOption::allowed);
     }
 
     std::shared_ptr<mg::Display> create_display(

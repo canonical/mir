@@ -23,7 +23,10 @@
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
-#include "mir/test/doubles/platform_factory.h"
+#include "mir/test/doubles/null_emergency_cleanup.h"
+#include "src/server/report/null_report_factory.h"
+#include "mir/test/doubles/null_virtual_terminal.h"
+#include "mir/options/program_option.h"
 #if defined(MESA_KMS) || defined(MESA_X11)
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
@@ -32,7 +35,11 @@
 #include "mir/test/doubles/mock_android_hw.h"
 #endif
 #ifdef MESA_X11
+#include "src/platforms/mesa/server/x11/graphics/platform.h"
 #include "mir/test/doubles/mock_x11.h"
+#endif
+#ifdef MESA_KMS
+#include "src/platforms/mesa/server/kms/platform.h"
 #endif
 
 #include "mir/logging/dumb_console_logger.h"
@@ -40,6 +47,7 @@
 #include <gtest/gtest.h>
 
 namespace mg = mir::graphics;
+namespace mgm = mg::mesa;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
@@ -77,7 +85,25 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-        return mtd::create_platform_with_null_dependencies();
+#ifdef ANDROID
+      return create_host_platform(
+              std::make_shared<mir::options::ProgramOption>(),
+              std::make_shared<mtd::NullEmergencyCleanup>(),
+              mir::report::null_display_report());
+#elif MESA_KMS
+      return std::make_shared<mgm::Platform>(
+              mir::report::null_display_report(),
+              std::make_shared<mtd::NullVirtualTerminal>(),
+              *std::make_shared<mtd::NullEmergencyCleanup>(),
+              mgm::BypassOption::allowed);
+#elif MESA_X11
+      return std::make_shared<mg::X::Platform>(std::shared_ptr<::Display>(
+              XOpenDisplay(nullptr),
+              [](::Display* display)
+              {
+                  XCloseDisplay(display);
+              }), mir::geometry::Size{1280,1024});
+#endif
     }
 
     std::shared_ptr<ml::Logger> logger;

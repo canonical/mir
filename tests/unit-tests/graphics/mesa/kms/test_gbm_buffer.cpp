@@ -27,7 +27,9 @@
 #include "src/platforms/mesa/server/common/gbm_buffer.h"
 #include "src/platforms/mesa/server/common/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
-#include "mir/test/doubles/platform_factory.h"
+#include "mir/test/doubles/null_emergency_cleanup.h"
+#include "src/server/report/null_report_factory.h"
+#include "mir/test/doubles/null_virtual_terminal.h"
 
 #include <gbm.h>
 
@@ -70,7 +72,11 @@ protected:
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
         .WillByDefault(Return(stride.as_uint32_t()));
 
-        platform = mtd::create_mesa_platform_with_null_dependencies();
+        platform = std::make_shared<mgm::Platform>(
+                mir::report::null_display_report(),
+                std::make_shared<mtd::NullVirtualTerminal>(),
+                *std::make_shared<mtd::NullEmergencyCleanup>(),
+                mgm::BypassOption::allowed);
 
         allocator.reset(new mgm::BufferAllocator(platform->gbm.device, mgm::BypassOption::allowed, mgm::BufferImportMethod::gbm_native_pixmap));
     }

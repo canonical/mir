@@ -21,12 +21,16 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 
+#include "src/platforms/mesa/server/kms/platform.h"
+
+#include "mir/test/doubles/null_emergency_cleanup.h"
+#include "src/server/report/null_report_factory.h"
+#include "mir/test/doubles/null_virtual_terminal.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/stub_gl_program_factory.h"
-#include "mir/test/doubles/platform_factory.h"
 
 #include "mir_test_framework/udev_environment.h"
 
@@ -39,6 +43,7 @@
 #include <unordered_set>
 
 namespace mg = mir::graphics;
+namespace mgm = mg::mesa;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
@@ -128,13 +133,17 @@ public:
         fake_devices.add_standard_device("standard-drm-devices");
     }
 
-    std::shared_ptr<mg::Platform> create_platform()
+    std::shared_ptr<mgm::Platform> create_platform()
     {
-        return mtd::create_platform_with_null_dependencies();
+        return std::make_shared<mgm::Platform>(
+               mir::report::null_display_report(),
+               std::make_shared<mtd::NullVirtualTerminal>(),
+               *std::make_shared<mtd::NullEmergencyCleanup>(),
+               mgm::BypassOption::allowed);
     }
 
     std::shared_ptr<mg::Display> create_display_cloned(
-        std::shared_ptr<mg::Platform> const& platform)
+        std::shared_ptr<mgm::Platform> const& platform)
     {
         return platform->create_display(
             std::make_shared<ClonedDisplayConfigurationPolicy>(),
