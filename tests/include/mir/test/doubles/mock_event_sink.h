@@ -28,11 +28,6 @@
 
 namespace mir
 {
-namespace frontend
-{
-class MessageSender;
-}
-
 namespace test
 {
 namespace doubles
@@ -40,15 +35,13 @@ namespace doubles
 struct MockEventSink : public frontend::EventSink
 {
     MOCK_METHOD1(handle_event, void(MirEvent const&));
-
     MOCK_METHOD1(handle_lifecycle_event, void(MirLifecycleState));
     MOCK_METHOD1(handle_display_config_change, void(graphics::DisplayConfiguration const&));
-
     MOCK_METHOD1(send_ping, void(int32_t));
-
     MOCK_METHOD3(send_buffer, void(frontend::BufferStreamId, graphics::Buffer&, graphics::BufferIpcMsgType));
 };
 }
 }
 }
+
 #endif /* MIR_TEST_DOUBLES_MOCK_EVENT_SINK_H_*/
