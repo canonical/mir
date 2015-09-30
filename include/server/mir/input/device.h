@@ -33,19 +33,19 @@ namespace input
 class PointerSettings;
 class TouchPadSettings;
 
-class DeviceHandle
+class Device
 {
 public:
-    DeviceHandle() = default;
-    virtual ~DeviceHandle() = default;
+    Device() = default;
+    virtual ~Device() = default;
     virtual MirInputDeviceId id() const = 0;
     virtual DeviceCapabilities capabilities() const = 0;
     virtual std::string name() const = 0;
     virtual std::string unique_id() const = 0;
 
 private:
-    DeviceHandle(DeviceHandle const&) = delete;
-    DeviceHandle& operator=(DeviceHandle const&) = delete;
+    Device(Device const&) = delete;
+    Device& operator=(Device const&) = delete;
 };
 
 }

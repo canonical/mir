@@ -17,31 +17,31 @@
  *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "default_device_handle.h"
+#include "device_handle.h"
 
 namespace mi = mir::input;
 
-mi::DefaultDeviceHandle::DefaultDeviceHandle(MirInputDeviceId id, mi::InputDeviceInfo const& info) :
+mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, mi::InputDeviceInfo const& info) :
     device_id{id}, info(info)
 {
 }
 
-mi::DeviceCapabilities mi::DefaultDeviceHandle::capabilities() const
+mi::DeviceCapabilities mi::DefaultDevice::capabilities() const
 {
     return info.capabilities;
 }
 
-std::string mi::DefaultDeviceHandle::name() const
+std::string mi::DefaultDevice::name() const
 {
     return info.name;
 }
 
-std::string mi::DefaultDeviceHandle::unique_id() const
+std::string mi::DefaultDevice::unique_id() const
 {
     return info.unique_id;
 }
 
-MirInputDeviceId mi::DefaultDeviceHandle::id() const
+MirInputDeviceId mi::DefaultDevice::id() const
 {
     return device_id;
 }
