@@ -16,6 +16,9 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
 #include "mir/options/program_option.h"
 #include "src/platforms/mesa/server/x11/graphics/platform.h"
 
@@ -26,9 +29,6 @@
 #include "mir/shared_library.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/udev_environment.h"
-
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
