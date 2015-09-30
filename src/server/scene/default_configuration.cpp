@@ -24,6 +24,7 @@
 #include "mir/input/scene.h"
 #include "mir/abnormal_exit.h"
 #include "mir/scene/session.h"
+#include "mir/shell/display_configuration_controller.h"
 
 #include "broadcasting_session_event_sink.h"
 #include "default_session_container.h"
@@ -235,4 +236,10 @@ auto mir::DefaultServerConfiguration::the_application_not_responding_detector()
             return std::make_shared<ms::TimeoutApplicationNotRespondingDetector>(
                 *the_main_loop(), 1s);
         });
+}
+
+std::shared_ptr<msh::DisplayConfigurationController>
+mir::DefaultServerConfiguration::the_display_configuration_controller()
+{
+    return the_mediating_display_changer();
 }

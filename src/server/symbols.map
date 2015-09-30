@@ -610,6 +610,7 @@ MIR_SERVER_35 {
     mir::DefaultServerConfiguration::the_display*;
     mir::DefaultServerConfiguration::the_display_buffer_compositor_factory*;
     mir::DefaultServerConfiguration::the_display_changer*;
+    mir::DefaultServerConfiguration::the_display_configuration_controller*;
     mir::DefaultServerConfiguration::the_display_configuration_policy*;
     mir::DefaultServerConfiguration::the_display_report*;
     mir::DefaultServerConfiguration::the_emergency_cleanup*;
