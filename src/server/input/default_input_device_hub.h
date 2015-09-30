@@ -49,7 +49,7 @@ class InputDeviceObserver;
 class TouchVisualizer;
 class InputRegion;
 class CursorListener;
-class DefaultDeviceHandle;
+class DefaultDevice;
 
 class DefaultInputDeviceHub : public InputDeviceRegistry, public InputDeviceHub
 {
@@ -71,7 +71,7 @@ public:
 
 private:
     void update_spots();
-    void add_device_handle(std::shared_ptr<DefaultDeviceHandle> const& handle);
+    void add_device_handle(std::shared_ptr<DefaultDevice> const& handle);
     void remove_device_handle(MirInputDeviceId id);
     MirInputDeviceId create_new_device_id();
     std::shared_ptr<InputDispatcher> const input_dispatcher;
@@ -106,7 +106,7 @@ private:
         friend class DefaultInputDeviceHub;
     };
 
-    std::vector<std::shared_ptr<DefaultDeviceHandle>> handles;
+    std::vector<std::shared_ptr<DefaultDevice>> handles;
     std::vector<std::unique_ptr<RegisteredDevice>> devices;
     std::vector<std::shared_ptr<InputDeviceObserver>> observers;
     
