@@ -504,9 +504,18 @@ TEST_F(NestedServer, cursor_image_changes_are_forwarded_to_host)
         connection, 24, 24, mir_pixel_format_argb_8888, mir_buffer_usage_software);
     mir_buffer_stream_swap_buffers_sync(stream);
 
-    auto conf = mir_cursor_configuration_from_buffer_stream(stream, 0, 0);
-    mir_wait_for(mir_surface_configure_cursor(surface, conf));
-    mir_cursor_configuration_destroy(conf);
+    {
+        mt::WaitCondition condition;
+        EXPECT_CALL(*mock_cursor, show(_)).Times(1)
+            .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+
+        auto conf = mir_cursor_configuration_from_buffer_stream(stream, 0, 0);
+        mir_wait_for(mir_surface_configure_cursor(surface, conf));
+        mir_cursor_configuration_destroy(conf);
+
+        condition.wait_for_at_most_seconds(1);
+        Mock::VerifyAndClearExpectations(mock_cursor.get());
+    }
 
     for (int i = 0; i != frames; ++i)
     {
