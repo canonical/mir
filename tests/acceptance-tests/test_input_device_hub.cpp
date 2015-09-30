@@ -38,9 +38,9 @@ namespace
 
 struct MockInputDeviceObserver : public mi::InputDeviceObserver
 {
-    MOCK_METHOD1(device_added, void(std::shared_ptr<mi::DeviceHandle> const& device));
-    MOCK_METHOD1(device_changed, void(std::shared_ptr<mi::DeviceHandle> const& device));
-    MOCK_METHOD1(device_removed, void(std::shared_ptr<mi::DeviceHandle> const& device));
+    MOCK_METHOD1(device_added, void(std::shared_ptr<mi::Device> const& device));
+    MOCK_METHOD1(device_changed, void(std::shared_ptr<mi::Device> const& device));
+    MOCK_METHOD1(device_removed, void(std::shared_ptr<mi::Device> const& device));
     MOCK_METHOD0(changes_complete, void());
 };
 

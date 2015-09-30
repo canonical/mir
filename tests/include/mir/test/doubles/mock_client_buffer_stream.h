@@ -21,6 +21,8 @@
 
 #include "src/client/client_buffer_stream.h"
 
+#include <gmock/gmock.h>
+
 namespace mir
 {
 namespace test

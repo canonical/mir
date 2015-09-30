@@ -40,10 +40,10 @@ public:
     bool is_set() const { return is_set_; }
 
     constexpr explicit operator bool() const { return is_set_; }
-    constexpr const T* operator->() const { return &value_; }
-    T* operator->() { return &value_; }
-    constexpr const T& operator*() const { return value_; }
-    T& operator*() { return value_; }
+    constexpr const T* operator->() const { return &ref(); }
+    T* operator->() { return &ref(); }
+    constexpr const T& operator*() const { return ref(); }
+    T& operator*() { return ref(); }
 
     T value() const
     {
@@ -55,6 +55,22 @@ public:
     }
 
 private:
+    const T& ref() const
+    {
+        if (!is_set())
+        {
+            (*fatal_error)("Accessing value of unset optional");
+        }
+        return value_;
+    }
+    T& ref()
+    {
+        if (!is_set())
+        {
+            (*fatal_error)("Accessing value of unset optional");
+        }
+        return value_;
+    }
     T value_;
     bool is_set_{false};
 };
