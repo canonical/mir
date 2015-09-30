@@ -25,7 +25,7 @@
 #include "mir/test/event_matchers.h"
 
 #include "mir/input/input_device.h"
-#include "mir/input/device_handle.h"
+#include "mir/input/device.h"
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"

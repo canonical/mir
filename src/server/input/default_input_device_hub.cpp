@@ -17,7 +17,7 @@
  */
 
 #include "default_input_device_hub.h"
-#include "default_device_handle.h"
+#include "device_handle.h"
 
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/input_device.h"

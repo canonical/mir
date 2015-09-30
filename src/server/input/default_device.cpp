@@ -17,7 +17,7 @@
  *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "default_device_handle.h"
+#include "device_handle.h"
 
 namespace mi = mir::input;
 

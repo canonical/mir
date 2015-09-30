@@ -21,7 +21,7 @@
 #define MIR_INPUT_DEFAULT_DEVICE_HANDLE_H_
 
 #include "mir_toolkit/event.h"
-#include "mir/input/device_handle.h"
+#include "mir/input/device.h"
 #include "mir/input/input_device_info.h"
 #include "mir/module_deleter.h"
 
