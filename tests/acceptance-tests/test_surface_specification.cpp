@@ -27,6 +27,8 @@
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/client_types.h"
 
+#include <gmock/gmock.h>
+
 namespace mev = mir::events;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;

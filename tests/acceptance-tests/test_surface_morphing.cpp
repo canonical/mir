@@ -25,6 +25,8 @@
 #include "mir/test/signal.h"
 #include "mir_toolkit/common.h"
 
+#include <gmock/gmock.h>
+
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace ms = mir::scene;

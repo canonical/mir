@@ -28,6 +28,8 @@
 #include "mir/test/signal.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
 
 namespace mg = mir::graphics;
 namespace mtf = mir_test_framework;

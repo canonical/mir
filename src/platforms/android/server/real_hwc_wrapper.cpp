@@ -18,6 +18,7 @@
 
 #include "real_hwc_wrapper.h"
 #include "hwc_report.h"
+#include "display_disconnected_exception.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <sstream>
@@ -115,9 +116,15 @@ void mga::RealHwcWrapper::set(
     std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
     report->report_set_list(displays);
-    if (auto rc = hwc_device->set(hwc_device.get(), num_displays(displays),
+    auto const num_displays = ::num_displays(displays);
+    if (auto rc = hwc_device->set(hwc_device.get(), num_displays,
         const_cast<hwc_display_contents_1**>(displays.data())))
     {
+        if (num_displays > 1 && !display_connected(DisplayName::external))
+        {
+            BOOST_THROW_EXCEPTION(mga::DisplayDisconnectedException());
+        }
+
         std::stringstream ss;
         ss << "error during hwc set(). rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
@@ -289,4 +296,10 @@ void mga::RealHwcWrapper::set_active_config(DisplayName display_name, ConfigId i
     int rc = hwc_device->setActiveConfig(hwc_device.get(), display_name, id.as_value());
     if (rc < 0)
         BOOST_THROW_EXCEPTION(std::system_error(rc, std::system_category(), "unable to set active display config"));
+}
+
+bool mga::RealHwcWrapper::display_connected(DisplayName display_name) const
+{
+    size_t num_configs = 0;
+    return hwc_device->getDisplayConfigs(hwc_device.get(), display_name, nullptr, &num_configs) == 0;
 }
