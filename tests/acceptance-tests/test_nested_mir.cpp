@@ -90,8 +90,6 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
 
 struct MockCursor : public mtd::StubCursor
 {
-    MockCursor() { std::cerr << __PRETTY_FUNCTION__ << std::endl; }
-    ~MockCursor() { std::cerr << __PRETTY_FUNCTION__ << std::endl; }
     MOCK_METHOD1(show, void(mg::CursorImage const&));
 };
 
@@ -162,7 +160,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
         server.override_the_display_configuration_report([this]
             { return the_mock_display_configuration_report(); });
 
-        server.override_the_cursor([this] { std::cerr << "DEBUG overriding the cursor\n"; return the_mock_cursor(); });
+        server.override_the_cursor([this] { return the_mock_cursor(); });
 
         mtf::HeadlessInProcessServer::SetUp();
     }
