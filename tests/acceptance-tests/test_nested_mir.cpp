@@ -133,8 +133,6 @@ private:
 
 struct NestedServer : mtf::HeadlessInProcessServer
 {
-    NestedServer() { add_to_environment("MIR_SERVER_ENABLE_INPUT","off"); }
-
     mtd::NestedMockEGL mock_egl;
     mtf::UsingStubClientPlatform using_stub_client_platform;
 
