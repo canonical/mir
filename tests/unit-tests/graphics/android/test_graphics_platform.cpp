@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -27,20 +27,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/test/doubles/null_virtual_terminal.h"
 #include "mir/options/program_option.h"
-#if defined(MESA_KMS) || defined(MESA_X11)
-#include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/mock_gbm.h"
-#include "mir_test_framework/udev_environment.h"
-#elif ANDROID
 #include "mir/test/doubles/mock_android_hw.h"
-#endif
-#ifdef MESA_X11
-#include "src/platforms/mesa/server/x11/graphics/platform.h"
-#include "mir/test/doubles/mock_x11.h"
-#endif
-#ifdef MESA_KMS
-#include "src/platforms/mesa/server/kms/platform.h"
-#endif
 
 #include "mir/logging/dumb_console_logger.h"
 
@@ -52,77 +39,30 @@ namespace ml = mir::logging;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mo = mir::options;
-#if defined(MESA_KMS) || defined(MESA_X11)
-namespace mtf = mir_test_framework;
-#endif
 
-class GraphicsPlatform : public ::testing::Test
+class GraphicsPlatformAndroid : public ::testing::Test
 {
 public:
-    GraphicsPlatform() : logger(std::make_shared<ml::DumbConsoleLogger>())
+    GraphicsPlatformAndroid() : logger(std::make_shared<ml::DumbConsoleLogger>())
     {
-        using namespace testing;
-
-#if defined(MESA_KMS) || defined(MESA_X11)
-        ON_CALL(mock_gbm, gbm_bo_get_width(_))
-        .WillByDefault(Return(320));
-
-        ON_CALL(mock_gbm, gbm_bo_get_height(_))
-        .WillByDefault(Return(240));
-
-        // FIXME: This format needs to match Mesa's first supported pixel
-        //        format or tests will fail. The coupling is presently loose.
-        ON_CALL(mock_gbm, gbm_bo_get_format(_))
-        .WillByDefault(Return(GBM_FORMAT_ARGB8888));
-
-#ifdef MESA_KMS
-        fake_devices.add_standard_device("standard-drm-devices");
-#else
-        fake_devices.add_standard_device("standard-drm-render-nodes");
-#endif
-#endif
     }
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-#ifdef ANDROID
       return create_host_platform(
               std::make_shared<mir::options::ProgramOption>(),
               std::make_shared<mtd::NullEmergencyCleanup>(),
               mir::report::null_display_report());
-#elif MESA_KMS
-      return std::make_shared<mgm::Platform>(
-              mir::report::null_display_report(),
-              std::make_shared<mtd::NullVirtualTerminal>(),
-              *std::make_shared<mtd::NullEmergencyCleanup>(),
-              mgm::BypassOption::allowed);
-#elif MESA_X11
-      return std::make_shared<mg::X::Platform>(std::shared_ptr<::Display>(
-              XOpenDisplay(nullptr),
-              [](::Display* display)
-              {
-                  XCloseDisplay(display);
-              }), mir::geometry::Size{1280,1024});
-#endif
     }
 
     std::shared_ptr<ml::Logger> logger;
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL> mock_gl;
-#ifdef ANDROID
     ::testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
-#else
-    ::testing::NiceMock<mtd::MockDRM> mock_drm;
-    ::testing::NiceMock<mtd::MockGBM> mock_gbm;
-    mtf::UdevEnvironment fake_devices;
-#endif
-#ifdef MESA_X11
-    ::testing::NiceMock<mtd::MockX11> mock_x11;
-#endif
 };
 
-TEST_F(GraphicsPlatform, buffer_allocator_creation)
+TEST_F(GraphicsPlatformAndroid, buffer_allocator_creation)
 {
     using namespace testing;
 
@@ -134,7 +74,7 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
     );
 }
 
-TEST_F(GraphicsPlatform, buffer_creation)
+TEST_F(GraphicsPlatformAndroid, buffer_creation)
 {
     auto platform = create_platform();
     auto allocator = platform->create_buffer_allocator();
@@ -155,7 +95,7 @@ TEST_F(GraphicsPlatform, buffer_creation)
     EXPECT_EQ(buffer->pixel_format(), pf);
 }
 
-TEST_F(GraphicsPlatform, connection_ipc_package)
+TEST_F(GraphicsPlatformAndroid, connection_ipc_package)
 {
     auto platform = create_platform();
     auto ipc_ops = platform->make_ipc_operations();

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -30,21 +30,11 @@
 #include "mir/test/doubles/null_virtual_terminal.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/graphics/default_display_configuration_policy.h"
-#if defined(MESA_KMS) || defined(MESA_X11)
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir_test_framework/udev_environment.h"
-#elif ANDROID
-#include "mir/test/doubles/mock_android_hw.h"
-#include "mir/test/doubles/mock_display_device.h"
-#endif
-#ifdef MESA_X11
 #include "src/platforms/mesa/server/x11/graphics/platform.h"
 #include "mir/test/doubles/mock_x11.h"
-#endif
-#ifdef MESA_KMS
-#include "src/platforms/mesa/server/kms/platform.h"
-#endif
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -52,18 +42,15 @@
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 namespace mtd = mir::test::doubles;
-#if defined(MESA_KMS) || defined(MESA_X11)
 namespace mtf = mir_test_framework;
-#endif
 
-class DisplayTest : public ::testing::Test
+class DisplayTestX11 : public ::testing::Test
 {
 public:
-    DisplayTest()
+    DisplayTestX11()
     {
         using namespace testing;
 
-#ifdef MESA_X11
         EGLint const client_version = 2;
 
         ON_CALL(mock_egl, eglQueryContext(mock_egl.fake_egl_display,
@@ -98,7 +85,6 @@ public:
                                      _))
             .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.expose_event_return),
                        Return(1)));
-#endif
 
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
             .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
@@ -108,34 +94,17 @@ public:
         mock_egl.provide_egl_extensions();
         mock_gl.provide_gles_extensions();
 
-#ifdef MESA_KMS
-        fake_devices.add_standard_device("standard-drm-devices");
-#elif MESA_X11
         fake_devices.add_standard_device("standard-drm-render-nodes");
-#endif
     }
 
     std::shared_ptr<mg::Display> create_display()
     {
-#ifdef ANDROID
-        auto const platform = create_host_platform(
-                std::make_shared<mir::options::ProgramOption>(),
-                std::make_shared<mtd::NullEmergencyCleanup>(),
-                mir::report::null_display_report());
-#elif MESA_KMS
-        auto const platform = std::make_shared<mgm::Platform>(
-                mir::report::null_display_report(),
-                std::make_shared<mtd::NullVirtualTerminal>(),
-                *std::make_shared<mtd::NullEmergencyCleanup>(),
-                mgm::BypassOption::allowed);
-#elif MESA_X11
         auto const platform = std::make_shared<mg::X::Platform>(std::shared_ptr<::Display>(
                 XOpenDisplay(nullptr),
                 [](::Display* display)
                 {
                     XCloseDisplay(display);
                 }), mir::geometry::Size{1280,1024});
-#endif
         return platform->create_display(
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLProgramFactory>(),
@@ -144,16 +113,10 @@ public:
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL> mock_gl;
-#ifdef ANDROID
-    ::testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
-#else
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     mtf::UdevEnvironment fake_devices;
-#endif
-#ifdef MESA_X11
     ::testing::NiceMock<mtd::MockX11> mock_x11;
-#endif
 };
 
 namespace
@@ -173,7 +136,7 @@ public:
 
 }
 
-TEST_F(DisplayTest, configure_disallows_invalid_configuration)
+TEST_F(DisplayTestX11, configure_disallows_invalid_configuration)
 {
     using namespace testing;
     auto display = create_display();
@@ -188,11 +151,7 @@ TEST_F(DisplayTest, configure_disallows_invalid_configuration)
     // platform-dependent exercise, so won't be tested here.
 }
 
-#ifdef MESA_X11
-TEST_F(DisplayTest, DISABLED_gl_context_make_current_uses_shared_context)
-#else
-TEST_F(DisplayTest, gl_context_make_current_uses_shared_context)
-#endif
+TEST_F(DisplayTestX11, DISABLED_gl_context_make_current_uses_shared_context)
 {
     using namespace testing;
     EGLContext const shared_context{reinterpret_cast<EGLContext>(0x111)};
@@ -233,7 +192,7 @@ TEST_F(DisplayTest, gl_context_make_current_uses_shared_context)
         .Times(AtLeast(0));
 }
 
-TEST_F(DisplayTest, gl_context_releases_context)
+TEST_F(DisplayTestX11, gl_context_releases_context)
 {
     using namespace testing;
 
@@ -259,11 +218,7 @@ TEST_F(DisplayTest, gl_context_releases_context)
         .Times(AtLeast(0));
 }
 
-#ifdef MESA_X11
-TEST_F(DisplayTest, DISABLED_does_not_expose_display_buffer_for_output_with_power_mode_off)
-#else
-TEST_F(DisplayTest, does_not_expose_display_buffer_for_output_with_power_mode_off)
-#endif
+TEST_F(DisplayTestX11, DISABLED_does_not_expose_display_buffer_for_output_with_power_mode_off)
 {
     using namespace testing;
     auto display = create_display();

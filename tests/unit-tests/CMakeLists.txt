@@ -79,6 +79,13 @@ list(APPEND UNIT_TEST_SOURCES
 )
 endif()
 
+CMAKE_DEPENDENT_OPTION(
+  MIR_RUN_UNIT_TESTS
+  "Run unit tests as part of default testing"
+  ON
+  "MIR_BUILD_UNIT_TESTS"
+  OFF)
+
 add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(compositor/)
@@ -142,10 +149,11 @@ target_link_libraries(
   ${XKBCOMMON_LIBRARIES}
 )
 
-if ((MIR_BUILD_PLATFORM_MESA_KMS) OR (MIR_BUILD_PLATFORM_MESA_X11))
+if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
 target_link_libraries(mir_unit_tests
+  mirsharedmesaservercommon-static
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
-  mirsharedmesaservercommon-static)
+)
 endif()
 
 if (MIR_BUILD_PLATFORM_MESA_KMS)
@@ -161,13 +169,6 @@ target_link_libraries(mir_unit_tests
   ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
 )
 endif()
-
-CMAKE_DEPENDENT_OPTION(
-  MIR_RUN_UNIT_TESTS
-  "Run unit tests as part of default testing"
-  ON
-  "MIR_BUILD_UNIT_TESTS"
-  OFF)
 
 if (MIR_RUN_UNIT_TESTS)
   mir_discover_tests_with_fd_leak_detection(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0 G_SLICE=always-malloc G_DEBUG=gc-friendly)
