@@ -149,14 +149,14 @@ target_link_libraries(
   ${XKBCOMMON_LIBRARIES}
 )
 
-if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
+if(MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
 target_link_libraries(mir_unit_tests
   mirsharedmesaservercommon-static
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
 )
 endif()
 
-if (MIR_BUILD_PLATFORM_MESA_KMS)
+if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
 target_link_libraries(mir_unit_tests
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )

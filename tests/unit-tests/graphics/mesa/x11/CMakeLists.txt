@@ -17,36 +17,11 @@ add_dependencies(mir_unit_tests_mesa-x11 GMock)
 target_link_libraries(
   mir_unit_tests_mesa-x11
 
-  mirdraw
-  demo-shell
-  mircommon
-
-  mirclient-static
-  mirclientrpc-static
-  mirclientlttng-static
-
   mir-test-static
   mir-test-framework-static
   mir-test-doubles-static
   mir-test-doubles-platform-static
   mirsharedmesaservercommon-static
-
-  xcursorloader-static
-
-  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
-  ${PROTOBUF_LITE_LIBRARIES}
-  ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
-  ${Boost_LIBRARIES}
-  ${UMOCKDEV_LIBRARIES}
-  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
-  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${MIR_PLATFORM_REFERENCES}
-  ${MIR_COMMON_REFERENCES}
-  ${MIR_SERVER_REFERENCES}
-  ${XKBCOMMON_LIBRARIES}
 )
 
 if (MIR_RUN_UNIT_TESTS)
