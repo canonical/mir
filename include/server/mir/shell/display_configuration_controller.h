@@ -34,7 +34,11 @@ namespace shell
 class DisplayConfigurationController
 {
 public:
+    DisplayConfigurationController() = default;
     virtual ~DisplayConfigurationController() = default;
+
+    DisplayConfigurationController(DisplayConfigurationController const&) = delete;
+    DisplayConfigurationController& operator=(DisplayConfigurationController const&) = delete;
 
     /**
      * Set the base display configuration.
