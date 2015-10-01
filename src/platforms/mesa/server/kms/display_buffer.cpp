@@ -198,9 +198,6 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
         auto bypass_it = std::find_if(renderable_list.rbegin(), renderable_list.rend(), bypass_match);
         if (bypass_it != renderable_list.rend())
         {
-            bypass_buf = nullptr;
-            bypass_bufobj = nullptr;
-
             auto bypass_buffer = (*bypass_it)->buffer();
             auto native = bypass_buffer->native_buffer_handle();
             if (native->flags & mir_buffer_flag_can_scanout &&
@@ -218,6 +215,8 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
         }
     }
 
+    bypass_buf = nullptr;
+    bypass_bufobj = nullptr;
     return false;
 }
 
