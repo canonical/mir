@@ -43,20 +43,29 @@ namespace mc = mir::compositor;
 namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
 
-mrg::RenderingTarget::RenderingTarget(mg::DisplayBuffer* buffer)
-    : buffer{buffer}
+mrg::CurrentRenderTarget::CurrentRenderTarget(mg::DisplayBuffer* display_buffer)
+    : render_target{
+        dynamic_cast<renderer::gl::RenderTarget*>(display_buffer->native_display_buffer())}
 {
+    if (!render_target)
+        BOOST_THROW_EXCEPTION(std::logic_error("DisplayBuffer does not support GL rendering"));
+
     ensure_current();
 }
 
-mrg::RenderingTarget::~RenderingTarget()
+mrg::CurrentRenderTarget::~CurrentRenderTarget()
 {
-    buffer->release_current();
+    render_target->release_current();
 }
 
-void mrg::RenderingTarget::ensure_current()
+void mrg::CurrentRenderTarget::ensure_current()
 {
-    buffer->make_current();
+    render_target->make_current();
+}
+
+void mrg::CurrentRenderTarget::swap_buffers()
+{
+    render_target->swap_buffers();
 }
 
 const GLchar* const mrg::Renderer::vshader =
@@ -112,8 +121,7 @@ mrg::Renderer::Program::Program(GLuint program_id)
 }
 
 mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
-    : rendering_target(&display_buffer),
-      display_buffer(display_buffer),
+    : render_target(&display_buffer),
       clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
@@ -183,7 +191,7 @@ void mrg::Renderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
 
 void mrg::Renderer::render(mg::RenderableList const& renderables) const
 {
-    rendering_target.ensure_current();
+    render_target.ensure_current();
 
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -195,7 +203,7 @@ void mrg::Renderer::render(mg::RenderableList const& renderables) const
 
     texture_cache->drop_unused();
 
-    display_buffer.gl_swap_buffers();
+    render_target.swap_buffers();
 }
 
 void mrg::Renderer::draw(mg::Renderable const& renderable,
