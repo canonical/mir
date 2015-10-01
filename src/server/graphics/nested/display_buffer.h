@@ -40,7 +40,8 @@ class HostSurface;
 namespace detail
 {
 
-class DisplayBuffer : public graphics::DisplayBuffer
+class DisplayBuffer : public graphics::DisplayBuffer,
+                      public graphics::NativeDisplayBuffer
 {
 public:
     DisplayBuffer(
@@ -60,6 +61,8 @@ public:
     MirOrientation orientation() const override;
 
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
+
+    NativeDisplayBuffer* native_display_buffer() override;
 
     DisplayBuffer(DisplayBuffer const&) = delete;
     DisplayBuffer operator=(DisplayBuffer const&) = delete;

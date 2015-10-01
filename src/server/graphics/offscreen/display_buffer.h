@@ -56,7 +56,8 @@ private:
 
 }
 
-class DisplayBuffer : public graphics::DisplayBuffer
+class DisplayBuffer : public graphics::DisplayBuffer,
+                      public graphics::NativeDisplayBuffer
 {
 public:
     DisplayBuffer(SurfacelessEGLContext egl_context,
@@ -70,6 +71,8 @@ public:
     MirOrientation orientation() const override;
 
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override; 
+
+    NativeDisplayBuffer* native_display_buffer() override;
 
 private:
     SurfacelessEGLContext const egl_context;

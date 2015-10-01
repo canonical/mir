@@ -39,7 +39,8 @@ class DisplayDevice;
 class FramebufferBundle;
 class LayerList;
 
-class DisplayBuffer : public ConfigurableDisplayBuffer
+class DisplayBuffer : public ConfigurableDisplayBuffer,
+                      public NativeDisplayBuffer
 {
 public:
     //TODO: could probably just take the HalComponentFactory to reduce the
@@ -63,6 +64,8 @@ public:
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 
     MirOrientation orientation() const override;
+    NativeDisplayBuffer* native_display_buffer() override;
+
     void configure(MirPowerMode power_mode, MirOrientation orientation, geometry::Displacement) override;
     DisplayContents contents() override;
     MirPowerMode power_mode() const override;
