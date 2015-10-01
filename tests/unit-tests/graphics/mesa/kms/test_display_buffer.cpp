@@ -326,7 +326,7 @@ TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
 
 TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_cannot_bypass)
 {
-    graphics::RenderableList list{fake_software_renderable};
+    graphics::RenderableList const list{fake_software_renderable};
 
     // Passes the bypass candidate test:
     EXPECT_EQ(fake_software_renderable->buffer()->size(), display_area.size);
@@ -346,15 +346,10 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_cannot_bypass)
 
 TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
 {   // Also checks it doesn't crash (LP: #1493721)
-    graphics::RenderableList list{fake_software_renderable};
+    graphics::RenderableList const list{fake_software_renderable};
 
     // Passes the bypass candidate test:
     EXPECT_EQ(fake_software_renderable->buffer()->size(), display_area.size);
-
-    // If you find yourself using gbm_ functions on a Shm buffer then you're
-    // asking for a crash (LP: #1493721) ...
-    EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(fake_bo))
-        .Times(0);
 
     graphics::mesa::DisplayBuffer db(
         create_platform(),
@@ -366,7 +361,11 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
         gl_config,
         mock_egl.fake_egl_context);
 
+    // If you find yourself using gbm_ functions on a Shm buffer then you're
+    // asking for a crash (LP: #1493721) ...
+    EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_)).Times(0);
     db.post_renderables_if_optimizable(list);
+    Mock::VerifyAndClearExpectations(&mock_gbm);
 }
 
 TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
@@ -400,6 +399,8 @@ TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
         mir_orientation_normal,
         gl_config,
         mock_egl.fake_egl_context);
+
+    Mock::VerifyAndClearExpectations(&mock_gbm);
 }
 
 TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
@@ -418,6 +419,8 @@ TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
         mir_orientation_left,
         gl_config,
         mock_egl.fake_egl_context);
+
+    Mock::VerifyAndClearExpectations(&mock_gbm);
 }
 
 TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
@@ -436,6 +439,8 @@ TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
         mir_orientation_inverted,
         gl_config,
         mock_egl.fake_egl_context);
+
+    Mock::VerifyAndClearExpectations(&mock_gbm);
 }
 
 TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
@@ -454,6 +459,8 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
         mir_orientation_right,
         gl_config,
         mock_egl.fake_egl_context);
+
+    Mock::VerifyAndClearExpectations(&mock_gbm);
 }
 
 TEST_F(MesaDisplayBufferTest, clone_mode_first_flip_flips_but_no_wait)
