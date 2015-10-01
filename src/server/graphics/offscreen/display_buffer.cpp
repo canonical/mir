@@ -157,3 +157,8 @@ MirOrientation mgo::DisplayBuffer::orientation() const
      */
     return mir_orientation_normal;
 }
+
+mg::NativeDisplayBuffer* mgo::DisplayBuffer::native_display_buffer()
+{
+    return this;
+}

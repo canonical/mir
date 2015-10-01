@@ -137,3 +137,8 @@ void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
         dispatcher->dispatch(event);
     }
 }
+
+mg::NativeDisplayBuffer* mgn::detail::DisplayBuffer::native_display_buffer()
+{
+    return this;
+}

@@ -32,7 +32,8 @@ namespace graphics
 namespace X
 {
 
-class DisplayBuffer : public graphics::DisplayBuffer
+class DisplayBuffer : public graphics::DisplayBuffer,
+                      public graphics::NativeDisplayBuffer
 {
 public:
     DisplayBuffer(
@@ -50,6 +51,7 @@ public:
     void set_orientation(MirOrientation const new_orientation);
 
     MirOrientation orientation() const override;
+    NativeDisplayBuffer* native_display_buffer() override;
 
 private:
     geometry::Size const size;

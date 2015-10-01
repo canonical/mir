@@ -128,3 +128,8 @@ MirPowerMode mga::DisplayBuffer::power_mode() const
 {
     return power_mode_;
 }
+
+mg::NativeDisplayBuffer* mga::DisplayBuffer::native_display_buffer()
+{
+    return this;
+}
