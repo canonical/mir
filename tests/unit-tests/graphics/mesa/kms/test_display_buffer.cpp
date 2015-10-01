@@ -353,7 +353,7 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
 
     // If you find yourself using gbm_ functions on a Shm buffer then you're
     // asking for a crash (LP: #1493721) ...
-    EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
+    EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(fake_bo))
         .Times(0);
 
     graphics::mesa::DisplayBuffer db(
