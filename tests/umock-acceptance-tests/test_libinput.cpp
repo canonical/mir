@@ -60,13 +60,14 @@ TEST(LibInput, DISABLED_probes_as_unsupported_without_device_access)
 {
     NiceMock<MockOption> options;
 
-    // dumb assumption - nobody runs these test cases as root.. otherwise they will fail..
+    // dumb assumption - nobody runs this test cases as root..
+    // or allows accessing evdev input devices from non privileged users.
     auto library = get_libinput_platform();
     auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
     EXPECT_THAT(probe_fun(options), Eq(mir::input::PlatformPriority::unsupported));
 }
 
-TEST(LibInput, probes_as_supported_with_atleast_one_device_to_deal_with)
+TEST(LibInput, probes_as_supported_with_at_least_one_device_to_deal_with)
 {
     mtf::UdevEnvironment env;
     env.add_standard_device("laptop-keyboard");
