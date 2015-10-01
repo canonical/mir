@@ -25,6 +25,7 @@
 #include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test_framework/any_surface.h"
+#include "mir/test/signal.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -251,4 +252,68 @@ TEST_F(ClientSurfaceEvents, client_can_query_preferred_orientation)
         mir_wait_for(mir_surface_set_preferred_orientation(surface, mode));
         EXPECT_THAT(mir_surface_get_preferred_orientation(surface), Eq(mode));
     }
+}
+
+namespace
+{
+class WrapShellGeneratingCloseEvent : public mir::shell::ShellWrapper
+{
+    using mir::shell::ShellWrapper::ShellWrapper;
+
+    mir::frontend::SurfaceId create_surface(
+        std::shared_ptr <mir::scene::Session> const& session,
+        mir::scene::SurfaceCreationParameters const& params,
+        std::shared_ptr<mir::frontend::EventSink> const& sink) override
+    {
+        auto const surface = mir::shell::ShellWrapper::create_surface(session, params, sink);
+        session->surface(surface)->request_client_surface_close();
+        return surface;
+    }
+};
+
+class ClientSurfaceStartupEvents : public mtf::ConnectedClientHeadlessServer
+{
+    void SetUp() override
+    {
+        server.wrap_shell([&](std::shared_ptr<msh::Shell> const& wrapped)
+            -> std::shared_ptr<msh::Shell>
+            {
+                return std::make_shared<WrapShellGeneratingCloseEvent>(wrapped);
+            });
+
+        mtf::ConnectedClientHeadlessServer::SetUp();
+    }
+};
+
+void raise_signal_on_close_event(MirSurface*, MirEvent const* ev, void* ctx)
+{
+    if (mir_event_get_type(ev) == mir_event_type_close_surface)
+    {
+        auto signal = reinterpret_cast<mt::Signal*>(ctx);
+        signal->raise();
+    }
+}
+}
+
+TEST_F(ClientSurfaceStartupEvents, receives_event_sent_during_surface_construction)
+{
+    mt::Signal done;
+
+    auto spec = mir_connection_create_spec_for_normal_surface(connection, 100, 100, mir_pixel_format_abgr_8888);
+    mir_surface_spec_set_event_handler(spec, &raise_signal_on_close_event, &done);
+
+    auto surface = mir_surface_create_sync(spec);
+
+    mir_surface_spec_release(spec);
+
+    /* This expectation will fail if the event generated during surface creation is
+     * sent before the create_surface reply.
+     *
+     * In that case, libmirclient first receives a close_surface event for a surface
+     * it doesn't know about, throws it away, and then receives the SurfaceID of the
+     * surface it just created.
+     */
+    EXPECT_TRUE(done.wait_for(std::chrono::seconds{10}));
+
+    mir_surface_release_sync(surface);
 }
