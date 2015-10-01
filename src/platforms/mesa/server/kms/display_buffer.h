@@ -43,7 +43,8 @@ class BufferObject;
 class KMSOutput;
 
 class DisplayBuffer : public graphics::DisplayBuffer,
-                      public graphics::DisplaySyncGroup
+                      public graphics::DisplaySyncGroup,
+                      public graphics::NativeDisplayBuffer
 {
 public:
     DisplayBuffer(std::shared_ptr<Platform> const& platform,
@@ -68,6 +69,8 @@ public:
     std::chrono::milliseconds recommended_sleep() const override;
 
     MirOrientation orientation() const override;
+    NativeDisplayBuffer* native_display_buffer() override;
+
     void set_orientation(MirOrientation const rot, geometry::Rectangle const& a);
     void schedule_set_crtc();
     void wait_for_page_flip();

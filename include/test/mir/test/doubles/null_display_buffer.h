@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-class NullDisplayBuffer : public graphics::DisplayBuffer
+class NullDisplayBuffer : public graphics::DisplayBuffer, graphics::NativeDisplayBuffer
 {
 public:
     geometry::Rectangle view_area() const override { return geometry::Rectangle(); }
@@ -37,6 +37,7 @@ public:
     void gl_swap_buffers() override {}
     bool post_renderables_if_optimizable(graphics::RenderableList const&) override { return false; }
     MirOrientation orientation() const override { return mir_orientation_normal; }
+    NativeDisplayBuffer* native_display_buffer() override { return this; }
 };
 
 }

@@ -76,3 +76,8 @@ void mgx::DisplayBuffer::set_orientation(MirOrientation const new_orientation)
 {
     orientation_ = new_orientation;
 }
+
+mg::NativeDisplayBuffer* mgx::DisplayBuffer::native_display_buffer()
+{
+    return this;
+}
