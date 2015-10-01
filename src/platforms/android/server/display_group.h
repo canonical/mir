@@ -40,7 +40,11 @@ class DisplayGroup : public graphics::DisplaySyncGroup
 public:
     DisplayGroup(
         std::shared_ptr<DisplayDevice> const& device,
-        std::unique_ptr<ConfigurableDisplayBuffer> primary_buffer);
+        std::unique_ptr<ConfigurableDisplayBuffer> primary_buffer,
+        std::function<void()> external_display_error_handler);
+    DisplayGroup(
+           std::shared_ptr<DisplayDevice> const& device,
+           std::unique_ptr<ConfigurableDisplayBuffer> primary_buffer);
 
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override;
     void post() override;
@@ -55,6 +59,7 @@ private:
     std::mutex mutable guard;
     std::shared_ptr<DisplayDevice> const device;
     std::map<DisplayName, std::unique_ptr<ConfigurableDisplayBuffer>> dbs;
+    std::function<void()> external_display_error_handler;
 };
 
 }
