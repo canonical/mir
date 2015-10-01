@@ -218,21 +218,6 @@ void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) cons
 void mga::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
-    update_configuration(lock);
-    if ((config.external().connected) && !displays.display_present(mga::DisplayName::external))
-        displays.add(mga::DisplayName::external,
-            create_display_buffer(
-                display_device,
-                mga::DisplayName::external,
-                *display_buffer_builder,
-                config.external(),
-                gl_program_factory,
-                gl_context,
-                config.external().top_left - origin,
-                overlay_option));
-    if ((!config.external().connected) && displays.display_present(mga::DisplayName::external))
-        displays.remove(mga::DisplayName::external);
-
     f(displays);
 }
 
@@ -250,6 +235,20 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid or inconsistent display configuration"));
 
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+
+    if ((config.external().connected) && !displays.display_present(mga::DisplayName::external))
+        displays.add(mga::DisplayName::external,
+            create_display_buffer(
+                display_device,
+                mga::DisplayName::external,
+                *display_buffer_builder,
+                config.external(),
+                gl_program_factory,
+                gl_context,
+                config.external().top_left - origin,
+                overlay_option));
+    if ((!config.external().connected) && displays.display_present(mga::DisplayName::external))
+        displays.remove(mga::DisplayName::external);
 
     new_configuration.for_each_output([this](mg::DisplayConfigurationOutput const& output)
     {
