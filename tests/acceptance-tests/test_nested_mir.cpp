@@ -482,11 +482,10 @@ TEST_F(NestedServer, display_configuration_changes_are_visible_to_client_when_it
     mir_connection_release(connection);
 }
 
-TEST_F(NestedServer, cursor_image_changes_are_forwarded_to_host)
+TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
 {
     int const frames = 10;
     NestedMirRunner nested_mir{new_connection()};
-    ignore_rebuild_of_egl_context();
 
     auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
     auto const surface = make_and_paint_surface(connection);
@@ -530,6 +529,56 @@ TEST_F(NestedServer, cursor_image_changes_are_forwarded_to_host)
     }
 
     mir_buffer_stream_release_sync(stream);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
+{
+    NestedMirRunner nested_mir{new_connection()};
+
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto const surface = make_and_paint_surface(connection);
+    auto const mock_cursor = the_mock_cursor();
+
+    auto const spec = mir_connection_create_spec_for_changes(connection);
+    mir_surface_spec_set_fullscreen_on_output(spec, 1);
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
+
+    nested_mir.server.the_cursor()->move_to({489, 9});
+    server.the_cursor_listener()->cursor_moved_to(489, 9);
+    
+    for (auto const name : {
+        mir_disabled_cursor_name,
+        mir_arrow_cursor_name,
+        mir_busy_cursor_name,
+        mir_caret_cursor_name,
+        mir_pointing_hand_cursor_name,
+        mir_open_hand_cursor_name,
+        mir_closed_hand_cursor_name,
+        mir_horizontal_resize_cursor_name,
+        mir_vertical_resize_cursor_name,
+        mir_diagonal_resize_bottom_to_top_cursor_name,
+        mir_diagonal_resize_top_to_bottom_cursor_name,
+        mir_omnidirectional_resize_cursor_name,
+        mir_vsplit_resize_cursor_name,
+        mir_hsplit_resize_cursor_name,
+        mir_crosshair_cursor_name,
+        mir_default_cursor_name})
+    {
+        mt::WaitCondition condition;
+        EXPECT_CALL(*mock_cursor, show(_)).Times(1)
+            .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+
+        auto const conf = mir_cursor_configuration_from_name(name);
+        mir_wait_for(mir_surface_configure_cursor(surface, conf));
+        mir_cursor_configuration_destroy(conf);
+
+        condition.wait_for_at_most_seconds(1);
+        Mock::VerifyAndClearExpectations(mock_cursor.get());
+    }
+
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }
