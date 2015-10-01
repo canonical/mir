@@ -148,8 +148,6 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
     void SetUp() override
     {
-        add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", nullptr);
-
         initial_display_layout(display_geometry);
         server.override_the_session_mediator_report([this]
             {
