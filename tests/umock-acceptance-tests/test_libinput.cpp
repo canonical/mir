@@ -56,7 +56,7 @@ char const host_socket_opt[] = "host-socket";
 
 }
 
-TEST(LibInput, probes_as_unsupported_without_device_access)
+TEST(LibInput, DISABLED_probes_as_unsupported_without_device_access)
 {
     NiceMock<MockOption> options;
 
