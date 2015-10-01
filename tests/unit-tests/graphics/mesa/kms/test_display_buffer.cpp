@@ -50,10 +50,10 @@ public:
 
     MesaDisplayBufferTest()
         : mock_bypassable_buffer{std::make_shared<NiceMock<MockBuffer>>()}
-        , mock_nonbypassable_buffer{std::make_shared<NiceMock<MockBuffer>>()}
+        , mock_software_buffer{std::make_shared<NiceMock<MockBuffer>>()}
         , fake_bypassable_renderable{
              std::make_shared<FakeRenderable>(display_area)}
-        , fake_nonbypassable_renderable{
+        , fake_software_renderable{
              std::make_shared<FakeRenderable>(display_area)}
         , stub_gbm_native_buffer{
              std::make_shared<StubGBMNativeBuffer>(display_area.size)}
@@ -97,11 +97,11 @@ public:
         memset(stub_shm_native_buffer.get(), 0, sizeof(MirNativeBuffer));
         stub_shm_native_buffer->flags = 0;  // Is not a hardware/GBM buffer
 
-        ON_CALL(*mock_nonbypassable_buffer, size())
+        ON_CALL(*mock_software_buffer, size())
             .WillByDefault(Return(display_area.size));
-        ON_CALL(*mock_nonbypassable_buffer, native_buffer_handle())
+        ON_CALL(*mock_software_buffer, native_buffer_handle())
             .WillByDefault(Return(stub_shm_native_buffer));
-        fake_nonbypassable_renderable->set_buffer(mock_nonbypassable_buffer);
+        fake_software_renderable->set_buffer(mock_software_buffer);
     }
 
     // The platform has an implicit dependency on mock_gbm etc so must be
@@ -120,9 +120,9 @@ protected:
     NiceMock<MockGL>  mock_gl;
     NiceMock<MockDRM> mock_drm; 
     std::shared_ptr<MockBuffer> mock_bypassable_buffer;
-    std::shared_ptr<MockBuffer> mock_nonbypassable_buffer;
+    std::shared_ptr<MockBuffer> mock_software_buffer;
     std::shared_ptr<FakeRenderable> fake_bypassable_renderable;
-    std::shared_ptr<FakeRenderable> fake_nonbypassable_renderable;
+    std::shared_ptr<FakeRenderable> fake_software_renderable;
     std::shared_ptr<mesa::GBMNativeBuffer> stub_gbm_native_buffer;
     std::shared_ptr<MirNativeBuffer> stub_shm_native_buffer;
     gbm_bo*           fake_bo;
@@ -131,7 +131,6 @@ protected:
     std::shared_ptr<MockKMSOutput> mock_kms_output;
     StubGLConfig gl_config;
     mir::graphics::RenderableList const bypassable_list;
-
 };
 
 TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
@@ -323,6 +322,51 @@ TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
         mock_egl.fake_egl_context);
 
     EXPECT_FALSE(db.post_renderables_if_optimizable(bypassable_list));
+}
+
+TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_cannot_bypass)
+{
+    graphics::RenderableList list{fake_software_renderable};
+
+    // Passes the bypass candidate test:
+    EXPECT_EQ(fake_software_renderable->buffer()->size(), display_area.size);
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    EXPECT_FALSE(db.post_renderables_if_optimizable(list));
+}
+
+TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
+{   // Also checks it doesn't crash (LP: #1493721)
+    graphics::RenderableList list{fake_software_renderable};
+
+    // Passes the bypass candidate test:
+    EXPECT_EQ(fake_software_renderable->buffer()->size(), display_area.size);
+
+    // If you find yourself using gbm_ functions on a Shm buffer then you're
+    // asking for a crash (LP: #1493721) ...
+    EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
+        .Times(0);
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    db.post_renderables_if_optimizable(list);
 }
 
 TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
