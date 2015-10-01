@@ -567,36 +567,46 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
         mir_hsplit_resize_cursor_name,
         mir_crosshair_cursor_name };
 
-    int total_calls_to_cursor_show_image = 0;
-    int double_calls_to_cursor_show_image = 0;
+    // Sometimes the update gives two notifications (one for the image, one for a changed hotspot).
+    // This is due to an optimization to avoid the nested server recreating the cursor bufferstream
+    // which has the effect that we can't push the image frame and the hotspot change together.
+    // This is messy and fragile (as it depends on the order of the cursor_names list).
+    auto const cursors_that_update_hotspot = {
+        mir_busy_cursor_name,
+        mir_caret_cursor_name,
+        mir_default_cursor_name,
+        mir_pointing_hand_cursor_name,
+        mir_closed_hand_cursor_name,
+        mir_horizontal_resize_cursor_name,
+        mir_diagonal_resize_bottom_to_top_cursor_name,
+        mir_diagonal_resize_top_to_bottom_cursor_name,
+        mir_omnidirectional_resize_cursor_name,
+        mir_vsplit_resize_cursor_name };
 
     for (auto const name : cursor_names)
     {
         mt::WaitCondition condition;
 
-        // Sometimes the update gives two notifications (one for the image, one for a changed hotspot).
-        // This is due to an optimization to avoid the nested server recreating the cursor bufferstream
-        // as there is no way to push the image frame and the hotpoint together.
-        bool second_call{false};
-
-        EXPECT_CALL(*mock_cursor, show(_)).Times(AtLeast(1))
-            .WillOnce(InvokeWithoutArgs([&] { ++total_calls_to_cursor_show_image; condition.wake_up_everyone(); }))
-            .WillOnce(InvokeWithoutArgs([&] { ++total_calls_to_cursor_show_image; second_call = true; }))
-            .WillRepeatedly(InvokeWithoutArgs([&] { ++total_calls_to_cursor_show_image; }));
+        if (std::find(begin(cursors_that_update_hotspot), end(cursors_that_update_hotspot), name)
+            == end(cursors_that_update_hotspot))
+        {
+            EXPECT_CALL(*mock_cursor, show(_)).Times(1)
+                .WillOnce(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+        }
+        else
+        {
+            EXPECT_CALL(*mock_cursor, show(_)).Times(2)
+                .WillOnce(InvokeWithoutArgs([]{}))
+                .WillOnce(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+        }
 
         auto const cursor = mir_cursor_configuration_from_name(name);
         mir_wait_for(mir_surface_configure_cursor(surface, cursor));
         mir_cursor_configuration_destroy(cursor);
 
         condition.wait_for_at_most_seconds(1);
-        mt::spin_wait_for_condition_or_timeout([&] { return second_call; }, 10ms);
         Mock::VerifyAndClearExpectations(mock_cursor.get());
-
-        double_calls_to_cursor_show_image += second_call;
     }
-
-    EXPECT_THAT(total_calls_to_cursor_show_image, Le(2*cursor_names.size()));
-    EXPECT_THAT(total_calls_to_cursor_show_image, Eq(cursor_names.size()+double_calls_to_cursor_show_image));
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
