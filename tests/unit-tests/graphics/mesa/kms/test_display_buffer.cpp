@@ -50,10 +50,15 @@ public:
 
     MesaDisplayBufferTest()
         : mock_bypassable_buffer{std::make_shared<NiceMock<MockBuffer>>()}
+        , mock_nonbypassable_buffer{std::make_shared<NiceMock<MockBuffer>>()}
         , fake_bypassable_renderable{
+             std::make_shared<FakeRenderable>(display_area)}
+        , fake_nonbypassable_renderable{
              std::make_shared<FakeRenderable>(display_area)}
         , stub_gbm_native_buffer{
              std::make_shared<StubGBMNativeBuffer>(display_area.size)}
+        , stub_shm_native_buffer{
+             std::make_shared<MirNativeBuffer>()}
         , bypassable_list{fake_bypassable_renderable}
     {
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
@@ -88,6 +93,15 @@ public:
         ON_CALL(*mock_bypassable_buffer, native_buffer_handle())
             .WillByDefault(Return(stub_gbm_native_buffer));
         fake_bypassable_renderable->set_buffer(mock_bypassable_buffer);
+
+        memset(stub_shm_native_buffer.get(), 0, sizeof(MirNativeBuffer));
+        stub_shm_native_buffer->flags = 0;  // Is not a hardware/GBM buffer
+
+        ON_CALL(*mock_nonbypassable_buffer, size())
+            .WillByDefault(Return(display_area.size));
+        ON_CALL(*mock_nonbypassable_buffer, native_buffer_handle())
+            .WillByDefault(Return(stub_shm_native_buffer));
+        fake_nonbypassable_renderable->set_buffer(mock_nonbypassable_buffer);
     }
 
     // The platform has an implicit dependency on mock_gbm etc so must be
@@ -106,8 +120,11 @@ protected:
     NiceMock<MockGL>  mock_gl;
     NiceMock<MockDRM> mock_drm; 
     std::shared_ptr<MockBuffer> mock_bypassable_buffer;
+    std::shared_ptr<MockBuffer> mock_nonbypassable_buffer;
     std::shared_ptr<FakeRenderable> fake_bypassable_renderable;
+    std::shared_ptr<FakeRenderable> fake_nonbypassable_renderable;
     std::shared_ptr<mesa::GBMNativeBuffer> stub_gbm_native_buffer;
+    std::shared_ptr<MirNativeBuffer> stub_shm_native_buffer;
     gbm_bo*           fake_bo;
     gbm_bo_handle     fake_handle;
     UdevEnvironment   fake_devices;
