@@ -20,12 +20,13 @@
 #define MIR_COMPOSITOR_SCREENCAST_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
-#include "mir/renderer/gl/texture_source.h"
+#include "mir/renderer/gl/render_target.h"
 
 #include <GLES2/gl2.h>
 
 namespace mir
 {
+namespace renderer { namespace gl { class TextureSource; }}
 namespace compositor
 {
 namespace detail
@@ -46,7 +47,9 @@ private:
 };
 }
 
-class ScreencastDisplayBuffer : public graphics::DisplayBuffer
+class ScreencastDisplayBuffer : public graphics::DisplayBuffer,
+                                public graphics::NativeDisplayBuffer,
+                                public renderer::gl::RenderTarget
 {
 public:
     ScreencastDisplayBuffer(
@@ -62,9 +65,11 @@ public:
 
     bool post_renderables_if_optimizable(graphics::RenderableList const&) override;
 
-    void gl_swap_buffers() override;
+    void swap_buffers() override;
 
     MirOrientation orientation() const override;
+
+    NativeDisplayBuffer* native_display_buffer() override;
 
 private:
     geometry::Rectangle const rect;

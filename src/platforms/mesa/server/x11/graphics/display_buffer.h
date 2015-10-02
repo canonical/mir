@@ -21,6 +21,7 @@
 #define MIR_GRAPHICS_X_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
+#include "mir/renderer/gl/render_target.h"
 #include "gl_context.h"
 
 #include <EGL/egl.h>
@@ -32,7 +33,9 @@ namespace graphics
 namespace X
 {
 
-class DisplayBuffer : public graphics::DisplayBuffer
+class DisplayBuffer : public graphics::DisplayBuffer,
+                      public graphics::NativeDisplayBuffer,
+                      public renderer::gl::RenderTarget
 {
 public:
     DisplayBuffer(
@@ -45,11 +48,12 @@ public:
     geometry::Rectangle view_area() const override;
     void make_current() override;
     void release_current() override;
-    void gl_swap_buffers() override;
+    void swap_buffers() override;
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
     void set_orientation(MirOrientation const new_orientation);
 
     MirOrientation orientation() const override;
+    NativeDisplayBuffer* native_display_buffer() override;
 
 private:
     geometry::Size const size;

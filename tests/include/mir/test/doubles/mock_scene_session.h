@@ -35,7 +35,10 @@ namespace doubles
 
 struct MockSceneSession : public scene::Session
 {
-    MOCK_METHOD1(create_surface, frontend::SurfaceId(scene::SurfaceCreationParameters const&));
+    MOCK_METHOD2(create_surface,
+        frontend::SurfaceId(
+            scene::SurfaceCreationParameters const&,
+            std::shared_ptr<frontend::EventSink> const&));
     MOCK_METHOD1(destroy_surface, void(frontend::SurfaceId));
     MOCK_CONST_METHOD1(get_surface, std::shared_ptr<frontend::Surface>(frontend::SurfaceId));
     MOCK_CONST_METHOD1(surface, std::shared_ptr<scene::Surface>(frontend::SurfaceId));

@@ -94,7 +94,7 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     return needs_commit;
 }
 
-void mga::DisplayBuffer::gl_swap_buffers()
+void mga::DisplayBuffer::swap_buffers()
 {
     layer_list->update_list({}, offset_from_origin);
 }
@@ -127,4 +127,9 @@ mga::DisplayContents mga::DisplayBuffer::contents()
 MirPowerMode mga::DisplayBuffer::power_mode() const
 {
     return power_mode_;
+}
+
+mg::NativeDisplayBuffer* mga::DisplayBuffer::native_display_buffer()
+{
+    return this;
 }

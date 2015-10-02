@@ -70,7 +70,10 @@ void msh::FrontendShell::stop_prompt_session(std::shared_ptr<mf::PromptSession> 
     wrapped->stop_prompt_session(scene_prompt_session);
 }
 
-mf::SurfaceId msh::FrontendShell::create_surface(std::shared_ptr<mf::Session> const& session, ms::SurfaceCreationParameters const& params)
+mf::SurfaceId msh::FrontendShell::create_surface(
+    std::shared_ptr<mf::Session> const& session,
+    ms::SurfaceCreationParameters const& params,
+    std::shared_ptr<mf::EventSink> const& sink)
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
 
@@ -88,7 +91,7 @@ mf::SurfaceId msh::FrontendShell::create_surface(std::shared_ptr<mf::Session> co
     if (populated_params.parent_id.is_set())
         populated_params.parent = scene_session->surface(populated_params.parent_id.value());
 
-    return wrapped->create_surface(scene_session, populated_params);
+    return wrapped->create_surface(scene_session, populated_params, sink);
 }
 
 void msh::FrontendShell::modify_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface_id, SurfaceSpecification const& modifications)

@@ -56,7 +56,9 @@ public:
 
     ~ApplicationSession();
 
-    frontend::SurfaceId create_surface(SurfaceCreationParameters const& params) override;
+    frontend::SurfaceId create_surface(
+        SurfaceCreationParameters const& params,
+        std::shared_ptr<frontend::EventSink> const& surface_sink) override;
     void destroy_surface(frontend::SurfaceId surface) override;
     std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const override;
     std::shared_ptr<Surface> surface(frontend::SurfaceId surface) const override;

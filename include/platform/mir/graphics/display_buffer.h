@@ -32,27 +32,25 @@ namespace graphics
 
 class Buffer;
 
+class NativeDisplayBuffer
+{
+protected:
+    NativeDisplayBuffer() = default;
+    virtual ~NativeDisplayBuffer() = default;
+    NativeDisplayBuffer(NativeDisplayBuffer const&) = delete;
+    NativeDisplayBuffer operator=(NativeDisplayBuffer const&) = delete;
+};
+
 /**
  * Interface to an output framebuffer.
  */
 class DisplayBuffer
 {
 public:
-    virtual ~DisplayBuffer() {}
+    virtual ~DisplayBuffer() = default;
 
     /** The area the DisplayBuffer occupies in the virtual screen space. */
     virtual geometry::Rectangle view_area() const = 0;
-    /** Makes the DisplayBuffer the current GL rendering target. */
-    virtual void make_current() = 0;
-    /** Releases the current GL rendering target. */
-    virtual void release_current() = 0;
-
-    /**
-     * Swap buffers for OpenGL rendering.
-     * After this method returns is the earliest time that it is safe to
-     * free GL-related resources such as textures and buffers.
-     */
-    virtual void gl_swap_buffers() = 0;
 
     /** This will render renderlist to the screen and post the result to the 
      *  screen if there is a hardware optimization that can be done.
@@ -80,6 +78,14 @@ public:
      *  amount of rotation the renderer must do to make things "look right".
      */
     virtual MirOrientation orientation() const = 0;
+
+    /** Returns a pointer to the native display buffer object backing this
+     *  display buffer.
+     *
+     *  The pointer to the native display buffer remains valid as long as the
+     *  display buffer object is valid.
+     */
+    virtual NativeDisplayBuffer* native_display_buffer() = 0;
 
 protected:
     DisplayBuffer() = default;
