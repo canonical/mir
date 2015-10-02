@@ -133,6 +133,20 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
         streams[stream_id] = buffer_stream;
     }
 
+    auto output_properties = output_cache.properties_for(geometry::Rectangle{
+        surface->top_left(),
+        surface->size()});
+
+    if (output_properties)
+    {
+        event_sink->handle_event(
+            *mev::make_event(
+                id,
+                output_properties->dpi,
+                output_properties->scale,
+                output_properties->form_factor));
+    }
+
     session_listener->surface_created(*this, surface);
     return id;
 }

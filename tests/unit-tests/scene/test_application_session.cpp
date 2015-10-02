@@ -52,7 +52,10 @@ namespace
 {
 static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 {
-    return std::make_shared<testing::NiceMock<mtd::MockSurface> >();
+    using namespace testing;
+    auto surface = std::make_shared<NiceMock<mtd::MockSurface>>();
+    ON_CALL(*surface, size()).WillByDefault(Return(geom::Size { 100, 100 }));
+    return surface;
 }
 
 struct MockBufferStreamFactory : public ms::BufferStreamFactory
@@ -629,7 +632,7 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
     EXPECT_CALL(mock_surface_factory, create_surface(Eq(session->get_buffer_stream(id)),_))
         .WillOnce(Invoke([&](auto bs, auto)
     {
-        auto surface = std::make_shared<NiceMock<mtd::MockSurface>>();
+        auto surface = make_mock_surface();
         ON_CALL(*surface, primary_buffer_stream())
             .WillByDefault(Return(bs));
         return surface;
@@ -725,10 +728,14 @@ public:
 class ObserverPreservingSurfaceFactory : public ms::SurfaceFactory
 {
 public:
-    std::shared_ptr<ms::Surface> create_surface(std::shared_ptr<mir::compositor::BufferStream> const&,
-                                                mir::scene::SurfaceCreationParameters const&) override
+    std::shared_ptr<ms::Surface> create_surface(
+        std::shared_ptr<mir::compositor::BufferStream> const&,
+        mir::scene::SurfaceCreationParameters const& params) override
     {
-        return std::make_shared<testing::NiceMock<ObserverPreservingSurface>>();
+        using namespace testing;
+        auto mock = std::make_shared<NiceMock<ObserverPreservingSurface>>();
+        ON_CALL(*mock, size()).WillByDefault(Return(params.size));
+        return mock;
     };
 };
 
