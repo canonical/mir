@@ -326,17 +326,41 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
     std::lock_guard<std::mutex> lock{surfaces_and_streams_mutex};
     for (auto& surface : surfaces)
     {
+        bool changed{false};
+        int dpi;
+        float scale;
+        MirFormFactor form_factor;
+
         for (auto const& output : outputs)
         {
-            if (output.position.contains(surface.second->top_left()))
+            if (output.position.overlaps(
+                    geometry::Rectangle{
+                        surface.second->top_left(),
+                        surface.second->size()}))
             {
-                event_sink->handle_event(
-                    *mev::make_event(
-                        surface.first,
-                        output.dpi,
-                        output.scale,
-                        output.form_factor));
+                if (!changed)
+                {
+                    changed = true;
+                    scale = output.scale;
+                    dpi = output.dpi;
+                    form_factor = output.form_factor;
+                }
+                else if (scale < output.scale)
+                {
+                    scale = output.scale;
+                    dpi = output.dpi;
+                    form_factor = output.form_factor;
+                }
             }
+        }
+        if (changed)
+        {
+            event_sink->handle_event(
+                *mev::make_event(
+                    surface.first,
+                    dpi,
+                    scale,
+                    form_factor));
         }
     }
 }
