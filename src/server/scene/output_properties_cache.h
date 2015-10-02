@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <memory>
+#include <atomic>
 
 namespace mir
 {
@@ -51,6 +52,7 @@ public:
     std::shared_ptr<OutputProperties const> properties_for(geometry::Rectangle const& extents) const;
 
 private:
+//    std::atomic<std::shared_ptr<std::vector<OutputProperties>>> cache;
     std::shared_ptr<std::vector<OutputProperties>> cache;
 };
 

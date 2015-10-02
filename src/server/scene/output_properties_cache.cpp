@@ -58,13 +58,15 @@ void ms::OutputPropertiesCache::update_from(mg::DisplayConfiguration const &conf
                 output.form_factor});
         });
 
-    std::atomic_store(&cache, new_properties);
+    cache = new_properties;
+//    std::atomic_store(&cache, new_properties);
 }
 
 std::shared_ptr<ms::OutputPropertiesCache::OutputProperties const>
 ms::OutputPropertiesCache::properties_for(geom::Rectangle const& extents) const
 {
-    auto temp_properties = std::atomic_load(&cache);
+    auto temp_properties = cache;
+//    auto temp_properties = std::atomic_load(&cache);
 
     std::shared_ptr<OutputProperties const> matching_output_properties{};
     if (temp_properties)

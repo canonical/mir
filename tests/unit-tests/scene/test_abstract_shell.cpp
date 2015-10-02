@@ -107,6 +107,7 @@ struct AbstractShell : Test
     NiceMock<MockSessionEventSink> session_event_sink;
     NiceMock<mtd::MockSessionListener> session_listener;
     NiceMock<MockSurfaceFactory> surface_factory;
+    mtd::StubDisplayConfig display_config;
 
     NiceMock<MockSessionManager> session_manager{
         mt::fake_shared(surface_coordinator),
@@ -116,7 +117,7 @@ struct AbstractShell : Test
         std::make_shared<mtd::NullSnapshotStrategy>(),
         mt::fake_shared(session_event_sink),
         mt::fake_shared(session_listener),
-        [conf = mtd::StubDisplayConfig{}]() -> std::shared_ptr<mg::DisplayConfiguration const> { return mt::fake_shared(conf); },
+        [this] { return mt::fake_shared(display_config); },
         std::make_shared<mtd::NullANRDetector>()};
 
     mtd::StubInputTargeter input_targeter;
