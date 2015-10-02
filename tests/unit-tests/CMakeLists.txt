@@ -142,14 +142,7 @@ target_link_libraries(
 
 if ((MIR_BUILD_PLATFORM_MESA_KMS) OR (MIR_BUILD_PLATFORM_MESA_X11))
 target_link_libraries(mir_unit_tests
-  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
   mirsharedmesaservercommon-static)
-endif()
-
-if (MIR_BUILD_PLATFORM_MESA_KMS)
-target_link_libraries(mir_unit_tests
-  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
-)
 endif()
 
 if (MIR_BUILD_PLATFORM_ANDROID)
