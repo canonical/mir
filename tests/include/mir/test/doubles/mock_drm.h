@@ -119,6 +119,11 @@ public:
                                                   uint32_t flags, void *user_data));
     MOCK_METHOD2(drmHandleEvent, int(int fd, drmEventContextPtr evctx));
 
+    MOCK_METHOD3(drmGetCap, int(int fd, uint64_t capability, uint64_t *value));
+    MOCK_METHOD2(drmModeGetProperty, drmModePropertyPtr(int fd, uint32_t propertyId));
+    MOCK_METHOD1(drmModeFreeProperty, void(drmModePropertyPtr));
+    MOCK_METHOD4(drmModeConnectorSetProperty, int(int fd, uint32_t connector_id, uint32_t property_id, uint64_t value));
+
     MOCK_METHOD2(drmGetMagic, int(int fd, drm_magic_t *magic));
     MOCK_METHOD2(drmAuthMagic, int(int fd, drm_magic_t magic));
 
