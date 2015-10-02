@@ -98,6 +98,11 @@ MATCHER_P(HasParent, parent, "")
     return arg.parent.lock() == parent;
 }
 
+MATCHER(IsSurfaceOutputEvent, "")
+{
+    return mir_event_get_type(&arg) == mir_event_type_surface_output;
+}
+
 struct StubSurfaceCoordinator : public ms::SurfaceCoordinator
 {
     void raise(std::weak_ptr<ms::Surface> const&) override
@@ -642,7 +647,7 @@ struct ApplicationSessionSender : public ApplicationSession
     {
     }
 
-    mtd::MockEventSink sender;
+    testing::NiceMock<mtd::MockEventSink> sender;
     ms::ApplicationSession app_session;
 };
 }
@@ -682,4 +687,57 @@ TEST_F(ApplicationSessionSender, stop_prompt_session)
 
     EXPECT_CALL(sender, handle_event(EqPromptSessionEventState(mir_prompt_session_state_stopped))).Times(1);
     app_session.stop_prompt_session();
+}
+
+namespace
+{
+int calculate_dpi(geom::Size const& resolution, geom::Size const& size)
+{
+    float constexpr mm_per_inch = 25.4f;
+
+    auto diagonal_mm = sqrt(size.height.as_int()*size.height.as_int()
+                            + size.width.as_int()*size.width.as_int());
+    auto diagonal_px = sqrt(resolution.height.as_int() * resolution.height.as_int()
+                            + resolution.width.as_int() * resolution.width.as_int());
+
+    return diagonal_px / diagonal_mm * mm_per_inch;
+}
+}
+
+TEST_F(ApplicationSessionSender, sends_surface_output_events_to_surfaces)
+{
+    using namespace ::testing;
+
+    MirFormFactor constexpr form_factor = mir_form_factor_projector;
+    float constexpr scale = 2.5f;
+    auto const dpi = calculate_dpi({1280, 1024}, {400, 300});
+
+    MirEvent event;
+    bool event_received{false};
+
+    EXPECT_CALL(sender, handle_event(IsSurfaceOutputEvent()))
+        .WillOnce(Invoke([&event, &event_received](auto ev)
+                         {
+                             event = ev;
+                             event_received = true;
+                         }));
+
+    ms::SurfaceCreationParameters params;
+    auto surf_id = app_session.create_surface(params, nullptr);
+    auto surface = app_session.get_surface(surf_id);
+
+    std::vector<mg::DisplayConfigurationOutput> outputs =
+        {
+            mtd::StubDisplayConfigurationOutput{{1280, 1024}, {400, 300}, mir_pixel_format_abgr_8888, 60.0, true}
+        };
+    outputs[0].scale = scale;
+    outputs[0].form_factor = form_factor;
+    mtd::StubDisplayConfig config(outputs);
+    app_session.send_display_config(config);
+
+    ASSERT_TRUE(event_received);
+    auto surface_output_event = mir_event_get_surface_output_event(&event);
+    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(dpi));
+    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(form_factor));
+    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(scale));
 }

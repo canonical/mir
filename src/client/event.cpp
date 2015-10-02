@@ -151,7 +151,7 @@ MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* 
 {
     expect_event_type(ev, mir_event_type_surface_output);
 
-    return nullptr;
+    return &ev->surface_output;
 }
 
 /* Surface event accessors */
@@ -230,19 +230,22 @@ MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurati
 
 /* Surface output event accessors */
 
-int mir_surface_output_event_get_dpi(MirSurfaceOutputEvent const* /*ev*/)
+int mir_surface_output_event_get_dpi(MirSurfaceOutputEvent const* ev)
 {
-    return 0;
+    expect_event_type(ev, mir_event_type_surface_output);
+    return ev->dpi;
 }
 
-MirFormFactor mir_surface_output_event_get_form_factor(MirSurfaceOutputEvent const* /*ev*/)
+MirFormFactor mir_surface_output_event_get_form_factor(MirSurfaceOutputEvent const* ev)
 {
-    return mir_form_factor_monitor;
+    expect_event_type(ev, mir_event_type_surface_output);
+    return ev->form_factor;
 }
 
-float mir_surface_output_event_get_scale(MirSurfaceOutputEvent const* /*ev*/)
+float mir_surface_output_event_get_scale(MirSurfaceOutputEvent const* ev)
 {
-    return 0;
+    expect_event_type(ev, mir_event_type_surface_output);
+    return ev->scale;
 }
 
 
