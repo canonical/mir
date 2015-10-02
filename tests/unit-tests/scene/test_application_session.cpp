@@ -638,41 +638,15 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
 
 namespace
 {
-class ObserverPreservingSurface : public mtd::MockSurface
-{
-public:
-    void add_observer(std::shared_ptr<mir::scene::SurfaceObserver> const &observer) override
-    {
-        return BasicSurface::add_observer(observer);
-    }
-
-    void remove_observer(std::weak_ptr<mir::scene::SurfaceObserver> const &observer) override
-    {
-        return BasicSurface::remove_observer(observer);
-    }
-};
-
-class ObserverPreservingSurfaceFactory : public ms::SurfaceFactory
-{
-public:
-    std::shared_ptr<ms::Surface> create_surface(std::shared_ptr<mir::compositor::BufferStream> const&,
-        mir::scene::SurfaceCreationParameters const&) override
-    {
-        return std::make_shared<testing::NiceMock<ObserverPreservingSurface>>();
-    };
-};
-
 struct ApplicationSessionSender : public ApplicationSession
 {
     ApplicationSessionSender() :
-        stub_surface_factory{std::make_shared<ObserverPreservingSurfaceFactory>()},
         app_session(
         stub_surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
         pid, name,null_snapshot_strategy, stub_session_listener, mt::fake_shared(sender))
     {
     }
 
-    std::shared_ptr<ms::SurfaceFactory> const stub_surface_factory;
     testing::NiceMock<mtd::MockEventSink> sender;
     ms::ApplicationSession app_session;
 };
@@ -717,6 +691,45 @@ TEST_F(ApplicationSessionSender, stop_prompt_session)
 
 namespace
 {
+class ObserverPreservingSurface : public mtd::MockSurface
+{
+public:
+    void add_observer(std::shared_ptr<mir::scene::SurfaceObserver> const &observer) override
+    {
+        return BasicSurface::add_observer(observer);
+    }
+
+    void remove_observer(std::weak_ptr<mir::scene::SurfaceObserver> const &observer) override
+    {
+        return BasicSurface::remove_observer(observer);
+    }
+};
+
+class ObserverPreservingSurfaceFactory : public ms::SurfaceFactory
+{
+public:
+    std::shared_ptr<ms::Surface> create_surface(std::shared_ptr<mir::compositor::BufferStream> const&,
+                                                mir::scene::SurfaceCreationParameters const&) override
+    {
+        return std::make_shared<testing::NiceMock<ObserverPreservingSurface>>();
+    };
+};
+
+struct ApplicationSessionSurfaceOutput : public ApplicationSession
+{
+    ApplicationSessionSurfaceOutput() :
+        stub_surface_factory{std::make_shared<ObserverPreservingSurfaceFactory>()},
+        app_session(
+            stub_surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
+            pid, name,null_snapshot_strategy, stub_session_listener, mt::fake_shared(sender))
+    {
+    }
+
+    std::shared_ptr<ms::SurfaceFactory> const stub_surface_factory;
+    testing::NiceMock<mtd::MockEventSink> sender;
+    ms::ApplicationSession app_session;
+};
+
 int calculate_dpi(geom::Size const& resolution, geom::Size const& size)
 {
     float constexpr mm_per_inch = 25.4f;
@@ -730,7 +743,7 @@ int calculate_dpi(geom::Size const& resolution, geom::Size const& size)
 }
 }
 
-TEST_F(ApplicationSessionSender, sends_surface_output_events_to_surfaces)
+TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_events_to_surfaces)
 {
     using namespace ::testing;
 
@@ -772,7 +785,7 @@ TEST_F(ApplicationSessionSender, sends_surface_output_events_to_surfaces)
     EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(scale));
 }
 
-TEST_F(ApplicationSessionSender, sends_correct_surface_details_to_surface)
+TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface)
 {
     using namespace ::testing;
 
@@ -839,7 +852,7 @@ TEST_F(ApplicationSessionSender, sends_correct_surface_details_to_surface)
     }
 }
 
-TEST_F(ApplicationSessionSender, sends_details_of_the_hightest_scale_factor_display_on_overlap)
+TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_factor_display_on_overlap)
 {
     using namespace ::testing;
 
@@ -899,7 +912,7 @@ TEST_F(ApplicationSessionSender, sends_details_of_the_hightest_scale_factor_disp
     EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(scale[0]));
 }
 
-TEST_F(ApplicationSessionSender, sends_surface_output_event_on_move)
+TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
 {
     using namespace ::testing;
 
