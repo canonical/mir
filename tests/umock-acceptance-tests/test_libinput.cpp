@@ -16,14 +16,10 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-// ThrowBack alert:
-// This test uses utility headers an external user cannot use, for the sake of this
-// test those utilities just remove some verobsity and avoid code duplication.
-#include "src/include/common/mir/shared_library.h"
-// --
-
 #include "mir/input/platform.h"
+#include "mir/shared_library.h"
 #include "mir/options/option.h"
+
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/executable_path.h"
 
