@@ -303,23 +303,41 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
 {
     event_sink->handle_display_config_change(info);
 
-    int dpi;
-    float scale;
-    MirFormFactor form_factor;
+    struct OutputMap
+    {
+        geometry::Rectangle position;
+        int dpi;
+        float scale;
+        MirFormFactor form_factor;
+    };
 
+    std::vector<OutputMap> outputs;
     info.for_each_output(
-        [&dpi, &scale, &form_factor](auto output)
+        [&outputs](auto output)
         {
             auto const mode = output.modes[output.current_mode_index];
-            dpi = calculate_dpi(mode.size, output.physical_size_mm);
-            scale = output.scale;
-            form_factor = output.form_factor;
+            outputs.emplace_back(OutputMap {
+                output.extents(),
+                calculate_dpi(mode.size, output.physical_size_mm),
+                output.scale,
+                output.form_factor});
         });
 
     std::lock_guard<std::mutex> lock{surfaces_and_streams_mutex};
     for (auto& surface : surfaces)
     {
-        event_sink->handle_event(*mev::make_event(surface.first, dpi, scale, form_factor));
+        for (auto const& output : outputs)
+        {
+            if (output.position.contains(surface.second->top_left()))
+            {
+                event_sink->handle_event(
+                    *mev::make_event(
+                        surface.first,
+                        output.dpi,
+                        output.scale,
+                        output.form_factor));
+            }
+        }
     }
 }
 

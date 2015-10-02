@@ -741,3 +741,65 @@ TEST_F(ApplicationSessionSender, sends_surface_output_events_to_surfaces)
     EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(form_factor));
     EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(scale));
 }
+
+TEST_F(ApplicationSessionSender, sends_correct_surface_details_to_surface)
+{
+    using namespace ::testing;
+
+    MirFormFactor constexpr form_factor[2] = { mir_form_factor_projector, mir_form_factor_tv };
+    float constexpr scale[2] = { 2.5f, 0.5f };
+    int const dpi[2] = {
+        calculate_dpi({1280, 1024}, {400, 300}),
+        calculate_dpi({1280, 720}, {600, 500})};
+
+    std::array<MirEvent, 2> event;
+    int events_received{0};
+
+    ON_CALL(sender, handle_event(IsSurfaceOutputEvent()))
+        .WillByDefault(Invoke([&event, &events_received](auto ev)
+                         {
+                             event[events_received] = ev;
+                             ++events_received;
+                         }));
+
+    ms::SurfaceCreationParameters params;
+
+    mf::SurfaceId ids[2];
+    std::shared_ptr<ms::Surface> surfaces[2];
+
+    ids[0] = app_session.create_surface(params, nullptr);
+    ids[1] = app_session.create_surface(params, nullptr);
+
+    surfaces[0] = app_session.surface(ids[0]);
+    surfaces[1] = app_session.surface(ids[1]);
+
+    surfaces[0]->move_to({100, 100});
+    surfaces[1]->move_to({1280 + 100, 100});
+
+    std::vector<mg::DisplayConfigurationOutput> outputs =
+        {
+            mtd::StubDisplayConfigurationOutput{{1280, 1024}, {400, 300}, mir_pixel_format_abgr_8888, 60.0, true},
+            mtd::StubDisplayConfigurationOutput{{1280, 720}, {600, 500}, mir_pixel_format_abgr_8888, 60.0, true}
+        };
+    outputs[0].scale = scale[0];
+    outputs[1].scale = scale[1];
+    outputs[0].form_factor = form_factor[0];
+    outputs[1].form_factor = form_factor[1];
+
+    outputs[0].top_left = {0, 0};
+    outputs[1].top_left = {1280, 0};
+
+    mtd::StubDisplayConfig config(outputs);
+    app_session.send_display_config(config);
+
+    ASSERT_THAT(events_received, Eq(2));
+
+    for (int i = 0; i < 2 ; ++i)
+    {
+        auto surface_output_event = mir_event_get_surface_output_event(&event[i]);
+        EXPECT_THAT(event[i].surface_output.surface_id, Eq(ids[i].as_value()));
+        EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(dpi[i]));
+        EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(form_factor[i]));
+        EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(scale[i]));
+    }
+}
