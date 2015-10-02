@@ -399,8 +399,6 @@ TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
         mir_orientation_normal,
         gl_config,
         mock_egl.fake_egl_context);
-
-    Mock::VerifyAndClearExpectations(&mock_gbm);
 }
 
 TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
@@ -419,8 +417,6 @@ TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
         mir_orientation_left,
         gl_config,
         mock_egl.fake_egl_context);
-
-    Mock::VerifyAndClearExpectations(&mock_gbm);
 }
 
 TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
@@ -439,8 +435,6 @@ TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
         mir_orientation_inverted,
         gl_config,
         mock_egl.fake_egl_context);
-
-    Mock::VerifyAndClearExpectations(&mock_gbm);
 }
 
 TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
@@ -459,8 +453,6 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
         mir_orientation_right,
         gl_config,
         mock_egl.fake_egl_context);
-
-    Mock::VerifyAndClearExpectations(&mock_gbm);
 }
 
 TEST_F(MesaDisplayBufferTest, clone_mode_first_flip_flips_but_no_wait)
