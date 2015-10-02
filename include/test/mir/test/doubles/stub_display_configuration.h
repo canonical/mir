@@ -191,6 +191,22 @@ public:
         cards.push_back(card);
     }
 
+    StubDisplayConfig(std::vector<graphics::DisplayConfigurationOutput> const& outputs)
+    {
+        graphics::DisplayConfigurationCard card{
+            graphics::DisplayConfigurationCardId{static_cast<int>(1)},
+            outputs.size()
+        };
+
+        cards.push_back(card);
+        this->outputs = outputs;
+
+        for (auto& output : this->outputs)
+        {
+            output.card_id = cards[0].id;
+        }
+    }
+
     void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)> f) const override
     {
         for (auto const& card : cards)
