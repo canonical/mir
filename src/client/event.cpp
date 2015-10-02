@@ -147,6 +147,13 @@ MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEve
     return &ev->input_configuration;
 }
 
+MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_surface_output);
+
+    return nullptr;
+}
+
 /* Surface event accessors */
 
 MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev)
@@ -220,6 +227,24 @@ MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurati
     expect_event_type(ev, mir_event_type_input_configuration);
     return ev->id;
 }
+
+/* Surface output event accessors */
+
+int mir_surface_output_event_get_dpi(MirSurfaceOutputEvent const* /*ev*/)
+{
+    return 0;
+}
+
+MirFormFactor mir_surface_output_event_get_form_factor(MirSurfaceOutputEvent const* /*ev*/)
+{
+    return mir_form_factor_monitor;
+}
+
+float mir_surface_output_event_get_scale(MirSurfaceOutputEvent const* /*ev*/)
+{
+    return 0;
+}
+
 
 // TODO: Until we opaquify the MirEvent structure and add
 // a ref count ref is implemented as copy.

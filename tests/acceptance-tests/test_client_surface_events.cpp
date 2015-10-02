@@ -21,6 +21,10 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 
+#include "mir/graphics/display.h"
+
+#include "mir/shell/display_configuration_controller.h"
+
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
@@ -40,6 +44,7 @@ namespace msh = mir::shell;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
+namespace mg = mir::graphics;
 
 using namespace testing;
 
@@ -252,6 +257,39 @@ TEST_F(ClientSurfaceEvents, client_can_query_preferred_orientation)
         mir_wait_for(mir_surface_set_preferred_orientation(surface, mode));
         EXPECT_THAT(mir_surface_get_preferred_orientation(surface), Eq(mode));
     }
+}
+
+TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_changes)
+{
+    using namespace std::literals::chrono_literals;
+
+    auto constexpr form_factor = mir_form_factor_tablet;
+    float constexpr scale = 2.15f;
+
+    auto display_configuration = server.the_display()->configuration();
+
+    display_configuration->for_each_output(
+        [](mg::UserDisplayConfigurationOutput& output_config)
+        {
+            output_config.scale = scale;
+            output_config.form_factor = form_factor;
+        });
+
+    set_event_filter(mir_event_type_surface_output);
+    reset_last_event();
+
+    auto display_controller = server.the_display_configuration_controller();
+    display_controller->set_default_display_configuration(std::move(display_configuration)).get();
+
+    ASSERT_TRUE(wait_for_event(1min));
+
+    std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
+
+    EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_surface_output));
+    auto output_event = mir_event_get_surface_output_event(last_event);
+
+    EXPECT_THAT(mir_surface_output_event_get_form_factor(output_event), Eq(form_factor));
+    EXPECT_THAT(mir_surface_output_event_get_scale(output_event), FloatEq(scale));
 }
 
 namespace

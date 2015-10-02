@@ -179,6 +179,10 @@ MIR_CLIENT_9.1 {  # New functions in Mir 0.15
 MIR_CLIENT_9.2 {  # New functions in Mir 0.16
   global:
     mir_surface_spec_set_event_handler;
+    mir_event_get_surface_output_event;
+    mir_surface_output_event_get_dpi;
+    mir_surface_output_event_get_form_factor;
+    mir_surface_output_event_get_scale;
   local: *;
 } MIR_CLIENT_9.1;
 

@@ -215,7 +215,8 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
         outputs.push_back({id, card_id, type, formats, modes, preferred_mode_index,
                            physical_size, connected, false, geom::Point(),
                            current_mode_index, mir_pixel_format_xrgb_8888,
-                           mir_power_mode_on, mir_orientation_normal});
+                           mir_power_mode_on, mir_orientation_normal,
+                           1.0f, mir_form_factor_monitor});
     }
     else
     {

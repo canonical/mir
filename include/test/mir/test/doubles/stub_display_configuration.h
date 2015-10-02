@@ -56,7 +56,9 @@ struct StubDisplayConfigurationOutput : public graphics::DisplayConfigurationOut
             0,
             format,
             mir_power_mode_on,
-            mir_orientation_normal
+            mir_orientation_normal,
+            1.0f,
+            mir_form_factor_monitor
         }
     {
     }
@@ -141,7 +143,9 @@ public:
                 top_left,
                 mode_index, pfs[0],
                 mir_power_mode_off,
-                mir_orientation_normal
+                mir_orientation_normal,
+                1.0f,
+                mir_form_factor_monitor
             };
 
             outputs.push_back(output);
@@ -170,7 +174,9 @@ public:
                 {{rect.size, 60.0}},
                 0, geometry::Size{}, true, true, rect.top_left, 0,
                 mir_pixel_format_abgr_8888, mir_power_mode_on,
-                mir_orientation_normal
+                mir_orientation_normal,
+                1.0f,
+                mir_form_factor_monitor
             };
 
             outputs.push_back(output);

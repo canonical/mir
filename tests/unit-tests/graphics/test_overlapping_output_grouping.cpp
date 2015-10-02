@@ -94,7 +94,9 @@ public:
                 i - 1,
                 mir_pixel_format_invalid,
                 info.power_mode,
-                info.orientation
+                info.orientation,
+                1.0f,
+                mir_form_factor_monitor
             };
 
             f(output);

@@ -148,7 +148,9 @@ mg::DisplayConfigurationOutput populate_config(
         preferred_format_index,
         display_format,
         external_mode,
-        mir_orientation_normal
+        mir_orientation_normal,
+        1.0f,
+        mir_form_factor_phone
     };
 }
 

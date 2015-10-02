@@ -110,6 +110,11 @@ struct DisplayConfigurationOutput
     MirPowerMode power_mode;
     MirOrientation orientation;
 
+    /** Requested scale factor for this output, for HiDPI support */
+    float scale;
+    /** Form factor of this output; phone display, tablet, monitor, TV, projector... */
+    MirFormFactor form_factor;
+
     /** The logical rectangle occupied by the output, based on its position,
         current mode and orientation (rotation) */
     geometry::Rectangle extents() const;
@@ -136,6 +141,8 @@ struct UserDisplayConfigurationOutput
     MirPixelFormat& current_format;
     MirPowerMode& power_mode;
     MirOrientation& orientation;
+    float& scale;
+    MirFormFactor& form_factor;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& master);
     geometry::Rectangle extents() const;
