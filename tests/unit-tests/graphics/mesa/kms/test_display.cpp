@@ -23,6 +23,7 @@
 #include "mir/logging/logger.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/default_display_configuration_policy.h"
+#include "mir/renderer/gl/render_target.h"
 #include "mir/time/steady_clock.h"
 #include "mir/glib_main_loop.h"
 
@@ -44,6 +45,7 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/auto_unblock_thread.h"
 #include "mir/test/signal.h"
+#include "mir/test/as_render_target.h"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -447,7 +449,7 @@ TEST_F(MesaDisplayTest, post_update)
 
     display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([](mg::DisplayBuffer& db) {
-            db.gl_swap_buffers();
+            mt::as_render_target(db)->swap_buffers();
         });
         group.post();
     });
@@ -486,7 +488,7 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
         auto display = create_display(create_platform());
         display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
             group.for_each_display_buffer([](mg::DisplayBuffer& db) {
-                db.gl_swap_buffers();
+                mt::as_render_target(db)->swap_buffers();
             });
             group.post();
         });

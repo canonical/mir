@@ -22,6 +22,7 @@
 #include "configurable_display_buffer.h"
 #include "mir/graphics/egl_resources.h"
 #include "mir/graphics/gl_program_factory.h"
+#include "mir/renderer/gl/render_target.h"
 #include "display_configuration.h"
 #include "gl_context.h"
 #include "hwc_fallback_gl_renderer.h"
@@ -40,7 +41,8 @@ class FramebufferBundle;
 class LayerList;
 
 class DisplayBuffer : public ConfigurableDisplayBuffer,
-                      public NativeDisplayBuffer
+                      public NativeDisplayBuffer,
+                      public renderer::gl::RenderTarget
 {
 public:
     //TODO: could probably just take the HalComponentFactory to reduce the
@@ -60,7 +62,7 @@ public:
     geometry::Rectangle view_area() const override;
     void make_current() override;
     void release_current() override;
-    void gl_swap_buffers() override;
+    void swap_buffers() override;
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 
     MirOrientation orientation() const override;
