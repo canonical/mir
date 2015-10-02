@@ -227,7 +227,7 @@ void mgm::DisplayBuffer::for_each_display_buffer(
     f(*this);
 }
 
-void mgm::DisplayBuffer::gl_swap_buffers()
+void mgm::DisplayBuffer::swap_buffers()
 {
     if (!egl.swap_buffers())
         fatal_error("Failed to perform buffer swap");

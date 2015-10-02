@@ -31,6 +31,7 @@
 #include <gmock/gmock.h>
 
 namespace ms = mir::scene;
+namespace mf = mir::frontend;
 namespace msh = mir::shell;
 
 namespace mtf = mir_test_framework;
@@ -42,9 +43,12 @@ class SimpleConfigurablePlacementShell : public msh::ShellWrapper
 public:
     using msh::ShellWrapper::ShellWrapper;
 
-    mir::frontend::SurfaceId create_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)
+    mir::frontend::SurfaceId create_surface(
+        std::shared_ptr<ms::Session> const& session,
+        ms::SurfaceCreationParameters const& params,
+        std::shared_ptr<mf::EventSink> const& sink) override
     {
-        auto const result = msh::ShellWrapper::create_surface(session, params);
+        auto const result = msh::ShellWrapper::create_surface(session, params, sink);
         auto const surface = session->surface(result);
 
         surface->move_to(placement.top_left);

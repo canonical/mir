@@ -30,8 +30,8 @@
 #include <mir/test/doubles/mock_gl.h>
 #include <mir/test/doubles/mock_egl.h>
 #include <src/renderers/gl/renderer.h>
-#include <mir/test/doubles/stub_display_buffer.h>
-#include <mir/test/doubles/mock_display_buffer.h>
+#include <mir/test/doubles/stub_gl_display_buffer.h>
+#include <mir/test/doubles/mock_gl_display_buffer.h>
 
 using testing::SetArgPointee;
 using testing::InSequence;
@@ -146,8 +146,8 @@ public:
     testing::NiceMock<mtd::MockGL> mock_gl;
     testing::NiceMock<mtd::MockEGL> mock_egl;
     std::shared_ptr<mtd::MockGLBuffer> mock_buffer;
-    mtd::StubDisplayBuffer display_buffer{{{1, 2}, {3, 4}}};
-    testing::NiceMock<mtd::MockDisplayBuffer> mock_display_buffer;
+    mtd::StubGLDisplayBuffer display_buffer{{{1, 2}, {3, 4}}};
+    testing::NiceMock<mtd::MockGLDisplayBuffer> mock_display_buffer;
     std::shared_ptr<testing::NiceMock<mtd::MockRenderable>> renderable;
     mg::RenderableList renderable_list;
     glm::mat4 trans;
@@ -244,7 +244,7 @@ TEST_F(GLRenderer, swaps_buffers_after_rendering)
 
     InSequence seq;
     EXPECT_CALL(mock_gl, glDrawArrays(_, _, _)).Times(AnyNumber());
-    EXPECT_CALL(mock_display_buffer, gl_swap_buffers());
+    EXPECT_CALL(mock_display_buffer, swap_buffers());
 
     renderer.render(renderable_list);
 }

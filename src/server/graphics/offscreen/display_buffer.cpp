@@ -139,7 +139,7 @@ void mgo::DisplayBuffer::release_current()
     egl_context.release_current();
 }
 
-void mgo::DisplayBuffer::gl_swap_buffers()
+void mgo::DisplayBuffer::swap_buffers()
 {
     glFinish();
 }

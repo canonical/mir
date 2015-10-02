@@ -30,10 +30,10 @@ namespace mir
 namespace frontend
 {
 class ResourceCache;
+class MessageSender;
 
 namespace detail
 {
-class MessageSender;
 
 class ProtobufResponder : public ProtobufMessageSender
 {
