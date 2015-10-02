@@ -119,9 +119,9 @@ std::string as_string(MirFormFactor form_factor)
 
 std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput const& val)
 {
-    out << "{ id: " << val.id << ", card_id: " << val.card_id
-        << " type: " << output_type_to_string(val.type)
-        << " modes: [";
+    out << "{" << std::endl << "\tid: " << val.id << std::endl << "\tcard_id: " << val.card_id << std::endl
+        << "\ttype: " << output_type_to_string(val.type) << std::endl
+        << "\tmodes: [ ";
 
     for (size_t i = 0; i < val.modes.size(); ++i)
     {
@@ -130,21 +130,22 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput c
             out << ", ";
     }
 
-    out << "], preferred_mode: " << val.preferred_mode_index;
-    out << " physical_size_mm: " << val.physical_size_mm.width << "x" << val.physical_size_mm.height;
-    out << ", connected: " << (val.connected ? "true" : "false");
-    out << ", used: " << (val.used ? "true" : "false");
-    out << ", top_left: " << val.top_left;
-    out << ", current_mode: " << val.current_mode_index << " (";
+    out << "]" << std::endl;
+    out << "\tpreferred_mode: " << val.preferred_mode_index << std::endl;
+    out << "\tphysical_size_mm: " << val.physical_size_mm.width << "x" << val.physical_size_mm.height << std::endl;
+    out << "\tconnected: " << (val.connected ? "true" : "false") << std::endl;
+    out << "\tused: " << (val.used ? "true" : "false") << std::endl;
+    out << "\ttop_left: " << val.top_left << std::endl;
+    out << "\tcurrent_mode: " << val.current_mode_index << " (";
     if (val.current_mode_index < val.modes.size())
         out << val.modes[val.current_mode_index];
     else
         out << "none";
+    out << ")" << std::endl;
 
-    out << ", scale: " << val.scale;
-    out << ", form factor: " << as_string(val.form_factor);
-
-    out << ") }";
+    out << "\tscale: " << val.scale << std::endl;
+    out << "\tform factor: " << as_string(val.form_factor) << std::endl;
+    out << "}" << std::endl;
 
     return out;
 }
