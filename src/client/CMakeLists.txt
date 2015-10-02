@@ -72,7 +72,8 @@ add_library(mirclientobjects OBJECT
   mir_buffer_stream_api.cpp
   default_client_buffer_stream_factory.cpp
   ${MIR_CLIENT_SOURCES}
-  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/events/surface_output_event.h)
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/events/surface_output_event.h
+)
 
 # Ensure protobuf C++ headers have been produced before
 # trying to compile mirclientobjects
