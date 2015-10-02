@@ -34,6 +34,10 @@ namespace frontend
 class EventSink;
 }
 namespace compositor { class BufferStream; }
+namespace graphics
+{
+class DisplayConfiguration;
+}
 namespace scene
 {
 class SessionListener;
@@ -54,6 +58,7 @@ public:
         std::string const& session_name,
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
         std::shared_ptr<SessionListener> const& session_listener,
+        graphics::DisplayConfiguration const& initial_config,
         std::shared_ptr<frontend::EventSink> const& sink);
 
     ~ApplicationSession();

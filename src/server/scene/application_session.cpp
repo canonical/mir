@@ -54,6 +54,7 @@ ms::ApplicationSession::ApplicationSession(
     std::string const& session_name,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionListener> const& session_listener,
+    mg::DisplayConfiguration const& initial_config,
     std::shared_ptr<mf::EventSink> const& sink) :
     surface_coordinator(surface_coordinator),
     surface_factory(surface_factory),
@@ -66,6 +67,7 @@ ms::ApplicationSession::ApplicationSession(
     next_surface_id(0)
 {
     assert(surface_coordinator);
+    output_cache.update_from(initial_config);
 }
 
 ms::ApplicationSession::~ApplicationSession()

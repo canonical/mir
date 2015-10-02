@@ -35,6 +35,7 @@
 #include "mir/test/doubles/null_session_event_sink.h"
 #include "mir/test/doubles/stub_surface_factory.h"
 #include "mir/test/doubles/null_application_not_responding_detector.h"
+#include "mir/test/doubles/stub_display_configuration.h"
 
 #include "mir/test/fake_shared.h"
 
@@ -99,6 +100,7 @@ struct SessionManagerSetup : public testing::Test
         std::make_shared<mtd::NullSnapshotStrategy>(),
         std::make_shared<mtd::NullSessionEventSink>(),
         mt::fake_shared(session_listener),
+        [conf = mtd::StubDisplayConfig{}]() { return mt::fake_shared(conf); },
         std::make_shared<mtd::NullANRDetector>()};
 };
 
@@ -155,6 +157,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
         std::make_shared<mtd::NullSnapshotStrategy>(),
         std::make_shared<mtd::NullSessionEventSink>(),
         mt::fake_shared(session_listener),
+        [conf = mtd::StubDisplayConfig{}]() { return mt::fake_shared(conf); },
         std::make_shared<mtd::NullANRDetector>()};
 };
 }
@@ -194,6 +197,7 @@ struct SessionManagerSessionEventsSetup : public testing::Test
         std::make_shared<mtd::NullSnapshotStrategy>(),
         mt::fake_shared(session_event_sink),
         mt::fake_shared(session_listener),
+        [conf = mtd::StubDisplayConfig{}]() { return mt::fake_shared(conf); },
         std::make_shared<mtd::NullANRDetector>()};
 };
 }

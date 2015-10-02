@@ -34,6 +34,7 @@
 #include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/null_prompt_session.h"
+#include "mir/test/doubles/stub_display_configuration.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -143,6 +144,7 @@ struct ApplicationSession : public testing::Test
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
+           mtd::StubDisplayConfig{},
            event_sink);
     }
     
@@ -155,6 +157,7 @@ struct ApplicationSession : public testing::Test
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
+           mtd::StubDisplayConfig{},
            event_sink);
     }
 
@@ -167,6 +170,7 @@ struct ApplicationSession : public testing::Test
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
+           mtd::StubDisplayConfig{},
            event_sink);
     }
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_coordinator(
@@ -177,6 +181,7 @@ struct ApplicationSession : public testing::Test
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
+           mtd::StubDisplayConfig{},
            event_sink);
     }
     
@@ -188,6 +193,7 @@ struct ApplicationSession : public testing::Test
            pid, name,
            null_snapshot_strategy,
            session_listener,
+           mtd::StubDisplayConfig{},
            event_sink);
     }
 
@@ -200,6 +206,7 @@ struct ApplicationSession : public testing::Test
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
+           mtd::StubDisplayConfig{},
            event_sink);
     }
 
@@ -434,6 +441,7 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
         pid, name,
         snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
+        mtd::StubDisplayConfig{},
         event_sink);
 
     auto surface = app_session.create_surface(ms::SurfaceCreationParameters{}, nullptr);
@@ -454,6 +462,7 @@ TEST_F(ApplicationSession, returns_null_snapshot_if_no_default_surface)
         pid, name,
         snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
+        mtd::StubDisplayConfig{},
         event_sink);
 
     EXPECT_CALL(*snapshot_strategy, take_snapshot_of(_,_)).Times(0);
@@ -474,6 +483,7 @@ TEST_F(ApplicationSession, process_id)
         session_pid, name,
         null_snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
+        mtd::StubDisplayConfig{},
         event_sink);
 
     EXPECT_THAT(app_session.process_id(), Eq(session_pid));
@@ -642,8 +652,15 @@ struct ApplicationSessionSender : public ApplicationSession
 {
     ApplicationSessionSender() :
         app_session(
-        stub_surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
-        pid, name,null_snapshot_strategy, stub_session_listener, mt::fake_shared(sender))
+            stub_surface_coordinator,
+            stub_surface_factory,
+            stub_buffer_stream_factory,
+            pid,
+            name,
+            null_snapshot_strategy,
+            stub_session_listener,
+            mtd::StubDisplayConfig{},
+            mt::fake_shared(sender))
     {
     }
 
@@ -734,8 +751,15 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
         projector({1280, 1024}, {800, 600}, 0.5f, mir_form_factor_projector),
         stub_surface_factory{std::make_shared<ObserverPreservingSurfaceFactory>()},
         app_session(
-            stub_surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
-            pid, name,null_snapshot_strategy, stub_session_listener, mt::fake_shared(sender))
+            stub_surface_coordinator,
+            stub_surface_factory,
+            stub_buffer_stream_factory,
+            pid,
+            name,
+            null_snapshot_strategy,
+            stub_session_listener,
+            mtd::StubDisplayConfig{},
+            mt::fake_shared(sender))
     {
     }
 

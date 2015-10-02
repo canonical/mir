@@ -37,6 +37,7 @@
 #include "mir/test/doubles/stub_input_targeter.h"
 #include "mir/test/doubles/stub_buffer_stream_factory.h"
 #include "mir/test/doubles/null_application_not_responding_detector.h"
+#include "mir/test/doubles/stub_display_configuration.h"
 
 #include "mir/test/fake_shared.h"
 
@@ -48,6 +49,7 @@ namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
+namespace mg = mir::graphics;
 
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -114,6 +116,7 @@ struct AbstractShell : Test
         std::make_shared<mtd::NullSnapshotStrategy>(),
         mt::fake_shared(session_event_sink),
         mt::fake_shared(session_listener),
+        [conf = mtd::StubDisplayConfig{}]() -> std::shared_ptr<mg::DisplayConfiguration const> { return mt::fake_shared(conf); },
         std::make_shared<mtd::NullANRDetector>()};
 
     mtd::StubInputTargeter input_targeter;
