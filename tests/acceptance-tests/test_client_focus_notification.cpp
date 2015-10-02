@@ -148,7 +148,7 @@ TEST_F(ClientFocusNotification, two_surfaces_are_notified_of_gaining_and_losing_
             client_one->detach();
             ready_for_second_client.wait_for_signal_ready_for();
 
-            EXPECT_CALL(observer, see(_)).Times(AnyNumber()); //ignore scaling events
+            EXPECT_CALL(observer, see(_)); //ignore scaling events
             EXPECT_CALL(observer, see(
                 mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused)))
                     .Times(1).WillOnce(mt::WakeUp(&all_events_received));

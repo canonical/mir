@@ -411,7 +411,7 @@ TEST_F(AbstractShell, as_focus_controller_focused_surface_follows_focus)
     auto const surface1 = session1->surface(surface1_id);
 
     msh::FocusController& focus_controller = shell;
-;
+
     focus_controller.set_focus_to(session0, surface0);
     EXPECT_THAT(focus_controller.focused_surface(), Eq(surface0));
     focus_controller.set_focus_to(session1, surface1);

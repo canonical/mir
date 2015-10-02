@@ -248,7 +248,6 @@ float mir_surface_output_event_get_scale(MirSurfaceOutputEvent const* ev)
     return ev->scale;
 }
 
-
 // TODO: Until we opaquify the MirEvent structure and add
 // a ref count ref is implemented as copy.
 MirEvent const* mir_event_ref(MirEvent const* ev)

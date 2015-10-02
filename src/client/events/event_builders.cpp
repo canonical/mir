@@ -95,7 +95,6 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id)
     return make_event_uptr(e);
 }
 
-
 mir::EventUPtr mev::make_event(
     mf::SurfaceId const& surface_id,
     int dpi,
