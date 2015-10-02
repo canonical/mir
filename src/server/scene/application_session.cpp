@@ -111,7 +111,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
                                                params.pixel_format,
                                                params.buffer_usage};
         buffer_stream = buffer_stream_factory->create_buffer_stream(
-            stream_id, event_sink, buffer_properties);
+            stream_id, surface_sink, buffer_properties);
     }
     auto surface = surface_factory->create_surface(buffer_stream, params);
     surface_coordinator->add_surface(surface, params.depth, params.input_mode, this);
@@ -139,7 +139,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
 
     if (output_properties)
     {
-        event_sink->handle_event(
+        surface_sink->handle_event(
             *mev::make_event(
                 id,
                 output_properties->dpi,
