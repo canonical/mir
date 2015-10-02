@@ -19,6 +19,7 @@
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/input/cursor_images.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_report.h"
@@ -531,17 +532,75 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
     mir_connection_release(connection);
 }
 
-#if defined(ANDROID)
-#define DISABLE_ON_ANDROID(name) DISABLED_##name
-#else
-#define DISABLE_ON_ANDROID(name) name
-#endif
-
-// This test relies on Xcursors, on android these are not available and the fallback of
-// BuiltinCursorImages only provides one image
-TEST_F(NestedServer, DISABLE_ON_ANDROID(named_cursor_image_changes_are_forwarded_to_host))
+// We can't rely on the test environment to have X cursors, so we provide some of our own
+namespace 
 {
-    NestedMirRunner nested_mir{new_connection()};
+static auto const cursor_names = {
+//        mir_disabled_cursor_name,
+    mir_arrow_cursor_name,
+    mir_busy_cursor_name,
+    mir_caret_cursor_name,
+    mir_default_cursor_name,
+    mir_pointing_hand_cursor_name,
+    mir_open_hand_cursor_name,
+    mir_closed_hand_cursor_name,
+    mir_horizontal_resize_cursor_name,
+    mir_vertical_resize_cursor_name,
+    mir_diagonal_resize_bottom_to_top_cursor_name,
+    mir_diagonal_resize_top_to_bottom_cursor_name,
+    mir_omnidirectional_resize_cursor_name,
+    mir_vsplit_resize_cursor_name,
+    mir_hsplit_resize_cursor_name,
+    mir_crosshair_cursor_name };
+
+struct CursorImage : public mg::CursorImage
+{
+    CursorImage(char const* name) :
+        id{std::find(begin(cursor_names), end(cursor_names), name) - begin(cursor_names)},
+        data{uint8_t(id)}
+    {
+    }
+
+    void const* as_argb_8888() const { return data.data(); }
+
+    geom::Size size() const { return { 24, 24 }; }
+
+    geom::Displacement hotspot() const { return {0, 0}; }
+
+    ptrdiff_t id;
+    std::array<uint8_t, 4*8*24*24> data;
+};
+
+struct CursorImages : mir::input::CursorImages
+{
+public:
+
+    std::shared_ptr<mg::CursorImage> image(std::string const& cursor_name, geom::Size const& /*size*/)
+    {
+        return std::make_shared<CursorImage>(cursor_name.c_str());
+    }
+};
+
+class NestedMirRunnerWithCursorImages : public mtf::HeadlessNestedServerRunner
+{
+public:
+    NestedMirRunnerWithCursorImages(std::string const& connection_string)
+        : mtf::HeadlessNestedServerRunner(connection_string)
+    {
+        server.override_the_cursor_images([] { return std::make_shared<CursorImages>(); });
+        start_server();
+    }
+
+    ~NestedMirRunnerWithCursorImages()
+    {
+        stop_server();
+    }
+};
+}
+
+TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
+{
+    NestedMirRunnerWithCursorImages nested_mir{new_connection()};
 
     auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
     auto const surface = make_and_paint_surface(connection);
@@ -552,59 +611,14 @@ TEST_F(NestedServer, DISABLE_ON_ANDROID(named_cursor_image_changes_are_forwarded
     mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
 
-    nested_mir.server.the_cursor()->move_to({489, 9});
     server.the_cursor_listener()->cursor_moved_to(489, 9);
-
-    auto const cursor_names = {
-//        mir_disabled_cursor_name,
-        mir_arrow_cursor_name,
-        mir_busy_cursor_name,
-        mir_caret_cursor_name,
-        mir_default_cursor_name,
-        mir_pointing_hand_cursor_name,
-        mir_open_hand_cursor_name,
-        mir_closed_hand_cursor_name,
-        mir_horizontal_resize_cursor_name,
-        mir_vertical_resize_cursor_name,
-        mir_diagonal_resize_bottom_to_top_cursor_name,
-        mir_diagonal_resize_top_to_bottom_cursor_name,
-        mir_omnidirectional_resize_cursor_name,
-        mir_vsplit_resize_cursor_name,
-        mir_hsplit_resize_cursor_name,
-        mir_crosshair_cursor_name };
-
-    // Sometimes the update gives two notifications (one for the image, one for a changed hotspot).
-    // This is due to an optimization to avoid the nested server recreating the cursor bufferstream
-    // which has the effect that we can't push the image frame and the hotspot change together.
-    // This is messy and fragile (as it depends on the order of the cursor_names list).
-    auto const cursors_that_update_hotspot = {
-        mir_busy_cursor_name,
-        mir_caret_cursor_name,
-        mir_default_cursor_name,
-        mir_pointing_hand_cursor_name,
-        mir_closed_hand_cursor_name,
-        mir_horizontal_resize_cursor_name,
-        mir_diagonal_resize_bottom_to_top_cursor_name,
-        mir_diagonal_resize_top_to_bottom_cursor_name,
-        mir_omnidirectional_resize_cursor_name,
-        mir_vsplit_resize_cursor_name };
 
     for (auto const name : cursor_names)
     {
         mt::WaitCondition condition;
 
-        if (std::find(begin(cursors_that_update_hotspot), end(cursors_that_update_hotspot), name)
-            == end(cursors_that_update_hotspot))
-        {
-            EXPECT_CALL(*mock_cursor, show(_)).Times(1)
-                .WillOnce(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
-        }
-        else
-        {
-            EXPECT_CALL(*mock_cursor, show(_)).Times(2)
-                .WillOnce(InvokeWithoutArgs([]{}))
-                .WillOnce(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
-        }
+        EXPECT_CALL(*mock_cursor, show(_)).Times(1)
+            .WillOnce(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
         auto const cursor = mir_cursor_configuration_from_name(name);
         mir_wait_for(mir_surface_configure_cursor(surface, cursor));
