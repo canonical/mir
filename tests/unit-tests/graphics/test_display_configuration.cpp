@@ -246,6 +246,32 @@ TEST(DisplayConfiguration, outputs_with_different_power_mode_compare_equal)
     EXPECT_EQ(b, a);
 }
 
+TEST(DisplayConfiguration, outputs_with_different_scaling_factors_compare_unequal)
+{
+    mg::DisplayConfigurationOutput a = tmpl_output;
+    mg::DisplayConfigurationOutput b = tmpl_output;
+
+    EXPECT_EQ(a, b);
+    EXPECT_EQ(b, a);
+    a.scale = 2.0f;
+    b.scale = 3.0f;
+    EXPECT_NE(a, b);
+    EXPECT_NE(b, a);
+}
+
+TEST(DisplayConfiguration, outputs_with_different_form_factors_compare_unequal)
+{
+    mg::DisplayConfigurationOutput a = tmpl_output;
+    mg::DisplayConfigurationOutput b = tmpl_output;
+
+    EXPECT_EQ(a, b);
+    EXPECT_EQ(b, a);
+    a.form_factor = mir_form_factor_monitor;
+    b.form_factor = mir_form_factor_projector;
+    EXPECT_NE(a, b);
+    EXPECT_NE(b, a);
+}
+
 TEST(DisplayConfiguration, output_extents_uses_current_mode)
 {
     mg::DisplayConfigurationOutput out = tmpl_output;
