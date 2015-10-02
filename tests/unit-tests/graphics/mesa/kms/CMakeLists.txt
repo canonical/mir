@@ -17,7 +17,6 @@ mir_add_wrapped_executable(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_bypass.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_nested_authentication.cpp
   ${MIR_SERVER_OBJECTS}
-  ${MIR_PLATFORM_OBJECTS}
   ${MIR_COMMON_OBJECTS}
   $<TARGET_OBJECTS:mirplatformgraphicsmesakmsobjects>
 )
