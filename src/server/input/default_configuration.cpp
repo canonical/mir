@@ -48,8 +48,10 @@
 #include "mir/emergency_cleanup.h"
 #include "mir/report/legacy_input_report.h"
 #include "mir/main_loop.h"
+#include "mir/shared_library_prober.h"
 #include "mir/shared_library.h"
 #include "mir/glib_main_loop.h"
+#include "mir/log.h"
 #include "mir/dispatch/action_queue.h"
 
 #include "mir_toolkit/cursors.h"
@@ -305,24 +307,75 @@ mir::DefaultServerConfiguration::the_cursor_images()
         });
 }
 
-std::shared_ptr<mi::Platform>
-mir::DefaultServerConfiguration::the_input_platform()
+namespace
 {
-    return input_platform(
-        [this]() -> std::shared_ptr<mi::Platform>
+auto probe_input_platform(std::shared_ptr<mir::SharedLibrary> const& lib, mir::options::Option const& options)
+{
+    auto probe = lib->load_function<mi::ProbePlatform>("probe_input_platform", MIR_SERVER_INPUT_PLATFORM_VERSION);
+
+    return probe(options);
+}
+
+void describe_input_platform(std::shared_ptr<mir::SharedLibrary> const& lib)
+{
+    auto describe =
+        lib->load_function<mi::DescribeModule>("describe_input_module", MIR_SERVER_INPUT_PLATFORM_VERSION);
+    auto desc = describe();
+    mir::log_info("Found input driver: %s", desc->name);
+}
+
+mir::UniqueModulePtr<mi::Platform> create_input_platform(
+    std::shared_ptr<mir::SharedLibrary> const& lib, std::shared_ptr<mir::options::Option> const& options,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const& cleanup_registry,
+    std::shared_ptr<mi::InputDeviceRegistry> const& registry, std::shared_ptr<mi::InputReport> const& report)
+{
+
+    auto create = lib->load_function<mi::CreatePlatform>("create_input_platform", MIR_SERVER_INPUT_PLATFORM_VERSION);
+
+    return create(options, cleanup_registry, registry, report);
+}
+}
+
+std::vector<mir::UniqueModulePtr<mi::Platform>> mir::DefaultServerConfiguration::available_platforms()
+{
+    auto options = the_options();
+
+    std::vector<UniqueModulePtr<input::Platform>> platforms;
+
+    if (options->is_set(options::platform_input_lib))
+    {
+        auto lib = std::make_shared<mir::SharedLibrary>(options->get<std::string>(options::platform_input_lib));
+
+        platforms.emplace_back(create_input_platform(lib, options, the_emergency_cleanup(),
+                                                     the_input_device_registry(), the_input_report()));
+
+        describe_input_platform(lib);
+    }
+    else
+    {
+
+        auto const& path = options->get<std::string>(options::platform_path);
+        auto platforms_libs = mir::libraries_for_path(path, *the_shared_library_prober_report());
+
+        for (auto const& platform_lib : platforms_libs)
         {
-            auto options = the_options();
+            try
+            {
+                if (probe_input_platform(platform_lib, *options) > input::PlatformPriority::dummy)
+                {
+                    platforms.emplace_back(create_input_platform(platform_lib, options, the_emergency_cleanup(),
+                                                                 the_input_device_registry(), the_input_report()));
 
-            if (!options->is_set(options::platform_input_lib))
-                return nullptr;
+                    describe_input_platform(platform_lib);
+                }
+            }
+            catch (std::runtime_error const&)
+            {
+            }
+        }
+    }
 
-            auto lib = std::make_shared<mir::SharedLibrary>(
-                options->get<std::string>(options::platform_input_lib));
-            auto create = lib->load_function<mi::CreatePlatform>(
-                "create_input_platform",
-                MIR_SERVER_INPUT_PLATFORM_VERSION);
-            return create(the_options(), the_emergency_cleanup(), the_input_device_registry(), the_input_report());
-        });
+    return std::move(platforms);
 }
 
 namespace
@@ -356,23 +409,19 @@ mir::DefaultServerConfiguration::the_input_manager()
             }
             else
             {
-                if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
-                    mr::legacy_input::initialize(the_logger());
+                auto platforms = available_platforms();
 
-                if (auto platform = the_input_platform())
-                {
-                    auto const ret = std::make_shared<mi::DefaultInputManager>(
-                        the_input_reading_multiplexer(),
-                        std::make_shared<NullLegacyInputDispatchable>());
+                if (platforms.empty())
+                    BOOST_THROW_EXCEPTION(std::runtime_error("No input platforms found"));
 
-                    ret->add_platform(platform);
-                    return ret;
-                }
-                else
-                {
-                    return std::make_shared<mi::DefaultInputManager>(
-                        the_input_reading_multiplexer(), the_legacy_input_dispatchable());
-                }
+                auto const ret = std::make_shared<mi::DefaultInputManager>(
+                    the_input_reading_multiplexer(),
+                    std::make_shared<NullLegacyInputDispatchable>());
+
+                for (auto & platform : platforms)
+                    ret->add_platform(std::move(platform));
+
+                return ret;
             }
         }
     );
