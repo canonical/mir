@@ -27,6 +27,7 @@
 
 namespace mir
 {
+namespace frontend { class EventSink; }
 namespace shell { struct StreamSpecification; }
 namespace scene
 {
@@ -52,7 +53,9 @@ public:
     virtual void suspend_prompt_session() = 0;
     virtual void resume_prompt_session() = 0;
 
-    virtual frontend::SurfaceId create_surface(SurfaceCreationParameters const& params) = 0;
+    virtual frontend::SurfaceId create_surface(
+        SurfaceCreationParameters const& params,
+        std::shared_ptr<frontend::EventSink> const& sink) = 0;
     virtual void destroy_surface(frontend::SurfaceId surface) = 0;
 
     virtual std::shared_ptr<Surface> surface(frontend::SurfaceId surface) const = 0;

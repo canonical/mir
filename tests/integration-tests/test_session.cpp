@@ -124,7 +124,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
         std::make_shared<ms::NullSessionListener>(),
         std::make_shared<mtd::NullEventSink>()
     };
-    session.create_surface(ms::a_surface());
+    session.create_surface(ms::a_surface(), std::make_shared<mtd::NullEventSink>());
 
     auto compositor = conf.the_compositor();
 

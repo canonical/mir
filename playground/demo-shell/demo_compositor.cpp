@@ -125,14 +125,11 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
     }
     else
     {
-        display_buffer.make_current();
-
         renderer.set_rotation(display_buffer.orientation());
         renderer.set_viewport(viewport);
         renderer.begin(std::move(decorated));
         renderer.render(renderable_list);
 
-        display_buffer.gl_swap_buffers();
         report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);
 

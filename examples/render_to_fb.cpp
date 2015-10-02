@@ -17,16 +17,19 @@
  */
 
 #include "graphics.h"
+#include "as_render_target.h"
 
 #include "mir/server.h"
 #include "mir/report_exception.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/renderer/gl/render_target.h"
 
 #include <csignal>
 
 namespace mg=mir::graphics;
 namespace mo=mir::options;
+namespace me=mir::examples;
 
 namespace
 {
@@ -57,7 +60,7 @@ void render_loop(mir::Server& server)
     {
         group.for_each_display_buffer([&](mg::DisplayBuffer& buffer)
         {
-            buffer.make_current();
+            me::as_render_target(buffer)->make_current();
             gl_animation.init_gl();
         });
     });
@@ -68,9 +71,10 @@ void render_loop(mir::Server& server)
         {
             group.for_each_display_buffer([&](mg::DisplayBuffer& buffer)
             {
-                buffer.make_current();
+                auto const render_target = me::as_render_target(buffer);
+                render_target->make_current();
                 gl_animation.render_gl();
-                buffer.gl_swap_buffers();
+                render_target->swap_buffers();
             });
             group.post();
         });

@@ -28,6 +28,7 @@
 
 namespace me = mir::examples;
 namespace ms = mir::scene;
+namespace mf = mir::frontend;
 using namespace mir::geometry;
 
 ///\example server_example_tiling_window_manager.cpp
@@ -117,7 +118,8 @@ auto me::TilingWindowManagerPolicy::handle_place_new_surface(
 void me::TilingWindowManagerPolicy::generate_decorations_for(
     std::shared_ptr<ms::Session> const&,
     std::shared_ptr<ms::Surface> const&,
-    TilingSurfaceInfoMap&)
+    TilingSurfaceInfoMap&,
+    std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const&, ms::SurfaceCreationParameters const&)> const&)
 {
 }
 

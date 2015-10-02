@@ -29,6 +29,7 @@
 #include "mir/test/doubles/stub_display.h"
 #include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/validity_matchers.h"
+#include "mir/test/as_render_target.h"
 #include "patterns.h"
 #include "examples/graphics.h"
 #include <EGL/egl.h>
@@ -201,15 +202,17 @@ TEST_F(AndroidHardwareSanity, display_can_post)
     display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([](mg::DisplayBuffer& buffer)
         {
-            buffer.make_current();
+            auto const render_target = mt::as_render_target(buffer);
+
+            render_target->make_current();
             mir::draw::glAnimationBasic gl_animation;
             gl_animation.init_gl();
 
             gl_animation.render_gl();
-            buffer.gl_swap_buffers();
+            render_target->swap_buffers();
 
             gl_animation.render_gl();
-            buffer.gl_swap_buffers();
+            render_target->swap_buffers();
         });
         group.post();
     });
@@ -221,7 +224,7 @@ TEST_F(AndroidHardwareSanity, display_can_post_overlay)
     display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([](mg::DisplayBuffer& db)
         {
-            db.make_current();
+            mt::as_render_target(db)->make_current();
             auto area = db.view_area();
             mg::BufferProperties properties{
                 area.size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};

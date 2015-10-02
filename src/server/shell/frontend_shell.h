@@ -63,7 +63,10 @@ struct FrontendShell : mf::Shell
 
     void stop_prompt_session(std::shared_ptr<mf::PromptSession> const& prompt_session) override;
 
-    mf::SurfaceId create_surface(std::shared_ptr<mf::Session> const& session, ms::SurfaceCreationParameters const& params) override;
+    mf::SurfaceId create_surface(
+        std::shared_ptr<mf::Session> const& session,
+        ms::SurfaceCreationParameters const& params,
+        std::shared_ptr<mf::EventSink> const& sink) override;
 
     void modify_surface(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface, SurfaceSpecification const& modifications) override;
 

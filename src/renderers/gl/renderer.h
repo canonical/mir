@@ -26,6 +26,7 @@
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
 #include <mir/graphics/gl_primitive.h>
+#include "mir/renderer/gl/render_target.h"
 
 #include <GLES2/gl2.h>
 #include <unordered_map>
@@ -46,16 +47,17 @@ namespace renderer
 namespace gl
 {
 
-class RenderingTarget
+class CurrentRenderTarget
 {
 public:
-    RenderingTarget(graphics::DisplayBuffer* buffer);
-    ~RenderingTarget();
+    CurrentRenderTarget(graphics::DisplayBuffer* display_buffer);
+    ~CurrentRenderTarget();
 
     void ensure_current();
+    void swap_buffers();
 
 private:
-    graphics::DisplayBuffer* const buffer;
+    renderer::gl::RenderTarget* const render_target;
 };
 
 class Renderer : public compositor::Renderer
@@ -73,8 +75,7 @@ public:
     void suspend() override;
 
 private:
-    mutable RenderingTarget rendering_target;
-    graphics::DisplayBuffer& display_buffer;
+    mutable CurrentRenderTarget render_target;
 
 protected:
     /**

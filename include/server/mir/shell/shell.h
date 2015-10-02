@@ -73,7 +73,10 @@ public:
 
     virtual void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& prompt_session) = 0;
 
-    virtual frontend::SurfaceId create_surface(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params) = 0;
+    virtual frontend::SurfaceId create_surface(
+        std::shared_ptr<scene::Session> const& session,
+        scene::SurfaceCreationParameters const& params,
+        std::shared_ptr<frontend::EventSink> const& sink) = 0;
 
     virtual void modify_surface(
         std::shared_ptr<scene::Session> const& session,

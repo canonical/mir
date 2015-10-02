@@ -20,6 +20,7 @@
 
 #include "mir/frontend/session_credentials.h"
 #include "event_sender.h"
+#include "event_sink_factory.h"
 #include "protobuf_message_processor.h"
 #include "protobuf_responder.h"
 #include "socket_messenger.h"
@@ -56,6 +57,26 @@ int mf::ProtobufConnectionCreator::next_id()
     return next_session_id.fetch_add(1);
 }
 
+namespace
+{
+class ProtobufEventFactory : public mf::EventSinkFactory
+{
+public:
+    ProtobufEventFactory(std::shared_ptr<mir::graphics::PlatformIpcOperations> const& operations)
+        : ops{operations}
+    {
+    }
+
+    std::unique_ptr<mf::EventSink>
+    create_sink(std::shared_ptr<mf::MessageSender> const& messenger)
+    {
+        return std::make_unique<mf::detail::EventSender>(messenger, ops);
+    };
+private:
+    std::shared_ptr<mir::graphics::PlatformIpcOperations> const ops;
+};
+}
+
 void mf::ProtobufConnectionCreator::create_connection_for(
     std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
     ConnectionContext const& connection_context)
@@ -69,10 +90,14 @@ void mf::ProtobufConnectionCreator::create_connection_for(
             messenger,
             ipc_factory->resource_cache());
 
-        auto const event_sink = std::make_shared<detail::EventSender>(messenger, operations);
+
         auto const msg_processor = create_processor(
             message_sender,
-            ipc_factory->make_ipc_server(creds, event_sink, connection_context),
+            ipc_factory->make_ipc_server(
+                creds,
+                std::make_shared<ProtobufEventFactory>(operations),
+                messenger,
+                connection_context),
             report);
 
         auto const& connection = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connections, msg_processor);
