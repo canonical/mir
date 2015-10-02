@@ -750,6 +750,7 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
         high_dpi({3840, 2160}, {509, 286}, 2.5f, mir_form_factor_monitor),
         projector({1280, 1024}, {800, 600}, 0.5f, mir_form_factor_projector),
         stub_surface_factory{std::make_shared<ObserverPreservingSurfaceFactory>()},
+        sender{std::make_shared<testing::NiceMock<mtd::MockEventSink>>()},
         app_session(
             stub_surface_coordinator,
             stub_surface_factory,
@@ -759,7 +760,7 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
             null_snapshot_strategy,
             stub_session_listener,
             mtd::StubDisplayConfig{},
-            mt::fake_shared(sender))
+            sender)
     {
     }
 
@@ -790,7 +791,7 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
     TestOutput const high_dpi;
     TestOutput const projector;
     std::shared_ptr<ms::SurfaceFactory> const stub_surface_factory;
-    testing::NiceMock<mtd::MockEventSink> sender;
+    std::shared_ptr<testing::NiceMock<mtd::MockEventSink>> sender;
     ms::ApplicationSession app_session;
 };
 }
@@ -802,7 +803,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_events_to_surfaces)
     MirEvent event;
     bool event_received{false};
 
-    EXPECT_CALL(sender, handle_event(IsSurfaceOutputEvent()))
+    EXPECT_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
         .WillOnce(Invoke([&event, &event_received](auto ev)
                          {
                              event = ev;
@@ -810,7 +811,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_events_to_surfaces)
                          }));
 
     ms::SurfaceCreationParameters params;
-    auto surf_id = app_session.create_surface(params, nullptr);
+    auto surf_id = app_session.create_surface(params, sender);
     auto surface = std::dynamic_pointer_cast<mtd::MockSurface>(app_session.surface(surf_id));
 
     // Unsatisfying mockery
@@ -840,7 +841,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
     std::array<MirEvent, 2> event;
     int events_received{0};
 
-    ON_CALL(sender, handle_event(IsSurfaceOutputEvent()))
+    ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
         .WillByDefault(Invoke([&event, &events_received](auto ev)
                          {
                              event[events_received] = ev;
@@ -852,8 +853,8 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
     mf::SurfaceId ids[2];
     std::shared_ptr<mtd::MockSurface> surfaces[2];
 
-    ids[0] = app_session.create_surface(params, nullptr);
-    ids[1] = app_session.create_surface(params, nullptr);
+    ids[0] = app_session.create_surface(params, sender);
+    ids[1] = app_session.create_surface(params, sender);
 
     surfaces[0] = std::dynamic_pointer_cast<mtd::MockSurface>(app_session.surface(ids[0]));
     surfaces[1] = std::dynamic_pointer_cast<mtd::MockSurface>(app_session.surface(ids[1]));
@@ -897,7 +898,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
     MirEvent event;
     bool event_received{false};
 
-    ON_CALL(sender, handle_event(IsSurfaceOutputEvent()))
+    ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
         .WillByDefault(Invoke([&event, &event_received](auto ev)
                               {
                                   event = ev;
@@ -907,7 +908,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
     ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
         .of_size({100, 100});
 
-    auto id = app_session.create_surface(params, nullptr);
+    auto id = app_session.create_surface(params, sender);
     auto surface = std::dynamic_pointer_cast<mtd::MockSurface>(app_session.surface(id));
 
     // Unsatisfying mockery
@@ -949,7 +950,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     int events_received{0};
 
 
-    ON_CALL(sender, handle_event(IsSurfaceOutputEvent()))
+    ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
         .WillByDefault(Invoke([&event, &events_received](auto ev)
                               {
                                   event = ev;
@@ -972,7 +973,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
         .of_size({100, 100});
 
-    auto id = app_session.create_surface(params, nullptr);
+    auto id = app_session.create_surface(params, sender);
     auto surface = app_session.surface(id);
 
     // This should overlap both outputs
