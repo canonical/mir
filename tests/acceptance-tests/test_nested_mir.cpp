@@ -531,7 +531,15 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
     mir_connection_release(connection);
 }
 
-TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
+#if defined(ANDROID)
+#define DISABLE_ON_ANDROID(name) DISABLED_##name
+#else
+#define DISABLE_ON_ANDROID(name) name
+#endif
+
+// This test relies on Xcursors, on android these are not available and the fallback of
+// BuiltinCursorImages only provides one image
+TEST_F(NestedServer, DISABLE_ON_ANDROID(named_cursor_image_changes_are_forwarded_to_host))
 {
     NestedMirRunner nested_mir{new_connection()};
 
