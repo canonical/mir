@@ -149,6 +149,14 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput c
     return out;
 }
 
+std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfiguration const& val)
+{
+    val.for_each_card([&out](auto card) { out << card << std::endl; });
+    val.for_each_output([&out](DisplayConfigurationOutput const& output) { out << output << std::endl; });
+
+    return out;
+}
+
 bool mg::operator==(mg::DisplayConfigurationCard const& val1,
                     mg::DisplayConfigurationCard const& val2)
 {

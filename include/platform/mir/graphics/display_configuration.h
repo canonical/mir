@@ -181,6 +181,8 @@ protected:
     DisplayConfiguration& operator=(DisplayConfiguration const& c) = delete;
 };
 
+std::ostream& operator<<(std::ostream& out, DisplayConfiguration const& val);
+
 }
 }
 
