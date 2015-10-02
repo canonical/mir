@@ -32,6 +32,7 @@
 #include "mir/test/doubles/mock_surface_coordinator.h"
 #include "mir/test/doubles/mock_session_listener.h"
 #include "mir/test/doubles/mock_surface.h"
+#include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/null_snapshot_strategy.h"
 #include "mir/test/doubles/null_prompt_session_manager.h"
 #include "mir/test/doubles/stub_input_targeter.h"
@@ -135,6 +136,8 @@ struct AbstractShell : Test
         ON_CALL(session_container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
         ON_CALL(session_manager, set_focus_to(_)).
             WillByDefault(Invoke(&session_manager, &MockSessionManager::unmocked_set_focus_to));
+        ON_CALL(mock_surface, size())
+            .WillByDefault(Return(geom::Size{}));
         ON_CALL(surface_factory, create_surface(_,_))
             .WillByDefault(Return(mt::fake_shared(mock_surface)));
     }
@@ -394,7 +397,7 @@ TEST_F(AbstractShell, as_focus_controller_focused_surface_follows_focus)
     auto const session0 = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
     auto const session1 = shell.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
     NiceMock<mtd::MockSurface> dummy_surface;
-
+    ON_CALL(dummy_surface, size()).WillByDefault(Return(geom::Size{}));
     EXPECT_CALL(surface_factory, create_surface(_,_)).Times(AnyNumber())
         .WillOnce(Return(mt::fake_shared(dummy_surface)))
         .WillOnce(Return(mt::fake_shared(mock_surface)));

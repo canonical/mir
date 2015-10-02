@@ -247,7 +247,7 @@ TEST_F(ApplicationSession, adds_created_surface_to_coordinator)
         mt::fake_shared(surface_coordinator), mt::fake_shared(mock_surface_factory));
 
     ms::SurfaceCreationParameters params;
-    auto surf = session->create_surface(params, nullptr);
+    auto surf = session->create_surface(params, event_sink);
 
     session->destroy_surface(surf);
 }
@@ -265,7 +265,7 @@ TEST_F(ApplicationSession, notifies_listener_of_create_and_destroy_surface)
     auto session = make_application_session_with_listener(mt::fake_shared(listener));
 
     ms::SurfaceCreationParameters params;
-    auto surf = session->create_surface(params, nullptr);
+    auto surf = session->create_surface(params, event_sink);
 
     session->destroy_surface(surf);
 }
@@ -284,7 +284,7 @@ TEST_F(ApplicationSession, notifies_listener_of_surface_destruction_via_session_
         auto session = make_application_session_with_listener(mt::fake_shared(listener));
 
         ms::SurfaceCreationParameters params;
-        session->create_surface(params, nullptr);
+        session->create_surface(params, event_sink);
     }
 }
 
@@ -413,7 +413,7 @@ TEST_F(ApplicationSession, session_visbility_propagates_to_surfaces)
     }
 
     ms::SurfaceCreationParameters params;
-    auto surf = app_session->create_surface(params, nullptr);
+    auto surf = app_session->create_surface(params, event_sink);
 
     app_session->hide();
     app_session->show();
@@ -447,7 +447,7 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
         mtd::StubDisplayConfig{},
         event_sink);
 
-    auto surface = app_session.create_surface(ms::SurfaceCreationParameters{}, nullptr);
+    auto surface = app_session.create_surface(ms::SurfaceCreationParameters{}, event_sink);
     app_session.take_snapshot(ms::SnapshotCallback());
     app_session.destroy_surface(surface);
 }
@@ -511,7 +511,7 @@ TEST_F(ApplicationSession, surface_ids_are_bufferstream_ids)
 
     ms::SurfaceCreationParameters params;
 
-    auto id1 = session->create_surface(params, nullptr);
+    auto id1 = session->create_surface(params, event_sink);
     EXPECT_THAT(session->get_buffer_stream(mf::BufferStreamId(id1.as_value())), Eq(stub_bstream));
     EXPECT_THAT(session->get_surface(id1), Eq(mock_surface));
 
@@ -526,7 +526,7 @@ TEST_F(ApplicationSession, can_destroy_surface_bstream)
 {
     auto session = make_application_session_with_stubs();
     ms::SurfaceCreationParameters params;
-    auto id = session->create_surface(params, nullptr);
+    auto id = session->create_surface(params, event_sink);
     mf::BufferStreamId stream_id(id.as_value());
     session->destroy_buffer_stream(stream_id);
     EXPECT_THROW({
@@ -568,7 +568,7 @@ TEST_F(ApplicationSession, sets_and_looks_up_surface_streams)
     auto stream_id0 = mf::BufferStreamId(
         session->create_surface(
             ms::a_surface().of_position({1,1}),
-            nullptr).as_value());
+            event_sink).as_value());
 
     auto stream_id1 = session->create_buffer_stream(stream_properties);
     auto stream_id2 = session->create_buffer_stream(stream_properties);
@@ -643,7 +643,7 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
         .of_type(mir_surface_type_normal)
         .with_buffer_stream(id);
 
-    auto surface_id = session->create_surface(params, nullptr);
+    auto surface_id = session->create_surface(params, event_sink);
     auto surface = session->get_surface(surface_id);
 
     EXPECT_THAT(surface->primary_buffer_stream(), Eq(session->get_buffer_stream(id)));

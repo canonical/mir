@@ -33,6 +33,7 @@
 #include "mir/test/doubles/stub_buffer_stream_factory.h"
 #include "mir/test/doubles/null_snapshot_strategy.h"
 #include "mir/test/doubles/null_session_event_sink.h"
+#include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/stub_surface_factory.h"
 #include "mir/test/doubles/null_application_not_responding_detector.h"
 #include "mir/test/doubles/stub_display_configuration.h"
@@ -93,6 +94,7 @@ struct SessionManagerSetup : public testing::Test
     mtd::StubBufferStreamFactory buffer_stream_factory;
     mtd::StubSurfaceFactory stub_surface_factory;
     mtd::StubDisplayConfig display_config;
+    mtd::NullEventSink event_sink;
 
     ms::SessionManager session_manager{mt::fake_shared(surface_coordinator),
         mt::fake_shared(stub_surface_factory),
@@ -114,7 +116,7 @@ TEST_F(SessionManagerSetup, open_and_close_session)
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
 
-    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", std::shared_ptr<mf::EventSink>());
+    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", mt::fake_shared(event_sink));
     session_manager.close_session(session);
 }
 
@@ -127,10 +129,10 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
 
-    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", std::shared_ptr<mf::EventSink>());
+    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", mt::fake_shared(event_sink));
     session->create_surface(
         ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}),
-        nullptr);
+        mt::fake_shared(event_sink));
 
     session_manager.close_session(session);
 }
