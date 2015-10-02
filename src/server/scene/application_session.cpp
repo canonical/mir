@@ -82,7 +82,9 @@ mf::SurfaceId ms::ApplicationSession::next_id()
     return mf::SurfaceId(next_surface_id.fetch_add(1));
 }
 
-mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters const& the_params)
+mf::SurfaceId ms::ApplicationSession::create_surface(
+    SurfaceCreationParameters const& the_params,
+    std::shared_ptr<mf::EventSink> const& surface_sink)
 {
     auto const id = next_id();
     mf::BufferStreamId const stream_id{the_params.content_id.is_set() ?
@@ -93,7 +95,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters c
     if (params.parent_id.is_set())
         params.parent = checked_find(the_params.parent_id.value())->second;
 
-    auto const observer = std::make_shared<scene::SurfaceEventSource>(id, event_sink);
+    auto const observer = std::make_shared<scene::SurfaceEventSource>(id, surface_sink);
 
     std::shared_ptr<compositor::BufferStream> buffer_stream;
     if (params.content_id.is_set())

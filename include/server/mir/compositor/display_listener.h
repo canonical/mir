@@ -21,7 +21,7 @@
 
 namespace mir
 {
-namespace geometry { class Rectangle; }
+namespace geometry { struct Rectangle; }
 namespace compositor
 {
 class DisplayListener

@@ -42,9 +42,9 @@ namespace geom = mir::geometry;
 
 namespace
 {
-struct MockMsgSender : public mfd::MessageSender
+struct MockMsgSender : public mf::MessageSender
 {
-    MOCK_METHOD3(send, void(char const*, size_t, mfd::FdSets const&));
+    MOCK_METHOD3(send, void(char const*, size_t, mf::FdSets const&));
 };
 struct EventSender : public testing::Test
 {

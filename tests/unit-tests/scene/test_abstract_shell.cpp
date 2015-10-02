@@ -187,7 +187,7 @@ TEST_F(AbstractShell, create_surface_provides_create_parameters_to_window_manage
 
     EXPECT_CALL(*wm, add_surface(session, Ref(params), _));
 
-    shell.create_surface(session, params);
+    shell.create_surface(session, params, nullptr);
 }
 
 TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_parameters)
@@ -207,7 +207,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_paramet
             std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const&)> const& build)
             { return build(session, placed_params); }));
 
-    shell.create_surface(session, params);
+    shell.create_surface(session, params, nullptr);
 }
 
 TEST_F(AbstractShell, destroy_surface_removes_surface_from_window_manager)
@@ -216,7 +216,7 @@ TEST_F(AbstractShell, destroy_surface_removes_surface_from_window_manager)
     std::shared_ptr<ms::Session> const session =
         shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
 
-    auto const surface_id = shell.create_surface(session, params);
+    auto const surface_id = shell.create_surface(session, params, nullptr);
     auto const surface = session->surface(surface_id);
 
     EXPECT_CALL(*wm, remove_surface(session, WeakPtrTo(surface)));
@@ -323,7 +323,7 @@ TEST_F(AbstractShell, setting_surface_state_is_handled_by_window_manager)
     std::shared_ptr<ms::Session> const session =
         shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
 
-    auto const surface_id = shell.create_surface(session, ms::a_surface());
+    auto const surface_id = shell.create_surface(session, ms::a_surface(), nullptr);
     auto const surface = session->surface(surface_id);
 
     MirSurfaceState const state{mir_surface_state_fullscreen};
@@ -398,13 +398,13 @@ TEST_F(AbstractShell, as_focus_controller_focused_surface_follows_focus)
         WillOnce(Return(session0));
 
 
-    auto const surface0_id = shell.create_surface(session0, ms::a_surface());
+    auto const surface0_id = shell.create_surface(session0, ms::a_surface(), nullptr);
     auto const surface0 = session0->surface(surface0_id);
-    auto const surface1_id = shell.create_surface(session1, ms::a_surface());
+    auto const surface1_id = shell.create_surface(session1, ms::a_surface(), nullptr);
     auto const surface1 = session1->surface(surface1_id);
 
     msh::FocusController& focus_controller = shell;
-
+;
     focus_controller.set_focus_to(session0, surface0);
     EXPECT_THAT(focus_controller.focused_surface(), Eq(surface0));
     focus_controller.set_focus_to(session1, surface1);

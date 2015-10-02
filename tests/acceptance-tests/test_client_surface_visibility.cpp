@@ -54,9 +54,10 @@ public:
 
     mf::SurfaceId create_surface(
         std::shared_ptr<ms::Session> const& session,
-        ms::SurfaceCreationParameters const& params) override
+        ms::SurfaceCreationParameters const& params,
+        std::shared_ptr<mf::EventSink> const& sink) override
     {
-        auto const result = msh::ShellWrapper::create_surface(session, params);
+        auto const result = msh::ShellWrapper::create_surface(session, params, sink);
         auto const surface = session->surface(result);
         surface->move_to({0, 0});
         surfaces.push_back(surface);

@@ -50,7 +50,7 @@ bool socket_exists(std::string const& socket_name)
 
 std::string create_random_socket_name()
 {
-    std::random_device random_device;
+    std::random_device random_device("/dev/urandom");
     std::mt19937 generator(random_device());
     int max_concurrent_test_instances = 99999;
     std::uniform_int_distribution<> dist(1, max_concurrent_test_instances);
