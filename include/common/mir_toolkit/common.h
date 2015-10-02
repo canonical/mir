@@ -196,6 +196,7 @@ typedef enum MirEdgeAttachment
  */
 typedef enum MirFormFactor
 {
+    mir_form_factor_unknown,
     mir_form_factor_phone,
     mir_form_factor_tablet,
     mir_form_factor_monitor,
