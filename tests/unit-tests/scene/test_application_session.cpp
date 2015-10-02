@@ -715,21 +715,6 @@ public:
     };
 };
 
-struct ApplicationSessionSurfaceOutput : public ApplicationSession
-{
-    ApplicationSessionSurfaceOutput() :
-        stub_surface_factory{std::make_shared<ObserverPreservingSurfaceFactory>()},
-        app_session(
-            stub_surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
-            pid, name,null_snapshot_strategy, stub_session_listener, mt::fake_shared(sender))
-    {
-    }
-
-    std::shared_ptr<ms::SurfaceFactory> const stub_surface_factory;
-    testing::NiceMock<mtd::MockEventSink> sender;
-    ms::ApplicationSession app_session;
-};
-
 int calculate_dpi(geom::Size const& resolution, geom::Size const& size)
 {
     float constexpr mm_per_inch = 25.4f;
@@ -741,15 +726,54 @@ int calculate_dpi(geom::Size const& resolution, geom::Size const& size)
 
     return diagonal_px / diagonal_mm * mm_per_inch;
 }
+
+struct ApplicationSessionSurfaceOutput : public ApplicationSession
+{
+    ApplicationSessionSurfaceOutput() :
+        high_dpi({3840, 2160}, {509, 286}, 2.5f, mir_form_factor_monitor),
+        projector({1280, 1024}, {800, 600}, 0.5f, mir_form_factor_projector),
+        stub_surface_factory{std::make_shared<ObserverPreservingSurfaceFactory>()},
+        app_session(
+            stub_surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
+            pid, name,null_snapshot_strategy, stub_session_listener, mt::fake_shared(sender))
+    {
+    }
+
+    struct TestOutput
+    {
+        TestOutput(
+            geom::Size const& resolution,
+            geom::Size const& physical_size,
+            float scale,
+            MirFormFactor form_factor) :
+            output{resolution, physical_size, mir_pixel_format_argb_8888, 60.0, true},
+            form_factor{form_factor},
+            scale{scale},
+            dpi{calculate_dpi(resolution, physical_size)},
+            width{resolution.width.as_int()}
+        {
+            output.scale = scale;
+            output.form_factor = form_factor;
+        }
+
+        mtd::StubDisplayConfigurationOutput output;
+        MirFormFactor form_factor;
+        float scale;
+        int dpi;
+        int width;
+    };
+
+    TestOutput const high_dpi;
+    TestOutput const projector;
+    std::shared_ptr<ms::SurfaceFactory> const stub_surface_factory;
+    testing::NiceMock<mtd::MockEventSink> sender;
+    ms::ApplicationSession app_session;
+};
 }
 
 TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_events_to_surfaces)
 {
     using namespace ::testing;
-
-    MirFormFactor constexpr form_factor = mir_form_factor_projector;
-    float constexpr scale = 2.5f;
-    auto const dpi = calculate_dpi({1280, 1024}, {400, 300});
 
     MirEvent event;
     bool event_received{false};
@@ -771,29 +795,23 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_events_to_surfaces)
 
     std::vector<mg::DisplayConfigurationOutput> outputs =
         {
-            mtd::StubDisplayConfigurationOutput{{1280, 1024}, {400, 300}, mir_pixel_format_abgr_8888, 60.0, true}
+            high_dpi.output
         };
-    outputs[0].scale = scale;
-    outputs[0].form_factor = form_factor;
     mtd::StubDisplayConfig config(outputs);
     app_session.send_display_config(config);
 
     ASSERT_TRUE(event_received);
     auto surface_output_event = mir_event_get_surface_output_event(&event);
-    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(dpi));
-    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(form_factor));
-    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(scale));
+    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(high_dpi.dpi));
+    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(high_dpi.form_factor));
+    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(high_dpi.scale));
 }
 
 TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface)
 {
     using namespace ::testing;
 
-    MirFormFactor constexpr form_factor[2] = { mir_form_factor_projector, mir_form_factor_tv };
-    float constexpr scale[2] = { 2.5f, 0.5f };
-    int const dpi[2] = {
-        calculate_dpi({1280, 1024}, {400, 300}),
-        calculate_dpi({1280, 720}, {600, 500})};
+    std::array<TestOutput const*, 2> outputs{&high_dpi, &projector};
 
     std::array<MirEvent, 2> event;
     int events_received{0};
@@ -821,23 +839,17 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
     ON_CALL(*surfaces[1], size())
         .WillByDefault(Return(geom::Size{100, 100}));
 
-    surfaces[0]->move_to({100, 100});
-    surfaces[1]->move_to({1280 + 100, 100});
+    surfaces[0]->move_to({0 + 100, 100});
+    surfaces[1]->move_to({outputs[0]->width + 100, 100});
 
-    std::vector<mg::DisplayConfigurationOutput> outputs =
+    std::vector<mg::DisplayConfigurationOutput> configuration_outputs =
         {
-            mtd::StubDisplayConfigurationOutput{{1280, 1024}, {400, 300}, mir_pixel_format_abgr_8888, 60.0, true},
-            mtd::StubDisplayConfigurationOutput{{1280, 720}, {600, 500}, mir_pixel_format_abgr_8888, 60.0, true}
+            outputs[0]->output, outputs[1]->output
         };
-    outputs[0].scale = scale[0];
-    outputs[1].scale = scale[1];
-    outputs[0].form_factor = form_factor[0];
-    outputs[1].form_factor = form_factor[1];
+    configuration_outputs[0].top_left = {0, 0};
+    configuration_outputs[1].top_left = {outputs[0]->width, 0};
 
-    outputs[0].top_left = {0, 0};
-    outputs[1].top_left = {1280, 0};
-
-    mtd::StubDisplayConfig config(outputs);
+    mtd::StubDisplayConfig config(configuration_outputs);
     app_session.send_display_config(config);
 
     ASSERT_THAT(events_received, Eq(2));
@@ -846,9 +858,9 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
     {
         auto surface_output_event = mir_event_get_surface_output_event(&event[i]);
         EXPECT_THAT(event[i].surface_output.surface_id, Eq(ids[i].as_value()));
-        EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(dpi[i]));
-        EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(form_factor[i]));
-        EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(scale[i]));
+        EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(outputs[i]->dpi));
+        EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(outputs[i]->form_factor));
+        EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(outputs[i]->scale));
     }
 }
 
@@ -856,11 +868,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
 {
     using namespace ::testing;
 
-    MirFormFactor constexpr form_factor[2] = { mir_form_factor_projector, mir_form_factor_tv };
-    float constexpr scale[2] = { 2.5f, 0.5f };
-    int const dpi[2] = {
-        calculate_dpi({1280, 1024}, {400, 300}),
-        calculate_dpi({1280, 720}, {600, 500})};
+    std::array<TestOutput const*, 2> outputs{&projector, &high_dpi};
 
     MirEvent event;
     bool event_received{false};
@@ -883,44 +891,35 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
         .WillByDefault(Return(geom::Size{100, 100}));
 
     // This should overlap both outputs
-    surface->move_to({1200, 100});
+    surface->move_to({outputs[0]->width - 50, 100});
 
-    std::vector<mg::DisplayConfigurationOutput> outputs =
+    std::vector<mg::DisplayConfigurationOutput> configuration_outputs =
         {
-            mtd::StubDisplayConfigurationOutput{{1280, 1024}, {400, 300}, mir_pixel_format_abgr_8888, 60.0, true},
-            mtd::StubDisplayConfigurationOutput{{1280, 720}, {600, 500}, mir_pixel_format_abgr_8888, 60.0, true}
+            outputs[0]->output, outputs[1]->output
         };
-    outputs[0].scale = scale[0];
-    outputs[1].scale = scale[1];
-    outputs[0].form_factor = form_factor[0];
-    outputs[1].form_factor = form_factor[1];
 
     // Put the higher-scale output on the right, so a surface's top_left coordinate
     // can be in the lower-scale output but overlap with the higher-scale output.
-    outputs[0].top_left = {1280, 0};
-    outputs[1].top_left = {0, 0};
+    configuration_outputs[0].top_left = {0, 0};
+    configuration_outputs[1].top_left = {outputs[0]->width, 0};
 
-    mtd::StubDisplayConfig config(outputs);
+    mtd::StubDisplayConfig config(configuration_outputs);
     app_session.send_display_config(config);
 
     ASSERT_TRUE(event_received);
 
     auto surface_output_event = mir_event_get_surface_output_event(&event);
     EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
-    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(dpi[0]));
-    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(form_factor[0]));
-    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(scale[0]));
+    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(high_dpi.dpi));
+    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(high_dpi.form_factor));
+    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(high_dpi.scale));
 }
 
 TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
 {
     using namespace ::testing;
 
-    MirFormFactor constexpr form_factor[2] = { mir_form_factor_projector, mir_form_factor_tv };
-    float constexpr scale[2] = { 2.5f, 0.5f };
-    int const dpi[2] = {
-        calculate_dpi({1280, 1024}, {400, 300}),
-        calculate_dpi({1280, 720}, {600, 500})};
+    std::array<TestOutput const*, 2> outputs{&projector, &high_dpi};
 
     MirEvent event;
     int events_received{0};
@@ -933,22 +932,17 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
                                   events_received++;
                               }));
 
-    std::vector<mg::DisplayConfigurationOutput> outputs =
+    std::vector<mg::DisplayConfigurationOutput> configuration_outputs =
         {
-            mtd::StubDisplayConfigurationOutput{{1280, 1024}, {400, 300}, mir_pixel_format_abgr_8888, 60.0, true},
-            mtd::StubDisplayConfigurationOutput{{1280, 720}, {600, 500}, mir_pixel_format_abgr_8888, 60.0, true}
+            outputs[0]->output, outputs[1]->output
         };
-    outputs[0].scale = scale[0];
-    outputs[1].scale = scale[1];
-    outputs[0].form_factor = form_factor[0];
-    outputs[1].form_factor = form_factor[1];
 
     // Put the higher-scale output on the right, so a surface's top_left coordinate
     // can be in the lower-scale output but overlap with the higher-scale output.
-    outputs[0].top_left = {1280, 0};
-    outputs[1].top_left = {0, 0};
+    configuration_outputs[0].top_left = {0, 0};
+    configuration_outputs[1].top_left = {outputs[0]->width, 0};
 
-    mtd::StubDisplayConfig config(outputs);
+    mtd::StubDisplayConfig config(configuration_outputs);
     app_session.send_display_config(config);
 
     ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
@@ -958,7 +952,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     auto surface = app_session.surface(id);
 
     // This should overlap both outputs
-    surface->move_to({1200, 100});
+    surface->move_to({outputs[0]->width - 50, 100});
 
 
     ASSERT_THAT(events_received, Ge(1));
@@ -966,9 +960,9 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
 
     auto surface_output_event = mir_event_get_surface_output_event(&event);
     EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
-    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(dpi[0]));
-    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(form_factor[0]));
-    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(scale[0]));
+    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(high_dpi.dpi));
+    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(high_dpi.form_factor));
+    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(high_dpi.scale));
 
     // Now solely on the left output
     surface->move_to({0, 0});
@@ -978,19 +972,19 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
 
     surface_output_event = mir_event_get_surface_output_event(&event);
     EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
-    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(dpi[1]));
-    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(form_factor[1]));
-    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(scale[1]));
+    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(projector.dpi));
+    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(projector.form_factor));
+    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(projector.scale));
 
     // Now solely on the right output
-    surface->move_to({1300, 100});
+    surface->move_to({outputs[0]->width + 100, 100});
 
     ASSERT_THAT(events_received, Eq(events_expected));
     events_expected++;
 
     surface_output_event = mir_event_get_surface_output_event(&event);
     EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
-    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(dpi[0]));
-    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(form_factor[0]));
-    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(scale[0]));
+    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(high_dpi.dpi));
+    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(high_dpi.form_factor));
+    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(high_dpi.scale));
 }
