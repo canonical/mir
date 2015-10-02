@@ -21,8 +21,15 @@
 
 #include "mir/frontend/event_sink.h"
 
+#include <memory>
+
 namespace mir
 {
+namespace frontend
+{
+class MessageSender;
+}
+
 namespace test
 {
 namespace doubles
@@ -35,6 +42,8 @@ struct NullEventSink : public frontend::EventSink
     void send_ping(int32_t) {}
     void send_buffer(frontend::BufferStreamId, graphics::Buffer&, graphics::BufferIpcMsgType) {}
 };
+
+std::unique_ptr<frontend::EventSink> null_sink_factory(std::shared_ptr<frontend::MessageSender> const&);
 }
 }
 }

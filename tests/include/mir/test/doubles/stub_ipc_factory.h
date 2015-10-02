@@ -45,9 +45,10 @@ public:
     }
 
     std::shared_ptr<frontend::detail::DisplayServer> make_ipc_server(
-        mir::frontend::SessionCredentials const& /*creds*/,
-        std::shared_ptr<mir::frontend::EventSink> const& /*sink*/,
-        mir::frontend::ConnectionContext const& /*connection_context*/) override
+        mir::frontend::SessionCredentials const & /*creds*/,
+        std::shared_ptr<frontend::EventSinkFactory> const& /*sink_factory*/,
+        std::shared_ptr<frontend::MessageSender> const& /*message_sender*/,
+        mir::frontend::ConnectionContext const & /*connection_context*/) override
     {
         return server;
     }

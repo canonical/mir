@@ -32,9 +32,10 @@ class EventSequence;
 }
 namespace frontend
 {
+class MessageSender;
+
 namespace detail
 {
-class MessageSender;
 
 class EventSender : public  mir::frontend::EventSink
 {
