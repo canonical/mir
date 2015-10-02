@@ -41,16 +41,9 @@ struct StubGBMNativeBuffer : public graphics::mesa::GBMNativeBuffer
         fd_items = 1;
         width = size.width.as_int();
         height = size.height.as_int();
-        /*
-         * From gbm.h
-         *   GBM_BO_USE_SCANOUT      = (1 << 0),
-         *   GBM_BO_USE_CURSOR_64X64 = (1 << 1),
-         *   GBM_BO_USE_RENDERING    = (1 << 2),
-         *   GBM_BO_USE_WRITE        = (1 << 3),
-         */
-        flags = (bypassable ? GBM_BO_USE_SCANOUT : 0) |
-                              GBM_BO_USE_CURSOR_64X64 |
-                              GBM_BO_USE_RENDERING;
+
+        // Flags are defined in mir_native_buffer.h ...
+        flags = bypassable ? mir_buffer_flag_can_scanout : 0;
         stride = 4390;
         bo = reinterpret_cast<gbm_bo*>(&fake_bo); //gbm_bo is opaque, so test code shouldn't dereference.
         for(auto i = 0; i < data_items; i++)
