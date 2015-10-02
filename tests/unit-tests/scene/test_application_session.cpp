@@ -843,7 +843,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
 {
     using namespace ::testing;
 
-    std::array<TestOutput const*, 2> outputs{&high_dpi, &projector};
+    std::array<TestOutput const*, 2> outputs{{ &high_dpi, &projector }};
 
     std::array<MirEvent, 2> event;
     int events_received{0};
@@ -900,7 +900,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
 {
     using namespace ::testing;
 
-    std::array<TestOutput const*, 2> outputs{&projector, &high_dpi};
+    std::array<TestOutput const*, 2> outputs{{ &projector, &high_dpi }};
 
     MirEvent event;
     bool event_received{false};
@@ -951,7 +951,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
 {
     using namespace ::testing;
 
-    std::array<TestOutput const*, 2> outputs{&projector, &high_dpi};
+    std::array<TestOutput const*, 2> outputs {{ &projector, &high_dpi }};
 
     MirEvent event;
     int events_received{0};
