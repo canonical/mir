@@ -28,6 +28,7 @@ namespace graphics
 {
 class DisplayBuffer;
 }
+namespace renderer { namespace gl { class RenderTarget; }}
 namespace examples
 {
 class AdorningDisplayBufferCompositor : public compositor::DisplayBufferCompositor
@@ -37,6 +38,7 @@ public:
     void composite(compositor::SceneElementSequence&& scene_sequence) override;
 private:
     graphics::DisplayBuffer& db;
+    renderer::gl::RenderTarget* const render_target;
     GLchar const*const vert_shader_src;
     GLchar const*const frag_shader_src;
     bool current;

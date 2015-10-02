@@ -21,6 +21,7 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display.h"
+#include "mir/renderer/gl/render_target.h"
 #include "display_helpers.h"
 
 #include <vector>
@@ -44,7 +45,8 @@ class KMSOutput;
 
 class DisplayBuffer : public graphics::DisplayBuffer,
                       public graphics::DisplaySyncGroup,
-                      public graphics::NativeDisplayBuffer
+                      public graphics::NativeDisplayBuffer,
+                      public renderer::gl::RenderTarget
 {
 public:
     DisplayBuffer(std::shared_ptr<Platform> const& platform,
@@ -60,7 +62,7 @@ public:
     geometry::Rectangle view_area() const override;
     void make_current() override;
     void release_current() override;
-    void gl_swap_buffers() override;
+    void swap_buffers() override;
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 
     void for_each_display_buffer(

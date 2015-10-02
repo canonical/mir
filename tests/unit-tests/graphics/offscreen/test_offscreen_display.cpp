@@ -2,10 +2,12 @@
 
 #include "src/server/graphics/offscreen/display.h"
 #include "mir/graphics/default_display_configuration_policy.h"
+#include "mir/renderer/gl/render_target.h"
 #include "src/server/report/null_report_factory.h"
 
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
+#include "mir/test/as_render_target.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -16,6 +18,7 @@ namespace mg=mir::graphics;
 namespace mgo=mir::graphics::offscreen;
 namespace mtd=mir::test::doubles;
 namespace mr = mir::report;
+namespace mt = mir::test;
 
 namespace
 {
@@ -128,7 +131,7 @@ TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
             EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,Ne(EGL_NO_CONTEXT)));
             EXPECT_CALL(mock_gl, glBindFramebuffer(_,Ne(0)));
 
-            db.make_current();
+            mt::as_render_target(db)->make_current();
 
             Mock::VerifyAndClearExpectations(&mock_egl);
             Mock::VerifyAndClearExpectations(&mock_gl);

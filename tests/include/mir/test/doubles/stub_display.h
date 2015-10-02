@@ -21,7 +21,6 @@
 
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/null_display_sync_group.h"
-#include "mir/test/doubles/stub_display_buffer.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 
 #include "mir/geometry/rectangle.h"

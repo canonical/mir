@@ -94,7 +94,7 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     return needs_commit;
 }
 
-void mga::DisplayBuffer::gl_swap_buffers()
+void mga::DisplayBuffer::swap_buffers()
 {
     layer_list->update_list({}, offset_from_origin);
 }

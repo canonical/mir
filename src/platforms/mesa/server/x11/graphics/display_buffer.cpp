@@ -61,7 +61,7 @@ bool mgx::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& /
     return false;
 }
 
-void mgx::DisplayBuffer::gl_swap_buffers()
+void mgx::DisplayBuffer::swap_buffers()
 {
     if (!eglSwapBuffers(egl_dpy, egl_surf))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
