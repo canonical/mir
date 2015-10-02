@@ -19,6 +19,7 @@
 #include "application_session.h"
 #include "snapshot_strategy.h"
 #include "default_session_container.h"
+#include "output_properties_cache.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
@@ -284,84 +285,25 @@ void ms::ApplicationSession::show()
     }
 }
 
-namespace
-{
-int calculate_dpi(mir::geometry::Size const& resolution, mir::geometry::Size const& size)
-{
-    float constexpr mm_per_inch = 25.4f;
-
-    auto diagonal_mm = sqrt(size.height.as_int()*size.height.as_int()
-                            + size.width.as_int()*size.width.as_int());
-    auto diagonal_px = sqrt(resolution.height.as_int() * resolution.height.as_int()
-                            + resolution.width.as_int() * resolution.width.as_int());
-
-    return diagonal_px / diagonal_mm * mm_per_inch;
-}
-}
-
 void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const& info)
 {
     event_sink->handle_display_config_change(info);
 
-    struct OutputMap
-    {
-        geometry::Rectangle position;
-        int dpi;
-        float scale;
-        MirFormFactor form_factor;
-    };
-
-    std::vector<OutputMap> outputs;
-    info.for_each_output(
-        [&outputs](auto output)
-        {
-            auto const mode = output.modes[output.current_mode_index];
-            outputs.emplace_back(OutputMap {
-                output.extents(),
-                calculate_dpi(mode.size, output.physical_size_mm),
-                output.scale,
-                output.form_factor});
-        });
+    output_cache.update_from(info);
 
     std::lock_guard<std::mutex> lock{surfaces_and_streams_mutex};
     for (auto& surface : surfaces)
     {
-        bool changed{false};
-        int dpi;
-        float scale;
-        MirFormFactor form_factor;
+        auto output_properties = output_cache.properties_for(geometry::Rectangle{
+            surface.second->top_left(),
+            surface.second->size()});
 
-        for (auto const& output : outputs)
-        {
-            if (output.position.overlaps(
-                    geometry::Rectangle{
-                        surface.second->top_left(),
-                        surface.second->size()}))
-            {
-                if (!changed)
-                {
-                    changed = true;
-                    scale = output.scale;
-                    dpi = output.dpi;
-                    form_factor = output.form_factor;
-                }
-                else if (scale < output.scale)
-                {
-                    scale = output.scale;
-                    dpi = output.dpi;
-                    form_factor = output.form_factor;
-                }
-            }
-        }
-        if (changed)
-        {
-            event_sink->handle_event(
-                *mev::make_event(
-                    surface.first,
-                    dpi,
-                    scale,
-                    form_factor));
-        }
+        event_sink->handle_event(
+            *mev::make_event(
+                surface.first,
+                output_properties->dpi,
+                output_properties->scale,
+                output_properties->form_factor));
     }
 }
 

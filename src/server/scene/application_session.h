@@ -21,6 +21,8 @@
 
 #include "mir/scene/session.h"
 
+#include "output_properties_cache.h"
+
 #include <atomic>
 #include <map>
 #include <mutex>
@@ -106,6 +108,8 @@ private:
     frontend::SurfaceId next_id();
 
     std::atomic<int> next_surface_id;
+
+    OutputPropertiesCache output_cache;
 
     typedef std::map<frontend::SurfaceId, std::shared_ptr<Surface>> Surfaces;
     typedef std::map<frontend::BufferStreamId, std::shared_ptr<compositor::BufferStream>> Streams;
