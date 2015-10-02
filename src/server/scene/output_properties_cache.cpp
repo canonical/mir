@@ -67,17 +67,20 @@ ms::OutputPropertiesCache::properties_for(geom::Rectangle const& extents) const
     auto temp_properties = std::atomic_load(&cache);
 
     std::shared_ptr<OutputProperties const> matching_output_properties{};
-    for (auto const& output : *temp_properties)
+    if (temp_properties)
     {
-        if (output.extents.overlaps(extents))
+        for (auto const &output : *temp_properties)
         {
-            if (!matching_output_properties ||
-                (output.scale > matching_output_properties->scale))
+            if (output.extents.overlaps(extents))
             {
-                matching_output_properties = std::shared_ptr<OutputProperties const>(
-                    temp_properties,
-                    &output
-                );
+                if (!matching_output_properties ||
+                    (output.scale > matching_output_properties->scale))
+                {
+                    matching_output_properties = std::shared_ptr<OutputProperties const>(
+                        temp_properties,
+                        &output
+                    );
+                }
             }
         }
     }
