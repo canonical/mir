@@ -71,13 +71,11 @@ set(
   test_mir_cookie.cpp
 )
 
-if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
 list(APPEND UNIT_TEST_SOURCES
-  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/x11/X11_resources.cpp
+  $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
   $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
   $<TARGET_OBJECTS:mirplatforminputmesax11objects>
 )
-endif()
 
 add_subdirectory(options/)
 add_subdirectory(client/)

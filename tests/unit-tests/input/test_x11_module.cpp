@@ -16,82 +16,66 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-// ThrowBack alert:
-// This test uses utility headers an external user cannot use, for the sake of this
-// test those utilities just remove some verobsity and avoid code duplication.
-#include "src/include/common/mir/shared_library.h"
-// --
-
+#include "mir/shared_library.h"
 #include "mir/input/platform.h"
+
+#include "mir/test/doubles/mock_x11.h"
 #include "mir/test/doubles/mock_option.h"
-#include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/executable_path.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
+namespace mtf = mir_test_framework;
 namespace mo = mir::options;
-
 using namespace ::testing;
 namespace
 {
-auto get_libinput_platform()
+auto get_x11_platform()
 {
-    auto path = mtf::server_input_platform("input-evdev");
+    auto path = mtf::server_platform("server-mesa-x11");
     return std::make_shared<mir::SharedLibrary>(path);
 }
 
 char const probe_input_platform_symbol[] = "probe_input_platform";
 char const host_socket_opt[] = "host-socket";
 
+struct X11Platform : Test
+{
+
+    NiceMock<mtd::MockOption> options;
+    NiceMock<mtd::MockX11> mock_x11;
+    std::shared_ptr<mir::SharedLibrary> library{get_x11_platform()};
+};
+
 }
 
-TEST(LibInput, DISABLED_probes_as_unsupported_without_device_access)
+TEST_F(X11Platform, probes_as_unsupported_without_display)
 {
-    NiceMock<mtd::MockOption> options;
+    ON_CALL(mock_x11, XOpenDisplay(_))
+        .WillByDefault(Return(nullptr));
 
-    // dumb assumption - nobody runs this test cases as root..
-    // or allows accessing evdev input devices from non privileged users.
-    auto library = get_libinput_platform();
     auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
     EXPECT_THAT(probe_fun(options), Eq(mir::input::PlatformPriority::unsupported));
 }
 
-TEST(LibInput, probes_as_supported_with_at_least_one_device_to_deal_with)
+TEST_F(X11Platform, probes_as_supported_with_display)
 {
-    mtf::UdevEnvironment env;
-    env.add_standard_device("laptop-keyboard");
-    NiceMock<mtd::MockOption> options;
+    // default setup of MockX11 already provides fake objects
 
-    auto library = get_libinput_platform();
     auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
     EXPECT_THAT(probe_fun(options), Ge(mir::input::PlatformPriority::supported));
 }
 
-TEST(LibInput, probes_as_unsupported_on_nested_configs)
+TEST_F(X11Platform, probes_as_unsupported_on_nested_configs)
 {
-    mtf::UdevEnvironment env;
-    env.add_standard_device("laptop-keyboard");
-    NiceMock<mtd::MockOption> options;
-
     ON_CALL(options,is_set(StrEq(host_socket_opt)))
         .WillByDefault(Return(true));
     ON_CALL(options,get(StrEq(host_socket_opt), Matcher<char const*>(_)))
         .WillByDefault(Return("something"));
 
-    auto library = get_libinput_platform();
     auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
     EXPECT_THAT(probe_fun(options), Eq(mir::input::PlatformPriority::unsupported));
 }
 
-TEST(LibInput, probes_as_supported_when_umock_dev_available_or_before_input_devices_are_available)
-{
-    mtf::UdevEnvironment env;
-    NiceMock<mtd::MockOption> options;
-
-    auto library = get_libinput_platform();
-    auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
-    EXPECT_THAT(probe_fun(options), Eq(mir::input::PlatformPriority::supported));
-}

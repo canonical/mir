@@ -44,7 +44,6 @@ void add_input_platform_options(
 mi::PlatformPriority probe_input_platform(
     mo::Option const& options)
 {
-    return mi::PlatformPriority::best;
     if (options.is_set("host-socket"))
         return mi::PlatformPriority::unsupported;
 
