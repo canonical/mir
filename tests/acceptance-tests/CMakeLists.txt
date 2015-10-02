@@ -3,7 +3,6 @@ include(CMakeDependentOption)
 include_directories(
   ${CMAKE_SOURCE_DIR}
   ${PROJECT_SOURCE_DIR}/include/cookie
-  ${UMOCKDEV_INCLUDE_DIRS}
 )
 
 set(
@@ -79,7 +78,6 @@ target_link_libraries(mir_acceptance_tests
   mirclient-debug-extension
   mirserver
 
-  ${UMOCKDEV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
