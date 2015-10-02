@@ -27,6 +27,8 @@
 #include "mir/scene/application_not_responding_detector.h"
 #include "session_event_sink.h"
 #include "mir/frontend/event_sink.h"
+#include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -48,7 +50,7 @@ ms::SessionManager::SessionManager(
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionEventSink> const& session_event_sink,
     std::shared_ptr<SessionListener> const& session_listener,
-    std::function<std::shared_ptr<graphics::DisplayConfiguration const>()> const& get_display_config,
+    std::shared_ptr<graphics::Display const> const& display,
     std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector) :
     surface_coordinator(surface_coordinator),
     surface_factory(surface_factory),
@@ -57,7 +59,7 @@ ms::SessionManager::SessionManager(
     snapshot_strategy(snapshot_strategy),
     session_event_sink(session_event_sink),
     session_listener(session_listener),
-    get_display_config{get_display_config},
+    display{display},
     anr_detector{anr_detector}
 {
 }
@@ -95,7 +97,7 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
             name,
             snapshot_strategy,
             session_listener,
-            *get_display_config(),
+            *display->configuration(),
             sender);
 
     app_container->insert_session(new_session);

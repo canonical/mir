@@ -36,7 +36,7 @@
 #include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/stub_surface_factory.h"
 #include "mir/test/doubles/null_application_not_responding_detector.h"
-#include "mir/test/doubles/stub_display_configuration.h"
+#include "mir/test/doubles/stub_display.h"
 
 #include "mir/test/fake_shared.h"
 
@@ -93,7 +93,7 @@ struct SessionManagerSetup : public testing::Test
     ms::NullSessionListener session_listener;
     mtd::StubBufferStreamFactory buffer_stream_factory;
     mtd::StubSurfaceFactory stub_surface_factory;
-    mtd::StubDisplayConfig display_config;
+    mtd::StubDisplay display{2};
     mtd::NullEventSink event_sink;
 
     ms::SessionManager session_manager{mt::fake_shared(surface_coordinator),
@@ -103,7 +103,7 @@ struct SessionManagerSetup : public testing::Test
         std::make_shared<mtd::NullSnapshotStrategy>(),
         std::make_shared<mtd::NullSessionEventSink>(),
         mt::fake_shared(session_listener),
-        [this] { return mt::fake_shared(display_config); },
+        mt::fake_shared(display),
         std::make_shared<mtd::NullANRDetector>()};
 };
 
@@ -151,7 +151,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
     testing::NiceMock<MockSessionContainer> container;
     testing::NiceMock<mtd::MockSessionListener> session_listener;
     mtd::StubSurfaceFactory stub_surface_factory;
-    mtd::StubDisplayConfig display_config;
+    mtd::StubDisplay display{2};
 
     ms::SessionManager session_manager{
         mt::fake_shared(surface_coordinator),
@@ -161,7 +161,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
         std::make_shared<mtd::NullSnapshotStrategy>(),
         std::make_shared<mtd::NullSessionEventSink>(),
         mt::fake_shared(session_listener),
-        [this] { return mt::fake_shared(display_config); },
+        mt::fake_shared(display),
         std::make_shared<mtd::NullANRDetector>()};
 };
 }
@@ -192,7 +192,7 @@ struct SessionManagerSessionEventsSetup : public testing::Test
     MockSessionEventSink session_event_sink;
     testing::NiceMock<mtd::MockSessionListener> session_listener;
     mtd::StubSurfaceFactory stub_surface_factory;
-    mtd::StubDisplayConfig display_config;
+    mtd::StubDisplay display{3};
 
     ms::SessionManager session_manager{
         mt::fake_shared(surface_coordinator),
@@ -202,7 +202,7 @@ struct SessionManagerSessionEventsSetup : public testing::Test
         std::make_shared<mtd::NullSnapshotStrategy>(),
         mt::fake_shared(session_event_sink),
         mt::fake_shared(session_listener),
-        [this] { return mt::fake_shared(display_config); },
+        mt::fake_shared(display),
         std::make_shared<mtd::NullANRDetector>()};
 };
 }

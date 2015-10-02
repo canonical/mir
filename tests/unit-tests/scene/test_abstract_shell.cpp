@@ -38,7 +38,7 @@
 #include "mir/test/doubles/stub_input_targeter.h"
 #include "mir/test/doubles/stub_buffer_stream_factory.h"
 #include "mir/test/doubles/null_application_not_responding_detector.h"
-#include "mir/test/doubles/stub_display_configuration.h"
+#include "mir/test/doubles/stub_display.h"
 
 #include "mir/test/fake_shared.h"
 
@@ -108,7 +108,7 @@ struct AbstractShell : Test
     NiceMock<MockSessionEventSink> session_event_sink;
     NiceMock<mtd::MockSessionListener> session_listener;
     NiceMock<MockSurfaceFactory> surface_factory;
-    mtd::StubDisplayConfig display_config;
+    mtd::StubDisplay display{3};
 
     NiceMock<MockSessionManager> session_manager{
         mt::fake_shared(surface_coordinator),
@@ -118,7 +118,7 @@ struct AbstractShell : Test
         std::make_shared<mtd::NullSnapshotStrategy>(),
         mt::fake_shared(session_event_sink),
         mt::fake_shared(session_listener),
-        [this] { return mt::fake_shared(display_config); },
+        mt::fake_shared(display),
         std::make_shared<mtd::NullANRDetector>()};
 
     mtd::StubInputTargeter input_targeter;

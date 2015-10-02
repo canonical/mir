@@ -181,10 +181,7 @@ mir::DefaultServerConfiguration::the_session_coordinator()
                     the_snapshot_strategy(),
                     the_session_event_sink(),
                     the_session_listener(),
-                    [this]() -> std::shared_ptr<mg::DisplayConfiguration>
-                    {
-                        return the_frontend_display_changer()->active_configuration();
-                    },
+                    the_display(),
                     the_application_not_responding_detector());
         });
 }

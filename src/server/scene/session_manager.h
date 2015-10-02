@@ -29,6 +29,7 @@ namespace mir
 namespace graphics
 {
 class DisplayConfiguration;
+class Display;
 }
 
 namespace scene
@@ -54,7 +55,7 @@ public:
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
         std::shared_ptr<SessionEventSink> const& session_event_sink,
         std::shared_ptr<SessionListener> const& session_listener,
-        std::function<std::shared_ptr<graphics::DisplayConfiguration const>()> const& get_display_config,
+        std::shared_ptr<graphics::Display const> const& display,
         std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector);
 
     virtual ~SessionManager() noexcept;
@@ -83,7 +84,7 @@ private:
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionEventSink> const session_event_sink;
     std::shared_ptr<SessionListener> const session_listener;
-    std::function<std::shared_ptr<graphics::DisplayConfiguration const>()> get_display_config;
+    std::shared_ptr<graphics::Display const> const display;
     std::shared_ptr<ApplicationNotRespondingDetector> const anr_detector;
 };
 
