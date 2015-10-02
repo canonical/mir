@@ -58,15 +58,21 @@ void ms::OutputPropertiesCache::update_from(mg::DisplayConfiguration const &conf
                 output.form_factor});
         });
 
+    std::lock_guard<std::mutex> lk(mutex);
     cache = new_properties;
-//    std::atomic_store(&cache, new_properties);
 }
 
-std::shared_ptr<ms::OutputPropertiesCache::OutputProperties const>
-ms::OutputPropertiesCache::properties_for(geom::Rectangle const& extents) const
+auto ms::OutputPropertiesCache::get_cache() const
+    -> std::shared_ptr<std::vector<OutputProperties>>
 {
-    auto temp_properties = cache;
-//    auto temp_properties = std::atomic_load(&cache);
+    std::lock_guard<std::mutex> lk(mutex);
+    return cache;
+}
+
+auto ms::OutputPropertiesCache::properties_for(geom::Rectangle const& extents) const
+    -> std::shared_ptr<OutputProperties const>
+{
+    auto temp_properties = get_cache();
 
     std::shared_ptr<OutputProperties const> matching_output_properties{};
     if (temp_properties)
