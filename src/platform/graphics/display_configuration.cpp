@@ -97,7 +97,7 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationMode con
 
 namespace
 {
-std::string as_string(MirFormFactor form_factor)
+char const* as_string(MirFormFactor form_factor)
 {
     switch (form_factor)
     {
