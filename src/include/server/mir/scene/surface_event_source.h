@@ -29,21 +29,26 @@ namespace mir
 {
 namespace scene
 {
+class OutputPropertiesCache;
+
 class SurfaceEventSource : public NullSurfaceObserver
 {
 public:
     SurfaceEventSource(
         frontend::SurfaceId id,
+        OutputPropertiesCache const& outputs,
         std::shared_ptr<frontend::EventSink> const& event_sink);
 
     void attrib_changed(MirSurfaceAttrib attrib, int value) override;
     void resized_to(geometry::Size const& size) override;
+    void moved_to(geometry::Point const& top_left) override;
     void orientation_set_to(MirOrientation orientation) override;
     void client_surface_close_requested() override;
     void keymap_changed(xkb_rule_names const& names) override;
 
 private:
     frontend::SurfaceId const id;
+    OutputPropertiesCache const& outputs;
     std::shared_ptr<frontend::EventSink> const event_sink;
 };
 }

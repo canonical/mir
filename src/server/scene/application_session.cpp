@@ -96,7 +96,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     if (params.parent_id.is_set())
         params.parent = checked_find(the_params.parent_id.value())->second;
 
-    auto const observer = std::make_shared<scene::SurfaceEventSource>(id, surface_sink);
+    auto const observer = std::make_shared<scene::SurfaceEventSource>(id, output_cache, surface_sink);
 
     std::shared_ptr<compositor::BufferStream> buffer_stream;
     if (params.content_id.is_set())
@@ -298,12 +298,15 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
             surface.second->top_left(),
             surface.second->size()});
 
-        event_sink->handle_event(
-            *mev::make_event(
-                surface.first,
-                output_properties->dpi,
-                output_properties->scale,
-                output_properties->form_factor));
+        if (output_properties)
+        {
+            event_sink->handle_event(
+                *mev::make_event(
+                    surface.first,
+                    output_properties->dpi,
+                    output_properties->scale,
+                    output_properties->form_factor));
+        }
     }
 }
 

@@ -638,15 +638,41 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
 
 namespace
 {
+class ObserverPreservingSurface : public mtd::MockSurface
+{
+public:
+    void add_observer(std::shared_ptr<mir::scene::SurfaceObserver> const &observer) override
+    {
+        return BasicSurface::add_observer(observer);
+    }
+
+    void remove_observer(std::weak_ptr<mir::scene::SurfaceObserver> const &observer) override
+    {
+        return BasicSurface::remove_observer(observer);
+    }
+};
+
+class ObserverPreservingSurfaceFactory : public ms::SurfaceFactory
+{
+public:
+    std::shared_ptr<ms::Surface> create_surface(std::shared_ptr<mir::compositor::BufferStream> const&,
+        mir::scene::SurfaceCreationParameters const&) override
+    {
+        return std::make_shared<testing::NiceMock<ObserverPreservingSurface>>();
+    };
+};
+
 struct ApplicationSessionSender : public ApplicationSession
 {
     ApplicationSessionSender() :
+        stub_surface_factory{std::make_shared<ObserverPreservingSurfaceFactory>()},
         app_session(
         stub_surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
         pid, name,null_snapshot_strategy, stub_session_listener, mt::fake_shared(sender))
     {
     }
 
+    std::shared_ptr<ms::SurfaceFactory> const stub_surface_factory;
     testing::NiceMock<mtd::MockEventSink> sender;
     ms::ApplicationSession app_session;
 };
@@ -867,6 +893,89 @@ TEST_F(ApplicationSessionSender, sends_details_of_the_hightest_scale_factor_disp
     ASSERT_TRUE(event_received);
 
     auto surface_output_event = mir_event_get_surface_output_event(&event);
+    EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
+    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(dpi[0]));
+    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(form_factor[0]));
+    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(scale[0]));
+}
+
+TEST_F(ApplicationSessionSender, sends_surface_output_event_on_move)
+{
+    using namespace ::testing;
+
+    MirFormFactor constexpr form_factor[2] = { mir_form_factor_projector, mir_form_factor_tv };
+    float constexpr scale[2] = { 2.5f, 0.5f };
+    int const dpi[2] = {
+        calculate_dpi({1280, 1024}, {400, 300}),
+        calculate_dpi({1280, 720}, {600, 500})};
+
+    MirEvent event;
+    int events_received{0};
+
+
+    ON_CALL(sender, handle_event(IsSurfaceOutputEvent()))
+        .WillByDefault(Invoke([&event, &events_received](auto ev)
+                              {
+                                  event = ev;
+                                  events_received++;
+                              }));
+
+    std::vector<mg::DisplayConfigurationOutput> outputs =
+        {
+            mtd::StubDisplayConfigurationOutput{{1280, 1024}, {400, 300}, mir_pixel_format_abgr_8888, 60.0, true},
+            mtd::StubDisplayConfigurationOutput{{1280, 720}, {600, 500}, mir_pixel_format_abgr_8888, 60.0, true}
+        };
+    outputs[0].scale = scale[0];
+    outputs[1].scale = scale[1];
+    outputs[0].form_factor = form_factor[0];
+    outputs[1].form_factor = form_factor[1];
+
+    // Put the higher-scale output on the right, so a surface's top_left coordinate
+    // can be in the lower-scale output but overlap with the higher-scale output.
+    outputs[0].top_left = {1280, 0};
+    outputs[1].top_left = {0, 0};
+
+    mtd::StubDisplayConfig config(outputs);
+    app_session.send_display_config(config);
+
+    ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
+        .of_size({100, 100});
+
+    auto id = app_session.create_surface(params, nullptr);
+    auto surface = app_session.surface(id);
+
+    // This should overlap both outputs
+    surface->move_to({1200, 100});
+
+
+    ASSERT_THAT(events_received, Ge(1));
+    auto events_expected = events_received + 1;
+
+    auto surface_output_event = mir_event_get_surface_output_event(&event);
+    EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
+    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(dpi[0]));
+    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(form_factor[0]));
+    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(scale[0]));
+
+    // Now solely on the left output
+    surface->move_to({0, 0});
+
+    ASSERT_THAT(events_received, Eq(events_expected));
+    events_expected++;
+
+    surface_output_event = mir_event_get_surface_output_event(&event);
+    EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
+    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(dpi[1]));
+    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(form_factor[1]));
+    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(scale[1]));
+
+    // Now solely on the right output
+    surface->move_to({1300, 100});
+
+    ASSERT_THAT(events_received, Eq(events_expected));
+    events_expected++;
+
+    surface_output_event = mir_event_get_surface_output_event(&event);
     EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
     EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(dpi[0]));
     EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(form_factor[0]));

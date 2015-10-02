@@ -18,8 +18,10 @@
 
 #include "mir/events/event_builders.h"
 #include "mir/scene/surface_event_source.h"
+#include "output_properties_cache.h"
 
 #include "mir/geometry/size.h"
+#include "mir/geometry/rectangle.h"
 
 #include <cstring>
 #include <algorithm>
@@ -30,8 +32,10 @@ namespace geom = mir::geometry;
 
 ms::SurfaceEventSource::SurfaceEventSource(
     frontend::SurfaceId id,
+    OutputPropertiesCache const& outputs,
     std::shared_ptr<frontend::EventSink> const& event_sink) :
     id(id),
+    outputs{outputs},
     event_sink(event_sink)
 {
 }
@@ -41,6 +45,18 @@ void ms::SurfaceEventSource::resized_to(geom::Size const& size)
     event_sink->handle_event(*mev::make_event(id, size));
 }
 
+void ms::SurfaceEventSource::moved_to(geom::Point const& top_left)
+{
+    auto new_output_properties = outputs.properties_for(geom::Rectangle{top_left, {100,100}});
+    if (new_output_properties)
+    {
+        event_sink->handle_event(*mev::make_event(
+            id,
+            new_output_properties->dpi,
+            new_output_properties->scale,
+            new_output_properties->form_factor));
+    }
+}
 
 void ms::SurfaceEventSource::attrib_changed(MirSurfaceAttrib attrib, int value)
 {
