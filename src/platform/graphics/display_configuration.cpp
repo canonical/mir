@@ -119,9 +119,9 @@ char const* as_string(MirFormFactor form_factor)
 
 std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput const& val)
 {
-    out << "{" << std::endl << "\tid: " << val.id << std::endl << "\tcard_id: " << val.card_id << std::endl
-        << "\ttype: " << output_type_to_string(val.type) << std::endl
-        << "\tmodes: [ ";
+    out << "{\n\tid: " << val.id << "\n\tcard_id: " << val.card_id
+        << "\n\ttype: " << output_type_to_string(val.type)
+        << "\n\tmodes: [ ";
 
     for (size_t i = 0; i < val.modes.size(); ++i)
     {
