@@ -24,68 +24,10 @@ installing the Mesa packages from Ubuntu 13.10 (or later) or by building the
 custom Mesa yourself and ensuring it can be found by Mir, e.g., by using
 LD_LIBRARY_PATH.
 
-Using Mir as system compositor with X
--------------------------------------
-
-Note: for this to work you need to have Mir and all its dependencies (which
-include lightdm, Mesa and the Xorg drivers). The easiest way is to run Ubuntu
-13.10 or later.
-
-If you are running Ubuntu 13.10, additionally install unity-system-compositor.
-If you are running Ubuntu 14.04 or later, instead install ubuntu-desktop-mir.
-These packages will install dependencies you need and will create a file in
-/etc/lightdm/lightdm.conf.d/10-unity-system-compositor.conf.
-
-If you have instead built from source, to set up the system compositor, create
-/etc/lightdm/lightdm.conf.d/10-unity-system-compositor.conf yourself and make
-it look like this:
-
-    [SeatDefaults]
-    type=unity
-
-Now restart lightdm:
-
-    $ sudo restart lightdm
-
-Or you may simply reboot.
-
-In theory, you should now find yourself back in Ubuntu and not notice
-anything different. You can verify you're in Mir several ways:
-
-    $ ps aux | grep unity-system-compositor
-    $ grep -i xmir /var/log/Xorg.0.log
-    $ ls -l /var/log/lightdm/unity-system-compositor.log
-
-If problems occur, have a look at the following log files:
-
-    /var/log/lightdm/lightdm.log
-    /var/log/lightdm/unity-system-compositor.log
-    /var/log/lightdm/x-0.log
-    /var/log/Xorg.0.log
-
-You may not be able to get to a terminal if your video system has locked up. In
-that case secure shell into to your machine and read / copy these logs. They are
-overwritten on next boot.
-
-In any case, if you wish to deactivate XMir upon boot, simply comment out
-the type=unity line from
-/etc/lightdm/lightdm.conf.d/10-unity-system-compositor.conf, like this:
-
-    [SeatDefaults]
-    #type=unity
-
-If you cannot boot into a graphical display or terminal to disable XMir, then
-enter recovery mode as described in https://wiki.ubuntu.com/RecoveryMode. From
-there edit / move / remove
-/etc/lightdm/lightdm.conf.d/10-unity-system-compositor.conf and then reboot.
-To modify the filesystem you will need to enter the following command:
-
-    # mount / -o remount,rw
-
 Running Mir natively
 --------------------
 
-You can also run Mir natively. To do so, log in to VT1 (Ctrl+Alt+F1) _after_
+To run Mir natively on a PC/desktop/laptop, log in to VT1 (Ctrl+Alt+F1) _after_
 you are already logged in to X.  If you do so before then you will not be
 assigned adequate credentials to access the graphics hardware and will get
 strange errors.
