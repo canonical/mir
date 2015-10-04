@@ -122,8 +122,6 @@ target_link_libraries(
 
   mir-test-static
   mir-test-framework-static
-  mir-test-doubles-static
-  mir-test-doubles-platform-static
 
   xcursorloader-static
 
@@ -148,6 +146,12 @@ target_link_libraries(mir_unit_tests
   ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
 )
 endif()
+
+target_link_libraries(mir_unit_tests
+
+  mir-test-doubles-static
+  mir-test-doubles-platform-static
+  )
 
 CMAKE_DEPENDENT_OPTION(
   MIR_RUN_UNIT_TESTS
