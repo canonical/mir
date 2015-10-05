@@ -19,6 +19,7 @@ add_library(mirplatforminputevdevobjects OBJECT
     )
 
 add_library(mirplatforminputevdev MODULE
+  platform_factory.cpp
   $<TARGET_OBJECTS:mirplatforminputevdevobjects>
   $<TARGET_OBJECTS:mirevdevutilsobjects>
 )
