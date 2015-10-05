@@ -50,12 +50,15 @@ void ms::OutputPropertiesCache::update_from(mg::DisplayConfiguration const &conf
     config.for_each_output(
         [&new_properties](auto output)
         {
-            auto const mode = output.modes[output.current_mode_index];
-            new_properties->emplace_back(OutputProperties {
-                output.extents(),
-                calculate_dpi(mode.size, output.physical_size_mm),
-                output.scale,
-                output.form_factor});
+            if (output.connected)
+            {
+                auto const mode = output.modes[output.current_mode_index];
+                new_properties->emplace_back(OutputProperties {
+                    output.extents(),
+                    calculate_dpi(mode.size, output.physical_size_mm),
+                    output.scale,
+                    output.form_factor});
+            }
         });
 
     std::lock_guard<std::mutex> lk(mutex);
