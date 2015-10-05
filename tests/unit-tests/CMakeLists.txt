@@ -71,11 +71,13 @@ set(
   test_mir_cookie.cpp
 )
 
-list(APPEND UNIT_TEST_SOURCES
-  $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
-  $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
-  $<TARGET_OBJECTS:mirplatforminputmesax11objects>
-)
+if(MIR_BUILD_PLATFORM_MESA_X11)
+    list(APPEND UNIT_TEST_SOURCES
+      $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
+      $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
+      $<TARGET_OBJECTS:mirplatforminputmesax11objects>
+    )
+endif()
 
 add_subdirectory(options/)
 add_subdirectory(client/)
@@ -120,8 +122,6 @@ target_link_libraries(
 
   mir-test-static
   mir-test-framework-static
-  mir-test-doubles-static
-  mir-test-doubles-platform-static
 
   xcursorloader-static
 
@@ -131,13 +131,7 @@ target_link_libraries(
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
   ${UMOCKDEV_LIBRARIES}
-  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
-  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${MIR_PLATFORM_REFERENCES}
-  ${MIR_COMMON_REFERENCES}
-  ${MIR_SERVER_REFERENCES}
-  ${XKBCOMMON_LIBRARIES}
 )
 
 if ((MIR_BUILD_PLATFORM_MESA_KMS) OR (MIR_BUILD_PLATFORM_MESA_X11))
@@ -152,6 +146,12 @@ target_link_libraries(mir_unit_tests
   ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
 )
 endif()
+
+target_link_libraries(mir_unit_tests
+
+  mir-test-doubles-static
+  mir-test-doubles-platform-static
+  )
 
 CMAKE_DEPENDENT_OPTION(
   MIR_RUN_UNIT_TESTS
