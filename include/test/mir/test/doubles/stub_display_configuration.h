@@ -122,9 +122,9 @@ public:
             std::vector<graphics::DisplayConfigurationMode> modes;
 
             // Every second output is connected...
-            auto const connected = [](int index) { return index % 2; };
+            auto const connected = [](int index) -> bool { return index % 2; };
             // ..and every second connected output is used...
-            auto const used = [](int index) { return index % 4; };
+            auto const used = [](int index) -> bool { return index % 4; };
 
             for (auto j = 0u; j <= i; j++)
             {
@@ -144,7 +144,7 @@ public:
             else
             {
                 current_mode_index = std::numeric_limits<uint32_t>::max();
-                current_mode_index = std::numeric_limits<uint32_t>::max();
+                preferred_mode_index = std::numeric_limits<uint32_t>::max();
             }
 
             geometry::Size physical_size{};
