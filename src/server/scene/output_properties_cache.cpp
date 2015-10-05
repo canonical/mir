@@ -50,7 +50,7 @@ void ms::OutputPropertiesCache::update_from(mg::DisplayConfiguration const &conf
     config.for_each_output(
         [&new_properties](auto output)
         {
-            if (output.connected)
+            if (output.current_mode_index < output.modes.size())
             {
                 auto const mode = output.modes[output.current_mode_index];
                 new_properties->emplace_back(OutputProperties {
