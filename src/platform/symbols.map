@@ -245,16 +245,12 @@ MIRPLATFORM_11 {
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::operator*;
     mir::graphics::egl_category*;
-    mir::graphics::GLTexture::bind*;
-    mir::graphics::GLTexture::?GLTexture*;
-    mir::graphics::GLTexture::GLTexture*;
     mir::graphics::green_channel_depth*;
     mir::graphics::OverlappingOutputGroup::bounding_rectangle*;
     mir::graphics::OverlappingOutputGroup::for_each_output*;
     mir::graphics::OverlappingOutputGrouping::for_each_group*;
     mir::graphics::OverlappingOutputGrouping::OverlappingOutputGrouping*;
     mir::graphics::red_channel_depth*;
-    mir::graphics::SimpleGLProgram::SimpleGLProgram*;
     mir::graphics::tessellate_renderable_into_rectangle*;
     mir::udev::Context::?Context*;
     mir::udev::Context::Context*;

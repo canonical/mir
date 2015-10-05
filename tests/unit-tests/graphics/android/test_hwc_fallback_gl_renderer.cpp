@@ -18,9 +18,9 @@
 
 #include "src/platforms/android/server/hwc_fallback_gl_renderer.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/graphics/gl_program_factory.h"
-#include "mir/graphics/gl_primitive.h"
-#include "mir/graphics/gl_texture.h"
+#include "mir/gl/program_factory.h"
+#include "mir/gl/primitive.h"
+#include "mir/gl/texture.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/stub_renderable.h"
@@ -37,18 +37,19 @@
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
+namespace mgl=mir::gl;
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 namespace
 {
 
-class MockGLProgramFactory : public mg::GLProgramFactory
+class MockGLProgramFactory : public mgl::ProgramFactory
 {
 public:
     MOCK_CONST_METHOD2(create_gl_program,
-        std::unique_ptr<mg::GLProgram>(std::string const&, std::string const&));
-    MOCK_CONST_METHOD0(create_texture_cache, std::unique_ptr<mg::GLTextureCache>());
+        std::unique_ptr<mgl::Program>(std::string const&, std::string const&));
+    MOCK_CONST_METHOD0(create_texture_cache, std::unique_ptr<mgl::TextureCache>());
 };
 
 class MockContext : public mg::GLContext
@@ -58,23 +59,23 @@ public:
     MOCK_CONST_METHOD0(release_current, void());
 };
 
-struct MockTextureCache : public mg::GLTextureCache
+struct MockTextureCache : public mgl::TextureCache
 {
     MockTextureCache()
     {
         ON_CALL(*this, load(testing::_))
-            .WillByDefault(testing::Return(std::make_shared<mg::GLTexture>()));
+            .WillByDefault(testing::Return(std::make_shared<mgl::Texture>()));
     }
-    MOCK_METHOD1(load, std::shared_ptr<mg::GLTexture>(mg::Renderable const&));
+    MOCK_METHOD1(load, std::shared_ptr<mgl::Texture>(mg::Renderable const&));
     MOCK_METHOD0(invalidate, void());
     MOCK_METHOD0(drop_unused, void());
 };
 
-class StubTextureCache : public mg::GLTextureCache
+class StubTextureCache : public mgl::TextureCache
 {
-    std::shared_ptr<mg::GLTexture> load(mg::Renderable const&)
+    std::shared_ptr<mgl::Texture> load(mg::Renderable const&)
     {
-        return std::make_shared<mg::GLTexture>();
+        return std::make_shared<mgl::Texture>();
     }
     void invalidate()
     {
@@ -92,10 +93,10 @@ public:
         using namespace testing;
         ON_CALL(mock_gl_program_factory,create_gl_program(_,_))
             .WillByDefault(Invoke([](std::string const, std::string const)
-                { return std::unique_ptr<mg::GLProgram>(new mtd::StubGLProgram); }));
+                { return std::unique_ptr<mgl::Program>(new mtd::StubGLProgramNew); }));
         ON_CALL(mock_gl_program_factory,create_texture_cache())
             .WillByDefault(Invoke([]()
-                { return std::unique_ptr<mg::GLTextureCache>(new StubTextureCache); }));
+                { return std::unique_ptr<mgl::TextureCache>(new StubTextureCache); }));
 
         ON_CALL(mock_gl, glGetShaderiv(_,_,_))
             .WillByDefault(SetArgPointee<2>(GL_TRUE));
@@ -119,7 +120,7 @@ public:
     GLint const texcoord_attr_loc{3};
     GLint const tex_uniform_loc{4};
     GLint const texid{5};
-    size_t const stride{sizeof(mg::GLVertex)};
+    size_t const stride{sizeof(mgl::Vertex)};
 
     testing::NiceMock<MockGLProgramFactory> mock_gl_program_factory;
     testing::NiceMock<mtd::MockSwappingGLContext> mock_swapping_context;

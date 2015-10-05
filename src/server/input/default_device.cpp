@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,39 +13,35 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by:
+ *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
-#ifndef MIR_TEST_DOUBLES_STUB_GL_PROGRAM_H_
-#define MIR_TEST_DOUBLES_STUB_GL_PROGRAM_H_
 
-#include "mir/graphics/gl_program.h"
-#include "mir/gl/program.h"
+#include "device_handle.h"
 
-namespace mir
-{
-namespace test
-{
-namespace doubles
-{
+namespace mi = mir::input;
 
-struct StubGLProgram : public graphics::GLProgram
+mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, mi::InputDeviceInfo const& info) :
+    device_id{id}, info(info)
 {
-    operator GLuint() const override
-    {
-        return 7;
-    }
-};
-
-struct StubGLProgramNew : public gl::Program
-{
-    operator GLuint() const override
-    {
-        return 7;
-    }
-};
-
 }
-}
-} // namespace mir
 
-#endif /* MIR_TEST_DOUBLES_STUB_GL_PROGRAM_H_ */
+mi::DeviceCapabilities mi::DefaultDevice::capabilities() const
+{
+    return info.capabilities;
+}
+
+std::string mi::DefaultDevice::name() const
+{
+    return info.name;
+}
+
+std::string mi::DefaultDevice::unique_id() const
+{
+    return info.unique_id;
+}
+
+MirInputDeviceId mi::DefaultDevice::id() const
+{
+    return device_id;
+}

@@ -44,7 +44,7 @@ struct DisplayBuffer : public ::testing::Test
 {
     testing::NiceMock<mtd::MockEGL> mock_egl;
     testing::NiceMock<mtd::MockGL> mock_gl;
-    mtd::StubGLProgramFactory stub_program_factory;
+    mtd::StubGLProgramFactoryNew stub_program_factory;
 
     int visual_id{5};
     EGLConfig dummy_config{mock_egl.fake_configs[0]};

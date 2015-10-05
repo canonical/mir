@@ -16,29 +16,29 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GL_TEXTURE_H_
-#define MIR_GRAPHICS_GL_TEXTURE_H_
+#ifndef MIR_GL_TEXTURE_H_
+#define MIR_GL_TEXTURE_H_
 
 #include <GLES2/gl2.h>
 
 namespace mir
 {
-namespace graphics
+namespace gl
 {
-class GLTexture
+class Texture
 {
 public:
-    GLTexture();
-    ~GLTexture();
+    Texture();
+    ~Texture();
     void bind() const;
 
 private:
-    GLTexture(GLTexture const&) = delete;
-    GLTexture& operator=(GLTexture const&) = delete;
+    Texture(Texture const&) = delete;
+    Texture& operator=(Texture const&) = delete;
     GLuint generate_id() const;
     GLuint const id;
 };
 }
 }
 
-#endif /* MIR_GRAPHICS_GL_TEXTURE_H_ */
+#endif /* MIR_GL_TEXTURE_H_ */
