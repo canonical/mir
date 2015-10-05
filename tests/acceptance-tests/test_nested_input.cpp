@@ -99,7 +99,7 @@ struct NestedInput : public mtf::HeadlessInProcessServer
     mtf::UsingStubClientPlatform using_stub_client_platform;
     
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{ 0, "keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
+        mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
     };
 
     mir::test::WaitCondition all_events_received;

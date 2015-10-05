@@ -261,7 +261,7 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
     mtf::UsingStubClientPlatform using_stub_client_platform;
 
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{ 0, "mouse", "mouse-uid" , mi::DeviceCapability::pointer})
+        mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})
         };
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;

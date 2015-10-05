@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,10 +16,11 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_DISPLAY_BUFFER_H_
-#define MIR_TEST_DOUBLES_NULL_DISPLAY_BUFFER_H_
+#ifndef MIR_TEST_DOUBLES_STUB_GL_DISPLAY_BUFFER_H_
+#define MIR_TEST_DOUBLES_STUB_GL_DISPLAY_BUFFER_H_
 
-#include "mir/graphics/display_buffer.h"
+#include "mir/test/doubles/stub_display_buffer.h"
+#include "mir/renderer/gl/render_target.h"
 
 namespace mir
 {
@@ -28,17 +29,19 @@ namespace test
 namespace doubles
 {
 
-class NullDisplayBuffer : public graphics::DisplayBuffer, public graphics::NativeDisplayBuffer
+class StubGLDisplayBuffer : public StubDisplayBuffer,
+                            public renderer::gl::RenderTarget
 {
 public:
-    geometry::Rectangle view_area() const override { return geometry::Rectangle(); }
-    bool post_renderables_if_optimizable(graphics::RenderableList const&) override { return false; }
-    MirOrientation orientation() const override { return mir_orientation_normal; }
-    NativeDisplayBuffer* native_display_buffer() override { return this; }
+    using StubDisplayBuffer::StubDisplayBuffer;
+
+    void make_current() override {}
+    void release_current() override {}
+    void swap_buffers() override {}
 };
 
 }
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_NULL_DISPLAY_BUFFER_H_ */
+#endif
