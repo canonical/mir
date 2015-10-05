@@ -76,6 +76,24 @@ std::string mir_test_framework::server_platform(std::string const& name)
     BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find server platform in standard search locations"));
 }
 
+std::string mir_test_framework::server_input_platform(std::string const& name)
+{
+    std::string libname{name};
+
+    if (libname.find(".so") == std::string::npos)
+        libname += ".so." MIR_SERVER_INPUT_PLATFORM_ABI_STRING;
+
+    for (auto const& option :
+         {library_path() + "/server-modules/", library_path() + "/server-platform/", std::string(MIR_SERVER_PLATFORM_PATH) + '/'})
+    {
+        auto path_to_test = option + libname;
+        if (boost::filesystem::exists(path_to_test))
+            return path_to_test;
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find server platform in standard search locations"));
+}
+
 std::string mir_test_framework::client_platform(std::string const& name)
 {
     std::string libname{name};
