@@ -365,7 +365,6 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
     // asking for a crash (LP: #1493721) ...
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_)).Times(0);
     db.post_renderables_if_optimizable(list);
-    Mock::VerifyAndClearExpectations(&mock_gbm);
 }
 
 TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
