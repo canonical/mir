@@ -118,7 +118,7 @@ DisplayConfigurationOutput connected_without_modes()
     output.pixel_formats = {};
     output.modes = {};
     output.current_format = mir_pixel_format_invalid;
-    output.current_mode_index = std::numeric_limits<size_t>::max();
+    output.current_mode_index = std::numeric_limits<uint32_t>::max();
     return output;
 }
 

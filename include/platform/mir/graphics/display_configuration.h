@@ -93,7 +93,7 @@ struct DisplayConfigurationOutput
     /** The modes supported by the output. */
     std::vector<DisplayConfigurationMode> modes;
     /** The index in the 'modes' vector of the preferred output mode. */
-    size_t preferred_mode_index;
+    uint32_t preferred_mode_index;
     /** The physical size of the output. */
     geometry::Size physical_size_mm;
     /** Whether the output is connected. */
@@ -103,7 +103,7 @@ struct DisplayConfigurationOutput
     /** The top left point of this output in the virtual coordinate space. */
     geometry::Point top_left;
     /** The index in the 'modes' vector of the current output mode. */
-    size_t current_mode_index;
+    uint32_t current_mode_index;
     /** The current output pixel format. A matching entry should be found in the 'pixel_formats' vector*/
     MirPixelFormat current_format;
     /** Current power mode **/
@@ -132,12 +132,12 @@ struct UserDisplayConfigurationOutput
     DisplayConfigurationOutputType const& type;
     std::vector<MirPixelFormat> const& pixel_formats;
     std::vector<DisplayConfigurationMode> const& modes;
-    size_t const& preferred_mode_index;
+    uint32_t const& preferred_mode_index;
     geometry::Size const& physical_size_mm;
     bool const& connected;
     bool& used;
     geometry::Point& top_left;
-    size_t& current_mode_index;
+    uint32_t& current_mode_index;
     MirPixelFormat& current_format;
     MirPowerMode& power_mode;
     MirOrientation& orientation;

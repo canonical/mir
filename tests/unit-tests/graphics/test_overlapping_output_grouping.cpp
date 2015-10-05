@@ -73,7 +73,7 @@ public:
 
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
     {
-        size_t i = 1;
+        uint32_t i = 1;
         for (auto const& info : outputs)
         {
             std::vector<mg::DisplayConfigurationMode> modes(i);
