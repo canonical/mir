@@ -454,8 +454,6 @@ private:
 
     virtual std::string the_socket_file() const;
 
-    std::vector<UniqueModulePtr<input::Platform>> available_platforms();
-
     // The following caches and factory functions are internal to the
     // default implementations of corresponding the Mir components
     CachedPtr<scene::BroadcastingSessionEventSink> broadcasting_session_event_sink;

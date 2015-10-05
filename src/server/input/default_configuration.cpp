@@ -40,16 +40,14 @@
 #include "surface_input_dispatcher.h"
 
 #include "mir/input/touch_visualizer.h"
+#include "mir/input/input_probe.h"
 #include "mir/input/platform.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/compositor/scene.h"
 #include "mir/emergency_cleanup.h"
-#include "mir/report/legacy_input_report.h"
 #include "mir/main_loop.h"
-#include "mir/shared_library_prober.h"
-#include "mir/shared_library.h"
 #include "mir/glib_main_loop.h"
 #include "mir/log.h"
 #include "mir/dispatch/action_queue.h"
@@ -309,77 +307,6 @@ mir::DefaultServerConfiguration::the_cursor_images()
 
 namespace
 {
-auto probe_input_platform(std::shared_ptr<mir::SharedLibrary> const& lib, mir::options::Option const& options)
-{
-    auto probe = lib->load_function<mi::ProbePlatform>("probe_input_platform", MIR_SERVER_INPUT_PLATFORM_VERSION);
-
-    return probe(options);
-}
-
-void describe_input_platform(std::shared_ptr<mir::SharedLibrary> const& lib)
-{
-    auto describe =
-        lib->load_function<mi::DescribeModule>("describe_input_module", MIR_SERVER_INPUT_PLATFORM_VERSION);
-    auto desc = describe();
-    mir::log_info("Found input driver: %s", desc->name);
-}
-
-mir::UniqueModulePtr<mi::Platform> create_input_platform(
-    std::shared_ptr<mir::SharedLibrary> const& lib, std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const& cleanup_registry,
-    std::shared_ptr<mi::InputDeviceRegistry> const& registry, std::shared_ptr<mi::InputReport> const& report)
-{
-
-    auto create = lib->load_function<mi::CreatePlatform>("create_input_platform", MIR_SERVER_INPUT_PLATFORM_VERSION);
-
-    return create(options, cleanup_registry, registry, report);
-}
-}
-
-std::vector<mir::UniqueModulePtr<mi::Platform>> mir::DefaultServerConfiguration::available_platforms()
-{
-    auto options = the_options();
-
-    std::vector<UniqueModulePtr<input::Platform>> platforms;
-
-    if (options->is_set(options::platform_input_lib))
-    {
-        auto lib = std::make_shared<mir::SharedLibrary>(options->get<std::string>(options::platform_input_lib));
-
-        platforms.emplace_back(create_input_platform(lib, options, the_emergency_cleanup(),
-                                                     the_input_device_registry(), the_input_report()));
-
-        describe_input_platform(lib);
-    }
-    else
-    {
-
-        auto const& path = options->get<std::string>(options::platform_path);
-        auto platforms_libs = mir::libraries_for_path(path, *the_shared_library_prober_report());
-
-        for (auto const& platform_lib : platforms_libs)
-        {
-            try
-            {
-                if (probe_input_platform(platform_lib, *options) > input::PlatformPriority::dummy)
-                {
-                    platforms.emplace_back(create_input_platform(platform_lib, options, the_emergency_cleanup(),
-                                                                 the_input_device_registry(), the_input_report()));
-
-                    describe_input_platform(platform_lib);
-                }
-            }
-            catch (std::runtime_error const&)
-            {
-            }
-        }
-    }
-
-    return std::move(platforms);
-}
-
-namespace
-{
 class NullLegacyInputDispatchable : public mi::LegacyInputDispatchable
 {
 public:
@@ -409,7 +336,8 @@ mir::DefaultServerConfiguration::the_input_manager()
             }
             else
             {
-                auto platforms = available_platforms();
+                auto platforms = probe_input_platforms(*options, the_emergency_cleanup(), the_input_device_registry(),
+                                                       the_input_report(), *the_shared_library_prober_report());
 
                 if (platforms.empty())
                     BOOST_THROW_EXCEPTION(std::runtime_error("No input platforms found"));
