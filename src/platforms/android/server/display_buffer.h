@@ -21,7 +21,7 @@
 
 #include "configurable_display_buffer.h"
 #include "mir/graphics/egl_resources.h"
-#include "mir/graphics/gl_program_factory.h"
+#include "mir/gl/program_factory.h"
 #include "mir/renderer/gl/render_target.h"
 #include "display_configuration.h"
 #include "gl_context.h"
@@ -54,7 +54,7 @@ public:
         std::shared_ptr<DisplayDevice> const& display_device,
         std::shared_ptr<ANativeWindow> const& native_window,
         GLContext const& shared_gl_context,
-        GLProgramFactory const& program_factory,
+        gl::ProgramFactory const& program_factory,
         MirOrientation orientation,
         geometry::Displacement offset,
         OverlayOptimization overlay_option);

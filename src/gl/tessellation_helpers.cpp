@@ -16,13 +16,14 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  *              Kevin DuBois <kevin.dubois@canonical.com>
  */
-#include "mir/graphics/tessellation_helpers.h"
+#include "mir/gl/tessellation_helpers.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 
 namespace mg = mir::graphics;
+namespace mgl = mir::gl;
 namespace geom = mir::geometry;
-mg::GLPrimitive mg::tessellate_renderable_into_rectangle(
+mgl::Primitive mgl::tessellate_renderable_into_rectangle(
     mg::Renderable const& renderable, geom::Displacement const& offset)
 {
     auto const& buf_size = renderable.buffer()->size();
@@ -33,7 +34,7 @@ mg::GLPrimitive mg::tessellate_renderable_into_rectangle(
     GLfloat top = rect.top_left.y.as_int();
     GLfloat bottom = top + rect.size.height.as_int();
 
-    mg::GLPrimitive rectangle;
+    mgl::Primitive rectangle;
     rectangle.tex_id = 0;
     rectangle.type = GL_TRIANGLE_STRIP;
 
