@@ -116,7 +116,8 @@ public:
     void generate_decorations_for(
         std::shared_ptr<ms::Session> const&,
         std::shared_ptr<ms::Surface> const&,
-        SurfaceInfoMap&)
+        SurfaceInfoMap&,
+        std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const&, ms::SurfaceCreationParameters const&)> const&)
     {
     }
 private:

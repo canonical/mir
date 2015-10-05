@@ -18,6 +18,7 @@
 
 #include "screencast_display_buffer.h"
 #include "mir/graphics/buffer.h"
+#include "mir/renderer/gl/texture_source.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -96,7 +97,7 @@ bool mc::ScreencastDisplayBuffer::post_renderables_if_optimizable(mg::Renderable
     return false;
 }
 
-void mc::ScreencastDisplayBuffer::gl_swap_buffers()
+void mc::ScreencastDisplayBuffer::swap_buffers()
 {
     glFinish();
 }
@@ -104,4 +105,9 @@ void mc::ScreencastDisplayBuffer::gl_swap_buffers()
 MirOrientation mc::ScreencastDisplayBuffer::orientation() const
 {
     return mir_orientation_normal;
+}
+
+mg::NativeDisplayBuffer* mc::ScreencastDisplayBuffer::native_display_buffer()
+{
+    return this;
 }

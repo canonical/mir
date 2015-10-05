@@ -24,6 +24,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/renderer/gl/render_target.h"
 
 #include <EGL/egl.h>
 
@@ -56,7 +57,9 @@ private:
 
 }
 
-class DisplayBuffer : public graphics::DisplayBuffer
+class DisplayBuffer : public graphics::DisplayBuffer,
+                      public graphics::NativeDisplayBuffer,
+                      public renderer::gl::RenderTarget
 {
 public:
     DisplayBuffer(SurfacelessEGLContext egl_context,
@@ -65,11 +68,13 @@ public:
     geometry::Rectangle view_area() const override;
     void make_current() override;
     void release_current() override;
-    void gl_swap_buffers() override;
+    void swap_buffers() override;
 
     MirOrientation orientation() const override;
 
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override; 
+
+    NativeDisplayBuffer* native_display_buffer() override;
 
 private:
     SurfacelessEGLContext const egl_context;

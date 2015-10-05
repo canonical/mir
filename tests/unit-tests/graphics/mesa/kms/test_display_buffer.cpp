@@ -151,7 +151,7 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_is_held_for_full_frame)
 
     // Switch back to normal compositing
     db.make_current();
-    db.gl_swap_buffers();
+    db.swap_buffers();
     db.post();
 
     // Bypass buffer should no longer be held by db
@@ -414,7 +414,7 @@ TEST_F(MesaDisplayBufferTest, clone_mode_first_flip_flips_but_no_wait)
         gl_config,
         mock_egl.fake_egl_context);
 
-    db.gl_swap_buffers();
+    db.swap_buffers();
     db.post();
 }
 
@@ -435,7 +435,7 @@ TEST_F(MesaDisplayBufferTest, single_mode_first_post_flips_with_wait)
         gl_config,
         mock_egl.fake_egl_context);
 
-    db.gl_swap_buffers();
+    db.swap_buffers();
     db.post();
 }
 
@@ -464,10 +464,10 @@ TEST_F(MesaDisplayBufferTest, clone_mode_waits_for_page_flip_on_second_flip)
         gl_config,
         mock_egl.fake_egl_context);
 
-    db.gl_swap_buffers();
+    db.swap_buffers();
     db.post();
 
-    db.gl_swap_buffers();
+    db.swap_buffers();
     db.post();
 }
 

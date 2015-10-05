@@ -56,7 +56,7 @@ public:
           null_display_report{mir::report::null_display_report()},
           stub_db_factory{std::make_shared<mtd::StubDisplayBuilder>()},
           stub_gl_config{std::make_shared<mtd::StubGLConfig>()},
-          stub_gl_program_factory{std::make_shared<mtd::StubGLProgramFactory>()}
+          stub_gl_program_factory{std::make_shared<mtd::StubGLProgramFactoryNew>()}
     {
     }
 
@@ -70,7 +70,7 @@ protected:
     std::shared_ptr<mg::DisplayReport> const null_display_report;
     std::shared_ptr<mtd::StubDisplayBuilder> const stub_db_factory;
     std::shared_ptr<mtd::StubGLConfig> const stub_gl_config;
-    std::shared_ptr<mtd::StubGLProgramFactory> const stub_gl_program_factory;
+    std::shared_ptr<mtd::StubGLProgramFactoryNew> const stub_gl_program_factory;
 };
 
 //egl expectations are hard to tease out, we should unit-test the gl contexts instead

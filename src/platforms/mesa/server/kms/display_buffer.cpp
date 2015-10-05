@@ -31,6 +31,7 @@
 #include <chrono>
 #include <thread>
 
+namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
@@ -226,7 +227,7 @@ void mgm::DisplayBuffer::for_each_display_buffer(
     f(*this);
 }
 
-void mgm::DisplayBuffer::gl_swap_buffers()
+void mgm::DisplayBuffer::swap_buffers()
 {
     if (!egl.swap_buffers())
         fatal_error("Failed to perform buffer swap");
@@ -458,3 +459,7 @@ void mgm::DisplayBuffer::schedule_set_crtc()
     needs_set_crtc = true;
 }
 
+mg::NativeDisplayBuffer* mgm::DisplayBuffer::native_display_buffer()
+{
+    return this;
+}

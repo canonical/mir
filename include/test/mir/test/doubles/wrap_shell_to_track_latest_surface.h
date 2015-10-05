@@ -34,9 +34,10 @@ struct WrapShellToTrackLatestSurface : mir::shell::ShellWrapper
 
     mir::frontend::SurfaceId create_surface(
         std::shared_ptr <mir::scene::Session> const& session,
-        mir::scene::SurfaceCreationParameters const& params) override
+        mir::scene::SurfaceCreationParameters const& params,
+        std::shared_ptr<mir::frontend::EventSink> const& sink) override
     {
-        auto const surface = mir::shell::ShellWrapper::create_surface(session, params);
+        auto const surface = mir::shell::ShellWrapper::create_surface(session, params, sink);
         latest_surface = session->surface(surface);
         return surface;
     }

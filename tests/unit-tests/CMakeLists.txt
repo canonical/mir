@@ -30,6 +30,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/common
+  ${PROJECT_SOURCE_DIR}/src/include/gl
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
   ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
   ${GLIB_INCLUDE_DIRS}

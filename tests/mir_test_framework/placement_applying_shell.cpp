@@ -32,8 +32,9 @@ mtf::PlacementApplyingShell::PlacementApplyingShell(std::shared_ptr<mir::shell::
 }
 
 mir::frontend::SurfaceId mtf::PlacementApplyingShell::create_surface(
-        std::shared_ptr<mir::scene::Session> const& session,
-        mir::scene::SurfaceCreationParameters const& params)
+    std::shared_ptr<mir::scene::Session> const& session,
+    mir::scene::SurfaceCreationParameters const& params,
+    std::shared_ptr<mir::frontend::EventSink> const& sink)
 {
     auto creation_parameters = params;
 
@@ -41,7 +42,7 @@ mir::frontend::SurfaceId mtf::PlacementApplyingShell::create_surface(
     if (depth != client_depths.end())
         creation_parameters.depth = depth->second;
 
-    auto const id = wrapped->create_surface(session, creation_parameters);
+    auto const id = wrapped->create_surface(session, creation_parameters, sink);
     auto const surface = session->surface(id);
 
     auto position= client_positions.find(params.name);

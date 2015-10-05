@@ -44,7 +44,11 @@ namespace
 struct MockShell : msh::ShellWrapper
 {
     using msh::ShellWrapper::ShellWrapper;
-    MOCK_METHOD2(create_surface, mf::SurfaceId(std::shared_ptr<ms::Session> const&, ms::SurfaceCreationParameters const&));
+    MOCK_METHOD3(create_surface,
+        mf::SurfaceId(
+            std::shared_ptr<ms::Session> const&,
+            ms::SurfaceCreationParameters const&,
+            std::shared_ptr<mf::EventSink> const&));
 };
 
 bool parent_field_matches(ms::SurfaceCreationParameters const& params,
@@ -132,7 +136,7 @@ struct ClientMirSurface : mtf::ConnectedClientHeadlessServer
 
         server.the_surface_coordinator();
 
-        ON_CALL(*mock_shell, create_surface(_, _))
+        ON_CALL(*mock_shell, create_surface(_, _, _))
             .WillByDefault(Invoke(wrapped_shell.get(), &msh::Shell::create_surface));
 
         spec.connection = connection;
@@ -156,7 +160,7 @@ struct ClientMirSurface : mtf::ConnectedClientHeadlessServer
 
 TEST_F(ClientMirSurface, sends_optional_params)
 {
-    EXPECT_CALL(*mock_shell, create_surface(_,AllOf(MatchesRequired(&spec), MatchesOptional(&spec))));
+    EXPECT_CALL(*mock_shell, create_surface(_,AllOf(MatchesRequired(&spec), MatchesOptional(&spec)),_));
 
     auto surf = create_surface(&spec);
 
@@ -164,13 +168,13 @@ TEST_F(ClientMirSurface, sends_optional_params)
     ASSERT_THAT(surf.get(), IsValid());
     spec.parent = surf.get();
 
-    EXPECT_CALL(*mock_shell, create_surface(_, MatchesOptional(&spec)));
+    EXPECT_CALL(*mock_shell, create_surface(_, MatchesOptional(&spec),_));
     create_surface(&spec);
 }
 
 TEST_F(ClientMirSurface, as_menu_sends_correct_params)
 {
-    EXPECT_CALL(*mock_shell, create_surface(_,_));
+    EXPECT_CALL(*mock_shell, create_surface(_,_,_));
     auto parent = create_surface(&spec);
     ASSERT_THAT(parent.get(), IsValid());
 
@@ -188,13 +192,13 @@ TEST_F(ClientMirSurface, as_menu_sends_correct_params)
     ASSERT_THAT(menu_spec, NotNull());
 
     EXPECT_CALL(*mock_shell, create_surface(_, AllOf(IsAMenu(),
-        HasParent(parent.get()), MatchesAuxRect(attachment_rect), MatchesEdge(edge))));
+        HasParent(parent.get()), MatchesAuxRect(attachment_rect), MatchesEdge(edge)),_));
     create_surface(menu_spec.get());
 }
 
 TEST_F(ClientMirSurface, as_tooltip_sends_correct_params)
 {
-    EXPECT_CALL(*mock_shell, create_surface(_,_));
+    EXPECT_CALL(*mock_shell, create_surface(_,_,_));
     auto parent = create_surface(&spec);
     ASSERT_THAT(parent.get(), IsValid());
 
@@ -210,7 +214,7 @@ TEST_F(ClientMirSurface, as_tooltip_sends_correct_params)
     ASSERT_THAT(tooltip_spec, NotNull());
 
     EXPECT_CALL(*mock_shell, create_surface(_, AllOf(IsATooltip(),
-        HasParent(parent.get()), MatchesAuxRect(target_zone_rect))));
+        HasParent(parent.get()), MatchesAuxRect(target_zone_rect)),_));
     create_surface(tooltip_spec.get());
 }
 
@@ -224,13 +228,13 @@ TEST_F(ClientMirSurface, as_dialog_sends_correct_params)
 
     ASSERT_THAT(dialog_spec, NotNull());
 
-    EXPECT_CALL(*mock_shell, create_surface(_, AllOf(IsADialog(), NoParentSet())));
+    EXPECT_CALL(*mock_shell, create_surface(_, AllOf(IsADialog(), NoParentSet()),_));
     create_surface(dialog_spec.get());
 }
 
 TEST_F(ClientMirSurface, as_modal_dialog_sends_correct_params)
 {
-    EXPECT_CALL(*mock_shell, create_surface(_,_));
+    EXPECT_CALL(*mock_shell, create_surface(_,_,_));
     auto parent = create_surface(&spec);
     ASSERT_THAT(parent.get(), IsValid());
 
@@ -243,6 +247,6 @@ TEST_F(ClientMirSurface, as_modal_dialog_sends_correct_params)
 
     ASSERT_THAT(dialog_spec, NotNull());
 
-    EXPECT_CALL(*mock_shell, create_surface(_, AllOf(IsADialog(), HasParent(parent.get()))));
+    EXPECT_CALL(*mock_shell, create_surface(_, AllOf(IsADialog(), HasParent(parent.get())),_));
     create_surface(dialog_spec.get());
 }
