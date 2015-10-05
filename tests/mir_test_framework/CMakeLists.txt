@@ -16,6 +16,8 @@ add_definitions(
     -DMIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}"
     -DMIR_CLIENT_PLATFORM_ABI_STRING="${MIR_CLIENT_PLATFORM_ABI}"
     -DMIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
+    -DMIR_INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX}"
+    -DMIR_BUILD_PREFIX="${CMAKE_BINARY_DIR}"
     )
 
 add_library(mir-public-test-framework OBJECT
@@ -51,7 +53,6 @@ add_library(mir-protected-test-framework OBJECT
 
   fake_input_server_configuration.cpp
   input_testing_server_options.cpp
-  testing_process_manager.cpp
   udev_environment.cpp
 )
 
@@ -114,7 +115,7 @@ set_target_properties(
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
   OUTPUT_NAME input-stub
   PREFIX ""
-  LINK_FLAGS "-Wl,--version-script,${CMAKE_CURRENT_SOURCE_DIR}/symbols-stub-input.map"
+  LINK_FLAGS "-Wl,--version-script,${MIR_INPUT_PLATFORM_VERSION_SCRIPT}"
 )
 
 install(TARGETS mirplatforminputstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
@@ -162,3 +163,5 @@ string (REPLACE " -Wl,--no-undefined" " " CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHAR
 install(TARGETS mirplatformgraphicsstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
 
 install(TARGETS mirclientplatformstub LIBRARY DESTINATION ${MIR_CLIENT_PLATFORM_PATH})
+
+add_subdirectory(udev_recordings/)

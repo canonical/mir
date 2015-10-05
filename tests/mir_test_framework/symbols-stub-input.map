@@ -1,7 +1,0 @@
-MIR_INPUT_PLATFORM_2 {
-  global:
-    add_input_platform_options;
-    create_input_platform;
-    probe_input_platform;
-    describe_input_module;
-};

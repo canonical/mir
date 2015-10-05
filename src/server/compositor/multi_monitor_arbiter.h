@@ -19,6 +19,7 @@
 #define MIR_COMPOSITOR_MULTI_MONITOR_ARBITER_H_
 
 #include "mir/compositor/compositor_id.h"
+#include "mir/graphics/buffer_id.h"
 #include "buffer_bundle.h"
 #include <memory>
 #include <mutex>
@@ -32,10 +33,18 @@ namespace frontend { class ClientBuffers; }
 namespace compositor
 {
 class Schedule;
+
+enum class MultiMonitorMode
+{
+    multi_monitor_sync,
+    single_monitor_fast
+};
+
 class MultiMonitorArbiter : public BufferAcquisition 
 {
 public:
     MultiMonitorArbiter(
+        MultiMonitorMode mode,
         std::shared_ptr<frontend::ClientBuffers> const& map,
         std::shared_ptr<Schedule> const& schedule);
 
@@ -44,11 +53,15 @@ public:
     std::shared_ptr<graphics::Buffer> snapshot_acquire() override;
     void snapshot_release(std::shared_ptr<graphics::Buffer> const&) override;
     void set_schedule(std::shared_ptr<Schedule> const& schedule);
+    void set_mode(MultiMonitorMode mode);
+    bool buffer_ready_for(compositor::CompositorID id);
 
 private:
+    void decrease_refcount_for(graphics::BufferID id, std::lock_guard<std::mutex> const&);
     void clean_onscreen_buffers(std::lock_guard<std::mutex> const&);
 
     std::mutex mutable mutex;
+    MultiMonitorMode mode;
     std::shared_ptr<frontend::ClientBuffers> const map;
     struct ScheduleEntry
     {

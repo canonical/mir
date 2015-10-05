@@ -48,26 +48,6 @@ namespace mir
 namespace compositor
 {
 
-class CurrentRenderingTarget
-{
-public:
-    CurrentRenderingTarget() = default;
-    void ensure_current(mg::DisplayBuffer* buffer)
-    {
-        if ((buffer) && (buffer != current_buffer))
-            buffer->make_current();
-        current_buffer = buffer;
-    }
-
-    ~CurrentRenderingTarget()
-    {
-        if (current_buffer) current_buffer->release_current();
-    }
-
-private:
-    mg::DisplayBuffer* current_buffer{nullptr};
-};
-
 class CompositingFunctor
 {
 public:
@@ -102,17 +82,15 @@ public:
 
         mir::set_thread_name("Mir/Comp");
 
-        CurrentRenderingTarget target;
-        auto const comp_id = this;
         std::vector<std::tuple<mg::DisplayBuffer*, std::unique_ptr<mc::DisplayBufferCompositor>>> compositors;
         group.for_each_display_buffer(
-        [this, &compositors, &comp_id, &target](mg::DisplayBuffer& buffer)
+        [this, &compositors](mg::DisplayBuffer& buffer)
         {
-            target.ensure_current(&buffer);
             compositors.emplace_back(
                 std::make_tuple(&buffer, compositor_factory->create_compositor_for(buffer)));
 
-            const auto& r = buffer.view_area();
+            auto const& r = buffer.view_area();
+            auto const comp_id = std::get<1>(compositors.back()).get();
             report->added_display(r.size.width.as_int(), r.size.height.as_int(),
                                   r.top_left.x.as_int(), r.top_left.y.as_int(),
                                   CompositorReport::SubCompositorId{comp_id});
@@ -125,8 +103,15 @@ public:
                 { display_listener->remove_display(buffer.view_area()); });});
 
         auto compositor_registration = mir::raii::paired_calls(
-            [this,&comp_id]{scene->register_compositor(comp_id);},
-            [this,&comp_id]{scene->unregister_compositor(comp_id);});
+            [this,&compositors]
+            {
+                for (auto& compositor : compositors)
+                    scene->register_compositor(std::get<1>(compositor).get());
+            },
+            [this,&compositors]{
+                for (auto& compositor : compositors)
+                    scene->unregister_compositor(std::get<1>(compositor).get());
+            });
 
         started.set_value();
 
@@ -152,10 +137,10 @@ public:
                 frames_scheduled--;
                 lock.unlock();
 
-                for (auto& compositor : compositors)
+                for (auto& tuple : compositors)
                 {
-                    target.ensure_current(std::get<0>(compositor));
-                    std::get<1>(compositor)->composite(scene->scene_elements_for(comp_id));
+                    auto& compositor = std::get<1>(tuple);
+                    compositor->composite(scene->scene_elements_for(compositor.get()));
                 }
                 group.post();
 
@@ -178,7 +163,15 @@ public:
                  * important to re-count number of frames pending, separately
                  * to the initial scene_elements_for()...
                  */
-                int pending = scene->frames_pending(comp_id);
+                int pending = 0;
+                for (auto& compositor : compositors)
+                {
+                    auto const comp_id = std::get<1>(compositor).get();
+                    int pend = scene->frames_pending(comp_id);
+                    if (pend > pending)
+                        pending = pend;
+                }
+
                 if (pending > frames_scheduled)
                     frames_scheduled = pending;
             }

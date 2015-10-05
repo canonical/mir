@@ -27,6 +27,8 @@
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/client_types.h"
 
+#include <gmock/gmock.h>
+
 namespace mev = mir::events;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
@@ -137,9 +139,14 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
         auto const vscroll_value = 0.0;
         auto const action = mir_pointer_action_button_down;
         auto const mac = 0;
+        auto const relative_x_value = 0.0;
+        auto const relative_y_value = 0.0;
 
         auto const click_event = mev::make_event(device_id, timestamp, mac, modifiers,
-                                                 action, mir_pointer_button_tertiary, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
+                                                 action, mir_pointer_button_tertiary,
+                                                 x_axis_value, y_axis_value,
+                                                 hscroll_value, vscroll_value,
+                                                 relative_x_value, relative_y_value);
 
         server.the_shell()->handle(*click_event);
     }
@@ -154,9 +161,14 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
         auto const vscroll_value = 0.0;
         auto const action = mir_pointer_action_motion;
         auto const mac = 0;
+        auto const relative_x_value = 0.0;
+        auto const relative_y_value = 0.0;
 
         auto const drag_event = mev::make_event(device_id, timestamp, mac, modifiers,
-                                                action, mir_pointer_button_tertiary, x_axis_value, y_axis_value, hscroll_value, vscroll_value);
+                                                action, mir_pointer_button_tertiary,
+                                                x_axis_value, y_axis_value,
+                                                hscroll_value, vscroll_value,
+                                                relative_x_value, relative_y_value);
 
         server.the_shell()->handle(*drag_event);
     }

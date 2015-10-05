@@ -139,7 +139,7 @@ void mgo::DisplayBuffer::release_current()
     egl_context.release_current();
 }
 
-void mgo::DisplayBuffer::gl_swap_buffers()
+void mgo::DisplayBuffer::swap_buffers()
 {
     glFinish();
 }
@@ -156,4 +156,9 @@ MirOrientation mgo::DisplayBuffer::orientation() const
      * so nothing more to do.
      */
     return mir_orientation_normal;
+}
+
+mg::NativeDisplayBuffer* mgo::DisplayBuffer::native_display_buffer()
+{
+    return this;
 }

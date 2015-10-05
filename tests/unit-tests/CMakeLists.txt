@@ -25,10 +25,12 @@ include_directories(
   ${GBM_INCLUDE_DIRS}
   ${UMOCKDEV_INCLUDE_DIRS}
 
+  ${PROJECT_SOURCE_DIR}/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/common
+  ${PROJECT_SOURCE_DIR}/src/include/gl
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
   ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
   ${GLIB_INCLUDE_DIRS}
@@ -67,6 +69,7 @@ set(
   test_shared_library_prober.cpp
   test_lockable_callback.cpp
   test_module_deleter.cpp
+  test_mir_cookie.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
@@ -90,6 +93,7 @@ add_subdirectory(android_input/)
 add_subdirectory(scene/)
 add_subdirectory(thread/)
 add_subdirectory(dispatch/)
+add_subdirectory(renderers/gl)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 

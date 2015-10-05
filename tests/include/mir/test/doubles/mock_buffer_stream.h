@@ -78,6 +78,7 @@ struct MockBufferStream : public compositor::BufferStream
     MOCK_METHOD1(allocate_buffer, graphics::BufferID(graphics::BufferProperties const&));
     MOCK_METHOD1(remove_buffer, void(graphics::BufferID));
     MOCK_METHOD2(with_buffer, void(graphics::BufferID, std::function<void(graphics::Buffer&)> const&));
+    MOCK_METHOD1(set_scale, void(float));
 };
 }
 }

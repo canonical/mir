@@ -20,42 +20,30 @@
 #define MIR_INPUT_X_INPUT_DEVICE_H_
 
 #include "mir/input/input_device.h"
-
-#include <X11/Xlib.h>
+#include "mir/input/input_device_info.h"
 
 namespace mir
 {
-
-namespace dispatch
-{
-class Dispatchable;
-}
-
 namespace input
 {
 
 namespace X
 {
-class XDispatchable;
 
 class XInputDevice : public input::InputDevice
 {
 public:
-    XInputDevice(std::shared_ptr<::Display> const& conn);
-    ~XInputDevice() = default;
+    XInputDevice(InputDeviceInfo const& info);
 
-    std::shared_ptr<dispatch::Dispatchable> dispatchable() override;
-    void start(input::InputSink* destination, EventBuilder* builder) override;
+    std::shared_ptr<dispatch::Dispatchable> dispatchable();
+    void start(InputSink* destination, EventBuilder* builder) override;
     void stop() override;
     InputDeviceInfo get_device_info() override;
 
-protected:
-    XInputDevice(XInputDevice const&) = delete;
-    XInputDevice& operator=(XInputDevice const&) = delete;
-
+    InputSink* sink{nullptr};
+    EventBuilder* builder{nullptr};
 private:
-    int fd;
-    std::shared_ptr<XDispatchable> x_dispatchable;
+    InputDeviceInfo info;
 };
 
 }

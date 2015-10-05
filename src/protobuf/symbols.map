@@ -1,4 +1,4 @@
-MIR_PROTOBUF_1 {
+MIR_PROTOBUF_3 {
  global:
   extern "C++" {
     mir::protobuf::BufferAllocation::?BufferAllocation*;
@@ -306,40 +306,6 @@ MIR_PROTOBUF_1 {
     mir::protobuf::DisplayOutput::New*;
     mir::protobuf::DisplayOutput::SerializeWithCachedSizes*;
     mir::protobuf::DisplayOutput::Swap*;
-    mir::protobuf::DRMAuthMagicStatus::ByteSize*;
-    mir::protobuf::DRMAuthMagicStatus::CheckTypeAndMergeFrom*;
-    mir::protobuf::DRMAuthMagicStatus::Clear*;
-    mir::protobuf::DRMAuthMagicStatus::CopyFrom*;
-    mir::protobuf::DRMAuthMagicStatus::default_instance*;
-    mir::protobuf::DRMAuthMagicStatus::DiscardUnknownFields*;
-    mir::protobuf::DRMAuthMagicStatus::?DRMAuthMagicStatus*;
-    mir::protobuf::DRMAuthMagicStatus::DRMAuthMagicStatus*;
-    mir::protobuf::DRMAuthMagicStatus::GetTypeName*;
-    mir::protobuf::DRMAuthMagicStatus::IsInitialized*;
-    mir::protobuf::DRMAuthMagicStatus::kErrorFieldNumber*;
-    mir::protobuf::DRMAuthMagicStatus::kStatusCodeFieldNumber*;
-    mir::protobuf::DRMAuthMagicStatus::MergeFrom*;
-    mir::protobuf::DRMAuthMagicStatus::MergePartialFromCodedStream*;
-    mir::protobuf::DRMAuthMagicStatus::New*;
-    mir::protobuf::DRMAuthMagicStatus::SerializeWithCachedSizes*;
-    mir::protobuf::DRMAuthMagicStatus::Swap*;
-    mir::protobuf::DRMMagic::ByteSize*;
-    mir::protobuf::DRMMagic::CheckTypeAndMergeFrom*;
-    mir::protobuf::DRMMagic::Clear*;
-    mir::protobuf::DRMMagic::CopyFrom*;
-    mir::protobuf::DRMMagic::default_instance*;
-    mir::protobuf::DRMMagic::DiscardUnknownFields*;
-    mir::protobuf::DRMMagic::?DRMMagic*;
-    mir::protobuf::DRMMagic::DRMMagic*;
-    mir::protobuf::DRMMagic::GetTypeName*;
-    mir::protobuf::DRMMagic::IsInitialized*;
-    mir::protobuf::DRMMagic::kErrorFieldNumber*;
-    mir::protobuf::DRMMagic::kMagicFieldNumber*;
-    mir::protobuf::DRMMagic::MergeFrom*;
-    mir::protobuf::DRMMagic::MergePartialFromCodedStream*;
-    mir::protobuf::DRMMagic::New*;
-    mir::protobuf::DRMMagic::SerializeWithCachedSizes*;
-    mir::protobuf::DRMMagic::Swap*;
     mir::protobuf::Event::ByteSize*;
     mir::protobuf::Event::CheckTypeAndMergeFrom*;
     mir::protobuf::Event::Clear*;
@@ -855,8 +821,6 @@ MIR_PROTOBUF_1 {
     non-virtual?thunk?to?mir::protobuf::DisplayConfiguration::?DisplayConfiguration*;
     non-virtual?thunk?to?mir::protobuf::DisplayMode::?DisplayMode*;
     non-virtual?thunk?to?mir::protobuf::DisplayOutput::?DisplayOutput*;
-    non-virtual?thunk?to?mir::protobuf::DRMAuthMagicStatus::?DRMAuthMagicStatus*;
-    non-virtual?thunk?to?mir::protobuf::DRMMagic::?DRMMagic*;
     non-virtual?thunk?to?mir::protobuf::Event::?Event*;
     non-virtual?thunk?to?mir::protobuf::EventSequence::?EventSequence*;
     non-virtual?thunk?to?mir::protobuf::LifecycleEvent::?LifecycleEvent*;
@@ -898,8 +862,6 @@ MIR_PROTOBUF_1 {
     typeinfo?for?mir::protobuf::DisplayConfiguration;
     typeinfo?for?mir::protobuf::DisplayMode;
     typeinfo?for?mir::protobuf::DisplayOutput;
-    typeinfo?for?mir::protobuf::DRMAuthMagicStatus;
-    typeinfo?for?mir::protobuf::DRMMagic;
     typeinfo?for?mir::protobuf::Event;
     typeinfo?for?mir::protobuf::EventSequence;
     typeinfo?for?mir::protobuf::LifecycleEvent;
@@ -943,8 +905,6 @@ MIR_PROTOBUF_1 {
     vtable?for?mir::protobuf::DisplayConfiguration;
     vtable?for?mir::protobuf::DisplayMode;
     vtable?for?mir::protobuf::DisplayOutput;
-    vtable?for?mir::protobuf::DRMAuthMagicStatus;
-    vtable?for?mir::protobuf::DRMMagic;
     vtable?for?mir::protobuf::Event;
     vtable?for?mir::protobuf::EventSequence;
     vtable?for?mir::protobuf::LifecycleEvent;

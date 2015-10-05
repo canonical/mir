@@ -23,9 +23,10 @@
 #include "mir/input/input_device_info.h"
 
 #include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
-#include "mir_test_framework/fake_input_server_configuration.h"
+#include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/declarative_placement_window_manage_policy.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
@@ -214,62 +215,41 @@ struct NamedCursorClient : CursorClient
     std::string const cursor_name;
 };
 
-struct TestServerConfiguration : mtf::FakeInputServerConfiguration
+struct TestClientCursorAPI : mtf::HeadlessInProcessServer
 {
-    auto the_window_manager_builder() -> msh::WindowManagerBuilder override
-    {
-        using PlacementWindowManager = msh::BasicWindowManager<mtf::DeclarativePlacementWindowManagerPolicy, msh::CanonicalSessionInfo, msh::CanonicalSurfaceInfo>;
-
-        return [&](msh::FocusController* focus_controller)
-            {
-                return std::make_shared<PlacementWindowManager>(
-                    focus_controller,
-                    client_geometries,
-                    client_depths,
-                    the_shell_display_layout());
-            };
-    }
-
-    std::shared_ptr<mg::Cursor> the_cursor() override
-    {
-        return mt::fake_shared(cursor);
-    }
-
-    std::shared_ptr<mi::CursorImages> the_cursor_images() override
-    {
-        return std::make_shared<NamedCursorImages>();
-    }
-
+    mtf::TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str()};
     MockCursor cursor;
     mtf::SurfaceGeometries client_geometries;
     mtf::SurfaceDepths client_depths;
-};
 
-struct TestClientCursorAPI : mtf::InProcessServer
-{
     TestClientCursorAPI()
     {
         mock_egl.provide_egl_extensions();
         mock_egl.provide_stub_platform_buffer_swapping();
-    }
-    mir::DefaultServerConfiguration& server_config() override
-    {
-        return server_configuration_;
-    }
 
-    TestServerConfiguration& test_server_config()
-    {
-        return server_configuration_;
+        server.override_the_cursor([this]() { return mt::fake_shared(cursor); });
+
+        server.override_the_cursor_images([]() { return std::make_shared<NamedCursorImages>(); });
+
+        server.override_the_window_manager_builder([this](msh::FocusController* focus_controller)
+            {
+                using PlacementWindowManager = msh::BasicWindowManager<mtf::DeclarativePlacementWindowManagerPolicy, msh::CanonicalSessionInfo, msh::CanonicalSurfaceInfo>;
+                return std::make_shared<PlacementWindowManager>(
+                    focus_controller,
+                    client_geometries,
+                    client_depths,
+                    server.the_shell_display_layout());
+            });
     }
 
     void expect_client_shutdown()
     {
         using namespace testing;
-        Mock::VerifyAndClearExpectations(&test_server_config().cursor);
+        Mock::VerifyAndClearExpectations(&cursor);
 
         // Client shutdown
-        EXPECT_CALL(test_server_config().cursor, show(_)).Times(AnyNumber());
-        EXPECT_CALL(test_server_config().cursor, hide()).Times(AnyNumber());
+        EXPECT_CALL(cursor, show(_)).Times(AnyNumber());
+        EXPECT_CALL(cursor, hide()).Times(AnyNumber());
     }
 
     std::string const client_name_1{"client-1"};
@@ -277,12 +257,11 @@ struct TestClientCursorAPI : mtf::InProcessServer
     std::string const client_cursor_1{"cursor-1"};
     std::string const client_cursor_2{"cursor-2"};
 
-    TestServerConfiguration server_configuration_;
     mir::test::WaitCondition expectations_satisfied;
     mtf::UsingStubClientPlatform using_stub_client_platform;
 
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{ 0, "mouse", "mouse-uid" , mi::DeviceCapability::pointer})
+        mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})
         };
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
@@ -297,13 +276,13 @@ TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
 {
     using namespace ::testing;
 
-    test_server_config().client_geometries[client_name_1] =
+    client_geometries[client_name_1] =
         geom::Rectangle{{1, 0}, {1, 1}};
 
     DisabledCursorClient client{new_connection(), client_name_1};
     client.run();
 
-    EXPECT_CALL(test_server_config().cursor, hide())
+    EXPECT_CALL(cursor, hide())
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
@@ -317,15 +296,15 @@ TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
 {
     using namespace ::testing;
 
-    test_server_config().client_geometries[client_name_1] =
+    client_geometries[client_name_1] =
         geom::Rectangle{{1, 0}, {1, 1}};
 
     DisabledCursorClient client{new_connection(), client_name_1};
     client.run();
 
     InSequence seq;
-    EXPECT_CALL(test_server_config().cursor, hide());
-    EXPECT_CALL(test_server_config().cursor, show(DefaultCursorImage()))
+    EXPECT_CALL(cursor, hide());
+    EXPECT_CALL(cursor, show(DefaultCursorImage()))
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
@@ -340,9 +319,9 @@ TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
 {
     using namespace ::testing;
 
-    test_server_config().client_geometries[client_name_1] =
+    client_geometries[client_name_1] =
         geom::Rectangle{{1, 0}, {1, 1}};
-    test_server_config().client_geometries[client_name_2] =
+    client_geometries[client_name_2] =
         geom::Rectangle{{2, 0}, {1, 1}};
 
     NamedCursorClient client_1{new_connection(), client_name_1, client_cursor_1};
@@ -351,8 +330,8 @@ TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
     client_2.run();
 
     InSequence seq;
-    EXPECT_CALL(test_server_config().cursor, show(CursorNamed(client_cursor_1)));
-    EXPECT_CALL(test_server_config().cursor, show(CursorNamed(client_cursor_2)))
+    EXPECT_CALL(cursor, show(CursorNamed(client_cursor_1)));
+    EXPECT_CALL(cursor, show(CursorNamed(client_cursor_2)))
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
@@ -367,9 +346,9 @@ TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
 {
     using namespace ::testing;
 
-    test_server_config().client_geometries[client_name_1] =
+    client_geometries[client_name_1] =
         geom::Rectangle{{1, 0}, {1, 1}};
-    test_server_config().client_geometries[client_name_2] =
+    client_geometries[client_name_2] =
         geom::Rectangle{{1, 0}, {1, 1}};
 
     NamedCursorClient client_1{new_connection(), client_name_1, client_cursor_1};
@@ -377,7 +356,7 @@ TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
     client_1.run();
     client_2.run();
 
-    EXPECT_CALL(test_server_config().cursor, show(CursorNamed(client_cursor_2)))
+    EXPECT_CALL(cursor, show(CursorNamed(client_cursor_2)))
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
@@ -408,14 +387,14 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
         }
     };
 
-    test_server_config().client_geometries[client_name_1] =
+    client_geometries[client_name_1] =
         geom::Rectangle{{0, 0}, {1, 1}};
 
     ChangingCursorClient client{new_connection(), client_name_1, client_cursor_1};
 
     InSequence seq;
-    EXPECT_CALL(test_server_config().cursor, show(CursorNamed(client_cursor_1)));
-    EXPECT_CALL(test_server_config().cursor, hide())
+    EXPECT_CALL(cursor, show(CursorNamed(client_cursor_1)));
+    EXPECT_CALL(cursor, hide())
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
     client.run();
@@ -442,11 +421,12 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
                 mir_buffer_usage_software);
             auto conf = mir_cursor_configuration_from_buffer_stream(stream, hotspot_x, hotspot_y);
 
+            mir_buffer_stream_swap_buffers_sync(stream);
+
             mir_wait_for(mir_surface_configure_cursor(surface, conf));
             
             mir_cursor_configuration_destroy(conf);            
             
-            mir_buffer_stream_swap_buffers_sync(stream);
             mir_buffer_stream_swap_buffers_sync(stream);
             mir_buffer_stream_swap_buffers_sync(stream);
 
@@ -454,15 +434,15 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
         }
     };
 
-    test_server_config().client_geometries[client_name_1] =
+    client_geometries[client_name_1] =
         geom::Rectangle{{0, 0}, {1, 1}};
 
     BufferStreamClient client{new_connection(), client_name_1};
 
     {
         InSequence seq;
-        EXPECT_CALL(test_server_config().cursor, show(_)).Times(2);
-        EXPECT_CALL(test_server_config().cursor, show(_)).Times(1)
+        EXPECT_CALL(cursor, show(_)).Times(2);
+        EXPECT_CALL(cursor, show(_)).Times(1)
             .WillOnce(mt::WakeUp(&expectations_satisfied));
     }
 
@@ -500,7 +480,7 @@ TEST_F(TestClientCursorAPI, cursor_passed_through_nested_server)
     mtf::HeadlessNestedServerRunner nested_mir(new_connection());
     nested_mir.start_server();
 
-    EXPECT_CALL(test_server_config().cursor, hide())
+    EXPECT_CALL(cursor, hide())
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
     { // Ensure we finalize the client prior stopping the nested server

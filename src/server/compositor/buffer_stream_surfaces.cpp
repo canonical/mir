@@ -30,7 +30,9 @@ namespace geom = mir::geometry;
 
 mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> const& buffer_bundle) :
     buffer_bundle(buffer_bundle),
-    first_frame_posted{false}
+    first_frame_posted{false},
+    logical_size(buffer_bundle->properties().size),
+    scale{1.0f}
 {
 }
 
@@ -56,16 +58,23 @@ void mc::BufferStreamSurfaces::acquire_client_buffer(
 void mc::BufferStreamSurfaces::release_client_buffer(graphics::Buffer* buf)
 {
     buffer_bundle->client_release(buf);
+    {
+        std::unique_lock<std::mutex> lk(mutex);
+        first_frame_posted = true;
+    }
 }
 
 geom::Size mc::BufferStreamSurfaces::stream_size()
 {
-    return buffer_bundle->properties().size;
+    std::unique_lock<std::mutex> lk(mutex);
+    return logical_size;
 }
 
 void mc::BufferStreamSurfaces::resize(geom::Size const& size)
 {
-    buffer_bundle->resize(size);
+    std::unique_lock<std::mutex> lk(mutex);
+    logical_size = size;
+    buffer_bundle->resize(logical_size * scale);
 }
 
 void mc::BufferStreamSurfaces::force_requests_to_complete()
@@ -94,10 +103,6 @@ void mc::BufferStreamSurfaces::swap_buffers(
     if (old_buffer)
     {
         release_client_buffer(old_buffer);
-        {
-            std::unique_lock<std::mutex> lk(mutex);
-            first_frame_posted = true;
-        }
 
         /*
          * TODO: In future frame_posted() could be made parameterless.
@@ -118,6 +123,8 @@ bool mc::BufferStreamSurfaces::has_submitted_buffer() const
 
 void mc::BufferStreamSurfaces::with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec)
 {
+    if (!first_frame_posted)
+        BOOST_THROW_EXCEPTION(std::runtime_error("No frame posted yet"));
     exec(*std::make_shared<mc::TemporarySnapshotBuffer>(buffer_bundle));
 }
 
@@ -150,4 +157,14 @@ void mc::BufferStreamSurfaces::remove_buffer(graphics::BufferID)
 void mc::BufferStreamSurfaces::with_buffer(mg::BufferID, std::function<void(mg::Buffer&)> const&)
 {
     BOOST_THROW_EXCEPTION(std::logic_error("buffer lookup cannot happen with an exchange-based buffer client"));
+}
+
+void mc::BufferStreamSurfaces::set_scale(float new_scale)
+{
+    if (new_scale <= 0.0f)
+        BOOST_THROW_EXCEPTION(std::logic_error("invalid scale (must be greater than zero)"));
+
+    std::unique_lock<std::mutex> lk(mutex);
+    scale = new_scale;
+    buffer_bundle->resize(logical_size * scale);
 }

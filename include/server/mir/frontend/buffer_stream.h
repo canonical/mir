@@ -29,7 +29,7 @@ namespace mir
 namespace graphics
 {
 class Buffer;
-class BufferProperties;
+struct BufferProperties;
 }
 namespace scene
 {
@@ -57,6 +57,8 @@ public:
     virtual graphics::BufferID allocate_buffer(graphics::BufferProperties const&) = 0;
     virtual void remove_buffer(graphics::BufferID) = 0;
     virtual void with_buffer(graphics::BufferID id, std::function<void(graphics::Buffer&)> const& fn) = 0;
+    virtual void allow_framedropping(bool) = 0;
+    virtual void set_scale(float scale) = 0;
 protected:
     BufferStream() = default;
     BufferStream(BufferStream const&) = delete;

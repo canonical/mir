@@ -51,7 +51,6 @@ private:
     public:
         InputDevice(mir::input::InputDeviceInfo const& info,
                     std::shared_ptr<mir::dispatch::Dispatchable> const& dispatchable);
-        std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
 
         void start(mir::input::InputSink* destination, mir::input::EventBuilder* builder) override;
         void stop() override;

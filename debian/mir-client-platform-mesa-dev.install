@@ -1,2 +1,2 @@
-usr/include/mirclient/mir_toolkit/mesa
-usr/lib/*/pkgconfig/mir-client-platform-mesa-dev.pc
+usr/include/mirplatform/mir_toolkit/mesa
+usr/lib/*/pkgconfig/mir-client-platform-mesa.pc

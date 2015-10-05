@@ -15,22 +15,23 @@
  *
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
-#include "src/platforms/mesa/server/x11/graphics/display.h"
-#include "mir/test/doubles/mock_egl.h"
-#include "mir/test/doubles/mock_x11.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "src/platforms/mesa/server/x11/graphics/display.h"
+#include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_x11.h"
+
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace mtd=mir::test::doubles;
+namespace geom=mir::geometry;
 
 namespace
 {
 
-EGLint const window_width = 1280;
-EGLint const window_height = 1024;
+geom::Size const size{1280, 1024};
 
 class X11DisplayTest : public ::testing::Test
 {
@@ -52,14 +53,14 @@ public:
                                           mock_egl.fake_egl_surface,
                                           EGL_WIDTH,
                                           _))
-            .WillByDefault(DoAll(SetArgPointee<3>(window_width),
+            .WillByDefault(DoAll(SetArgPointee<3>(size.width.as_int()),
                             Return(EGL_TRUE)));
 
         ON_CALL(mock_egl, eglQuerySurface(mock_egl.fake_egl_display,
                                           mock_egl.fake_egl_surface,
                                           EGL_HEIGHT,
                                           _))
-            .WillByDefault(DoAll(SetArgPointee<3>(window_height),
+            .WillByDefault(DoAll(SetArgPointee<3>(size.height.as_int()),
                             Return(EGL_TRUE)));
 
         ON_CALL(mock_egl, eglGetConfigAttrib(mock_egl.fake_egl_display,
@@ -77,7 +78,7 @@ public:
 
     std::shared_ptr<mgx::Display> create_display()
     {
-        return std::make_shared<mgx::Display>(mock_x11.fake_x11.display);
+        return std::make_shared<mgx::Display>(mock_x11.fake_x11.display, size);
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
@@ -93,7 +94,7 @@ TEST_F(X11DisplayTest, creates_display_successfully)
     EXPECT_CALL(mock_egl, eglGetDisplay(mock_x11.fake_x11.display))
         .Times(Exactly(1));
 
-    EXPECT_CALL(mock_x11, XCreateWindow_wrapper(mock_x11.fake_x11.display,_, window_width, window_height,_,_,_,_,_,_))
+    EXPECT_CALL(mock_x11, XCreateWindow_wrapper(mock_x11.fake_x11.display,_, size.width.as_int(), size.height.as_int(),_,_,_,_,_,_))
         .Times(Exactly(1));
 
     EXPECT_CALL(mock_egl, eglCreateContext(mock_egl.fake_egl_display,_, EGL_NO_CONTEXT,_))

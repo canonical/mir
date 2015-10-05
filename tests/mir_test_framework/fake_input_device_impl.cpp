@@ -25,7 +25,6 @@
 #include "mir/input/event_builder.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/geometry/displacement.h"
-#include "mir/module_deleter.h"
 #include "src/platforms/evdev/input_modifier_utils.h"
 
 #include "boost/throw_exception.hpp"
@@ -40,7 +39,7 @@ namespace md = mir::dispatch;
 namespace mtf = mir_test_framework;
 
 mtf::FakeInputDeviceImpl::FakeInputDeviceImpl(mi::InputDeviceInfo const& info)
-    : queue{mir::make_module_ptr<md::ActionQueue>()}, device{mir::make_module_ptr<InputDevice>(info, queue)}
+    : queue{std::make_shared<md::ActionQueue>()}, device{std::make_shared<InputDevice>(info, queue)}
 {
     mtf::StubInputPlatform::add(device);
 }
@@ -105,9 +104,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
     auto key_event = builder->key_event(event_time, input_action, key_code, key_params.scancode, event_modifiers);
 
     if (key_params.action == synthesis::EventAction::Down)
-        modifiers |= mie::to_modifier(key_params.scancode);
+        modifiers |= mie::to_modifiers(key_params.scancode);
     else
-        modifiers &= ~mie::to_modifier(key_params.scancode);
+        modifiers &= ~mie::to_modifiers(key_params.scancode);
 
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
@@ -232,19 +231,16 @@ void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(float& x, floa
     y = (y - float(FakeInputDevice::minimum_touch_axis_value))*y_scale + area.top_left.y.as_float();
 }
 
-std::shared_ptr<md::Dispatchable> mtf::FakeInputDeviceImpl::InputDevice::dispatchable()
-{
-    return queue;
-}
-
 void mtf::FakeInputDeviceImpl::InputDevice::start(mi::InputSink* destination, mi::EventBuilder* event_builder)
 {
     sink = destination;
     builder = event_builder;
+    mtf::StubInputPlatform::register_dispatchable(queue);
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::stop()
 {
     sink = nullptr;
     builder = nullptr;
+    mtf::StubInputPlatform::unregister_dispatchable(queue);
 }

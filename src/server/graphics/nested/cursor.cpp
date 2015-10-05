@@ -31,9 +31,12 @@ mgn::Cursor::Cursor(std::shared_ptr<HostConnection> const& host_connection, std:
     connection->set_cursor_image(*default_image);
 }
 
+mgn::Cursor::~Cursor()
+{
+}
+
 void mgn::Cursor::move_to(geom::Point)
 {
-    // TODO Should this throw?
 }
 
 void mgn::Cursor::show(mg::CursorImage const& cursor_image)

@@ -21,6 +21,7 @@
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/fake_shared.h"
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 using namespace testing;
 namespace mtd = mir::test::doubles;

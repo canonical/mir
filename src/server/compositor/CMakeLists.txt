@@ -1,3 +1,9 @@
+include_directories(
+  ${PROJECT_SOURCE_DIR}/include/renderers/gl/
+  # TODO: This is a temporary dependency until renderers become proper plugins
+  ${PROJECT_SOURCE_DIR}/src/renderers/ 
+)
+
 set(
   MIR_COMPOSITOR_SRCS
 
@@ -6,9 +12,6 @@ set(
   temporary_buffers.cpp
   buffer_stream_factory.cpp
   buffer_stream_surfaces.cpp
-  gl_renderer.cpp
-  gl_renderer_factory.cpp
-  gl_program_family.cpp
   multi_threaded_compositor.cpp
   occlusion.cpp
   default_configuration.cpp
@@ -16,7 +19,6 @@ set(
   compositing_screencast.cpp
   timeout_frame_dropping_policy_factory.cpp
   buffer_queue.cpp
-  recently_used_cache.cpp
   stream.cpp
   multi_monitor_arbiter.cpp
   buffer_map.cpp

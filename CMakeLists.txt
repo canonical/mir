@@ -27,7 +27,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 16)
+set(MIR_VERSION_MINOR 17)
 set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
@@ -175,6 +175,8 @@ find_package(XKBCOMMON REQUIRED)
 find_package(LTTngUST REQUIRED)
 pkg_check_modules(UDEV REQUIRED libudev)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
+pkg_check_modules(LIBINPUT REQUIRED libinput)
+pkg_check_modules(NETTLE REQUIRED nettle)
 pkg_check_modules(UUID REQUIRED uuid)
 
 include_directories (${GLESv2_INCLUDE_DIRS})

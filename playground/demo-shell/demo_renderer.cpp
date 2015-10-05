@@ -31,6 +31,7 @@ using namespace mir;
 using namespace mir::examples;
 using namespace mir::geometry;
 using namespace mir::compositor;
+using namespace mir::renderer;
 
 namespace
 {
@@ -177,10 +178,10 @@ static const GLchar contrast_fshader[] =
 } // namespace
 
 DemoRenderer::DemoRenderer(
-    Rectangle const& display_area,
+    graphics::DisplayBuffer& display_buffer,
     float const titlebar_height,
     float const shadow_radius) :
-    GLRenderer(display_area),
+    renderer::gl::Renderer(display_buffer),
     titlebar_height{titlebar_height},
     shadow_radius{shadow_radius},
     corner_radius{0.5f},
@@ -220,10 +221,10 @@ void DemoRenderer::begin(DecorMap&& d) const
     title_cache.mark_all_unused();
 }
 
-void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
+void DemoRenderer::tessellate(std::vector<gl::Primitive>& primitives,
                               graphics::Renderable const& renderable) const
 {
-    GLRenderer::tessellate(primitives, renderable);
+    renderer::gl::Renderer::tessellate(primitives, renderable);
     auto d = decor_map.find(renderable.id());
     if (d != decor_map.end())
     {
@@ -237,7 +238,7 @@ void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
     }
 }
 
-void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primitives,
+void DemoRenderer::tessellate_shadow(std::vector<gl::Primitive>& primitives,
                                      graphics::Renderable const& renderable,
                                      float radius) const
 {
@@ -316,7 +317,7 @@ void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primiti
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitives,
+void DemoRenderer::tessellate_frame(std::vector<gl::Primitive>& primitives,
                                     graphics::Renderable const& renderable,
                                     float titlebar_height,
                                     char const* name) const
@@ -388,14 +389,14 @@ void DemoRenderer::set_colour_effect(ColourEffect e)
 }
 
 void DemoRenderer::draw(graphics::Renderable const& renderable,
-                        GLRenderer::Program const& current_program) const
+                        renderer::gl::Renderer::Program const& current_program) const
 {
-    const GLRenderer::Program* const programs[ColourEffect::neffects] =
+    const renderer::gl::Renderer::Program* const programs[ColourEffect::neffects] =
     {
         &current_program,
         &inverse_program,
         &contrast_program
     };
 
-    GLRenderer::draw(renderable, *programs[colour_effect]);
+    renderer::gl::Renderer::draw(renderable, *programs[colour_effect]);
 }

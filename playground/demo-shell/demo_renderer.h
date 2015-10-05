@@ -19,7 +19,7 @@
 #ifndef MIR_EXAMPLES_DEMO_RENDERER_H_
 #define MIR_EXAMPLES_DEMO_RENDERER_H_
 
-#include "mir/compositor/gl_renderer.h"
+#include "gl/renderer.h"
 #include "mir/compositor/decoration.h"
 #include "typo_glcache.h"
 
@@ -41,11 +41,11 @@ enum ColourEffect
 typedef std::unordered_map<graphics::Renderable::ID,
                            std::unique_ptr<compositor::Decoration>> DecorMap;
 
-class DemoRenderer : public compositor::GLRenderer
+class DemoRenderer : public renderer::gl::Renderer
 {
 public:
     DemoRenderer(
-        geometry::Rectangle const& display_area,
+        graphics::DisplayBuffer& display_buffer,
         float const titlebar_height,
         float const shadow_radius);
     ~DemoRenderer();
@@ -54,19 +54,19 @@ public:
     void set_colour_effect(ColourEffect);
 
 protected:
-    void tessellate(std::vector<graphics::GLPrimitive>& primitives,
+    void tessellate(std::vector<gl::Primitive>& primitives,
                     graphics::Renderable const& renderable) const override;
 
     void draw(graphics::Renderable const& renderable,
-              GLRenderer::Program const& prog) const override;
+              Renderer::Program const& prog) const override;
 
 private:
     void tessellate_shadow(
-        std::vector<graphics::GLPrimitive>& primitives,
+        std::vector<gl::Primitive>& primitives,
         graphics::Renderable const& renderable,
         float radius) const;
     void tessellate_frame(
-        std::vector<graphics::GLPrimitive>& primitives,
+        std::vector<gl::Primitive>& primitives,
         graphics::Renderable const& renderable,
         float titlebar_height,
         char const* name) const;

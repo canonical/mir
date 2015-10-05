@@ -51,7 +51,7 @@ namespace
 class StubRendererFactory : public mc::RendererFactory
 {
 public:
-    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
+    std::unique_ptr<mc::Renderer> create_renderer_for(mg::DisplayBuffer&)
     {
         return std::unique_ptr<mc::Renderer>(new mtd::StubRenderer());
     }
@@ -74,7 +74,6 @@ mtf::StubbedServerConfiguration::StubbedServerConfiguration(
 
           result->add_options()
                   (mtd::logging_opt, po::value<bool>()->default_value(false), mtd::logging_descr)
-                  ("tests-use-real-graphics", po::value<bool>()->default_value(false), "Use real graphics in tests.")
                   ("tests-use-real-input", po::value<bool>()->default_value(false), "Use real input in tests.");
 
           return result;
@@ -97,14 +96,11 @@ std::shared_ptr<mc::RendererFactory> mtf::StubbedServerConfiguration::the_render
 {
     auto options = the_options();
 
-    if (options->get<bool>("tests-use-real-graphics"))
-        return DefaultServerConfiguration::the_renderer_factory();
-    else
-        return renderer_factory(
-            [&]()
-            {
-                return std::make_shared<StubRendererFactory>();
-            });
+    return renderer_factory(
+        [&]()
+        {
+            return std::make_shared<StubRendererFactory>();
+        });
 }
 
 std::shared_ptr<mi::InputManager> mtf::StubbedServerConfiguration::the_input_manager()

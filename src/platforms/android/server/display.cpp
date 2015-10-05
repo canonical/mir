@@ -31,13 +31,16 @@
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/event_handler_register.h"
+#include "mir/gl/program_factory.h"
 #include "mir/fd.h"
 
 #include <boost/throw_exception.hpp>
 #include <fcntl.h>
 
 #include "mir/geometry/dimensions.h"
+
 namespace mga=mir::graphics::android;
+namespace mgl=mir::gl;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
@@ -109,7 +112,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
     mga::DisplayName name,
     mga::DisplayComponentFactory& display_buffer_builder,
     mg::DisplayConfigurationOutput const& config,
-    std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
+    std::shared_ptr<mgl::ProgramFactory> const& gl_program_factory,
     mga::PbufferGLContext const& gl_context,
     geom::Displacement displacement,
     mga::OverlayOptimization overlay_option)
@@ -134,7 +137,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
 
 mga::Display::Display(
     std::shared_ptr<mga::DisplayComponentFactory> const& display_buffer_builder,
-    std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
+    std::shared_ptr<mgl::ProgramFactory> const& gl_program_factory,
     std::shared_ptr<GLConfig> const& gl_config,
     std::shared_ptr<DisplayReport> const& display_report,
     mga::OverlayOptimization overlay_option) :
@@ -279,7 +282,6 @@ void mga::Display::on_hotplug()
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     configuration_dirty = true;
-    displays.hotplug_occurred();
     display_change_pipe->notify_change();
 }
 

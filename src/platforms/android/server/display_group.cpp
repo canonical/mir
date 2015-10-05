@@ -18,6 +18,7 @@
 
 #include "display_group.h"
 #include "configurable_display_buffer.h"
+#include "display_disconnected_exception.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -28,8 +29,7 @@ namespace geom = mir::geometry;
 mga::DisplayGroup::DisplayGroup(
     std::shared_ptr<mga::DisplayDevice> const& device,
     std::unique_ptr<mga::ConfigurableDisplayBuffer> primary_buffer) :
-    device(device),
-    hotplugging(false)
+    device(device)
 {
     dbs.emplace(std::make_pair(mga::DisplayName::primary, std::move(primary_buffer)));
 }
@@ -81,28 +81,19 @@ void mga::DisplayGroup::post()
         std::unique_lock<decltype(guard)> lk(guard);
         for(auto const& db : dbs)
             contents.emplace_back(db.second->contents());
-        hotplugging = false;
     }
 
     try
     {
         device->commit(contents);
     }
-    catch (std::runtime_error& e)
+    catch (mga::DisplayDisconnectedException& e)
     {
-        std::unique_lock<decltype(guard)> lk(guard);
-        if (!hotplugging)
-            throw e;
+        //Ignore disconnect errors as they are not fatal
     }
 }
 
 std::chrono::milliseconds mga::DisplayGroup::recommended_sleep() const
 {
     return device->recommended_sleep();
-}
-
-void mga::DisplayGroup::hotplug_occurred()
-{
-    std::unique_lock<decltype(guard)> lk(guard);
-    hotplugging = true;
 }

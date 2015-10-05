@@ -39,7 +39,8 @@ mc::Stream::Stream(std::unique_ptr<frontend::ClientBuffers> map, geom::Size size
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
     buffers(std::move(map)),
-    arbiter(std::make_shared<mc::MultiMonitorArbiter>(buffers, schedule)),
+    arbiter(std::make_shared<mc::MultiMonitorArbiter>(
+        mc::MultiMonitorMode::multi_monitor_sync, buffers, schedule)),
     size(size),
     pf(pf),
     first_frame_posted(false)
@@ -134,10 +135,10 @@ void mc::Stream::force_requests_to_complete()
     //we dont block any requests in this system, nothing to force
 }
 
-int mc::Stream::buffers_ready_for_compositor(void const*) const
+int mc::Stream::buffers_ready_for_compositor(void const* id) const
 {
     std::lock_guard<decltype(mutex)> lk(mutex); 
-    if (schedule->anything_scheduled())
+    if (arbiter->buffer_ready_for(id))
         return 1;
     return 0;
 }
@@ -172,4 +173,8 @@ void mc::Stream::with_buffer(mg::BufferID id, std::function<void(mg::Buffer&)> c
 {
     auto buffer = (*buffers)[id];
     fn(*buffer);
+}
+
+void mc::Stream::set_scale(float)
+{
 }

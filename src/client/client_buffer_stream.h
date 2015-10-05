@@ -58,7 +58,7 @@ public:
     virtual std::shared_ptr<MemoryRegion> secure_for_cpu_write() = 0;
 
     virtual int swap_interval() const = 0;
-    virtual void set_swap_interval(int interval) = 0;
+    virtual MirWaitHandle* set_swap_interval(int interval) = 0;
 
     virtual MirNativeBuffer* get_current_buffer_package() = 0;
     virtual MirPlatformType platform_type() = 0;
@@ -71,7 +71,7 @@ public:
     virtual void buffer_available(mir::protobuf::Buffer const& buffer) = 0;
     virtual void buffer_unavailable() = 0;
     virtual void set_size(geometry::Size) = 0;
-
+    virtual MirWaitHandle* set_scale(float) = 0;
 protected:
     ClientBufferStream() = default;
     ClientBufferStream(const ClientBufferStream&) = delete;

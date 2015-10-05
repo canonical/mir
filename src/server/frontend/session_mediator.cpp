@@ -17,6 +17,8 @@
  */
 
 #include "session_mediator.h"
+#include "reordering_message_sender.h"
+#include "event_sink_factory.h"
 
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/shell.h"
@@ -46,11 +48,6 @@
 #include "mir/frontend/buffer_stream.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
-
-// Temporary include to ease client transition from mir_connection_drm* APIs
-// to mir_connection_platform_operation().
-// TODO: Remove when transition is complete
-#include "../../src/platforms/mesa/include/mir_toolkit/mesa/platform_operation.h"
 
 #include "mir/geometry/rectangles.h"
 #include "buffer_stream_tracker.h"
@@ -82,7 +79,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
     std::vector<MirPixelFormat> const& surface_pixel_formats,
     std::shared_ptr<SessionMediatorReport> const& report,
-    std::shared_ptr<EventSink> const& sender,
+    std::shared_ptr<mf::EventSinkFactory> const& sink_factory,
+    std::shared_ptr<mf::MessageSender> const& message_sender,
     std::shared_ptr<MessageResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast,
     ConnectionContext const& connection_context,
@@ -95,7 +93,9 @@ mf::SessionMediator::SessionMediator(
     surface_pixel_formats(surface_pixel_formats),
     display_changer(display_changer),
     report(report),
-    event_sink(sender),
+    sink_factory{sink_factory},
+    event_sink{sink_factory->create_sink(message_sender)},
+    message_sender{message_sender},
     resource_cache(resource_cache),
     screencast(screencast),
     connection_context(connection_context),
@@ -264,7 +264,10 @@ void mf::SessionMediator::create_surface(
 
     params.input_shape = extract_input_shape_from(request);
 
-    auto const surf_id = shell->create_surface(session, params);
+    auto buffering_sender = std::make_shared<mf::ReorderingMessageSender>(message_sender);
+    std::shared_ptr<mf::EventSink> sink = sink_factory->create_sink(buffering_sender);
+
+    auto const surf_id = shell->create_surface(session, params, sink);
     auto stream_id = mf::BufferStreamId(surf_id.as_value());
 
     auto surface = session->get_surface(surf_id);
@@ -294,14 +297,19 @@ void mf::SessionMediator::create_surface(
     }
 
     advance_buffer(stream_id, *stream, buffer_stream_tracker.last_buffer(stream_id),
-        [this, surf_id, response, done, session]
+        [this, buffering_sender, surf_id, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
             response->mutable_buffer_stream()->mutable_id()->set_value(surf_id.as_value());
             if (client_buffer)
                 pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(), client_buffer, msg_type);
 
+
+            // Send the create_surface reply first...
             done->Run();
+
+            // ...then uncork the message sender, sending all buffered surface events.
+            buffering_sender->uncork();
         });
 }
 
@@ -872,36 +880,6 @@ void mf::SessionMediator::translate_surface_to_screen(
     done->Run();
 }
 
-void mf::SessionMediator::drm_auth_magic(
-    const mir::protobuf::DRMMagic* request,
-    mir::protobuf::DRMAuthMagicStatus* response,
-    google::protobuf::Closure* done)
-{
-    auto session = weak_session.lock();
-
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-    report->session_drm_auth_magic_called(session->name());
-
-    auto const magic = request->magic();
-
-    MirMesaAuthMagicRequest const auth_magic_request{magic};
-    mg::PlatformOperationMessage platform_request;
-    platform_request.data.resize(sizeof(auth_magic_request));
-    std::memcpy(platform_request.data.data(), &auth_magic_request, sizeof(auth_magic_request));
-
-    auto const platform_response = ipc_operations->platform_operation(
-        MirMesaPlatformOperation::auth_magic, platform_request);
-
-    MirMesaAuthMagicResponse auth_magic_response{-1};
-    std::memcpy(&auth_magic_response, platform_response.data.data(),
-                platform_response.data.size());
-    response->set_status_code(auth_magic_response.status);
-
-    done->Run();
-}
-
 void mf::SessionMediator::platform_operation(
     mir::protobuf::PlatformOperationMessage const* request,
     mir::protobuf::PlatformOperationMessage* response,
@@ -1009,4 +987,22 @@ void mf::SessionMediator::pack_protobuf_buffer(
 
     for(auto const& fd : packer.fds())
         resource_cache->save_fd(&protobuf_buffer, fd);
+}
+
+void mf::SessionMediator::configure_buffer_stream(
+    mir::protobuf::StreamConfiguration const* request,
+    mir::protobuf::Void*,
+    google::protobuf::Closure* done)
+{
+    auto const session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
+    if (request->has_swapinterval())
+        stream->allow_framedropping(request->swapinterval() == 0);
+    if (request->has_scale())
+        stream->set_scale(request->scale());
+
+    done->Run();
 }

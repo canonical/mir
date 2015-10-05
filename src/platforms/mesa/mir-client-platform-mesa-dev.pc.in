@@ -1,7 +1,0 @@
-includedir=@INCLUDEDIR@/mirclient
-common_includedir=@INCLUDEDIR@/mircommon
-
-Name: mir-client-platform-mesa-dev
-Description: Mir Mesa client platform development files
-Version: @MIR_VERSION@
-Cflags: -I${includedir} -I${common_includedir} 

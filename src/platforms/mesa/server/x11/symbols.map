@@ -1,4 +1,4 @@
-MIR_GRAPHICS_PLATFORM_4 {
+MIR_GRAPHICS_PLATFORM_6 {
   global: 
    add_graphics_platform_options;
    probe_graphics_platform;
@@ -8,7 +8,7 @@ MIR_GRAPHICS_PLATFORM_4 {
   local: *;
 };
 
-MIR_INPUT_PLATFORM_2 {
+MIR_INPUT_PLATFORM_3 {
   global: 
    add_input_platform_options;
    create_input_platform;

@@ -30,6 +30,7 @@
 #include "mir/frontend/connector.h"
 
 #include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_gl_buffer.h"
 #include "mir/test/doubles/stub_buffer_stream_factory.h"
 #include "mir/test/doubles/stub_display.h"
 #include "mir/test/doubles/null_event_sink.h"
@@ -86,6 +87,25 @@ void swap_buffers_blocking(mf::Surface& surf, mg::Buffer*& buffer)
     cv.wait(lock, [&]{ return done; });
 }
 
+struct StubGLBufferStream : public mtd::StubBufferStream
+{
+public:
+    StubGLBufferStream()
+    {
+        stub_compositor_buffer = std::make_shared<mtd::StubGLBuffer>();
+    }
+};
+
+struct StubGLBufferStreamFactory : public mtd::StubBufferStreamFactory
+{
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(
+        mf::BufferStreamId, std::shared_ptr<mf::BufferSink> const&,
+        mg::BufferProperties const&) override
+    {
+        return std::make_shared<StubGLBufferStream>();
+    }
+};
+
 } // anonymouse namespace
 
 TEST(ApplicationSession, stress_test_take_snapshot)
@@ -97,14 +117,14 @@ TEST(ApplicationSession, stress_test_take_snapshot)
     ms::ApplicationSession session{
         conf.the_surface_coordinator(),
         conf.the_surface_factory(),
-        std::make_shared<mtd::StubBufferStreamFactory>(),
+        std::make_shared<StubGLBufferStreamFactory>(),
         __LINE__,
         "stress",
         conf.the_snapshot_strategy(),
         std::make_shared<ms::NullSessionListener>(),
         std::make_shared<mtd::NullEventSink>()
     };
-    session.create_surface(ms::a_surface());
+    session.create_surface(ms::a_surface(), std::make_shared<mtd::NullEventSink>());
 
     auto compositor = conf.the_compositor();
 

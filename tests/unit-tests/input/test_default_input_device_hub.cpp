@@ -25,13 +25,15 @@
 #include "mir/test/event_matchers.h"
 
 #include "mir/input/input_device.h"
-#include "mir/input/input_device_info.h"
+#include "mir/input/device.h"
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/events/event_builders.h"
 #include "mir/input/cursor_listener.h"
+
+#include "mir/input/input_device_info.h" // needed for fake device setup
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -48,11 +50,6 @@ namespace mir
 {
 namespace input
 {
-std::ostream& operator<<(std::ostream& out, InputDeviceInfo const& info)
-{
-    return out << info.id << ' ' << info.name << ' ' << info.unique_id;
-}
-
 bool operator==(mir::input::TouchVisualizer::Spot const& lhs, mir::input::TouchVisualizer::Spot const& rhs)
 {
     return lhs.touch_location == rhs.touch_location && lhs.pressure == rhs.pressure;
@@ -69,9 +66,9 @@ struct MockTouchVisualizer : public mi::TouchVisualizer
 
 struct MockInputDeviceObserver : public mi::InputDeviceObserver
 {
-    MOCK_METHOD1(device_added, void (mi::InputDeviceInfo const& device));
-    MOCK_METHOD1(device_changed, void(mi::InputDeviceInfo const& device));
-    MOCK_METHOD1(device_removed, void(mi::InputDeviceInfo const& device));
+    MOCK_METHOD1(device_added, void(std::shared_ptr<mi::Device> const& device));
+    MOCK_METHOD1(device_changed, void(std::shared_ptr<mi::Device> const& device));
+    MOCK_METHOD1(device_removed, void(std::shared_ptr<mi::Device> const& device));
     MOCK_METHOD0(changes_complete, void());
 };
 
@@ -84,8 +81,6 @@ struct MockCursorListener : public mi::CursorListener
 
 struct MockInputDevice : public mi::InputDevice
 {
-    mir::dispatch::ActionQueue queue;
-    std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() { return mt::fake_shared(queue);}
     MOCK_METHOD2(start, void(mi::InputSink* destination, mi::EventBuilder* builder));
     MOCK_METHOD0(stop, void());
     MOCK_METHOD0(get_device_info, mi::InputDeviceInfo());
@@ -116,13 +111,13 @@ struct InputDeviceHubTest : ::testing::Test
     {
         using namespace testing;
         ON_CALL(device,get_device_info())
-            .WillByDefault(Return(mi::InputDeviceInfo{0,"device","dev-1", mi::DeviceCapability::unknown}));
+            .WillByDefault(Return(mi::InputDeviceInfo{"device","dev-1", mi::DeviceCapability::unknown}));
 
         ON_CALL(another_device,get_device_info())
-            .WillByDefault(Return(mi::InputDeviceInfo{0,"another_device","dev-2", mi::DeviceCapability::keyboard}));
+            .WillByDefault(Return(mi::InputDeviceInfo{"another_device","dev-2", mi::DeviceCapability::keyboard}));
 
         ON_CALL(third_device,get_device_info())
-            .WillByDefault(Return(mi::InputDeviceInfo{0,"third_device","dev-3", mi::DeviceCapability::keyboard}));
+            .WillByDefault(Return(mi::InputDeviceInfo{"third_device","dev-3", mi::DeviceCapability::keyboard}));
     }
 
     void capture_input_sink(Nice<MockInputDevice>& dev, mi::InputSink*& sink, mi::EventBuilder*& builder)
@@ -191,18 +186,18 @@ MATCHER_P(WithName, name,
           std::string(negation?"isn't":"is") +
           " name:" + std::string(name))
 {
-    return arg.name == name;
+    return arg->name() == name;
 }
 
 TEST_F(InputDeviceHubTest, observers_receive_devices_on_add)
 {
     using namespace ::testing;
 
-    mi::InputDeviceInfo info1, info2;
+    std::shared_ptr<mi::Device> handle_1, handle_2;
 
     InSequence seq;
-    EXPECT_CALL(mock_observer,device_added(WithName("device"))).WillOnce(SaveArg<0>(&info1));
-    EXPECT_CALL(mock_observer,device_added(WithName("another_device"))).WillOnce(SaveArg<0>(&info2));
+    EXPECT_CALL(mock_observer,device_added(WithName("device"))).WillOnce(SaveArg<0>(&handle_1));
+    EXPECT_CALL(mock_observer,device_added(WithName("another_device"))).WillOnce(SaveArg<0>(&handle_2));
     EXPECT_CALL(mock_observer,changes_complete());
 
     hub.add_device(mt::fake_shared(device));
@@ -211,7 +206,8 @@ TEST_F(InputDeviceHubTest, observers_receive_devices_on_add)
 
     observer_loop.trigger_server_actions();
 
-    EXPECT_THAT(info1.id,Ne(info2.id));
+    EXPECT_THAT(handle_1,Ne(handle_2));
+    EXPECT_THAT(handle_1->unique_id(),Ne(handle_2->unique_id()));
 }
 
 TEST_F(InputDeviceHubTest, throws_on_duplicate_add)
@@ -257,12 +253,12 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
 
     mi::InputSink* sink;
     mi::EventBuilder* builder;
-    mi::InputDeviceInfo info;
+    std::shared_ptr<mi::Device> handle;
 
     capture_input_sink(device, sink, builder);
 
     EXPECT_CALL(mock_observer,device_added(_))
-        .WillOnce(SaveArg<0>(&info));
+        .WillOnce(SaveArg<0>(&handle));
 
     hub.add_observer(mt::fake_shared(mock_observer));
     hub.add_device(mt::fake_shared(device));
@@ -272,7 +268,7 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
     auto event = builder->key_event(arbitrary_timestamp, mir_keyboard_action_down, 0,
                                     KEY_A, mir_input_event_modifier_none);
 
-    EXPECT_CALL(mock_dispatcher, dispatch(AllOf(mt::InputDeviceIdMatches(info.id), mt::MirKeyEventMatches(event.get()))));
+    EXPECT_CALL(mock_dispatcher, dispatch(AllOf(mt::InputDeviceIdMatches(handle->id()), mt::MirKeyEventMatches(event.get()))));
 
     sink->handle_input(*event);
 }
@@ -281,7 +277,6 @@ TEST_F(InputDeviceHubTest, forwards_touch_spots_to_visualizer)
 {
     using namespace ::testing;
     mi::InputSink* sink;
-    mi::InputDeviceInfo info;
     mi::EventBuilder* builder;
 
     capture_input_sink(device, sink, builder);
@@ -375,10 +370,10 @@ TEST_F(InputDeviceHubTest, forwards_pointer_updates_to_cursor_listener)
     using namespace ::testing;
 
     auto x = 12.2f, y = 14.3f;
-    auto mac = 0;
+    auto const mac = 0;
 
     auto event = mir::events::make_event(0, 0ns, mac, mir_input_event_modifier_none, mir_pointer_action_motion, 0,
-        x, y, 0.0f, 0.0f);
+        x, y, 0.0f, 0.0f, 0.0f, 0.0f);
 
     EXPECT_CALL(mock_cursor_listener, cursor_moved_to(x, y)).Times(1);
 

@@ -17,18 +17,27 @@
  */
 
 #include "server_example_adorning_compositor.h"
+#include "as_render_target.h"
+
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
 #include "mir/compositor/scene_element.h"
+#include "mir/renderer/gl/texture_source.h"
+#include "mir/renderer/gl/render_target.h"
+
+#include <stdexcept>
+#include <boost/throw_exception.hpp>
+
 #include <GLES2/gl2.h>
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
+namespace mrg = mir::renderer::gl;
 
-bool make_current(mg::DisplayBuffer& db)
+bool make_current(mrg::RenderTarget* render_target)
 {
-    db.make_current();
+    render_target->make_current();
     return true;
 }
 
@@ -61,6 +70,7 @@ me::AdorningDisplayBufferCompositor::AdorningDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
     std::tuple<float, float, float> const& background_rgb) :
     db{display_buffer},
+    render_target{me::as_render_target(display_buffer)},
     vert_shader_src{
         "attribute vec4 vPosition;"
         "uniform vec2 pos;"
@@ -81,7 +91,7 @@ me::AdorningDisplayBufferCompositor::AdorningDisplayBufferCompositor(
         "   gl_FragColor = texture2D(tex, texcoord) * alpha;"
         "}"
     },
-    current(make_current(db)),
+    current(make_current(render_target)),
     vertex(&vert_shader_src, GL_VERTEX_SHADER),
     fragment(&frag_shader_src, GL_FRAGMENT_SHADER),
     program(vertex,  fragment)
@@ -112,7 +122,7 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
     //      to give the the display hardware a chance at an optimized render of
     //      the scene. In this example though, we want some custom elements, so
     //      we'll always use GLES.
-    db.make_current();
+    render_target->make_current();
 
     auto display_width  = db.view_area().size.width.as_float();
     auto display_height = db.view_area().size.height.as_float();
@@ -150,7 +160,13 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
-        renderable->buffer()->gl_bind_to_texture();
+
+        auto const texture_source =
+            dynamic_cast<mir::renderer::gl::TextureSource*>(
+                renderable->buffer()->native_buffer_base());
+        if (!texture_source)
+            BOOST_THROW_EXCEPTION(std::logic_error("Buffer does not support GL rendering"));
+        texture_source->gl_bind_to_texture();
 
         glEnableVertexAttribArray(vPositionAttr);
         glEnableVertexAttribArray(uvCoord);
@@ -159,5 +175,5 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
         glDisableVertexAttribArray(vPositionAttr);
     }
 
-    db.gl_swap_buffers();
+    render_target->swap_buffers();
 }

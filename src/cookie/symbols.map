@@ -1,0 +1,10 @@
+MIR_COOKIE_1 {
+ global:
+  extern "C++" {
+    mir::cookie::CookieFactory::optimal_secret_size*;
+    mir::cookie::CookieFactory::create_from_secret*;
+    mir::cookie::CookieFactory::create_saving_secret*;
+    mir::cookie::CookieFactory::create_keeping_secret*;
+  };
+ local: *;
+};

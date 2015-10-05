@@ -18,6 +18,7 @@
 
 #include "screencast_display_buffer.h"
 #include "mir/graphics/buffer.h"
+#include "mir/renderer/gl/texture_source.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -28,8 +29,14 @@ namespace geom = mir::geometry;
 mc::ScreencastDisplayBuffer::ScreencastDisplayBuffer(
     geom::Rectangle const& rect,
     mg::Buffer& buffer)
-    : rect(rect), buffer(buffer), old_fbo(), old_viewport()
+    : rect(rect), buffer(buffer),
+      texture_source(
+          dynamic_cast<mir::renderer::gl::TextureSource*>(
+              buffer.native_buffer_base())),
+      old_fbo(), old_viewport()
 {
+    if (!texture_source)
+        BOOST_THROW_EXCEPTION(std::logic_error("Buffer does not support GL rendering"));
     glGetIntegerv(GL_VIEWPORT, old_viewport);
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &old_fbo);
 
@@ -68,7 +75,7 @@ geom::Rectangle mc::ScreencastDisplayBuffer::view_area() const
 void mc::ScreencastDisplayBuffer::make_current()
 {
     glBindTexture(GL_TEXTURE_2D, color_tex);
-    buffer.gl_bind_to_texture();
+    texture_source->gl_bind_to_texture();
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                            GL_TEXTURE_2D, color_tex, 0);
 
@@ -90,7 +97,7 @@ bool mc::ScreencastDisplayBuffer::post_renderables_if_optimizable(mg::Renderable
     return false;
 }
 
-void mc::ScreencastDisplayBuffer::gl_swap_buffers()
+void mc::ScreencastDisplayBuffer::swap_buffers()
 {
     glFinish();
 }
@@ -98,4 +105,9 @@ void mc::ScreencastDisplayBuffer::gl_swap_buffers()
 MirOrientation mc::ScreencastDisplayBuffer::orientation() const
 {
     return mir_orientation_normal;
+}
+
+mg::NativeDisplayBuffer* mc::ScreencastDisplayBuffer::native_display_buffer()
+{
+    return this;
 }

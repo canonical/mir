@@ -140,11 +140,14 @@ MIR_COMMON_5 {
     mir::SignalBlocker::SignalBlocker*;
     mir::SignalBlocker::?SignalBlocker*;
   };
- local: *;
 };
 
-MIR_COMMON_5.1 {
+MIR_COMMON_5.1 {  # New functions in Mir 0.16
  global:
+    __android_log_assert;
+    __android_log_print;
+    systemTime;
+    toMillisecondTimeoutDelay;
     extern "C++" {
       android::InputChannel::InputChannel*;
       android::InputChannel::openInputFdPair*;
@@ -167,8 +170,6 @@ MIR_COMMON_5.1 {
       android::IntSet::operator*;
       android::IntSet::remove*;
       android::KeyEvent::initialize*;
-      __android_log_assert*;
-      __android_log_print*;
       android::MotionEvent::getAxisValue*;
       android::MotionEvent::getAxisValue*;
       android::MotionEvent::getHistoricalAxisValue*;
@@ -189,17 +190,8 @@ MIR_COMMON_5.1 {
       android::RefBase::?RefBase*;
       android::RefBase::RefBase*;
       mir::write_to_log;
-      systemTime;
-      toMillisecondTimeoutDelay*;
       typeinfo?for?android::RefBase;
       vtable?for?android::IntSet;
-    };
-  local: *;
-} MIR_COMMON_5;
-
-MIR_COMMON_5.2 {
-  global:
-    extern "C++" {
       mir::dispatch::ReadableFd::ReadableFd*;
       mir::dispatch::ReadableFd::?ReadableFd*;
       mir::dispatch::ReadableFd::watch_fd*;
@@ -207,4 +199,6 @@ MIR_COMMON_5.2 {
       mir::dispatch::ReadableFd::relevant_events*;
       mir::logger::Logger::log*;
     };
-} MIR_COMMON_5.1;
+  local: *;
+} MIR_COMMON_5;
+

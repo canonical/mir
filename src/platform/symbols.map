@@ -1,12 +1,12 @@
-MIRPLATFORM_9 {
+MIRPLATFORM_11 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mirplatform public" | sed "s/mirplatform public: /    /" | sort  
     mir::graphics::BufferBasic::BufferBasic*;
     mir::graphics::Buffer::Buffer*;
-    mir::graphics::Buffer::gl_bind_to_texture*;
     mir::graphics::Buffer::id*;
+    mir::graphics::Buffer::native_buffer_base*;
     mir::graphics::Buffer::native_buffer_handle*;
     mir::graphics::Buffer::pixel_format*;
     mir::graphics::Buffer::size*;
@@ -25,11 +25,10 @@ MIRPLATFORM_9 {
     mir::graphics::Cursor::operator*;
     mir::graphics::Cursor::show*;
     mir::graphics::DisplayBuffer::DisplayBuffer*;
-    mir::graphics::DisplayBuffer::make_current*;
+    mir::graphics::DisplayBuffer::native_display_buffer*;
     mir::graphics::DisplayBuffer::operator*;
     mir::graphics::DisplayBuffer::orientation*;
     mir::graphics::DisplayBuffer::post_renderables_if_optimizable*;
-    mir::graphics::DisplayBuffer::release_current*;
     mir::graphics::DisplayBuffer::view_area*;
     mir::graphics::Display::configuration*;
     mir::graphics::DisplayConfiguration::DisplayConfiguration*;
@@ -246,16 +245,12 @@ MIRPLATFORM_9 {
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::operator*;
     mir::graphics::egl_category*;
-    mir::graphics::GLTexture::bind*;
-    mir::graphics::GLTexture::?GLTexture*;
-    mir::graphics::GLTexture::GLTexture*;
     mir::graphics::green_channel_depth*;
     mir::graphics::OverlappingOutputGroup::bounding_rectangle*;
     mir::graphics::OverlappingOutputGroup::for_each_output*;
     mir::graphics::OverlappingOutputGrouping::for_each_group*;
     mir::graphics::OverlappingOutputGrouping::OverlappingOutputGrouping*;
     mir::graphics::red_channel_depth*;
-    mir::graphics::SimpleGLProgram::SimpleGLProgram*;
     mir::graphics::tessellate_renderable_into_rectangle*;
     mir::udev::Context::?Context*;
     mir::udev::Context::Context*;
@@ -275,35 +270,30 @@ MIRPLATFORM_9 {
     mir::udev::Monitor::Monitor*;
     mir::udev::Monitor::process_events*;
     mir::udev::operator*;
+
+    # Android input platform symbols
+    android::EventHub::EventHub*;
+    android::getAbsAxisUsage*;
+    android::getInputDeviceConfigurationFilePathByDeviceIdentifier*;
+    android::InputDeviceInfo::?InputDeviceInfo*;
+    android::InputDeviceInfo::InputDeviceInfo*;
+    android::InputReaderConfiguration::setDisplayInfo*;
+    android::InputReader::InputReader*;
+    android::isEligibleBuiltInKeyboard*;
+    android::KeyCharacterMap::combine*;
+    android::KeyCharacterMap::empty*;
+    android::KeyCharacterMap::mapKey*;
+    android::KeyLayoutMap::findScanCodesForKey*;
+    android::KeyLayoutMap::mapAxis*;
+    android::KeyLayoutMap::mapKey*;
+    android::KeyMap::?KeyMap*;
+    android::KeyMap::KeyMap*;
+    android::KeyMap::load*;
+    android::KeyMap::loadGenericMaps*;
+    __android_log_assert;
+    __android_log_print;
+    android::VirtualKeyMap::load*;
+    android::VirtualKeyMap::?VirtualKeyMap*;
   };
  local: *;
 };
-
-MIRPLATFORM_9.1 {
-  global:
-    extern "C++" {
-      android::EventHub::EventHub*;
-      android::getAbsAxisUsage*;
-      android::getInputDeviceConfigurationFilePathByDeviceIdentifier*;
-      android::InputDeviceInfo::?InputDeviceInfo*;
-      android::InputDeviceInfo::InputDeviceInfo*;
-      android::InputReaderConfiguration::setDisplayInfo*;
-      android::InputReader::InputReader*;
-      android::isEligibleBuiltInKeyboard*;
-      android::KeyCharacterMap::combine*;
-      android::KeyCharacterMap::empty*;
-      android::KeyCharacterMap::mapKey*;
-      android::KeyLayoutMap::findScanCodesForKey*;
-      android::KeyLayoutMap::mapAxis*;
-      android::KeyLayoutMap::mapKey*;
-      android::KeyMap::?KeyMap*;
-      android::KeyMap::KeyMap*;
-      android::KeyMap::load*;
-      android::KeyMap::loadGenericMaps*;
-      __android_log_assert;
-      __android_log_print;
-      android::VirtualKeyMap::load*;
-      android::VirtualKeyMap::?VirtualKeyMap*;
-      mir::graphics::Buffer::native_buffer_base*;
-    };
-} MIRPLATFORM_9;

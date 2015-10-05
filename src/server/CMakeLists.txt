@@ -7,9 +7,11 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/server
+  ${PROJECT_SOURCE_DIR}/include/renderers/gl
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/server
+  ${PROJECT_SOURCE_DIR}/include/cookie
   ${GLIB_INCLUDE_DIRS}
 )
 add_definitions(-DMIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
@@ -70,6 +72,9 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirnestedgraphics>
   $<TARGET_OBJECTS:miroffscreengraphics>
   $<TARGET_OBJECTS:mirthread>
+
+  $<TARGET_OBJECTS:mirrenderergl>
+  $<TARGET_OBJECTS:mirgl>
 )
 
 set(MIR_SERVER_REFERENCES
@@ -93,7 +98,7 @@ target_link_libraries(mirserver LINK_PUBLIC
   mirplatform
   mircommon
   mirprotobuf
-
+  mircookie
   xcursorloader-static
 
   ${GLog_LIBRARY}
@@ -115,7 +120,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
 )
 
-set(MIRSERVER_ABI 33) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 35) # Be sure to increment MIR_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(

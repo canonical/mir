@@ -9,5 +9,4 @@ add_library(
   input.cpp
   input_platform.cpp
   input_device.cpp
-  dispatchable.cpp
 )

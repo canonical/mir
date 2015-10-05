@@ -22,6 +22,8 @@
 #include "display_server.h"
 #include "buffer_stream_tracker.h"
 
+#include "protobuf_ipc_factory.h"
+
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/buffer_stream_id.h"
@@ -64,6 +66,8 @@ class Surface;
 class MessageResourceCache;
 class SessionMediatorReport;
 class EventSink;
+class EventSinkFactory;
+class MessageSender;
 class DisplayChanger;
 class Screencast;
 class PromptSession;
@@ -88,7 +92,8 @@ public:
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
         std::vector<MirPixelFormat> const& surface_pixel_formats,
         std::shared_ptr<SessionMediatorReport> const& report,
-        std::shared_ptr<EventSink> const& event_sink,
+        std::shared_ptr<EventSinkFactory> const& sink_factory,
+        std::shared_ptr<MessageSender> const& message_sender,
         std::shared_ptr<MessageResourceCache> const& resource_cache,
         std::shared_ptr<Screencast> const& screencast,
         ConnectionContext const& connection_context,
@@ -123,10 +128,6 @@ public:
     void release_surface(
         mir::protobuf::SurfaceId const* request,
         mir::protobuf::Void* response,
-        google::protobuf::Closure* done) override;
-    void drm_auth_magic(
-        mir::protobuf::DRMMagic const* request,
-        mir::protobuf::DRMAuthMagicStatus* response,
         google::protobuf::Closure* done) override;
     void platform_operation(
         mir::protobuf::PlatformOperationMessage const* request,
@@ -200,6 +201,10 @@ public:
         mir::protobuf::PingEvent const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
+    void configure_buffer_stream(
+        mir::protobuf::StreamConfiguration const* request,
+        mir::protobuf::Void*,
+        google::protobuf::Closure* done) override;
 
     // TODO: Split this into a separate thing
     void translate_surface_to_screen(
@@ -228,7 +233,9 @@ private:
 
     std::shared_ptr<frontend::DisplayChanger> const display_changer;
     std::shared_ptr<SessionMediatorReport> const report;
+    std::shared_ptr<EventSinkFactory> const sink_factory;
     std::shared_ptr<EventSink> const event_sink;
+    std::shared_ptr<MessageSender> const message_sender;
     std::shared_ptr<MessageResourceCache> const resource_cache;
     std::shared_ptr<Screencast> const screencast;
     ConnectionContext const connection_context;

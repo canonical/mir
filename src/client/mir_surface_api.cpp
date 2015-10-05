@@ -219,15 +219,20 @@ void mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrienta
     spec->pref_orientation = mode;
 }
 
+void mir_surface_spec_set_event_handler(MirSurfaceSpec* spec,
+    mir_surface_event_callback callback,
+    void* context)
+{
+    spec->event_handler = MirSurfaceSpec::EventHandler{callback, context};
+}
+
 void mir_surface_spec_release(MirSurfaceSpec* spec)
 {
     delete spec;
 }
 
 extern "C"
-void mir_surface_set_event_handler(MirSurface* surface,
-                                       mir_surface_event_callback callback,
-                                       void* context)
+void mir_surface_set_event_handler(MirSurface* surface, mir_surface_event_callback callback, void* context)
 {
     surface->set_event_handler(callback, context);
 }
@@ -339,13 +344,18 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
 
     try
     {
-        return surf ? surf->configure(mir_surface_attrib_swapinterval, interval) : nullptr;
+        if (surf)
+        {
+            if (auto stream = surf->get_buffer_stream())
+                return stream->set_swap_interval(interval);
+        }
     }
     catch (std::exception const& ex)
     {
         MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
+    return nullptr;
 }
 
 int mir_surface_get_swapinterval(MirSurface* surf)
@@ -354,7 +364,11 @@ int mir_surface_get_swapinterval(MirSurface* surf)
 
     try
     {
-        swap_interval = surf ? surf->attrib(mir_surface_attrib_swapinterval) : -1;
+        if (surf)
+        {
+            if (auto stream = surf->get_buffer_stream())
+                swap_interval = stream->swap_interval();
+        }
     }
     catch (std::exception const& ex)
     {
