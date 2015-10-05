@@ -56,9 +56,9 @@ mix::XInputPlatform::XInputPlatform(std::shared_ptr<mi::InputDeviceRegistry> con
                                 })),
     registry(input_device_registry),
     core_keyboard(std::make_shared<mix::XInputDevice>(
-            mi::InputDeviceInfo{0, "x11-keyboard-device", "x11-key-dev-1", mi::DeviceCapability::keyboard})),
+            mi::InputDeviceInfo{"x11-keyboard-device", "x11-key-dev-1", mi::DeviceCapability::keyboard})),
     core_pointer(std::make_shared<mix::XInputDevice>(
-            mi::InputDeviceInfo{0, "x11-mouse-device", "x11-mouse-dev-1", mi::DeviceCapability::pointer}))
+            mi::InputDeviceInfo{"x11-mouse-device", "x11-mouse-dev-1", mi::DeviceCapability::pointer}))
 {
 }
 

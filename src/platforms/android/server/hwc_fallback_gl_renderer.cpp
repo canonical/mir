@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/gl_program_factory.h"
+#include "mir/gl/program_factory.h"
+#include "mir/gl/texture.h"
+#include "mir/gl/tessellation_helpers.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/graphics/gl_texture.h"
-#include "mir/graphics/tessellation_helpers.h"
 #include "hwc_fallback_gl_renderer.h"
 #include "swapping_gl_context.h"
 #include "buffer.h"
@@ -31,6 +31,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 namespace mg = mir::graphics;
+namespace mgl = mir::gl;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 
@@ -73,7 +74,7 @@ void set_display_transform(GLint uniform_loc, geom::Rectangle const& rect)
 }
 
 mga::HWCFallbackGLRenderer::HWCFallbackGLRenderer(
-    GLProgramFactory const& factory,
+    gl::ProgramFactory const& factory,
     mg::GLContext const& context,
     geom::Rectangle const& screen_pos)
 {
@@ -123,11 +124,11 @@ void mga::HWCFallbackGLRenderer::render(
         else
             glDisable(GL_BLEND);
 
-        auto const primitive = mg::tessellate_renderable_into_rectangle(*renderable, offset);
-        glVertexAttribPointer(position_attr, 3, GL_FLOAT, GL_FALSE, sizeof(mg::GLVertex),
+        auto const primitive = mgl::tessellate_renderable_into_rectangle(*renderable, offset);
+        glVertexAttribPointer(position_attr, 3, GL_FLOAT, GL_FALSE, sizeof(mgl::Vertex),
                               &primitive.vertices[0].position);
         //TODO: (kdub) scaling or pi/2 rotation eventually. for now, all quads get same texcoords
-        glVertexAttribPointer(texcoord_attr, 2, GL_FLOAT, GL_FALSE, sizeof(mg::GLVertex),
+        glVertexAttribPointer(texcoord_attr, 2, GL_FLOAT, GL_FALSE, sizeof(mgl::Vertex),
                               &primitive.vertices[0].texcoord);
 
         texture_cache->load(*renderable)->bind();

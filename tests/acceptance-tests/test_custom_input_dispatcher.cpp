@@ -53,10 +53,10 @@ struct TestCustomInputDispatcher : mtf::HeadlessInProcessServer
     }
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{ 0, "keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
+        mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
         };
     std::unique_ptr<mtf::FakeInputDevice> fake_pointer{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{ 0, "mouse", "mouse-uid" , mi::DeviceCapability::pointer})
+        mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})
         };
     mir::test::WaitCondition all_keys_received;
     mir::test::WaitCondition all_pointer_events_received;

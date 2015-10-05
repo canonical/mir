@@ -24,6 +24,7 @@
 
 #include "mir/input/event_builder.h"
 #include "mir/input/input_device.h"
+#include "mir/input/input_device_info.h"
 #include "mir/geometry/point.h"
 
 #include <vector>
@@ -51,10 +52,10 @@ public:
     ~LibInputDevice();
     void start(InputSink* sink, EventBuilder* builder) override;
     void stop() override;
-    virtual InputDeviceInfo get_device_info() override;
+    InputDeviceInfo get_device_info() override;
 
     void process_event(libinput_event* event);
-    ::libinput_device* device();
+    ::libinput_device* device() const;
     ::libinput_device_group* group();
     void add_device_of_group(char const* path, LibInputDevicePtr ptr);
     bool is_in_group(char const* path);
@@ -68,6 +69,7 @@ private:
     void add_touch_up_event(libinput_event_touch* touch);
     void add_touch_motion_event(libinput_event_touch* touch);
     MirEvent& get_accumulated_touch_event(std::chrono::nanoseconds timestamp);
+    void update_device_info();
 
     std::shared_ptr<InputReport> report;
     std::shared_ptr<::libinput> lib;
@@ -79,6 +81,7 @@ private:
     EventBuilder* builder{nullptr};
     EventUPtr accumulated_touch_event;
 
+    InputDeviceInfo info;
     mir::geometry::Point pointer_pos;
     MirInputEventModifiers modifier_state;
     MirPointerButtons button_state;
