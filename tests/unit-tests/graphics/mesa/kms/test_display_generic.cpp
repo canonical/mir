@@ -43,10 +43,10 @@ namespace mgm = mg::mesa;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
-class DisplayTestKMS : public ::testing::Test
+class DisplayTestGeneric : public ::testing::Test
 {
 public:
-    DisplayTestKMS()
+    DisplayTestGeneric()
     {
         using namespace testing;
 
@@ -81,128 +81,4 @@ public:
     mtf::UdevEnvironment fake_devices;
 };
 
-namespace
-{
-
-class MockDisplayConfiguration : public mg::DisplayConfiguration
-{
-public:
-    MOCK_CONST_METHOD1(for_each_card,
-        void(std::function<void(mg::DisplayConfigurationCard const&)>));
-    MOCK_CONST_METHOD1(for_each_output,
-        void(std::function<void(mg::DisplayConfigurationOutput const&)>));
-    MOCK_METHOD1(for_each_output,
-        void(std::function<void(mg::UserDisplayConfigurationOutput&)>));
-    MOCK_CONST_METHOD0(valid, bool());
-};
-
-}
-
-TEST_F(DisplayTestKMS, configure_disallows_invalid_configuration)
-{
-    using namespace testing;
-    auto display = create_display();
-    MockDisplayConfiguration config;
-
-    EXPECT_CALL(config, valid())
-        .WillOnce(Return(false));
-
-    EXPECT_THROW({display->configure(config);}, std::logic_error);
-
-    // Determining what counts as a valid configuration is a much trickier
-    // platform-dependent exercise, so won't be tested here.
-}
-
-TEST_F(DisplayTestKMS, gl_context_make_current_uses_shared_context)
-{
-    using namespace testing;
-    EGLContext const shared_context{reinterpret_cast<EGLContext>(0x111)};
-    EGLContext const display_buffer_context{reinterpret_cast<EGLContext>(0x222)};
-    EGLContext const new_context{reinterpret_cast<EGLContext>(0x333)};
-
-    EXPECT_CALL(mock_egl, eglCreateContext(_,_,EGL_NO_CONTEXT,_))
-        .WillOnce(Return(shared_context));
-    EXPECT_CALL(mock_egl, eglCreateContext(_,_,shared_context,_))
-        .WillOnce(Return(display_buffer_context));
-
-    auto display = create_display();
-
-    Mock::VerifyAndClearExpectations(&mock_egl);
-
-    {
-        InSequence s;
-        EXPECT_CALL(mock_egl, eglCreateContext(_,_,shared_context,_))
-            .WillOnce(Return(new_context));
-        EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,new_context));
-        EXPECT_CALL(mock_egl, eglGetCurrentContext())
-           .WillOnce(Return(new_context));
-        EXPECT_CALL(mock_egl, eglMakeCurrent(_,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT));
-
-        auto gl_ctx = display->create_gl_context();
-
-        ASSERT_NE(nullptr, gl_ctx);
-
-        gl_ctx->make_current();
-    }
-
-    Mock::VerifyAndClearExpectations(&mock_egl);
-
-    /* Possible display shutdown sequence, depending on the platform */
-    EXPECT_CALL(mock_egl, eglGetCurrentContext())
-        .Times(AtLeast(0));
-    EXPECT_CALL(mock_egl, eglMakeCurrent(_,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT))
-        .Times(AtLeast(0));
-}
-
-TEST_F(DisplayTestKMS, gl_context_releases_context)
-{
-    using namespace testing;
-
-    auto display = create_display();
-
-    {
-        InSequence s;
-        EXPECT_CALL(mock_egl, eglMakeCurrent(_,_,_,Ne(EGL_NO_CONTEXT)));
-        EXPECT_CALL(mock_egl, eglMakeCurrent(_,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT));
-
-        auto gl_ctx = display->create_gl_context();
-
-        ASSERT_NE(nullptr, gl_ctx);
-
-        gl_ctx->make_current();
-        gl_ctx->release_current();
-
-        Mock::VerifyAndClearExpectations(&mock_egl);
-    }
-
-    /* Possible display shutdown sequence, depending on the platform */
-    EXPECT_CALL(mock_egl, eglMakeCurrent(_,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT))
-        .Times(AtLeast(0));
-}
-
-TEST_F(DisplayTestKMS, does_not_expose_display_buffer_for_output_with_power_mode_off)
-{
-    using namespace testing;
-    auto display = create_display();
-    int db_count{0};
-
-    display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
-        group.for_each_display_buffer([&] (mg::DisplayBuffer&) { ++db_count; });
-    });
-    EXPECT_THAT(db_count, Eq(1));
-
-    auto conf = display->configuration();
-    conf->for_each_output(
-        [] (mg::UserDisplayConfigurationOutput& output)
-        {
-            output.power_mode = mir_power_mode_off;
-        });
-
-    display->configure(*conf);
-
-    db_count = 0;
-    display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
-        group.for_each_display_buffer([&] (mg::DisplayBuffer&) { ++db_count; });
-    });
-    EXPECT_THAT(db_count, Eq(0));
-}
+#include "../../test_display.h"
