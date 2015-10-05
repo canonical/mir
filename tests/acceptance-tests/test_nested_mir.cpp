@@ -159,7 +159,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
         server.override_the_display_configuration_report([this]
             { return the_mock_display_configuration_report(); });
 
-        server.override_the_cursor([this] { return the_mock_cursor(); });
+        server.wrap_cursor([this](std::shared_ptr<mg::Cursor> const&) { return the_mock_cursor(); });
 
         mtf::HeadlessInProcessServer::SetUp();
     }
@@ -495,7 +495,6 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
     mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
 
-    nested_mir.server.the_cursor()->move_to({489, 9});
     server.the_cursor_listener()->cursor_moved_to(489, 9);
 
     auto stream = mir_connection_create_buffer_stream_sync(
