@@ -19,7 +19,7 @@
 #include "src/platforms/android/server/display.h"
 #include "src/platforms/android/server/hal_component_factory.h"
 #include "src/platforms/android/server/hwc_layerlist.h"
-#include "src/server/graphics/program_factory.h"
+#include "mir/gl/default_program_factory.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/glib_main_loop.h"
 #include "mir/time/steady_clock.h"
@@ -115,7 +115,7 @@ struct DisplayHotplug : ::testing::Test
     std::shared_ptr<StubOutputBuilder> stub_output_builder{std::make_shared<StubOutputBuilder>()};
     mga::Display display{
         stub_output_builder,
-        std::make_shared<mg::ProgramFactory>(),
+        std::make_shared<mir::gl::DefaultProgramFactory>(),
         std::make_shared<mtd::StubGLConfig>(),
         mir::report::null_display_report(),
         mga::OverlayOptimization::enabled};
