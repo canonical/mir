@@ -142,6 +142,8 @@ endif()
 if (MIR_BUILD_PLATFORM_ANDROID)
 target_link_libraries(mir_unit_tests 
   mirsharedandroid-static
+  ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
+  ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
 )
 endif()
 
