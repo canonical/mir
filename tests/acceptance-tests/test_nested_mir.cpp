@@ -557,7 +557,7 @@ struct CursorImage : public mg::CursorImage
 {
     CursorImage(char const* name) :
         id{std::find(begin(cursor_names), end(cursor_names), name) - begin(cursor_names)},
-        data{uint8_t(id)}
+        data{{uint8_t(id)}}
     {
     }
 
