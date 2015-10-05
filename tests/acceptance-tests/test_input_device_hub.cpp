@@ -38,9 +38,9 @@ namespace
 
 struct MockInputDeviceObserver : public mi::InputDeviceObserver
 {
-    MOCK_METHOD1(device_added, void (mi::InputDeviceInfo const& device));
-    MOCK_METHOD1(device_changed, void(mi::InputDeviceInfo const& device));
-    MOCK_METHOD1(device_removed, void(mi::InputDeviceInfo const& device));
+    MOCK_METHOD1(device_added, void(std::shared_ptr<mi::Device> const& device));
+    MOCK_METHOD1(device_changed, void(std::shared_ptr<mi::Device> const& device));
+    MOCK_METHOD1(device_removed, void(std::shared_ptr<mi::Device> const& device));
     MOCK_METHOD0(changes_complete, void());
 };
 
@@ -78,7 +78,7 @@ TEST_F(TestInputDeviceHub, notifies_input_device_observer_about_available_device
     server.the_input_device_hub()->add_observer(mt::fake_shared(observer));
     observer_registered.wait_for_at_most_seconds(4);
 
-    keep_on_living = mtf::add_fake_input_device(mi::InputDeviceInfo{0, "keyboard", "keyboard-uid", mir::input::DeviceCapability::keyboard});
+    keep_on_living = mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid", mir::input::DeviceCapability::keyboard});
 
     callbacks_received.wait_for_at_most_seconds(4);
 }

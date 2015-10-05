@@ -31,7 +31,6 @@ namespace input
 
 struct InputDeviceInfo
 {
-    int32_t id;
     std::string name;
     std::string unique_id;
     DeviceCapabilities capabilities;

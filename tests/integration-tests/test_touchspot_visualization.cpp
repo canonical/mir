@@ -123,7 +123,7 @@ struct TestTouchspotVisualizations : mtf::DeferredInProcessServer
     ServerConfiguration server_configuration{test_complete_fence};
 
     std::unique_ptr<mtf::FakeInputDevice> fake_touch_screen{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{ 0, "ts", "ts-uid" , mi::DeviceCapability::touchscreen|mi::DeviceCapability::multitouch})
+        mtf::add_fake_input_device(mi::InputDeviceInfo{"ts", "ts-uid" , mi::DeviceCapability::touchscreen|mi::DeviceCapability::multitouch})
         };
 
 

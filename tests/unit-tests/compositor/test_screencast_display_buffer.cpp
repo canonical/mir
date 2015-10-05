@@ -145,7 +145,7 @@ TEST_F(ScreencastDisplayBufferTest, forces_rendering_to_complete_on_swap)
     Mock::VerifyAndClearExpectations(&mock_gl);
     EXPECT_CALL(mock_gl, glFinish());
 
-    db.gl_swap_buffers();
+    db.swap_buffers();
 }
 
 TEST_F(ScreencastDisplayBufferTest, rejects_attempt_to_optimize)
