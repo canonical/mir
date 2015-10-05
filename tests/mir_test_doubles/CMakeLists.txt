@@ -20,11 +20,18 @@ set(
   test_protobuf_socket_server.cpp
   triggered_main_loop.cpp
   fake_alarm_factory.cpp
+  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_message_sender.h
+  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_message_sender.h
+  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_event_sink_factory.h
+  null_event_sink_factory.cpp
+  mock_event_sink_factory.cpp
+  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_event_sink_factory.h
 )
 
 set(
   MIR_TEST_DOUBLES_PLATFORM_SRCS
 
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_libinput.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_egl.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_gl.cpp
 )

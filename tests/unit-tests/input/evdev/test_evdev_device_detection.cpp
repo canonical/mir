@@ -22,6 +22,7 @@
 #include "mir_test_framework/udev_environment.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <tuple>
 
 namespace mtf = mir_test_framework;

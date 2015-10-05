@@ -9,7 +9,8 @@ abi_var_for=( ["mirclient"]="MIRCLIENT_ABI" \
     ["mirclientplatformandroid"]="MIR_CLIENT_PLATFORM_ABI" \
     ["mirclientplatformmesa"]="MIR_CLIENT_PLATFORM_ABI" \
     ["mirplatformgraphicsandroid"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" \
-    ["mirplatformgraphicsmesakms"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" )
+    ["mirplatformgraphicsmesakms"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" \
+    ["mirplatforminputevdev"]="MIR_SERVER_INPUT_PLATFORM_ABI" )
 
 print_help_and_exit()
 {

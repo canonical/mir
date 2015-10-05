@@ -46,6 +46,7 @@ class SessionMediatorReport;
 class DisplayChanger;
 class Screencast;
 class SessionAuthorizer;
+class EventSinkFactory;
 
 class DefaultIpcFactory : public ProtobufIpcFactory
 {
@@ -63,9 +64,10 @@ public:
         std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector);
 
     std::shared_ptr<detail::DisplayServer> make_ipc_server(
-        SessionCredentials const& creds,
-        std::shared_ptr<EventSink> const& sink,
-        ConnectionContext const& connection_context) override;
+        SessionCredentials const &creds,
+        std::shared_ptr<EventSinkFactory> const& sink_factory,
+        std::shared_ptr<MessageSender> const& message_sender,
+        ConnectionContext const &connection_context) override;
 
     virtual std::shared_ptr<ResourceCache> resource_cache() override;
 
@@ -75,7 +77,8 @@ public:
         std::shared_ptr<DisplayChanger> const& changer,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<SessionMediatorReport> const& sm_report,
-        std::shared_ptr<EventSink> const& sink,
+        std::shared_ptr<EventSinkFactory> const& sink_factory,
+        std::shared_ptr<MessageSender> const& message_sender,
         std::shared_ptr<Screencast> const& effective_screencast,
         ConnectionContext const& connection_context,
         std::shared_ptr<input::CursorImages> const& cursor_images);

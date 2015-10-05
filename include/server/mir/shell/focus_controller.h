@@ -24,7 +24,7 @@
 
 namespace mir
 {
-namespace geometry { class Point; }
+namespace geometry { struct Point; }
 namespace scene { class Session; class Surface; }
 
 namespace shell

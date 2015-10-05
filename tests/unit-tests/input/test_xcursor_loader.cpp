@@ -20,6 +20,7 @@
 
 #include "mir/graphics/cursor_image.h"
 #include "mir_test_framework/executable_path.h"
+#include "mir_test_framework/temporary_environment_value.h"
 
 #include <mir_toolkit/common.h>
 #include <mir_toolkit/cursors.h>
@@ -34,6 +35,25 @@
 
 namespace mi = mir::input;
 namespace mg = mir::graphics;
+namespace mtf = mir_test_framework;
+
+namespace
+{
+std::string const test_cursor_path{mir_test_framework::executable_path() + std::string("/testing-cursor-theme")};
+}
+
+// Warning, XCURSOR_PATH will only be checked ONCE by libxcursor due to static var
+class XCursorLoaderTest : public ::testing::Test
+{
+public:
+    XCursorLoaderTest()
+        : xcursor_path("XCURSOR_PATH", test_cursor_path.c_str())
+    {
+    }
+
+    mtf::TemporaryEnvironmentValue xcursor_path;
+    mi::XCursorLoader loader;
+};
 
 namespace
 {
@@ -82,34 +102,10 @@ MATCHER(IsSolidBlack, "")
 {
     return cursor_image_is_solid_color(arg, 0xff000000);
 }
-
-char *old_xcursor_path = nullptr;
-void set_xcursor_path()
-{
-    char const* old = getenv("XCURSOR_PATH");
-    if (old)
-        old_xcursor_path = strdup(old);
-    auto test_cursor_path =mir_test_framework::executable_path() + std::string("/testing-cursor-theme");
-    setenv("XCURSOR_PATH", test_cursor_path.c_str(), 1);
 }
 
-void restore_xcursor_path()
+TEST_F(XCursorLoaderTest, loads_cursors_from_testing_theme)
 {
-    if (old_xcursor_path)
-    {
-        setenv("XCURSOR_PATH", old_xcursor_path, 1);
-        free(old_xcursor_path);
-    }
-}
-
-}
-
-TEST(XCursorLoader, loads_cursors_from_testing_theme)
-{
-    set_xcursor_path();
-
-    mi::XCursorLoader loader;
-    
     auto size = mi::default_cursor_size;
     auto red_image = loader.image("red", size);
     auto blue_image = loader.image("blue", size);
@@ -121,25 +117,17 @@ TEST(XCursorLoader, loads_cursors_from_testing_theme)
     EXPECT_THAT(red_image, IsSolidRed());
     EXPECT_THAT(green_image, IsSolidGreen());
     EXPECT_THAT(blue_image, IsSolidBlue());
-    
-    restore_xcursor_path();
 }
 
-TEST(XCursorLoader, only_supports_the_default_size)
+TEST_F(XCursorLoaderTest, only_supports_the_default_size)
 {
-    mi::XCursorLoader loader;
-    
     EXPECT_THROW({
             loader.image("red", {100, 100});
     }, std::logic_error);
 }
 
-TEST(XCursorLoader, default_image_is_arrow_from_xcursor_theme)
+TEST_F(XCursorLoaderTest, default_image_is_arrow_from_xcursor_theme)
 {
-    set_xcursor_path();
-
-    mi::XCursorLoader loader;
-    
     auto size = mi::default_cursor_size;
     auto arrow_image = loader.image(mir_default_cursor_name, size);
 
@@ -147,21 +135,13 @@ TEST(XCursorLoader, default_image_is_arrow_from_xcursor_theme)
     // name.
     ASSERT_THAT(arrow_image, HasLoaded());
     EXPECT_THAT(arrow_image, IsSolidBlack());
-    
-    restore_xcursor_path();
 }
 
-TEST(XCursorLoader, symbolic_names_which_are_not_present_resolve_to_default)
+TEST_F(XCursorLoaderTest, symbolic_names_which_are_not_present_resolve_to_default)
 {
-    set_xcursor_path();
-
-    mi::XCursorLoader loader;
-    
     auto size = mi::default_cursor_size;
     auto default_image = loader.image(mir_default_cursor_name, size);
     auto image_with_made_up_name = loader.image("Artickrumbulis", size);
 
     EXPECT_EQ(default_image, image_with_made_up_name);
-    
-    restore_xcursor_path();
 }

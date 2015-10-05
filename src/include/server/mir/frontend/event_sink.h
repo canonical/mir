@@ -16,8 +16,8 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_EVENTS_EVENT_SINK_H_
-#define MIR_EVENTS_EVENT_SINK_H_
+#ifndef MIR_FRONTEND_EVENT_SINK_H_
+#define MIR_FRONTEND_EVENT_SINK_H_
 
 #include "mir_toolkit/event.h"
 #include "mir/frontend/buffer_sink.h"
@@ -49,4 +49,4 @@ protected:
 }
 } // namespace mir
 
-#endif // MIR_EVENTS_EVENT_SINK_H_
+#endif // MIR_FRONTEND_EVENT_SINK_H_

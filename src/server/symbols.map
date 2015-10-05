@@ -145,6 +145,7 @@ MIR_SERVER_35 {
     mir::Server::open_prompt_socket*;
     mir::Server::override_the_application_not_responding_detector*;
     mir::Server::override_the_compositor*;
+    mir::Server::override_the_cursor*;
     mir::Server::override_the_display_buffer_compositor_factory*;
     mir::Server::override_the_display_configuration_report*;
     mir::Server::override_the_gl_config*;

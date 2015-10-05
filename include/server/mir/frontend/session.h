@@ -31,7 +31,7 @@ namespace mir
 namespace graphics
 {
 class DisplayConfiguration;
-class BufferProperties;
+struct BufferProperties;
 }
 
 namespace frontend

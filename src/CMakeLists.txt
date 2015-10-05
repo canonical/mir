@@ -1,5 +1,5 @@
 # We need MIRPLATFORM_ABI in both libmirplatform and the platform implementations.
-set(MIRPLATFORM_ABI 10)
+set(MIRPLATFORM_ABI 11)
 
 # Add the cookie implementation before exposing any APIs
 add_subdirectory(cookie/)
@@ -25,6 +25,7 @@ add_subdirectory(server/)
 add_subdirectory(client/)
 add_subdirectory(utils/)
 add_subdirectory(renderers/)
+add_subdirectory(gl/)
 
 add_executable(wrapper wrapper.c)
 set_property(TARGET wrapper
@@ -49,4 +50,5 @@ set(MIR_SERVER_PLATFORM_PATH ${MIR_SERVER_PLATFORM_PATH} PARENT_SCOPE)
 # We need the ABI versions in the tests
 set(MIR_SERVER_GRAPHICS_PLATFORM_ABI ${MIR_SERVER_GRAPHICS_PLATFORM_ABI} PARENT_SCOPE)
 set(MIR_CLIENT_PLATFORM_ABI ${MIR_CLIENT_PLATFORM_ABI} PARENT_SCOPE)
+set(MIR_INPUT_PLATFORM_VERSION_SCRIPT ${MIR_INPUT_PLATFORM_VERSION_SCRIPT} PARENT_SCOPE)
 set(MIR_CLIENT_PLATFORM_VERSION ${MIR_CLIENT_PLATFORM_VERSION} PARENT_SCOPE)

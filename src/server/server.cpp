@@ -24,6 +24,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/options/default_configuration.h"
+#include "mir/renderer/gl/render_target.h"
 #include "mir/default_server_configuration.h"
 #include "mir/logging/logger.h"
 #include "mir/log.h"
@@ -49,6 +50,8 @@ namespace mo = mir::options;
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
+    MACRO(cursor)\
+    MACRO(cursor_images)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_report)\
     MACRO(gl_config)\
@@ -163,7 +166,9 @@ class StubGLRenderer : public mir::compositor::Renderer
 {
 public:
     StubGLRenderer(mir::graphics::DisplayBuffer& display_buffer)
-        : display_buffer{display_buffer}
+        : render_target{
+            dynamic_cast<mir::renderer::gl::RenderTarget*>(
+                display_buffer.native_display_buffer())}
     {
     }
 
@@ -173,17 +178,21 @@ public:
 
     void render(mir::graphics::RenderableList const& renderables) const override
     {
-        display_buffer.make_current();
+        // Invoke GL renderer specific functions if the DisplayBuffer supports them
+        if (render_target)
+            render_target->make_current();
 
         for (auto const& r : renderables)
             r->buffer(); // We need to consume a buffer to unblock client tests
 
-        display_buffer.gl_swap_buffers();
+        // Invoke GL renderer specific functions if the DisplayBuffer supports them
+        if (render_target)
+            render_target->swap_buffers();
     }
 
     void suspend() override {}
 
-    mir::graphics::DisplayBuffer& display_buffer;
+    mir::renderer::gl::RenderTarget* const render_target;
 };
 
 class StubGLRendererFactory : public mir::compositor::RendererFactory

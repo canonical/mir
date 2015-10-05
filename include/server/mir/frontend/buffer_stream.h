@@ -29,7 +29,7 @@ namespace mir
 namespace graphics
 {
 class Buffer;
-class BufferProperties;
+struct BufferProperties;
 }
 namespace scene
 {
