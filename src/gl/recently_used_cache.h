@@ -17,22 +17,24 @@
  *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_RECENTLY_USED_CACHE_H_
-#define MIR_COMPOSITOR_RECENTLY_USED_CACHE_H_
+#ifndef MIR_GL_RECENTLY_USED_CACHE_H_
+#define MIR_GL_RECENTLY_USED_CACHE_H_
 
-#include "mir/graphics/gl_texture_cache.h"
-#include "mir/graphics/gl_texture.h"
+#include "mir/gl/texture_cache.h"
+#include "mir/gl/texture.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/graphics/renderable.h"
 #include <unordered_map>
 
 namespace mir
 {
-namespace compositor 
+namespace graphics { class Buffer; }
+namespace gl
 {
-class RecentlyUsedCache : public graphics::GLTextureCache
+class RecentlyUsedCache : public TextureCache
 {
 public:
-    std::shared_ptr<graphics::GLTexture> load(graphics::Renderable const& renderable) override;
+    std::shared_ptr<Texture> load(graphics::Renderable const& renderable) override;
     void invalidate() override;
     void drop_unused() override;
 
@@ -40,9 +42,9 @@ private:
     struct Entry
     {
         Entry()
-         : texture(std::make_shared<graphics::GLTexture>())
+         : texture(std::make_shared<Texture>())
         {}
-        std::shared_ptr<graphics::GLTexture> texture;
+        std::shared_ptr<Texture> texture;
         graphics::BufferID last_bound_buffer;
         bool used{true};
         bool valid_binding{false};
@@ -54,4 +56,4 @@ private:
 }
 }
 
-#endif /* MIR_COMPOSITOR_RECENTLY_USED_CACHE_H_ */
+#endif /* MIR_GL_RECENTLY_USED_CACHE_H_ */

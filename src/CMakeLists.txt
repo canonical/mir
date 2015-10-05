@@ -25,6 +25,7 @@ add_subdirectory(server/)
 add_subdirectory(client/)
 add_subdirectory(utils/)
 add_subdirectory(renderers/)
+add_subdirectory(gl/)
 
 add_executable(wrapper wrapper.c)
 set_property(TARGET wrapper

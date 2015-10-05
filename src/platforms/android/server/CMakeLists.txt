@@ -2,6 +2,10 @@ include_directories(
     ${server_common_include_dirs}
 )
 
+include_directories(
+    ${PROJECT_SOURCE_DIR}/src/include/gl
+)
+
 include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 include_directories(
     ${EGL_INCLUDE_DIRS}
@@ -44,6 +48,7 @@ add_library(mirplatformgraphicsandroidobjects OBJECT
 add_library(mirplatformgraphicsandroid SHARED
 
   $<TARGET_OBJECTS:mirplatformgraphicsandroidobjects>
+  $<TARGET_OBJECTS:mirgl>
 )
 
 target_link_libraries(

@@ -16,18 +16,36 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_TESSELLATION_HELPERS_H_
-#define MIR_GRAPHICS_TESSELLATION_HELPERS_H_
-#include "mir/graphics/gl_primitive.h"
-#include "mir/geometry/displacement.h"
+#ifndef MIR_GL_PROGRAM_FACTORY_H_
+#define MIR_GL_PROGRAM_FACTORY_H_
+
+#include "program.h"
+#include "texture_cache.h"
+#include <memory>
 
 namespace mir
 {
-namespace graphics
+namespace gl
 {
-class Renderable;
-GLPrimitive tessellate_renderable_into_rectangle(
-    Renderable const& renderable, geometry::Displacement const& offset);
+
+class ProgramFactory
+{
+public:
+    virtual ~ProgramFactory() = default;
+
+    virtual std::unique_ptr<Program>
+        create_gl_program(std::string const&, std::string const&) const = 0;
+    virtual std::unique_ptr<TextureCache> create_texture_cache() const = 0;
+protected:
+    ProgramFactory() = default;
+
+private:
+    ProgramFactory(ProgramFactory const&) = delete;
+    ProgramFactory& operator=(ProgramFactory const&) = delete;
+
+};
+
 }
 }
-#endif /* MIR_GRAPHICS_TESSELLATION_HELPERS_H_ */
+
+#endif /* MIR_GL_PROGRAM_FACTORY_H_ */
