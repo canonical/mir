@@ -50,7 +50,6 @@ class DisplayReport;
 class DisplayConfigurationPolicy;
 class GraphicBufferAllocator;
 class GLConfig;
-class GLProgramFactory;
 class PlatformIpcOperations;
 class NestedContext;
 
@@ -83,7 +82,6 @@ public:
      */
     virtual std::shared_ptr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-        std::shared_ptr<GLProgramFactory> const& gl_program_factory,
         std::shared_ptr<GLConfig> const& gl_config) = 0;
 
     /**

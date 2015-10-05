@@ -138,7 +138,6 @@ public:
     {
         return platform->create_display(
             std::make_shared<ClonedDisplayConfigurationPolicy>(),
-            std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
     }
 
@@ -147,7 +146,6 @@ public:
     {
         return platform->create_display(
             std::make_shared<SideBySideDisplayConfigurationPolicy>(),
-            std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
     }
 

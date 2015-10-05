@@ -102,7 +102,6 @@ std::shared_ptr<mg::PlatformIpcOperations> mgm::GuestPlatform::make_ipc_operatio
 
 std::shared_ptr<mg::Display> mgm::GuestPlatform::create_display(
     std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
-    std::shared_ptr<graphics::GLProgramFactory> const&,
     std::shared_ptr<graphics::GLConfig> const& /*gl_config*/)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("mgm::GuestPlatform cannot create display\n"));
