@@ -27,6 +27,7 @@
 #include <sstream>
 
 namespace mg=mir::graphics;
+namespace mgl=mir::gl;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
@@ -37,7 +38,7 @@ mga::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<DisplayDevice> const& display_device,
     std::shared_ptr<ANativeWindow> const& native_window,
     mga::GLContext const& shared_gl_context,
-    mg::GLProgramFactory const& program_factory,
+    mgl::ProgramFactory const& program_factory,
     MirOrientation orientation,
     geom::Displacement offset,
     mga::OverlayOptimization overlay_option)

@@ -259,7 +259,7 @@ TEST(ServerShutdownWithThreadException,
         }};
 
     {
-        auto dev = mtf::add_fake_input_device(mir::input::InputDeviceInfo{0, "throwing device", "throwing-device-0",
+        auto dev = mtf::add_fake_input_device(mir::input::InputDeviceInfo{"throwing device", "throwing-device-0",
                                                                           mir::input::DeviceCapability::unknown});
         dev->emit_runtime_error();
         server.join();

@@ -157,13 +157,13 @@ struct TestClientInput : mtf::HeadlessInProcessServer
     }
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{ 0, "keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
+        mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
         };
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{ 0, "mouse", "mouse-uid" , mi::DeviceCapability::pointer})
+        mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})
         };
     std::unique_ptr<mtf::FakeInputDevice> fake_touch_screen{mtf::add_fake_input_device(mi::InputDeviceInfo{
-        0, "touch screen", "touch-screen-uid", mi::DeviceCapability::touchscreen | mi::DeviceCapability::multitouch})};
+        "touch screen", "touch-screen-uid", mi::DeviceCapability::touchscreen | mi::DeviceCapability::multitouch})};
 
     std::string first{"first"};
     std::string second{"second"};

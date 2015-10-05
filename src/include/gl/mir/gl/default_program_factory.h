@@ -16,23 +16,21 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GL_RENDERER_FACTORY_H_
-#define MIR_GRAPHICS_GL_RENDERER_FACTORY_H_
+#ifndef MIR_GL_DEFAULT_PROGRAM_FACTORY_H_
+#define MIR_GL_DEFAULT_PROGRAM_FACTORY_H_
 
-#include "mir/graphics/gl_program_factory.h"
-#include "mir/graphics/gl_program.h"
-#include "mir/graphics/gl_texture_cache.h"
+#include "program_factory.h"
 #include <mutex>
 
 namespace mir
 {
-namespace graphics
+namespace gl
 {
-class ProgramFactory : public GLProgramFactory
+class DefaultProgramFactory : public ProgramFactory
 {
 public:
-    std::unique_ptr<GLProgram> create_gl_program(std::string const&, std::string const&) const override;
-    std::unique_ptr<GLTextureCache> create_texture_cache() const override;
+    std::unique_ptr<Program> create_gl_program(std::string const&, std::string const&) const override;
+    std::unique_ptr<TextureCache> create_texture_cache() const override;
 
 private:
     /*
@@ -46,4 +44,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_GL_RENDERER_FACTORY_H_ */
+#endif /* MIR_GL_DEFAULT_PROGRAM_FACTORY_H_ */

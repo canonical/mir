@@ -5,11 +5,10 @@ include_directories(${MIR_XCURSOR_INCLUDE_DIRECTORIES})
 set(
   INPUT_SOURCES
 
-
-
   builtin_cursor_images.cpp
   cursor_controller.cpp
   default_configuration.cpp
+  default_device.cpp
   default_event_builder.cpp
   default_input_device_hub.cpp
   default_input_manager.cpp

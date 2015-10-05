@@ -38,6 +38,7 @@ public:
     MockLibInput();
     ~MockLibInput() noexcept;
     void wake();
+    void setup_device(libinput* ptr, libinput_device* device, char const* path, char const* name, unsigned int vendor, unsigned int product);
 
     MOCK_METHOD1(libinput_ref, libinput*(libinput*));
     MOCK_METHOD1(libinput_unref, libinput*(libinput*));
@@ -98,6 +99,53 @@ public:
     MOCK_METHOD1(libinput_device_get_id_vendor, unsigned int(libinput_device*));
     MOCK_METHOD1(libinput_device_get_sysname, char const*(libinput_device*));
     MOCK_METHOD1(libinput_device_get_device_group, libinput_device_group*(libinput_device*));
+
+    MOCK_METHOD1(libinput_device_config_tap_get_finger_count, int(libinput_device*));
+    MOCK_METHOD2(libinput_device_config_tap_set_enabled, libinput_config_status(libinput_device*,  libinput_config_tap_state enable));
+    MOCK_METHOD1(libinput_device_config_tap_get_enabled, libinput_config_tap_state(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_tap_get_default_enabled, libinput_config_tap_state(libinput_device*));
+    MOCK_METHOD2(libinput_device_config_tap_set_drag_lock_enabled, libinput_config_status(libinput_device*,  libinput_config_drag_lock_state enable));
+    MOCK_METHOD1(libinput_device_config_tap_get_drag_lock_enabled, libinput_config_drag_lock_state(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_tap_get_default_drag_lock_enabled, libinput_config_drag_lock_state(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_calibration_has_matrix, int(libinput_device*));
+    MOCK_METHOD2(libinput_device_config_calibration_set_matrix, libinput_config_status(libinput_device*, const float matrix[6]));
+    MOCK_METHOD2(libinput_device_config_calibration_get_matrix, int(libinput_device*,  float matrix[6]));
+    MOCK_METHOD2(libinput_device_config_calibration_get_default_matrix, int(libinput_device*,  float matrix[6]));
+    MOCK_METHOD1(libinput_device_config_send_events_get_modes, uint32_t(libinput_device*));
+    MOCK_METHOD2(libinput_device_config_send_events_set_mode, libinput_config_status(libinput_device*, uint32_t mode));
+    MOCK_METHOD1(libinput_device_config_send_events_get_mode, uint32_t(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_send_events_get_default_mode, uint32_t(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_accel_is_available, int(libinput_device*));
+    MOCK_METHOD2(libinput_device_config_accel_set_speed, libinput_config_status(libinput_device*, double speed));
+    MOCK_METHOD1(libinput_device_config_accel_get_speed, double(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_accel_get_default_speed, double(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_scroll_has_natural_scroll, int(libinput_device*));
+    MOCK_METHOD2(libinput_device_config_scroll_set_natural_scroll_enabled, libinput_config_status(libinput_device*, int enable));
+    MOCK_METHOD1(libinput_device_config_scroll_get_natural_scroll_enabled, int(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_scroll_get_default_natural_scroll_enabled, int(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_left_handed_is_available, int(libinput_device*));
+    MOCK_METHOD2(libinput_device_config_left_handed_set, libinput_config_status(libinput_device*,  int left_handed));
+    MOCK_METHOD1(libinput_device_config_left_handed_get, int(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_left_handed_get_default, int(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_click_get_methods, uint32_t(libinput_device*));
+    MOCK_METHOD2(libinput_device_config_click_set_method, libinput_config_status(libinput_device*, libinput_config_click_method method));
+    MOCK_METHOD1(libinput_device_config_click_get_method, libinput_config_click_method(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_click_get_default_method, libinput_config_click_method(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_middle_emulation_is_available, int(libinput_device*));
+    MOCK_METHOD2(libinput_device_config_middle_emulation_set_enabled, libinput_config_status(libinput_device*, libinput_config_middle_emulation_state enable));
+    MOCK_METHOD1(libinput_device_config_middle_emulation_get_enabled, libinput_config_middle_emulation_state(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_middle_emulation_get_default_enabled, libinput_config_middle_emulation_state(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_scroll_get_methods, uint32_t(libinput_device*));
+    MOCK_METHOD2(libinput_device_config_scroll_set_method, libinput_config_status(libinput_device*, libinput_config_scroll_method method));
+    MOCK_METHOD1(libinput_device_config_scroll_get_method, libinput_config_scroll_method(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_scroll_get_default_method, libinput_config_scroll_method(libinput_device*));
+    MOCK_METHOD2(libinput_device_config_scroll_set_button, libinput_config_status(libinput_device*,  uint32_t button));
+    MOCK_METHOD1(libinput_device_config_scroll_get_button, uint32_t(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_scroll_get_default_button, uint32_t(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_dwt_is_available, int(libinput_device*));
+    MOCK_METHOD2(libinput_device_config_dwt_set_enabled, libinput_config_status(libinput_device*, libinput_config_dwt_state enable));
+    MOCK_METHOD1(libinput_device_config_dwt_get_enabled, libinput_config_dwt_state(libinput_device*));
+    MOCK_METHOD1(libinput_device_config_dwt_get_default_enabled, libinput_config_dwt_state(libinput_device*));
 
 private:
     dispatch::ActionQueue libinput_simulation_queue;

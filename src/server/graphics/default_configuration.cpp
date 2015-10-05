@@ -31,7 +31,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/platform_probe.h"
-#include "program_factory.h"
 
 #include "mir/shared_library.h"
 #include "mir/shared_library_prober.h"
@@ -250,9 +249,5 @@ mir::DefaultServerConfiguration::the_gl_config()
 std::shared_ptr<mg::GLProgramFactory>
 mir::DefaultServerConfiguration::the_gl_program_factory()
 {
-    return gl_program_factory(
-        [this]
-        {
-            return std::make_shared<mg::ProgramFactory>();
-        });
+    return std::shared_ptr<mg::GLProgramFactory>();
 }

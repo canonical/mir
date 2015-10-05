@@ -57,7 +57,6 @@ bool can_open_input_devices()
             device_found = true;
 
             mir::Fd input_device(::open(device.devnode(), O_RDONLY|O_NONBLOCK));
-            std::cout <<device.devnode() << std::endl;
             if (input_device > 0)
                 return true;
         }

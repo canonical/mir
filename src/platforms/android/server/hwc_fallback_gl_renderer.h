@@ -20,17 +20,17 @@
 #define MIR_GRAPHICS_ANDROID_HWC_FALLBACK_GL_RENDERER_H_
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/displacement.h"
-#include "mir/graphics/gl_program.h"
+#include "mir/gl/program.h"
+#include "mir/gl/texture_cache.h"
 #include "mir/graphics/renderable.h"
-#include "mir/graphics/gl_texture_cache.h"
 #include <memory>
 
 namespace mir
 {
+namespace gl { class ProgramFactory; }
 namespace graphics
 {
 class GLContext;
-class GLProgramFactory;
 
 namespace android
 {
@@ -52,14 +52,14 @@ class HWCFallbackGLRenderer : public RenderableListCompositor
 {
 public:
     HWCFallbackGLRenderer(
-        GLProgramFactory const& program_factory,
+        gl::ProgramFactory const& program_factory,
         graphics::GLContext const& gl_context,
         geometry::Rectangle const& screen_position);
 
     void render(RenderableList const&, geometry::Displacement, SwappingGLContext const&) const;
 private:
-    std::unique_ptr<graphics::GLProgram> program;
-    std::unique_ptr<graphics::GLTextureCache> texture_cache;
+    std::unique_ptr<gl::Program> program;
+    std::unique_ptr<gl::TextureCache> texture_cache;
 
     GLint position_attr;
     GLint texcoord_attr;

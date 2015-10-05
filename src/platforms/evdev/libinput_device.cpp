@@ -63,6 +63,7 @@ void mie::LibInputDevice::add_device_of_group(char const* path, LibInputDevicePt
 {
     paths.emplace_back(path);
     devices.emplace_back(std::move(dev));
+    update_device_info();
 }
 
 bool mie::LibInputDevice::is_in_group(char const* path)
@@ -321,6 +322,11 @@ void mie::LibInputDevice::add_touch_motion_event(libinput_event_touch* touch)
 
 mi::InputDeviceInfo mie::LibInputDevice::get_device_info()
 {
+    return info;
+}
+
+void mie::LibInputDevice::update_device_info()
+{
     auto dev = device();
     std::string name = libinput_device_get_name(dev);
     std::stringstream unique_id(name);
@@ -332,7 +338,7 @@ mi::InputDeviceInfo mie::LibInputDevice::get_device_info()
     for (auto const& path : paths)
         caps |= mie::detect_device_capabilities(path.c_str());
 
-    return mi::InputDeviceInfo{0, name, unique_id.str(), caps};
+    info = mi::InputDeviceInfo{name, unique_id.str(), caps};
 }
 
 libinput_device_group* mie::LibInputDevice::group()
@@ -340,7 +346,7 @@ libinput_device_group* mie::LibInputDevice::group()
     return libinput_device_get_device_group(device());
 }
 
-libinput_device* mie::LibInputDevice::device()
+libinput_device* mie::LibInputDevice::device() const
 {
     return devices.front().get();
 }
