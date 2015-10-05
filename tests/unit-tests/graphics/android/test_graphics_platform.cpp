@@ -40,10 +40,10 @@ namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 namespace mo = mir::options;
 
-class GraphicsPlatformAndroid : public ::testing::Test
+class GraphicsPlatform : public ::testing::Test
 {
 public:
-    GraphicsPlatformAndroid() : logger(std::make_shared<ml::DumbConsoleLogger>())
+    GraphicsPlatform() : logger(std::make_shared<ml::DumbConsoleLogger>())
     {
     }
 
@@ -62,44 +62,4 @@ public:
     ::testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
 };
 
-TEST_F(GraphicsPlatformAndroid, buffer_allocator_creation)
-{
-    using namespace testing;
-
-    EXPECT_NO_THROW (
-        auto platform = create_platform();
-        auto allocator = platform->create_buffer_allocator();
-
-        EXPECT_TRUE(allocator.get());
-    );
-}
-
-TEST_F(GraphicsPlatformAndroid, buffer_creation)
-{
-    auto platform = create_platform();
-    auto allocator = platform->create_buffer_allocator();
-    auto supported_pixel_formats = allocator->supported_pixel_formats();
-
-    ASSERT_NE(0u, supported_pixel_formats.size());
-
-    geom::Size size{320, 240};
-    MirPixelFormat const pf{supported_pixel_formats[0]};
-    mg::BufferUsage usage{mg::BufferUsage::hardware};
-    mg::BufferProperties buffer_properties{size, pf, usage};
-
-    auto buffer = allocator->alloc_buffer(buffer_properties);
-
-    ASSERT_TRUE(buffer.get() != NULL);
-
-    EXPECT_EQ(buffer->size(), size);
-    EXPECT_EQ(buffer->pixel_format(), pf);
-}
-
-TEST_F(GraphicsPlatformAndroid, connection_ipc_package)
-{
-    auto platform = create_platform();
-    auto ipc_ops = platform->make_ipc_operations();
-    auto pkg = ipc_ops->connection_ipc_package();
-
-    ASSERT_TRUE(pkg.get() != NULL);
-}
+#include "../test_graphics_platform.h"

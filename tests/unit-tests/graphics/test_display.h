@@ -19,11 +19,6 @@
 #ifndef TEST_DISPLAY_H_
 #define TEST_DISPLAY_H_
 
-namespace mg = mir::graphics;
-namespace mgm = mg::mesa;
-namespace mtd = mir::test::doubles;
-namespace mtf = mir_test_framework;
-
 namespace
 {
 
