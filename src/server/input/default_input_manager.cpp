@@ -17,10 +17,8 @@
  */
 
 #include "default_input_manager.h"
-#include "android/input_reader_dispatchable.h"
 
 #include "mir/input/platform.h"
-#include "mir/input/legacy_input_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/threaded_dispatcher.h"
@@ -33,11 +31,9 @@
 #include <future>
 
 namespace mi = mir::input;
-namespace mia = mi::android;
 
-mi::DefaultInputManager::DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
-                                             std::shared_ptr<LegacyInputDispatchable>  const& legacy_dispatchable)
-    : multiplexer{multiplexer}, legacy_dispatchable{legacy_dispatchable}, queue{std::make_shared<mir::dispatch::ActionQueue>()}, state{State::stopped}
+mi::DefaultInputManager::DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer)
+    : multiplexer{multiplexer}, queue{std::make_shared<mir::dispatch::ActionQueue>()}, state{State::stopped}
 {
 }
 
@@ -79,10 +75,6 @@ void mi::DefaultInputManager::start()
     multiplexer->add_watch(queue);
     auto unregister_queue = on_unwind([this]{multiplexer->remove_watch(queue);});
 
-    multiplexer->add_watch(legacy_dispatchable);
-    auto unregister_legacy_dispatchable = on_unwind([this]{multiplexer->remove_watch(legacy_dispatchable);});
-
-    legacy_dispatchable->start();
 
     auto started_promise = std::make_shared<std::promise<void>>();
     auto started_future = started_promise->get_future();
@@ -97,7 +89,6 @@ void mi::DefaultInputManager::start()
                         start_platforms();
                         // TODO: Udev monitoring is still not separated yet - an initial scan is necessary to open
                         // devices, this will be triggered through the first call to dispatch->InputReader->loopOnce.
-                        legacy_dispatchable->dispatch(dispatch::FdEvent::readable);
                         promise->set_value();
                    });
 
@@ -108,7 +99,6 @@ void mi::DefaultInputManager::start()
         {
             stop_platforms();
             multiplexer->remove_watch(queue);
-            multiplexer->remove_watch(legacy_dispatchable);
             state = State::stopped;
             mir::terminate_with_current_exception();
         });
@@ -146,10 +136,6 @@ void mi::DefaultInputManager::stop()
 
     multiplexer->remove_watch(queue);
     auto register_queue = on_unwind([this]{multiplexer->add_watch(queue);});
-
-    multiplexer->remove_watch(legacy_dispatchable);
-
-    auto register_legacy_dispatchable= on_unwind([this]{multiplexer->add_watch(legacy_dispatchable);});
 
     input_thread.reset();
 

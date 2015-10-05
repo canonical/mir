@@ -18,12 +18,9 @@
 
 #include "mir/default_server_configuration.h"
 
-#include "android/android_input_reader_policy.h"
 #include "android/input_sender.h"
 #include "android/input_channel_factory.h"
-#include "android/input_translator.h"
 #include "key_repeat_dispatcher.h"
-#include "android/input_reader_dispatchable.h"
 #include "display_input_region.h"
 #include "event_filter_chain_dispatcher.h"
 #include "cursor_controller.h"
@@ -53,8 +50,6 @@
 #include "mir/dispatch/action_queue.h"
 
 #include "mir_toolkit/cursors.h"
-
-#include <EventHub.h>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
@@ -170,56 +165,6 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
         });
 }
 
-std::shared_ptr<droidinput::EventHubInterface>
-mir::DefaultServerConfiguration::the_event_hub()
-{
-    return event_hub(
-        [this]()
-        {
-            return std::make_shared<droidinput::EventHub>(the_input_report());
-        });
-}
-
-std::shared_ptr<mir::input::LegacyInputDispatchable>
-mir::DefaultServerConfiguration::the_legacy_input_dispatchable()
-{
-    return legacy_input_dispatchable(
-        [this]()
-        {
-            return std::make_shared<mia::InputReaderDispatchable>(the_event_hub(), the_input_reader());
-        });
-}
-
-std::shared_ptr<droidinput::InputReaderPolicyInterface>
-mir::DefaultServerConfiguration::the_input_reader_policy()
-{
-    return input_reader_policy(
-        [this]()
-        {
-            return std::make_shared<mia::InputReaderPolicy>(the_input_region(), the_cursor_listener(), the_touch_visualizer());
-        });
-}
-
-std::shared_ptr<droidinput::InputReaderInterface>
-mir::DefaultServerConfiguration::the_input_reader()
-{
-    return input_reader(
-        [this]()
-        {
-            return std::make_shared<droidinput::InputReader>(the_event_hub(), the_input_reader_policy(), the_input_translator());
-        });
-}
-
-std::shared_ptr<droidinput::InputListenerInterface>
-mir::DefaultServerConfiguration::the_input_translator()
-{
-    return input_translator(
-        [this]()
-        {
-            return std::make_shared<mia::InputTranslator>(the_input_dispatcher());
-        });
-}
-
 std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_input_channel_factory()
 {
     auto const options = the_options();
@@ -305,21 +250,6 @@ mir::DefaultServerConfiguration::the_cursor_images()
         });
 }
 
-namespace
-{
-class NullLegacyInputDispatchable : public mi::LegacyInputDispatchable
-{
-public:
-    void start() override {};
-    mir::Fd watch_fd() const override { return aq.watch_fd();};
-    bool dispatch(md::FdEvents events) override { return aq.dispatch(events); }
-    md::FdEvents relevant_events() const override{ return aq.relevant_events(); }
-
-private:
-    md::ActionQueue aq;
-};
-}
-
 std::shared_ptr<mi::InputManager>
 mir::DefaultServerConfiguration::the_input_manager()
 {
@@ -342,9 +272,7 @@ mir::DefaultServerConfiguration::the_input_manager()
                 if (platforms.empty())
                     BOOST_THROW_EXCEPTION(std::runtime_error("No input platforms found"));
 
-                auto const ret = std::make_shared<mi::DefaultInputManager>(
-                    the_input_reading_multiplexer(),
-                    std::make_shared<NullLegacyInputDispatchable>());
+                auto const ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer());
 
                 for (auto & platform : platforms)
                     ret->add_platform(std::move(platform));

@@ -69,7 +69,6 @@ if (MIR_BUILD_PLATFORM_ANDROID)
 endif()
 
 add_library(mir-public-test-doubles OBJECT
-  fake_event_hub.cpp
   nested_mock_egl.cpp
   null_logger.cpp
 )
