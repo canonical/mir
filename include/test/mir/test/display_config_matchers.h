@@ -72,6 +72,10 @@ bool compare_display_configurations(MirDisplayConfiguration const& client_config
 bool compare_display_configurations(graphics::DisplayConfiguration const& display_config1,
                                     MirDisplayConfiguration const* display_config2);
 
+
+bool compare_display_configurations(MirDisplayConfiguration const* display_config2,
+                                    graphics::DisplayConfiguration const& display_config1);
+
 MATCHER_P(DisplayConfigMatches, config, "")
 {
     return compare_display_configurations(arg, config);
