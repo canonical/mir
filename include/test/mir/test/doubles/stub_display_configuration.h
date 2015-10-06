@@ -121,10 +121,11 @@ public:
         {
             std::vector<graphics::DisplayConfigurationMode> modes;
 
-            // Every second output is connected...
-            auto const connected = [](int index) -> bool { return index % 2; };
+            // Every second output, starting with the first, is connected...
+            // (Android tests assume the first output in a configuration is connected)
+            auto const connected = [](int index) { return (index % 2) == 0; };
             // ..and every second connected output is used...
-            auto const used = [](int index) -> bool { return index % 4; };
+            auto const used = [](int index) { return (index % 4) == 0; };
 
             for (auto j = 0u; j <= i; j++)
             {
