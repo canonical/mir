@@ -555,18 +555,26 @@ TEST_F(LibInputDevice, reads_pointer_settings_from_libinput)
     mie::LibInputDevice dev(mir::report::null_input_report(), mouse_device_path, mie::make_libinput_device(lib.get(), mouse_device_path));
 
     setup_pointer_configuration(dev.device(), 1, mir_pointer_button_primary);
-    auto ptr = dev.get_pointer_settings();
-    EXPECT_THAT(ptr->primary_button, Eq(mir_pointer_button_primary));
-    EXPECT_THAT(ptr->cursor_speed, Eq(1.0));
-    EXPECT_THAT(ptr->horizontal_scroll_speed, Eq(1.0));
-    EXPECT_THAT(ptr->vertical_scroll_speed, Eq(1.0));
+    auto optional_settings = dev.get_pointer_settings();
+
+    EXPECT_THAT(optional_settings.is_set(), Eq(true));
+
+    auto ptr_settings = optional_settings.value();
+    EXPECT_THAT(ptr_settings.primary_button, Eq(mir_pointer_button_primary));
+    EXPECT_THAT(ptr_settings.cursor_speed, Eq(1.0));
+    EXPECT_THAT(ptr_settings.horizontal_scroll_speed, Eq(1.0));
+    EXPECT_THAT(ptr_settings.vertical_scroll_speed, Eq(1.0));
 
     setup_pointer_configuration(dev.device(), 0.0, mir_pointer_button_secondary);
-    ptr = dev.get_pointer_settings();
-    EXPECT_THAT(ptr->primary_button, Eq(mir_pointer_button_secondary));
-    EXPECT_THAT(ptr->cursor_speed, Eq(0.0));
-    EXPECT_THAT(ptr->horizontal_scroll_speed, Eq(1.0));
-    EXPECT_THAT(ptr->vertical_scroll_speed, Eq(1.0));
+    optional_settings = dev.get_pointer_settings();
+
+    EXPECT_THAT(optional_settings.is_set(), Eq(true));
+
+    ptr_settings = optional_settings.value();
+    EXPECT_THAT(ptr_settings.primary_button, Eq(mir_pointer_button_secondary));
+    EXPECT_THAT(ptr_settings.cursor_speed, Eq(0.0));
+    EXPECT_THAT(ptr_settings.horizontal_scroll_speed, Eq(1.0));
+    EXPECT_THAT(ptr_settings.vertical_scroll_speed, Eq(1.0));
 }
 
 TEST_F(LibInputDevice, applies_pointer_settings)
@@ -579,14 +587,14 @@ TEST_F(LibInputDevice, applies_pointer_settings)
     mie::LibInputDevice dev(mir::report::null_input_report(), mouse_device_path, mie::make_libinput_device(lib.get(), path));
 
     setup_pointer_configuration(dev.device(), 1, mir_pointer_button_primary);
-    auto ptr = dev.get_pointer_settings();
-    ptr->cursor_speed = 1.1;
-    ptr->primary_button = mir_pointer_button_secondary;
+    mi::PointerSettings settings(dev.get_pointer_settings().value());
+    settings.cursor_speed = 1.1;
+    settings.primary_button = mir_pointer_button_secondary;
 
     EXPECT_CALL(mock_libinput,libinput_device_config_accel_set_speed(dev.device(), 1.1)).Times(1);
     EXPECT_CALL(mock_libinput,libinput_device_config_left_handed_set(dev.device(), true)).Times(1);
 
-    dev.apply_settings(*ptr);
+    dev.apply_settings(settings);
 }
 
 TEST_F(LibInputDevice, denies_pointer_settings_on_keyboards)
@@ -604,7 +612,7 @@ TEST_F(LibInputDevice, denies_pointer_settings_on_keyboards)
     EXPECT_CALL(mock_libinput,libinput_device_config_accel_set_speed(_, _)).Times(0);
     EXPECT_CALL(mock_libinput,libinput_device_config_left_handed_set(_, _)).Times(0);
 
-    keyboard_dev.apply_settings(*settings_from_mouse);
+    keyboard_dev.apply_settings(settings_from_mouse.value());
 }
 
 TEST_F(LibInputDevice, scroll_speed_scales_scroll_events)
@@ -620,10 +628,10 @@ TEST_F(LibInputDevice, scroll_speed_scales_scroll_events)
     setup_axis_event(fake_event_2, event_time_2, -2.0, 0.0);
 
     setup_pointer_configuration(dev.device(), 1, mir_pointer_button_primary);
-    auto ptr = dev.get_pointer_settings();
-    ptr->vertical_scroll_speed = -1.0;
-    ptr->horizontal_scroll_speed = 5.0;
-    dev.apply_settings(*ptr);
+    mi::PointerSettings settings(dev.get_pointer_settings().value());
+    settings.vertical_scroll_speed = -1.0;
+    settings.horizontal_scroll_speed = 5.0;
+    dev.apply_settings(settings);
 
     InSequence seq;
     // expect two scroll events..
