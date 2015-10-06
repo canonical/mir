@@ -34,7 +34,6 @@ public:
 
     std::shared_ptr<mir::graphics::Display> create_display(
         std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const&,
-        std::shared_ptr<mir::graphics::GLProgramFactory> const&,
         std::shared_ptr<mir::graphics::GLConfig> const&) override;
 
 private:

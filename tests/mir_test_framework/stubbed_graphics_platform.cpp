@@ -232,7 +232,6 @@ std::shared_ptr<mg::Display> display_preset;
 
 std::shared_ptr<mg::Display> mtf::StubGraphicPlatform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
-    std::shared_ptr<mg::GLProgramFactory> const&,
     std::shared_ptr<mg::GLConfig> const&)
 {
     if (display_preset)
@@ -266,10 +265,9 @@ struct GuestPlatformAdapter : mg::Platform
 
     std::shared_ptr<mg::Display> create_display(
         std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
-        std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
         std::shared_ptr<mg::GLConfig> const& gl_config) override
     {
-        return adaptee->create_display(initial_conf_policy, gl_program_factory, gl_config);
+        return adaptee->create_display(initial_conf_policy, gl_config);
     }
 
     EGLNativeDisplayType egl_native_display() const override
