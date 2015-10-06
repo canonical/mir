@@ -29,7 +29,7 @@ namespace geom = mir::geometry;
 mga::DisplayGroup::DisplayGroup(
     std::shared_ptr<mga::DisplayDevice> const& device,
     std::unique_ptr<mga::ConfigurableDisplayBuffer> primary_buffer,
-    ExceptionHandler exception_handler) :
+    ExceptionHandler const& exception_handler) :
     device(device),
     exception_handler(exception_handler)
 {

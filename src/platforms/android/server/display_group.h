@@ -42,7 +42,7 @@ public:
     DisplayGroup(
         std::shared_ptr<DisplayDevice> const& device,
         std::unique_ptr<ConfigurableDisplayBuffer> primary_buffer,
-        ExceptionHandler handler);
+        ExceptionHandler const& handler);
     DisplayGroup(
            std::shared_ptr<DisplayDevice> const& device,
            std::unique_ptr<ConfigurableDisplayBuffer> primary_buffer);
@@ -60,7 +60,7 @@ private:
     std::mutex mutable guard;
     std::shared_ptr<DisplayDevice> const device;
     std::map<DisplayName, std::unique_ptr<ConfigurableDisplayBuffer>> dbs;
-    ExceptionHandler exception_handler;
+    ExceptionHandler const exception_handler;
 };
 
 }
