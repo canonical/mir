@@ -65,6 +65,9 @@ MIR_COMMON_5 {
     mir::logging::Logger::Logger*;
     mir::logging::Logger::operator*;
     mir::logging::set_logger*;
+    mir::SharedLibrary::load_symbol*;
+    mir::SharedLibrary::?SharedLibrary*;
+    mir::SharedLibrary::SharedLibrary*;
     non-virtual?thunk?to?mir::dispatch::ActionQueue::?ActionQueue*;
     non-virtual?thunk?to?mir::dispatch::Dispatchable::?Dispatchable*;
     non-virtual?thunk?to?mir::dispatch::MultiplexingDispatchable::dispatch*;
@@ -119,9 +122,6 @@ MIR_COMMON_5 {
     mir::report::lttng::TracepointProvider::?TracepointProvider*;
     mir::report::lttng::TracepointProvider::TracepointProvider*;
     mir::set_thread_name*;
-    mir::SharedLibrary::load_symbol*;
-    mir::SharedLibrary::?SharedLibrary*;
-    mir::SharedLibrary::SharedLibrary*;
     vtable?for?mir::logging::DumbConsoleLogger;
     vtable?for?mir::time::SteadyClock;
     vtable?for?mir::time::Clock;
