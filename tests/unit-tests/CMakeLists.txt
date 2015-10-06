@@ -70,7 +70,6 @@ set(
   test_lockable_callback.cpp
   test_module_deleter.cpp
   test_mir_cookie.cpp
-  test_client_cookie.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
