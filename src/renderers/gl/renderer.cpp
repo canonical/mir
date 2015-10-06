@@ -20,13 +20,13 @@
 
 #include "renderer.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/compositor/recently_used_cache.h"
+#include "mir/gl/default_program_factory.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/gl_texture_cache.h"
-#include "mir/graphics/gl_texture.h"
-#include "mir/graphics/tessellation_helpers.h"
+#include "mir/gl/tessellation_helpers.h"
+#include "mir/gl/texture_cache.h"
+#include "mir/gl/texture.h"
 #include "mir/log.h"
 
 #define GLM_FORCE_RADIANS
@@ -39,24 +39,33 @@
 #include <cmath>
 
 namespace mg = mir::graphics;
-namespace mc = mir::compositor;
+namespace mgl = mir::gl;
 namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
 
-mrg::RenderingTarget::RenderingTarget(mg::DisplayBuffer* buffer)
-    : buffer{buffer}
+mrg::CurrentRenderTarget::CurrentRenderTarget(mg::DisplayBuffer* display_buffer)
+    : render_target{
+        dynamic_cast<renderer::gl::RenderTarget*>(display_buffer->native_display_buffer())}
 {
+    if (!render_target)
+        BOOST_THROW_EXCEPTION(std::logic_error("DisplayBuffer does not support GL rendering"));
+
     ensure_current();
 }
 
-mrg::RenderingTarget::~RenderingTarget()
+mrg::CurrentRenderTarget::~CurrentRenderTarget()
 {
-    buffer->release_current();
+    render_target->release_current();
 }
 
-void mrg::RenderingTarget::ensure_current()
+void mrg::CurrentRenderTarget::ensure_current()
 {
-    buffer->make_current();
+    render_target->make_current();
+}
+
+void mrg::CurrentRenderTarget::swap_buffers()
+{
+    render_target->swap_buffers();
 }
 
 const GLchar* const mrg::Renderer::vshader =
@@ -112,12 +121,11 @@ mrg::Renderer::Program::Program(GLuint program_id)
 }
 
 mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
-    : rendering_target(&display_buffer),
-      display_buffer(display_buffer),
+    : render_target(&display_buffer),
       clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
-      texture_cache(std::make_unique<mc::RecentlyUsedCache>()),
+      texture_cache(mgl::DefaultProgramFactory().create_texture_cache()),
       rotation(NAN) // ensure the first set_rotation succeeds
 {
     EGLDisplay disp = eglGetCurrentDisplay();
@@ -174,16 +182,16 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
 
 mrg::Renderer::~Renderer() = default;
 
-void mrg::Renderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
+void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
                                 mg::Renderable const& renderable) const
 {
     primitives.resize(1);
-    primitives[0] = mg::tessellate_renderable_into_rectangle(renderable, geom::Displacement{0,0});
+    primitives[0] = mgl::tessellate_renderable_into_rectangle(renderable, geom::Displacement{0,0});
 }
 
 void mrg::Renderer::render(mg::RenderableList const& renderables) const
 {
-    rendering_target.ensure_current();
+    render_target.ensure_current();
 
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -195,7 +203,7 @@ void mrg::Renderer::render(mg::RenderableList const& renderables) const
 
     texture_cache->drop_unused();
 
-    display_buffer.gl_swap_buffers();
+    render_target.swap_buffers();
 }
 
 void mrg::Renderer::draw(mg::Renderable const& renderable,
@@ -253,10 +261,10 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
             glBindTexture(GL_TEXTURE_2D, p.tex_id);
 
         glVertexAttribPointer(prog.position_attr, 3, GL_FLOAT,
-                              GL_FALSE, sizeof(mg::GLVertex),
+                              GL_FALSE, sizeof(mgl::Vertex),
                               &p.vertices[0].position);
         glVertexAttribPointer(prog.texcoord_attr, 2, GL_FLOAT,
-                              GL_FALSE, sizeof(mg::GLVertex),
+                              GL_FALSE, sizeof(mgl::Vertex),
                               &p.vertices[0].texcoord);
 
         glDrawArrays(p.type, 0, p.nvertices);

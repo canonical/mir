@@ -54,9 +54,12 @@ void mf::ShellWrapper::stop_prompt_session(
     wrapped->stop_prompt_session(prompt_session);
 }
 
-mf::SurfaceId mf::ShellWrapper::create_surface(std::shared_ptr<Session> const& session, scene::SurfaceCreationParameters const& params)
+mf::SurfaceId mf::ShellWrapper::create_surface(
+    std::shared_ptr<Session> const& session,
+    scene::SurfaceCreationParameters const& params,
+    std::shared_ptr<EventSink> const& sink)
 {
-    return wrapped->create_surface(session, params);
+    return wrapped->create_surface(session, params, sink);
 }
 
 void mf::ShellWrapper::modify_surface(std::shared_ptr<Session> const& session, SurfaceId surface, shell::SurfaceSpecification const& modifications)

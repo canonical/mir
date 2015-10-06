@@ -58,6 +58,10 @@ void mc::BufferStreamSurfaces::acquire_client_buffer(
 void mc::BufferStreamSurfaces::release_client_buffer(graphics::Buffer* buf)
 {
     buffer_bundle->client_release(buf);
+    {
+        std::unique_lock<std::mutex> lk(mutex);
+        first_frame_posted = true;
+    }
 }
 
 geom::Size mc::BufferStreamSurfaces::stream_size()
@@ -99,10 +103,6 @@ void mc::BufferStreamSurfaces::swap_buffers(
     if (old_buffer)
     {
         release_client_buffer(old_buffer);
-        {
-            std::unique_lock<std::mutex> lk(mutex);
-            first_frame_posted = true;
-        }
 
         /*
          * TODO: In future frame_posted() could be made parameterless.
@@ -123,6 +123,8 @@ bool mc::BufferStreamSurfaces::has_submitted_buffer() const
 
 void mc::BufferStreamSurfaces::with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec)
 {
+    if (!first_frame_posted)
+        BOOST_THROW_EXCEPTION(std::runtime_error("No frame posted yet"));
     exec(*std::make_shared<mc::TemporarySnapshotBuffer>(buffer_bundle));
 }
 

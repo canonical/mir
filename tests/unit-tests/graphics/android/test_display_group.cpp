@@ -32,14 +32,12 @@ namespace mt=mir::test;
 
 namespace
 {
-struct StubConfigurableDB : mga::ConfigurableDisplayBuffer
+struct StubConfigurableDB : mga::ConfigurableDisplayBuffer, mg::NativeDisplayBuffer
 {
     mir::geometry::Rectangle view_area() const override { return {}; }
-    void make_current() override {}
-    void release_current() override {}
-    void gl_swap_buffers() override {}
     bool post_renderables_if_optimizable(mg::RenderableList const&) override { return false; }
     MirOrientation orientation() const override { return mir_orientation_normal; }
+    mg::NativeDisplayBuffer* native_display_buffer() override { return this; }
     void configure(MirPowerMode, MirOrientation, mir::geometry::Displacement) override {}
     mga::DisplayContents contents() override
     {

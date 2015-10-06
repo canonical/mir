@@ -24,7 +24,9 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/renderer/gl/render_target.h"
 #include "mir_image.h"
+#include "as_render_target.h"
 
 #include <chrono>
 #include <csignal>
@@ -33,6 +35,7 @@
 namespace mg=mir::graphics;
 namespace mo=mir::options;
 namespace geom=mir::geometry;
+namespace me=mir::examples;
 
 namespace
 {
@@ -208,7 +211,8 @@ void render_loop(mir::Server& server)
         {
             group.for_each_display_buffer([&](mg::DisplayBuffer& buffer)
             {
-                buffer.make_current();
+                // TODO: Is make_current() really needed here?
+                me::as_render_target(buffer)->make_current();
                 buffer.post_renderables_if_optimizable(renderlist);
             });
             group.post();

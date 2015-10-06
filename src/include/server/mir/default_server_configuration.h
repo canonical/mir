@@ -78,6 +78,7 @@ class Screencast;
 
 namespace shell
 {
+class DisplayConfigurationController;
 class InputTargeter;
 class FocusSetter;
 class FocusController;
@@ -208,6 +209,7 @@ public:
      * configurable interfaces for modifying graphics
      *  @{ */
     virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
+    virtual std::shared_ptr<shell::DisplayConfigurationController> the_display_configuration_controller();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
     virtual std::shared_ptr<graphics::GLConfig> the_gl_config();

@@ -32,7 +32,9 @@ struct StubSceneSession : public scene::Session
 {
     StubSceneSession(pid_t pid = -1) : pid(pid) {}
 
-    frontend::SurfaceId create_surface(scene::SurfaceCreationParameters const& /* params */) override
+    frontend::SurfaceId create_surface(
+        scene::SurfaceCreationParameters const& /* params */,
+        std::shared_ptr<frontend::EventSink> const& /* sink */) override
     {
         return frontend::SurfaceId{0};
     }

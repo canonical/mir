@@ -97,7 +97,8 @@ public:
 
     void generate_decorations_for(
         std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface,
-        TilingSurfaceInfoMap& surface_info);
+        TilingSurfaceInfoMap& surface_info,
+        std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const&, scene::SurfaceCreationParameters const&)> const& build);
 
 private:
     static const int modifier_mask =

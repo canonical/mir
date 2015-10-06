@@ -24,7 +24,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/geometry/rectangle.h>
-#include "src/server/graphics/program_factory.h"
+#include "src/gl/default_program_factory.h"
 #include <mir/test/fake_shared.h>
 #include <mir/test/doubles/mock_buffer.h>
 #include <mir/test/doubles/mock_renderable.h>
@@ -107,7 +107,7 @@ class ProgramFactory : public testing::Test
 {
 public:
     testing::NiceMock<mtd::MockGL> mock_gl;
-    mg::ProgramFactory factory;
+    mir::gl::DefaultProgramFactory factory;
 };
 
 ACTION_P2(CopyString, str, len)

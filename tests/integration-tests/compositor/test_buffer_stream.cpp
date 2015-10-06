@@ -300,9 +300,8 @@ TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
 namespace
 {
 
-void client_loop(int nframes, BufferStreamSurfaces& stream)
+void client_loop(mg::Buffer*& out_buffer, int nframes, BufferStreamSurfaces& stream)
 {
-    mg::Buffer* out_buffer{nullptr};
     for (int f = 0; f < nframes; f++)
     {
         stream.swap_client_buffers_blocking(out_buffer);
@@ -351,7 +350,14 @@ TEST_F(BufferStreamTest, stress_test_distinct_buffers)
     std::atomic<bool> done;
     done = false;
 
+    mg::Buffer* out_buffer{nullptr};
+
+    // Ensure we've posted a buffer before we start the snapshot loop
+    buffer_stream.swap_client_buffers_blocking(out_buffer);
+    buffer_stream.swap_client_buffers_blocking(out_buffer);
+
     std::thread client(client_loop,
+                       std::ref(out_buffer),
                        num_frames,
                        std::ref(buffer_stream));
 

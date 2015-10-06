@@ -358,20 +358,19 @@ libinput_device* mie::LibInputDevice::device() const
 
 mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settings() const
 {
-    mir::optional_value<PointerSettings> ret;
     if (!contains(info.capabilities, mi::DeviceCapability::pointer))
-        return ret;
+        return {};
 
     auto dev = device();
     auto accel_speed = libinput_device_config_accel_get_speed(dev);
     auto left_handed = (libinput_device_config_left_handed_get(dev) == 1);
 
-    ret = mi::PointerSettings();
-    ret->cursor_speed = accel_speed;
-    ret->vertical_scroll_speed = vertical_scroll_speed;
-    ret->horizontal_scroll_speed = horizontal_scroll_speed;
-    ret->primary_button = left_handed? mir_pointer_button_secondary : mir_pointer_button_primary;
-    return ret;
+    PointerSettings settings;
+    settings.cursor_speed = accel_speed;
+    settings.vertical_scroll_speed = vertical_scroll_speed;
+    settings.horizontal_scroll_speed = horizontal_scroll_speed;
+    settings.primary_button = left_handed? mir_pointer_button_secondary : mir_pointer_button_primary;
+    return settings;
 }
 
 void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& settings)
@@ -388,38 +387,37 @@ void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& sett
 
 mir::optional_value<mi::TouchPadSettings> mie::LibInputDevice::get_touch_pad_settings() const
 {
-    mir::optional_value<TouchPadSettings> ret;
     if (!contains(info.capabilities, mi::DeviceCapability::touchpad))
-        return ret;
+        return {};
 
     auto dev = device();
     auto click_modes = libinput_device_config_click_get_method(dev);
     auto scroll_modes = libinput_device_config_scroll_get_method(dev);
 
-    ret = TouchPadSettings();
+    TouchPadSettings settings;
 
-    ret->click_mode = mir_touch_pad_click_mode_none;
+    settings.click_mode = mir_touch_pad_click_mode_none;
     if (click_modes & LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS)
-        ret->click_mode |= mir_touch_pad_click_mode_area_to_click;
+        settings.click_mode |= mir_touch_pad_click_mode_area_to_click;
     if (click_modes & LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER)
-        ret->click_mode |= mir_touch_pad_click_mode_finger_count;
+        settings.click_mode |= mir_touch_pad_click_mode_finger_count;
 
-    ret->scroll_mode = mir_touch_pad_scroll_mode_none;
+    settings.scroll_mode = mir_touch_pad_scroll_mode_none;
     if (scroll_modes & LIBINPUT_CONFIG_SCROLL_2FG)
-        ret->scroll_mode |= mir_touch_pad_scroll_mode_two_finger_scroll;
+        settings.scroll_mode |= mir_touch_pad_scroll_mode_two_finger_scroll;
     if (scroll_modes & LIBINPUT_CONFIG_SCROLL_EDGE)
-        ret->scroll_mode |= mir_touch_pad_scroll_mode_edge_scroll;
+        settings.scroll_mode |= mir_touch_pad_scroll_mode_edge_scroll;
     if (scroll_modes & LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN)
-        ret->scroll_mode |= mir_touch_pad_scroll_mode_button_down_scroll;
+        settings.scroll_mode |= mir_touch_pad_scroll_mode_button_down_scroll;
 
-    ret->tap_to_click = libinput_device_config_tap_get_enabled(dev) == LIBINPUT_CONFIG_TAP_ENABLED;
-    ret->disable_while_typing = libinput_device_config_dwt_get_enabled(dev) == LIBINPUT_CONFIG_DWT_ENABLED;
-    ret->disable_with_mouse =
+    settings.tap_to_click = libinput_device_config_tap_get_enabled(dev) == LIBINPUT_CONFIG_TAP_ENABLED;
+    settings.disable_while_typing = libinput_device_config_dwt_get_enabled(dev) == LIBINPUT_CONFIG_DWT_ENABLED;
+    settings.disable_with_mouse =
         libinput_device_config_send_events_get_mode(dev) == LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE;
-    ret->middle_mouse_button_emulation =
+    settings.middle_mouse_button_emulation =
         libinput_device_config_middle_emulation_get_enabled(dev) == LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED;
 
-    return ret;
+    return settings;
 }
 
 void mie::LibInputDevice::apply_settings(mi::TouchPadSettings const& settings)
