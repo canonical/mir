@@ -29,6 +29,7 @@ namespace input
 
 struct PointerSettings
 {
+    PointerSettings() {}
     /**
      * Configure left and right handed mode by selecting a primary button
      *   - mir_pointer_button_primary -> right handed
