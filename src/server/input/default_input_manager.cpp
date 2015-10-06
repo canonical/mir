@@ -87,8 +87,6 @@ void mi::DefaultInputManager::start()
     queue->enqueue([this,promise = std::move(started_promise)]()
                    {
                         start_platforms();
-                        // TODO: Udev monitoring is still not separated yet - an initial scan is necessary to open
-                        // devices, this will be triggered through the first call to dispatch->InputReader->loopOnce.
                         promise->set_value();
                    });
 
