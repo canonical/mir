@@ -479,3 +479,74 @@ TEST_F(MediatingDisplayChangerTest, does_not_block_IPC_thread_for_inactive_sessi
 
     display_changer.configure(inactive_session, conf);
 }
+
+TEST_F(MediatingDisplayChangerTest, set_default_display_configuration_doesnt_override_session_configuration)
+{
+    using namespace testing;
+
+    auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
+    auto session1 = std::make_shared<mtd::StubSceneSession>();
+
+    stub_session_container.insert_session(session1);
+    changer->configure(session1, conf);
+
+    session_event_sink.handle_focus_change(session1);
+
+    Mock::VerifyAndClearExpectations(&mock_compositor);
+    Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
+
+    changer->set_default_display_configuration(conf);
+}
+
+TEST_F(MediatingDisplayChangerTest, set_default_display_configuration_overrides_base_configuration)
+{
+    using namespace testing;
+
+    auto conf = std::make_shared<mtd::NullDisplayConfiguration>();
+    auto session1 = std::make_shared<mtd::StubSceneSession>();
+
+    stub_session_container.insert_session(session1);
+
+    Mock::VerifyAndClearExpectations(&mock_compositor);
+    Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(mock_display, configure(_)).Times(1);
+
+    changer->set_default_display_configuration(conf);
+}
+
+TEST_F(MediatingDisplayChangerTest, stores_new_base_config_on_set_default_configuration)
+{
+    using namespace testing;
+
+    auto default_conf = std::make_shared<mtd::StubDisplayConfig>(2);
+    auto session_conf = std::make_shared<mtd::StubDisplayConfig>(4);
+
+    auto mock_session1 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+    auto mock_session2 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+    auto mock_session3 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    stub_session_container.insert_session(mock_session1);
+
+    stub_session_container.insert_session(mock_session2);
+    session_event_sink.handle_focus_change(mock_session2);
+    changer->configure(mock_session2, session_conf);
+
+    stub_session_container.insert_session(mock_session3);
+
+
+    Mock::VerifyAndClearExpectations(&mock_display);
+
+    InSequence s;
+    EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(std::cref(*default_conf))));
+    EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(std::cref(*session_conf))));
+    EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(std::cref(*default_conf))));
+
+    changer->set_default_display_configuration(default_conf);
+
+    session_event_sink.handle_focus_change(mock_session1);
+    session_event_sink.handle_focus_change(mock_session2);
+    session_event_sink.handle_focus_change(mock_session3);
+}

@@ -278,3 +278,27 @@ void ms::MediatingDisplayChanger::session_stopping_handler(
 
     config_map.erase(session);
 }
+
+std::future<void> ms::MediatingDisplayChanger::set_default_display_configuration(
+    std::shared_ptr<mg::DisplayConfiguration> const &conf)
+{
+    auto promise = std::make_shared<std::promise<void>>();
+    auto completion_future = promise->get_future();
+    server_action_queue->enqueue(
+        this,
+        [this, conf, done = std::move(promise)]
+        {
+            std::lock_guard<std::mutex> lg{configuration_mutex};
+
+            base_configuration = conf;
+            if (base_configuration_applied)
+            {
+                apply_base_config(PauseResumeSystem);
+
+                /* Send the new configuration to all the sessions */
+                send_config_to_all_sessions(conf);
+            }
+            done->set_value();
+        });
+    return completion_future;
+}
