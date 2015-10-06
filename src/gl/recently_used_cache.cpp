@@ -17,7 +17,7 @@
  *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/recently_used_cache.h"
+#include "recently_used_cache.h"
 #include "mir/graphics/buffer.h"
 #include "mir/renderer/gl/texture_source.h"
 
@@ -25,10 +25,10 @@
 #include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
-namespace mc = mir::compositor;
+namespace mgl = mir::gl;
 namespace geom = mir::geometry;
 
-std::shared_ptr<mg::GLTexture> mc::RecentlyUsedCache::load(mg::Renderable const& renderable)
+std::shared_ptr<mgl::Texture> mgl::RecentlyUsedCache::load(mg::Renderable const& renderable)
 {
     auto const& buffer = renderable.buffer();
     auto buffer_id = buffer->id();
@@ -53,13 +53,13 @@ std::shared_ptr<mg::GLTexture> mc::RecentlyUsedCache::load(mg::Renderable const&
     return texture.texture;
 }
 
-void mc::RecentlyUsedCache::invalidate()
+void mgl::RecentlyUsedCache::invalidate()
 {
     for (auto &t : textures)
         t.second.valid_binding = false;
 }
 
-void mc::RecentlyUsedCache::drop_unused()
+void mgl::RecentlyUsedCache::drop_unused()
 {
     auto t = textures.begin();
     while (t != textures.end())

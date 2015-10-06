@@ -1,6 +1,7 @@
 usr/bin/mir_stress
 usr/bin/mir_unit_tests
 usr/bin/mir_acceptance_tests
+usr/bin/mir_umock_acceptance_tests
 usr/bin/mir_integration_tests*
 usr/bin/mir_performance_tests
 usr/bin/mir_privileged_tests
