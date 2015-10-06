@@ -23,7 +23,7 @@
 
 namespace
 {
-char const* init()
+const char* init()
 {
     std::ostringstream formatter;
 
@@ -38,3 +38,4 @@ char const* init()
 }
 
 const char *const mir::default_server_socket = init();
+
