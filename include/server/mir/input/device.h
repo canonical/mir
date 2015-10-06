@@ -17,8 +17,8 @@
  *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_DEVICE_HANDLE_H_
-#define MIR_INPUT_DEVICE_HANDLE_H_
+#ifndef MIR_INPUT_DEVICE_H_
+#define MIR_INPUT_DEVICE_H_
 
 #include "mir/input/device_capability.h"
 #include "mir_toolkit/event.h"

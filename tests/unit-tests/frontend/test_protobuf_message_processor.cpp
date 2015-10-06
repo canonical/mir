@@ -38,7 +38,7 @@ namespace
 {
 struct StubProtobufMessageSender : mfd::ProtobufMessageSender
 {
-    void send_response(gp::uint32, gp::MessageLite*, mfd::FdSets const&) override
+    void send_response(gp::uint32, gp::MessageLite*, mf::FdSets const&) override
     {
     }
 };

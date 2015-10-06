@@ -125,7 +125,9 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     EXPECT_CALL(container, remove_session(_)).Times(1);
 
     auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", std::shared_ptr<mf::EventSink>());
-    session->create_surface(ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}));
+    session->create_surface(
+        ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}),
+        nullptr);
 
     session_manager.close_session(session);
 }

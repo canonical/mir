@@ -300,3 +300,10 @@ bool mt::compare_display_configurations(graphics::DisplayConfiguration const& di
     TestDisplayConfiguration config2{*display_config2};
     return compare_display_configurations(display_config1, config2);
 }
+
+bool mt::compare_display_configurations(MirDisplayConfiguration const* display_config2,
+                                        graphics::DisplayConfiguration const& display_config1)
+{
+    TestDisplayConfiguration config2{*display_config2};
+    return compare_display_configurations(display_config1, config2);
+}

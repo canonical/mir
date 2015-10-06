@@ -1,6 +1,5 @@
-
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -17,23 +16,32 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "program_factory.h"
-#include "mir/graphics/gl_program.h"
-#include "mir/compositor/recently_used_cache.h"
+#ifndef MIR_TEST_DOUBLES_STUB_GL_DISPLAY_BUFFER_H_
+#define MIR_TEST_DOUBLES_STUB_GL_DISPLAY_BUFFER_H_
 
-namespace mg = mir::graphics;
+#include "mir/test/doubles/stub_display_buffer.h"
+#include "mir/renderer/gl/render_target.h"
 
-std::unique_ptr<mg::GLProgram>
-mg::ProgramFactory::create_gl_program(
-    std::string const& vertex_shader,
-    std::string const& fragment_shader) const
+namespace mir
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
-    return std::make_unique<SimpleGLProgram>(
-        vertex_shader.c_str(), fragment_shader.c_str());
+namespace test
+{
+namespace doubles
+{
+
+class StubGLDisplayBuffer : public StubDisplayBuffer,
+                            public renderer::gl::RenderTarget
+{
+public:
+    using StubDisplayBuffer::StubDisplayBuffer;
+
+    void make_current() override {}
+    void release_current() override {}
+    void swap_buffers() override {}
+};
+
+}
+}
 }
 
-std::unique_ptr<mg::GLTextureCache> mg::ProgramFactory::create_texture_cache() const
-{
-    return std::make_unique<mir::compositor::RecentlyUsedCache>();
-}
+#endif

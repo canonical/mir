@@ -27,11 +27,11 @@
 
 namespace mir
 {
-namespace geometry { class Rectangle; }
-namespace scene { class Session; class Surface; class SurfaceCreationParameters; }
+namespace geometry { struct Rectangle; }
+namespace scene { class Session; class Surface; struct SurfaceCreationParameters; }
 namespace shell
 {
-class SurfaceSpecification;
+struct SurfaceSpecification;
 
 /// interface to provide window management logic
 class WindowManager

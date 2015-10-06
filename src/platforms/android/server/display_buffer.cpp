@@ -27,6 +27,7 @@
 #include <sstream>
 
 namespace mg=mir::graphics;
+namespace mgl=mir::gl;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
@@ -37,7 +38,7 @@ mga::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<DisplayDevice> const& display_device,
     std::shared_ptr<ANativeWindow> const& native_window,
     mga::GLContext const& shared_gl_context,
-    mg::GLProgramFactory const& program_factory,
+    mgl::ProgramFactory const& program_factory,
     MirOrientation orientation,
     geom::Displacement offset,
     mga::OverlayOptimization overlay_option)
@@ -94,7 +95,7 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     return needs_commit;
 }
 
-void mga::DisplayBuffer::gl_swap_buffers()
+void mga::DisplayBuffer::swap_buffers()
 {
     layer_list->update_list({}, offset_from_origin);
 }
@@ -127,4 +128,9 @@ mga::DisplayContents mga::DisplayBuffer::contents()
 MirPowerMode mga::DisplayBuffer::power_mode() const
 {
     return power_mode_;
+}
+
+mg::NativeDisplayBuffer* mga::DisplayBuffer::native_display_buffer()
+{
+    return this;
 }

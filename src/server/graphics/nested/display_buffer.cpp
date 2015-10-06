@@ -68,7 +68,7 @@ void mgn::detail::DisplayBuffer::release_current()
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
-void mgn::detail::DisplayBuffer::gl_swap_buffers()
+void mgn::detail::DisplayBuffer::swap_buffers()
 {
     eglSwapBuffers(egl_display, egl_surface);
 }
@@ -136,4 +136,9 @@ void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
     {
         dispatcher->dispatch(event);
     }
+}
+
+mg::NativeDisplayBuffer* mgn::detail::DisplayBuffer::native_display_buffer()
+{
+    return this;
 }
