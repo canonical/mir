@@ -41,6 +41,7 @@ using Secret = std::vector<uint8_t>;
 namespace shell
 {
 class DisplayLayout;
+class DisplayConfigurationController;
 class FocusController;
 class HostLifecycleEventListener;
 class InputTargeter;
@@ -318,6 +319,8 @@ public:
 
     /// \return the graphics display.
     auto the_display() const -> std::shared_ptr<graphics::Display>;
+
+    auto the_display_configuration_controller() const -> std::shared_ptr<shell::DisplayConfigurationController>;
 
     /// \return the GL config.
     auto the_gl_config() const -> std::shared_ptr<graphics::GLConfig>;

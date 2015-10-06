@@ -18,6 +18,15 @@
 
 #include "platform.h"
 #include "mir/udev/wrapper.h"
+#include "mir/fd.h"
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#include <memory>
+#include <string>
+#include <iostream>
 
 namespace mo = mir::options;
 namespace mi = mir::input;
@@ -33,6 +42,28 @@ mir::ModuleProperties const description = {
     MIR_VERSION_MINOR,
     MIR_VERSION_MICRO
 };
+bool can_open_input_devices()
+{
+    mu::Enumerator input_enumerator{std::make_shared<mu::Context>()};
+    input_enumerator.match_subsystem("input");
+    input_enumerator.scan_devices();
+
+    bool device_found = false;
+
+    for (auto& device : input_enumerator)
+    {
+        if (device.devnode() != nullptr)
+        {
+            device_found = true;
+
+            mir::Fd input_device(::open(device.devnode(), O_RDONLY|O_NONBLOCK));
+            if (input_device > 0)
+                return true;
+        }
+    }
+    return ! device_found;
+}
+
 }
 
 mir::UniqueModulePtr<mi::Platform> create_input_platform(
@@ -59,7 +90,11 @@ mi::PlatformPriority probe_input_platform(
     {
         return mi::PlatformPriority::unsupported;
     }
-    return mi::PlatformPriority::supported;
+
+    if (can_open_input_devices())
+        return mi::PlatformPriority::supported;
+
+    return mi::PlatformPriority::unsupported;
 }
 
 mir::ModuleProperties const* describe_input_module()
