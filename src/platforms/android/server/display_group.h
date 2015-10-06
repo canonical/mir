@@ -38,10 +38,11 @@ class DisplayDevice;
 class DisplayGroup : public graphics::DisplaySyncGroup
 {
 public:
+    using ExceptionHandler = std::function<void()>;
     DisplayGroup(
         std::shared_ptr<DisplayDevice> const& device,
         std::unique_ptr<ConfigurableDisplayBuffer> primary_buffer,
-        std::function<void()> external_display_error_handler);
+        ExceptionHandler handler);
     DisplayGroup(
            std::shared_ptr<DisplayDevice> const& device,
            std::unique_ptr<ConfigurableDisplayBuffer> primary_buffer);
@@ -59,7 +60,7 @@ private:
     std::mutex mutable guard;
     std::shared_ptr<DisplayDevice> const device;
     std::map<DisplayName, std::unique_ptr<ConfigurableDisplayBuffer>> dbs;
-    std::function<void()> external_display_error_handler;
+    ExceptionHandler exception_handler;
 };
 
 }

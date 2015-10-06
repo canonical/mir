@@ -164,7 +164,7 @@ mga::Display::Display(
             gl_context,
             geom::Displacement{0,0},
             overlay_option),
-            [this] { on_hotplug(); }),
+            [this] { on_hotplug(); }), //Recover from exception by forcing a configuration change
     overlay_option(overlay_option)
 {
     //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.

@@ -29,9 +29,9 @@ namespace geom = mir::geometry;
 mga::DisplayGroup::DisplayGroup(
     std::shared_ptr<mga::DisplayDevice> const& device,
     std::unique_ptr<mga::ConfigurableDisplayBuffer> primary_buffer,
-    std::function<void()> error_handler) :
+    ExceptionHandler exception_handler) :
     device(device),
-    external_display_error_handler(error_handler)
+    exception_handler(exception_handler)
 {
     dbs.emplace(std::make_pair(mga::DisplayName::primary, std::move(primary_buffer)));
 }
@@ -96,17 +96,18 @@ void mga::DisplayGroup::post()
     {
         device->commit(contents);
     }
+    catch (mga::DisplayDisconnectedException const&)
+    {
+        //Ignore disconnect errors as they are not fatal
+    }
     catch (mga::ExternalDisplayError const&)
     {
         //NOTE: We allow Display to inject an error handler (which can then attempt to recover
         // from this error) as post is called directly by the compositor and we don't want to propagate
         // handling of android platform specific exceptions in mir core.
-        external_display_error_handler();
+        exception_handler();
     }
-    catch (mga::DisplayDisconnectedException const&)
-    {
-        //Ignore disconnect errors as they are not fatal
-    }
+
 }
 
 std::chrono::milliseconds mga::DisplayGroup::recommended_sleep() const
