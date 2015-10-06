@@ -63,7 +63,6 @@ void copy_image(MirGraphicsRegion const& g, mg::CursorImage const& image)
 
     auto const image_stride = image.size().width.as_int() * MIR_BYTES_PER_PIXEL(cursor_pixel_format);
     auto const image_height = image.size().height.as_int();
-    auto const margin = g.stride - image_stride;
 
     auto dest = g.vaddr;
     auto src  = static_cast<char const*>(image.as_argb_8888());
@@ -71,7 +70,6 @@ void copy_image(MirGraphicsRegion const& g, mg::CursorImage const& image)
     for (int row = 0; row != image_height; ++row)
     {
         memcpy(dest, src, image_stride);
-        memset(dest + image_stride, 0, margin);
         dest += g.stride;
         src += image_stride;
     }
