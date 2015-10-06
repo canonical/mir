@@ -30,6 +30,7 @@ const int no_scroll_button = 0;
 
 struct TouchPadSettings
 {
+    TouchPadSettings() {}
     MirTouchPadClickMode click_mode{mir_touch_pad_click_mode_finger_count};
     MirTouchPadScrollMode scroll_mode{mir_touch_pad_scroll_mode_two_finger_scroll};
     int button_down_scroll_button{no_scroll_button};
