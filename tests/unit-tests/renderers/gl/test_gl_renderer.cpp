@@ -21,7 +21,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/geometry/rectangle.h>
-#include <mir/graphics/gl_texture.h>
 #include <mir/test/fake_shared.h>
 #include <mir/test/doubles/mock_gl_buffer.h>
 #include <mir/test/doubles/mock_renderable.h>
@@ -45,6 +44,7 @@ using testing::_;
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace mg=mir::graphics;
+namespace mgl=mir::gl;
 namespace mrg = mir::renderer::gl;
 
 namespace
@@ -178,7 +178,7 @@ TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
         {
         }
 
-        void tessellate(std::vector<mg::GLPrimitive>& primitives,
+        void tessellate(std::vector<mgl::Primitive>& primitives,
                         mg::Renderable const&) const override
         {
             primitives.resize(num_primitives);

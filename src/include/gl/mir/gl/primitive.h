@@ -17,26 +17,26 @@
  *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GL_PRIMITIVE_H_
-#define MIR_GRAPHICS_GL_PRIMITIVE_H_
+#ifndef MIR_GL_PRIMITIVE_H_
+#define MIR_GL_PRIMITIVE_H_
 
 #include <GLES2/gl2.h>
 
 namespace mir
 {
-namespace graphics
+namespace gl
 {
-struct GLVertex
+struct Vertex
 {
     GLfloat position[3];
     GLfloat texcoord[2];
 };
 
-struct GLPrimitive
+struct Primitive
 {
     enum {max_vertices = 4};
 
-    GLPrimitive()
+    Primitive()
         : type(GL_TRIANGLE_FAN), nvertices(4)
     {
         // Default is a quad. Just need to assign vertices[] and tex_id.
@@ -45,8 +45,8 @@ struct GLPrimitive
     GLenum type; // GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES etc
     GLuint tex_id;  // GL texture ID (or 0 to represent the surface itself)
     int nvertices;
-    GLVertex vertices[max_vertices];
+    Vertex vertices[max_vertices];
 };
 }
 }
-#endif /* MIR_GRAPHICS_GL_PRIMITIVE_H_ */
+#endif /* MIR_GL_PRIMITIVE_H_ */

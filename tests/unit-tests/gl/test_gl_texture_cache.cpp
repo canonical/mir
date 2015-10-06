@@ -17,14 +17,14 @@
  * Originally by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/compositor/recently_used_cache.h"
+#include "mir/gl/recently_used_cache.h"
 #include "mir/test/doubles/mock_gl_buffer.h"
 #include "mir/test/doubles/mock_renderable.h"
 #include "mir/test/doubles/mock_gl.h"
 #include <gtest/gtest.h>
 
 namespace mtd=mir::test::doubles;
-namespace mc=mir::compositor;
+namespace mgl=mir::gl;
 namespace mg=mir::graphics;
 
 namespace
@@ -95,7 +95,7 @@ TEST_F(RecentlyUsedCache, caches_and_uploads_texture_only_on_buffer_changes)
 
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
 
-    mc::RecentlyUsedCache cache;
+    mgl::RecentlyUsedCache cache;
     cache.load(*renderable);
     cache.drop_unused();
 
@@ -117,7 +117,7 @@ TEST_F(RecentlyUsedCache, caches_and_uploads_texture_only_on_buffer_changes)
 TEST_F(RecentlyUsedCache, holds_buffers_till_the_end)
 {
     auto old_use_count = mock_buffer.use_count();
-    mc::RecentlyUsedCache cache;
+    mgl::RecentlyUsedCache cache;
     cache.load(*renderable);
     EXPECT_EQ(old_use_count+1, mock_buffer.use_count());
     cache.drop_unused();
@@ -132,7 +132,7 @@ TEST_F(RecentlyUsedCache, invalidated_buffers_are_reloaded)
     EXPECT_CALL(*mock_buffer,gl_bind_to_texture())
         .Times(2);
 
-    mc::RecentlyUsedCache cache;
+    mgl::RecentlyUsedCache cache;
     cache.load(*renderable);
     cache.load(*renderable);
     cache.invalidate();

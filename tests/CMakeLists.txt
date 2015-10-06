@@ -65,6 +65,7 @@ option(MIR_BUILD_UNIT_TESTS "Build unit tests" ON)
 
 if (MIR_BUILD_ACCEPTANCE_TESTS)
   add_subdirectory(acceptance-tests/)
+  add_subdirectory(umock-acceptance-tests/)
 endif (MIR_BUILD_ACCEPTANCE_TESTS)
 
 if (MIR_BUILD_PERFORMANCE_TESTS)

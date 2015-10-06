@@ -32,6 +32,7 @@
 
 namespace mir
 {
+namespace gl { class ProgramFactory; }
 namespace graphics
 {
 
@@ -52,7 +53,7 @@ class Display : public graphics::Display
 public:
     explicit Display(
         std::shared_ptr<DisplayComponentFactory> const& display_buffer_builder,
-        std::shared_ptr<GLProgramFactory> const& gl_program_factory,
+        std::shared_ptr<gl::ProgramFactory> const& gl_program_factory,
         std::shared_ptr<GLConfig> const& gl_config,
         std::shared_ptr<DisplayReport> const& display_report,
         OverlayOptimization overlay_option);
@@ -93,7 +94,7 @@ private:
     PbufferGLContext gl_context;
     std::shared_ptr<DisplayDevice> display_device;
     std::unique_ptr<DisplayChangePipe> display_change_pipe;
-    std::shared_ptr<GLProgramFactory> const gl_program_factory;
+    std::shared_ptr<gl::ProgramFactory> const gl_program_factory;
     DisplayGroup mutable displays;
     OverlayOptimization const overlay_option;
 

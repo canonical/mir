@@ -17,23 +17,23 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "program_factory.h"
-#include "mir/graphics/gl_program.h"
-#include "mir/compositor/recently_used_cache.h"
+#include "mir/gl/default_program_factory.h"
+#include "mir/gl/program.h"
+#include "recently_used_cache.h"
 
-namespace mg = mir::graphics;
+namespace mgl = mir::gl;
 
-std::unique_ptr<mg::GLProgram>
-mg::ProgramFactory::create_gl_program(
+std::unique_ptr<mgl::Program>
+mgl::DefaultProgramFactory::create_gl_program(
     std::string const& vertex_shader,
     std::string const& fragment_shader) const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    return std::make_unique<SimpleGLProgram>(
+    return std::make_unique<SimpleProgram>(
         vertex_shader.c_str(), fragment_shader.c_str());
 }
 
-std::unique_ptr<mg::GLTextureCache> mg::ProgramFactory::create_texture_cache() const
+std::unique_ptr<mgl::TextureCache> mgl::DefaultProgramFactory::create_texture_cache() const
 {
-    return std::make_unique<mir::compositor::RecentlyUsedCache>();
+    return std::make_unique<RecentlyUsedCache>();
 }
