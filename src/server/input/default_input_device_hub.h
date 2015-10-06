@@ -90,7 +90,13 @@ private:
     struct RegisteredDevice : public InputSink
     {
     public:
-        RegisteredDevice(std::shared_ptr<InputDevice> const& dev, MirInputDeviceId dev_id, std::shared_ptr<InputDispatcher> const& dispatcher, std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer, std::shared_ptr<cookie::CookieFactory> const& c_factory, DefaultInputDeviceHub * hub);
+        RegisteredDevice(std::shared_ptr<InputDevice> const& dev,
+                         MirInputDeviceId dev_id,
+                         std::shared_ptr<InputDispatcher> const& dispatcher,
+                         std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
+                         std::shared_ptr<cookie::CookieFactory> const& c_factory,
+                         DefaultInputDeviceHub* hub);
+
         void handle_input(MirEvent& event) override;
         void confine_pointer(mir::geometry::Point& position) override;
         mir::geometry::Rectangle bounding_rectangle() const override;
