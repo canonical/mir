@@ -715,6 +715,7 @@ TEST_F(Display, turns_external_display_on_with_hotplug)
                     {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, external_connected};
             }));
 
+        InSequence seq;
 
         //At construction, we expect external display to be connected
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, _));
@@ -941,4 +942,50 @@ TEST_F(Display, display_buffers_respect_overlay_option)
             EXPECT_FALSE(db.post_renderables_if_optimizable({std::make_shared<mtd::StubRenderable>()}));
         });
     });
+}
+
+TEST_F(Display, does_not_remove_dbs_when_enumerating_display_groups)
+{
+    using namespace testing;
+    std::function<void()> hotplug_fn = []{};
+    bool external_connected = true;
+    stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
+    {
+        ON_CALL(mock_config, active_config_for(mga::DisplayName::primary))
+            .WillByDefault(Return(mtd::StubDisplayConfigurationOutput{
+                mg::DisplayConfigurationOutputId{0}, {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, true}));
+
+        ON_CALL(mock_config, active_config_for(mga::DisplayName::external))
+            .WillByDefault(Invoke([&](mga::DisplayName)
+            {
+                return mtd::StubDisplayConfigurationOutput{mg::DisplayConfigurationOutputId{1},
+                    {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, external_connected};
+            }));
+        EXPECT_CALL(mock_config, subscribe_to_config_changes(_,_))
+            .WillOnce(DoAll(SaveArg<0>(&hotplug_fn), Return(std::make_shared<char>('2'))));
+    });
+
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::enabled);
+
+    auto db_count = 0;
+    auto db_group_counter = [&](mg::DisplaySyncGroup& group) {
+        group.for_each_display_buffer([&](mg::DisplayBuffer&) {db_count++;});
+    };
+
+    display.for_each_display_sync_group(db_group_counter);
+    auto const expected_buffer_count = 2;
+    EXPECT_THAT(db_count, Eq(expected_buffer_count));
+
+    //hotplug external away
+    external_connected = false;
+    hotplug_fn();
+
+    db_count = 0;
+    display.for_each_display_sync_group(db_group_counter);
+    EXPECT_THAT(db_count, Eq(expected_buffer_count));
 }
