@@ -803,6 +803,35 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
 };
 }
 
+namespace
+{
+MATCHER_P(SurfaceOutputEventFor, output, "")
+{
+    using namespace testing;
+
+    if (mir_event_get_type(arg) != mir_event_type_surface_output)
+    {
+        *result_listener << "Event is not a MirSurfaceOutputEvent";
+        return 0;
+    }
+
+    auto const event = mir_event_get_surface_output_event(arg);
+    return
+        ExplainMatchResult(
+            Eq(output.dpi),
+            mir_surface_output_event_get_dpi(event),
+            result_listener) &&
+        ExplainMatchResult(
+            Eq(output.form_factor),
+            mir_surface_output_event_get_form_factor(event),
+            result_listener) &&
+        ExplainMatchResult(
+            Eq(output.scale),
+            mir_surface_output_event_get_scale(event),
+            result_listener);
+}
+}
+
 TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_events_to_surfaces)
 {
     using namespace ::testing;
@@ -833,10 +862,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_events_to_surfaces)
     app_session.send_display_config(config);
 
     ASSERT_TRUE(event_received);
-    auto surface_output_event = mir_event_get_surface_output_event(&event);
-    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(high_dpi.dpi));
-    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(high_dpi.form_factor));
-    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(high_dpi.scale));
+    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
 }
 
 TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface)
@@ -888,11 +914,8 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
 
     for (int i = 0; i < 2 ; ++i)
     {
-        auto surface_output_event = mir_event_get_surface_output_event(&event[i]);
         EXPECT_THAT(event[i].surface_output.surface_id, Eq(ids[i].as_value()));
-        EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(outputs[i]->dpi));
-        EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(outputs[i]->form_factor));
-        EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(outputs[i]->scale));
+        EXPECT_THAT(&event[i], SurfaceOutputEventFor(*outputs[i]));
     }
 }
 
@@ -940,11 +963,8 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
 
     ASSERT_TRUE(event_received);
 
-    auto surface_output_event = mir_event_get_surface_output_event(&event);
     EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
-    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(high_dpi.dpi));
-    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(high_dpi.form_factor));
-    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(high_dpi.scale));
+    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
 }
 
 TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
@@ -990,11 +1010,8 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ASSERT_THAT(events_received, Ge(1));
     auto events_expected = events_received + 1;
 
-    auto surface_output_event = mir_event_get_surface_output_event(&event);
     EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
-    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(high_dpi.dpi));
-    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(high_dpi.form_factor));
-    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(high_dpi.scale));
+    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
 
     // Now solely on the left output
     surface->move_to({0, 0});
@@ -1002,11 +1019,8 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ASSERT_THAT(events_received, Eq(events_expected));
     events_expected++;
 
-    surface_output_event = mir_event_get_surface_output_event(&event);
     EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
-    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(projector.dpi));
-    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(projector.form_factor));
-    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(projector.scale));
+    EXPECT_THAT(&event, SurfaceOutputEventFor(projector));
 
     // Now solely on the right output
     surface->move_to({outputs[0]->width + 100, 100});
@@ -1014,9 +1028,6 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ASSERT_THAT(events_received, Eq(events_expected));
     events_expected++;
 
-    surface_output_event = mir_event_get_surface_output_event(&event);
     EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
-    EXPECT_THAT(mir_surface_output_event_get_dpi(surface_output_event), Eq(high_dpi.dpi));
-    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_output_event), Eq(high_dpi.form_factor));
-    EXPECT_THAT(mir_surface_output_event_get_scale(surface_output_event), Eq(high_dpi.scale));
+    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
 }
