@@ -273,20 +273,18 @@ void mgn::Display::register_pause_resume_handlers(
 
 void mgn::Display::pause()
 {
-    // TODO Do we "own" the cursor or does the host mir?
-    // If we "own" the cursor then we need to hide it
+    // No need to do anything
 }
 
 void mgn::Display::resume()
 {
-    // TODO Do we "own" the cursor or does the host mir?
-    // TODO If we "own" the cursor then we need to restore it
+    // No need to do anything
 }
 
-auto mgn::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /* initial image */)->std::shared_ptr<Cursor>
+auto mgn::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /*initial_image*/) -> std::shared_ptr<mg::Cursor>
 {
-    // TODO Do we "own" the cursor or does the host mir?
-    return std::shared_ptr<Cursor>();
+    BOOST_THROW_EXCEPTION(std::logic_error("Initialization loop: we already need the Cursor when creating the Display"));
+    // So we can't do this: return std::make_shared<Cursor>(connection, initial_image);
 }
 
 std::unique_ptr<mg::GLContext> mgn::Display::create_gl_context()

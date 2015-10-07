@@ -27,6 +27,8 @@
 #include "mir/scene/application_not_responding_detector.h"
 #include "session_event_sink.h"
 #include "mir/frontend/event_sink.h"
+#include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -37,6 +39,7 @@
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
+namespace mg = mir::graphics;
 namespace msh = mir::shell;
 
 ms::SessionManager::SessionManager(
@@ -47,6 +50,7 @@ ms::SessionManager::SessionManager(
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionEventSink> const& session_event_sink,
     std::shared_ptr<SessionListener> const& session_listener,
+    std::shared_ptr<graphics::Display const> const& display,
     std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector) :
     surface_coordinator(surface_coordinator),
     surface_factory(surface_factory),
@@ -55,6 +59,7 @@ ms::SessionManager::SessionManager(
     snapshot_strategy(snapshot_strategy),
     session_event_sink(session_event_sink),
     session_listener(session_listener),
+    display{display},
     anr_detector{anr_detector}
 {
 }
@@ -84,11 +89,16 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
     std::string const& name,
     std::shared_ptr<mf::EventSink> const& sender)
 {
-    std::shared_ptr<Session> new_session =
-        std::make_shared<ApplicationSession>(
-            surface_coordinator, surface_factory,
-            buffer_stream_factory, client_pid, name,
-            snapshot_strategy, session_listener, sender);
+    std::shared_ptr<Session> new_session = std::make_shared<ApplicationSession>(
+            surface_coordinator,
+            surface_factory,
+            buffer_stream_factory,
+            client_pid,
+            name,
+            snapshot_strategy,
+            session_listener,
+            *display->configuration(),
+            sender);
 
     app_container->insert_session(new_session);
 
