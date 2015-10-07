@@ -17,7 +17,7 @@
  *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "device_handle.h"
+#include "default_device.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/input_device.h"
