@@ -25,7 +25,6 @@
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/stub_gl_config.h"
-#include "mir/test/doubles/stub_gl_program_factory.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "mir/test/doubles/null_virtual_terminal.h"
 #include "src/server/report/null_report_factory.h"
@@ -70,7 +69,6 @@ public:
                 mgm::BypassOption::allowed);
         return platform->create_display(
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-            std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
     }
 
