@@ -114,7 +114,7 @@ std::vector<geom::Rectangle> const display_geometry
 std::chrono::seconds const timeout{10};
 
 // We can't rely on the test environment to have X cursors, so we provide some of our own
-static auto const cursor_names = {
+auto const cursor_names = {
 //        mir_disabled_cursor_name,
     mir_arrow_cursor_name,
     mir_busy_cursor_name,
@@ -132,7 +132,9 @@ static auto const cursor_names = {
     mir_hsplit_resize_cursor_name,
     mir_crosshair_cursor_name };
 
-struct CursorImage : public mg::CursorImage
+int const cursor_size = 24;
+
+struct CursorImage : mg::CursorImage
 {
     CursorImage(char const* name) :
         id{std::find(begin(cursor_names), end(cursor_names), name) - begin(cursor_names)},
@@ -142,12 +144,12 @@ struct CursorImage : public mg::CursorImage
 
     void const* as_argb_8888() const { return data.data(); }
 
-    geom::Size size() const { return { 24, 24 }; }
+    geom::Size size() const { return {cursor_size, cursor_size}; }
 
     geom::Displacement hotspot() const { return {0, 0}; }
 
     ptrdiff_t id;
-    std::array<uint8_t, 4*8*24*24> data;
+    std::array<uint8_t, MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888) * cursor_size * cursor_size> data;
 };
 
 struct CursorImages : mir::input::CursorImages
@@ -160,7 +162,7 @@ public:
     }
 };
 
-struct CursorWrapper : public mg::Cursor
+struct CursorWrapper : mg::Cursor
 {
     CursorWrapper(std::shared_ptr<mg::Cursor> const& wrapped) : wrapped{wrapped} {}
     void show() override { if (!hidden) wrapped->show(); }
@@ -573,7 +575,7 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
     server.the_cursor_listener()->cursor_moved_to(489, 9);
 
     auto stream = mir_connection_create_buffer_stream_sync(
-        connection, 24, 24, mir_pixel_format_argb_8888, mir_buffer_usage_software);
+        connection, cursor_size, cursor_size, mir_pixel_format_argb_8888, mir_buffer_usage_software);
     mir_buffer_stream_swap_buffers_sync(stream);
 
     {
@@ -657,7 +659,7 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
     server.the_cursor_listener()->cursor_moved_to(489, 9);
 
     auto stream = mir_connection_create_buffer_stream_sync(
-        connection, 24, 24, mir_pixel_format_argb_8888, mir_buffer_usage_software);
+        connection, cursor_size, cursor_size, mir_pixel_format_argb_8888, mir_buffer_usage_software);
     mir_buffer_stream_swap_buffers_sync(stream);
 
     {
