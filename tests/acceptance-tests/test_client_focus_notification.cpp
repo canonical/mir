@@ -95,6 +95,7 @@ TEST_F(ClientFocusNotification, a_surface_is_notified_of_receiving_focus)
     run_in_client([&]
         {
             InSequence s;
+            EXPECT_CALL(observer, see(_)); //ignore scaling events
             EXPECT_CALL(observer, see(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused))).Times(1)
                 .WillOnce(mt::WakeUp(&all_events_received));
             // We may not see mir_surface_unfocused before connection closes
@@ -123,6 +124,7 @@ TEST_F(ClientFocusNotification, two_surfaces_are_notified_of_gaining_and_losing_
     auto const client_one = new_client_process([&]
         {
             InSequence seq;
+            EXPECT_CALL(observer, see(_)); //ignore scaling events
             // We should receive focus as we are created
             EXPECT_CALL(observer, see(mt::SurfaceEvent(mir_surface_attrib_focus,
                 mir_surface_focused))).Times(1)
@@ -146,6 +148,7 @@ TEST_F(ClientFocusNotification, two_surfaces_are_notified_of_gaining_and_losing_
             client_one->detach();
             ready_for_second_client.wait_for_signal_ready_for();
 
+            EXPECT_CALL(observer, see(_)); //ignore scaling events
             EXPECT_CALL(observer, see(
                 mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused)))
                     .Times(1).WillOnce(mt::WakeUp(&all_events_received));

@@ -34,7 +34,6 @@ public:
     
     std::shared_ptr<mir::graphics::Display> create_display(
         std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const& initial_conf_policy,
-        std::shared_ptr<mir::graphics::GLProgramFactory> const& gl_program_factory,
         std::shared_ptr<mir::graphics::GLConfig> const& gl_config);
     
     std::shared_ptr<mir::graphics::PlatformIpcOperations> make_ipc_operations() const;

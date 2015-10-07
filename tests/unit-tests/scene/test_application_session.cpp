@@ -34,6 +34,7 @@
 #include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/null_prompt_session.h"
+#include "mir/test/doubles/stub_display_configuration.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -51,7 +52,10 @@ namespace
 {
 static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 {
-    return std::make_shared<testing::NiceMock<mtd::MockSurface> >();
+    using namespace testing;
+    auto surface = std::make_shared<NiceMock<mtd::MockSurface>>();
+    ON_CALL(*surface, size()).WillByDefault(Return(geom::Size { 100, 100 }));
+    return surface;
 }
 
 struct MockBufferStreamFactory : public ms::BufferStreamFactory
@@ -98,6 +102,11 @@ MATCHER_P(HasParent, parent, "")
     return arg.parent.lock() == parent;
 }
 
+MATCHER(IsSurfaceOutputEvent, "")
+{
+    return mir_event_get_type(&arg) == mir_event_type_surface_output;
+}
+
 struct StubSurfaceCoordinator : public ms::SurfaceCoordinator
 {
     void raise(std::weak_ptr<ms::Surface> const&) override
@@ -138,6 +147,7 @@ struct ApplicationSession : public testing::Test
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
+           mtd::StubDisplayConfig{},
            event_sink);
     }
     
@@ -150,6 +160,7 @@ struct ApplicationSession : public testing::Test
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
+           mtd::StubDisplayConfig{},
            event_sink);
     }
 
@@ -162,6 +173,7 @@ struct ApplicationSession : public testing::Test
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
+           mtd::StubDisplayConfig{},
            event_sink);
     }
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_coordinator(
@@ -172,6 +184,7 @@ struct ApplicationSession : public testing::Test
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
+           mtd::StubDisplayConfig{},
            event_sink);
     }
     
@@ -183,6 +196,7 @@ struct ApplicationSession : public testing::Test
            pid, name,
            null_snapshot_strategy,
            session_listener,
+           mtd::StubDisplayConfig{},
            event_sink);
     }
 
@@ -195,6 +209,7 @@ struct ApplicationSession : public testing::Test
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
+           mtd::StubDisplayConfig{},
            event_sink);
     }
 
@@ -232,7 +247,7 @@ TEST_F(ApplicationSession, adds_created_surface_to_coordinator)
         mt::fake_shared(surface_coordinator), mt::fake_shared(mock_surface_factory));
 
     ms::SurfaceCreationParameters params;
-    auto surf = session->create_surface(params, nullptr);
+    auto surf = session->create_surface(params, event_sink);
 
     session->destroy_surface(surf);
 }
@@ -250,7 +265,7 @@ TEST_F(ApplicationSession, notifies_listener_of_create_and_destroy_surface)
     auto session = make_application_session_with_listener(mt::fake_shared(listener));
 
     ms::SurfaceCreationParameters params;
-    auto surf = session->create_surface(params, nullptr);
+    auto surf = session->create_surface(params, event_sink);
 
     session->destroy_surface(surf);
 }
@@ -269,7 +284,7 @@ TEST_F(ApplicationSession, notifies_listener_of_surface_destruction_via_session_
         auto session = make_application_session_with_listener(mt::fake_shared(listener));
 
         ms::SurfaceCreationParameters params;
-        session->create_surface(params, nullptr);
+        session->create_surface(params, event_sink);
     }
 }
 
@@ -398,7 +413,7 @@ TEST_F(ApplicationSession, session_visbility_propagates_to_surfaces)
     }
 
     ms::SurfaceCreationParameters params;
-    auto surf = app_session->create_surface(params, nullptr);
+    auto surf = app_session->create_surface(params, event_sink);
 
     app_session->hide();
     app_session->show();
@@ -429,9 +444,10 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
         pid, name,
         snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
+        mtd::StubDisplayConfig{},
         event_sink);
 
-    auto surface = app_session.create_surface(ms::SurfaceCreationParameters{}, nullptr);
+    auto surface = app_session.create_surface(ms::SurfaceCreationParameters{}, event_sink);
     app_session.take_snapshot(ms::SnapshotCallback());
     app_session.destroy_surface(surface);
 }
@@ -449,6 +465,7 @@ TEST_F(ApplicationSession, returns_null_snapshot_if_no_default_surface)
         pid, name,
         snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
+        mtd::StubDisplayConfig{},
         event_sink);
 
     EXPECT_CALL(*snapshot_strategy, take_snapshot_of(_,_)).Times(0);
@@ -469,6 +486,7 @@ TEST_F(ApplicationSession, process_id)
         session_pid, name,
         null_snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
+        mtd::StubDisplayConfig{},
         event_sink);
 
     EXPECT_THAT(app_session.process_id(), Eq(session_pid));
@@ -493,7 +511,7 @@ TEST_F(ApplicationSession, surface_ids_are_bufferstream_ids)
 
     ms::SurfaceCreationParameters params;
 
-    auto id1 = session->create_surface(params, nullptr);
+    auto id1 = session->create_surface(params, event_sink);
     EXPECT_THAT(session->get_buffer_stream(mf::BufferStreamId(id1.as_value())), Eq(stub_bstream));
     EXPECT_THAT(session->get_surface(id1), Eq(mock_surface));
 
@@ -508,7 +526,7 @@ TEST_F(ApplicationSession, can_destroy_surface_bstream)
 {
     auto session = make_application_session_with_stubs();
     ms::SurfaceCreationParameters params;
-    auto id = session->create_surface(params, nullptr);
+    auto id = session->create_surface(params, event_sink);
     mf::BufferStreamId stream_id(id.as_value());
     session->destroy_buffer_stream(stream_id);
     EXPECT_THROW({
@@ -550,7 +568,7 @@ TEST_F(ApplicationSession, sets_and_looks_up_surface_streams)
     auto stream_id0 = mf::BufferStreamId(
         session->create_surface(
             ms::a_surface().of_position({1,1}),
-            nullptr).as_value());
+            event_sink).as_value());
 
     auto stream_id1 = session->create_buffer_stream(stream_properties);
     auto stream_id2 = session->create_buffer_stream(stream_properties);
@@ -614,7 +632,7 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
     EXPECT_CALL(mock_surface_factory, create_surface(Eq(session->get_buffer_stream(id)),_))
         .WillOnce(Invoke([&](auto bs, auto)
     {
-        auto surface = std::make_shared<NiceMock<mtd::MockSurface>>();
+        auto surface = make_mock_surface();
         ON_CALL(*surface, primary_buffer_stream())
             .WillByDefault(Return(bs));
         return surface;
@@ -625,7 +643,7 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
         .of_type(mir_surface_type_normal)
         .with_buffer_stream(id);
 
-    auto surface_id = session->create_surface(params, nullptr);
+    auto surface_id = session->create_surface(params, event_sink);
     auto surface = session->get_surface(surface_id);
 
     EXPECT_THAT(surface->primary_buffer_stream(), Eq(session->get_buffer_stream(id)));
@@ -637,12 +655,19 @@ struct ApplicationSessionSender : public ApplicationSession
 {
     ApplicationSessionSender() :
         app_session(
-        stub_surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
-        pid, name,null_snapshot_strategy, stub_session_listener, mt::fake_shared(sender))
+            stub_surface_coordinator,
+            stub_surface_factory,
+            stub_buffer_stream_factory,
+            pid,
+            name,
+            null_snapshot_strategy,
+            stub_session_listener,
+            mtd::StubDisplayConfig{},
+            mt::fake_shared(sender))
     {
     }
 
-    mtd::MockEventSink sender;
+    testing::NiceMock<mtd::MockEventSink> sender;
     ms::ApplicationSession app_session;
 };
 }
@@ -682,4 +707,431 @@ TEST_F(ApplicationSessionSender, stop_prompt_session)
 
     EXPECT_CALL(sender, handle_event(EqPromptSessionEventState(mir_prompt_session_state_stopped))).Times(1);
     app_session.stop_prompt_session();
+}
+
+namespace
+{
+class ObserverPreservingSurface : public mtd::MockSurface
+{
+public:
+    void add_observer(std::shared_ptr<mir::scene::SurfaceObserver> const &observer) override
+    {
+        return BasicSurface::add_observer(observer);
+    }
+
+    void remove_observer(std::weak_ptr<mir::scene::SurfaceObserver> const &observer) override
+    {
+        return BasicSurface::remove_observer(observer);
+    }
+};
+
+class ObserverPreservingSurfaceFactory : public ms::SurfaceFactory
+{
+public:
+    std::shared_ptr<ms::Surface> create_surface(
+        std::shared_ptr<mir::compositor::BufferStream> const&,
+        mir::scene::SurfaceCreationParameters const& params) override
+    {
+        using namespace testing;
+        auto mock = std::make_shared<NiceMock<ObserverPreservingSurface>>();
+        ON_CALL(*mock, size()).WillByDefault(Return(params.size));
+        return mock;
+    };
+};
+
+int calculate_dpi(geom::Size const& resolution, geom::Size const& size)
+{
+    float constexpr mm_per_inch = 25.4f;
+
+    auto diagonal_mm = sqrt(size.height.as_int()*size.height.as_int()
+                            + size.width.as_int()*size.width.as_int());
+    auto diagonal_px = sqrt(resolution.height.as_int() * resolution.height.as_int()
+                            + resolution.width.as_int() * resolution.width.as_int());
+
+    return diagonal_px / diagonal_mm * mm_per_inch;
+}
+
+struct ApplicationSessionSurfaceOutput : public ApplicationSession
+{
+    ApplicationSessionSurfaceOutput() :
+        high_dpi({3840, 2160}, {509, 286}, 2.5f, mir_form_factor_monitor),
+        projector({1280, 1024}, {800, 600}, 0.5f, mir_form_factor_projector),
+        stub_surface_factory{std::make_shared<ObserverPreservingSurfaceFactory>()},
+        sender{std::make_shared<testing::NiceMock<mtd::MockEventSink>>()},
+        app_session(
+            stub_surface_coordinator,
+            stub_surface_factory,
+            stub_buffer_stream_factory,
+            pid,
+            name,
+            null_snapshot_strategy,
+            stub_session_listener,
+            mtd::StubDisplayConfig{},
+            sender)
+    {
+    }
+
+    struct TestOutput
+    {
+        TestOutput(
+            geom::Size const& resolution,
+            geom::Size const& physical_size,
+            float scale,
+            MirFormFactor form_factor) :
+            output{resolution, physical_size, mir_pixel_format_argb_8888, 60.0, true},
+            form_factor{form_factor},
+            scale{scale},
+            dpi{calculate_dpi(resolution, physical_size)},
+            width{resolution.width.as_int()}
+        {
+            output.scale = scale;
+            output.form_factor = form_factor;
+        }
+
+        mtd::StubDisplayConfigurationOutput output;
+        MirFormFactor form_factor;
+        float scale;
+        int dpi;
+        int width;
+    };
+
+    TestOutput const high_dpi;
+    TestOutput const projector;
+    std::shared_ptr<ms::SurfaceFactory> const stub_surface_factory;
+    std::shared_ptr<testing::NiceMock<mtd::MockEventSink>> sender;
+    ms::ApplicationSession app_session;
+};
+}
+
+namespace
+{
+MATCHER_P(SurfaceOutputEventFor, output, "")
+{
+    using namespace testing;
+
+    if (mir_event_get_type(arg) != mir_event_type_surface_output)
+    {
+        *result_listener << "Event is not a MirSurfaceOutputEvent";
+        return 0;
+    }
+
+    auto const event = mir_event_get_surface_output_event(arg);
+    return
+        ExplainMatchResult(
+            Eq(output.dpi),
+            mir_surface_output_event_get_dpi(event),
+            result_listener) &&
+        ExplainMatchResult(
+            Eq(output.form_factor),
+            mir_surface_output_event_get_form_factor(event),
+            result_listener) &&
+        ExplainMatchResult(
+            Eq(output.scale),
+            mir_surface_output_event_get_scale(event),
+            result_listener);
+}
+}
+
+TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_events_to_surfaces)
+{
+    using namespace ::testing;
+
+    MirEvent event;
+    bool event_received{false};
+
+    EXPECT_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
+        .WillOnce(Invoke([&event, &event_received](auto ev)
+                         {
+                             event = ev;
+                             event_received = true;
+                         }));
+
+    std::vector<mg::DisplayConfigurationOutput> outputs =
+        {
+            high_dpi.output
+        };
+    mtd::StubDisplayConfig config(outputs);
+    app_session.send_display_config(config);
+
+    ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
+        .of_size({100, 100});
+    auto surf_id = app_session.create_surface(params, sender);
+    auto surface = app_session.surface(surf_id);
+
+    ASSERT_TRUE(event_received);
+    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
+}
+
+TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface)
+{
+    using namespace ::testing;
+
+    std::array<TestOutput const*, 2> outputs{{ &high_dpi, &projector }};
+
+    std::array<MirEvent, 2> event;
+    int events_received{0};
+
+    ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
+        .WillByDefault(Invoke([&event, &events_received](auto ev)
+                         {
+                             event[events_received] = ev;
+                             ++events_received;
+                         }));
+
+    ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
+        .of_size({100, 100});
+
+    mf::SurfaceId ids[2];
+    std::shared_ptr<ms::Surface> surfaces[2];
+
+    ids[0] = app_session.create_surface(params, sender);
+    ids[1] = app_session.create_surface(params, sender);
+
+    surfaces[0] = app_session.surface(ids[0]);
+    surfaces[1] = app_session.surface(ids[1]);
+
+    surfaces[0]->move_to({0 + 100, 100});
+    surfaces[1]->move_to({outputs[0]->width + 100, 100});
+
+    // Reset events recieved; we may have received events from the move.
+    events_received = 0;
+
+    std::vector<mg::DisplayConfigurationOutput> configuration_outputs =
+        {
+            outputs[0]->output, outputs[1]->output
+        };
+    configuration_outputs[0].top_left = {0, 0};
+    configuration_outputs[1].top_left = {outputs[0]->width, 0};
+
+    mtd::StubDisplayConfig config(configuration_outputs);
+    app_session.send_display_config(config);
+
+    ASSERT_THAT(events_received, Eq(2));
+
+    for (int i = 0; i < 2 ; ++i)
+    {
+        EXPECT_THAT(event[i].surface_output.surface_id, Eq(ids[i].as_value()));
+        EXPECT_THAT(&event[i], SurfaceOutputEventFor(*outputs[i]));
+    }
+}
+
+TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_factor_display_on_overlap)
+{
+    using namespace ::testing;
+
+    std::array<TestOutput const*, 2> outputs{{ &projector, &high_dpi }};
+
+    MirEvent event;
+    bool event_received{false};
+
+    ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
+        .WillByDefault(Invoke([&event, &event_received](auto ev)
+                              {
+                                  event = ev;
+                                  event_received = true;
+                              }));
+
+    ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
+        .of_size({100, 100});
+
+    auto id = app_session.create_surface(params, sender);
+    auto surface = app_session.surface(id);
+
+    // This should overlap both outputs
+    surface->move_to({outputs[0]->width - 50, 100});
+
+    std::vector<mg::DisplayConfigurationOutput> configuration_outputs =
+        {
+            outputs[0]->output, outputs[1]->output
+        };
+
+    // Put the higher-scale output on the right, so a surface's top_left coordinate
+    // can be in the lower-scale output but overlap with the higher-scale output.
+    configuration_outputs[0].top_left = {0, 0};
+    configuration_outputs[1].top_left = {outputs[0]->width, 0};
+
+    mtd::StubDisplayConfig config(configuration_outputs);
+    app_session.send_display_config(config);
+
+    ASSERT_TRUE(event_received);
+
+    EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
+    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
+}
+
+TEST_F(ApplicationSessionSurfaceOutput, surfaces_on_edges_get_correct_values)
+{
+    using namespace ::testing;
+
+    std::array<TestOutput const*, 2> outputs{{ &projector, &high_dpi }};
+
+    MirEvent event;
+    bool event_received{false};
+
+    ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
+        .WillByDefault(Invoke([&event, &event_received](auto ev)
+                              {
+                                  event = ev;
+                                  event_received = true;
+                              }));
+
+    std::vector<mg::DisplayConfigurationOutput> configuration_outputs =
+        {
+            outputs[0]->output, outputs[1]->output
+        };
+
+    // Put the higher-scale output on the right, so a surface's top_left coordinate
+    // can be in the lower-scale output but overlap with the higher-scale output.
+    configuration_outputs[0].top_left = {0, 0};
+    configuration_outputs[1].top_left = {outputs[0]->width, 0};
+
+    mtd::StubDisplayConfig config(configuration_outputs);
+    app_session.send_display_config(config);
+
+    ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
+        .of_size({640, 480});
+
+    auto id = app_session.create_surface(params, sender);
+    auto surface = app_session.surface(id);
+
+    // This should solidly overlap both outputs
+    surface->move_to({outputs[0]->width - ((surface->size().width.as_uint32_t()) / 2), 100});
+
+    ASSERT_TRUE(event_received);
+    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
+
+    event_received = false;
+    // This should be *just* entirely on the projector
+    surface->move_to({outputs[0]->width - surface->size().width.as_uint32_t(), 100});
+
+    ASSERT_TRUE(event_received);
+    EXPECT_THAT(&event, SurfaceOutputEventFor(projector));
+
+    event_received = false;
+    // This should have a single pixel overlap on the high_dpi
+    surface->move_to({outputs[0]->width - (surface->size().width.as_uint32_t() - 1), 100});
+
+    ASSERT_TRUE(event_received);
+    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
+}
+
+TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
+{
+    using namespace ::testing;
+
+    std::array<TestOutput const*, 2> outputs {{ &projector, &high_dpi }};
+
+    MirEvent event;
+    int events_received{0};
+
+
+    ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
+        .WillByDefault(Invoke([&event, &events_received](auto ev)
+                              {
+                                  event = ev;
+                                  events_received++;
+                              }));
+
+    std::vector<mg::DisplayConfigurationOutput> configuration_outputs =
+        {
+            outputs[0]->output, outputs[1]->output
+        };
+
+    // Put the higher-scale output on the right, so a surface's top_left coordinate
+    // can be in the lower-scale output but overlap with the higher-scale output.
+    configuration_outputs[0].top_left = {0, 0};
+    configuration_outputs[1].top_left = {outputs[0]->width, 0};
+
+    mtd::StubDisplayConfig config(configuration_outputs);
+    app_session.send_display_config(config);
+
+    ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
+        .of_size({100, 100});
+
+    auto id = app_session.create_surface(params, sender);
+    auto surface = app_session.surface(id);
+
+    // This should overlap both outputs
+    surface->move_to({outputs[0]->width - 50, 100});
+
+
+    ASSERT_THAT(events_received, Ge(1));
+    auto events_expected = events_received + 1;
+
+    EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
+    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
+
+    // Now solely on the left output
+    surface->move_to({0, 0});
+
+    ASSERT_THAT(events_received, Eq(events_expected));
+    events_expected++;
+
+    EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
+    EXPECT_THAT(&event, SurfaceOutputEventFor(projector));
+
+    // Now solely on the right output
+    surface->move_to({outputs[0]->width + 100, 100});
+
+    ASSERT_THAT(events_received, Eq(events_expected));
+    events_expected++;
+
+    EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
+    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
+}
+
+TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move_only_if_changed)
+{
+    using namespace ::testing;
+
+    std::array<TestOutput const*, 2> outputs {{ &projector, &high_dpi }};
+
+    MirEvent event;
+    int events_received{0};
+
+    ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
+        .WillByDefault(Invoke([&event, &events_received](auto ev)
+                              {
+                                  event = ev;
+                                  events_received++;
+                              }));
+
+    std::vector<mg::DisplayConfigurationOutput> configuration_outputs =
+        {
+            outputs[0]->output, outputs[1]->output
+        };
+
+    // Put the higher-scale output on the right, so a surface's top_left coordinate
+    // can be in the lower-scale output but overlap with the higher-scale output.
+    configuration_outputs[0].top_left = {0, 0};
+    configuration_outputs[1].top_left = {outputs[0]->width, 0};
+
+    mtd::StubDisplayConfig config(configuration_outputs);
+    app_session.send_display_config(config);
+
+    ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
+        .of_size({100, 100});
+
+    auto id = app_session.create_surface(params, sender);
+    auto surface = app_session.surface(id);
+
+    // We get an event on surface creation.
+    EXPECT_THAT(events_received, Eq(1));
+
+    // This should move within the same output, so not generate any events
+    surface->move_to({outputs[0]->width - (surface->size().width.as_int() + 1), 100});
+
+    EXPECT_THAT(events_received, Eq(1));
+
+    // This should move to *exactly* touching the edge of the output; still no events
+    surface->move_to({outputs[0]->width - surface->size().width.as_int(), 100});
+    EXPECT_THAT(events_received, Eq(1));
+
+    // This should move to just overlaping the second output; should generate an event
+    surface->move_to({outputs[0]->width - (surface->size().width.as_int() - 1), 100});
+    EXPECT_THAT(events_received, Eq(2));
+
+    // Back to exactly on the original display; another event.
+    surface->move_to({outputs[0]->width - surface->size().width.as_int(), 100});
+    EXPECT_THAT(events_received, Eq(3));
 }

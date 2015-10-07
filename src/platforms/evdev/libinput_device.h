@@ -28,6 +28,7 @@
 #include "mir/geometry/point.h"
 
 #include <vector>
+#include <unordered_map>
 
 struct libinput_event;
 struct libinput_event_keyboard;
@@ -85,6 +86,15 @@ private:
     mir::geometry::Point pointer_pos;
     MirInputEventModifiers modifier_state;
     MirPointerButtons button_state;
+
+    struct ContactData
+    {
+        ContactData() {}
+        float x{0}, y{0}, major{0}, minor{0}, pressure{0};
+    };
+    std::unordered_map<MirTouchId,ContactData> last_seen_properties;
+
+    void update_contact_data(ContactData &data, libinput_event_touch* touch);
 };
 }
 }

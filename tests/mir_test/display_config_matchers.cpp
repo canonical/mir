@@ -69,7 +69,9 @@ public:
                 protobuf_output.current_mode(),
                 static_cast<MirPixelFormat>(protobuf_output.current_format()),
                 static_cast<MirPowerMode>(protobuf_output.power_mode()),
-                static_cast<MirOrientation>(protobuf_output.orientation())
+                static_cast<MirOrientation>(protobuf_output.orientation()),
+                1.0f,
+                mir_form_factor_monitor
             };
 
             /* Modes */
@@ -135,7 +137,9 @@ public:
                 client_output.current_mode,
                 client_output.current_format,
                 static_cast<MirPowerMode>(client_output.power_mode),
-                static_cast<MirOrientation>(client_output.orientation)
+                static_cast<MirOrientation>(client_output.orientation),
+                1.0f,
+                mir_form_factor_monitor
             };
 
             /* Modes */
@@ -296,6 +300,13 @@ bool mt::compare_display_configurations(MirDisplayConfiguration const& client_co
 
 bool mt::compare_display_configurations(graphics::DisplayConfiguration const& display_config1,
                                         MirDisplayConfiguration const* display_config2)
+{
+    TestDisplayConfiguration config2{*display_config2};
+    return compare_display_configurations(display_config1, config2);
+}
+
+bool mt::compare_display_configurations(MirDisplayConfiguration const* display_config2,
+                                        graphics::DisplayConfiguration const& display_config1)
 {
     TestDisplayConfiguration config2{*display_config2};
     return compare_display_configurations(display_config1, config2);

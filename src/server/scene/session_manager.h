@@ -26,6 +26,12 @@
 
 namespace mir
 {
+namespace graphics
+{
+class DisplayConfiguration;
+class Display;
+}
+
 namespace scene
 {
 class SessionContainer;
@@ -41,14 +47,17 @@ class ApplicationNotRespondingDetector;
 class SessionManager : public SessionCoordinator
 {
 public:
-    explicit SessionManager(std::shared_ptr<SurfaceCoordinator> const& surface_coordinator,
-                            std::shared_ptr<SurfaceFactory> const& surface_factory,
-                            std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
-                            std::shared_ptr<SessionContainer> const& app_container,
-                            std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
-                            std::shared_ptr<SessionEventSink> const& session_event_sink,
-                            std::shared_ptr<SessionListener> const& session_listener,
-                            std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector);
+    SessionManager(
+        std::shared_ptr<SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<SurfaceFactory> const& surface_factory,
+        std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
+        std::shared_ptr<SessionContainer> const& app_container,
+        std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
+        std::shared_ptr<SessionEventSink> const& session_event_sink,
+        std::shared_ptr<SessionListener> const& session_listener,
+        std::shared_ptr<graphics::Display const> const& display,
+        std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector);
+
     virtual ~SessionManager() noexcept;
 
     std::shared_ptr<Session> open_session(
@@ -75,6 +84,7 @@ private:
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionEventSink> const session_event_sink;
     std::shared_ptr<SessionListener> const session_listener;
+    std::shared_ptr<graphics::Display const> const display;
     std::shared_ptr<ApplicationNotRespondingDetector> const anr_detector;
 };
 

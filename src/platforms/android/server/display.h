@@ -38,7 +38,6 @@ namespace graphics
 
 class DisplayReport;
 class GLConfig;
-class GLProgramFactory;
 
 namespace android
 {
