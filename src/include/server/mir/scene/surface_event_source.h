@@ -29,6 +29,7 @@ namespace mir
 {
 namespace scene
 {
+class Surface;
 class OutputPropertiesCache;
 
 class SurfaceEventSource : public NullSurfaceObserver
@@ -36,6 +37,7 @@ class SurfaceEventSource : public NullSurfaceObserver
 public:
     SurfaceEventSource(
         frontend::SurfaceId id,
+        Surface const& surface,
         OutputPropertiesCache const& outputs,
         std::shared_ptr<frontend::EventSink> const& event_sink);
 
@@ -48,6 +50,7 @@ public:
 
 private:
     frontend::SurfaceId const id;
+    Surface const& surface;
     OutputPropertiesCache const& outputs;
     std::shared_ptr<frontend::EventSink> const event_sink;
 };

@@ -959,6 +959,62 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
     EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
 }
 
+TEST_F(ApplicationSessionSurfaceOutput, surfaces_on_edges_get_correct_values)
+{
+    using namespace ::testing;
+
+    std::array<TestOutput const*, 2> outputs{{ &projector, &high_dpi }};
+
+    MirEvent event;
+    bool event_received{false};
+
+    ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
+        .WillByDefault(Invoke([&event, &event_received](auto ev)
+                              {
+                                  event = ev;
+                                  event_received = true;
+                              }));
+
+    std::vector<mg::DisplayConfigurationOutput> configuration_outputs =
+        {
+            outputs[0]->output, outputs[1]->output
+        };
+
+    // Put the higher-scale output on the right, so a surface's top_left coordinate
+    // can be in the lower-scale output but overlap with the higher-scale output.
+    configuration_outputs[0].top_left = {0, 0};
+    configuration_outputs[1].top_left = {outputs[0]->width, 0};
+
+    mtd::StubDisplayConfig config(configuration_outputs);
+    app_session.send_display_config(config);
+
+    ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
+        .of_size({640, 480});
+
+    auto id = app_session.create_surface(params, sender);
+    auto surface = app_session.surface(id);
+
+    // This should solidly overlap both outputs
+    surface->move_to({outputs[0]->width - ((surface->size().width.as_uint32_t()) / 2), 100});
+
+    ASSERT_TRUE(event_received);
+    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
+
+    event_received = false;
+    // This should be *just* entirely on the projector
+    surface->move_to({outputs[0]->width - surface->size().width.as_uint32_t(), 100});
+
+    ASSERT_TRUE(event_received);
+    EXPECT_THAT(&event, SurfaceOutputEventFor(projector));
+
+    event_received = false;
+    // This should have a single pixel overlap on the high_dpi
+    surface->move_to({outputs[0]->width - (surface->size().width.as_uint32_t() - 1), 100});
+
+    ASSERT_TRUE(event_received);
+    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
+}
+
 TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
 {
     using namespace ::testing;

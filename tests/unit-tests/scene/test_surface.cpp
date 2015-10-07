@@ -270,7 +270,7 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
 
     auto const mock_event_sink = std::make_shared<MockEventSink>();
     ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), cache, mock_event_sink);
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), surface, cache, mock_event_sink);
 
     surface.add_observer(observer);
 
@@ -287,7 +287,7 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
     geom::Size const new_size{123, 456};
     auto const mock_event_sink = std::make_shared<MockEventSink>();
     ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), cache, mock_event_sink);
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), surface, cache, mock_event_sink);
 
     surface.add_observer(observer);
 

@@ -175,7 +175,7 @@ TEST_F(Surface, emits_resize_events)
     geom::Size const new_size{123, 456};
     auto sink = std::make_shared<mtd::MockEventSink>();
     ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, sink);
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, *surface, cache, sink);
 
     surface->add_observer(observer);
 
@@ -195,7 +195,7 @@ TEST_F(Surface, emits_resize_events_only_on_change)
     geom::Size const new_size2{789, 1011};
     auto sink = std::make_shared<mtd::MockEventSink>();
     ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, sink);
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, *surface, cache, sink);
 
     surface->add_observer(observer);
 
@@ -233,7 +233,7 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
     }
 
     ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, mt::fake_shared(sink));
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, *surface, cache, mt::fake_shared(sink));
 
     surface->add_observer(observer);
 
@@ -247,7 +247,7 @@ TEST_F(Surface, emits_client_close_events)
 
     auto sink = std::make_shared<mtd::MockEventSink>();
     ms::OutputPropertiesCache cache;
-    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, cache, sink);
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, *surface, cache, sink);
 
     surface->add_observer(observer);
 

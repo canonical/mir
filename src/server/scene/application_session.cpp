@@ -98,8 +98,6 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     if (params.parent_id.is_set())
         params.parent = checked_find(the_params.parent_id.value())->second;
 
-    auto const observer = std::make_shared<scene::SurfaceEventSource>(id, output_cache, surface_sink);
-
     std::shared_ptr<compositor::BufferStream> buffer_stream;
     if (params.content_id.is_set())
     {
@@ -125,6 +123,11 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     if (params.input_shape.is_set())
         surface->set_input_region(params.input_shape.value());
 
+    auto const observer = std::make_shared<scene::SurfaceEventSource>(
+        id,
+        *surface,
+        output_cache,
+        surface_sink);
     surface->add_observer(observer);
 
     {
