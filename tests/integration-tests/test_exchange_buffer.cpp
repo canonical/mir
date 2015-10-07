@@ -175,7 +175,6 @@ struct StubPlatform : public mtd::NullPlatform
 
     std::shared_ptr<mg::Display> create_display(
         std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
-        std::shared_ptr<mg::GLProgramFactory> const&,
         std::shared_ptr<mg::GLConfig> const&) override
     {
         std::vector<geom::Rectangle> rect{geom::Rectangle{{0,0},{1,1}}};
