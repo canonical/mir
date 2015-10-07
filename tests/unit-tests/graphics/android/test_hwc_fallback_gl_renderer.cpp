@@ -93,7 +93,7 @@ public:
         using namespace testing;
         ON_CALL(mock_gl_program_factory,create_gl_program(_,_))
             .WillByDefault(Invoke([](std::string const, std::string const)
-                { return std::unique_ptr<mgl::Program>(new mtd::StubGLProgramNew); }));
+                { return std::unique_ptr<mgl::Program>(new mtd::StubGLProgram); }));
         ON_CALL(mock_gl_program_factory,create_texture_cache())
             .WillByDefault(Invoke([]()
                 { return std::unique_ptr<mgl::TextureCache>(new StubTextureCache); }));

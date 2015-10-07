@@ -40,7 +40,6 @@ public:
     
     std::shared_ptr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
-        std::shared_ptr<graphics::GLProgramFactory> const&,
         std::shared_ptr<graphics::GLConfig> const&) override;
     EGLNativeDisplayType egl_native_display() const override;
 

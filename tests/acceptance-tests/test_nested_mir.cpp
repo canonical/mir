@@ -19,6 +19,7 @@
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/input/cursor_images.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_report.h"
@@ -112,6 +113,76 @@ std::vector<geom::Rectangle> const display_geometry
 
 std::chrono::seconds const timeout{10};
 
+// We can't rely on the test environment to have X cursors, so we provide some of our own
+auto const cursor_names = {
+//        mir_disabled_cursor_name,
+    mir_arrow_cursor_name,
+    mir_busy_cursor_name,
+    mir_caret_cursor_name,
+    mir_default_cursor_name,
+    mir_pointing_hand_cursor_name,
+    mir_open_hand_cursor_name,
+    mir_closed_hand_cursor_name,
+    mir_horizontal_resize_cursor_name,
+    mir_vertical_resize_cursor_name,
+    mir_diagonal_resize_bottom_to_top_cursor_name,
+    mir_diagonal_resize_top_to_bottom_cursor_name,
+    mir_omnidirectional_resize_cursor_name,
+    mir_vsplit_resize_cursor_name,
+    mir_hsplit_resize_cursor_name,
+    mir_crosshair_cursor_name };
+
+int const cursor_size = 24;
+
+struct CursorImage : mg::CursorImage
+{
+    CursorImage(char const* name) :
+        id{std::find(begin(cursor_names), end(cursor_names), name) - begin(cursor_names)},
+        data{{uint8_t(id)}}
+    {
+    }
+
+    void const* as_argb_8888() const { return data.data(); }
+
+    geom::Size size() const { return {cursor_size, cursor_size}; }
+
+    geom::Displacement hotspot() const { return {0, 0}; }
+
+    ptrdiff_t id;
+    std::array<uint8_t, MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888) * cursor_size * cursor_size> data;
+};
+
+struct CursorImages : mir::input::CursorImages
+{
+public:
+
+    std::shared_ptr<mg::CursorImage> image(std::string const& cursor_name, geom::Size const& /*size*/)
+    {
+        return std::make_shared<CursorImage>(cursor_name.c_str());
+    }
+};
+
+struct CursorWrapper : mg::Cursor
+{
+    CursorWrapper(std::shared_ptr<mg::Cursor> const& wrapped) : wrapped{wrapped} {}
+    void show() override { if (!hidden) wrapped->show(); }
+    void show(mg::CursorImage const& cursor_image) override { if (!hidden) wrapped->show(cursor_image); }
+    void hide() override { wrapped->hide(); }
+
+    void move_to(geom::Point position) override { wrapped->move_to(position); }
+
+    void set_hidden(bool hidden)
+    {
+        this->hidden = hidden;
+        if (hidden) hide();
+        else show();
+    }
+
+private:
+    std::shared_ptr<mg::Cursor> const wrapped;
+    bool hidden{false};
+};
+
 class NestedMirRunner : public mtf::HeadlessNestedServerRunner
 {
 public:
@@ -120,6 +191,11 @@ public:
     {
         server.override_the_host_lifecycle_event_listener([this]
             { return the_mock_host_lifecycle_event_listener(); });
+
+        server.wrap_cursor([&](std::shared_ptr<mg::Cursor> const& wrapped)
+            { return cursor_wrapper = std::make_shared<CursorWrapper>(wrapped); });
+
+        server.override_the_cursor_images([] { return std::make_shared<CursorImages>(); });
 
         start_server();
     }
@@ -134,6 +210,8 @@ public:
         return mock_host_lifecycle_event_listener([]
             { return std::make_shared<NiceMock<MockHostLifecycleEventListener>>(); });
     }
+
+    std::shared_ptr<CursorWrapper> cursor_wrapper;
 
 private:
     mir::CachedPtr<MockHostLifecycleEventListener> mock_host_lifecycle_event_listener;
@@ -158,7 +236,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
         server.override_the_display_configuration_report([this]
             { return the_mock_display_configuration_report(); });
 
-        server.override_the_cursor([this] { return the_mock_cursor(); });
+        server.wrap_cursor([this](std::shared_ptr<mg::Cursor> const&) { return the_mock_cursor(); });
 
         mtf::HeadlessInProcessServer::SetUp();
     }
@@ -480,11 +558,10 @@ TEST_F(NestedServer, display_configuration_changes_are_visible_to_client_when_it
     mir_connection_release(connection);
 }
 
-TEST_F(NestedServer, cursor_image_changes_are_forwarded_to_host)
+TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
 {
     int const frames = 10;
     NestedMirRunner nested_mir{new_connection()};
-    ignore_rebuild_of_egl_context();
 
     auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
     auto const surface = make_and_paint_surface(connection);
@@ -495,11 +572,10 @@ TEST_F(NestedServer, cursor_image_changes_are_forwarded_to_host)
     mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
 
-    nested_mir.server.the_cursor()->move_to({489, 9});
     server.the_cursor_listener()->cursor_moved_to(489, 9);
 
     auto stream = mir_connection_create_buffer_stream_sync(
-        connection, 24, 24, mir_pixel_format_argb_8888, mir_buffer_usage_software);
+        connection, cursor_size, cursor_size, mir_pixel_format_argb_8888, mir_buffer_usage_software);
     mir_buffer_stream_swap_buffers_sync(stream);
 
     {
@@ -530,4 +606,89 @@ TEST_F(NestedServer, cursor_image_changes_are_forwarded_to_host)
     mir_buffer_stream_release_sync(stream);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
+}
+
+TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
+{
+    NestedMirRunner nested_mir{new_connection()};
+
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto const surface = make_and_paint_surface(connection);
+    auto const mock_cursor = the_mock_cursor();
+
+    auto const spec = mir_connection_create_spec_for_changes(connection);
+    mir_surface_spec_set_fullscreen_on_output(spec, 1);
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
+
+    server.the_cursor_listener()->cursor_moved_to(489, 9);
+
+    for (auto const name : cursor_names)
+    {
+        mt::WaitCondition condition;
+
+        EXPECT_CALL(*mock_cursor, show(_)).Times(1)
+            .WillOnce(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+
+        auto const cursor = mir_cursor_configuration_from_name(name);
+        mir_wait_for(mir_surface_configure_cursor(surface, cursor));
+        mir_cursor_configuration_destroy(cursor);
+
+        condition.wait_for_at_most_seconds(1);
+        Mock::VerifyAndClearExpectations(mock_cursor.get());
+    }
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(NestedServer, can_hide_the_host_cursor)
+{
+    int const frames = 10;
+    NestedMirRunner nested_mir{new_connection()};
+
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto const surface = make_and_paint_surface(connection);
+    auto const mock_cursor = the_mock_cursor();
+
+    auto const spec = mir_connection_create_spec_for_changes(connection);
+    mir_surface_spec_set_fullscreen_on_output(spec, 1);
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
+
+    server.the_cursor_listener()->cursor_moved_to(489, 9);
+
+    auto stream = mir_connection_create_buffer_stream_sync(
+        connection, cursor_size, cursor_size, mir_pixel_format_argb_8888, mir_buffer_usage_software);
+    mir_buffer_stream_swap_buffers_sync(stream);
+
+    {
+        mt::WaitCondition condition;
+        EXPECT_CALL(*mock_cursor, show(_)).Times(1)
+            .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+
+        auto conf = mir_cursor_configuration_from_buffer_stream(stream, 0, 0);
+        mir_wait_for(mir_surface_configure_cursor(surface, conf));
+        mir_cursor_configuration_destroy(conf);
+
+        condition.wait_for_at_most_seconds(1);
+        Mock::VerifyAndClearExpectations(mock_cursor.get());
+    }
+
+    nested_mir.cursor_wrapper->set_hidden(true);
+
+    EXPECT_CALL(*mock_cursor, show(_)).Times(0);
+
+    for (int i = 0; i != frames; ++i)
+    {
+        mir_buffer_stream_swap_buffers_sync(stream);
+    }
+
+    mir_buffer_stream_release_sync(stream);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+
+    // Need to verify before test server teardown deletes the
+    // surface as the host cursor then reverts to default.
+    Mock::VerifyAndClearExpectations(mock_cursor.get());
 }

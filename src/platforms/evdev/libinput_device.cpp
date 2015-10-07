@@ -265,19 +265,16 @@ void mie::LibInputDevice::add_touch_down_event(libinput_event_touch* touch)
     auto const action = mir_touch_action_down;
     // TODO make libinput indicate tool type
     auto const tool = mir_touch_tooltype_finger;
-    float const pressure = libinput_event_touch_get_pressure(touch);
-    auto const screen = sink->bounding_rectangle();
-    uint32_t const width = screen.size.width.as_int();
-    uint32_t const height = screen.size.height.as_int();
-    float const x = libinput_event_touch_get_x_transformed(touch, width);
-    float const y = libinput_event_touch_get_y_transformed(touch, height);
-    float const major = libinput_event_touch_get_major_transformed(touch, width, height);
-    float const minor = libinput_event_touch_get_minor_transformed(touch, width, height);
+
+    auto& current_contact_data = last_seen_properties[id];
+
+    update_contact_data(current_contact_data, touch);
     // TODO why do we send size to clients?
-    float const size = std::max(major, minor);
+    float const size = std::max(current_contact_data.major, current_contact_data.minor);
 
     // TODO extend for touch screens that provide orientation
-    builder->add_touch(event, id, action, tool, x, y, pressure, major, minor, size);
+    builder->add_touch(event, id, action, tool, current_contact_data.x, current_contact_data.y,
+                       current_contact_data.pressure, current_contact_data.major, current_contact_data.minor, size);
 }
 
 void mie::LibInputDevice::add_touch_up_event(libinput_event_touch* touch)
@@ -286,15 +283,30 @@ void mie::LibInputDevice::add_touch_up_event(libinput_event_touch* touch)
     auto& event = get_accumulated_touch_event(time);
     MirTouchId const id = libinput_event_touch_get_slot(touch);
     auto const action = mir_touch_action_up;
-    auto const tool = mir_touch_tooltype_finger; // TODO make libinput indicate tool type
+    auto const tool = mir_touch_tooltype_finger;  // TODO make libinput indicate tool type
 
-    float const pressure = 0.0f;
-    float const major = 0.0f;
-    float const minor = 0.0f;
-    float const size = 0.0f;
+    // get contact data from last motion or down event:
+    auto& current_contact_data = last_seen_properties[id];
+
+    float const size = std::max(current_contact_data.major, current_contact_data.minor);
     // TODO extend for touch screens that provide orientation and major/minor
-    builder->add_touch(event, id, action, tool, libinput_event_touch_get_x(touch), libinput_event_touch_get_y(touch),
-                       pressure, major, minor, size);
+    builder->add_touch(event, id, action, tool, current_contact_data.x, current_contact_data.y,
+                       current_contact_data.pressure, current_contact_data.major, current_contact_data.minor, size);
+
+    last_seen_properties.erase(id);
+}
+
+void mie::LibInputDevice::update_contact_data(ContactData & data, libinput_event_touch* touch)
+{
+    auto const screen = sink->bounding_rectangle();
+    uint32_t const width = screen.size.width.as_int();
+    uint32_t const height = screen.size.height.as_int();
+
+    data.pressure = libinput_event_touch_get_pressure(touch);
+    data.x = libinput_event_touch_get_x_transformed(touch, width);
+    data.y = libinput_event_touch_get_y_transformed(touch, height);
+    data.major = libinput_event_touch_get_major_transformed(touch, width, height);
+    data.minor = libinput_event_touch_get_minor_transformed(touch, width, height);
 }
 
 void mie::LibInputDevice::add_touch_motion_event(libinput_event_touch* touch)
@@ -305,19 +317,17 @@ void mie::LibInputDevice::add_touch_motion_event(libinput_event_touch* touch)
     MirTouchId const id = libinput_event_touch_get_slot(touch);
     auto const action = mir_touch_action_change;
     auto const tool = mir_touch_tooltype_finger; // TODO make libinput indicate tool type
-    float const pressure = libinput_event_touch_get_pressure(touch);
-    auto const screen = sink->bounding_rectangle();
-    uint32_t const width = screen.size.width.as_int();
-    uint32_t const height = screen.size.height.as_int();
-    float const x = libinput_event_touch_get_x_transformed(touch, width);
-    float const y = libinput_event_touch_get_y_transformed(touch, height);
-    float const major = libinput_event_touch_get_major_transformed(touch, width, height);
-    float const minor = libinput_event_touch_get_minor_transformed(touch, width, height);
+
+    auto & current_contact_data = last_seen_properties[id];
+
+    update_contact_data(current_contact_data, touch);
+
     // TODO why do we send size to clients?
-    float const size = std::max(major, minor);
+    float const size = std::max(current_contact_data.major, current_contact_data.minor);
 
     // TODO extend for touch screens that provide orientation
-    builder->add_touch(event, id, action, tool, x, y, pressure, major, minor, size);
+    builder->add_touch(event, id, action, tool, current_contact_data.x, current_contact_data.y,
+                       current_contact_data.pressure, current_contact_data.major, current_contact_data.minor, size);
 }
 
 mi::InputDeviceInfo mie::LibInputDevice::get_device_info()
@@ -350,4 +360,3 @@ libinput_device* mie::LibInputDevice::device() const
 {
     return devices.front().get();
 }
-

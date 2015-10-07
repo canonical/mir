@@ -73,7 +73,9 @@ mg::DisplayConfigurationOutput mga::FbControl::active_config_for(DisplayName dis
         0,
         mga::to_mir_format(fb_device->format),
         mir_power_mode_on,
-        mir_orientation_normal
+        mir_orientation_normal,
+        1.0f,
+        mir_form_factor_phone
     };
 }
 

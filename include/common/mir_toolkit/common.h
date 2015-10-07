@@ -190,6 +190,20 @@ typedef enum MirEdgeAttachment
     mir_edge_attachment_any = mir_edge_attachment_vertical |
                               mir_edge_attachment_horizontal
 } MirEdgeAttachment;
+
+/**
+ * Form factor associated with a physical output
+ */
+typedef enum MirFormFactor
+{
+    mir_form_factor_unknown,
+    mir_form_factor_phone,
+    mir_form_factor_tablet,
+    mir_form_factor_monitor,
+    mir_form_factor_tv,
+    mir_form_factor_projector,
+} MirFormFactor;
+
 /**@}*/
 
 #endif

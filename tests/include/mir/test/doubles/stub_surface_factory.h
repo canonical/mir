@@ -35,9 +35,12 @@ class StubSurfaceFactory : public scene::SurfaceFactory
 public:
     std::shared_ptr<scene::Surface> create_surface(
         std::shared_ptr<compositor::BufferStream> const&,
-        scene::SurfaceCreationParameters const&) override
+        scene::SurfaceCreationParameters const& params) override
     {
-        return std::make_shared<testing::NiceMock<MockSurface>>();
+        using namespace testing;
+        auto surface = std::make_shared<NiceMock<MockSurface>>();
+        ON_CALL(*surface, size()).WillByDefault(Return(params.size));
+        return surface;;
     }
 };
 

@@ -113,7 +113,6 @@ public:
         auto const platform = mtd::create_platform_with_null_dependencies();
         return platform->create_display(
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-            std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
     }
 
