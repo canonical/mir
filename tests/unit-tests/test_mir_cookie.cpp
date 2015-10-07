@@ -19,6 +19,7 @@
 #include "mir/cookie_factory.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 TEST(MirCookieFactory, attests_real_timestamp)
 {

@@ -19,16 +19,12 @@
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/wait_condition.h"
-#include "mir/test/fake_shared.h"
-#include "mir/test/doubles/stub_cursor.h"
 #include "mir/cookie_factory.h"
 
 #include "boost/throw_exception.hpp"
 
 
-namespace mt = mir::test;
 namespace mtf = mir_test_framework;
-namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -44,14 +40,6 @@ public:
     {
         // Needed because the headless server sets stub_input.so
         add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", nullptr);
-
-        server.override_the_cursor([this]() { return mt::fake_shared(cursor); });
-
-        // Need to override the cursor images because the xcursor test depends on a
-        // global variable for the path. Which would get set if we didnt override
-        // the cursor images. This causes the xcuror tests to fail
-        server.override_the_cursor_images([]()
-            { return std::make_shared<mtd::StubCursorImages>(); });
 
         server.override_the_cookie_factory([this] ()
             { return mir::cookie::CookieFactory::create_saving_secret(cookie_secret); });
@@ -71,7 +59,6 @@ public:
     mtf::UdevEnvironment mock_devices;
     MirCookie out_cookie;
     mir::test::WaitCondition udev_read_recording;
-    mtd::StubCursor cursor;
 };
 
 namespace
