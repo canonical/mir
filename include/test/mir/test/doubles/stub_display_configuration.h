@@ -77,6 +77,17 @@ public:
     {
     }
 
+    StubDisplayConfig(graphics::DisplayConfiguration const& other)
+        : graphics::DisplayConfiguration()
+    {
+        other.for_each_card([this](auto card) { cards.push_back(card); });
+        other.for_each_output(
+            [this](graphics::DisplayConfigurationOutput const& output)
+            {
+                outputs.push_back(output);
+            });
+    }
+
     StubDisplayConfig(unsigned int num_displays)
         : StubDisplayConfig(num_displays,
                             {
