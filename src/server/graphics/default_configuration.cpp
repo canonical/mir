@@ -156,7 +156,6 @@ mir::DefaultServerConfiguration::the_display()
             {
                 return the_graphics_platform()->create_display(
                     the_display_configuration_policy(),
-                    the_gl_program_factory(),
                     the_gl_config());
             }
         });
@@ -244,10 +243,4 @@ mir::DefaultServerConfiguration::the_gl_config()
             };
             return std::make_shared<NoGLConfig>();
         });
-}
-
-std::shared_ptr<mg::GLProgramFactory>
-mir::DefaultServerConfiguration::the_gl_program_factory()
-{
-    return std::shared_ptr<mg::GLProgramFactory>();
 }
