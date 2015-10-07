@@ -51,13 +51,14 @@ void ms::SurfaceEventSource::resized_to(geom::Size const& size)
 void ms::SurfaceEventSource::moved_to(geom::Point const& top_left)
 {
     auto new_output_properties = outputs.properties_for(geom::Rectangle{top_left, surface.size()});
-    if (new_output_properties)
+    if (new_output_properties && (new_output_properties != last_output.lock()))
     {
         event_sink->handle_event(*mev::make_event(
             id,
             new_output_properties->dpi,
             new_output_properties->scale,
             new_output_properties->form_factor));
+        last_output = new_output_properties;
     }
 }
 

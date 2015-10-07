@@ -1079,3 +1079,59 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
     EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
 }
+
+TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move_only_if_changed)
+{
+    using namespace ::testing;
+
+    std::array<TestOutput const*, 2> outputs {{ &projector, &high_dpi }};
+
+    MirEvent event;
+    int events_received{0};
+
+    ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
+        .WillByDefault(Invoke([&event, &events_received](auto ev)
+                              {
+                                  event = ev;
+                                  events_received++;
+                              }));
+
+    std::vector<mg::DisplayConfigurationOutput> configuration_outputs =
+        {
+            outputs[0]->output, outputs[1]->output
+        };
+
+    // Put the higher-scale output on the right, so a surface's top_left coordinate
+    // can be in the lower-scale output but overlap with the higher-scale output.
+    configuration_outputs[0].top_left = {0, 0};
+    configuration_outputs[1].top_left = {outputs[0]->width, 0};
+
+    mtd::StubDisplayConfig config(configuration_outputs);
+    app_session.send_display_config(config);
+
+    ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
+        .of_size({100, 100});
+
+    auto id = app_session.create_surface(params, sender);
+    auto surface = app_session.surface(id);
+
+    // We get an event on surface creation.
+    EXPECT_THAT(events_received, Eq(1));
+
+    // This should move within the same output, so not generate any events
+    surface->move_to({outputs[0]->width - (surface->size().width.as_int() + 1), 100});
+
+    EXPECT_THAT(events_received, Eq(1));
+
+    // This should move to *exactly* touching the edge of the output; still no events
+    surface->move_to({outputs[0]->width - surface->size().width.as_int(), 100});
+    EXPECT_THAT(events_received, Eq(1));
+
+    // This should move to just overlaping the second output; should generate an event
+    surface->move_to({outputs[0]->width - (surface->size().width.as_int() - 1), 100});
+    EXPECT_THAT(events_received, Eq(2));
+
+    // Back to exactly on the original display; another event.
+    surface->move_to({outputs[0]->width - surface->size().width.as_int(), 100});
+    EXPECT_THAT(events_received, Eq(3));
+}

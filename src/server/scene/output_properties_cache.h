@@ -35,17 +35,17 @@ class DisplayConfiguration;
 
 namespace scene
 {
+struct OutputProperties
+{
+    geometry::Rectangle extents;
+    int dpi;
+    float scale;
+    MirFormFactor form_factor;
+};
 
 class OutputPropertiesCache
 {
 public:
-    struct OutputProperties
-    {
-        geometry::Rectangle extents;
-        int dpi;
-        float scale;
-        MirFormFactor form_factor;
-    };
 
     void update_from(graphics::DisplayConfiguration const& config);
 
