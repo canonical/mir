@@ -45,6 +45,7 @@ typedef enum
     mir_event_type_input,
     mir_event_type_keymap,
     mir_event_type_input_configuration,
+    mir_event_type_surface_output,
 } MirEventType;
 
 typedef struct MirSurfaceEvent MirSurfaceEvent;
@@ -55,6 +56,7 @@ typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent;
 typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
 typedef struct MirInputConfigurationEvent MirInputConfigurationEvent;
+typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent;
 
 typedef union MirEvent MirEvent;
 
@@ -70,6 +72,7 @@ typedef union MirEvent MirEvent;
 #include "mir_toolkit/events/prompt_session_event.h"
 #include "mir_toolkit/events/keymap_event.h"
 #include "mir_toolkit/events/input_configuration_event.h"
+#include "mir_toolkit/events/surface_output_event.h"
 
 #ifdef __cplusplus
 /**
@@ -168,6 +171,21 @@ MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev);
  * \return           The associated MirInputConfigurationEvent
  */
 MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* ev);
+
+/**
+ * Retrieve the MirSurfaceOutputEvent associated with a MirEvent of type
+ * mir_event_type_surface_output. The event signifies that the properties
+ * of the output the surface is displayed upon have changed.
+ *
+ * A MirSurfaceOutputEvent is generated either when the properties of the
+ * output the surface is primarily on change (for example: by user configuration
+ * of resolution) or when the output the surface is primarily on changes
+ * (for example: when a user moves the surface from one monitor to another).
+ *
+ * \param [in] event The event
+ * \return           The associated MirSurfaceOutputEvent
+ */
+MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* ev);
 
 /*
  * 
