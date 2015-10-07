@@ -4,4 +4,5 @@ common_includedir=@INCLUDEDIR@/mircommon
 Name: mir-client-platform-mesa
 Description: Mir Mesa client platform development files
 Version: @MIR_VERSION@
+Requires.private: mirclient
 Cflags: -I${includedir} -I${common_includedir} 
