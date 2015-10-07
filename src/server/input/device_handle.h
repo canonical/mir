@@ -23,26 +23,44 @@
 #include "mir_toolkit/event.h"
 #include "mir/input/device.h"
 #include "mir/input/input_device_info.h"
-#include "mir/module_deleter.h"
+#include "mir/input/pointer_settings.h"
+#include "mir/input/touch_pad_settings.h"
+#include "mir/optional_value.h"
 
 #include <memory>
 
 namespace mir
 {
+namespace dispatch
+{
+class ActionQueue;
+}
 namespace input
 {
+
+class InputDevice;
 
 class DefaultDevice : public Device
 {
 public:
-    DefaultDevice(MirInputDeviceId id, InputDeviceInfo const& info);
+    DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
+                  std::shared_ptr<InputDevice> const& device);
     MirInputDeviceId id() const override;
     DeviceCapabilities capabilities() const override;
     std::string name() const override;
     std::string unique_id() const override;
+
+    optional_value<PointerConfiguration> pointer_configuration() const override;
+    void apply_configuration(PointerConfiguration const&) override;
+    optional_value<TouchPadConfiguration> touch_pad_configuration() const override;
+    void apply_configuration(TouchPadConfiguration const&) override;
 private:
-    MirInputDeviceId device_id;
-    InputDeviceInfo info;
+    MirInputDeviceId const device_id;
+    std::shared_ptr<InputDevice> const device;
+    InputDeviceInfo const info;
+    optional_value<PointerSettings> pointer;
+    optional_value<TouchPadSettings> touch_pad;
+    std::shared_ptr<dispatch::ActionQueue> const actions;
 };
 
 }

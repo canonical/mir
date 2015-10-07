@@ -5,25 +5,26 @@ include_directories(${MIR_XCURSOR_INCLUDE_DIRECTORIES})
 set(
   INPUT_SOURCES
 
-  default_device.cpp
-  default_event_builder.cpp
-  default_input_manager.cpp
-  default_input_device_hub.cpp
-
-  surface_input_dispatcher.cpp
-  event_filter_chain_dispatcher.cpp
-
-  null_input_channel_factory.cpp
-  null_input_dispatcher.cpp
-  display_input_region.cpp
-  vt_filter.cpp
+  builtin_cursor_images.cpp
   cursor_controller.cpp
   default_configuration.cpp
-  xcursor_loader.cpp
-  builtin_cursor_images.cpp
-  touchspot_controller.cpp
+  default_device.cpp
+  default_event_builder.cpp
+  default_input_device_hub.cpp
+  default_input_manager.cpp
+  display_input_region.cpp
+  event_filter_chain_dispatcher.cpp
+  input_probe.cpp
   key_repeat_dispatcher.cpp
+  null_input_channel_factory.cpp
+  null_input_dispatcher.cpp
+  pointer_configuration.cpp
+  surface_input_dispatcher.cpp
+  touch_pad_configuration.cpp
+  touchspot_controller.cpp
   validator.cpp
+  vt_filter.cpp
+  xcursor_loader.cpp
 )
 
 add_subdirectory(android)

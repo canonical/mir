@@ -22,6 +22,7 @@
 
 #include "mir/input/device_capability.h"
 #include "mir_toolkit/event.h"
+#include "mir/optional_value.h"
 
 #include <memory>
 
@@ -30,8 +31,8 @@ namespace mir
 namespace input
 {
 
-class PointerSettings;
-class TouchPadSettings;
+class PointerConfiguration;
+class TouchPadConfiguration;
 
 class Device
 {
@@ -42,6 +43,12 @@ public:
     virtual DeviceCapabilities capabilities() const = 0;
     virtual std::string name() const = 0;
     virtual std::string unique_id() const = 0;
+
+    virtual mir::optional_value<PointerConfiguration> pointer_configuration() const = 0;
+    virtual void apply_configuration(PointerConfiguration const&) = 0;
+
+    virtual mir::optional_value<TouchPadConfiguration> touch_pad_configuration() const = 0;
+    virtual void apply_configuration(TouchPadConfiguration const&) = 0;
 
 private:
     Device(Device const&) = delete;

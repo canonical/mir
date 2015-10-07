@@ -36,6 +36,7 @@ add_library(
 add_library(
   mirplatformgraphicsmesakms MODULE
 
+  platform_symbols.cpp
   $<TARGET_OBJECTS:mirplatformgraphicsmesakmsobjects>
 )
 

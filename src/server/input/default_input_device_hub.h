@@ -40,6 +40,7 @@ namespace dispatch
 {
 class Dispatchable;
 class MultiplexingDispatchable;
+class ActionQueue;
 }
 namespace input
 {
@@ -77,6 +78,7 @@ private:
     std::shared_ptr<InputDispatcher> const input_dispatcher;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const input_dispatchable;
     std::shared_ptr<ServerActionQueue> const observer_queue;
+    std::shared_ptr<dispatch::ActionQueue> const device_queue;
     std::shared_ptr<TouchVisualizer> const touch_visualizer;
     std::shared_ptr<CursorListener> const cursor_listener;
     std::shared_ptr<InputRegion> const input_region;
@@ -109,7 +111,7 @@ private:
     std::vector<std::shared_ptr<DefaultDevice>> handles;
     std::vector<std::unique_ptr<RegisteredDevice>> devices;
     std::vector<std::shared_ptr<InputDeviceObserver>> observers;
-    
+
     MirInputDeviceId device_id_generator;
 };
 

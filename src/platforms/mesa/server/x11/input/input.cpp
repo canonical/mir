@@ -28,7 +28,7 @@ namespace mix = mi::X;
 extern mx::X11Resources x11_resources;
 
 mir::UniqueModulePtr<mi::Platform> create_input_platform(
-    std::shared_ptr<mo::Option> const& /*options*/,
+    mo::Option const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<mi::InputReport> const& /*report*/)
@@ -42,9 +42,16 @@ void add_input_platform_options(
 }
 
 mi::PlatformPriority probe_input_platform(
-    mo::Option const& /*options*/)
+    mo::Option const& options)
 {
-    return mi::PlatformPriority::best;
+    if (options.is_set("host-socket"))
+        return mi::PlatformPriority::unsupported;
+
+    auto display_available = x11_resources.get_conn() != nullptr;
+    if (display_available)
+        return mi::PlatformPriority::best;
+    else
+        return mi::PlatformPriority::unsupported;
 }
 
 namespace
