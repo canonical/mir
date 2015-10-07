@@ -623,7 +623,6 @@ MIR_SERVER_35 {
     mir::DefaultServerConfiguration::the_frontend_shell*;
     mir::DefaultServerConfiguration::the_gl_config*;
     mir::DefaultServerConfiguration::the_global_event_sink*;
-    mir::DefaultServerConfiguration::the_gl_program_factory*;
     mir::DefaultServerConfiguration::the_graphics_platform*;
     mir::DefaultServerConfiguration::the_host_connection*;
     mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
