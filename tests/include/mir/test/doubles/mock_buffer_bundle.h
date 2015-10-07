@@ -37,7 +37,9 @@ public:
         ON_CALL(*this, buffers_ready_for_compositor(testing::_))
             .WillByDefault(testing::Return(1));
         ON_CALL(*this, properties())
-            .WillByDefault(testing::Return(graphics::BufferProperties()));
+            .WillByDefault(testing::Return(
+                graphics::BufferProperties{geometry::Size{1,1},
+                mir_pixel_format_abgr_8888, graphics::BufferUsage::hardware}));
     }
 
     MOCK_METHOD1(client_acquire,     void(std::function<void(graphics::Buffer*)>));
