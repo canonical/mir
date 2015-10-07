@@ -167,29 +167,36 @@ mir::DefaultServerConfiguration::the_cursor()
     return cursor(
         [this]() -> std::shared_ptr<mg::Cursor>
         {
+            // In nested mode we delegate cursor presentation to the host
             if (the_options()->is_set(options::host_socket_opt))
-                return std::make_shared<mgn::Cursor>(the_host_connection(), the_default_cursor_image());
-            
-            // We try to create a hardware cursor, if this fails we use a software cursor
-            auto hardware_cursor = the_display()->create_hardware_cursor(the_default_cursor_image());
-            if (hardware_cursor)
+            {
+                mir::log_info("Using nested cursor");
+                return wrap_cursor(std::make_shared<mgn::Cursor>(the_host_connection(), the_default_cursor_image()));
+            }
+
+            // Otherwise we try to create a hardware cursor
+            if (auto hardware_cursor = the_display()->create_hardware_cursor(the_default_cursor_image()))
             {
                 mir::log_info("Using hardware cursor");
-                return hardware_cursor;
+                return wrap_cursor(hardware_cursor);
             }
-            else
-            {
-                mir::log_info("Using software cursor");
 
-                auto const cursor = std::make_shared<mg::SoftwareCursor>(
-                    the_buffer_allocator(),
-                    the_input_scene());
+            // If other options fail we use a software cursor
+            mir::log_info("Using software cursor");
+            auto const cursor = wrap_cursor(std::make_shared<mg::SoftwareCursor>(
+                the_buffer_allocator(),
+                the_input_scene()));
 
-                cursor->show(*the_default_cursor_image());
+            cursor->show(*the_default_cursor_image());
 
-                return cursor;
-            }
+            return cursor;
         });
+}
+
+std::shared_ptr<mg::Cursor>
+mir::DefaultServerConfiguration::wrap_cursor(std::shared_ptr<mg::Cursor> const& wrapped)
+{
+    return wrapped;
 }
 
 auto mir::DefaultServerConfiguration::the_host_connection()

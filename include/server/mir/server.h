@@ -224,9 +224,6 @@ public:
     /// Sets an override functor for creating the compositor.
     void override_the_compositor(Builder<compositor::Compositor> const& compositor_builder);
 
-    /// Sets an override functor for creating the cursor.
-    void override_the_cursor(Builder<graphics::Cursor> const& cursor_builder);
-
     /// Sets an override functor for creating the cursor images.
     void override_the_cursor_images(Builder<input::CursorImages> const& cursor_images_builder);
 
@@ -281,6 +278,9 @@ public:
 
     /// Each of the wrap functions takes a wrapper functor of the same form
     template<typename T> using Wrapper = std::function<std::shared_ptr<T>(std::shared_ptr<T> const&)>;
+
+    /// Sets a wrapper functor for creating the cursor.
+    void wrap_cursor(Wrapper<graphics::Cursor> const& cursor_builder);
 
     /// Sets a wrapper functor for creating the cursor listener.
     void wrap_cursor_listener(Wrapper<input::CursorListener> const& wrapper);
