@@ -131,8 +131,12 @@ mg::DisplayConfigurationOutput populate_config(
         external_modes.emplace_back(mg::DisplayConfigurationMode{pixel_size, vrefresh_hz});
 
     auto type = mg::DisplayConfigurationOutputType::lvds;
+    auto form_factor = mir_form_factor_phone;
     if (name == mga::DisplayName::external)
+    {
         type = mg::DisplayConfigurationOutputType::displayport;
+        form_factor = mir_form_factor_monitor;
+    }
     
     return {
         static_cast<mg::DisplayConfigurationOutputId>(name),
@@ -148,7 +152,9 @@ mg::DisplayConfigurationOutput populate_config(
         preferred_format_index,
         display_format,
         external_mode,
-        mir_orientation_normal
+        mir_orientation_normal,
+        1.0f,
+        form_factor
     };
 }
 
