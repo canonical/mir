@@ -846,20 +846,17 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_events_to_surfaces)
                              event_received = true;
                          }));
 
-    ms::SurfaceCreationParameters params;
-    auto surf_id = app_session.create_surface(params, sender);
-    auto surface = std::dynamic_pointer_cast<mtd::MockSurface>(app_session.surface(surf_id));
-
-    // Unsatisfying mockery
-    ON_CALL(*surface, size())
-        .WillByDefault(Return(geom::Size{100, 100}));
-
     std::vector<mg::DisplayConfigurationOutput> outputs =
         {
             high_dpi.output
         };
     mtd::StubDisplayConfig config(outputs);
     app_session.send_display_config(config);
+
+    ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
+        .of_size({100, 100});
+    auto surf_id = app_session.create_surface(params, sender);
+    auto surface = app_session.surface(surf_id);
 
     ASSERT_TRUE(event_received);
     EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
@@ -881,24 +878,23 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
                              ++events_received;
                          }));
 
-    ms::SurfaceCreationParameters params;
+    ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
+        .of_size({100, 100});
 
     mf::SurfaceId ids[2];
-    std::shared_ptr<mtd::MockSurface> surfaces[2];
+    std::shared_ptr<ms::Surface> surfaces[2];
 
     ids[0] = app_session.create_surface(params, sender);
     ids[1] = app_session.create_surface(params, sender);
 
-    surfaces[0] = std::dynamic_pointer_cast<mtd::MockSurface>(app_session.surface(ids[0]));
-    surfaces[1] = std::dynamic_pointer_cast<mtd::MockSurface>(app_session.surface(ids[1]));
-
-    ON_CALL(*surfaces[0], size())
-        .WillByDefault(Return(geom::Size{100, 100}));
-    ON_CALL(*surfaces[1], size())
-        .WillByDefault(Return(geom::Size{100, 100}));
+    surfaces[0] = app_session.surface(ids[0]);
+    surfaces[1] = app_session.surface(ids[1]);
 
     surfaces[0]->move_to({0 + 100, 100});
     surfaces[1]->move_to({outputs[0]->width + 100, 100});
+
+    // Reset events recieved; we may have received events from the move.
+    events_received = 0;
 
     std::vector<mg::DisplayConfigurationOutput> configuration_outputs =
         {
@@ -939,11 +935,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
         .of_size({100, 100});
 
     auto id = app_session.create_surface(params, sender);
-    auto surface = std::dynamic_pointer_cast<mtd::MockSurface>(app_session.surface(id));
-
-    // Unsatisfying mockery
-    ON_CALL(*surface, size())
-        .WillByDefault(Return(geom::Size{100, 100}));
+    auto surface = app_session.surface(id);
 
     // This should overlap both outputs
     surface->move_to({outputs[0]->width - 50, 100});
