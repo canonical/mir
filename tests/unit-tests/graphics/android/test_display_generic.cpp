@@ -62,7 +62,7 @@ public:
                 std::make_shared<mir::options::ProgramOption>(),
                 std::make_shared<mtd::NullEmergencyCleanup>(),
                 mir::report::null_display_report());
-        return platform->                                                           (
+        return platform->create_display(
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLConfig>());
     }
