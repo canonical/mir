@@ -29,9 +29,11 @@ add_library(exampleserverconfig STATIC
   server_example_window_management.cpp
   server_example_custom_compositor.cpp
   server_example_adorning_compositor.cpp
+  server_example_cursor_images.cpp
+  server_example_cursor_images.h
   xcursor_loader.cpp
   xcursor_loader.h
-        server_example_cursor_images.cpp server_example_cursor_images.h)
+)
 
 target_link_libraries(eglapp
   mirclient
