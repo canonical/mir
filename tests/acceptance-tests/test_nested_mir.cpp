@@ -19,6 +19,7 @@
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/input/cursor_images.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_report.h"
@@ -480,11 +481,10 @@ TEST_F(NestedServer, display_configuration_changes_are_visible_to_client_when_it
     mir_connection_release(connection);
 }
 
-TEST_F(NestedServer, cursor_image_changes_are_forwarded_to_host)
+TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
 {
     int const frames = 10;
     NestedMirRunner nested_mir{new_connection()};
-    ignore_rebuild_of_egl_context();
 
     auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
     auto const surface = make_and_paint_surface(connection);
@@ -528,6 +528,106 @@ TEST_F(NestedServer, cursor_image_changes_are_forwarded_to_host)
     }
 
     mir_buffer_stream_release_sync(stream);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+// We can't rely on the test environment to have X cursors, so we provide some of our own
+namespace 
+{
+static auto const cursor_names = {
+//        mir_disabled_cursor_name,
+    mir_arrow_cursor_name,
+    mir_busy_cursor_name,
+    mir_caret_cursor_name,
+    mir_default_cursor_name,
+    mir_pointing_hand_cursor_name,
+    mir_open_hand_cursor_name,
+    mir_closed_hand_cursor_name,
+    mir_horizontal_resize_cursor_name,
+    mir_vertical_resize_cursor_name,
+    mir_diagonal_resize_bottom_to_top_cursor_name,
+    mir_diagonal_resize_top_to_bottom_cursor_name,
+    mir_omnidirectional_resize_cursor_name,
+    mir_vsplit_resize_cursor_name,
+    mir_hsplit_resize_cursor_name,
+    mir_crosshair_cursor_name };
+
+struct CursorImage : public mg::CursorImage
+{
+    CursorImage(char const* name) :
+        id{std::find(begin(cursor_names), end(cursor_names), name) - begin(cursor_names)},
+        data{{uint8_t(id)}}
+    {
+    }
+
+    void const* as_argb_8888() const { return data.data(); }
+
+    geom::Size size() const { return { 24, 24 }; }
+
+    geom::Displacement hotspot() const { return {0, 0}; }
+
+    ptrdiff_t id;
+    std::array<uint8_t, 4*8*24*24> data;
+};
+
+struct CursorImages : mir::input::CursorImages
+{
+public:
+
+    std::shared_ptr<mg::CursorImage> image(std::string const& cursor_name, geom::Size const& /*size*/)
+    {
+        return std::make_shared<CursorImage>(cursor_name.c_str());
+    }
+};
+
+class NestedMirRunnerWithCursorImages : public mtf::HeadlessNestedServerRunner
+{
+public:
+    NestedMirRunnerWithCursorImages(std::string const& connection_string)
+        : mtf::HeadlessNestedServerRunner(connection_string)
+    {
+        server.override_the_cursor_images([] { return std::make_shared<CursorImages>(); });
+        start_server();
+    }
+
+    ~NestedMirRunnerWithCursorImages()
+    {
+        stop_server();
+    }
+};
+}
+
+TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
+{
+    NestedMirRunnerWithCursorImages nested_mir{new_connection()};
+
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto const surface = make_and_paint_surface(connection);
+    auto const mock_cursor = the_mock_cursor();
+
+    auto const spec = mir_connection_create_spec_for_changes(connection);
+    mir_surface_spec_set_fullscreen_on_output(spec, 1);
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
+
+    server.the_cursor_listener()->cursor_moved_to(489, 9);
+
+    for (auto const name : cursor_names)
+    {
+        mt::WaitCondition condition;
+
+        EXPECT_CALL(*mock_cursor, show(_)).Times(1)
+            .WillOnce(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+
+        auto const cursor = mir_cursor_configuration_from_name(name);
+        mir_wait_for(mir_surface_configure_cursor(surface, cursor));
+        mir_cursor_configuration_destroy(cursor);
+
+        condition.wait_for_at_most_seconds(1);
+        Mock::VerifyAndClearExpectations(mock_cursor.get());
+    }
+
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }

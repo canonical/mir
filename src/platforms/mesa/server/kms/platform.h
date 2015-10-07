@@ -46,7 +46,6 @@ public:
     std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
     std::shared_ptr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-        std::shared_ptr<GLProgramFactory> const& program_factory,
         std::shared_ptr<GLConfig> const& gl_config) override;
 
     std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
