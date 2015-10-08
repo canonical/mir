@@ -46,7 +46,8 @@ void describe_input_platform(mir::SharedLibrary const& lib)
     auto describe =
         lib.load_function<mi::DescribeModule>("describe_input_module", MIR_SERVER_INPUT_PLATFORM_VERSION);
     auto desc = describe();
-    mir::log_info("Found input driver: %s", desc->name);
+    mir::log_info("Selected input driver: %s (version: %d.%d.%d)", desc->name, desc->major_version, desc->minor_version,
+                  desc->micro_version);
 }
 
 mir::UniqueModulePtr<mi::Platform> create_input_platform(
