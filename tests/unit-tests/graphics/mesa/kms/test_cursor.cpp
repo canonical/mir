@@ -98,7 +98,9 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 1,
                 mir_pixel_format_invalid,
                 mir_power_mode_on,
-                mir_orientation_normal
+                mir_orientation_normal,
+                1.0f,
+                mir_form_factor_monitor
             });
         outputs.push_back(
             {
@@ -118,7 +120,9 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 0,
                 mir_pixel_format_invalid,
                 mir_power_mode_on,
-                mir_orientation_normal
+                mir_orientation_normal,
+                1.0f,
+                mir_form_factor_monitor
             });
         outputs.push_back(
             {
@@ -138,7 +142,9 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 0,
                 mir_pixel_format_invalid,
                 mir_power_mode_on,
-                mir_orientation_right
+                mir_orientation_right,
+                1.0f,
+                mir_form_factor_monitor
             });
     }
 

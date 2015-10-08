@@ -256,6 +256,34 @@ struct LibInputDevice : public ::testing::Test
             .WillRepeatedly(Return(minor));
         EXPECT_CALL(mock_libinput, libinput_event_touch_get_pressure(touch_event))
             .WillRepeatedly(Return(pressure));
+    }
+
+    void setup_touch_up_event(libinput_event* event, uint64_t event_time, int slot)
+    {
+        auto touch_event = reinterpret_cast<libinput_event_touch*>(event);
+
+        EXPECT_CALL(mock_libinput, libinput_event_get_type(event))
+            .WillRepeatedly(Return(LIBINPUT_EVENT_TOUCH_UP));
+        EXPECT_CALL(mock_libinput, libinput_event_get_touch_event(event))
+            .WillRepeatedly(Return(touch_event));
+        EXPECT_CALL(mock_libinput, libinput_event_touch_get_slot(touch_event))
+            .WillRepeatedly(Return(slot));
+        EXPECT_CALL(mock_libinput, libinput_event_touch_get_x_transformed(touch_event, _))
+            .Times(0);
+        EXPECT_CALL(mock_libinput, libinput_event_touch_get_y_transformed(touch_event, _))
+            .Times(0);
+        EXPECT_CALL(mock_libinput, libinput_event_touch_get_x(touch_event))
+            .Times(0);
+        EXPECT_CALL(mock_libinput, libinput_event_touch_get_y(touch_event))
+            .Times(0);
+        EXPECT_CALL(mock_libinput, libinput_event_touch_get_time_usec(touch_event))
+            .WillRepeatedly(Return(event_time));
+        EXPECT_CALL(mock_libinput, libinput_event_touch_get_major_transformed(touch_event, _, _))
+            .Times(0);
+        EXPECT_CALL(mock_libinput, libinput_event_touch_get_minor_transformed(touch_event, _, _))
+            .Times(0);
+        EXPECT_CALL(mock_libinput, libinput_event_touch_get_pressure(touch_event))
+            .Times(0);
 
     }
 
@@ -529,4 +557,39 @@ TEST_F(LibInputDevice, process_event_handles_touch_move_events)
     dev.start(&mock_sink, &mock_builder);
     dev.process_event(fake_event_1);
     dev.process_event(fake_event_2);
+}
+
+TEST_F(LibInputDevice, process_event_handles_touch_up_events_without_querying_properties)
+{
+    std::shared_ptr<libinput> lib = mie::make_libinput();
+    mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
+
+    int slot = 3;
+    float major = 6;
+    float minor = 5;
+    float pressure = 0.6f;
+    float x = 30;
+    float y = 20;
+
+    setup_touch_event(fake_event_1, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot, x, y, major, minor, pressure);
+    setup_touch_frame(fake_event_2);
+    setup_touch_up_event(fake_event_3, event_time_2, slot);
+    setup_touch_frame(fake_event_4);
+
+    InSequence seq;
+    EXPECT_CALL(mock_builder, touch_event(time_stamp_1, mir_input_event_modifier_none));
+    EXPECT_CALL(mock_builder, add_touch(_, MirTouchId{slot}, mir_touch_action_down, mir_touch_tooltype_finger, x, y,
+                                        pressure, major, minor, major));
+    EXPECT_CALL(mock_sink, handle_input(mt::TouchEvent(x,y)));
+
+    EXPECT_CALL(mock_builder, touch_event(time_stamp_2, mir_input_event_modifier_none));
+    EXPECT_CALL(mock_builder, add_touch(_, MirTouchId{slot}, mir_touch_action_up, mir_touch_tooltype_finger, x, y,
+                                        pressure, major, minor, major));
+    EXPECT_CALL(mock_sink, handle_input(mt::TouchUpEvent(x,y)));
+
+    dev.start(&mock_sink, &mock_builder);
+    dev.process_event(fake_event_1);
+    dev.process_event(fake_event_2);
+    dev.process_event(fake_event_3);
+    dev.process_event(fake_event_4);
 }

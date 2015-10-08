@@ -95,11 +95,33 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationMode con
     return out << val.size.width << "x" << val.size.height << "@" << val.vrefresh_hz;
 }
 
+namespace
+{
+char const* as_string(MirFormFactor form_factor)
+{
+    switch (form_factor)
+    {
+    case mir_form_factor_monitor:
+        return "monitor";
+    case mir_form_factor_projector:
+        return "projector";
+    case mir_form_factor_tv:
+        return "TV";
+    case mir_form_factor_phone:
+        return "phone";
+    case mir_form_factor_tablet:
+        return "tablet";
+    default:
+        return "UNKNOWN";
+    }
+}
+}
+
 std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput const& val)
 {
-    out << "{ id: " << val.id << ", card_id: " << val.card_id
-        << " type: " << output_type_to_string(val.type)
-        << " modes: [";
+    out << "{\n\tid: " << val.id << "\n\tcard_id: " << val.card_id
+        << "\n\ttype: " << output_type_to_string(val.type)
+        << "\n\tmodes: [ ";
 
     for (size_t i = 0; i < val.modes.size(); ++i)
     {
@@ -108,18 +130,30 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput c
             out << ", ";
     }
 
-    out << "], preferred_mode: " << val.preferred_mode_index;
-    out << " physical_size_mm: " << val.physical_size_mm.width << "x" << val.physical_size_mm.height;
-    out << ", connected: " << (val.connected ? "true" : "false");
-    out << ", used: " << (val.used ? "true" : "false");
-    out << ", top_left: " << val.top_left;
-    out << ", current_mode: " << val.current_mode_index << " (";
+    out << "]" << std::endl;
+    out << "\tpreferred_mode: " << val.preferred_mode_index << std::endl;
+    out << "\tphysical_size_mm: " << val.physical_size_mm.width << "x" << val.physical_size_mm.height << std::endl;
+    out << "\tconnected: " << (val.connected ? "true" : "false") << std::endl;
+    out << "\tused: " << (val.used ? "true" : "false") << std::endl;
+    out << "\ttop_left: " << val.top_left << std::endl;
+    out << "\tcurrent_mode: " << val.current_mode_index << " (";
     if (val.current_mode_index < val.modes.size())
         out << val.modes[val.current_mode_index];
     else
         out << "none";
+    out << ")" << std::endl;
 
-    out << ") }";
+    out << "\tscale: " << val.scale << std::endl;
+    out << "\tform factor: " << as_string(val.form_factor) << std::endl;
+    out << "}" << std::endl;
+
+    return out;
+}
+
+std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfiguration const& val)
+{
+    val.for_each_card([&out](auto card) { out << card << std::endl; });
+    val.for_each_output([&out](DisplayConfigurationOutput const& output) { out << output << std::endl; });
 
     return out;
 }
@@ -163,7 +197,9 @@ bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
                (val1.top_left == val2.top_left) &&
                (val1.orientation == val2.orientation) &&
                (val1.current_mode_index == val2.current_mode_index) &&
-               (val1.modes.size() == val2.modes.size())};
+               (val1.modes.size() == val2.modes.size()) &&
+               (val1.scale == val2.scale) &&
+               (val1.form_factor == val2.form_factor)};
 
     if (equal)
     {
@@ -259,7 +295,9 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
         current_mode_index(master.current_mode_index),
         current_format(master.current_format),
         power_mode(master.power_mode),
-        orientation(master.orientation)
+        orientation(master.orientation),
+        scale(master.scale),
+        form_factor(master.form_factor)
 {
 }
 

@@ -55,6 +55,26 @@ static void nested_lifecycle_event_callback_thunk(MirConnection* /*connection*/,
     listener->lifecycle_event_occurred(state);
 }
 
+MirPixelFormat const cursor_pixel_format = mir_pixel_format_argb_8888;
+
+void copy_image(MirGraphicsRegion const& g, mg::CursorImage const& image)
+{
+    assert(g.pixel_format == cursor_pixel_format);
+
+    auto const image_stride = image.size().width.as_int() * MIR_BYTES_PER_PIXEL(cursor_pixel_format);
+    auto const image_height = image.size().height.as_int();
+
+    auto dest = g.vaddr;
+    auto src  = static_cast<char const*>(image.as_argb_8888());
+
+    for (int row = 0; row != image_height; ++row)
+    {
+        memcpy(dest, src, image_stride);
+        dest += g.stride;
+        src += image_stride;
+    }
+}
+
 class MirClientHostSurface : public mgn::HostSurface
 {
 public:
@@ -93,8 +113,6 @@ public:
     {
         auto const image_width = image.size().width.as_int();
         auto const image_height = image.size().height.as_int();
-        auto const pixels_size = image_width * image_height
-            * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888);
 
         MirGraphicsRegion g;
 
@@ -117,13 +135,14 @@ public:
                 mir_connection,
                 image_width,
                 image_height,
-                mir_pixel_format_argb_8888,
+                cursor_pixel_format,
                 mir_buffer_usage_software);
 
             mir_buffer_stream_get_graphics_region(cursor, &g);
         }
 
-        memcpy(g.vaddr, image.as_argb_8888(), pixels_size);
+        copy_image(g, image);
+
         mir_buffer_stream_swap_buffers_sync(cursor);
 
         if (new_cursor || cursor_hotspot != image.hotspot())

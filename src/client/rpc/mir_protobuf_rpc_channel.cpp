@@ -324,6 +324,9 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 case mir_event_type_keymap:
                     surface_map->with_surface_do(mf::SurfaceId(e.keymap.surface_id), send_e);
                     break;
+                case mir_event_type_surface_output:
+                    surface_map->with_surface_do(mf::SurfaceId(e.surface_output.surface_id), send_e);
+                    break;
                 default:
                     event_sink->handle_event(e);
                 }
