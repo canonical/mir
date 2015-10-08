@@ -23,7 +23,7 @@ namespace mir
 {
 struct EmptyDeleter
 {
-    void operator()(void* )
+    void operator()(void const* )
     {
     }
 };

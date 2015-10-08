@@ -227,7 +227,7 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
         mock_egl.provide_egl_extensions();
         mock_egl.provide_stub_platform_buffer_swapping();
 
-        server.override_the_cursor([this]() { return mt::fake_shared(cursor); });
+        server.wrap_cursor([this](std::shared_ptr<mg::Cursor> const&) { return mt::fake_shared(cursor); });
 
         server.override_the_cursor_images([]() { return std::make_shared<NamedCursorImages>(); });
 
