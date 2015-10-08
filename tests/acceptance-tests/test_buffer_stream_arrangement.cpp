@@ -38,6 +38,23 @@ namespace mg = mir::graphics;
 namespace
 {
 
+struct RelativeRectangle
+{
+    RelativeRectangle() = default;
+
+    RelativeRectangle(geom::Displacement const& displacement, geom::Size const& size)
+        : displacement{displacement}, size{size}
+    {
+    }
+
+    geom::Displacement displacement;
+    geom::Size size;
+};
+bool operator==(RelativeRectangle const& a, RelativeRectangle const& b)
+{
+    return (a.displacement == b.displacement) && (a.size == b.size);
+}
+
 MirPixelFormat an_available_format(MirConnection* connection)
 {
     using namespace testing;
@@ -110,26 +127,26 @@ struct Ordering
             return;
 
         std::unique_lock<decltype(mutex)> lk(mutex);
-        std::vector<std::tuple<geom::Displacement, geom::Size>> displacement;
+        std::vector<RelativeRectangle> position;
         auto first_position = (*sequence.begin())->renderable()->screen_position().top_left;
         for (auto const& element : sequence)
-            displacement.emplace_back(
+            position.emplace_back(
                 element->renderable()->screen_position().top_left - first_position,
                 element->renderable()->screen_position().size);
-        displacements.push_back(displacement);
+        positions.push_back(position);
         cv.notify_all();
     }
 
     template<typename T, typename S>
-    bool wait_for_ordering_within(
-        std::vector<std::tuple<geom::Displacement, geom::Size>> const& positions,
+    bool wait_for_positions_within(
+        std::vector<RelativeRectangle> const& awaited_positions,
         std::chrono::duration<T,S> duration)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
-        return cv.wait_for(lk, duration, [this, positions] {
-            for (auto& displacement : displacements)
-                if (displacement == positions) return true;
-            displacements.clear();
+        return cv.wait_for(lk, duration, [this, awaited_positions] {
+            for (auto& position : positions)
+                if (position == awaited_positions) return true;
+            positions.clear();
             return false;
         });
     }
@@ -137,7 +154,7 @@ struct Ordering
 private:
     std::mutex mutex;
     std::condition_variable cv;
-    std::vector<std::vector<std::tuple<geom::Displacement, geom::Size>>> displacements;
+    std::vector<std::vector<RelativeRectangle>> positions;
 };
 
 struct OrderTrackingDBC : mc::DisplayBufferCompositor
@@ -236,7 +253,7 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
     mir_surface_apply_spec(surface, change_spec);
     mir_surface_spec_release(change_spec);
 
-    std::vector<std::tuple<geom::Displacement, geom::Size>> positions;
+    std::vector<RelativeRectangle> positions;
     i = 0;
     for (auto& info : infos)
     {
@@ -247,6 +264,6 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
 
     //check that the compositor rendered correctly
     using namespace std::literals::chrono_literals;
-    EXPECT_TRUE(ordering->wait_for_ordering_within(positions, 5s))
+    EXPECT_TRUE(ordering->wait_for_positions_within(positions, 5s))
          << "timed out waiting to see the compositor post the streams in the right arrangement";
 }
