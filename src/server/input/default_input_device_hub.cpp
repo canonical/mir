@@ -44,10 +44,10 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<TouchVisualizer> const& touch_visualizer,
     std::shared_ptr<CursorListener> const& cursor_listener,
     std::shared_ptr<InputRegion> const& input_region,
-    std::shared_ptr<mir::cookie::CookieFactory> const& c_factory)
+    std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory)
     : input_dispatcher(input_dispatcher), input_dispatchable{input_multiplexer}, observer_queue(observer_queue),
       touch_visualizer(touch_visualizer), cursor_listener(cursor_listener), input_region(input_region),
-      cookie_factory(c_factory), device_id_generator{0}
+      cookie_factory(cookie_factory), device_id_generator{0}
 {
 }
 
@@ -130,9 +130,9 @@ mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
     MirInputDeviceId device_id,
     std::shared_ptr<InputDispatcher> const& dispatcher,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
-    std::shared_ptr<mir::cookie::CookieFactory> const& c_factory,
+    std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory,
     DefaultInputDeviceHub* hub)
-    : device_id(device_id), builder(device_id, c_factory), device(dev), dispatcher(dispatcher),
+    : device_id(device_id), builder(device_id, cookie_factory), device(dev), dispatcher(dispatcher),
       multiplexer(multiplexer), hub(hub)
 {
 }

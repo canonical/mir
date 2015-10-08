@@ -33,13 +33,13 @@ namespace mi = mir::input;
 mi::KeyRepeatDispatcher::KeyRepeatDispatcher(
     std::shared_ptr<mi::InputDispatcher> const& next_dispatcher,
     std::shared_ptr<mir::time::AlarmFactory> const& factory,
-    std::shared_ptr<mir::cookie::CookieFactory> const& c_factory,
+    std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory,
     bool repeat_enabled,
     std::chrono::milliseconds repeat_timeout,
     std::chrono::milliseconds repeat_delay)
     : next_dispatcher(next_dispatcher),
       alarm_factory(factory),
-      cookie_factory(c_factory),
+      cookie_factory(cookie_factory),
       repeat_enabled(repeat_enabled),
       repeat_timeout(repeat_timeout),
       repeat_delay(repeat_delay)

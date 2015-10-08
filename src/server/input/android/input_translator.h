@@ -42,7 +42,7 @@ class InputTranslator : public droidinput::InputListenerInterface
 {
 public:
     InputTranslator(std::shared_ptr<InputDispatcher> const& dispatcher,
-                    std::shared_ptr<cookie::CookieFactory> const& c_factory);
+                    std::shared_ptr<cookie::CookieFactory> const& cookie_factory);
 
     void notifyConfigurationChanged(const droidinput::NotifyConfigurationChangedArgs* args) override;
     void notifyKey(const droidinput::NotifyKeyArgs* args) override;

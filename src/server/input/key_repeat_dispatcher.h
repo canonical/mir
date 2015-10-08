@@ -45,7 +45,7 @@ class KeyRepeatDispatcher : public mir::input::InputDispatcher
 public:
     KeyRepeatDispatcher(std::shared_ptr<InputDispatcher> const& next_dispatcher,
                         std::shared_ptr<time::AlarmFactory> const& factory,
-                        std::shared_ptr<cookie::CookieFactory> const& c_factory,
+                        std::shared_ptr<cookie::CookieFactory> const& cookie_factory,
                         bool repeat_enabled,
                         std::chrono::milliseconds repeat_timeout, /* timeout before sending first repeat */
                         std::chrono::milliseconds repeat_delay /* delay between repeated keys */);
