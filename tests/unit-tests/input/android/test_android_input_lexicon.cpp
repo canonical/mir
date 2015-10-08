@@ -64,6 +64,7 @@ TEST(AndroidInputLexicon, translates_key_events)
     EXPECT_EQ(scan_code, mir_keyboard_event_scan_code(kev));
 
     EXPECT_EQ(mac, mir_keyboard_event_get_cookie(kev).mac);
+    EXPECT_EQ(event_time.count(), mir_keyboard_event_get_cookie(kev).timestamp);
 
     delete android_key_ev;
 }
@@ -131,7 +132,7 @@ TEST(AndroidInputLexicon, translates_single_pointer_motion_events)
 
     auto tev = mir_input_event_get_touch_event(iev);
     EXPECT_EQ(pointer_count, mir_touch_event_point_count(tev));
-    EXPECT_EQ(mac, mir_touch_event_get_cookie(tev).mac);
+    EXPECT_EQ(event_time.count(), mir_touch_event_get_cookie(tev).timestamp);
     
     EXPECT_EQ(pointer_id, mir_touch_event_id(tev, 0));
     // Notice these two coordinates are offset by x/y offset

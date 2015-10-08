@@ -55,9 +55,9 @@ bool valid_motion_event(MirMotionEvent const& motion)
 }
 
 mia::InputTranslator::InputTranslator(std::shared_ptr<InputDispatcher> const& dispatcher,
-                                      std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory)
-    : dispatcher(dispatcher),
-      cookie_factory(cookie_factory)
+                                      std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory) :
+    dispatcher(dispatcher),
+    cookie_factory(cookie_factory)
 {
 }
 

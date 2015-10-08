@@ -40,8 +40,7 @@ mir::EventUPtr mi::DefaultEventBuilder::key_event(Timestamp timestamp, MirKeyboa
 
 mir::EventUPtr mi::DefaultEventBuilder::touch_event(Timestamp timestamp, MirInputEventModifiers modifiers)
 {
-    uint64_t mac = cookie_factory->timestamp_to_cookie(timestamp.count()).mac;
-    return me::make_event(device_id, timestamp, mac, modifiers);
+    return me::make_event(device_id, timestamp, 0, modifiers);
 }
 
 void mi::DefaultEventBuilder::add_touch(MirEvent& event, MirTouchId touch_id, MirTouchAction action,
@@ -59,7 +58,10 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp, MirIn
                                                       float vscroll_value, float relative_x_value,
                                                       float relative_y_value)
 {
-    uint64_t mac = cookie_factory->timestamp_to_cookie(timestamp.count()).mac;
+    uint64_t mac = 0;
+    if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
+        mac = cookie_factory->timestamp_to_cookie(timestamp.count()).mac;
+
     return me::make_event(device_id, timestamp, mac, modifiers, action, buttons_pressed, x_axis_value, y_axis_value,
                           hscroll_value, vscroll_value, relative_x_value, relative_y_value);
 }
