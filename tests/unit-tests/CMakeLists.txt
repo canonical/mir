@@ -74,7 +74,7 @@ set(
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
 list(APPEND UNIT_TEST_SOURCES
-  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/x11/X11_resources.cpp
+  $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
   $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
   $<TARGET_OBJECTS:mirplatforminputmesax11objects>
 )
@@ -130,8 +130,6 @@ target_link_libraries(
 
   mir-test-static
   mir-test-framework-static
-  mir-test-doubles-static
-  mir-test-doubles-platform-static
 
   xcursorloader-static
 
@@ -141,25 +139,12 @@ target_link_libraries(
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
   ${UMOCKDEV_LIBRARIES}
-  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
-  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${MIR_PLATFORM_REFERENCES}
-  ${MIR_COMMON_REFERENCES}
-  ${MIR_SERVER_REFERENCES}
-  ${XKBCOMMON_LIBRARIES}
 )
 
 if(MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
 target_link_libraries(mir_unit_tests
   mirsharedmesaservercommon-static
-  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
-)
-endif()
-
-if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
-target_link_libraries(mir_unit_tests
-  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )
 endif()
 
@@ -170,6 +155,12 @@ target_link_libraries(mir_unit_tests
   ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
 )
 endif()
+
+target_link_libraries(mir_unit_tests
+
+  mir-test-doubles-static
+  mir-test-doubles-platform-static
+  )
 
 if (MIR_RUN_UNIT_TESTS)
   mir_discover_tests_with_fd_leak_detection(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0 G_SLICE=always-malloc G_DEBUG=gc-friendly)

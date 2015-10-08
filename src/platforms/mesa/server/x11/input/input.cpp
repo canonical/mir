@@ -42,9 +42,16 @@ void add_input_platform_options(
 }
 
 mi::PlatformPriority probe_input_platform(
-    mo::Option const& /*options*/)
+    mo::Option const& options)
 {
-    return mi::PlatformPriority::best;
+    if (options.is_set("host-socket"))
+        return mi::PlatformPriority::unsupported;
+
+    auto display_available = x11_resources.get_conn() != nullptr;
+    if (display_available)
+        return mi::PlatformPriority::best;
+    else
+        return mi::PlatformPriority::unsupported;
 }
 
 namespace

@@ -318,6 +318,26 @@ void drmModeFreeResources(drmModeResPtr ptr)
     global_mock->drmModeFreeResources(ptr);
 }
 
+void drmModeFreeProperty(drmModePropertyPtr ptr)
+{
+    global_mock->drmModeFreeProperty(ptr);
+}
+
+int drmGetCap(int fd, uint64_t capability, uint64_t *value)
+{
+    return global_mock->drmGetCap(fd, capability, value);
+}
+
+drmModePropertyPtr drmModeGetProperty(int fd, uint32_t propertyId)
+{
+    return global_mock->drmModeGetProperty(fd, propertyId);
+}
+
+int drmModeConnectorSetProperty(int fd, uint32_t connector_id, uint32_t property_id, uint64_t value)
+{
+    return global_mock->drmModeConnectorSetProperty(fd, connector_id, property_id, value);
+}
+
 void drmModeFreeConnector(drmModeConnectorPtr ptr)
 {
     global_mock->drmModeFreeConnector(ptr);

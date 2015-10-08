@@ -16,7 +16,6 @@ include_directories(
 add_library(
   mirplatformgraphicsmesax11objects OBJECT
 
-  graphics.cpp
   platform.cpp
   guest_platform.cpp
   display.cpp
@@ -24,4 +23,10 @@ add_library(
   gl_context.cpp
   display_group.cpp
   display_buffer.cpp
+)
+
+add_library(
+  mirplatformgraphicsmesax11objects-symbols OBJECT
+
+  graphics.cpp
 )
