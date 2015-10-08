@@ -130,8 +130,7 @@ TEST_F(InputPlatformProbe, stub_platform_not_picked_up_by_default)
         mi::probe_input_platforms(mock_options, mt::fake_shared(stub_emergency), mt::fake_shared(mock_registry),
                                   mr::null_input_report(), *stub_prober_report);
 
-    EXPECT_THAT(platforms.size(), Eq(1));
-    EXPECT_THAT(platforms.front(), OfPtrType<mir::input::evdev::Platform>());
+    EXPECT_THAT(platforms, ElementsAre(OfPtrType<mi::evdev::Platform>()));
 }
 
 #ifdef MIR_BUILD_PLATFORM_MESA_X11
@@ -141,9 +140,7 @@ TEST_F(InputPlatformProbe, x11_platform_found_and_used_when_display_connection_w
         mi::probe_input_platforms(mock_options, mt::fake_shared(stub_emergency), mt::fake_shared(mock_registry),
                                   mr::null_input_report(), *stub_prober_report);
 
-    EXPECT_THAT(platforms.size(), Eq(2)); // we cannot disable the default evdev platform with only umock dev is in place
-    EXPECT_THAT(platforms[0], AnyOf(OfPtrType<mi::evdev::Platform>(), OfPtrType<mi::X::XInputPlatform>()));
-    EXPECT_THAT(platforms[1], AnyOf(OfPtrType<mi::evdev::Platform>(), OfPtrType<mi::X::XInputPlatform>()));
+    EXPECT_THAT(platforms, UnorderedElementsAre(OfPtrType<mi::evdev::Platform>(), OfPtrType<mi::X::XInputPlatform>()));
 }
 #endif
 
@@ -156,6 +153,5 @@ TEST_F(InputPlatformProbe, allows_forcing_stub_input_platform)
     auto platforms =
         mi::probe_input_platforms(mock_options, mt::fake_shared(stub_emergency), mt::fake_shared(mock_registry),
                                   mr::null_input_report(), *stub_prober_report);
-    EXPECT_THAT(platforms.size(), Eq(1));
-    EXPECT_THAT(platforms.front(), OfPtrType<mtf::StubInputPlatform>());
+    EXPECT_THAT(platforms, ElementsAre(OfPtrType<mtf::StubInputPlatform>()));
 }
