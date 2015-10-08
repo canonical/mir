@@ -28,6 +28,7 @@
 
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/executable_path.h"
+#include "mir_test_framework/stub_input_platform.h"
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/test/doubles/mock_libinput.h"
 #include "mir/test/doubles/mock_option.h"
@@ -80,7 +81,9 @@ struct InputPlatformProbe : ::testing::Test
         ON_CALL(mock_x11, XOpenDisplay(_)).WillByDefault(Return(nullptr));
     }
 
-    mtf::UdevEnvironment env; // TODO replace with mock_libevdev und mock_libudev when the new input reading stack is the only in use.
+    // replace with with mocks for udev and evdev to simulate root or non-root
+    // access on evdev devices, and enable the disabled test case(s) below.
+    mtf::UdevEnvironment env;
 
     NiceMock<mtd::MockX11> mock_x11;
     NiceMock<mtd::MockLibInput> mock_libinput;
@@ -95,12 +98,12 @@ struct InputPlatformProbe : ::testing::Test
 };
 
 template <typename Expected>
-struct OfTypeMatcher
+struct OfPtrTypeMatcher
 {
     template <typename T>
-    bool MatchAndExplain(T* p, MatchResultListener* /* listener */) const
+    bool MatchAndExplain(T&& p, MatchResultListener* /* listener */) const
     {
-        return dynamic_cast<Expected*>(p) != nullptr;
+        return dynamic_cast<Expected*>(&*p) != nullptr;
     }
     void DescribeTo(::std::ostream* os) const
     {
@@ -113,9 +116,9 @@ struct OfTypeMatcher
 };
 
 template<typename Dest>
-inline PolymorphicMatcher<OfTypeMatcher<Dest>> OfType()
+inline auto OfPtrType()
 {
-    return MakePolymorphicMatcher(OfTypeMatcher<Dest>());
+    return MakePolymorphicMatcher(OfPtrTypeMatcher<Dest>());
 }
 }
 
@@ -128,7 +131,7 @@ TEST_F(InputPlatformProbe, stub_platform_not_picked_up_by_default)
                                   mr::null_input_report(), *stub_prober_report);
 
     EXPECT_THAT(platforms.size(), Eq(1));
-    EXPECT_THAT(platforms.front().get(), OfType<mir::input::evdev::Platform>());
+    EXPECT_THAT(platforms.front(), OfPtrType<mir::input::evdev::Platform>());
 }
 
 #ifdef MIR_BUILD_PLATFORM_MESA_X11
@@ -139,15 +142,20 @@ TEST_F(InputPlatformProbe, x11_platform_found_and_used_when_display_connection_w
                                   mr::null_input_report(), *stub_prober_report);
 
     EXPECT_THAT(platforms.size(), Eq(2)); // we cannot disable the default evdev platform with only umock dev is in place
-    EXPECT_THAT(platforms[0].get(), AnyOf(OfType<mi::evdev::Platform>(), OfType<mi::X::XInputPlatform>()));
-    EXPECT_THAT(platforms[1].get(), AnyOf(OfType<mi::evdev::Platform>(), OfType<mi::X::XInputPlatform>()));
+    EXPECT_THAT(platforms[0], AnyOf(OfPtrType<mi::evdev::Platform>(), OfPtrType<mi::X::XInputPlatform>()));
+    EXPECT_THAT(platforms[1], AnyOf(OfPtrType<mi::evdev::Platform>(), OfPtrType<mi::X::XInputPlatform>()));
 }
 #endif
 
 
 TEST_F(InputPlatformProbe, allows_forcing_stub_input_platform)
 {
-        ON_CALL(mock_options, is_set(StrEq(platform_input_lib))).WillByDefault(Return(true));
-        platform_input_lib_value = mtf::server_input_platform("input-stub.so");
-        platform_input_lib_value_as_any = platform_input_lib_value;
+    ON_CALL(mock_options, is_set(StrEq(platform_input_lib))).WillByDefault(Return(true));
+    platform_input_lib_value = mtf::server_input_platform("input-stub.so");
+    platform_input_lib_value_as_any = platform_input_lib_value;
+    auto platforms =
+        mi::probe_input_platforms(mock_options, mt::fake_shared(stub_emergency), mt::fake_shared(mock_registry),
+                                  mr::null_input_report(), *stub_prober_report);
+    EXPECT_THAT(platforms.size(), Eq(1));
+    EXPECT_THAT(platforms.front(), OfPtrType<mtf::StubInputPlatform>());
 }

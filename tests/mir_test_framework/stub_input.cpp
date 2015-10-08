@@ -16,7 +16,7 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "stub_input_platform.h"
+#include "mir_test_framework/stub_input_platform.h"
 #include "fake_input_device_impl.h"
 #include "mir/module_properties.h"
 

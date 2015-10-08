@@ -99,5 +99,5 @@ std::vector<mir::UniqueModulePtr<mi::Platform>> mi::probe_input_platforms(
         }
     }
 
-    return std::move(platforms);
+    return platforms;
 }
