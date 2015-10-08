@@ -1,17 +1,62 @@
 mir (0.17.0-0ubuntu1) UNRELEASED; urgency=medium
 
-  [ Andreas Pokorny ]
   * New upstream release 0.17.0 (https://launchpad.net/mir/+milestone/0.17.0)
     - ABI summary: Only servers and graphics drivers need rebuilding;
       . Mirclient ABI unchanged at 9
       . Mirserver ABI bumped to 35
       . Mircommon ABI unchanged at 5
-      . Mirplatform ABI unchanged at 10
+      . Mirplatform ABI bumped to 11
       . Mirprotobuf ABI bumped to 3
-      . Mirplatformgraphics ABI unchanged at 5
+      . Mirplatformgraphics ABI bumped to 6
       . Mirclientplatform ABI unchanged at 3
+    - Enhancements:
+      . Introduce libmircookie, a simple mechanism for a group of cooperating
+        processes to hand out and verify difficult-to-forge timestamps to
+        untrusted 3rd parties.
+      . More refactorings to support renderers other than GL.
+      . Add MirBlob to the client API - a tool for serializing and
+        deserializing data.
+      . Introduce a libinput based input platform, not yet used by default.
+      . Provide a mechanism for the shell to send events on surface
+        construction.
+      . Provide mir::shell::DisplayConfigurationController allowing shells
+        to correctly change the display configuration, notifying clients
+        as appropriate.
+      . New DSO versioning guide.
+      . Send events pertaining to the output a surface is currently on (dpi,
+        form factor, scale) to clients.
+    - Bug fixes:
+      . [enhancement] XMir specific documentation should live in its own
+        subsection (LP: #1200114)
+      . Nested servers need cursor support (LP: #1289072)
+      . Mir cursor is missing/invisible until the client sets it multiple
+        times (LP: #1308133)
+      . [regression] Fullscreen software surfaces (like Xmir -sw) can crash
+        the Mir server (LP: #1493721)
+      . [usc] Mir gives up and shuts down due to input with multimonitor qtmir
+        (std::exception::what: Failure sending input event) (LP: #1496069)
+      . Mouse cursor disappears upon entering the surface area of a nested
+        client (LP: #1496849)
+      . [android] input is not dispatched when attaching an external monitor
+        (LP: #1498045)
+      . [android] input coordinates are scaled incorrectly when an external
+        display is connected (LP: #1498540)
+      . [android] std::exception::what: error during hwc set() when unplugging
+        external monitor (LP: #1498550)
+      . tests do not compile without precompiled headers (LP: #1498829)
+      . [android] std::exception::what: Failed to monitor fd: Operation not
+        permitted when unplugging external display in a nested configuration
+        (LP: #1499042)
+      . Mir suddenly no longer builds since 'mesa (11.0.0-1ubuntu1) wily':
+        /usr/include/EGL/eglplatform.h:100:35: fatal error:
+        android/native_window.h: No such file or directory (LP: #1499134)
+      . [android] various crashes when unplugging external display on a
+        nested configuration (LP: #1501927)
+      . Cursor becomes visible by itself when an external monitor is connected
+        (LP: #1502200)
+      . mesa FTBFS due to missing Requires in mirclient (LP: #1503450)
 
- -- Andreas Pokorny <andreas.pokorny@canonical.com>  Thu, 24 Sep 2015 17:32:39 +0200
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Thu, 08 Oct 2015 10:59:18 +0300
 
 mir (0.16.1+15.10.20150930.1-0ubuntu1) wily; urgency=medium
 
