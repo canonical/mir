@@ -37,6 +37,7 @@
 #include "mir/test/doubles/stub_renderer.h"
 #include "mir/test/doubles/stub_surface_factory.h"
 #include "mir/test/doubles/null_pixel_buffer.h"
+#include "mir/test/doubles/stub_display_configuration.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 
 #include <gtest/gtest.h>
@@ -122,6 +123,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
         "stress",
         conf.the_snapshot_strategy(),
         std::make_shared<ms::NullSessionListener>(),
+        mtd::StubDisplayConfig{},
         std::make_shared<mtd::NullEventSink>()
     };
     session.create_surface(ms::a_surface(), std::make_shared<mtd::NullEventSink>());

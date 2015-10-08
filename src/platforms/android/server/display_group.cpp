@@ -18,7 +18,7 @@
 
 #include "display_group.h"
 #include "configurable_display_buffer.h"
-#include "display_disconnected_exception.h"
+#include "display_device_exceptions.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -28,10 +28,19 @@ namespace geom = mir::geometry;
 
 mga::DisplayGroup::DisplayGroup(
     std::shared_ptr<mga::DisplayDevice> const& device,
-    std::unique_ptr<mga::ConfigurableDisplayBuffer> primary_buffer) :
-    device(device)
+    std::unique_ptr<mga::ConfigurableDisplayBuffer> primary_buffer,
+    ExceptionHandler const& exception_handler) :
+    device(device),
+    exception_handler(exception_handler)
 {
     dbs.emplace(std::make_pair(mga::DisplayName::primary, std::move(primary_buffer)));
+}
+
+mga::DisplayGroup::DisplayGroup(
+    std::shared_ptr<mga::DisplayDevice> const& device,
+    std::unique_ptr<mga::ConfigurableDisplayBuffer> primary_buffer)
+    : DisplayGroup(device, std::move(primary_buffer), []{})
+{
 }
 
 void mga::DisplayGroup::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
@@ -87,10 +96,18 @@ void mga::DisplayGroup::post()
     {
         device->commit(contents);
     }
-    catch (mga::DisplayDisconnectedException& e)
+    catch (mga::DisplayDisconnectedException const&)
     {
         //Ignore disconnect errors as they are not fatal
     }
+    catch (mga::ExternalDisplayError const&)
+    {
+        //NOTE: We allow Display to inject an error handler (which can then attempt to recover
+        // from this error) as post is called directly by the compositor and we don't want to propagate
+        // handling of android platform specific exceptions in mir core.
+        exception_handler();
+    }
+
 }
 
 std::chrono::milliseconds mga::DisplayGroup::recommended_sleep() const

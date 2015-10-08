@@ -16,10 +16,11 @@
  * Authored by: Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_DISCONNECTED_EXCEPTION_H_
-#define MIR_GRAPHICS_ANDROID_DISPLAY_DISCONNECTED_EXCEPTION_H_
+#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_DEVICE_EXCEPTIONS_H_
+#define MIR_GRAPHICS_ANDROID_DISPLAY_DEVICE_EXCEPTIONS_H_
 
 #include <stdexcept>
+#include <string>
 
 namespace mir
 {
@@ -31,11 +32,17 @@ namespace android
 class DisplayDisconnectedException : public std::runtime_error
 {
 public:
-    DisplayDisconnectedException() : std::runtime_error("display disconnected") {}
+    DisplayDisconnectedException(std::string const& message) : std::runtime_error(message) {}
+};
+
+class ExternalDisplayError : public std::runtime_error
+{
+public:
+    ExternalDisplayError(std::string const& message) : std::runtime_error(message) {}
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_DISCONNECTED_EXCEPTION_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_DEVICE_EXCEPTIONS_H_ */

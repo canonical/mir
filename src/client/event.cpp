@@ -147,6 +147,13 @@ MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEve
     return &ev->input_configuration;
 }
 
+MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_surface_output);
+
+    return &ev->surface_output;
+}
+
 /* Surface event accessors */
 
 MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev)
@@ -219,6 +226,26 @@ MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurati
 {
     expect_event_type(ev, mir_event_type_input_configuration);
     return ev->id;
+}
+
+/* Surface output event accessors */
+
+int mir_surface_output_event_get_dpi(MirSurfaceOutputEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_surface_output);
+    return ev->dpi;
+}
+
+MirFormFactor mir_surface_output_event_get_form_factor(MirSurfaceOutputEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_surface_output);
+    return ev->form_factor;
+}
+
+float mir_surface_output_event_get_scale(MirSurfaceOutputEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_surface_output);
+    return ev->scale;
 }
 
 // TODO: Until we opaquify the MirEvent structure and add

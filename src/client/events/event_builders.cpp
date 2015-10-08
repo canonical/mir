@@ -95,6 +95,24 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id)
     return make_event_uptr(e);
 }
 
+mir::EventUPtr mev::make_event(
+    mf::SurfaceId const& surface_id,
+    int dpi,
+    float scale,
+    MirFormFactor form_factor)
+{
+    auto e = new MirEvent;
+    memset(e, 0, sizeof(*e));
+
+    e->type = mir_event_type_surface_output;
+    e->surface_output.surface_id = surface_id.as_value();
+    e->surface_output.dpi = dpi;
+    e->surface_output.scale = scale;
+    e->surface_output.form_factor = form_factor;
+
+    return make_event_uptr(e);
+}
+
 namespace
 {
 // Never exposed in old event, so lets avoid leaking it in to a header now.

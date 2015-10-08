@@ -46,6 +46,12 @@ EventUPtr make_event(frontend::SurfaceId const& surface_id, MirSurfaceAttrib att
 EventUPtr make_event(frontend::SurfaceId const& surface_id);
 // Keymap event
 EventUPtr make_event(frontend::SurfaceId const& surface_id, xkb_rule_names const& names);
+// Surface output event
+EventUPtr make_event(
+    frontend::SurfaceId const& surface_id,
+    int dpi,
+    float scale,
+    MirFormFactor form_factor);
 
 // Key event
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,

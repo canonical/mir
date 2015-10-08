@@ -18,7 +18,6 @@
 #ifndef MIR_TOOLKIT_MESA_NATIVE_DISPLAY_H
 #define MIR_TOOLKIT_MESA_NATIVE_DISPLAY_H
 
-#include <mir_toolkit/mir_native_buffer.h>
 #include <mir_toolkit/client_types.h>
 
 #define MIR_MESA_TRUE 1
@@ -35,6 +34,7 @@ extern "C"
 
 typedef struct MirMesaEGLNativeDisplay MirMesaEGLNativeDisplay;
 typedef struct MirMesaEGLNativeSurface MirMesaEGLNativeSurface;
+typedef struct MirBufferPackage MirBufferPackage;
 
 struct MirMesaEGLNativeDisplay
 {
