@@ -23,9 +23,9 @@
 
 namespace mir
 {
-namespace geometry
+namespace graphics
 {
-struct Rectangle;
+struct DisplayBuffer;
 }
 namespace compositor
 {
@@ -37,7 +37,7 @@ class RendererFactory
 public:
     virtual ~RendererFactory() = default;
 
-    virtual std::unique_ptr<Renderer> create_renderer_for(geometry::Rectangle const& rect) = 0;
+    virtual std::unique_ptr<Renderer> create_renderer_for(graphics::DisplayBuffer& display_buffer) = 0;
 
 protected:
     RendererFactory() = default;

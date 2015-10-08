@@ -65,6 +65,9 @@ MIR_COMMON_5 {
     mir::logging::Logger::Logger*;
     mir::logging::Logger::operator*;
     mir::logging::set_logger*;
+    mir::SharedLibrary::load_symbol*;
+    mir::SharedLibrary::?SharedLibrary*;
+    mir::SharedLibrary::SharedLibrary*;
     non-virtual?thunk?to?mir::dispatch::ActionQueue::?ActionQueue*;
     non-virtual?thunk?to?mir::dispatch::Dispatchable::?Dispatchable*;
     non-virtual?thunk?to?mir::dispatch::MultiplexingDispatchable::dispatch*;
@@ -119,9 +122,6 @@ MIR_COMMON_5 {
     mir::report::lttng::TracepointProvider::?TracepointProvider*;
     mir::report::lttng::TracepointProvider::TracepointProvider*;
     mir::set_thread_name*;
-    mir::SharedLibrary::load_symbol*;
-    mir::SharedLibrary::?SharedLibrary*;
-    mir::SharedLibrary::SharedLibrary*;
     vtable?for?mir::logging::DumbConsoleLogger;
     vtable?for?mir::time::SteadyClock;
     vtable?for?mir::time::Clock;
@@ -140,11 +140,14 @@ MIR_COMMON_5 {
     mir::SignalBlocker::SignalBlocker*;
     mir::SignalBlocker::?SignalBlocker*;
   };
- local: *;
 };
 
 MIR_COMMON_5.1 {  # New functions in Mir 0.16
  global:
+    __android_log_assert;
+    __android_log_print;
+    systemTime;
+    toMillisecondTimeoutDelay;
     extern "C++" {
       android::InputChannel::InputChannel*;
       android::InputChannel::openInputFdPair*;
@@ -167,8 +170,6 @@ MIR_COMMON_5.1 {  # New functions in Mir 0.16
       android::IntSet::operator*;
       android::IntSet::remove*;
       android::KeyEvent::initialize*;
-      __android_log_assert*;
-      __android_log_print*;
       android::MotionEvent::getAxisValue*;
       android::MotionEvent::getAxisValue*;
       android::MotionEvent::getHistoricalAxisValue*;
@@ -189,8 +190,6 @@ MIR_COMMON_5.1 {  # New functions in Mir 0.16
       android::RefBase::?RefBase*;
       android::RefBase::RefBase*;
       mir::write_to_log;
-      systemTime;
-      toMillisecondTimeoutDelay*;
       typeinfo?for?android::RefBase;
       vtable?for?android::IntSet;
       mir::dispatch::ReadableFd::ReadableFd*;

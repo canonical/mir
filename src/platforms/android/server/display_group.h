@@ -38,9 +38,14 @@ class DisplayDevice;
 class DisplayGroup : public graphics::DisplaySyncGroup
 {
 public:
+    using ExceptionHandler = std::function<void()>;
     DisplayGroup(
         std::shared_ptr<DisplayDevice> const& device,
-        std::unique_ptr<ConfigurableDisplayBuffer> primary_buffer);
+        std::unique_ptr<ConfigurableDisplayBuffer> primary_buffer,
+        ExceptionHandler const& handler);
+    DisplayGroup(
+           std::shared_ptr<DisplayDevice> const& device,
+           std::unique_ptr<ConfigurableDisplayBuffer> primary_buffer);
 
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override;
     void post() override;
@@ -50,13 +55,12 @@ public:
     void remove(DisplayName name);
     void configure(DisplayName name, MirPowerMode, MirOrientation, geometry::Displacement);
     bool display_present(DisplayName name) const;
-    void hotplug_occurred();
 
 private:
     std::mutex mutable guard;
     std::shared_ptr<DisplayDevice> const device;
     std::map<DisplayName, std::unique_ptr<ConfigurableDisplayBuffer>> dbs;
-    bool hotplugging;
+    ExceptionHandler const exception_handler;
 };
 
 }

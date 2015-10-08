@@ -2,6 +2,7 @@ include(CMakeDependentOption)
 
 include_directories(
   ${CMAKE_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/include/cookie
 )
 
 set(
@@ -15,7 +16,6 @@ set(
   test_client_input.cpp
   test_client_library.cpp
   test_client_library_callbacks.cpp
-  test_client_library_errors.cpp
   test_client_library_old.cpp
   test_client_surface_events.cpp
   test_client_surface_swap_buffers.cpp
@@ -26,12 +26,14 @@ set(
   test_server_shutdown.cpp
   test_client_focus_notification.cpp
   test_client_authorization.cpp
+  test_mirblob.cpp
   test_nested_mir.cpp
   test_nested_input.cpp
   test_display_configuration.cpp
   test_surfaces_with_output_id.cpp
   test_server_disconnect.cpp
   test_prompt_session_client_api.cpp
+  test_client_scaling.cpp
   test_client_screencast.cpp
   test_client_surface_visibility.cpp
   test_buffer_stream_arrangement.cpp
@@ -43,7 +45,6 @@ set(
   test_client_platform_operation.cpp
   test_input_device_hub.cpp
   test_latency.cpp
-  test_shell_control_of_surface_configuration.cpp
   test_render_override.cpp
   test_surface_modifications.cpp
   test_surface_placement.cpp
@@ -72,9 +73,6 @@ add_dependencies(mir_acceptance_tests GMock)
 
 target_link_libraries(mir_acceptance_tests
   mir-test-assist
-
-  # needed for 'throwback' tests that use private APIs
-  mir-test-framework-static
 
   mirclient
   mirclient-debug-extension

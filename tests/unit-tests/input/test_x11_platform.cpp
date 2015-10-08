@@ -16,6 +16,9 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
 #include "src/server/input/default_event_builder.h"
 #include "src/platforms/mesa/server/x11/input/input_platform.h"
 #include "src/platforms/mesa/server/x11/input/input_device.h"
@@ -29,9 +32,6 @@
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/test/fake_shared.h"
-
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 namespace md = mir::dispatch;
 namespace mi = mir::input;

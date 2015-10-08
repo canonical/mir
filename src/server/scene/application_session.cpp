@@ -19,6 +19,7 @@
 #include "application_session.h"
 #include "snapshot_strategy.h"
 #include "default_session_container.h"
+#include "output_properties_cache.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
@@ -53,6 +54,7 @@ ms::ApplicationSession::ApplicationSession(
     std::string const& session_name,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionListener> const& session_listener,
+    mg::DisplayConfiguration const& initial_config,
     std::shared_ptr<mf::EventSink> const& sink) :
     surface_coordinator(surface_coordinator),
     surface_factory(surface_factory),
@@ -65,6 +67,7 @@ ms::ApplicationSession::ApplicationSession(
     next_surface_id(0)
 {
     assert(surface_coordinator);
+    output_cache.update_from(initial_config);
 }
 
 ms::ApplicationSession::~ApplicationSession()
@@ -82,7 +85,9 @@ mf::SurfaceId ms::ApplicationSession::next_id()
     return mf::SurfaceId(next_surface_id.fetch_add(1));
 }
 
-mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters const& the_params)
+mf::SurfaceId ms::ApplicationSession::create_surface(
+    SurfaceCreationParameters const& the_params,
+    std::shared_ptr<mf::EventSink> const& surface_sink)
 {
     auto const id = next_id();
     mf::BufferStreamId const stream_id{the_params.content_id.is_set() ?
@@ -92,8 +97,6 @@ mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters c
 
     if (params.parent_id.is_set())
         params.parent = checked_find(the_params.parent_id.value())->second;
-
-    auto const observer = std::make_shared<scene::SurfaceEventSource>(id, event_sink);
 
     std::shared_ptr<compositor::BufferStream> buffer_stream;
     if (params.content_id.is_set())
@@ -106,7 +109,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters c
                                                params.pixel_format,
                                                params.buffer_usage};
         buffer_stream = buffer_stream_factory->create_buffer_stream(
-            stream_id, event_sink, buffer_properties);
+            stream_id, surface_sink, buffer_properties);
     }
     auto surface = surface_factory->create_surface(buffer_stream, params);
     surface_coordinator->add_surface(surface, params.depth, params.input_mode, this);
@@ -120,6 +123,11 @@ mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters c
     if (params.input_shape.is_set())
         surface->set_input_region(params.input_shape.value());
 
+    auto const observer = std::make_shared<scene::SurfaceEventSource>(
+        id,
+        *surface,
+        output_cache,
+        surface_sink);
     surface->add_observer(observer);
 
     {
@@ -127,6 +135,8 @@ mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters c
         surfaces[id] = surface;
         streams[stream_id] = buffer_stream;
     }
+
+    observer->moved_to(surface->top_left());
 
     session_listener->surface_created(*this, surface);
     return id;
@@ -285,6 +295,26 @@ void ms::ApplicationSession::show()
 void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const& info)
 {
     event_sink->handle_display_config_change(info);
+
+    output_cache.update_from(info);
+
+    std::lock_guard<std::mutex> lock{surfaces_and_streams_mutex};
+    for (auto& surface : surfaces)
+    {
+        auto output_properties = output_cache.properties_for(geometry::Rectangle{
+            surface.second->top_left(),
+            surface.second->size()});
+
+        if (output_properties)
+        {
+            event_sink->handle_event(
+                *mev::make_event(
+                    surface.first,
+                    output_properties->dpi,
+                    output_properties->scale,
+                    output_properties->form_factor));
+        }
+    }
 }
 
 void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)

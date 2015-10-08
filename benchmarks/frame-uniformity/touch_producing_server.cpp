@@ -44,7 +44,7 @@ TouchProducingServer::TouchProducingServer(geom::Rectangle screen_dimensions, ge
       touch_duration(touch_duration),
       client_ready(client_ready),
       touch_screen(mtf::add_fake_input_device(mi::InputDeviceInfo{
-                                              0, "touch screen", "touch-screen-uid", mi::DeviceCapability::touchscreen | mi::DeviceCapability::multitouch}))
+                                              "touch screen", "touch-screen-uid", mi::DeviceCapability::touchscreen | mi::DeviceCapability::multitouch}))
 {
     input_injection_thread = std::thread(std::mem_fn(&TouchProducingServer::thread_function), this);
 }

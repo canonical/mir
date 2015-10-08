@@ -1,4 +1,4 @@
-MIR_SERVER_34 {
+MIR_SERVER_35 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -135,6 +135,7 @@ MIR_SERVER_34 {
     mir::ServerActionQueue::?ServerActionQueue*;
     mir::ServerActionQueue::ServerActionQueue*;
     mir::Server::add_configuration_option*;
+    mir::Server::override_the_cookie_factory*;
     mir::Server::add_emergency_cleanup*;
     mir::Server::add_init_callback*;
     mir::Server::apply_settings*;
@@ -144,6 +145,7 @@ MIR_SERVER_34 {
     mir::Server::open_prompt_socket*;
     mir::Server::override_the_application_not_responding_detector*;
     mir::Server::override_the_compositor*;
+    mir::Server::override_the_cursor_images*;
     mir::Server::override_the_display_buffer_compositor_factory*;
     mir::Server::override_the_display_configuration_report*;
     mir::Server::override_the_gl_config*;
@@ -197,6 +199,7 @@ MIR_SERVER_34 {
     mir::Server::the_surface_coordinator*;
     mir::Server::the_surface_factory*;
     mir::Server::the_touch_visualizer*;
+    mir::Server::wrap_cursor*;
     mir::Server::wrap_cursor_listener*;
     mir::Server::wrap_display_buffer_compositor_factory*;
     mir::Server::wrap_display_configuration_policy*;
@@ -590,6 +593,7 @@ MIR_SERVER_34 {
     mir::DefaultServerConfiguration::the_buffer_stream_factory*;
     mir::DefaultServerConfiguration::the_clock*;
     mir::DefaultServerConfiguration::the_composite_event_filter*;
+    mir::DefaultServerConfiguration::the_cookie_factory*;
     mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
     mir::DefaultServerConfiguration::the_surface_input_dispatcher;
     mir::DefaultServerConfiguration::the_compositor*;
@@ -607,6 +611,7 @@ MIR_SERVER_34 {
     mir::DefaultServerConfiguration::the_display*;
     mir::DefaultServerConfiguration::the_display_buffer_compositor_factory*;
     mir::DefaultServerConfiguration::the_display_changer*;
+    mir::DefaultServerConfiguration::the_display_configuration_controller*;
     mir::DefaultServerConfiguration::the_display_configuration_policy*;
     mir::DefaultServerConfiguration::the_display_report*;
     mir::DefaultServerConfiguration::the_emergency_cleanup*;
@@ -619,7 +624,6 @@ MIR_SERVER_34 {
     mir::DefaultServerConfiguration::the_frontend_shell*;
     mir::DefaultServerConfiguration::the_gl_config*;
     mir::DefaultServerConfiguration::the_global_event_sink*;
-    mir::DefaultServerConfiguration::the_gl_program_factory*;
     mir::DefaultServerConfiguration::the_graphics_platform*;
     mir::DefaultServerConfiguration::the_host_connection*;
     mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
@@ -680,6 +684,7 @@ MIR_SERVER_34 {
     mir::DefaultServerConfiguration::the_surface_stack_model*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
     mir::DefaultServerConfiguration::the_window_manager_builder*;
+    mir::DefaultServerConfiguration::wrap_cursor*;
     mir::DefaultServerConfiguration::wrap_cursor_listener*;
     mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
     mir::DefaultServerConfiguration::wrap_display_configuration_policy*;

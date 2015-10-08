@@ -41,6 +41,10 @@ class ServerActionQueue;
 class SharedLibrary;
 class SharedLibraryProberReport;
 
+namespace cookie
+{
+class CookieFactory;
+}
 namespace dispatch
 {
 class MultiplexingDispatchable;
@@ -74,6 +78,7 @@ class Screencast;
 
 namespace shell
 {
+class DisplayConfigurationController;
 class InputTargeter;
 class FocusSetter;
 class FocusController;
@@ -119,7 +124,6 @@ class GraphicBufferAllocator;
 class Cursor;
 class CursorImage;
 class GLConfig;
-class GLProgramFactory;
 namespace nested { class HostConnection; }
 }
 namespace input
@@ -186,7 +190,8 @@ public:
     std::shared_ptr<DisplayChanger>         the_display_changer() override;
     std::shared_ptr<graphics::Platform>     the_graphics_platform() override;
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
-    std::shared_ptr<EmergencyCleanup>  the_emergency_cleanup() override;
+    std::shared_ptr<EmergencyCleanup>       the_emergency_cleanup() override;
+    std::shared_ptr<cookie::CookieFactory>  the_cookie_factory() override;
     /**
      * Function to call when a "fatal" error occurs. This implementation allows
      * the default strategy to be overridden by --on-fatal-error-abort to force a
@@ -203,6 +208,7 @@ public:
      * configurable interfaces for modifying graphics
      *  @{ */
     virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
+    virtual std::shared_ptr<shell::DisplayConfigurationController> the_display_configuration_controller();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
     virtual std::shared_ptr<graphics::GLConfig> the_gl_config();
@@ -213,6 +219,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<graphics::DisplayReport> the_display_report();
     virtual std::shared_ptr<graphics::Cursor> the_cursor();
+    virtual std::shared_ptr<graphics::Cursor> wrap_cursor(std::shared_ptr<graphics::Cursor> const& wrapped);
     virtual std::shared_ptr<graphics::CursorImage> the_default_cursor_image();
     virtual std::shared_ptr<input::CursorImages> the_cursor_images();
     virtual std::shared_ptr<graphics::DisplayConfigurationReport> the_display_configuration_report();
@@ -344,7 +351,6 @@ public:
 protected:
     std::shared_ptr<options::Option> the_options() const;
 
-    virtual std::shared_ptr<graphics::GLProgramFactory> the_gl_program_factory();
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> new_ipc_factory(
@@ -429,7 +435,6 @@ protected:
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
     CachedPtr<graphics::nested::HostConnection> host_connection;
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
-    CachedPtr<graphics::GLProgramFactory> gl_program_factory;
     CachedPtr<graphics::GLConfig> gl_config;
     CachedPtr<scene::PromptSessionListener> prompt_session_listener;
     CachedPtr<scene::PromptSessionManager> prompt_session_manager;
@@ -441,6 +446,7 @@ protected:
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
     CachedPtr<shell::Shell> shell;
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
+    CachedPtr<cookie::CookieFactory> cookie_factory;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

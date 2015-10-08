@@ -199,7 +199,5 @@ TEST_F(SystemCompositorWindowManager, if_no_surface_posts_client_never_gets_focu
     ON_CALL(client, surface_event(_, MirFocusEvent(mir_surface_focused)))
             .WillByDefault(InvokeWithoutArgs([&] { signal.raise(); }));
 
-    EXPECT_CALL(client, surface_event(_, MirFocusEvent(mir_surface_focused))).Times(0);
-
-    signal.wait_for(100ms);
+    EXPECT_FALSE(signal.wait_for(100ms)) << "Unexpected surface_focused event received";
 }

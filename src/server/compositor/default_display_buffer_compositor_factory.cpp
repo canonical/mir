@@ -36,9 +36,9 @@ mc::DefaultDisplayBufferCompositorFactory::DefaultDisplayBufferCompositorFactory
 
 std::unique_ptr<mc::DisplayBufferCompositor>
 mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
-    graphics::DisplayBuffer& display_buffer)
+    mg::DisplayBuffer& display_buffer)
 {
-    auto renderer = renderer_factory->create_renderer_for(display_buffer.view_area());
+    auto renderer = renderer_factory->create_renderer_for(display_buffer);
     return std::make_unique<DefaultDisplayBufferCompositor>(
          display_buffer, std::move(renderer), report);
 }

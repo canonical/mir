@@ -26,8 +26,6 @@ namespace mir
 {
 namespace frontend
 {
-namespace detail
-{
 class MessageSender
 {
 public:
@@ -40,7 +38,6 @@ protected:
     MessageSender& operator=(MessageSender const&) = delete;
 };
 
-}
 }
 }
 #endif /* MIR_FRONTEND_MESSAGE_SENDER_H_ */

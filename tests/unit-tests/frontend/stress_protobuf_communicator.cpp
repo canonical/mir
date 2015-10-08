@@ -70,7 +70,6 @@ struct StubProtobufClient
     void exchange_buffer_done();
     void release_surface_done();
     void disconnect_done();
-    void drm_auth_magic_done();
 
     void wait_for_connect_done();
 
@@ -81,8 +80,6 @@ struct StubProtobufClient
     void wait_for_release_surface();
 
     void wait_for_disconnect_done();
-
-    void wait_for_drm_auth_magic_done();
 
     void wait_for_surface_count(int count);
 
@@ -98,7 +95,6 @@ struct StubProtobufClient
     std::atomic<bool> exchange_buffer_called;
     std::atomic<bool> release_surface_called;
     std::atomic<bool> disconnect_done_called;
-    std::atomic<bool> drm_auth_magic_done_called;
     std::atomic<bool> tfd_done_called;
 
     std::atomic<int> connect_done_count;
@@ -242,11 +238,6 @@ void StubProtobufClient::disconnect_done()
     while (!disconnect_done_count.compare_exchange_weak(old, old+1));
 }
 
-void StubProtobufClient::drm_auth_magic_done()
-{
-    drm_auth_magic_done_called.store(true);
-}
-
 void StubProtobufClient::wait_for_connect_done()
 {
     for (int i = 0; !connect_done_called.load() && i < maxwait; ++i)
@@ -297,16 +288,6 @@ void StubProtobufClient::wait_for_disconnect_done()
         std::this_thread::yield();
     }
     disconnect_done_called.store(false);
-}
-
-void StubProtobufClient::wait_for_drm_auth_magic_done()
-{
-    for (int i = 0; !drm_auth_magic_done_called.load() && i < maxwait; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::this_thread::yield();
-    }
-    drm_auth_magic_done_called.store(false);
 }
 
 void StubProtobufClient::wait_for_surface_count(int count)

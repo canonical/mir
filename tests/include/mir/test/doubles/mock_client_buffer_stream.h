@@ -21,6 +21,8 @@
 
 #include "src/client/client_buffer_stream.h"
 
+#include <gmock/gmock.h>
+
 namespace mir
 {
 namespace test
@@ -39,7 +41,7 @@ struct MockClientBufferStream : public client::ClientBufferStream
     MOCK_METHOD1(next_buffer, MirWaitHandle*(std::function<void()> const&));
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<client::MemoryRegion>());
     MOCK_CONST_METHOD0(swap_interval, int());
-    MOCK_METHOD1(set_swap_interval, void(int));
+    MOCK_METHOD1(set_swap_interval, MirWaitHandle*(int));
     MOCK_METHOD0(platform_type, MirPlatformType(void));
     MOCK_METHOD0(get_current_buffer_package, MirNativeBuffer*(void));
     MOCK_METHOD0(get_create_wait_handle, MirWaitHandle*(void));
@@ -48,6 +50,7 @@ struct MockClientBufferStream : public client::ClientBufferStream
     MOCK_METHOD1(buffer_available, void(mir::protobuf::Buffer const&));
     MOCK_METHOD0(buffer_unavailable, void());
     MOCK_METHOD1(set_size, void(geometry::Size));
+    MOCK_METHOD1(set_scale, MirWaitHandle*(float));
 };
 
 }

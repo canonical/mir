@@ -45,7 +45,7 @@ class DemoRenderer : public renderer::gl::Renderer
 {
 public:
     DemoRenderer(
-        geometry::Rectangle const& display_area,
+        graphics::DisplayBuffer& display_buffer,
         float const titlebar_height,
         float const shadow_radius);
     ~DemoRenderer();
@@ -54,7 +54,7 @@ public:
     void set_colour_effect(ColourEffect);
 
 protected:
-    void tessellate(std::vector<graphics::GLPrimitive>& primitives,
+    void tessellate(std::vector<gl::Primitive>& primitives,
                     graphics::Renderable const& renderable) const override;
 
     void draw(graphics::Renderable const& renderable,
@@ -62,11 +62,11 @@ protected:
 
 private:
     void tessellate_shadow(
-        std::vector<graphics::GLPrimitive>& primitives,
+        std::vector<gl::Primitive>& primitives,
         graphics::Renderable const& renderable,
         float radius) const;
     void tessellate_frame(
-        std::vector<graphics::GLPrimitive>& primitives,
+        std::vector<gl::Primitive>& primitives,
         graphics::Renderable const& renderable,
         float titlebar_height,
         char const* name) const;

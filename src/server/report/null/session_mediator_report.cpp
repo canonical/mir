@@ -54,10 +54,6 @@ void mir::report::null::SessionMediatorReport::session_disconnect_called(std::st
 {
 }
 
-void mir::report::null::SessionMediatorReport::session_drm_auth_magic_called(std::string const&)
-{
-}
-
 void mir::report::null::SessionMediatorReport::session_configure_surface_called(std::string const&)
 {
 }

@@ -31,6 +31,7 @@
 #include <chrono>
 #include <thread>
 
+namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
@@ -199,24 +200,23 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
         {
             auto bypass_buffer = (*bypass_it)->buffer();
             auto native = bypass_buffer->native_buffer_handle();
-            auto gbm_native = static_cast<mgm::GBMNativeBuffer*>(native.get());
-            auto bufobj = get_buffer_object(gbm_native->bo);
-            if (bufobj &&
-                native->flags & mir_buffer_flag_can_scanout &&
+            if (native->flags & mir_buffer_flag_can_scanout &&
                 bypass_buffer->size() == geom::Size{fb_width,fb_height})
             {
-                bypass_buf = bypass_buffer;
-                bypass_bufobj = bufobj;
-                return true;
-            }
-            else
-            {
-                bypass_buf = nullptr;
-                bypass_bufobj = nullptr;
+                auto gbm_native =
+                    static_cast<mgm::GBMNativeBuffer*>(native.get());
+                if (auto bufobj = get_buffer_object(gbm_native->bo))
+                {
+                    bypass_buf = bypass_buffer;
+                    bypass_bufobj = bufobj;
+                    return true;
+                }
             }
         }
     }
 
+    bypass_buf = nullptr;
+    bypass_bufobj = nullptr;
     return false;
 }
 
@@ -226,7 +226,7 @@ void mgm::DisplayBuffer::for_each_display_buffer(
     f(*this);
 }
 
-void mgm::DisplayBuffer::gl_swap_buffers()
+void mgm::DisplayBuffer::swap_buffers()
 {
     if (!egl.swap_buffers())
         fatal_error("Failed to perform buffer swap");
@@ -458,3 +458,7 @@ void mgm::DisplayBuffer::schedule_set_crtc()
     needs_set_crtc = true;
 }
 
+mg::NativeDisplayBuffer* mgm::DisplayBuffer::native_display_buffer()
+{
+    return this;
+}

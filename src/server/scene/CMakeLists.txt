@@ -30,4 +30,6 @@ ADD_LIBRARY(
   rendering_tracker.cpp
   default_coordinate_translator.cpp
   timeout_application_not_responding_detector.cpp
+  output_properties_cache.cpp
+  output_properties_cache.h
 )

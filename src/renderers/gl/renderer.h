@@ -25,7 +25,8 @@
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
-#include <mir/graphics/gl_primitive.h>
+#include <mir/gl/primitive.h>
+#include "mir/renderer/gl/render_target.h"
 
 #include <GLES2/gl2.h>
 #include <unordered_map>
@@ -34,17 +35,30 @@
 
 namespace mir
 {
-namespace graphics { class GLTextureCache; }
-
+namespace gl { class TextureCache; }
+namespace graphics { class DisplayBuffer; }
 namespace renderer
 {
 namespace gl
 {
 
+class CurrentRenderTarget
+{
+public:
+    CurrentRenderTarget(graphics::DisplayBuffer* display_buffer);
+    ~CurrentRenderTarget();
+
+    void ensure_current();
+    void swap_buffers();
+
+private:
+    renderer::gl::RenderTarget* const render_target;
+};
+
 class Renderer : public compositor::Renderer
 {
 public:
-    Renderer(geometry::Rectangle const& display_area);
+    Renderer(graphics::DisplayBuffer& display_buffer);
     virtual ~Renderer();
 
     // These are called with a valid GL context:
@@ -54,6 +68,9 @@ public:
 
     // This is called _without_ a GL context:
     void suspend() override;
+
+private:
+    mutable CurrentRenderTarget render_target;
 
 protected:
     /**
@@ -72,7 +89,7 @@ protected:
      *       the only OpenGL-specific class in the display server, and
      *       tessellation is very much OpenGL-specific.
      */
-    virtual void tessellate(std::vector<graphics::GLPrimitive>& primitives,
+    virtual void tessellate(std::vector<mir::gl::Primitive>& primitives,
                             graphics::Renderable const& renderable) const;
 
     GLfloat clear_color[4];
@@ -105,12 +122,12 @@ protected:
                       Renderer::Program const& prog) const;
 
 private:
-    std::unique_ptr<graphics::GLTextureCache> const texture_cache;
+    std::unique_ptr<mir::gl::TextureCache> const texture_cache;
     float rotation;
     geometry::Rectangle viewport;
     glm::mat4 screen_to_gl_coords, screen_rotation;
 
-    std::vector<graphics::GLPrimitive> mutable primitives;
+    std::vector<mir::gl::Primitive> mutable primitives;
 };
 
 }

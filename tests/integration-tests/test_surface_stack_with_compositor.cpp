@@ -54,7 +54,7 @@ class StubRendererFactory : public mc::RendererFactory
 {
 public:
     std::unique_ptr<mc::Renderer>
-        create_renderer_for(geom::Rectangle const&) override
+        create_renderer_for(mg::DisplayBuffer&) override
     {
         return std::unique_ptr<mtd::StubRenderer>(new mtd::StubRenderer);
     }

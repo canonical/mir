@@ -37,7 +37,7 @@ me::DemoCompositor::DemoCompositor(
     viewport(display_buffer.view_area()),
     zoom_mag{1.0f},
     renderer(
-        display_buffer.view_area(),
+        display_buffer,
         30.0f, //titlebar_height
         80.0f) //shadow_radius
 {
@@ -125,14 +125,11 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
     }
     else
     {
-        display_buffer.make_current();
-
         renderer.set_rotation(display_buffer.orientation());
         renderer.set_viewport(viewport);
         renderer.begin(std::move(decorated));
         renderer.render(renderable_list);
 
-        display_buffer.gl_swap_buffers();
         report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);
 

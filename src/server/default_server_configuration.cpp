@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -24,6 +24,7 @@
 #include "mir/default_server_status_listener.h"
 #include "mir/emergency_cleanup.h"
 #include "mir/default_configuration.h"
+#include "mir/cookie_factory.h"
 
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/options/program_option.h"
@@ -41,6 +42,8 @@
 #include "mir/scene/null_prompt_session_listener.h"
 #include "default_emergency_cleanup.h"
 
+#include <type_traits>
+
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
@@ -50,6 +53,11 @@ namespace mo = mir::options;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
+
+namespace
+{
+    unsigned const secret_size{64};
+}
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const* argv[]) :
         DefaultServerConfiguration(std::make_shared<mo::DefaultConfiguration>(argc, argv))
@@ -170,6 +178,18 @@ std::shared_ptr<mir::EmergencyCleanup> mir::DefaultServerConfiguration::the_emer
         []()
         {
             return std::make_shared<DefaultEmergencyCleanup>();
+        });
+}
+
+std::shared_ptr<mir::cookie::CookieFactory> mir::DefaultServerConfiguration::the_cookie_factory()
+{
+    return cookie_factory(
+        []()
+        {
+            static_assert(secret_size >= mir::cookie::CookieFactory::minimum_secret_size,
+                          "Secret size is smaller then the minimum secret size");
+
+            return mir::cookie::CookieFactory::create_keeping_secret();
         });
 }
 

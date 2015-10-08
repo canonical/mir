@@ -21,10 +21,15 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 
+#include "mir/graphics/display.h"
+
+#include "mir/shell/display_configuration_controller.h"
+
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test_framework/any_surface.h"
+#include "mir/test/signal.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -39,6 +44,7 @@ namespace msh = mir::shell;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
+namespace mg = mir::graphics;
 
 using namespace testing;
 
@@ -251,4 +257,163 @@ TEST_F(ClientSurfaceEvents, client_can_query_preferred_orientation)
         mir_wait_for(mir_surface_set_preferred_orientation(surface, mode));
         EXPECT_THAT(mir_surface_get_preferred_orientation(surface), Eq(mode));
     }
+}
+
+TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_changes)
+{
+    using namespace std::literals::chrono_literals;
+
+    auto constexpr form_factor = mir_form_factor_tablet;
+    float constexpr scale = 2.15f;
+
+    auto display_configuration = server.the_display()->configuration();
+
+    display_configuration->for_each_output(
+        [](mg::UserDisplayConfigurationOutput& output_config)
+        {
+            output_config.scale = scale;
+            output_config.form_factor = form_factor;
+        });
+
+    set_event_filter(mir_event_type_surface_output);
+    reset_last_event();
+
+    auto display_controller = server.the_display_configuration_controller();
+    display_controller->set_default_display_configuration(std::move(display_configuration)).get();
+
+    ASSERT_TRUE(wait_for_event(1min));
+
+    std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
+
+    EXPECT_THAT(mir_event_get_type(last_event), Eq(mir_event_type_surface_output));
+    auto output_event = mir_event_get_surface_output_event(last_event);
+
+    EXPECT_THAT(mir_surface_output_event_get_form_factor(output_event), Eq(form_factor));
+    EXPECT_THAT(mir_surface_output_event_get_scale(output_event), FloatEq(scale));
+}
+
+namespace
+{
+class WrapShellGeneratingCloseEvent : public mir::shell::ShellWrapper
+{
+    using mir::shell::ShellWrapper::ShellWrapper;
+
+    mir::frontend::SurfaceId create_surface(
+        std::shared_ptr <mir::scene::Session> const& session,
+        mir::scene::SurfaceCreationParameters const& params,
+        std::shared_ptr<mir::frontend::EventSink> const& sink) override
+    {
+        auto const surface = mir::shell::ShellWrapper::create_surface(session, params, sink);
+        session->surface(surface)->request_client_surface_close();
+        return surface;
+    }
+};
+
+class ClientSurfaceStartupEvents : public mtf::ConnectedClientHeadlessServer
+{
+    void SetUp() override
+    {
+        server.wrap_shell([&](std::shared_ptr<msh::Shell> const& wrapped)
+            -> std::shared_ptr<msh::Shell>
+            {
+                return std::make_shared<WrapShellGeneratingCloseEvent>(wrapped);
+            });
+
+        mtf::ConnectedClientHeadlessServer::SetUp();
+    }
+};
+
+void raise_signal_on_close_event(MirSurface*, MirEvent const* ev, void* ctx)
+{
+    if (mir_event_get_type(ev) == mir_event_type_close_surface)
+    {
+        auto signal = reinterpret_cast<mt::Signal*>(ctx);
+        signal->raise();
+    }
+}
+}
+
+TEST_F(ClientSurfaceStartupEvents, receives_event_sent_during_surface_construction)
+{
+    mt::Signal done;
+
+    auto spec = mir_connection_create_spec_for_normal_surface(connection, 100, 100, mir_pixel_format_abgr_8888);
+    mir_surface_spec_set_event_handler(spec, &raise_signal_on_close_event, &done);
+
+    auto surface = mir_surface_create_sync(spec);
+
+    mir_surface_spec_release(spec);
+
+    /* This expectation will fail if the event generated during surface creation is
+     * sent before the create_surface reply.
+     *
+     * In that case, libmirclient first receives a close_surface event for a surface
+     * it doesn't know about, throws it away, and then receives the SurfaceID of the
+     * surface it just created.
+     */
+    EXPECT_TRUE(done.wait_for(std::chrono::seconds{10}));
+
+    mir_surface_release_sync(surface);
+}
+
+struct EventContext
+{
+    EventContext()
+        : event{nullptr}
+    {
+    }
+
+    ~EventContext()
+    {
+        if (event != nullptr)
+            mir_event_unref(event);
+    }
+
+    mt::Signal captured;
+    MirEvent const* event;
+};
+
+void surface_output_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
+{
+    if (mir_event_get_type(ev) == mir_event_type_surface_output)
+    {
+        auto out_event = reinterpret_cast<EventContext*>(ctx);
+        out_event->event = mir_event_ref(ev);
+        out_event->captured.raise();
+    }
+}
+
+TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
+{
+    using namespace std::literals::chrono_literals;
+
+    auto constexpr form_factor = mir_form_factor_tablet;
+    float constexpr scale = 2.15f;
+
+    std::shared_ptr<mg::DisplayConfiguration> display_configuration{server.the_display()->configuration()};
+
+    display_configuration->for_each_output(
+        [](mg::UserDisplayConfigurationOutput& output_config)
+        {
+            output_config.scale = scale;
+            output_config.form_factor = form_factor;
+        });
+
+    auto display_controller = server.the_display_configuration_controller();
+    display_controller->set_default_display_configuration(std::move(display_configuration)).get();
+
+    EventContext context;
+
+    auto spec = mir_connection_create_spec_for_normal_surface(connection, 640, 480, mir_pixel_format_abgr_8888);
+    mir_surface_spec_set_event_handler(spec, &surface_output_capturing_callback, &context);
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    ASSERT_TRUE(context.captured.wait_for(10s));
+    ASSERT_THAT(mir_event_get_type(context.event), Eq(mir_event_type_surface_output));
+    auto surface_event = mir_event_get_surface_output_event(context.event);
+    EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_event), Eq(form_factor));
+    EXPECT_THAT(mir_surface_output_event_get_scale(surface_event), Eq(scale));
+
+    mir_surface_release_sync(surface);
 }

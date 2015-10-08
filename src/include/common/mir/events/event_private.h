@@ -164,6 +164,16 @@ struct MirKeymapEvent
     struct xkb_rule_names rules;
 };
 
+struct MirSurfaceOutputEvent
+{
+    MirEventType type;
+
+    int surface_id;
+    int dpi;
+    float scale;
+    MirFormFactor form_factor;
+};
+
 // Access to MirEvent is deprecated
 union MirEvent
 {
@@ -177,6 +187,7 @@ union MirEvent
     MirCloseSurfaceEvent   close_surface;
     MirKeymapEvent keymap;
     MirInputConfigurationEvent input_configuration;
+    MirSurfaceOutputEvent surface_output;
 };
 
 #ifdef __cplusplus

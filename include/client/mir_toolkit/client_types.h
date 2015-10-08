@@ -44,6 +44,7 @@ typedef struct MirScreencast MirScreencast;
 typedef struct MirPromptSession MirPromptSession;
 typedef struct MirBufferStream MirBufferStream;
 typedef struct MirPersistentId MirPersistentId;
+typedef struct MirBlob MirBlob;
 
 /**
  * Returned by asynchronous functions. Must not be free'd by

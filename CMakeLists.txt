@@ -27,8 +27,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 16) # This should change at least with every MIRSERVER_ABI
-set(MIR_VERSION_PATCH 1)
+set(MIR_VERSION_MINOR 17)
+set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
 add_definitions(-DMIR_VERSION_MINOR=${MIR_VERSION_MINOR})
@@ -175,6 +175,8 @@ find_package(XKBCOMMON REQUIRED)
 find_package(LTTngUST REQUIRED)
 pkg_check_modules(UDEV REQUIRED libudev)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
+pkg_check_modules(LIBINPUT REQUIRED libinput)
+pkg_check_modules(NETTLE REQUIRED nettle)
 pkg_check_modules(UUID REQUIRED uuid)
 
 include_directories (${GLESv2_INCLUDE_DIRS})
@@ -243,3 +245,11 @@ add_subdirectory(snappy)
 add_custom_target(ptest
     COMMAND "${CMAKE_SOURCE_DIR}/tools/run_ctests.sh" "--cost-file" "${CMAKE_BINARY_DIR}/ptest_ctest_cost_data.txt" "sh ${CMAKE_BINARY_DIR}/discover_all_tests.sh" "--" "$$ARGS"
     )
+
+add_custom_target(release-checks)
+
+mir_check_no_unreleased_symbols(mirclient release-checks)
+mir_check_no_unreleased_symbols(mircookie release-checks)
+mir_check_no_unreleased_symbols(mirplatform release-checks)
+mir_check_no_unreleased_symbols(mirprotobuf release-checks)
+mir_check_no_unreleased_symbols(mirserver release-checks)

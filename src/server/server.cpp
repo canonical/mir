@@ -22,13 +22,16 @@
 #include "mir/fd.h"
 #include "mir/frontend/connector.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/options/default_configuration.h"
+#include "mir/renderer/gl/render_target.h"
 #include "mir/default_server_configuration.h"
 #include "mir/logging/logger.h"
 #include "mir/log.h"
 #include "mir/main_loop.h"
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
+#include "mir/cookie_factory.h"
 
 // TODO these are used to frig a stub renderer when running headless
 #include "mir/compositor/renderer.h"
@@ -40,6 +43,7 @@
 namespace mo = mir::options;
 
 #define FOREACH_WRAPPER(MACRO)\
+    MACRO(cursor)\
     MACRO(cursor_listener)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
@@ -47,6 +51,7 @@ namespace mo = mir::options;
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
+    MACRO(cursor_images)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_report)\
     MACRO(gl_config)\
@@ -69,6 +74,7 @@ namespace mo = mir::options;
     MACRO(the_cursor_listener)\
     MACRO(the_cursor)\
     MACRO(the_display)\
+    MACRO(the_display_configuration_controller)\
     MACRO(the_focus_controller)\
     MACRO(the_gl_config)\
     MACRO(the_graphics_platform)\
@@ -101,6 +107,7 @@ struct mir::Server::Self
     std::weak_ptr<options::Option> options;
     std::string config_file;
     std::shared_ptr<ServerConfiguration> server_config;
+    std::shared_ptr<cookie::CookieFactory> cookie_factory;
 
     std::function<void()> init_callback{[]{}};
     int argc{0};
@@ -156,29 +163,46 @@ auto wrap_##name(decltype(Self::name##_wrapper)::result_type const& wrapped)\
 // TODO these are used to frig a stub renderer when running headless
 namespace
 {
-class StubRenderer : public mir::compositor::Renderer
+class StubGLRenderer : public mir::compositor::Renderer
 {
 public:
+    StubGLRenderer(mir::graphics::DisplayBuffer& display_buffer)
+        : render_target{
+            dynamic_cast<mir::renderer::gl::RenderTarget*>(
+                display_buffer.native_display_buffer())}
+    {
+    }
+
     void set_viewport(mir::geometry::Rectangle const&) override {}
 
     void set_rotation(float) override {}
 
     void render(mir::graphics::RenderableList const& renderables) const override
     {
+        // Invoke GL renderer specific functions if the DisplayBuffer supports them
+        if (render_target)
+            render_target->make_current();
+
         for (auto const& r : renderables)
             r->buffer(); // We need to consume a buffer to unblock client tests
+
+        // Invoke GL renderer specific functions if the DisplayBuffer supports them
+        if (render_target)
+            render_target->swap_buffers();
     }
 
     void suspend() override {}
+
+    mir::renderer::gl::RenderTarget* const render_target;
 };
 
-class StubRendererFactory : public mir::compositor::RendererFactory
+class StubGLRendererFactory : public mir::compositor::RendererFactory
 {
 public:
-    auto create_renderer_for(mir::geometry::Rectangle const&)
+    auto create_renderer_for(mir::graphics::DisplayBuffer& display_buffer)
     -> std::unique_ptr<mir::compositor::Renderer>
     {
-        return std::make_unique<StubRenderer>();
+        return std::make_unique<StubGLRenderer>(display_buffer);
     }
 };
 }
@@ -202,9 +226,18 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
             auto const graphics_lib = options->get<std::string>(options::platform_graphics_lib);
 
             if (graphics_lib.find("graphics-dummy.so") != std::string::npos)
-                return std::make_shared<StubRendererFactory>();
+                return std::make_shared<StubGLRendererFactory>();
         }
         return mir::DefaultServerConfiguration::the_renderer_factory();
+    }
+
+    auto the_cookie_factory() -> std::shared_ptr<cookie::CookieFactory> override
+    {
+        if (self->cookie_factory)
+        {
+            return self->cookie_factory;
+        }
+        return mir::DefaultServerConfiguration::the_cookie_factory();
     }
 
     using mir::DefaultServerConfiguration::the_options;
@@ -275,6 +308,12 @@ void mir::Server::set_command_line(int argc, char const* argv[])
     verify_setting_allowed(self->server_config);
     self->argc = argc;
     self->argv = argv;
+}
+
+void mir::Server::override_the_cookie_factory(mir::cookie::Secret const& secret)
+{
+    verify_setting_allowed(self->server_config);
+    self->cookie_factory = mir::cookie::CookieFactory::create_from_secret(secret);
 }
 
 void mir::Server::add_init_callback(std::function<void()> const& init_callback)

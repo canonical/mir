@@ -18,6 +18,7 @@
 
 #include "display_group.h"
 #include "configurable_display_buffer.h"
+#include "display_device_exceptions.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
@@ -27,11 +28,19 @@ namespace geom = mir::geometry;
 
 mga::DisplayGroup::DisplayGroup(
     std::shared_ptr<mga::DisplayDevice> const& device,
-    std::unique_ptr<mga::ConfigurableDisplayBuffer> primary_buffer) :
+    std::unique_ptr<mga::ConfigurableDisplayBuffer> primary_buffer,
+    ExceptionHandler const& exception_handler) :
     device(device),
-    hotplugging(false)
+    exception_handler(exception_handler)
 {
     dbs.emplace(std::make_pair(mga::DisplayName::primary, std::move(primary_buffer)));
+}
+
+mga::DisplayGroup::DisplayGroup(
+    std::shared_ptr<mga::DisplayDevice> const& device,
+    std::unique_ptr<mga::ConfigurableDisplayBuffer> primary_buffer)
+    : DisplayGroup(device, std::move(primary_buffer), []{})
+{
 }
 
 void mga::DisplayGroup::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
@@ -81,28 +90,27 @@ void mga::DisplayGroup::post()
         std::unique_lock<decltype(guard)> lk(guard);
         for(auto const& db : dbs)
             contents.emplace_back(db.second->contents());
-        hotplugging = false;
     }
 
     try
     {
         device->commit(contents);
     }
-    catch (std::runtime_error& e)
+    catch (mga::DisplayDisconnectedException const&)
     {
-        std::unique_lock<decltype(guard)> lk(guard);
-        if (!hotplugging)
-            throw e;
+        //Ignore disconnect errors as they are not fatal
     }
+    catch (mga::ExternalDisplayError const&)
+    {
+        //NOTE: We allow Display to inject an error handler (which can then attempt to recover
+        // from this error) as post is called directly by the compositor and we don't want to propagate
+        // handling of android platform specific exceptions in mir core.
+        exception_handler();
+    }
+
 }
 
 std::chrono::milliseconds mga::DisplayGroup::recommended_sleep() const
 {
     return device->recommended_sleep();
-}
-
-void mga::DisplayGroup::hotplug_occurred()
-{
-    std::unique_lock<decltype(guard)> lk(guard);
-    hotplugging = true;
 }

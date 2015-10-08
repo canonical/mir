@@ -82,6 +82,10 @@ message StreamConfiguration {
   optional BufferStreamId id = 1;
   optional int32 displacement_x = 2;
   optional int32 displacement_y = 3;
+  optional int32 swapinterval = 4;
+  optional float scale = 5;
+
+  optional string error = 127;
 };
 
 message SurfaceModifications {
@@ -210,16 +214,6 @@ message Surface {
   
   optional BufferStream buffer_stream = 10;
 
-  optional string error = 127;
-}
-
-message DRMMagic {
-  optional uint32 magic = 1;
-  optional string error = 127;
-}
-
-message DRMAuthMagicStatus {
-  optional int32 status_code = 1;
   optional string error = 127;
 }
 

@@ -45,6 +45,7 @@ add_library(mirclientobjects OBJECT
   error_connections.cpp
   event.cpp
   event_printer.cpp
+  mir_blob.cpp
   mir_connection.cpp
   mir_connection_api.cpp
   mir_wait_handle.cpp
@@ -71,6 +72,7 @@ add_library(mirclientobjects OBJECT
   mir_buffer_stream_api.cpp
   default_client_buffer_stream_factory.cpp
   ${MIR_CLIENT_SOURCES}
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/events/surface_output_event.h
 )
 
 # Ensure protobuf C++ headers have been produced before

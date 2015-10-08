@@ -79,6 +79,7 @@ set(mirplatform-exclude-headers "${CMAKE_SOURCE_DIR}/include/platform/mir/input"
 make_lib_descriptor(client)
 make_lib_descriptor(server)
 make_lib_descriptor(common INCLUDE_PRIVATE EXCLUDE_HEADERS ${mircommon-exclude-headers})
+make_lib_descriptor(cookie)
 make_lib_descriptor(platform INCLUDE_PRIVATE EXCLUDE_HEADERS ${mirplatform-exclude-headers})
 if(MIR_BUILD_PLATFORM_MESA_KMS)
 make_lib_descriptor(clientplatformmesa LIBRARY_HEADER ${CMAKE_SOURCE_DIR}/src/include/client/mir/client_platform_factory.h)
@@ -88,6 +89,7 @@ if(MIR_BUILD_PLATFORM_ANDROID)
 make_lib_descriptor(clientplatformandroid LIBRARY_HEADER ${CMAKE_SOURCE_DIR}/src/include/client/mir/client_platform_factory.h)
 make_lib_descriptor(platformgraphicsandroid LIBRARY_HEADER ${CMAKE_SOURCE_DIR}/include/platform/mir/graphics/platform.h)
 endif()
+make_lib_descriptor(platforminputevdev LIBRARY_HEADER ${CMAKE_SOURCE_DIR}/include/platform/mir/input/)
 
 add_custom_target(abi-release-dump
   COMMAND /bin/sh -c '${CMAKE_SOURCE_DIR}/tools/generate-abi-base-dump.sh ${CMAKE_SOURCE_DIR}'
@@ -124,7 +126,7 @@ macro(_define_abi_check_for libname)
   )
 endmacro(_define_abi_check_for)
 
-set(the_libs mirserver mirclient mircommon mirplatform)
+set(the_libs mirserver mirclient mircommon mirplatform mircookie mirplatforminputevdev)
 if(MIR_BUILD_PLATFORM_MESA_KMS)
   set(the_libs ${the_libs} mirclientplatformmesa mirplatformgraphicsmesakms)
 endif()

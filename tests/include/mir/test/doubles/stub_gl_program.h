@@ -18,7 +18,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_GL_PROGRAM_H_
 #define MIR_TEST_DOUBLES_STUB_GL_PROGRAM_H_
 
-#include "mir/graphics/gl_program_factory.h"
+#include "mir/gl/program.h"
 
 namespace mir
 {
@@ -27,7 +27,7 @@ namespace test
 namespace doubles
 {
 
-struct StubGLProgram : public graphics::GLProgram
+struct StubGLProgram : public gl::Program
 {
     operator GLuint() const override
     {
