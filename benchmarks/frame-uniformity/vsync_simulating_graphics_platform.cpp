@@ -103,7 +103,6 @@ std::shared_ptr<mg::GraphicBufferAllocator> VsyncSimulatingPlatform::create_buff
 
 std::shared_ptr<mg::Display> VsyncSimulatingPlatform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
-    std::shared_ptr<mg::GLProgramFactory> const&,
      std::shared_ptr<mg::GLConfig> const&)
 {
     return display;

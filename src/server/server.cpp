@@ -43,6 +43,7 @@
 namespace mo = mir::options;
 
 #define FOREACH_WRAPPER(MACRO)\
+    MACRO(cursor)\
     MACRO(cursor_listener)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
@@ -50,7 +51,6 @@ namespace mo = mir::options;
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
-    MACRO(cursor)\
     MACRO(cursor_images)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_report)\
@@ -74,6 +74,7 @@ namespace mo = mir::options;
     MACRO(the_cursor_listener)\
     MACRO(the_cursor)\
     MACRO(the_display)\
+    MACRO(the_display_configuration_controller)\
     MACRO(the_focus_controller)\
     MACRO(the_gl_config)\
     MACRO(the_graphics_platform)\
