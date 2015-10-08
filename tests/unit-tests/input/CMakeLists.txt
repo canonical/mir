@@ -20,6 +20,8 @@ if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x1
 list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_x11_platform.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_x11_module.cpp
+    $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
+    $<TARGET_OBJECTS:mirplatforminputmesax11objects>
 )
 endif()
 

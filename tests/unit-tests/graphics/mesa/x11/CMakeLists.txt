@@ -5,7 +5,7 @@ mir_add_wrapped_executable(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_guest_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_generic.cpp
-  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/x11/X11_resources.cpp
+  $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
   $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
 )
 

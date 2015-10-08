@@ -72,14 +72,6 @@ set(
   test_mir_cookie.cpp
 )
 
-if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
-list(APPEND UNIT_TEST_SOURCES
-  $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
-  $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
-  $<TARGET_OBJECTS:mirplatforminputmesax11objects>
-)
-endif()
-
 CMAKE_DEPENDENT_OPTION(
   MIR_RUN_UNIT_TESTS
   "Run unit tests as part of default testing"
