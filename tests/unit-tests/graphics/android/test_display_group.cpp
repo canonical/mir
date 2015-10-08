@@ -18,7 +18,7 @@
 
 #include "src/platforms/android/server/configurable_display_buffer.h"
 #include "src/platforms/android/server/display_group.h"
-#include "src/platforms/android/server/display_disconnected_exception.h"
+#include "src/platforms/android/server/display_device_exceptions.h"
 #include "mir/test/doubles/mock_display_device.h"
 #include "mir/test/doubles/stub_renderable_list_compositor.h"
 #include "mir/test/doubles/stub_swapping_gl_context.h"
@@ -91,7 +91,7 @@ TEST(DisplayGroup, group_ignores_throws_during_hotplug)
     NiceMock<mtd::MockDisplayDevice> mock_device;
     mga::DisplayGroup group(mt::fake_shared(mock_device), std::make_unique<StubConfigurableDB>());
     EXPECT_CALL(mock_device, commit(_))
-        .WillOnce(Throw(mga::DisplayDisconnectedException()))
+        .WillOnce(Throw(mga::DisplayDisconnectedException("")))
         .WillOnce(Throw(std::runtime_error("")));
 
     EXPECT_NO_THROW({group.post();});
@@ -99,4 +99,19 @@ TEST(DisplayGroup, group_ignores_throws_during_hotplug)
     EXPECT_THROW({
         group.post();
     }, std::runtime_error);
+}
+
+TEST(DisplayGroup, calls_error_handler_on_external_display_error)
+{
+    using namespace testing;
+    NiceMock<mtd::MockDisplayDevice> mock_device;
+    bool error_handler_called{false};
+
+    mga::DisplayGroup group(mt::fake_shared(mock_device), std::make_unique<StubConfigurableDB>(),
+        [&error_handler_called] { error_handler_called = true; });
+    EXPECT_CALL(mock_device, commit(_))
+        .WillOnce(Throw(mga::ExternalDisplayError("")));
+
+    EXPECT_NO_THROW({group.post();});
+    EXPECT_TRUE(error_handler_called);
 }

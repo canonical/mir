@@ -93,7 +93,9 @@ DisplayConfigurationOutput default_output(DisplayConfigurationOutputId id)
         0,
         mir_pixel_format_abgr_8888,
         mir_power_mode_on,
-        mir_orientation_normal
+        mir_orientation_normal,
+        1.0f,
+        mir_form_factor_monitor
     };
 }
 
@@ -116,7 +118,7 @@ DisplayConfigurationOutput connected_without_modes()
     output.pixel_formats = {};
     output.modes = {};
     output.current_format = mir_pixel_format_invalid;
-    output.current_mode_index = std::numeric_limits<size_t>::max();
+    output.current_mode_index = std::numeric_limits<uint32_t>::max();
     return output;
 }
 

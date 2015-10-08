@@ -109,7 +109,6 @@ protected:
         auto conf_policy = std::make_shared<mg::CloneDisplayConfigurationPolicy>();
         display = platform->create_display(
             conf_policy,
-            std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
         allocator = platform->create_buffer_allocator();
         size = geom::Size{100, 100};

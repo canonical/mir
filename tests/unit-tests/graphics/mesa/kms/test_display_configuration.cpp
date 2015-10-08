@@ -94,7 +94,6 @@ public:
     {
         return platform->create_display(
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-            std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
     }
 
@@ -204,7 +203,9 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             1,
             mir_pixel_format_invalid,
             mir_power_mode_on,
-            mir_orientation_normal
+            mir_orientation_normal,
+            1.0f,
+            mir_form_factor_monitor
         },
         {
             mg::DisplayConfigurationOutputId{connector1_id},
@@ -212,15 +213,17 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             mg::DisplayConfigurationOutputType::unknown,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
-            std::numeric_limits<size_t>::max(),
+            std::numeric_limits<uint32_t>::max(),
             connector1_physical_size_mm,
             false,
             false,
             geom::Point(),
-            std::numeric_limits<size_t>::max(),
+            std::numeric_limits<uint32_t>::max(),
             mir_pixel_format_invalid,
             mir_power_mode_on,
-            mir_orientation_normal
+            mir_orientation_normal,
+            1.0f,
+            mir_form_factor_monitor
         },
         {
             mg::DisplayConfigurationOutputId{connector2_id},
@@ -228,15 +231,17 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             mg::DisplayConfigurationOutputType::edp,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
-            std::numeric_limits<size_t>::max(),
+            std::numeric_limits<uint32_t>::max(),
             connector2_physical_size_mm,
             false,
             false,
             geom::Point(),
-            std::numeric_limits<size_t>::max(),
+            std::numeric_limits<uint32_t>::max(),
             mir_pixel_format_invalid,
             mir_power_mode_on,
-            mir_orientation_normal
+            mir_orientation_normal,
+            1.0f,
+            mir_form_factor_monitor
         }
     };
 
@@ -391,7 +396,9 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             1,
             mir_pixel_format_invalid,
             mir_power_mode_on,
-            mir_orientation_normal
+            mir_orientation_normal,
+            1.0f,
+            mir_form_factor_monitor
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -399,15 +406,17 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mg::DisplayConfigurationOutputType::vga,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
-            std::numeric_limits<size_t>::max(),
+            std::numeric_limits<uint32_t>::max(),
             connector_physical_sizes_mm_before[1],
             false,
             false,
             geom::Point(),
-            std::numeric_limits<size_t>::max(),
+            std::numeric_limits<uint32_t>::max(),
             mir_pixel_format_invalid,
             mir_power_mode_on,
-            mir_orientation_normal
+            mir_orientation_normal,
+            1.0f,
+            mir_form_factor_monitor
         },
     };
 
@@ -419,7 +428,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mg::DisplayConfigurationOutputType::composite,
             {},
             std::vector<mg::DisplayConfigurationMode>(),
-            std::numeric_limits<size_t>::max(),
+            std::numeric_limits<uint32_t>::max(),
             connector_physical_sizes_mm_after[0],
             false,
             true,
@@ -427,7 +436,9 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             1,  // Ensure current_mode_index is remembered even still
             mir_pixel_format_invalid,
             mir_power_mode_on,
-            mir_orientation_normal
+            mir_orientation_normal,
+            1.0f,
+            mir_form_factor_monitor
         },
         {
             mg::DisplayConfigurationOutputId(connector_ids[1]),
@@ -443,7 +454,9 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             1,
             mir_pixel_format_invalid,
             mir_power_mode_on,
-            mir_orientation_normal
+            mir_orientation_normal,
+            1.0f,
+            mir_form_factor_monitor
         },
     };
 
@@ -563,7 +576,9 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
             1,
             mir_pixel_format_invalid,
             mir_power_mode_on,
-            mir_orientation_normal
+            mir_orientation_normal,
+            1.0f,
+            mir_form_factor_monitor
         },
     };
 
@@ -584,7 +599,9 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
                 // available modes has also changed
             mir_pixel_format_invalid,
             mir_power_mode_on,
-            mir_orientation_normal
+            mir_orientation_normal,
+            1.0f,
+            mir_form_factor_monitor
         },
     };
 

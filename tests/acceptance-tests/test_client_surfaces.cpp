@@ -82,15 +82,6 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
     static const int max_surface_count = 5;
     SurfaceSync ssync[max_surface_count];
 
-    MirSurfaceParameters surface_params
-    {
-        "Arbitrary surface name",
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-
     void SetUp() override
     {
         server.override_the_window_manager_builder([this](msh::FocusController*)
