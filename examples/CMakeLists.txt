@@ -197,6 +197,7 @@ add_library(mir_demo_server_loadable MODULE
 target_link_libraries(mir_demo_server_loadable
   mirserver
   exampleserverconfig
+  xcursorloader-static
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}
   ${Boost_LIBRARIES}
