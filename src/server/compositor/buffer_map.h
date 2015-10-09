@@ -43,11 +43,20 @@ public:
 
     void receive_buffer(graphics::BufferID id);
     void send_buffer(graphics::BufferID id) override;
+
+    size_t client_owned_buffer_count();
     std::shared_ptr<graphics::Buffer>& operator[](graphics::BufferID) override;
     
 private:
     std::mutex mutable mutex;
-    typedef std::map<graphics::BufferID, std::shared_ptr<graphics::Buffer>> Map;
+
+    enum class Owner;
+    struct MapEntry
+    {
+        std::shared_ptr<graphics::Buffer> buffer;
+        Owner owner;
+    };
+    typedef std::map<graphics::BufferID, MapEntry> Map;
     //used to keep strong reference
     Map buffers;
     Map::iterator checked_buffers_find(graphics::BufferID, std::unique_lock<std::mutex> const&);

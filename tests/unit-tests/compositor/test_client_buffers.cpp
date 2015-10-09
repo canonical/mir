@@ -124,6 +124,26 @@ TEST_F(ClientBuffers, sends_no_update_msg_if_buffer_is_not_around)
     map.send_buffer(stub_allocator.ids[0]);
 }
 
+TEST_F(ClientBuffers, removing_decreases_count)
+{
+    map.add_buffer(properties);
+    ASSERT_THAT(stub_allocator.map, SizeIs(3));
+    ASSERT_THAT(stub_allocator.ids, SizeIs(3));
+
+    EXPECT_THAT(map.client_owned_buffer_count(), Eq(1));
+    map.remove_buffer(stub_allocator.ids[0]);
+    EXPECT_THAT(map.client_owned_buffer_count(), Eq(0));
+}
+
+TEST_F(ClientBuffers, ignores_unknown_receive)
+{
+    map.add_buffer(properties);
+    map.remove_buffer(stub_allocator.ids[0]);
+    EXPECT_THAT(map.client_owned_buffer_count(), Eq(0));
+    map.send_buffer(stub_allocator.ids[0]);
+    EXPECT_THAT(map.client_owned_buffer_count(), Eq(0));
+}
+
 TEST_F(ClientBuffers, can_track_how_many_buffers_client_owns)
 {
     map.add_buffer(properties);

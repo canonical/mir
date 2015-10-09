@@ -25,6 +25,15 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 
+namespace mir { namespace compositor {
+enum class BufferMap::Owner
+{
+    server,
+    client
+};
+}
+}
+
 mc::BufferMap::BufferMap(
     mf::BufferStreamId id,
     std::shared_ptr<mf::EventSink> const& sink,
@@ -39,7 +48,7 @@ mg::BufferID mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto buffer = allocator->alloc_buffer(properties);
-    buffers[buffer->id()] = buffer;
+    buffers[buffer->id()] = {buffer, Owner::client};
     sink->send_buffer(stream_id, *buffer, mg::BufferIpcMsgType::full_msg);
     return buffer->id();
 }
@@ -55,19 +64,24 @@ void mc::BufferMap::send_buffer(mg::BufferID id)
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = buffers.find(id);
     if (it != buffers.end())
-        sink->send_buffer(stream_id, *it->second, mg::BufferIpcMsgType::update_msg);
+    {
+        sink->send_buffer(stream_id, *it->second.buffer, mg::BufferIpcMsgType::update_msg);
+        it->second.owner = Owner::client;
+    }
 }
 
-void receive_buffer(graphics::BufferID id)
+void mc::BufferMap::receive_buffer(graphics::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
-    (void) id;
+    auto it = buffers.find(id);
+    if (it != buffers.end())
+        it->second.owner = Owner::server;
 }
 
 std::shared_ptr<mg::Buffer>& mc::BufferMap::operator[](mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
-    return checked_buffers_find(id, lk)->second;
+    return checked_buffers_find(id, lk)->second.buffer;
 }
 
 mc::BufferMap::Map::iterator mc::BufferMap::checked_buffers_find(
@@ -77,4 +91,9 @@ mc::BufferMap::Map::iterator mc::BufferMap::checked_buffers_find(
     if (it == buffers.end())
         BOOST_THROW_EXCEPTION(std::logic_error("cannot find buffer by id"));
     return it;
+}
+
+size_t mc::BufferMap::client_owned_buffer_count()
+{
+    return 0;
 }
