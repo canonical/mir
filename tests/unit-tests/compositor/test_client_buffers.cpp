@@ -127,8 +127,8 @@ TEST_F(ClientBuffers, sends_no_update_msg_if_buffer_is_not_around)
 TEST_F(ClientBuffers, removing_decreases_count)
 {
     map.add_buffer(properties);
-    ASSERT_THAT(stub_allocator.map, SizeIs(3));
-    ASSERT_THAT(stub_allocator.ids, SizeIs(3));
+    ASSERT_THAT(stub_allocator.map, SizeIs(1));
+    ASSERT_THAT(stub_allocator.ids, SizeIs(1));
 
     EXPECT_THAT(map.client_owned_buffer_count(), Eq(1));
     map.remove_buffer(stub_allocator.ids[0]);
@@ -160,6 +160,6 @@ TEST_F(ClientBuffers, can_track_how_many_buffers_client_owns)
     map.send_buffer(stub_allocator.ids[0]);
     EXPECT_THAT(map.client_owned_buffer_count(), Eq(2));
 
-    map.send_buffer(stub_allocator.ids[0]);
+    map.send_buffer(stub_allocator.ids[1]);
     EXPECT_THAT(map.client_owned_buffer_count(), Eq(3));
 }
