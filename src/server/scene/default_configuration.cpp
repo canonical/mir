@@ -42,11 +42,14 @@
 #include "timeout_application_not_responding_detector.h"
 #include "mir/options/program_option.h"
 #include "mir/options/default_configuration.h"
+#include "mir/graphics/display_configuration.h"
+#include "mir/frontend/display_changer.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace ms = mir::scene;
+namespace mg = mir::graphics;
 namespace msh = mir::shell;
 
 std::shared_ptr<ms::SurfaceStackModel>
@@ -178,6 +181,7 @@ mir::DefaultServerConfiguration::the_session_coordinator()
                     the_snapshot_strategy(),
                     the_session_event_sink(),
                     the_session_listener(),
+                    the_display(),
                     the_application_not_responding_detector());
         });
 }

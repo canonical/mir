@@ -595,17 +595,17 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
         }
     }
 
-    if (info.titlebar)
-    {
-        tools->forget(info.titlebar);
-        session->destroy_surface(info.titlebar_id);
-    }
-
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
         active_surface_.reset();
         tools->focus_next_session();
         select_active_surface(tools->focused_surface());
+    }
+
+    if (info.titlebar)
+    {
+        tools->forget(info.titlebar);
+        session->destroy_surface(info.titlebar_id);
     }
 }
 

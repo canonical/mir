@@ -23,7 +23,11 @@
 
 #include "mir/graphics/cursor_image.h"
 
+#include <xf86drm.h>
+#include <drm/drm.h>
+
 #include "mir/test/doubles/mock_gbm.h"
+#include "mir/test/doubles/mock_drm.h"
 #include "mir/test/fake_shared.h"
 #include "mock_kms_output.h"
 
@@ -98,7 +102,9 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 1,
                 mir_pixel_format_invalid,
                 mir_power_mode_on,
-                mir_orientation_normal
+                mir_orientation_normal,
+                1.0f,
+                mir_form_factor_monitor
             });
         outputs.push_back(
             {
@@ -118,7 +124,9 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 0,
                 mir_pixel_format_invalid,
                 mir_power_mode_on,
-                mir_orientation_normal
+                mir_orientation_normal,
+                1.0f,
+                mir_form_factor_monitor
             });
         outputs.push_back(
             {
@@ -138,7 +146,9 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 0,
                 mir_pixel_format_invalid,
                 mir_power_mode_on,
-                mir_orientation_right
+                mir_orientation_right,
+                1.0f,
+                mir_form_factor_monitor
             });
     }
 
@@ -220,6 +230,14 @@ struct StubCursorImage : public mg::CursorImage
 };
 void const* StubCursorImage::image_data = reinterpret_cast<void*>(&StubCursorImage::image_data);
 
+// Those new cap flags are currently only available in drm/drm.h but not in
+// libdrm/drm.h nor in xf86drm.h. Additionally drm/drm.h is current c++ unfriendly
+// So until those headers get cleaned up we duplicate those definitions.
+#ifndef DRM_CAP_CURSOR_WIDTH
+#define DRM_CAP_CURSOR_WIDTH            0x8
+#define DRM_CAP_CURSOR_HEIGHT           0x9
+#endif
+
 struct MesaCursorTest : ::testing::Test
 {
     struct MockGBM : testing::NiceMock<mtd::MockGBM>
@@ -236,13 +254,29 @@ struct MesaCursorTest : ::testing::Test
         }
     } mock_gbm;
 
+    size_t const cursor_side{64};
     MesaCursorTest()
         : cursor{mock_gbm.fake_gbm.device, output_container,
             mt::fake_shared(current_configuration),
             mt::fake_shared(stub_image)}
     {
+        using namespace ::testing;
+        ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_WIDTH, _))
+            .WillByDefault(Invoke([this](int , uint64_t , uint64_t *value)
+                                  {
+                                      *value = cursor_side;
+                                      return 0;
+                                  }));
+        ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_HEIGHT, _))
+            .WillByDefault(Invoke([this](int , uint64_t , uint64_t *value)
+                                  {
+                                      *value = cursor_side;
+                                      return 0;
+                                  }));
+
     }
 
+    testing::NiceMock<mtd::MockDRM> mock_drm;
     StubCurrentConfiguration current_configuration;
     StubCursorImage stub_image;
     StubKMSOutputContainer output_container;
@@ -269,7 +303,6 @@ struct SinglePixelCursorImage : public StubCursorImage
 
 TEST_F(MesaCursorTest, creates_cursor_bo_image)
 {
-    size_t const cursor_side{64};
     EXPECT_CALL(mock_gbm, gbm_bo_create(mock_gbm.fake_gbm.device,
                                         cursor_side, cursor_side,
                                         GBM_FORMAT_ARGB8888,
@@ -297,7 +330,6 @@ TEST_F(MesaCursorTest, show_cursor_writes_to_bo)
     using namespace testing;
 
     StubCursorImage image;
-    size_t const cursor_side{64};
     geom::Size const cursor_size{cursor_side, cursor_side};
     size_t const cursor_size_bytes{cursor_side * cursor_side * sizeof(uint32_t)};
 

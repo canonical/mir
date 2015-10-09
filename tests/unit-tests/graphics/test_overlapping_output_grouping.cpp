@@ -73,7 +73,7 @@ public:
 
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
     {
-        size_t i = 1;
+        uint32_t i = 1;
         for (auto const& info : outputs)
         {
             std::vector<mg::DisplayConfigurationMode> modes(i);
@@ -94,7 +94,9 @@ public:
                 i - 1,
                 mir_pixel_format_invalid,
                 info.power_mode,
-                info.orientation
+                info.orientation,
+                1.0f,
+                mir_form_factor_monitor
             };
 
             f(output);
