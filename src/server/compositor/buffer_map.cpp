@@ -55,7 +55,11 @@ void mc::BufferMap::send_buffer(mg::BufferID id)
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = buffers.find(id);
     if (it != buffers.end())
-        sink->send_buffer(stream_id, *it->second, mg::BufferIpcMsgType::update_msg);
+    {
+        auto buffer = it->second;
+        lk.unlock();
+        sink->send_buffer(stream_id, *buffer, mg::BufferIpcMsgType::update_msg);
+    }
 }
 
 std::shared_ptr<mg::Buffer>& mc::BufferMap::operator[](mg::BufferID id)
