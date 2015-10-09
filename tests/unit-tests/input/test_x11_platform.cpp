@@ -50,8 +50,7 @@ struct X11PlatformTest : ::testing::Test
     NiceMock<mtd::MockInputSink> mock_keyboard_sink;
     NiceMock<mtd::MockX11> mock_x11;
     NiceMock<mtd::MockInputDeviceRegistry> mock_registry;
-    std::shared_ptr<mir::cookie::CookieFactory> cookie_factory = mir::cookie::CookieFactory::create_keeping_secret();
-    mir::input::DefaultEventBuilder builder{0, cookie_factory};
+    mir::input::DefaultEventBuilder builder{0, mir::cookie::CookieFactory::create_keeping_secret()};
 
     mir::input::X::XInputPlatform x11_platform{
         mt::fake_shared(mock_registry),
