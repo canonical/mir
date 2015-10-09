@@ -212,7 +212,6 @@ include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 option(MIR_ENABLE_TESTS "Build tests" ON)
 
 add_subdirectory(benchmarks/)
-add_subdirectory(tools/)
 add_subdirectory(examples/)
 add_subdirectory(playground/)
 add_subdirectory(guides/)
