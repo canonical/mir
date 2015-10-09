@@ -115,16 +115,20 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
     if (!args)
         return;
 
-    MirCookie const cookie = cookie_factory->timestamp_to_cookie(args->eventTime.count());
+    uint64_t mac = 0;
 
     if (mia::android_source_id_is_pointer_device(args->source))
     {
+        auto pointer_action = mia::mir_pointer_action_from_masked_android(args->action & AMOTION_EVENT_ACTION_MASK);
+        if (pointer_action == mir_pointer_action_button_up || pointer_action == mir_pointer_action_button_down)
+            mac = cookie_factory->timestamp_to_cookie(args->eventTime.count()).mac;
+
         auto const& pc = args->pointerCoords[0];
         auto mir_event = mev::make_event(MirInputDeviceId(args->deviceId),
             args->eventTime,
-            cookie.mac,
+            mac,
             mia::mir_modifiers_from_android(args->metaState),
-            mia::mir_pointer_action_from_masked_android(args->action & AMOTION_EVENT_ACTION_MASK),
+            pointer_action,
             mia::mir_pointer_buttons_from_android(args->buttonState),
             pc.getX(), pc.getY(),
             pc.getAxisValue(AMOTION_EVENT_AXIS_HSCROLL),
@@ -141,7 +145,7 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
     {
         auto mir_event = mev::make_event(MirInputDeviceId(args->deviceId),
                                          args->eventTime,
-                                         cookie.mac,
+                                         0, // need to check if an action is up/down before assigning the mac
                                          mia::mir_modifiers_from_android(args->metaState));
         auto action = args->action;
         size_t index_with_action = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
@@ -157,6 +161,9 @@ void mia::InputTranslator::notifyMotion(const droidinput::NotifyMotionArgs* args
                 action = mir_touch_action_from_masked_android(masked_action);
             else
                 action = mir_touch_action_change;
+
+            if (action == mir_touch_action_up || action == mir_touch_action_down)
+                mir_event->motion.mac = cookie_factory->timestamp_to_cookie(args->eventTime.count()).mac;
 
             mev::add_touch(*mir_event, args->pointerProperties[i].id, action,
                            mia::mir_tool_type_from_android(args->pointerProperties[i].toolType),
