@@ -19,6 +19,7 @@
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/mock_event_sink.h"
+#include "mir/test/doubles/mock_frame_dropping_policy_factory.h"
 #include "mir/test/fake_shared.h"
 #include "src/server/compositor/stream.h"
 #include "mir/scene/null_surface_observer.h"
@@ -99,7 +100,10 @@ struct Stream : Test
     NiceMock<mtd::MockEventSink> mock_sink;
     geom::Size initial_size{44,2};
     MirPixelFormat construction_format{mir_pixel_format_rgb_565};
-    mc::Stream stream{std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
+    mtd::MockFrameDroppingPolicyFactory framedrop_factory;
+    mc::Stream stream{
+        mt::fake_shared(framedrop_factory),
+        std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
 };
 }
 
@@ -242,4 +246,13 @@ TEST_F(Stream, can_access_buffer_after_allocation)
 {
     EXPECT_CALL(*this, called(testing::Ref(*buffers.front())));
     stream.with_buffer(buffers.front()->id(), [this](mg::Buffer& b) { called(b); });
+}
+
+//confusingly, we have two framedrops. One is swapinterval zero, where old buffers are dropped as quickly as possible.
+//In non-framedropping mode, we drop based on a timeout according to a policy, mostly for screen-off scenarios.
+TEST_F(Stream, timer_starts_when_buffers_run_out_and_framedropping_disabled)
+{
+//    stream.
+//void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer* new_buffer)> fn)
+//std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const* id)
 }

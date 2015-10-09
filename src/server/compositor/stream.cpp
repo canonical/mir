@@ -23,6 +23,8 @@
 #include "temporary_buffers.h"
 #include "mir/frontend/client_buffers.h"
 #include "mir/graphics/buffer.h"
+#include "mir/compositor/frame_dropping_policy_factory.h"
+#include "mir/compositor/frame_dropping_policy.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -35,7 +37,22 @@ enum class mc::Stream::ScheduleMode {
     Dropping
 };
 
-mc::Stream::Stream(std::unique_ptr<frontend::ClientBuffers> map, geom::Size size, MirPixelFormat pf) :
+void mc::Stream::DroppingCallback::operator()()
+{
+}
+
+void mc::Stream::DroppingCallback::lock()
+{
+}
+
+void mc::Stream::DroppingCallback::unlock()
+{
+}
+
+mc::Stream::Stream(
+    std::shared_ptr<mc::FrameDroppingPolicyFactory> const& policy_factory,
+    std::unique_ptr<frontend::ClientBuffers> map, geom::Size size, MirPixelFormat pf) :
+    drop_policy(policy_factory->create_policy(std::make_shared<DroppingCallback>())),
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
     buffers(std::move(map)),
