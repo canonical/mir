@@ -33,8 +33,7 @@ add_library(exampleserverconfig STATIC
   server_example_cursor_images.h
   xcursor_loader.cpp
   xcursor_loader.h
-  $<TARGET_OBJECTS:xcursorloader>
-)
+        cursor-theme-dump.cpp)
 
 target_link_libraries(eglapp
   mirclient
@@ -251,3 +250,12 @@ else()
   )
 endif ()
 endif ()
+
+mir_add_wrapped_executable(mir_cursor_theme_dump
+        cursor-theme-ndump.cpp
+)
+
+target_link_libraries(mir_cursor_theme_dump
+  exampleserverconfig
+  mirserver
+)
