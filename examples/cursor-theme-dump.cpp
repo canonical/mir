@@ -52,7 +52,7 @@ try
 {
     if (argc != 2)
     {
-        puts("Lousy params");
+        puts("Usage mir_cursor_theme_dump <cursor theme>\n");
         exit(-1);
     }
 
@@ -89,11 +89,6 @@ try
 
             auto const hotspot = image->hotspot();
             auto const argb_8888 = static_cast<uint8_t const*>(image->as_argb_8888());
-            auto const size = image->size();
-
-            printf(" . . hotspot %d, %d\n", hotspot.dx.as_int(), hotspot.dy.as_int());
-            printf(" . . size    %d, %d\n", size.width.as_int(), size.height.as_int());
-            printf(" . . data    %p\n", argb_8888);
 
             output << "CursorData{\"" << cursor << "\", " << hotspot.dx.as_int() << ", " << hotspot.dy.as_int() << ",\n";
 
@@ -117,12 +112,10 @@ try
             output << "\"\n";
 
             output << "},\n";
-
-
         }
         else
         {
-            printf("No image for %s:%s\n", theme, cursor);
+            printf("** WARNING ** No image for %s:%s\n", theme, cursor);
         }
     }
     output << "};\n";
@@ -130,5 +123,5 @@ try
 }
 catch (std::exception const& error)
 {
-    printf("Error: %s", error.what());
+    printf("** ERROR **: %s", error.what());
 }
