@@ -56,7 +56,9 @@ struct StubDisplayConfigurationOutput : public graphics::DisplayConfigurationOut
             0,
             format,
             mir_power_mode_on,
-            mir_orientation_normal
+            mir_orientation_normal,
+            1.0f,
+            mir_form_factor_monitor
         }
     {
     }
@@ -119,6 +121,12 @@ public:
         {
             std::vector<graphics::DisplayConfigurationMode> modes;
 
+            // Every second output, starting with the first, is connected...
+            // (Android tests assume the first output in a configuration is connected)
+            auto const connected = [](int index) { return (index % 2) == 0; };
+            // ..and every second connected output is used...
+            auto const used = [](int index) { return (index % 4) == 0; };
+
             for (auto j = 0u; j <= i; j++)
             {
                 geometry::Size sz{mode_index*4, mode_index*3};
@@ -127,21 +135,37 @@ public:
                 modes.push_back(mode);
             }
 
-            size_t mode_index = modes.size() - 1;
+            uint32_t current_mode_index;
+            uint32_t preferred_mode_index;
+            if (connected(i))
+            {
+                current_mode_index = modes.size() - 1;
+                preferred_mode_index = i;
+            }
+            else
+            {
+                current_mode_index = std::numeric_limits<uint32_t>::max();
+                preferred_mode_index = std::numeric_limits<uint32_t>::max();
+            }
+
             geometry::Size physical_size{};
             geometry::Point top_left{};
             graphics::DisplayConfigurationOutput output{
                 graphics::DisplayConfigurationOutputId{static_cast<int>(i + 1)},
                 graphics::DisplayConfigurationCardId{static_cast<int>(i)},
                 graphics::DisplayConfigurationOutputType::vga,
-                pfs, modes, i,
+                pfs,
+                connected(i) ? modes : std::vector<graphics::DisplayConfigurationMode>{},
+                preferred_mode_index,
                 physical_size,
-                ((i % 2) == 0),  // even numbers have connected==true
-                ((i % 4) == 0),  // only every second even has used==true
+                connected(i),
+                used(i),
                 top_left,
-                mode_index, pfs[0],
-                mir_power_mode_off,
-                mir_orientation_normal
+                current_mode_index, pfs[0],
+                used(i) ? mir_power_mode_on : mir_power_mode_off,
+                mir_orientation_normal,
+                1.0f,
+                mir_form_factor_monitor
             };
 
             outputs.push_back(output);
@@ -170,7 +194,9 @@ public:
                 {{rect.size, 60.0}},
                 0, geometry::Size{}, true, true, rect.top_left, 0,
                 mir_pixel_format_abgr_8888, mir_power_mode_on,
-                mir_orientation_normal
+                mir_orientation_normal,
+                1.0f,
+                mir_form_factor_monitor
             };
 
             outputs.push_back(output);
@@ -183,6 +209,22 @@ public:
         };
 
         cards.push_back(card);
+    }
+
+    StubDisplayConfig(std::vector<graphics::DisplayConfigurationOutput> const& outputs)
+    {
+        graphics::DisplayConfigurationCard card{
+            graphics::DisplayConfigurationCardId{static_cast<int>(1)},
+            outputs.size()
+        };
+
+        cards.push_back(card);
+        this->outputs = outputs;
+
+        for (auto& output : this->outputs)
+        {
+            output.card_id = cards[0].id;
+        }
     }
 
     void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)> f) const override

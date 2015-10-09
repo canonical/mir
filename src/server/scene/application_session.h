@@ -21,6 +21,8 @@
 
 #include "mir/scene/session.h"
 
+#include "output_properties_cache.h"
+
 #include <atomic>
 #include <map>
 #include <mutex>
@@ -32,6 +34,10 @@ namespace frontend
 class EventSink;
 }
 namespace compositor { class BufferStream; }
+namespace graphics
+{
+class DisplayConfiguration;
+}
 namespace scene
 {
 class SessionListener;
@@ -52,6 +58,7 @@ public:
         std::string const& session_name,
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
         std::shared_ptr<SessionListener> const& session_listener,
+        graphics::DisplayConfiguration const& initial_config,
         std::shared_ptr<frontend::EventSink> const& sink);
 
     ~ApplicationSession();
@@ -106,6 +113,8 @@ private:
     frontend::SurfaceId next_id();
 
     std::atomic<int> next_surface_id;
+
+    OutputPropertiesCache output_cache;
 
     typedef std::map<frontend::SurfaceId, std::shared_ptr<Surface>> Surfaces;
     typedef std::map<frontend::BufferStreamId, std::shared_ptr<compositor::BufferStream>> Streams;

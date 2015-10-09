@@ -17,7 +17,7 @@
  */
 
 #include "fake_input_device_impl.h"
-#include "stub_input_platform.h"
+#include "mir_test_framework/stub_input_platform.h"
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"

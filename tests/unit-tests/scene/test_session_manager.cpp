@@ -33,8 +33,10 @@
 #include "mir/test/doubles/stub_buffer_stream_factory.h"
 #include "mir/test/doubles/null_snapshot_strategy.h"
 #include "mir/test/doubles/null_session_event_sink.h"
+#include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/stub_surface_factory.h"
 #include "mir/test/doubles/null_application_not_responding_detector.h"
+#include "mir/test/doubles/stub_display.h"
 
 #include "mir/test/fake_shared.h"
 
@@ -91,6 +93,8 @@ struct SessionManagerSetup : public testing::Test
     ms::NullSessionListener session_listener;
     mtd::StubBufferStreamFactory buffer_stream_factory;
     mtd::StubSurfaceFactory stub_surface_factory;
+    mtd::StubDisplay display{2};
+    mtd::NullEventSink event_sink;
 
     ms::SessionManager session_manager{mt::fake_shared(surface_coordinator),
         mt::fake_shared(stub_surface_factory),
@@ -99,6 +103,7 @@ struct SessionManagerSetup : public testing::Test
         std::make_shared<mtd::NullSnapshotStrategy>(),
         std::make_shared<mtd::NullSessionEventSink>(),
         mt::fake_shared(session_listener),
+        mt::fake_shared(display),
         std::make_shared<mtd::NullANRDetector>()};
 };
 
@@ -111,7 +116,7 @@ TEST_F(SessionManagerSetup, open_and_close_session)
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
 
-    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", std::shared_ptr<mf::EventSink>());
+    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", mt::fake_shared(event_sink));
     session_manager.close_session(session);
 }
 
@@ -124,10 +129,10 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
 
-    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", std::shared_ptr<mf::EventSink>());
+    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", mt::fake_shared(event_sink));
     session->create_surface(
         ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}),
-        nullptr);
+        mt::fake_shared(event_sink));
 
     session_manager.close_session(session);
 }
@@ -146,6 +151,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
     testing::NiceMock<MockSessionContainer> container;
     testing::NiceMock<mtd::MockSessionListener> session_listener;
     mtd::StubSurfaceFactory stub_surface_factory;
+    mtd::StubDisplay display{2};
 
     ms::SessionManager session_manager{
         mt::fake_shared(surface_coordinator),
@@ -155,6 +161,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
         std::make_shared<mtd::NullSnapshotStrategy>(),
         std::make_shared<mtd::NullSessionEventSink>(),
         mt::fake_shared(session_listener),
+        mt::fake_shared(display),
         std::make_shared<mtd::NullANRDetector>()};
 };
 }
@@ -185,6 +192,7 @@ struct SessionManagerSessionEventsSetup : public testing::Test
     MockSessionEventSink session_event_sink;
     testing::NiceMock<mtd::MockSessionListener> session_listener;
     mtd::StubSurfaceFactory stub_surface_factory;
+    mtd::StubDisplay display{3};
 
     ms::SessionManager session_manager{
         mt::fake_shared(surface_coordinator),
@@ -194,6 +202,7 @@ struct SessionManagerSessionEventsSetup : public testing::Test
         std::make_shared<mtd::NullSnapshotStrategy>(),
         mt::fake_shared(session_event_sink),
         mt::fake_shared(session_listener),
+        mt::fake_shared(display),
         std::make_shared<mtd::NullANRDetector>()};
 };
 }

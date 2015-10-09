@@ -79,7 +79,9 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
                 mir_output.current_mode,
                 mir_output.current_format,
                 mir_output.power_mode,
-                mir_output.orientation
+                mir_output.orientation,
+                1.0f,
+                mir_form_factor_monitor
             };
 
             f(output);
@@ -133,7 +135,9 @@ void mgn::NestedDisplayConfiguration::for_each_output(
                 mir_output.current_mode,
                 mir_output.current_format,
                 mir_output.power_mode,
-                mir_output.orientation
+                mir_output.orientation,
+                1.0f,
+                mir_form_factor_monitor
             };
             UserDisplayConfigurationOutput user(output);
 
