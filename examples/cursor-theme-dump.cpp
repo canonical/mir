@@ -57,9 +57,12 @@ try
     }
 
     auto const theme = argv[1];
-    std::ofstream output(std::string{theme} + ".h");
+    std::ofstream output(std::string{theme} + "-theme.h");
 
     output << "#include <initializer_list>\n"
+      "\n"
+      "namespace\n"
+      "{\n"
         "struct CursorData\n"
         "{\n"
         "    CursorData(char const* name, unsigned int hotspot_x, unsigned int hotspot_y, char const* pixel_data) :\n"
@@ -123,6 +126,7 @@ try
         }
     }
     output << "};\n";
+    output << "}\n";
 }
 catch (std::exception const& error)
 {
