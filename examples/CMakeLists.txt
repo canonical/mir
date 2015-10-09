@@ -33,7 +33,8 @@ add_library(exampleserverconfig STATIC
   server_example_cursor_images.h
   xcursor_loader.cpp
   xcursor_loader.h
-        cursor-theme-dump.cpp)
+  $<TARGET_OBJECTS:xcursorloader>
+)
 
 target_link_libraries(eglapp
   mirclient
@@ -197,7 +198,6 @@ add_library(mir_demo_server_loadable MODULE
 target_link_libraries(mir_demo_server_loadable
   mirserver
   exampleserverconfig
-  xcursorloader-static
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}
   ${Boost_LIBRARIES}
@@ -259,5 +259,4 @@ add_executable(mir_cursor_theme_dump
 target_link_libraries(mir_cursor_theme_dump
   exampleserverconfig
   mirserver
-  xcursorloader-static
 )
