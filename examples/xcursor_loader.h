@@ -41,12 +41,15 @@ namespace graphics
 class CursorImage;
 }
 
-namespace input
+namespace examples
 {
-class XCursorLoader : public CursorImages
+class XCursorLoader : public input::CursorImages
 {
 public:
     XCursorLoader();
+
+    explicit XCursorLoader(std::string const& theme);
+
     virtual ~XCursorLoader() = default;
 
     std::shared_ptr<graphics::CursorImage> image(std::string const& cursor_name,
