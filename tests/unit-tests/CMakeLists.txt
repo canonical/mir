@@ -70,6 +70,7 @@ set(
   test_lockable_callback.cpp
   test_module_deleter.cpp
   test_mir_cookie.cpp
+  $<TARGET_OBJECTS:xcursorloader>
 )
 
 if(MIR_BUILD_PLATFORM_MESA_X11)
@@ -124,8 +125,6 @@ target_link_libraries(
 
   mir-test-static
   mir-test-framework-static
-
-  xcursorloader-static
 
   ${PROTOBUF_LITE_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
