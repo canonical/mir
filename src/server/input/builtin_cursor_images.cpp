@@ -16,10 +16,13 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "black_arrow.c"
 #include "builtin_cursor_images.h"
 
 #include "mir/graphics/cursor_image.h"
+
+#include "default-theme.h"
+
+#include <algorithm>
 
 namespace mi = mir::input;
 namespace mg = mir::graphics;
@@ -27,31 +30,35 @@ namespace geom = mir::geometry;
 
 namespace
 {
-struct BlackArrowCursorImage : public mg::CursorImage
+struct CursorImage : public mg::CursorImage
 {
+    CursorImage(CursorData const* const cursor_data) : cursor_data(cursor_data) {}
+
     void const* as_argb_8888() const
     {
-        return black_arrow.pixel_data;
+        return cursor_data->pixel_data;
     }
+
     geom::Size size() const
     {
-        return { black_arrow.width, black_arrow.height };
+        return { cursor_data->width, cursor_data->height };
     }
     geom::Displacement hotspot() const
     {
-        return {0, 0};
+        return {cursor_data->hotspot_x, cursor_data->hotspot_y};
     }
+
+    CursorData const* const cursor_data;
 };
 }
 
-mi::BuiltinCursorImages::BuiltinCursorImages()
-    : builtin_image(std::make_shared<BlackArrowCursorImage>())
-{
-}
-
-std::shared_ptr<mg::CursorImage> mi::BuiltinCursorImages::image(std::string const& /* cursor_name */,
+std::shared_ptr<mg::CursorImage> mi::BuiltinCursorImages::image(std::string const& cursor_name,
     geom::Size const& /* size */)
 {
-    // Builtin repository only has one cursor at a single size.
-    return builtin_image;
+    auto const match = std::find_if(begin(cursor_data), end(cursor_data), [&](CursorData const& data) { return cursor_name == data.name; });
+
+    if (match != end(cursor_data))
+        return std::make_shared<CursorImage>(&*match);
+
+    return {};
 }
