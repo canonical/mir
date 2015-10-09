@@ -20,6 +20,7 @@
 #include "default_event_builder.h"
 #include "mir/events/event_builders.h"
 #include "mir/cookie_factory.h"
+#include "mir/events/event_private.h"
 
 namespace me = mir::events;
 namespace mi = mir::input;
@@ -48,6 +49,12 @@ void mi::DefaultEventBuilder::add_touch(MirEvent& event, MirTouchId touch_id, Mi
                                                   float pressure_value, float touch_major_value,
                                                   float touch_minor_value, float size_value)
 {
+    if (action == mir_touch_action_up || action == mir_touch_action_down)
+    {
+        auto cookie = cookie_factory->timestamp_to_cookie(event.motion.event_time.count());
+        event.motion.mac = cookie.mac;
+    }
+
     me::add_touch(event, touch_id, action, tooltype, x_axis_value, y_axis_value, pressure_value, touch_major_value,
                   touch_minor_value, size_value);
 }
