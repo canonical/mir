@@ -49,7 +49,6 @@ if(use_debflags)
 endif()
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
-include (cmake/PrePush.cmake)
 include (GNUInstallDirs)
 
 set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer")
