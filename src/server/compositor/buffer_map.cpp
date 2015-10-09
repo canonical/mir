@@ -58,6 +58,12 @@ void mc::BufferMap::send_buffer(mg::BufferID id)
         sink->send_buffer(stream_id, *it->second, mg::BufferIpcMsgType::update_msg);
 }
 
+void receive_buffer(graphics::BufferID id)
+{
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    (void) id;
+}
+
 std::shared_ptr<mg::Buffer>& mc::BufferMap::operator[](mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);

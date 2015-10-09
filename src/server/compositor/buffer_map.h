@@ -40,6 +40,8 @@ public:
 
     graphics::BufferID add_buffer(graphics::BufferProperties const& properties) override;
     void remove_buffer(graphics::BufferID id) override;
+
+    void receive_buffer(graphics::BufferID id);
     void send_buffer(graphics::BufferID id) override;
     std::shared_ptr<graphics::Buffer>& operator[](graphics::BufferID) override;
     
