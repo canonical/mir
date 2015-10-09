@@ -230,6 +230,9 @@ struct StubCursorImage : public mg::CursorImage
 };
 void const* StubCursorImage::image_data = reinterpret_cast<void*>(&StubCursorImage::image_data);
 
+// Those new cap flags are currently only available in drm/drm.h but not in
+// libdrm/drm.h nor in xf86drm.h. Additionally drm/drm.h is current c++ unfriendly
+// So until those headers get cleaned up we duplicate those definitions.
 #ifndef DRM_CAP_CURSOR_WIDTH
 #define DRM_CAP_CURSOR_WIDTH            0x8
 #define DRM_CAP_CURSOR_HEIGHT           0x9
