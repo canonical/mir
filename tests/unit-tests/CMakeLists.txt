@@ -70,6 +70,7 @@ set(
   test_lockable_callback.cpp
   test_module_deleter.cpp
   test_mir_cookie.cpp
+  $<TARGET_OBJECTS:xcursorloader>
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
@@ -126,8 +127,6 @@ target_link_libraries(
   mir-test-framework-static
   mir-test-doubles-static
   mir-test-doubles-platform-static
-
-  xcursorloader-static
 
   ${PROTOBUF_LITE_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
