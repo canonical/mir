@@ -27,7 +27,7 @@
 namespace mir
 {
 namespace graphics { class GraphicBufferAllocator; }
-namespace frontend { class EventSink; }
+namespace frontend { class BufferSink; }
 namespace compositor
 {
 class BufferMap : public frontend::ClientBuffers
@@ -35,7 +35,7 @@ class BufferMap : public frontend::ClientBuffers
 public:
     BufferMap(
         frontend::BufferStreamId id,
-        std::shared_ptr<frontend::EventSink> const& sink,
+        std::shared_ptr<frontend::BufferSink> const& sink,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     graphics::BufferID add_buffer(graphics::BufferProperties const& properties) override;
@@ -51,7 +51,7 @@ private:
     Map::iterator checked_buffers_find(graphics::BufferID, std::unique_lock<std::mutex> const&);
 
     frontend::BufferStreamId const stream_id;
-    std::shared_ptr<frontend::EventSink> const sink;
+    std::shared_ptr<frontend::BufferSink> const sink;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
 };
 }
