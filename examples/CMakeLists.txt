@@ -197,6 +197,7 @@ add_library(mir_demo_server_loadable MODULE
 target_link_libraries(mir_demo_server_loadable
   mirserver
   exampleserverconfig
+  xcursorloader-static
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}
   ${Boost_LIBRARIES}
@@ -252,10 +253,11 @@ endif ()
 endif ()
 
 mir_add_wrapped_executable(mir_cursor_theme_dump
-        cursor-theme-ndump.cpp
+        cursor-theme-dump.cpp
 )
 
 target_link_libraries(mir_cursor_theme_dump
   exampleserverconfig
   mirserver
+  xcursorloader-static
 )
