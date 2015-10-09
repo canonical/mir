@@ -145,7 +145,7 @@ MIR_SERVER_35 {
     mir::Server::open_prompt_socket*;
     mir::Server::override_the_application_not_responding_detector*;
     mir::Server::override_the_compositor*;
-    mir::Server::override_the_cursor*;
+    mir::Server::override_the_cursor_images*;
     mir::Server::override_the_display_buffer_compositor_factory*;
     mir::Server::override_the_display_configuration_report*;
     mir::Server::override_the_gl_config*;
@@ -199,6 +199,7 @@ MIR_SERVER_35 {
     mir::Server::the_surface_coordinator*;
     mir::Server::the_surface_factory*;
     mir::Server::the_touch_visualizer*;
+    mir::Server::wrap_cursor*;
     mir::Server::wrap_cursor_listener*;
     mir::Server::wrap_display_buffer_compositor_factory*;
     mir::Server::wrap_display_configuration_policy*;
@@ -683,6 +684,7 @@ MIR_SERVER_35 {
     mir::DefaultServerConfiguration::the_surface_stack_model*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
     mir::DefaultServerConfiguration::the_window_manager_builder*;
+    mir::DefaultServerConfiguration::wrap_cursor*;
     mir::DefaultServerConfiguration::wrap_cursor_listener*;
     mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
     mir::DefaultServerConfiguration::wrap_display_configuration_policy*;

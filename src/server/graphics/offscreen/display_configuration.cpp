@@ -34,7 +34,9 @@ mgo::DisplayConfiguration::DisplayConfiguration(geom::Size const& display_size)
                  0,
                  mir_pixel_format_xrgb_8888,
                  mir_power_mode_on,
-                 mir_orientation_normal},
+                 mir_orientation_normal,
+                 1.0f,
+                 mir_form_factor_monitor},
           card{mg::DisplayConfigurationCardId{0}, 1}
 {
 }

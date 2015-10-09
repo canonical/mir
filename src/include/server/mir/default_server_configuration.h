@@ -219,6 +219,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<graphics::DisplayReport> the_display_report();
     virtual std::shared_ptr<graphics::Cursor> the_cursor();
+    virtual std::shared_ptr<graphics::Cursor> wrap_cursor(std::shared_ptr<graphics::Cursor> const& wrapped);
     virtual std::shared_ptr<graphics::CursorImage> the_default_cursor_image();
     virtual std::shared_ptr<input::CursorImages> the_cursor_images();
     virtual std::shared_ptr<graphics::DisplayConfigurationReport> the_display_configuration_report();
