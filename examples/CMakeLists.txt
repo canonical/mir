@@ -251,3 +251,12 @@ else()
   )
 endif ()
 endif ()
+
+add_executable(mir_cursor_theme_dump
+  cursor-theme-dump.cpp
+)
+
+target_link_libraries(mir_cursor_theme_dump
+  exampleserverconfig
+  mirserver
+)
