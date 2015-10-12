@@ -82,8 +82,6 @@ target_link_libraries(
   mirclientrpc-static
   mirclientlttng-static
 
-  xcursorloader-static
-
   ${PROTOBUF_LITE_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
