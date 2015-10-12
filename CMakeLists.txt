@@ -49,7 +49,6 @@ if(use_debflags)
 endif()
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
-include (cmake/PrePush.cmake)
 include (GNUInstallDirs)
 
 set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer")
@@ -212,7 +211,6 @@ include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 option(MIR_ENABLE_TESTS "Build tests" ON)
 
 add_subdirectory(benchmarks/)
-add_subdirectory(tools/)
 add_subdirectory(examples/)
 add_subdirectory(playground/)
 add_subdirectory(guides/)
@@ -245,3 +243,11 @@ add_subdirectory(snappy)
 add_custom_target(ptest
     COMMAND "${CMAKE_SOURCE_DIR}/tools/run_ctests.sh" "--cost-file" "${CMAKE_BINARY_DIR}/ptest_ctest_cost_data.txt" "sh ${CMAKE_BINARY_DIR}/discover_all_tests.sh" "--" "$$ARGS"
     )
+
+add_custom_target(release-checks)
+
+mir_check_no_unreleased_symbols(mirclient release-checks)
+mir_check_no_unreleased_symbols(mircookie release-checks)
+mir_check_no_unreleased_symbols(mirplatform release-checks)
+mir_check_no_unreleased_symbols(mirprotobuf release-checks)
+mir_check_no_unreleased_symbols(mirserver release-checks)

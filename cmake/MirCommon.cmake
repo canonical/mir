@@ -219,3 +219,29 @@ function (mir_add_test)
       "echo \"set_tests_properties(${MAT_NAME} PROPERTIES WORKING_DIRECTORY \\\"${MAT_WORKING_DIRECTORY}\\\")\"\n")
   endif()
 endfunction()
+
+function (mir_check_no_unreleased_symbols TARGET DEPENDENT_TARGET)
+  set(TARGET_NAME "Checking-${TARGET}-for-unreleased-symbols")
+  add_custom_target(
+    ${TARGET_NAME}
+    # Some sort of documentation for this awk monstrosity:
+    #
+    # Objdump format is:
+    #
+    # $ADDRESS $FLAGS $SECTION $SIZE $SYMVER $NAME
+    #
+    # Sadly, $FLAGS is fixed-width but contains 1 or more fields separated by whitespace,
+    # but the rest of the fields are *not* fixed witdth.
+    #
+    # So:
+    #
+    # We look only at the lines which start with a digit; these are the lines containing symbols.
+    # Then, we loop through the fields until we find one matching exactly "D."; this will be the $FLAGS
+    # section with D(ynamic symbol) then some other modifier.
+    # Then we check that the next field ($SECTION) is not *UND* (ie: this symbol is defined in this DSO).
+    # *Then* we check that the $SYMVER field does not match "unreleased"
+    COMMAND /bin/sh -c "objdump -T $<TARGET_FILE:${TARGET}> | awk '/^[[:digit:]]+.*/ { for (i = 2 ; i <= NF ; i++) { if ($i ~ \"^D.\$\") { i++ ; if (\$i != \"*UND*\") { i = i+2 ; if (\$i ~ \"unreleased\") { print ; exit 1}}}}}'"
+    VERBATIM
+  )
+  add_dependencies(${DEPENDENT_TARGET} ${TARGET_NAME})
+endfunction()

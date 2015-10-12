@@ -20,6 +20,7 @@
 #define MIR_TEST_FRAMEWORK_CONNECTED_CLIENT_WITH_A_SURFACE_H_
 
 #include "mir_test_framework/connected_client_headless_server.h"
+#include "mir/geometry/size.h"
 
 namespace mir_test_framework
 {
@@ -30,6 +31,8 @@ struct ConnectedClientWithASurface : ConnectedClientHeadlessServer
     void SetUp() override;
 
     void TearDown() override;
+
+    mir::geometry::Size const surface_size {640, 480};
 };
 }
 

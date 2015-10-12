@@ -6,14 +6,13 @@ So, what do I have to do?
 
 There are more detailed descriptions below, but as a general rule:
 
- - If you add a new symbol, add it to a _new_ dotted-decimal version stanza,
-   like `MIR_CLIENT_8.1`, `MIR_CLIENT_8.2`, etc.
- - If you change the behaviour or signature of a symbol and not change SONAME,
-   see "Change symbols without breaking ABI" below
- - If you change SONAME, collect all previous symbol version stanzas into a
-   single labelled with the new SOVER. For example, remove the `MIR_CLIENT_8`,
-   `MIR_CLIENT_8.1`, and `MIR_CLIENT_8.2` stanzas and consolidate their
-   contents into a single new `MIR_CLIENT_9` stanza.
+ - If you add a new symbol, add it to the `*_unreleased` version stanza,
+   like `MIR_CLIENT_unreleased`, `MIR_PLATFORM_unreleased`, etc.
+ - If you change the behaviour or signature of a symbol _and_ wish to preserve
+   backward compatibility, see "Change symbols without breaking ABI" below.
+ - At release time, rename the current `*_unversioned` stanzas to have the
+   version of the current release, like `MIR_CLIENT_0.17`, `MIR_PLATFORM_0.17`,
+   etc.
 
 Can I have some details?
 ------------------------
@@ -89,19 +88,19 @@ possibly much later, and more confusingly.
 When you add new symbols, add them to a new `version` block in the relevant
 `symbols.map` file, like so:
 
-    MIR_CLIENT_8 {
+    MIR_CLIENT_0.17 {
         global:
             mir_connect_sync;
             ...
             /* Other symbols go here */
     };
 
-    MIR_CLIENT_8.1 {
+    MIR_CLIENT_unreleased {
         global:
             mir_connect_new_symbol;
         local:
             *;
-    } MIR_CLIENT_8;
+    } MIR_CLIENT_0.17;
 
 Note that the script is read top to bottom; wildcards are greedily bound when
 first encountered, so to avoid surprises you should only have a wildcard in the
@@ -133,33 +132,33 @@ For example, if you wanted to change the signature of
 
 `mir_connection_api.cpp`:
 
-    __asm__(".symver old_mir_connection_create_surface,mir_connection_create_surface@MIR_CLIENT_8");
+    __asm__(".symver old_mir_connection_create_surface,mir_connection_create_surface@MIR_CLIENT_0.17");
 
     extern "C" MirWaitHandle* old_mir_connection_create_surface(...)
     /* The old implementation */
 
     /* The @@ specifies that this is the default version */
-    __asm__(".symver mir_connection_create_surface,mir_connection_create_surface@@@MIR_CLIENT_8.1");
+    __asm__(".symver mir_connection_create_surface,mir_connection_create_surface@@@MIR_CLIENT_unreleased");
     MirWaitHandle* mir_connection_create_surface(...)
     /* The new implementation */
 
 `symbols.map`:
 
-    MIR_CLIENT_8 {
+    MIR_CLIENT_0.17 {
         global:
             ...
             mir_connection_create_surface;
             ...
     };
 
-    MIR_CLIENT_8.1 {
+    MIR_CLIENT_unreleased {
         global:
             ...
             mir_connection_create_surface;
             ...
         local:
             *;
-    } MIR_CLIENT_8;
+    } MIR_CLIENT_0.17;
 
 Safely load multiple versions of a library into the same address space
 ----------------------------------------------------------------------

@@ -192,6 +192,10 @@ MIR_CLIENT_9v17 {
     mir_blob_release;
     mir_buffer_stream_set_scale;
     mir_buffer_stream_set_scale_sync;
+    mir_event_get_surface_output_event;
+    mir_surface_output_event_get_dpi;
+    mir_surface_output_event_get_form_factor;
+    mir_surface_output_event_get_scale;
 } MIR_CLIENT_9.2;
 
 MIR_CLIENT_DETAIL_9 {

@@ -18,7 +18,7 @@
 
 #include "real_hwc_wrapper.h"
 #include "hwc_report.h"
-#include "display_disconnected_exception.h"
+#include "display_device_exceptions.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <sstream>
@@ -120,13 +120,17 @@ void mga::RealHwcWrapper::set(
     if (auto rc = hwc_device->set(hwc_device.get(), num_displays,
         const_cast<hwc_display_contents_1**>(displays.data())))
     {
-        if (num_displays > 1 && !display_connected(DisplayName::external))
-        {
-            BOOST_THROW_EXCEPTION(mga::DisplayDisconnectedException());
-        }
-
         std::stringstream ss;
         ss << "error during hwc set(). rc = " << std::hex << rc;
+
+        if (num_displays > 1)
+        {
+            if (!display_connected(DisplayName::external))
+                BOOST_THROW_EXCEPTION(mga::DisplayDisconnectedException(ss.str()));
+            else
+                BOOST_THROW_EXCEPTION(mga::ExternalDisplayError(ss.str()));
+        }
+
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
     report->report_set_done(displays);
