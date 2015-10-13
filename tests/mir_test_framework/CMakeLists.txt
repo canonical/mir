@@ -41,6 +41,7 @@ add_library(mir-public-test-framework OBJECT
   stub_client_platform_factory.cpp
   stub_server_platform_factory.cpp
   stub_session.cpp
+  stub_surface.cpp
   stubbed_server_configuration.cpp
   testing_client_options.cpp
   testing_server_options.cpp
