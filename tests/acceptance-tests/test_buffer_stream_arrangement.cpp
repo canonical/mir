@@ -38,6 +38,23 @@ namespace mg = mir::graphics;
 namespace
 {
 
+struct RelativeRectangle
+{
+    RelativeRectangle() = default;
+
+    RelativeRectangle(geom::Displacement const& displacement, geom::Size const& size)
+        : displacement{displacement}, size{size}
+    {
+    }
+
+    geom::Displacement displacement;
+    geom::Size size;
+};
+bool operator==(RelativeRectangle const& a, RelativeRectangle const& b)
+{
+    return (a.displacement == b.displacement) && (a.size == b.size);
+}
+
 MirPixelFormat an_available_format(MirConnection* connection)
 {
     using namespace testing;
@@ -49,9 +66,10 @@ MirPixelFormat an_available_format(MirConnection* connection)
 
 struct Stream
 {
-    Stream(MirBufferStream* stream, geom::Point pt) :
+    Stream(MirBufferStream* stream, geom::Point pt, geom::Size sz) :
         stream(stream),
         pos{pt},
+        stream_size{sz},
         needs_release{false}
     {
         mir_buffer_stream_swap_buffers_sync(stream);
@@ -65,6 +83,7 @@ struct Stream
             an_available_format(connection),
             mir_buffer_usage_hardware)),
         pos{rect.top_left},
+        stream_size{rect.size},
         needs_release{true}
     {
         mir_buffer_stream_swap_buffers_sync(stream);
@@ -86,11 +105,17 @@ struct Stream
         return pos;
     }
 
+    geom::Size size()
+    {
+        return stream_size;
+    }
+
     Stream(Stream const&) = delete;
     Stream& operator=(Stream const&) = delete;
 private:
     MirBufferStream* stream;
     geom::Point const pos;
+    geom::Size stream_size;
     bool const needs_release;
 };
 
@@ -102,24 +127,26 @@ struct Ordering
             return;
 
         std::unique_lock<decltype(mutex)> lk(mutex);
-        std::vector<geom::Displacement> displacement;
+        std::vector<RelativeRectangle> position;
         auto first_position = (*sequence.begin())->renderable()->screen_position().top_left;
         for (auto const& element : sequence)
-            displacement.emplace_back(element->renderable()->screen_position().top_left - first_position);
-        displacements.push_back(displacement);
+            position.emplace_back(
+                element->renderable()->screen_position().top_left - first_position,
+                element->renderable()->screen_position().size);
+        positions.push_back(position);
         cv.notify_all();
     }
 
     template<typename T, typename S>
-    bool wait_for_ordering_within(
-        std::vector<geom::Displacement> const& ordering,
+    bool wait_for_positions_within(
+        std::vector<RelativeRectangle> const& awaited_positions,
         std::chrono::duration<T,S> duration)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
-        return cv.wait_for(lk, duration, [this, ordering] {
-            for (auto& displacement : displacements)
-                if (displacement == ordering) return true;
-            displacements.clear();
+        return cv.wait_for(lk, duration, [this, awaited_positions] {
+            for (auto& position : positions)
+                if (position == awaited_positions) return true;
+            positions.clear();
             return false;
         });
     }
@@ -127,7 +154,7 @@ struct Ordering
 private:
     std::mutex mutex;
     std::condition_variable cv;
-    std::vector<std::vector<geom::Displacement>> displacements;
+    std::vector<std::vector<RelativeRectangle>> positions;
 };
 
 struct OrderTrackingDBC : mc::DisplayBufferCompositor
@@ -186,7 +213,7 @@ struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
         server.the_cursor()->hide();
 
         streams.emplace_back(
-            std::make_unique<Stream>(mir_surface_get_buffer_stream(surface), geom::Point{0,0}));
+            std::make_unique<Stream>(mir_surface_get_buffer_stream(surface), geom::Point{0,0}, surface_size));
         int const additional_streams{3};
         for (auto i = 0; i < additional_streams; i++)
         {
@@ -226,12 +253,17 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
     mir_surface_apply_spec(surface, change_spec);
     mir_surface_spec_release(change_spec);
 
-    std::vector<geom::Displacement> displacements;
+    std::vector<RelativeRectangle> positions;
+    i = 0;
     for (auto& info : infos)
-        displacements.emplace_back(geom::Displacement{info.displacement_x, info.displacement_y});
+    {
+        positions.emplace_back(
+            geom::Displacement{info.displacement_x, info.displacement_y},
+            streams[i++]->size());
+    }
 
     //check that the compositor rendered correctly
     using namespace std::literals::chrono_literals;
-    EXPECT_TRUE(ordering->wait_for_ordering_within(displacements, 5s))
+    EXPECT_TRUE(ordering->wait_for_positions_within(positions, 5s))
          << "timed out waiting to see the compositor post the streams in the right arrangement";
 }

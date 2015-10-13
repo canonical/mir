@@ -69,8 +69,10 @@ void mc::BufferMap::send_buffer(mg::BufferID id)
     auto it = buffers.find(id);
     if (it != buffers.end())
     {
-        sink->send_buffer(stream_id, *it->second.buffer, mg::BufferIpcMsgType::update_msg);
+        auto buffer = it->second.buffer;
         it->second.owner = Owner::client;
+        lk.unlock();
+        sink->send_buffer(stream_id, *buffer, mg::BufferIpcMsgType::update_msg);
     }
 }
 

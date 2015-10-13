@@ -124,6 +124,19 @@ TEST_F(ClientBuffers, sends_no_update_msg_if_buffer_is_not_around)
     map.send_buffer(stub_allocator.ids[0]);
 }
 
+TEST_F(ClientBuffers, can_remove_buffer_from_send_callback)
+{
+    map.add_buffer(properties);
+    ON_CALL(mock_sink, send_buffer(_,_,_))
+        .WillByDefault(Invoke(
+        [&] (mf::BufferStreamId, mg::Buffer& buffer, mg::BufferIpcMsgType)
+        {
+            map.remove_buffer(buffer.id());
+        }));
+
+    map.send_buffer(stub_allocator.ids[0]);
+}
+
 TEST_F(ClientBuffers, removing_decreases_count)
 {
     map.add_buffer(properties);
