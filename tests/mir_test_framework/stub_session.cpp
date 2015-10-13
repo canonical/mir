@@ -127,3 +127,9 @@ void mtd::StubSession::configure_streams(
     std::vector<mir::shell::StreamSpecification> const& /*config*/)
 {
 }
+
+namespace
+{
+// Ensure we don't accidentally have an abstract class
+mtd::StubSession instantiation_test;
+}

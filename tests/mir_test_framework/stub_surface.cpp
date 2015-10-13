@@ -198,3 +198,9 @@ void mtd::StubSurface::set_keymap(xkb_rule_names const& /*rules*/)
 void mtd::StubSurface::rename(std::string const& /*title*/)
 {
 }
+
+namespace
+{
+// Ensure we don't accidentally have an abstract class
+mtd::StubSurface instantiation_test;
+}
