@@ -27,6 +27,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include "mir/test/gmock_fixes.h"
 using namespace testing;
 namespace mf = mir::frontend;
 namespace mt = mir::test;
@@ -250,9 +251,25 @@ TEST_F(Stream, can_access_buffer_after_allocation)
 
 //confusingly, we have two framedrops. One is swapinterval zero, where old buffers are dropped as quickly as possible.
 //In non-framedropping mode, we drop based on a timeout according to a policy, mostly for screen-off scenarios.
+//
+namespace
+{
+struct MockPolicy : mc::FrameDroppingPolicy
+{
+    MOCK_METHOD0(swap_now_blocking, void(void));
+    MOCK_METHOD0(swap_unblocked, void(void));
+};
+}
 TEST_F(Stream, timer_starts_when_buffers_run_out_and_framedropping_disabled)
 {
-//    stream.
-//void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer* new_buffer)> fn)
-//std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const* id)
+    auto policy = std::make_unique<MockPolicy>();
+    auto policy_factory = std::make_unique<mtd::FrameDroppingPolicyFactoryMock>();
+    EXPECT_CALL(*policy, swap_now_blocking());
+    EXPECT_CALL(*policy_factory, create_policy(_))
+        .WillOnce(InvokeWithoutArgs([&]{ return std::move(policy); }));
+    mc::Stream stream{
+        mt::fake_shared(framedrop_factory),
+        std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
+    for (auto& buffer : buffers)
+        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
 }
