@@ -24,6 +24,7 @@
 #include "server_example_window_management.h"
 #include "server_example_custom_compositor.h"
 #include "server_example_test_client.h"
+#include "server_example_cursor_images.h"
 
 #include "mir/server.h"
 #include "mir/main_loop.h"
@@ -93,6 +94,7 @@ try
     me::add_custom_compositor_option_to(server);
     add_launcher_option_to(server);
     add_timeout_option_to(server);
+    me::add_x_cursor_images(server);
 
     me::ClientContext context;
     me::add_test_client_option_to(server, context);

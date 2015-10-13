@@ -1,0 +1,153 @@
+# device /dev/input/event5
+# EVEMU 1.2
+# Input device name: "SynPS/2 Synaptics TouchPad"
+# Input device ID: bus 0x11 vendor 0x02 product 0x07 version 0x1b1
+# Supported events:
+#   Event type 0 (EV_SYN)
+#     Event code 0 (SYN_REPORT)
+#     Event code 1 (SYN_CONFIG)
+#     Event code 2 (SYN_MT_REPORT)
+#     Event code 3 (SYN_DROPPED)
+#     Event code 4 ((null))
+#     Event code 5 ((null))
+#     Event code 6 ((null))
+#     Event code 7 ((null))
+#     Event code 8 ((null))
+#     Event code 9 ((null))
+#     Event code 10 ((null))
+#     Event code 11 ((null))
+#     Event code 12 ((null))
+#     Event code 13 ((null))
+#     Event code 14 ((null))
+#   Event type 1 (EV_KEY)
+#     Event code 272 (BTN_LEFT)
+#     Event code 273 (BTN_RIGHT)
+#     Event code 325 (BTN_TOOL_FINGER)
+#     Event code 330 (BTN_TOUCH)
+#     Event code 333 (BTN_TOOL_DOUBLETAP)
+#     Event code 334 (BTN_TOOL_TRIPLETAP)
+#   Event type 3 (EV_ABS)
+#     Event code 0 (ABS_X)
+#       Value   4171
+#       Min     1472
+#       Max     5470
+#       Fuzz       0
+#       Flat       0
+#       Resolution 60
+#     Event code 1 (ABS_Y)
+#       Value   3320
+#       Min     1408
+#       Max     4498
+#       Fuzz       0
+#       Flat       0
+#       Resolution 85
+#     Event code 24 (ABS_PRESSURE)
+#       Value      0
+#       Min        0
+#       Max      255
+#       Fuzz       0
+#       Flat       0
+#       Resolution 0
+#     Event code 28 (ABS_TOOL_WIDTH)
+#       Value      0
+#       Min        0
+#       Max       15
+#       Fuzz       0
+#       Flat       0
+#       Resolution 0
+#     Event code 47 (ABS_MT_SLOT)
+#       Value      0
+#       Min        0
+#       Max        1
+#       Fuzz       0
+#       Flat       0
+#       Resolution 0
+#     Event code 53 (ABS_MT_POSITION_X)
+#       Value      0
+#       Min     1472
+#       Max     5470
+#       Fuzz       0
+#       Flat       0
+#       Resolution 60
+#     Event code 54 (ABS_MT_POSITION_Y)
+#       Value      0
+#       Min     1408
+#       Max     4498
+#       Fuzz       0
+#       Flat       0
+#       Resolution 85
+#     Event code 57 (ABS_MT_TRACKING_ID)
+#       Value      0
+#       Min        0
+#       Max    65535
+#       Fuzz       0
+#       Flat       0
+#       Resolution 0
+# Properties:
+#   Property  type 0 (INPUT_PROP_POINTER)
+#   Property  type 3 (INPUT_PROP_SEMI_MT)
+# N: SynPS/2 Synaptics TouchPad
+# I: 0011 0002 0007 01b1
+# P: 09 00 00 00 00 00 00 00
+# B: 00 0b 00 00 00 00 00 00 00
+# B: 01 00 00 00 00 00 00 00 00
+# B: 01 00 00 00 00 00 00 00 00
+# B: 01 00 00 00 00 00 00 00 00
+# B: 01 00 00 00 00 00 00 00 00
+# B: 01 00 00 03 00 00 00 00 00
+# B: 01 20 64 00 00 00 00 00 00
+# B: 01 00 00 00 00 00 00 00 00
+# B: 01 00 00 00 00 00 00 00 00
+# B: 01 00 00 00 00 00 00 00 00
+# B: 01 00 00 00 00 00 00 00 00
+# B: 01 00 00 00 00 00 00 00 00
+# B: 01 00 00 00 00 00 00 00 00
+# B: 02 00 00 00 00 00 00 00 00
+# B: 03 03 00 00 11 00 80 60 02
+# B: 04 00 00 00 00 00 00 00 00
+# B: 05 00 00 00 00 00 00 00 00
+# B: 11 00 00 00 00 00 00 00 00
+# B: 12 00 00 00 00 00 00 00 00
+# B: 14 00 00 00 00 00 00 00 00
+# B: 15 00 00 00 00 00 00 00 00
+# B: 15 00 00 00 00 00 00 00 00
+# A: 00 1472 5470 0 0 60
+# A: 01 1408 4498 0 0 85
+# A: 18 0 255 0 0 0
+# A: 1c 0 15 0 0 0
+# A: 2f 0 1 0 0 0
+# A: 35 1472 5470 0 0 60
+# A: 36 1408 4498 0 0 85
+# A: 39 0 65535 0 0 0
+################################
+#      Waiting for events      #
+################################
+E: 0.000000 0003 0039 0137	# EV_ABS / ABS_MT_TRACKING_ID   137
+E: 0.000000 0003 0035 3461	# EV_ABS / ABS_MT_POSITION_X    3461
+E: 0.000000 0003 0036 2303	# EV_ABS / ABS_MT_POSITION_Y    2303
+E: 0.000000 0003 0000 3461	# EV_ABS / ABS_X                3461
+E: 0.000000 0003 0001 2303	# EV_ABS / ABS_Y                2303
+E: 0.000000 0003 0018 0015	# EV_ABS / ABS_PRESSURE         15
+E: 0.000000 0003 001c 0006	# EV_ABS / ABS_TOOL_WIDTH       6
+E: 0.000000 0001 0145 0001	# EV_KEY / BTN_TOOL_FINGER      1
+E: 0.000000 0000 0000 0000	# ------------ SYN_REPORT (0) ----------
+E: 0.000000 0003 0035 3499	# EV_ABS / ABS_MT_POSITION_X    3499
+E: 0.000000 0003 0036 2304	# EV_ABS / ABS_MT_POSITION_Y    2304
+E: 0.000000 0001 014a 0001	# EV_KEY / BTN_TOUCH            1
+E: 0.000000 0003 0000 3499	# EV_ABS / ABS_X                3499
+E: 0.000000 0003 0001 2304	# EV_ABS / ABS_Y                2304
+E: 0.000000 0003 0018 0047	# EV_ABS / ABS_PRESSURE         47
+E: 0.000000 0003 001c 0004	# EV_ABS / ABS_TOOL_WIDTH       4
+E: 0.000000 0000 0000 0000	# ------------ SYN_REPORT (0) ----------
+E: 0.000000 0003 0035 3506	# EV_ABS / ABS_MT_POSITION_X    3506
+E: 0.000000 0003 0036 2302	# EV_ABS / ABS_MT_POSITION_Y    2302
+E: 0.000000 0003 0000 3506	# EV_ABS / ABS_X                3506
+E: 0.000000 0003 0001 2302	# EV_ABS / ABS_Y                2302
+E: 0.000000 0003 0018 0054	# EV_ABS / ABS_PRESSURE         54
+E: 0.000000 0000 0000 0000	# ------------ SYN_REPORT (0) ----------
+E: 0.000000 0003 0035 3522	# EV_ABS / ABS_MT_POSITION_X    3522
+E: 0.000000 0003 0036 2306	# EV_ABS / ABS_MT_POSITION_Y    2306
+E: 0.000000 0003 0000 3522	# EV_ABS / ABS_X                3522
+E: 0.000000 0003 0001 2306	# EV_ABS / ABS_Y                2306
+E: 0.000000 0000 0000 0000	# ------------ SYN_REPORT (0) ----------
+E: 0.000000 0003 001c 0005	# EV_ABS / ABS_TOOL_WIDTH       5

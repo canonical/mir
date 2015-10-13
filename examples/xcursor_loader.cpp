@@ -35,6 +35,7 @@ extern "C"
 #include <xcursor.h>
 }
 
+namespace me = mir::examples;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
@@ -148,13 +149,18 @@ xcursor_name_for_mir_cursor(std::string const& mir_cursor_name)
 }
 }
 
-mi::XCursorLoader::XCursorLoader()
+me::XCursorLoader::XCursorLoader()
 {
     load_cursor_theme("default");
 }
 
+me::XCursorLoader::XCursorLoader(std::string const& theme)
+{
+    load_cursor_theme(theme);
+}
+
 // Each XcursorImages represents images for the different sizes of a given symbolic cursor.
-void mi::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images)
+void me::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images)
 {
     // We would rather take this lock in load_cursor_theme but the Xcursor lib style 
     // makes it difficult to use our standard 'pass the lg around to _locked members' pattern
@@ -184,7 +190,7 @@ void mi::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images)
     loaded_images[std::string(images->name)] = std::make_shared<XCursorImage>(image_of_correct_size, saved_xcursor_library_resource);
 }
 
-void mi::XCursorLoader::load_cursor_theme(std::string const& theme_name)
+void me::XCursorLoader::load_cursor_theme(std::string const& theme_name)
 {
     // Cursors are named by their square dimension...called the nominal size in XCursor terminology, so we just look up by width.
     // Later we verify the actual size.
@@ -192,12 +198,12 @@ void mi::XCursorLoader::load_cursor_theme(std::string const& theme_name)
         [](XcursorImages* images, void *this_ptr)  -> void
         {
             // Can't use lambda capture as this lambda is thunked to a C function ptr
-            auto p = static_cast<mi::XCursorLoader*>(this_ptr);
+            auto p = static_cast<me::XCursorLoader*>(this_ptr);
             p->load_appropriately_sized_image(images);
         }, this);
 }
 
-std::shared_ptr<mg::CursorImage> mi::XCursorLoader::image(
+std::shared_ptr<mg::CursorImage> me::XCursorLoader::image(
     std::string const& cursor_name,
     geom::Size const& size)
 {

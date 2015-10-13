@@ -35,7 +35,6 @@
 #include "mir/test/doubles/null_virtual_terminal.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/mock_gl_config.h"
-#include "mir/test/doubles/platform_factory.h"
 #include "mir/test/doubles/mock_virtual_terminal.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 
@@ -119,7 +118,11 @@ public:
 
     std::shared_ptr<mgm::Platform> create_platform()
     {
-        return mtd::create_mesa_platform_with_null_dependencies();
+        return std::make_shared<mgm::Platform>(
+               mir::report::null_display_report(),
+               std::make_shared<mtd::NullVirtualTerminal>(),
+               *std::make_shared<mtd::NullEmergencyCleanup>(),
+               mgm::BypassOption::allowed);
     }
 
     std::shared_ptr<mgm::Display> create_display(

@@ -53,6 +53,8 @@ struct MockBufferStream : public compositor::BufferStream
             .WillByDefault(testing::Return(true));
         ON_CALL(*this, pixel_format())
             .WillByDefault(testing::Return(mir_pixel_format_abgr_8888));
+        ON_CALL(*this, stream_size())
+            .WillByDefault(testing::Return(geometry::Size{0,0}));
     }
     MOCK_METHOD1(acquire_client_buffer, void(std::function<void(graphics::Buffer* buffer)>));
     MOCK_METHOD1(release_client_buffer, void(graphics::Buffer*));

@@ -5,6 +5,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_buffer_allocator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_tex_bind.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_display_generic.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_group.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_alloc_adaptor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_buffer_allocator.cpp
@@ -21,6 +22,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_server_interpreter.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_pixel_format.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_platform.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_interpreter_buffer_cache.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_native_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_output_builder.cpp
