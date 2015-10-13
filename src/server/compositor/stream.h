@@ -68,11 +68,15 @@ private:
     enum class ScheduleMode;
     struct DroppingCallback : mir::LockableCallback
     {
+        DroppingCallback(Stream* stream);
         void operator()() override;
         void lock() override;
         void unlock() override;
+        Stream* stream;
+        std::unique_lock<std::mutex> guard_lock;
     };
     void transition_schedule(std::shared_ptr<Schedule>&& new_schedule, std::lock_guard<std::mutex> const&);
+    void drop_frame();
 
     std::mutex mutable mutex;
     std::unique_ptr<compositor::FrameDroppingPolicy> drop_policy;

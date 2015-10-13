@@ -71,6 +71,7 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw(
     }
     else
     {
+        //start_waiting_timer();
         promises.emplace_back(std::move(promise));
     }
     return future;
@@ -147,6 +148,7 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 
     if (!promises.empty())
     {
+        //cancel waiting timer
         buffers[protobuf_buffer.buffer_id()].owner = Owner::ContentProducer;
         promises.front().set_value(buffers[protobuf_buffer.buffer_id()].buffer);
         promises.pop_front();

@@ -45,6 +45,7 @@ struct MockSurfaceObserver : mir::scene::NullSurfaceObserver
 struct StubBufferMap : mf::ClientBuffers
 {
     StubBufferMap(mf::EventSink& sink, std::vector<std::shared_ptr<mg::Buffer>>& buffers) :
+        client_count{static_cast<int>(buffers.size())},
         buffers{buffers},
         sink{sink}
     {
@@ -61,9 +62,11 @@ struct StubBufferMap : mf::ClientBuffers
     }
     void receive_buffer(mg::BufferID)
     {
+        client_count--;
     }
     void send_buffer(mg::BufferID id)
     {
+        client_count++;
         sink.send_buffer(mf::BufferStreamId{33}, *operator[](id), mg::BufferIpcMsgType::update_msg);
     }
     std::shared_ptr<mg::Buffer>& operator[](mg::BufferID id)
@@ -79,8 +82,9 @@ struct StubBufferMap : mf::ClientBuffers
     }
     size_t client_owned_buffer_count() const
     {
-        return 0;
+        return client_count;
     }
+    int client_count{0};
     std::vector<std::shared_ptr<mg::Buffer>>& buffers;
     mf::EventSink& sink;
 };
@@ -263,12 +267,12 @@ struct MockPolicy : mc::FrameDroppingPolicy
 TEST_F(Stream, timer_starts_when_buffers_run_out_and_framedropping_disabled)
 {
     auto policy = std::make_unique<MockPolicy>();
-    auto policy_factory = std::make_unique<mtd::FrameDroppingPolicyFactoryMock>();
+    auto policy_factory = std::make_shared<mtd::FrameDroppingPolicyFactoryMock>();
     EXPECT_CALL(*policy, swap_now_blocking());
     EXPECT_CALL(*policy_factory, create_policy(_))
         .WillOnce(InvokeWithoutArgs([&]{ return std::move(policy); }));
     mc::Stream stream{
-        mt::fake_shared(framedrop_factory),
+        policy_factory,
         std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
     for (auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
@@ -277,13 +281,13 @@ TEST_F(Stream, timer_starts_when_buffers_run_out_and_framedropping_disabled)
 TEST_F(Stream, timer_stops_if_a_buffer_is_available)
 {
     auto policy = std::make_unique<MockPolicy>();
-    auto policy_factory = std::make_unique<mtd::FrameDroppingPolicyFactoryMock>();
+    auto policy_factory = std::make_shared<mtd::FrameDroppingPolicyFactoryMock>();
     EXPECT_CALL(*policy, swap_now_blocking());
     EXPECT_CALL(*policy, swap_unblocked());
     EXPECT_CALL(*policy_factory, create_policy(_))
         .WillOnce(InvokeWithoutArgs([&]{ return std::move(policy); }));
     mc::Stream stream{
-        mt::fake_shared(framedrop_factory),
+        policy_factory,
         std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
     for (auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});

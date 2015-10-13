@@ -37,22 +37,31 @@ enum class mc::Stream::ScheduleMode {
     Dropping
 };
 
+mc::Stream::DroppingCallback::DroppingCallback(Stream* stream) :
+    stream(stream)
+{
+}
+
 void mc::Stream::DroppingCallback::operator()()
 {
+    stream->drop_frame();
 }
 
 void mc::Stream::DroppingCallback::lock()
 {
+    guard_lock = std::unique_lock<std::mutex>{stream->mutex};
 }
 
 void mc::Stream::DroppingCallback::unlock()
 {
+    if (guard_lock.owns_lock())
+        guard_lock.unlock();
 }
 
 mc::Stream::Stream(
     std::shared_ptr<mc::FrameDroppingPolicyFactory> const& policy_factory,
     std::unique_ptr<frontend::ClientBuffers> map, geom::Size size, MirPixelFormat pf) :
-    drop_policy(policy_factory->create_policy(std::make_shared<DroppingCallback>())),
+    drop_policy(policy_factory->create_policy(std::make_shared<DroppingCallback>(this))),
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
     buffers(std::move(map)),
@@ -71,10 +80,19 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
         {
             std::lock_guard<decltype(mutex)> lk(mutex); 
             first_frame_posted = true;
+            buffers->receive_buffer(buffer->id());
             schedule->schedule((*buffers)[buffer->id()]);
+            printf("EE %i\n", (int) buffers->client_owned_buffer_count());
+            if (buffers->client_owned_buffer_count() == 0)
+            {
+                //client has no buffers. start the timer
+                drop_policy->swap_now_blocking();
+            }
         }
         observers.frame_posted(1);
     }
+
+
     fn(nullptr); //legacy support
 }
 
@@ -103,7 +121,8 @@ void mc::Stream::remove_observer(std::weak_ptr<ms::SurfaceObserver> const& obser
 
 std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const* id)
 {
-    std::lock_guard<decltype(mutex)> lk(mutex); 
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    drop_policy->swap_unblocked();
     return std::make_shared<mc::TemporaryCompositorBuffer>(arbiter, id);
 }
 
@@ -194,4 +213,10 @@ void mc::Stream::with_buffer(mg::BufferID id, std::function<void(mg::Buffer&)> c
 
 void mc::Stream::set_scale(float)
 {
+}
+
+void mc::Stream::drop_frame()
+{
+    if (schedule->anything_scheduled())
+        buffers->send_buffer(schedule->next_buffer()->id());
 }
