@@ -14,7 +14,6 @@ set(
 
   mock_frame_dropping_policy_factory.cpp
   mock_timer.cpp
-  platform_factory.cpp
   stub_buffer.cpp
   test_protobuf_client.cpp
   test_protobuf_socket_server.cpp

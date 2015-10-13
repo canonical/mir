@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "src/server/input/xcursor_loader.h"
+#include "examples/xcursor_loader.h"
 
 #include "mir/graphics/cursor_image.h"
 #include "mir_test_framework/executable_path.h"
@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+namespace me = mir::examples;
 namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace mtf = mir_test_framework;
@@ -52,7 +53,7 @@ public:
     }
 
     mtf::TemporaryEnvironmentValue xcursor_path;
-    mi::XCursorLoader loader;
+    me::XCursorLoader loader;
 };
 
 namespace
