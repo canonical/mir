@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/frontend/event_sink.h"
+#include "mir/frontend/buffer_sink.h"
 #include "buffer_map.h"
 #include <boost/throw_exception.hpp>
 #include <algorithm>
@@ -40,7 +40,7 @@ enum class BufferMap::Owner
 
 mc::BufferMap::BufferMap(
     mf::BufferStreamId id,
-    std::shared_ptr<mf::EventSink> const& sink,
+    std::shared_ptr<mf::BufferSink> const& sink,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) :
     stream_id(id),
     sink(sink),
