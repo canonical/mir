@@ -32,7 +32,7 @@
 //  we refer to them via their _ prefixed version, i.e. _XcursorImage
 extern "C"
 {
-#include <xcursor.h>
+#include "xcursor.h"
 }
 
 namespace me = mir::examples;

@@ -11,7 +11,6 @@ target_link_libraries(mir_demo_standalone_render_surfaces
 )
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
-include_directories(${MIR_XCURSOR_INCLUDE_DIRECTORIES})
 
 add_library(eglapp STATIC
   eglapp.c
@@ -33,8 +32,11 @@ add_library(exampleserverconfig STATIC
   server_example_cursor_images.h
   xcursor_loader.cpp
   xcursor_loader.h
-  $<TARGET_OBJECTS:xcursorloader>
+  xcursor.c
+  xcursor.h
 )
+
+SET_SOURCE_FILES_PROPERTIES(xcursor.c PROPERTIES COMPILE_FLAGS -D_GNU_SOURCE)
 
 target_link_libraries(eglapp
   mirclient
