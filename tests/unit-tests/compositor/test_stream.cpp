@@ -273,3 +273,29 @@ TEST_F(Stream, timer_starts_when_buffers_run_out_and_framedropping_disabled)
     for (auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
 }
+
+TEST_F(Stream, timer_stops_if_a_buffer_is_available)
+{
+    auto policy = std::make_unique<MockPolicy>();
+    auto policy_factory = std::make_unique<mtd::FrameDroppingPolicyFactoryMock>();
+    EXPECT_CALL(*policy, swap_now_blocking());
+    EXPECT_CALL(*policy, swap_unblocked());
+    EXPECT_CALL(*policy_factory, create_policy(_))
+        .WillOnce(InvokeWithoutArgs([&]{ return std::move(policy); }));
+    mc::Stream stream{
+        mt::fake_shared(framedrop_factory),
+        std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
+    for (auto& buffer : buffers)
+        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+    stream.lock_compositor_buffer(this);
+}
+
+TEST_F(Stream, triggering_policy_gives_a_buffer_back)
+{
+    for (auto& buffer : buffers)
+        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+
+    Mock::VerifyAndClearExpectations(&mock_sink);
+    EXPECT_CALL(mock_sink, send_buffer(_,_,_));
+    framedrop_factory.trigger_policies();
+}
