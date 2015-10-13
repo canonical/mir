@@ -87,8 +87,6 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
         }
         observers.frame_posted(1);
     }
-
-
     fn(nullptr); //legacy support
 }
 
