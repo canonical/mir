@@ -26,7 +26,10 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 
-namespace mir { namespace compositor {
+namespace mir
+{
+namespace compositor
+{
 enum class BufferMap::Owner
 {
     server,
