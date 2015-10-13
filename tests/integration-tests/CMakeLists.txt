@@ -103,7 +103,7 @@ target_link_libraries(
   ${MIR_SERVER_REFERENCES}
 )
 
-if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
+if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
 target_link_libraries(mir_integration_tests
   mirsharedmesaservercommon-static
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
@@ -111,7 +111,7 @@ target_link_libraries(mir_integration_tests
 )
 endif()
 
-if (MIR_BUILD_PLATFORM_ANDROID)
+if (MIR_TEST_PLATFORM STREQUAL "android")
 target_link_libraries(mir_integration_tests
   mirsharedandroid-static
   ${ANDROID_PROPERTIES_LDFLAGS}

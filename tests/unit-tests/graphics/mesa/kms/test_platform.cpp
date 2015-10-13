@@ -28,9 +28,9 @@
 
 #include "mir/test/doubles/mock_buffer.h"
 #include "mir/test/doubles/mock_buffer_ipc_message.h"
-#include "mir/test/doubles/platform_factory.h"
 #include "mir/test/doubles/mock_virtual_terminal.h"
 #include "mir/test/doubles/null_virtual_terminal.h"
+#include "mir/test/doubles/null_emergency_cleanup.h"
 
 #include <gtest/gtest.h>
 
@@ -70,9 +70,13 @@ public:
         fake_devices.add_standard_device("standard-drm-devices");
     }
 
-    std::shared_ptr<mg::Platform> create_platform()
+    std::shared_ptr<mgm::Platform> create_platform()
     {
-        return mtd::create_platform_with_null_dependencies();
+        return std::make_shared<mgm::Platform>(
+                mir::report::null_display_report(),
+                std::make_shared<mtd::NullVirtualTerminal>(),
+                *std::make_shared<mtd::NullEmergencyCleanup>(),
+                mgm::BypassOption::allowed);
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;

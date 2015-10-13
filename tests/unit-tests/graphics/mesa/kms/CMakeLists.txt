@@ -1,8 +1,11 @@
-add_library(unit_test_graphics_mesa_kms OBJECT
+mir_add_wrapped_executable(
+  mir_unit_tests_mesa-kms
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_allocator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_platform.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_display_generic.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_multi_monitor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_configuration.cpp
@@ -13,11 +16,25 @@ add_library(unit_test_graphics_mesa_kms OBJECT
   ${CMAKE_CURRENT_SOURCE_DIR}/test_guest_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_bypass.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_nested_authentication.cpp
-)
-
-list(APPEND UNIT_TEST_SOURCES
-  $<TARGET_OBJECTS:unit_test_graphics_mesa_kms>
+  ${MIR_SERVER_OBJECTS}
+  ${MIR_COMMON_OBJECTS}
   $<TARGET_OBJECTS:mirplatformgraphicsmesakmsobjects>
 )
 
-set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
+add_dependencies(mir_unit_tests_mesa-kms GMock)
+
+target_link_libraries(
+  mir_unit_tests_mesa-kms
+
+  mir-test-static
+  mir-test-framework-static
+  mir-test-doubles-static
+  mir-test-doubles-platform-static
+  mirsharedmesaservercommon-static
+
+  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
+)
+
+if (MIR_RUN_UNIT_TESTS)
+  mir_discover_tests_with_fd_leak_detection(mir_unit_tests_mesa-kms LD_PRELOAD=libumockdev-preload.so.0 G_SLICE=always-malloc G_DEBUG=gc-friendly)
+endif (MIR_RUN_UNIT_TESTS)
