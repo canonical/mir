@@ -82,12 +82,8 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
             first_frame_posted = true;
             buffers->receive_buffer(buffer->id());
             schedule->schedule((*buffers)[buffer->id()]);
-            printf("EE %i\n", (int) buffers->client_owned_buffer_count());
             if (buffers->client_owned_buffer_count() == 0)
-            {
-                //client has no buffers. start the timer
                 drop_policy->swap_now_blocking();
-            }
         }
         observers.frame_posted(1);
     }
