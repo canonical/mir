@@ -182,7 +182,7 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     EXPECT_THAT(description->name, HasSubstr("dummy"));
 }
 
-#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_ANDROID)
+#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11) || defined(MIR_BUILD_PLATFORM_ANDROID)
 TEST(ServerPlatformProbe, LoadsMesaOrAndroidInPreferenceToDummy)
 {
     using namespace testing;

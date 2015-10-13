@@ -240,6 +240,9 @@ mtd::MockDRM::MockDRM()
     ON_CALL(*this, drmOpen(_,_))
     .WillByDefault(Return(fake_drm.fd()));
 
+    ON_CALL(*this, drmClose(_))
+    .WillByDefault(WithArg<0>(Invoke([&](int fd){ return close(fd); })));
+
     ON_CALL(*this, drmModeGetResources(_))
     .WillByDefault(Return(fake_drm.resources_ptr()));
 
