@@ -49,7 +49,6 @@ if(use_debflags)
 endif()
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
-include (cmake/PrePush.cmake)
 include (GNUInstallDirs)
 
 set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer")
@@ -122,6 +121,7 @@ add_definitions(-DLOG_NDEBUG=1)
 enable_testing()
 
 include_directories(include/common)
+include_directories(include/cookie)
 
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem REQUIRED)
@@ -212,7 +212,6 @@ include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 option(MIR_ENABLE_TESTS "Build tests" ON)
 
 add_subdirectory(benchmarks/)
-add_subdirectory(tools/)
 add_subdirectory(examples/)
 add_subdirectory(playground/)
 add_subdirectory(guides/)

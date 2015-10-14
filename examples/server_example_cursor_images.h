@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,34 +13,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_DOUBLES_PLATFORM_FACTORY_H_
-#define MIR_TEST_DOUBLES_PLATFORM_FACTORY_H_
-
-#include <memory>
+#ifndef MIR_EXAMPLE_CURSOR_IMAGES_H
+#define MIR_EXAMPLE_CURSOR_IMAGES_H
 
 namespace mir
 {
-namespace graphics
+class Server;
+
+namespace examples
 {
-class Platform;
-namespace mesa { class Platform; }
+void add_x_cursor_images(Server& server);
 }
-namespace test
-{
-namespace doubles
-{
+} // namespace mir
 
-std::shared_ptr<graphics::Platform> create_platform_with_null_dependencies();
 
-#ifdef MESA_KMS
-std::shared_ptr<graphics::mesa::Platform> create_mesa_platform_with_null_dependencies();
-#endif
-
-}
-}
-}
-
-#endif /* MIR_TEST_DOUBLES_PLATFORM_FACTORY_H_ */
+#endif //MIR_EXAMPLE_CURSOR_IMAGES_H
