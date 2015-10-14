@@ -188,7 +188,7 @@ private:
     std::unique_ptr<CursorStreamImageAdapter> const cursor_stream_adapter;
 
     input::Validator input_validator;
-    uint64_t last_timestamp;
+    uint64_t last_timestamp{0};
 };
 
 }
