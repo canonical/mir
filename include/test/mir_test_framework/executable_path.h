@@ -26,6 +26,7 @@ namespace mir_test_framework
 std::string executable_path();
 
 std::string library_path();
+std::string server_platform_path();
 std::string udev_recordings_path();
 std::string server_platform(std::string const& name);
 std::string server_input_platform(std::string const& name);

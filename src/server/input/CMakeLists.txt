@@ -22,6 +22,7 @@ set(
   touchspot_controller.cpp
   key_repeat_dispatcher.cpp
   validator.cpp
+  input_probe.cpp
 )
 
 add_subdirectory(android)
