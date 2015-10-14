@@ -108,8 +108,8 @@ MirBufferStream* me::BufferStream::create_stream(
         hardware ? mir_buffer_usage_hardware : mir_buffer_usage_software);
 }
 
-me::NormalSurface::NormalSurface(me::Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha) :
-    surface{create_surface(connection, width, height, prefers_alpha), surface_deleter}
+me::NormalSurface::NormalSurface(me::Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha, bool hardware) :
+    surface{create_surface(connection, width, height, prefers_alpha, hardware), surface_deleter}
 {
 }
 
@@ -118,7 +118,12 @@ me::NormalSurface::operator MirSurface*() const
     return surface.get();
 }
 
-MirSurface* me::NormalSurface::create_surface(MirConnection* connection, unsigned int width, unsigned int height, bool prefers_alpha)
+MirSurface* me::NormalSurface::create_surface(
+    MirConnection* connection,
+    unsigned int width,
+    unsigned int height,
+    bool prefers_alpha,
+    bool hardware)
 {
     MirPixelFormat selected_format;
     unsigned int valid_formats{0};
@@ -148,7 +153,7 @@ MirSurface* me::NormalSurface::create_surface(MirConnection* connection, unsigne
     };
 
     mir_surface_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
-    mir_surface_spec_set_buffer_usage(spec.get(), mir_buffer_usage_hardware);
+    mir_surface_spec_set_buffer_usage(spec.get(), hardware ? mir_buffer_usage_hardware : mir_buffer_usage_software);
     auto surface = mir_surface_create_sync(spec.get());
     return surface;
 }
