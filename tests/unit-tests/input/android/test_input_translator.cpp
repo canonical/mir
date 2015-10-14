@@ -20,6 +20,7 @@
 #include "src/server/input/android/input_translator.h"
 #include "mir/events/event_private.h"
 #include "mir/events/event_builders.h"
+#include "mir/cookie_factory.h"
 
 #include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/fake_shared.h"
@@ -42,11 +43,13 @@ namespace
 class InputTranslator : public ::testing::Test
 {
 public:
+    std::shared_ptr<mir::cookie::CookieFactory> cookie_factory;
     ::testing::NiceMock<mtd::MockInputDispatcher> dispatcher;
     mia::InputTranslator translator;
 
     InputTranslator()
-        : translator(mt::fake_shared(dispatcher))
+        : cookie_factory(mir::cookie::CookieFactory::create_keeping_secret())
+        , translator(mt::fake_shared(dispatcher), cookie_factory)
     {
         std::memset(coords, 0, sizeof(coords));
         std::memset(properties, 0, sizeof(properties));
