@@ -31,7 +31,6 @@
 #include "null_input_manager.h"
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
-#include "xcursor_loader.h"
 #include "builtin_cursor_images.h"
 #include "null_input_send_observer.h"
 #include "null_input_channel_factory.h"
@@ -40,16 +39,16 @@
 #include "surface_input_dispatcher.h"
 
 #include "mir/input/touch_visualizer.h"
-#include "mir/input/input_probe.h"
 #include "mir/input/platform.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/compositor/scene.h"
 #include "mir/emergency_cleanup.h"
+#include "mir/report/legacy_input_report.h"
 #include "mir/main_loop.h"
+#include "mir/shared_library.h"
 #include "mir/glib_main_loop.h"
-#include "mir/log.h"
 #include "mir/dispatch/action_queue.h"
 
 #include "mir_toolkit/cursors.h"
@@ -165,8 +164,8 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
             auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
-                the_event_filter_chain_dispatcher(), the_main_loop(), enable_repeat,
-                key_repeat_timeout, key_repeat_delay);
+                the_event_filter_chain_dispatcher(), the_main_loop(), the_cookie_factory(),
+                enable_repeat, key_repeat_timeout, key_repeat_delay);
         });
 }
 
@@ -216,7 +215,7 @@ mir::DefaultServerConfiguration::the_input_translator()
     return input_translator(
         [this]()
         {
-            return std::make_shared<mia::InputTranslator>(the_input_dispatcher());
+            return std::make_shared<mia::InputTranslator>(the_input_dispatcher(), the_cookie_factory());
         });
 }
 
@@ -281,27 +280,33 @@ mir::DefaultServerConfiguration::the_default_cursor_image()
         });
 }
 
-namespace
-{
-bool has_default_cursor(mi::CursorImages& images)
-{
-    if (images.image(mir_default_cursor_name, mi::default_cursor_size))
-        return true;
-    return false;
-}
-}
-
 std::shared_ptr<mi::CursorImages>
 mir::DefaultServerConfiguration::the_cursor_images()
 {
     return cursor_images(
         [this]() -> std::shared_ptr<mi::CursorImages>
         {
-            auto xcursor_loader = std::make_shared<mi::XCursorLoader>();
-            if (has_default_cursor(*xcursor_loader))
-                return xcursor_loader;
-            else
-                return std::make_shared<mi::BuiltinCursorImages>();
+            return std::make_shared<mi::BuiltinCursorImages>();
+        });
+}
+
+std::shared_ptr<mi::Platform>
+mir::DefaultServerConfiguration::the_input_platform()
+{
+    return input_platform(
+        [this]() -> std::shared_ptr<mi::Platform>
+        {
+            auto options = the_options();
+
+            if (!options->is_set(options::platform_input_lib))
+                return nullptr;
+
+            auto lib = std::make_shared<mir::SharedLibrary>(
+                options->get<std::string>(options::platform_input_lib));
+            auto create = lib->load_function<mi::CreatePlatform>(
+                "create_input_platform",
+                MIR_SERVER_INPUT_PLATFORM_VERSION);
+            return create(the_options(), the_emergency_cleanup(), the_input_device_registry(), the_input_report());
         });
 }
 
@@ -336,20 +341,23 @@ mir::DefaultServerConfiguration::the_input_manager()
             }
             else
             {
-                auto platforms = probe_input_platforms(*options, the_emergency_cleanup(), the_input_device_registry(),
-                                                       the_input_report(), *the_shared_library_prober_report());
+                if (options->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
+                    mr::legacy_input::initialize(the_logger());
 
-                if (platforms.empty())
-                    BOOST_THROW_EXCEPTION(std::runtime_error("No input platforms found"));
+                if (auto platform = the_input_platform())
+                {
+                    auto const ret = std::make_shared<mi::DefaultInputManager>(
+                        the_input_reading_multiplexer(),
+                        std::make_shared<NullLegacyInputDispatchable>());
 
-                auto const ret = std::make_shared<mi::DefaultInputManager>(
-                    the_input_reading_multiplexer(),
-                    std::make_shared<NullLegacyInputDispatchable>());
-
-                for (auto & platform : platforms)
-                    ret->add_platform(std::move(platform));
-
-                return ret;
+                    ret->add_platform(platform);
+                    return ret;
+                }
+                else
+                {
+                    return std::make_shared<mi::DefaultInputManager>(
+                        the_input_reading_multiplexer(), the_legacy_input_dispatchable());
+                }
             }
         }
     );
@@ -376,7 +384,8 @@ std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_in
                                             the_main_loop(),
                                             the_touch_visualizer(),
                                             the_cursor_listener(),
-                                            the_input_region());
+                                            the_input_region(),
+                                            the_cookie_factory());
                                     });
 }
 
@@ -390,6 +399,7 @@ std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_d
                                             the_main_loop(),
                                             the_touch_visualizer(),
                                             the_cursor_listener(),
-                                            the_input_region());
+                                            the_input_region(),
+                                            the_cookie_factory());
                                     });
 }

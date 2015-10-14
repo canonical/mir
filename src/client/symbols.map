@@ -198,6 +198,15 @@ MIR_CLIENT_9v17 {
     mir_surface_output_event_get_scale;
 } MIR_CLIENT_9.2;
 
+MIR_CLIENT_unreleased {
+  global:
+    mir_keyboard_event_get_cookie;
+    mir_pointer_event_get_cookie;
+    mir_touch_event_get_cookie;
+  local:
+    *;
+} MIR_CLIENT_9v17;
+
 MIR_CLIENT_DETAIL_9 {
   global:
     extern "C++" { 

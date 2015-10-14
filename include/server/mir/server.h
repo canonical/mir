@@ -37,6 +37,7 @@ namespace options { class Option; }
 namespace cookie
 {
 using Secret = std::vector<uint8_t>;
+class CookieFactory;
 }
 namespace shell
 {
@@ -84,12 +85,11 @@ public:
     /// This must remain valid while apply_settings() and run() are called.
     void set_command_line(int argc, char const* argv[]);
 
-    /// creates the CookieFactory from the given secret
-    /// This secret is used to generate timestamps that can be attested to by
-    /// libmircookie. Any process this secret is shared with can verify Mir-generated
-    /// cookies, or produce their own.
-    /// \note If not explicitly set, a random secret will be chosen.
-    void override_the_cookie_factory(mir::cookie::Secret const& secret);
+    /// Sets an override functor for creating the cookie factory.
+    /// A secret can be saved and any process this secret is shared
+    /// with can verify Mir-generated cookies, or produce their own.
+    void override_the_cookie_factory(
+        std::function<std::shared_ptr<cookie::CookieFactory>()> const& cookie_factory_builder);
 
     /// Applies any configuration options, hooks, or custom implementations.
     /// Must be called before calling run() or accessing any mir subsystems.
