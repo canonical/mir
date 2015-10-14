@@ -32,6 +32,7 @@ class Connection
 {
 public:
     Connection(char const* socket_file);
+    Connection(char const* socket_file, const char* name);
     ~Connection();
     operator MirConnection*();
     Connection(Connection const&) = delete;
