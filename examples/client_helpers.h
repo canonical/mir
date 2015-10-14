@@ -41,6 +41,31 @@ private:
     MirConnection* connection;
 };
 
+class BufferStream
+{
+public:
+    BufferStream(
+        Connection& connection,
+        unsigned int width,
+        unsigned int height,
+        bool prefer_alpha = false,
+        bool hardware = true);
+
+    operator MirBufferStream*() const;
+private:
+    MirBufferStream* create_stream(
+        MirConnection* connection,
+        unsigned int width,
+        unsigned int height,
+        bool prefer_alpha,
+        bool hardware);
+
+    std::unique_ptr<MirBufferStream, decltype(&mir_buffer_stream_release_sync)> const stream;
+
+    BufferStream(BufferStream const&) = delete;
+    BufferStream& operator=(BufferStream const&) = delete;
+};
+
 class NormalSurface
 {
 public:

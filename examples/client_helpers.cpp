@@ -51,6 +51,63 @@ me::Connection::operator MirConnection*()
     return connection;
 }
 
+me::BufferStream::BufferStream(
+    Connection& connection,
+    unsigned int width,
+    unsigned int height,
+    bool prefer_alpha,
+    bool hardware)
+    : stream{create_stream(connection, width, height, prefer_alpha, hardware),
+             &mir_buffer_stream_release_sync}
+{
+    if (!mir_buffer_stream_is_valid(stream.get()))
+    {
+        // TODO: Huh. There's no mir_buffer_stream_get_error?
+        throw std::runtime_error("Could not create buffer stream.");
+    }
+}
+
+me::BufferStream::operator MirBufferStream*() const
+{
+    return stream.get();
+}
+
+MirBufferStream* me::BufferStream::create_stream(
+    MirConnection *connection,
+    unsigned int width,
+    unsigned int height,
+    bool prefer_alpha,
+    bool hardware)
+{
+    MirPixelFormat selected_format;
+    unsigned int valid_formats{0};
+    MirPixelFormat pixel_formats[mir_pixel_formats];
+    mir_connection_get_available_surface_formats(connection, pixel_formats, mir_pixel_formats, &valid_formats);
+    if (valid_formats == 0)
+        throw std::runtime_error("no pixel formats for buffer stream");
+    selected_format = pixel_formats[0];
+    //select an 8 bit opaque format if we can
+    if (!prefer_alpha)
+    {
+        for(auto i = 0u; i < valid_formats; i++)
+        {
+            if (pixel_formats[i] == mir_pixel_format_xbgr_8888 ||
+                pixel_formats[i] == mir_pixel_format_xrgb_8888)
+            {
+                selected_format = pixel_formats[i];
+                break;
+            }
+        }
+    }
+
+    return mir_connection_create_buffer_stream_sync(
+        connection,
+        width,
+        height,
+        selected_format,
+        hardware ? mir_buffer_usage_hardware : mir_buffer_usage_software);
+}
+
 me::NormalSurface::NormalSurface(me::Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha) :
     surface{create_surface(connection, width, height, prefers_alpha), surface_deleter}
 {
