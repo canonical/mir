@@ -511,16 +511,17 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
     {
         if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
         {
-            producer = std::make_unique<BufferQueueProducer>(stream);
-            consumer = std::make_unique<BufferQueueConsumer>(stream);
-            second_consumer = std::make_unique<BufferQueueConsumer>(stream);
-            third_consumer = std::make_unique<BufferQueueConsumer>(stream);
-            istream = &stream;
+            auto exchange_stream = std::make_shared<mc::BufferStreamSurfaces>(mt::fake_shared(queue));
+            producer = std::make_unique<BufferQueueProducer>(*exchange_stream);
+            consumer = std::make_unique<BufferQueueConsumer>(*exchange_stream);
+            second_consumer = std::make_unique<BufferQueueConsumer>(*exchange_stream);
+            third_consumer = std::make_unique<BufferQueueConsumer>(*exchange_stream);
+            stream = exchange_stream;
         }
         else
         {
             ipc = std::make_shared<StubIpcSystem>();
-            auto stream = std::make_shared<mc::Stream>(
+            auto submit_stream = std::make_shared<mc::Stream>(
                 std::make_unique<mc::BufferMap>(
                     mf::BufferStreamId{2},
                     std::make_shared<StubEventSink>(ipc),
@@ -528,24 +529,24 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
                 geom::Size{100,100},
                 mir_pixel_format_abgr_8888);
             ipc->on_server_bound_transfer(
-                [stream](mp::Buffer& buffer)
+                [submit_stream](mp::Buffer& buffer)
                 {
                     mtd::StubBuffer b(mg::BufferID{static_cast<unsigned int>(buffer.buffer_id())});
-                    stream->swap_buffers(&b, [](mg::Buffer*){});
+                    submit_stream->swap_buffers(&b, [](mg::Buffer*){});
                 });
             ipc->on_allocate(
-                [stream](geom::Size sz)
+                [submit_stream](geom::Size sz)
                 {
-                    stream->allocate_buffer(
+                    submit_stream->allocate_buffer(
                         mg::BufferProperties{sz, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware});
                 });
 
-            consumer = std::make_unique<ScheduledConsumer>(stream);
-            second_consumer = std::make_unique<ScheduledConsumer>(stream);
-            third_consumer = std::make_unique<ScheduledConsumer>(stream);
+            consumer = std::make_unique<ScheduledConsumer>(submit_stream);
+            second_consumer = std::make_unique<ScheduledConsumer>(submit_stream);
+            third_consumer = std::make_unique<ScheduledConsumer>(submit_stream);
             producer = std::make_unique<ScheduledProducer>(ipc, std::get<0>(GetParam()));
 
-            istream = stream.get();
+            stream = submit_stream;
         }
     }
 
@@ -554,7 +555,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
     {
         if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
         {
-            istream->resize(sz);
+            stream->resize(sz);
         }
         else
         {
@@ -585,10 +586,9 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
     mg::BufferProperties properties{geom::Size{3,3}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
     int nbuffers = std::get<0>(GetParam());
 
-    mc::BufferStream* istream;
     mcl::ClientBufferDepository depository{mt::fake_shared(client_buffer_factory), nbuffers};
     mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory), properties, stub_policy};
-    mc::BufferStreamSurfaces stream{mt::fake_shared(queue)};
+    std::shared_ptr<mc::BufferStream> stream;
     std::shared_ptr<StubIpcSystem> ipc;
     std::unique_ptr<ProducerSystem> producer;
     std::unique_ptr<ConsumerSystem> consumer;
@@ -979,7 +979,7 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
     // Produce frame 1
     producer->produce();
     // Acquire frame 1
-    auto a = istream->lock_compositor_buffer(this);
+    auto a = stream->lock_compositor_buffer(this);
 
     // Produce frame 2
     producer->produce();
@@ -989,19 +989,19 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
 
     //slightchange--kdub
     // Acquire frame 2
-    auto b = istream->lock_compositor_buffer(this);
+    auto b = stream->lock_compositor_buffer(this);
     // Produce frame 3
     producer->produce();
     // Release frame 2
     b.reset();
 
     // Verify frame 3 is ready for the first compositor
-    EXPECT_THAT(istream->buffers_ready_for_compositor(this), Ge(1));
-    auto c = istream->lock_compositor_buffer(this);
+    EXPECT_THAT(stream->buffers_ready_for_compositor(this), Ge(1));
+    auto c = stream->lock_compositor_buffer(this);
 
     // Verify frame 3 is ready for a second compositor
     int const other_compositor_id = 0;
-    ASSERT_THAT(istream->buffers_ready_for_compositor(&other_compositor_id), Ge(1));
+    ASSERT_THAT(stream->buffers_ready_for_compositor(&other_compositor_id), Ge(1));
 
     c.reset();
 }
@@ -1017,12 +1017,12 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
     } };
 
     for (auto const& consumer : consumers)
-        EXPECT_EQ(0, istream->buffers_ready_for_compositor(consumer));
+        EXPECT_EQ(0, stream->buffers_ready_for_compositor(consumer));
 
     producer->produce();
     for (auto consumer : consumers)
     {
-        ASSERT_NE(0, istream->buffers_ready_for_compositor(consumer));
+        ASSERT_NE(0, stream->buffers_ready_for_compositor(consumer));
 
         // Double consume to account for the +1 that
         // buffers_ready_for_compositor adds to do dynamic performance
@@ -1030,7 +1030,7 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
         consumer->consume();
         consumer->consume();
 
-        ASSERT_EQ(0, istream->buffers_ready_for_compositor(consumer));
+        ASSERT_EQ(0, stream->buffers_ready_for_compositor(consumer));
     }
 }
 
@@ -1160,7 +1160,7 @@ TEST_P(WithAnyNumberOfBuffersExchangeOnly, compositor_inflates_ready_count_for_s
 
         // Detecting a slow client requires scheduling at least one extra
         // frame...
-        int nready = istream->buffers_ready_for_compositor(consumer.get());
+        int nready = stream->buffers_ready_for_compositor(consumer.get());
         ASSERT_THAT(nready, Ge(2));
         for (int i = 0; i < nready; ++i)
             consumer->consume();
@@ -1170,7 +1170,7 @@ TEST_P(WithAnyNumberOfBuffersExchangeOnly, compositor_inflates_ready_count_for_s
 TEST_P(WithThreeBuffers, gives_compositor_a_valid_buffer_after_dropping_old_buffers_without_clients)
 {
     producer->produce();
-    istream->drop_old_buffers();
+    stream->drop_old_buffers();
     consumer->consume();
     EXPECT_THAT(consumer->consumption_log(), SizeIs(1));
 }
@@ -1180,7 +1180,7 @@ TEST_P(WithThreeBuffers, gives_new_compositor_the_newest_buffer_after_dropping_o
     producer->produce();
     consumer->consume();
     producer->produce();
-    istream->drop_old_buffers();
+    stream->drop_old_buffers();
 
     second_consumer->consume();
 //    void const* const new_compositor_id{&nbuffers};
@@ -1443,7 +1443,7 @@ TEST_P(WithAnyNumberOfBuffers, can_snapshot_repeatedly_without_blocking)
     std::vector<mg::BufferID> snaps(num_snapshots);
     for(auto i = 0u; i < num_snapshots; i++)
     {
-        istream->with_most_recent_buffer_do([i, &snaps](mg::Buffer& buffer)
+        stream->with_most_recent_buffer_do([i, &snaps](mg::Buffer& buffer)
         {
             snaps[i] = buffer.id();
         });
