@@ -66,7 +66,7 @@ std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
     if (nbuffers == 0)
     {
         return std::make_shared<mc::Stream>(
-            policy_factory,
+            *policy_factory,
             std::make_unique<mc::BufferMap>(id, sink, gralloc),
             buffer_properties.size, buffer_properties.format);
     }

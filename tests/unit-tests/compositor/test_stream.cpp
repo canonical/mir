@@ -107,7 +107,7 @@ struct Stream : Test
     MirPixelFormat construction_format{mir_pixel_format_rgb_565};
     mtd::MockFrameDroppingPolicyFactory framedrop_factory;
     mc::Stream stream{
-        mt::fake_shared(framedrop_factory),
+        framedrop_factory,
         std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
 };
 }
@@ -267,9 +267,9 @@ struct MockPolicy : mc::FrameDroppingPolicy
 TEST_F(Stream, timer_starts_when_buffers_run_out_and_framedropping_disabled)
 {
     auto policy = std::make_unique<MockPolicy>();
-    auto policy_factory = std::make_shared<mtd::FrameDroppingPolicyFactoryMock>();
+    mtd::FrameDroppingPolicyFactoryMock policy_factory;
     EXPECT_CALL(*policy, swap_now_blocking());
-    EXPECT_CALL(*policy_factory, create_policy(_))
+    EXPECT_CALL(policy_factory, create_policy(_))
         .WillOnce(InvokeWithoutArgs([&]{ return std::move(policy); }));
     mc::Stream stream{
         policy_factory,
@@ -281,10 +281,10 @@ TEST_F(Stream, timer_starts_when_buffers_run_out_and_framedropping_disabled)
 TEST_F(Stream, timer_stops_if_a_buffer_is_available)
 {
     auto policy = std::make_unique<MockPolicy>();
-    auto policy_factory = std::make_shared<mtd::FrameDroppingPolicyFactoryMock>();
+    mtd::FrameDroppingPolicyFactoryMock policy_factory;
     EXPECT_CALL(*policy, swap_now_blocking());
     EXPECT_CALL(*policy, swap_unblocked());
-    EXPECT_CALL(*policy_factory, create_policy(_))
+    EXPECT_CALL(policy_factory, create_policy(_))
         .WillOnce(InvokeWithoutArgs([&]{ return std::move(policy); }));
     mc::Stream stream{
         policy_factory,

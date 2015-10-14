@@ -41,7 +41,7 @@ class Stream : public BufferStream
 {
 public:
     Stream(
-        std::shared_ptr<FrameDroppingPolicyFactory> const& policy_factory,
+        FrameDroppingPolicyFactory const& policy_factory,
         std::unique_ptr<frontend::ClientBuffers>, geometry::Size sz, MirPixelFormat format);
 
     void swap_buffers(
