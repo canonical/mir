@@ -375,7 +375,7 @@ mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settin
     auto left_handed = (libinput_device_config_left_handed_get(dev) == 1);
 
     mi::PointerSettings settings;
-    settings.bias_cursor_acceleration = accel_bias;
+    settings.cursor_acceleration_bias = accel_bias;
     settings.vertical_scroll_scale = vertical_scroll_scale;
     settings.horizontal_scroll_scale = horizontal_scroll_scale;
     settings.primary_button = left_handed? mir_pointer_button_secondary : mir_pointer_button_primary;
@@ -388,7 +388,7 @@ void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& sett
         return;
 
     auto dev = device();
-    libinput_device_config_accel_set_speed(dev, settings.bias_cursor_acceleration);
+    libinput_device_config_accel_set_speed(dev, settings.cursor_acceleration_bias);
     libinput_device_config_left_handed_set(dev, mir_pointer_button_primary != settings.primary_button);
     vertical_scroll_scale = settings.vertical_scroll_scale;
     horizontal_scroll_scale = settings.horizontal_scroll_scale;
