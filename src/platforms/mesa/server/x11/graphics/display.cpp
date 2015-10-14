@@ -90,7 +90,7 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, geom::Size const
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot get config attrib"));
 
     XVisualInfo visTemplate;
-    int num_visuals;
+    int num_visuals = 0;
     visTemplate.visualid = vid;
     auto visInfo = XGetVisualInfo(x_dpy, VisualIDMask, &visTemplate, &num_visuals);
     if (!visInfo)

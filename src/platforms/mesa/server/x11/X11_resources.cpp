@@ -46,10 +46,11 @@ std::shared_ptr<::Display> mx::X11Resources::get_conn()
 
     std::shared_ptr<::Display> new_conn{
         XOpenDisplay(nullptr),
-        [](::Display* display) { XCloseDisplay(display); }};
+        [](::Display* display) { if (display) XCloseDisplay(display); }};
 
 #ifdef FORCE_SYNCHRONOUS
-    XSynchronize(new_conn.get(), True);
+    if (new_conn)
+        XSynchronize(new_conn.get(), True);
 #endif
     connection = new_conn;
     return new_conn;

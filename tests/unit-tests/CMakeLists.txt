@@ -70,15 +70,15 @@ set(
   test_lockable_callback.cpp
   test_module_deleter.cpp
   test_mir_cookie.cpp
+  $<TARGET_OBJECTS:xcursorloader>
 )
 
-if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
-list(APPEND UNIT_TEST_SOURCES
-  ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/x11/X11_resources.cpp
-  $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
-  $<TARGET_OBJECTS:mirplatforminputmesax11objects>
-)
-endif()
+CMAKE_DEPENDENT_OPTION(
+  MIR_RUN_UNIT_TESTS
+  "Run unit tests as part of default testing"
+  ON
+  "MIR_BUILD_UNIT_TESTS"
+  OFF)
 
 add_subdirectory(options/)
 add_subdirectory(client/)
@@ -113,6 +113,7 @@ uses_android_input(mir_unit_tests)
 target_link_libraries(
   mir_unit_tests
 
+  exampleserverconfig
   mirdraw
   demo-shell
   mircommon
@@ -123,10 +124,6 @@ target_link_libraries(
 
   mir-test-static
   mir-test-framework-static
-  mir-test-doubles-static
-  mir-test-doubles-platform-static
-
-  xcursorloader-static
 
   ${PROTOBUF_LITE_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
@@ -134,24 +131,12 @@ target_link_libraries(
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
   ${UMOCKDEV_LIBRARIES}
-  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
-  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
-  ${MIR_PLATFORM_REFERENCES}
-  ${MIR_COMMON_REFERENCES}
-  ${MIR_SERVER_REFERENCES}
-  ${XKBCOMMON_LIBRARIES}
 )
 
-if ((MIR_BUILD_PLATFORM_MESA_KMS) OR (MIR_BUILD_PLATFORM_MESA_X11))
+if(MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
 target_link_libraries(mir_unit_tests
-  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
-  mirsharedmesaservercommon-static)
-endif()
-
-if (MIR_BUILD_PLATFORM_MESA_KMS)
-target_link_libraries(mir_unit_tests
-  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
+  mirsharedmesaservercommon-static
 )
 endif()
 
@@ -163,12 +148,11 @@ target_link_libraries(mir_unit_tests
 )
 endif()
 
-CMAKE_DEPENDENT_OPTION(
-  MIR_RUN_UNIT_TESTS
-  "Run unit tests as part of default testing"
-  ON
-  "MIR_BUILD_UNIT_TESTS"
-  OFF)
+target_link_libraries(mir_unit_tests
+
+  mir-test-doubles-static
+  mir-test-doubles-platform-static
+  )
 
 if (MIR_RUN_UNIT_TESTS)
   mir_discover_tests_with_fd_leak_detection(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0 G_SLICE=always-malloc G_DEBUG=gc-friendly)

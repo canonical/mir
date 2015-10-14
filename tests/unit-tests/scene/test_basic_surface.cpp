@@ -760,6 +760,11 @@ MATCHER_P(IsRenderableOfPosition, pos, "is renderable with position")
     return (pos == arg->screen_position().top_left);
 }
 
+MATCHER_P(IsRenderableOfSize, size, "is renderable with size")
+{
+    return (size == arg->screen_position().size);
+}
+
 MATCHER_P(IsRenderableOfAlpha, alpha, "is renderable with alpha")
 {
     EXPECT_THAT(static_cast<float>(alpha), testing::FloatEq(arg->alpha()));
@@ -964,4 +969,29 @@ TEST_F(BasicSurfaceTest, buffers_ready_correctly_reported)
     EXPECT_THAT(surface.buffers_ready_for_compositor(this), Eq(3));
     EXPECT_THAT(surface.buffers_ready_for_compositor(this), Eq(0));
     EXPECT_THAT(surface.buffers_ready_for_compositor(this), Eq(2));
+}
+
+TEST_F(BasicSurfaceTest, buffer_streams_produce_correctly_sized_renderables)
+{
+    using namespace testing;
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    geom::Displacement d0{0,0};
+    geom::Displacement d1{19,99};
+    geom::Size size0 {100, 101};
+    geom::Size size1 {102, 103};
+    ON_CALL(*mock_buffer_stream, stream_size())
+        .WillByDefault(Return(size0));
+    ON_CALL(*buffer_stream, stream_size())
+        .WillByDefault(Return(size1));
+
+    std::list<ms::StreamInfo> streams = {
+        { mock_buffer_stream, d0 },
+        { buffer_stream, d1 },
+    };
+    surface.set_streams(streams);
+
+    auto renderables = surface.generate_renderables(this);
+    ASSERT_THAT(renderables.size(), Eq(2));
+    EXPECT_THAT(renderables[0], IsRenderableOfSize(size0));
+    EXPECT_THAT(renderables[1], IsRenderableOfSize(size1));
 }

@@ -11,6 +11,7 @@ target_link_libraries(mir_demo_standalone_render_surfaces
 )
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
+include_directories(${MIR_XCURSOR_INCLUDE_DIRECTORIES})
 
 add_library(eglapp STATIC
   eglapp.c
@@ -28,6 +29,11 @@ add_library(exampleserverconfig STATIC
   server_example_window_management.cpp
   server_example_custom_compositor.cpp
   server_example_adorning_compositor.cpp
+  server_example_cursor_images.cpp
+  server_example_cursor_images.h
+  xcursor_loader.cpp
+  xcursor_loader.h
+  $<TARGET_OBJECTS:xcursorloader>
 )
 
 target_link_libraries(eglapp
@@ -245,3 +251,12 @@ else()
   )
 endif ()
 endif ()
+
+add_executable(mir_cursor_theme_dump
+  cursor-theme-dump.cpp
+)
+
+target_link_libraries(mir_cursor_theme_dump
+  exampleserverconfig
+  mirserver
+)

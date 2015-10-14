@@ -2,12 +2,17 @@ add_subdirectory(graphics/)
 add_subdirectory(input/)
 
 add_library(
-  mirplatformservermesax11 MODULE
-
+  mirplatformservermesax11sharedresources OBJECT
   X11_resources.cpp
-  $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
-  $<TARGET_OBJECTS:mirplatforminputmesax11objects>
 )
+add_library(
+    mirplatformservermesax11 MODULE
+    $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
+    $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
+    $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects-symbols>
+    $<TARGET_OBJECTS:mirplatforminputmesax11objects>
+    $<TARGET_OBJECTS:mirplatforminputmesax11objects-symbols>)
+
 
 target_link_libraries(
   mirplatformservermesax11

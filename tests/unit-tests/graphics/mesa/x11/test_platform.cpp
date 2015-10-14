@@ -22,7 +22,6 @@
 #include "mir/options/program_option.h"
 #include "src/platforms/mesa/server/x11/graphics/platform.h"
 
-#include "mir/test/doubles/platform_factory.h"
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/mock_x11.h"
@@ -49,7 +48,12 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-        return mtd::create_platform_with_null_dependencies();
+        return std::make_shared<mg::X::Platform>(std::shared_ptr<::Display>(
+                XOpenDisplay(nullptr),
+                [](::Display* display)
+                {
+                    XCloseDisplay(display);
+                }), mir::geometry::Size{1280,1024});
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
