@@ -234,3 +234,11 @@ MIR_CLIENT_DETAIL_9 {
       mir::operator???std::ostream???Mir*
     }; 
 };
+
+MIR_CLIENT_DETAIL_v0.18.0 {
+  global:
+    extern "C++" { 
+      mir::events::set_modifier*;
+    };
+} MIR_CLIENT_DETAIL_9;
+

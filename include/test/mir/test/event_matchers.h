@@ -353,6 +353,14 @@ MATCHER_P2(PointerEventWithPosition, x, y, "")
     return true;
 }
 
+MATCHER_P(PointerEventWithModifiers, modifiers, "")
+{
+    auto pev = maybe_pointer_event(to_address(arg));
+    if (pev && mir_pointer_event_modifiers(pev) == modifiers)
+        return true;
+    return false;
+}
+
 MATCHER_P2(PointerEventWithDiff, dx, dy, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));

@@ -25,7 +25,7 @@
 #include "mir/input/event_builder.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/geometry/displacement.h"
-#include "src/platforms/evdev/input_modifier_utils.h"
+#include "src/platforms/evdev/button_utils.h"
 
 #include "boost/throw_exception.hpp"
 
@@ -100,13 +100,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
     auto input_action =
         (key_params.action == synthesis::EventAction::Down) ? mir_keyboard_action_down : mir_keyboard_action_up;
 
-    auto event_modifiers = mie::expand_modifiers(modifiers);
-    auto key_event = builder->key_event(event_time, input_action, key_code, key_params.scancode, event_modifiers);
-
-    if (key_params.action == synthesis::EventAction::Down)
-        modifiers |= mie::to_modifiers(key_params.scancode);
-    else
-        modifiers &= ~mie::to_modifiers(key_params.scancode);
+    auto key_event = builder->key_event(event_time, input_action, key_code, key_params.scancode);
 
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
@@ -118,9 +112,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonP
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::system_clock::now().time_since_epoch());
     auto action = update_buttons(button.action, mie::to_pointer_button(button.button));
-    auto event_modifiers = mie::expand_modifiers(modifiers);
     auto button_event = builder->pointer_event(event_time,
-                                               event_modifiers,
                                                action,
                                                buttons,
                                                pos.x.as_float(),
@@ -156,10 +148,8 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
 
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::system_clock::now().time_since_epoch());
-    auto event_modifiers = mie::expand_modifiers(modifiers);
     update_position(pointer.rel_x, pointer.rel_y);
     auto pointer_event = builder->pointer_event(event_time,
-                                                event_modifiers,
                                                 mir_pointer_action_motion,
                                                 buttons,
                                                 pos.x.as_float(),
@@ -185,9 +175,8 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
 
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::system_clock::now().time_since_epoch());
-    auto event_modifiers = mie::expand_modifiers(modifiers);
 
-    auto touch_event = builder->touch_event(event_time, event_modifiers);
+    auto touch_event = builder->touch_event(event_time);
 
     auto touch_action = mir_touch_action_up;
     if (touch.action == synthesis::TouchParameters::Action::Tap)

@@ -16,22 +16,22 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVDEV_INPUT_MODIFIER_UTILS_H_
-#define MIR_INPUT_EVDEV_INPUT_MODIFIER_UTILS_H_
+#include "button_utils.h"
+#include "boost/throw_exception.hpp"
 
-#include "mir_toolkit/event.h"
+#include "linux/input.h"
 
-namespace mir
-{
-namespace input
-{
-namespace evdev
-{
-MirPointerButton to_pointer_button(int button);
-MirInputEventModifiers to_modifiers(int32_t scan_code);
-MirInputEventModifiers expand_modifiers(MirInputEventModifiers modifiers);
-}
-}
-}
+#include <stdexcept>
 
-#endif
+MirPointerButton mir::input::evdev::to_pointer_button(int button)
+{
+    switch(button)
+    {
+    case BTN_LEFT: return mir_pointer_button_primary;
+    case BTN_RIGHT: return mir_pointer_button_secondary;
+    case BTN_MIDDLE: return mir_pointer_button_tertiary;
+    case BTN_BACK: return mir_pointer_button_back;
+    case BTN_FORWARD: return mir_pointer_button_forward;
+    }
+    BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mouse button"));
+}

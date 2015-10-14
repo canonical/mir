@@ -9,6 +9,8 @@ set(
   default_event_builder.cpp
   default_input_manager.cpp
   default_input_device_hub.cpp
+  input_modifier_utils.cpp
+  seat.cpp
 
   surface_input_dispatcher.cpp
   event_filter_chain_dispatcher.cpp

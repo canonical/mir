@@ -73,7 +73,6 @@ private:
         mir::input::EventBuilder* builder{nullptr};
         mir::input::InputDeviceInfo info;
         std::shared_ptr<mir::dispatch::Dispatchable> const queue;
-        uint32_t modifiers{0};
         mir::geometry::Point pos, scroll;
         MirPointerButtons buttons;
     };
