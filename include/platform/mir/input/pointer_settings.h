@@ -42,7 +42,7 @@ struct PointerSettings
      *   - 0: default acceleration
      *   - (0, 1]: increased acceleration
      */
-    double bias_cursor_acceleration{0.0};
+    double cursor_acceleration_bias{0.0};
     /**
      * Scale horizontal scrolling linearly
      */

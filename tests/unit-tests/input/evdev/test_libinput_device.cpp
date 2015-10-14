@@ -730,7 +730,7 @@ TEST_F(LibInputDevice, reads_pointer_settings_from_libinput)
 
     auto ptr_settings = optional_settings.value();
     EXPECT_THAT(ptr_settings.primary_button, Eq(mir_pointer_button_primary));
-    EXPECT_THAT(ptr_settings.bias_cursor_acceleration, Eq(1.0));
+    EXPECT_THAT(ptr_settings.cursor_acceleration_bias, Eq(1.0));
     EXPECT_THAT(ptr_settings.horizontal_scroll_scale, Eq(1.0));
     EXPECT_THAT(ptr_settings.vertical_scroll_scale, Eq(1.0));
 
@@ -741,7 +741,7 @@ TEST_F(LibInputDevice, reads_pointer_settings_from_libinput)
 
     ptr_settings = optional_settings.value();
     EXPECT_THAT(ptr_settings.primary_button, Eq(mir_pointer_button_secondary));
-    EXPECT_THAT(ptr_settings.bias_cursor_acceleration, Eq(0.0));
+    EXPECT_THAT(ptr_settings.cursor_acceleration_bias, Eq(0.0));
     EXPECT_THAT(ptr_settings.horizontal_scroll_scale, Eq(1.0));
     EXPECT_THAT(ptr_settings.vertical_scroll_scale, Eq(1.0));
 }
@@ -756,7 +756,7 @@ TEST_F(LibInputDevice, applies_pointer_settings)
     setup_pointer_configuration(dev.device(), 1, mir_pointer_button_primary);
 
     mi::PointerSettings settings(dev.get_pointer_settings().value());
-    settings.bias_cursor_acceleration = 1.1;
+    settings.cursor_acceleration_bias = 1.1;
     settings.primary_button = mir_pointer_button_secondary;
 
     EXPECT_CALL(mock_libinput,libinput_device_config_accel_set_speed(dev.device(), 1.1)).Times(1);

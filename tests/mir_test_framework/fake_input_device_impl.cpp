@@ -163,7 +163,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
     // constant scaling is used here to simplify checking for the
     // expected results. Default settings of the device lead to no
     // scaling at all.
-    auto acceleration = (settings.bias_cursor_acceleration + 1.0);
+    auto acceleration = (settings.cursor_acceleration_bias + 1.0);
     auto rel_x = pointer.rel_x * acceleration;
     auto rel_y = pointer.rel_y * acceleration;
     
