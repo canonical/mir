@@ -244,7 +244,7 @@ MIR_CLIENT_DETAIL_9 {
     }; 
 };
 
-MIR_CLIENT_DETAIL_v0.18.0 {
+MIR_CLIENT_DETAIL_unreleased {
   global:
     extern "C++" { 
       mir::events::set_modifier*;
