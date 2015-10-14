@@ -41,6 +41,7 @@ public:
     Window window;
     XVisualInfo visual_info;
     XEvent keypress_event_return;
+    XEvent button_release_event_return;
     XEvent expose_event_return;
     XEvent focus_in_event_return;
     XEvent focus_out_event_return;
