@@ -606,6 +606,7 @@ struct WithOneBuffer : BufferScheduling {};
 struct WithTwoBuffers : BufferScheduling {};
 struct WithTwoBuffersExchangeOnly : BufferScheduling {};
 struct WithThreeBuffers : BufferScheduling {};
+struct WithThreeBuffersExchangeOnly : BufferScheduling {};
 }
 
 /* Regression test for LP#1270964 */
@@ -691,7 +692,7 @@ TEST_P(WithTwoOrMoreBuffers, consumer_cycles_through_all_available_buffers)
 {
     auto tick = 0_t;
     std::vector<ScheduleEntry> schedule;
-    for(auto i = 0; i < nbuffers-1; i++)
+    for(auto i = 0; i < nbuffers - 1; i++)
         schedule.emplace_back(ScheduleEntry{tick++, {producer.get()}, {}});
     run_system(schedule);
  
@@ -797,18 +798,12 @@ TEST_P(WithThreeOrMoreBuffers, multiple_fast_compositors_are_in_sync)
     EXPECT_THAT(consumption_log_2, Eq(production_log));
 }
 
-TEST_P(WithTwoOrMoreBuffers, framedropping_clients_get_all_buffers_and_dont_block)
+TEST_P(WithTwoOrMoreBuffersExchangeOnly, framedropping_clients_get_all_buffers_and_dont_block)
 {
     allow_framedropping();
     std::vector<ScheduleEntry> schedule;
     for (auto i = 0; i < nbuffers * 3; i++)
         schedule.emplace_back(ScheduleEntry{1_t, {producer.get()}, {}});
-    run_system(schedule);
-    consumer->consume(); 
-    run_system(schedule);
-    consumer->consume(); 
-    run_system(schedule);
-    consumer->consume(); 
     run_system(schedule);
 
     auto production_log = producer->production_log();
@@ -818,10 +813,7 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_clients_get_all_buffers_and_dont_bloc
         [](BufferEntry const& a, BufferEntry const& b) { return a.id == b.id; });
     production_log.erase(last, production_log.end());
 
-    if (!(std::get<1>(GetParam()) == TestType::ExchangeSemantics) && (std::get<0>(GetParam()) == 4))
-        EXPECT_THAT(production_log.size(), Ge(nbuffers - 1)); //Ge is to accommodate overallocation
-    else
-        EXPECT_THAT(production_log.size(), Ge(nbuffers)); //Ge is to accommodate overallocation
+    EXPECT_THAT(production_log.size(), Ge(nbuffers)); //Ge is to accommodate overallocation
 }
 
 TEST_P(WithTwoOrMoreBuffers, nonframedropping_client_throttles_to_compositor_rate)
@@ -846,7 +838,6 @@ TEST_P(WithAnyNumberOfBuffersExchangeOnly, resize_affects_client_acquires_immedi
     for(auto i = 0u; i < sizes_to_test; i++)
     {
         new_size = new_size * 2;
-
         resize(new_size);
 
         std::vector<ScheduleEntry> schedule = {{1_t,  {producer.get()}, {consumer.get()}}};
@@ -863,14 +854,13 @@ TEST_P(WithAnyNumberOfBuffersExchangeOnly, compositor_acquires_resized_frames)
     for(auto i = 0u; i < sizes_to_test; i++)
     {
         new_size = new_size * 2;
+        resize(new_size);
 
         std::vector<ScheduleEntry> schedule = {
             {1_t,  {producer.get()}, {}},
             {2_t,  {}, {consumer.get()}},
             {3_t,  {producer.get()}, {}},
         };
-
-        resize(new_size);
         run_system(schedule);
 
         int attempt_count = 0;
@@ -974,7 +964,7 @@ TEST_P(WithTwoBuffersExchangeOnly, composite_on_demand_never_deadlocks)
 }
 
 // Regression test for LP: #1395581
-TEST_P(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
+TEST_P(WithTwoOrMoreBuffersExchangeOnly, buffers_ready_is_not_underestimated)
 {
     // Produce frame 1
     producer->produce();
@@ -983,13 +973,10 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
 
     // Produce frame 2
     producer->produce();
-
-    // Release frame 1
-    a.reset();
-
-    //slightchange--kdub
     // Acquire frame 2
     auto b = stream->lock_compositor_buffer(this);
+    // Release frame 1
+    a.reset();
     // Produce frame 3
     producer->produce();
     // Release frame 2
@@ -1006,7 +993,6 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
     c.reset();
 }
 
-//THIS is an actual missing feature. secondary compositors have to get update messages
 TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
 {
     const int nmonitors = 3;
@@ -1175,7 +1161,7 @@ TEST_P(WithThreeBuffers, gives_compositor_a_valid_buffer_after_dropping_old_buff
     EXPECT_THAT(consumer->consumption_log(), SizeIs(1));
 }
 
-TEST_P(WithThreeBuffers, gives_new_compositor_the_newest_buffer_after_dropping_old_buffers)
+TEST_P(WithThreeBuffersExchangeOnly, gives_new_compositor_the_newest_buffer_after_dropping_old_buffers)
 {
     producer->produce();
     consumer->consume();
@@ -1183,18 +1169,16 @@ TEST_P(WithThreeBuffers, gives_new_compositor_the_newest_buffer_after_dropping_o
     stream->drop_old_buffers();
 
     second_consumer->consume();
-//    void const* const new_compositor_id{&nbuffers};
-//    auto comp2 = queue.compositor_acquire(new_compositor_id);
 
     auto production_log = producer->production_log();
     auto consumption_log = consumer->consumption_log();
-    auto second_consumption_log = consumer->consumption_log();
+    auto second_consumption_log = second_consumer->consumption_log();
     ASSERT_THAT(production_log, SizeIs(2));
     ASSERT_THAT(consumption_log, SizeIs(1));
     ASSERT_THAT(second_consumption_log, SizeIs(1));
 
     EXPECT_THAT(production_log[0], Eq(consumption_log[0]));
-//    EXPECT_THAT(production_log[1], Eq(second_consumption_log[0]));
+    EXPECT_THAT(production_log[1], Eq(second_consumption_log[0]));
 }
 
 TEST_P(WithTwoOrMoreBuffersExchangeOnly, overlapping_compositors_get_different_frames)
@@ -1491,3 +1475,7 @@ INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeBuffers,
     Combine(Values(3), Values(TestType::ExchangeSemantics, TestType::SubmitSemantics)));
+INSTANTIATE_TEST_CASE_P(
+    BufferScheduling,
+    WithThreeBuffersExchangeOnly,
+    Combine(Values(3), Values(TestType::ExchangeSemantics)));
