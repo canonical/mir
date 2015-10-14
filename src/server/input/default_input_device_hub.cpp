@@ -83,7 +83,6 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
         auto handle = std::make_shared<DefaultDevice>(
             dev->id(), device->get_device_info());
 
-
         // pass input device handle to observer loop..
         observer_queue->enqueue(this,
                                 [this, handle]()
