@@ -119,6 +119,8 @@ private:
 
     geometry::Point old_cursor{};
 };
+
+using TilingWindowManager = BasicWindowManagerCopy<TilingWindowManagerPolicy, TilingSessionInfo, CanonicalSurfaceInfoCopy>;
 }
 }
 

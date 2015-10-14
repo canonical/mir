@@ -20,7 +20,6 @@
 
 #include "server_example_tiling_window_manager.h"
 #include "server_example_canonical_window_manager.h"
-#include "server_example_basic_window_manager.h"
 
 #include "mir/abnormal_exit.h"
 #include "mir/server.h"
@@ -126,7 +125,6 @@ private:
 
 }
 
-using TilingWindowManager = me::BasicWindowManagerCopy<me::TilingWindowManagerPolicy, me::TilingSessionInfo, me::CanonicalSurfaceInfoCopy>;
 using FullscreenWindowManager = me::BasicWindowManagerCopy<FullscreenWindowManagerPolicy, NullSessionInfo, NullSurfaceInfo>;
 using CanonicalWindowManager = me::BasicWindowManagerCopy<me::CanonicalWindowManagerPolicyCopy, me::CanonicalSessionInfoCopy, me::CanonicalSurfaceInfoCopy>;
 
