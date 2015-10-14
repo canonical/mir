@@ -31,6 +31,7 @@
 #include "mir/test/doubles/mock_libinput.h"
 #include "mir/test/gmock_fixes.h"
 #include "mir/udev/wrapper.h"
+#include "mir/cookie_factory.h"
 #include "mir_test_framework/udev_environment.h"
 
 #include <gmock/gmock.h>
@@ -73,7 +74,8 @@ struct MockInputSink : mi::InputSink
 
 struct MockEventBuilder : mi::EventBuilder
 {
-    mi::DefaultEventBuilder builder{MirInputDeviceId{3}};
+    std::shared_ptr<mir::cookie::CookieFactory> const cookie_factory = mir::cookie::CookieFactory::create_keeping_secret();
+    mi::DefaultEventBuilder builder{MirInputDeviceId{3}, cookie_factory};
     MockEventBuilder()
     {
         ON_CALL(*this, key_event(_,_,_,_,_))
@@ -728,9 +730,9 @@ TEST_F(LibInputDevice, reads_pointer_settings_from_libinput)
 
     auto ptr_settings = optional_settings.value();
     EXPECT_THAT(ptr_settings.primary_button, Eq(mir_pointer_button_primary));
-    EXPECT_THAT(ptr_settings.cursor_speed, Eq(1.0));
-    EXPECT_THAT(ptr_settings.horizontal_scroll_speed, Eq(1.0));
-    EXPECT_THAT(ptr_settings.vertical_scroll_speed, Eq(1.0));
+    EXPECT_THAT(ptr_settings.bias_cursor_acceleration, Eq(1.0));
+    EXPECT_THAT(ptr_settings.horizontal_scroll_scale, Eq(1.0));
+    EXPECT_THAT(ptr_settings.vertical_scroll_scale, Eq(1.0));
 
     setup_pointer_configuration(dev.device(), 0.0, mir_pointer_button_secondary);
     optional_settings = dev.get_pointer_settings();
@@ -739,9 +741,9 @@ TEST_F(LibInputDevice, reads_pointer_settings_from_libinput)
 
     ptr_settings = optional_settings.value();
     EXPECT_THAT(ptr_settings.primary_button, Eq(mir_pointer_button_secondary));
-    EXPECT_THAT(ptr_settings.cursor_speed, Eq(0.0));
-    EXPECT_THAT(ptr_settings.horizontal_scroll_speed, Eq(1.0));
-    EXPECT_THAT(ptr_settings.vertical_scroll_speed, Eq(1.0));
+    EXPECT_THAT(ptr_settings.bias_cursor_acceleration, Eq(0.0));
+    EXPECT_THAT(ptr_settings.horizontal_scroll_scale, Eq(1.0));
+    EXPECT_THAT(ptr_settings.vertical_scroll_scale, Eq(1.0));
 }
 
 TEST_F(LibInputDevice, applies_pointer_settings)
@@ -754,7 +756,7 @@ TEST_F(LibInputDevice, applies_pointer_settings)
     setup_pointer_configuration(dev.device(), 1, mir_pointer_button_primary);
 
     mi::PointerSettings settings(dev.get_pointer_settings().value());
-    settings.cursor_speed = 1.1;
+    settings.bias_cursor_acceleration = 1.1;
     settings.primary_button = mir_pointer_button_secondary;
 
     EXPECT_CALL(mock_libinput,libinput_device_config_accel_set_speed(dev.device(), 1.1)).Times(1);
@@ -796,8 +798,8 @@ TEST_F(LibInputDevice, scroll_speed_scales_scroll_events)
 
     setup_pointer_configuration(dev.device(), 1, mir_pointer_button_primary);
     mi::PointerSettings settings(dev.get_pointer_settings().value());
-    settings.vertical_scroll_speed = -1.0;
-    settings.horizontal_scroll_speed = 5.0;
+    settings.vertical_scroll_scale = -1.0;
+    settings.horizontal_scroll_scale = 5.0;
     dev.apply_settings(settings);
 
     dev.start(&mock_sink, &mock_builder);

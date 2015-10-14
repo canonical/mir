@@ -37,14 +37,20 @@ struct PointerSettings
      */
     MirPointerButton primary_button{mir_pointer_button_primary};
     /**
-     * Scale cursor accelaration.
+     * Bias cursor acceleration.
+     *   - [-1, 0): reduced acceleration
      *   - 0: default acceleration
-     *   - [-1, 0[: reduced acceleration
-     *   - ]0, 1]: increased acceleration
+     *   - (0, 1]: increased acceleration
      */
-    double cursor_speed{0.0};
-    double horizontal_scroll_speed{1.0};
-    double vertical_scroll_speed{1.0};
+    double bias_cursor_acceleration{0.0};
+    /**
+     * Scale horizontal scrolling linearly
+     */
+    double horizontal_scroll_scale{1.0};
+    /**
+     * Scale vertical scrolling linearly
+     */
+    double vertical_scroll_scale{1.0};
 };
 
 }
