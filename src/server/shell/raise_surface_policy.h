@@ -16,25 +16,35 @@
  * Authored By: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#include "raise_surface_decider.h"
-#include "mir/cookie_factory.h"
-#include "mir/scene/session.h"
-#include "mir/scene/surface.h"
+#include <memory>
 
-namespace ms = mir::scene;
-namespace msh = mir::shell;
+#include "mir_toolkit/cookie.h"
 
-msh::RaiseSurfaceDecider::RaiseSurfaceDecider(std::shared_ptr<cookie::CookieFactory> const& c_factory)
-    : cookie_factory(c_factory)
+namespace mir
 {
+namespace cookie
+{
+class CookieFactory;
 }
-
-bool msh::RaiseSurfaceDecider::should_raise_surface(
-    std::shared_ptr<ms::Surface> const& focused_surface,
-    MirCookie const& cookie) const
+namespace scene
 {
-    if (cookie_factory->attest_timestamp(cookie))
-        return cookie.timestamp >= focused_surface->last_input_event_timestamp();
+class Surface;
+}
+namespace shell
+{
 
-    return false;
+class RaiseSurfacePolicy
+{
+public:
+    RaiseSurfacePolicy(std::shared_ptr<cookie::CookieFactory> const& cookie_factory);
+
+    bool should_raise_surface(
+        std::shared_ptr<scene::Surface> const& focused_surface,
+        MirCookie const& cookie) const;
+
+private:
+    std::shared_ptr<cookie::CookieFactory> const cookie_factory;
+};
+
+}
 }

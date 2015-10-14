@@ -17,7 +17,7 @@
  */
 
 #include "frontend_shell.h"
-#include "raise_surface_decider.h"
+#include "raise_surface_policy.h"
 #include "mir/shell/persistent_surface_store.h"
 #include "mir/shell/shell.h"
 
@@ -157,7 +157,7 @@ void msh::FrontendShell::raise_surface_with_cookie(
     auto const scene_session   = std::dynamic_pointer_cast<ms::Session>(session);
     auto const focused_surface = wrapped->focused_surface();
 
-    if (raise_decider->should_raise_surface(focused_surface, cookie))
+    if (raise_policy->should_raise_surface(focused_surface, cookie))
     {
         auto const surface = scene_session->surface(surface_id);
         wrapped->set_focus_to(scene_session, surface);

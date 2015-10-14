@@ -30,7 +30,7 @@ namespace shell
 {
 class Shell;
 class PersistentSurfaceStore;
-class RaiseSurfaceDecider;
+class RaiseSurfacePolicy;
 
 namespace detail
 {
@@ -39,14 +39,14 @@ struct FrontendShell : mf::Shell
 {
     std::shared_ptr<shell::Shell> const wrapped;
     std::shared_ptr<shell::PersistentSurfaceStore> const surface_store;
-    std::shared_ptr<shell::RaiseSurfaceDecider> const raise_decider;
+    std::shared_ptr<shell::RaiseSurfacePolicy> const raise_policy;
 
     explicit FrontendShell(std::shared_ptr<shell::Shell> const& wrapped,
                            std::shared_ptr<shell::PersistentSurfaceStore> const& surface_store,
-                           std::shared_ptr<shell::RaiseSurfaceDecider> const& raise_decider)
+                           std::shared_ptr<shell::RaiseSurfacePolicy> const& raise_policy)
         : wrapped{wrapped},
           surface_store{surface_store},
-          raise_decider{raise_decider}
+          raise_policy{raise_policy}
     {
     }
 
