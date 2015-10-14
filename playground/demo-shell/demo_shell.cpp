@@ -49,7 +49,7 @@ namespace mir
 namespace examples
 {
 using CanonicalWindowManager = msh::BasicWindowManager<msh::CanonicalWindowManagerPolicy, msh::CanonicalSessionInfo, msh::CanonicalSurfaceInfo>;
-using TilingWindowManager = me::BasicWindowManagerCopy<me::TilingWindowManagerPolicy, me::TilingSessionInfo, me::TilingSurfaceInfo>;
+using TilingWindowManager = me::BasicWindowManagerCopy<me::TilingWindowManagerPolicy, me::TilingSessionInfo, me::CanonicalSurfaceInfoCopy>;
 
 
 class DisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
