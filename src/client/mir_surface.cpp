@@ -30,6 +30,7 @@
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/input/input_platform.h"
 #include "mir/input/xkb_mapper.h"
+#include "mir_toolkit/cookie.h"
 
 #include <cassert>
 #include <unistd.h>
@@ -632,6 +633,21 @@ MirOrientation MirSurface::get_orientation() const
 MirWaitHandle* MirSurface::set_preferred_orientation(MirOrientationMode mode)
 {
     return configure(mir_surface_attrib_preferred_orientation, mode);
+}
+
+void MirSurface::raise_surface_with_cookie(MirCookie const& cookie)
+{
+    mp::RaiseEvent raise_event;
+
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    raise_event.mutable_surface_id()->set_value(surface->id().value());
+
+    auto const event_cookie = raise_event.mutable_cookie();
+
+    event_cookie->set_timestamp(cookie.timestamp);
+    event_cookie->set_mac(cookie.mac);
+
+    server->raise_surface_with_cookie(&raise_event, void_response.get(), nullptr);
 }
 
 mir::client::ClientBufferStream* MirSurface::get_buffer_stream()

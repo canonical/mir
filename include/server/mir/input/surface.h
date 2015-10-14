@@ -54,6 +54,7 @@ public:
     virtual std::shared_ptr<graphics::CursorImage> cursor_image() const = 0;
     virtual InputReceptionMode reception_mode() const = 0;
     virtual void consume(MirEvent const& event) = 0;
+    virtual uint64_t last_input_event_timestamp() const = 0;
 
 protected:
     Surface() = default;

@@ -130,6 +130,10 @@ struct StubDisplayServer : public mir::frontend::detail::DisplayServer
         mir::protobuf::StreamConfiguration const* /*request*/,
         mir::protobuf::Void* /*response*/,
         google::protobuf::Closure* /*done*/) {}
+    void raise_surface_with_cookie(
+        mir::protobuf::RaiseEvent const* /*request*/,
+        mir::protobuf::Void* /*response*/,
+        google::protobuf::Closure* /*done*/) {}
 };
 
 }

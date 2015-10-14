@@ -21,6 +21,7 @@
 #include <mir_toolkit/mir_native_buffer.h>
 #include <mir_toolkit/client_types.h>
 #include <mir_toolkit/common.h>
+#include <mir_toolkit/cookie.h>
 #include <mir_toolkit/mir_cursor_configuration.h>
 
 #include <stdbool.h>
@@ -666,6 +667,13 @@ MirOrientation mir_surface_get_orientation(MirSurface *surface);
  *   \return                 A wait handle that can be passed to mir_wait_for
  */
 MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surface, MirOrientationMode orientation);
+
+/**
+ * Attempts to raise the surface based on a keyboard/touch/pointer cookie.
+ *   \param [in] surface The surface to operate on
+ *   \param [in] cookie  The MirCookie from the event that you want to raise the window from.
+ */
+void mir_surface_raise_with_cookie(MirSurface* surface, MirCookie const cookie);
 
 /**
  * Get the preferred orientation modes of a surface.

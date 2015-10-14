@@ -104,6 +104,7 @@ public:
     void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&) {}
     void rename(std::string const&) {}
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override { return nullptr; }
+    uint64_t last_input_event_timestamp() const override { return 0; }
 };
 
 }

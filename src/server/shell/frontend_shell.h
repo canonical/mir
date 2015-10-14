@@ -30,6 +30,7 @@ namespace shell
 {
 class Shell;
 class PersistentSurfaceStore;
+class RaiseSurfaceDecider;
 
 namespace detail
 {
@@ -38,11 +39,14 @@ struct FrontendShell : mf::Shell
 {
     std::shared_ptr<shell::Shell> const wrapped;
     std::shared_ptr<shell::PersistentSurfaceStore> const surface_store;
+    std::shared_ptr<shell::RaiseSurfaceDecider> const raise_decider;
 
     explicit FrontendShell(std::shared_ptr<shell::Shell> const& wrapped,
-                           std::shared_ptr<shell::PersistentSurfaceStore> const& surface_store)
+                           std::shared_ptr<shell::PersistentSurfaceStore> const& surface_store,
+                           std::shared_ptr<shell::RaiseSurfaceDecider> const& raise_decider)
         : wrapped{wrapped},
-          surface_store{surface_store}
+          surface_store{surface_store},
+          raise_decider{raise_decider}
     {
     }
 
@@ -86,6 +90,11 @@ struct FrontendShell : mf::Shell
         std::shared_ptr<mf::Session> const& session,
         mf::SurfaceId surface_id,
         MirSurfaceAttrib attrib) override;
+
+    void raise_surface_with_cookie(
+        std::shared_ptr<mf::Session> const& session,
+        mf::SurfaceId surface_id,
+        MirCookie const& cookie) override;
 };
 }
 }

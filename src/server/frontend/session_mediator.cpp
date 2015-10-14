@@ -1006,3 +1006,22 @@ void mf::SessionMediator::configure_buffer_stream(
 
     done->Run();
 }
+
+void mf::SessionMediator::raise_surface_with_cookie(
+    mir::protobuf::RaiseEvent const* request,
+    mir::protobuf::Void*,
+    google::protobuf::Closure* done)
+{
+    auto const session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto const cookie     = request->cookie();
+    auto const surface_id = request->surface_id();
+
+    MirCookie const mir_cookie = {cookie.timestamp(), cookie.mac()};
+
+    shell->raise_surface_with_cookie(session, mf::SurfaceId{surface_id.value()}, mir_cookie);
+
+    done->Run();
+}

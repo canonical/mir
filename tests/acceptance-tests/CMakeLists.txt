@@ -30,6 +30,7 @@ set(
   test_nested_input.cpp
   test_display_configuration.cpp
   test_surfaces_with_output_id.cpp
+  test_surface_raise.cpp
   test_server_disconnect.cpp
   test_prompt_session_client_api.cpp
   test_client_scaling.cpp

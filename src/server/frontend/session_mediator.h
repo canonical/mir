@@ -205,6 +205,10 @@ public:
         mir::protobuf::StreamConfiguration const* request,
         mir::protobuf::Void*,
         google::protobuf::Closure* done) override;
+    void raise_surface_with_cookie(
+        mir::protobuf::RaiseEvent const* request,
+        mir::protobuf::Void*,
+        google::protobuf::Closure* done) override;
 
     // TODO: Split this into a separate thing
     void translate_surface_to_screen(

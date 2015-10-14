@@ -21,6 +21,7 @@
 
 #include "mir/frontend/surface_id.h"
 #include "mir_toolkit/common.h"
+#include "mir_toolkit/cookie.h"
 
 #include <sys/types.h>
 
@@ -81,6 +82,11 @@ public:
         std::shared_ptr<Session> const& session,
         SurfaceId surface_id,
         MirSurfaceAttrib attrib) = 0;
+
+    virtual void raise_surface_with_cookie(
+        std::shared_ptr<Session> const& session,
+        SurfaceId surface_id,
+        MirCookie const& cookie) = 0;
 
 protected:
     Shell() = default;

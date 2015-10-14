@@ -135,6 +135,10 @@ public:
         mir::protobuf::StreamConfiguration const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
+    void raise_surface_with_cookie(
+        mir::protobuf::RaiseEvent const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
 private:
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const channel;
 };

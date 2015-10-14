@@ -61,8 +61,6 @@ struct MockShell : public frontend::Shell
     MOCK_METHOD2(persistent_id_for, std::string(std::shared_ptr<frontend::Session> const&, frontend::SurfaceId));
     MOCK_METHOD1(surface_for_id, std::shared_ptr<scene::Surface>(std::string const&));
 
-
-
     MOCK_METHOD4(set_surface_attribute, int(
         std::shared_ptr<frontend::Session> const& session, frontend::SurfaceId surface_id,
         MirSurfaceAttrib attrib, int value));
@@ -70,6 +68,8 @@ struct MockShell : public frontend::Shell
     MOCK_METHOD3(get_surface_attribute, int(std::shared_ptr<frontend::Session> const& session,
         frontend::SurfaceId surface_id, MirSurfaceAttrib attrib));
 
+    MOCK_METHOD3(raise_surface_with_cookie, void(std::shared_ptr<frontend::Session> const& session,
+        frontend::SurfaceId surface_id, MirCookie const& cookie));
 };
 
 }

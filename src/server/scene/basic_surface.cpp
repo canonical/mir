@@ -835,6 +835,16 @@ int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 void ms::BasicSurface::consume(MirEvent const& event)
 {
     input_validator.validate_and_dispatch(event);
+    if (mir_event_get_type(&event) == mir_event_type_input)
+    {
+        auto iev = mir_event_get_input_event(&event);
+        last_timestamp = mir_input_event_get_event_time(iev);
+    }
+}
+
+uint64_t ms::BasicSurface::last_input_event_timestamp() const
+{
+  return last_timestamp;
 }
 
 void ms::BasicSurface::set_keymap(xkb_rule_names const& rules)
