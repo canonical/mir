@@ -84,7 +84,6 @@ private:
 
     InputDeviceInfo info;
     mir::geometry::Point pointer_pos;
-    MirInputEventModifiers modifier_state;
     MirPointerButtons button_state;
 
     struct ContactData

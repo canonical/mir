@@ -53,8 +53,7 @@ void null_deleter(MirEvent *) {}
 
 mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& report, char const* path,
                                     LibInputDevicePtr dev)
-    : report{report}, accumulated_touch_event{nullptr, null_deleter}, pointer_pos{0, 0}, modifier_state{0},
-      button_state{0}
+    : report{report}, accumulated_touch_event{nullptr, null_deleter}, pointer_pos{0, 0}, button_state{0}
 {
     add_device_of_group(path, std::move(dev));
 }
