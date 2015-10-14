@@ -34,7 +34,7 @@ add_library(exampleserverconfig STATIC
   xcursor_loader.cpp
   xcursor_loader.h
   $<TARGET_OBJECTS:xcursorloader>
-)
+        server_example_canonical_surface_info.cpp server_example_canonical_surface_info.h)
 
 target_link_libraries(eglapp
   mirclient
