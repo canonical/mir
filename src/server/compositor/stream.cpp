@@ -139,7 +139,7 @@ int mc::Stream::buffers_ready_for_compositor(void const* id) const
 {
     std::lock_guard<decltype(mutex)> lk(mutex); 
     if (arbiter->buffer_ready_for(id))
-        return 2; //doesnt seem right
+        return 1;
     return 0;
 }
 
