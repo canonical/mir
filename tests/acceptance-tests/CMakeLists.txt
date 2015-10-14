@@ -2,7 +2,6 @@ include(CMakeDependentOption)
 
 include_directories(
   ${CMAKE_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/include/cookie
 )
 
 set(

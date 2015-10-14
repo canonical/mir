@@ -229,7 +229,7 @@ MATCHER(PointerLeaveEvent, "")
 }
 
 inline bool button_event_matches(MirPointerEvent const* pev, float x, float y, MirPointerAction action, MirPointerButtons button_state,
-                                 bool check_action = true, bool check_buttons = true)
+                                 bool check_action = true, bool check_buttons = true, bool check_axes = true)
 {
     if (pev == nullptr)
         return false;
@@ -237,9 +237,9 @@ inline bool button_event_matches(MirPointerEvent const* pev, float x, float y, M
         return false;
     if (check_buttons && mir_pointer_event_buttons(pev) != button_state)
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
+    if (check_axes && mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
+    if (check_axes && mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
         return false;
     return true;
 }

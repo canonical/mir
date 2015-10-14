@@ -1,6 +1,5 @@
 include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
 include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
-include_directories(${MIR_XCURSOR_INCLUDE_DIRECTORIES})
 
 set(
   INPUT_SOURCES
@@ -21,7 +20,6 @@ set(
   vt_filter.cpp
   cursor_controller.cpp
   default_configuration.cpp
-  xcursor_loader.cpp
   builtin_cursor_images.cpp
   touchspot_controller.cpp
   key_repeat_dispatcher.cpp

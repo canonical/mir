@@ -5,7 +5,7 @@ set(
 )
 
 add_library(
-  xcursorloader-static STATIC
+  xcursorloader OBJECT
 
   ${XCURSOR_SOURCES}
 )

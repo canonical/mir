@@ -27,7 +27,7 @@
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/mock_libinput.h"
 #include "mir/test/gmock_fixes.h"
-#include "mir/test/fake_shared.h"
+#include "mir/cookie_factory.h"
 #include "mir_test_framework/udev_environment.h"
 
 #include <gmock/gmock.h>
@@ -69,7 +69,8 @@ struct MockInputSink : mi::InputSink
 
 struct MockEventBuilder : mi::EventBuilder
 {
-    mi::DefaultEventBuilder builder{MirInputDeviceId{3}};
+    std::shared_ptr<mir::cookie::CookieFactory> const cookie_factory = mir::cookie::CookieFactory::create_keeping_secret();
+    mi::DefaultEventBuilder builder{MirInputDeviceId{3}, cookie_factory};
     MockEventBuilder()
     {
         ON_CALL(*this, key_event(_,_,_,_))
