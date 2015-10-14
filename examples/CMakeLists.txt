@@ -260,3 +260,13 @@ target_link_libraries(mir_cursor_theme_dump
   exampleserverconfig
   mirserver
 )
+
+mir_add_wrapped_executable(mir_demo_client_multistream
+  multi_stream.cpp
+)
+
+target_link_libraries(mir_demo_client_multistream
+  mirclient
+  eglapp
+  ${Boost_LIBRARIES}
+)
