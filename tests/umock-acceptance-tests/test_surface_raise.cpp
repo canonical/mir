@@ -36,7 +36,7 @@ namespace mt = mir::test;
 
 namespace
 {
-int const max_wait{4};
+std::chrono::seconds const max_wait{4};
 void cookie_capturing_callback(MirSurface* surface, MirEvent const* ev, void* ctx);
 }
 
