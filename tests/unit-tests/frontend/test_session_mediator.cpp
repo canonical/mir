@@ -58,6 +58,7 @@
 #include "mir/test/signal.h"
 #include "mir/frontend/connector.h"
 #include "mir/frontend/event_sink.h"
+#include "mir/cookie_factory.h"
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 
@@ -218,7 +219,8 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<mtd::NullEventSinkFactory>(),
             std::make_shared<mtd::NullMessageSender>(),
             resource_cache, stub_screencast, &connector, nullptr, nullptr,
-            std::make_shared<mtd::NullANRDetector>()}
+            std::make_shared<mtd::NullANRDetector>(),
+            mir::cookie::CookieFactory::create_keeping_secret()}
     {
         using namespace ::testing;
 
@@ -280,7 +282,8 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
         std::make_shared<mtd::NullEventSinkFactory>(),
         std::make_shared<mtd::NullMessageSender>(),
         resource_cache, stub_screencast, context, nullptr, nullptr,
-        std::make_shared<mtd::NullANRDetector>()};
+        std::make_shared<mtd::NullANRDetector>(),
+        mir::cookie::CookieFactory::create_keeping_secret()};
 
     EXPECT_THAT(connects_handled_count, Eq(0));
 
@@ -379,7 +382,8 @@ TEST_F(SessionMediator, connect_packs_display_configuration)
         std::make_shared<mtd::NullMessageSender>(),
         resource_cache, std::make_shared<mtd::NullScreencast>(),
         nullptr, nullptr, nullptr,
-        std::make_shared<mtd::NullANRDetector>());
+        std::make_shared<mtd::NullANRDetector>(),
+        mir::cookie::CookieFactory::create_keeping_secret());
     mediator.connect(&connect_parameters, &connection, null_callback.get());
 
 
@@ -585,7 +589,8 @@ TEST_F(SessionMediator, display_config_request)
         resource_cache,
         std::make_shared<mtd::NullScreencast>(),
          nullptr, nullptr, nullptr,
-        std::make_shared<mtd::NullANRDetector>()};
+        std::make_shared<mtd::NullANRDetector>(),
+        mir::cookie::CookieFactory::create_keeping_secret()};
 
     mediator.connect(&connect_parameters, &connection, null_callback.get());
 
@@ -840,7 +845,8 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
         std::make_shared<mtd::NullEventSinkFactory>(),
         std::make_shared<mtd::NullMessageSender>(),
         mt::fake_shared(mock_cache), stub_screencast, &connector, nullptr, nullptr,
-        std::make_shared<mtd::NullANRDetector>()};
+        std::make_shared<mtd::NullANRDetector>(),
+        mir::cookie::CookieFactory::create_keeping_secret()};
 
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
@@ -953,7 +959,8 @@ TEST_F(SessionMediator, sends_a_buffer_when_submit_buffer_is_called)
         nullptr,
         nullptr,
         nullptr,
-        std::make_shared<mtd::NullANRDetector>()};
+        std::make_shared<mtd::NullANRDetector>(),
+        mir::cookie::CookieFactory::create_keeping_secret()};
 
     mp::Void null;
     mp::BufferRequest request;
@@ -1043,7 +1050,8 @@ TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_submit)
         std::make_shared<mtd::NullEventSinkFactory>(),
         std::make_shared<mtd::NullMessageSender>(),
         resource_cache, stub_screencast, nullptr, nullptr, nullptr,
-        std::make_shared<mtd::NullANRDetector>()};
+        std::make_shared<mtd::NullANRDetector>(),
+        mir::cookie::CookieFactory::create_keeping_secret()};
 
     mp::Void null;
     mp::BufferRequest request;
@@ -1186,7 +1194,8 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         surface_pixel_formats, report, sink_factory,
         mock_sender,
         resource_cache, stub_screencast, nullptr, nullptr, nullptr,
-        std::make_shared<mtd::NullANRDetector>()};
+        std::make_shared<mtd::NullANRDetector>(),
+        mir::cookie::CookieFactory::create_keeping_secret()};
 
     ON_CALL(*shell, create_surface( _, _, _))
         .WillByDefault(

@@ -149,15 +149,15 @@ int msh::FrontendShell::get_surface_attribute(
     return wrapped->get_surface_attribute(surface, attrib);
 }
 
-void msh::FrontendShell::raise_surface_with_cookie(
+void msh::FrontendShell::raise_surface_with_timestamp(
     std::shared_ptr<mf::Session> const& session,
     mf::SurfaceId surface_id,
-    MirCookie const& cookie)
+    uint64_t timestamp)
 {
     auto const scene_session   = std::dynamic_pointer_cast<ms::Session>(session);
     auto const focused_surface = wrapped->focused_surface();
 
-    if (raise_policy->should_raise_surface(focused_surface, cookie))
+    if (raise_policy->should_raise_surface(focused_surface, timestamp))
     {
         auto const surface = scene_session->surface(surface_id);
         wrapped->set_focus_to(scene_session, surface);

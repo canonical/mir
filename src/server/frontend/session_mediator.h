@@ -38,6 +38,10 @@
 
 namespace mir
 {
+namespace cookie
+{
+class CookieFactory;
+}
 namespace graphics
 {
 class Buffer;
@@ -99,7 +103,8 @@ public:
         ConnectionContext const& connection_context,
         std::shared_ptr<input::CursorImages> const& cursor_images,
         std::shared_ptr<scene::CoordinateTranslator> const& translator,
-        std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector);
+        std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
+        std::shared_ptr<cookie::CookieFactory> const& cookie_factory);
 
     ~SessionMediator() noexcept;
 
@@ -246,6 +251,7 @@ private:
     std::shared_ptr<input::CursorImages> const cursor_images;
     std::shared_ptr<scene::CoordinateTranslator> const translator;
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const anr_detector;
+    std::shared_ptr<cookie::CookieFactory> const cookie_factory;
 
     BufferStreamTracker buffer_stream_tracker;
 

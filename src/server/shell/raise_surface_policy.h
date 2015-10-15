@@ -36,14 +36,11 @@ namespace shell
 class RaiseSurfacePolicy
 {
 public:
-    RaiseSurfacePolicy(std::shared_ptr<cookie::CookieFactory> const& cookie_factory);
+    RaiseSurfacePolicy() = default;
 
     bool should_raise_surface(
         std::shared_ptr<scene::Surface> const& focused_surface,
-        MirCookie const& cookie) const;
-
-private:
-    std::shared_ptr<cookie::CookieFactory> const cookie_factory;
+        uint64_t timestamp) const;
 };
 
 }

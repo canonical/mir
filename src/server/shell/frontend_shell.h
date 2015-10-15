@@ -91,10 +91,10 @@ struct FrontendShell : mf::Shell
         mf::SurfaceId surface_id,
         MirSurfaceAttrib attrib) override;
 
-    void raise_surface_with_cookie(
+    void raise_surface_with_timestamp(
         std::shared_ptr<mf::Session> const& session,
         mf::SurfaceId surface_id,
-        MirCookie const& cookie) override;
+        uint64_t timestamp) override;
 };
 }
 }

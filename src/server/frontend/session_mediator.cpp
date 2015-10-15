@@ -48,6 +48,7 @@
 #include "mir/frontend/buffer_stream.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
+#include "mir/cookie_factory.h"
 
 #include "mir/geometry/rectangles.h"
 #include "buffer_stream_tracker.h"
@@ -86,7 +87,8 @@ mf::SessionMediator::SessionMediator(
     ConnectionContext const& connection_context,
     std::shared_ptr<mi::CursorImages> const& cursor_images,
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
-    std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector) :
+    std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
+    std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -102,6 +104,7 @@ mf::SessionMediator::SessionMediator(
     cursor_images(cursor_images),
     translator{translator},
     anr_detector{anr_detector},
+    cookie_factory(cookie_factory),
     buffer_stream_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
@@ -1021,7 +1024,8 @@ void mf::SessionMediator::raise_surface_with_cookie(
 
     MirCookie const mir_cookie = {cookie.timestamp(), cookie.mac()};
 
-    shell->raise_surface_with_cookie(session, mf::SurfaceId{surface_id.value()}, mir_cookie);
+    if (cookie_factory->attest_timestamp(mir_cookie))
+        shell->raise_surface_with_timestamp(session, mf::SurfaceId{surface_id.value()}, cookie.timestamp());
 
     done->Run();
 }

@@ -75,10 +75,10 @@ public:
         SurfaceId surface_id,
         MirSurfaceAttrib attrib) override;
 
-    void raise_surface_with_cookie(
+    void raise_surface_with_timestamp(
         std::shared_ptr<Session> const& session,
         SurfaceId surface_id,
-        MirCookie const& cookie) override;
+        uint64_t timestamp) override;
 
 protected:
     std::shared_ptr<Shell> const wrapped;

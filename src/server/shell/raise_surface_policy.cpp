@@ -24,17 +24,9 @@
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-msh::RaiseSurfacePolicy::RaiseSurfacePolicy(std::shared_ptr<cookie::CookieFactory> const& c_factory)
-    : cookie_factory(c_factory)
-{
-}
-
 bool msh::RaiseSurfacePolicy::should_raise_surface(
     std::shared_ptr<ms::Surface> const& focused_surface,
-    MirCookie const& cookie) const
+    uint64_t timestamp) const
 {
-    if (cookie_factory->attest_timestamp(cookie))
-        return cookie.timestamp >= focused_surface->last_input_event_timestamp();
-
-    return false;
+    return timestamp >= focused_surface->last_input_event_timestamp();
 }
