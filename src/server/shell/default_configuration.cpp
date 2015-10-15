@@ -114,6 +114,6 @@ mir::DefaultServerConfiguration::the_raise_policy()
     return raise_surface_policy(
         [this]()
         {
-            return std::make_shared<msh::DefaultRaiseSurfacePolicy>();
+            return std::make_shared<msh::DefaultRaiseSurfacePolicy>(the_focus_controller());
         });
 }

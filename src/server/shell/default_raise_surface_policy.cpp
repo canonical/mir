@@ -19,15 +19,22 @@
 #include "mir/cookie_factory.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
+#include "mir/shell/focus_controller.h"
 
 #include "default_raise_surface_policy.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
+msh::DefaultRaiseSurfacePolicy::DefaultRaiseSurfacePolicy(std::shared_ptr<FocusController> const& focus_controller) :
+    focus_controller(focus_controller)
+{
+}
+
 bool msh::DefaultRaiseSurfacePolicy::should_raise_surface(
-    std::shared_ptr<ms::Surface> const& focused_surface,
+    std::shared_ptr<ms::Surface> const& /* surface */,
     uint64_t timestamp) const
 {
+    auto focused_surface = focus_controller->focused_surface();
     return timestamp >= focused_surface->last_input_event_timestamp();
 }

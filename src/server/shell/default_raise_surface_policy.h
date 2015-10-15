@@ -29,15 +29,19 @@ class Surface;
 }
 namespace shell
 {
+class FocusController;
 
 class DefaultRaiseSurfacePolicy : public RaiseSurfacePolicy
 {
 public:
-    DefaultRaiseSurfacePolicy() = default;
+    DefaultRaiseSurfacePolicy(std::shared_ptr<FocusController> const& focus_controller);
 
     bool should_raise_surface(
         std::shared_ptr<scene::Surface> const& focused_surface,
         uint64_t timestamp) const override;
+
+private:
+    std::shared_ptr<FocusController> const focus_controller;
 };
 
 }
