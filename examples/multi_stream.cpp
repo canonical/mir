@@ -19,6 +19,10 @@
 #include <boost/program_options.hpp>
 #include <iostream>
 #include <thread>
+#include <signal.h>
+#include <sys/signalfd.h>
+#include <mir/fd.h>
+#include <poll.h>
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -234,7 +238,22 @@ int main(int argc, char* argv[])
     int topColour = 255, dtop = 1;
     int bottomColour = 255, dbottom = 1;
 
-    while (1)
+    sigset_t halt_signals;
+    sigemptyset(&halt_signals);
+    sigaddset(&halt_signals, SIGTERM);
+    sigaddset(&halt_signals, SIGQUIT);
+    sigaddset(&halt_signals, SIGINT);
+
+    sigprocmask(SIG_BLOCK, &halt_signals, nullptr);
+    mir::Fd signal_watch{signalfd(-1, &halt_signals, SFD_CLOEXEC)};
+
+    pollfd signal_poll{
+        signal_watch,
+        POLLIN | POLLERR,
+        0
+    };
+
+    while (poll(&signal_poll, 1, 0) <= 0)
     {
         bounce_position(arrangement[1].displacement_x, bottom_dx, -100, 300);
         bounce_position(arrangement[1].displacement_y, bottom_dy, -100, 300);
@@ -248,7 +267,6 @@ int main(int argc, char* argv[])
         bounce_position(topColour, dtop, 200, 255);
         bounce_position(bottomColour, dbottom, 100, 255);
 
-
         fill_stream_with(surface_stream, baseColour, 0, 0, 128);
         fill_stream_with(bottom, 0, 0, bottomColour, 128);
         fill_stream_with(top, 0, topColour, 0, 128);
@@ -259,5 +277,6 @@ int main(int argc, char* argv[])
     }
     mir_surface_spec_release(spec);
 
+    std::cout << "Quitting; have a nice day." << std::endl;
     return 0;
 }
