@@ -78,7 +78,7 @@ mir::DefaultServerConfiguration::the_frontend_shell()
         {
             return std::make_shared<msh::detail::FrontendShell>(the_shell(),
                                                                 the_persistent_surface_store(),
-                                                                the_raise_decider());
+                                                                the_raise_policy());
         });
 }
 
@@ -109,7 +109,7 @@ mir::DefaultServerConfiguration::the_host_lifecycle_event_listener()
 }
 
 std::shared_ptr<msh::RaiseSurfacePolicy>
-mir::DefaultServerConfiguration::the_raise_decider()
+mir::DefaultServerConfiguration::the_raise_policy()
 {
     return raise_surface_policy(
         [this]()
