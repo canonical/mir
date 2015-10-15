@@ -99,7 +99,7 @@ public:
     pixel_iterator(MirGraphicsRegion const& region, int x, int y)
         : x{x},
           y{y},
-          buffer{region}
+          buffer(region)
     {
     }
 
