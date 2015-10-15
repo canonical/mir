@@ -147,7 +147,7 @@ private:
 
 pixel_iterator begin(MirGraphicsRegion const& region)
 {
-    return pixel_iterator{region};
+    return pixel_iterator(region);
 }
 
 pixel_iterator end(MirGraphicsRegion const& region)
