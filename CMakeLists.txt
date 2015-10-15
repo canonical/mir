@@ -121,6 +121,7 @@ add_definitions(-DLOG_NDEBUG=1)
 enable_testing()
 
 include_directories(include/common)
+include_directories(include/cookie)
 
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem REQUIRED)
@@ -195,7 +196,6 @@ endif()
 
 set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
 set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
-set(MIR_XCURSOR_INCLUDE_DIRECTORIES)
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
 add_subdirectory(3rd_party/)
 

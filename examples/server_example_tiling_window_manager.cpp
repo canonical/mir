@@ -34,16 +34,6 @@ using namespace mir::geometry;
 ///\example server_example_tiling_window_manager.cpp
 /// Demonstrate implementing a simple tiling algorithm
 
-me::TilingSurfaceInfo::TilingSurfaceInfo(
-    std::shared_ptr<scene::Session> const& session,
-    std::shared_ptr<scene::Surface> const& surface,
-    scene::SurfaceCreationParameters const& /*params*/) :
-    session{session},
-    state{mir_surface_state_restored},
-    restore_rect{surface->top_left(), surface->size()}
-{
-}
-
 me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(Tools* const tools) :
     tools{tools}
 {

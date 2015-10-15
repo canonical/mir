@@ -20,6 +20,7 @@
 #define MIR_TOOLKIT_POINTER_EVENT_H_
 
 #include <stdbool.h>
+#include <mir_toolkit/cookie.h>
 
 #ifdef __cplusplus
 /**
@@ -134,6 +135,14 @@ float mir_pointer_event_axis_value(MirPointerEvent const* event,
  * \return           The input event
  */
 MirInputEvent const* mir_pointer_event_input_event(MirPointerEvent const* event);
+
+/**
+ * Retrieves the timestamp cookie of a pointer event.
+ *
+ * \param [in] event The pointer event
+ * \return           A MirCookie
+ */
+MirCookie mir_pointer_event_get_cookie(MirPointerEvent const* event);
 
 #ifdef __cplusplus
 }
