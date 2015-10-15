@@ -49,6 +49,8 @@ struct StreamSpecification
 /// Specification of surface properties requested by client
 struct SurfaceSpecification
 {
+    bool is_empty() const;
+
     optional_value<geometry::Width> width;
     optional_value<geometry::Height> height;
     optional_value<MirPixelFormat> pixel_format;

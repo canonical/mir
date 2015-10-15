@@ -16,6 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include <mir/shell/surface_specification.h>
 #include "mir/shell/abstract_shell.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/shell/window_manager.h"
@@ -81,7 +82,10 @@ mf::SurfaceId msh::AbstractShell::create_surface(
 
 void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, SurfaceSpecification const& modifications)
 {
-    window_manager->modify_surface(session, surface, modifications);
+    if (!modifications.is_empty())
+    {
+        window_manager->modify_surface(session, surface, modifications);
+    }
 }
 
 void msh::AbstractShell::destroy_surface(
