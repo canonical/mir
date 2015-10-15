@@ -1181,7 +1181,7 @@ TEST_P(WithThreeBuffersExchangeOnly, gives_new_compositor_the_newest_buffer_afte
     EXPECT_THAT(production_log[1], Eq(second_consumption_log[0]));
 }
 
-TEST_P(WithTwoOrMoreBuffersExchangeOnly, overlapping_compositors_get_different_frames)
+TEST_P(WithTwoOrMoreBuffers, overlapping_compositors_get_different_frames)
 {
     // This test simulates bypass behaviour
     // overlay/bypass code will need to acquire two buffers at once, as there's a brief period of time where a buffer 
