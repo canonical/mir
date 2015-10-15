@@ -37,6 +37,9 @@ namespace mg = mir::graphics;
 namespace
 {
 
+int const refresh_rate = 60;
+std::chrono::microseconds const vblank_interval(1000000/refresh_rate);
+
 class Stats
 {
 public:
@@ -141,7 +144,7 @@ public:
          * then it's like having an infinite refresh rate and the measured
          * latency would never exceed 1.0.  (LP: #1447947)
          */
-        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        std::this_thread::sleep_for(vblank_interval);
     }
 
     float average_latency()
@@ -224,4 +227,34 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
 
     EXPECT_THAT(observed_latency, Gt(expected_min_latency-error_margin));
     EXPECT_THAT(observed_latency, Lt(expected_max_latency+error_margin));
+}
+
+TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
+{
+    using namespace testing;
+
+    int const throttled_input_rate = refresh_rate - 1;
+    std::chrono::microseconds const input_interval(1000000/throttled_input_rate);
+    auto next_input_event = std::chrono::high_resolution_clock::now();
+
+    auto stream = mir_surface_get_buffer_stream(surface);
+    for (auto i = 0u; i < test_submissions; i++)
+    {
+        std::this_thread::sleep_until(next_input_event);
+        next_input_event += input_interval;
+
+        auto submission_id = mir_debug_surface_current_buffer_id(surface);
+        stats.record_submission(submission_id);
+        mir_buffer_stream_swap_buffers_sync(stream);
+    }
+
+    // Wait for the compositor to finish rendering all those frames,
+    // or else we'll be missing some samples and get a spurious average.
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+    // As the client is producing frames slower than the compositor consumes
+    // them, the buffer queue never fills. So latency is low;
+    float const observed_latency = display.group.average_latency();
+    EXPECT_THAT(observed_latency, Ge(0.0f));
+    EXPECT_THAT(observed_latency, Lt(1.1f));
 }
