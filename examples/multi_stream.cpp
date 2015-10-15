@@ -168,8 +168,6 @@ void fill_stream_with(MirBufferStream* stream, int r, int g, int b, int a)
     {
         pixel.write(r, g, b, a);
     }
-
-    mir_buffer_stream_swap_buffers_sync(stream);
 }
 
 void bounce_position(int& position, int& delta, int min, int max)
@@ -212,8 +210,11 @@ int main(int argc, char* argv[])
     me::BufferStream bottom{connection, 50, 50, true, false};
 
     fill_stream_with(surface_stream, 255, 0, 0, 128);
+    mir_buffer_stream_swap_buffers_sync(surface_stream);
     fill_stream_with(top, 0, 255, 0, 128);
+    mir_buffer_stream_swap_buffers_sync(top);
     fill_stream_with(bottom, 0, 0, 255, 128);
+    mir_buffer_stream_swap_buffers_sync(bottom);
 
     std::array<MirBufferStreamInfo, 3> arrangement;
 
