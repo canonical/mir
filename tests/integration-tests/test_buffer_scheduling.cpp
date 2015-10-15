@@ -521,15 +521,22 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
                     std::make_shared<mtd::StubBufferAllocator>()),
                 geom::Size{100,100},
                 mir_pixel_format_abgr_8888);
+            auto weak_stream = std::weak_ptr<mc::Stream>(submit_stream);
             ipc->on_server_bound_transfer(
-                [submit_stream](mp::Buffer& buffer)
+                [weak_stream](mp::Buffer& buffer)
                 {
+                    auto submit_stream = weak_stream.lock();
+                    if (!submit_stream)
+                        return;
                     mtd::StubBuffer b(mg::BufferID{static_cast<unsigned int>(buffer.buffer_id())});
                     submit_stream->swap_buffers(&b, [](mg::Buffer*){});
                 });
             ipc->on_allocate(
-                [submit_stream](geom::Size sz)
+                [weak_stream](geom::Size sz)
                 {
+                    auto submit_stream = weak_stream.lock();
+                    if (!submit_stream)
+                        return;
                     submit_stream->allocate_buffer(
                         mg::BufferProperties{sz, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware});
                 });
