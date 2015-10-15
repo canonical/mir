@@ -284,5 +284,5 @@ TEST_F(AndroidHardwareSanity, can_allocate_hw_buffer)
 
     // Workaround for lp:1502782
     test_buffer.reset();
-    ffstd::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
