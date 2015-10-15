@@ -3,12 +3,14 @@ include(CMakeDependentOption)
 include_directories(
   ${CMAKE_SOURCE_DIR}
   ${CMAKE_SOURCE_DIR}/tests/include/
+  ${CMAKE_SOURCE_DIR}/include/cookie
   ${UMOCKDEV_INCLUDE_DIRS}
 )
 
 mir_add_wrapped_executable(
   mir_umock_acceptance_tests
 
+  test_client_cookie.cpp
   test_libinput.cpp
   )
 
