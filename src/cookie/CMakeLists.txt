@@ -38,7 +38,7 @@ install(
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/include/cookie/mir
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/cookie/mir ${CMAKE_SOURCE_DIR}/include/cookie/mir_toolkit
   DESTINATION "include/mircookie"
 )
 
