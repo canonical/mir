@@ -16,16 +16,13 @@
  * Authored By: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#include <memory>
+#ifndef MIR_DEFAULT_RAISE_SURFACE_POLICY_H_
+#define MIR_DEFAULT_RAISE_SURFACE_POLICY_H_
 
-#include "mir_toolkit/cookie.h"
+#include "mir/shell/raise_surface_policy.h"
 
 namespace mir
 {
-namespace cookie
-{
-class CookieFactory;
-}
 namespace scene
 {
 class Surface;
@@ -33,15 +30,17 @@ class Surface;
 namespace shell
 {
 
-class RaiseSurfacePolicy
+class DefaultRaiseSurfacePolicy : public RaiseSurfacePolicy
 {
 public:
-    RaiseSurfacePolicy() = default;
+    DefaultRaiseSurfacePolicy() = default;
 
     bool should_raise_surface(
         std::shared_ptr<scene::Surface> const& focused_surface,
-        uint64_t timestamp) const;
+        uint64_t timestamp) const override;
 };
 
 }
 }
+
+#endif // MIR_DEFAULT_RAISE_SURFACE_POLICY_H_

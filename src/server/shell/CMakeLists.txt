@@ -11,7 +11,7 @@ set(
   system_compositor_window_manager.cpp
   default_persistent_surface_store.cpp
   persistent_surface_store.cpp
-  raise_surface_policy.cpp
+  default_raise_surface_policy.cpp
 
   ${CMAKE_SOURCE_DIR}/include/server/mir/shell/display_configuration_controller.h
 )

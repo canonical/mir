@@ -16,15 +16,16 @@
  * Authored By: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#include "raise_surface_policy.h"
 #include "mir/cookie_factory.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 
+#include "default_raise_surface_policy.h"
+
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-bool msh::RaiseSurfacePolicy::should_raise_surface(
+bool msh::DefaultRaiseSurfacePolicy::should_raise_surface(
     std::shared_ptr<ms::Surface> const& focused_surface,
     uint64_t timestamp) const
 {

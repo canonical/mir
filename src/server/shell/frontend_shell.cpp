@@ -17,8 +17,8 @@
  */
 
 #include "frontend_shell.h"
-#include "raise_surface_policy.h"
 #include "mir/shell/persistent_surface_store.h"
+#include "mir/shell/raise_surface_policy.h"
 #include "mir/shell/shell.h"
 
 #include "mir/scene/session.h"

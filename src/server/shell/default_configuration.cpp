@@ -25,7 +25,7 @@
 #include "default_persistent_surface_store.h"
 #include "frontend_shell.h"
 #include "graphics_display_layout.h"
-#include "raise_surface_policy.h"
+#include "default_raise_surface_policy.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -114,6 +114,6 @@ mir::DefaultServerConfiguration::the_raise_policy()
     return raise_surface_policy(
         [this]()
         {
-            return std::make_shared<msh::RaiseSurfacePolicy>();
+            return std::make_shared<msh::DefaultRaiseSurfacePolicy>();
         });
 }
