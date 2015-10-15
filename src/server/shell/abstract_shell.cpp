@@ -82,9 +82,14 @@ mf::SurfaceId msh::AbstractShell::create_surface(
 
 void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, SurfaceSpecification const& modifications)
 {
-    if (!modifications.is_empty())
+    auto wm_relevant_mods = modifications;
+    if (wm_relevant_mods.streams.is_set())
     {
-        window_manager->modify_surface(session, surface, modifications);
+        session->configure_streams(*surface, wm_relevant_mods.streams.consume());
+    }
+    if (!wm_relevant_mods.is_empty())
+    {
+        window_manager->modify_surface(session, surface, wm_relevant_mods);
     }
 }
 
