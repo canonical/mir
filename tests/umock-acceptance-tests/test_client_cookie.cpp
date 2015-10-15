@@ -60,7 +60,7 @@ public:
 
     void read_evemu_file(std::string const& evemu_file)
     {
-       mock_devices.load_device_evemu(evemu_file);
+        mock_devices.load_device_evemu(evemu_file);
 
         udev_read_recording.wait_for_at_most_seconds(max_wait);
         if (!udev_read_recording.woken())
