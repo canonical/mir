@@ -964,7 +964,7 @@ TEST_P(WithTwoBuffersExchangeOnly, composite_on_demand_never_deadlocks)
 }
 
 // Regression test for LP: #1395581
-TEST_P(WithTwoOrMoreBuffersExchangeOnly, buffers_ready_is_not_underestimated)
+TEST_P(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
 {
     // Produce frame 1
     producer->produce();
