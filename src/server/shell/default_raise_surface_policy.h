@@ -31,11 +31,30 @@ namespace shell
 {
 class FocusController;
 
+/**
+ * The default raise policy for a surface raise request
+ */
 class DefaultRaiseSurfacePolicy : public RaiseSurfacePolicy
 {
 public:
+    /**
+     * DefaultRaiseSurfacePolicy uses the focus controller to get access to the
+     * currently focused window.
+     *
+     * \param [in] focus_controller  The focus controller for the shell
+     */
     DefaultRaiseSurfacePolicy(std::shared_ptr<FocusController> const& focus_controller);
 
+    /**
+     * The default behaviour is to use the focus cotroller to get the currently focused
+     * window. From there compare if the timestamp is less then the currently focused
+     * windows last input event timestamp. This means motion events will the raise policy
+     * to fail as it will update the last input event timestamp.
+     *
+     *  \param [in] surface_candidate  Surface requesting to be raised
+     *  \param [in] timestamp          Timestamp from the event that caused the raise request
+     *  return                         True if the surface should be raised, otherwise false
+     */
     bool should_raise_surface(
         std::shared_ptr<scene::Surface> const& surface_candidate,
         uint64_t timestamp) const override;
