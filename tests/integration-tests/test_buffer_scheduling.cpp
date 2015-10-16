@@ -559,9 +559,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
         }
         else
         {
-            printf("SANDWICH\n");
             producer->produce();
-            printf("SANDWICH\n");
             ipc->resize_event(sz);
             consumer->consume();
         }
