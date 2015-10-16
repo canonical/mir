@@ -108,6 +108,17 @@ TEST(MirCookieFactory, optimal_secret_size_is_larger_than_minimum_size)
         Ge(mir::cookie::CookieFactory::minimum_secret_size));
 }
 
+TEST(MirCookieFactory, assert_cookie_passes)
+{
+    using namespace testing;
+
+    auto timestamp = 23;
+    auto factory = mir::cookie::CookieFactory::create_keeping_secret();
+    auto cookie = factory->timestamp_to_cookie(timestamp);
+
+    EXPECT_NO_THROW(factory->assert_timestamp(cookie));
+}
+
 TEST(MirCookieFactory, assert_cookie_throws)
 {
     using namespace testing;
