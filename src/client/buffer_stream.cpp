@@ -341,7 +341,8 @@ mcl::BufferStream::BufferStream(
     mp::BufferStream const& protobuf_bs,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
     std::string const& surface_name,
-    geom::Size ideal_size)
+    geom::Size ideal_size,
+    size_t nbuffers)
     : connection(connection),
       display_server(server),
       mode(mode),
@@ -351,7 +352,8 @@ mcl::BufferStream::BufferStream(
       scale_(1.0f),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
-      ideal_buffer_size(ideal_size)
+      ideal_buffer_size(ideal_size),
+      nbuffers(nbuffers)
 {
     created(nullptr, nullptr);
     perf_report->name_surface(surface_name.c_str());
@@ -363,6 +365,7 @@ mcl::BufferStream::BufferStream(
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
     mp::BufferStreamParameters const& parameters,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
+    size_t nbuffers,
     mir_buffer_stream_callback callback,
     void *context)
     : connection(connection),
@@ -373,7 +376,8 @@ mcl::BufferStream::BufferStream(
       swap_interval_(1),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
-      ideal_buffer_size(parameters.width(), parameters.height())
+      ideal_buffer_size(parameters.width(), parameters.height()),
+      nbuffers(nbuffers)
 {
     perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
 
@@ -409,11 +413,10 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
     }
     else
     {
-        int initial_nbuffers = 3u;
         buffer_depository = std::make_unique<NewBufferSemantics>(
             client_platform->create_buffer_factory(),
             std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
-            ideal_buffer_size, mir_pixel_format_abgr_8888, 0, initial_nbuffers);
+            ideal_buffer_size, mir_pixel_format_abgr_8888, 0, nbuffers);
     }
 
 
