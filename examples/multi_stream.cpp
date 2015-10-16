@@ -21,7 +21,6 @@
 #include <thread>
 #include <signal.h>
 #include <sys/signalfd.h>
-#include <mir/fd.h>
 #include <poll.h>
 
 #include "mir_toolkit/mir_client_library.h"
@@ -246,7 +245,7 @@ int main(int argc, char* argv[])
     sigaddset(&halt_signals, SIGINT);
 
     sigprocmask(SIG_BLOCK, &halt_signals, nullptr);
-    mir::Fd signal_watch{signalfd(-1, &halt_signals, SFD_CLOEXEC)};
+    int const signal_watch{signalfd(-1, &halt_signals, SFD_CLOEXEC)};
 
     pollfd signal_poll{
         signal_watch,
@@ -277,6 +276,7 @@ int main(int argc, char* argv[])
         mir_buffer_stream_swap_buffers_sync(top);
     }
     mir_surface_spec_release(spec);
+    close(signal_watch);
 
     std::cout << "Quitting; have a nice day." << std::endl;
     return 0;
