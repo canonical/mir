@@ -890,7 +890,7 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_policy_never_drops_newest_frame)
     EXPECT_THAT(production_log[nbuffers], Not(Eq(production_log[nbuffers - 1]))); 
 }
 
-TEST_P(WithTwoOrMoreBuffersExchangeOnly, uncomposited_client_swaps_when_policy_triggered)
+TEST_P(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
 {
     mtd::MockFrameDroppingPolicyFactory policy_factory;
     mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory), properties, policy_factory};
@@ -909,25 +909,25 @@ TEST_P(WithTwoOrMoreBuffersExchangeOnly, uncomposited_client_swaps_when_policy_t
 }
 
 // Regression test for LP: #1319765
-TEST_P(WithTwoBuffersExchangeOnly, client_is_not_blocked_prematurely)
+TEST_P(WithTwoBuffers, client_is_not_blocked_prematurely)
 {
     producer->produce();
-    auto a = queue.compositor_acquire(this);
+    auto a = stream->lock_compositor_buffer(this);
     producer->produce();
-    auto b = queue.compositor_acquire(this);
+    auto b = stream->lock_compositor_buffer(this);
 
     ASSERT_NE(a.get(), b.get());
 
-    queue.compositor_release(a);
+    a.reset();
     producer->produce();
-    queue.compositor_release(b);
+    b.reset();
 
     /*
      * Update to the original test case; This additional compositor acquire
      * represents the fixing of LP: #1395581 in the compositor logic.
      */
-    if (queue.buffers_ready_for_compositor(this))
-        queue.compositor_release(queue.compositor_acquire(this));
+    if (stream->buffers_ready_for_compositor(this))
+        stream->lock_compositor_buffer(this);
 
     // With the fix, a buffer will be available instantaneously:
     EXPECT_TRUE(producer->can_produce());
