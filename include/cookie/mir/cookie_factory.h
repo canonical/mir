@@ -21,14 +21,25 @@
 
 #include "mir_toolkit/cookie.h"
 
-#include <vector>
 #include <memory>
+#include <stdexcept>
+#include <vector>
 
 namespace mir
 {
 namespace cookie
 {
 using Secret = std::vector<uint8_t>;
+
+/**
+ * \brief An error to throw when a MirCookie is invalid
+ *
+ * You cannot tell when an invalid cookie is invalid or a malicious attack.
+ */
+struct InvalidCookieError : std::runtime_error
+{
+    InvalidCookieError(std::string const& message) : std::runtime_error(message) {}
+};
 
 /**
  * \brief A source of moderately-difficult-to-spoof cookies.
@@ -96,6 +107,14 @@ public:
     *   \return             True when the MirCookie is valid, False when the MirCookie is not valid
     */
     virtual bool attest_timestamp(MirCookie const& cookie) = 0;
+
+    /**
+    *   Asserts that a MirCookie is a valid MirCookie, otherwise throw an InvalidCookieError
+    *
+    *   \param [in] cookie  A created MirCookie
+    *   \throws             A InvalidCookieError if the cookie is invalid
+    */
+    virtual void assert_timestamp(MirCookie const& cookie) = 0;
 
     /**
      * Absolute minimum size of secret key the CookieFactory will accept.
