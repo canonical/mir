@@ -28,7 +28,6 @@
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/mock_client_buffer_factory.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
-#include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include "mir/test/doubles/mock_frame_dropping_policy_factory.h"
 #include "mir/test/fake_shared.h"
 #include "mir_protobuf.pb.h"
@@ -515,6 +514,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
         {
             ipc = std::make_shared<StubIpcSystem>();
             auto submit_stream = std::make_shared<mc::Stream>(
+                drop_policy,
                 std::make_unique<mc::BufferMap>(
                     mf::BufferStreamId{2},
                     std::make_shared<StubEventSink>(ipc),
@@ -580,14 +580,14 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
         consumer->set_framedropping(false);
     }
 
+    mtd::MockFrameDroppingPolicyFactory drop_policy;
     mtd::MockClientBufferFactory client_buffer_factory;
     mtd::StubBufferAllocator server_buffer_factory;
-    mtd::StubFrameDroppingPolicyFactory stub_policy;
     mg::BufferProperties properties{geom::Size{3,3}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
     int nbuffers = std::get<0>(GetParam());
 
     mcl::ClientBufferDepository depository{mt::fake_shared(client_buffer_factory), nbuffers};
-    mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory), properties, stub_policy};
+    mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory), properties, drop_policy};
     std::shared_ptr<mc::BufferStream> stream;
     std::shared_ptr<StubIpcSystem> ipc;
     std::unique_ptr<ProducerSystem> producer;
@@ -875,41 +875,31 @@ TEST_P(WithAnyNumberOfBuffersExchangeOnly, compositor_acquires_resized_frames)
 // Regression test for LP: #1396006
 TEST_P(WithTwoOrMoreBuffers, framedropping_policy_never_drops_newest_frame)
 {
-    mtd::MockFrameDroppingPolicyFactory policy_factory;
-    mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory), properties, policy_factory};
-    mc::BufferStreamSurfaces stream{mt::fake_shared(queue)};
-    BufferQueueProducer producer(stream);
-
     for(auto i = 0; i < nbuffers; i++)
-        producer.produce();
-    policy_factory.trigger_policies();
-    producer.produce();
+        producer->produce();
+    drop_policy.trigger_policies();
+    producer->produce();
 
-    auto production_log = producer.production_log();
+    auto production_log = producer->production_log();
     ASSERT_THAT(production_log, SizeIs(nbuffers + 1));
     EXPECT_THAT(production_log[nbuffers], Not(Eq(production_log[nbuffers - 1]))); 
 }
 
 TEST_P(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
 {
-    mtd::MockFrameDroppingPolicyFactory policy_factory;
-    mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory), properties, policy_factory};
-    mc::BufferStreamSurfaces stream{mt::fake_shared(queue)};
-    BufferQueueProducer producer(stream);
+    for(auto i = 0; i < nbuffers + 1; i++)
+        producer->produce();
+    drop_policy.trigger_policies();
+    producer->produce();
 
-    for(auto i = 0; i < nbuffers; i++)
-        producer.produce();
-    policy_factory.trigger_policies();
-    producer.produce();
-
-    auto production_log = producer.production_log();
-    ASSERT_THAT(production_log, SizeIs(nbuffers + 1));
-    EXPECT_THAT(production_log[nbuffers - 1].blockage, Eq(Access::blocked));
-    EXPECT_THAT(production_log[nbuffers].blockage, Eq(Access::unblocked));
+    auto production_log = producer->production_log();
+    ASSERT_THAT(production_log, SizeIs(nbuffers + 2));
+    EXPECT_THAT(production_log[nbuffers].blockage, Eq(Access::blocked));
+    EXPECT_THAT(production_log[nbuffers + 1].blockage, Eq(Access::unblocked));
 }
 
 // Regression test for LP: #1319765
-TEST_P(WithTwoBuffers, client_is_not_blocked_prematurely)
+TEST_P(WithTwoBuffersExchangeOnly, client_is_not_blocked_prematurely)
 {
     producer->produce();
     auto a = stream->lock_compositor_buffer(this);
