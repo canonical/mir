@@ -48,13 +48,21 @@ make_perf_report(std::shared_ptr<ml::Logger> const& logger)
     }
 }
 
+size_t get_nbuffers_from_env()
+{
+    const char* nbuffers_opt = getenv("MIR_CLIENT_NBUFFERS");
+    if (nbuffers_opt && !strncmp(nbuffers_opt, "2", strlen(nbuffers_opt)))
+        return 2u;
+    return 3u;
+}
 }
 
 mcl::DefaultClientBufferStreamFactory::DefaultClientBufferStreamFactory(
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
     std::shared_ptr<ml::Logger> const& logger)
     : client_platform(client_platform),
-      logger(logger)
+      logger(logger),
+      nbuffers(get_nbuffers_from_env())
 {
 }
 
@@ -64,7 +72,7 @@ std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::
 {
     return std::make_shared<mcl::BufferStream>(
         connection, server, mcl::BufferStreamMode::Consumer, client_platform,
-        protobuf_bs, make_perf_report(logger), surface_name, size);
+        protobuf_bs, make_perf_report(logger), surface_name, size, nbuffers);
 }
 
 std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::make_producer_stream(
@@ -73,7 +81,7 @@ std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::
 {
     return std::make_shared<mcl::BufferStream>(
         connection, server, mcl::BufferStreamMode::Producer, client_platform,
-        protobuf_bs, make_perf_report(logger), surface_name, size);
+        protobuf_bs, make_perf_report(logger), surface_name, size, nbuffers);
 }
 
 
@@ -82,5 +90,5 @@ mcl::ClientBufferStream* mcl::DefaultClientBufferStreamFactory::make_producer_st
     mp::BufferStreamParameters const& params, mir_buffer_stream_callback callback, void* context)
 {
     return new mcl::BufferStream(
-        connection, server, client_platform, params, make_perf_report(logger), callback, context);
+        connection, server, client_platform, params, make_perf_report(logger), nbuffers, callback, context);
 }

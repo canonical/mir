@@ -20,6 +20,7 @@
 #define MIR_EXAMPLE_TILING_WINDOW_MANAGER_H_
 
 #include "server_example_basic_window_manager.h"
+#include "server_example_canonical_surface_info.h"
 
 ///\example server_example_tiling_window_manager.h
 /// Demonstrate implementing a simple tiling algorithm
@@ -34,18 +35,6 @@ struct TilingSessionInfo
     std::vector<std::weak_ptr<scene::Surface>> surfaces;
 };
 
-struct TilingSurfaceInfo
-{
-    TilingSurfaceInfo(
-        std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface,
-        scene::SurfaceCreationParameters const& params);
-
-    std::weak_ptr<scene::Session> session;
-    MirSurfaceState state;
-    geometry::Rectangle restore_rect;
-};
-
 // simple tiling algorithm:
 //  o Switch apps: tap or click on the corresponding tile
 //  o Move window: Alt-leftmousebutton drag
@@ -57,9 +46,9 @@ struct TilingSurfaceInfo
 class TilingWindowManagerPolicy
 {
 public:
-    using Tools = BasicWindowManagerToolsCopy<TilingSessionInfo, TilingSurfaceInfo>;
+    using Tools = BasicWindowManagerToolsCopy<TilingSessionInfo, CanonicalSurfaceInfoCopy>;
     using TilingSessionInfoMap = typename SessionTo<TilingSessionInfo>::type;
-    using TilingSurfaceInfoMap = typename SurfaceTo<TilingSurfaceInfo>::type;
+    using TilingSurfaceInfoMap = typename SurfaceTo<CanonicalSurfaceInfoCopy>::type;
 
     explicit TilingWindowManagerPolicy(Tools* const tools);
 
@@ -130,6 +119,8 @@ private:
 
     geometry::Point old_cursor{};
 };
+
+using TilingWindowManager = BasicWindowManagerCopy<TilingWindowManagerPolicy, TilingSessionInfo, CanonicalSurfaceInfoCopy>;
 }
 }
 
