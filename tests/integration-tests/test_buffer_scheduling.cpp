@@ -604,7 +604,6 @@ struct WithThreeOrMoreBuffers : BufferScheduling {};
 struct WithThreeOrMoreBuffersExchangeOnly : BufferScheduling {};
 struct WithOneBuffer : BufferScheduling {};
 struct WithTwoBuffers : BufferScheduling {};
-struct WithTwoBuffersExchangeOnly : BufferScheduling {};
 struct WithThreeBuffers : BufferScheduling {};
 struct WithThreeBuffersExchangeOnly : BufferScheduling {};
 }
@@ -1467,10 +1466,6 @@ INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoBuffers,
     Combine(Values(2), Values(TestType::ExchangeSemantics, TestType::SubmitSemantics)));
-INSTANTIATE_TEST_CASE_P(
-    BufferScheduling,
-    WithTwoBuffersExchangeOnly,
-    Combine(Values(2), Values(TestType::ExchangeSemantics)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeBuffers,
