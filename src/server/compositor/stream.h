@@ -23,6 +23,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/scene/surface_observers.h"
 #include "mir/frontend/buffer_stream_id.h"
+#include "mir/lockable_callback.h"
 #include "mir/geometry/size.h"
 #include "multi_monitor_arbiter.h"
 #include <mutex>
@@ -34,10 +35,14 @@ namespace frontend { class ClientBuffers; }
 namespace compositor
 {
 class Schedule;
+class FrameDroppingPolicyFactory;
+class FrameDroppingPolicy;
 class Stream : public BufferStream
 {
 public:
-    Stream(std::unique_ptr<frontend::ClientBuffers>, geometry::Size sz, MirPixelFormat format);
+    Stream(
+        FrameDroppingPolicyFactory const& policy_factory,
+        std::unique_ptr<frontend::ClientBuffers>, geometry::Size sz, MirPixelFormat format);
 
     void swap_buffers(
         graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
@@ -61,9 +66,20 @@ public:
 
 private:
     enum class ScheduleMode;
+    struct DroppingCallback : mir::LockableCallback
+    {
+        DroppingCallback(Stream* stream);
+        void operator()() override;
+        void lock() override;
+        void unlock() override;
+        Stream* stream;
+        std::unique_lock<std::mutex> guard_lock;
+    };
     void transition_schedule(std::shared_ptr<Schedule>&& new_schedule, std::lock_guard<std::mutex> const&);
+    void drop_frame();
 
     std::mutex mutable mutex;
+    std::unique_ptr<compositor::FrameDroppingPolicy> drop_policy;
     ScheduleMode schedule_mode;
     std::shared_ptr<Schedule> schedule;
     std::shared_ptr<frontend::ClientBuffers> buffers;
