@@ -48,10 +48,6 @@ namespace mir
 {
 namespace examples
 {
-using CanonicalWindowManager = msh::BasicWindowManager<msh::CanonicalWindowManagerPolicy, msh::CanonicalSessionInfo, msh::CanonicalSurfaceInfo>;
-using TilingWindowManager = me::BasicWindowManagerCopy<me::TilingWindowManagerPolicy, me::TilingSessionInfo, me::TilingSurfaceInfo>;
-
-
 class DisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
 public:
@@ -120,7 +116,7 @@ public:
                 }
                 else if (selection == wm_canonical)
                 {
-                    return std::make_shared<CanonicalWindowManager>(
+                    return std::make_shared<msh::CanonicalWindowManager>(
                         focus_controller,
                         the_shell_display_layout());
                 }
