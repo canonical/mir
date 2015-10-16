@@ -123,7 +123,7 @@ public:
     void assert_timestamp(MirCookie const& cookie) override
     {
         if (!verify_mac(cookie))
-            throw mir::cookie::InvalidCookieError("MirCookie is invalid");
+            throw mir::cookie::InvalidCookieError();
     }
 
 private:

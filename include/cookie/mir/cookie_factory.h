@@ -38,7 +38,7 @@ using Secret = std::vector<uint8_t>;
  */
 struct InvalidCookieError : std::runtime_error
 {
-    InvalidCookieError(std::string const& message) : std::runtime_error(message) {}
+    InvalidCookieError() : std::runtime_error("Invalid MirCookie detected") {}
 };
 
 /**
