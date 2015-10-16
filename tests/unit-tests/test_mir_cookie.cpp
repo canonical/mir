@@ -107,3 +107,12 @@ TEST(MirCookieFactory, optimal_secret_size_is_larger_than_minimum_size)
     EXPECT_THAT(mir::cookie::CookieFactory::optimal_secret_size(),
         Ge(mir::cookie::CookieFactory::minimum_secret_size));
 }
+
+TEST(MirCookieFactory, assert_cookie_throws)
+{
+    using namespace testing;
+
+    auto factory = mir::cookie::CookieFactory::create_keeping_secret();
+
+    EXPECT_THROW(factory->assert_timestamp({0, 0}), mir::cookie::InvalidCookieError);
+}
