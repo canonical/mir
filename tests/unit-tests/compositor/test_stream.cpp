@@ -57,6 +57,9 @@ struct StubBufferMap : mf::ClientBuffers
     void with_buffer(mg::BufferID, std::function<void(mg::Buffer&)> const&)
     {
     }
+    void receive_buffer(mg::BufferID)
+    {
+    }
     void send_buffer(mg::BufferID id)
     {
         sink.send_buffer(mf::BufferStreamId{33}, *operator[](id), mg::BufferIpcMsgType::update_msg);
@@ -71,6 +74,10 @@ struct StubBufferMap : mf::ClientBuffers
         if (it == buffers.end())
             throw std::logic_error("cannot find buffer in map");
         return *it;
+    }
+    size_t client_owned_buffer_count() const
+    {
+        return 0;
     }
     std::vector<std::shared_ptr<mg::Buffer>>& buffers;
     mf::EventSink& sink;
