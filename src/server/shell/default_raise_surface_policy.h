@@ -37,7 +37,7 @@ public:
     DefaultRaiseSurfacePolicy(std::shared_ptr<FocusController> const& focus_controller);
 
     bool should_raise_surface(
-        std::shared_ptr<scene::Surface> const& focused_surface,
+        std::shared_ptr<scene::Surface> const& surface_candidate,
         uint64_t timestamp) const override;
 
 private:

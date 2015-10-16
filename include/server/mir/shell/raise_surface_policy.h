@@ -28,14 +28,27 @@ class Surface;
 namespace shell
 {
 
+/**
+ * Interface used to determine if a surface is a candidate to be raised
+ */
 class RaiseSurfacePolicy
 {
 public:
     RaiseSurfacePolicy() = default;
     virtual ~RaiseSurfacePolicy() = default;
 
+    RaiseSurfacePolicy& operator=(RaiseSurfacePolicy const&) = delete;
+
+    /**
+     *  Takes a surface that is requesting to be raised and a timestamp then
+     *  determines if that surface should be raised.
+     *
+     *  \param [in] surface_candidate  Surface requesting to be raised
+     *  \param [in] timestamp          Timestamp from the event that caused the raise request
+     *  return                         True if the surface should be raised, otherwise false
+     */
     virtual bool should_raise_surface(
-            std::shared_ptr<scene::Surface> const& focused_surface,
+            std::shared_ptr<scene::Surface> const& surface_candidate,
             uint64_t timestamp) const = 0;
 };
 
