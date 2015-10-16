@@ -1023,9 +1023,9 @@ void mf::SessionMediator::raise_surface_with_cookie(
     auto const surface_id = request->surface_id();
 
     MirCookie const mir_cookie = {cookie.timestamp(), cookie.mac()};
+    cookie_factory->assert_timestamp(mir_cookie);
 
-    if (cookie_factory->attest_timestamp(mir_cookie))
-        shell->raise_surface_with_timestamp(session, mf::SurfaceId{surface_id.value()}, cookie.timestamp());
+    shell->raise_surface_with_timestamp(session, mf::SurfaceId{surface_id.value()}, cookie.timestamp());
 
     done->Run();
 }
