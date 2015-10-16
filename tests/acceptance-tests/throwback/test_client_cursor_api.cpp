@@ -217,7 +217,6 @@ struct NamedCursorClient : CursorClient
 
 struct TestClientCursorAPI : mtf::HeadlessInProcessServer
 {
-    mtf::TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str()};
     MockCursor cursor;
     mtf::SurfaceGeometries client_geometries;
     mtf::SurfaceDepths client_depths;
