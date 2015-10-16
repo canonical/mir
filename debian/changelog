@@ -1,5 +1,6 @@
-mir (0.17.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.17.0+15.10.20151008.2-0ubuntu1) wily; urgency=medium
 
+  [ Alexandros Frantzis ]
   * New upstream release 0.17.0 (https://launchpad.net/mir/+milestone/0.17.0)
     - ABI summary: Only servers and graphics drivers need rebuilding;
       . Mirclient ABI unchanged at 9
@@ -56,7 +57,10 @@ mir (0.17.0-0ubuntu1) UNRELEASED; urgency=medium
         (LP: #1502200)
       . mesa FTBFS due to missing Requires in mirclient (LP: #1503450)
 
- -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Thu, 08 Oct 2015 10:59:18 +0300
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Thu, 08 Oct 2015 16:12:19 +0000
 
 mir (0.16.1+15.10.20150930.1-0ubuntu1) wily; urgency=medium
 
