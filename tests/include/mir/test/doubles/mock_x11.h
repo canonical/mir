@@ -40,12 +40,12 @@ public:
     Display *display;
     Window window;
     XVisualInfo visual_info;
-    XEvent keypress_event_return;
-    XEvent button_release_event_return;
-    XEvent expose_event_return;
-    XEvent focus_in_event_return;
-    XEvent focus_out_event_return;
-    XEvent vscroll_event_return;
+    XEvent keypress_event_return = { 0 };
+    XEvent button_release_event_return = { 0 };
+    XEvent expose_event_return = { 0 };
+    XEvent focus_in_event_return = { 0 };
+    XEvent focus_out_event_return = { 0 };
+    XEvent vscroll_event_return = { 0 };
 };
 
 class MockX11
