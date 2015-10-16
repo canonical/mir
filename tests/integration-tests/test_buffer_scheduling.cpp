@@ -559,7 +559,11 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
         }
         else
         {
+            printf("SANDWICH\n");
+            producer->produce();
+            printf("SANDWICH\n");
             ipc->resize_event(sz);
+            consumer->consume();
         }
     }
 
@@ -846,17 +850,20 @@ TEST_P(WithAnyNumberOfBuffersExchangeOnly, resize_affects_client_acquires_immedi
     }
 }
 
-TEST_P(WithAnyNumberOfBuffersExchangeOnly, compositor_acquires_resized_frames)
+TEST_P(WithAnyNumberOfBuffers, compositor_acquires_resized_frames)
 {
-    unsigned int const sizes_to_test{4};
+    unsigned int const sizes_to_test{1};
     int const attempt_limit{100};
     geom::Size new_size = properties.size;
+    producer->produce();
     for(auto i = 0u; i < sizes_to_test; i++)
     {
         new_size = new_size * 2;
+
         resize(new_size);
 
         std::vector<ScheduleEntry> schedule = {
+            {0_t,  {}, {consumer.get()}},
             {1_t,  {producer.get()}, {}},
             {2_t,  {}, {consumer.get()}},
             {3_t,  {producer.get()}, {}},
