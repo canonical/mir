@@ -335,7 +335,7 @@ message Cookie {
   required uint64 mac = 2;
 }
 
-message RaiseEvent {
+message RaiseRequest {
   required Cookie cookie = 1;
   required SurfaceId surface_id = 2;
 }

@@ -136,7 +136,7 @@ public:
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
     void raise_surface_with_cookie(
-        mir::protobuf::RaiseEvent const* request,
+        mir::protobuf::RaiseRequest const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
 private:

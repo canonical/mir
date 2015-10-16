@@ -1011,7 +1011,7 @@ void mf::SessionMediator::configure_buffer_stream(
 }
 
 void mf::SessionMediator::raise_surface_with_cookie(
-    mir::protobuf::RaiseEvent const* request,
+    mir::protobuf::RaiseRequest const* request,
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
