@@ -99,7 +99,7 @@ struct RealPosixProcessOperations : public mgm::PosixProcessOperations
 
 // Hack around the way mesa loads mir: This hack makes the
 // necessary symbols global.
-extern "C" int __attribute__((constructor))
+extern "C" int
 ensure_loaded_with_rtld_global()
 {
     Dl_info info;
@@ -195,5 +195,6 @@ std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& nested_context)
 {
+    ensure_loaded_with_rtld_global();
     return std::make_shared<mgm::GuestPlatform>(nested_context);
 }
