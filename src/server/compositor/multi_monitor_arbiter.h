@@ -56,6 +56,7 @@ public:
     void set_mode(MultiMonitorMode mode);
     bool buffer_ready_for(compositor::CompositorID id);
 
+
 private:
     void decrease_refcount_for(graphics::BufferID id, std::lock_guard<std::mutex> const&);
     void clean_onscreen_buffers(std::lock_guard<std::mutex> const&);

@@ -151,6 +151,9 @@ void mc::Stream::drop_old_buffers()
         transferred_buffers.emplace_back(schedule->next_buffer());
     if (!transferred_buffers.empty())
         schedule->schedule(transferred_buffers.front());
+
+//    arbiter->compositor_release(arbiter->compositor_acquire(this));
+//    arbiter->compositor_release(arbiter->compositor_acquire(this));
 }
 
 bool mc::Stream::has_submitted_buffer() const

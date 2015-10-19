@@ -211,6 +211,22 @@ TEST_F(Stream, flattens_queue_out_when_told_to_drop)
     EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(0));
 }
 
+TEST_F(Stream, forces_a_new_buffer)
+{
+    int that{0};
+    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
+    stream.swap_buffers(buffers[1].get(), [](mg::Buffer*){});
+    stream.swap_buffers(buffers[2].get(), [](mg::Buffer*){});
+
+    auto a = stream.lock_compositor_buffer(this);
+    stream.drop_old_buffers();
+    auto b = stream.lock_compositor_buffer(&that);
+    auto c = stream.lock_compositor_buffer(this);
+    EXPECT_THAT(b->id(), Eq(c->id()));
+    EXPECT_THAT(a->id(), Ne(b->id())); 
+    EXPECT_THAT(a->id(), Ne(c->id())); 
+}
+
 TEST_F(Stream, ignores_nullptr_submissions) //legacy behavior
 {
     auto observer = std::make_shared<MockSurfaceObserver>();

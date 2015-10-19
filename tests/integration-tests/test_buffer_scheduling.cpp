@@ -1161,7 +1161,7 @@ TEST_P(WithThreeBuffers, gives_compositor_a_valid_buffer_after_dropping_old_buff
     EXPECT_THAT(consumer->consumption_log(), SizeIs(1));
 }
 
-TEST_P(WithThreeBuffersExchangeOnly, gives_new_compositor_the_newest_buffer_after_dropping_old_buffers)
+TEST_P(WithThreeBuffers, gives_new_compositor_the_newest_buffer_after_dropping_old_buffers)
 {
     producer->produce();
     consumer->consume();
