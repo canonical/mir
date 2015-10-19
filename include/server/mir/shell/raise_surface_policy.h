@@ -29,7 +29,13 @@ namespace shell
 {
 
 /**
- * Interface used to determine if a surface is a candidate to be raised
+ * Policy to determine whether a client raise request should be honoured.
+ *
+ * Client requests to raise and focus surfaces (also known as presenting a surface)
+ * are first checked against this policy. If the policy denies a request no further
+ * action is taken.
+ *
+ * This is where a policy for focus stealing prevention should be implemented.
  */
 class RaiseSurfacePolicy
 {
@@ -37,6 +43,7 @@ public:
     RaiseSurfacePolicy() = default;
     virtual ~RaiseSurfacePolicy() = default;
 
+    RaiseSurfacePolicy(RaiseSurfacePolicy const&) = delete;
     RaiseSurfacePolicy& operator=(RaiseSurfacePolicy const&) = delete;
 
     /**
