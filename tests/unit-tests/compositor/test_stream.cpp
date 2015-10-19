@@ -298,8 +298,18 @@ TEST_F(Stream, triggering_policy_gives_a_buffer_back)
 {
     for (auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+    stream.lock_compositor_buffer(this);
 
     Mock::VerifyAndClearExpectations(&mock_sink);
     EXPECT_CALL(mock_sink, send_buffer(_,_,_));
+    framedrop_factory.trigger_policies();
+}
+
+TEST_F(Stream, doesnt_drop_the_only_frame_when_arbiter_has_none)
+{
+    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
+    Mock::VerifyAndClearExpectations(&mock_sink);
+    EXPECT_CALL(mock_sink, send_buffer(_,_,_))
+        .Times(0);
     framedrop_factory.trigger_policies();
 }
