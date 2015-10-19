@@ -445,3 +445,15 @@ TEST_F(MultiMonitorArbiter, other_compositor_ready_status_advances_with_fastest_
     EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id1));
     EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id2));
 } 
+
+TEST_F(MultiMonitorArbiter, advance_buffer)
+{
+    int comp_id1{0};
+    schedule.set_schedule({buffers[0], buffers[1], buffers[2]});
+
+    arbiter.advance_buffer();
+    arbiter.advance_buffer();
+
+    auto b1 = arbiter.compositor_acquire(&comp_id1);
+    EXPECT_THAT(b1->id(), Eq(buffers[2]->id()));
+}

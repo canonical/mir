@@ -140,3 +140,8 @@ bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
     return schedule->anything_scheduled() ||
        ((current_buffer_users.find(id) == current_buffer_users.end()) && !onscreen_buffers.empty());
 }
+
+void mc::MultiMonitorArbiter::advance_buffer()
+{
+    
+}

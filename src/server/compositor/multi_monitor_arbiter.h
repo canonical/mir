@@ -55,7 +55,7 @@ public:
     void set_schedule(std::shared_ptr<Schedule> const& schedule);
     void set_mode(MultiMonitorMode mode);
     bool buffer_ready_for(compositor::CompositorID id);
-
+    void advance_buffer();
 
 private:
     void decrease_refcount_for(graphics::BufferID id, std::lock_guard<std::mutex> const&);
