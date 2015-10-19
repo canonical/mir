@@ -119,7 +119,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonP
 {
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::system_clock::now().time_since_epoch());
-    auto action = update_buttons(button.action, mie::to_pointer_button(button.button, settings.primary_button));
+    auto action = update_buttons(button.action, mie::to_pointer_button(button.button, settings.handedness));
     auto event_modifiers = mie::expand_modifiers(modifiers);
     auto button_event = builder->pointer_event(event_time,
                                                event_modifiers,
