@@ -35,13 +35,15 @@ class CursorListener;
  * The seat bundles a group of devices. A cursor position, input event modifiers and the visible touch spots are properties
  * controlled by this grouping of input devices.
  */
-struct Seat
+class Seat
 {
+public:
     Seat(std::shared_ptr<TouchVisualizer> const& touch_visualizer, std::shared_ptr<CursorListener> const& cursor_listener);
     void add_device(MirInputDeviceId);
     void remove_device(MirInputDeviceId);
 
     MirInputEventModifiers event_modifier() const;
+    MirInputEventModifiers event_modifier(MirInputDeviceId) const;
     void update_seat_properties(MirInputEvent const* event);
 private:
     void update_cursor(MirPointerEvent const* event);

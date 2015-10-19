@@ -165,9 +165,13 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(MirEvent& event)
     if (type != mir_event_type_input)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid input event receivd from device"));
 
-    seat->update_seat_properties(mir_event_get_input_event(&event));
+    auto input_event = mir_event_get_input_event(&event);
+    seat->update_seat_properties(input_event);
 
-    mev::set_modifier(event, seat->event_modifier());
+    if (mir_input_event_type_key  == mir_input_event_get_type(input_event))
+        mev::set_modifier(event, seat->event_modifier(mir_input_event_get_device_id(input_event)));
+    else
+        mev::set_modifier(event, seat->event_modifier());
 
     dispatcher->dispatch(event);
 }

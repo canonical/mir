@@ -505,9 +505,9 @@ TEST_F(InputDeviceHubTest, input_sink_reduces_modifier_state_accross_devices)
         mouse_event_builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 30, 50, 0, 0, 18, 10);
 
     EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(r_alt_modifier)));
-    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(combined_modifier)));
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(l_ctrl_modifier)));
     EXPECT_CALL(mock_dispatcher, dispatch(mt::PointerEventWithModifiers(combined_modifier)));
-    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(r_alt_modifier)));
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(mir_input_event_modifier_none)));
     EXPECT_CALL(mock_dispatcher, dispatch(mt::PointerEventWithModifiers(r_alt_modifier)));
 
     key_board_sink_1->handle_input(*alt_down);

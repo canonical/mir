@@ -64,6 +64,14 @@ MirInputEventModifiers mi::Seat::event_modifier() const
     return expand_modifiers(modifier);
 }
 
+MirInputEventModifiers mi::Seat::event_modifier(MirInputDeviceId id) const
+{
+    auto stored_data = device_data.find(id);
+    if (stored_data == end(device_data))
+        BOOST_THROW_EXCEPTION(std::logic_error("Modifier for unknown device requested"));
+    return expand_modifiers(stored_data->second.mod);
+}
+
 void mi::Seat::update_seat_properties(MirInputEvent const* event)
 {
     auto id = mir_input_event_get_device_id(event);
