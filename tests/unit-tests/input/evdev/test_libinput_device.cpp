@@ -205,12 +205,12 @@ struct LibInputDevice : public ::testing::Test
         return device_path;
     }
 
-    void setup_pointer_configuration(libinput_device* dev, double accel_speed, MirPointerButton primary)
+    void setup_pointer_configuration(libinput_device* dev, double accel_speed, MirPointerHandedness handedness)
     {
         EXPECT_CALL(mock_libinput, libinput_device_config_accel_get_speed(dev))
             .WillRepeatedly(Return(accel_speed));
         EXPECT_CALL(mock_libinput, libinput_device_config_left_handed_get(dev))
-            .WillRepeatedly(Return(primary == mir_pointer_button_secondary));
+            .WillRepeatedly(Return(handedness == mir_pointer_handedness_left));
     }
 
     void setup_touch_pad_configuration(libinput_device* dev,
@@ -722,25 +722,24 @@ TEST_F(LibInputDevice, reads_pointer_settings_from_libinput)
     std::shared_ptr<libinput> lib = mie::make_libinput();
     mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
-    setup_pointer_configuration(dev.device(), 1, mir_pointer_button_primary);
-
+    setup_pointer_configuration(dev.device(), 1, mir_pointer_handedness_right);
     auto optional_settings = dev.get_pointer_settings();
 
     EXPECT_THAT(optional_settings.is_set(), Eq(true));
 
     auto ptr_settings = optional_settings.value();
-    EXPECT_THAT(ptr_settings.primary_button, Eq(mir_pointer_button_primary));
+    EXPECT_THAT(ptr_settings.handedness, Eq(mir_pointer_handedness_right));
     EXPECT_THAT(ptr_settings.cursor_acceleration_bias, Eq(1.0));
     EXPECT_THAT(ptr_settings.horizontal_scroll_scale, Eq(1.0));
     EXPECT_THAT(ptr_settings.vertical_scroll_scale, Eq(1.0));
 
-    setup_pointer_configuration(dev.device(), 0.0, mir_pointer_button_secondary);
+    setup_pointer_configuration(dev.device(), 0.0, mir_pointer_handedness_left);
     optional_settings = dev.get_pointer_settings();
 
     EXPECT_THAT(optional_settings.is_set(), Eq(true));
 
     ptr_settings = optional_settings.value();
-    EXPECT_THAT(ptr_settings.primary_button, Eq(mir_pointer_button_secondary));
+    EXPECT_THAT(ptr_settings.handedness, Eq(mir_pointer_handedness_left));
     EXPECT_THAT(ptr_settings.cursor_acceleration_bias, Eq(0.0));
     EXPECT_THAT(ptr_settings.horizontal_scroll_scale, Eq(1.0));
     EXPECT_THAT(ptr_settings.vertical_scroll_scale, Eq(1.0));
@@ -753,11 +752,10 @@ TEST_F(LibInputDevice, applies_pointer_settings)
     std::shared_ptr<libinput> lib = mie::make_libinput();
     mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
 
-    setup_pointer_configuration(dev.device(), 1, mir_pointer_button_primary);
-
+    setup_pointer_configuration(dev.device(), 1, mir_pointer_handedness_right);
     mi::PointerSettings settings(dev.get_pointer_settings().value());
     settings.cursor_acceleration_bias = 1.1;
-    settings.primary_button = mir_pointer_button_secondary;
+    settings.handedness = mir_pointer_handedness_left;
 
     EXPECT_CALL(mock_libinput,libinput_device_config_accel_set_speed(dev.device(), 1.1)).Times(1);
     EXPECT_CALL(mock_libinput,libinput_device_config_left_handed_set(dev.device(), true)).Times(1);
@@ -796,7 +794,7 @@ TEST_F(LibInputDevice, scroll_speed_scales_scroll_events)
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, -3.0f)));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, -10.0f)));
 
-    setup_pointer_configuration(dev.device(), 1, mir_pointer_button_primary);
+    setup_pointer_configuration(dev.device(), 1, mir_pointer_handedness_right);
     mi::PointerSettings settings(dev.get_pointer_settings().value());
     settings.vertical_scroll_scale = -1.0;
     settings.horizontal_scroll_scale = 5.0;

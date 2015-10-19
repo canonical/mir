@@ -21,6 +21,7 @@
 #define MIR_INPUT_POINTER_SETTINGS_H_
 
 #include "mir_toolkit/client_types.h"
+#include "mir_toolkit/mir_input_device.h"
 
 namespace mir
 {
@@ -32,10 +33,8 @@ struct PointerSettings
     PointerSettings() {}
     /**
      * Configure left and right handed mode by selecting a primary button
-     *   - mir_pointer_button_primary -> right handed
-     *   - mir_pointer_button_secondary -> left handed
      */
-    MirPointerButton primary_button{mir_pointer_button_primary};
+    MirPointerHandedness handedness{mir_pointer_handedness_right};
     /**
      * Bias cursor acceleration.
      *   - [-1, 0): reduced acceleration

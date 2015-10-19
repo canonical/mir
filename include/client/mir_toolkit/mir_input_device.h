@@ -26,6 +26,12 @@
 extern "C" {
 #endif
 
+typedef enum MirPointerHandedness
+{
+    mir_pointer_handedness_right = 0,
+    mir_pointer_handedness_left = 1
+} MirPointerHandedness;
+
 typedef enum MirTouchPadClickModes
 {
     mir_touch_pad_click_mode_none          = 0,
@@ -42,7 +48,6 @@ typedef enum MirTouchPadScrollModes
     mir_touch_pad_scroll_mode_button_down_scroll = 1 << 3
 } MirTouchPadScrollModes;
 typedef unsigned int MirTouchPadScrollMode;
-
 
 #ifdef __cplusplus
 }

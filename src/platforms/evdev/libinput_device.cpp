@@ -161,7 +161,7 @@ mir::EventUPtr mie::LibInputDevice::convert_button_event(libinput_event_pointer*
     auto const action = (libinput_event_pointer_get_button_state(pointer) == LIBINPUT_BUTTON_STATE_PRESSED)?
         mir_pointer_action_button_down : mir_pointer_action_button_up;
 
-    auto const do_not_swap_buttons = mir_pointer_button_primary;
+    auto const do_not_swap_buttons = mir_pointer_handedness_right;
     auto const pointer_button = mie::to_pointer_button(button, do_not_swap_buttons);
     auto const relative_x_value = 0.0f;
     auto const relative_y_value = 0.0f;
@@ -379,7 +379,7 @@ mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settin
     settings.cursor_acceleration_bias = accel_bias;
     settings.vertical_scroll_scale = vertical_scroll_scale;
     settings.horizontal_scroll_scale = horizontal_scroll_scale;
-    settings.primary_button = left_handed? mir_pointer_button_secondary : mir_pointer_button_primary;
+    settings.handedness = left_handed? mir_pointer_handedness_left : mir_pointer_handedness_right;
     return settings;
 }
 
@@ -390,7 +390,7 @@ void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& sett
 
     auto dev = device();
     libinput_device_config_accel_set_speed(dev, settings.cursor_acceleration_bias);
-    libinput_device_config_left_handed_set(dev, mir_pointer_button_primary != settings.primary_button);
+    libinput_device_config_left_handed_set(dev, mir_pointer_handedness_left == settings.handedness);
     vertical_scroll_scale = settings.vertical_scroll_scale;
     horizontal_scroll_scale = settings.horizontal_scroll_scale;
 }
