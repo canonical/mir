@@ -851,15 +851,14 @@ TEST_P(WithAnyNumberOfBuffers, resize_affects_client_acquires_immediately)
 
 TEST_P(WithAnyNumberOfBuffers, compositor_acquires_resized_frames)
 {
-    unsigned int const sizes_to_test{1};
+    unsigned int const sizes_to_test{4};
     int const attempt_limit{100};
     geom::Size new_size = properties.size;
     producer->produce();
-    consumer->consume();
     for(auto i = 0u; i < sizes_to_test; i++)
     {
         new_size = new_size * 2;
-
+        consumer->consume();
         resize(new_size);
 
         std::vector<ScheduleEntry> schedule = {
