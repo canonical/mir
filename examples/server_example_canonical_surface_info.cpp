@@ -27,6 +27,7 @@
 
 namespace me = mir::examples;
 namespace ms = mir::scene;
+namespace mg = mir::graphics;
 using namespace mir::geometry;
 
 me::CanonicalSurfaceInfoCopy::CanonicalSurfaceInfoCopy(
@@ -155,7 +156,14 @@ bool me::CanonicalSurfaceInfoCopy::is_visible() const
 
 struct mir::examples::CanonicalSurfaceInfoCopy::PaintingImpl
 {
-    PaintingImpl(std::shared_ptr<frontend::BufferStream> const& buffer_stream) :
+    virtual void paint(int) = 0;
+    virtual ~PaintingImpl() = default;
+    PaintingImpl() = default;
+};
+
+struct mir::examples::CanonicalSurfaceInfoCopy::OldImpl : mir::examples::CanonicalSurfaceInfoCopy::PaintingImpl
+{
+    OldImpl(std::shared_ptr<frontend::BufferStream> const& buffer_stream) :
         buffer_stream{buffer_stream}, buffer{nullptr}
     {
         swap_buffers();
@@ -171,28 +179,80 @@ struct mir::examples::CanonicalSurfaceInfoCopy::PaintingImpl
         buffer_stream->swap_buffers(buffer, callback);
     }
 
+    void paint(int intensity) override
+    {
+        if (auto const buf = buffer.load())
+        {
+            auto const format = buffer_stream->pixel_format();
+            auto const sz = buf->size().height.as_int() *
+                            buf->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
+            std::vector<unsigned char> pixels(sz, intensity);
+            buf->write(pixels.data(), sz);
+            swap_buffers();
+        }
+    }
+
     std::shared_ptr<frontend::BufferStream> const buffer_stream;
     std::atomic<graphics::Buffer*> buffer;
 };
 
+struct mir::examples::CanonicalSurfaceInfoCopy::BufferPainter : mir::examples::CanonicalSurfaceInfoCopy::PaintingImpl
+{
+    BufferPainter(std::shared_ptr<frontend::BufferStream> const& buffer_stream, Size size) :
+        buffer_stream(buffer_stream),
+        properties({
+            size,
+            buffer_stream->pixel_format(),
+            mg::BufferUsage::software
+        }),
+        front_buffer(buffer_stream->allocate_buffer(properties)),
+        back_buffer(buffer_stream->allocate_buffer(properties))
+    {
+    }
+
+    void paint(int intensity) override
+    {
+        buffer_stream->with_buffer(back_buffer,
+            [this, intensity](graphics::Buffer& buffer)
+            {
+                auto const format = buffer.pixel_format();
+                auto const sz = buffer.size().height.as_int() *
+                                buffer.size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
+                std::vector<unsigned char> pixels(sz, intensity);
+                buffer.write(pixels.data(), sz);
+                buffer_stream->swap_buffers(&buffer, [](mg::Buffer*){});
+            });
+        std::swap(front_buffer, back_buffer);
+    }
+
+    ~BufferPainter()
+    {
+        buffer_stream->remove_buffer(front_buffer);
+        buffer_stream->remove_buffer(back_buffer);
+    }
+
+    std::shared_ptr<frontend::BufferStream> const buffer_stream;
+    mg::BufferProperties properties;
+    mg::BufferID front_buffer; 
+    mg::BufferID back_buffer; 
+};
+
 void mir::examples::CanonicalSurfaceInfoCopy::init_titlebar(std::shared_ptr<scene::Surface> const& surface)
 {
-    painting_impl = std::make_shared<PaintingImpl>(surface->primary_buffer_stream());
+    auto stream = surface->primary_buffer_stream();
+    try
+    {
+        painting_impl = std::make_shared<BufferPainter>(stream, surface->size());
+    }
+    catch (...)
+    {
+        painting_impl = std::make_shared<OldImpl>(stream);
+    }
 }
 
 void mir::examples::CanonicalSurfaceInfoCopy::paint_titlebar(int intensity)
 {
-    if (auto const buf = painting_impl->buffer.load())
-    {
-        auto const format = painting_impl->buffer_stream->pixel_format();
-        auto const sz = buf->size().height.as_int() *
-                        buf->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
-
-        std::vector<unsigned char> pixels(sz, intensity);
-        buf->write(pixels.data(), sz);
-
-        painting_impl->swap_buffers();
-    }
+    painting_impl->paint(intensity);
 }
 
 void me::CanonicalSurfaceInfoCopy::constrain_resize(

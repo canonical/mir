@@ -80,6 +80,8 @@ struct CanonicalSurfaceInfoCopy
 private:
 
     struct PaintingImpl;
+    struct BufferPainter;
+    struct OldImpl;
 
     std::shared_ptr <PaintingImpl> painting_impl;
 };
