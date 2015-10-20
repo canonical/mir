@@ -68,7 +68,7 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
     MirSurface* surface2;
 
     mtf::UdevEnvironment mock_devices;
-    MirCookie out_cookie;
+    std::vector<MirCookie> out_cookies;
     MirSurface* out_surface{nullptr};
     mir::test::WaitCondition udev_read_recording;
 };
@@ -87,8 +87,11 @@ void cookie_capturing_callback(MirSurface* surface, MirEvent const* ev, void* ct
         {
             auto kev = mir_input_event_get_keyboard_event(iev);
             client->out_surface = surface;
-            client->out_cookie  = mir_keyboard_event_get_cookie(kev);
-            client->udev_read_recording.wake_up_everyone();
+            client->out_cookies.push_back(mir_keyboard_event_get_cookie(kev));
+
+            // Want to make sure we read to up 2 events before we wake up
+            if (client->out_cookies.size() >= 2)
+                client->udev_read_recording.wake_up_everyone();
         }
     }
 }
@@ -105,7 +108,7 @@ TEST_F(RaiseSurfaces, raise_surface_with_cookie)
     EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
     EXPECT_EQ(out_surface, surface2);
 
-    mir_surface_raise_with_cookie(surface1, out_cookie);
+    mir_surface_raise_with_cookie(surface1, out_cookies.back());
     bool surface_becomes_focused = mt::spin_wait_for_condition_or_timeout(
         [this]
         {
@@ -114,4 +117,25 @@ TEST_F(RaiseSurfaces, raise_surface_with_cookie)
         std::chrono::seconds{max_wait});
 
     EXPECT_TRUE(surface_becomes_focused);
+}
+
+TEST_F(RaiseSurfaces, raise_surface_prevents_focus_steal)
+{
+    mock_devices.load_device_evemu("laptop-keyboard-hello");
+
+    udev_read_recording.wait_for_at_most_seconds(max_wait);
+    if (!udev_read_recording.woken())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for udev to read the recording 'laptop-keyboard-hello'"));
+
+    EXPECT_TRUE(out_cookies.front().timestamp < out_cookies.back().timestamp);
+
+    EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
+    EXPECT_EQ(out_surface, surface2);
+
+    mir_surface_raise_with_cookie(surface1, out_cookies.front());
+
+    // Need to wait for this call to actually go through
+    std::this_thread::sleep_for(std::chrono::milliseconds{1000});
+
+    EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
 }
