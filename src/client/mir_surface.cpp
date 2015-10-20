@@ -637,17 +637,17 @@ MirWaitHandle* MirSurface::set_preferred_orientation(MirOrientationMode mode)
 
 void MirSurface::raise_surface_with_cookie(MirCookie const& cookie)
 {
-    mp::RaiseRequest raise_event;
+    mp::RaiseRequest raise_request;
 
     std::unique_lock<decltype(mutex)> lock(mutex);
-    raise_event.mutable_surface_id()->set_value(surface->id().value());
+    raise_request.mutable_surface_id()->set_value(surface->id().value());
 
-    auto const event_cookie = raise_event.mutable_cookie();
+    auto const event_cookie = raise_request.mutable_cookie();
 
     event_cookie->set_timestamp(cookie.timestamp);
     event_cookie->set_mac(cookie.mac);
 
-    server->raise_surface_with_cookie(&raise_event, void_response.get(), nullptr);
+    server->raise_surface_with_cookie(&raise_request, void_response.get(), nullptr);
 }
 
 mir::client::ClientBufferStream* MirSurface::get_buffer_stream()
