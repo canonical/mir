@@ -515,6 +515,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
         {
             ipc = std::make_shared<StubIpcSystem>();
             auto submit_stream = std::make_shared<mc::Stream>(
+                stub_policy,
                 std::make_unique<mc::BufferMap>(
                     mf::BufferStreamId{2},
                     std::make_shared<StubEventSink>(ipc),
