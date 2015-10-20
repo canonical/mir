@@ -249,6 +249,7 @@ struct SessionMediator : public ::testing::Test
     mp::Connection connection;
     mp::SurfaceParameters surface_parameters;
     mp::Surface surface_response;
+    mp::Void void_response;
     mp::SurfaceId surface_id_request;
     mp::Buffer buffer_response;
     mp::BufferRequest buffer_request;
@@ -1216,4 +1217,14 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         &surface_parameters,
         &surface_response,
         google::protobuf::NewCallback(&send_non_event, mock_sender));
+}
+
+TEST_F(SessionMediator, raise_with_invalid_cookie_throws)
+{
+    mp::RaiseRequest raise_request;
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+
+    EXPECT_THROW({
+        mediator.raise_surface_with_cookie(&raise_request, &void_response, nullptr);
+    }, mir::cookie::InvalidCookieError);
 }
