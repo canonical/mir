@@ -800,7 +800,7 @@ TEST_P(WithThreeOrMoreBuffers, multiple_fast_compositors_are_in_sync)
     EXPECT_THAT(consumption_log_2, Eq(production_log));
 }
 
-TEST_P(WithTwoOrMoreBuffersExchangeOnly, framedropping_clients_get_all_buffers_and_dont_block)
+TEST_P(WithTwoOrMoreBuffers, framedropping_clients_dont_block)
 {
     allow_framedropping();
     std::vector<ScheduleEntry> schedule;
@@ -809,13 +809,9 @@ TEST_P(WithTwoOrMoreBuffersExchangeOnly, framedropping_clients_get_all_buffers_a
     run_system(schedule);
 
     auto production_log = producer->production_log();
-    std::sort(production_log.begin(), production_log.end(),
-        [](BufferEntry const& a, BufferEntry const& b) { return a.id.as_value() > b.id.as_value(); });
-    auto last = std::unique(production_log.begin(), production_log.end(),
-        [](BufferEntry const& a, BufferEntry const& b) { return a.id == b.id; });
-    production_log.erase(last, production_log.end());
-
-    EXPECT_THAT(production_log.size(), Ge(nbuffers)); //Ge is to accommodate overallocation
+    auto block_count = std::count_if(production_log.begin(), production_log.end(),
+        [](BufferEntry const& e) { return e.blockage == Access::blocked; });
+    EXPECT_THAT(block_count, Eq(0));
 }
 
 TEST_P(WithTwoOrMoreBuffers, nonframedropping_client_throttles_to_compositor_rate)
