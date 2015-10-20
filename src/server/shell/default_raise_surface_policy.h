@@ -22,8 +22,6 @@
 #include "mir/shell/raise_surface_policy.h"
 #include "mir/input/event_filter.h"
 
-#include <iostream>
-
 namespace mir
 {
 namespace scene

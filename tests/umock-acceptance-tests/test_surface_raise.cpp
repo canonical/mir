@@ -20,7 +20,6 @@
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir/cookie_factory.h"
 #include "mir/test/wait_condition.h"
 #include "mir/test/spin_wait.h"
 
@@ -46,9 +45,6 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
     {
         // Needed because the headless server sets stub_input.so
         add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", nullptr);
-
-        server.override_the_cookie_factory([this] ()
-            { return mir::cookie::CookieFactory::create_keeping_secret(); });
 
         mock_devices.add_standard_device("laptop-keyboard");
     }
@@ -116,6 +112,6 @@ TEST_F(RaiseSurfaces, raise_surface_with_cookie)
             return mir_surface_get_focus(surface1) == mir_surface_focused;
         },
         std::chrono::seconds{max_wait});
-    
+
     EXPECT_TRUE(surface_becomes_focused);
 }
