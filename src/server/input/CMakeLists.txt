@@ -13,7 +13,6 @@ set(
   default_input_manager.cpp
   display_input_region.cpp
   event_filter_chain_dispatcher.cpp
-  input_probe.cpp
   key_repeat_dispatcher.cpp
   null_input_channel_factory.cpp
   null_input_dispatcher.cpp

@@ -59,7 +59,8 @@ mir::optional_value<mi::PointerConfiguration> mi::DefaultDevice::pointer_configu
 
     auto const& settings = pointer.value();
 
-    return PointerConfiguration(settings.primary_button, settings.cursor_speed, settings.horizontal_scroll_speed, settings.vertical_scroll_speed);
+    return PointerConfiguration(settings.handedness, settings.cursor_acceleration_bias,
+                                settings.horizontal_scroll_scale, settings.vertical_scroll_scale);
 }
 
 mir::optional_value<mi::TouchPadConfiguration> mi::DefaultDevice::touch_pad_configuration() const
@@ -80,10 +81,10 @@ void mi::DefaultDevice::apply_configuration(mi::PointerConfiguration const& conf
         return;
 
     PointerSettings settings;
-    settings.primary_button = conf.primary_button();
-    settings.cursor_speed = conf.cursor_speed();
-    settings.vertical_scroll_speed = conf.vertical_scroll_speed();
-    settings.horizontal_scroll_speed = conf.horizontal_scroll_speed();
+    settings.handedness = conf.handedness();
+    settings.cursor_acceleration_bias = conf.cursor_acceleration_bias();
+    settings.vertical_scroll_scale = conf.vertical_scroll_scale();
+    settings.horizontal_scroll_scale = conf.horizontal_scroll_scale();
 
     pointer = settings;
 

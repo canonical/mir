@@ -22,6 +22,7 @@
 
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/client_types.h"
+#include "mir_toolkit/mir_input_device.h"
 
 namespace mir
 {
@@ -31,15 +32,15 @@ namespace input
 struct PointerConfiguration
 {
     PointerConfiguration();
-    PointerConfiguration(MirPointerButton primary, double cursor_speed, double horizontal_scroll_speed, double vertical_scroll_speed);
+    PointerConfiguration(MirPointerHandedness pointer, double acceleration_bias, double horizontal_scroll_scale, double vertical_scroll_scale);
     ~PointerConfiguration();
 
     /*!
      * Configure which button shall be used as primary button. That way the input device is configured to be either
      * right or left handed.
      */
-    void primary_button(MirPointerButton button);
-    MirPointerButton primary_button() const;
+    void handedness(MirPointerHandedness handedness);
+    MirPointerHandedness handedness() const;
 
     /*!
      * Configures the intensity of the cursor acceleration. Values within the range of [-1, 1] are allowed.
@@ -47,25 +48,25 @@ struct PointerConfiguration
      *   - [-1, 0[: reduced acceleration
      *   - ]0, 1]: increased acceleration
      */
-    void cursor_speed(double speed);
-    double cursor_speed() const;
+    void cursor_acceleration_bias(double bias);
+    double cursor_acceleration_bias() const;
 
     /*!
      * Configures a signed scale of the horizontal scrolling. Use negative values to configure 'natural scrolling'
      */
-    void horizontal_scroll_speed(double horizontal);
-    double horizontal_scroll_speed() const;
+    void horizontal_scroll_scale(double horizontal);
+    double horizontal_scroll_scale() const;
 
     /*!
      * Configures a signed scale of the vertical scrolling. Use negative values to configure 'natural scrolling'
      */
-    void vertical_scroll_speed(double vertical);
-    double vertical_scroll_speed() const;
+    void vertical_scroll_scale(double vertical);
+    double vertical_scroll_scale() const;
 private:
-    MirPointerButton primary_button_;
-    double cursor_speed_;
-    double horizontal_scroll_speed_;
-    double vertical_scroll_speed_;
+    MirPointerHandedness handedness_;
+    double acceleration_bias;
+    double horizontal_scroll_scale_;
+    double vertical_scroll_scale_;
 };
 
 }

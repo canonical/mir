@@ -18,59 +18,61 @@
  */
 
 #include "mir/input/pointer_configuration.h"
+#include "mir_toolkit/mir_input_device.h"
 
 
 namespace mi = mir::input;
 
 mi::PointerConfiguration::PointerConfiguration() :
-    primary_button_{mir_pointer_button_primary}, cursor_speed_{0.0}, horizontal_scroll_speed_{1.0}, vertical_scroll_speed_{1.0}
+    handedness_{mir_pointer_handedness_right}, acceleration_bias{0.0}, horizontal_scroll_scale_{1.0}, vertical_scroll_scale_{1.0}
 {
 }
 
-mi::PointerConfiguration::PointerConfiguration(MirPointerButton primary, double cursor_speed,
-                                               double horizontal_scroll_speed, double vertical_scroll_speed) :
-    primary_button_{primary}, cursor_speed_{cursor_speed}, horizontal_scroll_speed_{horizontal_scroll_speed},
-    vertical_scroll_speed_{vertical_scroll_speed}
+mi::PointerConfiguration::PointerConfiguration(MirPointerHandedness handedness, double acceleration_bias,
+                                               double horizontal_scroll_scale, double vertical_scroll_scale)
+    : handedness_{handedness}, acceleration_bias{acceleration_bias}, horizontal_scroll_scale_{horizontal_scroll_scale},
+      vertical_scroll_scale_{vertical_scroll_scale}
 {
 }
 
 mi::PointerConfiguration::~PointerConfiguration() = default;
 
-void mi::PointerConfiguration::primary_button(MirPointerButton button)
+void mi::PointerConfiguration::handedness(MirPointerHandedness handedness)
 {
-    primary_button_ = button;
-}
-MirPointerButton mi::PointerConfiguration::primary_button() const
-{
-    return primary_button_;
+    handedness_ = handedness;
 }
 
-void mi::PointerConfiguration::cursor_speed(double speed)
+MirPointerHandedness mi::PointerConfiguration::handedness() const
 {
-    cursor_speed_ = speed;
+    return handedness_;
 }
 
-double mi::PointerConfiguration::cursor_speed() const
+void mi::PointerConfiguration::cursor_acceleration_bias(double bias)
 {
-    return cursor_speed_;
+    acceleration_bias = bias;
 }
 
-void mi::PointerConfiguration::horizontal_scroll_speed(double horizontal)
+double mi::PointerConfiguration::cursor_acceleration_bias() const
 {
-    horizontal_scroll_speed_ = horizontal;
+    return acceleration_bias;
 }
 
-double mi::PointerConfiguration::horizontal_scroll_speed() const
+void mi::PointerConfiguration::horizontal_scroll_scale(double horizontal)
 {
-    return horizontal_scroll_speed_;
+    horizontal_scroll_scale_ = horizontal;
 }
 
-void mi::PointerConfiguration::vertical_scroll_speed(double vertical)
+double mi::PointerConfiguration::horizontal_scroll_scale() const
 {
-    vertical_scroll_speed_ = vertical;
+    return horizontal_scroll_scale_;
 }
 
-double mi::PointerConfiguration::vertical_scroll_speed() const
+void mi::PointerConfiguration::vertical_scroll_scale(double vertical)
 {
-    return vertical_scroll_speed_;
+    vertical_scroll_scale_ = vertical;
+}
+
+double mi::PointerConfiguration::vertical_scroll_scale() const
+{
+    return vertical_scroll_scale_;
 }
