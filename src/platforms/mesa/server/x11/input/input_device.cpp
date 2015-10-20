@@ -16,8 +16,11 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "mir/input/input_device_info.h"
 #include "input_device.h"
+
+#include "mir/input/pointer_settings.h"
+#include "mir/input/input_device_info.h"
+#include "mir/input/device_capability.h"
 
 namespace mi = mir::input;
 namespace mix = mi::X;
@@ -42,4 +45,18 @@ void mix::XInputDevice::stop()
 mi::InputDeviceInfo mix::XInputDevice::get_device_info()
 {
     return info;
+}
+
+mir::optional_value<mi::PointerSettings> mix::XInputDevice::get_pointer_settings() const
+{
+    mir::optional_value<PointerSettings> ret;
+    if (contains(info.capabilities, DeviceCapability::pointer))
+        ret = PointerSettings();
+
+    return ret;
+}
+
+void mix::XInputDevice::apply_settings(PointerSettings const&)
+{
+    // TODO Make use if X11-XInput2
 }
