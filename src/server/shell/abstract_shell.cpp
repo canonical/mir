@@ -136,8 +136,6 @@ void msh::AbstractShell::raise_surface_with_timestamp(
     frontend::SurfaceId surface_id,
     uint64_t timestamp)
 {
-
-    printf("HER WE ARE\n");
     if (raise_policy->should_raise_surface(focused_surface(), timestamp))
     {
         auto const surface = session->surface(surface_id);

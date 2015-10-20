@@ -34,9 +34,11 @@ namespace shell
 {
 
 /**
- * The default behaviour is to use the focus cotroller to get the currently focused
- * window. From there compare if the input event timestamp is less then the currently
- * focused windows last input event timestamp.
+ * The default behaviour is to check each MirEvent for input events that are key or
+ * pointer/touch up/down. Save that timestamp, this being the last input event timestamp
+ * that we have received. From there compare that last received input event timestamp to
+ * the timestamp that we given by the client from an event. If we are lower then the last
+ * input event we dont want to steal focus!
  */
 class DefaultRaiseSurfacePolicy : public RaiseSurfacePolicy, public virtual input::EventFilter
 {
