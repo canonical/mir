@@ -268,7 +268,7 @@ public:
     // the_focus_controller() is an interface for the_shell().
     std::shared_ptr<shell::FocusController> the_focus_controller();
 
-    // the_raise_policy() is an interface for the_frontend_shell()
+    // the_raise_policy() is an interface for the_shell()
     std::shared_ptr<shell::RaiseSurfacePolicy> the_raise_policy();
 
     /** @name shell configuration - customization
