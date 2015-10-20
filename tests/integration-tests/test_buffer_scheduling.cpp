@@ -890,7 +890,7 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_policy_never_drops_newest_frame)
     EXPECT_THAT(production_log[nbuffers], Not(Eq(production_log[nbuffers - 1]))); 
 }
 
-TEST_P(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
+TEST_P(WithTwoOrMoreBuffersExchangeOnly, uncomposited_client_swaps_when_policy_triggered)
 {
     for(auto i = 0; i < nbuffers + 1; i++)
         producer->produce();
