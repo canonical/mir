@@ -559,7 +559,9 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
         }
         else
         {
+            producer->produce();
             ipc->resize_event(sz);
+            consumer->consume();
         }
     }
 
@@ -831,29 +833,32 @@ TEST_P(WithTwoOrMoreBuffers, nonframedropping_client_throttles_to_compositor_rat
     EXPECT_THAT(block_count, Ge(expected_blocks));
 }
 
-TEST_P(WithAnyNumberOfBuffersExchangeOnly, resize_affects_client_acquires_immediately)
+TEST_P(WithAnyNumberOfBuffers, resize_affects_client_acquires_immediately)
 {
     unsigned int const sizes_to_test{4};
     geom::Size new_size = properties.size;
+    producer->produce();
+    consumer->consume();
     for(auto i = 0u; i < sizes_to_test; i++)
     {
         new_size = new_size * 2;
         resize(new_size);
-
         std::vector<ScheduleEntry> schedule = {{1_t,  {producer.get()}, {consumer.get()}}};
         run_system(schedule);
         EXPECT_THAT(producer->last_size(), Eq(new_size));
     }
 }
 
-TEST_P(WithAnyNumberOfBuffersExchangeOnly, compositor_acquires_resized_frames)
+TEST_P(WithAnyNumberOfBuffers, compositor_acquires_resized_frames)
 {
     unsigned int const sizes_to_test{4};
     int const attempt_limit{100};
     geom::Size new_size = properties.size;
+    producer->produce();
     for(auto i = 0u; i < sizes_to_test; i++)
     {
         new_size = new_size * 2;
+        consumer->consume();
         resize(new_size);
 
         std::vector<ScheduleEntry> schedule = {

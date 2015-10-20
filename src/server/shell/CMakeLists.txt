@@ -13,6 +13,7 @@ set(
   persistent_surface_store.cpp
 
   ${CMAKE_SOURCE_DIR}/include/server/mir/shell/display_configuration_controller.h
+  surface_specification.cpp
 )
 
 add_library(
