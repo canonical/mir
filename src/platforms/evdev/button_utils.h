@@ -20,6 +20,7 @@
 #define MIR_INPUT_EVDEV_BUTTON_UTILS_H_
 
 #include "mir_toolkit/event.h"
+#include "mir_toolkit/mir_input_device.h"
 
 namespace mir
 {
@@ -27,7 +28,7 @@ namespace input
 {
 namespace evdev
 {
-MirPointerButton to_pointer_button(int button);
+MirPointerButton to_pointer_button(int button, MirPointerHandedness handedness);
 }
 }
 }

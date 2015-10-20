@@ -22,6 +22,7 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/input_sink.h"
+#include "mir/input/pointer_settings.h"
 #include "mir/input/event_builder.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/geometry/displacement.h"
@@ -111,7 +112,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonP
 {
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::system_clock::now().time_since_epoch());
-    auto action = update_buttons(button.action, mie::to_pointer_button(button.button));
+    auto action = update_buttons(button.action, mie::to_pointer_button(button.button, settings.handedness));
     auto button_event = builder->pointer_event(event_time,
                                                action,
                                                buttons,
@@ -148,7 +149,14 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
 
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::system_clock::now().time_since_epoch());
-    update_position(pointer.rel_x, pointer.rel_y);
+    // constant scaling is used here to simplify checking for the
+    // expected results. Default settings of the device lead to no
+    // scaling at all.
+    auto acceleration = (settings.cursor_acceleration_bias + 1.0);
+    auto rel_x = pointer.rel_x * acceleration;
+    auto rel_y = pointer.rel_y * acceleration;
+
+    update_position(rel_x, rel_y);
     auto pointer_event = builder->pointer_event(event_time,
                                                 mir_pointer_action_motion,
                                                 buttons,
@@ -156,8 +164,8 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
                                                 pos.y.as_float(),
                                                 scroll.x.as_float(),
                                                 scroll.y.as_float(),
-                                                pointer.rel_x,
-                                                pointer.rel_y);
+                                                rel_x,
+                                                rel_y);
 
     sink->handle_input(*pointer_event);
 }
@@ -207,6 +215,23 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
                        size_value);
 
     sink->handle_input(*touch_event);
+}
+
+mir::optional_value<mi::PointerSettings> mtf::FakeInputDeviceImpl::InputDevice::get_pointer_settings() const
+{
+    mir::optional_value<mi::PointerSettings> ret;
+    if (!contains(info.capabilities, mi::DeviceCapability::pointer))
+        return ret;
+
+    ret = mi::PointerSettings();
+    return ret;
+}
+
+void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::PointerSettings const& settings)
+{
+    if (!contains(info.capabilities, mi::DeviceCapability::pointer))
+        return;
+    this->settings = settings;
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(float& x, float& y)
