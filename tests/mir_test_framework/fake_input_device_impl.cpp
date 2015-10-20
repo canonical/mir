@@ -120,7 +120,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonP
 {
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::system_clock::now().time_since_epoch());
-    auto action = update_buttons(button.action, mie::to_pointer_button(button.button, settings.primary_button));
+    auto action = update_buttons(button.action, mie::to_pointer_button(button.button, settings.handedness));
     auto event_modifiers = mie::expand_modifiers(modifiers);
     auto button_event = builder->pointer_event(event_time,
                                                event_modifiers,
@@ -163,7 +163,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
     // constant scaling is used here to simplify checking for the
     // expected results. Default settings of the device lead to no
     // scaling at all.
-    auto acceleration = (settings.cursor_speed + 1.0);
+    auto acceleration = (settings.cursor_acceleration_bias + 1.0);
     auto rel_x = pointer.rel_x * acceleration;
     auto rel_y = pointer.rel_y * acceleration;
     
@@ -259,7 +259,7 @@ mir::optional_value<mi::TouchPadSettings> mtf::FakeInputDeviceImpl::InputDevice:
 void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::TouchPadSettings const&)
 {
     // Not applicable for configuration since FakeInputDevice just
-    // forwards aldready interpreted events.
+    // forwards already interpreted events.
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(float& x, float& y)

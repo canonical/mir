@@ -28,7 +28,7 @@ namespace mix = mi::X;
 extern mx::X11Resources x11_resources;
 
 mir::UniqueModulePtr<mi::Platform> create_input_platform(
-    mo::Option const& /*options*/,
+    std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<mi::InputReport> const& /*report*/)

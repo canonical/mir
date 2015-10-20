@@ -1,6 +1,5 @@
 include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
 include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
-include_directories(${MIR_XCURSOR_INCLUDE_DIRECTORIES})
 
 set(
   INPUT_SOURCES
@@ -24,7 +23,6 @@ set(
   touchspot_controller.cpp
   validator.cpp
   vt_filter.cpp
-  xcursor_loader.cpp
 )
 
 add_subdirectory(android)

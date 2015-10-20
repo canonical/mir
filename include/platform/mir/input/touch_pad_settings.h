@@ -26,7 +26,7 @@ namespace mir
 {
 namespace input
 {
-const int no_scroll_button = 0;
+int const no_scroll_button = 0;
 
 struct TouchPadSettings
 {

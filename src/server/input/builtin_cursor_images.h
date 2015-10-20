@@ -29,18 +29,8 @@ namespace input
 class BuiltinCursorImages : public CursorImages
 {
 public:
-    BuiltinCursorImages();
-    virtual ~BuiltinCursorImages() = default;
-
     std::shared_ptr<graphics::CursorImage> image(std::string const& cursor_name,
         geometry::Size const& size);
-
-protected:
-    BuiltinCursorImages(BuiltinCursorImages const&) = delete;
-    BuiltinCursorImages& operator=(BuiltinCursorImages const&) = delete;
-
-private:
-    std::shared_ptr<graphics::CursorImage> const builtin_image;
 };
 }
 }
