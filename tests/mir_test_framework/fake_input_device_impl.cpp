@@ -259,7 +259,7 @@ mir::optional_value<mi::TouchPadSettings> mtf::FakeInputDeviceImpl::InputDevice:
 void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::TouchPadSettings const&)
 {
     // Not applicable for configuration since FakeInputDevice just
-    // forwards aldready interpreted events.
+    // forwards already interpreted events.
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(float& x, float& y)
