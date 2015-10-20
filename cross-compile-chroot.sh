@@ -146,7 +146,7 @@ pushd ${BUILD_DIR} > /dev/null
     echo "Using PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
     echo "Using PKG_CONFIG_EXECUTABLE: $PKG_CONFIG_EXECUTABLE"
     cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/LinuxCrossCompile.cmake \
-      -DMIR_PLATFORM=${mir_platform} -DMIR_ENABLE_TESTS=no \
+      -DMIR_PLATFORM=${mir_platform} \
       .. 
 
     make -j${NUM_JOBS} $@

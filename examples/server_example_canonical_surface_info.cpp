@@ -159,11 +159,13 @@ struct mir::examples::CanonicalSurfaceInfoCopy::PaintingImpl
     virtual void paint(int) = 0;
     virtual ~PaintingImpl() = default;
     PaintingImpl() = default;
+    PaintingImpl(PaintingImpl const&) = delete;
+    PaintingImpl& operator=(PaintingImpl const&) = delete;
 };
 
-struct mir::examples::CanonicalSurfaceInfoCopy::OldImpl : mir::examples::CanonicalSurfaceInfoCopy::PaintingImpl
+struct mir::examples::CanonicalSurfaceInfoCopy::SwappingPainter : mir::examples::CanonicalSurfaceInfoCopy::PaintingImpl
 {
-    OldImpl(std::shared_ptr<frontend::BufferStream> const& buffer_stream) :
+    SwappingPainter(std::shared_ptr<frontend::BufferStream> const& buffer_stream) :
         buffer_stream{buffer_stream}, buffer{nullptr}
     {
         swap_buffers();
@@ -196,9 +198,9 @@ struct mir::examples::CanonicalSurfaceInfoCopy::OldImpl : mir::examples::Canonic
     std::atomic<graphics::Buffer*> buffer;
 };
 
-struct mir::examples::CanonicalSurfaceInfoCopy::BufferPainter : mir::examples::CanonicalSurfaceInfoCopy::PaintingImpl
+struct mir::examples::CanonicalSurfaceInfoCopy::AllocatingPainter : mir::examples::CanonicalSurfaceInfoCopy::PaintingImpl
 {
-    BufferPainter(std::shared_ptr<frontend::BufferStream> const& buffer_stream, Size size) :
+    AllocatingPainter(std::shared_ptr<frontend::BufferStream> const& buffer_stream, Size size) :
         buffer_stream(buffer_stream),
         properties({
             size,
@@ -225,7 +227,7 @@ struct mir::examples::CanonicalSurfaceInfoCopy::BufferPainter : mir::examples::C
         std::swap(front_buffer, back_buffer);
     }
 
-    ~BufferPainter()
+    ~AllocatingPainter()
     {
         buffer_stream->remove_buffer(front_buffer);
         buffer_stream->remove_buffer(back_buffer);
@@ -242,11 +244,11 @@ void mir::examples::CanonicalSurfaceInfoCopy::init_titlebar(std::shared_ptr<scen
     auto stream = surface->primary_buffer_stream();
     try
     {
-        painting_impl = std::make_shared<BufferPainter>(stream, surface->size());
+        painting_impl = std::make_shared<AllocatingPainter>(stream, surface->size());
     }
     catch (...)
     {
-        painting_impl = std::make_shared<OldImpl>(stream);
+        painting_impl = std::make_shared<SwappingPainter>(stream);
     }
 }
 
