@@ -28,6 +28,7 @@ namespace mir
 {
 namespace shell
 {
+class RaiseSurfacePolicy;
 class WindowManager;
 
 /// Minimal Shell implementation with none of the necessary window management logic
@@ -39,6 +40,7 @@ public:
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
+        std::shared_ptr<RaiseSurfacePolicy> const& raise_policy,
         WindowManagerBuilder const& wm_builder);
 
     ~AbstractShell() noexcept;
@@ -68,6 +70,11 @@ public:
     int get_surface_attribute(
         std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib) override;
+
+    void raise_surface_with_timestamp(
+        std::shared_ptr<scene::Session> const& session,
+        frontend::SurfaceId surface_id,
+        uint64_t timestamp) override;
 
     std::shared_ptr<scene::PromptSession> start_prompt_session_for(
         std::shared_ptr<scene::Session> const& session,
@@ -114,6 +121,7 @@ protected:
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
     std::shared_ptr<scene::PromptSessionManager> const prompt_session_manager;
+    std::shared_ptr<RaiseSurfacePolicy> const raise_policy;
     std::shared_ptr<WindowManager> const window_manager;
 
 private:

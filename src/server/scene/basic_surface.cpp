@@ -832,56 +832,9 @@ int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
     return max_buf;
 }
 
-/* Need to check if our input event is either a key event or a up/down action pointer/touch event */
-bool should_update_last_input_event_timestamp(MirInputEvent const* iev)
-{
-    auto iev_type = mir_input_event_get_type(iev);
-
-    switch (iev_type)
-    {
-        case mir_input_event_type_key:
-            return true;
-        case mir_input_event_type_pointer:
-        {
-            auto pev = mir_input_event_get_pointer_event(iev);
-            auto pointer_action = mir_pointer_event_action(pev);
-
-            return pointer_action == mir_pointer_action_button_up ||
-                   pointer_action == mir_pointer_action_button_down;
-        }
-        case mir_input_event_type_touch:
-        {
-            auto tev = mir_input_event_get_touch_event(iev);
-            auto touch_count = mir_touch_event_point_count(tev);
-            for (unsigned i = 0; i < touch_count; i++)
-            {
-                auto touch_action = mir_touch_event_action(tev, i);
-                if (touch_action == mir_touch_action_up ||
-                       touch_action == mir_touch_action_down)
-                {
-                    return true;
-                }
-            }
-        }
-    }
-
-    return false;
-}
-
 void ms::BasicSurface::consume(MirEvent const& event)
 {
     input_validator.validate_and_dispatch(event);
-    if (mir_event_get_type(&event) == mir_event_type_input)
-    {
-        auto const iev = mir_event_get_input_event(&event);
-        if (should_update_last_input_event_timestamp(iev))
-            last_timestamp = mir_input_event_get_event_time(iev);
-    }
-}
-
-uint64_t ms::BasicSurface::last_input_event_timestamp() const
-{
-  return last_timestamp;
 }
 
 void ms::BasicSurface::set_keymap(xkb_rule_names const& rules)

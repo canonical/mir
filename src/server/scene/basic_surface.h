@@ -110,7 +110,6 @@ public:
     geometry::Rectangle input_bounds() const override;
     bool input_area_contains(geometry::Point const& point) const override;
     void consume(MirEvent const& event) override;
-    uint64_t last_input_event_timestamp() const override;
     void set_alpha(float alpha) override;
     void set_orientation(MirOrientation orientation) override;
     void set_transformation(glm::mat4 const&) override;
@@ -188,7 +187,6 @@ private:
     std::unique_ptr<CursorStreamImageAdapter> const cursor_stream_adapter;
 
     input::Validator input_validator;
-    uint64_t last_timestamp{0};
 };
 
 }

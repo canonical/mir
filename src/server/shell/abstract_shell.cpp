@@ -18,6 +18,7 @@
 
 #include "mir/shell/abstract_shell.h"
 #include "mir/shell/input_targeter.h"
+#include "mir/shell/raise_surface_policy.h"
 #include "mir/shell/window_manager.h"
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
@@ -35,11 +36,13 @@ msh::AbstractShell::AbstractShell(
     std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
+    std::shared_ptr<msh::RaiseSurfacePolicy> const& raise_policy,
     std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder) :
     input_targeter(input_targeter),
     surface_coordinator(surface_coordinator),
     session_coordinator(session_coordinator),
     prompt_session_manager(prompt_session_manager),
+    raise_policy(raise_policy),
     window_manager(wm_builder(this))
 {
 }
@@ -128,6 +131,20 @@ int msh::AbstractShell::get_surface_attribute(
     return surface->query(attrib);
 }
 
+void msh::AbstractShell::raise_surface_with_timestamp(
+    std::shared_ptr<ms::Session> const& session,
+    frontend::SurfaceId surface_id,
+    uint64_t timestamp)
+{
+
+    printf("HER WE ARE\n");
+    if (raise_policy->should_raise_surface(focused_surface(), timestamp))
+    {
+        auto const surface = session->surface(surface_id);
+        set_focus_to(session, surface);
+        raise({surface});
+    }
+}
 
 void msh::AbstractShell::focus_next_session()
 {

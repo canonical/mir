@@ -41,6 +41,7 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
                 the_surface_coordinator(),
                 the_session_coordinator(),
                 the_prompt_session_manager(),
+                the_raise_policy(),
                 the_window_manager_builder()));
 
             the_composite_event_filter()->prepend(result);
@@ -77,8 +78,7 @@ mir::DefaultServerConfiguration::the_frontend_shell()
     return frontend_shell([this]
         {
             return std::make_shared<msh::detail::FrontendShell>(the_shell(),
-                                                                the_persistent_surface_store(),
-                                                                the_raise_policy());
+                                                                the_persistent_surface_store());
         });
 }
 
@@ -114,6 +114,9 @@ mir::DefaultServerConfiguration::the_raise_policy()
     return raise_surface_policy(
         [this]()
         {
-            return std::make_shared<msh::DefaultRaiseSurfacePolicy>(the_focus_controller());
+            auto raise_policy = std::make_shared<msh::DefaultRaiseSurfacePolicy>();
+            the_composite_event_filter()->prepend(raise_policy);
+
+            return raise_policy;
         });
 }

@@ -55,8 +55,8 @@ public:
      *  return                         True if the surface should be raised, otherwise false
      */
     virtual bool should_raise_surface(
-            std::shared_ptr<scene::Surface> const& surface_candidate,
-            uint64_t timestamp) const = 0;
+        std::shared_ptr<scene::Surface> const& surface_candidate,
+        uint64_t timestamp) const = 0;
 };
 
 }

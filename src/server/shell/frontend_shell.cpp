@@ -18,7 +18,6 @@
 
 #include "frontend_shell.h"
 #include "mir/shell/persistent_surface_store.h"
-#include "mir/shell/raise_surface_policy.h"
 #include "mir/shell/shell.h"
 
 #include "mir/scene/session.h"
@@ -154,13 +153,6 @@ void msh::FrontendShell::raise_surface_with_timestamp(
     mf::SurfaceId surface_id,
     uint64_t timestamp)
 {
-    auto const scene_session   = std::dynamic_pointer_cast<ms::Session>(session);
-    auto const focused_surface = wrapped->focused_surface();
-
-    if (raise_policy->should_raise_surface(focused_surface, timestamp))
-    {
-        auto const surface = scene_session->surface(surface_id);
-        wrapped->set_focus_to(scene_session, surface);
-        wrapped->raise({surface});
-    }
+    auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+    wrapped->raise_surface_with_timestamp(scene_session, surface_id, timestamp);
 }

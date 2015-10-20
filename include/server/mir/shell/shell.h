@@ -94,6 +94,12 @@ public:
     virtual int get_surface_attribute(
         std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib) = 0;
+
+    virtual void raise_surface_with_timestamp(
+        std::shared_ptr<scene::Session> const& session,
+        frontend::SurfaceId surface_id,
+        uint64_t timestamp) = 0;
+
 /** @} */
 };
 }

@@ -39,6 +39,7 @@
 #include "mir/test/doubles/stub_buffer_stream_factory.h"
 #include "mir/test/doubles/null_application_not_responding_detector.h"
 #include "mir/test/doubles/stub_display.h"
+#include "mir/test/doubles/stub_raise_surface_policy.h"
 
 #include "mir/test/fake_shared.h"
 
@@ -122,6 +123,7 @@ struct AbstractShell : Test
         std::make_shared<mtd::NullANRDetector>()};
 
     mtd::StubInputTargeter input_targeter;
+    mtd::StubRaiseSurfacePolicy raise_policy;
     std::shared_ptr<NiceMockWindowManager> wm;
 
     msh::AbstractShell shell{
@@ -129,6 +131,7 @@ struct AbstractShell : Test
         mt::fake_shared(surface_coordinator),
         mt::fake_shared(session_manager),
         std::make_shared<mtd::NullPromptSessionManager>(),
+        mt::fake_shared(raise_policy),
         [this](msh::FocusController*) { return wm = std::make_shared<NiceMockWindowManager>(); }};
 
     void SetUp() override

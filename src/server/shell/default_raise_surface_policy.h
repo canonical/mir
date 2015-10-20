@@ -20,6 +20,9 @@
 #define MIR_DEFAULT_RAISE_SURFACE_POLICY_H_
 
 #include "mir/shell/raise_surface_policy.h"
+#include "mir/input/event_filter.h"
+
+#include <iostream>
 
 namespace mir
 {
@@ -29,30 +32,26 @@ class Surface;
 }
 namespace shell
 {
-class FocusController;
 
 /**
  * The default behaviour is to use the focus cotroller to get the currently focused
  * window. From there compare if the input event timestamp is less then the currently
  * focused windows last input event timestamp.
  */
-class DefaultRaiseSurfacePolicy : public RaiseSurfacePolicy
+class DefaultRaiseSurfacePolicy : public RaiseSurfacePolicy, public virtual input::EventFilter
 {
 public:
-    /**
-     * DefaultRaiseSurfacePolicy uses the focus controller to get access to the
-     * currently focused window.
-     *
-     * \param [in] focus_controller  The focus controller for the shell
-     */
-    DefaultRaiseSurfacePolicy(std::shared_ptr<FocusController> const& focus_controller);
+    DefaultRaiseSurfacePolicy() = default;
 
     bool should_raise_surface(
         std::shared_ptr<scene::Surface> const& surface_candidate,
         uint64_t timestamp) const override;
 
+    bool handle(MirEvent const& event) override;
+
 private:
-    std::shared_ptr<FocusController> const focus_controller;
+    uint64_t last_input_event_timestamp{0};
+
 };
 
 }

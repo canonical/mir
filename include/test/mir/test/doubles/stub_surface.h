@@ -69,7 +69,6 @@ struct StubSurface : scene::Surface
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) override;
     void set_keymap(xkb_rule_names const& rules) override;
     void rename(std::string const& title) override;
-    uint64_t last_input_event_timestamp() const override;
 };
 }
 }

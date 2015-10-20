@@ -199,11 +199,6 @@ void mtd::StubSurface::rename(std::string const& /*title*/)
 {
 }
 
-uint64_t mtd::StubSurface::last_input_event_timestamp() const
-{
-    return 0;
-}
-
 namespace
 {
 // Ensure we don't accidentally have an abstract class
