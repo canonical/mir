@@ -653,12 +653,8 @@ TEST_P(ClientBufferStream, returns_correct_surface_parameters_with_nondefault_fo
         std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
         response, perf_report, "", size, nbuffers);
     service_requests_for(bs, 1);
-
     auto params = bs.get_parameters();
     EXPECT_THAT(params.pixel_format, Eq(format));
-
-//    auto buffer = bs.get_current_buffer();
-//    EXPECT_THAT(buffer->pixel_format(), Eq(format));
 }
 
 INSTANTIATE_TEST_CASE_P(BufferSemanticsMode, ClientBufferStream, Bool());
