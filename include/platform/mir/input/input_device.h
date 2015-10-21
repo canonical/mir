@@ -20,6 +20,9 @@
 #ifndef MIR_INPUT_INPUT_DEVICE_H_
 #define MIR_INPUT_INPUT_DEVICE_H_
 
+#include "mir/module_deleter.h"
+#include "mir/optional_value.h"
+
 #include <memory>
 
 namespace mir
@@ -33,6 +36,8 @@ namespace input
 class InputSink;
 class InputDeviceInfo;
 class EventBuilder;
+
+class PointerSettings;
 
 /**
  * Represents an input device.
@@ -53,6 +58,9 @@ public:
     virtual void stop() = 0;
 
     virtual InputDeviceInfo get_device_info() = 0;
+
+    virtual mir::optional_value<PointerSettings> get_pointer_settings() const = 0;
+    virtual void apply_settings(PointerSettings const&) = 0;
 
 protected:
     InputDevice(InputDevice const&) = delete;
