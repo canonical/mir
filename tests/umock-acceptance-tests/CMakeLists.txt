@@ -11,7 +11,6 @@ mir_add_wrapped_executable(
   mir_umock_acceptance_tests
 
   test_client_cookie.cpp
-  test_surface_raise.cpp
   test_libinput.cpp
   )
 
