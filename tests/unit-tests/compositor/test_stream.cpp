@@ -211,7 +211,7 @@ TEST_F(Stream, flattens_queue_out_when_told_to_drop)
     EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(0));
 }
 
-TEST_F(Stream, forces_a_new_buffer)
+TEST_F(Stream, forces_a_new_buffer_when_told_to_drop_buffers)
 {
     int that{0};
     stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});

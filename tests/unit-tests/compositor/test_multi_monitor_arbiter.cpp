@@ -446,7 +446,7 @@ TEST_F(MultiMonitorArbiter, other_compositor_ready_status_advances_with_fastest_
     EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id2));
 } 
 
-TEST_F(MultiMonitorArbiter, advance_buffer)
+TEST_F(MultiMonitorArbiter, can_advance_buffer_manually)
 {
     int comp_id1{0};
     int comp_id2{0};
