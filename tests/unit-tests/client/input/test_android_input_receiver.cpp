@@ -222,51 +222,6 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
     EXPECT_FALSE(mt::fd_is_readable(receiver.watch_fd()));
 }
 
-TEST_F(AndroidInputReceiverSetup, no_artificial_latency_in_resampling)
-{
-    using namespace testing;
-    using namespace std::chrono;
-    using namespace std::literals::chrono_literals;
-
-    auto t = 0ns;
-    MirEvent ev;
-    bool handler_called{false};
-
-    mircva::InputReceiver receiver{
-        client_fd,
-        std::make_shared<mircv::XKBMapper>(),
-        [&ev, &handler_called](MirEvent* event)
-        {
-            ev = *event;
-            handler_called = true;
-        },
-        std::make_shared<mircv::NullInputReceiverReport>(),
-        [&t](int)
-        {
-            return t;
-        }
-    };
-    TestingInputProducer producer(server_fd);
-
-    producer.produce_a_pointer_event(123, 456, t);
-    flush_channels();
-
-    while (!mt::fd_becomes_readable(receiver.watch_fd(), 1ms) && t < 100ms)
-        t += 1ms;
-
-    receiver.dispatch(md::FdEvent::readable);
-    EXPECT_TRUE(handler_called);
-    ASSERT_EQ(mir_event_type_motion, ev.type);
-
-    auto const resample_latency_ms =
-        duration_cast<std::chrono::milliseconds>(t);
-
-    // Check that we're not using the Android-default RESAMPLE_LATENCY of 5ms
-    // which is too high...
-    // Use plain integers so any failures are readable:
-    EXPECT_THAT(resample_latency_ms.count(), Lt(1));
-}
-
 TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
 {  // Regression test for LP: #1372300
     using namespace testing;
@@ -304,11 +259,14 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     EXPECT_TRUE(handler_called);
     ASSERT_EQ(mir_event_type_key, ev.type);
 
+    // The motion is still too new. Won't be reported yet, but is batched.
     auto start = high_resolution_clock::now();
 
     EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), 1ms));
     handler_called = false;
     receiver.dispatch(md::FdEvent::readable);
+    // We've processed the data, but no new event has been generated.
+    EXPECT_FALSE(handler_called);
 
     auto end = high_resolution_clock::now();
     auto duration = end - start;
@@ -322,7 +280,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
 
     // But later in a frame or so, the motion will be reported:
     t += 2 * one_frame;  // Account for the slower 59Hz event rate
-    EXPECT_TRUE(handler_called || mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
+    EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
 
     EXPECT_TRUE(handler_called);

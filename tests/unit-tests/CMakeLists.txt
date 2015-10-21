@@ -36,9 +36,6 @@ include_directories(
   ${GLIB_INCLUDE_DIRS}
 )
 
-# TODO: Aim to remove
-include_directories(${MIR_XCURSOR_INCLUDE_DIRECTORIES})
-
 add_library(example SHARED library_example.cpp)
 target_link_libraries(example mircommon)
 set_target_properties(
@@ -70,7 +67,6 @@ set(
   test_lockable_callback.cpp
   test_module_deleter.cpp
   test_mir_cookie.cpp
-  $<TARGET_OBJECTS:xcursorloader>
 )
 
 CMAKE_DEPENDENT_OPTION(
