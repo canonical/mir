@@ -104,10 +104,7 @@ void ensure_loaded_with_rtld_global()
 {
     Dl_info info;
 
-    // Cast dladdr itself to work around g++-4.8 warnings (LP: #1366134)
-    typedef int (safe_dladdr_t)(void(*func)(), Dl_info *info);
-    safe_dladdr_t *safe_dladdr = (safe_dladdr_t*)&dladdr;
-    safe_dladdr(&ensure_loaded_with_rtld_global, &info);
+    dladdr(reinterpret_cast<void*>(&ensure_loaded_with_rtld_global), &info);
     dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
 }
 
@@ -119,7 +116,6 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mg::DisplayReport> const& report)
 {
     // ensure mesa finds the mesa mir-platform symbols
-    ensure_loaded_with_rtld_global();
     auto real_fops = std::make_shared<RealVTFileOperations>();
     auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});
     auto vt = std::make_shared<mgm::LinuxVirtualTerminal>(

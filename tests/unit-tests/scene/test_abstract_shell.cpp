@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: ALan Griffiths <alan.griffiths@canonical.com>
+ * Authored by: Alan Griffiths <alan.griffiths@canonical.com>
  */
 
 #include "mir/shell/abstract_shell.h"
@@ -436,6 +436,41 @@ TEST_F(AbstractShell, as_focus_controller_delegates_surface_at_to_surface_coordi
     msh::FocusController& focus_controller = shell;
 
     EXPECT_THAT(focus_controller.surface_at(cursor), Eq(surface));
+}
+
+TEST_F(AbstractShell, modify_surface_with_only_streams_doesnt_call_into_wm)
+{
+    std::shared_ptr<ms::Session> session =
+        shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+
+    auto creation_params = ms::a_surface();
+
+    auto surface_id = shell.create_surface(session, creation_params, nullptr);
+    auto surface = session->surface(surface_id);
+
+    msh::SurfaceSpecification stream_modification;
+    stream_modification.streams = std::vector<msh::StreamSpecification>{};
+
+    EXPECT_CALL(*wm, modify_surface(_,_,_)).Times(0);
+
+    shell.modify_surface(session, surface, stream_modification);
+}
+
+TEST_F(AbstractShell, modify_surface_does_not_call_wm_for_empty_changes)
+{
+    std::shared_ptr<ms::Session> session =
+        shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+
+    auto creation_params = ms::a_surface();
+
+    auto surface_id = shell.create_surface(session, creation_params, nullptr);
+    auto surface = session->surface(surface_id);
+
+    msh::SurfaceSpecification stream_modification;
+
+    EXPECT_CALL(*wm, modify_surface(_,_,_)).Times(0);
+
+    shell.modify_surface(session, surface, stream_modification);
 }
 
 namespace mir
