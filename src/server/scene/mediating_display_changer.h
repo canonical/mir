@@ -58,7 +58,7 @@ public:
         std::shared_ptr<graphics::DisplayConfigurationReport> const& report);
 
     /* From mir::frontend::DisplayChanger */
-    std::shared_ptr<graphics::DisplayConfiguration> active_configuration() override;
+    std::shared_ptr<graphics::DisplayConfiguration> base_configuration() override;
     void configure(std::shared_ptr<frontend::Session> const& session,
                    std::shared_ptr<graphics::DisplayConfiguration> const& conf) override;
 
@@ -97,7 +97,7 @@ private:
              std::shared_ptr<graphics::DisplayConfiguration>,
              std::owner_less<std::weak_ptr<frontend::Session>>> config_map;
     std::weak_ptr<frontend::Session> focused_session;
-    std::shared_ptr<graphics::DisplayConfiguration> base_configuration;
+    std::shared_ptr<graphics::DisplayConfiguration> base_configuration_;
     bool base_configuration_applied;
 };
 
