@@ -19,7 +19,7 @@
 #ifndef MIR_PROTOBUF_PROTOCOL_VERSION_H
 #define MIR_PROTOBUF_PROTOCOL_VERSION_H
 
-#include "mir_toolkit/version.h"
+#include "mir_toolkit/mir_version_number.h"
 
 namespace mir
 {
