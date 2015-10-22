@@ -183,7 +183,7 @@ TEST_F(ClientLibrary, connects_when_protobuf_protocol_oldest_supported)
 TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_obsolete)
 {
     std::ostringstream buffer;
-    buffer << (mir::protobuf::oldest_compatible_protocol_version() - 123);
+    buffer << (mir::protobuf::oldest_compatible_protocol_version() - 1);
     add_to_environment(protocol_version_override, buffer.str().c_str());
 
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -195,10 +195,10 @@ TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_obsolete)
     mir_connection_release(connection);
 }
 
-TEST_F(ClientLibrary, reports_no_error_when_protobuf_protocol_minor_newer)
+TEST_F(ClientLibrary, reports_no_error_when_protobuf_protocol_slightly_new)
 {
     std::ostringstream buffer;
-    buffer << mir::protobuf::current_protocol_version() + 456;
+    buffer << mir::protobuf::current_protocol_version() + 3;
     add_to_environment(protocol_version_override, buffer.str().c_str());
 
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -209,17 +209,17 @@ TEST_F(ClientLibrary, reports_no_error_when_protobuf_protocol_minor_newer)
     mir_connection_release(connection);
 }
 
-TEST_F(ClientLibrary, reports_no_error_when_protobuf_protocol_epoch_newer)
+TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_epoch_too_new)
 {
     std::ostringstream buffer;
-    buffer << mir::protobuf::current_protocol_version() +
-              MIR_VERSION_NUMBER(1,0,0);
+    buffer << mir::protobuf::next_incompatible_protocol_version();
     add_to_environment(protocol_version_override, buffer.str().c_str());
 
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     EXPECT_THAT(connection, NotNull());
-    EXPECT_TRUE(mir_connection_is_valid(connection));
+    EXPECT_FALSE(mir_connection_is_valid(connection));
+    EXPECT_THAT(mir_connection_get_error_message(connection), HasSubstr("not accepted by server"));
 
     mir_connection_release(connection);
 }

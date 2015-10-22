@@ -34,6 +34,11 @@ inline constexpr int oldest_compatible_protocol_version()
 {
     return MIR_VERSION_NUMBER(0,3,0);
 }
+
+inline constexpr int next_incompatible_protocol_version()
+{
+    return MIR_VERSION_NUMBER(1,0,0);
+}
 }
 }
 

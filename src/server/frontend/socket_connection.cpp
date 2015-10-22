@@ -91,8 +91,6 @@ void mfd::SocketConnection::on_read_size(const boost::system::error_code& error)
 void mfd::SocketConnection::on_new_message(const boost::system::error_code& error)
 try
 {
-    static auto const backward_compatibility_limit = mir::protobuf::oldest_compatible_protocol_version();
-
     if (error)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
@@ -101,8 +99,11 @@ try
     mir::protobuf::wire::Invocation invocation;
     invocation.ParseFromArray(body.data(), body.size());
 
-    if (!invocation.has_protocol_version() ||
-        invocation.protocol_version() < backward_compatibility_limit)
+    int const v = invocation.has_protocol_version() ?
+                  invocation.protocol_version() :
+                  -1;
+    if (v <  mir::protobuf::oldest_compatible_protocol_version() ||
+        v >= mir::protobuf::next_incompatible_protocol_version())
         BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported protocol version"));
 
     std::vector<mir::Fd> fds;
