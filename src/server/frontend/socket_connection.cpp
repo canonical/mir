@@ -134,7 +134,7 @@ try
 catch (std::exception& e)
 {
     connections->remove(id());
-    mir::log_warning("Rejected message from a client (%s)", e.what());
+    mir::log_warning("Rejected and disconnected a client (%s)", e.what());
     throw;
 }
 
