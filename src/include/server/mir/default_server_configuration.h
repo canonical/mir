@@ -21,11 +21,9 @@
 #include "mir/cached_ptr.h"
 #include "mir/server_configuration.h"
 #include "mir/shell/window_manager_builder.h"
-#include "mir/module_deleter.h"
 
 #include <memory>
 #include <string>
-#include <vector>
 
 namespace mir
 {
@@ -124,7 +122,6 @@ class InputReport;
 class Scene;
 class InputManager;
 class SurfaceInputDispatcher;
-class Platform;
 class InputDeviceRegistry;
 class InputDeviceHub;
 class DefaultInputDeviceHub;
@@ -136,8 +133,6 @@ class TouchVisualizer;
 class InputRegion;
 class InputSender;
 class InputSendObserver;
-class NestedInputRelay;
-class EventHandler;
 class CursorImages;
 }
 

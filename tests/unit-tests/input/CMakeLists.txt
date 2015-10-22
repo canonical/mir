@@ -17,11 +17,13 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_validator.cpp
 )
 
-if (MIR_BUILD_PLATFORM_MESA_X11)
+if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
 list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_x11_platform.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_x11_module.cpp
-  )
+    $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
+    $<TARGET_OBJECTS:mirplatforminputmesax11objects>
+)
 endif()
 
 set(

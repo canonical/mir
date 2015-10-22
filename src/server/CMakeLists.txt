@@ -99,7 +99,6 @@ target_link_libraries(mirserver LINK_PUBLIC
   mircommon
   mirprotobuf
   mircookie
-  xcursorloader-static
 
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}

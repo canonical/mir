@@ -73,7 +73,7 @@ TEST(ProbingClientPlatformFactory, ThrowsErrorWhenNoPlatformPluginProbesSuccessf
                  std::runtime_error);
 }
 
-#ifdef MIR_BUILD_PLATFORM_MESA_KMS
+#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
 TEST(ProbingClientPlatformFactory, CreatesMesaPlatformWhenAppropriate)
 #else
 TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformWhenAppropriate)

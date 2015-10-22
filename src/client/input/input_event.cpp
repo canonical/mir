@@ -18,6 +18,7 @@
 
 #define MIR_LOG_COMPONENT "input-event-access"
 
+#include "mir/cookie_factory.h"
 #include "mir/event_type_to_string.h"
 #include "mir/events/event_private.h"
 #include "mir/log.h"
@@ -160,6 +161,39 @@ MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev)
     default:
         abort();
     }
+}
+
+MirCookie mir_keyboard_event_get_cookie(MirKeyboardEvent const* kev)
+{
+    MirCookie cookie;
+    auto const& old_kev = old_kev_from_new(kev);
+
+    cookie.timestamp = old_kev.event_time.count();
+    cookie.mac       = old_kev.mac;
+
+    return cookie;
+}
+
+MirCookie mir_pointer_event_get_cookie(MirPointerEvent const* mev)
+{
+    MirCookie cookie;
+    auto const& old_mev = old_mev_from_new(mev);
+
+    cookie.timestamp = old_mev.event_time.count();
+    cookie.mac       = old_mev.mac;
+
+    return cookie;
+}
+
+MirCookie mir_touch_event_get_cookie(MirTouchEvent const* tev)
+{
+    MirCookie cookie;
+    auto const& old_mev = old_mev_from_new(tev);
+
+    cookie.timestamp = old_mev.event_time.count();
+    cookie.mac       = old_mev.mac;
+
+    return cookie;
 }
 
 int64_t mir_input_event_get_event_time(MirInputEvent const* ev)

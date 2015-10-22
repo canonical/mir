@@ -28,7 +28,6 @@
 #include "null_input_manager.h"
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
-#include "xcursor_loader.h"
 #include "builtin_cursor_images.h"
 #include "null_input_send_observer.h"
 #include "null_input_channel_factory.h"
@@ -160,8 +159,8 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
             auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
-                the_event_filter_chain_dispatcher(), the_main_loop(), enable_repeat,
-                key_repeat_timeout, key_repeat_delay);
+                the_event_filter_chain_dispatcher(), the_main_loop(), the_cookie_factory(),
+                enable_repeat, key_repeat_timeout, key_repeat_delay);
         });
 }
 
@@ -226,27 +225,13 @@ mir::DefaultServerConfiguration::the_default_cursor_image()
         });
 }
 
-namespace
-{
-bool has_default_cursor(mi::CursorImages& images)
-{
-    if (images.image(mir_default_cursor_name, mi::default_cursor_size))
-        return true;
-    return false;
-}
-}
-
 std::shared_ptr<mi::CursorImages>
 mir::DefaultServerConfiguration::the_cursor_images()
 {
     return cursor_images(
         [this]() -> std::shared_ptr<mi::CursorImages>
         {
-            auto xcursor_loader = std::make_shared<mi::XCursorLoader>();
-            if (has_default_cursor(*xcursor_loader))
-                return xcursor_loader;
-            else
-                return std::make_shared<mi::BuiltinCursorImages>();
+            return std::make_shared<mi::BuiltinCursorImages>();
         });
 }
 
@@ -304,7 +289,8 @@ std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_in
                                             the_main_loop(),
                                             the_touch_visualizer(),
                                             the_cursor_listener(),
-                                            the_input_region());
+                                            the_input_region(),
+                                            the_cookie_factory());
                                     });
 }
 
@@ -318,6 +304,7 @@ std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_d
                                             the_main_loop(),
                                             the_touch_visualizer(),
                                             the_cursor_listener(),
-                                            the_input_region());
+                                            the_input_region(),
+                                            the_cookie_factory());
                                     });
 }
