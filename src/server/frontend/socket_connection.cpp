@@ -22,6 +22,7 @@
 #include "mir/frontend/message_processor.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/protobuf/protocol_version.h"
+#include "mir/log.h"
 
 #include "mir_protobuf_wire.pb.h"
 
@@ -130,9 +131,10 @@ try
         connections->remove(id());
     }
 }
-catch (...)
+catch (std::exception& e)
 {
     connections->remove(id());
+    mir::log_warning("Rejected message from a client (%s)", e.what());
     throw;
 }
 
