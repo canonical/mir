@@ -82,7 +82,7 @@ public:
 
     void raise_surface_with_timestamp(
         std::shared_ptr<scene::Session> const& session,
-        frontend::SurfaceId surface_id,
+        std::shared_ptr<scene::Surface> const& surface,
         uint64_t timestamp) override;
 
     void add_display(geometry::Rectangle const& area) override;

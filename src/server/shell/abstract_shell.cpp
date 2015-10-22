@@ -133,12 +133,11 @@ int msh::AbstractShell::get_surface_attribute(
 
 void msh::AbstractShell::raise_surface_with_timestamp(
     std::shared_ptr<ms::Session> const& session,
-    frontend::SurfaceId surface_id,
+    std::shared_ptr<ms::Surface> const& surface,
     uint64_t timestamp)
 {
-    if (raise_policy->should_raise_surface(focused_surface(), timestamp))
+    if (raise_policy->should_raise_surface(surface, timestamp))
     {
-        auto const surface = session->surface(surface_id);
         set_focus_to(session, surface);
         raise({surface});
     }

@@ -22,6 +22,8 @@
 #include "mir/shell/raise_surface_policy.h"
 #include "mir/input/event_filter.h"
 
+#include <atomic>
+
 namespace mir
 {
 namespace scene
@@ -50,7 +52,7 @@ public:
     bool handle(MirEvent const& event) override;
 
 private:
-    uint64_t last_input_event_timestamp{0};
+    std::atomic<uint64_t> last_input_event_timestamp{0};
 
 };
 

@@ -114,10 +114,10 @@ int msh::ShellWrapper::get_surface_attribute(
 
 void msh::ShellWrapper::raise_surface_with_timestamp(
     std::shared_ptr<ms::Session> const& session,
-    mf::SurfaceId surface_id,
+    std::shared_ptr<ms::Surface> const& surface,
     uint64_t timestamp)
 {
-    wrapped->raise_surface_with_timestamp(session, surface_id, timestamp);
+    wrapped->raise_surface_with_timestamp(session, surface, timestamp);
 }
 
 void msh::ShellWrapper::add_display(geometry::Rectangle const& area)

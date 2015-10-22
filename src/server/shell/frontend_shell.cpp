@@ -154,5 +154,6 @@ void msh::FrontendShell::raise_surface_with_timestamp(
     uint64_t timestamp)
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
-    wrapped->raise_surface_with_timestamp(scene_session, surface_id, timestamp);
+    auto const surface = scene_session->surface(surface_id);
+    wrapped->raise_surface_with_timestamp(scene_session, surface, timestamp);
 }
