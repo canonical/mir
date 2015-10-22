@@ -314,6 +314,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         std::unique_lock<std::mutex> lk(mutex);
         if (!current_buffer_)
             advance_current_buffer(lk);
+        lk.unlock();
 
         vault.deposit(current_buffer_);
 
@@ -321,6 +322,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         vault.wire_transfer_outbound(current_buffer_);
         next_buffer_wait_handle.result_received();
 
+        lk.lock();
         advance_current_buffer(lk);
         done();
         return &next_buffer_wait_handle;
@@ -454,7 +456,7 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
     process_buffer(buffer, lock);
 }
 
-void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&)
+void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>& lk)
 {
     if (buffer.has_width() && buffer.has_height())
     {
@@ -469,7 +471,8 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
     try
     {
         auto pixel_format = static_cast<MirPixelFormat>(protobuf_bs->pixel_format());
-        buffer_depository->deposit(buffer, cached_buffer_size, pixel_format);
+        lk.unlock();
+        buffer_depository->deposit(buffer, geom::Size{buffer.width(), buffer.height()}, pixel_format);
         perf_report->begin_frame(buffer.buffer_id());
     }
     catch (const std::runtime_error& err)
