@@ -219,6 +219,28 @@ bool mg::operator!=(mg::DisplayConfigurationOutput const& val1,
     return !(val1 == val2);
 }
 
+bool mg::operator==(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs)
+{
+    std::vector<std::reference_wrapper<DisplayConfigurationCard const>> lhs_cards;
+    std::vector<std::reference_wrapper<DisplayConfigurationOutput const>> lhs_outputs;
+
+    lhs.for_each_card([&lhs_cards](DisplayConfigurationCard const& card) { lhs_cards.emplace_back(std::ref(card)); });
+    lhs.for_each_output([&lhs_outputs](DisplayConfigurationOutput const& output) { lhs_outputs.emplace_back(std::ref(output)); });
+
+    std::vector<std::reference_wrapper<DisplayConfigurationCard const>> rhs_cards;
+    std::vector<std::reference_wrapper<DisplayConfigurationOutput const>> rhs_outputs;
+
+    rhs.for_each_card([&rhs_cards](DisplayConfigurationCard const& card) { rhs_cards.emplace_back(std::ref(card)); });
+    rhs.for_each_output([&rhs_outputs](DisplayConfigurationOutput const& output) { rhs_outputs.emplace_back(std::ref(output)); });
+
+    return lhs_cards == rhs_cards && lhs_outputs == rhs_outputs;
+}
+
+bool mg::operator!=(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs)
+{
+    return !(lhs == rhs);
+}
+
 namespace
 {
 mir::geometry::Rectangle extents_of(
