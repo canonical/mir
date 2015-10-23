@@ -25,6 +25,7 @@
 
 #include <sys/mman.h>
 #include <unistd.h>
+#include <dlfcn.h>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 
@@ -33,6 +34,15 @@ namespace mclm = mcl::mesa;
 
 namespace
 {
+// Hack around the way mesa loads mir: This hack makes the
+// necessary symbols global.
+void ensure_loaded_with_rtld_global_mesa_client()
+{
+    Dl_info info;
+
+    dladdr(reinterpret_cast<void*>(&ensure_loaded_with_rtld_global_mesa_client), &info);
+    dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
+}
 
 struct RealBufferFileOps : public mclm::BufferFileOps
 {
@@ -63,6 +73,7 @@ struct RealBufferFileOps : public mclm::BufferFileOps
 
 std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* context)
 {
+    ensure_loaded_with_rtld_global_mesa_client();
     MirPlatformPackage package;
     context->populate_server_package(package);
     if (package.data_items != 0 || package.fd_items != 1)

@@ -14,6 +14,7 @@ set(
   default_raise_surface_policy.cpp
 
   ${CMAKE_SOURCE_DIR}/include/server/mir/shell/display_configuration_controller.h
+  surface_specification.cpp
 )
 
 add_library(
