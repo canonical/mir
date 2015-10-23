@@ -160,6 +160,20 @@ TEST_F(X11PlatformTest, button_release_has_no_buttons_pressed)
     process_input_event();
 }
 
+TEST_F(X11PlatformTest, button4_button5_converted_to_vscroll)
+{
+    prepare_event_processing();
+
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.vscroll_event_return),
+                       Return(1)));
+
+    EXPECT_CALL(mock_pointer_sink, handle_input(mt::PointerMovementEvent()))
+        .Times(Exactly(1));
+
+    process_input_event();
+}
+
 TEST_F(X11PlatformTest, grabs_keyboard)
 {
     prepare_event_processing();
