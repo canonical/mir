@@ -43,8 +43,8 @@ public:
 
     optional_value<PointerSettings> get_pointer_settings() const override;
     void apply_settings(PointerSettings const& settings) override;
-    optional_value<TouchPadSettings> get_touch_pad_settings() const override;
-    void apply_settings(TouchPadSettings const& settings) override;
+    optional_value<TouchpadSettings> get_touchpad_settings() const override;
+    void apply_settings(TouchpadSettings const& settings) override;
 
     InputSink* sink{nullptr};
     EventBuilder* builder{nullptr};

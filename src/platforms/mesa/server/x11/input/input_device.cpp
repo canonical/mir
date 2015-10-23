@@ -19,7 +19,7 @@
 #include "input_device.h"
 
 #include "mir/input/pointer_settings.h"
-#include "mir/input/touch_pad_settings.h"
+#include "mir/input/touchpad_settings.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/device_capability.h"
 
@@ -62,15 +62,15 @@ void mix::XInputDevice::apply_settings(PointerSettings const&)
     // TODO Make use if X11-XInput2
 }
 
-mir::optional_value<mi::TouchPadSettings> mix::XInputDevice::get_touch_pad_settings() const
+mir::optional_value<mi::TouchpadSettings> mix::XInputDevice::get_touchpad_settings() const
 {
-    optional_value<TouchPadSettings> ret;
+    optional_value<TouchpadSettings> ret;
     if (contains(info.capabilities, DeviceCapability::touchpad))
-        ret = TouchPadSettings();
+        ret = TouchpadSettings();
 
     return ret;
 }
 
-void mix::XInputDevice::apply_settings(TouchPadSettings const&)
+void mix::XInputDevice::apply_settings(TouchpadSettings const&)
 {
 }

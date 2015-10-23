@@ -23,7 +23,7 @@
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_sink.h"
 #include "mir/input/pointer_settings.h"
-#include "mir/input/touch_pad_settings.h"
+#include "mir/input/touchpad_settings.h"
 #include "mir/flags.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/rectangle.h"
@@ -152,7 +152,7 @@ struct LibInputDevice : public ::testing::Test
     char const* trackpad_dev_path = "/dev/input/event13";
     char const* touch_screen_dev_path = "/dev/input/event4";
     char const* usb_mouse_dev_path = "/dev/input/event13";
-    char const* touch_pad_dev_path = "/dev/input/event12";
+    char const* touchpad_dev_path = "/dev/input/event12";
 
     LibInputDevice()
     {
@@ -176,9 +176,9 @@ struct LibInputDevice : public ::testing::Test
         return setup_device(dev, touch_screen_dev_path, "mt-screen-detection", 858, 484);
     }
 
-    char const* setup_touch_pad(libinput_device* dev)
+    char const* setup_touchpad(libinput_device* dev)
     {
-        return setup_device(dev, touch_pad_dev_path, "synaptics-touchpad", 858, 484);
+        return setup_device(dev, touchpad_dev_path, "synaptics-touchpad", 858, 484);
     }
 
     char const* setup_mouse(libinput_device* dev)
@@ -215,9 +215,9 @@ struct LibInputDevice : public ::testing::Test
             .WillByDefault(Return(handedness == mir_pointer_handedness_left));
     }
 
-    void setup_touch_pad_configuration(libinput_device* dev,
-                                       MirTouchPadClickMode click_mode,
-                                       MirTouchPadScrollMode scroll_mode,
+    void setup_touchpad_configuration(libinput_device* dev,
+                                       MirTouchpadClickMode click_mode,
+                                       MirTouchpadScrollMode scroll_mode,
                                        int scroll_button,
                                        bool tap_to_click,
                                        bool disable_while_typing,
@@ -225,17 +225,17 @@ struct LibInputDevice : public ::testing::Test
                                        bool middle_button_emulation)
     {
         mir::Flags<libinput_config_click_method> click_method = LIBINPUT_CONFIG_CLICK_METHOD_NONE;
-        if (click_mode & mir_touch_pad_click_mode_finger_count)
+        if (click_mode & mir_touchpad_click_mode_finger_count)
             click_method |= LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER;
-        if (click_mode & mir_touch_pad_click_mode_area_to_click)
+        if (click_mode & mir_touchpad_click_mode_area_to_click)
             click_method |= LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS;
 
         mir::Flags<libinput_config_scroll_method> scroll_method = LIBINPUT_CONFIG_SCROLL_NO_SCROLL;
-        if (scroll_mode & mir_touch_pad_scroll_mode_two_finger_scroll)
+        if (scroll_mode & mir_touchpad_scroll_mode_two_finger_scroll)
             scroll_method |= LIBINPUT_CONFIG_SCROLL_2FG;
-        if (scroll_mode & mir_touch_pad_scroll_mode_edge_scroll)
+        if (scroll_mode & mir_touchpad_scroll_mode_edge_scroll)
             scroll_method |= LIBINPUT_CONFIG_SCROLL_EDGE;
-        if (scroll_mode & mir_touch_pad_scroll_mode_button_down_scroll)
+        if (scroll_mode & mir_touchpad_scroll_mode_button_down_scroll)
             scroll_method |= LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN;
 
         ON_CALL(mock_libinput, libinput_device_config_click_get_method(dev))
@@ -403,10 +403,10 @@ struct LibInputDeviceOnTouchScreen : public LibInputDevice
     mie::LibInputDevice touch_screen{mir::report::null_input_report(), touch_screen_path, mie::make_libinput_device(lib.get(), touch_screen_path)};
 };
 
-struct LibInputDeviceOnTouchPad : public LibInputDevice
+struct LibInputDeviceOnTouchpad : public LibInputDevice
 {
-    char const* touch_pad_path = setup_touch_pad(fake_device);
-    mie::LibInputDevice touch_pad{mir::report::null_input_report(), touch_pad_path, mie::make_libinput_device(lib.get(), touch_pad_path)};
+    char const* touchpad_path = setup_touchpad(fake_device);
+    mie::LibInputDevice touchpad{mir::report::null_input_report(), touchpad_path, mie::make_libinput_device(lib.get(), touchpad_path)};
 };
 }
 
@@ -747,36 +747,36 @@ TEST_F(LibInputDeviceOnMouse, scroll_speed_scales_scroll_events)
     mouse.process_event(fake_event_2);
 }
 
-TEST_F(LibInputDeviceOnLaptopKeyboardAndMouse, provides_no_touch_pad_settings_for_non_touchpad_devices)
+TEST_F(LibInputDeviceOnLaptopKeyboardAndMouse, provides_no_touchpad_settings_for_non_touchpad_devices)
 {
-    auto val = keyboard.get_touch_pad_settings();
+    auto val = keyboard.get_touchpad_settings();
     EXPECT_THAT(val.is_set(), Eq(false));
-    val = mouse.get_touch_pad_settings();
+    val = mouse.get_touchpad_settings();
     EXPECT_THAT(val.is_set(), Eq(false));
 }
 
-TEST_F(LibInputDeviceOnTouchPad, reads_touch_pad_settings_from_libinput)
+TEST_F(LibInputDeviceOnTouchpad, reads_touchpad_settings_from_libinput)
 {
-    setup_touch_pad_configuration(fake_device, mir_touch_pad_click_mode_finger_count,
-                                  mir_touch_pad_scroll_mode_edge_scroll, 0, true, false, true, false);
+    setup_touchpad_configuration(fake_device, mir_touchpad_click_mode_finger_count,
+                                  mir_touchpad_scroll_mode_edge_scroll, 0, true, false, true, false);
 
-    auto settings = touch_pad.get_touch_pad_settings().value();
-    EXPECT_THAT(settings.click_mode, Eq(mir_touch_pad_click_mode_finger_count));
-    EXPECT_THAT(settings.scroll_mode, Eq(mir_touch_pad_scroll_mode_edge_scroll));
+    auto settings = touchpad.get_touchpad_settings().value();
+    EXPECT_THAT(settings.click_mode, Eq(mir_touchpad_click_mode_finger_count));
+    EXPECT_THAT(settings.scroll_mode, Eq(mir_touchpad_scroll_mode_edge_scroll));
     EXPECT_THAT(settings.tap_to_click, Eq(true));
     EXPECT_THAT(settings.disable_while_typing, Eq(false));
     EXPECT_THAT(settings.disable_with_mouse, Eq(true));
     EXPECT_THAT(settings.middle_mouse_button_emulation, Eq(false));
 }
 
-TEST_F(LibInputDeviceOnTouchPad, applies_touch_pad_settings)
+TEST_F(LibInputDeviceOnTouchpad, applies_touchpad_settings)
 {
-    setup_touch_pad_configuration(fake_device, mir_touch_pad_click_mode_finger_count,
-                                  mir_touch_pad_scroll_mode_two_finger_scroll, 0, true, false, true, false);
+    setup_touchpad_configuration(fake_device, mir_touchpad_click_mode_finger_count,
+                                  mir_touchpad_scroll_mode_two_finger_scroll, 0, true, false, true, false);
 
-    mi::TouchPadSettings settings(touch_pad.get_touch_pad_settings().value());
-    settings.scroll_mode = mir_touch_pad_scroll_mode_button_down_scroll;
-    settings.click_mode = mir_touch_pad_click_mode_finger_count;
+    mi::TouchpadSettings settings(touchpad.get_touchpad_settings().value());
+    settings.scroll_mode = mir_touchpad_scroll_mode_button_down_scroll;
+    settings.click_mode = mir_touchpad_click_mode_finger_count;
     settings.button_down_scroll_button = KEY_A;
     settings.tap_to_click = true;
     settings.disable_while_typing = false;
@@ -784,17 +784,17 @@ TEST_F(LibInputDeviceOnTouchPad, applies_touch_pad_settings)
     settings.middle_mouse_button_emulation = true;
 
     EXPECT_CALL(mock_libinput,
-                libinput_device_config_scroll_set_method(touch_pad.device(), LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN));
+                libinput_device_config_scroll_set_method(touchpad.device(), LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN));
     EXPECT_CALL(mock_libinput,
-                libinput_device_config_click_set_method(touch_pad.device(), LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER));
-    EXPECT_CALL(mock_libinput, libinput_device_config_scroll_set_button(touch_pad.device(), KEY_A));
-    EXPECT_CALL(mock_libinput, libinput_device_config_tap_set_enabled(touch_pad.device(), LIBINPUT_CONFIG_TAP_ENABLED));
+                libinput_device_config_click_set_method(touchpad.device(), LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER));
+    EXPECT_CALL(mock_libinput, libinput_device_config_scroll_set_button(touchpad.device(), KEY_A));
+    EXPECT_CALL(mock_libinput, libinput_device_config_tap_set_enabled(touchpad.device(), LIBINPUT_CONFIG_TAP_ENABLED));
     EXPECT_CALL(mock_libinput,
-                libinput_device_config_dwt_set_enabled(touch_pad.device(), LIBINPUT_CONFIG_DWT_DISABLED));
+                libinput_device_config_dwt_set_enabled(touchpad.device(), LIBINPUT_CONFIG_DWT_DISABLED));
     EXPECT_CALL(mock_libinput, libinput_device_config_send_events_set_mode(
-                                   touch_pad.device(), LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE));
+                                   touchpad.device(), LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE));
     EXPECT_CALL(mock_libinput, libinput_device_config_middle_emulation_set_enabled(
-                                   touch_pad.device(), LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED));
+                                   touchpad.device(), LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED));
 
-    touch_pad.apply_settings(settings);
+    touchpad.apply_settings(settings);
 }
