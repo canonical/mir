@@ -45,6 +45,7 @@ namespace
 {
 std::chrono::seconds const max_wait{4};
 void cookie_capturing_callback(MirSurface* surface, MirEvent const* ev, void* ctx);
+void lifecycle_changed(MirConnection* /* connection */, MirLifecycleState state, void* ctx);
 }
 
 struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
@@ -69,6 +70,8 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
         mir_surface_apply_spec(surface1, spec);
         mir_surface_apply_spec(surface2, spec);
         mir_surface_spec_release(spec);
+
+        mir_connection_set_lifecycle_event_callback(connection, lifecycle_changed, this);
     }
 
     MirSurface* surface1;
@@ -76,6 +79,8 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
 
     std::vector<MirCookie> key_cookies;
     std::vector<MirCookie> pointer_cookies;
+
+    MirLifecycleState lifecycle_state{mir_lifecycle_state_resumed};
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
@@ -106,6 +111,12 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
             client->pointer_cookies.push_back(mir_pointer_event_get_cookie(pev));
         }
     }
+}
+
+void lifecycle_changed(MirConnection* /* connection */, MirLifecycleState state, void* ctx)
+{
+    auto client = reinterpret_cast<RaiseSurfaces*>(ctx);
+    client->lifecycle_state = state;
 }
 
 void wait_for_n_events(size_t n, std::vector<MirCookie>& cookies)
@@ -175,4 +186,18 @@ TEST_F(RaiseSurfaces, raise_surface_motion_events_dont_prevent_raise)
         std::chrono::seconds{max_wait});
 
     EXPECT_TRUE(surface_becomes_focused);
+}
+
+TEST_F(RaiseSurfaces, client_connection_close_invalid_cookie)
+{
+    mir_surface_raise_with_cookie(surface1, {0, 0});
+
+    bool connection_close = mt::spin_wait_for_condition_or_timeout(
+        [this]
+        {
+            return lifecycle_state == mir_lifecycle_connection_lost;
+        },
+        std::chrono::seconds{max_wait});
+
+    EXPECT_TRUE(connection_close);
 }
