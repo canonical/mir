@@ -187,9 +187,6 @@ void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
 {
     primitives.resize(1);
     primitives[0] = mgl::tessellate_renderable_into_rectangle(renderable, geom::Displacement{0,0});
-    primitives[0].blend_func_src = GL_ONE;
-    primitives[0].blend_func_dst = renderable.shaped() ?
-                                   GL_ONE_MINUS_SRC_ALPHA : GL_ZERO;
 }
 
 void mrg::Renderer::render(mg::RenderableList const& renderables) const
@@ -246,27 +243,34 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
 
     auto surface_tex = texture_cache->load(renderable);
 
-    GLenum sfactor = GL_NONE, dfactor = GL_NONE;
     for (auto const& p : primitives)
     {
-        if (sfactor != p.blend_func_src || dfactor != p.blend_func_dst)
-        {
-            sfactor = p.blend_func_src;
-            dfactor = p.blend_func_dst;
-            if (sfactor == GL_ONE && dfactor == GL_ZERO &&
-                renderable.alpha() == 1.0f)
-                glDisable(GL_BLEND);
-            else
-                glEnable(GL_BLEND);
-
-            // We assume the default glBlendEquation of GL_FUNC_ADD
-            glBlendFunc(sfactor, dfactor);
-        }
-
         if (p.tex_id == 0)   // The client surface texture
+        {
+            if (renderable.shaped())  // The texture's alpha channel is valid
+            {
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+            }
+            else if (renderable.alpha() == 1.0f)
+            {
+                glDisable(GL_BLEND);
+            }
+            else  // alpha channel is uninitialized but opacity enabled
+            {
+                glEnable(GL_BLEND);
+                glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA,
+                                    GL_ZERO, GL_ONE);
+            }
             surface_tex->bind();
+        }
         else   // Some other texture from the shell (e.g. decorations)
+        {
+            // We assume all decorations are full RGBA for now...
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             glBindTexture(GL_TEXTURE_2D, p.tex_id);
+        }
 
         glVertexAttribPointer(prog.position_attr, 3, GL_FLOAT,
                               GL_FALSE, sizeof(mgl::Vertex),
