@@ -120,6 +120,12 @@ public:
         return verify_mac(cookie);
     }
 
+    void assert_timestamp(MirCookie const& cookie) override
+    {
+        if (!verify_mac(cookie))
+            throw mir::cookie::InvalidCookieError();
+    }
+
 private:
     void calculate_mac(MirCookie& cookie)
     {

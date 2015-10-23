@@ -174,6 +174,8 @@ public:
     MirOrientation get_orientation() const;
     MirWaitHandle* set_preferred_orientation(MirOrientationMode mode);
 
+    void raise_surface_with_cookie(MirCookie const& cookie);
+
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
     void set_event_handler(mir_surface_event_callback callback,

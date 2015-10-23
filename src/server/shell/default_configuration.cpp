@@ -25,6 +25,7 @@
 #include "default_persistent_surface_store.h"
 #include "frontend_shell.h"
 #include "graphics_display_layout.h"
+#include "default_raise_surface_policy.h"
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -40,6 +41,7 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
                 the_surface_coordinator(),
                 the_session_coordinator(),
                 the_prompt_session_manager(),
+                the_raise_policy(),
                 the_window_manager_builder()));
 
             the_composite_event_filter()->prepend(result);
@@ -103,5 +105,18 @@ mir::DefaultServerConfiguration::the_host_lifecycle_event_listener()
         []()
         {
             return std::make_shared<msh::NullHostLifecycleEventListener>();
+        });
+}
+
+std::shared_ptr<msh::RaiseSurfacePolicy>
+mir::DefaultServerConfiguration::the_raise_policy()
+{
+    return raise_surface_policy(
+        [this]()
+        {
+            auto raise_policy = std::make_shared<msh::DefaultRaiseSurfacePolicy>();
+            the_composite_event_filter()->prepend(raise_policy);
+
+            return raise_policy;
         });
 }
