@@ -28,7 +28,7 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-int const max_wait{4};
+std::chrono::seconds const max_wait{4};
 void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx);
 }
 
