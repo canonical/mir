@@ -21,14 +21,14 @@
 #include "mir/dispatch/action_queue.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/input_device.h"
-#include "mir/input/touch_pad_configuration.h"
+#include "mir/input/touchpad_configuration.h"
 #include "mir/input/pointer_configuration.h"
 
 namespace mi = mir::input;
 
 mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
                                  std::shared_ptr<InputDevice> const& device) :
-    device_id{id}, device{device}, info(device->get_device_info()), pointer{device->get_pointer_settings()}, touch_pad{device->get_touch_pad_settings()}, actions{actions}
+    device_id{id}, device{device}, info(device->get_device_info()), pointer{device->get_pointer_settings()}, touchpad{device->get_touchpad_settings()}, actions{actions}
 {
 }
 
@@ -63,14 +63,14 @@ mir::optional_value<mi::PointerConfiguration> mi::DefaultDevice::pointer_configu
                                 settings.horizontal_scroll_scale, settings.vertical_scroll_scale);
 }
 
-mir::optional_value<mi::TouchPadConfiguration> mi::DefaultDevice::touch_pad_configuration() const
+mir::optional_value<mi::TouchpadConfiguration> mi::DefaultDevice::touchpad_configuration() const
 {
-    if (!touch_pad.is_set())
+    if (!touchpad.is_set())
         return {};
 
-    auto const& settings = touch_pad.value();
+    auto const& settings = touchpad.value();
 
-    return TouchPadConfiguration(settings.click_mode, settings.scroll_mode, settings.button_down_scroll_button,
+    return TouchpadConfiguration(settings.click_mode, settings.scroll_mode, settings.button_down_scroll_button,
                                  settings.tap_to_click, settings.disable_while_typing, settings.disable_with_mouse,
                                  settings.middle_mouse_button_emulation);
 }
@@ -94,12 +94,12 @@ void mi::DefaultDevice::apply_configuration(mi::PointerConfiguration const& conf
                      });
 }
 
-void mi::DefaultDevice::apply_configuration(mi::TouchPadConfiguration const& conf)
+void mi::DefaultDevice::apply_configuration(mi::TouchpadConfiguration const& conf)
 {
-    if (!touch_pad.is_set())
+    if (!touchpad.is_set())
         return;
 
-    TouchPadSettings settings;
+    TouchpadSettings settings;
     settings.click_mode = conf.click_mode();
     settings.scroll_mode = conf.scroll_mode();
     settings.button_down_scroll_button = conf.scroll_button();
@@ -108,7 +108,7 @@ void mi::DefaultDevice::apply_configuration(mi::TouchPadConfiguration const& con
     settings.tap_to_click = conf.tap_to_click();
     settings.middle_mouse_button_emulation = conf.middle_mouse_button_emulation();
 
-    touch_pad = settings;
+    touchpad = settings;
 
     actions->enqueue([settings = std::move(settings), dev=device]
                      {

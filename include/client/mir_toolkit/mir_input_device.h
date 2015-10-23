@@ -32,22 +32,22 @@ typedef enum MirPointerHandedness
     mir_pointer_handedness_left = 1
 } MirPointerHandedness;
 
-typedef enum MirTouchPadClickModes
+typedef enum MirTouchpadClickMode
 {
-    mir_touch_pad_click_mode_none          = 0,
-    mir_touch_pad_click_mode_area_to_click = 1 << 1,
-    mir_touch_pad_click_mode_finger_count  = 1 << 2
-} MirTouchPadClickModes;
-typedef unsigned int MirTouchPadClickMode;
+    mir_touchpad_click_mode_none          = 0,
+    mir_touchpad_click_mode_area_to_click = 1 << 0,
+    mir_touchpad_click_mode_finger_count  = 1 << 1
+} MirTouchpadClickMode;
+typedef unsigned int MirTouchpadClickModes;
 
-typedef enum MirTouchPadScrollModes
+typedef enum MirTouchpadScrollMode
 {
-    mir_touch_pad_scroll_mode_none               = 0,
-    mir_touch_pad_scroll_mode_two_finger_scroll  = 1 << 1,
-    mir_touch_pad_scroll_mode_edge_scroll        = 1 << 2,
-    mir_touch_pad_scroll_mode_button_down_scroll = 1 << 3
-} MirTouchPadScrollModes;
-typedef unsigned int MirTouchPadScrollMode;
+    mir_touchpad_scroll_mode_none               = 0,
+    mir_touchpad_scroll_mode_two_finger_scroll  = 1 << 0,
+    mir_touchpad_scroll_mode_edge_scroll        = 1 << 1,
+    mir_touchpad_scroll_mode_button_down_scroll = 1 << 2
+} MirTouchpadScrollMode;
+typedef unsigned int MirTouchpadScrollModes;
 
 #ifdef __cplusplus
 }

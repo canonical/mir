@@ -26,11 +26,11 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/pointer_settings.h"
-#include "mir/input/touch_pad_settings.h"
+#include "mir/input/touchpad_settings.h"
 #include "mir/input/device.h"
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/pointer_configuration.h"
-#include "mir/input/touch_pad_configuration.h"
+#include "mir/input/touchpad_configuration.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
@@ -92,8 +92,8 @@ struct MockInputDevice : public mi::InputDevice
     MOCK_METHOD0(get_device_info, mi::InputDeviceInfo());
     MOCK_CONST_METHOD0(get_pointer_settings, mir::optional_value<mi::PointerSettings>());
     MOCK_METHOD1(apply_settings, void(mi::PointerSettings const&));
-    MOCK_CONST_METHOD0(get_touch_pad_settings, mir::optional_value<mi::TouchPadSettings>());
-    MOCK_METHOD1(apply_settings, void(mi::TouchPadSettings const&));
+    MOCK_CONST_METHOD0(get_touchpad_settings, mir::optional_value<mi::TouchpadSettings>());
+    MOCK_METHOD1(apply_settings, void(mi::TouchpadSettings const&));
 };
 
 template<typename Type>
@@ -115,7 +115,7 @@ struct InputDeviceHubTest : ::testing::Test
     Nice<MockInputDevice> device;
     Nice<MockInputDevice> another_device;
     Nice<MockInputDevice> third_device;
-    Nice<MockInputDevice> touch_pad;
+    Nice<MockInputDevice> touchpad;
 
     std::chrono::nanoseconds arbitrary_timestamp;
 
@@ -125,29 +125,29 @@ struct InputDeviceHubTest : ::testing::Test
             .WillByDefault(Return(mi::InputDeviceInfo{"device","dev-1", mi::DeviceCapability::unknown}));
         ON_CALL(device, get_pointer_settings())
             .WillByDefault(Return(mir::optional_value<mi::PointerSettings>()));
-        ON_CALL(device, get_touch_pad_settings())
-            .WillByDefault(Return(mir::optional_value<mi::TouchPadSettings>()));
+        ON_CALL(device, get_touchpad_settings())
+            .WillByDefault(Return(mir::optional_value<mi::TouchpadSettings>()));
 
         ON_CALL(another_device, get_device_info())
             .WillByDefault(Return(mi::InputDeviceInfo{"another_device","dev-2", mi::DeviceCapability::keyboard}));
         ON_CALL(another_device, get_pointer_settings())
             .WillByDefault(Return(mir::optional_value<mi::PointerSettings>()));
-        ON_CALL(another_device, get_touch_pad_settings())
-            .WillByDefault(Return(mir::optional_value<mi::TouchPadSettings>()));
+        ON_CALL(another_device, get_touchpad_settings())
+            .WillByDefault(Return(mir::optional_value<mi::TouchpadSettings>()));
 
         ON_CALL(third_device,get_device_info())
             .WillByDefault(Return(mi::InputDeviceInfo{"third_device","dev-3", mi::DeviceCapability::keyboard}));
         ON_CALL(third_device, get_pointer_settings())
             .WillByDefault(Return(mir::optional_value<mi::PointerSettings>()));
-        ON_CALL(third_device, get_touch_pad_settings())
-            .WillByDefault(Return(mir::optional_value<mi::TouchPadSettings>()));
+        ON_CALL(third_device, get_touchpad_settings())
+            .WillByDefault(Return(mir::optional_value<mi::TouchpadSettings>()));
 
-        ON_CALL(touch_pad, get_device_info())
-            .WillByDefault(Return(mi::InputDeviceInfo{"touch_pad", "dev-4", mi::DeviceCapability::pointer|mi::DeviceCapability::pointer}));
-        ON_CALL(touch_pad, get_pointer_settings())
+        ON_CALL(touchpad, get_device_info())
+            .WillByDefault(Return(mi::InputDeviceInfo{"touchpad", "dev-4", mi::DeviceCapability::pointer|mi::DeviceCapability::pointer}));
+        ON_CALL(touchpad, get_pointer_settings())
             .WillByDefault(Return(mi::PointerSettings()));
-        ON_CALL(touch_pad, get_touch_pad_settings())
-            .WillByDefault(Return(mi::TouchPadSettings()));
+        ON_CALL(touchpad, get_touchpad_settings())
+            .WillByDefault(Return(mi::TouchpadSettings()));
     }
 
     void capture_input_sink(Nice<MockInputDevice>& dev, mi::InputSink*& sink, mi::EventBuilder*& builder)
@@ -404,28 +404,28 @@ TEST_F(InputDeviceHubTest, forwards_pointer_settings_to_input_device)
     ON_CALL(mock_observer, device_added(_)).WillByDefault(SaveArg<0>(&dev));
 
     hub.add_observer(mt::fake_shared(mock_observer));
-    hub.add_device(mt::fake_shared(touch_pad));
+    hub.add_device(mt::fake_shared(touchpad));
     observer_loop.trigger_server_actions();
 
-    EXPECT_CALL(touch_pad, apply_settings(Matcher<mi::PointerSettings const&>(_)));
+    EXPECT_CALL(touchpad, apply_settings(Matcher<mi::PointerSettings const&>(_)));
 
     auto conf = dev->pointer_configuration();
     dev->apply_configuration(conf.value());
     multiplexer.dispatch(mir::dispatch::FdEvent::readable);
 }
 
-TEST_F(InputDeviceHubTest, forwards_touch_pad_settings_to_input_device)
+TEST_F(InputDeviceHubTest, forwards_touchpad_settings_to_input_device)
 {
     std::shared_ptr<mi::Device> dev;
     ON_CALL(mock_observer, device_added(_)).WillByDefault(SaveArg<0>(&dev));
 
     hub.add_observer(mt::fake_shared(mock_observer));
-    hub.add_device(mt::fake_shared(touch_pad));
+    hub.add_device(mt::fake_shared(touchpad));
     observer_loop.trigger_server_actions();
 
-    EXPECT_CALL(touch_pad, apply_settings(Matcher<mi::TouchPadSettings const&>(_)));
+    EXPECT_CALL(touchpad, apply_settings(Matcher<mi::TouchpadSettings const&>(_)));
 
-    auto conf = dev->touch_pad_configuration();
+    auto conf = dev->touchpad_configuration();
     dev->apply_configuration(conf.value());
     multiplexer.dispatch(mir::dispatch::FdEvent::readable);
 }

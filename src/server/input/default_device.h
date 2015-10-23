@@ -24,7 +24,7 @@
 #include "mir/input/device.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/pointer_settings.h"
-#include "mir/input/touch_pad_settings.h"
+#include "mir/input/touchpad_settings.h"
 #include "mir/optional_value.h"
 
 #include <memory>
@@ -52,14 +52,14 @@ public:
 
     optional_value<PointerConfiguration> pointer_configuration() const override;
     void apply_configuration(PointerConfiguration const&) override;
-    optional_value<TouchPadConfiguration> touch_pad_configuration() const override;
-    void apply_configuration(TouchPadConfiguration const&) override;
+    optional_value<TouchpadConfiguration> touchpad_configuration() const override;
+    void apply_configuration(TouchpadConfiguration const&) override;
 private:
     MirInputDeviceId const device_id;
     std::shared_ptr<InputDevice> const device;
     InputDeviceInfo const info;
     optional_value<PointerSettings> pointer;
-    optional_value<TouchPadSettings> touch_pad;
+    optional_value<TouchpadSettings> touchpad;
     std::shared_ptr<dispatch::ActionQueue> const actions;
 };
 

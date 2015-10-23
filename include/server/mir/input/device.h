@@ -32,7 +32,7 @@ namespace input
 {
 
 class PointerConfiguration;
-class TouchPadConfiguration;
+class TouchpadConfiguration;
 
 class Device
 {
@@ -47,8 +47,8 @@ public:
     virtual mir::optional_value<PointerConfiguration> pointer_configuration() const = 0;
     virtual void apply_configuration(PointerConfiguration const&) = 0;
 
-    virtual mir::optional_value<TouchPadConfiguration> touch_pad_configuration() const = 0;
-    virtual void apply_configuration(TouchPadConfiguration const&) = 0;
+    virtual mir::optional_value<TouchpadConfiguration> touchpad_configuration() const = 0;
+    virtual void apply_configuration(TouchpadConfiguration const&) = 0;
 
 private:
     Device(Device const&) = delete;

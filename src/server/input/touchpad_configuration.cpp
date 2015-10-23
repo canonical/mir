@@ -17,12 +17,12 @@
  *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir/input/touch_pad_configuration.h"
+#include "mir/input/touchpad_configuration.h"
 
 namespace mi = mir::input;
 
-mi::TouchPadConfiguration::TouchPadConfiguration(MirTouchPadClickMode click_mode,
-                                                 MirTouchPadScrollMode scroll_mode,
+mi::TouchpadConfiguration::TouchpadConfiguration(MirTouchpadClickModes click_mode,
+                                                 MirTouchpadScrollModes scroll_mode,
                                                  int button_down_scroll_button,
                                                  bool tap_to_click,
                                                  bool disable_while_typing,
@@ -34,82 +34,82 @@ mi::TouchPadConfiguration::TouchPadConfiguration(MirTouchPadClickMode click_mode
 {
 }
 
-mi::TouchPadConfiguration::TouchPadConfiguration() :
-    click_mode_{mir_touch_pad_click_mode_finger_count}, scroll_mode_{mir_touch_pad_scroll_mode_two_finger_scroll}, button_down_scroll_button_{0}, tap_to_click_{true}, disable_while_typing_{false}, disable_with_mouse_{false}, middle_mouse_button_emulation_{true}
+mi::TouchpadConfiguration::TouchpadConfiguration() :
+    click_mode_{mir_touchpad_click_mode_finger_count}, scroll_mode_{mir_touchpad_scroll_mode_two_finger_scroll}, button_down_scroll_button_{0}, tap_to_click_{true}, disable_while_typing_{false}, disable_with_mouse_{false}, middle_mouse_button_emulation_{true}
 {
 }
 
-mi::TouchPadConfiguration::~TouchPadConfiguration()
+mi::TouchpadConfiguration::~TouchpadConfiguration()
 {
 }
 
-void mi::TouchPadConfiguration::tap_to_click(bool enabled)
+void mi::TouchpadConfiguration::tap_to_click(bool enabled)
 {
     tap_to_click_ = enabled;
 }
 
-bool mi::TouchPadConfiguration::tap_to_click() const
+bool mi::TouchpadConfiguration::tap_to_click() const
 {
     return tap_to_click_;
 }
 
-void mi::TouchPadConfiguration::middle_mouse_button_emulation(bool enabled)
+void mi::TouchpadConfiguration::middle_mouse_button_emulation(bool enabled)
 {
     middle_mouse_button_emulation_ = enabled;
 }
 
-bool mi::TouchPadConfiguration::middle_mouse_button_emulation() const
+bool mi::TouchpadConfiguration::middle_mouse_button_emulation() const
 {
     return middle_mouse_button_emulation_;
 }
 
-void mi::TouchPadConfiguration::disable_with_mouse(bool enabled)
+void mi::TouchpadConfiguration::disable_with_mouse(bool enabled)
 {
     disable_with_mouse_ = enabled;
 }
 
-bool mi::TouchPadConfiguration::disable_with_mouse() const
+bool mi::TouchpadConfiguration::disable_with_mouse() const
 {
     return disable_with_mouse_;
 }
 
-void mi::TouchPadConfiguration::disable_while_typing(bool enabled)
+void mi::TouchpadConfiguration::disable_while_typing(bool enabled)
 {
     disable_while_typing_ = enabled;
 }
 
-bool mi::TouchPadConfiguration::disable_while_typing() const
+bool mi::TouchpadConfiguration::disable_while_typing() const
 {
     return disable_while_typing_;
 }
 
-void mi::TouchPadConfiguration::click_mode(MirTouchPadClickMode click_mode)
+void mi::TouchpadConfiguration::click_mode(MirTouchpadClickModes click_mode)
 {
     click_mode_ = click_mode;
 }
 
-MirTouchPadClickMode mi::TouchPadConfiguration::click_mode() const
+MirTouchpadClickModes mi::TouchpadConfiguration::click_mode() const
 {
     return click_mode_;
 }
 
-void mi::TouchPadConfiguration::scroll_mode(MirTouchPadScrollMode scroll_mode)
+void mi::TouchpadConfiguration::scroll_mode(MirTouchpadScrollModes scroll_mode)
 {
     scroll_mode_ = scroll_mode;
 }
 
-MirTouchPadScrollMode mi::TouchPadConfiguration::scroll_mode() const
+MirTouchpadScrollModes mi::TouchpadConfiguration::scroll_mode() const
 {
     return scroll_mode_;
 }
 
-void mi::TouchPadConfiguration::scroll_mode(int scroll_button)
+void mi::TouchpadConfiguration::scroll_mode(int scroll_button)
 {
-    scroll_mode_ |= mir_touch_pad_scroll_mode_button_down_scroll;
+    scroll_mode_ |= mir_touchpad_scroll_mode_button_down_scroll;
     button_down_scroll_button_ = scroll_button;
 }
 
-int mi::TouchPadConfiguration::scroll_button() const
+int mi::TouchpadConfiguration::scroll_button() const
 {
     return button_down_scroll_button_;
 }

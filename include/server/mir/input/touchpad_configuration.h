@@ -28,17 +28,17 @@ namespace mir
 namespace input
 {
 
-struct TouchPadConfiguration
+struct TouchpadConfiguration
 {
-    TouchPadConfiguration(MirTouchPadClickMode click_mode,
-                          MirTouchPadScrollMode scroll_mode,
+    TouchpadConfiguration(MirTouchpadClickModes click_mode,
+                          MirTouchpadScrollModes scroll_mode,
                           int button_down_scroll_button,
                           bool tap_to_click,
                           bool disable_while_typing,
                           bool disable_with_mouse,
                           bool middle_mouse_button_emulation);
-    TouchPadConfiguration();
-    ~TouchPadConfiguration();
+    TouchpadConfiguration();
+    ~TouchpadConfiguration();
 
     /*!
      */
@@ -58,21 +58,21 @@ struct TouchPadConfiguration
     bool disable_while_typing() const;
     /*!
      */
-    void click_mode(MirTouchPadClickMode click_mode);
-    MirTouchPadClickMode click_mode() const;
+    void click_mode(MirTouchpadClickModes click_mode);
+    MirTouchpadClickModes click_mode() const;
 
     /*!
      */
-    void scroll_mode(MirTouchPadScrollMode scroll_mode);
-    MirTouchPadScrollMode scroll_mode() const;
+    void scroll_mode(MirTouchpadScrollModes scroll_mode);
+    MirTouchpadScrollModes scroll_mode() const;
     /*!
      * Configure scroll mode via button down.
      */
     void scroll_mode(int scroll_button);
     int scroll_button() const;
 private:
-    MirTouchPadClickMode click_mode_;
-    MirTouchPadScrollMode scroll_mode_;
+    MirTouchpadClickModes click_mode_;
+    MirTouchpadScrollModes scroll_mode_;
     int button_down_scroll_button_;
     bool tap_to_click_;
     bool disable_while_typing_;

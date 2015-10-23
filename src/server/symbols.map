@@ -705,17 +705,17 @@ MIR_SERVER_unreleased {
       mir::input::PointerConfiguration::cursor_speed*;
       mir::input::PointerConfiguration::vertical_scroll_speed*;
       mir::input::PointerConfiguration::horizontal_scroll_speed*;
-      mir::input::TouchPadConfiguration::TouchPadConfiguration*;
-      mir::input::TouchPadConfiguration::?TouchPadConfiguration*;
-      mir::input::TouchPadConfiguration::click_mode*;
-      mir::input::TouchPadConfiguration::scroll_mode*;
-      mir::input::TouchPadConfiguration::scroll_button*;
-      mir::input::TouchPadConfiguration::disable_with_mouse*;
-      mir::input::TouchPadConfiguration::disable_while_typing*;
-      mir::input::TouchPadConfiguration::middle_mouse_button_emulation*;
-      mir::input::TouchPadConfiguration::tap_to_click*;
+      mir::input::TouchpadConfiguration::TouchpadConfiguration*;
+      mir::input::TouchpadConfiguration::?TouchpadConfiguration*;
+      mir::input::TouchpadConfiguration::click_mode*;
+      mir::input::TouchpadConfiguration::scroll_mode*;
+      mir::input::TouchpadConfiguration::scroll_button*;
+      mir::input::TouchpadConfiguration::disable_with_mouse*;
+      mir::input::TouchpadConfiguration::disable_while_typing*;
+      mir::input::TouchpadConfiguration::middle_mouse_button_emulation*;
+      mir::input::TouchpadConfiguration::tap_to_click*;
 
       typeinfo?for?mir::input::PointerConfiguration;
-      typeinfo?for?mir::input::TouchPadConfiguration;
+      typeinfo?for?mir::input::TouchpadConfiguration;
     };
 } MIR_SERVER_35;
