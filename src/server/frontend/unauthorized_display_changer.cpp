@@ -27,9 +27,9 @@ mf::UnauthorizedDisplayChanger::UnauthorizedDisplayChanger(std::shared_ptr<front
 {
 }
 
-std::shared_ptr<mg::DisplayConfiguration> mf::UnauthorizedDisplayChanger::active_configuration()
+std::shared_ptr<mg::DisplayConfiguration> mf::UnauthorizedDisplayChanger::base_configuration()
 {
-    return changer->active_configuration();
+    return changer->base_configuration();
 }
 
 void mf::UnauthorizedDisplayChanger::configure(

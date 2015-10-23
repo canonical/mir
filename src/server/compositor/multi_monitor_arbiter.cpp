@@ -67,7 +67,7 @@ void mc::MultiMonitorArbiter::compositor_release(std::shared_ptr<mg::Buffer> con
 
     decrease_refcount_for(buffer->id(), lk);
 
-    if (mode == mc::MultiMonitorMode::single_monitor_fast)
+    if ((mode == mc::MultiMonitorMode::single_monitor_fast) || (onscreen_buffers.size() > 1))
         clean_onscreen_buffers(lk);
 }
 
