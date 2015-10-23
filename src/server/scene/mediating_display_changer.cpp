@@ -277,7 +277,7 @@ void ms::MediatingDisplayChanger::session_stopping_handler(
     config_map.erase(session);
 }
 
-std::future<void> ms::MediatingDisplayChanger::set_default_display_configuration(
+std::future<void> ms::MediatingDisplayChanger::set_base_configuration(
     std::shared_ptr<mg::DisplayConfiguration> const &conf)
 {
     auto promise = std::make_shared<std::promise<void>>();
