@@ -672,7 +672,7 @@ TEST_F(NestedServer, applies_display_config_on_startup)
                             { output.orientation = mir_orientation_inverted; });
                      }));
 
-            return result;
+            return std::shared_ptr<MockDisplayConfigurationPolicy>(std::move(result));
         }
     } nested_mir{new_connection()};
 
