@@ -125,7 +125,9 @@ public:
 
     std::shared_ptr<mf::BufferStream> get_buffer_stream(mf::BufferStreamId stream) const override
     {
-        return get_surface(mf::SurfaceId(stream.as_value()))->primary_buffer_stream();
+        if (mock_streams.find(stream) == mock_streams.end())
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid SurfaceId"));
+        return mock_streams.at(stream);
     }
 
     std::shared_ptr<mtd::MockFrontendSurface> mock_surface_at(mf::SurfaceId id)
@@ -139,7 +141,7 @@ public:
     {
         if (mock_surfaces.end() == mock_surfaces.find(id))
             create_mock_surface(id);
-        return mock_streams.at(id);
+        return mock_streams.at(mf::BufferStreamId(id.as_value()));
     }
 
     std::shared_ptr<mtd::MockFrontendSurface> create_mock_surface(mf::SurfaceId id)
@@ -165,15 +167,30 @@ public:
 
 
         mock_surfaces[id] = surface;
-        mock_streams[id] = stream;
+        mock_streams[mf::BufferStreamId(id.as_value())] = stream;
         return surface;
     }
 
-    mf::SurfaceId create_surface(ms::SurfaceCreationParameters const& /* params */)
+    std::shared_ptr<mtd::MockBufferStream> create_mock_stream(mf::BufferStreamId id)
+    {
+        mock_streams[id] = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
+        return mock_streams[id];
+    }
+
+    mf::SurfaceId create_surface(ms::SurfaceCreationParameters const&)
     {
         mf::SurfaceId id{last_surface_id};
         if (mock_surfaces.end() == mock_surfaces.find(id))
             create_mock_surface(id);
+        last_surface_id++;
+        return id;
+    }
+
+    mf::BufferStreamId create_buffer_stream(mg::BufferProperties const&)
+    {
+        mf::BufferStreamId id{last_surface_id};
+        if (mock_streams.end() == mock_streams.find(id))
+            create_mock_stream(id);
         last_surface_id++;
         return id;
     }
@@ -183,7 +200,7 @@ public:
         mock_surfaces.erase(surface);
     }
 
-    std::map<mf::SurfaceId, std::shared_ptr<mtd::MockBufferStream>> mock_streams;
+    std::map<mf::BufferStreamId, std::shared_ptr<mtd::MockBufferStream>> mock_streams;
     std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
     static int const testing_client_input_fd;
     int last_surface_id;
@@ -1207,4 +1224,21 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         &surface_parameters,
         &surface_response,
         google::protobuf::NewCallback(&send_non_event, mock_sender));
+}
+
+TEST_F(SessionMediator, doesnt_inadventently_set_buffer_field_when_theres_no_buffer)
+{
+    mp::Void null;
+    mf::SurfaceId surf_id{0};
+    mp::BufferStreamParameters stream_request;
+    mp::BufferStream stream_response;
+
+    auto stream = stubbed_session->mock_primary_stream_at(surf_id);
+    ON_CALL(*stream, swap_buffers(nullptr,testing::_))
+        .WillByDefault(testing::InvokeArgument<1>(nullptr));
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_buffer_stream(&stream_request, &stream_response, null_callback.get());
+
+    EXPECT_FALSE(stream_response.has_buffer());
 }
