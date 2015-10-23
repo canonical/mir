@@ -1232,13 +1232,10 @@ TEST_F(SessionMediator, doesnt_inadventently_set_buffer_field_when_theres_no_buf
     mf::SurfaceId surf_id{0};
     mp::BufferStreamParameters stream_request;
     mp::BufferStream stream_response;
-
     auto stream = stubbed_session->mock_primary_stream_at(surf_id);
     ON_CALL(*stream, swap_buffers(nullptr,testing::_))
         .WillByDefault(testing::InvokeArgument<1>(nullptr));
-
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_buffer_stream(&stream_request, &stream_response, null_callback.get());
-
     EXPECT_FALSE(stream_response.has_buffer());
 }
