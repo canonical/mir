@@ -1,6 +1,6 @@
 includedir=@INCLUDEDIR@/mirplatform
 
-Name: mir-client-platform-mesa
+Name: mir-client-platform-mesa-dev
 Description: Mir Mesa client platform development files
 Version: @MIR_VERSION@
 Requires.private: mirclient
