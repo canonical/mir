@@ -222,17 +222,17 @@ bool mg::operator!=(mg::DisplayConfigurationOutput const& val1,
 
 bool mg::operator==(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs)
 {
-    std::vector<DisplayConfigurationCard const*> lhs_cards;
-    std::vector<DisplayConfigurationOutput const*> lhs_outputs;
+    std::vector<DisplayConfigurationCard> lhs_cards;
+    std::vector<DisplayConfigurationOutput> lhs_outputs;
 
-    lhs.for_each_card([&lhs_cards](DisplayConfigurationCard const& card) { lhs_cards.emplace_back(&card); });
-    lhs.for_each_output([&lhs_outputs](DisplayConfigurationOutput const& output) { lhs_outputs.emplace_back(&output); });
+    lhs.for_each_card([&lhs_cards](DisplayConfigurationCard const& card) { lhs_cards.emplace_back(card); });
+    lhs.for_each_output([&lhs_outputs](DisplayConfigurationOutput const& output) { lhs_outputs.emplace_back(output); });
 
-    std::vector<DisplayConfigurationCard const*> rhs_cards;
-    std::vector<DisplayConfigurationOutput const*> rhs_outputs;
+    std::vector<DisplayConfigurationCard> rhs_cards;
+    std::vector<DisplayConfigurationOutput> rhs_outputs;
 
-    rhs.for_each_card([&rhs_cards](DisplayConfigurationCard const& card) { rhs_cards.emplace_back(&card); });
-    rhs.for_each_output([&rhs_outputs](DisplayConfigurationOutput const& output) { rhs_outputs.emplace_back(&output); });
+    rhs.for_each_card([&rhs_cards](DisplayConfigurationCard const& card) { rhs_cards.emplace_back(card); });
+    rhs.for_each_output([&rhs_outputs](DisplayConfigurationOutput const& output) { rhs_outputs.emplace_back(output); });
 
     bool result = rhs_cards.size() == lhs_cards.size();
 
@@ -241,7 +241,7 @@ bool mg::operator==(DisplayConfiguration const& lhs, DisplayConfiguration const&
         auto p = begin(rhs_cards);
         for (auto const& o : lhs_cards)
         {
-            if (*o != **p++)
+            if (o != *p++)
                 result = false;
         }
     }
@@ -253,7 +253,7 @@ bool mg::operator==(DisplayConfiguration const& lhs, DisplayConfiguration const&
         auto p = begin(rhs_outputs);
         for (auto const& o : lhs_outputs)
         {
-            if (*o != **p++)
+            if (o != *p++)
                 result = false;
         }
     }

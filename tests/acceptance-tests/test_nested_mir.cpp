@@ -22,6 +22,7 @@
 #include "mir/input/cursor_images.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration_report.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/cached_ptr.h"
@@ -183,6 +184,11 @@ private:
     bool hidden{false};
 };
 
+struct NullDisplayConfigurationPolicy : mg::DisplayConfigurationPolicy
+{
+    virtual void apply_to(mg::DisplayConfiguration&) {}
+};
+
 class NestedMirRunner : public mtf::HeadlessNestedServerRunner
 {
 public:
@@ -196,6 +202,9 @@ public:
             { return cursor_wrapper = std::make_shared<CursorWrapper>(wrapped); });
 
         server.override_the_cursor_images([] { return std::make_shared<CursorImages>(); });
+
+        server.wrap_display_configuration_policy([](std::shared_ptr<mg::DisplayConfigurationPolicy> const&)
+            { return std::make_shared<NullDisplayConfigurationPolicy>(); });
 
         start_server();
     }
