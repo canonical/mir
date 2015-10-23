@@ -71,7 +71,7 @@ public:
     void resume_display_config_processing() override;
 
     /* From shell::DisplayConfigurationController */
-    std::future<void> set_default_display_configuration(
+    std::future<void> set_base_configuration(
         std::shared_ptr<graphics::DisplayConfiguration> const &conf) override;
 
 private:

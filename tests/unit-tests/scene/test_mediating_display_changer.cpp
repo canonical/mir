@@ -494,7 +494,7 @@ TEST_F(MediatingDisplayChangerTest, does_not_block_IPC_thread_for_inactive_sessi
     display_changer.configure(inactive_session, conf);
 }
 
-TEST_F(MediatingDisplayChangerTest, set_default_display_configuration_doesnt_override_session_configuration)
+TEST_F(MediatingDisplayChangerTest, set_base_configuration_doesnt_override_session_configuration)
 {
     using namespace testing;
 
@@ -511,10 +511,10 @@ TEST_F(MediatingDisplayChangerTest, set_default_display_configuration_doesnt_ove
 
     EXPECT_CALL(mock_display, configure(_)).Times(0);
 
-    changer->set_default_display_configuration(conf);
+    changer->set_base_configuration(conf);
 }
 
-TEST_F(MediatingDisplayChangerTest, set_default_display_configuration_overrides_base_configuration)
+TEST_F(MediatingDisplayChangerTest, set_base_configuration_overrides_base_configuration)
 {
     using namespace testing;
 
@@ -528,7 +528,7 @@ TEST_F(MediatingDisplayChangerTest, set_default_display_configuration_overrides_
 
     EXPECT_CALL(mock_display, configure(_)).Times(1);
 
-    changer->set_default_display_configuration(conf);
+    changer->set_base_configuration(conf);
 }
 
 TEST_F(MediatingDisplayChangerTest, stores_new_base_config_on_set_default_configuration)
@@ -558,7 +558,7 @@ TEST_F(MediatingDisplayChangerTest, stores_new_base_config_on_set_default_config
     EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(std::cref(*session_conf))));
     EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(std::cref(*default_conf))));
 
-    changer->set_default_display_configuration(default_conf);
+    changer->set_base_configuration(default_conf);
 
     session_event_sink.handle_focus_change(mock_session1);
     session_event_sink.handle_focus_change(mock_session2);
@@ -566,19 +566,19 @@ TEST_F(MediatingDisplayChangerTest, stores_new_base_config_on_set_default_config
 }
 
 TEST_F(MediatingDisplayChangerTest,
-       returns_updated_base_configuration_after_set_default_configuration)
+       returns_updated_base_configuration_after_set_base_configuration)
 {
     using namespace testing;
 
     mtd::StubDisplayConfig conf{2};
 
-    changer->set_default_display_configuration(mt::fake_shared(conf));
+    changer->set_base_configuration(mt::fake_shared(conf));
 
     auto const base_conf = changer->base_configuration();
     EXPECT_THAT(*base_conf, mt::DisplayConfigMatches(conf));
 }
 
-TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_set_default_configuration)
+TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_set_base_configuration)
 {
     using namespace testing;
 
@@ -592,5 +592,5 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_set_default_configu
     EXPECT_CALL(mock_session1, send_display_config(_));
     EXPECT_CALL(mock_session2, send_display_config(_));
 
-    changer->set_default_display_configuration(mt::fake_shared(conf));
+    changer->set_base_configuration(mt::fake_shared(conf));
 }
