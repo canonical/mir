@@ -145,6 +145,7 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput c
 
     out << "\tscale: " << val.scale << std::endl;
     out << "\tform factor: " << as_string(val.form_factor) << std::endl;
+    out << "\torientation: " << val.orientation << '\n';
     out << "}" << std::endl;
 
     return out;
@@ -221,19 +222,43 @@ bool mg::operator!=(mg::DisplayConfigurationOutput const& val1,
 
 bool mg::operator==(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs)
 {
-    std::vector<std::reference_wrapper<DisplayConfigurationCard const>> lhs_cards;
-    std::vector<std::reference_wrapper<DisplayConfigurationOutput const>> lhs_outputs;
+    std::vector<DisplayConfigurationCard const*> lhs_cards;
+    std::vector<DisplayConfigurationOutput const*> lhs_outputs;
 
-    lhs.for_each_card([&lhs_cards](DisplayConfigurationCard const& card) { lhs_cards.emplace_back(std::ref(card)); });
-    lhs.for_each_output([&lhs_outputs](DisplayConfigurationOutput const& output) { lhs_outputs.emplace_back(std::ref(output)); });
+    lhs.for_each_card([&lhs_cards](DisplayConfigurationCard const& card) { lhs_cards.emplace_back(&card); });
+    lhs.for_each_output([&lhs_outputs](DisplayConfigurationOutput const& output) { lhs_outputs.emplace_back(&output); });
 
-    std::vector<std::reference_wrapper<DisplayConfigurationCard const>> rhs_cards;
-    std::vector<std::reference_wrapper<DisplayConfigurationOutput const>> rhs_outputs;
+    std::vector<DisplayConfigurationCard const*> rhs_cards;
+    std::vector<DisplayConfigurationOutput const*> rhs_outputs;
 
-    rhs.for_each_card([&rhs_cards](DisplayConfigurationCard const& card) { rhs_cards.emplace_back(std::ref(card)); });
-    rhs.for_each_output([&rhs_outputs](DisplayConfigurationOutput const& output) { rhs_outputs.emplace_back(std::ref(output)); });
+    rhs.for_each_card([&rhs_cards](DisplayConfigurationCard const& card) { rhs_cards.emplace_back(&card); });
+    rhs.for_each_output([&rhs_outputs](DisplayConfigurationOutput const& output) { rhs_outputs.emplace_back(&output); });
 
-    return lhs_cards == rhs_cards && lhs_outputs == rhs_outputs;
+    bool result = rhs_cards.size() == lhs_cards.size();
+
+    if (result)
+    {
+        auto p = begin(rhs_cards);
+        for (auto const& o : lhs_cards)
+        {
+            if (*o != **p++)
+                result = false;
+        }
+    }
+
+    result = result && rhs_outputs.size() == lhs_outputs.size();
+
+    if (result)
+    {
+        auto p = begin(rhs_outputs);
+        for (auto const& o : lhs_outputs)
+        {
+            if (*o != **p++)
+                result = false;
+        }
+    }
+
+    return result;
 }
 
 bool mg::operator!=(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs)
