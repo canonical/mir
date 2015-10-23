@@ -37,12 +37,18 @@ struct Primitive
     enum {max_vertices = 4};
 
     Primitive()
-        : type(GL_TRIANGLE_FAN), nvertices(4)
+        : type(GL_TRIANGLE_FAN)
+        , blend_func_src(GL_ONE)
+        , blend_func_dst(GL_ONE_MINUS_SRC_ALPHA)
+        , nvertices(4)
     {
         // Default is a quad. Just need to assign vertices[] and tex_id.
     }
 
     GLenum type; // GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES etc
+    // We assume glBlendEquation is always GL_FUNC_ADD...
+    GLenum blend_func_src;
+    GLenum blend_func_dst;
     GLuint tex_id;  // GL texture ID (or 0 to represent the surface itself)
     int nvertices;
     Vertex vertices[max_vertices];
