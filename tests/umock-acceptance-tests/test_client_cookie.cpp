@@ -81,8 +81,7 @@ void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
 }
 }
 
-// TODO replace with fake input devices or wait until umockdev supports libinput
-TEST_F(ClientCookies, DISABLED_keyboard_events_have_attestable_cookies)
+TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
 {
     mock_devices.load_device_evemu("laptop-keyboard-hello");
 
