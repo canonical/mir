@@ -247,18 +247,23 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
     {
         if (p.tex_id == 0)   // The client surface texture
         {
-            if (renderable.shaped())  // The texture's alpha channel is valid
-            {
+            if (renderable.shaped())
+            {   // The texture contains a valid alpha channel:
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             }
             else if (renderable.alpha() == 1.0f)
-            {
+            {   // The texture's alpha channel is uninitialized (opaque) and
+                // no window translucency is active either:
                 glDisable(GL_BLEND);
             }
-            else  // alpha channel is uninitialized but opacity enabled
-            {
+            else
+            {   // Window is translucent but the texture alpha channel is
+                // uninitialized and so should not be used:
                 glEnable(GL_BLEND);
+
+                // FIXME? GL_ONE_MINUS_SRC_ALPHA sounds wrong. Might need
+                //        to modify alpha_fshader above.
                 glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA,
                                     GL_ZERO, GL_ONE);
             }
