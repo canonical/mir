@@ -701,10 +701,10 @@ MIR_SERVER_unreleased {
     extern "C++"{
       mir::input::PointerConfiguration::PointerConfiguration*;
       mir::input::PointerConfiguration::?PointerConfiguration*;
-      mir::input::PointerConfiguration::primary_button*;
-      mir::input::PointerConfiguration::cursor_speed*;
-      mir::input::PointerConfiguration::vertical_scroll_speed*;
-      mir::input::PointerConfiguration::horizontal_scroll_speed*;
+      mir::input::PointerConfiguration::handedness*;
+      mir::input::PointerConfiguration::cursor_acceleration_bias*;
+      mir::input::PointerConfiguration::vertical_scroll_scale*;
+      mir::input::PointerConfiguration::horizontal_scroll_scale*;
       mir::input::TouchpadConfiguration::TouchpadConfiguration*;
       mir::input::TouchpadConfiguration::?TouchpadConfiguration*;
       mir::input::TouchpadConfiguration::click_mode*;
