@@ -39,7 +39,7 @@ namespace
 class LargeDisplayConfigChanger : public mtd::NullDisplayChanger
 {
 public:
-    std::shared_ptr<mg::DisplayConfiguration> active_configuration() override
+    std::shared_ptr<mg::DisplayConfiguration> base_configuration() override
     {
         return mt::fake_shared(stub_display_config);
     }

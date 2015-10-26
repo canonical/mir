@@ -33,11 +33,16 @@ struct WaitCondition
 {
     WaitCondition() : woken_(false) {}
 
-    void wait_for_at_most_seconds(int seconds)
+    void wait_for_at_most_seconds(std::chrono::seconds const& seconds)
     {
         std::unique_lock<std::mutex> ul(guard);
-        condition.wait_for(ul, std::chrono::seconds(seconds),
+        condition.wait_for(ul, seconds,
                            [this] { return woken_; });
+    }
+
+    void wait_for_at_most_seconds(int seconds)
+    {
+        wait_for_at_most_seconds(std::chrono::seconds(seconds));
     }
 
     void wake_up_everyone()

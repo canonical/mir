@@ -54,6 +54,10 @@ public:
     void start(InputSink* sink, EventBuilder* builder) override;
     void stop() override;
     InputDeviceInfo get_device_info() override;
+    optional_value<PointerSettings> get_pointer_settings() const override;
+    void apply_settings(PointerSettings const&) override;
+    optional_value<TouchpadSettings> get_touchpad_settings() const override;
+    void apply_settings(TouchpadSettings const&) override;
 
     void process_event(libinput_event* event);
     ::libinput_device* device() const;
@@ -86,6 +90,8 @@ private:
     mir::geometry::Point pointer_pos;
     MirInputEventModifiers modifier_state;
     MirPointerButtons button_state;
+    double vertical_scroll_scale{1.0};
+    double horizontal_scroll_scale{1.0};
 
     struct ContactData
     {

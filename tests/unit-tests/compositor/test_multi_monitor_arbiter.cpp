@@ -37,8 +37,10 @@ struct MockBufferMap : mf::ClientBuffers
 {
     MOCK_METHOD1(add_buffer, mg::BufferID(mg::BufferProperties const&));
     MOCK_METHOD1(remove_buffer, void(mg::BufferID id));
+    MOCK_METHOD1(receive_buffer, void(mg::BufferID id));
     MOCK_METHOD1(send_buffer, void(mg::BufferID id));
     MOCK_METHOD1(at, std::shared_ptr<mg::Buffer>&(mg::BufferID));
+    MOCK_CONST_METHOD0(client_owned_buffer_count, size_t());
     std::shared_ptr<mg::Buffer>& operator[](mg::BufferID id) { return at(id); }
 };
 
@@ -442,4 +444,36 @@ TEST_F(MultiMonitorArbiter, other_compositor_ready_status_advances_with_fastest_
     arbiter.compositor_release(b1);
     EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id1));
     EXPECT_FALSE(arbiter.buffer_ready_for(&comp_id2));
+}
+
+TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_overlay_scenario)
+{
+    int comp_id1{0};
+    schedule.set_schedule({buffers[0], buffers[1], buffers[0], buffers[1]});
+
+    EXPECT_CALL(mock_map, send_buffer(buffers[0]->id()));
+    auto b1 = arbiter.compositor_acquire(&comp_id1);
+    auto b2 = arbiter.compositor_acquire(&comp_id1);
+    EXPECT_THAT(b1, Eq(buffers[0]));
+    EXPECT_THAT(b2, Eq(buffers[1]));
+    arbiter.compositor_release(b1);
+    arbiter.compositor_release(b2);
 } 
+
+TEST_F(MultiMonitorArbiter, can_advance_buffer_manually)
+{
+    int comp_id1{0};
+    int comp_id2{0};
+    schedule.set_schedule({buffers[0], buffers[1], buffers[2]});
+
+    arbiter.advance_schedule();
+    arbiter.advance_schedule();
+
+    auto b1 = arbiter.compositor_acquire(&comp_id1);
+    auto b2 = arbiter.compositor_acquire(&comp_id2);
+    EXPECT_THAT(b1->id(), Eq(buffers[1]->id()));
+    EXPECT_THAT(b2->id(), Eq(buffers[1]->id()));
+
+    auto b3 = arbiter.compositor_acquire(&comp_id1);
+    EXPECT_THAT(b3->id(), Eq(buffers[2]->id()));
+}

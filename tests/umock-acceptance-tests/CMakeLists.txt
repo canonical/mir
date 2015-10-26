@@ -10,7 +10,6 @@ include_directories(
 mir_add_wrapped_executable(
   mir_umock_acceptance_tests
 
-  test_client_cookie.cpp
   test_libinput.cpp
   )
 

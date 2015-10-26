@@ -22,6 +22,7 @@
 #include "mir_test_framework/fake_input_device.h"
 
 #include "mir/input/input_device.h"
+#include "mir/input/pointer_settings.h"
 #include "mir/input/input_device_info.h"
 #include "mir/geometry/point.h"
 
@@ -64,6 +65,11 @@ private:
             return info;
         }
 
+        mir::optional_value<mir::input::PointerSettings> get_pointer_settings() const override;
+        void apply_settings(mir::input::PointerSettings const& settings) override;
+        mir::optional_value<mir::input::TouchpadSettings> get_touchpad_settings() const override;
+        void apply_settings(mir::input::TouchpadSettings const& settings) override;
+
     private:
         MirPointerAction update_buttons(synthesis::EventAction action, MirPointerButton button);
         void update_position(int rel_x, int rel_y);
@@ -76,6 +82,7 @@ private:
         uint32_t modifiers{0};
         mir::geometry::Point pos, scroll;
         MirPointerButtons buttons;
+        mir::input::PointerSettings settings;
     };
     std::shared_ptr<mir::dispatch::ActionQueue> queue;
     std::shared_ptr<InputDevice> device;

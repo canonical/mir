@@ -180,6 +180,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirclient9 (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
+         libmircookie-dev (= ${binary:Version}),
          libprotobuf-dev (>= 2.4.1),
          ${misc:Depends},
 Description: Display server for Ubuntu - development headers

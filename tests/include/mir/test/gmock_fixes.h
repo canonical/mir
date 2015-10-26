@@ -142,6 +142,29 @@ class DefaultValue<std::unique_ptr<T, void(*)(T*)>> {
   }
 };
 
+template<typename T, typename D>
+class DefaultValue<std::unique_ptr<T, D>> {
+ public:
+  // Unsets the default value for type T.
+  static void Clear() {}
+
+  // Returns true if the user has set the default value for type T.
+  static bool IsSet() { return false; }
+
+  // Returns true if T has a default return value set by the user or there
+  // exists a built-in default value.
+  static bool Exists() {
+    return true;
+  }
+
+  // Returns the default value for type T if the user has set one;
+  // otherwise returns the built-in default value if there is one;
+  // otherwise aborts the process.
+  static std::unique_ptr<T, D> Get() {
+    return std::unique_ptr<T, D>();
+  }
+};
+
 
 
 }

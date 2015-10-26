@@ -57,6 +57,9 @@ struct StubBufferMap : mf::ClientBuffers
     void with_buffer(mg::BufferID, std::function<void(mg::Buffer&)> const&)
     {
     }
+    void receive_buffer(mg::BufferID)
+    {
+    }
     void send_buffer(mg::BufferID id)
     {
         sink.send_buffer(mf::BufferStreamId{33}, *operator[](id), mg::BufferIpcMsgType::update_msg);
@@ -71,6 +74,10 @@ struct StubBufferMap : mf::ClientBuffers
         if (it == buffers.end())
             throw std::logic_error("cannot find buffer in map");
         return *it;
+    }
+    size_t client_owned_buffer_count() const
+    {
+        return 0;
     }
     std::vector<std::shared_ptr<mg::Buffer>>& buffers;
     mf::EventSink& sink;
@@ -202,6 +209,22 @@ TEST_F(Stream, flattens_queue_out_when_told_to_drop)
     stream.drop_old_buffers();
     stream.lock_compositor_buffer(this);
     EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(0));
+}
+
+TEST_F(Stream, forces_a_new_buffer_when_told_to_drop_buffers)
+{
+    int that{0};
+    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
+    stream.swap_buffers(buffers[1].get(), [](mg::Buffer*){});
+    stream.swap_buffers(buffers[2].get(), [](mg::Buffer*){});
+
+    auto a = stream.lock_compositor_buffer(this);
+    stream.drop_old_buffers();
+    auto b = stream.lock_compositor_buffer(&that);
+    auto c = stream.lock_compositor_buffer(this);
+    EXPECT_THAT(b->id(), Eq(c->id()));
+    EXPECT_THAT(a->id(), Ne(b->id())); 
+    EXPECT_THAT(a->id(), Ne(c->id())); 
 }
 
 TEST_F(Stream, ignores_nullptr_submissions) //legacy behavior

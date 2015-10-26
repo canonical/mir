@@ -317,7 +317,7 @@ TEST_F(ThreadedDispatcherTest, sets_thread_names_appropriately)
 // The bug involves uninitialized memory and is also sensitive to signal
 // timings, so this test does not always catch the problem. However, repeated
 // runs (~300, YMMV) consistently fail when run against the problematic code.
-TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
+TEST(ThreadedDispatcherSignalTest, DISABLED_keeps_dispatching_after_signal_interruption)
 {
     using namespace std::chrono_literals;
     mt::CrossProcessAction stop_and_restart_process;
