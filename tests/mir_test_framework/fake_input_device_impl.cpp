@@ -23,6 +23,7 @@
 #include "mir/input/input_device_info.h"
 #include "mir/input/input_sink.h"
 #include "mir/input/pointer_settings.h"
+#include "mir/input/touchpad_settings.h"
 #include "mir/input/event_builder.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/geometry/displacement.h"
@@ -244,6 +245,21 @@ void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::PointerSettings c
     if (!contains(info.capabilities, mi::DeviceCapability::pointer))
         return;
     this->settings = settings;
+}
+
+mir::optional_value<mi::TouchpadSettings> mtf::FakeInputDeviceImpl::InputDevice::get_touchpad_settings() const
+{
+    mir::optional_value<mi::TouchpadSettings> ret;
+    if (contains(info.capabilities, mi::DeviceCapability::pointer))
+        ret = mi::TouchpadSettings();
+
+    return ret;
+}
+
+void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::TouchpadSettings const&)
+{
+    // Not applicable for configuration since FakeInputDevice just
+    // forwards already interpreted events.
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(float& x, float& y)
