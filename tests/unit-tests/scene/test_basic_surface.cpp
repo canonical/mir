@@ -995,3 +995,45 @@ TEST_F(BasicSurfaceTest, buffer_streams_produce_correctly_sized_renderables)
     EXPECT_THAT(renderables[0], IsRenderableOfSize(size0));
     EXPECT_THAT(renderables[1], IsRenderableOfSize(size1));
 }
+
+namespace
+{
+struct VisibilityObserver : ms::NullSurfaceObserver
+{
+    void attrib_changed(MirSurfaceAttrib attrib, int value) override
+    {
+        if (attrib == mir_surface_attrib_visibility)
+        {
+            if (value == mir_surface_visibility_occluded)
+                hides_++;
+            else if (value == mir_surface_visibility_exposed)
+                exposes_++;
+        }
+    }
+    unsigned int exposes()
+    {
+        return exposes_;
+    }
+    unsigned int hides()
+    {
+        return hides_;
+    }
+private:
+    unsigned int exposes_{0};
+    unsigned int hides_{0};
+};
+}
+
+TEST_F(BasicSurfaceTest, notifies_when_first_visible)
+{
+    using namespace testing;
+    auto observer = std::make_shared<VisibilityObserver>();
+    surface.add_observer(observer);
+
+    EXPECT_THAT(observer->exposes(), Eq(0));
+    EXPECT_THAT(observer->hides(), Eq(0));
+
+    post_a_frame(surface);
+    EXPECT_THAT(observer->exposes(), Eq(1));
+    EXPECT_THAT(observer->hides(), Eq(0));
+}

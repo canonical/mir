@@ -49,11 +49,9 @@ public:
     explicit SurfaceHandle(MirSurface* surface) : surface{surface}
     {
         // Swap buffers to ensure surface is visible for event based tests
-        if (mir_surface_is_valid(surface))
-            mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
     }
 
-    ~SurfaceHandle() { if (surface) mir_surface_release_sync(surface); }
+    ~SurfaceHandle() { printf("TRASHING SURFACE\n"); if (surface) mir_surface_release_sync(surface); }
 
     operator MirSurface*() const { return surface; }
     SurfaceHandle(SurfaceHandle&& that) : surface{that.surface} { that.surface = nullptr; }
@@ -74,8 +72,8 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
 {
     SurfaceSpecification() { add_to_environment("MIR_SERVER_ENABLE_INPUT", "OFF"); }
 
-    Rectangle const first_display {{  0, 0}, {640,  480}};
-    Rectangle const second_display{{640, 0}, {640,  480}};
+    Rectangle const first_display {{  0, 0}, {1640,  1480}};
+    Rectangle const second_display{{1640, 0}, {1640,  1480}};
 
     void SetUp() override
     {
@@ -107,15 +105,60 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
         return result;
     }
 
+    void set_visibility(MirSurface* surface, bool visible)
+    {
+        printf("SET VIS\n");
+        std::lock_guard<std::mutex> lk(mutex); 
+        if (visible)
+        {
+            visible_surfaces.push_back(surface);
+            cv.notify_all();
+        }
+    }
+
+    void wait_for_visible(MirSurface* surface)
+    {
+        std::unique_lock<std::mutex> lk(mutex);
+        auto stat = cv.wait_for(lk, std::chrono::seconds(5),
+            [this, surface]{ return visible_surfaces.end() != std::find(visible_surfaces.begin(), visible_surfaces.end(), surface); });
+        if (!stat)
+            throw std::runtime_error("timeout waiting for visibility of surface");
+    }
+
+    std::mutex mutex;
+    std::condition_variable cv;
+    std::vector<MirSurface*> visible_surfaces;
+
+    static void event_callback(MirSurface* surf, MirEvent const* ev, void* context)
+    {
+        printf("EVENT CB\n");
+        if (mir_event_get_type(ev) == mir_event_type_surface)
+        {
+            printf("SURFACE ev %i %i\n", 
+                mir_surface_event_get_attribute(mir_event_get_surface_event(ev)),
+                mir_surface_attrib_visibility);
+            if(mir_surface_event_get_attribute(mir_event_get_surface_event(ev)) == mir_surface_attrib_visibility)
+        {
+            auto ctx = reinterpret_cast<SurfaceSpecification*>(context);
+            ctx->set_visibility(surf, mir_surface_event_get_attribute_value(mir_event_get_surface_event(ev)));
+        }
+        }
+    }
+
     template<typename Specifier>
-    SurfaceHandle create_surface(Specifier const& specifier) const
+    SurfaceHandle create_surface(Specifier const& specifier)
     {
         auto const spec = mir_create_surface_spec(connection);
-
+        mir_surface_spec_set_event_handler(spec, SurfaceSpecification::event_callback, this);
         specifier(spec);
 
         auto const surface = mir_surface_create_sync(spec);
         mir_surface_spec_release(spec);
+
+        printf("WAIT FOR VISIBLE\n");
+        if (mir_surface_is_valid(surface))
+            mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        wait_for_visible(surface);
 
         return SurfaceHandle{surface};
     }
@@ -437,10 +480,12 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_height_and_height_inc_is_resp
     Size actual;
     EXPECT_CALL(surface_observer, resized_to(_)).WillOnce(SaveArg<0>(&actual));
 
+    printf("CLIKKING\n");
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(bottom_right + DeltaY(16));
 
     EXPECT_TRUE((actual.height.as_int() - min_height) % height_inc == 0);
+    printf("ENDIt\n");
 }
 
 TEST_F(SurfaceSpecification, surface_spec_with_min_aspect_ratio_is_respected)
