@@ -26,6 +26,7 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/pointer_settings.h"
+#include "mir/input/touchpad_settings.h"
 #include "mir/input/device.h"
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_device_observer.h"
@@ -88,6 +89,8 @@ struct MockInputDevice : public mi::InputDevice
     MOCK_METHOD0(get_device_info, mi::InputDeviceInfo());
     MOCK_CONST_METHOD0(get_pointer_settings, mir::optional_value<mi::PointerSettings>());
     MOCK_METHOD1(apply_settings, void(mi::PointerSettings const&));
+    MOCK_CONST_METHOD0(get_touchpad_settings, mir::optional_value<mi::TouchpadSettings>());
+    MOCK_METHOD1(apply_settings, void(mi::TouchpadSettings const&));
 };
 
 template<typename Type>
