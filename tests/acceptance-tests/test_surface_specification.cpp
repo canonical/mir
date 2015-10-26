@@ -51,7 +51,7 @@ public:
         // Swap buffers to ensure surface is visible for event based tests
     }
 
-    ~SurfaceHandle() { printf("TRASHING SURFACE\n"); if (surface) mir_surface_release_sync(surface); }
+    ~SurfaceHandle() { if (surface) mir_surface_release_sync(surface); }
 
     operator MirSurface*() const { return surface; }
     SurfaceHandle(SurfaceHandle&& that) : surface{that.surface} { that.surface = nullptr; }
@@ -107,7 +107,6 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
 
     void set_visibility(MirSurface* surface, bool visible)
     {
-        printf("SET VIS\n");
         std::lock_guard<std::mutex> lk(mutex); 
         if (visible)
         {
@@ -131,12 +130,8 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
 
     static void event_callback(MirSurface* surf, MirEvent const* ev, void* context)
     {
-        printf("EVENT CB\n");
         if (mir_event_get_type(ev) == mir_event_type_surface)
         {
-            printf("SURFACE ev %i %i\n", 
-                mir_surface_event_get_attribute(mir_event_get_surface_event(ev)),
-                mir_surface_attrib_visibility);
             if(mir_surface_event_get_attribute(mir_event_get_surface_event(ev)) == mir_surface_attrib_visibility)
         {
             auto ctx = reinterpret_cast<SurfaceSpecification*>(context);
@@ -155,7 +150,6 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
         auto const surface = mir_surface_create_sync(spec);
         mir_surface_spec_release(spec);
 
-        printf("WAIT FOR VISIBLE\n");
         if (mir_surface_is_valid(surface))
             mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
         wait_for_visible(surface);
@@ -480,12 +474,10 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_height_and_height_inc_is_resp
     Size actual;
     EXPECT_CALL(surface_observer, resized_to(_)).WillOnce(SaveArg<0>(&actual));
 
-    printf("CLIKKING\n");
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(bottom_right + DeltaY(16));
 
     EXPECT_TRUE((actual.height.as_int() - min_height) % height_inc == 0);
-    printf("ENDIt\n");
 }
 
 TEST_F(SurfaceSpecification, surface_spec_with_min_aspect_ratio_is_respected)

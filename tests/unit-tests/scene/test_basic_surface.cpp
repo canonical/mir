@@ -1032,8 +1032,9 @@ TEST_F(BasicSurfaceTest, notifies_when_first_visible)
 
     EXPECT_THAT(observer->exposes(), Eq(0));
     EXPECT_THAT(observer->hides(), Eq(0));
-
     post_a_frame(surface);
+    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
+
     EXPECT_THAT(observer->exposes(), Eq(1));
     EXPECT_THAT(observer->hides(), Eq(0));
 }
