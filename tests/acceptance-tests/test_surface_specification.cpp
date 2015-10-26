@@ -47,7 +47,6 @@ class SurfaceHandle
 {
 public:
     explicit SurfaceHandle(MirSurfaceSpec* spec) :
-        surface{surface},
         visible{false}
     {
         mir_surface_spec_set_event_handler(spec, SurfaceHandle::event_callback, this);
