@@ -166,6 +166,50 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
     renderer.render(renderable_list);
 }
 
+TEST_F(GLRenderer, enables_blending_for_rgba_surfaces)
+{
+    EXPECT_CALL(*renderable, shaped()).WillOnce(Return(true));
+    EXPECT_CALL(mock_gl, glDisable(GL_BLEND)).Times(0);
+    EXPECT_CALL(mock_gl, glEnable(GL_BLEND));
+
+    mrg::Renderer renderer(display_buffer);
+    renderer.render(renderable_list);
+}
+
+TEST_F(GLRenderer, enables_blending_for_rgbx_translucent_surfaces)
+{
+    EXPECT_CALL(*renderable, alpha()).WillRepeatedly(Return(0.5f));
+    EXPECT_CALL(*renderable, shaped()).WillOnce(Return(false));
+    EXPECT_CALL(mock_gl, glDisable(GL_BLEND)).Times(0);
+    EXPECT_CALL(mock_gl, glEnable(GL_BLEND));
+
+    mrg::Renderer renderer(display_buffer);
+    renderer.render(renderable_list);
+}
+
+TEST_F(GLRenderer, uses_premultiplied_src_alpha_for_rgba_surfaces)
+{
+    EXPECT_CALL(*renderable, shaped()).WillOnce(Return(true));
+    EXPECT_CALL(mock_gl, glDisable(GL_BLEND)).Times(0);
+    EXPECT_CALL(mock_gl, glEnable(GL_BLEND));
+    EXPECT_CALL(mock_gl, glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
+
+    mrg::Renderer renderer(display_buffer);
+    renderer.render(renderable_list);
+}
+
+TEST_F(GLRenderer, avoids_src_alpha_for_rgbx_blending)  // LP: #1423462
+{
+    EXPECT_CALL(*renderable, alpha()).WillRepeatedly(Return(0.5f));
+    EXPECT_CALL(*renderable, shaped()).WillOnce(Return(false));
+    EXPECT_CALL(mock_gl, glDisable(GL_BLEND)).Times(0);
+    EXPECT_CALL(mock_gl, glEnable(GL_BLEND));
+    EXPECT_CALL(mock_gl, glBlendFunc(GL_ONE, GL_ONE_MINUS_CONSTANT_ALPHA));
+
+    mrg::Renderer renderer(display_buffer);
+    renderer.render(renderable_list);
+}
+
 TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
 {
     //'listening to the tests', it would be a bit easier to use a tessellator mock of some sort
