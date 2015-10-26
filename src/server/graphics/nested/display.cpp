@@ -29,6 +29,8 @@
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
+#include "mir_toolkit/mir_blob.h"
+#include "mir_toolkit/mir_connection.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -145,6 +147,20 @@ mgn::detail::DisplaySyncGroup::recommended_sleep() const
     return std::chrono::milliseconds::zero();
 }
 
+namespace
+{
+auto copy_config(MirDisplayConfiguration* conf) -> std::shared_ptr<MirDisplayConfiguration>
+{
+    std::shared_ptr<MirBlob> const blob{
+        mir_blob_from_display_configuration(conf),
+        [] (MirBlob* b) { mir_blob_release(b); }};
+
+    return std::shared_ptr<MirDisplayConfiguration>{
+        mir_blob_to_display_configuration(blob.get()),
+        [] (MirDisplayConfiguration* c) { if (c) mir_display_config_destroy(c); }};
+}
+}
+
 mgn::Display::Display(
     std::shared_ptr<mg::Platform> const& platform,
     std::shared_ptr<HostConnection> const& connection,
@@ -159,12 +175,13 @@ mgn::Display::Display(
     display_report{display_report},
     egl_display{connection->egl_native_display(), gl_config},
     cursor_listener{cursor_listener},
-    outputs{}
+    outputs{},
+    current_configuration(std::make_unique<NestedDisplayConfiguration>(connection->create_display_config()))
 {
     std::shared_ptr<DisplayConfiguration> conf(configuration());
     initial_conf_policy->apply_to(*conf);
 
-    if (*configuration() != *conf)
+    if (*current_configuration != *conf)
         apply_to_connection(*conf);
 
     create_surfaces(*conf);
@@ -185,8 +202,8 @@ void mgn::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 
 std::unique_ptr<mg::DisplayConfiguration> mgn::Display::configuration() const
 {
-    return std::make_unique<NestedDisplayConfiguration>(
-        connection->create_display_config());
+    std::lock_guard<std::mutex> lock(configuration_mutex);
+    return std::make_unique<NestedDisplayConfiguration>(copy_config(*current_configuration));
 }
 
 void mgn::Display::complete_display_initialization(MirPixelFormat format)
@@ -199,7 +216,8 @@ void mgn::Display::complete_display_initialization(MirPixelFormat format)
 
 void mgn::Display::configure(mg::DisplayConfiguration const& configuration)
 {
-    if (*this->configuration() != configuration)
+    std::lock_guard<std::mutex> lock(configuration_mutex);
+    if (*current_configuration != configuration)
     {
         apply_to_connection(configuration);
         create_surfaces(configuration);
@@ -261,6 +279,8 @@ void mgn::Display::apply_to_connection(mg::DisplayConfiguration const& configura
     auto const& conf = dynamic_cast<NestedDisplayConfiguration const&>(configuration);
 
     connection->apply_display_config(*conf);
+
+    current_configuration = std::make_unique<NestedDisplayConfiguration>(copy_config(conf));
 }
 
 void mgn::Display::register_configuration_change_handler(
