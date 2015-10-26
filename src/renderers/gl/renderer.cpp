@@ -243,35 +243,34 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
 
     auto surface_tex = texture_cache->load(renderable);
 
+    bool const have_src_alpha = renderable.shaped(); // see also LP: #1236224
+    bool const have_const_alpha = renderable.alpha() < 1.0f;
+    if (have_const_alpha)
+        glBlendColor(0.0f, 0.0f, 0.0f, renderable.alpha());
+
     for (auto const& p : primitives)
     {
         if (p.tex_id == 0)   // The client surface texture
         {
-            if (renderable.shaped())
-            {   // The texture contains a valid alpha channel:
+            if (have_src_alpha || have_const_alpha)
+            {
                 glEnable(GL_BLEND);
-                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-            }
-            else if (renderable.alpha() == 1.0f)
-            {   // The texture's alpha channel is uninitialized (opaque) and
-                // no window translucency is active either:
-                glDisable(GL_BLEND);
+                // If you don't have src_alpha (ie. are RGBX rather than RGBA)
+                // then don't read the uninitialized 'X' bytes (LP: #1423462)
+                glBlendFunc(GL_ONE, have_src_alpha ?
+                                    GL_ONE_MINUS_SRC_ALPHA :
+                                    GL_ONE_MINUS_CONSTANT_ALPHA);
             }
             else
-            {   // Window is translucent but the texture alpha channel is
-                // uninitialized and so should not be used:
-                glEnable(GL_BLEND);
-
-                // FIXME? GL_ONE_MINUS_SRC_ALPHA sounds wrong. Might need
-                //        to modify alpha_fshader above.
-                glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA,
-                                    GL_ZERO, GL_ONE);
+            {
+                glDisable(GL_BLEND);
             }
+
             surface_tex->bind();
         }
         else   // Some other texture from the shell (e.g. decorations)
         {
-            // We assume all decorations are full RGBA for now...
+            // We assume for now all shell-added textures are RGBA.
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             glBindTexture(GL_TEXTURE_2D, p.tex_id);
