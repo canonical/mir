@@ -528,14 +528,16 @@ EGLNativeWindowType mcl::BufferStream::egl_native_window()
 
 void mcl::BufferStream::release_cpu_region()
 {
+    std::unique_lock<decltype(mutex)> lock(mutex);
     secured_region.reset();
 }
 
 std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 {
+    auto buffer = buffer_depository->current_buffer();
     std::unique_lock<decltype(mutex)> lock(mutex);
 
-    secured_region = buffer_depository->current_buffer()->secure_for_cpu_write();
+    secured_region = buffer->secure_for_cpu_write();
     return secured_region;
 }
 
