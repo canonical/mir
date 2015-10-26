@@ -192,7 +192,8 @@ TEST_F(GLRenderer, uses_premultiplied_src_alpha_for_rgba_surfaces)
     EXPECT_CALL(*renderable, shaped()).WillOnce(Return(true));
     EXPECT_CALL(mock_gl, glDisable(GL_BLEND)).Times(0);
     EXPECT_CALL(mock_gl, glEnable(GL_BLEND));
-    EXPECT_CALL(mock_gl, glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
+    EXPECT_CALL(mock_gl, glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA,
+                                             GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
 
     mrg::Renderer renderer(display_buffer);
     renderer.render(renderable_list);
@@ -204,7 +205,9 @@ TEST_F(GLRenderer, avoids_src_alpha_for_rgbx_blending)  // LP: #1423462
     EXPECT_CALL(*renderable, shaped()).WillOnce(Return(false));
     EXPECT_CALL(mock_gl, glDisable(GL_BLEND)).Times(0);
     EXPECT_CALL(mock_gl, glEnable(GL_BLEND));
-    EXPECT_CALL(mock_gl, glBlendFunc(GL_ONE, GL_ONE_MINUS_CONSTANT_ALPHA));
+    EXPECT_CALL(mock_gl,
+                glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_CONSTANT_ALPHA,
+                                    GL_ZERO, GL_ONE));
 
     mrg::Renderer renderer(display_buffer);
     renderer.render(renderable_list);

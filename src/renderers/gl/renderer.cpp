@@ -174,6 +174,8 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
     mir::log_info("GL framebuffer bits: RGBA=%d%d%d%d, depth=%d, stencil=%d",
                   rbits, gbits, bbits, abits, dbits, sbits);
 
+    framebuffer_alpha_bits = abits;
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     set_viewport(display_buffer.view_area());
@@ -243,36 +245,46 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
 
     auto surface_tex = texture_cache->load(renderable);
 
-    GLenum client_blend_func_dest;
+    typedef struct  // Represents parameters of glBlendFuncSeparate()
+    {
+        GLenum src_rgb, dst_rgb, src_alpha, dst_alpha;
+    } BlendSeparate;
+
+    BlendSeparate client_blend;
+
     // These renderable method names could be better (see LP: #1236224)
     if (renderable.shaped())  // Client is RGBA:
     {
-        client_blend_func_dest = GL_ONE_MINUS_SRC_ALPHA;
+        client_blend = {GL_ONE, GL_ONE_MINUS_SRC_ALPHA,
+                        GL_ONE, GL_ONE_MINUS_SRC_ALPHA};
     }
     else if (renderable.alpha() == 1.0f)  // RGBX and no window translucency:
     {
-        client_blend_func_dest = GL_ZERO;
+        client_blend = {GL_ONE,  GL_ZERO,
+                        GL_ZERO, GL_ONE};  // Avoid using src_alpha!
     }
     else
     {   // Client is RGBX but we also have window translucency.
         // The texture alpha channel is possibly uninitialized so we must be
         // careful and avoid using SRC_ALPHA (LP: #1423462).
-        client_blend_func_dest = GL_ONE_MINUS_CONSTANT_ALPHA;
+        client_blend = {GL_ONE,  GL_ONE_MINUS_CONSTANT_ALPHA,
+                        GL_ZERO, GL_ONE};
         glBlendColor(0.0f, 0.0f, 0.0f, renderable.alpha());
     }
 
     for (auto const& p : primitives)
     {
-        GLenum blend_func_dest;
+        BlendSeparate blend;
 
         if (p.tex_id == 0)   // The client surface texture
         {
-            blend_func_dest = client_blend_func_dest;
+            blend = client_blend;
             surface_tex->bind();
         }
         else   // Some other texture from the shell (e.g. decorations) which
         {      // is always RGBA (valid SRC_ALPHA).
-            blend_func_dest = GL_ONE_MINUS_SRC_ALPHA;
+            blend = {GL_ONE, GL_ONE_MINUS_SRC_ALPHA,
+                     GL_ONE, GL_ONE_MINUS_SRC_ALPHA};
             glBindTexture(GL_TEXTURE_2D, p.tex_id);
         }
 
@@ -283,15 +295,13 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
                               GL_FALSE, sizeof(mgl::Vertex),
                               &p.vertices[0].texcoord);
 
-        if (blend_func_dest == GL_ZERO)
-        {
-            glDisable(GL_BLEND);
-        }
-        else
-        {
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_ONE, blend_func_dest);
-        }
+        glBlendFuncSeparate(blend.src_rgb,   blend.dst_rgb,
+                            blend.src_alpha, blend.dst_alpha);
+
+        if (blend.dst_rgb == GL_ZERO && framebuffer_alpha_bits == 0)
+            glDisable(GL_BLEND); // <- Fastest, but theoretically wrong for a
+        else                     //    framebuffer with an alpha channel.
+            glEnable(GL_BLEND);  // <- Works for all modes
 
         glDrawArrays(p.type, 0, p.nvertices);
     }
