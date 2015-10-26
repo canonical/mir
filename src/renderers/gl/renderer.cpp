@@ -174,8 +174,6 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
     mir::log_info("GL framebuffer bits: RGBA=%d%d%d%d, depth=%d, stencil=%d",
                   rbits, gbits, bbits, abits, dbits, sbits);
 
-    framebuffer_alpha_bits = abits;
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     set_viewport(display_buffer.view_area());
@@ -295,13 +293,16 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
                               GL_FALSE, sizeof(mgl::Vertex),
                               &p.vertices[0].texcoord);
 
-        glBlendFuncSeparate(blend.src_rgb,   blend.dst_rgb,
-                            blend.src_alpha, blend.dst_alpha);
-
-        if (blend.dst_rgb == GL_ZERO && framebuffer_alpha_bits == 0)
-            glDisable(GL_BLEND); // <- Fastest, but theoretically wrong for a
-        else                     //    framebuffer with an alpha channel.
-            glEnable(GL_BLEND);  // <- Works for all modes
+        if (blend.dst_rgb == GL_ZERO)
+        {
+            glDisable(GL_BLEND);
+        }
+        else
+        {
+            glEnable(GL_BLEND);
+            glBlendFuncSeparate(blend.src_rgb,   blend.dst_rgb,
+                                blend.src_alpha, blend.dst_alpha);
+        }
 
         glDrawArrays(p.type, 0, p.nvertices);
     }

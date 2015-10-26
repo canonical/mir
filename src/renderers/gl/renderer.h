@@ -124,7 +124,6 @@ protected:
 private:
     std::unique_ptr<mir::gl::TextureCache> const texture_cache;
     float rotation;
-    GLint framebuffer_alpha_bits;
     geometry::Rectangle viewport;
     glm::mat4 screen_to_gl_coords, screen_rotation;
 
