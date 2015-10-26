@@ -140,3 +140,13 @@ bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
     return schedule->anything_scheduled() ||
        ((current_buffer_users.find(id) == current_buffer_users.end()) && !onscreen_buffers.empty());
 }
+
+void mc::MultiMonitorArbiter::advance_schedule()
+{
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    if (schedule->anything_scheduled())
+    {
+        onscreen_buffers.emplace_front(schedule->next_buffer(), 0);
+        current_buffer_users.clear();
+    } 
+}

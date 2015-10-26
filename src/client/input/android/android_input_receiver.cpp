@@ -28,6 +28,7 @@
 #include <androidfw/InputTransport.h>
 
 #include <sys/timerfd.h>
+#include <sys/eventfd.h>
 #include <system_error>
 #include <cstdlib>
 
@@ -37,12 +38,28 @@ namespace md = mir::dispatch;
 
 namespace mia = mir::input::android;
 
+namespace
+{
+int valid_fd_or_system_error(int fd, char const* message)
+{
+    if (fd < 0)
+        BOOST_THROW_EXCEPTION((std::system_error{errno,
+                                                 std::system_category(),
+                                                 message}));
+    return fd;
+}
+}
+
 mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel,
                                      std::shared_ptr<mircv::XKBMapper> const& keymapper,
                                      std::function<void(MirEvent*)> const& event_handling_callback,
                                      std::shared_ptr<mircv::InputReceiverReport> const& report,
                                      AndroidClock clock)
-  : input_channel(input_channel),
+  : timer_fd{valid_fd_or_system_error(timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC),
+        "Failed to create IO timer")},
+    wake_fd{valid_fd_or_system_error(eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK | EFD_SEMAPHORE),
+        "Failed to create IO wakeup notifier")},
+    input_channel(input_channel),
     handler{event_handling_callback},
     xkb_mapper(keymapper),
     report(report),
@@ -58,33 +75,15 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
     if (env != NULL)
         event_rate_hz = atoi(env);
 
-    timer_fd = mir::Fd{timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC)};
-    if (timer_fd == mir::Fd::invalid)
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                 std::system_category(),
-                                                 "Failed to create IO timer"}));
-    }
-
-    int pipefds[2];
-    if (pipe(pipefds) < 0)
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{errno,
-                                                 std::system_category(),
-                                                 "Failed to create notification pipe for IO"}));
-    }
-    notify_receiver_fd = mir::Fd{pipefds[0]};
-    notify_sender_fd = mir::Fd{pipefds[1]};
-
     dispatcher.add_watch(timer_fd, [this]()
     {
         consume_wake_notification(timer_fd);
         process_and_maybe_send_event();
     });
 
-    dispatcher.add_watch(notify_receiver_fd, [this]()
+    dispatcher.add_watch(wake_fd, [this]()
     {
-        consume_wake_notification(notify_receiver_fd);
+        consume_wake_notification(wake_fd);
         process_and_maybe_send_event();
     });
 
@@ -233,8 +232,8 @@ void mircva::InputReceiver::consume_wake_notification(mir::Fd const& fd)
 
 void mircva::InputReceiver::wake()
 {
-    uint64_t dummy{0};
-    if (write(notify_sender_fd, &dummy, sizeof(dummy)) != sizeof(dummy))
+    uint64_t one{1};
+    if (write(wake_fd, &one, sizeof(one)) != sizeof(one))
     {
         BOOST_THROW_EXCEPTION((std::system_error{errno,
                                                  std::system_category(),
