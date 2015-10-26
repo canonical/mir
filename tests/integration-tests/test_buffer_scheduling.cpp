@@ -828,7 +828,7 @@ TEST_P(WithTwoOrMoreBuffers, nonframedropping_client_throttles_to_compositor_rat
     EXPECT_THAT(block_count, Ge(expected_blocks));
 }
 
-TEST_P(WithAnyNumberOfBuffers, resize_affects_client_acquires_immediately)
+TEST_P(WithAnyNumberOfBuffersExchangeOnly, resize_affects_client_acquires_immediately)
 {
     unsigned int const sizes_to_test{4};
     geom::Size new_size = properties.size;
@@ -844,7 +844,7 @@ TEST_P(WithAnyNumberOfBuffers, resize_affects_client_acquires_immediately)
     }
 }
 
-TEST_P(WithAnyNumberOfBuffers, compositor_acquires_resized_frames)
+TEST_P(WithAnyNumberOfBuffersExchangeOnly, compositor_acquires_resized_frames)
 {
     unsigned int const sizes_to_test{4};
     int const attempt_limit{100};
