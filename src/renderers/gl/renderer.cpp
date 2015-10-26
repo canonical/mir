@@ -243,12 +243,17 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
 
     auto surface_tex = texture_cache->load(renderable);
 
-    GLenum renderable_blend_func_dest = GL_ONE_MINUS_SRC_ALPHA;
-    if (!renderable.shaped() && renderable.alpha() == 1.0f)
-        renderable_blend_func_dest = GL_ZERO;
-    else if (!renderable.shaped())
-    {   // Renderable is RGBX so the alpha channel is uninitialized bytes
-        renderable_blend_func_dest = GL_ONE_MINUS_CONSTANT_ALPHA;
+    GLenum client_blend_func_dest;
+    // These renderable method names could be better (see LP: #1236224)
+    if (renderable.shaped())  // Client is RGBA:
+        client_blend_func_dest = GL_ONE_MINUS_SRC_ALPHA;
+    else if (renderable.alpha() == 1.0f)  // RGBX and no window translucency:
+        client_blend_func_dest = GL_ZERO;
+    else
+    {   // Client is RGBX but we also have window translucency.
+        // The texture alpha channel is possibly uninitialized so we must be
+        // careful and avoid using SRC_ALPHA (LP: #1423462).
+        client_blend_func_dest = GL_ONE_MINUS_CONSTANT_ALPHA;
         glBlendColor(0.0f, 0.0f, 0.0f, renderable.alpha());
     }
 
@@ -258,7 +263,7 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
 
         if (p.tex_id == 0)   // The client surface texture
         {
-            blend_func_dest = renderable_blend_func_dest;
+            blend_func_dest = client_blend_func_dest;
             surface_tex->bind();
         }
         else   // Some other texture from the shell (e.g. decorations) which
