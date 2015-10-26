@@ -243,36 +243,27 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
 
     auto surface_tex = texture_cache->load(renderable);
 
-    bool const have_src_alpha = renderable.shaped(); // see also LP: #1236224
-    bool const have_const_alpha = renderable.alpha() < 1.0f;
-    if (have_const_alpha)
+    GLenum renderable_blend_func_dest = GL_ONE_MINUS_SRC_ALPHA;
+    if (!renderable.shaped() && renderable.alpha() == 1.0f)
+        renderable_blend_func_dest = GL_ZERO;
+    else if (!renderable.shaped())
+    {   // Renderable is RGBX so the alpha channel is uninitialized bytes
+        renderable_blend_func_dest = GL_ONE_MINUS_CONSTANT_ALPHA;
         glBlendColor(0.0f, 0.0f, 0.0f, renderable.alpha());
+    }
 
     for (auto const& p : primitives)
     {
+        GLenum blend_func_dest;
+
         if (p.tex_id == 0)   // The client surface texture
         {
-            if (have_src_alpha || have_const_alpha)
-            {
-                glEnable(GL_BLEND);
-                // If you don't have src_alpha (ie. are RGBX rather than RGBA)
-                // then don't read the uninitialized 'X' bytes (LP: #1423462)
-                glBlendFunc(GL_ONE, have_src_alpha ?
-                                    GL_ONE_MINUS_SRC_ALPHA :
-                                    GL_ONE_MINUS_CONSTANT_ALPHA);
-            }
-            else
-            {
-                glDisable(GL_BLEND);
-            }
-
+            blend_func_dest = renderable_blend_func_dest;
             surface_tex->bind();
         }
-        else   // Some other texture from the shell (e.g. decorations)
-        {
-            // We assume for now all shell-added textures are RGBA.
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        else   // Some other texture from the shell (e.g. decorations) which
+        {      // is always RGBA (valid SRC_ALPHA).
+            blend_func_dest = GL_ONE_MINUS_SRC_ALPHA;
             glBindTexture(GL_TEXTURE_2D, p.tex_id);
         }
 
@@ -282,6 +273,14 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
         glVertexAttribPointer(prog.texcoord_attr, 2, GL_FLOAT,
                               GL_FALSE, sizeof(mgl::Vertex),
                               &p.vertices[0].texcoord);
+
+        if (blend_func_dest == GL_ZERO)
+            glDisable(GL_BLEND);
+        else
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_ONE, blend_func_dest);
+        }
 
         glDrawArrays(p.type, 0, p.nvertices);
     }
