@@ -234,31 +234,7 @@ bool mg::operator==(DisplayConfiguration const& lhs, DisplayConfiguration const&
     rhs.for_each_card([&rhs_cards](DisplayConfigurationCard const& card) { rhs_cards.emplace_back(card); });
     rhs.for_each_output([&rhs_outputs](DisplayConfigurationOutput const& output) { rhs_outputs.emplace_back(output); });
 
-    bool result = rhs_cards.size() == lhs_cards.size();
-
-    if (result)
-    {
-        auto p = begin(rhs_cards);
-        for (auto const& o : lhs_cards)
-        {
-            if (o != *p++)
-                result = false;
-        }
-    }
-
-    result = result && rhs_outputs.size() == lhs_outputs.size();
-
-    if (result)
-    {
-        auto p = begin(rhs_outputs);
-        for (auto const& o : lhs_outputs)
-        {
-            if (o != *p++)
-                result = false;
-        }
-    }
-
-    return result;
+    return lhs_cards == rhs_cards && lhs_outputs == rhs_outputs;
 }
 
 bool mg::operator!=(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs)
