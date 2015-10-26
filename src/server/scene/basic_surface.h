@@ -182,7 +182,7 @@ private:
     MirSurfaceFocusState focus_ = mir_surface_unfocused;
     int dpi_ = 0;
     MirSurfaceVisibility visibility_ = mir_surface_visibility_exposed;
-    bool unsent_visibility = true;
+    bool unobserved_visibility = true;
     MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
 
     std::unique_ptr<CursorStreamImageAdapter> const cursor_stream_adapter;

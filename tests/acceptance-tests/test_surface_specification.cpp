@@ -46,18 +46,54 @@ namespace
 class SurfaceHandle
 {
 public:
-    explicit SurfaceHandle(MirSurface* surface) : surface{surface}
+    explicit SurfaceHandle(MirSurfaceSpec* spec) :
+        surface{surface},
+        visible{false}
     {
+        mir_surface_spec_set_event_handler(spec, SurfaceHandle::event_callback, this);
+        surface = mir_surface_create_sync(spec);
         // Swap buffers to ensure surface is visible for event based tests
+        if (mir_surface_is_valid(surface))
+        {
+            mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+
+            std::unique_lock<std::mutex> lk(mutex);
+            if (!cv.wait_for(lk, std::chrono::seconds(5), [this] { return visible; }))
+                throw std::runtime_error("timeout waiting for visibility of surface");
+        }
     }
 
     ~SurfaceHandle() { if (surface) mir_surface_release_sync(surface); }
 
+    static void event_callback(MirSurface* surf, MirEvent const* ev, void* context)
+    {
+        if (mir_event_get_type(ev) == mir_event_type_surface)
+        {
+            if (mir_surface_event_get_attribute(mir_event_get_surface_event(ev)) == mir_surface_attrib_visibility)
+            {
+                auto ctx = reinterpret_cast<SurfaceHandle*>(context);
+                ctx->set_visibility(surf, mir_surface_event_get_attribute_value(mir_event_get_surface_event(ev)));
+            }
+        }
+    }
+
+    void set_visibility(MirSurface* surf, bool vis)
+    {
+        std::lock_guard<std::mutex> lk(mutex);
+        if (surf != surface) return;
+        visible = vis;
+        cv.notify_all();
+    }
+
     operator MirSurface*() const { return surface; }
     SurfaceHandle(SurfaceHandle&& that) : surface{that.surface} { that.surface = nullptr; }
 private:
+    std::mutex mutex;
+    std::condition_variable cv;
+
     SurfaceHandle(SurfaceHandle const&) = delete;
     MirSurface* surface;
+    bool visible;
 };
 
 class MockSurfaceObserver : public ms::NullSurfaceObserver
@@ -105,56 +141,13 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
         return result;
     }
 
-    void set_visibility(MirSurface* surface, bool visible)
-    {
-        std::lock_guard<std::mutex> lk(mutex); 
-        if (visible)
-        {
-            visible_surfaces.push_back(surface);
-            cv.notify_all();
-        }
-    }
-
-    void wait_for_visible(MirSurface* surface)
-    {
-        std::unique_lock<std::mutex> lk(mutex);
-        auto stat = cv.wait_for(lk, std::chrono::seconds(5),
-            [this, surface]{ return visible_surfaces.end() != std::find(visible_surfaces.begin(), visible_surfaces.end(), surface); });
-        if (!stat)
-            throw std::runtime_error("timeout waiting for visibility of surface");
-    }
-
-    std::mutex mutex;
-    std::condition_variable cv;
-    std::vector<MirSurface*> visible_surfaces;
-
-    static void event_callback(MirSurface* surf, MirEvent const* ev, void* context)
-    {
-        if (mir_event_get_type(ev) == mir_event_type_surface)
-        {
-            if(mir_surface_event_get_attribute(mir_event_get_surface_event(ev)) == mir_surface_attrib_visibility)
-        {
-            auto ctx = reinterpret_cast<SurfaceSpecification*>(context);
-            ctx->set_visibility(surf, mir_surface_event_get_attribute_value(mir_event_get_surface_event(ev)));
-        }
-        }
-    }
-
     template<typename Specifier>
     SurfaceHandle create_surface(Specifier const& specifier)
     {
-        auto const spec = mir_create_surface_spec(connection);
-        mir_surface_spec_set_event_handler(spec, SurfaceSpecification::event_callback, this);
-        specifier(spec);
-
-        auto const surface = mir_surface_create_sync(spec);
-        mir_surface_spec_release(spec);
-
-        if (mir_surface_is_valid(surface))
-            mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
-        wait_for_visible(surface);
-
-        return SurfaceHandle{surface};
+        auto del = [] (MirSurfaceSpec* spec) { mir_surface_spec_release(spec); };
+        std::unique_ptr<MirSurfaceSpec, decltype(del)> spec(mir_create_surface_spec(connection), del);
+        specifier(spec.get());
+        return SurfaceHandle{spec.get()};
     }
 
     NiceMock<MockSurfaceObserver> surface_observer;
