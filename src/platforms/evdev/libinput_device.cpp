@@ -25,6 +25,8 @@
 #include "mir/input/input_sink.h"
 #include "mir/input/input_report.h"
 #include "mir/input/device_capability.h"
+#include "mir/input/pointer_settings.h"
+#include "mir/input/touchpad_settings.h"
 #include "mir/input/input_device_info.h"
 #include "mir/events/event_builders.h"
 #include "mir/geometry/displacement.h"
@@ -159,7 +161,8 @@ mir::EventUPtr mie::LibInputDevice::convert_button_event(libinput_event_pointer*
     auto const action = (libinput_event_pointer_get_button_state(pointer) == LIBINPUT_BUTTON_STATE_PRESSED)?
         mir_pointer_action_button_down : mir_pointer_action_button_up;
 
-    auto const pointer_button = mie::to_pointer_button(button);
+    auto const do_not_swap_buttons = mir_pointer_handedness_right;
+    auto const pointer_button = mie::to_pointer_button(button, do_not_swap_buttons);
     auto const relative_x_value = 0.0f;
     auto const relative_y_value = 0.0f;
     auto const hscroll_value = 0.0f;
@@ -232,10 +235,12 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
     auto const relative_x_value = 0.0f;
     auto const relative_y_value = 0.0f;
     auto const hscroll_value = libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)
-        ? libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)
+        ? horizontal_scroll_scale * libinput_event_pointer_get_axis_value(pointer,
+                                                                          LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)
         : 0.0f;
     auto const vscroll_value = libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)
-        ? libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)
+        ? vertical_scroll_scale * libinput_event_pointer_get_axis_value(pointer,
+                                                                        LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)
         : 0.0f;
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
@@ -359,4 +364,107 @@ libinput_device_group* mie::LibInputDevice::group()
 libinput_device* mie::LibInputDevice::device() const
 {
     return devices.front().get();
+}
+
+mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settings() const
+{
+    if (!contains(info.capabilities, mi::DeviceCapability::pointer))
+        return {};
+
+    auto dev = device();
+    auto accel_bias = libinput_device_config_accel_get_speed(dev);
+    auto left_handed = (libinput_device_config_left_handed_get(dev) == 1);
+
+    mi::PointerSettings settings;
+    settings.cursor_acceleration_bias = accel_bias;
+    settings.vertical_scroll_scale = vertical_scroll_scale;
+    settings.horizontal_scroll_scale = horizontal_scroll_scale;
+    settings.handedness = left_handed? mir_pointer_handedness_left : mir_pointer_handedness_right;
+    return settings;
+}
+
+void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& settings)
+{
+    if (!contains(info.capabilities, mi::DeviceCapability::pointer))
+        return;
+
+    auto dev = device();
+    libinput_device_config_accel_set_speed(dev, settings.cursor_acceleration_bias);
+    libinput_device_config_left_handed_set(dev, mir_pointer_handedness_left == settings.handedness);
+    vertical_scroll_scale = settings.vertical_scroll_scale;
+    horizontal_scroll_scale = settings.horizontal_scroll_scale;
+}
+
+mir::optional_value<mi::TouchpadSettings> mie::LibInputDevice::get_touchpad_settings() const
+{
+    if (!contains(info.capabilities, mi::DeviceCapability::touchpad))
+        return {};
+
+    auto dev = device();
+    auto click_modes = libinput_device_config_click_get_method(dev);
+    auto scroll_modes = libinput_device_config_scroll_get_method(dev);
+
+    TouchpadSettings settings;
+
+    settings.click_mode = mir_touchpad_click_mode_none;
+    if (click_modes & LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS)
+        settings.click_mode |= mir_touchpad_click_mode_area_to_click;
+    if (click_modes & LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER)
+        settings.click_mode |= mir_touchpad_click_mode_finger_count;
+
+    settings.scroll_mode = mir_touchpad_scroll_mode_none;
+    if (scroll_modes & LIBINPUT_CONFIG_SCROLL_2FG)
+        settings.scroll_mode |= mir_touchpad_scroll_mode_two_finger_scroll;
+    if (scroll_modes & LIBINPUT_CONFIG_SCROLL_EDGE)
+        settings.scroll_mode |= mir_touchpad_scroll_mode_edge_scroll;
+    if (scroll_modes & LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN)
+        settings.scroll_mode |= mir_touchpad_scroll_mode_button_down_scroll;
+
+    settings.tap_to_click = libinput_device_config_tap_get_enabled(dev) == LIBINPUT_CONFIG_TAP_ENABLED;
+    settings.disable_while_typing = libinput_device_config_dwt_get_enabled(dev) == LIBINPUT_CONFIG_DWT_ENABLED;
+    settings.disable_with_mouse =
+        libinput_device_config_send_events_get_mode(dev) == LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE;
+    settings.middle_mouse_button_emulation =
+        libinput_device_config_middle_emulation_get_enabled(dev) == LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED;
+
+    return settings;
+}
+
+void mie::LibInputDevice::apply_settings(mi::TouchpadSettings const& settings)
+{
+    auto dev = device();
+
+    uint32_t click_method = LIBINPUT_CONFIG_CLICK_METHOD_NONE;
+    if (settings.click_mode & mir_touchpad_click_mode_area_to_click)
+        click_method |= LIBINPUT_CONFIG_CLICK_METHOD_BUTTON_AREAS;
+    if (settings.click_mode & mir_touchpad_click_mode_finger_count)
+        click_method |= LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER;
+
+    uint32_t scroll_method = LIBINPUT_CONFIG_CLICK_METHOD_NONE;
+    if (settings.scroll_mode & mir_touchpad_scroll_mode_button_down_scroll)
+    {
+        scroll_method |= LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN;
+        libinput_device_config_scroll_set_button(dev, settings.button_down_scroll_button);
+    }
+    if (settings.scroll_mode & mir_touchpad_scroll_mode_edge_scroll)
+        scroll_method |= LIBINPUT_CONFIG_SCROLL_EDGE;
+    if (settings.scroll_mode & mir_touchpad_scroll_mode_two_finger_scroll)
+        scroll_method |= LIBINPUT_CONFIG_SCROLL_2FG;
+
+    libinput_device_config_click_set_method(dev, static_cast<libinput_config_click_method>(click_method));
+    libinput_device_config_scroll_set_method(dev, static_cast<libinput_config_scroll_method>(scroll_method));
+
+    libinput_device_config_tap_set_enabled(
+        dev, settings.tap_to_click ? LIBINPUT_CONFIG_TAP_ENABLED : LIBINPUT_CONFIG_TAP_DISABLED);
+
+    libinput_device_config_dwt_set_enabled(
+        dev, settings.disable_while_typing ? LIBINPUT_CONFIG_DWT_ENABLED : LIBINPUT_CONFIG_DWT_DISABLED);
+
+    libinput_device_config_send_events_set_mode(dev, settings.disable_with_mouse ?
+                                                         LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE :
+                                                         LIBINPUT_CONFIG_SEND_EVENTS_ENABLED);
+
+    libinput_device_config_middle_emulation_set_enabled(dev, settings.middle_mouse_button_emulation ?
+                                                                 LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED :
+                                                                 LIBINPUT_CONFIG_MIDDLE_EMULATION_DISABLED);
 }

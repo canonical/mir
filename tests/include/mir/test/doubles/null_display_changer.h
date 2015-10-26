@@ -32,7 +32,7 @@ namespace doubles
 class NullDisplayChanger : public frontend::DisplayChanger
 {
 public:
-    virtual std::shared_ptr<graphics::DisplayConfiguration> active_configuration()
+    virtual std::shared_ptr<graphics::DisplayConfiguration> base_configuration()
     {
         return std::make_shared<NullDisplayConfiguration>();
     }
