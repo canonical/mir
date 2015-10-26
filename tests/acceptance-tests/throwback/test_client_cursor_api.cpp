@@ -217,6 +217,7 @@ struct NamedCursorClient : CursorClient
 
 struct TestClientCursorAPI : mtf::HeadlessInProcessServer
 {
+    // mtf::add_fake_input_device needs this library to be loaded each test, for the tests
     mtf::TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str()};
     MockCursor cursor;
     mtf::SurfaceGeometries client_geometries;

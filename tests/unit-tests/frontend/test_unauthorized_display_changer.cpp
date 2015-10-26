@@ -50,13 +50,13 @@ TEST_F(UnauthorizedDisplayChangerTest, access_config)
     using namespace testing;
 
     mtd::NullDisplayConfiguration conf;
-    EXPECT_CALL(underlying_changer, active_configuration())
+    EXPECT_CALL(underlying_changer, base_configuration())
         .Times(1)
         .WillOnce(Return(mt::fake_shared(conf)));
 
     mf::UnauthorizedDisplayChanger changer(mt::fake_shared(underlying_changer));
 
-    auto returned_conf = changer.active_configuration();
+    auto returned_conf = changer.base_configuration();
 
     EXPECT_EQ(&conf, returned_conf.get());
 }

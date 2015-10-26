@@ -36,7 +36,7 @@ class DisplayChanger
 public:
     virtual ~DisplayChanger() = default;
 
-    virtual std::shared_ptr<graphics::DisplayConfiguration> active_configuration() = 0;
+    virtual std::shared_ptr<graphics::DisplayConfiguration> base_configuration() = 0;
     virtual void configure(std::shared_ptr<Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&) = 0;
 
 protected:

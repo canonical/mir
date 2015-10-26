@@ -81,9 +81,8 @@ protected:
 
 private:
     dispatch::MultiplexingDispatchable dispatcher;
-    Fd notify_receiver_fd;
-    Fd notify_sender_fd;
-    Fd timer_fd;
+    Fd const timer_fd;
+    Fd const wake_fd;
 
     droidinput::sp<droidinput::InputChannel> input_channel;
     std::function<void(MirEvent*)> const handler;
