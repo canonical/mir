@@ -166,6 +166,14 @@ void mix::XInputPlatform::process_input_event()
                               xbev.subwindow, xbev.time, xbev.x, xbev.y, xbev.x_root,
                               xbev.y_root, xbev.state, xbev.button, xbev.same_screen);
 #endif
+                if ((xbev.type == ButtonRelease) &&
+                    ((xbev.button == Button4) || (xbev.button == Button5)))
+                {
+#ifdef MIR_ON_X11_INPUT_VERBOSE
+                    mir::log_info("Swallowed");
+#endif
+                    break;
+                }
                 auto event_time =
                     std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds{xbev.time});
 
@@ -189,21 +197,41 @@ void mix::XInputPlatform::process_input_event()
                               "buttons_pressed=0x%0X, event_time=%" PRId64,
                               xbev.x, xbev.y, buttons_pressed, event_time);
 #endif
-                core_pointer->sink->handle_input(
-                    *core_pointer->builder->pointer_event(
-                        event_time,
-                        xbev.type == ButtonPress ?
-                            mir_pointer_action_button_down :
-                            mir_pointer_action_button_up,
-                        buttons_pressed,
-                        xbev.x,
-                        xbev.y,
-                        0.0f,
-                        0.0f,
-                        0.0f,
-                        0.0f
-                        )
-                    );
+
+                if ((xbev.button == Button4) || (xbev.button == Button5))
+                { // scroll event
+                    core_pointer->sink->handle_input(
+                        *core_pointer->builder->pointer_event(
+                            event_time,
+                            mir_pointer_action_motion,
+                            0,
+                            xbev.x,
+                            xbev.y,
+                            0.0f,
+                            (xbev.button == Button4) ? 1.0f : -1.0f,
+                            0.0f,
+                            0.0f
+                            )
+                        );
+                }
+                else
+                {
+                    core_pointer->sink->handle_input(
+                        *core_pointer->builder->pointer_event(
+                            event_time,
+                            xbev.type == ButtonPress ?
+                                mir_pointer_action_button_down :
+                                mir_pointer_action_button_up,
+                            buttons_pressed,
+                            xbev.x,
+                            xbev.y,
+                            0.0f,
+                            0.0f,
+                            0.0f,
+                            0.0f
+                            )
+                        );
+                }
                 break;
             }
 
