@@ -163,6 +163,10 @@ mgn::Display::Display(
 {
     std::shared_ptr<DisplayConfiguration> conf(configuration());
     initial_conf_policy->apply_to(*conf);
+
+    if (*configuration() != *conf)
+        apply_to_connection(*conf);
+
     create_surfaces(*conf);
 }
 
@@ -195,8 +199,11 @@ void mgn::Display::complete_display_initialization(MirPixelFormat format)
 
 void mgn::Display::configure(mg::DisplayConfiguration const& configuration)
 {
-    create_surfaces(configuration);
-    apply_to_connection(configuration);
+    if (*this->configuration() != configuration)
+    {
+        apply_to_connection(configuration);
+        create_surfaces(configuration);
+    }
 }
 
 void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration)
