@@ -246,9 +246,13 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
     GLenum client_blend_func_dest;
     // These renderable method names could be better (see LP: #1236224)
     if (renderable.shaped())  // Client is RGBA:
+    {
         client_blend_func_dest = GL_ONE_MINUS_SRC_ALPHA;
+    }
     else if (renderable.alpha() == 1.0f)  // RGBX and no window translucency:
+    {
         client_blend_func_dest = GL_ZERO;
+    }
     else
     {   // Client is RGBX but we also have window translucency.
         // The texture alpha channel is possibly uninitialized so we must be
@@ -280,7 +284,9 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
                               &p.vertices[0].texcoord);
 
         if (blend_func_dest == GL_ZERO)
+        {
             glDisable(GL_BLEND);
+        }
         else
         {
             glEnable(GL_BLEND);
