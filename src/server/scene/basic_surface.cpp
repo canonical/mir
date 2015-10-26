@@ -723,10 +723,9 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
     }
 
     std::unique_lock<std::mutex> lg(guard);
-    if ((visibility_ != new_visibility) || unobserved_visibility)
+    if (visibility_ != new_visibility)
     {
         visibility_ = new_visibility;
-        unobserved_visibility = false;
         lg.unlock();
         if (new_visibility == mir_surface_visibility_exposed)
         {

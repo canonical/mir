@@ -535,8 +535,8 @@ struct BasicSurfaceAttributeTest : public BasicSurfaceTest,
 
 AttributeTestParameters const surface_visibility_test_parameters{
     mir_surface_attrib_visibility,
-    mir_surface_visibility_exposed,
     mir_surface_visibility_occluded,
+    mir_surface_visibility_exposed,
     -1
 };
 
@@ -620,10 +620,6 @@ TEST_P(BasicSurfaceAttributeTest, does_not_notify_if_attrib_is_unchanged)
 
     NiceMock<MockSurfaceObserver> mock_surface_observer;
 
-    //send first visibility event
-    if (attribute == mir_surface_attrib_visibility)
-        EXPECT_CALL(mock_surface_observer, attrib_changed(attribute, mir_surface_visibility_exposed))
-            .Times(1);
     EXPECT_CALL(mock_surface_observer, attrib_changed(attribute, another_value))
         .Times(1);
 
