@@ -25,26 +25,9 @@
 
 #include <stdexcept>
 
-namespace mie = mir::input::evdev;
+namespace mi = mir::input;
 
-MirPointerButton mie::to_pointer_button(int button, MirPointerHandedness handedness)
-{
-    switch(button)
-    {
-    case BTN_LEFT: return (handedness == mir_pointer_handedness_right)
-            ? mir_pointer_button_primary
-            : mir_pointer_button_secondary;
-    case BTN_RIGHT: return (handedness == mir_pointer_handedness_right)
-            ? mir_pointer_button_secondary
-            : mir_pointer_button_primary;
-    case BTN_MIDDLE: return mir_pointer_button_tertiary;
-    case BTN_BACK: return mir_pointer_button_back;
-    case BTN_FORWARD: return mir_pointer_button_forward;
-    }
-    BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mouse button"));
-}
-
-MirInputEventModifiers mie::to_modifiers(int32_t scan_code)
+MirInputEventModifiers mi::to_modifiers(int32_t scan_code)
 {
     switch(scan_code)
     {
@@ -75,7 +58,7 @@ MirInputEventModifiers mie::to_modifiers(int32_t scan_code)
     }
 }
 
-MirInputEventModifiers mie::expand_modifiers(MirInputEventModifiers modifiers)
+MirInputEventModifiers mi::expand_modifiers(MirInputEventModifiers modifiers)
 {
     if (modifiers == 0)
         return mir_input_event_modifier_none;
@@ -94,5 +77,4 @@ MirInputEventModifiers mie::expand_modifiers(MirInputEventModifiers modifiers)
 
     return modifiers;
 }
-
 
