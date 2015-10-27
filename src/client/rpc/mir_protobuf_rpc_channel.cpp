@@ -80,6 +80,14 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     this->transport->register_observer(std::shared_ptr<mclr::StreamTransport::Observer>{this, NullDeleter()});
 }
 
+mclr::MirProtobufRpcChannel::~MirProtobufRpcChannel()
+{
+    surface_map->with_all_streams_do(
+        [](mcl::ClientBufferStream* stream) {   
+            if (stream) stream->buffer_unavailable();
+       });
+}
+
 void mclr::MirProtobufRpcChannel::notify_disconnected()
 {
     if (!disconnected.exchange(true))

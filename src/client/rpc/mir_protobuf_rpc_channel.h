@@ -59,7 +59,7 @@ public:
                           std::shared_ptr<PingHandler> const& ping_handler,
                           std::shared_ptr<EventSink> const& event_sink);
 
-    ~MirProtobufRpcChannel() = default;
+    ~MirProtobufRpcChannel();
 
     // StreamTransport::Observer
     void on_data_available() override;

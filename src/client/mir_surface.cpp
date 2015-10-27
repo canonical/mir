@@ -229,6 +229,10 @@ MirSurface::~MirSurface()
 
     for (auto i = 0, end = surface->fd_size(); i != end; ++i)
         close(surface->fd(i));
+
+    if (buffer_stream)
+        connection->release_consumer_stream(buffer_stream.get());
+    buffer_stream.reset();
 }
 
 MirSurfaceParameters MirSurface::get_parameters() const
@@ -382,6 +386,10 @@ MirWaitHandle* MirSurface::release_surface(
     }
     if (this->surface->has_error())
         was_valid = false;
+
+    if (buffer_stream)
+        connection->release_consumer_stream(buffer_stream.get());
+    buffer_stream.reset();
 
     MirWaitHandle* wait_handle{nullptr};
     if (connection && was_valid)
@@ -596,7 +604,7 @@ void MirSurface::handle_event(MirEvent const& e)
     }
     case mir_event_type_resize:
     {
-        if (auto_resize_stream)
+        if (auto_resize_stream && buffer_stream)
         {
             auto resize_event = mir_event_get_resize_event(&e);
             buffer_stream->set_size(geom::Size{
