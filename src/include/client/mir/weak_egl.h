@@ -33,7 +33,7 @@ public:
     }
 
     EGLBoolean eglGetConfigAttrib(EGLDisplay dpy, EGLConfig config,
-                                  EGLint attribute, EGLint *value)
+                                  EGLint attribute, EGLint* value)
     {
         if (find("eglGetConfigAttrib", (void**)&pGetConfigAttrib))
             return pGetConfigAttrib(dpy, config, attribute, value);
@@ -42,7 +42,7 @@ public:
     }
 
 private:
-    bool find(char const* name, void **func)
+    bool find(char const* name, void** func)
     {
         if (!*func)
         {
@@ -62,7 +62,7 @@ private:
 
     void* egl1 = nullptr;
     EGLBoolean (*pGetConfigAttrib)(EGLDisplay dpy, EGLConfig config,
-                                   EGLint attribute, EGLint *value) = nullptr;
+                                   EGLint attribute, EGLint* value) = nullptr;
 };
 
 }} // namespace mir::client
