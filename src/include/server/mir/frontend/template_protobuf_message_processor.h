@@ -78,7 +78,7 @@ void invoke(
     }
     catch (mir::cookie::InvalidCookieError const& err)
     {
-        throw err;
+        throw;
     }
     catch (std::exception const& x)
     {
