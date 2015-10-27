@@ -62,6 +62,7 @@ public:
     void wire_transfer_inbound(protobuf::Buffer const&);
     void wire_transfer_outbound(std::shared_ptr<ClientBuffer> const& buffer);
     void set_size(geometry::Size);
+    void disconnected();
 
 private:
     std::shared_ptr<ClientBufferFactory> const factory;

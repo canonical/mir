@@ -158,3 +158,8 @@ void mcl::BufferVault::set_size(geom::Size sz)
     std::lock_guard<std::mutex> lk(mutex);
     size = sz;
 }
+
+void mcl::BufferVault::disconnected()
+{
+
+}

@@ -381,3 +381,12 @@ TEST_F(StartedBufferVault, simply_setting_size_triggers_no_server_interations)
     }
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
+
+TEST_F(StartedBufferVault, waiting_threads_give_future_error_if_disconnected)
+{
+    auto future = vault.withdraw();
+    vault.disconnected();
+    EXPECT_THROW({
+        future.get();
+    }, std::future_error);
+}
