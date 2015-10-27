@@ -151,12 +151,12 @@ struct MediatingDisplayChangerTest : public ::testing::Test
 
 }
 
-TEST_F(MediatingDisplayChangerTest, returns_active_configuration_from_display)
+TEST_F(MediatingDisplayChangerTest, returns_base_configuration_from_display_at_startup)
 {
     using namespace testing;
 
-    auto returned_conf = changer->active_configuration();
-    EXPECT_EQ(mock_display.conf_ptr, returned_conf.get());
+    auto const base_conf = changer->base_configuration();
+    EXPECT_THAT(mock_display.conf_ptr, base_conf.get());
 }
 
 TEST_F(MediatingDisplayChangerTest, pauses_system_when_applying_new_configuration_for_focused_session)
@@ -188,6 +188,20 @@ TEST_F(MediatingDisplayChangerTest, doesnt_apply_config_for_unfocused_session)
 
     changer->configure(std::make_shared<mtd::StubSceneSession>(),
                        mt::fake_shared(conf));
+}
+
+TEST_F(MediatingDisplayChangerTest, returns_updated_base_configuration_after_hardware_change)
+{
+    using namespace testing;
+
+    mtd::StubDisplayConfig conf{2};
+
+    changer->configure_for_hardware_change(
+        mt::fake_shared(conf),
+        mir::DisplayChanger::PauseResumeSystem);
+
+    auto const base_conf = changer->base_configuration();
+    EXPECT_THAT(*base_conf, mt::DisplayConfigMatches(conf));
 }
 
 TEST_F(MediatingDisplayChangerTest, handles_hardware_change_properly_when_pausing_system)
@@ -480,7 +494,7 @@ TEST_F(MediatingDisplayChangerTest, does_not_block_IPC_thread_for_inactive_sessi
     display_changer.configure(inactive_session, conf);
 }
 
-TEST_F(MediatingDisplayChangerTest, set_default_display_configuration_doesnt_override_session_configuration)
+TEST_F(MediatingDisplayChangerTest, set_base_configuration_doesnt_override_session_configuration)
 {
     using namespace testing;
 
@@ -497,10 +511,10 @@ TEST_F(MediatingDisplayChangerTest, set_default_display_configuration_doesnt_ove
 
     EXPECT_CALL(mock_display, configure(_)).Times(0);
 
-    changer->set_default_display_configuration(conf);
+    changer->set_base_configuration(conf);
 }
 
-TEST_F(MediatingDisplayChangerTest, set_default_display_configuration_overrides_base_configuration)
+TEST_F(MediatingDisplayChangerTest, set_base_configuration_overrides_base_configuration)
 {
     using namespace testing;
 
@@ -514,7 +528,7 @@ TEST_F(MediatingDisplayChangerTest, set_default_display_configuration_overrides_
 
     EXPECT_CALL(mock_display, configure(_)).Times(1);
 
-    changer->set_default_display_configuration(conf);
+    changer->set_base_configuration(conf);
 }
 
 TEST_F(MediatingDisplayChangerTest, stores_new_base_config_on_set_default_configuration)
@@ -544,9 +558,39 @@ TEST_F(MediatingDisplayChangerTest, stores_new_base_config_on_set_default_config
     EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(std::cref(*session_conf))));
     EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(std::cref(*default_conf))));
 
-    changer->set_default_display_configuration(default_conf);
+    changer->set_base_configuration(default_conf);
 
     session_event_sink.handle_focus_change(mock_session1);
     session_event_sink.handle_focus_change(mock_session2);
     session_event_sink.handle_focus_change(mock_session3);
+}
+
+TEST_F(MediatingDisplayChangerTest,
+       returns_updated_base_configuration_after_set_base_configuration)
+{
+    using namespace testing;
+
+    mtd::StubDisplayConfig conf{2};
+
+    changer->set_base_configuration(mt::fake_shared(conf));
+
+    auto const base_conf = changer->base_configuration();
+    EXPECT_THAT(*base_conf, mt::DisplayConfigMatches(conf));
+}
+
+TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_set_base_configuration)
+{
+    using namespace testing;
+
+    mtd::NullDisplayConfiguration conf;
+    mtd::MockSceneSession mock_session1;
+    mtd::MockSceneSession mock_session2;
+
+    stub_session_container.insert_session(mt::fake_shared(mock_session1));
+    stub_session_container.insert_session(mt::fake_shared(mock_session2));
+
+    EXPECT_CALL(mock_session1, send_display_config(_));
+    EXPECT_CALL(mock_session2, send_display_config(_));
+
+    changer->set_base_configuration(mt::fake_shared(conf));
 }

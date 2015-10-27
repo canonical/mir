@@ -67,7 +67,7 @@ void mc::MultiMonitorArbiter::compositor_release(std::shared_ptr<mg::Buffer> con
 
     decrease_refcount_for(buffer->id(), lk);
 
-    if (mode == mc::MultiMonitorMode::single_monitor_fast)
+    if ((mode == mc::MultiMonitorMode::single_monitor_fast) || (onscreen_buffers.size() > 1))
         clean_onscreen_buffers(lk);
 }
 
@@ -139,4 +139,14 @@ bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
     std::lock_guard<decltype(mutex)> lk(mutex);
     return schedule->anything_scheduled() ||
        ((current_buffer_users.find(id) == current_buffer_users.end()) && !onscreen_buffers.empty());
+}
+
+void mc::MultiMonitorArbiter::advance_schedule()
+{
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    if (schedule->anything_scheduled())
+    {
+        onscreen_buffers.emplace_front(schedule->next_buffer(), 0);
+        current_buffer_users.clear();
+    } 
 }

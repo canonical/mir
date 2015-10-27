@@ -559,7 +559,9 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
         }
         else
         {
+            producer->produce();
             ipc->resize_event(sz);
+            consumer->consume();
         }
     }
 
@@ -604,7 +606,6 @@ struct WithThreeOrMoreBuffers : BufferScheduling {};
 struct WithThreeOrMoreBuffersExchangeOnly : BufferScheduling {};
 struct WithOneBuffer : BufferScheduling {};
 struct WithTwoBuffers : BufferScheduling {};
-struct WithTwoBuffersExchangeOnly : BufferScheduling {};
 struct WithThreeBuffers : BufferScheduling {};
 struct WithThreeBuffersExchangeOnly : BufferScheduling {};
 }
@@ -798,7 +799,7 @@ TEST_P(WithThreeOrMoreBuffers, multiple_fast_compositors_are_in_sync)
     EXPECT_THAT(consumption_log_2, Eq(production_log));
 }
 
-TEST_P(WithTwoOrMoreBuffersExchangeOnly, framedropping_clients_get_all_buffers_and_dont_block)
+TEST_P(WithTwoOrMoreBuffers, framedropping_clients_dont_block)
 {
     allow_framedropping();
     std::vector<ScheduleEntry> schedule;
@@ -807,13 +808,9 @@ TEST_P(WithTwoOrMoreBuffersExchangeOnly, framedropping_clients_get_all_buffers_a
     run_system(schedule);
 
     auto production_log = producer->production_log();
-    std::sort(production_log.begin(), production_log.end(),
-        [](BufferEntry const& a, BufferEntry const& b) { return a.id.as_value() > b.id.as_value(); });
-    auto last = std::unique(production_log.begin(), production_log.end(),
-        [](BufferEntry const& a, BufferEntry const& b) { return a.id == b.id; });
-    production_log.erase(last, production_log.end());
-
-    EXPECT_THAT(production_log.size(), Ge(nbuffers)); //Ge is to accommodate overallocation
+    auto block_count = std::count_if(production_log.begin(), production_log.end(),
+        [](BufferEntry const& e) { return e.blockage == Access::blocked; });
+    EXPECT_THAT(block_count, Eq(0));
 }
 
 TEST_P(WithTwoOrMoreBuffers, nonframedropping_client_throttles_to_compositor_rate)
@@ -835,11 +832,12 @@ TEST_P(WithAnyNumberOfBuffersExchangeOnly, resize_affects_client_acquires_immedi
 {
     unsigned int const sizes_to_test{4};
     geom::Size new_size = properties.size;
+    producer->produce();
+    consumer->consume();
     for(auto i = 0u; i < sizes_to_test; i++)
     {
         new_size = new_size * 2;
         resize(new_size);
-
         std::vector<ScheduleEntry> schedule = {{1_t,  {producer.get()}, {consumer.get()}}};
         run_system(schedule);
         EXPECT_THAT(producer->last_size(), Eq(new_size));
@@ -851,9 +849,11 @@ TEST_P(WithAnyNumberOfBuffersExchangeOnly, compositor_acquires_resized_frames)
     unsigned int const sizes_to_test{4};
     int const attempt_limit{100};
     geom::Size new_size = properties.size;
+    producer->produce();
     for(auto i = 0u; i < sizes_to_test; i++)
     {
         new_size = new_size * 2;
+        consumer->consume();
         resize(new_size);
 
         std::vector<ScheduleEntry> schedule = {
@@ -909,52 +909,52 @@ TEST_P(WithTwoOrMoreBuffersExchangeOnly, uncomposited_client_swaps_when_policy_t
 }
 
 // Regression test for LP: #1319765
-TEST_P(WithTwoBuffersExchangeOnly, client_is_not_blocked_prematurely)
+TEST_P(WithTwoBuffers, client_is_not_blocked_prematurely)
 {
     producer->produce();
-    auto a = queue.compositor_acquire(this);
+    auto a = stream->lock_compositor_buffer(this);
     producer->produce();
-    auto b = queue.compositor_acquire(this);
+    auto b = stream->lock_compositor_buffer(this);
 
-    ASSERT_NE(a.get(), b.get());
+    ASSERT_NE(a, b);
 
-    queue.compositor_release(a);
+    a.reset();
     producer->produce();
-    queue.compositor_release(b);
+    b.reset();
 
     /*
      * Update to the original test case; This additional compositor acquire
      * represents the fixing of LP: #1395581 in the compositor logic.
      */
-    if (queue.buffers_ready_for_compositor(this))
-        queue.compositor_release(queue.compositor_acquire(this));
+    if (stream->buffers_ready_for_compositor(this))
+        stream->lock_compositor_buffer(this);
 
     // With the fix, a buffer will be available instantaneously:
     EXPECT_TRUE(producer->can_produce());
 }
 
 // Extended regression test for LP: #1319765
-TEST_P(WithTwoBuffersExchangeOnly, composite_on_demand_never_deadlocks)
+TEST_P(WithTwoBuffers, composite_on_demand_never_deadlocks)
 {
     for (int i = 0; i < 100; ++i)
     {
         producer->produce();
-        auto a = queue.compositor_acquire(this);
+        auto a = stream->lock_compositor_buffer(this);
         producer->produce();
-        auto b = queue.compositor_acquire(this);
+        auto b = stream->lock_compositor_buffer(this);
     
-        ASSERT_NE(a.get(), b.get());
-    
-        queue.compositor_release(a);
+        ASSERT_NE(a, b);
+
+        a.reset(); 
         producer->produce();
-        queue.compositor_release(b);
+        b.reset(); 
 
         /*
          * Update to the original test case; This additional compositor acquire
          * represents the fixing of LP: #1395581 in the compositor logic.
          */
-        if (queue.buffers_ready_for_compositor(this))
-            queue.compositor_release(queue.compositor_acquire(this));
+        if (stream->buffers_ready_for_compositor(this))
+            stream->lock_compositor_buffer(this);
 
         EXPECT_TRUE(producer->can_produce());
 
@@ -964,7 +964,7 @@ TEST_P(WithTwoBuffersExchangeOnly, composite_on_demand_never_deadlocks)
 }
 
 // Regression test for LP: #1395581
-TEST_P(WithTwoOrMoreBuffersExchangeOnly, buffers_ready_is_not_underestimated)
+TEST_P(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
 {
     // Produce frame 1
     producer->produce();
@@ -1181,7 +1181,7 @@ TEST_P(WithThreeBuffersExchangeOnly, gives_new_compositor_the_newest_buffer_afte
     EXPECT_THAT(production_log[1], Eq(second_consumption_log[0]));
 }
 
-TEST_P(WithTwoOrMoreBuffersExchangeOnly, overlapping_compositors_get_different_frames)
+TEST_P(WithTwoOrMoreBuffers, overlapping_compositors_get_different_frames)
 {
     // This test simulates bypass behaviour
     // overlay/bypass code will need to acquire two buffers at once, as there's a brief period of time where a buffer 
@@ -1467,10 +1467,6 @@ INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithTwoBuffers,
     Combine(Values(2), Values(TestType::ExchangeSemantics, TestType::SubmitSemantics)));
-INSTANTIATE_TEST_CASE_P(
-    BufferScheduling,
-    WithTwoBuffersExchangeOnly,
-    Combine(Values(2), Values(TestType::ExchangeSemantics)));
 INSTANTIATE_TEST_CASE_P(
     BufferScheduling,
     WithThreeBuffers,
