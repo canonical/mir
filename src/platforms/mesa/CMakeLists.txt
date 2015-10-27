@@ -26,7 +26,9 @@ install(
 )
 
 install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/mir-client-platform-mesa-dev.pc
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/mir-client-platform-mesa.pc
+  FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/mir-client-platform-mesa-dev.pc
+  ${CMAKE_CURRENT_BINARY_DIR}/mir-client-platform-mesa.pc
+
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
