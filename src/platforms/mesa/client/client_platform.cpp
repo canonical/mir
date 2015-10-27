@@ -169,8 +169,6 @@ MirPixelFormat mclm::ClientPlatform::get_egl_pixel_format(
 {
     MirPixelFormat mir_format = mir_pixel_format_invalid;
 
-    mcl::WeakEGL weak;
-
     /*
      * This is based on gbm_dri_is_format_supported() however we can't call it
      * via the public API gbm_device_is_format_supported because that is
@@ -182,6 +180,7 @@ MirPixelFormat mclm::ClientPlatform::get_egl_pixel_format(
      * EGL_NATIVE_VISUAL_ID, so ignore that for now.
      */
     EGLint r = 0, g = 0, b = 0, a = 0;
+    mcl::WeakEGL weak;
     weak.eglGetConfigAttrib(disp, conf, EGL_RED_SIZE, &r);
     weak.eglGetConfigAttrib(disp, conf, EGL_GREEN_SIZE, &g);
     weak.eglGetConfigAttrib(disp, conf, EGL_BLUE_SIZE, &b);
