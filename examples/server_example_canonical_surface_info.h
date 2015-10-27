@@ -79,11 +79,11 @@ struct CanonicalSurfaceInfoCopy
 
 private:
 
-    struct PaintingImpl;
+    struct StreamPainter;
     struct AllocatingPainter;
     struct SwappingPainter;
 
-    std::shared_ptr <PaintingImpl> painting_impl;
+    std::shared_ptr <StreamPainter> stream_painter;
 };
 }
 }

@@ -154,16 +154,17 @@ bool me::CanonicalSurfaceInfoCopy::is_visible() const
     return true;
 }
 
-struct mir::examples::CanonicalSurfaceInfoCopy::PaintingImpl
+struct mir::examples::CanonicalSurfaceInfoCopy::StreamPainter
 {
     virtual void paint(int) = 0;
-    virtual ~PaintingImpl() = default;
-    PaintingImpl() = default;
-    PaintingImpl(PaintingImpl const&) = delete;
-    PaintingImpl& operator=(PaintingImpl const&) = delete;
+    virtual ~StreamPainter() = default;
+    StreamPainter() = default;
+    StreamPainter(StreamPainter const&) = delete;
+    StreamPainter& operator=(StreamPainter const&) = delete;
 };
 
-struct mir::examples::CanonicalSurfaceInfoCopy::SwappingPainter : mir::examples::CanonicalSurfaceInfoCopy::PaintingImpl
+struct mir::examples::CanonicalSurfaceInfoCopy::SwappingPainter
+    : mir::examples::CanonicalSurfaceInfoCopy::StreamPainter
 {
     SwappingPainter(std::shared_ptr<frontend::BufferStream> const& buffer_stream) :
         buffer_stream{buffer_stream}, buffer{nullptr}
@@ -198,7 +199,8 @@ struct mir::examples::CanonicalSurfaceInfoCopy::SwappingPainter : mir::examples:
     std::atomic<graphics::Buffer*> buffer;
 };
 
-struct mir::examples::CanonicalSurfaceInfoCopy::AllocatingPainter : mir::examples::CanonicalSurfaceInfoCopy::PaintingImpl
+struct mir::examples::CanonicalSurfaceInfoCopy::AllocatingPainter
+    : mir::examples::CanonicalSurfaceInfoCopy::StreamPainter
 {
     AllocatingPainter(std::shared_ptr<frontend::BufferStream> const& buffer_stream, Size size) :
         buffer_stream(buffer_stream),
@@ -244,17 +246,17 @@ void mir::examples::CanonicalSurfaceInfoCopy::init_titlebar(std::shared_ptr<scen
     auto stream = surface->primary_buffer_stream();
     try
     {
-        painting_impl = std::make_shared<AllocatingPainter>(stream, surface->size());
+        stream_painter = std::make_shared<AllocatingPainter>(stream, surface->size());
     }
     catch (...)
     {
-        painting_impl = std::make_shared<SwappingPainter>(stream);
+        stream_painter = std::make_shared<SwappingPainter>(stream);
     }
 }
 
 void mir::examples::CanonicalSurfaceInfoCopy::paint_titlebar(int intensity)
 {
-    painting_impl->paint(intensity);
+    stream_painter->paint(intensity);
 }
 
 void me::CanonicalSurfaceInfoCopy::constrain_resize(
