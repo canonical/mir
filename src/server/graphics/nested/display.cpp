@@ -31,6 +31,7 @@
 #include "mir/graphics/egl_error.h"
 #include "mir_toolkit/mir_blob.h"
 #include "mir_toolkit/mir_connection.h"
+#include "mir/raii.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -151,9 +152,9 @@ namespace
 {
 auto copy_config(MirDisplayConfiguration* conf) -> std::shared_ptr<MirDisplayConfiguration>
 {
-    std::shared_ptr<MirBlob> const blob{
+    auto const blob = mir::raii::deleter_for(
         mir_blob_from_display_configuration(conf),
-        [] (MirBlob* b) { mir_blob_release(b); }};
+        [] (MirBlob* b) { mir_blob_release(b); });
 
     return std::shared_ptr<MirDisplayConfiguration>{
         mir_blob_to_display_configuration(blob.get()),
