@@ -108,6 +108,7 @@ void populate_buffer_package(
     }
 }
 
+mp::Void protobuf_void;
 
 struct ExchangeSemantics : mcl::ServerBufferSemantics
 {
@@ -173,7 +174,7 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         request->mutable_buffer()->set_buffer_id(wrapped.current_buffer_id());
         lock.unlock();
 
-        display_server.submit_buffer(request.get(), protobuf_void.get(),
+        display_server.submit_buffer(request.get(), &protobuf_void,
             google::protobuf::NewCallback(google::protobuf::DoNothing));
 
         lock.lock();
@@ -217,7 +218,6 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
     mir::protobuf::DisplayServer& display_server;
     std::function<void()> on_incoming_buffer;
     std::queue<mir::protobuf::Buffer> incoming_buffers;
-    std::unique_ptr<mir::protobuf::Void> protobuf_void{std::make_unique<mp::Void>()};
     MirWaitHandle next_buffer_wait_handle;
     bool server_connection_lost {false};
 };
@@ -273,7 +273,6 @@ public:
 private:
     std::atomic<bool> disconnected_{false};
     mclr::DisplayServer& server;
-    mp::Void protobuf_void;
     int stream_id;
 };
 
