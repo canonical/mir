@@ -103,10 +103,9 @@ MirTouchpadScrollModes mi::TouchpadConfiguration::scroll_mode() const
     return scroll_mode_;
 }
 
-void mi::TouchpadConfiguration::scroll_mode(int scroll_button)
+void mi::TouchpadConfiguration::scroll_button(int button)
 {
-    scroll_mode_ |= mir_touchpad_scroll_mode_button_down_scroll;
-    button_down_scroll_button_ = scroll_button;
+    button_down_scroll_button_ = button;
 }
 
 int mi::TouchpadConfiguration::scroll_button() const

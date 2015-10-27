@@ -41,36 +41,57 @@ struct TouchpadConfiguration
     ~TouchpadConfiguration();
 
     /*!
+     * When tap to click is enabled the system will interpret short finger touch down/up sequences as button clicks.
+     * \{
      */
     void tap_to_click(bool enabled);
     bool tap_to_click() const;
+    /// \}
     /*!
+     * Emulates a middle mouse button press when the left and right buttons on a touchpad are pressed.
+     * \{
      */
     void middle_mouse_button_emulation(bool enabled);
     bool middle_mouse_button_emulation() const;
+    /// \}
     /*!
+     * When disable-with-mouse is enabled the touchpad will stop to emit user input events when another pointing device is plugged in.
+     * \{
      */
     void disable_with_mouse(bool enabled);
     bool disable_with_mouse() const;
+    /// \}
     /*!
+     * When disable-with-mouse is enabled the touchpad will stop to emit user input events when the user starts to use a keyboard and a short period after.
+     * \{
      */
     void disable_while_typing(bool enabled);
     bool disable_while_typing() const;
+    /// \}
     /*!
+     * The click mode defines when the touchpad generates software emulated button events.
+     * \{
      */
     void click_mode(MirTouchpadClickModes click_mode);
     MirTouchpadClickModes click_mode() const;
+    /// \}
 
     /*!
+     * The scroll mode defines when the touchpad generates scroll events instead of pointer motion events.
+     * \{
      */
     void scroll_mode(MirTouchpadScrollModes scroll_mode);
     MirTouchpadScrollModes scroll_mode() const;
     /*!
-     * Configure scroll mode via button down.
+     * Configures the button used for the on-button-down scroll mode
      */
-    void scroll_mode(int scroll_button);
+    void scroll_button(int scroll_button);
+    /*!
+     * Returns button used to enable the on-button-down scroll mode
+     */
     int scroll_button() const;
-private:
+    /// \}
+    private:
     MirTouchpadClickModes click_mode_;
     MirTouchpadScrollModes scroll_mode_;
     int button_down_scroll_button_;
