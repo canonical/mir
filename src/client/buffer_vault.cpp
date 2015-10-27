@@ -161,5 +161,7 @@ void mcl::BufferVault::set_size(geom::Size sz)
 
 void mcl::BufferVault::disconnected()
 {
-
+    server_requests->disconnected();
+    std::lock_guard<std::mutex> lk(mutex);
+    promises.clear();
 }
