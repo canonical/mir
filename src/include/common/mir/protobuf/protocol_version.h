@@ -37,7 +37,9 @@ inline constexpr int oldest_compatible_protocol_version()
 
 inline constexpr int next_incompatible_protocol_version()
 {
-    return MIR_VERSION_NUMBER(1,0,0);
+    // For now we're very cautious/pessimistic. Maybe we can be more flexible
+    // in the more distant future...
+    return current_protocol_version() + MIR_VERSION_NUMBER(0,0,1);
 }
 }
 }

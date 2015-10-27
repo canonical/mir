@@ -195,16 +195,17 @@ TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_obsolete)
     mir_connection_release(connection);
 }
 
-TEST_F(ClientLibrary, reports_no_error_when_protobuf_protocol_slightly_new)
+TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_too_new)
 {
     std::ostringstream buffer;
-    buffer << mir::protobuf::current_protocol_version() + 3;
+    buffer << mir::protobuf::current_protocol_version() + 1;
     add_to_environment(protocol_version_override, buffer.str().c_str());
 
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     EXPECT_THAT(connection, NotNull());
-    EXPECT_TRUE(mir_connection_is_valid(connection));
+    EXPECT_FALSE(mir_connection_is_valid(connection));
+    EXPECT_THAT(mir_connection_get_error_message(connection), HasSubstr("not accepted by server"));
 
     mir_connection_release(connection);
 }
