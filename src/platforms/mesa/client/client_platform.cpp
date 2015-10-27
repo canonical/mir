@@ -168,44 +168,52 @@ MirPixelFormat mclm::ClientPlatform::get_egl_pixel_format(
 {
     MirPixelFormat mir_format = mir_pixel_format_invalid;
 
-    void *egl1 = dlopen("libEGL.so.1", RTLD_NOLOAD|RTLD_LAZY);
-    if (egl1)
-    {
-        typedef EGLBoolean EglGetConfigAttrib(EGLDisplay dpy, EGLConfig config,
-                                              EGLint attribute, EGLint *value);
-        EglGetConfigAttrib *egl_get_config_attrib =
-            (EglGetConfigAttrib*)dlsym(egl1, "eglGetConfigAttrib");
-        if (egl_get_config_attrib)
-        {
-            /*
-             * This is based on gbm_dri_is_format_supported() however we can't
-             * call it via the public API gbm_device_is_format_supported
-             * because that is too buggy right now (LP: #1473901).
-             * Ideally Mesa should implement EGL_NATIVE_VISUAL_ID for all
-             * platforms to explicitly return the exact GBM pixel format. But
-             * it doesn't do that yet (for most platforms). It does however
-             * successfully return zero for EGL_NATIVE_VISUAL_ID, so ignore
-             * that for now.
-             */
-            EGLint r = 0, g = 0, b = 0, a = 0;
-            egl_get_config_attrib(disp, conf, EGL_RED_SIZE, &r);
-            egl_get_config_attrib(disp, conf, EGL_GREEN_SIZE, &g);
-            egl_get_config_attrib(disp, conf, EGL_BLUE_SIZE, &b);
-            egl_get_config_attrib(disp, conf, EGL_ALPHA_SIZE, &a);
-        
-            if (r == 8 && g == 8 && b == 8)
-            {
-                // GBM is very limited, which at least makes this simple...
-                if (a == 8)
-                    mir_format = mir_pixel_format_argb_8888;
-                else if (a == 0)
-                    mir_format = mir_pixel_format_xrgb_8888;
-            }
-        }
+    typedef EGLBoolean EglGetConfigAttrib(EGLDisplay dpy, EGLConfig config,
+                                          EGLint attribute, EGLint *value);
 
-        // The function is usually only called once. No need to cache...
-        dlclose(egl1);
+    // Try this first because it catches MockEGL unlike the second option...
+    EglGetConfigAttrib *egl_get_config_attrib =
+        (EglGetConfigAttrib*)dlsym(RTLD_DEFAULT, "eglGetConfigAttrib");
+
+    void *egl1 = NULL;
+    if (!egl_get_config_attrib)
+    {
+        egl1 = dlopen("libEGL.so.1", RTLD_NOLOAD|RTLD_LAZY);
+        egl_get_config_attrib =
+            (EglGetConfigAttrib*)dlsym(RTLD_DEFAULT, "eglGetConfigAttrib");
     }
+
+    if (egl_get_config_attrib)
+    {
+        /*
+         * This is based on gbm_dri_is_format_supported() however we can't
+         * call it via the public API gbm_device_is_format_supported
+         * because that is too buggy right now (LP: #1473901).
+         * Ideally Mesa should implement EGL_NATIVE_VISUAL_ID for all
+         * platforms to explicitly return the exact GBM pixel format. But
+         * it doesn't do that yet (for most platforms). It does however
+         * successfully return zero for EGL_NATIVE_VISUAL_ID, so ignore
+         * that for now.
+         */
+        EGLint r = 0, g = 0, b = 0, a = 0;
+        egl_get_config_attrib(disp, conf, EGL_RED_SIZE, &r);
+        egl_get_config_attrib(disp, conf, EGL_GREEN_SIZE, &g);
+        egl_get_config_attrib(disp, conf, EGL_BLUE_SIZE, &b);
+        egl_get_config_attrib(disp, conf, EGL_ALPHA_SIZE, &a);
+    
+        if (r == 8 && g == 8 && b == 8)
+        {
+            // GBM is very limited, which at least makes this simple...
+            if (a == 8)
+                mir_format = mir_pixel_format_argb_8888;
+            else if (a == 0)
+                mir_format = mir_pixel_format_xrgb_8888;
+        }
+    }
+
+    // The function is usually only called once. No need to cache...
+    if (egl1)
+        dlclose(egl1);
 
     return mir_format;
 }
