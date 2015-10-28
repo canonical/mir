@@ -282,33 +282,34 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     void deposit(mp::Buffer const& buffer, geom::Size, MirPixelFormat) override
     {
         vault.wire_transfer_inbound(buffer);
-        current_buffer_id_ = buffer.buffer_id();
     }
 
     std::shared_ptr<mir::client::ClientBuffer> current_buffer() override
     {
-        if (!current_buffer_)
-            current_buffer_ = vault.withdraw().get();
-        return current_buffer_;
+        if (!current.buffer)
+            current = vault.withdraw().get();
+        return current.buffer;
     }
 
     uint32_t current_buffer_id() override
     {
-        return current_buffer_id_;
+        if (!current.buffer)
+            current = vault.withdraw().get();
+        return current.id;
     }
 
     MirWaitHandle* submit(std::function<void()> const& done, geom::Size, MirPixelFormat, int) override
     {
-        if (!current_buffer_)
-            current_buffer_ = vault.withdraw().get();
+        if (!current.buffer)
+            current = vault.withdraw().get();
 
-        vault.deposit(current_buffer_);
+        vault.deposit(current.buffer);
 
         next_buffer_wait_handle.expect_result();
-        vault.wire_transfer_outbound(current_buffer_);
+        vault.wire_transfer_outbound(current.buffer);
         next_buffer_wait_handle.result_received();
 
-        current_buffer_ = vault.withdraw().get();
+        current = vault.withdraw().get();
         done();
         return &next_buffer_wait_handle;
     }
@@ -327,8 +328,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     }
 
     mcl::BufferVault vault;
-    std::shared_ptr<mcl::ClientBuffer> current_buffer_;
-    int current_buffer_id_;
+    mcl::BufferInfo current{nullptr, 0};
     MirWaitHandle next_buffer_wait_handle;
 };
 }
