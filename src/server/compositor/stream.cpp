@@ -152,7 +152,7 @@ void mc::Stream::transition_schedule(
     std::shared_ptr<mc::Schedule>&& new_schedule, std::lock_guard<std::mutex> const&)
 {
     std::vector<std::shared_ptr<mg::Buffer>> transferred_buffers;
-    while(schedule->anything_scheduled())
+    while(schedule->num_scheduled())
         transferred_buffers.emplace_back(schedule->next_buffer());
     for(auto& buffer : transferred_buffers)
         new_schedule->schedule(buffer);
@@ -177,7 +177,7 @@ void mc::Stream::drop_old_buffers()
 {
     std::lock_guard<decltype(mutex)> lk(mutex); 
     std::vector<std::shared_ptr<mg::Buffer>> transferred_buffers;
-    while(schedule->anything_scheduled())
+    while(schedule->num_scheduled())
         transferred_buffers.emplace_back(schedule->next_buffer());
     if (!transferred_buffers.empty())
         schedule->schedule(transferred_buffers.front());
@@ -213,6 +213,6 @@ void mc::Stream::set_scale(float)
 
 void mc::Stream::drop_frame()
 {
-    if (schedule->anything_scheduled() && arbiter->has_buffer())
+    if ((schedule->num_scheduled() > 1) && arbiter->has_buffer())
         buffers->send_buffer(schedule->next_buffer()->id());
 }

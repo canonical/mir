@@ -43,12 +43,12 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
 
-    if (onscreen_buffers.empty() && !schedule->anything_scheduled())
+    if (onscreen_buffers.empty() && !schedule->num_scheduled())
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to compositor"));
 
     if (current_buffer_users.find(id) != current_buffer_users.end() || onscreen_buffers.empty())
     {
-        if (schedule->anything_scheduled())
+        if (schedule->num_scheduled())
             onscreen_buffers.emplace_front(schedule->next_buffer(), 0);
         current_buffer_users.clear();
     }
@@ -85,7 +85,7 @@ void mc::MultiMonitorArbiter::clean_onscreen_buffers(std::lock_guard<std::mutex>
     for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end();)
     {
         if ((it->use_count == 0) &&
-            (it != onscreen_buffers.begin() || schedule->anything_scheduled())) //ensure monitors always have a buffer
+            (it != onscreen_buffers.begin() || schedule->num_scheduled())) //ensure monitors always have a buffer
         {
             map->send_buffer(it->buffer->id());
             it = onscreen_buffers.erase(it);
@@ -101,12 +101,12 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
 
-    if (onscreen_buffers.empty() && !schedule->anything_scheduled())
+    if (onscreen_buffers.empty() && !schedule->num_scheduled())
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to snapshotter"));
 
     if (onscreen_buffers.empty())
     {
-        if (schedule->anything_scheduled())
+        if (schedule->num_scheduled())
             onscreen_buffers.emplace_front(schedule->next_buffer(), 0);
     }
 
@@ -137,7 +137,7 @@ void mc::MultiMonitorArbiter::set_mode(MultiMonitorMode new_mode)
 bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-    return schedule->anything_scheduled() ||
+    return schedule->num_scheduled() ||
        ((current_buffer_users.find(id) == current_buffer_users.end()) && !onscreen_buffers.empty());
 }
 
@@ -150,7 +150,7 @@ bool mc::MultiMonitorArbiter::has_buffer()
 void mc::MultiMonitorArbiter::advance_schedule()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-    if (schedule->anything_scheduled())
+    if (schedule->num_scheduled())
     {
         onscreen_buffers.emplace_front(schedule->next_buffer(), 0);
         current_buffer_users.clear();
