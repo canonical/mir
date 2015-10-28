@@ -38,6 +38,7 @@ class InputDeviceInfo;
 class EventBuilder;
 
 class PointerSettings;
+class TouchpadSettings;
 
 /**
  * Represents an input device.
@@ -59,9 +60,11 @@ public:
 
     virtual InputDeviceInfo get_device_info() = 0;
 
-    virtual mir::optional_value<PointerSettings> get_pointer_settings() const = 0;
+    virtual optional_value<PointerSettings> get_pointer_settings() const = 0;
     virtual void apply_settings(PointerSettings const&) = 0;
 
+    virtual optional_value<TouchpadSettings> get_touchpad_settings() const = 0;
+    virtual void apply_settings(TouchpadSettings const&) = 0;
 protected:
     InputDevice(InputDevice const&) = delete;
     InputDevice& operator=(InputDevice const&) = delete;
