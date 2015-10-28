@@ -29,43 +29,17 @@ namespace mir { namespace client {
 class WeakEGL
 {
 public:
-    ~WeakEGL()
-    {
-        if (egl1)
-            dlclose(egl1);
-    }
-
+    WeakEGL();
+    ~WeakEGL();
     EGLBoolean eglGetConfigAttrib(EGLDisplay dpy, EGLConfig config,
-                                  EGLint attribute, EGLint* value)
-    {
-        if (find("eglGetConfigAttrib", (void**)&pGetConfigAttrib))
-            return pGetConfigAttrib(dpy, config, attribute, value);
-        else
-            return EGL_FALSE;
-    }
+                                  EGLint attribute, EGLint* value);
 
 private:
-    bool find(char const* name, void** func)
-    {
-        if (!*func)
-        {
-            // RTLD_DEFAULT is first choice to support wrappers like MockEGL
-            if (!(*func = dlsym(RTLD_DEFAULT, name)))
-            {
-                // This will work more in real-world situations if the library
-                // is hidden behind an RTLD_LOCAL (e.g. a Qt plugin)
-                if (!egl1)
-                    egl1 = dlopen("libEGL.so.1", RTLD_NOLOAD|RTLD_LAZY);
-                if (egl1)
-                    *func = dlsym(egl1, name);
-            }
-        }
-        return *func != nullptr;
-    }
+    bool find(char const* name, void** func);
 
-    void* egl1 = nullptr;
+    void* egl1;
     EGLBoolean (*pGetConfigAttrib)(EGLDisplay dpy, EGLConfig config,
-                                   EGLint attribute, EGLint* value) = nullptr;
+                                   EGLint attribute, EGLint* value);
 };
 
 }} // namespace mir::client
