@@ -427,7 +427,7 @@ TEST_F(DisplayConfigurationTest, shell_initiated_display_configuration_notifies_
         &new_display_config_matches,
         &context);
 
-    server.the_display_configuration_controller()->set_default_display_configuration(new_conf).get();
+    server.the_display_configuration_controller()->set_base_configuration(new_conf).get();
 
     EXPECT_THAT(
         *server.the_display()->configuration(),

@@ -143,7 +143,7 @@ void mf::SessionMediator::connect(
     for (auto& ipc_fds : ipc_package->ipc_fds)
         platform->add_fd(ipc_fds);
 
-    auto display_config = display_changer->active_configuration();
+    auto display_config = display_changer->base_configuration();
     auto protobuf_config = response->mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, *display_config);
 
@@ -609,7 +609,7 @@ void mf::SessionMediator::configure_display(
 
     report->session_configure_display_called(session->name());
 
-    auto config = display_changer->active_configuration();
+    auto config = display_changer->base_configuration();
 
     config->for_each_output([&](mg::UserDisplayConfigurationOutput& dest){
         unsigned id = dest.id.as_value();
@@ -634,7 +634,7 @@ void mf::SessionMediator::configure_display(
     });
 
     display_changer->configure(session, config);
-    auto display_config = display_changer->active_configuration();
+    auto display_config = display_changer->base_configuration();
     mfd::pack_protobuf_display_configuration(*response, *display_config);
 
     done->Run();

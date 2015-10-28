@@ -373,7 +373,7 @@ TEST_F(SessionMediator, connect_packs_display_configuration)
     using namespace testing;
     mtd::StubDisplayConfig config;
     auto mock_display = std::make_shared<NiceMock<mtd::MockDisplayChanger>>();
-    ON_CALL(*mock_display, active_configuration())
+    ON_CALL(*mock_display, base_configuration())
         .WillByDefault(Return(mt::fake_shared(config)));
 
     mf::SessionMediator mediator(
@@ -570,15 +570,15 @@ TEST_F(SessionMediator, display_config_request)
     auto mock_display_selector = std::make_shared<mtd::MockDisplayChanger>();
 
     Sequence seq;
-    EXPECT_CALL(*mock_display_selector, active_configuration())
+    EXPECT_CALL(*mock_display_selector, base_configuration())
         .InSequence(seq)
         .WillOnce(Return(mt::fake_shared(mock_display_config)));
-    EXPECT_CALL(*mock_display_selector, active_configuration())
+    EXPECT_CALL(*mock_display_selector, base_configuration())
         .InSequence(seq)
         .WillOnce(Return(mt::fake_shared(mock_display_config)));
     EXPECT_CALL(*mock_display_selector, configure(_,_))
         .InSequence(seq);
-    EXPECT_CALL(*mock_display_selector, active_configuration())
+    EXPECT_CALL(*mock_display_selector, base_configuration())
         .InSequence(seq)
         .WillOnce(Return(mt::fake_shared(stub_display_config)));
 
