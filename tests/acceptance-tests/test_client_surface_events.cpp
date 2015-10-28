@@ -279,7 +279,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_cha
     reset_last_event();
 
     auto display_controller = server.the_display_configuration_controller();
-    display_controller->set_default_display_configuration(std::move(display_configuration)).get();
+    display_controller->set_base_configuration(std::move(display_configuration)).get();
 
     ASSERT_TRUE(wait_for_event(1min));
 
@@ -400,7 +400,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
         });
 
     auto display_controller = server.the_display_configuration_controller();
-    display_controller->set_default_display_configuration(std::move(display_configuration)).get();
+    display_controller->set_base_configuration(std::move(display_configuration)).get();
 
     EventContext context;
 

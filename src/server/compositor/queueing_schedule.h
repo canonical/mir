@@ -32,7 +32,7 @@ class QueueingSchedule : public Schedule
 {
 public:
     void schedule(std::shared_ptr<graphics::Buffer> const& buffer);
-    bool anything_scheduled();
+    unsigned int num_scheduled();
     std::shared_ptr<graphics::Buffer> next_buffer();
 
 private:

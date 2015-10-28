@@ -311,10 +311,6 @@ void DemoRenderer::tessellate_shadow(std::vector<gl::Primitive>& primitives,
     tl_shadow.vertices[1] = {{leftr, top,  0.0f}, {1.0f, 0.0f}};
     tl_shadow.vertices[2] = {{leftr, topr, 0.0f}, {1.0f, 1.0f}};
     tl_shadow.vertices[3] = {{left,  topr, 0.0f}, {0.0f, 1.0f}};
-
-    // Shadows always need blending...
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void DemoRenderer::tessellate_frame(std::vector<gl::Primitive>& primitives,
