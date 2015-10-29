@@ -61,7 +61,11 @@ public:
     void deposit(std::shared_ptr<ClientBuffer> const& buffer);
     void wire_transfer_inbound(protobuf::Buffer const&);
     void wire_transfer_outbound(std::shared_ptr<ClientBuffer> const& buffer);
+
+    //TODO: once the server/surface can't spam us with resizes
+    //      these can be unified
     void set_size(geometry::Size);
+    void set_scale(float scale);
 
 private:
     std::shared_ptr<ClientBufferFactory> const factory;

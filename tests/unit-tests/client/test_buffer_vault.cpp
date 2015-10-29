@@ -381,3 +381,22 @@ TEST_F(StartedBufferVault, simply_setting_size_triggers_no_server_interations)
     }
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
+
+TEST_F(StartedBufferVault, scaling_resizes_buffer_right_away)
+{
+    mp::Buffer package4;
+    float scale = 2.0f;
+    geom::Size new_size = size * scale;
+    package4.set_width(new_size.width.as_int());
+    package4.set_height(new_size.height.as_int());
+    package4.set_buffer_id(4);
+
+    EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
+        .WillOnce(InvokeWithoutArgs(
+            [&]{vault.wire_transfer_inbound(package4);}));
+    vault.set_scale(scale);
+
+    auto b = vault.withdraw().get();
+    EXPECT_THAT(b->size(), Eq(new_size));
+
+}
