@@ -28,6 +28,7 @@ namespace mir
 {
 namespace shell
 {
+class ShellReport;
 class WindowManager;
 
 /// Minimal Shell implementation with none of the necessary window management logic
@@ -117,6 +118,8 @@ protected:
     std::shared_ptr<WindowManager> const window_manager;
 
 private:
+    std::shared_ptr<ShellReport> const report;
+
     std::mutex mutable focus_mutex;
     std::weak_ptr<scene::Surface> focus_surface;
     std::weak_ptr<scene::Session> focus_session;
