@@ -40,6 +40,7 @@ public:
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
+        std::shared_ptr<ShellReport> const& report,
         WindowManagerBuilder const& wm_builder);
 
     ~AbstractShell() noexcept;

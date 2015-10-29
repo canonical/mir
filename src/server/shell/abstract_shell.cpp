@@ -32,83 +32,19 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-namespace 
-{
-class NullShellReport : public msh::ShellReport
-{
-    void opened_session(mir::scene::Session const& /*session*/) override
-    {
-    }
-
-    void closing_session(mir::scene::Session const& /*session*/) override
-    {
-    }
-
-    void created_surface(mir::scene::Session const& /*session*/, mir::frontend::SurfaceId /*surface_id*/) override
-    {
-    }
-
-    void update_surface(mir::scene::Session const& /*session*/, mir::scene::Surface const& /*surface*/,
-        mir::shell::SurfaceSpecification const& /*modifications*/) override
-    {
-    }
-
-    void update_surface(mir::scene::Session const& /*session*/, mir::scene::Surface const& /*surface*/,
-        MirSurfaceAttrib /*attrib*/, int /*value*/) override
-    {
-    }
-
-    void destroying_surface(mir::scene::Session const& /*session*/, mir::frontend::SurfaceId /*surface*/) override
-    {
-    }
-
-    void started_prompt_session(mir::scene::PromptSession const& /*prompt_session*/, mir::scene::Session const& /*session*/) override
-    {
-    }
-
-    void added_prompt_provider(
-        mir::scene::PromptSession const& /*prompt_session*/,
-        mir::scene::Session const& /*session*/) override
-    {
-    }
-
-    void stopping_prompt_session(
-        mir::scene::PromptSession const& /*prompt_session*/) override
-    {
-    }
-
-    void adding_display(mir::geometry::Rectangle const& /*area*/) override
-    {
-    }
-
-    void removing_display(mir::geometry::Rectangle const& /*area*/) override
-    {
-    }
-
-    void input_focus_set_to(
-        mir::scene::Session const* /*focus_session*/,
-        mir::scene::Surface const* /*focus_surface*/) override
-    {
-    }
-
-    void surfaces_raised(mir::shell::SurfaceSet const& /*surfaces*/) override
-    {
-    }
-};
-}
-
 msh::AbstractShell::AbstractShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
     std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
+    std::shared_ptr<ShellReport> const& report,
     std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder) :
     input_targeter(input_targeter),
     surface_coordinator(surface_coordinator),
     session_coordinator(session_coordinator),
     prompt_session_manager(prompt_session_manager),
     window_manager(wm_builder(this)),
-    report(std::make_shared<NullShellReport>())
+    report(report)
 {
 }
 
