@@ -277,4 +277,5 @@ auto msh::AbstractShell::surface_at(geometry::Point cursor) const
 void msh::AbstractShell::raise(SurfaceSet const& surfaces)
 {
     surface_coordinator->raise(surfaces);
+    report->surfaces_raised(surfaces);
 }
