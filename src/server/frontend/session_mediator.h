@@ -42,6 +42,7 @@ namespace graphics
 {
 class Buffer;
 class Display;
+class DisplayConfiguration;
 class GraphicBufferAllocator;
 }
 namespace input
@@ -141,6 +142,10 @@ public:
         mir::protobuf::DisplayConfiguration const* request,
         mir::protobuf::DisplayConfiguration* response,
         google::protobuf::Closure* done) override;
+    void set_base_display_configuration(
+        mir::protobuf::DisplayConfiguration const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done);
     void create_screencast(
         mir::protobuf::ScreencastParameters const* request,
         mir::protobuf::Screencast* response,
@@ -222,6 +227,9 @@ private:
         BufferStream& buffer_stream,
         graphics::Buffer* old_buffer,
         std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete);
+
+    std::shared_ptr<graphics::DisplayConfiguration> unpack_and_sanitize_display_configuration(
+        protobuf::DisplayConfiguration const*);
 
     virtual std::function<void(std::shared_ptr<Session> const&)> prompt_session_connect_handler() const;
 
