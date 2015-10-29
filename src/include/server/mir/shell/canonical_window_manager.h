@@ -128,9 +128,9 @@ public:
     std::vector<std::shared_ptr<scene::Surface>> generate_decorations_for(
         std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
 
-    bool should_raise_surface(
-        std::shared_ptr<scene::Surface> const& surface,
-        uint64_t timestamp) const;
+    void handle_raise_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface);
 
 private:
     static const int modifier_mask =
@@ -162,7 +162,6 @@ private:
     geometry::Rectangle display_area;
     geometry::Point old_cursor{};
     std::weak_ptr<scene::Surface> active_surface_;
-    std::atomic<uint64_t> last_input_event_timestamp{0};
 };
 
 using CanonicalWindowManager = BasicWindowManager<CanonicalWindowManagerPolicy, CanonicalSessionInfo, CanonicalSurfaceInfo>;

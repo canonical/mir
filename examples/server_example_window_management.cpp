@@ -112,11 +112,10 @@ public:
 
     bool handle_pointer_event(MirPointerEvent const* /*event*/) { return false; }
 
-    bool should_raise_surface(
-        std::shared_ptr<ms::Surface> const& /*surface*/,
-        uint64_t /*timestamp*/) const
+    void handle_raise_surface(
+        std::shared_ptr<ms::Session> const& /*session*/,
+        std::shared_ptr<ms::Surface> const& /*surface*/)
     {
-        return false;
     }
 
     void generate_decorations_for(

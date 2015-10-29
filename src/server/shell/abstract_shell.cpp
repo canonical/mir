@@ -142,11 +142,7 @@ void msh::AbstractShell::raise_surface_with_timestamp(
     std::shared_ptr<ms::Surface> const& surface,
     uint64_t timestamp)
 {
-    if (window_manager->should_raise_surface(surface, timestamp))
-    {
-        set_focus_to(session, surface);
-        raise({surface});
-    }
+    window_manager->handle_raise_surface(session, surface, timestamp);
 }
 
 void msh::AbstractShell::focus_next_session()

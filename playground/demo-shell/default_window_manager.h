@@ -64,9 +64,10 @@ public:
 
     bool handle_pointer_event(MirPointerEvent const* event) override;
 
-    bool should_raise_surface(
+    void handle_raise_surface(
+        std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        uint64_t timestamp) const override;
+        uint64_t timestamp) override;
 
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,

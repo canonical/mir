@@ -236,11 +236,12 @@ void me::TilingWindowManagerPolicy::drag(Point cursor)
     old_cursor = cursor;
 }
 
-bool me::TilingWindowManagerPolicy::should_raise_surface(
-    std::shared_ptr<scene::Surface> const& /*surface*/,
-    uint64_t /*timestamp*/) const
+void me::TilingWindowManagerPolicy::handle_raise_surface(
+    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Surface> const& surface)
 {
-    return false;
+    tools->set_focus_to(session, surface);
+    tools->raise({surface});
 }
 
 bool me::TilingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)

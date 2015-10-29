@@ -606,11 +606,12 @@ void msh::CanonicalWindowManagerPolicy::drag(Point cursor)
     drag(active_surface(), cursor, old_cursor, display_area);
     old_cursor = cursor;
 }
-bool msh::CanonicalWindowManagerPolicy::should_raise_surface(
-    std::shared_ptr<scene::Surface> const& /*surface*/,
-    uint64_t timestamp) const
+void msh::CanonicalWindowManagerPolicy::handle_raise_surface(
+    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Surface> const& surface)
 {
-    return timestamp >= last_input_event_timestamp;
+    tools->set_focus_to(session, surface);
+    tools->raise({surface});
 }
 
 bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)
@@ -618,9 +619,6 @@ bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent c
     auto const action = mir_keyboard_event_action(event);
     auto const scan_code = mir_keyboard_event_scan_code(event);
     auto const modifiers = mir_keyboard_event_modifiers(event) & modifier_mask;
-
-    last_input_event_timestamp =
-        mir_input_event_get_event_time(mir_keyboard_event_input_event(event));
 
     if (action == mir_keyboard_action_down && scan_code == KEY_F11)
     {
@@ -711,17 +709,11 @@ bool msh::CanonicalWindowManagerPolicy::handle_touch_event(MirTouchEvent const* 
         switch (mir_touch_event_action(event, i))
         {
         case mir_touch_action_up:
-        {
-            last_input_event_timestamp =
-                mir_input_event_get_event_time(mir_touch_event_input_event(event));
             return false;
-        }
+
         case mir_touch_action_down:
-        {
-            last_input_event_timestamp =
-                mir_input_event_get_event_time(mir_touch_event_input_event(event));
             is_drag = false;
-        }
+
         case mir_touch_action_change:
             continue;
         }
@@ -747,15 +739,8 @@ bool msh::CanonicalWindowManagerPolicy::handle_pointer_event(MirPointerEvent con
         mir_pointer_event_axis_value(event, mir_pointer_axis_x),
         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
 
-    if (action == mir_pointer_action_button_up)
+    if (action == mir_pointer_action_button_down)
     {
-        last_input_event_timestamp =
-            mir_input_event_get_event_time(mir_pointer_event_input_event(event));
-    }
-    else if (action == mir_pointer_action_button_down)
-    {
-        last_input_event_timestamp =
-            mir_input_event_get_event_time(mir_pointer_event_input_event(event));
         click(cursor);
         return false;
     }
