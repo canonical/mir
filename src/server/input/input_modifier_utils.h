@@ -16,22 +16,17 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVDEV_INPUT_MODIFIER_UTILS_H_
-#define MIR_INPUT_EVDEV_INPUT_MODIFIER_UTILS_H_
+#ifndef MIR_INPUT_INPUT_MODIFIER_UTILS_H_
+#define MIR_INPUT_INPUT_MODIFIER_UTILS_H_
 
 #include "mir_toolkit/event.h"
-#include "mir_toolkit/mir_input_device.h"
 
 namespace mir
 {
 namespace input
 {
-namespace evdev
-{
-MirPointerButton to_pointer_button(int button, MirPointerHandedness handedness);
 MirInputEventModifiers to_modifiers(int32_t scan_code);
 MirInputEventModifiers expand_modifiers(MirInputEventModifiers modifiers);
-}
 }
 }
 

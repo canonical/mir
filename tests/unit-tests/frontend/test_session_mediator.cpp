@@ -22,6 +22,7 @@
 #include "src/server/frontend/resource_cache.h"
 #include "src/server/scene/application_session.h"
 #include "src/server/frontend/event_sender.h"
+#include "src/server/frontend/protobuf_buffer_packer.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
@@ -233,6 +234,21 @@ struct SessionMediator : public ::testing::Test
             WithArg<1>(Invoke(stubbed_session.get(), &StubbedSession::destroy_surface)));
     }
 
+
+    std::shared_ptr<mf::SessionMediator> create_session_mediator_with_display_changer(
+        std::shared_ptr<mf::DisplayChanger> const& display_changer)
+    {
+        return std::make_shared<mf::SessionMediator>(
+            shell, mt::fake_shared(mock_ipc_operations), display_changer,
+            surface_pixel_formats, report,
+            std::make_shared<mtd::NullEventSinkFactory>(),
+            std::make_shared<mtd::NullMessageSender>(),
+            resource_cache, std::make_shared<mtd::NullScreencast>(),
+            nullptr, nullptr, nullptr,
+            std::make_shared<mtd::NullANRDetector>(),
+            mir::cookie::CookieFactory::create_keeping_secret());
+    }
+
     MockConnector connector;
     testing::NiceMock<mtd::MockPlatformIpcOperations> mock_ipc_operations;
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
@@ -372,21 +388,12 @@ TEST_F(SessionMediator, connect_packs_display_configuration)
 {
     using namespace testing;
     mtd::StubDisplayConfig config;
-    auto mock_display = std::make_shared<NiceMock<mtd::MockDisplayChanger>>();
-    ON_CALL(*mock_display, base_configuration())
+    auto mock_display_changer = std::make_shared<NiceMock<mtd::MockDisplayChanger>>();
+    ON_CALL(*mock_display_changer, base_configuration())
         .WillByDefault(Return(mt::fake_shared(config)));
 
-    mf::SessionMediator mediator(
-        shell, mt::fake_shared(mock_ipc_operations), mock_display,
-        surface_pixel_formats, report,
-        std::make_shared<mtd::NullEventSinkFactory>(),
-        std::make_shared<mtd::NullMessageSender>(),
-        resource_cache, std::make_shared<mtd::NullScreencast>(),
-        nullptr, nullptr, nullptr,
-        std::make_shared<mtd::NullANRDetector>(),
-        mir::cookie::CookieFactory::create_keeping_secret());
-    mediator.connect(&connect_parameters, &connection, null_callback.get());
-
+    auto const mediator = create_session_mediator_with_display_changer(mock_display_changer);
+    mediator->connect(&connect_parameters, &connection, null_callback.get());
 
     EXPECT_THAT(connection.display_configuration(), mt::DisplayConfigMatches(std::cref(config)));
 }
@@ -567,33 +574,24 @@ TEST_F(SessionMediator, display_config_request)
 
     NiceMock<MockConfig> mock_display_config;
     mtd::StubDisplayConfig stub_display_config;
-    auto mock_display_selector = std::make_shared<mtd::MockDisplayChanger>();
+    auto mock_display_changer = std::make_shared<mtd::MockDisplayChanger>();
 
     Sequence seq;
-    EXPECT_CALL(*mock_display_selector, base_configuration())
+    EXPECT_CALL(*mock_display_changer, base_configuration())
         .InSequence(seq)
         .WillOnce(Return(mt::fake_shared(mock_display_config)));
-    EXPECT_CALL(*mock_display_selector, base_configuration())
+    EXPECT_CALL(*mock_display_changer, base_configuration())
         .InSequence(seq)
         .WillOnce(Return(mt::fake_shared(mock_display_config)));
-    EXPECT_CALL(*mock_display_selector, configure(_,_))
+    EXPECT_CALL(*mock_display_changer, configure(_,_))
         .InSequence(seq);
-    EXPECT_CALL(*mock_display_selector, base_configuration())
+    EXPECT_CALL(*mock_display_changer, base_configuration())
         .InSequence(seq)
         .WillOnce(Return(mt::fake_shared(stub_display_config)));
 
-    mf::SessionMediator mediator{
-        shell, mt::fake_shared(mock_ipc_operations), mock_display_selector,
-        surface_pixel_formats, report,
-        std::make_shared<mtd::NullEventSinkFactory>(),
-        std::make_shared<mtd::NullMessageSender>(),
-        resource_cache,
-        std::make_shared<mtd::NullScreencast>(),
-         nullptr, nullptr, nullptr,
-        std::make_shared<mtd::NullANRDetector>(),
-        mir::cookie::CookieFactory::create_keeping_secret()};
+    auto const mediator = create_session_mediator_with_display_changer(mock_display_changer);
 
-    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator->connect(&connect_parameters, &connection, null_callback.get());
 
     mp::DisplayConfiguration configuration_response;
     mp::DisplayConfiguration configuration;
@@ -617,12 +615,12 @@ TEST_F(SessionMediator, display_config_request)
     disp1->set_power_mode(static_cast<uint32_t>(mir_power_mode_off));
     disp1->set_orientation(mir_orientation_inverted);
 
-    mediator.configure_display(&configuration,
-                                       &configuration_response, null_callback.get());
+    mediator->configure_display(&configuration,
+                                &configuration_response, null_callback.get());
 
     EXPECT_THAT(configuration_response, mt::DisplayConfigMatches(std::cref(stub_display_config)));
 
-    mediator.disconnect(nullptr, nullptr, null_callback.get());
+    mediator->disconnect(nullptr, nullptr, null_callback.get());
 }
 
 TEST_F(SessionMediator, fully_packs_buffer_for_create_screencast)
@@ -1227,4 +1225,65 @@ TEST_F(SessionMediator, raise_with_invalid_cookie_throws)
     EXPECT_THROW({
         mediator.raise_surface_with_cookie(&raise_request, &void_response, nullptr);
     }, mir::cookie::InvalidCookieError);
+}
+
+TEST_F(SessionMediator, sets_base_display_configuration)
+{
+    using namespace testing;
+
+    mtd::StubDisplayConfig display_config{2};
+    mp::DisplayConfiguration request;
+    mp::Void response;
+
+    mf::detail::pack_protobuf_display_configuration(request, display_config);
+
+    auto mock_display_changer = std::make_shared<NiceMock<mtd::MockDisplayChanger>>();
+
+    ON_CALL(*mock_display_changer, base_configuration())
+        .WillByDefault(Return(mt::fake_shared(display_config)));
+    EXPECT_CALL(*mock_display_changer,
+                mock_set_base_configuration(
+                    mt::DisplayConfigMatches(std::cref(display_config))));
+
+    auto const mediator = create_session_mediator_with_display_changer(mock_display_changer);
+
+    mediator->connect(&connect_parameters, &connection, null_callback.get());
+    mediator->set_base_display_configuration(&request, &response, null_callback.get());
+}
+
+TEST_F(SessionMediator, sanitizes_base_display_configuration_before_setting)
+{
+    using namespace testing;
+
+    auto const set_second_mode =
+        [] (mg::UserDisplayConfigurationOutput& output)
+        {
+            output.current_mode_index = 1;
+        };
+
+    mtd::StubDisplayConfig single_output_base_config{1};
+    mtd::StubDisplayConfig dual_output_requested_config{2};
+    mtd::StubDisplayConfig single_output_sanitized_config{1};
+
+    dual_output_requested_config.for_each_output(set_second_mode);
+    single_output_sanitized_config.for_each_output(set_second_mode);
+
+    mp::DisplayConfiguration request;
+    mp::Void response;
+
+    mf::detail::pack_protobuf_display_configuration(request, dual_output_requested_config);
+
+    auto mock_display_changer = std::make_shared<NiceMock<mtd::MockDisplayChanger>>();
+
+    ON_CALL(*mock_display_changer, base_configuration())
+        .WillByDefault(Return(mt::fake_shared(single_output_base_config)));
+
+    EXPECT_CALL(*mock_display_changer,
+                mock_set_base_configuration(
+                    mt::DisplayConfigMatches(std::cref(single_output_sanitized_config))));
+
+    auto const mediator = create_session_mediator_with_display_changer(mock_display_changer);
+
+    mediator->connect(&connect_parameters, &connection, null_callback.get());
+    mediator->set_base_display_configuration(&request, &response, null_callback.get());
 }

@@ -609,33 +609,29 @@ void mf::SessionMediator::configure_display(
 
     report->session_configure_display_called(session->name());
 
-    auto config = display_changer->base_configuration();
-
-    config->for_each_output([&](mg::UserDisplayConfigurationOutput& dest){
-        unsigned id = dest.id.as_value();
-        int n = 0;
-        for (; n < request->display_output_size(); ++n)
-        {
-            if (request->display_output(n).output_id() == id)
-                break;
-        }
-        if (n >= request->display_output_size())
-            return;
-
-        auto& src = request->display_output(n);
-        dest.used = src.used();
-        dest.top_left = geom::Point{src.position_x(),
-                src.position_y()};
-        dest.current_mode_index = src.current_mode();
-        dest.current_format =
-                static_cast<MirPixelFormat>(src.current_format());
-        dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
-        dest.orientation = static_cast<MirOrientation>(src.orientation());
-    });
-
+    auto const config = unpack_and_sanitize_display_configuration(request);
     display_changer->configure(session, config);
+
     auto display_config = display_changer->base_configuration();
     mfd::pack_protobuf_display_configuration(*response, *display_config);
+
+    done->Run();
+}
+
+void mf::SessionMediator::set_base_display_configuration(
+    mir::protobuf::DisplayConfiguration const* request,
+    mir::protobuf::Void* /*response*/,
+    google::protobuf::Closure* done)
+{
+    auto session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    report->session_set_base_display_configuration_called(session->name());
+
+    auto const config = unpack_and_sanitize_display_configuration(request);
+    display_changer->set_base_configuration(config);
 
     done->Run();
 }
@@ -1028,4 +1024,35 @@ void mf::SessionMediator::raise_surface_with_cookie(
     shell->raise_surface_with_timestamp(session, mf::SurfaceId{surface_id.value()}, cookie.timestamp());
 
     done->Run();
+}
+
+std::shared_ptr<mg::DisplayConfiguration>
+mf::SessionMediator::unpack_and_sanitize_display_configuration(
+    mir::protobuf::DisplayConfiguration const* protobuf_config)
+{
+    auto config = display_changer->base_configuration();
+
+    config->for_each_output([&](mg::UserDisplayConfigurationOutput& dest){
+        unsigned id = dest.id.as_value();
+        int n = 0;
+        for (; n < protobuf_config->display_output_size(); ++n)
+        {
+            if (protobuf_config->display_output(n).output_id() == id)
+                break;
+        }
+        if (n >= protobuf_config->display_output_size())
+            return;
+
+        auto& src = protobuf_config->display_output(n);
+        dest.used = src.used();
+        dest.top_left = geom::Point{src.position_x(),
+                src.position_y()};
+        dest.current_mode_index = src.current_mode();
+        dest.current_format =
+                static_cast<MirPixelFormat>(src.current_format());
+        dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
+        dest.orientation = static_cast<MirOrientation>(src.orientation());
+    });
+
+    return config;
 }

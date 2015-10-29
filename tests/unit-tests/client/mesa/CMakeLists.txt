@@ -30,7 +30,6 @@ add_library(unit_test_client_platform_mesa OBJECT
 list(APPEND UNIT_TEST_SOURCES
   $<TARGET_OBJECTS:unit_test_client_platform_mesa>
   $<TARGET_OBJECTS:mirclientplatformmesaobjects>
-  $<TARGET_OBJECTS:client_platform_common>
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
