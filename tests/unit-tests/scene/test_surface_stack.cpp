@@ -339,6 +339,7 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
 {
     using namespace testing;
     ms::SurfaceStack stack{report};
+    stack.register_compositor(this);
     mtd::StubBuffer stub_buffer;
     int ready = 0;
     auto mock_queue = std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>();
@@ -384,6 +385,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
     using namespace testing;
 
     ms::SurfaceStack stack{report};
+    stack.register_compositor(this);
     auto surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),
         geom::Rectangle{{},{}},
@@ -403,6 +405,48 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
     post_a_frame(*surface);
     post_a_frame(*surface);
     EXPECT_EQ(0, stack.frames_pending(this));
+}
+
+TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_surfaces)
+{  // Regression test for LP: #1499039
+    using namespace testing;
+
+    // Partially exposed means occluded in one compositor but not another
+    ms::SurfaceStack stack{report};
+    auto comp1{reinterpret_cast<mc::CompositorID>(0)};
+    auto comp2{reinterpret_cast<mc::CompositorID>(1)};
+
+    stack.register_compositor(comp1);
+    stack.register_compositor(comp2);
+    auto surface = std::make_shared<ms::BasicSurface>(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        std::make_shared<mtd::StubBufferStream>(),
+        std::shared_ptr<mir::input::InputChannel>(),
+        std::shared_ptr<mir::input::InputSender>(),
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+
+    stack.add_surface(surface, default_params.depth, default_params.input_mode);
+    post_a_frame(*surface);
+    post_a_frame(*surface);
+    post_a_frame(*surface);
+
+    EXPECT_EQ(3, stack.frames_pending(comp2));
+    auto elements = stack.scene_elements_for(comp1);
+    for (auto const& elem : elements)
+    {
+        elem->rendered();
+    }
+
+    elements = stack.scene_elements_for(comp2);
+    for (auto const& elem : elements)
+    {
+        elem->occluded();
+    }
+
+    EXPECT_EQ(0, stack.frames_pending(comp2));
 }
 
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
