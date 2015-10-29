@@ -16,8 +16,6 @@
  * Authored by: Brandon Schaefer <brandontschaefer@canonical.com>
  */
 
-
-//#include "mir_test_framework/udev_environment.h"
 #include "mir/input/input_device_info.h"
 
 #include "mir_test_framework/fake_input_device.h"
