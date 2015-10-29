@@ -165,6 +165,28 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     return make_event_uptr(e);
 }
 
+
+void mev::set_modifier(MirEvent& event, MirInputEventModifiers modifiers)
+{
+    switch(event.type)
+    {
+    case mir_event_type_key:
+        {
+            auto& kev = event.key;
+            kev.modifiers = modifiers;
+            break;
+        }
+    case mir_event_type_motion:
+        {
+            auto& mev = event.motion;
+            mev.modifiers = modifiers;
+            break;
+        }
+    default:
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Input event modifiers are only valid for pointer, key and touch events."));
+    }
+}
+
 // Deprecated version without mac
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirKeyboardAction action, xkb_keysym_t key_code,

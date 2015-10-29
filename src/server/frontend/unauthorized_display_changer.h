@@ -33,6 +33,7 @@ public:
 
     std::shared_ptr<graphics::DisplayConfiguration> base_configuration();
     void configure(std::shared_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&);
+    std::future<void> set_base_configuration(std::shared_ptr<graphics::DisplayConfiguration> const&);
 
 private:
     std::shared_ptr<frontend::DisplayChanger> const changer;

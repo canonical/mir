@@ -8,7 +8,7 @@ include_directories(
 
 add_library(mirevdevutilsobjects OBJECT
     evdev_device_detection.cpp
-    input_modifier_utils.cpp
+    button_utils.cpp
     )
 
 add_library(mirplatforminputevdevobjects OBJECT
@@ -34,8 +34,7 @@ set_target_properties(
 )
 
 target_link_libraries(mirplatforminputevdev
-  mirplatform
-  mirclient
+  mirplatform # udev wrapper
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${LIBINPUT_LDFLAGS} ${LIBINPUT_LIBRARIES}
 )
