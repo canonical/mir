@@ -527,6 +527,13 @@ void me::CanonicalWindowManagerPolicyCopy::drag(Point cursor)
     old_cursor = cursor;
 }
 
+bool me::CanonicalWindowManagerPolicyCopy::should_raise_surface(
+    std::shared_ptr<scene::Surface> const& /*surface*/,
+    uint64_t /*timestamp*/) const
+{
+    return false;
+}
+
 bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEvent const* event)
 {
     auto const action = mir_keyboard_event_action(event);

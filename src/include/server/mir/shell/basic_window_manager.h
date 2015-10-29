@@ -275,6 +275,13 @@ protected:
         focus_controller->raise(surfaces);
     }
 
+    bool should_raise_surface(
+        std::shared_ptr<scene::Surface> const& surface,
+        uint64_t timestamp) const override
+    {
+        return policy.should_raise_surface(surface, timestamp);
+    }
+
     auto active_display() -> geometry::Rectangle const override
     {
         geometry::Rectangle result;

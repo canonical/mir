@@ -582,6 +582,7 @@ MIR_SERVER_35 {
     mir::shell::CanonicalWindowManagerPolicy::handle_keyboard_event*;
     mir::shell::CanonicalWindowManagerPolicy::handle_touch_event*;
     mir::shell::CanonicalWindowManagerPolicy::handle_pointer_event*;
+    mir::shell::CanonicalWindowManagerPolicy::should_raise_surface*;
     mir::shell::DefaultWindowManager::DefaultWindowManager*;
 
     mir::DefaultServerConfiguration::clock*;

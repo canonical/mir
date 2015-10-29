@@ -214,6 +214,13 @@ private:
         return policy.handle_pointer_event(event);
     }
 
+    bool should_raise_surface(
+        std::shared_ptr<scene::Surface> const& surface,
+        uint64_t timestamp) const override
+    {
+        return policy.should_raise_surface(surface, timestamp);
+    }
+
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& /*session*/,
         std::shared_ptr<scene::Surface> const& surface,

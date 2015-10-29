@@ -149,3 +149,10 @@ void msh::SystemCompositorWindowManager::on_session_ready(std::shared_ptr<mir::s
 {
     focus_controller->set_focus_to(session, session->default_surface());
 }
+
+bool msh::SystemCompositorWindowManager::should_raise_surface(
+    std::shared_ptr<scene::Surface> const& /*surface*/,
+    uint64_t /*timestamp*/) const
+{
+    return false;
+}

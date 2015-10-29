@@ -90,6 +90,10 @@ public:
 
     bool handle_pointer_event(MirPointerEvent const* event);
 
+    bool should_raise_surface(
+        std::shared_ptr<scene::Surface> const& surface,
+        uint64_t timestamp) const;
+
     void generate_decorations_for(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,

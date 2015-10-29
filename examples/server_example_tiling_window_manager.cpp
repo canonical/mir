@@ -236,6 +236,13 @@ void me::TilingWindowManagerPolicy::drag(Point cursor)
     old_cursor = cursor;
 }
 
+bool me::TilingWindowManagerPolicy::should_raise_surface(
+    std::shared_ptr<scene::Surface> const& /*surface*/,
+    uint64_t /*timestamp*/) const
+{
+    return false;
+}
+
 bool me::TilingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)
 {
     auto const action = mir_keyboard_event_action(event);

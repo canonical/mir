@@ -71,6 +71,10 @@ public:
         MirSurfaceAttrib attrib,
         int value) = 0;
 
+    virtual bool should_raise_surface(
+        std::shared_ptr<scene::Surface> const& surface,
+        uint64_t timestamp) const = 0;
+
     virtual ~WindowManager() = default;
     WindowManager() = default;
     WindowManager(WindowManager const&) = delete;

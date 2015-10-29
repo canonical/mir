@@ -86,7 +86,6 @@ class DisplayLayout;
 class HostLifecycleEventListener;
 class Shell;
 class PersistentSurfaceStore;
-class RaiseSurfacePolicy;
 namespace detail { class FrontendShell; }
 }
 namespace time
@@ -268,9 +267,6 @@ public:
     // the_focus_controller() is an interface for the_shell().
     std::shared_ptr<shell::FocusController> the_focus_controller();
 
-    // the_raise_policy() is an interface for the_shell()
-    std::shared_ptr<shell::RaiseSurfacePolicy> the_raise_policy();
-
     /** @name shell configuration - customization
      * configurable interfaces for modifying shell
      *  @{ */
@@ -451,7 +447,6 @@ protected:
     CachedPtr<shell::Shell> shell;
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::CookieFactory> cookie_factory;
-    CachedPtr<shell::RaiseSurfacePolicy> raise_surface_policy;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

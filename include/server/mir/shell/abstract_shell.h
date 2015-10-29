@@ -28,7 +28,6 @@ namespace mir
 {
 namespace shell
 {
-class RaiseSurfacePolicy;
 class WindowManager;
 
 /// Minimal Shell implementation with none of the necessary window management logic
@@ -40,7 +39,6 @@ public:
         std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
-        std::shared_ptr<RaiseSurfacePolicy> const& raise_policy,
         WindowManagerBuilder const& wm_builder);
 
     ~AbstractShell() noexcept;
@@ -121,7 +119,6 @@ protected:
     std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
     std::shared_ptr<scene::PromptSessionManager> const prompt_session_manager;
-    std::shared_ptr<RaiseSurfacePolicy> const raise_policy;
     std::shared_ptr<WindowManager> const window_manager;
 
 private:
