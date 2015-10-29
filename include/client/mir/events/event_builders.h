@@ -51,7 +51,8 @@ EventUPtr make_event(
     frontend::SurfaceId const& surface_id,
     int dpi,
     float scale,
-    MirFormFactor form_factor);
+    MirFormFactor form_factor,
+    uint32_t id);
 
 // Key event
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
