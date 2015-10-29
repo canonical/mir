@@ -161,5 +161,6 @@ void mcl::BufferVault::set_size(geom::Size sz)
 
 void mcl::BufferVault::set_scale(float scale)
 {
-    (void) scale;
+    size = size * scale;
+    server_requests->allocate_buffer(size, format, usage);
 }

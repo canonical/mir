@@ -670,6 +670,13 @@ void mcl::BufferStream::set_size(geom::Size sz)
 
 MirWaitHandle* mcl::BufferStream::set_scale(float scale)
 {
+    //
+    if (NBS)
+    {
+        buffer_vault->set_scale();
+    }
+    else
+    {
     mp::StreamConfiguration configuration;
     configuration.mutable_id()->set_value(protobuf_bs->id().value());
     configuration.set_scale(scale);
@@ -678,4 +685,5 @@ MirWaitHandle* mcl::BufferStream::set_scale(float scale)
     display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
         google::protobuf::NewCallback(this, &mcl::BufferStream::on_scale_set, scale));
     return &scale_wait_handle;
+    }
 }
