@@ -29,8 +29,6 @@
 
 #include <linux/input.h>
 
-#include <iostream>
-
 namespace mtf = mir_test_framework;
 namespace mt = mir::test;
 namespace mi = mir::input;
@@ -97,7 +95,6 @@ void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
         }
         else if (itype == mir_input_event_type_pointer)
         {
-            std::cout << "here" << std::endl;
             auto pev = mir_input_event_get_pointer_event(iev);
             client->out_cookies.push_back(mir_pointer_event_get_cookie(pev));
         }
