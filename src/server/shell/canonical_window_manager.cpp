@@ -606,6 +606,7 @@ void msh::CanonicalWindowManagerPolicy::drag(Point cursor)
     drag(active_surface(), cursor, old_cursor, display_area);
     old_cursor = cursor;
 }
+
 void msh::CanonicalWindowManagerPolicy::handle_raise_surface(
     std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<ms::Surface> const& surface)
