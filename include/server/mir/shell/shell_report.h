@@ -20,15 +20,20 @@
 #define MIR_SHELL_SHELL_REPORT_H
 
 #include "mir/frontend/surface_id.h"
+#include "mir_toolkit/common.h"
+
+#include <memory>
+#include <set>
 
 namespace mir
 {
 namespace geometry { struct Rectangle; }
-namespace scene { class Session; class Surface; struct SurfaceCreationParameters; }
+namespace scene { class PromptSession; class Session; class Surface; struct SurfaceCreationParameters; }
 
 namespace shell
 {
 struct SurfaceSpecification;
+using SurfaceSet = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;
 
 class ShellReport
 {

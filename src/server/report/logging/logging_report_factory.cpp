@@ -78,3 +78,7 @@ std::shared_ptr<mir::SharedLibraryProberReport> mr::LoggingReportFactory::create
     return std::make_shared<mir::logging::SharedLibraryProberReport>(logger);
 }
 
+std::shared_ptr<mir::shell::ShellReport> mir::report::LoggingReportFactory::create_shell_report()
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Not implemented"));
+}
