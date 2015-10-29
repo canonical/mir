@@ -35,7 +35,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <iostream>
+
 namespace mtf = mir_test_framework;
 namespace mt = mir::test;
 namespace mi = mir::input;
@@ -102,7 +102,6 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
         }
         else if (itype == mir_input_event_type_pointer)
         {
-            std::cout << "HERE" << std::endl;
             auto pev = mir_input_event_get_pointer_event(iev);
             client->pointer_cookies.push_back(mir_pointer_event_get_cookie(pev));
         }
