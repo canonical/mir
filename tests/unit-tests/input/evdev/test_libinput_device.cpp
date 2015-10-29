@@ -293,6 +293,22 @@ struct LibInputDevice : public ::testing::Test
             .WillByDefault(Return(relatve_y));
     }
 
+    void setup_absolute_pointer_event(libinput_event* event, uint64_t event_time, float x, float y)
+    {
+        auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
+
+        ON_CALL(mock_libinput, libinput_event_get_type(event))
+            .WillByDefault(Return(LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE));
+        ON_CALL(mock_libinput, libinput_event_get_pointer_event(event))
+            .WillByDefault(Return(pointer_event));
+        ON_CALL(mock_libinput, libinput_event_pointer_get_time_usec(pointer_event))
+            .WillByDefault(Return(event_time));
+        ON_CALL(mock_libinput, libinput_event_pointer_get_absolute_x_transformed(pointer_event, _))
+            .WillByDefault(Return(x));
+        ON_CALL(mock_libinput, libinput_event_pointer_get_absolute_y_transformed(pointer_event, _))
+            .WillByDefault(Return(y));
+    }
+
     void setup_button_event(libinput_event* event, uint64_t event_time, int button, libinput_button_state state)
     {
         auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
@@ -509,14 +525,37 @@ TEST_F(LibInputDeviceOnLaptopKeyboard, process_event_accumulates_key_state)
 
 TEST_F(LibInputDeviceOnMouse, process_event_converts_pointer_event)
 {
-    float x = 15;
-    float y = 17;
-    setup_pointer_event(fake_event_1, event_time_1, x, y);
+    float x_movement_1 = 15;
+    float y_movement_1 = 17;
+    float x_movement_2 = 20;
+    float y_movement_2 = 40;
+    setup_pointer_event(fake_event_1, event_time_1, x_movement_1, y_movement_1);
+    setup_pointer_event(fake_event_2, event_time_2, x_movement_2, y_movement_2);
 
-    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithPosition(x,y)));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x_movement_1,y_movement_1)));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x_movement_2,y_movement_2)));
 
     mouse.start(&mock_sink, &mock_builder);
     mouse.process_event(fake_event_1);
+    mouse.process_event(fake_event_2);
+}
+
+TEST_F(LibInputDeviceOnMouse, process_event_handles_absolute_pointer_events)
+{
+    float x1 = 15;
+    float y1 = 17;
+    float x2 = 40;
+    float y2 = 10;
+    setup_absolute_pointer_event(fake_event_1, event_time_1, x1, y1);
+    setup_absolute_pointer_event(fake_event_2, event_time_2, x2, y2);
+
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithPosition(x1, y1)));
+    EXPECT_CALL(mock_sink,
+                handle_input(AllOf(mt::PointerEventWithPosition(x2, y2), mt::PointerEventWithDiff(x2 - x1, y2 - y1))));
+
+    mouse.start(&mock_sink, &mock_builder);
+    mouse.process_event(fake_event_1);
+    mouse.process_event(fake_event_2);
 }
 
 TEST_F(LibInputDeviceOnMouse, process_event_provides_relative_coordinates)
