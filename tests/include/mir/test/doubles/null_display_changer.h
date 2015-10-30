@@ -32,12 +32,19 @@ namespace doubles
 class NullDisplayChanger : public frontend::DisplayChanger
 {
 public:
-    virtual std::shared_ptr<graphics::DisplayConfiguration> base_configuration()
+    std::shared_ptr<graphics::DisplayConfiguration> base_configuration() override
     {
         return std::make_shared<NullDisplayConfiguration>();
     }
-    virtual void configure(std::shared_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&)
+    void configure(std::shared_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&) override
     {
+    }
+    std::future<void> set_base_configuration(std::shared_ptr<graphics::DisplayConfiguration> const&) override
+    {
+        std::packaged_task<void()> task{[]{}};
+        auto fut = task.get_future();
+        task();
+        return std::move(fut);
     }
 };
 }
