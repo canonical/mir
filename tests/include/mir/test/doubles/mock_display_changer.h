@@ -19,7 +19,8 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_CHANGER_H_
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_CHANGER_H_
 
-#include "mir/frontend/display_changer.h"
+#include "null_display_changer.h"
+
 #include <gmock/gmock.h>
 
 namespace mir
@@ -29,12 +30,20 @@ namespace test
 namespace doubles
 {
 
-class MockDisplayChanger : public frontend::DisplayChanger
+class MockDisplayChanger : public NullDisplayChanger
 {
 public:
-    MOCK_METHOD0(active_configuration, std::shared_ptr<graphics::DisplayConfiguration>());
+    MOCK_METHOD0(base_configuration, std::shared_ptr<graphics::DisplayConfiguration>());
     MOCK_METHOD2(configure,
         void(std::shared_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&));
+    MOCK_METHOD1(mock_set_base_configuration,void(graphics::DisplayConfiguration const&));
+
+    std::future<void> set_base_configuration(
+        std::shared_ptr<graphics::DisplayConfiguration> const& config)
+    {
+        mock_set_base_configuration(*config);
+        return NullDisplayChanger::set_base_configuration(config);
+    }
 };
 
 }

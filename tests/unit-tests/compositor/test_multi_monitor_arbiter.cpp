@@ -459,3 +459,21 @@ TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_overlay_scenario)
     arbiter.compositor_release(b1);
     arbiter.compositor_release(b2);
 } 
+
+TEST_F(MultiMonitorArbiter, can_advance_buffer_manually)
+{
+    int comp_id1{0};
+    int comp_id2{0};
+    schedule.set_schedule({buffers[0], buffers[1], buffers[2]});
+
+    arbiter.advance_schedule();
+    arbiter.advance_schedule();
+
+    auto b1 = arbiter.compositor_acquire(&comp_id1);
+    auto b2 = arbiter.compositor_acquire(&comp_id2);
+    EXPECT_THAT(b1->id(), Eq(buffers[1]->id()));
+    EXPECT_THAT(b2->id(), Eq(buffers[1]->id()));
+
+    auto b3 = arbiter.compositor_acquire(&comp_id1);
+    EXPECT_THAT(b3->id(), Eq(buffers[2]->id()));
+}

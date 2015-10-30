@@ -23,6 +23,8 @@
 
 #include "mir/geometry/displacement.h"
 
+#include <atomic>
+
 namespace mir
 {
 namespace shell
@@ -125,6 +127,10 @@ public:
 
     std::vector<std::shared_ptr<scene::Surface>> generate_decorations_for(
         std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
+
+    void handle_raise_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface);
 
 private:
     static const int modifier_mask =

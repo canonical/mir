@@ -67,6 +67,8 @@ private:
 
         mir::optional_value<mir::input::PointerSettings> get_pointer_settings() const override;
         void apply_settings(mir::input::PointerSettings const& settings) override;
+        mir::optional_value<mir::input::TouchpadSettings> get_touchpad_settings() const override;
+        void apply_settings(mir::input::TouchpadSettings const& settings) override;
 
     private:
         MirPointerAction update_buttons(synthesis::EventAction action, MirPointerButton button);
@@ -77,7 +79,6 @@ private:
         mir::input::EventBuilder* builder{nullptr};
         mir::input::InputDeviceInfo info;
         std::shared_ptr<mir::dispatch::Dispatchable> const queue;
-        uint32_t modifiers{0};
         mir::geometry::Point pos, scroll;
         MirPointerButtons buttons;
         mir::input::PointerSettings settings;

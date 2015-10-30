@@ -27,13 +27,18 @@ mf::UnauthorizedDisplayChanger::UnauthorizedDisplayChanger(std::shared_ptr<front
 {
 }
 
-std::shared_ptr<mg::DisplayConfiguration> mf::UnauthorizedDisplayChanger::active_configuration()
+std::shared_ptr<mg::DisplayConfiguration> mf::UnauthorizedDisplayChanger::base_configuration()
 {
-    return changer->active_configuration();
+    return changer->base_configuration();
 }
 
 void mf::UnauthorizedDisplayChanger::configure(
     std::shared_ptr<mf::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to apply display configurations"));
+}
+
+std::future<void> mf::UnauthorizedDisplayChanger::set_base_configuration(std::shared_ptr<graphics::DisplayConfiguration> const&)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to set base display configurations"));
 }

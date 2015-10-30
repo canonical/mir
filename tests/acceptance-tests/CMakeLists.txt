@@ -52,6 +52,7 @@ set(
   test_system_compositor_window_manager.cpp
   test_session_mediator_report.cpp
   test_surface_raise.cpp
+  test_client_cookie.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")

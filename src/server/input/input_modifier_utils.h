@@ -13,34 +13,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir/shell/raise_surface_policy.h"
+#ifndef MIR_INPUT_INPUT_MODIFIER_UTILS_H_
+#define MIR_INPUT_INPUT_MODIFIER_UTILS_H_
+
+#include "mir_toolkit/event.h"
 
 namespace mir
 {
-namespace scene
+namespace input
 {
-class Surface;
+MirInputEventModifiers to_modifiers(int32_t scan_code);
+MirInputEventModifiers expand_modifiers(MirInputEventModifiers modifiers);
 }
-namespace test
-{
-namespace doubles
-{
+}
 
-struct StubRaiseSurfacePolicy : shell::RaiseSurfacePolicy
-{
-    StubRaiseSurfacePolicy() = default;
-
-    bool should_raise_surface(
-        std::shared_ptr<scene::Surface> const& /* surface_candidate */,
-        uint64_t /* timestamp */) const override
-    {
-        return false;
-    }
-};
-
-}
-}
-}
+#endif

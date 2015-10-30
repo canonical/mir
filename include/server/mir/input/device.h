@@ -31,7 +31,7 @@ namespace input
 {
 
 class PointerSettings;
-class TouchPadSettings;
+class TouchpadSettings;
 
 class Device
 {

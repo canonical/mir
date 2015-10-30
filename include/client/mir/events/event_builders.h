@@ -58,6 +58,8 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
     uint64_t mac, MirKeyboardAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers);
 
+void set_modifier(MirEvent& event, MirInputEventModifiers modifiers);
+
 // Deprecated version without mac
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirKeyboardAction action, xkb_keysym_t key_code,

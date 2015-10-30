@@ -214,6 +214,15 @@ private:
         return policy.handle_pointer_event(event);
     }
 
+    void handle_raise_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        uint64_t /*timestamp*/) override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        policy.handle_raise_surface(session, surface);
+    }
+
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& /*session*/,
         std::shared_ptr<scene::Surface> const& surface,

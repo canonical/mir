@@ -113,6 +113,7 @@ target_link_libraries(
   mirdraw
   demo-shell
   mircommon
+  client_platform_common
 
   mirclient-static
   mirclientrpc-static
