@@ -27,7 +27,7 @@ namespace mir
 
 struct SecurityCheckFailed : std::exception
 {
-    SecurityCheckFailed(std::string const& message);
+    SecurityCheckFailed() = default;
     virtual char const* what() const noexcept override;
 
 private:

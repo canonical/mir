@@ -59,8 +59,8 @@
 #include "mir/test/signal.h"
 #include "mir/frontend/connector.h"
 #include "mir/frontend/event_sink.h"
+#include "mir/frontend/security_check_failed.h"
 #include "mir/cookie_factory.h"
-#include "mir/security_check_failed.h"
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 

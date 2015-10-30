@@ -16,14 +16,14 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#include "mir/security_check_failed.h"
+#include "mir/frontend/security_check_failed.h"
 
-mir::SecurityCheckFailed::SecurityCheckFailed(std::string const& message) :
-    message(message)
+namespace
 {
+char const* invalid_cookie{"Invald MirCookie"};
 }
 
 char const* mir::SecurityCheckFailed::what() const noexcept
 {
-    return message.c_str();
+    return invalid_cookie;
 }

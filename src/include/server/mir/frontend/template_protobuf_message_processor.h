@@ -20,8 +20,8 @@
 #ifndef MIR_FRONTEND_TEMPLATE_PROTOBUF_MESSAGE_PROCESSOR_H_
 #define MIR_FRONTEND_TEMPLATE_PROTOBUF_MESSAGE_PROCESSOR_H_
 
-#include "mir/security_check_failed.h"
 #include "mir/frontend/message_processor.h"
+#include "mir/frontend/security_check_failed.h"
 
 #include <google/protobuf/stubs/common.h>
 #include <boost/exception/diagnostic_information.hpp>
