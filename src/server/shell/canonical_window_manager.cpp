@@ -608,11 +608,10 @@ void msh::CanonicalWindowManagerPolicy::drag(Point cursor)
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_raise_surface(
-    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Session> const& /*session*/,
     std::shared_ptr<ms::Surface> const& surface)
 {
-    tools->set_focus_to(session, surface);
-    tools->raise({surface});
+    select_active_surface(surface);
 }
 
 bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)

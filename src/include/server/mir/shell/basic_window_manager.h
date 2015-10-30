@@ -346,6 +346,8 @@ protected:
     uint64_t last_input_event_timestamp{0};
 
 private:
+    // TODO Clean up by introducing a client function to get the timestamps of
+    // TODO each type of event (Key/Pointer/Touch)
     void update_event_timestamp(MirInputEvent const* iev)
     {
         auto iev_type = mir_input_event_get_type(iev);

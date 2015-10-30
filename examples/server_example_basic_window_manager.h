@@ -194,18 +194,21 @@ private:
     bool handle_keyboard_event(MirKeyboardEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
+        update_event_timestamp(mir_keyboard_event_input_event(event));
         return policy.handle_keyboard_event(event);
     }
 
     bool handle_touch_event(MirTouchEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
+        update_event_timestamp(mir_touch_event_input_event(event));
         return policy.handle_touch_event(event);
     }
 
     bool handle_pointer_event(MirPointerEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
+        update_event_timestamp(mir_pointer_event_input_event(event));
 
         cursor = {
             mir_pointer_event_axis_value(event, mir_pointer_axis_x),
@@ -217,10 +220,11 @@ private:
     void handle_raise_surface(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        uint64_t /*timestamp*/) override
+        uint64_t timestamp) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        policy.handle_raise_surface(session, surface);
+        if (timestamp <= last_input_event_timestamp)
+            policy.handle_raise_surface(session, surface);
     }
 
     int set_surface_attribute(
@@ -353,6 +357,50 @@ private:
     typename SurfaceTo<SurfaceInfo>::type surface_info;
     geometry::Rectangles displays;
     geometry::Point cursor;
+    uint64_t last_input_event_timestamp{0};
+
+private:
+    // TODO Clean up by introducing a client function to get the timestamps of
+    // TODO each type of event (Key/Pointer/Touch)
+    void update_event_timestamp(MirInputEvent const* iev)
+    {
+        auto iev_type = mir_input_event_get_type(iev);
+     
+        switch (iev_type)
+        {
+            case mir_input_event_type_key:
+                last_input_event_timestamp = mir_input_event_get_event_time(iev);
+                break;
+            case mir_input_event_type_pointer:
+            {
+                auto pev = mir_input_event_get_pointer_event(iev);
+                auto pointer_action = mir_pointer_event_action(pev);
+     
+                if (pointer_action == mir_pointer_action_button_up ||
+                    pointer_action == mir_pointer_action_button_down)
+                {
+                    last_input_event_timestamp = mir_input_event_get_event_time(iev);
+                }
+                break;
+            }
+            case mir_input_event_type_touch:
+            {
+                auto tev = mir_input_event_get_touch_event(iev);
+                auto touch_count = mir_touch_event_point_count(tev);
+                for (unsigned i = 0; i < touch_count; i++)
+                {
+                    auto touch_action = mir_touch_event_action(tev, i);
+                    if (touch_action == mir_touch_action_up ||
+                           touch_action == mir_touch_action_down)
+                    {
+                        last_input_event_timestamp = mir_input_event_get_event_time(iev);
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
 };
 }
 }
