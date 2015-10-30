@@ -48,6 +48,12 @@ namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace mgn = mir::graphics::nested;
 
+namespace
+{
+// TODO: Temporary, until we actually manage module lifetimes
+static std::shared_ptr<mir::SharedLibrary> platform_library;
+}
+
 std::shared_ptr<mg::DisplayConfigurationPolicy>
 mir::DefaultServerConfiguration::the_display_configuration_policy()
 {
@@ -71,7 +77,6 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
     return graphics_platform(
         [this]()->std::shared_ptr<mg::Platform>
         {
-            std::shared_ptr<mir::SharedLibrary> platform_library;
             // fallback to standalone if host socket is unset
             if (the_options()->is_set(options::platform_graphics_lib))
             {

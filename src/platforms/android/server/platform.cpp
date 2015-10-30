@@ -136,7 +136,7 @@ EGLNativeDisplayType mga::Platform::egl_native_display() const
     return EGL_DEFAULT_DISPLAY;
 }
 
-mir::UniqueModulePtr<mg::Platform> create_host_platform(
+std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mir::graphics::DisplayReport> const& display_report)
@@ -149,10 +149,10 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(quirks);
     auto component_factory = std::make_shared<mga::HalComponentFactory>(
         fb_allocator, display_resource_factory, hwc_report, quirks);
-    return mir::make_module_ptr<mga::Platform>(component_factory, display_report, overlay_option, quirks);
+    return std::make_shared<mga::Platform>(component_factory, display_report, overlay_option, quirks);
 }
 
-mir::UniqueModulePtr<mg::Platform> create_guest_platform(
+std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::NestedContext> const&)
 {
@@ -160,7 +160,7 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
     //TODO: remove nullptr parameter once platform classes are sorted.
     //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder
-    return mir::make_module_ptr<mga::Platform>(nullptr, display_report, mga::OverlayOptimization::disabled, quirks);
+    return std::make_shared<mga::Platform>(nullptr, display_report, mga::OverlayOptimization::disabled, quirks);
 }
 
 void add_graphics_platform_options(
