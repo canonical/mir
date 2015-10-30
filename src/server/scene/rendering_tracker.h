@@ -53,7 +53,7 @@ private:
     std::weak_ptr<Surface> const weak_surface;
     std::set<compositor::CompositorID> occlusions;
     std::set<compositor::CompositorID> active_compositors_;
-    mutable std::mutex guard;
+    std::mutex mutable guard;
 };
 
 }
