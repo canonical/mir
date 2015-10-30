@@ -18,12 +18,7 @@
 
 #include "mir/frontend/security_check_failed.h"
 
-namespace
+mir::SecurityCheckFailed::SecurityCheckFailed() :
+    runtime_error("Invalid MirCookie")
 {
-char const* invalid_cookie{"Invald MirCookie"};
-}
-
-char const* mir::SecurityCheckFailed::what() const noexcept
-{
-    return invalid_cookie;
 }

@@ -19,19 +19,14 @@
 #ifndef MIR_SECURITY_CHECK_FAILED_H_
 #define MIR_SECURITY_CHECK_FAILED_H_
 
-#include <exception>
-#include <string>
+#include <stdexcept>
 
 namespace mir
 {
 
-struct SecurityCheckFailed : std::exception
+struct SecurityCheckFailed : std::runtime_error
 {
-    SecurityCheckFailed() = default;
-    virtual char const* what() const noexcept override;
-
-private:
-    std::string message;
+    SecurityCheckFailed();
 };
 
 }
