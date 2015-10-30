@@ -20,7 +20,6 @@ add_library(
   mirclientplatformmesa MODULE
 
   $<TARGET_OBJECTS:mirclientplatformmesaobjects>
-  $<TARGET_OBJECTS:client_platform_common>
 )
 
 set_target_properties(
@@ -34,6 +33,7 @@ set_target_properties(
 
 target_link_libraries(mirclientplatformmesa
   mirclient
+  client_platform_common
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )
 

@@ -88,7 +88,6 @@ private:
 
     InputDeviceInfo info;
     mir::geometry::Point pointer_pos;
-    MirInputEventModifiers modifier_state;
     MirPointerButtons button_state;
     double vertical_scroll_scale{1.0};
     double horizontal_scroll_scale{1.0};
