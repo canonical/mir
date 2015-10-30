@@ -1217,16 +1217,6 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         google::protobuf::NewCallback(&send_non_event, mock_sender));
 }
 
-TEST_F(SessionMediator, raise_with_invalid_cookie_throws)
-{
-    mp::RaiseRequest raise_request;
-    mediator.connect(&connect_parameters, &connection, null_callback.get());
-
-    EXPECT_THROW({
-        mediator.raise_surface_with_cookie(&raise_request, &void_response, nullptr);
-    }, mir::cookie::InvalidCookieError);
-}
-
 TEST_F(SessionMediator, sets_base_display_configuration)
 {
     using namespace testing;
