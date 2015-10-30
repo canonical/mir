@@ -30,6 +30,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <stdexcept>
+#include <array>
 
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
@@ -399,4 +400,41 @@ TEST_F(StartedBufferVault, scaling_resizes_buffer_right_away)
     auto b = vault.withdraw().get();
     EXPECT_THAT(b->size(), Eq(new_size));
 
+}
+
+TEST_F(StartedBufferVault, scaling_levels_off_buffer_count)
+{
+    std::array<mp::Buffer, 3> buffers;
+    float scale = 2.0f;
+    geom::Size new_size = size * scale;
+
+    int i = initial_nbuffers;
+    for (auto& buffer : buffers)
+    {
+        buffer.set_width(new_size.width.as_int());
+        buffer.set_height(new_size.height.as_int());
+        buffer.set_buffer_id(i++);
+    }
+
+    EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
+        .Times(initial_nbuffers)
+        .WillOnce(InvokeWithoutArgs(
+            [&]{vault.wire_transfer_inbound(buffers[0]);}))
+        .WillOnce(InvokeWithoutArgs(
+            [&]{vault.wire_transfer_inbound(buffers[1]);}))
+        .WillOnce(InvokeWithoutArgs(
+            [&]{vault.wire_transfer_inbound(buffers[2]);}));
+    //make sure we free all the old buffers
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(initial_nbuffers);
+
+    auto buffer = vault.withdraw().get();
+    vault.set_scale(scale);
+
+    auto b = vault.withdraw().get();
+    EXPECT_THAT(b->size(), Eq(new_size));
+
+    vault.deposit(buffer);
+    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_inbound(package);
 }
