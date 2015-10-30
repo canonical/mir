@@ -383,7 +383,7 @@ TEST_F(StartedBufferVault, simply_setting_size_triggers_no_server_interations)
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
-TEST_F(StartedBufferVault, scaling_resizes_buffer_right_away)
+TEST_F(StartedBufferVault, scaling_resizes_buffers_right_away)
 {
     mp::Buffer package4;
     float scale = 2.0f;
@@ -395,10 +395,12 @@ TEST_F(StartedBufferVault, scaling_resizes_buffer_right_away)
     EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
         .WillOnce(InvokeWithoutArgs(
             [&]{vault.wire_transfer_inbound(package4);}));
+    auto b1 = vault.withdraw().get();
+    auto b2 = vault.withdraw().get();
     vault.set_scale(scale);
 
-    auto b = vault.withdraw().get();
-    EXPECT_THAT(b->size(), Eq(new_size));
+    auto b3 = vault.withdraw().get();
+    EXPECT_THAT(b3->size(), Eq(new_size));
 
 }
 
@@ -430,11 +432,17 @@ TEST_F(StartedBufferVault, scaling_levels_off_buffer_count)
 
     auto buffer = vault.withdraw().get();
     vault.set_scale(scale);
-
-    auto b = vault.withdraw().get();
-    EXPECT_THAT(b->size(), Eq(new_size));
-
     vault.deposit(buffer);
     vault.wire_transfer_outbound(buffer);
     vault.wire_transfer_inbound(package);
+
+    for(auto i = 0; i < 100; i++)
+    {
+        auto b = vault.withdraw().get();
+        EXPECT_THAT(b->size(), Eq(new_size));
+        vault.deposit(b);
+        vault.wire_transfer_outbound(b);
+        vault.wire_transfer_inbound(buffers[(i+1)%3]);
+    }
+    Mock::VerifyAndClearExpectations(&mock_requests);
 }
