@@ -413,8 +413,8 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_su
 
     // Partially exposed means occluded in one compositor but not another
     ms::SurfaceStack stack{report};
-    auto comp1{reinterpret_cast<mc::CompositorID>(0)};
-    auto comp2{reinterpret_cast<mc::CompositorID>(1)};
+    auto const comp1 = reinterpret_cast<mc::CompositorID>(0);
+    auto const comp2 = reinterpret_cast<mc::CompositorID>(1);
 
     stack.register_compositor(comp1);
     stack.register_compositor(comp2);
