@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/common.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/display_configuration.h"
 
 #include <vector>
 #include <memory>
@@ -28,10 +29,6 @@
 
 namespace mir
 {
-namespace graphics
-{
-class DisplayConfiguration;
-}
 
 namespace scene
 {
@@ -41,6 +38,7 @@ struct OutputProperties
     int dpi;
     float scale;
     MirFormFactor form_factor;
+    graphics::DisplayConfigurationOutputId id;
 };
 
 class OutputPropertiesCache
