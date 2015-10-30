@@ -250,9 +250,15 @@ public:
         }
     }
 
+    std::unique_ptr<graphics::DisplayConfiguration> clone() const override
+    {
+        return std::make_unique<StubDisplayConfig>(*this);
+    }
+
     std::vector<graphics::DisplayConfigurationCard> cards;
     std::vector<graphics::DisplayConfigurationOutput> outputs;
 };
+
 
 }
 }

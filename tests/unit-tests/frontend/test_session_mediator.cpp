@@ -91,13 +91,6 @@ struct MockResourceCache : public mf::MessageResourceCache
     MOCK_METHOD1(free_resource, void(google::protobuf::MessageLite*));
 };
 
-struct MockConfig : public mg::DisplayConfiguration
-{
-    MOCK_CONST_METHOD1(for_each_card, void(std::function<void(mg::DisplayConfigurationCard const&)>));
-    MOCK_CONST_METHOD1(for_each_output, void(std::function<void(mg::DisplayConfigurationOutput const&)>));
-    MOCK_METHOD1(for_each_output, void(std::function<void(mg::UserDisplayConfigurationOutput&)>));
-};
-
 struct MockConnector : public mf::Connector
 {
 public:
@@ -567,17 +560,16 @@ TEST_F(SessionMediator, display_config_request)
     MirPixelFormat format1{mir_pixel_format_argb_8888};
     mg::DisplayConfigurationOutputId id0{6}, id1{3};
 
-    NiceMock<MockConfig> mock_display_config;
     mtd::StubDisplayConfig stub_display_config;
     auto mock_display_changer = std::make_shared<mtd::MockDisplayChanger>();
 
     Sequence seq;
     EXPECT_CALL(*mock_display_changer, base_configuration())
         .InSequence(seq)
-        .WillOnce(Return(mt::fake_shared(mock_display_config)));
+        .WillOnce(Return(mt::fake_shared(stub_display_config)));
     EXPECT_CALL(*mock_display_changer, base_configuration())
         .InSequence(seq)
-        .WillOnce(Return(mt::fake_shared(mock_display_config)));
+        .WillOnce(Return(mt::fake_shared(stub_display_config)));
     EXPECT_CALL(*mock_display_changer, configure(_,_))
         .InSequence(seq);
     EXPECT_CALL(*mock_display_changer, base_configuration())

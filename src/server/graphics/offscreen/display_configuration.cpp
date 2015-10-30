@@ -78,3 +78,7 @@ void mgo::DisplayConfiguration::for_each_output(
     f(user);
 }
 
+std::unique_ptr<mg::DisplayConfiguration> mgo::DisplayConfiguration::clone() const
+{
+    return std::make_unique<mgo::DisplayConfiguration>(*this);
+}
