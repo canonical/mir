@@ -754,8 +754,8 @@ int calculate_dpi(geom::Size const& resolution, geom::Size const& size)
 struct ApplicationSessionSurfaceOutput : public ApplicationSession
 {
     ApplicationSessionSurfaceOutput() :
-        high_dpi({3840, 2160}, {509, 286}, 2.5f, mir_form_factor_monitor),
-        projector({1280, 1024}, {800, 600}, 0.5f, mir_form_factor_projector),
+        high_dpi(static_cast<mg::DisplayConfigurationOutputId>(5), {3840, 2160}, {509, 286}, 2.5f, mir_form_factor_monitor),
+        projector(static_cast<mg::DisplayConfigurationOutputId>(2), {1280, 1024}, {800, 600}, 0.5f, mir_form_factor_projector),
         stub_surface_factory{std::make_shared<ObserverPreservingSurfaceFactory>()},
         sender{std::make_shared<testing::NiceMock<mtd::MockEventSink>>()},
         app_session(
@@ -774,15 +774,17 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
     struct TestOutput
     {
         TestOutput(
+            mg::DisplayConfigurationOutputId id,
             geom::Size const& resolution,
             geom::Size const& physical_size,
             float scale,
             MirFormFactor form_factor) :
-            output{resolution, physical_size, mir_pixel_format_argb_8888, 60.0, true},
+            output{id, resolution, physical_size, mir_pixel_format_argb_8888, 60.0, true},
             form_factor{form_factor},
             scale{scale},
             dpi{calculate_dpi(resolution, physical_size)},
-            width{resolution.width.as_int()}
+            width{resolution.width.as_int()},
+            id{static_cast<uint32_t>(output.id.as_value())}
         {
             output.scale = scale;
             output.form_factor = form_factor;
@@ -793,6 +795,7 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
         float scale;
         int dpi;
         int width;
+        uint32_t id;
     };
 
     TestOutput const high_dpi;
@@ -816,6 +819,7 @@ MATCHER_P(SurfaceOutputEventFor, output, "")
     }
 
     auto const event = mir_event_get_surface_output_event(arg);
+
     return
         ExplainMatchResult(
             Eq(output.dpi),
@@ -828,6 +832,10 @@ MATCHER_P(SurfaceOutputEventFor, output, "")
         ExplainMatchResult(
             Eq(output.scale),
             mir_surface_output_event_get_scale(event),
+            result_listener) &&
+        ExplainMatchResult(
+            Eq(output.id),
+            mir_surface_output_event_get_output_id(event),
             result_listener);
 }
 }

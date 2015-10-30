@@ -63,7 +63,9 @@ target_link_libraries(
   ${ANDROID_PROPERTIES_LDFLAGS}
 )
 
-set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
+    ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
+set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
 set_target_properties(
   mirplatformgraphicsandroid PROPERTIES
