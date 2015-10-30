@@ -55,6 +55,7 @@ add_library(mirserverobjects OBJECT
   server.cpp
   lockable_callback_wrapper.cpp
   basic_callback.cpp
+  security_check_failed.cpp
 )
 
 set(MIR_SERVER_OBJECTS

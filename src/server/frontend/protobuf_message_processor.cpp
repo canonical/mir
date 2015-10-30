@@ -18,7 +18,7 @@
 
 #include "display_server.h"
 #include "protobuf_message_processor.h"
-#include "mir/cookie_factory.h"
+#include "mir/security_check_failed.h"
 #include "mir/frontend/message_processor_report.h"
 #include "mir/frontend/protobuf_message_sender.h"
 #include "mir/frontend/template_protobuf_message_processor.h"
@@ -136,7 +136,7 @@ void invoke(
             result_message.get(),
             callback);
     }
-    catch (mir::cookie::InvalidCookieError const& err)
+    catch (mir::SecurityCheckFailed const& /*err*/)
     {
         throw;
     }

@@ -20,7 +20,7 @@
 #ifndef MIR_FRONTEND_TEMPLATE_PROTOBUF_MESSAGE_PROCESSOR_H_
 #define MIR_FRONTEND_TEMPLATE_PROTOBUF_MESSAGE_PROCESSOR_H_
 
-#include "mir/cookie_factory.h"
+#include "mir/security_check_failed.h"
 #include "mir/frontend/message_processor.h"
 
 #include <google/protobuf/stubs/common.h>
@@ -76,7 +76,7 @@ void invoke(
             &result_message,
             callback.get());
     }
-    catch (mir::cookie::InvalidCookieError const& err)
+    catch (mir::SecurityCheckFailed const& /*err*/)
     {
         throw;
     }
