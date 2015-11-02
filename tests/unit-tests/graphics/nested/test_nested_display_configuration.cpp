@@ -19,6 +19,8 @@
 #include "src/server/graphics/nested/nested_display_configuration.h"
 #include "mir_display_configuration_builder.h"
 
+#include "mir/test/display_config_matchers.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -157,5 +159,38 @@ TEST(NestedDisplayConfiguration, non_trivial_configuration_can_be_configured)
                 EXPECT_EQ(1, output.current_mode_index);
                 EXPECT_EQ(mir_pixel_format_argb_8888, output.current_format);
             }
+        });
+}
+
+TEST(NestedDisplayConfiguration, clone_matches_original_configuration)
+{
+    mgn::NestedDisplayConfiguration config(mt::build_non_trivial_configuration());
+    auto cloned_config = config.clone();
+
+    EXPECT_THAT(*cloned_config, mir::test::DisplayConfigMatches(config));
+}
+
+TEST(NestedDisplayConfiguration, clone_is_independent_of_original_configuration)
+{
+    mgn::NestedDisplayConfiguration config(mt::build_non_trivial_configuration());
+    auto cloned_config = config.clone();
+
+    config.for_each_output(
+        [] (mg::UserDisplayConfigurationOutput& output)
+        {
+            output.power_mode = mir_power_mode_off;
+        });
+
+    cloned_config->for_each_output(
+        [] (mg::UserDisplayConfigurationOutput& output)
+        {
+            output.power_mode = mir_power_mode_on;
+        });
+
+    // Check that changes to cloned_config haven't affected original config
+    config.for_each_output(
+        [] (mg::DisplayConfigurationOutput const& output)
+        {
+            EXPECT_THAT(output.power_mode, Eq(mir_power_mode_off));
         });
 }

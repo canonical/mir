@@ -20,6 +20,8 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/geometry/displacement.h"
 
+#include "mir/test/doubles/stub_display_configuration.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -29,52 +31,26 @@ using namespace mir::geometry;
 namespace
 {
 
-class MockDisplayConfiguration : public DisplayConfiguration
+class StubDisplayConfiguration : public mir::test::doubles::StubDisplayConfig
 {
 public:
-    MockDisplayConfiguration(MockDisplayConfiguration && m)
-        : max_simultaneous_outputs{m.max_simultaneous_outputs},
-        outputs{std::move(m.outputs)}
+    using mir::test::doubles::StubDisplayConfig::StubDisplayConfig;
+
+    StubDisplayConfiguration(
+        size_t max_simultaneous_outputs,
+        std::vector<DisplayConfigurationOutput> const& outputs)
+        : StubDisplayConfig{outputs},
+          max_simultaneous_outputs{max_simultaneous_outputs}
     {
     }
 
-    MockDisplayConfiguration(size_t max_simultaneous_outputs, std::vector<DisplayConfigurationOutput> && config)
-        : max_simultaneous_outputs{max_simultaneous_outputs},
-        outputs{config}
-    {
-        if (max_simultaneous_outputs == max_simultaneous_outputs_all)
-            max_simultaneous_outputs = outputs.size();
-    }
-
-    MockDisplayConfiguration(std::vector<DisplayConfigurationOutput> && config)
-        : MockDisplayConfiguration(max_simultaneous_outputs_all, std::move(config))
-    {
-    }
-
-    void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const
+    void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const override
     {
         f({DisplayConfigurationCardId{1}, max_simultaneous_outputs});
     }
 
-    void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override
-    {
-        for (auto const& output : outputs)
-            f(output);
-    }
-
-    void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f)
-    {
-        for (auto& output : outputs)
-        {
-            UserDisplayConfigurationOutput user(output);
-            f(user);
-        }
-    }
-
-    static const size_t max_simultaneous_outputs_all{std::numeric_limits<size_t>::max()};
 private:
     size_t max_simultaneous_outputs;
-    std::vector<DisplayConfigurationOutput> outputs;
 };
 
 }
@@ -150,9 +126,9 @@ DisplayConfigurationOutput connected_with_xrgb_bgr()
     return output;
 }
 
-MockDisplayConfiguration create_default_configuration(size_t max_outputs = MockDisplayConfiguration::max_simultaneous_outputs_all)
+StubDisplayConfiguration create_default_configuration(size_t max_outputs = 4)
 {
-    return MockDisplayConfiguration
+    return StubDisplayConfiguration
     {
         max_outputs,
         {
@@ -169,7 +145,7 @@ TEST(CloneDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
     using namespace ::testing;
 
     CloneDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration conf{create_default_configuration()};
+    StubDisplayConfiguration conf{create_default_configuration()};
 
     policy.apply_to(conf);
 
@@ -193,7 +169,7 @@ TEST(CloneDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
     using namespace ::testing;
 
     CloneDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration conf{create_default_configuration()};
+    StubDisplayConfiguration conf{create_default_configuration()};
 
     policy.apply_to(conf);
 
@@ -208,7 +184,7 @@ TEST(CloneDisplayConfigurationPolicyTest, default_orientation_is_normal)
     using namespace ::testing;
 
     CloneDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration conf{create_default_configuration()};
+    StubDisplayConfiguration conf{create_default_configuration()};
 
     conf.for_each_output([&conf](DisplayConfigurationOutput const& output)
     {
@@ -222,7 +198,7 @@ TEST(CloneDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than_supp
 
     size_t const max_simultaneous_outputs{1};
     CloneDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration conf{create_default_configuration(max_simultaneous_outputs)};
+    StubDisplayConfiguration conf{create_default_configuration(max_simultaneous_outputs)};
 
     policy.apply_to(conf);
 
@@ -241,7 +217,7 @@ TEST(CloneDisplayConfigurationPolicyTest, prefer_opaque_over_alpha)
     using namespace ::testing;
 
     CloneDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration pick_xrgb{ { connected_with_rgba_and_xrgb() } };
+    StubDisplayConfiguration pick_xrgb{ { connected_with_rgba_and_xrgb() } };
 
     policy.apply_to(pick_xrgb);
 
@@ -256,7 +232,7 @@ TEST(CloneDisplayConfigurationPolicyTest, preserve_opaque_selection)
     using namespace ::testing;
 
     CloneDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration keep_bgr{ { connected_with_xrgb_bgr() } };
+    StubDisplayConfiguration keep_bgr{ { connected_with_xrgb_bgr() } };
 
     policy.apply_to(keep_bgr);
 
@@ -271,7 +247,7 @@ TEST(CloneDisplayConfigurationPolicyTest, accept_transparency_when_only_option)
     using namespace ::testing;
 
     CloneDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration pick_rgba{ { default_output(DisplayConfigurationOutputId{15}) } };
+    StubDisplayConfiguration pick_rgba{ { default_output(DisplayConfigurationOutputId{15}) } };
 
     policy.apply_to(pick_rgba);
 
@@ -286,7 +262,7 @@ TEST(SingleDisplayConfigurationPolicyTest, uses_first_of_connected_valid_outputs
     using namespace ::testing;
 
     SingleDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration conf{create_default_configuration()};
+    StubDisplayConfiguration conf{create_default_configuration()};
 
     policy.apply_to(conf);
 
@@ -313,7 +289,7 @@ TEST(SingleDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
     using namespace ::testing;
 
     SingleDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration conf{create_default_configuration()};
+    StubDisplayConfiguration conf{create_default_configuration()};
 
     policy.apply_to(conf);
 
@@ -334,7 +310,8 @@ TEST(SingleDisplayConfigurationPolicyTest, default_orientation_is_normal)
     using namespace ::testing;
 
     SingleDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration conf{create_default_configuration()};
+    auto conf = create_default_configuration();
+    //StubDisplayConfiguration conf{create_default_configuration()};
 
     conf.for_each_output([&conf](DisplayConfigurationOutput const& output)
     {
@@ -348,7 +325,7 @@ TEST(SingleDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than_sup
 
     size_t const max_simultaneous_outputs{1};
     SingleDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration conf{create_default_configuration(max_simultaneous_outputs)};
+    StubDisplayConfiguration conf{create_default_configuration(max_simultaneous_outputs)};
 
     policy.apply_to(conf);
 
@@ -367,7 +344,7 @@ TEST(SideBySideDisplayConfigurationPolicyTest, uses_all_connected_valid_outputs)
     using namespace ::testing;
 
     SideBySideDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration conf{create_default_configuration()};
+    StubDisplayConfiguration conf{create_default_configuration()};
 
     policy.apply_to(conf);
 
@@ -395,7 +372,7 @@ TEST(SideBySideDisplayConfigurationPolicyTest, default_policy_is_power_mode_on)
     using namespace ::testing;
 
     SideBySideDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration conf{create_default_configuration()};
+    StubDisplayConfiguration conf{create_default_configuration()};
 
     policy.apply_to(conf);
 
@@ -413,7 +390,7 @@ TEST(SideBySideDisplayConfigurationPolicyTest, default_orientation_is_normal)
     using namespace ::testing;
 
     SideBySideDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration conf{create_default_configuration()};
+    StubDisplayConfiguration conf{create_default_configuration()};
 
     conf.for_each_output([&conf](DisplayConfigurationOutput const& output)
     {
@@ -427,7 +404,7 @@ TEST(SideBySideDisplayConfigurationPolicyTest, does_not_enable_more_outputs_than
 
     size_t const max_simultaneous_outputs{1};
     SideBySideDisplayConfigurationPolicy policy;
-    MockDisplayConfiguration conf{create_default_configuration(max_simultaneous_outputs)};
+    StubDisplayConfiguration conf{create_default_configuration(max_simultaneous_outputs)};
 
     policy.apply_to(conf);
 

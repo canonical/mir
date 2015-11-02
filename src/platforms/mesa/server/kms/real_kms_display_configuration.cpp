@@ -120,6 +120,11 @@ void mgm::RealKMSDisplayConfiguration::for_each_output(
     }
 }
 
+std::unique_ptr<mg::DisplayConfiguration> mgm::RealKMSDisplayConfiguration::clone() const
+{
+    return std::make_unique<RealKMSDisplayConfiguration>(*this);
+}
+
 uint32_t mgm::RealKMSDisplayConfiguration::get_kms_connector_id(
     DisplayConfigurationOutputId id) const
 {
