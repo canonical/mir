@@ -35,10 +35,10 @@ class GuestPlatform : public graphics::Platform
 public:
     GuestPlatform(std::shared_ptr<NestedContext> const& /*nested_context*/);
 
-    std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() override;
-    std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
-    
-    std::shared_ptr<Display> create_display(
+    UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
+    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+
+    UniqueModulePtr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const&) override;
     EGLNativeDisplayType egl_native_display() const override;

@@ -75,12 +75,12 @@ public:
     /**
      * Creates the buffer allocator subsystem.
      */
-    virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() = 0;
-    
+    virtual UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() = 0;
+
     /**
      * Creates the display subsystem.
      */
-    virtual std::shared_ptr<Display> create_display(
+    virtual UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) = 0;
 
@@ -88,7 +88,7 @@ public:
      * Creates an object capable of doing platform specific processing of buffers
      * before they are sent or after they are recieved accross IPC
      */
-    virtual std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const = 0;
+    virtual UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const = 0;
 
     virtual EGLNativeDisplayType egl_native_display() const = 0;
 };
