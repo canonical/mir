@@ -259,7 +259,6 @@ public:
     std::vector<graphics::DisplayConfigurationOutput> outputs;
 };
 
-
 }
 }
 }

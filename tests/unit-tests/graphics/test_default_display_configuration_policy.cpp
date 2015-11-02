@@ -28,7 +28,6 @@
 using namespace mir::graphics;
 using namespace mir::geometry;
 
-
 namespace
 {
 

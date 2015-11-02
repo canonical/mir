@@ -35,7 +35,6 @@ class DisplayConfiguration : public graphics::DisplayConfiguration
 public:
     DisplayConfiguration(MirPixelFormat pf, mir::geometry::Size const size, MirOrientation orientation);
     DisplayConfiguration(DisplayConfiguration const&);
-    DisplayConfiguration& operator=(DisplayConfiguration const&);
 
     virtual ~DisplayConfiguration() = default;
 

@@ -175,17 +175,6 @@ public:
     {
     }
 
-    TestDisplayConfiguration& operator=(TestDisplayConfiguration const& other)
-    {
-        if (&other != this)
-        {
-            cards = other.cards;
-            outputs = other.outputs;
-        }
-
-        return *this;
-    }
-
     void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const override
     {
         for (auto const& card : cards)

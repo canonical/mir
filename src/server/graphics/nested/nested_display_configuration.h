@@ -35,7 +35,6 @@ public:
     NestedDisplayConfiguration(
         std::shared_ptr<MirDisplayConfiguration> const& display_config);
     NestedDisplayConfiguration(NestedDisplayConfiguration const&);
-    NestedDisplayConfiguration& operator=(NestedDisplayConfiguration const&);
 
     void for_each_card(std::function<void(DisplayConfigurationCard const&)>) const override;
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)>) const override;
