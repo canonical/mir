@@ -156,7 +156,7 @@ TEST_F(MediatingDisplayChangerTest, returns_base_configuration_from_display_at_s
     using namespace testing;
 
     auto const base_conf = changer->base_configuration();
-    EXPECT_THAT(mock_display.conf_ptr, base_conf.get());
+    EXPECT_THAT(*base_conf, mt::DisplayConfigMatches(std::ref(*mock_display.conf_ptr)));
 }
 
 TEST_F(MediatingDisplayChangerTest, pauses_system_when_applying_new_configuration_for_focused_session)
