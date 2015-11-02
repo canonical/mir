@@ -467,6 +467,7 @@ TEST_F(NestedServer, display_configuration_changes_are_forwarded_to_host)
     mir_wait_for(mir_connection_apply_display_config(connection, configuration));
 
     condition.wait_for_at_most_seconds(1);
+    Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 
     mir_display_config_destroy(configuration);
     mir_surface_release_sync(painted_surface);
