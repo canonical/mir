@@ -215,8 +215,13 @@ void mgn::Display::complete_display_initialization(MirPixelFormat format)
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_display.egl_context());
 }
 
+#include <iostream>
 void mgn::Display::configure(mg::DisplayConfiguration const& configuration)
 {
+    std::cerr << "DEBUG " << __func__ << '\n';
+    std::cerr << "DEBUG current_configuration=" << *current_configuration << '\n';
+    std::cerr << "DEBUG configuration=" << configuration << '\n';
+
     std::lock_guard<std::mutex> lock(configuration_mutex);
     if (*current_configuration != configuration)
     {
@@ -277,6 +282,7 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
 
 void mgn::Display::apply_to_connection(mg::DisplayConfiguration const& configuration)
 {
+    std::cerr << "DEBUG " << __func__ << '\n';
     auto const& conf = dynamic_cast<NestedDisplayConfiguration const&>(configuration);
 
     connection->apply_display_config(*conf);

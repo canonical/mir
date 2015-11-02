@@ -59,6 +59,7 @@ private:
 };
 }
 
+#include <iostream>
 ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::Compositor> const& compositor,
@@ -112,6 +113,9 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
         });
 
     report->initial_configuration(*base_configuration_);
+
+    std::cerr << "DEBUG: " << __func__  << " " << this << "\n";
+    std::cerr << "DEBUG base_configuration_=" << *base_configuration_ << '\n';
 }
 
 void ms::MediatingDisplayChanger::configure(
@@ -161,10 +165,38 @@ ms::MediatingDisplayChanger::base_configuration()
     return base_configuration_;
 }
 
+void ms::MediatingDisplayChanger::remove(std::shared_ptr<frontend::Session> const& session)
+{
+    {
+        std::lock_guard<std::mutex> lg{configuration_mutex};
+
+        if (!config_map.erase(session) || base_configuration_applied || session != focused_session.lock())
+            return;
+    }
+
+    std::cerr << "DEBUG: " << __func__  << " " << this << "\n";
+    std::cerr << "DEBUG base_configuration_=" << *base_configuration_ << '\n';
+
+    server_action_queue->enqueue(
+        this, [this]
+        {
+            std::lock_guard<std::mutex> lg{configuration_mutex};
+
+            if (!base_configuration_applied && end(config_map) == config_map.find(focused_session))
+            {
+                apply_base_config(PauseResumeSystem);
+                focused_session.reset();
+            }
+        });
+}
+
 void ms::MediatingDisplayChanger::configure_for_hardware_change(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf,
     SystemStateHandling pause_resume_system)
 {
+    std::cerr << "DEBUG: " << __func__  << " " << this << "\n";
+    std::cerr << "DEBUG conf=" << *conf << '\n';
+
     server_action_queue->enqueue(
         this,
         [this, conf, pause_resume_system]
@@ -280,6 +312,9 @@ void ms::MediatingDisplayChanger::session_stopping_handler(
 std::future<void> ms::MediatingDisplayChanger::set_base_configuration(
     std::shared_ptr<mg::DisplayConfiguration> const &conf)
 {
+    std::cerr << "DEBUG: " << __func__  << " " << this << "\n";
+    std::cerr << "DEBUG conf=" << *conf << '\n';
+
     auto promise = std::make_shared<std::promise<void>>();
     auto completion_future = promise->get_future();
     server_action_queue->enqueue(

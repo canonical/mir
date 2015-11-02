@@ -46,6 +46,9 @@ public:
         task();
         return std::move(fut);
     }
+    void remove(std::shared_ptr<frontend::Session> const&) override
+    {
+    }
 };
 }
 }
