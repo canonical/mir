@@ -105,7 +105,7 @@ std::shared_ptr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_allocat
         //LP: 1371619. Some devices cannot call gralloc's open()/close() function repeatedly without crashing
         static std::mutex allocator_mutex;
         std::unique_lock<std::mutex> lk(allocator_mutex);
-        static std::shared_ptr<mg::GraphicBufferAllocator> preserved_allocator;
+
         if (!preserved_allocator)
             preserved_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(quirks);
         return preserved_allocator;

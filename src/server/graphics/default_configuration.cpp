@@ -48,12 +48,6 @@ namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace mgn = mir::graphics::nested;
 
-namespace
-{
-// TODO: Temporary, until we actually manage module lifetimes
-static std::shared_ptr<mir::SharedLibrary> platform_library;
-}
-
 std::shared_ptr<mg::DisplayConfigurationPolicy>
 mir::DefaultServerConfiguration::the_display_configuration_policy()
 {
