@@ -9,4 +9,6 @@ add_library(
     null_report_factory.cpp
     scene_report.cpp
     session_mediator_report.cpp
-    )
+    shell_report.cpp
+    shell_report.h
+)

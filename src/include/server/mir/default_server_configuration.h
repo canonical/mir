@@ -85,6 +85,7 @@ class FocusController;
 class DisplayLayout;
 class HostLifecycleEventListener;
 class Shell;
+class ShellReport;
 class PersistentSurfaceStore;
 namespace detail { class FrontendShell; }
 }
@@ -278,7 +279,7 @@ public:
     virtual std::shared_ptr<scene::PromptSessionManager>  the_prompt_session_manager();
     virtual std::shared_ptr<shell::HostLifecycleEventListener> the_host_lifecycle_event_listener();
     virtual std::shared_ptr<shell::PersistentSurfaceStore> the_persistent_surface_store();
-
+    virtual std::shared_ptr<shell::ShellReport>         the_shell_report();
     /** @} */
 
     /** @name internal scene configuration
@@ -445,6 +446,7 @@ protected:
     CachedPtr<shell::PersistentSurfaceStore> surface_store;
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
     CachedPtr<shell::Shell> shell;
+    CachedPtr<shell::ShellReport> shell_report;
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::CookieFactory> cookie_factory;
 
