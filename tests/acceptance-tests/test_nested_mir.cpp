@@ -743,7 +743,7 @@ TEST_F(NestedServer, display_configuration_reset_when_application_exits)
     // Wait for initial config to be applied
     initial_condition.wait_for_at_most_seconds(1);
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
-
+    ASSERT_TRUE(initial_condition.woken());
 
     mt::WaitCondition condition;
     EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
