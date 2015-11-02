@@ -269,9 +269,9 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
                     float n = mir_touch_event_axis_value(tev, p,
                                                   mir_touch_axis_touch_minor);
                     radius = (m + n) / 4;  /* Half the average */
-                    // Min radius should at least be 1
-                    if (radius < 1)
-                        radius = 1;
+                    // mir_touch_axis_touch_major can be 0
+                    if (radius < 5)
+                        radius = 5;
                     pressure = mir_touch_event_axis_value(tev, p,
                                                       mir_touch_axis_pressure);
                 }
