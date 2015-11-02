@@ -24,6 +24,7 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface_factory.h"
 
+#include "src/server/report/null/shell_report.h"
 #include "src/server/scene/default_session_container.h"
 #include "src/server/scene/session_event_sink.h"
 #include "src/server/scene/session_manager.h"
@@ -129,6 +130,7 @@ struct AbstractShell : Test
         mt::fake_shared(surface_coordinator),
         mt::fake_shared(session_manager),
         std::make_shared<mtd::NullPromptSessionManager>(),
+        std::make_shared<mir::report::null::ShellReport>(),
         [this](msh::FocusController*) { return wm = std::make_shared<NiceMockWindowManager>(); }};
 
     void SetUp() override
