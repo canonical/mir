@@ -756,3 +756,43 @@ TEST_F(NestedServer, display_configuration_reset_when_application_exits)
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 }
 
+// lp:1511798
+TEST_F(NestedServer, display_configuration_reset_when_nested_server_exits)
+{
+    mt::WaitCondition condition;
+
+    {
+        NestedMirRunner nested_mir{new_connection()};
+        ignore_rebuild_of_egl_context();
+
+        auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+
+        // Need a painted surface to have focus
+        auto const painted_surface = make_and_paint_surface(connection);
+
+        std::shared_ptr<mg::DisplayConfiguration> const new_config{nested_mir.server.the_display()->configuration()};
+        new_config->for_each_output([](mg::UserDisplayConfigurationOutput& output)
+                                        { output.orientation = mir_orientation_inverted;});
+
+        mt::WaitCondition initial_condition;
+
+        EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
+            .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
+
+        nested_mir.server.the_display_configuration_controller()->set_base_configuration(new_config);
+
+        // Wait for initial config to be applied
+        initial_condition.wait_for_at_most_seconds(1);
+        Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
+        ASSERT_TRUE(initial_condition.woken());
+
+        EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
+            .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+
+        mir_surface_release_sync(painted_surface);
+        mir_connection_release(connection);
+    }
+
+    condition.wait_for_at_most_seconds(1);
+    EXPECT_TRUE(condition.woken());
+}
