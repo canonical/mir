@@ -27,8 +27,6 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "boost/throw_exception.hpp"
-
 #include <linux/input.h>
 
 #include <gtest/gtest.h>
