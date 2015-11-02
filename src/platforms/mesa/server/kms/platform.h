@@ -33,8 +33,7 @@ namespace mesa
 
 class VirtualTerminal;
 class InternalNativeDisplay;
-class Platform : public graphics::Platform,
-                 public std::enable_shared_from_this<Platform>
+class Platform : public graphics::Platform
 {
 public:
     explicit Platform(std::shared_ptr<DisplayReport> const& reporter,
@@ -54,7 +53,7 @@ public:
 
     std::shared_ptr<mir::udev::Context> udev;
     std::shared_ptr<helpers::DRMHelper> const drm;
-    helpers::GBMHelper gbm;
+    std::shared_ptr<helpers::GBMHelper> const gbm;
 
     std::shared_ptr<DisplayReport> const listener;
     std::shared_ptr<VirtualTerminal> const vt;

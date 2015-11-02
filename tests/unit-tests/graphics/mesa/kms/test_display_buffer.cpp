@@ -107,17 +107,6 @@ public:
         fake_software_renderable->set_buffer(mock_software_buffer);
     }
 
-    // The platform has an implicit dependency on mock_gbm etc so must be
-    // reconstructed locally to ensure its lifetime is shorter than mock_gbm.
-    shared_ptr<graphics::mesa::Platform> create_platform()
-    {
-        return make_shared<graphics::mesa::Platform>(
-               report::null_display_report(),
-               make_shared<NullVirtualTerminal>(),
-               *make_shared<NullEmergencyCleanup>(),
-               graphics::mesa::BypassOption::allowed);
-    }
-
 protected:
     int const width{56};
     int const height{78};
@@ -138,12 +127,16 @@ protected:
     std::shared_ptr<MockKMSOutput> mock_kms_output;
     StubGLConfig gl_config;
     mir::graphics::RenderableList const bypassable_list;
+    std::shared_ptr<helpers::GBMHelper> gbm{std::make_shared<helpers::GBMHelper>()};
+    std::shared_ptr<helpers::DRMHelper> drm{std::make_shared<helpers::DRMHelper>(helpers::DRMNodeToUse::card)};
 };
 
 TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
 {
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {},
         nullptr,
@@ -158,7 +151,9 @@ TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
 TEST_F(MesaDisplayBufferTest, bypass_buffer_is_held_for_full_frame)
 {
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {mock_kms_output},
         nullptr,
@@ -184,7 +179,9 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_is_held_for_full_frame)
 TEST_F(MesaDisplayBufferTest, predictive_bypass_is_throttled)
 {
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {mock_kms_output},
         nullptr,
@@ -212,7 +209,9 @@ TEST_F(MesaDisplayBufferTest, frames_requiring_gl_are_not_throttled)
     };
 
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {mock_kms_output},
         nullptr,
@@ -234,7 +233,9 @@ TEST_F(MesaDisplayBufferTest, frames_requiring_gl_are_not_throttled)
 TEST_F(MesaDisplayBufferTest, bypass_buffer_only_referenced_once_by_db)
 {
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {mock_kms_output},
         nullptr,
@@ -257,7 +258,9 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_only_referenced_once_by_db)
 TEST_F(MesaDisplayBufferTest, normal_orientation_with_bypassable_list_can_bypass)
 {
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {mock_kms_output},
         nullptr,
@@ -277,7 +280,9 @@ TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
         .WillOnce(Return(0));   // Succeed second bypass attempt
 
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {mock_kms_output},
         nullptr,
@@ -304,7 +309,9 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_lagging_resize)
     graphics::RenderableList list{fullscreen};
 
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {mock_kms_output},
         nullptr,
@@ -319,7 +326,9 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_lagging_resize)
 TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
 {
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {},
         nullptr,
@@ -339,7 +348,9 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_cannot_bypass)
     EXPECT_EQ(fake_software_renderable->buffer()->size(), display_area.size);
 
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {},
         nullptr,
@@ -359,7 +370,9 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
     EXPECT_EQ(fake_software_renderable->buffer()->size(), display_area.size);
 
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {},
         nullptr,
@@ -377,7 +390,9 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
 TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
 {
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {},
         nullptr,
@@ -397,7 +412,9 @@ TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {},
         nullptr,
@@ -415,7 +432,9 @@ TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {},
         nullptr,
@@ -433,7 +452,9 @@ TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {},
         nullptr,
@@ -451,7 +472,9 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {},
         nullptr,
@@ -471,7 +494,9 @@ TEST_F(MesaDisplayBufferTest, clone_mode_first_flip_flips_but_no_wait)
         .Times(0);
 
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {mock_kms_output, mock_kms_output},
         nullptr,
@@ -492,7 +517,9 @@ TEST_F(MesaDisplayBufferTest, single_mode_first_post_flips_with_wait)
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {mock_kms_output},
         nullptr,
@@ -521,7 +548,9 @@ TEST_F(MesaDisplayBufferTest, clone_mode_waits_for_page_flip_on_second_flip)
         .Times(0);
 
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {mock_kms_output, mock_kms_output},
         nullptr,
@@ -545,7 +574,9 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_list)
     };
 
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {mock_kms_output},
         nullptr,
@@ -572,7 +603,9 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
     graphics::RenderableList list{fullscreen};
 
     graphics::mesa::DisplayBuffer db(
-        create_platform(),
+        graphics::mesa::BypassOption::allowed,
+        drm,
+        gbm,
         null_display_report(),
         {mock_kms_output},
         nullptr,
