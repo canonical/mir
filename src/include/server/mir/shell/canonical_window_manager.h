@@ -23,8 +23,6 @@
 
 #include "mir/geometry/displacement.h"
 
-#include <atomic>
-
 namespace mir
 {
 namespace shell

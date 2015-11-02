@@ -223,7 +223,7 @@ private:
         uint64_t timestamp) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        if (timestamp <= last_input_event_timestamp)
+        if (timestamp >= last_input_event_timestamp)
             policy.handle_raise_surface(session, surface);
     }
 
