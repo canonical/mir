@@ -168,6 +168,24 @@ public:
         }
     }
 
+    TestDisplayConfiguration(TestDisplayConfiguration const& other)
+        : mg::DisplayConfiguration(),
+          cards{other.cards},
+          outputs{other.outputs}
+    {
+    }
+
+    TestDisplayConfiguration& operator=(TestDisplayConfiguration const& other)
+    {
+        if (&other != this)
+        {
+            cards = other.cards;
+            outputs = other.outputs;
+        }
+
+        return *this;
+    }
+
     void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const override
     {
         for (auto const& card : cards)
@@ -187,6 +205,11 @@ public:
             mg::UserDisplayConfigurationOutput user(output);
             f(user);
         }
+    }
+
+    std::unique_ptr<mg::DisplayConfiguration> clone() const override
+    {
+        return std::make_unique<TestDisplayConfiguration>(*this);
     }
 
 private:

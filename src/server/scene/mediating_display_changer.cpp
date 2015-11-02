@@ -162,7 +162,7 @@ ms::MediatingDisplayChanger::base_configuration()
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
 
-    return base_configuration_;
+    return base_configuration_->clone();
 }
 
 void ms::MediatingDisplayChanger::remove(std::shared_ptr<frontend::Session> const& session)

@@ -20,6 +20,10 @@
 #include "host_connection.h"
 
 #include "mir/graphics/pixel_format_utils.h"
+#include "mir/raii.h"
+
+#include "mir_toolkit/mir_connection.h"
+#include "mir_toolkit/mir_blob.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -30,10 +34,42 @@
 namespace mg = mir::graphics;
 namespace mgn = mg::nested;
 
+namespace
+{
+auto copy_config(MirDisplayConfiguration* conf) -> std::shared_ptr<MirDisplayConfiguration>
+{
+    auto const blob = mir::raii::deleter_for(
+        mir_blob_from_display_configuration(conf),
+        [] (MirBlob* b) { mir_blob_release(b); });
+
+    return std::shared_ptr<MirDisplayConfiguration>{
+        mir_blob_to_display_configuration(blob.get()),
+        [] (MirDisplayConfiguration* c) { if (c) mir_display_config_destroy(c); }};
+}
+}
+
 mgn::NestedDisplayConfiguration::NestedDisplayConfiguration(
     std::shared_ptr<MirDisplayConfiguration> const& display_config)
     : display_config{display_config}
 {
+}
+
+mgn::NestedDisplayConfiguration::NestedDisplayConfiguration(
+    NestedDisplayConfiguration const& other)
+    : mg::DisplayConfiguration(),
+      display_config{copy_config(other.display_config.get())}
+{
+}
+
+mgn::NestedDisplayConfiguration& mgn::NestedDisplayConfiguration::operator=(
+    NestedDisplayConfiguration const& other)
+{
+    if (&other != this)
+    {
+        display_config = copy_config(other.display_config.get());
+    }
+
+    return *this;
 }
 
 void mgn::NestedDisplayConfiguration::for_each_card(
@@ -153,3 +189,7 @@ void mgn::NestedDisplayConfiguration::for_each_output(
         });
 }
 
+std::unique_ptr<mg::DisplayConfiguration> mgn::NestedDisplayConfiguration::clone() const
+{
+    return std::make_unique<mgn::NestedDisplayConfiguration>(*this);
+}

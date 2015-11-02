@@ -34,12 +34,15 @@ class DisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
     DisplayConfiguration(MirPixelFormat pf, mir::geometry::Size const size, MirOrientation orientation);
+    DisplayConfiguration(DisplayConfiguration const&);
+    DisplayConfiguration& operator=(DisplayConfiguration const&);
 
     virtual ~DisplayConfiguration() = default;
 
     void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const override;
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override;
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
+    std::unique_ptr<graphics::DisplayConfiguration> clone() const override;
 
 private:
     DisplayConfigurationOutput configuration;

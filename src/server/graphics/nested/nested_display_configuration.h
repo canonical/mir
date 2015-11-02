@@ -34,15 +34,18 @@ class NestedDisplayConfiguration : public DisplayConfiguration
 public:
     NestedDisplayConfiguration(
         std::shared_ptr<MirDisplayConfiguration> const& display_config);
+    NestedDisplayConfiguration(NestedDisplayConfiguration const&);
+    NestedDisplayConfiguration& operator=(NestedDisplayConfiguration const&);
 
     void for_each_card(std::function<void(DisplayConfigurationCard const&)>) const override;
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)>) const override;
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)>) override;
+    std::unique_ptr<DisplayConfiguration> clone() const override;
 
     operator MirDisplayConfiguration*() const { return display_config.get(); }
 
 private:
-    std::shared_ptr<MirDisplayConfiguration> const display_config;
+    std::shared_ptr<MirDisplayConfiguration> display_config;
 };
 }
 }

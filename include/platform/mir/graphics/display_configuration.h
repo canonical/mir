@@ -27,6 +27,7 @@
 
 #include <functional>
 #include <vector>
+#include <memory>
 
 namespace mir
 {
@@ -166,13 +167,16 @@ bool operator!=(DisplayConfigurationOutput const& val1, DisplayConfigurationOutp
 class DisplayConfiguration
 {
 public:
-    virtual ~DisplayConfiguration() {}
+    virtual ~DisplayConfiguration() = default;
 
     /** Executes a function object for each card in the configuration. */
     virtual void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const = 0;
     /** Executes a function object for each output in the configuration. */
     virtual void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const = 0;
     virtual void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) = 0;
+
+    virtual std::unique_ptr<DisplayConfiguration> clone() const = 0;
+
     virtual bool valid() const;
 
 protected:
