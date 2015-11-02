@@ -67,4 +67,7 @@ std::shared_ptr<mir::SharedLibraryProberReport> mir::report::LttngReportFactory:
     return std::make_shared<lttng::SharedLibraryProberReport>();
 }
 
-
+std::shared_ptr<mir::shell::ShellReport> mir::report::LttngReportFactory::create_shell_report()
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Not implemented"));
+}
