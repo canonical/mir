@@ -37,6 +37,12 @@ If you wish to target arm64 (AArch64) then you can use:
     $ ./cross-compile-chroot.sh -a arm64
     $ ls -l build-arm64-*/bin
 
+Note: If your target device is running an Ubuntu version other than vivid
+then you will also need to specify the target distribution for correct
+library linkage. For example:
+
+    $ ./cross-compile-chroot.sh -a arm64 -d wily
+
 More architectures like PowerPC are also supported. To see the full list of
 options, just run:
 
