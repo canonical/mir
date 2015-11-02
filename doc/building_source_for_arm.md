@@ -23,12 +23,24 @@ Building for ARM from a PC (cross compiling)
 --------------------------------------------
 
 Using a current Ubuntu (15.04 or later) installation it's very simple to build
-binaries for armhf devices. Just follow these steps:
+binaries for armhf (32-bit) devices. Just follow these steps:
 
-    $ sudo apt-get install g++-arm-linux-gnueabihf debootstrap
+    $ sudo apt-get install g++-arm-linux-gnueabihf multistrap
     $ cd mir_source_dir
     $ ./cross-compile-chroot.sh
     $ ls -l build-android-arm/*  # binaries to copy to your device as you wish
+
+If you wish to target arm64 (AArch64) then you can use:
+
+    $ sudo apt-get install g++-aarch64-linux-gnu multistrap
+    $ cd mir_source_dir
+    $ ./cross-compile-chroot.sh -a arm64
+    $ ls -l build-arm64-*/bin
+
+More architectures like PowerPC are also supported. To see the full list of
+options, just run:
+
+    $ ./cross-compile-chroot.sh -h
 
 To speed up the process for future runs of cross-compile-chroot.sh, some files
 are saved in ~/.cache/. To flush the cache and download new armhf packages
