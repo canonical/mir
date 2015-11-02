@@ -61,17 +61,6 @@ mgn::NestedDisplayConfiguration::NestedDisplayConfiguration(
 {
 }
 
-mgn::NestedDisplayConfiguration& mgn::NestedDisplayConfiguration::operator=(
-    NestedDisplayConfiguration const& other)
-{
-    if (&other != this)
-    {
-        display_config = copy_config(other.display_config.get());
-    }
-
-    return *this;
-}
-
 void mgn::NestedDisplayConfiguration::for_each_card(
     std::function<void(DisplayConfigurationCard const&)> f) const
 {
