@@ -158,7 +158,29 @@ ms::MediatingDisplayChanger::base_configuration()
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
 
-    return base_configuration_;
+    return base_configuration_->clone();
+}
+
+void ms::MediatingDisplayChanger::remove(std::shared_ptr<frontend::Session> const& session)
+{
+    {
+        std::lock_guard<std::mutex> lg{configuration_mutex};
+
+        if (!config_map.erase(session) || base_configuration_applied || session != focused_session.lock())
+            return;
+    }
+
+    server_action_queue->enqueue(
+        this, [this]
+        {
+            std::lock_guard<std::mutex> lg{configuration_mutex};
+
+            if (!base_configuration_applied && end(config_map) == config_map.find(focused_session))
+            {
+                apply_base_config(PauseResumeSystem);
+                focused_session.reset();
+            }
+        });
 }
 
 void ms::MediatingDisplayChanger::configure_for_hardware_change(

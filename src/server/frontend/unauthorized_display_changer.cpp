@@ -42,3 +42,7 @@ std::future<void> mf::UnauthorizedDisplayChanger::set_base_configuration(std::sh
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to set base display configurations"));
 }
+
+void mf::UnauthorizedDisplayChanger::remove(std::shared_ptr<Session> const& /*session*/)
+{
+}

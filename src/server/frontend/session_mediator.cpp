@@ -111,6 +111,7 @@ mf::SessionMediator::~SessionMediator() noexcept
     if (auto session = weak_session.lock())
     {
         report->session_error(session->name(), __PRETTY_FUNCTION__, "connection dropped without disconnect");
+        display_changer->remove(session);
         shell->close_session(session);
     }
 }
@@ -480,6 +481,7 @@ void mf::SessionMediator::disconnect(
 
     report->session_disconnect_called(session->name());
 
+    display_changer->remove(session);
     shell->close_session(session);
     weak_session.reset();
 

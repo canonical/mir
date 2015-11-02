@@ -61,6 +61,7 @@ public:
     std::shared_ptr<graphics::DisplayConfiguration> base_configuration() override;
     void configure(std::shared_ptr<frontend::Session> const& session,
                    std::shared_ptr<graphics::DisplayConfiguration> const& conf) override;
+    void remove(std::shared_ptr<frontend::Session> const& session) override;
 
     /* From mir::DisplayChanger */
     void configure_for_hardware_change(
