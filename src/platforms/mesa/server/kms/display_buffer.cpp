@@ -17,7 +17,6 @@
  */
 
 #include "display_buffer.h"
-#include "platform.h"
 #include "kms_output.h"
 #include "mir/graphics/display_report.h"
 #include "bypass.h"
@@ -30,6 +29,7 @@
 #include <stdexcept>
 #include <chrono>
 #include <thread>
+#include <algorithm>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -91,7 +91,9 @@ void ensure_egl_image_extensions()
 }
 
 mgm::DisplayBuffer::DisplayBuffer(
-    std::shared_ptr<Platform> const& platform,
+    mgm::BypassOption option,
+    std::shared_ptr<helpers::DRMHelper> const& drm,
+    std::shared_ptr<helpers::GBMHelper> const& gbm,
     std::shared_ptr<DisplayReport> const& listener,
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
     GBMSurfaceUPtr surface_gbm_param,
@@ -101,9 +103,10 @@ mgm::DisplayBuffer::DisplayBuffer(
     EGLContext shared_context)
     : visible_composite_frame{nullptr},
       scheduled_composite_frame{nullptr},
-      platform(platform),
       listener(listener),
-      drm(*platform->drm),
+      bypass_option(option),
+      drm(drm),
+      gbm(gbm),
       outputs(outputs),
       surface_gbm{std::move(surface_gbm_param)},
       egl{gl_config},
@@ -125,7 +128,7 @@ mgm::DisplayBuffer::DisplayBuffer(
         fb_height = area_height;
     }
 
-    egl.setup(platform->gbm, surface_gbm.get(), shared_context);
+    egl.setup(*gbm, surface_gbm.get(), shared_context);
 
     listener->report_successful_setup_of_native_resources();
 
@@ -192,7 +195,7 @@ void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rec
 bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderable_list)
 {
     if ((rotation == mir_orientation_normal) &&
-       (platform->bypass_option() == mgm::BypassOption::allowed))
+       (bypass_option == mgm::BypassOption::allowed))
     {
         mgm::BypassMatch bypass_match(area);
         auto bypass_it = std::find_if(renderable_list.rbegin(), renderable_list.rend(), bypass_match);
@@ -387,7 +390,7 @@ mgm::BufferObject* mgm::DisplayBuffer::get_buffer_object(
         format = GBM_FORMAT_ARGB8888;
 
     /* Create a KMS FB object with the gbm_bo attached to it. */
-    auto ret = drmModeAddFB2(drm.fd, fb_width, fb_height, format,
+    auto ret = drmModeAddFB2(drm->fd, fb_width, fb_height, format,
                              handles, strides, offsets, &fb_id, 0);
     if (ret)
         return nullptr;
