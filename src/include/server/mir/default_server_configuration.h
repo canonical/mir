@@ -349,6 +349,12 @@ public:
     virtual std::shared_ptr<ServerActionQueue> the_server_action_queue();
     virtual std::shared_ptr<SharedLibraryProberReport>  the_shared_library_prober_report();
 
+private:
+    // We need to ensure the platform library is destroyed last as the
+    // DisplayConfiguration can hold weak_ptrs to objects created from the library
+    // TODO: We need a better way to manage the lifetimes of platform libraries
+    std::shared_ptr<mir::SharedLibrary> platform_library;
+
 protected:
     std::shared_ptr<options::Option> the_options() const;
 
