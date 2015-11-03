@@ -45,10 +45,10 @@ public:
     virtual std::string unique_id() const = 0;
 
     virtual mir::optional_value<PointerConfiguration> pointer_configuration() const = 0;
-    virtual void apply_configuration(PointerConfiguration const&) = 0;
+    virtual void apply_pointer_configuration(PointerConfiguration const&) = 0;
 
     virtual mir::optional_value<TouchpadConfiguration> touchpad_configuration() const = 0;
-    virtual void apply_configuration(TouchpadConfiguration const&) = 0;
+    virtual void apply_touchpad_configuration(TouchpadConfiguration const&) = 0;
 
 private:
     Device(Device const&) = delete;

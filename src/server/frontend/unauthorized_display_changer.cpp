@@ -37,3 +37,8 @@ void mf::UnauthorizedDisplayChanger::configure(
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to apply display configurations"));
 }
+
+std::future<void> mf::UnauthorizedDisplayChanger::set_base_configuration(std::shared_ptr<graphics::DisplayConfiguration> const&)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to set base display configurations"));
+}

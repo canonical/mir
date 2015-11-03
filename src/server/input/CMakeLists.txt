@@ -13,10 +13,12 @@ set(
   default_input_manager.cpp
   display_input_region.cpp
   event_filter_chain_dispatcher.cpp
+  input_modifier_utils.cpp
   key_repeat_dispatcher.cpp
   null_input_channel_factory.cpp
   null_input_dispatcher.cpp
   pointer_configuration.cpp
+  seat.cpp
   surface_input_dispatcher.cpp
   touchpad_configuration.cpp
   touchspot_controller.cpp

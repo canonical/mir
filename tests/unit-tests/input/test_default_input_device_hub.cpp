@@ -283,7 +283,7 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
     observer_loop.trigger_server_actions();
 
     auto event = builder->key_event(arbitrary_timestamp, mir_keyboard_action_down, 0,
-                                    KEY_A, mir_input_event_modifier_none);
+                                    KEY_A);
 
     EXPECT_CALL(mock_dispatcher, dispatch(AllOf(mt::InputDeviceIdMatches(handle->id()), mt::MirKeyEventMatches(event.get()))));
 
@@ -301,23 +301,23 @@ TEST_F(InputDeviceHubTest, forwards_touch_spots_to_visualizer)
 
     observer_loop.trigger_server_actions();
 
-    auto touch_event_1 = builder->touch_event(arbitrary_timestamp, mir_input_event_modifier_none);
+    auto touch_event_1 = builder->touch_event(arbitrary_timestamp);
     builder->add_touch(*touch_event_1, 0, mir_touch_action_down, mir_touch_tooltype_finger, 21.0f, 34.0f, 50.0f, 15.0f,
                        5.0f, 4.0f);
 
-    auto touch_event_2 = builder->touch_event(arbitrary_timestamp, mir_input_event_modifier_none);
+    auto touch_event_2 = builder->touch_event(arbitrary_timestamp);
     builder->add_touch(*touch_event_2, 0, mir_touch_action_change, mir_touch_tooltype_finger, 24.0f, 34.0f, 50.0f,
                        15.0f, 5.0f, 4.0f);
     builder->add_touch(*touch_event_2, 1, mir_touch_action_down, mir_touch_tooltype_finger, 60.0f, 34.0f, 50.0f, 15.0f,
                        5.0f, 4.0f);
 
-    auto touch_event_3 = builder->touch_event(arbitrary_timestamp, mir_input_event_modifier_none);
+    auto touch_event_3 = builder->touch_event(arbitrary_timestamp);
     builder->add_touch(*touch_event_3, 0, mir_touch_action_up, mir_touch_tooltype_finger, 24.0f, 34.0f, 50.0f, 15.0f,
                        5.0f, 4.0f);
     builder->add_touch(*touch_event_3, 1, mir_touch_action_change, mir_touch_tooltype_finger, 70.0f, 30.0f, 50.0f,
                        15.0f, 5.0f, 4.0f);
 
-    auto touch_event_4 = builder->touch_event(arbitrary_timestamp, mir_input_event_modifier_none);
+    auto touch_event_4 = builder->touch_event(arbitrary_timestamp);
     builder->add_touch(*touch_event_4, 1, mir_touch_action_up, mir_touch_tooltype_finger, 70.0f, 35.0f, 50.0f, 15.0f,
                        5.0f, 4.0f);
 
@@ -383,17 +383,15 @@ TEST_F(InputDeviceHubTest, confines_pointer_movement)
 TEST_F(InputDeviceHubTest, forwards_pointer_updates_to_cursor_listener)
 {
     auto x = 12.2f, y = 14.3f;
-    auto const mac = 0;
-
-    auto event = mir::events::make_event(0, 0ns, mac, mir_input_event_modifier_none, mir_pointer_action_motion, 0,
-        x, y, 0.0f, 0.0f, 0.0f, 0.0f);
-
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(x, y)).Times(1);
 
     mi::InputSink* sink;
     mi::EventBuilder* builder;
     capture_input_sink(device, sink, builder);
     hub.add_device(mt::fake_shared(device));
+
+    auto event = builder->pointer_event(0ns, mir_pointer_action_motion, 0, x, y, 0.0f, 0.0f, 0.0f, 0.0f);
+
+    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(x, y)).Times(1);
 
     sink->handle_input(*event);
 }
@@ -410,7 +408,7 @@ TEST_F(InputDeviceHubTest, forwards_pointer_settings_to_input_device)
     EXPECT_CALL(touchpad, apply_settings(Matcher<mi::PointerSettings const&>(_)));
 
     auto conf = dev->pointer_configuration();
-    dev->apply_configuration(conf.value());
+    dev->apply_pointer_configuration(conf.value());
     multiplexer.dispatch(mir::dispatch::FdEvent::readable);
 }
 
@@ -426,6 +424,140 @@ TEST_F(InputDeviceHubTest, forwards_touchpad_settings_to_input_device)
     EXPECT_CALL(touchpad, apply_settings(Matcher<mi::TouchpadSettings const&>(_)));
 
     auto conf = dev->touchpad_configuration();
-    dev->apply_configuration(conf.value());
+    dev->apply_touchpad_configuration(conf.value());
     multiplexer.dispatch(mir::dispatch::FdEvent::readable);
+}
+
+TEST_F(InputDeviceHubTest, input_sink_tracks_modifier)
+{
+    using namespace ::testing;
+
+    mi::InputSink* key_board_sink;
+    mi::EventBuilder* key_event_builder;
+    std::shared_ptr<mi::Device> key_handle;
+
+    capture_input_sink(device,  key_board_sink, key_event_builder);
+
+    InSequence seq;
+    EXPECT_CALL(mock_observer,device_added(_))
+        .WillOnce(SaveArg<0>(&key_handle));
+
+    hub.add_observer(mt::fake_shared(mock_observer));
+    hub.add_device(mt::fake_shared(device));
+
+    observer_loop.trigger_server_actions();
+
+    const MirInputEventModifiers shift_left = mir_input_event_modifier_shift_left | mir_input_event_modifier_shift;
+    auto shift_down =
+        key_event_builder->key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_LEFTSHIFT);
+    auto shift_up =
+        key_event_builder->key_event(arbitrary_timestamp, mir_keyboard_action_up, 0, KEY_LEFTSHIFT);
+
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(shift_left)));
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(mir_input_event_modifier_none)));
+
+    key_board_sink->handle_input(*shift_down);
+    key_board_sink->handle_input(*shift_up);
+}
+
+TEST_F(InputDeviceHubTest, input_sink_unifies_modifier_state_accross_devices)
+{
+    using namespace ::testing;
+
+    mi::InputSink* mouse_sink;
+    mi::EventBuilder* mouse_event_builder;
+    mi::InputSink* key_board_sink;
+    mi::EventBuilder* key_event_builder;
+    std::shared_ptr<mi::Device> mouse_handle;
+    std::shared_ptr<mi::Device> key_handle;
+
+    capture_input_sink(device, mouse_sink, mouse_event_builder);
+    capture_input_sink(another_device, key_board_sink, key_event_builder);
+
+    InSequence seq;
+    EXPECT_CALL(mock_observer,device_added(_))
+        .WillOnce(SaveArg<0>(&mouse_handle));
+    EXPECT_CALL(mock_observer,device_added(_))
+        .WillOnce(SaveArg<0>(&key_handle));
+
+    hub.add_observer(mt::fake_shared(mock_observer));
+    hub.add_device(mt::fake_shared(device));
+    hub.add_device(mt::fake_shared(another_device));
+
+    observer_loop.trigger_server_actions();
+
+    const MirInputEventModifiers r_alt_modifier = mir_input_event_modifier_alt_right | mir_input_event_modifier_alt;
+    auto key =
+        key_event_builder->key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_RIGHTALT);
+    auto motion =
+        mouse_event_builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 12, 40, 0, 0, 12, 40);
+
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(r_alt_modifier)));
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::PointerEventWithModifiers(r_alt_modifier)));
+
+    key_board_sink->handle_input(*key);
+    mouse_sink->handle_input(*motion);
+
+    EXPECT_THAT(key_handle->id(), Ne(mouse_handle->id()));
+}
+
+TEST_F(InputDeviceHubTest, input_sink_reduces_modifier_state_accross_devices)
+{
+    using namespace ::testing;
+
+    mi::InputSink* mouse_sink;
+    mi::EventBuilder* mouse_event_builder;
+    mi::InputSink* key_board_sink_1;
+    mi::EventBuilder* key_event_builder_1;
+    mi::InputSink* key_board_sink_2;
+    mi::EventBuilder* key_event_builder_2;
+    std::shared_ptr<mi::Device> mouse_handle;
+    std::shared_ptr<mi::Device> key_handle_1;
+    std::shared_ptr<mi::Device> key_handle_2;
+
+    capture_input_sink(device, mouse_sink, mouse_event_builder);
+    capture_input_sink(another_device, key_board_sink_1, key_event_builder_1);
+    capture_input_sink(third_device, key_board_sink_2, key_event_builder_2);
+
+    InSequence seq;
+    EXPECT_CALL(mock_observer, device_added(_))
+        .WillOnce(SaveArg<0>(&mouse_handle));
+    EXPECT_CALL(mock_observer, device_added(_))
+        .WillOnce(SaveArg<0>(&key_handle_1));
+    EXPECT_CALL(mock_observer, device_added(_))
+        .WillOnce(SaveArg<0>(&key_handle_2));
+
+    hub.add_observer(mt::fake_shared(mock_observer));
+    hub.add_device(mt::fake_shared(device));
+    hub.add_device(mt::fake_shared(another_device));
+    hub.add_device(mt::fake_shared(third_device));
+
+    const MirInputEventModifiers r_alt_modifier = mir_input_event_modifier_alt_right | mir_input_event_modifier_alt;
+    const MirInputEventModifiers l_ctrl_modifier = mir_input_event_modifier_ctrl_left | mir_input_event_modifier_ctrl;
+    const MirInputEventModifiers combined_modifier = r_alt_modifier | l_ctrl_modifier;
+
+    observer_loop.trigger_server_actions();
+
+    auto alt_down = key_event_builder_1->key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_RIGHTALT);
+    auto ctrl_down = key_event_builder_2->key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_LEFTCTRL);
+    auto ctrl_up = key_event_builder_2->key_event(arbitrary_timestamp, mir_keyboard_action_up, 0, KEY_LEFTCTRL);
+
+    auto motion_1 =
+        mouse_event_builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 12, 40, 0, 0, 12, 40);
+    auto motion_2 =
+        mouse_event_builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 30, 50, 0, 0, 18, 10);
+
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(r_alt_modifier)));
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(l_ctrl_modifier)));
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::PointerEventWithModifiers(combined_modifier)));
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(mir_input_event_modifier_none)));
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::PointerEventWithModifiers(r_alt_modifier)));
+
+    key_board_sink_1->handle_input(*alt_down);
+    key_board_sink_2->handle_input(*ctrl_down);
+    mouse_sink->handle_input(*motion_1);
+    key_board_sink_2->handle_input(*ctrl_up);
+    mouse_sink->handle_input(*motion_2);
+
+    EXPECT_THAT(key_handle_1->id(), Ne(key_handle_2->id()));
 }

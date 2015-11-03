@@ -75,7 +75,7 @@ mir::optional_value<mi::TouchpadConfiguration> mi::DefaultDevice::touchpad_confi
                                  settings.middle_mouse_button_emulation);
 }
 
-void mi::DefaultDevice::apply_configuration(mi::PointerConfiguration const& conf)
+void mi::DefaultDevice::apply_pointer_configuration(mi::PointerConfiguration const& conf)
 {
     if (!pointer.is_set())
         return;
@@ -94,7 +94,7 @@ void mi::DefaultDevice::apply_configuration(mi::PointerConfiguration const& conf
                      });
 }
 
-void mi::DefaultDevice::apply_configuration(mi::TouchpadConfiguration const& conf)
+void mi::DefaultDevice::apply_touchpad_configuration(mi::TouchpadConfiguration const& conf)
 {
     if (!touchpad.is_set())
         return;

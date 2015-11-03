@@ -24,6 +24,7 @@
 #include "message_processor_report.h"
 #include "scene_report.h"
 #include "session_mediator_report.h"
+#include "shell_report.h"
 #include "input_report.h"
 #include "mir/logging/shared_library_prober_report.h"
 
@@ -78,3 +79,7 @@ std::shared_ptr<mir::SharedLibraryProberReport> mr::LoggingReportFactory::create
     return std::make_shared<mir::logging::SharedLibraryProberReport>(logger);
 }
 
+std::shared_ptr<mir::shell::ShellReport> mir::report::LoggingReportFactory::create_shell_report()
+{
+    return std::make_shared<mir::logging::ShellReport>(logger);
+}

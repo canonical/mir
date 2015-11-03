@@ -414,8 +414,8 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
 
     if (info.titlebar)
     {
-        tools->forget(info.titlebar);
         session->destroy_surface(info.titlebar_id);
+        tools->forget(info.titlebar);
     }
 }
 

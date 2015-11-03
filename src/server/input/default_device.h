@@ -51,9 +51,9 @@ public:
     std::string unique_id() const override;
 
     optional_value<PointerConfiguration> pointer_configuration() const override;
-    void apply_configuration(PointerConfiguration const&) override;
+    void apply_pointer_configuration(PointerConfiguration const&) override;
     optional_value<TouchpadConfiguration> touchpad_configuration() const override;
-    void apply_configuration(TouchpadConfiguration const&) override;
+    void apply_touchpad_configuration(TouchpadConfiguration const&) override;
 private:
     MirInputDeviceId const device_id;
     std::shared_ptr<InputDevice> const device;

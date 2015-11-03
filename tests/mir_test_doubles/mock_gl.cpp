@@ -135,6 +135,13 @@ void glBlendFunc(GLenum src, GLenum dst)
     global_mock_gl->glBlendFunc (src, dst);
 }
 
+void glBlendFuncSeparate(GLenum src_rgb, GLenum dst_rgb,
+                         GLenum src_alpha, GLenum dst_alpha)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glBlendFuncSeparate(src_rgb, dst_rgb, src_alpha, dst_alpha);
+}
+
 void glActiveTexture(GLenum unit)
 {
     CHECK_GLOBAL_VOID_MOCK();
