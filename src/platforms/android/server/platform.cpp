@@ -104,6 +104,8 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_al
         //LP: 1371619. Some devices cannot call gralloc's open()/close() function repeatedly without crashing
         static std::mutex allocator_mutex;
         std::unique_lock<std::mutex> lk(allocator_mutex);
+
+
         if (!preserved_allocator)
             preserved_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(quirks);
 
