@@ -165,11 +165,11 @@ void mcl::BufferVault::set_size(geom::Size sz)
 void mcl::BufferVault::set_scale(float scale)
 {
     auto new_size = size * scale;
+    std::vector<int> free_ids;
     std::unique_lock<std::mutex> lk(mutex);
     if (new_size == size)
         return;
     size = new_size;
-    std::vector<int> free_ids;
     for (auto it = buffers.begin(); it != buffers.end();)
     {
         if ((it->second.owner == Owner::Self) && (it->second.buffer->size() != size)) 

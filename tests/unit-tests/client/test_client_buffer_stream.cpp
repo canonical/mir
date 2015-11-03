@@ -210,11 +210,11 @@ struct ClientBufferStream : TestWithParam<bool>
 
         protobuf_bs.set_pixel_format(format);
         protobuf_bs.set_buffer_usage(usage);
-        bool const legacy_exchange_buffer = GetParam();
         if (legacy_exchange_buffer)
             fill_protobuf_buffer_from_package(protobuf_bs.mutable_buffer(), package);
         return protobuf_bs;
     }
+    bool const legacy_exchange_buffer = GetParam();
 
     void service_requests_for(mcl::ClientBufferStream& bs, unsigned int count)
     {
@@ -628,6 +628,7 @@ MATCHER_P(StreamConfigScaleIs, val, "")
 
 TEST_P(ClientBufferStream, configures_scale)
 {
+    if (!legacy_exchange_buffer) return;
     mcl::BufferStream bs{
         nullptr, mock_protobuf_server, mode,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),

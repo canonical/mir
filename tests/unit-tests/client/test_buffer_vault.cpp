@@ -404,7 +404,7 @@ TEST_F(StartedBufferVault, scaling_resizes_buffers_right_away)
 
 }
 
-TEST_F(StartedBufferVault, scaling_levels_off_buffer_count)
+TEST_F(StartedBufferVault, buffer_count_remains_the_same_after_scaling)
 {
     std::array<mp::Buffer, 3> buffers;
     float scale = 2.0f;
@@ -418,6 +418,7 @@ TEST_F(StartedBufferVault, scaling_levels_off_buffer_count)
         buffer.set_buffer_id(i++);
     }
 
+    //make sure we alloc 3 new ones and free 3 old ones
     EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
         .Times(initial_nbuffers)
         .WillOnce(InvokeWithoutArgs(
@@ -426,7 +427,6 @@ TEST_F(StartedBufferVault, scaling_levels_off_buffer_count)
             [&]{vault.wire_transfer_inbound(buffers[1]);}))
         .WillOnce(InvokeWithoutArgs(
             [&]{vault.wire_transfer_inbound(buffers[2]);}));
-    //make sure we free all the old buffers
     EXPECT_CALL(mock_requests, free_buffer(_))
         .Times(initial_nbuffers);
 
