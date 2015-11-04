@@ -95,6 +95,11 @@ private:
     bool visible;
 };
 
+//gmocks printer has problems with printing this type
+::std::ostream& operator<<(::std::ostream& os, const SurfaceHandle& handle) {
+    return os << static_cast<MirSurface*>(handle);
+}
+
 class MockSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
@@ -107,8 +112,8 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
 {
     SurfaceSpecification() { add_to_environment("MIR_SERVER_ENABLE_INPUT", "OFF"); }
 
-    Rectangle const first_display {{  0, 0}, {1640,  1480}};
-    Rectangle const second_display{{1640, 0}, {1640,  1480}};
+    Rectangle const first_display {{  0, 0}, {640,  480}};
+    Rectangle const second_display{{640, 0}, {640,  480}};
 
     void SetUp() override
     {
