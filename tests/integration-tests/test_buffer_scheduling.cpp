@@ -881,9 +881,13 @@ TEST_P(WithTwoOrMoreBuffers, framedropping_policy_never_drops_newest_frame)
     EXPECT_THAT(production_log[nbuffers], Not(Eq(production_log[nbuffers - 1]))); 
 }
 
-TEST_P(WithTwoOrMoreBuffers, uncomposited_client_swaps_when_policy_triggered)
+//TODO: (kdub) switch this test back to 2 buffers when we have timeout framedropping for NBS and nbuffers == 2 
+TEST_P(WithThreeOrMoreBuffers, client_is_unblocked_after_policy_is_triggered)
 {
-    for(auto i = 0; i < nbuffers + 1; i++)
+    producer->produce();
+    consumer->consume();
+
+    for(auto i = 0; i < nbuffers; i++)
         producer->produce();
     drop_policy.trigger_policies();
     producer->produce();
