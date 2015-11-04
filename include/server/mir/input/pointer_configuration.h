@@ -45,8 +45,8 @@ struct PointerConfiguration
     /*!
      * Configures the intensity of the cursor acceleration. Values within the range of [-1, 1] are allowed.
      *   - 0: default acceleration
-     *   - [-1, 0[: reduced acceleration
-     *   - ]0, 1]: increased acceleration
+     *   - [-1, 0): reduced acceleration
+     *   - (0, 1]: increased acceleration
      */
     void cursor_acceleration_bias(double bias);
     double cursor_acceleration_bias() const;

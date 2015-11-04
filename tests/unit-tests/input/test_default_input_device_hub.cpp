@@ -143,7 +143,7 @@ struct InputDeviceHubTest : ::testing::Test
             .WillByDefault(Return(mir::optional_value<mi::TouchpadSettings>()));
 
         ON_CALL(touchpad, get_device_info())
-            .WillByDefault(Return(mi::InputDeviceInfo{"touchpad", "dev-4", mi::DeviceCapability::pointer|mi::DeviceCapability::pointer}));
+            .WillByDefault(Return(mi::InputDeviceInfo{"touchpad", "dev-4", mi::DeviceCapability::touchpad|mi::DeviceCapability::pointer}));
         ON_CALL(touchpad, get_pointer_settings())
             .WillByDefault(Return(mi::PointerSettings()));
         ON_CALL(touchpad, get_touchpad_settings())
