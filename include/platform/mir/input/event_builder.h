@@ -38,18 +38,16 @@ public:
     virtual ~EventBuilder() = default;
     using Timestamp = std::chrono::nanoseconds;
 
-    virtual EventUPtr key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code, int scan_code,
-                                MirInputEventModifiers modifiers) = 0;
+    virtual EventUPtr key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code, int scan_code) = 0;
 
-    virtual EventUPtr touch_event(Timestamp timestamp, MirInputEventModifiers modifiers) = 0;
+    virtual EventUPtr touch_event(Timestamp timestamp) = 0;
     virtual void add_touch(MirEvent& event, MirTouchId touch_id, MirTouchAction action, MirTouchTooltype tooltype,
                            float x_axis_value, float y_axis_value, float pressure_value, float touch_major_value,
                            float touch_minor_value, float size_value) = 0;
 
-    virtual EventUPtr pointer_event(Timestamp timestamp, MirInputEventModifiers modifiers, MirPointerAction action,
-                                    MirPointerButtons buttons_pressed, float x_axis_value, float y_axis_value,
-                                    float hscroll_value, float vscroll_value, float relative_x_value,
-                                    float relative_y_value) = 0;
+    virtual EventUPtr pointer_event(Timestamp timestamp, MirPointerAction action, MirPointerButtons buttons_pressed,
+                                    float x_axis_value, float y_axis_value, float hscroll_value, float vscroll_value,
+                                    float relative_x_value, float relative_y_value) = 0;
 
     virtual EventUPtr configuration_event(Timestamp timestamp, MirInputConfigurationAction action) = 0;
 

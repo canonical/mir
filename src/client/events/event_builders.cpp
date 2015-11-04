@@ -99,7 +99,8 @@ mir::EventUPtr mev::make_event(
     mf::SurfaceId const& surface_id,
     int dpi,
     float scale,
-    MirFormFactor form_factor)
+    MirFormFactor form_factor,
+    uint32_t output_id)
 {
     auto e = new MirEvent;
     memset(e, 0, sizeof(*e));
@@ -109,6 +110,7 @@ mir::EventUPtr mev::make_event(
     e->surface_output.dpi = dpi;
     e->surface_output.scale = scale;
     e->surface_output.form_factor = form_factor;
+    e->surface_output.output_id = output_id;
 
     return make_event_uptr(e);
 }
@@ -163,6 +165,28 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     kev.modifiers = modifiers;
 
     return make_event_uptr(e);
+}
+
+
+void mev::set_modifier(MirEvent& event, MirInputEventModifiers modifiers)
+{
+    switch(event.type)
+    {
+    case mir_event_type_key:
+        {
+            auto& kev = event.key;
+            kev.modifiers = modifiers;
+            break;
+        }
+    case mir_event_type_motion:
+        {
+            auto& mev = event.motion;
+            mev.modifiers = modifiers;
+            break;
+        }
+    default:
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Input event modifiers are only valid for pointer, key and touch events."));
+    }
 }
 
 // Deprecated version without mac

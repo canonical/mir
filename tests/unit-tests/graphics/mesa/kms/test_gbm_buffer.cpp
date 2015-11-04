@@ -78,7 +78,7 @@ protected:
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
                 mgm::BypassOption::allowed);
 
-        allocator.reset(new mgm::BufferAllocator(platform->gbm.device, mgm::BypassOption::allowed, mgm::BufferImportMethod::gbm_native_pixmap));
+        allocator.reset(new mgm::BufferAllocator(platform->gbm->device, mgm::BypassOption::allowed, mgm::BufferImportMethod::gbm_native_pixmap));
     }
 
     mir::renderer::gl::TextureSource* as_texture_source(std::shared_ptr<mg::Buffer> const& buffer)

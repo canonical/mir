@@ -172,6 +172,7 @@ struct MirSurfaceOutputEvent
     int dpi;
     float scale;
     MirFormFactor form_factor;
+    uint32_t output_id;
 };
 
 // Access to MirEvent is deprecated

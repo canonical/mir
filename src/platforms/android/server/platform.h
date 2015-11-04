@@ -59,6 +59,8 @@ private:
     std::shared_ptr<PlatformIpcOperations> const ipc_operations;
     std::shared_ptr<DeviceQuirks> const quirks;
     OverlayOptimization const overlay_option;
+
+    std::shared_ptr<graphics::GraphicBufferAllocator> preserved_allocator;
 };
 
 }

@@ -52,6 +52,8 @@ class Platform;
 
 namespace nested
 {
+class NestedDisplayConfiguration;
+
 namespace detail
 {
 
@@ -151,6 +153,10 @@ private:
 
     std::mutex outputs_mutex;
     std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::DisplaySyncGroup>> outputs;
+
+    std::mutex mutable configuration_mutex;
+    std::unique_ptr<NestedDisplayConfiguration> current_configuration;
+
     void create_surfaces(mir::graphics::DisplayConfiguration const& configuration);
     void apply_to_connection(mir::graphics::DisplayConfiguration const& configuration);
     void complete_display_initialization(MirPixelFormat format);
