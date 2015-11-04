@@ -329,3 +329,13 @@ message CoordinateTranslationResponse {
 
   optional string error = 127;
 }
+
+message Cookie {
+  required uint64 timestamp = 1;
+  required uint64 mac = 2;
+}
+
+message RaiseRequest {
+  required Cookie cookie = 1;
+  required SurfaceId surface_id = 2;
+}

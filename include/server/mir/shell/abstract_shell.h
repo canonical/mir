@@ -71,6 +71,11 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib) override;
 
+    void raise_surface_with_timestamp(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        uint64_t timestamp) override;
+
     std::shared_ptr<scene::PromptSession> start_prompt_session_for(
         std::shared_ptr<scene::Session> const& session,
         scene::PromptSessionCreationParameters const& params) override;

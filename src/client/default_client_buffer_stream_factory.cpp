@@ -50,6 +50,8 @@ make_perf_report(std::shared_ptr<ml::Logger> const& logger)
 
 size_t get_nbuffers_from_env()
 {
+    //TODO: (kdub) cannot set nbuffers == 2 in production until we have client-side
+    //      timeout-based overallocation for timeout-based framedropping.
     const char* nbuffers_opt = getenv("MIR_CLIENT_NBUFFERS");
     if (nbuffers_opt && !strncmp(nbuffers_opt, "2", strlen(nbuffers_opt)))
         return 2u;

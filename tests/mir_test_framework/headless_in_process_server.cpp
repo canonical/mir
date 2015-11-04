@@ -17,6 +17,7 @@
  */
 
 #include "mir_test_framework/headless_in_process_server.h"
+#include "mir_test_framework/stub_server_platform_factory.h"
 
 namespace mtf = mir_test_framework;
 
@@ -32,5 +33,6 @@ void mtf::HeadlessInProcessServer::SetUp()
 
 void mtf::HeadlessInProcessServer::TearDown()
 {
+    mtf::set_next_preset_display(nullptr);
     stop_server();
 }
