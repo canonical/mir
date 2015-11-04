@@ -42,7 +42,7 @@ struct QueueingSchedule : Test
     std::vector<std::shared_ptr<mg::Buffer>> drain_queue()
     {
         std::vector<std::shared_ptr<mg::Buffer>> scheduled_buffers;
-        while(schedule.anything_scheduled())
+        while(schedule.num_scheduled())
             scheduled_buffers.emplace_back(schedule.next_buffer());
         return scheduled_buffers;
     }
@@ -51,7 +51,7 @@ struct QueueingSchedule : Test
 
 TEST_F(QueueingSchedule, throws_if_no_buffers)
 {
-    EXPECT_FALSE(schedule.anything_scheduled());
+    EXPECT_FALSE(schedule.num_scheduled());
     EXPECT_THROW({
         schedule.next_buffer();
     }, std::logic_error);
@@ -59,7 +59,7 @@ TEST_F(QueueingSchedule, throws_if_no_buffers)
 
 TEST_F(QueueingSchedule, queues_buffers_up)
 {
-    EXPECT_FALSE(schedule.anything_scheduled());
+    EXPECT_FALSE(schedule.num_scheduled());
 
     std::vector<std::shared_ptr<mg::Buffer>> scheduled_buffers {
         buffers[1], buffers[3], buffers[0], buffers[2], buffers[4]
@@ -68,11 +68,11 @@ TEST_F(QueueingSchedule, queues_buffers_up)
     for (auto& buffer : scheduled_buffers)
         schedule.schedule(buffer);
 
-    EXPECT_TRUE(schedule.anything_scheduled());
+    EXPECT_TRUE(schedule.num_scheduled());
 
     EXPECT_THAT(drain_queue(), ContainerEq(scheduled_buffers));
 
-    EXPECT_FALSE(schedule.anything_scheduled());
+    EXPECT_FALSE(schedule.num_scheduled());
 }
 
 TEST_F(QueueingSchedule, queuing_the_same_buffer_moves_it_to_front_of_queue)

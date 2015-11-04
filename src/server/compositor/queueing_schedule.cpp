@@ -32,10 +32,10 @@ void mc::QueueingSchedule::schedule(std::shared_ptr<graphics::Buffer> const& buf
     queue.emplace_back(buffer);
 }
 
-bool mc::QueueingSchedule::anything_scheduled()
+unsigned int mc::QueueingSchedule::num_scheduled()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-    return !queue.empty();
+    return queue.size();
 }
 
 std::shared_ptr<mg::Buffer> mc::QueueingSchedule::next_buffer()
