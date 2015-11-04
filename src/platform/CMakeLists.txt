@@ -36,7 +36,6 @@ add_library(mirplatform SHARED
 target_link_libraries(mirplatform
 
   mircommon
-  ${Boost_PROGRAM_OPTIONS}
   ${MIR_PLATFORM_REFERENCES}
 )
 
