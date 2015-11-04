@@ -6,6 +6,9 @@ mir (0.17.1) UNRELEASED; urgency=medium
       . compositing never stops when external monitor is connected
         (LP: #1499039)
       . half screen on external monitor (LP: #1511538)
+      . Nested servers don't apply their display configuration at startup 
+        (LP: #1492269)
+      . mir_connection_get_egl_pixel_format() crashes (LP: #1510218)
       . [regression] mir-client-platform-mesa-dev pkg-config file dropped
         (LP: #1509005)
 
