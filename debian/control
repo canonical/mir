@@ -425,6 +425,7 @@ Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
+         ${shlibs:Depends},
 Description: Produce and verify spoof-resistant timestamps - runtime library
  libmircookie provides a simple mechanism for a group of cooperating processes
  to hand out and verify difficult-to-forge timestamps to untrusted 3rd parties.
@@ -438,7 +439,6 @@ Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmircookie1 (= ${binary:Version}),
-         nettle-dev,
          ${misc:Depends},
 Description: Produce and verify spoof-resistant timestamps - development headers
  libmircookie provides a simple mechanism for a group of cooperating processes
