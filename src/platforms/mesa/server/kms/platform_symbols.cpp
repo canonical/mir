@@ -22,6 +22,7 @@
 #include "mir/options/program_option.h"
 #include "mir/options/option.h"
 #include "mir/udev/wrapper.h"
+#include "mir/module_deleter.h"
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -104,21 +105,19 @@ ensure_loaded_with_rtld_global()
 {
     Dl_info info;
 
-    // Cast dladdr itself to work around g++-4.8 warnings (LP: #1366134)
-    typedef int (safe_dladdr_t)(int(*func)(), Dl_info *info);
-    safe_dladdr_t *safe_dladdr = (safe_dladdr_t*)&dladdr;
-    safe_dladdr(&ensure_loaded_with_rtld_global, &info);
+    dladdr(reinterpret_cast<void*>(&ensure_loaded_with_rtld_global), &info);
     dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
     return 0;
 }
 
 }
 
-std::shared_ptr<mg::Platform> create_host_platform(
+mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mg::DisplayReport> const& report)
 {
+    // ensure mesa finds the mesa mir-platform symbols
     auto real_fops = std::make_shared<RealVTFileOperations>();
     auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});
     auto vt = std::make_shared<mgm::LinuxVirtualTerminal>(
@@ -131,7 +130,7 @@ std::shared_ptr<mg::Platform> create_host_platform(
     if (!options->get<bool>(bypass_option_name))
         bypass_option = mgm::BypassOption::prohibited;
 
-    return std::make_shared<mgm::Platform>(
+    return mir::make_module_ptr<mgm::Platform>(
         report, vt, *emergency_cleanup_registry, bypass_option);
 }
 
@@ -191,9 +190,11 @@ mir::ModuleProperties const* describe_graphics_module()
     return &description;
 }
 
-std::shared_ptr<mg::Platform> create_guest_platform(
+mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& nested_context)
 {
-    return std::make_shared<mgm::GuestPlatform>(nested_context);
+    // ensure mesa finds the mesa mir-platform symbols
+    ensure_loaded_with_rtld_global();
+    return mir::make_module_ptr<mgm::GuestPlatform>(nested_context);
 }

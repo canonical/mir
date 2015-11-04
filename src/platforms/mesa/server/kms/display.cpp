@@ -79,22 +79,28 @@ private:
 
 }
 
-mgm::Display::Display(std::shared_ptr<Platform> const& platform,
+mgm::Display::Display(std::shared_ptr<helpers::DRMHelper> const& drm,
+                      std::shared_ptr<helpers::GBMHelper> const& gbm,
+                      std::shared_ptr<VirtualTerminal> const& vt,
+                      mgm::BypassOption bypass_option,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& listener)
-    : platform(platform),
+    : drm(drm),
+      gbm(gbm),
+      vt(vt),
       listener(listener),
       monitor(mir::udev::Context()),
       shared_egl{*gl_config},
-      output_container{platform->drm->fd,
-                       std::make_shared<KMSPageFlipper>(platform->drm->fd, listener)},
-      current_display_configuration{platform->drm->fd},
+      output_container{drm->fd,
+                       std::make_shared<KMSPageFlipper>(drm->fd, listener)},
+      current_display_configuration{drm->fd},
+      bypass_option(bypass_option),
       gl_config{gl_config}
 {
-    platform->vt->set_graphics_mode();
+    vt->set_graphics_mode();
 
-    shared_egl.setup(platform->gbm);
+    shared_egl.setup(*gbm);
 
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
     monitor.enable();
@@ -219,10 +225,13 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                     std::swap(width, height);
                 }
 
-                auto surface = platform->gbm.create_scanout_surface(width, height);
+                auto surface = gbm->create_scanout_surface(width, height);
 
                 std::unique_ptr<DisplayBuffer> db{
-                    new DisplayBuffer{platform, listener,
+                    new DisplayBuffer{bypass_option,
+                                      drm,
+                                      gbm,
+                                      listener,
                                       kms_outputs,
                                       std::move(surface),
                                       bounding_rect,
@@ -270,7 +279,7 @@ void mgm::Display::register_pause_resume_handlers(
     DisplayPauseHandler const& pause_handler,
     DisplayResumeHandler const& resume_handler)
 {
-    platform->vt->register_switch_handlers(handlers, pause_handler, resume_handler);
+    vt->register_switch_handlers(handlers, pause_handler, resume_handler);
 }
 
 void mgm::Display::pause()
@@ -278,7 +287,7 @@ void mgm::Display::pause()
     try
     {
         if (auto c = cursor.lock()) c->suspend();
-        platform->drm->drop_master();
+        drm->drop_master();
     }
     catch(std::runtime_error const& e)
     {
@@ -291,7 +300,7 @@ void mgm::Display::resume()
 {
     try
     {
-        platform->drm->set_master();
+        drm->set_master();
     }
     catch(std::runtime_error const& e)
     {
@@ -343,7 +352,7 @@ auto mgm::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
             Display& display;
         };
 
-        cursor = locked_cursor = std::make_shared<Cursor>(platform->gbm.device, output_container,
+        cursor = locked_cursor = std::make_shared<Cursor>(gbm->device, output_container,
             std::make_shared<KMSCurrentConfiguration>(*this),
             initial_image);
     }
@@ -353,11 +362,7 @@ auto mgm::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
 
 std::unique_ptr<mg::GLContext> mgm::Display::create_gl_context()
 {
-    return std::unique_ptr<GBMGLContext>{
-        new GBMGLContext{
-            platform->gbm,
-            *gl_config,
-            shared_egl.context()}};
+    return std::make_unique<GBMGLContext>(*gbm, *gl_config, shared_egl.context());
 }
 
 void mgm::Display::clear_connected_unused_outputs()

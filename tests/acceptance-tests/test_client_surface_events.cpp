@@ -391,12 +391,15 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
     float constexpr scale = 2.15f;
 
     std::shared_ptr<mg::DisplayConfiguration> display_configuration{server.the_display()->configuration()};
+    std::vector<uint32_t> display_ids;
 
     display_configuration->for_each_output(
-        [](mg::UserDisplayConfigurationOutput& output_config)
+        [&display_ids](mg::UserDisplayConfigurationOutput& output_config)
         {
             output_config.scale = scale;
             output_config.form_factor = form_factor;
+            display_ids.push_back(
+                static_cast<uint32_t>(output_config.id.as_value()));
         });
 
     auto display_controller = server.the_display_configuration_controller();
@@ -414,6 +417,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
     auto surface_event = mir_event_get_surface_output_event(context.event);
     EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_event), Eq(form_factor));
     EXPECT_THAT(mir_surface_output_event_get_scale(surface_event), Eq(scale));
+    EXPECT_THAT(display_ids, Contains(Eq(mir_surface_output_event_get_output_id(surface_event))));
 
     mir_surface_release_sync(surface);
 }

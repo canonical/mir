@@ -69,7 +69,7 @@ protected:
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
                 mgm::BypassOption::allowed);
         allocator.reset(new mgm::BufferAllocator(
-            platform->gbm.device, mgm::BypassOption::allowed, mgm::BufferImportMethod::gbm_native_pixmap));
+            platform->gbm->device, mgm::BypassOption::allowed, mgm::BufferImportMethod::gbm_native_pixmap));
     }
 
     // Defaults
@@ -150,7 +150,7 @@ TEST_F(MesaBufferAllocatorTest, bypass_disables_when_option_is_disabled)
                                           mg::BufferUsage::hardware);
 
     mgm::BufferAllocator alloc(
-        platform->gbm.device,
+        platform->gbm->device,
         mgm::BypassOption::prohibited,
         mgm::BufferImportMethod::gbm_native_pixmap);
     auto buf = alloc.alloc_buffer(properties);

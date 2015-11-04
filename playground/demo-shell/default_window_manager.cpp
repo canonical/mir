@@ -117,6 +117,13 @@ void me::DefaultWindowManager::remove_display(geometry::Rectangle const& /*area*
 {
 }
 
+void me::DefaultWindowManager::handle_raise_surface(
+    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Surface> const& /*surface*/,
+    uint64_t /*timestamp*/)
+{
+}
+
 bool me::DefaultWindowManager::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
 {
     return false;
