@@ -24,6 +24,9 @@
 #include "mir/input/touchpad_configuration.h"
 #include "mir/input/pointer_configuration.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 namespace mi = mir::input;
 
 mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
@@ -78,7 +81,10 @@ mir::optional_value<mi::TouchpadConfiguration> mi::DefaultDevice::touchpad_confi
 void mi::DefaultDevice::apply_pointer_configuration(mi::PointerConfiguration const& conf)
 {
     if (!pointer.is_set())
-        return;
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a pointer configuration"));
+
+    if (conf.cursor_acceleration_bias < -1.0 || conf.cursor_acceleration_bias > 1.0)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor acceleration bias out of range"));
 
     PointerSettings settings;
     settings.handedness = conf.handedness;
@@ -97,7 +103,10 @@ void mi::DefaultDevice::apply_pointer_configuration(mi::PointerConfiguration con
 void mi::DefaultDevice::apply_touchpad_configuration(mi::TouchpadConfiguration const& conf)
 {
     if (!touchpad.is_set())
-        return;
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a touchpad configuration"));
+
+    if (conf.scroll_mode & mir_touchpad_scroll_mode_button_down_scroll && conf.button_down_scroll_button == mi::no_scroll_button)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("No scroll button configured"));
 
     TouchpadSettings settings;
     settings.click_mode = conf.click_mode;
