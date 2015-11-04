@@ -194,24 +194,37 @@ private:
     bool handle_keyboard_event(MirKeyboardEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
+        update_event_timestamp(event);
         return policy.handle_keyboard_event(event);
     }
 
     bool handle_touch_event(MirTouchEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
+        update_event_timestamp(event);
         return policy.handle_touch_event(event);
     }
 
     bool handle_pointer_event(MirPointerEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
+        update_event_timestamp(event);
 
         cursor = {
             mir_pointer_event_axis_value(event, mir_pointer_axis_x),
             mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
 
         return policy.handle_pointer_event(event);
+    }
+
+    void handle_raise_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        uint64_t timestamp) override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        if (timestamp >= last_input_event_timestamp)
+            policy.handle_raise_surface(session, surface);
     }
 
     int set_surface_attribute(
@@ -344,6 +357,42 @@ private:
     typename SurfaceTo<SurfaceInfo>::type surface_info;
     geometry::Rectangles displays;
     geometry::Point cursor;
+    uint64_t last_input_event_timestamp{0};
+
+private:
+    void update_event_timestamp(MirKeyboardEvent const* kev)
+    {
+        auto iev = mir_keyboard_event_input_event(kev);
+        last_input_event_timestamp = mir_input_event_get_event_time(iev);
+    }
+
+    void update_event_timestamp(MirPointerEvent const* pev)
+    {
+        auto iev = mir_pointer_event_input_event(pev);
+        auto pointer_action = mir_pointer_event_action(pev);
+
+        if (pointer_action == mir_pointer_action_button_up ||
+            pointer_action == mir_pointer_action_button_down)
+        {
+            last_input_event_timestamp = mir_input_event_get_event_time(iev);
+        }
+    }
+
+    void update_event_timestamp(MirTouchEvent const* tev)
+    {
+        auto iev = mir_touch_event_input_event(tev);
+        auto touch_count = mir_touch_event_point_count(tev);
+        for (unsigned i = 0; i < touch_count; i++)
+        {
+            auto touch_action = mir_touch_event_action(tev, i);
+            if (touch_action == mir_touch_action_up ||
+                   touch_action == mir_touch_action_down)
+            {
+                last_input_event_timestamp = mir_input_event_get_event_time(iev);
+                break;
+            }
+        }
+    }
 };
 }
 }

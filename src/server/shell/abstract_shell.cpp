@@ -152,6 +152,13 @@ int msh::AbstractShell::get_surface_attribute(
     return surface->query(attrib);
 }
 
+void msh::AbstractShell::raise_surface_with_timestamp(
+    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Surface> const& surface,
+    uint64_t timestamp)
+{
+    window_manager->handle_raise_surface(session, surface, timestamp);
+}
 
 void msh::AbstractShell::focus_next_session()
 {
