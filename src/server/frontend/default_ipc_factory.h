@@ -23,6 +23,10 @@
 
 namespace mir
 {
+namespace cookie
+{
+class CookieFactory;
+}
 namespace graphics
 {
 class PlatformIpcOperations;
@@ -61,7 +65,8 @@ public:
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<input::CursorImages> const& cursor_images,
         std::shared_ptr<scene::CoordinateTranslator> const& translator,
-        std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector);
+        std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
+        std::shared_ptr<cookie::CookieFactory> const& cookie_factory);
 
     std::shared_ptr<detail::DisplayServer> make_ipc_server(
         SessionCredentials const &creds,
@@ -96,6 +101,7 @@ private:
     std::shared_ptr<input::CursorImages> const cursor_images;
     std::shared_ptr<scene::CoordinateTranslator> const translator;
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const anr_detector;
+    std::shared_ptr<cookie::CookieFactory> const cookie_factory;
 };
 }
 }

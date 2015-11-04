@@ -127,16 +127,6 @@ void mix::XInputPlatform::process_input_event()
 #endif
                 XLookupString(&xkev, str, STRMAX, &keysym, NULL);
 
-                MirInputEventModifiers modifiers = mir_input_event_modifier_none;
-                if (xkev.state & ShiftMask)
-                    modifiers |= mir_input_event_modifier_shift;
-                if (xkev.state & ControlMask)
-                    modifiers |= mir_input_event_modifier_ctrl;
-                if (xkev.state & Mod1Mask)
-                    modifiers |= mir_input_event_modifier_alt;
-                if (xkev.state & Mod4Mask)
-                    modifiers |= mir_input_event_modifier_meta;
-
                 auto event_time =
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
                         std::chrono::milliseconds{xkev.time});
@@ -155,8 +145,7 @@ void mix::XInputPlatform::process_input_event()
                             mir_keyboard_action_down :
                             mir_keyboard_action_up,
                         keysym,
-                        xkev.keycode-8,
-                        modifiers
+                        xkev.keycode-8
                         )
                     );
                 break;
@@ -185,16 +174,6 @@ void mix::XInputPlatform::process_input_event()
 #endif
                     break;
                 }
-                MirInputEventModifiers modifiers = mir_input_event_modifier_none;
-                if (xbev.state & ShiftMask)
-                    modifiers |= mir_input_event_modifier_shift;
-                if (xbev.state & ControlMask)
-                    modifiers |= mir_input_event_modifier_ctrl;
-                if (xbev.state & Mod1Mask)
-                    modifiers |= mir_input_event_modifier_alt;
-                if (xbev.state & Mod4Mask)
-                    modifiers |= mir_input_event_modifier_meta;
-
                 auto event_time =
                     std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds{xbev.time});
 
@@ -215,15 +194,15 @@ void mix::XInputPlatform::process_input_event()
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                 mir::log_info("Mir button event : x=%d, y=%d, "
-                              "buttons_pressed=0x%0X, modifiers=0x%0X, event_time=%" PRId64,
-                              xbev.x, xbev.y, buttons_pressed, modifiers, event_time);
+                              "buttons_pressed=0x%0X, event_time=%" PRId64,
+                              xbev.x, xbev.y, buttons_pressed, event_time);
 #endif
+
                 if ((xbev.button == Button4) || (xbev.button == Button5))
                 { // scroll event
                     core_pointer->sink->handle_input(
                         *core_pointer->builder->pointer_event(
                             event_time,
-                            modifiers,
                             mir_pointer_action_motion,
                             0,
                             xbev.x,
@@ -240,7 +219,6 @@ void mix::XInputPlatform::process_input_event()
                     core_pointer->sink->handle_input(
                         *core_pointer->builder->pointer_event(
                             event_time,
-                            modifiers,
                             xbev.type == ButtonPress ?
                                 mir_pointer_action_button_down :
                                 mir_pointer_action_button_up,
@@ -270,15 +248,6 @@ void mix::XInputPlatform::process_input_event()
                               xmev.root, xmev.subwindow, xmev.time, xmev.x, xmev.y, xmev.x_root,
                               xmev.y_root, xmev.state, xmev.is_hint == NotifyNormal ? "no" : "yes", xmev.same_screen);
 #endif
-                MirInputEventModifiers modifiers = mir_input_event_modifier_none;
-                if (xmev.state & ShiftMask)
-                    modifiers |= mir_input_event_modifier_shift;
-                if (xmev.state & ControlMask)
-                    modifiers |=  mir_input_event_modifier_ctrl;
-                if (xmev.state & Mod1Mask)
-                    modifiers |=  mir_input_event_modifier_alt;
-                if (xmev.state & Mod4Mask)
-                    modifiers |=  mir_input_event_modifier_meta;
 
                 auto event_time =
                     std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -298,13 +267,12 @@ void mix::XInputPlatform::process_input_event()
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                 mir::log_info("Mir pointer event : "
-                              "x=%d, y=%d, buttons_pressed=0x%0X, modifiers=0x%0X, event_time=%" PRId64,
-                              xmev.x, xmev.y, buttons_pressed, modifiers, event_time);
+                              "x=%d, y=%d, buttons_pressed=0x%0X, event_time=%" PRId64,
+                              xmev.x, xmev.y, buttons_pressed, event_time);
 #endif
                 core_pointer->sink->handle_input(
                     *core_pointer->builder->pointer_event(
                         event_time,
-                        modifiers,
                         mir_pointer_action_motion,
                         buttons_pressed,
                         xmev.x,

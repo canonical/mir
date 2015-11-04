@@ -85,6 +85,7 @@ class FocusController;
 class DisplayLayout;
 class HostLifecycleEventListener;
 class Shell;
+class ShellReport;
 class PersistentSurfaceStore;
 namespace detail { class FrontendShell; }
 }
@@ -278,7 +279,7 @@ public:
     virtual std::shared_ptr<scene::PromptSessionManager>  the_prompt_session_manager();
     virtual std::shared_ptr<shell::HostLifecycleEventListener> the_host_lifecycle_event_listener();
     virtual std::shared_ptr<shell::PersistentSurfaceStore> the_persistent_surface_store();
-
+    virtual std::shared_ptr<shell::ShellReport>         the_shell_report();
     /** @} */
 
     /** @name internal scene configuration
@@ -347,6 +348,12 @@ public:
     virtual std::shared_ptr<time::Clock> the_clock();
     virtual std::shared_ptr<ServerActionQueue> the_server_action_queue();
     virtual std::shared_ptr<SharedLibraryProberReport>  the_shared_library_prober_report();
+
+private:
+    // We need to ensure the platform library is destroyed last as the
+    // DisplayConfiguration can hold weak_ptrs to objects created from the library
+    // TODO: We need a better way to manage the lifetimes of platform libraries
+    std::shared_ptr<mir::SharedLibrary> platform_library;
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
@@ -445,6 +452,7 @@ protected:
     CachedPtr<shell::PersistentSurfaceStore> surface_store;
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
     CachedPtr<shell::Shell> shell;
+    CachedPtr<shell::ShellReport> shell_report;
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::CookieFactory> cookie_factory;
 

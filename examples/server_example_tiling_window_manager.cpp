@@ -236,6 +236,14 @@ void me::TilingWindowManagerPolicy::drag(Point cursor)
     old_cursor = cursor;
 }
 
+void me::TilingWindowManagerPolicy::handle_raise_surface(
+    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Surface> const& surface)
+{
+    tools->set_focus_to(session, surface);
+    tools->raise({surface});
+}
+
 bool me::TilingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)
 {
     auto const action = mir_keyboard_event_action(event);
