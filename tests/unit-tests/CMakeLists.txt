@@ -113,6 +113,7 @@ target_link_libraries(
   mirdraw
   demo-shell
   mircommon
+  client_platform_common
 
   mirclient-static
   mirclientrpc-static
@@ -130,7 +131,7 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
-if(MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
+if(MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
 target_link_libraries(mir_unit_tests
   mirsharedmesaservercommon-static
 )

@@ -23,6 +23,7 @@
 #include "real_kms_output_container.h"
 #include "real_kms_display_configuration.h"
 #include "display_helpers.h"
+#include "platform_common.h"
 
 #include <mutex>
 
@@ -46,15 +47,24 @@ class GLConfig;
 namespace mesa
 {
 
-class Platform;
+namespace helpers
+{
+class DRMHelper;
+class GBMHelper;
+}
+
 class DisplayBuffer;
+class VirtualTerminal;
 class KMSOutput;
 class Cursor;
 
 class Display : public graphics::Display
 {
 public:
-    Display(std::shared_ptr<Platform> const& platform,
+    Display(std::shared_ptr<helpers::DRMHelper> const& drm,
+            std::shared_ptr<helpers::GBMHelper> const& gbm,
+            std::shared_ptr<VirtualTerminal> const& vt,
+            BypassOption bypass_option,
             std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
             std::shared_ptr<GLConfig> const& gl_config,
             std::shared_ptr<DisplayReport> const& listener);
@@ -86,14 +96,17 @@ private:
     void clear_connected_unused_outputs();
 
     mutable std::mutex configuration_mutex;
-    std::shared_ptr<Platform> const platform;
+    std::shared_ptr<helpers::DRMHelper> const drm;
+    std::shared_ptr<helpers::GBMHelper> const gbm;
+    std::shared_ptr<VirtualTerminal> const vt;
     std::shared_ptr<DisplayReport> const listener;
     mir::udev::Monitor monitor;
     helpers::EGLHelper shared_egl;
     std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
     RealKMSOutputContainer output_container;
     mutable RealKMSDisplayConfiguration current_display_configuration;
-    
+
+    BypassOption bypass_option;
     std::weak_ptr<Cursor> cursor;
     std::shared_ptr<GLConfig> const gl_config;
 };

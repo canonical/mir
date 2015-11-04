@@ -24,6 +24,7 @@
 #include "android_client_buffer_factory.h"
 #include "egl_native_surface_interpreter.h"
 
+#include "mir/weak_egl.h"
 #include <EGL/egl.h>
 
 #include <boost/throw_exception.hpp>
@@ -124,19 +125,6 @@ MirNativeBuffer* mcla::AndroidClientPlatform::convert_native_buffer(graphics::Na
     return buf->anwb();
 }
 
-/*
- * Driver modules get dlopened with RTLD_NOW, meaning that if the below egl
- * functions aren't found in memory the driver fails to load. This would
- * normally prevent software clients (those not linked to libEGL) from
- * successfully loading our client module, but if we mark the undefined
- * egl function symbols as "weak" then their absence is no longer an error,
- * even with RTLD_NOW.
- */
-extern "C" EGLAPI EGLBoolean EGLAPIENTRY
-    eglGetConfigAttrib(EGLDisplay dpy, EGLConfig config,
-                       EGLint attribute, EGLint *value)
-    __attribute__((weak));
-
 MirPixelFormat mcla::AndroidClientPlatform::get_egl_pixel_format(
     EGLDisplay disp, EGLConfig conf) const
 {
@@ -144,7 +132,8 @@ MirPixelFormat mcla::AndroidClientPlatform::get_egl_pixel_format(
 
     // EGL_KHR_platform_android says this will always work...
     EGLint vis = 0;
-    if (eglGetConfigAttrib(disp, conf, EGL_NATIVE_VISUAL_ID, &vis))
+    mcl::WeakEGL weak;
+    if (weak.eglGetConfigAttrib(disp, conf, EGL_NATIVE_VISUAL_ID, &vis))
         mir_format = mir::graphics::android::to_mir_format(vis);
 
     return mir_format;

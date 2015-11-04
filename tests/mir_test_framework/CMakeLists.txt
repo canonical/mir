@@ -124,7 +124,9 @@ set_target_properties(
 
 install(TARGETS mirplatforminputstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
 
-set(server_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-server.map)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols-server.map.in
+    ${CMAKE_CURRENT_BINARY_DIR}/symbols-server.map)
+set(server_symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols-server.map)
 add_library(
   mirplatformgraphicsstub MODULE
 

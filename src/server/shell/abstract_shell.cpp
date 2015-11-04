@@ -16,9 +16,10 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include <mir/shell/surface_specification.h>
 #include "mir/shell/abstract_shell.h"
 #include "mir/shell/input_targeter.h"
+#include "mir/shell/shell_report.h"
+#include "mir/shell/surface_specification.h"
 #include "mir/shell/window_manager.h"
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
@@ -36,12 +37,14 @@ msh::AbstractShell::AbstractShell(
     std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
+    std::shared_ptr<ShellReport> const& report,
     std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder) :
     input_targeter(input_targeter),
     surface_coordinator(surface_coordinator),
     session_coordinator(session_coordinator),
     prompt_session_manager(prompt_session_manager),
-    window_manager(wm_builder(this))
+    window_manager(wm_builder(this)),
+    report(report)
 {
 }
 
@@ -56,12 +59,14 @@ std::shared_ptr<ms::Session> msh::AbstractShell::open_session(
 {
     auto const result = session_coordinator->open_session(client_pid, name, sink);
     window_manager->add_session(result);
+    report->opened_session(*result);
     return result;
 }
 
 void msh::AbstractShell::close_session(
     std::shared_ptr<ms::Session> const& session)
 {
+    report->closing_session(*session);
     prompt_session_manager->remove_session(session);
     session_coordinator->close_session(session);
     window_manager->remove_session(session);
@@ -77,11 +82,15 @@ mf::SurfaceId msh::AbstractShell::create_surface(
             return session->create_surface(placed_params, sink);
         };
 
-    return window_manager->add_surface(session, params, build);
+    auto const result = window_manager->add_surface(session, params, build);
+    report->created_surface(*session, result);
+    return result;
 }
 
 void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, SurfaceSpecification const& modifications)
 {
+    report->update_surface(*session, *surface, modifications);
+
     auto wm_relevant_mods = modifications;
     if (wm_relevant_mods.streams.is_set())
     {
@@ -97,6 +106,7 @@ void msh::AbstractShell::destroy_surface(
     std::shared_ptr<ms::Session> const& session,
     mf::SurfaceId surface)
 {
+    report->destroying_surface(*session, surface);
     window_manager->remove_surface(session, session->surface(surface));
     session->destroy_surface(surface);
 }
@@ -105,7 +115,9 @@ std::shared_ptr<ms::PromptSession> msh::AbstractShell::start_prompt_session_for(
     std::shared_ptr<ms::Session> const& session,
     scene::PromptSessionCreationParameters const& params)
 {
-    return prompt_session_manager->start_prompt_session_for(session, params);
+    auto const result = prompt_session_manager->start_prompt_session_for(session, params);
+    report->started_prompt_session(*result, *session);
+    return result;
 }
 
 void msh::AbstractShell::add_prompt_provider_for(
@@ -113,11 +125,13 @@ void msh::AbstractShell::add_prompt_provider_for(
     std::shared_ptr<ms::Session> const& session)
 {
     prompt_session_manager->add_prompt_provider(prompt_session, session);
+    report->added_prompt_provider(*prompt_session, *session);
 }
 
 void msh::AbstractShell::stop_prompt_session(
     std::shared_ptr<ms::PromptSession> const& prompt_session)
 {
+    report->stopping_prompt_session(*prompt_session);
     prompt_session_manager->stop_prompt_session(prompt_session);
 }
 
@@ -127,6 +141,7 @@ int msh::AbstractShell::set_surface_attribute(
     MirSurfaceAttrib attrib,
     int value)
 {
+    report->update_surface(*session, *surface, attrib, value);
     return window_manager->set_surface_attribute(session, surface, attrib, value);
 }
 
@@ -137,6 +152,13 @@ int msh::AbstractShell::get_surface_attribute(
     return surface->query(attrib);
 }
 
+void msh::AbstractShell::raise_surface_with_timestamp(
+    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Surface> const& surface,
+    uint64_t timestamp)
+{
+    window_manager->handle_raise_surface(session, surface, timestamp);
+}
 
 void msh::AbstractShell::focus_next_session()
 {
@@ -215,15 +237,19 @@ void msh::AbstractShell::set_focus_to_locked(
             session_coordinator->unset_focus();
         }
     }
+
+    report->input_focus_set_to(session.get(), surface.get());
 }
 
 void msh::AbstractShell::add_display(geometry::Rectangle const& area)
 {
+    report->adding_display(area);
     window_manager->add_display(area);
 }
 
 void msh::AbstractShell::remove_display(geometry::Rectangle const& area)
 {
+    report->removing_display(area);
     window_manager->remove_display(area);
 }
 
@@ -258,5 +284,5 @@ auto msh::AbstractShell::surface_at(geometry::Point cursor) const
 void msh::AbstractShell::raise(SurfaceSet const& surfaces)
 {
     surface_coordinator->raise(surfaces);
+    report->surfaces_raised(surfaces);
 }
-
