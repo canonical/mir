@@ -289,7 +289,7 @@ extern "C" std::shared_ptr<mg::Platform> create_stub_platform(std::vector<geom::
     return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
 }
 
-std::shared_ptr<mg::Platform> create_host_platform(
+mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
@@ -306,10 +306,10 @@ std::shared_ptr<mg::Platform> create_host_platform(
         result = create_stub_platform(default_display_rects);
     }
     the_graphics_platform = result;
-    return result;
+    return mir::make_module_ptr<GuestPlatformAdapter>(nullptr, result);
 }
 
-std::shared_ptr<mg::Platform> create_guest_platform(
+mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& context)
 {
@@ -319,7 +319,7 @@ std::shared_ptr<mg::Platform> create_guest_platform(
         static std::vector<geom::Rectangle> const default_display_rects{geom::Rectangle{{0,0},{1600,1600}}};
         the_graphics_platform = graphics_platform = create_stub_platform(default_display_rects);
     }
-    return std::make_shared<GuestPlatformAdapter>(context, graphics_platform);
+    return mir::make_module_ptr<GuestPlatformAdapter>(context, graphics_platform);
 }
 
 void add_graphics_platform_options(

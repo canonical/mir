@@ -21,8 +21,8 @@
 
 #include "mir_toolkit/cookie.h"
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace mir
 {
