@@ -42,6 +42,7 @@ public:
     void rendered_in(compositor::CompositorID cid);
     void occluded_in(compositor::CompositorID cid);
     void active_compositors(std::set<compositor::CompositorID> const& cids);
+    bool is_exposed_in(compositor::CompositorID cid) const;
 
 private:
     bool occluded_in_all_active_compositors();
@@ -52,7 +53,7 @@ private:
     std::weak_ptr<Surface> const weak_surface;
     std::set<compositor::CompositorID> occlusions;
     std::set<compositor::CompositorID> active_compositors_;
-    std::mutex guard;
+    std::mutex mutable guard;
 };
 
 }

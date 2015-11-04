@@ -68,6 +68,18 @@ void ms::RenderingTracker::active_compositors(std::set<mc::CompositorID> const& 
         configure_visibility(mir_surface_visibility_occluded);
 }
 
+bool ms::RenderingTracker::is_exposed_in(mc::CompositorID cid) const
+{
+    std::lock_guard<std::mutex> lock{guard};
+
+    ensure_is_active_compositor(cid);
+
+    if (occlusions.size() == 0)
+        return true;
+
+    return occlusions.find(cid) == occlusions.end();
+}
+
 bool ms::RenderingTracker::occluded_in_all_active_compositors()
 {
     return occlusions == active_compositors_;

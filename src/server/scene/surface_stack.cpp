@@ -168,15 +168,18 @@ int ms::SurfaceStack::frames_pending(mc::CompositorID id) const
             // TODO: Rename mir_surface_attrib_visibility as it's obviously
             //       confusing with visible()
             if (surface->visible() &&
-                surface->query(mir_surface_attrib_visibility) ==
-                    mir_surface_visibility_exposed)
+                surface->query(mir_surface_attrib_visibility) == mir_surface_visibility_exposed)
             {
-                // Note that we ask the surface and not a Renderable.
-                // This is because we don't want to waste time and resources
-                // on a snapshot till we're sure we need it...
-                int ready = surface->buffers_ready_for_compositor(id);
-                if (ready > result)
-                    result = ready;
+                auto const tracker = rendering_trackers.find(surface.get());
+                if (tracker != rendering_trackers.end() && tracker->second->is_exposed_in(id))
+                {
+                    // Note that we ask the surface and not a Renderable.
+                    // This is because we don't want to waste time and resources
+                    // on a snapshot till we're sure we need it...
+                    int ready = surface->buffers_ready_for_compositor(id);
+                    if (ready > result)
+                        result = ready;
+                }
             }
         }
     }
