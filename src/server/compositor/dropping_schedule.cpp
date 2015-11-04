@@ -38,10 +38,13 @@ void mc::DroppingSchedule::schedule(std::shared_ptr<mg::Buffer> const& buffer)
     the_only_buffer = buffer;
 }
 
-bool mc::DroppingSchedule::anything_scheduled()
+unsigned int mc::DroppingSchedule::num_scheduled()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-    return static_cast<bool>(the_only_buffer);
+    if (the_only_buffer)
+        return 1;
+    else
+        return 0;
 }
 
 std::shared_ptr<mg::Buffer> mc::DroppingSchedule::next_buffer()
