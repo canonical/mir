@@ -112,6 +112,7 @@ public:
 
     void TearDown() override
     {
+        placement_strategy.reset();
         if (connection)
         {
             mir_connection_release(connection);
