@@ -696,27 +696,3 @@ MIR_SERVER_35 {
   };
  local: *;
 };
-
-MIR_SERVER_unreleased {
-  global:
-    extern "C++"{
-      mir::input::PointerConfiguration::PointerConfiguration*;
-      mir::input::PointerConfiguration::?PointerConfiguration*;
-      mir::input::PointerConfiguration::handedness*;
-      mir::input::PointerConfiguration::cursor_acceleration_bias*;
-      mir::input::PointerConfiguration::vertical_scroll_scale*;
-      mir::input::PointerConfiguration::horizontal_scroll_scale*;
-      mir::input::TouchpadConfiguration::TouchpadConfiguration*;
-      mir::input::TouchpadConfiguration::?TouchpadConfiguration*;
-      mir::input::TouchpadConfiguration::click_mode*;
-      mir::input::TouchpadConfiguration::scroll_mode*;
-      mir::input::TouchpadConfiguration::scroll_button*;
-      mir::input::TouchpadConfiguration::disable_with_mouse*;
-      mir::input::TouchpadConfiguration::disable_while_typing*;
-      mir::input::TouchpadConfiguration::middle_mouse_button_emulation*;
-      mir::input::TouchpadConfiguration::tap_to_click*;
-
-      typeinfo?for?mir::input::PointerConfiguration;
-      typeinfo?for?mir::input::TouchpadConfiguration;
-    };
-} MIR_SERVER_35;
