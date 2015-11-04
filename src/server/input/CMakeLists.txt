@@ -17,10 +17,8 @@ set(
   key_repeat_dispatcher.cpp
   null_input_channel_factory.cpp
   null_input_dispatcher.cpp
-  pointer_configuration.cpp
   seat.cpp
   surface_input_dispatcher.cpp
-  touchpad_configuration.cpp
   touchspot_controller.cpp
   validator.cpp
   vt_filter.cpp

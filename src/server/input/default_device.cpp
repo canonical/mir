@@ -81,10 +81,10 @@ void mi::DefaultDevice::apply_pointer_configuration(mi::PointerConfiguration con
         return;
 
     PointerSettings settings;
-    settings.handedness = conf.handedness();
-    settings.cursor_acceleration_bias = conf.cursor_acceleration_bias();
-    settings.vertical_scroll_scale = conf.vertical_scroll_scale();
-    settings.horizontal_scroll_scale = conf.horizontal_scroll_scale();
+    settings.handedness = conf.handedness;
+    settings.cursor_acceleration_bias = conf.cursor_acceleration_bias;
+    settings.vertical_scroll_scale = conf.vertical_scroll_scale;
+    settings.horizontal_scroll_scale = conf.horizontal_scroll_scale;
 
     pointer = settings;
 
@@ -100,13 +100,13 @@ void mi::DefaultDevice::apply_touchpad_configuration(mi::TouchpadConfiguration c
         return;
 
     TouchpadSettings settings;
-    settings.click_mode = conf.click_mode();
-    settings.scroll_mode = conf.scroll_mode();
-    settings.button_down_scroll_button = conf.scroll_button();
-    settings.disable_with_mouse = conf.disable_with_mouse();
-    settings.disable_while_typing = conf.disable_while_typing();
-    settings.tap_to_click = conf.tap_to_click();
-    settings.middle_mouse_button_emulation = conf.middle_mouse_button_emulation();
+    settings.click_mode = conf.click_mode;
+    settings.scroll_mode = conf.scroll_mode;
+    settings.button_down_scroll_button = conf.button_down_scroll_button;
+    settings.disable_with_mouse = conf.disable_with_mouse;
+    settings.disable_while_typing = conf.disable_while_typing;
+    settings.tap_to_click = conf.tap_to_click;
+    settings.middle_mouse_button_emulation = conf.middle_mouse_button_emulation;
 
     touchpad = settings;
 

@@ -31,16 +31,20 @@ namespace input
 
 struct PointerConfiguration
 {
-    PointerConfiguration();
-    PointerConfiguration(MirPointerHandedness pointer, double acceleration_bias, double horizontal_scroll_scale, double vertical_scroll_scale);
-    ~PointerConfiguration();
+    PointerConfiguration() {}
+
+    PointerConfiguration(MirPointerHandedness handedness, double acceleration_bias, double horizontal_scroll_scale,
+                         double vertical_scroll_scale)
+        : handedness{handedness}, cursor_acceleration_bias{acceleration_bias},
+          horizontal_scroll_scale{horizontal_scroll_scale}, vertical_scroll_scale{vertical_scroll_scale}
+    {
+    }
 
     /*!
      * Configure which button shall be used as primary button. That way the input device is configured to be either
      * right or left handed.
      */
-    void handedness(MirPointerHandedness handedness);
-    MirPointerHandedness handedness() const;
+    MirPointerHandedness handedness{mir_pointer_handedness_right};
 
     /*!
      * Configures the intensity of the cursor acceleration. Values within the range of [-1, 1] are allowed.
@@ -48,25 +52,17 @@ struct PointerConfiguration
      *   - [-1, 0): reduced acceleration
      *   - (0, 1]: increased acceleration
      */
-    void cursor_acceleration_bias(double bias);
-    double cursor_acceleration_bias() const;
+    double cursor_acceleration_bias{0.0};
 
     /*!
      * Configures a signed scale of the horizontal scrolling. Use negative values to configure 'natural scrolling'
      */
-    void horizontal_scroll_scale(double horizontal);
-    double horizontal_scroll_scale() const;
+    double horizontal_scroll_scale{1.0};
 
     /*!
      * Configures a signed scale of the vertical scrolling. Use negative values to configure 'natural scrolling'
      */
-    void vertical_scroll_scale(double vertical);
-    double vertical_scroll_scale() const;
-private:
-    MirPointerHandedness handedness_;
-    double acceleration_bias;
-    double horizontal_scroll_scale_;
-    double vertical_scroll_scale_;
+    double vertical_scroll_scale{1.0};
 };
 
 }

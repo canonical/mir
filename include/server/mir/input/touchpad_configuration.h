@@ -30,75 +30,50 @@ namespace input
 
 struct TouchpadConfiguration
 {
+    TouchpadConfiguration() {}
     TouchpadConfiguration(MirTouchpadClickModes click_mode,
                           MirTouchpadScrollModes scroll_mode,
                           int button_down_scroll_button,
                           bool tap_to_click,
                           bool disable_while_typing,
                           bool disable_with_mouse,
-                          bool middle_mouse_button_emulation);
-    TouchpadConfiguration();
-    ~TouchpadConfiguration();
+                          bool middle_mouse_button_emulation)
+        : click_mode{click_mode}, scroll_mode{scroll_mode}, button_down_scroll_button{button_down_scroll_button},
+          tap_to_click{tap_to_click}, middle_mouse_button_emulation{middle_mouse_button_emulation},
+          disable_with_mouse{disable_with_mouse}, disable_while_typing{disable_while_typing}
+    {
+    }
 
-    /*!
-     * When tap to click is enabled the system will interpret short finger touch down/up sequences as button clicks.
-     * \{
-     */
-    void tap_to_click(bool enabled);
-    bool tap_to_click() const;
-    /// \}
-    /*!
-     * Emulates a middle mouse button press when the left and right buttons on a touchpad are pressed.
-     * \{
-     */
-    void middle_mouse_button_emulation(bool enabled);
-    bool middle_mouse_button_emulation() const;
-    /// \}
-    /*!
-     * When disable-with-mouse is enabled the touchpad will stop to emit user input events when another pointing device is plugged in.
-     * \{
-     */
-    void disable_with_mouse(bool enabled);
-    bool disable_with_mouse() const;
-    /// \}
-    /*!
-     * When disable-with-mouse is enabled the touchpad will stop to emit user input events when the user starts to use a keyboard and a short period after.
-     * \{
-     */
-    void disable_while_typing(bool enabled);
-    bool disable_while_typing() const;
-    /// \}
     /*!
      * The click mode defines when the touchpad generates software emulated button events.
-     * \{
      */
-    void click_mode(MirTouchpadClickModes click_mode);
-    MirTouchpadClickModes click_mode() const;
-    /// \}
-
-    /*!
+    MirTouchpadClickModes click_mode{mir_touchpad_click_mode_finger_count};
+/*!
      * The scroll mode defines when the touchpad generates scroll events instead of pointer motion events.
-     * \{
      */
-    void scroll_mode(MirTouchpadScrollModes scroll_mode);
-    MirTouchpadScrollModes scroll_mode() const;
+    MirTouchpadScrollModes scroll_mode{mir_touchpad_scroll_mode_two_finger_scroll};
+
     /*!
      * Configures the button used for the on-button-down scroll mode
      */
-    void scroll_button(int scroll_button);
+    int button_down_scroll_button{0};
+
     /*!
-     * Returns button used to enable the on-button-down scroll mode
+     * When tap to click is enabled the system will interpret short finger touch down/up sequences as button clicks.
      */
-    int scroll_button() const;
-    /// \}
-    private:
-    MirTouchpadClickModes click_mode_;
-    MirTouchpadScrollModes scroll_mode_;
-    int button_down_scroll_button_;
-    bool tap_to_click_;
-    bool disable_while_typing_;
-    bool disable_with_mouse_;
-    bool middle_mouse_button_emulation_;
+    bool tap_to_click{true};
+    /*!
+     * Emulates a middle mouse button press when the left and right buttons on a touchpad are pressed.
+     */
+    bool middle_mouse_button_emulation{true};
+    /*!
+     * When disable-with-mouse is enabled the touchpad will stop to emit user input events when another pointing device is plugged in.
+     */
+    bool disable_with_mouse{false};
+    /*!
+     * When disable-with-mouse is enabled the touchpad will stop to emit user input events when the user starts to use a keyboard and a short period after.
+     */
+    bool disable_while_typing{false};
 };
 
 }
