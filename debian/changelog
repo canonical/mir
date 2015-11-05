@@ -10,6 +10,8 @@ mir (0.17.1) UNRELEASED; urgency=medium
         (LP: #1492269)
       . libmircookie1 package does not list libnettle as dependency
         (LP: #1513225)
+      . unity-system-compositor crash, no interaction on windowed mode
+        (LP: #1511095)
       . mir_connection_get_egl_pixel_format() crashes (LP: #1510218)
       . [regression] mir-client-platform-mesa-dev pkg-config file dropped
         (LP: #1509005)
