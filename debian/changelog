@@ -1,5 +1,6 @@
-mir (0.17.1) UNRELEASED; urgency=medium
+mir (0.17.1+16.04.20151105.1-0ubuntu1) xenial; urgency=medium
 
+  [ Alberto Aguirre ]
   * New upstream release 0.17.1 (https://launchpad.net/mir/+milestone/0.17.1)
     - No ABI changes. Bug fix release only.
     - Bugs fixed:
@@ -16,7 +17,10 @@ mir (0.17.1) UNRELEASED; urgency=medium
       . [regression] mir-client-platform-mesa-dev pkg-config file dropped
         (LP: #1509005)
 
- -- Alberto Aguirre <alberto.aguirre@canonical.com>  Wed, 04 Nov 2015 15:08:54 -0600
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Thu, 05 Nov 2015 21:54:17 +0000
 
 mir (0.17.0+15.10.20151008.2-0ubuntu1) wily; urgency=medium
 
