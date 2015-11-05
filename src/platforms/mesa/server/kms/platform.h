@@ -42,12 +42,12 @@ public:
                       BypassOption bypass_option);
 
     /* From Platform */
-    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
-    std::shared_ptr<graphics::Display> create_display(
+    UniqueModulePtr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
+    UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
 
-    std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
+    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
     EGLNativeDisplayType egl_native_display() const override;
 

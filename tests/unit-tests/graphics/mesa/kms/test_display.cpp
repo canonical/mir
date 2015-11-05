@@ -708,16 +708,6 @@ TEST_F(MesaDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
         std::make_shared<mtd::NullVirtualTerminal>(),
         *std::make_shared<mtd::NullEmergencyCleanup>(),
         mgm::BypassOption::allowed);
-#if 0
-    auto display = std::make_shared<mgm::Display>(
-                        platform->gbm,
-                        platform->drm,
-                        platform->vt,
-                        platform->bypass_option(),
-                        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-                        std::make_shared<mtd::StubGLConfig>(),
-                        mock_report);
-#endif
     auto display = platform->create_display(
         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         std::make_shared<mtd::StubGLConfig>()
