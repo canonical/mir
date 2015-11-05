@@ -39,18 +39,11 @@ public:
     StubDisplayConfiguration(
         size_t max_simultaneous_outputs,
         std::vector<DisplayConfigurationOutput> const& outputs)
-        : StubDisplayConfig{outputs},
-          max_simultaneous_outputs{max_simultaneous_outputs}
+        : StubDisplayConfig{
+            {{DisplayConfigurationCardId{1}, max_simultaneous_outputs}},
+            outputs}
     {
     }
-
-    void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const override
-    {
-        f({DisplayConfigurationCardId{1}, max_simultaneous_outputs});
-    }
-
-private:
-    size_t max_simultaneous_outputs;
 };
 
 }
