@@ -227,6 +227,14 @@ public:
         }
     }
 
+    StubDisplayConfig(
+        std::vector<graphics::DisplayConfigurationCard> const& cards,
+        std::vector<graphics::DisplayConfigurationOutput> const& outputs)
+        : cards(cards),
+          outputs(outputs)
+    {
+    }
+
     void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)> f) const override
     {
         for (auto const& card : cards)
@@ -248,6 +256,11 @@ public:
             graphics::UserDisplayConfigurationOutput user(disp);
             f(user);
         }
+    }
+
+    std::unique_ptr<graphics::DisplayConfiguration> clone() const override
+    {
+        return std::make_unique<StubDisplayConfig>(*this);
     }
 
     std::vector<graphics::DisplayConfigurationCard> cards;
