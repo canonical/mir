@@ -59,6 +59,7 @@
 #include "mir/test/signal.h"
 #include "mir/frontend/connector.h"
 #include "mir/frontend/event_sink.h"
+#include "mir/frontend/security_check_failed.h"
 #include "mir/cookie_factory.h"
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
@@ -1276,4 +1277,14 @@ TEST_F(SessionMediator, sanitizes_base_display_configuration_before_setting)
 
     mediator->connect(&connect_parameters, &connection, null_callback.get());
     mediator->set_base_display_configuration(&request, &response, null_callback.get());
+}
+
+TEST_F(SessionMediator, raise_with_invalid_cookie_throws)
+{
+    mp::RaiseRequest raise_request;
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+
+    EXPECT_THROW({
+        mediator.raise_surface_with_cookie(&raise_request, &void_response, null_callback.get());
+    }, mir::SecurityCheckFailed);
 }

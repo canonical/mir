@@ -46,6 +46,7 @@
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
 #include "mir/frontend/buffer_stream.h"
+#include "mir/frontend/security_check_failed.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
 #include "mir/cookie_factory.h"
@@ -1019,8 +1020,10 @@ void mf::SessionMediator::raise_surface_with_cookie(
     auto const surface_id = request->surface_id();
 
     MirCookie const mir_cookie = {cookie.timestamp(), cookie.mac()};
-    if (cookie_factory->attest_timestamp(mir_cookie))
-        shell->raise_surface_with_timestamp(session, mf::SurfaceId{surface_id.value()}, cookie.timestamp());
+    if (!cookie_factory->attest_timestamp(mir_cookie))
+        throw mir::SecurityCheckFailed();
+
+    shell->raise_surface_with_timestamp(session, mf::SurfaceId{surface_id.value()}, cookie.timestamp());
 
     done->Run();
 }
