@@ -22,12 +22,14 @@
 #include "mir/input/cursor_images.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration_report.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/cached_ptr.h"
 #include "mir/main_loop.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
+#include "mir/shell/display_configuration_controller.h"
 #include "mir/shell/host_lifecycle_event_listener.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
@@ -183,24 +185,21 @@ private:
     bool hidden{false};
 };
 
+struct MockDisplayConfigurationPolicy : mg::DisplayConfigurationPolicy
+{
+    MOCK_METHOD1(apply_to, void (mg::DisplayConfiguration&));
+};
+
 class NestedMirRunner : public mtf::HeadlessNestedServerRunner
 {
 public:
     NestedMirRunner(std::string const& connection_string)
-        : mtf::HeadlessNestedServerRunner(connection_string)
+        : NestedMirRunner(connection_string, true)
     {
-        server.override_the_host_lifecycle_event_listener([this]
-            { return the_mock_host_lifecycle_event_listener(); });
-
-        server.wrap_cursor([&](std::shared_ptr<mg::Cursor> const& wrapped)
-            { return cursor_wrapper = std::make_shared<CursorWrapper>(wrapped); });
-
-        server.override_the_cursor_images([] { return std::make_shared<CursorImages>(); });
-
         start_server();
     }
 
-    ~NestedMirRunner()
+    virtual ~NestedMirRunner()
     {
         stop_server();
     }
@@ -213,8 +212,33 @@ public:
 
     std::shared_ptr<CursorWrapper> cursor_wrapper;
 
+    virtual std::shared_ptr<MockDisplayConfigurationPolicy> mock_display_configuration_policy()
+    {
+        return mock_display_configuration_policy_([this]
+            { return std::make_shared<NiceMock<MockDisplayConfigurationPolicy>>(); });
+    }
+
+protected:
+    NestedMirRunner(std::string const& connection_string, bool)
+        : mtf::HeadlessNestedServerRunner(connection_string)
+    {
+        server.override_the_host_lifecycle_event_listener([this]
+            { return the_mock_host_lifecycle_event_listener(); });
+
+        server.wrap_cursor([&](std::shared_ptr<mg::Cursor> const& wrapped)
+            { return cursor_wrapper = std::make_shared<CursorWrapper>(wrapped); });
+
+        server.override_the_cursor_images([] { return std::make_shared<CursorImages>(); });
+
+        server.wrap_display_configuration_policy([this]
+            (std::shared_ptr<mg::DisplayConfigurationPolicy> const&)
+            { return mock_display_configuration_policy(); });
+    }
+
 private:
     mir::CachedPtr<MockHostLifecycleEventListener> mock_host_lifecycle_event_listener;
+    
+    mir::CachedPtr<MockDisplayConfigurationPolicy> mock_display_configuration_policy_;
 };
 
 struct NestedServer : mtf::HeadlessInProcessServer
@@ -376,6 +400,7 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
     // No post on surface creation
     EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(0);
     NestedMirRunner nested_mir{new_connection()};
+
     auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
     auto const surface = mtf::make_any_surface(connection);
 
@@ -691,4 +716,73 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
     // Need to verify before test server teardown deletes the
     // surface as the host cursor then reverts to default.
     Mock::VerifyAndClearExpectations(mock_cursor.get());
+}
+
+TEST_F(NestedServer, applies_display_config_on_startup)
+{
+    mt::WaitCondition condition;
+
+    auto const expected_config = server.the_display()->configuration();
+    expected_config->for_each_output([](mg::UserDisplayConfigurationOutput& output)
+        { output.orientation = mir_orientation_inverted;});
+
+    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(mt::DisplayConfigMatches(std::ref(*expected_config))))
+        .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+
+    struct MyNestedMirRunner : NestedMirRunner
+    {
+        MyNestedMirRunner(std::string const& connection_string) :
+            NestedMirRunner(connection_string, true)
+        {
+            start_server();
+        }
+
+        std::shared_ptr<MockDisplayConfigurationPolicy> mock_display_configuration_policy() override
+        {
+            auto result = std::make_unique<MockDisplayConfigurationPolicy>();
+            EXPECT_CALL(*result, apply_to(_)).Times(AnyNumber())
+                .WillOnce(Invoke([](mg::DisplayConfiguration& config)
+                     {
+                        config.for_each_output([](mg::UserDisplayConfigurationOutput& output)
+                            { output.orientation = mir_orientation_inverted; });
+                     }));
+
+            return std::shared_ptr<MockDisplayConfigurationPolicy>(std::move(result));
+        }
+    } nested_mir{new_connection()};
+
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto const surface = make_and_paint_surface(connection);
+
+    condition.wait_for_at_most_seconds(1);
+    Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
+
+    EXPECT_TRUE(condition.woken());
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(NestedServer, base_configuration_change_in_host_is_seen_in_nested)
+{
+    NestedMirRunner nested_mir{new_connection()};
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto const surface = make_and_paint_surface(connection);
+    auto const config_policy = nested_mir.mock_display_configuration_policy();
+    std::shared_ptr<mg::DisplayConfiguration> const new_config{server.the_display()->configuration()};
+    new_config->for_each_output([](mg::UserDisplayConfigurationOutput& output)
+                                    { output.orientation = mir_orientation_inverted;});
+
+    mt::WaitCondition condition;
+    EXPECT_CALL(*config_policy, apply_to(mt::DisplayConfigMatches(std::ref(*new_config))))
+        .WillOnce(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+
+    server.the_display_configuration_controller()->set_default_display_configuration(new_config);
+
+    condition.wait_for_at_most_seconds(1);
+    Mock::VerifyAndClearExpectations(config_policy.get());
+    EXPECT_TRUE(condition.woken());
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
 }
