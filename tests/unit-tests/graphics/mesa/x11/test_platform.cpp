@@ -127,3 +127,16 @@ TEST_F(X11GraphicsPlatformTest, probe_returns_best_when_drm_render_nodes_exist)
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::best, probe(options));
 }
+
+TEST_F(X11GraphicsPlatformTest, probe_returns_unsupported_with_vt_option)
+{
+    mtf::UdevEnvironment udev_environment;
+    boost::program_options::options_description po;
+    mir::options::ProgramOption options;
+    const char *argv[] = {"dummy", "--vt"};
+    options.parse_arguments(po, 2, argv);
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("server-mesa-x11")};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
+    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(options));
+}
