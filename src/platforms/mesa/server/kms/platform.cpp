@@ -40,12 +40,13 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                         BypassOption bypass_option)
     : udev{std::make_shared<mir::udev::Context>()},
       drm{std::make_shared<mgmh::DRMHelper>(mgmh::DRMNodeToUse::card)},
+      gbm{std::make_shared<mgmh::GBMHelper>()},
       listener{listener},
       vt{vt},
       bypass_option_{bypass_option}
 {
     drm->setup(udev);
-    gbm.setup(*drm);
+    gbm->setup(*drm);
 
     std::weak_ptr<VirtualTerminal> weak_vt = vt;
     std::weak_ptr<mgmh::DRMHelper> weak_drm = drm;
@@ -62,7 +63,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator()
 {
-    return std::make_shared<mgm::BufferAllocator>(gbm.device, bypass_option_, mgm::BufferImportMethod::gbm_native_pixmap);
+    return std::make_shared<mgm::BufferAllocator>(gbm->device, bypass_option_, mgm::BufferImportMethod::gbm_native_pixmap);
 }
 
 std::shared_ptr<mg::Display> mgm::Platform::create_display(
@@ -70,7 +71,10 @@ std::shared_ptr<mg::Display> mgm::Platform::create_display(
     std::shared_ptr<GLConfig> const& gl_config)
 {
     return std::make_shared<mgm::Display>(
-        this->shared_from_this(),
+        drm,
+        gbm,
+        vt,
+        bypass_option_,
         initial_conf_policy,
         gl_config,
         listener);
@@ -83,7 +87,7 @@ std::shared_ptr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() 
 
 EGLNativeDisplayType mgm::Platform::egl_native_display() const
 {
-    return gbm.device;
+    return gbm->device;
 }
 
 mgm::BypassOption mgm::Platform::bypass_option() const

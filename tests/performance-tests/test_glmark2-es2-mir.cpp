@@ -18,15 +18,6 @@ struct GLMark2Test : testing::Test, mtf::AsyncServerRunner
 {
     void SetUp() override
     {
-#ifdef ANDROID
-        /*
-         * Workaround instability that causes freezes when combining
-         * Android overlays with high-speed frame dropping (LP: #1391261).
-         * Fortunately glmark2 is the only use case that exploits this issue
-         * right now.
-         */
-        add_to_environment("MIR_SERVER_DISABLE_OVERLAYS", "true");
-#endif
         start_server();
     }
 

@@ -24,6 +24,7 @@
 #include "session_mediator_report.h"
 #include "display_report.h"
 #include "input_report.h"
+#include "shell_report.h"
 #include "scene_report.h"
 #include "mir/logging/null_shared_library_prober_report.h"
 
@@ -65,6 +66,11 @@ std::shared_ptr<mir::input::InputReport> mir::report::NullReportFactory::create_
 std::shared_ptr<mir::SharedLibraryProberReport> mir::report::NullReportFactory::create_shared_library_prober_report()
 {
     return std::make_shared<logging::NullSharedLibraryProberReport>();
+}
+
+std::shared_ptr<mir::shell::ShellReport> mir::report::NullReportFactory::create_shell_report()
+{
+    return std::make_shared<null::ShellReport>();
 }
 
 std::shared_ptr<mir::compositor::CompositorReport> mir::report::null_compositor_report()

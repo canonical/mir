@@ -414,8 +414,8 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
 
     if (info.titlebar)
     {
-        tools->forget(info.titlebar);
         session->destroy_surface(info.titlebar_id);
+        tools->forget(info.titlebar);
     }
 }
 
@@ -525,6 +525,13 @@ void me::CanonicalWindowManagerPolicyCopy::drag(Point cursor)
     select_active_surface(tools->surface_at(old_cursor));
     drag(active_surface(), cursor, old_cursor, display_area);
     old_cursor = cursor;
+}
+
+void me::CanonicalWindowManagerPolicyCopy::handle_raise_surface(
+    std::shared_ptr<ms::Session> const& /*session*/,
+    std::shared_ptr<ms::Surface> const& surface)
+{
+    select_active_surface(surface);
 }
 
 bool me::CanonicalWindowManagerPolicyCopy::handle_keyboard_event(MirKeyboardEvent const* event)

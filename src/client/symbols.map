@@ -203,6 +203,8 @@ MIR_CLIENT_unreleased {
     mir_keyboard_event_get_cookie;
     mir_pointer_event_get_cookie;
     mir_touch_event_get_cookie;
+    mir_surface_raise_with_cookie;
+    mir_surface_output_event_get_output_id;
   local:
     *;
 } MIR_CLIENT_9v17;
@@ -243,3 +245,11 @@ MIR_CLIENT_DETAIL_9 {
       mir::operator???std::ostream???Mir*
     }; 
 };
+
+MIR_CLIENT_DETAIL_unreleased {
+  global:
+    extern "C++" { 
+      mir::events::set_modifier*;
+    };
+} MIR_CLIENT_DETAIL_9;
+
