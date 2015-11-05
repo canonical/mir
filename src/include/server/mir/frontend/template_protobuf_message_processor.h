@@ -21,6 +21,7 @@
 #define MIR_FRONTEND_TEMPLATE_PROTOBUF_MESSAGE_PROCESSOR_H_
 
 #include "mir/frontend/message_processor.h"
+#include "mir/frontend/security_check_failed.h"
 
 #include <google/protobuf/stubs/common.h>
 #include <boost/exception/diagnostic_information.hpp>
@@ -74,6 +75,10 @@ void invoke(
             &parameter_message,
             &result_message,
             callback.get());
+    }
+    catch (mir::SecurityCheckFailed const& /*err*/)
+    {
+        throw;
     }
     catch (std::exception const& x)
     {
