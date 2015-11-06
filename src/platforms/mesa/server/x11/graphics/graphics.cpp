@@ -71,28 +71,12 @@ void add_graphics_platform_options(boost::program_options::options_description& 
          "[mir-on-X specific] WIDTHxHEIGHT of \"display\" window.");
 }
 
-mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
+mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*/)
 {
     auto dpy = XOpenDisplay(nullptr);
     if (dpy)
     {
         XCloseDisplay(dpy);
-
-        char const* vt_option_name{"vt"};
-        auto const unparsed_arguments = options.unparsed_command_line();
-        auto vt_option_used = false;
-
-        for (auto const& token : unparsed_arguments)
-        {
-            if (token == (std::string("--") + vt_option_name))
-                vt_option_used = true;
-        }
-
-        if (options.is_set(vt_option_name))
-            vt_option_used = true;
-
-        if (vt_option_used)
-            return mg::PlatformPriority::unsupported;
 
         auto udev = std::make_shared<mir::udev::Context>();
 
@@ -102,7 +86,7 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
         drm_devices.scan_devices();
 
         if (drm_devices.begin() != drm_devices.end())
-            return mg::PlatformPriority::best;
+            return mg::PlatformPriority::supported;
     }
     return mg::PlatformPriority::unsupported;
 }

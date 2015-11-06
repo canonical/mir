@@ -30,6 +30,7 @@
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
+namespace mgmh = mgm::helpers;
 namespace mo = mir::options;
 
 namespace
@@ -157,20 +158,36 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
     if (options.is_set(vt_option_name))
         platform_option_used = true;
 
-    auto udev = std::make_shared<mir::udev::Context>();
+    mir::udev::Enumerator devices(std::make_shared<mir::udev::Context>());
 
-    mir::udev::Enumerator drm_devices{udev};
-    drm_devices.match_subsystem("drm");
-    drm_devices.match_sysname("card[0-9]*");
-    drm_devices.scan_devices();
+    devices.match_subsystem("drm");
+    devices.match_sysname("card[0-9]*");
+    devices.scan_devices();
+    if (devices.begin() == devices.end())
+        return mg::PlatformPriority::unsupported;
 
-    for (auto& device : drm_devices)
+    if (platform_option_used)
+        return mg::PlatformPriority::best;
+
+    // Check for master
+    int tmp_fd = -1;
+    for (auto& device : devices)
     {
-        static_cast<void>(device);
-        if (platform_option_used)
+        tmp_fd = open(device.devnode(), O_RDWR | O_CLOEXEC);
+        if (tmp_fd >= 0)
+            break;
+    }
+
+    if (tmp_fd >= 0)
+    {
+        if (drmSetMaster(tmp_fd) >= 0)
+        {
+            drmDropMaster(tmp_fd);
+            drmClose(tmp_fd);
             return mg::PlatformPriority::best;
+        }
         else
-            return mg::PlatformPriority::supported;
+            drmClose(tmp_fd);
     }
 
     return mg::PlatformPriority::unsupported;
