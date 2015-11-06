@@ -159,6 +159,7 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
         platform_option_used = true;
 
     auto udev = std::make_shared<mir::udev::Context>();
+
     mir::udev::Enumerator drm_devices{udev};
     drm_devices.match_subsystem("drm");
     drm_devices.match_sysname("card[0-9]*");
