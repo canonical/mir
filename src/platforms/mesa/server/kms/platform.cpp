@@ -61,28 +61,20 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
         });
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator()
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator()
 {
-    return std::make_shared<mgm::BufferAllocator>(gbm->device, bypass_option_, mgm::BufferImportMethod::gbm_native_pixmap);
+    return make_module_ptr<mgm::BufferAllocator>(gbm->device, bypass_option_, mgm::BufferImportMethod::gbm_native_pixmap);
 }
 
-std::shared_ptr<mg::Display> mgm::Platform::create_display(
-    std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-    std::shared_ptr<GLConfig> const& gl_config)
+mir::UniqueModulePtr<mg::Display> mgm::Platform::create_display(
+    std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy, std::shared_ptr<GLConfig> const& gl_config)
 {
-    return std::make_shared<mgm::Display>(
-        drm,
-        gbm,
-        vt,
-        bypass_option_,
-        initial_conf_policy,
-        gl_config,
-        listener);
+    return make_module_ptr<mgm::Display>(drm, gbm, vt, bypass_option_, initial_conf_policy, gl_config, listener);
 }
 
-std::shared_ptr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
+mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
 {
-    return std::make_shared<mgm::IpcOperations>(drm);
+    return make_module_ptr<mgm::IpcOperations>(drm);
 }
 
 EGLNativeDisplayType mgm::Platform::egl_native_display() const
@@ -94,4 +86,3 @@ mgm::BypassOption mgm::Platform::bypass_option() const
 {
     return bypass_option_;
 }
-

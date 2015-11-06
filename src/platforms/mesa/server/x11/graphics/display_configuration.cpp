@@ -48,6 +48,13 @@ mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, geom::Size co
 {
 }
 
+mgx::DisplayConfiguration::DisplayConfiguration(DisplayConfiguration const& other)
+    : mg::DisplayConfiguration(),
+      configuration(other.configuration),
+      card(other.card)
+{
+}
+
 void mgx::DisplayConfiguration::for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
 {
     f(card);
@@ -62,4 +69,9 @@ void mgx::DisplayConfiguration::for_each_output(std::function<void(mg::UserDispl
 {
     mg::UserDisplayConfigurationOutput user(configuration);
     f(user);
+}
+
+std::unique_ptr<mg::DisplayConfiguration> mgx::DisplayConfiguration::clone() const
+{
+    return std::make_unique<mgx::DisplayConfiguration>(*this);
 }

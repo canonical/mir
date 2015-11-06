@@ -51,7 +51,10 @@ geom::Rectangle mi::DisplayInputRegion::bounding_rectangle()
     // to group a touchscreen with a display. So for now, just return the view area
     // of the first display, as that matches the most common systems (laptops with touchscreens,
     // phone/tablets with touchscreens).
-    return *rectangles.begin();
+    if (rectangles.size() != 0)
+        return *rectangles.begin();
+    else
+        return geom::Rectangle{};
 }
 
 void mi::DisplayInputRegion::confine(geom::Point& point)

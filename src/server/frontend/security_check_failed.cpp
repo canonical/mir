@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,26 +13,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored By: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#include "mir_test_framework/headless_in_process_server.h"
-#include "mir_test_framework/stub_server_platform_factory.h"
+#include "mir/frontend/security_check_failed.h"
 
-namespace mtf = mir_test_framework;
-
-mtf::HeadlessInProcessServer::HeadlessInProcessServer()
+mir::SecurityCheckFailed::SecurityCheckFailed() :
+    runtime_error("Invalid MirCookie")
 {
-    add_to_environment("MIR_SERVER_NO_FILE", "");
-}
-
-void mtf::HeadlessInProcessServer::SetUp()
-{
-    start_server();
-}
-
-void mtf::HeadlessInProcessServer::TearDown()
-{
-    mtf::set_next_preset_display(nullptr);
-    stop_server();
 }

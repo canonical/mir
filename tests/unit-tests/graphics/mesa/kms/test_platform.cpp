@@ -211,7 +211,7 @@ TEST_F(MesaGraphicsPlatform, drm_close_not_called_concurrently_on_ipc_package_de
                              Return(0)));
 
     auto platform = create_platform();
-    auto ipc_ops = platform->make_ipc_operations();
+    std::shared_ptr<mg::PlatformIpcOperations> ipc_ops = platform->make_ipc_operations();
 
     std::vector<std::thread> threads;
 
