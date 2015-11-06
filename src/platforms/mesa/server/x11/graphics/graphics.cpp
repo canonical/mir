@@ -16,7 +16,7 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "mir/options/program_option.h"
+#include "mir/options/option.h"
 #include "platform.h"
 #include "guest_platform.h"
 #include "../X11_resources.h"

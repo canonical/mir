@@ -158,12 +158,13 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
     if (options.is_set(vt_option_name))
         platform_option_used = true;
 
-    mir::udev::Enumerator devices(std::make_shared<mir::udev::Context>());
+    auto udev = std::make_shared<mir::udev::Context>();
+    mir::udev::Enumerator drm_devices{udev};
+    drm_devices.match_subsystem("drm");
+    drm_devices.match_sysname("card[0-9]*");
+    drm_devices.scan_devices();
 
-    devices.match_subsystem("drm");
-    devices.match_sysname("card[0-9]*");
-    devices.scan_devices();
-    if (devices.begin() == devices.end())
+    if (drm_devices.begin() == drm_devices.end())
         return mg::PlatformPriority::unsupported;
 
     if (platform_option_used)
@@ -171,7 +172,7 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
 
     // Check for master
     int tmp_fd = -1;
-    for (auto& device : devices)
+    for (auto& device : drm_devices)
     {
         tmp_fd = open(device.devnode(), O_RDWR | O_CLOEXEC);
         if (tmp_fd >= 0)
