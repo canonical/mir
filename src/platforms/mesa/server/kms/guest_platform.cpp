@@ -79,21 +79,20 @@ mgm::GuestPlatform::GuestPlatform(
     auto const fds = nested_context->platform_fd_items();
     gbm.setup(fds.at(0));
     set_guest_gbm_device(*nested_context, gbm.device);
-    ipc_ops = std::make_shared<mgm::IpcOperations>(
+}
+
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::GuestPlatform::create_buffer_allocator()
+{
+    return mir::make_module_ptr<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited, mgm::BufferImportMethod::gbm_native_pixmap);
+}
+
+mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::GuestPlatform::make_ipc_operations() const
+{
+    return mir::make_module_ptr<mgm::IpcOperations>(
         std::make_shared<mgm::NestedAuthentication>(nested_context));
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgm::GuestPlatform::create_buffer_allocator()
-{
-    return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited, mgm::BufferImportMethod::gbm_native_pixmap);
-}
-
-std::shared_ptr<mg::PlatformIpcOperations> mgm::GuestPlatform::make_ipc_operations() const
-{
-    return ipc_ops;
-}
-
-std::shared_ptr<mg::Display> mgm::GuestPlatform::create_display(
+mir::UniqueModulePtr<mg::Display> mgm::GuestPlatform::create_display(
     std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
     std::shared_ptr<graphics::GLConfig> const& /*gl_config*/)
 {

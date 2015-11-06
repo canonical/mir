@@ -288,7 +288,12 @@ void mgn::Display::register_configuration_change_handler(
         EventHandlerRegister& /*handlers*/,
         DisplayConfigurationChangeHandler const& conf_change_handler)
 {
-    connection->set_display_config_change_callback(conf_change_handler);
+    auto const handler = [this, conf_change_handler] { 
+        current_configuration = std::make_unique<NestedDisplayConfiguration>(connection->create_display_config());
+        conf_change_handler();
+    };
+
+    connection->set_display_config_change_callback(handler);
 }
 
 void mgn::Display::register_pause_resume_handlers(

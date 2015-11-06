@@ -80,3 +80,14 @@ TEST(DisplayInputRegionTest, confines_point_to_closest_valid_position)
     }
 
 }
+
+TEST(DisplayInputRegionTest, returns_empty_bounding_rectangle_when_there_are_no_outputs)
+{
+    geom::Rectangle const empty_rect{};
+    auto const stub_display = std::make_shared<mtd::StubDisplay>(0);
+
+    mi::DisplayInputRegion input_region{stub_display};
+
+    auto const bounding_rect = input_region.bounding_rectangle();
+    EXPECT_EQ(empty_rect, bounding_rect);
+}

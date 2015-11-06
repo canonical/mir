@@ -108,6 +108,11 @@ public:
     {
     }
 
+    std::unique_ptr<mg::DisplayConfiguration> clone() const override
+    {
+        return {};
+    }
+
     std::vector<OutputInfo> outputs;
 };
 

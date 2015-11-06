@@ -28,11 +28,11 @@ class StubGraphicPlatform : public mir::test::doubles::NullPlatform
 public:
     StubGraphicPlatform(std::vector<mir::geometry::Rectangle> const& display_rects);
 
-    std::shared_ptr<mir::graphics::GraphicBufferAllocator> create_buffer_allocator() override;
+    mir::UniqueModulePtr<mir::graphics::GraphicBufferAllocator> create_buffer_allocator() override;
 
-    std::shared_ptr<mir::graphics::PlatformIpcOperations> make_ipc_operations() const override;
+    mir::UniqueModulePtr<mir::graphics::PlatformIpcOperations> make_ipc_operations() const override;
 
-    std::shared_ptr<mir::graphics::Display> create_display(
+    mir::UniqueModulePtr<mir::graphics::Display> create_display(
         std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<mir::graphics::GLConfig> const&) override;
 

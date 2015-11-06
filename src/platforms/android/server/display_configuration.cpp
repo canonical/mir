@@ -83,6 +83,11 @@ void mga::DisplayConfiguration::for_each_output(std::function<void(mg::UserDispl
     }
 }
 
+std::unique_ptr<mg::DisplayConfiguration> mga::DisplayConfiguration::clone() const
+{
+    return std::make_unique<mga::DisplayConfiguration>(*this);
+}
+
 mg::DisplayConfigurationOutput& mga::DisplayConfiguration::primary()
 {
     return configurations[primary_id];
