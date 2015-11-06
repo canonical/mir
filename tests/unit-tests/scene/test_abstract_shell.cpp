@@ -475,7 +475,7 @@ TEST_F(AbstractShell,
 
     focus_controller.set_focus_to(session, session->surface(surface_id));
 
-    shell.destroy_surface(session, surface_id);
+    session->destroy_surface(surface_id);
 
     EXPECT_CALL(session_container, successor_of(session)).
         WillOnce(Return(session1));

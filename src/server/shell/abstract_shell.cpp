@@ -107,11 +107,7 @@ void msh::AbstractShell::destroy_surface(
     mf::SurfaceId surface)
 {
     report->destroying_surface(*session, surface);
-    // Order matters. The surface needs to be destroyed before calling the WM,
-    // so the WM and its tools can make decisions based on up-to-date information.
-    auto weak_surface = std::weak_ptr<ms::Surface>{session->surface(surface)};
-    session->destroy_surface(surface);
-    window_manager->remove_surface(session, weak_surface);
+    window_manager->remove_surface(session, session->surface(surface));
 }
 
 std::shared_ptr<ms::PromptSession> msh::AbstractShell::start_prompt_session_for(

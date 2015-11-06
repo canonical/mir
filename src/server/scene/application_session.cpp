@@ -376,3 +376,27 @@ void ms::ApplicationSession::configure_streams(
         list.emplace_back(ms::StreamInfo{checked_find(stream.stream_id)->second, stream.displacement});
     surface.set_streams(list); 
 }
+
+void ms::ApplicationSession::destroy_surface(std::weak_ptr<Surface> const& surface)
+{
+    auto const ss = surface.lock();
+    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+    auto p = find_if(begin(surfaces), end(surfaces), [&](Surfaces::value_type const& val)
+        { return val.second == ss; });
+
+    if (p == surfaces.end())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid Surface"));
+
+    auto const id = p->first;
+
+    session_listener->destroying_surface(*this, ss);
+    surfaces.erase(p);
+    auto stream_it = streams.find(mf::BufferStreamId(id.as_value()));
+    if (stream_it != streams.end())
+        streams.erase(stream_it);
+
+    lock.unlock();
+
+    surface_coordinator->remove_surface(ss);
+
+}

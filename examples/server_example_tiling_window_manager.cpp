@@ -140,6 +140,8 @@ void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Se
         }
     }
 
+    session->destroy_surface(surface);
+
     if (surfaces.empty() && session == tools->focused_session())
     {
         tools->focus_next_session();
