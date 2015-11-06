@@ -30,7 +30,6 @@
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
-namespace mgmh = mgm::helpers;
 namespace mo = mir::options;
 
 namespace
