@@ -100,14 +100,12 @@ struct RealPosixProcessOperations : public mgm::PosixProcessOperations
 
 // Hack around the way mesa loads mir: This hack makes the
 // necessary symbols global.
-extern "C" int __attribute__((constructor))
-ensure_loaded_with_rtld_global()
+void ensure_loaded_with_rtld_global()
 {
     Dl_info info;
 
     dladdr(reinterpret_cast<void*>(&ensure_loaded_with_rtld_global), &info);
     dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
-    return 0;
 }
 
 }
