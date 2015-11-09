@@ -127,10 +127,18 @@ void msh::SystemCompositorWindowManager::add_display(mir::geometry::Rectangle co
 
             mir::geometry::Rectangle rect{surface->top_left(), surface->size()};
 
-            display_layout->place_in_output(output_id, rect);
+            try
+            {
+                // This can fail when the corresponding output isn't active
+                display_layout->place_in_output(output_id, rect);
 
-            surface->move_to(rect.top_left);
-            surface->resize(rect.size);
+                surface->move_to(rect.top_left);
+                surface->resize(rect.size);
+            }
+            catch (...)
+            {
+                // TODO Better way of ignoring placement failure
+            }
         }
     }
 }
