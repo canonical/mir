@@ -60,7 +60,15 @@ auto msh::SystemCompositorWindowManager::add_surface(
 {
     mir::geometry::Rectangle rect{params.top_left, params.size};
 
-    display_layout->place_in_output(params.output_id, rect);
+    try
+    {
+        // This can fail when the corresponding output isn't active
+        display_layout->place_in_output(params.output_id, rect);
+    }
+    catch (...)
+    {
+        // TODO Better way of ignoring placement failure
+    }
 
     auto placed_parameters = params;
     placed_parameters.top_left = rect.top_left;
@@ -99,10 +107,18 @@ void msh::SystemCompositorWindowManager::modify_surface(
 
         mir::geometry::Rectangle rect{surface->top_left(), surface->size()};
 
-        display_layout->place_in_output(output_id, rect);
+        try
+        {
+            // This can fail when the corresponding output isn't active
+            display_layout->place_in_output(output_id, rect);
 
-        surface->move_to(rect.top_left);
-        surface->resize(rect.size);
+            surface->move_to(rect.top_left);
+            surface->resize(rect.size);
+        }
+        catch (...)
+        {
+            // TODO Better way of ignoring placement failure
+        }
 
         std::lock_guard<decltype(mutex)> lock{mutex};
         output_map[surface] = output_id;
