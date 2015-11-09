@@ -194,12 +194,15 @@ mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event
     auto const action = mir_pointer_action_motion;
     auto const hscroll_value = 0.0f;
     auto const vscroll_value = 0.0f;
+    auto const screen = sink->bounding_rectangle();
+    uint32_t const width = screen.size.width.as_int();
+    uint32_t const height = screen.size.height.as_int();
 
     report->received_event_from_kernel(time.count(), EV_ABS, 0, 0);
     auto const old_pointer_pos = pointer_pos;
     pointer_pos = mir::geometry::Point{
-        libinput_event_pointer_get_absolute_x(pointer),
-        libinput_event_pointer_get_absolute_y(pointer)};
+        libinput_event_pointer_get_absolute_x_transformed(pointer, width),
+        libinput_event_pointer_get_absolute_y_transformed(pointer, height)};
     auto const movement = pointer_pos - old_pointer_pos;
 
     sink->confine_pointer(pointer_pos);
