@@ -78,6 +78,9 @@ auto msh::SystemCompositorWindowManager::add_surface(
         surface);
 
     surface->add_observer(session_ready_observer);
+    
+    std::lock_guard<decltype(mutex)> lock{mutex};
+    output_map[surface] = params.output_id;
 
     return result;
 }
@@ -89,6 +92,21 @@ void msh::SystemCompositorWindowManager::modify_surface(
 {
     if (modifications.name.is_set())
         surface->rename(modifications.name.value());
+
+    if (modifications.output_id.is_set())
+    {
+        auto const output_id = modifications.output_id.value();
+
+        mir::geometry::Rectangle rect{surface->top_left(), surface->size()};
+
+        display_layout->place_in_output(output_id, rect);
+
+        surface->move_to(rect.top_left);
+        surface->resize(rect.size);
+
+        std::lock_guard<decltype(mutex)> lock{mutex};
+        output_map[surface] = output_id;
+    }
 }
 
 void msh::SystemCompositorWindowManager::remove_surface(
@@ -99,6 +117,22 @@ void msh::SystemCompositorWindowManager::remove_surface(
 
 void msh::SystemCompositorWindowManager::add_display(mir::geometry::Rectangle const& /*area*/)
 {
+    std::lock_guard<decltype(mutex)> lock{mutex};
+
+    for (auto const& so : output_map)
+    {
+        if (auto surface = so.first.lock())
+        {
+            auto const output_id = so.second;
+
+            mir::geometry::Rectangle rect{surface->top_left(), surface->size()};
+
+            display_layout->place_in_output(output_id, rect);
+
+            surface->move_to(rect.top_left);
+            surface->resize(rect.size);
+        }
+    }
 }
 
 void msh::SystemCompositorWindowManager::remove_display(mir::geometry::Rectangle const& /*area*/)
