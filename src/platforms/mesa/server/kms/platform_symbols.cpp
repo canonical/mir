@@ -167,9 +167,6 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
     if (drm_devices.begin() == drm_devices.end())
         return mg::PlatformPriority::unsupported;
 
-    if (platform_option_used)
-        return mg::PlatformPriority::best;
-
     // Check for master
     int tmp_fd = -1;
     for (auto& device : drm_devices)
@@ -190,6 +187,9 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
         else
             drmClose(tmp_fd);
     }
+
+    if (platform_option_used)
+        return mg::PlatformPriority::best;
 
     return mg::PlatformPriority::unsupported;
 }
