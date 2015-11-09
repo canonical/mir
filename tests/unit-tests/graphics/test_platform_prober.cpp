@@ -216,7 +216,7 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaOrAndroidInPreferenceToDummy)
 }
 #endif
 
-TEST(ServerPlatformProbe, IgnoresNonPlatformModules)
+TEST_F(ServerPlatformProbeMockDRM, IgnoresNonPlatformModules)
 {
     using namespace testing;
     boost::program_options::options_description po;
