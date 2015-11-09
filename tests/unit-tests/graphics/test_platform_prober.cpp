@@ -115,7 +115,10 @@ TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
 TEST(ServerPlatformProbe, LoadsMesaPlatformWhenDrmDevicePresent)
 {
     using namespace testing;
+    boost::program_options::options_description po;
     mir::options::ProgramOption options;
+    const char *argv[] = {"dummy", "--vt"};
+    options.parse_arguments(po, 2, argv);
     auto block_android = ensure_android_probing_fails();
     auto fake_mesa = ensure_mesa_probing_succeeds();
 
@@ -186,7 +189,10 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
 TEST(ServerPlatformProbe, LoadsMesaOrAndroidInPreferenceToDummy)
 {
     using namespace testing;
+    boost::program_options::options_description po;
     mir::options::ProgramOption options;
+    const char *argv[] = {"dummy", "--vt"};
+    options.parse_arguments(po, 2, argv);
     auto ensure_mesa = ensure_mesa_probing_succeeds();
     auto ensure_android = ensure_android_probing_succeeds();
 
@@ -206,7 +212,10 @@ TEST(ServerPlatformProbe, LoadsMesaOrAndroidInPreferenceToDummy)
 TEST(ServerPlatformProbe, IgnoresNonPlatformModules)
 {
     using namespace testing;
+    boost::program_options::options_description po;
     mir::options::ProgramOption options;
+    const char *argv[] = {"dummy", "--vt"};
+    options.parse_arguments(po, 2, argv);
     auto ensure_mesa = ensure_mesa_probing_succeeds();
     auto ensure_android = ensure_android_probing_succeeds();
 
