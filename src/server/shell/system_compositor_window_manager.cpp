@@ -28,6 +28,8 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 
+#include <boost/throw_exception.hpp>
+
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -60,15 +62,10 @@ auto msh::SystemCompositorWindowManager::add_surface(
 {
     mir::geometry::Rectangle rect{params.top_left, params.size};
 
-    try
-    {
-        // This can fail when the corresponding output isn't active
-        display_layout->place_in_output(params.output_id, rect);
-    }
-    catch (...)
-    {
-        // TODO Better way of ignoring placement failure
-    }
+    if (!params.output_id.as_value())
+        BOOST_THROW_EXCEPTION(std::runtime_error("An output ID must be specified"));
+
+    display_layout->place_in_output(params.output_id, rect);
 
     auto placed_parameters = params;
     placed_parameters.top_left = rect.top_left;
@@ -107,17 +104,10 @@ void msh::SystemCompositorWindowManager::modify_surface(
 
         mir::geometry::Rectangle rect{surface->top_left(), surface->size()};
 
-        try
+        if (display_layout->place_in_output(output_id, rect))
         {
-            // This can fail when the corresponding output isn't active
-            display_layout->place_in_output(output_id, rect);
-
             surface->move_to(rect.top_left);
             surface->resize(rect.size);
-        }
-        catch (...)
-        {
-            // TODO Better way of ignoring placement failure
         }
 
         std::lock_guard<decltype(mutex)> lock{mutex};
@@ -143,17 +133,10 @@ void msh::SystemCompositorWindowManager::add_display(mir::geometry::Rectangle co
 
             mir::geometry::Rectangle rect{surface->top_left(), surface->size()};
 
-            try
+            if (display_layout->place_in_output(output_id, rect))
             {
-                // This can fail when the corresponding output isn't active
-                display_layout->place_in_output(output_id, rect);
-
                 surface->move_to(rect.top_left);
                 surface->resize(rect.size);
-            }
-            catch (...)
-            {
-                // TODO Better way of ignoring placement failure
             }
         }
     }
