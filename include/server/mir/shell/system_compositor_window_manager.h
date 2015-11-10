@@ -23,7 +23,7 @@
 
 namespace mir
 {
-namespace scene { class PlacementStrategy; class SessionCoordinator; }
+namespace scene { class SessionCoordinator; }
 namespace shell
 {
 class FocusController;
