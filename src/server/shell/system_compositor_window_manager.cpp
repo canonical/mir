@@ -117,8 +117,9 @@ void msh::SystemCompositorWindowManager::modify_surface(
 
 void msh::SystemCompositorWindowManager::remove_surface(
     std::shared_ptr<ms::Session> const& /*session*/,
-    std::weak_ptr<ms::Surface> const& /*surface*/)
+    std::weak_ptr<ms::Surface> const& surface)
 {
+    output_map.erase(surface);
 }
 
 void msh::SystemCompositorWindowManager::add_display(mir::geometry::Rectangle const& /*area*/)
