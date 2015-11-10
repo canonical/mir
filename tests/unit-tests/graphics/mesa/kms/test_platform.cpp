@@ -235,12 +235,16 @@ TEST_F(MesaGraphicsPlatform, drm_close_not_called_concurrently_on_ipc_package_de
 
 struct StubEmergencyCleanupRegistry : mir::EmergencyCleanupRegistry
 {
-    void add(mir::EmergencyCleanupHandler const& handler) override
+    void add(mir::EmergencyCleanupHandler const&) override
     {
-        this->handler = handler;
     }
 
-    mir::EmergencyCleanupHandler handler;
+    void add(mir::ModuleEmergencyCleanupHandler handler) override
+    {
+        this->handler = std::move(handler);
+    }
+
+    mir::ModuleEmergencyCleanupHandler handler;
 };
 
 TEST_F(MesaGraphicsPlatform, restores_vt_on_emergency_cleanup)
@@ -257,7 +261,7 @@ TEST_F(MesaGraphicsPlatform, restores_vt_on_emergency_cleanup)
 
     EXPECT_CALL(*mock_vt, restore());
 
-    emergency_cleanup_registry.handler();
+    (*emergency_cleanup_registry.handler)();
 
     Mock::VerifyAndClearExpectations(mock_vt.get());
 }
@@ -278,7 +282,7 @@ TEST_F(MesaGraphicsPlatform, releases_drm_on_emergency_cleanup)
     EXPECT_CALL(mock_drm, drmDropMaster(mock_drm.fake_drm.fd()))
         .WillOnce(Return(success_code));
 
-    emergency_cleanup_registry.handler();
+    (*emergency_cleanup_registry.handler)();
 
     Mock::VerifyAndClearExpectations(&mock_drm);
 }
@@ -300,7 +304,7 @@ TEST_F(MesaGraphicsPlatform, does_not_propagate_emergency_cleanup_exceptions)
     EXPECT_CALL(mock_drm, drmDropMaster(mock_drm.fake_drm.fd()))
         .WillOnce(Throw(std::runtime_error("drm drop master exception")));
 
-    emergency_cleanup_registry.handler();
+    (*emergency_cleanup_registry.handler)();
 
     Mock::VerifyAndClearExpectations(&mock_drm);
 }
