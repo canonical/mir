@@ -127,9 +127,18 @@ private:
 
 struct StubAuthorizer : mtd::StubSessionAuthorizer
 {
-    bool configure_display_is_allowed(mf::SessionCredentials const&) override { return result; }
+    bool configure_display_is_allowed(mf::SessionCredentials const&) override
+    {
+        return allow_configure_display;
+    }
 
-    std::atomic<bool> result{true};
+    bool set_base_display_configuration_is_allowed(mf::SessionCredentials const&) override
+    {
+        return allow_set_base_display_configuration;
+    }
+
+    std::atomic<bool> allow_configure_display{true};
+    std::atomic<bool> allow_set_base_display_configuration{true};
 };
 
 void wait_for_server_actions_to_finish(mir::ServerActionQueue& server_action_queue)
@@ -217,7 +226,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
 
 TEST_F(DisplayConfigurationTest, display_change_request_for_unauthorized_client_fails)
 {
-    stub_authorizer.result = false;
+    stub_authorizer.allow_configure_display = false;
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -535,4 +544,20 @@ TEST_F(DisplayConfigurationTest,
     EXPECT_THAT(callback_called, Eq(true));
 
     display_client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest,
+       set_base_configuration_for_unauthorized_client_fails)
+{
+    stub_authorizer.allow_set_base_display_configuration = false;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto configuration = mir_connection_create_display_config(connection);
+    mir_wait_for(mir_connection_set_base_display_config(connection, configuration));
+    EXPECT_THAT(mir_connection_get_error_message(connection),
+                testing::HasSubstr("not authorized to set base display configuration"));
+
+    mir_display_config_destroy(configuration);
+    mir_connection_release(connection);
 }
