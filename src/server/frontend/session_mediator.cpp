@@ -632,7 +632,8 @@ void mf::SessionMediator::set_base_display_configuration(
     report->session_set_base_display_configuration_called(session->name());
 
     auto const config = unpack_and_sanitize_display_configuration(request);
-    display_changer->set_base_configuration(config);
+    auto base_configuration_set = display_changer->set_base_configuration(config);
+    base_configuration_set.wait();
 
     done->Run();
 }

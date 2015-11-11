@@ -177,6 +177,21 @@ void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
 MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration);
 
 /**
+ * Set the base display configuration
+ *
+ * The base display configuration is the configuration the server applies when there is no
+ * active per-connection configuration.
+ *
+ *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
+ *   \param [in] connection             The connection
+ *   \param [in] display_configuration  The display_configuration to set as base
+ *   \return                            A handle that can be passed to mir_wait_for
+ */
+MirWaitHandle* mir_connection_set_base_display_config(
+    MirConnection* connection,
+    MirDisplayConfiguration const* display_configuration);
+
+/**
  * Get a display type that can be used for OpenGL ES 2.0 acceleration.
  *   \param [in] connection  The connection
  *   \return                 An EGLNativeDisplayType that the client can use
