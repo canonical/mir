@@ -24,6 +24,7 @@
 #include "mir_toolkit/common.h"
 
 #include <vector>
+#include <limits>
 
 namespace mir
 {
