@@ -45,9 +45,8 @@ struct MockSurfaceAllocator : public ms::SurfaceFactory
 
 struct MockSurfaceStackModel : public ms::SurfaceStackModel
 {
-    MOCK_METHOD3(add_surface, void(
+    MOCK_METHOD2(add_surface, void(
         std::shared_ptr<ms::Surface> const&,
-        ms::DepthId depth,
         mir::input::InputReceptionMode));
     MOCK_METHOD1(remove_surface, void(std::weak_ptr<ms::Surface> const&));
     MOCK_METHOD1(raise, void(std::weak_ptr<ms::Surface> const&));
@@ -80,11 +79,11 @@ TEST_F(SurfaceController, add_and_remove_surface)
         mt::fake_shared(model));
 
     InSequence seq;
-    EXPECT_CALL(model, add_surface(_,_,_)).Times(1);
+    EXPECT_CALL(model, add_surface(_,_)).Times(1);
     EXPECT_CALL(model, remove_surface(_)).Times(1);
     
     auto params = ms::a_surface();
-    controller.add_surface(expect_surface, params.depth, params.input_mode, &session);
+    controller.add_surface(expect_surface, params.input_mode, &session);
     controller.remove_surface(expect_surface);
 }
 

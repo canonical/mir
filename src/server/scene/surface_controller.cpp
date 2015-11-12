@@ -33,11 +33,10 @@ ms::SurfaceController::SurfaceController(
 
 void ms::SurfaceController::add_surface(
     std::shared_ptr<ms::Surface> const& surface,
-    ms::DepthId depth, 
     mir::input::InputReceptionMode const& input_mode,
     Session* /*session*/)
 {
-    surface_stack->add_surface(surface, depth, input_mode);
+    surface_stack->add_surface(surface, input_mode);
 }
 
 void ms::SurfaceController::remove_surface(std::weak_ptr<Surface> const& surface)

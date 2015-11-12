@@ -196,7 +196,7 @@ TEST_F(SurfaceStackCompositor, swapping_a_surface_that_has_been_added_triggers_a
         null_comp_report, default_delay, false);
     mt_compositor.start();
 
-    stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface, default_params.input_mode);
     stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
@@ -218,7 +218,7 @@ TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_co
         null_comp_report, default_delay, false);
     mt_compositor.start();
 
-    stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface, default_params.input_mode);
     stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(5, timeout));
@@ -241,7 +241,7 @@ TEST_F(SurfaceStackCompositor, bypassed_compositor_runs_until_all_surfaces_buffe
         null_comp_report, default_delay, false);
     mt_compositor.start();
 
-    stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface, default_params.input_mode);
     stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(5, timeout));
@@ -262,7 +262,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
         null_comp_report, default_delay, false);
     mt_compositor.start();
 
-    stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface, default_params.input_mode);
     stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
@@ -277,7 +277,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
 TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
 {
     stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
-    stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface, default_params.input_mode);
 
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
@@ -296,7 +296,7 @@ TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
 TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
 {
     stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
-    stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface, default_params.input_mode);
 
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
@@ -317,7 +317,7 @@ TEST_F(SurfaceStackCompositor, buffer_updates_trigger_composition)
     using namespace testing;
     ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor(_))
         .WillByDefault(testing::Return(1));
-    stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface, default_params.input_mode);
     stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     mc::MultiThreadedCompositor mt_compositor(

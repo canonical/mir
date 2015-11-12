@@ -39,7 +39,6 @@ public:
 
     void add_surface(
         std::shared_ptr<Surface> const&,
-        scene::DepthId new_depth,
         input::InputReceptionMode const& new_mode,
         Session* session) override;
 
