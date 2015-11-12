@@ -26,7 +26,6 @@
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <dlfcn.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -97,17 +96,6 @@ struct RealPosixProcessOperations : public mgm::PosixProcessOperations
         return ::setsid();
     }
 };
-
-// Hack around the way mesa loads mir: This hack makes the
-// necessary symbols global.
-void ensure_loaded_with_rtld_global()
-{
-    Dl_info info;
-
-    dladdr(reinterpret_cast<void*>(&ensure_loaded_with_rtld_global), &info);
-    dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
-}
-
 }
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
@@ -210,7 +198,5 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& nested_context)
 {
-    // ensure mesa finds the mesa mir-platform symbols
-    ensure_loaded_with_rtld_global();
     return mir::make_module_ptr<mgm::GuestPlatform>(nested_context);
 }
