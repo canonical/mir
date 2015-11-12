@@ -21,11 +21,13 @@
 #define MIR_EMERGENCY_CLEANUP_REGISTRY_H_
 
 #include <functional>
+#include "mir/module_deleter.h"
 
 namespace mir
 {
 
-typedef std::function<void()> EmergencyCleanupHandler;
+using EmergencyCleanupHandler = std::function<void()>;
+using ModuleEmergencyCleanupHandler = mir::UniqueModulePtr<std::function<void()>>;
 
 class EmergencyCleanupRegistry
 {
@@ -33,6 +35,7 @@ public:
     virtual ~EmergencyCleanupRegistry() = default;
 
     virtual void add(EmergencyCleanupHandler const& handler) = 0;
+    virtual void add(ModuleEmergencyCleanupHandler handler) = 0;
 
 protected:
     EmergencyCleanupRegistry() = default;

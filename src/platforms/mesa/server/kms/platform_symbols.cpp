@@ -164,14 +164,32 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
     drm_devices.match_sysname("card[0-9]*");
     drm_devices.scan_devices();
 
+    if (drm_devices.begin() == drm_devices.end())
+        return mg::PlatformPriority::unsupported;
+
+    // Check for master
+    int tmp_fd = -1;
     for (auto& device : drm_devices)
     {
-        static_cast<void>(device);
-        if (platform_option_used)
-            return mg::PlatformPriority::best;
-        else
-            return mg::PlatformPriority::supported;
+        tmp_fd = open(device.devnode(), O_RDWR | O_CLOEXEC);
+        if (tmp_fd >= 0)
+            break;
     }
+
+    if (tmp_fd >= 0)
+    {
+        if (drmSetMaster(tmp_fd) >= 0)
+        {
+            drmDropMaster(tmp_fd);
+            drmClose(tmp_fd);
+            return mg::PlatformPriority::best;
+        }
+        else
+            drmClose(tmp_fd);
+    }
+
+    if (platform_option_used)
+        return mg::PlatformPriority::best;
 
     return mg::PlatformPriority::unsupported;
 }

@@ -100,6 +100,13 @@ std::shared_ptr<void> ensure_android_probing_succeeds()
     return std::shared_ptr<void>{};
 #endif
 }
+
+class ServerPlatformProbeMockDRM : public ::testing::Test
+{
+public:
+    ::testing::NiceMock<mtd::MockDRM> mock_drm;
+};
+
 }
 
 TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
@@ -112,7 +119,7 @@ TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
 }
 
 #ifdef MIR_BUILD_PLATFORM_MESA_KMS
-TEST(ServerPlatformProbe, LoadsMesaPlatformWhenDrmDevicePresent)
+TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 {
     using namespace testing;
     mir::options::ProgramOption options;
@@ -183,7 +190,7 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
 }
 
 #if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11) || defined(MIR_BUILD_PLATFORM_ANDROID)
-TEST(ServerPlatformProbe, LoadsMesaOrAndroidInPreferenceToDummy)
+TEST_F(ServerPlatformProbeMockDRM, LoadsMesaOrAndroidInPreferenceToDummy)
 {
     using namespace testing;
     mir::options::ProgramOption options;
@@ -203,7 +210,7 @@ TEST(ServerPlatformProbe, LoadsMesaOrAndroidInPreferenceToDummy)
 }
 #endif
 
-TEST(ServerPlatformProbe, IgnoresNonPlatformModules)
+TEST_F(ServerPlatformProbeMockDRM, IgnoresNonPlatformModules)
 {
     using namespace testing;
     mir::options::ProgramOption options;
