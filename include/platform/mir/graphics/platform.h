@@ -130,13 +130,6 @@ typedef void(*AddPlatformOptions)(
 typedef mir::graphics::PlatformPriority(*PlatformProbe)(mir::options::ProgramOption const& options);
 
 typedef mir::ModuleProperties const*(*DescribeModule)();
-
-template<typename ReferenceTypename, typename EntryPoint>
-void assert_entry_point_signature(EntryPoint)
-{
-    static_assert(std::is_same<EntryPoint, ReferenceTypename>::value,
-                  "Signature of graphics platform entry point does not match.");
-}
 }
 }
 

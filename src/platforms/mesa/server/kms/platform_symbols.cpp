@@ -23,6 +23,7 @@
 #include "mir/options/option.h"
 #include "mir/udev/wrapper.h"
 #include "mir/module_deleter.h"
+#include "mir/assert_module_entry_point.h"
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -115,7 +116,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mg::DisplayReport> const& report)
 {
-    mg::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
+    mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     // ensure mesa finds the mesa mir-platform symbols
     auto real_fops = std::make_shared<RealVTFileOperations>();
     auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});
@@ -135,7 +136,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 
 void add_graphics_platform_options(boost::program_options::options_description& config)
 {
-    mg::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
+    mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
     config.add_options()
         (vt_option_name,
          boost::program_options::value<int>()->default_value(0),
@@ -147,7 +148,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
 
 mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
 {
-    mg::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
     auto const unparsed_arguments = options.unparsed_command_line();
     auto platform_option_used = false;
 
@@ -206,7 +207,7 @@ mir::ModuleProperties const description = {
 
 mir::ModuleProperties const* describe_graphics_module()
 {
-    mg::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
+    mir::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
     return &description;
 }
 
@@ -214,7 +215,7 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& nested_context)
 {
-    mg::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
+    mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     // ensure mesa finds the mesa mir-platform symbols
     ensure_loaded_with_rtld_global();
     return mir::make_module_ptr<mgm::GuestPlatform>(nested_context);

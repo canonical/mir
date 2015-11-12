@@ -26,6 +26,7 @@
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_display.h"
 #include "mir/fd.h"
+#include "mir/assert_module_entry_point.h"
 #include "mir/test/pipe.h"
 
 #ifdef ANDROID
@@ -344,7 +345,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
-    mg::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
+    mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     std::shared_ptr<mg::Platform> result{};
 
     if (auto const display_rects = std::move(chosen_display_rects))
@@ -364,7 +365,7 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& context)
 {
-    mg::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
+    mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     auto graphics_platform = the_graphics_platform.lock();
     if (!graphics_platform)
     {
@@ -377,7 +378,7 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
 void add_graphics_platform_options(
     boost::program_options::options_description& /*config*/)
 {
-    mg::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
+    mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
 }
 
 extern "C" void set_next_display_rects(

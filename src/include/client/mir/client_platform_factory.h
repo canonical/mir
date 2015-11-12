@@ -43,13 +43,6 @@ protected:
 
 extern "C" typedef std::shared_ptr<ClientPlatform>(*CreateClientPlatform)(ClientContext* context);
 extern "C" typedef bool (*ClientPlatformProbe)(ClientContext* context);
-
-template<typename ReferenceTypename, typename EntryPoint>
-void assert_entry_point_signature(EntryPoint)
-{
-    static_assert(std::is_same<EntryPoint, ReferenceTypename>::value,
-                  "Signature of client platform entry point does not match.");
-}
 }
 }
 

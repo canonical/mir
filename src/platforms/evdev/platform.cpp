@@ -24,6 +24,7 @@
 #include "mir/dispatch/readable_fd.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/module_properties.h"
+#include "mir/assert_module_entry_point.h"
 
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_device.h"
