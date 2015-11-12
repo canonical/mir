@@ -30,6 +30,7 @@ namespace mcla = mcl::android;
 std::shared_ptr<mcl::ClientPlatform>
 create_client_platform(mcl::ClientContext* context)
 {
+    mcl::assert_entry_point_signature<mcl::CreateClientPlatform>(&create_client_platform);
     MirPlatformPackage platform;
     context->populate_server_package(platform);
     if (platform.data_items != 0 || platform.fd_items != 0)
@@ -42,6 +43,7 @@ create_client_platform(mcl::ClientContext* context)
 bool
 is_appropriate_module(mcl::ClientContext* context)
 {
+    mcl::assert_entry_point_signature<mcl::ClientPlatformProbe>(&is_appropriate_module);
     MirPlatformPackage platform;
     context->populate_server_package(platform);
     // TODO: Actually check what platform we're using, rather than blindly

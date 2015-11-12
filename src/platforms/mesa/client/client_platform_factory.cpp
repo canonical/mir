@@ -73,6 +73,7 @@ struct RealBufferFileOps : public mclm::BufferFileOps
 
 std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* context)
 {
+    mcl::assert_entry_point_signature<mcl::CreateClientPlatform>(&create_client_platform);
     ensure_loaded_with_rtld_global_mesa_client();
     MirPlatformPackage package;
     context->populate_server_package(package);
@@ -88,6 +89,7 @@ std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* 
 bool
 is_appropriate_module(mcl::ClientContext* context)
 {
+    mcl::assert_entry_point_signature<mcl::ClientPlatformProbe>(&is_appropriate_module);
     MirPlatformPackage platform;
     context->populate_server_package(platform);
     // TODO: Actually check what platform we're using, rather than blindly

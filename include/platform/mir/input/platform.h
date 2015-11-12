@@ -104,6 +104,13 @@ typedef PlatformPriority(*ProbePlatform)(
 
 typedef ModuleProperties const*(*DescribeModule)();
 
+template<typename ReferenceTypename, typename EntryPoint>
+void assert_entry_point_signature(EntryPoint)
+{
+    static_assert(std::is_same<EntryPoint, ReferenceTypename>::value,
+                  "Signature of input platform entry point does not match.");
+}
+
 }
 }
 

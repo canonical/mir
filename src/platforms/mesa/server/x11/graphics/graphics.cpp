@@ -41,6 +41,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
+    mg::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     if (!x11_resources.get_conn())
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
 
@@ -60,11 +61,13 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const& /*report*/,
     std::shared_ptr<mg::NestedContext> const& nested_context)
 {
+    mg::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     return mir::make_module_ptr<mgx::GuestPlatform>(nested_context);
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)
 {
+    mg::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
     config.add_options()
         (x11_displays_option_name,
          boost::program_options::value<std::string>()->default_value("1280x1024"),
@@ -73,6 +76,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
 
 mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*/)
 {
+    mg::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
     auto dpy = XOpenDisplay(nullptr);
     if (dpy)
     {
@@ -100,5 +104,6 @@ mir::ModuleProperties const description = {
 
 mir::ModuleProperties const* describe_graphics_module()
 {
+    mg::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
     return &description;
 }
