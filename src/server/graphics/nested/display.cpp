@@ -256,7 +256,7 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
                             mir_buffer_usage_hardware,
                             static_cast<uint32_t>(output.id.as_value()));
 
-                        result[output.id] = std::make_shared<mgn::detail::DisplaySyncGroup>( 
+                        result[output.id] = std::make_shared<mgn::detail::DisplaySyncGroup>(
                             std::make_shared<mgn::detail::DisplayBuffer>(
                                 egl_display,
                                 host_surface,
