@@ -28,7 +28,7 @@
 #include "server_render_window.h"
 #include "display_buffer.h"
 #include "hwc_layerlist.h"
-#include "mir/graphics/android/mir_native_window.h"
+#include "mir_native_window.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/event_handler_register.h"
 #include "mir/gl/program_factory.h"

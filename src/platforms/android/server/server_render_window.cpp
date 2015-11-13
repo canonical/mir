@@ -18,8 +18,8 @@
  */
 
 #include "mir/graphics/buffer.h"
-#include "mir/graphics/android/sync_fence.h"
-#include "mir/graphics/android/android_format_conversion-inl.h"
+#include "sync_fence.h"
+#include "android_format_conversion-inl.h"
 #include "server_render_window.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
