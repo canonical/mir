@@ -20,14 +20,13 @@
 
 namespace mtf = mir_test_framework;
 
-mtf::PlacementApplyingShell::PlacementApplyingShell(std::shared_ptr<mir::shell::Shell> wrapped_coordinator,
-                                                    ClientInputRegions const& client_input_regions,
-                                                    ClientPositions const& client_positions,
-                                                    ClientDepths const& client_depths) :
+mtf::PlacementApplyingShell::PlacementApplyingShell(
+    std::shared_ptr<mir::shell::Shell> wrapped_coordinator,
+    ClientInputRegions const& client_input_regions,
+    ClientPositions const& client_positions) :
     mir::shell::ShellWrapper(wrapped_coordinator),
     client_input_regions(client_input_regions),
-    client_positions(client_positions),
-    client_depths(client_depths)
+    client_positions(client_positions)
 {
 }
 
@@ -37,10 +36,6 @@ mir::frontend::SurfaceId mtf::PlacementApplyingShell::create_surface(
     std::shared_ptr<mir::frontend::EventSink> const& sink)
 {
     auto creation_parameters = params;
-
-    auto depth = client_depths.find(params.name);
-    if (depth != client_depths.end())
-        creation_parameters.depth = depth->second;
 
     auto const id = wrapped->create_surface(session, creation_parameters, sink);
     auto const surface = session->surface(id);

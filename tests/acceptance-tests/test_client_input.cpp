@@ -147,12 +147,11 @@ struct TestClientInput : mtf::HeadlessInProcessServer
             {
                 return std::make_shared<mtf::PlacementApplyingShell>(
                     wrapped,
-                    input_regions, positions, depths);
+                    input_regions, positions);
             });
 
         HeadlessInProcessServer::SetUp();
 
-        depths[first] = ms::DepthId{0};
         positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     }
 
@@ -169,7 +168,6 @@ struct TestClientInput : mtf::HeadlessInProcessServer
     std::string second{"second"};
     mtf::ClientInputRegions input_regions;
     mtf::ClientPositions positions;
-    mtf::ClientDepths depths;
     geom::Rectangle screen_geometry{{0,0}, {1000,800}};
     std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
 };
@@ -421,7 +419,6 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
 
     positions[first] = screen_geometry;
     positions[second] = smaller_geometry;
-    depths[second] = ms::DepthId{1};
 
     Client first_client(new_connection(), first);
     Client second_client(new_connection(), second);
@@ -464,7 +461,6 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
 
 TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
 {
-    depths[second] = ms::DepthId{1};
     positions[second] = {{0,0}, {surface_width, surface_height}};
 
     Client first_client(new_connection(), first);
