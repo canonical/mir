@@ -40,3 +40,10 @@ mg::EGLExtensions::EGLExtensions()
     if (!glEGLImageTargetTexture2DOES)
         BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support updating a texture from an EGLImage"));
 }
+
+mg::EGLSyncExtensions::EGLSyncExtensions() : 
+    eglCreateSyncKHR{nullptr},
+    eglDestroySyncKHR{nullptr},
+    eglClientWaitSyncKHR{nullptr}
+{
+}

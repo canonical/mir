@@ -37,6 +37,15 @@ struct EGLExtensions
     PFNEGLDESTROYIMAGEKHRPROC const eglDestroyImageKHR;
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC const glEGLImageTargetTexture2DOES;
 };
+
+struct EGLSyncExtensions
+{
+    EGLSyncExtensions();
+    PFNEGLCREATEIMAGEKHRPROC const eglCreateSyncKHR;
+    PFNEGLDESTROYIMAGEKHRPROC const eglDestroySyncKHR;
+    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC const eglClientWaitSyncKHR;
+};
+
 }
 }
 
