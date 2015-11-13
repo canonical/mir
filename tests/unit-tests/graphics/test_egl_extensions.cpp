@@ -71,8 +71,8 @@ TEST_F(EGLExtensions, success_has_sane_function_hooks)
 
 TEST_F(EGLExtensions, constructor_throws_if_egl_create_sync_not_supported)
 {
-    EXPECT_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateSyncKHR")))
-        .WillOnce(Return(reinterpret_cast<func_ptr_t>(0)));
+    ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateSyncKHR")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
     EXPECT_THROW({
         mg::EGLSyncExtensions extensions;
     }, std::runtime_error);
@@ -80,8 +80,8 @@ TEST_F(EGLExtensions, constructor_throws_if_egl_create_sync_not_supported)
 
 TEST_F(EGLExtensions, constructor_throws_if_egl_destroy_sync_not_supported)
 {
-    EXPECT_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroySyncKHR")))
-        .WillOnce(Return(reinterpret_cast<func_ptr_t>(0)));
+    ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroySyncKHR")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
     EXPECT_THROW({
         mg::EGLSyncExtensions extensions;
     }, std::runtime_error);
@@ -89,8 +89,8 @@ TEST_F(EGLExtensions, constructor_throws_if_egl_destroy_sync_not_supported)
 
 TEST_F(EGLExtensions, constructor_throws_if_egl_wait_sync_not_supported)
 {
-    EXPECT_CALL(mock_egl, eglGetProcAddress(StrEq("eglClientWaitSyncKHR")))
-        .WillOnce(Return(reinterpret_cast<func_ptr_t>(0)));
+    ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglClientWaitSyncKHR")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
     EXPECT_THROW({
         mg::EGLSyncExtensions extensions;
     }, std::runtime_error);
