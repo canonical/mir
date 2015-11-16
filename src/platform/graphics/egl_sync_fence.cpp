@@ -20,6 +20,19 @@
 
 namespace mg = mir::graphics;
 
+void mg::NullCommandSync::raise()
+{
+}
+
+void mg::NullCommandSync::reset()
+{
+}
+
+bool mg::NullCommandSync::clear_or_timeout_after(std::chrono::nanoseconds)
+{
+    return true;
+}
+
 mg::EGLSyncFence::EGLSyncFence(std::shared_ptr<EGLSyncExtensions> const& egl) :
     egl(egl)
 {
