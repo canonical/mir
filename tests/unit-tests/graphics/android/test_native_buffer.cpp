@@ -17,26 +17,41 @@
  */
 
 #include "mir/graphics/android/android_native_buffer.h"
+#include "mir/graphics/egl_sync_fence.h"
 #include "mir/test/doubles/mock_fence.h"
 #include <memory>
 #include <gtest/gtest.h>
 
 namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
+using namespace testing;
+
+namespace
+{
+struct MockCommandStreamSync : public mir::graphics::CommandStreamSync
+{
+    MOCK_METHOD0(raise, void());
+    MOCK_METHOD0(reset, void());
+    MOCK_METHOD1(clear_or_timeout_after, bool(std::chrono::nanoseconds));
+};
+}
 
 struct NativeBuffer : public testing::Test
 {
     NativeBuffer() :
         a_native_window_buffer(std::make_shared<ANativeWindowBuffer>()),
         mock_fence(std::make_shared<testing::NiceMock<mtd::MockFence>>()),
-        fake_fd{48484}
+        fake_fd{48484},
+        timeout{std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(2))},
+        mock_cmdstream_sync{std::make_shared<MockCommandStreamSync>()}
     {
     }
 
     std::shared_ptr<ANativeWindowBuffer> a_native_window_buffer;
     std::shared_ptr<mtd::MockFence> mock_fence;
     int fake_fd;
-    auto timeout = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono:seconds(2));
+    std::chrono::nanoseconds timeout;
+    std::shared_ptr<MockCommandStreamSync> mock_cmdstream_sync;
 };
 
 TEST_F(NativeBuffer, extends_lifetime_when_driver_calls_external_refcount_hooks)
@@ -143,14 +158,14 @@ TEST_F(NativeBuffer, raises_egl_fence)
 {
     mga::AndroidNativeBuffer buffer(a_native_window_buffer, mock_cmdstream_sync, mock_fence, mga::BufferAccess::read);
 
-    EXPECT_CALL(mock_cmdstream_sync, raise());
+    EXPECT_CALL(*mock_cmdstream_sync, raise());
     buffer.used_by_gpu();
 }
 
 TEST_F(NativeBuffer, clears_egl_fence_successfully)
 {
     mga::AndroidNativeBuffer buffer(a_native_window_buffer, mock_cmdstream_sync, mock_fence, mga::BufferAccess::read);
-    EXPECT_CALL(mock_cmdstream_sync, wait_or_timeout(timeout))
+    EXPECT_CALL(*mock_cmdstream_sync, clear_or_timeout_after(timeout))
         .Times(1)
         .WillOnce(Return(true));
     buffer.ensure_not_used_by_gpu();
@@ -160,7 +175,7 @@ TEST_F(NativeBuffer, clears_egl_fence_successfully)
 TEST_F(NativeBuffer, ignores_clears_egl_fence_failure)
 {
     mga::AndroidNativeBuffer buffer(a_native_window_buffer, mock_cmdstream_sync, mock_fence, mga::BufferAccess::read);
-    EXPECT_CALL(mock_cmdstream_sync, wait_or_timeout(timeout))
+    EXPECT_CALL(*mock_cmdstream_sync, clear_or_timeout_after(timeout))
         .Times(1)
         .WillOnce(Return(false));
     buffer.ensure_not_used_by_gpu();

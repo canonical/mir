@@ -22,9 +22,11 @@ namespace mga=mir::graphics::android;
 
 mga::AndroidNativeBuffer::AndroidNativeBuffer(
     std::shared_ptr<ANativeWindowBuffer> const& anwb,
+    std::shared_ptr<CommandStreamSync> const& cmdstream_sync,
     std::shared_ptr<Fence> const& fence,
     BufferAccess access)
-    : fence(fence),
+    : cmdstream_sync(cmdstream_sync),
+      fence(fence),
       access(access),
       native_window_buffer(anwb)
 {
@@ -57,4 +59,12 @@ buffer_handle_t mga::AndroidNativeBuffer::handle() const
 mga::NativeFence mga::AndroidNativeBuffer::copy_fence() const
 {
     return fence->copy_native_handle();
+}
+
+void mga::AndroidNativeBuffer::used_by_gpu()
+{
+}
+
+void mga::AndroidNativeBuffer::ensure_not_used_by_gpu()
+{
 }

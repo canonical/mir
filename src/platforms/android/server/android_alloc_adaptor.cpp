@@ -20,6 +20,7 @@
 #include "mir/graphics/android/android_native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/android_format_conversion-inl.h"
+#include "mir/graphics/egl_sync_fence.h"
 #include "android_alloc_adaptor.h"
 #include "device_quirks.h"
 
@@ -48,10 +49,13 @@ private:
 };
 }
 
-mga::AndroidAllocAdaptor::AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> const& alloc_device,
-    std::shared_ptr<DeviceQuirks> const& quirks)
-    : alloc_dev(alloc_device),
-      quirks(quirks)
+mga::AndroidAllocAdaptor::AndroidAllocAdaptor(
+    std::shared_ptr<struct alloc_device_t> const& alloc_device,
+    std::shared_ptr<EGLSyncExtensions> const& extensions,
+    std::shared_ptr<DeviceQuirks> const& quirks) :
+    alloc_dev(alloc_device),
+    sync_extensions(extensions),
+    quirks(quirks)
 {
 }
 
@@ -94,7 +98,12 @@ std::shared_ptr<mg::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     anwb->format = format;
     anwb->usage = usage_flag;
 
-    return std::make_shared<mga::AndroidNativeBuffer>(anwb, fence, mga::BufferAccess::read);
+    std::shared_ptr<CommandStreamSync> cmdstream_sync;
+    if (sync_extensions->eglCreateSyncKHR)
+        cmdstream_sync = std::make_shared<EGLSyncFence>(sync_extensions);
+    else
+        cmdstream_sync = std::make_shared<NullCommandSync>();
+    return std::make_shared<mga::AndroidNativeBuffer>(anwb, cmdstream_sync, fence, mga::BufferAccess::read);
 }
 
 int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)

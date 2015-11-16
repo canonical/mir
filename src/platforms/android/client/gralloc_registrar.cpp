@@ -18,6 +18,7 @@
 
 #include "mir/graphics/android/android_native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
+#include "mir/graphics/egl_sync_fence.h"
 #include "gralloc_registrar.h"
 #include "mir/client_buffer.h"
 
@@ -82,7 +83,8 @@ std::shared_ptr<mg::NativeBuffer> create_native_buffer(
     anwb->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     anwb->handle = handle.get();
 
-    return std::make_shared<mga::AndroidNativeBuffer>(anwb, fence, mga::BufferAccess::read);
+    auto sync = std::make_shared<mg::NullCommandSync>();
+    return std::make_shared<mga::AndroidNativeBuffer>(anwb, sync, fence, mga::BufferAccess::read);
 }
 }
 std::shared_ptr<mg::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
