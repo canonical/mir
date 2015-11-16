@@ -58,6 +58,7 @@ class SessionListener;
 class SessionCoordinator;
 class SurfaceCoordinator;
 class SurfaceFactory;
+class CoordinateTranslator;
 }
 
 class Fd;
@@ -237,6 +238,10 @@ public:
 
     /// Sets an override functor for creating the gl config.
     void override_the_gl_config(Builder<graphics::GLConfig> const& gl_config_builder);
+
+    /// Sets an override functor for creating the coordinate translator.
+    void override_the_coordinate_translator(
+        Builder<scene::CoordinateTranslator> const& coordinate_translator_builder);
 
     /// Sets an override functor for creating the host lifecycle event listener.
     void override_the_host_lifecycle_event_listener(

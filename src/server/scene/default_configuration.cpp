@@ -39,6 +39,7 @@
 #include "threaded_snapshot_strategy.h"
 #include "prompt_session_manager_impl.h"
 #include "default_coordinate_translator.h"
+#include "unsupported_coordinate_translator.h"
 #include "timeout_application_not_responding_detector.h"
 #include "mir/options/program_option.h"
 #include "mir/options/default_configuration.h"
@@ -224,9 +225,12 @@ std::shared_ptr<ms::CoordinateTranslator>
 mir::DefaultServerConfiguration::the_coordinate_translator()
 {
     return coordinate_translator(
-        [this]()
+        [this]() -> std::shared_ptr<ms::CoordinateTranslator>
         {
-            return std::make_shared<ms::DefaultCoordinateTranslator>();
+            if (the_options()->is_set(options::debug_opt))
+                return std::make_shared<ms::DefaultCoordinateTranslator>();
+            else
+                return std::make_shared<ms::UnsupportedCoordinateTranslator>();
         });
 }
 
