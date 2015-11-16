@@ -28,7 +28,7 @@ using namespace testing;
 
 struct EglSyncFence : ::testing::Test
 {
-    mtd::MockEGL mock_egl;
+    NiceMock<mtd::MockEGL> mock_egl;
     std::shared_ptr<mg::EGLSyncExtensions> sync_extensions{std::make_shared<mg::EGLSyncExtensions>()};
     std::array<int,2> fake_fences;
     void* fake_fence0{&fake_fences[0]};
@@ -137,9 +137,13 @@ TEST_F(EglSyncFence, repeated_raises_clear_existing_fence)
         .WillOnce(Return(EGL_CONDITION_SATISFIED_KHR));
     EXPECT_CALL(mock_egl, eglDestroySyncKHR(mock_egl.fake_egl_display, fake_fence0))
         .InSequence(seq);
+    EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
+        .InSequence(seq);
     EXPECT_CALL(mock_egl, eglCreateSyncKHR(mock_egl.fake_egl_display, EGL_SYNC_FENCE_KHR, nullptr))
         .InSequence(seq)
         .WillOnce(Return(fake_fence1));
+    EXPECT_CALL(mock_egl, eglDestroySyncKHR(mock_egl.fake_egl_display, fake_fence1))
+        .InSequence(seq);
 
     mg::EGLSyncFence fence(sync_extensions);
     fence.raise(); 

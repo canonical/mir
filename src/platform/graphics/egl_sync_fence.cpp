@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/egl_sync_fence.h"
+#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 
@@ -34,20 +35,59 @@ bool mg::NullCommandSync::clear_or_timeout_after(std::chrono::nanoseconds)
 }
 
 mg::EGLSyncFence::EGLSyncFence(std::shared_ptr<EGLSyncExtensions> const& egl) :
-    egl(egl)
+    egl(egl),
+    fence_display(EGL_NO_DISPLAY),
+    sync_point(EGL_NO_SYNC_KHR)
 {
+}
+
+mg::EGLSyncFence::~EGLSyncFence()
+{
+    reset();
 }
 
 void mg::EGLSyncFence::raise()
 {
+    std::unique_lock<std::mutex> lk(mutex);
+    clear_or_timeout_after(lk, default_timeout);
+
+    fence_display = eglGetCurrentDisplay();
+    sync_point = egl->eglCreateSyncKHR(fence_display, EGL_SYNC_FENCE_KHR, NULL);
+    if (sync_point == EGL_NO_SYNC_KHR)
+        BOOST_THROW_EXCEPTION(std::runtime_error("failed to add sync point to command buffer"));
 }
 
 void mg::EGLSyncFence::reset()
 {
+    std::unique_lock<std::mutex> lk(mutex);
+    reset(lk);
+}
+
+void mg::EGLSyncFence::reset(std::unique_lock<std::mutex> const&)
+{
+    if (sync_point != EGL_NO_SYNC_KHR)
+    {
+        egl->eglDestroySyncKHR(fence_display, sync_point);
+        fence_display = EGL_NO_DISPLAY;
+        sync_point = EGL_NO_SYNC_KHR;
+    }
 }
 
 bool mg::EGLSyncFence::clear_or_timeout_after(std::chrono::nanoseconds ns)
 {
-    (void) ns;
-    return false;
+    std::unique_lock<std::mutex> lk(mutex);
+    return clear_or_timeout_after(lk, ns);
+}
+
+bool mg::EGLSyncFence::clear_or_timeout_after(
+    std::unique_lock<std::mutex> const& lk,
+    std::chrono::nanoseconds ns)
+{
+    auto status = EGL_CONDITION_SATISFIED_KHR;
+    if (sync_point != EGL_NO_SYNC_KHR)
+    {
+        status = egl->eglClientWaitSyncKHR(fence_display, sync_point, 0, ns.count());
+        reset(lk);
+    }
+    return status == EGL_CONDITION_SATISFIED_KHR;
 }

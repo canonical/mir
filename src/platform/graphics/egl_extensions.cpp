@@ -40,7 +40,7 @@ mg::EGLExtensions::EGLExtensions() :
 
 mg::EGLSyncExtensions::EGLSyncExtensions() :
     eglCreateSyncKHR{
-        reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateSyncKHR"))},
+        reinterpret_cast<PFNEGLCREATESYNCKHRPROC>(eglGetProcAddress("eglCreateSyncKHR"))},
     eglDestroySyncKHR{
         reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroySyncKHR"))},
     eglClientWaitSyncKHR{
