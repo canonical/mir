@@ -21,19 +21,13 @@
 
 std::string mir::logging::input_timestamp(std::chrono::nanoseconds when)
 {
-    // Input events use CLOCK_REALTIME, and so we must...
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-
-    std::chrono::nanoseconds now = std::chrono::nanoseconds(ts.tv_sec * 1000000000LL + ts.tv_nsec);
-    std::chrono::nanoseconds age = now - when;
+    // Input events use CLOCK_MONOTONIC, and so we must...
+    auto age =
+        std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now().time_since_epoch() - when);
 
     char str[64];
-    snprintf(str, sizeof str, "%lld (%ld.%06ld ms ago)",
-             static_cast<long long>(when.count()),
-             static_cast<long>(age.count() / 1000000LL),
-             static_cast<long>(age.count() % 1000000LL));
+    snprintf(str, sizeof str, "%lld (%.6fms ago)",
+             static_cast<long long>(when.count()),age.count());
 
     return std::string(str);
 }
-
