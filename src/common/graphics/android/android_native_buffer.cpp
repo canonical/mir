@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/android/android_native_buffer.h"
+#include "mir/graphics/egl_sync_fence.h"
 
 namespace mga=mir::graphics::android;
 
@@ -63,8 +64,11 @@ mga::NativeFence mga::AndroidNativeBuffer::copy_fence() const
 
 void mga::AndroidNativeBuffer::used_by_gpu()
 {
+    cmdstream_sync->raise();
 }
 
 void mga::AndroidNativeBuffer::ensure_not_used_by_gpu()
 {
+    using namespace std::chrono;
+    cmdstream_sync->clear_or_timeout_after(duration_cast<nanoseconds>(seconds(2)));
 }
