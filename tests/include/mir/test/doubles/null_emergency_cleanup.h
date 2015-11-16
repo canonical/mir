@@ -32,6 +32,7 @@ class NullEmergencyCleanup : public EmergencyCleanup
 {
  public:
     void add(EmergencyCleanupHandler const&) override {}
+    void add(ModuleEmergencyCleanupHandler) override {}
     void operator()() const override {}
 };
 

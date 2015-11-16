@@ -50,6 +50,7 @@ namespace
 struct StubEmergencyCleanupRegistry : mir::EmergencyCleanupRegistry
 {
     void add(mir::EmergencyCleanupHandler const&) override {}
+    void add(mir::ModuleEmergencyCleanupHandler) override {}
 };
 char const platform_input_lib[] = "platform-input-lib";
 char const platform_path[] = "platform-path";

@@ -26,7 +26,6 @@
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <dlfcn.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -97,17 +96,6 @@ struct RealPosixProcessOperations : public mgm::PosixProcessOperations
         return ::setsid();
     }
 };
-
-// Hack around the way mesa loads mir: This hack makes the
-// necessary symbols global.
-void ensure_loaded_with_rtld_global()
-{
-    Dl_info info;
-
-    dladdr(reinterpret_cast<void*>(&ensure_loaded_with_rtld_global), &info);
-    dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
-}
-
 }
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
@@ -164,14 +152,32 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
     drm_devices.match_sysname("card[0-9]*");
     drm_devices.scan_devices();
 
+    if (drm_devices.begin() == drm_devices.end())
+        return mg::PlatformPriority::unsupported;
+
+    // Check for master
+    int tmp_fd = -1;
     for (auto& device : drm_devices)
     {
-        static_cast<void>(device);
-        if (platform_option_used)
-            return mg::PlatformPriority::best;
-        else
-            return mg::PlatformPriority::supported;
+        tmp_fd = open(device.devnode(), O_RDWR | O_CLOEXEC);
+        if (tmp_fd >= 0)
+            break;
     }
+
+    if (tmp_fd >= 0)
+    {
+        if (drmSetMaster(tmp_fd) >= 0)
+        {
+            drmDropMaster(tmp_fd);
+            drmClose(tmp_fd);
+            return mg::PlatformPriority::best;
+        }
+        else
+            drmClose(tmp_fd);
+    }
+
+    if (platform_option_used)
+        return mg::PlatformPriority::best;
 
     return mg::PlatformPriority::unsupported;
 }
@@ -192,7 +198,5 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& nested_context)
 {
-    // ensure mesa finds the mesa mir-platform symbols
-    ensure_loaded_with_rtld_global();
     return mir::make_module_ptr<mgm::GuestPlatform>(nested_context);
 }

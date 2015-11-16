@@ -22,7 +22,6 @@
 #include "surface_stack_model.h"
 
 #include "mir/compositor/scene.h"
-#include "mir/scene/depth_id.h"
 #include "mir/scene/observer.h"
 #include "mir/input/scene.h"
 
@@ -88,7 +87,6 @@ public:
 
     void add_surface(
         std::shared_ptr<Surface> const& surface,
-        DepthId depth,
         input::InputReceptionMode input_mode) override;
     
     auto surface_at(geometry::Point) const -> std::shared_ptr<Surface> override;
@@ -113,8 +111,7 @@ private:
     std::shared_ptr<InputRegistrar> const input_registrar;
     std::shared_ptr<SceneReport> const report;
 
-    typedef std::vector<std::shared_ptr<Surface>> Layer;
-    std::map<DepthId, Layer> layers_by_depth;
+    std::vector<std::shared_ptr<Surface>> surfaces;
     std::map<Surface*,std::shared_ptr<RenderingTracker>> rendering_trackers;
     std::set<compositor::CompositorID> registered_compositors;
     

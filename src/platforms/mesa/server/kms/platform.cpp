@@ -51,14 +51,16 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
     std::weak_ptr<VirtualTerminal> weak_vt = vt;
     std::weak_ptr<mgmh::DRMHelper> weak_drm = drm;
     emergency_cleanup_registry.add(
-        [weak_vt,weak_drm]
-        {
-            if (auto const vt = weak_vt.lock())
-                try { vt->restore(); } catch (...) {}
+        make_module_ptr<EmergencyCleanupHandler>(
+            [weak_vt,weak_drm]
+            {
+                if (auto const vt = weak_vt.lock())
+                    try { vt->restore(); } catch (...) {}
 
-            if (auto const drm = weak_drm.lock())
-                try { drm->drop_master(); } catch (...) {}
-        });
+                if (auto const drm = weak_drm.lock())
+                    try { drm->drop_master(); } catch (...) {}
+            }));
+
 }
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator()

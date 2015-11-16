@@ -31,7 +31,6 @@
 
 #include "mir/test/doubles/mock_window_manager.h"
 #include "mir/test/doubles/mock_surface_coordinator.h"
-#include "mir/test/doubles/mock_session_listener.h"
 #include "mir/test/doubles/mock_surface.h"
 #include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/null_snapshot_strategy.h"
@@ -107,7 +106,6 @@ struct AbstractShell : Test
     NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
     NiceMock<MockSessionContainer> session_container;
     NiceMock<MockSessionEventSink> session_event_sink;
-    NiceMock<mtd::MockSessionListener> session_listener;
     NiceMock<MockSurfaceFactory> surface_factory;
     mtd::StubDisplay display{3};
 
@@ -118,7 +116,7 @@ struct AbstractShell : Test
         mt::fake_shared(session_container),
         std::make_shared<mtd::NullSnapshotStrategy>(),
         mt::fake_shared(session_event_sink),
-        mt::fake_shared(session_listener),
+        std::make_shared<ms::NullSessionListener>(),
         mt::fake_shared(display),
         std::make_shared<mtd::NullANRDetector>()};
 
@@ -208,7 +206,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_paramet
     auto placed_params = params;
     placed_params.size.width = geom::Width{100};
 
-    EXPECT_CALL(surface_coordinator, add_surface(_,placed_params.depth,placed_params.input_mode,_));
+    EXPECT_CALL(surface_coordinator, add_surface(_,placed_params.input_mode,_));
 
     EXPECT_CALL(*wm, add_surface(session, Ref(params), _)).WillOnce(Invoke(
         [&](std::shared_ptr<ms::Session> const& session,
@@ -367,6 +365,9 @@ TEST_F(AbstractShell, as_focus_controller_focus_next_session_notifies_session_ev
     msh::FocusController& focus_controller = shell;
     auto session = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
     auto session1 = shell.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
+    shell.create_surface(session, ms::a_surface(), nullptr);
+    shell.create_surface(session1, ms::a_surface(), nullptr);
+
     focus_controller.set_focus_to(session, {});
 
     EXPECT_CALL(session_container, successor_of(session)).
@@ -381,6 +382,9 @@ TEST_F(AbstractShell, as_focus_controller_focused_session_follows_focus)
 {
     auto session = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
     auto session1 = shell.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
+    shell.create_surface(session, ms::a_surface(), nullptr);
+    shell.create_surface(session1, ms::a_surface(), nullptr);
+
     EXPECT_CALL(session_container, successor_of(session1)).
         WillOnce(Return(session));
 
@@ -438,6 +442,49 @@ TEST_F(AbstractShell, as_focus_controller_delegates_surface_at_to_surface_coordi
     msh::FocusController& focus_controller = shell;
 
     EXPECT_THAT(focus_controller.surface_at(cursor), Eq(surface));
+}
+
+TEST_F(AbstractShell, as_focus_controller_focus_next_session_skips_surfaceless_sessions)
+{
+    msh::FocusController& focus_controller = shell;
+    auto session = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+    auto session1 = shell.open_session(__LINE__, "Surfaceless", std::shared_ptr<mf::EventSink>());
+    auto session2 = shell.open_session(__LINE__, "Bla", std::shared_ptr<mf::EventSink>());
+    auto surface_id = shell.create_surface(session, ms::a_surface(), nullptr);
+    shell.create_surface(session2, ms::a_surface(), nullptr);
+
+    focus_controller.set_focus_to(session, session->surface(surface_id));
+
+    EXPECT_CALL(session_container, successor_of(session)).
+        WillOnce(Return(session1));
+    EXPECT_CALL(session_container, successor_of(session1)).
+        WillOnce(Return(session2));
+
+    EXPECT_CALL(session_event_sink, handle_focus_change(session2));
+
+    focus_controller.focus_next_session();
+}
+
+TEST_F(AbstractShell,
+       as_focus_controller_focus_next_session_does_not_focus_any_session_if_no_session_has_surfaces)
+{
+    msh::FocusController& focus_controller = shell;
+    auto session = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+    auto session1 = shell.open_session(__LINE__, "Surfaceless", std::shared_ptr<mf::EventSink>());
+    auto surface_id = shell.create_surface(session, ms::a_surface(), nullptr);
+
+    focus_controller.set_focus_to(session, session->surface(surface_id));
+
+    session->destroy_surface(surface_id);
+
+    EXPECT_CALL(session_container, successor_of(session)).
+        WillOnce(Return(session1));
+    EXPECT_CALL(session_container, successor_of(session1)).
+        WillOnce(Return(session));
+
+    EXPECT_CALL(session_event_sink, handle_no_focus());
+
+    focus_controller.focus_next_session();
 }
 
 TEST_F(AbstractShell, modify_surface_with_only_streams_doesnt_call_into_wm)
