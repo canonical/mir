@@ -35,6 +35,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <sstream>
 
 namespace mi = mir::input;
 namespace mg = mir::graphics;
@@ -248,11 +249,15 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
 
                         complete_display_initialization(egl_config_format);
 
+                        std::ostringstream surface_title;
+
+                        surface_title << "Mir nested display for output #" << output.id.as_value();
+
                         auto const host_surface = connection->create_surface(
                             area.size.width.as_int(),
                             area.size.height.as_int(),
                             egl_config_format,
-                            "Mir nested display",
+                            surface_title.str().c_str(),
                             mir_buffer_usage_hardware,
                             static_cast<uint32_t>(output.id.as_value()));
 
