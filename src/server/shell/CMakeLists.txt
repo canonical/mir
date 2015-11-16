@@ -5,7 +5,9 @@ set(
   canonical_window_manager.cpp
   frontend_shell.cpp
   graphics_display_layout.cpp
+  graphics_display_layout.h
   default_configuration.cpp
+  null_host_lifecycle_event_listener.h
   shell_wrapper.cpp
   surface_ready_observer.cpp
   system_compositor_window_manager.cpp

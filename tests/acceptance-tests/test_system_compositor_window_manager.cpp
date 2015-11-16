@@ -167,7 +167,7 @@ TEST_F(SystemCompositorWindowManager, when_output_ID_not_specified_surfaces_crea
     auto surface = client.create_surface(0);
 
     EXPECT_FALSE(mir_surface_is_valid(surface));
-    EXPECT_THAT(mir_surface_get_error_message(surface), HasSubstr("Failed to place surface"));
+    EXPECT_THAT(mir_surface_get_error_message(surface), HasSubstr("An output ID must be specified"));
 }
 
 TEST_F(SystemCompositorWindowManager, if_a_surface_posts_client_gets_focus)

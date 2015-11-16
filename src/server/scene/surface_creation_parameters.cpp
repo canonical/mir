@@ -27,7 +27,7 @@ namespace geom = mir::geometry;
 ms::SurfaceCreationParameters::SurfaceCreationParameters()
     : buffer_usage{mg::BufferUsage::undefined},
       pixel_format{mir_pixel_format_invalid},
-      depth{0}, input_mode{mi::InputReceptionMode::normal}
+      input_mode{mi::InputReceptionMode::normal}
 {
 }
 
@@ -72,14 +72,6 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_pixel_format(
     MirPixelFormat new_pixel_format)
 {
     pixel_format = new_pixel_format;
-
-    return *this;
-}
-
-ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_depth(
-    scene::DepthId const& new_depth)
-{
-    depth = new_depth;
 
     return *this;
 }
@@ -151,7 +143,6 @@ bool ms::operator==(
         lhs.top_left == rhs.top_left &&
         lhs.buffer_usage == rhs.buffer_usage &&
         lhs.pixel_format == rhs.pixel_format &&
-        lhs.depth == rhs.depth &&
         lhs.input_mode == rhs.input_mode &&
         lhs.output_id == rhs.output_id &&
         lhs.state == rhs.state &&

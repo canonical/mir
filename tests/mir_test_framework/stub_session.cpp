@@ -128,6 +128,11 @@ void mtd::StubSession::configure_streams(
 {
 }
 
+void mtd::StubSession::destroy_surface(std::weak_ptr<scene::Surface> const& /*surface*/)
+{
+}
+
+
 namespace
 {
 // Ensure we don't accidentally have an abstract class

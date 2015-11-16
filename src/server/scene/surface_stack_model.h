@@ -20,7 +20,6 @@
 #define MIR_SCENE_SURFACE_STACK_MODEL_H_
 
 #include "mir/frontend/surface_id.h"
-#include "mir/scene/depth_id.h"
 #include "mir/input/input_reception_mode.h"
 
 #include <memory>
@@ -43,7 +42,6 @@ public:
 
     virtual void add_surface(
         std::shared_ptr<Surface> const& surface,
-        DepthId depth,
         input::InputReceptionMode input_mode) = 0;
 
     virtual void remove_surface(std::weak_ptr<Surface> const& surface) = 0;

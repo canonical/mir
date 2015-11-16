@@ -20,7 +20,6 @@
 #ifndef MIR_SCENE_SURFACE_COORDINATOR_H_
 #define MIR_SCENE_SURFACE_COORDINATOR_H_
 
-#include "mir/scene/depth_id.h"
 #include <memory>
 #include <set>
 
@@ -42,7 +41,6 @@ public:
 
     virtual void add_surface(
         std::shared_ptr<Surface> const&,
-        scene::DepthId depth,
         input::InputReceptionMode const& new_mode,
         Session* session) = 0;
 
