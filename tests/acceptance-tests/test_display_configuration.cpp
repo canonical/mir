@@ -38,6 +38,7 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include <atomic>
+#include <chrono>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -50,6 +51,7 @@ namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
 
 using namespace testing;
+using namespace std::literals::chrono_literals;
 
 namespace
 {
@@ -494,45 +496,35 @@ TEST_F(DisplayConfigurationTest,
     display_client.disconnect();
 }
 
-TEST_F(DisplayConfigurationTest, client_gets_updated_base_config_after_setting_it)
-{
-    DisplayClient display_client{new_connection()};
-    display_client.connect();
-
-    auto config = display_client.get_base_config();
-    EXPECT_THAT(config->outputs[0].used, Eq(1));
-    config->outputs[0].used = 0;
-
-    display_client.set_base_config(config.get());
-
-    auto const new_config = display_client.get_base_config();
-    EXPECT_THAT(new_config.get(), mt::DisplayConfigMatches(config.get()));
-
-    display_client.disconnect();
-}
-
 namespace
 {
 void display_config_change_handler(MirConnection*, void* context)
 {
-    auto callback_called = static_cast<std::atomic<bool>*>(context);
-    *callback_called = true;
+    auto callback_called = static_cast<mt::Signal*>(context);
+    callback_called->raise();
 }
 }
 
 TEST_F(DisplayConfigurationTest,
-       client_is_notified_of_new_base_config_before_set_base_configuration_returns)
+       client_is_notified_of_new_base_config_eventually_after_set_base_configuration)
 {
     DisplayClient display_client{new_connection()};
     display_client.connect();
 
-    std::atomic<bool> callback_called{false};
+    mt::Signal callback_called;
     mir_connection_set_display_config_change_callback(
         display_client.connection, &display_config_change_handler, &callback_called);
 
-    display_client.set_base_config(display_client.get_base_config().get());
+    auto requested_config = display_client.get_base_config();
+    EXPECT_THAT(requested_config->outputs[0].used, Eq(1));
+    requested_config->outputs[0].used = 0;
 
-    EXPECT_THAT(callback_called, Eq(true));
+    display_client.set_base_config(requested_config.get());
+
+    EXPECT_THAT(callback_called.wait_for(5s), Eq(true));
+
+    auto const new_config = display_client.get_base_config();
+    EXPECT_THAT(new_config.get(), mt::DisplayConfigMatches(requested_config.get()));
 
     display_client.disconnect();
 }
