@@ -41,7 +41,7 @@ struct EGLExtensions
 struct EGLSyncExtensions
 {
     EGLSyncExtensions();
-    PFNEGLCREATEIMAGEKHRPROC const eglCreateSyncKHR;
+    PFNEGLCREATESYNCKHRPROC const eglCreateSyncKHR;
     PFNEGLDESTROYIMAGEKHRPROC const eglDestroySyncKHR;
     PFNEGLCLIENTWAITSYNCKHRPROC const eglClientWaitSyncKHR;
 };
