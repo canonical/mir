@@ -239,38 +239,33 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
     unique_outputs.for_each_group(
         [&](mg::OverlappingOutputGroup const& group)
         {
-            bool have_output_for_group = false;
-            geometry::Rectangle const& area = group.bounding_rectangle();
             group.for_each_output([&](mg::DisplayConfigurationOutput output)
                 {
-                    if (!have_output_for_group)
-                    {
-                        auto const& egl_config_format = output.current_format;
+                    auto const& egl_config_format = output.current_format;
+                    geometry::Rectangle const& area = output.extents();
 
-                        complete_display_initialization(egl_config_format);
+                    complete_display_initialization(egl_config_format);
 
-                        std::ostringstream surface_title;
+                    std::ostringstream surface_title;
 
-                        surface_title << "Mir nested display for output #" << output.id.as_value();
+                    surface_title << "Mir nested display for output #" << output.id.as_value();
 
-                        auto const host_surface = connection->create_surface(
-                            area.size.width.as_int(),
-                            area.size.height.as_int(),
-                            egl_config_format,
-                            surface_title.str().c_str(),
-                            mir_buffer_usage_hardware,
-                            static_cast<uint32_t>(output.id.as_value()));
+                    auto const host_surface = connection->create_surface(
+                        area.size.width.as_int(),
+                        area.size.height.as_int(),
+                        egl_config_format,
+                        surface_title.str().c_str(),
+                        mir_buffer_usage_hardware,
+                        static_cast<uint32_t>(output.id.as_value()));
 
-                        result[output.id] = std::make_shared<mgn::detail::DisplaySyncGroup>(
-                            std::make_shared<mgn::detail::DisplayBuffer>(
-                                egl_display,
-                                host_surface,
-                                area,
-                                dispatcher,
-                                cursor_listener,
-                                output.current_format));
-                        have_output_for_group = true;
-                    }
+                    result[output.id] = std::make_shared<mgn::detail::DisplaySyncGroup>(
+                        std::make_shared<mgn::detail::DisplayBuffer>(
+                            egl_display,
+                            host_surface,
+                            area,
+                            dispatcher,
+                            cursor_listener,
+                            output.current_format));
                 });
         });
 
