@@ -79,18 +79,14 @@ struct InputPlatformProbe : ::testing::Test
 
     void disable_x11()
     {
-#ifdef MIR_BUILD_PLATFORM_MESA_X11
         ON_CALL(mock_x11, XOpenDisplay(_)).WillByDefault(Return(nullptr));
-#endif
     }
 
     // replace with with mocks for udev and evdev to simulate root or non-root
     // access on evdev devices, and enable the disabled test case(s) below.
     mtf::UdevEnvironment env;
 
-#ifdef MIR_BUILD_PLATFORM_MESA_X11
     NiceMock<mtd::MockX11> mock_x11;
-#endif
     NiceMock<mtd::MockLibInput> mock_libinput;
     NiceMock<mtd::MockOption> mock_options;
     mtd::MockInputDeviceRegistry mock_registry;
@@ -148,7 +144,6 @@ TEST_F(InputPlatformProbe, x11_platform_found_and_used_when_display_connection_w
     EXPECT_THAT(platforms, UnorderedElementsAre(OfPtrType<mi::evdev::Platform>(), OfPtrType<mi::X::XInputPlatform>()));
 }
 #endif
-
 
 TEST_F(InputPlatformProbe, allows_forcing_stub_input_platform)
 {
