@@ -19,6 +19,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
+#include "mir/scene/coordinate_translator.h"
 #include "mir/shell/shell_wrapper.h"
 
 #include "mir_test_framework/headless_test.h"
@@ -65,6 +66,18 @@ char const* const debugenv = "MIR_SERVER_DEBUG";
 void dont_kill_me_bro(MirConnection* /*unused*/, MirLifecycleState /*unused*/, void* /*unused*/)
 {
 }
+
+class SimpleCoordinateTranslator : public mir::scene::CoordinateTranslator
+{
+public:
+    mir::geometry::Point surface_to_screen(
+        std::shared_ptr<mir::frontend::Surface> /*surface*/,
+        int32_t /*x*/,
+        int32_t /*y*/) override
+    {
+        return mir::geometry::Point{13, 7};
+    }
+};
 
 class DebugAPI : public mtf::HeadlessTest
 {
@@ -163,7 +176,7 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
     mir_surface_release_sync(surf);
 }
 
-TEST_F(DebugAPI, is_unavaliable_when_server_not_started_with_debug)
+TEST_F(DebugAPI, is_unavailable_when_server_not_started_with_debug)
 {
     start_server_with_debug(false);
 
@@ -173,6 +186,28 @@ TEST_F(DebugAPI, is_unavaliable_when_server_not_started_with_debug)
     int screen_x, screen_y;
 
     EXPECT_FALSE(mir_debug_surface_coords_to_screen(surf, 0, 0, &screen_x, &screen_y));
+
+    mir_surface_release_sync(surf);
+}
+
+TEST_F(DebugAPI, is_overrideable)
+{
+    server.override_the_coordinate_translator([&]()
+        ->std::shared_ptr<mir::scene::CoordinateTranslator>
+        {
+            return std::make_shared<SimpleCoordinateTranslator>();
+        });
+
+    start_server_with_debug(false);
+
+    auto surf = mtf::make_any_surface(connection);
+    ASSERT_TRUE(mir_surface_is_valid(surf));
+
+    int screen_x, screen_y;
+
+    EXPECT_TRUE(mir_debug_surface_coords_to_screen(surf, 0, 0, &screen_x, &screen_y));
+    EXPECT_EQ(13, screen_x);
+    EXPECT_EQ(7, screen_y);
 
     mir_surface_release_sync(surf);
 }
