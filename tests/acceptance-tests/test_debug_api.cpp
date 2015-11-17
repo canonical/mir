@@ -62,6 +62,7 @@ public:
 };
 
 char const* const debugenv = "MIR_SERVER_DEBUG";
+mir::geometry::Point const testpoint{13, 7};
 
 void dont_kill_me_bro(MirConnection* /*unused*/, MirLifecycleState /*unused*/, void* /*unused*/)
 {
@@ -75,7 +76,7 @@ public:
         int32_t /*x*/,
         int32_t /*y*/) override
     {
-        return mir::geometry::Point{13, 7};
+        return testpoint;
     }
 };
 
@@ -206,8 +207,8 @@ TEST_F(DebugAPI, is_overrideable)
     int screen_x, screen_y;
 
     EXPECT_TRUE(mir_debug_surface_coords_to_screen(surf, 0, 0, &screen_x, &screen_y));
-    EXPECT_EQ(13, screen_x);
-    EXPECT_EQ(7, screen_y);
+    EXPECT_EQ(testpoint.x.as_int(), screen_x);
+    EXPECT_EQ(testpoint.y.as_int(), screen_y);
 
     mir_surface_release_sync(surf);
 }
