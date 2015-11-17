@@ -1,3 +1,9 @@
+mir (0.18.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.18.0 (https://launchpad.net/mir/+milestone/0.18.0)
+
+ -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Tue, 17 Nov 2015 13:14:36 +0200
+
 mir (0.17.1+16.04.20151105.1-0ubuntu1) xenial; urgency=medium
 
   [ Alberto Aguirre ]
