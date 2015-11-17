@@ -183,7 +183,7 @@ MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, Mi
  * there is no active per-connection configuration.
  *
  * When the wait handle returned by this function becomes ready, clients can use
- * mir_connection_get_error_message() to check if an authorization error occured.
+ * mir_connection_get_error_message() to check if an authorization error occurred.
  * Only authorization errors are guaranteed to return an error message for this
  * operation.
  *
