@@ -1,3 +1,27 @@
+mir (0.17.1+16.04.20151105.1-0ubuntu1) xenial; urgency=medium
+
+  [ Alberto Aguirre ]
+  * New upstream release 0.17.1 (https://launchpad.net/mir/+milestone/0.17.1)
+    - No ABI changes. Bug fix release only.
+    - Bugs fixed:
+      . compositing never stops when external monitor is connected
+        (LP: #1499039)
+      . half screen on external monitor (LP: #1511538)
+      . Nested servers don't apply their display configuration at startup
+        (LP: #1492269)
+      . libmircookie1 package does not list libnettle as dependency
+        (LP: #1513225)
+      . unity-system-compositor crash, no interaction on windowed mode
+        (LP: #1511095)
+      . mir_connection_get_egl_pixel_format() crashes (LP: #1510218)
+      . [regression] mir-client-platform-mesa-dev pkg-config file dropped
+        (LP: #1509005)
+
+  [ CI Train Bot ]
+  * New rebuild forced.
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Thu, 05 Nov 2015 21:54:17 +0000
+
 mir (0.17.0+15.10.20151008.2-0ubuntu1) wily; urgency=medium
 
   [ Alexandros Frantzis ]
