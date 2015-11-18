@@ -106,13 +106,13 @@ void mga::HwcDevice::commit(std::list<DisplayContents> const& contents)
         if (content.list.needs_swapbuffers())
         {
             auto rejected_renderables = content.list.rejected_renderables();
-            auto current_context = mir::raii::paired_calls(
-                [&]{ content.context.make_current(); },
-                [&]{ content.context.release_current(); });
-            if (rejected_renderables.empty())
-                content.context.swap_buffers();
-            else
+            if (!rejected_renderables.empty())
+            {
+                auto current_context = mir::raii::paired_calls(
+                    [&]{ content.context.make_current(); },
+                    [&]{ content.context.release_current(); });
                 content.compositor.render(std::move(rejected_renderables), content.list_offset, content.context);
+            }
             content.list.setup_fb(content.context.last_rendered_buffer());
             content.list.swap_occurred();
             purely_overlays = false;
