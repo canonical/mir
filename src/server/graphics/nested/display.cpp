@@ -148,20 +148,6 @@ mgn::detail::DisplaySyncGroup::recommended_sleep() const
     return std::chrono::milliseconds::zero();
 }
 
-namespace
-{
-auto copy_config(MirDisplayConfiguration* conf) -> std::shared_ptr<MirDisplayConfiguration>
-{
-    auto const blob = mir::raii::deleter_for(
-        mir_blob_from_display_configuration(conf),
-        [] (MirBlob* b) { mir_blob_release(b); });
-
-    return std::shared_ptr<MirDisplayConfiguration>{
-        mir_blob_to_display_configuration(blob.get()),
-        [] (MirDisplayConfiguration* c) { if (c) mir_display_config_destroy(c); }};
-}
-}
-
 mgn::Display::Display(
     std::shared_ptr<mg::Platform> const& platform,
     std::shared_ptr<HostConnection> const& connection,
@@ -204,7 +190,7 @@ void mgn::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 std::unique_ptr<mg::DisplayConfiguration> mgn::Display::configuration() const
 {
     std::lock_guard<std::mutex> lock(configuration_mutex);
-    return std::make_unique<NestedDisplayConfiguration>(copy_config(*current_configuration));
+    return current_configuration->clone();
 }
 
 void mgn::Display::complete_display_initialization(MirPixelFormat format)
@@ -277,19 +263,21 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
 
 void mgn::Display::apply_to_connection(mg::DisplayConfiguration const& configuration)
 {
-    auto const& conf = dynamic_cast<NestedDisplayConfiguration const&>(configuration);
+    decltype(current_configuration) new_config{dynamic_cast<NestedDisplayConfiguration*>(configuration.clone().release())};
 
-    connection->apply_display_config(*conf);
-
-    current_configuration = std::make_unique<NestedDisplayConfiguration>(copy_config(conf));
+    connection->apply_display_config(**new_config);
+    swap(current_configuration, new_config);
 }
 
 void mgn::Display::register_configuration_change_handler(
         EventHandlerRegister& /*handlers*/,
         DisplayConfigurationChangeHandler const& conf_change_handler)
 {
-    auto const handler = [this, conf_change_handler] { 
-        current_configuration = std::make_unique<NestedDisplayConfiguration>(connection->create_display_config());
+    auto const handler = [this, conf_change_handler] {
+        {
+            std::lock_guard<std::mutex> lock(configuration_mutex);
+            current_configuration = std::make_unique<NestedDisplayConfiguration>(connection->create_display_config());
+        }
         conf_change_handler();
     };
 
