@@ -32,6 +32,7 @@ void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer
 {
     auto native_buffer = buffer.native_buffer_handle();
 
+    native_buffer->ensure_not_used_by_gpu();
     mir::Fd fence_fd(native_buffer->copy_fence());
     if (fence_fd != mir::Fd::invalid)
     {
