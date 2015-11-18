@@ -37,6 +37,15 @@ char const* const me::mouse_cursor_accleration_bias_opt = "mouse-cursor-accelera
 char const* const me::mouse_scroll_speed_scale_opt = "mouse-scroll-speed-scale";
 char const* const me::touchpad_cursor_accleration_bias_opt = "touchpad-cursor-acceleration-bias";
 char const* const me::touchpad_scroll_speed_scale_opt = "touchpad-scroll-speed-scale";
+char const* const me::touchpad_scroll_mode_opt = "touchpad-scroll-mode";
+
+char const* const touchpad_scroll_mode_two_finger = "two-finger";
+char const* const touchpad_scroll_mode_edge = "edge";
+
+char const* const me::touchpad_click_mode_opt= "touchpad-click-mode";
+
+char const* const touchpad_click_mode_area = "area";
+char const* const touchpad_click_mode_finger_count = "finger-count";
 
 void me::add_input_device_configuration_options_to(mir::Server& server)
 {
@@ -57,32 +66,72 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
                                     "Scales touchpad scroll events, use negative values for natural scrolling",
                                     -1.0);
 
-    server.add_init_callback([&server]()
+    server.add_configuration_option(touchpad_scroll_mode_opt,
+                                    "Select scrolll mode for touchpads: [{two-finger, edge}]",
+                                    touchpad_scroll_mode_two_finger);
+
+    server.add_configuration_option(touchpad_click_mode_opt,
+                                    "Select click mode for touchpads: [{area, finger-count}]",
+                                    touchpad_click_mode_finger_count);
+
+    auto clamp_to_range = [](double val)
+    {
+        if (val < -1.0)
+            val = -1.0;
+        else if (val > 1.0)
+            val = 1.0;
+        return val;
+    };
+
+    // TODO the configuration api allows a combination of values. We might want to expose that in the command line api too.
+    auto convert_to_scroll_mode = [](std::string const& val)
+    {
+        if (val == touchpad_scroll_mode_edge)
+            return mir_touchpad_scroll_mode_edge_scroll;
+        if (val == touchpad_scroll_mode_two_finger)
+            return mir_touchpad_scroll_mode_two_finger_scroll;
+        return mir_touchpad_scroll_mode_none;
+    };
+
+    auto convert_to_click_mode = [](std::string const& val)
+    {
+        if (val == touchpad_click_mode_finger_count)
+            return mir_touchpad_click_mode_finger_count;
+        if (val == touchpad_click_mode_area)
+            return mir_touchpad_click_mode_area_to_click;
+        return mir_touchpad_click_mode_none;
+    };
+
+    server.add_init_callback([&]()
         {
             auto const options = server.get_options();
             auto const input_config = std::make_shared<me::InputDeviceConfig>(
                 options->get<bool>(disable_while_typing_opt),
-                options->get<double>(mouse_cursor_accleration_bias_opt),
+                clamp_to_range(options->get<double>(mouse_cursor_accleration_bias_opt)),
                 options->get<double>(mouse_scroll_speed_scale_opt),
-                options->get<double>(touchpad_cursor_accleration_bias_opt),
-                options->get<double>(touchpad_scroll_speed_scale_opt)
+                clamp_to_range(options->get<double>(touchpad_cursor_accleration_bias_opt)),
+                options->get<double>(touchpad_scroll_speed_scale_opt),
+                convert_to_click_mode(options->get<std::string>(touchpad_click_mode_opt)),
+                convert_to_scroll_mode(options->get<std::string>(touchpad_scroll_mode_opt))
                 );
             server.the_input_device_hub()->add_observer(input_config);
         });
 }
 
-///\example server_example_input_event_filter.cpp
-/// Demonstrate a custom input by making Ctrl+Alt+BkSp stop the server
+///\example server_example_input_device_config.cpp
+/// Demonstrate how to implement an InputDeviceObserver that identifies and configures input devices.
 
 me::InputDeviceConfig::InputDeviceConfig(bool disable_while_typing,
                                          double mouse_cursor_accleration_bias,
                                          double mouse_scroll_speed_scale,
                                          double touchpad_scroll_speed_scale,
-                                         double touchpad_cursor_accleration_bias)
+                                         double touchpad_cursor_accleration_bias,
+                                         MirTouchpadClickModes click_mode,
+                                         MirTouchpadClickModes scroll_mode)
     : disable_while_typing(disable_while_typing), mouse_cursor_accleration_bias(mouse_cursor_accleration_bias),
       mouse_scroll_speed_scale(mouse_scroll_speed_scale),
       touchpad_cursor_accleration_bias(touchpad_cursor_accleration_bias),
-      touchpad_scroll_speed_scale(touchpad_scroll_speed_scale)
+      touchpad_scroll_speed_scale(touchpad_scroll_speed_scale), click_mode(click_mode), scroll_mode(scroll_mode)
 {
 }
 
@@ -99,6 +148,8 @@ void me::InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& devi
 
         mi::TouchpadConfiguration touch_config( device->touchpad_configuration().value() );
         touch_config.disable_while_typing = disable_while_typing;
+        touch_config.click_mode = click_mode;
+        touch_config.scroll_mode = scroll_mode;
         device->apply_touchpad_configuration(touch_config);
     }
     else if (contains(device->capabilities(), mi::DeviceCapability::pointer))

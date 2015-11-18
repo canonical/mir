@@ -20,6 +20,7 @@
 #define MIR_EXAMPLES_INPUT_DEVICE_CONFIG_H_
 
 #include "mir/input/input_device_observer.h"
+#include "mir_toolkit/mir_input_device.h"
 
 namespace mir
 {
@@ -37,6 +38,8 @@ extern char const* const mouse_cursor_accleration_bias_opt;
 extern char const* const mouse_scroll_speed_scale_opt;
 extern char const* const touchpad_cursor_accleration_bias_opt;
 extern char const* const touchpad_scroll_speed_scale_opt;
+extern char const* const touchpad_click_mode_opt;
+extern char const* const touchpad_scroll_mode_opt;
 
 void add_input_device_configuration_options_to(Server& server);
 
@@ -47,7 +50,9 @@ public:
                       double mouse_cursor_accleration_bias,
                       double mouse_scroll_speed_scale,
                       double touchpad_scroll_speed_scale,
-                      double touchpad_cursor_accleration_bias);
+                      double touchpad_cursor_accleration_bias,
+                      MirTouchpadClickModes click_mode,
+                      MirTouchpadScrollModes scroll_mode);
     void device_added(std::shared_ptr<input::Device> const& device) override;
     void device_changed(std::shared_ptr<input::Device> const&) override {};
     void device_removed(std::shared_ptr<input::Device> const&) override {};
@@ -58,6 +63,8 @@ private:
     double mouse_scroll_speed_scale;
     double touchpad_cursor_accleration_bias;
     double touchpad_scroll_speed_scale;
+    MirTouchpadClickModes click_mode;
+    MirTouchpadScrollModes scroll_mode;
 };
 
 }
