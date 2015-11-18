@@ -485,8 +485,8 @@ TEST_P(ClientBufferStream, map_graphics_region)
 TEST_P(ClientBufferStream, maps_graphics_region_only_once_per_swapbuffers)
 {
     MockClientBuffer mock_client_buffer(size);
-    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
-        .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
+    ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+        .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
     mcl::BufferStream bs(
         nullptr, mock_protobuf_server, mode,
         std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
