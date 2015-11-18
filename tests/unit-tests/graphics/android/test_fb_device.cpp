@@ -72,6 +72,12 @@ struct FBDevice : public ::testing::Test
     mga::DisplayName primary{mga::DisplayName::primary};
 };
 
+TEST_F(FBDevice, reports_it_can_swap)
+{
+    mga::FBDevice fbdev(fb_hal_mock);
+    EXPECT_TRUE(device.can_swap_buffers());
+}
+
 TEST_F(FBDevice, rejects_renderables)
 {
     mg::RenderableList renderlist

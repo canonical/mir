@@ -120,6 +120,12 @@ struct HwcDevice : public ::testing::Test
 };
 }
 
+TEST_F(HwcDevice, reports_it_can_swap)
+{
+    mga::HwcDevice device(mock_device);
+    EXPECT_TRUE(device.can_swap_buffers());
+}
+
 TEST_F(HwcDevice, prepares_a_skip_and_target_layer_by_default)
 {
     using namespace testing;
@@ -174,7 +180,7 @@ TEST_F(HwcDevice, calls_backup_compositor_when_overlay_rejected)
     device.commit({content});
 }
 
-TEST_F(HwcDevice, swaps_buffers_directly_when_no_renderables)
+TEST_F(HwcDevice, does_not_swap_buffers_when_no_renderables)
 {
     using namespace testing;
     mtd::MockRenderableListCompositor mock_compositor;
@@ -184,7 +190,8 @@ TEST_F(HwcDevice, swaps_buffers_directly_when_no_renderables)
 
     EXPECT_CALL(mock_compositor, render(_,_,_))
         .Times(0);
-    EXPECT_CALL(mock_context, swap_buffers());
+    EXPECT_CALL(mock_context, swap_buffers())
+        .Times(0);
 
     mga::LayerList list(layer_adapter, {}, geom::Displacement{});
     mga::DisplayContents content{primary, list, offset, mock_context, mock_compositor};
