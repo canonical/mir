@@ -47,6 +47,11 @@ std::shared_ptr<mgl::Texture> mgl::RecentlyUsedCache::load(mg::Renderable const&
         texture.resource = buffer;
         texture.last_bound_buffer = buffer_id;
     }
+    else
+    {
+        buffer->used_as_texture();
+    }
+
     texture.valid_binding = true;
     texture.used = true;
 
