@@ -84,6 +84,7 @@ CMAKE_DEPENDENT_OPTION(
 #add_subdirectory(shell/)
 #add_subdirectory(geometry/)
 add_subdirectory(graphics/)
+add_subdirectory(gl/)
 #add_subdirectory(input/)
 #add_subdirectory(android_input/)
 #add_subdirectory(scene/)
