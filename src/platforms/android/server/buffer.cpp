@@ -196,4 +196,6 @@ mg::NativeBufferBase* mga::Buffer::native_buffer_base()
 
 void mga::Buffer::used_as_texture()
 {
+    std::unique_lock<std::mutex> lk(content_lock);
+    native_buffer->used_by_gpu();
 }
