@@ -97,7 +97,6 @@ private:
                          DefaultInputDeviceHub* hub,
                          Seat* seat);
         void handle_input(MirEvent& event) override;
-        void confine_pointer(mir::geometry::Point& position) override;
         mir::geometry::Rectangle bounding_rectangle() const override;
         bool device_matches(std::shared_ptr<InputDevice> const& dev) const;
         void start();
