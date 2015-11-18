@@ -473,6 +473,7 @@ TEST_F(LibInputDevice, input_info_combines_capabilities)
     auto info = dev.get_device_info();
 
     EXPECT_THAT(info.capabilities, Eq(mi::DeviceCapability::touchpad|
+                                      mi::DeviceCapability::pointer|
                                       mi::DeviceCapability::keyboard|
                                       mi::DeviceCapability::alpha_numeric));
 }
