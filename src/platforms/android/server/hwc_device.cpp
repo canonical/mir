@@ -161,3 +161,8 @@ void mga::HwcDevice::content_cleared()
 {
     onscreen_overlay_buffers.clear();
 }
+
+bool mga::HwcDevice::can_swap_buffers() const
+{
+    return true;
+}

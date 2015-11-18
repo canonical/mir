@@ -123,3 +123,8 @@ std::chrono::milliseconds mga::FBDevice::recommended_sleep() const
 {
     return std::chrono::milliseconds::zero();
 }
+
+bool mga::FBDevice::can_swap_buffers() const
+{
+    return true;
+}
