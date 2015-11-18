@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013, 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -29,7 +29,6 @@
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
-#include "mir_toolkit/mir_blob.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir/raii.h"
 
