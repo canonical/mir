@@ -481,6 +481,34 @@ TEST_P(ClientBufferStream, map_graphics_region)
     EXPECT_EQ(&expected_memory_region, bs.secure_for_cpu_write().get());
 }
 
+//lp: #1463873
+TEST_P(ClientBufferStream, maps_graphics_region_only_once_per_swapbuffers)
+{
+    MockClientBuffer mock_client_buffer(size);
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+        .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
+    mcl::BufferStream bs(
+        nullptr, mock_protobuf_server, mode,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        response, perf_report, "", size, nbuffers);
+    service_requests_for(bs, 2);
+
+    mcl::MemoryRegion first_expected_memory_region;
+    mcl::MemoryRegion second_expected_memory_region;
+    EXPECT_CALL(mock_client_buffer, secure_for_cpu_write())
+        .Times(2)
+        .WillOnce(Return(mt::fake_shared(first_expected_memory_region)))
+        .WillOnce(Return(mt::fake_shared(second_expected_memory_region)));
+    EXPECT_EQ(&first_expected_memory_region, bs.secure_for_cpu_write().get());
+    bs.secure_for_cpu_write();
+    bs.secure_for_cpu_write();
+
+    bs.request_and_wait_for_next_buffer();
+    EXPECT_EQ(&second_expected_memory_region, bs.secure_for_cpu_write().get());
+    bs.secure_for_cpu_write();
+    bs.secure_for_cpu_write();
+}
+
 TEST_P(ClientBufferStream, passes_name_to_perf_report)
 {
     NiceMock<MockPerfReport> mock_perf_report;
