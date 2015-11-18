@@ -19,11 +19,11 @@
 #include "mir/logging/input_timestamp.h"
 #include <cstdio>
 
-std::string mir::logging::input_timestamp(std::chrono::nanoseconds when)
+using namespace std::chrono;
+std::string mir::logging::input_timestamp(nanoseconds when)
 {
     // Input events use CLOCK_MONOTONIC, and so we must...
-    auto age =
-        std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now().time_since_epoch() - when);
+    duration<double, std::milli> const age = steady_clock::now().time_since_epoch() - when;
 
     char str[64];
     snprintf(str, sizeof str, "%lld (%.6fms ago)",
