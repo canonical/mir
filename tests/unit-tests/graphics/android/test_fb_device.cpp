@@ -98,6 +98,8 @@ TEST_F(FBDevice, commits_frame)
         .WillOnce(Return(-1))
         .WillOnce(Return(0));
 
+    EXPECT_CALL(mock_context, swap_buffers())
+        .Times(0);
     mga::FBDevice fbdev(fb_hal_mock);
     mga::DisplayContents content{primary, list, geom::Displacement{}, mock_context, stub_compositor};
 
