@@ -65,6 +65,7 @@ public:
 
     NativeBufferBase* native_buffer_base() override;
 
+    void used_as_texture() override;
 private:
     gralloc_module_t const* hw_module;
 

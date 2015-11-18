@@ -113,10 +113,7 @@ void mga::Buffer::gl_bind_to_texture()
     }
 
     egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
-
-    //TODO: we should make use of the android egl fence extension here to update the fence.
-    //      if the extension is not available, we should pass out a token that the user
-    //      will have to keep until the completion of the gl draw
+    native_buffer->used_by_gpu();
 }
 
 std::shared_ptr<mg::NativeBuffer> mga::Buffer::native_buffer_handle() const
@@ -195,4 +192,8 @@ void mga::Buffer::read(std::function<void(unsigned char const*)> const& do_with_
 mg::NativeBufferBase* mga::Buffer::native_buffer_base()
 {
     return this;
+}
+
+void mga::Buffer::used_as_texture()
+{
 }

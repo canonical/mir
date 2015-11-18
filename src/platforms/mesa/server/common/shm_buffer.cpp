@@ -176,3 +176,7 @@ mg::NativeBufferBase* mgm::ShmBuffer::native_buffer_base()
 {
     return this;
 }
+
+void mgm::ShmBuffer::used_as_texture()
+{
+}

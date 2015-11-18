@@ -54,6 +54,7 @@ public:
     void write(unsigned char const* data, size_t size) override;
     void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
     NativeBufferBase* native_buffer_base() override;
+    void used_as_texture() override;
 
 private:
     ShmBuffer(ShmBuffer const&) = delete;

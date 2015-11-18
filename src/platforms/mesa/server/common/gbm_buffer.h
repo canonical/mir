@@ -73,6 +73,7 @@ public:
 
     NativeBufferBase* native_buffer_base() override;
 
+    void used_as_texture() override;
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;
     uint32_t bo_flags;

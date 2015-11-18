@@ -197,3 +197,7 @@ mg::NativeBufferBase* mgm::GBMBuffer::native_buffer_base()
 {
     return this;
 }
+
+void mgm::GBMBuffer::used_as_texture()
+{
+}
