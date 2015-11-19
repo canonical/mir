@@ -832,3 +832,18 @@ TEST_F(LibInputDeviceOnTouchpad, applies_touchpad_settings)
 
     touchpad.apply_settings(settings);
 }
+
+TEST_F(LibInputDevice, device_ptr_keeps_libinput_context_alive)
+{
+    InSequence seq;
+    EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device));
+    EXPECT_CALL(mock_libinput, libinput_device_unref(fake_device));
+    EXPECT_CALL(mock_libinput, libinput_unref(fake_input));
+
+    mock_libinput.setup_device(fake_input, fake_device, "/dev/test/path", "name", 1, 2);
+
+    auto device_ptr = mie::make_libinput_device(lib, "/dev/test/path");
+
+    lib.reset();
+    device_ptr.reset();
+}
