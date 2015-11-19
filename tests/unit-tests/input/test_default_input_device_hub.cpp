@@ -562,7 +562,7 @@ TEST_F(InputDeviceHubTest, input_sink_reduces_modifier_state_accross_devices)
     EXPECT_THAT(key_handle_1->id(), Ne(key_handle_2->id()));
 }
 
-TEST_F(InputDeviceHubTest, tracks_a_single_cursor_position_from_mutliple_pointing_devices)
+TEST_F(InputDeviceHubTest, tracks_a_single_cursor_position_from_multiple_pointing_devices)
 {
     using namespace ::testing;
 
@@ -593,5 +593,44 @@ TEST_F(InputDeviceHubTest, tracks_a_single_cursor_position_from_mutliple_pointin
     mouse_sink_1->handle_input(*motion_1);
     mouse_sink_2->handle_input(*motion_2);
     mouse_sink_1->handle_input(*motion_3);
+}
 
+TEST_F(InputDeviceHubTest, tracks_a_single_button_state_from_multiple_pointing_devices)
+{
+    using namespace ::testing;
+
+    int const x = 0, y = 0;
+    MirPointerButtons no_buttons = 0;
+    mi::InputSink* mouse_sink_1;
+    mi::EventBuilder* mouse_event_builder_1;
+    mi::InputSink* mouse_sink_2;
+    mi::EventBuilder* mouse_event_builder_2;
+
+    capture_input_sink(device, mouse_sink_1, mouse_event_builder_1);
+    capture_input_sink(another_device, mouse_sink_2, mouse_event_builder_2);
+
+    hub.add_device(mt::fake_shared(device));
+    hub.add_device(mt::fake_shared(another_device));
+
+    observer_loop.trigger_server_actions();
+
+    auto motion_1 =
+        mouse_event_builder_1->pointer_event(arbitrary_timestamp, mir_pointer_action_button_down, mir_pointer_button_primary, 0, 0, 0, 0);
+    auto motion_2 =
+        mouse_event_builder_2->pointer_event(arbitrary_timestamp, mir_pointer_action_button_down, mir_pointer_button_secondary, 0, 0, 0, 0);
+    auto motion_3 =
+        mouse_event_builder_1->pointer_event(arbitrary_timestamp, mir_pointer_action_button_up, no_buttons, 0, 0, 0, 0);
+    auto motion_4 =
+        mouse_event_builder_2->pointer_event(arbitrary_timestamp, mir_pointer_action_button_up, no_buttons, 0, 0, 0, 0);
+
+    InSequence seq;
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::ButtonsDown(x, y, mir_pointer_button_primary)));
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::ButtonsDown(x, y, mir_pointer_button_primary | mir_pointer_button_secondary)));
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::ButtonsUp(x, y, mir_pointer_button_secondary)));
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::ButtonsUp(x, y, no_buttons)));
+
+    mouse_sink_1->handle_input(*motion_1);
+    mouse_sink_2->handle_input(*motion_2);
+    mouse_sink_1->handle_input(*motion_3);
+    mouse_sink_1->handle_input(*motion_4);
 }
