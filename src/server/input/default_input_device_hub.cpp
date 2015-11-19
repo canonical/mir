@@ -17,7 +17,7 @@
  */
 
 #include "default_input_device_hub.h"
-#include "device_handle.h"
+#include "default_device.h"
 
 #include "seat.h"
 #include "mir/input/input_dispatcher.h"
@@ -27,6 +27,7 @@
 #include "mir/geometry/point.h"
 #include "mir/events/event_builders.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
+#include "mir/dispatch/action_queue.h"
 #include "mir/server_action_queue.h"
 #include "mir/cookie_factory.h"
 #define MIR_LOG_COMPONENT "Input"
@@ -52,11 +53,13 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     : input_dispatcher(input_dispatcher),
       input_dispatchable{input_multiplexer},
       observer_queue(observer_queue),
+      device_queue(std::make_shared<dispatch::ActionQueue>()),
       input_region(input_region),
       cookie_factory(cookie_factory),
       seat(touch_visualizer, cursor_listener, input_region),
       device_id_generator{0}
 {
+    input_dispatchable->add_watch(device_queue);
 }
 
 void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& device)
@@ -80,8 +83,7 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
         auto const& dev = devices.back();
         seat.add_device(dev->id());
 
-        auto handle = std::make_shared<DefaultDevice>(
-            dev->id(), device->get_device_info());
+        auto handle = std::make_shared<DefaultDevice>(dev->id(), device_queue, device);
 
         // pass input device handle to observer loop..
         observer_queue->enqueue(this,

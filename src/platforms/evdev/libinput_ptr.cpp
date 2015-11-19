@@ -23,14 +23,26 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <linux/input.h>
 
 namespace mie = mir::input::evdev;
 
 namespace
 {
+int use_monotonic_clock(int evdev)
+{
+    if (evdev != -1)
+    {
+        int const clockId = CLOCK_MONOTONIC;
+        // Switch each evdev 'client' to MONOTONIC
+        ioctl(evdev, EVIOCSCLOCKID, &clockId);
+    }
+    return evdev;
+}
+
 int fd_open(const char* path, int flags, void* /*userdata*/)
 {
-    return ::open(path, flags);
+    return use_monotonic_clock(::open(path, flags));
 }
 
 void fd_close(int fd, void* /*userdata*/)
