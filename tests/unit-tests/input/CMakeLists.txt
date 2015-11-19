@@ -9,6 +9,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_touchspot_controller.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_input_event.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_event_builders.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_default_device.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_default_input_device_hub.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_default_input_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_input_dispatcher.cpp
