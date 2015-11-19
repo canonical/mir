@@ -149,6 +149,11 @@ mgn::detail::DisplaySyncGroup::recommended_sleep() const
     return std::chrono::milliseconds::zero();
 }
 
+void mgn::detail::DisplaySyncGroup::resize(geometry::Rectangle const& area)
+{
+    output->resize(area);
+}
+
 namespace
 {
 auto copy_config(MirDisplayConfiguration* conf) -> std::shared_ptr<MirDisplayConfiguration>
@@ -234,6 +239,8 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
     }
 
     decltype(outputs) result;
+
+
     OverlappingOutputGrouping unique_outputs{configuration};
 
     unique_outputs.for_each_group(
@@ -244,28 +251,42 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
                     auto const& egl_config_format = output.current_format;
                     geometry::Rectangle const& area = output.extents();
 
-                    complete_display_initialization(egl_config_format);
+                    auto& display_buffer = result[output.id];
 
-                    std::ostringstream surface_title;
+                    {
+                        std::unique_lock<std::mutex> lock(outputs_mutex);
+                        display_buffer = outputs[output.id];
+                    }
+                                      
+                    if (display_buffer)
+                    {
+                        display_buffer->resize(area);
+                    }
+                    else
+                    {
+                        complete_display_initialization(egl_config_format);
 
-                    surface_title << "Mir nested display for output #" << output.id.as_value();
+                        std::ostringstream surface_title;
 
-                    auto const host_surface = connection->create_surface(
-                        area.size.width.as_int(),
-                        area.size.height.as_int(),
-                        egl_config_format,
-                        surface_title.str().c_str(),
-                        mir_buffer_usage_hardware,
-                        static_cast<uint32_t>(output.id.as_value()));
+                        surface_title << "Mir nested display for output #" << output.id.as_value();
 
-                    result[output.id] = std::make_shared<mgn::detail::DisplaySyncGroup>(
-                        std::make_shared<mgn::detail::DisplayBuffer>(
-                            egl_display,
-                            host_surface,
-                            area,
-                            dispatcher,
-                            cursor_listener,
-                            output.current_format));
+                        auto const host_surface = connection->create_surface(
+                            area.size.width.as_int(),
+                            area.size.height.as_int(),
+                            egl_config_format,
+                            surface_title.str().c_str(),
+                            mir_buffer_usage_hardware,
+                            static_cast<uint32_t>(output.id.as_value()));
+
+                        display_buffer = std::make_shared<mgn::detail::DisplaySyncGroup>(
+                            std::make_shared<mgn::detail::DisplayBuffer>(
+                                egl_display,
+                                host_surface,
+                                area,
+                                dispatcher,
+                                cursor_listener,
+                                output.current_format));
+                    }
                 });
         });
 

@@ -142,3 +142,8 @@ mg::NativeDisplayBuffer* mgn::detail::DisplayBuffer::native_display_buffer()
 {
     return this;
 }
+
+void mgn::detail::DisplayBuffer::resize(geometry::Rectangle const& area)
+{
+    this->area = area;
+}
