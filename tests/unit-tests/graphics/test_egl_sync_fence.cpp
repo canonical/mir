@@ -78,7 +78,7 @@ TEST_F(EglSyncFence, can_wait_for_fence)
 
     mg::EGLSyncFence fence(sync_extensions);
     fence.raise(); 
-    EXPECT_TRUE(fence.clear_or_timeout_after(ns)); 
+    EXPECT_TRUE(fence.wait_for(ns)); 
 }
 
 TEST_F(EglSyncFence, can_wait_for_fence_with_timeout)
@@ -99,7 +99,7 @@ TEST_F(EglSyncFence, can_wait_for_fence_with_timeout)
 
     mg::EGLSyncFence fence(sync_extensions);
     fence.raise(); 
-    EXPECT_FALSE(fence.clear_or_timeout_after(ns)); 
+    EXPECT_FALSE(fence.wait_for(ns)); 
 }
 
 TEST_F(EglSyncFence, can_clear_without_waiting)
