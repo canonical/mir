@@ -562,7 +562,7 @@ TEST_F(InputDeviceHubTest, input_sink_reduces_modifier_state_accross_devices)
     EXPECT_THAT(key_handle_1->id(), Ne(key_handle_2->id()));
 }
 
-TEST_F(InputDeviceHubTest, tracks_a_single_cursor_position_from_mutliple_pointing_devices)
+TEST_F(InputDeviceHubTest, tracks_a_single_cursor_position_from_multiple_pointing_devices)
 {
     using namespace ::testing;
 
