@@ -167,11 +167,8 @@ void mi::Seat::update_cursor(MirPointerEvent const* event)
         mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x),
         mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y),
     };
-    auto new_position = cursor_pos + movement;
-    input_region->confine(new_position);
-    movement = new_position - cursor_pos;
-
-    cursor_pos = new_position;
+    cursor_pos = cursor_pos + movement;
+    input_region->confine(cursor_pos);
 
     cursor_listener->cursor_moved_to(cursor_pos.x.as_float(), cursor_pos.y.as_float());
 }
