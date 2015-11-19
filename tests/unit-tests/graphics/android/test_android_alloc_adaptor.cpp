@@ -55,7 +55,7 @@ public:
         usage = mga::BufferUsage::use_hardware;
     }
 
-    std::shared_ptr<mga::DisplayComponentFactory> sync_factory;
+    std::shared_ptr<mga::CommandStreamSyncFactory> sync_factory;
     std::shared_ptr<mtd::MockAllocDevice> mock_alloc_device;
     std::shared_ptr<mga::AndroidAllocAdaptor> alloc_adaptor;
 

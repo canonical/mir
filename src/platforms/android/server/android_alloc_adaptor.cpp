@@ -52,10 +52,10 @@ private:
 
 mga::AndroidAllocAdaptor::AndroidAllocAdaptor(
     std::shared_ptr<struct alloc_device_t> const& alloc_device,
-    std::shared_ptr<DisplayComponentFactory> const& component_factory,
+    std::shared_ptr<CommandStreamSyncFactory> const& sync_factory,
     std::shared_ptr<DeviceQuirks> const& quirks) :
     alloc_dev(alloc_device),
-    sync_extensions(component_factory),
+    sync_factory(sync_factory),
     quirks(quirks)
 {
 }
@@ -99,9 +99,9 @@ std::shared_ptr<mg::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     anwb->format = format;
     anwb->usage = usage_flag;
 
-    if (sync_extensions)
+    if (sync_factory)
     return std::make_shared<mga::AndroidNativeBuffer>(anwb,
-        sync_extensions->create_command_stream_sync(),
+        sync_factory->create_command_stream_sync(),
         fence, mga::BufferAccess::read);
     else
     return std::make_shared<mga::AndroidNativeBuffer>(anwb,

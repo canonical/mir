@@ -33,12 +33,14 @@ namespace android
 class GraphicBufferAllocator;
 class FramebufferFactory;
 class DisplayComponentFactory;
+class CommandStreamSyncFactory;
 
 class Platform : public graphics::Platform
 {
 public:
     Platform(
         std::shared_ptr<DisplayComponentFactory> const& display_buffer_builder,
+        std::shared_ptr<CommandStreamSyncFactory> const& sync_factory,
         std::shared_ptr<DisplayReport> const& display_report,
         OverlayOptimization overlay_option,
         std::shared_ptr<DeviceQuirks> const& quirks);
@@ -55,6 +57,7 @@ private:
     std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator();
 
     std::shared_ptr<DisplayComponentFactory> const display_buffer_builder;
+    std::shared_ptr<CommandStreamSyncFactory> const sync_factory;
     std::shared_ptr<DisplayReport> const display_report;
     std::shared_ptr<PlatformIpcOperations> const ipc_operations;
     std::shared_ptr<DeviceQuirks> const quirks;

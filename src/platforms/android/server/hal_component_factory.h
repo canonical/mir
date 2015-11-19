@@ -39,7 +39,7 @@ class DeviceQuirks;
 
 //NOTE: this should be the only class that inspects the HWC version and assembles
 //the components accordingly
-class HalComponentFactory : public DisplayComponentFactory
+class HalComponentFactory : public DisplayComponentFactory, public CommandStreamSyncFactory
 {
 public:
     HalComponentFactory(

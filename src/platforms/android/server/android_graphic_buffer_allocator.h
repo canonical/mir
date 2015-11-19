@@ -39,13 +39,13 @@ namespace android
 
 class GraphicAllocAdaptor;
 class DeviceQuirks;
-class DisplayComponentFactory;
+class CommandStreamSyncFactory;
 
 class AndroidGraphicBufferAllocator: public GraphicBufferAllocator, public graphics::GraphicBufferAllocator
 {
 public:
     AndroidGraphicBufferAllocator(
-        std::shared_ptr<DisplayComponentFactory> const& extensions,
+        std::shared_ptr<CommandStreamSyncFactory> const& cmdstream_sync_factory,
         std::shared_ptr<DeviceQuirks> const& quirks);
 
     std::shared_ptr<graphics::Buffer> alloc_buffer(
@@ -64,7 +64,7 @@ private:
     const hw_module_t    *hw_module;
     std::shared_ptr<GraphicAllocAdaptor> alloc_device;
     std::shared_ptr<EGLExtensions> const egl_extensions;
-    std::shared_ptr<DisplayComponentFactory> const extensions;
+    std::shared_ptr<CommandStreamSyncFactory> const cmdstream_sync_factory;
 };
 
 }

@@ -83,7 +83,7 @@ std::shared_ptr<mg::NativeBuffer> create_native_buffer(
     anwb->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     anwb->handle = handle.get();
 
-    auto sync = std::make_shared<mg::NullCommandSync>();
+    auto sync = std::make_shared<mg::NullCommandSync>(); //no need for eglsync client side
     return std::make_shared<mga::AndroidNativeBuffer>(anwb, sync, fence, mga::BufferAccess::read);
 }
 }

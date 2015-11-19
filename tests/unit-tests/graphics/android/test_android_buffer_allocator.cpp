@@ -24,6 +24,7 @@
 #include "mir/graphics/android/native_buffer.h"
 
 #include "mir/test/doubles/stub_display_builder.h"
+#include "mir/test/doubles/stub_cmdstream_sync_factory.h"
 #include "mir/test/doubles/mock_egl.h"
 
 #include <hardware/gralloc.h>
@@ -45,7 +46,7 @@ struct AndroidGraphicBufferAllocatorTest : public ::testing::Test
     testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
     testing::NiceMock<mtd::MockEGL> mock_egl;
     mga::AndroidGraphicBufferAllocator allocator{
-        std::make_shared<mtd::StubDisplayBuilder>(),
+        std::make_shared<mtd::StubCmdStreamSyncFactory>(),
         std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{})};
 };
 
@@ -57,7 +58,7 @@ TEST_F(AndroidGraphicBufferAllocatorTest, allocator_accesses_gralloc_module)
         .Times(1);
 
     auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
-    mga::AndroidGraphicBufferAllocator allocator{std::make_shared<mtd::StubDisplayBuilder>(), quirks};
+    mga::AndroidGraphicBufferAllocator allocator{std::make_shared<mtd::StubCmdStreamSyncFactory>(), quirks};
 }
 
 TEST_F(AndroidGraphicBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
