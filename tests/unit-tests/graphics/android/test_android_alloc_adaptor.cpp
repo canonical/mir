@@ -48,14 +48,14 @@ public:
         mock_alloc_device = std::make_shared<NiceMock<mtd::MockAllocDevice>>();
 
         auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
-        alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device, extensions, quirks);
+        alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device, sync_factory, quirks);
 
         pf = mir_pixel_format_abgr_8888;
         size = geom::Size{300, 200};
         usage = mga::BufferUsage::use_hardware;
     }
 
-    std::shared_ptr<mg::EGLSyncExtensions> extensions;
+    std::shared_ptr<mga::DisplayComponentFactory> sync_factory;
     std::shared_ptr<mtd::MockAllocDevice> mock_alloc_device;
     std::shared_ptr<mga::AndroidAllocAdaptor> alloc_adaptor;
 

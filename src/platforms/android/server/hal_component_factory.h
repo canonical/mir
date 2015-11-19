@@ -48,6 +48,7 @@ public:
         std::shared_ptr<HwcReport> const& hwc_report,
         std::shared_ptr<DeviceQuirks> const& quirks);
 
+    std::unique_ptr<CommandStreamSync> create_command_stream_sync() override;
     std::unique_ptr<FramebufferBundle> create_framebuffers(DisplayConfigurationOutput const&) override;
     std::unique_ptr<DisplayDevice> create_display_device() override;
     std::unique_ptr<HwcConfiguration> create_hwc_configuration() override;

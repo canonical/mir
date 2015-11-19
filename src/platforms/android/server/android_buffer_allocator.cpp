@@ -26,6 +26,7 @@
 #include "android_graphic_buffer_allocator.h"
 #include "android_alloc_adaptor.h"
 #include "buffer.h"
+#include "display_component_factory.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -47,8 +48,11 @@ struct AllocDevDeleter
 };
 }
 
-mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(std::shared_ptr<DeviceQuirks> const& quirks)
-    : egl_extensions(std::make_shared<mg::EGLExtensions>())
+mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(
+    std::shared_ptr<DisplayComponentFactory> const& extensions,
+    std::shared_ptr<DeviceQuirks> const& quirks)
+    : egl_extensions(std::make_shared<mg::EGLExtensions>()),
+    extensions(extensions)
 {
     int err;
 
@@ -68,7 +72,7 @@ mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(std::shared_pt
     AllocDevDeleter del;
     std::shared_ptr<struct alloc_device_t> alloc_dev_ptr(alloc_dev, del);
     alloc_device = std::make_shared<mga::AndroidAllocAdaptor>(
-        alloc_dev_ptr, std::make_shared<mg::EGLSyncExtensions>(), quirks);
+        alloc_dev_ptr, extensions, quirks);
 }
 
 std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
@@ -89,9 +93,11 @@ std::unique_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::reconstruct_from
 
     //TODO: we should have an android platform function for accessing the fence.
 
+//    auto b = extensions->create_command_stream_sync();
     auto native_handle = std::make_shared<mga::AndroidNativeBuffer>(
         native_window_buffer,
-        std::make_shared<mg::EGLSyncFence>(std::make_shared<mg::EGLSyncExtensions>()),
+        nullptr,
+//        std::shared_ptr<mg::CommandStreamSync>(std::move(b)),
         std::make_shared<mga::SyncFence>(std::make_shared<mga::RealSyncFileOps>(), mir::Fd()),
         mga::BufferAccess::read);
     return std::make_unique<Buffer>(

@@ -28,17 +28,17 @@ namespace mir
 {
 namespace graphics
 {
-class EGLSyncExtensions;
 namespace android
 {
 class DeviceQuirks;
+class DisplayComponentFactory;
 
 class AndroidAllocAdaptor : public GraphicAllocAdaptor
 {
 public:
     explicit AndroidAllocAdaptor(
         std::shared_ptr<struct alloc_device_t> const& alloc_device,
-        std::shared_ptr<EGLSyncExtensions> const& extensions,
+        std::shared_ptr<DisplayComponentFactory> const& extensions,
         std::shared_ptr<DeviceQuirks> const& quirks);
     std::shared_ptr<NativeBuffer> alloc_buffer(geometry::Size,
             MirPixelFormat, BufferUsage usage);
@@ -47,7 +47,7 @@ public:
 
 private:
     std::shared_ptr<struct alloc_device_t> alloc_dev;
-    std::shared_ptr<EGLSyncExtensions> const sync_extensions;
+    std::shared_ptr<DisplayComponentFactory> const sync_extensions;
     std::shared_ptr<DeviceQuirks> const quirks;
     int convert_to_android_usage(BufferUsage usage);
 };

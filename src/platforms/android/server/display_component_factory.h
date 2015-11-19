@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_DISPLAY_COMPONENT_FACTORY_H_
 #define MIR_GRAPHICS_ANDROID_DISPLAY_COMPONENT_FACTORY_H_
 
+#include "mir/graphics/egl_sync_fence.h"
 #include "display_device.h"
 #include "framebuffer_bundle.h"
 #include <memory>
@@ -28,6 +29,7 @@ namespace mir
 namespace graphics
 {
 class DisplayConfigurationOutput;
+class CommandStreamSync;
 namespace android
 {
 class HwcConfiguration;
@@ -42,6 +44,7 @@ public:
     virtual std::unique_ptr<DisplayDevice> create_display_device() = 0;
     virtual std::unique_ptr<HwcConfiguration> create_hwc_configuration() = 0;
     virtual std::unique_ptr<LayerList> create_layer_list() = 0;
+    virtual std::unique_ptr<CommandStreamSync> create_command_stream_sync() = 0;
 
 protected:
     DisplayComponentFactory() = default;

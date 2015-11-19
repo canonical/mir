@@ -97,7 +97,7 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_al
 {
     if (quirks->gralloc_reopenable_after_close())
     {
-        return mir::make_module_ptr<mga::AndroidGraphicBufferAllocator>(quirks);
+        return mir::make_module_ptr<mga::AndroidGraphicBufferAllocator>(display_buffer_builder, quirks);
     }
     else
     {
@@ -107,7 +107,7 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_al
 
 
         if (!preserved_allocator)
-            preserved_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(quirks);
+            preserved_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(display_buffer_builder, quirks);
 
         struct WrappingGraphicsBufferAllocator : mg::GraphicBufferAllocator
         {
@@ -131,7 +131,7 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_al
 
 std::shared_ptr<mga::GraphicBufferAllocator> mga::Platform::create_mga_buffer_allocator()
 {
-    return std::make_shared<mga::AndroidGraphicBufferAllocator>(quirks);
+    return std::make_shared<mga::AndroidGraphicBufferAllocator>(display_buffer_builder, quirks);
 }
 
 mir::UniqueModulePtr<mg::Display> mga::Platform::create_display(
@@ -163,7 +163,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     auto overlay_option = should_use_overlay_optimization(*options);
     hwc_report->report_overlay_optimization(overlay_option);
     auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
-    auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(quirks);
+    auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(nullptr, quirks);
     auto component_factory = std::make_shared<mga::HalComponentFactory>(
         fb_allocator, display_resource_factory, hwc_report, quirks);
     return mir::make_module_ptr<mga::Platform>(component_factory, display_report, overlay_option, quirks);

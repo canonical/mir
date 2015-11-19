@@ -65,6 +65,15 @@ mga::HalComponentFactory::HalComponentFactory(
     }
 }
 
+std::unique_ptr<mg::CommandStreamSync> mga::HalComponentFactory::create_command_stream_sync()
+{
+    auto sync_extensions = std::make_shared<mg::EGLSyncExtensions>();
+    if (sync_extensions->eglCreateSyncKHR)
+        return std::make_unique<EGLSyncFence>(sync_extensions);
+    else
+        return std::make_unique<NullCommandSync>();
+}
+
 std::unique_ptr<mga::FramebufferBundle> mga::HalComponentFactory::create_framebuffers(mg::DisplayConfigurationOutput const& config)
 {
     return std::unique_ptr<mga::FramebufferBundle>(new mga::Framebuffers(
