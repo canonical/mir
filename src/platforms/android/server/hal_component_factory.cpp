@@ -67,11 +67,17 @@ mga::HalComponentFactory::HalComponentFactory(
 
 std::unique_ptr<mg::CommandStreamSync> mga::HalComponentFactory::create_command_stream_sync()
 {
-    auto sync_extensions = std::make_shared<mg::EGLSyncExtensions>();
-    if ((sync_extensions->eglCreateSyncKHR) && (hwc_version != mga::HwcVersion::hwc10))
-        return std::make_unique<EGLSyncFence>(sync_extensions);
-    else
+    if (hwc_version == mga::HwcVersion::hwc10)
         return std::make_unique<NullCommandSync>();
+
+    try
+    {
+        return std::make_unique<EGLSyncFence>(std::make_shared<mg::EGLSyncExtensions>());
+    }
+    catch (std::runtime_error&)
+    {
+        return std::make_unique<NullCommandSync>();
+    }
 }
 
 std::unique_ptr<mga::FramebufferBundle> mga::HalComponentFactory::create_framebuffers(mg::DisplayConfigurationOutput const& config)
