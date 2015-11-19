@@ -472,9 +472,9 @@ TEST_F(LibInputDevice, input_info_combines_capabilities)
     dev.add_device_of_group(second_dev, mie::make_libinput_device(lib.get(), second_dev));
     auto info = dev.get_device_info();
 
-    EXPECT_THAT(info.capabilities, Eq(mi::DeviceCapability::touchpad|
-                                      mi::DeviceCapability::pointer|
-                                      mi::DeviceCapability::keyboard|
+    EXPECT_THAT(info.capabilities, Eq(mi::DeviceCapability::touchpad |
+                                      mi::DeviceCapability::pointer |
+                                      mi::DeviceCapability::keyboard |
                                       mi::DeviceCapability::alpha_numeric));
 }
 
