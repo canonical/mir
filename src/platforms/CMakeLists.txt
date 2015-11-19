@@ -51,7 +51,6 @@ set(server_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/common/server/symbols.map)
 set(client_common_include_dirs
   ${PROJECT_SOURCE_DIR}/include/client
   ${CMAKE_CURRENT_SOURCE_DIR}/common/client
-#  ${PROJECT_SOURCE_DIR}/src/include/platform
 )
 
 # TODO client platform implementations shouldn't depend on private APIs

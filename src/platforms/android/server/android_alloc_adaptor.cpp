@@ -22,7 +22,7 @@
 #include "mir/graphics/android/android_format_conversion-inl.h"
 #include "mir/graphics/egl_sync_fence.h"
 #include "android_alloc_adaptor.h"
-#include "display_component_factory.h"
+#include "cmdstream_sync_factory.h"
 #include "device_quirks.h"
 
 #include <boost/throw_exception.hpp>
@@ -99,13 +99,8 @@ std::shared_ptr<mg::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     anwb->format = format;
     anwb->usage = usage_flag;
 
-    if (sync_factory)
     return std::make_shared<mga::AndroidNativeBuffer>(anwb,
         sync_factory->create_command_stream_sync(),
-        fence, mga::BufferAccess::read);
-    else
-    return std::make_shared<mga::AndroidNativeBuffer>(anwb,
-        nullptr,
         fence, mga::BufferAccess::read);
 }
 

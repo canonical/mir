@@ -26,7 +26,7 @@
 #include "android_graphic_buffer_allocator.h"
 #include "android_alloc_adaptor.h"
 #include "buffer.h"
-#include "display_component_factory.h"
+#include "cmdstream_sync_factory.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -67,7 +67,6 @@ mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(
 
     /* note for future use: at this point, the hardware module should be filled with vendor information
        that we can determine different courses of action based upon */
-
 
     AllocDevDeleter del;
     std::shared_ptr<struct alloc_device_t> alloc_dev_ptr(alloc_dev, del);

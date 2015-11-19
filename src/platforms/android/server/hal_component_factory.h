@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HAL_COMPONENT_FACTORY_H_
 #define MIR_GRAPHICS_ANDROID_HAL_COMPONENT_FACTORY_H_
 
+#include "cmdstream_sync_factory.h"
 #include "display_component_factory.h"
 #include "display_resource_factory.h"
 

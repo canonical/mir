@@ -34,22 +34,6 @@ namespace android
 {
 class HwcConfiguration;
 
-class CommandStreamSyncFactory
-{
-public:
-    virtual ~CommandStreamSyncFactory() = default;
-    virtual std::unique_ptr<CommandStreamSync> create_command_stream_sync() = 0;
-protected:
-    CommandStreamSyncFactory() = default;
-    CommandStreamSyncFactory(CommandStreamSyncFactory const&) = delete;
-    CommandStreamSyncFactory& operator=(CommandStreamSyncFactory const&) = delete;
-};
-
-class EGLSyncFactory : public CommandStreamSyncFactory
-{
-    std::unique_ptr<CommandStreamSync> create_command_stream_sync() override;
-};
-
 //TODO: this name needs improvement.
 class DisplayComponentFactory
 {
