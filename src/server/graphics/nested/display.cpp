@@ -238,8 +238,6 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
     }
 
     decltype(outputs) result;
-
-
     OverlappingOutputGrouping unique_outputs{configuration};
 
     unique_outputs.for_each_group(

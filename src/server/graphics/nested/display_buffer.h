@@ -73,7 +73,7 @@ private:
     std::shared_ptr<HostSurface> const host_surface;
     EGLConfig const egl_config;
     EGLContextStore const egl_context;
-    geometry::Rectangle area;
+    geometry::Rectangle const area;
     std::shared_ptr<input::InputDispatcher> const dispatcher;
     std::shared_ptr<input::CursorListener> const cursor_listener;
     EGLSurfaceHandle const egl_surface;
