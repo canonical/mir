@@ -8,3 +8,5 @@ add_library(mirclientrpc-static STATIC
   mir_display_server.cpp
   mir_display_server_debug.cpp
 )
+
+add_dependencies(mirclientrpc-static mirprotobuf)
