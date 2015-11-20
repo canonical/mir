@@ -149,9 +149,9 @@ mgn::detail::DisplaySyncGroup::recommended_sleep() const
     return std::chrono::milliseconds::zero();
 }
 
-void mgn::detail::DisplaySyncGroup::resize(geometry::Rectangle const& area)
+geom::Rectangle mgn::detail::DisplaySyncGroup::view_area() const
 {
-    output->resize(area);
+    return output->view_area();
 }
 
 namespace
@@ -259,9 +259,11 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
                                       
                     if (display_buffer)
                     {
-                        display_buffer->resize(area);
+                        if (display_buffer->view_area() != area)
+                            display_buffer.reset();
                     }
-                    else
+
+                    if (!display_buffer)
                     {
                         complete_display_initialization(egl_config_format);
 

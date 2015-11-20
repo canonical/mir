@@ -142,9 +142,3 @@ mg::NativeDisplayBuffer* mgn::detail::DisplayBuffer::native_display_buffer()
 {
     return this;
 }
-
-void mgn::detail::DisplayBuffer::resize(geometry::Rectangle const& area)
-{
-    // As the underlying surface is fullscreen it should be resized by the host
-    this->area = area;
-}

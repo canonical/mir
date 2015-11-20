@@ -101,7 +101,7 @@ public:
     void post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
-    void resize(geometry::Rectangle const& area);
+    geometry::Rectangle view_area() const;
 private:
     std::shared_ptr<detail::DisplayBuffer> const output;
 };

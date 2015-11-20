@@ -66,8 +66,6 @@ public:
 
     NativeDisplayBuffer* native_display_buffer() override;
 
-    void resize(geometry::Rectangle const& area);
-
     DisplayBuffer(DisplayBuffer const&) = delete;
     DisplayBuffer operator=(DisplayBuffer const&) = delete;
 private:
