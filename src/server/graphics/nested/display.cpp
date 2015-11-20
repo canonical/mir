@@ -225,10 +225,9 @@ void mgn::Display::configure(mg::DisplayConfiguration const& configuration)
 {
     std::lock_guard<std::mutex> lock(configuration_mutex);
     if (*current_configuration != configuration)
-    {
         apply_to_connection(configuration);
-        create_surfaces(configuration);
-    }
+
+    create_surfaces(configuration);
 }
 
 void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration)
