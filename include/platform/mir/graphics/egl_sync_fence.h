@@ -39,7 +39,7 @@ public:
     //wait for fence.
     // \ param [in] ns  The amount of time to wait for the fence to become signalled
     // \ returns        true if the fence was signalled, false if timeout
-    virtual bool clear_or_timeout_after(std::chrono::nanoseconds ns) = 0;
+    virtual bool wait_for(std::chrono::nanoseconds ns) = 0;
 
     virtual ~CommandStreamSync() = default;
     CommandStreamSync() = default; 
@@ -51,7 +51,7 @@ class NullCommandSync : public CommandStreamSync
 {
     void raise() override;
     void reset() override;
-    bool clear_or_timeout_after(std::chrono::nanoseconds ns) override;
+    bool wait_for(std::chrono::nanoseconds ns) override;
 };
 
 class EGLSyncFence : public CommandStreamSync
@@ -62,10 +62,10 @@ public:
 
     void raise() override;
     void reset() override;
-    bool clear_or_timeout_after(std::chrono::nanoseconds ns) override;
+    bool wait_for(std::chrono::nanoseconds ns) override;
 private:
     void reset(std::unique_lock<std::mutex> const&);
-    bool clear_or_timeout_after(std::unique_lock<std::mutex> const&, std::chrono::nanoseconds ns);
+    bool wait_for(std::unique_lock<std::mutex> const&, std::chrono::nanoseconds ns);
 
     std::shared_ptr<EGLSyncExtensions> const egl;
     std::chrono::nanoseconds const default_timeout{

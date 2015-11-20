@@ -29,7 +29,7 @@ void mg::NullCommandSync::reset()
 {
 }
 
-bool mg::NullCommandSync::clear_or_timeout_after(std::chrono::nanoseconds)
+bool mg::NullCommandSync::wait_for(std::chrono::nanoseconds)
 {
     return true;
 }
@@ -49,7 +49,7 @@ mg::EGLSyncFence::~EGLSyncFence()
 void mg::EGLSyncFence::raise()
 {
     std::unique_lock<std::mutex> lk(mutex);
-    clear_or_timeout_after(lk, default_timeout);
+    wait_for(lk, default_timeout);
 
     fence_display = eglGetCurrentDisplay();
     sync_point = egl->eglCreateSyncKHR(fence_display, EGL_SYNC_FENCE_KHR, NULL);
@@ -73,13 +73,13 @@ void mg::EGLSyncFence::reset(std::unique_lock<std::mutex> const&)
     }
 }
 
-bool mg::EGLSyncFence::clear_or_timeout_after(std::chrono::nanoseconds ns)
+bool mg::EGLSyncFence::wait_for(std::chrono::nanoseconds ns)
 {
     std::unique_lock<std::mutex> lk(mutex);
-    return clear_or_timeout_after(lk, ns);
+    return wait_for(lk, ns);
 }
 
-bool mg::EGLSyncFence::clear_or_timeout_after(
+bool mg::EGLSyncFence::wait_for(
     std::unique_lock<std::mutex> const& lk,
     std::chrono::nanoseconds ns)
 {

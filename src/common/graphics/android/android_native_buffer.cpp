@@ -70,5 +70,5 @@ void mga::AndroidNativeBuffer::used_by_gpu()
 void mga::AndroidNativeBuffer::ensure_not_used_by_gpu()
 {
     using namespace std::chrono;
-    cmdstream_sync->clear_or_timeout_after(duration_cast<nanoseconds>(seconds(2)));
+    cmdstream_sync->wait_for(duration_cast<nanoseconds>(seconds(2)));
 }
