@@ -149,7 +149,7 @@ void mie::Platform::device_added(mu::Device const& dev)
     if (end(devices) != find_device(dev.devnode()))
         return;
 
-    auto device_ptr = make_libinput_device(lib.get(), dev.devnode());
+    auto device_ptr = make_libinput_device(lib, dev.devnode());
 
     // libinput might refuse to open certain devices nodes like /dev/input/mice
     // or ignore devices with odd evdev bits/capabilities set

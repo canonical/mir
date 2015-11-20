@@ -49,7 +49,11 @@ void mrl::ShellReport::created_surface(
     scene::Session const& session,
     frontend::SurfaceId surface_id)
 {
-    log->log(Severity::informational, "session \"" + session.name() + "\" created surface: \"" + session.surface(surface_id)->name() + "\"", component);
+    auto const surface = session.surface(surface_id);
+    std::ostringstream out;
+    out << "session \"" << session.name() << "\" created surface: \"" << surface->name() << "\" @";
+    out << surface->input_bounds();
+    log->log(Severity::informational, out.str(), component);
 }
 
 void mrl::ShellReport::update_surface(
@@ -57,7 +61,10 @@ void mrl::ShellReport::update_surface(
     scene::Surface const& surface,
     shell::SurfaceSpecification const& /*modifications*/)
 {
-    log->log(Severity::informational, "session \"" + session.name() + "\" update surface: \"" + surface.name() + "\"", component);
+    std::ostringstream out;
+    out << "session \"" << session.name() << "\" update surface: \"" << surface.name() << "\" @";
+    out << surface.input_bounds();
+    log->log(Severity::informational, out.str(), component);
 }
 
 void mrl::ShellReport::update_surface(
@@ -65,7 +72,10 @@ void mrl::ShellReport::update_surface(
     scene::Surface const& surface,
     MirSurfaceAttrib /*attrib*/, int /*value*/)
 {
-    log->log(Severity::informational, "session \"" + session.name() + "\" update surface: \"" + surface.name() + "\"", component);
+    std::ostringstream out;
+    out << "session \"" << session.name() << "\" update surface: \"" << surface.name() << "\" @";
+    out << surface.input_bounds();
+    log->log(Severity::informational, out.str(), component);
 }
 
 void mrl::ShellReport::destroying_surface(
