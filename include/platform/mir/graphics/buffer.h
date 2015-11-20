@@ -59,8 +59,6 @@ public:
 
     virtual NativeBufferBase* native_buffer_base() = 0;
 
-    //must be called if using this buffer after initial texture upload
-    virtual void used_as_texture() = 0; 
 protected:
     Buffer() = default;
 };

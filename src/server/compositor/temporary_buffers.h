@@ -43,7 +43,6 @@ public:
     void write (unsigned char const* data, size_t size) override;
     void read (std::function<void(unsigned char const*)> const& do_with_pixels) override;
     graphics::NativeBufferBase* native_buffer_base() override;
-    void used_as_texture() override;
 
 protected:
     explicit TemporaryBuffer(std::shared_ptr<mg::Buffer> const& real_buffer);

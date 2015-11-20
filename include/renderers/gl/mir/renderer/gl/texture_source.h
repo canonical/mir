@@ -32,6 +32,8 @@ public:
     virtual ~TextureSource() = default;
 
     virtual void gl_bind_to_texture() = 0;
+    //must be called if using this buffer after initial texture upload
+    virtual void used_as_texture() = 0; 
 
 protected:
     TextureSource() = default;

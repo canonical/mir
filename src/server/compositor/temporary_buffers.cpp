@@ -95,8 +95,3 @@ mg::NativeBufferBase* mc::TemporaryBuffer::native_buffer_base()
 {
     return buffer->native_buffer_base();
 }
-
-void mc::TemporaryBuffer::used_as_texture()
-{
-    buffer->used_as_texture();
-}
