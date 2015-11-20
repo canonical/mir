@@ -111,7 +111,7 @@ struct MockDisplayConfigurationReport : public mg::DisplayConfigurationReport
 std::vector<geom::Rectangle> const display_geometry
 {
     {{  0, 0}, { 640,  480}},
-    {{480, 0}, {1920, 1080}}
+    {{640, 0}, {1920, 1080}}
 };
 
 std::chrono::seconds const timeout{10};
