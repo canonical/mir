@@ -284,24 +284,36 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         vault.wire_transfer_inbound(buffer);
     }
 
+    void advance_current_buffer(std::unique_lock<std::mutex>& lk)
+    {
+        lk.unlock();
+        auto buffer = vault.withdraw().get();
+        lk.lock();
+        current = buffer;
+    }
+
     std::shared_ptr<mir::client::ClientBuffer> current_buffer() override
     {
+        std::unique_lock<std::mutex> lk(mutex);
         if (!current.buffer)
-            current = vault.withdraw().get();
+            advance_current_buffer(lk);
         return current.buffer;
     }
 
     uint32_t current_buffer_id() override
     {
+        std::unique_lock<std::mutex> lk(mutex);
         if (!current.buffer)
-            current = vault.withdraw().get();
+            advance_current_buffer(lk);
         return current.id;
     }
 
     MirWaitHandle* submit(std::function<void()> const& done, geom::Size, MirPixelFormat, int) override
     {
+        std::unique_lock<std::mutex> lk(mutex);
         if (!current.buffer)
-            current = vault.withdraw().get();
+            advance_current_buffer(lk);
+        lk.unlock();
 
         vault.deposit(current.buffer);
 
@@ -309,7 +321,8 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         vault.wire_transfer_outbound(current.buffer);
         next_buffer_wait_handle.result_received();
 
-        current = vault.withdraw().get();
+        lk.lock();
+        advance_current_buffer(lk);
         done();
         return &next_buffer_wait_handle;
     }
@@ -328,6 +341,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     }
 
     mcl::BufferVault vault;
+    std::mutex mutex;
     mcl::BufferInfo current{nullptr, 0};
     MirWaitHandle next_buffer_wait_handle;
 };
@@ -440,7 +454,7 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
     process_buffer(buffer, lock);
 }
 
-void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex> const&)
+void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>& lk)
 {
     if (buffer.has_width() && buffer.has_height())
     {
@@ -455,7 +469,8 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
     try
     {
         auto pixel_format = static_cast<MirPixelFormat>(protobuf_bs->pixel_format());
-        buffer_depository->deposit(buffer, cached_buffer_size, pixel_format);
+        lk.unlock();
+        buffer_depository->deposit(buffer, geom::Size{buffer.width(), buffer.height()}, pixel_format);
         perf_report->begin_frame(buffer.buffer_id());
     }
     catch (const std::runtime_error& err)
@@ -500,7 +515,6 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 
 std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
     return buffer_depository->current_buffer();
 }
 
@@ -512,14 +526,17 @@ EGLNativeWindowType mcl::BufferStream::egl_native_window()
 
 void mcl::BufferStream::release_cpu_region()
 {
+    std::unique_lock<decltype(mutex)> lock(mutex);
     secured_region.reset();
 }
 
 std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 {
+    auto buffer = buffer_depository->current_buffer();
     std::unique_lock<decltype(mutex)> lock(mutex);
 
-    secured_region = buffer_depository->current_buffer()->secure_for_cpu_write();
+    if (!secured_region)
+        secured_region = buffer->secure_for_cpu_write();
     return secured_region;
 }
 

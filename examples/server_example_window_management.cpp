@@ -101,7 +101,8 @@ public:
     {
     }
 
-    void handle_delete_surface(std::shared_ptr<ms::Session> const& /*session*/, std::weak_ptr<ms::Surface> const& /*surface*/) {}
+    void handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
+        { session->destroy_surface(surface); }
 
     int handle_set_state(std::shared_ptr<ms::Surface> const& /*surface*/, MirSurfaceState value)
         { return value; }
@@ -111,6 +112,12 @@ public:
     bool handle_touch_event(MirTouchEvent const* /*event*/) { return false; }
 
     bool handle_pointer_event(MirPointerEvent const* /*event*/) { return false; }
+
+    void handle_raise_surface(
+        std::shared_ptr<ms::Session> const& /*session*/,
+        std::shared_ptr<ms::Surface> const& /*surface*/)
+    {
+    }
 
     void generate_decorations_for(
         std::shared_ptr<ms::Session> const&,

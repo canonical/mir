@@ -52,7 +52,10 @@ target_link_libraries(
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
 
-set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
+    ${CMAKE_CURRENT_BINARY_DIR}/symbols.map
+    )
+set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
 set_target_properties(
   mirplatformgraphicsmesakms PROPERTIES

@@ -22,9 +22,9 @@
 
 #include <boost/program_options/options_description.hpp>
 #include <EGL/egl.h>
-#include <memory>
 
 #include "mir/module_properties.h"
+#include "mir/module_deleter.h"
 
 namespace mir
 {
@@ -75,12 +75,12 @@ public:
     /**
      * Creates the buffer allocator subsystem.
      */
-    virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() = 0;
-    
+    virtual UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() = 0;
+
     /**
      * Creates the display subsystem.
      */
-    virtual std::shared_ptr<Display> create_display(
+    virtual UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) = 0;
 
@@ -88,7 +88,7 @@ public:
      * Creates an object capable of doing platform specific processing of buffers
      * before they are sent or after they are recieved accross IPC
      */
-    virtual std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const = 0;
+    virtual UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const = 0;
 
     virtual EGLNativeDisplayType egl_native_display() const = 0;
 };
@@ -114,12 +114,12 @@ enum PlatformPriority : uint32_t
                          */
 };
 
-typedef std::shared_ptr<mir::graphics::Platform>(*CreateHostPlatform)(
+typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateHostPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::graphics::DisplayReport> const& report);
 
-typedef std::shared_ptr<mir::graphics::Platform>(*CreateGuestPlatform)(
+typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateGuestPlatform)(
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
     std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
 
@@ -148,7 +148,7 @@ extern "C"
  *
  * \ingroup platform_enablement
  */
-std::shared_ptr<mir::graphics::Platform> create_host_platform(
+mir::UniqueModulePtr<mir::graphics::Platform> create_host_platform(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::graphics::DisplayReport> const& report);
@@ -164,7 +164,7 @@ std::shared_ptr<mir::graphics::Platform> create_host_platform(
  *
  * \ingroup platform_enablement
  */
-std::shared_ptr<mir::graphics::Platform> create_guest_platform(
+mir::UniqueModulePtr<mir::graphics::Platform> create_guest_platform(
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
     std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
 

@@ -48,7 +48,7 @@ void ms::OutputPropertiesCache::update_from(mg::DisplayConfiguration const &conf
     auto new_properties = std::make_shared<std::vector<OutputProperties>>();
 
     config.for_each_output(
-        [&new_properties](auto output)
+        [&new_properties](mg::DisplayConfigurationOutput const& output)
         {
             if (output.current_mode_index < output.modes.size())
             {
@@ -57,7 +57,8 @@ void ms::OutputPropertiesCache::update_from(mg::DisplayConfiguration const &conf
                     output.extents(),
                     calculate_dpi(mode.size, output.physical_size_mm),
                     output.scale,
-                    output.form_factor});
+                    output.form_factor,
+                    output.id});
             }
         });
 

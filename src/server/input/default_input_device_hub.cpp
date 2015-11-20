@@ -17,14 +17,17 @@
  */
 
 #include "default_input_device_hub.h"
-#include "device_handle.h"
+#include "default_device.h"
 
+#include "seat.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_observer.h"
-#include "mir/input/cursor_listener.h"
 #include "mir/input/input_region.h"
+#include "mir/geometry/point.h"
+#include "mir/events/event_builders.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
+#include "mir/dispatch/action_queue.h"
 #include "mir/server_action_queue.h"
 #include "mir/cookie_factory.h"
 #define MIR_LOG_COMPONENT "Input"
@@ -36,6 +39,8 @@
 #include <atomic>
 
 namespace mi = mir::input;
+namespace geom = mir::geometry;
+namespace mev = mir::events;
 
 mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mi::InputDispatcher> const& input_dispatcher,
@@ -45,10 +50,16 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<CursorListener> const& cursor_listener,
     std::shared_ptr<InputRegion> const& input_region,
     std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory)
-    : input_dispatcher(input_dispatcher), input_dispatchable{input_multiplexer}, observer_queue(observer_queue),
-      touch_visualizer(touch_visualizer), cursor_listener(cursor_listener), input_region(input_region),
-      cookie_factory(cookie_factory), device_id_generator{0}
+    : input_dispatcher(input_dispatcher),
+      input_dispatchable{input_multiplexer},
+      observer_queue(observer_queue),
+      device_queue(std::make_shared<dispatch::ActionQueue>()),
+      input_region(input_region),
+      cookie_factory(cookie_factory),
+      seat(touch_visualizer, cursor_listener),
+      device_id_generator{0}
 {
+    input_dispatchable->add_watch(device_queue);
 }
 
 void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& device)
@@ -67,12 +78,12 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
     {
         // send input device info to observer loop..
         devices.push_back(std::make_unique<RegisteredDevice>(
-            device, create_new_device_id(), input_dispatcher, input_dispatchable, cookie_factory, this));
+            device, create_new_device_id(), input_dispatcher, input_dispatchable, cookie_factory, this, &seat));
 
         auto const& dev = devices.back();
+        seat.add_device(dev->id());
 
-        auto handle = std::make_shared<DefaultDevice>(
-            dev->id(), device->get_device_info());
+        auto handle = std::make_shared<DefaultDevice>(dev->id(), device_queue, device);
 
         // pass input device handle to observer loop..
         observer_queue->enqueue(this,
@@ -104,6 +115,7 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
             if (item->device_matches(device))
             {
                 item->stop();
+                seat.remove_device(item->id());
 
                 // send input device info to observer queue..
                 observer_queue->enqueue(
@@ -131,9 +143,10 @@ mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
     std::shared_ptr<InputDispatcher> const& dispatcher,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
     std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory,
-    DefaultInputDeviceHub* hub)
+    DefaultInputDeviceHub* hub,
+    Seat* seat)
     : device_id(device_id), builder(device_id, cookie_factory), device(dev), dispatcher(dispatcher),
-      multiplexer(multiplexer), hub(hub)
+      multiplexer(multiplexer), hub(hub), seat(seat)
 {
 }
 
@@ -154,48 +167,15 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(MirEvent& event)
     if (type != mir_event_type_input)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid input event receivd from device"));
 
-    update_spots(mir_event_get_input_event(&event));
-    notify_cursor_listener(mir_event_get_input_event(&event));
+    auto input_event = mir_event_get_input_event(&event);
+    seat->update_seat_properties(input_event);
+
+    if (mir_input_event_type_key  == mir_input_event_get_type(input_event))
+        mev::set_modifier(event, seat->event_modifier(mir_input_event_get_device_id(input_event)));
+    else
+        mev::set_modifier(event, seat->event_modifier());
+
     dispatcher->dispatch(event);
-}
-
-void mi::DefaultInputDeviceHub::RegisteredDevice::notify_cursor_listener(MirInputEvent const* event)
-{
-    if (mir_input_event_get_type(event) != mir_input_event_type_pointer)
-        return;
-
-    auto pointer_ev = mir_input_event_get_pointer_event(event);
-    hub->cursor_listener->cursor_moved_to(
-        mir_pointer_event_axis_value(pointer_ev, mir_pointer_axis_x),
-        mir_pointer_event_axis_value(pointer_ev, mir_pointer_axis_y)
-        );
-}
-
-void mi::DefaultInputDeviceHub::RegisteredDevice::update_spots(MirInputEvent const* event)
-{
-    if (mir_input_event_get_type(event) != mir_input_event_type_touch)
-        return;
-
-    auto const* touch_event = mir_input_event_get_touch_event(event);
-    auto count = mir_touch_event_point_count(touch_event);
-    touch_spots.reserve(count);
-    touch_spots.clear();
-    for (decltype(count) i = 0; i != count; ++i)
-    {
-        if (mir_touch_event_action(touch_event, i) == mir_touch_action_up)
-            continue;
-        touch_spots.push_back(mi::TouchVisualizer::Spot{
-            {mir_touch_event_axis_value(touch_event, i, mir_touch_axis_x),
-             mir_touch_event_axis_value(touch_event, i, mir_touch_axis_y)},
-            mir_touch_event_axis_value(touch_event, i, mir_touch_axis_pressure)});
-    }
-
-    hub->update_spots();
-}
-
-std::vector<mir::input::TouchVisualizer::Spot> const& mi::DefaultInputDeviceHub::RegisteredDevice::spots() const
-{
-    return touch_spots;
 }
 
 bool mi::DefaultInputDeviceHub::RegisteredDevice::device_matches(std::shared_ptr<InputDevice> const& dev) const
@@ -277,14 +257,4 @@ void mi::DefaultInputDeviceHub::remove_device_handle(MirInputDeviceId id)
     }
 
     handles.erase(handle_it, end(handles));
-}
-
-void mi::DefaultInputDeviceHub::update_spots()
-{
-    std::vector<TouchVisualizer::Spot> spots;
-
-    for (auto const& dev : devices)
-        spots.insert(end(spots), begin(dev->spots()), end(dev->spots()));
-
-    touch_visualizer->visualize_touches(spots);
 }

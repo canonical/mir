@@ -67,7 +67,7 @@ Description: Display server for Ubuntu - RPC definitions
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
-Package: libmirserver35
+Package: libmirserver36
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -133,7 +133,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver35 (= ${binary:Version}),
+Depends: libmirserver36 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -290,7 +290,7 @@ Description: Display server for Ubuntu - shared library
  Contains the shared libraries required for the Mir server and client.
 
 # Longer-term these drivers should move out-of-tree
-Package: mir-platform-graphics-mesa-x6
+Package: mir-platform-graphics-mesa-x7
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -304,7 +304,7 @@ Description: Display server for Ubuntu - platform library for X11 Mesa
  Contains the shared libraries required for the Mir server to interact with
  the X11 platform using the Mesa drivers.
 
-Package: mir-platform-graphics-mesa-kms6
+Package: mir-platform-graphics-mesa-kms7
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -318,7 +318,7 @@ Description: Display server for Ubuntu - platform library for KMS Mesa
  Contains the shared libraries required for the Mir server to interact with
  the hardware platform using the Mesa drivers.
 
-Package: mir-platform-graphics-android6
+Package: mir-platform-graphics-android7
 Section: libs
 Architecture: i386 amd64 armhf
 Multi-Arch: same
@@ -332,7 +332,7 @@ Description: Display server for Ubuntu - platform library for Android
  Contains the shared libraries required for the Mir server to interact with
  the hardware platform using the Android drivers.
 
-Package: mir-platform-input-evdev3
+Package: mir-platform-input-evdev4
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -394,8 +394,8 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-mesa-kms6,
-         mir-platform-graphics-mesa-x6,
+         mir-platform-graphics-mesa-kms7,
+         mir-platform-graphics-mesa-x7,
          mir-client-platform-mesa3,
 Description: Display server for Ubuntu - desktop driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
@@ -410,7 +410,7 @@ Architecture: i386 amd64 armhf
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-android6,
+         mir-platform-graphics-android7,
          mir-client-platform-android3,
 Description: Display server for Ubuntu - android driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
@@ -425,6 +425,7 @@ Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
+         ${shlibs:Depends},
 Description: Produce and verify spoof-resistant timestamps - runtime library
  libmircookie provides a simple mechanism for a group of cooperating processes
  to hand out and verify difficult-to-forge timestamps to untrusted 3rd parties.

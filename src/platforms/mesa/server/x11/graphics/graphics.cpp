@@ -21,6 +21,8 @@
 #include "guest_platform.h"
 #include "../X11_resources.h"
 #include <boost/throw_exception.hpp>
+#include "mir/module_deleter.h"
+#include "mir/assert_module_entry_point.h"
 
 namespace mo = mir::options;
 namespace mg = mir::graphics;
@@ -35,11 +37,12 @@ namespace
 char const* x11_displays_option_name{"x11-displays"};
 }
 
-std::shared_ptr<mg::Platform> create_host_platform(
+mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
+    mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     if (!x11_resources.get_conn())
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
 
@@ -48,22 +51,24 @@ std::shared_ptr<mg::Platform> create_host_platform(
     if (pos == std::string::npos)
         BOOST_THROW_EXCEPTION(std::runtime_error("Malformed display size option"));
 
-    return std::make_shared<mgx::Platform>(
+    return mir::make_module_ptr<mgx::Platform>(
                x11_resources.get_conn(),
                geom::Size{std::stoi(display_dims_str.substr(0, pos)),
                           std::stoi(display_dims_str.substr(pos+1, display_dims_str.find(':')))}
            );
 }
 
-std::shared_ptr<mg::Platform> create_guest_platform(
+mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const& /*report*/,
     std::shared_ptr<mg::NestedContext> const& nested_context)
 {
-    return std::make_shared<mgx::GuestPlatform>(nested_context);
+    mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
+    return mir::make_module_ptr<mgx::GuestPlatform>(nested_context);
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)
 {
+    mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
     config.add_options()
         (x11_displays_option_name,
          boost::program_options::value<std::string>()->default_value("1280x1024"),
@@ -72,6 +77,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
 
 mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*/)
 {
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
     auto dpy = XOpenDisplay(nullptr);
     if (dpy)
     {
@@ -85,7 +91,7 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*
         drm_devices.scan_devices();
 
         if (drm_devices.begin() != drm_devices.end())
-            return mg::PlatformPriority::best;
+            return mg::PlatformPriority::supported;
     }
     return mg::PlatformPriority::unsupported;
 }
@@ -99,5 +105,6 @@ mir::ModuleProperties const description = {
 
 mir::ModuleProperties const* describe_graphics_module()
 {
+    mir::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
     return &description;
 }

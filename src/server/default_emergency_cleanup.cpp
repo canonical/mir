@@ -22,7 +22,16 @@ void mir::DefaultEmergencyCleanup::add(EmergencyCleanupHandler const& handler)
 {
     std::lock_guard<std::mutex> lock{handlers_mutex};
 
-    last_item()->next.reset(new ListItem{handler, nullptr});
+    last_item()->next.reset(
+        new ListItem{std::make_shared<EmergencyCleanupHandler>(handler), nullptr});
+    ++num_handlers;
+}
+
+void mir::DefaultEmergencyCleanup::add(ModuleEmergencyCleanupHandler handler)
+{
+    std::lock_guard<std::mutex> lock{handlers_mutex};
+
+    last_item()->next.reset(new ListItem{std::move(handler), nullptr});
     ++num_handlers;
 }
 
@@ -33,7 +42,7 @@ void mir::DefaultEmergencyCleanup::operator()() const
     while (handlers_left-- > 0)
     {
         item = item->next.get();
-        item->handler();
+        (*item->handler)();
     }
 }
 

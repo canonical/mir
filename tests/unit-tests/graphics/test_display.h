@@ -19,28 +19,14 @@
 #ifndef TEST_DISPLAY_H_
 #define TEST_DISPLAY_H_
 
-namespace
-{
-
-class MockDisplayConfiguration : public mg::DisplayConfiguration
-{
-public:
-    MOCK_CONST_METHOD1(for_each_card,
-        void(std::function<void(mg::DisplayConfigurationCard const&)>));
-    MOCK_CONST_METHOD1(for_each_output,
-        void(std::function<void(mg::DisplayConfigurationOutput const&)>));
-    MOCK_METHOD1(for_each_output,
-        void(std::function<void(mg::UserDisplayConfigurationOutput&)>));
-    MOCK_CONST_METHOD0(valid, bool());
-};
-
-}
+#include "mir/test/doubles/mock_display_configuration.h"
+#include "mir/test/display_config_matchers.h"
 
 TEST_F(DisplayTestGeneric, configure_disallows_invalid_configuration)
 {
     using namespace testing;
     auto display = create_display();
-    MockDisplayConfiguration config;
+    mir::test::doubles::MockDisplayConfiguration config;
 
     EXPECT_CALL(config, valid())
         .WillOnce(Return(false));
@@ -151,6 +137,49 @@ TEST_F(DisplayTestGeneric, does_not_expose_display_buffer_for_output_with_power_
         group.for_each_display_buffer([&] (mg::DisplayBuffer&) { ++db_count; });
     });
     EXPECT_THAT(db_count, Eq(0));
+}
+
+TEST_F(DisplayTestGeneric,
+       returns_configuration_whose_clone_matches_original_configuration)
+{
+    using namespace testing;
+
+    auto display = create_display();
+
+    auto config = display->configuration();
+    auto cloned_config = config->clone();
+
+    EXPECT_THAT(*cloned_config, mir::test::DisplayConfigMatches(std::cref(*config)));
+}
+
+TEST_F(DisplayTestGeneric,
+       returns_configuration_whose_clone_is_independent_of_original_configuration)
+{
+    using namespace testing;
+
+    auto display = create_display();
+
+    auto config = display->configuration();
+    auto cloned_config = config->clone();
+
+    config->for_each_output(
+        [] (mg::UserDisplayConfigurationOutput& output)
+        {
+            output.power_mode = mir_power_mode_off;
+        });
+
+    cloned_config->for_each_output(
+        [] (mg::UserDisplayConfigurationOutput& output)
+        {
+            output.power_mode = mir_power_mode_on;
+        });
+
+    // Check that changes to cloned_config haven't affected original config
+    config->for_each_output(
+        [] (mg::DisplayConfigurationOutput const& output)
+        {
+            EXPECT_THAT(output.power_mode, Eq(mir_power_mode_off));
+        });
 }
 
 #endif // TEST_DISPLAY_H_

@@ -140,6 +140,8 @@ void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Se
         }
     }
 
+    session->destroy_surface(surface);
+
     if (surfaces.empty() && session == tools->focused_session())
     {
         tools->focus_next_session();
@@ -234,6 +236,14 @@ void me::TilingWindowManagerPolicy::drag(Point cursor)
     }
 
     old_cursor = cursor;
+}
+
+void me::TilingWindowManagerPolicy::handle_raise_surface(
+    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Surface> const& surface)
+{
+    tools->set_focus_to(session, surface);
+    tools->raise({surface});
 }
 
 bool me::TilingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)

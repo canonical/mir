@@ -92,23 +92,23 @@ struct StubDisplay : public mtd::StubDisplay
 }
 
 VsyncSimulatingPlatform::VsyncSimulatingPlatform(geom::Size const& output_size, int vsync_rate_in_hz)
-    : display(std::make_shared<StubDisplay>(output_size, vsync_rate_in_hz))
+    : output_size(output_size), vsync_rate_in_hz(vsync_rate_in_hz)
 {
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> VsyncSimulatingPlatform::create_buffer_allocator()
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> VsyncSimulatingPlatform::create_buffer_allocator()
 {
-    return std::make_shared<mtd::StubBufferAllocator>();
+    return mir::make_module_ptr<mtd::StubBufferAllocator>();
 }
 
-std::shared_ptr<mg::Display> VsyncSimulatingPlatform::create_display(
+mir::UniqueModulePtr<mg::Display> VsyncSimulatingPlatform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
      std::shared_ptr<mg::GLConfig> const&)
 {
-    return display;
+    return mir::make_module_ptr<StubDisplay>(output_size, vsync_rate_in_hz);
 }
-    
-std::shared_ptr<mg::PlatformIpcOperations> VsyncSimulatingPlatform::make_ipc_operations() const
+
+mir::UniqueModulePtr<mg::PlatformIpcOperations> VsyncSimulatingPlatform::make_ipc_operations() const
 {
-    return std::make_shared<mtd::NullPlatformIpcOperations>();
+    return mir::make_module_ptr<mtd::NullPlatformIpcOperations>();
 }

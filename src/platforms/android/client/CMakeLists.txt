@@ -20,7 +20,6 @@ add_library(
   mirclientplatformandroid MODULE
 
   $<TARGET_OBJECTS:mirclientplatformandroidobjects>
-  $<TARGET_OBJECTS:client_platform_common>
 )
 
 set_target_properties(
@@ -34,6 +33,7 @@ set_target_properties(
 
 target_link_libraries(mirclientplatformandroid
   mirclient
+  client_platform_common
   mirsharedandroid-static
   ${LIBHARDWARE_LIBRARIES}
 )

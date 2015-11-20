@@ -32,12 +32,13 @@ class DefaultEmergencyCleanup : public EmergencyCleanup
 {
 public:
     void add(EmergencyCleanupHandler const& handler) override;
+    void add(ModuleEmergencyCleanupHandler handler) override;
     void operator()() const override;
 
 private:
     struct ListItem
     {
-        EmergencyCleanupHandler handler;
+        std::shared_ptr<EmergencyCleanupHandler> handler;
         std::unique_ptr<ListItem> next;
     };
 
