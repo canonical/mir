@@ -224,9 +224,7 @@ void mgn::Display::complete_display_initialization(MirPixelFormat format)
 void mgn::Display::configure(mg::DisplayConfiguration const& configuration)
 {
     std::lock_guard<std::mutex> lock(configuration_mutex);
-    if (*current_configuration != configuration)
-        apply_to_connection(configuration);
-
+    apply_to_connection(configuration);
     create_surfaces(configuration);
 }
 
