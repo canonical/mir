@@ -100,7 +100,6 @@ class BroadcastingSessionEventSink;
 class BufferStreamFactory;
 class MediatingDisplayChanger;
 class PixelBuffer;
-class PlacementStrategy;
 class SessionContainer;
 class SessionEventSink;
 class SessionEventHandlerRegister;
@@ -425,7 +424,6 @@ protected:
     CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
     CachedPtr<scene::SurfaceCoordinator> surface_coordinator;
-    CachedPtr<scene::PlacementStrategy> placement_strategy;
     CachedPtr<scene::SessionListener> session_listener;
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
     CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;

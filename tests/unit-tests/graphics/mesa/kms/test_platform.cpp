@@ -211,7 +211,7 @@ TEST_F(MesaGraphicsPlatform, drm_close_not_called_concurrently_on_ipc_package_de
                              Return(0)));
 
     auto platform = create_platform();
-    auto ipc_ops = platform->make_ipc_operations();
+    std::shared_ptr<mg::PlatformIpcOperations> ipc_ops = platform->make_ipc_operations();
 
     std::vector<std::thread> threads;
 
@@ -235,12 +235,16 @@ TEST_F(MesaGraphicsPlatform, drm_close_not_called_concurrently_on_ipc_package_de
 
 struct StubEmergencyCleanupRegistry : mir::EmergencyCleanupRegistry
 {
-    void add(mir::EmergencyCleanupHandler const& handler) override
+    void add(mir::EmergencyCleanupHandler const&) override
     {
-        this->handler = handler;
     }
 
-    mir::EmergencyCleanupHandler handler;
+    void add(mir::ModuleEmergencyCleanupHandler handler) override
+    {
+        this->handler = std::move(handler);
+    }
+
+    mir::ModuleEmergencyCleanupHandler handler;
 };
 
 TEST_F(MesaGraphicsPlatform, restores_vt_on_emergency_cleanup)
@@ -257,7 +261,7 @@ TEST_F(MesaGraphicsPlatform, restores_vt_on_emergency_cleanup)
 
     EXPECT_CALL(*mock_vt, restore());
 
-    emergency_cleanup_registry.handler();
+    (*emergency_cleanup_registry.handler)();
 
     Mock::VerifyAndClearExpectations(mock_vt.get());
 }
@@ -278,7 +282,7 @@ TEST_F(MesaGraphicsPlatform, releases_drm_on_emergency_cleanup)
     EXPECT_CALL(mock_drm, drmDropMaster(mock_drm.fake_drm.fd()))
         .WillOnce(Return(success_code));
 
-    emergency_cleanup_registry.handler();
+    (*emergency_cleanup_registry.handler)();
 
     Mock::VerifyAndClearExpectations(&mock_drm);
 }
@@ -300,7 +304,7 @@ TEST_F(MesaGraphicsPlatform, does_not_propagate_emergency_cleanup_exceptions)
     EXPECT_CALL(mock_drm, drmDropMaster(mock_drm.fake_drm.fd()))
         .WillOnce(Throw(std::runtime_error("drm drop master exception")));
 
-    emergency_cleanup_registry.handler();
+    (*emergency_cleanup_registry.handler)();
 
     Mock::VerifyAndClearExpectations(&mock_drm);
 }
@@ -315,7 +319,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_no_drm_udev_devices)
     EXPECT_EQ(mg::PlatformPriority::unsupported, probe(options));
 }
 
-TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_drm_devices_exist)
+TEST_F(MesaGraphicsPlatform, probe_returns_best_when_master)
 {
     mtf::UdevEnvironment udev_environment;
     boost::program_options::options_description po;
@@ -325,7 +329,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_drm_devices_exist)
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::supported, probe(options));
+    EXPECT_EQ(mg::PlatformPriority::best, probe(options));
 }
 
 TEST_F(MesaGraphicsPlatform, probe_returns_best_when_drm_devices_vt_option_exist)

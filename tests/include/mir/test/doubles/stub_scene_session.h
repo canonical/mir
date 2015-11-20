@@ -123,6 +123,10 @@ struct StubSceneSession : public scene::Session
     {
     }
 
+    void destroy_surface(std::weak_ptr<scene::Surface> const&) override
+    {
+    }
+
     pid_t const pid;
 };
 

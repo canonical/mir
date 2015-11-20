@@ -44,11 +44,11 @@ public:
         std::shared_ptr<DeviceQuirks> const& quirks);
 
     /* From Platform */
-    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
-    std::shared_ptr<Display> create_display(
+    UniqueModulePtr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
+    UniqueModulePtr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
-    std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
+    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     EGLNativeDisplayType egl_native_display() const override;
 
 private:

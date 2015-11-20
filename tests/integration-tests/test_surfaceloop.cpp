@@ -182,16 +182,16 @@ struct BufferCounterConfig : mtf::StubbedServerConfiguration
     class StubPlatform : public mtd::NullPlatform
     {
     public:
-        std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
+        mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator() override
         {
-            return std::make_shared<StubGraphicBufferAllocator>();
+            return mir::make_module_ptr<StubGraphicBufferAllocator>();
         }
 
-        std::shared_ptr<mg::Display> create_display(
+        mir::UniqueModulePtr<mg::Display> create_display(
             std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
             std::shared_ptr<mg::GLConfig> const&) override
         {
-            return std::make_shared<StubDisplay>();
+            return mir::make_module_ptr<StubDisplay>();
         }
     };
 

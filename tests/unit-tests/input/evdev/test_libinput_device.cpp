@@ -293,6 +293,22 @@ struct LibInputDevice : public ::testing::Test
             .WillByDefault(Return(relatve_y));
     }
 
+    void setup_absolute_pointer_event(libinput_event* event, uint64_t event_time, float x, float y)
+    {
+        auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
+
+        ON_CALL(mock_libinput, libinput_event_get_type(event))
+            .WillByDefault(Return(LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE));
+        ON_CALL(mock_libinput, libinput_event_get_pointer_event(event))
+            .WillByDefault(Return(pointer_event));
+        ON_CALL(mock_libinput, libinput_event_pointer_get_time_usec(pointer_event))
+            .WillByDefault(Return(event_time));
+        ON_CALL(mock_libinput, libinput_event_pointer_get_absolute_x_transformed(pointer_event, _))
+            .WillByDefault(Return(x));
+        ON_CALL(mock_libinput, libinput_event_pointer_get_absolute_y_transformed(pointer_event, _))
+            .WillByDefault(Return(y));
+    }
+
     void setup_button_event(libinput_event* event, uint64_t event_time, int button, libinput_button_state state)
     {
         auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
@@ -378,33 +394,33 @@ struct LibInputDevice : public ::testing::Test
 struct LibInputDeviceOnLaptopKeyboard : public LibInputDevice
 {
     char const* keyboard_path = setup_laptop_keyboard(fake_device);
-    mie::LibInputDevice keyboard{mir::report::null_input_report(), keyboard_path, mie::make_libinput_device(lib.get(), keyboard_path)};
+    mie::LibInputDevice keyboard{mir::report::null_input_report(), keyboard_path, mie::make_libinput_device(lib, keyboard_path)};
 };
 
 struct LibInputDeviceOnMouse : public LibInputDevice
 {
     char const* mouse_path = setup_mouse(fake_device);
-    mie::LibInputDevice mouse{mir::report::null_input_report(), mouse_path, mie::make_libinput_device(lib.get(), mouse_path)};
+    mie::LibInputDevice mouse{mir::report::null_input_report(), mouse_path, mie::make_libinput_device(lib, mouse_path)};
 };
 
 struct LibInputDeviceOnLaptopKeyboardAndMouse : public LibInputDevice
 {
     char const* mouse_path = setup_mouse(fake_device);
     char const* keyboard_path = setup_laptop_keyboard(fake_device);
-    mie::LibInputDevice keyboard{mir::report::null_input_report(), keyboard_path, mie::make_libinput_device(lib.get(), keyboard_path)};
-    mie::LibInputDevice mouse{mir::report::null_input_report(), mouse_path, mie::make_libinput_device(lib.get(), mouse_path)};
+    mie::LibInputDevice keyboard{mir::report::null_input_report(), keyboard_path, mie::make_libinput_device(lib, keyboard_path)};
+    mie::LibInputDevice mouse{mir::report::null_input_report(), mouse_path, mie::make_libinput_device(lib, mouse_path)};
 };
 
 struct LibInputDeviceOnTouchScreen : public LibInputDevice
 {
     char const* touch_screen_path = setup_touch_screen(fake_device);
-    mie::LibInputDevice touch_screen{mir::report::null_input_report(), touch_screen_path, mie::make_libinput_device(lib.get(), touch_screen_path)};
+    mie::LibInputDevice touch_screen{mir::report::null_input_report(), touch_screen_path, mie::make_libinput_device(lib, touch_screen_path)};
 };
 
 struct LibInputDeviceOnTouchpad : public LibInputDevice
 {
     char const* touchpad_path = setup_touchpad(fake_device);
-    mie::LibInputDevice touchpad{mir::report::null_input_report(), touchpad_path, mie::make_libinput_device(lib.get(), touchpad_path)};
+    mie::LibInputDevice touchpad{mir::report::null_input_report(), touchpad_path, mie::make_libinput_device(lib, touchpad_path)};
 };
 }
 
@@ -421,7 +437,7 @@ TEST_F(LibInputDevice, start_creates_and_unrefs_libinput_device_from_path)
 
     mie::LibInputDevice dev(mir::report::null_input_report(),
                             path,
-                            std::move(mie::make_libinput_device(lib.get(), path)));
+                            std::move(mie::make_libinput_device(lib, path)));
     dev.start(&mock_sink, &mock_builder);
 }
 
@@ -440,8 +456,8 @@ TEST_F(LibInputDevice, open_device_of_group)
 
     mie::LibInputDevice dev(mir::report::null_input_report(),
                             first_path,
-                            std::move(mie::make_libinput_device(lib.get(), first_path)));
-    dev.add_device_of_group(second_path, mie::make_libinput_device(lib.get(), second_path));
+                            std::move(mie::make_libinput_device(lib, first_path)));
+    dev.add_device_of_group(second_path, mie::make_libinput_device(lib, second_path));
     dev.start(&mock_sink, &mock_builder);
 }
 
@@ -452,12 +468,13 @@ TEST_F(LibInputDevice, input_info_combines_capabilities)
 
     mie::LibInputDevice dev(mir::report::null_input_report(),
                             first_dev,
-                            mie::make_libinput_device(lib.get(), first_dev));
-    dev.add_device_of_group(second_dev, mie::make_libinput_device(lib.get(), second_dev));
+                            mie::make_libinput_device(lib, first_dev));
+    dev.add_device_of_group(second_dev, mie::make_libinput_device(lib, second_dev));
     auto info = dev.get_device_info();
 
-    EXPECT_THAT(info.capabilities, Eq(mi::DeviceCapability::touchpad|
-                                      mi::DeviceCapability::keyboard|
+    EXPECT_THAT(info.capabilities, Eq(mi::DeviceCapability::touchpad |
+                                      mi::DeviceCapability::pointer |
+                                      mi::DeviceCapability::keyboard |
                                       mi::DeviceCapability::alpha_numeric));
 }
 
@@ -468,7 +485,7 @@ TEST_F(LibInputDevice, removal_unrefs_libinput_device)
     EXPECT_CALL(mock_libinput, libinput_device_unref(fake_device))
         .Times(1);
 
-    mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib.get(), path));
+    mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib, path));
 }
 
 TEST_F(LibInputDeviceOnLaptopKeyboard, process_event_converts_key_event)
@@ -509,14 +526,37 @@ TEST_F(LibInputDeviceOnLaptopKeyboard, process_event_accumulates_key_state)
 
 TEST_F(LibInputDeviceOnMouse, process_event_converts_pointer_event)
 {
-    float x = 15;
-    float y = 17;
-    setup_pointer_event(fake_event_1, event_time_1, x, y);
+    float x_movement_1 = 15;
+    float y_movement_1 = 17;
+    float x_movement_2 = 20;
+    float y_movement_2 = 40;
+    setup_pointer_event(fake_event_1, event_time_1, x_movement_1, y_movement_1);
+    setup_pointer_event(fake_event_2, event_time_2, x_movement_2, y_movement_2);
 
-    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithPosition(x,y)));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x_movement_1,y_movement_1)));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x_movement_2,y_movement_2)));
 
     mouse.start(&mock_sink, &mock_builder);
     mouse.process_event(fake_event_1);
+    mouse.process_event(fake_event_2);
+}
+
+TEST_F(LibInputDeviceOnMouse, process_event_handles_absolute_pointer_events)
+{
+    float x1 = 15;
+    float y1 = 17;
+    float x2 = 40;
+    float y2 = 10;
+    setup_absolute_pointer_event(fake_event_1, event_time_1, x1, y1);
+    setup_absolute_pointer_event(fake_event_2, event_time_2, x2, y2);
+
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithPosition(x1, y1)));
+    EXPECT_CALL(mock_sink,
+                handle_input(AllOf(mt::PointerEventWithPosition(x2, y2), mt::PointerEventWithDiff(x2 - x1, y2 - y1))));
+
+    mouse.start(&mock_sink, &mock_builder);
+    mouse.process_event(fake_event_1);
+    mouse.process_event(fake_event_2);
 }
 
 TEST_F(LibInputDeviceOnMouse, process_event_provides_relative_coordinates)
@@ -792,4 +832,19 @@ TEST_F(LibInputDeviceOnTouchpad, applies_touchpad_settings)
                                    touchpad.device(), LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED));
 
     touchpad.apply_settings(settings);
+}
+
+TEST_F(LibInputDevice, device_ptr_keeps_libinput_context_alive)
+{
+    InSequence seq;
+    EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device));
+    EXPECT_CALL(mock_libinput, libinput_device_unref(fake_device));
+    EXPECT_CALL(mock_libinput, libinput_unref(fake_input));
+
+    mock_libinput.setup_device(fake_input, fake_device, "/dev/test/path", "name", 1, 2);
+
+    auto device_ptr = mie::make_libinput_device(lib, "/dev/test/path");
+
+    lib.reset();
+    device_ptr.reset();
 }

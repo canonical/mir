@@ -39,20 +39,20 @@ mgx::GuestPlatform::GuestPlatform(
     gbm.setup(*drm);
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgx::GuestPlatform::create_buffer_allocator()
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgx::GuestPlatform::create_buffer_allocator()
 {
-    return std::make_shared<mgm::BufferAllocator>(
+    return make_module_ptr<mgm::BufferAllocator>(
                gbm.device,
                mgm::BypassOption::prohibited,
                mgm::BufferImportMethod::dma_buf);
 }
 
-std::shared_ptr<mg::PlatformIpcOperations> mgx::GuestPlatform::make_ipc_operations() const
+mir::UniqueModulePtr<mg::PlatformIpcOperations> mgx::GuestPlatform::make_ipc_operations() const
 {
-    return std::make_shared<mg::mesa::IpcOperations>(drm);
+    return make_module_ptr<mg::mesa::IpcOperations>(drm);
 }
 
-std::shared_ptr<mg::Display> mgx::GuestPlatform::create_display(
+mir::UniqueModulePtr<mg::Display> mgx::GuestPlatform::create_display(
     std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
     std::shared_ptr<graphics::GLConfig> const&)
 {
