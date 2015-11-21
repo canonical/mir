@@ -39,7 +39,7 @@ namespace
 {
 struct MockSurfaceObserver : mir::scene::NullSurfaceObserver
 {
-    MOCK_METHOD1(frame_posted, void(int));
+    MOCK_METHOD2(frame_posted, void(int, geom::Size const&));
 };
 
 struct StubBufferMap : mf::ClientBuffers
@@ -190,7 +190,7 @@ TEST_F(Stream, tracks_has_buffer)
 TEST_F(Stream, calls_observers_after_scheduling_on_submissions)
 {
     auto observer = std::make_shared<MockSurfaceObserver>();
-    EXPECT_CALL(*observer, frame_posted(1));
+    EXPECT_CALL(*observer, frame_posted(1, geom::Size{0,0}));
     stream.add_observer(observer);
     stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
     stream.remove_observer(observer);
@@ -200,7 +200,7 @@ TEST_F(Stream, calls_observers_after_scheduling_on_submissions)
 TEST_F(Stream, calls_observers_call_doesnt_hold_lock)
 {
     auto observer = std::make_shared<MockSurfaceObserver>();
-    EXPECT_CALL(*observer, frame_posted(1))
+    EXPECT_CALL(*observer, frame_posted(1,_))
         .WillOnce(InvokeWithoutArgs([&]{
             EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(1));
             EXPECT_TRUE(stream.has_submitted_buffer());
@@ -239,7 +239,7 @@ TEST_F(Stream, forces_a_new_buffer_when_told_to_drop_buffers)
 TEST_F(Stream, ignores_nullptr_submissions) //legacy behavior
 {
     auto observer = std::make_shared<MockSurfaceObserver>();
-    EXPECT_CALL(*observer, frame_posted(_)).Times(0);
+    EXPECT_CALL(*observer, frame_posted(_,_)).Times(0);
     stream.add_observer(observer);
     bool was_called = false;
     stream.swap_buffers(nullptr, [&](mg::Buffer*){ was_called = true; });

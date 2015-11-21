@@ -85,7 +85,7 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
             if (buffers->client_owned_buffer_count() == 0)
                 drop_policy->swap_now_blocking();
         }
-        observers.frame_posted(1);
+        observers.frame_posted(1, buffer->size());
     }
     fn(nullptr); //legacy support
 }
