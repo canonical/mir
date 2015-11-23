@@ -50,7 +50,7 @@ struct CanonicalSessionInfoCopy
 class CanonicalWindowManagerPolicyCopy
 {
 public:
-    using Tools = BasicWindowManagerToolsCopy<CanonicalSessionInfoCopy, CanonicalSurfaceInfoCopy>;
+    using Tools = BasicWindowManagerToolsCopy<CanonicalSessionInfoCopy>;
     using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfoCopy>::type;
     using CanonicalSurfaceInfoMap = typename SurfaceTo<CanonicalSurfaceInfoCopy>::type;
 

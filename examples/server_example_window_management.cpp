@@ -57,7 +57,7 @@ struct NullSessionInfo
 class FullscreenWindowManagerPolicy
 {
 public:
-    using Tools = me::BasicWindowManagerToolsCopy<NullSessionInfo, me::CanonicalSurfaceInfoCopy>;
+    using Tools = me::BasicWindowManagerToolsCopy<NullSessionInfo>;
     using SessionInfoMap = typename me::SessionTo<NullSessionInfo>::type;
     using SurfaceInfoMap = typename me::SurfaceTo<me::CanonicalSurfaceInfoCopy>::type;
 
@@ -123,8 +123,8 @@ private:
 
 }
 
-using FullscreenWindowManager = me::BasicWindowManagerCopy<FullscreenWindowManagerPolicy, NullSessionInfo, me::CanonicalSurfaceInfoCopy>;
-using CanonicalWindowManager = me::BasicWindowManagerCopy<me::CanonicalWindowManagerPolicyCopy, me::CanonicalSessionInfoCopy, me::CanonicalSurfaceInfoCopy>;
+using FullscreenWindowManager = me::BasicWindowManagerCopy<FullscreenWindowManagerPolicy, NullSessionInfo>;
+using CanonicalWindowManager = me::BasicWindowManagerCopy<me::CanonicalWindowManagerPolicyCopy, me::CanonicalSessionInfoCopy>;
 
 void me::add_window_manager_option_to(Server& server)
 {

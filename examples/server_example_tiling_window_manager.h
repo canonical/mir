@@ -46,7 +46,7 @@ struct TilingSessionInfo
 class TilingWindowManagerPolicy
 {
 public:
-    using Tools = BasicWindowManagerToolsCopy<TilingSessionInfo, CanonicalSurfaceInfoCopy>;
+    using Tools = BasicWindowManagerToolsCopy<TilingSessionInfo>;
     using TilingSessionInfoMap = typename SessionTo<TilingSessionInfo>::type;
     using TilingSurfaceInfoMap = typename SurfaceTo<CanonicalSurfaceInfoCopy>::type;
 
@@ -128,7 +128,7 @@ private:
     geometry::Point old_cursor{};
 };
 
-using TilingWindowManager = BasicWindowManagerCopy<TilingWindowManagerPolicy, TilingSessionInfo, CanonicalSurfaceInfoCopy>;
+using TilingWindowManager = BasicWindowManagerCopy<TilingWindowManagerPolicy, TilingSessionInfo>;
 }
 }
 
