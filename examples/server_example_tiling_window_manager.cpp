@@ -342,7 +342,7 @@ bool me::TilingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const
     {
         tools->focus_next_session();
         if (auto const surface = tools->focused_surface())
-            tools->raise({surface});
+            raise_tree(surface);
 
         return true;
     }
@@ -533,7 +533,7 @@ void me::TilingWindowManagerPolicy::fit_to_new_tile(ms::Surface& surface, Rectan
     surface.resize({width, height});
 }
 
-bool me::TilingWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle bounds)
+void me::TilingWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle bounds)
 {
     if (surface && surface->input_area_contains(from))
     {
@@ -546,11 +546,7 @@ bool me::TilingWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface, P
             auto move = movement;
             constrained_move(child.lock(), move, bounds);
         }
-
-        return true;
     }
-
-    return false;
 }
 
 void me::TilingWindowManagerPolicy::constrained_move(
@@ -579,7 +575,7 @@ void me::TilingWindowManagerPolicy::constrained_move(
     surface->move_to(new_pos);
 }
 
-bool me::TilingWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> surface, Point cursor, Point old_cursor, Rectangle bounds)
+void me::TilingWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> surface, Point cursor, Point old_cursor, Rectangle bounds)
 {
     if (surface && surface->input_area_contains(old_cursor))
     {
@@ -591,7 +587,7 @@ bool me::TilingWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> surface,
         auto const scale_x = new_displacement.dx.as_float()/std::max(1.0f, old_displacement.dx.as_float());
         auto const scale_y = new_displacement.dy.as_float()/std::max(1.0f, old_displacement.dy.as_float());
 
-        if (scale_x <= 0.0f || scale_y <= 0.0f) return false;
+        if (scale_x <= 0.0f || scale_y <= 0.0f) return;
 
         auto const old_size = surface->size();
         Size new_size{scale_x*old_size.width, scale_y*old_size.height};
@@ -605,11 +601,7 @@ bool me::TilingWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> surface,
             new_size.height = size_limits.height;
 
         surface->resize(new_size);
-
-        return true;
     }
-
-    return false;
 }
 
 void me::TilingWindowManagerPolicy::raise_tree(std::shared_ptr<scene::Surface> const& root) const
