@@ -121,8 +121,6 @@ private:
 
     static void constrained_move(std::shared_ptr<scene::Surface> const& surface, geometry::Displacement& movement, geometry::Rectangle const& bounds);
 
-    void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
-
     std::shared_ptr<scene::Surface> select_active_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
 
     Tools* const tools;

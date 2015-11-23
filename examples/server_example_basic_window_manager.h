@@ -83,6 +83,8 @@ public:
 
     virtual void forget(std::weak_ptr<scene::Surface> const& surface) = 0;
 
+    virtual void raise_tree(std::shared_ptr<scene::Surface> const& root) = 0;
+
     virtual ~BasicWindowManagerToolsCopy() = default;
     BasicWindowManagerToolsCopy() = default;
     BasicWindowManagerToolsCopy(BasicWindowManagerToolsCopy const&) = delete;
@@ -347,6 +349,24 @@ private:
             result = *displays.begin();
 
         return result;
+    }
+
+    void raise_tree(std::shared_ptr<scene::Surface> const& root) override
+    {
+        SurfaceSet surfaces;
+        std::function<void(std::weak_ptr<scene::Surface> const& surface)> const add_children =
+            [&,this](std::weak_ptr<scene::Surface> const& surface)
+                {
+                auto const& info = info_for(surface);
+                surfaces.insert(begin(info.children), end(info.children));
+                for (auto const& child : info.children)
+                    add_children(child);
+                };
+
+        surfaces.insert(root);
+        add_children(root);
+
+        raise(surfaces);
     }
 
     shell::FocusController* const focus_controller;
