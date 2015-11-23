@@ -119,7 +119,7 @@ private:
 
     static void resize(std::shared_ptr<scene::Surface> surface, geometry::Point cursor, geometry::Point old_cursor, geometry::Rectangle bounds);
 
-    void constrained_move(std::shared_ptr<scene::Surface> const& surface, geometry::Displacement& movement, geometry::Rectangle const& bounds) const;
+    static void constrained_move(std::shared_ptr<scene::Surface> const& surface, geometry::Displacement& movement, geometry::Rectangle const& bounds);
 
     void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
 

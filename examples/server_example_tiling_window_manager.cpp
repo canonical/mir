@@ -552,7 +552,7 @@ void me::TilingWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface, P
 void me::TilingWindowManagerPolicy::constrained_move(
     std::shared_ptr<scene::Surface> const& surface,
     Displacement& movement,
-    Rectangle const& bounds) const
+    Rectangle const& bounds)
 {
     auto const top_left = surface->top_left();
     auto const surface_size = surface->size();
