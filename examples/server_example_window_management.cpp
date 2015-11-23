@@ -53,22 +53,13 @@ struct NullSessionInfo
 {
 };
 
-struct NullSurfaceInfo
-{
-    NullSurfaceInfo(
-        std::shared_ptr<ms::Session> const& /*session*/,
-        std::shared_ptr<ms::Surface> const& /*surface*/,
-        ms::SurfaceCreationParameters const& /*params*/) {}
-};
-
-
 // Very simple - make every surface fullscreen
 class FullscreenWindowManagerPolicy
 {
 public:
-    using Tools = me::BasicWindowManagerToolsCopy<NullSessionInfo, NullSurfaceInfo>;
+    using Tools = me::BasicWindowManagerToolsCopy<NullSessionInfo, me::CanonicalSurfaceInfoCopy>;
     using SessionInfoMap = typename me::SessionTo<NullSessionInfo>::type;
-    using SurfaceInfoMap = typename me::SurfaceTo<NullSurfaceInfo>::type;
+    using SurfaceInfoMap = typename me::SurfaceTo<me::CanonicalSurfaceInfoCopy>::type;
 
     FullscreenWindowManagerPolicy(Tools* const /*tools*/, std::shared_ptr<msh::DisplayLayout> const& display_layout) :
         display_layout{display_layout} {}
@@ -132,7 +123,7 @@ private:
 
 }
 
-using FullscreenWindowManager = me::BasicWindowManagerCopy<FullscreenWindowManagerPolicy, NullSessionInfo, NullSurfaceInfo>;
+using FullscreenWindowManager = me::BasicWindowManagerCopy<FullscreenWindowManagerPolicy, NullSessionInfo, me::CanonicalSurfaceInfoCopy>;
 using CanonicalWindowManager = me::BasicWindowManagerCopy<me::CanonicalWindowManagerPolicyCopy, me::CanonicalSessionInfoCopy, me::CanonicalSurfaceInfoCopy>;
 
 void me::add_window_manager_option_to(Server& server)
