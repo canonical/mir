@@ -740,7 +740,6 @@ TEST_F(NestedServer, display_configuration_reset_when_application_exits)
     mir_wait_for(mir_connection_apply_display_config(connection, configuration));
 
     mir_display_config_destroy(configuration);
-    mir_surface_release_sync(painted_surface);
 
     // Wait for initial config to be applied
     initial_condition.wait_for_at_most_seconds(1);
@@ -751,6 +750,7 @@ TEST_F(NestedServer, display_configuration_reset_when_application_exits)
     EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
         .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
+    mir_surface_release_sync(painted_surface);
     mir_connection_release(connection);
 
     condition.wait_for_at_most_seconds(1);
