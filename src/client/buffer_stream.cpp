@@ -537,7 +537,8 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
     auto buffer = buffer_depository->current_buffer();
     std::unique_lock<decltype(mutex)> lock(mutex);
 
-    secured_region = buffer->secure_for_cpu_write();
+    if (!secured_region)
+        secured_region = buffer->secure_for_cpu_write();
     return secured_region;
 }
 

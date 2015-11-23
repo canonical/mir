@@ -21,9 +21,14 @@
 
 namespace mie = mir::input::evdev;
 
-mie::LibInputDevicePtr mie::make_libinput_device(libinput* lib, char const* path)
+void mie::LibInputDeviceDeleter::operator()(::libinput_device* device) const
 {
-    auto ret = mie::LibInputDevicePtr(::libinput_path_add_device(lib, path), libinput_device_unref);
+    libinput_device_unref(device);
+}
+
+mie::LibInputDevicePtr mie::make_libinput_device(std::shared_ptr<libinput> const& lib, char const* path)
+{
+    auto ret = mie::LibInputDevicePtr(::libinput_path_add_device(lib.get(), path), lib);
     if (ret)
         libinput_device_ref(ret.get());
     return ret;
