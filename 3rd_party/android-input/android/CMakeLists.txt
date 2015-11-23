@@ -1,5 +1,5 @@
 include_directories(
-  external/kernel-headers/original
+  external/kernel-headers
   frameworks/base/include
   frameworks/native/include
   hardware/libhardware_legacy/include
