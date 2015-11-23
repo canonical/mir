@@ -101,6 +101,55 @@ auto me::TilingWindowManagerPolicy::handle_place_new_surface(
     Rectangle const& tile = tools->info_for(session).tile;
     parameters.top_left = parameters.top_left + (tile.top_left - Point{0, 0});
 
+    if (auto const parent = parameters.parent.lock())
+    {
+        auto const width = parameters.size.width.as_int();
+        auto const height = parameters.size.height.as_int();
+
+        if (parameters.aux_rect.is_set() && parameters.edge_attachment.is_set())
+        {
+            auto const edge_attachment = parameters.edge_attachment.value();
+            auto const aux_rect = parameters.aux_rect.value();
+            auto const parent_top_left = parent->top_left();
+            auto const top_left = aux_rect.top_left     -Point{} + parent_top_left;
+            auto const top_right= aux_rect.top_right()  -Point{} + parent_top_left;
+            auto const bot_left = aux_rect.bottom_left()-Point{} + parent_top_left;
+
+            if (edge_attachment & mir_edge_attachment_vertical)
+            {
+                if (tile.contains(top_right + Displacement{width, height}))
+                {
+                    parameters.top_left = top_right;
+                }
+                else if (tile.contains(top_left + Displacement{-width, height}))
+                {
+                    parameters.top_left = top_left + Displacement{-width, 0};
+                }
+            }
+
+            if (edge_attachment & mir_edge_attachment_horizontal)
+            {
+                if (tile.contains(bot_left + Displacement{width, height}))
+                {
+                    parameters.top_left = bot_left;
+                }
+                else if (tile.contains(top_left + Displacement{width, -height}))
+                {
+                    parameters.top_left = top_left + Displacement{0, -height};
+                }
+            }
+        }
+        else
+        {
+            auto const parent_top_left = parent->top_left();
+            auto const centred = parent_top_left
+                                 + 0.5*(as_displacement(parent->size()) - as_displacement(parameters.size))
+                                 - DeltaY{(parent->size().height.as_int()-height)/6};
+
+            parameters.top_left = centred;
+        }
+    }
+
     clip_to_tile(parameters, tile);
     return parameters;
 }
