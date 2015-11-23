@@ -241,23 +241,23 @@ int me::TilingWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surface>
     switch (value)
     {
     case mir_surface_state_restored:
-        surface->move_to(info.restore_rect.top_left);
         surface->resize(info.restore_rect.size);
+        drag(surface, info.restore_rect.top_left, surface->top_left(), tile);
         break;
 
     case mir_surface_state_maximized:
-        surface->move_to(tile.top_left);
         surface->resize(tile.size);
+        drag(surface, tile.top_left, surface->top_left(), tile);
         break;
 
     case mir_surface_state_horizmaximized:
-        surface->move_to({tile.top_left.x, info.restore_rect.top_left.y});
         surface->resize({tile.size.width, info.restore_rect.size.height});
+        drag(surface, {tile.top_left.x, info.restore_rect.top_left.y}, surface->top_left(), tile);
         break;
 
     case mir_surface_state_vertmaximized:
-        surface->move_to({info.restore_rect.top_left.x, tile.top_left.y});
         surface->resize({info.restore_rect.size.width, tile.size.height});
+        drag(surface, {info.restore_rect.top_left.x, tile.top_left.y}, surface->top_left(), tile);
         break;
 
     default:
