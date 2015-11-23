@@ -205,8 +205,7 @@ void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Se
     if (surfaces.empty() && session == tools->focused_session())
     {
         tools->focus_next_session();
-        if (auto const surface = tools->focused_surface())
-            tools->raise({surface});
+        select_active_surface(tools->focused_session(), tools->focused_surface());
     }
 }
 
@@ -341,8 +340,7 @@ bool me::TilingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const
             scan_code == KEY_TAB)
     {
         tools->focus_next_session();
-        if (auto const surface = tools->focused_surface())
-            raise_tree(surface);
+        select_active_surface(tools->focused_session(), tools->focused_surface());
 
         return true;
     }
