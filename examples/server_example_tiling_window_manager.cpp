@@ -155,11 +155,8 @@ void me::TilingWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Sessi
     if (surface_info.can_be_active())
     {
         surface->add_observer(std::make_shared<shell::SurfaceReadyObserver>(
-            [this](std::shared_ptr<scene::Session> const& /*session*/,
-                   std::shared_ptr<scene::Surface> const& /*surface*/)
-                {
-                    // TODO select_active_surface(surface);
-                },
+            [this](std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface)
+                { select_active_surface(session, surface); },
             session,
             surface));
     }
