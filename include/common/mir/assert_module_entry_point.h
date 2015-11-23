@@ -16,32 +16,18 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVDEV_LIBINPUT_DEVICE_PTR_H_
-#define MIR_INPUT_EVDEV_LIBINPUT_DEVICE_PTR_H_
+#ifndef MIR_ASSERT_MODULE_ENTRY_POINT_H_
+#define MIR_ASSERT_MODULE_ENTRY_POINT_H_
 
-#include <memory>
-
-struct libinput_device;
-struct libinput;
+#include <type_traits>
 
 namespace mir
 {
-namespace input
+template<typename ReferenceTypename, typename EntryPoint>
+void assert_entry_point_signature(EntryPoint)
 {
-namespace evdev
-{
-struct LibInputDeviceDeleter
-{
-    LibInputDeviceDeleter(std::shared_ptr<::libinput> const& lib)
-        : lib{lib}
-    {}
-    void operator()(::libinput_device* device) const;
-    std::shared_ptr<::libinput> const lib;
-};
-using LibInputDevicePtr = std::unique_ptr<libinput_device, LibInputDeviceDeleter>;
-
-LibInputDevicePtr make_libinput_device(std::shared_ptr<::libinput> const& lib, char const* path);
-}
+    static_assert(std::is_same<EntryPoint, ReferenceTypename>::value,
+                  "Signature of platform entry point does not match.");
 }
 }
 
