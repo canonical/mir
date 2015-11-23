@@ -19,6 +19,7 @@
 #include "stub_input_platform.h"
 #include "fake_input_device_impl.h"
 #include "mir/module_properties.h"
+#include "mir/assert_module_entry_point.h"
 
 namespace mtf = mir_test_framework;
 namespace mo = mir::options;
@@ -30,18 +31,21 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<mi::InputReport> const& /*report*/)
 {
+    mir::assert_entry_point_signature<mi::CreatePlatform>(&create_input_platform);
     return mir::make_module_ptr<mtf::StubInputPlatform>(input_device_registry);
 }
 
 void add_input_platform_options(
     boost::program_options::options_description& /*config*/)
 {
+    mir::assert_entry_point_signature<mi::AddPlatformOptions>(&add_input_platform_options);
     // no options to add yet
 }
 
 mi::PlatformPriority probe_input_platform(
     mo::Option const& /*options*/)
 {
+    mir::assert_entry_point_signature<mi::ProbePlatform>(&probe_input_platform);
     return mi::PlatformPriority::dummy;
 }
 
@@ -57,6 +61,7 @@ mir::ModuleProperties const description = {
 
 mir::ModuleProperties const* describe_input_module()
 {
+    mir::assert_entry_point_signature<mi::DescribeModule>(&describe_input_module);
     return &description;
 }
 
