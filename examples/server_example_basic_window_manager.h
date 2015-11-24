@@ -71,8 +71,6 @@ public:
 
     virtual auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> = 0;
 
-    virtual void raise(SurfaceSet const& surfaces) = 0;
-
     virtual auto active_display() -> geometry::Rectangle const = 0;
 
     virtual void forget(std::weak_ptr<scene::Surface> const& surface) = 0;
@@ -297,11 +295,6 @@ private:
         return focus_controller->surface_at(cursor);
     }
 
-    void raise(SurfaceSet const& surfaces) override
-    {
-        focus_controller->raise(surfaces);
-    }
-
     auto active_display() -> geometry::Rectangle const override
     {
         geometry::Rectangle result;
@@ -364,7 +357,7 @@ private:
         surfaces.insert(root);
         add_children(root);
 
-        raise(surfaces);
+        focus_controller->raise(surfaces);
     }
 
     shell::FocusController* const focus_controller;
