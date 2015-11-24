@@ -94,6 +94,11 @@ int mga::DeviceQuirks::aligned_width(int width) const
     return width;
 }
 
+bool mga::DeviceQuirks::clear_fb_context_fence() const
+{
+    return false;
+}
+
 void mga::DeviceQuirks::add_options(boost::program_options::options_description& config)
 {
     config.add_options()
