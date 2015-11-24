@@ -53,7 +53,7 @@ char const* const wm_system_compositor = "system-compositor";
 class FullscreenWindowManagerPolicy
 {
 public:
-    using Tools = me::BasicWindowManagerToolsCopy;
+    using Tools = me::WindowManagerTools;
     using SessionInfoMap = typename Tools::SessionInfoMap;
     using SurfaceInfoMap = typename Tools::SurfaceInfoMap;
 

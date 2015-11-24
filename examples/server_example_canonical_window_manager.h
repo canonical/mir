@@ -44,7 +44,7 @@ namespace examples
 class CanonicalWindowManagerPolicyCopy
 {
 public:
-    using Tools = BasicWindowManagerToolsCopy;
+    using Tools = WindowManagerTools;
     using SessionInfoMap = typename Tools::SessionInfoMap;
     using SurfaceInfoMap = typename Tools::SurfaceInfoMap;
 
