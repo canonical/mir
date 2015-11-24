@@ -465,7 +465,7 @@ void me::TilingWindowManagerPolicy::toggle(MirSurfaceState state)
 
 std::shared_ptr<ms::Session> me::TilingWindowManagerPolicy::session_under(Point position)
 {
-    return tools->find_session([&](TilingSessionInfo const& info) { return info.tile.contains(position);});
+    return tools->find_session([&](SessionInfo const& info) { return info.tile.contains(position);});
 }
 
 void me::TilingWindowManagerPolicy::update_tiles(

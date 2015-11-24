@@ -44,10 +44,10 @@ using shell::SurfaceSet;
 /// These functions assume that the BasicWindowManager data structures can be accessed freely.
 /// I.e. should only be invoked by the policy handle_... methods (where any necessary locks are held).
 // TODO extract commonality with FocusController (once that's separated from shell::FocusController)
-template<typename SessionInfo>
 class BasicWindowManagerToolsCopy
 {
 public:
+    using SessionInfo = CanonicalSessionInfoCopy;
     using SurfaceInfo = CanonicalSurfaceInfoCopy;
     using SurfaceInfoMap = std::map<std::weak_ptr<scene::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<scene::Surface>>>;
     using SessionInfoMap = std::map<std::weak_ptr<scene::Session>, SessionInfo, std::owner_less<std::weak_ptr<scene::Session>>>;
@@ -103,14 +103,15 @@ public:
 /// \tparam SessionInfo must be default constructable.
 ///
 /// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>, ms::SurfaceCreationParameters const& params)
-template<typename WindowManagementPolicy, typename SessionInfo>
+template<typename WindowManagementPolicy>
 class BasicWindowManagerCopy : public shell::WindowManager,
-    private BasicWindowManagerToolsCopy<SessionInfo>
+    private BasicWindowManagerToolsCopy
 {
 public:
-    using typename BasicWindowManagerToolsCopy<SessionInfo>::SurfaceInfo;
-    using typename BasicWindowManagerToolsCopy<SessionInfo>::SurfaceInfoMap;
-    using typename BasicWindowManagerToolsCopy<SessionInfo>::SessionInfoMap;
+    using typename BasicWindowManagerToolsCopy::SessionInfo;
+    using typename BasicWindowManagerToolsCopy::SurfaceInfo;
+    using typename BasicWindowManagerToolsCopy::SurfaceInfoMap;
+    using typename BasicWindowManagerToolsCopy::SessionInfoMap;
 
     template <typename... PolicyArgs>
     BasicWindowManagerCopy(

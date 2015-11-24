@@ -49,15 +49,11 @@ char const* const wm_fullscreen = "fullscreen";
 char const* const wm_canonical = "canonical";
 char const* const wm_system_compositor = "system-compositor";
 
-struct NullSessionInfo
-{
-};
-
 // Very simple - make every surface fullscreen
 class FullscreenWindowManagerPolicy
 {
 public:
-    using Tools = me::BasicWindowManagerToolsCopy<NullSessionInfo>;
+    using Tools = me::BasicWindowManagerToolsCopy;
     using SessionInfoMap = typename Tools::SessionInfoMap;
     using SurfaceInfoMap = typename Tools::SurfaceInfoMap;
 
@@ -123,8 +119,8 @@ private:
 
 }
 
-using FullscreenWindowManager = me::BasicWindowManagerCopy<FullscreenWindowManagerPolicy, NullSessionInfo>;
-using CanonicalWindowManager = me::BasicWindowManagerCopy<me::CanonicalWindowManagerPolicyCopy, me::CanonicalSessionInfoCopy>;
+using FullscreenWindowManager = me::BasicWindowManagerCopy<FullscreenWindowManagerPolicy>;
+using CanonicalWindowManager = me::BasicWindowManagerCopy<me::CanonicalWindowManagerPolicyCopy>;
 
 void me::add_window_manager_option_to(Server& server)
 {

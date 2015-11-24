@@ -29,12 +29,6 @@ namespace mir
 {
 namespace examples
 {
-struct TilingSessionInfo
-{
-    geometry::Rectangle tile;
-    std::vector<std::weak_ptr<scene::Surface>> surfaces;
-};
-
 // simple tiling algorithm:
 //  o Switch apps: tap or click on the corresponding tile
 //  o Move window: Alt-leftmousebutton drag (three finger drag)
@@ -46,7 +40,8 @@ struct TilingSessionInfo
 class TilingWindowManagerPolicy
 {
 public:
-    using Tools = BasicWindowManagerToolsCopy<TilingSessionInfo>;
+    using Tools = BasicWindowManagerToolsCopy;
+    using SessionInfo = typename Tools::SessionInfo;
     using SessionInfoMap = typename Tools::SessionInfoMap;
     using SurfaceInfoMap = typename Tools::SurfaceInfoMap;
 
@@ -128,7 +123,7 @@ private:
     geometry::Point old_cursor{};
 };
 
-using TilingWindowManager = BasicWindowManagerCopy<TilingWindowManagerPolicy, TilingSessionInfo>;
+using TilingWindowManager = BasicWindowManagerCopy<TilingWindowManagerPolicy>;
 }
 }
 

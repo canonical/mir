@@ -23,6 +23,8 @@
 #include "mir/optional_value.h"
 #include "mir/shell/surface_specification.h"
 
+#include <vector>
+
 namespace mir
 {
 namespace scene { class Session; class Surface; class SurfaceCreationParameters; }
@@ -84,6 +86,15 @@ private:
     struct SwappingPainter;
 
     std::shared_ptr <StreamPainter> stream_painter;
+};
+
+struct CanonicalSessionInfoCopy
+{
+    std::vector<std::weak_ptr<scene::Surface>> surfaces;
+
+    // This is only used by the TilingWindowManagerPolicy,
+    // perhaps we need a more extensible mechanism. (std::experimental::any?)
+    geometry::Rectangle tile;
 };
 }
 }

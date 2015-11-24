@@ -266,7 +266,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms
         tools->info_for(parent).children.push_back(surface);
     }
 
-    tools->info_for(session).surfaces++;
+    tools->info_for(session).surfaces.push_back(surface);
 
     if (surface_info.can_be_active())
     {
@@ -409,7 +409,18 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
         tools->forget(info.titlebar);
     }
 
-    if (!--tools->info_for(session).surfaces && session == tools->focused_session())
+    auto& surfaces = tools->info_for(session).surfaces;
+
+    for (auto i = begin(surfaces); i != end(surfaces); ++i)
+    {
+        if (surface.lock() == i->lock())
+        {
+            surfaces.erase(i);
+            break;
+        }
+    }
+
+    if (surfaces.empty() && session == tools->focused_session())
     {
         active_surface_.reset();
         tools->focus_next_session();

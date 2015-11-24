@@ -34,11 +34,6 @@ namespace mir
 namespace shell { class DisplayLayout; }
 namespace examples
 {
-struct CanonicalSessionInfoCopy
-{
-    int surfaces{0};
-};
-
 // standard window management algorithm:
 //  o Switch apps: tap or click on the corresponding tile
 //  o Move window: Alt-leftmousebutton drag (three finger drag)
@@ -50,7 +45,7 @@ struct CanonicalSessionInfoCopy
 class CanonicalWindowManagerPolicyCopy
 {
 public:
-    using Tools = BasicWindowManagerToolsCopy<CanonicalSessionInfoCopy>;
+    using Tools = BasicWindowManagerToolsCopy;
     using SessionInfoMap = typename Tools::SessionInfoMap;
     using SurfaceInfoMap = typename Tools::SurfaceInfoMap;
 
