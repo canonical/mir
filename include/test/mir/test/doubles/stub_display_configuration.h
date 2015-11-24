@@ -37,7 +37,7 @@ struct StubDisplayConfigurationOutput : public graphics::DisplayConfigurationOut
 {
     StubDisplayConfigurationOutput(
         geometry::Size px_size, geometry::Size mm_size, MirPixelFormat format, double vrefresh, bool connected) :
-        StubDisplayConfigurationOutput(graphics::DisplayConfigurationOutputId{0}, px_size, mm_size, format, vrefresh, connected)
+        StubDisplayConfigurationOutput(graphics::DisplayConfigurationOutputId{1}, px_size, mm_size, format, vrefresh, connected)
     {
     }
 
@@ -109,7 +109,7 @@ public:
             outputs[i].connected = connected_used[i].first;
             outputs[i].used = connected_used[i].second;
             outputs[i].current_format = mir_pixel_format_abgr_8888;
-            outputs[i].id = graphics::DisplayConfigurationOutputId{static_cast<int>(i)};
+            outputs[i].id = graphics::DisplayConfigurationOutputId{static_cast<int>(i+1)};
         }
     }
 

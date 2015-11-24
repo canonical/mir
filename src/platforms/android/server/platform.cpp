@@ -36,6 +36,7 @@
 #include "mir/options/option.h"
 #include "mir/options/configuration.h"
 #include "mir/abnormal_exit.h"
+#include "mir/assert_module_entry_point.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -160,6 +161,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mir::graphics::DisplayReport> const& display_report)
 {
+    mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}, *options);
     auto hwc_report = make_hwc_report(*options);
     auto overlay_option = should_use_overlay_optimization(*options);
@@ -177,6 +179,7 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::NestedContext> const&)
 {
+    mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     //TODO: actually allow disabling quirks for guest platform
     auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
     auto sync_factory = std::make_shared<mga::EGLSyncFactory>();
@@ -189,6 +192,7 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
 void add_graphics_platform_options(
     boost::program_options::options_description& config)
 {
+    mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
     config.add_options()
         (hwc_log_opt,
          boost::program_options::value<std::string>()->default_value(std::string{mo::off_opt_value}),
@@ -201,6 +205,7 @@ void add_graphics_platform_options(
 
 mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*/)
 {
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
     int err;
     hw_module_t const* hw_module;
 
@@ -218,5 +223,6 @@ mir::ModuleProperties const description = {
 
 mir::ModuleProperties const* describe_graphics_module()
 {
+    mir::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
     return &description;
 }
