@@ -170,6 +170,25 @@ TEST(DeviceDetection, clears_gl_context_fence_on_krillin)
     EXPECT_TRUE(quirks.clear_fb_context_fence());
 }
 
+TEST(DeviceDetection, does_not_clear_gl_context_fence_on_others)
+{
+    using namespace testing;
+    char const default_str[] = "";
+    char const mx4_name_str[] = "others";
+
+    MockOps mock_ops;
+    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
+        .Times(1)
+        .WillOnce(Invoke([&](char const*, char* value, char const*)
+        {
+            strncpy(value, mx4_name_str, PROP_VALUE_MAX);
+            return 0;
+        }));
+
+    mga::DeviceQuirks quirks(mock_ops);
+    EXPECT_FALSE(quirks.clear_fb_context_fence());
+}
+
 struct DeviceQuirks : testing::Test
 {
     void SetUp()

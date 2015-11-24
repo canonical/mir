@@ -74,6 +74,7 @@ private:
     unsigned int const num_framebuffers_;
     bool const gralloc_reopenable_after_close_;
     bool const enable_width_alignment_quirk;
+    bool const clear_fb_context_fence_;
 };
 }
 }
