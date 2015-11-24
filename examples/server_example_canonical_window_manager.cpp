@@ -63,11 +63,11 @@ void me::CanonicalWindowManagerPolicyCopy::click(Point cursor)
         select_active_surface(surface);
 }
 
-void me::CanonicalWindowManagerPolicyCopy::handle_session_info_updated(CanonicalSessionInfoMap& /*session_info*/, Rectangles const& /*displays*/)
+void me::CanonicalWindowManagerPolicyCopy::handle_session_info_updated(SessionInfoMap& /*session_info*/, Rectangles const& /*displays*/)
 {
 }
 
-void me::CanonicalWindowManagerPolicyCopy::handle_displays_updated(CanonicalSessionInfoMap& /*session_info*/, Rectangles const& displays)
+void me::CanonicalWindowManagerPolicyCopy::handle_displays_updated(SessionInfoMap& /*session_info*/, Rectangles const& displays)
 {
     display_area = displays.bounding_rectangle();
 }
@@ -228,7 +228,7 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
-    CanonicalSurfaceInfoMap& surface_map,
+    SurfaceInfoMap& surface_map,
     std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build)
 {
     if (!CanonicalSurfaceInfoCopy::needs_titlebar(surface->type()))

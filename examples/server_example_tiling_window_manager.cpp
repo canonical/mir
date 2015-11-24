@@ -47,12 +47,12 @@ void me::TilingWindowManagerPolicy::click(Point cursor)
     select_active_surface(session, surface);
 }
 
-void me::TilingWindowManagerPolicy::handle_session_info_updated(TilingSessionInfoMap& session_info, Rectangles const& displays)
+void me::TilingWindowManagerPolicy::handle_session_info_updated(SessionInfoMap& session_info, Rectangles const& displays)
 {
     update_tiles(session_info, displays);
 }
 
-void me::TilingWindowManagerPolicy::handle_displays_updated(TilingSessionInfoMap& session_info, Rectangles const& displays)
+void me::TilingWindowManagerPolicy::handle_displays_updated(SessionInfoMap& session_info, Rectangles const& displays)
 {
     update_tiles(session_info, displays);
 }
@@ -137,7 +137,7 @@ auto me::TilingWindowManagerPolicy::handle_place_new_surface(
 void me::TilingWindowManagerPolicy::generate_decorations_for(
     std::shared_ptr<ms::Session> const&,
     std::shared_ptr<ms::Surface> const&,
-    TilingSurfaceInfoMap&,
+    SurfaceInfoMap&,
     std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const&, ms::SurfaceCreationParameters const&)> const&)
 {
 }
@@ -469,7 +469,7 @@ std::shared_ptr<ms::Session> me::TilingWindowManagerPolicy::session_under(Point 
 }
 
 void me::TilingWindowManagerPolicy::update_tiles(
-    TilingSessionInfoMap& session_info,
+    SessionInfoMap& session_info,
     Rectangles const& displays)
 {
     if (session_info.size() < 1 || displays.size() < 1) return;

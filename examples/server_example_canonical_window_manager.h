@@ -51,8 +51,8 @@ class CanonicalWindowManagerPolicyCopy
 {
 public:
     using Tools = BasicWindowManagerToolsCopy<CanonicalSessionInfoCopy>;
-    using CanonicalSessionInfoMap = typename Tools::SessionInfoMap;
-    using CanonicalSurfaceInfoMap = typename Tools::SurfaceInfoMap;
+    using SessionInfoMap = typename Tools::SessionInfoMap;
+    using SurfaceInfoMap = typename Tools::SurfaceInfoMap;
 
     explicit CanonicalWindowManagerPolicyCopy(
         Tools* const tools,
@@ -60,9 +60,9 @@ public:
 
     void click(geometry::Point cursor);
 
-    void handle_session_info_updated(CanonicalSessionInfoMap& session_info, geometry::Rectangles const& displays);
+    void handle_session_info_updated(SessionInfoMap& session_info, geometry::Rectangles const& displays);
 
-    void handle_displays_updated(CanonicalSessionInfoMap& session_info, geometry::Rectangles const& displays);
+    void handle_displays_updated(SessionInfoMap& session_info, geometry::Rectangles const& displays);
 
     void resize(geometry::Point cursor);
 
@@ -97,7 +97,7 @@ public:
     void generate_decorations_for(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        CanonicalSurfaceInfoMap& surface_map,
+        SurfaceInfoMap& surface_map,
         std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build);
 
 private:
