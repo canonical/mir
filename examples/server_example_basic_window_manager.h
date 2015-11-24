@@ -124,16 +124,19 @@ public:
     WindowManagementPolicy& operator=(WindowManagementPolicy const&) = delete;
 };
 
-class GenericWindowManager : public shell::WindowManager,
+/// A policy based window manager.
+/// This takes care of the management of any meta implementation held for the sessions and surfaces.
+class BasicWindowManager : public shell::WindowManager,
                              protected WindowManagerTools
 {
+protected:
+    BasicWindowManager(
+        shell::FocusController* focus_controller,
+        std::unique_ptr<WindowManagementPolicy>&& policy);
+
 public:
     using typename WindowManagerTools::SurfaceInfoMap;
     using typename WindowManagerTools::SessionInfoMap;
-
-    GenericWindowManager(
-        shell::FocusController* focus_controller,
-        WindowManagementPolicy* policy);
 
     void add_session(std::shared_ptr<scene::Session> const& session) override;
 
@@ -200,6 +203,7 @@ public:
 
     void raise_tree(std::shared_ptr<scene::Surface> const& root) override;
 
+private:
     shell::FocusController* const focus_controller;
     std::unique_ptr<WindowManagementPolicy> const policy;
 
@@ -210,45 +214,36 @@ public:
     geometry::Point cursor;
     uint64_t last_input_event_timestamp{0};
 
-private:
     void update_event_timestamp(MirKeyboardEvent const* kev);
     void update_event_timestamp(MirPointerEvent const* pev);
     void update_event_timestamp(MirTouchEvent const* tev);
 };
 
-/// A policy based window manager.
-/// This takes care of the management of any meta implementation held for the sessions and surfaces.
-///
-/// \tparam WindowManagementPolicy the constructor must take a pointer to BasicWindowManagerTools<>
-/// as its first parameter. (Any additional parameters can be forwarded by
-/// BasicWindowManager::BasicWindowManager.)
-/// In addition WindowManagementPolicy must implement the following methods:
-/// - void handle_session_info_updated(SessionInfoMap& session_info, Rectangles const& displays);
-/// - void handle_displays_updated(SessionInfoMap& session_info, Rectangles const& displays);
-/// - auto handle_place_new_surface(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& request_parameters) -> ms::SurfaceCreationParameters;
-/// - void handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface);
-/// - void handle_delete_surface(std::shared_ptr<ms::Session> const& /*session*/, std::weak_ptr<ms::Surface> const& /*surface*/);
-/// - int handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value);
-/// - bool handle_keyboard_event(MirKeyboardEvent const* event);
-/// - bool handle_touch_event(MirTouchEvent const* event);
-/// - bool handle_pointer_event(MirPointerEvent const* event);
-///
-/// \tparam SessionInfo must be default constructable.
-///
-/// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>, ms::SurfaceCreationParameters const& params)
+/// A policy based window manager. This exists to initialize GenericWindowManager and
+/// the WindowManagementPolicy (in an awkward manner).
+/// TODO revisit this initialization sequence.
 template<typename WindowManagementPolicy>
-class BasicWindowManagerCopy : public GenericWindowManager
+class BasicWindowManagerBuilder : public BasicWindowManager
 {
 public:
 
     template <typename... PolicyArgs>
-    BasicWindowManagerCopy(
+    BasicWindowManagerBuilder(
         shell::FocusController* focus_controller,
         PolicyArgs&&... policy_args) :
-        GenericWindowManager(
+        BasicWindowManager(
             focus_controller,
-            new WindowManagementPolicy(this, std::forward<PolicyArgs>(policy_args)...))
+            build_policy(std::forward<PolicyArgs>(policy_args)...))
     {
+    }
+
+private:
+    template <typename... PolicyArgs>
+    auto build_policy(PolicyArgs&&... policy_args)
+    -> std::unique_ptr<WindowManagementPolicy>
+    {
+        return std::unique_ptr<WindowManagementPolicy>(
+            new WindowManagementPolicy(this, std::forward<PolicyArgs>(policy_args)...));
     }
 };
 }

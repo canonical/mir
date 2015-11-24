@@ -121,8 +121,8 @@ private:
 
 }
 
-using FullscreenWindowManager = me::BasicWindowManagerCopy<FullscreenWindowManagerPolicy>;
-using CanonicalWindowManager = me::BasicWindowManagerCopy<me::CanonicalWindowManagerPolicyCopy>;
+using FullscreenWindowManager = me::BasicWindowManagerBuilder<FullscreenWindowManagerPolicy>;
+using CanonicalWindowManager = me::BasicWindowManagerBuilder<me::CanonicalWindowManagerPolicyCopy>;
 
 void me::add_window_manager_option_to(Server& server)
 {
