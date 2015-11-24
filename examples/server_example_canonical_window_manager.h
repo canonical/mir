@@ -41,8 +41,8 @@ struct CanonicalSessionInfoCopy
 
 // standard window management algorithm:
 //  o Switch apps: tap or click on the corresponding tile
-//  o Move window: Alt-leftmousebutton drag
-//  o Resize window: Alt-middle_button drag
+//  o Move window: Alt-leftmousebutton drag (three finger drag)
+//  o Resize window: Alt-middle_button drag (two finger drag)
 //  o Maximize/restore current window (to display size): Alt-F11
 //  o Maximize/restore current window (to display height): Shift-F11
 //  o Maximize/restore current window (to display width): Ctrl-F11
