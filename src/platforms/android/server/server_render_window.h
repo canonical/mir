@@ -54,6 +54,7 @@ private:
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<InterpreterResourceCache> const resource_cache;
     int format;
+    bool const clear_fence;
 };
 
 }

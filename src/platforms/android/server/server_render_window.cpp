@@ -38,10 +38,11 @@ mga::ServerRenderWindow::ServerRenderWindow(
     std::shared_ptr<mga::FramebufferBundle> const& fb_bundle,
     MirPixelFormat format,
     std::shared_ptr<InterpreterResourceCache> const& cache,
-    DeviceQuirks& /*quirks*/)
+    DeviceQuirks& quirks)
     : fb_bundle(fb_bundle),
       resource_cache(cache),
-      format(mga::to_android_format(format))
+      format(mga::to_android_format(format)),
+      clear_fence(quirks.clear_fb_context_fence())
 {
 }
 
@@ -55,7 +56,13 @@ mg::NativeBuffer* mga::ServerRenderWindow::driver_requests_buffer()
 
 void mga::ServerRenderWindow::driver_returns_buffer(ANativeWindowBuffer* buffer, int fence_fd)
 {
-    resource_cache->update_native_fence(buffer, fence_fd);
+    //depending on the quirk, some mali drivers won't synchronize the fb context fence before posting.
+    //if this bug is present, we synchronize here to avoid tearing or other artifacts.
+    if (clear_fence)
+        mga::SyncFence(std::make_shared<RealSyncFileOps>(), mir::Fd(fence_fd)).wait();
+    else
+        resource_cache->update_native_fence(buffer, fence_fd);
+
     resource_cache->retrieve_buffer(buffer);
 }
 
