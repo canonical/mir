@@ -394,24 +394,23 @@ bool me::TilingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* even
         }
     }
 
-    if (is_drag && count == 3)
+    bool consumes_event = false;
+    if (is_drag)
     {
-        drag(cursor);
-        old_cursor = cursor;
-        return true;
+        switch (count)
+        {
+        case 2:
+            resize(cursor);
+            consumes_event = true;
+
+        case 3:
+            drag(cursor);
+            consumes_event = true;
+        }
     }
-    else if (is_drag && count == 4)
-    {
-        resize(cursor);
-        old_cursor = cursor;
-        return true;
-    }
-    else
-    {
-        click(cursor);
-        old_cursor = cursor;
-        return false;
-    }
+
+    old_cursor = cursor;
+    return consumes_event;
 }
 
 bool me::TilingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* event)
