@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_SERVER_EXAMPLE_CANONICAL_SURFACE_INFO_H
-#define MIR_SERVER_EXAMPLE_CANONICAL_SURFACE_INFO_H
+#ifndef MIR_SERVER_EXAMPLE_WINDOW_MANAGEMENT_INFO_H
+#define MIR_SERVER_EXAMPLE_WINDOW_MANAGEMENT_INFO_H
 
 #include "mir/geometry/rectangles.h"
 #include "mir/optional_value.h"
@@ -30,9 +30,9 @@ namespace mir
 namespace scene { class Session; class Surface; class SurfaceCreationParameters; }
 namespace examples
 {
-struct CanonicalSurfaceInfoCopy
+struct SurfaceInfo
 {
-    CanonicalSurfaceInfoCopy(
+    SurfaceInfo(
         std::shared_ptr <scene::Session> const& session,
         std::shared_ptr <scene::Surface> const& surface,
         scene::SurfaceCreationParameters const& params);
@@ -88,7 +88,7 @@ private:
     std::shared_ptr <StreamPainter> stream_painter;
 };
 
-struct CanonicalSessionInfoCopy
+struct SessionInfo
 {
     std::vector<std::weak_ptr<scene::Surface>> surfaces;
 
@@ -99,4 +99,4 @@ struct CanonicalSessionInfoCopy
 }
 }
 
-#endif //MIR_SERVER_EXAMPLE_CANONICAL_SURFACE_INFO_H
+#endif //MIR_SERVER_EXAMPLE_WINDOW_MANAGEMENT_INFO_H

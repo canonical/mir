@@ -20,7 +20,6 @@
 #define MIR_EXAMPLE_CANONICAL_WINDOW_MANAGER_H_
 
 #include "server_example_basic_window_manager.h"
-#include "server_example_canonical_surface_info.h"
 
 #include "mir/geometry/displacement.h"
 

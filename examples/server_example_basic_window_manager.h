@@ -19,7 +19,7 @@
 #ifndef MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
 #define MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
 
-#include "server_example_canonical_surface_info.h"
+#include "server_example_window_management_info.h"
 
 #include "mir/geometry/rectangles.h"
 #include "mir/scene/session.h"
@@ -47,8 +47,6 @@ using shell::SurfaceSet;
 class BasicWindowManagerToolsCopy
 {
 public:
-    using SessionInfo = CanonicalSessionInfoCopy;
-    using SurfaceInfo = CanonicalSurfaceInfoCopy;
     using SurfaceInfoMap = std::map<std::weak_ptr<scene::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<scene::Surface>>>;
     using SessionInfoMap = std::map<std::weak_ptr<scene::Session>, SessionInfo, std::owner_less<std::weak_ptr<scene::Session>>>;
 
@@ -108,8 +106,6 @@ class BasicWindowManagerCopy : public shell::WindowManager,
     private BasicWindowManagerToolsCopy
 {
 public:
-    using typename BasicWindowManagerToolsCopy::SessionInfo;
-    using typename BasicWindowManagerToolsCopy::SurfaceInfo;
     using typename BasicWindowManagerToolsCopy::SurfaceInfoMap;
     using typename BasicWindowManagerToolsCopy::SessionInfoMap;
 

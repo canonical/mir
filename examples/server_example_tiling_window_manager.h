@@ -20,7 +20,6 @@
 #define MIR_EXAMPLE_TILING_WINDOW_MANAGER_H_
 
 #include "server_example_basic_window_manager.h"
-#include "server_example_canonical_surface_info.h"
 
 ///\example server_example_tiling_window_manager.h
 /// Demonstrate implementing a simple tiling algorithm
@@ -41,7 +40,6 @@ class TilingWindowManagerPolicy
 {
 public:
     using Tools = BasicWindowManagerToolsCopy;
-    using SessionInfo = typename Tools::SessionInfo;
     using SessionInfoMap = typename Tools::SessionInfoMap;
     using SurfaceInfoMap = typename Tools::SurfaceInfoMap;
 

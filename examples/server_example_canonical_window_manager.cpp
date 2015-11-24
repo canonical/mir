@@ -85,7 +85,7 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 {
     auto parameters = request_parameters;
     auto surf_type = parameters.type.is_set() ? parameters.type.value() : mir_surface_type_normal;
-    bool const needs_titlebar = CanonicalSurfaceInfoCopy::needs_titlebar(surf_type);
+    bool const needs_titlebar = SurfaceInfo::needs_titlebar(surf_type);
 
     if (needs_titlebar)
         parameters.size.height = parameters.size.height + DeltaY{title_bar_height};
@@ -231,7 +231,7 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     SurfaceInfoMap& surface_map,
     std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build)
 {
-    if (!CanonicalSurfaceInfoCopy::needs_titlebar(surface->type()))
+    if (!SurfaceInfo::needs_titlebar(surface->type()))
         return;
 
     auto format = mir_pixel_format_xrgb_8888;
@@ -251,8 +251,8 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     surface_info.titlebar_id = id;
     surface_info.children.push_back(titlebar);
 
-    CanonicalSurfaceInfoCopy& titlebar_info =
-            surface_map.emplace(titlebar, CanonicalSurfaceInfoCopy{session, titlebar, {}}).first->second;
+    SurfaceInfo& titlebar_info =
+            surface_map.emplace(titlebar, SurfaceInfo{session, titlebar, {}}).first->second;
     titlebar_info.is_titlebar = true;
     titlebar_info.parent = surface;
     titlebar_info.init_titlebar(titlebar);
