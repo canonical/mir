@@ -39,11 +39,7 @@ namespace examples
 class TilingWindowManagerPolicy : public WindowManagementPolicy
 {
 public:
-    using Tools = WindowManagerTools;
-    using SessionInfoMap = typename Tools::SessionInfoMap;
-    using SurfaceInfoMap = typename Tools::SurfaceInfoMap;
-
-    explicit TilingWindowManagerPolicy(Tools* const tools);
+    explicit TilingWindowManagerPolicy(WindowManagerTools* const tools);
 
     void click(geometry::Point cursor);
 
@@ -116,12 +112,12 @@ private:
 
     std::shared_ptr<scene::Surface> select_active_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
 
-    Tools* const tools;
+    WindowManagerTools* const tools;
 
     geometry::Point old_cursor{};
 };
 
-using TilingWindowManager = BasicWindowManagerBuilder<TilingWindowManagerPolicy>;
+using TilingWindowManager = WindowManagerBuilder<TilingWindowManagerPolicy>;
 }
 }
 

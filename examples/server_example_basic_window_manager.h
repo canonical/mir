@@ -219,16 +219,16 @@ private:
     void update_event_timestamp(MirTouchEvent const* tev);
 };
 
-/// A policy based window manager. This exists to initialize GenericWindowManager and
-/// the WindowManagementPolicy (in an awkward manner).
+/// A policy based window manager. This exists to initialize BasicWindowManager and
+/// the WMPolicy (in an awkward manner).
 /// TODO revisit this initialization sequence.
-template<typename WindowManagementPolicy>
-class BasicWindowManagerBuilder : public BasicWindowManager
+template<typename WMPolicy>
+class WindowManagerBuilder : public BasicWindowManager
 {
 public:
 
     template <typename... PolicyArgs>
-    BasicWindowManagerBuilder(
+    WindowManagerBuilder(
         shell::FocusController* focus_controller,
         PolicyArgs&&... policy_args) :
         BasicWindowManager(
@@ -240,10 +240,10 @@ public:
 private:
     template <typename... PolicyArgs>
     auto build_policy(PolicyArgs&&... policy_args)
-    -> std::unique_ptr<WindowManagementPolicy>
+    -> std::unique_ptr<WMPolicy>
     {
-        return std::unique_ptr<WindowManagementPolicy>(
-            new WindowManagementPolicy(this, std::forward<PolicyArgs>(policy_args)...));
+        return std::unique_ptr<WMPolicy>(
+            new WMPolicy(this, std::forward<PolicyArgs>(policy_args)...));
     }
 };
 }

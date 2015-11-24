@@ -55,11 +55,7 @@ char const* const wm_system_compositor = "system-compositor";
 class FullscreenWindowManagerPolicy  : public me::WindowManagementPolicy
 {
 public:
-    using Tools = me::WindowManagerTools;
-    using SessionInfoMap = typename Tools::SessionInfoMap;
-    using SurfaceInfoMap = typename Tools::SurfaceInfoMap;
-
-    FullscreenWindowManagerPolicy(Tools* const /*tools*/, std::shared_ptr<msh::DisplayLayout> const& display_layout) :
+    FullscreenWindowManagerPolicy(me::WindowManagerTools* const /*tools*/, std::shared_ptr<msh::DisplayLayout> const& display_layout) :
         display_layout{display_layout} {}
 
     void handle_session_info_updated(SessionInfoMap& /*session_info*/, Rectangles const& /*displays*/) {}
@@ -121,8 +117,8 @@ private:
 
 }
 
-using FullscreenWindowManager = me::BasicWindowManagerBuilder<FullscreenWindowManagerPolicy>;
-using CanonicalWindowManager = me::BasicWindowManagerBuilder<me::CanonicalWindowManagerPolicyCopy>;
+using FullscreenWindowManager = me::WindowManagerBuilder<FullscreenWindowManagerPolicy>;
+using CanonicalWindowManager = me::WindowManagerBuilder<me::CanonicalWindowManagerPolicyCopy>;
 
 void me::add_window_manager_option_to(Server& server)
 {

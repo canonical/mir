@@ -53,7 +53,7 @@ Point titlebar_position_for_window(Point window_position)
 }
 
 me::CanonicalWindowManagerPolicyCopy::CanonicalWindowManagerPolicyCopy(
-    Tools* const tools,
+    WindowManagerTools* const tools,
     std::shared_ptr<shell::DisplayLayout> const& display_layout) :
     tools{tools},
     display_layout{display_layout}

@@ -37,7 +37,7 @@ using namespace mir::geometry;
 ///\example server_example_tiling_window_manager.cpp
 /// Demonstrate implementing a simple tiling algorithm
 
-me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(Tools* const tools) :
+me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(WindowManagerTools* const tools) :
     tools{tools}
 {
 }

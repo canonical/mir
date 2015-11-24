@@ -44,12 +44,9 @@ namespace examples
 class CanonicalWindowManagerPolicyCopy  : public WindowManagementPolicy
 {
 public:
-    using Tools = WindowManagerTools;
-    using SessionInfoMap = typename Tools::SessionInfoMap;
-    using SurfaceInfoMap = typename Tools::SurfaceInfoMap;
 
     explicit CanonicalWindowManagerPolicyCopy(
-        Tools* const tools,
+        WindowManagerTools* const tools,
         std::shared_ptr<shell::DisplayLayout> const& display_layout);
 
     void click(geometry::Point cursor);
@@ -118,7 +115,7 @@ private:
         geometry::Point const& new_pos,
         geometry::Size const& new_size) const;
 
-    Tools* const tools;
+    WindowManagerTools* const tools;
     std::shared_ptr<shell::DisplayLayout> const display_layout;
 
     geometry::Rectangle display_area;
