@@ -642,6 +642,12 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_touch_event(MirTouchEvent cons
         old_cursor = cursor;
         return true;
     }
+    else if (is_drag && count == 4)
+    {
+        resize(cursor);
+        old_cursor = cursor;
+        return true;
+    }
     else
     {
         click(cursor);
