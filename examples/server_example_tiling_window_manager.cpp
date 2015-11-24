@@ -402,10 +402,12 @@ bool me::TilingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* even
         case 2:
             resize(cursor);
             consumes_event = true;
+            break;
 
         case 3:
             drag(cursor);
             consumes_event = true;
+            break;
         }
     }
 

@@ -644,10 +644,12 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_touch_event(MirTouchEvent cons
         case 2:
             resize(cursor);
             consumes_event = true;
+            break;
 
         case 3:
             drag(cursor);
             consumes_event = true;
+            break;
         }
     }
 
