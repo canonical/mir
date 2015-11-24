@@ -32,7 +32,7 @@ struct MockCommandStreamSync : public mir::graphics::CommandStreamSync
 {
     MOCK_METHOD0(raise, void());
     MOCK_METHOD0(reset, void());
-    MOCK_METHOD1(clear_or_timeout_after, bool(std::chrono::nanoseconds));
+    MOCK_METHOD1(wait_for, bool(std::chrono::nanoseconds));
 };
 }
 
@@ -165,7 +165,7 @@ TEST_F(NativeBuffer, raises_egl_fence)
 TEST_F(NativeBuffer, clears_egl_fence_successfully)
 {
     mga::AndroidNativeBuffer buffer(a_native_window_buffer, mock_cmdstream_sync, mock_fence, mga::BufferAccess::read);
-    EXPECT_CALL(*mock_cmdstream_sync, clear_or_timeout_after(timeout))
+    EXPECT_CALL(*mock_cmdstream_sync, wait_for(timeout))
         .Times(1)
         .WillOnce(Return(true));
     buffer.ensure_not_used_by_gpu();
@@ -175,7 +175,7 @@ TEST_F(NativeBuffer, clears_egl_fence_successfully)
 TEST_F(NativeBuffer, ignores_clears_egl_fence_failure)
 {
     mga::AndroidNativeBuffer buffer(a_native_window_buffer, mock_cmdstream_sync, mock_fence, mga::BufferAccess::read);
-    EXPECT_CALL(*mock_cmdstream_sync, clear_or_timeout_after(timeout))
+    EXPECT_CALL(*mock_cmdstream_sync, wait_for(timeout))
         .Times(1)
         .WillOnce(Return(false));
     buffer.ensure_not_used_by_gpu();

@@ -36,6 +36,7 @@ struct MockGLBuffer : public MockBuffer,
     using MockBuffer::MockBuffer;
 
     MOCK_METHOD0(gl_bind_to_texture, void());
+    MOCK_METHOD0(used_as_texture, void());
 };
 
 }

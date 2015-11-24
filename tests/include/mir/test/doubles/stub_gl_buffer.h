@@ -36,6 +36,7 @@ public:
     using StubBuffer::StubBuffer;
 
     void gl_bind_to_texture() {}
+    void used_as_texture() {}
 };
 
 }

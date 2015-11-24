@@ -120,10 +120,6 @@ public:
         return this;
     }
 
-    void used_as_texture() override
-    {
-    }
-
     std::shared_ptr<graphics::NativeBuffer> const native_buffer;
     geometry::Size const buf_size;
     MirPixelFormat const buf_pixel_format;

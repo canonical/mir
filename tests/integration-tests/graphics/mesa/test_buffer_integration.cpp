@@ -77,6 +77,8 @@ public:
         }
     }
 
+    void used_as_texture() override {}
+
 private:
     std::thread::id creation_thread_id;
 };
