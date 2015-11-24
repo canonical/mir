@@ -18,6 +18,9 @@
 
 #include "server_example_canonical_window_manager.h"
 
+#include "mir/scene/session.h"
+#include "mir/scene/surface.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/surface_ready_observer.h"
 #include "mir/shell/display_layout.h"
 

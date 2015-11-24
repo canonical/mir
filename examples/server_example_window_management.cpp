@@ -25,6 +25,8 @@
 #include "mir/server.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/options/option.h"
+#include "mir/scene/session.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/display_layout.h"
 #include "mir/shell/system_compositor_window_manager.h"
 
