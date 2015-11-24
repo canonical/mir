@@ -80,6 +80,53 @@ public:
     WindowManagerTools& operator=(WindowManagerTools const&) = delete;
 };
 
+class WindowManagementPolicy
+{
+public:
+    using SessionInfoMap = typename WindowManagerTools::SessionInfoMap;
+    using SurfaceInfoMap = typename WindowManagerTools::SurfaceInfoMap;
+
+    virtual void handle_session_info_updated(SessionInfoMap& session_info, geometry::Rectangles const& displays) = 0;
+
+    virtual void handle_displays_updated(SessionInfoMap& session_info, geometry::Rectangles const& displays) = 0;
+
+    virtual auto handle_place_new_surface(
+        std::shared_ptr<scene::Session> const& session,
+        scene::SurfaceCreationParameters const& request_parameters)
+        -> scene::SurfaceCreationParameters = 0;
+
+    virtual void handle_new_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface) = 0;
+
+    virtual void handle_modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        shell::SurfaceSpecification const& modifications) = 0;
+
+    virtual void handle_delete_surface(std::shared_ptr<scene::Session> const& session, std::weak_ptr<scene::Surface> const& surface) = 0;
+
+    virtual int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value) = 0;
+
+    virtual void generate_decorations_for(
+        std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface,
+        SurfaceInfoMap& surface_info,
+        std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const&, scene::SurfaceCreationParameters const&)> const& build) = 0;
+
+    virtual bool handle_keyboard_event(MirKeyboardEvent const* event) = 0;
+
+    virtual bool handle_touch_event(MirTouchEvent const* event) = 0;
+
+    virtual bool handle_pointer_event(MirPointerEvent const* event) = 0;
+
+    virtual void handle_raise_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface) = 0;
+
+    virtual ~WindowManagementPolicy() = default;
+    WindowManagementPolicy() = default;
+    WindowManagementPolicy(WindowManagementPolicy const&) = delete;
+    WindowManagementPolicy& operator=(WindowManagementPolicy const&) = delete;
+};
+
 /// A policy based window manager.
 /// This takes care of the management of any meta implementation held for the sessions and surfaces.
 ///
@@ -113,7 +160,7 @@ public:
         shell::FocusController* focus_controller,
         PolicyArgs&&... policy_args) :
         focus_controller(focus_controller),
-        policy(this, std::forward<PolicyArgs>(policy_args)...)
+        policy(new WindowManagementPolicy(this, std::forward<PolicyArgs>(policy_args)...))
     {
     }
 
@@ -122,14 +169,14 @@ private:
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info[session] = SessionInfo();
-        policy.handle_session_info_updated(session_info, displays);
+        policy->handle_session_info_updated(session_info, displays);
     }
 
     void remove_session(std::shared_ptr<scene::Session> const& session) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info.erase(session);
-        policy.handle_session_info_updated(session_info, displays);
+        policy->handle_session_info_updated(session_info, displays);
     }
 
     frontend::SurfaceId add_surface(
@@ -138,12 +185,12 @@ private:
         std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        scene::SurfaceCreationParameters const placed_params = policy.handle_place_new_surface(session, params);
+        scene::SurfaceCreationParameters const placed_params = policy->handle_place_new_surface(session, params);
         auto const result = build(session, placed_params);
         auto const surface = session->surface(result);
         surface_info.emplace(surface, SurfaceInfo{session, surface, placed_params});
-        policy.handle_new_surface(session, surface);
-        policy.generate_decorations_for(session, surface, surface_info, build);
+        policy->handle_new_surface(session, surface);
+        policy->generate_decorations_for(session, surface, surface_info, build);
         return result;
     }
 
@@ -153,7 +200,7 @@ private:
         shell::SurfaceSpecification const& modifications) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        policy.handle_modify_surface(session, surface, modifications);
+        policy->handle_modify_surface(session, surface, modifications);
     }
 
     void remove_surface(
@@ -161,7 +208,7 @@ private:
         std::weak_ptr<scene::Surface> const& surface) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        policy.handle_delete_surface(session, surface);
+        policy->handle_delete_surface(session, surface);
 
         surface_info.erase(surface);
     }
@@ -175,28 +222,28 @@ private:
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         displays.add(area);
-        policy.handle_displays_updated(session_info, displays);
+        policy->handle_displays_updated(session_info, displays);
     }
 
     void remove_display(geometry::Rectangle const& area) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         displays.remove(area);
-        policy.handle_displays_updated(session_info, displays);
+        policy->handle_displays_updated(session_info, displays);
     }
 
     bool handle_keyboard_event(MirKeyboardEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         update_event_timestamp(event);
-        return policy.handle_keyboard_event(event);
+        return policy->handle_keyboard_event(event);
     }
 
     bool handle_touch_event(MirTouchEvent const* event) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         update_event_timestamp(event);
-        return policy.handle_touch_event(event);
+        return policy->handle_touch_event(event);
     }
 
     bool handle_pointer_event(MirPointerEvent const* event) override
@@ -208,7 +255,7 @@ private:
             mir_pointer_event_axis_value(event, mir_pointer_axis_x),
             mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
 
-        return policy.handle_pointer_event(event);
+        return policy->handle_pointer_event(event);
     }
 
     void handle_raise_surface(
@@ -218,7 +265,7 @@ private:
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         if (timestamp >= last_input_event_timestamp)
-            policy.handle_raise_surface(session, surface);
+            policy->handle_raise_surface(session, surface);
     }
 
     int set_surface_attribute(
@@ -232,7 +279,7 @@ private:
         {
         case mir_surface_attrib_state:
         {
-            auto const state = policy.handle_set_state(surface, MirSurfaceState(value));
+            auto const state = policy->handle_set_state(surface, MirSurfaceState(value));
             return surface->configure(attrib, state);
         }
         default:
@@ -357,7 +404,7 @@ private:
     }
 
     shell::FocusController* const focus_controller;
-    WindowManagementPolicy policy;
+    std::unique_ptr<WindowManagementPolicy> const policy;
 
     std::mutex mutex;
     SessionInfoMap session_info;

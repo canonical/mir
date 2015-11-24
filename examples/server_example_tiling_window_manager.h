@@ -36,7 +36,7 @@ namespace examples
 //  o Maximize/restore current window (to tile height): Shift-F11
 //  o Maximize/restore current window (to tile width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
-class TilingWindowManagerPolicy
+class TilingWindowManagerPolicy : public WindowManagementPolicy
 {
 public:
     using Tools = WindowManagerTools;

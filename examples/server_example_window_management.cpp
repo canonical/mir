@@ -50,7 +50,7 @@ char const* const wm_canonical = "canonical";
 char const* const wm_system_compositor = "system-compositor";
 
 // Very simple - make every surface fullscreen
-class FullscreenWindowManagerPolicy
+class FullscreenWindowManagerPolicy  : public me::WindowManagementPolicy
 {
 public:
     using Tools = me::WindowManagerTools;

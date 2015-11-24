@@ -41,7 +41,7 @@ namespace examples
 //  o Maximize/restore current window (to display height): Shift-F11
 //  o Maximize/restore current window (to display width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
-class CanonicalWindowManagerPolicyCopy
+class CanonicalWindowManagerPolicyCopy  : public WindowManagementPolicy
 {
 public:
     using Tools = WindowManagerTools;
