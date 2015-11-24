@@ -61,8 +61,6 @@ void me::CanonicalWindowManagerPolicyCopy::click(Point cursor)
 {
     if (auto const surface = tools->surface_at(cursor))
         select_active_surface(surface);
-
-    old_cursor = cursor;
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_session_info_updated(CanonicalSessionInfoMap& /*session_info*/, Rectangles const& /*displays*/)
@@ -78,7 +76,6 @@ void me::CanonicalWindowManagerPolicyCopy::resize(Point cursor)
 {
     select_active_surface(tools->surface_at(old_cursor));
     resize(active_surface(), cursor, old_cursor, display_area);
-    old_cursor = cursor;
 }
 
 auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
@@ -525,7 +522,6 @@ void me::CanonicalWindowManagerPolicyCopy::drag(Point cursor)
 {
     select_active_surface(tools->surface_at(old_cursor));
     drag(active_surface(), cursor, old_cursor, display_area);
-    old_cursor = cursor;
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_raise_surface(
@@ -643,11 +639,13 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_touch_event(MirTouchEvent cons
     if (is_drag && count == 3)
     {
         drag(cursor);
+        old_cursor = cursor;
         return true;
     }
     else
     {
         click(cursor);
+        old_cursor = cursor;
         return false;
     }
 }
@@ -660,10 +658,11 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
         mir_pointer_event_axis_value(event, mir_pointer_axis_x),
         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
 
+    bool consumes_event = false;
+
     if (action == mir_pointer_action_button_down)
     {
         click(cursor);
-        return false;
     }
     else if (action == mir_pointer_action_motion &&
              modifiers == mir_input_event_modifier_alt)
@@ -671,13 +670,13 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
         if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
         {
             drag(cursor);
-            return true;
+            consumes_event = true;
         }
 
         if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
         {
             resize(cursor);
-            return true;
+            consumes_event = true;
         }
     }
     else if (action == mir_pointer_action_motion && !modifiers)
@@ -689,13 +688,14 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
                 if (tools->info_for(possible_titlebar).is_titlebar)
                 {
                     drag(cursor);
-                    return true;
+                    consumes_event = true;
                 }
             }
         }
     }
 
-    return false;
+    old_cursor = cursor;
+    return consumes_event;
 }
 
 void me::CanonicalWindowManagerPolicyCopy::toggle(MirSurfaceState state)

@@ -397,11 +397,13 @@ bool me::TilingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* even
     if (is_drag && count == 3)
     {
         drag(cursor);
+        old_cursor = cursor;
         return true;
     }
     else
     {
         click(cursor);
+        old_cursor = cursor;
         return false;
     }
 }
