@@ -47,8 +47,8 @@ class TilingWindowManagerPolicy
 {
 public:
     using Tools = BasicWindowManagerToolsCopy<TilingSessionInfo>;
-    using TilingSessionInfoMap = typename SessionTo<TilingSessionInfo>::type;
-    using TilingSurfaceInfoMap = typename SurfaceTo<CanonicalSurfaceInfoCopy>::type;
+    using TilingSessionInfoMap = typename Tools::SessionInfoMap;
+    using TilingSurfaceInfoMap = typename Tools::SurfaceInfoMap;
 
     explicit TilingWindowManagerPolicy(Tools* const tools);
 

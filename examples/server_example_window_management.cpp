@@ -58,8 +58,8 @@ class FullscreenWindowManagerPolicy
 {
 public:
     using Tools = me::BasicWindowManagerToolsCopy<NullSessionInfo>;
-    using SessionInfoMap = typename me::SessionTo<NullSessionInfo>::type;
-    using SurfaceInfoMap = typename me::SurfaceTo<me::CanonicalSurfaceInfoCopy>::type;
+    using SessionInfoMap = typename Tools::SessionInfoMap;
+    using SurfaceInfoMap = typename Tools::SurfaceInfoMap;
 
     FullscreenWindowManagerPolicy(Tools* const /*tools*/, std::shared_ptr<msh::DisplayLayout> const& display_layout) :
         display_layout{display_layout} {}

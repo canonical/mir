@@ -40,18 +40,6 @@ namespace examples
 {
 using shell::SurfaceSet;
 
-template<typename Info>
-struct SurfaceTo
-{
-    using type = std::map<std::weak_ptr<scene::Surface>, Info, std::owner_less<std::weak_ptr<scene::Surface>>>;
-};
-
-template<typename Info>
-struct SessionTo
-{
-    using type = std::map<std::weak_ptr<scene::Session>, Info, std::owner_less<std::weak_ptr<scene::Session>>>;
-};
-
 /// The interface through which the policy instructs the controller.
 /// These functions assume that the BasicWindowManager data structures can be accessed freely.
 /// I.e. should only be invoked by the policy handle_... methods (where any necessary locks are held).
@@ -61,6 +49,8 @@ class BasicWindowManagerToolsCopy
 {
 public:
     using SurfaceInfo = CanonicalSurfaceInfoCopy;
+    using SurfaceInfoMap = std::map<std::weak_ptr<scene::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<scene::Surface>>>;
+    using SessionInfoMap = std::map<std::weak_ptr<scene::Session>, SessionInfo, std::owner_less<std::weak_ptr<scene::Session>>>;
 
     virtual auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
     -> std::shared_ptr<scene::Session> = 0;
@@ -120,7 +110,9 @@ class BasicWindowManagerCopy : public shell::WindowManager,
     private BasicWindowManagerToolsCopy<SessionInfo>
 {
 public:
-    using SurfaceInfo = CanonicalSurfaceInfoCopy;
+    using typename BasicWindowManagerToolsCopy<SessionInfo>::SurfaceInfo;
+    using typename BasicWindowManagerToolsCopy<SessionInfo>::SurfaceInfoMap;
+    using typename BasicWindowManagerToolsCopy<SessionInfo>::SessionInfoMap;
 
     template <typename... PolicyArgs>
     BasicWindowManagerCopy(
@@ -379,8 +371,8 @@ private:
     WindowManagementPolicy policy;
 
     std::mutex mutex;
-    typename SessionTo<SessionInfo>::type session_info;
-    typename SurfaceTo<SurfaceInfo>::type surface_info;
+    SessionInfoMap session_info;
+    SurfaceInfoMap surface_info;
     geometry::Rectangles displays;
     geometry::Point cursor;
     uint64_t last_input_event_timestamp{0};

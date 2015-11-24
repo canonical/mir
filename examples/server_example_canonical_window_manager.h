@@ -51,8 +51,8 @@ class CanonicalWindowManagerPolicyCopy
 {
 public:
     using Tools = BasicWindowManagerToolsCopy<CanonicalSessionInfoCopy>;
-    using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfoCopy>::type;
-    using CanonicalSurfaceInfoMap = typename SurfaceTo<CanonicalSurfaceInfoCopy>::type;
+    using CanonicalSessionInfoMap = typename Tools::SessionInfoMap;
+    using CanonicalSurfaceInfoMap = typename Tools::SurfaceInfoMap;
 
     explicit CanonicalWindowManagerPolicyCopy(
         Tools* const tools,
