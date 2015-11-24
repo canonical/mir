@@ -37,7 +37,6 @@ namespace
 char const* const num_framebuffers_opt = "enable-num-framebuffers-quirk";
 char const* const single_gralloc_instance_opt = "enable-single-gralloc-instance-quirk";
 char const* const width_alignment_opt = "enable-width-alignment-quirk";
-char const* const clear_fb_context_fence_opt = "enable-clear-fb-context-fence-quirk";
 
 std::string determine_device_name(mga::PropertiesWrapper const& properties)
 {
@@ -61,11 +60,9 @@ unsigned int gralloc_reopenable_after_close_for(std::string const& device_name, 
     return !(quirk_enabled && device_name == std::string{"krillin"});
 }
 
-bool clear_fb_context_fence_for(std::string const& device_name, bool quirk_enabled)
+bool clear_fb_context_fence_for(std::string const& device_name)
 {
-    return quirk_enabled ||
-        device_name == std::string{"krillin"} ||
-        device_name == std::string{"mx4"};
+    return device_name == std::string{"krillin"} || device_name == std::string{"mx4"};
 }
 
 }
@@ -75,7 +72,7 @@ mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties)
       num_framebuffers_(num_framebuffers_for(device_name, true)),
       gralloc_reopenable_after_close_(gralloc_reopenable_after_close_for(device_name, true)),
       enable_width_alignment_quirk{true},
-      clear_fb_context_fence_{clear_fb_context_fence_for(device_name, false)}
+      clear_fb_context_fence_{clear_fb_context_fence_for(device_name)}
 {
 }
 
@@ -84,7 +81,7 @@ mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties, mo::Option 
       num_framebuffers_(num_framebuffers_for(device_name, options.get(num_framebuffers_opt, true))),
       gralloc_reopenable_after_close_(gralloc_reopenable_after_close_for(device_name, options.get(single_gralloc_instance_opt, true))),
       enable_width_alignment_quirk(options.get(width_alignment_opt, true)),
-      clear_fb_context_fence_(options.get(clear_fb_context_fence_opt, true))
+      clear_fb_context_fence_{clear_fb_context_fence_for(device_name)}
 {
 }
 
@@ -121,8 +118,5 @@ void mga::DeviceQuirks::add_options(boost::program_options::options_description&
          "[platform-specific] Allocate a single gralloc instance (krillin quirk)  [{true,false}]")
          (width_alignment_opt,
           boost::program_options::value<bool>()->default_value(true),
-          "[platform-specific] Enable width alignment (vegetahd quirk) [{true,false}]")
-         (clear_fb_context_fence_opt,
-          boost::program_options::value<bool>()->default_value(false),
-          "[platform-specific] Enable width alignment (krillin,mx4 quirk) [{false,true}]");
+          "[platform-specific] Enable width alignment (vegetahd quirk) [{true,false}]");
 }

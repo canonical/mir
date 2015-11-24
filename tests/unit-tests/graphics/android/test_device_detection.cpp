@@ -229,16 +229,6 @@ struct DeviceQuirks : testing::Test
         options.parse_arguments(desc, argc, argv);
     }
 
-    void disable_clear_fb_context_fence_quirk()
-    {
-        int const argc = 2;
-        char const* argv[argc] = {
-            __PRETTY_FUNCTION__,
-            "--enable-clear-fb-context-fence=false"
-        };
-
-        options.parse_arguments(desc, argc, argv);
-    }
     bpo::options_description desc{"Options"};
     mir::options::ProgramOption options;
 };
@@ -302,24 +292,4 @@ TEST_F(DeviceQuirks, width_alignment_quirk_can_be_disabled)
     disable_width_alignment_quirk();
     mga::DeviceQuirks quirks(mock_ops, options);
     EXPECT_THAT(quirks.aligned_width(720), Eq(720));
-}
-
-TEST_F(DeviceQuirks, disable_clear_fb_context_fence_before_commit)
-{
-    using namespace testing;
-    char const default_str[] = "";
-    char const krillin_name_str[] = "krillin";
-
-    MockOps mock_ops;
-    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
-        .WillOnce(Invoke([&](char const*, char* value, char const*)
-        {
-            strncpy(value, krillin_name_str, PROP_VALUE_MAX);
-            return 0;
-        }));
-
-    disable_clear_fb_context_fence_quirk();
-
-    mga::DeviceQuirks quirks(mock_ops, options);
-    EXPECT_FALSE(quirks.clear_fb_context_fence());
 }
