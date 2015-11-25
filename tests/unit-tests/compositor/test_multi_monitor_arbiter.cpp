@@ -54,9 +54,9 @@ struct FixedSchedule : mc::Schedule
     {
         throw std::runtime_error("this stub doesnt support this");
     }
-    bool anything_scheduled()
+    unsigned int num_scheduled()
     {
-        return current != sched.size();
+        return sched.size() - current;
     }
     std::shared_ptr<mg::Buffer> next_buffer()
     {

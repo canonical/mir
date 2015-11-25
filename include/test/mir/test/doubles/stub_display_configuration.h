@@ -24,6 +24,7 @@
 #include "mir_toolkit/common.h"
 
 #include <vector>
+#include <limits>
 
 namespace mir
 {
@@ -36,7 +37,7 @@ struct StubDisplayConfigurationOutput : public graphics::DisplayConfigurationOut
 {
     StubDisplayConfigurationOutput(
         geometry::Size px_size, geometry::Size mm_size, MirPixelFormat format, double vrefresh, bool connected) :
-        StubDisplayConfigurationOutput(graphics::DisplayConfigurationOutputId{0}, px_size, mm_size, format, vrefresh, connected)
+        StubDisplayConfigurationOutput(graphics::DisplayConfigurationOutputId{1}, px_size, mm_size, format, vrefresh, connected)
     {
     }
 
@@ -108,7 +109,7 @@ public:
             outputs[i].connected = connected_used[i].first;
             outputs[i].used = connected_used[i].second;
             outputs[i].current_format = mir_pixel_format_abgr_8888;
-            outputs[i].id = graphics::DisplayConfigurationOutputId{static_cast<int>(i)};
+            outputs[i].id = graphics::DisplayConfigurationOutputId{static_cast<int>(i+1)};
         }
     }
 
@@ -227,6 +228,14 @@ public:
         }
     }
 
+    StubDisplayConfig(
+        std::vector<graphics::DisplayConfigurationCard> const& cards,
+        std::vector<graphics::DisplayConfigurationOutput> const& outputs)
+        : cards(cards),
+          outputs(outputs)
+    {
+    }
+
     void for_each_card(std::function<void(graphics::DisplayConfigurationCard const&)> f) const override
     {
         for (auto const& card : cards)
@@ -248,6 +257,11 @@ public:
             graphics::UserDisplayConfigurationOutput user(disp);
             f(user);
         }
+    }
+
+    std::unique_ptr<graphics::DisplayConfiguration> clone() const override
+    {
+        return std::make_unique<StubDisplayConfig>(*this);
     }
 
     std::vector<graphics::DisplayConfigurationCard> cards;

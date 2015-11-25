@@ -39,21 +39,21 @@ mgx::Platform::Platform(std::shared_ptr<::Display> const& conn, geom::Size const
     gbm.setup(*drm);
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgx::Platform::create_buffer_allocator()
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgx::Platform::create_buffer_allocator()
 {
-    return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited, mgm::BufferImportMethod::dma_buf);
+    return make_module_ptr<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited, mgm::BufferImportMethod::dma_buf);
 }
 
-std::shared_ptr<mg::Display> mgx::Platform::create_display(
+mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& /*initial_conf_policy*/,
     std::shared_ptr<GLConfig> const& /*gl_config*/)
 {
-    return std::make_shared<mgx::Display>(x11_connection.get(), size);
+    return make_module_ptr<mgx::Display>(x11_connection.get(), size);
 }
 
-std::shared_ptr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const
+mir::UniqueModulePtr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const
 {
-    return std::make_shared<mg::mesa::IpcOperations>(drm);
+    return make_module_ptr<mg::mesa::IpcOperations>(drm);
 }
 
 EGLNativeDisplayType mgx::Platform::egl_native_display() const

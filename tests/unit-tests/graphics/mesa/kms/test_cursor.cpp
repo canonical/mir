@@ -28,6 +28,7 @@
 
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/fake_shared.h"
 #include "mock_kms_output.h"
 
@@ -82,12 +83,11 @@ struct StubKMSOutputContainer : public mgm::KMSOutputContainer
 struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
 {
     StubKMSDisplayConfiguration()
-        : card_id{1}
-    {
-        outputs.push_back(
-            {
+        : mgm::KMSDisplayConfiguration(),
+          stub_config{
+            {{
                 mg::DisplayConfigurationOutputId{10},
-                card_id,
+                mg::DisplayConfigurationCardId{},
                 mg::DisplayConfigurationOutputType::vga,
                 {},
                 {
@@ -105,11 +105,10 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 mir_orientation_normal,
                 1.0f,
                 mir_form_factor_monitor
-            });
-        outputs.push_back(
+            },
             {
                 mg::DisplayConfigurationOutputId{11},
-                card_id,
+                mg::DisplayConfigurationCardId{},
                 mg::DisplayConfigurationOutputType::vga,
                 {},
                 {
@@ -127,11 +126,10 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 mir_orientation_normal,
                 1.0f,
                 mir_form_factor_monitor
-            });
-        outputs.push_back(
+            },
             {
                 mg::DisplayConfigurationOutputId{12},
-                card_id,
+                mg::DisplayConfigurationCardId{},
                 mg::DisplayConfigurationOutputType::vga,
                 {},
                 {
@@ -149,27 +147,33 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
                 mir_orientation_right,
                 1.0f,
                 mir_form_factor_monitor
-            });
+            }}}
+    {
     }
 
     void for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const override
     {
-        f({card_id, outputs.size()});
+        stub_config.for_each_card(f);
     }
 
     void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const override
     {
-        for (auto const& output : outputs)
-            f(output);
+        stub_config.for_each_output(f);
     }
 
     void for_each_output(std::function<void(mg::UserDisplayConfigurationOutput&)> f) override
     {
-        for (auto& output : outputs)
-        {
-            mg::UserDisplayConfigurationOutput user(output);
-            f(user);
-        }
+        stub_config.for_each_output(f);
+    }
+
+    std::unique_ptr<DisplayConfiguration> clone() const override
+    {
+        return stub_config.clone();
+    }
+
+    bool valid() const override
+    {
+        return stub_config.valid();
     }
 
     uint32_t get_kms_connector_id(mg::DisplayConfigurationOutputId id) const override
@@ -182,22 +186,21 @@ struct StubKMSDisplayConfiguration : public mgm::KMSDisplayConfiguration
         return conf_mode_index;
     }
 
-    void update()
+    void update() override
     {
     }
 
     void set_orentation_of_output(mg::DisplayConfigurationOutputId id, MirOrientation orientation)
     {
-        auto output = std::find_if(outputs.begin(), outputs.end(),
-                                   [id] (mg::DisplayConfigurationOutput const& output) -> bool {return output.id == id;});
-        if (output != outputs.end())
-        {
-            output->orientation = orientation;
-        }
+        stub_config.for_each_output(
+            [id,orientation] (mg::UserDisplayConfigurationOutput const& output)
+            {
+                if (output.id == id)
+                    output.orientation = orientation;
+            });
     }
 
-    mg::DisplayConfigurationCardId card_id;
-    std::vector<mg::DisplayConfigurationOutput> outputs;
+    mtd::StubDisplayConfig stub_config;
 };
 
 struct StubCurrentConfiguration : public mgm::CurrentConfiguration

@@ -63,15 +63,10 @@ if [ -z ${1} ]; then
 fi
 
 directory=${1}
-echo "creating phablet-compatible armhf partial chroot for mir compilation in directory ${directory}"
+echo "creating phablet-compatible $arch partial chroot for mir compilation in directory ${directory}"
 
 if [ ! -d ${directory} ]; then
     mkdir -p ${directory} 
-fi
-
-arch=armhf
-if [ ! -z "$3" ]; then
-    arch=$3
 fi
 
 DEBCONTROL=$(pwd)/../debian/control

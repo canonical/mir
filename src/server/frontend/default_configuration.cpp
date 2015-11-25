@@ -25,6 +25,7 @@
 #include "unsupported_coordinate_translator.h"
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/frontend/protobuf_connection_creator.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/options/configuration.h"
@@ -167,5 +168,6 @@ mir::DefaultServerConfiguration::new_ipc_factory(
                 session_authorizer,
                 the_cursor_images(),
                 translator,
-                the_application_not_responding_detector());
+                the_application_not_responding_detector(),
+                the_cookie_factory());
 }

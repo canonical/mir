@@ -29,6 +29,7 @@ set(
   reordering_message_sender.cpp
   reordering_message_sender.h
   event_sink_factory.h
+  security_check_failed.cpp
 )
 
 add_library(

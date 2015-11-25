@@ -26,6 +26,7 @@
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/stub_display.h"
 #include "mir/fd.h"
+#include "mir/assert_module_entry_point.h"
 #include "mir/test/pipe.h"
 
 #ifdef ANDROID
@@ -97,6 +98,58 @@ public:
 private:
     int fd;
     const mg::BufferProperties properties;
+};
+
+struct WrappingDisplay : mg::Display
+{
+    WrappingDisplay(std::shared_ptr<mg::Display> const& display) : display{display} {}
+
+    void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
+    {
+        display->for_each_display_sync_group(f);
+    }
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
+    {
+        return display->configuration();
+    }
+    void configure(mg::DisplayConfiguration const& conf) override
+    {
+        display->configure(conf);
+    }
+    void register_configuration_change_handler(
+        mg::EventHandlerRegister& handlers,
+        mg::DisplayConfigurationChangeHandler const& conf_change_handler) override
+    {
+        display->register_configuration_change_handler(handlers, conf_change_handler);
+    }
+
+    void register_pause_resume_handlers(
+        mg::EventHandlerRegister& handlers,
+        mg::DisplayPauseHandler const& pause_handler,
+        mg::DisplayResumeHandler const& resume_handler) override
+    {
+        display->register_pause_resume_handlers(handlers, pause_handler, resume_handler);
+    }
+
+    void pause() override
+    {
+        display->pause();
+    }
+
+    void resume( )override
+    {
+        display->resume();
+    }
+    std::shared_ptr<mg::Cursor> create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& initial_image) override
+    {
+        return display->create_hardware_cursor(initial_image);
+    }
+    std::unique_ptr<mg::GLContext> create_gl_context() override
+    {
+        return display->create_gl_context();
+    }
+
+    std::shared_ptr<Display> const display;
 };
 
 class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
@@ -215,14 +268,14 @@ mtf::StubGraphicPlatform::StubGraphicPlatform(std::vector<geom::Rectangle> const
 {
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mtf::StubGraphicPlatform::create_buffer_allocator()
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mtf::StubGraphicPlatform::create_buffer_allocator()
 {
-    return std::make_shared<StubGraphicBufferAllocator>();
+    return mir::make_module_ptr<StubGraphicBufferAllocator>();
 }
 
-std::shared_ptr<mg::PlatformIpcOperations> mtf::StubGraphicPlatform::make_ipc_operations() const
+mir::UniqueModulePtr<mg::PlatformIpcOperations> mtf::StubGraphicPlatform::make_ipc_operations() const
 {
-    return std::make_shared<StubIpcOps>();
+    return mir::make_module_ptr<StubIpcOps>();
 }
 
 namespace
@@ -230,14 +283,14 @@ namespace
 std::shared_ptr<mg::Display> display_preset;
 }
 
-std::shared_ptr<mg::Display> mtf::StubGraphicPlatform::create_display(
+mir::UniqueModulePtr<mg::Display> mtf::StubGraphicPlatform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
     std::shared_ptr<mg::GLConfig> const&)
 {
     if (display_preset)
-        return std::move(display_preset);
+        return mir::make_module_ptr<WrappingDisplay>(std::move(display_preset));
 
-    return std::make_shared<mtd::StubDisplay>(display_rects);
+    return mir::make_module_ptr<mtd::StubDisplay>(display_rects);
 }
 
 namespace
@@ -248,22 +301,21 @@ struct GuestPlatformAdapter : mg::Platform
         std::shared_ptr<mg::NestedContext> const& context,
         std::shared_ptr<mg::Platform> const& adaptee) :
         context(context),
-        adaptee(adaptee),
-        ipc_ops(adaptee->make_ipc_operations())
+        adaptee(adaptee)
     {
     }
 
-    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
+    mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator() override
     {
         return adaptee->create_buffer_allocator();
     }
 
-    std::shared_ptr<mg::PlatformIpcOperations> make_ipc_operations() const override
+    mir::UniqueModulePtr<mg::PlatformIpcOperations> make_ipc_operations() const override
     {
-        return ipc_ops;
+        return adaptee->make_ipc_operations();
     }
 
-    std::shared_ptr<mg::Display> create_display(
+    mir::UniqueModulePtr<mg::Display> create_display(
         std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<mg::GLConfig> const& gl_config) override
     {
@@ -277,7 +329,6 @@ struct GuestPlatformAdapter : mg::Platform
 
     std::shared_ptr<mg::NestedContext> const context;
     std::shared_ptr<mg::Platform> const adaptee;
-    std::shared_ptr<mg::PlatformIpcOperations> const ipc_ops;
 };
 
 std::weak_ptr<mg::Platform> the_graphics_platform{};
@@ -289,11 +340,12 @@ extern "C" std::shared_ptr<mg::Platform> create_stub_platform(std::vector<geom::
     return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
 }
 
-std::shared_ptr<mg::Platform> create_host_platform(
+mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
+    mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     std::shared_ptr<mg::Platform> result{};
 
     if (auto const display_rects = std::move(chosen_display_rects))
@@ -306,25 +358,27 @@ std::shared_ptr<mg::Platform> create_host_platform(
         result = create_stub_platform(default_display_rects);
     }
     the_graphics_platform = result;
-    return result;
+    return mir::make_module_ptr<GuestPlatformAdapter>(nullptr, result);
 }
 
-std::shared_ptr<mg::Platform> create_guest_platform(
+mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& context)
 {
+    mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     auto graphics_platform = the_graphics_platform.lock();
     if (!graphics_platform)
     {
         static std::vector<geom::Rectangle> const default_display_rects{geom::Rectangle{{0,0},{1600,1600}}};
         the_graphics_platform = graphics_platform = create_stub_platform(default_display_rects);
     }
-    return std::make_shared<GuestPlatformAdapter>(context, graphics_platform);
+    return mir::make_module_ptr<GuestPlatformAdapter>(context, graphics_platform);
 }
 
 void add_graphics_platform_options(
     boost::program_options::options_description& /*config*/)
 {
+    mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
 }
 
 extern "C" void set_next_display_rects(
