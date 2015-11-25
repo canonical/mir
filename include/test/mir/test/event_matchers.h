@@ -250,8 +250,6 @@ MATCHER_P2(ButtonDownEvent, x, y, "")
     return button_event_matches(pev, x, y, mir_pointer_action_button_down, 0, true, false);
 }
 
-
-
 MATCHER_P2(ButtonDownEventWithButton, pos, button, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
