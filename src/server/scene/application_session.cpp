@@ -23,11 +23,11 @@
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
-#include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/session_listener.h"
 #include "mir/scene/surface_factory.h"
 #include "mir/scene/buffer_stream_factory.h"
+#include "mir/shell/surface_stack.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/events/event_builders.h"
 #include "mir/frontend/event_sink.h"
@@ -47,7 +47,7 @@ namespace mg = mir::graphics;
 namespace mev = mir::events;
 
 ms::ApplicationSession::ApplicationSession(
-    std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
+    std::shared_ptr<msh::SurfaceStack> const& surface_coordinator,
     std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::shared_ptr<ms::BufferStreamFactory> const& buffer_stream_factory,
     pid_t pid,

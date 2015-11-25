@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-14 Canonical Ltd.
+ * Copyright © 2013-15 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_SCENE_SURFACE_COORDINATOR_H_
-#define MIR_SCENE_SURFACE_COORDINATOR_H_
+#ifndef MIR_SHELL_SURFACE_COORDINATOR_H_
+#define MIR_SHELL_SURFACE_COORDINATOR_H_
 
 #include <memory>
 #include <set>
@@ -33,32 +33,35 @@ class Surface;
 struct SurfaceCreationParameters;
 class SurfaceObserver;
 class Session;
+}
 
-class SurfaceCoordinator
+namespace shell
+{
+class SurfaceStack
 {
 public:
     using SurfaceSet = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;
 
     virtual void add_surface(
-        std::shared_ptr<Surface> const&,
+        std::shared_ptr<scene::Surface> const&,
         input::InputReceptionMode new_mode) = 0;
 
-    virtual void raise(std::weak_ptr<Surface> const& surface) = 0;
+    virtual void raise(std::weak_ptr<scene::Surface> const& surface) = 0;
 
     virtual void raise(SurfaceSet const& surfaces) = 0;
 
-    virtual void remove_surface(std::weak_ptr<Surface> const& surface) = 0;
+    virtual void remove_surface(std::weak_ptr<scene::Surface> const& surface) = 0;
 
-    virtual auto surface_at(geometry::Point) const -> std::shared_ptr<Surface> = 0;
+    virtual auto surface_at(geometry::Point) const -> std::shared_ptr<scene::Surface> = 0;
 
 protected:
-    SurfaceCoordinator() = default;
-    virtual ~SurfaceCoordinator() = default;
-    SurfaceCoordinator(SurfaceCoordinator const&) = delete;
-    SurfaceCoordinator& operator=(SurfaceCoordinator const&) = delete;
+    SurfaceStack() = default;
+    virtual ~SurfaceStack() = default;
+    SurfaceStack(SurfaceStack const&) = delete;
+    SurfaceStack& operator=(SurfaceStack const&) = delete;
 };
 }
 }
 
 
-#endif /* MIR_SCENE_SURFACE_COORDINATOR_H_ */
+#endif /* MIR_SHELL_SURFACE_COORDINATOR_H_ */

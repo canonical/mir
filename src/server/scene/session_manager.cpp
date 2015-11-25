@@ -20,11 +20,11 @@
 #include "application_session.h"
 #include "session_container.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_coordinator.h"
 #include "mir/scene/session.h"
 #include "mir/scene/session_listener.h"
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/application_not_responding_detector.h"
+#include "mir/shell/surface_stack.h"
 #include "session_event_sink.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display.h"
@@ -43,7 +43,7 @@ namespace mg = mir::graphics;
 namespace msh = mir::shell;
 
 ms::SessionManager::SessionManager(
-    std::shared_ptr<SurfaceCoordinator> const& surface_coordinator,
+    std::shared_ptr<shell::SurfaceStack> const& surface_coordinator,
     std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
     std::shared_ptr<SessionContainer> const& container,

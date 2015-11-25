@@ -42,6 +42,7 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -107,7 +108,7 @@ MATCHER(IsSurfaceOutputEvent, "")
     return mir_event_get_type(&arg) == mir_event_type_surface_output;
 }
 
-struct StubSurfaceCoordinator : public ms::SurfaceCoordinator
+struct StubSurfaceCoordinator : public msh::SurfaceStack
 {
     void raise(std::weak_ptr<ms::Surface> const&) override
     {
@@ -164,7 +165,7 @@ struct ApplicationSession : public testing::Test
     }
 
     std::shared_ptr<ms::ApplicationSession> make_application_session(
-        std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<msh::SurfaceStack> const& surface_coordinator,
         std::shared_ptr<ms::SurfaceFactory> const& surface_factory)
     {
         return std::make_shared<ms::ApplicationSession>(
@@ -176,7 +177,7 @@ struct ApplicationSession : public testing::Test
            event_sink);
     }
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_coordinator(
-        std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator)
+        std::shared_ptr<msh::SurfaceStack> const& surface_coordinator)
     {
         return std::make_shared<ms::ApplicationSession>(
            surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,

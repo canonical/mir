@@ -20,13 +20,13 @@
 #include "mir/shell/input_targeter.h"
 #include "mir/shell/shell_report.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/shell/surface_stack.h"
 #include "mir/shell/window_manager.h"
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_coordinator.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -34,7 +34,7 @@ namespace msh = mir::shell;
 
 msh::AbstractShell::AbstractShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
-    std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
+    std::shared_ptr<msh::SurfaceStack> const& surface_coordinator,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
     std::shared_ptr<ShellReport> const& report,

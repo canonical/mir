@@ -78,7 +78,7 @@ auto mir::DefaultServerConfiguration::the_surface_factory()
         });
 }
 
-std::shared_ptr<ms::SurfaceCoordinator>
+std::shared_ptr<msh::SurfaceStack>
 mir::DefaultServerConfiguration::the_surface_coordinator()
 {
     return surface_stack([this]()

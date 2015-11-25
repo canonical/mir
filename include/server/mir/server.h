@@ -47,6 +47,7 @@ class FocusController;
 class HostLifecycleEventListener;
 class InputTargeter;
 class Shell;
+class SurfaceStack;
 }
 namespace scene
 {
@@ -56,7 +57,6 @@ class PromptSessionListener;
 class PromptSessionManager;
 class SessionListener;
 class SessionCoordinator;
-class SurfaceCoordinator;
 class SurfaceFactory;
 }
 
@@ -365,7 +365,7 @@ public:
     auto the_surface_factory() const -> std::shared_ptr<scene::SurfaceFactory>;
 
     /// \return the surface coordinator.
-    auto the_surface_coordinator() const -> std::shared_ptr<scene::SurfaceCoordinator>;
+    auto the_surface_coordinator() const -> std::shared_ptr<shell::SurfaceStack>;
 
     /// \return the touch visualizer.
     auto the_touch_visualizer() const -> std::shared_ptr<input::TouchVisualizer>;
