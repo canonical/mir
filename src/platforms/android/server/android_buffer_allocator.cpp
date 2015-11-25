@@ -69,7 +69,7 @@ mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(std::shared_pt
 
     std::shared_ptr<struct alloc_device_t> alloc_dev_ptr(
         alloc_dev,
-        quirks->gralloc_can_be_safely_closed() ? alloc_dev_deleter : null_alloc_dev_deleter);
+        quirks->gralloc_cannot_be_closed_safely() ? null_alloc_dev_deleter : alloc_dev_deleter);
     alloc_device = std::shared_ptr<mga::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr, quirks));
 }
 

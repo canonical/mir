@@ -75,7 +75,7 @@ TEST(DeviceDetection, three_buffers_reported_for_mx3)
 }
 
 //LP: 1371619, 1370555
-TEST(DeviceDetection, reports_gralloc_can_be_safely_closed_by_default)
+TEST(DeviceDetection, reports_gralloc_can_be_closed_safely_by_default)
 {
     using namespace testing;
     char const default_str[] = "";
@@ -91,10 +91,10 @@ TEST(DeviceDetection, reports_gralloc_can_be_safely_closed_by_default)
         }));
 
     mga::DeviceQuirks quirks(mock_ops);
-    EXPECT_TRUE(quirks.gralloc_can_be_safely_closed());
+    EXPECT_FALSE(quirks.gralloc_cannot_be_closed_safely());
 }
 
-TEST(DeviceDetection, reports_gralloc_cannot_be_safely_closed_on_krillin)
+TEST(DeviceDetection, reports_gralloc_cannot_be_closed_safely_on_krillin)
 {
     using namespace testing;
     char const default_str[] = "";
@@ -110,7 +110,7 @@ TEST(DeviceDetection, reports_gralloc_cannot_be_safely_closed_on_krillin)
         }));
 
     mga::DeviceQuirks quirks(mock_ops);
-    EXPECT_FALSE(quirks.gralloc_can_be_safely_closed());
+    EXPECT_TRUE(quirks.gralloc_cannot_be_closed_safely());
 }
 
 TEST(DeviceDetection, aligns_width_on_vegetahd)
@@ -150,12 +150,12 @@ struct DeviceQuirks : testing::Test
         options.parse_arguments(desc, argc, argv);
     }
 
-    void disable_gralloc_can_be_safely_closed_quirk()
+    void disable_gralloc_cannot_be_closed_safely_quirk()
     {
         int const argc = 2;
         char const* argv[argc] = {
             __PRETTY_FUNCTION__,
-            "--enable-gralloc-can-be-safely-closed-quirk=false"
+            "--enable-gralloc-cannot-be-closed-safely-quirk=false"
         };
 
         options.parse_arguments(desc, argc, argv);
@@ -197,7 +197,7 @@ TEST_F(DeviceQuirks, number_of_framebuffers_quirk_can_be_disabled)
     EXPECT_THAT(quirks.num_framebuffers(), Ne(3));
 }
 
-TEST_F(DeviceQuirks, gralloc_can_be_safely_closed_quirk_can_be_disabled)
+TEST_F(DeviceQuirks, gralloc_cannot_be_closed_safely_quirk_can_be_disabled)
 {
     using namespace testing;
     char const default_str[] = "";
@@ -212,9 +212,9 @@ TEST_F(DeviceQuirks, gralloc_can_be_safely_closed_quirk_can_be_disabled)
             return 0;
         }));
 
-    disable_gralloc_can_be_safely_closed_quirk();
+    disable_gralloc_cannot_be_closed_safely_quirk();
     mga::DeviceQuirks quirks(mock_ops, options);
-    EXPECT_TRUE(quirks.gralloc_can_be_safely_closed());
+    EXPECT_FALSE(quirks.gralloc_cannot_be_closed_safely());
 }
 
 TEST_F(DeviceQuirks, width_alignment_quirk_can_be_disabled)
