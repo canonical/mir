@@ -33,9 +33,9 @@ namespace mi = mir::input;
 /// Demonstrate input device configuration
 
 char const* const me::disable_while_typing_opt = "disable-while-typing";
-char const* const me::mouse_cursor_accleration_bias_opt = "mouse-cursor-acceleration-bias";
+char const* const me::mouse_cursor_acceleration_bias_opt = "mouse-cursor-acceleration-bias";
 char const* const me::mouse_scroll_speed_scale_opt = "mouse-scroll-speed-scale";
-char const* const me::touchpad_cursor_accleration_bias_opt = "touchpad-cursor-acceleration-bias";
+char const* const me::touchpad_cursor_acceleration_bias_opt = "touchpad-cursor-acceleration-bias";
 char const* const me::touchpad_scroll_speed_scale_opt = "touchpad-scroll-speed-scale";
 char const* const me::touchpad_scroll_mode_opt = "touchpad-scroll-mode";
 
@@ -51,15 +51,15 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
 {
     // Add choice of monitor configuration
     server.add_configuration_option(disable_while_typing_opt,
-                                    "Disable touch pad while typing on keyboard configuration [true, false]",
+                                    "Disable touchpad while typing on keyboard configuration [true, false]",
                                     false);
-    server.add_configuration_option(mouse_cursor_accleration_bias_opt,
+    server.add_configuration_option(mouse_cursor_acceleration_bias_opt,
                                     "Bias to the acceleration curve within the range [-1.0, 1.0] for mice",
                                     0.0);
     server.add_configuration_option(mouse_scroll_speed_scale_opt,
                                     "Scales mice scroll events, use negative values for natural scrolling",
                                     1.0);
-    server.add_configuration_option(touchpad_cursor_accleration_bias_opt,
+    server.add_configuration_option(touchpad_cursor_acceleration_bias_opt,
                                     "Bias to the acceleration curve within the range [-1.0, 1.0] for touchpads",
                                     0.0);
     server.add_configuration_option(touchpad_scroll_speed_scale_opt,
@@ -67,7 +67,7 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
                                     -1.0);
 
     server.add_configuration_option(touchpad_scroll_mode_opt,
-                                    "Select scrolll mode for touchpads: [{two-finger, edge}]",
+                                    "Select scroll mode for touchpads: [{two-finger, edge}]",
                                     touchpad_scroll_mode_two_finger);
 
     server.add_configuration_option(touchpad_click_mode_opt,
@@ -107,9 +107,9 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
             auto const options = server.get_options();
             auto const input_config = std::make_shared<me::InputDeviceConfig>(
                 options->get<bool>(disable_while_typing_opt),
-                clamp_to_range(options->get<double>(mouse_cursor_accleration_bias_opt)),
+                clamp_to_range(options->get<double>(mouse_cursor_acceleration_bias_opt)),
                 options->get<double>(mouse_scroll_speed_scale_opt),
-                clamp_to_range(options->get<double>(touchpad_cursor_accleration_bias_opt)),
+                clamp_to_range(options->get<double>(touchpad_cursor_acceleration_bias_opt)),
                 options->get<double>(touchpad_scroll_speed_scale_opt),
                 convert_to_click_mode(options->get<std::string>(touchpad_click_mode_opt)),
                 convert_to_scroll_mode(options->get<std::string>(touchpad_scroll_mode_opt))
@@ -122,26 +122,25 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
 /// Demonstrate how to implement an InputDeviceObserver that identifies and configures input devices.
 
 me::InputDeviceConfig::InputDeviceConfig(bool disable_while_typing,
-                                         double mouse_cursor_accleration_bias,
+                                         double mouse_cursor_acceleration_bias,
                                          double mouse_scroll_speed_scale,
                                          double touchpad_scroll_speed_scale,
-                                         double touchpad_cursor_accleration_bias,
+                                         double touchpad_cursor_acceleration_bias,
                                          MirTouchpadClickModes click_mode,
                                          MirTouchpadClickModes scroll_mode)
-    : disable_while_typing(disable_while_typing), mouse_cursor_accleration_bias(mouse_cursor_accleration_bias),
+    : disable_while_typing(disable_while_typing), mouse_cursor_acceleration_bias(mouse_cursor_acceleration_bias),
       mouse_scroll_speed_scale(mouse_scroll_speed_scale),
-      touchpad_cursor_accleration_bias(touchpad_cursor_accleration_bias),
+      touchpad_cursor_acceleration_bias(touchpad_cursor_acceleration_bias),
       touchpad_scroll_speed_scale(touchpad_scroll_speed_scale), click_mode(click_mode), scroll_mode(scroll_mode)
 {
 }
 
 void me::InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& device)
 {
-    if (contains(device->capabilities(), mi::DeviceCapability::pointer) &&
-        contains(device->capabilities(), mi::DeviceCapability::touchpad))
+    if (contains(device->capabilities(), mi::DeviceCapability::touchpad))
     {
         mi::PointerConfiguration pointer_config( device->pointer_configuration().value() );
-        pointer_config.cursor_acceleration_bias = touchpad_cursor_accleration_bias;
+        pointer_config.cursor_acceleration_bias = touchpad_cursor_acceleration_bias;
         pointer_config.vertical_scroll_scale  = touchpad_scroll_speed_scale;
         pointer_config.horizontal_scroll_scale = touchpad_scroll_speed_scale;
         device->apply_pointer_configuration(pointer_config);
@@ -155,7 +154,7 @@ void me::InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& devi
     else if (contains(device->capabilities(), mi::DeviceCapability::pointer))
     {
         mi::PointerConfiguration pointer_config( device->pointer_configuration().value() );
-        pointer_config.cursor_acceleration_bias = mouse_cursor_accleration_bias;
+        pointer_config.cursor_acceleration_bias = mouse_cursor_acceleration_bias;
         pointer_config.vertical_scroll_scale  = mouse_scroll_speed_scale;
         pointer_config.horizontal_scroll_scale = mouse_scroll_speed_scale;
         device->apply_pointer_configuration(pointer_config);
