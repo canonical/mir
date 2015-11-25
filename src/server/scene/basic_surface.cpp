@@ -417,6 +417,7 @@ bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
     bool visible{false};
     for (auto const& info : layers)
         visible |= info.stream->has_submitted_buffer();
+    printf("V %i H %i\n", visible, hidden);
     return !hidden && visible;
 }
 
@@ -722,12 +723,15 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid visibility value"));
     }
 
+    bool should_drop{false};
     std::unique_lock<std::mutex> lg(guard);
-    if (visibility_ != new_visibility)
+    if ((visibility_ != new_visibility) || !sent_visibility)
     {
+        should_drop = sent_visibility; 
+        sent_visibility = true;
         visibility_ = new_visibility;
         lg.unlock();
-        if (new_visibility == mir_surface_visibility_exposed)
+        if (new_visibility == mir_surface_visibility_exposed && should_drop)
         {
             for (auto& info : layers)
                 info.stream->drop_old_buffers();

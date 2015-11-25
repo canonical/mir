@@ -181,7 +181,8 @@ private:
     int swapinterval_ = 1;
     MirSurfaceFocusState focus_ = mir_surface_unfocused;
     int dpi_ = 0;
-    MirSurfaceVisibility visibility_ = mir_surface_visibility_occluded;
+    bool sent_visibility{false};
+    MirSurfaceVisibility visibility_ = mir_surface_visibility_exposed;
     MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
 
     std::unique_ptr<CursorStreamImageAdapter> const cursor_stream_adapter;
