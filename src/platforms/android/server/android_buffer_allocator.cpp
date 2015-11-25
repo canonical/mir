@@ -27,6 +27,7 @@
 #include "android_alloc_adaptor.h"
 #include "buffer.h"
 #include "cmdstream_sync_factory.h"
+#include "device_quirks.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -38,14 +39,17 @@ namespace geom = mir::geometry;
 
 namespace
 {
-struct AllocDevDeleter
+
+void alloc_dev_deleter(alloc_device_t* t)
 {
-    void operator()(alloc_device_t* t)
-    {
-        /* android takes care of delete for us */
-        t->common.close((hw_device_t*)t);
-    }
-};
+    /* android takes care of delete for us */
+    t->common.close((hw_device_t*)t);
+}
+
+void null_alloc_dev_deleter(alloc_device_t*)
+{
+}
+
 }
 
 mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(
@@ -68,10 +72,10 @@ mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(
     /* note for future use: at this point, the hardware module should be filled with vendor information
        that we can determine different courses of action based upon */
 
-    AllocDevDeleter del;
-    std::shared_ptr<struct alloc_device_t> alloc_dev_ptr(alloc_dev, del);
-    alloc_device = std::make_shared<mga::AndroidAllocAdaptor>(
-        alloc_dev_ptr, cmdstream_sync_factory, quirks);
+    std::shared_ptr<struct alloc_device_t> alloc_dev_ptr(
+        alloc_dev,
+        quirks->gralloc_cannot_be_closed_safely() ? null_alloc_dev_deleter : alloc_dev_deleter);
+    alloc_device = std::shared_ptr<mga::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr, cmdstream_sync_factory, quirks));
 }
 
 std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
