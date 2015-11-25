@@ -83,6 +83,7 @@ MIR_SERVER_0.18 {
     mir::input::TouchVisualizer::operator*;
     mir::input::TouchVisualizer::?TouchVisualizer*;
     mir::input::TouchVisualizer::TouchVisualizer*;
+    mir::input::probe_input_platforms*;
     mir::LockableCallback::?LockableCallback*;
     mir::LockableCallback::LockableCallback*;
     mir::LockableCallback::operator*;
@@ -687,7 +688,6 @@ MIR_SERVER_0.18 {
     mir::DefaultServerConfiguration::the_input_dispatcher*;
     mir::DefaultServerConfiguration::the_new_input_dispatcher*;
     mir::DefaultServerConfiguration::the_input_manager*;
-    mir::DefaultServerConfiguration::the_input_platform*;
     mir::DefaultServerConfiguration::the_input_reader*;
     mir::DefaultServerConfiguration::the_input_reader_policy*;
     mir::DefaultServerConfiguration::the_input_reading_multiplexer*;

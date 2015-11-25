@@ -163,8 +163,7 @@ mir::EventUPtr mie::LibInputDevice::convert_button_event(libinput_event_pointer*
     else
         button_state = MirPointerButton(button_state & ~uint32_t(pointer_button));
 
-    return builder->pointer_event(time, action, button_state, pointer_pos.x.as_float(), pointer_pos.y.as_float(),
-                                   hscroll_value, vscroll_value, relative_x_value, relative_y_value);
+    return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, relative_x_value, relative_y_value);
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_motion_event(libinput_event_pointer* pointer)
@@ -179,12 +178,9 @@ mir::EventUPtr mie::LibInputDevice::convert_motion_event(libinput_event_pointer*
     mir::geometry::Displacement const movement{
         libinput_event_pointer_get_dx(pointer),
         libinput_event_pointer_get_dy(pointer)};
-    pointer_pos = pointer_pos + movement;
 
-    sink->confine_pointer(pointer_pos);
-
-    return builder->pointer_event(time, action, button_state, pointer_pos.x.as_float(), pointer_pos.y.as_float(),
-                                  hscroll_value, vscroll_value, movement.dx.as_float(), movement.dy.as_float());
+    return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, movement.dx.as_float(),
+                                  movement.dy.as_float());
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event_pointer* pointer)
@@ -205,10 +201,7 @@ mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event
         libinput_event_pointer_get_absolute_y_transformed(pointer, height)};
     auto const movement = pointer_pos - old_pointer_pos;
 
-    sink->confine_pointer(pointer_pos);
-
-    return builder->pointer_event(time, action, button_state, pointer_pos.x.as_float(), pointer_pos.y.as_float(),
-                                  hscroll_value, vscroll_value, movement.dx.as_float(), movement.dy.as_float());
+    return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, movement.dx.as_float(), movement.dy.as_float());
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* pointer)
@@ -227,8 +220,8 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
         : 0.0f;
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
-    return builder->pointer_event(time, action, button_state, pointer_pos.x.as_float(), pointer_pos.y.as_float(),
-                                  hscroll_value, vscroll_value, relative_x_value, relative_y_value);
+    return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, relative_x_value,
+                                  relative_y_value);
 }
 
 MirEvent& mie::LibInputDevice::get_accumulated_touch_event(std::chrono::nanoseconds timestamp)

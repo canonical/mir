@@ -20,6 +20,8 @@
 #include "seat.h"
 #include "mir/input/device.h"
 #include "mir/input/cursor_listener.h"
+#include "mir/input/input_region.h"
+#include "mir/geometry/displacement.h"
 
 #include "input_modifier_utils.h"
 
@@ -31,8 +33,9 @@
 namespace mi = mir::input;
 
 mi::Seat::Seat(std::shared_ptr<TouchVisualizer> const& touch_visualizer,
-               std::shared_ptr<CursorListener> const& cursor_listener)
-    : touch_visualizer{touch_visualizer}, cursor_listener{cursor_listener}, modifier{0}
+               std::shared_ptr<CursorListener> const& cursor_listener,
+               std::shared_ptr<InputRegion> const& input_region)
+    : touch_visualizer{touch_visualizer}, cursor_listener{cursor_listener}, input_region{input_region}, modifier{0}
 {
 }
 
@@ -153,9 +156,19 @@ void mi::Seat::update_modifier()
                                });
 }
 
-void mi::Seat::update_cursor(MirPointerEvent const* event)
+mir::geometry::Point mi::Seat::cursor_position() const
 {
-    cursor_listener->cursor_moved_to(mir_pointer_event_axis_value(event, mir_pointer_axis_x),
-                                     mir_pointer_event_axis_value(event, mir_pointer_axis_y));
+    return cursor_pos;
 }
 
+void mi::Seat::update_cursor(MirPointerEvent const* event)
+{
+    mir::geometry::Displacement movement{
+        mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x),
+        mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y),
+    };
+    cursor_pos = cursor_pos + movement;
+    input_region->confine(cursor_pos);
+
+    cursor_listener->cursor_moved_to(cursor_pos.x.as_float(), cursor_pos.y.as_float());
+}
