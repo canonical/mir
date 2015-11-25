@@ -153,20 +153,20 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     }
 }
 
+//TODO: the server will currently spam us with a lot of resize messages at once,
+//      and we want to delay the IPC transactions for resize. If we could rate-limit
+//      the incoming messages, we should should consolidate the scale and size functions
 void mcl::BufferVault::set_size(geom::Size sz)
 {
-    //TODO: the server will currently spam us with a lot of resize messages at once,
-    //      and we want to delay the IPC transactions for resize. If we could rate-limit
-    //      the incoming messages, we should should consolidate the scale and size functions
     std::lock_guard<std::mutex> lk(mutex);
     size = sz;
 }
 
 void mcl::BufferVault::set_scale(float scale)
 {
-    auto new_size = size * scale;
     std::vector<int> free_ids;
     std::unique_lock<std::mutex> lk(mutex);
+    auto new_size = size * scale;
     if (new_size == size)
         return;
     size = new_size;
