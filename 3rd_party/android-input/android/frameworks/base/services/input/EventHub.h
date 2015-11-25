@@ -34,7 +34,7 @@
 
 #include "mir/fd.h"
 
-#include <linux/input.h>
+#include <original/linux/input.h>
 #include <sys/epoll.h>
 
 #include <memory>
