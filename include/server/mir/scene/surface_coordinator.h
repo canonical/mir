@@ -41,8 +41,7 @@ public:
 
     virtual void add_surface(
         std::shared_ptr<Surface> const&,
-        input::InputReceptionMode const& new_mode,
-        Session* session) = 0;
+        input::InputReceptionMode new_mode) = 0;
 
     virtual void raise(std::weak_ptr<Surface> const& surface) = 0;
 
