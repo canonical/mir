@@ -16,7 +16,7 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "stub_input_platform.h"
+#include "mir_test_framework/stub_input_platform.h"
 #include "fake_input_device_impl.h"
 #include "mir/module_properties.h"
 #include "mir/assert_module_entry_point.h"
@@ -26,7 +26,7 @@ namespace mo = mir::options;
 namespace mi = mir::input;
 
 mir::UniqueModulePtr<mi::Platform> create_input_platform(
-    std::shared_ptr<mo::Option> const& /*options*/,
+    mo::Option const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<mi::InputReport> const& /*report*/)
