@@ -35,7 +35,7 @@ int mga::PropertiesOps::property_get(
 namespace
 {
 char const* const num_framebuffers_opt = "enable-num-framebuffers-quirk";
-char const* const single_gralloc_instance_opt = "enable-single-gralloc-instance-quirk";
+char const* const gralloc_cannot_be_closed_safely_opt = "enable-gralloc-cannot-be-closed-safely-quirk";
 char const* const width_alignment_opt = "enable-width-alignment-quirk";
 
 std::string determine_device_name(mga::PropertiesWrapper const& properties)
@@ -55,16 +55,16 @@ unsigned int num_framebuffers_for(std::string const& device_name, bool quirk_ena
         return 2;
 }
 
-unsigned int gralloc_reopenable_after_close_for(std::string const& device_name, bool quirk_enabled)
+bool gralloc_cannot_be_closed_safely_for(std::string const& device_name, bool quirk_enabled)
 {
-    return !(quirk_enabled && device_name == std::string{"krillin"});
+    return quirk_enabled && device_name == std::string{"krillin"};
 }
 }
 
 mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties)
     : device_name(determine_device_name(properties)),
       num_framebuffers_(num_framebuffers_for(device_name, true)),
-      gralloc_reopenable_after_close_(gralloc_reopenable_after_close_for(device_name, true)),
+      gralloc_cannot_be_closed_safely_(gralloc_cannot_be_closed_safely_for(device_name, true)),
       enable_width_alignment_quirk{true}
 {
 }
@@ -72,7 +72,7 @@ mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties)
 mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties, mo::Option const& options)
     : device_name(determine_device_name(properties)),
       num_framebuffers_(num_framebuffers_for(device_name, options.get(num_framebuffers_opt, true))),
-      gralloc_reopenable_after_close_(gralloc_reopenable_after_close_for(device_name, options.get(single_gralloc_instance_opt, true))),
+      gralloc_cannot_be_closed_safely_(gralloc_cannot_be_closed_safely_for(device_name, options.get(gralloc_cannot_be_closed_safely_opt, true))),
       enable_width_alignment_quirk(options.get(width_alignment_opt, true))
 {
 }
@@ -82,9 +82,9 @@ unsigned int mga::DeviceQuirks::num_framebuffers() const
     return num_framebuffers_;
 }
 
-bool mga::DeviceQuirks::gralloc_reopenable_after_close() const
+bool mga::DeviceQuirks::gralloc_cannot_be_closed_safely() const
 {
-    return gralloc_reopenable_after_close_;
+    return gralloc_cannot_be_closed_safely_;
 }
 
 int mga::DeviceQuirks::aligned_width(int width) const
@@ -100,9 +100,9 @@ void mga::DeviceQuirks::add_options(boost::program_options::options_description&
         (num_framebuffers_opt,
          boost::program_options::value<bool>()->default_value(true),
          "[platform-specific] Enable allocating 3 framebuffers (MX3 quirk) [{true,false}]")
-        (single_gralloc_instance_opt,
+        (gralloc_cannot_be_closed_safely_opt,
          boost::program_options::value<bool>()->default_value(true),
-         "[platform-specific] Allocate a single gralloc instance (krillin quirk)  [{true,false}]")
+         "[platform-specific] Only close gralloc if it is safe to do so (krillin quirk)  [{true,false}]")
          (width_alignment_opt,
           boost::program_options::value<bool>()->default_value(true),
           "[platform-specific] Enable width alignment (vegetahd quirk) [{true,false}]");
