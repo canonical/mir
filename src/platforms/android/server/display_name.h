@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_DISPLAY_NAME_H_
 #define MIR_GRAPHICS_ANDROID_DISPLAY_NAME_H_
 
+#include "mir/graphics/display_configuration.h"
 #include <hardware/hwcomposer.h>
 
 namespace mir
@@ -28,13 +29,22 @@ namespace graphics
 namespace android
 {
 
-enum DisplayName
+enum class DisplayName
 {
     primary = HWC_DISPLAY_PRIMARY,
     external = HWC_DISPLAY_EXTERNAL,
     virt = HWC_DISPLAY_VIRTUAL
 };
 
+inline auto as_output_id(DisplayName name) -> DisplayConfigurationOutputId
+{
+    return DisplayConfigurationOutputId{1 + static_cast<int>(name)};
+}
+
+inline auto as_hwc_display(DisplayName name) -> int
+{
+    return static_cast<int>(name);
+}
 }
 }
 }
