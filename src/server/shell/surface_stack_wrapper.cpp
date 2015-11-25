@@ -16,11 +16,12 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "surface_stack_wrapper.h"
+#include "mir/shell/surface_stack_wrapper.h"
 
 #include "mir/geometry/point.h"
 
 namespace msh = mir::shell;
+
 
 msh::SurfaceStackWrapper::SurfaceStackWrapper(std::shared_ptr<SurfaceStack> const& wrapped) :
     wrapped(wrapped)

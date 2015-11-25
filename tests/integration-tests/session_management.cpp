@@ -73,7 +73,7 @@ struct TestConfiguration : public mir_test_framework::StubbedServerConfiguration
 {
 
     std::shared_ptr<msh::SurfaceStack>
-    the_surface_coordinator() override
+    the_surface_stack() override
     {
         return surface_stack(
             [this]()

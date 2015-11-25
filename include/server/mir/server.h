@@ -294,6 +294,9 @@ public:
 
     /// Sets a wrapper functor for creating the shell.
     void wrap_shell(Wrapper<shell::Shell> const& wrapper);
+
+    /// Sets a wrapper functor for creating the surface stack.
+    void wrap_surface_stack(Wrapper<shell::SurfaceStack> const& surface_stack);
 /** @} */
 
 /** @name Getting access to Mir subsystems
@@ -364,8 +367,8 @@ public:
     /// \return the surface factory
     auto the_surface_factory() const -> std::shared_ptr<scene::SurfaceFactory>;
 
-    /// \return the surface coordinator.
-    auto the_surface_coordinator() const -> std::shared_ptr<shell::SurfaceStack>;
+    /// \return the surface stack.
+    auto the_surface_stack() const -> std::shared_ptr<shell::SurfaceStack>;
 
     /// \return the touch visualizer.
     auto the_touch_visualizer() const -> std::shared_ptr<input::TouchVisualizer>;

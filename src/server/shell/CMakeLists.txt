@@ -15,7 +15,7 @@ set(
   persistent_surface_store.cpp
   ${CMAKE_SOURCE_DIR}/include/server/mir/shell/display_configuration_controller.h
   surface_specification.cpp
-  surface_stack_wrapper.cpp surface_stack_wrapper.h
+  surface_stack_wrapper.cpp ${CMAKE_SOURCE_DIR}/include/server/mir/shell/surface_stack_wrapper.h
 )
 
 add_library(

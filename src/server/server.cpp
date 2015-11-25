@@ -90,7 +90,7 @@ namespace mo = mir::options;
     MACRO(the_prompt_session_manager)\
     MACRO(the_shell)\
     MACRO(the_shell_display_layout)\
-    MACRO(the_surface_coordinator)\
+    MACRO(the_surface_stack)\
     MACRO(the_touch_visualizer)\
     MACRO(the_input_device_hub)\
     MACRO(the_application_not_responding_detector)

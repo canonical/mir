@@ -108,7 +108,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
     {
         server.wrap_shell([&](std::shared_ptr<msh::Shell> const& wrapped)
             {
-                auto const result = std::make_shared<StoringShell>(wrapped, server.the_surface_coordinator());
+                auto const result = std::make_shared<StoringShell>(wrapped, server.the_surface_stack());
                 shell = result;
                 return result;
             });

@@ -61,7 +61,7 @@ mir::DefaultServerConfiguration::the_scene()
 std::shared_ptr<mi::Scene> mir::DefaultServerConfiguration::the_input_scene()
 {
     return surface_stack([this]()
-                         { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
+                             { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
 }
 
 auto mir::DefaultServerConfiguration::the_surface_factory()
@@ -79,10 +79,18 @@ auto mir::DefaultServerConfiguration::the_surface_factory()
 }
 
 std::shared_ptr<msh::SurfaceStack>
-mir::DefaultServerConfiguration::the_surface_coordinator()
+mir::DefaultServerConfiguration::the_surface_stack()
 {
     return surface_stack([this]()
                              { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
+//    return wrap_surface_stack(surface_stack([this]()
+//        { return std::make_shared<ms::SurfaceStack>(the_scene_report()); }));
+}
+
+auto mir::DefaultServerConfiguration::wrap_surface_stack(std::shared_ptr<shell::SurfaceStack> const& wrapped)
+-> std::shared_ptr<shell::SurfaceStack>
+{
+    return wrapped_surface_stack([&wrapped]() { return wrapped; });
 }
 
 std::shared_ptr<ms::BroadcastingSessionEventSink>
@@ -161,7 +169,7 @@ mir::DefaultServerConfiguration::the_session_coordinator()
         [this]()
         {
             return std::make_shared<ms::SessionManager>(
-                    the_surface_coordinator(),
+                the_surface_stack(),
                     the_surface_factory(),
                     the_buffer_stream_factory(),
                     the_session_container(),

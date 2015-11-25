@@ -218,8 +218,8 @@ MIR_SERVER_0.18 {
     mir::Server::the_session_listener*;
     mir::Server::the_shell*;
     mir::Server::the_shell_display_layout*;
-    mir::Server::the_surface_coordinator*;
     mir::Server::the_surface_factory*;
+    mir::Server::the_surface_stack*;
     mir::Server::the_touch_visualizer*;
     mir::Server::wrap_cursor*;
     mir::Server::wrap_cursor_listener*;
@@ -732,7 +732,7 @@ MIR_SERVER_0.18 {
     mir::DefaultServerConfiguration::the_snapshot_strategy*;
     mir::DefaultServerConfiguration::the_socket_file*;
     mir::DefaultServerConfiguration::the_surface_configurator*;
-    mir::DefaultServerConfiguration::the_surface_coordinator*;
+    mir::DefaultServerConfiguration::the_surface_stack*;
     mir::DefaultServerConfiguration::the_surface_input_dispatcher*;
     mir::DefaultServerConfiguration::the_surface_factory*;
     mir::DefaultServerConfiguration::the_surface_stack_model*;
@@ -743,6 +743,7 @@ MIR_SERVER_0.18 {
     mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
     mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
     mir::DefaultServerConfiguration::wrap_shell*;
+    mir::DefaultServerConfiguration::wrap_surface_stack*;
     typeinfo?for?mir::DefaultServerConfiguration;
     mir::run_mir*;
     mir::DisplayServer::stop*;

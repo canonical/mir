@@ -290,7 +290,8 @@ public:
     virtual std::shared_ptr<scene::SessionEventSink>  the_session_event_sink();
     virtual std::shared_ptr<scene::SessionEventHandlerRegister> the_session_event_handler_register();
     virtual std::shared_ptr<scene::SurfaceFactory>    the_surface_factory();
-    virtual std::shared_ptr<shell::SurfaceStack>the_surface_coordinator();
+    virtual std::shared_ptr<shell::SurfaceStack>      the_surface_stack();
+    virtual std::shared_ptr<shell::SurfaceStack>      wrap_surface_stack(std::shared_ptr<shell::SurfaceStack> const& wrapped);
     /** @} */
 
     /** @name scene configuration - dependencies
@@ -417,6 +418,7 @@ protected:
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<compositor::FrameDroppingPolicyFactory> frame_dropping_policy_factory;
     CachedPtr<scene::SurfaceStack> surface_stack;
+    CachedPtr<shell::SurfaceStack> wrapped_surface_stack;
     CachedPtr<scene::SceneReport> scene_report;
 
     CachedPtr<scene::SurfaceFactory> surface_factory;
