@@ -24,11 +24,13 @@
 #include "mir/test/doubles/mock_android_hw.h"
 #include "mir/test/doubles/mock_buffer_ipc_message.h"
 #include "mir/test/doubles/mock_display_report.h"
+#include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/stub_display_builder.h"
 #include "mir/test/doubles/stub_cmdstream_sync_factory.h"
 #include "mir/test/doubles/fd_matcher.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_android_native_buffer.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir/shared_library.h"
 #include <system/window.h>
@@ -84,6 +86,7 @@ protected:
     }
 
     std::shared_ptr<mtd::MockAndroidNativeBuffer> native_buffer;
+    std::shared_ptr<mtd::StubBufferAllocator> stub_buffer_allocator;
     std::shared_ptr<mtd::StubDisplayBuilder> stub_display_builder;
     std::shared_ptr<mtd::StubCmdStreamSyncFactory> stub_sync_factory;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
@@ -103,7 +106,8 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(fake_fence));
 
-    mga::Platform platform(stub_display_builder, stub_sync_factory, stub_display_report, mga::OverlayOptimization::enabled, quirks);
+    mga::Platform platform(stub_buffer_allocator, stub_display_builder,
+        stub_sync_factory, stub_display_report, mga::OverlayOptimization::enabled, quirks);
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
@@ -135,7 +139,8 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(-1));
 
-    mga::Platform platform(stub_display_builder, stub_sync_factory, stub_display_report, mga::OverlayOptimization::enabled, quirks);
+    mga::Platform platform(stub_buffer_allocator, stub_display_builder,
+        stub_sync_factory, stub_display_report, mga::OverlayOptimization::enabled, quirks);
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
@@ -175,7 +180,8 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_nested)
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(-1));
 
-    mga::Platform platform(stub_display_builder, stub_sync_factory, stub_display_report, mga::OverlayOptimization::enabled, quirks);
+    mga::Platform platform(stub_buffer_allocator, stub_display_builder,
+        stub_sync_factory, stub_display_report, mga::OverlayOptimization::enabled, quirks);
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
@@ -210,7 +216,8 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
     using namespace ::testing;
 
     int fake_fence{33};
-    mga::Platform platform(stub_display_builder, stub_sync_factory, stub_display_report, mga::OverlayOptimization::enabled, quirks);
+    mga::Platform platform(stub_buffer_allocator, stub_display_builder,
+        stub_sync_factory, stub_display_report, mga::OverlayOptimization::enabled, quirks);
     auto ipc_ops = platform.make_ipc_operations();
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
@@ -235,6 +242,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
 TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
 {
     mga::Platform platform(
+        std::make_shared<mtd::StubBufferAllocator>(),
         std::make_shared<mtd::StubDisplayBuilder>(),
         std::make_shared<mtd::StubCmdStreamSyncFactory>(),
         mr::null_display_report(),
@@ -272,6 +280,7 @@ TEST(NestedPlatformCreation, doesnt_access_display_hardware)
 
     mtd::HardwareAccessMock hwaccess;
     mtd::MockDisplayReport stub_report;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
 
     EXPECT_CALL(hwaccess, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(0);
