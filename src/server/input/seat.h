@@ -21,6 +21,7 @@
 #define MIR_INPUT_DEFAULT_SEAT_H_
 
 #include "mir/input/touch_visualizer.h"
+#include "mir/geometry/point.h"
 #include "mir_toolkit/event.h"
 #include <unordered_map>
 #include <memory>
@@ -30,6 +31,7 @@ namespace mir
 namespace input
 {
 class CursorListener;
+class InputRegion;
 
 /*
  * The seat bundles a group of devices. A cursor position, input event modifiers and the visible touch spots are properties
@@ -38,13 +40,15 @@ class CursorListener;
 class Seat
 {
 public:
-    Seat(std::shared_ptr<TouchVisualizer> const& touch_visualizer, std::shared_ptr<CursorListener> const& cursor_listener);
+    Seat(std::shared_ptr<TouchVisualizer> const& touch_visualizer,
+         std::shared_ptr<CursorListener> const& cursor_listener, std::shared_ptr<InputRegion> const& input_region);
     void add_device(MirInputDeviceId);
     void remove_device(MirInputDeviceId);
 
     MirInputEventModifiers event_modifier() const;
     MirInputEventModifiers event_modifier(MirInputDeviceId) const;
     void update_seat_properties(MirInputEvent const* event);
+    geometry::Point cursor_position() const;
 private:
     void update_cursor(MirPointerEvent const* event);
     void update_spots();
@@ -52,6 +56,7 @@ private:
 
     std::shared_ptr<TouchVisualizer> const touch_visualizer;
     std::shared_ptr<CursorListener> const cursor_listener;
+    std::shared_ptr<InputRegion> const input_region;
 
     struct DeviceData
     {
@@ -63,6 +68,7 @@ private:
         std::vector<TouchVisualizer::Spot> spots;
     };
 
+    mir::geometry::Point cursor_pos;
     MirInputEventModifiers modifier;
     std::unordered_map<MirInputDeviceId, DeviceData> device_data;
     std::vector<TouchVisualizer::Spot> spots;
