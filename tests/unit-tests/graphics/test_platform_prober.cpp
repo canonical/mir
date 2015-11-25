@@ -103,8 +103,10 @@ std::shared_ptr<void> ensure_android_probing_succeeds()
 
 class ServerPlatformProbeMockDRM : public ::testing::Test
 {
+#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
 public:
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
+#endif
 };
 
 }
