@@ -40,7 +40,7 @@ class SessionContainer;
 class SessionEventSink;
 class SessionListener;
 class SnapshotStrategy;
-class SurfaceCoordinator;
+class SurfaceStack;
 class PromptSessionManager;
 class BufferStreamFactory;
 class SurfaceFactory;

@@ -30,7 +30,7 @@
 #include "src/server/scene/session_manager.h"
 
 #include "mir/test/doubles/mock_window_manager.h"
-#include "mir/test/doubles/mock_surface_coordinator.h"
+#include "mir/test/doubles/mock_surface_stack.h"
 #include "mir/test/doubles/mock_surface.h"
 #include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/null_snapshot_strategy.h"
@@ -103,14 +103,14 @@ using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
 struct AbstractShell : Test
 {
     NiceMock<mtd::MockSurface> mock_surface;
-    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
+    NiceMock<mtd::MockSurfaceStack> surface_stack;
     NiceMock<MockSessionContainer> session_container;
     NiceMock<MockSessionEventSink> session_event_sink;
     NiceMock<MockSurfaceFactory> surface_factory;
     mtd::StubDisplay display{3};
 
     NiceMock<MockSessionManager> session_manager{
-        mt::fake_shared(surface_coordinator),
+        mt::fake_shared(surface_stack),
         mt::fake_shared(surface_factory),
         std::make_shared<mtd::StubBufferStreamFactory>(),
         mt::fake_shared(session_container),
@@ -125,7 +125,7 @@ struct AbstractShell : Test
 
     msh::AbstractShell shell{
         mt::fake_shared(input_targeter),
-        mt::fake_shared(surface_coordinator),
+        mt::fake_shared(surface_stack),
         mt::fake_shared(session_manager),
         std::make_shared<mtd::NullPromptSessionManager>(),
         std::make_shared<mir::report::null::ShellReport>(),
@@ -206,7 +206,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_paramet
     auto placed_params = params;
     placed_params.size.width = geom::Width{100};
 
-    EXPECT_CALL(surface_coordinator, add_surface(_,placed_params.input_mode));
+    EXPECT_CALL(surface_stack, add_surface(_,placed_params.input_mode));
 
     EXPECT_CALL(*wm, add_surface(session, Ref(params), _)).WillOnce(Invoke(
         [&](std::shared_ptr<ms::Session> const& session,
@@ -431,12 +431,12 @@ TEST_F(AbstractShell, as_focus_controller_focused_surface_follows_focus)
     shell.close_session(session0);
 }
 
-TEST_F(AbstractShell, as_focus_controller_delegates_surface_at_to_surface_coordinator)
+TEST_F(AbstractShell, as_focus_controller_delegates_surface_at_to_surface_stack)
 {
     auto const surface = mt::fake_shared(mock_surface);
     geom::Point const cursor{__LINE__, __LINE__};
 
-    EXPECT_CALL(surface_coordinator, surface_at(cursor)).
+    EXPECT_CALL(surface_stack, surface_at(cursor)).
         WillOnce(Return(surface));
 
     msh::FocusController& focus_controller = shell;
@@ -536,11 +536,11 @@ inline bool operator==(
 }
 }
 
-TEST_F(AbstractShell, as_focus_controller_delegates_raise_to_surface_coordinator)
+TEST_F(AbstractShell, as_focus_controller_delegates_raise_to_surface_stack)
 {
     msh::SurfaceSet const surfaces{mt::fake_shared(mock_surface)};
 
-    EXPECT_CALL(surface_coordinator, raise(surfaces));
+    EXPECT_CALL(surface_stack, raise(surfaces));
 
     msh::FocusController& focus_controller = shell;
 
