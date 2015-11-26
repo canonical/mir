@@ -26,7 +26,6 @@
 #include <functional>
 
 namespace mi = mir::input;
-namespace mia = mi::android;
 namespace mg = mir::graphics;
 namespace mis = mi::synthesis;
 namespace geom = mir::geometry;

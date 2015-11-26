@@ -17,7 +17,7 @@
  */
 
 #include "fake_input_device_impl.h"
-#include "stub_input_platform.h"
+#include "mir_test_framework/stub_input_platform.h"
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
@@ -117,8 +117,6 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonP
     auto button_event = builder->pointer_event(event_time,
                                                action,
                                                buttons,
-                                               pos.x.as_float(),
-                                               pos.y.as_float(),
                                                scroll.x.as_float(),
                                                scroll.y.as_float(),
                                                0.0f,
@@ -157,24 +155,15 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
     auto rel_x = pointer.rel_x * acceleration;
     auto rel_y = pointer.rel_y * acceleration;
 
-    update_position(rel_x, rel_y);
     auto pointer_event = builder->pointer_event(event_time,
                                                 mir_pointer_action_motion,
                                                 buttons,
-                                                pos.x.as_float(),
-                                                pos.y.as_float(),
                                                 scroll.x.as_float(),
                                                 scroll.y.as_float(),
                                                 rel_x,
                                                 rel_y);
 
     sink->handle_input(*pointer_event);
-}
-
-void mtf::FakeInputDeviceImpl::InputDevice::update_position(int rel_x, int rel_y)
-{
-    pos = pos + mir::geometry::Displacement{rel_x, rel_y};
-    sink->confine_pointer(pos);
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchParameters const& touch)
