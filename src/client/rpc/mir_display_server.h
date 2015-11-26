@@ -71,6 +71,10 @@ public:
         mir::protobuf::DisplayConfiguration const* request,
         mir::protobuf::DisplayConfiguration* response,
         google::protobuf::Closure* done) override;
+    void set_base_display_configuration(
+        mir::protobuf::DisplayConfiguration const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
     void create_screencast(
         mir::protobuf::ScreencastParameters const* request,
         mir::protobuf::Screencast* response,
