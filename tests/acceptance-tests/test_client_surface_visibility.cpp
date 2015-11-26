@@ -47,9 +47,9 @@ class StoringShell : public msh::ShellWrapper
 public:
     StoringShell(
         std::shared_ptr<msh::Shell> const& wrapped,
-        std::shared_ptr<msh::SurfaceStack> const surface_coordinator) :
+        std::shared_ptr<msh::SurfaceStack> const surface_stack) :
         msh::ShellWrapper{wrapped},
-        surface_coordinator{surface_coordinator}
+        surface_stack{surface_stack}
     {}
 
     mf::SurfaceId create_surface(
@@ -71,12 +71,12 @@ public:
 
     void raise(int index)
     {
-        surface_coordinator->raise(surface(index));
+        surface_stack->raise(surface(index));
     }
 
     using msh::ShellWrapper::raise;
 private:
-    std::shared_ptr<msh::SurfaceStack> const surface_coordinator;
+    std::shared_ptr<msh::SurfaceStack> const surface_stack;
     std::vector<std::weak_ptr<ms::Surface>> surfaces;
 
 };

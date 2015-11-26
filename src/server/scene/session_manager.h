@@ -50,7 +50,7 @@ class SessionManager : public SessionCoordinator
 {
 public:
     SessionManager(
-        std::shared_ptr<shell::SurfaceStack> const& surface_coordinator,
+        std::shared_ptr<shell::SurfaceStack> const& surface_stack,
         std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
         std::shared_ptr<SessionContainer> const& app_container,
@@ -79,7 +79,7 @@ protected:
     SessionManager& operator=(const SessionManager&) = delete;
 
 private:
-    std::shared_ptr<shell::SurfaceStack> const surface_coordinator;
+    std::shared_ptr<shell::SurfaceStack> const surface_stack;
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<SessionContainer> const app_container;

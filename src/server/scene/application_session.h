@@ -51,7 +51,7 @@ class ApplicationSession : public Session
 {
 public:
     ApplicationSession(
-        std::shared_ptr<shell::SurfaceStack> const& surface_coordinator,
+        std::shared_ptr<shell::SurfaceStack> const& surface_stack,
         std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
         pid_t pid,
@@ -102,7 +102,7 @@ protected:
     ApplicationSession& operator=(ApplicationSession const&) = delete;
 
 private:
-    std::shared_ptr<shell::SurfaceStack> const surface_coordinator;
+    std::shared_ptr<shell::SurfaceStack> const surface_stack;
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     pid_t const pid;

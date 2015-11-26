@@ -37,7 +37,7 @@ class AbstractShell : public virtual Shell, public virtual FocusController
 public:
     AbstractShell(
         std::shared_ptr<InputTargeter> const& input_targeter,
-        std::shared_ptr<SurfaceStack> const& surface_coordinator,
+        std::shared_ptr<SurfaceStack> const& surface_stack,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
         std::shared_ptr<ShellReport> const& report,
@@ -118,7 +118,7 @@ public:
 
 protected:
     std::shared_ptr<InputTargeter> const input_targeter;
-    std::shared_ptr<SurfaceStack> const surface_coordinator;
+    std::shared_ptr<SurfaceStack> const surface_stack;
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
     std::shared_ptr<scene::PromptSessionManager> const prompt_session_manager;
     std::shared_ptr<WindowManager> const window_manager;

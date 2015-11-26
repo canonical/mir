@@ -171,14 +171,14 @@ mir::DefaultServerConfiguration::the_session_coordinator()
         {
             return std::make_shared<ms::SessionManager>(
                 the_surface_stack(),
-                    the_surface_factory(),
-                    the_buffer_stream_factory(),
-                    the_session_container(),
-                    the_snapshot_strategy(),
-                    the_session_event_sink(),
-                    the_session_listener(),
-                    the_display(),
-                    the_application_not_responding_detector());
+                the_surface_factory(),
+                the_buffer_stream_factory(),
+                the_session_container(),
+                the_snapshot_strategy(),
+                the_session_event_sink(),
+                the_session_listener(),
+                the_display(),
+                the_application_not_responding_detector());
         });
 }
 
