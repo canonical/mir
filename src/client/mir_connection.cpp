@@ -341,9 +341,10 @@ MirWaitHandle* MirConnection::connect(
             this, &MirConnection::connected, callback, context));
     return &connect_wait_handle;
 }
-
+#include <iostream>
 void MirConnection::done_disconnect()
 {
+    std::cerr << "MirConnection::done_disconnect" << std::endl;
     /* todo: keeping all MirWaitHandles from a release surface until the end of the connection
        is a kludge until we have a better story about the lifetime of MirWaitHandles */
     {
@@ -359,6 +360,8 @@ void MirConnection::done_disconnect()
 
 MirWaitHandle* MirConnection::disconnect()
 {
+
+    std::cerr << "MirConnection::disconnect" << std::endl;
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         disconnecting = true;

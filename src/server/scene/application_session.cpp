@@ -39,6 +39,8 @@
 #include <cassert>
 #include <algorithm>
 #include <cstring>
+#include <utility>
+#include <iostream>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -68,11 +70,13 @@ ms::ApplicationSession::ApplicationSession(
 {
     assert(surface_coordinator);
     output_cache.update_from(initial_config);
+    std::cerr << "ApplicationSession " << session_name << std::endl;
 }
 
 ms::ApplicationSession::~ApplicationSession()
 {
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+    std::cerr << "~ApplicationSession " << session_name << " nsurfaces " << surfaces.size() << std::endl;
     for (auto const& pair_id_surface : surfaces)
     {
         session_listener->destroying_surface(*this, pair_id_surface.second);
@@ -399,4 +403,18 @@ void ms::ApplicationSession::destroy_surface(std::weak_ptr<Surface> const& surfa
 
     surface_coordinator->remove_surface(ss);
 
+}
+
+void ms::ApplicationSession::for_each_surface_id(std::function<void(mf::SurfaceId)> const& f) const
+{
+    std::vector<mf::SurfaceId> surface_ids;
+
+    {
+        std::lock_guard<std::mutex> lock(surfaces_and_streams_mutex);
+        for (auto const& kv : surfaces)
+            surface_ids.push_back(kv.first);
+    }
+
+    for (auto const& id : surface_ids)
+        f(id);
 }

@@ -27,6 +27,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_coordinator.h"
+#include "../scene/application_session.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -67,6 +68,11 @@ void msh::AbstractShell::close_session(
     std::shared_ptr<ms::Session> const& session)
 {
     report->closing_session(*session);
+
+    // Ensure all surfaces are properly destroyed before closing the session itself
+    session->for_each_surface_id(
+        [session,this] (mf::SurfaceId id) { destroy_surface(session, id); });
+
     prompt_session_manager->remove_session(session);
     session_coordinator->close_session(session);
     window_manager->remove_session(session);

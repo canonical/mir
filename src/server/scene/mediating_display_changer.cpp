@@ -27,6 +27,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_report.h"
 #include "mir/server_action_queue.h"
+#include <iostream>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -80,6 +81,8 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
     session_event_handler_register->register_focus_change_handler(
         [this](std::shared_ptr<ms::Session> const& session)
         {
+            std::cerr << "[" << this << "] focus_change_handler callback "
+                      << session->name() << std::endl;
             auto const weak_session = std::weak_ptr<ms::Session>(session);
             this->server_action_queue->enqueue(
                 this,
@@ -93,6 +96,7 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
     session_event_handler_register->register_no_focus_handler(
         [this]
         {
+            std::cerr << "[" << this << "] no_focus_handler callback " << std::endl;
             this->server_action_queue->enqueue(
                 this,
                 [this] { no_focus_handler(); });
@@ -101,6 +105,8 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
     session_event_handler_register->register_session_stopping_handler(
         [this](std::shared_ptr<ms::Session> const& session)
         {
+            std::cerr << "[" << this << "] session_stopping_handler callback "
+                      << session->name() << std::endl;
             auto const weak_session = std::weak_ptr<ms::Session>(session);
             this->server_action_queue->enqueue(
                 this,
@@ -118,6 +124,8 @@ void ms::MediatingDisplayChanger::configure(
     std::shared_ptr<mf::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
+    std::cerr << "[" << this << "] ms::MediatingDisplayChanger::configure "
+              << session->name() << std::endl;
     {
         std::lock_guard<std::mutex> lg{configuration_mutex};
         config_map[session] = conf;
@@ -191,6 +199,7 @@ void ms::MediatingDisplayChanger::apply_config(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf,
     SystemStateHandling pause_resume_system)
 {
+    std::cerr << "[" << this << "] ms::MediatingDisplayChanger::apply_config " << std::endl;
     report->new_configuration(*conf);
     if (pause_resume_system)
     {
@@ -211,6 +220,7 @@ void ms::MediatingDisplayChanger::apply_config(
 void ms::MediatingDisplayChanger::apply_base_config(
     SystemStateHandling pause_resume_system)
 {
+    std::cerr << "[" << this << "] ms::MediatingDisplayChanger::apply_base_config " << std::endl;
     apply_config(base_configuration_, pause_resume_system);
     base_configuration_applied = true;
 }
@@ -229,6 +239,8 @@ void ms::MediatingDisplayChanger::focus_change_handler(
     std::shared_ptr<ms::Session> const& session)
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
+    std::cerr << "[" << this << "] ms::MediatingDisplayChanger::focus_change_handler "
+              << session->name() << std::endl;
 
     focused_session = session;
 
@@ -251,6 +263,7 @@ void ms::MediatingDisplayChanger::focus_change_handler(
 void ms::MediatingDisplayChanger::no_focus_handler()
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
+    std::cerr << "[" << this << "] ms::MediatingDisplayChanger::no_focus_handler " << std::endl;
 
     focused_session.reset();
     if (!base_configuration_applied)
@@ -263,6 +276,7 @@ void ms::MediatingDisplayChanger::session_stopping_handler(
     std::shared_ptr<ms::Session> const& session)
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
+    std::cerr << "[" << this << "] ms::MediatingDisplayChanger::session_stopping_handler " << session->name() << std::endl;
 
     config_map.erase(session);
 }

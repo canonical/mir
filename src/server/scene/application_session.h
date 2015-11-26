@@ -70,6 +70,7 @@ public:
     std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const override;
     std::shared_ptr<Surface> surface(frontend::SurfaceId surface) const override;
     std::shared_ptr<Surface> surface_after(std::shared_ptr<Surface> const&) const override;
+    void for_each_surface_id(std::function<void(frontend::SurfaceId)> const& f) const override;
 
     void take_snapshot(SnapshotCallback const& snapshot_taken) override;
     std::shared_ptr<Surface> default_surface() const override;
@@ -96,6 +97,7 @@ public:
     void destroy_buffer_stream(frontend::BufferStreamId stream) override;
     void configure_streams(Surface& surface, std::vector<shell::StreamSpecification> const& config) override;
     void destroy_surface(std::weak_ptr<Surface> const& surface) override;
+
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;

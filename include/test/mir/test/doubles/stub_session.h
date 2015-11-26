@@ -71,6 +71,9 @@ struct StubSession : scene::Session
     std::shared_ptr<scene::Surface> surface_after(
         std::shared_ptr<scene::Surface> const&) const override;
 
+    void for_each_surface_id(
+        std::function<void(frontend::SurfaceId)> const& func) const override;
+
     std::shared_ptr<frontend::BufferStream> get_buffer_stream(
         frontend::BufferStreamId stream) const override;
 

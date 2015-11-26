@@ -60,6 +60,7 @@ public:
 
     virtual std::shared_ptr<Surface> surface(frontend::SurfaceId surface) const = 0;
     virtual std::shared_ptr<Surface> surface_after(std::shared_ptr<Surface> const&) const = 0;
+    virtual void for_each_surface_id(std::function<void(frontend::SurfaceId)> const& func) const = 0;
 
     virtual std::shared_ptr<frontend::BufferStream> get_buffer_stream(frontend::BufferStreamId stream) const = 0;
 

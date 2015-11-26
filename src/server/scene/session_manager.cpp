@@ -123,7 +123,7 @@ void ms::SessionManager::unset_focus()
     session_event_sink->handle_no_focus();
     session_listener->unfocused();
 }
-
+#include <iostream>
 void ms::SessionManager::close_session(std::shared_ptr<Session> const& session)
 {
     auto scene_session = std::dynamic_pointer_cast<Session>(session);
@@ -137,6 +137,9 @@ void ms::SessionManager::close_session(std::shared_ptr<Session> const& session)
     session_listener->stopping(scene_session);
 
     app_container->remove_session(scene_session);
+    std::cerr << "ms::SessionManager::close_session " << session->name() 
+              << " use count " << session.use_count()
+              << std::endl;
 }
 
 

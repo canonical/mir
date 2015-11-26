@@ -106,6 +106,11 @@ std::shared_ptr<mir::scene::Surface> mtd::StubSession::surface_after(
     return {};
 }
 
+void mtd::StubSession::for_each_surface_id(
+    std::function<void(frontend::SurfaceId)> const&) const
+{
+}
+
 std::shared_ptr<mir::frontend::BufferStream> mtd::StubSession::get_buffer_stream(
     mir::frontend::BufferStreamId /*stream*/) const
 {

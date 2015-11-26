@@ -53,6 +53,11 @@ struct StubSceneSession : public scene::Session
     {
         return s;
     }
+
+    void for_each_surface_id(std::function<void(frontend::SurfaceId)> const& /* func */) const override
+    {
+    }
+
     std::string name() const override
     {
         return std::string();
