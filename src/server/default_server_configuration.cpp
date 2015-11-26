@@ -123,6 +123,11 @@ mir::DefaultServerConfiguration::the_session_authorizer()
             return true;
         }
 
+        bool set_base_display_configuration_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
+
         bool screencast_is_allowed(mf::SessionCredentials const& /* creds */) override
         {
             return true;
