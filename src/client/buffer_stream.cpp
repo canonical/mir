@@ -345,6 +345,12 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     mcl::BufferInfo current{nullptr, 0};
     MirWaitHandle next_buffer_wait_handle;
 };
+
+struct OnScopeExit
+{
+    ~OnScopeExit() { f(); }
+    std::function<void()> const f;
+};
 }
 
 mcl::BufferStream::BufferStream(
@@ -405,12 +411,22 @@ mcl::BufferStream::BufferStream(
     {
         protobuf_bs->set_error(std::string{"Error invoking create buffer stream: "} +
                               boost::diagnostic_information(ex));
+        if (callback)
+            callback(reinterpret_cast<MirBufferStream*>(this), context);
+        if (create_wait_handle.is_pending())
+            create_wait_handle.result_received();
     }
-        
 }
 
 void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *context)
 {
+    OnScopeExit on_scope_exit{[this, callback, context]
+    {
+        if (callback)
+            callback(reinterpret_cast<MirBufferStream*>(this), context);
+        create_wait_handle.result_received();
+    }};
+
     if (!protobuf_bs->has_id() || protobuf_bs->has_error())
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
 
@@ -438,10 +454,6 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
 
     if (connection)
         connection->on_stream_created(protobuf_bs->id().value(), this);
-
-    if (callback)
-        callback(reinterpret_cast<MirBufferStream*>(this), context);
-    create_wait_handle.result_received();
 }
 
 mcl::BufferStream::~BufferStream()
