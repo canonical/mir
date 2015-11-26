@@ -250,6 +250,7 @@ MIR_CLIENT_DETAIL_unreleased {
   global:
     extern "C++" { 
       mir::events::set_modifier*;
+      mir::events::set_cursor_position*;
     };
 } MIR_CLIENT_DETAIL_9;
 
