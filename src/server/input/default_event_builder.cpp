@@ -60,10 +60,11 @@ void mi::DefaultEventBuilder::add_touch(MirEvent& event, MirTouchId touch_id, Mi
 }
 
 mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp, MirPointerAction action,
-                                                      MirPointerButtons buttons_pressed, float x_axis_value,
-                                                      float y_axis_value, float hscroll_value, float vscroll_value,
+                                                      MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value,
                                                       float relative_x_value, float relative_y_value)
 {
+    const float x_axis_value = 0;
+    const float y_axis_value = 0;
     uint64_t mac = 0;
     if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
         mac = cookie_factory->timestamp_to_cookie(timestamp.count()).mac;

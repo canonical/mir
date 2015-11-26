@@ -38,6 +38,7 @@ add_library(mir-public-test-framework OBJECT
   process.cpp
   server_runner.cpp
   socket_detect_server.cpp
+  stub_input_platform.cpp
   stub_client_platform_factory.cpp
   stub_server_platform_factory.cpp
   stub_session.cpp

@@ -96,11 +96,11 @@ struct MockEventBuilder : mi::EventBuilder
                                         return builder.add_touch(event, id, action, tooltype, x, y, major, minor,
                                                                  pressure, size);
                                   }));
-        ON_CALL(*this, pointer_event(_, _, _, _, _, _, _, _, _))
-            .WillByDefault(Invoke([this](Timestamp time, MirPointerAction action, MirPointerButtons buttons, float x,
-                                         float y, float hscroll, float vscroll, float relative_x, float relative_y)
+        ON_CALL(*this, pointer_event(_, _, _, _, _, _, _))
+            .WillByDefault(Invoke([this](Timestamp time, MirPointerAction action, MirPointerButtons buttons,
+                                         float hscroll, float vscroll, float relative_x, float relative_y)
                                   {
-                                      return builder.pointer_event(time, action, buttons, x, y, hscroll, vscroll,
+                                      return builder.pointer_event(time, action, buttons, hscroll, vscroll,
                                                                    relative_x, relative_y);
                                   }));
         ON_CALL(*this, configuration_event(_,_))
@@ -115,9 +115,8 @@ struct MockEventBuilder : mi::EventBuilder
     MOCK_METHOD1(touch_event, mir::EventUPtr(Timestamp));
     MOCK_METHOD10(add_touch, void(MirEvent&, MirTouchId, MirTouchAction, MirTouchTooltype, float, float, float, float,
                                   float, float));
-
-    MOCK_METHOD9(pointer_event, mir::EventUPtr(Timestamp, MirPointerAction, MirPointerButtons, float, float, float,
-                                               float, float, float));
+    MOCK_METHOD7(pointer_event,
+                 mir::EventUPtr(Timestamp, MirPointerAction, MirPointerButtons, float, float, float, float));
     MOCK_METHOD2(configuration_event, mir::EventUPtr(Timestamp, MirInputConfigurationAction));
 };
 
@@ -550,28 +549,16 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_absolute_pointer_events)
     setup_absolute_pointer_event(fake_event_1, event_time_1, x1, y1);
     setup_absolute_pointer_event(fake_event_2, event_time_2, x2, y2);
 
-    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithPosition(x1, y1)));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x1, y1)));
     EXPECT_CALL(mock_sink,
-                handle_input(AllOf(mt::PointerEventWithPosition(x2, y2), mt::PointerEventWithDiff(x2 - x1, y2 - y1))));
+                handle_input(mt::PointerEventWithDiff(x2 - x1, y2 - y1)));
 
     mouse.start(&mock_sink, &mock_builder);
     mouse.process_event(fake_event_1);
     mouse.process_event(fake_event_2);
 }
 
-TEST_F(LibInputDeviceOnMouse, process_event_provides_relative_coordinates)
-{
-    float x = -5;
-    float y = 20;
-    setup_pointer_event(fake_event_1, event_time_1, x, y);
-
-    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x,y)));
-
-    mouse.start(&mock_sink, &mock_builder);
-    mouse.process_event(fake_event_1);
-}
-
-TEST_F(LibInputDeviceOnMouse, process_event_accumulates_pointer_movement)
+TEST_F(LibInputDeviceOnMouse, process_event_motion_events_with_relative_changes)
 {
     float x1 = 15, x2 = 23;
     float y1 = 17, y2 = 21;
@@ -579,8 +566,8 @@ TEST_F(LibInputDeviceOnMouse, process_event_accumulates_pointer_movement)
     setup_pointer_event(fake_event_1, event_time_1, x1, y1);
     setup_pointer_event(fake_event_2, event_time_2, x2, y2);
 
-    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithPosition(x1,y1)));
-    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithPosition(x1+x2,y1+y2)));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x1,y1)));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x2,y2)));
 
     mouse.start(&mock_sink, &mock_builder);
     mouse.process_event(fake_event_1);
@@ -619,10 +606,10 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
     InSequence seq;
     // expect two scroll events..
     EXPECT_CALL(mock_builder,
-                pointer_event(time_stamp_1, mir_pointer_action_motion, 0, 0.0f, 0.0f, 0.0f, 20.0f, 0.0f, 0.0f));
+                pointer_event(time_stamp_1, mir_pointer_action_motion, 0, 0.0f, 20.0f, 0.0f, 0.0f));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 20.0f)));
     EXPECT_CALL(mock_builder,
-                pointer_event(time_stamp_2, mir_pointer_action_motion, 0, 0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f));
+                pointer_event(time_stamp_2, mir_pointer_action_motion, 0, 5.0f, 0.0f, 0.0f, 0.0f));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 5.0f)));
 
     mouse.start(&mock_sink, &mock_builder);
