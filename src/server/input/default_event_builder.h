@@ -45,8 +45,8 @@ public:
                    float touch_minor_value, float size_value) override;
 
     EventUPtr pointer_event(Timestamp timestamp, MirPointerAction action, MirPointerButtons buttons_pressed,
-                            float x_axis_value, float y_axis_value, float hscroll_value, float vscroll_value,
-                            float relative_x_value, float relative_y_value) override;
+                            float hscroll_value, float vscroll_value, float relative_x_value,
+                            float relative_y_value) override;
 
     EventUPtr configuration_event(Timestamp timestamp, MirInputConfigurationAction action) override;
 

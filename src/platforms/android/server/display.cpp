@@ -287,7 +287,7 @@ void mga::Display::on_hotplug()
 
 void mga::Display::on_vsync(DisplayName name) const
 {
-    display_report->report_vsync(name);
+    display_report->report_vsync(as_output_id(name).as_value());
 }
 
 void mga::Display::register_configuration_change_handler(

@@ -13,37 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- *   Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_DEFAULT_DEVICE_H_
-#define MIR_INPUT_DEFAULT_DEVICE_H_
+#ifndef MIR_INPUT_PROBE_H_
+#define MIR_INPUT_PROBE_H_
 
-#include "mir_toolkit/event.h"
-#include "mir/input/device.h"
-#include "mir/input/input_device_info.h"
+#include <vector>
 #include "mir/module_deleter.h"
-
-#include <memory>
 
 namespace mir
 {
+namespace options
+{
+class Option;
+}
+class EmergencyCleanupRegistry;
+class SharedLibraryProberReport;
+
 namespace input
 {
+class InputReport;
+class Platform;
+class InputDeviceRegistry;
 
-class DefaultDevice : public Device
-{
-public:
-    DefaultDevice(MirInputDeviceId id, InputDeviceInfo const& info);
-    MirInputDeviceId id() const override;
-    DeviceCapabilities capabilities() const override;
-    std::string name() const override;
-    std::string unique_id() const override;
-private:
-    MirInputDeviceId device_id;
-    InputDeviceInfo info;
-};
+std::vector<mir::UniqueModulePtr<Platform>> probe_input_platforms(
+    options::Option const& options, std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup,
+    std::shared_ptr<InputDeviceRegistry> const& device_registry, std::shared_ptr<InputReport> const& input_report,
+    SharedLibraryProberReport & prober_report);
 
 }
 }

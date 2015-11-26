@@ -30,9 +30,17 @@ namespace input
 {
 namespace evdev
 {
-using LibInputDevicePtr = std::unique_ptr<libinput_device, libinput_device*(*)(libinput_device*)>;
+struct LibInputDeviceDeleter
+{
+    LibInputDeviceDeleter(std::shared_ptr<::libinput> const& lib)
+        : lib{lib}
+    {}
+    void operator()(::libinput_device* device) const;
+    std::shared_ptr<::libinput> const lib;
+};
+using LibInputDevicePtr = std::unique_ptr<libinput_device, LibInputDeviceDeleter>;
 
-LibInputDevicePtr make_libinput_device(libinput* lib, char const* path);
+LibInputDevicePtr make_libinput_device(std::shared_ptr<::libinput> const& lib, char const* path);
 }
 }
 }
