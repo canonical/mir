@@ -55,13 +55,13 @@ namespace msh = mir::shell;
 std::shared_ptr<mc::Scene>
 mir::DefaultServerConfiguration::the_scene()
 {
-    return surface_stack([this]()
+    return scene_surface_stack([this]()
                          { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
 }
 
 std::shared_ptr<mi::Scene> mir::DefaultServerConfiguration::the_input_scene()
 {
-    return surface_stack([this]()
+    return scene_surface_stack([this]()
                              { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
 }
 
@@ -83,15 +83,19 @@ std::shared_ptr<msh::SurfaceStack>
 mir::DefaultServerConfiguration::the_surface_stack()
 {
     return surface_stack([this]()
-                             { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
-//    return wrap_surface_stack(surface_stack([this]()
-//        { return std::make_shared<ms::SurfaceStack>(the_scene_report()); }));
+        -> std::shared_ptr<msh::SurfaceStack>
+             {
+                 auto const wrapped = scene_surface_stack([this]()
+                     { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
+
+                 return wrap_surface_stack(wrapped);
+             });
 }
 
 auto mir::DefaultServerConfiguration::wrap_surface_stack(std::shared_ptr<shell::SurfaceStack> const& wrapped)
 -> std::shared_ptr<shell::SurfaceStack>
 {
-    return wrapped_surface_stack([&wrapped]() { return wrapped; });
+    return wrapped;
 }
 
 std::shared_ptr<ms::BroadcastingSessionEventSink>

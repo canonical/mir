@@ -407,8 +407,8 @@ protected:
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<compositor::FrameDroppingPolicyFactory> frame_dropping_policy_factory;
-    CachedPtr<scene::SurfaceStack> surface_stack;
-    CachedPtr<shell::SurfaceStack> wrapped_surface_stack;
+    CachedPtr<scene::SurfaceStack> scene_surface_stack;
+    CachedPtr<shell::SurfaceStack> surface_stack;
     CachedPtr<scene::SceneReport> scene_report;
 
     CachedPtr<scene::SurfaceFactory> surface_factory;

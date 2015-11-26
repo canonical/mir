@@ -47,7 +47,8 @@ namespace mo = mir::options;
     MACRO(cursor_listener)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
-    MACRO(shell)
+    MACRO(shell)\
+    MACRO(surface_stack)
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
