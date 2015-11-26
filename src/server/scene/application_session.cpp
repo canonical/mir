@@ -112,7 +112,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
             stream_id, surface_sink, buffer_properties);
     }
     auto surface = surface_factory->create_surface(buffer_stream, params);
-    surface_coordinator->add_surface(surface, params.input_mode, this);
+    surface_coordinator->add_surface(surface, params.input_mode);
 
     if (params.state.is_set())
         surface->configure(mir_surface_attrib_state, params.state.value());
