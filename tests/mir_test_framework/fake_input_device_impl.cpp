@@ -97,7 +97,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
     xkb_keysym_t key_code = 0;
 
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::system_clock::now().time_since_epoch());
+        std::chrono::steady_clock::now().time_since_epoch());
 
     auto input_action =
         (key_params.action == synthesis::EventAction::Down) ? mir_keyboard_action_down : mir_keyboard_action_up;
@@ -112,13 +112,11 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonParameters const& button)
 {
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::system_clock::now().time_since_epoch());
+        std::chrono::steady_clock::now().time_since_epoch());
     auto action = update_buttons(button.action, mie::to_pointer_button(button.button, settings.handedness));
     auto button_event = builder->pointer_event(event_time,
                                                action,
                                                buttons,
-                                               pos.x.as_float(),
-                                               pos.y.as_float(),
                                                scroll.x.as_float(),
                                                scroll.y.as_float(),
                                                0.0f,
@@ -149,7 +147,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
 
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::system_clock::now().time_since_epoch());
+        std::chrono::steady_clock::now().time_since_epoch());
     // constant scaling is used here to simplify checking for the
     // expected results. Default settings of the device lead to no
     // scaling at all.
@@ -157,12 +155,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
     auto rel_x = pointer.rel_x * acceleration;
     auto rel_y = pointer.rel_y * acceleration;
 
-    update_position(rel_x, rel_y);
     auto pointer_event = builder->pointer_event(event_time,
                                                 mir_pointer_action_motion,
                                                 buttons,
-                                                pos.x.as_float(),
-                                                pos.y.as_float(),
                                                 scroll.x.as_float(),
                                                 scroll.y.as_float(),
                                                 rel_x,
@@ -171,19 +166,13 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
     sink->handle_input(*pointer_event);
 }
 
-void mtf::FakeInputDeviceImpl::InputDevice::update_position(int rel_x, int rel_y)
-{
-    pos = pos + mir::geometry::Displacement{rel_x, rel_y};
-    sink->confine_pointer(pos);
-}
-
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchParameters const& touch)
 {
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
 
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::system_clock::now().time_since_epoch());
+        std::chrono::steady_clock::now().time_since_epoch());
 
     auto touch_event = builder->touch_event(event_time);
 

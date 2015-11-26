@@ -48,7 +48,7 @@ INSTANTIATE_TEST_CASE_P(InputDeviceCapabilityDetection,
                             std::make_tuple(
                                 "synaptics-touchpad",
                                 "/dev/input/event12",
-                                mi::DeviceCapability::touchpad
+                                mi::DeviceCapability::touchpad|mi::DeviceCapability::pointer
                                 ),
                             std::make_tuple(
                                 "laptop-keyboard",
@@ -68,7 +68,7 @@ INSTANTIATE_TEST_CASE_P(InputDeviceCapabilityDetection,
                             std::make_tuple(
                                 "bluetooth-magic-trackpad",
                                 "/dev/input/event13",
-                                mi::DeviceCapability::touchpad
+                                mi::DeviceCapability::touchpad|mi::DeviceCapability::pointer
                                 ),
                             std::make_tuple(
                                 "mt-screen-detection", // device also reports available keys..

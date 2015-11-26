@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/platform.h"
+#include "mir/assert_module_entry_point.h"
 
 namespace mir
 {
@@ -28,6 +29,7 @@ class ProgramOption;
 
 mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOption const& /*options*/)
 {
+    mir::assert_entry_point_signature<mir::graphics::PlatformProbe>(&probe_graphics_platform);
     return mir::graphics::PlatformPriority::dummy;
 }
 
@@ -40,5 +42,6 @@ mir::ModuleProperties const description {
 
 mir::ModuleProperties const* describe_graphics_module()
 {
+    mir::assert_entry_point_signature<mir::graphics::DescribeModule>(&describe_graphics_module);
     return &description;
 }

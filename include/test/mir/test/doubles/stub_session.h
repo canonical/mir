@@ -82,6 +82,8 @@ struct StubSession : scene::Session
     void configure_streams(
         scene::Surface& surface,
         std::vector<shell::StreamSpecification> const& config) override;
+
+    void destroy_surface(std::weak_ptr<scene::Surface> const& surface) override;
 };
 }
 }

@@ -50,6 +50,7 @@ namespace
 struct StubEmergencyCleanupRegistry : mir::EmergencyCleanupRegistry
 {
     void add(mir::EmergencyCleanupHandler const&) override {}
+    void add(mir::ModuleEmergencyCleanupHandler) override {}
 };
 char const platform_input_lib[] = "platform-input-lib";
 char const platform_path[] = "platform-path";
@@ -147,7 +148,6 @@ TEST_F(InputPlatformProbe, x11_platform_found_and_used_when_display_connection_w
     EXPECT_THAT(platforms, UnorderedElementsAre(OfPtrType<mi::evdev::Platform>(), OfPtrType<mi::X::XInputPlatform>()));
 }
 #endif
-
 
 TEST_F(InputPlatformProbe, allows_forcing_stub_input_platform)
 {

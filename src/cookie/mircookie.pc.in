@@ -6,6 +6,5 @@ includedir=@INCLUDEDIR@/mircookie
 Name: mircookie
 Description: Mir client library
 Version: @MIR_VERSION@
-Requires.private: nettle
 Libs: -L${libdir} -lmircookie
 Cflags: -I${includedir}

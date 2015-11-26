@@ -110,7 +110,6 @@ void mtf::AsyncServerRunner::stop_server()
 {
     server.stop();
     wait_for_server_exit();
-    connections.clear();
 }
 
 void mtf::AsyncServerRunner::wait_for_server_exit()
@@ -132,10 +131,12 @@ auto mtf::AsyncServerRunner::new_connection() -> std::string
     return connection(server.open_client_socket());
 }
 
-auto mtf::AsyncServerRunner::connection(mir::Fd fd) -> std::string
+auto mtf::AsyncServerRunner::connection(int fd) -> std::string
 {
     char connect_string[64] = {0};
-    connections.push_back(fd);
-    sprintf(connect_string, "fd://%d", fd.operator int());
+    // We can't have both the server and the client owning the same fd, since
+    // that will result in a double-close(). We give the client a duplicate which
+    // the client can safely own (and should close when done).
+    sprintf(connect_string, "fd://%d", dup(fd));
     return connect_string;
 }

@@ -22,9 +22,11 @@
 #include "mir/client_context.h"
 #include "buffer_file_ops.h"
 #include "mir/egl_native_display_container.h"
+#include "mir/assert_module_entry_point.h"
 
 #include <sys/mman.h>
 #include <unistd.h>
+#include <dlfcn.h>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 
@@ -33,6 +35,15 @@ namespace mclm = mcl::mesa;
 
 namespace
 {
+// Hack around the way mesa loads mir: This hack makes the
+// necessary symbols global.
+void ensure_loaded_with_rtld_global_mesa_client()
+{
+    Dl_info info;
+
+    dladdr(reinterpret_cast<void*>(&ensure_loaded_with_rtld_global_mesa_client), &info);
+    dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
+}
 
 struct RealBufferFileOps : public mclm::BufferFileOps
 {
@@ -63,6 +74,8 @@ struct RealBufferFileOps : public mclm::BufferFileOps
 
 std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* context)
 {
+    mir::assert_entry_point_signature<mcl::CreateClientPlatform>(&create_client_platform);
+    ensure_loaded_with_rtld_global_mesa_client();
     MirPlatformPackage package;
     context->populate_server_package(package);
     if (package.data_items != 0 || package.fd_items != 1)
@@ -77,6 +90,7 @@ std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* 
 bool
 is_appropriate_module(mcl::ClientContext* context)
 {
+    mir::assert_entry_point_signature<mcl::ClientPlatformProbe>(&is_appropriate_module);
     MirPlatformPackage platform;
     context->populate_server_package(platform);
     // TODO: Actually check what platform we're using, rather than blindly

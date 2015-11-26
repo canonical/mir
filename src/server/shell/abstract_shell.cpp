@@ -108,7 +108,6 @@ void msh::AbstractShell::destroy_surface(
 {
     report->destroying_surface(*session, surface);
     window_manager->remove_surface(session, session->surface(surface));
-    session->destroy_surface(surface);
 }
 
 std::shared_ptr<ms::PromptSession> msh::AbstractShell::start_prompt_session_for(
@@ -163,16 +162,22 @@ void msh::AbstractShell::raise_surface_with_timestamp(
 void msh::AbstractShell::focus_next_session()
 {
     std::unique_lock<std::mutex> lock(focus_mutex);
-    auto session = focus_session.lock();
+    auto const focused_session = focus_session.lock();
+    auto successor = session_coordinator->successor_of(focused_session);
 
-    session = session_coordinator->successor_of(session);
+    while (successor != nullptr &&
+           successor != focused_session &&
+           successor->default_surface() == nullptr)
+    {
+        successor = session_coordinator->successor_of(successor);
+    }
 
-    std::shared_ptr<ms::Surface> surface;
+    auto const surface = successor ? successor->default_surface() : nullptr;
 
-    if (session)
-        surface = session->default_surface();
+    if (!surface)
+        successor = nullptr;
 
-    set_focus_to_locked(lock, session, surface);
+    set_focus_to_locked(lock, successor, surface);
 }
 
 std::shared_ptr<ms::Session> msh::AbstractShell::focused_session() const

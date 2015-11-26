@@ -148,7 +148,7 @@ ms::MediatingDisplayChanger::base_configuration()
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
 
-    return base_configuration_;
+    return base_configuration_->clone();
 }
 
 void ms::MediatingDisplayChanger::configure_for_hardware_change(

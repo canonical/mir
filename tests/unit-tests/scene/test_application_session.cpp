@@ -116,7 +116,7 @@ struct StubSurfaceCoordinator : public ms::SurfaceCoordinator
     {
     }
     void add_surface(
-        std::shared_ptr<ms::Surface> const&, ms::DepthId, mi::InputReceptionMode const&, ms::Session*) override
+        std::shared_ptr<ms::Surface> const&, mi::InputReceptionMode const&, ms::Session*) override
     {
     }
     void remove_surface(std::weak_ptr<ms::Surface> const&) override
@@ -242,7 +242,7 @@ TEST_F(ApplicationSession, adds_created_surface_to_coordinator)
 
     EXPECT_CALL(mock_surface_factory, create_surface(_,_))
         .WillOnce(Return(mock_surface));
-    EXPECT_CALL(surface_coordinator, add_surface(mock_surface,_,_,_));
+    EXPECT_CALL(surface_coordinator, add_surface(mock_surface,_,_));
     auto session = make_application_session(
         mt::fake_shared(surface_coordinator), mt::fake_shared(mock_surface_factory));
 

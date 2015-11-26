@@ -21,7 +21,6 @@
 
 #include "mir/shell/shell_wrapper.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/scene/depth_id.h"
 
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
@@ -35,15 +34,13 @@ namespace mir_test_framework
 {
 using ClientInputRegions = std::map<std::string, std::vector<mir::geometry::Rectangle>>;
 using ClientPositions = std::map<std::string, mir::geometry::Rectangle>;
-using ClientDepths = std::map<std::string, mir::scene::DepthId>;
 
 struct PlacementApplyingShell : mir::shell::ShellWrapper
 {
     PlacementApplyingShell(
         std::shared_ptr<mir::shell::Shell> wrapped_coordinator,
         ClientInputRegions const& client_input_regions,
-        ClientPositions const& client_positions,
-        ClientDepths const& client_depths);
+        ClientPositions const& client_positions);
 
     mir::frontend::SurfaceId create_surface(
         std::shared_ptr<mir::scene::Session> const& session,
@@ -52,7 +49,6 @@ struct PlacementApplyingShell : mir::shell::ShellWrapper
 private:
     ClientInputRegions const& client_input_regions;
     ClientPositions const& client_positions;
-    ClientDepths const& client_depths;
 };
 
 }
