@@ -132,7 +132,6 @@ class InputReport;
 class Scene;
 class InputManager;
 class SurfaceInputDispatcher;
-class Platform;
 class InputDeviceRegistry;
 class InputDeviceHub;
 class DefaultInputDeviceHub;
@@ -144,15 +143,8 @@ class TouchVisualizer;
 class InputRegion;
 class InputSender;
 class InputSendObserver;
-class NestedInputRelay;
-class EventHandler;
 class CursorImages;
 class LegacyInputDispatchable;
-namespace android
-{
-class InputRegistrar;
-class InputThread;
-}
 }
 
 namespace logging
@@ -331,7 +323,6 @@ public:
     virtual std::shared_ptr<droidinput::InputListenerInterface> the_input_translator();
 
     // new input reading related parts:
-    virtual std::shared_ptr<input::Platform> the_input_platform();
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
     virtual std::shared_ptr<input::InputDeviceRegistry> the_input_device_registry();
     virtual std::shared_ptr<input::InputDeviceHub> the_input_device_hub();
@@ -390,8 +381,7 @@ protected:
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::SurfaceInputDispatcher>    surface_input_dispatcher;
-    CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub; // currently not used by default
-    CachedPtr<input::Platform>    input_platform; // currently not used by default
+    CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub;
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;
     CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<input::InputSender>     input_sender;

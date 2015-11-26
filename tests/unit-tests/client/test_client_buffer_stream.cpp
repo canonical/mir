@@ -348,6 +348,7 @@ TEST_P(ClientBufferStream, consumer_streams_call_screencast_buffer_on_next_buffe
         nullptr, mock_protobuf_server, mcl::BufferStreamMode::Consumer,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
         response, perf_report, "", size, nbuffers);
+    service_requests_for(bs, mock_protobuf_server.alloc_count);
     auto wh = bs.next_buffer([]{});
     ASSERT_THAT(wh, NotNull());
     EXPECT_FALSE(wh->is_pending());
@@ -683,6 +684,27 @@ TEST_P(ClientBufferStream, returns_correct_surface_parameters_with_nondefault_fo
     service_requests_for(bs, 1);
     auto params = bs.get_parameters();
     EXPECT_THAT(params.pixel_format, Eq(format));
+}
+
+TEST_P(ClientBufferStream, keeps_accurate_buffer_id)
+{
+    ON_CALL(mock_factory, create_buffer(_,_,_))
+        .WillByDefault(Return(std::make_shared<mtd::NullClientBuffer>(size)));
+    mcl::BufferStream stream(
+        nullptr, mock_protobuf_server, mode,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        response, perf_report, "", size, nbuffers);
+    for(auto i = 0u; i < 2; i++)
+    {
+        mp::Buffer buffer;
+        fill_protobuf_buffer_from_package(&buffer, a_buffer_package());
+        buffer.set_buffer_id(i+10);
+        buffer.set_width(size.width.as_int());
+        buffer.set_height(size.height.as_int());
+        stream.buffer_available(buffer);
+    }
+
+    EXPECT_THAT(stream.get_current_buffer_id(), Eq(10));
 }
 
 INSTANTIATE_TEST_CASE_P(BufferSemanticsMode, ClientBufferStream, Bool());
