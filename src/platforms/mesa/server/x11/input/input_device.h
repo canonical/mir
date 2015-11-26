@@ -21,6 +21,7 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
+#include "mir/geometry/point.h"
 #include "mir/optional_value.h"
 
 namespace mir
@@ -48,6 +49,7 @@ public:
 
     InputSink* sink{nullptr};
     EventBuilder* builder{nullptr};
+    geometry::Point pointer_pos;
 private:
     InputDeviceInfo info;
 };

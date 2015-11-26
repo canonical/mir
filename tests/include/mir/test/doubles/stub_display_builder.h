@@ -70,7 +70,7 @@ struct StubHwcConfiguration : public graphics::android::HwcConfiguration
     {
         bool connected{name == graphics::android::DisplayName::primary};
         auto config = StubDisplayConfig({{connected, connected}}).outputs[0];
-        config.id = static_cast<graphics::DisplayConfigurationOutputId>(name);
+        config.id = as_output_id(name);
         return config;
     }
     

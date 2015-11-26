@@ -23,7 +23,6 @@ namespace mtf = mir_test_framework;
 namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
-namespace mia = mir::input::android;
 
 mtf::FakeInputServerConfiguration::FakeInputServerConfiguration()
 {

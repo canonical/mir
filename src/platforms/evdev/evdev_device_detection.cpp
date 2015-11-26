@@ -131,7 +131,8 @@ mi::DeviceCapabilities evaluate_device_capabilities(DeviceInfo const& info)
         get_bit(info.key_bit_mask, BTN_TOOL_FINGER) && !get_bit(info.key_bit_mask, BTN_TOOL_PEN);
 
     bool const has_touch = get_bit(info.key_bit_mask, BTN_TOUCH);
-    bool const is_pointer = get_bit(info.key_bit_mask, BTN_MOUSE) && get_bit(info.rel_bit_mask, REL_X) && get_bit(info.rel_bit_mask, REL_Y);
+    bool const is_mouse = get_bit(info.key_bit_mask, BTN_MOUSE) && get_bit(info.rel_bit_mask, REL_X) && get_bit(info.rel_bit_mask, REL_Y);
+    bool const is_touchpad = finger_but_no_pen && !is_direct && (has_coordinates || has_mt_coordinates);
 
     bool const has_joystick_axis = 0 < get_num_bits(
         info.abs_bit_mask, {ABS_Z,
@@ -142,24 +143,24 @@ mi::DeviceCapabilities evaluate_device_capabilities(DeviceInfo const& info)
         });
 
     if (has_keys || has_gamepad_buttons)
-        caps = caps | mi::DeviceCapability::keyboard;
+        caps |= mi::DeviceCapability::keyboard;
 
     if (has_alpha_numeric)
-        caps = caps | mi::DeviceCapability::alpha_numeric;
+        caps |= mi::DeviceCapability::alpha_numeric;
 
-    if (is_pointer)
-        caps = caps | mi::DeviceCapability::pointer;
+    if (is_mouse)
+        caps |= mi::DeviceCapability::pointer;
 
-    if (finger_but_no_pen && !is_direct && (has_coordinates || has_mt_coordinates))
-        caps = caps | mi::DeviceCapability::touchpad;
+    if (is_touchpad)
+        caps |= mi::DeviceCapability::touchpad | mi::DeviceCapability::pointer;
     else if (has_touch && ((has_mt_coordinates && !has_gamepad_buttons) || has_coordinates))
-        caps = caps | mi::DeviceCapability::touchscreen;
+        caps |= mi::DeviceCapability::touchscreen;
 
     if (has_joystick_axis || (!has_touch && has_coordinates))
-        caps = caps | mi::DeviceCapability::joystick;
+        caps |= mi::DeviceCapability::joystick;
 
     if (has_gamepad_buttons)
-        caps = caps | mi::DeviceCapability::gamepad;
+        caps |= mi::DeviceCapability::gamepad;
 
     return caps;
 }

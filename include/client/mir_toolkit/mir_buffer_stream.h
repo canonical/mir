@@ -152,8 +152,10 @@ MirWaitHandle *mir_buffer_stream_swap_buffers(
 void mir_buffer_stream_swap_buffers_sync(MirBufferStream *buffer_stream);
 
 /**
- * Retrieve a buffer stream's graphics region, e.g. map the graphics buffer to main
- * memory.
+ * Retrieve a buffer stream's graphics region
+ *   \warning Depending on platform, this can map the graphics buffer each
+ *            time its called. The region remains mapped until
+ *            mir_buffer_stream_swap_buffers().
  *   \pre                          The buffer stream is valid
  *   \param [in] buffer stream     The buffer stream
  *   \param [out] graphics_region  Structure to be populated

@@ -202,6 +202,8 @@ void dispatch_loop(std::string const& name,
         {
             if (poll(&waiter, 1, -1) < 0)
             {
+                if (errno == EINTR)
+                    continue;
                 BOOST_THROW_EXCEPTION((std::system_error{errno,
                                                          std::system_category(),
                                                          "Failed to wait for event"}));

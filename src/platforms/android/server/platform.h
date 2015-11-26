@@ -38,6 +38,7 @@ class Platform : public graphics::Platform
 {
 public:
     Platform(
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<DisplayComponentFactory> const& display_buffer_builder,
         std::shared_ptr<DisplayReport> const& display_report,
         OverlayOptimization overlay_option,
@@ -52,15 +53,13 @@ public:
     EGLNativeDisplayType egl_native_display() const override;
 
 private:
-    std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator();
-
+    std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<DisplayComponentFactory> const display_buffer_builder;
     std::shared_ptr<DisplayReport> const display_report;
     std::shared_ptr<PlatformIpcOperations> const ipc_operations;
     std::shared_ptr<DeviceQuirks> const quirks;
     OverlayOptimization const overlay_option;
 
-    std::shared_ptr<graphics::GraphicBufferAllocator> preserved_allocator;
 };
 
 }

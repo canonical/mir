@@ -20,38 +20,12 @@
 #include <utils/Timers.h>
 #include <std/Log.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/time.h>
-#include <time.h>
-#include <errno.h>
 #include <limits.h>
+#include <chrono>
 
-#ifdef HAVE_WIN32_THREADS
-#include <windows.h>
-#endif
-
-std::chrono::nanoseconds systemTime(int clock)
+std::chrono::nanoseconds systemTime(int /*clock => always MONOTONIC*/)
 {
-#if defined(HAVE_POSIX_CLOCKS)
-    static const clockid_t clocks[] = {
-            CLOCK_REALTIME,
-            CLOCK_MONOTONIC,
-            CLOCK_PROCESS_CPUTIME_ID,
-            CLOCK_THREAD_CPUTIME_ID
-    };
-    struct timespec t;
-    t.tv_sec = t.tv_nsec = 0;
-    clock_gettime(clocks[clock], &t);
-    return std::chrono::nanoseconds(t.tv_sec)*1000000000LL + t.tv_nsec;
-#else
-    // we don't support the clocks here.
-    struct timeval t;
-    t.tv_sec = t.tv_usec = 0;
-    gettimeofday(&t, NULL);
-    return std::chrono::nanoseconds(t.tv_sec)*1000000000LL + std::chrono::nanoseconds(t.tv_usec)*1000LL;
-#endif
+    return {std::chrono::steady_clock::now().time_since_epoch()};
 }
 
 int toMillisecondTimeoutDelay(std::chrono::nanoseconds referenceTime, std::chrono::nanoseconds timeoutTime)
