@@ -298,6 +298,7 @@ MIR_SERVER_0.18 {
     mir::shell::SystemCompositorWindowManager::handle_keyboard_event*;
     mir::shell::SystemCompositorWindowManager::handle_pointer_event*;
     mir::shell::SystemCompositorWindowManager::handle_touch_event*;
+    mir::shell::SystemCompositorWindowManager::handle_raise_surface*;
     mir::shell::SystemCompositorWindowManager::modify_surface*;
     mir::shell::SystemCompositorWindowManager::on_session_added*;
     mir::shell::SystemCompositorWindowManager::on_session_ready*;
