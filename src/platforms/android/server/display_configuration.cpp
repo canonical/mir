@@ -100,7 +100,7 @@ mg::DisplayConfigurationOutput& mga::DisplayConfiguration::external()
 
 mg::DisplayConfigurationOutput& mga::DisplayConfiguration::operator[](mg::DisplayConfigurationOutputId const& disp_id)
 {
-    auto id = disp_id.as_value();
+    auto id = disp_id.as_value() - 1;
     if (id != primary_id && id != external_id)
         BOOST_THROW_EXCEPTION(std::invalid_argument("invalid display id"));
     return configurations[id];
