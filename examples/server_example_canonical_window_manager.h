@@ -24,6 +24,7 @@
 #include "mir/geometry/displacement.h"
 
 #include <atomic>
+#include <set>
 
 ///\example server_example_canonical_window_manager.h
 // Based on "Mir and Unity: Surfaces, input, and displays (v0.3)"
@@ -121,6 +122,9 @@ private:
     geometry::Rectangle display_area;
     geometry::Point old_cursor{};
     std::weak_ptr<scene::Surface> active_surface_;
+    using FullscreenSurfaces = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;
+
+    FullscreenSurfaces fullscreen_surfaces;
 };
 }
 }

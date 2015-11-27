@@ -72,8 +72,8 @@ struct TestSurfaceStack : public ms::SurfaceStack
 struct TestConfiguration : public mir_test_framework::StubbedServerConfiguration
 {
 
-    std::shared_ptr<ms::SurfaceStackModel>
-    the_surface_stack_model() override
+    std::shared_ptr<ms::SurfaceCoordinator>
+    the_surface_coordinator() override
     {
         return surface_stack(
             [this]()

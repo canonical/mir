@@ -52,9 +52,3 @@ std::shared_ptr<mi::InputSender> mtf::FakeInputServerConfiguration::the_input_se
 {
     return DefaultServerConfiguration::the_input_sender();
 }
-
-std::shared_ptr<mi::LegacyInputDispatchable> mtf::FakeInputServerConfiguration::the_legacy_input_dispatchable()
-{
-    return DefaultServerConfiguration::the_legacy_input_dispatchable();
-}
-
