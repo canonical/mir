@@ -606,10 +606,8 @@ TEST_F(DisplayConfigurationTest,
 
     EXPECT_CALL(mock_display, configure(_)).Times(1);
 
-    std::cerr << "*** DisplayConfigurationTest before releasing surface " << std::endl;
     display_client.disconnect_without_releasing_surface();
 
     wait_for_server_actions_to_finish(*server.the_main_loop());
     testing::Mock::VerifyAndClearExpectations(&mock_display);
-    std::cerr << "*** DisplayConfigurationTest after releasing surface " << std::endl;
 }
