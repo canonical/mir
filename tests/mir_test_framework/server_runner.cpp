@@ -40,15 +40,13 @@ char const* const env_no_file = "MIR_SERVER_NO_FILE";
 mtf::ServerRunner::ServerRunner() :
     old_env(getenv(env_no_file))
 {
-    //Initialize atomically
-    display_server = nullptr;
     if (!old_env) setenv(env_no_file, "", true);
 }
 
 void mtf::ServerRunner::start_server()
 {
-    display_server = start_mir_server();
-    if (display_server.load() == nullptr)
+    std::atomic_store(&main_loop, start_mir_server());
+    if (std::atomic_load(&main_loop) == nullptr)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to start server thread"});
     }
@@ -70,11 +68,12 @@ std::string mtf::ServerRunner::new_prompt_connection()
 
 void mtf::ServerRunner::stop_server()
 {
-    if (display_server.load() == nullptr)
+    auto const ml = std::atomic_load(&main_loop);
+    if (ml == nullptr)
     {
         BOOST_THROW_EXCEPTION(std::logic_error{"stop_server() called without calling start_server()?"});
     }
-    display_server.load()->stop();
+    ml->stop();
     if (server_thread.joinable()) server_thread.join();
 }
 
@@ -85,11 +84,11 @@ mtf::ServerRunner::~ServerRunner()
     if (!old_env) unsetenv(env_no_file);
 }
 
-mir::DisplayServer* mtf::ServerRunner::start_mir_server()
+std::shared_ptr<mir::MainLoop> mtf::ServerRunner::start_mir_server()
 {
     std::mutex mutex;
-    std::condition_variable started;
-    mir::DisplayServer* result{nullptr};
+    std::condition_variable started_cv;
+    bool started{false};
     auto const main_loop = server_config().the_main_loop();
     mir::logging::set_logger(server_config().the_logger());
 
@@ -97,7 +96,7 @@ mir::DisplayServer* mtf::ServerRunner::start_mir_server()
     {
         try
         {
-            mir::run_mir(server_config(), [&](mir::DisplayServer& ds)
+            mir::run_mir(server_config(), [&](mir::DisplayServer&)
             {
                 // By enqueuing the notification code in the main loop, we are
                 // ensuring that the server has really and fully started before
@@ -107,8 +106,8 @@ mir::DisplayServer* mtf::ServerRunner::start_mir_server()
                     [&]
                     {
                         std::lock_guard<std::mutex> lock(mutex);
-                        result = &ds;
-                        started.notify_one();
+                        started = true;
+                        started_cv.notify_one();
                     });
             });
         }
@@ -119,7 +118,7 @@ mir::DisplayServer* mtf::ServerRunner::start_mir_server()
     });
 
     std::unique_lock<std::mutex> lock(mutex);
-    started.wait_for(lock, std::chrono::seconds{10}, [&]{ return !!result; });
+    started_cv.wait_for(lock, std::chrono::seconds{10}, [&]{ return started; });
 
-    return result;
+    return main_loop;
 }
