@@ -36,6 +36,7 @@
 #include <boost/throw_exception.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 
+#include <memory>
 #include <stdexcept>
 
 namespace mcl = mir::client;
@@ -404,10 +405,11 @@ mcl::BufferStream::BufferStream(
     perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
 
     create_wait_handle.expect_result();
+    std::unique_ptr<gp::Closure> closure{gp::NewCallback(this, &mcl::BufferStream::created, callback, context)};
     try
     {
-        server.create_buffer_stream(&parameters, protobuf_bs.get(), gp::NewCallback(this, &mcl::BufferStream::created, callback,
-            context));
+        server.create_buffer_stream(&parameters, protobuf_bs.get(), closure.get());
+        closure.release();
     }
     catch (std::exception const& ex)
     {
