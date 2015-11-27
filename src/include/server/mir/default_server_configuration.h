@@ -25,16 +25,6 @@
 #include <memory>
 #include <string>
 
-namespace android
-{
-class EventHubInterface;
-class InputReaderInterface;
-class InputReaderPolicyInterface;
-class InputListenerInterface;
-}
-
-namespace droidinput = android;
-
 namespace mir
 {
 class ServerActionQueue;
@@ -143,7 +133,6 @@ class InputRegion;
 class InputSender;
 class InputSendObserver;
 class CursorImages;
-class LegacyInputDispatchable;
 }
 
 namespace logging
@@ -314,11 +303,6 @@ public:
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
     virtual std::shared_ptr<input::InputSender>    the_input_sender();
     virtual std::shared_ptr<input::InputSendObserver> the_input_send_observer();
-    virtual std::shared_ptr<input::LegacyInputDispatchable> the_legacy_input_dispatchable();
-    virtual std::shared_ptr<droidinput::EventHubInterface> the_event_hub();
-    virtual std::shared_ptr<droidinput::InputReaderInterface> the_input_reader();
-    virtual std::shared_ptr<droidinput::InputReaderPolicyInterface> the_input_reader_policy();
-    virtual std::shared_ptr<droidinput::InputListenerInterface> the_input_translator();
 
     // new input reading related parts:
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
@@ -364,12 +348,6 @@ protected:
     virtual std::shared_ptr<input::CursorListener>  wrap_cursor_listener(
         std::shared_ptr<input::CursorListener> const& wrapped);
 /** @} */
-
-    CachedPtr<droidinput::EventHubInterface> event_hub;
-    CachedPtr<droidinput::InputReaderPolicyInterface> input_reader_policy;
-    CachedPtr<droidinput::InputReaderInterface> input_reader;
-    CachedPtr<droidinput::InputListenerInterface> input_translator;
-    CachedPtr<input::LegacyInputDispatchable> legacy_input_dispatchable;
 
     CachedPtr<frontend::Connector>   connector;
     CachedPtr<frontend::Connector>   prompt_connector;
