@@ -68,6 +68,19 @@ void msh::AbstractShell::close_session(
 {
     report->closing_session(*session);
     prompt_session_manager->remove_session(session);
+
+    // TODO revisit this when reworking the AbstractShell/WindowManager interactions
+    // this is an ugly kludge to extract the list of surfaces owned by the session
+    // We're likely to have this information in the WindowManager implementation
+    std::set<std::shared_ptr<ms::Surface>> surfaces;
+    for (auto surface = session->default_surface(); surface; surface = session->surface_after(surface))
+        if (!surfaces.insert(surface).second) break;
+
+    // this is an ugly kludge to remove the each of the surfaces owned by the session
+    // We could likely do this better (and atomically) within the WindowManager
+    for (auto const& surface : surfaces)
+        window_manager->remove_surface(session, surface);
+
     session_coordinator->close_session(session);
     window_manager->remove_session(session);
 }

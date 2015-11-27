@@ -49,9 +49,9 @@ struct StubSceneSession : public scene::Session
     {
         return std::shared_ptr<scene::Surface>();
     }
-    std::shared_ptr<scene::Surface> surface_after(std::shared_ptr<scene::Surface> const& s) const override
+    std::shared_ptr<scene::Surface> surface_after(std::shared_ptr<scene::Surface> const& ) const override
     {
-        return s;
+        return {};
     }
     std::string name() const override
     {
