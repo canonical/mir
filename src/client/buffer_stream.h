@@ -34,6 +34,13 @@
 #include <memory>
 #include <mutex>
 
+namespace google
+{
+namespace protobuf
+{
+class Closure;
+}
+}
 namespace mir
 {
 namespace logging
@@ -87,17 +94,17 @@ public:
         size_t nbuffers,
         mir_buffer_stream_callback callback,
         void *context);
-        
+
     virtual ~BufferStream();
 
     MirWaitHandle *get_create_wait_handle() override;
     MirWaitHandle *release(mir_buffer_stream_callback callback, void* context) override;
-    
+
     MirWaitHandle* next_buffer(std::function<void()> const& done) override;
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override;
     // Required by debug API
     uint32_t get_current_buffer_id() override;
-    
+
     int swap_interval() const override;
     MirWaitHandle* set_swap_interval(int interval) override;
     void set_buffer_cache_size(unsigned int) override;
@@ -117,7 +124,7 @@ public:
 
     frontend::BufferStreamId rpc_id() const override;
     bool valid() const override;
-    
+
     void buffer_available(mir::protobuf::Buffer const& buffer) override;
     void buffer_unavailable() override;
     void set_size(geometry::Size) override;
@@ -144,12 +151,13 @@ private:
     std::shared_ptr<ClientPlatform> const client_platform;
 
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
+    std::unique_ptr<google::protobuf::Closure> closure;
 
     int swap_interval_;
     float scale_;
 
     std::shared_ptr<mir::client::PerfReport> const perf_report;
-    
+
     std::shared_ptr<EGLNativeWindowType> egl_native_window_;
 
     MirWaitHandle create_wait_handle;
@@ -158,9 +166,9 @@ private:
     MirWaitHandle interval_wait_handle;
     MirWaitHandle scale_wait_handle;
     std::unique_ptr<mir::protobuf::Void> protobuf_void;
-    
+
     std::shared_ptr<MemoryRegion> secured_region;
-    
+
     geometry::Size cached_buffer_size;
 
     std::unique_ptr<ServerBufferSemantics> buffer_depository;
