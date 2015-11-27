@@ -6,13 +6,6 @@
    fun:ioctl
 }
 {
-   Supress incorrect unaddressable memory warning ioctl
-   Memcheck:Param
-   ioctl(generic)
-   fun:ioctl
-   fun:_ZN7android8EventHub16openDeviceLockedEPKc
-}
-{
    <kernel_ignores_futex_utime_if_not_required>
    Memcheck:Param
    futex(utime)

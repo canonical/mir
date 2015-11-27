@@ -14,7 +14,6 @@ set(MIR_PLATFORM_OBJECTS
   $<TARGET_OBJECTS:mirplatformgraphicscommon>
   $<TARGET_OBJECTS:miroptions>
   $<TARGET_OBJECTS:mirudev>
-  $<TARGET_OBJECTS:android-input-platform>
 )
 
 set(MIR_PLATFORM_REFERENCES

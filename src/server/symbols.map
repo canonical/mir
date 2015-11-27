@@ -308,6 +308,7 @@ MIR_SERVER_0.18 {
     mir::shell::SystemCompositorWindowManager::handle_pointer_event*;
     mir::shell::SystemCompositorWindowManager::handle_raise_surface*;
     mir::shell::SystemCompositorWindowManager::handle_touch_event*;
+    mir::shell::SystemCompositorWindowManager::handle_raise_surface*;
     mir::shell::SystemCompositorWindowManager::modify_surface*;
     mir::shell::SystemCompositorWindowManager::on_session_added*;
     mir::shell::SystemCompositorWindowManager::on_session_ready*;
@@ -697,7 +698,6 @@ MIR_SERVER_0.18 {
     mir::DefaultServerConfiguration::the_display_configuration_policy*;
     mir::DefaultServerConfiguration::the_display_report*;
     mir::DefaultServerConfiguration::the_emergency_cleanup*;
-    mir::DefaultServerConfiguration::the_event_hub*;
     mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
     mir::DefaultServerConfiguration::the_fatal_error_strategy*;
     mir::DefaultServerConfiguration::the_focus_controller*;
@@ -715,8 +715,6 @@ MIR_SERVER_0.18 {
     mir::DefaultServerConfiguration::the_input_dispatcher*;
     mir::DefaultServerConfiguration::the_new_input_dispatcher*;
     mir::DefaultServerConfiguration::the_input_manager*;
-    mir::DefaultServerConfiguration::the_input_reader*;
-    mir::DefaultServerConfiguration::the_input_reader_policy*;
     mir::DefaultServerConfiguration::the_input_reading_multiplexer*;
     mir::DefaultServerConfiguration::the_input_region*;
     mir::DefaultServerConfiguration::the_input_registrar*;

@@ -111,7 +111,7 @@ struct MockDisplayConfigurationReport : public mg::DisplayConfigurationReport
 std::vector<geom::Rectangle> const display_geometry
 {
     {{  0, 0}, { 640,  480}},
-    {{480, 0}, {1920, 1080}}
+    {{640, 0}, {1920, 1080}}
 };
 
 std::chrono::seconds const timeout{10};
@@ -410,12 +410,13 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
     // would be included in one of the later counts and cause a test failure.
     Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
 
-    // One post when surface drawn
+    // One post on each output when surface drawn
     {
         mt::WaitCondition wait;
 
-        EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(1)
-                .WillOnce(InvokeWithoutArgs([&] { wait.wake_up_everyone(); }));
+        EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(2)
+            .WillOnce(InvokeWithoutArgs([]{}))
+            .WillOnce(InvokeWithoutArgs([&] { wait.wake_up_everyone(); }));
 
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
 
@@ -423,12 +424,13 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
         Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());
     }
 
-    // One post when surface released
+    // One post on each output when surface released
     {
         mt::WaitCondition wait;
 
-        EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(1)
-                .WillOnce(InvokeWithoutArgs([&] { wait.wake_up_everyone(); }));
+        EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(2)
+            .WillOnce(InvokeWithoutArgs([]{}))
+            .WillOnce(InvokeWithoutArgs([&] { wait.wake_up_everyone(); }));
 
         mir_surface_release_sync(surface);
         mir_connection_release(connection);
