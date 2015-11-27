@@ -38,6 +38,10 @@ class StubSessionAuthorizer : public frontend::SessionAuthorizer
     {
         return true;
     }
+    bool set_base_display_configuration_is_allowed(mir::frontend::SessionCredentials const&) override
+    {
+        return true;
+    }
     bool screencast_is_allowed(mir::frontend::SessionCredentials const&) override
     {
         return true;

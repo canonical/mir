@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_SURFACE_STACK_H_
 #define MIR_SCENE_SURFACE_STACK_H_
 
-#include "surface_stack_model.h"
+#include "mir/scene/surface_coordinator.h"
 
 #include "mir/compositor/scene.h"
 #include "mir/scene/observer.h"
@@ -63,7 +63,7 @@ public:
    using BasicObservers<Observer>::remove;
 };
 
-class SurfaceStack : public compositor::Scene, public input::Scene, public SurfaceStackModel
+class SurfaceStack : public compositor::Scene, public input::Scene, public SurfaceCoordinator
 {
 public:
     explicit SurfaceStack(

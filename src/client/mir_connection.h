@@ -161,6 +161,9 @@ public:
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
     void done_display_configure();
 
+    MirWaitHandle* set_base_display_configuration(MirDisplayConfiguration const* configuration);
+    void done_set_base_display_configuration();
+
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> rpc_channel() const
     {
         return channel;
@@ -192,6 +195,7 @@ private:
     std::unique_ptr<mir::protobuf::ConnectParameters> connect_parameters;
     std::unique_ptr<mir::protobuf::PlatformOperationMessage> platform_operation_reply;
     std::unique_ptr<mir::protobuf::DisplayConfiguration> display_configuration_response;
+    std::unique_ptr<mir::protobuf::Void> set_base_display_configuration_response;
     std::atomic<bool> disconnecting{false};
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
@@ -206,6 +210,7 @@ private:
     MirWaitHandle disconnect_wait_handle;
     MirWaitHandle platform_operation_wait_handle;
     MirWaitHandle configure_display_wait_handle;
+    MirWaitHandle set_base_display_configuration_wait_handle;
 
     std::mutex release_wait_handle_guard;
     std::vector<MirWaitHandle*> release_wait_handles;
@@ -237,7 +242,7 @@ private:
     void released(SurfaceRelease);
     void released(StreamRelease);
     void done_platform_operation(mir_platform_operation_callback, void* context);
-    bool validate_user_display_config(MirDisplayConfiguration* config);
+    bool validate_user_display_config(MirDisplayConfiguration const* config);
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

@@ -34,7 +34,6 @@
 #include "session_container.h"
 #include "session_manager.h"
 #include "surface_allocator.h"
-#include "surface_controller.h"
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
 #include "prompt_session_manager_impl.h"
@@ -52,13 +51,6 @@ namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace msh = mir::shell;
-
-std::shared_ptr<ms::SurfaceStackModel>
-mir::DefaultServerConfiguration::the_surface_stack_model()
-{
-    return surface_stack([this]()
-                         { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
-}
 
 std::shared_ptr<mc::Scene>
 mir::DefaultServerConfiguration::the_scene()
@@ -90,13 +82,8 @@ auto mir::DefaultServerConfiguration::the_surface_factory()
 std::shared_ptr<ms::SurfaceCoordinator>
 mir::DefaultServerConfiguration::the_surface_coordinator()
 {
-    return surface_coordinator(
-        [this]()
-        {
-            return std::make_shared<ms::SurfaceController>(
-                    the_surface_factory(),
-                    the_surface_stack_model());
-        });
+    return surface_stack([this]()
+                             { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
 }
 
 std::shared_ptr<ms::BroadcastingSessionEventSink>

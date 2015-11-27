@@ -206,7 +206,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_paramet
     auto placed_params = params;
     placed_params.size.width = geom::Width{100};
 
-    EXPECT_CALL(surface_coordinator, add_surface(_,placed_params.input_mode,_));
+    EXPECT_CALL(surface_coordinator, add_surface(_,placed_params.input_mode));
 
     EXPECT_CALL(*wm, add_surface(session, Ref(params), _)).WillOnce(Invoke(
         [&](std::shared_ptr<ms::Session> const& session,

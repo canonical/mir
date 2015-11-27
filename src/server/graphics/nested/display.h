@@ -100,6 +100,8 @@ public:
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const&) override;
     void post() override;
     std::chrono::milliseconds recommended_sleep() const override;
+
+    geometry::Rectangle view_area() const;
 private:
     std::shared_ptr<detail::DisplayBuffer> const output;
 };
