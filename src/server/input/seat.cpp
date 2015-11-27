@@ -36,7 +36,7 @@ namespace mi = mir::input;
 mi::Seat::Seat(std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                std::shared_ptr<CursorListener> const& cursor_listener,
                std::shared_ptr<InputRegion> const& input_region)
-    : touch_visualizer{touch_visualizer}, cursor_listener{cursor_listener}, input_region{input_region}, modifier{0}
+    : touch_visualizer{touch_visualizer}, cursor_listener{cursor_listener}, input_region{input_region}, modifier{0}, buttons{0}
 {
 }
 
