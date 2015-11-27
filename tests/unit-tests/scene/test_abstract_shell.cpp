@@ -32,6 +32,7 @@
 #include "mir/test/doubles/mock_window_manager.h"
 #include "mir/test/doubles/mock_surface_coordinator.h"
 #include "mir/test/doubles/mock_surface.h"
+#include "mir/test/doubles/stub_surface.h"
 #include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/null_snapshot_strategy.h"
 #include "mir/test/doubles/null_prompt_session_manager.h"
@@ -182,6 +183,32 @@ TEST_F(AbstractShell, close_session_notifies_session_event_sink)
     EXPECT_CALL(session_event_sink, handle_session_stopping(session));
 
     shell.close_session(session1);
+    shell.close_session(session);
+}
+
+TEST_F(AbstractShell, close_session_removes_existing_session_surfaces_from_window_manager)
+{
+    mtd::StubSurface surface1;
+    mtd::StubSurface surface2;
+    mtd::StubSurface surface3;
+    EXPECT_CALL(surface_factory, create_surface(_,_)).
+        WillOnce(Return(mt::fake_shared(surface1))).
+        WillOnce(Return(mt::fake_shared(surface2))).
+        WillOnce(Return(mt::fake_shared(surface3)));
+
+    auto const session = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+    auto const surface_id1 = shell.create_surface(session, ms::a_surface(), nullptr);
+    auto const surface_id2 = shell.create_surface(session, ms::a_surface(), nullptr);
+    auto const surface_id3 = shell.create_surface(session, ms::a_surface(), nullptr);
+
+    session->destroy_surface(surface_id2);
+
+    Expectation remove1 = EXPECT_CALL(
+        *wm, remove_surface(session, WeakPtrTo(session->surface(surface_id1))));
+    Expectation remove3 = EXPECT_CALL(
+        *wm, remove_surface(session, WeakPtrTo(session->surface(surface_id3))));
+    EXPECT_CALL(*wm, remove_session(session)).After(remove1, remove3);
+
     shell.close_session(session);
 }
 

@@ -265,6 +265,11 @@ struct SimpleClient
         mir_connection_release(connection);
     }
 
+    void disconnect_without_releasing_surface()
+    {
+        mir_connection_release(connection);
+    }
+
     std::string mir_test_socket;
     MirConnection* connection{nullptr};
     MirSurface* surface{nullptr};
@@ -552,4 +557,59 @@ TEST_F(DisplayConfigurationTest,
 
     mir_display_config_destroy(configuration);
     mir_connection_release(connection);
+}
+
+TEST_F(DisplayConfigurationTest, disconnection_of_client_with_display_config_reconfigures_display)
+{
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
+
+    DisplayClient display_client{new_connection()};
+
+    display_client.connect();
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(mock_display, configure(testing::_)).Times(1);
+
+    display_client.apply_config();
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(mock_display, configure(_)).Times(1);
+
+    display_client.disconnect();
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+}
+
+TEST_F(DisplayConfigurationTest,
+       disconnection_without_releasing_surfaces_of_client_with_display_config_reconfigures_display)
+{
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
+
+    DisplayClient display_client{new_connection()};
+
+    display_client.connect();
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(mock_display, configure(testing::_)).Times(1);
+
+    display_client.apply_config();
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(mock_display, configure(_)).Times(1);
+
+    std::cerr << "*** DisplayConfigurationTest before releasing surface " << std::endl;
+    display_client.disconnect_without_releasing_surface();
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+    std::cerr << "*** DisplayConfigurationTest after releasing surface " << std::endl;
 }
