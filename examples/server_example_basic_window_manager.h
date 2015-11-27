@@ -132,7 +132,7 @@ class BasicWindowManager : public virtual shell::WindowManager,
 protected:
     BasicWindowManager(
         shell::FocusController* focus_controller,
-        std::unique_ptr<WindowManagementPolicy>&& policy);
+        std::unique_ptr<WindowManagementPolicy> policy);
 
 public:
     using typename WindowManagerTools::SurfaceInfoMap;

@@ -26,7 +26,7 @@ namespace me = mir::examples;
 
 me::BasicWindowManager::BasicWindowManager(
     shell::FocusController* focus_controller,
-    std::unique_ptr<WindowManagementPolicy>&& policy) :
+    std::unique_ptr<WindowManagementPolicy> policy) :
     focus_controller(focus_controller),
     policy(std::move(policy))
 {
