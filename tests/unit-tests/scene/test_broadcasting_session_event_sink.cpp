@@ -17,7 +17,7 @@
  */
 
 #include "src/server/scene/broadcasting_session_event_sink.h"
-#include "mir/test/doubles/stub_scene_session.h"
+#include "mir/test/doubles/stub_session.h"
 #include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -28,7 +28,7 @@ namespace mt = mir::test;
 
 TEST(BroadcastingSessionEventSinkTest, emits_and_handles_focus_change)
 {
-    mtd::StubSceneSession session1;
+    mtd::StubSession session1;
     std::vector<ms::Session*> handler_called(3, nullptr);
 
     ms::BroadcastingSessionEventSink events;
@@ -52,7 +52,7 @@ TEST(BroadcastingSessionEventSinkTest, emits_and_handles_focus_change)
 
 TEST(BroadcastingSessionEventSinkTest, emits_and_handles_no_focus)
 {
-    mtd::StubSceneSession session1;
+    mtd::StubSession session1;
     std::vector<int> handler_called(3, 0);
 
     ms::BroadcastingSessionEventSink events;
@@ -76,7 +76,7 @@ TEST(BroadcastingSessionEventSinkTest, emits_and_handles_no_focus)
 
 TEST(BroadcastingSessionEventSinkTest, emits_and_handles_session_stopping)
 {
-    mtd::StubSceneSession session1;
+    mtd::StubSession session1;
     std::vector<ms::Session*> handler_called(3, nullptr);
 
     ms::BroadcastingSessionEventSink events;
