@@ -470,6 +470,12 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
     {
         protobuf_bs->set_error(std::string{"Error processing buffer stream creating response:"} +
                                boost::diagnostic_information(error));
+
+        if (!buffer_depository)
+        {
+            for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
+                ::close(protobuf_bs->buffer().fd(i));
+        }
     }
 }
 
@@ -489,7 +495,7 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
     {
         cached_buffer_size = geom::Size{buffer.width(), buffer.height()};
     }
-    
+
     if (buffer.has_error())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("BufferStream received buffer with error:" + buffer.error()));
@@ -681,7 +687,7 @@ MirWaitHandle* mcl::BufferStream::release(
 mf::BufferStreamId mcl::BufferStream::rpc_id() const
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    
+
     return mf::BufferStreamId(protobuf_bs->id().value());
 }
 
