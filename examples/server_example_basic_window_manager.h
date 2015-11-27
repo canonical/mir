@@ -126,8 +126,8 @@ public:
 
 /// A policy based window manager.
 /// This takes care of the management of any meta implementation held for the sessions and surfaces.
-class BasicWindowManager : public shell::WindowManager,
-                             protected WindowManagerTools
+class BasicWindowManager : public virtual shell::WindowManager,
+    protected WindowManagerTools
 {
 protected:
     BasicWindowManager(
