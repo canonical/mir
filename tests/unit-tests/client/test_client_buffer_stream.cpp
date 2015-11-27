@@ -316,21 +316,23 @@ TEST_P(ClientBufferStream, protobuf_requirements)
 
     auto error_bs = valid_bs;
     error_bs.set_error("An error");
-    EXPECT_THROW({
+    {
         mcl::BufferStream bs(
             nullptr, mock_protobuf_server, mode,
             std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
             error_bs, perf_report, "", size, nbuffers);
-    }, std::runtime_error);
+        EXPECT_FALSE(bs.valid());
+    }
     
     auto no_id_bs = valid_bs;
     no_id_bs.clear_id();
-    EXPECT_THROW({
+    {
         mcl::BufferStream bs(
             nullptr, mock_protobuf_server, mode,
             std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
             no_id_bs, perf_report, "", size, nbuffers);
-    }, std::runtime_error);
+        EXPECT_FALSE(bs.valid());
+    }
 }
 
 TEST_P(ClientBufferStream, uses_buffer_message_from_server)

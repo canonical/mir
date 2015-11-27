@@ -428,7 +428,7 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
     }};
 
     if (!protobuf_bs->has_id() || protobuf_bs->has_error())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
+        return;
 
     if (protobuf_bs->has_buffer())
     {
