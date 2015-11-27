@@ -72,6 +72,7 @@ struct CanonicalSurfaceInfoCopy
     mir::optional_value<geometry::DeltaY> height_inc;
     mir::optional_value<shell::SurfaceAspectRatio> min_aspect;
     mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
+    mir::optional_value<graphics::DisplayConfigurationOutputId> output_id;
 
     void init_titlebar(std::shared_ptr <scene::Surface> const& surface);
 

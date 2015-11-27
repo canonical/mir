@@ -48,6 +48,8 @@ me::CanonicalSurfaceInfoCopy::CanonicalSurfaceInfoCopy(
     min_aspect{params.min_aspect},
     max_aspect{params.max_aspect}
 {
+    if (params.output_id != mir::graphics::DisplayConfigurationOutputId{0})
+        output_id = params.output_id;
 }
 
 bool me::CanonicalSurfaceInfoCopy::can_be_active() const
