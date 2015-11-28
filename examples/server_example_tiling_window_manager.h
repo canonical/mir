@@ -46,7 +46,7 @@ struct TilingSessionInfo
 class TilingWindowManagerPolicy
 {
 public:
-    using Tools = BasicWindowManagerToolsCopy<TilingSessionInfo, CanonicalSurfaceInfoCopy>;
+    using Tools = BasicWindowManagerToolsCopy<TilingSessionInfo>;
     using TilingSessionInfoMap = typename SessionTo<TilingSessionInfo>::type;
     using TilingSurfaceInfoMap = typename SurfaceTo<CanonicalSurfaceInfoCopy>::type;
 
@@ -121,8 +121,6 @@ private:
 
     static void constrained_move(std::shared_ptr<scene::Surface> const& surface, geometry::Displacement& movement, geometry::Rectangle const& bounds);
 
-    void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
-
     std::shared_ptr<scene::Surface> select_active_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
 
     Tools* const tools;
@@ -130,7 +128,7 @@ private:
     geometry::Point old_cursor{};
 };
 
-using TilingWindowManager = BasicWindowManagerCopy<TilingWindowManagerPolicy, TilingSessionInfo, CanonicalSurfaceInfoCopy>;
+using TilingWindowManager = BasicWindowManagerCopy<TilingWindowManagerPolicy, TilingSessionInfo>;
 }
 }
 

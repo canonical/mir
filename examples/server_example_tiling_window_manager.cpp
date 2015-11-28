@@ -602,24 +602,6 @@ void me::TilingWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> surface,
     }
 }
 
-void me::TilingWindowManagerPolicy::raise_tree(std::shared_ptr<scene::Surface> const& root) const
-{
-    SurfaceSet surfaces;
-    std::function<void(std::weak_ptr<scene::Surface> const& surface)> const add_children =
-        [&,this](std::weak_ptr<scene::Surface> const& surface)
-            {
-            auto const& info_for = tools->info_for(surface);
-            surfaces.insert(begin(info_for.children), end(info_for.children));
-            for (auto const& child : info_for.children)
-                add_children(child);
-            };
-
-    surfaces.insert(root);
-    add_children(root);
-
-    tools->raise(surfaces);
-}
-
 std::shared_ptr<ms::Surface> me::TilingWindowManagerPolicy::select_active_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<scene::Surface> const& surface)
 {
     if (!surface)
@@ -633,7 +615,7 @@ std::shared_ptr<ms::Surface> me::TilingWindowManagerPolicy::select_active_surfac
     if (info_for.can_be_active())
     {
         tools->set_focus_to(session, surface);
-        raise_tree(surface);
+        tools->raise_tree(surface);
         return surface;
     }
     else
