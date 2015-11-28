@@ -115,9 +115,15 @@ private:
 
     static void fit_to_new_tile(scene::Surface& surface, geometry::Rectangle const& old_tile, geometry::Rectangle const& new_tile);
 
-    static bool drag(std::shared_ptr<scene::Surface> surface, geometry::Point to, geometry::Point from, geometry::Rectangle bounds);
+    void drag(std::shared_ptr<scene::Surface> surface, geometry::Point to, geometry::Point from, geometry::Rectangle bounds);
 
-    static bool resize(std::shared_ptr<scene::Surface> surface, geometry::Point cursor, geometry::Point old_cursor, geometry::Rectangle bounds);
+    static void resize(std::shared_ptr<scene::Surface> surface, geometry::Point cursor, geometry::Point old_cursor, geometry::Rectangle bounds);
+
+    static void constrained_move(std::shared_ptr<scene::Surface> const& surface, geometry::Displacement& movement, geometry::Rectangle const& bounds);
+
+    void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
+
+    std::shared_ptr<scene::Surface> select_active_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
 
     Tools* const tools;
 
