@@ -22,6 +22,7 @@ add_library(exampleserverconfig STATIC
   server_example_basic_window_manager.h
   server_example_canonical_window_manager.cpp
   server_example_display_configuration_policy.cpp
+  server_example_input_device_config.cpp
   server_example_input_event_filter.cpp
   server_example_log_options.cpp
   server_example_input_filter.cpp

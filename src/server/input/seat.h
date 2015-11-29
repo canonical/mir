@@ -49,10 +49,11 @@ public:
     MirInputEventModifiers event_modifier(MirInputDeviceId) const;
     void update_seat_properties(MirInputEvent const* event);
     geometry::Point cursor_position() const;
+    MirPointerButtons button_state() const;
 private:
     void update_cursor(MirPointerEvent const* event);
     void update_spots();
-    void update_modifier();
+    void update_states();
 
     std::shared_ptr<TouchVisualizer> const touch_visualizer;
     std::shared_ptr<CursorListener> const cursor_listener;
@@ -62,14 +63,17 @@ private:
     {
         DeviceData() {}
         bool update_modifier(MirKeyboardAction action, int scan_code);
+        bool update_button_state(MirPointerButtons button_state);
         bool update_spots(MirTouchEvent const* event);
 
         MirInputEventModifiers mod{0};
+        MirPointerButtons buttons{0};
         std::vector<TouchVisualizer::Spot> spots;
     };
 
     mir::geometry::Point cursor_pos;
     MirInputEventModifiers modifier;
+    MirPointerButtons buttons;
     std::unordered_map<MirInputDeviceId, DeviceData> device_data;
     std::vector<TouchVisualizer::Spot> spots;
 };
