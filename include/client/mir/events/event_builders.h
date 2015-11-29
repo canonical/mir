@@ -62,6 +62,7 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
 
 void set_modifier(MirEvent& event, MirInputEventModifiers modifiers);
 void set_cursor_position(MirEvent& event, mir::geometry::Point const& pos);
+void set_button_state(MirEvent& event, MirPointerButtons button_state);
 
 // Deprecated version without mac
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,

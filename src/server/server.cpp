@@ -509,6 +509,27 @@ void mir::Server::add_configuration_option(
 void mir::Server::add_configuration_option(
     std::string const& option,
     std::string const& description,
+    double default_)
+{
+    verify_setting_allowed(self->server_config);
+    namespace po = boost::program_options;
+
+    auto const& existing = self->add_configuration_options;
+
+    auto const option_adder = [=](options::DefaultConfiguration& config)
+        {
+            existing(config);
+
+            config.add_options()
+            (option.c_str(), po::value<double>()->default_value(default_), description.c_str());
+        };
+
+    self->set_add_configuration_options(option_adder);
+}
+
+void mir::Server::add_configuration_option(
+    std::string const& option,
+    std::string const& description,
     std::string const& default_)
 {
     verify_setting_allowed(self->server_config);

@@ -788,7 +788,7 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
             tools->info_for(titlebar).paint_titlebar(0xFF);
         }
         tools->set_focus_to(info_for.session.lock(), surface);
-        raise_tree(surface);
+        tools->raise_tree(surface);
         active_surface_ = surface;
     }
     else
@@ -922,22 +922,4 @@ void me::CanonicalWindowManagerPolicyCopy::move_tree(std::shared_ptr<ms::Surface
     {
         move_tree(child.lock(), movement);
     }
-}
-
-void me::CanonicalWindowManagerPolicyCopy::raise_tree(std::shared_ptr<scene::Surface> const& root) const
-{
-    SurfaceSet surfaces;
-    std::function<void(std::weak_ptr<scene::Surface> const& surface)> const add_children =
-        [&,this](std::weak_ptr<scene::Surface> const& surface)
-        {
-            auto const& info_for = tools->info_for(surface);
-            surfaces.insert(begin(info_for.children), end(info_for.children));
-            for (auto const& child : info_for.children)
-                add_children(child);
-        };
-
-    surfaces.insert(root);
-    add_children(root);
-
-    tools->raise(surfaces);
 }
