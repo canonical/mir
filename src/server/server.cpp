@@ -47,7 +47,8 @@ namespace mo = mir::options;
     MACRO(cursor_listener)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
-    MACRO(shell)
+    MACRO(shell)\
+    MACRO(surface_stack)
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
@@ -91,7 +92,7 @@ namespace mo = mir::options;
     MACRO(the_prompt_session_manager)\
     MACRO(the_shell)\
     MACRO(the_shell_display_layout)\
-    MACRO(the_surface_coordinator)\
+    MACRO(the_surface_stack)\
     MACRO(the_touch_visualizer)\
     MACRO(the_input_device_hub)\
     MACRO(the_application_not_responding_detector)

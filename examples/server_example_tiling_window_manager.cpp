@@ -20,9 +20,9 @@
 
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/shell/surface_stack.h"
 #include "mir/shell/surface_ready_observer.h"
 #include "mir/geometry/displacement.h"
 

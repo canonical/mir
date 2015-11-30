@@ -76,6 +76,7 @@ class DisplayLayout;
 class HostLifecycleEventListener;
 class Shell;
 class ShellReport;
+class SurfaceStack;
 class PersistentSurfaceStore;
 namespace detail { class FrontendShell; }
 }
@@ -96,7 +97,6 @@ class SessionEventHandlerRegister;
 class SessionListener;
 class SessionCoordinator;
 class SnapshotStrategy;
-class SurfaceCoordinator;
 class SurfaceStack;
 class SceneReport;
 class PromptSessionListener;
@@ -271,7 +271,8 @@ public:
     virtual std::shared_ptr<scene::SessionEventSink>  the_session_event_sink();
     virtual std::shared_ptr<scene::SessionEventHandlerRegister> the_session_event_handler_register();
     virtual std::shared_ptr<scene::SurfaceFactory>    the_surface_factory();
-    virtual std::shared_ptr<scene::SurfaceCoordinator>the_surface_coordinator();
+    virtual std::shared_ptr<shell::SurfaceStack>      the_surface_stack();
+    virtual std::shared_ptr<shell::SurfaceStack>      wrap_surface_stack(std::shared_ptr<shell::SurfaceStack> const& wrapped);
     /** @} */
 
     /** @name scene configuration - dependencies
@@ -384,12 +385,12 @@ protected:
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<compositor::FrameDroppingPolicyFactory> frame_dropping_policy_factory;
-    CachedPtr<scene::SurfaceStack> surface_stack;
+    CachedPtr<scene::SurfaceStack> scene_surface_stack;
+    CachedPtr<shell::SurfaceStack> surface_stack;
     CachedPtr<scene::SceneReport> scene_report;
 
     CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
-    CachedPtr<scene::SurfaceCoordinator> surface_coordinator;
     CachedPtr<scene::SessionListener> session_listener;
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
     CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;
