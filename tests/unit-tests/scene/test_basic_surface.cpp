@@ -863,9 +863,9 @@ TEST_F(BasicSurfaceTest, showing_brings_all_streams_up_to_date)
     EXPECT_CALL(*buffer_stream, drop_old_buffers()).Times(Exactly(1));
     EXPECT_CALL(*mock_buffer_stream, drop_old_buffers()).Times(Exactly(1));
 
-    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded);
-    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
-    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
+    surface.hide();
+    surface.show();
+    surface.show();
 }
 
 //TODO: per-stream alpha and swapinterval seems useful
@@ -1033,7 +1033,7 @@ TEST_F(BasicSurfaceTest, notifies_when_first_visible)
     EXPECT_THAT(observer->exposes(), Eq(0));
     EXPECT_THAT(observer->hides(), Eq(0));
     post_a_frame(surface);
-    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
+    surface.show();
 
     EXPECT_THAT(observer->exposes(), Eq(1));
     EXPECT_THAT(observer->hides(), Eq(0));
