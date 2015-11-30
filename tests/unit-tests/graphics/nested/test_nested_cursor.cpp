@@ -43,7 +43,7 @@ struct MockHostConnection : public mtd::StubHostConnection
 struct StubCursorImage : public mg::CursorImage
 {
     void const* as_argb_8888() const { return this; }
-    geom::Size size() const { return geom::Size{}; }
+    geom::Size size() const { return geom::Size{16, 16}; }
     geom::Displacement hotspot() const { return geom::Displacement{0, 0}; }
 };
 
