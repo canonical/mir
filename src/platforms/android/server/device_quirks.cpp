@@ -49,7 +49,7 @@ std::string determine_device_name(mga::PropertiesWrapper const& properties)
 
 unsigned int num_framebuffers_for(std::string const& device_name, bool quirk_enabled)
 {
-    if (quirk_enabled && device_name == std::string{"mx3"})
+    if (quirk_enabled && device_name == "mx3")
         return 3;
     else
         return 2;
@@ -57,12 +57,12 @@ unsigned int num_framebuffers_for(std::string const& device_name, bool quirk_ena
 
 unsigned int gralloc_reopenable_after_close_for(std::string const& device_name, bool quirk_enabled)
 {
-    return !(quirk_enabled && device_name == std::string{"krillin"});
+    return !(quirk_enabled && device_name == "krillin");
 }
 
 bool clear_fb_context_fence_for(std::string const& device_name)
 {
-    return device_name == std::string{"krillin"} || device_name == std::string{"mx4"};
+    return device_name == "krillin" || device_name == "mx4";
 }
 
 }
@@ -97,7 +97,7 @@ bool mga::DeviceQuirks::gralloc_reopenable_after_close() const
 
 int mga::DeviceQuirks::aligned_width(int width) const
 {
-    if (enable_width_alignment_quirk && width == 720 && device_name == std::string{"vegetahd"})
+    if (enable_width_alignment_quirk && width == 720 && device_name == "vegetahd")
         return 736;
     return width;
 }
