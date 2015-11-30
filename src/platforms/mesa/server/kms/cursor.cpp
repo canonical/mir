@@ -163,9 +163,10 @@ void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> co
 
 void mgm::Cursor::show()
 {
+    std::lock_guard<std::mutex> lg(guard);
+
     if (!visible)
     {
-        std::lock_guard<std::mutex> lg(guard);
         visible = true;
         place_cursor_at_locked(lg, current_position, ForceState);
     }
