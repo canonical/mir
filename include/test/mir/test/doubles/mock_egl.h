@@ -21,8 +21,9 @@
 
 #include <gmock/gmock.h>
 
-#include <unordered_map>
+#include <mutex>
 #include <thread>
+#include <unordered_map>
 
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
@@ -157,6 +158,7 @@ public:
     EGLContext fake_egl_context;
     EGLImageKHR fake_egl_image;
     int fake_visual_id;
+    std::mutex mutable current_contexts_mutex;
     std::unordered_map<std::thread::id,EGLContext> current_contexts;
 };
 
