@@ -19,8 +19,8 @@
 #include "server_example_tiling_window_manager.h"
 
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_coordinator.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/shell/surface_stack.h"
 #include "mir/shell/surface_ready_observer.h"
 #include "mir/geometry/displacement.h"
 

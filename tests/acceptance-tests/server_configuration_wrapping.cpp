@@ -18,6 +18,9 @@
 
 #include "mir/input/cursor_listener.h"
 #include "mir/shell/shell_wrapper.h"
+#include "mir/shell/surface_stack_wrapper.h"
+
+#include "mir/geometry/point.h"
 
 #include "mir_test_framework/headless_test.h"
 
@@ -51,6 +54,11 @@ struct MyCursorListener : mi::CursorListener
     std::shared_ptr<mi::CursorListener> const wrapped;
 };
 
+struct MySurfaceStack : msh::SurfaceStackWrapper
+{
+    using msh::SurfaceStackWrapper::SurfaceStackWrapper;
+};
+
 struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
 {
     void SetUp() override
@@ -67,14 +75,22 @@ struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
                 return std::make_shared<MyCursorListener>(wrapped);
             });
 
+        server.wrap_surface_stack([]
+            (std::shared_ptr<msh::SurfaceStack> const& wrapped)
+            {
+                return std::make_shared<MySurfaceStack>(wrapped);
+            });
+
         server.apply_settings();
 
         shell = server.the_shell();
         cursor_listener = server.the_cursor_listener();
+        surface_stack = server.the_surface_stack();
     }
 
     std::shared_ptr<msh::Shell> shell;
     std::shared_ptr<mi::CursorListener> cursor_listener;
+    std::shared_ptr<msh::SurfaceStack> surface_stack;
 };
 }
 
@@ -120,3 +136,11 @@ TEST_F(ServerConfigurationWrapping, returns_same_cursor_listener_from_cache)
 {
     ASSERT_THAT(server.the_cursor_listener(), Eq(cursor_listener));
 }
+
+TEST_F(ServerConfigurationWrapping, surface_stack_is_of_wrapper_type)
+{
+    auto const my_surface_stack = std::dynamic_pointer_cast<MySurfaceStack>(surface_stack);
+
+    EXPECT_THAT(my_surface_stack, Ne(nullptr));
+}
+

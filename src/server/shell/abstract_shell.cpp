@@ -20,13 +20,13 @@
 #include "mir/shell/input_targeter.h"
 #include "mir/shell/shell_report.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/shell/surface_stack.h"
 #include "mir/shell/window_manager.h"
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_coordinator.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -34,13 +34,13 @@ namespace msh = mir::shell;
 
 msh::AbstractShell::AbstractShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
-    std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
+    std::shared_ptr<msh::SurfaceStack> const& surface_stack,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
     std::shared_ptr<ShellReport> const& report,
     std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder) :
     input_targeter(input_targeter),
-    surface_coordinator(surface_coordinator),
+    surface_stack(surface_stack),
     session_coordinator(session_coordinator),
     prompt_session_manager(prompt_session_manager),
     window_manager(wm_builder(this)),
@@ -296,11 +296,11 @@ bool msh::AbstractShell::handle(MirEvent const& event)
 auto msh::AbstractShell::surface_at(geometry::Point cursor) const
 -> std::shared_ptr<scene::Surface>
 {
-    return surface_coordinator->surface_at(cursor);
+    return surface_stack->surface_at(cursor);
 }
 
 void msh::AbstractShell::raise(SurfaceSet const& surfaces)
 {
-    surface_coordinator->raise(surfaces);
+    surface_stack->raise(surfaces);
     report->surfaces_raised(surfaces);
 }
