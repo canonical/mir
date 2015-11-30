@@ -152,7 +152,7 @@ public:
     MOCK_METHOD4(eglClientWaitSyncKHR, EGLint(EGLDisplay, EGLSyncKHR, EGLint, EGLTimeKHR));
 
     EGLDisplay const fake_egl_display;
-    EGLConfig* const fake_configs;
+    EGLConfig const* const fake_configs;
     EGLint const fake_configs_num;
     EGLSurface const fake_egl_surface;
     EGLContext const fake_egl_context;
