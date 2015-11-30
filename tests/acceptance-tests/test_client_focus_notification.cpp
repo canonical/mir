@@ -152,11 +152,9 @@ TEST_F(ClientFocusNotification, two_surfaces_are_notified_of_gaining_and_losing_
     EXPECT_THAT(log[0], Eq(mir_surface_focused));
     EXPECT_THAT(log[1], Eq(mir_surface_unfocused));
     EXPECT_THAT(log[2], Eq(mir_surface_focused));
-    if (log.size() >= 4)
-        EXPECT_THAT(log[3], Eq(mir_surface_unfocused));
+    EXPECT_THAT(log[3], Eq(mir_surface_unfocused));
 
     log = logger->events_for(surface2.native_handle());
     EXPECT_THAT(log[0], Eq(mir_surface_focused));
-    if (log.size() >= 2)
     EXPECT_THAT(log[1], Eq(mir_surface_unfocused));
 }
