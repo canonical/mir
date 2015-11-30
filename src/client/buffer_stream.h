@@ -151,7 +151,7 @@ private:
     std::shared_ptr<ClientPlatform> const client_platform;
 
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
-    std::unique_ptr<google::protobuf::Closure> closure;
+    std::unique_ptr<google::protobuf::Closure> const closure;
 
     int swap_interval_;
     float scale_;
