@@ -37,10 +37,10 @@ class GraphicsDisplayLayout : public DisplayLayout
 public:
     GraphicsDisplayLayout(std::shared_ptr<graphics::Display> const& display);
 
-    void clip_to_output(geometry::Rectangle& rect);
-    void size_to_output(geometry::Rectangle& rect);
-    void place_in_output(graphics::DisplayConfigurationOutputId output_id,
-                         geometry::Rectangle& rect);
+    void clip_to_output(geometry::Rectangle& rect) override;
+    void size_to_output(geometry::Rectangle& rect) override;
+    bool place_in_output(graphics::DisplayConfigurationOutputId output_id,
+                         geometry::Rectangle& rect) override;
 
 private:
     geometry::Rectangle get_output_for(geometry::Rectangle& rect);

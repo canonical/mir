@@ -26,11 +26,9 @@ namespace mtf = mir_test_framework;
 mtf::DeclarativePlacementWindowManagerPolicy::DeclarativePlacementWindowManagerPolicy(
     Tools* const tools,
     SurfaceGeometries const& positions_by_name,
-    SurfaceDepths const& depths_by_name,
     std::shared_ptr<mir::shell::DisplayLayout> const& display_layout) :
     mir::shell::CanonicalWindowManagerPolicy{tools, display_layout},
-    surface_geometries_by_name{positions_by_name},
-    surface_depths_by_name{depths_by_name}
+    surface_geometries_by_name{positions_by_name}
 {
 }
 
@@ -47,10 +45,6 @@ ms::SurfaceCreationParameters mtf::DeclarativePlacementWindowManagerPolicy::hand
         auto const& geometry = surface_geometries_by_name.at(name);
         placed.top_left = geometry.top_left;
         placed.size = geometry.size;        
-    }
-    if (surface_depths_by_name.find(name) != surface_depths_by_name.end())
-    {
-        placed.depth = surface_depths_by_name.at(name);
     }
 
     return placed;

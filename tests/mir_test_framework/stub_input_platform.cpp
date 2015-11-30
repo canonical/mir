@@ -16,7 +16,7 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "stub_input_platform.h"
+#include "mir_test_framework/stub_input_platform.h"
 
 #include "mir/input/input_device_registry.h"
 #include "mir/dispatch/action_queue.h"

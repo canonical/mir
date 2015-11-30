@@ -20,10 +20,14 @@
 #define MIR_SHELL_SYSTEM_COMPOSITOR_WINDOW_MANAGER_H_
 
 #include "mir/shell/window_manager.h"
+#include "mir/graphics/display_configuration.h"
+
+#include <map>
+#include <mutex>
 
 namespace mir
 {
-namespace scene { class PlacementStrategy; class SessionCoordinator; }
+namespace scene { class SessionCoordinator; }
 namespace shell
 {
 class FocusController;
@@ -96,6 +100,11 @@ private:
         std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib,
         int value) override;
+
+    using OutputMap = std::map<std::weak_ptr<scene::Surface>, graphics::DisplayConfigurationOutputId, std::owner_less<std::weak_ptr<scene::Surface>>>;
+
+    std::mutex mutable mutex;
+    OutputMap output_map;
 };
 }
 }

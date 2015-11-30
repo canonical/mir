@@ -134,7 +134,7 @@ struct ClientMirSurface : mtf::ConnectedClientHeadlessServer
             });
         mtf::ConnectedClientHeadlessServer::SetUp();
 
-        server.the_surface_coordinator();
+        server.the_surface_stack();
 
         ON_CALL(*mock_shell, create_surface(_, _, _))
             .WillByDefault(Invoke(wrapped_shell.get(), &msh::Shell::create_surface));

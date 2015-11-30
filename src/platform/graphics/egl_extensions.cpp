@@ -23,20 +23,29 @@
 
 namespace mg=mir::graphics;
 
-mg::EGLExtensions::EGLExtensions()
-    : eglCreateImageKHR{
-          reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(
-              eglGetProcAddress("eglCreateImageKHR"))},
-      eglDestroyImageKHR{
-          reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(
-              eglGetProcAddress("eglDestroyImageKHR"))},
-      glEGLImageTargetTexture2DOES{
-          reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(
-              eglGetProcAddress("glEGLImageTargetTexture2DOES"))}
+mg::EGLExtensions::EGLExtensions() :
+    eglCreateImageKHR{
+        reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"))},
+    eglDestroyImageKHR{
+        reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"))},
+    glEGLImageTargetTexture2DOES{
+        reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"))}
 {
     if (!eglCreateImageKHR || !eglDestroyImageKHR)
         BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGLImage"));
 
     if (!glEGLImageTargetTexture2DOES)
         BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support updating a texture from an EGLImage"));
+}
+
+mg::EGLSyncExtensions::EGLSyncExtensions() :
+    eglCreateSyncKHR{
+        reinterpret_cast<PFNEGLCREATESYNCKHRPROC>(eglGetProcAddress("eglCreateSyncKHR"))},
+    eglDestroySyncKHR{
+        reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroySyncKHR"))},
+    eglClientWaitSyncKHR{
+        reinterpret_cast<PFNEGLCLIENTWAITSYNCKHRPROC>(eglGetProcAddress("eglClientWaitSyncKHR"))}
+{
+    if (!eglCreateSyncKHR || !eglDestroySyncKHR || !eglClientWaitSyncKHR)
+        BOOST_THROW_EXCEPTION(std::runtime_error("EGL doesn't support the KHR_reusable_sync extension"));
 }

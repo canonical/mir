@@ -38,6 +38,10 @@ class NullDisplayConfiguration : public graphics::DisplayConfiguration
     void for_each_output(std::function<void(graphics::UserDisplayConfigurationOutput&)>) override
     {
     }
+    std::unique_ptr<graphics::DisplayConfiguration> clone() const override
+    {
+        return std::make_unique<NullDisplayConfiguration>();
+    }
 };
 }
 }

@@ -118,7 +118,7 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
             {
                 std::lock_guard<std::mutex> lg(repeat_state_mutex);
 
-                ev.key.event_time = std::chrono::high_resolution_clock::now().time_since_epoch();
+                ev.key.event_time = std::chrono::steady_clock::now().time_since_epoch();
                 ev.key.mac = cookie_factory->timestamp_to_cookie(ev.key.event_time.count()).mac;
                 next_dispatcher->dispatch(ev);
 

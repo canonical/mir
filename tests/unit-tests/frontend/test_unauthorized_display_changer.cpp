@@ -33,30 +33,53 @@ namespace mf = mir::frontend;
 struct UnauthorizedDisplayChangerTest : public ::testing::Test
 {
     mtd::MockDisplayChanger underlying_changer;
+    std::shared_ptr<mtd::NullDisplayConfiguration> const conf{
+        std::make_shared<mtd::NullDisplayConfiguration>()};
+    mf::UnauthorizedDisplayChanger changer{mt::fake_shared(underlying_changer)};
 };
 
-TEST_F(UnauthorizedDisplayChangerTest, change_attempt)
+TEST_F(UnauthorizedDisplayChangerTest, disallows_configure_display_by_default)
 {
-    mtd::NullDisplayConfiguration conf;
-    mf::UnauthorizedDisplayChanger changer(mt::fake_shared(underlying_changer));
-
     EXPECT_THROW({
-        changer.configure(std::shared_ptr<mf::Session>(), mt::fake_shared(conf));
+        changer.configure(std::shared_ptr<mf::Session>(), conf);
     }, std::runtime_error);
+}
+
+TEST_F(UnauthorizedDisplayChangerTest, disallows_set_base_configuration_by_default)
+{
+    EXPECT_THROW({
+        changer.set_base_configuration(conf);
+    }, std::runtime_error);
+}
+
+TEST_F(UnauthorizedDisplayChangerTest, can_allow_configure_display)
+{
+    using namespace testing;
+
+    EXPECT_CALL(underlying_changer, configure(_, _)).Times(1);
+
+    changer.allow_configure_display();
+    changer.configure(std::shared_ptr<mf::Session>(), conf);
+}
+
+TEST_F(UnauthorizedDisplayChangerTest, can_allow_set_base_display_configuration)
+{
+    using namespace testing;
+
+    EXPECT_CALL(underlying_changer, mock_set_base_configuration(_)).Times(1);
+
+    changer.allow_set_base_configuration();
+    changer.set_base_configuration(conf);
 }
 
 TEST_F(UnauthorizedDisplayChangerTest, access_config)
 {
     using namespace testing;
 
-    mtd::NullDisplayConfiguration conf;
     EXPECT_CALL(underlying_changer, base_configuration())
-        .Times(1)
-        .WillOnce(Return(mt::fake_shared(conf)));
-
-    mf::UnauthorizedDisplayChanger changer(mt::fake_shared(underlying_changer));
+        .WillOnce(Return(conf));
 
     auto returned_conf = changer.base_configuration();
 
-    EXPECT_EQ(&conf, returned_conf.get());
+    EXPECT_EQ(conf, returned_conf);
 }
