@@ -290,9 +290,6 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     void deposit(mp::Buffer const& buffer, geom::Size, MirPixelFormat) override
     {
         vault.wire_transfer_inbound(buffer);
-
-        std::lock_guard<std::mutex> lk(mutex);
-        current_buffer_id_ = buffer.buffer_id();
     }
 
     void advance_current_buffer(std::unique_lock<std::mutex>& lk)
@@ -300,34 +297,36 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         lk.unlock();
         auto buffer = vault.withdraw().get();
         lk.lock();
-        current_buffer_ = buffer;
+        current = buffer;
     }
 
     std::shared_ptr<mir::client::ClientBuffer> current_buffer() override
     {
         std::unique_lock<std::mutex> lk(mutex);
-        if (!current_buffer_)
+        if (!current.buffer)
             advance_current_buffer(lk);
-        return current_buffer_;
+        return current.buffer;
     }
 
     uint32_t current_buffer_id() override
     {
-        std::lock_guard<std::mutex> lk(mutex);
-        return current_buffer_id_;
+        std::unique_lock<std::mutex> lk(mutex);
+        if (!current.buffer)
+            advance_current_buffer(lk);
+        return current.id;
     }
 
     MirWaitHandle* submit(std::function<void()> const& done, geom::Size, MirPixelFormat, int) override
     {
         std::unique_lock<std::mutex> lk(mutex);
-        if (!current_buffer_)
+        if (!current.buffer)
             advance_current_buffer(lk);
         lk.unlock();
 
-        vault.deposit(current_buffer_);
+        vault.deposit(current.buffer);
 
         next_buffer_wait_handle.expect_result();
-        vault.wire_transfer_outbound(current_buffer_);
+        vault.wire_transfer_outbound(current.buffer);
         next_buffer_wait_handle.result_received();
 
         lk.lock();
@@ -352,8 +351,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
     mcl::BufferVault vault;
     std::mutex mutex;
-    std::shared_ptr<mcl::ClientBuffer> current_buffer_;
-    int current_buffer_id_;
+    mcl::BufferInfo current{nullptr, 0};
     MirWaitHandle next_buffer_wait_handle;
 };
 }

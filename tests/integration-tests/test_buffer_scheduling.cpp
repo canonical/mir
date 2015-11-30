@@ -399,7 +399,7 @@ struct ScheduledProducer : ProducerSystem
     {
         if (can_produce())
         {
-            auto buffer = vault.withdraw().get();
+            auto buffer = vault.withdraw().get().buffer;
             vault.deposit(buffer);
             vault.wire_transfer_outbound(buffer);
             last_size_ = buffer->size();

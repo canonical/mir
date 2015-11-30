@@ -30,6 +30,8 @@ namespace doubles
 
 struct StubSession : scene::Session
 {
+    StubSession(pid_t pid = -1);
+
     std::shared_ptr<frontend::Surface> get_surface(
         frontend::SurfaceId surface) const override;
 
@@ -84,6 +86,8 @@ struct StubSession : scene::Session
         std::vector<shell::StreamSpecification> const& config) override;
 
     void destroy_surface(std::weak_ptr<scene::Surface> const& surface) override;
+
+    pid_t pid;
 };
 }
 }

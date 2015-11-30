@@ -39,7 +39,6 @@ class PromptSessionManager;
 class PromptSessionCreationParameters;
 class SessionCoordinator;
 class Surface;
-class SurfaceCoordinator;
 class SurfaceCreationParameters;
 }
 
@@ -47,6 +46,7 @@ namespace shell
 {
 class InputTargeter;
 class SurfaceSpecification;
+class SurfaceStack;
 
 class Shell :
     public virtual FocusController,

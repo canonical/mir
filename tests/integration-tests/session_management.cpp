@@ -72,10 +72,10 @@ struct TestSurfaceStack : public ms::SurfaceStack
 struct TestConfiguration : public mir_test_framework::StubbedServerConfiguration
 {
 
-    std::shared_ptr<ms::SurfaceStackModel>
-    the_surface_stack_model() override
+    std::shared_ptr<msh::SurfaceStack>
+    the_surface_stack() override
     {
-        return surface_stack(
+        return scene_surface_stack(
             [this]()
             {
                 auto const scene_report = the_scene_report();

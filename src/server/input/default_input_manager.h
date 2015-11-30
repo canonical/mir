@@ -35,7 +35,6 @@ class ActionQueue;
 }
 namespace input
 {
-class LegacyInputDispatchable;
 class Platform;
 class InputEventHandlerRegister;
 class InputDeviceRegistry;
@@ -43,8 +42,7 @@ class InputDeviceRegistry;
 class DefaultInputManager : public InputManager
 {
 public:
-    DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
-                        std::shared_ptr<LegacyInputDispatchable> const& legacy_dispatchable);
+    DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer);
     ~DefaultInputManager();
     void add_platform(std::shared_ptr<Platform> const& platform) override;
     void start() override;
@@ -54,7 +52,6 @@ private:
     void stop_platforms();
     std::vector<std::shared_ptr<Platform>> platforms;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
-    std::shared_ptr<input::LegacyInputDispatchable> const legacy_dispatchable;
     std::shared_ptr<dispatch::ActionQueue> const queue;
     std::unique_ptr<dispatch::ThreadedDispatcher> input_thread;
 

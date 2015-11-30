@@ -278,6 +278,12 @@ MATCHER_P3(ButtonsDown, x, y, buttons, "")
     return button_event_matches(pev, x, y, mir_pointer_action_button_down, buttons, false);
 }
 
+MATCHER_P3(ButtonsUp, x, y, buttons, "")
+{
+    auto pev = maybe_pointer_event(to_address(arg));
+    return button_event_matches(pev, x, y, mir_pointer_action_button_up, buttons, false);
+}
+
 MATCHER_P2(ButtonUpEventWithButton, pos, button, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
