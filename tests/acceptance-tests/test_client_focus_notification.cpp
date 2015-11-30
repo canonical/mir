@@ -148,7 +148,6 @@ TEST_F(ClientFocusNotification, two_surfaces_are_notified_of_gaining_and_losing_
     logger->wait_for_num_focus_events(4, surface1.native_handle(), std::chrono::seconds(5));
     logger->wait_for_num_focus_events(2, surface2.native_handle(), std::chrono::seconds(5));
 
-
     auto log = logger->events_for(surface1.native_handle());
     EXPECT_THAT(log[0], Eq(mir_surface_focused));
     EXPECT_THAT(log[1], Eq(mir_surface_unfocused));
