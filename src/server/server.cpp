@@ -47,7 +47,8 @@ namespace mo = mir::options;
     MACRO(cursor_listener)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
-    MACRO(shell)
+    MACRO(shell)\
+    MACRO(surface_stack)
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
@@ -66,7 +67,8 @@ namespace mo = mir::options;
     MACRO(session_mediator_report)\
     MACRO(shell)\
     MACRO(application_not_responding_detector)\
-    MACRO(cookie_factory)
+    MACRO(cookie_factory)\
+    MACRO(coordinate_translator)
 
 #define FOREACH_ACCESSOR(MACRO)\
     MACRO(the_buffer_stream_factory)\
@@ -90,7 +92,7 @@ namespace mo = mir::options;
     MACRO(the_prompt_session_manager)\
     MACRO(the_shell)\
     MACRO(the_shell_display_layout)\
-    MACRO(the_surface_coordinator)\
+    MACRO(the_surface_stack)\
     MACRO(the_touch_visualizer)\
     MACRO(the_input_device_hub)\
     MACRO(the_application_not_responding_detector)
@@ -499,6 +501,27 @@ void mir::Server::add_configuration_option(
 
             config.add_options()
             (option.c_str(), po::value<int>()->default_value(default_), description.c_str());
+        };
+
+    self->set_add_configuration_options(option_adder);
+}
+
+void mir::Server::add_configuration_option(
+    std::string const& option,
+    std::string const& description,
+    double default_)
+{
+    verify_setting_allowed(self->server_config);
+    namespace po = boost::program_options;
+
+    auto const& existing = self->add_configuration_options;
+
+    auto const option_adder = [=](options::DefaultConfiguration& config)
+        {
+            existing(config);
+
+            config.add_options()
+            (option.c_str(), po::value<double>()->default_value(default_), description.c_str());
         };
 
     self->set_add_configuration_options(option_adder);

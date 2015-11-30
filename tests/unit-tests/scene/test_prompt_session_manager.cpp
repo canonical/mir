@@ -24,7 +24,7 @@
 #include "mir/scene/prompt_session_creation_parameters.h"
 
 #include "mir/test/doubles/mock_prompt_session_listener.h"
-#include "mir/test/doubles/stub_scene_session.h"
+#include "mir/test/doubles/stub_session.h"
 #include "mir/test/fake_shared.h"
 
 #include <gmock/gmock.h>
@@ -68,10 +68,10 @@ struct PromptSessionManager : public testing::Test
     pid_t const helper_pid = __LINE__;
     pid_t const application_pid = __LINE__;
     pid_t const prompt_provider_pid = __LINE__;
-    std::shared_ptr<ms::Session> const helper{std::make_shared<mtd::StubSceneSession>(helper_pid)};
-    std::shared_ptr<ms::Session> const application_session{std::make_shared<mtd::StubSceneSession>(application_pid)};
-    std::shared_ptr<ms::Session> const provider_session{std::make_shared<mtd::StubSceneSession>(prompt_provider_pid)};
-    std::shared_ptr<ms::Session> const another_prompt_provider{std::make_shared<mtd::StubSceneSession>(__LINE__)};
+    std::shared_ptr<ms::Session> const helper{std::make_shared<mtd::StubSession>(helper_pid)};
+    std::shared_ptr<ms::Session> const application_session{std::make_shared<mtd::StubSession>(application_pid)};
+    std::shared_ptr<ms::Session> const provider_session{std::make_shared<mtd::StubSession>(prompt_provider_pid)};
+    std::shared_ptr<ms::Session> const another_prompt_provider{std::make_shared<mtd::StubSession>(__LINE__)};
     ms::PromptSessionCreationParameters parameters;
     StubSessionContainer existing_sessions;
 

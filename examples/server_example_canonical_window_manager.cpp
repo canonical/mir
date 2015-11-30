@@ -72,6 +72,19 @@ void me::CanonicalWindowManagerPolicyCopy::handle_session_info_updated(Canonical
 void me::CanonicalWindowManagerPolicyCopy::handle_displays_updated(CanonicalSessionInfoMap& /*session_info*/, Rectangles const& displays)
 {
     display_area = displays.bounding_rectangle();
+
+    for (auto const weak_surface : fullscreen_surfaces)
+    {
+        if (auto const surface = weak_surface.lock())
+        {
+            auto const& info = tools->info_for(weak_surface);
+            Rectangle rect{surface->top_left(), surface->size()};
+
+            display_layout->place_in_output(info.output_id.value(), rect);
+            surface->move_to(rect.top_left);
+            surface->resize(rect.size);
+        }
+    }
 }
 
 void me::CanonicalWindowManagerPolicyCopy::resize(Point cursor)
@@ -282,6 +295,9 @@ void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms
             session,
             surface));
     }
+
+    if (surface_info.state == mir_surface_state_fullscreen)
+        fullscreen_surfaces.insert(surface);
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
@@ -337,6 +353,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
     COPY_IF_SET(height_inc);
     COPY_IF_SET(min_aspect);
     COPY_IF_SET(max_aspect);
+    COPY_IF_SET(output_id);
 
     #undef COPY_IF_SET
 
@@ -389,6 +406,8 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
 
 void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
+    fullscreen_surfaces.erase(surface);
+
     auto& info = tools->info_for(surface);
 
     if (auto const parent = info.parent.lock())
@@ -444,6 +463,16 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
         info.restore_rect = {surface->top_left(), surface->size()};
     }
 
+    if (info.state != mir_surface_state_fullscreen)
+    {
+        info.output_id = decltype(info.output_id){};
+        fullscreen_surfaces.erase(surface);
+    }
+    else
+    {
+        fullscreen_surfaces.insert(surface);
+    }
+
     if (info.state == value)
     {
         return info.state;
@@ -491,7 +520,16 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
     case mir_surface_state_fullscreen:
     {
         Rectangle rect{old_pos, surface->size()};
-        display_layout->size_to_output(rect);
+
+        if (info.output_id.is_set())
+        {
+            display_layout->place_in_output(info.output_id.value(), rect);
+        }
+        else
+        {
+            display_layout->size_to_output(rect);
+        }
+
         movement = rect.top_left - old_pos;
         surface->resize(rect.size);
         break;
@@ -750,7 +788,7 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
             tools->info_for(titlebar).paint_titlebar(0xFF);
         }
         tools->set_focus_to(info_for.session.lock(), surface);
-        raise_tree(surface);
+        tools->raise_tree(surface);
         active_surface_ = surface;
     }
     else
@@ -884,22 +922,4 @@ void me::CanonicalWindowManagerPolicyCopy::move_tree(std::shared_ptr<ms::Surface
     {
         move_tree(child.lock(), movement);
     }
-}
-
-void me::CanonicalWindowManagerPolicyCopy::raise_tree(std::shared_ptr<scene::Surface> const& root) const
-{
-    SurfaceSet surfaces;
-    std::function<void(std::weak_ptr<scene::Surface> const& surface)> const add_children =
-        [&,this](std::weak_ptr<scene::Surface> const& surface)
-        {
-            auto const& info_for = tools->info_for(surface);
-            surfaces.insert(begin(info_for.children), end(info_for.children));
-            for (auto const& child : info_for.children)
-                add_children(child);
-        };
-
-    surfaces.insert(root);
-    add_children(root);
-
-    tools->raise(surfaces);
 }

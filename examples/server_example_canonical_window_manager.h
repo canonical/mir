@@ -25,6 +25,7 @@
 #include "mir/geometry/displacement.h"
 
 #include <atomic>
+#include <set>
 
 ///\example server_example_canonical_window_manager.h
 // Based on "Mir and Unity: Surfaces, input, and displays (v0.3)"
@@ -50,7 +51,7 @@ struct CanonicalSessionInfoCopy
 class CanonicalWindowManagerPolicyCopy
 {
 public:
-    using Tools = BasicWindowManagerToolsCopy<CanonicalSessionInfoCopy, CanonicalSurfaceInfoCopy>;
+    using Tools = BasicWindowManagerToolsCopy<CanonicalSessionInfoCopy>;
     using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfoCopy>::type;
     using CanonicalSurfaceInfoMap = typename SurfaceTo<CanonicalSurfaceInfoCopy>::type;
 
@@ -118,7 +119,6 @@ private:
     bool resize(std::shared_ptr<scene::Surface> const& surface, geometry::Point cursor, geometry::Point old_cursor, geometry::Rectangle bounds);
     bool drag(std::shared_ptr<scene::Surface> surface, geometry::Point to, geometry::Point from, geometry::Rectangle bounds);
     void move_tree(std::shared_ptr<scene::Surface> const& root, geometry::Displacement movement) const;
-    void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
     void apply_resize(
         std::shared_ptr<mir::scene::Surface> const& surface,
         std::shared_ptr<mir::scene::Surface> const& titlebar,
@@ -131,6 +131,9 @@ private:
     geometry::Rectangle display_area;
     geometry::Point old_cursor{};
     std::weak_ptr<scene::Surface> active_surface_;
+    using FullscreenSurfaces = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;
+
+    FullscreenSurfaces fullscreen_surfaces;
 };
 }
 }
