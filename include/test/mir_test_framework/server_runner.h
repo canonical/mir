@@ -21,10 +21,10 @@
 
 #include <gtest/gtest.h>
 
-#include <atomic>
 #include <string>
 #include <thread>
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -60,6 +60,7 @@ private:
 
     char const* const old_env;
     std::thread server_thread;
+    std::mutex main_loop_mutex;
     std::shared_ptr<mir::MainLoop> main_loop;
 };
 }

@@ -45,11 +45,14 @@ mtf::ServerRunner::ServerRunner() :
 
 void mtf::ServerRunner::start_server()
 {
-    std::atomic_store(&main_loop, start_mir_server());
-    if (std::atomic_load(&main_loop) == nullptr)
+    auto const ml = start_mir_server();
+    if (ml == nullptr)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to start server thread"});
     }
+
+    std::lock_guard<std::mutex> main_loop_lock{main_loop_mutex};
+    main_loop = ml;
 }
 
 std::string mtf::ServerRunner::new_connection()
@@ -68,7 +71,13 @@ std::string mtf::ServerRunner::new_prompt_connection()
 
 void mtf::ServerRunner::stop_server()
 {
-    auto const ml = std::atomic_load(&main_loop);
+    decltype(main_loop) ml;
+
+    {
+        std::lock_guard<std::mutex> main_loop_lock{main_loop_mutex};
+        ml = main_loop;
+    }
+
     if (ml == nullptr)
     {
         BOOST_THROW_EXCEPTION(std::logic_error{"stop_server() called without calling start_server()?"});
@@ -89,7 +98,7 @@ std::shared_ptr<mir::MainLoop> mtf::ServerRunner::start_mir_server()
     std::mutex mutex;
     std::condition_variable started_cv;
     bool started{false};
-    auto const main_loop = server_config().the_main_loop();
+    auto const ml = server_config().the_main_loop();
     mir::logging::set_logger(server_config().the_logger());
 
     server_thread = std::thread([&]
@@ -101,7 +110,7 @@ std::shared_ptr<mir::MainLoop> mtf::ServerRunner::start_mir_server()
                 // By enqueuing the notification code in the main loop, we are
                 // ensuring that the server has really and fully started before
                 // leaving start_mir_server().
-                main_loop->enqueue(
+                ml->enqueue(
                     this,
                     [&]
                     {
@@ -120,5 +129,5 @@ std::shared_ptr<mir::MainLoop> mtf::ServerRunner::start_mir_server()
     std::unique_lock<std::mutex> lock(mutex);
     started_cv.wait_for(lock, std::chrono::seconds{10}, [&]{ return started; });
 
-    return main_loop;
+    return ml;
 }
