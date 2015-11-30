@@ -62,7 +62,7 @@ bool gralloc_cannot_be_closed_safely_for(std::string const& device_name, bool qu
 
 bool clear_fb_context_fence_for(std::string const& device_name)
 {
-    return device_name == "krillin" || device_name == "mx4";
+    return device_name == "krillin" || device_name == "mx4" || device_name == "manta";
 }
 
 }
