@@ -340,22 +340,22 @@ TEST_F(InputDeviceHubTest, forwards_touch_spots_to_visualizer)
 TEST_F(InputDeviceHubTest, tracks_pointer_position)
 {
     geom::Point first{10,10}, second{20,20}, third{10,30};
-    EXPECT_CALL(mock_region,confine(first));
-    EXPECT_CALL(mock_region,confine(second));
-    EXPECT_CALL(mock_region,confine(third));
+    EXPECT_CALL(mock_region, confine(first));
+    EXPECT_CALL(mock_region, confine(second));
+    EXPECT_CALL(mock_region, confine(third));
 
     mi::InputSink* sink;
     mi::EventBuilder* builder;
     capture_input_sink(device, sink, builder);
 
     hub.add_device(mt::fake_shared(device));
-
-    geom::Point pos = first;
-    sink->confine_pointer(pos);
-    pos = second;
-    sink->confine_pointer(pos);
-    pos = third;
-    sink->confine_pointer(pos);
+    observer_loop.trigger_server_actions();
+    sink->handle_input(
+        *builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, 10.0f, 10.0f));
+    sink->handle_input(
+        *builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, 10.0f, 10.0f));
+    sink->handle_input(
+        *builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, -10.0f, 10.0f));
 }
 
 TEST_F(InputDeviceHubTest, confines_pointer_movement)
@@ -364,34 +364,34 @@ TEST_F(InputDeviceHubTest, confines_pointer_movement)
 
     ON_CALL(mock_region,confine(_))
         .WillByDefault(SetArgReferee<0>(confined_pos));
+    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(confined_pos.x.as_int(), confined_pos.y.as_int())).Times(2);
 
     mi::InputSink* sink;
     mi::EventBuilder* builder;
     capture_input_sink(device, sink, builder);
     hub.add_device(mt::fake_shared(device));
+    observer_loop.trigger_server_actions();
 
-    geom::Point pos1{10,20};
-    sink->confine_pointer(pos1);
-
-    geom::Point pos2{20,30};
-    sink->confine_pointer(pos2);
-
-    EXPECT_THAT(pos1, Eq(confined_pos));
-    EXPECT_THAT(pos2, Eq(confined_pos));
+    sink->handle_input(
+        *builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, 10.0f, 20.0f));
+    sink->handle_input(
+        *builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, 10.0f, 10.0f));
 }
 
 TEST_F(InputDeviceHubTest, forwards_pointer_updates_to_cursor_listener)
 {
-    auto x = 12.2f, y = 14.3f;
+    using namespace ::testing;
+
+    auto move_x = 12.0f, move_y = 14.0f;
 
     mi::InputSink* sink;
     mi::EventBuilder* builder;
     capture_input_sink(device, sink, builder);
     hub.add_device(mt::fake_shared(device));
 
-    auto event = builder->pointer_event(0ns, mir_pointer_action_motion, 0, x, y, 0.0f, 0.0f, 0.0f, 0.0f);
+    auto event = builder->pointer_event(0ns, mir_pointer_action_motion, 0, 0.0f, 0.0f, move_x, move_y);
 
-    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(x, y)).Times(1);
+    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(move_x, move_y)).Times(1);
 
     sink->handle_input(*event);
 }
@@ -490,7 +490,7 @@ TEST_F(InputDeviceHubTest, input_sink_unifies_modifier_state_accross_devices)
     auto key =
         key_event_builder->key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_RIGHTALT);
     auto motion =
-        mouse_event_builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 12, 40, 0, 0, 12, 40);
+        mouse_event_builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0, 0, 12, 40);
 
     EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(r_alt_modifier)));
     EXPECT_CALL(mock_dispatcher, dispatch(mt::PointerEventWithModifiers(r_alt_modifier)));
@@ -543,9 +543,9 @@ TEST_F(InputDeviceHubTest, input_sink_reduces_modifier_state_accross_devices)
     auto ctrl_up = key_event_builder_2->key_event(arbitrary_timestamp, mir_keyboard_action_up, 0, KEY_LEFTCTRL);
 
     auto motion_1 =
-        mouse_event_builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 12, 40, 0, 0, 12, 40);
+        mouse_event_builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0, 0, 12, 40);
     auto motion_2 =
-        mouse_event_builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 30, 50, 0, 0, 18, 10);
+        mouse_event_builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0, 0, 18, 10);
 
     EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(r_alt_modifier)));
     EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(l_ctrl_modifier)));
@@ -560,4 +560,77 @@ TEST_F(InputDeviceHubTest, input_sink_reduces_modifier_state_accross_devices)
     mouse_sink->handle_input(*motion_2);
 
     EXPECT_THAT(key_handle_1->id(), Ne(key_handle_2->id()));
+}
+
+TEST_F(InputDeviceHubTest, tracks_a_single_cursor_position_from_multiple_pointing_devices)
+{
+    using namespace ::testing;
+
+    mi::InputSink* mouse_sink_1;
+    mi::EventBuilder* mouse_event_builder_1;
+    mi::InputSink* mouse_sink_2;
+    mi::EventBuilder* mouse_event_builder_2;
+
+    capture_input_sink(device, mouse_sink_1, mouse_event_builder_1);
+    capture_input_sink(another_device, mouse_sink_2, mouse_event_builder_2);
+
+    hub.add_device(mt::fake_shared(device));
+    hub.add_device(mt::fake_shared(another_device));
+
+    observer_loop.trigger_server_actions();
+
+    auto motion_1 =
+        mouse_event_builder_1->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0, 0, 23, 20);
+    auto motion_2 =
+        mouse_event_builder_2->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0, 0, 18, -10);
+    auto motion_3 =
+        mouse_event_builder_2->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0, 0, 2, 10);
+
+    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(23, 20));
+    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(41, 10));
+    EXPECT_CALL(mock_cursor_listener, cursor_moved_to(43, 20));
+
+    mouse_sink_1->handle_input(*motion_1);
+    mouse_sink_2->handle_input(*motion_2);
+    mouse_sink_1->handle_input(*motion_3);
+}
+
+TEST_F(InputDeviceHubTest, tracks_a_single_button_state_from_multiple_pointing_devices)
+{
+    using namespace ::testing;
+
+    int const x = 0, y = 0;
+    MirPointerButtons no_buttons = 0;
+    mi::InputSink* mouse_sink_1;
+    mi::EventBuilder* mouse_event_builder_1;
+    mi::InputSink* mouse_sink_2;
+    mi::EventBuilder* mouse_event_builder_2;
+
+    capture_input_sink(device, mouse_sink_1, mouse_event_builder_1);
+    capture_input_sink(another_device, mouse_sink_2, mouse_event_builder_2);
+
+    hub.add_device(mt::fake_shared(device));
+    hub.add_device(mt::fake_shared(another_device));
+
+    observer_loop.trigger_server_actions();
+
+    auto motion_1 =
+        mouse_event_builder_1->pointer_event(arbitrary_timestamp, mir_pointer_action_button_down, mir_pointer_button_primary, 0, 0, 0, 0);
+    auto motion_2 =
+        mouse_event_builder_2->pointer_event(arbitrary_timestamp, mir_pointer_action_button_down, mir_pointer_button_secondary, 0, 0, 0, 0);
+    auto motion_3 =
+        mouse_event_builder_1->pointer_event(arbitrary_timestamp, mir_pointer_action_button_up, no_buttons, 0, 0, 0, 0);
+    auto motion_4 =
+        mouse_event_builder_2->pointer_event(arbitrary_timestamp, mir_pointer_action_button_up, no_buttons, 0, 0, 0, 0);
+
+    InSequence seq;
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::ButtonsDown(x, y, mir_pointer_button_primary)));
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::ButtonsDown(x, y, mir_pointer_button_primary | mir_pointer_button_secondary)));
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::ButtonsUp(x, y, mir_pointer_button_secondary)));
+    EXPECT_CALL(mock_dispatcher, dispatch(mt::ButtonsUp(x, y, no_buttons)));
+
+    mouse_sink_1->handle_input(*motion_1);
+    mouse_sink_2->handle_input(*motion_2);
+    mouse_sink_1->handle_input(*motion_3);
+    mouse_sink_1->handle_input(*motion_4);
 }

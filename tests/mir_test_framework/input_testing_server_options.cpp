@@ -38,7 +38,6 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace ms = mir::shell;
-namespace mia = mi::android;
 namespace geom = mir::geometry;
 
 mtf::InputTestingServerConfiguration::InputTestingServerConfiguration()

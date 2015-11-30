@@ -23,7 +23,9 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 
 mf::UnauthorizedDisplayChanger::UnauthorizedDisplayChanger(std::shared_ptr<frontend::DisplayChanger> const& changer)
-    : changer(changer)
+    : changer(changer),
+      configure_display_is_allowed(false),
+      set_base_configuration_is_allowed(false)
 {
 }
 
@@ -33,12 +35,30 @@ std::shared_ptr<mg::DisplayConfiguration> mf::UnauthorizedDisplayChanger::base_c
 }
 
 void mf::UnauthorizedDisplayChanger::configure(
-    std::shared_ptr<mf::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&)
+    std::shared_ptr<mf::Session> const& session,
+    std::shared_ptr<mg::DisplayConfiguration> const& config)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to apply display configurations"));
+    if (configure_display_is_allowed)
+        changer->configure(session, config);
+    else
+        BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to apply display configurations"));
 }
 
-std::future<void> mf::UnauthorizedDisplayChanger::set_base_configuration(std::shared_ptr<graphics::DisplayConfiguration> const&)
+std::future<void> mf::UnauthorizedDisplayChanger::set_base_configuration(
+    std::shared_ptr<graphics::DisplayConfiguration> const& config)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to set base display configurations"));
+    if (set_base_configuration_is_allowed)
+        return changer->set_base_configuration(config);
+    else
+        BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to set base display configurations"));
+}
+
+void mf::UnauthorizedDisplayChanger::allow_configure_display()
+{
+    configure_display_is_allowed = true;
+}
+
+void mf::UnauthorizedDisplayChanger::allow_set_base_configuration()
+{
+    set_base_configuration_is_allowed = true;
 }

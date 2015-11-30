@@ -47,6 +47,7 @@ class FocusController;
 class HostLifecycleEventListener;
 class InputTargeter;
 class Shell;
+class SurfaceStack;
 }
 namespace scene
 {
@@ -56,8 +57,8 @@ class PromptSessionListener;
 class PromptSessionManager;
 class SessionListener;
 class SessionCoordinator;
-class SurfaceCoordinator;
 class SurfaceFactory;
+class CoordinateTranslator;
 }
 
 class Fd;
@@ -120,6 +121,14 @@ public:
         std::string const& option,
         std::string const& description,
         int default_value);
+
+    /// Add user configuration option(s) to Mir's option handling.
+    /// These will be resolved during initialisation from the command line,
+    /// environment variables, a config file or the supplied default.
+    void add_configuration_option(
+        std::string const& option,
+        std::string const& description,
+        double default_value);
 
     /// Add user configuration option(s) to Mir's option handling.
     /// These will be resolved during initialisation from the command line,
@@ -238,6 +247,10 @@ public:
     /// Sets an override functor for creating the gl config.
     void override_the_gl_config(Builder<graphics::GLConfig> const& gl_config_builder);
 
+    /// Sets an override functor for creating the coordinate translator.
+    void override_the_coordinate_translator(
+        Builder<scene::CoordinateTranslator> const& coordinate_translator_builder);
+
     /// Sets an override functor for creating the host lifecycle event listener.
     void override_the_host_lifecycle_event_listener(
         Builder<shell::HostLifecycleEventListener> const& host_lifecycle_event_listener_builder);
@@ -294,6 +307,9 @@ public:
 
     /// Sets a wrapper functor for creating the shell.
     void wrap_shell(Wrapper<shell::Shell> const& wrapper);
+
+    /// Sets a wrapper functor for creating the surface stack.
+    void wrap_surface_stack(Wrapper<shell::SurfaceStack> const& surface_stack);
 /** @} */
 
 /** @name Getting access to Mir subsystems
@@ -364,8 +380,8 @@ public:
     /// \return the surface factory
     auto the_surface_factory() const -> std::shared_ptr<scene::SurfaceFactory>;
 
-    /// \return the surface coordinator.
-    auto the_surface_coordinator() const -> std::shared_ptr<scene::SurfaceCoordinator>;
+    /// \return the surface stack.
+    auto the_surface_stack() const -> std::shared_ptr<shell::SurfaceStack>;
 
     /// \return the touch visualizer.
     auto the_touch_visualizer() const -> std::shared_ptr<input::TouchVisualizer>;
