@@ -16,22 +16,21 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_UNSUPPORTED_COORDINATE_TRANSLATOR_H_
-#define MIR_FRONTEND_UNSUPPORTED_COORDINATE_TRANSLATOR_H_
+#ifndef MIR_SCENE_UNSUPPORTED_COORDINATE_TRANSLATOR_H_
+#define MIR_SCENE_UNSUPPORTED_COORDINATE_TRANSLATOR_H_
 
 #include "mir/scene/coordinate_translator.h"
 
 namespace mir
 {
-namespace frontend
+namespace scene
 {
-class UnsupportedCoordinateTranslator : public scene::CoordinateTranslator
+class UnsupportedCoordinateTranslator : public CoordinateTranslator
 {
-    geometry::Point surface_to_screen(std::shared_ptr<Surface> surface,
+    geometry::Point surface_to_screen(std::shared_ptr<frontend::Surface> surface,
                                       int32_t x, int32_t y) override;
 };
-
 }
 }
 
-#endif // MIR_FRONTEND_UNSUPPORTED_COORDINATE_TRANSLATOR_H_
+#endif // MIR_SCENE_UNSUPPORTED_COORDINATE_TRANSLATOR_H_

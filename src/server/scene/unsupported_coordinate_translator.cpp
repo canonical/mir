@@ -23,10 +23,11 @@
 
 namespace mg = mir::geometry;
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 
-mg::Point mf::UnsupportedCoordinateTranslator::surface_to_screen(
+mg::Point ms::UnsupportedCoordinateTranslator::surface_to_screen(
         std::shared_ptr<mf::Surface> /*surface*/,
         int32_t /*x*/, int32_t /*y*/)
 {
-    BOOST_THROW_EXCEPTION(mir::frontend::unsupported_feature());
+    BOOST_THROW_EXCEPTION(mf::unsupported_feature());
 }

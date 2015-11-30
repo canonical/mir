@@ -34,11 +34,11 @@
 #include "session_container.h"
 #include "session_manager.h"
 #include "surface_allocator.h"
-#include "surface_controller.h"
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
 #include "prompt_session_manager_impl.h"
 #include "default_coordinate_translator.h"
+#include "unsupported_coordinate_translator.h"
 #include "timeout_application_not_responding_detector.h"
 #include "mir/options/program_option.h"
 #include "mir/options/default_configuration.h"
@@ -52,24 +52,17 @@ namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace msh = mir::shell;
 
-std::shared_ptr<ms::SurfaceStackModel>
-mir::DefaultServerConfiguration::the_surface_stack_model()
-{
-    return surface_stack([this]()
-                         { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
-}
-
 std::shared_ptr<mc::Scene>
 mir::DefaultServerConfiguration::the_scene()
 {
-    return surface_stack([this]()
+    return scene_surface_stack([this]()
                          { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
 }
 
 std::shared_ptr<mi::Scene> mir::DefaultServerConfiguration::the_input_scene()
 {
-    return surface_stack([this]()
-                         { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
+    return scene_surface_stack([this]()
+                             { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
 }
 
 auto mir::DefaultServerConfiguration::the_surface_factory()
@@ -86,16 +79,23 @@ auto mir::DefaultServerConfiguration::the_surface_factory()
         });
 }
 
-std::shared_ptr<ms::SurfaceCoordinator>
-mir::DefaultServerConfiguration::the_surface_coordinator()
+std::shared_ptr<msh::SurfaceStack>
+mir::DefaultServerConfiguration::the_surface_stack()
 {
-    return surface_coordinator(
-        [this]()
-        {
-            return std::make_shared<ms::SurfaceController>(
-                    the_surface_factory(),
-                    the_surface_stack_model());
-        });
+    return surface_stack([this]()
+        -> std::shared_ptr<msh::SurfaceStack>
+             {
+                 auto const wrapped = scene_surface_stack([this]()
+                     { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
+
+                 return wrap_surface_stack(wrapped);
+             });
+}
+
+auto mir::DefaultServerConfiguration::wrap_surface_stack(std::shared_ptr<shell::SurfaceStack> const& wrapped)
+-> std::shared_ptr<shell::SurfaceStack>
+{
+    return wrapped;
 }
 
 std::shared_ptr<ms::BroadcastingSessionEventSink>
@@ -174,15 +174,15 @@ mir::DefaultServerConfiguration::the_session_coordinator()
         [this]()
         {
             return std::make_shared<ms::SessionManager>(
-                    the_surface_coordinator(),
-                    the_surface_factory(),
-                    the_buffer_stream_factory(),
-                    the_session_container(),
-                    the_snapshot_strategy(),
-                    the_session_event_sink(),
-                    the_session_listener(),
-                    the_display(),
-                    the_application_not_responding_detector());
+                the_surface_stack(),
+                the_surface_factory(),
+                the_buffer_stream_factory(),
+                the_session_container(),
+                the_snapshot_strategy(),
+                the_session_event_sink(),
+                the_session_listener(),
+                the_display(),
+                the_application_not_responding_detector());
         });
 }
 
@@ -224,9 +224,12 @@ std::shared_ptr<ms::CoordinateTranslator>
 mir::DefaultServerConfiguration::the_coordinate_translator()
 {
     return coordinate_translator(
-        [this]()
+        [this]() -> std::shared_ptr<ms::CoordinateTranslator>
         {
-            return std::make_shared<ms::DefaultCoordinateTranslator>();
+            if (the_options()->is_set(options::debug_opt))
+                return std::make_shared<ms::DefaultCoordinateTranslator>();
+            else
+                return std::make_shared<ms::UnsupportedCoordinateTranslator>();
         });
 }
 

@@ -19,6 +19,8 @@
 #ifndef MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
 #define MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
 
+#include "server_example_canonical_surface_info.h"
+
 #include "mir/geometry/rectangles.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
@@ -54,10 +56,12 @@ struct SessionTo
 /// These functions assume that the BasicWindowManager data structures can be accessed freely.
 /// I.e. should only be invoked by the policy handle_... methods (where any necessary locks are held).
 // TODO extract commonality with FocusController (once that's separated from shell::FocusController)
-template<typename SessionInfo, typename SurfaceInfo>
+template<typename SessionInfo>
 class BasicWindowManagerToolsCopy
 {
 public:
+    using SurfaceInfo = CanonicalSurfaceInfoCopy;
+
     virtual auto find_session(std::function<bool(SessionInfo const& info)> const& predicate)
     -> std::shared_ptr<scene::Session> = 0;
 
@@ -82,6 +86,8 @@ public:
     virtual auto active_display() -> geometry::Rectangle const = 0;
 
     virtual void forget(std::weak_ptr<scene::Surface> const& surface) = 0;
+
+    virtual void raise_tree(std::shared_ptr<scene::Surface> const& root) = 0;
 
     virtual ~BasicWindowManagerToolsCopy() = default;
     BasicWindowManagerToolsCopy() = default;
@@ -109,11 +115,13 @@ public:
 /// \tparam SessionInfo must be default constructable.
 ///
 /// \tparam SurfaceInfo must be constructable from (std::shared_ptr<ms::Session>, std::shared_ptr<ms::Surface>, ms::SurfaceCreationParameters const& params)
-template<typename WindowManagementPolicy, typename SessionInfo, typename SurfaceInfo>
+template<typename WindowManagementPolicy, typename SessionInfo>
 class BasicWindowManagerCopy : public shell::WindowManager,
-    private BasicWindowManagerToolsCopy<SessionInfo, SurfaceInfo>
+    private BasicWindowManagerToolsCopy<SessionInfo>
 {
 public:
+    using SurfaceInfo = CanonicalSurfaceInfoCopy;
+
     template <typename... PolicyArgs>
     BasicWindowManagerCopy(
         shell::FocusController* focus_controller,
@@ -347,6 +355,24 @@ private:
             result = *displays.begin();
 
         return result;
+    }
+
+    void raise_tree(std::shared_ptr<scene::Surface> const& root) override
+    {
+        SurfaceSet surfaces;
+        std::function<void(std::weak_ptr<scene::Surface> const& surface)> const add_children =
+            [&,this](std::weak_ptr<scene::Surface> const& surface)
+                {
+                auto const& info = info_for(surface);
+                surfaces.insert(begin(info.children), end(info.children));
+                for (auto const& child : info.children)
+                    add_children(child);
+                };
+
+        surfaces.insert(root);
+        add_children(root);
+
+        raise(surfaces);
     }
 
     shell::FocusController* const focus_controller;
