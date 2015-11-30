@@ -433,7 +433,9 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_su
     post_a_frame(*surface);
     post_a_frame(*surface);
 
-    EXPECT_EQ(3, stack.frames_pending(comp2));
+    EXPECT_EQ(0, stack.frames_pending(comp1));
+    EXPECT_EQ(0, stack.frames_pending(comp2));
+
     auto elements = stack.scene_elements_for(comp1);
     for (auto const& elem : elements)
     {
@@ -446,6 +448,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_su
         elem->occluded();
     }
 
+    EXPECT_EQ(3, stack.frames_pending(comp1));
     EXPECT_EQ(0, stack.frames_pending(comp2));
 }
 
