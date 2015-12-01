@@ -42,7 +42,15 @@ public:
                  void(std::initializer_list<int>,
                       std::function<void(int)> const&));
 
+    MOCK_METHOD2(register_signal_handler_module_ptr,
+                 void(std::initializer_list<int>,
+                      std::function<void(int)> const&));
+
     MOCK_METHOD3(register_fd_handler,
+                 void(std::initializer_list<int>, void const*,
+                      std::function<void(int)> const&));
+
+    MOCK_METHOD3(register_fd_handler_module_ptr,
                  void(std::initializer_list<int>, void const*,
                       std::function<void(int)> const&));
 
@@ -55,6 +63,20 @@ public:
     MOCK_METHOD1(create_alarm, std::unique_ptr<time::Alarm>(std::function<void()> const& callback));
     MOCK_METHOD1(create_alarm, std::unique_ptr<time::Alarm>(std::shared_ptr<LockableCallback> const& callback));
 
+    void register_signal_handler(
+        std::initializer_list<int> signals,
+        mir::UniqueModulePtr<std::function<void(int)>> handler)
+    {
+        register_signal_handler_module_ptr(signals, *handler);
+    }
+
+    void register_fd_handler(
+         std::initializer_list<int> fds,
+         void const* owner,
+         mir::UniqueModulePtr<std::function<void(int)>> handler)
+    {
+        register_fd_handler_module_ptr(fds, owner, *handler);
+    }
 };
 
 }

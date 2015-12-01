@@ -295,10 +295,13 @@ void mga::Display::register_configuration_change_handler(
     EventHandlerRegister& event_handler,
     DisplayConfigurationChangeHandler const& change_handler)
 {
-    event_handler.register_fd_handler({display_change_pipe->read_pipe}, this, [change_handler, this](int){
-        change_handler();
-        display_change_pipe->ack_change();
-    });
+    event_handler.register_fd_handler({display_change_pipe->read_pipe}, this,
+        make_module_ptr<std::function<void(int)>>(
+            [change_handler, this](int)
+            {
+                change_handler();
+                display_change_pipe->ack_change();
+            }));
 }
 
 void mga::Display::register_pause_resume_handlers(
