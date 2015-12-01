@@ -33,9 +33,18 @@ mtd::MockDisplay::MockDisplay()
 {
 }
 
+mtd::MockDisplay::MockDisplay(std::vector<geometry::Rectangle> const& output_rects) :
+    config{std::make_shared<StubDisplayConfig>(output_rects)},
+    handler_called{false}
+{
+    for (auto const& rect : output_rects)
+        groups.emplace_back(new StubDisplaySyncGroup({rect}));
+}
+
 void mtd::MockDisplay::for_each_display_sync_group(std::function<void(mir::graphics::DisplaySyncGroup&)> const& f)
 {
-    f(display_sync_group);
+    for (auto& group : groups)
+        f(*group);
 }
 
 std::unique_ptr<mir::graphics::DisplayConfiguration> mtd::MockDisplay::configuration() const

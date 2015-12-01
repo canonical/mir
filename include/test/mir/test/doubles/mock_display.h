@@ -22,7 +22,10 @@
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/pipe.h"
 
+#include "mir/geometry/rectangle.h"
+
 #include <atomic>
+#include <vector>
 
 namespace mir
 {
@@ -34,6 +37,8 @@ class MockDisplay : public NullDisplay
 {
 public:
     MockDisplay();
+
+    explicit MockDisplay(std::vector<geometry::Rectangle> const& output_rects);
 
     void for_each_display_sync_group(std::function<void(mir::graphics::DisplaySyncGroup&)> const& f) override;
 
@@ -52,7 +57,7 @@ public:
 
 private:
     std::shared_ptr<mir::graphics::DisplayConfiguration> config;
-    NullDisplaySyncGroup display_sync_group;
+    std::vector<std::unique_ptr<StubDisplaySyncGroup>> groups;
     Pipe p;
     std::atomic<bool> handler_called;
 };
