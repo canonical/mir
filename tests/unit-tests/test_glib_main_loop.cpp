@@ -281,6 +281,27 @@ TEST_F(GLibMainLoopTest, propagates_exception_from_signal_handler)
         destroy_glib_main_loop);
 }
 
+TEST_F(GLibMainLoopTest, handles_signal_with_unique_module_ptr_handler)
+{
+    int const signum{SIGUSR1};
+    int handled_signum{0};
+
+    ml.register_signal_handler(
+        {signum},
+        mir::make_module_ptr<std::function<void(int)>>(
+            [&handled_signum, this](int sig)
+            {
+               handled_signum = sig;
+               ml.stop();
+            }));
+
+    kill(getpid(), signum);
+
+    ml.run();
+
+    ASSERT_EQ(signum, handled_signum);
+}
+
 TEST_F(GLibMainLoopTest, handles_fd)
 {
     mt::Pipe p;
@@ -541,6 +562,31 @@ TEST_F(GLibMainLoopTest, can_unregister_fd_from_within_fd_handler)
     EXPECT_EQ(1, write(p1.write_fd(), "a", 1));
 
     ml.run();
+}
+
+TEST_F(GLibMainLoopTest, handles_fd_with_unique_module_ptr_handler)
+{
+    mt::Pipe p;
+    char const data_to_write{'a'};
+    int handled_fd{0};
+    char data_read{0};
+
+    ml.register_fd_handler(
+        {p.read_fd()},
+        this,
+        mir::make_module_ptr<std::function<void(int)>>(
+            [&handled_fd, &data_read, this](int fd)
+            {
+                handled_fd = fd;
+                EXPECT_EQ(1, read(fd, &data_read, 1));
+                ml.stop();
+            }));
+
+    EXPECT_EQ(1, write(p.write_fd(), &data_to_write, 1));
+
+    ml.run();
+
+    EXPECT_EQ(data_to_write, data_read);
 }
 
 TEST_F(GLibMainLoopTest, dispatches_action)

@@ -51,6 +51,9 @@ bool mir_buffer_stream_is_valid(MirBufferStream *buffer_stream);
  * \param [in] buffer_usage   Requested buffer usage, use 
  *                            mir_buffer_usage_software for cursor image streams
  * \param [in] callback       Callback to be invoked when the request completes
+ *                            The callback is guaranteed to be called and called with a
+ *                            non-null MirBufferStream*, but the stream may be invalid in
+ *                            case of an error.
  * \param [in] context        Userdata to pass to callback function
  *
  * \return                    A handle that can be supplied to mir_wait_for

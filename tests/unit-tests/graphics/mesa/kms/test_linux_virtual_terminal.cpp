@@ -22,6 +22,7 @@
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_display_report.h"
+#include "mir/test/doubles/mock_event_handler_register.h"
 #include "mir/test/gmock_fixes.h"
 
 #include <gtest/gtest.h>
@@ -69,23 +70,6 @@ public:
 // The default return values are appropriate, so
 // Add a typedef to aid clarity.
 typedef testing::NiceMock<MockPosixProcessOperations> StubPosixProcessOperations;
-
-class MockEventHandlerRegister : public mg::EventHandlerRegister
-{
-public:
-    ~MockEventHandlerRegister() noexcept {}
-
-    MOCK_METHOD2(register_signal_handler,
-                 void(std::initializer_list<int>,
-                      std::function<void(int)> const&));
-
-    MOCK_METHOD3(register_fd_handler,
-                 void(std::initializer_list<int>,
-                      void const*,
-                      std::function<void(int)> const&));
-
-    MOCK_METHOD1(unregister_fd_handler, void(void const*));
-};
 
 ACTION_TEMPLATE(SetIoctlPointee,
                 HAS_1_TEMPLATE_PARAMS(typename, T),
@@ -204,7 +188,8 @@ public:
     {
         using namespace testing;
 
-        EXPECT_CALL(mock_event_handler_register, register_signal_handler(ElementsAre(sig), _))
+        EXPECT_CALL(mock_event_handler_register,
+                    register_signal_handler_module_ptr(ElementsAre(sig), _))
             .WillOnce(SaveArg<1>(&sig_handler));
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_SETMODE,
                                      MatcherCast<void*>(ModeUsesSignal(sig))));
@@ -257,7 +242,7 @@ public:
     struct termios fake_tc_attr;
     std::function<void(int)> sig_handler;
     MockVTFileOperations mock_fops;
-    MockEventHandlerRegister mock_event_handler_register;
+    mtd::MockEventHandlerRegister mock_event_handler_register;
 };
 
 
