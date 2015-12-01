@@ -20,7 +20,6 @@
 #define MIR_EXAMPLE_TILING_WINDOW_MANAGER_H_
 
 #include "server_example_basic_window_manager.h"
-#include "server_example_canonical_surface_info.h"
 
 ///\example server_example_tiling_window_manager.h
 /// Demonstrate implementing a simple tiling algorithm
@@ -29,34 +28,24 @@ namespace mir
 {
 namespace examples
 {
-struct TilingSessionInfo
-{
-    geometry::Rectangle tile;
-    std::vector<std::weak_ptr<scene::Surface>> surfaces;
-};
-
 // simple tiling algorithm:
 //  o Switch apps: tap or click on the corresponding tile
-//  o Move window: Alt-leftmousebutton drag
-//  o Resize window: Alt-middle_button drag
+//  o Move window: Alt-leftmousebutton drag (three finger drag)
+//  o Resize window: Alt-middle_button drag (two finger drag)
 //  o Maximize/restore current window (to tile size): Alt-F11
 //  o Maximize/restore current window (to tile height): Shift-F11
 //  o Maximize/restore current window (to tile width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
-class TilingWindowManagerPolicy
+class TilingWindowManagerPolicy : public WindowManagementPolicy
 {
 public:
-    using Tools = BasicWindowManagerToolsCopy<TilingSessionInfo>;
-    using TilingSessionInfoMap = typename SessionTo<TilingSessionInfo>::type;
-    using TilingSurfaceInfoMap = typename SurfaceTo<CanonicalSurfaceInfoCopy>::type;
-
-    explicit TilingWindowManagerPolicy(Tools* const tools);
+    explicit TilingWindowManagerPolicy(WindowManagerTools* const tools);
 
     void click(geometry::Point cursor);
 
-    void handle_session_info_updated(TilingSessionInfoMap& session_info, geometry::Rectangles const& displays);
+    void handle_session_info_updated(SessionInfoMap& session_info, geometry::Rectangles const& displays);
 
-    void handle_displays_updated(TilingSessionInfoMap& session_info, geometry::Rectangles const& displays);
+    void handle_displays_updated(SessionInfoMap& session_info, geometry::Rectangles const& displays);
 
     void resize(geometry::Point cursor);
 
@@ -90,7 +79,7 @@ public:
 
     void generate_decorations_for(
         std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface,
-        TilingSurfaceInfoMap& surface_info,
+        SurfaceInfoMap& surface_info,
         std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const&, scene::SurfaceCreationParameters const&)> const& build);
 
 private:
@@ -106,7 +95,7 @@ private:
     std::shared_ptr<scene::Session> session_under(geometry::Point position);
 
     void update_tiles(
-        TilingSessionInfoMap& session_info,
+        SessionInfoMap& session_info,
         geometry::Rectangles const& displays);
 
     void update_surfaces(std::weak_ptr<scene::Session> const& session, geometry::Rectangle const& old_tile, geometry::Rectangle const& new_tile);
@@ -123,12 +112,12 @@ private:
 
     std::shared_ptr<scene::Surface> select_active_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
 
-    Tools* const tools;
+    WindowManagerTools* const tools;
 
     geometry::Point old_cursor{};
 };
 
-using TilingWindowManager = BasicWindowManagerCopy<TilingWindowManagerPolicy, TilingSessionInfo>;
+using TilingWindowManager = WindowManagerBuilder<TilingWindowManagerPolicy>;
 }
 }
 

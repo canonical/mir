@@ -18,6 +18,9 @@
 
 #include "server_example_canonical_window_manager.h"
 
+#include "mir/scene/session.h"
+#include "mir/scene/surface.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/surface_ready_observer.h"
 #include "mir/shell/display_layout.h"
 
@@ -50,7 +53,7 @@ Point titlebar_position_for_window(Point window_position)
 }
 
 me::CanonicalWindowManagerPolicyCopy::CanonicalWindowManagerPolicyCopy(
-    Tools* const tools,
+    WindowManagerTools* const tools,
     std::shared_ptr<shell::DisplayLayout> const& display_layout) :
     tools{tools},
     display_layout{display_layout}
@@ -61,15 +64,13 @@ void me::CanonicalWindowManagerPolicyCopy::click(Point cursor)
 {
     if (auto const surface = tools->surface_at(cursor))
         select_active_surface(surface);
-
-    old_cursor = cursor;
 }
 
-void me::CanonicalWindowManagerPolicyCopy::handle_session_info_updated(CanonicalSessionInfoMap& /*session_info*/, Rectangles const& /*displays*/)
+void me::CanonicalWindowManagerPolicyCopy::handle_session_info_updated(SessionInfoMap& /*session_info*/, Rectangles const& /*displays*/)
 {
 }
 
-void me::CanonicalWindowManagerPolicyCopy::handle_displays_updated(CanonicalSessionInfoMap& /*session_info*/, Rectangles const& displays)
+void me::CanonicalWindowManagerPolicyCopy::handle_displays_updated(SessionInfoMap& /*session_info*/, Rectangles const& displays)
 {
     display_area = displays.bounding_rectangle();
 
@@ -91,7 +92,6 @@ void me::CanonicalWindowManagerPolicyCopy::resize(Point cursor)
 {
     select_active_surface(tools->surface_at(old_cursor));
     resize(active_surface(), cursor, old_cursor, display_area);
-    old_cursor = cursor;
 }
 
 auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
@@ -101,7 +101,7 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 {
     auto parameters = request_parameters;
     auto surf_type = parameters.type.is_set() ? parameters.type.value() : mir_surface_type_normal;
-    bool const needs_titlebar = CanonicalSurfaceInfoCopy::needs_titlebar(surf_type);
+    bool const needs_titlebar = SurfaceInfo::needs_titlebar(surf_type);
 
     if (needs_titlebar)
         parameters.size.height = parameters.size.height + DeltaY{title_bar_height};
@@ -244,10 +244,10 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
 void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface,
-    CanonicalSurfaceInfoMap& surface_map,
+    SurfaceInfoMap& surface_map,
     std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build)
 {
-    if (!CanonicalSurfaceInfoCopy::needs_titlebar(surface->type()))
+    if (!SurfaceInfo::needs_titlebar(surface->type()))
         return;
 
     auto format = mir_pixel_format_xrgb_8888;
@@ -267,8 +267,8 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     surface_info.titlebar_id = id;
     surface_info.children.push_back(titlebar);
 
-    CanonicalSurfaceInfoCopy& titlebar_info =
-            surface_map.emplace(titlebar, CanonicalSurfaceInfoCopy{session, titlebar, {}}).first->second;
+    SurfaceInfo& titlebar_info =
+            surface_map.emplace(titlebar, SurfaceInfo{session, titlebar, {}}).first->second;
     titlebar_info.is_titlebar = true;
     titlebar_info.parent = surface;
     titlebar_info.init_titlebar(titlebar);
@@ -282,7 +282,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms
         tools->info_for(parent).children.push_back(surface);
     }
 
-    tools->info_for(session).surfaces++;
+    tools->info_for(session).surfaces.push_back(surface);
 
     if (surface_info.can_be_active())
     {
@@ -431,7 +431,18 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
         tools->forget(info.titlebar);
     }
 
-    if (!--tools->info_for(session).surfaces && session == tools->focused_session())
+    auto& surfaces = tools->info_for(session).surfaces;
+
+    for (auto i = begin(surfaces); i != end(surfaces); ++i)
+    {
+        if (surface.lock() == i->lock())
+        {
+            surfaces.erase(i);
+            break;
+        }
+    }
+
+    if (surfaces.empty() && session == tools->focused_session())
     {
         active_surface_.reset();
         tools->focus_next_session();
@@ -563,7 +574,6 @@ void me::CanonicalWindowManagerPolicyCopy::drag(Point cursor)
 {
     select_active_surface(tools->surface_at(old_cursor));
     drag(active_surface(), cursor, old_cursor, display_area);
-    old_cursor = cursor;
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_raise_surface(
@@ -678,16 +688,25 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_touch_event(MirTouchEvent cons
         }
     }
 
-    if (is_drag && count == 3)
+    bool consumes_event = false;
+    if (is_drag)
     {
-        drag(cursor);
-        return true;
+        switch (count)
+        {
+        case 2:
+            resize(cursor);
+            consumes_event = true;
+            break;
+
+        case 3:
+            drag(cursor);
+            consumes_event = true;
+            break;
+        }
     }
-    else
-    {
-        click(cursor);
-        return false;
-    }
+
+    old_cursor = cursor;
+    return consumes_event;
 }
 
 bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent const* event)
@@ -698,10 +717,11 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
         mir_pointer_event_axis_value(event, mir_pointer_axis_x),
         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
 
+    bool consumes_event = false;
+
     if (action == mir_pointer_action_button_down)
     {
         click(cursor);
-        return false;
     }
     else if (action == mir_pointer_action_motion &&
              modifiers == mir_input_event_modifier_alt)
@@ -709,13 +729,13 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
         if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
         {
             drag(cursor);
-            return true;
+            consumes_event = true;
         }
 
         if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
         {
             resize(cursor);
-            return true;
+            consumes_event = true;
         }
     }
     else if (action == mir_pointer_action_motion && !modifiers)
@@ -727,13 +747,14 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
                 if (tools->info_for(possible_titlebar).is_titlebar)
                 {
                     drag(cursor);
-                    return true;
+                    consumes_event = true;
                 }
             }
         }
     }
 
-    return false;
+    old_cursor = cursor;
+    return consumes_event;
 }
 
 void me::CanonicalWindowManagerPolicyCopy::toggle(MirSurfaceState state)
