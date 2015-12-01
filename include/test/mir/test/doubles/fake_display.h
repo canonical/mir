@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
-#define MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
+#ifndef MIR_TEST_DOUBLES_FAKE_DISPLAY_H_
+#define MIR_TEST_DOUBLES_FAKE_DISPLAY_H_
 
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/pipe.h"
@@ -33,12 +33,12 @@ namespace test
 {
 namespace doubles
 {
-class MockDisplay : public NullDisplay
+class FakeDisplay : public NullDisplay
 {
 public:
-    MockDisplay();
+    FakeDisplay();
 
-    explicit MockDisplay(std::vector<geometry::Rectangle> const& output_rects);
+    explicit FakeDisplay(std::vector<geometry::Rectangle> const& output_rects);
 
     void for_each_display_sync_group(std::function<void(mir::graphics::DisplaySyncGroup&)> const& f) override;
 
@@ -65,4 +65,4 @@ private:
 }
 }
 
-#endif //MIR_TEST_DOUBLES_MOCK_DISPLAY_H_
+#endif //MIR_TEST_DOUBLES_FAKE_DISPLAY_H_

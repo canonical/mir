@@ -24,7 +24,7 @@
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/doubles/null_platform.h"
-#include "mir/test/doubles/mock_display.h"
+#include "mir/test/doubles/fake_display.h"
 #include "mir/test/doubles/null_display_sync_group.h"
 #include "mir/test/doubles/null_platform.h"
 #include "mir/test/display_config_matchers.h"
@@ -59,17 +59,17 @@ mtd::StubDisplayConfig stub_display_config;
 
 mtd::StubDisplayConfig changed_stub_display_config{1};
 
-class MockDisplay : public mtd::MockDisplay
+class MockDisplay : public mtd::FakeDisplay
 {
 public:
-    MockDisplay(): mtd::MockDisplay()
+    MockDisplay(): mtd::FakeDisplay()
     {
         using namespace testing;
         ON_CALL(*this, configure(_))
             .WillByDefault(Invoke(
                 [this](mg::DisplayConfiguration const& new_config)
                 {
-                    mtd::MockDisplay::configure(new_config);
+                    mtd::FakeDisplay::configure(new_config);
                 }));
     }
 

@@ -39,7 +39,7 @@
 #include "mir/test/wait_condition.h"
 #include "mir/test/spin_wait.h"
 #include "mir/test/display_config_matchers.h"
-#include "mir/test/doubles/mock_display.h"
+#include "mir/test/doubles/fake_display.h"
 #include "mir/test/doubles/stub_cursor.h"
 
 #include "mir/test/doubles/nested_mock_egl.h"
@@ -250,7 +250,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
     mtf::UsingStubClientPlatform using_stub_client_platform;
 
     std::shared_ptr<MockSessionMediatorReport> mock_session_mediator_report;
-    testing::NiceMock<mtd::MockDisplay> mock_display{display_geometry};
+    testing::NiceMock<mtd::FakeDisplay> mock_display{display_geometry};
 
     void SetUp() override
     {

@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/test/doubles/mock_display.h"
+#include "mir/test/doubles/fake_display.h"
 
 #include "mir/test/doubles/stub_display_configuration.h"
 
@@ -27,13 +27,13 @@
 namespace mtd = mir::test::doubles;
 
 
-mtd::MockDisplay::MockDisplay()
+mtd::FakeDisplay::FakeDisplay()
     : config{std::make_shared<StubDisplayConfig>()},
       handler_called{false}
 {
 }
 
-mtd::MockDisplay::MockDisplay(std::vector<geometry::Rectangle> const& output_rects) :
+mtd::FakeDisplay::FakeDisplay(std::vector<geometry::Rectangle> const& output_rects) :
     config{std::make_shared<StubDisplayConfig>(output_rects)},
     handler_called{false}
 {
@@ -41,18 +41,18 @@ mtd::MockDisplay::MockDisplay(std::vector<geometry::Rectangle> const& output_rec
         groups.emplace_back(new StubDisplaySyncGroup({rect}));
 }
 
-void mtd::MockDisplay::for_each_display_sync_group(std::function<void(mir::graphics::DisplaySyncGroup&)> const& f)
+void mtd::FakeDisplay::for_each_display_sync_group(std::function<void(mir::graphics::DisplaySyncGroup&)> const& f)
 {
     for (auto& group : groups)
         f(*group);
 }
 
-std::unique_ptr<mir::graphics::DisplayConfiguration> mtd::MockDisplay::configuration() const
+std::unique_ptr<mir::graphics::DisplayConfiguration> mtd::FakeDisplay::configuration() const
 {
     return std::unique_ptr<mir::graphics::DisplayConfiguration>(new StubDisplayConfig(*config));
 }
 
-void mtd::MockDisplay::register_configuration_change_handler(
+void mtd::FakeDisplay::register_configuration_change_handler(
     mir::graphics::EventHandlerRegister& handlers,
     mir::graphics::DisplayConfigurationChangeHandler const& handler)
 {
@@ -70,12 +70,12 @@ void mtd::MockDisplay::register_configuration_change_handler(
             });
 }
 
-void mtd::MockDisplay::configure(mir::graphics::DisplayConfiguration const& new_config)
+void mtd::FakeDisplay::configure(mir::graphics::DisplayConfiguration const& new_config)
 {
     config = std::make_shared<StubDisplayConfig>(new_config);
 }
 
-void mtd::MockDisplay::emit_configuration_change_event(
+void mtd::FakeDisplay::emit_configuration_change_event(
     std::shared_ptr<mir::graphics::DisplayConfiguration> const& new_config)
 {
     handler_called = false;
@@ -83,7 +83,7 @@ void mtd::MockDisplay::emit_configuration_change_event(
     if (write(p.write_fd(), "a", 1)) {}
 }
 
-void mtd::MockDisplay::wait_for_configuration_change_handler()
+void mtd::FakeDisplay::wait_for_configuration_change_handler()
 {
     while (!handler_called)
         std::this_thread::sleep_for(std::chrono::milliseconds{1});
