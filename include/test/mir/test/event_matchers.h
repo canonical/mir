@@ -329,6 +329,22 @@ MATCHER_P2(TouchEvent, x, y, "")
     return true;
 }
 
+MATCHER_P4(TouchContact, slot, action, x, y, "")
+{
+    auto tev = maybe_touch_event(to_address(arg));
+    if (tev == nullptr)
+        return false;
+
+    if (mir_touch_event_action(tev, slot) != action)
+        return false;
+    if (std::abs(mir_touch_event_axis_value(tev, slot, mir_touch_axis_x) - x) > 0.5f)
+        return false;
+    if (std::abs(mir_touch_event_axis_value(tev, slot, mir_touch_axis_y) - y) > 0.5f)
+        return false;
+
+    return true;
+}
+
 MATCHER_P2(TouchUpEvent, x, y, "")
 {
     auto tev = maybe_touch_event(to_address(arg));

@@ -21,8 +21,9 @@
 
 #include <gmock/gmock.h>
 
-#include <unordered_map>
+#include <mutex>
 #include <thread>
+#include <unordered_map>
 
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
@@ -150,13 +151,14 @@ public:
     MOCK_METHOD2(eglDestroySyncKHR, EGLBoolean(EGLDisplay, EGLSyncKHR));
     MOCK_METHOD4(eglClientWaitSyncKHR, EGLint(EGLDisplay, EGLSyncKHR, EGLint, EGLTimeKHR));
 
-    EGLDisplay fake_egl_display;
-    EGLConfig* fake_configs;
-    EGLint fake_configs_num;
-    EGLSurface fake_egl_surface;
-    EGLContext fake_egl_context;
-    EGLImageKHR fake_egl_image;
-    int fake_visual_id;
+    EGLDisplay const fake_egl_display;
+    EGLConfig const* const fake_configs;
+    EGLint const fake_configs_num;
+    EGLSurface const fake_egl_surface;
+    EGLContext const fake_egl_context;
+    EGLImageKHR const fake_egl_image;
+    int const fake_visual_id;
+    std::mutex mutable current_contexts_mutex;
     std::unordered_map<std::thread::id,EGLContext> current_contexts;
 };
 

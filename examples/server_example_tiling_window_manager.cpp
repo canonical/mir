@@ -18,7 +18,9 @@
 
 #include "server_example_tiling_window_manager.h"
 
+#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/shell/surface_stack.h"
 #include "mir/shell/surface_ready_observer.h"
@@ -35,7 +37,7 @@ using namespace mir::geometry;
 ///\example server_example_tiling_window_manager.cpp
 /// Demonstrate implementing a simple tiling algorithm
 
-me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(Tools* const tools) :
+me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(WindowManagerTools* const tools) :
     tools{tools}
 {
 }
@@ -47,12 +49,12 @@ void me::TilingWindowManagerPolicy::click(Point cursor)
     select_active_surface(session, surface);
 }
 
-void me::TilingWindowManagerPolicy::handle_session_info_updated(TilingSessionInfoMap& session_info, Rectangles const& displays)
+void me::TilingWindowManagerPolicy::handle_session_info_updated(SessionInfoMap& session_info, Rectangles const& displays)
 {
     update_tiles(session_info, displays);
 }
 
-void me::TilingWindowManagerPolicy::handle_displays_updated(TilingSessionInfoMap& session_info, Rectangles const& displays)
+void me::TilingWindowManagerPolicy::handle_displays_updated(SessionInfoMap& session_info, Rectangles const& displays)
 {
     update_tiles(session_info, displays);
 }
@@ -137,7 +139,7 @@ auto me::TilingWindowManagerPolicy::handle_place_new_surface(
 void me::TilingWindowManagerPolicy::generate_decorations_for(
     std::shared_ptr<ms::Session> const&,
     std::shared_ptr<ms::Surface> const&,
-    TilingSurfaceInfoMap&,
+    SurfaceInfoMap&,
     std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const&, ms::SurfaceCreationParameters const&)> const&)
 {
 }
@@ -394,16 +396,25 @@ bool me::TilingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* even
         }
     }
 
-    if (is_drag && count == 3)
+    bool consumes_event = false;
+    if (is_drag)
     {
-        drag(cursor);
-        return true;
+        switch (count)
+        {
+        case 2:
+            resize(cursor);
+            consumes_event = true;
+            break;
+
+        case 3:
+            drag(cursor);
+            consumes_event = true;
+            break;
+        }
     }
-    else
-    {
-        click(cursor);
-        return false;
-    }
+
+    old_cursor = cursor;
+    return consumes_event;
 }
 
 bool me::TilingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* event)
@@ -456,11 +467,11 @@ void me::TilingWindowManagerPolicy::toggle(MirSurfaceState state)
 
 std::shared_ptr<ms::Session> me::TilingWindowManagerPolicy::session_under(Point position)
 {
-    return tools->find_session([&](TilingSessionInfo const& info) { return info.tile.contains(position);});
+    return tools->find_session([&](SessionInfo const& info) { return info.tile.contains(position);});
 }
 
 void me::TilingWindowManagerPolicy::update_tiles(
-    TilingSessionInfoMap& session_info,
+    SessionInfoMap& session_info,
     Rectangles const& displays)
 {
     if (session_info.size() < 1 || displays.size() < 1) return;

@@ -49,7 +49,7 @@ std::string determine_device_name(mga::PropertiesWrapper const& properties)
 
 unsigned int num_framebuffers_for(std::string const& device_name, bool quirk_enabled)
 {
-    if (quirk_enabled && device_name == std::string{"mx3"})
+    if (quirk_enabled && device_name == "mx3")
         return 3;
     else
         return 2;
@@ -57,15 +57,22 @@ unsigned int num_framebuffers_for(std::string const& device_name, bool quirk_ena
 
 bool gralloc_cannot_be_closed_safely_for(std::string const& device_name, bool quirk_enabled)
 {
-    return quirk_enabled && device_name == std::string{"krillin"};
+    return quirk_enabled && device_name == "krillin";
 }
+
+bool clear_fb_context_fence_for(std::string const& device_name)
+{
+    return device_name == "krillin" || device_name == "mx4" || device_name == "manta";
+}
+
 }
 
 mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties)
     : device_name(determine_device_name(properties)),
       num_framebuffers_(num_framebuffers_for(device_name, true)),
       gralloc_cannot_be_closed_safely_(gralloc_cannot_be_closed_safely_for(device_name, true)),
-      enable_width_alignment_quirk{true}
+      enable_width_alignment_quirk{true},
+      clear_fb_context_fence_{clear_fb_context_fence_for(device_name)}
 {
 }
 
@@ -73,7 +80,8 @@ mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties, mo::Option 
     : device_name(determine_device_name(properties)),
       num_framebuffers_(num_framebuffers_for(device_name, options.get(num_framebuffers_opt, true))),
       gralloc_cannot_be_closed_safely_(gralloc_cannot_be_closed_safely_for(device_name, options.get(gralloc_cannot_be_closed_safely_opt, true))),
-      enable_width_alignment_quirk(options.get(width_alignment_opt, true))
+      enable_width_alignment_quirk(options.get(width_alignment_opt, true)),
+      clear_fb_context_fence_{clear_fb_context_fence_for(device_name)}
 {
 }
 
@@ -89,9 +97,14 @@ bool mga::DeviceQuirks::gralloc_cannot_be_closed_safely() const
 
 int mga::DeviceQuirks::aligned_width(int width) const
 {
-    if (enable_width_alignment_quirk && width == 720 && device_name == std::string{"vegetahd"})
+    if (enable_width_alignment_quirk && width == 720 && device_name == "vegetahd")
         return 736;
     return width;
+}
+
+bool mga::DeviceQuirks::clear_fb_context_fence() const
+{
+    return clear_fb_context_fence_;
 }
 
 void mga::DeviceQuirks::add_options(boost::program_options::options_description& config)

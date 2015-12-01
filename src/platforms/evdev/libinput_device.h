@@ -28,7 +28,7 @@
 #include "mir/geometry/point.h"
 
 #include <vector>
-#include <unordered_map>
+#include <map>
 
 struct libinput_event;
 struct libinput_event_keyboard;
@@ -70,10 +70,10 @@ private:
     EventUPtr convert_motion_event(libinput_event_pointer* pointer);
     EventUPtr convert_absolute_motion_event(libinput_event_pointer* pointer);
     EventUPtr convert_axis_event(libinput_event_pointer* pointer);
-    void add_touch_down_event(libinput_event_touch* touch);
-    void add_touch_up_event(libinput_event_touch* touch);
-    void add_touch_motion_event(libinput_event_touch* touch);
-    MirEvent& get_accumulated_touch_event(std::chrono::nanoseconds timestamp);
+    EventUPtr convert_touch_frame(libinput_event_touch* touch);
+    void handle_touch_down(libinput_event_touch* touch);
+    void handle_touch_up(libinput_event_touch* touch);
+    void handle_touch_motion(libinput_event_touch* touch);
     void update_device_info();
 
     std::shared_ptr<InputReport> report;
@@ -84,7 +84,6 @@ private:
 
     InputSink* sink{nullptr};
     EventBuilder* builder{nullptr};
-    EventUPtr accumulated_touch_event;
 
     InputDeviceInfo info;
     mir::geometry::Point pointer_pos;
@@ -95,11 +94,12 @@ private:
     struct ContactData
     {
         ContactData() {}
+        MirTouchAction action{mir_touch_action_change};
         float x{0}, y{0}, major{0}, minor{0}, pressure{0};
     };
-    std::unordered_map<MirTouchId,ContactData> last_seen_properties;
+    std::map<MirTouchId,ContactData> last_seen_properties;
 
-    void update_contact_data(ContactData &data, libinput_event_touch* touch);
+    void update_contact_data(ContactData &data, MirTouchAction action, libinput_event_touch* touch);
 };
 }
 }
