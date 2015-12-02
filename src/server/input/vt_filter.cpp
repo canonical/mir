@@ -46,9 +46,11 @@ bool mir::input::VTFilter::handle(MirEvent const& event)
         return false;
 
     auto const keyboard_event = mir_input_event_get_keyboard_event(input_event);
+    auto const modifier_state  = mir_keyboard_event_modifiers(keyboard_event);
 
     if (mir_keyboard_event_action(keyboard_event) == mir_keyboard_action_down &&
-        (mir_keyboard_event_modifiers(keyboard_event) & (mir_input_event_modifier_alt | mir_input_event_modifier_ctrl)))
+        (modifier_state & mir_input_event_modifier_alt) &&
+        (modifier_state & mir_input_event_modifier_ctrl))
     {
         switch (mir_keyboard_event_scan_code(keyboard_event))
         {

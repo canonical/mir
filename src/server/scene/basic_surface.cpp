@@ -70,10 +70,10 @@ void ms::SurfaceObservers::hidden_set_to(bool hide)
         { observer->hidden_set_to(hide); });
 }
 
-void ms::SurfaceObservers::frame_posted(int frames_available)
+void ms::SurfaceObservers::frame_posted(int frames_available, geometry::Size const& size)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->frame_posted(frames_available); });
+        { observer->frame_posted(frames_available, size); });
 }
 
 void ms::SurfaceObservers::alpha_set_to(float alpha)
@@ -172,7 +172,7 @@ private:
         {
         }
 
-        void frame_posted(int /* available */)
+        void frame_posted(int /* available */, geometry::Size const& /* size */)
         {
             self->post_cursor_image_from_current_buffer();
         }

@@ -202,3 +202,9 @@ void mir_buffer_stream_set_scale_sync(MirBufferStream* opaque_stream, float scal
     if (wh)
         wh->wait_for_all();
 }
+
+char const* mir_buffer_stream_get_error_message(MirBufferStream* opaque_stream)
+{
+    auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(opaque_stream);
+    return buffer_stream->get_error_message();
+}
