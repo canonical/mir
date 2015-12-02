@@ -102,7 +102,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
 {
     using namespace ::testing;
     int fake_fence{333};
-    EXPECT_CALL(*native_buffer, ensure_not_used_by_gpu());
+    EXPECT_CALL(*native_buffer, wait_for_unlock_by_gpu());
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(fake_fence));
 
@@ -135,7 +135,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_without_fence)
 {
     using namespace ::testing;
-    EXPECT_CALL(*native_buffer, ensure_not_used_by_gpu());
+    EXPECT_CALL(*native_buffer, wait_for_unlock_by_gpu());
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(-1));
 
@@ -176,7 +176,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_nested)
 {
     using namespace ::testing;
-    EXPECT_CALL(*native_buffer, ensure_not_used_by_gpu());
+    EXPECT_CALL(*native_buffer, wait_for_unlock_by_gpu());
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(-1));
 

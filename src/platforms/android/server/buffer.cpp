@@ -86,7 +86,6 @@ void mga::Buffer::bind()
 
 void mga::Buffer::bind(std::unique_lock<std::mutex> const&)
 {
-    std::unique_lock<std::mutex> lk(content_lock);
     native_buffer->ensure_available_for(mga::BufferAccess::read);
 
     DispContextPair current
@@ -126,7 +125,6 @@ void mga::Buffer::bind(std::unique_lock<std::mutex> const&)
     }
 
     egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
-    native_buffer->used_by_gpu();
 }
 
 std::shared_ptr<mg::NativeBuffer> mga::Buffer::native_buffer_handle() const
@@ -215,5 +213,5 @@ void mga::Buffer::secure_for_render()
 
 void mga::Buffer::secure_for_render(std::unique_lock<std::mutex> const&)
 {
-    native_buffer->used_by_gpu();
+    native_buffer->lock_for_gpu();
 }

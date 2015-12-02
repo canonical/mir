@@ -47,8 +47,8 @@ struct StubAndroidNativeBuffer : public graphics::NativeBuffer
     void ensure_available_for(graphics::android::BufferAccess) {}
     void update_usage(graphics::android::NativeFence&, graphics::android::BufferAccess) {}
 
-    void used_by_gpu() {};
-    void ensure_not_used_by_gpu() {};
+    void lock_for_gpu() {};
+    void wait_for_unlock_by_gpu() {};
 
     ANativeWindowBuffer stub_anwb;
     native_handle_t native_handle;

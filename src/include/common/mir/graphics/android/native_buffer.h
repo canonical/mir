@@ -53,8 +53,8 @@ public:
     virtual void ensure_available_for(android::BufferAccess intent) = 0;
     virtual void update_usage(android::NativeFence& fence, android::BufferAccess current_usage) = 0;
 
-    virtual void used_by_gpu() = 0;
-    virtual void ensure_not_used_by_gpu() = 0;
+    virtual void lock_for_gpu() = 0;
+    virtual void wait_for_unlock_by_gpu() = 0;
 
 protected:
     NativeBuffer() = default;

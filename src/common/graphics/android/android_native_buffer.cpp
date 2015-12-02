@@ -62,12 +62,12 @@ mga::NativeFence mga::AndroidNativeBuffer::copy_fence() const
     return fence->copy_native_handle();
 }
 
-void mga::AndroidNativeBuffer::used_by_gpu()
+void mga::AndroidNativeBuffer::lock_for_gpu()
 {
     cmdstream_sync->raise();
 }
 
-void mga::AndroidNativeBuffer::ensure_not_used_by_gpu()
+void mga::AndroidNativeBuffer::wait_for_unlock_by_gpu()
 {
     using namespace std::chrono;
     cmdstream_sync->wait_for(duration_cast<nanoseconds>(seconds(2)));

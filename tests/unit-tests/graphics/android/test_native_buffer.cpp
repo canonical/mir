@@ -159,7 +159,7 @@ TEST_F(NativeBuffer, raises_egl_fence)
     mga::AndroidNativeBuffer buffer(a_native_window_buffer, mock_cmdstream_sync, mock_fence, mga::BufferAccess::read);
 
     EXPECT_CALL(*mock_cmdstream_sync, raise());
-    buffer.used_by_gpu();
+    buffer.lock_for_gpu();
 }
 
 TEST_F(NativeBuffer, clears_egl_fence_successfully)
@@ -168,7 +168,7 @@ TEST_F(NativeBuffer, clears_egl_fence_successfully)
     EXPECT_CALL(*mock_cmdstream_sync, wait_for(timeout))
         .Times(1)
         .WillOnce(Return(true));
-    buffer.ensure_not_used_by_gpu();
+    buffer.wait_for_unlock_by_gpu();
 }
 
 //not really helpful to throw if the timeout fails
@@ -178,5 +178,5 @@ TEST_F(NativeBuffer, ignores_clears_egl_fence_failure)
     EXPECT_CALL(*mock_cmdstream_sync, wait_for(timeout))
         .Times(1)
         .WillOnce(Return(false));
-    buffer.ensure_not_used_by_gpu();
+    buffer.wait_for_unlock_by_gpu();
 }

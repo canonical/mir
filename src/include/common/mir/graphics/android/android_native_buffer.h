@@ -47,8 +47,8 @@ struct AndroidNativeBuffer : public graphics::NativeBuffer
     void ensure_available_for(BufferAccess);
     void update_usage(NativeFence& merge_fd, BufferAccess);
 
-    void used_by_gpu();
-    void ensure_not_used_by_gpu();
+    void lock_for_gpu();
+    void wait_for_unlock_by_gpu();
 
 private:
     std::shared_ptr<CommandStreamSync> cmdstream_sync;
