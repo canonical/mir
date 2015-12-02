@@ -52,6 +52,11 @@ ACTION(RunProtobufClosure)
     arg2->Run();
 }
 
+ACTION_P(SetResponseError, message)
+{
+    arg1->set_error(message);
+}
+
 struct MockProtobufServer : public mclr::DisplayServer
 {
     MockProtobufServer() : mclr::DisplayServer(nullptr)
@@ -89,6 +94,10 @@ struct MockProtobufServer : public mclr::DisplayServer
     MOCK_METHOD3(exchange_buffer, void(
         mp::BufferRequest const* /*request*/,
         mp::Buffer* /*response*/,
+        google::protobuf::Closure* /*done*/));
+    MOCK_METHOD3(create_buffer_stream, void(
+        mp::BufferStreamParameters const* /*request*/,
+        mp::BufferStream* /*response*/,
         google::protobuf::Closure* /*done*/));
     unsigned int alloc_count{0};
 };
@@ -150,6 +159,16 @@ struct MockClientBuffer : public mtd::NullClientBuffer
     {
     }
     MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
+};
+
+struct BufferStreamCallback
+{
+    static void created(MirBufferStream* /*stream*/, void *client_context)
+    {
+        auto const context = reinterpret_cast<BufferStreamCallback*>(client_context);
+        context->invoked = true;
+    }
+    bool invoked = false;
 };
 
 EGLNativeWindowType StubClientPlatform::egl_native_window{
@@ -705,6 +724,61 @@ TEST_P(ClientBufferStream, keeps_accurate_buffer_id)
     }
 
     EXPECT_THAT(stream.get_current_buffer_id(), Eq(10));
+}
+
+TEST_P(ClientBufferStream, wait_handle_is_signaled_during_creation_error)
+{
+    ON_CALL(mock_protobuf_server, create_buffer_stream(_,_,_))
+        .WillByDefault(DoAll(SetResponseError("test failure"), RunProtobufClosure()));
+    mp::BufferStreamParameters params;
+    mcl::BufferStream bs(
+        nullptr, mock_protobuf_server,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        params, perf_report, nbuffers, nullptr, nullptr);
+
+    EXPECT_FALSE(bs.get_create_wait_handle()->is_pending());
+}
+
+TEST_P(ClientBufferStream, wait_handle_is_signaled_during_creation_exception)
+{
+    ON_CALL(mock_protobuf_server, create_buffer_stream(_,_,_))
+        .WillByDefault(Throw(std::runtime_error("")));
+    mp::BufferStreamParameters params;
+    mcl::BufferStream bs(
+        nullptr, mock_protobuf_server,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        params, perf_report, nbuffers, nullptr, nullptr);
+    EXPECT_FALSE(bs.get_create_wait_handle()->is_pending());
+}
+
+TEST_P(ClientBufferStream, callback_is_still_invoked_after_creation_error)
+{
+    BufferStreamCallback callback;
+
+    ON_CALL(mock_protobuf_server, create_buffer_stream(_,_,_))
+        .WillByDefault(DoAll(SetResponseError("test failure"), RunProtobufClosure()));
+    mp::BufferStreamParameters params;
+    mcl::BufferStream bs(
+        nullptr, mock_protobuf_server,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        params, perf_report, nbuffers, &BufferStreamCallback::created, &callback);
+
+    EXPECT_TRUE(callback.invoked);
+}
+
+TEST_P(ClientBufferStream, callback_is_still_invoked_after_creation_exception)
+{
+    BufferStreamCallback callback;
+
+    ON_CALL(mock_protobuf_server, create_buffer_stream(_,_,_))
+        .WillByDefault(Throw(std::runtime_error("")));
+    mp::BufferStreamParameters params;
+    mcl::BufferStream bs(
+        nullptr, mock_protobuf_server,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        params, perf_report, nbuffers, &BufferStreamCallback::created, &callback);
+
+    EXPECT_TRUE(callback.invoked);
 }
 
 INSTANTIATE_TEST_CASE_P(BufferSemanticsMode, ClientBufferStream, Bool());

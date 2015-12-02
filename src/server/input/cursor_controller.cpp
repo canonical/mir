@@ -21,6 +21,7 @@
 #include "mir/input/scene.h"
 #include "mir/input/surface.h"
 #include "mir/graphics/cursor.h"
+#include "mir/graphics/cursor_image.h"
 #include "mir/scene/observer.h"
 #include "mir/scene/null_surface_observer.h"
 #include "mir/scene/surface.h"
@@ -59,7 +60,7 @@ struct UpdateCursorOnSurfaceChanges : ms::NullSurfaceObserver
     {
         cursor_controller->update_cursor_image();
     }
-    void frame_posted(int) override
+    void frame_posted(int, geom::Size const&) override
     {
         // The first frame posted will trigger a cursor update, since it
         // changes the visibility status of the surface, and can thus affect
@@ -105,7 +106,7 @@ struct UpdateCursorOnSceneChanges : ms::Observer
         : cursor_controller(cursor_controller)
     {
     }
-    
+
     void add_surface_observer(ms::Surface* surface)
     {
         auto const observer = std::make_shared<UpdateCursorOnSurfaceChanges>(cursor_controller);
@@ -116,7 +117,7 @@ struct UpdateCursorOnSceneChanges : ms::Observer
             surface_observers[surface] = observer;
         }
     }
-    
+
     void surface_added(ms::Surface *surface)
     {
         add_surface_observer(surface);
@@ -144,13 +145,13 @@ struct UpdateCursorOnSceneChanges : ms::Observer
     {
         cursor_controller->update_cursor_image();
     }
-    
+
     void surface_exists(ms::Surface *surface)
     {
         add_surface_observer(surface);
         cursor_controller->update_cursor_image();
     }
-    
+
     void end_observation()
     {
         std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
@@ -162,7 +163,7 @@ struct UpdateCursorOnSceneChanges : ms::Observer
         }
         surface_observers.clear();
     }
-    
+
 private:
     mi::CursorController* const cursor_controller;
 
@@ -183,6 +184,11 @@ std::shared_ptr<mi::Surface> topmost_surface_containing_point(
     return top_surface_at_point;
 }
 
+bool is_empty(std::shared_ptr<mg::CursorImage> const& image)
+{
+    auto const size = image->size();
+    return size.width.as_int() == 0 || size.height.as_int() == 0;
+}
 }
 
 mi::CursorController::CursorController(std::shared_ptr<mi::Scene> const& input_targets,
@@ -224,7 +230,7 @@ void mi::CursorController::set_cursor_image_locked(std::unique_lock<std::mutex>&
 
     lock.unlock();
 
-    if (image)
+    if (image && !is_empty(image))
         cursor->show(*image);
     else
         cursor->hide();

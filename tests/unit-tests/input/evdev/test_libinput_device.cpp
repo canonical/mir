@@ -134,6 +134,10 @@ struct LibInputDevice : public ::testing::Test
     libinput_event* fake_event_2 = reinterpret_cast<libinput_event*>(0xF4C6);
     libinput_event* fake_event_3 = reinterpret_cast<libinput_event*>(0xF4C7);
     libinput_event* fake_event_4 = reinterpret_cast<libinput_event*>(0xF4C8);
+    libinput_event* fake_event_5 = reinterpret_cast<libinput_event*>(0xF4D0);
+    libinput_event* fake_event_6 = reinterpret_cast<libinput_event*>(0xF4D1);
+    libinput_event* fake_event_7 = reinterpret_cast<libinput_event*>(0xF4D2);
+    libinput_event* fake_event_8 = reinterpret_cast<libinput_event*>(0xF4D3);
     libinput_device* second_fake_device = reinterpret_cast<libinput_device*>(0xF4C9);
 
     const uint64_t event_time_1 = 1000;
@@ -383,10 +387,16 @@ struct LibInputDevice : public ::testing::Test
             .WillByDefault(Return(event_time));
     }
 
-    void setup_touch_frame(libinput_event* event)
+    void setup_touch_frame(libinput_event* event, uint64_t event_time)
     {
+        auto touch_event = reinterpret_cast<libinput_event_touch*>(event);
+
         ON_CALL(mock_libinput, libinput_event_get_type(event))
             .WillByDefault(Return(LIBINPUT_EVENT_TOUCH_FRAME));
+        ON_CALL(mock_libinput, libinput_event_get_touch_event(event))
+            .WillByDefault(Return(touch_event));
+        ON_CALL(mock_libinput, libinput_event_touch_get_time_usec(touch_event))
+            .WillByDefault(Return(event_time));
     }
 };
 
@@ -627,7 +637,7 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_down_events)
     float y = 7;
 
     setup_touch_event(fake_event_1, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot, x, y, major, minor, pressure);
-    setup_touch_frame(fake_event_2);
+    setup_touch_frame(fake_event_2, event_time_1);
 
     InSequence seq;
     EXPECT_CALL(mock_builder, touch_event(time_stamp_1));
@@ -650,7 +660,7 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_move_events)
     float y = 7;
 
     setup_touch_event(fake_event_1, LIBINPUT_EVENT_TOUCH_MOTION, event_time_1, slot, x, y, major, minor, pressure);
-    setup_touch_frame(fake_event_2);
+    setup_touch_frame(fake_event_2, event_time_1);
 
     InSequence seq;
     EXPECT_CALL(mock_builder, touch_event(time_stamp_1));
@@ -673,9 +683,9 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_up_events_withou
     float y = 20;
 
     setup_touch_event(fake_event_1, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot, x, y, major, minor, pressure);
-    setup_touch_frame(fake_event_2);
+    setup_touch_frame(fake_event_2, event_time_1);
     setup_touch_up_event(fake_event_3, event_time_2, slot);
-    setup_touch_frame(fake_event_4);
+    setup_touch_frame(fake_event_4, event_time_2);
 
     InSequence seq;
     EXPECT_CALL(mock_builder, touch_event(time_stamp_1));
@@ -693,6 +703,48 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_up_events_withou
     touch_screen.process_event(fake_event_2);
     touch_screen.process_event(fake_event_3);
     touch_screen.process_event(fake_event_4);
+}
+
+TEST_F(LibInputDeviceOnTouchScreen, sends_complete_events)
+{
+    const int first_slot = 1;
+    const int second_slot = 3;
+    const float major = 6;
+    const float minor = 5;
+    const float pressure = 0.6f;
+    const float first_x = 30;
+    const float first_y = 20;
+    const float second_x = 90;
+    const float second_y = 90;
+
+    setup_touch_event(fake_event_1, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, first_slot, first_x, first_y, major, minor, pressure);
+    setup_touch_frame(fake_event_2, event_time_1);
+    setup_touch_event(fake_event_3, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, second_slot, second_x, second_y, major, minor, pressure);
+    setup_touch_frame(fake_event_4, event_time_1);
+    setup_touch_event(fake_event_5, LIBINPUT_EVENT_TOUCH_MOTION, event_time_2, first_slot, first_x, first_y + 5, major, minor, pressure);
+    setup_touch_frame(fake_event_6, event_time_2);
+    setup_touch_event(fake_event_7, LIBINPUT_EVENT_TOUCH_MOTION, event_time_2, second_slot, second_x + 5, second_y, major, minor, pressure);
+    setup_touch_frame(fake_event_8, event_time_2);
+
+    InSequence seq;
+    EXPECT_CALL(mock_sink, handle_input(mt::TouchContact(0, mir_touch_action_down, first_x, first_y)));
+    EXPECT_CALL(mock_sink, handle_input(AllOf(mt::TouchContact(0, mir_touch_action_change, first_x, first_y),
+                                              mt::TouchContact(1, mir_touch_action_down, second_x, second_y))));
+    EXPECT_CALL(mock_sink, handle_input(AllOf(mt::TouchContact(0, mir_touch_action_change, first_x, first_y + 5),
+                                              mt::TouchContact(1, mir_touch_action_change, second_x, second_y))));
+    EXPECT_CALL(mock_sink, handle_input(AllOf(mt::TouchContact(0, mir_touch_action_change, first_x, first_y + 5),
+                                              mt::TouchContact(1, mir_touch_action_change, second_x + 5, second_y))));
+
+
+    touch_screen.start(&mock_sink, &mock_builder);
+    touch_screen.process_event(fake_event_1);
+    touch_screen.process_event(fake_event_2);
+    touch_screen.process_event(fake_event_3);
+    touch_screen.process_event(fake_event_4);
+    touch_screen.process_event(fake_event_5);
+    touch_screen.process_event(fake_event_6);
+    touch_screen.process_event(fake_event_7);
+    touch_screen.process_event(fake_event_8);
 }
 
 TEST_F(LibInputDeviceOnLaptopKeyboard, provides_no_pointer_settings_for_non_pointing_devices)

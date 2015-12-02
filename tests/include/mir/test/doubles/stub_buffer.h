@@ -48,6 +48,18 @@ public:
     {
     }
 
+    StubBuffer(geometry::Size const& size)
+        : StubBuffer{
+              create_native_buffer(),
+              graphics::BufferProperties{
+                  size,
+                  mir_pixel_format_abgr_8888,
+                  graphics::BufferUsage::hardware},
+              geometry::Stride{}}
+
+    {
+    }
+
     StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer, geometry::Size const& size)
         : StubBuffer{
               native_buffer,

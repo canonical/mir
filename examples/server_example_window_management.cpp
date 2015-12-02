@@ -25,6 +25,8 @@
 #include "mir/server.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/options/option.h"
+#include "mir/scene/session.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/display_layout.h"
 #include "mir/shell/system_compositor_window_manager.h"
 
@@ -49,19 +51,11 @@ char const* const wm_fullscreen = "fullscreen";
 char const* const wm_canonical = "canonical";
 char const* const wm_system_compositor = "system-compositor";
 
-struct NullSessionInfo
-{
-};
-
 // Very simple - make every surface fullscreen
-class FullscreenWindowManagerPolicy
+class FullscreenWindowManagerPolicy  : public me::WindowManagementPolicy
 {
 public:
-    using Tools = me::BasicWindowManagerToolsCopy<NullSessionInfo>;
-    using SessionInfoMap = typename me::SessionTo<NullSessionInfo>::type;
-    using SurfaceInfoMap = typename me::SurfaceTo<me::CanonicalSurfaceInfoCopy>::type;
-
-    FullscreenWindowManagerPolicy(Tools* const /*tools*/, std::shared_ptr<msh::DisplayLayout> const& display_layout) :
+    FullscreenWindowManagerPolicy(me::WindowManagerTools* const /*tools*/, std::shared_ptr<msh::DisplayLayout> const& display_layout) :
         display_layout{display_layout} {}
 
     void handle_session_info_updated(SessionInfoMap& /*session_info*/, Rectangles const& /*displays*/) {}
@@ -123,8 +117,8 @@ private:
 
 }
 
-using FullscreenWindowManager = me::BasicWindowManagerCopy<FullscreenWindowManagerPolicy, NullSessionInfo>;
-using CanonicalWindowManager = me::BasicWindowManagerCopy<me::CanonicalWindowManagerPolicyCopy, me::CanonicalSessionInfoCopy>;
+using FullscreenWindowManager = me::WindowManagerBuilder<FullscreenWindowManagerPolicy>;
+using CanonicalWindowManager = me::WindowManagerBuilder<me::CanonicalWindowManagerPolicyCopy>;
 
 void me::add_window_manager_option_to(Server& server)
 {

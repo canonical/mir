@@ -79,15 +79,20 @@ void mt::CrossProcessSync::try_signal_ready_for(const std::chrono::milliseconds&
     pollfd poll_fd[1] = { { fds[write_fd], POLLOUT, empty_revents } };
     int rc = -1;
 
-    if ((rc = ::poll(poll_fd, 1, duration.count())) < 0)
+    while ((rc = ::poll(poll_fd, 1, duration.count())) <= 0)
     {
-        BOOST_THROW_EXCEPTION(std::system_error(errno,
-                                                std::system_category(),
-                                                "Error while polling pipe to become writable"));
-    }
-    else if (rc == 0)
-    {
-        throw std::runtime_error("Poll on writefd for pipe timed out");
+        if (errno == EINTR)
+        {
+            continue;
+        }
+        if (rc == 0)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Poll on writefd for pipe timed out"));
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Error while polling pipe to become writable"));
+        }
     }
 
     int value = 1;
@@ -110,16 +115,22 @@ unsigned int mt::CrossProcessSync::wait_for_signal_ready_for(const std::chrono::
     pollfd poll_fd[1] = { { fds[read_fd], POLLIN, empty_revents } };
     int rc = -1;
 
-    if ((rc = ::poll(poll_fd, 1, duration.count())) < 0)
+    while ((rc = ::poll(poll_fd, 1, duration.count())) <= 0)
     {
-        BOOST_THROW_EXCEPTION(std::system_error(errno,
-                                                std::system_category(),
-                                                "Error while polling pipe to become readable"));
+        if (errno == EINTR)
+        {
+            continue;
+        }
+        if (rc == 0)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Poll on readfd for pipe timed out"));
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Error while polling pipe to become readable"));
+        }
     }
-    else if (rc == 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Poll on readfd for pipe timed out"));
-    }
+
 
     int value;
     if (sizeof(value) != read(fds[read_fd], std::addressof(value), sizeof(value)))

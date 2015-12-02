@@ -109,7 +109,7 @@ void mc::BufferStreamSurfaces::swap_buffers(
          *       The new method of catching up on buffer backlogs is to
          *       query buffers_ready_for_compositor() or Scene::frames_pending
          */
-        observers.frame_posted(1);
+        observers.frame_posted(1, old_buffer->size());
     }
 
     acquire_client_buffer(complete);
