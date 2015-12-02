@@ -25,7 +25,6 @@
 #include "mir/graphics/buffer_id.h"
 #include <vector>
 #include <string.h>
-#include <iostream>
 
 namespace mir
 {
