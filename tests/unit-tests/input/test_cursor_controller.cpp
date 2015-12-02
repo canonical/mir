@@ -174,7 +174,7 @@ struct StubInputSurface : public mtd::StubSceneSurface
     {
         for (auto observer : observers)
         {
-            observer->frame_posted(1);
+            observer->frame_posted(1, geom::Size{0,0});
         }
     }
 

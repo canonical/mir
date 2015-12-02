@@ -1021,3 +1021,19 @@ TEST_F(ClientLibrary, input_method_can_specify_foreign_surface_id)
     mir_connection_release(first_client);
     mir_connection_release(im_client);
 }
+
+TEST_F(ClientLibrary, creates_buffer_streams)
+{
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    ASSERT_TRUE(mir_connection_is_valid(connection));
+
+    auto stream = mir_connection_create_buffer_stream_sync(connection,
+        640, 480, mir_pixel_format_abgr_8888, mir_buffer_usage_software);
+
+    ASSERT_THAT(stream, NotNull());
+    EXPECT_TRUE(mir_buffer_stream_is_valid(stream));
+    EXPECT_THAT(mir_buffer_stream_get_error_message(stream), StrEq(""));
+
+    mir_buffer_stream_release_sync(stream);
+    mir_connection_release(connection);
+}

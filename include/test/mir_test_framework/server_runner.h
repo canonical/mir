@@ -21,13 +21,14 @@
 
 #include <gtest/gtest.h>
 
-#include <atomic>
 #include <string>
 #include <thread>
+#include <memory>
+#include <mutex>
 
 namespace mir
 {
-class DisplayServer;
+class MainLoop;
 class DefaultServerConfiguration;
 }
 
@@ -54,12 +55,13 @@ struct ServerRunner
     std::string new_prompt_connection();
 
 private:
-    mir::DisplayServer* start_mir_server();
+    std::shared_ptr<mir::MainLoop> start_mir_server();
     virtual mir::DefaultServerConfiguration& server_config() = 0;
 
     char const* const old_env;
     std::thread server_thread;
-    std::atomic<mir::DisplayServer*> display_server;
+    std::mutex main_loop_mutex;
+    std::shared_ptr<mir::MainLoop> main_loop;
 };
 }
 
