@@ -93,17 +93,17 @@ struct Stream : Test
 {
     Stream() :
         buffers{
-            std::make_shared<mtd::StubBuffer>(),
-            std::make_shared<mtd::StubBuffer>(),
-            std::make_shared<mtd::StubBuffer>()}
+            std::make_shared<mtd::StubBuffer>(initial_size),
+            std::make_shared<mtd::StubBuffer>(initial_size),
+            std::make_shared<mtd::StubBuffer>(initial_size)}
     {
     }
     
     MOCK_METHOD1(called, void(mg::Buffer&));
 
+    geom::Size initial_size{44,2};
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
     NiceMock<mtd::MockEventSink> mock_sink;
-    geom::Size initial_size{44,2};
     MirPixelFormat construction_format{mir_pixel_format_rgb_565};
     mtd::MockFrameDroppingPolicyFactory framedrop_factory;
     mc::Stream stream{
@@ -190,7 +190,7 @@ TEST_F(Stream, tracks_has_buffer)
 TEST_F(Stream, calls_observers_after_scheduling_on_submissions)
 {
     auto observer = std::make_shared<MockSurfaceObserver>();
-    EXPECT_CALL(*observer, frame_posted(1, geom::Size{0,0}));
+    EXPECT_CALL(*observer, frame_posted(1, initial_size));
     stream.add_observer(observer);
     stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
     stream.remove_observer(observer);

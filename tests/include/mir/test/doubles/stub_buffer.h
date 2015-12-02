@@ -25,6 +25,7 @@
 #include "mir/graphics/buffer_id.h"
 #include <vector>
 #include <string.h>
+#include <iostream>
 
 namespace mir
 {
@@ -32,7 +33,6 @@ namespace test
 {
 namespace doubles
 {
-
 class StubBuffer : public graphics::BufferBasic, public graphics::NativeBufferBase
 {
 public:
@@ -41,6 +41,18 @@ public:
               create_native_buffer(),
               graphics::BufferProperties{
                   geometry::Size{},
+                  mir_pixel_format_abgr_8888,
+                  graphics::BufferUsage::hardware},
+              geometry::Stride{}}
+
+    {
+    }
+
+    StubBuffer(geometry::Size const& size)
+        : StubBuffer{
+              create_native_buffer(),
+              graphics::BufferProperties{
+                  size,
                   mir_pixel_format_abgr_8888,
                   graphics::BufferUsage::hardware},
               geometry::Stride{}}
