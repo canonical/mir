@@ -59,10 +59,19 @@ public:
         std::initializer_list<int> signals,
         std::function<void(int)> const& handler) override;
 
+    void register_signal_handler(
+        std::initializer_list<int> signals,
+        mir::UniqueModulePtr<std::function<void(int)>> handler) override;
+
     void register_fd_handler(
         std::initializer_list<int> fds,
         void const* owner,
         std::function<void(int)> const& handler) override;
+
+    void register_fd_handler(
+        std::initializer_list<int> fds,
+        void const* owner,
+        mir::UniqueModulePtr<std::function<void(int)>> handler) override;
 
     void unregister_fd_handler(void const* owner) override;
 

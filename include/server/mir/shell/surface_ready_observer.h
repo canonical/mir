@@ -27,6 +27,7 @@
 namespace mir
 {
 namespace scene { class Session; class Surface; }
+namespace geometry { struct Size; }
 
 namespace shell
 {
@@ -46,7 +47,7 @@ public:
     ~SurfaceReadyObserver();
 
 private:
-    void frame_posted(int) override;
+    void frame_posted(int, geometry::Size const&) override;
 
     ActivateFunction const activate;
     std::weak_ptr<scene::Session> const session;

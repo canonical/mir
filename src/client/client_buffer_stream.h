@@ -72,6 +72,8 @@ public:
     virtual void buffer_unavailable() = 0;
     virtual void set_size(geometry::Size) = 0;
     virtual MirWaitHandle* set_scale(float) = 0;
+    virtual char const* get_error_message() const = 0;
+
 protected:
     ClientBufferStream() = default;
     ClientBufferStream(const ClientBufferStream&) = delete;

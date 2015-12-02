@@ -107,6 +107,14 @@ elseif(cmake_build_type_lower MATCHES "threadsanitizer")
   endif()
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=thread")
+elseif(cmake_build_type_lower MATCHES "ubsanitizer")
+  # Skip vptr checks, there seems to be missing RTTI information when linking with UBSan enabled
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize=vptr -fno-omit-frame-pointer")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-sanitize=vptr -fno-omit-frame-pointer")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
+  # "Symbol already defined" errors occur with pre-compiled headers
+  SET(MIR_USE_PRECOMPILED_HEADERS OFF CACHE BOOL "Use precompiled headers" FORCE)
 else()
   # AddressSanitizer builds fail if we disallow undefined symbols
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
@@ -125,7 +133,7 @@ include_directories(include/cookie)
 
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem REQUIRED)
-include_directories (
+include_directories (SYSTEM
   ${Boost_INCLUDE_DIRS}
 )
 
@@ -179,9 +187,9 @@ pkg_check_modules(LIBINPUT REQUIRED libinput)
 pkg_check_modules(NETTLE REQUIRED nettle)
 pkg_check_modules(UUID REQUIRED uuid)
 
-include_directories (${GLESv2_INCLUDE_DIRS})
-include_directories (${EGL_INCLUDE_DIRS})
-include_directories (${GLM_INCLUDE_DIRS})
+include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
+include_directories (SYSTEM ${EGL_INCLUDE_DIRS})
+include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
 
 if (MIR_BUILD_PLATFORM_ANDROID)
   find_package(AndroidProperties REQUIRED)

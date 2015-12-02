@@ -46,7 +46,7 @@ void ms::LegacySurfaceChangeNotification::hidden_set_to(bool /*hide*/)
     notify_scene_change();
 }
 
-void ms::LegacySurfaceChangeNotification::frame_posted(int frames_available)
+void ms::LegacySurfaceChangeNotification::frame_posted(int frames_available, geom::Size const& /* size */)
 {
     notify_buffer_change(frames_available);
 }
