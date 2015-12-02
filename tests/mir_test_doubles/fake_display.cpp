@@ -72,14 +72,23 @@ void mtd::FakeDisplay::register_configuration_change_handler(
 
 void mtd::FakeDisplay::configure(mir::graphics::DisplayConfiguration const& new_config)
 {
-    config = std::make_shared<StubDisplayConfig>(new_config);
+    decltype(config) new_configuration = std::make_shared<StubDisplayConfig>(new_config);
+    decltype(groups) new_groups;
+
+    new_configuration->for_each_output([&](mir::graphics::DisplayConfigurationOutput const& output)
+        {
+            new_groups.emplace_back(new StubDisplaySyncGroup({output.extents()}));
+        });
+
+    swap(config, new_configuration);
+    swap(groups, new_groups);
 }
 
 void mtd::FakeDisplay::emit_configuration_change_event(
     std::shared_ptr<mir::graphics::DisplayConfiguration> const& new_config)
 {
     handler_called = false;
-    config = new_config;
+    config = std::make_shared<StubDisplayConfig>(*new_config);
     if (write(p.write_fd(), "a", 1)) {}
 }
 
