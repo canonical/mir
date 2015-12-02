@@ -102,6 +102,7 @@ MIR_SERVER_0.18 {
     mir::scene::NullSurfaceObserver::alpha_set_to*;
     mir::scene::NullSurfaceObserver::attrib_changed*;
     mir::scene::NullSurfaceObserver::client_surface_close_requested*;
+    mir::scene::NullSurfaceObserver::cursor_image_removed*;
     mir::scene::NullSurfaceObserver::cursor_image_set_to*;
     mir::scene::NullSurfaceObserver::frame_posted*;
     mir::scene::NullSurfaceObserver::hidden_set_to*;

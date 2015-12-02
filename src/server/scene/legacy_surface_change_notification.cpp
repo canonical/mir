@@ -76,6 +76,10 @@ void ms::LegacySurfaceChangeNotification::cursor_image_set_to(mg::CursorImage co
 {
 }
 
+void ms::LegacySurfaceChangeNotification::cursor_image_removed()
+{
+}
+
 void ms::LegacySurfaceChangeNotification::reception_mode_set_to(mi::InputReceptionMode /*mode*/)
 {
     notify_scene_change();

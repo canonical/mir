@@ -124,6 +124,12 @@ void ms::SurfaceObservers::renamed(char const* name)
         { observer->renamed(name); });
 }
 
+void ms::SurfaceObservers::cursor_image_removed()
+{
+    for_each([](std::shared_ptr<SurfaceObserver> const& observer)
+        { observer->cursor_image_removed(); });
+}
+
 struct ms::CursorStreamImageAdapter
 {
     CursorStreamImageAdapter(ms::BasicSurface &surface)
@@ -613,8 +619,11 @@ void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& 
         cursor_image_ = image;
     }
 
-    observers.cursor_image_set_to(*image);
-}    
+    if (image)
+        observers.cursor_image_set_to(*image);
+    else
+        observers.cursor_image_removed();
+}
 
 std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image() const
 {
