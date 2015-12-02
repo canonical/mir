@@ -216,7 +216,7 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
     std::mutex mutex;
     mcl::ClientBufferDepository wrapped;
     mir::protobuf::DisplayServer& display_server;
-    std::function<void()> on_incoming_buffer;
+    std::function<void()> on_incoming_buffer{std::function<void()>{}};
     std::queue<mir::protobuf::Buffer> incoming_buffers;
     MirWaitHandle next_buffer_wait_handle;
     bool server_connection_lost {false};
