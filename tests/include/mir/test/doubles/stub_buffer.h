@@ -32,6 +32,7 @@ namespace test
 {
 namespace doubles
 {
+
 class StubBuffer : public graphics::BufferBasic, public graphics::NativeBufferBase
 {
 public:
