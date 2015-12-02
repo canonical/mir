@@ -129,6 +129,8 @@ public:
     void buffer_unavailable() override;
     void set_size(geometry::Size) override;
     MirWaitHandle* set_scale(float scale) override;
+    char const* get_error_message() const override;
+
 protected:
     BufferStream(BufferStream const&) = delete;
     BufferStream& operator=(BufferStream const&) = delete;
@@ -174,6 +176,7 @@ private:
     std::unique_ptr<ServerBufferSemantics> buffer_depository;
     geometry::Size ideal_buffer_size;
     size_t const nbuffers;
+    std::string error_message;
 };
 
 }
