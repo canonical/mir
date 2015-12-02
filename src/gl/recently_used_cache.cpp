@@ -42,14 +42,11 @@ std::shared_ptr<mgl::Texture> mgl::RecentlyUsedCache::load(mg::Renderable const&
 
     if ((texture.last_bound_buffer != buffer_id) || (!texture.valid_binding))
     {
-        texture_source->gl_bind_to_texture();
+        texture_source->bind();
         texture.resource = buffer;
         texture.last_bound_buffer = buffer_id;
     }
-    else
-    {
-        texture_source->used_as_texture();
-    }
+    texture_source->secure_for_render();
 
     texture.valid_binding = true;
     texture.used = true;

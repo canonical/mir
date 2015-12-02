@@ -77,7 +77,8 @@ public:
         }
     }
 
-    void used_as_texture() override {}
+    void bind() override { gl_bind_to_texture(); }
+    void secure_for_render() override {}
 
 private:
     std::thread::id creation_thread_id;

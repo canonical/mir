@@ -74,6 +74,19 @@ MirPixelFormat mga::Buffer::pixel_format() const
 void mga::Buffer::gl_bind_to_texture()
 {
     std::unique_lock<std::mutex> lk(content_lock);
+    bind(lk);
+    secure_for_render(lk);
+}
+
+void mga::Buffer::bind()
+{
+    std::unique_lock<std::mutex> lk(content_lock);
+    bind(lk);
+}
+
+void mga::Buffer::bind(std::unique_lock<std::mutex> const&)
+{
+    std::unique_lock<std::mutex> lk(content_lock);
     native_buffer->ensure_available_for(mga::BufferAccess::read);
 
     DispContextPair current
@@ -194,8 +207,13 @@ mg::NativeBufferBase* mga::Buffer::native_buffer_base()
     return this;
 }
 
-void mga::Buffer::used_as_texture()
+void mga::Buffer::secure_for_render()
 {
     std::unique_lock<std::mutex> lk(content_lock);
+    secure_for_render(lk);
+}
+
+void mga::Buffer::secure_for_render(std::unique_lock<std::mutex> const&)
+{
     native_buffer->used_by_gpu();
 }

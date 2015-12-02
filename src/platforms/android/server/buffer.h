@@ -56,6 +56,10 @@ public:
     geometry::Stride stride() const override;
     MirPixelFormat pixel_format() const override;
     void gl_bind_to_texture() override;
+    void bind() override;
+    void secure_for_render() override;
+
+
     //note, you will get the native representation of an android buffer, including
     //the fences associated with the buffer. You must close these fences
     std::shared_ptr<NativeBuffer> native_buffer_handle() const override;
@@ -65,8 +69,9 @@ public:
 
     NativeBufferBase* native_buffer_base() override;
 
-    void used_as_texture() override;
 private:
+    void bind(std::unique_lock<std::mutex> const&);
+    void secure_for_render(std::unique_lock<std::mutex> const&);
     gralloc_module_t const* hw_module;
 
     typedef std::pair<EGLDisplay, EGLContext> DispContextPair;

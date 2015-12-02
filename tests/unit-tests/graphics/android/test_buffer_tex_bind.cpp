@@ -306,7 +306,7 @@ TEST_F(AndroidBufferBinding, notes_gpu_usage_when_explicity_told)
         .Times(0);
     EXPECT_CALL(*mock_native_buffer, used_by_gpu()); 
     mga::Buffer buffer(gralloc, mock_native_buffer, extensions);
-    buffer.used_as_texture();
+    buffer.secure_for_render();
 }
 
 TEST_F(AndroidBufferBinding, buffer_calls_binding_extension_every_time)

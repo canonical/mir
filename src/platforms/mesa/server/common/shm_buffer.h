@@ -51,10 +51,11 @@ public:
     MirPixelFormat pixel_format() const override;
     std::shared_ptr<MirNativeBuffer> native_buffer_handle() const override;
     void gl_bind_to_texture() override;
+    void bind() override;
+    void secure_for_render() override;
     void write(unsigned char const* data, size_t size) override;
     void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
     NativeBufferBase* native_buffer_base() override;
-    void used_as_texture() override;
 
 private:
     ShmBuffer(ShmBuffer const&) = delete;
