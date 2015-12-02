@@ -125,7 +125,7 @@ include_directories(include/cookie)
 
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem REQUIRED)
-include_directories (
+include_directories (SYSTEM
   ${Boost_INCLUDE_DIRS}
 )
 
@@ -179,9 +179,9 @@ pkg_check_modules(LIBINPUT REQUIRED libinput)
 pkg_check_modules(NETTLE REQUIRED nettle)
 pkg_check_modules(UUID REQUIRED uuid)
 
-include_directories (${GLESv2_INCLUDE_DIRS})
-include_directories (${EGL_INCLUDE_DIRS})
-include_directories (${GLM_INCLUDE_DIRS})
+include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
+include_directories (SYSTEM ${EGL_INCLUDE_DIRS})
+include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
 
 if (MIR_BUILD_PLATFORM_ANDROID)
   find_package(AndroidProperties REQUIRED)
