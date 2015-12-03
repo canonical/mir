@@ -31,12 +31,12 @@
 
 #ifdef MIR_BUILD_PLATFORM_ANDROID
 #include "mir/test/doubles/mock_android_hw.h"
-namespace mtd = mir::test::doubles;
 #endif
 
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/executable_path.h"
 
+namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
 namespace
