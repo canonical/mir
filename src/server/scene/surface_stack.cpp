@@ -168,12 +168,16 @@ int ms::SurfaceStack::frames_pending(mc::CompositorID id) const
             auto const tracker = rendering_trackers.find(surface.get());
             if (tracker != rendering_trackers.end() && tracker->second->is_exposed_in(id))
             {
-                // Note that we ask the surface and not a Renderable.
-                // This is because we don't want to waste time and resources
-                // on a snapshot till we're sure we need it...
-                int ready = surface->buffers_ready_for_compositor(id);
-                if (ready > result)
-                    result = ready;
+                auto const tracker = rendering_trackers.find(surface.get());
+                if (tracker != rendering_trackers.end() && tracker->second->is_exposed_in(id))
+                {
+                    // Note that we ask the surface and not a Renderable.
+                    // This is because we don't want to waste time and resources
+                    // on a snapshot till we're sure we need it...
+                    int ready = surface->buffers_ready_for_compositor(id);
+                    if (ready > result)
+                        result = ready;
+                }
             }
         }
     }
