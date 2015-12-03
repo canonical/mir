@@ -200,10 +200,7 @@ MIR_CLIENT_9v17 {
 
 MIR_CLIENT_unreleased {
   global:
-    mir_keyboard_event_get_cookie;
-    mir_pointer_event_get_cookie;
-    mir_touch_event_get_cookie;
-    mir_surface_raise_with_cookie;
+    mir_buffer_stream_get_error_message;
     mir_surface_output_event_get_output_id;
     mir_connection_set_base_display_config;
   local:

@@ -39,6 +39,17 @@ extern "C" {
 bool mir_buffer_stream_is_valid(MirBufferStream *buffer_stream);
 
 /**
+ * Retrieve a text description of the error. The returned string is owned by
+ * the library and remains valid until the stream or the associated
+ * connection has been released.
+ *   \param [in] buffer_stream  The buffer stream
+ *   \return              A text description of any error resulting in an
+ *                        invalid stream, or the empty string "" if the
+ *                        connection is valid.
+ */
+char const *mir_buffer_stream_get_error_message(MirBufferStream *surface);
+
+/**
  * Create a new buffer stream. 
  *
  * For example, the resulting buffer stream may be used

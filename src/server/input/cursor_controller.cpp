@@ -60,7 +60,7 @@ struct UpdateCursorOnSurfaceChanges : ms::NullSurfaceObserver
     {
         cursor_controller->update_cursor_image();
     }
-    void frame_posted(int) override
+    void frame_posted(int, geom::Size const&) override
     {
         // The first frame posted will trigger a cursor update, since it
         // changes the visibility status of the surface, and can thus affect
@@ -84,6 +84,10 @@ struct UpdateCursorOnSurfaceChanges : ms::NullSurfaceObserver
         cursor_controller->update_cursor_image();
     }
     void cursor_image_set_to(mg::CursorImage const&) override
+    {
+        cursor_controller->update_cursor_image();
+    }
+    void cursor_image_removed() override
     {
         cursor_controller->update_cursor_image();
     }

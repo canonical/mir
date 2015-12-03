@@ -80,30 +80,9 @@ public:
 
 namespace
 {
-void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
+// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
+void cookie_capturing_callback(MirSurface*, MirEvent const* /*ev*/, void* /*ctx*/)
 {
-    auto client = reinterpret_cast<ClientCookies*>(ctx);
-    auto etype = mir_event_get_type(ev);
-    if (etype == mir_event_type_input)
-    {
-        auto iev = mir_event_get_input_event(ev);
-        auto itype = mir_input_event_get_type(iev);
-        if (itype == mir_input_event_type_key)
-        {
-            auto kev = mir_input_event_get_keyboard_event(iev);
-            client->out_cookies.push_back(mir_keyboard_event_get_cookie(kev));
-        }
-        else if (itype == mir_input_event_type_pointer)
-        {
-            auto pev = mir_input_event_get_pointer_event(iev);
-            client->out_cookies.push_back(mir_pointer_event_get_cookie(pev));
-        }
-        else if (itype == mir_input_event_type_touch)
-        {
-            auto tev = mir_input_event_get_touch_event(iev);
-            client->out_cookies.push_back(mir_touch_event_get_cookie(tev));
-        }
-    }
 }
 
 bool wait_for_n_events(size_t n, std::vector<MirCookie>& cookies)
@@ -120,7 +99,8 @@ bool wait_for_n_events(size_t n, std::vector<MirCookie>& cookies)
 }
 }
 
-TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
+// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
+TEST_F(ClientCookies, DISABLED_keyboard_events_have_attestable_cookies)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
     if (wait_for_n_events(1, out_cookies))
@@ -130,7 +110,8 @@ TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
     }
 }
 
-TEST_F(ClientCookies, pointer_motion_events_do_not_have_attestable_cookies)
+// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
+TEST_F(ClientCookies, DISABLED_pointer_motion_events_do_not_have_attestable_cookies)
 {
     fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
     if (wait_for_n_events(1, out_cookies))
@@ -140,7 +121,7 @@ TEST_F(ClientCookies, pointer_motion_events_do_not_have_attestable_cookies)
     }
 }
 
-TEST_F(ClientCookies, pointer_click_events_have_attestable_cookies)
+TEST_F(ClientCookies, DISABLED_pointer_click_events_have_attestable_cookies)
 {
     fake_pointer->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_pointer->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
@@ -151,7 +132,8 @@ TEST_F(ClientCookies, pointer_click_events_have_attestable_cookies)
     }
 }
 
-TEST_F(ClientCookies, touch_motion_events_do_not_have_attestable_cookies)
+// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
+TEST_F(ClientCookies, DISABLED_touch_motion_events_do_not_have_attestable_cookies)
 {
     fake_touch_screen->emit_event(
          mis::a_touch_event()
@@ -171,7 +153,8 @@ TEST_F(ClientCookies, touch_motion_events_do_not_have_attestable_cookies)
     }
 }
 
-TEST_F(ClientCookies, touch_click_events_have_attestable_cookies)
+// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
+TEST_F(ClientCookies, DISABLED_touch_click_events_have_attestable_cookies)
 {
     fake_touch_screen->emit_event(
          mis::a_touch_event()

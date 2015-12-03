@@ -313,11 +313,12 @@ TEST_F(ThreadedDispatcherTest, sets_thread_names_appropriately)
     EXPECT_TRUE(dispatched->wait_for(10s));
 }
 
+void sigcont_handler(int)
+{
+}
+
 // Regression test for: lp #1439719
-// The bug involves uninitialized memory and is also sensitive to signal
-// timings, so this test does not always catch the problem. However, repeated
-// runs (~300, YMMV) consistently fail when run against the problematic code.
-TEST(ThreadedDispatcherSignalTest, DISABLED_keeps_dispatching_after_signal_interruption)
+TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
 {
     using namespace std::chrono_literals;
     mt::CrossProcessAction stop_and_restart_process;
@@ -329,6 +330,19 @@ TEST(ThreadedDispatcherSignalTest, DISABLED_keeps_dispatching_after_signal_inter
                 auto dispatched = std::make_shared<mt::Signal>();
                 auto dispatchable = std::make_shared<mt::TestDispatchable>(
                     [dispatched]() { dispatched->raise(); });
+
+                /* When there's no SIGCONT handler installed a SIGSTOP/SIGCONT
+                 * pair POSIX mandates that a SIGSTOP/SIGCONT pair will *not*
+                 * result in blocked syscalls returning EINTR.
+                 *
+                 * Linux isn't POSIX compliant for some of its syscalls -
+                 * see “man 7 signal”, notably epoll - but for most syscalls
+                 * it does the right thing.
+                 *
+                 * When there's a signal handler for SIGCONT installed then
+                 * any blocked syscall will (correctly) return EINTR, so install one.
+                 */
+                signal(SIGCONT, &sigcont_handler);
 
                 md::ThreadedDispatcher dispatcher{"Test thread", dispatchable};
                 // Ensure the dispatcher has started
