@@ -88,16 +88,16 @@ public:
     void add_surface(
         std::shared_ptr<Surface> const& surface,
         input::InputReceptionMode input_mode) override;
-    
+
     auto surface_at(geometry::Point) const -> std::shared_ptr<Surface> override;
 
     void add_observer(std::shared_ptr<Observer> const& observer) override;
     void remove_observer(std::weak_ptr<Observer> const& observer) override;
-    
+
     // Intended for input overlays, as described in mir::input::Scene documentation.
     void add_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay) override;
     void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& overlay) override;
-    
+
     void emit_scene_changed() override;
 
 private:
@@ -107,6 +107,7 @@ private:
     void update_rendering_tracker_compositors();
 
     std::mutex mutable guard;
+    std::recursive_mutex mutable remove_guard;
 
     std::shared_ptr<InputRegistrar> const input_registrar;
     std::shared_ptr<SceneReport> const report;
@@ -114,7 +115,7 @@ private:
     std::vector<std::shared_ptr<Surface>> surfaces;
     std::map<Surface*,std::shared_ptr<RenderingTracker>> rendering_trackers;
     std::set<compositor::CompositorID> registered_compositors;
-    
+
     std::vector<std::shared_ptr<graphics::Renderable>> overlays;
 
     Observers observers;

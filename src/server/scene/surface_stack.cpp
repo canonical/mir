@@ -221,7 +221,7 @@ void ms::SurfaceStack::remove_input_visualization(
         }
         overlays.erase(p);
     }
-    
+
     emit_scene_changed();
 }
 
@@ -252,7 +252,7 @@ void ms::SurfaceStack::add_surface(
 void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 {
     auto const keep_alive = surface.lock();
-
+    std::lock_guard<decltype(remove_guard)> lg{remove_guard};
     bool found_surface = false;
     {
         std::lock_guard<decltype(guard)> lg(guard);
@@ -378,13 +378,19 @@ void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observe
 {
     observers.add(observer);
 
-    // Notify observer of existing surfaces
+    // NOTE: Guarantee that surface_exists will not be called with stale surfaces
+    // by preventing surface_removed from removing surfaces before we are done here
+    std::lock_guard<decltype(remove_guard)> rlk{remove_guard};
+
+    // A copy of the surfaces is taken, as raise and add_surface can still invalidate
+    // the iterators and surface_exists should not be called with the surface list lock held.
     std::unique_lock<decltype(guard)> lk(guard);
-    for (auto &surface : surfaces)
+    auto const surfaces_copy = surfaces;
+    lk.unlock();
+
+    for (auto &surface : surfaces_copy)
     {
-        lk.unlock();
         observer->surface_exists(surface.get());
-        lk.lock();
     }
 }
 
@@ -393,13 +399,13 @@ void ms::SurfaceStack::remove_observer(std::weak_ptr<ms::Observer> const& observ
     auto o = observer.lock();
     if (!o)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid observer (destroyed)"));
-    
+
     o->end_observation();
-    
+
     observers.remove(o);
 }
 
-void ms::Observers::surface_added(ms::Surface* surface) 
+void ms::Observers::surface_added(ms::Surface* surface)
 {
     for_each([&](std::shared_ptr<Observer> const& observer)
         { observer->surface_added(surface); });
