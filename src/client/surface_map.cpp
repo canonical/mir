@@ -100,9 +100,7 @@ void mcl::ConnectionSurfaceMap::with_stream_do(
     auto const it = streams.find(stream_id);
     if (it != streams.end())
     {
-        auto const stream = it->second.stream;
-        lk.unlock();
-        exec(stream);
+        exec(it->second.stream);
     }
     else
     {
