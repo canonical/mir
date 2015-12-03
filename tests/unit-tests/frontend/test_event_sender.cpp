@@ -34,6 +34,7 @@
 #include <gmock/gmock.h>
 
 namespace mt = mir::test;
+namespace mi = mir::input;
 namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
 namespace mfd = mf::detail;
@@ -118,3 +119,28 @@ TEST_F(EventSender, packs_buffer_with_platform_packer)
     EXPECT_CALL(mock_msg_sender, send(_,_,_));
     event_sender.send_buffer(mf::BufferStreamId{}, buffer, msg_type);
 }
+
+#if 0
+TEST_F(EventSender, sends_input_devices)
+{
+    using namespace testing;
+
+    std::vector<std::shared_ptr<mi::Device>> devices;
+
+    auto msg_validator = [&devices](char const* data, size_t len){
+        mir::protobuf::wire::Result wire;
+        wire.ParseFromArray(data, len);
+        std::string str = wire.events(0);
+        mir::protobuf::EventSequence seq;
+        seq.ParseFromString(str);
+        EXPECT_THAT(seq.input_device_event(), .. array matcher ..w
+                    (std::cref(config)));
+    };
+
+    EXPECT_CALL(mock_msg_sender, send(_, _, _))
+        .Times(1)
+        .WillOnce(WithArgs<0,1>(Invoke(msg_validator)));
+
+    event_sender.handle_input_device_change(devices);
+}
+#endif

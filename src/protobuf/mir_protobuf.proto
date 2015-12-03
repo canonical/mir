@@ -254,6 +254,7 @@ message EventSequence {
   optional LifecycleEvent lifecycle_event = 3;
   optional BufferRequest buffer_request = 4;
   optional PingEvent ping_event = 5;
+  optional InputDeviceEvent input_device_event = 6;
 
   optional string error = 127;
 }
@@ -339,3 +340,33 @@ message RaiseRequest {
   required Cookie cookie = 1;
   required SurfaceId surface_id = 2;
 }
+
+message InputDeviceInfo {
+  optional int64 id = 1;
+  optional string name = 2;
+  optional string unique_id = 3;
+  optional uint32 capabilities = 4;
+}
+
+message InputDeviceEvent {
+  repeated InputDeviceInfo devices = 1;
+}
+
+message TouchpadConfigurationRequest {
+  required int64 id = 1;
+  optional uint32 click_mode = 2;
+  optional uint32 scroll_mode = 3;
+  optional int32 button = 4;
+  optional bool tap_to_clock = 5;
+  optional bool disable_while_typing = 6;
+  optional bool disable_with_mouse = 7;
+  optional bool middle_mouse_button_emulation = 8;
+} 
+
+message PointerConfigurationRequest {
+  required int64 id = 1;
+  optional int32 handedness = 2;
+  optional double cursor_acceleration_bias = 3;
+  optional double horizontal_scroll_scale = 4;
+  optional double vertical_scroll_scale = 5;
+} 
