@@ -936,3 +936,46 @@ TEST_F(NestedServer, DISABLED_when_monitor_unplugs_client_display_configuration_
     mir_surface_release_sync(painted_surface);
     mir_connection_release(connection);
 }
+
+TEST_F(NestedServer, when_monitor_plugged_in_client_is_notified_of_new_display_configuration)
+{
+    NestedMirRunner nested_mir{new_connection()};
+    ignore_rebuild_of_egl_context();
+
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    // Need a painted surface to have focus
+    auto const painted_surface = make_and_paint_surface(connection);
+
+    auto new_displays = display_geometry;
+    new_displays.push_back({{2560, 0}, { 640,  480}});
+
+    auto const new_config = std::make_shared<mtd::StubDisplayConfig>(new_displays);
+
+    mt::WaitCondition condition;
+
+    auto const display_change_handler = [](MirConnection*, void* context)
+        { static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); };
+
+    mir_connection_set_display_config_change_callback(connection, display_change_handler, &condition);
+
+    display.emit_configuration_change_event(new_config);
+
+    condition.wait_for_at_most_seconds(1);
+
+    ASSERT_TRUE(condition.woken());
+
+    // The default layout policy (for cloned displays) will be applied by the MediatingDisplayChanger.
+    // So set the expectation to match
+    for (auto& output : new_displays)
+        output.top_left = {0, 0};
+
+    auto const configuration = mir_connection_create_display_config(connection);
+
+    EXPECT_THAT(configuration, mt::DisplayConfigMatches(mtd::StubDisplayConfig{new_displays}));
+
+    mir_display_config_destroy(configuration);
+
+    mir_surface_release_sync(painted_surface);
+    mir_connection_release(connection);
+}
