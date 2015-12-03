@@ -177,13 +177,12 @@ TEST_F(SystemCompositorWindowManager, if_a_surface_posts_client_gets_focus)
     // Throw away all uninteresting surface events
     EXPECT_CALL(client, surface_event(_, Not(MirFocusEvent(mir_surface_focused)))).Times(AnyNumber());
 
-    auto surface = client.create_surface(1);
-
     mt::Signal signal;
 
     EXPECT_CALL(client, surface_event(_, MirFocusEvent(mir_surface_focused))).Times(1)
             .WillOnce(InvokeWithoutArgs([&] { signal.raise(); }));
 
+    auto surface = client.create_surface(1);
     surface.post_buffer();
 
     signal.wait_for(1s);
