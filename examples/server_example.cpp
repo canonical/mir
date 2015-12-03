@@ -25,6 +25,7 @@
 #include "server_example_custom_compositor.h"
 #include "server_example_test_client.h"
 #include "server_example_cursor_images.h"
+#include "server_example_input_device_config.h"
 
 #include "mir/server.h"
 #include "mir/main_loop.h"
@@ -92,6 +93,7 @@ try
     me::add_glog_options_to(server);
     me::add_window_manager_option_to(server);
     me::add_custom_compositor_option_to(server);
+    me::add_input_device_configuration_options_to(server);
     add_launcher_option_to(server);
     add_timeout_option_to(server);
     me::add_x_cursor_images(server);

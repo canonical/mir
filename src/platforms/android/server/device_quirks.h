@@ -61,8 +61,9 @@ public:
     DeviceQuirks(PropertiesWrapper const& properties, mir::options::Option const& options);
 
     unsigned int num_framebuffers() const;
-    bool gralloc_reopenable_after_close() const;
+    bool gralloc_cannot_be_closed_safely() const;
     int aligned_width(int width) const;
+    bool clear_fb_context_fence() const;
 
     static void add_options(boost::program_options::options_description& config);
 
@@ -71,8 +72,9 @@ private:
     DeviceQuirks & operator=(DeviceQuirks const&) = delete;
     std::string const device_name;
     unsigned int const num_framebuffers_;
-    bool const gralloc_reopenable_after_close_;
+    bool const gralloc_cannot_be_closed_safely_;
     bool const enable_width_alignment_quirk;
+    bool const clear_fb_context_fence_;
 };
 }
 }

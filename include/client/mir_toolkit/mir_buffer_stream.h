@@ -39,6 +39,17 @@ extern "C" {
 bool mir_buffer_stream_is_valid(MirBufferStream *buffer_stream);
 
 /**
+ * Retrieve a text description of the error. The returned string is owned by
+ * the library and remains valid until the stream or the associated
+ * connection has been released.
+ *   \param [in] buffer_stream  The buffer stream
+ *   \return              A text description of any error resulting in an
+ *                        invalid stream, or the empty string "" if the
+ *                        connection is valid.
+ */
+char const *mir_buffer_stream_get_error_message(MirBufferStream *surface);
+
+/**
  * Create a new buffer stream. 
  *
  * For example, the resulting buffer stream may be used
@@ -51,6 +62,9 @@ bool mir_buffer_stream_is_valid(MirBufferStream *buffer_stream);
  * \param [in] buffer_usage   Requested buffer usage, use 
  *                            mir_buffer_usage_software for cursor image streams
  * \param [in] callback       Callback to be invoked when the request completes
+ *                            The callback is guaranteed to be called and called with a
+ *                            non-null MirBufferStream*, but the stream may be invalid in
+ *                            case of an error.
  * \param [in] context        Userdata to pass to callback function
  *
  * \return                    A handle that can be supplied to mir_wait_for
@@ -152,8 +166,10 @@ MirWaitHandle *mir_buffer_stream_swap_buffers(
 void mir_buffer_stream_swap_buffers_sync(MirBufferStream *buffer_stream);
 
 /**
- * Retrieve a buffer stream's graphics region, e.g. map the graphics buffer to main
- * memory.
+ * Retrieve a buffer stream's graphics region
+ *   \warning Depending on platform, this can map the graphics buffer each
+ *            time its called. The region remains mapped until
+ *            mir_buffer_stream_swap_buffers().
  *   \pre                          The buffer stream is valid
  *   \param [in] buffer stream     The buffer stream
  *   \param [out] graphics_region  Structure to be populated

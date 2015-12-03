@@ -21,6 +21,7 @@
 #include "mir/options/option.h"
 
 #include "mir/graphics/default_display_configuration_policy.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "nested/mir_client_host_connection.h"
 #include "nested/cursor.h"
 #include "nested/display.h"

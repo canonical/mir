@@ -48,9 +48,8 @@ struct TestSurfaceStack : public ms::SurfaceStack
 {
     using ms::SurfaceStack::SurfaceStack;
 
-    MOCK_METHOD3(add_surface, void(
+    MOCK_METHOD2(add_surface, void(
         std::shared_ptr<ms::Surface> const& surface,
-        ms::DepthId depth,
         mir::input::InputReceptionMode input_mode));
 
     MOCK_METHOD1(raise, void(
@@ -58,10 +57,9 @@ struct TestSurfaceStack : public ms::SurfaceStack
 
     void default_add_surface(
         std::shared_ptr<ms::Surface> const& surface,
-        ms::DepthId depth,
         mir::input::InputReceptionMode input_mode)
     {
-        ms::SurfaceStack::add_surface(surface, depth, input_mode);
+        ms::SurfaceStack::add_surface(surface, input_mode);
     }
 
     void default_raise(std::weak_ptr<ms::Surface> const& surface)
@@ -74,10 +72,10 @@ struct TestSurfaceStack : public ms::SurfaceStack
 struct TestConfiguration : public mir_test_framework::StubbedServerConfiguration
 {
 
-    std::shared_ptr<ms::SurfaceStackModel>
-    the_surface_stack_model() override
+    std::shared_ptr<msh::SurfaceStack>
+    the_surface_stack() override
     {
-        return surface_stack(
+        return scene_surface_stack(
             [this]()
             {
                 auto const scene_report = the_scene_report();
@@ -102,7 +100,7 @@ struct SessionManagement : Test
     void SetUp()
     {
         ASSERT_THAT(test_surface_stack, Ne(nullptr));
-        ON_CALL(*test_surface_stack, add_surface(_,_,_))
+        ON_CALL(*test_surface_stack, add_surface(_,_))
             .WillByDefault(Invoke(test_surface_stack.get(), &TestSurfaceStack::default_add_surface));
         ON_CALL(*test_surface_stack, raise(_))
             .WillByDefault(Invoke(test_surface_stack.get(), &TestSurfaceStack::default_raise));
@@ -119,6 +117,6 @@ TEST_F(SessionManagement, creating_a_surface_adds_it_to_scene)
 {
     auto const session = session_manager->open_session(0, __PRETTY_FUNCTION__, event_sink);
 
-    EXPECT_CALL(*test_surface_stack, add_surface(_,_,_)).Times(1);
+    EXPECT_CALL(*test_surface_stack, add_surface(_,_)).Times(1);
     session_manager->create_surface(session, params, event_sink);
 }

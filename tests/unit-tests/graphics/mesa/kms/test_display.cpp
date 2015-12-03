@@ -37,6 +37,7 @@
 #include "mir/test/doubles/mock_gl_config.h"
 #include "mir/test/doubles/mock_virtual_terminal.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
+#include "mir/test/doubles/mock_event_handler_register.h"
 
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
@@ -73,21 +74,6 @@ struct MockLogger : public ml::Logger
 
     ~MockLogger() noexcept(true) {}
 };
-
-class MockEventRegister : public mg::EventHandlerRegister
-{
-public:
-    MOCK_METHOD2(register_signal_handler,
-                 void(std::initializer_list<int>,
-                 std::function<void(int)> const&));
-    MOCK_METHOD3(register_fd_handler,
-                 void(std::initializer_list<int>,
-                 void const*, std::function<void(int)> const&));
-    MOCK_METHOD1(unregister_fd_handler,
-                 void(void const*));
-
-};
-
 
 class MesaDisplayTest : public ::testing::Test
 {
@@ -708,16 +694,6 @@ TEST_F(MesaDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
         std::make_shared<mtd::NullVirtualTerminal>(),
         *std::make_shared<mtd::NullEmergencyCleanup>(),
         mgm::BypassOption::allowed);
-#if 0
-    auto display = std::make_shared<mgm::Display>(
-                        platform->gbm,
-                        platform->drm,
-                        platform->vt,
-                        platform->bypass_option(),
-                        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-                        std::make_shared<mtd::StubGLConfig>(),
-                        mock_report);
-#endif
     auto display = platform->create_display(
         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         std::make_shared<mtd::StubGLConfig>()
@@ -737,9 +713,9 @@ TEST_F(MesaDisplayTest, configuration_change_registers_video_devices_handler)
     using namespace testing;
 
     auto display = create_display(create_platform());
-    MockEventRegister mock_register;
+    mtd::MockEventHandlerRegister mock_register;
 
-    EXPECT_CALL(mock_register, register_fd_handler(_,_,_));
+    EXPECT_CALL(mock_register, register_fd_handler_module_ptr(_,_,_));
 
     display->register_configuration_change_handler(mock_register, []{});
 }

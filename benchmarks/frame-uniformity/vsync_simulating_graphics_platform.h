@@ -30,16 +30,17 @@ public:
     VsyncSimulatingPlatform(mir::geometry::Size const& output_size, int vsync_rate_in_hz);
     ~VsyncSimulatingPlatform() = default;
     
-    std::shared_ptr<mir::graphics::GraphicBufferAllocator> create_buffer_allocator();
+    mir::UniqueModulePtr<mir::graphics::GraphicBufferAllocator> create_buffer_allocator();
     
-    std::shared_ptr<mir::graphics::Display> create_display(
+    mir::UniqueModulePtr<mir::graphics::Display> create_display(
         std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<mir::graphics::GLConfig> const& gl_config);
     
-    std::shared_ptr<mir::graphics::PlatformIpcOperations> make_ipc_operations() const;
+    mir::UniqueModulePtr<mir::graphics::PlatformIpcOperations> make_ipc_operations() const;
 
 private:
-    std::shared_ptr<mir::graphics::Display> display;
+    mir::geometry::Size const output_size;
+    int const vsync_rate_in_hz;
 };
 
 #endif // VSYNC_SIMULATING_GRAPHICS_PLATFORM_H_

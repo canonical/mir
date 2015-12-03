@@ -22,7 +22,7 @@
 #include "mir/graphics/event_handler_register.h"
 #include "mir/shell/display_configuration_controller.h"
 
-#include "mir_test_framework/connected_client_headless_server.h"
+#include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/doubles/null_platform.h"
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/null_display_sync_group.h"
@@ -38,6 +38,7 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include <atomic>
+#include <chrono>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -50,6 +51,7 @@ namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
 
 using namespace testing;
+using namespace std::literals::chrono_literals;
 
 namespace
 {
@@ -127,9 +129,18 @@ private:
 
 struct StubAuthorizer : mtd::StubSessionAuthorizer
 {
-    bool configure_display_is_allowed(mf::SessionCredentials const&) override { return result; }
+    bool configure_display_is_allowed(mf::SessionCredentials const&) override
+    {
+        return allow_configure_display;
+    }
 
-    std::atomic<bool> result{true};
+    bool set_base_display_configuration_is_allowed(mf::SessionCredentials const&) override
+    {
+        return allow_set_base_display_configuration;
+    }
+
+    std::atomic<bool> allow_configure_display{true};
+    std::atomic<bool> allow_set_base_display_configuration{true};
 };
 
 void wait_for_server_actions_to_finish(mir::ServerActionQueue& server_action_queue)
@@ -143,13 +154,13 @@ void wait_for_server_actions_to_finish(mir::ServerActionQueue& server_action_que
 }
 }
 
-struct DisplayConfigurationTest : mtf::ConnectedClientHeadlessServer
+struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
 {
     void SetUp() override
     {
         server.override_the_session_authorizer([this] { return mt::fake_shared(stub_authorizer); });
         preset_display(mt::fake_shared(mock_display));
-        mtf::ConnectedClientHeadlessServer::SetUp();
+        mtf::ConnectedClientWithASurface::SetUp();
     }
 
     testing::NiceMock<MockDisplay> mock_display;
@@ -217,7 +228,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
 
 TEST_F(DisplayConfigurationTest, display_change_request_for_unauthorized_client_fails)
 {
-    stub_authorizer.result = false;
+    stub_authorizer.allow_configure_display = false;
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -254,6 +265,11 @@ struct SimpleClient
         mir_connection_release(connection);
     }
 
+    void disconnect_without_releasing_surface()
+    {
+        mir_connection_release(connection);
+    }
+
     std::string mir_test_socket;
     MirConnection* connection{nullptr};
     MirSurface* surface{nullptr};
@@ -269,6 +285,18 @@ struct DisplayClient : SimpleClient
         mir_wait_for(mir_connection_apply_display_config(connection, configuration));
         EXPECT_STREQ("", mir_connection_get_error_message(connection));
         mir_display_config_destroy(configuration);
+    }
+
+    std::unique_ptr<MirDisplayConfiguration,void(*)(MirDisplayConfiguration*)> get_base_config()
+    {
+        return {mir_connection_create_display_config(connection),
+                mir_display_config_destroy};
+    }
+
+    void set_base_config(MirDisplayConfiguration* configuration)
+    {
+        mir_wait_for(mir_connection_set_base_display_config(connection, configuration));
+        EXPECT_STREQ("", mir_connection_get_error_message(connection));
     }
 };
 }
@@ -436,4 +464,150 @@ TEST_F(DisplayConfigurationTest, shell_initiated_display_configuration_notifies_
     EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{10}));
 
     client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest,
+       client_setting_base_config_configures_display_if_a_session_config_is_not_applied)
+{
+    DisplayClient display_client{new_connection()};
+    display_client.connect();
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(mock_display, configure(testing::_)).Times(1);
+
+    display_client.set_base_config(display_client.get_base_config().get());
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+
+    display_client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest,
+       client_setting_base_config_does_not_configure_display_if_a_session_config_is_applied)
+{
+    DisplayClient display_client{new_connection()};
+    DisplayClient display_client_with_session_config{new_connection()};
+    // Client with session config should have focus after this
+    display_client.connect();
+    display_client_with_session_config.connect();
+
+    display_client_with_session_config.apply_config();
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(mock_display, configure(testing::_)).Times(0);
+
+    display_client.set_base_config(display_client.get_base_config().get());
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+
+    display_client_with_session_config.disconnect();
+    display_client.disconnect();
+}
+
+namespace
+{
+void display_config_change_handler(MirConnection*, void* context)
+{
+    auto callback_called = static_cast<mt::Signal*>(context);
+    callback_called->raise();
+}
+}
+
+TEST_F(DisplayConfigurationTest,
+       client_is_notified_of_new_base_config_eventually_after_set_base_configuration)
+{
+    DisplayClient display_client{new_connection()};
+    display_client.connect();
+
+    mt::Signal callback_called;
+    mir_connection_set_display_config_change_callback(
+        display_client.connection, &display_config_change_handler, &callback_called);
+
+    auto requested_config = display_client.get_base_config();
+    EXPECT_THAT(requested_config->outputs[0].used, Eq(1));
+    requested_config->outputs[0].used = 0;
+
+    display_client.set_base_config(requested_config.get());
+
+    EXPECT_THAT(callback_called.wait_for(5s), Eq(true));
+
+    auto const new_config = display_client.get_base_config();
+    EXPECT_THAT(new_config.get(), mt::DisplayConfigMatches(requested_config.get()));
+
+    display_client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest,
+       set_base_configuration_for_unauthorized_client_fails)
+{
+    stub_authorizer.allow_set_base_display_configuration = false;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto configuration = mir_connection_create_display_config(connection);
+    mir_wait_for(mir_connection_set_base_display_config(connection, configuration));
+    EXPECT_THAT(mir_connection_get_error_message(connection),
+                testing::HasSubstr("not authorized to set base display configuration"));
+
+    mir_display_config_destroy(configuration);
+    mir_connection_release(connection);
+}
+
+TEST_F(DisplayConfigurationTest, disconnection_of_client_with_display_config_reconfigures_display)
+{
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
+
+    DisplayClient display_client{new_connection()};
+
+    display_client.connect();
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(mock_display, configure(testing::_)).Times(1);
+
+    display_client.apply_config();
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(mock_display, configure(_)).Times(1);
+
+    display_client.disconnect();
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+}
+
+TEST_F(DisplayConfigurationTest,
+       disconnection_without_releasing_surfaces_of_client_with_display_config_reconfigures_display)
+{
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
+
+    DisplayClient display_client{new_connection()};
+
+    display_client.connect();
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(mock_display, configure(testing::_)).Times(1);
+
+    display_client.apply_config();
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(mock_display, configure(_)).Times(1);
+
+    display_client.disconnect_without_releasing_surface();
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    testing::Mock::VerifyAndClearExpectations(&mock_display);
 }

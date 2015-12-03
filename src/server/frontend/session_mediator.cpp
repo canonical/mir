@@ -46,8 +46,10 @@
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
 #include "mir/frontend/buffer_stream.h"
+#include "mir/frontend/security_check_failed.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
+#include "mir/cookie_factory.h"
 
 #include "mir/geometry/rectangles.h"
 #include "buffer_stream_tracker.h"
@@ -86,7 +88,8 @@ mf::SessionMediator::SessionMediator(
     ConnectionContext const& connection_context,
     std::shared_ptr<mi::CursorImages> const& cursor_images,
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
-    std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector) :
+    std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
+    std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -102,6 +105,7 @@ mf::SessionMediator::SessionMediator(
     cursor_images(cursor_images),
     translator{translator},
     anr_detector{anr_detector},
+    cookie_factory(cookie_factory),
     buffer_stream_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
@@ -350,7 +354,11 @@ void mf::SessionMediator::exchange_buffer(
     mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
 
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
-    ipc_operations->unpack_buffer(request_msg, *buffer_stream_tracker.last_buffer(stream_id));
+    auto buffer = buffer_stream_tracker.last_buffer(stream_id);
+    if (!buffer)
+        BOOST_THROW_EXCEPTION(std::logic_error("No buffer found for given stream id"));
+
+    ipc_operations->unpack_buffer(request_msg, *buffer);
 
     auto const session = weak_session.lock();
     if (!session)
@@ -724,9 +732,8 @@ void mf::SessionMediator::create_buffer_stream(
         [this, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
-            auto buffer = response->mutable_buffer();
             if (client_buffer)
-                pack_protobuf_buffer(*buffer, client_buffer, msg_type);
+                pack_protobuf_buffer(*response->mutable_buffer(), client_buffer, msg_type);
 
             done->Run();
         });
@@ -999,6 +1006,27 @@ void mf::SessionMediator::configure_buffer_stream(
         stream->allow_framedropping(request->swapinterval() == 0);
     if (request->has_scale())
         stream->set_scale(request->scale());
+
+    done->Run();
+}
+
+void mf::SessionMediator::raise_surface_with_cookie(
+    mir::protobuf::RaiseRequest const* request,
+    mir::protobuf::Void*,
+    google::protobuf::Closure* done)
+{
+    auto const session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto const cookie     = request->cookie();
+    auto const surface_id = request->surface_id();
+
+    MirCookie const mir_cookie = {cookie.timestamp(), cookie.mac()};
+    if (!cookie_factory->attest_timestamp(mir_cookie))
+        throw mir::SecurityCheckFailed();
+
+    shell->raise_surface_with_timestamp(session, mf::SurfaceId{surface_id.value()}, cookie.timestamp());
 
     done->Run();
 }

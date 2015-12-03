@@ -21,6 +21,7 @@
 #define MIR_GRAPHICS_ANDROID_SERVER_RENDER_WINDOW_H_
 
 #include "mir/graphics/android/android_driver_interpreter.h"
+#include "device_quirks.h"
 #include "mir_toolkit/common.h"
 
 #include <memory>
@@ -39,7 +40,8 @@ class ServerRenderWindow : public AndroidDriverInterpreter
 public:
     ServerRenderWindow(std::shared_ptr<FramebufferBundle> const& fb_bundle,
                        MirPixelFormat format,
-                       std::shared_ptr<InterpreterResourceCache> const&);
+                       std::shared_ptr<InterpreterResourceCache> const&,
+                       DeviceQuirks& quirks);
 
     graphics::NativeBuffer* driver_requests_buffer() override;
     void driver_returns_buffer(ANativeWindowBuffer*, int fence_fd) override;
@@ -52,6 +54,7 @@ private:
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<InterpreterResourceCache> const resource_cache;
     int format;
+    bool const clear_fence;
 };
 
 }

@@ -45,6 +45,16 @@ std::string mir_test_framework::library_path()
     return executable_path() + "/../lib";
 }
 
+std::string mir_test_framework::server_platform_path()
+{
+    for (auto const& option : {library_path() + "/server-modules/",
+                               library_path() + "/server-platform/",
+                               std::string(MIR_SERVER_PLATFORM_PATH) + '/'})
+        if (boost::filesystem::exists(option))
+            return option;
+    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find server platform in standard search locations"));
+}
+
 std::string mir_test_framework::udev_recordings_path()
 {
     std::string run_path     = executable_path() + "/udev_recordings";

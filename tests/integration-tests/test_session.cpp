@@ -116,7 +116,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
     auto dispatcher = conf.the_input_dispatcher();
 
     ms::ApplicationSession session{
-        conf.the_surface_coordinator(),
+        conf.the_surface_stack(),
         conf.the_surface_factory(),
         std::make_shared<StubGLBufferStreamFactory>(),
         __LINE__,

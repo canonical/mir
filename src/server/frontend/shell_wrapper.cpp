@@ -98,3 +98,11 @@ int mf::ShellWrapper::get_surface_attribute(
 {
     return wrapped->get_surface_attribute(session, surface_id, attrib);
 }
+
+void mf::ShellWrapper::raise_surface_with_timestamp(
+    std::shared_ptr<Session> const& session,
+    SurfaceId surface_id,
+    uint64_t timestamp)
+{
+    wrapped->raise_surface_with_timestamp(session, surface_id, timestamp);
+}

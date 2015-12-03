@@ -37,7 +37,7 @@ class AbstractShell : public virtual Shell, public virtual FocusController
 public:
     AbstractShell(
         std::shared_ptr<InputTargeter> const& input_targeter,
-        std::shared_ptr<scene::SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<SurfaceStack> const& surface_stack,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
         std::shared_ptr<ShellReport> const& report,
@@ -70,6 +70,11 @@ public:
     int get_surface_attribute(
         std::shared_ptr<scene::Surface> const& surface,
         MirSurfaceAttrib attrib) override;
+
+    void raise_surface_with_timestamp(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        uint64_t timestamp) override;
 
     std::shared_ptr<scene::PromptSession> start_prompt_session_for(
         std::shared_ptr<scene::Session> const& session,
@@ -113,7 +118,7 @@ public:
 
 protected:
     std::shared_ptr<InputTargeter> const input_targeter;
-    std::shared_ptr<scene::SurfaceCoordinator> const surface_coordinator;
+    std::shared_ptr<SurfaceStack> const surface_stack;
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
     std::shared_ptr<scene::PromptSessionManager> const prompt_session_manager;
     std::shared_ptr<WindowManager> const window_manager;

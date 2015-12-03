@@ -46,6 +46,14 @@ namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 
+namespace
+{
+mg::DisplayConfigurationOutputId const primary_output_id{
+    mga::as_output_id(mga::DisplayName::primary)};
+mg::DisplayConfigurationOutputId const external_output_id{
+    mga::as_output_id(mga::DisplayName::external)};
+}
+
 class Display : public ::testing::Test
 {
 public:
@@ -359,35 +367,35 @@ TEST_F(Display, configures_power_modes)
     auto configuration = display.configuration();
     configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
         //on by default
-        if (output.id == mg::DisplayConfigurationOutputId{0})
+        if (output.id == primary_output_id)
             EXPECT_EQ(output.power_mode, mir_power_mode_on);
         output.power_mode = mir_power_mode_on;
     });
     display.configure(*configuration);
 
     configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
-        if (output.id == mg::DisplayConfigurationOutputId{0})
+        if (output.id == primary_output_id)
             EXPECT_EQ(output.power_mode, mir_power_mode_on);
         output.power_mode = mir_power_mode_standby;
     });
     display.configure(*configuration);
 
     configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
-        if (output.id == mg::DisplayConfigurationOutputId{0})
+        if (output.id == primary_output_id)
             EXPECT_EQ(output.power_mode, mir_power_mode_standby);
         output.power_mode = mir_power_mode_off;
     });
     display.configure(*configuration);
 
     configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
-        if (output.id == mg::DisplayConfigurationOutputId{0})
+        if (output.id == primary_output_id)
             EXPECT_EQ(output.power_mode, mir_power_mode_off);
         output.power_mode = mir_power_mode_suspend;
     });
     display.configure(*configuration);
 
     configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
-        if (output.id == mg::DisplayConfigurationOutputId{0})
+        if (output.id == primary_output_id)
             EXPECT_EQ(output.power_mode, mir_power_mode_suspend);
     });
 }
@@ -429,7 +437,7 @@ TEST_F(Display, returns_correct_config_with_one_connected_output_at_start)
     auto& disp_mode = outputs[0].modes[0];
     EXPECT_EQ(pixel_size, disp_mode.size);
     EXPECT_EQ(vrefresh, disp_mode.vrefresh_hz);
-    EXPECT_EQ(mg::DisplayConfigurationOutputId{0}, outputs[0].id);
+    EXPECT_EQ(primary_output_id, outputs[0].id);
     EXPECT_EQ(mg::DisplayConfigurationCardId{0}, outputs[0].card_id);
     EXPECT_TRUE(outputs[0].connected);
     EXPECT_TRUE(outputs[0].used);
@@ -456,7 +464,7 @@ TEST_F(Display, returns_correct_config_with_external_and_primary_output_at_start
             .WillByDefault(Return(mtd::StubDisplayConfigurationOutput{
                 primary_pixel_size, primary_physical_size, format, primary_vrefresh, true}));
         ON_CALL(mock_config, active_config_for(mga::DisplayName::external))
-            .WillByDefault(Return(mtd::StubDisplayConfigurationOutput{mg::DisplayConfigurationOutputId{1},
+            .WillByDefault(Return(mtd::StubDisplayConfigurationOutput{external_output_id,
                 external_pixel_size, external_physical_size, format, external_vrefresh, true}));
     });
 
@@ -477,7 +485,7 @@ TEST_F(Display, returns_correct_config_with_external_and_primary_output_at_start
     auto& disp_mode = outputs[0].modes[0];
     EXPECT_EQ(primary_pixel_size, disp_mode.size);
     EXPECT_EQ(primary_vrefresh, disp_mode.vrefresh_hz);
-    EXPECT_EQ(mg::DisplayConfigurationOutputId{0}, outputs[0].id);
+    EXPECT_EQ(primary_output_id, outputs[0].id);
     EXPECT_EQ(mg::DisplayConfigurationCardId{0}, outputs[0].card_id);
     EXPECT_TRUE(outputs[0].connected);
     EXPECT_TRUE(outputs[0].used);
@@ -492,7 +500,7 @@ TEST_F(Display, returns_correct_config_with_external_and_primary_output_at_start
     disp_mode = outputs[1].modes[0];
     EXPECT_EQ(external_pixel_size, disp_mode.size);
     EXPECT_EQ(external_vrefresh, disp_mode.vrefresh_hz);
-    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, outputs[1].id);
+    EXPECT_EQ(external_output_id, outputs[1].id);
     EXPECT_EQ(mg::DisplayConfigurationCardId{0}, outputs[1].card_id);
     EXPECT_TRUE(outputs[1].connected);
     EXPECT_TRUE(outputs[1].used);
@@ -546,7 +554,7 @@ TEST_F(Display, display_orientation_not_supported)
 
     config = display.configuration();
     config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
-        if (c.id == mg::DisplayConfigurationOutputId{0})
+        if (c.id == primary_output_id)
             EXPECT_EQ(mir_orientation_left, c.orientation);
     });
 }
@@ -640,12 +648,12 @@ TEST_F(Display, returns_correct_dbs_with_external_and_primary_output_at_start)
     {
         ON_CALL(mock_config, active_config_for(mga::DisplayName::primary))
             .WillByDefault(Return(mtd::StubDisplayConfigurationOutput{
-                mg::DisplayConfigurationOutputId{0}, {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, true}));
+                primary_output_id, {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, true}));
 
         ON_CALL(mock_config, active_config_for(mga::DisplayName::external))
             .WillByDefault(Invoke([&](mga::DisplayName)
             {
-                return mtd::StubDisplayConfigurationOutput{mg::DisplayConfigurationOutputId{1},
+                return mtd::StubDisplayConfigurationOutput{external_output_id,
                     {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, external_connected};
             }));
         EXPECT_CALL(mock_config, subscribe_to_config_changes(_,_))
@@ -761,7 +769,7 @@ TEST_F(Display, configures_external_display)
     {
         ON_CALL(mock_config, active_config_for(mga::DisplayName::external))
             .WillByDefault(Return(mtd::StubDisplayConfigurationOutput{
-                mg::DisplayConfigurationOutputId{1}, {0,0}, {0,0}, mir_pixel_format_abgr_8888, 0.0, true}));
+                external_output_id, {0,0}, {0,0}, mir_pixel_format_abgr_8888, 0.0, true}));
         EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, _))
             .Times(AnyNumber());
         InSequence seq;
@@ -883,11 +891,11 @@ TEST_F(Display, applying_orientation_after_hotplug)
     {
         ON_CALL(mock_config, active_config_for(mga::DisplayName::primary))
             .WillByDefault(Return(mtd::StubDisplayConfigurationOutput{
-                mg::DisplayConfigurationOutputId{0}, {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, true}));
+                primary_output_id, {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, true}));
         ON_CALL(mock_config, active_config_for(mga::DisplayName::external))
             .WillByDefault(Invoke([&](mga::DisplayName)
             {
-                return mtd::StubDisplayConfigurationOutput{mg::DisplayConfigurationOutputId{1},
+                return mtd::StubDisplayConfigurationOutput{external_output_id,
                     {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, external_connected};
             }));
         EXPECT_CALL(mock_config, subscribe_to_config_changes(_,_))
@@ -926,7 +934,7 @@ TEST_F(Display, display_buffers_respect_overlay_option)
         ON_CALL(mock_config, active_config_for(_))
             .WillByDefault(InvokeWithoutArgs([]
             {
-                return mtd::StubDisplayConfigurationOutput{mg::DisplayConfigurationOutputId{1},
+                return mtd::StubDisplayConfigurationOutput{external_output_id,
                     {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, true};
             }));
     });
@@ -953,12 +961,12 @@ TEST_F(Display, does_not_remove_dbs_when_enumerating_display_groups)
     {
         ON_CALL(mock_config, active_config_for(mga::DisplayName::primary))
             .WillByDefault(Return(mtd::StubDisplayConfigurationOutput{
-                mg::DisplayConfigurationOutputId{0}, {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, true}));
+                primary_output_id, {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, true}));
 
         ON_CALL(mock_config, active_config_for(mga::DisplayName::external))
             .WillByDefault(Invoke([&](mga::DisplayName)
             {
-                return mtd::StubDisplayConfigurationOutput{mg::DisplayConfigurationOutputId{1},
+                return mtd::StubDisplayConfigurationOutput{external_output_id,
                     {20,20}, {4,4}, mir_pixel_format_abgr_8888, 50.0f, external_connected};
             }));
         EXPECT_CALL(mock_config, subscribe_to_config_changes(_,_))

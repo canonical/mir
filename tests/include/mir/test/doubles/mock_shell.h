@@ -70,6 +70,8 @@ struct MockShell : public frontend::Shell
     MOCK_METHOD3(get_surface_attribute, int(std::shared_ptr<frontend::Session> const& session,
         frontend::SurfaceId surface_id, MirSurfaceAttrib attrib));
 
+    MOCK_METHOD3(raise_surface_with_timestamp, void(std::shared_ptr<frontend::Session> const& session,
+        frontend::SurfaceId surface_id, uint64_t timestamp));
 };
 
 }

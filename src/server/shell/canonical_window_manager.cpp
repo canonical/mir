@@ -507,6 +507,8 @@ void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms
         }
     }
 
+    session->destroy_surface(surface);
+
     if (!--tools->info_for(session).surfaces && session == tools->focused_session())
     {
         active_surface_.reset();
@@ -605,6 +607,13 @@ void msh::CanonicalWindowManagerPolicy::drag(Point cursor)
     select_active_surface(tools->surface_at(old_cursor));
     drag(active_surface(), cursor, old_cursor, display_area);
     old_cursor = cursor;
+}
+
+void msh::CanonicalWindowManagerPolicy::handle_raise_surface(
+    std::shared_ptr<ms::Session> const& /*session*/,
+    std::shared_ptr<ms::Surface> const& surface)
+{
+    select_active_surface(surface);
 }
 
 bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)

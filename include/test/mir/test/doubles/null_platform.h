@@ -21,6 +21,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/null_platform_ipc_operations.h"
 
@@ -33,16 +34,16 @@ namespace doubles
 class NullPlatform : public graphics::Platform
 {
  public:
-    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator() override
+    mir::UniqueModulePtr<graphics::GraphicBufferAllocator> create_buffer_allocator() override
     {
         return nullptr;
     }
 
-    std::shared_ptr<graphics::Display> create_display(
+    mir::UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const&) override
     {
-        return std::make_shared<NullDisplay>();
+        return mir::make_module_ptr<NullDisplay>();
     }
 
     std::shared_ptr<graphics::PlatformIPCPackage> connection_ipc_package()
@@ -50,9 +51,9 @@ class NullPlatform : public graphics::Platform
         return std::make_shared<graphics::PlatformIPCPackage>();
     }
 
-    std::shared_ptr<graphics::PlatformIpcOperations> make_ipc_operations() const override
+    mir::UniqueModulePtr<graphics::PlatformIpcOperations> make_ipc_operations() const override
     {
-        return std::make_shared<NullPlatformIpcOperations>();
+        return mir::make_module_ptr<NullPlatformIpcOperations>();
     }
 
     EGLNativeDisplayType egl_native_display() const override
