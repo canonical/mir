@@ -27,6 +27,7 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/events/event_builders.h"
 
+#include "mir/test/doubles/stub_cursor_image.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/mock_input_sender.h"
 #include "mir/test/doubles/stub_input_sender.h"
@@ -67,6 +68,8 @@ public:
     MOCK_METHOD1(hidden_set_to, void(bool));
     MOCK_METHOD1(renamed, void(char const*));
     MOCK_METHOD0(client_surface_close_requested, void());
+    MOCK_METHOD1(cursor_image_set_to, void(mir::graphics::CursorImage const& image));
+    MOCK_METHOD0(cursor_image_removed, void());
 };
 
 void post_a_frame(ms::BasicSurface& surface)
@@ -660,6 +663,32 @@ INSTANTIATE_TEST_CASE_P(SurfaceDPIAttributeTest, BasicSurfaceAttributeTest,
 
 INSTANTIATE_TEST_CASE_P(SurfaceFocusAttributeTest, BasicSurfaceAttributeTest,
    ::testing::Values(surface_focus_test_parameters));
+
+TEST_F(BasicSurfaceTest, notifies_about_cursor_image_change)
+{
+    using namespace testing;
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    auto cursor_image = std::make_shared<mtd::StubCursorImage>();
+    EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_));
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_cursor_image(cursor_image);
+}
+
+TEST_F(BasicSurfaceTest, notifies_about_cursor_image_removal)
+{
+    using namespace testing;
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_)).Times(0);
+    EXPECT_CALL(mock_surface_observer, cursor_image_removed());
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_cursor_image({});
+}
 
 TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
 {
