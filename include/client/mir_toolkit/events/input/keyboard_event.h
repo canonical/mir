@@ -20,7 +20,6 @@
 #define MIR_TOOLKIT_KEYBOARD_EVENT_H_
 
 #include <xkbcommon/xkbcommon.h>
-#include <mir_toolkit/cookie.h>
 
 #ifdef __cplusplus
 /**
@@ -98,14 +97,6 @@ MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* even
  * \return           The input event
  */
 MirInputEvent const* mir_keyboard_event_input_event(MirKeyboardEvent const* event);
-
-/**
- * Retrieves the timestamp cookie of a keyboard event.
- *
- * \param [in] event The keyboard event
- * \return           A MirCookie
- */
-MirCookie mir_keyboard_event_get_cookie(MirKeyboardEvent const* event);
 
 #ifdef __cplusplus
 }
