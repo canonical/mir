@@ -48,7 +48,7 @@ mi::PlatformPriority probe_input_platform(
     mo::Option const& options)
 {
     mir::assert_entry_point_signature<mi::ProbePlatform>(&probe_input_platform);
-    if (options.is_set("host-socket"))
+    if (options.is_set("host-socket") || options.is_set("vt"))
         return mi::PlatformPriority::unsupported;
 
     auto display_available = x11_resources.get_conn() != nullptr;
