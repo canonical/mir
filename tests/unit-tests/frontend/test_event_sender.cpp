@@ -29,9 +29,15 @@
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/mock_platform_ipc_operations.h"
+#include "mir/input/device.h"
+#include "mir/input/device_capability.h"
+#include "mir/input/pointer_configuration.h"
+#include "mir/input/touchpad_configuration.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <algorithm>
 
 namespace mt = mir::test;
 namespace mi = mir::input;
@@ -41,8 +47,71 @@ namespace mfd = mf::detail;
 namespace mev = mir::events;
 namespace geom = mir::geometry;
 
+namespace mir
+{
+namespace protobuf
+{
+bool operator==(InputDeviceInfo const& info, std::shared_ptr<mi::Device> const& device)
+{
+    return
+        info.id() == device->id() &&
+        info.capabilities() == device->capabilities().value() &&
+        info.name() == device->name() &&
+        info.unique_id() == device->unique_id();
+}
+
+}
+}
 namespace
 {
+MATCHER_P(InputDevicesMatch, devices, "")
+{
+    return std::equal(std::begin(arg.devices()), std::end(arg.devices()), begin(devices), end(devices));
+}
+
+struct StubDevice : mi::Device
+{
+    StubDevice(MirInputDeviceId id, mi::DeviceCapabilities caps, std::string const& name, std::string const& unique_id)
+        : device_id(id), device_capabilities(caps), device_name(name), device_unique_id(unique_id) {}
+
+    MirInputDeviceId id() const override
+    {
+        return device_id;
+    }
+    mi::DeviceCapabilities capabilities() const override
+    {
+        return device_capabilities;
+    }
+    std::string name() const override
+    {
+        return device_name;
+    }
+    std::string unique_id() const override
+    {
+        return device_unique_id;
+    }
+    mir::optional_value<mi::PointerConfiguration> pointer_configuration() const override
+    {
+        return {};
+    }
+    void apply_pointer_configuration(mi::PointerConfiguration const&) override
+    {
+    }
+
+    mir::optional_value<mi::TouchpadConfiguration> touchpad_configuration() const override
+    {
+        return {};
+    }
+    void apply_touchpad_configuration(mi::TouchpadConfiguration const&) override
+    {
+    }
+
+    MirInputDeviceId device_id;
+    mi::DeviceCapabilities device_capabilities;
+    std::string device_name;
+    std::string device_unique_id;
+};
+
 struct MockMsgSender : public mf::MessageSender
 {
     MOCK_METHOD3(send, void(char const*, size_t, mf::FdSets const&));
@@ -120,8 +189,33 @@ TEST_F(EventSender, packs_buffer_with_platform_packer)
     event_sender.send_buffer(mf::BufferStreamId{}, buffer, msg_type);
 }
 
-#if 0
 TEST_F(EventSender, sends_input_devices)
+{
+    using namespace testing;
+
+    std::vector<std::shared_ptr<mi::Device>> devices{
+        std::make_shared<StubDevice>(3, mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad, "touchpad",
+                                     "5352"),
+        std::make_shared<StubDevice>(23, mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric,
+                                     "keybaord", "7853")};
+
+    auto msg_validator = [&devices](char const* data, size_t len){
+        mir::protobuf::wire::Result wire;
+        wire.ParseFromArray(data, len);
+        std::string str = wire.events(0);
+        mir::protobuf::EventSequence seq;
+        seq.ParseFromString(str);
+        EXPECT_THAT(seq.input_device_event(), InputDevicesMatch(devices));
+    };
+
+    EXPECT_CALL(mock_msg_sender, send(_, _, _))
+        .Times(1)
+        .WillOnce(WithArgs<0,1>(Invoke(msg_validator)));
+
+    event_sender.handle_input_device_change(devices);
+}
+
+TEST_F(EventSender, sends_empty_sequence_of_devices)
 {
     using namespace testing;
 
@@ -133,8 +227,7 @@ TEST_F(EventSender, sends_input_devices)
         std::string str = wire.events(0);
         mir::protobuf::EventSequence seq;
         seq.ParseFromString(str);
-        EXPECT_THAT(seq.input_device_event(), .. array matcher ..w
-                    (std::cref(config)));
+        EXPECT_THAT(seq.input_device_event(), InputDevicesMatch(devices));
     };
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
@@ -143,4 +236,3 @@ TEST_F(EventSender, sends_input_devices)
 
     event_sender.handle_input_device_change(devices);
 }
-#endif

@@ -17,7 +17,7 @@
  */
 
 #include "mir/input/vt_filter.h"
-#include "mir/events/event_private.h"
+#include "mir_toolkit/event.h"
 
 #include <linux/input.h>
 #include <linux/vt.h>
@@ -37,12 +37,22 @@ void set_active_vt(int vt)
 
 bool mir::input::VTFilter::handle(MirEvent const& event)
 {
-    if (event.type == mir_event_type_key &&
-        event.key.action == mir_keyboard_action_down &&
-        (event.key.modifiers & mir_input_event_modifier_alt) &&
-        (event.key.modifiers & mir_input_event_modifier_ctrl))
+    if (mir_event_get_type(&event) != mir_event_type_input)
+        return false;
+
+    auto const input_event = mir_event_get_input_event(&event);
+
+    if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
+        return false;
+
+    auto const keyboard_event = mir_input_event_get_keyboard_event(input_event);
+    auto const modifier_state  = mir_keyboard_event_modifiers(keyboard_event);
+
+    if (mir_keyboard_event_action(keyboard_event) == mir_keyboard_action_down &&
+        (modifier_state & mir_input_event_modifier_alt) &&
+        (modifier_state & mir_input_event_modifier_ctrl))
     {
-        switch (event.key.scan_code)
+        switch (mir_keyboard_event_scan_code(keyboard_event))
         {
         case KEY_F1:
             set_active_vt(1);

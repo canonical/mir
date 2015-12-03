@@ -53,6 +53,7 @@ struct StubEmergencyCleanupRegistry : mir::EmergencyCleanupRegistry
     void add(mir::ModuleEmergencyCleanupHandler) override {}
 };
 char const platform_input_lib[] = "platform-input-lib";
+char const vt[] = "vt";
 char const platform_path[] = "platform-path";
 
 struct InputPlatformProbe : ::testing::Test
@@ -147,6 +148,17 @@ TEST_F(InputPlatformProbe, x11_platform_found_and_used_when_display_connection_w
 
     EXPECT_THAT(platforms, UnorderedElementsAre(OfPtrType<mi::evdev::Platform>(), OfPtrType<mi::X::XInputPlatform>()));
 }
+
+TEST_F(InputPlatformProbe, x11_input_platform_not_used_when_vt_specified)
+{
+    ON_CALL(mock_options, is_set(StrEq(vt))).WillByDefault(Return(true));
+    auto platforms =
+        mi::probe_input_platforms(mock_options, mt::fake_shared(stub_emergency), mt::fake_shared(mock_registry),
+                                  mr::null_input_report(), *stub_prober_report);
+
+    EXPECT_THAT(platforms, ElementsAre(OfPtrType<mi::evdev::Platform>()));
+}
+
 #endif
 
 TEST_F(InputPlatformProbe, allows_forcing_stub_input_platform)

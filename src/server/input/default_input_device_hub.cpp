@@ -176,7 +176,10 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(MirEvent& event)
         mev::set_modifier(event, seat->event_modifier());
 
     if (mir_input_event_type_pointer == mir_input_event_get_type(input_event))
+    {
         mev::set_cursor_position(event, seat->cursor_position());
+        mev::set_button_state(event, seat->button_state());
+    }
 
     dispatcher->dispatch(event);
 }

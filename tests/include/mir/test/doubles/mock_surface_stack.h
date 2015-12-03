@@ -17,10 +17,10 @@
  */
 
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_COORDINATOR_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_COORDINATOR_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_STACK_H_
+#define MIR_TEST_DOUBLES_MOCK_SURFACE_STACK_H_
 
-#include "mir/scene/surface_coordinator.h"
+#include "mir/shell/surface_stack.h"
 #include "mir/scene/surface_creation_parameters.h"
 
 #include <gmock/gmock.h>
@@ -32,10 +32,10 @@ namespace test
 namespace doubles
 {
 
-struct MockSurfaceCoordinator : public scene::SurfaceCoordinator
+struct MockSurfaceStack : public shell::SurfaceStack
 {
     MOCK_METHOD1(raise, void(std::weak_ptr<scene::Surface> const&));
-    MOCK_METHOD1(raise, void(scene::SurfaceCoordinator::SurfaceSet const&));
+    MOCK_METHOD1(raise, void(SurfaceSet const&));
 
     MOCK_METHOD2(add_surface, void(std::shared_ptr<scene::Surface> const&, input::InputReceptionMode new_mode));
 
@@ -48,4 +48,4 @@ struct MockSurfaceCoordinator : public scene::SurfaceCoordinator
 }
 
 
-#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_COORDINATOR_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_SURFACE_STACK_H_ */

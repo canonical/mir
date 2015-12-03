@@ -20,7 +20,6 @@
 #define MIR_EXAMPLE_CANONICAL_WINDOW_MANAGER_H_
 
 #include "server_example_basic_window_manager.h"
-#include "server_example_canonical_surface_info.h"
 
 #include "mir/geometry/displacement.h"
 
@@ -35,35 +34,27 @@ namespace mir
 namespace shell { class DisplayLayout; }
 namespace examples
 {
-struct CanonicalSessionInfoCopy
-{
-    int surfaces{0};
-};
-
 // standard window management algorithm:
 //  o Switch apps: tap or click on the corresponding tile
-//  o Move window: Alt-leftmousebutton drag
-//  o Resize window: Alt-middle_button drag
+//  o Move window: Alt-leftmousebutton drag (three finger drag)
+//  o Resize window: Alt-middle_button drag (two finger drag)
 //  o Maximize/restore current window (to display size): Alt-F11
 //  o Maximize/restore current window (to display height): Shift-F11
 //  o Maximize/restore current window (to display width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
-class CanonicalWindowManagerPolicyCopy
+class CanonicalWindowManagerPolicyCopy  : public WindowManagementPolicy
 {
 public:
-    using Tools = BasicWindowManagerToolsCopy<CanonicalSessionInfoCopy, CanonicalSurfaceInfoCopy>;
-    using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfoCopy>::type;
-    using CanonicalSurfaceInfoMap = typename SurfaceTo<CanonicalSurfaceInfoCopy>::type;
 
     explicit CanonicalWindowManagerPolicyCopy(
-        Tools* const tools,
+        WindowManagerTools* const tools,
         std::shared_ptr<shell::DisplayLayout> const& display_layout);
 
     void click(geometry::Point cursor);
 
-    void handle_session_info_updated(CanonicalSessionInfoMap& session_info, geometry::Rectangles const& displays);
+    void handle_session_info_updated(SessionInfoMap& session_info, geometry::Rectangles const& displays);
 
-    void handle_displays_updated(CanonicalSessionInfoMap& session_info, geometry::Rectangles const& displays);
+    void handle_displays_updated(SessionInfoMap& session_info, geometry::Rectangles const& displays);
 
     void resize(geometry::Point cursor);
 
@@ -98,7 +89,7 @@ public:
     void generate_decorations_for(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        CanonicalSurfaceInfoMap& surface_map,
+        SurfaceInfoMap& surface_map,
         std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build);
 
 private:
@@ -119,14 +110,13 @@ private:
     bool resize(std::shared_ptr<scene::Surface> const& surface, geometry::Point cursor, geometry::Point old_cursor, geometry::Rectangle bounds);
     bool drag(std::shared_ptr<scene::Surface> surface, geometry::Point to, geometry::Point from, geometry::Rectangle bounds);
     void move_tree(std::shared_ptr<scene::Surface> const& root, geometry::Displacement movement) const;
-    void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
     void apply_resize(
         std::shared_ptr<mir::scene::Surface> const& surface,
         std::shared_ptr<mir::scene::Surface> const& titlebar,
         geometry::Point const& new_pos,
         geometry::Size const& new_size) const;
 
-    Tools* const tools;
+    WindowManagerTools* const tools;
     std::shared_ptr<shell::DisplayLayout> const display_layout;
 
     geometry::Rectangle display_area;

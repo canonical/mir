@@ -173,6 +173,22 @@ void mir::GLibMainLoop::register_signal_handler(
     signal_sources.add(sigs, handler_with_exception_handling);
 }
 
+void mir::GLibMainLoop::register_signal_handler(
+    std::initializer_list<int> sigs,
+    mir::UniqueModulePtr<std::function<void(int)>> handler)
+{
+    std::shared_ptr<std::function<void(int)>> const shared_handler{std::move(handler)};
+
+    auto const handler_with_exception_handling =
+        [this, shared_handler] (int sig)
+        {
+            try { (*shared_handler)(sig); }
+            catch (...) { handle_exception(std::current_exception()); }
+        };
+
+    signal_sources.add(sigs, handler_with_exception_handling);
+}
+
 void mir::GLibMainLoop::register_fd_handler(
     std::initializer_list<int> fds,
     void const* owner,
@@ -182,6 +198,24 @@ void mir::GLibMainLoop::register_fd_handler(
         [this, handler] (int fd)
         {
             try { handler(fd); }
+            catch (...) { handle_exception(std::current_exception()); }
+        };
+
+    for (auto fd : fds)
+        fd_sources.add(fd, owner, handler_with_exception_handling);
+}
+
+void mir::GLibMainLoop::register_fd_handler(
+    std::initializer_list<int> fds,
+    void const* owner,
+    mir::UniqueModulePtr<std::function<void(int)>> handler)
+{
+    std::shared_ptr<std::function<void(int)>> const shared_handler{std::move(handler)};
+
+    auto const handler_with_exception_handling =
+        [this, shared_handler] (int fd)
+        {
+            try { (*shared_handler)(fd); }
             catch (...) { handle_exception(std::current_exception()); }
         };
 

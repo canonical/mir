@@ -132,6 +132,82 @@ TEST(DeviceDetection, aligns_width_on_vegetahd)
     EXPECT_THAT(quirks.aligned_width(720), Eq(736));
 }
 
+TEST(DeviceDetection, clears_gl_context_fence_on_manta)
+{
+    using namespace testing;
+    char const default_str[] = "";
+    char const mx4_name_str[] = "manta";
+
+    MockOps mock_ops;
+    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
+        .Times(1)
+        .WillOnce(Invoke([&](char const*, char* value, char const*)
+        {
+            strncpy(value, mx4_name_str, PROP_VALUE_MAX);
+            return 0;
+        }));
+
+    mga::DeviceQuirks quirks(mock_ops);
+    EXPECT_TRUE(quirks.clear_fb_context_fence());
+}
+
+TEST(DeviceDetection, clears_gl_context_fence_on_mx4)
+{
+    using namespace testing;
+    char const default_str[] = "";
+    char const mx4_name_str[] = "mx4";
+
+    MockOps mock_ops;
+    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
+        .Times(1)
+        .WillOnce(Invoke([&](char const*, char* value, char const*)
+        {
+            strncpy(value, mx4_name_str, PROP_VALUE_MAX);
+            return 0;
+        }));
+
+    mga::DeviceQuirks quirks(mock_ops);
+    EXPECT_TRUE(quirks.clear_fb_context_fence());
+}
+
+TEST(DeviceDetection, clears_gl_context_fence_on_krillin)
+{
+    using namespace testing;
+    char const default_str[] = "";
+    char const krillin_name_str[] = "krillin";
+
+    MockOps mock_ops;
+    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
+        .Times(1)
+        .WillOnce(Invoke([&](char const*, char* value, char const*)
+        {
+            strncpy(value, krillin_name_str, PROP_VALUE_MAX);
+            return 0;
+        }));
+
+    mga::DeviceQuirks quirks(mock_ops);
+    EXPECT_TRUE(quirks.clear_fb_context_fence());
+}
+
+TEST(DeviceDetection, does_not_clear_gl_context_fence_on_others)
+{
+    using namespace testing;
+    char const default_str[] = "";
+    char const mx4_name_str[] = "others";
+
+    MockOps mock_ops;
+    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
+        .Times(1)
+        .WillOnce(Invoke([&](char const*, char* value, char const*)
+        {
+            strncpy(value, mx4_name_str, PROP_VALUE_MAX);
+            return 0;
+        }));
+
+    mga::DeviceQuirks quirks(mock_ops);
+    EXPECT_FALSE(quirks.clear_fb_context_fence());
+}
+
 struct DeviceQuirks : testing::Test
 {
     void SetUp()
