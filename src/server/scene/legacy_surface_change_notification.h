@@ -50,6 +50,7 @@ public:
     void client_surface_close_requested() override;
     void keymap_changed(xkb_rule_names const& names) override;
     void renamed(char const*) override;
+    void cursor_image_removed() override;
 
 private:
     std::function<void()> const notify_scene_change;
