@@ -194,6 +194,7 @@
 # futex
 
 {
+   futex_utime
    Memcheck:Param
    futex(utime)
    fun:syscall
