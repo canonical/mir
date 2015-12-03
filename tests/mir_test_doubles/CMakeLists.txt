@@ -70,6 +70,7 @@ endif()
 add_library(mir-public-test-doubles OBJECT
   nested_mock_egl.cpp
   null_logger.cpp
+  fake_display.cpp ${CMAKE_SOURCE_DIR}/include/test/mir/test/doubles/fake_display.h
 )
 
 add_library(mir-test-doubles-static STATIC

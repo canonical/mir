@@ -24,7 +24,7 @@
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/doubles/null_platform.h"
-#include "mir/test/doubles/null_display.h"
+#include "mir/test/doubles/fake_display.h"
 #include "mir/test/doubles/null_display_sync_group.h"
 #include "mir/test/doubles/null_platform.h"
 #include "mir/test/display_config_matchers.h"
@@ -59,72 +59,21 @@ mtd::StubDisplayConfig stub_display_config;
 
 mtd::StubDisplayConfig changed_stub_display_config{1};
 
-class MockDisplay : public mtd::NullDisplay
+class MockDisplay : public mtd::FakeDisplay
 {
 public:
-    MockDisplay()
-        : config{std::make_shared<mtd::StubDisplayConfig>()},
-          handler_called{false}
+    MockDisplay(): mtd::FakeDisplay()
     {
         using namespace testing;
         ON_CALL(*this, configure(_))
             .WillByDefault(Invoke(
                 [this](mg::DisplayConfiguration const& new_config)
                 {
-                    config = std::make_shared<mtd::StubDisplayConfig>(new_config);
+                    mtd::FakeDisplay::configure(new_config);
                 }));
     }
 
-    void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
-    {
-        f(display_sync_group);
-    }
-
-    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
-    {
-        return std::unique_ptr<mg::DisplayConfiguration>(
-            new mtd::StubDisplayConfig(*config)
-        );
-    }
-
-    void register_configuration_change_handler(
-        mg::EventHandlerRegister& handlers,
-        mg::DisplayConfigurationChangeHandler const& handler) override
-    {
-        handlers.register_fd_handler(
-            {p.read_fd()},
-            this,
-            [this, handler](int fd)
-            {
-                char c;
-                if (read(fd, &c, 1) == 1)
-                {
-                    handler();
-                    handler_called = true;
-                }
-            });
-    }
-
     MOCK_METHOD1(configure, void(mg::DisplayConfiguration const&));
-
-    void emit_configuration_change_event(
-        std::shared_ptr<mtd::StubDisplayConfig> const& new_config)
-    {
-        config = new_config;
-        if (write(p.write_fd(), "a", 1)) {}
-    }
-
-    void wait_for_configuration_change_handler()
-    {
-        while (!handler_called)
-            std::this_thread::sleep_for(std::chrono::milliseconds{1});
-    }
-
-private:
-    std::shared_ptr<mg::DisplayConfiguration> config;
-    mtd::NullDisplaySyncGroup display_sync_group;
-    mt::Pipe p;
-    std::atomic<bool> handler_called;
 };
 
 struct StubAuthorizer : mtd::StubSessionAuthorizer
