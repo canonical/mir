@@ -841,7 +841,7 @@ TEST_F(NestedServer, when_monitor_unplugs_client_is_notified_of_new_display_conf
     mir_connection_release(connection);
 }
 
-TEST_F(NestedServer, when_monitor_unplugs_base_display_configuration_is_reset)
+TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_monitor_unplugs_configuration_is_reset)
 {
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
@@ -893,7 +893,7 @@ TEST_F(NestedServer, when_monitor_unplugs_base_display_configuration_is_reset)
 // doesn't reset the session config of the active client (even though it
 // clears it from MediatingDisplayChanger::config_map).  There are, however,
 // other tests that rely on that behavior, so we'll address it later.
-TEST_F(NestedServer, DISABLED_when_monitor_unplugs_client_display_configuration_is_reset)
+TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monitor_unplugs_configuration_is_reset)
 {
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
