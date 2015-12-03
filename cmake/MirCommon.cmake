@@ -63,7 +63,7 @@ function (mir_discover_tests_internal EXECUTABLE DETECT_FD_LEAKS)
 
   if(ENABLE_MEMCHECK_OPTION)
     set(test_cmd ${VALGRIND_CMD} ${test_cmd_no_memcheck})
-    set(test_no_memcheck_filter "*DeathTest.*")
+    set(test_no_memcheck_filter "*DeathTest.*:ThreadedDispatcherSignalTest.keeps_dispatching_after_signal_interruption")
   endif()
 
   if(cmake_build_type_lower MATCHES "threadsanitizer")
