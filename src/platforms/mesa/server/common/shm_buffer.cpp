@@ -176,3 +176,12 @@ mg::NativeBufferBase* mgm::ShmBuffer::native_buffer_base()
 {
     return this;
 }
+
+void mgm::ShmBuffer::bind()
+{
+    gl_bind_to_texture();
+}
+
+void mgm::ShmBuffer::secure_for_render()
+{
+}

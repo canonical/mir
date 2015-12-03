@@ -47,6 +47,7 @@ public:
     void commit(std::list<DisplayContents> const& contents) override;
     void content_cleared() override;
     std::chrono::milliseconds recommended_sleep() const override;
+    bool can_swap_buffers() const override;
 
 private:
     bool buffer_is_onscreen(Buffer const&) const;
