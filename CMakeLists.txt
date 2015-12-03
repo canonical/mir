@@ -103,6 +103,9 @@ elseif(cmake_build_type_lower MATCHES "threadsanitizer")
     # -fsanitize=thread is used, but doesn't.
     #
     # Linking everything with tsan is harmless and simple, so do that.
+    if (CMAKE_VERSION VERSION_GREATER 3.2.1)
+      cmake_policy(SET CMP0022 OLD)
+    endif()
     link_libraries(tsan)
   endif()
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")
