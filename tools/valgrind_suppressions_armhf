@@ -190,3 +190,12 @@
    fun:memset
    fun:g_slice_alloc0
 }
+
+# futex
+
+{
+   Memcheck:Param
+   futex(utime)
+   fun:syscall
+   fun:_ZNSt28__atomic_futex_unsigned_base19_M_futex_wait_untilEPjjbNSt6chrono8durationIxSt5ratioILx1ELx1EEEENS2_IxS3_ILx1ELx1000000000EEEE
+}
