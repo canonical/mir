@@ -397,8 +397,9 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
         report);
 
     stack.add_surface(surface, default_params.input_mode);
-    surface->configure(mir_surface_attrib_visibility,
-                       mir_surface_visibility_occluded);
+    auto elements = stack.scene_elements_for(this);
+    for (auto const& elem : elements)
+        elem->occluded();
 
     EXPECT_EQ(0, stack.frames_pending(this));
     post_a_frame(*surface);
@@ -433,7 +434,9 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_su
     post_a_frame(*surface);
     post_a_frame(*surface);
 
+    EXPECT_EQ(3, stack.frames_pending(comp1));
     EXPECT_EQ(3, stack.frames_pending(comp2));
+
     auto elements = stack.scene_elements_for(comp1);
     for (auto const& elem : elements)
     {
@@ -446,6 +449,7 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_su
         elem->occluded();
     }
 
+    EXPECT_EQ(3, stack.frames_pending(comp1));
     EXPECT_EQ(0, stack.frames_pending(comp2));
 }
 
