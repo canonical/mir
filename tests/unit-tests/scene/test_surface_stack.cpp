@@ -349,7 +349,7 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
         .WillByDefault(InvokeWithoutArgs([&]{ready++;}));
     ON_CALL(*mock_queue, compositor_acquire(_))
         .WillByDefault(InvokeWithoutArgs([&]{ready--; return mt::fake_shared(stub_buffer); }));
- 
+
     auto surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),
         geom::Rectangle{{},{}},
@@ -624,17 +624,73 @@ TEST_F(SurfaceStack, scene_observer_informed_of_existing_surfaces)
 {
     using namespace ::testing;
 
-    using namespace ::testing;
-
     MockSceneObserver observer;
 
     InSequence seq;
     EXPECT_CALL(observer, surface_exists(stub_surface1.get())).Times(1);
     EXPECT_CALL(observer, surface_exists(stub_surface2.get())).Times(1);
-    
+
     stack.add_surface(stub_surface1, default_params.input_mode);
     stack.add_surface(stub_surface2, default_params.input_mode);
 
+    stack.add_observer(mt::fake_shared(observer));
+}
+
+TEST_F(SurfaceStack, scene_observer_can_query_scene_within_surface_exists_notification)
+{
+    using namespace ::testing;
+
+    MockSceneObserver observer;
+
+    auto const scene_query = [&]{
+        stack.for_each([&](std::shared_ptr<mi::Surface> const& surface){
+            EXPECT_THAT(surface.get(), Eq(stub_surface1.get()));
+        });
+    };
+    EXPECT_CALL(observer, surface_exists(stub_surface1.get())).Times(1)
+        .WillOnce(InvokeWithoutArgs(scene_query));
+
+    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_observer(mt::fake_shared(observer));
+}
+
+TEST_F(SurfaceStack, scene_observer_can_async_query_scene_within_surface_exists_notification)
+{
+    using namespace ::testing;
+
+    MockSceneObserver observer;
+
+    auto const scene_query = [&]{
+        stack.for_each([&](std::shared_ptr<mi::Surface> const& surface){
+            EXPECT_THAT(surface.get(), Eq(stub_surface1.get()));
+        });
+    };
+
+    auto const async_scene_query = [&]{
+        std::async(std::launch::async, scene_query);
+    };
+
+    EXPECT_CALL(observer, surface_exists(stub_surface1.get())).Times(1)
+        .WillOnce(InvokeWithoutArgs(async_scene_query));
+
+    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_observer(mt::fake_shared(observer));
+}
+
+
+TEST_F(SurfaceStack, scene_observer_can_remove_surface_from_scene_within_surface_exists_notification)
+{
+    using namespace ::testing;
+
+    MockSceneObserver observer;
+
+    auto const surface_removal = [&]{
+        stack.remove_surface(stub_surface1);
+    };
+    EXPECT_CALL(observer, surface_exists(stub_surface1.get())).Times(1)
+        .WillOnce(InvokeWithoutArgs(surface_removal));
+
+    stack.add_surface(stub_surface1, default_params.input_mode);
     stack.add_observer(mt::fake_shared(observer));
 }
 
@@ -927,7 +983,7 @@ TEST_F(SurfaceStack, scene_observer_notified_of_add_and_remove_input_visualizati
 TEST_F(SurfaceStack, overlays_do_not_appear_in_input_enumeration)
 {
     mtd::StubRenderable r;
-    
+
     stack.add_surface(stub_surface1, default_params.input_mode);
     stack.add_surface(stub_surface2, default_params.input_mode);
 
@@ -950,25 +1006,7 @@ TEST_F(SurfaceStack, overlays_appear_at_top_of_renderlist)
     using namespace ::testing;
 
     mtd::StubRenderable r;
-    
-    stack.add_surface(stub_surface1, default_params.input_mode);
-    stack.add_input_visualization(mt::fake_shared(r));
-    stack.add_surface(stub_surface2, default_params.input_mode);
 
-    EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
-        ElementsAre(
-            SceneElementForSurface(stub_surface1),
-            SceneElementForSurface(stub_surface2),
-            SceneElementForStream(mt::fake_shared(r))));    
-}
-
-TEST_F(SurfaceStack, removed_overlays_are_removed)
-{
-    using namespace ::testing;
-
-    mtd::StubRenderable r;
-    
     stack.add_surface(stub_surface1, default_params.input_mode);
     stack.add_input_visualization(mt::fake_shared(r));
     stack.add_surface(stub_surface2, default_params.input_mode);
@@ -979,7 +1017,25 @@ TEST_F(SurfaceStack, removed_overlays_are_removed)
             SceneElementForSurface(stub_surface1),
             SceneElementForSurface(stub_surface2),
             SceneElementForStream(mt::fake_shared(r))));
-    
+}
+
+TEST_F(SurfaceStack, removed_overlays_are_removed)
+{
+    using namespace ::testing;
+
+    mtd::StubRenderable r;
+
+    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_input_visualization(mt::fake_shared(r));
+    stack.add_surface(stub_surface2, default_params.input_mode);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForSurface(stub_surface1),
+            SceneElementForSurface(stub_surface2),
+            SceneElementForStream(mt::fake_shared(r))));
+
     stack.remove_input_visualization(mt::fake_shared(r));
 
     EXPECT_THAT(
@@ -995,10 +1051,10 @@ TEST_F(SurfaceStack, scene_observers_notified_of_generic_scene_change)
 
     EXPECT_CALL(o1, scene_changed()).Times(1);
     EXPECT_CALL(o2, scene_changed()).Times(1);
-    
+
     stack.add_observer(mt::fake_shared(o1));
     stack.add_observer(mt::fake_shared(o2));
-    
+
     stack.emit_scene_changed();
 }
 

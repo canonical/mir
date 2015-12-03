@@ -24,6 +24,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/scene/observer.h"
 #include "mir/input/scene.h"
+#include "mir/recursive_read_write_mutex.h"
 
 #include "mir/basic_observers.h"
 
@@ -106,7 +107,7 @@ private:
     void create_rendering_tracker_for(std::shared_ptr<Surface> const&);
     void update_rendering_tracker_compositors();
 
-    std::mutex mutable guard;
+    RecursiveReadWriteMutex mutable guard;
 
     std::shared_ptr<InputRegistrar> const input_registrar;
     std::shared_ptr<SceneReport> const report;
