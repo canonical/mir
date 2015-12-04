@@ -888,11 +888,12 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
     mir_connection_release(connection);
 }
 
-// TODO this test needs some core changes before it will pass.
+// TODO this test needs some core changes before it will pass. C.f. lp:1522802
 // Specifically, ms::MediatingDisplayChanger::configure_for_hardware_change()
 // doesn't reset the session config of the active client (even though it
-// clears it from MediatingDisplayChanger::config_map).  There are, however,
-// other tests that rely on that behavior, so we'll address it later.
+// clears it from MediatingDisplayChanger::config_map).
+// This is intentional, to avoid redundant reconfigurations, but we should
+// handle the case of a client failing to apply a new config.
 TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monitor_unplugs_configuration_is_reset)
 {
     NestedMirRunner nested_mir{new_connection()};
@@ -1032,11 +1033,12 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
     mir_connection_release(connection);
 }
 
-// TODO this test needs some core changes before it will pass.
+// TODO this test needs some core changes before it will pass. C.f. lp:1522802
 // Specifically, ms::MediatingDisplayChanger::configure_for_hardware_change()
 // doesn't reset the session config of the active client (even though it
-// clears it from MediatingDisplayChanger::config_map).  There are, however,
-// other tests that rely on that behavior, so we'll address it later.
+// clears it from MediatingDisplayChanger::config_map).
+// This is intentional, to avoid redundant reconfigurations, but we should
+// handle the case of a client failing to apply a new config.
 TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monitor_plugged_in_configuration_is_reset)
 {
     NestedMirRunner nested_mir{new_connection()};
@@ -1081,6 +1083,60 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
     condition.wait_for_at_most_seconds(1);
     EXPECT_TRUE(condition.woken());
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
+
+    mir_surface_release_sync(painted_surface);
+    mir_connection_release(connection);
+}
+
+// TODO this test is unexpectedly flaky and can crash
+TEST_F(NestedServer,
+       DISABLED_given_client_set_display_configuration_when_monitor_unplugs_client_is_notified_of_new_display_configuration)
+{
+    NestedMirRunner nested_mir{new_connection()};
+    ignore_rebuild_of_egl_context();
+
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+    auto const painted_surface = make_and_paint_surface(connection);
+
+    {
+        mt::WaitCondition initial_condition;
+
+        EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
+            .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
+
+        auto const configuration = mir_connection_create_display_config(connection);
+        configuration->outputs->used = false;
+        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+        mir_display_config_destroy(configuration);
+
+        initial_condition.wait_for_at_most_seconds(1);
+        Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
+        ASSERT_TRUE(initial_condition.woken());
+    }
+
+    auto new_displays = display_geometry;
+    new_displays.resize(1);
+
+    auto const new_config = std::make_shared<mtd::StubDisplayConfig>(new_displays);
+
+    mt::WaitCondition condition;
+
+    auto const display_change_handler = [](MirConnection*, void* context)
+        { static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); };
+
+    mir_connection_set_display_config_change_callback(connection, display_change_handler, &condition);
+
+    display.emit_configuration_change_event(new_config);
+
+    condition.wait_for_at_most_seconds(1);
+
+    EXPECT_TRUE(condition.woken());
+
+    auto const configuration = mir_connection_create_display_config(connection);
+
+    EXPECT_THAT(configuration, mt::DisplayConfigMatches(*new_config));
+
+    mir_display_config_destroy(configuration);
 
     mir_surface_release_sync(painted_surface);
     mir_connection_release(connection);
