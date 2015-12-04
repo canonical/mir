@@ -194,6 +194,13 @@ struct MockDisplayConfigurationPolicy : mg::DisplayConfigurationPolicy
     MOCK_METHOD1(apply_to, void (mg::DisplayConfiguration&));
 };
 
+struct MockDisplay : mtd::FakeDisplay
+{
+    using mtd::FakeDisplay::FakeDisplay;
+
+    MOCK_METHOD1(configure, void (mg::DisplayConfiguration const&));
+};
+
 class NestedMirRunner : public mtf::HeadlessNestedServerRunner
 {
 public:
@@ -251,7 +258,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
     mtf::UsingStubClientPlatform using_stub_client_platform;
 
     std::shared_ptr<MockSessionMediatorReport> mock_session_mediator_report;
-    mtd::FakeDisplay display{display_geometry};
+    NiceMock<MockDisplay> display{display_geometry};
 
     void SetUp() override
     {
@@ -1089,6 +1096,9 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
 }
 
 // TODO this test is unexpectedly flaky and can crash
+// It looks like the nested server deadlocks as in the crashing runs:
+// 1. there is no display_change_handler message; and,
+// 2. the nested server doesn't exit on request
 TEST_F(NestedServer,
        DISABLED_given_client_set_display_configuration_when_monitor_unplugs_client_is_notified_of_new_display_configuration)
 {
@@ -1096,35 +1106,40 @@ TEST_F(NestedServer,
     ignore_rebuild_of_egl_context();
 
     auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    mt::WaitCondition condition;
+
+    mir_connection_set_display_config_change_callback(
+        connection,
+        [](MirConnection*, void* context) { puts("===========>> display_change_handler <<===========");
+                                            static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); },
+        &condition);
+
     auto const painted_surface = make_and_paint_surface(connection);
 
     {
         mt::WaitCondition initial_condition;
 
-        EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
-            .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
-
         auto const configuration = mir_connection_create_display_config(connection);
         configuration->outputs->used = false;
+
+        EXPECT_CALL(display, configure(Not(mt::DisplayConfigMatches(configuration)))).Times(AnyNumber())
+            .WillRepeatedly(InvokeWithoutArgs([] {}));
+        EXPECT_CALL(display, configure(mt::DisplayConfigMatches(configuration)))
+            .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
+
         mir_wait_for(mir_connection_apply_display_config(connection, configuration));
-        mir_display_config_destroy(configuration);
 
         initial_condition.wait_for_at_most_seconds(1);
-        Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
+        Mock::VerifyAndClearExpectations(&display);
         ASSERT_TRUE(initial_condition.woken());
+        mir_display_config_destroy(configuration);
     }
 
     auto new_displays = display_geometry;
     new_displays.resize(1);
 
     auto const new_config = std::make_shared<mtd::StubDisplayConfig>(new_displays);
-
-    mt::WaitCondition condition;
-
-    auto const display_change_handler = [](MirConnection*, void* context)
-        { static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); };
-
-    mir_connection_set_display_config_change_callback(connection, display_change_handler, &condition);
 
     display.emit_configuration_change_event(new_config);
 
@@ -1140,4 +1155,5 @@ TEST_F(NestedServer,
 
     mir_surface_release_sync(painted_surface);
     mir_connection_release(connection);
+    Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 }
