@@ -75,9 +75,6 @@ function (mir_discover_tests_internal EXECUTABLE DETECT_FD_LEAKS)
     endif()
     # Space after ${TSAN_EXTRA_OPTIONS} works around bug in TSAN env. variable parsing 
     list(APPEND test_env "TSAN_OPTIONS=\"suppressions=${CMAKE_SOURCE_DIR}/tools/tsan-suppressions second_deadlock_stack=1 halt_on_error=1 history_size=7 ${TSAN_EXTRA_OPTIONS} \"")
-    # TSan does not support multi-threaded fork
-    # TSan may open fds so "surface_creation_does_not_leak_fds" will not work as written
-    # TSan deadlocks when running StreamTransportTest/0.SendsFullMessagesWhenInterrupted - disable it until understood
   endif()
 
   if(SYSTEM_SUPPORTS_O_TMPFILE EQUAL 1)
