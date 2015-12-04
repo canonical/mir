@@ -76,6 +76,7 @@ mir (0.18.0-0ubuntu1) UNRELEASED; urgency=medium
         . notify when cursor images are removed (LP: #1521795)
         . use EGL_fence_sync extension on the android platform (LP: #1517205)
         . fix arm64, powerpc, ppc64el builds (LP: #1522122)
+        . fix locking in ms::SurfaceStack (LP: #1522105)
 
  -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 30 Nov 2015 14:09:31 -0500
 
