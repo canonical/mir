@@ -200,3 +200,11 @@
    fun:syscall
    fun:_ZNSt28__atomic_futex_unsigned_base19_M_futex_wait_untilEPjjbNSt6chrono8durationIxSt5ratioILx1ELx1EEEENS2_IxS3_ILx1ELx1000000000EEEE
 }
+
+{
+   futex_timeout
+   Memcheck:Param
+   futex(timeout)
+   fun:syscall
+   fun:_ZNSt28__atomic_futex_unsigned_base19_M_futex_wait_untilEPjjbNSt6chrono8durationIxSt5ratioILx1ELx1EEEENS2_IxS3_ILx1ELx1000000000EEEE
+}
