@@ -49,8 +49,8 @@ public:
     InputDeviceConfig(bool disable_while_typing,
                       double mouse_cursor_acceleration_bias,
                       double mouse_scroll_speed_scale,
-                      double touchpad_scroll_speed_scale,
                       double touchpad_cursor_acceleration_bias,
+                      double touchpad_scroll_speed_scale,
                       MirTouchpadClickModes click_mode,
                       MirTouchpadScrollModes scroll_mode);
     void device_added(std::shared_ptr<input::Device> const& device) override;
