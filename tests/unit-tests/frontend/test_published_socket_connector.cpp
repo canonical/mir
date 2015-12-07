@@ -41,8 +41,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <stdexcept>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 namespace mf = mir::frontend;
@@ -160,7 +160,7 @@ TEST_F(PublishedSocketConnector, connection_sets_app_name)
 
     client->wait_for_connect_done();
 
-    EXPECT_EQ(__PRETTY_FUNCTION__, stub_server_tool->app_name);
+    EXPECT_EQ(__PRETTY_FUNCTION__, stub_server_tool->application_name());
 }
 
 TEST_F(PublishedSocketConnector, create_surface_sets_surface_name)
@@ -186,7 +186,7 @@ TEST_F(PublishedSocketConnector, create_surface_sets_surface_name)
 
     client->wait_for_create_surface();
 
-    EXPECT_EQ(__PRETTY_FUNCTION__, stub_server_tool->surface_name);
+    EXPECT_EQ(__PRETTY_FUNCTION__, stub_server_tool->surface_name());
 }
 
 

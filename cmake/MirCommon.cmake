@@ -74,7 +74,9 @@ function (mir_discover_tests_internal EXECUTABLE DETECT_FD_LEAKS)
       endif()
     endif()
     # Space after ${TSAN_EXTRA_OPTIONS} works around bug in TSAN env. variable parsing 
-    list(APPEND test_env "TSAN_OPTIONS=\"suppressions=${CMAKE_SOURCE_DIR}/tools/tsan-suppressions second_deadlock_stack=1 halt_on_error=1 history_size=7 ${TSAN_EXTRA_OPTIONS} \"")
+    list(APPEND test_env "TSAN_OPTIONS=\"suppressions=${CMAKE_SOURCE_DIR}/tools/tsan-suppressions second_deadlock_stack=1 halt_on_error=1 history_size=7 die_after_fork=0 ${TSAN_EXTRA_OPTIONS} \"")
+     # TSan does not support starting threads after fork
+    set(test_exclusion_filter "ThreadedDispatcherSignalTest.keeps_dispatching_after_signal_interruption")
   endif()
 
   if(SYSTEM_SUPPORTS_O_TMPFILE EQUAL 1)
