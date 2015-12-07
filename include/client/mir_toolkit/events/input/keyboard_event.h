@@ -32,7 +32,7 @@ extern "C" {
 /**
  * An event type describing a change in keyboard state
  *
- * Apology #1: The name "MirKeyboardEvent" is used instead of "MirKeyEvent"
+ * Apology #1: The name "MirKeyboardEvent" is used instead of "MirKeyboardEvent"
  * because the latter still exists in the old Mir event API.
  *
  * Apology #2: Keyboard events almost always come from a keyboard, except they

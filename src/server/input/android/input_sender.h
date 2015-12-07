@@ -100,7 +100,7 @@ private:
         void on_response_timeout();
         void update_timer();
         void cancel_timer();
-        droidinput::status_t send_key_event(uint32_t sequence_id, MirKeyEvent const& event);
+        droidinput::status_t send_key_event(uint32_t sequence_id, MirKeyboardEvent const& event);
         droidinput::status_t send_motion_event(uint32_t sequence_id, MirMotionEvent const& event);
         InputSendEntry unqueue_entry(uint32_t sequence_id);
         void enqueue_entry(InputSendEntry && entry);
