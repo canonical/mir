@@ -71,6 +71,10 @@ public:
         mir::protobuf::DisplayConfiguration const* request,
         mir::protobuf::DisplayConfiguration* response,
         google::protobuf::Closure* done) override;
+    void set_base_display_configuration(
+        mir::protobuf::DisplayConfiguration const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
     void create_screencast(
         mir::protobuf::ScreencastParameters const* request,
         mir::protobuf::Screencast* response,
@@ -133,6 +137,10 @@ public:
         google::protobuf::Closure* done) override;
     void configure_buffer_stream(
         mir::protobuf::StreamConfiguration const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
+    void raise_surface_with_cookie(
+        mir::protobuf::RaiseRequest const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
 private:

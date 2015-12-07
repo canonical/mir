@@ -23,7 +23,6 @@ namespace mtf = mir_test_framework;
 namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
-namespace mia = mir::input::android;
 
 mtf::FakeInputServerConfiguration::FakeInputServerConfiguration()
 {
@@ -53,9 +52,3 @@ std::shared_ptr<mi::InputSender> mtf::FakeInputServerConfiguration::the_input_se
 {
     return DefaultServerConfiguration::the_input_sender();
 }
-
-std::shared_ptr<mi::LegacyInputDispatchable> mtf::FakeInputServerConfiguration::the_legacy_input_dispatchable()
-{
-    return DefaultServerConfiguration::the_legacy_input_dispatchable();
-}
-

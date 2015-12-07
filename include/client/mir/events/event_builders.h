@@ -22,6 +22,7 @@
 #include "mir_toolkit/event.h"
 
 #include "mir/geometry/size.h"
+#include "mir/geometry/point.h"
 #include "mir/frontend/surface_id.h"
 
 #include <memory>
@@ -60,6 +61,8 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
     int scan_code, MirInputEventModifiers modifiers);
 
 void set_modifier(MirEvent& event, MirInputEventModifiers modifiers);
+void set_cursor_position(MirEvent& event, mir::geometry::Point const& pos);
+void set_button_state(MirEvent& event, MirPointerButtons button_state);
 
 // Deprecated version without mac
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,

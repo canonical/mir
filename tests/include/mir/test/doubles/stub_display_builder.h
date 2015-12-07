@@ -70,7 +70,7 @@ struct StubHwcConfiguration : public graphics::android::HwcConfiguration
     {
         bool connected{name == graphics::android::DisplayName::primary};
         auto config = StubDisplayConfig({{connected, connected}}).outputs[0];
-        config.id = static_cast<graphics::DisplayConfigurationOutputId>(name);
+        config.id = as_output_id(name);
         return config;
     }
     
@@ -124,6 +124,11 @@ struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
             new testing::NiceMock<MockHwcConfiguration>()};
         fn(*mock_config);
         config = std::move(mock_config); 
+    }
+
+    std::unique_ptr<graphics::CommandStreamSync> create_command_stream_sync()
+    {
+        return std::make_unique<graphics::NullCommandSync>();
     }
 
     geometry::Size sz;

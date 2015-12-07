@@ -205,8 +205,6 @@ void mix::XInputPlatform::process_input_event()
                             event_time,
                             mir_pointer_action_motion,
                             0,
-                            xbev.x,
-                            xbev.y,
                             0.0f,
                             (xbev.button == Button4) ? 1.0f : -1.0f,
                             0.0f,
@@ -216,6 +214,10 @@ void mix::XInputPlatform::process_input_event()
                 }
                 else
                 {
+                    auto const old_pointer_pos = core_pointer->pointer_pos;
+                    core_pointer->pointer_pos = geometry::Point{xbev.x, xbev.y};
+                    auto const movement = core_pointer->pointer_pos - old_pointer_pos;
+
                     core_pointer->sink->handle_input(
                         *core_pointer->builder->pointer_event(
                             event_time,
@@ -223,12 +225,10 @@ void mix::XInputPlatform::process_input_event()
                                 mir_pointer_action_button_down :
                                 mir_pointer_action_button_up,
                             buttons_pressed,
-                            xbev.x,
-                            xbev.y,
                             0.0f,
                             0.0f,
-                            0.0f,
-                            0.0f
+                            movement.dx.as_float(),
+                            movement.dy.as_float()
                             )
                         );
                 }
@@ -275,8 +275,6 @@ void mix::XInputPlatform::process_input_event()
                         event_time,
                         mir_pointer_action_motion,
                         buttons_pressed,
-                        xmev.x,
-                        xmev.y,
                         0.0f,
                         0.0f,
                         0.0f,

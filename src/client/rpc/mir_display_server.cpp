@@ -91,6 +91,13 @@ void mclr::DisplayServer::configure_display(
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
+void mclr::DisplayServer::set_base_display_configuration(
+    mir::protobuf::DisplayConfiguration const* request,
+    mir::protobuf::Void* response,
+    google::protobuf::Closure* done)
+{
+    channel->call_method(std::string(__func__), request, response, done);
+}
 void mclr::DisplayServer::create_screencast(
     mir::protobuf::ScreencastParameters const* request,
     mir::protobuf::Screencast* response,
@@ -198,6 +205,13 @@ void mclr::DisplayServer::pong(
 }
 void mclr::DisplayServer::configure_buffer_stream(
     mir::protobuf::StreamConfiguration const* request,
+    mir::protobuf::Void* response,
+    google::protobuf::Closure* done)
+{
+    channel->call_method(std::string(__func__), request, response, done);
+}
+void mclr::DisplayServer::raise_surface_with_cookie(
+    mir::protobuf::RaiseRequest const* request,
     mir::protobuf::Void* response,
     google::protobuf::Closure* done)
 {

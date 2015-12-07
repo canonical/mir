@@ -219,6 +219,7 @@ MIRPLATFORM_11 {
     vtable?for?mir::graphics::EventHandlerRegister;
     vtable?for?mir::graphics::GLConfig;
     vtable?for?mir::graphics::GLContext;
+    vtable?for?mir::graphics::NullCommandSync;
     vtable?for?mir::graphics::GraphicBufferAllocator;
     vtable?for?mir::graphics::Platform;
     vtable?for?mir::graphics::PlatformIpcOperations;
@@ -237,6 +238,19 @@ MIRPLATFORM_11 {
     mir::graphics::blue_channel_depth*;
     mir::graphics::contains_alpha*;
     mir::graphics::EGLExtensions::EGLExtensions*;
+    mir::graphics::EGLSyncExtensions::EGLSyncExtensions*;
+    mir::graphics::CommandStreamSync::?CommandStreamSync*;
+    mir::graphics::CommandStreamSync::CommandStreamSync*;
+    mir::graphics::CommandStreamSync::CommandStreamSync*;
+    mir::graphics::CommandStreamSync::operator*;
+    mir::graphics::NullCommandSync::?NullCommandSync*;
+    mir::graphics::NullCommandSync::NullCommandSync*;
+    mir::graphics::NullCommandSync::NullCommandSync*;
+    mir::graphics::NullCommandSync::operator*;
+    mir::graphics::EGLSyncFence::?EGLSyncFence*;
+    mir::graphics::EGLSyncFence::EGLSyncFence*;
+    mir::graphics::EGLSyncFence::EGLSyncFence*;
+    mir::graphics::EGLSyncFence::operator*;
     mir::graphics::EGLContextStore::?EGLContextStore*;
     mir::graphics::EGLContextStore::EGLContextStore*;
     mir::graphics::EGLContextStore::EGLContextStore*;
@@ -273,28 +287,11 @@ MIRPLATFORM_11 {
     mir::udev::operator*;
 
     # Android input platform symbols
-    android::EventHub::EventHub*;
     android::getAbsAxisUsage*;
     android::getInputDeviceConfigurationFilePathByDeviceIdentifier*;
-    android::InputDeviceInfo::?InputDeviceInfo*;
-    android::InputDeviceInfo::InputDeviceInfo*;
-    android::InputReaderConfiguration::setDisplayInfo*;
-    android::InputReader::InputReader*;
     android::isEligibleBuiltInKeyboard*;
-    android::KeyCharacterMap::combine*;
-    android::KeyCharacterMap::empty*;
-    android::KeyCharacterMap::mapKey*;
-    android::KeyLayoutMap::findScanCodesForKey*;
-    android::KeyLayoutMap::mapAxis*;
-    android::KeyLayoutMap::mapKey*;
-    android::KeyMap::?KeyMap*;
-    android::KeyMap::KeyMap*;
-    android::KeyMap::load*;
-    android::KeyMap::loadGenericMaps*;
     __android_log_assert;
     __android_log_print;
-    android::VirtualKeyMap::load*;
-    android::VirtualKeyMap::?VirtualKeyMap*;
   };
  local: *;
 };

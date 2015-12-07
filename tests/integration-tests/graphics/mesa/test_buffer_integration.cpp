@@ -77,6 +77,9 @@ public:
         }
     }
 
+    void bind() override { gl_bind_to_texture(); }
+    void secure_for_render() override {}
+
 private:
     std::thread::id creation_thread_id;
 };
@@ -93,9 +96,9 @@ class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
 class StubGraphicPlatform : public mtd::NullPlatform
 {
 public:
-    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
+    mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator() override
     {
-        return std::make_shared<StubGraphicBufferAllocator>();
+        return mir::make_module_ptr<StubGraphicBufferAllocator>();
     }
 };
 

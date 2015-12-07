@@ -18,6 +18,7 @@
 
 #include "display_server.h"
 #include "protobuf_message_processor.h"
+#include "mir/frontend/security_check_failed.h"
 #include "mir/frontend/message_processor_report.h"
 #include "mir/frontend/protobuf_message_sender.h"
 #include "mir/frontend/template_protobuf_message_processor.h"
@@ -135,6 +136,10 @@ void invoke(
             result_message.get(),
             callback);
     }
+    catch (mir::SecurityCheckFailed const& /*err*/)
+    {
+        throw;
+    }
     catch (std::exception const& x)
     {
         using namespace std::literals;
@@ -249,6 +254,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::configure_display, invocation);
         }
+        else if ("set_base_display_configuration" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::set_base_display_configuration, invocation);
+        }
         else if ("configure_surface" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::configure_surface, invocation);
@@ -305,6 +314,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         else if ("configure_buffer_stream" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::configure_buffer_stream, invocation);
+        }
+        else if ("raise_surface_with_cookie" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::raise_surface_with_cookie, invocation);
         }
         else if ("translate_surface_to_screen" == invocation.method_name())
         {

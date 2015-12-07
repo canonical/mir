@@ -120,9 +120,10 @@ struct StubBundleFactory : public msc::BufferStreamFactory
 
 struct StubBufferPacker : public mg::PlatformIpcOperations
 {
-    StubBufferPacker() :
-        last_fd{-1}
+    StubBufferPacker(std::shared_ptr<mir::Fd> const& last_fd) :
+        last_fd{last_fd}
     {
+        *last_fd = mir::Fd{-1};
     }
     void pack_buffer(mg::BufferIpcMessage&, mg::Buffer const&, mg::BufferIpcMsgType) const override
     {
@@ -133,7 +134,7 @@ struct StubBufferPacker : public mg::PlatformIpcOperations
         auto fds = msg.fds();
         if (!fds.empty())
         {
-            last_fd = fds[0];
+            *last_fd = fds[0];
         }
     }
 
@@ -142,46 +143,40 @@ struct StubBufferPacker : public mg::PlatformIpcOperations
         return std::make_shared<mg::PlatformIPCPackage>();
     }
 
-    mir::Fd last_unpacked_fd()
-    {
-        return last_fd;
-    }
-
     mg::PlatformOperationMessage platform_operation(
         unsigned int const, mg::PlatformOperationMessage const&) override
     {
         return mg::PlatformOperationMessage();
     }
 private:
-    mir::Fd mutable last_fd;
+    std::shared_ptr<mir::Fd> const last_fd;
 };
 
 struct StubPlatform : public mtd::NullPlatform
 {
-    StubPlatform(std::shared_ptr<mg::PlatformIpcOperations> const& ipc_ops) :
-        ipc_ops{ipc_ops}
+    StubPlatform(std::shared_ptr<mir::Fd> const& last_fd) : last_fd(last_fd)
     {
     }
 
-    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
+    mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator() override
     {
-        return std::make_shared<mtd::StubBufferAllocator>();
+        return mir::make_module_ptr<mtd::StubBufferAllocator>();
     }
 
-    std::shared_ptr<mg::PlatformIpcOperations> make_ipc_operations() const override
+    mir::UniqueModulePtr<mg::PlatformIpcOperations> make_ipc_operations() const override
     {
-        return ipc_ops;
+        return mir::make_module_ptr<StubBufferPacker>(last_fd);
     }
 
-    std::shared_ptr<mg::Display> create_display(
+    mir::UniqueModulePtr<mg::Display> create_display(
         std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
         std::shared_ptr<mg::GLConfig> const&) override
     {
         std::vector<geom::Rectangle> rect{geom::Rectangle{{0,0},{1,1}}};
-        return std::make_shared<mtd::StubDisplay>(rect);
+        return mir::make_module_ptr<mtd::StubDisplay>(rect);
     }
-    
-    std::shared_ptr<mg::PlatformIpcOperations> const ipc_ops;
+
+    std::shared_ptr<mir::Fd> const last_fd;
 };
 
 class SinkSkimmingCoordinator : public msc::SessionCoordinator
@@ -229,9 +224,9 @@ struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
 {
     ExchangeServerConfiguration(
         std::vector<mg::BufferID> const& id_seq,
-        std::shared_ptr<mg::PlatformIpcOperations> const& ipc_ops) :
+        std::shared_ptr<mir::Fd> const& last_unpacked_fd) :
         stream_factory{std::make_shared<StubBundleFactory>(id_seq)},
-        platform{std::make_shared<StubPlatform>(ipc_ops)}
+        platform{std::make_shared<StubPlatform>(last_unpacked_fd)}
     {
     }
 
@@ -263,8 +258,8 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
     std::vector<mg::BufferID> const buffer_id_exchange_seq{
         mg::BufferID{4}, mg::BufferID{8}, mg::BufferID{9}, mg::BufferID{3}, mg::BufferID{4}};
 
-    std::shared_ptr<StubBufferPacker> stub_packer{std::make_shared<StubBufferPacker>()};
-    ExchangeServerConfiguration server_configuration{buffer_id_exchange_seq, stub_packer};
+    std::shared_ptr<mir::Fd> last_unpacked_fd{std::make_shared<mir::Fd>()};
+    ExchangeServerConfiguration server_configuration{buffer_id_exchange_seq, last_unpacked_fd};
     mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
     mtf::UsingStubClientPlatform using_stub_client_platform;
 
@@ -385,7 +380,7 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 
-    auto server_received_fd = stub_packer->last_unpacked_fd();
+    auto server_received_fd = *last_unpacked_fd;
     char file_buffer[32];
     lseek(file, 0, SEEK_SET);
     ASSERT_THAT(read(server_received_fd, file_buffer, sizeof(file_buffer)), NoErrorOnFileRead());

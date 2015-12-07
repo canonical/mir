@@ -10,6 +10,7 @@ list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_overlapping_output_grouping.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_platform_prober.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_software_cursor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_egl_sync_fence.cpp
 )
 
 add_subdirectory(nested/)

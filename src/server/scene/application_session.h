@@ -38,11 +38,11 @@ namespace graphics
 {
 class DisplayConfiguration;
 }
+namespace shell { class SurfaceStack; }
 namespace scene
 {
 class SessionListener;
 class Surface;
-class SurfaceCoordinator;
 class SnapshotStrategy;
 class BufferStreamFactory;
 class SurfaceFactory;
@@ -51,7 +51,7 @@ class ApplicationSession : public Session
 {
 public:
     ApplicationSession(
-        std::shared_ptr<SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<shell::SurfaceStack> const& surface_stack,
         std::shared_ptr<SurfaceFactory> const& surface_factory,
         std::shared_ptr<BufferStreamFactory> const& buffer_stream_factory,
         pid_t pid,
@@ -95,13 +95,14 @@ public:
     frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const& params) override;
     void destroy_buffer_stream(frontend::BufferStreamId stream) override;
     void configure_streams(Surface& surface, std::vector<shell::StreamSpecification> const& config) override;
+    void destroy_surface(std::weak_ptr<Surface> const& surface) override;
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
     ApplicationSession& operator=(ApplicationSession const&) = delete;
 
 private:
-    std::shared_ptr<SurfaceCoordinator> const surface_coordinator;
+    std::shared_ptr<shell::SurfaceStack> const surface_stack;
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     pid_t const pid;

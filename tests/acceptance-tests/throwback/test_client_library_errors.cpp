@@ -205,6 +205,24 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
     mir_connection_release(connection);
 }
 
+TEST_F(ClientLibraryErrors, create_buffer_stream_returns_error_object_on_failure)
+{
+    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_buffer_factory>> stubby;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    ASSERT_THAT(connection, IsValid());
+
+    auto stream = mir_connection_create_buffer_stream_sync(connection,
+        640, 480, mir_pixel_format_abgr_8888, mir_buffer_usage_software);
+    ASSERT_NE(stream, nullptr);
+    EXPECT_FALSE(mir_buffer_stream_is_valid(stream));
+    EXPECT_THAT(mir_buffer_stream_get_error_message(stream), testing::HasSubstr(exception_text));
+
+    mir_buffer_stream_release_sync(stream);
+    mir_connection_release(connection);
+}
+
 namespace
 {
 void recording_surface_callback(MirSurface*, void* ctx)

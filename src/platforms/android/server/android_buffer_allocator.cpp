@@ -19,12 +19,15 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/egl_extensions.h"
+#include "mir/graphics/egl_sync_fence.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/android_native_buffer.h"
 #include "android_graphic_buffer_allocator.h"
 #include "android_alloc_adaptor.h"
 #include "buffer.h"
+#include "cmdstream_sync_factory.h"
+#include "device_quirks.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -36,18 +39,24 @@ namespace geom = mir::geometry;
 
 namespace
 {
-struct AllocDevDeleter
+
+void alloc_dev_deleter(alloc_device_t* t)
 {
-    void operator()(alloc_device_t* t)
-    {
-        /* android takes care of delete for us */
-        t->common.close((hw_device_t*)t);
-    }
-};
+    /* android takes care of delete for us */
+    t->common.close((hw_device_t*)t);
 }
 
-mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(std::shared_ptr<DeviceQuirks> const& quirks)
-    : egl_extensions(std::make_shared<mg::EGLExtensions>())
+void null_alloc_dev_deleter(alloc_device_t*)
+{
+}
+
+}
+
+mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(
+    std::shared_ptr<CommandStreamSyncFactory> const& cmdstream_sync_factory,
+    std::shared_ptr<DeviceQuirks> const& quirks)
+    : egl_extensions(std::make_shared<mg::EGLExtensions>()),
+    cmdstream_sync_factory(cmdstream_sync_factory)
 {
     int err;
 
@@ -63,9 +72,10 @@ mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(std::shared_pt
     /* note for future use: at this point, the hardware module should be filled with vendor information
        that we can determine different courses of action based upon */
 
-    AllocDevDeleter del;
-    std::shared_ptr<struct alloc_device_t> alloc_dev_ptr(alloc_dev, del);
-    alloc_device = std::shared_ptr<mga::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr, quirks));
+    std::shared_ptr<struct alloc_device_t> alloc_dev_ptr(
+        alloc_dev,
+        quirks->gralloc_cannot_be_closed_safely() ? null_alloc_dev_deleter : alloc_dev_deleter);
+    alloc_device = std::shared_ptr<mga::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr, cmdstream_sync_factory, quirks));
 }
 
 std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
@@ -84,9 +94,10 @@ std::unique_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::reconstruct_from
         [](ANativeWindowBuffer* buffer){ buffer->common.decRef(&buffer->common); });
     anwb->common.incRef(&anwb->common);
 
+    //TODO: we should have an android platform function for accessing the fence.
     auto native_handle = std::make_shared<mga::AndroidNativeBuffer>(
         native_window_buffer,
-        //TODO: we should have an android platform function for accessing the fence.
+        cmdstream_sync_factory->create_command_stream_sync(),
         std::make_shared<mga::SyncFence>(std::make_shared<mga::RealSyncFileOps>(), mir::Fd()),
         mga::BufferAccess::read);
     return std::make_unique<Buffer>(

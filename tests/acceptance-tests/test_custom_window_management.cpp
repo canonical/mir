@@ -197,6 +197,19 @@ TEST_F(CustomWindowManagement, surface_release_removes_surface)
     EXPECT_CALL(window_manager, remove_surface(_,_));
 
     mir_surface_release_sync(surface);
+
+    Mock::VerifyAndClearExpectations(&window_manager);
+}
+
+TEST_F(CustomWindowManagement, client_disconnect_removes_unreleased_surfaces)
+{
+    start_server();
+    auto client = connect_client();
+    client.surface_create();
+
+    EXPECT_CALL(window_manager, remove_surface(_,_));
+
+    client.disconnect();
 }
 
 TEST_F(CustomWindowManagement, surface_is_associated_with_correct_client)
@@ -214,16 +227,18 @@ TEST_F(CustomWindowManagement, surface_is_associated_with_correct_client)
         client.emplace_back(connect_client());
     }
 
+    Mock::VerifyAndClearExpectations(&window_manager);
+
     for (int i = 0; i != no_of_clients; ++i)
     {
-        // verify expectations for each client in turn
-        Mock::VerifyAndClearExpectations(&window_manager);
-
         EXPECT_CALL(window_manager, add_surface(WeakPtrEq(session[i]),_,_));
         EXPECT_CALL(window_manager, remove_surface(WeakPtrEq(session[i]),_));
 
         auto const surface = client[i].surface_create();
         mir_surface_release_sync(surface);
+
+        // verify expectations for each client in turn
+        Mock::VerifyAndClearExpectations(&window_manager);
     }
 }
 

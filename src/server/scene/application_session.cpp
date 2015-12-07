@@ -23,11 +23,11 @@
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
-#include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/session_listener.h"
 #include "mir/scene/surface_factory.h"
 #include "mir/scene/buffer_stream_factory.h"
+#include "mir/shell/surface_stack.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/events/event_builders.h"
 #include "mir/frontend/event_sink.h"
@@ -47,7 +47,7 @@ namespace mg = mir::graphics;
 namespace mev = mir::events;
 
 ms::ApplicationSession::ApplicationSession(
-    std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
+    std::shared_ptr<msh::SurfaceStack> const& surface_stack,
     std::shared_ptr<SurfaceFactory> const& surface_factory,
     std::shared_ptr<ms::BufferStreamFactory> const& buffer_stream_factory,
     pid_t pid,
@@ -56,7 +56,7 @@ ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<SessionListener> const& session_listener,
     mg::DisplayConfiguration const& initial_config,
     std::shared_ptr<mf::EventSink> const& sink) :
-    surface_coordinator(surface_coordinator),
+    surface_stack(surface_stack),
     surface_factory(surface_factory),
     buffer_stream_factory(buffer_stream_factory),
     pid(pid),
@@ -66,7 +66,7 @@ ms::ApplicationSession::ApplicationSession(
     event_sink(sink),
     next_surface_id(0)
 {
-    assert(surface_coordinator);
+    assert(surface_stack);
     output_cache.update_from(initial_config);
 }
 
@@ -76,7 +76,7 @@ ms::ApplicationSession::~ApplicationSession()
     for (auto const& pair_id_surface : surfaces)
     {
         session_listener->destroying_surface(*this, pair_id_surface.second);
-        surface_coordinator->remove_surface(pair_id_surface.second);
+        surface_stack->remove_surface(pair_id_surface.second);
     }
 }
 
@@ -112,7 +112,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
             stream_id, surface_sink, buffer_properties);
     }
     auto surface = surface_factory->create_surface(buffer_stream, params);
-    surface_coordinator->add_surface(surface, params.depth, params.input_mode, this);
+    surface_stack->add_surface(surface, params.input_mode);
 
     if (params.state.is_set())
         surface->configure(mir_surface_attrib_state, params.state.value());
@@ -252,7 +252,7 @@ void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
 
     lock.unlock();
 
-    surface_coordinator->remove_surface(surface);
+    surface_stack->remove_surface(surface);
 }
 
 std::string ms::ApplicationSession::name() const
@@ -375,4 +375,28 @@ void ms::ApplicationSession::configure_streams(
     for (auto& stream : streams)
         list.emplace_back(ms::StreamInfo{checked_find(stream.stream_id)->second, stream.displacement});
     surface.set_streams(list); 
+}
+
+void ms::ApplicationSession::destroy_surface(std::weak_ptr<Surface> const& surface)
+{
+    auto const ss = surface.lock();
+    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+    auto p = find_if(begin(surfaces), end(surfaces), [&](Surfaces::value_type const& val)
+        { return val.second == ss; });
+
+    if (p == surfaces.end())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid Surface"));
+
+    auto const id = p->first;
+
+    session_listener->destroying_surface(*this, ss);
+    surfaces.erase(p);
+    auto stream_it = streams.find(mf::BufferStreamId(id.as_value()));
+    if (stream_it != streams.end())
+        streams.erase(stream_it);
+
+    lock.unlock();
+
+    surface_stack->remove_surface(ss);
+
 }

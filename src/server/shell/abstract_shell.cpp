@@ -20,13 +20,13 @@
 #include "mir/shell/input_targeter.h"
 #include "mir/shell/shell_report.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/shell/surface_stack.h"
 #include "mir/shell/window_manager.h"
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_coordinator.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -34,13 +34,13 @@ namespace msh = mir::shell;
 
 msh::AbstractShell::AbstractShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
-    std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
+    std::shared_ptr<msh::SurfaceStack> const& surface_stack,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
     std::shared_ptr<ShellReport> const& report,
     std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder) :
     input_targeter(input_targeter),
-    surface_coordinator(surface_coordinator),
+    surface_stack(surface_stack),
     session_coordinator(session_coordinator),
     prompt_session_manager(prompt_session_manager),
     window_manager(wm_builder(this)),
@@ -68,6 +68,19 @@ void msh::AbstractShell::close_session(
 {
     report->closing_session(*session);
     prompt_session_manager->remove_session(session);
+
+    // TODO revisit this when reworking the AbstractShell/WindowManager interactions
+    // this is an ugly kludge to extract the list of surfaces owned by the session
+    // We're likely to have this information in the WindowManager implementation
+    std::set<std::shared_ptr<ms::Surface>> surfaces;
+    for (auto surface = session->default_surface(); surface; surface = session->surface_after(surface))
+        if (!surfaces.insert(surface).second) break;
+
+    // this is an ugly kludge to remove the each of the surfaces owned by the session
+    // We could likely do this better (and atomically) within the WindowManager
+    for (auto const& surface : surfaces)
+        window_manager->remove_surface(session, surface);
+
     session_coordinator->close_session(session);
     window_manager->remove_session(session);
 }
@@ -108,7 +121,6 @@ void msh::AbstractShell::destroy_surface(
 {
     report->destroying_surface(*session, surface);
     window_manager->remove_surface(session, session->surface(surface));
-    session->destroy_surface(surface);
 }
 
 std::shared_ptr<ms::PromptSession> msh::AbstractShell::start_prompt_session_for(
@@ -152,20 +164,33 @@ int msh::AbstractShell::get_surface_attribute(
     return surface->query(attrib);
 }
 
+void msh::AbstractShell::raise_surface_with_timestamp(
+    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Surface> const& surface,
+    uint64_t timestamp)
+{
+    window_manager->handle_raise_surface(session, surface, timestamp);
+}
 
 void msh::AbstractShell::focus_next_session()
 {
     std::unique_lock<std::mutex> lock(focus_mutex);
-    auto session = focus_session.lock();
+    auto const focused_session = focus_session.lock();
+    auto successor = session_coordinator->successor_of(focused_session);
 
-    session = session_coordinator->successor_of(session);
+    while (successor != nullptr &&
+           successor != focused_session &&
+           successor->default_surface() == nullptr)
+    {
+        successor = session_coordinator->successor_of(successor);
+    }
 
-    std::shared_ptr<ms::Surface> surface;
+    auto const surface = successor ? successor->default_surface() : nullptr;
 
-    if (session)
-        surface = session->default_surface();
+    if (!surface)
+        successor = nullptr;
 
-    set_focus_to_locked(lock, session, surface);
+    set_focus_to_locked(lock, successor, surface);
 }
 
 std::shared_ptr<ms::Session> msh::AbstractShell::focused_session() const
@@ -271,11 +296,11 @@ bool msh::AbstractShell::handle(MirEvent const& event)
 auto msh::AbstractShell::surface_at(geometry::Point cursor) const
 -> std::shared_ptr<scene::Surface>
 {
-    return surface_coordinator->surface_at(cursor);
+    return surface_stack->surface_at(cursor);
 }
 
 void msh::AbstractShell::raise(SurfaceSet const& surfaces)
 {
-    surface_coordinator->raise(surfaces);
+    surface_stack->raise(surfaces);
     report->surfaces_raised(surfaces);
 }

@@ -264,14 +264,15 @@ void mgm::Display::register_configuration_change_handler(
     handlers.register_fd_handler(
         {monitor.fd()},
         this,
-        [conf_change_handler, this](int)
-        {
-            monitor.process_events([conf_change_handler]
-                                   (mir::udev::Monitor::EventType, mir::udev::Device const&)
-                                   {
-                                        conf_change_handler();
-                                   });
-        });
+        make_module_ptr<std::function<void(int)>>(
+            [conf_change_handler, this](int)
+            {
+                monitor.process_events([conf_change_handler]
+                                       (mir::udev::Monitor::EventType, mir::udev::Device const&)
+                                       {
+                                            conf_change_handler();
+                                       });
+            }));
 }
 
 void mgm::Display::register_pause_resume_handlers(

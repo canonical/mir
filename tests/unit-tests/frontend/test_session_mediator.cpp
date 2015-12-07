@@ -59,6 +59,8 @@
 #include "mir/test/signal.h"
 #include "mir/frontend/connector.h"
 #include "mir/frontend/event_sink.h"
+#include "mir/frontend/security_check_failed.h"
+#include "mir/cookie_factory.h"
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 
@@ -91,13 +93,6 @@ struct MockResourceCache : public mf::MessageResourceCache
     MOCK_METHOD1(free_resource, void(google::protobuf::MessageLite*));
 };
 
-struct MockConfig : public mg::DisplayConfiguration
-{
-    MOCK_CONST_METHOD1(for_each_card, void(std::function<void(mg::DisplayConfigurationCard const&)>));
-    MOCK_CONST_METHOD1(for_each_output, void(std::function<void(mg::DisplayConfigurationOutput const&)>));
-    MOCK_METHOD1(for_each_output, void(std::function<void(mg::UserDisplayConfigurationOutput&)>));
-};
-
 struct MockConnector : public mf::Connector
 {
 public:
@@ -126,7 +121,9 @@ public:
 
     std::shared_ptr<mf::BufferStream> get_buffer_stream(mf::BufferStreamId stream) const override
     {
-        return get_surface(mf::SurfaceId(stream.as_value()))->primary_buffer_stream();
+        if (mock_streams.find(stream) == mock_streams.end())
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid SurfaceId"));
+        return mock_streams.at(stream);
     }
 
     std::shared_ptr<mtd::MockFrontendSurface> mock_surface_at(mf::SurfaceId id)
@@ -140,7 +137,7 @@ public:
     {
         if (mock_surfaces.end() == mock_surfaces.find(id))
             create_mock_surface(id);
-        return mock_streams.at(id);
+        return mock_streams.at(mf::BufferStreamId(id.as_value()));
     }
 
     std::shared_ptr<mtd::MockFrontendSurface> create_mock_surface(mf::SurfaceId id)
@@ -166,15 +163,30 @@ public:
 
 
         mock_surfaces[id] = surface;
-        mock_streams[id] = stream;
+        mock_streams[mf::BufferStreamId(id.as_value())] = stream;
         return surface;
     }
 
-    mf::SurfaceId create_surface(ms::SurfaceCreationParameters const& /* params */)
+    std::shared_ptr<mtd::MockBufferStream> create_mock_stream(mf::BufferStreamId id)
+    {
+        mock_streams[id] = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
+        return mock_streams[id];
+    }
+
+    mf::SurfaceId create_surface(ms::SurfaceCreationParameters const&)
     {
         mf::SurfaceId id{last_surface_id};
         if (mock_surfaces.end() == mock_surfaces.find(id))
             create_mock_surface(id);
+        last_surface_id++;
+        return id;
+    }
+
+    mf::BufferStreamId create_buffer_stream(mg::BufferProperties const&)
+    {
+        mf::BufferStreamId id{last_surface_id};
+        if (mock_streams.end() == mock_streams.find(id))
+            create_mock_stream(id);
         last_surface_id++;
         return id;
     }
@@ -184,7 +196,7 @@ public:
         mock_surfaces.erase(surface);
     }
 
-    std::map<mf::SurfaceId, std::shared_ptr<mtd::MockBufferStream>> mock_streams;
+    std::map<mf::BufferStreamId, std::shared_ptr<mtd::MockBufferStream>> mock_streams;
     std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
     static int const testing_client_input_fd;
     int last_surface_id;
@@ -219,7 +231,8 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<mtd::NullEventSinkFactory>(),
             std::make_shared<mtd::NullMessageSender>(),
             resource_cache, stub_screencast, &connector, nullptr, nullptr,
-            std::make_shared<mtd::NullANRDetector>()}
+            std::make_shared<mtd::NullANRDetector>(),
+            mir::cookie::CookieFactory::create_keeping_secret()}
     {
         using namespace ::testing;
 
@@ -243,7 +256,8 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<mtd::NullMessageSender>(),
             resource_cache, std::make_shared<mtd::NullScreencast>(),
             nullptr, nullptr, nullptr,
-            std::make_shared<mtd::NullANRDetector>());
+            std::make_shared<mtd::NullANRDetector>(),
+            mir::cookie::CookieFactory::create_keeping_secret());
     }
 
     MockConnector connector;
@@ -262,6 +276,7 @@ struct SessionMediator : public ::testing::Test
     mp::Connection connection;
     mp::SurfaceParameters surface_parameters;
     mp::Surface surface_response;
+    mp::Void void_response;
     mp::SurfaceId surface_id_request;
     mp::Buffer buffer_response;
     mp::BufferRequest buffer_request;
@@ -295,7 +310,8 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
         std::make_shared<mtd::NullEventSinkFactory>(),
         std::make_shared<mtd::NullMessageSender>(),
         resource_cache, stub_screencast, context, nullptr, nullptr,
-        std::make_shared<mtd::NullANRDetector>()};
+        std::make_shared<mtd::NullANRDetector>(),
+        mir::cookie::CookieFactory::create_keeping_secret()};
 
     EXPECT_THAT(connects_handled_count, Eq(0));
 
@@ -567,17 +583,16 @@ TEST_F(SessionMediator, display_config_request)
     MirPixelFormat format1{mir_pixel_format_argb_8888};
     mg::DisplayConfigurationOutputId id0{6}, id1{3};
 
-    NiceMock<MockConfig> mock_display_config;
     mtd::StubDisplayConfig stub_display_config;
     auto mock_display_changer = std::make_shared<mtd::MockDisplayChanger>();
 
     Sequence seq;
     EXPECT_CALL(*mock_display_changer, base_configuration())
         .InSequence(seq)
-        .WillOnce(Return(mt::fake_shared(mock_display_config)));
+        .WillOnce(Return(mt::fake_shared(stub_display_config)));
     EXPECT_CALL(*mock_display_changer, base_configuration())
         .InSequence(seq)
-        .WillOnce(Return(mt::fake_shared(mock_display_config)));
+        .WillOnce(Return(mt::fake_shared(stub_display_config)));
     EXPECT_CALL(*mock_display_changer, configure(_,_))
         .InSequence(seq);
     EXPECT_CALL(*mock_display_changer, base_configuration())
@@ -839,7 +854,8 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
         std::make_shared<mtd::NullEventSinkFactory>(),
         std::make_shared<mtd::NullMessageSender>(),
         mt::fake_shared(mock_cache), stub_screencast, &connector, nullptr, nullptr,
-        std::make_shared<mtd::NullANRDetector>()};
+        std::make_shared<mtd::NullANRDetector>(),
+        mir::cookie::CookieFactory::create_keeping_secret()};
 
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
@@ -952,7 +968,8 @@ TEST_F(SessionMediator, sends_a_buffer_when_submit_buffer_is_called)
         nullptr,
         nullptr,
         nullptr,
-        std::make_shared<mtd::NullANRDetector>()};
+        std::make_shared<mtd::NullANRDetector>(),
+        mir::cookie::CookieFactory::create_keeping_secret()};
 
     mp::Void null;
     mp::BufferRequest request;
@@ -1042,7 +1059,8 @@ TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_submit)
         std::make_shared<mtd::NullEventSinkFactory>(),
         std::make_shared<mtd::NullMessageSender>(),
         resource_cache, stub_screencast, nullptr, nullptr, nullptr,
-        std::make_shared<mtd::NullANRDetector>()};
+        std::make_shared<mtd::NullANRDetector>(),
+        mir::cookie::CookieFactory::create_keeping_secret()};
 
     mp::Void null;
     mp::BufferRequest request;
@@ -1185,7 +1203,8 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         surface_pixel_formats, report, sink_factory,
         mock_sender,
         resource_cache, stub_screencast, nullptr, nullptr, nullptr,
-        std::make_shared<mtd::NullANRDetector>()};
+        std::make_shared<mtd::NullANRDetector>(),
+        mir::cookie::CookieFactory::create_keeping_secret()};
 
     ON_CALL(*shell, create_surface( _, _, _))
         .WillByDefault(
@@ -1206,6 +1225,20 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         &surface_parameters,
         &surface_response,
         google::protobuf::NewCallback(&send_non_event, mock_sender));
+}
+
+TEST_F(SessionMediator, doesnt_inadventently_set_buffer_field_when_theres_no_buffer)
+{
+    mp::Void null;
+    mf::SurfaceId surf_id{0};
+    mp::BufferStreamParameters stream_request;
+    mp::BufferStream stream_response;
+    auto stream = stubbed_session->mock_primary_stream_at(surf_id);
+    ON_CALL(*stream, swap_buffers(nullptr,testing::_))
+        .WillByDefault(testing::InvokeArgument<1>(nullptr));
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_buffer_stream(&stream_request, &stream_response, null_callback.get());
+    EXPECT_FALSE(stream_response.has_buffer());
 }
 
 TEST_F(SessionMediator, sets_base_display_configuration)
@@ -1267,4 +1300,14 @@ TEST_F(SessionMediator, sanitizes_base_display_configuration_before_setting)
 
     mediator->connect(&connect_parameters, &connection, null_callback.get());
     mediator->set_base_display_configuration(&request, &response, null_callback.get());
+}
+
+TEST_F(SessionMediator, raise_with_invalid_cookie_throws)
+{
+    mp::RaiseRequest raise_request;
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+
+    EXPECT_THROW({
+        mediator.raise_surface_with_cookie(&raise_request, &void_response, null_callback.get());
+    }, mir::SecurityCheckFailed);
 }

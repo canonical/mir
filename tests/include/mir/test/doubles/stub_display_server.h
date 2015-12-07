@@ -66,6 +66,10 @@ struct StubDisplayServer : public mir::frontend::detail::DisplayServer
         mir::protobuf::DisplayConfiguration const* /*request*/,
         mir::protobuf::DisplayConfiguration* /*response*/,
         google::protobuf::Closure* /*done*/) {}
+    void set_base_display_configuration(
+        mir::protobuf::DisplayConfiguration const* /*request*/,
+        mir::protobuf::Void* /*response*/,
+        google::protobuf::Closure* /*done*/) {}
     void create_screencast(
         mir::protobuf::ScreencastParameters const* /*request*/,
         mir::protobuf::Screencast* /*response*/,
@@ -128,6 +132,10 @@ struct StubDisplayServer : public mir::frontend::detail::DisplayServer
         google::protobuf::Closure* /*done*/) {}
     void configure_buffer_stream(
         mir::protobuf::StreamConfiguration const* /*request*/,
+        mir::protobuf::Void* /*response*/,
+        google::protobuf::Closure* /*done*/) {}
+    void raise_surface_with_cookie(
+        mir::protobuf::RaiseRequest const* /*request*/,
         mir::protobuf::Void* /*response*/,
         google::protobuf::Closure* /*done*/) {}
 };

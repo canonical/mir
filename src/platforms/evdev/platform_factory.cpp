@@ -19,6 +19,7 @@
 #include "platform.h"
 #include "mir/udev/wrapper.h"
 #include "mir/fd.h"
+#include "mir/assert_module_entry_point.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -67,11 +68,12 @@ bool can_open_input_devices()
 }
 
 mir::UniqueModulePtr<mi::Platform> create_input_platform(
-    std::shared_ptr<mo::Option> const& /*options*/,
+    mo::Option const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<mi::InputReport> const& report)
 {
+    mir::assert_entry_point_signature<mi::CreatePlatform>(&create_input_platform);
     auto ctx = std::make_unique<mu::Context>();
     auto monitor = std::make_unique<mu::Monitor>(*ctx.get());
     return mir::make_module_ptr<mie::Platform>(input_device_registry, report, std::move(ctx), std::move(monitor));
@@ -80,12 +82,14 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
 void add_input_platform_options(
     boost::program_options::options_description& /*config*/)
 {
+    mir::assert_entry_point_signature<mi::AddPlatformOptions>(&add_input_platform_options);
     // no options to add yet
 }
 
 mi::PlatformPriority probe_input_platform(
     mo::Option const& options)
 {
+    mir::assert_entry_point_signature<mi::ProbePlatform>(&probe_input_platform);
     if (options.is_set(host_socket_opt))
     {
         return mi::PlatformPriority::unsupported;
@@ -99,5 +103,6 @@ mi::PlatformPriority probe_input_platform(
 
 mir::ModuleProperties const* describe_input_module()
 {
+    mir::assert_entry_point_signature<mi::DescribeModule>(&describe_input_module);
     return &description;
 }

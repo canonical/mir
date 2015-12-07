@@ -17,14 +17,17 @@
  */
 
 #include "mir/graphics/android/android_native_buffer.h"
+#include "mir/graphics/egl_sync_fence.h"
 
 namespace mga=mir::graphics::android;
 
 mga::AndroidNativeBuffer::AndroidNativeBuffer(
     std::shared_ptr<ANativeWindowBuffer> const& anwb,
+    std::shared_ptr<CommandStreamSync> const& cmdstream_sync,
     std::shared_ptr<Fence> const& fence,
     BufferAccess access)
-    : fence(fence),
+    : cmdstream_sync(cmdstream_sync),
+      fence(fence),
       access(access),
       native_window_buffer(anwb)
 {
@@ -57,4 +60,15 @@ buffer_handle_t mga::AndroidNativeBuffer::handle() const
 mga::NativeFence mga::AndroidNativeBuffer::copy_fence() const
 {
     return fence->copy_native_handle();
+}
+
+void mga::AndroidNativeBuffer::lock_for_gpu()
+{
+    cmdstream_sync->raise();
+}
+
+void mga::AndroidNativeBuffer::wait_for_unlock_by_gpu()
+{
+    using namespace std::chrono;
+    cmdstream_sync->wait_for(duration_cast<nanoseconds>(seconds(2)));
 }
