@@ -397,6 +397,7 @@ Depends: ${misc:Depends},
          mir-platform-graphics-mesa-kms7,
          mir-platform-graphics-mesa-x7,
          mir-client-platform-mesa3,
+         mir-platform-input-evdev4,
 Description: Display server for Ubuntu - desktop driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -412,6 +413,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          mir-platform-graphics-android7,
          mir-client-platform-android3,
+         mir-platform-input-evdev4,
 Description: Display server for Ubuntu - android driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.

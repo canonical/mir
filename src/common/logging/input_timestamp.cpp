@@ -23,11 +23,14 @@ using namespace std::chrono;
 std::string mir::logging::input_timestamp(nanoseconds when)
 {
     // Input events use CLOCK_MONOTONIC, and so we must...
-    duration<double, std::milli> const age = steady_clock::now().time_since_epoch() - when;
+    auto const now = steady_clock::now().time_since_epoch();
+    long long const when_ns = when.count();
+    long long const now_ns = duration_cast<nanoseconds>(now).count();
+    long long const age_ns = now_ns - when_ns;
 
     char str[64];
-    snprintf(str, sizeof str, "%lld (%.6fms ago)",
-             static_cast<long long>(when.count()),age.count());
+    snprintf(str, sizeof str, "%lld (%lld.%06lldms ago)",
+             when_ns, age_ns / 1000000LL, age_ns % 1000000LL);
 
     return std::string(str);
 }

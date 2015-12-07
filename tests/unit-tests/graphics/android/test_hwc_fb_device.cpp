@@ -104,6 +104,12 @@ protected:
 };
 }
 
+TEST_F(HwcFbDevice, reports_it_cannot_swap)
+{
+    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device);
+    EXPECT_FALSE(device.can_swap_buffers());
+}
+
 TEST_F(HwcFbDevice, hwc10_subscribes_to_vsync_events)
 {
     using namespace testing;
