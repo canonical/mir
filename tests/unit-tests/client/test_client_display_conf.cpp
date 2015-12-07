@@ -35,8 +35,8 @@ void fill(mp::DisplayCard* out)
 
 void fill(mp::DisplayOutput* out)
 {
-    out->add_pixel_format(4);
-    out->set_current_format(45);
+    out->add_pixel_format(mir_pixel_format_xrgb_8888);
+    out->set_current_format(mir_pixel_format_argb_8888);
     auto mode = out->add_mode();
     mode->set_horizontal_resolution(4);
     mode->set_vertical_resolution(558);

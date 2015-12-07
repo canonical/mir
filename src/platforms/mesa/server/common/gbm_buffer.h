@@ -67,6 +67,8 @@ public:
     virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const override;
 
     virtual void gl_bind_to_texture() override;
+    virtual void bind() override;
+    virtual void secure_for_render() override;
 
     void write(unsigned char const* pixels, size_t size) override;
     void read(std::function<void(unsigned char const*)> const& do_with_pixels) override;
