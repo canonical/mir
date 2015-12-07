@@ -66,7 +66,7 @@ namespace
 {
 MATCHER_P(InputDevicesMatch, devices, "")
 {
-    return std::equal(std::begin(arg.devices()), std::end(arg.devices()), begin(devices), end(devices));
+    return std::equal(std::begin(arg), std::end(arg), begin(devices), end(devices));
 }
 
 struct StubDevice : mi::Device
@@ -205,7 +205,7 @@ TEST_F(EventSender, sends_input_devices)
         std::string str = wire.events(0);
         mir::protobuf::EventSequence seq;
         seq.ParseFromString(str);
-        EXPECT_THAT(seq.input_device_event(), InputDevicesMatch(devices));
+        EXPECT_THAT(seq.input_devices(), InputDevicesMatch(devices));
     };
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
@@ -227,7 +227,7 @@ TEST_F(EventSender, sends_empty_sequence_of_devices)
         std::string str = wire.events(0);
         mir::protobuf::EventSequence seq;
         seq.ParseFromString(str);
-        EXPECT_THAT(seq.input_device_event(), InputDevicesMatch(devices));
+        EXPECT_THAT(seq.input_devices(), InputDevicesMatch(devices));
     };
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))

@@ -23,6 +23,7 @@
 #include "rpc/null_rpc_report.h"
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/input/input_platform.h"
+#include "mir/input/input_devices.h"
 #include "mir/input/null_input_receiver_report.h"
 #include "logging/rpc_report.h"
 #include "logging/input_receiver_report.h"
@@ -74,7 +75,7 @@ mcl::DefaultConnectionConfiguration::the_rpc_channel()
         [this]
         {
             return mcl::rpc::make_rpc_channel(
-                the_socket_file(), the_surface_map(), the_display_configuration(), the_rpc_report(), the_lifecycle_control(), the_ping_handler(), the_event_sink());
+                the_socket_file(), the_surface_map(), the_display_configuration(), the_input_devices(), the_rpc_report(), the_lifecycle_control(), the_ping_handler(), the_event_sink());
         });
 }
 
@@ -121,6 +122,15 @@ mcl::DefaultConnectionConfiguration::the_input_platform()
         {
             return mir::input::receiver::InputPlatform::create(the_input_receiver_report());
         });
+}
+
+std::shared_ptr<mir::input::InputDevices>
+mcl::DefaultConnectionConfiguration::the_input_devices()
+{
+    return input_devices([]
+                         {
+                             return std::make_shared<mir::input::InputDevices>();
+                         });
 }
 
 std::string

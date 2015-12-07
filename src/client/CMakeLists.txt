@@ -34,10 +34,10 @@ add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mirclient")
 set(MIR_CLIENT_SOURCES)
 set(MIR_CLIENT_REFERENCES mircommon)
 
-add_subdirectory(rpc/)
 add_subdirectory(lttng/)
 add_subdirectory(events)
 add_subdirectory(input)
+add_subdirectory(rpc/)
 
 add_library(mirclientobjects OBJECT
 
@@ -75,6 +75,8 @@ add_library(mirclientobjects OBJECT
   ${MIR_CLIENT_SOURCES}
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/events/surface_output_event.h
 )
+
+message(STATUS ${MIR_CLIENT_SOURCES})
 
 # Ensure protobuf C++ headers have been produced before
 # trying to compile mirclientobjects

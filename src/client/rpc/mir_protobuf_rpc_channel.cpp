@@ -25,6 +25,7 @@
 #include "../lifecycle_control.h"
 #include "../event_sink.h"
 #include "../make_protobuf_object.h"
+#include "mir/input/input_devices.h"
 #include "mir/variable_length_array.h"
 #include "mir/events/event_private.h"
 
@@ -47,10 +48,12 @@ namespace
 std::chrono::milliseconds const timeout(200);
 }
 
+
 mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     std::unique_ptr<mclr::StreamTransport> transport,
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
     std::shared_ptr<DisplayConfiguration> const& disp_config,
+    std::shared_ptr<input::InputDevices> const& input_devices,
     std::shared_ptr<RpcReport> const& rpc_report,
     std::shared_ptr<LifecycleControl> const& lifecycle_control,
     std::shared_ptr<PingHandler> const& ping_handler,
@@ -59,6 +62,7 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     pending_calls(rpc_report),
     surface_map(surface_map),
     display_configuration(disp_config),
+    input_devices(input_devices),
     lifecycle_control(lifecycle_control),
     ping_handler{ping_handler},
     event_sink(event_sink),
@@ -249,6 +253,16 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
     if (seq.has_display_configuration())
     {
         display_configuration->update_configuration(seq.display_configuration());
+    }
+
+    if (seq.input_devices_size())
+    {
+        input_devices->clear();
+
+        for (auto const& dev : seq.input_devices())
+            input_devices->add_device(input::DeviceData{dev.id(), dev.capabilities(), dev.name(), dev.unique_id()});
+
+        input_devices->notify_changes();
     }
 
     if (seq.has_lifecycle_event())

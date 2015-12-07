@@ -25,6 +25,7 @@
 #include "src/client/lifecycle_control.h"
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
+#include "mir/input/input_devices.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/events/event_private.h"
@@ -43,6 +44,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
         socket_file,
         std::make_shared<mir::client::ConnectionSurfaceMap>(),
         std::make_shared<mir::client::DisplayConfiguration>(),
+        std::make_shared<mir::input::InputDevices>(),
         rpc_report,
         std::make_shared<mir::client::LifecycleControl>(),
         std::make_shared<mir::client::AtomicCallback<int32_t>>(),
