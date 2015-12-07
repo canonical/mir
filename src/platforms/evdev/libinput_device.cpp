@@ -202,14 +202,34 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
     auto const action = mir_pointer_action_motion;
     auto const relative_x_value = 0.0f;
     auto const relative_y_value = 0.0f;
-    auto const hscroll_value = libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)
-        ? horizontal_scroll_scale * libinput_event_pointer_get_axis_value(pointer,
-                                                                          LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)
-        : 0.0f;
-    auto const vscroll_value = libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)
-        ? vertical_scroll_scale * libinput_event_pointer_get_axis_value(pointer,
-                                                                        LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)
-        : 0.0f;
+
+    auto hscroll_value = 0.0f;
+    auto vscroll_value = 0.0f;
+    if (libinput_event_pointer_get_axis_source(pointer) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL)
+    {
+        if (libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+            hscroll_value = horizontal_scroll_scale * libinput_event_pointer_get_axis_value_discrete(
+                                                          pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL);
+        if (libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+            vscroll_value = -vertical_scroll_scale * libinput_event_pointer_get_axis_value_discrete(
+                                                        pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL);
+    }
+    else
+    {
+        // by default libinput assumes that wheel ticks represent a rotation of 15 degrees. This relation
+        // is used to map wheel rotations to 'scroll units'. To map the immediate scroll units received
+        // from gesture based scrolling we invert that transformation here.
+        auto const scroll_units_to_ticks = 15.0f;
+        if (libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+            hscroll_value = horizontal_scroll_scale *
+                            libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL) /
+                            scroll_units_to_ticks;
+
+        if (libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+            vscroll_value = -vertical_scroll_scale *
+                            libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL) /
+                            scroll_units_to_ticks;
+    }
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
     return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, relative_x_value,

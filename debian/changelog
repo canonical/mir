@@ -77,6 +77,7 @@ mir (0.18.0-0ubuntu1) UNRELEASED; urgency=medium
         . use EGL_fence_sync extension on the android platform (LP: #1517205)
         . fix arm64, powerpc, ppc64el builds (LP: #1522122)
         . fix locking in ms::SurfaceStack (LP: #1522105)
+        . [regression] Mouse wheel events are now unusably over-sensitive and backwards (LP: #1522673)
 
  -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 30 Nov 2015 14:09:31 -0500
 
