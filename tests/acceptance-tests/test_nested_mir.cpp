@@ -1141,6 +1141,11 @@ TEST_F(NestedServer,
 
     auto const new_config = std::make_shared<mtd::StubDisplayConfig>(new_displays);
 
+    // ******************************* FRIG *************************
+    // This avoids problems by allowing time for things to stabilize
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    // ******************************* FRIG *************************
+
     display.emit_configuration_change_event(new_config);
 
     condition.wait_for_at_most_seconds(1);
