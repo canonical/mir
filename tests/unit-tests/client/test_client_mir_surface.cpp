@@ -286,6 +286,8 @@ void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
 {
 }
 
+std::string const test_socket_name("./test_socket_surface");
+
 struct MirClientSurfaceTest : public testing::Test
 {
     MirClientSurfaceTest()
@@ -304,8 +306,8 @@ struct MirClientSurfaceTest : public testing::Test
     void start_test_server()
     {
         // In case an earlier test left a stray file
-        std::remove("./test_socket_surface");
-        test_server = std::make_shared<mt::TestProtobufServer>("./test_socket_surface", mock_server_tool);
+        std::remove(test_socket_name.c_str());
+        test_server = std::make_shared<mt::TestProtobufServer>(test_socket_name, mock_server_tool);
         test_server->comm->start();
     }
 
