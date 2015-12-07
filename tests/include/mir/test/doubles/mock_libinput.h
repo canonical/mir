@@ -71,6 +71,8 @@ public:
     MOCK_METHOD1(libinput_event_pointer_get_seat_button_count, uint32_t(libinput_event_pointer*));
     MOCK_METHOD1(libinput_event_pointer_get_axis, libinput_pointer_axis(libinput_event_pointer*));
     MOCK_METHOD2(libinput_event_pointer_get_axis_value, double(libinput_event_pointer*, libinput_pointer_axis));
+    MOCK_METHOD1(libinput_event_pointer_get_axis_source, libinput_pointer_axis_source(libinput_event_pointer*));
+    MOCK_METHOD2(libinput_event_pointer_get_axis_value_discrete, double(libinput_event_pointer*, libinput_pointer_axis));
     MOCK_METHOD2(libinput_event_pointer_has_axis,int(libinput_event_pointer *,libinput_pointer_axis));
 
     MOCK_METHOD1(libinput_event_touch_get_time, uint32_t(libinput_event_touch*));
