@@ -26,10 +26,9 @@ add_subdirectory(android)
 add_library(mirsharedinput OBJECT
   ${ANDROID_SHARED_INPUT_SOURCES}
   input_event.cpp
+  input_devices.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/xkb_mapper.cpp
 )
-
-list(APPEND MIR_CLIENT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/input_devices.cpp)
 
 list(APPEND MIR_CLIENT_REFERENCES ${XKBCOMMON_LIBRARIES})
 

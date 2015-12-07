@@ -76,8 +76,6 @@ add_library(mirclientobjects OBJECT
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/events/surface_output_event.h
 )
 
-message(STATUS ${MIR_CLIENT_SOURCES})
-
 # Ensure protobuf C++ headers have been produced before
 # trying to compile mirclientobjects
 add_dependencies(mirclientobjects mirprotobuf)
