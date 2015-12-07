@@ -1095,12 +1095,8 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
     mir_connection_release(connection);
 }
 
-// TODO this test is unexpectedly flaky and can crash
-// It looks like the nested server deadlocks as in the crashing runs:
-// 1. there is no display_change_handler message; and,
-// 2. the nested server doesn't exit on request
 TEST_F(NestedServer,
-       DISABLED_given_client_set_display_configuration_when_monitor_unplugs_client_is_notified_of_new_display_configuration)
+    given_client_set_display_configuration_when_monitor_unplugs_client_is_notified_of_new_display_configuration)
 {
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
@@ -1111,8 +1107,7 @@ TEST_F(NestedServer,
 
     mir_connection_set_display_config_change_callback(
         connection,
-        [](MirConnection*, void* context) { puts("===========>> display_change_handler <<===========");
-                                            static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); },
+        [](MirConnection*, void* context) { static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); },
         &condition);
 
     auto const painted_surface = make_and_paint_surface(connection);
@@ -1140,11 +1135,6 @@ TEST_F(NestedServer,
     new_displays.resize(1);
 
     auto const new_config = std::make_shared<mtd::StubDisplayConfig>(new_displays);
-
-    // ******************************* FRIG *************************
-    // This avoids problems by allowing time for things to stabilize
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    // ******************************* FRIG *************************
 
     display.emit_configuration_change_event(new_config);
 
