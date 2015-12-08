@@ -311,12 +311,21 @@ struct NestedServer : mtf::HeadlessInProcessServer
         EXPECT_CALL(mock_egl, eglDestroyContext(_, _)).Times(AnyNumber()).WillRepeatedly(Return(EGL_TRUE));
     }
 
-    auto hw_config_for_unplug() -> std::shared_ptr<mtd::StubDisplayConfig>
+    auto hw_display_config_for_unplug() -> std::shared_ptr<mtd::StubDisplayConfig>
     {
         auto new_displays = display_geometry;
         new_displays.resize(1);
 
         return std::make_shared<mtd::StubDisplayConfig>(new_displays);
+    }
+
+
+    auto hw_display_config_for_plugin() -> std::shared_ptr<mtd::StubDisplayConfig>
+    {
+        auto new_displays = display_geometry;
+        new_displays.push_back({{2560, 0}, { 640,  480}});
+
+        return  std::make_shared<mtd::StubDisplayConfig>(new_displays);
     }
 };
 
@@ -848,7 +857,7 @@ TEST_F(NestedServer, when_monitor_unplugs_client_is_notified_of_new_display_conf
         [](MirConnection*, void* context) { static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); },
         &client_config_changed);
 
-    auto const new_config = hw_config_for_unplug();
+    auto const new_config = hw_display_config_for_unplug();
 
     display.emit_configuration_change_event(new_config);
 
@@ -888,7 +897,7 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
 
     ClientWithAPaintedSurface client(nested_mir);
 
-    auto const expect_config = hw_config_for_unplug();
+    auto const expect_config = hw_display_config_for_unplug();
 
     mt::WaitCondition condition;
 
@@ -918,7 +927,7 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
     client.update_display_configuration_applied_to(display,
         [](MirDisplayConfiguration* config) { config->outputs->used = false; });
 
-    auto const expect_config = hw_config_for_unplug();
+    auto const expect_config = hw_display_config_for_unplug();
 
     mt::WaitCondition condition;
 
@@ -943,10 +952,7 @@ TEST_F(NestedServer, when_monitor_plugged_in_client_is_notified_of_new_display_c
         [](MirConnection*, void* context) { static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); },
         &client_config_changed);
 
-    auto new_displays = display_geometry;
-    new_displays.push_back({{2560, 0}, { 640,  480}});
-
-    auto const new_config = std::make_shared<mtd::StubDisplayConfig>(new_displays);
+    auto const new_config = hw_display_config_for_plugin();
 
     display.emit_configuration_change_event(new_config);
 
@@ -956,12 +962,13 @@ TEST_F(NestedServer, when_monitor_plugged_in_client_is_notified_of_new_display_c
 
     // The default layout policy (for cloned displays) will be applied by the MediatingDisplayChanger.
     // So set the expectation to match
-    for (auto& output : new_displays)
-        output.top_left = {0, 0};
+    mtd::StubDisplayConfig expected_config(*new_config);
+    expected_config.for_each_output([](mg::UserDisplayConfigurationOutput& output)
+        { output.top_left = {0, 0}; });
 
     auto const configuration = mir_connection_create_display_config(client.connection);
 
-    EXPECT_THAT(configuration, mt::DisplayConfigMatches(mtd::StubDisplayConfig{new_displays}));
+    EXPECT_THAT(configuration, mt::DisplayConfigMatches(expected_config));
 
     mir_display_config_destroy(configuration);
 }
@@ -991,22 +998,20 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
 
     ClientWithAPaintedSurface client(nested_mir);
 
-    auto new_displays = display_geometry;
-    new_displays.push_back({{2560, 0}, { 640,  480}});
-
-    auto const expect_config = std::make_shared<mtd::StubDisplayConfig>(new_displays);
+    auto const new_config = hw_display_config_for_plugin();
 
     // The default layout policy (for cloned displays) will be applied by the MediatingDisplayChanger.
     // So set the expectation to match
-    for (auto& output : new_displays)
-        output.top_left = {0, 0};
+    mtd::StubDisplayConfig expected_config(*new_config);
+    expected_config.for_each_output([](mg::UserDisplayConfigurationOutput& output)
+                                        { output.top_left = {0, 0}; });
 
     mt::WaitCondition condition;
 
-    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(mt::DisplayConfigMatches(mtd::StubDisplayConfig{new_displays})))
+    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(mt::DisplayConfigMatches(expected_config)))
         .WillOnce(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
-    display.emit_configuration_change_event(expect_config);
+    display.emit_configuration_change_event(new_config);
 
     condition.wait_for_at_most_seconds(1);
     EXPECT_TRUE(condition.woken());
@@ -1029,19 +1034,17 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
     client.update_display_configuration_applied_to(display,
         [](MirDisplayConfiguration* config) { config->outputs->used = false; });
 
-    auto new_displays = display_geometry;
-    new_displays.push_back({{2560, 0}, { 640,  480}});
-
-    auto const new_config = std::make_shared<mtd::StubDisplayConfig>(new_displays);
+    auto const new_config = hw_display_config_for_plugin();
 
     // The default layout policy (for cloned displays) will be applied by the MediatingDisplayChanger.
     // So set the expectation to match
-    for (auto& output : new_displays)
-        output.top_left = {0, 0};
+    mtd::StubDisplayConfig expected_config(*new_config);
+    expected_config.for_each_output([](mg::UserDisplayConfigurationOutput& output)
+                                        { output.top_left = {0, 0}; });
 
     mt::WaitCondition condition;
 
-    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(mt::DisplayConfigMatches(mtd::StubDisplayConfig{new_displays})))
+    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(mt::DisplayConfigMatches(expected_config)))
         .WillOnce(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
     display.emit_configuration_change_event(new_config);
@@ -1067,7 +1070,7 @@ TEST_F(NestedServer,
     client.update_display_configuration_applied_to(display,
         [](MirDisplayConfiguration* config) { config->outputs->used = false; });
 
-    auto const new_config = hw_config_for_unplug();
+    auto const new_config = hw_display_config_for_unplug();
 
     display.emit_configuration_change_event(new_config);
 
@@ -1099,7 +1102,7 @@ TEST_F(NestedServer,
     client.update_display_configuration_applied_to(display,
         [](MirDisplayConfiguration* config) { config->outputs->used = mir_orientation_inverted; });
 
-    auto const new_hw_config = hw_config_for_unplug();
+    auto const new_hw_config = hw_display_config_for_unplug();
 
     auto const expected_config = std::make_shared<mtd::StubDisplayConfig>(*new_hw_config);
     expected_config->for_each_output([](mg::UserDisplayConfigurationOutput& output)
