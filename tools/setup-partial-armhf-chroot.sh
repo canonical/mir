@@ -80,7 +80,7 @@ echo "" > status
 set +e
 
 # Parse dependencies from debian/control
-# dpkg-checkbuilddeps non-zero when dependencies are not met and the list is sent to stderr
+# dpkg-checkbuilddeps returns non-zero when dependencies are not met and the list is sent to stderr
 builddeps=$(dpkg-checkbuilddeps -a ${arch} --admindir=. ${DEBCONTROL} 2>&1 )
 if [ $? -eq 0 ] ; then
     exit 0 
