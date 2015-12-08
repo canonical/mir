@@ -330,6 +330,28 @@ struct Client
         mir_display_config_destroy(configuration);
     }
 
+    void update_display_configuration_applied_to(MockDisplay& display, void (*changer)(MirDisplayConfiguration* config))
+    {
+        mt::WaitCondition initial_condition;
+
+        auto const configuration = mir_connection_create_display_config(connection);
+
+        changer(configuration);
+
+        EXPECT_CALL(display, configure(Not(mt::DisplayConfigMatches(configuration)))).Times(AnyNumber())
+            .WillRepeatedly(InvokeWithoutArgs([] {}));
+        EXPECT_CALL(display, configure(mt::DisplayConfigMatches(configuration)))
+            .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
+
+        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+
+        initial_condition.wait_for_at_most_seconds(1);
+        mir_display_config_destroy(configuration);
+
+        Mock::VerifyAndClearExpectations(&display);
+        ASSERT_TRUE(initial_condition.woken());
+    }
+
     MirConnection* const connection;
 };
 
@@ -891,19 +913,8 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
 
     ClientWithAPaintedSurface client(nested_mir);
 
-    {
-        mt::WaitCondition initial_condition;
-
-        EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
-            .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
-
-        client.update_display_configuration(
-            [](MirDisplayConfiguration* config) { config->outputs->used = false; });
-
-        initial_condition.wait_for_at_most_seconds(1);
-        Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
-        ASSERT_TRUE(initial_condition.woken());
-    }
+    client.update_display_configuration_applied_to(display,
+        [](MirDisplayConfiguration* config) { config->outputs->used = false; });
 
     auto new_displays = display_geometry;
     new_displays.resize(1);
@@ -1016,19 +1027,8 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
 
     ClientWithAPaintedSurface client(nested_mir);
 
-    {
-        mt::WaitCondition initial_condition;
-
-        EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
-            .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
-
-        client.update_display_configuration(
-            [](MirDisplayConfiguration* config) { config->outputs->used = false; });
-
-        initial_condition.wait_for_at_most_seconds(1);
-        Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
-        ASSERT_TRUE(initial_condition.woken());
-    }
+    client.update_display_configuration_applied_to(display,
+        [](MirDisplayConfiguration* config) { config->outputs->used = false; });
 
     auto new_displays = display_geometry;
     new_displays.push_back({{2560, 0}, { 640,  480}});
@@ -1065,24 +1065,8 @@ TEST_F(NestedServer,
         [](MirConnection*, void* context) { static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); },
         &condition);
 
-    {
-        mt::WaitCondition initial_condition;
-
-        auto const configuration = mir_connection_create_display_config(client.connection);
-        configuration->outputs->used = false;
-
-        EXPECT_CALL(display, configure(Not(mt::DisplayConfigMatches(configuration)))).Times(AnyNumber())
-            .WillRepeatedly(InvokeWithoutArgs([] {}));
-        EXPECT_CALL(display, configure(mt::DisplayConfigMatches(configuration)))
-            .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
-
-        mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
-
-        initial_condition.wait_for_at_most_seconds(1);
-        Mock::VerifyAndClearExpectations(&display);
-        ASSERT_TRUE(initial_condition.woken());
-        mir_display_config_destroy(configuration);
-    }
+    client.update_display_configuration_applied_to(display,
+        [](MirDisplayConfiguration* config) { config->outputs->used = false; });
 
     auto new_displays = display_geometry;
     new_displays.resize(1);
@@ -1116,24 +1100,8 @@ TEST_F(NestedServer,
         [](MirConnection*, void* context) { static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); },
         &client_config_changed);
 
-    {
-        mt::WaitCondition initial_condition;
-
-        auto const configuration = mir_connection_create_display_config(client.connection);
-        configuration->outputs->used = mir_orientation_inverted;
-
-        EXPECT_CALL(display, configure(Not(mt::DisplayConfigMatches(configuration)))).Times(AnyNumber())
-            .WillRepeatedly(InvokeWithoutArgs([] {}));
-        EXPECT_CALL(display, configure(mt::DisplayConfigMatches(configuration)))
-            .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
-
-        mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
-
-        initial_condition.wait_for_at_most_seconds(1);
-        Mock::VerifyAndClearExpectations(&display);
-        ASSERT_TRUE(initial_condition.woken());
-        mir_display_config_destroy(configuration);
-    }
+    client.update_display_configuration_applied_to(display,
+        [](MirDisplayConfiguration* config) { config->outputs->used = mir_orientation_inverted; });
 
     auto new_displays = display_geometry;
     new_displays.resize(1);
