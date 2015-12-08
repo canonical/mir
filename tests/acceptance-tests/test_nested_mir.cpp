@@ -322,6 +322,14 @@ struct Client
 
     ~Client() { mir_connection_release(connection); }
 
+    void update_display_configuration(void (*changer)(MirDisplayConfiguration* config))
+    {
+        auto const configuration = mir_connection_create_display_config(connection);
+        changer(configuration);
+        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+        mir_display_config_destroy(configuration);
+    }
+
     MirConnection* const connection;
 };
 
@@ -496,23 +504,18 @@ TEST_F(NestedServer, display_configuration_changes_are_forwarded_to_host)
 {
     NestedMirRunner nested_mir{new_connection()};
     ClientWithAPaintedSurface client(nested_mir);
-
-    auto const configuration = mir_connection_create_display_config(client.connection);
-
-    configuration->outputs->used = false;
+    ignore_rebuild_of_egl_context();
 
     mt::WaitCondition condition;
 
-    ignore_rebuild_of_egl_context();
     EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
         .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
-    mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
+    client.update_display_configuration(
+        [](MirDisplayConfiguration* config) { config->outputs->used = false; });
 
     condition.wait_for_at_most_seconds(1);
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
-
-    mir_display_config_destroy(configuration);
 }
 
 TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
@@ -747,16 +750,11 @@ TEST_F(NestedServer, display_configuration_reset_when_application_exits)
         {
             mt::WaitCondition initial_condition;
 
-            auto const configuration = mir_connection_create_display_config(client.connection);
-
-            configuration->outputs->used = false;
-
             EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
                 .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
 
-            mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
-
-            mir_display_config_destroy(configuration);
+            client.update_display_configuration(
+                [](MirDisplayConfiguration* config) { config->outputs->used = false; });
 
             // Wait for initial config to be applied
             initial_condition.wait_for_at_most_seconds(1);
@@ -899,10 +897,8 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
         EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
             .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
 
-        auto const configuration = mir_connection_create_display_config(client.connection);
-        configuration->outputs->used = false;
-        mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
-        mir_display_config_destroy(configuration);
+        client.update_display_configuration(
+            [](MirDisplayConfiguration* config) { config->outputs->used = false; });
 
         initial_condition.wait_for_at_most_seconds(1);
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
@@ -1026,10 +1022,8 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
         EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
             .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
 
-        auto const configuration = mir_connection_create_display_config(client.connection);
-        configuration->outputs->used = false;
-        mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
-        mir_display_config_destroy(configuration);
+        client.update_display_configuration(
+            [](MirDisplayConfiguration* config) { config->outputs->used = false; });
 
         initial_condition.wait_for_at_most_seconds(1);
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
@@ -1162,10 +1156,8 @@ TEST_F(NestedServer,
     client_config_changed.wait_for_at_most_seconds(1);
     if (client_config_changed.woken())
     {
-        auto const configuration = mir_connection_create_display_config(client.connection);
-        configuration->outputs->orientation = mir_orientation_inverted;
-        mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
-        mir_display_config_destroy(configuration);
+        client.update_display_configuration(
+            [](MirDisplayConfiguration* config) { config->outputs->orientation = mir_orientation_inverted; });
     }
 
     host_config_change.wait_for_at_most_seconds(1);
