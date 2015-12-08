@@ -304,13 +304,6 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
     mir::CachedPtr<MockCursor> mock_cursor;
 
-    MirSurface* make_and_paint_surface(MirConnection* connection) const
-    {
-        auto const surface = mtf::make_any_surface(connection);
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
-        return surface;
-    }
-
     void ignore_rebuild_of_egl_context()
     {
         InSequence context_lifecycle;
@@ -318,6 +311,51 @@ struct NestedServer : mtf::HeadlessInProcessServer
         EXPECT_CALL(mock_egl, eglDestroyContext(_, _)).Times(AnyNumber()).WillRepeatedly(Return(EGL_TRUE));
     }
 };
+
+namespace
+{
+struct Client
+{
+    explicit Client(NestedMirRunner& nested_mir) :
+        connection(mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__))
+    {}
+
+    ~Client() { mir_connection_release(connection); }
+
+    MirConnection* const connection;
+};
+
+struct ClientWithADisplayChangeCallback : virtual Client
+{
+    ClientWithADisplayChangeCallback(NestedMirRunner& nested_mir, mir_display_config_callback callback, void* context) :
+        Client(nested_mir)
+    {
+        mir_connection_set_display_config_change_callback(connection, callback, context);
+    }
+};
+
+struct ClientWithAPaintedSurface : virtual Client
+{
+    ClientWithAPaintedSurface(NestedMirRunner& nested_mir) :
+        Client(nested_mir),
+        surface(mtf::make_any_surface(connection))
+    {
+        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+    }
+
+    MirSurface* const surface;
+};
+
+struct ClientWithADisplayChangeCallbackAndAPaintedSurface : virtual Client, ClientWithADisplayChangeCallback, ClientWithAPaintedSurface
+{
+    ClientWithADisplayChangeCallbackAndAPaintedSurface(NestedMirRunner& nested_mir, mir_display_config_callback callback, void* context) :
+        Client(nested_mir),
+        ClientWithADisplayChangeCallback(nested_mir, callback, context),
+        ClientWithAPaintedSurface(nested_mir)
+    {
+    }
+};
+}
 }
 
 TEST_F(NestedServer, nested_platform_connects_and_disconnects)
@@ -390,11 +428,10 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
 {
     NestedMirRunner nested_mir{new_connection()};
 
-    auto c = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto surface = make_and_paint_surface(c);
+    ClientWithAPaintedSurface client(nested_mir);
 
     bool became_exposed_and_focused = mir::test::spin_wait_for_condition_or_timeout(
-        [surface]
+        [surface = client.surface]
         {
             return mir_surface_get_visibility(surface) == mir_surface_visibility_exposed
                 && mir_surface_get_focus(surface) == mir_surface_focused;
@@ -402,9 +439,6 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
         std::chrono::seconds{10});
 
     EXPECT_TRUE(became_exposed_and_focused);
-
-    mir_surface_release_sync(surface);
-    mir_connection_release(c);
 }
 
 TEST_F(NestedServer, posts_when_scene_has_visible_changes)
@@ -461,13 +495,9 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
 TEST_F(NestedServer, display_configuration_changes_are_forwarded_to_host)
 {
     NestedMirRunner nested_mir{new_connection()};
+    ClientWithAPaintedSurface client(nested_mir);
 
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-
-    // Need a painted surface to have focus
-    auto const painted_surface = make_and_paint_surface(connection);
-
-    auto const configuration = mir_connection_create_display_config(connection);
+    auto const configuration = mir_connection_create_display_config(client.connection);
 
     configuration->outputs->used = false;
 
@@ -477,26 +507,21 @@ TEST_F(NestedServer, display_configuration_changes_are_forwarded_to_host)
     EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
         .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
-    mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+    mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
 
     condition.wait_for_at_most_seconds(1);
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 
     mir_display_config_destroy(configuration);
-    mir_surface_release_sync(painted_surface);
-    mir_connection_release(connection);
 }
 
 TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
 {
     NestedMirRunner nested_mir{new_connection()};
 
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+    ClientWithAPaintedSurface client(nested_mir);
 
-    // Need a painted surface to have focus
-    auto const painted_surface = make_and_paint_surface(connection);
-
-    auto const configuration = mir_connection_create_display_config(connection);
+    auto const configuration = mir_connection_create_display_config(client.connection);
 
     for (auto new_orientation :
         {mir_orientation_left, mir_orientation_right, mir_orientation_inverted, mir_orientation_normal,
@@ -513,15 +538,13 @@ TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
         EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(mt::DisplayConfigMatches(configuration)))
             .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
-        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+        mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
 
         condition.wait_for_at_most_seconds(1);
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
     }
 
     mir_display_config_destroy(configuration);
-    mir_surface_release_sync(painted_surface);
-    mir_connection_release(connection);
 }
 
 TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
@@ -529,19 +552,18 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
     int const frames = 10;
     NestedMirRunner nested_mir{new_connection()};
 
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto const surface = make_and_paint_surface(connection);
+    ClientWithAPaintedSurface client(nested_mir);
     auto const mock_cursor = the_mock_cursor();
 
-    auto const spec = mir_connection_create_spec_for_changes(connection);
+    auto const spec = mir_connection_create_spec_for_changes(client.connection);
     mir_surface_spec_set_fullscreen_on_output(spec, 1);
-    mir_surface_apply_spec(surface, spec);
+    mir_surface_apply_spec(client.surface, spec);
     mir_surface_spec_release(spec);
 
     server.the_cursor_listener()->cursor_moved_to(489, 9);
 
     auto stream = mir_connection_create_buffer_stream_sync(
-        connection, cursor_size, cursor_size, mir_pixel_format_argb_8888, mir_buffer_usage_software);
+        client.connection, cursor_size, cursor_size, mir_pixel_format_argb_8888, mir_buffer_usage_software);
     mir_buffer_stream_swap_buffers_sync(stream);
 
     {
@@ -550,7 +572,7 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
             .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
         auto conf = mir_cursor_configuration_from_buffer_stream(stream, 0, 0);
-        mir_wait_for(mir_surface_configure_cursor(surface, conf));
+        mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
         mir_cursor_configuration_destroy(conf);
 
         condition.wait_for_at_most_seconds(1);
@@ -570,21 +592,18 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
     }
 
     mir_buffer_stream_release_sync(stream);
-    mir_surface_release_sync(surface);
-    mir_connection_release(connection);
 }
 
 TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
 {
     NestedMirRunner nested_mir{new_connection()};
 
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto const surface = make_and_paint_surface(connection);
+    ClientWithAPaintedSurface client(nested_mir);
     auto const mock_cursor = the_mock_cursor();
 
-    auto const spec = mir_connection_create_spec_for_changes(connection);
+    auto const spec = mir_connection_create_spec_for_changes(client.connection);
     mir_surface_spec_set_fullscreen_on_output(spec, 1);
-    mir_surface_apply_spec(surface, spec);
+    mir_surface_apply_spec(client.surface, spec);
     mir_surface_spec_release(spec);
 
     server.the_cursor_listener()->cursor_moved_to(489, 9);
@@ -597,15 +616,12 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
             .WillOnce(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
         auto const cursor = mir_cursor_configuration_from_name(name);
-        mir_wait_for(mir_surface_configure_cursor(surface, cursor));
+        mir_wait_for(mir_surface_configure_cursor(client.surface, cursor));
         mir_cursor_configuration_destroy(cursor);
 
         condition.wait_for_at_most_seconds(1);
         Mock::VerifyAndClearExpectations(mock_cursor.get());
     }
-
-    mir_surface_release_sync(surface);
-    mir_connection_release(connection);
 }
 
 TEST_F(NestedServer, can_hide_the_host_cursor)
@@ -613,19 +629,18 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
     int const frames = 10;
     NestedMirRunner nested_mir{new_connection()};
 
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto const surface = make_and_paint_surface(connection);
+    ClientWithAPaintedSurface client(nested_mir);
     auto const mock_cursor = the_mock_cursor();
 
-    auto const spec = mir_connection_create_spec_for_changes(connection);
+    auto const spec = mir_connection_create_spec_for_changes(client.connection);
     mir_surface_spec_set_fullscreen_on_output(spec, 1);
-    mir_surface_apply_spec(surface, spec);
+    mir_surface_apply_spec(client.surface, spec);
     mir_surface_spec_release(spec);
 
     server.the_cursor_listener()->cursor_moved_to(489, 9);
 
     auto stream = mir_connection_create_buffer_stream_sync(
-        connection, cursor_size, cursor_size, mir_pixel_format_argb_8888, mir_buffer_usage_software);
+        client.connection, cursor_size, cursor_size, mir_pixel_format_argb_8888, mir_buffer_usage_software);
     mir_buffer_stream_swap_buffers_sync(stream);
 
     {
@@ -634,7 +649,7 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
             .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
         auto conf = mir_cursor_configuration_from_buffer_stream(stream, 0, 0);
-        mir_wait_for(mir_surface_configure_cursor(surface, conf));
+        mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
         mir_cursor_configuration_destroy(conf);
 
         condition.wait_for_at_most_seconds(1);
@@ -651,8 +666,6 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
     }
 
     mir_buffer_stream_release_sync(stream);
-    mir_surface_release_sync(surface);
-    mir_connection_release(connection);
 
     // Need to verify before test server teardown deletes the
     // surface as the host cursor then reverts to default.
@@ -692,23 +705,19 @@ TEST_F(NestedServer, applies_display_config_on_startup)
         }
     } nested_mir{new_connection()};
 
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto const surface = make_and_paint_surface(connection);
+    ClientWithAPaintedSurface client(nested_mir);
 
     condition.wait_for_at_most_seconds(1);
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 
     EXPECT_TRUE(condition.woken());
-
-    mir_surface_release_sync(surface);
-    mir_connection_release(connection);
 }
 
 TEST_F(NestedServer, base_configuration_change_in_host_is_seen_in_nested)
 {
     NestedMirRunner nested_mir{new_connection()};
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto const surface = make_and_paint_surface(connection);
+    ClientWithAPaintedSurface client(nested_mir);
+
     auto const config_policy = nested_mir.mock_display_configuration_policy();
     std::shared_ptr<mg::DisplayConfiguration> const new_config{server.the_display()->configuration()};
     new_config->for_each_output([](mg::UserDisplayConfigurationOutput& output)
@@ -723,9 +732,6 @@ TEST_F(NestedServer, base_configuration_change_in_host_is_seen_in_nested)
     condition.wait_for_at_most_seconds(1);
     Mock::VerifyAndClearExpectations(config_policy.get());
     EXPECT_TRUE(condition.woken());
-
-    mir_surface_release_sync(surface);
-    mir_connection_release(connection);
 }
 
 // lp:1511798
@@ -734,35 +740,34 @@ TEST_F(NestedServer, display_configuration_reset_when_application_exits)
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
 
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-
-    // Need a painted surface to have focus
-    auto const painted_surface = make_and_paint_surface(connection);
-
-    auto const configuration = mir_connection_create_display_config(connection);
-
-    configuration->outputs->used = false;
-
-    mt::WaitCondition initial_condition;
-
-    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
-        .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
-
-    mir_wait_for(mir_connection_apply_display_config(connection, configuration));
-
-    mir_display_config_destroy(configuration);
-
-    // Wait for initial config to be applied
-    initial_condition.wait_for_at_most_seconds(1);
-    Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
-    ASSERT_TRUE(initial_condition.woken());
-
     mt::WaitCondition condition;
-    EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
-        .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+    {
+        ClientWithAPaintedSurface client(nested_mir);
 
-    mir_surface_release_sync(painted_surface);
-    mir_connection_release(connection);
+        {
+            mt::WaitCondition initial_condition;
+
+            auto const configuration = mir_connection_create_display_config(client.connection);
+
+            configuration->outputs->used = false;
+
+            EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
+                .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
+
+            mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
+
+            mir_display_config_destroy(configuration);
+
+            // Wait for initial config to be applied
+            initial_condition.wait_for_at_most_seconds(1);
+
+            Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
+            ASSERT_TRUE(initial_condition.woken());
+        }
+
+        EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
+            .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
+    }
 
     condition.wait_for_at_most_seconds(1);
     EXPECT_TRUE(condition.woken());
@@ -778,10 +783,7 @@ TEST_F(NestedServer, display_configuration_reset_when_nested_server_exits)
         NestedMirRunner nested_mir{new_connection()};
         ignore_rebuild_of_egl_context();
 
-        auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-
-        // Need a painted surface to have focus
-        auto const painted_surface = make_and_paint_surface(connection);
+        ClientWithAPaintedSurface client(nested_mir);
 
         std::shared_ptr<mg::DisplayConfiguration> const new_config{nested_mir.server.the_display()->configuration()};
         new_config->for_each_output([](mg::UserDisplayConfigurationOutput& output)
@@ -801,9 +803,6 @@ TEST_F(NestedServer, display_configuration_reset_when_nested_server_exits)
 
         EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
             .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
-
-        mir_surface_release_sync(painted_surface);
-        mir_connection_release(connection);
     }
 
     condition.wait_for_at_most_seconds(1);
@@ -815,37 +814,28 @@ TEST_F(NestedServer, when_monitor_unplugs_client_is_notified_of_new_display_conf
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
 
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-
-    // Need a painted surface to have focus
-    auto const painted_surface = make_and_paint_surface(connection);
+    mt::WaitCondition client_config_changed;
+    ClientWithADisplayChangeCallbackAndAPaintedSurface client(
+        nested_mir,
+        [](MirConnection*, void* context) { static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); },
+        &client_config_changed);
 
     auto new_displays = display_geometry;
     new_displays.resize(1);
 
     auto const new_config = std::make_shared<mtd::StubDisplayConfig>(new_displays);
 
-    mt::WaitCondition condition;
-
-    auto const display_change_handler = [](MirConnection*, void* context)
-        { static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); };
-
-    mir_connection_set_display_config_change_callback(connection, display_change_handler, &condition);
-
     display.emit_configuration_change_event(new_config);
 
-    condition.wait_for_at_most_seconds(1);
+    client_config_changed.wait_for_at_most_seconds(1);
 
-    ASSERT_TRUE(condition.woken());
+    ASSERT_TRUE(client_config_changed.woken());
 
-    auto const configuration = mir_connection_create_display_config(connection);
+    auto const configuration = mir_connection_create_display_config(client.connection);
 
     EXPECT_THAT(configuration, mt::DisplayConfigMatches(*new_config));
 
     mir_display_config_destroy(configuration);
-
-    mir_surface_release_sync(painted_surface);
-    mir_connection_release(connection);
 }
 
 TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_monitor_unplugs_configuration_is_reset)
@@ -871,9 +861,7 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
         ASSERT_TRUE(initial_condition.woken());
     }
 
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-
-    auto const painted_surface = make_and_paint_surface(connection);
+    ClientWithAPaintedSurface client(nested_mir);
 
     auto new_displays = display_geometry;
     new_displays.resize(1);
@@ -890,9 +878,6 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
     condition.wait_for_at_most_seconds(1);
     EXPECT_TRUE(condition.woken());
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
-
-    mir_surface_release_sync(painted_surface);
-    mir_connection_release(connection);
 }
 
 // TODO this test needs some core changes before it will pass. C.f. lp:1522802
@@ -906,8 +891,7 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
 
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto const painted_surface = make_and_paint_surface(connection);
+    ClientWithAPaintedSurface client(nested_mir);
 
     {
         mt::WaitCondition initial_condition;
@@ -915,9 +899,9 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
         EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
             .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
 
-        auto const configuration = mir_connection_create_display_config(connection);
+        auto const configuration = mir_connection_create_display_config(client.connection);
         configuration->outputs->used = false;
-        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+        mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
         mir_display_config_destroy(configuration);
 
         initial_condition.wait_for_at_most_seconds(1);
@@ -940,9 +924,6 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
     condition.wait_for_at_most_seconds(1);
     EXPECT_TRUE(condition.woken());
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
-
-    mir_surface_release_sync(painted_surface);
-    mir_connection_release(connection);
 }
 
 TEST_F(NestedServer, when_monitor_plugged_in_client_is_notified_of_new_display_configuration)
@@ -950,42 +931,33 @@ TEST_F(NestedServer, when_monitor_plugged_in_client_is_notified_of_new_display_c
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
 
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-
-    // Need a painted surface to have focus
-    auto const painted_surface = make_and_paint_surface(connection);
+    mt::WaitCondition client_config_changed;
+    ClientWithADisplayChangeCallbackAndAPaintedSurface client(
+        nested_mir,
+        [](MirConnection*, void* context) { static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); },
+        &client_config_changed);
 
     auto new_displays = display_geometry;
     new_displays.push_back({{2560, 0}, { 640,  480}});
 
     auto const new_config = std::make_shared<mtd::StubDisplayConfig>(new_displays);
 
-    mt::WaitCondition condition;
-
-    auto const display_change_handler = [](MirConnection*, void* context)
-        { static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); };
-
-    mir_connection_set_display_config_change_callback(connection, display_change_handler, &condition);
-
     display.emit_configuration_change_event(new_config);
 
-    condition.wait_for_at_most_seconds(1);
+    client_config_changed.wait_for_at_most_seconds(1);
 
-    ASSERT_TRUE(condition.woken());
+    ASSERT_TRUE(client_config_changed.woken());
 
     // The default layout policy (for cloned displays) will be applied by the MediatingDisplayChanger.
     // So set the expectation to match
     for (auto& output : new_displays)
         output.top_left = {0, 0};
 
-    auto const configuration = mir_connection_create_display_config(connection);
+    auto const configuration = mir_connection_create_display_config(client.connection);
 
     EXPECT_THAT(configuration, mt::DisplayConfigMatches(mtd::StubDisplayConfig{new_displays}));
 
     mir_display_config_destroy(configuration);
-
-    mir_surface_release_sync(painted_surface);
-    mir_connection_release(connection);
 }
 
 TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_monitor_plugged_in_configuration_is_reset)
@@ -1011,9 +983,7 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
         ASSERT_TRUE(initial_condition.woken());
     }
 
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-
-    auto const painted_surface = make_and_paint_surface(connection);
+    ClientWithAPaintedSurface client(nested_mir);
 
     auto new_displays = display_geometry;
     new_displays.push_back({{2560, 0}, { 640,  480}});
@@ -1035,9 +1005,6 @@ TEST_F(NestedServer, given_nested_server_set_base_display_configuration_when_mon
     condition.wait_for_at_most_seconds(1);
     EXPECT_TRUE(condition.woken());
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
-
-    mir_surface_release_sync(painted_surface);
-    mir_connection_release(connection);
 }
 
 // TODO this test needs some core changes before it will pass. C.f. lp:1522802
@@ -1051,8 +1018,7 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
 
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-    auto const painted_surface = make_and_paint_surface(connection);
+    ClientWithAPaintedSurface client(nested_mir);
 
     {
         mt::WaitCondition initial_condition;
@@ -1060,9 +1026,9 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
         EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(_))
             .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
 
-        auto const configuration = mir_connection_create_display_config(connection);
+        auto const configuration = mir_connection_create_display_config(client.connection);
         configuration->outputs->used = false;
-        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+        mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
         mir_display_config_destroy(configuration);
 
         initial_condition.wait_for_at_most_seconds(1);
@@ -1090,9 +1056,6 @@ TEST_F(NestedServer, DISABLED_given_client_set_display_configuration_when_monito
     condition.wait_for_at_most_seconds(1);
     EXPECT_TRUE(condition.woken());
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
-
-    mir_surface_release_sync(painted_surface);
-    mir_connection_release(connection);
 }
 
 TEST_F(NestedServer,
@@ -1101,21 +1064,17 @@ TEST_F(NestedServer,
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
 
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-
     mt::WaitCondition condition;
 
-    mir_connection_set_display_config_change_callback(
-        connection,
+    ClientWithADisplayChangeCallbackAndAPaintedSurface client(
+        nested_mir,
         [](MirConnection*, void* context) { static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); },
         &condition);
-
-    auto const painted_surface = make_and_paint_surface(connection);
 
     {
         mt::WaitCondition initial_condition;
 
-        auto const configuration = mir_connection_create_display_config(connection);
+        auto const configuration = mir_connection_create_display_config(client.connection);
         configuration->outputs->used = false;
 
         EXPECT_CALL(display, configure(Not(mt::DisplayConfigMatches(configuration)))).Times(AnyNumber())
@@ -1123,7 +1082,7 @@ TEST_F(NestedServer,
         EXPECT_CALL(display, configure(mt::DisplayConfigMatches(configuration)))
             .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
 
-        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+        mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
 
         initial_condition.wait_for_at_most_seconds(1);
         Mock::VerifyAndClearExpectations(&display);
@@ -1142,14 +1101,11 @@ TEST_F(NestedServer,
 
     EXPECT_TRUE(condition.woken());
 
-    auto const configuration = mir_connection_create_display_config(connection);
+    auto const configuration = mir_connection_create_display_config(client.connection);
 
     EXPECT_THAT(configuration, mt::DisplayConfigMatches(*new_config));
 
     mir_display_config_destroy(configuration);
-
-    mir_surface_release_sync(painted_surface);
-    mir_connection_release(connection);
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 }
 
@@ -1159,20 +1115,17 @@ TEST_F(NestedServer,
     NestedMirRunner nested_mir{new_connection()};
     ignore_rebuild_of_egl_context();
 
-    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
-
     mt::WaitCondition client_config_changed;
-    mir_connection_set_display_config_change_callback(
-        connection,
+
+    ClientWithADisplayChangeCallbackAndAPaintedSurface client(
+        nested_mir,
         [](MirConnection*, void* context) { static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); },
         &client_config_changed);
-
-    auto const painted_surface = make_and_paint_surface(connection);
 
     {
         mt::WaitCondition initial_condition;
 
-        auto const configuration = mir_connection_create_display_config(connection);
+        auto const configuration = mir_connection_create_display_config(client.connection);
         configuration->outputs->used = mir_orientation_inverted;
 
         EXPECT_CALL(display, configure(Not(mt::DisplayConfigMatches(configuration)))).Times(AnyNumber())
@@ -1180,7 +1133,7 @@ TEST_F(NestedServer,
         EXPECT_CALL(display, configure(mt::DisplayConfigMatches(configuration)))
             .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
 
-        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+        mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
 
         initial_condition.wait_for_at_most_seconds(1);
         Mock::VerifyAndClearExpectations(&display);
@@ -1209,9 +1162,9 @@ TEST_F(NestedServer,
     client_config_changed.wait_for_at_most_seconds(1);
     if (client_config_changed.woken())
     {
-        auto const configuration = mir_connection_create_display_config(connection);
+        auto const configuration = mir_connection_create_display_config(client.connection);
         configuration->outputs->orientation = mir_orientation_inverted;
-        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+        mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
         mir_display_config_destroy(configuration);
     }
 
@@ -1219,7 +1172,4 @@ TEST_F(NestedServer,
 
     EXPECT_TRUE(host_config_change.woken());
     Mock::VerifyAndClearExpectations(&display);
-
-    mir_surface_release_sync(painted_surface);
-    mir_connection_release(connection);
 }
