@@ -388,7 +388,43 @@ struct ClientWithAPaintedSurface : virtual Client
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
     }
 
+    ~ClientWithAPaintedSurface()
+    {
+        mir_surface_release_sync(surface);
+    }
+
+    void update_surface_spec(void (*changer)(MirSurfaceSpec* spec))
+    {
+        auto const spec = mir_connection_create_spec_for_changes(connection);
+        changer(spec);
+        mir_surface_apply_spec(surface, spec);
+        mir_surface_spec_release(spec);
+
+    }
+
     MirSurface* const surface;
+};
+
+struct ClientWithAPaintedSurfaceAndABufferStream : virtual Client, ClientWithAPaintedSurface
+{
+    ClientWithAPaintedSurfaceAndABufferStream(NestedMirRunner& nested_mir) :
+        Client(nested_mir),
+        ClientWithAPaintedSurface(nested_mir),
+        buffer_stream(mir_connection_create_buffer_stream_sync(
+            connection,
+            cursor_size,
+            cursor_size,
+            mir_pixel_format_argb_8888, mir_buffer_usage_software))
+    {
+        mir_buffer_stream_swap_buffers_sync(buffer_stream);
+    }
+
+    ~ClientWithAPaintedSurfaceAndABufferStream()
+    {
+        mir_buffer_stream_release_sync(buffer_stream);
+    }
+
+    MirBufferStream* const buffer_stream;
 };
 
 struct ClientWithADisplayChangeCallbackAndAPaintedSurface : virtual Client, ClientWithADisplayChangeCallback, ClientWithAPaintedSurface
@@ -591,26 +627,20 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
     int const frames = 10;
     NestedMirRunner nested_mir{new_connection()};
 
-    ClientWithAPaintedSurface client(nested_mir);
+    ClientWithAPaintedSurfaceAndABufferStream client(nested_mir);
     auto const mock_cursor = the_mock_cursor();
 
-    auto const spec = mir_connection_create_spec_for_changes(client.connection);
-    mir_surface_spec_set_fullscreen_on_output(spec, 1);
-    mir_surface_apply_spec(client.surface, spec);
-    mir_surface_spec_release(spec);
+    client.update_surface_spec(
+        [](MirSurfaceSpec* spec) { mir_surface_spec_set_fullscreen_on_output(spec, 1); });
 
     server.the_cursor_listener()->cursor_moved_to(489, 9);
-
-    auto stream = mir_connection_create_buffer_stream_sync(
-        client.connection, cursor_size, cursor_size, mir_pixel_format_argb_8888, mir_buffer_usage_software);
-    mir_buffer_stream_swap_buffers_sync(stream);
 
     {
         mt::WaitCondition condition;
         EXPECT_CALL(*mock_cursor, show(_)).Times(1)
             .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
-        auto conf = mir_cursor_configuration_from_buffer_stream(stream, 0, 0);
+        auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
         mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
         mir_cursor_configuration_destroy(conf);
 
@@ -624,13 +654,11 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
         EXPECT_CALL(*mock_cursor, show(_)).Times(1)
             .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
-        mir_buffer_stream_swap_buffers_sync(stream);
+        mir_buffer_stream_swap_buffers_sync(client.buffer_stream);
 
         condition.wait_for_at_most_seconds(1);
         Mock::VerifyAndClearExpectations(mock_cursor.get());
     }
-
-    mir_buffer_stream_release_sync(stream);
 }
 
 TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
@@ -640,10 +668,8 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
     ClientWithAPaintedSurface client(nested_mir);
     auto const mock_cursor = the_mock_cursor();
 
-    auto const spec = mir_connection_create_spec_for_changes(client.connection);
-    mir_surface_spec_set_fullscreen_on_output(spec, 1);
-    mir_surface_apply_spec(client.surface, spec);
-    mir_surface_spec_release(spec);
+    client.update_surface_spec(
+        [](MirSurfaceSpec* spec) { mir_surface_spec_set_fullscreen_on_output(spec, 1); });
 
     server.the_cursor_listener()->cursor_moved_to(489, 9);
 
@@ -668,26 +694,20 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
     int const frames = 10;
     NestedMirRunner nested_mir{new_connection()};
 
-    ClientWithAPaintedSurface client(nested_mir);
+    ClientWithAPaintedSurfaceAndABufferStream client(nested_mir);
     auto const mock_cursor = the_mock_cursor();
 
-    auto const spec = mir_connection_create_spec_for_changes(client.connection);
-    mir_surface_spec_set_fullscreen_on_output(spec, 1);
-    mir_surface_apply_spec(client.surface, spec);
-    mir_surface_spec_release(spec);
+    client.update_surface_spec(
+        [](MirSurfaceSpec* spec) { mir_surface_spec_set_fullscreen_on_output(spec, 1); });
 
     server.the_cursor_listener()->cursor_moved_to(489, 9);
-
-    auto stream = mir_connection_create_buffer_stream_sync(
-        client.connection, cursor_size, cursor_size, mir_pixel_format_argb_8888, mir_buffer_usage_software);
-    mir_buffer_stream_swap_buffers_sync(stream);
 
     {
         mt::WaitCondition condition;
         EXPECT_CALL(*mock_cursor, show(_)).Times(1)
             .WillRepeatedly(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
-        auto conf = mir_cursor_configuration_from_buffer_stream(stream, 0, 0);
+        auto conf = mir_cursor_configuration_from_buffer_stream(client.buffer_stream, 0, 0);
         mir_wait_for(mir_surface_configure_cursor(client.surface, conf));
         mir_cursor_configuration_destroy(conf);
 
@@ -701,10 +721,8 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
 
     for (int i = 0; i != frames; ++i)
     {
-        mir_buffer_stream_swap_buffers_sync(stream);
+        mir_buffer_stream_swap_buffers_sync(client.buffer_stream);
     }
-
-    mir_buffer_stream_release_sync(stream);
 
     // Need to verify before test server teardown deletes the
     // surface as the host cursor then reverts to default.
