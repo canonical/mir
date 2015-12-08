@@ -74,6 +74,7 @@ struct TestProtobufClient
     void on_disconnect_done();
     void on_configure_display_done();
 
+    void create_surface();
     void wait_for_connect_done();
     void wait_for_create_surface();
     void wait_for_next_buffer();

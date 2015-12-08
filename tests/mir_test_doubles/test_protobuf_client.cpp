@@ -114,6 +114,18 @@ void mir::test::TestProtobufClient::on_configure_display_done()
     signal_condition(configure_display_done_called);
 }
 
+void mir::test::TestProtobufClient::create_surface()
+{
+    {
+        std::lock_guard<decltype(guard)> lk{guard};
+        create_surface_called = false;
+    }
+    display_server.create_surface(
+        &surface_parameters,
+        &surface,
+        google::protobuf::NewCallback(this, &TestProtobufClient::create_surface_done));
+}
+
 void mir::test::TestProtobufClient::wait_for_configure_display_done()
 {
     wait_for([this]{ return configure_display_done_called; }, "Timed out waiting to configure display");

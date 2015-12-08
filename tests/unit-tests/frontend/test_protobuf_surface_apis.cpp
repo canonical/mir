@@ -136,11 +136,7 @@ TEST_F(ProtobufSurfaceCounter,
 
     for (int i = 0; i != surface_count; ++i)
     {
-        stub_client->display_server.create_surface(
-            &stub_client->surface_parameters,
-            &stub_client->surface,
-            google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::create_surface_done));
-
+        stub_client->create_surface();
         stub_client->wait_for_create_surface();
     }
 
