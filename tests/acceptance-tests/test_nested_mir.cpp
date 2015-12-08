@@ -329,8 +329,6 @@ struct NestedServer : mtf::HeadlessInProcessServer
     }
 };
 
-namespace
-{
 struct Client
 {
     explicit Client(NestedMirRunner& nested_mir) :
@@ -402,7 +400,6 @@ struct ClientWithADisplayChangeCallbackAndAPaintedSurface : virtual Client, Clie
     {
     }
 };
-}
 }
 
 TEST_F(NestedServer, nested_platform_connects_and_disconnects)
