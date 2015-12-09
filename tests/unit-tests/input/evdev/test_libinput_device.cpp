@@ -338,6 +338,30 @@ struct LibInputDevice : public ::testing::Test
             .WillByDefault(Return(pointer_event));
         ON_CALL(mock_libinput, libinput_event_pointer_get_time_usec(pointer_event))
             .WillByDefault(Return(event_time));
+        ON_CALL(mock_libinput, libinput_event_pointer_get_axis_source(pointer_event))
+            .WillByDefault(Return(LIBINPUT_POINTER_AXIS_SOURCE_WHEEL));
+        ON_CALL(mock_libinput, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+            .WillByDefault(Return(horizontal!=0.0));
+        ON_CALL(mock_libinput, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+            .WillByDefault(Return(vertical!=0.0));
+        ON_CALL(mock_libinput, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+            .WillByDefault(Return(vertical));
+        ON_CALL(mock_libinput, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+            .WillByDefault(Return(horizontal));
+    }
+
+    void setup_finger_axis_event(libinput_event* event, uint64_t event_time, double horizontal, double vertical)
+    {
+        auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
+
+        ON_CALL(mock_libinput, libinput_event_get_type(event))
+            .WillByDefault(Return(LIBINPUT_EVENT_POINTER_AXIS));
+        ON_CALL(mock_libinput, libinput_event_get_pointer_event(event))
+            .WillByDefault(Return(pointer_event));
+        ON_CALL(mock_libinput, libinput_event_pointer_get_time_usec(pointer_event))
+            .WillByDefault(Return(event_time));
+        ON_CALL(mock_libinput, libinput_event_pointer_get_axis_source(pointer_event))
+            .WillByDefault(Return(LIBINPUT_POINTER_AXIS_SOURCE_FINGER));
         ON_CALL(mock_libinput, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
             .WillByDefault(Return(horizontal!=0.0));
         ON_CALL(mock_libinput, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
@@ -616,8 +640,8 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
     InSequence seq;
     // expect two scroll events..
     EXPECT_CALL(mock_builder,
-                pointer_event(time_stamp_1, mir_pointer_action_motion, 0, 0.0f, 20.0f, 0.0f, 0.0f));
-    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 20.0f)));
+                pointer_event(time_stamp_1, mir_pointer_action_motion, 0, 0.0f, -20.0f, 0.0f, 0.0f));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, -20.0f)));
     EXPECT_CALL(mock_builder,
                 pointer_event(time_stamp_2, mir_pointer_action_motion, 0, 5.0f, 0.0f, 0.0f, 0.0f));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 5.0f)));
@@ -807,7 +831,7 @@ TEST_F(LibInputDeviceOnMouse, scroll_speed_scales_scroll_events)
     setup_axis_event(fake_event_2, event_time_2, -2.0, 0.0);
 
     // expect two scroll events..
-    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, -3.0f)));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 3.0f)));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, -10.0f)));
 
     setup_pointer_configuration(mouse.device(), 1, mir_pointer_handedness_right);
@@ -827,6 +851,26 @@ TEST_F(LibInputDeviceOnLaptopKeyboardAndMouse, provides_no_touchpad_settings_for
     EXPECT_THAT(val.is_set(), Eq(false));
     val = mouse.get_touchpad_settings();
     EXPECT_THAT(val.is_set(), Eq(false));
+}
+
+TEST_F(LibInputDeviceOnTouchpad, process_event_handles_scroll)
+{
+    setup_finger_axis_event(fake_event_1, event_time_1, 0.0, 150.0);
+    setup_finger_axis_event(fake_event_2, event_time_2, 15.0, 0.0);
+
+    InSequence seq;
+    // expect two scroll events..
+    EXPECT_CALL(mock_builder,
+                pointer_event(time_stamp_1, mir_pointer_action_motion, 0, 0.0f, -10.0f, 0.0f, 0.0f));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, -10.0f)));
+    EXPECT_CALL(mock_builder,
+                pointer_event(time_stamp_2, mir_pointer_action_motion, 0, 1.0f, 0.0f, 0.0f, 0.0f));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 1.0f)));
+
+    touchpad.start(&mock_sink, &mock_builder);
+    touchpad.process_event(fake_event_1);
+    touchpad.process_event(fake_event_2);
+
 }
 
 TEST_F(LibInputDeviceOnTouchpad, reads_touchpad_settings_from_libinput)
