@@ -117,6 +117,8 @@ mir (0.18.0-0ubuntu1) UNRELEASED; urgency=medium
       . fix locking in ms::SurfaceStack (LP: #1522105)
       . [regression] Mouse wheel events are now unusably over-sensitive and
         backwards (LP: #1522673)
+      . Cross compiling Mir from a xenial host fails (dpkg-checkbuilddeps:
+        error: Unmet build dependencies: ...) (LP: #1523801)
 
  -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 30 Nov 2015 14:09:31 -0500
 
