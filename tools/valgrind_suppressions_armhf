@@ -198,7 +198,7 @@
    Memcheck:Param
    futex(utime)
    fun:syscall
-   fun:_ZNSt28__atomic_futex_unsigned_base19_M_futex_wait_untilEPjjbNSt6chrono8durationIxSt5ratioILx1ELx1EEEENS2_IxS3_ILx1ELx1000000000EEEE
+   fun:_ZNSt28__atomic_futex_unsigned_base19_M_futex_wait_untilEPjjbNSt6chrono8durationIxSt5ratioILx1ELx1EEEENS2*
 }
 
 {
@@ -206,10 +206,10 @@
    Memcheck:Param
    futex(timeout)
    fun:syscall
-   fun:_ZNSt28__atomic_futex_unsigned_base19_M_futex_wait_untilEPjjbNSt6chrono8durationIxSt5ratioILx1ELx1EEEENS2_IxS3_ILx1ELx1000000000EEEE
+   fun:_ZNSt28__atomic_futex_unsigned_base19_M_futex_wait_untilEPjjbNSt6chrono8durationIxSt5ratioILx1ELx1EEEENS2*
 }
 
-# remove_if_stale, fails due to '-O2' optimization level
+# remove_if_stale, false positive due to '-O2' optimization level
 
 {
    remove_if_stale
