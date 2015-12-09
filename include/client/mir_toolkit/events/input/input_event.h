@@ -32,6 +32,7 @@ extern "C" {
 #endif
 
 typedef int64_t MirInputDeviceId;
+typedef uint64_t MirInputEventMac;
 
 typedef enum {
     mir_input_event_type_key = 0,
@@ -132,6 +133,13 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev);
  */
 MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev);
 
+/*
+ * Retrieve the mac attached to a given input event.
+ *
+ * \param[in] event The input event
+ * \return          mac of the input event
+ */
+MirInputEventMac mir_input_event_get_mac(MirInputEvent const* ev);
 #ifdef __cplusplus
 }
 /**@}*/

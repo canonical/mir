@@ -66,6 +66,7 @@ MIR_CLIENT_9 {
     mir_input_event_get_device_id;
     mir_input_event_get_event_time;
     mir_input_event_get_keyboard_event;
+    mir_input_event_get_mac;
     mir_input_event_get_pointer_event;
     mir_input_event_get_touch_event;
     mir_input_event_get_type;
@@ -250,6 +251,7 @@ MIR_CLIENT_DETAIL_unreleased {
       mir::events::set_modifier*;
       mir::events::set_cursor_position*;
       mir::events::set_button_state*;
+      mir::input::android::android_pointer_action_from_mir*;
     };
 } MIR_CLIENT_DETAIL_9;
 
