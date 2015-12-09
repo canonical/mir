@@ -269,6 +269,7 @@ TEST_F(AndroidInputSender, can_send_consumeable_mir_motion_events)
         EXPECT_EQ(test_x_coord[i], client_motion_event.getX(i)) << "When i=" << i;
         EXPECT_EQ(test_y_coord[i], client_motion_event.getRawY(i)) << "When i=" << i;
         EXPECT_EQ(test_y_coord[i], client_motion_event.getY(i)) << "When i=" << i;
+        EXPECT_EQ(AMOTION_EVENT_TOOL_TYPE_FINGER, client_motion_event.getToolType(i)) << "When i=" << i;
     }
     EXPECT_EQ(AINPUT_SOURCE_TOUCHSCREEN, client_motion_event.getSource());
 }
@@ -288,6 +289,7 @@ TEST_F(AndroidInputSender, sends_pointer_events)
     EXPECT_EQ(pos.y.as_float(), client_motion_event.getY(0));
     EXPECT_EQ(movement.dx.as_float(), client_motion_event.getAxisValue(AMOTION_EVENT_AXIS_RX, 0));
     EXPECT_EQ(movement.dy.as_float(), client_motion_event.getAxisValue(AMOTION_EVENT_AXIS_RY, 0));
+    EXPECT_EQ(AMOTION_EVENT_TOOL_TYPE_MOUSE, client_motion_event.getToolType(0));
     EXPECT_EQ(AINPUT_SOURCE_MOUSE, client_motion_event.getSource());
 }
 
