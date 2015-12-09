@@ -174,26 +174,25 @@ mia::InputSender::ActiveTransfer::ActiveTransfer(InputSenderState & state, int s
 
 void mia::InputSender::ActiveTransfer::send(InputSendEntry && event)
 {
-    if (event.event.type != mir_event_type_key &&
-        event.event.type != mir_event_type_motion)
+    if (mir_event_get_type(event.event.get()) != mir_event_type_input)
         return;
 
     droidinput::status_t error_status;
 
-    auto event_time = mir_input_event_get_event_time(mir_event_get_input_event(&event.event));
-    auto input_event = mir_event_get_input_event(&event.event);
+    auto event_time = mir_input_event_get_event_time(mir_event_get_input_event(event.event.get()));
+    auto input_event = mir_event_get_input_event(event.event.get());
     switch(mir_input_event_get_type(input_event))
     {
     case mir_input_event_type_key:
-        error_status = send_key_event(event.sequence_id, event.event);
+        error_status = send_key_event(event.sequence_id, *event.event);
         state.report->published_key_event(event.channel->server_fd(), event.sequence_id, event_time);
         break;
     case mir_input_event_type_touch:
-        error_status = send_touch_event(event.sequence_id, event.event);
+        error_status = send_touch_event(event.sequence_id, *event.event);
         state.report->published_motion_event(event.channel->server_fd(), event.sequence_id, event_time);
         break;
     case mir_input_event_type_pointer:
-        error_status = send_pointer_event(event.sequence_id, event.event);
+        error_status = send_pointer_event(event.sequence_id, *event.event);
         state.report->published_motion_event(event.channel->server_fd(), event.sequence_id, event_time);
         break;
     }
@@ -208,11 +207,11 @@ void mia::InputSender::ActiveTransfer::send(InputSendEntry && event)
     {
     case droidinput::WOULD_BLOCK:
         if (state.observer)
-            state.observer->client_blocked(event.event, surface);
+            state.observer->client_blocked(*event.event, surface);
         break;
     case droidinput::DEAD_OBJECT:
         if (state.observer)
-            state.observer->send_failed(event.event, surface, InputSendObserver::socket_error);
+            state.observer->send_failed(*event.event, surface, InputSendObserver::socket_error);
         break;
     default:
         BOOST_THROW_EXCEPTION(boost::enable_error_info(std::runtime_error("Failure sending input event : ")) << boost::errinfo_errno(errno));
@@ -362,7 +361,7 @@ void mia::InputSender::ActiveTransfer::on_surface_disappeared()
                       release_pending_responses.rend(),
                       [observer,this](InputSendEntry const& entry)
                       {
-                          observer->send_failed(entry.event, surface, InputSendObserver::surface_disappeared);
+                          observer->send_failed(*entry.event, surface, InputSendObserver::surface_disappeared);
                       });
     }
 }
@@ -383,7 +382,7 @@ void mia::InputSender::ActiveTransfer::on_finish_signal()
             auto observer = state.observer;
 
             if (entry.sequence_id == sequence && observer)
-                observer->send_suceeded(entry.event,
+                observer->send_suceeded(*entry.event,
                                         surface,
                                         handled ? InputSendObserver::consumed : InputSendObserver::not_consumed);
         }
@@ -409,7 +408,7 @@ void mia::InputSender::ActiveTransfer::on_response_timeout()
     mia::InputSendEntry timedout_entry{unqueue_entry(top_sequence_id)};
 
     if (state.observer)
-        state.observer->send_failed(timedout_entry.event, surface, InputSendObserver::no_response_received);
+        state.observer->send_failed(*timedout_entry.event, surface, InputSendObserver::no_response_received);
 }
 
 void mia::InputSender::ActiveTransfer::enqueue_entry(mia::InputSendEntry && entry)
@@ -422,7 +421,7 @@ void mia::InputSender::ActiveTransfer::enqueue_entry(mia::InputSendEntry && entr
         update_timer();
     }
 
-    pending_responses.push_back(entry);
+    pending_responses.emplace_back(std::move(entry));
 }
 
 mia::InputSendEntry mia::InputSender::ActiveTransfer::unqueue_entry(uint32_t sequence_id)
@@ -434,9 +433,9 @@ mia::InputSendEntry mia::InputSender::ActiveTransfer::unqueue_entry(uint32_t seq
                             { return entry.sequence_id == sequence_id; });
 
     if (pos == end(pending_responses))
-        return {0, MirEvent{}, std::shared_ptr<mi::InputChannel>()};
+        BOOST_THROW_EXCEPTION(std::runtime_error("unknown sequence id in client response"));
 
-    mia::InputSendEntry result = *pos;
+    mia::InputSendEntry result = std::move(*pos);
     pending_responses.erase(pos);
     if (pending_responses.empty())
     {
