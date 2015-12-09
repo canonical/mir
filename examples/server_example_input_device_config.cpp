@@ -124,8 +124,8 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
 me::InputDeviceConfig::InputDeviceConfig(bool disable_while_typing,
                                          double mouse_cursor_acceleration_bias,
                                          double mouse_scroll_speed_scale,
-                                         double touchpad_scroll_speed_scale,
                                          double touchpad_cursor_acceleration_bias,
+                                         double touchpad_scroll_speed_scale,
                                          MirTouchpadClickModes click_mode,
                                          MirTouchpadClickModes scroll_mode)
     : disable_while_typing(disable_while_typing), mouse_cursor_acceleration_bias(mouse_cursor_acceleration_bias),
