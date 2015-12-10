@@ -196,6 +196,8 @@ void mia::InputSender::ActiveTransfer::send(InputSendEntry && event)
         error_status = send_pointer_event(event.sequence_id, *event.event);
         state.report->published_motion_event(event.channel->server_fd(), event.sequence_id, event_time);
         break;
+    default:
+        BOOST_THROW_EXCEPTION(std::runtime_error("unknown input event type"));
     }
 
     if (error_status == droidinput::OK)
@@ -249,22 +251,21 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t s
     int32_t repeat_count = 0;
     auto input_event = mir_event_get_input_event(&event);
     auto key_event = mir_input_event_get_keyboard_event(input_event);
-    auto android_action = mia::android_keyboard_action_from_mir(repeat_count, mir_keyboard_event_action(key_event));
-    std::chrono::nanoseconds event_time{mir_input_event_get_event_time(input_event)};
-    return publisher.publishKeyEvent(
-        seq,
-        mir_input_event_get_device_id(input_event),
-        AINPUT_SOURCE_KEYBOARD,
-        android_action,
-        0, /* Flags */
-        mir_keyboard_event_key_code(key_event),
-        mir_keyboard_event_scan_code(key_event),
-        mia::android_modifiers_from_mir(mir_keyboard_event_modifiers(key_event)),
-        repeat_count,
-        event.key.mac,
-        event_time,
-        event_time
-        );
+    auto const android_action = mia::android_keyboard_action_from_mir(repeat_count, mir_keyboard_event_action(key_event));
+    std::chrono::nanoseconds const event_time{mir_input_event_get_event_time(input_event)};
+    auto const flags = 0;
+    return publisher.publishKeyEvent(seq,
+                                     mir_input_event_get_device_id(input_event),
+                                     AINPUT_SOURCE_KEYBOARD,
+                                     android_action,
+                                     flags,
+                                     mir_keyboard_event_key_code(key_event),
+                                     mir_keyboard_event_scan_code(key_event),
+                                     mia::android_modifiers_from_mir(mir_keyboard_event_modifiers(key_event)),
+                                     repeat_count,
+                                     event.key.mac,
+                                     event_time,
+                                     event_time);
 }
 
 droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t seq, MirEvent const& event)
@@ -290,27 +291,20 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t
         properties[i].toolType = mia::android_tool_type_from_mir(mir_touch_event_tooltype(touch, i));
         properties[i].id = mir_touch_event_id(touch, i);
     }
-    std::chrono::nanoseconds event_time{mir_input_event_get_event_time(input_event)};
 
-    return publisher.publishMotionEvent(
-        seq,
-        mir_input_event_get_device_id(input_event),
-        AINPUT_SOURCE_TOUCHSCREEN,
-        mia::extract_android_action_from(event),
-        0, /* flags */
-        0, /* edge flags */
-        mia::android_modifiers_from_mir(mir_touch_event_modifiers(touch)),
-        0, /* no button state at touch input_event */
-        0.0f,  // input_event.x_offset,
-        0.0f,  // input_event.y_offset,
-        0, 0, /* unused x/y precision */
-        event.motion.mac,
-        event_time,
-        event_time,
-        mir_touch_event_point_count(touch),
-        properties,
-        coords
-        );
+    std::chrono::nanoseconds const event_time{mir_input_event_get_event_time(input_event)};
+    auto const x_offset = 0.0f;
+    auto const y_offset = 0.0f;
+    auto const x_precision = 0;
+    auto const y_precision = 0;
+    auto const flags = 0;
+    auto const edge_flags = 0;
+    auto const button_state = 0;
+    return publisher.publishMotionEvent(seq, mir_input_event_get_device_id(input_event), AINPUT_SOURCE_TOUCHSCREEN,
+                                        mia::extract_android_action_from(event), flags, edge_flags,
+                                        mia::android_modifiers_from_mir(mir_touch_event_modifiers(touch)), button_state,
+                                        x_offset, y_offset, x_precision, y_precision, event.motion.mac, event_time,
+                                        event_time, mir_touch_event_point_count(touch), properties, coords);
 }
 
 droidinput::status_t mia::InputSender::ActiveTransfer::send_pointer_event(uint32_t seq, MirEvent const& event)
@@ -332,20 +326,19 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_pointer_event(uint32
     properties[0].toolType = AMOTION_EVENT_TOOL_TYPE_MOUSE;
     properties[0].id = 0;
 
-    std::chrono::nanoseconds event_time{mir_input_event_get_event_time(input_event)};
+    std::chrono::nanoseconds const event_time{mir_input_event_get_event_time(input_event)};
+    auto const x_offset = 0.0f;
+    auto const y_offset = 0.0f;
+    auto const x_precision = 0;
+    auto const y_precision = 0;
+    auto const flags = 0;
+    auto const edge_flags = 0;
     return publisher.publishMotionEvent(
         seq, mir_input_event_get_device_id(input_event), AINPUT_SOURCE_MOUSE,
         mia::android_pointer_action_from_mir(mir_pointer_event_action(pointer), mir_pointer_event_buttons(pointer)),
-        0, /* flags */
-        0, /* edge flags */
-        mia::android_modifiers_from_mir(mir_pointer_event_modifiers(pointer)),
-        mia::android_pointer_buttons_from_mir(
-            mir_pointer_event_buttons(pointer)),
-        0.0f,                                    // input_event.x_offset,
-        0.0f,                                    // input_event.y_offset,
-        0,
-        0, /* unused x/y precision */
-        event.motion.mac, event_time, event_time, 1, properties, coords);
+        flags, edge_flags, mia::android_modifiers_from_mir(mir_pointer_event_modifiers(pointer)),
+        mia::android_pointer_buttons_from_mir(mir_pointer_event_buttons(pointer)), x_offset, y_offset, x_precision,
+        y_precision, event.motion.mac, event_time, event_time, 1, properties, coords);
 }
 
 void mia::InputSender::ActiveTransfer::on_surface_disappeared()
