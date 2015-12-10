@@ -383,11 +383,11 @@ TEST_F(AndroidInputSender, unordered_finish_signal_triggers_the_right_callback)
     EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &second_sequence, &event));
 
     EXPECT_CALL(observer,
-                send_suceeded(mt::MirKeyEventMatches(*another_key_event),
+                send_suceeded(mt::MirKeyboardEventMatches(*another_key_event),
                               &stub_surface,
                               mi::InputSendObserver::consumed));
     EXPECT_CALL(observer,
-                send_suceeded(mt::MirKeyEventMatches(*key_event),
+                send_suceeded(mt::MirKeyboardEventMatches(*key_event),
                               &stub_surface,
                               mi::InputSendObserver::not_consumed));
     
@@ -403,7 +403,7 @@ TEST_F(AndroidInputSender, observer_notified_on_disapeared_surface )
     sender.send_event(*key_event, channel);
     EXPECT_CALL(
         observer,
-        send_failed(mt::MirKeyEventMatches(*key_event), &stub_surface, mir::input::InputSendObserver::surface_disappeared));
+        send_failed(mt::MirKeyboardEventMatches(*key_event), &stub_surface, mir::input::InputSendObserver::surface_disappeared));
     deregister_surface();
 }
 
@@ -424,7 +424,7 @@ TEST_F(AndroidInputSender, observer_informed_on_response_timeout)
     sender.send_event(*key_event, channel);
     EXPECT_CALL(
         observer,
-        send_failed(mt::MirKeyEventMatches(*key_event), &stub_surface, mir::input::InputSendObserver::no_response_received));
+        send_failed(mt::MirKeyboardEventMatches(*key_event), &stub_surface, mir::input::InputSendObserver::no_response_received));
 
     loop.fire_all_alarms();
 }
@@ -435,7 +435,7 @@ TEST_F(AndroidInputSender, observer_informed_about_closed_socket_on_send_event)
 
     EXPECT_CALL(
         observer,
-        send_failed(mt::MirKeyEventMatches(*key_event), &stub_surface, mir::input::InputSendObserver::socket_error));
+        send_failed(mt::MirKeyboardEventMatches(*key_event), &stub_surface, mir::input::InputSendObserver::socket_error));
     ::close(channel->client_fd());
     sender.send_event(*key_event, channel);
 }
