@@ -66,7 +66,6 @@ MIR_CLIENT_9 {
     mir_input_event_get_device_id;
     mir_input_event_get_event_time;
     mir_input_event_get_keyboard_event;
-    mir_input_event_get_mac;
     mir_input_event_get_pointer_event;
     mir_input_event_get_touch_event;
     mir_input_event_get_type;

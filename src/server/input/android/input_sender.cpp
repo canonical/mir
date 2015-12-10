@@ -27,6 +27,7 @@
 #include "mir/scene/surface.h"
 #include "mir/compositor/scene.h"
 #include "mir/main_loop.h"
+#include "mir/events/event_private.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -260,7 +261,7 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t s
         mir_keyboard_event_scan_code(key_event),
         mia::android_modifiers_from_mir(mir_keyboard_event_modifiers(key_event)),
         repeat_count,
-        mir_input_event_get_mac(input_event),
+        event.key.mac,
         event_time,
         event_time
         );
@@ -303,7 +304,7 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t
         0.0f,  // input_event.x_offset,
         0.0f,  // input_event.y_offset,
         0, 0, /* unused x/y precision */
-        mir_input_event_get_mac(input_event),
+        event.motion.mac,
         event_time,
         event_time,
         mir_touch_event_point_count(touch),
@@ -338,11 +339,13 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_pointer_event(uint32
         0, /* flags */
         0, /* edge flags */
         mia::android_modifiers_from_mir(mir_pointer_event_modifiers(pointer)),
-        mia::android_pointer_buttons_from_mir(mir_pointer_event_buttons(pointer)), /* no button state at touch input_event */
-        0.0f,                                                                      // input_event.x_offset,
-        0.0f,                                                                      // input_event.y_offset,
-        0, 0,                                                                      /* unused x/y precision */
-        mir_input_event_get_mac(input_event), event_time, event_time, 1, properties, coords);
+        mia::android_pointer_buttons_from_mir(
+            mir_pointer_event_buttons(pointer)),
+        0.0f,                                    // input_event.x_offset,
+        0.0f,                                    // input_event.y_offset,
+        0,
+        0, /* unused x/y precision */
+        event.motion.mac, event_time, event_time, 1, properties, coords);
 }
 
 void mia::InputSender::ActiveTransfer::on_surface_disappeared()
