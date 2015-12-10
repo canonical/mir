@@ -100,6 +100,15 @@ builddeps=$(echo ${builddeps} | sed 's/([^)]*)//g')
 builddeps=$(echo ${builddeps} | sed -e 's/abi-compliance-checker//g')
 builddeps=$(echo ${builddeps} | sed -e 's/multistrap//g')
 
+case ${arch} in
+    amd64 | i386 )
+        source_url=http://archive.ubuntu.com/ubuntu
+        ;;
+    * )
+        source_url=http://ports.ubuntu.com/ubuntu-ports
+        ;;
+esac
+
 echo "[General]
 arch=${arch}
 directory=${directory}
@@ -109,7 +118,7 @@ bootstrap=Ubuntu ${sources}
 
 [Ubuntu]
 packages=${builddeps}
-source=http://ports.ubuntu.com/ubuntu-ports
+source=${source_url}
 suite=${dist}
 " > mstrap.conf
 
