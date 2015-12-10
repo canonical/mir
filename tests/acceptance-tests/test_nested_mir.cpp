@@ -1152,3 +1152,74 @@ TEST_F(NestedServer,
     mir_connection_release(connection);
     Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
 }
+
+TEST_F(NestedServer,
+       given_client_set_display_configuration_when_monitor_unplugs_client_can_set_display_configuration)
+{
+    NestedMirRunner nested_mir{new_connection()};
+    ignore_rebuild_of_egl_context();
+
+    auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    mt::WaitCondition client_config_changed;
+    mir_connection_set_display_config_change_callback(
+        connection,
+        [](MirConnection*, void* context) { static_cast<mt::WaitCondition*>(context)->wake_up_everyone(); },
+        &client_config_changed);
+
+    auto const painted_surface = make_and_paint_surface(connection);
+
+    {
+        mt::WaitCondition initial_condition;
+
+        auto const configuration = mir_connection_create_display_config(connection);
+        configuration->outputs->used = mir_orientation_inverted;
+
+        EXPECT_CALL(display, configure(Not(mt::DisplayConfigMatches(configuration)))).Times(AnyNumber())
+            .WillRepeatedly(InvokeWithoutArgs([] {}));
+        EXPECT_CALL(display, configure(mt::DisplayConfigMatches(configuration)))
+            .WillRepeatedly(InvokeWithoutArgs([&] { initial_condition.wake_up_everyone(); }));
+
+        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+
+        initial_condition.wait_for_at_most_seconds(1);
+        Mock::VerifyAndClearExpectations(&display);
+        ASSERT_TRUE(initial_condition.woken());
+        mir_display_config_destroy(configuration);
+    }
+
+    auto new_displays = display_geometry;
+    new_displays.resize(1);
+
+    auto const new_hw_config = std::make_shared<mtd::StubDisplayConfig>(new_displays);
+
+    auto const expected_config = std::make_shared<mtd::StubDisplayConfig>(*new_hw_config);
+    expected_config->for_each_output([](mg::UserDisplayConfigurationOutput& output)
+        { output.orientation = mir_orientation_inverted; });
+
+    mt::WaitCondition host_config_change;
+
+    EXPECT_CALL(display, configure(Not(mt::DisplayConfigMatches(*expected_config)))).Times(AnyNumber())
+        .WillRepeatedly(InvokeWithoutArgs([] {}));
+    EXPECT_CALL(display, configure(mt::DisplayConfigMatches(*expected_config)))
+        .WillRepeatedly(InvokeWithoutArgs([&] { host_config_change.wake_up_everyone(); }));
+
+    display.emit_configuration_change_event(new_hw_config);
+
+    client_config_changed.wait_for_at_most_seconds(1);
+    if (client_config_changed.woken())
+    {
+        auto const configuration = mir_connection_create_display_config(connection);
+        configuration->outputs->orientation = mir_orientation_inverted;
+        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+        mir_display_config_destroy(configuration);
+    }
+
+    host_config_change.wait_for_at_most_seconds(1);
+
+    EXPECT_TRUE(host_config_change.woken());
+    Mock::VerifyAndClearExpectations(&display);
+
+    mir_surface_release_sync(painted_surface);
+    mir_connection_release(connection);
+}
