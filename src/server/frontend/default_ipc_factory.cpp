@@ -67,17 +67,13 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_serve
     std::shared_ptr<mf::MessageSender> const& message_sender,
     ConnectionContext const &connection_context)
 {
-    std::shared_ptr<DisplayChanger> changer;
+    auto const changer = std::make_shared<UnauthorizedDisplayChanger>(display_changer);
     std::shared_ptr<Screencast> effective_screencast;
 
     if (session_authorizer->configure_display_is_allowed(creds))
-    {
-        changer = display_changer;
-    }
-    else
-    {
-        changer = std::make_shared<UnauthorizedDisplayChanger>(display_changer);
-    }
+        changer->allow_configure_display();
+    if (session_authorizer->set_base_display_configuration_is_allowed(creds))
+        changer->allow_set_base_configuration();
 
     if (session_authorizer->screencast_is_allowed(creds))
     {

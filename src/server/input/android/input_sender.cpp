@@ -238,7 +238,7 @@ void mia::InputSender::ActiveTransfer::subscribe()
             });
 }
 
-droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t seq, MirKeyEvent const& event)
+droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t seq, MirKeyboardEvent const& event)
 {
     int32_t repeat_count = 0;
     auto android_action = mia::android_keyboard_action_from_mir(repeat_count, event.action);

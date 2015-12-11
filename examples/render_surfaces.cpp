@@ -29,9 +29,9 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/options/option.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_coordinator.h"
 #include "mir/scene/buffer_stream_factory.h"
 #include "mir/scene/surface_factory.h"
+#include "mir/shell/surface_stack.h"
 #include "mir/frontend/buffer_sink.h"
 #include "mir/server.h"
 #include "mir/report_exception.h"
@@ -336,7 +336,7 @@ public:
         auto const display = the_display();
         auto const buffer_stream_factory = the_buffer_stream_factory();
         auto const surface_factory = the_surface_factory();
-        auto const surface_coordinator = the_surface_coordinator();
+        auto const surface_stack = the_surface_stack();
         auto const gl_context = the_display()->create_gl_context();
 
         /* TODO: Get proper configuration */
@@ -373,7 +373,7 @@ public:
             auto const stream = buffer_stream_factory->create_buffer_stream(
                 mf::BufferStreamId{}, std::make_shared<NullBufferSink>(), properties);
             auto const surface = surface_factory->create_surface(stream, params);
-            surface_coordinator->add_surface(surface, params.input_mode, nullptr);
+            surface_stack->add_surface(surface, params.input_mode);
 
             {
                 mg::Buffer* buffer{nullptr};

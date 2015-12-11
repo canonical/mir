@@ -162,7 +162,6 @@ MIR_COMMON_5.1 {  # New functions in Mir 0.16
       android::InputPublisher::publishKeyEvent*;
       android::InputPublisher::publishMotionEvent*;
       android::InputPublisher::receiveFinishedSignal*;
-      android::InputReaderConfiguration::setDisplayInfo*;
       android::IntSet::contains*;
       android::IntSet::indexOf*;
       android::IntSet::?IntSet*;

@@ -55,10 +55,10 @@ mcl::BufferVault::~BufferVault()
         server_requests->free_buffer(it.first);
 }
 
-mcl::NoTLSFuture<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
+mcl::NoTLSFuture<mcl::BufferInfo> mcl::BufferVault::withdraw()
 {
     std::lock_guard<std::mutex> lk(mutex);
-    mcl::NoTLSPromise<std::shared_ptr<mcl::ClientBuffer>> promise;
+    mcl::NoTLSPromise<mcl::BufferInfo> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [this](std::pair<int, BufferEntry> const& entry) { 
             return ((entry.second.owner == Owner::Self) && (size == entry.second.buffer->size())); });
@@ -67,7 +67,7 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw(
     if (it != buffers.end())
     {
         it->second.owner = Owner::ContentProducer;
-        promise.set_value(it->second.buffer);
+        promise.set_value({it->second.buffer, it->first});
     }
     else
     {
@@ -148,7 +148,7 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     if (!promises.empty())
     {
         buffers[protobuf_buffer.buffer_id()].owner = Owner::ContentProducer;
-        promises.front().set_value(buffers[protobuf_buffer.buffer_id()].buffer);
+        promises.front().set_value({buffers[protobuf_buffer.buffer_id()].buffer, protobuf_buffer.buffer_id()});
         promises.pop_front();
     }
 }

@@ -166,7 +166,7 @@ MATCHER_P(KeyOfScanCode, code, "")
     return true;
 }
 
-MATCHER_P(MirKeyEventMatches, event, "")
+MATCHER_P(MirKeyboardEventMatches, event, "")
 {
     auto expected = maybe_key_event(to_address(event));
     auto actual = maybe_key_event(to_address(arg));
@@ -278,6 +278,12 @@ MATCHER_P3(ButtonsDown, x, y, buttons, "")
     return button_event_matches(pev, x, y, mir_pointer_action_button_down, buttons, false);
 }
 
+MATCHER_P3(ButtonsUp, x, y, buttons, "")
+{
+    auto pev = maybe_pointer_event(to_address(arg));
+    return button_event_matches(pev, x, y, mir_pointer_action_button_up, buttons, false);
+}
+
 MATCHER_P2(ButtonUpEventWithButton, pos, button, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
@@ -318,6 +324,22 @@ MATCHER_P2(TouchEvent, x, y, "")
     if (std::abs(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x) - x) > 0.5f)
         return false;
     if (std::abs(mir_touch_event_axis_value(tev, 0, mir_touch_axis_y) - y) > 0.5f)
+        return false;
+
+    return true;
+}
+
+MATCHER_P4(TouchContact, slot, action, x, y, "")
+{
+    auto tev = maybe_touch_event(to_address(arg));
+    if (tev == nullptr)
+        return false;
+
+    if (mir_touch_event_action(tev, slot) != action)
+        return false;
+    if (std::abs(mir_touch_event_axis_value(tev, slot, mir_touch_axis_x) - x) > 0.5f)
+        return false;
+    if (std::abs(mir_touch_event_axis_value(tev, slot, mir_touch_axis_y) - y) > 0.5f)
         return false;
 
     return true;

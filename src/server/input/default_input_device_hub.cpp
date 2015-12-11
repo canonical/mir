@@ -56,7 +56,7 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
       device_queue(std::make_shared<dispatch::ActionQueue>()),
       input_region(input_region),
       cookie_factory(cookie_factory),
-      seat(touch_visualizer, cursor_listener),
+      seat(touch_visualizer, cursor_listener, input_region),
       device_id_generator{0}
 {
     input_dispatchable->add_watch(device_queue);
@@ -175,6 +175,12 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(MirEvent& event)
     else
         mev::set_modifier(event, seat->event_modifier());
 
+    if (mir_input_event_type_pointer == mir_input_event_get_type(input_event))
+    {
+        mev::set_cursor_position(event, seat->cursor_position());
+        mev::set_button_state(event, seat->button_state());
+    }
+
     dispatcher->dispatch(event);
 }
 
@@ -191,11 +197,6 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::start()
 void mi::DefaultInputDeviceHub::RegisteredDevice::stop()
 {
     device->stop();
-}
-
-void mi::DefaultInputDeviceHub::RegisteredDevice::confine_pointer(mir::geometry::Point& position)
-{
-    hub->input_region->confine(position);
 }
 
 mir::geometry::Rectangle mi::DefaultInputDeviceHub::RegisteredDevice::bounding_rectangle() const
