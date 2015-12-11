@@ -27,7 +27,6 @@ namespace mir
 {
 namespace graphics
 {
-class CommandStreamSync;
 namespace android
 {
 class Fence;
@@ -36,7 +35,6 @@ struct AndroidNativeBuffer : public graphics::NativeBuffer
 {
     AndroidNativeBuffer(
         std::shared_ptr<ANativeWindowBuffer> const& handle,
-        std::shared_ptr<CommandStreamSync> const& cmdstream_sync,
         std::shared_ptr<Fence> const& fence,
         BufferAccess fence_access);
 
@@ -47,11 +45,7 @@ struct AndroidNativeBuffer : public graphics::NativeBuffer
     void ensure_available_for(BufferAccess);
     void update_usage(NativeFence& merge_fd, BufferAccess);
 
-    void lock_for_gpu();
-    void wait_for_unlock_by_gpu();
-
 private:
-    std::shared_ptr<CommandStreamSync> cmdstream_sync;
     std::shared_ptr<Fence> fence;
     BufferAccess access;
     std::shared_ptr<ANativeWindowBuffer> native_window_buffer;

@@ -25,7 +25,6 @@ mir (0.18.0-0ubuntu1) UNRELEASED; urgency=medium
       . Allow for setting a base display configuration via client api
       . Various nested server multimonitor fixes and stability improvements
       . Remove DepthId from the SurfaceStack
-      . Use EGL_fence_sync extension on android
     - Bug fixes:
       . Unit test failures in Display.* on Android (LP: #1519276)
       . Build failure due to missing dependency of client rpc code on mir
@@ -112,7 +111,6 @@ mir (0.18.0-0ubuntu1) UNRELEASED; urgency=medium
       . After exiting Mir (by Ctrl+Alt+BkSp) VT switching by Ctrl+Alt+Fn is
         broken (LP: #1521651)
       . notify when cursor images are removed (LP: #1521795)
-      . use EGL_fence_sync extension on the android platform (LP: #1517205)
       . fix arm64, powerpc, ppc64el builds (LP: #1522122)
       . fix locking in ms::SurfaceStack (LP: #1522105)
       . [regression] Mouse wheel events are now unusably over-sensitive and
