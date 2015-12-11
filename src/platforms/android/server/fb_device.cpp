@@ -99,6 +99,8 @@ void mga::FBDevice::commit(std::list<DisplayContents> const& contents)
     });
     if (primary_contents == contents.end()) return;
     auto& context = primary_contents->context;
+    
+    context.swap_buffers();
     auto const& buffer = context.last_rendered_buffer();
     auto native_buffer = buffer->native_buffer_handle();
     native_buffer->ensure_available_for(mga::BufferAccess::read);
@@ -120,9 +122,4 @@ void mga::FBDevice::content_cleared()
 std::chrono::milliseconds mga::FBDevice::recommended_sleep() const
 {
     return std::chrono::milliseconds::zero();
-}
-
-bool mga::FBDevice::can_swap_buffers() const
-{
-    return true;
 }

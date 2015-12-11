@@ -27,7 +27,6 @@
 namespace mg = mir::graphics;
 namespace mgl = mir::gl;
 namespace geom = mir::geometry;
-namespace mrgl = mir::renderer::gl;
 
 std::shared_ptr<mgl::Texture> mgl::RecentlyUsedCache::load(mg::Renderable const& renderable)
 {
@@ -36,18 +35,18 @@ std::shared_ptr<mgl::Texture> mgl::RecentlyUsedCache::load(mg::Renderable const&
     auto& texture = textures[renderable.id()];
     texture.texture->bind();
 
-    auto const texture_source = dynamic_cast<mrgl::TextureSource*>(buffer->native_buffer_base());
-    if (!texture_source)
-        BOOST_THROW_EXCEPTION(std::logic_error("Buffer does not support GL rendering"));
-
     if ((texture.last_bound_buffer != buffer_id) || (!texture.valid_binding))
     {
-        texture_source->bind();
+        auto const texture_source =
+            dynamic_cast<mir::renderer::gl::TextureSource*>(
+                    buffer->native_buffer_base());
+        if (!texture_source)
+            BOOST_THROW_EXCEPTION(std::logic_error("Buffer does not support GL rendering"));
+
+        texture_source->gl_bind_to_texture();
         texture.resource = buffer;
         texture.last_bound_buffer = buffer_id;
     }
-    texture_source->secure_for_render();
-
     texture.valid_binding = true;
     texture.used = true;
 
