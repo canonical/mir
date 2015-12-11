@@ -105,6 +105,23 @@ struct Client
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become focused and exposed"));
     }
 
+    void handle_surface_event(MirSurfaceEvent const* event)
+    {
+        auto const attrib = mir_surface_event_get_attribute(event);
+        auto const value = mir_surface_event_get_attribute_value(event);
+
+        if (mir_surface_attrib_visibility == attrib &&
+            mir_surface_visibility_exposed == value)
+            exposed = true;
+
+        if (mir_surface_attrib_focus == attrib &&
+            mir_surface_focused == value)
+            focused = true;
+
+        if (exposed && focused)
+            ready_to_accept_events.wake_up_everyone();
+    }
+
     static void handle_event(MirSurface*, MirEvent const* ev, void* context)
     {
         auto const client = static_cast<Client*>(context);
@@ -112,10 +129,8 @@ struct Client
         if (type == mir_event_type_surface)
         {
             auto surface_event = mir_event_get_surface_event(ev);
+            client->handle_surface_event(surface_event);
 
-            if (mir_surface_attrib_focus == mir_surface_event_get_attribute(surface_event) &&
-                1 == mir_surface_event_get_attribute_value(surface_event))
-                client->ready_to_accept_events.wake_up_everyone();
         }
         if (type == mir_event_type_input)
             client->handle_input(ev);
@@ -134,6 +149,8 @@ struct Client
     MirConnection * connection;
     mir::test::WaitCondition ready_to_accept_events;
     mir::test::WaitCondition all_events_received;
+    bool exposed = false;
+    bool focused = false;
 };
 
 struct TestClientInput : mtf::HeadlessInProcessServer
