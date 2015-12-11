@@ -285,7 +285,7 @@ TEST_F(InputDeviceHubTest, input_sink_posts_events_to_input_dispatcher)
     auto event = builder->key_event(arbitrary_timestamp, mir_keyboard_action_down, 0,
                                     KEY_A);
 
-    EXPECT_CALL(mock_dispatcher, dispatch(AllOf(mt::InputDeviceIdMatches(handle->id()), mt::MirKeyEventMatches(event.get()))));
+    EXPECT_CALL(mock_dispatcher, dispatch(AllOf(mt::InputDeviceIdMatches(handle->id()), mt::MirKeyboardEventMatches(event.get()))));
 
     sink->handle_input(*event);
 }
