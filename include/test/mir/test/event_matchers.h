@@ -166,7 +166,7 @@ MATCHER_P(KeyOfScanCode, code, "")
     return true;
 }
 
-MATCHER_P(MirKeyEventMatches, event, "")
+MATCHER_P(MirKeyboardEventMatches, event, "")
 {
     auto expected = maybe_key_event(to_address(event));
     auto actual = maybe_key_event(to_address(arg));

@@ -82,13 +82,6 @@ MirEvent const* old_ev_from_new(MirInputEvent const* ev)
     return reinterpret_cast<MirEvent const*>(ev);
 }
 
-MirKeyEvent const& old_kev_from_new(MirKeyboardEvent const* ev)
-{
-    auto old_ev = reinterpret_cast<MirEvent const*>(ev);
-    expect_old_event_type(old_ev, mir_event_type_key);
-    return old_ev->key;
-}
-
 MirMotionEvent const& old_mev_from_new(MirTouchEvent const* ev)
 {
     auto old_ev = reinterpret_cast<MirEvent const*>(ev);
@@ -213,27 +206,22 @@ MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* 
 
 MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* kev)
 {
-    auto const& old_kev = old_kev_from_new(kev);
-
-    return old_kev.action;
+    return kev->action;
 }
 
 xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* kev)
 {
-    auto const& old_kev = old_kev_from_new(kev);
-    return old_kev.key_code;
+    return kev->key_code;
 }
 
 int mir_keyboard_event_scan_code(MirKeyboardEvent const* kev)
 {
-    auto const& old_kev = old_kev_from_new(kev);
-    return old_kev.scan_code;
+    return kev->scan_code;
 }
 
 MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* kev)
 {    
-    auto const& old_kev = old_kev_from_new(kev);
-    return old_kev.modifiers;
+    return kev->modifiers;
 }
 /* Touch event accessors */
 
