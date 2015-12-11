@@ -399,7 +399,7 @@ TEST_F(StartedBufferVault, scaling_resizes_buffers_right_away)
     auto b2 = vault.withdraw().get();
     vault.set_scale(scale);
 
-    auto b3 = vault.withdraw().get();
+    auto b3 = vault.withdraw().get().buffer;
     EXPECT_THAT(b3->size(), Eq(new_size));
 
 }
@@ -430,7 +430,7 @@ TEST_F(StartedBufferVault, buffer_count_remains_the_same_after_scaling)
     EXPECT_CALL(mock_requests, free_buffer(_))
         .Times(initial_nbuffers);
 
-    auto buffer = vault.withdraw().get();
+    auto buffer = vault.withdraw().get().buffer;
     vault.set_scale(scale);
     vault.deposit(buffer);
     vault.wire_transfer_outbound(buffer);
@@ -438,7 +438,7 @@ TEST_F(StartedBufferVault, buffer_count_remains_the_same_after_scaling)
 
     for(auto i = 0; i < 100; i++)
     {
-        auto b = vault.withdraw().get();
+        auto b = vault.withdraw().get().buffer;
         EXPECT_THAT(b->size(), Eq(new_size));
         vault.deposit(b);
         vault.wire_transfer_outbound(b);
