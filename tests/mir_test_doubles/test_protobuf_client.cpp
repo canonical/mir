@@ -86,6 +86,12 @@ void mir::test::TestProtobufClient::signal_condition(bool& condition)
     cv.notify_all();
 }
 
+void mir::test::TestProtobufClient::reset_condition(bool& condition)
+{
+    std::lock_guard<decltype(guard)> lk{guard};
+    condition = false;
+}
+
 void mir::test::TestProtobufClient::on_connect_done()
 {
     signal_condition(connect_done_called);
@@ -114,16 +120,49 @@ void mir::test::TestProtobufClient::on_configure_display_done()
     signal_condition(configure_display_done_called);
 }
 
+void mir::test::TestProtobufClient::connect()
+{
+    reset_condition(connect_done_called);
+    display_server.connect(
+        &connect_parameters,
+        &connection,
+        google::protobuf::NewCallback(this, &TestProtobufClient::connect_done));
+}
+
+void mir::test::TestProtobufClient::disconnect()
+{
+    reset_condition(disconnect_done_called);
+    display_server.disconnect(
+        &ignored,
+        &ignored,
+        google::protobuf::NewCallback(this, &TestProtobufClient::disconnect_done));
+}
+
 void mir::test::TestProtobufClient::create_surface()
 {
-    {
-        std::lock_guard<decltype(guard)> lk{guard};
-        create_surface_called = false;
-    }
+    reset_condition(create_surface_called);
     display_server.create_surface(
         &surface_parameters,
         &surface,
         google::protobuf::NewCallback(this, &TestProtobufClient::create_surface_done));
+}
+
+void mir::test::TestProtobufClient::next_buffer()
+{
+    reset_condition(next_buffer_called);
+    display_server.next_buffer(
+        &surface.id(),
+        surface.mutable_buffer(),
+        google::protobuf::NewCallback(this, &TestProtobufClient::next_buffer_done));
+}
+
+void mir::test::TestProtobufClient::configure_display()
+{
+    reset_condition(configure_display_done_called);
+    display_server.configure_display(
+        &disp_config,
+        &disp_config_response,
+        google::protobuf::NewCallback(this, &TestProtobufClient::display_configure_done));
 }
 
 void mir::test::TestProtobufClient::wait_for_configure_display_done()

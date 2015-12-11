@@ -74,7 +74,12 @@ struct TestProtobufClient
     void on_disconnect_done();
     void on_configure_display_done();
 
+    void connect();
+    void disconnect();
     void create_surface();
+    void next_buffer();
+    void configure_display();
+
     void wait_for_connect_done();
     void wait_for_create_surface();
     void wait_for_next_buffer();
@@ -84,6 +89,7 @@ struct TestProtobufClient
 
     void wait_for(std::function<bool()> const& predicate, std::string const& error_message);
     void signal_condition(bool& condition);
+    void reset_condition(bool& condition);
 
     int const maxwait;
     bool connect_done_called;
