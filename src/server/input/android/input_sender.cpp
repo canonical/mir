@@ -35,6 +35,7 @@
 #include <cstring>
 #include <algorithm>
 #include <iterator>
+#include <iostream>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
@@ -374,13 +375,16 @@ void mia::InputSender::ActiveTransfer::on_finish_signal()
         if (status == droidinput::OK)
         {
             state.report->received_event_finished_signal(publisher.getChannel()->getFd(), sequence);
-            InputSendEntry entry = unqueue_entry(sequence);
-            auto observer = state.observer;
-
-            if (entry.sequence_id == sequence && observer)
-                observer->send_suceeded(*entry.event,
-                                        surface,
-                                        handled ? InputSendObserver::consumed : InputSendObserver::not_consumed);
+            unqueue_entry(
+                sequence,
+                [observer = state.observer,this,handled](InputSendEntry const& entry)
+                {
+                    if(observer)
+                        observer->send_suceeded(
+                            *entry.event,
+                            surface,
+                            handled ? InputSendObserver::consumed : InputSendObserver::not_consumed);
+                });
         }
         else
         {
@@ -401,10 +405,12 @@ void mia::InputSender::ActiveTransfer::on_response_timeout()
         top_sequence_id = pending_responses.front().sequence_id;
     }
 
-    mia::InputSendEntry timedout_entry{unqueue_entry(top_sequence_id)};
-
-    if (state.observer)
-        state.observer->send_failed(*timedout_entry.event, surface, InputSendObserver::no_response_received);
+    unqueue_entry(top_sequence_id,
+                 [observer = state.observer, this](InputSendEntry const& entry)
+                 {
+                     if(observer)
+                         state.observer->send_failed(*entry.event, surface, InputSendObserver::no_response_received);
+                 });
 }
 
 void mia::InputSender::ActiveTransfer::enqueue_entry(mia::InputSendEntry && entry)
@@ -420,16 +426,16 @@ void mia::InputSender::ActiveTransfer::enqueue_entry(mia::InputSendEntry && entr
     pending_responses.emplace_back(std::move(entry));
 }
 
-mia::InputSendEntry mia::InputSender::ActiveTransfer::unqueue_entry(uint32_t sequence_id)
+void mia::InputSender::ActiveTransfer::unqueue_entry(uint32_t sequence_id, std::function<void(InputSendEntry const&)> const& execute_on_entry)
 {
-    std::lock_guard<std::mutex> lock(transfer_mutex);
+    std::unique_lock<std::mutex> lock(transfer_mutex);
     auto pos = std::find_if(pending_responses.begin(),
                             pending_responses.end(),
                             [sequence_id](mia::InputSendEntry const& entry)
                             { return entry.sequence_id == sequence_id; });
 
     if (pos == end(pending_responses))
-        BOOST_THROW_EXCEPTION(std::runtime_error("unknown sequence id in client response"));
+        return;
 
     mia::InputSendEntry result = std::move(*pos);
     pending_responses.erase(pos);
@@ -442,7 +448,9 @@ mia::InputSendEntry mia::InputSender::ActiveTransfer::unqueue_entry(uint32_t seq
         update_timer();
     }
 
-    return result;
+    lock.unlock();
+
+    execute_on_entry(result);
 }
 
 void mia::InputSender::ActiveTransfer::update_timer()

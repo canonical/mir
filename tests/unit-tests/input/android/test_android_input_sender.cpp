@@ -337,21 +337,6 @@ TEST_F(AndroidInputSender, reports_receival_of_finish_signal)
     loop.trigger_pending_fds();
 }
 
-TEST_F(AndroidInputSender, throws_on_unknown_sequence_id_response)
-{
-    register_surface();
-
-    sender.send_event(*motion_event, channel);
-
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
-
-    auto wrong_sequence_numer = seq + 1;
-    EXPECT_CALL(mock_input_report, received_event_finished_signal(channel->server_fd(), wrong_sequence_numer)).Times(1);
-
-    consumer.sendFinishedSignal(wrong_sequence_numer, true);
-    EXPECT_THROW({loop.trigger_pending_fds();}, std::runtime_error);
-}
-
 TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_not_consumed)
 {
     register_surface();
