@@ -35,7 +35,6 @@
 #include <cstring>
 #include <algorithm>
 #include <iterator>
-#include <iostream>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
@@ -271,11 +270,8 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t s
 
 droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t seq, MirEvent const& event)
 {
-    droidinput::PointerCoords coords[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
-    droidinput::PointerProperties properties[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
-    // no default constructor:
-    std::memset(coords, 0, sizeof(coords));
-    std::memset(properties, 0, sizeof(properties));
+    std::array<droidinput::PointerCoords, MIR_INPUT_EVENT_MAX_POINTER_COUNT> coords{};
+    std::array<droidinput::PointerProperties, MIR_INPUT_EVENT_MAX_POINTER_COUNT> properties{};
 
     auto input_event = mir_event_get_input_event(&event);
     auto touch = mir_input_event_get_touch_event(input_event);
@@ -305,27 +301,24 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t
                                         mia::extract_android_action_from(event), flags, edge_flags,
                                         mia::android_modifiers_from_mir(mir_touch_event_modifiers(touch)), button_state,
                                         x_offset, y_offset, x_precision, y_precision, event.motion.mac, event_time,
-                                        event_time, mir_touch_event_point_count(touch), properties, coords);
+                                        event_time, mir_touch_event_point_count(touch), properties.data(), coords.data());
 }
 
 droidinput::status_t mia::InputSender::ActiveTransfer::send_pointer_event(uint32_t seq, MirEvent const& event)
 {
-    droidinput::PointerCoords coords[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
-    droidinput::PointerProperties properties[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
-    // no default constructor:
-    std::memset(coords, 0, sizeof(coords));
-    std::memset(properties, 0, sizeof(properties));
+    droidinput::PointerCoords pointer_coord{};
+    droidinput::PointerProperties pointer_properties{};
 
     auto input_event = mir_event_get_input_event(&event);
     auto pointer = mir_input_event_get_pointer_event(input_event);
-    coords[0].setAxisValue(AMOTION_EVENT_AXIS_X, mir_pointer_event_axis_value(pointer, mir_pointer_axis_x));
-    coords[0].setAxisValue(AMOTION_EVENT_AXIS_Y, mir_pointer_event_axis_value(pointer, mir_pointer_axis_y));
-    coords[0].setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, mir_pointer_event_axis_value(pointer, mir_pointer_axis_hscroll));
-    coords[0].setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, mir_pointer_event_axis_value(pointer, mir_pointer_axis_vscroll));
-    coords[0].setAxisValue(AMOTION_EVENT_AXIS_RX, mir_pointer_event_axis_value(pointer, mir_pointer_axis_relative_x));
-    coords[0].setAxisValue(AMOTION_EVENT_AXIS_RY, mir_pointer_event_axis_value(pointer, mir_pointer_axis_relative_y));
-    properties[0].toolType = AMOTION_EVENT_TOOL_TYPE_MOUSE;
-    properties[0].id = 0;
+    pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_X, mir_pointer_event_axis_value(pointer, mir_pointer_axis_x));
+    pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_Y, mir_pointer_event_axis_value(pointer, mir_pointer_axis_y));
+    pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, mir_pointer_event_axis_value(pointer, mir_pointer_axis_hscroll));
+    pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, mir_pointer_event_axis_value(pointer, mir_pointer_axis_vscroll));
+    pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_RX, mir_pointer_event_axis_value(pointer, mir_pointer_axis_relative_x));
+    pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_RY, mir_pointer_event_axis_value(pointer, mir_pointer_axis_relative_y));
+    pointer_properties.toolType = AMOTION_EVENT_TOOL_TYPE_MOUSE;
+    pointer_properties.id = 0;
 
     std::chrono::nanoseconds const event_time{mir_input_event_get_event_time(input_event)};
     auto const x_offset = 0.0f;
@@ -339,7 +332,7 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_pointer_event(uint32
         mia::android_pointer_action_from_mir(mir_pointer_event_action(pointer), mir_pointer_event_buttons(pointer)),
         flags, edge_flags, mia::android_modifiers_from_mir(mir_pointer_event_modifiers(pointer)),
         mia::android_pointer_buttons_from_mir(mir_pointer_event_buttons(pointer)), x_offset, y_offset, x_precision,
-        y_precision, event.motion.mac, event_time, event_time, 1, properties, coords);
+        y_precision, event.motion.mac, event_time, event_time, 1, &pointer_properties, &pointer_coord);
 }
 
 void mia::InputSender::ActiveTransfer::on_surface_disappeared()
@@ -409,7 +402,7 @@ void mia::InputSender::ActiveTransfer::on_response_timeout()
                  [observer = state.observer, this](InputSendEntry const& entry)
                  {
                      if(observer)
-                         state.observer->send_failed(*entry.event, surface, InputSendObserver::no_response_received);
+                         observer->send_failed(*entry.event, surface, InputSendObserver::no_response_received);
                  });
 }
 
