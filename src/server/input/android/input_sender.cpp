@@ -270,8 +270,10 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t s
 
 droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t seq, MirEvent const& event)
 {
-    std::array<droidinput::PointerCoords, MIR_INPUT_EVENT_MAX_POINTER_COUNT> coords{};
-    std::array<droidinput::PointerProperties, MIR_INPUT_EVENT_MAX_POINTER_COUNT> properties{};
+    droidinput::PointerCoords coords[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
+    droidinput::PointerProperties properties[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
+    std::memset(&coords, 0, sizeof(coords));
+    std::memset(&properties, 0, sizeof(properties));
 
     auto input_event = mir_event_get_input_event(&event);
     auto touch = mir_input_event_get_touch_event(input_event);
@@ -301,13 +303,15 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t
                                         mia::extract_android_action_from(event), flags, edge_flags,
                                         mia::android_modifiers_from_mir(mir_touch_event_modifiers(touch)), button_state,
                                         x_offset, y_offset, x_precision, y_precision, event.motion.mac, event_time,
-                                        event_time, mir_touch_event_point_count(touch), properties.data(), coords.data());
+                                        event_time, mir_touch_event_point_count(touch), properties, coords);
 }
 
 droidinput::status_t mia::InputSender::ActiveTransfer::send_pointer_event(uint32_t seq, MirEvent const& event)
 {
-    droidinput::PointerCoords pointer_coord{};
-    droidinput::PointerProperties pointer_properties{};
+    droidinput::PointerCoords pointer_coord;
+    droidinput::PointerProperties pointer_properties;
+    std::memset(&pointer_coord, 0, sizeof(pointer_coord));
+    std::memset(&pointer_properties, 0, sizeof(pointer_properties));
 
     auto input_event = mir_event_get_input_event(&event);
     auto pointer = mir_input_event_get_pointer_event(input_event);
