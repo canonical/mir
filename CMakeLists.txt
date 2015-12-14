@@ -27,7 +27,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 18)
+set(MIR_VERSION_MINOR 19)
 set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
@@ -103,6 +103,9 @@ elseif(cmake_build_type_lower MATCHES "threadsanitizer")
     # -fsanitize=thread is used, but doesn't.
     #
     # Linking everything with tsan is harmless and simple, so do that.
+    if (CMAKE_VERSION VERSION_GREATER 3.2.1)
+      cmake_policy(SET CMP0022 OLD)
+    endif()
     link_libraries(tsan)
   endif()
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")

@@ -5,9 +5,9 @@ set -e
 
 usage() {
   echo "usage: $(basename $0) [-a <arch>] [-c] [-h] [-d <dist>] [-u]"
-  echo "  -a <arch>  Specify target architecture (armhf/arm64/powerpc/ppc64el)"
+  echo "  -a <arch>  Specify target architecture (armhf/arm64/powerpc/ppc64el/amd64/i386/host)"
   echo "  -c         Clean before building"
-  echo "  -d <dist>  Select the distribution to build for (wily/vivid)"
+  echo "  -d <dist>  Select the distribution to build for (vivid/wily/xenial)"
   echo "  -h         This message"
   echo "  -u         Update partial chroot directory"
 }
@@ -65,6 +65,10 @@ done
 
 shift $((${OPTIND}-1))
 
+if [ "${target_arch}" = "host" ]; then
+    target_arch=`dpkg-architecture -qDEB_HOST_ARCH`
+fi
+
 if [ ${clean} -ne 0 ]; then
     clean_build_dir ${BUILD_DIR}
 fi
@@ -94,15 +98,6 @@ if [ ${dist} == "vivid" ] ; then
     additional_repositories="-r http://ppa.launchpad.net/ci-train-ppa-service/stable-phone-overlay/ubuntu"
 fi
 
-
-if [ ${_do_update_chroot} -eq 1 ] ; then
-    pushd tools > /dev/null
-        ./setup-partial-armhf-chroot.sh -d ${dist} -a ${target_arch} ${additional_repositories} ${MIR_NDK_PATH}
-    popd > /dev/null
-    # force a clean build after an update, since CMake cache maybe out of date
-    clean_build_dir ${BUILD_DIR}
-fi
-
 gcc_variant=
 if [ "${dist}" = "vivid" ]; then
     gcc_variant=-4.9
@@ -111,6 +106,14 @@ fi
 case ${target_arch} in
     armhf )
         target_machine=arm-linux-gnueabihf
+        mir_platform="android;mesa-kms"
+        ;;
+    amd64 )
+        target_machine=x86_64-linux-gnu
+        mir_platform="android;mesa-kms"
+        ;;
+    i386 )
+        target_machine=i386-linux-gnu
         mir_platform="android;mesa-kms"
         ;;
     arm64 )
@@ -126,13 +129,26 @@ case ${target_arch} in
         mir_platform=mesa-kms
         ;;
     * )
-        echo "Unknown architecture ${target_arch}"
-        usage
-        exit 1
+        mir_platform=mesa-kms
+        # A good guess (assuming you have dpkg-architecture)
+        target_machine=`dpkg-architecture -A${target_arch} -qDEB_HOST_MULTIARCH` || {
+            echo "Unknown architecture ${target_arch}"
+            usage
+            exit 1
+        }
+        ;;
 esac
 
 echo "Target architecture: ${target_arch}"
 echo "Target machine: ${target_machine}"
+
+if [ ${_do_update_chroot} -eq 1 ] ; then
+    pushd tools > /dev/null
+        ./setup-partial-armhf-chroot.sh -d ${dist} -a ${target_arch} ${additional_repositories} ${MIR_NDK_PATH}
+    popd > /dev/null
+    # force a clean build after an update, since CMake cache maybe out of date
+    clean_build_dir ${BUILD_DIR}
+fi
 
 pushd ${BUILD_DIR} > /dev/null 
 
