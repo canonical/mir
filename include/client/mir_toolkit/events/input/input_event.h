@@ -32,7 +32,6 @@ extern "C" {
 #endif
 
 typedef int64_t MirInputDeviceId;
-typedef uint64_t MirInputEventMac;
 
 typedef enum {
     mir_input_event_type_key = 0,
