@@ -30,6 +30,9 @@
 #include <gmock/gmock.h>
 #include <deque>
 
+#include <mutex>
+#include <condition_variable>
+
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
@@ -47,6 +50,7 @@ public:
     {
         std::lock_guard<std::mutex> lock{mutex};
         post_count++;
+        posted.notify_one();
     }
 
     void record_submission(uint32_t submission_id)
@@ -74,8 +78,21 @@ public:
         return latency;
     }
 
+    bool wait_for_posts(unsigned int count, std::chrono::milliseconds timeout)
+    {
+        std::unique_lock<std::mutex> lock(mutex);
+        auto const deadline = std::chrono::system_clock::now() + timeout;
+        while (post_count < count)
+        {
+            if (posted.wait_until(lock, deadline) == std::cv_status::timeout)
+                return false;
+        }
+        return true;
+    }
+
 private:
     std::mutex mutex;
+    std::condition_variable posted;
     unsigned int post_count{0};
 
     // Note that a buffer_id may appear twice in the list as the client is
@@ -190,6 +207,12 @@ struct ClientLatency : mtf::ConnectedClientWithASurface
     Stats stats;
     TimeTrackingDisplay display{stats};
     unsigned int test_submissions{100};
+
+    // We still have a margin for error here. The client and server will
+    // be scheduled somewhat unpredictably which affects results. Also
+    // affecting results will be the first few frames before the buffer
+    // quere is full (during which there will be no buffer latency).
+    float const error_margin = 0.4f;
 };
 }
 
@@ -204,9 +227,8 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
         mir_buffer_stream_swap_buffers_sync(stream);
     }
 
-    // Wait for the compositor to finish rendering all those frames,
-    // or else we'll be missing some samples and get a spurious average.
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    ASSERT_TRUE(stats.wait_for_posts(test_submissions,
+                                     std::chrono::seconds(60)));
 
     unsigned int const expected_client_buffers = 3;
 
@@ -218,12 +240,6 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
     float const expected_min_latency = expected_client_buffers - 1;
 
     auto observed_latency = display.group.average_latency();
-
-    // We still have a margin for error here. The client and server will
-    // be scheduled somewhat unpredictably which affects results. Also
-    // affecting results will be the first few frames before the buffer
-    // quere is full (during which there will be no buffer latency).
-    float const error_margin = 0.1f;
 
     EXPECT_THAT(observed_latency, Gt(expected_min_latency-error_margin));
     EXPECT_THAT(observed_latency, Lt(expected_max_latency+error_margin));
@@ -248,13 +264,12 @@ TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
         mir_buffer_stream_swap_buffers_sync(stream);
     }
 
-    // Wait for the compositor to finish rendering all those frames,
-    // or else we'll be missing some samples and get a spurious average.
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    ASSERT_TRUE(stats.wait_for_posts(test_submissions,
+                                     std::chrono::seconds(60)));
 
     // As the client is producing frames slower than the compositor consumes
     // them, the buffer queue never fills. So latency is low;
     float const observed_latency = display.group.average_latency();
     EXPECT_THAT(observed_latency, Ge(0.0f));
-    EXPECT_THAT(observed_latency, Lt(1.1f));
+    EXPECT_THAT(observed_latency, Le(1.0f + error_margin));
 }
