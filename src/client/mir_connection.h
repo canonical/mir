@@ -101,9 +101,9 @@ public:
         mir_surface_callback callback,
         void * context);
     MirWaitHandle* release_surface(
-            MirSurface *surface,
-            mir_surface_callback callback,
-            void *context);
+        MirSurface *surface,
+        mir_surface_callback callback,
+        void *context);
 
     MirPromptSession* create_prompt_session();
 
@@ -155,7 +155,6 @@ public:
     EGLNativeDisplayType egl_native_display();
     MirPixelFormat       egl_pixel_format(EGLDisplay, EGLConfig) const;
 
-    void on_surface_created(int id, MirSurface* surface);
     void on_stream_created(int id, mir::client::ClientBufferStream* stream);
 
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
@@ -170,9 +169,29 @@ public:
     }
 
     mir::client::rpc::DisplayServer& display_server();
+    mir::client::rpc::DisplayServerDebug& debug_display_server();
     std::shared_ptr<mir::logging::Logger> const& the_logger() const;
 
 private:
+
+    //google cant have callbacks with more than 2 args
+    struct Create
+    {
+        Create(mir_surface_callback cb, void* context,  MirSurfaceSpec const& spec) :
+            cb(cb), context(context), spec(spec), response(std::make_shared<mir::protobuf::Surface>())
+        {
+        }
+
+        mir_surface_callback cb;
+        void* context;
+        MirSurfaceSpec const& spec;
+        std::shared_ptr<mir::protobuf::Surface> response;
+        MirWaitHandle wh;
+        bool serviced{false};
+    };
+    std::vector<std::shared_ptr<Create>> surface_responses;
+    void surface_created(Create*);
+
     void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.
     struct Deregisterer

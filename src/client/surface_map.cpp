@@ -31,7 +31,7 @@ mcl::ConnectionSurfaceMap::ConnectionSurfaceMap()
 
 mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
 {
-    std::unordered_map<frontend::SurfaceId, MirSurface*> surface_map;
+    std::unordered_map<frontend::SurfaceId, std::shared_ptr<MirSurface>> surface_map;
     std::unordered_map<frontend::BufferStreamId, StreamInfo> stream_map;
     {
         //Prevent TSAN from flagging lock ordering issues
@@ -44,9 +44,10 @@ mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
 
     // Unless the client has screwed up there should be no surfaces left
     // here. (OTOH *we* don't need to leak memory when clients screw up.)
+#if 0
     for (auto const& surface : surface_map)
     {
-        if (MirSurface::is_valid(surface.second))
+        if (MirSurface::is_valid(surface.second.get()))
             delete surface.second;
     }
 
@@ -55,6 +56,7 @@ mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
         if (info.second.owned)
             delete info.second.stream;
     }
+#endif
 }
 
 void mcl::ConnectionSurfaceMap::with_surface_do(
@@ -66,7 +68,7 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
     {
         auto const surface = it->second;
         lk.unlock();
-        exec(surface);
+        exec(surface.get());
     }
     else
     {
@@ -76,21 +78,17 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
     }
 }
 
-void mcl::ConnectionSurfaceMap::insert(mf::SurfaceId surface_id, MirSurface* surface)
+void mcl::ConnectionSurfaceMap::insert(mf::SurfaceId surface_id, std::shared_ptr<MirSurface> const& surface)
 {
-    // get_buffer_stream has internal locks - call before locking mutex to
-    // avoid locking ordering issues
-    auto const stream = surface->get_buffer_stream();
     std::lock_guard<std::mutex> lk(guard);
     surfaces[surface_id] = surface;
-    streams[mf::BufferStreamId(surface_id.as_value())] = {stream, false};
 }
 
 void mcl::ConnectionSurfaceMap::erase(mf::SurfaceId surface_id)
 {
     std::lock_guard<std::mutex> lk(guard);
-    surfaces.erase(surface_id);
-    streams.erase(mf::BufferStreamId(surface_id.as_value()));
+    if (surfaces.find(surface_id) != surfaces.end())
+        surfaces.erase(surface_id);
 }
 
 void mcl::ConnectionSurfaceMap::with_stream_do(

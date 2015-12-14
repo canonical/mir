@@ -140,28 +140,24 @@ public:
     MirSurface(MirSurface const &) = delete;
     MirSurface& operator=(MirSurface const &) = delete;
 
-    MirSurface(std::string const& error);
+    MirSurface(
+        std::string const& error,
+        MirConnection *allocating_connection);
 
     MirSurface(
         MirConnection *allocating_connection,
         mir::client::rpc::DisplayServer& server,
         mir::client::rpc::DisplayServerDebug* debug,
-        std::shared_ptr<mir::client::ClientBufferStreamFactory> const& buffer_stream_factory,
+        std::shared_ptr<mir::client::ClientBufferStream> const& buffer_stream,
         std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
-        MirSurfaceSpec const& spec,
-        mir_surface_callback callback, void * context);
+        MirSurfaceSpec const& spec, mir::protobuf::Surface const& surface_proto);
 
     ~MirSurface();
-
-    MirWaitHandle* release_surface(
-        mir_surface_callback callback,
-        void *context);
 
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();
     int id() const;
 
-    MirWaitHandle* get_create_wait_handle();
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
 
     // TODO: Some sort of extension mechanism so that this can be moved
@@ -192,12 +188,12 @@ public:
     static bool is_valid(MirSurface* query);
 
     MirWaitHandle* request_persistent_id(mir_surface_id_callback callback, void* context);
+    MirConnection* connection();
 private:
     mutable std::mutex mutex; // Protects all members of *this
 
     void on_configured();
     void on_cursor_configured();
-    void created(mir_surface_callback callback, void* context);
     void acquired_persistent_id(mir_surface_id_callback callback, void* context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
 
@@ -213,14 +209,12 @@ private:
     MirWaitHandle modify_wait_handle;
     std::unique_ptr<mir::protobuf::Void> modify_result;
 
-    MirConnection* const connection{nullptr};
+    MirConnection* const connection_{nullptr};
 
-    MirWaitHandle create_wait_handle;
     MirWaitHandle configure_wait_handle;
     MirWaitHandle configure_cursor_wait_handle;
     MirWaitHandle persistent_id_wait_handle;
 
-    std::shared_ptr<mir::client::ClientBufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
     std::shared_ptr<mir::input::receiver::XKBMapper> const keymapper;
