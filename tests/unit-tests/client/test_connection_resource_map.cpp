@@ -28,7 +28,7 @@ using namespace testing;
 
 struct ConnectionResourceMap : testing::Test
 {
-    std::shared_ptr<MirSurface> surface{std::make_shared<MirSurface>("a string", nullptr)};
+    std::shared_ptr<MirSurface> surface{std::make_shared<MirSurface>("a string", nullptr, mf::SurfaceId{93})};
     mtd::MockClientBufferStream stream; 
     mf::SurfaceId const surface_id{43};
     mf::BufferStreamId const stream_id{43};

@@ -261,18 +261,26 @@ MirWaitHandle* MirConnection::create_surface(
     }
     catch (std::exception const& ex)
     {
-        auto b = std::find_if(surface_requests.begin(), surface_requests.end(),
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        auto request = std::find_if(surface_requests.begin(), surface_requests.end(),
             [&](std::shared_ptr<MirConnection::SurfaceCreationRequest> c2) { return c.get() == c2.get(); });
-        if (b != surface_requests.end())
+        if (request != surface_requests.end())
         {
+            auto id = next_error_id(lock);
             auto surf = std::make_shared<MirSurface>(
-                std::string{"Error creating surface: "} + boost::diagnostic_information(ex), this);
-            surface_map->insert(mf::SurfaceId{220}, surf);
+                std::string{"Error creating surface: "} + boost::diagnostic_information(ex), this, id);
+            surface_map->insert(id, surf);
             callback(surf.get(), context);
-            (*b)->wh.result_received();
+            (*request)->wh.result_received();
+            surface_requests.erase(request);
         }
     }
     return &c->wh;
+}
+
+mf::SurfaceId MirConnection::next_error_id(std::lock_guard<std::mutex> const&)
+{
+    return mf::SurfaceId{surface_error_id--};
 }
 
 void MirConnection::surface_created(SurfaceCreationRequest* request)
@@ -282,10 +290,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
     std::shared_ptr<mcl::ClientBufferStream> stream {nullptr};
     //make sure this request actually was made.
     auto request_it = std::find_if(surface_requests.begin(), surface_requests.end(),
-        [&request](std::shared_ptr<MirConnection::SurfaceCreationRequest> r)
-        {
-            return request == r.get();
-        });
+        [&request](std::shared_ptr<MirConnection::SurfaceCreationRequest> r){ return request == r.get(); });
     if (request_it == surface_requests.end())
         return;
 
@@ -294,14 +299,11 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
     auto context = request->context;
     auto const& spec = request->spec;
 
-    if (!surface_proto->has_id() && !surface_proto->has_error())
-        surface_proto->set_error(std::string{"Error creating surface: "});
-
     try
     {
-        mir::geometry::Size size{surface_proto->width(), surface_proto->height()};
         stream = buffer_stream_factory->make_producer_stream(
-            this, server, surface_proto->buffer_stream(), std::string{}, size);
+            this, server, surface_proto->buffer_stream(), std::string{},
+            {surface_proto->width(), surface_proto->height()});
     }
     catch (std::exception const& error)
     {
@@ -313,10 +315,18 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
                 ::close(surface_proto->buffer_stream().buffer().fd(i));
     }
 
-    if (surface_proto->has_error())
+    if (surface_proto->has_error() || !surface_proto->has_id())
     {
-        surf = std::make_shared<MirSurface>(surface_proto->error(), this);
-        surface_map->insert(mf::SurfaceId{220}, surf);
+        std::string reason;
+        if (surface_proto->has_error())
+            reason += surface_proto->error();
+        if (surface_proto->has_error() && !surface_proto->has_id())
+            reason += " and ";
+        if (!surface_proto->has_id()) 
+            reason +=  "Server assigned surface no id";
+        auto id = next_error_id(lock);
+        surf = std::make_shared<MirSurface>(reason, this, id);
+        surface_map->insert(id, surf);
     }
     else
     {
@@ -386,10 +396,8 @@ void MirConnection::released(SurfaceRelease data)
         auto unfocus = mev::make_event(mir::frontend::SurfaceId{data.surface->id()}, mir_surface_attrib_focus, mir_surface_unfocused);
         data.surface->handle_event(*unfocus);
     }
-
     data.callback(data.surface, data.context);
     data.handle->result_received();
-
     surface_map->erase(mf::BufferStreamId(data.surface->id()));
     surface_map->erase(mf::SurfaceId(data.surface->id()));
 }
@@ -424,6 +432,7 @@ MirWaitHandle* MirConnection::release_surface(
     new_wait_handle->expect_result();
     server.release_surface(&message, void_response.get(),
                            gp::NewCallback(this, &MirConnection::released, surf_release));
+
 
     return new_wait_handle;
 }

@@ -88,12 +88,12 @@ std::string const&MirPersistentId::as_string()
     return string_id;
 }
 
-MirSurface::MirSurface(std::string const& error, MirConnection* conn) :
+MirSurface::MirSurface(std::string const& error, MirConnection* conn, mir::frontend::SurfaceId id) :
     surface{mcl::make_protobuf_object<mir::protobuf::Surface>()},
     connection_(conn)
 {
     surface->set_error(error);
-    surface->mutable_id()->set_value(220);
+    surface->mutable_id()->set_value(id.as_value());
 
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
     valid_surfaces.insert(this);
@@ -182,10 +182,7 @@ int MirSurface::id() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-//    if (surface->has_id())
-        return surface->id().value();
-//    else
-//        return 220;
+    return surface->id().value();
 }
 
 bool MirSurface::is_valid(MirSurface* query)
@@ -623,7 +620,7 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
     return &modify_wait_handle;
 }
 
-MirConnection* MirSurface::connection()
+MirConnection* MirSurface::connection() const
 {
     return connection_;
 }

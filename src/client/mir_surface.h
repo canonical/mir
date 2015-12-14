@@ -25,6 +25,7 @@
 #include "rpc/mir_display_server_debug.h"
 
 #include "mir/client_platform.h"
+#include "mir/frontend/surface_id.h"
 #include "mir/optional_value.h"
 #include "mir/geometry/dimensions.h"
 #include "mir_toolkit/common.h"
@@ -142,7 +143,8 @@ public:
 
     MirSurface(
         std::string const& error,
-        MirConnection *allocating_connection);
+        MirConnection *allocating_connection,
+        mir::frontend::SurfaceId surface_id);
 
     MirSurface(
         MirConnection *allocating_connection,
@@ -188,7 +190,7 @@ public:
     static bool is_valid(MirSurface* query);
 
     MirWaitHandle* request_persistent_id(mir_surface_id_callback callback, void* context);
-    MirConnection* connection();
+    MirConnection* connection() const;
 private:
     mutable std::mutex mutex; // Protects all members of *this
 
@@ -209,7 +211,7 @@ private:
     MirWaitHandle modify_wait_handle;
     std::unique_ptr<mir::protobuf::Void> modify_result;
 
-    MirConnection* const connection_{nullptr};
+    MirConnection* const connection_;
 
     MirWaitHandle configure_wait_handle;
     MirWaitHandle configure_cursor_wait_handle;

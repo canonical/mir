@@ -152,9 +152,6 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
     }
     catch (std::exception const& error)
     {
-        auto error_surf = new MirSurface{std::string{"Failed to create surface: "} +
-                                         boost::diagnostic_information(error), conn};
-        (*callback)(error_surf, context);
         return nullptr;
     }
 }

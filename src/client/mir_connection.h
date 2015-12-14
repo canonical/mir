@@ -26,6 +26,7 @@
 
 #include "mir/geometry/size.h"
 #include "mir/client_platform.h"
+#include "mir/frontend/surface_id.h"
 #include "mir/client_context.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_surface.h"
@@ -186,7 +187,6 @@ private:
         MirSurfaceSpec const spec;
         std::shared_ptr<mir::protobuf::Surface> response;
         MirWaitHandle wh;
-        bool serviced{false};
     };
     std::vector<std::shared_ptr<SurfaceCreationRequest>> surface_requests;
     void surface_created(SurfaceCreationRequest*);
@@ -215,6 +215,9 @@ private:
     std::unique_ptr<mir::protobuf::DisplayConfiguration> display_configuration_response;
     std::unique_ptr<mir::protobuf::Void> set_base_display_configuration_response;
     std::atomic<bool> disconnecting{false};
+
+    mir::frontend::SurfaceId next_error_id(std::lock_guard<std::mutex> const&);
+    int surface_error_id{-1};
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;
