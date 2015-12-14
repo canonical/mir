@@ -397,19 +397,18 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
         auto const callback = [](MirConnection*, void* context) { static_cast<mt::Signal*>(context)->raise(); };
         mir_connection_set_display_config_change_callback(connection, callback, &display_config_changed);
 
-        std::shared_ptr<mg::DisplayConfiguration> display_configuration{server.the_display()->configuration()};
+        std::shared_ptr<mg::DisplayConfiguration> const display_configuration{server.the_display()->configuration()};
 
         display_configuration->for_each_output(
             [&display_ids](mg::UserDisplayConfigurationOutput& output_config)
-                {
+            {
                 output_config.scale = scale;
                 output_config.form_factor = form_factor;
-                display_ids.push_back(
-                    static_cast<uint32_t>(output_config.id.as_value()));
-                });
+                display_ids.push_back(static_cast<uint32_t>(output_config.id.as_value()));
+            });
 
-        auto display_controller = server.the_display_configuration_controller();
-        display_controller->set_base_configuration(std::move(display_configuration));
+        auto const display_controller = server.the_display_configuration_controller();
+        display_controller->set_base_configuration(display_configuration);
 
         ASSERT_TRUE(display_config_changed.wait_for(1s));
     }
