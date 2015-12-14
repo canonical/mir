@@ -246,12 +246,12 @@ MirWaitHandle* MirConnection::create_surface(
     void * context)
 {
     auto response = std::make_shared<mp::Surface>();
-    auto c = std::make_shared<MirConnection::Create>(callback, context, spec);
+    auto c = std::make_shared<MirConnection::SurfaceCreationRequest>(callback, context, spec);
     c->wh.expect_result();
     auto const message = serialize_spec(spec);
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        surface_responses.emplace_back(c);
+        surface_requests.emplace_back(c);
     }
 
     try 
@@ -261,9 +261,9 @@ MirWaitHandle* MirConnection::create_surface(
     }
     catch (std::exception const& ex)
     {
-        auto b = std::find_if(surface_responses.begin(), surface_responses.end(),
-            [&](std::shared_ptr<MirConnection::Create> c2) { return c.get() == c2.get(); });
-        if (b != surface_responses.end())
+        auto b = std::find_if(surface_requests.begin(), surface_requests.end(),
+            [&](std::shared_ptr<MirConnection::SurfaceCreationRequest> c2) { return c.get() == c2.get(); });
+        if (b != surface_requests.end())
         {
             auto surf = std::make_shared<MirSurface>(
                 std::string{"Error creating surface: "} + boost::diagnostic_information(ex), this);
@@ -275,20 +275,24 @@ MirWaitHandle* MirConnection::create_surface(
     return &c->wh;
 }
 
-void MirConnection::surface_created(Create* c)
+void MirConnection::surface_created(SurfaceCreationRequest* request)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     std::shared_ptr<MirSurface> surf {nullptr};
     std::shared_ptr<mcl::ClientBufferStream> stream {nullptr};
-    auto b = std::find_if(surface_responses.begin(), surface_responses.end(),
-        [&](std::shared_ptr<MirConnection::Create> c2) { return c == c2.get(); });
-    if (b == surface_responses.end())
+    //make sure this request actually was made.
+    auto request_it = std::find_if(surface_requests.begin(), surface_requests.end(),
+        [&request](std::shared_ptr<MirConnection::SurfaceCreationRequest> r)
+        {
+            return request == r.get();
+        });
+    if (request_it == surface_requests.end())
         return;
 
-    auto surface_proto = (*b)->response; 
-    auto callback = (*b)->cb;
-    auto context = (*b)->context;
-    auto const& spec = (*b)->spec;
+    auto surface_proto = request->response; 
+    auto callback = request->cb;
+    auto context = request->context;
+    auto const& spec = request->spec;
 
     if (!surface_proto->has_id() && !surface_proto->has_error())
         surface_proto->set_error(std::string{"Error creating surface: "});
@@ -323,9 +327,9 @@ void MirConnection::surface_created(Create* c)
     }
 
     callback(surf.get(), context);
-    (*b)->wh.result_received();
+    request->wh.result_received();
 
-    surface_responses.erase(b);
+    surface_requests.erase(request_it);
 }
 
 char const * MirConnection::get_error_message()

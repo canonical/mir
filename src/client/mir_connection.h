@@ -28,6 +28,7 @@
 #include "mir/client_platform.h"
 #include "mir/client_context.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_surface.h"
 
 #include <atomic>
 #include <memory>
@@ -173,24 +174,22 @@ public:
     std::shared_ptr<mir::logging::Logger> const& the_logger() const;
 
 private:
-
     //google cant have callbacks with more than 2 args
-    struct Create
+    struct SurfaceCreationRequest
     {
-        Create(mir_surface_callback cb, void* context,  MirSurfaceSpec const& spec) :
+        SurfaceCreationRequest(mir_surface_callback cb, void* context,  MirSurfaceSpec const& spec) :
             cb(cb), context(context), spec(spec), response(std::make_shared<mir::protobuf::Surface>())
         {
         }
-
         mir_surface_callback cb;
         void* context;
-        MirSurfaceSpec const& spec;
+        MirSurfaceSpec const spec;
         std::shared_ptr<mir::protobuf::Surface> response;
         MirWaitHandle wh;
         bool serviced{false};
     };
-    std::vector<std::shared_ptr<Create>> surface_responses;
-    void surface_created(Create*);
+    std::vector<std::shared_ptr<SurfaceCreationRequest>> surface_requests;
+    void surface_created(SurfaceCreationRequest*);
 
     void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.
