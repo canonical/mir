@@ -25,10 +25,13 @@ Building for ARM from a PC (cross compiling)
 Using a current Ubuntu (15.04 or later) installation it's very simple to build
 binaries for armhf (32-bit) devices. Just follow these steps:
 
-    $ sudo apt-get install g++-arm-linux-gnueabihf multistrap
+    $ sudo apt-get install g++-arm-linux-gnueabihf g++-4.9-arm-linux-gnueabihf multistrap
     $ cd mir_source_dir
     $ ./cross-compile-chroot.sh
     $ ls -l build-android-arm/*  # binaries to copy to your device as you wish
+
+The special package 'g++-4.9-arm-linux-gnueabihf' above is required if you
+are building for vivid (-d vivid).
 
 If you wish to target arm64 (AArch64) then you can use:
 

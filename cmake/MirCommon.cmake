@@ -63,20 +63,18 @@ function (mir_discover_tests_internal EXECUTABLE DETECT_FD_LEAKS)
 
   if(ENABLE_MEMCHECK_OPTION)
     set(test_cmd ${VALGRIND_CMD} ${test_cmd_no_memcheck})
-    set(test_no_memcheck_filter "*DeathTest.*")
+    set(test_no_memcheck_filter "*DeathTest.*:ClientLatency.*")
   endif()
 
   if(cmake_build_type_lower MATCHES "threadsanitizer")
-    find_program(LLVM_SYMBOLIZER llvm-symbolizer-3.6)
-    if (LLVM_SYMBOLIZER)
+    if (NOT CMAKE_COMPILER_IS_GNUCXX)
+      find_program(LLVM_SYMBOLIZER llvm-symbolizer-3.6)
+      if (LLVM_SYMBOLIZER)
         set(TSAN_EXTRA_OPTIONS "external_symbolizer_path=${LLVM_SYMBOLIZER}")
+      endif()
     endif()
     # Space after ${TSAN_EXTRA_OPTIONS} works around bug in TSAN env. variable parsing 
     list(APPEND test_env "TSAN_OPTIONS=\"suppressions=${CMAKE_SOURCE_DIR}/tools/tsan-suppressions second_deadlock_stack=1 halt_on_error=1 history_size=7 ${TSAN_EXTRA_OPTIONS} \"")
-    # TSan does not support multi-threaded fork
-    # TSan may open fds so "surface_creation_does_not_leak_fds" will not work as written
-    # TSan deadlocks when running StreamTransportTest/0.SendsFullMessagesWhenInterrupted - disable it until understood
-    set(test_exclusion_filter "UnresponsiveClient.does_not_hang_server:DemoInProcessServerWithStubClientPlatform.surface_creation_does_not_leak_fds:StreamTransportTest/0.SendsFullMessagesWhenInterrupted:BufferQueue/WithTwoOrMoreBuffers.client_framerate_matches_compositor*:BufferQueue/WithThreeOrMoreBuffers.slow_client_framerate_matches_compositor*:BufferQueue/WithThreeOrMoreBuffers.queue_size_scales_with_client_performance*")
   endif()
 
   if(SYSTEM_SUPPORTS_O_TMPFILE EQUAL 1)
