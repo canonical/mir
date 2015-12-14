@@ -90,6 +90,7 @@ mtf::FakeInputDeviceImpl::InputDevice::InputDevice(mi::InputDeviceInfo const& in
                                                    std::shared_ptr<mir::dispatch::Dispatchable> const& dispatchable)
     : info(info), queue{dispatchable}, buttons{0}
 {
+    settings.enable_cursor_acceleration = false;
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyParameters const& key_params)
@@ -151,9 +152,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
     // constant scaling is used here to simplify checking for the
     // expected results. Default settings of the device lead to no
     // scaling at all.
-    auto acceleration = (settings.cursor_acceleration_bias + 1.0);
-    auto rel_x = pointer.rel_x * acceleration;
-    auto rel_y = pointer.rel_y * acceleration;
+    auto const acceleration = settings.enable_cursor_acceleration?(settings.cursor_acceleration_bias + 1.0):1.0;
+    auto const rel_x = pointer.rel_x * acceleration;
+    auto const rel_y = pointer.rel_y * acceleration;
 
     auto pointer_event = builder->pointer_event(event_time,
                                                 mir_pointer_action_motion,
@@ -213,7 +214,7 @@ mir::optional_value<mi::PointerSettings> mtf::FakeInputDeviceImpl::InputDevice::
     if (!contains(info.capabilities, mi::DeviceCapability::pointer))
         return ret;
 
-    ret = mi::PointerSettings();
+    ret = settings;
     return ret;
 }
 

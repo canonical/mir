@@ -296,6 +296,22 @@ struct LibInputDevice : public ::testing::Test
             .WillByDefault(Return(relatve_y));
     }
 
+    void setup_unaccelerated_pointer_event(libinput_event* event, uint64_t event_time, float relatve_x, float relatve_y)
+    {
+        auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
+
+        ON_CALL(mock_libinput, libinput_event_get_type(event))
+            .WillByDefault(Return(LIBINPUT_EVENT_POINTER_MOTION));
+        ON_CALL(mock_libinput, libinput_event_get_pointer_event(event))
+            .WillByDefault(Return(pointer_event));
+        ON_CALL(mock_libinput, libinput_event_pointer_get_time_usec(pointer_event))
+            .WillByDefault(Return(event_time));
+        ON_CALL(mock_libinput, libinput_event_pointer_get_dx_unaccelerated(pointer_event))
+            .WillByDefault(Return(relatve_x));
+        ON_CALL(mock_libinput, libinput_event_pointer_get_dy_unaccelerated(pointer_event))
+            .WillByDefault(Return(relatve_y));
+    }
+
     void setup_absolute_pointer_event(libinput_event* event, uint64_t event_time, float x, float y)
     {
         auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
@@ -813,6 +829,24 @@ TEST_F(LibInputDeviceOnMouse, applies_pointer_settings)
     EXPECT_CALL(mock_libinput,libinput_device_config_left_handed_set(mouse.device(), true)).Times(1);
 
     mouse.apply_settings(settings);
+}
+
+
+TEST_F(LibInputDeviceOnMouse, pointer_settings_can_disable_accelerated_cursor_movement)
+{
+    setup_pointer_configuration(mouse.device(), 1, mir_pointer_handedness_right);
+    mi::PointerSettings settings(mouse.get_pointer_settings().value());
+    settings.enable_cursor_acceleration = false;
+    float x_movement_1 = 15;
+    float y_movement_1 = 17;
+    setup_unaccelerated_pointer_event(fake_event_1, event_time_1, x_movement_1, y_movement_1);
+
+    EXPECT_CALL(mock_libinput, libinput_event_pointer_get_dx_unaccelerated(_));
+    EXPECT_CALL(mock_libinput, libinput_event_pointer_get_dy_unaccelerated(_));
+
+    mouse.start(&mock_sink, &mock_builder);
+    mouse.apply_settings(settings);
+    mouse.process_event(fake_event_1);
 }
 
 TEST_F(LibInputDeviceOnLaptopKeyboardAndMouse, denies_pointer_settings_on_keyboards)

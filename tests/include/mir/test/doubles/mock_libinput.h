@@ -62,6 +62,8 @@ public:
     MOCK_METHOD1(libinput_event_pointer_get_time_usec, uint64_t(libinput_event_pointer*));
     MOCK_METHOD1(libinput_event_pointer_get_dx, double(libinput_event_pointer*));
     MOCK_METHOD1(libinput_event_pointer_get_dy, double(libinput_event_pointer*));
+    MOCK_METHOD1(libinput_event_pointer_get_dx_unaccelerated, double(libinput_event_pointer*));
+    MOCK_METHOD1(libinput_event_pointer_get_dy_unaccelerated, double(libinput_event_pointer*));
     MOCK_METHOD1(libinput_event_pointer_get_absolute_x, double(libinput_event_pointer*));
     MOCK_METHOD1(libinput_event_pointer_get_absolute_y, double(libinput_event_pointer*));
     MOCK_METHOD2(libinput_event_pointer_get_absolute_x_transformed, double(libinput_event_pointer*, uint32_t));

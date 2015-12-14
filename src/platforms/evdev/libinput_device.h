@@ -88,6 +88,7 @@ private:
     InputDeviceInfo info;
     mir::geometry::Point pointer_pos;
     MirPointerButtons button_state;
+    bool enable_cursor_acceleration{true};
     double vertical_scroll_scale{1.0};
     double horizontal_scroll_scale{1.0};
 

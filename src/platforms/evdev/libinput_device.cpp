@@ -168,8 +168,10 @@ mir::EventUPtr mie::LibInputDevice::convert_motion_event(libinput_event_pointer*
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
 
     mir::geometry::Displacement const movement{
-        libinput_event_pointer_get_dx(pointer),
-        libinput_event_pointer_get_dy(pointer)};
+        (enable_cursor_acceleration) ? libinput_event_pointer_get_dx(pointer) :
+                                       libinput_event_pointer_get_dx_unaccelerated(pointer),
+        (enable_cursor_acceleration) ? libinput_event_pointer_get_dy(pointer) :
+                                       libinput_event_pointer_get_dy_unaccelerated(pointer)};
 
     return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, movement.dx.as_float(),
                                   movement.dy.as_float());
@@ -342,6 +344,7 @@ mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settin
 
     mi::PointerSettings settings;
     settings.cursor_acceleration_bias = accel_bias;
+    settings.enable_cursor_acceleration = enable_cursor_acceleration;
     settings.vertical_scroll_scale = vertical_scroll_scale;
     settings.horizontal_scroll_scale = horizontal_scroll_scale;
     settings.handedness = left_handed? mir_pointer_handedness_left : mir_pointer_handedness_right;
@@ -358,6 +361,7 @@ void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& sett
     libinput_device_config_left_handed_set(dev, mir_pointer_handedness_left == settings.handedness);
     vertical_scroll_scale = settings.vertical_scroll_scale;
     horizontal_scroll_scale = settings.horizontal_scroll_scale;
+    enable_cursor_acceleration = settings.enable_cursor_acceleration;
 }
 
 mir::optional_value<mi::TouchpadSettings> mie::LibInputDevice::get_touchpad_settings() const

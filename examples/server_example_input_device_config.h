@@ -34,6 +34,7 @@ class Device;
 namespace examples
 {
 extern char const* const disable_while_typing_opt;
+extern char const* const mouse_enable_acceleration_opt;
 extern char const* const mouse_cursor_acceleration_bias_opt;
 extern char const* const mouse_scroll_speed_scale_opt;
 extern char const* const touchpad_cursor_acceleration_bias_opt;
@@ -47,6 +48,7 @@ class InputDeviceConfig : public mir::input::InputDeviceObserver
 {
 public:
     InputDeviceConfig(bool disable_while_typing,
+                      bool mouse_enable_acceleration,
                       double mouse_cursor_acceleration_bias,
                       double mouse_scroll_speed_scale,
                       double touchpad_cursor_acceleration_bias,
@@ -59,6 +61,7 @@ public:
     void changes_complete() override {}
 private:
     bool disable_while_typing;
+    bool mouse_enable_acceleration;
     double mouse_cursor_acceleration_bias;
     double mouse_scroll_speed_scale;
     double touchpad_cursor_acceleration_bias;

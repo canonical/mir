@@ -157,6 +157,16 @@ double libinput_event_pointer_get_dy(libinput_event_pointer* event)
     return global_libinput->libinput_event_pointer_get_dy(event);
 }
 
+double libinput_event_pointer_get_dx_unaccelerated(libinput_event_pointer* event)
+{
+    return global_libinput->libinput_event_pointer_get_dx_unaccelerated(event);
+}
+
+double libinput_event_pointer_get_dy_unaccelerated(libinput_event_pointer* event)
+{
+    return global_libinput->libinput_event_pointer_get_dy_unaccelerated(event);
+}
+
 double libinput_event_pointer_get_absolute_x(libinput_event_pointer* event)
 {
     return global_libinput->libinput_event_pointer_get_absolute_x(event);

@@ -33,10 +33,11 @@ struct PointerConfiguration
 {
     PointerConfiguration() {}
 
-    PointerConfiguration(MirPointerHandedness handedness, double acceleration_bias, double horizontal_scroll_scale,
-                         double vertical_scroll_scale)
-        : handedness{handedness}, cursor_acceleration_bias{acceleration_bias},
-          horizontal_scroll_scale{horizontal_scroll_scale}, vertical_scroll_scale{vertical_scroll_scale}
+    PointerConfiguration(MirPointerHandedness handedness, bool enable_cursor_acceleration, double acceleration_bias,
+                         double horizontal_scroll_scale, double vertical_scroll_scale)
+        : handedness{handedness}, enable_cursor_acceleration{enable_cursor_acceleration},
+          cursor_acceleration_bias{acceleration_bias}, horizontal_scroll_scale{horizontal_scroll_scale},
+          vertical_scroll_scale{vertical_scroll_scale}
     {
     }
 
@@ -45,6 +46,11 @@ struct PointerConfiguration
      * right or left handed.
      */
     MirPointerHandedness handedness{mir_pointer_handedness_right};
+
+    /*!
+     * Configure whether mouse acceleration should be applied.
+     */
+    bool enable_cursor_acceleration{true};
 
     /*!
      * Configures the intensity of the cursor acceleration. Values within the range of [-1, 1] are allowed.

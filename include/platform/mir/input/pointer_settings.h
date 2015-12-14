@@ -43,6 +43,10 @@ struct PointerSettings
      */
     double cursor_acceleration_bias{0.0};
     /**
+     * Enable cursor acceleration
+     */
+    bool enable_cursor_acceleration{true};
+    /**
      * Scale horizontal scrolling linearly
      */
     double horizontal_scroll_scale{1.0};
