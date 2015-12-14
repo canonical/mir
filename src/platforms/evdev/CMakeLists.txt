@@ -1,3 +1,5 @@
+pkg_check_modules(LIBINPUT REQUIRED libinput)
+
 include_directories(
   ${LIBINPUT_CFLAGS} 
   ${PROJECT_SOURCE_DIR}/include/platform
