@@ -332,7 +332,6 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
     {
         surf = std::make_shared<MirSurface>(this, server, &debug, stream, input_platform, spec, *surface_proto );
 
-        surface_map->insert(mf::BufferStreamId(surface_proto->id().value()), stream.get());
         surface_map->insert(mf::SurfaceId{surface_proto->id().value()}, surf);
     }
 
@@ -398,7 +397,6 @@ void MirConnection::released(SurfaceRelease data)
     }
     data.callback(data.surface, data.context);
     data.handle->result_received();
-    surface_map->erase(mf::BufferStreamId(data.surface->id()));
     surface_map->erase(mf::SurfaceId(data.surface->id()));
 }
 
@@ -415,7 +413,6 @@ MirWaitHandle* MirConnection::release_surface(
         callback(surface, context);
         auto id = surface->id();
         surface_map->erase(mf::SurfaceId(id));
-        surface_map->erase(mf::BufferStreamId(id));
         return new_wait_handle;    
     }
 

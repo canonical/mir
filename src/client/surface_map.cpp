@@ -42,21 +42,13 @@ mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
         stream_map = std::move(streams);
     }
 
-    // Unless the client has screwed up there should be no surfaces left
+    // Unless the client has screwed up there should be no streams left
     // here. (OTOH *we* don't need to leak memory when clients screw up.)
-#if 0
-    for (auto const& surface : surface_map)
-    {
-        if (MirSurface::is_valid(surface.second.get()))
-            delete surface.second;
-    }
-
     for (auto const& info : stream_map)
     {
         if (info.second.owned)
             delete info.second.stream;
     }
-#endif
 }
 
 void mcl::ConnectionSurfaceMap::with_surface_do(
@@ -80,15 +72,19 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
 
 void mcl::ConnectionSurfaceMap::insert(mf::SurfaceId surface_id, std::shared_ptr<MirSurface> const& surface)
 {
+    // get_buffer_stream has internal locks - call before locking mutex to
+    // avoid locking ordering issues
+    auto const stream = surface->get_buffer_stream();
     std::lock_guard<std::mutex> lk(guard);
     surfaces[surface_id] = surface;
+    streams[mf::BufferStreamId(surface_id.as_value())] = {stream, false};
 }
 
 void mcl::ConnectionSurfaceMap::erase(mf::SurfaceId surface_id)
 {
     std::lock_guard<std::mutex> lk(guard);
-    if (surfaces.find(surface_id) != surfaces.end())
-        surfaces.erase(surface_id);
+    surfaces.erase(surface_id);
+    streams.erase(mf::BufferStreamId(surface_id.as_value()));
 }
 
 void mcl::ConnectionSurfaceMap::with_stream_do(
