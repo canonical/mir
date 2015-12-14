@@ -90,7 +90,7 @@ public:
         });
 
         //Appease TSan, avoid destructor and this thread accessing the same shared_ptr instance
-        auto disp_listener = std::move(display_listener);
+        auto const disp_listener = display_listener;
         auto display_registration = mir::raii::paired_calls(
             [this, &disp_listener]{group.for_each_display_buffer([&disp_listener](mg::DisplayBuffer& buffer)
                 { disp_listener->add_display(buffer.view_area()); });},
