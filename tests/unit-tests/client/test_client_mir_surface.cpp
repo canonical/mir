@@ -51,8 +51,7 @@
 
 #include <boost/throw_exception.hpp>
 #include "mir/test/doubles/stub_client_buffer_factory.h"
-#include "mir/test/doubles/stub_client_buffer_stream_factory.h"
-#include "mir/test/doubles/mock_client_buffer_stream_factory.h"
+#include "mir/test/doubles/stub_buffer_stream.h"
 #include "mir/test/doubles/mock_client_buffer_stream.h"
 
 #include "mir_test_framework/stub_client_platform_factory.h"
@@ -135,7 +134,6 @@ struct MockServerPackageGenerator : public mt::StubServerTool
 
     static std::map<int, int> sent_surface_attributes;
 
-private:
     void generate_unique_buffer()
     {
         global_buffer_id++;
@@ -274,10 +272,6 @@ void null_connected_callback(MirConnection* /*connection*/, void * /*client_cont
 {
 }
 
-void null_surface_callback(MirSurface*, void*)
-{
-}
-
 void null_event_callback(MirSurface*, MirEvent const*, void*)
 {
 }
@@ -290,6 +284,8 @@ struct MirClientSurfaceTest : public testing::Test
 {
     MirClientSurfaceTest()
     {
+        mock_server_tool->create_surface_response(&surface_proto);
+        ON_CALL(*stub_buffer_stream, swap_interval()).WillByDefault(testing::Return(1));
         start_test_server();
         connect_to_test_server();
     }
@@ -329,50 +325,45 @@ struct MirClientSurfaceTest : public testing::Test
             connection.get(),
             server_stub,
             nullptr,
-            stub_buffer_stream_factory,
+            stub_buffer_stream,
             input_platform,
             spec,
-            &null_surface_callback,
-            nullptr);
+            surface_proto);
     }
 
     std::shared_ptr<MirSurface> create_surface_with(
         mclr::DisplayServer& server_stub,
-        std::shared_ptr<mcl::ClientBufferStreamFactory> const& buffer_stream_factory)
+        std::shared_ptr<mcl::ClientBufferStream> const& buffer_stream)
     {
         return std::make_shared<MirSurface>(
             connection.get(),
             server_stub,
             nullptr,
-            buffer_stream_factory,
+            buffer_stream,
             input_platform,
             spec,
-            &null_surface_callback,
-            nullptr);
+            surface_proto);
     }
 
     std::shared_ptr<MirSurface> create_and_wait_for_surface_with(
         mclr::DisplayServer& server_stub)
     {
         auto surface = create_surface_with(server_stub);
-        surface->get_create_wait_handle()->wait_for_all();
         return surface;
     }
 
     std::shared_ptr<MirSurface> create_and_wait_for_surface_with(
         mclr::DisplayServer& server_stub,
-        std::shared_ptr<mcl::ClientBufferStreamFactory> const& buffer_stream_factory)
+        std::shared_ptr<mcl::ClientBufferStream> const& buffer_stream)
     {
-        auto surface = create_surface_with(server_stub, buffer_stream_factory);
-        surface->get_create_wait_handle()->wait_for_all();
+        auto surface = create_surface_with(server_stub, buffer_stream);
         return surface;
     }
 
     std::shared_ptr<MirConnection> connection;
 
     MirSurfaceSpec const spec{nullptr, 33, 45, mir_pixel_format_abgr_8888};
-    std::shared_ptr<mtd::StubClientBufferStreamFactory> const stub_buffer_stream_factory =
-        std::make_shared<mtd::StubClientBufferStreamFactory>();
+    std::shared_ptr<mtd::MockClientBufferStream> stub_buffer_stream{std::make_shared<mtd::MockClientBufferStream>()};
     std::shared_ptr<StubClientInputPlatform> const input_platform =
         std::make_shared<StubClientInputPlatform>();
     std::shared_ptr<MockServerPackageGenerator> const mock_server_tool =
@@ -381,6 +372,7 @@ struct MirClientSurfaceTest : public testing::Test
     std::shared_ptr<mcl::ConnectionSurfaceMap> surface_map;
     std::shared_ptr<mt::TestProtobufServer> test_server;
     std::shared_ptr<mclr::DisplayServer> client_comm_channel;
+    mir::protobuf::Surface surface_proto;
 
     std::chrono::milliseconds const pause_time{10};
 };
@@ -399,22 +391,6 @@ TEST_F(MirClientSurfaceTest, attributes_set_on_surface_creation)
     }
 }
 
-TEST_F(MirClientSurfaceTest, create_wait_handle_really_blocks)
-{
-    using namespace testing;
-
-    FakeRpcChannel fake_channel;
-    mclr::DisplayServer unresponsive_server{mt::fake_shared(fake_channel)};
-
-    auto const surface = create_surface_with(unresponsive_server);
-    auto wait_handle = surface->get_create_wait_handle();
-
-    auto expected_end = std::chrono::steady_clock::now() + pause_time;
-    wait_handle->wait_for_pending(pause_time);
-
-    EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
-}
-
 TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_dispatcher_when_delegate_specified)
 {
     using namespace ::testing;
@@ -428,9 +404,7 @@ TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_dispatcher_when_del
         .WillOnce(Return(mock_input_dispatcher));
 
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
-        stub_buffer_stream_factory, mock_input_platform, spec, &null_surface_callback, nullptr};
-    auto wait_handle = surface.get_create_wait_handle();
-    wait_handle->wait_for_all();
+        stub_buffer_stream, mock_input_platform, spec, surface_proto};
     surface.set_event_handler(null_event_callback, nullptr);
 
     mock_input_dispatcher->trigger();
@@ -451,9 +425,7 @@ TEST_F(MirClientSurfaceTest, replacing_delegate_with_nullptr_prevents_further_di
         .WillOnce(Return(mock_input_dispatcher));
 
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
-        stub_buffer_stream_factory, mock_input_platform, spec, &null_surface_callback, nullptr};
-    auto wait_handle = surface.get_create_wait_handle();
-    wait_handle->wait_for_all();
+        stub_buffer_stream, mock_input_platform, spec, surface_proto};
     surface.set_event_handler(null_event_callback, nullptr);
 
     // Should now not get dispatched.
@@ -474,9 +446,7 @@ TEST_F(MirClientSurfaceTest, does_not_create_input_dispatcher_when_no_delegate_s
     EXPECT_CALL(*mock_input_platform, create_input_receiver(_, _, _)).Times(0);
 
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
-        stub_buffer_stream_factory, mock_input_platform, spec, &null_surface_callback, nullptr};
-    auto wait_handle = surface.get_create_wait_handle();
-    wait_handle->wait_for_all();
+        stub_buffer_stream, mock_input_platform, spec, surface_proto};
 }
 
 TEST_F(MirClientSurfaceTest, valid_surface_is_valid)
@@ -527,12 +497,7 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_no_customized
 {
     using namespace testing;
     auto mock_stream = std::make_shared<mtd::MockClientBufferStream>(); 
-    auto mock_stream_factory = std::make_shared<NiceMock<mtd::MockClientBufferStreamFactory>>();
     auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
-    ON_CALL(*mock_stream_factory, make_producer_stream(_,_,_,_,An<void*>()))
-        .WillByDefault(Return(mock_stream.get()));
-    ON_CALL(*mock_stream_factory, make_producer_stream(_,_,_,_,An<geom::Size>()))
-        .WillByDefault(Return(mock_stream));
     ON_CALL(*mock_input_platform, create_input_receiver(_,_,_))
         .WillByDefault(Return(std::make_shared<mt::TestDispatchable>([]{})));
     ON_CALL(*mock_stream, rpc_id()).WillByDefault(Return(mir::frontend::BufferStreamId(2)));
@@ -541,11 +506,8 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_no_customized
     EXPECT_CALL(*mock_stream, set_size(size));
     auto ev = mir::events::make_event(mir::frontend::SurfaceId(2), size);
 
-    //FIXME: difficult construction
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
-        mock_stream_factory, mock_input_platform, spec, &null_surface_callback, nullptr};
-    auto wait_handle = surface.get_create_wait_handle();
-    wait_handle->wait_for_all();
+        mock_stream, mock_input_platform, spec, surface_proto};
     surface.handle_event(*ev);
     surface_map->erase(mir::frontend::BufferStreamId(2));
 }
@@ -554,13 +516,8 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_customized_st
 {
     using namespace testing;
     auto mock_stream = std::make_shared<NiceMock<mtd::MockClientBufferStream>>();
-    auto mock_stream_factory = std::make_shared<NiceMock<mtd::MockClientBufferStreamFactory>>();
     auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
     ON_CALL(*mock_stream, rpc_id()).WillByDefault(Return(mir::frontend::BufferStreamId(2)));
-    ON_CALL(*mock_stream_factory, make_producer_stream(_,_,_,_,An<void*>()))
-        .WillByDefault(Return(mock_stream.get()));
-    ON_CALL(*mock_stream_factory, make_producer_stream(_,_,_,_,An<geom::Size>()))
-        .WillByDefault(Return(mock_stream));
     ON_CALL(*mock_input_platform, create_input_receiver(_,_,_))
         .WillByDefault(Return(std::make_shared<mt::TestDispatchable>([]{})));
 
@@ -568,8 +525,7 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_customized_st
     EXPECT_CALL(*mock_stream, set_size(size)).Times(0);
     auto ev = mir::events::make_event(mir::frontend::SurfaceId(2), size);
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
-        mock_stream_factory, mock_input_platform, spec, &null_surface_callback, nullptr};
-    surface.get_create_wait_handle()->wait_for_all();
+        mock_stream, mock_input_platform, spec, surface_proto};
 
     MirSurfaceSpec spec;
     std::vector<MirBufferStreamInfo> info =

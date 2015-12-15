@@ -108,8 +108,6 @@ void populate_buffer_package(
     }
 }
 
-mp::Void protobuf_void;
-
 struct ExchangeSemantics : mcl::ServerBufferSemantics
 {
     ExchangeSemantics(
@@ -220,6 +218,7 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
     std::queue<mir::protobuf::Buffer> incoming_buffers;
     MirWaitHandle next_buffer_wait_handle;
     bool server_connection_lost {false};
+    mp::Void protobuf_void;
 };
 
 class Requests : public mcl::ServerBufferRequests
@@ -274,6 +273,7 @@ private:
     std::atomic<bool> disconnected_{false};
     mclr::DisplayServer& server;
     int stream_id;
+    mp::Void protobuf_void;
 };
 
 struct NewBufferSemantics : mcl::ServerBufferSemantics

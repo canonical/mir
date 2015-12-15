@@ -40,7 +40,7 @@ public:
     ~ConnectionSurfaceMap() noexcept;
 
     void with_surface_do(frontend::SurfaceId surface_id, std::function<void(MirSurface*)> const& exec) const override;
-    void insert(frontend::SurfaceId surface_id, MirSurface* surface);
+    void insert(frontend::SurfaceId surface_id, std::shared_ptr<MirSurface> const& surface);
     void erase(frontend::SurfaceId surface_id);
 
     void with_stream_do(frontend::BufferStreamId stream_id, std::function<void(ClientBufferStream*)> const& exec) const override;
@@ -50,7 +50,7 @@ public:
 
 private:
     std::mutex mutable guard;
-    std::unordered_map<frontend::SurfaceId, MirSurface*> surfaces;
+    std::unordered_map<frontend::SurfaceId, std::shared_ptr<MirSurface>> surfaces;
     std::unordered_map<frontend::BufferStreamId, StreamInfo> streams;
 };
 
