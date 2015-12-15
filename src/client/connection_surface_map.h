@@ -20,8 +20,8 @@
 #define MIR_CLIENT_CONNECTION_SURFACE_MAP_H_
 
 #include "surface_map.h"
-#include "mir/recursive_read_write_mutex.h"
 
+#include <shared_mutex>
 #include <unordered_map>
 
 namespace mir
@@ -49,7 +49,7 @@ public:
     void erase(frontend::BufferStreamId surface_id);
 
 private:
-    RecursiveReadWriteMutex mutable guard;
+    std::shared_timed_mutex mutable guard;
     std::unordered_map<frontend::SurfaceId, MirSurface*> surfaces;
     std::unordered_map<frontend::BufferStreamId, StreamInfo> streams;
 };

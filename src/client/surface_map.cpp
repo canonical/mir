@@ -37,7 +37,7 @@ mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
         //Prevent TSAN from flagging lock ordering issues
         //as the surface/buffer_stream destructors acquire internal locks
         //The mutex lock is used mainly as a memory barrier here
-        RecursiveWriteLock lk(guard);
+        std::unique_lock<decltype(guard)> lk(guard);
         surface_map = std::move(surfaces);
         stream_map = std::move(streams);
     }
@@ -60,7 +60,7 @@ mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
 void mcl::ConnectionSurfaceMap::with_surface_do(
     mf::SurfaceId surface_id, std::function<void(MirSurface*)> const& exec) const
 {
-    RecursiveReadLock lk(guard);
+    std::shared_lock<decltype(guard)> lk(guard);
     auto const it = surfaces.find(surface_id);
     if (it != surfaces.end())
     {
@@ -80,14 +80,14 @@ void mcl::ConnectionSurfaceMap::insert(mf::SurfaceId surface_id, MirSurface* sur
     // get_buffer_stream has internal locks - call before locking mutex to
     // avoid locking ordering issues
     auto const stream = surface->get_buffer_stream();
-    RecursiveWriteLock lk(guard);
+    std::unique_lock<decltype(guard)> lk(guard);
     surfaces[surface_id] = surface;
     streams[mf::BufferStreamId(surface_id.as_value())] = {stream, false};
 }
 
 void mcl::ConnectionSurfaceMap::erase(mf::SurfaceId surface_id)
 {
-    RecursiveWriteLock lk(guard);
+    std::unique_lock<decltype(guard)> lk(guard);
     surfaces.erase(surface_id);
     streams.erase(mf::BufferStreamId(surface_id.as_value()));
 }
@@ -95,7 +95,7 @@ void mcl::ConnectionSurfaceMap::erase(mf::SurfaceId surface_id)
 void mcl::ConnectionSurfaceMap::with_stream_do(
     mf::BufferStreamId stream_id, std::function<void(ClientBufferStream*)> const& exec) const
 {
-    RecursiveReadLock lk(guard);
+    std::shared_lock<decltype(guard)> lk(guard);
     auto const it = streams.find(stream_id);
     if (it != streams.end())
     {
@@ -112,19 +112,19 @@ void mcl::ConnectionSurfaceMap::with_stream_do(
 
 void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBufferStream*)> const& fn) const
 {
-    RecursiveReadLock lk(guard);
+    std::shared_lock<decltype(guard)> lk(guard);
     for(auto const& stream : streams)
         fn(stream.second.stream);
 }
 
 void mcl::ConnectionSurfaceMap::insert(mf::BufferStreamId stream_id, ClientBufferStream* stream)
 {
-    RecursiveWriteLock lk(guard);
+    std::unique_lock<decltype(guard)> lk(guard);
     streams[stream_id] = {stream, true};
 }
 
 void mcl::ConnectionSurfaceMap::erase(mf::BufferStreamId stream_id)
 {
-    RecursiveWriteLock lk(guard);
+    std::unique_lock<decltype(guard)> lk(guard);
     streams.erase(stream_id);
 }
