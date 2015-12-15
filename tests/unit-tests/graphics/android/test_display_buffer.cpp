@@ -235,21 +235,6 @@ TEST_F(DisplayBuffer, release_current)
     db.release_current();
 }
 
-//In HWC 1.0 notably we cannot eglSwapBuffers on the fb context.
-TEST_F(DisplayBuffer, swaps_when_allowed)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_display_device, can_swap_buffers())
-        .Times(2)
-        .WillOnce(Return(true))
-        .WillOnce(Return(false));
-    EXPECT_CALL(mock_egl, eglSwapBuffers(dummy_display, mock_egl.fake_egl_surface))
-        .Times(1);
-
-    db.swap_buffers();
-    db.swap_buffers();
-}
-
 TEST_F(DisplayBuffer, notifies_list_that_content_is_cleared)
 {
     EXPECT_CALL(*mock_display_device, content_cleared())
