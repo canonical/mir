@@ -91,7 +91,7 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*
         drm_devices.scan_devices();
 
         if (drm_devices.begin() != drm_devices.end())
-            return mg::PlatformPriority::supported;
+            return mg::PlatformPriority::best;
     }
     return mg::PlatformPriority::unsupported;
 }
