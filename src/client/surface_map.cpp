@@ -37,7 +37,7 @@ mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
         //Prevent TSAN from flagging lock ordering issues
         //as the surface/buffer_stream destructors acquire internal locks
         //The mutex lock is used mainly as a memory barrier here
-        std::unique_lock<decltype(guard)> lk(guard);
+        std::lock_guard<decltype(guard)> lk(guard);
         surface_map = std::move(surfaces);
         stream_map = std::move(streams);
     }
@@ -80,14 +80,14 @@ void mcl::ConnectionSurfaceMap::insert(mf::SurfaceId surface_id, MirSurface* sur
     // get_buffer_stream has internal locks - call before locking mutex to
     // avoid locking ordering issues
     auto const stream = surface->get_buffer_stream();
-    std::unique_lock<decltype(guard)> lk(guard);
+    std::lock_guard<decltype(guard)> lk(guard);
     surfaces[surface_id] = surface;
     streams[mf::BufferStreamId(surface_id.as_value())] = {stream, false};
 }
 
 void mcl::ConnectionSurfaceMap::erase(mf::SurfaceId surface_id)
 {
-    std::unique_lock<decltype(guard)> lk(guard);
+    std::lock_guard<decltype(guard)> lk(guard);
     surfaces.erase(surface_id);
     streams.erase(mf::BufferStreamId(surface_id.as_value()));
 }
@@ -119,12 +119,12 @@ void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBuf
 
 void mcl::ConnectionSurfaceMap::insert(mf::BufferStreamId stream_id, ClientBufferStream* stream)
 {
-    std::unique_lock<decltype(guard)> lk(guard);
+    std::lock_guard<decltype(guard)> lk(guard);
     streams[stream_id] = {stream, true};
 }
 
 void mcl::ConnectionSurfaceMap::erase(mf::BufferStreamId stream_id)
 {
-    std::unique_lock<decltype(guard)> lk(guard);
+    std::lock_guard<decltype(guard)> lk(guard);
     streams.erase(stream_id);
 }
