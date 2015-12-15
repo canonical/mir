@@ -36,6 +36,7 @@ namespace
 {
 char const* bypass_option_name{"bypass"};
 char const* vt_option_name{"vt"};
+char const* host_socket{"host-socket"};
 
 struct RealVTFileOperations : public mgm::VTFileOperations
 {
@@ -148,6 +149,7 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
 
     if (options.is_set(vt_option_name))
         platform_option_used = true;
+    auto nested = options.is_set(host_socket);
 
     auto udev = std::make_shared<mir::udev::Context>();
 
@@ -167,6 +169,11 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
         if (tmp_fd >= 0)
             break;
     }
+
+    if (nested && platform_option_used)
+        return mg::PlatformPriority::best;
+    if (nested)
+        return mg::PlatformPriority::supported;
 
     if (tmp_fd >= 0)
     {
