@@ -279,7 +279,7 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_when_configuration_cha
     reset_last_event();
 
     auto display_controller = server.the_display_configuration_controller();
-    display_controller->set_base_configuration(std::move(display_configuration)).get();
+    display_controller->set_base_configuration(std::move(display_configuration));
 
     ASSERT_TRUE(wait_for_event(1min));
 
@@ -390,20 +390,28 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
     auto constexpr form_factor = mir_form_factor_tablet;
     float constexpr scale = 2.15f;
 
-    std::shared_ptr<mg::DisplayConfiguration> display_configuration{server.the_display()->configuration()};
     std::vector<uint32_t> display_ids;
 
-    display_configuration->for_each_output(
-        [&display_ids](mg::UserDisplayConfigurationOutput& output_config)
-        {
-            output_config.scale = scale;
-            output_config.form_factor = form_factor;
-            display_ids.push_back(
-                static_cast<uint32_t>(output_config.id.as_value()));
-        });
+    {
+        mt::Signal display_config_changed;
+        auto const callback = [](MirConnection*, void* context) { static_cast<mt::Signal*>(context)->raise(); };
+        mir_connection_set_display_config_change_callback(connection, callback, &display_config_changed);
 
-    auto display_controller = server.the_display_configuration_controller();
-    display_controller->set_base_configuration(std::move(display_configuration)).get();
+        std::shared_ptr<mg::DisplayConfiguration> const display_configuration{server.the_display()->configuration()};
+
+        display_configuration->for_each_output(
+            [&display_ids](mg::UserDisplayConfigurationOutput& output_config)
+            {
+                output_config.scale = scale;
+                output_config.form_factor = form_factor;
+                display_ids.push_back(static_cast<uint32_t>(output_config.id.as_value()));
+            });
+
+        auto const display_controller = server.the_display_configuration_controller();
+        display_controller->set_base_configuration(display_configuration);
+
+        ASSERT_TRUE(display_config_changed.wait_for(1s));
+    }
 
     EventContext context;
 
