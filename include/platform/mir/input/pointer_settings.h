@@ -43,9 +43,9 @@ struct PointerSettings
      */
     double cursor_acceleration_bias{0.0};
     /**
-     * Enable cursor acceleration
+     * Acceleration profile
      */
-    bool enable_cursor_acceleration{true};
+    MirPointerAccelerationProfile acceleration_profile{mir_pointer_acceleration_profile_adaptive};
     /**
      * Scale horizontal scrolling linearly
      */

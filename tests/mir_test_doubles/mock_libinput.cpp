@@ -51,6 +51,8 @@ mtd::MockLibInput::MockLibInput()
         .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
     ON_CALL(*this, libinput_device_config_middle_emulation_set_enabled(_, _))
         .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
+    ON_CALL(*this, libinput_device_config_accel_set_profile(_, _))
+        .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
 }
 
 void mtd::MockLibInput::wake()
@@ -155,16 +157,6 @@ double libinput_event_pointer_get_dx(libinput_event_pointer* event)
 double libinput_event_pointer_get_dy(libinput_event_pointer* event)
 {
     return global_libinput->libinput_event_pointer_get_dy(event);
-}
-
-double libinput_event_pointer_get_dx_unaccelerated(libinput_event_pointer* event)
-{
-    return global_libinput->libinput_event_pointer_get_dx_unaccelerated(event);
-}
-
-double libinput_event_pointer_get_dy_unaccelerated(libinput_event_pointer* event)
-{
-    return global_libinput->libinput_event_pointer_get_dy_unaccelerated(event);
 }
 
 double libinput_event_pointer_get_absolute_x(libinput_event_pointer* event)
@@ -466,6 +458,16 @@ double libinput_device_config_accel_get_speed(libinput_device *device)
 double libinput_device_config_accel_get_default_speed(libinput_device *device)
 {
     return global_libinput->libinput_device_config_accel_get_default_speed(device);
+}
+
+libinput_config_status libinput_device_config_accel_set_profile(libinput_device* dev, libinput_config_accel_profile profile)
+{
+    return global_libinput->libinput_device_config_accel_set_profile(dev, profile);
+}
+
+libinput_config_accel_profile libinput_device_config_accel_get_profile(libinput_device* dev)
+{
+    return global_libinput->libinput_device_config_accel_get_profile(dev);
 }
 
 int libinput_device_config_scroll_has_natural_scroll(libinput_device *device)
