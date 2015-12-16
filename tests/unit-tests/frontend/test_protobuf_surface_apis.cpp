@@ -85,7 +85,7 @@ struct ProtobufSurfaceCounter : public ::testing::Test
 
         stub_server->comm->start();
 
-        stub_client = std::make_shared<mt::TestProtobufClient>(mtf::test_socket_file(), 100);
+        stub_client = std::make_shared<mt::TestProtobufClient>(mtf::test_socket_file(), 10000);
         stub_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
@@ -136,11 +136,7 @@ TEST_F(ProtobufSurfaceCounter,
 
     for (int i = 0; i != surface_count; ++i)
     {
-        stub_client->display_server.create_surface(
-            &stub_client->surface_parameters,
-            &stub_client->surface,
-            google::protobuf::NewCallback(stub_client.get(), &mt::TestProtobufClient::create_surface_done));
-
+        stub_client->create_surface();
         stub_client->wait_for_create_surface();
     }
 
@@ -182,7 +178,7 @@ struct ProtobufSocketMultiClientCommunicator : public ::testing::Test
 
         for(int i=0; i<number_of_clients; i++)
         {
-            auto client_tmp = std::make_shared<mt::TestProtobufClient>(mtf::test_socket_file(), 100);
+            auto client_tmp = std::make_shared<mt::TestProtobufClient>(mtf::test_socket_file(), 10000);
             clients.push_back(client_tmp);
         }
     }

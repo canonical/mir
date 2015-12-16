@@ -73,13 +73,6 @@ public:
     void operator()() noexcept  // noexcept is important! (LP: #1237332)
     try
     {
-        auto on_startup_failure = on_unwind(
-            [this]
-            {
-                if (started_future.wait_for(0s) != std::future_status::ready)
-                    started.set_exception(std::current_exception());
-            });
-
         mir::set_thread_name("Mir/Comp");
 
         std::vector<std::tuple<mg::DisplayBuffer*, std::unique_ptr<mc::DisplayBufferCompositor>>> compositors;
@@ -96,11 +89,13 @@ public:
                                   CompositorReport::SubCompositorId{comp_id});
         });
 
+        //Appease TSan, avoid destructor and this thread accessing the same shared_ptr instance
+        auto const disp_listener = display_listener;
         auto display_registration = mir::raii::paired_calls(
-            [this]{group.for_each_display_buffer([this](mg::DisplayBuffer& buffer)
-                { display_listener->add_display(buffer.view_area()); });},
-            [this]{group.for_each_display_buffer([this](mg::DisplayBuffer& buffer)
-                { display_listener->remove_display(buffer.view_area()); });});
+            [this, &disp_listener]{group.for_each_display_buffer([&disp_listener](mg::DisplayBuffer& buffer)
+                { disp_listener->add_display(buffer.view_area()); });},
+            [this, &disp_listener]{group.for_each_display_buffer([&disp_listener](mg::DisplayBuffer& buffer)
+                { disp_listener->remove_display(buffer.view_area()); });});
 
         auto compositor_registration = mir::raii::paired_calls(
             [this,&compositors]
@@ -179,6 +174,16 @@ public:
     }
     catch(...)
     {
+        try
+        {
+            //Move the promise so that the promise destructor occurs here rather than in the thread
+            //destroying CompositingFunctor, mostly to appease TSan
+            auto promise = std::move(started);
+            promise.set_exception(std::current_exception());
+        }
+        catch(...)
+        {
+        }
         mir::terminate_with_current_exception();
     }
 
