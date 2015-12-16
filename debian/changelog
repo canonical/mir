@@ -1,4 +1,4 @@
-mir (0.18.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.18.0+16.04.20151216.1-0ubuntu1) xenial; urgency=medium
 
   [ Kevin DuBois ]
   * New upstream release 0.18.0 (https://launchpad.net/mir/+milestone/0.18.0)
@@ -118,7 +118,10 @@ mir (0.18.0-0ubuntu1) UNRELEASED; urgency=medium
       . Cross compiling Mir from a xenial host fails (dpkg-checkbuilddeps:
         error: Unmet build dependencies: ...) (LP: #1523801)
 
- -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 30 Nov 2015 14:09:31 -0500
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Wed, 16 Dec 2015 18:24:40 +0000
 
 mir (0.17.1+16.04.20151105.1-0ubuntu1) xenial; urgency=medium
 
