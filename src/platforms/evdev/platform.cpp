@@ -51,14 +51,9 @@ std::string describe(mu::Device const& dev)
 {
     std::string desc(dev.devnode());
 
-    char const * const vendor = dev.property("ID_VENDOR");
     char const * const model = dev.property("ID_MODEL");
-    if (vendor || model)
-        desc += ':';
-    if (vendor)
-        desc += " " + std::string(vendor);
     if (model)
-        desc += " " + std::string(model);
+        desc += ": " + std::string(model);
 
     // Yes, we could use std::replace but this will compile smaller and faster
     for (auto &c : desc)
