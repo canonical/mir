@@ -27,7 +27,6 @@
 #include "mir/geometry/displacement.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/scene/depth_id.h"
 
 #include <string>
 #include <memory>
@@ -49,6 +48,8 @@ struct StreamSpecification
 /// Specification of surface properties requested by client
 struct SurfaceSpecification
 {
+    bool is_empty() const;
+
     optional_value<geometry::Width> width;
     optional_value<geometry::Height> height;
     optional_value<MirPixelFormat> pixel_format;
@@ -76,7 +77,6 @@ struct SurfaceSpecification
     
     // TODO scene::SurfaceCreationParameters overlaps this content but has additional fields:
     //    geometry::Point top_left;
-    //    scene::DepthId depth;
     //    input::InputReceptionMode input_mode;
     //
     //    it also has size instead of width + height

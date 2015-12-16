@@ -32,6 +32,8 @@
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/test/fake_shared.h"
+#include "mir/cookie_factory.h"
+#include "mir/test/event_matchers.h"
 
 namespace md = mir::dispatch;
 namespace mi = mir::input;
@@ -49,7 +51,7 @@ struct X11PlatformTest : ::testing::Test
     NiceMock<mtd::MockInputSink> mock_keyboard_sink;
     NiceMock<mtd::MockX11> mock_x11;
     NiceMock<mtd::MockInputDeviceRegistry> mock_registry;
-    mir::input::DefaultEventBuilder builder{0};
+    mir::input::DefaultEventBuilder builder{0, mir::cookie::CookieFactory::create_keeping_secret()};
 
     mir::input::X::XInputPlatform x11_platform{
         mt::fake_shared(mock_registry),
@@ -87,6 +89,12 @@ struct X11PlatformTest : ::testing::Test
     }
 };
 
+}
+
+MATCHER(ButtonUpEventWithNoButtonsPressed, "")
+{
+    auto pev = mt::maybe_pointer_event(mt::to_address(arg));
+    return mt::button_event_matches(pev, 0, 0, mir_pointer_action_button_up, 0, true, true, false);
 }
 
 TEST_F(X11PlatformTest, registers_two_devices)
@@ -133,6 +141,34 @@ TEST_F(X11PlatformTest, dispatches_input_events_to_sink)
                        Return(1)));
 
     EXPECT_CALL(mock_keyboard_sink, handle_input(_))
+        .Times(Exactly(1));
+
+    process_input_event();
+}
+
+TEST_F(X11PlatformTest, button_release_has_no_buttons_pressed)
+{
+    prepare_event_processing();
+
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.button_release_event_return),
+                       Return(1)));
+
+    EXPECT_CALL(mock_pointer_sink, handle_input(ButtonUpEventWithNoButtonsPressed()))
+        .Times(Exactly(1));
+
+    process_input_event();
+}
+
+TEST_F(X11PlatformTest, button4_button5_converted_to_vscroll)
+{
+    prepare_event_processing();
+
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.vscroll_event_return),
+                       Return(1)));
+
+    EXPECT_CALL(mock_pointer_sink, handle_input(mt::PointerMovementEvent()))
         .Times(Exactly(1));
 
     process_input_event();

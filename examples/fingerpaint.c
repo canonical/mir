@@ -42,6 +42,7 @@ static volatile bool running = true;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t change = PTHREAD_COND_INITIALIZER;
 static bool changed = true;
+static int force_radius = 0;
 
 static void shutdown(int signum)
 {
@@ -263,11 +264,16 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
                 {
                     x = mir_touch_event_axis_value(tev, p, mir_touch_axis_x);
                     y = mir_touch_event_axis_value(tev, p, mir_touch_axis_y);
-                    float size = mir_touch_event_axis_value(tev, p,
-                                                          mir_touch_axis_size);
+                    float m = mir_touch_event_axis_value(tev, p,
+                                                  mir_touch_axis_touch_major);
+                    float n = mir_touch_event_axis_value(tev, p,
+                                                  mir_touch_axis_touch_minor);
+                    radius = (m + n) / 4;  /* Half the average */
+                    // mir_touch_axis_touch_major can be 0
+                    if (radius < 5)
+                        radius = 5;
                     pressure = mir_touch_event_axis_value(tev, p,
                                                       mir_touch_axis_pressure);
-                    radius = size * 50.0f + 1.0f;
                 }
                 else if (pev != NULL)
                 {
@@ -276,6 +282,9 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
                     pressure = 0.5f;
                     radius = 5;
                 }
+
+                if (force_radius)
+                    radius = force_radius;
 
                 size_t c = (base_color + p) %
                            (sizeof(color)/sizeof(color[0]));
@@ -365,7 +374,18 @@ int main(int argc, char *argv[])
                 switch (arg[1])
                 {
                 case 'm':
-                    mir_socket = argv[++i];
+                    ++i;
+                    if (i < argc)
+                        mir_socket = argv[i];
+                    else
+                        help = 1;
+                    break;
+                case 'r':
+                    ++i;
+                    if (i < argc)
+                        force_radius = atoi(argv[i]);
+                    else
+                        help = 1;
                     break;
                 case 'w':
                     swap_interval = 1;
@@ -385,7 +405,8 @@ int main(int argc, char *argv[])
             {
                 printf("Usage: %s [<options>]\n"
                        "  -h               Show this help text\n"
-                       "  -m socket        Mir server socket\n"
+                       "  -m <socket path> Mir server socket\n"
+                       "  -r <radius>      Force paint brush radius\n"
                        "  -w               Wait for vblank (don't drop frames)\n"
                        "  --               Ignore further arguments\n"
                        , argv[0]);

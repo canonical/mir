@@ -31,11 +31,15 @@ mtd::FakeX11Resources::FakeX11Resources()
     : display{reinterpret_cast<Display*>(0x12345678)},
       window{reinterpret_cast<Window>((long unsigned int)9876543210)}
 {
-    visual_info.depth=24;
+    visual_info.depth = 24;
     keypress_event_return.type = KeyPress;
+    button_release_event_return.type = ButtonRelease;
     expose_event_return.type = Expose;
     focus_in_event_return.type = FocusIn;
     focus_out_event_return.type = FocusOut;
+    vscroll_event_return.type = ButtonPress;
+    XButtonEvent& xbev = (XButtonEvent&)vscroll_event_return;
+    xbev.button = Button4;
 }
 
 mtd::MockX11::MockX11()

@@ -56,7 +56,7 @@ public:
 private:
     std::shared_ptr<ClientPlatform> const client_platform;
     std::shared_ptr<logging::Logger> const logger;
-
+    size_t const nbuffers;
 };
 }
 }

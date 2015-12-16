@@ -31,11 +31,21 @@ class UnauthorizedDisplayChanger : public frontend::DisplayChanger
 public:
     explicit UnauthorizedDisplayChanger(std::shared_ptr<frontend::DisplayChanger> const& changer);
 
-    std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
-    void configure(std::shared_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&);
+    std::shared_ptr<graphics::DisplayConfiguration> base_configuration() override;
+    void configure(
+        std::shared_ptr<frontend::Session> const&,
+        std::shared_ptr<graphics::DisplayConfiguration> const&) override;
+    std::future<void> set_base_configuration(
+        std::shared_ptr<graphics::DisplayConfiguration> const&) override;
+
+    void allow_configure_display();
+    void allow_set_base_configuration();
 
 private:
     std::shared_ptr<frontend::DisplayChanger> const changer;
+
+    bool configure_display_is_allowed;
+    bool set_base_configuration_is_allowed;
 };
 
 }

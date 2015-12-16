@@ -20,6 +20,7 @@
 #define MIR_OPTIONAL_VALUE_H_
 
 #include "mir/fatal.h"
+#include <utility>
 
 namespace mir
 {
@@ -40,14 +41,26 @@ public:
     bool is_set() const { return is_set_; }
     T value() const
     {
+        die_if_unset();
+        return value_;
+    }
+
+    T&& consume()
+    {
+        die_if_unset();
+        is_set_ = false;
+        return std::move(value_);
+    }
+
+private:
+    void die_if_unset() const
+    {
         if (!is_set())
         {
             (*fatal_error)("Accessing value of unset optional");
         }
-        return value_;
     }
 
-private:
     T value_;
     bool is_set_{false};
 };

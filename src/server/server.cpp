@@ -47,7 +47,8 @@ namespace mo = mir::options;
     MACRO(cursor_listener)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
-    MACRO(shell)
+    MACRO(shell)\
+    MACRO(surface_stack)
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
@@ -65,7 +66,9 @@ namespace mo = mir::options;
     MACRO(session_listener)\
     MACRO(session_mediator_report)\
     MACRO(shell)\
-    MACRO(application_not_responding_detector)
+    MACRO(application_not_responding_detector)\
+    MACRO(cookie_factory)\
+    MACRO(coordinate_translator)
 
 #define FOREACH_ACCESSOR(MACRO)\
     MACRO(the_buffer_stream_factory)\
@@ -89,7 +92,7 @@ namespace mo = mir::options;
     MACRO(the_prompt_session_manager)\
     MACRO(the_shell)\
     MACRO(the_shell_display_layout)\
-    MACRO(the_surface_coordinator)\
+    MACRO(the_surface_stack)\
     MACRO(the_touch_visualizer)\
     MACRO(the_input_device_hub)\
     MACRO(the_application_not_responding_detector)
@@ -107,7 +110,6 @@ struct mir::Server::Self
     std::weak_ptr<options::Option> options;
     std::string config_file;
     std::shared_ptr<ServerConfiguration> server_config;
-    std::shared_ptr<cookie::CookieFactory> cookie_factory;
 
     std::function<void()> init_callback{[]{}};
     int argc{0};
@@ -231,15 +233,6 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
         return mir::DefaultServerConfiguration::the_renderer_factory();
     }
 
-    auto the_cookie_factory() -> std::shared_ptr<cookie::CookieFactory> override
-    {
-        if (self->cookie_factory)
-        {
-            return self->cookie_factory;
-        }
-        return mir::DefaultServerConfiguration::the_cookie_factory();
-    }
-
     using mir::DefaultServerConfiguration::the_options;
 
     FOREACH_OVERRIDE(MIR_SERVER_CONFIG_OVERRIDE)
@@ -308,12 +301,6 @@ void mir::Server::set_command_line(int argc, char const* argv[])
     verify_setting_allowed(self->server_config);
     self->argc = argc;
     self->argv = argv;
-}
-
-void mir::Server::override_the_cookie_factory(mir::cookie::Secret const& secret)
-{
-    verify_setting_allowed(self->server_config);
-    self->cookie_factory = mir::cookie::CookieFactory::create_from_secret(secret);
 }
 
 void mir::Server::add_init_callback(std::function<void()> const& init_callback)
@@ -514,6 +501,27 @@ void mir::Server::add_configuration_option(
 
             config.add_options()
             (option.c_str(), po::value<int>()->default_value(default_), description.c_str());
+        };
+
+    self->set_add_configuration_options(option_adder);
+}
+
+void mir::Server::add_configuration_option(
+    std::string const& option,
+    std::string const& description,
+    double default_)
+{
+    verify_setting_allowed(self->server_config);
+    namespace po = boost::program_options;
+
+    auto const& existing = self->add_configuration_options;
+
+    auto const option_adder = [=](options::DefaultConfiguration& config)
+        {
+            existing(config);
+
+            config.add_options()
+            (option.c_str(), po::value<double>()->default_value(default_), description.c_str());
         };
 
     self->set_add_configuration_options(option_adder);

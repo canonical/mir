@@ -38,8 +38,11 @@ add_library(mir-public-test-framework OBJECT
   process.cpp
   server_runner.cpp
   socket_detect_server.cpp
+  stub_input_platform.cpp
   stub_client_platform_factory.cpp
   stub_server_platform_factory.cpp
+  stub_session.cpp
+  stub_surface.cpp
   stubbed_server_configuration.cpp
   testing_client_options.cpp
   testing_server_options.cpp
@@ -121,7 +124,9 @@ set_target_properties(
 
 install(TARGETS mirplatforminputstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
 
-set(server_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-server.map)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols-server.map.in
+    ${CMAKE_CURRENT_BINARY_DIR}/symbols-server.map)
+set(server_symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols-server.map)
 add_library(
   mirplatformgraphicsstub MODULE
 

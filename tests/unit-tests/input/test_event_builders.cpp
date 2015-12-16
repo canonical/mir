@@ -29,7 +29,7 @@ struct InputEventBuilder : public testing::Test
 {
     MirInputDeviceId const device_id = 7;
     std::chrono::nanoseconds const timestamp = std::chrono::nanoseconds(39);
-    uint64_t const mac = 0;
+    uint64_t const mac = 12;
     MirInputEventModifiers const modifiers = mir_input_event_modifier_meta;
 };
 }
@@ -52,6 +52,7 @@ TEST_F(InputEventBuilder, makes_valid_key_event)
    EXPECT_EQ(key_code, mir_keyboard_event_key_code(kev));
    EXPECT_EQ(scan_code, mir_keyboard_event_scan_code(kev));
    EXPECT_EQ(modifiers, mir_keyboard_event_modifiers(kev));
+   // FIXME Test the mac value once the public API has landed in 0.19
 }
 
 TEST_F(InputEventBuilder, makes_valid_touch_event)
@@ -82,6 +83,7 @@ TEST_F(InputEventBuilder, makes_valid_touch_event)
    auto tev = mir_input_event_get_touch_event(ie);
    EXPECT_EQ(modifiers, mir_touch_event_modifiers(tev));
    EXPECT_EQ(touch_count, mir_touch_event_point_count(tev));
+   // FIXME Test the mac value once the public API has landed in 0.19
 
    for (unsigned i = 0; i < touch_count; i++)
    {
@@ -115,6 +117,7 @@ TEST_F(InputEventBuilder, makes_valid_pointer_event)
     auto pev = mir_input_event_get_pointer_event(ie);
     EXPECT_EQ(modifiers, mir_pointer_event_modifiers(pev));
     EXPECT_EQ(action, mir_pointer_event_action(pev));
+    // FIXME Test the mac value once the public API has landed in 0.19
     EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_back));
     EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_tertiary));
     EXPECT_FALSE(mir_pointer_event_button_state(pev, mir_pointer_button_primary));
@@ -159,6 +162,7 @@ TEST_F(InputEventBuilder, maps_single_touch_up_to_motion_up)
     auto tev = mir_input_event_get_touch_event(ie);
 
     EXPECT_EQ(action, mir_touch_event_action(tev, 0));
+    // FIXME Test the mac value once the public API has landed in 0.19
 }
 
 TEST_F(InputEventBuilder, map_to_hover_if_no_button_pressed)
@@ -177,4 +181,5 @@ TEST_F(InputEventBuilder, map_to_hover_if_no_button_pressed)
     auto pev = mir_input_event_get_pointer_event(ie);
     EXPECT_EQ(modifiers, mir_pointer_event_modifiers(pev));
     EXPECT_EQ(action, mir_pointer_event_action(pev));
+    // FIXME Test the mac value once the public API has landed in 0.19
 }

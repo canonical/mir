@@ -58,6 +58,8 @@ public:
 
     virtual void session_configure_display_called(std::string const& app_name) = 0;
 
+    virtual void session_set_base_display_configuration_called(std::string const& app_name) = 0;
+
     virtual void session_start_prompt_session_called(std::string const& app_name, pid_t application_process) = 0;
 
     virtual void session_stop_prompt_session_called(std::string const& app_name) = 0;

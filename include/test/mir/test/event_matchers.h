@@ -229,7 +229,7 @@ MATCHER(PointerLeaveEvent, "")
 }
 
 inline bool button_event_matches(MirPointerEvent const* pev, float x, float y, MirPointerAction action, MirPointerButtons button_state,
-                                 bool check_action = true, bool check_buttons = true)
+                                 bool check_action = true, bool check_buttons = true, bool check_axes = true)
 {
     if (pev == nullptr)
         return false;
@@ -237,9 +237,9 @@ inline bool button_event_matches(MirPointerEvent const* pev, float x, float y, M
         return false;
     if (check_buttons && mir_pointer_event_buttons(pev) != button_state)
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
+    if (check_axes && mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
+    if (check_axes && mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
         return false;
     return true;
 }
@@ -276,6 +276,12 @@ MATCHER_P3(ButtonsDown, x, y, buttons, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
     return button_event_matches(pev, x, y, mir_pointer_action_button_down, buttons, false);
+}
+
+MATCHER_P3(ButtonsUp, x, y, buttons, "")
+{
+    auto pev = maybe_pointer_event(to_address(arg));
+    return button_event_matches(pev, x, y, mir_pointer_action_button_up, buttons, false);
 }
 
 MATCHER_P2(ButtonUpEventWithButton, pos, button, "")
@@ -323,6 +329,22 @@ MATCHER_P2(TouchEvent, x, y, "")
     return true;
 }
 
+MATCHER_P4(TouchContact, slot, action, x, y, "")
+{
+    auto tev = maybe_touch_event(to_address(arg));
+    if (tev == nullptr)
+        return false;
+
+    if (mir_touch_event_action(tev, slot) != action)
+        return false;
+    if (std::abs(mir_touch_event_axis_value(tev, slot, mir_touch_axis_x) - x) > 0.5f)
+        return false;
+    if (std::abs(mir_touch_event_axis_value(tev, slot, mir_touch_axis_y) - y) > 0.5f)
+        return false;
+
+    return true;
+}
+
 MATCHER_P2(TouchUpEvent, x, y, "")
 {
     auto tev = maybe_touch_event(to_address(arg));
@@ -351,6 +373,14 @@ MATCHER_P2(PointerEventWithPosition, x, y, "")
     if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
         return false;
     return true;
+}
+
+MATCHER_P(PointerEventWithModifiers, modifiers, "")
+{
+    auto pev = maybe_pointer_event(to_address(arg));
+    if (pev && mir_pointer_event_modifiers(pev) == modifiers)
+        return true;
+    return false;
 }
 
 MATCHER_P2(PointerEventWithDiff, dx, dy, "")

@@ -27,8 +27,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 17)
-set(MIR_VERSION_PATCH 1)
+set(MIR_VERSION_MINOR 18)
+set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
 add_definitions(-DMIR_VERSION_MINOR=${MIR_VERSION_MINOR})
@@ -49,7 +49,6 @@ if(use_debflags)
 endif()
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
-include (cmake/PrePush.cmake)
 include (GNUInstallDirs)
 
 set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer")
@@ -108,6 +107,14 @@ elseif(cmake_build_type_lower MATCHES "threadsanitizer")
   endif()
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=thread")
+elseif(cmake_build_type_lower MATCHES "ubsanitizer")
+  # Skip vptr checks, there seems to be missing RTTI information when linking with UBSan enabled
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize=vptr -fno-omit-frame-pointer")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-sanitize=vptr -fno-omit-frame-pointer")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
+  # "Symbol already defined" errors occur with pre-compiled headers
+  SET(MIR_USE_PRECOMPILED_HEADERS OFF CACHE BOOL "Use precompiled headers" FORCE)
 else()
   # AddressSanitizer builds fail if we disallow undefined symbols
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
@@ -122,10 +129,11 @@ add_definitions(-DLOG_NDEBUG=1)
 enable_testing()
 
 include_directories(include/common)
+include_directories(include/cookie)
 
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem REQUIRED)
-include_directories (
+include_directories (SYSTEM
   ${Boost_INCLUDE_DIRS}
 )
 
@@ -179,9 +187,9 @@ pkg_check_modules(LIBINPUT REQUIRED libinput)
 pkg_check_modules(NETTLE REQUIRED nettle)
 pkg_check_modules(UUID REQUIRED uuid)
 
-include_directories (${GLESv2_INCLUDE_DIRS})
-include_directories (${EGL_INCLUDE_DIRS})
-include_directories (${GLM_INCLUDE_DIRS})
+include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
+include_directories (SYSTEM ${EGL_INCLUDE_DIRS})
+include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
 
 if (MIR_BUILD_PLATFORM_ANDROID)
   find_package(AndroidProperties REQUIRED)
@@ -196,7 +204,6 @@ endif()
 
 set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
 set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
-set(MIR_XCURSOR_INCLUDE_DIRECTORIES)
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
 add_subdirectory(3rd_party/)
 
@@ -212,7 +219,6 @@ include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 option(MIR_ENABLE_TESTS "Build tests" ON)
 
 add_subdirectory(benchmarks/)
-add_subdirectory(tools/)
 add_subdirectory(examples/)
 add_subdirectory(playground/)
 add_subdirectory(guides/)

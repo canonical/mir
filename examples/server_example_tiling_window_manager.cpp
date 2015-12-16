@@ -18,9 +18,12 @@
 
 #include "server_example_tiling_window_manager.h"
 
+#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_coordinator.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/shell/surface_stack.h"
+#include "mir/shell/surface_ready_observer.h"
 #include "mir/geometry/displacement.h"
 
 #include <linux/input.h>
@@ -34,17 +37,7 @@ using namespace mir::geometry;
 ///\example server_example_tiling_window_manager.cpp
 /// Demonstrate implementing a simple tiling algorithm
 
-me::TilingSurfaceInfo::TilingSurfaceInfo(
-    std::shared_ptr<scene::Session> const& session,
-    std::shared_ptr<scene::Surface> const& surface,
-    scene::SurfaceCreationParameters const& /*params*/) :
-    session{session},
-    state{mir_surface_state_restored},
-    restore_rect{surface->top_left(), surface->size()}
-{
-}
-
-me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(Tools* const tools) :
+me::TilingWindowManagerPolicy::TilingWindowManagerPolicy(WindowManagerTools* const tools) :
     tools{tools}
 {
 }
@@ -53,18 +46,15 @@ void me::TilingWindowManagerPolicy::click(Point cursor)
 {
     auto const session = session_under(cursor);
     auto const surface = tools->surface_at(cursor);
-    tools->set_focus_to(session, surface);
-    if (auto const surface = tools->focused_surface())
-        tools->raise({surface});
-    old_cursor = cursor;
+    select_active_surface(session, surface);
 }
 
-void me::TilingWindowManagerPolicy::handle_session_info_updated(TilingSessionInfoMap& session_info, Rectangles const& displays)
+void me::TilingWindowManagerPolicy::handle_session_info_updated(SessionInfoMap& session_info, Rectangles const& displays)
 {
     update_tiles(session_info, displays);
 }
 
-void me::TilingWindowManagerPolicy::handle_displays_updated(TilingSessionInfoMap& session_info, Rectangles const& displays)
+void me::TilingWindowManagerPolicy::handle_displays_updated(SessionInfoMap& session_info, Rectangles const& displays)
 {
     update_tiles(session_info, displays);
 }
@@ -75,30 +65,12 @@ void me::TilingWindowManagerPolicy::resize(Point cursor)
     {
         if (session == session_under(old_cursor))
         {
-            auto const& info = tools->info_for(session);
-
-            if (resize(tools->focused_surface(), cursor, old_cursor, info.tile))
+            if (auto const surface = select_active_surface(session, tools->surface_at(old_cursor)))
             {
-                // Still dragging the same surface
-            }
-            else
-            {
-                auto const new_surface = tools->surface_at(old_cursor);
-
-                if (new_surface && tools->info_for(new_surface).session.lock() == session)
-                {
-                    if (resize(new_surface, cursor, old_cursor, info.tile))
-                    {
-                        tools->set_focus_to(session, new_surface);
-                        if (auto const surface = tools->focused_surface())
-                            tools->raise({surface});
-                    }
-                }
+                resize(surface, cursor, old_cursor, tools->info_for(session).tile);
             }
         }
     }
-
-    old_cursor = cursor;
 }
 
 auto me::TilingWindowManagerPolicy::handle_place_new_surface(
@@ -111,6 +83,55 @@ auto me::TilingWindowManagerPolicy::handle_place_new_surface(
     Rectangle const& tile = tools->info_for(session).tile;
     parameters.top_left = parameters.top_left + (tile.top_left - Point{0, 0});
 
+    if (auto const parent = parameters.parent.lock())
+    {
+        auto const width = parameters.size.width.as_int();
+        auto const height = parameters.size.height.as_int();
+
+        if (parameters.aux_rect.is_set() && parameters.edge_attachment.is_set())
+        {
+            auto const edge_attachment = parameters.edge_attachment.value();
+            auto const aux_rect = parameters.aux_rect.value();
+            auto const parent_top_left = parent->top_left();
+            auto const top_left = aux_rect.top_left     -Point{} + parent_top_left;
+            auto const top_right= aux_rect.top_right()  -Point{} + parent_top_left;
+            auto const bot_left = aux_rect.bottom_left()-Point{} + parent_top_left;
+
+            if (edge_attachment & mir_edge_attachment_vertical)
+            {
+                if (tile.contains(top_right + Displacement{width, height}))
+                {
+                    parameters.top_left = top_right;
+                }
+                else if (tile.contains(top_left + Displacement{-width, height}))
+                {
+                    parameters.top_left = top_left + Displacement{-width, 0};
+                }
+            }
+
+            if (edge_attachment & mir_edge_attachment_horizontal)
+            {
+                if (tile.contains(bot_left + Displacement{width, height}))
+                {
+                    parameters.top_left = bot_left;
+                }
+                else if (tile.contains(top_left + Displacement{width, -height}))
+                {
+                    parameters.top_left = top_left + Displacement{0, -height};
+                }
+            }
+        }
+        else
+        {
+            auto const parent_top_left = parent->top_left();
+            auto const centred = parent_top_left
+                                 + 0.5*(as_displacement(parent->size()) - as_displacement(parameters.size))
+                                 - DeltaY{(parent->size().height.as_int()-height)/6};
+
+            parameters.top_left = centred;
+        }
+    }
+
     clip_to_tile(parameters, tile);
     return parameters;
 }
@@ -118,7 +139,7 @@ auto me::TilingWindowManagerPolicy::handle_place_new_surface(
 void me::TilingWindowManagerPolicy::generate_decorations_for(
     std::shared_ptr<ms::Session> const&,
     std::shared_ptr<ms::Surface> const&,
-    TilingSurfaceInfoMap&,
+    SurfaceInfoMap&,
     std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const&, ms::SurfaceCreationParameters const&)> const&)
 {
 }
@@ -126,6 +147,21 @@ void me::TilingWindowManagerPolicy::generate_decorations_for(
 void me::TilingWindowManagerPolicy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
 {
     tools->info_for(session).surfaces.push_back(surface);
+
+    auto& surface_info = tools->info_for(surface);
+    if (auto const parent = surface_info.parent.lock())
+    {
+        tools->info_for(parent).children.push_back(surface);
+    }
+
+    if (surface_info.can_be_active())
+    {
+        surface->add_observer(std::make_shared<shell::SurfaceReadyObserver>(
+            [this](std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface)
+                { select_active_surface(session, surface); },
+            session,
+            surface));
+    }
 }
 
 void me::TilingWindowManagerPolicy::handle_modify_surface(
@@ -139,6 +175,22 @@ void me::TilingWindowManagerPolicy::handle_modify_surface(
 
 void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
+    auto& info = tools->info_for(surface);
+
+    if (auto const parent = info.parent.lock())
+    {
+        auto& siblings = tools->info_for(parent).children;
+
+        for (auto i = begin(siblings); i != end(siblings); ++i)
+        {
+            if (surface.lock() == i->lock())
+            {
+                siblings.erase(i);
+                break;
+            }
+        }
+    }
+
     auto& surfaces = tools->info_for(session).surfaces;
 
     for (auto i = begin(surfaces); i != end(surfaces); ++i)
@@ -150,11 +202,12 @@ void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Se
         }
     }
 
+    session->destroy_surface(surface);
+
     if (surfaces.empty() && session == tools->focused_session())
     {
         tools->focus_next_session();
-        if (auto const surface = tools->focused_surface())
-            tools->raise({surface});
+        select_active_surface(tools->focused_session(), tools->focused_surface());
     }
 }
 
@@ -189,23 +242,23 @@ int me::TilingWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surface>
     switch (value)
     {
     case mir_surface_state_restored:
-        surface->move_to(info.restore_rect.top_left);
         surface->resize(info.restore_rect.size);
+        drag(surface, info.restore_rect.top_left, surface->top_left(), tile);
         break;
 
     case mir_surface_state_maximized:
-        surface->move_to(tile.top_left);
         surface->resize(tile.size);
+        drag(surface, tile.top_left, surface->top_left(), tile);
         break;
 
     case mir_surface_state_horizmaximized:
-        surface->move_to({tile.top_left.x, info.restore_rect.top_left.y});
         surface->resize({tile.size.width, info.restore_rect.size.height});
+        drag(surface, {tile.top_left.x, info.restore_rect.top_left.y}, surface->top_left(), tile);
         break;
 
     case mir_surface_state_vertmaximized:
-        surface->move_to({info.restore_rect.top_left.x, tile.top_left.y});
         surface->resize({info.restore_rect.size.width, tile.size.height});
+        drag(surface, {info.restore_rect.top_left.x, tile.top_left.y}, surface->top_left(), tile);
         break;
 
     default:
@@ -221,29 +274,19 @@ void me::TilingWindowManagerPolicy::drag(Point cursor)
     {
         if (session == session_under(old_cursor))
         {
-            auto const& info = tools->info_for(session);
-            if (drag(tools->focused_surface(), cursor, old_cursor, info.tile))
+            if (auto const surface = select_active_surface(session, tools->surface_at(old_cursor)))
             {
-                // Still dragging the same surface
-            }
-            else
-            {
-                auto const new_surface = tools->surface_at(old_cursor);
-
-                if (new_surface && tools->info_for(new_surface).session.lock() == session)
-                {
-                    if (resize(new_surface, cursor, old_cursor, info.tile))
-                    {
-                        tools->set_focus_to(session, new_surface);
-                        if (auto const surface = tools->focused_surface())
-                            tools->raise({surface});
-                    }
-                }
+                drag(surface, cursor, old_cursor, tools->info_for(session).tile);
             }
         }
     }
+}
 
-    old_cursor = cursor;
+void me::TilingWindowManagerPolicy::handle_raise_surface(
+    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Surface> const& surface)
+{
+    select_active_surface(session, surface);
 }
 
 bool me::TilingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)
@@ -299,8 +342,7 @@ bool me::TilingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const
             scan_code == KEY_TAB)
     {
         tools->focus_next_session();
-        if (auto const surface = tools->focused_surface())
-            tools->raise({surface});
+        select_active_surface(tools->focused_session(), tools->focused_surface());
 
         return true;
     }
@@ -313,8 +355,7 @@ bool me::TilingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const
             if (auto const app = tools->focused_session())
                 if (auto const surface = app->surface_after(prev))
                 {
-                    tools->set_focus_to(app, surface);
-                    tools->raise({surface});
+                    select_active_surface(app, surface);
                 }
         }
 
@@ -355,16 +396,25 @@ bool me::TilingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* even
         }
     }
 
-    if (is_drag && count == 3)
+    bool consumes_event = false;
+    if (is_drag)
     {
-        drag(cursor);
-        return true;
+        switch (count)
+        {
+        case 2:
+            resize(cursor);
+            consumes_event = true;
+            break;
+
+        case 3:
+            drag(cursor);
+            consumes_event = true;
+            break;
+        }
     }
-    else
-    {
-        click(cursor);
-        return false;
-    }
+
+    old_cursor = cursor;
+    return consumes_event;
 }
 
 bool me::TilingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* event)
@@ -375,10 +425,11 @@ bool me::TilingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* 
         mir_pointer_event_axis_value(event, mir_pointer_axis_x),
         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
 
+    bool consumes_event = false;
+
     if (action == mir_pointer_action_button_down)
     {
         click(cursor);
-        return false;
     }
     else if (action == mir_pointer_action_motion &&
              modifiers == mir_input_event_modifier_alt)
@@ -386,17 +437,17 @@ bool me::TilingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* 
         if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
         {
             drag(cursor);
-            return true;
+            consumes_event = true;
         }
-
-        if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
+        else if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
         {
             resize(cursor);
-            return true;
+            consumes_event = true;
         }
     }
 
-    return false;
+    old_cursor = cursor;
+    return consumes_event;
 }
 
 void me::TilingWindowManagerPolicy::toggle(MirSurfaceState state)
@@ -416,11 +467,11 @@ void me::TilingWindowManagerPolicy::toggle(MirSurfaceState state)
 
 std::shared_ptr<ms::Session> me::TilingWindowManagerPolicy::session_under(Point position)
 {
-    return tools->find_session([&](TilingSessionInfo const& info) { return info.tile.contains(position);});
+    return tools->find_session([&](SessionInfo const& info) { return info.tile.contains(position);});
 }
 
 void me::TilingWindowManagerPolicy::update_tiles(
-    TilingSessionInfoMap& session_info,
+    SessionInfoMap& session_info,
     Rectangles const& displays)
 {
     if (session_info.size() < 1 || displays.size() < 1) return;
@@ -491,38 +542,49 @@ void me::TilingWindowManagerPolicy::fit_to_new_tile(ms::Surface& surface, Rectan
     surface.resize({width, height});
 }
 
-bool me::TilingWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle bounds)
+void me::TilingWindowManagerPolicy::drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle bounds)
 {
     if (surface && surface->input_area_contains(from))
     {
-        auto const top_left = surface->top_left();
-        auto const surface_size = surface->size();
-        auto const bottom_right = top_left + as_displacement(surface_size);
-
         auto movement = to - from;
 
-        if (movement.dx < DeltaX{0})
-            movement.dx = std::max(movement.dx, (bounds.top_left - top_left).dx);
+        constrained_move(surface, movement, bounds);
 
-        if (movement.dy < DeltaY{0})
-            movement.dy = std::max(movement.dy, (bounds.top_left - top_left).dy);
-
-        if (movement.dx > DeltaX{0})
-            movement.dx = std::min(movement.dx, (bounds.bottom_right() - bottom_right).dx);
-
-        if (movement.dy > DeltaY{0})
-            movement.dy = std::min(movement.dy, (bounds.bottom_right() - bottom_right).dy);
-
-        auto new_pos = surface->top_left() + movement;
-
-        surface->move_to(new_pos);
-        return true;
+        for (auto const& child: tools->info_for(surface).children)
+        {
+            auto move = movement;
+            constrained_move(child.lock(), move, bounds);
+        }
     }
-
-    return false;
 }
 
-bool me::TilingWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> surface, Point cursor, Point old_cursor, Rectangle bounds)
+void me::TilingWindowManagerPolicy::constrained_move(
+    std::shared_ptr<scene::Surface> const& surface,
+    Displacement& movement,
+    Rectangle const& bounds)
+{
+    auto const top_left = surface->top_left();
+    auto const surface_size = surface->size();
+    auto const bottom_right = top_left + as_displacement(surface_size);
+
+    if (movement.dx < DeltaX{0})
+            movement.dx = std::max(movement.dx, (bounds.top_left - top_left).dx);
+
+    if (movement.dy < DeltaY{0})
+            movement.dy = std::max(movement.dy, (bounds.top_left - top_left).dy);
+
+    if (movement.dx > DeltaX{0})
+            movement.dx = std::min(movement.dx, (bounds.bottom_right() - bottom_right).dx);
+
+    if (movement.dy > DeltaY{0})
+            movement.dy = std::min(movement.dy, (bounds.bottom_right() - bottom_right).dy);
+
+    auto new_pos = surface->top_left() + movement;
+
+    surface->move_to(new_pos);
+}
+
+void me::TilingWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> surface, Point cursor, Point old_cursor, Rectangle bounds)
 {
     if (surface && surface->input_area_contains(old_cursor))
     {
@@ -534,7 +596,7 @@ bool me::TilingWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> surface,
         auto const scale_x = new_displacement.dx.as_float()/std::max(1.0f, old_displacement.dx.as_float());
         auto const scale_y = new_displacement.dy.as_float()/std::max(1.0f, old_displacement.dy.as_float());
 
-        if (scale_x <= 0.0f || scale_y <= 0.0f) return false;
+        if (scale_x <= 0.0f || scale_y <= 0.0f) return;
 
         auto const old_size = surface->size();
         Size new_size{scale_x*old_size.width, scale_y*old_size.height};
@@ -548,9 +610,31 @@ bool me::TilingWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> surface,
             new_size.height = size_limits.height;
 
         surface->resize(new_size);
+    }
+}
 
-        return true;
+std::shared_ptr<ms::Surface> me::TilingWindowManagerPolicy::select_active_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<scene::Surface> const& surface)
+{
+    if (!surface)
+    {
+        tools->set_focus_to({}, {});
+        return surface;
     }
 
-    return false;
+    auto const& info_for = tools->info_for(surface);
+
+    if (info_for.can_be_active())
+    {
+        tools->set_focus_to(session, surface);
+        tools->raise_tree(surface);
+        return surface;
+    }
+    else
+    {
+        // Cannot have input focus - try the parent
+        if (auto const parent = info_for.parent.lock())
+            return select_active_surface(session, parent);
+
+        return {};
+    }
 }

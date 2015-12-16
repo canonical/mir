@@ -240,6 +240,9 @@ mtd::MockDRM::MockDRM()
     ON_CALL(*this, drmOpen(_,_))
     .WillByDefault(Return(fake_drm.fd()));
 
+    ON_CALL(*this, drmClose(_))
+    .WillByDefault(WithArg<0>(Invoke([&](int fd){ return close(fd); })));
+
     ON_CALL(*this, drmModeGetResources(_))
     .WillByDefault(Return(fake_drm.resources_ptr()));
 
@@ -313,6 +316,26 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
 void drmModeFreeResources(drmModeResPtr ptr)
 {
     global_mock->drmModeFreeResources(ptr);
+}
+
+void drmModeFreeProperty(drmModePropertyPtr ptr)
+{
+    global_mock->drmModeFreeProperty(ptr);
+}
+
+int drmGetCap(int fd, uint64_t capability, uint64_t *value)
+{
+    return global_mock->drmGetCap(fd, capability, value);
+}
+
+drmModePropertyPtr drmModeGetProperty(int fd, uint32_t propertyId)
+{
+    return global_mock->drmModeGetProperty(fd, propertyId);
+}
+
+int drmModeConnectorSetProperty(int fd, uint32_t connector_id, uint32_t property_id, uint64_t value)
+{
+    return global_mock->drmModeConnectorSetProperty(fd, connector_id, property_id, value);
 }
 
 void drmModeFreeConnector(drmModeConnectorPtr ptr)

@@ -17,15 +17,17 @@
  */
 
 #include "fake_input_device_impl.h"
-#include "stub_input_platform.h"
+#include "mir_test_framework/stub_input_platform.h"
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/input_sink.h"
+#include "mir/input/pointer_settings.h"
+#include "mir/input/touchpad_settings.h"
 #include "mir/input/event_builder.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/geometry/displacement.h"
-#include "src/platforms/evdev/input_modifier_utils.h"
+#include "src/platforms/evdev/button_utils.h"
 
 #include "boost/throw_exception.hpp"
 
@@ -95,18 +97,12 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
     xkb_keysym_t key_code = 0;
 
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::system_clock::now().time_since_epoch());
+        std::chrono::steady_clock::now().time_since_epoch());
 
     auto input_action =
         (key_params.action == synthesis::EventAction::Down) ? mir_keyboard_action_down : mir_keyboard_action_up;
 
-    auto event_modifiers = mie::expand_modifiers(modifiers);
-    auto key_event = builder->key_event(event_time, input_action, key_code, key_params.scancode, event_modifiers);
-
-    if (key_params.action == synthesis::EventAction::Down)
-        modifiers |= mie::to_modifiers(key_params.scancode);
-    else
-        modifiers &= ~mie::to_modifiers(key_params.scancode);
+    auto key_event = builder->key_event(event_time, input_action, key_code, key_params.scancode);
 
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
@@ -116,15 +112,11 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonParameters const& button)
 {
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::system_clock::now().time_since_epoch());
-    auto action = update_buttons(button.action, mie::to_pointer_button(button.button));
-    auto event_modifiers = mie::expand_modifiers(modifiers);
+        std::chrono::steady_clock::now().time_since_epoch());
+    auto action = update_buttons(button.action, mie::to_pointer_button(button.button, settings.handedness));
     auto button_event = builder->pointer_event(event_time,
-                                               event_modifiers,
                                                action,
                                                buttons,
-                                               pos.x.as_float(),
-                                               pos.y.as_float(),
                                                scroll.x.as_float(),
                                                scroll.y.as_float(),
                                                0.0f,
@@ -155,27 +147,23 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
 
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::system_clock::now().time_since_epoch());
-    auto event_modifiers = mie::expand_modifiers(modifiers);
-    update_position(pointer.rel_x, pointer.rel_y);
+        std::chrono::steady_clock::now().time_since_epoch());
+    // constant scaling is used here to simplify checking for the
+    // expected results. Default settings of the device lead to no
+    // scaling at all.
+    auto acceleration = (settings.cursor_acceleration_bias + 1.0);
+    auto rel_x = pointer.rel_x * acceleration;
+    auto rel_y = pointer.rel_y * acceleration;
+
     auto pointer_event = builder->pointer_event(event_time,
-                                                event_modifiers,
                                                 mir_pointer_action_motion,
                                                 buttons,
-                                                pos.x.as_float(),
-                                                pos.y.as_float(),
                                                 scroll.x.as_float(),
                                                 scroll.y.as_float(),
-                                                pointer.rel_x,
-                                                pointer.rel_y);
+                                                rel_x,
+                                                rel_y);
 
     sink->handle_input(*pointer_event);
-}
-
-void mtf::FakeInputDeviceImpl::InputDevice::update_position(int rel_x, int rel_y)
-{
-    pos = pos + mir::geometry::Displacement{rel_x, rel_y};
-    sink->confine_pointer(pos);
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchParameters const& touch)
@@ -184,10 +172,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
 
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::system_clock::now().time_since_epoch());
-    auto event_modifiers = mie::expand_modifiers(modifiers);
+        std::chrono::steady_clock::now().time_since_epoch());
 
-    auto touch_event = builder->touch_event(event_time, event_modifiers);
+    auto touch_event = builder->touch_event(event_time);
 
     auto touch_action = mir_touch_action_up;
     if (touch.action == synthesis::TouchParameters::Action::Tap)
@@ -218,6 +205,38 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
                        size_value);
 
     sink->handle_input(*touch_event);
+}
+
+mir::optional_value<mi::PointerSettings> mtf::FakeInputDeviceImpl::InputDevice::get_pointer_settings() const
+{
+    mir::optional_value<mi::PointerSettings> ret;
+    if (!contains(info.capabilities, mi::DeviceCapability::pointer))
+        return ret;
+
+    ret = mi::PointerSettings();
+    return ret;
+}
+
+void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::PointerSettings const& settings)
+{
+    if (!contains(info.capabilities, mi::DeviceCapability::pointer))
+        return;
+    this->settings = settings;
+}
+
+mir::optional_value<mi::TouchpadSettings> mtf::FakeInputDeviceImpl::InputDevice::get_touchpad_settings() const
+{
+    mir::optional_value<mi::TouchpadSettings> ret;
+    if (contains(info.capabilities, mi::DeviceCapability::pointer))
+        ret = mi::TouchpadSettings();
+
+    return ret;
+}
+
+void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::TouchpadSettings const&)
+{
+    // Not applicable for configuration since FakeInputDevice just
+    // forwards already interpreted events.
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(float& x, float& y)

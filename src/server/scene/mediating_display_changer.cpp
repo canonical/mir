@@ -74,7 +74,7 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
       session_event_handler_register{session_event_handler_register},
       server_action_queue{server_action_queue},
       report{report},
-      base_configuration{display->configuration()},
+      base_configuration_{display->configuration()},
       base_configuration_applied{true}
 {
     session_event_handler_register->register_focus_change_handler(
@@ -111,54 +111,44 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
                 });
         });
 
-    report->initial_configuration(*base_configuration);
+    report->initial_configuration(*base_configuration_);
 }
 
 void ms::MediatingDisplayChanger::configure(
     std::shared_ptr<mf::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
-    bool is_active_session{false};
     {
         std::lock_guard<std::mutex> lg{configuration_mutex};
         config_map[session] = conf;
-        is_active_session = session == focused_session.lock();
+
+        if (session != focused_session.lock())
+            return;
     }
 
-    if (is_active_session)
-    {
-        std::weak_ptr<mf::Session> const weak_session{session};
-        std::condition_variable cv;
-        bool done{false};
+    std::weak_ptr<mf::Session> const weak_session{session};
 
-        server_action_queue->enqueue(
-            this,
-            [this, weak_session, conf, &done, &cv]
+    server_action_queue->enqueue(
+        this,
+        [this, weak_session, conf]
+        {
+            if (auto const session = weak_session.lock())
             {
                 std::lock_guard<std::mutex> lg{configuration_mutex};
 
-                if (auto const session = weak_session.lock())
-                {
-                    /* If the session is focused, apply the configuration */
-                    if (focused_session.lock() == session)
-                        apply_config(conf, PauseResumeSystem);
-                }
-
-                done = true;
-                cv.notify_one();
-            });
-
-        std::unique_lock<std::mutex> lg{configuration_mutex};
-        cv.wait(lg, [&done] { return done; });
-    }
+                /* If the session is focused, apply the configuration */
+                if (focused_session.lock() == session)
+                    apply_config(conf, PauseResumeSystem);
+            }
+        });
 }
 
 std::shared_ptr<mg::DisplayConfiguration>
-ms::MediatingDisplayChanger::active_configuration()
+ms::MediatingDisplayChanger::base_configuration()
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
 
-    return display->configuration();
+    return base_configuration_->clone();
 }
 
 void ms::MediatingDisplayChanger::configure_for_hardware_change(
@@ -172,7 +162,7 @@ void ms::MediatingDisplayChanger::configure_for_hardware_change(
             std::lock_guard<std::mutex> lg{configuration_mutex};
 
             display_configuration_policy->apply_to(*conf);
-            base_configuration = conf;
+            base_configuration_ = conf;
             if (base_configuration_applied)
                 apply_base_config(pause_resume_system);
 
@@ -221,7 +211,7 @@ void ms::MediatingDisplayChanger::apply_config(
 void ms::MediatingDisplayChanger::apply_base_config(
     SystemStateHandling pause_resume_system)
 {
-    apply_config(base_configuration, pause_resume_system);
+    apply_config(base_configuration_, pause_resume_system);
     base_configuration_applied = true;
 }
 
@@ -251,12 +241,10 @@ void ms::MediatingDisplayChanger::focus_change_handler(
     if (it != config_map.end())
     {
         apply_config(it->second, PauseResumeSystem);
-        session->send_display_config(*it->second);
     }
     else if (!base_configuration_applied)
     {
         apply_base_config(PauseResumeSystem);
-        session->send_display_config(*base_configuration);
     }
 }
 
@@ -279,7 +267,7 @@ void ms::MediatingDisplayChanger::session_stopping_handler(
     config_map.erase(session);
 }
 
-std::future<void> ms::MediatingDisplayChanger::set_default_display_configuration(
+std::future<void> ms::MediatingDisplayChanger::set_base_configuration(
     std::shared_ptr<mg::DisplayConfiguration> const &conf)
 {
     auto promise = std::make_shared<std::promise<void>>();
@@ -290,14 +278,12 @@ std::future<void> ms::MediatingDisplayChanger::set_default_display_configuration
         {
             std::lock_guard<std::mutex> lg{configuration_mutex};
 
-            base_configuration = conf;
+            base_configuration_ = conf;
             if (base_configuration_applied)
-            {
                 apply_base_config(PauseResumeSystem);
 
-                /* Send the new configuration to all the sessions */
-                send_config_to_all_sessions(conf);
-            }
+            send_config_to_all_sessions(conf);
+
             done->set_value();
         });
     return completion_future;

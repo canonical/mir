@@ -127,25 +127,22 @@ ms::SurfaceStack::SurfaceStack(
 
 mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID id)
 {
-    std::lock_guard<decltype(guard)> lg(guard);
+    RecursiveReadLock lg(guard);
 
     scene_changed = false;
     mc::SceneElementSequence elements;
-    for (auto const& layer : layers_by_depth)
+    for (auto const& surface : surfaces)
     {
-        for (auto const& surface : layer.second) 
+        if (surface->visible())
         {
-            if (surface->visible())
+            for (auto& renderable : surface->generate_renderables(id))
             {
-                for (auto& renderable : surface->generate_renderables(id))
-                {
-                    elements.emplace_back(
-                        std::make_shared<SurfaceSceneElement>(
-                            surface->name(),
-                            renderable,
-                            rendering_trackers[surface.get()],
-                            id));
-                }
+                elements.emplace_back(
+                    std::make_shared<SurfaceSceneElement>(
+                        surface->name(),
+                        renderable,
+                        rendering_trackers[surface.get()],
+                        id));
             }
         }
     }
@@ -158,28 +155,25 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
 
 int ms::SurfaceStack::frames_pending(mc::CompositorID id) const
 {
-    std::lock_guard<decltype(guard)> lg(guard);
+    RecursiveReadLock lg(guard);
 
     int result = scene_changed ? 1 : 0;
-    for (auto const& layer : layers_by_depth)
+    for (auto const& surface : surfaces)
     {
-        for (auto const& surface : layer.second) 
+        // TODO: Rename mir_surface_attrib_visibility as it's obviously
+        //       confusing with visible()
+        if (surface->visible() &&
+            surface->query(mir_surface_attrib_visibility) == mir_surface_visibility_exposed)
         {
-            // TODO: Rename mir_surface_attrib_visibility as it's obviously
-            //       confusing with visible()
-            if (surface->visible() &&
-                surface->query(mir_surface_attrib_visibility) == mir_surface_visibility_exposed)
+            auto const tracker = rendering_trackers.find(surface.get());
+            if (tracker != rendering_trackers.end() && tracker->second->is_exposed_in(id))
             {
-                auto const tracker = rendering_trackers.find(surface.get());
-                if (tracker != rendering_trackers.end() && tracker->second->is_exposed_in(id))
-                {
-                    // Note that we ask the surface and not a Renderable.
-                    // This is because we don't want to waste time and resources
-                    // on a snapshot till we're sure we need it...
-                    int ready = surface->buffers_ready_for_compositor(id);
-                    if (ready > result)
-                        result = ready;
-                }
+                // Note that we ask the surface and not a Renderable.
+                // This is because we don't want to waste time and resources
+                // on a snapshot till we're sure we need it...
+                int ready = surface->buffers_ready_for_compositor(id);
+                if (ready > result)
+                    result = ready;
             }
         }
     }
@@ -188,7 +182,7 @@ int ms::SurfaceStack::frames_pending(mc::CompositorID id) const
 
 void ms::SurfaceStack::register_compositor(mc::CompositorID cid)
 {
-    std::lock_guard<decltype(guard)> lg(guard);
+    RecursiveWriteLock lg(guard);
 
     registered_compositors.insert(cid);
 
@@ -197,7 +191,7 @@ void ms::SurfaceStack::register_compositor(mc::CompositorID cid)
 
 void ms::SurfaceStack::unregister_compositor(mc::CompositorID cid)
 {
-    std::lock_guard<decltype(guard)> lg(guard);
+    RecursiveWriteLock lg(guard);
 
     registered_compositors.erase(cid);
 
@@ -208,7 +202,7 @@ void ms::SurfaceStack::add_input_visualization(
     std::shared_ptr<mg::Renderable> const& overlay)
 {
     {
-        std::lock_guard<decltype(guard)> lg(guard);
+        RecursiveWriteLock lg(guard);
         overlays.push_back(overlay);
     }
     emit_scene_changed();
@@ -219,7 +213,7 @@ void ms::SurfaceStack::remove_input_visualization(
 {
     auto overlay = weak_overlay.lock();
     {
-        std::lock_guard<decltype(guard)> lg(guard);
+        RecursiveWriteLock lg(guard);
         auto const p = std::find(overlays.begin(), overlays.end(), overlay);
         if (p == overlays.end())
         {
@@ -234,7 +228,7 @@ void ms::SurfaceStack::remove_input_visualization(
 void ms::SurfaceStack::emit_scene_changed()
 {
     {
-        std::lock_guard<decltype(guard)> lg(guard);
+        RecursiveWriteLock lg(guard);
         scene_changed = true;
     }
     observers.scene_changed();
@@ -242,12 +236,11 @@ void ms::SurfaceStack::emit_scene_changed()
 
 void ms::SurfaceStack::add_surface(
     std::shared_ptr<Surface> const& surface,
-    DepthId depth,
     mi::InputReceptionMode input_mode)
 {
     {
-        std::lock_guard<decltype(guard)> lg(guard);
-        layers_by_depth[depth].push_back(surface);
+        RecursiveWriteLock lg(guard);
+        surfaces.push_back(surface);
         create_rendering_tracker_for(surface);
     }
     surface->set_reception_mode(input_mode);
@@ -262,20 +255,15 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 
     bool found_surface = false;
     {
-        std::lock_guard<decltype(guard)> lg(guard);
+        RecursiveWriteLock lg(guard);
 
-        for (auto &layer : layers_by_depth)
+        auto const surface = std::find(surfaces.begin(), surfaces.end(), keep_alive);
+
+        if (surface != surfaces.end())
         {
-            auto &surfaces = layer.second;
-            auto const p = std::find(surfaces.begin(), surfaces.end(), keep_alive);
-
-            if (p != surfaces.end())
-            {
-                surfaces.erase(p);
-                rendering_trackers.erase(keep_alive.get());
-                found_surface = true;
-                break;
-            }
+            surfaces.erase(surface);
+            rendering_trackers.erase(keep_alive.get());
+            found_surface = true;
         }
     }
 
@@ -304,18 +292,15 @@ InReverse<Container> in_reverse(Container& container) { return InReverse<Contain
 auto ms::SurfaceStack::surface_at(geometry::Point cursor) const
 -> std::shared_ptr<Surface>
 {
-    std::lock_guard<decltype(guard)> lg(guard);
-    for (auto &layer : in_reverse(layers_by_depth))
+    RecursiveReadLock lg(guard);
+    for (auto const& surface : in_reverse(surfaces))
     {
-        for (auto const& surface : in_reverse(layer.second))
-        {
-            // TODO There's a lack of clarity about how the input area will
-            // TODO be maintained and whether this test will detect clicks on
-            // TODO decorations (it should) as these may be outside the area
-            // TODO known to the client.  But it works for now.
-            if (surface->input_area_contains(cursor))
-                    return surface;
-        }
+        // TODO There's a lack of clarity about how the input area will
+        // TODO be maintained and whether this test will detect clicks on
+        // TODO decorations (it should) as these may be outside the area
+        // TODO known to the client.  But it works for now.
+        if (surface->input_area_contains(cursor))
+                return surface;
     }
 
     return {};
@@ -323,67 +308,55 @@ auto ms::SurfaceStack::surface_at(geometry::Point cursor) const
 
 void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::Surface> const&)> const& callback)
 {
-    std::lock_guard<decltype(guard)> lg(guard);
-    for (auto &layer : layers_by_depth)
+    RecursiveReadLock lg(guard);
+    for (auto &surface : surfaces)
     {
-        for (auto it = layer.second.begin(); it != layer.second.end(); ++it)
+        if (surface->query(mir_surface_attrib_visibility) ==
+            MirSurfaceVisibility::mir_surface_visibility_exposed)
         {
-            if ((*it)->query(mir_surface_attrib_visibility) ==
-                MirSurfaceVisibility::mir_surface_visibility_exposed)
-            {
-                callback(*it);
-            }
+            callback(surface);
         }
     }
 }
 
 void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
 {
-    auto surface = s.lock();
+    bool surfaces_reordered{false};
 
     {
-        std::unique_lock<decltype(guard)> ul(guard);
-        for (auto &layer : layers_by_depth)
+        auto const surface = s.lock();
+
+        RecursiveWriteLock ul(guard);
+        auto const p = std::find(surfaces.begin(), surfaces.end(), surface);
+
+        if (p != surfaces.end())
         {
-            auto &surfaces = layer.second;
-            auto const p = std::find(surfaces.begin(), surfaces.end(), surface);
-
-            if (p != surfaces.end())
-            {
-                surfaces.erase(p);
-                surfaces.push_back(surface);
-
-                ul.unlock();
-                observers.surfaces_reordered();
-
-                return;
-            }
+            surfaces.erase(p);
+            surfaces.push_back(surface);
+            surfaces_reordered = true;
         }
     }
 
-    BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+    if (!surfaces_reordered)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+
+    observers.surfaces_reordered();
+    return;
 }
 
 void ms::SurfaceStack::raise(SurfaceSet const& ss)
 {
     bool surfaces_reordered{false};
-
     {
-        std::lock_guard<decltype(guard)> ul(guard);
+        RecursiveWriteLock ul(guard);
 
-        for (auto &layer : layers_by_depth)
-        {
-            auto &surfaces = layer.second;
+        auto const old_surfaces = surfaces;
+        std::stable_partition(
+            begin(surfaces), end(surfaces),
+            [&](std::weak_ptr<Surface> const& s) { return !ss.count(s); });
 
-            auto const old_surfaces = surfaces;
-
-            std::stable_partition(
-                begin(surfaces), end(surfaces),
-                [&](std::weak_ptr<Surface> const& s) { return !ss.count(s); });
-
-            if (old_surfaces != surfaces)
-                surfaces_reordered = true;
-        }
+        if (old_surfaces != surfaces)
+            surfaces_reordered = true;
     }
 
     if (surfaces_reordered)
@@ -393,12 +366,16 @@ void ms::SurfaceStack::raise(SurfaceSet const& ss)
 void ms::SurfaceStack::create_rendering_tracker_for(std::shared_ptr<Surface> const& surface)
 {
     auto const tracker = std::make_shared<RenderingTracker>(surface);
+
+    RecursiveWriteLock ul(guard);
     tracker->active_compositors(registered_compositors);
     rendering_trackers[surface.get()] = tracker;
 }
 
 void ms::SurfaceStack::update_rendering_tracker_compositors()
 {
+    RecursiveReadLock ul(guard);
+
     for (auto const& pair : rendering_trackers)
         pair.second->active_compositors(registered_compositors);
 }
@@ -408,13 +385,10 @@ void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observe
     observers.add(observer);
 
     // Notify observer of existing surfaces
+    RecursiveReadLock lk(guard);
+    for (auto &surface : surfaces)
     {
-        std::lock_guard<decltype(guard)> ul(guard);
-        for (auto &layer : layers_by_depth)
-        {
-            for (auto &surface : layer.second)
-                observer->surface_exists(surface.get());
-        }
+        observer->surface_exists(surface.get());
     }
 }
 

@@ -75,7 +75,7 @@ struct NamedCursorImage : public mg::CursorImage
     }
 
     void const* as_argb_8888() const override { return nullptr; }
-    geom::Size size() const override { return geom::Size{}; }
+    geom::Size size() const override { return geom::Size{16, 16}; }
     geom::Displacement hotspot() const override { return geom::Displacement{0, 0}; }
 
     std::string const cursor_name;
@@ -217,10 +217,10 @@ struct NamedCursorClient : CursorClient
 
 struct TestClientCursorAPI : mtf::HeadlessInProcessServer
 {
+    // mtf::add_fake_input_device needs this library to be loaded each test, for the tests
     mtf::TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str()};
     MockCursor cursor;
     mtf::SurfaceGeometries client_geometries;
-    mtf::SurfaceDepths client_depths;
 
     TestClientCursorAPI()
     {
@@ -237,7 +237,6 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
                 return std::make_shared<PlacementWindowManager>(
                     focus_controller,
                     client_geometries,
-                    client_depths,
                     server.the_shell_display_layout());
             });
     }

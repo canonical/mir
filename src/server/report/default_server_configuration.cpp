@@ -135,3 +135,13 @@ auto mir::DefaultServerConfiguration::the_shared_library_prober_report() -> std:
             return report_factory(options::shared_library_prober_report_opt)->create_shared_library_prober_report();
         });
 }
+
+auto mir::DefaultServerConfiguration::the_shell_report() -> std::shared_ptr<shell::ShellReport>
+{
+    return shell_report(
+        [this]()->std::shared_ptr<shell::ShellReport>
+        {
+            return report_factory(options::shell_report_opt)->create_shell_report();
+        });
+}
+

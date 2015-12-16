@@ -25,16 +25,6 @@
 #include <memory>
 #include <string>
 
-namespace android
-{
-class EventHubInterface;
-class InputReaderInterface;
-class InputReaderPolicyInterface;
-class InputListenerInterface;
-}
-
-namespace droidinput = android;
-
 namespace mir
 {
 class ServerActionQueue;
@@ -85,6 +75,8 @@ class FocusController;
 class DisplayLayout;
 class HostLifecycleEventListener;
 class Shell;
+class ShellReport;
+class SurfaceStack;
 class PersistentSurfaceStore;
 namespace detail { class FrontendShell; }
 }
@@ -99,15 +91,12 @@ class BroadcastingSessionEventSink;
 class BufferStreamFactory;
 class MediatingDisplayChanger;
 class PixelBuffer;
-class PlacementStrategy;
 class SessionContainer;
 class SessionEventSink;
 class SessionEventHandlerRegister;
 class SessionListener;
 class SessionCoordinator;
 class SnapshotStrategy;
-class SurfaceCoordinator;
-class SurfaceStackModel;
 class SurfaceStack;
 class SceneReport;
 class PromptSessionListener;
@@ -132,7 +121,6 @@ class InputReport;
 class Scene;
 class InputManager;
 class SurfaceInputDispatcher;
-class Platform;
 class InputDeviceRegistry;
 class InputDeviceHub;
 class DefaultInputDeviceHub;
@@ -144,15 +132,7 @@ class TouchVisualizer;
 class InputRegion;
 class InputSender;
 class InputSendObserver;
-class NestedInputRelay;
-class EventHandler;
 class CursorImages;
-class LegacyInputDispatchable;
-namespace android
-{
-class InputRegistrar;
-class InputThread;
-}
 }
 
 namespace logging
@@ -278,7 +258,7 @@ public:
     virtual std::shared_ptr<scene::PromptSessionManager>  the_prompt_session_manager();
     virtual std::shared_ptr<shell::HostLifecycleEventListener> the_host_lifecycle_event_listener();
     virtual std::shared_ptr<shell::PersistentSurfaceStore> the_persistent_surface_store();
-
+    virtual std::shared_ptr<shell::ShellReport>         the_shell_report();
     /** @} */
 
     /** @name internal scene configuration
@@ -290,9 +270,9 @@ public:
     virtual std::shared_ptr<scene::SessionContainer>  the_session_container();
     virtual std::shared_ptr<scene::SessionEventSink>  the_session_event_sink();
     virtual std::shared_ptr<scene::SessionEventHandlerRegister> the_session_event_handler_register();
-    virtual std::shared_ptr<scene::SurfaceStackModel> the_surface_stack_model();
     virtual std::shared_ptr<scene::SurfaceFactory>    the_surface_factory();
-    virtual std::shared_ptr<scene::SurfaceCoordinator>the_surface_coordinator();
+    virtual std::shared_ptr<shell::SurfaceStack>      the_surface_stack();
+    virtual std::shared_ptr<shell::SurfaceStack>      wrap_surface_stack(std::shared_ptr<shell::SurfaceStack> const& wrapped);
     /** @} */
 
     /** @name scene configuration - dependencies
@@ -324,14 +304,8 @@ public:
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
     virtual std::shared_ptr<input::InputSender>    the_input_sender();
     virtual std::shared_ptr<input::InputSendObserver> the_input_send_observer();
-    virtual std::shared_ptr<input::LegacyInputDispatchable> the_legacy_input_dispatchable();
-    virtual std::shared_ptr<droidinput::EventHubInterface> the_event_hub();
-    virtual std::shared_ptr<droidinput::InputReaderInterface> the_input_reader();
-    virtual std::shared_ptr<droidinput::InputReaderPolicyInterface> the_input_reader_policy();
-    virtual std::shared_ptr<droidinput::InputListenerInterface> the_input_translator();
 
     // new input reading related parts:
-    virtual std::shared_ptr<input::Platform> the_input_platform();
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
     virtual std::shared_ptr<input::InputDeviceRegistry> the_input_device_registry();
     virtual std::shared_ptr<input::InputDeviceHub> the_input_device_hub();
@@ -347,6 +321,12 @@ public:
     virtual std::shared_ptr<time::Clock> the_clock();
     virtual std::shared_ptr<ServerActionQueue> the_server_action_queue();
     virtual std::shared_ptr<SharedLibraryProberReport>  the_shared_library_prober_report();
+
+private:
+    // We need to ensure the platform library is destroyed last as the
+    // DisplayConfiguration can hold weak_ptrs to objects created from the library
+    // TODO: We need a better way to manage the lifetimes of platform libraries
+    std::shared_ptr<mir::SharedLibrary> platform_library;
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
@@ -370,12 +350,6 @@ protected:
         std::shared_ptr<input::CursorListener> const& wrapped);
 /** @} */
 
-    CachedPtr<droidinput::EventHubInterface> event_hub;
-    CachedPtr<droidinput::InputReaderPolicyInterface> input_reader_policy;
-    CachedPtr<droidinput::InputReaderInterface> input_reader;
-    CachedPtr<droidinput::InputListenerInterface> input_translator;
-    CachedPtr<input::LegacyInputDispatchable> legacy_input_dispatchable;
-
     CachedPtr<frontend::Connector>   connector;
     CachedPtr<frontend::Connector>   prompt_connector;
 
@@ -384,8 +358,7 @@ protected:
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::SurfaceInputDispatcher>    surface_input_dispatcher;
-    CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub; // currently not used by default
-    CachedPtr<input::Platform>    input_platform; // currently not used by default
+    CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub;
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;
     CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<input::InputSender>     input_sender;
@@ -412,13 +385,12 @@ protected:
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
     CachedPtr<compositor::FrameDroppingPolicyFactory> frame_dropping_policy_factory;
-    CachedPtr<scene::SurfaceStack> surface_stack;
+    CachedPtr<scene::SurfaceStack> scene_surface_stack;
+    CachedPtr<shell::SurfaceStack> surface_stack;
     CachedPtr<scene::SceneReport> scene_report;
 
     CachedPtr<scene::SurfaceFactory> surface_factory;
     CachedPtr<scene::SessionContainer>  session_container;
-    CachedPtr<scene::SurfaceCoordinator> surface_coordinator;
-    CachedPtr<scene::PlacementStrategy> placement_strategy;
     CachedPtr<scene::SessionListener> session_listener;
     CachedPtr<scene::PixelBuffer>       pixel_buffer;
     CachedPtr<scene::SnapshotStrategy>  snapshot_strategy;
@@ -445,6 +417,7 @@ protected:
     CachedPtr<shell::PersistentSurfaceStore> surface_store;
     CachedPtr<SharedLibraryProberReport> shared_library_prober_report;
     CachedPtr<shell::Shell> shell;
+    CachedPtr<shell::ShellReport> shell_report;
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::CookieFactory> cookie_factory;
 

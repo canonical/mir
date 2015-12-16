@@ -22,7 +22,6 @@
 #include "mir/options/program_option.h"
 #include "src/platforms/mesa/server/x11/graphics/platform.h"
 
-#include "mir/test/doubles/platform_factory.h"
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/mock_x11.h"
@@ -49,7 +48,12 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-        return mtd::create_platform_with_null_dependencies();
+        return std::make_shared<mg::X::Platform>(std::shared_ptr<::Display>(
+                XOpenDisplay(nullptr),
+                [](::Display* display)
+                {
+                    XCloseDisplay(display);
+                }), mir::geometry::Size{1280,1024});
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
@@ -112,7 +116,7 @@ TEST_F(X11GraphicsPlatformTest, probe_returns_unsupported_when_x_cannot_open_dis
     EXPECT_EQ(mg::PlatformPriority::unsupported, probe(options));
 }
 
-TEST_F(X11GraphicsPlatformTest, probe_returns_best_when_drm_render_nodes_exist)
+TEST_F(X11GraphicsPlatformTest, probe_returns_supported_when_drm_render_nodes_exist)
 {
     mtf::UdevEnvironment udev_environment;
     mir::options::ProgramOption options;
@@ -121,5 +125,5 @@ TEST_F(X11GraphicsPlatformTest, probe_returns_best_when_drm_render_nodes_exist)
 
     mir::SharedLibrary platform_lib{mtf::server_platform("server-mesa-x11")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::best, probe(options));
+    EXPECT_EQ(mg::PlatformPriority::supported, probe(options));
 }

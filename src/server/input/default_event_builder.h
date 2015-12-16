@@ -25,30 +25,34 @@
 
 namespace mir
 {
+namespace cookie
+{
+class CookieFactory;
+}
 namespace input
 {
 class DefaultEventBuilder : public EventBuilder
 {
 public:
-    explicit DefaultEventBuilder(MirInputDeviceId device_id);
+    explicit DefaultEventBuilder(MirInputDeviceId device_id,
+                                 std::shared_ptr<cookie::CookieFactory> const& cookie_factory);
 
-    EventUPtr key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code, int scan_code,
-                        MirInputEventModifiers modifiers) override;
+    EventUPtr key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code, int scan_code) override;
 
-    EventUPtr touch_event(Timestamp timestamp, MirInputEventModifiers modifiers) override;
+    EventUPtr touch_event(Timestamp timestamp) override;
     void add_touch(MirEvent& event, MirTouchId touch_id, MirTouchAction action, MirTouchTooltype tooltype,
                    float x_axis_value, float y_axis_value, float pressure_value, float touch_major_value,
                    float touch_minor_value, float size_value) override;
 
-    EventUPtr pointer_event(Timestamp timestamp, MirInputEventModifiers modifiers, MirPointerAction action,
-                            MirPointerButtons buttons_pressed, float x_axis_value, float y_axis_value,
+    EventUPtr pointer_event(Timestamp timestamp, MirPointerAction action, MirPointerButtons buttons_pressed,
                             float hscroll_value, float vscroll_value, float relative_x_value,
                             float relative_y_value) override;
 
     EventUPtr configuration_event(Timestamp timestamp, MirInputConfigurationAction action) override;
 
 private:
-    MirInputDeviceId device_id;
+    MirInputDeviceId const device_id;
+    std::shared_ptr<cookie::CookieFactory> const cookie_factory;
 };
 }
 }

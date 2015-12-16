@@ -104,9 +104,10 @@ void me::DefaultWindowManager::modify_surface(
 }
 
 void me::DefaultWindowManager::remove_surface(
-    std::shared_ptr<scene::Session> const& /*session*/,
-    std::weak_ptr<scene::Surface> const& /*surface*/)
+    std::shared_ptr<scene::Session> const& session,
+    std::weak_ptr<scene::Surface> const& surface)
 {
+    session->destroy_surface(surface);
 }
 
 void me::DefaultWindowManager::add_display(geometry::Rectangle const& /*area*/)
@@ -114,6 +115,13 @@ void me::DefaultWindowManager::add_display(geometry::Rectangle const& /*area*/)
 }
 
 void me::DefaultWindowManager::remove_display(geometry::Rectangle const& /*area*/)
+{
+}
+
+void me::DefaultWindowManager::handle_raise_surface(
+    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Surface> const& /*surface*/,
+    uint64_t /*timestamp*/)
 {
 }
 

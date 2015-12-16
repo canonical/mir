@@ -70,10 +70,10 @@ void ms::SurfaceObservers::hidden_set_to(bool hide)
         { observer->hidden_set_to(hide); });
 }
 
-void ms::SurfaceObservers::frame_posted(int frames_available)
+void ms::SurfaceObservers::frame_posted(int frames_available, geometry::Size const& size)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->frame_posted(frames_available); });
+        { observer->frame_posted(frames_available, size); });
 }
 
 void ms::SurfaceObservers::alpha_set_to(float alpha)
@@ -124,6 +124,12 @@ void ms::SurfaceObservers::renamed(char const* name)
         { observer->renamed(name); });
 }
 
+void ms::SurfaceObservers::cursor_image_removed()
+{
+    for_each([](std::shared_ptr<SurfaceObserver> const& observer)
+        { observer->cursor_image_removed(); });
+}
+
 struct ms::CursorStreamImageAdapter
 {
     CursorStreamImageAdapter(ms::BasicSurface &surface)
@@ -172,7 +178,7 @@ private:
         {
         }
 
-        void frame_posted(int /* available */)
+        void frame_posted(int /* available */, geometry::Size const& /* size */)
         {
             self->post_cursor_image_from_current_buffer();
         }
@@ -613,8 +619,11 @@ void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& 
         cursor_image_ = image;
     }
 
-    observers.cursor_image_set_to(*image);
-}    
+    if (image)
+        observers.cursor_image_set_to(*image);
+    else
+        observers.cursor_image_removed();
+}
 
 std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image() const
 {
@@ -877,7 +886,7 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
         {
             list.emplace_back(std::make_shared<SurfaceSnapshot>(
                 info.stream, id,
-                geom::Rectangle{surface_rect.top_left + info.displacement, surface_rect.size},
+                geom::Rectangle{surface_rect.top_left + info.displacement, info.stream->stream_size()},
                 transformation_matrix, surface_alpha, nonrectangular, info.stream.get()));
         }
     }

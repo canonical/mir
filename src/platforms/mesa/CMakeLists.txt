@@ -1,12 +1,6 @@
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
 
 configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/mir-client-platform-mesa-dev.pc.in
-  ${CMAKE_CURRENT_BINARY_DIR}/mir-client-platform-mesa-dev.pc
-  @ONLY
-)
-
-configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mir-client-platform-mesa.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mir-client-platform-mesa.pc
   @ONLY
@@ -26,9 +20,6 @@ install(
 )
 
 install(
-  FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/mir-client-platform-mesa-dev.pc
-  ${CMAKE_CURRENT_BINARY_DIR}/mir-client-platform-mesa.pc
-
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/mir-client-platform-mesa.pc
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )

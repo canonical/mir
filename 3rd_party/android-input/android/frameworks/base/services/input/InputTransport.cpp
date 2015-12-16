@@ -43,11 +43,7 @@ static constexpr const std::chrono::nanoseconds NANOS_PER_MS = std::chrono::nano
 
 // Latency added during resampling.  A few milliseconds doesn't hurt much but
 // reduces the impact of mispredicted touch positions.
-//static constexpr const std::chrono::nanoseconds RESAMPLE_LATENCY = std::chrono::nanoseconds(5 * NANOS_PER_MS);
-
-// Mir modification: No artificial latency please. This seems to provide
-// visibly and measurably lower input latency, with no noticeable down side...
-static constexpr const std::chrono::nanoseconds RESAMPLE_LATENCY(0);
+static constexpr const std::chrono::nanoseconds RESAMPLE_LATENCY = std::chrono::nanoseconds(5 * NANOS_PER_MS);
 
 // Minimum time difference between consecutive samples before attempting to resample.
 static constexpr const std::chrono::nanoseconds RESAMPLE_MIN_DELTA = std::chrono::nanoseconds(2 * NANOS_PER_MS);

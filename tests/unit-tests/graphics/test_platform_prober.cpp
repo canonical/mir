@@ -31,12 +31,12 @@
 
 #ifdef MIR_BUILD_PLATFORM_ANDROID
 #include "mir/test/doubles/mock_android_hw.h"
-namespace mtd = mir::test::doubles;
 #endif
 
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/executable_path.h"
 
+namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
 namespace
@@ -100,6 +100,15 @@ std::shared_ptr<void> ensure_android_probing_succeeds()
     return std::shared_ptr<void>{};
 #endif
 }
+
+class ServerPlatformProbeMockDRM : public ::testing::Test
+{
+#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
+public:
+    ::testing::NiceMock<mtd::MockDRM> mock_drm;
+#endif
+};
+
 }
 
 TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
@@ -112,7 +121,7 @@ TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
 }
 
 #ifdef MIR_BUILD_PLATFORM_MESA_KMS
-TEST(ServerPlatformProbe, LoadsMesaPlatformWhenDrmDevicePresent)
+TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 {
     using namespace testing;
     mir::options::ProgramOption options;
@@ -182,8 +191,8 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     EXPECT_THAT(description->name, HasSubstr("dummy"));
 }
 
-#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_ANDROID)
-TEST(ServerPlatformProbe, LoadsMesaOrAndroidInPreferenceToDummy)
+#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11) || defined(MIR_BUILD_PLATFORM_ANDROID)
+TEST_F(ServerPlatformProbeMockDRM, LoadsMesaOrAndroidInPreferenceToDummy)
 {
     using namespace testing;
     mir::options::ProgramOption options;
@@ -203,7 +212,7 @@ TEST(ServerPlatformProbe, LoadsMesaOrAndroidInPreferenceToDummy)
 }
 #endif
 
-TEST(ServerPlatformProbe, IgnoresNonPlatformModules)
+TEST_F(ServerPlatformProbeMockDRM, IgnoresNonPlatformModules)
 {
     using namespace testing;
     mir::options::ProgramOption options;

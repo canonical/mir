@@ -197,9 +197,19 @@ libinput_pointer_axis libinput_event_pointer_get_axis(libinput_event_pointer* ev
     return global_libinput->libinput_event_pointer_get_axis(event);
 }
 
+libinput_pointer_axis_source libinput_event_pointer_get_axis_source(libinput_event_pointer* event)
+{
+    return global_libinput->libinput_event_pointer_get_axis_source(event);
+}
+
 double libinput_event_pointer_get_axis_value(libinput_event_pointer* event, libinput_pointer_axis axis)
 {
     return global_libinput->libinput_event_pointer_get_axis_value(event, axis);
+}
+
+double libinput_event_pointer_get_axis_value_discrete(libinput_event_pointer* event, libinput_pointer_axis axis)
+{
+    return global_libinput->libinput_event_pointer_get_axis_value_discrete(event, axis);
 }
 
 int libinput_event_pointer_has_axis(libinput_event_pointer* event, libinput_pointer_axis axis)

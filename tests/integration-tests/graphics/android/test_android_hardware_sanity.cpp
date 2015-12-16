@@ -281,4 +281,8 @@ TEST_F(AndroidHardwareSanity, can_allocate_hw_buffer)
     //TODO: kdub it is a bit trickier to test that a gpu can render... just check creation for now
     auto test_buffer = runner->config.the_buffer_allocator()->alloc_buffer(hw_properties);
     EXPECT_NE(nullptr, test_buffer);
+
+    // Workaround for lp:1502782
+    test_buffer.reset();
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }

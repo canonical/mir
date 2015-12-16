@@ -20,12 +20,12 @@
 #define MIR_INPUT_DEFAULT_INPUT_DEVICE_HUB_H_
 
 #include "default_event_builder.h"
+#include "seat.h"
 
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_sink.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/input_device_info.h"
-#include "mir/input/touch_visualizer.h"
 
 #include "mir_toolkit/event.h"
 
@@ -36,10 +36,15 @@
 namespace mir
 {
 class ServerActionQueue;
+namespace cookie
+{
+class CookieFactory;
+}
 namespace dispatch
 {
 class Dispatchable;
 class MultiplexingDispatchable;
+class ActionQueue;
 }
 namespace input
 {
@@ -59,7 +64,8 @@ public:
                           std::shared_ptr<ServerActionQueue> const& observer_queue,
                           std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                           std::shared_ptr<CursorListener> const& cursor_listener,
-                          std::shared_ptr<InputRegion> const& input_region);
+                          std::shared_ptr<InputRegion> const& input_region,
+                          std::shared_ptr<cookie::CookieFactory> const& cookie_factory);
 
     // InputDeviceRegistry - calls from mi::Platform
     void add_device(std::shared_ptr<InputDevice> const& device) override;
@@ -77,39 +83,42 @@ private:
     std::shared_ptr<InputDispatcher> const input_dispatcher;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const input_dispatchable;
     std::shared_ptr<ServerActionQueue> const observer_queue;
-    std::shared_ptr<TouchVisualizer> const touch_visualizer;
-    std::shared_ptr<CursorListener> const cursor_listener;
+    std::shared_ptr<dispatch::ActionQueue> const device_queue;
     std::shared_ptr<InputRegion> const input_region;
+    std::shared_ptr<cookie::CookieFactory> const cookie_factory;
+    Seat seat;
 
     struct RegisteredDevice : public InputSink
     {
     public:
-        RegisteredDevice(std::shared_ptr<InputDevice> const& dev, MirInputDeviceId dev_id, std::shared_ptr<InputDispatcher> const& dispatcher, std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer, DefaultInputDeviceHub * hub);
+        RegisteredDevice(std::shared_ptr<InputDevice> const& dev,
+                         MirInputDeviceId dev_id,
+                         std::shared_ptr<InputDispatcher> const& dispatcher,
+                         std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
+                         std::shared_ptr<cookie::CookieFactory> const& cookie_factory,
+                         DefaultInputDeviceHub* hub,
+                         Seat* seat);
         void handle_input(MirEvent& event) override;
-        void confine_pointer(mir::geometry::Point& position) override;
         mir::geometry::Rectangle bounding_rectangle() const override;
         bool device_matches(std::shared_ptr<InputDevice> const& dev) const;
         void start();
         void stop();
         MirInputDeviceId id();
-        std::vector<TouchVisualizer::Spot> const& spots() const;
     private:
-        void update_spots(MirInputEvent const* event);
-        void notify_cursor_listener(MirInputEvent const* event);
         MirInputDeviceId device_id;
         DefaultEventBuilder builder;
         std::shared_ptr<InputDevice> const device;
         std::shared_ptr<InputDispatcher> const dispatcher;
         std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
-        DefaultInputDeviceHub * hub;
-        std::vector<TouchVisualizer::Spot> touch_spots;
+        DefaultInputDeviceHub* hub;
+        Seat* seat;
         friend class DefaultInputDeviceHub;
     };
 
     std::vector<std::shared_ptr<DefaultDevice>> handles;
     std::vector<std::unique_ptr<RegisteredDevice>> devices;
     std::vector<std::shared_ptr<InputDeviceObserver>> observers;
-    
+
     MirInputDeviceId device_id_generator;
 };
 

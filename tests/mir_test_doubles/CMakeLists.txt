@@ -14,7 +14,6 @@ set(
 
   mock_frame_dropping_policy_factory.cpp
   mock_timer.cpp
-  platform_factory.cpp
   stub_buffer.cpp
   test_protobuf_client.cpp
   test_protobuf_socket_server.cpp
@@ -69,9 +68,9 @@ if (MIR_BUILD_PLATFORM_ANDROID)
 endif()
 
 add_library(mir-public-test-doubles OBJECT
-  fake_event_hub.cpp
   nested_mock_egl.cpp
   null_logger.cpp
+  fake_display.cpp ${CMAKE_SOURCE_DIR}/include/test/mir/test/doubles/fake_display.h
 )
 
 add_library(mir-test-doubles-static STATIC

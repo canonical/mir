@@ -23,7 +23,7 @@
 #include "mir/scene/surface_factory.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/test/fake_shared.h"
-#include "mir/test/doubles/mock_surface_coordinator.h"
+#include "mir/test/doubles/mock_surface_stack.h"
 #include "mir/test/doubles/mock_surface.h"
 #include "mir/test/doubles/mock_session_listener.h"
 #include "mir/test/doubles/stub_display_configuration.h"
@@ -42,6 +42,7 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -107,7 +108,7 @@ MATCHER(IsSurfaceOutputEvent, "")
     return mir_event_get_type(&arg) == mir_event_type_surface_output;
 }
 
-struct StubSurfaceCoordinator : public ms::SurfaceCoordinator
+struct StubSurfaceStack : public msh::SurfaceStack
 {
     void raise(std::weak_ptr<ms::Surface> const&) override
     {
@@ -115,8 +116,7 @@ struct StubSurfaceCoordinator : public ms::SurfaceCoordinator
     void raise(SurfaceSet const&) override
     {
     }
-    void add_surface(
-        std::shared_ptr<ms::Surface> const&, ms::DepthId, mi::InputReceptionMode const&, ms::Session*) override
+    void add_surface(std::shared_ptr<ms::Surface> const&, mi::InputReceptionMode) override
     {
     }
     void remove_surface(std::weak_ptr<ms::Surface> const&) override
@@ -133,7 +133,7 @@ struct ApplicationSession : public testing::Test
     ApplicationSession()
         : event_sink(std::make_shared<mtd::NullEventSink>()),
           stub_session_listener(std::make_shared<ms::NullSessionListener>()),
-          stub_surface_coordinator(std::make_shared<StubSurfaceCoordinator>()),
+          stub_surface_stack(std::make_shared<StubSurfaceStack>()),
           null_snapshot_strategy(std::make_shared<mtd::NullSnapshotStrategy>()),
           pid(0),
           name("test-session-name")
@@ -143,7 +143,7 @@ struct ApplicationSession : public testing::Test
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_stubs()
     {
         return std::make_shared<ms::ApplicationSession>(
-           stub_surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
+           stub_surface_stack, stub_surface_factory, stub_buffer_stream_factory,
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
@@ -156,7 +156,7 @@ struct ApplicationSession : public testing::Test
         std::shared_ptr<ms::SurfaceFactory> const& surface_factory)
     {
         return std::make_shared<ms::ApplicationSession>(
-           stub_surface_coordinator, surface_factory, bstream_factory,
+           stub_surface_stack, surface_factory, bstream_factory,
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
@@ -165,11 +165,11 @@ struct ApplicationSession : public testing::Test
     }
 
     std::shared_ptr<ms::ApplicationSession> make_application_session(
-        std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
+        std::shared_ptr<msh::SurfaceStack> const& surface_stack,
         std::shared_ptr<ms::SurfaceFactory> const& surface_factory)
     {
         return std::make_shared<ms::ApplicationSession>(
-           surface_coordinator, surface_factory, stub_buffer_stream_factory,
+           surface_stack, surface_factory, stub_buffer_stream_factory,
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
@@ -177,10 +177,10 @@ struct ApplicationSession : public testing::Test
            event_sink);
     }
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_coordinator(
-        std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator)
+        std::shared_ptr<msh::SurfaceStack> const& surface_stack)
     {
         return std::make_shared<ms::ApplicationSession>(
-           surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
+           surface_stack, stub_surface_factory, stub_buffer_stream_factory,
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
@@ -192,7 +192,7 @@ struct ApplicationSession : public testing::Test
         std::shared_ptr<ms::SessionListener> const& session_listener)
     {
         return std::make_shared<ms::ApplicationSession>(
-           stub_surface_coordinator, stub_surface_factory, stub_buffer_stream_factory,
+           stub_surface_stack, stub_surface_factory, stub_buffer_stream_factory,
            pid, name,
            null_snapshot_strategy,
            session_listener,
@@ -205,7 +205,7 @@ struct ApplicationSession : public testing::Test
         std::shared_ptr<ms::BufferStreamFactory> const& buffer_stream_factory)
     {
         return std::make_shared<ms::ApplicationSession>(
-           stub_surface_coordinator, stub_surface_factory, buffer_stream_factory,
+           stub_surface_stack, stub_surface_factory, buffer_stream_factory,
            pid, name,
            null_snapshot_strategy,
            stub_session_listener,
@@ -215,7 +215,7 @@ struct ApplicationSession : public testing::Test
 
     std::shared_ptr<mtd::NullEventSink> const event_sink;
     std::shared_ptr<ms::NullSessionListener> const stub_session_listener;
-    std::shared_ptr<StubSurfaceCoordinator> const stub_surface_coordinator;
+    std::shared_ptr<StubSurfaceStack> const stub_surface_stack;
     std::shared_ptr<ms::SnapshotStrategy> const null_snapshot_strategy;
     std::shared_ptr<mtd::StubBufferStreamFactory> const stub_buffer_stream_factory =
         std::make_shared<mtd::StubBufferStreamFactory>();
@@ -237,14 +237,14 @@ TEST_F(ApplicationSession, adds_created_surface_to_coordinator)
     using namespace ::testing;
 
     NiceMock<MockSurfaceFactory> mock_surface_factory;
-    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
+    NiceMock<mtd::MockSurfaceStack> surface_stack;
     std::shared_ptr<ms::Surface> mock_surface = make_mock_surface();
 
     EXPECT_CALL(mock_surface_factory, create_surface(_,_))
         .WillOnce(Return(mock_surface));
-    EXPECT_CALL(surface_coordinator, add_surface(mock_surface,_,_,_));
+    EXPECT_CALL(surface_stack, add_surface(mock_surface,_));
     auto session = make_application_session(
-        mt::fake_shared(surface_coordinator), mt::fake_shared(mock_surface_factory));
+        mt::fake_shared(surface_stack), mt::fake_shared(mock_surface_factory));
 
     ms::SurfaceCreationParameters params;
     auto surf = session->create_surface(params, event_sink);
@@ -403,8 +403,8 @@ TEST_F(ApplicationSession, session_visbility_propagates_to_surfaces)
 
     NiceMock<MockSurfaceFactory> surface_factory;
     ON_CALL(surface_factory, create_surface(_,_)).WillByDefault(Return(mock_surface));
-    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
-    auto app_session = make_application_session(mt::fake_shared(surface_coordinator), mt::fake_shared(surface_factory));
+    NiceMock<mtd::MockSurfaceStack> surface_stack;
+    auto app_session = make_application_session(mt::fake_shared(surface_stack), mt::fake_shared(surface_factory));
 
     {
         InSequence seq;
@@ -431,14 +431,14 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
     std::shared_ptr<mc::BufferStream> const mock_stream = std::make_shared<mtd::MockBufferStream>();
     ON_CALL(mock_buffer_stream_factory, create_buffer_stream(_,_,_)).WillByDefault(Return(mock_stream));
     ON_CALL(surface_factory, create_surface(_,_)).WillByDefault(Return(mock_surface));
-    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
+    NiceMock<mtd::MockSurfaceStack> surface_stack;
 
     auto const snapshot_strategy = std::make_shared<MockSnapshotStrategy>();
 
     EXPECT_CALL(*snapshot_strategy, take_snapshot_of(mock_stream, _));
 
     ms::ApplicationSession app_session(
-        mt::fake_shared(surface_coordinator),
+        mt::fake_shared(surface_stack),
         mt::fake_shared(surface_factory),
         mt::fake_shared(mock_buffer_stream_factory),
         pid, name,
@@ -460,7 +460,7 @@ TEST_F(ApplicationSession, returns_null_snapshot_if_no_default_surface)
     MockSnapshotCallback mock_snapshot_callback;
 
     ms::ApplicationSession app_session(
-        stub_surface_coordinator, stub_surface_factory,
+        stub_surface_stack, stub_surface_factory,
         stub_buffer_stream_factory,
         pid, name,
         snapshot_strategy,
@@ -481,7 +481,7 @@ TEST_F(ApplicationSession, process_id)
     pid_t const session_pid{__LINE__};
 
     ms::ApplicationSession app_session(
-        stub_surface_coordinator, stub_surface_factory,
+        stub_surface_stack, stub_surface_factory,
         stub_buffer_stream_factory,
         session_pid, name,
         null_snapshot_strategy,
@@ -498,7 +498,7 @@ TEST_F(ApplicationSession, surface_ids_are_bufferstream_ids)
 
     NiceMock<MockSurfaceFactory> mock_surface_factory;
     NiceMock<MockBufferStreamFactory> mock_bufferstream_factory;
-    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
+    NiceMock<mtd::MockSurfaceStack> surface_stack;
     std::shared_ptr<ms::Surface> mock_surface = make_mock_surface();
     auto stub_bstream = std::make_shared<mtd::StubBufferStream>();
     EXPECT_CALL(mock_bufferstream_factory, create_buffer_stream(_,_,_))
@@ -655,7 +655,7 @@ struct ApplicationSessionSender : public ApplicationSession
 {
     ApplicationSessionSender() :
         app_session(
-            stub_surface_coordinator,
+            stub_surface_stack,
             stub_surface_factory,
             stub_buffer_stream_factory,
             pid,
@@ -754,12 +754,12 @@ int calculate_dpi(geom::Size const& resolution, geom::Size const& size)
 struct ApplicationSessionSurfaceOutput : public ApplicationSession
 {
     ApplicationSessionSurfaceOutput() :
-        high_dpi({3840, 2160}, {509, 286}, 2.5f, mir_form_factor_monitor),
-        projector({1280, 1024}, {800, 600}, 0.5f, mir_form_factor_projector),
+        high_dpi(static_cast<mg::DisplayConfigurationOutputId>(5), {3840, 2160}, {509, 286}, 2.5f, mir_form_factor_monitor),
+        projector(static_cast<mg::DisplayConfigurationOutputId>(2), {1280, 1024}, {800, 600}, 0.5f, mir_form_factor_projector),
         stub_surface_factory{std::make_shared<ObserverPreservingSurfaceFactory>()},
         sender{std::make_shared<testing::NiceMock<mtd::MockEventSink>>()},
         app_session(
-            stub_surface_coordinator,
+            stub_surface_stack,
             stub_surface_factory,
             stub_buffer_stream_factory,
             pid,
@@ -774,15 +774,17 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
     struct TestOutput
     {
         TestOutput(
+            mg::DisplayConfigurationOutputId id,
             geom::Size const& resolution,
             geom::Size const& physical_size,
             float scale,
             MirFormFactor form_factor) :
-            output{resolution, physical_size, mir_pixel_format_argb_8888, 60.0, true},
+            output{id, resolution, physical_size, mir_pixel_format_argb_8888, 60.0, true},
             form_factor{form_factor},
             scale{scale},
             dpi{calculate_dpi(resolution, physical_size)},
-            width{resolution.width.as_int()}
+            width{resolution.width.as_int()},
+            id{static_cast<uint32_t>(output.id.as_value())}
         {
             output.scale = scale;
             output.form_factor = form_factor;
@@ -793,6 +795,7 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
         float scale;
         int dpi;
         int width;
+        uint32_t id;
     };
 
     TestOutput const high_dpi;
@@ -816,6 +819,7 @@ MATCHER_P(SurfaceOutputEventFor, output, "")
     }
 
     auto const event = mir_event_get_surface_output_event(arg);
+
     return
         ExplainMatchResult(
             Eq(output.dpi),
@@ -828,6 +832,10 @@ MATCHER_P(SurfaceOutputEventFor, output, "")
         ExplainMatchResult(
             Eq(output.scale),
             mir_surface_output_event_get_scale(event),
+            result_listener) &&
+        ExplainMatchResult(
+            Eq(output.id),
+            mir_surface_output_event_get_output_id(event),
             result_listener);
 }
 }

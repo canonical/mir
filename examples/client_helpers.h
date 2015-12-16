@@ -32,6 +32,7 @@ class Connection
 {
 public:
     Connection(char const* socket_file);
+    Connection(char const* socket_file, const char* name);
     ~Connection();
     operator MirConnection*();
     Connection(Connection const&) = delete;
@@ -40,14 +41,39 @@ private:
     MirConnection* connection;
 };
 
+class BufferStream
+{
+public:
+    BufferStream(
+        Connection& connection,
+        unsigned int width,
+        unsigned int height,
+        bool prefer_alpha = false,
+        bool hardware = true);
+
+    operator MirBufferStream*() const;
+private:
+    MirBufferStream* create_stream(
+        MirConnection* connection,
+        unsigned int width,
+        unsigned int height,
+        bool prefer_alpha,
+        bool hardware);
+
+    std::unique_ptr<MirBufferStream, decltype(&mir_buffer_stream_release_sync)> const stream;
+
+    BufferStream(BufferStream const&) = delete;
+    BufferStream& operator=(BufferStream const&) = delete;
+};
+
 class NormalSurface
 {
 public:
-    NormalSurface(Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha = false);
-    
+    NormalSurface(Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha = false, bool hardware = true);
+
     operator MirSurface*() const;
 private:
-    MirSurface* create_surface(MirConnection* connection, unsigned int width, unsigned int height, bool prefers_alpha);
+    MirSurface* create_surface(MirConnection* connection, unsigned int width, unsigned int height, bool prefers_alpha, bool hardware);
     std::function<void(MirSurface*)> const surface_deleter{
         [](MirSurface* surface) { mir_surface_release_sync(surface); }
     };

@@ -37,7 +37,9 @@ struct MockBufferMap : mf::ClientBuffers
     MOCK_METHOD1(add_buffer, mg::BufferID(mg::BufferProperties const&));
     MOCK_METHOD1(remove_buffer, void(mg::BufferID id));
     MOCK_METHOD1(send_buffer, void(mg::BufferID id));
+    MOCK_METHOD1(receive_buffer, void(mg::BufferID id));
     MOCK_METHOD1(at, std::shared_ptr<mg::Buffer>&(mg::BufferID));
+    MOCK_CONST_METHOD0(client_owned_buffer_count, size_t());
     std::shared_ptr<mg::Buffer>& operator[](mg::BufferID id) { return at(id); }
 };
 
@@ -56,7 +58,7 @@ struct DroppingSchedule : Test
     std::vector<std::shared_ptr<mg::Buffer>> drain_queue()
     {
         std::vector<std::shared_ptr<mg::Buffer>> scheduled_buffers;
-        while(schedule.anything_scheduled())
+        while(schedule.num_scheduled())
             scheduled_buffers.emplace_back(schedule.next_buffer());
         return scheduled_buffers;
     }
@@ -65,7 +67,7 @@ struct DroppingSchedule : Test
 
 TEST_F(DroppingSchedule, throws_if_no_buffers)
 {
-    EXPECT_FALSE(schedule.anything_scheduled());
+    EXPECT_FALSE(schedule.num_scheduled());
     EXPECT_THROW({
         schedule.next_buffer();
     }, std::logic_error);

@@ -50,7 +50,7 @@ public:
      * \return              A std::future<> that becomes ready once the configuration
      *                      has been applied.
      */
-    virtual std::future<void> set_default_display_configuration(
+    virtual std::future<void> set_base_configuration(
         std::shared_ptr<graphics::DisplayConfiguration> const& conf) = 0;
 };
 }

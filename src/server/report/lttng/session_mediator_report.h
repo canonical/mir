@@ -45,6 +45,7 @@ public:
     void session_configure_surface_called(std::string const& app_name) override;
     void session_configure_surface_cursor_called(std::string const& app_name) override;
     void session_configure_display_called(std::string const& app_name) override;
+    void session_set_base_display_configuration_called(std::string const& app_name) override;
     void session_start_prompt_session_called(std::string const& app_name, pid_t application_process) override;
     void session_stop_prompt_session_called(std::string const& app_name) override;
 

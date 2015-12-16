@@ -16,6 +16,9 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#include "mir/test/doubles/null_emergency_cleanup.h"
+#include "src/server/report/null_report_factory.h"
+#include "mir/test/doubles/null_virtual_terminal.h"
 #include "src/platforms/mesa/server/kms/platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/platforms/mesa/server/common/buffer_allocator.h"
@@ -25,7 +28,6 @@
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
-#include "mir/test/doubles/platform_factory.h"
 #include "mir_test_framework/udev_environment.h"
 
 #include <cstdlib>
@@ -61,9 +63,13 @@ protected:
         ON_CALL(mock_gbm, gbm_bo_get_handle(_))
         .WillByDefault(Return(mock_gbm.fake_gbm.bo_handle));
 
-        platform = mtd::create_mesa_platform_with_null_dependencies();
+        platform = std::make_shared<mgm::Platform>(
+                mir::report::null_display_report(),
+                std::make_shared<mtd::NullVirtualTerminal>(),
+                *std::make_shared<mtd::NullEmergencyCleanup>(),
+                mgm::BypassOption::allowed);
         allocator.reset(new mgm::BufferAllocator(
-            platform->gbm.device, mgm::BypassOption::allowed, mgm::BufferImportMethod::gbm_native_pixmap));
+            platform->gbm->device, mgm::BypassOption::allowed, mgm::BufferImportMethod::gbm_native_pixmap));
     }
 
     // Defaults
@@ -144,7 +150,7 @@ TEST_F(MesaBufferAllocatorTest, bypass_disables_when_option_is_disabled)
                                           mg::BufferUsage::hardware);
 
     mgm::BufferAllocator alloc(
-        platform->gbm.device,
+        platform->gbm->device,
         mgm::BypassOption::prohibited,
         mgm::BufferImportMethod::gbm_native_pixmap);
     auto buf = alloc.alloc_buffer(properties);

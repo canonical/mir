@@ -19,44 +19,56 @@
 
 #include "default_event_builder.h"
 #include "mir/events/event_builders.h"
+#include "mir/cookie_factory.h"
+#include "mir/events/event_private.h"
 
 namespace me = mir::events;
 namespace mi = mir::input;
 
-mi::DefaultEventBuilder::DefaultEventBuilder(MirInputDeviceId device_id) : device_id(device_id)
+mi::DefaultEventBuilder::DefaultEventBuilder(MirInputDeviceId device_id,
+                                             std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory)
+    : device_id(device_id),
+      cookie_factory(cookie_factory)
 {
 }
 
 mir::EventUPtr mi::DefaultEventBuilder::key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code,
-                                                  int scan_code, MirInputEventModifiers modifiers)
+                                                  int scan_code)
 {
-    uint64_t mac = 0;
-    return me::make_event(device_id, timestamp, mac, action, key_code, scan_code, modifiers);
+    uint64_t mac = cookie_factory->timestamp_to_cookie(timestamp.count()).mac;
+    return me::make_event(device_id, timestamp, mac, action, key_code, scan_code, mir_input_event_modifier_none);
 }
 
-mir::EventUPtr mi::DefaultEventBuilder::touch_event(Timestamp timestamp, MirInputEventModifiers modifiers)
+mir::EventUPtr mi::DefaultEventBuilder::touch_event(Timestamp timestamp)
 {
-    uint64_t mac = 0;
-    return me::make_event(device_id, timestamp, mac, modifiers);
+    return me::make_event(device_id, timestamp, 0, mir_input_event_modifier_none);
 }
 
 void mi::DefaultEventBuilder::add_touch(MirEvent& event, MirTouchId touch_id, MirTouchAction action,
-                                                  MirTouchTooltype tooltype, float x_axis_value, float y_axis_value,
-                                                  float pressure_value, float touch_major_value,
-                                                  float touch_minor_value, float size_value)
+                                        MirTouchTooltype tooltype, float x_axis_value, float y_axis_value,
+                                        float pressure_value, float touch_major_value, float touch_minor_value,
+                                        float size_value)
 {
+    if (action == mir_touch_action_up || action == mir_touch_action_down)
+    {
+        auto cookie = cookie_factory->timestamp_to_cookie(event.motion.event_time.count());
+        event.motion.mac = cookie.mac;
+    }
+
     me::add_touch(event, touch_id, action, tooltype, x_axis_value, y_axis_value, pressure_value, touch_major_value,
                   touch_minor_value, size_value);
 }
 
-mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp, MirInputEventModifiers modifiers,
-                                                      MirPointerAction action, MirPointerButtons buttons_pressed,
-                                                      float x_axis_value, float y_axis_value, float hscroll_value,
-                                                      float vscroll_value, float relative_x_value,
-                                                      float relative_y_value)
+mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp, MirPointerAction action,
+                                                      MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value,
+                                                      float relative_x_value, float relative_y_value)
 {
+    const float x_axis_value = 0;
+    const float y_axis_value = 0;
     uint64_t mac = 0;
-    return me::make_event(device_id, timestamp, mac, modifiers, action, buttons_pressed, x_axis_value, y_axis_value,
+    if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
+        mac = cookie_factory->timestamp_to_cookie(timestamp.count()).mac;
+    return me::make_event(device_id, timestamp, mac, mir_input_event_modifier_none, action, buttons_pressed, x_axis_value, y_axis_value,
                           hscroll_value, vscroll_value, relative_x_value, relative_y_value);
 }
 

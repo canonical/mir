@@ -123,3 +123,56 @@ TEST_F(ClientBuffers, sends_no_update_msg_if_buffer_is_not_around)
     map.remove_buffer(stub_allocator.ids[0]);
     map.send_buffer(stub_allocator.ids[0]);
 }
+
+TEST_F(ClientBuffers, can_remove_buffer_from_send_callback)
+{
+    map.add_buffer(properties);
+    ON_CALL(mock_sink, send_buffer(_,_,_))
+        .WillByDefault(Invoke(
+        [&] (mf::BufferStreamId, mg::Buffer& buffer, mg::BufferIpcMsgType)
+        {
+            map.remove_buffer(buffer.id());
+        }));
+
+    map.send_buffer(stub_allocator.ids[0]);
+}
+
+TEST_F(ClientBuffers, removing_decreases_count)
+{
+    map.add_buffer(properties);
+    ASSERT_THAT(stub_allocator.map, SizeIs(1));
+    ASSERT_THAT(stub_allocator.ids, SizeIs(1));
+
+    EXPECT_THAT(map.client_owned_buffer_count(), Eq(1));
+    map.remove_buffer(stub_allocator.ids[0]);
+    EXPECT_THAT(map.client_owned_buffer_count(), Eq(0));
+}
+
+TEST_F(ClientBuffers, ignores_unknown_receive)
+{
+    map.add_buffer(properties);
+    map.remove_buffer(stub_allocator.ids[0]);
+    EXPECT_THAT(map.client_owned_buffer_count(), Eq(0));
+    map.send_buffer(stub_allocator.ids[0]);
+    EXPECT_THAT(map.client_owned_buffer_count(), Eq(0));
+}
+
+TEST_F(ClientBuffers, can_track_how_many_buffers_client_owns)
+{
+    map.add_buffer(properties);
+    map.add_buffer(properties);
+    map.add_buffer(properties);
+    ASSERT_THAT(stub_allocator.map, SizeIs(3));
+    ASSERT_THAT(stub_allocator.ids, SizeIs(3));
+    EXPECT_THAT(map.client_owned_buffer_count(), Eq(3));
+
+    map.receive_buffer(stub_allocator.ids[0]);
+    map.receive_buffer(stub_allocator.ids[1]);
+    EXPECT_THAT(map.client_owned_buffer_count(), Eq(1));
+
+    map.send_buffer(stub_allocator.ids[0]);
+    EXPECT_THAT(map.client_owned_buffer_count(), Eq(2));
+
+    map.send_buffer(stub_allocator.ids[1]);
+    EXPECT_THAT(map.client_owned_buffer_count(), Eq(3));
+}

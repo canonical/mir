@@ -27,7 +27,7 @@
 namespace mir
 {
 namespace graphics { class GraphicBufferAllocator; }
-namespace frontend { class EventSink; }
+namespace frontend { class BufferSink; }
 namespace compositor
 {
 class BufferMap : public frontend::ClientBuffers
@@ -35,23 +35,34 @@ class BufferMap : public frontend::ClientBuffers
 public:
     BufferMap(
         frontend::BufferStreamId id,
-        std::shared_ptr<frontend::EventSink> const& sink,
+        std::shared_ptr<frontend::BufferSink> const& sink,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     graphics::BufferID add_buffer(graphics::BufferProperties const& properties) override;
     void remove_buffer(graphics::BufferID id) override;
+
+    void receive_buffer(graphics::BufferID id) override;
     void send_buffer(graphics::BufferID id) override;
+    size_t client_owned_buffer_count() const override;
+
     std::shared_ptr<graphics::Buffer>& operator[](graphics::BufferID) override;
     
 private:
     std::mutex mutable mutex;
-    typedef std::map<graphics::BufferID, std::shared_ptr<graphics::Buffer>> Map;
+
+    enum class Owner;
+    struct MapEntry
+    {
+        std::shared_ptr<graphics::Buffer> buffer;
+        Owner owner;
+    };
+    typedef std::map<graphics::BufferID, MapEntry> Map;
     //used to keep strong reference
     Map buffers;
     Map::iterator checked_buffers_find(graphics::BufferID, std::unique_lock<std::mutex> const&);
 
     frontend::BufferStreamId const stream_id;
-    std::shared_ptr<frontend::EventSink> const sink;
+    std::shared_ptr<frontend::BufferSink> const sink;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
 };
 }

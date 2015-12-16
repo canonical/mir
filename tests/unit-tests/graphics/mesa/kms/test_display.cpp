@@ -35,9 +35,9 @@
 #include "mir/test/doubles/null_virtual_terminal.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/mock_gl_config.h"
-#include "mir/test/doubles/platform_factory.h"
 #include "mir/test/doubles/mock_virtual_terminal.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
+#include "mir/test/doubles/mock_event_handler_register.h"
 
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
@@ -75,21 +75,6 @@ struct MockLogger : public ml::Logger
     ~MockLogger() noexcept(true) {}
 };
 
-class MockEventRegister : public mg::EventHandlerRegister
-{
-public:
-    MOCK_METHOD2(register_signal_handler,
-                 void(std::initializer_list<int>,
-                 std::function<void(int)> const&));
-    MOCK_METHOD3(register_fd_handler,
-                 void(std::initializer_list<int>,
-                 void const*, std::function<void(int)> const&));
-    MOCK_METHOD1(unregister_fd_handler,
-                 void(void const*));
-
-};
-
-
 class MesaDisplayTest : public ::testing::Test
 {
 public:
@@ -119,14 +104,21 @@ public:
 
     std::shared_ptr<mgm::Platform> create_platform()
     {
-        return mtd::create_mesa_platform_with_null_dependencies();
+        return std::make_shared<mgm::Platform>(
+               mir::report::null_display_report(),
+               std::make_shared<mtd::NullVirtualTerminal>(),
+               *std::make_shared<mtd::NullEmergencyCleanup>(),
+               mgm::BypassOption::allowed);
     }
 
     std::shared_ptr<mgm::Display> create_display(
         std::shared_ptr<mgm::Platform> const& platform)
     {
         return std::make_shared<mgm::Display>(
-            platform,
+            platform->drm,
+            platform->gbm,
+            platform->vt,
+            platform->bypass_option(),
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLConfig>(),
             null_report);
@@ -519,8 +511,12 @@ TEST_F(MesaDisplayTest, successful_creation_of_display_reports_successful_setup_
         *mock_report,
         report_egl_configuration(mock_egl.fake_egl_display,mock_egl.fake_configs[0])).Times(Exactly(1));
 
+    auto platform = create_platform();
     auto display = std::make_shared<mgm::Display>(
-                        create_platform(),
+                        platform->drm,
+                        platform->gbm,
+                        platform->vt,
+                        platform->bypass_option(),
                         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
                         std::make_shared<mtd::StubGLConfig>(),
                         mock_report);
@@ -698,11 +694,10 @@ TEST_F(MesaDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
         std::make_shared<mtd::NullVirtualTerminal>(),
         *std::make_shared<mtd::NullEmergencyCleanup>(),
         mgm::BypassOption::allowed);
-    auto display = std::make_shared<mgm::Display>(
-                        platform,
-                        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-                        std::make_shared<mtd::StubGLConfig>(),
-                        mock_report);
+    auto display = platform->create_display(
+        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
+        std::make_shared<mtd::StubGLConfig>()
+        );
 
     EXPECT_THROW({
         display->pause();
@@ -718,9 +713,9 @@ TEST_F(MesaDisplayTest, configuration_change_registers_video_devices_handler)
     using namespace testing;
 
     auto display = create_display(create_platform());
-    MockEventRegister mock_register;
+    mtd::MockEventHandlerRegister mock_register;
 
-    EXPECT_CALL(mock_register, register_fd_handler(_,_,_));
+    EXPECT_CALL(mock_register, register_fd_handler_module_ptr(_,_,_));
 
     display->register_configuration_change_handler(mock_register, []{});
 }
@@ -797,8 +792,12 @@ TEST_F(MesaDisplayTest, respects_gl_config)
                         SetArgPointee<4>(1),
                         Return(EGL_TRUE)));
 
+    auto platform = create_platform();
     mgm::Display display{
-        create_platform(),
+        platform->drm,
+        platform->gbm,
+        platform->vt,
+        platform->bypass_option(),
         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         mir::test::fake_shared(mock_gl_config),
         null_report};
@@ -823,8 +822,12 @@ TEST_F(MesaDisplayTest, supports_as_low_as_15bit_colour)
                         SetArgPointee<4>(1),
                         Return(EGL_TRUE)));
 
+    auto platform = create_platform();
     mgm::Display display{
-        create_platform(),
+        platform->drm,
+        platform->gbm,
+        platform->vt,
+        platform->bypass_option(),
         std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
         mir::test::fake_shared(stub_gl_config),
         null_report};

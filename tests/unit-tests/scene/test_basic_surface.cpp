@@ -27,6 +27,7 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/events/event_builders.h"
 
+#include "mir/test/doubles/stub_cursor_image.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/mock_input_sender.h"
 #include "mir/test/doubles/stub_input_sender.h"
@@ -67,6 +68,8 @@ public:
     MOCK_METHOD1(hidden_set_to, void(bool));
     MOCK_METHOD1(renamed, void(char const*));
     MOCK_METHOD0(client_surface_close_requested, void());
+    MOCK_METHOD1(cursor_image_set_to, void(mir::graphics::CursorImage const& image));
+    MOCK_METHOD0(cursor_image_removed, void());
 };
 
 void post_a_frame(ms::BasicSurface& surface)
@@ -661,6 +664,32 @@ INSTANTIATE_TEST_CASE_P(SurfaceDPIAttributeTest, BasicSurfaceAttributeTest,
 INSTANTIATE_TEST_CASE_P(SurfaceFocusAttributeTest, BasicSurfaceAttributeTest,
    ::testing::Values(surface_focus_test_parameters));
 
+TEST_F(BasicSurfaceTest, notifies_about_cursor_image_change)
+{
+    using namespace testing;
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    auto cursor_image = std::make_shared<mtd::StubCursorImage>();
+    EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_));
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_cursor_image(cursor_image);
+}
+
+TEST_F(BasicSurfaceTest, notifies_about_cursor_image_removal)
+{
+    using namespace testing;
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_)).Times(0);
+    EXPECT_CALL(mock_surface_observer, cursor_image_removed());
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_cursor_image({});
+}
+
 TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
 {
     using namespace ::testing;
@@ -758,6 +787,11 @@ TEST_F(BasicSurfaceTest, notifies_of_rename)
 MATCHER_P(IsRenderableOfPosition, pos, "is renderable with position")
 {
     return (pos == arg->screen_position().top_left);
+}
+
+MATCHER_P(IsRenderableOfSize, size, "is renderable with size")
+{
+    return (size == arg->screen_position().size);
 }
 
 MATCHER_P(IsRenderableOfAlpha, alpha, "is renderable with alpha")
@@ -964,4 +998,29 @@ TEST_F(BasicSurfaceTest, buffers_ready_correctly_reported)
     EXPECT_THAT(surface.buffers_ready_for_compositor(this), Eq(3));
     EXPECT_THAT(surface.buffers_ready_for_compositor(this), Eq(0));
     EXPECT_THAT(surface.buffers_ready_for_compositor(this), Eq(2));
+}
+
+TEST_F(BasicSurfaceTest, buffer_streams_produce_correctly_sized_renderables)
+{
+    using namespace testing;
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    geom::Displacement d0{0,0};
+    geom::Displacement d1{19,99};
+    geom::Size size0 {100, 101};
+    geom::Size size1 {102, 103};
+    ON_CALL(*mock_buffer_stream, stream_size())
+        .WillByDefault(Return(size0));
+    ON_CALL(*buffer_stream, stream_size())
+        .WillByDefault(Return(size1));
+
+    std::list<ms::StreamInfo> streams = {
+        { mock_buffer_stream, d0 },
+        { buffer_stream, d1 },
+    };
+    surface.set_streams(streams);
+
+    auto renderables = surface.generate_renderables(this);
+    ASSERT_THAT(renderables.size(), Eq(2));
+    EXPECT_THAT(renderables[0], IsRenderableOfSize(size0));
+    EXPECT_THAT(renderables[1], IsRenderableOfSize(size1));
 }

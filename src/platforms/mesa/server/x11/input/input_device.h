@@ -21,6 +21,8 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
+#include "mir/geometry/point.h"
+#include "mir/optional_value.h"
 
 namespace mir
 {
@@ -40,8 +42,14 @@ public:
     void stop() override;
     InputDeviceInfo get_device_info() override;
 
+    optional_value<PointerSettings> get_pointer_settings() const override;
+    void apply_settings(PointerSettings const& settings) override;
+    optional_value<TouchpadSettings> get_touchpad_settings() const override;
+    void apply_settings(TouchpadSettings const& settings) override;
+
     InputSink* sink{nullptr};
     EventBuilder* builder{nullptr};
+    geometry::Point pointer_pos;
 private:
     InputDeviceInfo info;
 };

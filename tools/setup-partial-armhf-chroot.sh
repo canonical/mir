@@ -63,15 +63,10 @@ if [ -z ${1} ]; then
 fi
 
 directory=${1}
-echo "creating phablet-compatible armhf partial chroot for mir compilation in directory ${directory}"
+echo "creating phablet-compatible $arch partial chroot for mir compilation in directory ${directory}"
 
 if [ ! -d ${directory} ]; then
     mkdir -p ${directory} 
-fi
-
-arch=armhf
-if [ ! -z "$3" ]; then
-    arch=$3
 fi
 
 DEBCONTROL=$(pwd)/../debian/control
@@ -85,19 +80,22 @@ echo "" > status
 set +e
 
 # Parse dependencies from debian/control
-# dpkg-checkbuilddeps returns 1 when dependencies are not met and the list is sent to stderr
+# dpkg-checkbuilddeps returns non-zero when dependencies are not met and the list is sent to stderr
 builddeps=$(dpkg-checkbuilddeps -a ${arch} --admindir=. ${DEBCONTROL} 2>&1 )
-if [ $? -ne 1 ] ; then
-    echo "${builddeps}"
-    exit 2
+if [ $? -eq 0 ] ; then
+    exit 0 
 fi
+echo "${builddeps}"
 
 # now turn exit on error option
 set -e
 
 # Sanitize dependencies list for submission to multistrap
 # build-essential is not needed as we are cross-compiling
-builddeps=$(echo ${builddeps} | sed -e 's/dpkg-checkbuilddeps://g' -e 's/Unmet build dependencies://g' -e 's/build-essential:native//g')
+builddeps=$(echo ${builddeps} | sed -e 's/dpkg-checkbuilddeps://g' \
+                                    -e 's/error://g' \
+                                    -e 's/Unmet build dependencies://g' \
+                                    -e 's/build-essential:native//g')
 builddeps=$(echo ${builddeps} | sed 's/([^)]*)//g')
 builddeps=$(echo ${builddeps} | sed -e 's/abi-compliance-checker//g')
 builddeps=$(echo ${builddeps} | sed -e 's/multistrap//g')

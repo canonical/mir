@@ -23,6 +23,7 @@
 #include "mir/graphics/display.h"
 #include "mir/renderer/gl/render_target.h"
 #include "display_helpers.h"
+#include "platform_common.h"
 
 #include <vector>
 #include <memory>
@@ -49,7 +50,9 @@ class DisplayBuffer : public graphics::DisplayBuffer,
                       public renderer::gl::RenderTarget
 {
 public:
-    DisplayBuffer(std::shared_ptr<Platform> const& platform,
+    DisplayBuffer(BypassOption bypass_options,
+                  std::shared_ptr<helpers::DRMHelper> const& drm,
+                  std::shared_ptr<helpers::GBMHelper> const& gbm,
                   std::shared_ptr<DisplayReport> const& listener,
                   std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                   GBMSurfaceUPtr surface_gbm,
@@ -88,10 +91,11 @@ private:
     std::shared_ptr<graphics::Buffer> visible_bypass_frame, scheduled_bypass_frame;
     std::shared_ptr<Buffer> bypass_buf{nullptr};
     BufferObject* bypass_bufobj{nullptr};
-    std::shared_ptr<Platform> const platform;
     std::shared_ptr<DisplayReport> const listener;
+    BypassOption bypass_option;
     /* DRM helper from mgm::Platform */
-    helpers::DRMHelper& drm;
+    std::shared_ptr<helpers::DRMHelper> const drm;
+    std::shared_ptr<helpers::GBMHelper> const gbm;
     std::vector<std::shared_ptr<KMSOutput>> outputs;
     GBMSurfaceUPtr surface_gbm;
     helpers::EGLHelper egl;

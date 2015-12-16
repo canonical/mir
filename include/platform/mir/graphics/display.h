@@ -152,7 +152,6 @@ public:
      */
     virtual std::unique_ptr<GLContext> create_gl_context() = 0;
 
-protected:
     Display() = default;
     virtual ~Display() {/* TODO: make nothrow */}
 private:
