@@ -118,8 +118,3 @@ std::chrono::milliseconds mga::HwcFbDevice::recommended_sleep() const
 {
     return std::chrono::milliseconds::zero();
 }
-
-bool mga::HwcFbDevice::can_swap_buffers() const
-{
-    return false;
-}

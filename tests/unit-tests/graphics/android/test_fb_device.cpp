@@ -72,12 +72,6 @@ struct FBDevice : public ::testing::Test
     mga::DisplayName primary{mga::DisplayName::primary};
 };
 
-TEST_F(FBDevice, reports_it_can_swap)
-{
-    mga::FBDevice fbdev(fb_hal_mock);
-    EXPECT_TRUE(fbdev.can_swap_buffers());
-}
-
 TEST_F(FBDevice, rejects_renderables)
 {
     mg::RenderableList renderlist
@@ -98,8 +92,6 @@ TEST_F(FBDevice, commits_frame)
         .WillOnce(Return(-1))
         .WillOnce(Return(0));
 
-    EXPECT_CALL(mock_context, swap_buffers())
-        .Times(0);
     mga::FBDevice fbdev(fb_hal_mock);
     mga::DisplayContents content{primary, list, geom::Displacement{}, mock_context, stub_compositor};
 

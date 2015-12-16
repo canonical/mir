@@ -26,22 +26,12 @@ namespace renderer
 namespace gl
 {
 
-//FIXME: (kdub) we're not hiding the differences in texture upload approaches between our platforms
-//       very well with this interface.
 class TextureSource
 {
 public:
     virtual ~TextureSource() = default;
 
-    // \warning deprecated, provided for convenience and legacy transition.
-    //will call bind() and then secure_for_render()
     virtual void gl_bind_to_texture() = 0;
-    //Uploads texture.
-    virtual void bind() = 0;
-    //add synchronization points to the command stream to ensure resources
-    //are present during the draw. Will not upload texture.
-    //should be called if an already uploaded texture is reused.
-    virtual void secure_for_render() = 0;
 
 protected:
     TextureSource() = default;
