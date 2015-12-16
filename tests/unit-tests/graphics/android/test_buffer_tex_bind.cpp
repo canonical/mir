@@ -289,7 +289,7 @@ TEST_F(AndroidBufferBinding, buffer_image_creation_failure_throws)
 
 
 /* binding tests */
-TEST_F(AndroidBufferBinding, buffer_calls_binding_extension_and_notes_gpu_usage)
+TEST_F(AndroidBufferBinding, buffer_calls_binding_extension)
 {
     using namespace testing;
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, _))
@@ -298,22 +298,10 @@ TEST_F(AndroidBufferBinding, buffer_calls_binding_extension_and_notes_gpu_usage)
     buffer.gl_bind_to_texture();
 }
 
-TEST_F(AndroidBufferBinding, notes_gpu_usage_when_explicity_told)
-{
-    using namespace testing;
-    EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, _))
-        .Times(0);
-    EXPECT_CALL(*mock_native_buffer, lock_for_gpu()); 
-    mga::Buffer buffer(gralloc, mock_native_buffer, extensions);
-    buffer.secure_for_render();
-}
-
 TEST_F(AndroidBufferBinding, buffer_calls_binding_extension_every_time)
 {
     using namespace testing;
     EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(_, _))
-        .Times(Exactly(3));
-    EXPECT_CALL(*mock_native_buffer, lock_for_gpu())
         .Times(Exactly(3));
 
     mga::Buffer buffer(gralloc, mock_native_buffer, extensions);

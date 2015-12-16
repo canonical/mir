@@ -20,9 +20,7 @@
 #include "mir/graphics/android/android_native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/android_format_conversion-inl.h"
-#include "mir/graphics/egl_sync_fence.h"
 #include "android_alloc_adaptor.h"
-#include "cmdstream_sync_factory.h"
 #include "device_quirks.h"
 
 #include <boost/throw_exception.hpp>
@@ -50,13 +48,10 @@ private:
 };
 }
 
-mga::AndroidAllocAdaptor::AndroidAllocAdaptor(
-    std::shared_ptr<struct alloc_device_t> const& alloc_device,
-    std::shared_ptr<CommandStreamSyncFactory> const& sync_factory,
-    std::shared_ptr<DeviceQuirks> const& quirks) :
-    alloc_dev(alloc_device),
-    sync_factory(sync_factory),
-    quirks(quirks)
+mga::AndroidAllocAdaptor::AndroidAllocAdaptor(std::shared_ptr<struct alloc_device_t> const& alloc_device,
+    std::shared_ptr<DeviceQuirks> const& quirks)
+    : alloc_dev(alloc_device),
+      quirks(quirks)
 {
 }
 
@@ -99,9 +94,7 @@ std::shared_ptr<mg::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     anwb->format = format;
     anwb->usage = usage_flag;
 
-    return std::make_shared<mga::AndroidNativeBuffer>(anwb,
-        sync_factory->create_command_stream_sync(),
-        fence, mga::BufferAccess::read);
+    return std::make_shared<mga::AndroidNativeBuffer>(anwb, fence, mga::BufferAccess::read);
 }
 
 int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)

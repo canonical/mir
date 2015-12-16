@@ -24,7 +24,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/geometry/rectangle.h>
-#include "mir/gl/default_program_factory.h"
+#include "src/gl/default_program_factory.h"
 #include <mir/test/fake_shared.h>
 #include <mir/test/doubles/mock_buffer.h>
 #include <mir/test/doubles/mock_renderable.h>

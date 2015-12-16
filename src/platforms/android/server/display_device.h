@@ -69,8 +69,6 @@ public:
 
     virtual std::chrono::milliseconds recommended_sleep() const = 0;
 
-    virtual bool can_swap_buffers() const = 0;
-
 protected:
     DisplayDevice() = default;
     DisplayDevice& operator=(DisplayDevice const&) = delete;
