@@ -35,7 +35,7 @@ public:
     void configure(
         std::shared_ptr<frontend::Session> const&,
         std::shared_ptr<graphics::DisplayConfiguration> const&) override;
-    std::future<void> set_base_configuration(
+    void set_base_configuration(
         std::shared_ptr<graphics::DisplayConfiguration> const&) override;
 
     void allow_configure_display();

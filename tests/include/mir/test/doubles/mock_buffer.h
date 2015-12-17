@@ -72,7 +72,6 @@ struct MockBuffer : public graphics::Buffer, public graphics::NativeBufferBase
     MOCK_METHOD2(write, void(unsigned char const*, size_t));
     MOCK_METHOD1(read, void(std::function<void(unsigned char const*)> const&));
     MOCK_METHOD0(native_buffer_base, graphics::NativeBufferBase*());
-    MOCK_METHOD0(used_as_texture, void());
 };
 
 }
