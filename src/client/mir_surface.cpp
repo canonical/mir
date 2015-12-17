@@ -332,12 +332,12 @@ void MirSurface::created(mir_surface_callback callback, void * context)
     try
     {
         {
-            std::lock_guard<decltype(mutex)> lock(mutex);
-
             geom::Size size{surface->width(), surface->height()};
-            buffer_stream = buffer_stream_factory->
+            auto stream = buffer_stream_factory->
                 make_producer_stream(connection, *server, surface->buffer_stream(), name, size);
 
+            std::lock_guard<decltype(mutex)> lock(mutex);
+            buffer_stream = std::move(stream);
             for(int i = 0; i < surface->attributes_size(); i++)
             {
                 auto const& attrib = surface->attributes(i);
