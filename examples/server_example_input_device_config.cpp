@@ -36,7 +36,7 @@ namespace
 char const* const disable_while_typing_opt = "disable-while-typing";
 char const* const mouse_acceleration_profile_opt = "mouse-acceleration-profile";
 char const* const acceleration_profile_none = "none";
-char const* const acceleration_profile_constant = "flat";
+char const* const acceleration_profile_constant = "constant";
 char const* const acceleration_profile_adaptive = "adaptive";
 char const* const mouse_cursor_acceleration_bias_opt = "mouse-cursor-acceleration-bias";
 char const* const mouse_scroll_speed_scale_opt = "mouse-scroll-speed-scale";
@@ -60,7 +60,7 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
                                     "Disable touchpad while typing on keyboard configuration [true, false]",
                                     false);
     server.add_configuration_option(mouse_acceleration_profile_opt,
-                                    "Select acceleration profile for mice and trackballs [none, flat, adaptive]",
+                                    "Select acceleration profile for mice and trackballs [none, constant, adaptive]",
                                     acceleration_profile_adaptive);
     server.add_configuration_option(mouse_cursor_acceleration_bias_opt,
                                     "Bias to the acceleration curve within the range [-1.0, 1.0] for mice",
