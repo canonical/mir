@@ -121,7 +121,8 @@ private:
 
 ms::SurfaceStack::SurfaceStack(
     std::shared_ptr<SceneReport> const& report) :
-    report{report}
+    report{report},
+    scene_changed{false}
 {
 }
 

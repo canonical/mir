@@ -21,6 +21,7 @@
 #include "mir/input/platform.h"
 #include <atomic>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace mir
@@ -59,6 +60,7 @@ private:
     std::shared_ptr<mir::input::InputDeviceRegistry> const registry;
     static std::atomic<StubInputPlatform*> stub_input_platform;
     static std::vector<std::weak_ptr<mir::input::InputDevice>> device_store;
+    static std::mutex device_store_guard;
 };
 
 }

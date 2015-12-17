@@ -22,6 +22,7 @@
 #include "mir/test/current_thread_name.h"
 #include "mir/test/signal.h"
 
+#include <atomic>
 #include <memory>
 
 #include <gmock/gmock.h>
@@ -100,7 +101,7 @@ public:
     }
 
 private:
-    bool called;
+    std::atomic<bool> called;
     bool block;
     std::string name;
     mt::Signal signal;

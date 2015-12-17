@@ -57,8 +57,6 @@ struct MockAndroidNativeBuffer : public graphics::NativeBuffer
     MOCK_METHOD1(ensure_available_for, void(graphics::android::BufferAccess));
     MOCK_METHOD2(update_usage, void(graphics::android::NativeFence&, graphics::android::BufferAccess));
 
-    MOCK_METHOD0(lock_for_gpu, void());
-    MOCK_METHOD0(wait_for_unlock_by_gpu, void());
     ANativeWindowBuffer stub_anwb;
     native_handle_t native_handle;
 };

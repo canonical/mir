@@ -38,11 +38,11 @@ public:
         void(std::shared_ptr<frontend::Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&));
     MOCK_METHOD1(mock_set_base_configuration,void(graphics::DisplayConfiguration const&));
 
-    std::future<void> set_base_configuration(
+    void set_base_configuration(
         std::shared_ptr<graphics::DisplayConfiguration> const& config)
     {
         mock_set_base_configuration(*config);
-        return NullDisplayChanger::set_base_configuration(config);
+        NullDisplayChanger::set_base_configuration(config);
     }
 };
 
