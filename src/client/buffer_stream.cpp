@@ -62,7 +62,7 @@ struct ServerBufferSemantics
     virtual MirWaitHandle* submit(std::function<void()> const&, geometry::Size sz, MirPixelFormat, int stream_id) = 0;
     virtual void lost_connection() = 0;
     virtual void set_size(geom::Size) = 0;
-    virtual MirWaitHandle* set_scale(float, int) = 0;
+    virtual MirWaitHandle* set_scale(float, mf::BufferStreamId) = 0;
     virtual ~ServerBufferSemantics() = default;
     ServerBufferSemantics() = default;
     ServerBufferSemantics(ServerBufferSemantics const&) = delete;
@@ -220,10 +220,10 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         scale_wait_handle.result_received();
     }
 
-    MirWaitHandle* set_scale(float scale, int stream_id) override
+    MirWaitHandle* set_scale(float scale, mf::BufferStreamId stream_id) override
     {
         mp::StreamConfiguration configuration;
-        configuration.mutable_id()->set_value(stream_id);
+        configuration.mutable_id()->set_value(stream_id.as_value());
         configuration.set_scale(scale);
         scale_wait_handle.expect_result();
 
@@ -362,7 +362,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     {
     }
 
-    MirWaitHandle* set_scale(float scale, int) override
+    MirWaitHandle* set_scale(float scale, mf::BufferStreamId) override
     {
         scale_wait_handle.expect_result();
         scale_wait_handle.result_received();
@@ -746,7 +746,7 @@ void mcl::BufferStream::set_size(geom::Size sz)
 
 MirWaitHandle* mcl::BufferStream::set_scale(float scale)
 {
-    return buffer_depository->set_scale(scale, protobuf_bs->id().value());
+    return buffer_depository->set_scale(scale, mf::BufferStreamId(protobuf_bs->id().value()));
 }
 
 char const * mcl::BufferStream::get_error_message() const
