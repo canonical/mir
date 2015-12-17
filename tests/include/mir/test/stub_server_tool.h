@@ -44,8 +44,8 @@ struct StubServerTool : doubles::StubDisplayServer
         response->set_pixel_format(request->pixel_format());
         response->mutable_buffer()->set_buffer_id(22);
 
-        std::unique_lock<std::mutex> lock(guard);
-        surface_name = request->surface_name();
+        std::lock_guard<std::mutex> lock(guard);
+        surf_name = request->surface_name();
         wait_condition.notify_one();
 
         done->Run();
@@ -58,7 +58,8 @@ struct StubServerTool : doubles::StubDisplayServer
     {
         response->set_buffer_id(22);
 
-        std::unique_lock<std::mutex> lock(guard);
+        std::lock_guard<std::mutex> lock(guard);
+        //FIXME: huh? What's the condition here?
         wait_condition.notify_one();
         done->Run();
     }
@@ -78,7 +79,10 @@ struct StubServerTool : doubles::StubDisplayServer
         mir::protobuf::Connection* connect_msg,
         google::protobuf::Closure* done) override
     {
-        app_name = request->application_name();
+        {
+            std::lock_guard<std::mutex> lock(guard);
+            app_name = request->application_name();
+        }
         // If you check out MirConnection::connected either the platform and display_configuration
         // have to be set or the error has to be set, otherwise we die and fail to callback.
         //
@@ -95,7 +99,8 @@ struct StubServerTool : doubles::StubDisplayServer
         mir::protobuf::Void* /*response*/,
         google::protobuf::Closure* done) override
     {
-        std::unique_lock<std::mutex> lock(guard);
+        std::lock_guard<std::mutex> lock(guard);
+        //FIXME: huh? What's the condition here?
         wait_condition.notify_one();
         done->Run();
     }
@@ -108,8 +113,20 @@ struct StubServerTool : doubles::StubDisplayServer
         done->Run();
     }
 
-    std::mutex guard;
-    std::string surface_name;
+    std::string application_name() const
+    {
+        std::lock_guard<std::mutex> lock(guard);
+        return app_name;
+    }
+
+    std::string surface_name() const
+    {
+        std::lock_guard<std::mutex> lock(guard);
+        return surf_name;
+    }
+
+    std::mutex mutable guard;
+    std::string surf_name;
     std::condition_variable wait_condition;
     std::string app_name;
 };

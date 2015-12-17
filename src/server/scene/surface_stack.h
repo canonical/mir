@@ -28,11 +28,12 @@
 
 #include "mir/basic_observers.h"
 
-#include <memory>
-#include <vector>
-#include <mutex>
+#include <atomic>
 #include <map>
+#include <memory>
+#include <mutex>
 #include <set>
+#include <vector>
 
 namespace mir
 {
@@ -119,7 +120,7 @@ private:
     std::vector<std::shared_ptr<graphics::Renderable>> overlays;
 
     Observers observers;
-    bool scene_changed = false;
+    std::atomic<bool> scene_changed;
 };
 
 }
