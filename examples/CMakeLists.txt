@@ -276,7 +276,7 @@ if (MIR_ENABLE_TESTS)
     # Again, test the testcase...
     mir_add_test(NAME Client-using-ABI-from-mircommon-fails-check
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-      COMMAND /bin/sh -c "!(nm -u mir_symbol_test | grep -v @@MIR_CLIENT | grep @@MIR_)"
+      COMMAND /bin/sh -c "(nm -u mir_symbol_test | grep -v @@MIR_CLIENT | grep @@MIR_)"
     )
   endif ()
 endif ()
