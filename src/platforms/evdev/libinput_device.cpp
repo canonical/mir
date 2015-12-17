@@ -345,7 +345,7 @@ mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settin
         settings.acceleration_profile = mir_pointer_acceleration_profile_none;
         break;
     case LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT:
-        settings.acceleration_profile = mir_pointer_acceleration_profile_flat;
+        settings.acceleration_profile = mir_pointer_acceleration_profile_constant;
         break;
     case LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE:
         settings.acceleration_profile = mir_pointer_acceleration_profile_adaptive;
@@ -372,7 +372,7 @@ void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& sett
         dev,
         (settings.acceleration_profile == mir_pointer_acceleration_profile_none) ?
             LIBINPUT_CONFIG_ACCEL_PROFILE_NONE :
-            (settings.acceleration_profile == mir_pointer_acceleration_profile_flat) ?
+            (settings.acceleration_profile == mir_pointer_acceleration_profile_constant) ?
             LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT :
             LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE);
 }

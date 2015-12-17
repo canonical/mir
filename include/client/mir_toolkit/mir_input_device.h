@@ -35,7 +35,7 @@ typedef enum MirPointerHandedness
 typedef enum MirPointerAccelerationProfile
 {
     mir_pointer_acceleration_profile_none = 0,
-    mir_pointer_acceleration_profile_flat = 1,
+    mir_pointer_acceleration_profile_constant = 1,
     mir_pointer_acceleration_profile_adaptive = 2
 } MirPointerAccelerationProfile;
 

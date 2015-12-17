@@ -36,7 +36,7 @@ namespace
 char const* const disable_while_typing_opt = "disable-while-typing";
 char const* const mouse_acceleration_profile_opt = "mouse-acceleration-profile";
 char const* const acceleration_profile_none = "none";
-char const* const acceleration_profile_flat = "flat";
+char const* const acceleration_profile_constant = "flat";
 char const* const acceleration_profile_adaptive = "adaptive";
 char const* const mouse_cursor_acceleration_bias_opt = "mouse-cursor-acceleration-bias";
 char const* const mouse_scroll_speed_scale_opt = "mouse-scroll-speed-scale";
@@ -104,8 +104,8 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
 
     auto to_profile = [](std::string const& val)
     {
-        if (val == acceleration_profile_flat)
-            return mir_pointer_acceleration_profile_flat;
+        if (val == acceleration_profile_constant)
+            return mir_pointer_acceleration_profile_constant;
         if (val == acceleration_profile_none)
             return mir_pointer_acceleration_profile_none;
         return mir_pointer_acceleration_profile_adaptive;
