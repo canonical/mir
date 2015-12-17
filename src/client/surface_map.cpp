@@ -93,7 +93,8 @@ void mcl::ConnectionSurfaceMap::with_stream_do(
     auto const it = streams.find(stream_id);
     if (it != streams.end())
     {
-        exec(it->second.stream);
+        auto const stream = it->second.stream;
+        exec(stream);
     }
     else
     {
