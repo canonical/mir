@@ -404,13 +404,13 @@ TEST_F(DisplayConfigurationTest, shell_initiated_display_configuration_notifies_
         &new_display_config_matches,
         &context);
 
-    server.the_display_configuration_controller()->set_base_configuration(new_conf).get();
+    server.the_display_configuration_controller()->set_base_configuration(new_conf);
+
+    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{10}));
 
     EXPECT_THAT(
         *server.the_display()->configuration(),
         mt::DisplayConfigMatches(std::cref(*new_conf)));
-
-    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{10}));
 
     client.disconnect();
 }

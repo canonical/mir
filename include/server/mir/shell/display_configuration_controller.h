@@ -19,7 +19,6 @@
 #ifndef MIR_SHELL_DISPLAY_CONFIGURATION_CONTROLLER_H_
 #define MIR_SHELL_DISPLAY_CONFIGURATION_CONTROLLER_H_
 
-#include <future>
 #include <memory>
 
 namespace mir
@@ -47,10 +46,8 @@ public:
      * overridden by a client's requested configuration if that client is focused.
      *
      * \param [in]  conf    The new display configuration to set
-     * \return              A std::future<> that becomes ready once the configuration
-     *                      has been applied.
      */
-    virtual std::future<void> set_base_configuration(
+    virtual void set_base_configuration(
         std::shared_ptr<graphics::DisplayConfiguration> const& conf) = 0;
 };
 }

@@ -39,7 +39,7 @@ public:
 
     virtual std::shared_ptr<graphics::DisplayConfiguration> base_configuration() = 0;
     virtual void configure(std::shared_ptr<Session> const&, std::shared_ptr<graphics::DisplayConfiguration> const&) = 0;
-    virtual std::future<void> set_base_configuration(std::shared_ptr<graphics::DisplayConfiguration> const&) = 0;
+    virtual void set_base_configuration(std::shared_ptr<graphics::DisplayConfiguration> const&) = 0;
 
 protected:
     DisplayChanger() = default;

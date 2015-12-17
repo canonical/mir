@@ -81,7 +81,7 @@ struct ProtobufErrorTestFixture : public ::testing::Test
     {
         stub_services = std::make_shared<mt::ErrorServer>();
         server = std::make_shared<mt::TestProtobufServer>("./test_error_fixture", stub_services);
-        client = std::make_shared<mt::TestProtobufClient>("./test_error_fixture", 100);
+        client = std::make_shared<mt::TestProtobufClient>("./test_error_fixture", 10000);
         server->comm->start();
     }
 

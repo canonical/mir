@@ -126,11 +126,6 @@ struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
         config = std::move(mock_config); 
     }
 
-    std::unique_ptr<graphics::CommandStreamSync> create_command_stream_sync()
-    {
-        return std::make_unique<graphics::NullCommandSync>();
-    }
-
     geometry::Size sz;
     std::unique_ptr<graphics::android::HwcConfiguration> config;
 };

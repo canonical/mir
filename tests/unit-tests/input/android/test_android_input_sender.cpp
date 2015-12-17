@@ -99,13 +99,21 @@ class AndroidInputSender : public ::testing::Test
 public:
     int const test_scan_code = 32;
     size_t const test_pointer_count = 2;
-    float test_x_coord[2] = {12, 23};
-    float test_y_coord[2] = {17, 9};
-    
+    float const test_x_coord[2] = {12, 23};
+    float const test_y_coord[2] = {17, 9};
+    mir::geometry::Point const pos{100, 100};
+    mir::geometry::Displacement const movement{10, -10};
+
     AndroidInputSender()
-       : key_event(mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(1), 0, mir_keyboard_action_down,
-                                    7, test_scan_code, mir_input_event_modifier_none)),
-          motion_event(mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(-1), 0, mir_input_event_modifier_none))
+        : key_event(mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(1), 0, mir_keyboard_action_down, 7,
+                                    test_scan_code, mir_input_event_modifier_none)),
+          motion_event(
+              mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(-1), 0, mir_input_event_modifier_none)),
+          pointer_event(mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(123), 0,
+                                        mir_input_event_modifier_none, mir_pointer_action_motion,
+                                        mir_pointer_button_primary, pos.x.as_float(), pos.y.as_float(), 0.0f, 0.0f,
+                                        movement.dx.as_float(), movement.dy.as_float()))
+
     {
         using namespace ::testing;
 
@@ -139,6 +147,7 @@ public:
 
     mir::EventUPtr key_event;
     mir::EventUPtr motion_event;
+    mir::EventUPtr pointer_event;
 
     droidinput::MotionEvent client_motion_event;
     droidinput::KeyEvent client_key_event;
@@ -260,7 +269,28 @@ TEST_F(AndroidInputSender, can_send_consumeable_mir_motion_events)
         EXPECT_EQ(test_x_coord[i], client_motion_event.getX(i)) << "When i=" << i;
         EXPECT_EQ(test_y_coord[i], client_motion_event.getRawY(i)) << "When i=" << i;
         EXPECT_EQ(test_y_coord[i], client_motion_event.getY(i)) << "When i=" << i;
+        EXPECT_EQ(AMOTION_EVENT_TOOL_TYPE_FINGER, client_motion_event.getToolType(i)) << "When i=" << i;
     }
+    EXPECT_EQ(AINPUT_SOURCE_TOUCHSCREEN, client_motion_event.getSource());
+}
+
+TEST_F(AndroidInputSender, sends_pointer_events)
+{
+    using namespace ::testing;
+    register_surface();
+
+    sender.send_event(*pointer_event, channel);
+
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
+
+    EXPECT_EQ(1, client_motion_event.getPointerCount());
+
+    EXPECT_EQ(pos.x.as_float(), client_motion_event.getX(0));
+    EXPECT_EQ(pos.y.as_float(), client_motion_event.getY(0));
+    EXPECT_EQ(movement.dx.as_float(), client_motion_event.getAxisValue(AMOTION_EVENT_AXIS_RX, 0));
+    EXPECT_EQ(movement.dy.as_float(), client_motion_event.getAxisValue(AMOTION_EVENT_AXIS_RY, 0));
+    EXPECT_EQ(AMOTION_EVENT_TOOL_TYPE_MOUSE, client_motion_event.getToolType(0));
+    EXPECT_EQ(AINPUT_SOURCE_MOUSE, client_motion_event.getSource());
 }
 
 TEST_F(AndroidInputSender, response_keeps_fd_registered)

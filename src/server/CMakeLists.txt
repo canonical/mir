@@ -1,3 +1,5 @@
+pkg_check_modules(UUID REQUIRED uuid)
+
 add_definitions(
   -DMIR_LOG_COMPONENT_FALLBACK="mirserver"
   -DMIR_VERSION="${MIR_VERSION}"

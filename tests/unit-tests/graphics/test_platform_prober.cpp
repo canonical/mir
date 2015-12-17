@@ -121,7 +121,7 @@ TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
 }
 
 #ifdef MIR_BUILD_PLATFORM_MESA_KMS
-TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
+TEST(ServerPlatformProbe, LoadsMesaPlatformWhenDrmDevicePresent)
 {
     using namespace testing;
     mir::options::ProgramOption options;
@@ -192,7 +192,7 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
 }
 
 #if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11) || defined(MIR_BUILD_PLATFORM_ANDROID)
-TEST_F(ServerPlatformProbeMockDRM, LoadsMesaOrAndroidInPreferenceToDummy)
+TEST(ServerPlatformProbe, LoadsMesaOrAndroidInPreferenceToDummy)
 {
     using namespace testing;
     mir::options::ProgramOption options;
@@ -212,7 +212,7 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaOrAndroidInPreferenceToDummy)
 }
 #endif
 
-TEST_F(ServerPlatformProbeMockDRM, IgnoresNonPlatformModules)
+TEST(ServerPlatformProbe, IgnoresNonPlatformModules)
 {
     using namespace testing;
     mir::options::ProgramOption options;
