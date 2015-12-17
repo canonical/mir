@@ -20,7 +20,6 @@
 #define MIR_INPUT_ANDROID_INPUT_SEND_ENTRY_H_
 
 #include "mir_toolkit/event.h"
-#include "mir/events/event_private.h"
 
 #include <memory>
 
@@ -38,10 +37,11 @@ namespace android
 struct InputSendEntry
 {
     uint32_t sequence_id;
-    MirEvent event;
+    using EventPtr = std::unique_ptr<MirEvent const, void(*)(MirEvent const*)>;
+    EventPtr event;
     std::shared_ptr<InputChannel> channel;
-    InputSendEntry(uint32_t id, MirEvent ev, std::shared_ptr<InputChannel> const& channel)
-        : sequence_id(id), event(ev), channel(channel)
+    InputSendEntry(uint32_t id, MirEvent const& ev, std::shared_ptr<InputChannel> const& channel)
+        : sequence_id(id), event(mir_event_ref(&ev), mir_event_unref), channel(channel)
     {
     }
 };
