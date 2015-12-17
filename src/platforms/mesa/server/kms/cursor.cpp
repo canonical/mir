@@ -40,6 +40,9 @@ namespace
 {
 const uint64_t fallback_cursor_size = 64;
 
+// on some older hardware drm incorrectly reports the cursor size
+bool const force_64x64_cursor = getenv("MIR_DRM_CURSOR_64x64");
+
 // Transforms a relative position within the display bounds described by \a rect which is rotated with \a orientation
 geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement const& vector, MirOrientation orientation)
 {
@@ -68,17 +71,17 @@ geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement con
 // https://bugs.freedesktop.org/show_bug.cgi?id=89164
 int get_drm_cursor_height(int fd)
 {
-   uint64_t height;
-   if (drmGetCap(fd, DRM_CAP_CURSOR_HEIGHT, &height) < 0)
-       height = fallback_cursor_size;
+   uint64_t height = fallback_cursor_size;
+    if (!force_64x64_cursor)
+       drmGetCap(fd, DRM_CAP_CURSOR_HEIGHT, &height);
    return int(height);
 }
 
 int get_drm_cursor_width(int fd)
 {
-   uint64_t width;
-   if (drmGetCap(fd, DRM_CAP_CURSOR_WIDTH, &width) < 0)
-       width = fallback_cursor_size;
+   uint64_t width = fallback_cursor_size;
+   if (!force_64x64_cursor)
+       drmGetCap(fd, DRM_CAP_CURSOR_WIDTH, &width);
    return int(width);
 }
 }
