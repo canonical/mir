@@ -116,7 +116,7 @@ TEST_F(X11GraphicsPlatformTest, probe_returns_unsupported_when_x_cannot_open_dis
     EXPECT_EQ(mg::PlatformPriority::unsupported, probe(options));
 }
 
-TEST_F(X11GraphicsPlatformTest, probe_returns_supported_when_drm_render_nodes_exist)
+TEST_F(X11GraphicsPlatformTest, probe_returns_best_when_drm_render_nodes_exist)
 {
     mtf::UdevEnvironment udev_environment;
     mir::options::ProgramOption options;
@@ -125,5 +125,5 @@ TEST_F(X11GraphicsPlatformTest, probe_returns_supported_when_drm_render_nodes_ex
 
     mir::SharedLibrary platform_lib{mtf::server_platform("server-mesa-x11")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::supported, probe(options));
+    EXPECT_EQ(mg::PlatformPriority::best, probe(options));
 }

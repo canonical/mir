@@ -78,13 +78,17 @@ int main(int argc, char *argv[])
         const char *arg = argv[a];
         if (arg[0] == '-')
         {
+            if (arg[1] == '-' && arg[2] == '\0')
+                break;
+
             switch (arg[1])
             {
                 case 'h':
                 default:
-                    printf("Usage: %s [-h] [<socket-file>]\n"
+                    printf("Usage: %s [-h] [<socket-file>] [--]\n"
                            "Options:\n"
                            "    -h  Show this help information.\n"
+                           "    --  Ignore the rest of the command line.\n"
                            , argv[0]);
                     return 0;
             }
