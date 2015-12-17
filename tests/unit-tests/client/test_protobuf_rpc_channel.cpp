@@ -229,6 +229,7 @@ public:
     MockStreamTransport* transport;
     std::shared_ptr<mcl::LifecycleControl> lifecycle;
     std::shared_ptr<mclr::MirProtobufRpcChannel> channel;
+    mtd::MockClientBufferStream stream;
 };
 
 }
@@ -362,11 +363,10 @@ TEST_F(MirProtobufRpcChannelTest, notifies_streams_of_disconnect)
 {
     using namespace testing;
     auto stream_map = std::make_shared<MockSurfaceMap>();
-    mtd::MockClientBufferStream stream;
-    EXPECT_CALL(stream, buffer_unavailable());
-    EXPECT_CALL(*stream_map, with_all_streams_do(_))
-       .WillOnce(InvokeArgument<0>(&stream));
- 
+    EXPECT_CALL(stream, buffer_unavailable()).Times(AtLeast(1));
+    EXPECT_CALL(*stream_map, with_all_streams_do(_)).Times(AtLeast(1))
+       .WillRepeatedly(InvokeArgument<0>(&stream));
+
     mclr::MirProtobufRpcChannel channel{
                   std::make_unique<NiceMock<MockStreamTransport>>(),
                   stream_map,

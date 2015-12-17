@@ -83,6 +83,13 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
             platform_operation(static_cast<mp::PlatformOperationMessage const*>(parameters),
                                static_cast<mp::PlatformOperationMessage*>(response));
         }
+        else if (name == "create_surface")
+        {
+            auto response_message = static_cast<mp::Surface*>(response);
+            response_message->mutable_id()->set_value(33);
+            response_message->mutable_buffer_stream()->mutable_id()->set_value(33);
+        }
+
 
         complete->Run();
     }

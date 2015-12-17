@@ -27,7 +27,7 @@ namespace mtd = mir::test::doubles;
 
 struct ConnectionResourceMap : testing::Test
 {
-    MirSurface surface{"a string"};
+    std::shared_ptr<MirSurface> surface{std::make_shared<MirSurface>("a string", nullptr, mf::SurfaceId{2})};
     mtd::MockClientBufferStream stream; 
     mf::SurfaceId const surface_id{43};
     mf::BufferStreamId const stream_id{43};
@@ -39,14 +39,14 @@ TEST_F(ConnectionResourceMap, maps_surface_and_bufferstream_when_surface_inserte
     auto surface_called = false;
     auto stream_called = false;
     mcl::ConnectionSurfaceMap map;
-    map.insert(surface_id, &surface);
+    map.insert(surface_id, surface);
     map.with_surface_do(surface_id, [&](MirSurface* surf) {
-        EXPECT_THAT(surf, Eq(&surface));
+        EXPECT_THAT(surf, Eq(surface.get()));
         surface_called = true;
     });
 
     map.with_stream_do(stream_id, [&](mcl::ClientBufferStream* stream) {
-        EXPECT_THAT(stream, Eq(surface.get_buffer_stream()));
+        EXPECT_THAT(stream, Eq(surface->get_buffer_stream()));
         stream_called = true;
     });
 
@@ -59,9 +59,9 @@ TEST_F(ConnectionResourceMap, removes_surface_and_bufferstream_when_surface_remo
     using namespace testing;
     auto stream_called = false;
     mcl::ConnectionSurfaceMap map;
-    map.insert(surface_id, &surface);
+    map.insert(surface_id, surface);
     map.with_stream_do(stream_id, [&](mcl::ClientBufferStream* stream) {
-        EXPECT_THAT(stream, Eq(surface.get_buffer_stream()));
+        EXPECT_THAT(stream, Eq(surface->get_buffer_stream()));
         stream_called = true;
     });
     EXPECT_TRUE(stream_called);

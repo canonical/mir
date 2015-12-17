@@ -190,3 +190,10 @@ void mcl::BufferVault::set_scale(float scale)
         server_requests->free_buffer(id);
     }
 }
+
+void mcl::BufferVault::disconnected()
+{
+    server_requests->disconnected();
+    std::lock_guard<std::mutex> lk(mutex);
+    promises.clear();
+}
