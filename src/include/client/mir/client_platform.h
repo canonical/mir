@@ -26,6 +26,7 @@
 #include <EGL/eglplatform.h>
 #include <EGL/egl.h>  // for EGLConfig
 #include <memory>
+#include <vector>
 
 namespace mir
 {
@@ -66,6 +67,19 @@ public:
     virtual std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() = 0;
     virtual MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const = 0;
     virtual MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const = 0;
+    void hold_resource(std::shared_ptr<void> const& r)
+    {
+        resources.push_back(r);
+    }
+
+private:
+    /*
+     * It's crucial your resources (e.g. shared library handle of the driver)
+     * live longer than your ClientPlatform implementation. So storing the
+     * reference here in the base class ensures that. Also we only ever need
+     * the one-line implementation of hold_resource() above.
+     */
+    std::vector<std::shared_ptr<void>> resources;
 };
 
 }

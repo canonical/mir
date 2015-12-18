@@ -8,16 +8,21 @@
 
 namespace mir
 {
+class SharedLibraryProberReport;
+
 namespace client
 {
 class ProbingClientPlatformFactory : public ClientPlatformFactory
 {
 public:
-    ProbingClientPlatformFactory(std::vector<std::shared_ptr<SharedLibrary>> const& modules);
+    ProbingClientPlatformFactory(
+        std::shared_ptr<mir::SharedLibraryProberReport> const& rep);
 
     std::shared_ptr<ClientPlatform> create_client_platform(ClientContext *context) override;
+
 private:
-    std::vector<std::shared_ptr<SharedLibrary>> platform_modules;
+    std::shared_ptr<mir::SharedLibraryProberReport> const shared_library_prober_report;
+    std::string platform_override;
 };
 
 }

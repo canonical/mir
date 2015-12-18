@@ -33,11 +33,9 @@
 #include "lttng/shared_library_prober_report.h"
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
-#include "mir/shared_library.h"
 #include "mir/client_platform_factory.h"
 #include "probing_client_platform_factory.h"
 #include "mir_event_distributor.h"
-#include "mir/shared_library_prober.h"
 
 namespace mcl = mir::client;
 
@@ -46,10 +44,6 @@ namespace
 std::string const off_opt_val{"off"};
 std::string const log_opt_val{"log"};
 std::string const lttng_opt_val{"lttng"};
-
-// Shove this here until we properly manage the lifetime of our
-// loadable modules
-std::shared_ptr<mcl::ProbingClientPlatformFactory> the_platform_prober;
 }
 
 mcl::DefaultConnectionConfiguration::DefaultConnectionConfiguration(
@@ -94,22 +88,8 @@ mcl::DefaultConnectionConfiguration::the_client_platform_factory()
     return client_platform_factory(
         [this]
         {
-            auto const platform_override = getenv("MIR_CLIENT_PLATFORM_LIB");
-            std::vector<std::shared_ptr<mir::SharedLibrary>> platform_plugins;
-            if (platform_override)
-            {
-                platform_plugins.push_back(std::make_shared<mir::SharedLibrary>(platform_override));
-            }
-            else
-            {
-                auto const platform_path_override = getenv("MIR_CLIENT_PLATFORM_PATH");
-                auto const platform_path = platform_path_override ? platform_path_override : MIR_CLIENT_PLATFORM_PATH;
-                platform_plugins = mir::libraries_for_path(platform_path, *the_shared_library_prober_report());
-            }
-
-            the_platform_prober = std::make_shared<mcl::ProbingClientPlatformFactory>(platform_plugins);
-
-            return the_platform_prober;
+            return std::make_shared<mcl::ProbingClientPlatformFactory>(
+                                         the_shared_library_prober_report());
         });
 }
 
