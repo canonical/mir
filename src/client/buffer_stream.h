@@ -91,14 +91,9 @@ public:
         std::shared_ptr<ClientPlatform> const& native_window_factory,
         mir::protobuf::BufferStreamParameters const& parameters,
         std::shared_ptr<PerfReport> const& perf_report,
-        size_t nbuffers,
-        mir_buffer_stream_callback callback,
-        void *context);
+        size_t nbuffers);
 
     virtual ~BufferStream();
-
-    MirWaitHandle *get_create_wait_handle() override;
-    MirWaitHandle *release(mir_buffer_stream_callback callback, void* context) override;
 
     MirWaitHandle* next_buffer(std::function<void()> const& done) override;
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override;
@@ -130,13 +125,14 @@ public:
     void set_size(geometry::Size) override;
     MirWaitHandle* set_scale(float scale) override;
     char const* get_error_message() const override;
+    MirConnection* connection() const override;
 
 protected:
     BufferStream(BufferStream const&) = delete;
     BufferStream& operator=(BufferStream const&) = delete;
 
 private:
-    void created(mir_buffer_stream_callback callback, void* context);
+//    void created(mir_buffer_stream_callback callback, void* context);
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>&);
     void screencast_buffer_received(std::function<void()> done);
@@ -146,14 +142,13 @@ private:
 
     mutable std::mutex mutex; // Protects all members of *this
 
-    MirConnection* connection;
+    MirConnection* connection_;
     mir::client::rpc::DisplayServer& display_server;
 
     BufferStreamMode const mode;
     std::shared_ptr<ClientPlatform> const client_platform;
 
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
-    std::unique_ptr<google::protobuf::Closure> const closure;
 
     int swap_interval_;
     float scale_;

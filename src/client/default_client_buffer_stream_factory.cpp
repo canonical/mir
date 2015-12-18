@@ -89,8 +89,8 @@ std::shared_ptr<mcl::ClientBufferStream> mcl::DefaultClientBufferStreamFactory::
 
 mcl::ClientBufferStream* mcl::DefaultClientBufferStreamFactory::make_producer_stream(
     MirConnection* connection, mclr::DisplayServer& server,
-    mp::BufferStreamParameters const& params, mir_buffer_stream_callback callback, void* context)
+    mp::BufferStreamParameters const& params, mir_buffer_stream_callback, void*)
 {
     return new mcl::BufferStream(
-        connection, server, client_platform, params, make_perf_report(logger), nbuffers, callback, context);
+        connection, server, client_platform, params, make_perf_report(logger), nbuffers);
 }
