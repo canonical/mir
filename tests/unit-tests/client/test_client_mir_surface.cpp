@@ -332,7 +332,8 @@ struct MirClientSurfaceTest : public testing::Test
             stub_buffer_stream,
             input_platform,
             spec,
-            surface_proto);
+            surface_proto,
+            wh);
     }
 
     std::shared_ptr<MirSurface> create_surface_with(
@@ -346,7 +347,8 @@ struct MirClientSurfaceTest : public testing::Test
             buffer_stream,
             input_platform,
             spec,
-            surface_proto);
+            surface_proto,
+            wh);
     }
 
     std::shared_ptr<MirSurface> create_and_wait_for_surface_with(
@@ -377,6 +379,7 @@ struct MirClientSurfaceTest : public testing::Test
     std::shared_ptr<mt::TestProtobufServer> test_server;
     std::shared_ptr<mclr::DisplayServer> client_comm_channel;
     mir::protobuf::Surface surface_proto;
+    std::shared_ptr<MirWaitHandle> const wh{std::make_shared<MirWaitHandle>()};
 
     std::chrono::milliseconds const pause_time{10};
 };
@@ -408,7 +411,7 @@ TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_dispatcher_when_del
         .WillOnce(Return(mock_input_dispatcher));
 
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
-        stub_buffer_stream, mock_input_platform, spec, surface_proto};
+        stub_buffer_stream, mock_input_platform, spec, surface_proto, wh};
     surface.set_event_handler(null_event_callback, nullptr);
 
     mock_input_dispatcher->trigger();
@@ -429,7 +432,7 @@ TEST_F(MirClientSurfaceTest, replacing_delegate_with_nullptr_prevents_further_di
         .WillOnce(Return(mock_input_dispatcher));
 
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
-        stub_buffer_stream, mock_input_platform, spec, surface_proto};
+        stub_buffer_stream, mock_input_platform, spec, surface_proto, wh};
     surface.set_event_handler(null_event_callback, nullptr);
 
     // Should now not get dispatched.
@@ -450,7 +453,7 @@ TEST_F(MirClientSurfaceTest, does_not_create_input_dispatcher_when_no_delegate_s
     EXPECT_CALL(*mock_input_platform, create_input_receiver(_, _, _)).Times(0);
 
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
-        stub_buffer_stream, mock_input_platform, spec, surface_proto};
+        stub_buffer_stream, mock_input_platform, spec, surface_proto, wh};
 }
 
 TEST_F(MirClientSurfaceTest, valid_surface_is_valid)
@@ -511,7 +514,7 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_no_customized
     auto ev = mir::events::make_event(mir::frontend::SurfaceId(2), size);
 
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
-        mock_stream, mock_input_platform, spec, surface_proto};
+        mock_stream, mock_input_platform, spec, surface_proto, wh};
     surface.handle_event(*ev);
     surface_map->erase(mir::frontend::BufferStreamId(2));
 }
@@ -529,7 +532,7 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_customized_st
     EXPECT_CALL(*mock_stream, set_size(size)).Times(0);
     auto ev = mir::events::make_event(mir::frontend::SurfaceId(2), size);
     MirSurface surface{connection.get(), *client_comm_channel, nullptr,
-        mock_stream, mock_input_platform, spec, surface_proto};
+        mock_stream, mock_input_platform, spec, surface_proto, wh};
 
     MirSurfaceSpec spec;
     std::vector<MirBufferStreamInfo> info =
