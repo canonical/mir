@@ -21,7 +21,6 @@
 
 #include "src/server/input/android/android_input_channel.h"
 #include "src/server/input/android/input_sender.h"
-class Surface;
 #include "src/server/report/null_report_factory.h"
 
 #include "mir/test/doubles/stub_scene_surface.h"
