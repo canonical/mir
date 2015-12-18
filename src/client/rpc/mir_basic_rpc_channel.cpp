@@ -66,10 +66,12 @@ void mclrd::PendingCallCache::save_completion_details(
     pending_calls[invoke.id()] = PendingCall(response, complete);
 }
 
-google::protobuf::MessageLite* mclrd::PendingCallCache::message_for_result(mir::protobuf::wire::Result& result)
+void mclrd::PendingCallCache::populate_message_for_result(
+    mir::protobuf::wire::Result& result,
+    std::function<void(google::protobuf::MessageLite*)> const& populator)
 {
     std::unique_lock<std::mutex> lock(mutex);
-    return pending_calls.at(result.id()).response;
+    populator(pending_calls.at(result.id()).response);
 }
 
 void mclrd::PendingCallCache::complete_response(mir::protobuf::wire::Result& result)
