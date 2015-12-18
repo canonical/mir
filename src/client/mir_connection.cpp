@@ -407,6 +407,11 @@ MirWaitHandle* MirConnection::release_surface(
         void * context)
 {
     auto new_wait_handle = new MirWaitHandle;
+    {
+        std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
+        release_wait_handles.push_back(new_wait_handle);
+    }
+
     if (strncmp(surface->get_error_message(), "", 1))
     {
         new_wait_handle->expect_result();
@@ -421,11 +426,6 @@ MirWaitHandle* MirConnection::release_surface(
 
     mp::SurfaceId message;
     message.set_value(surface->id());
-
-    {
-        std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
-        release_wait_handles.push_back(new_wait_handle);
-    }
 
     new_wait_handle->expect_result();
     server.release_surface(&message, void_response.get(),
