@@ -396,9 +396,13 @@ void mclr::MirProtobufRpcChannel::on_data_available()
 
         if (result->has_id())
         {
-            auto result_message = pending_calls.message_for_result(*result);
-            result_message->ParseFromString(result->response());
-            receive_file_descriptors(result_message);
+            pending_calls.populate_message_for_result(
+                *result,
+                [&](google::protobuf::MessageLite* result_message)
+                    {
+                        result_message->ParseFromString(result->response());
+                        receive_file_descriptors(result_message);
+                    });
 
             if (id_to_wait_for)
             {

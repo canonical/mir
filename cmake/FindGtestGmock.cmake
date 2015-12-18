@@ -23,11 +23,18 @@ set(GTEST_BINARY_DIR ${GMOCK_BINARY_DIR}/gtest)
 set(GTEST_CXX_FLAGS "-fPIC")
 if (cmake_build_type_lower MATCHES "threadsanitizer")
   set(GTEST_CXX_FLAGS "${GTEST_CXX_FLAGS} -fsanitize=thread")
+elseif (cmake_build_type_lower MATCHES "ubsanitizer")
+  set(GTEST_CXX_FLAGS "${GTEST_CXX_FLAGS} -fsanitize=undefined")
 endif()
 
 set(GTEST_CMAKE_ARGS "-DCMAKE_CXX_FLAGS=${GTEST_CXX_FLAGS}")
 list(APPEND GTEST_CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER})
 list(APPEND GTEST_CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER})
+if (cmake_build_type_lower MATCHES "threadsanitizer")
+  #Skip compiler check, since if GCC is the compiler, we need to link against -ltsan
+  #explicitly; specifying additional linker flags doesn't seem possible for external projects
+  list(APPEND GTEST_CMAKE_ARGS -DCMAKE_CXX_COMPILER_WORKS=1)
+endif()
 if (${CMAKE_CROSSCOMPILING})
   if(DEFINED MIR_NDK_PATH)
     list(APPEND GTEST_CMAKE_ARGS -DCMAKE_TOOLCHAIN_FILE=${CMAKE_MODULE_PATH}/LinuxCrossCompile.cmake)

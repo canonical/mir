@@ -52,7 +52,6 @@ public:
     bool compatible_renderlist(RenderableList const& renderlist) override;
     void commit(std::list<DisplayContents> const& contents) override;
     std::chrono::milliseconds recommended_sleep() const override;
-    bool can_swap_buffers() const override;
 
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;

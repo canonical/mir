@@ -98,7 +98,11 @@ struct MockServerPackageGenerator : public mt::StubServerTool
         google::protobuf::Closure* done) override
     {
         create_surface_response(response);
-        surface_name = request->surface_name();
+        {
+            std::lock_guard<std::mutex> lock(guard);
+            surf_name = request->surface_name();
+        }
+
         done->Run();
     }
 

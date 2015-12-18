@@ -170,13 +170,17 @@ mgn::Display::Display(
     outputs{},
     current_configuration(std::make_unique<NestedDisplayConfiguration>(connection->create_display_config()))
 {
-    std::shared_ptr<DisplayConfiguration> conf(configuration());
+    decltype(current_configuration) conf{dynamic_cast<NestedDisplayConfiguration*>(current_configuration->clone().release())};
+
     initial_conf_policy->apply_to(*conf);
 
     if (*current_configuration != *conf)
-        apply_to_connection(*conf);
+    {
+        connection->apply_display_config(**conf);
+        swap(current_configuration, conf);
+    }
 
-    create_surfaces(*conf);
+    create_surfaces(*current_configuration);
 }
 
 mgn::Display::~Display() noexcept
@@ -208,9 +212,16 @@ void mgn::Display::complete_display_initialization(MirPixelFormat format)
 
 void mgn::Display::configure(mg::DisplayConfiguration const& configuration)
 {
-    std::lock_guard<std::mutex> lock(configuration_mutex);
-    apply_to_connection(configuration);
-    create_surfaces(configuration);
+    decltype(current_configuration) new_config{dynamic_cast<NestedDisplayConfiguration*>(configuration.clone().release())};
+
+    {
+        std::lock_guard<std::mutex> lock(configuration_mutex);
+
+        swap(current_configuration, new_config);
+        create_surfaces(*current_configuration);
+    }
+
+    connection->apply_display_config(**current_configuration);
 }
 
 namespace
@@ -295,14 +306,6 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
         std::unique_lock<std::mutex> lock(outputs_mutex);
         outputs.swap(result);
     }
-}
-
-void mgn::Display::apply_to_connection(mg::DisplayConfiguration const& configuration)
-{
-    decltype(current_configuration) new_config{dynamic_cast<NestedDisplayConfiguration*>(configuration.clone().release())};
-
-    connection->apply_display_config(**new_config);
-    swap(current_configuration, new_config);
 }
 
 void mgn::Display::register_configuration_change_handler(

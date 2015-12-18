@@ -27,6 +27,7 @@
 #include "mir/scene/surface.h"
 #include "mir/compositor/scene.h"
 #include "mir/main_loop.h"
+#include "mir/events/event_private.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -174,22 +175,29 @@ mia::InputSender::ActiveTransfer::ActiveTransfer(InputSenderState & state, int s
 
 void mia::InputSender::ActiveTransfer::send(InputSendEntry && event)
 {
-    if (event.event.type != mir_event_type_key &&
-        event.event.type != mir_event_type_motion)
+    if (mir_event_get_type(event.event.get()) != mir_event_type_input)
         return;
 
     droidinput::status_t error_status;
 
-    auto event_time = mir_input_event_get_event_time(mir_event_get_input_event(&event.event));
-    if (event.event.type == mir_event_type_key)
+    auto event_time = mir_input_event_get_event_time(mir_event_get_input_event(event.event.get()));
+    auto input_event = mir_event_get_input_event(event.event.get());
+    switch(mir_input_event_get_type(input_event))
     {
-        error_status = send_key_event(event.sequence_id, event.event.key);
+    case mir_input_event_type_key:
+        error_status = send_key_event(event.sequence_id, *event.event);
         state.report->published_key_event(event.channel->server_fd(), event.sequence_id, event_time);
-    }
-    else
-    {
-        error_status = send_motion_event(event.sequence_id, event.event.motion);
+        break;
+    case mir_input_event_type_touch:
+        error_status = send_touch_event(event.sequence_id, *event.event);
         state.report->published_motion_event(event.channel->server_fd(), event.sequence_id, event_time);
+        break;
+    case mir_input_event_type_pointer:
+        error_status = send_pointer_event(event.sequence_id, *event.event);
+        state.report->published_motion_event(event.channel->server_fd(), event.sequence_id, event_time);
+        break;
+    default:
+        BOOST_THROW_EXCEPTION(std::runtime_error("unknown input event type"));
     }
 
     if (error_status == droidinput::OK)
@@ -202,11 +210,11 @@ void mia::InputSender::ActiveTransfer::send(InputSendEntry && event)
     {
     case droidinput::WOULD_BLOCK:
         if (state.observer)
-            state.observer->client_blocked(event.event, surface);
+            state.observer->client_blocked(*event.event, surface);
         break;
     case droidinput::DEAD_OBJECT:
         if (state.observer)
-            state.observer->send_failed(event.event, surface, InputSendObserver::socket_error);
+            state.observer->send_failed(*event.event, surface, InputSendObserver::socket_error);
         break;
     default:
         BOOST_THROW_EXCEPTION(boost::enable_error_info(std::runtime_error("Failure sending input event : ")) << boost::errinfo_errno(errno));
@@ -238,73 +246,97 @@ void mia::InputSender::ActiveTransfer::subscribe()
             });
 }
 
-droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t seq, MirKeyEvent const& event)
+droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t seq, MirEvent const& event)
 {
     int32_t repeat_count = 0;
-    auto android_action = mia::android_keyboard_action_from_mir(repeat_count, event.action);
-    return publisher.publishKeyEvent(
-        seq,
-        event.device_id,
-        event.source_id,
-        android_action,
-        0, /* Flags */
-        event.key_code,
-        event.scan_code,
-        mia::android_modifiers_from_mir(event.modifiers),
-        repeat_count,
-        event.mac,
-        event.event_time,
-        event.event_time
-        );
+    auto input_event = mir_event_get_input_event(&event);
+    auto key_event = mir_input_event_get_keyboard_event(input_event);
+    auto const android_action = mia::android_keyboard_action_from_mir(repeat_count, mir_keyboard_event_action(key_event));
+    std::chrono::nanoseconds const event_time{mir_input_event_get_event_time(input_event)};
+    auto const flags = 0;
+    return publisher.publishKeyEvent(seq,
+                                     mir_input_event_get_device_id(input_event),
+                                     AINPUT_SOURCE_KEYBOARD,
+                                     android_action,
+                                     flags,
+                                     mir_keyboard_event_key_code(key_event),
+                                     mir_keyboard_event_scan_code(key_event),
+                                     mia::android_modifiers_from_mir(mir_keyboard_event_modifiers(key_event)),
+                                     repeat_count,
+                                     event.key.mac,
+                                     event_time,
+                                     event_time);
 }
 
-droidinput::status_t mia::InputSender::ActiveTransfer::send_motion_event(uint32_t seq, MirMotionEvent const& event)
+droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t seq, MirEvent const& event)
 {
     droidinput::PointerCoords coords[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
     droidinput::PointerProperties properties[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
-    // no default constructor:
-    std::memset(coords, 0, sizeof(coords));
-    std::memset(properties, 0, sizeof(properties));
+    std::memset(&coords, 0, sizeof(coords));
+    std::memset(&properties, 0, sizeof(properties));
 
-    for (size_t i = 0; i < event.pointer_count; ++i)
+    auto input_event = mir_event_get_input_event(&event);
+    auto touch = mir_input_event_get_touch_event(input_event);
+    for (size_t i = 0, e = mir_touch_event_point_count(touch); i != e; ++i)
     {
         // Note: this assumes that: x == raw_x + x_offset;
         // here x, y is used instead of the raw co-ordinates and offset is set to zero
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_X, event.pointer_coordinates[i].x);
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_Y, event.pointer_coordinates[i].y);
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_RX, event.pointer_coordinates[i].dx);
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_RY, event.pointer_coordinates[i].dy);
-
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR, event.pointer_coordinates[i].touch_major);
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR, event.pointer_coordinates[i].touch_minor);
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_SIZE, event.pointer_coordinates[i].size);
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_PRESSURE, event.pointer_coordinates[i].pressure);
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_ORIENTATION, event.pointer_coordinates[i].orientation);
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, event.pointer_coordinates[i].vscroll);
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, event.pointer_coordinates[i].hscroll);
-        properties[i].toolType = mia::android_tool_type_from_mir(event.pointer_coordinates[i].tool_type);
-        properties[i].id = event.pointer_coordinates[i].id;
+        coords[i].setAxisValue(AMOTION_EVENT_AXIS_X, mir_touch_event_axis_value(touch, i, mir_touch_axis_x));
+        coords[i].setAxisValue(AMOTION_EVENT_AXIS_Y, mir_touch_event_axis_value(touch, i, mir_touch_axis_y));
+        coords[i].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR, mir_touch_event_axis_value(touch, i, mir_touch_axis_touch_major));
+        coords[i].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR, mir_touch_event_axis_value(touch, i, mir_touch_axis_touch_minor));
+        coords[i].setAxisValue(AMOTION_EVENT_AXIS_SIZE, mir_touch_event_axis_value(touch, i, mir_touch_axis_size));
+        coords[i].setAxisValue(AMOTION_EVENT_AXIS_PRESSURE, mir_touch_event_axis_value(touch, i, mir_touch_axis_pressure));
+        properties[i].toolType = mia::android_tool_type_from_mir(mir_touch_event_tooltype(touch, i));
+        properties[i].id = mir_touch_event_id(touch, i);
     }
 
+    std::chrono::nanoseconds const event_time{mir_input_event_get_event_time(input_event)};
+    auto const x_offset = 0.0f;
+    auto const y_offset = 0.0f;
+    auto const x_precision = 0;
+    auto const y_precision = 0;
+    auto const flags = 0;
+    auto const edge_flags = 0;
+    auto const button_state = 0;
+    return publisher.publishMotionEvent(seq, mir_input_event_get_device_id(input_event), AINPUT_SOURCE_TOUCHSCREEN,
+                                        mia::extract_android_action_from(event), flags, edge_flags,
+                                        mia::android_modifiers_from_mir(mir_touch_event_modifiers(touch)), button_state,
+                                        x_offset, y_offset, x_precision, y_precision, event.motion.mac, event_time,
+                                        event_time, mir_touch_event_point_count(touch), properties, coords);
+}
+
+droidinput::status_t mia::InputSender::ActiveTransfer::send_pointer_event(uint32_t seq, MirEvent const& event)
+{
+    droidinput::PointerCoords pointer_coord;
+    droidinput::PointerProperties pointer_properties;
+    std::memset(&pointer_coord, 0, sizeof(pointer_coord));
+    std::memset(&pointer_properties, 0, sizeof(pointer_properties));
+
+    auto input_event = mir_event_get_input_event(&event);
+    auto pointer = mir_input_event_get_pointer_event(input_event);
+    pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_X, mir_pointer_event_axis_value(pointer, mir_pointer_axis_x));
+    pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_Y, mir_pointer_event_axis_value(pointer, mir_pointer_axis_y));
+    pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, mir_pointer_event_axis_value(pointer, mir_pointer_axis_hscroll));
+    pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, mir_pointer_event_axis_value(pointer, mir_pointer_axis_vscroll));
+    pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_RX, mir_pointer_event_axis_value(pointer, mir_pointer_axis_relative_x));
+    pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_RY, mir_pointer_event_axis_value(pointer, mir_pointer_axis_relative_y));
+    pointer_properties.toolType = AMOTION_EVENT_TOOL_TYPE_MOUSE;
+    pointer_properties.id = 0;
+
+    std::chrono::nanoseconds const event_time{mir_input_event_get_event_time(input_event)};
+    auto const x_offset = 0.0f;
+    auto const y_offset = 0.0f;
+    auto const x_precision = 0;
+    auto const y_precision = 0;
+    auto const flags = 0;
+    auto const edge_flags = 0;
     return publisher.publishMotionEvent(
-        seq,
-        event.device_id,
-        event.source_id,
-        mia::extract_android_action_from(reinterpret_cast<MirEvent const&>(event)),
-        0, /* flags */
-        0, /* edge flags */
-        mia::android_modifiers_from_mir(event.modifiers),
-        mia::android_pointer_buttons_from_mir(event.buttons),
-        0.0f,  // event.x_offset,
-        0.0f,  // event.y_offset,
-        0, 0, /* unused x/y precision */
-        event.mac,
-        event.event_time,
-        event.event_time,
-        event.pointer_count,
-        properties,
-        coords
-        );
+        seq, mir_input_event_get_device_id(input_event), AINPUT_SOURCE_MOUSE,
+        mia::android_pointer_action_from_mir(mir_pointer_event_action(pointer), mir_pointer_event_buttons(pointer)),
+        flags, edge_flags, mia::android_modifiers_from_mir(mir_pointer_event_modifiers(pointer)),
+        mia::android_pointer_buttons_from_mir(mir_pointer_event_buttons(pointer)), x_offset, y_offset, x_precision,
+        y_precision, event.motion.mac, event_time, event_time, 1, &pointer_properties, &pointer_coord);
 }
 
 void mia::InputSender::ActiveTransfer::on_surface_disappeared()
@@ -323,7 +355,7 @@ void mia::InputSender::ActiveTransfer::on_surface_disappeared()
                       release_pending_responses.rend(),
                       [observer,this](InputSendEntry const& entry)
                       {
-                          observer->send_failed(entry.event, surface, InputSendObserver::surface_disappeared);
+                          observer->send_failed(*entry.event, surface, InputSendObserver::surface_disappeared);
                       });
     }
 }
@@ -340,13 +372,16 @@ void mia::InputSender::ActiveTransfer::on_finish_signal()
         if (status == droidinput::OK)
         {
             state.report->received_event_finished_signal(publisher.getChannel()->getFd(), sequence);
-            InputSendEntry entry = unqueue_entry(sequence);
-            auto observer = state.observer;
-
-            if (entry.sequence_id == sequence && observer)
-                observer->send_suceeded(entry.event,
-                                        surface,
-                                        handled ? InputSendObserver::consumed : InputSendObserver::not_consumed);
+            unqueue_entry(
+                sequence,
+                [observer = state.observer,this,handled](InputSendEntry const& entry)
+                {
+                    if(observer)
+                        observer->send_suceeded(
+                            *entry.event,
+                            surface,
+                            handled ? InputSendObserver::consumed : InputSendObserver::not_consumed);
+                });
         }
         else
         {
@@ -367,10 +402,12 @@ void mia::InputSender::ActiveTransfer::on_response_timeout()
         top_sequence_id = pending_responses.front().sequence_id;
     }
 
-    mia::InputSendEntry timedout_entry{unqueue_entry(top_sequence_id)};
-
-    if (state.observer)
-        state.observer->send_failed(timedout_entry.event, surface, InputSendObserver::no_response_received);
+    unqueue_entry(top_sequence_id,
+                 [observer = state.observer, this](InputSendEntry const& entry)
+                 {
+                     if(observer)
+                         observer->send_failed(*entry.event, surface, InputSendObserver::no_response_received);
+                 });
 }
 
 void mia::InputSender::ActiveTransfer::enqueue_entry(mia::InputSendEntry && entry)
@@ -383,21 +420,21 @@ void mia::InputSender::ActiveTransfer::enqueue_entry(mia::InputSendEntry && entr
         update_timer();
     }
 
-    pending_responses.push_back(entry);
+    pending_responses.emplace_back(std::move(entry));
 }
 
-mia::InputSendEntry mia::InputSender::ActiveTransfer::unqueue_entry(uint32_t sequence_id)
+void mia::InputSender::ActiveTransfer::unqueue_entry(uint32_t sequence_id, std::function<void(InputSendEntry const&)> const& execute_on_entry)
 {
-    std::lock_guard<std::mutex> lock(transfer_mutex);
+    std::unique_lock<std::mutex> lock(transfer_mutex);
     auto pos = std::find_if(pending_responses.begin(),
                             pending_responses.end(),
                             [sequence_id](mia::InputSendEntry const& entry)
                             { return entry.sequence_id == sequence_id; });
 
     if (pos == end(pending_responses))
-        return {0, MirEvent{}, std::shared_ptr<mi::InputChannel>()};
+        return;
 
-    mia::InputSendEntry result = *pos;
+    mia::InputSendEntry result = std::move(*pos);
     pending_responses.erase(pos);
     if (pending_responses.empty())
     {
@@ -408,7 +445,9 @@ mia::InputSendEntry mia::InputSender::ActiveTransfer::unqueue_entry(uint32_t seq
         update_timer();
     }
 
-    return result;
+    lock.unlock();
+
+    execute_on_entry(result);
 }
 
 void mia::InputSender::ActiveTransfer::update_timer()

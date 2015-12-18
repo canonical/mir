@@ -387,10 +387,11 @@ bool me::WindowManager::handle_pointer_event(MirPointerEvent const* pev)
 
     float new_zoom_mag = 0.0f;  // zero means unchanged
 
-   if (modifiers & mir_input_event_modifier_meta &&
-       action == mir_pointer_action_motion)
-   {
-        zoom_exponent += vscroll;
+    if (modifiers & mir_input_event_modifier_meta &&
+        action == mir_pointer_action_motion &&
+        vscroll != 0.0f)
+    {
+        zoom_exponent += vscroll > 0.0f ? 1.0f : -1.0f;
 
         // Negative exponents do work too, but disable them until
         // there's a clear edge to the desktop.
@@ -449,7 +450,7 @@ bool me::WindowManager::handle_pointer_event(MirPointerEvent const* pev)
         vscroll)
     {
         float alpha = surf->alpha();
-        alpha += 0.1f * vscroll;
+        alpha += vscroll > 0.0f ? 0.1f : -0.1f;
         if (alpha < 0.0f)
             alpha = 0.0f;
         else if (alpha > 1.0f)
