@@ -150,7 +150,7 @@ TEST_F(ServerPlatformProbeMockDRM, returns_kms_platform_when_nested)
     boost::program_options::options_description desc("");
     desc.add_options()
         ("host-socket", boost::program_options::value<std::string>(), "Host socket filename");
-    std::array<char const*, 3> args { "./aserver", "--host-socket", "/dev/null" };
+    std::array<char const*, 3> args {{ "./aserver", "--host-socket", "/dev/null" }};
     options.parse_arguments(desc, args.size(), args.data());
 
     auto block_android = ensure_android_probing_fails();
