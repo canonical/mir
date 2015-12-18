@@ -192,24 +192,24 @@ public:
     MirWaitHandle* request_persistent_id(mir_surface_id_callback callback, void* context);
     MirConnection* connection() const;
 private:
-    mutable std::mutex mutex; // Protects all members of *this
+    std::mutex mutable mutex; // Protects all members of *this
 
     void on_configured();
     void on_cursor_configured();
     void acquired_persistent_id(mir_surface_id_callback callback, void* context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
 
-    mir::client::rpc::DisplayServer* server{nullptr};
-    mir::client::rpc::DisplayServerDebug* debug{nullptr};
-    std::unique_ptr<mir::protobuf::Surface> surface;
-    std::unique_ptr<mir::protobuf::PersistentSurfaceId> persistent_id;
-    std::string error_message;
-    std::string name;
-    std::unique_ptr<mir::protobuf::Void> void_response;
+    mir::client::rpc::DisplayServer* const server{nullptr};
+    mir::client::rpc::DisplayServerDebug* const debug{nullptr};
+    std::unique_ptr<mir::protobuf::Surface> const surface;
+    std::unique_ptr<mir::protobuf::PersistentSurfaceId> const persistent_id;
+    std::string const error_message;
+    std::string const name;
+    std::unique_ptr<mir::protobuf::Void> const void_response;
 
     void on_modified();
     MirWaitHandle modify_wait_handle;
-    std::unique_ptr<mir::protobuf::Void> modify_result;
+    std::unique_ptr<mir::protobuf::Void> const modify_result;
 
     MirConnection* const connection_;
 
@@ -221,7 +221,7 @@ private:
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
     std::shared_ptr<mir::input::receiver::XKBMapper> const keymapper;
 
-    std::unique_ptr<mir::protobuf::SurfaceSetting> configure_result;
+    std::unique_ptr<mir::protobuf::SurfaceSetting> const configure_result;
 
     // Cache of latest SurfaceSettings returned from the server
     int attrib_cache[mir_surface_attribs];

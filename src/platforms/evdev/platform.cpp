@@ -44,6 +44,26 @@ namespace md = mir::dispatch;
 namespace mu = mir::udev;
 namespace mie = mi::evdev;
 
+namespace
+{
+
+std::string describe(mu::Device const& dev)
+{
+    std::string desc(dev.devnode());
+
+    char const * const model = dev.property("ID_MODEL");
+    if (model)
+        desc += ": " + std::string(model);
+
+    // Yes, we could use std::replace but this will compile smaller and faster
+    for (auto &c : desc)
+        if (c == '_') c = ' ';
+
+    return desc;
+}
+
+} // namespace
+
 mie::Platform::Platform(std::shared_ptr<InputDeviceRegistry> const& registry,
                               std::shared_ptr<InputReport> const& report,
                               std::unique_ptr<udev::Context>&& udev_context,
@@ -111,21 +131,12 @@ void mie::Platform::process_changes()
         {
             if (!dev.devnode())
                 return;
-            if (event == mu::Monitor::ADDED)
-            {
-                log_info("udev:device added %s", dev.devnode());
+            else if (event == mu::Monitor::ADDED)
                 device_added(dev);
-            }
-            if (event == mu::Monitor::REMOVED)
-            {
-                log_info("udev:device removed %s", dev.devnode());
+            else if (event == mu::Monitor::REMOVED)
                 device_removed(dev);
-            }
-            if (event == mu::Monitor::CHANGED)
-            {
-                log_info("udev:device changed %s", dev.devnode());
+            else if (event == mu::Monitor::CHANGED)
                 device_changed(dev);
-            }
         });
 }
 
@@ -138,10 +149,7 @@ void mie::Platform::scan_for_devices()
     for (auto& device : input_enumerator)
     {
         if (device.devnode() != nullptr)
-        {
-            log_info("udev:device added %s", device.devnode());
             device_added(device);
-        }
     }
 }
 
@@ -157,9 +165,10 @@ void mie::Platform::device_added(mu::Device const& dev)
     if (!device_ptr)
     {
         report->failed_to_open_input_device(dev.devnode(), "evdev-input");
-        log_info("libinput refused to open device %s", dev.devnode());
         return;
     }
+
+    log_info("Added %s", describe(dev).c_str());
 
     auto device_it = find_device(libinput_device_get_device_group(device_ptr.get()));
     if (end(devices) != device_it)
@@ -192,6 +201,8 @@ void mie::Platform::device_removed(mu::Device const& dev)
 
     input_device_registry->remove_device(*known_device_pos);
     devices.erase(known_device_pos);
+
+    log_info("Removed %s", describe(dev).c_str());
 }
 
 
@@ -223,6 +234,7 @@ auto mie::Platform::find_device(libinput_device_group const* devgroup) -> declty
 
 void mie::Platform::device_changed(mu::Device const& dev)
 {
+    log_info("Change detected on %s", describe(dev).c_str());
     device_removed(dev);
     device_added(dev);
 }
