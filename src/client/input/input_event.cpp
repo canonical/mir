@@ -175,20 +175,6 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev)
     }
 }
 
-MirInputEventMac mir_input_event_get_mac(MirInputEvent const* ev)
-{
-    auto old_ev = old_ev_from_new(ev);
-    switch (old_ev->type)
-    {
-    case mir_event_type_motion:
-        return old_ev->motion.mac;
-    case mir_event_type_key:
-        return old_ev->key.mac;
-    default:
-        abort();
-    }
-}
-
 MirInputEvent const* mir_pointer_event_input_event(MirPointerEvent const* event)
 {
     return reinterpret_cast<MirInputEvent const*>(event);

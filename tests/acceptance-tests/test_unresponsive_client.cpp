@@ -32,8 +32,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <string>
 #include <future>
+#include <mutex>
+#include <string>
 
 namespace ms = mir::scene;
 namespace mt = mir::test;
@@ -45,19 +46,27 @@ namespace
 {
 struct SessionListener : ms::NullSessionListener
 {
+    ~SessionListener()
+    {
+        std::lock_guard<decltype(guard)> lk{guard};
+        sessions.clear();
+    }
+
     void starting(std::shared_ptr<ms::Session> const& session) override
-        { sessions.insert(session); }
+        { std::lock_guard<decltype(guard)> lk{guard}; sessions.insert(session); }
 
     void stopping(std::shared_ptr<ms::Session> const& session) override
-        { sessions.erase(session); }
+        { std::lock_guard<decltype(guard)> lk{guard}; sessions.erase(session); }
 
     void for_each(std::function<void(std::shared_ptr<ms::Session> const&)> f) const
     {
+        std::lock_guard<decltype(guard)> lk{guard};
         for (auto& session : sessions)
             f(session);
     }
 
 private:
+    std::mutex mutable guard;
     std::set<std::shared_ptr<ms::Session>> sessions;
 };
 }
