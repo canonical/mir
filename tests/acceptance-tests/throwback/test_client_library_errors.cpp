@@ -139,13 +139,9 @@ class ConfigurableFailureConfiguration : public mtf::StubConnectionConfiguration
         return std::make_shared<ConfigurableFailureFactory<failure_set>>();
     }
 };
-
-struct ClientLibraryErrors : mtf::HeadlessInProcessServer
-{
-    ClientLibraryErrors() { add_to_environment("MIR_SERVER_ENABLE_INPUT","off"); }
-};
 }
 
+using ClientLibraryErrors = mtf::HeadlessInProcessServer;
 
 TEST_F(ClientLibraryErrors, exception_in_client_configuration_constructor_generates_error)
 {

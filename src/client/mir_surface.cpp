@@ -88,9 +88,14 @@ std::string const&MirPersistentId::as_string()
     return string_id;
 }
 
-MirSurface::MirSurface(std::string const& error, MirConnection* conn, mir::frontend::SurfaceId id) :
+MirSurface::MirSurface(
+    std::string const& error,
+    MirConnection* conn,
+    mir::frontend::SurfaceId id,
+    std::shared_ptr<MirWaitHandle> handle) :
     surface{mcl::make_protobuf_object<mir::protobuf::Surface>()},
-    connection_(conn)
+    connection_(conn),
+    creation_handle(handle)
 {
     surface->set_error(error);
     surface->mutable_id()->set_value(id.as_value());
@@ -106,7 +111,8 @@ MirSurface::MirSurface(
     std::shared_ptr<mcl::ClientBufferStream> const& buffer_stream,
     std::shared_ptr<mircv::InputPlatform> const& input_platform,
     MirSurfaceSpec const& spec,
-    mir::protobuf::Surface const& surface_proto)
+    mir::protobuf::Surface const& surface_proto,
+    std::shared_ptr<MirWaitHandle> handle)
     : server{&the_server},
       debug{debug},
       surface{mcl::make_protobuf_object<mir::protobuf::Surface>(surface_proto)},
@@ -118,7 +124,8 @@ MirSurface::MirSurface(
       buffer_stream(buffer_stream),
       input_platform(input_platform),
       keymapper(std::make_shared<mircv::XKBMapper>()),
-      configure_result{mcl::make_protobuf_object<mir::protobuf::SurfaceSetting>()}
+      configure_result{mcl::make_protobuf_object<mir::protobuf::SurfaceSetting>()},
+      creation_handle(handle)
 {
     for(int i = 0; i < surface_proto.attributes_size(); i++)
     {

@@ -27,7 +27,8 @@ namespace mtd = mir::test::doubles;
 
 struct ConnectionResourceMap : testing::Test
 {
-    std::shared_ptr<MirSurface> surface{std::make_shared<MirSurface>("a string", nullptr, mf::SurfaceId{2})};
+    std::shared_ptr<MirWaitHandle> wh { std::make_shared<MirWaitHandle>() };
+    std::shared_ptr<MirSurface> surface{std::make_shared<MirSurface>("a string", nullptr, mf::SurfaceId{2}, wh)};
     mtd::MockClientBufferStream stream; 
     mf::SurfaceId const surface_id{43};
     mf::BufferStreamId const stream_id{43};
