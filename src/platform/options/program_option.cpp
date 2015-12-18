@@ -17,11 +17,11 @@
  */
 
 #include "mir/options/program_option.h"
+#include "mir/log.h"
 
 #include <boost/program_options/parsers.hpp>
 
 #include <fstream>
-#include <iostream>
 #include <locale>
 
 namespace mo = mir::options;
@@ -112,7 +112,7 @@ void mo::ProgramOption::parse_file(
         }
         catch (const po::error& error)
         {
-            std::cerr << "ERROR in " << filename << ": " << error.what() << std::endl;
+            log_warning("Error in %s: %s", filename, error.what());
         }
     }
 
