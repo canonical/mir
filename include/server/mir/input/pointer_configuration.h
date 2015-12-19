@@ -33,9 +33,9 @@ struct PointerConfiguration
 {
     PointerConfiguration() {}
 
-    PointerConfiguration(MirPointerHandedness handedness, MirPointerAccelerationProfile acceleration_profile, double acceleration_bias,
+    PointerConfiguration(MirPointerHandedness handedness, MirPointerAcceleration acceleration, double acceleration_bias,
                          double horizontal_scroll_scale, double vertical_scroll_scale)
-        : handedness{handedness}, acceleration_profile{acceleration_profile},
+        : handedness{handedness}, acceleration{acceleration},
           cursor_acceleration_bias{acceleration_bias}, horizontal_scroll_scale{horizontal_scroll_scale},
           vertical_scroll_scale{vertical_scroll_scale}
     {
@@ -50,7 +50,7 @@ struct PointerConfiguration
     /*!
      * Configure cursor acceleration profile
      */
-    MirPointerAccelerationProfile acceleration_profile{mir_pointer_acceleration_profile_adaptive};
+    MirPointerAcceleration acceleration{mir_pointer_acceleration_adaptive};
 
     /*!
      * Configures the intensity of the cursor acceleration. Values within the range of [-1, 1] are allowed.

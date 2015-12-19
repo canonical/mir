@@ -342,13 +342,13 @@ mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settin
     switch(libinput_device_config_accel_get_profile(dev))
     {
     case LIBINPUT_CONFIG_ACCEL_PROFILE_NONE:
-        settings.acceleration_profile = mir_pointer_acceleration_profile_none;
+        settings.acceleration = mir_pointer_acceleration_none;
         break;
     case LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT:
-        settings.acceleration_profile = mir_pointer_acceleration_profile_constant;
+        settings.acceleration = mir_pointer_acceleration_constant;
         break;
     case LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE:
-        settings.acceleration_profile = mir_pointer_acceleration_profile_adaptive;
+        settings.acceleration = mir_pointer_acceleration_adaptive;
         break;
     }
 
@@ -370,9 +370,9 @@ void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& sett
     horizontal_scroll_scale = settings.horizontal_scroll_scale;
     libinput_device_config_accel_set_profile(
         dev,
-        (settings.acceleration_profile == mir_pointer_acceleration_profile_none) ?
+        (settings.acceleration == mir_pointer_acceleration_none) ?
             LIBINPUT_CONFIG_ACCEL_PROFILE_NONE :
-            (settings.acceleration_profile == mir_pointer_acceleration_profile_constant) ?
+            (settings.acceleration == mir_pointer_acceleration_constant) ?
             LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT :
             LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE);
 }

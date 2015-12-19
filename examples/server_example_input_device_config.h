@@ -39,7 +39,7 @@ class InputDeviceConfig : public mir::input::InputDeviceObserver
 {
 public:
     InputDeviceConfig(bool disable_while_typing,
-                      MirPointerAccelerationProfile mouse_profile,
+                      MirPointerAcceleration mouse_profile,
                       double mouse_cursor_acceleration_bias,
                       double mouse_scroll_speed_scale,
                       double touchpad_cursor_acceleration_bias,
@@ -52,7 +52,7 @@ public:
     void changes_complete() override {}
 private:
     bool disable_while_typing;
-    MirPointerAccelerationProfile mouse_profile;
+    MirPointerAcceleration mouse_profile;
     double mouse_cursor_acceleration_bias;
     double mouse_scroll_speed_scale;
     double touchpad_cursor_acceleration_bias;

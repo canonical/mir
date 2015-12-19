@@ -45,7 +45,7 @@ struct PointerSettings
     /**
      * Acceleration profile
      */
-    MirPointerAccelerationProfile acceleration_profile{mir_pointer_acceleration_profile_adaptive};
+    MirPointerAcceleration acceleration{mir_pointer_acceleration_adaptive};
     /**
      * Scale horizontal scrolling linearly
      */

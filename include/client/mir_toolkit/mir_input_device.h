@@ -32,12 +32,12 @@ typedef enum MirPointerHandedness
     mir_pointer_handedness_left = 1
 } MirPointerHandedness;
 
-typedef enum MirPointerAccelerationProfile
+typedef enum MirPointerAcceleration
 {
-    mir_pointer_acceleration_profile_none = 0,
-    mir_pointer_acceleration_profile_constant = 1,
-    mir_pointer_acceleration_profile_adaptive = 2
-} MirPointerAccelerationProfile;
+    mir_pointer_acceleration_none = 0,
+    mir_pointer_acceleration_constant = 1,
+    mir_pointer_acceleration_adaptive = 2
+} MirPointerAcceleration;
 
 typedef enum MirTouchpadClickMode
 {
