@@ -121,12 +121,40 @@ TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
 }
 
 #ifdef MIR_BUILD_PLATFORM_MESA_KMS
-TEST(ServerPlatformProbe, LoadsMesaPlatformWhenDrmDevicePresent)
+TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 {
     using namespace testing;
     mir::options::ProgramOption options;
     auto block_android = ensure_android_probing_fails();
     auto fake_mesa = ensure_mesa_probing_succeeds();
+
+    auto modules = available_platforms();
+
+    auto module = mir::graphics::module_for_device(modules, options);
+    ASSERT_NE(nullptr, module);
+
+    auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
+    auto description = descriptor();
+
+    EXPECT_THAT(description->name, HasSubstr("mesa-kms"));
+}
+
+//LP: #1526225, LP: #1526505, LP: #1515558, LP: #1526209
+TEST_F(ServerPlatformProbeMockDRM, returns_kms_platform_when_nested)
+{
+    using namespace testing;
+    ON_CALL(mock_drm, drmSetMaster(_))
+        .WillByDefault(Return(-1));
+
+    mir::options::ProgramOption options;
+    boost::program_options::options_description desc("");
+    desc.add_options()
+        ("host-socket", boost::program_options::value<std::string>(), "Host socket filename");
+    std::array<char const*, 3> args {{ "./aserver", "--host-socket", "/dev/null" }};
+    options.parse_arguments(desc, args.size(), args.data());
+
+    auto block_android = ensure_android_probing_fails();
+    auto block_mesa = ensure_mesa_probing_succeeds();
 
     auto modules = available_platforms();
 
@@ -192,7 +220,7 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
 }
 
 #if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11) || defined(MIR_BUILD_PLATFORM_ANDROID)
-TEST(ServerPlatformProbe, LoadsMesaOrAndroidInPreferenceToDummy)
+TEST_F(ServerPlatformProbeMockDRM, LoadsMesaOrAndroidInPreferenceToDummy)
 {
     using namespace testing;
     mir::options::ProgramOption options;
@@ -212,7 +240,7 @@ TEST(ServerPlatformProbe, LoadsMesaOrAndroidInPreferenceToDummy)
 }
 #endif
 
-TEST(ServerPlatformProbe, IgnoresNonPlatformModules)
+TEST_F(ServerPlatformProbeMockDRM, IgnoresNonPlatformModules)
 {
     using namespace testing;
     mir::options::ProgramOption options;

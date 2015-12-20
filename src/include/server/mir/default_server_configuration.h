@@ -131,7 +131,6 @@ class CursorListener;
 class TouchVisualizer;
 class InputRegion;
 class InputSender;
-class InputSendObserver;
 class CursorImages;
 }
 
@@ -303,7 +302,6 @@ public:
     virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
     virtual std::shared_ptr<input::InputSender>    the_input_sender();
-    virtual std::shared_ptr<input::InputSendObserver> the_input_send_observer();
 
     // new input reading related parts:
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
@@ -362,7 +360,6 @@ protected:
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;
     CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<input::InputSender>     input_sender;
-    CachedPtr<input::InputSendObserver> input_send_observer;
     CachedPtr<input::InputRegion>     input_region;
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<input::CursorListener> cursor_listener;
