@@ -319,7 +319,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_no_drm_udev_devices)
     EXPECT_EQ(mg::PlatformPriority::unsupported, probe(options));
 }
 
-TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_drm_devices_exist)
+TEST_F(MesaGraphicsPlatform, probe_returns_best_when_master)
 {
     mtf::UdevEnvironment udev_environment;
     boost::program_options::options_description po;
@@ -329,7 +329,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_drm_devices_exist)
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::supported, probe(options));
+    EXPECT_EQ(mg::PlatformPriority::best, probe(options));
 }
 
 TEST_F(MesaGraphicsPlatform, probe_returns_best_when_drm_devices_vt_option_exist)

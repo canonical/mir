@@ -63,16 +63,6 @@ TRACEPOINT_EVENT(
 
 TRACEPOINT_EVENT(
     mir_server_input,
-    received_event_finished_signal,
-    TP_ARGS(int, src_fd, uint32_t, seq_id),
-    TP_FIELDS(
-        ctf_integer(int, src_fd, src_fd)
-        ctf_integer(uint32_t, seq_id, seq_id)
-    )
-)
-
-TRACEPOINT_EVENT(
-    mir_server_input,
     opened_input_device,
     TP_ARGS(const char*, device, const char*, platform),
     TP_FIELDS(
