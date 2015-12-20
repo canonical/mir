@@ -64,6 +64,10 @@ public:
 
     virtual void session_stop_prompt_session_called(std::string const& app_name) = 0;
 
+    virtual void session_create_buffer_stream_called(std::string const& app_name) = 0;
+
+    virtual void session_release_buffer_stream_called(std::string const& app_name) = 0;
+
     virtual void session_error(
         std::string const& app_name,
         char const* method,

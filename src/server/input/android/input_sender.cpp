@@ -18,10 +18,7 @@
 
 #include "input_sender.h"
 
-#include "input_send_entry.h"
-
 #include "mir/input/android/event_conversion_helpers.h"
-#include "mir/input/input_send_observer.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_report.h"
 #include "mir/scene/surface.h"
@@ -41,16 +38,10 @@ namespace mia = mi::android;
 
 namespace droidinput = android;
 
-namespace
-{
-const std::chrono::seconds input_send_timeout{5};
-}
-
 mia::InputSender::InputSender(std::shared_ptr<mir::compositor::Scene> const& scene,
                               std::shared_ptr<mir::MainLoop> const& main_loop,
-                              std::shared_ptr<mir::input::InputSendObserver> const& observer,
                               std::shared_ptr<InputReport> const& report)
-    : state{main_loop, observer, report}, scene{scene}
+    : state{main_loop, report}, scene{scene}
 {
     scene->add_observer(std::make_shared<SceneObserver>(state));
 }
@@ -64,7 +55,7 @@ void mia::InputSender::SceneObserver::surface_added(scene::Surface* surface)
 {
     if (surface && surface->input_channel())
     {
-        state.add_transfer(surface->input_channel()->server_fd(), surface);
+        state.add_transfer(surface->input_channel(), surface);
     }
 }
 
@@ -98,9 +89,8 @@ void mia::InputSender::SceneObserver::remove_transfer_for(mi::Surface * surface)
 }
 
 mia::InputSender::InputSenderState::InputSenderState(std::shared_ptr<mir::MainLoop> const& main_loop,
-                                                     std::shared_ptr<mi::InputSendObserver> const& observer,
                                                      std::shared_ptr<InputReport> const& report)
-    : main_loop{main_loop}, report{report}, observer{observer}, seq{}
+    : main_loop{main_loop}, report{report}, seq{}
 {
 }
 
@@ -127,21 +117,20 @@ void mia::InputSender::InputSenderState::send_event(std::shared_ptr<InputChannel
     if (!transfer)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failure sending input event : Unknown channel provided"));
 
-    mia::InputSendEntry entry{next_seq(), event, channel};
     lock.unlock();
 
-    transfer->send(std::move(entry));
+    transfer->send(next_seq(), event);
 }
 
-void mia::InputSender::InputSenderState::add_transfer(int fd, mi::Surface * surface)
+void mia::InputSender::InputSenderState::add_transfer(std::shared_ptr<mir::input::InputChannel> const& channel, mi::Surface * surface)
 {
     std::lock_guard<std::mutex> lock(sender_mutex);
-    std::shared_ptr<ActiveTransfer> transfer{get_transfer(fd)};
+    std::shared_ptr<ActiveTransfer> transfer{get_transfer(channel->server_fd())};
 
     if (transfer && transfer->used_for_surface(surface))
         return;
 
-    transfers[fd] = std::make_shared<ActiveTransfer>(*this, fd, surface);
+    transfers[channel->server_fd()] = std::make_shared<ActiveTransfer>(*this, channel, surface);
 }
 
 void mia::InputSender::InputSenderState::remove_transfer(int fd)
@@ -154,8 +143,6 @@ void mia::InputSender::InputSenderState::remove_transfer(int fd)
         transfer->unsubscribe();
         transfers.erase(fd);
         lock.unlock();
-
-        transfer->on_surface_disappeared();
     }
 }
 
@@ -165,56 +152,52 @@ uint32_t mia::InputSender::InputSenderState::next_seq()
     return seq;
 }
 
-mia::InputSender::ActiveTransfer::ActiveTransfer(InputSenderState & state, int server_fd, mi::Surface* surface) :
+mia::InputSender::ActiveTransfer::ActiveTransfer(InputSenderState & state, std::shared_ptr<InputChannel> const& channel, mi::Surface* surface) :
     state(state),
     publisher{droidinput::sp<droidinput::InputChannel>(
-            new droidinput::InputChannel(droidinput::String8(surface->name()), server_fd))},
-    surface{surface}
+            new droidinput::InputChannel(droidinput::String8(surface->name()), channel->server_fd()))},
+    surface{surface},
+    channel{channel}
 {
 }
 
-void mia::InputSender::ActiveTransfer::send(InputSendEntry && event)
+void mia::InputSender::ActiveTransfer::send(uint32_t sequence_id, MirEvent const& event)
 {
-    if (mir_event_get_type(event.event.get()) != mir_event_type_input)
+    if (mir_event_get_type(&event) != mir_event_type_input)
         return;
 
     droidinput::status_t error_status;
 
-    auto event_time = mir_input_event_get_event_time(mir_event_get_input_event(event.event.get()));
-    auto input_event = mir_event_get_input_event(event.event.get());
+    auto event_time = mir_input_event_get_event_time(mir_event_get_input_event(&event));
+    auto input_event = mir_event_get_input_event(&event);
     switch(mir_input_event_get_type(input_event))
     {
     case mir_input_event_type_key:
-        error_status = send_key_event(event.sequence_id, *event.event);
-        state.report->published_key_event(event.channel->server_fd(), event.sequence_id, event_time);
+        error_status = send_key_event(sequence_id, event);
+        state.report->published_key_event(channel->server_fd(), sequence_id, event_time);
         break;
     case mir_input_event_type_touch:
-        error_status = send_touch_event(event.sequence_id, *event.event);
-        state.report->published_motion_event(event.channel->server_fd(), event.sequence_id, event_time);
+        error_status = send_touch_event(sequence_id, event);
+        state.report->published_motion_event(channel->server_fd(), sequence_id, event_time);
         break;
     case mir_input_event_type_pointer:
-        error_status = send_pointer_event(event.sequence_id, *event.event);
-        state.report->published_motion_event(event.channel->server_fd(), event.sequence_id, event_time);
+        error_status = send_pointer_event(sequence_id, event);
+        state.report->published_motion_event(channel->server_fd(), sequence_id, event_time);
         break;
     default:
         BOOST_THROW_EXCEPTION(std::runtime_error("unknown input event type"));
     }
 
-    if (error_status == droidinput::OK)
-    {
-        enqueue_entry(std::move(event));
-        return;
-    }
-
     switch(error_status)
     {
+    case droidinput::OK:
+        subscribe();
+        break;
     case droidinput::WOULD_BLOCK:
-        if (state.observer)
-            state.observer->client_blocked(*event.event, surface);
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(std::runtime_error("Client input channel write blocked : ")) << boost::errinfo_errno(errno));
         break;
     case droidinput::DEAD_OBJECT:
-        if (state.observer)
-            state.observer->send_failed(*event.event, surface, InputSendObserver::socket_error);
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(std::runtime_error("Client channel dead : ")) << boost::errinfo_errno(errno));
         break;
     default:
         BOOST_THROW_EXCEPTION(boost::enable_error_info(std::runtime_error("Failure sending input event : ")) << boost::errinfo_errno(errno));
@@ -339,129 +322,13 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_pointer_event(uint32
         y_precision, event.motion.mac, event_time, event_time, 1, &pointer_properties, &pointer_coord);
 }
 
-void mia::InputSender::ActiveTransfer::on_surface_disappeared()
-{
-    std::unique_lock<std::mutex> lock{transfer_mutex};
-    std::vector<InputSendEntry> release_pending_responses;
-
-    swap(release_pending_responses, pending_responses);
-
-    lock.unlock();
-
-    auto observer = state.observer;
-    if (observer)
-    {
-        std::for_each(release_pending_responses.rbegin(),
-                      release_pending_responses.rend(),
-                      [observer,this](InputSendEntry const& entry)
-                      {
-                          observer->send_failed(*entry.event, surface, InputSendObserver::surface_disappeared);
-                      });
-    }
-}
 
 void mia::InputSender::ActiveTransfer::on_finish_signal()
 {
     uint32_t sequence;
     bool handled;
 
-    while(true)
-    {
-        droidinput::status_t status = publisher.receiveFinishedSignal(&sequence, &handled);
-
-        if (status == droidinput::OK)
-        {
-            state.report->received_event_finished_signal(publisher.getChannel()->getFd(), sequence);
-            unqueue_entry(
-                sequence,
-                [observer = state.observer,this,handled](InputSendEntry const& entry)
-                {
-                    if(observer)
-                        observer->send_suceeded(
-                            *entry.event,
-                            surface,
-                            handled ? InputSendObserver::consumed : InputSendObserver::not_consumed);
-                });
-        }
-        else
-        {
-            return;
-            // TODO find a better way to handle communication errors, droidinput::InputDispatcher just ignores them
-        }
-    }
-}
-
-void mia::InputSender::ActiveTransfer::on_response_timeout()
-{
-    int top_sequence_id{0};
-
-    {
-        std::lock_guard<std::mutex> lock(transfer_mutex);
-        if (pending_responses.empty())
-            return;
-        top_sequence_id = pending_responses.front().sequence_id;
-    }
-
-    unqueue_entry(top_sequence_id,
-                 [observer = state.observer, this](InputSendEntry const& entry)
-                 {
-                     if(observer)
-                         observer->send_failed(*entry.event, surface, InputSendObserver::no_response_received);
-                 });
-}
-
-void mia::InputSender::ActiveTransfer::enqueue_entry(mia::InputSendEntry && entry)
-{
-    subscribe();
-
-    std::lock_guard<std::mutex> lock(transfer_mutex);
-    if (pending_responses.empty())
-    {
-        update_timer();
-    }
-
-    pending_responses.emplace_back(std::move(entry));
-}
-
-void mia::InputSender::ActiveTransfer::unqueue_entry(uint32_t sequence_id, std::function<void(InputSendEntry const&)> const& execute_on_entry)
-{
-    std::unique_lock<std::mutex> lock(transfer_mutex);
-    auto pos = std::find_if(pending_responses.begin(),
-                            pending_responses.end(),
-                            [sequence_id](mia::InputSendEntry const& entry)
-                            { return entry.sequence_id == sequence_id; });
-
-    if (pos == end(pending_responses))
-        return;
-
-    mia::InputSendEntry result = std::move(*pos);
-    pending_responses.erase(pos);
-    if (pending_responses.empty())
-    {
-        cancel_timer();
-    }
-    else
-    {
-        update_timer();
-    }
-
-    lock.unlock();
-
-    execute_on_entry(result);
-}
-
-void mia::InputSender::ActiveTransfer::update_timer()
-{
-    if (send_timer == nullptr)
-        send_timer = state.main_loop->create_alarm([this]{ on_response_timeout(); });
-
-    send_timer->reschedule_in(input_send_timeout);
-}
-
-void mia::InputSender::ActiveTransfer::cancel_timer()
-{
-    if (send_timer)
-        send_timer->cancel();
+    while(droidinput::OK == publisher.receiveFinishedSignal(&sequence, &handled));
 }
 
 bool mia::InputSender::ActiveTransfer::used_for_surface(input::Surface const* surface) const
