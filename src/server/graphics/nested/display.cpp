@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013, 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -29,12 +29,12 @@
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
-#include "mir_toolkit/mir_blob.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir/raii.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <sstream>
 
 namespace mi = mir::input;
 namespace mg = mir::graphics;
@@ -148,18 +148,9 @@ mgn::detail::DisplaySyncGroup::recommended_sleep() const
     return std::chrono::milliseconds::zero();
 }
 
-namespace
+geom::Rectangle mgn::detail::DisplaySyncGroup::view_area() const
 {
-auto copy_config(MirDisplayConfiguration* conf) -> std::shared_ptr<MirDisplayConfiguration>
-{
-    auto const blob = mir::raii::deleter_for(
-        mir_blob_from_display_configuration(conf),
-        [] (MirBlob* b) { mir_blob_release(b); });
-
-    return std::shared_ptr<MirDisplayConfiguration>{
-        mir_blob_to_display_configuration(blob.get()),
-        [] (MirDisplayConfiguration* c) { if (c) mir_display_config_destroy(c); }};
-}
+    return output->view_area();
 }
 
 mgn::Display::Display(
@@ -179,13 +170,17 @@ mgn::Display::Display(
     outputs{},
     current_configuration(std::make_unique<NestedDisplayConfiguration>(connection->create_display_config()))
 {
-    std::shared_ptr<DisplayConfiguration> conf(configuration());
+    decltype(current_configuration) conf{dynamic_cast<NestedDisplayConfiguration*>(current_configuration->clone().release())};
+
     initial_conf_policy->apply_to(*conf);
 
     if (*current_configuration != *conf)
-        apply_to_connection(*conf);
+    {
+        connection->apply_display_config(**conf);
+        swap(current_configuration, conf);
+    }
 
-    create_surfaces(*conf);
+    create_surfaces(*current_configuration);
 }
 
 mgn::Display::~Display() noexcept
@@ -204,7 +199,7 @@ void mgn::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 std::unique_ptr<mg::DisplayConfiguration> mgn::Display::configuration() const
 {
     std::lock_guard<std::mutex> lock(configuration_mutex);
-    return std::make_unique<NestedDisplayConfiguration>(copy_config(*current_configuration));
+    return current_configuration->clone();
 }
 
 void mgn::Display::complete_display_initialization(MirPixelFormat format)
@@ -217,12 +212,24 @@ void mgn::Display::complete_display_initialization(MirPixelFormat format)
 
 void mgn::Display::configure(mg::DisplayConfiguration const& configuration)
 {
-    std::lock_guard<std::mutex> lock(configuration_mutex);
-    if (*current_configuration != configuration)
+    decltype(current_configuration) new_config{dynamic_cast<NestedDisplayConfiguration*>(configuration.clone().release())};
+
     {
-        apply_to_connection(configuration);
-        create_surfaces(configuration);
+        std::lock_guard<std::mutex> lock(configuration_mutex);
+
+        swap(current_configuration, new_config);
+        create_surfaces(*current_configuration);
     }
+
+    connection->apply_display_config(**current_configuration);
+}
+
+namespace
+{
+long area_of(geom::Rectangle const& rect)
+{
+    return static_cast<long>(rect.size.width.as_int())*rect.size.height.as_int();
+}
 }
 
 void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration)
@@ -238,35 +245,61 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
     unique_outputs.for_each_group(
         [&](mg::OverlappingOutputGroup const& group)
         {
-            bool have_output_for_group = false;
-            geometry::Rectangle const& area = group.bounding_rectangle();
-            group.for_each_output([&](mg::DisplayConfigurationOutput output)
+            geometry::Rectangle const area = group.bounding_rectangle();
+
+            long max_overlap_area = 0;
+            mg::DisplayConfigurationOutput best_output;
+
+            group.for_each_output([&](mg::DisplayConfigurationOutput const& output)
                 {
-                    if (!have_output_for_group)
+                    if (area_of(area.intersection_with(output.extents())) > max_overlap_area)
                     {
-                        auto const& egl_config_format = output.current_format;
-
-                        complete_display_initialization(egl_config_format);
-
-                        auto const host_surface = connection->create_surface(
-                            area.size.width.as_int(),
-                            area.size.height.as_int(),
-                            egl_config_format,
-                            "Mir nested display",
-                            mir_buffer_usage_hardware,
-                            static_cast<uint32_t>(output.id.as_value()));
-
-                        result[output.id] = std::make_shared<mgn::detail::DisplaySyncGroup>(
-                            std::make_shared<mgn::detail::DisplayBuffer>(
-                                egl_display,
-                                host_surface,
-                                area,
-                                dispatcher,
-                                cursor_listener,
-                                output.current_format));
-                        have_output_for_group = true;
+                        max_overlap_area = area_of(area.intersection_with(output.extents()));
+                        best_output = output;
                     }
                 });
+
+            auto const& egl_config_format = best_output.current_format;
+            geometry::Rectangle const& extents = best_output.extents();
+
+            auto& display_buffer = result[best_output.id];
+
+            {
+                std::unique_lock<std::mutex> lock(outputs_mutex);
+                display_buffer = outputs[best_output.id];
+            }
+
+            if (display_buffer)
+            {
+                if (display_buffer->view_area() != extents)
+                    display_buffer.reset();
+            }
+
+            if (!display_buffer)
+            {
+                complete_display_initialization(egl_config_format);
+
+                std::ostringstream surface_title;
+
+                surface_title << "Mir nested display for output #" << best_output.id.as_value();
+
+                auto const host_surface = connection->create_surface(
+                    extents.size.width.as_int(),
+                    extents.size.height.as_int(),
+                    egl_config_format,
+                    surface_title.str().c_str(),
+                    mir_buffer_usage_hardware,
+                    static_cast<uint32_t>(best_output.id.as_value()));
+
+                display_buffer = std::make_shared<mgn::detail::DisplaySyncGroup>(
+                    std::make_shared<mgn::detail::DisplayBuffer>(
+                        egl_display,
+                        host_surface,
+                        extents,
+                        dispatcher,
+                        cursor_listener,
+                        best_output.current_format));
+            }
         });
 
     {
@@ -275,21 +308,15 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
     }
 }
 
-void mgn::Display::apply_to_connection(mg::DisplayConfiguration const& configuration)
-{
-    auto const& conf = dynamic_cast<NestedDisplayConfiguration const&>(configuration);
-
-    connection->apply_display_config(*conf);
-
-    current_configuration = std::make_unique<NestedDisplayConfiguration>(copy_config(conf));
-}
-
 void mgn::Display::register_configuration_change_handler(
         EventHandlerRegister& /*handlers*/,
         DisplayConfigurationChangeHandler const& conf_change_handler)
 {
-    auto const handler = [this, conf_change_handler] { 
-        current_configuration = std::make_unique<NestedDisplayConfiguration>(connection->create_display_config());
+    auto const handler = [this, conf_change_handler] {
+        {
+            std::lock_guard<std::mutex> lock(configuration_mutex);
+            current_configuration = std::make_unique<NestedDisplayConfiguration>(connection->create_display_config());
+        }
         conf_change_handler();
     };
 

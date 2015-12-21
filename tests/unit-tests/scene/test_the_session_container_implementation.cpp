@@ -18,7 +18,7 @@
 
 #include "src/server/scene/application_session.h"
 #include "src/server/scene/default_session_container.h"
-#include "mir/test/doubles/stub_scene_session.h"
+#include "mir/test/doubles/stub_session.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -33,8 +33,8 @@ TEST(DefaultSessionContainer, for_each)
     using namespace ::testing;
     ms::DefaultSessionContainer container;
 
-    auto session1 = std::make_shared<mtd::StubSceneSession>();
-    auto session2 = std::make_shared<mtd::StubSceneSession>();
+    auto session1 = std::make_shared<mtd::StubSession>();
+    auto session2 = std::make_shared<mtd::StubSession>();
 
     container.insert_session(session1);
     container.insert_session(session2);
@@ -60,9 +60,9 @@ TEST(DefaultSessionContainer, successor_of)
     using namespace ::testing;
     ms::DefaultSessionContainer container;
 
-    auto session1 = std::make_shared<mtd::StubSceneSession>();
-    auto session2 = std::make_shared<mtd::StubSceneSession>();
-    auto session3 = std::make_shared<mtd::StubSceneSession>();
+    auto session1 = std::make_shared<mtd::StubSession>();
+    auto session2 = std::make_shared<mtd::StubSession>();
+    auto session3 = std::make_shared<mtd::StubSession>();
 
     container.insert_session(session1);
     container.insert_session(session2);
@@ -82,6 +82,6 @@ TEST(DefaultSessionContainer, invalid_session_throw_behavior)
     ms::DefaultSessionContainer container;
 
     EXPECT_THROW({
-        container.remove_session(std::make_shared<mtd::StubSceneSession>());
+        container.remove_session(std::make_shared<mtd::StubSession>());
     }, std::logic_error);
 }

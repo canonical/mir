@@ -139,7 +139,7 @@ mg::DisplayConfigurationOutput populate_config(
     }
     
     return {
-        static_cast<mg::DisplayConfigurationOutputId>(name),
+        as_output_id(name),
         mg::DisplayConfigurationCardId{0},
         type,
         {display_format},

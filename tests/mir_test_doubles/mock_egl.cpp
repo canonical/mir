@@ -46,6 +46,9 @@ EGLImageKHR extension_eglCreateImageKHR(EGLDisplay dpy, EGLContext ctx, EGLenum 
                                         EGLClientBuffer buffer, const EGLint *attrib_list);
 EGLBoolean extension_eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image);
 void extension_glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image);
+EGLSyncKHR extension_eglCreateSyncKHR(EGLDisplay dpy, EGLenum type, const EGLint *attrib_list);
+EGLBoolean extension_eglDestroySyncKHR(EGLDisplay dpy, EGLSyncKHR sync);
+EGLint extension_eglClientWaitSyncKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLint flags, EGLTimeKHR timeout);
 
 /* EGL{Surface,Display,Config,Context} are all opaque types, so we can put whatever
    we want in them for testing */
@@ -105,15 +108,19 @@ mtd::MockEGL::MockEGL()
 
     ON_CALL(*this, eglMakeCurrent(_,_,_,_))
     .WillByDefault(Invoke(
-        [&] (EGLDisplay, EGLSurface, EGLSurface, EGLContext context)
+        [this] (EGLDisplay, EGLSurface, EGLSurface, EGLContext context)
         {
+            std::lock_guard<decltype(current_contexts_mutex)> lock{current_contexts_mutex};
             current_contexts[std::this_thread::get_id()] = context;
             return EGL_TRUE;
         }));
 
     ON_CALL(*this, eglGetCurrentContext())
-    .WillByDefault(Invoke(
-        [&] { return current_contexts[std::this_thread::get_id()]; }));
+    .WillByDefault(Invoke([this]
+        {
+            std::lock_guard<decltype(current_contexts_mutex)> lock{current_contexts_mutex};
+            return current_contexts[std::this_thread::get_id()];
+        }));
 
     ON_CALL(*this, eglSwapBuffers(_,_))
         .WillByDefault(Return(EGL_TRUE));                              
@@ -131,6 +138,12 @@ mtd::MockEGL::MockEGL()
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(extension_eglDestroyImageKHR)));
     ON_CALL(*this, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(extension_glEGLImageTargetTexture2DOES)));
+    ON_CALL(*this, eglGetProcAddress(StrEq("eglCreateSyncKHR")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(extension_eglCreateSyncKHR)));
+    ON_CALL(*this, eglGetProcAddress(StrEq("eglDestroySyncKHR")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(extension_eglDestroySyncKHR)));
+    ON_CALL(*this, eglGetProcAddress(StrEq("eglClientWaitSyncKHR")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(extension_eglClientWaitSyncKHR)));
 }
 
 void mtd::MockEGL::provide_egl_extensions()
@@ -384,4 +397,22 @@ void extension_glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
 {
     CHECK_GLOBAL_VOID_MOCK();
     global_mock_egl->glEGLImageTargetTexture2DOES(target, image);
+}
+
+EGLSyncKHR extension_eglCreateSyncKHR(EGLDisplay dpy, EGLenum type, const EGLint *attrib_list)
+{
+    CHECK_GLOBAL_MOCK(EGLSyncKHR);
+    return global_mock_egl->eglCreateSyncKHR(dpy, type, attrib_list);
+}
+
+EGLBoolean extension_eglDestroySyncKHR(EGLDisplay dpy, EGLSyncKHR sync)
+{
+    CHECK_GLOBAL_MOCK(EGLBoolean);
+    return global_mock_egl->eglDestroySyncKHR(dpy, sync);
+}
+
+EGLint extension_eglClientWaitSyncKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLint flags, EGLTimeKHR timeout)
+{
+    CHECK_GLOBAL_MOCK(EGLint);
+    return global_mock_egl->eglClientWaitSyncKHR(dpy, sync, flags, timeout);
 }

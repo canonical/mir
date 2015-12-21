@@ -27,7 +27,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 18)
+set(MIR_VERSION_MINOR 19)
 set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
@@ -103,10 +103,20 @@ elseif(cmake_build_type_lower MATCHES "threadsanitizer")
     # -fsanitize=thread is used, but doesn't.
     #
     # Linking everything with tsan is harmless and simple, so do that.
+    if (CMAKE_VERSION VERSION_GREATER 3.2.1)
+      cmake_policy(SET CMP0022 OLD)
+    endif()
     link_libraries(tsan)
   endif()
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=thread")
+elseif(cmake_build_type_lower MATCHES "ubsanitizer")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=undefined")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=undefined")
+  # "Symbol already defined" errors occur with pre-compiled headers
+  SET(MIR_USE_PRECOMPILED_HEADERS OFF CACHE BOOL "Use precompiled headers" FORCE)
 else()
   # AddressSanitizer builds fail if we disallow undefined symbols
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
@@ -125,7 +135,7 @@ include_directories(include/cookie)
 
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem REQUIRED)
-include_directories (
+include_directories (SYSTEM
   ${Boost_INCLUDE_DIRS}
 )
 
@@ -171,17 +181,13 @@ find_package(GLM REQUIRED)
 find_package(Protobuf REQUIRED )
 find_package(GLog REQUIRED)
 find_package(GFlags REQUIRED)
-find_package(XKBCOMMON REQUIRED)
 find_package(LTTngUST REQUIRED)
 pkg_check_modules(UDEV REQUIRED libudev)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
-pkg_check_modules(LIBINPUT REQUIRED libinput)
-pkg_check_modules(NETTLE REQUIRED nettle)
-pkg_check_modules(UUID REQUIRED uuid)
 
-include_directories (${GLESv2_INCLUDE_DIRS})
-include_directories (${EGL_INCLUDE_DIRS})
-include_directories (${GLM_INCLUDE_DIRS})
+include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
+include_directories (SYSTEM ${EGL_INCLUDE_DIRS})
+include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
 
 if (MIR_BUILD_PLATFORM_ANDROID)
   find_package(AndroidProperties REQUIRED)

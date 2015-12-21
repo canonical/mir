@@ -68,9 +68,10 @@ if (MIR_BUILD_PLATFORM_ANDROID)
 endif()
 
 add_library(mir-public-test-doubles OBJECT
-  fake_event_hub.cpp
   nested_mock_egl.cpp
   null_logger.cpp
+  stub_display_configuration.cpp ${CMAKE_SOURCE_DIR}/include/test/mir/test/doubles/stub_display_configuration.h
+  fake_display.cpp ${CMAKE_SOURCE_DIR}/include/test/mir/test/doubles/fake_display.h
 )
 
 add_library(mir-test-doubles-static STATIC

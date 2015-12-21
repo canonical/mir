@@ -59,20 +59,20 @@ void mc::BufferStreamSurfaces::release_client_buffer(graphics::Buffer* buf)
 {
     buffer_bundle->client_release(buf);
     {
-        std::unique_lock<std::mutex> lk(mutex);
+        std::lock_guard<decltype(mutex)> lk(mutex);
         first_frame_posted = true;
     }
 }
 
 geom::Size mc::BufferStreamSurfaces::stream_size()
 {
-    std::unique_lock<std::mutex> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex);
     return logical_size;
 }
 
 void mc::BufferStreamSurfaces::resize(geom::Size const& size)
 {
-    std::unique_lock<std::mutex> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex);
     logical_size = size;
     buffer_bundle->resize(logical_size * scale);
 }
@@ -109,7 +109,7 @@ void mc::BufferStreamSurfaces::swap_buffers(
          *       The new method of catching up on buffer backlogs is to
          *       query buffers_ready_for_compositor() or Scene::frames_pending
          */
-        observers.frame_posted(1);
+        observers.frame_posted(1, old_buffer->size());
     }
 
     acquire_client_buffer(complete);
@@ -117,14 +117,17 @@ void mc::BufferStreamSurfaces::swap_buffers(
 
 bool mc::BufferStreamSurfaces::has_submitted_buffer() const
 {
-    std::unique_lock<std::mutex> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex);
     return first_frame_posted;
 }
 
 void mc::BufferStreamSurfaces::with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec)
 {
-    if (!first_frame_posted)
-        BOOST_THROW_EXCEPTION(std::runtime_error("No frame posted yet"));
+    {
+        std::lock_guard<decltype(mutex)> lk(mutex);
+        if (!first_frame_posted)
+            BOOST_THROW_EXCEPTION(std::runtime_error("No frame posted yet"));
+    }
     exec(*std::make_shared<mc::TemporarySnapshotBuffer>(buffer_bundle));
 }
 
@@ -164,7 +167,7 @@ void mc::BufferStreamSurfaces::set_scale(float new_scale)
     if (new_scale <= 0.0f)
         BOOST_THROW_EXCEPTION(std::logic_error("invalid scale (must be greater than zero)"));
 
-    std::unique_lock<std::mutex> lk(mutex);
+    std::lock_guard<decltype(mutex)> lk(mutex);
     scale = new_scale;
     buffer_bundle->resize(logical_size * scale);
 }

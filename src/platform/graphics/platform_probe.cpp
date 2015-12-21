@@ -46,7 +46,11 @@ mir::graphics::module_for_device(std::vector<std::shared_ptr<SharedLibrary>> con
                 "describe_graphics_module",
                 MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
             auto desc = describe();
-            mir::log_info("Found graphics driver: %s", desc->name);
+            mir::log_info("Found graphics driver: %s (version %d.%d.%d)",
+                          desc->name,
+                          desc->major_version,
+                          desc->minor_version,
+                          desc->micro_version);
         }
         catch (std::runtime_error const&)
         {

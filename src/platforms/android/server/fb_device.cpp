@@ -58,7 +58,7 @@ mg::DisplayConfigurationOutput mga::FbControl::active_config_for(DisplayName dis
     auto const connected = (display_name == DisplayName::primary);
 
     return {
-        static_cast<mg::DisplayConfigurationOutputId>(display_name),
+        as_output_id(display_name),
         mg::DisplayConfigurationCardId{0},
         mg::DisplayConfigurationOutputType::lvds,
         std::vector<MirPixelFormat>{mga::to_mir_format(fb_device->format)},

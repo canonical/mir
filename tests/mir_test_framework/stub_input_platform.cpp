@@ -16,7 +16,7 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "stub_input_platform.h"
+#include "mir_test_framework/stub_input_platform.h"
 
 #include "mir/input/input_device_registry.h"
 #include "mir/dispatch/action_queue.h"
@@ -40,12 +40,14 @@ mtf::StubInputPlatform::StubInputPlatform(
 
 mtf::StubInputPlatform::~StubInputPlatform()
 {
+    std::lock_guard<decltype(device_store_guard)> lk{device_store_guard};
     device_store.clear();
     stub_input_platform = nullptr;
 }
 
 void mtf::StubInputPlatform::start()
 {
+    std::lock_guard<decltype(device_store_guard)> lk{device_store_guard};
     for (auto const& dev : device_store)
     {
         auto device = dev.lock();
@@ -74,6 +76,7 @@ void mtf::StubInputPlatform::add(std::shared_ptr<mir::input::InputDevice> const&
     auto input_platform = stub_input_platform.load();
     if (!input_platform)
     {
+        std::lock_guard<decltype(device_store_guard)> lk{device_store_guard};
         device_store.push_back(dev);
         return;
     }
@@ -118,3 +121,4 @@ void mtf::StubInputPlatform::unregister_dispatchable(std::shared_ptr<mir::dispat
 
 std::atomic<mtf::StubInputPlatform*> mtf::StubInputPlatform::stub_input_platform{nullptr};
 std::vector<std::weak_ptr<mir::input::InputDevice>> mtf::StubInputPlatform::device_store;
+std::mutex mtf::StubInputPlatform::device_store_guard;

@@ -75,7 +75,7 @@ TEST(DeviceDetection, three_buffers_reported_for_mx3)
 }
 
 //LP: 1371619, 1370555
-TEST(DeviceDetection, reports_gralloc_reopenable_after_close_by_default)
+TEST(DeviceDetection, reports_gralloc_can_be_closed_safely_by_default)
 {
     using namespace testing;
     char const default_str[] = "";
@@ -91,10 +91,10 @@ TEST(DeviceDetection, reports_gralloc_reopenable_after_close_by_default)
         }));
 
     mga::DeviceQuirks quirks(mock_ops);
-    EXPECT_TRUE(quirks.gralloc_reopenable_after_close());
+    EXPECT_FALSE(quirks.gralloc_cannot_be_closed_safely());
 }
 
-TEST(DeviceDetection, reports_gralloc_not_reopenable_after_close_on_krillin)
+TEST(DeviceDetection, reports_gralloc_cannot_be_closed_safely_on_krillin)
 {
     using namespace testing;
     char const default_str[] = "";
@@ -110,7 +110,7 @@ TEST(DeviceDetection, reports_gralloc_not_reopenable_after_close_on_krillin)
         }));
 
     mga::DeviceQuirks quirks(mock_ops);
-    EXPECT_FALSE(quirks.gralloc_reopenable_after_close());
+    EXPECT_TRUE(quirks.gralloc_cannot_be_closed_safely());
 }
 
 TEST(DeviceDetection, aligns_width_on_vegetahd)
@@ -132,6 +132,82 @@ TEST(DeviceDetection, aligns_width_on_vegetahd)
     EXPECT_THAT(quirks.aligned_width(720), Eq(736));
 }
 
+TEST(DeviceDetection, clears_gl_context_fence_on_manta)
+{
+    using namespace testing;
+    char const default_str[] = "";
+    char const mx4_name_str[] = "manta";
+
+    MockOps mock_ops;
+    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
+        .Times(1)
+        .WillOnce(Invoke([&](char const*, char* value, char const*)
+        {
+            strncpy(value, mx4_name_str, PROP_VALUE_MAX);
+            return 0;
+        }));
+
+    mga::DeviceQuirks quirks(mock_ops);
+    EXPECT_TRUE(quirks.clear_fb_context_fence());
+}
+
+TEST(DeviceDetection, clears_gl_context_fence_on_mx4)
+{
+    using namespace testing;
+    char const default_str[] = "";
+    char const mx4_name_str[] = "mx4";
+
+    MockOps mock_ops;
+    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
+        .Times(1)
+        .WillOnce(Invoke([&](char const*, char* value, char const*)
+        {
+            strncpy(value, mx4_name_str, PROP_VALUE_MAX);
+            return 0;
+        }));
+
+    mga::DeviceQuirks quirks(mock_ops);
+    EXPECT_TRUE(quirks.clear_fb_context_fence());
+}
+
+TEST(DeviceDetection, clears_gl_context_fence_on_krillin)
+{
+    using namespace testing;
+    char const default_str[] = "";
+    char const krillin_name_str[] = "krillin";
+
+    MockOps mock_ops;
+    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
+        .Times(1)
+        .WillOnce(Invoke([&](char const*, char* value, char const*)
+        {
+            strncpy(value, krillin_name_str, PROP_VALUE_MAX);
+            return 0;
+        }));
+
+    mga::DeviceQuirks quirks(mock_ops);
+    EXPECT_TRUE(quirks.clear_fb_context_fence());
+}
+
+TEST(DeviceDetection, does_not_clear_gl_context_fence_on_others)
+{
+    using namespace testing;
+    char const default_str[] = "";
+    char const mx4_name_str[] = "others";
+
+    MockOps mock_ops;
+    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
+        .Times(1)
+        .WillOnce(Invoke([&](char const*, char* value, char const*)
+        {
+            strncpy(value, mx4_name_str, PROP_VALUE_MAX);
+            return 0;
+        }));
+
+    mga::DeviceQuirks quirks(mock_ops);
+    EXPECT_FALSE(quirks.clear_fb_context_fence());
+}
+
 struct DeviceQuirks : testing::Test
 {
     void SetUp()
@@ -150,12 +226,12 @@ struct DeviceQuirks : testing::Test
         options.parse_arguments(desc, argc, argv);
     }
 
-    void disable_single_gralloc_instance_quirk()
+    void disable_gralloc_cannot_be_closed_safely_quirk()
     {
         int const argc = 2;
         char const* argv[argc] = {
             __PRETTY_FUNCTION__,
-            "--enable-single-gralloc-instance-quirk=false"
+            "--enable-gralloc-cannot-be-closed-safely-quirk=false"
         };
 
         options.parse_arguments(desc, argc, argv);
@@ -197,7 +273,7 @@ TEST_F(DeviceQuirks, number_of_framebuffers_quirk_can_be_disabled)
     EXPECT_THAT(quirks.num_framebuffers(), Ne(3));
 }
 
-TEST_F(DeviceQuirks, single_gralloc_instance_quirk_can_be_disabled)
+TEST_F(DeviceQuirks, gralloc_cannot_be_closed_safely_quirk_can_be_disabled)
 {
     using namespace testing;
     char const default_str[] = "";
@@ -212,9 +288,9 @@ TEST_F(DeviceQuirks, single_gralloc_instance_quirk_can_be_disabled)
             return 0;
         }));
 
-    disable_single_gralloc_instance_quirk();
+    disable_gralloc_cannot_be_closed_safely_quirk();
     mga::DeviceQuirks quirks(mock_ops, options);
-    EXPECT_TRUE(quirks.gralloc_reopenable_after_close());
+    EXPECT_FALSE(quirks.gralloc_cannot_be_closed_safely());
 }
 
 TEST_F(DeviceQuirks, width_alignment_quirk_can_be_disabled)

@@ -100,6 +100,8 @@ public:
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const&) override;
     void post() override;
     std::chrono::milliseconds recommended_sleep() const override;
+
+    geometry::Rectangle view_area() const;
 private:
     std::shared_ptr<detail::DisplayBuffer> const output;
 };
@@ -158,7 +160,6 @@ private:
     std::unique_ptr<NestedDisplayConfiguration> current_configuration;
 
     void create_surfaces(mir::graphics::DisplayConfiguration const& configuration);
-    void apply_to_connection(mir::graphics::DisplayConfiguration const& configuration);
     void complete_display_initialization(MirPixelFormat format);
 };
 

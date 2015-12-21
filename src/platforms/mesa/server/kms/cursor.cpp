@@ -39,6 +39,7 @@ namespace geom = mir::geometry;
 namespace
 {
 const uint64_t fallback_cursor_size = 64;
+char const* const mir_drm_cursor_64x64 = "MIR_DRM_CURSOR_64x64";
 
 // Transforms a relative position within the display bounds described by \a rect which is rotated with \a orientation
 geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement const& vector, MirOrientation orientation)
@@ -68,18 +69,24 @@ geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement con
 // https://bugs.freedesktop.org/show_bug.cgi?id=89164
 int get_drm_cursor_height(int fd)
 {
-   uint64_t height;
-   if (drmGetCap(fd, DRM_CAP_CURSOR_HEIGHT, &height) < 0)
-       height = fallback_cursor_size;
-   return int(height);
+    // on some older hardware drm incorrectly reports the cursor size
+    bool const force_64x64_cursor = getenv(mir_drm_cursor_64x64);
+   
+    uint64_t height = fallback_cursor_size;
+    if (!force_64x64_cursor)
+       drmGetCap(fd, DRM_CAP_CURSOR_HEIGHT, &height);
+    return int(height);
 }
 
 int get_drm_cursor_width(int fd)
 {
-   uint64_t width;
-   if (drmGetCap(fd, DRM_CAP_CURSOR_WIDTH, &width) < 0)
-       width = fallback_cursor_size;
-   return int(width);
+    // on some older hardware drm incorrectly reports the cursor size
+    bool const force_64x64_cursor = getenv(mir_drm_cursor_64x64);
+    
+    uint64_t width = fallback_cursor_size;
+    if (!force_64x64_cursor)
+       drmGetCap(fd, DRM_CAP_CURSOR_WIDTH, &width);
+    return int(width);
 }
 }
 
@@ -163,9 +170,10 @@ void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> co
 
 void mgm::Cursor::show()
 {
+    std::lock_guard<std::mutex> lg(guard);
+
     if (!visible)
     {
-        std::lock_guard<std::mutex> lg(guard);
         visible = true;
         place_cursor_at_locked(lg, current_position, ForceState);
     }

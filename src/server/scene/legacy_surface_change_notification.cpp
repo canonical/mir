@@ -46,7 +46,7 @@ void ms::LegacySurfaceChangeNotification::hidden_set_to(bool /*hide*/)
     notify_scene_change();
 }
 
-void ms::LegacySurfaceChangeNotification::frame_posted(int frames_available)
+void ms::LegacySurfaceChangeNotification::frame_posted(int frames_available, geom::Size const& /* size */)
 {
     notify_buffer_change(frames_available);
 }
@@ -73,6 +73,10 @@ void ms::LegacySurfaceChangeNotification::attrib_changed(MirSurfaceAttrib /* att
 
 // Cursor image change request is not enough to trigger recomposition.
 void ms::LegacySurfaceChangeNotification::cursor_image_set_to(mg::CursorImage const& /* image */)
+{
+}
+
+void ms::LegacySurfaceChangeNotification::cursor_image_removed()
 {
 }
 

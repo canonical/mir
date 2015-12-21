@@ -59,6 +59,7 @@ public:
     virtual char const* devtype() const = 0;
     virtual char const* devpath() const = 0;
     virtual char const* devnode() const = 0;
+    virtual char const* property(char const *name) const = 0;
 protected:
     Device() = default;
 };
