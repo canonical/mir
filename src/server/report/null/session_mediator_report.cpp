@@ -78,6 +78,14 @@ void mir::report::null::SessionMediatorReport::session_stop_prompt_session_calle
 {
 }
 
+void mir::report::null::SessionMediatorReport::session_create_buffer_stream_called(std::string const&)
+{
+}
+
+void mir::report::null::SessionMediatorReport::session_release_buffer_stream_called(std::string const&)
+{
+}
+
 void mir::report::null::SessionMediatorReport::session_error(
         std::string const&,
         char const* ,

@@ -108,6 +108,16 @@ void mrl::SessionMediatorReport::session_stop_prompt_session_called(std::string 
     log->log(ml::Severity::informational, "session_stop_prompt_session_called(\"" + app_name + "\")", component);
 }
 
+void mrl::SessionMediatorReport::session_create_buffer_stream_called(std::string const& app_name)
+{
+    log->log(ml::Severity::informational, "session_create_buffer_stream_called(\"" + app_name + "\")", component);
+}
+
+void mrl::SessionMediatorReport::session_release_buffer_stream_called(std::string const& app_name)
+{
+    log->log(ml::Severity::informational, "session_release_buffer_stream_called(\"" + app_name + "\")", component);
+}
+
 void mrl::SessionMediatorReport::session_error(
         std::string const& app_name,
         char const* method,
