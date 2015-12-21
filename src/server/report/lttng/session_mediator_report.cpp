@@ -44,6 +44,9 @@ MIR_SESSION_MEDIATOR_EVENT_METHOD(session_configure_surface_cursor_called)
 MIR_SESSION_MEDIATOR_EVENT_METHOD(session_configure_display_called)
 MIR_SESSION_MEDIATOR_EVENT_METHOD(session_set_base_display_configuration_called)
 MIR_SESSION_MEDIATOR_EVENT_METHOD(session_stop_prompt_session_called)
+MIR_SESSION_MEDIATOR_EVENT_METHOD(session_create_buffer_stream_called)
+MIR_SESSION_MEDIATOR_EVENT_METHOD(session_release_buffer_stream_called)
+
 
 void mir::report::lttng::SessionMediatorReport::session_start_prompt_session_called(std::string const& app_name, pid_t application_process)
 {
