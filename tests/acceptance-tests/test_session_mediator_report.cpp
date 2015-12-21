@@ -51,6 +51,9 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
     MOCK_METHOD2(session_start_prompt_session_called, void (std::string const&, pid_t));
     MOCK_METHOD1(session_stop_prompt_session_called, void (std::string const&));
 
+    MOCK_METHOD1(session_create_buffer_stream_called, void (std::string const& app_name));
+    MOCK_METHOD1(session_release_buffer_stream_called, void (std::string const& app_name));
+
     void session_configure_surface_called(std::string const&) override {};
     void session_configure_surface_cursor_called(std::string const&) override {};
     void session_configure_display_called(std::string const&) override {};
@@ -149,5 +152,19 @@ TEST_F(SessionMediatorReportTest, session_start_and_stop_prompt_session_called)
 
     EXPECT_CALL(report, session_stop_prompt_session_called(_));
     mir_prompt_session_release_sync(prompt_session);
+    testing::Mock::VerifyAndClearExpectations(&report);
+}
+
+TEST_F(SessionMediatorReportTest, session_create_and_release_buffer_stream_called)
+{
+    connect_client();
+
+    EXPECT_CALL(report, session_create_buffer_stream_called(_));
+    auto const buffer_stream = mir_connection_create_buffer_stream_sync(connection,
+        640, 480, mir_pixel_format_abgr_8888, mir_buffer_usage_software);
+    testing::Mock::VerifyAndClearExpectations(&report);
+
+    EXPECT_CALL(report, session_release_buffer_stream_called(_));
+    mir_buffer_stream_release_sync(buffer_stream);
     testing::Mock::VerifyAndClearExpectations(&report);
 }
