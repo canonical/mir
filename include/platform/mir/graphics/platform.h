@@ -94,7 +94,9 @@ public:
 };
 
 /**
- * A measure of how well a platform supports a device
+ * A measure of how well a platform is likely to support a device. This
+ * is not a guarantee of support, but just the priority order in which a
+ * driver will be chosen unless overridden.
  *
  * \note This is compared as an integer; best + 1 is a valid PlatformPriority that
  *       will be used in preference to a module that reports best.
@@ -103,15 +105,22 @@ public:
  */
 enum PlatformPriority : uint32_t
 {
-    unsupported = 0,    /**< Unable to function at all on this device */
-    dummy = 1,          /**< Used only for dummy or stub platforms.
-                         */
-    supported = 128,    /**< Capable of providing a functioning Platform on this device,
-                         *    possibly with degraded performance or features.
-                         */
-    best = 256          /**< Capable of providing a Platform with the best features and
-                         *   performance this device is capable of.
-                         */
+    unsupported = 0,          /**< Completely and definitely unable to function
+                                   at all on this device. */
+    dummy = 1,                /**< Used only for dummy or stub platforms. */
+    guaranteed_fallback = 32, /**< Always works, but undesirable (e.g. software
+                                   rendering at low resolution). */
+    better_fallback = 64,     /**< Sometimes works. It's a good bet if nothing
+                                   better is available. In the least this
+                                   option will probe the hardware and report
+                                   exactly what the reason is that no
+                                   supported or best option is available. */
+    supported = 128,          /**< Capable of providing a functioning Platform
+                                   on this device possibly with degraded
+                                   performance or features. */
+    best = 256                /**< Capable of providing a Platform with the best
+                                   features and performance this device is
+                                   capable of. */
 };
 
 typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateHostPlatform)(

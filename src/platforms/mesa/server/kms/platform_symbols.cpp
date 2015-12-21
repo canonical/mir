@@ -149,6 +149,10 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
 
     if (options.is_set(vt_option_name))
         platform_option_used = true;
+
+    if (platform_option_used)
+        return mg::PlatformPriority::best;
+
     auto nested = options.is_set(host_socket);
 
     auto udev = std::make_shared<mir::udev::Context>();
@@ -158,6 +162,9 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
     drm_devices.match_sysname("card[0-9]*");
     drm_devices.scan_devices();
 
+    // TODO: Consider removing this. It is probably incorrect to assume the
+    //       absence of DRM means Mesa won't work. Mesa is designed to be
+    //       more flexible than that.
     if (drm_devices.begin() == drm_devices.end())
         return mg::PlatformPriority::unsupported;
 
@@ -187,10 +194,17 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
             drmClose(tmp_fd);
     }
 
-    if (platform_option_used)
-        return mg::PlatformPriority::best;
-
-    return mg::PlatformPriority::unsupported;
+    /* We failed to set mastership. However, still in most cases mesa-kms
+     * is the right driver to choose. Landing here just means the user did
+     * not specify --vt or is running from ssh. Still in most cases, mesa-kms
+     * is the correct option so give it a go. Better to fail trying to switch
+     * VTs (and tell the user that) than to refuse to load the correct
+     * driver at all. (LP: #1528082)
+     *
+     * Just make sure we are below PlatformPriority::supported in case
+     * mesa-x11 is a viable option instead.
+     */
+    return mg::PlatformPriority::better_fallback;
 }
 
 mir::ModuleProperties const description = {
