@@ -25,7 +25,6 @@
 
 #include "mir/test/doubles/stub_scene_surface.h"
 #include "mir/test/doubles/mock_input_surface.h"
-#include "mir/test/doubles/mock_input_send_observer.h"
 #include "mir/test/doubles/stub_scene.h"
 #include "mir/test/doubles/mock_scene.h"
 #include "mir/test/doubles/triggered_main_loop.h"
@@ -72,7 +71,6 @@ public:
     MOCK_METHOD4(received_event_from_kernel, void(int64_t when, int type, int code, int value));
     MOCK_METHOD3(published_key_event, void(int dest_fd, uint32_t seq_id, int64_t event_time));
     MOCK_METHOD3(published_motion_event, void(int dest_fd, uint32_t seq_id, int64_t event_time));
-    MOCK_METHOD2(received_event_finished_signal, void(int dest_fd, uint32_t seq_id));
     MOCK_METHOD2(opened_input_device, void(char const* device_name, char const* input_platform));
     MOCK_METHOD2(failed_to_open_input_device, void(char const* device_name, char const* input_platform));
 };
@@ -142,7 +140,6 @@ public:
     droidinput::InputConsumer consumer{client_channel};
 
     mtd::TriggeredMainLoop loop;
-    testing::NiceMock<mtd::MockInputSendObserver> observer;
     testing::NiceMock<MockInputReport> mock_input_report;
 
     mir::EventUPtr key_event;
@@ -158,7 +155,7 @@ public:
     uint32_t seq = 0;
 
     FakeScene fake_scene;
-    mia::InputSender sender{mt::fake_shared(fake_scene), mt::fake_shared(loop), mt::fake_shared(observer), mt::fake_shared(mock_input_report)};
+    mia::InputSender sender{mt::fake_shared(fake_scene), mt::fake_shared(loop), mt::fake_shared(mock_input_report)};
 };
 
 TEST_F(AndroidInputSender, subscribes_to_scene)
@@ -167,7 +164,7 @@ TEST_F(AndroidInputSender, subscribes_to_scene)
     NiceMock<mtd::MockScene> mock_scene;
 
     EXPECT_CALL(mock_scene, add_observer(_));
-    mia::InputSender sender(mt::fake_shared(mock_scene), mt::fake_shared(loop), mt::fake_shared(observer), mr::null_input_report());
+    mia::InputSender sender(mt::fake_shared(mock_scene), mt::fake_shared(loop), mr::null_input_report());
 }
 
 TEST_F(AndroidInputSender, throws_on_unknown_channel)
@@ -315,23 +312,6 @@ TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_consumed)
     sender.send_event(*motion_event, channel);
 
     EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
-    EXPECT_CALL(observer,
-                send_suceeded(mt::MirTouchEventMatches(*motion_event),
-                              &stub_surface,
-                              mi::InputSendObserver::consumed));
-
-    consumer.sendFinishedSignal(seq, true);
-    loop.trigger_pending_fds();
-}
-
-TEST_F(AndroidInputSender, reports_receival_of_finish_signal)
-{
-    register_surface();
-
-    sender.send_event(*motion_event, channel);
-
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
-    EXPECT_CALL(mock_input_report, received_event_finished_signal(channel->server_fd(), seq));
 
     consumer.sendFinishedSignal(seq, true);
     loop.trigger_pending_fds();
@@ -344,83 +324,7 @@ TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_not_consum
     sender.send_event(*motion_event, channel);
 
     EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &seq, &event));
-    EXPECT_CALL(observer,
-                send_suceeded(mt::MirTouchEventMatches(*motion_event),
-                              &stub_surface,
-                              mi::InputSendObserver::not_consumed));
 
     consumer.sendFinishedSignal(seq, false);
     loop.trigger_pending_fds();
-}
-
-TEST_F(AndroidInputSender, unordered_finish_signal_triggers_the_right_callback)
-{
-    register_surface();
-
-    auto another_key_event = mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(1), 0, mir_keyboard_action_down,
-                                             9, test_scan_code, mir_input_event_modifier_none);
-
-    sender.send_event(*key_event, channel);
-    sender.send_event(*another_key_event, channel);
-
-    uint32_t first_sequence, second_sequence;
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &first_sequence, &event));
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(-1), &second_sequence, &event));
-
-    EXPECT_CALL(observer,
-                send_suceeded(mt::MirKeyboardEventMatches(*another_key_event),
-                              &stub_surface,
-                              mi::InputSendObserver::consumed));
-    EXPECT_CALL(observer,
-                send_suceeded(mt::MirKeyboardEventMatches(*key_event),
-                              &stub_surface,
-                              mi::InputSendObserver::not_consumed));
-    
-    consumer.sendFinishedSignal(second_sequence, true);
-    consumer.sendFinishedSignal(first_sequence, false);
-    loop.trigger_pending_fds();
-}
-
-TEST_F(AndroidInputSender, observer_notified_on_disapeared_surface )
-{
-    register_surface();
-
-    sender.send_event(*key_event, channel);
-    EXPECT_CALL(
-        observer,
-        send_failed(mt::MirKeyboardEventMatches(*key_event), &stub_surface, mir::input::InputSendObserver::surface_disappeared));
-    deregister_surface();
-}
-
-TEST_F(AndroidInputSender, alarm_created_for_input_send)
-{
-    using namespace ::testing;
-
-    register_surface();
-
-    EXPECT_CALL(loop, create_alarm(An<std::function<void()> const&>()));
-    sender.send_event(*key_event, channel);
-}
-
-TEST_F(AndroidInputSender, observer_informed_on_response_timeout)
-{
-    register_surface();
-
-    sender.send_event(*key_event, channel);
-    EXPECT_CALL(
-        observer,
-        send_failed(mt::MirKeyboardEventMatches(*key_event), &stub_surface, mir::input::InputSendObserver::no_response_received));
-
-    loop.fire_all_alarms();
-}
-
-TEST_F(AndroidInputSender, observer_informed_about_closed_socket_on_send_event)
-{
-    register_surface();
-
-    EXPECT_CALL(
-        observer,
-        send_failed(mt::MirKeyboardEventMatches(*key_event), &stub_surface, mir::input::InputSendObserver::socket_error));
-    ::close(channel->client_fd());
-    sender.send_event(*key_event, channel);
 }

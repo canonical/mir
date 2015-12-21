@@ -48,6 +48,8 @@ public:
     void session_set_base_display_configuration_called(std::string const& app_name) override;
     void session_start_prompt_session_called(std::string const& app_name, pid_t application_process) override;
     void session_stop_prompt_session_called(std::string const& app_name) override;
+    void session_create_buffer_stream_called(std::string const& app_name) override;
+    void session_release_buffer_stream_called(std::string const& app_name) override;
 
     void session_error(std::string const& app_name, char const* method, std::string const& what) override;
 private:
