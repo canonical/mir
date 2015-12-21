@@ -30,6 +30,7 @@
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/fake_shared.h"
+#include "mir_test_framework/temporary_environment_value.h"
 #include "mock_kms_output.h"
 
 #include <gtest/gtest.h>
@@ -46,6 +47,7 @@ namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 using mt::MockKMSOutput;
+using namespace ::testing;
 
 namespace
 {
@@ -326,6 +328,40 @@ TEST_F(MesaCursorTest, queries_received_cursor_size)
     mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
         std::make_shared<StubCurrentConfiguration>(),
         std::make_shared<StubCursorImage>()};
+}
+
+TEST_F(MesaCursorTest, respects_drm_cap_cursor)
+{
+    auto const drm_buffer_size = 255;
+    ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_WIDTH, _))
+        .WillByDefault(Invoke([](int , uint64_t , uint64_t *value) { *value = drm_buffer_size; return 0; }));
+
+    ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_HEIGHT, _))
+        .WillByDefault(Invoke([](int , uint64_t , uint64_t *value) { *value = drm_buffer_size; return 0; }));
+
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_, drm_buffer_size, drm_buffer_size, _, _));
+
+    mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
+                           std::make_shared<StubCurrentConfiguration>(),
+                           std::make_shared<StubCursorImage>()};
+}
+
+TEST_F(MesaCursorTest, can_force_64x64_cursor)
+{
+    auto const drm_buffer_size = 255;
+    ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_WIDTH, _))
+        .WillByDefault(Invoke([](int , uint64_t , uint64_t *value) { *value = drm_buffer_size; return 0; }));
+
+    ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_HEIGHT, _))
+        .WillByDefault(Invoke([](int , uint64_t , uint64_t *value) { *value = drm_buffer_size; return 0; }));
+
+    mir_test_framework::TemporaryEnvironmentValue mir_drm_cursor_64x64{"MIR_DRM_CURSOR_64x64", "on"};
+
+    EXPECT_CALL(mock_gbm, gbm_bo_create(_, 64, 64, _, _));
+
+    mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
+                           std::make_shared<StubCurrentConfiguration>(),
+                           std::make_shared<StubCursorImage>()};
 }
 
 TEST_F(MesaCursorTest, show_cursor_writes_to_bo)
