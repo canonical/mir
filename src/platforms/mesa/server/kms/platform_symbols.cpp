@@ -204,7 +204,8 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
      * Just make sure we are below PlatformPriority::supported in case
      * mesa-x11 is a viable option instead.
      */
-    return mg::PlatformPriority::better_fallback;
+    return static_cast<mg::PlatformPriority>(
+        mg::PlatformPriority::supported - 1);
 }
 
 mir::ModuleProperties const description = {
