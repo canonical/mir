@@ -17,11 +17,14 @@
  */
 
 #include "src/server/input/default_input_device_hub.h"
+#include "src/server/input/basic_seat.h"
 
 #include "mir/test/doubles/mock_input_device.h"
 #include "mir/test/doubles/mock_input_device_observer.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/doubles/mock_input_region.h"
+#include "mir/test/doubles/mock_touch_visualizer.h"
+#include "mir/test/doubles/mock_cursor_listener.h"
 #include "mir/test/doubles/triggered_main_loop.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
@@ -29,11 +32,11 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/cookie_factory.h"
 
-#include "mir/input/cursor_listener.h"
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/pointer_configuration.h"
 #include "mir/input/touchpad_configuration.h"
+#include "mir/input/touch_visualizer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -44,30 +47,8 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 using namespace std::literals::chrono_literals;
 
-namespace mir
+namespace
 {
-namespace input
-{
-bool operator==(mir::input::TouchVisualizer::Spot const& lhs, mir::input::TouchVisualizer::Spot const& rhs)
-{
-    return lhs.touch_location == rhs.touch_location && lhs.pressure == rhs.pressure;
-}
-}
-}
-
-struct MockTouchVisualizer : public mi::TouchVisualizer
-{
-    MOCK_METHOD1(visualize_touches, void(std::vector<mi::TouchVisualizer::Spot> const&));
-    MOCK_METHOD0(enable, void());
-    MOCK_METHOD0(disable, void());
-};
-
-struct MockCursorListener : public mi::CursorListener
-{
-    MOCK_METHOD2(cursor_moved_to, void(float, float));
-
-    ~MockCursorListener() noexcept {}
-};
 
 template<typename Type>
 using Nice = ::testing::NiceMock<Type>;
@@ -79,12 +60,13 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     Nice<mtd::MockInputDispatcher> mock_dispatcher;
     Nice<mtd::MockInputRegion> mock_region;
     std::shared_ptr<mir::cookie::CookieFactory> cookie_factory = mir::cookie::CookieFactory::create_keeping_secret();
-    Nice<MockCursorListener> mock_cursor_listener;
-    Nice<MockTouchVisualizer> mock_visualizer;
+    Nice<mtd::MockCursorListener> mock_cursor_listener;
+    Nice<mtd::MockTouchVisualizer> mock_visualizer;
     mir::dispatch::MultiplexingDispatchable multiplexer;
-    mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_dispatcher), mt::fake_shared(multiplexer),
-                                  mt::fake_shared(observer_loop), mt::fake_shared(mock_visualizer),
-                                  mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region), cookie_factory};
+    mi::BasicSeat seat{mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer),
+                       mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region)};
+    mi::DefaultInputDeviceHub hub{mt::fake_shared(seat), mt::fake_shared(multiplexer), mt::fake_shared(observer_loop),
+                                  cookie_factory};
     Nice<mtd::MockInputDeviceObserver> mock_observer;
     Nice<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
     Nice<mtd::MockInputDevice> another_device{"another_device","dev-2", mi::DeviceCapability::keyboard};
@@ -104,6 +86,7 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
                                  ));
     }
 };
+}
 
 TEST_F(SingleSeatInputDeviceHubSetup, input_sink_posts_events_to_input_dispatcher)
 {

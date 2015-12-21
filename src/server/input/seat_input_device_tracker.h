@@ -17,8 +17,8 @@
  *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_DEFAULT_SEAT_H_
-#define MIR_INPUT_DEFAULT_SEAT_H_
+#ifndef MIR_INPUT_SEAT_INPUT_DEVICE_TRACKER_H
+#define MIR_INPUT_SEAT_INPUT_DEVICE_TRACKER_H
 
 #include "mir/input/touch_visualizer.h"
 #include "mir/geometry/point.h"
@@ -32,29 +32,37 @@ namespace input
 {
 class CursorListener;
 class InputRegion;
+class InputDispatcher;
 
 /*
- * The seat bundles a group of devices. A cursor position, input event modifiers and the visible touch spots are properties
- * controlled by this grouping of input devices.
+ * The SeatInputDeviceTracker bundles the input device properties of a group of devices defined by a seat:
+ *  - a single cursor position,
+ *  - modifier key states (i.e alt, ctrl ..)
+ *  - a single mouse button state for all pointing devices
+ *  - visible touch spots
  */
-class Seat
+class SeatInputDeviceTracker
 {
 public:
-    Seat(std::shared_ptr<TouchVisualizer> const& touch_visualizer,
-         std::shared_ptr<CursorListener> const& cursor_listener, std::shared_ptr<InputRegion> const& input_region);
+    SeatInputDeviceTracker(std::shared_ptr<InputDispatcher> const& dispatcher,
+                           std::shared_ptr<TouchVisualizer> const& touch_visualizer,
+                           std::shared_ptr<CursorListener> const& cursor_listener,
+                           std::shared_ptr<InputRegion> const& input_region);
     void add_device(MirInputDeviceId);
     void remove_device(MirInputDeviceId);
 
+    void dispatch(MirEvent & event);
+private:
+    MirPointerButtons button_state() const;
+    geometry::Point cursor_position() const;
     MirInputEventModifiers event_modifier() const;
     MirInputEventModifiers event_modifier(MirInputDeviceId) const;
     void update_seat_properties(MirInputEvent const* event);
-    geometry::Point cursor_position() const;
-    MirPointerButtons button_state() const;
-private:
     void update_cursor(MirPointerEvent const* event);
     void update_spots();
     void update_states();
 
+    std::shared_ptr<InputDispatcher> const dispatcher;
     std::shared_ptr<TouchVisualizer> const touch_visualizer;
     std::shared_ptr<CursorListener> const cursor_listener;
     std::shared_ptr<InputRegion> const input_region;

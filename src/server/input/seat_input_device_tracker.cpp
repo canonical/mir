@@ -17,11 +17,13 @@
  *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "seat.h"
+#include "seat_input_device_tracker.h"
 #include "mir/input/device.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/input_region.h"
+#include "mir/input/input_dispatcher.h"
 #include "mir/geometry/displacement.h"
+#include "mir/events/event_builders.h"
 
 #include "input_modifier_utils.h"
 
@@ -32,20 +34,23 @@
 #include <tuple>
 
 namespace mi = mir::input;
+namespace mev = mir::events;
 
-mi::Seat::Seat(std::shared_ptr<TouchVisualizer> const& touch_visualizer,
-               std::shared_ptr<CursorListener> const& cursor_listener,
-               std::shared_ptr<InputRegion> const& input_region)
-    : touch_visualizer{touch_visualizer}, cursor_listener{cursor_listener}, input_region{input_region}, modifier{0}, buttons{0}
+mi::SeatInputDeviceTracker::SeatInputDeviceTracker(std::shared_ptr<InputDispatcher> const& dispatcher,
+                                                   std::shared_ptr<TouchVisualizer> const& touch_visualizer,
+                                                   std::shared_ptr<CursorListener> const& cursor_listener,
+                                                   std::shared_ptr<InputRegion> const& input_region)
+    : dispatcher{dispatcher}, touch_visualizer{touch_visualizer}, cursor_listener{cursor_listener},
+      input_region{input_region}, modifier{0}, buttons{0}
 {
 }
 
-void mi::Seat::add_device(MirInputDeviceId id)
+void mi::SeatInputDeviceTracker::add_device(MirInputDeviceId id)
 {
     device_data[id];
 }
 
-void mi::Seat::remove_device(MirInputDeviceId id)
+void mi::SeatInputDeviceTracker::remove_device(MirInputDeviceId id)
 {
     auto stored_data = device_data.find(id);
 
@@ -64,12 +69,31 @@ void mi::Seat::remove_device(MirInputDeviceId id)
         update_spots();
 }
 
-MirInputEventModifiers mi::Seat::event_modifier() const
+void mi::SeatInputDeviceTracker::dispatch(MirEvent &event)
+{
+    auto input_event = mir_event_get_input_event(&event);
+    update_seat_properties(input_event);
+
+    if (mir_input_event_type_key  == mir_input_event_get_type(input_event))
+        mev::set_modifier(event, event_modifier(mir_input_event_get_device_id(input_event)));
+    else
+        mev::set_modifier(event, event_modifier());
+
+    if (mir_input_event_type_pointer == mir_input_event_get_type(input_event))
+    {
+        mev::set_cursor_position(event, cursor_position());
+        mev::set_button_state(event, button_state());
+    }
+
+    dispatcher->dispatch(event);
+}
+
+MirInputEventModifiers mi::SeatInputDeviceTracker::event_modifier() const
 {
     return expand_modifiers(modifier);
 }
 
-MirInputEventModifiers mi::Seat::event_modifier(MirInputDeviceId id) const
+MirInputEventModifiers mi::SeatInputDeviceTracker::event_modifier(MirInputDeviceId id) const
 {
     auto stored_data = device_data.find(id);
     if (stored_data == end(device_data))
@@ -77,7 +101,7 @@ MirInputEventModifiers mi::Seat::event_modifier(MirInputDeviceId id) const
     return expand_modifiers(stored_data->second.mod);
 }
 
-void mi::Seat::update_seat_properties(MirInputEvent const* event)
+void mi::SeatInputDeviceTracker::update_seat_properties(MirInputEvent const* event)
 {
     auto id = mir_input_event_get_device_id(event);
 
@@ -113,7 +137,7 @@ void mi::Seat::update_seat_properties(MirInputEvent const* event)
     }
 }
 
-bool mi::Seat::DeviceData::update_modifier(MirKeyboardAction key_action, int scan_code)
+bool mi::SeatInputDeviceTracker::DeviceData::update_modifier(MirKeyboardAction key_action, int scan_code)
 {
     auto mod_change = to_modifiers(scan_code);
 
@@ -128,7 +152,7 @@ bool mi::Seat::DeviceData::update_modifier(MirKeyboardAction key_action, int sca
     return true;
 }
 
-bool mi::Seat::DeviceData::update_button_state(MirPointerButtons button_state)
+bool mi::SeatInputDeviceTracker::DeviceData::update_button_state(MirPointerButtons button_state)
 {
     if (buttons == button_state)
         return false;
@@ -137,7 +161,7 @@ bool mi::Seat::DeviceData::update_button_state(MirPointerButtons button_state)
     return true;
 }
 
-bool mi::Seat::DeviceData::update_spots(MirTouchEvent const* event)
+bool mi::SeatInputDeviceTracker::DeviceData::update_spots(MirTouchEvent const* event)
 {
     auto count = mir_touch_event_point_count(event);
     spots.clear();
@@ -152,7 +176,7 @@ bool mi::Seat::DeviceData::update_spots(MirTouchEvent const* event)
     return true;
 }
 
-void mi::Seat::update_spots()
+void mi::SeatInputDeviceTracker::update_spots()
 {
     spots.clear();
     for (auto const& dev : device_data)
@@ -161,7 +185,7 @@ void mi::Seat::update_spots()
     touch_visualizer->visualize_touches(spots);
 }
 
-void mi::Seat::update_states()
+void mi::SeatInputDeviceTracker::update_states()
 {
     std::tie(modifier, buttons) =
         std::accumulate(begin(device_data),
@@ -173,17 +197,17 @@ void mi::Seat::update_states()
                         });
 }
 
-mir::geometry::Point mi::Seat::cursor_position() const
+mir::geometry::Point mi::SeatInputDeviceTracker::cursor_position() const
 {
     return cursor_pos;
 }
 
-MirPointerButtons mi::Seat::button_state() const
+MirPointerButtons mi::SeatInputDeviceTracker::button_state() const
 {
     return buttons;
 }
 
-void mi::Seat::update_cursor(MirPointerEvent const* event)
+void mi::SeatInputDeviceTracker::update_cursor(MirPointerEvent const* event)
 {
     mir::geometry::Displacement movement{
         mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x),

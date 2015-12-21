@@ -34,6 +34,7 @@
 #include "default_input_device_hub.h"
 #include "default_input_manager.h"
 #include "surface_input_dispatcher.h"
+#include "basic_seat.h"
 
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_probe.h"
@@ -284,12 +285,13 @@ std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_in
     return default_input_device_hub([this]()
                                     {
                                         return std::make_shared<mi::DefaultInputDeviceHub>(
-                                            the_input_dispatcher(),
+                                            std::make_shared<mi::BasicSeat>(
+                                                the_input_dispatcher(),
+                                                the_touch_visualizer(),
+                                                the_cursor_listener(),
+                                                the_input_region()),
                                             the_input_reading_multiplexer(),
                                             the_main_loop(),
-                                            the_touch_visualizer(),
-                                            the_cursor_listener(),
-                                            the_input_region(),
                                             the_cookie_factory());
                                     });
 }
@@ -299,12 +301,14 @@ std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_d
     return default_input_device_hub([this]()
                                     {
                                         return std::make_shared<mi::DefaultInputDeviceHub>(
-                                            the_input_dispatcher(),
+std::make_shared<mi::BasicSeat>(
+                                                the_input_dispatcher(),
+                                                the_touch_visualizer(),
+                                                the_cursor_listener(),
+                                                the_input_region()),
+
                                             the_input_reading_multiplexer(),
                                             the_main_loop(),
-                                            the_touch_visualizer(),
-                                            the_cursor_listener(),
-                                            the_input_region(),
                                             the_cookie_factory());
                                     });
 }
