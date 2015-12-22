@@ -108,7 +108,7 @@ void mi::SeatInputDeviceTracker::update_seat_properties(MirInputEvent const* eve
     auto stored_data = device_data.find(id);
 
     if (stored_data == end(device_data))
-        BOOST_THROW_EXCEPTION(std::logic_error("Modifier for unknown device changed"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Event of unknown device received"));
 
     switch(mir_input_event_get_type(event))
     {

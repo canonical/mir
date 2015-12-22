@@ -52,11 +52,12 @@ public:
     void remove_device(MirInputDeviceId);
 
     void dispatch(MirEvent & event);
-private:
+
     MirPointerButtons button_state() const;
     geometry::Point cursor_position() const;
     MirInputEventModifiers event_modifier() const;
     MirInputEventModifiers event_modifier(MirInputDeviceId) const;
+private:
     void update_seat_properties(MirInputEvent const* event);
     void update_cursor(MirPointerEvent const* event);
     void update_spots();
