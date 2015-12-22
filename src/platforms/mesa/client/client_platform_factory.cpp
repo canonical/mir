@@ -42,7 +42,9 @@ void ensure_loaded_with_rtld_global_mesa_client()
     Dl_info info;
 
     dladdr(reinterpret_cast<void*>(&ensure_loaded_with_rtld_global_mesa_client), &info);
-    dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
+    void* reexport_self_global =
+        dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
+    dlclose(reexport_self_global);
 }
 
 struct RealBufferFileOps : public mclm::BufferFileOps
