@@ -139,7 +139,7 @@ TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
     auto modules = all_available_modules();
     // NOTE: For minimum fuss, load something that has minimal side-effects...
     modules.push_back("libc.so.6");
-    modules.push_back("dummy.so");
+    modules.push_back(mtf::client_platform("dummy.so"));
 
     mir::client::ProbingClientPlatformFactory factory(
         mir::report::null_shared_library_prober_report(),
