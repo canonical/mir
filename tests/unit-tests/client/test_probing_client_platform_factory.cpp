@@ -26,6 +26,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <dlfcn.h>
 
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
@@ -44,6 +45,15 @@ all_available_modules()
 #endif
     return modules;
 }
+
+bool loaded(std::string const& path)
+{
+    void* x = dlopen(path.c_str(), RTLD_LAZY | RTLD_NOLOAD);
+    if (x)
+        dlclose(x);
+    return !!x;
+}
+
 }
 
 TEST(ProbingClientPlatformFactory, ThrowsErrorWhenConstructedWithNoPlatforms)
@@ -77,6 +87,36 @@ TEST(ProbingClientPlatformFactory, ThrowsErrorWhenNoPlatformPluginProbesSuccessf
 
     EXPECT_THROW(factory.create_client_platform(&context),
                  std::runtime_error);
+}
+
+TEST(ProbingClientPlatformFactory, WIP_LeakTest)
+{
+    using namespace testing;
+    auto const modules = all_available_modules();
+    ASSERT_FALSE(modules.empty());
+    std::string const preferred_module = modules.front();
+
+    mir::client::ProbingClientPlatformFactory factory(
+        mir::report::null_shared_library_prober_report(),
+        {preferred_module},
+        {});
+
+    mtd::MockClientContext context;
+    ON_CALL(context, populate_server_package(_))
+            .WillByDefault(Invoke([](MirPlatformPackage& pkg)
+                           {
+                               ::memset(&pkg, 0, sizeof(MirPlatformPackage));
+                               // Mock up something that looks like a GBM platform package,
+                               // until we send the actual platform type over the wire!
+                               pkg.fd_items = 1;
+                               pkg.fd[0] = 23;
+                           }));
+
+    ASSERT_FALSE(loaded(preferred_module));
+    auto platform = factory.create_client_platform(&context);
+    ASSERT_TRUE(loaded(preferred_module));
+    platform.reset();
+    ASSERT_FALSE(loaded(preferred_module));
 }
 
 #if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
