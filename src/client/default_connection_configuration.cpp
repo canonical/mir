@@ -88,8 +88,20 @@ mcl::DefaultConnectionConfiguration::the_client_platform_factory()
     return client_platform_factory(
         [this]
         {
+            std::vector<std::string> libs, paths;
+            if (auto const lib = getenv("MIR_CLIENT_PLATFORM_LIB"))
+                libs.push_back(lib);
+
+            if (auto path = getenv("MIR_CLIENT_PLATFORM_PATH"))
+                paths.push_back(path);
+            else
+                paths.push_back(MIR_CLIENT_PLATFORM_PATH);
+
             return std::make_shared<mcl::ProbingClientPlatformFactory>(
-                                         the_shared_library_prober_report());
+                                         the_shared_library_prober_report(),
+                                         libs,
+                                         paths
+                                         );
         });
 }
 

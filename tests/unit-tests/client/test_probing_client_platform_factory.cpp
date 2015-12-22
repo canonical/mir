@@ -18,6 +18,7 @@
 
 #include "mir/client_platform.h"
 #include "src/client/probing_client_platform_factory.h"
+#include "src/server/report/null_report_factory.h"
 
 #include "mir/test/doubles/mock_client_context.h"
 #include "mir_test_framework/executable_path.h"
@@ -31,15 +32,15 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-std::vector<std::shared_ptr<mir::SharedLibrary>>
+std::vector<std::string>
 all_available_modules()
 {
-    std::vector<std::shared_ptr<mir::SharedLibrary>> modules;
+    std::vector<std::string> modules;
 #if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
-    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::client_platform("mesa")));
+    modules.push_back(mtf::client_platform("mesa"));
 #endif
 #ifdef MIR_BUILD_PLATFORM_ANDROID
-    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::client_platform("android")));
+    modules.push_back(mtf::client_platform("android"));
 #endif
     return modules;
 }
@@ -48,7 +49,9 @@ all_available_modules()
 TEST(ProbingClientPlatformFactory, ThrowsErrorWhenConstructedWithNoPlatforms)
 {
     std::vector<std::shared_ptr<mir::SharedLibrary>> empty_modules;
-    EXPECT_THROW(mir::client::ProbingClientPlatformFactory{empty_modules},
+    EXPECT_THROW(mir::client::ProbingClientPlatformFactory(
+                     mir::report::null_shared_library_prober_report(),
+                     {}, {}),
                  std::runtime_error);
 }
 
@@ -56,7 +59,10 @@ TEST(ProbingClientPlatformFactory, ThrowsErrorWhenNoPlatformPluginProbesSuccessf
 {
     using namespace testing;
 
-    mir::client::ProbingClientPlatformFactory factory{all_available_modules()};
+    mir::client::ProbingClientPlatformFactory factory(
+        mir::report::null_shared_library_prober_report(),
+        all_available_modules(),
+        {});
 
     mtd::MockClientContext context;
     ON_CALL(context, populate_server_package(_))
@@ -81,7 +87,10 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformWhenAppropriate)
 {
     using namespace testing;
 
-    mir::client::ProbingClientPlatformFactory factory{all_available_modules()};
+    mir::client::ProbingClientPlatformFactory factory(
+        mir::report::null_shared_library_prober_report(),
+        all_available_modules(),
+        {});
 
     mtd::MockClientContext context;
     ON_CALL(context, populate_server_package(_))
@@ -105,7 +114,10 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesAndroidPlatformWhenAppropriat
 {
     using namespace testing;
 
-    mir::client::ProbingClientPlatformFactory factory{all_available_modules()};
+    mir::client::ProbingClientPlatformFactory factory(
+        mir::report::null_shared_library_prober_report(),
+        all_available_modules(),
+        {});
 
     mtd::MockClientContext context;
     ON_CALL(context, populate_server_package(_))
@@ -126,10 +138,13 @@ TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
 
     auto modules = all_available_modules();
     // NOTE: For minimum fuss, load something that has minimal side-effects...
-    modules.push_back(std::make_shared<mir::SharedLibrary>("libc.so.6"));
-    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::client_platform("dummy.so")));
+    modules.push_back("libc.so.6");
+    modules.push_back("dummy.so");
 
-    mir::client::ProbingClientPlatformFactory factory{modules};
+    mir::client::ProbingClientPlatformFactory factory(
+        mir::report::null_shared_library_prober_report(),
+        modules,
+        {});
 
     mtd::MockClientContext context;
     ON_CALL(context, populate_server_package(_))
