@@ -27,8 +27,6 @@ namespace mir
 {
 namespace input
 {
-class InputSendObserver;
-class Surface;
 class InputChannel;
 
 class InputSender

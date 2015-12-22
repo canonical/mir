@@ -222,17 +222,6 @@ void mrl::InputReport::published_motion_event(int dest_fd, uint32_t seq_id, int6
     logger->log(ml::Severity::informational, ss.str(), component());
 }
 
-void mrl::InputReport::received_event_finished_signal(int src_fd, uint32_t seq_id)
-{
-    std::stringstream ss;
-
-    ss << "Received event finished"
-       << " seq_id=" << seq_id
-       << " src_fd=" << src_fd;
-
-    logger->log(ml::Severity::informational, ss.str(), component());
-}
-
 void mrl::InputReport::opened_input_device(char const* device_name, char const* input_platform)
 {
     std::stringstream ss;
