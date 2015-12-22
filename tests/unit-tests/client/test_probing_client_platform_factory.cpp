@@ -101,6 +101,8 @@ TEST(ProbingClientPlatformFactory, WIP_LeakTest)
         {preferred_module},
         {});
 
+    std::shared_ptr<mir::client::ClientPlatform> platform;
+    {
     mtd::MockClientContext context;
     ON_CALL(context, populate_server_package(_))
             .WillByDefault(Invoke([](MirPlatformPackage& pkg)
@@ -112,11 +114,19 @@ TEST(ProbingClientPlatformFactory, WIP_LeakTest)
                                pkg.fd[0] = 23;
                            }));
 
+    EXPECT_TRUE(0);
     ASSERT_FALSE(loaded(preferred_module));
-    auto platform = factory.create_client_platform(&context);
+    EXPECT_TRUE(0);
+    platform = factory.create_client_platform(&context);
+    }
+    EXPECT_TRUE(0);
     ASSERT_TRUE(loaded(preferred_module));
+    EXPECT_TRUE(0);
+    // FIXME: Crashing on this unless we leak mesa.so.3 :
     platform.reset();
-    ASSERT_FALSE(loaded(preferred_module));
+    EXPECT_TRUE(0);
+    EXPECT_FALSE(loaded(preferred_module));
+    EXPECT_TRUE(0);
 }
 
 #if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
