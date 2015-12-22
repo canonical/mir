@@ -96,7 +96,7 @@ public:
     frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const& params) override;
     void destroy_buffer_stream(frontend::BufferStreamId stream) override;
     void configure_streams(Surface& surface, std::vector<shell::StreamSpecification> const& config) override;
-    void destroy_surface(std::weak_ptr<Surface> const& surface);
+    void destroy_surface(std::weak_ptr<Surface> const& surface) override;
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
