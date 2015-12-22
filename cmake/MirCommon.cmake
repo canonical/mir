@@ -165,7 +165,7 @@ function (mir_precompiled_header TARGET HEADER)
     # we need to uppercase CMAKE_BUILD_TYPE, then dereference ${CMAKE_CXX_FLAGS_${UC_BUILD_TYPE}}.
     #
     # I'm unaware of a less roundabout method of getting the *actual* build flags for a target.
-    string(TOUPPER ${CMAKE_BUILD_TYPE} UC_BUILD_TYPE)
+    string(TOUPPER "${CMAKE_BUILD_TYPE}" UC_BUILD_TYPE)
     separate_arguments(
       PCH_CXX_FLAGS UNIX_COMMAND
       "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${UC_BUILD_TYPE}} ${TARGET_COMPILE_FLAGS} ${TARGET_INCLUDE_DIRECTORIES_STRING}"
