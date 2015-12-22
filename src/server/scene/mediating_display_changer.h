@@ -71,8 +71,7 @@ public:
     void resume_display_config_processing() override;
 
     /* From shell::DisplayConfigurationController */
-    std::future<void> set_base_configuration(
-        std::shared_ptr<graphics::DisplayConfiguration> const &conf) override;
+    void set_base_configuration(std::shared_ptr<graphics::DisplayConfiguration> const &conf) override;
 
 private:
     void focus_change_handler(std::shared_ptr<Session> const& session);

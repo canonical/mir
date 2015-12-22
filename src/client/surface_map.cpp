@@ -28,12 +28,11 @@ namespace mf=mir::frontend;
 void mcl::ConnectionSurfaceMap::with_surface_do(
     mf::SurfaceId surface_id, std::function<void(MirSurface*)> const& exec) const
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::shared_lock<decltype(guard)> lk(guard);
     auto const it = surfaces.find(surface_id);
     if (it != surfaces.end())
     {
         auto const surface = it->second;
-        lk.unlock();
         exec(surface.get());
     }
     else
@@ -46,20 +45,20 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
 
 void mcl::ConnectionSurfaceMap::insert(mf::SurfaceId surface_id, std::shared_ptr<MirSurface> const& surface)
 {
-    std::lock_guard<std::mutex> lk(guard);
+    std::lock_guard<decltype(guard)> lk(guard);
     surfaces[surface_id] = surface;
 }
 
 void mcl::ConnectionSurfaceMap::erase(mf::SurfaceId surface_id)
 {
-    std::lock_guard<std::mutex> lk(guard);
+    std::lock_guard<decltype(guard)> lk(guard);
     surfaces.erase(surface_id);
 }
 
 void mcl::ConnectionSurfaceMap::with_stream_do(
     mf::BufferStreamId stream_id, std::function<void(ClientBufferStream*)> const& exec) const
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::shared_lock<decltype(guard)> lk(guard);
     auto const it = streams.find(stream_id);
     if (it != streams.end())
     {
@@ -77,7 +76,7 @@ void mcl::ConnectionSurfaceMap::with_stream_do(
 
 void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBufferStream*)> const& fn) const
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::shared_lock<decltype(guard)> lk(guard);
     for(auto const& stream : streams)
         fn(stream.second.get());
 }
@@ -85,12 +84,12 @@ void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBuf
 void mcl::ConnectionSurfaceMap::insert(
     mf::BufferStreamId stream_id, std::shared_ptr<ClientBufferStream> const& stream)
 {
-    std::lock_guard<std::mutex> lk(guard);
+    std::lock_guard<decltype(guard)> lk(guard);
     streams[stream_id] = stream;
 }
 
 void mcl::ConnectionSurfaceMap::erase(mf::BufferStreamId stream_id)
 {
-    std::lock_guard<std::mutex> lk(guard);
+    std::lock_guard<decltype(guard)> lk(guard);
     streams.erase(stream_id);
 }

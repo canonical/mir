@@ -177,14 +177,16 @@ private:
     struct SurfaceCreationRequest
     {
         SurfaceCreationRequest(mir_surface_callback cb, void* context,  MirSurfaceSpec const& spec) :
-            cb(cb), context(context), spec(spec), response(std::make_shared<mir::protobuf::Surface>())
+            cb(cb), context(context), spec(spec),
+            response(std::make_shared<mir::protobuf::Surface>()),
+            wh(std::make_shared<MirWaitHandle>())
         {
         }
         mir_surface_callback cb;
         void* context;
         MirSurfaceSpec const spec;
         std::shared_ptr<mir::protobuf::Surface> response;
-        MirWaitHandle wh;
+        std::shared_ptr<MirWaitHandle> wh;
     };
     std::vector<std::shared_ptr<SurfaceCreationRequest>> surface_requests;
     void surface_created(SurfaceCreationRequest*);

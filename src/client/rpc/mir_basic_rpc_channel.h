@@ -67,7 +67,9 @@ public:
         google::protobuf::Closure* complete);
 
 
-    google::protobuf::MessageLite* message_for_result(mir::protobuf::wire::Result& result);
+    void populate_message_for_result(
+        mir::protobuf::wire::Result& result,
+        std::function<void(google::protobuf::MessageLite*)> const& populator);
 
     void complete_response(mir::protobuf::wire::Result& result);
 

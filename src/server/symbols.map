@@ -1,4 +1,4 @@
-MIR_SERVER_0.18 {
+MIR_SERVER_0.19 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -722,7 +722,6 @@ MIR_SERVER_0.18 {
     mir::DefaultServerConfiguration::the_input_report*;
     mir::DefaultServerConfiguration::the_input_scene*;
     mir::DefaultServerConfiguration::the_input_sender*;
-    mir::DefaultServerConfiguration::the_input_send_observer*;
     mir::DefaultServerConfiguration::the_input_target_enumerator*;
     mir::DefaultServerConfiguration::the_input_targeter*;
     mir::DefaultServerConfiguration::the_input_translator*;
