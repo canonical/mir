@@ -153,8 +153,40 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     }
 }
 
+//TODO: the server will currently spam us with a lot of resize messages at once,
+//      and we want to delay the IPC transactions for resize. If we could rate-limit
+//      the incoming messages, we should should consolidate the scale and size functions
 void mcl::BufferVault::set_size(geom::Size sz)
 {
     std::lock_guard<std::mutex> lk(mutex);
     size = sz;
+}
+
+void mcl::BufferVault::set_scale(float scale)
+{
+    std::vector<int> free_ids;
+    std::unique_lock<std::mutex> lk(mutex);
+    auto new_size = size * scale;
+    if (new_size == size)
+        return;
+    size = new_size;
+    for (auto it = buffers.begin(); it != buffers.end();)
+    {
+        if ((it->second.owner == Owner::Self) && (it->second.buffer->size() != size)) 
+        {
+            free_ids.push_back(it->first);
+            it = buffers.erase(it);
+        }
+        else
+        {
+            it++;
+        }
+    } 
+    lk.unlock();
+
+    for(auto& id : free_ids)
+    {
+        server_requests->allocate_buffer(new_size, format, usage);
+        server_requests->free_buffer(id);
+    }
 }
