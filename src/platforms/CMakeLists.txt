@@ -42,7 +42,6 @@ set(server_common_include_dirs
 # TODO platform implementations shouldn't depend on private APIs
 set(server_common_include_dirs
   ${server_common_include_dirs}
-  ${PROJECT_SOURCE_DIR}/include/common
   ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/platform
 )
