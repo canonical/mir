@@ -235,28 +235,50 @@ target_link_libraries(mir_demo_standalone_render_overlays
 )
 
 if (MIR_ENABLE_TESTS)
-  # Regression tests for LP: #1415321
+  add_executable(mir_symbol_test
+      uses_non_client_symbol.cpp
+  )
+  target_link_libraries(mir_symbol_test
+      mirclient
+  )
 
+  # Regression tests for LP: #1415321
   # To see reasons for failure:  ctest -V -R Clients-only-use-client-symbols
   mir_add_test(NAME Clients-only-use-client-symbols
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    COMMAND /bin/sh -c "!(nm -u mir_demo_client* | grep -v @@MIR_CLIENT | grep 'U mir_')"
+    COMMAND /bin/sh -c "!(objdump -T mir_demo_client* | grep *UND* | grep mir | grep -v MIR_CLIENT)"
   )
 
-# We use a slightly weaker version of the test with clang as that generates spurious NEEDED
-if (NOT "${CMAKE_CXX_COMPILER}" MATCHES "clang")
-  # To see reasons for failure:  ctest -V -R Clients-only-use-client-ABI
-  mir_add_test(NAME Clients-only-use-client-ABI
+  # Test our testcase...
+  mir_add_test(NAME Client-using-symbols-from-mircommon-fails-check
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    COMMAND /bin/sh -c "!(objdump -p mir_demo_client*  | grep NEEDED | grep libmir | grep -v libmirclient)"
+    COMMAND /bin/sh -c "(objdump -T mir_symbol_test | grep *UND* | grep mir | grep -v MIR_CLIENT)"
   )
-else()
-  # To see reasons for failure:  ctest -V -R Clients-only-use-client-ABI
-  mir_add_test(NAME Clients-only-use-client-ABI
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    COMMAND /bin/sh -c "!(nm -u mir_demo_client* | grep -v @@MIR_CLIENT | grep @@MIR_)"
-  )
-endif ()
+
+  # We use a slightly weaker version of the test with clang as that generates spurious NEEDED
+  if (NOT "${CMAKE_CXX_COMPILER}" MATCHES "clang")
+    # To see reasons for failure:  ctest -V -R Clients-only-use-client-ABI
+    mir_add_test(NAME Clients-only-use-client-ABI
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+      COMMAND /bin/sh -c "!(objdump -p mir_demo_client*  | grep NEEDED | grep libmir | grep -v libmirclient)"
+    )
+    # Again, test the testcase...
+    mir_add_test(NAME Client-using-ABI-from-mircommon-fails-check
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+      COMMAND /bin/sh -c "(objdump -p mir_symbol_test | grep NEEDED | grep libmir | grep -v libmirclient)"
+    )
+  else()
+    # To see reasons for failure:  ctest -V -R Clients-only-use-client-ABI
+    mir_add_test(NAME Clients-only-use-client-ABI
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+      COMMAND /bin/sh -c "!(nm -u mir_demo_client* | grep -v @@MIR_CLIENT | grep @@MIR_)"
+    )
+    # Again, test the testcase...
+    mir_add_test(NAME Client-using-ABI-from-mircommon-fails-check
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+      COMMAND /bin/sh -c "(nm -u mir_symbol_test | grep -v @@MIR_CLIENT | grep @@MIR_)"
+    )
+  endif ()
 endif ()
 
 add_executable(mir_cursor_theme_dump

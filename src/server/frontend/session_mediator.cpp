@@ -711,7 +711,7 @@ void mf::SessionMediator::create_buffer_stream(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_create_surface_called(session->name());
+    report->session_create_buffer_stream_called(session->name());
     
     auto const usage = (request->buffer_usage() == mir_buffer_usage_hardware) ?
         mg::BufferUsage::hardware : mg::BufferUsage::software;
@@ -751,7 +751,7 @@ void mf::SessionMediator::release_buffer_stream(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_create_surface_called(session->name());
+    report->session_release_buffer_stream_called(session->name());
 
     auto const id = BufferStreamId(request->value());
 

@@ -327,6 +327,7 @@ void raise_signal_on_close_event(MirSurface*, MirEvent const* ev, void* ctx)
 {
     if (mir_event_get_type(ev) == mir_event_type_close_surface)
     {
+        mir_event_get_close_surface_event(ev);
         auto signal = reinterpret_cast<mt::Signal*>(ctx);
         signal->raise();
     }

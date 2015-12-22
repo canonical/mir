@@ -139,7 +139,7 @@ public:
     std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
        mir::protobuf::BufferStream const& protobuf_bs, std::string const& surface_name, mir::geometry::Size);
 
-    mir::client::ClientBufferStream* create_client_buffer_stream(
+    MirWaitHandle* create_client_buffer_stream(
         int width, int height,
         MirPixelFormat format,
         MirBufferUsage buffer_usage,
@@ -156,8 +156,6 @@ public:
 
     EGLNativeDisplayType egl_native_display();
     MirPixelFormat       egl_pixel_format(EGLDisplay, EGLConfig) const;
-
-    void on_stream_created(int id, mir::client::ClientBufferStream* stream);
 
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
     void done_display_configure();
@@ -192,6 +190,24 @@ private:
     };
     std::vector<std::shared_ptr<SurfaceCreationRequest>> surface_requests;
     void surface_created(SurfaceCreationRequest*);
+
+    struct StreamCreationRequest
+    {
+        StreamCreationRequest(
+            mir_buffer_stream_callback cb, void* context, mir::protobuf::BufferStreamParameters const& params) :
+            callback(cb), context(context), parameters(params), response(std::make_shared<mir::protobuf::BufferStream>())
+        {
+        }
+        mir_buffer_stream_callback callback;
+        void* context;
+        mir::protobuf::BufferStreamParameters const parameters;
+        std::shared_ptr<mir::protobuf::BufferStream> response;
+        MirWaitHandle wh;
+    };
+    std::vector<std::shared_ptr<StreamCreationRequest>> stream_requests;
+    void stream_created(StreamCreationRequest*);
+    
+
 
     void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.
