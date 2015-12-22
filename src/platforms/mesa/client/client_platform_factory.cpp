@@ -35,8 +35,8 @@ namespace mclm = mcl::mesa;
 
 namespace
 {
-// Hack around the way mesa loads mir: This hack makes the
-// necessary symbols global.
+// Re-export our own symbols from mesa.so.N globally so that Mesa itself can
+// find them with a simple dlsym(NULL,)
 void ensure_loaded_with_rtld_global_mesa_client()
 {
     Dl_info info;
