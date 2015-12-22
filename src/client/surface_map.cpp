@@ -59,6 +59,7 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
     if (it != surfaces.end())
     {
         auto const surface = it->second;
+        lk.unlock();
         exec(surface.get());
     }
     else
@@ -83,6 +84,7 @@ void mcl::ConnectionSurfaceMap::erase(mf::SurfaceId surface_id)
 {
     std::lock_guard<decltype(guard)> lk(guard);
     surfaces.erase(surface_id);
+    printf("HERE, erasing bs\n");
     streams.erase(mf::BufferStreamId(surface_id.as_value()));
 }
 
@@ -94,6 +96,7 @@ void mcl::ConnectionSurfaceMap::with_stream_do(
     if (it != streams.end())
     {
         auto const stream = it->second.stream;
+        lk.unlock();
         exec(stream);
     }
     else
@@ -108,7 +111,11 @@ void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBuf
 {
     std::shared_lock<decltype(guard)> lk(guard);
     for(auto const& stream : streams)
-        fn(stream.second.stream);
+    {
+        auto s = stream.second.stream;
+        lk.unlock();
+        fn(s);
+    }
 }
 
 void mcl::ConnectionSurfaceMap::insert(mf::BufferStreamId stream_id, ClientBufferStream* stream)

@@ -87,11 +87,13 @@ void mc::MultiMonitorArbiter::clean_onscreen_buffers(std::lock_guard<std::mutex>
         if ((it->use_count == 0) &&
             (it != onscreen_buffers.begin() || schedule->num_scheduled())) //ensure monitors always have a buffer
         {
+            printf("SEND BUFFER\n");
             map->send_buffer(it->buffer->id());
             it = onscreen_buffers.erase(it);
         }
         else
         {
+            printf("NO SEND BUFFER\n");
             it++;
         } 
     }

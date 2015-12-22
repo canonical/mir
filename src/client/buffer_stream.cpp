@@ -254,6 +254,7 @@ public:
 
     void allocate_buffer(geom::Size size, MirPixelFormat format, int usage) override
     {
+        printf("ALLOCAL\n");
         if (disconnected_) return;
         mp::BufferAllocation request;
         request.mutable_id()->set_value(stream_id);
@@ -311,12 +312,14 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
     void deposit(mp::Buffer const& buffer, geom::Size, MirPixelFormat) override
     {
+        printf("INBOUND.\n");
         vault.wire_transfer_inbound(buffer);
     }
 
     void advance_current_buffer(std::unique_lock<std::mutex>& lk)
     {
         lk.unlock();
+        printf("WITHDRAW.\n");
         auto buffer = vault.withdraw().get();
         lk.lock();
         current = buffer;
@@ -556,8 +559,9 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
 
 MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 {
+    auto id = buffer_depository->current_buffer_id();
     std::unique_lock<decltype(mutex)> lock(mutex);
-    perf_report->end_frame(buffer_depository->current_buffer_id());
+    perf_report->end_frame(id);
 
     secured_region.reset();
 
@@ -665,7 +669,7 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
 
 uint32_t mcl::BufferStream::get_current_buffer_id()
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
+//    std::unique_lock<decltype(mutex)> lock(mutex);
     return buffer_depository->current_buffer_id();
 }
 

@@ -21,6 +21,8 @@
 
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
+#include "mir/compositor/scene_element.h"
+#include "mir/graphics/renderable.h"
 
 #include <thread>
 
@@ -39,8 +41,16 @@ public:
     {
         struct NullDisplayBufferCompositor : compositor::DisplayBufferCompositor
         {
-            void composite(compositor::SceneElementSequence&&)
+            void composite(compositor::SceneElementSequence&& seq)
             {
+                (void) seq;
+                printf("NULLIT\n");
+                for(auto elem : seq)
+                {
+                    elem->rendered();
+                    elem->renderable()->buffer();
+                }
+//                for(auto&
                 // yield() is needed to ensure reasonable runtime under
                 // valgrind for some tests
                 std::this_thread::yield();

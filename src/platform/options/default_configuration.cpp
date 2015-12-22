@@ -175,7 +175,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
          "How to handle the Shell report. [{log,off}]")
         (frontend_threads_opt, po::value<int>()->default_value(default_ipc_threads),
             "threads in frontend thread pool.")
-        (nbuffers_opt, po::value<int>()->default_value(3),
+        (nbuffers_opt, po::value<int>()->default_value(0),
             "Number of buffers per surface.")
         (composite_delay_opt, po::value<int>()->default_value(-1),
             "Compositor frame delay in milliseconds (how long to wait for new "

@@ -108,6 +108,7 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
 
 void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 {
+    printf("INBOUND BVAULT\n");
     auto package = std::make_shared<MirBufferPackage>();
     package->data_items = protobuf_buffer.data_size();
     package->fd_items = protobuf_buffer.fd_size();
@@ -193,6 +194,7 @@ void mcl::BufferVault::set_scale(float scale)
 
 void mcl::BufferVault::disconnected()
 {
+    printf("DISCONNECTED\n");
     server_requests->disconnected();
     std::lock_guard<std::mutex> lk(mutex);
     promises.clear();

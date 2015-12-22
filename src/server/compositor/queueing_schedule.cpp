@@ -26,6 +26,7 @@ namespace mg = mir::graphics;
 void mc::QueueingSchedule::schedule(std::shared_ptr<graphics::Buffer> const& buffer)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
+    printf("SERVER SCHEDULE.\n");
     auto it = std::find(queue.begin(), queue.end(), buffer);
     if (it != queue.end())
         queue.erase(it);
@@ -41,6 +42,7 @@ unsigned int mc::QueueingSchedule::num_scheduled()
 std::shared_ptr<mg::Buffer> mc::QueueingSchedule::next_buffer()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
+    printf("SERVER CONSUME.\n");
     if (queue.empty())
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer scheduled"));
     auto buffer = queue.front();
