@@ -13,9 +13,6 @@ mcl::ProbingClientPlatformFactory::ProbingClientPlatformFactory(
     std::shared_ptr<mir::SharedLibraryProberReport> const& rep)
     : shared_library_prober_report(rep)
 {
-    auto const overridden = getenv("MIR_CLIENT_PLATFORM_LIB");
-    if (overridden)
-        platform_override = overridden;
 }
 
 std::shared_ptr<mcl::ClientPlatform>
@@ -25,7 +22,7 @@ mcl::ProbingClientPlatformFactory::create_client_platform(mcl::ClientContext* co
     // than it takes to choose the right one. So this list is local:
     std::vector<std::shared_ptr<mir::SharedLibrary>> platform_modules;
 
-    if (!platform_override.empty())
+    if (auto const platform_override = getenv("MIR_CLIENT_PLATFORM_LIB"))
     {
         // Even forcing a choice platform is only loaded on demand. It's good
         // to not need to hold the module open when there are no connections.

@@ -22,7 +22,6 @@ public:
 
 private:
     std::shared_ptr<mir::SharedLibraryProberReport> const shared_library_prober_report;
-    std::string platform_override;
 };
 
 }
