@@ -393,13 +393,13 @@ void MirConnection::released(StreamRelease data)
     if (data.callback)
         data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
     data.handle->result_received();
-//    delete data.stream;
 }
 
 void MirConnection::released(SurfaceRelease data)
 {
     // releasing this surface from surface_map means that it will no longer receive events
     // If it's still focused, send an unfocused event before we kill it entirely
+    surface_map->erase(mf::SurfaceId(data.surface->id()));
     if (data.surface->attrib(mir_surface_attrib_focus) == mir_surface_focused)
     {
         auto unfocus = mev::make_event(mir::frontend::SurfaceId{data.surface->id()}, mir_surface_attrib_focus, mir_surface_unfocused);
@@ -407,7 +407,6 @@ void MirConnection::released(SurfaceRelease data)
     }
     data.callback(data.surface, data.context);
     data.handle->result_received();
-    surface_map->erase(mf::SurfaceId(data.surface->id()));
 }
 
 MirWaitHandle* MirConnection::release_surface(

@@ -132,7 +132,6 @@ protected:
     BufferStream& operator=(BufferStream const&) = delete;
 
 private:
-//    void created(mir_buffer_stream_callback callback, void* context);
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>&);
     void screencast_buffer_received(std::function<void()> done);
@@ -171,6 +170,7 @@ private:
     geometry::Size ideal_buffer_size;
     size_t const nbuffers;
     std::string error_message;
+//    std::shared_ptr<MirWaitHandle> creation_wait_handle;
 };
 
 }

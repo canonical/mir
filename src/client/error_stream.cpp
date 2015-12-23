@@ -96,9 +96,3 @@ MirWaitHandle* mcl::ErrorStream::set_scale(float)
 void mcl::ErrorStream::buffer_available(mir::protobuf::Buffer const&) {}
 void mcl::ErrorStream::buffer_unavailable() {}
 void mcl::ErrorStream::set_size(geometry::Size) {}
-
-#if 0
-//probably remove altogethr
-//MirWaitHandle* mcl::ErrorStream::release(mir_buffer_stream_callback callback, void* context);
-//MirWaitHandle* mcl::ErrorStream::get_create_wait_handle();
-#endif
