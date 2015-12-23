@@ -27,6 +27,7 @@
 
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
+#include "mir/input/input_devices.h"
 
 #include "mir/test/doubles/null_client_event_sink.h"
 #include "mir/test/doubles/mock_client_buffer_stream.h"
@@ -219,6 +220,7 @@ public:
                   std::unique_ptr<MockStreamTransport>{transport},
                   std::make_shared<StubSurfaceMap>(),
                   std::make_shared<mcl::DisplayConfiguration>(),
+                  nullptr,
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),
@@ -371,6 +373,7 @@ TEST_F(MirProtobufRpcChannelTest, notifies_streams_of_disconnect)
                   std::make_unique<NiceMock<MockStreamTransport>>(),
                   stream_map,
                   std::make_shared<mcl::DisplayConfiguration>(),
+                  std::make_shared<mir::input::InputDevices>(),
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),

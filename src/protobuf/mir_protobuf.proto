@@ -254,6 +254,7 @@ message EventSequence {
   optional LifecycleEvent lifecycle_event = 3;
   optional BufferRequest buffer_request = 4;
   optional PingEvent ping_event = 5;
+  repeated InputDeviceInfo input_devices = 6;
 
   optional string error = 127;
 }
@@ -338,4 +339,11 @@ message Cookie {
 message RaiseRequest {
   required Cookie cookie = 1;
   required SurfaceId surface_id = 2;
+}
+
+message InputDeviceInfo {
+  optional int64 id = 1;
+  optional uint32 capabilities = 2;
+  optional string name = 3;
+  optional string unique_id = 4;
 }
