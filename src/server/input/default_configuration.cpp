@@ -270,33 +270,36 @@ mir::DefaultServerConfiguration::the_input_reading_multiplexer()
 
 std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_input_device_registry()
 {
-    return default_input_device_hub([this]()
-                                    {
-                                        return std::make_shared<mi::DefaultInputDeviceHub>(
-                                            std::make_shared<mi::BasicSeat>(
-                                                the_input_dispatcher(),
-                                                the_touch_visualizer(),
-                                                the_cursor_listener(),
-                                                the_input_region()),
-                                            the_input_reading_multiplexer(),
-                                            the_main_loop(),
-                                            the_cookie_factory());
-                                    });
+    return default_input_device_hub(
+        [this]()
+        {
+            return std::make_shared<mi::DefaultInputDeviceHub>(
+                std::make_shared<mi::BasicSeat>(
+                    the_global_event_sink(),
+                    the_input_dispatcher(),
+                    the_touch_visualizer(),
+                    the_cursor_listener(),
+                    the_input_region()),
+                the_input_reading_multiplexer(),
+                the_main_loop(),
+                the_cookie_factory());
+                });
 }
 
 std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_device_hub()
 {
-    return default_input_device_hub([this]()
-                                    {
-                                        return std::make_shared<mi::DefaultInputDeviceHub>(
-std::make_shared<mi::BasicSeat>(
-                                                the_input_dispatcher(),
-                                                the_touch_visualizer(),
-                                                the_cursor_listener(),
-                                                the_input_region()),
-
-                                            the_input_reading_multiplexer(),
-                                            the_main_loop(),
-                                            the_cookie_factory());
-                                    });
+    return default_input_device_hub(
+        [this]()
+        {
+            return std::make_shared<mi::DefaultInputDeviceHub>(
+                std::make_shared<mi::BasicSeat>(
+                    the_global_event_sink(),
+                    the_input_dispatcher(),
+                    the_touch_visualizer(),
+                    the_cursor_listener(),
+                    the_input_region()),
+                the_input_reading_multiplexer(),
+                the_main_loop(),
+                the_cookie_factory());
+        });
 }

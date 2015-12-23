@@ -21,6 +21,7 @@
 #define MIR_BASIC_SEAT_H_
 
 #include "mir/input/seat.h"
+#include "mir/frontend/event_sink.h"
 #include "seat_input_device_tracker.h"
 
 namespace mir
@@ -35,7 +36,8 @@ class InputDispatcher;
 class BasicSeat : public Seat
 {
 public:
-    BasicSeat(std::shared_ptr<InputDispatcher> const& dispatcher,
+    BasicSeat(std::shared_ptr<frontend::EventSink> const& event_sink,
+              std::shared_ptr<InputDispatcher> const& dispatcher,
               std::shared_ptr<TouchVisualizer> const& touch_visualizer,
               std::shared_ptr<CursorListener> const& cursor_listener,
               std::shared_ptr<InputRegion> const& input_region);
@@ -49,7 +51,8 @@ public:
 private:
     std::vector<std::shared_ptr<Device>> devices;
     SeatInputDeviceTracker input_state_tracker;
-    std::shared_ptr<InputRegion> input_region;
+    std::shared_ptr<InputRegion> const input_region;
+    std::shared_ptr<frontend::EventSink> const event_sink;
 };
 }
 }

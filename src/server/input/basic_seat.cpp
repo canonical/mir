@@ -21,24 +21,36 @@
 #include "mir/input/device.h"
 #include "mir/input/input_region.h"
 
-namespace mi = mir::input;
+#include <algorithm>
 
-mi::BasicSeat::BasicSeat(std::shared_ptr<mi::InputDispatcher> const& dispatcher,
-                          std::shared_ptr<mi::TouchVisualizer> const& touch_visualizer,
-                          std::shared_ptr<mi::CursorListener> const& cursor_listener,
-                          std::shared_ptr<mi::InputRegion> const& input_region)
-    : input_state_tracker{dispatcher, touch_visualizer, cursor_listener, input_region}, input_region{input_region}
+namespace mi = mir::input;
+namespace mf = mir::frontend;
+
+mi::BasicSeat::BasicSeat(std::shared_ptr<mf::EventSink> const& event_sink,
+                         std::shared_ptr<mi::InputDispatcher> const& dispatcher,
+                         std::shared_ptr<mi::TouchVisualizer> const& touch_visualizer,
+                         std::shared_ptr<mi::CursorListener> const& cursor_listener,
+                         std::shared_ptr<mi::InputRegion> const& input_region)
+    : input_state_tracker{dispatcher, touch_visualizer, cursor_listener, input_region}, input_region{input_region},
+      event_sink{event_sink}
 {
 }
 
 void mi::BasicSeat::add_device(std::shared_ptr<input::Device> const& device)
 {
     input_state_tracker.add_device(device->id());
+
+    devices.push_back(device);
+
+    event_sink->handle_input_device_change(devices);
 }
 
 void mi::BasicSeat::remove_device(std::shared_ptr<input::Device> const& device)
 {
     input_state_tracker.remove_device(device->id());
+
+    devices.erase(remove(begin(devices), end(devices), device), end(devices));
+    event_sink->handle_input_device_change(devices);
 }
 
 void mi::BasicSeat::dispatch_event(MirEvent& event)

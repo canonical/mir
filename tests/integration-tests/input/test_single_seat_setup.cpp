@@ -25,18 +25,21 @@
 #include "mir/test/doubles/mock_input_region.h"
 #include "mir/test/doubles/mock_touch_visualizer.h"
 #include "mir/test/doubles/mock_cursor_listener.h"
+#include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/triggered_main_loop.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/cookie_factory.h"
+#include "mir/graphics/buffer.h"
 
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/pointer_configuration.h"
 #include "mir/input/touchpad_configuration.h"
 #include "mir/input/touch_visualizer.h"
+#include "mir/input/input_device_info.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -54,16 +57,23 @@ template<typename Type>
 using Nice = ::testing::NiceMock<Type>;
 using namespace ::testing;
 
+MATCHER_P(DeviceMatches, device_info, "")
+{
+    return arg->name() == device_info.name &&
+        arg->unique_id() == device_info.unique_id;
+}
+
 struct SingleSeatInputDeviceHubSetup : ::testing::Test
 {
     mtd::TriggeredMainLoop observer_loop;
     Nice<mtd::MockInputDispatcher> mock_dispatcher;
     Nice<mtd::MockInputRegion> mock_region;
+    Nice<mtd::MockEventSink> mock_sink;
     std::shared_ptr<mir::cookie::CookieFactory> cookie_factory = mir::cookie::CookieFactory::create_keeping_secret();
     Nice<mtd::MockCursorListener> mock_cursor_listener;
     Nice<mtd::MockTouchVisualizer> mock_visualizer;
     mir::dispatch::MultiplexingDispatchable multiplexer;
-    mi::BasicSeat seat{mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer),
+    mi::BasicSeat seat{mt::fake_shared(mock_sink), mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer),
                        mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region)};
     mi::DefaultInputDeviceHub hub{mt::fake_shared(seat), mt::fake_shared(multiplexer), mt::fake_shared(observer_loop),
                                   cookie_factory};
@@ -455,4 +465,35 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_a_single_button_state_from_multiple
     mouse_sink_2->handle_input(*motion_2);
     mouse_sink_1->handle_input(*motion_3);
     mouse_sink_1->handle_input(*motion_4);
+}
+
+TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_sink)
+{
+    EXPECT_CALL(mock_sink, handle_input_device_change(UnorderedElementsAre(DeviceMatches(device.get_device_info()))));
+    hub.add_device(mt::fake_shared(device));
+    observer_loop.trigger_server_actions();
+}
+
+TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_sink_multiple_devices)
+{
+    hub.add_device(mt::fake_shared(device));
+    observer_loop.trigger_server_actions();
+
+    EXPECT_CALL(mock_sink,
+                handle_input_device_change(UnorderedElementsAre(DeviceMatches(device.get_device_info()),
+                                                                DeviceMatches(another_device.get_device_info()))));
+    hub.add_device(mt::fake_shared(another_device));
+    observer_loop.trigger_server_actions();
+}
+
+TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_sink_removal)
+{
+    hub.add_device(mt::fake_shared(device));
+    hub.add_device(mt::fake_shared(another_device));
+    observer_loop.trigger_server_actions();
+
+    EXPECT_CALL(mock_sink,
+                handle_input_device_change(UnorderedElementsAre(DeviceMatches(another_device.get_device_info()))));
+    hub.remove_device(mt::fake_shared(device));
+    observer_loop.trigger_server_actions();
 }
