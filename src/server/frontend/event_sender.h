@@ -48,7 +48,7 @@ public:
     void handle_display_config_change(graphics::DisplayConfiguration const& config) override;
     void handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& devices) override;
     void send_ping(int32_t serial) override;
-    void send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer, graphics::BufferIpcMsgType);
+    void send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer, graphics::BufferIpcMsgType) override;
 
 private:
     void send_event_sequence(protobuf::EventSequence&, FdSets const&);

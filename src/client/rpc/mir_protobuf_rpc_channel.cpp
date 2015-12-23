@@ -48,7 +48,6 @@ namespace
 std::chrono::milliseconds const timeout(200);
 }
 
-
 mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     std::unique_ptr<mclr::StreamTransport> transport,
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,

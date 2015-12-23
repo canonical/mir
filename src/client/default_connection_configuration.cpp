@@ -127,10 +127,11 @@ mcl::DefaultConnectionConfiguration::the_input_platform()
 std::shared_ptr<mir::input::InputDevices>
 mcl::DefaultConnectionConfiguration::the_input_devices()
 {
-    return input_devices([]
-                         {
-                             return std::make_shared<mir::input::InputDevices>();
-                         });
+    return input_devices(
+        []
+        {
+            return std::make_shared<mir::input::InputDevices>();
+        });
 }
 
 std::string
