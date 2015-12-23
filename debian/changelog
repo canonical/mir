@@ -1,8 +1,130 @@
-mir (0.18.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.19.0+16.04.20151216.1-0ubuntu1) UNRELEASED; urgency=medium
 
+  * placeholder for 0.19 release
+
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Tue, 22 Dec 2015 14:05:47 -0500
+
+mir (0.18.0+16.04.20151216.1-0ubuntu1) xenial; urgency=medium
+
+  [ Kevin DuBois ]
   * New upstream release 0.18.0 (https://launchpad.net/mir/+milestone/0.18.0)
+    - ABI summary: Only servers need rebuilding;
+      . Mirclient ABI unchanged at 9
+      . Mirserver ABI bumped to 36
+      . Mircommon ABI unchanged at 5
+      . Mirplatform ABI unchanged at 11
+      . Mirprotobuf ABI unchanged at 3
+      . Mirplatformgraphics ABI bumped to 7
+      . Mirclientplatform ABI unchanged at 3
+      . Mirinputplatform ABI added. Current version is 4
+    - Enhancements:
+      . Use libinput by default, and remove the android input stack
+      . Add x11 input probing
+      . Add alternative buffer swapping mechanism internally, available with
+        --nbuffers 0
+      . Automatic searching and selection of input platforms
+      . Better support for themed cursors
+      . Add demo client that uses multiple buffer streams in one surface
+      . Improve fingerpaint demo to use touch pressure
+      . Allow for configuring cursor acceleration, scroll speed and left or
+        right handed mice
+      . Allow for setting a base display configuration via client api
+      . Various nested server multimonitor fixes and stability improvements
+      . Remove DepthId from the SurfaceStack
+    - Bug fixes:
+      . Unit test failures in Display.* on Android (LP: #1519276)
+      . Build failure due to missing dependency of client rpc code on mir
+        protobuf (LP: #1518372)
+      . Test failure in
+        NestedServer.display_configuration_reset_when_application_exits
+        (LP: #1517990)
+      . CI test failures in various NesterServer tests (LP: #1517781)
+      . FTBFS with -DMIR_PLATFORM=android (LP: #1517532)
+      . Nesting Mir servers with assorted display configs causes lockup
+        (LP: #1516670)
+      . [testsfail] RaiseSurfaces.motion_events_dont_prevent_raise
+        (LP: #1515931)
+      . CI test failures in GLMark2Test (LP: #1515660)
+      . Shells that inject user input events need to agree with the system
+        compositor on the clock to use (LP: #1515515)
+      . mircookie-dev is missing nettle-dev dependency (LP: #1514391)
+      . Segmentation fault on server shutdown with mesa-kms (LP: #1513901)
+      . mircookie requires nettle but libmircookie-dev doesn't depend on it
+        (LP: #1513792)
+      . libmircookie1 package does not list libnettle as dependency
+        (LP: #1513225)
+      . display configuration not reset when application exits (LP: #1511798)
+      . unplugging external monitor causes nested server to throttle client
+        (LP: #1511723)
+      . 1/2 screen on external monitor (LP: #1511538)
+      . unity-system-compositor crash, no interaction on windowed mode
+        (LP: #1511095)
+      . [regression] arm64/powerpc cross compile doesn't build any more
+        (LP: #1510778)
+      . mir_connection_get_egl_pixel_format() crashes if libEGL is loaded
+        RTLD_LAZY (LP: #1510218)
+      . [multimonitor] nested server surface positioning incorrect
+        (LP: #1506846)
+      . unity-system-compositor fails to build against lp:mir r3027
+        (LP: #1506537)
+      . [regression] Resampled touch events are slightly less regular than they
+        used to be (LP: #1506331)
+      . [testsfail] Segmentation fault mir_demo_server --test-client
+        /usr/bin/mir_demo_client_basic (LP: #1506137)
+      . [regression] Can't move/resize windows any more using Alt+left/middle
+        buttons (LP: #1505114)
+      . CI failure on some 32-bit targets in
+        ServerSignal.terminate_handler_is_called_for_SIGTERM and others
+        (LP: #1504579)
+      . multibufferstreams use surface size instead of stream size
+        (LP: #1503317)
+      . CI segfault in mir-mediumtests-runner-mako in client tests
+        (LP: #1502896)
+      . CI segfault in mir-mediumtests-runner-mako after AndroidHardwareSanity
+        tests (LP: #1502782)
+      . compositing never stops when external monitor is connected
+        (LP: #1499039)
+      . mir_demo_server crashes with ERROR: Dynamic exception type:
+        std::out_of_range - std::exception::what: map::at when an Xmir rootless
+        app is closed by its File menu. (LP: #1497128)
+      . Nested servers don't apply their display configuration at startup
+        (LP: #1492269)
+      . mir fails to open the right mouse device in kvm/qemu (LP: #1489522)
+      . nexus4 & nexus7 hotplug survival (LP: #1488863)
+      . Android uses mir_display_output_invalid_id (0) as an output id value
+        (LP: #1463873)
+      . DemoRenderer: GL_BLEND is really always enabled even when not required
+        (also causes RGBX discolouration in mir_proving_server) (LP: #1423462)
+      . Severe graphical corruption (mostly horizontal streaks/lines) running
+        software clients (including Xmir) on android (LP: #1406725)
+      . [enhancement] Ubuntu needs a way to set mouse scrolling speed
+        (LP: #124440)
+      . input-evdev: always send all active contacts.
+      . fix backwards frame jumps on the FB context on some devices
+        (LP: #1270245)
+      . fix race in test (NestedServer suite) (LP: #1514884)
+      . fix signal callbacks in buffer stream creation (LP: #1519998 and
+        LP: #1519999)
+      . allow client to retrieve error messages when stream creation fails
+        (LP: #1520005)
+      . [regression] Ctrl/Alt modifiers not handled correctly (LP: #1521225)
+      . snappy packaging fixes
+      . CI test failures due to memory errors during GLibMainLoop shutdown
+        (LP: #1520217)
+      . fix UBSan build (LP: #1521808)
+      . SessionMediator::exchange_buffer can create references to null pointers
+        (LP: #1522093)
+      . After exiting Mir (by Ctrl+Alt+BkSp) VT switching by Ctrl+Alt+Fn is
+        broken (LP: #1521651)
+      . notify when cursor images are removed (LP: #1521795)
+      . fix arm64, powerpc, ppc64el builds (LP: #1522122)
+      . fix locking in ms::SurfaceStack (LP: #1522105)
+      . [regression] Mouse wheel events are now unusably over-sensitive and
+        backwards (LP: #1522673)
+      . Cross compiling Mir from a xenial host fails (dpkg-checkbuilddeps:
+        error: Unmet build dependencies: ...) (LP: #1523801)
 
- -- Alexandros Frantzis <alexandros.frantzis@canonical.com>  Tue, 17 Nov 2015 13:14:36 +0200
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 30 Nov 2015 14:09:31 -0500
 
 mir (0.17.1+16.04.20151105.1-0ubuntu1) xenial; urgency=medium
 
