@@ -155,9 +155,20 @@ function (mir_precompiled_header TARGET HEADER)
       endif()
     endforeach()
 
+    # So.
+    # ${CMAKE_CXX_FLAGS} *only* includes the base flags, not any extra flags set by the build target.
+    # The build targets set flags which affect the precompiled headers - -g verses no debug for the Debug build,
+    # -g -O2 -NDEBUG versus no specified optimisation for RelWithDebugInfo, etc.
+    #
+    # The various CMAKE_CXX_FLAGS_DEBUG, CMAKE_CXX_FLAGS_RELWITHDEBUGINFO, etc variables have the extra flags
+    # to add. CMAKE_BUILD_TYPE contains "Debug" or "RelWithDebugInfo" or "Release" etc, however, so first
+    # we need to uppercase CMAKE_BUILD_TYPE, then dereference ${CMAKE_CXX_FLAGS_${UC_BUILD_TYPE}}.
+    #
+    # I'm unaware of a less roundabout method of getting the *actual* build flags for a target.
+    string(TOUPPER "${CMAKE_BUILD_TYPE}" UC_BUILD_TYPE)
     separate_arguments(
       PCH_CXX_FLAGS UNIX_COMMAND
-      "${CMAKE_CXX_FLAGS} ${TARGET_COMPILE_FLAGS} ${TARGET_INCLUDE_DIRECTORIES_STRING}"
+      "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${UC_BUILD_TYPE}} ${TARGET_COMPILE_FLAGS} ${TARGET_INCLUDE_DIRECTORIES_STRING}"
     )
 
     add_custom_command(
