@@ -46,12 +46,6 @@ extern "C" typedef bool (*ClientPlatformProbe)(ClientContext* context);
 }
 }
 
-/* XXX: Hiding a shared_ptr to ClientPlatform behind "C" linkage means
- *      the ClientPlatform class definition is now part of the client
- *      platform ABI, and changing ClientPlatform breaks the ClientPlatform
- *      ABI. This is non-obvious in the least and we should find a way to
- *      make the ABI relationship here more transparent.
- */
 extern "C" std::shared_ptr<mir::client::ClientPlatform> create_client_platform(mir::client::ClientContext* context);
 extern "C" bool is_appropriate_module(mir::client::ClientContext* context);
 
