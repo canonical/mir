@@ -40,6 +40,7 @@ public:
     Plugin();
     virtual ~Plugin();
     void hold_resource(std::shared_ptr<void> const& r);
+    static void safely_unload(std::shared_ptr<Plugin>& p);
 private:
     std::vector<std::shared_ptr<void>> resources;
 };

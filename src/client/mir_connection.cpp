@@ -168,6 +168,9 @@ MirConnection::~MirConnection() noexcept
         for (int i = 0, end = platform.fd_size(); i != end; ++i)
             close(platform.fd(i));
     }
+
+    std::shared_ptr<mir::Plugin> die = std::move(platform);
+    mir::Plugin::safely_unload(die);
 }
 
 MirWaitHandle* MirConnection::create_surface(

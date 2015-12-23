@@ -212,5 +212,6 @@ MIR_COMMON_unreleased {
       mir::Plugin::Plugin*;
       mir::Plugin::?Plugin*;
       mir::Plugin::hold_resource*;
+      mir::Plugin::safely_unload*;
     };
 } MIR_COMMON_5.1;
