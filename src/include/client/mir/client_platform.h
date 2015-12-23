@@ -21,6 +21,7 @@
 #include "mir/graphics/native_buffer.h"
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include "mir/plugin.h"
 
 #include <EGL/eglplatform.h>
 #include <EGL/egl.h>  // for EGLConfig
@@ -35,28 +36,11 @@ class ClientBufferFactory;
 class EGLNativeSurface;
 class ClientContext;
 
-class Plugin
-{
-public:
-    void hold_resource(std::shared_ptr<void> const& r)
-    {
-        resources.push_back(r);
-    }
-private:
-    /*
-     * It's crucial your resources (e.g. shared library handle of the driver)
-     * live longer than your ClientPlatform implementation. So storing the
-     * reference here in the base class ensures that. Also we only ever need
-     * the one-line implementation of hold_resource() above.
-     */
-    std::vector<std::shared_ptr<void>> resources;
-};
-
 /**
  * Interface to client-side platform specific support for graphics operations.
  * \ingroup platform_enablement
  */
-class ClientPlatform : public Plugin
+class ClientPlatform : public mir::Plugin
 {
 public:
     ClientPlatform() = default;

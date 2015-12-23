@@ -92,6 +92,7 @@ target_link_libraries(
   mirclientplatformstub
 
   mir-test-framework-static
+  mircommon
   ${UMOCKDEV_LDFLAGS} ${UMOCKDEV_LIBRARIES}
 )
 
