@@ -35,11 +35,28 @@ class ClientBufferFactory;
 class EGLNativeSurface;
 class ClientContext;
 
+class Plugin
+{
+public:
+    void hold_resource(std::shared_ptr<void> const& r)
+    {
+        resources.push_back(r);
+    }
+private:
+    /*
+     * It's crucial your resources (e.g. shared library handle of the driver)
+     * live longer than your ClientPlatform implementation. So storing the
+     * reference here in the base class ensures that. Also we only ever need
+     * the one-line implementation of hold_resource() above.
+     */
+    std::vector<std::shared_ptr<void>> resources;
+};
+
 /**
  * Interface to client-side platform specific support for graphics operations.
  * \ingroup platform_enablement
  */
-class ClientPlatform
+class ClientPlatform : public Plugin
 {
 public:
     ClientPlatform() = default;
@@ -66,19 +83,6 @@ public:
     virtual std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() = 0;
     virtual MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const = 0;
     virtual MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const = 0;
-    void hold_resource(std::shared_ptr<void> const& r)
-    {
-        resources.push_back(r);
-    }
-
-private:
-    /*
-     * It's crucial your resources (e.g. shared library handle of the driver)
-     * live longer than your ClientPlatform implementation. So storing the
-     * reference here in the base class ensures that. Also we only ever need
-     * the one-line implementation of hold_resource() above.
-     */
-    std::vector<std::shared_ptr<void>> resources;
 };
 
 }
