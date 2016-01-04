@@ -17,6 +17,7 @@ To succesfully build Mir there are a few packages required. The easiest way
 to get them is to use the packaging build dependencies:
 
     $ sudo apt-get install devscripts equivs cmake
+    $ cd mir
     $ sudo mk-build-deps --install --tool "apt-get -y" --build-dep debian/control
 
 
@@ -26,6 +27,7 @@ Building Mir
 Mir is built using CMake. You first need to create the build directory and
 configure the build:
 
+    $ cd mir
     $ mkdir build
     $ cd build
     $ cmake .. (possibly passing configuration options to CMake)
@@ -80,6 +82,9 @@ find the Mir libraries at runtime.
 
 Building Mesa
 -------------
+
+*The Mesa packages shipped with Ubuntu are already built with the relevant Mir patches
+and should work out of the box with Mir.*
 
 For GL accelerated clients to use Mir they need to use a patched version of Mesa
 that supports Mir.
