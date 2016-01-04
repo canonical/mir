@@ -384,6 +384,15 @@ TEST_F(StartedBufferVault, simply_setting_size_triggers_no_server_interations)
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
+TEST_F(BufferVault, notifies_requests_when_disconnected)
+{
+    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+        size, format, usage, initial_nbuffers);
+
+    EXPECT_CALL(mock_requests, disconnected());
+    vault.disconnected();
+}
+
 TEST_F(StartedBufferVault, scaling_resizes_buffers_right_away)
 {
     mp::Buffer package4;
@@ -402,15 +411,6 @@ TEST_F(StartedBufferVault, scaling_resizes_buffers_right_away)
 
     auto b3 = vault.withdraw().get().buffer;
     EXPECT_THAT(b3->size(), Eq(new_size));
-}
-
-TEST_F(BufferVault, notifies_requests_when_disconnected)
-{
-    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
-        size, format, usage, initial_nbuffers);
-
-    EXPECT_CALL(mock_requests, disconnected());
-    vault.disconnected();
 }
 
 TEST_F(StartedBufferVault, buffer_count_remains_the_same_after_scaling)

@@ -238,9 +238,9 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
     std::queue<mir::protobuf::Buffer> incoming_buffers;
     MirWaitHandle next_buffer_wait_handle;
     bool server_connection_lost {false};
+    mp::Void protobuf_void;
     MirWaitHandle scale_wait_handle;
     float scale_;
-    mp::Void protobuf_void;
 };
 
 class Requests : public mcl::ServerBufferRequests
@@ -254,7 +254,6 @@ public:
 
     void allocate_buffer(geom::Size size, MirPixelFormat format, int usage) override
     {
-        printf("ALLOCAL\n");
         if (disconnected_) return;
         mp::BufferAllocation request;
         request.mutable_id()->set_value(stream_id);

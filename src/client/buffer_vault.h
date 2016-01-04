@@ -70,8 +70,8 @@ public:
     void wire_transfer_inbound(protobuf::Buffer const&);
     void wire_transfer_outbound(std::shared_ptr<ClientBuffer> const& buffer);
     void set_size(geometry::Size);
-    void set_scale(float scale);
     void disconnected();
+    void set_scale(float scale);
 
 private:
     std::shared_ptr<ClientBufferFactory> const factory;
