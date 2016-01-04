@@ -80,7 +80,7 @@ void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBuf
     std::shared_lock<decltype(guard)> lk(guard);
     for(auto const& stream : streams)
     {
-        auto s = stream.second.stream;
+        auto s = stream.second;
         lk.unlock();
         fn(s.get());
     }
