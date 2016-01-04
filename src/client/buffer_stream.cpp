@@ -62,6 +62,7 @@ struct ServerBufferSemantics
     virtual MirWaitHandle* submit(std::function<void()> const&, geometry::Size sz, MirPixelFormat, int stream_id) = 0;
     virtual void lost_connection() = 0;
     virtual void set_size(geom::Size) = 0;
+    virtual MirWaitHandle* set_scale(float, mf::BufferStreamId) = 0;
     virtual ~ServerBufferSemantics() = default;
     ServerBufferSemantics() = default;
     ServerBufferSemantics(ServerBufferSemantics const&) = delete;
@@ -211,6 +212,25 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
     {
     }
 
+    void on_scale_set(float scale)
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        scale_ = scale;
+        scale_wait_handle.result_received();
+    }
+
+    MirWaitHandle* set_scale(float scale, mf::BufferStreamId stream_id) override
+    {
+        mp::StreamConfiguration configuration;
+        configuration.mutable_id()->set_value(stream_id.as_value());
+        configuration.set_scale(scale);
+        scale_wait_handle.expect_result();
+
+        display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
+            google::protobuf::NewCallback(this, &ExchangeSemantics::on_scale_set, scale));
+        return &scale_wait_handle;
+    }
+
     std::mutex mutex;
     mcl::ClientBufferDepository wrapped;
     mir::protobuf::DisplayServer& display_server;
@@ -219,6 +239,8 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
     MirWaitHandle next_buffer_wait_handle;
     bool server_connection_lost {false};
     mp::Void protobuf_void;
+    MirWaitHandle scale_wait_handle;
+    float scale_;
 };
 
 class Requests : public mcl::ServerBufferRequests
@@ -349,10 +371,19 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     {
     }
 
+    MirWaitHandle* set_scale(float scale, mf::BufferStreamId) override
+    {
+        scale_wait_handle.expect_result();
+        scale_wait_handle.result_received();
+        vault.set_scale(scale);
+        return &scale_wait_handle;
+    }
+
     mcl::BufferVault vault;
     std::mutex mutex;
     mcl::BufferInfo current{nullptr, 0};
     MirWaitHandle next_buffer_wait_handle;
+    MirWaitHandle scale_wait_handle;
 };
 
 struct OnScopeExit
@@ -617,13 +648,6 @@ void mcl::BufferStream::on_swap_interval_set(int interval)
     interval_wait_handle.result_received();
 }
 
-void mcl::BufferStream::on_scale_set(float scale)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    scale_ = scale;
-    scale_wait_handle.result_received();
-}
-
 void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -731,14 +755,7 @@ void mcl::BufferStream::set_size(geom::Size sz)
 
 MirWaitHandle* mcl::BufferStream::set_scale(float scale)
 {
-    mp::StreamConfiguration configuration;
-    configuration.mutable_id()->set_value(protobuf_bs->id().value());
-    configuration.set_scale(scale);
-    scale_wait_handle.expect_result();
-
-    display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
-        google::protobuf::NewCallback(this, &mcl::BufferStream::on_scale_set, scale));
-    return &scale_wait_handle;
+    return buffer_depository->set_scale(scale, mf::BufferStreamId(protobuf_bs->id().value()));
 }
 
 char const * mcl::BufferStream::get_error_message() const
