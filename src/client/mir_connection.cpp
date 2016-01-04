@@ -710,13 +710,6 @@ void MirConnection::available_surface_formats(
     }
 }
 
-std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform()
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    return platform;
-}
-
 void MirConnection::stream_created(StreamCreationRequest* request)
 {
     auto stream_it = std::find_if(stream_requests.begin(), stream_requests.end(),
