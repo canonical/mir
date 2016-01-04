@@ -33,10 +33,10 @@ mcl::ProbingClientPlatformFactory::create_client_platform(mcl::ClientContext* co
 
     if (!platform_overrides.empty())
     {
-        // Even forcing a choice platform is only loaded on demand. It's good
+        // Even forcing a choice, platform is only loaded on demand. It's good
         // to not need to hold the module open when there are no connections.
         // Also, this allows you to swap driver binaries on disk at run-time,
-        // if you really want to.
+        // if you really wanted to.
 
         for (auto const& platform : platform_overrides)
             platform_modules.push_back(
