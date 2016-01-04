@@ -177,9 +177,9 @@ MirConnection::~MirConnection() noexcept
     buffer_stream_factory.reset();
     surface_map.reset();
     native_display.reset();
-    std::shared_ptr<mir::Plugin> die = std::move(platform);
-    if (die.use_count() == 1)  // else other connections exist?
-        mir::Plugin::safely_unload(die);
+    std::shared_ptr<mir::Plugin> plugin = std::move(platform);
+    if (plugin.use_count() == 1)  // else other connections exist?
+        mir::Plugin::safely_unload(plugin);
 }
 
 MirWaitHandle* MirConnection::create_surface(

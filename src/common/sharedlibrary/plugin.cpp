@@ -36,18 +36,19 @@ void Plugin::hold_resource(std::shared_ptr<void> const& r)
     resources.push_back(r);
 }
 
-void Plugin::safely_unload(std::shared_ptr<Plugin>& p)
+void Plugin::safely_unload(std::shared_ptr<Plugin>& plugin)
 {
-    if (p.use_count() == 0)
+    if (plugin.use_count() == 0)
         throw new std::runtime_error("Can't safely unload a plugin that's "
                                      "not presently loaded.");
-    if (p.use_count() > 1)
+    if (plugin.use_count() > 1)
         throw new std::runtime_error("Can't safely unload a plugin that's "
                                      "still in use.");
 
-    auto res = std::move(p->resources);
-    p.reset();   // <- Destruct everything that came from the plugin before...
-    res.clear(); // <- we unload the library itself.
+    auto res = std::move(plugin->resources);
+    plugin.reset(); // <- First destruct everything that came from the plugin.
+    res.clear();    // <- Second unload the library, as we now know it's safe
+                    //    and there are no destructors left in it to call.
 }
 
 } // namespace mir
