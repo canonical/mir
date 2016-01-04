@@ -63,7 +63,7 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
         ON_CALL(*this, watch_fd()).WillByDefault(testing::Return(pollable_fd));
     }
 
-    void call_method(std::string const& name,
+    virtual void call_method(std::string const& name,
                     google::protobuf::MessageLite const* parameters,
                     google::protobuf::MessageLite* response,
                     google::protobuf::Closure* complete)
@@ -644,4 +644,31 @@ TEST_F(MirConnectionTest, contacts_server_if_client_platform_cannot_handle_platf
 
     EXPECT_THAT(mir_platform_message_get_opcode(returned_response), Eq(opcode));
     mir_platform_message_release(returned_response);
+}
+
+TEST_F(MirConnectionTest, create_wait_handle_really_blocks)
+{
+    using namespace testing;
+
+    std::chrono::milliseconds const pause_time{10};
+    struct FakeRpcChannel : public MockRpcChannel
+    {
+        void call_method(
+            std::string const&,
+            google::protobuf::MessageLite const*,
+            google::protobuf::MessageLite*,
+            google::protobuf::Closure* closure) override
+        {
+            delete closure;
+        }
+    };
+    TestConnectionConfiguration conf{mock_platform, std::make_shared<NiceMock<FakeRpcChannel>>()};
+    MirConnection connection(conf);
+    MirSurfaceSpec const spec{&connection, 33, 45, mir_pixel_format_abgr_8888};
+
+    auto wait_handle = connection.create_surface(spec, nullptr, nullptr);
+    auto expected_end = std::chrono::steady_clock::now() + pause_time;
+    wait_handle->wait_for_pending(pause_time);
+
+    EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
 }
