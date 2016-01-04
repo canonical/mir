@@ -169,8 +169,17 @@ MirConnection::~MirConnection() noexcept
             close(platform.fd(i));
     }
 
+    /*
+     * Normal destruction order, but just a bit earlier. We have to make sure
+     * everything holding a reference to the platform driver is gone before we
+     * unload the driver itself. Otherwise we would crash (unmapped memory).
+     */
+    buffer_stream_factory.reset();
+    surface_map.reset();
+    native_display.reset();
     std::shared_ptr<mir::Plugin> die = std::move(platform);
-    mir::Plugin::safely_unload(die);
+    if (die.use_count() == 1)  // else other connections exist?
+        mir::Plugin::safely_unload(die);
 }
 
 MirWaitHandle* MirConnection::create_surface(
