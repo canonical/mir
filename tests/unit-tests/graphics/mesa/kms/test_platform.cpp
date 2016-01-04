@@ -332,6 +332,26 @@ TEST_F(MesaGraphicsPlatform, probe_returns_best_when_master)
     EXPECT_EQ(mg::PlatformPriority::best, probe(options));
 }
 
+TEST_F(MesaGraphicsPlatform, probe_returns_in_between_when_cant_set_master)
+{   // Regression test for LP: #1528082
+    using namespace testing;
+
+    mtf::UdevEnvironment udev_environment;
+    boost::program_options::options_description po;
+    mir::options::ProgramOption options;
+
+    udev_environment.add_standard_device("standard-drm-devices");
+
+    EXPECT_CALL(mock_drm, drmSetMaster(_))
+        .WillOnce(Return(-1));
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
+    auto prio = probe(options);
+    EXPECT_THAT(prio, Gt(mg::PlatformPriority::unsupported));
+    EXPECT_THAT(prio, Lt(mg::PlatformPriority::supported));
+}
+
 TEST_F(MesaGraphicsPlatform, probe_returns_best_when_drm_devices_vt_option_exist)
 {
     mtf::UdevEnvironment udev_environment;
