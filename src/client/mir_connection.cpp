@@ -344,10 +344,9 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
 
     try
     {
-        std::string str;
         stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, mcl::BufferStreamMode::Producer, platform,
-            surface_proto->buffer_stream(), make_perf_report(logger), str, /*surface_name, */
+            surface_proto->buffer_stream(), make_perf_report(logger), std::string{},
             mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
     }
     catch (std::exception const& error)
@@ -743,7 +742,7 @@ void MirConnection::stream_created(StreamCreationRequest* request)
         std::string str;
         stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, mcl::BufferStreamMode::Producer, platform,
-            *protobuf_bs, make_perf_report(logger), str, /*surface_name,*/ mir::geometry::Size{0,0}, nbuffers);
+            *protobuf_bs, make_perf_report(logger), std::string{}, mir::geometry::Size{0,0}, nbuffers);
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
     }
     catch (std::exception const& error)
