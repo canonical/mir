@@ -426,10 +426,10 @@ struct MirConnection::StreamRelease
 
 void MirConnection::released(StreamRelease data)
 {
-    surface_map->erase(mf::BufferStreamId(data.stream->rpc_id()));
     if (data.callback)
         data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
     data.handle->result_received();
+    surface_map->erase(mf::BufferStreamId(data.stream->rpc_id()));
 }
 
 void MirConnection::released(SurfaceRelease data)
@@ -443,6 +443,7 @@ void MirConnection::released(SurfaceRelease data)
     }
     data.callback(data.surface, data.context);
     data.handle->result_received();
+    surface_map->erase(mf::BufferStreamId(data.surface->id()));
     surface_map->erase(mf::SurfaceId(data.surface->id()));
 }
 
@@ -708,13 +709,6 @@ void MirConnection::available_surface_formats(
     }
 }
 
-std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform()
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    return platform;
-}
-
 void MirConnection::stream_created(StreamCreationRequest* request)
 {
     auto stream_it = std::find_if(stream_requests.begin(), stream_requests.end(),
@@ -723,45 +717,44 @@ void MirConnection::stream_created(StreamCreationRequest* request)
     if (stream_it == stream_requests.end())
         return;
 
-    auto protobuf_bs = request->response;
+    auto& protobuf_bs = request->response;
 
-    if (!request->response->has_id())
+    if (!protobuf_bs->has_id())
     {
-        if (!request->response->has_error())
-            request->response->set_error("Error processing buffer stream create response, no ID (disconnected?)");
+        if (!protobuf_bs->has_error())
+            protobuf_bs->set_error("Error processing buffer stream create response, no ID (disconnected?)");
+    }
+
+    if (protobuf_bs->has_error())
+    {
+        for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
+            ::close(protobuf_bs->buffer().fd(i));
+        stream_error(
+            std::string{"Error processing buffer stream creating response:"} + protobuf_bs->error(),
+            *request->wh, request->callback, request->context);
         return;
     }
 
-    if (request->response->has_error())
-        return;
-
-    std::shared_ptr<mcl::ClientBufferStream> stream;
     try
     {
-        std::string str;
-        stream = std::make_shared<mcl::BufferStream>(
+        auto stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, mcl::BufferStreamMode::Producer, platform,
             *protobuf_bs, make_perf_report(logger), std::string{}, mir::geometry::Size{0,0}, nbuffers);
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
+
+        if (request->callback)
+            request->callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
+        request->wh->result_received();
     }
     catch (std::exception const& error)
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-
-        stream = std::make_shared<mcl::ErrorStream>(
-            std::string{"Error processing buffer stream creating response:"} + boost::diagnostic_information(error),
-            this,
-            mf::BufferStreamId(next_error_id(lock).as_value()));
-
-        surface_map->insert(stream->rpc_id(), stream);
-        for (int i = 0; i < request->response->buffer().fd_size(); i++)
+        for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
             ::close(protobuf_bs->buffer().fd(i));
 
+        stream_error(
+            std::string{"Error processing buffer stream creating response:"} + boost::diagnostic_information(error),
+            *request->wh, request->callback, request->context);
     }
-
-    if (request->callback)
-        request->callback(reinterpret_cast<MirBufferStream*>(stream.get()), request->context);
-    request->wh->result_received();
 }
 
 MirWaitHandle* MirConnection::create_client_buffer_stream(
@@ -788,17 +781,24 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     }
     catch (std::exception const& ex)
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        auto stream = std::make_shared<mcl::ErrorStream>(
-            std::string{"Error requesting BufferStream from server"},
-            this,
-            mf::BufferStreamId(next_error_id(lock).as_value()));
-        surface_map->insert(stream->rpc_id(), stream); 
-
-        request->wh->result_received();
-        request->callback(reinterpret_cast<MirBufferStream*>(stream.get()), request->context);
+        stream_error(std::string{"Error requesting BufferStream from server"},
+            *request->wh, callback, context);
     }
     return request->wh.get();
+}
+
+void MirConnection::stream_error(
+    std::string const& error_msg,
+    MirWaitHandle& pending_handle, mir_buffer_stream_callback pending_callback, void *pending_context)
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    mf::BufferStreamId id(next_error_id(lock).as_value());
+    auto stream = std::make_shared<mcl::ErrorStream>(error_msg, this, id);
+    surface_map->insert(id, stream); 
+
+    pending_handle.result_received();
+    if (pending_callback)
+        pending_callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), pending_context);
 }
 
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(

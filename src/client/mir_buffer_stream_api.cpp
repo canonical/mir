@@ -70,10 +70,10 @@ MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connect
     MirBufferUsage buffer_usage)
 try
 {
-    mcl::BufferStream *stream = nullptr;
+    MirBufferStream *stream = nullptr;
     mir_connection_create_buffer_stream(connection, width, height, format, buffer_usage,
         reinterpret_cast<mir_buffer_stream_callback>(assign_result), &stream)->wait_for_all();
-    return reinterpret_cast<MirBufferStream*>(stream);
+    return stream;
 }
 catch (std::exception const& ex)
 {
@@ -81,12 +81,12 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-MirWaitHandle *mir_buffer_stream_release(
-    MirBufferStream * buffer_stream,
+MirWaitHandle* mir_buffer_stream_release(
+    MirBufferStream* buffer_stream,
     mir_buffer_stream_callback callback,
-    void *context)
+    void* context)
 {
-    auto *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    auto bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
     auto connection = bs->connection();
     return connection->release_buffer_stream(bs, callback, context);
 }

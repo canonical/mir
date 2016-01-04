@@ -134,8 +134,6 @@ public:
     void available_surface_formats(MirPixelFormat* formats,
                                    unsigned int formats_size, unsigned int& valid_formats);
 
-    std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
-
     std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
        mir::protobuf::BufferStream const& protobuf_bs, std::string const& surface_name, mir::geometry::Size);
 
@@ -207,8 +205,8 @@ private:
     };
     std::vector<std::shared_ptr<StreamCreationRequest>> stream_requests;
     void stream_created(StreamCreationRequest*);
-    
-
+    void stream_error(std::string const& error_msg,
+        MirWaitHandle& pending_handle, mir_buffer_stream_callback pending_callback, void *context);
 
     void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.

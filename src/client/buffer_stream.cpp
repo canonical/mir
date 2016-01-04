@@ -390,8 +390,6 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
 }
 
-mcl::BufferStream::~BufferStream(){}
-
 mcl::BufferStream::BufferStream(
     MirConnection* connection,
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
@@ -420,11 +418,10 @@ mcl::BufferStream::BufferStream(
     {
         if (!protobuf_bs->has_error())
             protobuf_bs->set_error("Error processing buffer stream create response, no ID (disconnected?)");
-        return;
     }
 
     if (protobuf_bs->has_error())
-        return;
+        BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
 
     try
     {
@@ -507,6 +504,10 @@ mcl::BufferStream::BufferStream(
             std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
             ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
     }
+}
+
+mcl::BufferStream::~BufferStream()
+{
 }
 
 void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)

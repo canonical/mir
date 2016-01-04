@@ -64,7 +64,6 @@ void mcl::ConnectionSurfaceMap::with_stream_do(
     if (it != streams.end())
     {
         auto const stream = it->second;
-        lk.unlock();
         exec(stream.get());
     }
     else
