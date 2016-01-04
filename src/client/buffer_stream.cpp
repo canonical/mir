@@ -409,11 +409,10 @@ mcl::BufferStream::BufferStream(
     {
         if (!protobuf_bs->has_error())
             protobuf_bs->set_error("Error processing buffer stream create response, no ID (disconnected?)");
-        return;
     }
 
     if (protobuf_bs->has_error())
-        return;
+        BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
 
     try
     {

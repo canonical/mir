@@ -427,10 +427,10 @@ struct MirConnection::StreamRelease
 
 void MirConnection::released(StreamRelease data)
 {
-    surface_map->erase(mf::BufferStreamId(data.stream->rpc_id()));
     if (data.callback)
         data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
     data.handle->result_received();
+    surface_map->erase(mf::BufferStreamId(data.stream->rpc_id()));
 }
 
 void MirConnection::released(SurfaceRelease data)
@@ -444,6 +444,7 @@ void MirConnection::released(SurfaceRelease data)
     }
     data.callback(data.surface, data.context);
     data.handle->result_received();
+    surface_map->erase(mf::BufferStreamId(data.surface->id()));
     surface_map->erase(mf::SurfaceId(data.surface->id()));
 }
 

@@ -34,11 +34,10 @@ struct ConnectionResourceMap : testing::Test
     mf::BufferStreamId const stream_id{43};
 };
 
-TEST_F(ConnectionResourceMap, maps_surface_and_bufferstream_when_surface_inserted)
+TEST_F(ConnectionResourceMap, maps_surface_when_surface_inserted)
 {
     using namespace testing;
     auto surface_called = false;
-    auto stream_called = false;
     mcl::ConnectionSurfaceMap map;
     map.insert(surface_id, surface);
     map.with_surface_do(surface_id, [&](MirSurface* surf) {
@@ -46,29 +45,15 @@ TEST_F(ConnectionResourceMap, maps_surface_and_bufferstream_when_surface_inserte
         surface_called = true;
     });
 
-    map.with_stream_do(stream_id, [&](mcl::ClientBufferStream* stream) {
-        EXPECT_THAT(stream, Eq(surface->get_buffer_stream()));
-        stream_called = true;
-    });
-
     EXPECT_TRUE(surface_called);
-    EXPECT_TRUE(stream_called);
 }
 
-TEST_F(ConnectionResourceMap, removes_surface_and_bufferstream_when_surface_removed)
+TEST_F(ConnectionResourceMap, removes_surface_when_surface_removed)
 {
     using namespace testing;
-    auto stream_called = false;
     mcl::ConnectionSurfaceMap map;
     map.insert(surface_id, surface);
-    map.with_stream_do(stream_id, [&](mcl::ClientBufferStream* stream) {
-        EXPECT_THAT(stream, Eq(surface->get_buffer_stream()));
-        stream_called = true;
-    });
-    EXPECT_TRUE(stream_called);
-
     map.erase(surface_id);
-
     EXPECT_THROW({
         map.with_stream_do(stream_id, [](mcl::ClientBufferStream*){});
     }, std::runtime_error);
