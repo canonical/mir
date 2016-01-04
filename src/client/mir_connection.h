@@ -132,8 +132,6 @@ public:
     void available_surface_formats(MirPixelFormat* formats,
                                    unsigned int formats_size, unsigned int& valid_formats);
 
-    std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
-
     std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
        mir::protobuf::BufferStream const& protobuf_bs, std::string const& surface_name, mir::geometry::Size);
 
