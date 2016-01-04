@@ -226,7 +226,7 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         configuration.set_scale(scale);
         scale_wait_handle.expect_result();
 
-        display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
+        display_server.configure_buffer_stream(&configuration, &protobuf_void,
             google::protobuf::NewCallback(this, &ExchangeSemantics::on_scale_set, scale));
         return &scale_wait_handle;
     }
