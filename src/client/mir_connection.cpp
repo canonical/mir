@@ -20,7 +20,6 @@
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
 #include "mir_protobuf.pb.h"
-#include "default_client_buffer_stream_factory.h"
 #include "make_protobuf_object.h"
 #include "mir_toolkit/mir_platform_message.h"
 #include "mir/client_platform.h"
@@ -348,7 +347,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         std::string str;
         stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, mcl::BufferStreamMode::Producer, platform,
-            surface_proto, make_perf_report(logger), str, /*surface_name, */
+            surface_proto->buffer_stream(), make_perf_report(logger), str, /*surface_name, */
             mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
     }
     catch (std::exception const& error)
@@ -439,7 +438,6 @@ void MirConnection::released(SurfaceRelease data)
 {
     // releasing this surface from surface_map means that it will no longer receive events
     // If it's still focused, send an unfocused event before we kill it entirely
-    surface_map->erase(mf::SurfaceId(data.surface->id()));
     if (data.surface->attrib(mir_surface_attrib_focus) == mir_surface_focused)
     {
         auto unfocus = mev::make_event(mir::frontend::SurfaceId{data.surface->id()}, mir_surface_attrib_focus, mir_surface_unfocused);
@@ -447,6 +445,7 @@ void MirConnection::released(SurfaceRelease data)
     }
     data.callback(data.surface, data.context);
     data.handle->result_received();
+    surface_map->erase(mf::SurfaceId(data.surface->id()));
 }
 
 MirWaitHandle* MirConnection::release_surface(
@@ -728,10 +727,6 @@ void MirConnection::stream_created(StreamCreationRequest* request)
 
     auto protobuf_bs = request->response;
 
-//    OnScopeExit on_scope_exit{[this, request]
-//    {
-//    }};
-
     if (!request->response->has_id())
     {
         if (!request->response->has_error())
@@ -748,7 +743,7 @@ void MirConnection::stream_created(StreamCreationRequest* request)
         std::string str;
         stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, mcl::BufferStreamMode::Producer, platform,
-            protobuf_bs, make_perf_report(logger), str, /*surface_name,*/ mir::geometry::Size{0,0}, nbuffers);
+            *protobuf_bs, make_perf_report(logger), str, /*surface_name,*/ mir::geometry::Size{0,0}, nbuffers);
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
     }
     catch (std::exception const& error)
