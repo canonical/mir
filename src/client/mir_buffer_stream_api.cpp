@@ -81,12 +81,12 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-MirWaitHandle *mir_buffer_stream_release(
-    MirBufferStream * buffer_stream,
+MirWaitHandle* mir_buffer_stream_release(
+    MirBufferStream* buffer_stream,
     mir_buffer_stream_callback callback,
-    void *context)
+    void* context)
 {
-    auto *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    auto bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
     auto connection = bs->connection();
     return connection->release_buffer_stream(bs, callback, context);
 }

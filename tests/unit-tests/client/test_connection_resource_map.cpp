@@ -29,7 +29,7 @@ struct ConnectionResourceMap : testing::Test
 {
     std::shared_ptr<MirWaitHandle> wh { std::make_shared<MirWaitHandle>() };
     std::shared_ptr<MirSurface> surface{std::make_shared<MirSurface>("a string", nullptr, mf::SurfaceId{2}, wh)};
-    mtd::MockClientBufferStream stream; 
+    std::shared_ptr<mcl::ClientBufferStream> stream{ std::make_shared<mtd::MockClientBufferStream>() }; 
     mf::SurfaceId const surface_id{43};
     mf::BufferStreamId const stream_id{43};
 };
@@ -79,9 +79,9 @@ TEST_F(ConnectionResourceMap, maps_streams)
     using namespace testing;
     auto stream_called = false;
     mcl::ConnectionSurfaceMap map;
-    map.insert(stream_id, &stream);
+    map.insert(stream_id, stream);
     map.with_stream_do(stream_id, [&](mcl::ClientBufferStream* str) {
-        EXPECT_THAT(str, Eq(&stream));
+        EXPECT_THAT(str, Eq(stream.get()));
         stream_called = true;
     });
     EXPECT_TRUE(stream_called);

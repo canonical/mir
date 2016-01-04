@@ -661,22 +661,22 @@ TEST_F(MirConnectionTest, contacts_server_if_client_platform_cannot_handle_platf
     mir_platform_message_release(returned_response);
 }
 
-TEST_F(MirConnectionTest, wait_handle_is_signaled_during_stream_creation_error)
+TEST_F(MirConnectionTest, wait_handle_is_signalled_during_stream_creation_error)
 {
     using namespace testing;
     EXPECT_CALL(*mock_channel, on_buffer_stream_create(_))
         .WillOnce(Invoke([](mp::BufferStream& bs){ bs.set_error("danger will robertson"); }));
     EXPECT_FALSE(connection->create_client_buffer_stream(
-        2, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, nullptr, nullptr)); 
+        2, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, nullptr, nullptr)->is_pending()); 
 }
 
-TEST_F(MirConnectionTest, wait_handle_is_signaled_during_creation_exception)
+TEST_F(MirConnectionTest, wait_handle_is_signalled_during_creation_exception)
 {
     using namespace testing;
     EXPECT_CALL(*mock_channel, on_buffer_stream_create(_))
         .WillOnce(Throw(std::runtime_error("pay no attention to the man behind the curtain")));
     EXPECT_FALSE(connection->create_client_buffer_stream(
-        2, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, nullptr, nullptr)); 
+        2, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, nullptr, nullptr)->is_pending()); 
 }
 
 TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_error)

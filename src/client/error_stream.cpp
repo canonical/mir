@@ -29,6 +29,7 @@ mcl::ErrorStream::ErrorStream(std::string const& error_msg, MirConnection* conn,
 
 char const* mcl::ErrorStream::get_error_message() const
 {
+    printf("ERRORMs\n");
     return error.c_str();
 }
 
