@@ -20,7 +20,6 @@
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
 #include "mir_protobuf.pb.h"
-#include "default_client_buffer_stream_factory.h"
 #include "make_protobuf_object.h"
 #include "mir_toolkit/mir_platform_message.h"
 #include "mir/client_platform.h"
@@ -33,6 +32,10 @@
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
 #include "error_stream.h"
+#include "buffer_stream.h"
+#include "perf_report.h"
+#include "logging/perf_report.h"
+#include "lttng/perf_report.h"
 
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
@@ -51,9 +54,39 @@ namespace mev = mir::events;
 namespace gp = google::protobuf;
 namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
+namespace ml = mir::logging;
 
 namespace
 {
+std::shared_ptr<mcl::PerfReport>
+make_perf_report(std::shared_ptr<ml::Logger> const& logger)
+{
+    // TODO: It seems strange that this directly uses getenv
+    const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
+    if (report_target && !strncmp(report_target, "log", strlen(report_target)))
+    {
+        return std::make_shared<mcl::logging::PerfReport>(logger);
+    }
+    else if (report_target && !strncmp(report_target, "lttng", strlen(report_target)))
+    {
+        return std::make_shared<mcl::lttng::PerfReport>();
+    }
+    else
+    {
+        return std::make_shared<mcl::NullPerfReport>();
+    }
+}
+
+size_t get_nbuffers_from_env()
+{
+    //TODO: (kdub) cannot set nbuffers == 2 in production until we have client-side
+    //      timeout-based overallocation for timeout-based framedropping.
+    const char* nbuffers_opt = getenv("MIR_CLIENT_NBUFFERS");
+    if (nbuffers_opt && !strncmp(nbuffers_opt, "2", strlen(nbuffers_opt)))
+        return 2u;
+    return 3u;
+}
+
 struct OnScopeExit
 {
     ~OnScopeExit() { f(); }
@@ -194,7 +227,8 @@ MirConnection::MirConnection(std::string const& error_message) :
     channel(),
     server(nullptr),
     debug(nullptr),
-    error_message(error_message)
+    error_message(error_message),
+    nbuffers(get_nbuffers_from_env())
 {
 }
 
@@ -214,6 +248,7 @@ MirConnection::MirConnection(
         display_configuration_response{mcl::make_protobuf_object<mir::protobuf::DisplayConfiguration>()},
         set_base_display_configuration_response{mcl::make_protobuf_object<mir::protobuf::Void>()},
         client_platform_factory(conf.the_client_platform_factory()),
+        platform(client_platform_factory->create_client_platform(this)),
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
         lifecycle_control(conf.the_lifecycle_control()),
@@ -221,7 +256,8 @@ MirConnection::MirConnection(
         surface_map(conf.the_surface_map()),
         event_handler_register(conf.the_event_handler_register()),
         pong_callback(google::protobuf::NewPermanentCallback(&google::protobuf::DoNothing)),
-        eventloop{new md::ThreadedDispatcher{"RPC Thread", std::dynamic_pointer_cast<md::Dispatchable>(channel)}}
+        eventloop{new md::ThreadedDispatcher{"RPC Thread", std::dynamic_pointer_cast<md::Dispatchable>(channel)}},
+        nbuffers(get_nbuffers_from_env())
 {
     connect_result->set_error("connect not called");
     {
@@ -307,9 +343,10 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
 
     try
     {
-        stream = buffer_stream_factory->make_producer_stream(
-            this, server, surface_proto->buffer_stream(), std::string{},
-            {surface_proto->width(), surface_proto->height()});
+        stream = std::make_shared<mcl::BufferStream>(
+            this, request->wh, server, mcl::BufferStreamMode::Producer, platform,
+            surface_proto->buffer_stream(), make_perf_report(logger), std::string{},
+            mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
     }
     catch (std::exception const& error)
     {
@@ -393,7 +430,6 @@ void MirConnection::released(StreamRelease data)
     if (data.callback)
         data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
     data.handle->result_received();
-//    delete data.stream;
 }
 
 void MirConnection::released(SurfaceRelease data)
@@ -479,8 +515,6 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
             };
 
         platform = client_platform_factory->create_client_platform(this);
-        buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(
-            platform, the_logger());
         native_display = platform->create_egl_native_display();
         display_configuration->set_configuration(connect_result->display_configuration());
         lifecycle_control->set_callback(default_lifecycle_event_handler);
@@ -691,10 +725,6 @@ void MirConnection::stream_created(StreamCreationRequest* request)
 
     auto protobuf_bs = request->response;
 
-//    OnScopeExit on_scope_exit{[this, request]
-//    {
-//    }};
-
     if (!request->response->has_id())
     {
         if (!request->response->has_error())
@@ -709,8 +739,9 @@ void MirConnection::stream_created(StreamCreationRequest* request)
     try
     {
         std::string str;
-        stream = buffer_stream_factory->make_producer_stream(
-            this, server, *protobuf_bs, str, mir::geometry::Size{0,0});
+        stream = std::make_shared<mcl::BufferStream>(
+            this, request->wh, server, mcl::BufferStreamMode::Producer, platform,
+            *protobuf_bs, make_perf_report(logger), std::string{}, mir::geometry::Size{0,0}, nbuffers);
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
     }
     catch (std::exception const& error)
@@ -730,7 +761,7 @@ void MirConnection::stream_created(StreamCreationRequest* request)
 
     if (request->callback)
         request->callback(reinterpret_cast<MirBufferStream*>(stream.get()), request->context);
-    request->wh.result_received();
+    request->wh->result_received();
 }
 
 MirWaitHandle* MirConnection::create_client_buffer_stream(
@@ -747,7 +778,7 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     params.set_buffer_usage(buffer_usage);
 
     auto request = std::make_shared<StreamCreationRequest>(callback, context, params);
-    request->wh.expect_result();
+    request->wh->expect_result();
     stream_requests.push_back(request);
 
     try
@@ -764,16 +795,18 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
             mf::BufferStreamId(next_error_id(lock).as_value()));
         surface_map->insert(stream->rpc_id(), stream); 
 
-        request->wh.result_received();
+        request->wh->result_received();
         request->callback(reinterpret_cast<MirBufferStream*>(stream.get()), request->context);
     }
-    return &request->wh;
+    return request->wh.get();
 }
 
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
    mp::BufferStream const& protobuf_bs, std::string const& surface_name, mir::geometry::Size size)
 {
-    return buffer_stream_factory->make_consumer_stream(this, server, protobuf_bs, surface_name, size);
+    return std::make_shared<mcl::BufferStream>(
+        this, nullptr, server, mcl::BufferStreamMode::Consumer, platform,
+        protobuf_bs, make_perf_report(logger), surface_name, size, nbuffers);
 }
 
 EGLNativeDisplayType MirConnection::egl_native_display()
