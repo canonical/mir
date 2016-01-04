@@ -77,6 +77,7 @@ class BufferStream : public EGLNativeSurface, public ClientBufferStream
 public:
     BufferStream(
         MirConnection* connection,
+        std::shared_ptr<MirWaitHandle> creation_wait_handle,
         mir::client::rpc::DisplayServer& server,
         BufferStreamMode mode,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
@@ -87,6 +88,7 @@ public:
     // For surfaceless buffer streams
     BufferStream(
         MirConnection* connection,
+        std::shared_ptr<MirWaitHandle> creation_wait_handle,
         mir::client::rpc::DisplayServer& server,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
         mir::protobuf::BufferStreamParameters const& parameters,
@@ -170,7 +172,7 @@ private:
     geometry::Size ideal_buffer_size;
     size_t const nbuffers;
     std::string error_message;
-//    std::shared_ptr<MirWaitHandle> creation_wait_handle;
+    std::shared_ptr<MirWaitHandle> creation_wait_handle;
 };
 
 }

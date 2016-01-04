@@ -383,6 +383,7 @@ mcl::BufferStream::~BufferStream(){}
 
 mcl::BufferStream::BufferStream(
     MirConnection* connection,
+    std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     mcl::BufferStreamMode mode,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
@@ -401,7 +402,8 @@ mcl::BufferStream::BufferStream(
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
       ideal_buffer_size(ideal_size),
-      nbuffers(nbuffers)
+      nbuffers(nbuffers),
+      creation_wait_handle(creation_wait_handle)
 {
     if (!protobuf_bs->has_id())
     {
@@ -456,6 +458,7 @@ mcl::BufferStream::BufferStream(
 
 mcl::BufferStream::BufferStream(
     MirConnection* connection,
+    std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
     mp::BufferStreamParameters const& parameters,
@@ -470,7 +473,8 @@ mcl::BufferStream::BufferStream(
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
       ideal_buffer_size(parameters.width(), parameters.height()),
-      nbuffers(nbuffers)
+      nbuffers(nbuffers),
+      creation_wait_handle(creation_wait_handle)
 {
     perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
 

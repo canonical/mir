@@ -29,34 +29,6 @@ namespace mp = mir::protobuf;
 namespace
 {
 
-std::shared_ptr<mcl::PerfReport>
-make_perf_report(std::shared_ptr<ml::Logger> const& logger)
-{
-    // TODO: It seems strange that this directly uses getenv
-    const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
-    if (report_target && !strncmp(report_target, "log", strlen(report_target)))
-    {
-        return std::make_shared<mcl::logging::PerfReport>(logger);
-    }
-    else if (report_target && !strncmp(report_target, "lttng", strlen(report_target)))
-    {
-        return std::make_shared<mcl::lttng::PerfReport>();
-    }
-    else
-    {
-        return std::make_shared<mcl::NullPerfReport>();
-    }
-}
-
-size_t get_nbuffers_from_env()
-{
-    //TODO: (kdub) cannot set nbuffers == 2 in production until we have client-side
-    //      timeout-based overallocation for timeout-based framedropping.
-    const char* nbuffers_opt = getenv("MIR_CLIENT_NBUFFERS");
-    if (nbuffers_opt && !strncmp(nbuffers_opt, "2", strlen(nbuffers_opt)))
-        return 2u;
-    return 3u;
-}
 }
 
 mcl::DefaultClientBufferStreamFactory::DefaultClientBufferStreamFactory(

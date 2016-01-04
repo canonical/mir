@@ -195,14 +195,15 @@ private:
     {
         StreamCreationRequest(
             mir_buffer_stream_callback cb, void* context, mir::protobuf::BufferStreamParameters const& params) :
-            callback(cb), context(context), parameters(params), response(std::make_shared<mir::protobuf::BufferStream>())
+            callback(cb), context(context), parameters(params), response(std::make_shared<mir::protobuf::BufferStream>()),
+            wh(std::make_shared<MirWaitHandle>())
         {
         }
         mir_buffer_stream_callback callback;
         void* context;
         mir::protobuf::BufferStreamParameters const parameters;
         std::shared_ptr<mir::protobuf::BufferStream> response;
-        MirWaitHandle wh;
+        std::shared_ptr<MirWaitHandle> const wh;
     };
     std::vector<std::shared_ptr<StreamCreationRequest>> stream_requests;
     void stream_created(StreamCreationRequest*);
@@ -282,6 +283,8 @@ private:
     void released(StreamRelease);
     void done_platform_operation(mir_platform_operation_callback, void* context);
     bool validate_user_display_config(MirDisplayConfiguration const* config);
+
+    int const nbuffers;
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */
