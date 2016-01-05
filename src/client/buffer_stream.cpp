@@ -321,7 +321,6 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         unsigned int initial_nbuffers) :
         vault(factory, requests, size, format, usage, initial_nbuffers)
     {
-        printf("NBS USAGE %X\n", usage);
     }
 
     void deposit(mp::Buffer const& buffer, geom::Size, MirPixelFormat) override

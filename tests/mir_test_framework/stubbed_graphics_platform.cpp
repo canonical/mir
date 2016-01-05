@@ -76,17 +76,11 @@ public:
         native_buffer->height = properties.size.height.as_int();
 
         native_buffer->flags = 0;
-    printf("SIZE scanout!!!! %i %i (u: %X)\n", properties.size.width.as_int(), properties.size.height.as_int(), (int)properties.usage);
         if (properties.size.width.as_int() >= 800 &&
             properties.size.height.as_int() >= 600 &&
             properties.usage == mg::BufferUsage::hardware)
         {
-            printf("SCANNNNNOUT\n");
             native_buffer->flags |= mir_buffer_flag_can_scanout;
-        }
-        else
-        {
-            printf("NO BYPASSER\n");
         }
 #else
         auto native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
