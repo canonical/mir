@@ -22,8 +22,8 @@
 #include "hwc_wrapper.h"
 #include "hwc_fallback_gl_renderer.h"
 #include "mir/graphics/buffer.h"
-#include "mir/graphics/android/native_buffer.h"
-#include "mir/graphics/android/android_format_conversion-inl.h"
+#include "native_buffer.h"
+#include "android_format_conversion-inl.h"
 #include "swapping_gl_context.h"
 #include "hwc_layerlist.h"
 

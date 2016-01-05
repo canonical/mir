@@ -25,11 +25,11 @@
 #include "hal_component_factory.h"
 #include "hwc_loggers.h"
 #include "ipc_operations.h"
+#include "sync_fence.h"
+#include "native_buffer.h"
 
-#include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_message.h"
-#include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/display_report.h"
 #include "mir/gl/default_program_factory.h"

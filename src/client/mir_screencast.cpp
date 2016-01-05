@@ -23,7 +23,6 @@
 #include "client_buffer_stream.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
-#include "mir/egl_native_window_factory.h"
 
 #include <boost/throw_exception.hpp>
 
