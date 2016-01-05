@@ -151,7 +151,6 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
     {
         elements.emplace_back(std::make_shared<OverlaySceneElement>(renderable));
     }
-        printf("GENNED %i\n",(int)(long) elements.size());
     return elements;
 }
 

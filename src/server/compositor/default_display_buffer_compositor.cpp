@@ -46,7 +46,6 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 
 void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& scene_elements)
 {
-    printf("DP COM?\n");
     report->began_frame(this);
 
     auto const& view_area = display_buffer.view_area();
@@ -73,7 +72,6 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
      */
     scene_elements.clear();  // Those in use are still in renderable_list
 
-    printf("HMM? %i\n", (int)(long)renderable_list.size());
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         report->renderables_in_frame(this, renderable_list);

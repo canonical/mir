@@ -45,19 +45,17 @@ mcl::BufferVault::BufferVault(
     usage(usage),
     size(size)
 {
+    printf("ALLOCATING BUFFERS FOR VAULT %i\n", initial_nbuffers);
     for (auto i = 0u; i < initial_nbuffers; i++)
         server_requests->allocate_buffer(size, format, usage);
 }
 
 mcl::BufferVault::~BufferVault()
 {
-    printf("FREEEEE\n");
     for (auto& it : buffers)
     {
-        printf("FREEID %i\n", it.first);
         server_requests->free_buffer(it.first);
     }
-    printf("END\n");
 }
 
 mcl::NoTLSFuture<mcl::BufferInfo> mcl::BufferVault::withdraw()
@@ -83,6 +81,7 @@ mcl::NoTLSFuture<mcl::BufferInfo> mcl::BufferVault::withdraw()
 
 void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 {
+    printf("INCOMING!\n");
     std::lock_guard<std::mutex> lk(mutex);
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
@@ -113,7 +112,6 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
 
 void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 {
-    printf("INBOUND BVAULT\n");
     auto package = std::make_shared<MirBufferPackage>();
     package->data_items = protobuf_buffer.data_size();
     package->fd_items = protobuf_buffer.fd_size();

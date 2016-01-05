@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/graphics/buffer_properties.h"
 #include "mir/frontend/buffer_sink.h"
 #include "buffer_map.h"
 #include <boost/throw_exception.hpp>
@@ -50,11 +51,17 @@ mc::BufferMap::BufferMap(
 
 mg::BufferID mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
 {
+    printf("SEND SINK TRYLOCK\n");
     std::unique_lock<decltype(mutex)> lk(mutex);
+    printf("TTSEND SINK TRYLOCK\n");
+    try{
+    printf("ALLOC? %ix%i\n", properties.size.width.as_int(), properties.size.height.as_int()); 
     auto buffer = allocator->alloc_buffer(properties);
     buffers[buffer->id()] = {buffer, Owner::client};
+    printf("SEND SINK\n");
     sink->send_buffer(stream_id, *buffer, mg::BufferIpcMsgType::full_msg);
     return buffer->id();
+    } catch (std::exception& e) { printf("EEEEE %s\n", e.what()); throw e; }
 }
 
 void mc::BufferMap::remove_buffer(mg::BufferID id)

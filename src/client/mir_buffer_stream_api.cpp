@@ -55,6 +55,7 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     void *context)
 try
 {
+    printf("CREATIN %ix%i\n", width, height);
     return connection->create_client_buffer_stream(
         width, height, format, buffer_usage, callback, context);
 }
@@ -70,9 +71,11 @@ MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connect
     MirBufferUsage buffer_usage)
 try
 {
+    printf("CREATE SYNC\n");
     MirBufferStream *stream = nullptr;
     mir_connection_create_buffer_stream(connection, width, height, format, buffer_usage,
         reinterpret_cast<mir_buffer_stream_callback>(assign_result), &stream)->wait_for_all();
+    printf("DONE CREATE SYNC\n");
     return stream;
 }
 catch (std::exception const& ex)

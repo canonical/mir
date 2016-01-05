@@ -381,6 +381,7 @@ void mf::SessionMediator::submit_buffer(
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
+    printf("SUBMIT START\n");
     auto const session = weak_session.lock();
     if (!session) BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
     report->session_submit_buffer_called(session->name());
@@ -390,7 +391,6 @@ void mf::SessionMediator::submit_buffer(
     auto stream = session->get_buffer_stream(stream_id);
 
 
-    printf("SUBMISSION!\n");
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
     if (auto* buffer = buffer_stream_tracker.last_buffer(stream_id))
     {
@@ -414,6 +414,7 @@ void mf::SessionMediator::submit_buffer(
     }
 
     done->Run();
+    printf("SUBMIT END\n");
 }
 
 void mf::SessionMediator::allocate_buffers( 
@@ -425,11 +426,13 @@ void mf::SessionMediator::allocate_buffers(
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
+    printf("ALLOCO\n");
     report->session_allocate_buffers_called(session->name());
     mf::BufferStreamId stream_id{request->id().value()};
     auto stream = session->get_buffer_stream(stream_id);
     for (auto i = 0; i < request->buffer_requests().size(); i++)
     {
+        printf("IN here\n");
         auto const& req = request->buffer_requests(i);
         mg::BufferProperties properties(
             geom::Size{req.width(), req.height()},
@@ -790,6 +793,7 @@ void mf::SessionMediator::configure_cursor(
 {
     auto session = weak_session.lock();
 
+    printf("CONFIGURE CURSOR...\n");
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
@@ -800,6 +804,7 @@ void mf::SessionMediator::configure_cursor(
 
     if (cursor_request->has_name())
     {
+            printf("NAMED.\n");
         auto const& image = cursor_images->image(cursor_request->name(), mi::default_cursor_size);
         surface->set_cursor_image(image);
     }
@@ -818,6 +823,7 @@ void mf::SessionMediator::configure_cursor(
         surface->set_cursor_image({});
     }
 
+    printf("FIN.\n");
     done->Run();
 }
 

@@ -267,7 +267,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
         preset_display(mt::fake_shared(display));
         server.override_the_session_mediator_report([this]
             {
-                mock_session_mediator_report = std::make_shared<MockSessionMediatorReport>();
+                mock_session_mediator_report = std::make_shared<NiceMock<MockSessionMediatorReport>>();
                 return mock_session_mediator_report;
             });
 
@@ -636,7 +636,7 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
 
     // TODO workaround for lp:1523621
     // (I don't see a way to detect that the host has placed focus on "Mir nested display for output #1")
-    std::this_thread::sleep_for(10ms);
+    std::this_thread::sleep_for(100ms);
 
     {
         mt::WaitCondition condition;
@@ -675,18 +675,23 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
 
     // TODO workaround for lp:1523621
     // (I don't see a way to detect that the host has placed focus on "Mir nested display for output #1")
-    std::this_thread::sleep_for(10ms);
+    std::this_thread::sleep_for(1s);
 
     for (auto const name : cursor_names)
     {
+        printf("CYCLING\n");
         mt::WaitCondition condition;
 
         EXPECT_CALL(*mock_cursor, show(_)).Times(1)
             .WillOnce(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
+        printf("CYCLING\n");
         auto const cursor = mir_cursor_configuration_from_name(name);
+        printf("CYCLING\n");
         mir_wait_for(mir_surface_configure_cursor(client.surface, cursor));
+        printf("CYCLING\n");
         mir_cursor_configuration_destroy(cursor);
+        printf("CYCLING\n");
 
         condition.wait_for_at_most_seconds(1);
         Mock::VerifyAndClearExpectations(mock_cursor.get());

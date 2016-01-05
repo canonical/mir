@@ -72,8 +72,10 @@ void ms::SurfaceObservers::hidden_set_to(bool hide)
 
 void ms::SurfaceObservers::frame_posted(int frames_available, geometry::Size const& size)
 {
+    printf("FRAME P S\n");
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
         { observer->frame_posted(frames_available, size); });
+    printf("FRAME P end\n");
 }
 
 void ms::SurfaceObservers::alpha_set_to(float alpha)
@@ -612,9 +614,11 @@ void ms::BasicSurface::show()
 
 void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& image)
 {
+    printf("INNER.\n");
     {
         std::unique_lock<std::mutex> lock(guard);
         cursor_stream_adapter->reset();
+    printf("INNEEER.\n");
         
         cursor_image_ = image;
     }
@@ -623,6 +627,7 @@ void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& 
         observers.cursor_image_set_to(*image);
     else
         observers.cursor_image_removed();
+    printf("FINNEEER.\n");
 }
 
 std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image() const

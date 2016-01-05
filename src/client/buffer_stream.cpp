@@ -270,19 +270,16 @@ public:
 
     void free_buffer(int buffer_id) override
     {
-        printf("FREES\n");
         std::unique_lock<std::mutex> lk(mut);
         if (disconnected_) return;
         mp::BufferRelease request;
         request.mutable_id()->set_value(stream_id);
         request.add_buffers()->set_buffer_id(buffer_id);
-    printf("NOW HERE.\n");
         mp::Void* protobuf_void = new mp::Void;
         try{
         server.release_buffers(&request, protobuf_void,
             google::protobuf::NewCallback(this, &Requests::ignore, protobuf_void));
         } catch (...) {/*delete protobuf_void;*/}
-        printf("FREES\n");
     }
 
     void ignore(mp::Void* mpvoid)
@@ -304,7 +301,6 @@ public:
 
     void disconnected() override
     {
-        printf("DISCONNECTEDDD\n");
         std::unique_lock<std::mutex> lk(mut);
         disconnected_ = true;
     }
@@ -329,14 +325,12 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
     void deposit(mp::Buffer const& buffer, geom::Size, MirPixelFormat) override
     {
-        printf("INBOUND.\n");
         vault.wire_transfer_inbound(buffer);
     }
 
     void advance_current_buffer(std::unique_lock<std::mutex>& lk)
     {
         lk.unlock();
-        printf("WITHDRAW.\n");
         auto buffer = vault.withdraw().get();
         lk.lock();
         current = buffer;

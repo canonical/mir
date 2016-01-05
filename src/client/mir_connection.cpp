@@ -269,7 +269,6 @@ MirConnection::MirConnection(
 
 MirConnection::~MirConnection() noexcept
 {
-        printf("CONNECTIOD DIED\n");
     // We don't die while if are pending callbacks (as they touch this).
     // But, if after 500ms we don't get a call, assume it won't happen.
     connect_wait_handle.wait_for_pending(std::chrono::milliseconds(500));
@@ -738,9 +737,11 @@ void MirConnection::stream_created(StreamCreationRequest* request)
 
     try
     {
+        printf("SSSS %i %i\n", request->parameters.width(), request->parameters.height());
         auto stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, mcl::BufferStreamMode::Producer, platform,
-            *protobuf_bs, make_perf_report(logger), std::string{}, mir::geometry::Size{0,0}, nbuffers);
+            *protobuf_bs, make_perf_report(logger), std::string{},
+            mir::geometry::Size{request->parameters.width(), request->parameters.height()}, nbuffers);
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
 
         if (request->callback)
@@ -765,6 +766,7 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     mir_buffer_stream_callback callback,
     void *context)
 {
+    printf("CREATIN\n");
     mp::BufferStreamParameters params;
     params.set_width(width);
     params.set_height(height);
@@ -782,6 +784,7 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     }
     catch (std::exception const& ex)
     {
+        printf("ERROR\n");
         stream_error(std::string{"Error requesting BufferStream from server"},
             *request->wh, callback, context);
     }

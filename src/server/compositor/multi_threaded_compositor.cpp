@@ -132,10 +132,8 @@ public:
                 frames_scheduled--;
                 lock.unlock();
 
-                printf("GOOOO COMPOSIOTR!\n");
                 for (auto& tuple : compositors)
                 {
-                    printf("GOOOO COMPOSIOTR2!\n");
                     auto& compositor = std::get<1>(tuple);
                     auto e = scene->scene_elements_for(compositor.get());
                     compositor->composite(std::move(e));
