@@ -122,13 +122,10 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     package->width = protobuf_buffer.width();
     package->height = protobuf_buffer.height();
 
-    printf("WIRE TRANSFER INBOUND\n");
     std::unique_lock<std::mutex> lk(mutex);
-    printf("WIRE TRANSFER INBOUND12\n");
     auto it = buffers.find(protobuf_buffer.buffer_id());
     if (it == buffers.end())
     {
-        printf("A NEW BUFFER\n");
         geom::Size sz{package->width, package->height};
         auto buffer = factory->create_buffer(package, geom::Size{package->width, package->height}, format);
         if (sz != size)
@@ -144,13 +141,11 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     {
         if (size == it->second.buffer->size())
         { 
-            printf("REUSE incoming.\n");
             it->second.owner = Owner::Self;
             it->second.buffer->update_from(*package);
         }
         else
         {
-            printf("EXPEL incoming.\n");
             int id = it->first;
             buffers.erase(it);
             lk.unlock();
@@ -162,7 +157,6 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 
     if (!promises.empty())
     {
-        printf("SETTING PROMISE\n");
         buffers[protobuf_buffer.buffer_id()].owner = Owner::ContentProducer;
         promises.front().set_value({buffers[protobuf_buffer.buffer_id()].buffer, protobuf_buffer.buffer_id()});
         promises.pop_front();
@@ -190,10 +184,8 @@ void mcl::BufferVault::set_scale(float scale)
     std::vector<int> free_ids;
     std::unique_lock<std::mutex> lk(mutex);
     auto new_size = size * scale;
-    printf("SCALE TO %i %i\n", new_size.width.as_int(), new_size.height.as_int());
     if (new_size == size)
     {
-        printf("SKIP\n");
         return;
     }
     size = new_size;
@@ -213,7 +205,6 @@ void mcl::BufferVault::set_scale(float scale)
 
     for(auto& id : free_ids)
     {
-        printf("FREE IDS?\n");
         server_requests->allocate_buffer(new_size, format, usage);
         server_requests->free_buffer(id);
     }

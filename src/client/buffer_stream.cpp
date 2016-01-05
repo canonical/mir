@@ -321,6 +321,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         unsigned int initial_nbuffers) :
         vault(factory, requests, size, format, usage, initial_nbuffers)
     {
+        printf("NBS USAGE %X\n", usage);
     }
 
     void deposit(mp::Buffer const& buffer, geom::Size, MirPixelFormat) override
@@ -331,9 +332,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     void advance_current_buffer(std::unique_lock<std::mutex>& lk)
     {
         lk.unlock();
-        printf("GETTING BUFFER\n");
         auto buffer = vault.withdraw().get();
-        printf("DONE GETTING BUFFER\n");
         lk.lock();
         current = buffer;
     }
@@ -456,7 +455,8 @@ mcl::BufferStream::BufferStream(
             buffer_depository = std::make_unique<NewBufferSemantics>(
                 client_platform->create_buffer_factory(),
                 std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
-                ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
+                ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
+                protobuf_bs->buffer_usage(), nbuffers);
         }
 
 
@@ -547,7 +547,6 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
     {
         auto pixel_format = static_cast<MirPixelFormat>(protobuf_bs->pixel_format());
         lk.unlock();
-        printf("DEPOST\n");
         buffer_depository->deposit(buffer, geom::Size{buffer.width(), buffer.height()}, pixel_format);
         perf_report->begin_frame(buffer.buffer_id());
     }
@@ -728,9 +727,7 @@ void mcl::BufferStream::set_buffer_cache_size(unsigned int cache_size)
 
 void mcl::BufferStream::buffer_available(mir::protobuf::Buffer const& buffer)
 {
-    printf("BUFFER AVAIL!\n");
     std::unique_lock<decltype(mutex)> lock(mutex);
-    printf("thru lok\n");
     process_buffer(buffer, lock);
 }
 

@@ -419,9 +419,7 @@ void mf::SessionMediator::allocate_buffers(
     mir::protobuf::BufferAllocation const* request,
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
-try
 {
-    printf("ALLOCATE server side\n");
     auto session = weak_session.lock();
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
@@ -432,7 +430,6 @@ try
     for (auto i = 0; i < request->buffer_requests().size(); i++)
     {
         auto const& req = request->buffer_requests(i);
-        printf("ALLOCATE %i x %i?\n", req.width(), req.height());
         mg::BufferProperties properties(
             geom::Size{req.width(), req.height()},
             static_cast<MirPixelFormat>(req.pixel_format()),
@@ -440,11 +437,6 @@ try
         stream->allocate_buffer(properties);
     }
     done->Run();
-    printf("DUNRUN\n");
-}
-catch(std::exception &e)
-{
-    printf("EEE %s\n", e.what()); 
 }
  
 void mf::SessionMediator::release_buffers(

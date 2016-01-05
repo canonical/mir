@@ -271,7 +271,6 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
 
     if (seq.has_buffer_request())
     {
-        printf("B REQUEST\n");
         std::array<char, 1> dummy;
         auto const num_fds = seq.mutable_buffer_request()->mutable_buffer()->fds_on_side_channel();
         std::vector<mir::Fd> fds(num_fds);
@@ -285,11 +284,9 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
 
         surface_map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
         [&] (mcl::ClientBufferStream* stream) {
-            printf("IN HERE.\n");
             if (stream)
                 stream->buffer_available(seq.buffer_request().buffer());
         });
-        printf("B REQUEST DONE\n");
     }
 
     int const nevents = seq.event_size();
