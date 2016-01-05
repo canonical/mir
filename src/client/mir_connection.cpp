@@ -509,14 +509,6 @@ void MirConnection::available_surface_formats(
     }
 }
 
-std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform()
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    return platform;
-}
-
-
 mir::client::ClientBufferStream* MirConnection::create_client_buffer_stream(
     int width, int height,
     MirPixelFormat format,

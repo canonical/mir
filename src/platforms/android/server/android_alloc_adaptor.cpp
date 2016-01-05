@@ -17,9 +17,9 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/android_native_buffer.h"
-#include "mir/graphics/android/sync_fence.h"
-#include "mir/graphics/android/android_format_conversion-inl.h"
+#include "android_native_buffer.h"
+#include "sync_fence.h"
+#include "android_format_conversion-inl.h"
 #include "android_alloc_adaptor.h"
 #include "device_quirks.h"
 

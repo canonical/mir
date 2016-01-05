@@ -21,7 +21,7 @@
 #include "mir/test/doubles/mock_android_hw.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer.h"
-#include "mir/graphics/android/native_buffer.h"
+#include "native_buffer.h"
 
 #include "mir/test/doubles/mock_egl.h"
 

@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/sync_fence.h"
+#include "sync_fence.h"
 #include "mir/test/doubles/mock_fence.h"
 
 #include <android/linux/sync.h>

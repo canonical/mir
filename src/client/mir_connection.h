@@ -38,7 +38,6 @@
 
 namespace mir
 {
-class SharedLibrary;
 namespace protobuf
 {
 class BufferStream;
@@ -132,8 +131,6 @@ public:
     void available_surface_formats(MirPixelFormat* formats,
                                    unsigned int formats_size, unsigned int& valid_formats);
 
-    std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
-
     std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
        mir::protobuf::BufferStream const& protobuf_bs, std::string const& surface_name, mir::geometry::Size);
 
@@ -177,10 +174,6 @@ private:
     // MUST be first data member so it is destroyed last.
     struct Deregisterer
     { MirConnection* const self; ~Deregisterer(); } deregisterer;
-
-    // MUST be placed before any variables for components that are loaded
-    // from a shared library, e.g., the ClientPlatform* objects.
-    std::shared_ptr<mir::SharedLibrary> const platform_library;
 
     mutable std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
