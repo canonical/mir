@@ -149,7 +149,6 @@ void mc::BufferStreamSurfaces::remove_observer(std::weak_ptr<scene::SurfaceObser
 
 mg::BufferID mc::BufferStreamSurfaces::allocate_buffer(graphics::BufferProperties const&)
 {
-    printf("ERROROROROROROR\n");
     BOOST_THROW_EXCEPTION(std::logic_error("buffer allocation cannot happen with an exchange-based buffer client"));
 }
 

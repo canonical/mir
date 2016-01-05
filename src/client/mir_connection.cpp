@@ -737,7 +737,6 @@ void MirConnection::stream_created(StreamCreationRequest* request)
 
     try
     {
-        printf("SSSS %i %i\n", request->parameters.width(), request->parameters.height());
         auto stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, mcl::BufferStreamMode::Producer, platform,
             *protobuf_bs, make_perf_report(logger), std::string{},
@@ -766,7 +765,6 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     mir_buffer_stream_callback callback,
     void *context)
 {
-    printf("CREATIN\n");
     mp::BufferStreamParameters params;
     params.set_width(width);
     params.set_height(height);
@@ -784,7 +782,6 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     }
     catch (std::exception const& ex)
     {
-        printf("ERROR\n");
         stream_error(std::string{"Error requesting BufferStream from server"},
             *request->wh, callback, context);
     }

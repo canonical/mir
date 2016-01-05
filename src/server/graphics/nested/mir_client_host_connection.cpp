@@ -131,7 +131,6 @@ public:
 
         if (new_cursor)
         {
-            printf("SHOULD HAVE WIDTH %i %i\n", image_width, image_height);
             cursor = mir_connection_create_buffer_stream_sync(
                 mir_connection,
                 image_width,

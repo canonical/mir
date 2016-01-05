@@ -376,7 +376,6 @@ void MirSurface::on_configured()
 
 void MirSurface::on_cursor_configured()
 {
-    printf("SURFACE CONFIG\n");
     configure_cursor_wait_handle.result_received();
 }
 

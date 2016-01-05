@@ -679,19 +679,14 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
 
     for (auto const name : cursor_names)
     {
-        printf("CYCLING\n");
         mt::WaitCondition condition;
 
         EXPECT_CALL(*mock_cursor, show(_)).Times(1)
             .WillOnce(InvokeWithoutArgs([&] { condition.wake_up_everyone(); }));
 
-        printf("CYCLING\n");
         auto const cursor = mir_cursor_configuration_from_name(name);
-        printf("CYCLING\n");
         mir_wait_for(mir_surface_configure_cursor(client.surface, cursor));
-        printf("CYCLING\n");
         mir_cursor_configuration_destroy(cursor);
-        printf("CYCLING\n");
 
         condition.wait_for_at_most_seconds(1);
         Mock::VerifyAndClearExpectations(mock_cursor.get());

@@ -45,7 +45,6 @@ mcl::BufferVault::BufferVault(
     usage(usage),
     size(size)
 {
-    printf("ALLOCATING BUFFERS FOR VAULT %i\n", initial_nbuffers);
     for (auto i = 0u; i < initial_nbuffers; i++)
         server_requests->allocate_buffer(size, format, usage);
 }
@@ -81,7 +80,6 @@ mcl::NoTLSFuture<mcl::BufferInfo> mcl::BufferVault::withdraw()
 
 void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 {
-    printf("INCOMING!\n");
     std::lock_guard<std::mutex> lk(mutex);
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
