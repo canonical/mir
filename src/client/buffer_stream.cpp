@@ -254,6 +254,7 @@ public:
 
     void allocate_buffer(geom::Size size, MirPixelFormat format, int usage) override
     {
+        std::unique_lock<std::mutex> lk(mut);
         if (disconnected_) return;
         mp::BufferAllocation request;
         request.mutable_id()->set_value(stream_id);
@@ -262,40 +263,57 @@ public:
         buf_params->set_height(size.height.as_int());
         buf_params->set_pixel_format(format);
         buf_params->set_buffer_usage(usage);
-        server.allocate_buffers(&request, &protobuf_void, 
-            google::protobuf::NewCallback(google::protobuf::DoNothing));
+        mp::Void* protobuf_void = new mp::Void;
+        server.allocate_buffers(&request, protobuf_void, 
+            google::protobuf::NewCallback(this, &Requests::ignore, protobuf_void));
     }
 
     void free_buffer(int buffer_id) override
     {
+        printf("FREES\n");
+        std::unique_lock<std::mutex> lk(mut);
         if (disconnected_) return;
         mp::BufferRelease request;
         request.mutable_id()->set_value(stream_id);
         request.add_buffers()->set_buffer_id(buffer_id);
-        server.release_buffers(&request, &protobuf_void,
-            google::protobuf::NewCallback(google::protobuf::DoNothing));
+    printf("NOW HERE.\n");
+        mp::Void* protobuf_void = new mp::Void;
+        try{
+        server.release_buffers(&request, protobuf_void,
+            google::protobuf::NewCallback(this, &Requests::ignore, protobuf_void));
+        } catch (...) {/*delete protobuf_void;*/}
+        printf("FREES\n");
+    }
+
+    void ignore(mp::Void* mpvoid)
+    {
+        delete mpvoid;
     }
 
     void submit_buffer(int id, mcl::ClientBuffer&) override
     {
+        std::unique_lock<std::mutex> lk(mut);
         if (disconnected_) return;
         mp::BufferRequest request;
         request.mutable_id()->set_value(stream_id);
         request.mutable_buffer()->set_buffer_id(id);
-        server.submit_buffer(&request, &protobuf_void,
-            google::protobuf::NewCallback(google::protobuf::DoNothing));
+        mp::Void* protobuf_void = new mp::Void;
+        server.submit_buffer(&request, protobuf_void,
+            google::protobuf::NewCallback(this, &Requests::ignore, protobuf_void));
     }
 
     void disconnected() override
     {
+        printf("DISCONNECTEDDD\n");
+        std::unique_lock<std::mutex> lk(mut);
         disconnected_ = true;
     }
 
 private:
+    std::mutex mut;
     std::atomic<bool> disconnected_{false};
     mclr::DisplayServer& server;
     int stream_id;
-    mp::Void protobuf_void;
 };
 
 struct NewBufferSemantics : mcl::ServerBufferSemantics
@@ -438,6 +456,7 @@ mcl::BufferStream::BufferStream(
         }
         else
         {
+            cached_buffer_size = ideal_buffer_size;
             buffer_depository = std::make_unique<NewBufferSemantics>(
                 client_platform->create_buffer_factory(),
                 std::make_shared<Requests>(display_server, protobuf_bs->id().value()),

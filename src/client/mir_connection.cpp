@@ -269,6 +269,7 @@ MirConnection::MirConnection(
 
 MirConnection::~MirConnection() noexcept
 {
+        printf("CONNECTIOD DIED\n");
     // We don't die while if are pending callbacks (as they touch this).
     // But, if after 500ms we don't get a call, assume it won't happen.
     connect_wait_handle.wait_for_pending(std::chrono::milliseconds(500));

@@ -51,8 +51,13 @@ mcl::BufferVault::BufferVault(
 
 mcl::BufferVault::~BufferVault()
 {
+    printf("FREEEEE\n");
     for (auto& it : buffers)
+    {
+        printf("FREEID %i\n", it.first);
         server_requests->free_buffer(it.first);
+    }
+    printf("END\n");
 }
 
 mcl::NoTLSFuture<mcl::BufferInfo> mcl::BufferVault::withdraw()
