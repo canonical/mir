@@ -29,16 +29,19 @@ class VisibleSurface
 {
 public:
     explicit VisibleSurface(MirSurfaceSpec* spec);
+    VisibleSurface(VisibleSurface&&);
+    VisibleSurface& operator=(VisibleSurface&&);
+    VisibleSurface(VisibleSurface const&) = delete;
+    VisibleSurface& operator=(VisibleSurface const&) = delete;
+
     ~VisibleSurface();
     static void event_callback(MirSurface* surf, MirEvent const* ev, void* context);
     void set_visibility(MirSurface* surf, bool vis);
     operator MirSurface*() const;
-    VisibleSurface(VisibleSurface&& that);
 private:
     std::mutex mutex;
     std::condition_variable cv;
 
-    VisibleSurface(VisibleSurface const&) = delete;
     MirSurface* surface;
     bool visible;
 };

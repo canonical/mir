@@ -70,3 +70,9 @@ mtf::VisibleSurface::VisibleSurface(VisibleSurface&& that) :
 {
     that.surface = nullptr;
 }
+
+mtf::VisibleSurface& mtf::VisibleSurface::operator=(VisibleSurface&& that)
+{
+    std::swap(that.surface, surface);
+    return *this;
+}
