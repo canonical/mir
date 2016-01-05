@@ -90,7 +90,7 @@ public:
     MirConnection(std::string const& error_message);
 
     MirConnection(mir::client::ConnectionConfiguration& conf);
-    ~MirConnection() noexcept;
+    ~MirConnection();
 
     MirConnection(MirConnection const &) = delete;
     MirConnection& operator=(MirConnection const &) = delete;

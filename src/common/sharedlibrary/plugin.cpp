@@ -27,8 +27,11 @@ Plugin::Plugin()
 
 Plugin::~Plugin()
 {
-    // Empty, but very important this implementation exists in one common
-    // location and is not re-instantiated inside plugin libraries themselves.
+    if (!resources.empty())
+        throw new std::runtime_error("Plugin was not safely unloaded and "
+                                     "you're trying to unmap the library "
+                                     "before we're finished executing code "
+                                     "from it.");
 }
 
 void Plugin::hold_resource(std::shared_ptr<void> const& r)
@@ -45,6 +48,13 @@ void Plugin::safely_unload(std::shared_ptr<Plugin>& plugin)
         throw new std::runtime_error("Can't safely unload a plugin that's "
                                      "still in use.");
 
+    /*
+     * plugin.use_count()==1, but note there may be other owners of the same
+     * dlopen handle (e.g. MirConnections), and dlopen has its own reference
+     * counting, so there is no strict guarantee that the library will unload
+     * just yet. That's OK though, as we only need to guarantee local safe
+     * unload ordering for each instance here...
+     */
     auto res = std::move(plugin->resources);
     plugin.reset(); // <- First destruct everything that came from the plugin.
     res.clear();    // <- Second unload the library, as we now know it's safe

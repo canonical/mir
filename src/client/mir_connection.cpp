@@ -155,7 +155,7 @@ MirConnection::MirConnection(
     }
 }
 
-MirConnection::~MirConnection() noexcept
+MirConnection::~MirConnection()
 {
     // We don't die while if are pending callbacks (as they touch this).
     // But, if after 500ms we don't get a call, assume it won't happen.
@@ -178,8 +178,7 @@ MirConnection::~MirConnection() noexcept
     surface_map.reset();
     native_display.reset();
     std::shared_ptr<mir::Plugin> plugin = std::move(platform);
-    if (plugin.use_count() == 1)  // else other connections exist?
-        mir::Plugin::safely_unload(plugin);
+    mir::Plugin::safely_unload(plugin);
 }
 
 MirWaitHandle* MirConnection::create_surface(
