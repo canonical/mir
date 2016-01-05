@@ -44,7 +44,7 @@ void Plugin::safely_unload(std::shared_ptr<Plugin>& plugin)
     if (plugin.use_count() == 0)
         throw new std::runtime_error("Can't safely unload a plugin that's "
                                      "not presently loaded.");
-    if (plugin.use_count() > 1)
+    if (plugin.use_count() > 1 && !plugin->resources.empty())
         throw new std::runtime_error("Can't safely unload a plugin that's "
                                      "still in use.");
 
