@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_DRIVER_INTERPRETER_H_
 #define MIR_TEST_DOUBLES_STUB_DRIVER_INTERPRETER_H_
 
-#include "mir/graphics/android/android_driver_interpreter.h"
+#include "android_driver_interpreter.h"
 
 namespace mir
 {

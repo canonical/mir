@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/sync_fence.h"
+#include "sync_fence.h"
 #include "src/platforms/android/server/framebuffer_bundle.h"
 #include "src/platforms/android/server/hwc_device.h"
 #include "src/platforms/android/server/hwc_layerlist.h"
