@@ -176,7 +176,15 @@ enum { mir_platform_package_max = 32 };
 
 /**
  * The native buffer type for the system the client is connected on
+ *
+ * \deprecated Use of this type is inherently non-portable in the presence
+ * of plug-in platform modules as these need not correspond to the available
+ * types.
+ * \todo This should be removed from the public API at the next API break.
  */
+#ifndef __cplusplus
+__attribute__ ((deprecated))
+#endif
 typedef enum MirPlatformType
 {
     mir_platform_type_gbm,

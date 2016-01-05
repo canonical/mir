@@ -160,15 +160,9 @@ int demo_client(const char* server, int buffer_swap_count)
             MirNativeBuffer* buffer_package = NULL;
             mir_buffer_stream_get_current_buffer(bs, &buffer_package);
             assert(buffer_package != NULL);
-            MirPlatformType platform_type =
-                mir_buffer_stream_get_platform_type(bs);
-            if (mir_platform_type_gbm == platform_type)
-            {
-                // Interpret buffer_package as MirBufferPackage
-            } else if (mir_platform_type_android == platform_type)
-            {
-                // Interpret buffer_package as ANativeWindowBuffer
-            }
+            MirGraphicsRegion graphics_region;
+            mir_buffer_stream_get_graphics_region(bs, &graphics_region);
+
             ///\internal [get_current_buffer_tag]
             // In a real application we'd render into the current buffer
         }
