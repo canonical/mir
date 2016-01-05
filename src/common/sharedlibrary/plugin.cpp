@@ -27,6 +27,13 @@ Plugin::Plugin()
 
 Plugin::~Plugin()
 {
+    /*
+     * Allowing destruction while resources exist would result in an unsafe
+     * dlclose of the library that implements our child class, all the while
+     * we're still executing its code. So you would get a nasty crash and
+     * maybe some error about unmapped memory with no stack trace. Better to
+     * report the caller's mistake more explicitly instead:
+     */
     if (!resources.empty())
         throw new std::runtime_error("Plugin was not safely unloaded and "
                                      "you're trying to unmap the library "
@@ -42,8 +49,8 @@ void Plugin::hold_resource(std::shared_ptr<void> const& r)
 void Plugin::safely_unload(std::shared_ptr<Plugin>& plugin)
 {
     if (plugin.use_count() == 0)
-        throw new std::runtime_error("Can't safely unload a plugin that's "
-                                     "not presently loaded.");
+        return;
+
     if (plugin.use_count() > 1 && !plugin->resources.empty())
         throw new std::runtime_error("Can't safely unload a plugin that's "
                                      "still in use.");
@@ -56,6 +63,7 @@ void Plugin::safely_unload(std::shared_ptr<Plugin>& plugin)
      * unload ordering for each instance here...
      */
     auto res = std::move(plugin->resources);
+    plugin->resources.clear();  // Yes, this is safe after std::move.
     plugin.reset(); // <- First destruct everything that came from the plugin.
     res.clear();    // <- Second unload the library, as we now know it's safe
                     //    and there are no destructors left in it to call.
