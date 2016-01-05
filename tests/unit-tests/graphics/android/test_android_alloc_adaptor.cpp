@@ -18,7 +18,7 @@
 
 #include "src/platforms/android/server/android_alloc_adaptor.h"
 #include "src/platforms/android/server/device_quirks.h"
-#include "mir/graphics/android/native_buffer.h"
+#include "native_buffer.h"
 
 #include "mir/test/doubles/mock_android_alloc_device.h"
 #include "mir/test/doubles/mock_alloc_adaptor.h"

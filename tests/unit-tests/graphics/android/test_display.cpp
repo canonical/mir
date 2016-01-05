@@ -32,7 +32,7 @@
 #include "mir/test/doubles/stub_gl_program_factory.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_renderable.h"
-#include "mir/graphics/android/mir_native_window.h"
+#include "mir_native_window.h"
 #include "mir/test/doubles/stub_driver_interpreter.h"
 
 #include <gtest/gtest.h>

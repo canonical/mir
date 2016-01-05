@@ -1,12 +1,7 @@
 include_directories(
-    ${server_common_include_dirs}
-)
-
-include_directories(
     ${PROJECT_SOURCE_DIR}/src/include/gl
 )
 
-include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 include_directories(
     ${EGL_INCLUDE_DIRS}
     ${GLESv2_INCLUDE_DIRS}
@@ -15,7 +10,6 @@ include_directories(
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/3rd_party/android-deps)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
-add_definitions( -DANDROID )
 
 add_library(mirplatformgraphicsandroidobjects OBJECT
   platform.cpp

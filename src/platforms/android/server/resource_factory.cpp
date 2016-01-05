@@ -17,8 +17,8 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/mir_native_window.h"
-#include "mir/graphics/android/sync_fence.h"
+#include "mir_native_window.h"
+#include "sync_fence.h"
 #include "buffer.h"
 #include "resource_factory.h"
 #include "fb_device.h"
