@@ -26,7 +26,6 @@
 #include <EGL/eglplatform.h>
 #include <EGL/egl.h>  // for EGLConfig
 #include <memory>
-#include <vector>
 
 namespace mir
 {

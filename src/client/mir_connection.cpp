@@ -175,7 +175,7 @@ MirConnection::~MirConnection()
      * unload the driver itself. Otherwise we would crash (unmapped memory).
      */
     buffer_stream_factory.reset();
-    surface_map.reset();
+    surface_map->clear();  // Note we must clear() and not simply reset().
     native_display.reset();
     std::shared_ptr<mir::Plugin> plugin = std::move(platform);
     mir::Plugin::safely_unload(plugin);

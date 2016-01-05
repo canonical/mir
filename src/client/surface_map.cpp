@@ -117,6 +117,13 @@ void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBuf
         fn(stream.second.stream);
 }
 
+void mcl::ConnectionSurfaceMap::clear()
+{
+    std::shared_lock<decltype(guard)> lk(guard);
+    streams.clear();
+    surfaces.clear();
+}
+
 void mcl::ConnectionSurfaceMap::insert(mf::BufferStreamId stream_id, ClientBufferStream* stream)
 {
     std::lock_guard<decltype(guard)> lk(guard);

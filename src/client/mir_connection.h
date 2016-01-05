@@ -214,7 +214,7 @@ private:
 
     std::shared_ptr<mir::client::PingHandler> const ping_handler;
 
-    std::shared_ptr<mir::client::ConnectionSurfaceMap> surface_map;
+    std::shared_ptr<mir::client::ConnectionSurfaceMap> const surface_map;
 
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
 

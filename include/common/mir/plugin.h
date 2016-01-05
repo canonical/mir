@@ -27,11 +27,7 @@ namespace mir
 
 /**
  * Plugin is a concrete base class designed to underpin any class whose
- * implementation comes from a dynamically run-time loaded library. As the
- * class is concrete and implemented outside of any such plugin libraries,
- * its destructor serves as a final safe location from which to release the
- * final reference to the SharedLibrary (or whatever) in which your
- * implementation class resides.
+ * implementation comes from a dynamically run-time loaded library.
  */
 class Plugin
 {
