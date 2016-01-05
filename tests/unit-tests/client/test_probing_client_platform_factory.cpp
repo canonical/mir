@@ -89,8 +89,8 @@ TEST(ProbingClientPlatformFactory, ThrowsErrorWhenNoPlatformPluginProbesSuccessf
                  std::runtime_error);
 }
 
-TEST(ProbingClientPlatformFactory, WIP_LeakTest)
-{
+TEST(ProbingClientPlatformFactory, DoesNotLeakDriverModule)
+{   // Regression test for LP: #1527449
     using namespace testing;
     auto const modules = all_available_modules();
     ASSERT_FALSE(modules.empty());
@@ -102,7 +102,6 @@ TEST(ProbingClientPlatformFactory, WIP_LeakTest)
         {});
 
     std::shared_ptr<mir::client::ClientPlatform> platform;
-    {
     mtd::MockClientContext context;
     ON_CALL(context, populate_server_package(_))
             .WillByDefault(Invoke([](MirPlatformPackage& pkg)
@@ -114,19 +113,12 @@ TEST(ProbingClientPlatformFactory, WIP_LeakTest)
                                pkg.fd[0] = 23;
                            }));
 
-    EXPECT_TRUE(0);
     ASSERT_FALSE(loaded(preferred_module));
-    EXPECT_TRUE(0);
     platform = factory.create_client_platform(&context);
-    }
-    EXPECT_TRUE(0);
     ASSERT_TRUE(loaded(preferred_module));
-    EXPECT_TRUE(0);
-    // FIXME: Crashing on this unless we leak mesa.so.3 :
-    platform.reset();
-    EXPECT_TRUE(0);
+    std::shared_ptr<mir::Plugin> plugin = std::move(platform);
+    mir::Plugin::safely_unload(plugin);
     EXPECT_FALSE(loaded(preferred_module));
-    EXPECT_TRUE(0);
 }
 
 #if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
@@ -154,6 +146,8 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformWhenAppropriate)
                            }));
     auto platform = factory.create_client_platform(&context);
     EXPECT_EQ(mir_platform_type_gbm, platform->platform_type());
+    std::shared_ptr<mir::Plugin> plugin = std::move(platform);
+    mir::Plugin::safely_unload(plugin);
 }
 
 #ifdef MIR_BUILD_PLATFORM_ANDROID
@@ -180,6 +174,8 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesAndroidPlatformWhenAppropriat
 
     auto platform = factory.create_client_platform(&context);
     EXPECT_EQ(mir_platform_type_android, platform->platform_type());
+    std::shared_ptr<mir::Plugin> plugin = std::move(platform);
+    mir::Plugin::safely_unload(plugin);
 }
 
 TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
@@ -204,4 +200,6 @@ TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
                            }));
 
     auto platform = factory.create_client_platform(&context);
+    std::shared_ptr<mir::Plugin> plugin = std::move(platform);
+    mir::Plugin::safely_unload(plugin);
 }
