@@ -71,7 +71,7 @@ EGLConfig select_egl_config_with_format(
 {
     EGLint const required_egl_config_attr [] =
     {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT | EGL_PBUFFER_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_DEPTH_SIZE, gl_config.depth_buffer_bits(),
         EGL_STENCIL_SIZE, gl_config.stencil_buffer_bits(),
