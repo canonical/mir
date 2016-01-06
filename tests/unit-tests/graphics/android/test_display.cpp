@@ -96,6 +96,8 @@ TEST_F(Display, creation_creates_egl_resources_properly)
     EXPECT_CALL(mock_egl, eglInitialize(dummy_display, _, _))
         .WillOnce(DoAll(SetArgPointee<1>(1), SetArgPointee<2>(4), Return(EGL_TRUE)));
     //display context
+    EXPECT_CALL(mock_egl, eglChooseConfig(
+        _,mtd::EGLConfigContainsAttrib(EGL_SURFACE_TYPE, EGL_WINDOW_BIT | EGL_PBUFFER_BIT),_,_,_));
     EXPECT_CALL(mock_egl, eglCreateContext(
         dummy_display, _, EGL_NO_CONTEXT, mtd::AttrMatches(expected_context_attr)))
         .WillOnce(Return(dummy_context));
