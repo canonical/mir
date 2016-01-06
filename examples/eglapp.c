@@ -48,7 +48,7 @@ void mir_eglapp_shutdown(void)
 {
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglTerminate(egldisplay);
-    //mir_surface_release_sync(surface);
+    mir_surface_release_sync(surface);
     surface = NULL;
     mir_connection_release(connection);
     connection = NULL;
