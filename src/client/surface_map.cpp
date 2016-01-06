@@ -120,8 +120,26 @@ void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBuf
 void mcl::ConnectionSurfaceMap::clear()
 {
     std::shared_lock<decltype(guard)> lk(guard);
-    streams.clear();
-    surfaces.clear();
+
+    while (!surfaces.empty() || !streams.empty())
+    {
+        while (!surfaces.empty())
+        {
+            MirSurface* surface = surfaces.begin()->second;
+            lk.unlock();  // Avoid deadlock because the release will callback
+            mir_wait_for(surface->release_surface(nullptr, nullptr));
+            // Since we waited, the connection should have erased it now.
+            lk.lock();
+        }
+        while (!streams.empty())
+        {
+            ClientBufferStream* stream = streams.begin()->second.stream;
+            lk.unlock();  // Avoid deadlock because the release will callback
+            mir_wait_for(stream->release(nullptr, nullptr));
+            // Since we waited, the connection should have erased it now.
+            lk.lock();
+        }
+    }
 }
 
 void mcl::ConnectionSurfaceMap::insert(mf::BufferStreamId stream_id, ClientBufferStream* stream)
