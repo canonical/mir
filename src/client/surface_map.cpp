@@ -31,6 +31,11 @@ mcl::ConnectionSurfaceMap::ConnectionSurfaceMap()
 
 mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
 {
+    clear();
+}
+
+void mcl::ConnectionSurfaceMap::clear()
+{
     std::unordered_map<frontend::SurfaceId, MirSurface*> surface_map;
     std::unordered_map<frontend::BufferStreamId, StreamInfo> stream_map;
     {
@@ -115,32 +120,6 @@ void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBuf
     std::shared_lock<decltype(guard)> lk(guard);
     for(auto const& stream : streams)
         fn(stream.second.stream);
-}
-
-void mcl::ConnectionSurfaceMap::clear()
-{
-    std::shared_lock<decltype(guard)> lk(guard);
-
-    while (!surfaces.empty() || !streams.empty())
-    {
-        while (!surfaces.empty())
-        {
-            MirSurface* surface = surfaces.begin()->second;
-            lk.unlock();  // Avoid deadlock because the release will callback
-                          // and erase the entry from 'surfaces'
-            mir_surface_release_sync(surface);
-            lk.lock();
-        }
-        while (!streams.empty())
-        {
-            ClientBufferStream* stream = streams.begin()->second.stream;
-            lk.unlock();  // Avoid deadlock because the release will callback
-                          // and erase the entry from 'streams'
-            // Use internal API because the public one needs reinterpet_cast
-            mir_wait_for(stream->release(nullptr, nullptr));
-            lk.lock();
-        }
-    }
 }
 
 void mcl::ConnectionSurfaceMap::insert(mf::BufferStreamId stream_id, ClientBufferStream* stream)
