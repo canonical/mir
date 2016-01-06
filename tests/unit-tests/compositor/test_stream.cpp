@@ -354,3 +354,15 @@ TEST_F(Stream, doesnt_drop_the_latest_frame_with_a_2_buffer_queue)
         .Times(0);
     framedrop_factory.trigger_policies();
 }
+
+TEST_F(Stream, returns_buffers_when_dropped)
+{
+    stream.swap_buffers(buffers[0].get(), [](mg::Buffer*){});
+    stream.swap_buffers(buffers[1].get(), [](mg::Buffer*){});
+    stream.swap_buffers(buffers[2].get(), [](mg::Buffer*){});
+
+    Mock::VerifyAndClearExpectations(&mock_sink);
+    EXPECT_CALL(mock_sink, send_buffer(_,Ref(*buffers[1]),_))
+        .Times(2);
+    stream.drop_old_buffers();
+}
