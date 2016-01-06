@@ -51,8 +51,14 @@ mcl::BufferVault::BufferVault(
 
 mcl::BufferVault::~BufferVault()
 {
-    for (auto& it : buffers)
-        server_requests->free_buffer(it.first);
+    try
+    {
+        for (auto& it : buffers)
+            server_requests->free_buffer(it.first);
+    } catch (...)
+    {
+        //ignore, server probably has died.
+    }
 }
 
 mcl::NoTLSFuture<mcl::BufferInfo> mcl::BufferVault::withdraw()
@@ -125,7 +131,6 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     if (it == buffers.end())
     {
         geom::Size sz{package->width, package->height};
-        auto buffer = factory->create_buffer(package, geom::Size{package->width, package->height}, format);
         if (sz != size)
         {
             lk.unlock();
@@ -133,7 +138,9 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
             server_requests->allocate_buffer(size, format, usage);
             return;
         }
-        buffers[protobuf_buffer.buffer_id()] = BufferEntry{ buffer, Owner::Self };
+
+        buffers[protobuf_buffer.buffer_id()] = 
+            BufferEntry{ factory->create_buffer(package, sz, format), Owner::Self };
     }
     else
     {

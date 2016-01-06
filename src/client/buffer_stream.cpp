@@ -262,9 +262,11 @@ public:
         buf_params->set_height(size.height.as_int());
         buf_params->set_pixel_format(format);
         buf_params->set_buffer_usage(usage);
-        mp::Void* protobuf_void = new mp::Void;
-        server.allocate_buffers(&request, protobuf_void, 
-            google::protobuf::NewCallback(this, &Requests::ignore, protobuf_void));
+
+        //note, NewCallback will trigger on exception, deleting this object there
+        auto protobuf_void = new mp::Void;
+        server.allocate_buffers(&request,  protobuf_void,
+            google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
     void free_buffer(int buffer_id) override
@@ -274,16 +276,11 @@ public:
         mp::BufferRelease request;
         request.mutable_id()->set_value(stream_id);
         request.add_buffers()->set_buffer_id(buffer_id);
-        mp::Void* protobuf_void = new mp::Void;
-        try{
-        server.release_buffers(&request, protobuf_void,
-            google::protobuf::NewCallback(this, &Requests::ignore, protobuf_void));
-        } catch (...) {/*delete protobuf_void;*/}
-    }
 
-    void ignore(mp::Void* mpvoid)
-    {
-        delete mpvoid;
+        //note, NewCallback will trigger on exception, deleting this object there
+        auto protobuf_void = new mp::Void;
+        server.release_buffers(&request, protobuf_void,
+            google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
     void submit_buffer(int id, mcl::ClientBuffer&) override
@@ -293,9 +290,16 @@ public:
         mp::BufferRequest request;
         request.mutable_id()->set_value(stream_id);
         request.mutable_buffer()->set_buffer_id(id);
-        mp::Void* protobuf_void = new mp::Void;
+
+        //note, NewCallback will trigger on exception, deleting this object there
+        auto protobuf_void = new mp::Void;
         server.submit_buffer(&request, protobuf_void,
-            google::protobuf::NewCallback(this, &Requests::ignore, protobuf_void));
+            google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
+    }
+
+    static void ignore_response(mp::Void* void_response)
+    {
+        delete void_response;
     }
 
     void disconnected() override
@@ -306,7 +310,7 @@ public:
 
 private:
     std::mutex mut;
-    std::atomic<bool> disconnected_{false};
+    bool disconnected_{false};
     mclr::DisplayServer& server;
     int stream_id;
     mp::Void protobuf_void;
@@ -667,7 +671,6 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
 
 uint32_t mcl::BufferStream::get_current_buffer_id()
 {
-//    std::unique_lock<decltype(mutex)> lock(mutex);
     return buffer_depository->current_buffer_id();
 }
 

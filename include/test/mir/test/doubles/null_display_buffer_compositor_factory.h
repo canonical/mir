@@ -44,13 +44,12 @@ public:
             void composite(compositor::SceneElementSequence&& seq)
             {
                 (void) seq;
-                printf("NULLIT\n");
+                //note, not sure this is correct behavior
                 for(auto elem : seq)
                 {
                     elem->rendered();
                     elem->renderable()->buffer();
                 }
-//                for(auto&
                 // yield() is needed to ensure reasonable runtime under
                 // valgrind for some tests
                 std::this_thread::yield();

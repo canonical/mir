@@ -467,3 +467,19 @@ TEST_F(StartedBufferVault, buffer_count_remains_the_same_after_scaling)
     }
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
+
+TEST_F(BufferVault, rescale_before_initial_buffers_are_serviced_frees_initial_buffers)
+{
+    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+        size, format, usage, initial_nbuffers);
+    vault.set_scale(2.0);
+
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(initial_nbuffers);
+    EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
+        .Times(initial_nbuffers);
+    vault.wire_transfer_inbound(package);
+    vault.wire_transfer_inbound(package2);
+    vault.wire_transfer_inbound(package3);
+    
+}
