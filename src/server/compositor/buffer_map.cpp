@@ -17,7 +17,6 @@
  */
 
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/graphics/buffer_properties.h"
 #include "mir/frontend/buffer_sink.h"
 #include "buffer_map.h"
 #include <boost/throw_exception.hpp>

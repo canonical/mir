@@ -52,9 +52,7 @@ mcl::BufferVault::BufferVault(
 mcl::BufferVault::~BufferVault()
 {
     for (auto& it : buffers)
-    {
         server_requests->free_buffer(it.first);
-    }
 }
 
 mcl::NoTLSFuture<mcl::BufferInfo> mcl::BufferVault::withdraw()
@@ -185,9 +183,7 @@ void mcl::BufferVault::set_scale(float scale)
     std::unique_lock<std::mutex> lk(mutex);
     auto new_size = size * scale;
     if (new_size == size)
-    {
         return;
-    }
     size = new_size;
     for (auto it = buffers.begin(); it != buffers.end();)
     {

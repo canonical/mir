@@ -58,6 +58,7 @@ namespace ml = mir::logging;
 
 namespace
 {
+
 std::shared_ptr<mcl::PerfReport>
 make_perf_report(std::shared_ptr<ml::Logger> const& logger)
 {

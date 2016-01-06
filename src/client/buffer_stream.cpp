@@ -309,6 +309,7 @@ private:
     std::atomic<bool> disconnected_{false};
     mclr::DisplayServer& server;
     int stream_id;
+    mp::Void protobuf_void;
 };
 
 struct NewBufferSemantics : mcl::ServerBufferSemantics

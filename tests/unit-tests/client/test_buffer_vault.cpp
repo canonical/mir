@@ -413,6 +413,18 @@ TEST_F(StartedBufferVault, scaling_resizes_buffers_right_away)
     EXPECT_THAT(b3->size(), Eq(new_size));
 }
 
+TEST_F(BufferVault, waiting_threads_give_future_error_if_disconnected)
+{
+    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+        size, format, usage, initial_nbuffers);
+
+    auto future = vault.withdraw();
+    vault.disconnected();
+    EXPECT_THROW({
+        future.get();
+    }, std::exception);
+}
+
 TEST_F(StartedBufferVault, buffer_count_remains_the_same_after_scaling)
 {
     std::array<mp::Buffer, 3> buffers;
@@ -454,16 +466,4 @@ TEST_F(StartedBufferVault, buffer_count_remains_the_same_after_scaling)
         vault.wire_transfer_inbound(buffers[(i+1)%3]);
     }
     Mock::VerifyAndClearExpectations(&mock_requests);
-}
-
-TEST_F(BufferVault, waiting_threads_give_future_error_if_disconnected)
-{
-    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
-        size, format, usage, initial_nbuffers);
-
-    auto future = vault.withdraw();
-    vault.disconnected();
-    EXPECT_THROW({
-        future.get();
-    }, std::exception);
 }

@@ -135,8 +135,7 @@ public:
                 for (auto& tuple : compositors)
                 {
                     auto& compositor = std::get<1>(tuple);
-                    auto e = scene->scene_elements_for(compositor.get());
-                    compositor->composite(std::move(e));
+                    compositor->composite(scene->scene_elements_for(compositor.get()));
                 }
                 group.post();
 
