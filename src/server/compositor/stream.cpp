@@ -179,8 +179,18 @@ void mc::Stream::drop_old_buffers()
     std::vector<std::shared_ptr<mg::Buffer>> transferred_buffers;
     while(schedule->num_scheduled())
         transferred_buffers.emplace_back(schedule->next_buffer());
+
     if (!transferred_buffers.empty())
-        schedule->schedule(transferred_buffers.front());
+    {
+        schedule->schedule(transferred_buffers.back());
+        transferred_buffers.pop_back();
+    }
+
+    for (auto &buffer : transferred_buffers)
+    {
+        printf("TRASH A BUFFER\n");
+        buffers->send_buffer(buffer->id());
+    }
 
     arbiter->advance_schedule();
 }
