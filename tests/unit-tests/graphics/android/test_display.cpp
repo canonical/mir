@@ -96,8 +96,6 @@ TEST_F(Display, creation_creates_egl_resources_properly)
     EXPECT_CALL(mock_egl, eglInitialize(dummy_display, _, _))
         .WillOnce(DoAll(SetArgPointee<1>(1), SetArgPointee<2>(4), Return(EGL_TRUE)));
     //display context
-    EXPECT_CALL(mock_egl, eglChooseConfig(
-        _,mtd::EGLConfigContainsAttrib(EGL_SURFACE_TYPE, EGL_WINDOW_BIT | EGL_PBUFFER_BIT),_,_,_));
     EXPECT_CALL(mock_egl, eglCreateContext(
         dummy_display, _, EGL_NO_CONTEXT, mtd::AttrMatches(expected_context_attr)))
         .WillOnce(Return(dummy_context));
@@ -143,7 +141,7 @@ TEST_F(Display, selects_usable_egl_configuration)
     int const correct_visual_id = 1;
     EGLint const num_cfgs = 45;
     EGLint const expected_cfg_attr [] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT | EGL_PBUFFER_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_DEPTH_SIZE, 0,
         EGL_STENCIL_SIZE, 0,
