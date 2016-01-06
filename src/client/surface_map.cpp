@@ -127,16 +127,17 @@ void mcl::ConnectionSurfaceMap::clear()
         {
             MirSurface* surface = surfaces.begin()->second;
             lk.unlock();  // Avoid deadlock because the release will callback
-            mir_wait_for(surface->release_surface(nullptr, nullptr));
-            // Since we waited, the connection should have erased it now.
+                          // and erase the entry from 'surfaces'
+            mir_surface_release_sync(surface);
             lk.lock();
         }
         while (!streams.empty())
         {
             ClientBufferStream* stream = streams.begin()->second.stream;
             lk.unlock();  // Avoid deadlock because the release will callback
+                          // and erase the entry from 'streams'
+            // Use internal API because the public one needs reinterpet_cast
             mir_wait_for(stream->release(nullptr, nullptr));
-            // Since we waited, the connection should have erased it now.
             lk.lock();
         }
     }
