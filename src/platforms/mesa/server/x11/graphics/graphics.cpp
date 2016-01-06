@@ -20,9 +20,12 @@
 #include "platform.h"
 #include "guest_platform.h"
 #include "../X11_resources.h"
-#include <boost/throw_exception.hpp>
 #include "mir/module_deleter.h"
 #include "mir/assert_module_entry_point.h"
+
+#include <boost/throw_exception.hpp>
+
+#include <dlfcn.h>
 
 namespace mo = mir::options;
 namespace mg = mir::graphics;
@@ -96,12 +99,24 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*
     return mg::PlatformPriority::unsupported;
 }
 
+namespace
+{
+char const* libname()
+{
+    Dl_info info;
+
+    dladdr(reinterpret_cast<void*>(&libname), &info);
+    return  info.dli_fname;
+}
+
 mir::ModuleProperties const description = {
-    "mesa-x11",
+    "mir:mesa-x11",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
+    MIR_VERSION_MICRO,
+    libname()
 };
+}
 
 mir::ModuleProperties const* describe_graphics_module()
 {

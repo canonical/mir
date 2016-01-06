@@ -21,6 +21,8 @@
 #include "mir/module_properties.h"
 #include "mir/assert_module_entry_point.h"
 
+#include <dlfcn.h>
+
 namespace mo = mir::options;
 namespace mi = mir::input;
 namespace mx = mir::X;
@@ -60,11 +62,20 @@ mi::PlatformPriority probe_input_platform(
 
 namespace
 {
+char const* libname()
+{
+    Dl_info info;
+
+    dladdr(reinterpret_cast<void*>(&libname), &info);
+    return  info.dli_fname;
+}
+
 mir::ModuleProperties const description = {
-    "x11-input",
+    "mir:x11-input",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
+    MIR_VERSION_MICRO,
+    libname()
 };
 }
 

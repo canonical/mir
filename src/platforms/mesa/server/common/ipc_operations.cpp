@@ -19,6 +19,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/platform.h"
 #include "mir/graphics/nested_context.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "display_helpers.h"
@@ -31,6 +32,7 @@
 #include <boost/exception/get_error_info.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
+#include <dlfcn.h>
 #include <cstring>
 
 namespace mg = mir::graphics;
@@ -38,11 +40,28 @@ namespace mgm = mir::graphics::mesa;
 
 namespace
 {
+char const* libname()
+{
+    Dl_info info;
+
+    dladdr(reinterpret_cast<void*>(&libname), &info);
+    return  info.dli_fname;
+}
+
+mir::ModuleProperties const description = {
+    "mir:mesa",
+    MIR_VERSION_MAJOR,
+    MIR_VERSION_MINOR,
+    MIR_VERSION_MICRO,
+    libname()
+};
+
 struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
 {
     MesaPlatformIPCPackage(int drm_auth_fd)
     {
         ipc_fds.push_back(drm_auth_fd);
+        properties = &description;
     }
 
     ~MesaPlatformIPCPackage()

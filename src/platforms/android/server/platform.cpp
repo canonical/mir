@@ -42,6 +42,8 @@
 #include <stdexcept>
 #include <mutex>
 
+#include <dlfcn.h>
+
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mf=mir::frontend;
@@ -197,12 +199,24 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*
     return err < 0 ? mg::PlatformPriority::unsupported : mg::PlatformPriority::best;
 }
 
+namespace
+{
+char const* libname()
+{
+    Dl_info info;
+
+    dladdr(reinterpret_cast<void*>(&libname), &info);
+    return  info.dli_fname;
+}
+
 mir::ModuleProperties const description = {
-    "android",
+    "mir:android",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
+    MIR_VERSION_MICRO,
+    libname()
 };
+}
 
 mir::ModuleProperties const* describe_graphics_module()
 {

@@ -23,6 +23,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <dlfcn.h>
 #include <fcntl.h>
 
 #include <memory>
@@ -37,12 +38,23 @@ namespace mie = mi::evdev;
 namespace
 {
 char const* const host_socket_opt = "host-socket";
+
+char const* libname()
+{
+    Dl_info info;
+
+    dladdr(reinterpret_cast<void*>(&libname), &info);
+    return  info.dli_fname;
+}
+
 mir::ModuleProperties const description = {
-    "evdev-input",
+    "mir:evdev-input",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
+    MIR_VERSION_MICRO,
+    libname()
 };
+
 bool can_open_input_devices()
 {
     mu::Enumerator input_enumerator{std::make_shared<mu::Context>()};
