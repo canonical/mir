@@ -34,10 +34,13 @@ namespace graphics
  */
 struct PlatformIPCPackage
 {
+    PlatformIPCPackage() : properties(nullptr) {}
+    explicit PlatformIPCPackage(ModuleProperties const* properties) : properties(properties) {}
+
     std::vector<int32_t> ipc_data;
     std::vector<int32_t> ipc_fds;
 
-    ModuleProperties const* properties = nullptr;
+    ModuleProperties const* properties;
 };
 
 }

@@ -58,10 +58,10 @@ mir::ModuleProperties const description = {
 
 struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
 {
-    MesaPlatformIPCPackage(int drm_auth_fd)
+    MesaPlatformIPCPackage(int drm_auth_fd) :
+        mg::PlatformIPCPackage(&description)
     {
         ipc_fds.push_back(drm_auth_fd);
-        properties = &description;
     }
 
     ~MesaPlatformIPCPackage()
