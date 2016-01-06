@@ -80,6 +80,14 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     this->transport->register_observer(std::shared_ptr<mclr::StreamTransport::Observer>{this, NullDeleter()});
 }
 
+mclr::MirProtobufRpcChannel::~MirProtobufRpcChannel()
+{
+    surface_map->with_all_streams_do(
+        [](mcl::ClientBufferStream* stream) {   
+            if (stream) stream->buffer_unavailable();
+       });
+}
+
 void mclr::MirProtobufRpcChannel::notify_disconnected()
 {
     if (!disconnected.exchange(true))
@@ -276,7 +284,8 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
 
         surface_map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
         [&] (mcl::ClientBufferStream* stream) {
-            stream->buffer_available(seq.buffer_request().buffer());
+            if (stream)
+                stream->buffer_available(seq.buffer_request().buffer());
         });
     }
 

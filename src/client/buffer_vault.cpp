@@ -162,6 +162,13 @@ void mcl::BufferVault::set_size(geom::Size sz)
     size = sz;
 }
 
+void mcl::BufferVault::disconnected()
+{
+    server_requests->disconnected();
+    std::lock_guard<std::mutex> lk(mutex);
+    promises.clear();
+}
+
 void mcl::BufferVault::set_scale(float scale)
 {
     std::vector<int> free_ids;

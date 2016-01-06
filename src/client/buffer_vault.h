@@ -39,6 +39,7 @@ public:
     virtual void allocate_buffer(geometry::Size size, MirPixelFormat format, int usage) = 0;
     virtual void free_buffer(int buffer_id) = 0;
     virtual void submit_buffer(int buffer_id, ClientBuffer&) = 0;
+    virtual void disconnected() = 0;
     virtual ~ServerBufferRequests() = default;
 protected:
     ServerBufferRequests() = default;
@@ -69,6 +70,7 @@ public:
     void wire_transfer_inbound(protobuf::Buffer const&);
     void wire_transfer_outbound(std::shared_ptr<ClientBuffer> const& buffer);
     void set_size(geometry::Size);
+    void disconnected();
     void set_scale(float scale);
 
 private:
