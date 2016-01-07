@@ -192,6 +192,14 @@ typedef struct MirPlatformPackage
     int fd[mir_platform_package_max];
 } MirPlatformPackage;
 
+typedef struct MirModuleProperties
+{
+    char const *name;
+    int major_version;
+    int minor_version;
+    int micro_version;
+    char const *file;
+} MirModuleProperties;
 
 /**
  * Retrieved information about a MirSurface. This is most useful for learning

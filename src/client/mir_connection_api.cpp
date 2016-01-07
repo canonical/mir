@@ -22,6 +22,7 @@
 #include "mir_toolkit/mir_connection.h"
 #include "mir/default_configuration.h"
 #include "mir/raii.h"
+#include "mir/require.h"
 
 #include "mir_connection.h"
 #include "default_connection_configuration.h"
@@ -184,6 +185,19 @@ void mir_connection_get_platform(
     MirPlatformPackage* platform_package)
 {
     connection->populate(*platform_package);
+}
+
+void mir_connection_get_graphics_module(MirConnection *connection, MirModuleProperties *properties)
+try
+{
+    mir::require(mir_connection_is_valid(connection));
+    mir::require(properties != nullptr);
+
+    connection->populate_graphics_module(*properties);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 void mir_connection_set_lifecycle_event_callback(

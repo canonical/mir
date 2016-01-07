@@ -127,6 +127,7 @@ public:
     void register_display_change_callback(mir_display_config_callback callback, void* context);
 
     void populate(MirPlatformPackage& platform_package);
+    void populate_graphics_module(MirModuleProperties& properties);
     MirDisplayConfiguration* create_copy_of_display_config();
     void available_surface_formats(MirPixelFormat* formats,
                                    unsigned int formats_size, unsigned int& valid_formats);
