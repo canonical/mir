@@ -117,6 +117,19 @@ int demo_client(const char* server, int buffer_swap_count)
         assert(0 <= platform_package.fd_items);
     }
 
+    {
+        MirModuleProperties properties = { NULL, -1, -1, -1, NULL };
+
+        mir_connection_get_graphics_module(mcd.connection, &properties);
+
+        assert(NULL != properties.name);
+        assert(0 <= properties.major_version);
+        assert(0 <= properties.minor_version);
+        assert(0 <= properties.micro_version);
+        assert(0 <= properties.major_version);
+        assert(NULL != properties.file);
+    }
+
     // Identify a supported pixel format
     MirPixelFormat pixel_format = mir_pixel_format_invalid;
     unsigned int valid_formats;

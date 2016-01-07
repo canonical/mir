@@ -203,6 +203,7 @@ MIR_CLIENT_unreleased {
     mir_buffer_stream_get_error_message;
     mir_surface_output_event_get_output_id;
     mir_connection_set_base_display_config;
+    mir_connection_get_graphics_module;
   local:
     *;
 } MIR_CLIENT_9v17;

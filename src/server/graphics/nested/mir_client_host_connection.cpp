@@ -317,3 +317,17 @@ void mgn::MirClientHostConnection::hide_cursor()
         surface->hide_cursor();
     }
 }
+
+auto mgn::MirClientHostConnection::graphics_platform_library() -> std::string
+{
+    MirModuleProperties properties = { nullptr, 0, 0, 0, nullptr };
+
+    mir_connection_get_graphics_module(mir_connection, &properties);
+
+    if (properties.file == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Cannot identify host graphics platform"));
+    }
+
+    return properties.file;
+}

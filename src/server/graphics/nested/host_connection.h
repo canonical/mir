@@ -52,6 +52,7 @@ public:
 
     virtual void set_cursor_image(CursorImage const& image) = 0;
     virtual void hide_cursor() = 0;
+    virtual auto graphics_platform_library() -> std::string = 0;
 
 protected:
     HostConnection() = default;
