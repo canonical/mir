@@ -18,7 +18,7 @@
 
 #include "src/platforms/android/server/device_quirks.h"
 #include "mir/options/program_option.h"
-
+#include <hardware/gralloc.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -215,6 +215,16 @@ struct DeviceQuirks : testing::Test
         mga::DeviceQuirks::add_options(desc);
     }
 
+    void enable_fb_ion_quirk()
+    {
+        int const argc = 2;
+        char const* argv[argc] = {
+            __PRETTY_FUNCTION__,
+            "--no-fb-ion-heap=true"
+        };
+
+        options.parse_arguments(desc, argc, argv);
+    }
     void disable_num_framebuffers_quirk()
     {
         int const argc = 2;
@@ -311,4 +321,22 @@ TEST_F(DeviceQuirks, width_alignment_quirk_can_be_disabled)
     disable_width_alignment_quirk();
     mga::DeviceQuirks quirks(mock_ops, options);
     EXPECT_THAT(quirks.aligned_width(720), Eq(720));
+}
+
+TEST_F(DeviceQuirks, returns_correct_gralloc_bits_without_fb_ion_quirk)
+{
+    MockOps mock_ops;
+    mga::DeviceQuirks quirks(mock_ops, options);
+    EXPECT_THAT(quirks.fb_gralloc_bits(),
+        testing::Eq(GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_FB));
+}
+
+TEST_F(DeviceQuirks, returns_correct_gralloc_bits_with_fb_ion_quirk)
+{
+    using namespace testing;
+    MockOps mock_ops;
+    enable_fb_ion_quirk();
+    mga::DeviceQuirks quirks(mock_ops, options);
+    EXPECT_THAT(quirks.fb_gralloc_bits(),
+        testing::Eq(GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE));
 }

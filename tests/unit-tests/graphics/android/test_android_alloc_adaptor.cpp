@@ -18,6 +18,7 @@
 
 #include "src/platforms/android/server/android_alloc_adaptor.h"
 #include "src/platforms/android/server/device_quirks.h"
+#include "mir/options/program_option.h"
 #include "native_buffer.h"
 
 #include "mir/test/doubles/mock_android_alloc_device.h"
@@ -38,6 +39,7 @@ class AdaptorICSTest : public ::testing::Test
 public:
     AdaptorICSTest()
      : fb_usage_flags(GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_FB),
+       fb_usage_flags_broken_device(GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE),
        hw_usage_flags(GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER),
        sw_usage_flags(GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE)
     {}
@@ -62,6 +64,7 @@ public:
     geom::Size size;
     mga::BufferUsage usage;
     int const fb_usage_flags;
+    int const fb_usage_flags_broken_device;
     int const hw_usage_flags;
     int const sw_usage_flags;
 };
@@ -176,6 +179,26 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion_fb_gles)
     using namespace testing;
 
     EXPECT_CALL(*mock_alloc_device, alloc_interface(_,_,_,_,fb_usage_flags,_,_));
+    EXPECT_CALL(*mock_alloc_device, free_interface(_,_));
+
+    alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer_gles);
+}
+
+TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion_fb_gles_with_quirk)
+{
+    using namespace testing;
+
+    mir::options::ProgramOption options;
+
+    boost::program_options::options_description description;
+    description.add_options()("no-fb-ion-heap", boost::program_options::value<bool>()->default_value(false), "");
+    std::array<char const*, 3> args { "progname", "--no-fb-ion-heap", "true"};
+    options.parse_arguments(description, args.size(), args.data());
+    auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}, options);
+
+    alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device, quirks);
+
+    EXPECT_CALL(*mock_alloc_device, alloc_interface(_,_,_,_,fb_usage_flags_broken_device,_,_));
     EXPECT_CALL(*mock_alloc_device, free_interface(_,_));
 
     alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer_gles);
