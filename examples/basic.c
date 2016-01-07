@@ -126,8 +126,16 @@ int demo_client(const char* server, int buffer_swap_count)
         assert(0 <= properties.major_version);
         assert(0 <= properties.minor_version);
         assert(0 <= properties.micro_version);
-        assert(0 <= properties.major_version);
         assert(NULL != properties.file);
+
+#if 0
+        printf("Graphics module: %s (%d.%d%d) - file: %s\n",
+            properties.name,
+            properties.major_version,
+            properties.minor_version,
+            properties.micro_version,
+            properties.file);
+#endif
     }
 
     // Identify a supported pixel format
