@@ -29,7 +29,6 @@
 
 #include "mir/log.h"
 #include "mir/client_platform.h"
-#include "mir/egl_native_window_factory.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
 

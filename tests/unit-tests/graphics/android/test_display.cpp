@@ -32,7 +32,7 @@
 #include "mir/test/doubles/stub_gl_program_factory.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_renderable.h"
-#include "mir/graphics/android/mir_native_window.h"
+#include "mir_native_window.h"
 #include "mir/test/doubles/stub_driver_interpreter.h"
 
 #include <gtest/gtest.h>
@@ -141,7 +141,7 @@ TEST_F(Display, selects_usable_egl_configuration)
     int const correct_visual_id = 1;
     EGLint const num_cfgs = 45;
     EGLint const expected_cfg_attr [] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT | EGL_PBUFFER_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_DEPTH_SIZE, 0,
         EGL_STENCIL_SIZE, 0,

@@ -33,6 +33,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/gl
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
   ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
+  ${PROJECT_SOURCE_DIR}/src/platforms/android/include
   ${GLIB_INCLUDE_DIRS}
 )
 

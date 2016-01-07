@@ -18,7 +18,7 @@
 
 #include "graphics_region_factory.h"
 #include "mir_toolkit/mir_client_library.h"
-#include "mir/graphics/android/native_buffer.h"
+#include "src/platforms/android/include/native_buffer.h"
 #include "mir_toolkit/common.h"
 #include <stdexcept>
 
