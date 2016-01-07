@@ -27,7 +27,9 @@ namespace client
 class ErrorStream : public ClientBufferStream
 {
 public:
-    ErrorStream(std::string const& error_msg, MirConnection* conn, frontend::BufferStreamId id);
+    ErrorStream(
+        std::string const& error_msg, MirConnection* conn,
+        frontend::BufferStreamId id, std::shared_ptr<MirWaitHandle> const& wh);
 
     MirWaitHandle* get_create_wait_handle();
     MirSurfaceParameters get_parameters() const;
@@ -53,6 +55,7 @@ private:
     std::string const error;
     MirConnection* const connection_;
     frontend::BufferStreamId id;
+    std::shared_ptr<MirWaitHandle> const wh;
 };
 }
 }

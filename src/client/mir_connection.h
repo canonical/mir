@@ -204,8 +204,7 @@ private:
     };
     std::vector<std::shared_ptr<StreamCreationRequest>> stream_requests;
     void stream_created(StreamCreationRequest*);
-    void stream_error(std::string const& error_msg,
-        MirWaitHandle& pending_handle, mir_buffer_stream_callback pending_callback, void *context);
+    void stream_error(std::string const& error_msg, std::shared_ptr<StreamCreationRequest> const& request);
 
     void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.
