@@ -39,7 +39,6 @@ public:
     virtual void with_stream_do(
         frontend::BufferStreamId stream_id, std::function<void(ClientBufferStream*)> const& exec) const = 0;
     virtual void with_all_streams_do(std::function<void(ClientBufferStream*)> const&) const = 0;
-    virtual void clear() = 0;
 
 protected:
     virtual ~SurfaceMap() = default;

@@ -60,7 +60,6 @@ struct MockSurfaceMap : mcl::SurfaceMap
         void(mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&));
     MOCK_CONST_METHOD1(with_all_streams_do,
         void(std::function<void(mcl::ClientBufferStream*)> const&));
-    MOCK_METHOD0(clear, void());
 }; 
  
 class StubSurfaceMap : public mcl::SurfaceMap
@@ -75,9 +74,6 @@ public:
     {
     }
     void with_all_streams_do(std::function<void(mcl::ClientBufferStream*)> const&) const override
-    {
-    }
-    void clear()
     {
     }
 };

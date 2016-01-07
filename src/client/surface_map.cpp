@@ -31,11 +31,6 @@ mcl::ConnectionSurfaceMap::ConnectionSurfaceMap()
 
 mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
 {
-    clear();
-}
-
-void mcl::ConnectionSurfaceMap::clear()
-{
     std::unordered_map<frontend::SurfaceId, MirSurface*> surface_map;
     std::unordered_map<frontend::BufferStreamId, StreamInfo> stream_map;
     {

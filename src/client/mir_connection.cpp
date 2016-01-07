@@ -168,9 +168,6 @@ MirConnection::~MirConnection() noexcept
         for (int i = 0, end = platform.fd_size(); i != end; ++i)
             close(platform.fd(i));
     }
-
-    //if (surface_map)
-    //    surface_map->clear();  // Note we must clear() and not simply reset().
 }
 
 MirWaitHandle* MirConnection::create_surface(

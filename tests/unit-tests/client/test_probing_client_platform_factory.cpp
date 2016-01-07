@@ -60,6 +60,15 @@ void populate_valid(MirPlatformPackage& pkg)
     pkg.fd_items = 1;
     pkg.fd[0] = 23;
 }
+
+void safely_unload(std::shared_ptr<mir::client::ClientPlatform>& platform)
+{
+    ASSERT_TRUE(platform.unique());
+    auto library = platform->keep_library_loaded();
+    platform.reset();
+    library.reset();
+}
+
 }
 
 TEST(ProbingClientPlatformFactory, ThrowsErrorWhenConstructedWithNoPlatforms)
@@ -115,9 +124,7 @@ TEST(ProbingClientPlatformFactory, DoesNotLeakDriverModule)
     ASSERT_FALSE(loaded(preferred_module));
     platform = factory.create_client_platform(&context);
     ASSERT_TRUE(loaded(preferred_module));
-    auto library = platform->keep_library_loaded();
-    platform.reset();
-    library.reset();
+    safely_unload(platform);
     EXPECT_FALSE(loaded(preferred_module));
 }
 
@@ -145,9 +152,7 @@ TEST(ProbingClientPlatformFactory, DiesOnUnsafeRelease)
 
     // ... but here in the parent process we need to actively avoid the
     // death happening, so that our test completes:
-    auto library = platform->keep_library_loaded();
-    platform.reset();
-    library.reset();
+    safely_unload(platform);
 }
 
 #if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
@@ -175,9 +180,7 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformWhenAppropriate)
                            }));
     auto platform = factory.create_client_platform(&context);
     EXPECT_EQ(mir_platform_type_gbm, platform->platform_type());
-    auto library = platform->keep_library_loaded();
-    platform.reset();
-    library.reset();
+    safely_unload(platform);
 }
 
 #ifdef MIR_BUILD_PLATFORM_ANDROID
@@ -204,9 +207,7 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesAndroidPlatformWhenAppropriat
 
     auto platform = factory.create_client_platform(&context);
     EXPECT_EQ(mir_platform_type_android, platform->platform_type());
-    auto library = platform->keep_library_loaded();
-    platform.reset();
-    library.reset();
+    safely_unload(platform);
 }
 
 TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
@@ -231,7 +232,5 @@ TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
                            }));
 
     auto platform = factory.create_client_platform(&context);
-    auto library = platform->keep_library_loaded();
-    platform.reset();
-    library.reset();
+    safely_unload(platform);
 }
