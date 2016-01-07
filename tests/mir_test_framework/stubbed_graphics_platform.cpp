@@ -35,6 +35,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <dlfcn.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -50,6 +51,25 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
+namespace
+{
+char const* libname()
+{
+    Dl_info info;
+
+    dladdr(reinterpret_cast<void*>(&libname), &info);
+    return  info.dli_fname;
+}
+
+mir::ModuleProperties const module_properties = {
+    "mir:stub-graphics",
+    MIR_VERSION_MAJOR,
+    MIR_VERSION_MINOR,
+    MIR_VERSION_MICRO,
+    libname()
+};
+}
+
 class StubFDBuffer : public mtd::StubBuffer
 {
 public:
@@ -203,7 +223,7 @@ class StubIpcOps : public mg::PlatformIpcOperations
 
     std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
-        auto package = std::make_shared<mg::PlatformIPCPackage>();
+        auto package = std::make_shared<mg::PlatformIPCPackage>(&module_properties);
         mtf::pack_stub_ipc_package(*package);
         return package;
     }
