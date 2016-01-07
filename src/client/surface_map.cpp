@@ -51,6 +51,10 @@ void mcl::ConnectionSurfaceMap::clear()
     // here. (OTOH *we* don't need to leak memory when clients screw up.)
     for (auto const& surface : surface_map)
     {
+        // Note: is_valid is very important here. Not just for leaky clients
+        //       but tests like MirClientSurfaceTest will new/delete their own
+        //       MirSurfaces. So this check also avoids double-free in that
+        //       case.
         if (MirSurface::is_valid(surface.second))
             delete surface.second;
     }
