@@ -208,5 +208,6 @@ MIR_COMMON_unreleased {
       typeinfo?for?mir::time::SteadyClock;
       typeinfo?for?android::InputChannel;
       typeinfo?for?mir::logging::DumbConsoleLogger;
+      mir::detail::libname_impl*;
     };
 } MIR_COMMON_5;

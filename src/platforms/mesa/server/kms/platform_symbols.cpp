@@ -24,8 +24,8 @@
 #include "mir/udev/wrapper.h"
 #include "mir/module_deleter.h"
 #include "mir/assert_module_entry_point.h"
+#include "mir/libname.h"
 
-#include <dlfcn.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
@@ -214,20 +214,12 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
 
 namespace
 {
-char const* libname()
-{
-    Dl_info info;
-
-    dladdr(reinterpret_cast<void*>(&libname), &info);
-    return  info.dli_fname;
-}
-
 mir::ModuleProperties const description = {
     "mir:mesa-kms",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
     MIR_VERSION_MICRO,
-    libname()
+    mir::libname()
 };
 }
 

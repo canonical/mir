@@ -22,6 +22,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/nested_context.h"
 #include "mir/graphics/platform_operation_message.h"
+#include "mir/libname.h"
 #include "display_helpers.h"
 #include "drm_authentication.h"
 #include "drm_close_threadsafe.h"
@@ -32,7 +33,6 @@
 #include <boost/exception/get_error_info.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
-#include <dlfcn.h>
 #include <cstring>
 
 namespace mg = mir::graphics;
@@ -40,20 +40,12 @@ namespace mgm = mir::graphics::mesa;
 
 namespace
 {
-char const* libname()
-{
-    Dl_info info;
-
-    dladdr(reinterpret_cast<void*>(&libname), &info);
-    return  info.dli_fname;
-}
-
 mir::ModuleProperties const description = {
     "mir:mesa",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
     MIR_VERSION_MICRO,
-    libname()
+    mir::libname()
 };
 
 struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
