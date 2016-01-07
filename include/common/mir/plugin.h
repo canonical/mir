@@ -20,25 +20,27 @@
 #define MIR_PLUGIN_H_
 
 #include <memory>
-#include <vector>
 
 namespace mir
 {
 
 /**
- * Plugin is a concrete base class designed to underpin any class whose
- * implementation comes from a dynamically run-time loaded library.
+ * Plugin is a base class designed to underpin any class whose implementation
+ * exists in a dynamically run-time loaded library.
+ * Plugin provides a foolproof check that you don't accidentally unload the
+ * library whose code you're still executing.
  */
 class Plugin
 {
 public:
     // Must never be inlined!
     Plugin();
-    virtual ~Plugin();
-    void hold_resource(std::shared_ptr<void> const& r);
-    static void safely_unload(std::shared_ptr<Plugin>& p);
+    virtual ~Plugin() noexcept;
+
+    void keep_library_loaded(std::shared_ptr<void> const&);
+    std::shared_ptr<void> keep_library_loaded() const;
 private:
-    std::vector<std::shared_ptr<void>> resources;
+    std::shared_ptr<void> library;
 };
 
 } // namespace mir

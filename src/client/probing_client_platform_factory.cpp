@@ -64,8 +64,7 @@ mcl::ProbingClientPlatformFactory::create_client_platform(mcl::ClientContext* co
             {
                 auto factory = module->load_function<mir::client::CreateClientPlatform>("create_client_platform", CLIENT_PLATFORM_VERSION);
                 auto platform = factory(context);
-                // Keep the driver module loaded only as long as we use it:
-                platform->hold_resource(module);
+                platform->keep_library_loaded(module);
                 return platform;
             }
         }

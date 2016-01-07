@@ -90,7 +90,7 @@ public:
     MirConnection(std::string const& error_message);
 
     MirConnection(mir::client::ConnectionConfiguration& conf);
-    ~MirConnection();
+    ~MirConnection() noexcept;
 
     MirConnection(MirConnection const &) = delete;
     MirConnection& operator=(MirConnection const &) = delete;
@@ -176,6 +176,9 @@ private:
     { MirConnection* const self; ~Deregisterer(); } deregisterer;
 
     mutable std::mutex mutex; // Protects all members of *this (except release_wait_handles)
+
+    // Destruct this last as it will unmap the platform library from memory.
+    std::shared_ptr<void> platform_library;
 
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const channel;
     mir::client::rpc::DisplayServer server;

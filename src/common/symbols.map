@@ -208,10 +208,10 @@ MIR_COMMON_unreleased {
       typeinfo?for?mir::time::SteadyClock;
       typeinfo?for?android::InputChannel;
       typeinfo?for?mir::logging::DumbConsoleLogger;
+
       typeinfo?for?mir::Plugin;
       mir::Plugin::Plugin*;
       mir::Plugin::?Plugin*;
-      mir::Plugin::hold_resource*;
-      mir::Plugin::safely_unload*;
+      mir::Plugin::keep_library_loaded*;
     };
 } MIR_COMMON_5.1;

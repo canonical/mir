@@ -155,7 +155,7 @@ MirConnection::MirConnection(
     }
 }
 
-MirConnection::~MirConnection()
+MirConnection::~MirConnection() noexcept
 {
     // We don't die while if are pending callbacks (as they touch this).
     // But, if after 500ms we don't get a call, assume it won't happen.
@@ -169,17 +169,8 @@ MirConnection::~MirConnection()
             close(platform.fd(i));
     }
 
-    /*
-     * Normal destruction order, but just a bit earlier. We have to make sure
-     * everything holding a reference to the platform driver is gone before we
-     * unload the driver itself. Otherwise we would crash (unmapped memory).
-     */
-    buffer_stream_factory.reset();
-    if (surface_map)
-        surface_map->clear();  // Note we must clear() and not simply reset().
-    native_display.reset();
-    std::shared_ptr<mir::Plugin> plugin = std::move(platform);
-    mir::Plugin::safely_unload(plugin);
+    //if (surface_map)
+    //    surface_map->clear();  // Note we must clear() and not simply reset().
 }
 
 MirWaitHandle* MirConnection::create_surface(
@@ -314,6 +305,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
             };
 
         platform = client_platform_factory->create_client_platform(this);
+        platform_library = platform->keep_library_loaded();
         buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(
             platform, the_logger());
         native_display = platform->create_egl_native_display();

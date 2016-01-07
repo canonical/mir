@@ -54,6 +54,12 @@ bool loaded(std::string const& path)
     return !!x;
 }
 
+void populate_valid(MirPlatformPackage& pkg)
+{
+    memset(&pkg, 0, sizeof(MirPlatformPackage));
+    pkg.fd_items = 1;
+    pkg.fd[0] = 23;
+}
 }
 
 TEST(ProbingClientPlatformFactory, ThrowsErrorWhenConstructedWithNoPlatforms)
@@ -104,21 +110,44 @@ TEST(ProbingClientPlatformFactory, DoesNotLeakDriverModule)
     std::shared_ptr<mir::client::ClientPlatform> platform;
     mtd::MockClientContext context;
     ON_CALL(context, populate_server_package(_))
-            .WillByDefault(Invoke([](MirPlatformPackage& pkg)
-                           {
-                               ::memset(&pkg, 0, sizeof(MirPlatformPackage));
-                               // Mock up something that looks like a GBM platform package,
-                               // until we send the actual platform type over the wire!
-                               pkg.fd_items = 1;
-                               pkg.fd[0] = 23;
-                           }));
+            .WillByDefault(Invoke(populate_valid));
 
     ASSERT_FALSE(loaded(preferred_module));
     platform = factory.create_client_platform(&context);
     ASSERT_TRUE(loaded(preferred_module));
-    std::shared_ptr<mir::Plugin> plugin = std::move(platform);
-    mir::Plugin::safely_unload(plugin);
+    auto library = platform->keep_library_loaded();
+    platform.reset();
+    library.reset();
     EXPECT_FALSE(loaded(preferred_module));
+}
+
+TEST(ProbingClientPlatformFactory, DiesOnUnsafeRelease)
+{
+    using namespace testing;
+    auto const modules = all_available_modules();
+    ASSERT_FALSE(modules.empty());
+    std::string const preferred_module = modules.front();
+
+    mir::client::ProbingClientPlatformFactory factory(
+        mir::report::null_shared_library_prober_report(),
+        {preferred_module},
+        {});
+
+    std::shared_ptr<mir::client::ClientPlatform> platform;
+    mtd::MockClientContext context;
+    ON_CALL(context, populate_server_package(_))
+            .WillByDefault(Invoke(populate_valid));
+
+    platform = factory.create_client_platform(&context);
+
+    // Google Test creates a child process to verify this:
+    ASSERT_DEATH({platform.reset();}, ".*still in use.*");
+
+    // ... but here in the parent process we need to actively avoid the
+    // death happening, so that our test completes:
+    auto library = platform->keep_library_loaded();
+    platform.reset();
+    library.reset();
 }
 
 #if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
@@ -146,8 +175,9 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformWhenAppropriate)
                            }));
     auto platform = factory.create_client_platform(&context);
     EXPECT_EQ(mir_platform_type_gbm, platform->platform_type());
-    std::shared_ptr<mir::Plugin> plugin = std::move(platform);
-    mir::Plugin::safely_unload(plugin);
+    auto library = platform->keep_library_loaded();
+    platform.reset();
+    library.reset();
 }
 
 #ifdef MIR_BUILD_PLATFORM_ANDROID
@@ -174,8 +204,9 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesAndroidPlatformWhenAppropriat
 
     auto platform = factory.create_client_platform(&context);
     EXPECT_EQ(mir_platform_type_android, platform->platform_type());
-    std::shared_ptr<mir::Plugin> plugin = std::move(platform);
-    mir::Plugin::safely_unload(plugin);
+    auto library = platform->keep_library_loaded();
+    platform.reset();
+    library.reset();
 }
 
 TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
@@ -200,6 +231,7 @@ TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
                            }));
 
     auto platform = factory.create_client_platform(&context);
-    std::shared_ptr<mir::Plugin> plugin = std::move(platform);
-    mir::Plugin::safely_unload(plugin);
+    auto library = platform->keep_library_loaded();
+    platform.reset();
+    library.reset();
 }
