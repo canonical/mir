@@ -1,9 +1,10 @@
 #ifndef MIR_CLIENT_PROBING_CLIENT_PLATFORM_FACTORY_H_
 #define MIR_CLIENT_PROBING_CLIENT_PLATFORM_FACTORY_H_
 
+#include <vector>
+
 #include "mir/client_platform_factory.h"
 #include "mir/shared_library.h"
-#include <vector>
 
 namespace mir
 {
