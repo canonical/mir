@@ -220,7 +220,7 @@ struct DeviceQuirks : testing::Test
         int const argc = 2;
         char const* argv[argc] = {
             __PRETTY_FUNCTION__,
-            "--no-fb-ion-heap=true"
+            "--fb-ion-heap=false"
         };
 
         options.parse_arguments(desc, argc, argv);
