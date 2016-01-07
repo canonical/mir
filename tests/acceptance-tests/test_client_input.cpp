@@ -105,6 +105,23 @@ struct Client
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become focused and exposed"));
     }
 
+    void handle_surface_event(MirSurfaceEvent const* event)
+    {
+        auto const attrib = mir_surface_event_get_attribute(event);
+        auto const value = mir_surface_event_get_attribute_value(event);
+
+        if (mir_surface_attrib_visibility == attrib &&
+            mir_surface_visibility_exposed == value)
+            exposed = true;
+
+        if (mir_surface_attrib_focus == attrib &&
+            mir_surface_focused == value)
+            focused = true;
+
+        if (exposed && focused)
+            ready_to_accept_events.wake_up_everyone();
+    }
+
     static void handle_event(MirSurface*, MirEvent const* ev, void* context)
     {
         auto const client = static_cast<Client*>(context);
@@ -112,10 +129,8 @@ struct Client
         if (type == mir_event_type_surface)
         {
             auto surface_event = mir_event_get_surface_event(ev);
+            client->handle_surface_event(surface_event);
 
-            if (mir_surface_attrib_focus == mir_surface_event_get_attribute(surface_event) &&
-                1 == mir_surface_event_get_attribute_value(surface_event))
-                client->ready_to_accept_events.wake_up_everyone();
         }
         if (type == mir_event_type_input)
             client->handle_input(ev);
@@ -134,6 +149,8 @@ struct Client
     MirConnection * connection;
     mir::test::WaitCondition ready_to_accept_events;
     mir::test::WaitCondition all_events_received;
+    bool exposed = false;
+    bool focused = false;
 };
 
 struct TestClientInput : mtf::HeadlessInProcessServer
@@ -147,12 +164,11 @@ struct TestClientInput : mtf::HeadlessInProcessServer
             {
                 return std::make_shared<mtf::PlacementApplyingShell>(
                     wrapped,
-                    input_regions, positions, depths);
+                    input_regions, positions);
             });
 
         HeadlessInProcessServer::SetUp();
 
-        depths[first] = ms::DepthId{0};
         positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     }
 
@@ -169,7 +185,6 @@ struct TestClientInput : mtf::HeadlessInProcessServer
     std::string second{"second"};
     mtf::ClientInputRegions input_regions;
     mtf::ClientPositions positions;
-    mtf::ClientDepths depths;
     geom::Rectangle screen_geometry{{0,0}, {1000,800}};
     std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
 };
@@ -421,7 +436,6 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
 
     positions[first] = screen_geometry;
     positions[second] = smaller_geometry;
-    depths[second] = ms::DepthId{1};
 
     Client first_client(new_connection(), first);
     Client second_client(new_connection(), second);
@@ -464,7 +478,6 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
 
 TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
 {
-    depths[second] = ms::DepthId{1};
     positions[second] = {{0,0}, {surface_width, surface_height}};
 
     Client first_client(new_connection(), first);
@@ -577,7 +590,7 @@ TEST_F(TestClientInput, send_mir_input_events_through_surface)
     auto key_event = mir::events::make_event(MirInputDeviceId{0}, 0ns, 0, mir_keyboard_action_down, 0, KEY_M,
                                              mir_input_event_modifier_none);
 
-    server.the_shell()->focused_surface()->consume(*key_event);
+    server.the_shell()->focused_surface()->consume(key_event.get());
 
     first_client.all_events_received.wait_for_at_most_seconds(2);
 }

@@ -55,10 +55,10 @@ mcl::BufferVault::~BufferVault()
         server_requests->free_buffer(it.first);
 }
 
-mcl::NoTLSFuture<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw()
+mcl::NoTLSFuture<mcl::BufferInfo> mcl::BufferVault::withdraw()
 {
     std::lock_guard<std::mutex> lk(mutex);
-    mcl::NoTLSPromise<std::shared_ptr<mcl::ClientBuffer>> promise;
+    mcl::NoTLSPromise<mcl::BufferInfo> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [this](std::pair<int, BufferEntry> const& entry) { 
             return ((entry.second.owner == Owner::Self) && (size == entry.second.buffer->size())); });
@@ -67,7 +67,7 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::ClientBuffer>> mcl::BufferVault::withdraw(
     if (it != buffers.end())
     {
         it->second.owner = Owner::ContentProducer;
-        promise.set_value(it->second.buffer);
+        promise.set_value({it->second.buffer, it->first});
     }
     else
     {
@@ -148,13 +148,45 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     if (!promises.empty())
     {
         buffers[protobuf_buffer.buffer_id()].owner = Owner::ContentProducer;
-        promises.front().set_value(buffers[protobuf_buffer.buffer_id()].buffer);
+        promises.front().set_value({buffers[protobuf_buffer.buffer_id()].buffer, protobuf_buffer.buffer_id()});
         promises.pop_front();
     }
 }
 
+//TODO: the server will currently spam us with a lot of resize messages at once,
+//      and we want to delay the IPC transactions for resize. If we could rate-limit
+//      the incoming messages, we should should consolidate the scale and size functions
 void mcl::BufferVault::set_size(geom::Size sz)
 {
     std::lock_guard<std::mutex> lk(mutex);
     size = sz;
+}
+
+void mcl::BufferVault::set_scale(float scale)
+{
+    std::vector<int> free_ids;
+    std::unique_lock<std::mutex> lk(mutex);
+    auto new_size = size * scale;
+    if (new_size == size)
+        return;
+    size = new_size;
+    for (auto it = buffers.begin(); it != buffers.end();)
+    {
+        if ((it->second.owner == Owner::Self) && (it->second.buffer->size() != size)) 
+        {
+            free_ids.push_back(it->first);
+            it = buffers.erase(it);
+        }
+        else
+        {
+            it++;
+        }
+    } 
+    lk.unlock();
+
+    for(auto& id : free_ids)
+    {
+        server_requests->allocate_buffer(new_size, format, usage);
+        server_requests->free_buffer(id);
+    }
 }

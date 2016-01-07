@@ -19,7 +19,7 @@
 #include "hwc_configuration.h"
 #include "hwc_wrapper.h"
 #include "mir/raii.h"
-#include "mir/graphics/android/android_format_conversion-inl.h"
+#include "android_format_conversion-inl.h"
 #include "mir/geometry/length.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -139,7 +139,7 @@ mg::DisplayConfigurationOutput populate_config(
     }
     
     return {
-        static_cast<mg::DisplayConfigurationOutputId>(name),
+        as_output_id(name),
         mg::DisplayConfigurationCardId{0},
         type,
         {display_format},

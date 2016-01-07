@@ -46,9 +46,9 @@ extern "C" {
 #define MIR_INPUT_EVENT_MAX_POINTER_COUNT 16
 
 // PRIVATE
-// Direct access to MirKeyEvent is deprecated. Please use mir_event_get_input_event
+// Direct access to MirKeyboardEvent is deprecated. Please use mir_event_get_input_event
 // and the mir_input_event* family of functions.
-typedef struct
+struct MirKeyboardEvent
 {
     MirEventType type;
 
@@ -62,7 +62,7 @@ typedef struct
 
     std::chrono::nanoseconds event_time;
     uint64_t mac;
-} MirKeyEvent;
+};
 
 typedef struct
 {
@@ -178,11 +178,11 @@ struct MirSurfaceOutputEvent
 // Access to MirEvent is deprecated
 union MirEvent
 {
-    MirEventType    type;
-    MirKeyEvent     key;
-    MirMotionEvent  motion;
-    MirSurfaceEvent surface;
-    MirResizeEvent  resize;
+    MirEventType     type;
+    MirKeyboardEvent key;
+    MirMotionEvent   motion;
+    MirSurfaceEvent  surface;
+    MirResizeEvent   resize;
     MirPromptSessionEvent  prompt_session;
     MirOrientationEvent orientation;
     MirCloseSurfaceEvent   close_surface;

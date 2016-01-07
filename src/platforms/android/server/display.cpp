@@ -28,7 +28,7 @@
 #include "server_render_window.h"
 #include "display_buffer.h"
 #include "hwc_layerlist.h"
-#include "mir/graphics/android/mir_native_window.h"
+#include "mir_native_window.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/event_handler_register.h"
 #include "mir/gl/program_factory.h"
@@ -119,7 +119,8 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
 {
     std::shared_ptr<mga::FramebufferBundle> fbs{display_buffer_builder.create_framebuffers(config)};
     auto cache = std::make_shared<mga::InterpreterCache>();
-    auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, config.current_format, cache);
+    mga::DeviceQuirks quirks(mga::PropertiesOps{});
+    auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, config.current_format, cache, quirks); 
     auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter);
     return std::unique_ptr<mga::ConfigurableDisplayBuffer>(new mga::DisplayBuffer(
         name,
@@ -287,17 +288,20 @@ void mga::Display::on_hotplug()
 
 void mga::Display::on_vsync(DisplayName name) const
 {
-    display_report->report_vsync(name);
+    display_report->report_vsync(as_output_id(name).as_value());
 }
 
 void mga::Display::register_configuration_change_handler(
     EventHandlerRegister& event_handler,
     DisplayConfigurationChangeHandler const& change_handler)
 {
-    event_handler.register_fd_handler({display_change_pipe->read_pipe}, this, [change_handler, this](int){
-        change_handler();
-        display_change_pipe->ack_change();
-    });
+    event_handler.register_fd_handler({display_change_pipe->read_pipe}, this,
+        make_module_ptr<std::function<void(int)>>(
+            [change_handler, this](int)
+            {
+                change_handler();
+                display_change_pipe->ack_change();
+            }));
 }
 
 void mga::Display::register_pause_resume_handlers(

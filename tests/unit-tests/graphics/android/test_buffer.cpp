@@ -18,8 +18,8 @@
 
 #include "mir/graphics/egl_extensions.h"
 #include "src/platforms/android/server/buffer.h"
-#include "mir/graphics/android/sync_fence.h"
-#include "mir/graphics/android/native_buffer.h"
+#include "sync_fence.h"
+#include "native_buffer.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_fence.h"

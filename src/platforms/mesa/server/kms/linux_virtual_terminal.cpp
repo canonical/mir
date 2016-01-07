@@ -118,35 +118,36 @@ void mgm::LinuxVirtualTerminal::register_switch_handlers(
 {
     handlers.register_signal_handler(
         {SIGUSR1},
-        [this, switch_away, switch_back](int)
-        {
-            if (!active)
+        make_module_ptr<std::function<void(int)>>(
+            [this, switch_away, switch_back](int)
             {
-                if (!switch_back())
-                    report->report_vt_switch_back_failure();
-                fops->ioctl(vt_fd.fd(), VT_RELDISP, VT_ACKACQ);
-                active = true;
-            }
-            else
-            {
-                static int const disallow_switch{0};
-                static int const allow_switch{1};
-                int action;
-
-                if (switch_away())
+                if (!active)
                 {
-                    action = allow_switch;
-                    active = false;
+                    if (!switch_back())
+                        report->report_vt_switch_back_failure();
+                    fops->ioctl(vt_fd.fd(), VT_RELDISP, VT_ACKACQ);
+                    active = true;
                 }
                 else
                 {
-                    action = disallow_switch;
-                    report->report_vt_switch_away_failure();
-                }
+                    static int const disallow_switch{0};
+                    static int const allow_switch{1};
+                    int action;
 
-                fops->ioctl(vt_fd.fd(), VT_RELDISP, action);
-            }
-        });
+                    if (switch_away())
+                    {
+                        action = allow_switch;
+                        active = false;
+                    }
+                    else
+                    {
+                        action = disallow_switch;
+                        report->report_vt_switch_away_failure();
+                    }
+
+                    fops->ioctl(vt_fd.fd(), VT_RELDISP, action);
+                }
+            }));
 
     struct vt_mode vtm
     {

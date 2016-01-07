@@ -247,6 +247,21 @@ MirWaitHandle* mir_connection_apply_display_config(
     }
 }
 
+MirWaitHandle* mir_connection_set_base_display_config(
+    MirConnection* connection,
+    MirDisplayConfiguration const* display_configuration)
+{
+    try
+    {
+        return connection ? connection->set_base_display_configuration(display_configuration) : nullptr;
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+        return nullptr;
+    }
+}
+
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(
     MirConnection* connection)
 {

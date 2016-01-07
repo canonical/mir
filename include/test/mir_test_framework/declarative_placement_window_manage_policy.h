@@ -21,7 +21,6 @@
 
 #include "mir/shell/canonical_window_manager.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/scene/depth_id.h"
 
 #include <memory>
 #include <map>
@@ -30,7 +29,6 @@
 namespace mir_test_framework
 {
 typedef std::map<std::string, mir::geometry::Rectangle> SurfaceGeometries;
-typedef std::map<std::string, mir::scene::DepthId> SurfaceDepths;
 
 /// DeclarativePlacementWindowManagerPolicy is a test utility server component for specifying
 /// a static list of surface geometries and relative depths. Used, for example,
@@ -42,7 +40,6 @@ public:
     DeclarativePlacementWindowManagerPolicy(
         Tools* const tools,
         SurfaceGeometries const& positions_by_name, 
-        SurfaceDepths const& depths_by_name,
         std::shared_ptr<mir::shell::DisplayLayout> const& display_layout);
 
     auto handle_place_new_surface(
@@ -52,7 +49,6 @@ public:
 
 private:
     SurfaceGeometries const& surface_geometries_by_name;
-    SurfaceDepths const& surface_depths_by_name;
 };
 
 }

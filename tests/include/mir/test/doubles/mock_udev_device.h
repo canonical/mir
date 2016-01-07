@@ -38,6 +38,7 @@ public:
     MOCK_CONST_METHOD0(devtype, char const*(void));
     MOCK_CONST_METHOD0(devpath, char const*(void));
     MOCK_CONST_METHOD0(devnode, char const*(void));
+    MOCK_CONST_METHOD1(property, char const*(char const*));
 };
 
 }

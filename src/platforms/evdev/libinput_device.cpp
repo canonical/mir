@@ -46,16 +46,9 @@ namespace mi = mir::input;
 namespace mie = mi::evdev;
 using namespace std::literals::chrono_literals;
 
-namespace
-{
-
-void null_deleter(MirEvent *) {}
-
-}
-
 mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& report, char const* path,
                                     LibInputDevicePtr dev)
-    : report{report}, accumulated_touch_event{nullptr, null_deleter}, pointer_pos{0, 0}, button_state{0}
+    : report{report}, pointer_pos{0, 0}, button_state{0}
 {
     add_device_of_group(path, std::move(dev));
 }
@@ -110,20 +103,19 @@ void mie::LibInputDevice::process_event(libinput_event* event)
         break;
     // touch events are processed as a batch of changes over all touch pointts
     case LIBINPUT_EVENT_TOUCH_DOWN:
-        add_touch_down_event(libinput_event_get_touch_event(event));
+        handle_touch_down(libinput_event_get_touch_event(event));
         break;
     case LIBINPUT_EVENT_TOUCH_UP:
-        add_touch_up_event(libinput_event_get_touch_event(event));
+        handle_touch_up(libinput_event_get_touch_event(event));
         break;
     case LIBINPUT_EVENT_TOUCH_MOTION:
-        add_touch_motion_event(libinput_event_get_touch_event(event));
+        handle_touch_motion(libinput_event_get_touch_event(event));
         break;
     case LIBINPUT_EVENT_TOUCH_CANCEL:
         // Not yet provided by libinput.
         break;
     case LIBINPUT_EVENT_TOUCH_FRAME:
-        sink->handle_input(get_accumulated_touch_event(0ns));
-        accumulated_touch_event.reset();
+        sink->handle_input(*convert_touch_frame(libinput_event_get_touch_event(event)));
         break;
     default:
         break;
@@ -163,8 +155,7 @@ mir::EventUPtr mie::LibInputDevice::convert_button_event(libinput_event_pointer*
     else
         button_state = MirPointerButton(button_state & ~uint32_t(pointer_button));
 
-    return builder->pointer_event(time, action, button_state, pointer_pos.x.as_float(), pointer_pos.y.as_float(),
-                                   hscroll_value, vscroll_value, relative_x_value, relative_y_value);
+    return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, relative_x_value, relative_y_value);
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_motion_event(libinput_event_pointer* pointer)
@@ -179,12 +170,9 @@ mir::EventUPtr mie::LibInputDevice::convert_motion_event(libinput_event_pointer*
     mir::geometry::Displacement const movement{
         libinput_event_pointer_get_dx(pointer),
         libinput_event_pointer_get_dy(pointer)};
-    pointer_pos = pointer_pos + movement;
 
-    sink->confine_pointer(pointer_pos);
-
-    return builder->pointer_event(time, action, button_state, pointer_pos.x.as_float(), pointer_pos.y.as_float(),
-                                  hscroll_value, vscroll_value, movement.dx.as_float(), movement.dy.as_float());
+    return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, movement.dx.as_float(),
+                                  movement.dy.as_float());
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event_pointer* pointer)
@@ -205,10 +193,7 @@ mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event
         libinput_event_pointer_get_absolute_y_transformed(pointer, height)};
     auto const movement = pointer_pos - old_pointer_pos;
 
-    sink->confine_pointer(pointer_pos);
-
-    return builder->pointer_event(time, action, button_state, pointer_pos.x.as_float(), pointer_pos.y.as_float(),
-                                  hscroll_value, vscroll_value, movement.dx.as_float(), movement.dy.as_float());
+    return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, movement.dx.as_float(), movement.dy.as_float());
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* pointer)
@@ -217,77 +202,91 @@ mir::EventUPtr mie::LibInputDevice::convert_axis_event(libinput_event_pointer* p
     auto const action = mir_pointer_action_motion;
     auto const relative_x_value = 0.0f;
     auto const relative_y_value = 0.0f;
-    auto const hscroll_value = libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)
-        ? horizontal_scroll_scale * libinput_event_pointer_get_axis_value(pointer,
-                                                                          LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL)
-        : 0.0f;
-    auto const vscroll_value = libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)
-        ? vertical_scroll_scale * libinput_event_pointer_get_axis_value(pointer,
-                                                                        LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL)
-        : 0.0f;
 
-    report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
-    return builder->pointer_event(time, action, button_state, pointer_pos.x.as_float(), pointer_pos.y.as_float(),
-                                  hscroll_value, vscroll_value, relative_x_value, relative_y_value);
-}
-
-MirEvent& mie::LibInputDevice::get_accumulated_touch_event(std::chrono::nanoseconds timestamp)
-{
-    if (!accumulated_touch_event)
+    auto hscroll_value = 0.0f;
+    auto vscroll_value = 0.0f;
+    if (libinput_event_pointer_get_axis_source(pointer) == LIBINPUT_POINTER_AXIS_SOURCE_WHEEL)
     {
-        report->received_event_from_kernel(timestamp.count(), EV_SYN, 0, 0);
-        accumulated_touch_event = builder->touch_event(timestamp);
+        if (libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+            hscroll_value = horizontal_scroll_scale * libinput_event_pointer_get_axis_value_discrete(
+                                                          pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL);
+        if (libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+            vscroll_value = -vertical_scroll_scale * libinput_event_pointer_get_axis_value_discrete(
+                                                        pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL);
+    }
+    else
+    {
+        // by default libinput assumes that wheel ticks represent a rotation of 15 degrees. This relation
+        // is used to map wheel rotations to 'scroll units'. To map the immediate scroll units received
+        // from gesture based scrolling we invert that transformation here.
+        auto const scroll_units_to_ticks = 15.0f;
+        if (libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+            hscroll_value = horizontal_scroll_scale *
+                            libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL) /
+                            scroll_units_to_ticks;
+
+        if (libinput_event_pointer_has_axis(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+            vscroll_value = -vertical_scroll_scale *
+                            libinput_event_pointer_get_axis_value(pointer, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL) /
+                            scroll_units_to_ticks;
     }
 
-    return *accumulated_touch_event;
+    report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
+    return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, relative_x_value,
+                                  relative_y_value);
 }
 
-void mie::LibInputDevice::add_touch_down_event(libinput_event_touch* touch)
+mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* touch)
 {
     std::chrono::nanoseconds const time = std::chrono::microseconds(libinput_event_touch_get_time_usec(touch));
-    auto& event = get_accumulated_touch_event(time);
+    report->received_event_from_kernel(time.count(), EV_SYN, 0, 0);
+    auto event = builder->touch_event(time);
 
-    MirTouchId const id = libinput_event_touch_get_slot(touch);
-    auto const action = mir_touch_action_down;
     // TODO make libinput indicate tool type
     auto const tool = mir_touch_tooltype_finger;
 
-    auto& current_contact_data = last_seen_properties[id];
+    for(auto it = begin(last_seen_properties); it != end(last_seen_properties);)
+    {
+        auto & id = it->first;
+        auto & data = it->second;
 
-    update_contact_data(current_contact_data, touch);
-    // TODO why do we send size to clients?
-    float const size = std::max(current_contact_data.major, current_contact_data.minor);
+        // TODO why do we send size to clients?
+        float const size = std::max(data.major, data.minor);
 
-    // TODO extend for touch screens that provide orientation
-    builder->add_touch(event, id, action, tool, current_contact_data.x, current_contact_data.y,
-                       current_contact_data.pressure, current_contact_data.major, current_contact_data.minor, size);
+        builder->add_touch(*event, id, data.action, tool, data.x, data.y,
+                           data.pressure, data.major, data.minor, size);
+
+        if (data.action == mir_touch_action_down)
+            data.action = mir_touch_action_change;
+
+        if (data.action == mir_touch_action_up)
+            it = last_seen_properties.erase(it);
+        else
+            ++it;
+    }
+
+    return event;
 }
 
-void mie::LibInputDevice::add_touch_up_event(libinput_event_touch* touch)
+void mie::LibInputDevice::handle_touch_down(libinput_event_touch* touch)
 {
-    std::chrono::nanoseconds const time = std::chrono::microseconds(libinput_event_touch_get_time_usec(touch));
-    auto& event = get_accumulated_touch_event(time);
     MirTouchId const id = libinput_event_touch_get_slot(touch);
-    auto const action = mir_touch_action_up;
-    auto const tool = mir_touch_tooltype_finger;  // TODO make libinput indicate tool type
-
-    // get contact data from last motion or down event:
-    auto& current_contact_data = last_seen_properties[id];
-
-    float const size = std::max(current_contact_data.major, current_contact_data.minor);
-    // TODO extend for touch screens that provide orientation and major/minor
-    builder->add_touch(event, id, action, tool, current_contact_data.x, current_contact_data.y,
-                       current_contact_data.pressure, current_contact_data.major, current_contact_data.minor, size);
-
-    last_seen_properties.erase(id);
+    update_contact_data(last_seen_properties[id], mir_touch_action_down, touch);
 }
 
-void mie::LibInputDevice::update_contact_data(ContactData & data, libinput_event_touch* touch)
+void mie::LibInputDevice::handle_touch_up(libinput_event_touch* touch)
+{
+    MirTouchId const id = libinput_event_touch_get_slot(touch);
+    last_seen_properties[id].action = mir_touch_action_up;
+}
+
+void mie::LibInputDevice::update_contact_data(ContactData & data, MirTouchAction action, libinput_event_touch* touch)
 {
     auto const screen = sink->bounding_rectangle();
     uint32_t const width = screen.size.width.as_int();
     uint32_t const height = screen.size.height.as_int();
 
+    data.action = action;
     data.pressure = libinput_event_touch_get_pressure(touch);
     data.x = libinput_event_touch_get_x_transformed(touch, width);
     data.y = libinput_event_touch_get_y_transformed(touch, height);
@@ -295,25 +294,10 @@ void mie::LibInputDevice::update_contact_data(ContactData & data, libinput_event
     data.minor = libinput_event_touch_get_minor_transformed(touch, width, height);
 }
 
-void mie::LibInputDevice::add_touch_motion_event(libinput_event_touch* touch)
+void mie::LibInputDevice::handle_touch_motion(libinput_event_touch* touch)
 {
-    std::chrono::nanoseconds const time = std::chrono::microseconds(libinput_event_touch_get_time_usec(touch));
-    auto& event = get_accumulated_touch_event(time);
-
     MirTouchId const id = libinput_event_touch_get_slot(touch);
-    auto const action = mir_touch_action_change;
-    auto const tool = mir_touch_tooltype_finger; // TODO make libinput indicate tool type
-
-    auto & current_contact_data = last_seen_properties[id];
-
-    update_contact_data(current_contact_data, touch);
-
-    // TODO why do we send size to clients?
-    float const size = std::max(current_contact_data.major, current_contact_data.minor);
-
-    // TODO extend for touch screens that provide orientation
-    builder->add_touch(event, id, action, tool, current_contact_data.x, current_contact_data.y,
-                       current_contact_data.pressure, current_contact_data.major, current_contact_data.minor, size);
+    update_contact_data(last_seen_properties[id], mir_touch_action_change, touch);
 }
 
 mi::InputDeviceInfo mie::LibInputDevice::get_device_info()

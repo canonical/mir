@@ -190,3 +190,29 @@
    fun:memset
    fun:g_slice_alloc0
 }
+
+# futex
+
+{
+   futex_utime
+   Memcheck:Param
+   futex(utime)
+   fun:syscall
+   fun:_ZNSt28__atomic_futex_unsigned_base19_M_futex_wait_untilEPjjbNSt6chrono8durationIxSt5ratioILx1ELx1EEEENS2*
+}
+
+{
+   futex_timeout
+   Memcheck:Param
+   futex(timeout)
+   fun:syscall
+   fun:_ZNSt28__atomic_futex_unsigned_base19_M_futex_wait_untilEPjjbNSt6chrono8durationIxSt5ratioILx1ELx1EEEENS2*
+}
+
+# remove_if_stale, false positive due to '-O2' optimization level
+
+{
+   remove_if_stale
+   Memcheck:Cond
+   fun:remove_if_stale
+}

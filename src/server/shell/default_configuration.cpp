@@ -37,7 +37,7 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
         {
             auto const result = wrap_shell(std::make_shared<msh::AbstractShell>(
                 the_input_targeter(),
-                the_surface_coordinator(),
+                the_surface_stack(),
                 the_session_coordinator(),
                 the_prompt_session_manager(),
                 the_shell_report(),

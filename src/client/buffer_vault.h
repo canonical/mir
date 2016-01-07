@@ -47,6 +47,13 @@ protected:
 };
 
 class ClientBufferFactory;
+
+struct BufferInfo
+{
+    std::shared_ptr<ClientBuffer> buffer;
+    int id;
+};
+
 class BufferVault
 {
 public:
@@ -57,11 +64,12 @@ public:
         unsigned int initial_nbuffers);
     ~BufferVault();
 
-    NoTLSFuture<std::shared_ptr<ClientBuffer>> withdraw();
+    NoTLSFuture<BufferInfo> withdraw();
     void deposit(std::shared_ptr<ClientBuffer> const& buffer);
     void wire_transfer_inbound(protobuf::Buffer const&);
     void wire_transfer_outbound(std::shared_ptr<ClientBuffer> const& buffer);
     void set_size(geometry::Size);
+    void set_scale(float scale);
 
 private:
     std::shared_ptr<ClientBufferFactory> const factory;
@@ -78,7 +86,7 @@ private:
 
     std::mutex mutex;
     std::map<int, BufferEntry> buffers;
-    std::deque<NoTLSPromise<std::shared_ptr<ClientBuffer>>> promises;
+    std::deque<NoTLSPromise<BufferInfo>> promises;
     geometry::Size size;
 };
 }

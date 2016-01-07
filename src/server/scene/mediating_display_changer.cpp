@@ -148,7 +148,7 @@ ms::MediatingDisplayChanger::base_configuration()
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
 
-    return base_configuration_;
+    return base_configuration_->clone();
 }
 
 void ms::MediatingDisplayChanger::configure_for_hardware_change(
@@ -267,14 +267,11 @@ void ms::MediatingDisplayChanger::session_stopping_handler(
     config_map.erase(session);
 }
 
-std::future<void> ms::MediatingDisplayChanger::set_base_configuration(
-    std::shared_ptr<mg::DisplayConfiguration> const &conf)
+void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::DisplayConfiguration> const &conf)
 {
-    auto promise = std::make_shared<std::promise<void>>();
-    auto completion_future = promise->get_future();
     server_action_queue->enqueue(
         this,
-        [this, conf, done = std::move(promise)]
+        [this, conf]
         {
             std::lock_guard<std::mutex> lg{configuration_mutex};
 
@@ -283,8 +280,5 @@ std::future<void> ms::MediatingDisplayChanger::set_base_configuration(
                 apply_base_config(PauseResumeSystem);
 
             send_config_to_all_sessions(conf);
-
-            done->set_value();
         });
-    return completion_future;
 }

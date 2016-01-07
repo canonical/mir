@@ -39,6 +39,26 @@ namespace mga=mir::graphics::android;
 
 namespace
 {
+//krillin and mx4 need to clear their fences before hwc commit.
+struct StubPropertiesWrapper : mga::PropertiesWrapper
+{
+    StubPropertiesWrapper(bool should_clear_fence) :
+        name(should_clear_fence ? "mx4" : "otherdevice")
+    {
+    }
+
+    int property_get(char const* key, char* value, char const* default_value) const override
+    {
+        if (strncmp(key, "ro.product.device", PROP_VALUE_MAX) == 0)
+            strncpy(value, name.c_str(), name.size());
+        else
+            strncpy(value, default_value, PROP_VALUE_MAX);
+        return 0;    
+    }
+
+    std::string name;
+};
+
 struct ServerRenderWindow : public ::testing::Test
 {
     std::shared_ptr<mtd::MockBuffer> mock_buffer{std::make_shared<testing::NiceMock<mtd::MockBuffer>>()};
@@ -47,7 +67,9 @@ struct ServerRenderWindow : public ::testing::Test
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle{
         std::make_shared<testing::NiceMock<mtd::MockFBBundle>>()};
     MirPixelFormat format{mir_pixel_format_abgr_8888};
-    mga::ServerRenderWindow render_window{mock_fb_bundle, format, mock_cache};
+    StubPropertiesWrapper wrapper{false};
+    mga::DeviceQuirks quirks{wrapper};
+    mga::ServerRenderWindow render_window{mock_fb_bundle, format, mock_cache, quirks};
 };
 }
 
@@ -85,6 +107,34 @@ TEST_F(ServerRenderWindow, updates_fences_and_returns_buffer_on_queue)
 
     std::shared_ptr<mg::Buffer> buf1 = mock_buffer;
     EXPECT_CALL(*mock_cache, update_native_fence(stub_buffer->anwb(), fake_fence));
+    EXPECT_CALL(*mock_cache, retrieve_buffer(stub_buffer->anwb()))
+        .WillOnce(Return(mock_buffer));
+
+    render_window.driver_returns_buffer(stub_buffer->anwb(), fake_fence);
+    Mock::VerifyAndClearExpectations(mock_fb_bundle.get());
+}
+
+TEST_F(ServerRenderWindow, clears_fence_when_quirk_present)
+{
+    using namespace testing;
+    StubPropertiesWrapper wrapper{true};
+    mga::DeviceQuirks quirks{wrapper};
+    mga::ServerRenderWindow render_window{mock_fb_bundle, format, mock_cache, quirks};
+
+    int fake_fence = 488;
+    auto stub_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
+
+    EXPECT_CALL(*mock_fb_bundle, buffer_for_render())
+        .WillOnce(Return(mock_buffer));
+    EXPECT_CALL(*mock_buffer, native_buffer_handle())
+        .WillOnce(Return(stub_buffer));
+
+    render_window.driver_requests_buffer();
+    Mock::VerifyAndClearExpectations(mock_fb_bundle.get());
+
+    std::shared_ptr<mg::Buffer> buf1 = mock_buffer;
+    EXPECT_CALL(*mock_cache, update_native_fence(stub_buffer->anwb(), fake_fence))
+        .Times(0);
     EXPECT_CALL(*mock_cache, retrieve_buffer(stub_buffer->anwb()))
         .WillOnce(Return(mock_buffer));
 

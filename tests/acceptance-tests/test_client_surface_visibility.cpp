@@ -20,8 +20,8 @@
 
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_coordinator.h"
 #include "mir/shell/shell_wrapper.h"
+#include "mir/shell/surface_stack.h"
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/wait_condition.h"
@@ -47,9 +47,9 @@ class StoringShell : public msh::ShellWrapper
 public:
     StoringShell(
         std::shared_ptr<msh::Shell> const& wrapped,
-        std::shared_ptr<ms::SurfaceCoordinator> const surface_coordinator) :
+        std::shared_ptr<msh::SurfaceStack> const surface_stack) :
         msh::ShellWrapper{wrapped},
-        surface_coordinator{surface_coordinator}
+        surface_stack{surface_stack}
     {}
 
     mf::SurfaceId create_surface(
@@ -71,12 +71,12 @@ public:
 
     void raise(int index)
     {
-        surface_coordinator->raise(surface(index));
+        surface_stack->raise(surface(index));
     }
 
     using msh::ShellWrapper::raise;
 private:
-    std::shared_ptr<ms::SurfaceCoordinator> const surface_coordinator;
+    std::shared_ptr<msh::SurfaceStack> const surface_stack;
     std::vector<std::weak_ptr<ms::Surface>> surfaces;
 
 };
@@ -108,7 +108,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
     {
         server.wrap_shell([&](std::shared_ptr<msh::Shell> const& wrapped)
             {
-                auto const result = std::make_shared<StoringShell>(wrapped, server.the_surface_coordinator());
+                auto const result = std::make_shared<StoringShell>(wrapped, server.the_surface_stack());
                 shell = result;
                 return result;
             });

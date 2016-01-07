@@ -70,10 +70,10 @@ void ms::SurfaceObservers::hidden_set_to(bool hide)
         { observer->hidden_set_to(hide); });
 }
 
-void ms::SurfaceObservers::frame_posted(int frames_available)
+void ms::SurfaceObservers::frame_posted(int frames_available, geometry::Size const& size)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->frame_posted(frames_available); });
+        { observer->frame_posted(frames_available, size); });
 }
 
 void ms::SurfaceObservers::alpha_set_to(float alpha)
@@ -124,6 +124,12 @@ void ms::SurfaceObservers::renamed(char const* name)
         { observer->renamed(name); });
 }
 
+void ms::SurfaceObservers::cursor_image_removed()
+{
+    for_each([](std::shared_ptr<SurfaceObserver> const& observer)
+        { observer->cursor_image_removed(); });
+}
+
 struct ms::CursorStreamImageAdapter
 {
     CursorStreamImageAdapter(ms::BasicSurface &surface)
@@ -172,7 +178,7 @@ private:
         {
         }
 
-        void frame_posted(int /* available */)
+        void frame_posted(int /* available */, geometry::Size const& /* size */)
         {
             self->post_cursor_image_from_current_buffer();
         }
@@ -613,8 +619,11 @@ void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& 
         cursor_image_ = image;
     }
 
-    observers.cursor_image_set_to(*image);
-}    
+    if (image)
+        observers.cursor_image_set_to(*image);
+    else
+        observers.cursor_image_removed();
+}
 
 std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image() const
 {
@@ -832,9 +841,9 @@ int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
     return max_buf;
 }
 
-void ms::BasicSurface::consume(MirEvent const& event)
+void ms::BasicSurface::consume(MirEvent const* event)
 {
-    input_validator.validate_and_dispatch(event);
+    input_validator.validate_and_dispatch(*event);
 }
 
 void ms::BasicSurface::set_keymap(xkb_rule_names const& rules)

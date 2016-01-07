@@ -17,10 +17,10 @@
  */
 
 #include "mir/graphics/buffer.h"
-#include "mir/graphics/android/native_buffer.h"
-#include "mir/graphics/android/sync_fence.h"
+#include "native_buffer.h"
+#include "sync_fence.h"
 #include "swapping_gl_context.h"
-#include "mir/graphics/android/android_format_conversion-inl.h"
+#include "android_format_conversion-inl.h"
 #include "fb_device.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
@@ -58,7 +58,7 @@ mg::DisplayConfigurationOutput mga::FbControl::active_config_for(DisplayName dis
     auto const connected = (display_name == DisplayName::primary);
 
     return {
-        static_cast<mg::DisplayConfigurationOutputId>(display_name),
+        as_output_id(display_name),
         mg::DisplayConfigurationCardId{0},
         mg::DisplayConfigurationOutputType::lvds,
         std::vector<MirPixelFormat>{mga::to_mir_format(fb_device->format)},

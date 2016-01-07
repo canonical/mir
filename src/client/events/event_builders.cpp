@@ -189,6 +189,27 @@ void mev::set_modifier(MirEvent& event, MirInputEventModifiers modifiers)
     }
 }
 
+void mev::set_cursor_position(MirEvent& event, mir::geometry::Point const& pos)
+{
+    if (event.type != mir_event_type_motion &&
+        event.motion.source_id != AINPUT_SOURCE_MOUSE &&
+        event.motion.pointer_count == 1)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor position is only valid for pointer events."));
+
+    event.motion.pointer_coordinates[0].x = pos.x.as_float();
+    event.motion.pointer_coordinates[0].y = pos.y.as_float();
+}
+
+void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
+{
+    if (event.type != mir_event_type_motion &&
+        event.motion.source_id != AINPUT_SOURCE_MOUSE &&
+        event.motion.pointer_count == 1)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor position is only valid for pointer events."));
+
+    event.motion.buttons = button_state;
+}
+
 // Deprecated version without mac
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirKeyboardAction action, xkb_keysym_t key_code,

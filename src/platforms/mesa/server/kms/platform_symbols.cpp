@@ -23,10 +23,10 @@
 #include "mir/options/option.h"
 #include "mir/udev/wrapper.h"
 #include "mir/module_deleter.h"
+#include "mir/assert_module_entry_point.h"
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <dlfcn.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -36,6 +36,7 @@ namespace
 {
 char const* bypass_option_name{"bypass"};
 char const* vt_option_name{"vt"};
+char const* host_socket{"host-socket"};
 
 struct RealVTFileOperations : public mgm::VTFileOperations
 {
@@ -97,17 +98,6 @@ struct RealPosixProcessOperations : public mgm::PosixProcessOperations
         return ::setsid();
     }
 };
-
-// Hack around the way mesa loads mir: This hack makes the
-// necessary symbols global.
-void ensure_loaded_with_rtld_global()
-{
-    Dl_info info;
-
-    dladdr(reinterpret_cast<void*>(&ensure_loaded_with_rtld_global), &info);
-    dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
-}
-
 }
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
@@ -115,6 +105,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mg::DisplayReport> const& report)
 {
+    mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     // ensure mesa finds the mesa mir-platform symbols
     auto real_fops = std::make_shared<RealVTFileOperations>();
     auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});
@@ -134,6 +125,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 
 void add_graphics_platform_options(boost::program_options::options_description& config)
 {
+    mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
     config.add_options()
         (vt_option_name,
          boost::program_options::value<int>()->default_value(0),
@@ -145,6 +137,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
 
 mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
 {
+    mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
     auto const unparsed_arguments = options.unparsed_command_line();
     auto platform_option_used = false;
 
@@ -156,6 +149,7 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
 
     if (options.is_set(vt_option_name))
         platform_option_used = true;
+    auto nested = options.is_set(host_socket);
 
     auto udev = std::make_shared<mir::udev::Context>();
 
@@ -164,16 +158,57 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
     drm_devices.match_sysname("card[0-9]*");
     drm_devices.scan_devices();
 
+    if (drm_devices.begin() == drm_devices.end())
+        return mg::PlatformPriority::unsupported;
+
+    // Check for master
+    int tmp_fd = -1;
     for (auto& device : drm_devices)
     {
-        static_cast<void>(device);
-        if (platform_option_used)
-            return mg::PlatformPriority::best;
-        else
-            return mg::PlatformPriority::supported;
+        tmp_fd = open(device.devnode(), O_RDWR | O_CLOEXEC);
+        if (tmp_fd >= 0)
+            break;
     }
 
-    return mg::PlatformPriority::unsupported;
+    if (nested && platform_option_used)
+        return mg::PlatformPriority::best;
+    if (nested)
+        return mg::PlatformPriority::supported;
+
+    if (tmp_fd >= 0)
+    {
+        if (drmSetMaster(tmp_fd) >= 0)
+        {
+            drmDropMaster(tmp_fd);
+            drmClose(tmp_fd);
+            return mg::PlatformPriority::best;
+        }
+        else
+            drmClose(tmp_fd);
+    }
+
+    if (platform_option_used)
+        return mg::PlatformPriority::best;
+
+    /* We failed to set mastership. However, still on most systems mesa-kms
+     * is the right driver to choose. Landing here just means the user did
+     * not specify --vt or is running from ssh. Still in most cases mesa-kms
+     * is the correct option so give it a go. Better to fail trying to switch
+     * VTs (and tell the user that) than to refuse to load the correct
+     * driver at all. (LP: #1528082)
+     *
+     * Just make sure we are below PlatformPriority::supported in case
+     * mesa-x11 or android can be used instead.
+     *
+     * TODO: Revisit the priority terminology. having a range of values between
+     *       "supported" and "unsupported" is potentially confusing.
+     * TODO: Revisit the return code of this function. We document that
+     *       integer values outside the enum are allowed but C++ disallows it
+     *       without a cast. So we should return an int or typedef to int
+     *       instead.
+     */
+    return static_cast<mg::PlatformPriority>(
+        mg::PlatformPriority::supported - 1);
 }
 
 mir::ModuleProperties const description = {
@@ -185,6 +220,7 @@ mir::ModuleProperties const description = {
 
 mir::ModuleProperties const* describe_graphics_module()
 {
+    mir::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
     return &description;
 }
 
@@ -192,7 +228,6 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& nested_context)
 {
-    // ensure mesa finds the mesa mir-platform symbols
-    ensure_loaded_with_rtld_global();
+    mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     return mir::make_module_ptr<mgm::GuestPlatform>(nested_context);
 }

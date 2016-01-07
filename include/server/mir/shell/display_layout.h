@@ -53,12 +53,14 @@ public:
     virtual void size_to_output(geometry::Rectangle& rect) = 0;
 
     /**
-     * Places a rectangle in an particular output.
+     * Places a rectangle in an particular output if the display is known,
+     * otherwise does nothing.
      *
      * @param [in]     id   the id of the output to place the rectangle in
      * @param [in,out] rect the rectangle to place
+     * @return true iff the display id is recognised
      */
-    virtual void place_in_output(graphics::DisplayConfigurationOutputId id,
+    virtual bool place_in_output(graphics::DisplayConfigurationOutputId id,
                                  geometry::Rectangle& rect) = 0;
 
 protected:

@@ -39,6 +39,7 @@ public:
     virtual char const* devtype() const override;
     virtual char const* devpath() const override;
     virtual char const* devnode() const override;
+    virtual char const* property(char const*) const override;
 
     udev_device* const dev;
 };
@@ -76,6 +77,11 @@ char const* DeviceImpl::devpath() const
 char const* DeviceImpl::devnode() const
 {
     return udev_device_get_devnode(dev);
+}
+
+char const* DeviceImpl::property(char const* name) const
+{
+    return udev_device_get_property_value(dev, name);
 }
 }
 

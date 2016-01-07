@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_FENCE_H_
 #define MIR_TEST_DOUBLES_MOCK_FENCE_H_
 
-#include "mir/graphics/android/fence.h"
+#include "fence.h"
 
 #include <gmock/gmock.h>
 

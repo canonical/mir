@@ -20,7 +20,6 @@
 #define MIR_TOOLKIT_KEYBOARD_EVENT_H_
 
 #include <xkbcommon/xkbcommon.h>
-#include <mir_toolkit/cookie.h>
 
 #ifdef __cplusplus
 /**
@@ -33,10 +32,7 @@ extern "C" {
 /**
  * An event type describing a change in keyboard state
  *
- * Apology #1: The name "MirKeyboardEvent" is used instead of "MirKeyEvent"
- * because the latter still exists in the old Mir event API.
- *
- * Apology #2: Keyboard events almost always come from a keyboard, except they
+ * Apology #1: Keyboard events almost always come from a keyboard, except they
  * can also come from system buttons (power, volume, home). This is an issue
  * we've inherited from the Linux kernel and Android, but could be solved in
  * future by giving such system switch events their own input group such as
@@ -98,14 +94,6 @@ MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* even
  * \return           The input event
  */
 MirInputEvent const* mir_keyboard_event_input_event(MirKeyboardEvent const* event);
-
-/**
- * Retrieves the timestamp cookie of a keyboard event.
- *
- * \param [in] event The keyboard event
- * \return           A MirCookie
- */
-MirCookie mir_keyboard_event_get_cookie(MirKeyboardEvent const* event);
 
 #ifdef __cplusplus
 }

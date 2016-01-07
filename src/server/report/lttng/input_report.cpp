@@ -39,11 +39,6 @@ void mir::report::lttng::InputReport::published_motion_event(int dest_fd, uint32
     mir_tracepoint(mir_server_input, published_motion_event, dest_fd, seq_id, event_time);
 }
 
-void mir::report::lttng::InputReport::received_event_finished_signal(int src_fd, uint32_t seq_id)
-{
-    mir_tracepoint(mir_server_input, received_event_finished_signal, src_fd, seq_id);
-}
-
 void mir::report::lttng::InputReport::opened_input_device(char const* name, char const* platform)
 {
     mir_tracepoint(mir_server_input, opened_input_device, name, platform);

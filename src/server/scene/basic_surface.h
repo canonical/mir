@@ -109,7 +109,7 @@ public:
     geometry::Point top_left() const override;
     geometry::Rectangle input_bounds() const override;
     bool input_area_contains(geometry::Point const& point) const override;
-    void consume(MirEvent const& event) override;
+    void consume(MirEvent const* event) override;
     void set_alpha(float alpha) override;
     void set_orientation(MirOrientation orientation) override;
     void set_transformation(glm::mat4 const&) override;
@@ -181,7 +181,7 @@ private:
     int swapinterval_ = 1;
     MirSurfaceFocusState focus_ = mir_surface_unfocused;
     int dpi_ = 0;
-    MirSurfaceVisibility visibility_ = mir_surface_visibility_exposed;
+    MirSurfaceVisibility visibility_ = mir_surface_visibility_occluded;
     MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
 
     std::unique_ptr<CursorStreamImageAdapter> const cursor_stream_adapter;

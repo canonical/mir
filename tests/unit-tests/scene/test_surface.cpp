@@ -414,9 +414,9 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
     mev::add_touch(*touch_event, 0, mir_touch_action_down, mir_touch_tooltype_finger, 0, 0,
         0, 0, 0, 0);
 
-    EXPECT_CALL(mock_sender, send_event(mt::MirKeyEventMatches(*key_event), _)).Times(1);
+    EXPECT_CALL(mock_sender, send_event(mt::MirKeyboardEventMatches(*key_event), _)).Times(1);
     EXPECT_CALL(mock_sender, send_event(mt::MirTouchEventMatches(*touch_event), _)).Times(1);
 
-    surface.consume(*key_event);
-    surface.consume(*touch_event);
+    surface.consume(key_event.get());
+    surface.consume(touch_event.get());
 }

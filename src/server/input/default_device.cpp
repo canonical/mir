@@ -17,12 +17,21 @@
  *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "device_handle.h"
+#include "default_device.h"
+#include "mir/dispatch/action_queue.h"
+#include "mir/input/device_capability.h"
+#include "mir/input/input_device.h"
+#include "mir/input/touchpad_configuration.h"
+#include "mir/input/pointer_configuration.h"
+
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mi = mir::input;
 
-mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, mi::InputDeviceInfo const& info) :
-    device_id{id}, info(info)
+mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
+                                 std::shared_ptr<InputDevice> const& device) :
+    device_id{id}, device{device}, info(device->get_device_info()), pointer{device->get_pointer_settings()}, touchpad{device->get_touchpad_settings()}, actions{actions}
 {
 }
 
@@ -44,4 +53,74 @@ std::string mi::DefaultDevice::unique_id() const
 MirInputDeviceId mi::DefaultDevice::id() const
 {
     return device_id;
+}
+
+mir::optional_value<mi::PointerConfiguration> mi::DefaultDevice::pointer_configuration() const
+{
+    if (!pointer.is_set())
+        return {};
+
+    auto const& settings = pointer.value();
+
+    return PointerConfiguration(settings.handedness, settings.cursor_acceleration_bias,
+                                settings.horizontal_scroll_scale, settings.vertical_scroll_scale);
+}
+
+mir::optional_value<mi::TouchpadConfiguration> mi::DefaultDevice::touchpad_configuration() const
+{
+    if (!touchpad.is_set())
+        return {};
+
+    auto const& settings = touchpad.value();
+
+    return TouchpadConfiguration(settings.click_mode, settings.scroll_mode, settings.button_down_scroll_button,
+                                 settings.tap_to_click, settings.disable_while_typing, settings.disable_with_mouse,
+                                 settings.middle_mouse_button_emulation);
+}
+
+void mi::DefaultDevice::apply_pointer_configuration(mi::PointerConfiguration const& conf)
+{
+    if (!pointer.is_set())
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a pointer configuration"));
+
+    if (conf.cursor_acceleration_bias < -1.0 || conf.cursor_acceleration_bias > 1.0)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor acceleration bias out of range"));
+
+    PointerSettings settings;
+    settings.handedness = conf.handedness;
+    settings.cursor_acceleration_bias = conf.cursor_acceleration_bias;
+    settings.vertical_scroll_scale = conf.vertical_scroll_scale;
+    settings.horizontal_scroll_scale = conf.horizontal_scroll_scale;
+
+    pointer = settings;
+
+    actions->enqueue([settings = std::move(settings), dev=device]
+                     {
+                         dev->apply_settings(settings);
+                     });
+}
+
+void mi::DefaultDevice::apply_touchpad_configuration(mi::TouchpadConfiguration const& conf)
+{
+    if (!touchpad.is_set())
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a touchpad configuration"));
+
+    if (conf.scroll_mode & mir_touchpad_scroll_mode_button_down_scroll && conf.button_down_scroll_button == mi::no_scroll_button)
+        BOOST_THROW_EXCEPTION(std::invalid_argument("No scroll button configured"));
+
+    TouchpadSettings settings;
+    settings.click_mode = conf.click_mode;
+    settings.scroll_mode = conf.scroll_mode;
+    settings.button_down_scroll_button = conf.button_down_scroll_button;
+    settings.disable_with_mouse = conf.disable_with_mouse;
+    settings.disable_while_typing = conf.disable_while_typing;
+    settings.tap_to_click = conf.tap_to_click;
+    settings.middle_mouse_button_emulation = conf.middle_mouse_button_emulation;
+
+    touchpad = settings;
+
+    actions->enqueue([settings = std::move(settings), dev=device]
+                     {
+                         dev->apply_settings(settings);
+                     });
 }

@@ -26,8 +26,10 @@
 
 namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
+using namespace testing;
 
-class EGLExtensionsTest  : public ::testing::Test
+typedef mtd::MockEGL::generic_function_pointer_t func_ptr_t;
+class EGLExtensions  : public ::testing::Test
 {
 protected:
     virtual void SetUp()
@@ -37,11 +39,8 @@ protected:
     testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
-TEST_F(EGLExtensionsTest, constructor_throws_if_egl_image_not_supported)
+TEST_F(EGLExtensions, constructor_throws_if_egl_image_not_supported)
 {
-    using namespace testing;
-    typedef mtd::MockEGL::generic_function_pointer_t func_ptr_t;
-
     ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateImageKHR")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
     ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroyImageKHR")))
@@ -52,11 +51,8 @@ TEST_F(EGLExtensionsTest, constructor_throws_if_egl_image_not_supported)
     }, std::runtime_error);
 }
 
-TEST_F(EGLExtensionsTest, constructor_throws_if_gl_oes_egl_image_not_supported)
+TEST_F(EGLExtensions, constructor_throws_if_gl_oes_egl_image_not_supported)
 {
-    using namespace testing;
-    typedef mtd::MockEGL::generic_function_pointer_t func_ptr_t;
-
     ON_CALL(mock_egl, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
 
@@ -65,7 +61,7 @@ TEST_F(EGLExtensionsTest, constructor_throws_if_gl_oes_egl_image_not_supported)
     }, std::runtime_error);
 }
 
-TEST_F(EGLExtensionsTest, success_has_sane_function_hooks)
+TEST_F(EGLExtensions, success_has_sane_function_hooks)
 {
     mg::EGLExtensions extensions;
     EXPECT_NE(nullptr, extensions.eglCreateImageKHR);
@@ -73,3 +69,37 @@ TEST_F(EGLExtensionsTest, success_has_sane_function_hooks)
     EXPECT_NE(nullptr, extensions.glEGLImageTargetTexture2DOES);
 }
 
+TEST_F(EGLExtensions, constructor_throws_if_egl_create_sync_not_supported)
+{
+    ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglCreateSyncKHR")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
+    EXPECT_THROW({
+        mg::EGLSyncExtensions extensions;
+    }, std::runtime_error);
+}
+
+TEST_F(EGLExtensions, constructor_throws_if_egl_destroy_sync_not_supported)
+{
+    ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglDestroySyncKHR")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
+    EXPECT_THROW({
+        mg::EGLSyncExtensions extensions;
+    }, std::runtime_error);
+}
+
+TEST_F(EGLExtensions, constructor_throws_if_egl_wait_sync_not_supported)
+{
+    ON_CALL(mock_egl, eglGetProcAddress(StrEq("eglClientWaitSyncKHR")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(0)));
+    EXPECT_THROW({
+        mg::EGLSyncExtensions extensions;
+    }, std::runtime_error);
+}
+
+TEST_F(EGLExtensions, sync_success_has_sane_function_hooks)
+{
+    mg::EGLSyncExtensions extensions;
+    EXPECT_NE(nullptr, extensions.eglCreateSyncKHR);
+    EXPECT_NE(nullptr, extensions.eglDestroySyncKHR);
+    EXPECT_NE(nullptr, extensions.eglClientWaitSyncKHR);
+}

@@ -27,6 +27,7 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/events/event_builders.h"
 
+#include "mir/test/doubles/stub_cursor_image.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/mock_input_sender.h"
 #include "mir/test/doubles/stub_input_sender.h"
@@ -67,6 +68,8 @@ public:
     MOCK_METHOD1(hidden_set_to, void(bool));
     MOCK_METHOD1(renamed, void(char const*));
     MOCK_METHOD0(client_surface_close_requested, void());
+    MOCK_METHOD1(cursor_image_set_to, void(mir::graphics::CursorImage const& image));
+    MOCK_METHOD0(cursor_image_removed, void());
 };
 
 void post_a_frame(ms::BasicSurface& surface)
@@ -535,8 +538,8 @@ struct BasicSurfaceAttributeTest : public BasicSurfaceTest,
 
 AttributeTestParameters const surface_visibility_test_parameters{
     mir_surface_attrib_visibility,
-    mir_surface_visibility_exposed,
     mir_surface_visibility_occluded,
+    mir_surface_visibility_exposed,
     -1
 };
 
@@ -661,6 +664,32 @@ INSTANTIATE_TEST_CASE_P(SurfaceDPIAttributeTest, BasicSurfaceAttributeTest,
 INSTANTIATE_TEST_CASE_P(SurfaceFocusAttributeTest, BasicSurfaceAttributeTest,
    ::testing::Values(surface_focus_test_parameters));
 
+TEST_F(BasicSurfaceTest, notifies_about_cursor_image_change)
+{
+    using namespace testing;
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    auto cursor_image = std::make_shared<mtd::StubCursorImage>();
+    EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_));
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_cursor_image(cursor_image);
+}
+
+TEST_F(BasicSurfaceTest, notifies_about_cursor_image_removal)
+{
+    using namespace testing;
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+
+    EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_)).Times(0);
+    EXPECT_CALL(mock_surface_observer, cursor_image_removed());
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_cursor_image({});
+}
+
 TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
 {
     using namespace ::testing;
@@ -677,7 +706,7 @@ TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
 
     EXPECT_CALL(mock_sender, send_event(_,_));
 
-    surface.consume(*mev::make_event(mir_prompt_session_state_started));
+    surface.consume(mev::make_event(mir_prompt_session_state_started).get());
 }
 
 TEST_F(BasicSurfaceTest, observer_can_trigger_state_change_within_notification)
@@ -994,4 +1023,47 @@ TEST_F(BasicSurfaceTest, buffer_streams_produce_correctly_sized_renderables)
     ASSERT_THAT(renderables.size(), Eq(2));
     EXPECT_THAT(renderables[0], IsRenderableOfSize(size0));
     EXPECT_THAT(renderables[1], IsRenderableOfSize(size1));
+}
+
+namespace
+{
+struct VisibilityObserver : ms::NullSurfaceObserver
+{
+    void attrib_changed(MirSurfaceAttrib attrib, int value) override
+    {
+        if (attrib == mir_surface_attrib_visibility)
+        {
+            if (value == mir_surface_visibility_occluded)
+                hides_++;
+            else if (value == mir_surface_visibility_exposed)
+                exposes_++;
+        }
+    }
+    unsigned int exposes()
+    {
+        return exposes_;
+    }
+    unsigned int hides()
+    {
+        return hides_;
+    }
+private:
+    unsigned int exposes_{0};
+    unsigned int hides_{0};
+};
+}
+
+TEST_F(BasicSurfaceTest, notifies_when_first_visible)
+{
+    using namespace testing;
+    auto observer = std::make_shared<VisibilityObserver>();
+    surface.add_observer(observer);
+
+    EXPECT_THAT(observer->exposes(), Eq(0));
+    EXPECT_THAT(observer->hides(), Eq(0));
+    post_a_frame(surface);
+    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
+
+    EXPECT_THAT(observer->exposes(), Eq(1));
+    EXPECT_THAT(observer->hides(), Eq(0));
 }

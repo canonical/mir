@@ -76,6 +76,25 @@ private:
     MirDisplayConfiguration* const config;
 };
 
+void populate_protobuf_display_configuration(
+    mp::DisplayConfiguration& protobuf_config,
+    MirDisplayConfiguration const* config)
+{
+    for (auto i = 0u; i < config->num_outputs; i++)
+    {
+        auto const& output = config->outputs[i];
+        auto protobuf_output = protobuf_config.add_display_output();
+        protobuf_output->set_output_id(output.output_id);
+        protobuf_output->set_used(output.used);
+        protobuf_output->set_current_mode(output.current_mode);
+        protobuf_output->set_current_format(output.current_format);
+        protobuf_output->set_position_x(output.position_x);
+        protobuf_output->set_position_y(output.position_y);
+        protobuf_output->set_power_mode(output.power_mode);
+        protobuf_output->set_orientation(output.orientation);
+    }
+}
+
 std::mutex connection_guard;
 MirConnection* valid_connections{nullptr};
 }
@@ -117,6 +136,7 @@ MirConnection::MirConnection(
         connect_parameters{mcl::make_protobuf_object<mir::protobuf::ConnectParameters>()},
         platform_operation_reply{mcl::make_protobuf_object<mir::protobuf::PlatformOperationMessage>()},
         display_configuration_response{mcl::make_protobuf_object<mir::protobuf::DisplayConfiguration>()},
+        set_base_display_configuration_response{mcl::make_protobuf_object<mir::protobuf::Void>()},
         client_platform_factory(conf.the_client_platform_factory()),
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
@@ -477,14 +497,6 @@ void MirConnection::available_surface_formats(
     }
 }
 
-std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform()
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    return platform;
-}
-
-
 mir::client::ClientBufferStream* MirConnection::create_client_buffer_stream(
     int width, int height,
     MirPixelFormat format,
@@ -552,7 +564,7 @@ void MirConnection::register_display_change_callback(mir_display_config_callback
     display_configuration->set_display_change_handler(std::bind(callback, this, context));
 }
 
-bool MirConnection::validate_user_display_config(MirDisplayConfiguration* config)
+bool MirConnection::validate_user_display_config(MirDisplayConfiguration const* config)
 {
     MirDisplayConfigurationStore orig_config{display_configuration->copy_to_client()};
 
@@ -597,29 +609,39 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
     }
 
     mp::DisplayConfiguration request;
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-
-        for (auto i=0u; i < config->num_outputs; i++)
-        {
-            auto output = config->outputs[i];
-            auto display_request = request.add_display_output();
-            display_request->set_output_id(output.output_id);
-            display_request->set_used(output.used);
-            display_request->set_current_mode(output.current_mode);
-            display_request->set_current_format(output.current_format);
-            display_request->set_position_x(output.position_x);
-            display_request->set_position_y(output.position_y);
-            display_request->set_power_mode(output.power_mode);
-            display_request->set_orientation(output.orientation);
-        }
-    }
+    populate_protobuf_display_configuration(request, config);
 
     configure_display_wait_handle.expect_result();
     server.configure_display(&request, display_configuration_response.get(),
         google::protobuf::NewCallback(this, &MirConnection::done_display_configure));
 
     return &configure_display_wait_handle;
+}
+
+MirWaitHandle* MirConnection::set_base_display_configuration(MirDisplayConfiguration const* config)
+{
+    if (!validate_user_display_config(config))
+    {
+        return NULL;
+    }
+
+    mp::DisplayConfiguration request;
+    populate_protobuf_display_configuration(request, config);
+
+    set_base_display_configuration_wait_handle.expect_result();
+    server.set_base_display_configuration(&request, set_base_display_configuration_response.get(),
+        google::protobuf::NewCallback(this, &MirConnection::done_set_base_display_configuration));
+
+    return &set_base_display_configuration_wait_handle;
+}
+
+void MirConnection::done_set_base_display_configuration()
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+
+    set_error_message(set_base_display_configuration_response->error());
+
+    return set_base_display_configuration_wait_handle.result_received();
 }
 
 mir::client::rpc::DisplayServer& MirConnection::display_server()

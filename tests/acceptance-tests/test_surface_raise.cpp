@@ -24,6 +24,7 @@
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/wait_condition.h"
 #include "mir/test/spin_wait.h"
+#include "mir/cookie_factory.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -66,6 +67,16 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
         mir_surface_apply_spec(surface1, spec);
         mir_surface_apply_spec(surface2, spec);
         mir_surface_spec_release(spec);
+        
+        bool surface_fullscreen = mt::spin_wait_for_condition_or_timeout(
+            [this]
+            {
+                return mir_surface_get_state(surface1) == mir_surface_state_fullscreen &&
+                       mir_surface_get_state(surface2) == mir_surface_state_fullscreen;
+            },
+            std::chrono::seconds{max_wait});
+
+        EXPECT_TRUE(surface_fullscreen);
 
         mir_connection_set_lifecycle_event_callback(connection, lifecycle_changed, this);
     }
@@ -88,25 +99,9 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
 
 namespace
 {
-void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void* ctx)
+// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
+void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* /*ev*/, void* /*ctx*/)
 {
-    auto client = reinterpret_cast<RaiseSurfaces*>(ctx);
-    auto etype = mir_event_get_type(ev);
-    if (etype == mir_event_type_input)
-    {
-        auto iev = mir_event_get_input_event(ev);
-        auto itype = mir_input_event_get_type(iev);
-        if (itype == mir_input_event_type_key)
-        {
-            auto kev = mir_input_event_get_keyboard_event(iev);
-            client->key_cookies.push_back(mir_keyboard_event_get_cookie(kev));
-        }
-        else if (itype == mir_input_event_type_pointer)
-        {
-            auto pev = mir_input_event_get_pointer_event(iev);
-            client->pointer_cookies.push_back(mir_pointer_event_get_cookie(pev));
-        }
-    }
 }
 
 void lifecycle_changed(MirConnection* /*connection*/, MirLifecycleState state, void* ctx)
@@ -128,32 +123,21 @@ bool wait_for_n_events(size_t n, std::vector<MirCookie>& cookies)
    return all_events;
 }
 
-bool attempt_focus(MirSurface* surface, MirCookie const& cookie)
-{
-    mir_surface_raise_with_cookie(surface, cookie);
-    bool surface_becomes_focused = mt::spin_wait_for_condition_or_timeout(
-        [&surface]
-        {
-            return mir_surface_get_focus(surface) == mir_surface_focused;
-        },
-        std::chrono::seconds{max_wait});
-
-    return surface_becomes_focused;
 }
 
-}
-
-TEST_F(RaiseSurfaces, key_event_with_cookie)
+// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
+TEST_F(RaiseSurfaces, DISABLED_key_event_with_cookie)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
     if (wait_for_n_events(1, key_cookies))
     {
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
-        EXPECT_TRUE(attempt_focus(surface2, key_cookies.back()));
+        // EXPECT_TRUE attempt_focus surface2 key_cookies.back()
     }
 }
 
-TEST_F(RaiseSurfaces, older_timestamp_does_not_focus)
+// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
+TEST_F(RaiseSurfaces, DISABLED_older_timestamp_does_not_focus)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_M));
@@ -162,7 +146,7 @@ TEST_F(RaiseSurfaces, older_timestamp_does_not_focus)
         EXPECT_TRUE(key_cookies.front().timestamp < key_cookies.back().timestamp);
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
 
-        mir_surface_raise_with_cookie(surface1, key_cookies.front());
+        // mir_surface_raise_with_cookie
 
         // Need to wait for this call to actually go through
         std::this_thread::sleep_for(std::chrono::milliseconds{1000});
@@ -170,7 +154,8 @@ TEST_F(RaiseSurfaces, older_timestamp_does_not_focus)
     }
 }
 
-TEST_F(RaiseSurfaces, motion_events_dont_prevent_raise)
+// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
+TEST_F(RaiseSurfaces, DISABLED_motion_events_dont_prevent_raise)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_M));
@@ -180,14 +165,15 @@ TEST_F(RaiseSurfaces, motion_events_dont_prevent_raise)
         if (wait_for_n_events(1, pointer_cookies))
         {
             EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
-            EXPECT_TRUE(attempt_focus(surface1, key_cookies.back()));
+            // EXPECT_TRUE attempt_focus surface1 key_cookies.back()
         }
     }
 }
 
-TEST_F(RaiseSurfaces, client_connection_close_invalid_cookie)
+// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
+TEST_F(RaiseSurfaces, DISABLED_client_connection_close_invalid_cookie)
 {
-    mir_surface_raise_with_cookie(surface1, {0, 0});
+    // mir_surface_raise_with_cookie
 
     bool connection_close = mt::spin_wait_for_condition_or_timeout(
         [this]
