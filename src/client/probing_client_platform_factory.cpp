@@ -46,7 +46,6 @@ mcl::ProbingClientPlatformFactory::create_client_platform(mcl::ClientContext* co
     {
         for (auto const& path : platform_paths)
         {
-            // FIXME: I think this is the remaining issue with LP: #1526658
             // This is sub-optimal. We shouldn't need to have all drivers
             // loaded simultaneously, but we do for now due to this API:
             auto modules = mir::libraries_for_path(path,
