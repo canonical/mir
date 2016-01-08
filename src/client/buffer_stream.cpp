@@ -109,6 +109,7 @@ void populate_buffer_package(
     }
 }
 
+
 struct ExchangeSemantics : mcl::ServerBufferSemantics
 {
     ExchangeSemantics(
@@ -173,7 +174,7 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         request->mutable_buffer()->set_buffer_id(wrapped.current_buffer_id());
         lock.unlock();
 
-        display_server.submit_buffer(request.get(), &protobuf_void,
+        display_server.submit_buffer(request.get(), protobuf_void.get(),
             google::protobuf::NewCallback(google::protobuf::DoNothing));
 
         lock.lock();
@@ -226,7 +227,7 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         configuration.set_scale(scale);
         scale_wait_handle.expect_result();
 
-        display_server.configure_buffer_stream(&configuration, &protobuf_void,
+        display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
             google::protobuf::NewCallback(this, &ExchangeSemantics::on_scale_set, scale));
         return &scale_wait_handle;
     }
@@ -234,11 +235,11 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
     std::mutex mutex;
     mcl::ClientBufferDepository wrapped;
     mir::protobuf::DisplayServer& display_server;
-    std::function<void()> on_incoming_buffer{std::function<void()>{}};
+    std::function<void()> on_incoming_buffer;
     std::queue<mir::protobuf::Buffer> incoming_buffers;
+    std::unique_ptr<mir::protobuf::Void> protobuf_void{std::make_unique<mp::Void>()};
     MirWaitHandle next_buffer_wait_handle;
     bool server_connection_lost {false};
-    mp::Void protobuf_void;
     MirWaitHandle scale_wait_handle;
     float scale_;
 };
@@ -254,7 +255,6 @@ public:
 
     void allocate_buffer(geom::Size size, MirPixelFormat format, int usage) override
     {
-        if (disconnected_) return;
         mp::BufferAllocation request;
         request.mutable_id()->set_value(stream_id);
         auto buf_params = request.add_buffer_requests();
@@ -268,7 +268,6 @@ public:
 
     void free_buffer(int buffer_id) override
     {
-        if (disconnected_) return;
         mp::BufferRelease request;
         request.mutable_id()->set_value(stream_id);
         request.add_buffers()->set_buffer_id(buffer_id);
@@ -278,7 +277,6 @@ public:
 
     void submit_buffer(int id, mcl::ClientBuffer&) override
     {
-        if (disconnected_) return;
         mp::BufferRequest request;
         request.mutable_id()->set_value(stream_id);
         request.mutable_buffer()->set_buffer_id(id);
@@ -286,16 +284,10 @@ public:
             google::protobuf::NewCallback(google::protobuf::DoNothing));
     }
 
-    void disconnected() override
-    {
-        disconnected_ = true;
-    }
-
 private:
-    std::atomic<bool> disconnected_{false};
     mclr::DisplayServer& server;
-    int stream_id;
     mp::Void protobuf_void;
+    int stream_id;
 };
 
 struct NewBufferSemantics : mcl::ServerBufferSemantics
