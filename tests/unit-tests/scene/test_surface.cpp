@@ -417,6 +417,6 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
     EXPECT_CALL(mock_sender, send_event(mt::MirKeyboardEventMatches(*key_event), _)).Times(1);
     EXPECT_CALL(mock_sender, send_event(mt::MirTouchEventMatches(*touch_event), _)).Times(1);
 
-    surface.consume(*key_event);
-    surface.consume(*touch_event);
+    surface.consume(key_event.get());
+    surface.consume(touch_event.get());
 }

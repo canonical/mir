@@ -88,7 +88,7 @@ void deliver(std::shared_ptr<mi::Surface> const& surface, T const* ev)
             to_deliver.motion.pointer_coordinates[i].y -= sy;
         }
     }
-    surface->consume(to_deliver);
+    surface->consume(&to_deliver);
 }
 
 }
