@@ -804,9 +804,11 @@ void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<S
     auto stream = std::make_shared<mcl::ErrorStream>(error_msg, this, id, request->wh);
     surface_map->insert(id, stream); 
 
-    request->wh->result_received();
     if (request->callback)
+    {
         request->callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
+    }
+    request->wh->result_received();
 }
 
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
