@@ -19,7 +19,6 @@
 #include "program_family.h"
 
 #include <mutex>
-#include <EGL/egl.h>
 
 namespace mir
 {
