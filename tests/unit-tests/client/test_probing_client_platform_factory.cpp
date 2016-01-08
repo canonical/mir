@@ -167,7 +167,9 @@ TEST(ProbingClientPlatformFactory, DoesNotLeakUnusedDriverModulesOnStartup)
     ASSERT_EQ(0, nloaded);
 }
 
-TEST(ProbingClientPlatformFactory, DiesOnUnsafeRelease)
+// Note "DeathTest" informs our scripts that we expect a leak from the
+// child process that died, and to ignore it.
+TEST(ProbingClientPlatformFactoryDeathTest, DiesOnUnsafeRelease)
 {
     using namespace testing;
     auto const modules = all_available_modules();
