@@ -201,7 +201,7 @@ MIR_COMMON_5.1 {  # New functions in Mir 0.16
   local: *;
 } MIR_COMMON_5;
 
-MIR_COMMON_unreleased {
+MIR_COMMON_unreleased { # New functions in Mir 0.19
   global:
     extern "C++" {
       typeinfo?for?mir::logging::SharedLibraryProberReport;
@@ -210,4 +210,4 @@ MIR_COMMON_unreleased {
       typeinfo?for?mir::logging::DumbConsoleLogger;
       mir::detail::libname_impl*;
     };
-} MIR_COMMON_5;
+} MIR_COMMON_5.1;
