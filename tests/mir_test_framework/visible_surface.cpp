@@ -76,3 +76,8 @@ mtf::VisibleSurface& mtf::VisibleSurface::operator=(VisibleSurface&& that)
     std::swap(that.surface, surface);
     return *this;
 }
+
+std::ostream& mtf::operator<<(std::ostream& os, VisibleSurface const& s)
+{
+    return os << static_cast<MirSurface*>(s);
+}
