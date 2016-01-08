@@ -310,6 +310,8 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         if (!surface_proto->has_error())
             surface_proto->set_error(error.what());
         // failed to create buffer_stream, so clean up FDs it doesn't own
+        for (auto i = 0; i < surface_proto->fd_size(); i++)
+            ::close(surface_proto->fd(i));
         if (surface_proto->has_buffer_stream() && surface_proto->buffer_stream().has_buffer())
             for (int i = 0; i < surface_proto->buffer_stream().buffer().fd_size(); i++)
                 ::close(surface_proto->buffer_stream().buffer().fd(i));
@@ -664,14 +666,6 @@ void MirConnection::available_surface_formats(
         }
     }
 }
-
-std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform()
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    return platform;
-}
-
 
 mir::client::ClientBufferStream* MirConnection::create_client_buffer_stream(
     int width, int height,
