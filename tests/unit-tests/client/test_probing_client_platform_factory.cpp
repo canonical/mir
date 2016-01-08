@@ -104,7 +104,7 @@ TEST(ProbingClientPlatformFactory, ThrowsErrorWhenNoPlatformPluginProbesSuccessf
                  std::runtime_error);
 }
 
-TEST(ProbingClientPlatformFactory, DoesNotLeakDriverModule)
+TEST(ProbingClientPlatformFactory, DoesNotLeakTheUsedDriverModuleOnShutdown)
 {   // Regression test for LP: #1527449
     using namespace testing;
     auto const modules = all_available_modules();
@@ -126,6 +126,45 @@ TEST(ProbingClientPlatformFactory, DoesNotLeakDriverModule)
     ASSERT_TRUE(loaded(preferred_module));
     safely_unload(platform);
     EXPECT_FALSE(loaded(preferred_module));
+}
+
+TEST(ProbingClientPlatformFactory, DoesNotLeakUnusedDriverModulesOnStartup)
+{   // Regression test for LP: #1527449 and LP: #1526658
+    using namespace testing;
+    auto const modules = all_available_modules();
+    ASSERT_FALSE(modules.empty());
+
+    // Note: This test is only really effective with nmodules>1, which many of
+    //       our builds will have. But nmodules==1 is harmless.
+
+    mir::client::ProbingClientPlatformFactory factory(
+        mir::report::null_shared_library_prober_report(),
+        modules,
+        {});
+
+    std::shared_ptr<mir::client::ClientPlatform> platform;
+    mtd::MockClientContext context;
+    ON_CALL(context, populate_server_package(_))
+            .WillByDefault(Invoke(populate_valid));
+
+    int nloaded = 0;
+    for (auto const& m : modules)
+        if (loaded(m)) ++nloaded;
+    ASSERT_EQ(0, nloaded);
+
+    platform = factory.create_client_platform(&context);
+
+    nloaded = 0;
+    for (auto const& m : modules)
+        if (loaded(m)) ++nloaded;
+    EXPECT_EQ(1, nloaded);  // expect not assert, because we need safely_unload
+
+    safely_unload(platform);
+
+    nloaded = 0;
+    for (auto const& m : modules)
+        if (loaded(m)) ++nloaded;
+    ASSERT_EQ(0, nloaded);
 }
 
 TEST(ProbingClientPlatformFactory, DiesOnUnsafeRelease)
