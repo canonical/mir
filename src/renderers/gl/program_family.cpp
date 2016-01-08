@@ -59,10 +59,6 @@ ProgramFamily::~ProgramFamily() noexcept
     // need any reference counting or to worry about how many copy constructions
     // might have been followed by destructor calls during container resizes.
 
-    // Workaround for lp:1454201. Release any current GL context to avoid crashes
-    // in the glDelete* functions that follow.
-    eglMakeCurrent(eglGetCurrentDisplay(), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-
     for (auto& p : program)
     {
         if (p.second.id)
