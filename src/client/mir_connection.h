@@ -216,7 +216,7 @@ private:
     std::unique_ptr<mir::protobuf::Void> set_base_display_configuration_response;
     std::atomic<bool> disconnecting{false};
 
-    mir::frontend::SurfaceId next_error_id(std::lock_guard<std::mutex> const&);
+    mir::frontend::SurfaceId next_error_id(std::unique_lock<std::mutex> const&);
     int surface_error_id{-1};
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
