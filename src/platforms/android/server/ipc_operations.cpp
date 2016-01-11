@@ -20,7 +20,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_operation_message.h"
-#include "mir/graphics/android/android_native_buffer.h"
+#include "android_native_buffer.h"
 #include "ipc_operations.h"
 #include <stdexcept>
 #include <boost/throw_exception.hpp>

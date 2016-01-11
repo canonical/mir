@@ -16,10 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/mir_native_window.h"
-#include "mir/graphics/android/android_driver_interpreter.h"
-#include "mir/graphics/android/sync_fence.h"
+#include "mir_native_window.h"
+#include "android_driver_interpreter.h"
+#include "sync_fence.h"
 
+#define MIR_LOG_COMPONENT "AndroidWindow"
 #include "mir/uncaught.h"
 
 #include <iostream>

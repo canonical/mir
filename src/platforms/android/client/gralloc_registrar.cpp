@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/android_native_buffer.h"
-#include "mir/graphics/android/sync_fence.h"
+#include "android_native_buffer.h"
+#include "sync_fence.h"
 #include "gralloc_registrar.h"
 #include "mir/client_buffer.h"
 

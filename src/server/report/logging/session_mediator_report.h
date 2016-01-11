@@ -41,40 +41,43 @@ class SessionMediatorReport : public frontend::SessionMediatorReport
 public:
     SessionMediatorReport(std::shared_ptr<mir::logging::Logger> const& log);
 
-    virtual void session_connect_called(std::string const& app_name);
+    virtual void session_connect_called(std::string const& app_name) override;
 
-    virtual void session_create_surface_called(std::string const& app_name);
+    virtual void session_create_surface_called(std::string const& app_name) override;
 
-    virtual void session_next_buffer_called(std::string const& app_name);
+    virtual void session_next_buffer_called(std::string const& app_name) override;
 
-    virtual void session_exchange_buffer_called(std::string const& app_name);
+    virtual void session_exchange_buffer_called(std::string const& app_name) override;
 
-    virtual void session_submit_buffer_called(std::string const& app_name);
+    virtual void session_submit_buffer_called(std::string const& app_name) override;
 
-    virtual void session_allocate_buffers_called(std::string const& app_name);
+    virtual void session_allocate_buffers_called(std::string const& app_name) override;
 
-    virtual void session_release_buffers_called(std::string const& app_name);
+    virtual void session_release_buffers_called(std::string const& app_name) override;
 
-    virtual void session_release_surface_called(std::string const& app_name);
+    virtual void session_release_surface_called(std::string const& app_name) override;
 
-    virtual void session_disconnect_called(std::string const& app_name);
+    virtual void session_disconnect_called(std::string const& app_name) override;
 
-    virtual void session_configure_surface_called(std::string const& app_name);
+    virtual void session_configure_surface_called(std::string const& app_name) override;
 
-    virtual void session_configure_surface_cursor_called(std::string const& app_name);
+    virtual void session_configure_surface_cursor_called(std::string const& app_name) override;
 
-    virtual void session_configure_display_called(std::string const& app_name);
+    virtual void session_configure_display_called(std::string const& app_name) override;
 
-    virtual void session_set_base_display_configuration_called(std::string const& app_name);
+    virtual void session_set_base_display_configuration_called(std::string const& app_name) override;
 
-    virtual void session_start_prompt_session_called(std::string const& app_name, pid_t application_process);
+    virtual void session_start_prompt_session_called(std::string const& app_name, pid_t application_process) override;
 
-    virtual void session_stop_prompt_session_called(std::string const& app_name);
+    virtual void session_stop_prompt_session_called(std::string const& app_name) override;
+
+    void session_create_buffer_stream_called(std::string const& app_name) override;
+    void session_release_buffer_stream_called(std::string const& app_name) override;
 
     virtual void session_error(
         std::string const& app_name,
         char const* method,
-        std::string const& what);
+        std::string const& what) override;
 
 private:
     std::shared_ptr<mir::logging::Logger> const log;

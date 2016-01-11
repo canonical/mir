@@ -2,24 +2,24 @@ Using Mir on an Android device {#using_mir_on_android}
 ==============================
 
 Mir is the default on Ubuntu Touch images, so if you're using Ubuntu Touch,
-you're already using mir.
+you're already using Mir.
 
-If you would like to run a pre-release version of mir on your device, you'll
+If you would like to run a pre-release version of Mir on your device, you'll
 need to recompile our downstream dependencies (unity-system-compositor and 
-qtmir) to ensure ABI compatibility with the pre-release version of mir.
+qtmir) to ensure ABI compatibility with the pre-release version of Mir.
 
 Using some demo applications
 ----------------------------
 
-Simpler demos are available in the `mir-demos` package.
+Simple demos are available in the `mir-demos` package.
 
 First install the demos:
 
-    $ apt-get install mir-demos
+    $ sudo apt-get install mir-demos
 
-Next unsure that the Unity8 session is ended:
+Next ensure that the Unity8 session is ended:
 
-    $ service lightdm stop
+    $ sudo stop lightdm
 
 Finally, start mir and a client application:
 

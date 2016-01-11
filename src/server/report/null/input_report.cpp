@@ -32,10 +32,6 @@ void mrn::InputReport::published_motion_event(int /* dest_fd */, uint32_t /* seq
 {
 }
 
-void mrn::InputReport::received_event_finished_signal(int /* src_fd */, uint32_t /* seq_id */)
-{
-}
-
 void mrn::InputReport::opened_input_device(char const* /* name */, char const* /* platform */)
 {
 }

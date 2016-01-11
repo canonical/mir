@@ -46,36 +46,30 @@ namespace mtd = mt::doubles;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 using namespace std::literals::chrono_literals;
-
-namespace
-{
-
-template<typename Type>
-using Nice = ::testing::NiceMock<Type>;
 using namespace ::testing;
 
 struct SingleSeatInputDeviceHubSetup : ::testing::Test
 {
     mtd::TriggeredMainLoop observer_loop;
-    Nice<mtd::MockInputDispatcher> mock_dispatcher;
-    Nice<mtd::MockInputRegion> mock_region;
+    NiceMock<mtd::MockInputDispatcher> mock_dispatcher;
+    NiceMock<mtd::MockInputRegion> mock_region;
     std::shared_ptr<mir::cookie::CookieFactory> cookie_factory = mir::cookie::CookieFactory::create_keeping_secret();
-    Nice<mtd::MockCursorListener> mock_cursor_listener;
-    Nice<mtd::MockTouchVisualizer> mock_visualizer;
+    NiceMock<mtd::MockCursorListener> mock_cursor_listener;
+    NiceMock<mtd::MockTouchVisualizer> mock_visualizer;
     mir::dispatch::MultiplexingDispatchable multiplexer;
     mi::BasicSeat seat{mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer),
                        mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region)};
     mi::DefaultInputDeviceHub hub{mt::fake_shared(seat), mt::fake_shared(multiplexer), mt::fake_shared(observer_loop),
                                   cookie_factory};
-    Nice<mtd::MockInputDeviceObserver> mock_observer;
-    Nice<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
-    Nice<mtd::MockInputDevice> another_device{"another_device","dev-2", mi::DeviceCapability::keyboard};
-    Nice<mtd::MockInputDevice> third_device{"third_device","dev-3", mi::DeviceCapability::keyboard};
-    Nice<mtd::MockInputDevice> touchpad{"touchpad", "dev-4", mi::DeviceCapability::touchpad|mi::DeviceCapability::pointer};
+    NiceMock<mtd::MockInputDeviceObserver> mock_observer;
+    NiceMock<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
+    NiceMock<mtd::MockInputDevice> another_device{"another_device","dev-2", mi::DeviceCapability::keyboard};
+    NiceMock<mtd::MockInputDevice> third_device{"third_device","dev-3", mi::DeviceCapability::keyboard};
+    NiceMock<mtd::MockInputDevice> touchpad{"touchpad", "dev-4", mi::DeviceCapability::touchpad|mi::DeviceCapability::pointer};
 
     std::chrono::nanoseconds arbitrary_timestamp;
 
-    void capture_input_sink(Nice<mtd::MockInputDevice>& dev, mi::InputSink*& sink, mi::EventBuilder*& builder)
+    void capture_input_sink(NiceMock<mtd::MockInputDevice>& dev, mi::InputSink*& sink, mi::EventBuilder*& builder)
     {
         ON_CALL(dev,start(_,_))
             .WillByDefault(Invoke([&sink,&builder](mi::InputSink* input_sink, mi::EventBuilder* event_builder)
@@ -86,7 +80,6 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
                                  ));
     }
 };
-}
 
 TEST_F(SingleSeatInputDeviceHubSetup, input_sink_posts_events_to_input_dispatcher)
 {
@@ -202,8 +195,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, confines_pointer_movement)
 
 TEST_F(SingleSeatInputDeviceHubSetup, forwards_pointer_updates_to_cursor_listener)
 {
-    using namespace ::testing;
-
     auto move_x = 12.0f, move_y = 14.0f;
 
     mi::InputSink* sink;
@@ -252,8 +243,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, forwards_touchpad_settings_to_input_device
 
 TEST_F(SingleSeatInputDeviceHubSetup, input_sink_tracks_modifier)
 {
-    using namespace ::testing;
-
     mi::InputSink* key_board_sink;
     mi::EventBuilder* key_event_builder;
     std::shared_ptr<mi::Device> key_handle;
@@ -284,8 +273,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_tracks_modifier)
 
 TEST_F(SingleSeatInputDeviceHubSetup, input_sink_unifies_modifier_state_accross_devices)
 {
-    using namespace ::testing;
-
     mi::InputSink* mouse_sink;
     mi::EventBuilder* mouse_event_builder;
     mi::InputSink* key_board_sink;
@@ -325,8 +312,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_unifies_modifier_state_accross_
 
 TEST_F(SingleSeatInputDeviceHubSetup, input_sink_reduces_modifier_state_accross_devices)
 {
-    using namespace ::testing;
-
     mi::InputSink* mouse_sink;
     mi::EventBuilder* mouse_event_builder;
     mi::InputSink* key_board_sink_1;
@@ -386,8 +371,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_reduces_modifier_state_accross_
 
 TEST_F(SingleSeatInputDeviceHubSetup, tracks_a_single_cursor_position_from_multiple_pointing_devices)
 {
-    using namespace ::testing;
-
     mi::InputSink* mouse_sink_1;
     mi::EventBuilder* mouse_event_builder_1;
     mi::InputSink* mouse_sink_2;
@@ -419,8 +402,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_a_single_cursor_position_from_multi
 
 TEST_F(SingleSeatInputDeviceHubSetup, tracks_a_single_button_state_from_multiple_pointing_devices)
 {
-    using namespace ::testing;
-
     int const x = 0, y = 0;
     MirPointerButtons no_buttons = 0;
     mi::InputSink* mouse_sink_1;

@@ -23,20 +23,22 @@ Here is a quick-start guide for running Mir in VMware:
 
        mks.gl.allowBlacklistedDrivers = "TRUE"
 
-7. Restart the VM, log in and try glmark2 to ensure it shows 'SVGA' as the
+7. Restart the VM, log in and try `glmark2` to ensure it shows 'SVGA' as the
    GL renderer (*not* 'llvmpipe'!):
 
        $ sudo apt-get install glmark2
        $ glmark2
 
-8. sudo apt-get unity8-desktop-session-mir mir-demos
+8. `$ sudo apt-get unity8-desktop-session-mir mir-demos`
 
-9. Try out a demo mir server:
-   1. Change to VT2 and run "sudo mir_proving_server"
-   2. Change to VT3 and run "sudo mir_demo_client_egltriangle"
-   3. Change back to VT2, you should see a window with a triangle spinning fast
-   4. Use Alt + click + drag to move the window around
-   5. Use Ctrl-Alt-Backspace to stop the server
+9. Try out a Mir demo server:
+   1. Change to VT2 and run
+   
+      `$ sudo mir_demo_server --launch-client mir_demo_client_egltriangle`
+      
+   2. You should see a window with a triangle spinning fast
+   3. Use Alt + click + drag to move the window around
+   4. Use Ctrl+Alt+BkSp to stop the server
 
 10. Try out the unity8 desktop session by selecting it in lightdm
 

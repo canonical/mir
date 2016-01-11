@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 #define MIR_GRAPHICS_ANDROID_HWC_LAYERLIST_H_
 
-#include "mir/graphics/android/fence.h"
+#include "fence.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/displacement.h"
 #include "hwc_layers.h"
