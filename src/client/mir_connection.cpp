@@ -717,12 +717,6 @@ void MirConnection::available_surface_formats(
 
 void MirConnection::stream_created(StreamCreationRequest* request_raw)
 {
-    auto stream_it = std::find_if(stream_requests.begin(), stream_requests.end(),
-        [&request_raw] (std::shared_ptr<StreamCreationRequest> const& req)
-        { return req.get() == request_raw; });
-    if (stream_it == stream_requests.end())
-        return;
-
     std::shared_ptr<StreamCreationRequest> request {nullptr};
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
@@ -734,7 +728,6 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
         request = *stream_it;
         stream_requests.erase(stream_it);
     }
-
     auto& protobuf_bs = request->response;
 
     if (!protobuf_bs->has_id())
@@ -800,8 +793,7 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     {
         server.create_buffer_stream(&params, request->response.get(),
             gp::NewCallback(this, &MirConnection::stream_created, request.get()));
-    }
-    catch (std::exception const& ex)
+    } catch (std::exception& e)
     {
         //if this throws, our socket code will run the closure, which will make an error object.
         //its nicer to return an stream with a error message, so just ignore the exception.

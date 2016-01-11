@@ -444,7 +444,7 @@ void MirSurface::handle_event(MirEvent const& e)
     }
     case mir_event_type_resize:
     {
-        if (auto_resize_stream && buffer_stream)
+        if (auto_resize_stream)
         {
             auto resize_event = mir_event_get_resize_event(&e);
             buffer_stream->set_size(geom::Size{
