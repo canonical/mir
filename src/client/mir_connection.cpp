@@ -58,7 +58,6 @@ namespace ml = mir::logging;
 
 namespace
 {
-
 std::shared_ptr<mcl::PerfReport>
 make_perf_report(std::shared_ptr<ml::Logger> const& logger)
 {
@@ -236,6 +235,7 @@ MirConnection::MirConnection(std::string const& error_message) :
 MirConnection::MirConnection(
     mir::client::ConnectionConfiguration& conf) :
         deregisterer{this},
+        surface_map(conf.the_surface_map()),
         channel(conf.the_rpc_channel()),
         server(channel),
         debug(channel),
@@ -254,7 +254,6 @@ MirConnection::MirConnection(
         display_configuration(conf.the_display_configuration()),
         lifecycle_control(conf.the_lifecycle_control()),
         ping_handler{conf.the_ping_handler()},
-        surface_map(conf.the_surface_map()),
         event_handler_register(conf.the_event_handler_register()),
         pong_callback(google::protobuf::NewPermanentCallback(&google::protobuf::DoNothing)),
         eventloop{new md::ThreadedDispatcher{"RPC Thread", std::dynamic_pointer_cast<md::Dispatchable>(channel)}},
@@ -273,6 +272,8 @@ MirConnection::~MirConnection() noexcept
     // We don't die while if are pending callbacks (as they touch this).
     // But, if after 500ms we don't get a call, assume it won't happen.
     connect_wait_handle.wait_for_pending(std::chrono::milliseconds(500));
+
+    surface_map.reset();
 
     std::lock_guard<decltype(mutex)> lock(mutex);
     if (connect_result && connect_result->has_platform())
@@ -304,7 +305,7 @@ MirWaitHandle* MirConnection::create_surface(
     }
     catch (std::exception const& ex)
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
+        std::unique_lock<decltype(mutex)> lock(mutex);
         auto request = std::find_if(surface_requests.begin(), surface_requests.end(),
             [&](std::shared_ptr<MirConnection::SurfaceCreationRequest> c2) { return c.get() == c2.get(); });
         if (request != surface_requests.end())
@@ -313,22 +314,25 @@ MirWaitHandle* MirConnection::create_surface(
             auto surf = std::make_shared<MirSurface>(
                 std::string{"Error creating surface: "} + boost::diagnostic_information(ex), this, id, (*request)->wh);
             surface_map->insert(id, surf);
-            callback(surf.get(), context);
-            (*request)->wh->result_received();
+            auto wh = (*request)->wh;
             surface_requests.erase(request);
+
+            lock.unlock();
+            callback(surf.get(), context);
+            wh->result_received();
         }
     }
     return c->wh.get();
 }
 
-mf::SurfaceId MirConnection::next_error_id(std::lock_guard<std::mutex> const&)
+mf::SurfaceId MirConnection::next_error_id(std::unique_lock<std::mutex> const&)
 {
     return mf::SurfaceId{surface_error_id--};
 }
 
 void MirConnection::surface_created(SurfaceCreationRequest* request)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::unique_lock<decltype(mutex)> lock(mutex);
     std::shared_ptr<MirSurface> surf {nullptr};
     std::shared_ptr<mcl::ClientBufferStream> stream {nullptr};
     //make sure this request actually was made.
@@ -564,6 +568,7 @@ void MirConnection::done_disconnect()
         for (auto handle : release_wait_handles)
             delete handle;
     }
+    surface_map.reset();
 
     // Ensure no racy lifecycle notifications can happen after disconnect completes
     lifecycle_control->set_callback([](MirLifecycleState){});
@@ -710,20 +715,32 @@ void MirConnection::available_surface_formats(
     }
 }
 
-void MirConnection::stream_created(StreamCreationRequest* request)
+void MirConnection::stream_created(StreamCreationRequest* request_raw)
 {
     auto stream_it = std::find_if(stream_requests.begin(), stream_requests.end(),
-        [&request] (std::shared_ptr<StreamCreationRequest> const& req)
-        { return req.get() == request; });
+        [&request_raw] (std::shared_ptr<StreamCreationRequest> const& req)
+        { return req.get() == request_raw; });
     if (stream_it == stream_requests.end())
         return;
+
+    std::shared_ptr<StreamCreationRequest> request {nullptr};
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        auto stream_it = std::find_if(stream_requests.begin(), stream_requests.end(),
+            [&request_raw] (std::shared_ptr<StreamCreationRequest> const& req)
+            { return req.get() == request_raw; });
+        if (stream_it == stream_requests.end())
+            return;
+        request = *stream_it;
+        stream_requests.erase(stream_it);
+    }
 
     auto& protobuf_bs = request->response;
 
     if (!protobuf_bs->has_id())
     {
         if (!protobuf_bs->has_error())
-            protobuf_bs->set_error("Error processing buffer stream create response, no ID (disconnected?)");
+            protobuf_bs->set_error("no ID in response (disconnected?)");
     }
 
     if (protobuf_bs->has_error())
@@ -731,8 +748,8 @@ void MirConnection::stream_created(StreamCreationRequest* request)
         for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
             ::close(protobuf_bs->buffer().fd(i));
         stream_error(
-            std::string{"Error processing buffer stream creating response:"} + protobuf_bs->error(),
-            *request->wh, request->callback, request->context);
+            std::string{"Error processing buffer stream response: "} + protobuf_bs->error(),
+            request);
         return;
     }
 
@@ -754,7 +771,7 @@ void MirConnection::stream_created(StreamCreationRequest* request)
 
         stream_error(
             std::string{"Error processing buffer stream creating response:"} + boost::diagnostic_information(error),
-            *request->wh, request->callback, request->context);
+            request);
     }
 }
 
@@ -773,7 +790,11 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
 
     auto request = std::make_shared<StreamCreationRequest>(callback, context, params);
     request->wh->expect_result();
-    stream_requests.push_back(request);
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        stream_requests.push_back(request);
+    }
 
     try
     {
@@ -782,24 +803,25 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     }
     catch (std::exception const& ex)
     {
-        stream_error(std::string{"Error requesting BufferStream from server"},
-            *request->wh, callback, context);
+        //if this throws, our socket code will run the closure, which will make an error object.
+        //its nicer to return an stream with a error message, so just ignore the exception.
     }
+
     return request->wh.get();
 }
 
-void MirConnection::stream_error(
-    std::string const& error_msg,
-    MirWaitHandle& pending_handle, mir_buffer_stream_callback pending_callback, void *pending_context)
+void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<StreamCreationRequest> const& request)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::unique_lock<decltype(mutex)> lock(mutex);
     mf::BufferStreamId id(next_error_id(lock).as_value());
-    auto stream = std::make_shared<mcl::ErrorStream>(error_msg, this, id);
+    auto stream = std::make_shared<mcl::ErrorStream>(error_msg, this, id, request->wh);
     surface_map->insert(id, stream); 
 
-    pending_handle.result_received();
-    if (pending_callback)
-        pending_callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), pending_context);
+    if (request->callback)
+    {
+        request->callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
+    }
+    request->wh->result_received();
 }
 
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(

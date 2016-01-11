@@ -92,7 +92,7 @@ MirSurface::MirSurface(
     std::string const& error,
     MirConnection* conn,
     mir::frontend::SurfaceId id,
-    std::shared_ptr<MirWaitHandle> handle) :
+    std::shared_ptr<MirWaitHandle> const& handle) :
     surface{mcl::make_protobuf_object<mir::protobuf::Surface>()},
     connection_(conn),
     creation_handle(handle)
@@ -112,7 +112,7 @@ MirSurface::MirSurface(
     std::shared_ptr<mircv::InputPlatform> const& input_platform,
     MirSurfaceSpec const& spec,
     mir::protobuf::Surface const& surface_proto,
-    std::shared_ptr<MirWaitHandle> handle)
+    std::shared_ptr<MirWaitHandle> const& handle)
     : server{&the_server},
       debug{debug},
       surface{mcl::make_protobuf_object<mir::protobuf::Surface>(surface_proto)},

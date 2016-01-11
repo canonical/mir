@@ -83,7 +83,6 @@ struct MockServerRequests : mcl::ServerBufferRequests
     MOCK_METHOD3(allocate_buffer, void(geom::Size size, MirPixelFormat format, int usage));
     MOCK_METHOD1(free_buffer, void(int));
     MOCK_METHOD2(submit_buffer, void(int, mcl::ClientBuffer&));
-    MOCK_METHOD0(disconnected, void());
 };
 
 struct BufferVault : public testing::Test
@@ -382,15 +381,6 @@ TEST_F(StartedBufferVault, simply_setting_size_triggers_no_server_interations)
         vault.set_size(new_size);
     }
     Mock::VerifyAndClearExpectations(&mock_requests);
-}
-
-TEST_F(BufferVault, notifies_requests_when_disconnected)
-{
-    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
-        size, format, usage, initial_nbuffers);
-
-    EXPECT_CALL(mock_requests, disconnected());
-    vault.disconnected();
 }
 
 TEST_F(StartedBufferVault, scaling_resizes_buffers_right_away)

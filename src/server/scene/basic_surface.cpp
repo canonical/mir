@@ -841,9 +841,9 @@ int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
     return max_buf;
 }
 
-void ms::BasicSurface::consume(MirEvent const& event)
+void ms::BasicSurface::consume(MirEvent const* event)
 {
-    input_validator.validate_and_dispatch(event);
+    input_validator.validate_and_dispatch(*event);
 }
 
 void ms::BasicSurface::set_keymap(xkb_rule_names const& rules)

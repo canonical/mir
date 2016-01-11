@@ -360,9 +360,6 @@ struct ServerRequests : mcl::ServerBufferRequests
         buffer.set_buffer_id(buffer_id);
         ipc->server_bound_transfer(buffer);   
     }
-
-    void disconnected() {}
-
     std::shared_ptr<StubIpcSystem> ipc;
 };
 

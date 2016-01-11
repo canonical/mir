@@ -253,7 +253,6 @@ public:
 
     void allocate_buffer(geom::Size size, MirPixelFormat format, int usage) override
     {
-        if (disconnected_) return;
         mp::BufferAllocation request;
         request.mutable_id()->set_value(stream_id);
         auto buf_params = request.add_buffer_requests();
@@ -267,7 +266,6 @@ public:
 
     void free_buffer(int buffer_id) override
     {
-        if (disconnected_) return;
         mp::BufferRelease request;
         request.mutable_id()->set_value(stream_id);
         request.add_buffers()->set_buffer_id(buffer_id);
@@ -277,7 +275,6 @@ public:
 
     void submit_buffer(int id, mcl::ClientBuffer&) override
     {
-        if (disconnected_) return;
         mp::BufferRequest request;
         request.mutable_id()->set_value(stream_id);
         request.mutable_buffer()->set_buffer_id(id);
@@ -285,13 +282,7 @@ public:
             google::protobuf::NewCallback(google::protobuf::DoNothing));
     }
 
-    void disconnected() override
-    {
-        disconnected_ = true;
-    }
-
 private:
-    std::atomic<bool> disconnected_{false};
     mclr::DisplayServer& server;
     int stream_id;
     mp::Void protobuf_void;

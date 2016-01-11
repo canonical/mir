@@ -204,8 +204,7 @@ private:
     };
     std::vector<std::shared_ptr<StreamCreationRequest>> stream_requests;
     void stream_created(StreamCreationRequest*);
-    void stream_error(std::string const& error_msg,
-        MirWaitHandle& pending_handle, mir_buffer_stream_callback pending_callback, void *context);
+    void stream_error(std::string const& error_msg, std::shared_ptr<StreamCreationRequest> const& request);
 
     void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.
@@ -214,6 +213,7 @@ private:
 
     mutable std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
+    std::shared_ptr<mir::client::ConnectionSurfaceMap> surface_map;
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const channel;
     mir::client::rpc::DisplayServer server;
     mir::client::rpc::DisplayServerDebug debug;
@@ -228,7 +228,7 @@ private:
     std::unique_ptr<mir::protobuf::Void> set_base_display_configuration_response;
     std::atomic<bool> disconnecting{false};
 
-    mir::frontend::SurfaceId next_error_id(std::lock_guard<std::mutex> const&);
+    mir::frontend::SurfaceId next_error_id(std::unique_lock<std::mutex> const&);
     int surface_error_id{-1};
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
@@ -254,7 +254,6 @@ private:
 
     std::shared_ptr<mir::client::PingHandler> const ping_handler;
 
-    std::shared_ptr<mir::client::ConnectionSurfaceMap> const surface_map;
 
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
 
