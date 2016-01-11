@@ -59,7 +59,8 @@ bool operator==(InputDeviceInfo const& info, std::shared_ptr<mi::Device> const& 
         info.name() == device->name() &&
         info.unique_id() == device->unique_id();
 }
-
+static void PrintTo(mir::protobuf::InputDeviceInfo const &, ::std::ostream*) __attribute__ ((unused));
+void PrintTo(mir::protobuf::InputDeviceInfo const&, ::std::ostream*) {}
 }
 }
 namespace
