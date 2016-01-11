@@ -315,12 +315,10 @@ MirWaitHandle* MirConnection::create_surface(
                 std::string{"Error creating surface: "} + boost::diagnostic_information(ex), this, id, (*request)->wh);
             surface_map->insert(id, surf);
             auto wh = (*request)->wh;
-            auto c = (*request)->cb;
-            auto co = (*request)->context;
             surface_requests.erase(request);
 
             lock.unlock();
-            c(surf.get(), co); 
+            callback(surf.get(), context);
             wh->result_received();
         }
     }
@@ -736,6 +734,10 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
         request = *stream_it;
         stream_requests.erase(stream_it);
     }
+<<<<<<< TREE
+=======
+
+>>>>>>> MERGE-SOURCE
     auto& protobuf_bs = request->response;
 
     if (!protobuf_bs->has_id())
@@ -758,8 +760,12 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
     {
         auto stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, mcl::BufferStreamMode::Producer, platform,
+<<<<<<< TREE
             *protobuf_bs, make_perf_report(logger), std::string{},
             mir::geometry::Size{request->parameters.width(), request->parameters.height()}, nbuffers);
+=======
+            *protobuf_bs, make_perf_report(logger), std::string{}, mir::geometry::Size{0,0}, nbuffers);
+>>>>>>> MERGE-SOURCE
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
 
         if (request->callback)
@@ -802,7 +808,12 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
     {
         server.create_buffer_stream(&params, request->response.get(),
             gp::NewCallback(this, &MirConnection::stream_created, request.get()));
+<<<<<<< TREE
     } catch (std::exception& e)
+=======
+    }
+    catch (std::exception const& ex)
+>>>>>>> MERGE-SOURCE
     {
         //if this throws, our socket code will run the closure, which will make an error object.
         //its nicer to return an stream with a error message, so just ignore the exception.
