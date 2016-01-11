@@ -29,7 +29,6 @@
 
 #include "mir/log.h"
 #include "mir/client_platform.h"
-#include "mir/egl_native_window_factory.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
@@ -378,15 +377,11 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     MirWaitHandle scale_wait_handle;
 };
 
-struct OnScopeExit
-{
-    ~OnScopeExit() { f(); }
-    std::function<void()> const f;
-};
 }
 
 mcl::BufferStream::BufferStream(
     MirConnection* connection,
+    std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     mcl::BufferStreamMode mode,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
@@ -395,7 +390,7 @@ mcl::BufferStream::BufferStream(
     std::string const& surface_name,
     geom::Size ideal_size,
     size_t nbuffers)
-    : connection(connection),
+    : connection_(connection),
       display_server(server),
       mode(mode),
       client_platform(client_platform),
@@ -405,71 +400,17 @@ mcl::BufferStream::BufferStream(
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
       ideal_buffer_size(ideal_size),
-      nbuffers(nbuffers)
+      nbuffers(nbuffers),
+      creation_wait_handle(creation_wait_handle)
 {
-    created(nullptr, nullptr);
-    if (!valid())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
-    perf_report->name_surface(surface_name.c_str());
-}
-
-mcl::BufferStream::BufferStream(
-    MirConnection* connection,
-    mclr::DisplayServer& server,
-    std::shared_ptr<mcl::ClientPlatform> const& client_platform,
-    mp::BufferStreamParameters const& parameters,
-    std::shared_ptr<mcl::PerfReport> const& perf_report,
-    size_t nbuffers,
-    mir_buffer_stream_callback callback,
-    void *context)
-    : connection(connection),
-      display_server(server),
-      mode(BufferStreamMode::Producer),
-      client_platform(client_platform),
-      protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>()},
-      closure{gp::NewPermanentCallback(this, &mcl::BufferStream::created, callback, context)},
-      swap_interval_(1),
-      perf_report(perf_report),
-      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
-      ideal_buffer_size(parameters.width(), parameters.height()),
-      nbuffers(nbuffers)
-{
-    perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
-
-    create_wait_handle.expect_result();
-    try
-    {
-        server.create_buffer_stream(&parameters, protobuf_bs.get(), closure.get());
-    }
-    catch (std::exception const& ex)
-    {
-        protobuf_bs->set_error(std::string{"Error invoking create buffer stream: "} +
-                              boost::diagnostic_information(ex));
-        if (callback)
-            callback(reinterpret_cast<MirBufferStream*>(this), context);
-        if (create_wait_handle.is_pending())
-            create_wait_handle.result_received();
-    }
-}
-
-void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *context)
-{
-    OnScopeExit on_scope_exit{[this, callback, context]
-    {
-        if (callback)
-            callback(reinterpret_cast<MirBufferStream*>(this), context);
-        create_wait_handle.result_received();
-    }};
-
     if (!protobuf_bs->has_id())
     {
         if (!protobuf_bs->has_error())
             protobuf_bs->set_error("Error processing buffer stream create response, no ID (disconnected?)");
-        return;
     }
 
     if (protobuf_bs->has_error())
-        return;
+        BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
 
     try
     {
@@ -494,9 +435,6 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
 
 
         egl_native_window_ = client_platform->create_egl_native_window(this);
-
-        if (connection)
-            connection->on_stream_created(protobuf_bs->id().value(), this);
     }
     catch (std::exception const& error)
     {
@@ -508,6 +446,52 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
             for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
                 ::close(protobuf_bs->buffer().fd(i));
         }
+    }
+
+    if (!valid())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
+    perf_report->name_surface(surface_name.c_str());
+}
+
+mcl::BufferStream::BufferStream(
+    MirConnection* connection,
+    std::shared_ptr<MirWaitHandle> creation_wait_handle,
+    mclr::DisplayServer& server,
+    std::shared_ptr<mcl::ClientPlatform> const& client_platform,
+    mp::BufferStreamParameters const& parameters,
+    std::shared_ptr<mcl::PerfReport> const& perf_report,
+    size_t nbuffers)
+    : connection_(connection),
+      display_server(server),
+      mode(BufferStreamMode::Producer),
+      client_platform(client_platform),
+      protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>()},
+      swap_interval_(1),
+      perf_report(perf_report),
+      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
+      ideal_buffer_size(parameters.width(), parameters.height()),
+      nbuffers(nbuffers),
+      creation_wait_handle(creation_wait_handle)
+{
+    perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
+
+    egl_native_window_ = client_platform->create_egl_native_window(this);
+    if (protobuf_bs->has_buffer())
+    {
+        buffer_depository = std::make_unique<ExchangeSemantics>(
+            display_server,
+            client_platform->create_buffer_factory(),
+            mir::frontend::client_buffer_cache_size,
+            protobuf_bs->buffer(),
+            geom::Size{protobuf_bs->buffer().width(), protobuf_bs->buffer().height()},
+            static_cast<MirPixelFormat>(protobuf_bs->pixel_format()));
+    }
+    else
+    {
+        buffer_depository = std::make_unique<NewBufferSemantics>(
+            client_platform->create_buffer_factory(),
+            std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
+            ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
     }
 }
 
@@ -695,20 +679,6 @@ MirPlatformType mcl::BufferStream::platform_type()
     return client_platform->platform_type();
 }
 
-MirWaitHandle* mcl::BufferStream::get_create_wait_handle()
-{
-    return &create_wait_handle;
-}
-
-MirWaitHandle* mcl::BufferStream::release(
-        mir_buffer_stream_callback callback, void* context)
-{
-    if (connection)
-        return connection->release_buffer_stream(this, callback, context);
-    else 
-        return nullptr;
-}
-
 mf::BufferStreamId mcl::BufferStream::rpc_id() const
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -760,4 +730,9 @@ char const * mcl::BufferStream::get_error_message() const
     }
 
     return error_message.c_str();
+}
+
+MirConnection* mcl::BufferStream::connection() const
+{
+    return connection_;
 }

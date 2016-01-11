@@ -100,7 +100,7 @@ bool mtd::StubSurface::input_area_contains(mir::geometry::Point const& /*point*/
     return false;
 }
 
-void mtd::StubSurface::consume(MirEvent const& /*event*/)
+void mtd::StubSurface::consume(MirEvent const* /*event*/)
 {
 }
 

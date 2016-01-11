@@ -39,7 +39,7 @@ public:
     MOCK_CONST_METHOD0(input_channel, std::shared_ptr<input::InputChannel>());
     MOCK_CONST_METHOD0(cursor_image, std::shared_ptr<graphics::CursorImage>());
     MOCK_CONST_METHOD0(reception_mode, input::InputReceptionMode());
-    MOCK_METHOD1(consume, void(MirEvent const&));
+    MOCK_METHOD1(consume, void(MirEvent const*));
 };
 
 }
