@@ -145,7 +145,7 @@ public:
         std::string const& error,
         MirConnection *allocating_connection,
         mir::frontend::SurfaceId surface_id,
-        std::shared_ptr<MirWaitHandle> handle);
+        std::shared_ptr<MirWaitHandle> const& handle);
 
     MirSurface(
         MirConnection *allocating_connection,
@@ -154,7 +154,7 @@ public:
         std::shared_ptr<mir::client::ClientBufferStream> const& buffer_stream,
         std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
         MirSurfaceSpec const& spec, mir::protobuf::Surface const& surface_proto,
-        std::shared_ptr<MirWaitHandle> handle);
+        std::shared_ptr<MirWaitHandle> const& handle);
 
     ~MirSurface();
 

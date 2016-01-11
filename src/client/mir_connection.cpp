@@ -58,7 +58,6 @@ namespace ml = mir::logging;
 
 namespace
 {
-
 std::shared_ptr<mcl::PerfReport>
 make_perf_report(std::shared_ptr<ml::Logger> const& logger)
 {
@@ -304,7 +303,7 @@ MirWaitHandle* MirConnection::create_surface(
     }
     catch (std::exception const& ex)
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
+        std::unique_lock<decltype(mutex)> lock(mutex);
         auto request = std::find_if(surface_requests.begin(), surface_requests.end(),
             [&](std::shared_ptr<MirConnection::SurfaceCreationRequest> c2) { return c.get() == c2.get(); });
         if (request != surface_requests.end())
@@ -313,22 +312,25 @@ MirWaitHandle* MirConnection::create_surface(
             auto surf = std::make_shared<MirSurface>(
                 std::string{"Error creating surface: "} + boost::diagnostic_information(ex), this, id, (*request)->wh);
             surface_map->insert(id, surf);
-            callback(surf.get(), context);
-            (*request)->wh->result_received();
+            auto wh = (*request)->wh;
             surface_requests.erase(request);
+
+            lock.unlock();
+            callback(surf.get(), context);
+            wh->result_received();
         }
     }
     return c->wh.get();
 }
 
-mf::SurfaceId MirConnection::next_error_id(std::lock_guard<std::mutex> const&)
+mf::SurfaceId MirConnection::next_error_id(std::unique_lock<std::mutex> const&)
 {
     return mf::SurfaceId{surface_error_id--};
 }
 
 void MirConnection::surface_created(SurfaceCreationRequest* request)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::unique_lock<decltype(mutex)> lock(mutex);
     std::shared_ptr<MirSurface> surf {nullptr};
     std::shared_ptr<mcl::ClientBufferStream> stream {nullptr};
     //make sure this request actually was made.
@@ -799,7 +801,7 @@ MirWaitHandle* MirConnection::create_client_buffer_stream(
 
 void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<StreamCreationRequest> const& request)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::unique_lock<decltype(mutex)> lock(mutex);
     mf::BufferStreamId id(next_error_id(lock).as_value());
     auto stream = std::make_shared<mcl::ErrorStream>(error_msg, this, id, request->wh);
     surface_map->insert(id, stream); 
