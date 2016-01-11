@@ -105,7 +105,9 @@ void mclrd::PendingCallCache::force_completion()
     for (auto& call : pending_calls)
     {
         auto& completion = call.second;
+        lock.unlock();
         completion.complete->Run();
+        lock.lock();
     }
 
     pending_calls.erase(pending_calls.begin(), pending_calls.end());

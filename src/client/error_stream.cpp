@@ -20,10 +20,13 @@
 
 namespace mcl = mir::client;
 
-mcl::ErrorStream::ErrorStream(std::string const& error_msg, MirConnection* conn, mir::frontend::BufferStreamId id) :
+mcl::ErrorStream::ErrorStream(
+    std::string const& error_msg, MirConnection* conn,
+    mir::frontend::BufferStreamId id, std::shared_ptr<MirWaitHandle> const& wh) :
     error(error_msg),
     connection_(conn),
-    id(id)
+    id(id),
+    wh(wh)
 {
 }
 

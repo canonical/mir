@@ -64,6 +64,7 @@ public:
     bool gralloc_cannot_be_closed_safely() const;
     int aligned_width(int width) const;
     bool clear_fb_context_fence() const;
+    int fb_gralloc_bits() const;
 
     static void add_options(boost::program_options::options_description& config);
 
@@ -75,6 +76,7 @@ private:
     bool const gralloc_cannot_be_closed_safely_;
     bool const enable_width_alignment_quirk;
     bool const clear_fb_context_fence_;
+    bool const fb_ion_heap_;
 };
 }
 }
