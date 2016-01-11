@@ -256,12 +256,14 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
 
     if (seq.input_devices_size())
     {
-        input_devices->clear();
+        std::vector<mir::input::DeviceData> devices;
+
+        devices.reserve(seq.input_devices_size());
 
         for (auto const& dev : seq.input_devices())
-            input_devices->add_device(input::DeviceData{dev.id(), dev.capabilities(), dev.name(), dev.unique_id()});
+            devices.emplace_back(input::DeviceData{dev.id(), dev.capabilities(), dev.name(), dev.unique_id()});
 
-        input_devices->notify_changes();
+        input_devices->update_devices(std::move(devices));
     }
 
     if (seq.has_lifecycle_event())

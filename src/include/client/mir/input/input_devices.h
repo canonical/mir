@@ -23,6 +23,7 @@
 #include "mir_toolkit/client_types.h"
 
 #include <vector>
+#include <mutex>
 #include <string>
 
 namespace mir
@@ -41,10 +42,9 @@ class InputDevices
 {
 public:
     InputDevices();
-    void clear();
-    void add_device(DeviceData && dev);
-    void notify_changes();
+    void update_devices(std::vector<DeviceData> && data);
 private:
+    std::mutex devices_access;
     std::vector<DeviceData> devices;
 };
 
