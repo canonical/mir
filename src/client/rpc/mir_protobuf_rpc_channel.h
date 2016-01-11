@@ -59,7 +59,7 @@ public:
                           std::shared_ptr<PingHandler> const& ping_handler,
                           std::shared_ptr<EventSink> const& event_sink);
 
-    ~MirProtobufRpcChannel();
+    ~MirProtobufRpcChannel() = default;
 
     // StreamTransport::Observer
     void on_data_available() override;
@@ -110,7 +110,7 @@ private:
 
     void notify_disconnected();
 
-    std::weak_ptr<SurfaceMap> map;
+    std::weak_ptr<SurfaceMap> surface_map;
     std::shared_ptr<DisplayConfiguration> display_configuration;
     std::shared_ptr<LifecycleControl> lifecycle_control;
     std::shared_ptr<PingHandler> const ping_handler;
