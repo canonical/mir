@@ -154,6 +154,8 @@ public:
     EGLNativeDisplayType egl_native_display();
     MirPixelFormat       egl_pixel_format(EGLDisplay, EGLConfig) const;
 
+    void on_stream_created(int id, mir::client::ClientBufferStream* stream);
+
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
     void done_display_configure();
 

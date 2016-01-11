@@ -22,6 +22,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include <mutex>
 #include <condition_variable>
+#include <ostream>
 
 namespace mir_test_framework
 {
@@ -45,6 +46,8 @@ private:
     MirSurface* surface;
     bool visible;
 };
+
+std::ostream& operator<<(std::ostream& os, VisibleSurface const& s);
 }
 
 #endif /* MIR_TEST_FRAMEWORK_VISIBLE_SURFACE_H_ */
