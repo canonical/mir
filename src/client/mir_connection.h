@@ -202,6 +202,7 @@ private:
 
     mutable std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
+    std::shared_ptr<mir::client::ConnectionSurfaceMap> surface_map;
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const channel;
     mir::client::rpc::DisplayServer server;
     mir::client::rpc::DisplayServerDebug debug;
@@ -242,7 +243,6 @@ private:
 
     std::shared_ptr<mir::client::PingHandler> const ping_handler;
 
-    std::shared_ptr<mir::client::ConnectionSurfaceMap> const surface_map;
 
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
 

@@ -110,7 +110,7 @@ private:
 
     void notify_disconnected();
 
-    std::shared_ptr<SurfaceMap> surface_map;
+    std::weak_ptr<SurfaceMap> map;
     std::shared_ptr<DisplayConfiguration> display_configuration;
     std::shared_ptr<LifecycleControl> lifecycle_control;
     std::shared_ptr<PingHandler> const ping_handler;
