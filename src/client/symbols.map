@@ -198,7 +198,7 @@ MIR_CLIENT_9v17 {
     mir_surface_output_event_get_scale;
 } MIR_CLIENT_9.2;
 
-MIR_CLIENT_unreleased {
+MIR_CLIENT_9v18 {
   global:
     mir_buffer_stream_get_error_message;
     mir_surface_output_event_get_output_id;
@@ -244,14 +244,22 @@ MIR_CLIENT_DETAIL_9 {
     }; 
 };
 
-MIR_CLIENT_DETAIL_unreleased {
+MIR_CLIENT_DETAIL_9v18 {
   global:
     extern "C++" { 
       mir::client::DefaultConnectionConfiguration::the_input_devices*;
       mir::events::set_modifier*;
       mir::events::set_cursor_position*;
       mir::events::set_button_state*;
-      mir::input::android::android_pointer_action_from_mir*;
     };
 } MIR_CLIENT_DETAIL_9;
+
+MIR_CLIENT_DETAIL_unreleased {
+  global:
+    extern "C++" { 
+      mir::input::android::android_pointer_action_from_mir*;
+    };
+  local:
+    *;
+} MIR_CLIENT_DETAIL_9v18;
 

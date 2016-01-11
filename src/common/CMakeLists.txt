@@ -4,10 +4,6 @@ set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 set(MIR_COMMON_SOURCES)
 set(MIR_COMMON_REFERENCES)
 
-if (MIR_BUILD_PLATFORM_ANDROID)
-  add_subdirectory(graphics/android)
-endif()
-
 add_subdirectory(fd)
 add_subdirectory(geometry)
 add_subdirectory(logging)

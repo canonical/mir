@@ -1,5 +1,7 @@
-include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
-include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/3rd_party/android-deps)
+include_directories(
+    ${server_common_include_dirs}
+    include/
+)
 
 add_definitions( -DANDROID )
 

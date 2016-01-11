@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_native_buffer.h"
-#include "mir/graphics/android/native_buffer.h"
+#include "native_buffer.h"
 #include "mir/egl_native_surface.h"
 #include "mir/client_buffer.h"
 #include "mir/frontend/client_constants.h"

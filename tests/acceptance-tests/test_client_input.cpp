@@ -590,7 +590,7 @@ TEST_F(TestClientInput, send_mir_input_events_through_surface)
     auto key_event = mir::events::make_event(MirInputDeviceId{0}, 0ns, 0, mir_keyboard_action_down, 0, KEY_M,
                                              mir_input_event_modifier_none);
 
-    server.the_shell()->focused_surface()->consume(*key_event);
+    server.the_shell()->focused_surface()->consume(key_event.get());
 
     first_client.all_events_received.wait_for_at_most_seconds(2);
 }
