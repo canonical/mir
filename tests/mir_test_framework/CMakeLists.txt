@@ -48,6 +48,7 @@ add_library(mir-public-test-framework OBJECT
   testing_server_options.cpp
   temporary_environment_value.cpp
   using_stub_client_platform.cpp
+  visible_surface.cpp
 )
 
 # Umockdev uses glib, which uses the deprecated "register" storage qualifier
