@@ -17,7 +17,7 @@
  */
 
 #include "egl_native_surface_interpreter.h"
-#include "mir/graphics/android/sync_fence.h"
+#include "sync_fence.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/client_buffer.h"
 #include <system/window.h>

@@ -166,7 +166,6 @@ private:
     MirWaitHandle release_wait_handle;
     MirWaitHandle screencast_wait_handle;
     MirWaitHandle interval_wait_handle;
-    MirWaitHandle scale_wait_handle;
     std::unique_ptr<mir::protobuf::Void> protobuf_void;
 
     std::shared_ptr<MemoryRegion> secured_region;

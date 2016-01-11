@@ -29,7 +29,6 @@
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
 #include "builtin_cursor_images.h"
-#include "null_input_send_observer.h"
 #include "null_input_channel_factory.h"
 #include "default_input_device_hub.h"
 #include "default_input_manager.h"
@@ -107,20 +106,9 @@ mir::DefaultServerConfiguration::the_input_sender()
         if (!the_options()->get<bool>(options::enable_input_opt))
             return std::make_shared<NullInputSender>();
         else
-            return std::make_shared<mia::InputSender>(the_scene(), the_main_loop(), the_input_send_observer(), the_input_report());
+            return std::make_shared<mia::InputSender>(the_scene(), the_main_loop(), the_input_report());
         });
 }
-
-std::shared_ptr<mi::InputSendObserver>
-mir::DefaultServerConfiguration::the_input_send_observer()
-{
-    return input_send_observer(
-        [this]()
-        {
-            return std::make_shared<mi::NullInputSendObserver>();
-        });
-}
-
 
 std::shared_ptr<msh::InputTargeter>
 mir::DefaultServerConfiguration::the_input_targeter()

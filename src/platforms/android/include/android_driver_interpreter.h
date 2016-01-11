@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_DRIVER_INTERPRETER_H_
 #define MIR_GRAPHICS_ANDROID_DRIVER_INTERPRETER_H_
 
-#include "mir/graphics/android/native_buffer.h"
+#include "native_buffer.h"
 #include <system/window.h>
 #include <memory>
 

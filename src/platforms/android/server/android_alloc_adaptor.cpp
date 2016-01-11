@@ -17,9 +17,9 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/android_native_buffer.h"
-#include "mir/graphics/android/sync_fence.h"
-#include "mir/graphics/android/android_format_conversion-inl.h"
+#include "android_native_buffer.h"
+#include "sync_fence.h"
+#include "android_format_conversion-inl.h"
 #include "android_alloc_adaptor.h"
 #include "device_quirks.h"
 
@@ -104,7 +104,7 @@ int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
     case mga::BufferUsage::use_hardware:
         return (GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER);
     case mga::BufferUsage::use_framebuffer_gles:
-        return (GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_FB);
+        return quirks->fb_gralloc_bits();
     case mga::BufferUsage::use_software:
         return (GRALLOC_USAGE_SW_WRITE_OFTEN | GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE);
     default:
