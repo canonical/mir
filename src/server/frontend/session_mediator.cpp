@@ -1022,8 +1022,12 @@ void mf::SessionMediator::raise_surface_with_cookie(
     auto const cookie     = request->cookie();
     auto const surface_id = request->surface_id();
 
-    MirCookie const mir_cookie = {cookie.timestamp(), cookie.mac()};
-    if (!cookie_factory->attest_timestamp(mir_cookie))
+    // FIXME 160 bits coming soon!
+    auto cookie_mac = cookie.mac();
+    auto const* mac_ptr = reinterpret_cast<uint8_t const*>(&cookie_mac);
+    std::vector<uint8_t> mac(mac_ptr, mac_ptr + sizeof(cookie.mac()));
+
+    if (!cookie_factory->attest_timestamp(cookie.timestamp(), mac))
         throw mir::SecurityCheckFailed();
 
     shell->raise_surface_with_timestamp(session, mf::SurfaceId{surface_id.value()}, cookie.timestamp());

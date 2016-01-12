@@ -84,8 +84,8 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
     MirSurface* surface1;
     MirSurface* surface2;
 
-    std::vector<MirCookie> key_cookies;
-    std::vector<MirCookie> pointer_cookies;
+    //std::vector<MirCookie> key_cookies;
+    //std::vector<MirCookie> pointer_cookies;
 
     MirLifecycleState lifecycle_state{mir_lifecycle_state_resumed};
 
@@ -109,7 +109,7 @@ void lifecycle_changed(MirConnection* /*connection*/, MirLifecycleState state, v
     auto client = reinterpret_cast<RaiseSurfaces*>(ctx);
     client->lifecycle_state = state;
 }
-
+/*
 bool wait_for_n_events(size_t n, std::vector<MirCookie>& cookies)
 {
     bool all_events = mt::spin_wait_for_condition_or_timeout(
@@ -122,10 +122,12 @@ bool wait_for_n_events(size_t n, std::vector<MirCookie>& cookies)
    EXPECT_TRUE(all_events);
    return all_events;
 }
+*/
 
 }
 
 // FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
+/*
 TEST_F(RaiseSurfaces, DISABLED_key_event_with_cookie)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
@@ -184,3 +186,4 @@ TEST_F(RaiseSurfaces, DISABLED_client_connection_close_invalid_cookie)
 
     EXPECT_TRUE(connection_close);
 }
+*/

@@ -20,9 +20,9 @@ configure_file(
 include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
-  ${PROJECT_SOURCE_DIR}/include/cookie
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/src/include/client
+  ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${DRM_INCLUDE_DIRS}
 )
 

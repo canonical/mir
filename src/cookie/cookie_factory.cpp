@@ -16,6 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#include "mir/cookie.h"
 #include "mir/cookie_factory.h"
 
 #include <algorithm>
@@ -108,33 +109,39 @@ public:
 
     virtual ~CookieFactoryNettle() noexcept = default;
 
-    MirCookie timestamp_to_cookie(uint64_t const& timestamp) override
+    std::vector<uint8_t> timestamp_to_mac(uint64_t const& timestamp) override
     {
-        MirCookie cookie { timestamp, 0 };
-        calculate_mac(cookie);
-        return cookie;
+        return calculate_mac(timestamp);
     }
 
-    bool attest_timestamp(MirCookie const& cookie) override
+    bool attest_timestamp(uint64_t const& timestamp, std::vector<uint8_t> const& mac) override
     {
-        return verify_mac(cookie);
+        return verify_mac(timestamp, mac);
     }
 
 private:
-    void calculate_mac(MirCookie& cookie)
+    std::vector<uint8_t> calculate_mac(uint64_t const& timestamp)
     {
-        hmac_sha1_update(&ctx, sizeof(cookie.timestamp), reinterpret_cast<uint8_t*>(&cookie.timestamp));
-        hmac_sha1_digest(&ctx, sizeof(cookie.mac), reinterpret_cast<uint8_t*>(&cookie.mac));
+        // FIXME Soon to change to 160bits, for now uint64_t
+        std::vector<uint8_t> mac(sizeof(uint64_t));
+        hmac_sha1_update(&ctx, sizeof(timestamp), reinterpret_cast<uint8_t const*>(&timestamp));
+        hmac_sha1_digest(&ctx, sizeof(uint64_t), reinterpret_cast<uint8_t*>(mac.data()));
+
+        return mac;
     }
 
-    bool verify_mac(MirCookie const& cookie)
+    bool verify_mac(uint64_t timestamp, std::vector<uint8_t> const& mac)
     {
-        decltype(cookie.mac) calculated_mac;
-        uint8_t* message = reinterpret_cast<uint8_t*>(const_cast<decltype(cookie.timestamp)*>(&cookie.timestamp));
-        hmac_sha1_update(&ctx, sizeof(cookie.timestamp), message);
+        // FIXME Soon to change to 160bits!
+        uint64_t calculated_mac;
+        uint8_t* message = reinterpret_cast<uint8_t*>(const_cast<decltype(timestamp)*>(&timestamp));
+        hmac_sha1_update(&ctx, sizeof(timestamp), message);
         hmac_sha1_digest(&ctx, sizeof(calculated_mac), reinterpret_cast<uint8_t*>(&calculated_mac));
 
-        return calculated_mac == cookie.mac;
+        // FIXME Soon to come 160bit + a constant time memcmp!
+        uint64_t real_mac = *reinterpret_cast<uint64_t*>(const_cast<uint8_t*>(mac.data()));
+
+        return calculated_mac == real_mac;
     }
 
     struct hmac_sha1_ctx ctx;

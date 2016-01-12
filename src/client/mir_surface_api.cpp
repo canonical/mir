@@ -20,7 +20,6 @@
 
 #include "mir_toolkit/mir_surface.h"
 #include "mir_toolkit/mir_wait.h"
-#include "mir_toolkit/cookie.h"
 #include "mir/require.h"
 
 #include "mir_connection.h"
@@ -488,7 +487,7 @@ MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrient
     return result;
 }
 
-void mir_surface_raise_with_cookie(MirSurface* surf, MirCookie const cookie)
+void mir_surface_raise_with_cookie(MirSurface* surf, MirCookie const* cookie)
 {
     mir::require(mir_surface_is_valid(surf));
 

@@ -19,8 +19,6 @@
 #ifndef MIR_COOKIE_COOKIE_FACTORY_H_
 #define MIR_COOKIE_COOKIE_FACTORY_H_
 
-#include "mir_toolkit/cookie.h"
-
 #include <memory>
 #include <vector>
 
@@ -82,20 +80,21 @@ public:
     virtual ~CookieFactory() noexcept = default;
 
     /**
-    *   Turns a timestamp into a MAC and returns a MirCookie.
+    *   Turns a timestamp into a MAC and returns a std::vector<uint8_t> which represents a MAC.
     *
     *   \param [in] timestamp The timestamp
-    *   \return               MirCookie with the stored MAC and timestamp
+    *   \return               std::vector<uint8_t> which represent the MAC
     */
-    virtual MirCookie timestamp_to_cookie(uint64_t const& timestamp) = 0;
+    virtual std::vector<uint8_t> timestamp_to_mac(uint64_t const& timestamp) = 0;
 
     /**
-    *   Checks that a MirCookie is a valid MirCookie.
+    *   Checks that a timestamp and a MAC is a valid Cookie.
     *
-    *   \param [in] cookie  A created MirCookie
-    *   \return             True when the MirCookie is valid, False when the MirCookie is not valid
+    *   \param [in] timestamp The timestamp used when creating the MAC
+    *   \param [in] MAC       std::vector<uint8_t> representing the MAC
+    *   \return               True when the timestamp and the MAC are valid, False when not valid
     */
-    virtual bool attest_timestamp(MirCookie const& cookie) = 0;
+    virtual bool attest_timestamp(uint64_t const& timestamp, std::vector<uint8_t> const& mac) = 0;
 
     /**
      * Absolute minimum size of secret key the CookieFactory will accept.

@@ -36,10 +36,10 @@ namespace mis = mir::input::synthesis;
 
 namespace
 {
-std::chrono::seconds const max_wait{4};
-void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx);
+//std::chrono::seconds const max_wait{4};
+//void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx);
 }
-
+/*
 class ClientCookies : public mtf::ConnectedClientWithASurface
 {
 public:
@@ -81,7 +81,7 @@ public:
 namespace
 {
 // FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-void cookie_capturing_callback(MirSurface*, MirEvent const* /*ev*/, void* /*ctx*/)
+void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
 {
 }
 
@@ -167,3 +167,4 @@ TEST_F(ClientCookies, DISABLED_touch_click_events_have_attestable_cookies)
         EXPECT_TRUE(factory->attest_timestamp(out_cookies.back()));
     }
 }
+*/

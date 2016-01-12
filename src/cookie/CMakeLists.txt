@@ -12,6 +12,7 @@ configure_file(
 )
 
 include_directories(
+  ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${PROJECT_SOURCE_DIR}/include/cookie
   ${NETTLE_INCLUDE_DIRS}
 )
@@ -40,7 +41,7 @@ install(
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/include/cookie/mir ${CMAKE_SOURCE_DIR}/include/cookie/mir_toolkit
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/cookie/mir
   DESTINATION "include/mircookie"
 )
 
