@@ -139,7 +139,7 @@ mc::BufferQueue::BufferQueue(
     : nbuffers{nbuffers},
       frame_deadlines_threshold{-1},  // Disable scaling by default
       frame_deadlines_met{0},
-      scheduled_ghost_frames{0},
+      scheduled_extra_frames{0},
       frame_dropping_enabled{false},
       current_compositor_buffer_valid{false},
       the_properties{props},
@@ -274,7 +274,7 @@ void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
      * is falling behind. Otherwise the compositor itself goes to sleep
      * and wouldn't be able to tell a slow client from a fast one.
      */
-    scheduled_ghost_frames = frame_deadlines_threshold - 1;
+    scheduled_extra_frames = frame_deadlines_threshold - 1;
 }
 
 std::shared_ptr<mg::Buffer>
@@ -291,8 +291,8 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
          * We only need to overschedule one display at most for the
          * slow client detection to work.
          */
-        if (scheduled_ghost_frames > 0)
-            --scheduled_ghost_frames;
+        if (scheduled_extra_frames > 0)
+            --scheduled_extra_frames;
 
         if (ready_to_composite_queue.empty())
             frame_deadlines_met = 0;
@@ -485,8 +485,8 @@ int mc::BufferQueue::buffers_ready_for_compositor(void const* user_id) const
      * idle is the extra frame wasted. Sounds like a reasonable price to pay
      * for dynamic performance monitoring.
      */
-    if (frame_deadlines_threshold >= 0 && scheduled_ghost_frames > 0)
-        count += scheduled_ghost_frames;
+    if (frame_deadlines_threshold >= 0 && scheduled_extra_frames > 0)
+        count += scheduled_extra_frames;
 
     return count;
 }
@@ -679,7 +679,7 @@ void mc::BufferQueue::drop_old_buffers()
        release(buffer, std::move(lock));
     }
 
-    scheduled_ghost_frames = 0;
+    scheduled_extra_frames = 0;
 }
 
 void mc::BufferQueue::drop_client_requests()
