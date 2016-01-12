@@ -80,18 +80,18 @@ public:
     virtual ~CookieFactory() noexcept = default;
 
     /**
-    *   Turns a timestamp into a MAC and returns a std::vector<uint8_t> which represents a MAC.
+    *   Turns a timestamp into a MAC and returns an std::vector<uint8_t> which represents a MAC.
     *
     *   \param [in] timestamp The timestamp
-    *   \return               std::vector<uint8_t> which represent the MAC
+    *   \return               std::vector<uint8_t> which represents the MAC
     */
     virtual std::vector<uint8_t> timestamp_to_mac(uint64_t const& timestamp) = 0;
 
     /**
-    *   Checks that a timestamp and a MAC is a valid Cookie.
+    *   Checks that a timestamp and a MAC are valid.
     *
-    *   \param [in] timestamp The timestamp used when creating the MAC
-    *   \param [in] MAC       std::vector<uint8_t> representing the MAC
+    *   \param [in] timestamp The timestamp used when creating the passed in MAC
+    *   \param [in] MAC       The MAC generated with timestamp_to_mac
     *   \return               True when the timestamp and the MAC are valid, False when not valid
     */
     virtual bool attest_timestamp(uint64_t const& timestamp, std::vector<uint8_t> const& mac) = 0;
