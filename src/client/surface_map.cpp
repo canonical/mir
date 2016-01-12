@@ -33,7 +33,6 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
     if (it != surfaces.end())
     {
         auto const surface = it->second;
-        lk.unlock();
         exec(surface.get());
     }
     else
@@ -64,7 +63,6 @@ void mcl::ConnectionSurfaceMap::with_stream_do(
     if (it != streams.end())
     {
         auto const stream = it->second;
-        lk.unlock();
         exec(stream.get());
     }
     else
@@ -79,11 +77,7 @@ void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBuf
 {
     std::shared_lock<decltype(guard)> lk(guard);
     for(auto const& stream : streams)
-    {
-        auto s = stream.second;
-        lk.unlock();
-        fn(s.get());
-    }
+        fn(stream.second.get());
 }
 
 void mcl::ConnectionSurfaceMap::insert(
