@@ -509,8 +509,9 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
         egl_native_window_ = client_platform->create_egl_native_window(this);
 
         // This might seem like something to provide during creation but
-        // it's only used when overridden by the environment. So not something
-        // terribly important to know for creation usually.
+        // knowing the swap interval is not a precondition to creation. It's
+        // only a precondition to your second and subsequent swaps, so don't
+        // bother the creation parameters with this stuff...
         if (fixed_swap_interval)
             force_swap_interval(swap_interval_);
 
