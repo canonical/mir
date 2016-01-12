@@ -443,12 +443,6 @@ size_t mir_input_event_get_cookie_size(MirInputEvent const* ev)
 // TODO size unused for now until we switch to 160bit for the MAC!
 void mir_input_event_get_cookie(MirInputEvent const* ev, MirCookie* cookie, size_t /*size*/)
 {
-    if (!cookie)
-    {
-        mir::log_critical("NULL was passed in as the MirCookie");
-        abort();
-    }
-
     auto const* old_ev = old_ev_from_new(ev);
 
     if(mir_event_get_type(old_ev) != mir_event_type_input)
