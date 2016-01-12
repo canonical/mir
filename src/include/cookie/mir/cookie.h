@@ -21,24 +21,10 @@
 
 #include <stdint.h>
 
-/**
- * \addtogroup mir_toolkit
- * @{
- */
-/* This is C code. Not C++. */
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct MirCookie
 {
     uint64_t timestamp;
     uint64_t mac;
 } MirCookie;
-
-#ifdef __cplusplus
-}
-#endif
-/**@}*/
 
 #endif // MIR_TOOLKIT_COOKIE_FACTORY_H_
