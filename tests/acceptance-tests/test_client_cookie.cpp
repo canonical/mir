@@ -39,6 +39,7 @@ namespace
 std::chrono::seconds const max_wait{4};
 void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx);
 }
+
 class ClientCookies : public mtf::ConnectedClientWithASurface
 {
 public:
