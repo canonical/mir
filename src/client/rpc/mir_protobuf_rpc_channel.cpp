@@ -220,9 +220,6 @@ void mclr::MirProtobufRpcChannel::send_message(
     mir::protobuf::wire::Invocation const& invocation,
     std::vector<mir::Fd>& fds)
 {
-    if (disconnected)
-        throw std::runtime_error("DISCONNECTED");
-
     const size_t size = body.ByteSize();
     const unsigned char header_bytes[2] =
     {
