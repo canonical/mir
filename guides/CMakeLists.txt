@@ -13,7 +13,7 @@ ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_BINARY_DIR}/doc/html/cppguide/styleguide.css
     # See discussion above.
     COMMAND mkdir -p ${CMAKE_BINARY_DIR}/doc/html/cppguide
-    COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/styleguide.css ${CMAKE_BINARY_DIR}/doc/html/cppguide/styleguide.css
+    COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/styleguide.css ${CMAKE_CURRENT_SOURCE_DIR}/favicon.ico ${CMAKE_BINARY_DIR}/doc/html/cppguide/
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/styleguide.css
     )
 
