@@ -271,6 +271,17 @@ TEST_F(AndroidInputSender, can_send_consumeable_mir_motion_events)
     EXPECT_EQ(AINPUT_SOURCE_TOUCHSCREEN, client_motion_event.getSource());
 }
 
+TEST_F(AndroidInputSender, non_input_clients_dont_crash_the_server)
+{   // Regression test for LP: #1528438
+    register_surface();
+
+    EXPECT_NO_THROW(
+        {
+            for (int i = 0; i < 10000; ++i)
+                sender.send_event(*motion_event, channel);
+        });
+}
+
 TEST_F(AndroidInputSender, sends_pointer_events)
 {
     using namespace ::testing;
