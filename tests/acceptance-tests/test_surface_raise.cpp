@@ -42,11 +42,16 @@ namespace
 {
 std::chrono::seconds const max_wait{4};
 void cookie_capturing_callback(MirSurface* surface, MirEvent const* ev, void* ctx);
-void lifecycle_changed(MirConnection* /* connection */, MirLifecycleState state, void* ctx);
 }
 
 struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
 {
+    ~RaiseSurfaces()
+    {
+        for (auto& e : out_cookies)
+            delete[] (uint8_t*)e;
+    }
+
     void SetUp() override
     {
         ConnectedClientHeadlessServer::SetUp();
@@ -77,15 +82,13 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
             std::chrono::seconds{max_wait});
 
         EXPECT_TRUE(surface_fullscreen);
-
-        mir_connection_set_lifecycle_event_callback(connection, lifecycle_changed, this);
     }
 
     MirSurface* surface1;
     MirSurface* surface2;
 
-    //std::vector<MirCookie> key_cookies;
-    //std::vector<MirCookie> pointer_cookies;
+    std::vector<MirCookie*> out_cookies;
+    size_t event_count{0};
 
     MirLifecycleState lifecycle_state{mir_lifecycle_state_resumed};
 
@@ -99,56 +102,86 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
 
 namespace
 {
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* /*ev*/, void* /*ctx*/)
+
+MirCookie* get_cookie(MirInputEvent const* iev)
 {
+    auto const size = mir_input_event_get_cookie_size(iev);
+    MirCookie* cookie = (MirCookie*)(new uint8_t[size]);
+    mir_input_event_get_cookie(iev, cookie, size);
+
+    return cookie;
 }
 
-void lifecycle_changed(MirConnection* /*connection*/, MirLifecycleState state, void* ctx)
+void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void* ctx)
 {
-    auto client = reinterpret_cast<RaiseSurfaces*>(ctx);
-    client->lifecycle_state = state;
+    auto const event_type = mir_event_get_type(ev);
+    auto raise_surfaces = reinterpret_cast<RaiseSurfaces*>(ctx);
+    
+    if (event_type == mir_event_type_input)
+    {   
+        auto const* iev = mir_event_get_input_event(ev);
+        if (mir_input_event_has_cookie(iev))
+        {   
+            raise_surfaces->out_cookies.push_back(get_cookie(iev));
+        }
+        
+        raise_surfaces->event_count++;
+    }
 }
-/*
-bool wait_for_n_events(size_t n, std::vector<MirCookie>& cookies)
+
+bool wait_for_n_events(size_t n, RaiseSurfaces const* raise_surfaces)
 {
     bool all_events = mt::spin_wait_for_condition_or_timeout(
-        [&n, &cookies]
+        [&n, &raise_surfaces]
         {
-            return cookies.size() >= n;
+            return raise_surfaces->event_count >= n;
         },
         std::chrono::seconds{max_wait});
 
    EXPECT_TRUE(all_events);
    return all_events;
 }
-*/
+
+bool attempt_focus(MirSurface* surface, MirCookie const* cookie)
+{
+    mir_surface_raise_with_cookie(surface, cookie);
+    bool surface_becomes_focused = mt::spin_wait_for_condition_or_timeout(
+        [&surface]
+        {
+            return mir_surface_get_focus(surface) == mir_surface_focused;
+        },
+        std::chrono::seconds{max_wait});
+ 
+    return surface_becomes_focused;
+}
 
 }
 
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-/*
-TEST_F(RaiseSurfaces, DISABLED_key_event_with_cookie)
+TEST_F(RaiseSurfaces, key_event_with_cookie)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
-    if (wait_for_n_events(1, key_cookies))
+
+    int events = 1;
+    if (wait_for_n_events(events, this))
     {
+        ASSERT_FALSE(out_cookies.empty());
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
-        // EXPECT_TRUE attempt_focus surface2 key_cookies.back()
+        attempt_focus(surface2, out_cookies.back());
     }
 }
 
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-TEST_F(RaiseSurfaces, DISABLED_older_timestamp_does_not_focus)
+TEST_F(RaiseSurfaces, older_timestamp_does_not_focus)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_M));
-    if (wait_for_n_events(2, key_cookies))
+
+    int events = 2;
+    if (wait_for_n_events(events, this))
     {
-        EXPECT_TRUE(key_cookies.front().timestamp < key_cookies.back().timestamp);
+        ASSERT_FALSE(out_cookies.empty());
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
 
-        // mir_surface_raise_with_cookie
+        mir_surface_raise_with_cookie(surface1, out_cookies.front());
 
         // Need to wait for this call to actually go through
         std::this_thread::sleep_for(std::chrono::milliseconds{1000});
@@ -156,34 +189,18 @@ TEST_F(RaiseSurfaces, DISABLED_older_timestamp_does_not_focus)
     }
 }
 
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-TEST_F(RaiseSurfaces, DISABLED_motion_events_dont_prevent_raise)
+TEST_F(RaiseSurfaces, motion_events_dont_prevent_raise)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_M));
-    if (wait_for_n_events(2, key_cookies))
+    if (wait_for_n_events(2, this))
     {
         fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
-        if (wait_for_n_events(1, pointer_cookies))
+        if (wait_for_n_events(1, this))
         {
+            ASSERT_FALSE(out_cookies.empty());
             EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
-            // EXPECT_TRUE attempt_focus surface1 key_cookies.back()
+            EXPECT_TRUE(attempt_focus(surface1, out_cookies.back()));
         }
     }
 }
-
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-TEST_F(RaiseSurfaces, DISABLED_client_connection_close_invalid_cookie)
-{
-    // mir_surface_raise_with_cookie
-
-    bool connection_close = mt::spin_wait_for_condition_or_timeout(
-        [this]
-        {
-            return lifecycle_state == mir_lifecycle_connection_lost;
-        },
-        std::chrono::seconds{max_wait});
-
-    EXPECT_TRUE(connection_close);
-}
-*/

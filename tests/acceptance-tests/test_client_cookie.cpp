@@ -36,10 +36,9 @@ namespace mis = mir::input::synthesis;
 
 namespace
 {
-//std::chrono::seconds const max_wait{4};
-//void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx);
+std::chrono::seconds const max_wait{4};
+void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx);
 }
-/*
 class ClientCookies : public mtf::ConnectedClientWithASurface
 {
 public:
@@ -47,6 +46,12 @@ public:
     {
         server.override_the_cookie_factory([this] ()
             { return mir::cookie::CookieFactory::create_saving_secret(cookie_secret); });
+    }
+
+    ~ClientCookies()
+    {
+        for (auto& e : out_cookies)
+            delete[] (uint8_t*)e;
     }
 
     void SetUp() override
@@ -64,7 +69,8 @@ public:
     }
 
     std::vector<uint8_t> cookie_secret;
-    std::vector<MirCookie> out_cookies;
+    std::vector<MirCookie*> out_cookies;
+    size_t event_count{0};
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
@@ -80,17 +86,40 @@ public:
 
 namespace
 {
+
+MirCookie* get_cookie(MirInputEvent const* iev)
+{
+    auto const size = mir_input_event_get_cookie_size(iev);
+    MirCookie* cookie = (MirCookie*)(new uint8_t[size]);
+    mir_input_event_get_cookie(iev, cookie, size);
+
+    return cookie;
+}
+
 // FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
 void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
 {
+    auto const event_type = mir_event_get_type(ev);
+    auto client_cookie = reinterpret_cast<ClientCookies*>(ctx);
+
+    if (event_type == mir_event_type_input)
+    {
+        auto const* iev = mir_event_get_input_event(ev);
+        if (mir_input_event_has_cookie(iev))
+        {
+            client_cookie->out_cookies.push_back(get_cookie(iev));
+        }
+
+        client_cookie->event_count++;
+    }
 }
 
-bool wait_for_n_events(size_t n, std::vector<MirCookie>& cookies)
+bool wait_for_n_events(size_t n, ClientCookies* client_cookie)
 {
     bool all_events = mt::spin_wait_for_condition_or_timeout(
-        [&n, &cookies]
+        [&n, &client_cookie]
         {
-            return cookies.size() >= n;
+            return client_cookie->event_count >= n;
         },
         std::chrono::seconds{max_wait});
 
@@ -99,41 +128,47 @@ bool wait_for_n_events(size_t n, std::vector<MirCookie>& cookies)
 }
 }
 
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-TEST_F(ClientCookies, DISABLED_keyboard_events_have_attestable_cookies)
+TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
-    if (wait_for_n_events(1, out_cookies))
+
+    int events = 1;
+    if (wait_for_n_events(events, this))
     {
+        ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
         EXPECT_TRUE(factory->attest_timestamp(out_cookies.back()));
     }
 }
 
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-TEST_F(ClientCookies, DISABLED_pointer_motion_events_do_not_have_attestable_cookies)
+TEST_F(ClientCookies, pointer_motion_events_do_not_have_attestable_cookies)
 {
+    // with movement generates 2 events
     fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
-    if (wait_for_n_events(1, out_cookies))
+
+    int events = 2;
+    if (wait_for_n_events(events, this))
     {
-        auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        EXPECT_FALSE(factory->attest_timestamp(out_cookies.back()));
+        EXPECT_EQ(event_count, events);
+        EXPECT_TRUE(out_cookies.empty());
     }
 }
 
-TEST_F(ClientCookies, DISABLED_pointer_click_events_have_attestable_cookies)
+TEST_F(ClientCookies, pointer_click_events_have_attestable_cookies)
 {
     fake_pointer->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_pointer->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
-    if (wait_for_n_events(2, out_cookies))
+
+    int events = 2;
+    if (wait_for_n_events(events, this))
     {
+        ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
         EXPECT_TRUE(factory->attest_timestamp(out_cookies.back()));
     }
 }
 
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-TEST_F(ClientCookies, DISABLED_touch_motion_events_do_not_have_attestable_cookies)
+TEST_F(ClientCookies, touch_motion_events_do_not_have_attestable_cookies)
 {
     fake_touch_screen->emit_event(
          mis::a_touch_event()
@@ -146,25 +181,26 @@ TEST_F(ClientCookies, DISABLED_touch_motion_events_do_not_have_attestable_cookie
         .at_position({1, 1})
         );
 
-    if (wait_for_n_events(2, out_cookies))
+    int events = 2;
+    if (wait_for_n_events(events, this))
     {
-        auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        EXPECT_FALSE(factory->attest_timestamp(out_cookies.back()));
+        EXPECT_EQ(event_count, events);
+        EXPECT_EQ(out_cookies.size(), 1);
     }
 }
 
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-TEST_F(ClientCookies, DISABLED_touch_click_events_have_attestable_cookies)
+TEST_F(ClientCookies, touch_click_events_have_attestable_cookies)
 {
     fake_touch_screen->emit_event(
          mis::a_touch_event()
         .at_position({0, 0})
         );
 
-    if (wait_for_n_events(1, out_cookies))
+    int events = 1;
+    if (wait_for_n_events(events, this))
     {
+        ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
         EXPECT_TRUE(factory->attest_timestamp(out_cookies.back()));
     }
 }
-*/

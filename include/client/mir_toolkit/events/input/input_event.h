@@ -22,6 +22,7 @@
 #include "mir_toolkit/events/event.h"
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 /**
@@ -32,6 +33,8 @@ extern "C" {
 #endif
 
 typedef int64_t MirInputDeviceId;
+
+typedef struct MirCookie MirCookie;
 
 typedef enum {
     mir_input_event_type_key = 0,
@@ -131,6 +134,29 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev);
  *                  mir_input_event_type_pointer
  */
 MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev);
+
+
+/* Tells if the MirInputEvent has a MirCookie
+ *
+ * \params[in] ev The input event
+ * \return        True if the input event has a MirCookie
+ */
+bool mir_input_event_has_cookie(MirInputEvent const* ev);
+
+/*
+ *
+ * \params[in] ev The input event
+ * \return        The number of bytes the MirCookie will require
+ */
+size_t mir_input_event_get_cookie_size(MirInputEvent const* ev);
+
+/*
+ *
+ * \params[in] ev     The input event
+ * \params[in] cookie An allocated MirCookie with exactly cookie_size bytes
+ * \params[in] size   The size of the MirCookie
+ */
+void mir_input_event_get_cookie(MirInputEvent const* ev, MirCookie* cookie, size_t size);
 
 #ifdef __cplusplus
 }

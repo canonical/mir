@@ -18,6 +18,7 @@
 
 #define MIR_LOG_COMPONENT "input-event-access"
 
+#include "mir/cookie.h"
 #include "mir/event_type_to_string.h"
 #include "mir/events/event_private.h"
 #include "mir/log.h"
@@ -394,4 +395,79 @@ float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis ax
        mir::log_critical("Invalid axis enumeration " + std::to_string(axis));
        abort();
    }
+}
+
+bool mir_input_event_has_cookie(MirInputEvent const* ev)
+{
+    switch (mir_input_event_get_type(ev))
+    {
+        case mir_input_event_type_key:
+            return true;
+        case mir_input_event_type_pointer:
+        {
+            auto const* pev = mir_input_event_get_pointer_event(ev);
+            auto const pev_action = mir_pointer_event_action(pev);
+            return (pev_action == mir_pointer_action_button_up ||
+                    pev_action == mir_pointer_action_button_down);
+        }
+        case mir_input_event_type_touch:
+        {
+            auto const* tev = mir_input_event_get_touch_event(ev);
+            auto const point_count = mir_touch_event_point_count(tev);
+            for (size_t i = 0; i < point_count; i++)
+            {
+                auto const tev_action = mir_touch_event_action(tev, i);
+                if (tev_action == mir_touch_action_up ||
+                    tev_action == mir_touch_action_down)
+                {
+                    return true;
+                }
+            }
+            break;
+        }
+    }
+
+    return false;
+}
+
+// TODO Waiting for MAC to be 160bits to finish this correctly! For now its 8bytes!
+size_t mir_input_event_get_cookie_size(MirInputEvent const* ev)
+{
+    if (mir_input_event_has_cookie(ev))
+        return sizeof(MirCookie);
+
+    /* No mac == no size! */
+    return 0;
+}
+
+// TODO size unused for now until we switch to 160bit for the MAC!
+void mir_input_event_get_cookie(MirInputEvent const* ev, MirCookie* cookie, size_t /*size*/)
+{
+    if (!cookie)
+    {
+        mir::log_critical("NULL was passed in as the MirCookie");
+        abort();
+    }
+
+    auto const* old_ev = old_ev_from_new(ev);
+
+    if(mir_event_get_type(old_ev) != mir_event_type_input)
+    {
+        mir::log_critical("expected input event but event was of type " + mir::event_type_to_string(old_ev->type));
+        abort();
+    }
+
+    cookie->timestamp = mir_input_event_get_event_time(ev);
+
+    switch (old_ev->type)
+    {
+    case mir_event_type_motion:
+        cookie->mac = old_ev->motion.mac;
+        break;
+    case mir_event_type_key:
+        cookie->mac = old_ev->key.mac;
+        break;
+    default:
+        abort();
+    }
 }

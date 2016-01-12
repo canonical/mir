@@ -22,6 +22,7 @@
 #include <memory>
 #include <vector>
 
+struct MirCookie;
 namespace mir
 {
 namespace cookie
@@ -86,6 +87,14 @@ public:
     *   \return               std::vector<uint8_t> which represents the MAC
     */
     virtual std::vector<uint8_t> timestamp_to_mac(uint64_t const& timestamp) = 0;
+
+    /**
+    *   Checks that a MirCookie is valid.
+    *
+    *   \param [in] cookie A MirCookie
+    *   \return            True when the MirCookie is valid, False when not valid
+    */
+    virtual bool attest_timestamp(MirCookie const* cookie) = 0;
 
     /**
     *   Checks that a timestamp and a MAC are valid.

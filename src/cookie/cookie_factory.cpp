@@ -114,9 +114,17 @@ public:
         return calculate_mac(timestamp);
     }
 
+    bool attest_timestamp(MirCookie const* cookie) override
+    {
+        return verify_mac(cookie->timestamp, cookie->mac);
+    }
+
     bool attest_timestamp(uint64_t const& timestamp, std::vector<uint8_t> const& mac) override
     {
-        return verify_mac(timestamp, mac);
+        // FIXME Soon to come 160bit + a constant time memcmp!
+        uint64_t real_mac = *reinterpret_cast<uint64_t*>(const_cast<uint8_t*>(mac.data()));
+
+        return verify_mac(timestamp, real_mac);
     }
 
 private:
@@ -130,7 +138,7 @@ private:
         return mac;
     }
 
-    bool verify_mac(uint64_t timestamp, std::vector<uint8_t> const& mac)
+    bool verify_mac(uint64_t timestamp, uint64_t const& mac)
     {
         // FIXME Soon to change to 160bits!
         uint64_t calculated_mac;
@@ -138,10 +146,7 @@ private:
         hmac_sha1_update(&ctx, sizeof(timestamp), message);
         hmac_sha1_digest(&ctx, sizeof(calculated_mac), reinterpret_cast<uint8_t*>(&calculated_mac));
 
-        // FIXME Soon to come 160bit + a constant time memcmp!
-        uint64_t real_mac = *reinterpret_cast<uint64_t*>(const_cast<uint8_t*>(mac.data()));
-
-        return calculated_mac == real_mac;
+        return calculated_mac == mac;
     }
 
     struct hmac_sha1_ctx ctx;
