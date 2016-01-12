@@ -415,7 +415,7 @@ TEST_F(BufferVault, waiting_threads_give_future_error_if_disconnected)
     }, std::exception);
 }
 
-TEST_F(StartedBufferVault, makes_sure_rpc_calls_exceptions_are_caught_in_destructor)
+TEST_F(BufferVault, makes_sure_rpc_calls_exceptions_are_caught_in_destructor)
 {
     EXPECT_CALL(mock_requests, free_buffer(_))
         .Times(1)

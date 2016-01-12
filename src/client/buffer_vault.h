@@ -89,6 +89,7 @@ private:
     std::map<int, BufferEntry> buffers;
     std::deque<NoTLSPromise<BufferInfo>> promises;
     geometry::Size size;
+    bool disconnected_;
 };
 }
 }
