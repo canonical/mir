@@ -33,7 +33,6 @@
 #include <algorithm>
 #include <iterator>
 #include <unordered_set>
-#include <iostream>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
@@ -274,7 +273,6 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t
 
     while(!done)
     {
-        std::cout << "beginning of loop" << std::endl;
         done = true;
         std::memset(&coords, 0, sizeof(coords));
         std::memset(&properties, 0, sizeof(properties));
@@ -300,28 +298,22 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t
                 coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_PRESSURE, mir_touch_event_axis_value(touch, i, mir_touch_axis_pressure));
                 properties[contacts_in_event].toolType = mia::android_tool_type_from_mir(mir_touch_event_tooltype(touch, i));
                 properties[contacts_in_event].id = mir_touch_event_id(touch, i);
-                std::cout << i << " adding as " << contacts_in_event << std::endl;
                 ++contacts_in_event;
             };
 
 
             if (action == mir_touch_action_up)
             {
-                std::cout << i << "is up" << std::endl;
                 if (already_sent)
-                {
-                    std::cout << i << "already sent" << std::endl;
                     continue;
-                }
+
                 if (android_action == AMOTION_EVENT_ACTION_MOVE)
                 {
-                    std::cout << i << " becomes the up action of the event" << std::endl;
                     android_action = e > 1 ? encode_android_action(AMOTION_EVENT_ACTION_UP) : AMOTION_EVENT_ACTION_POINTER_UP;
                     sent_indices.insert(i);
                 }
                 else
                 {
-                    std::cout << i << " another round needed to get the up encoded " << std::endl;
                     done = false;
                 }
 
@@ -329,22 +321,18 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t
             }
             else if (action == mir_touch_action_down)
             {
-                std::cout << i << "is down" << std::endl;
                 if (already_sent)
                 {
-                    std::cout << i << " alreasy sent so just a chnage..  " << std::endl;
                     add_contact_data();
                 }
                 else if (android_action == AMOTION_EVENT_ACTION_MOVE)
                 {
-                    std::cout << i << " is the down action of the event " << std::endl;
                     android_action = e > 1 ? encode_android_action(AMOTION_EVENT_ACTION_DOWN) : AMOTION_EVENT_ACTION_POINTER_DOWN;
                     add_contact_data();
                     sent_indices.insert(i);
                 }
                 else
                 {
-                    std::cout << i << " another round needed to get the down added " << std::endl;
                     done = false;
                 }
             }
@@ -359,10 +347,8 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t
             edge_flags, mia::android_modifiers_from_mir(mir_touch_event_modifiers(touch)), button_state, x_offset,
             y_offset, x_precision, y_precision, event.motion.mac, event_time, event_time,
             contacts_in_event, properties, coords);
-        std::cout << " one published" << std::endl;
     }
 
-    std::cout << "done publishing" << std::endl;
     return ret;
 }
 
