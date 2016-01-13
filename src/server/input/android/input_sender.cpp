@@ -194,9 +194,10 @@ void mia::InputSender::ActiveTransfer::send(uint32_t sequence_id, MirEvent const
         subscribe();
         break;
     case droidinput::WOULD_BLOCK:
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(std::runtime_error("Client input channel write blocked : ")) << boost::errinfo_errno(errno));
+        // Not an error. Clients are allowed to ignore input.
         break;
     case droidinput::DEAD_OBJECT:
+        // XXX This throw was recently added but is missing tests:
         BOOST_THROW_EXCEPTION(boost::enable_error_info(std::runtime_error("Client channel dead : ")) << boost::errinfo_errno(errno));
         break;
     default:
