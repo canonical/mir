@@ -49,7 +49,7 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
     ~RaiseSurfaces()
     {
         for (auto& e : out_cookies)
-            delete[] (uint8_t*)e;
+            free(e);
     }
 
     void SetUp() override
@@ -87,7 +87,7 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
     MirSurface* surface1;
     MirSurface* surface2;
 
-    std::vector<MirCookie*> out_cookies;
+    std::vector<void*> out_cookies;
     size_t event_count{0};
 
     MirLifecycleState lifecycle_state{mir_lifecycle_state_resumed};
@@ -103,11 +103,11 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
 namespace
 {
 
-MirCookie* get_cookie(MirInputEvent const* iev)
+void* get_cookie(MirInputEvent const* iev)
 {
     auto const size = mir_input_event_get_cookie_size(iev);
-    MirCookie* cookie = (MirCookie*)(new uint8_t[size]);
-    mir_input_event_get_cookie(iev, cookie, size);
+    void* cookie = malloc(size);
+    mir_input_event_copy_cookie(iev, cookie, size);
 
     return cookie;
 }
@@ -142,7 +142,7 @@ bool wait_for_n_events(size_t n, RaiseSurfaces const* raise_surfaces)
    return all_events;
 }
 
-bool attempt_focus(MirSurface* surface, MirCookie const* cookie)
+bool attempt_focus(MirSurface* surface, void const* cookie)
 {
     mir_surface_raise_with_cookie(surface, cookie);
     bool surface_becomes_focused = mt::spin_wait_for_condition_or_timeout(

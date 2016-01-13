@@ -441,7 +441,7 @@ size_t mir_input_event_get_cookie_size(MirInputEvent const* ev)
 }
 
 // TODO size unused for now until we switch to 160bit for the MAC!
-void mir_input_event_get_cookie(MirInputEvent const* ev, MirCookie* cookie, size_t /*size*/)
+void mir_input_event_copy_cookie(MirInputEvent const* ev, void* raw_cookie, size_t /*size*/)
 {
     auto const* old_ev = old_ev_from_new(ev);
 
@@ -451,6 +451,7 @@ void mir_input_event_get_cookie(MirInputEvent const* ev, MirCookie* cookie, size
         abort();
     }
 
+    auto* cookie = reinterpret_cast<MirCookie*>(raw_cookie);
     cookie->timestamp = mir_input_event_get_event_time(ev);
 
     switch (old_ev->type)

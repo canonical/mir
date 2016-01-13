@@ -759,9 +759,9 @@ MirPersistentId* mir_persistent_id_from_string(char const* string_representation
 /*
 * Attempts to raise the surface based on a keyboard/touch/pointer cookie.
 *   \param [in] surface The surface to operate on
-*   \param [in] cookie  The MirCookie from the event that you want to raise the window from.
+*   \param [in] cookie  The void* from the input event that you want to raise the window from.
 */
-void mir_surface_raise_with_cookie(MirSurface* surface, MirCookie const* cookie);
+void mir_surface_raise_with_cookie(MirSurface* surface, void const* cookie);
 
 #ifdef __cplusplus
 }

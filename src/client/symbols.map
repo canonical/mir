@@ -260,7 +260,7 @@ MIR_CLIENT_DETAIL_unreleased {
     };
     mir_input_event_has_cookie;
     mir_input_event_get_cookie_size;
-    mir_input_event_get_cookie;
+    mir_input_event_copy_cookie;
     mir_surface_raise_with_cookie;
   local:
     *;

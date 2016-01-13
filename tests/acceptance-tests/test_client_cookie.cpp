@@ -52,7 +52,7 @@ public:
     ~ClientCookies()
     {
         for (auto& e : out_cookies)
-            delete[] (uint8_t*)e;
+            free(e);
     }
 
     void SetUp() override
@@ -70,7 +70,7 @@ public:
     }
 
     std::vector<uint8_t> cookie_secret;
-    std::vector<MirCookie*> out_cookies;
+    std::vector<void*> out_cookies;
     size_t event_count{0};
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
@@ -88,11 +88,11 @@ public:
 namespace
 {
 
-MirCookie* get_cookie(MirInputEvent const* iev)
+void* get_cookie(MirInputEvent const* iev)
 {
     auto const size = mir_input_event_get_cookie_size(iev);
-    MirCookie* cookie = (MirCookie*)(new uint8_t[size]);
-    mir_input_event_get_cookie(iev, cookie, size);
+    void* cookie = malloc(size);
+    mir_input_event_copy_cookie(iev, cookie, size);
 
     return cookie;
 }
@@ -138,7 +138,7 @@ TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
     {
         ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        EXPECT_TRUE(factory->attest_timestamp(out_cookies.back()));
+        EXPECT_TRUE(factory->attest_timestamp(reinterpret_cast<MirCookie*>(out_cookies.back())));
     }
 }
 
@@ -165,7 +165,7 @@ TEST_F(ClientCookies, pointer_click_events_have_attestable_cookies)
     {
         ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        EXPECT_TRUE(factory->attest_timestamp(out_cookies.back()));
+        EXPECT_TRUE(factory->attest_timestamp(reinterpret_cast<MirCookie*>(out_cookies.back())));
     }
 }
 
@@ -202,6 +202,6 @@ TEST_F(ClientCookies, touch_click_events_have_attestable_cookies)
     {
         ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        EXPECT_TRUE(factory->attest_timestamp(out_cookies.back()));
+        EXPECT_TRUE(factory->attest_timestamp(reinterpret_cast<MirCookie*>(out_cookies.back())));
     }
 }
