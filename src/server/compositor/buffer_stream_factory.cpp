@@ -65,7 +65,6 @@ std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
 {
     if (nbuffers == 0)
     {
-        printf("NEW SEMANTICS\n");
         return std::make_shared<mc::Stream>(
             *policy_factory,
             std::make_unique<mc::BufferMap>(id, sink, gralloc),
@@ -73,7 +72,6 @@ std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
     }
     else
     {
-        printf("OLD SEMANTICS\n");
         auto switching_bundle = std::make_shared<mc::BufferQueue>(
             nbuffers, gralloc, buffer_properties, *policy_factory);
         return std::make_shared<mc::BufferStreamSurfaces>(switching_bundle);

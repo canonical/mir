@@ -384,15 +384,6 @@ TEST_F(StartedBufferVault, simply_setting_size_triggers_no_server_interations)
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
-TEST_F(BufferVault, notifies_requests_when_disconnected)
-{
-    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
-        size, format, usage, initial_nbuffers);
-
-    EXPECT_CALL(mock_requests, disconnected());
-    vault.disconnected();
-}
-
 TEST_F(StartedBufferVault, scaling_resizes_buffers_right_away)
 {
     mp::Buffer package4;

@@ -62,12 +62,12 @@ function (mir_discover_tests_internal_env EXECUTABLE DETECT_FD_LEAKS ENV)
   set(test_cmd "${test_cmd_no_memcheck}")
     message("AMESS " ${EXECUTABLE} " env " ${ENV})
     
-  set(test_env ${ARGN} ${ENV})
+  set(test_env ${ARGN})# ${ENV})
   set(test_name ${EXECUTABLE})
     
-  if (ENV)
-    set(test_name "${test_name}--${ENV}")
-  endif()
+ # if (ENV)
+ #   set(test_name "${test_name}--${ENV}")
+ # endif()
 
   set(test_no_memcheck_filter)
   set(test_exclusion_filter)

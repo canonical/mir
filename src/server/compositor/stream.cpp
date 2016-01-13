@@ -187,10 +187,7 @@ void mc::Stream::drop_old_buffers()
     }
 
     for (auto &buffer : transferred_buffers)
-    {
-        printf("TRASH A BUFFER\n");
         buffers->send_buffer(buffer->id());
-    }
 
     arbiter->advance_schedule();
 }

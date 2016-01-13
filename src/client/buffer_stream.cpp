@@ -254,7 +254,6 @@ public:
 
     void allocate_buffer(geom::Size size, MirPixelFormat format, int usage) override
     {
-        std::unique_lock<std::mutex> lk(mut);
         mp::BufferAllocation request;
         request.mutable_id()->set_value(stream_id);
         auto buf_params = request.add_buffer_requests();
@@ -271,7 +270,6 @@ public:
 
     void free_buffer(int buffer_id) override
     {
-        std::unique_lock<std::mutex> lk(mut);
         mp::BufferRelease request;
         request.mutable_id()->set_value(stream_id);
         request.add_buffers()->set_buffer_id(buffer_id);
@@ -284,7 +282,6 @@ public:
 
     void submit_buffer(int id, mcl::ClientBuffer&) override
     {
-        std::unique_lock<std::mutex> lk(mut);
         mp::BufferRequest request;
         request.mutable_id()->set_value(stream_id);
         request.mutable_buffer()->set_buffer_id(id);
@@ -301,7 +298,6 @@ public:
     }
 
 private:
-    std::mutex mut;
     mclr::DisplayServer& server;
     mp::Void protobuf_void;
     int stream_id;
