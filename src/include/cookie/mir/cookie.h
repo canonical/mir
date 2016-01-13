@@ -30,7 +30,7 @@ struct MirCookie
 {
     uint64_t timestamp;
     uint64_t mac;
-} MirCookie;
+};
 
 }
 }
