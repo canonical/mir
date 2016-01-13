@@ -17,7 +17,6 @@
  */
 
 #include "mir/events/event_private.h"
-#include "mir/events/event_builders.h"
 
 #include "src/server/input/android/android_input_channel.h"
 #include "src/server/input/android/input_sender.h"
@@ -49,7 +48,6 @@
 namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace mia = mi::android;
-namespace mev = mir::events;
 namespace mt = mir::test;
 namespace mr = mir::report;
 namespace mtd = mt::doubles;
@@ -95,7 +93,7 @@ public:
 class StubCookieFactory : public mir::cookie::CookieFactory
 {
 public:
-    MirCookie timestamp_to_cookie(uint64_t const&) override { return {};}
+    MirCookie timestamp_to_cookie(uint64_t const&) override { return {0, 0};}
     bool attest_timestamp(MirCookie const&) override {return true;}
     StubCookieFactory() = default;
 };
@@ -353,7 +351,7 @@ TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_not_consum
 
 TEST_F(AndroidInputSender, encodes_multiple_touch_contact_downs_as_multiple_events)
 {
-    // TODO When the rework of the transport encoding is finished we might want revisit this decision
+    // TODO When the rework of the transport encoding is finished we might want to revisit this decision
     register_surface();
 
     auto touch_ev_with_simultaneous_down = builder.touch_event(std::chrono::nanoseconds(86));
@@ -380,7 +378,7 @@ TEST_F(AndroidInputSender, encodes_multiple_touch_contact_downs_as_multiple_even
 
 TEST_F(AndroidInputSender, encodes_multiple_touch_contact_downs_as_multiple_events_but_keeps_only_moved_contacts_in_place)
 {
-    // TODO When the rework of the transport encoding is finished we might want revisit this decision
+    // TODO When the rework of the transport encoding is finished we might want to revisit this decision
     register_surface();
 
     auto touch_ev_with_simultaneous_down = builder.touch_event(std::chrono::nanoseconds(86));
@@ -410,7 +408,7 @@ TEST_F(AndroidInputSender, encodes_multiple_touch_contact_downs_as_multiple_even
 
 TEST_F(AndroidInputSender, encodes_multiple_releases_in_several_events)
 {
-    // TODO When the rework of the transport encoding is finished we might want revisit this decision
+    // TODO When the rework of the transport encoding is finished we might want to revisit this decision
     register_surface();
 
     auto touch_ev_with_simultaneous_down = builder.touch_event(std::chrono::nanoseconds(86));
@@ -440,7 +438,7 @@ TEST_F(AndroidInputSender, encodes_multiple_releases_in_several_events)
 
 TEST_F(AndroidInputSender, encodes_combinations_of_up_and_down_one_by_one)
 {
-    // TODO When the rework of the transport encoding is finished we might want revisit this decision
+    // TODO When the rework of the transport encoding is finished we might want to revisit this decision
     register_surface();
 
     auto touch_ev_with_simultaneous_down = builder.touch_event(std::chrono::nanoseconds(86));
@@ -469,7 +467,7 @@ TEST_F(AndroidInputSender, encodes_combinations_of_up_and_down_one_by_one)
 
 TEST_F(AndroidInputSender, encodes_combinations_of_down_and_up_one_by_one)
 {
-    // TODO When the rework of the transport encoding is finished we might want revisit this decision
+    // TODO When the rework of the transport encoding is finished we might want to revisit this decision
     register_surface();
 
     auto touch_ev_with_simultaneous_down = builder.touch_event(std::chrono::nanoseconds(86));
