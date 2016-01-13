@@ -452,7 +452,7 @@ mcl::BufferStream::BufferStream(
 
 void mcl::BufferStream::init_swap_interval()
 {
-    char const* env = getenv("MIR_CLIENT_SWAP_INTERVAL");
+    char const* env = getenv("MIR_CLIENT_FORCE_SWAP_INTERVAL");
     if (env)
     {
         swap_interval_ = atoi(env);
