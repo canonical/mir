@@ -463,7 +463,7 @@ MirWaitHandle* MirConnection::release_surface(
         release_wait_handles.push_back(new_wait_handle);
     }
 
-    if (strncmp(surface->get_error_message(), "", 1))
+    if (!mir_surface_is_valid(surface))
     {
         new_wait_handle->expect_result();
         new_wait_handle->result_received();
