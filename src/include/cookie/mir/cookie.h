@@ -26,7 +26,7 @@ namespace mir
 namespace cookie
 {
 
-typedef struct MirCookie
+struct MirCookie
 {
     uint64_t timestamp;
     uint64_t mac;
