@@ -256,9 +256,6 @@ MIR_CLIENT_DETAIL_9v18 {
 MIR_CLIENT_DETAIL_9v18v1 {
   global:
     extern "C++" { 
-      mir::events::set_modifier*;
-      mir::events::set_cursor_position*;
-      mir::events::set_button_state*;
       mir::input::android::android_pointer_action_from_mir*;
     };
 } MIR_CLIENT_DETAIL_9v18;
