@@ -32,6 +32,8 @@
 #include <cstring>
 #include <algorithm>
 #include <iterator>
+#include <unordered_set>
+#include <iostream>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
@@ -254,27 +256,12 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t s
 
 droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t seq, MirEvent const& event)
 {
+    std::unordered_set<size_t> sent_indices;
+    droidinput::status_t ret = droidinput::OK;
     droidinput::PointerCoords coords[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
     droidinput::PointerProperties properties[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
-    std::memset(&coords, 0, sizeof(coords));
-    std::memset(&properties, 0, sizeof(properties));
-
     auto input_event = mir_event_get_input_event(&event);
     auto touch = mir_input_event_get_touch_event(input_event);
-    for (size_t i = 0, e = mir_touch_event_point_count(touch); i != e; ++i)
-    {
-        // Note: this assumes that: x == raw_x + x_offset;
-        // here x, y is used instead of the raw co-ordinates and offset is set to zero
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_X, mir_touch_event_axis_value(touch, i, mir_touch_axis_x));
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_Y, mir_touch_event_axis_value(touch, i, mir_touch_axis_y));
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR, mir_touch_event_axis_value(touch, i, mir_touch_axis_touch_major));
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR, mir_touch_event_axis_value(touch, i, mir_touch_axis_touch_minor));
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_SIZE, mir_touch_event_axis_value(touch, i, mir_touch_axis_size));
-        coords[i].setAxisValue(AMOTION_EVENT_AXIS_PRESSURE, mir_touch_event_axis_value(touch, i, mir_touch_axis_pressure));
-        properties[i].toolType = mia::android_tool_type_from_mir(mir_touch_event_tooltype(touch, i));
-        properties[i].id = mir_touch_event_id(touch, i);
-    }
-
     std::chrono::nanoseconds const event_time{mir_input_event_get_event_time(input_event)};
     auto const x_offset = 0.0f;
     auto const y_offset = 0.0f;
@@ -283,11 +270,100 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t
     auto const flags = 0;
     auto const edge_flags = 0;
     auto const button_state = 0;
-    return publisher.publishMotionEvent(seq, mir_input_event_get_device_id(input_event), AINPUT_SOURCE_TOUCHSCREEN,
-                                        mia::extract_android_action_from(event), flags, edge_flags,
-                                        mia::android_modifiers_from_mir(mir_touch_event_modifiers(touch)), button_state,
-                                        x_offset, y_offset, x_precision, y_precision, event.motion.mac, event_time,
-                                        event_time, mir_touch_event_point_count(touch), properties, coords);
+    bool done = false;
+
+    while(!done)
+    {
+        std::cout << "beginning of loop" << std::endl;
+        done = true;
+        std::memset(&coords, 0, sizeof(coords));
+        std::memset(&properties, 0, sizeof(properties));
+
+        int android_action = AMOTION_EVENT_ACTION_MOVE;
+        int contacts_in_event = 0;
+
+        for (size_t i = 0, e = mir_touch_event_point_count(touch); i != e; ++i)
+        {
+            auto const action = mir_touch_event_action(touch, i);
+            auto const already_sent = sent_indices.find(i) != sent_indices.end();
+            auto const encode_android_action = [&](int action) -> int
+            {
+                return (contacts_in_event << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT)|action;
+            };
+            auto const add_contact_data = [&]()
+            {
+                coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_X, mir_touch_event_axis_value(touch, i, mir_touch_axis_x));
+                coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_Y, mir_touch_event_axis_value(touch, i, mir_touch_axis_y));
+                coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR, mir_touch_event_axis_value(touch, i, mir_touch_axis_touch_major));
+                coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR, mir_touch_event_axis_value(touch, i, mir_touch_axis_touch_minor));
+                coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_SIZE, mir_touch_event_axis_value(touch, i, mir_touch_axis_size));
+                coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_PRESSURE, mir_touch_event_axis_value(touch, i, mir_touch_axis_pressure));
+                properties[contacts_in_event].toolType = mia::android_tool_type_from_mir(mir_touch_event_tooltype(touch, i));
+                properties[contacts_in_event].id = mir_touch_event_id(touch, i);
+                std::cout << i << " adding as " << contacts_in_event << std::endl;
+                ++contacts_in_event;
+            };
+
+
+            if (action == mir_touch_action_up)
+            {
+                std::cout << i << "is up" << std::endl;
+                if (already_sent)
+                {
+                    std::cout << i << "already sent" << std::endl;
+                    continue;
+                }
+                if (android_action == AMOTION_EVENT_ACTION_MOVE)
+                {
+                    std::cout << i << " becomes the up action of the event" << std::endl;
+                    android_action = e > 1 ? encode_android_action(AMOTION_EVENT_ACTION_UP) : AMOTION_EVENT_ACTION_POINTER_UP;
+                    sent_indices.insert(i);
+                }
+                else
+                {
+                    std::cout << i << " another round needed to get the up encoded " << std::endl;
+                    done = false;
+                }
+
+                add_contact_data();
+            }
+            else if (action == mir_touch_action_down)
+            {
+                std::cout << i << "is down" << std::endl;
+                if (already_sent)
+                {
+                    std::cout << i << " alreasy sent so just a chnage..  " << std::endl;
+                    add_contact_data();
+                }
+                else if (android_action == AMOTION_EVENT_ACTION_MOVE)
+                {
+                    std::cout << i << " is the down action of the event " << std::endl;
+                    android_action = e > 1 ? encode_android_action(AMOTION_EVENT_ACTION_DOWN) : AMOTION_EVENT_ACTION_POINTER_DOWN;
+                    add_contact_data();
+                    sent_indices.insert(i);
+                }
+                else
+                {
+                    std::cout << i << " another round needed to get the down added " << std::endl;
+                    done = false;
+                }
+            }
+            else
+            {
+                add_contact_data();
+            }
+        }
+
+        ret = publisher.publishMotionEvent(
+            seq, mir_input_event_get_device_id(input_event), AINPUT_SOURCE_TOUCHSCREEN, android_action, flags,
+            edge_flags, mia::android_modifiers_from_mir(mir_touch_event_modifiers(touch)), button_state, x_offset,
+            y_offset, x_precision, y_precision, event.motion.mac, event_time, event_time,
+            contacts_in_event, properties, coords);
+        std::cout << " one published" << std::endl;
+    }
+
+    std::cout << "done publishing" << std::endl;
+    return ret;
 }
 
 droidinput::status_t mia::InputSender::ActiveTransfer::send_pointer_event(uint32_t seq, MirEvent const& event)
