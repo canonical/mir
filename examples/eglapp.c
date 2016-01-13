@@ -17,11 +17,7 @@
  */
 
 #include "eglapp.h"
-
-// For clock_gettime() et alia
-#define _POSIX_C_SOURCE (199309L)
 #include "mir_toolkit/mir_client_library.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -40,7 +36,6 @@ static MirSurface *surface;
 static EGLDisplay egldisplay;
 static EGLSurface eglsurface;
 static volatile sig_atomic_t running = 0;
-static bool show_fps = false;
 
 #define CHECK(_cond, _err) \
     if (!(_cond)) \
@@ -73,34 +68,6 @@ mir_eglapp_bool mir_eglapp_running(void)
     return running;
 }
 
-static void report_fps(void)
-{
-    static bool first_time = true;
-    static struct timespec then;
-    static unsigned frame_count = 0;
-
-    struct timespec now;
-    clock_gettime(CLOCK_MONOTONIC, &now);
-
-    if (first_time)
-    {
-        then = now;
-        first_time = false;
-    }
-
-    ++frame_count;
-
-    int ms_from_sec = (now.tv_sec - then.tv_sec) * 1000;
-    int ms_from_nsec = (now.tv_nsec - then.tv_nsec) / 1000000;
-
-    if ((ms_from_sec + ms_from_nsec) > 1000)
-    {
-        printf("FPS: %d\n", frame_count);
-        ++then.tv_sec;
-        frame_count = 0;
-    }
-}
-
 void mir_eglapp_swap_buffers(void)
 {
     EGLint width, height;
@@ -109,9 +76,6 @@ void mir_eglapp_swap_buffers(void)
         return;
 
     eglSwapBuffers(egldisplay, eglsurface);
-
-    if (show_fps)
-        report_fps();
 
     /*
      * Querying the surface (actually the current buffer) dimensions here is
@@ -308,9 +272,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                         }
                     }
                     break;
-                case 'p':
-                    show_fps = true;
-                    break;
                 case 'f':
                     *width = 0;
                     *height = 0;
@@ -371,7 +332,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                        "  -m socket        Mir server socket\n"
                        "  -s WIDTHxHEIGHT  Force surface size\n"
                        "  -c name          Request cursor image by name\n"
-                       "  -p               Show performance (FPS)\n"
                        "  -q               Quiet mode (no messages output)\n"
                        "  --               Ignore all arguments that follow\n"
                        , argv[0]);
