@@ -43,8 +43,6 @@ public:
         {
             void composite(compositor::SceneElementSequence&& seq)
             {
-                (void) seq;
-                //note, not sure this is correct behavior
                 for(auto elem : seq)
                 {
                     elem->rendered();

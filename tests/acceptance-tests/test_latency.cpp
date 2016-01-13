@@ -71,7 +71,6 @@ public:
             if (i->buffer_id == submission_id)
             {
                 latency = post_count - i->time;
-                    printf("LATENCY FOR %i %i\n", i->buffer_id, latency.value());
                 submissions.erase(i);
                 break;
             }
@@ -235,9 +234,7 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
 
     auto stream = mir_surface_get_buffer_stream(surface);
     for(auto i = 0u; i < test_submissions; i++) {
-        printf("GOOO %i\n", i);
         auto submission_id = mir_debug_surface_current_buffer_id(surface);
-        printf("GOOO %i %i\n", i, submission_id);
         stats.record_submission(submission_id);
         mir_buffer_stream_swap_buffers_sync(stream);
     }
@@ -259,7 +256,6 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
 //    EXPECT_THAT(observed_latency, Gt(expected_min_latency-error_margin));
     EXPECT_THAT(observed_latency, Lt(expected_max_latency+error_margin));
     visible_surface.reset();
-    printf("END\n");
 }
 
 TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)

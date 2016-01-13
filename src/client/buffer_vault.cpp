@@ -138,7 +138,6 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
         if (sz != size)
         {
             lk.unlock();
-            printf("INERE\n");
             server_requests->free_buffer(protobuf_buffer.buffer_id());
             server_requests->allocate_buffer(size, format, usage);
             return;

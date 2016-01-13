@@ -31,7 +31,6 @@ MirSurface* mtf::make_any_surface(MirConnection *connection)
 {
     auto spec = mir_connection_create_spec_for_normal_surface(connection,
         width, height, format);
-    printf("SYNC MAKe.\n");
     auto surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
     
