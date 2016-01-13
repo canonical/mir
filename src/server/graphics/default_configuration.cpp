@@ -38,12 +38,14 @@
 #include "mir/abnormal_exit.h"
 #include "mir/emergency_cleanup.h"
 #include "mir/log.h"
+#include "mir/report_exception.h"
 
 #include "mir_toolkit/common.h"
 
 #include <boost/throw_exception.hpp>
 
 #include <map>
+#include <sstream>
 
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
@@ -105,13 +107,23 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                           description->minor_version,
                           description->micro_version);
 
-            if (!the_options()->is_set(options::host_socket_opt))
-                return create_host_platform(the_options(), the_emergency_cleanup(), the_display_report());
-            else
-                return create_guest_platform(
-                    the_display_report(),
-                    the_host_connection());
-
+            std::stringstream error_report;
+            try
+            {
+                if (!the_options()->is_set(options::host_socket_opt))
+                    return create_host_platform(the_options(), the_emergency_cleanup(), the_display_report());
+                else
+                    return create_guest_platform(
+                        the_display_report(),
+                        the_host_connection());
+            }
+            catch(...)
+            {
+                // access exception information before platform library gets unloaded
+                error_report << "Exception while creating graphics platform" << std::endl;
+                mir::report_exception(error_report);
+            }
+            BOOST_THROW_EXCEPTION(std::runtime_error(error_report.str()));
         });
 }
 
