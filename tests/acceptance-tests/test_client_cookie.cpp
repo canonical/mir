@@ -138,7 +138,8 @@ TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
     {
         ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        EXPECT_TRUE(factory->attest_timestamp(reinterpret_cast<MirCookie*>(out_cookies.back())));
+        auto* last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back());
+        EXPECT_TRUE(factory->attest_timestamp(last_cookie));
     }
 }
 
@@ -165,7 +166,8 @@ TEST_F(ClientCookies, pointer_click_events_have_attestable_cookies)
     {
         ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        EXPECT_TRUE(factory->attest_timestamp(reinterpret_cast<MirCookie*>(out_cookies.back())));
+        auto* last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back());
+        EXPECT_TRUE(factory->attest_timestamp(last_cookie));
     }
 }
 
@@ -202,6 +204,7 @@ TEST_F(ClientCookies, touch_click_events_have_attestable_cookies)
     {
         ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        EXPECT_TRUE(factory->attest_timestamp(reinterpret_cast<MirCookie*>(out_cookies.back())));
+        auto* last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back());
+        EXPECT_TRUE(factory->attest_timestamp(last_cookie));
     }
 }

@@ -434,7 +434,7 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev)
 size_t mir_input_event_get_cookie_size(MirInputEvent const* ev)
 {
     if (mir_input_event_has_cookie(ev))
-        return sizeof(MirCookie);
+        return sizeof(mir::cookie::MirCookie);
 
     /* No mac == no size! */
     return 0;
@@ -451,7 +451,7 @@ void mir_input_event_copy_cookie(MirInputEvent const* ev, void* raw_cookie, size
         abort();
     }
 
-    auto* cookie = reinterpret_cast<MirCookie*>(raw_cookie);
+    auto* cookie = reinterpret_cast<mir::cookie::MirCookie*>(raw_cookie);
     cookie->timestamp = mir_input_event_get_event_time(ev);
 
     switch (old_ev->type)

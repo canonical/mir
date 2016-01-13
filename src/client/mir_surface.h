@@ -37,9 +37,12 @@
 #include <mutex>
 #include <unordered_set>
 
-struct MirCookie;
 namespace mir
 {
+namespace cookie
+{
+struct MirCookie;
+}
 namespace dispatch
 {
 class ThreadedDispatcher;
@@ -176,7 +179,7 @@ public:
     MirOrientation get_orientation() const;
     MirWaitHandle* set_preferred_orientation(MirOrientationMode mode);
 
-    void raise_surface_with_cookie(MirCookie const* cookie);
+    void raise_surface_with_cookie(mir::cookie::MirCookie const* cookie);
 
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 

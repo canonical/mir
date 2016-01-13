@@ -21,10 +21,18 @@
 
 #include <stdint.h>
 
+namespace mir
+{
+namespace cookie
+{
+
 typedef struct MirCookie
 {
     uint64_t timestamp;
     uint64_t mac;
 } MirCookie;
+
+}
+}
 
 #endif // MIR_TOOLKIT_COOKIE_FACTORY_H_

@@ -114,7 +114,7 @@ public:
         return calculate_mac(timestamp);
     }
 
-    bool attest_timestamp(MirCookie const* cookie) override
+    bool attest_timestamp(mir::cookie::MirCookie const* cookie) override
     {
         return verify_mac(cookie->timestamp, cookie->mac);
     }
