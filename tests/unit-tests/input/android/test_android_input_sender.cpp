@@ -97,7 +97,7 @@ public:
 class StubCookieFactory : public mir::cookie::CookieFactory
 {
 public:
-    MirCookie timestamp_to_cookie(uint64_t const&) override { return {};}
+    MirCookie timestamp_to_cookie(uint64_t const&) override { return {0, 0};}
     bool attest_timestamp(MirCookie const&) override {return true;}
     StubCookieFactory() = default;
 };
