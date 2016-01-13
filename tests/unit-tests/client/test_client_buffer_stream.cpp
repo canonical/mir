@@ -679,13 +679,13 @@ TEST_P(ClientBufferStream, sets_swap_interval_requested)
 
 TEST_P(ClientBufferStream, environment_overrides_requested_swap_interval)
 {
+    setenv("MIR_CLIENT_FORCE_SWAP_INTERVAL", "0", 1);
     mcl::BufferStream bs{
         nullptr, mock_protobuf_server, mode,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
         response, perf_report, "", size, nbuffers};
     service_requests_for(bs, mock_protobuf_server.alloc_count);
 
-    setenv("MIR_CLIENT_FORCE_SWAP_INTERVAL", "0", 1);
     bs.set_swap_interval(1);
     EXPECT_EQ(0, bs.swap_interval());
     unsetenv("MIR_CLIENT_FORCE_SWAP_INTERVAL");
