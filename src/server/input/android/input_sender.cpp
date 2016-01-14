@@ -299,7 +299,15 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t
         for (size_t i = 0, e = mir_touch_event_point_count(touch); i != e; ++i)
         {
             auto const action = mir_touch_event_action(touch, i);
-            auto const add_contact_data = [&]()
+
+            if (i == state_change.index)
+                action_index = contacts_in_event;
+
+            // before a touch up state change got processed it is treated as 'change', skipped otherwise
+            // after a touch down state change got processed it is treated as 'change', skipped otherwise
+            if (i == state_change.index
+                || (i < state_change.index && action != mir_touch_action_up)
+                || (i > state_change.index && action != mir_touch_action_down))
             {
                 coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_X, mir_touch_event_axis_value(touch, i, mir_touch_axis_x));
                 coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_Y, mir_touch_event_axis_value(touch, i, mir_touch_axis_y));
@@ -310,19 +318,7 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t
                 properties[contacts_in_event].toolType = mia::android_tool_type_from_mir(mir_touch_event_tooltype(touch, i));
                 properties[contacts_in_event].id = mir_touch_event_id(touch, i);
                 ++contacts_in_event;
-            };
-
-            if (i == state_change.index)
-            {
-                action_index = contacts_in_event;
-                add_contact_data();
             }
-
-            // before a touch up state change got processed it is treated as 'change', skipped otherwise
-            // after a touch down state change got processed it is treated as 'change', skipped otherwise
-            if ((i < state_change.index && action != mir_touch_action_up)
-                || (i > state_change.index && action != mir_touch_action_down))
-                add_contact_data();
         }
 
         state_change.android_action |= (action_index << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
