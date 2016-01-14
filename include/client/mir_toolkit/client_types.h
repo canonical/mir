@@ -205,7 +205,7 @@ typedef struct MirModuleProperties
     int major_version;
     int minor_version;
     int micro_version;
-    char const *file;
+    char const *filename;
 } MirModuleProperties;
 
 /**

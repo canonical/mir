@@ -324,10 +324,10 @@ auto mgn::MirClientHostConnection::graphics_platform_library() -> std::string
 
     mir_connection_get_graphics_module(mir_connection, &properties);
 
-    if (properties.file == nullptr)
+    if (properties.filename == nullptr)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Cannot identify host graphics platform"));
     }
 
-    return properties.file;
+    return properties.filename;
 }

@@ -484,7 +484,7 @@ void MirConnection::populate_graphics_module(MirModuleProperties& properties)
         properties.major_version = graphics_module.major_version();
         properties.minor_version = graphics_module.minor_version();
         properties.micro_version = graphics_module.micro_version();
-        properties.file = graphics_module.file().c_str();
+        properties.filename = graphics_module.file().c_str();
     }
     else
     {
@@ -492,7 +492,7 @@ void MirConnection::populate_graphics_module(MirModuleProperties& properties)
         properties.major_version = 0;
         properties.minor_version = 0;
         properties.micro_version = 0;
-        properties.file = nullptr;
+        properties.filename = nullptr;
     }
 }
 

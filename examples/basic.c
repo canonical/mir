@@ -126,7 +126,7 @@ int demo_client(const char* server, int buffer_swap_count)
         assert(0 <= properties.major_version);
         assert(0 <= properties.minor_version);
         assert(0 <= properties.micro_version);
-        assert(NULL != properties.file);
+        assert(NULL != properties.filename);
     }
 
     // Identify a supported pixel format
