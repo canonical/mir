@@ -1,8 +1,10 @@
-
 include_directories(
     ${server_common_include_dirs}
     include/
 )
+
+add_definitions( -DANDROID )
+
 add_library(
   mirsharedandroid-static STATIC
 
