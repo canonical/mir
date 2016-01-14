@@ -80,9 +80,31 @@ public:
         event_count++;
     }
 
+    size_t get_event_count() const
+    {
+        std::lock_guard<std::mutex> lk(mutex);
+        return event_count;
+    }
+
+    size_t cookie_size() const
+    {
+        std::lock_guard<std::mutex> lk(mutex);
+        return out_cookies.size();
+    }
+
+    std::vector<uint8_t> back_cookie() const
+    {
+        std::lock_guard<std::mutex> lk(mutex);
+        return out_cookies.back();
+    }
+
+    bool cookies_empty() const
+    {
+        std::lock_guard<std::mutex> lk(mutex);
+        return out_cookies.empty();
+    }
+
     std::vector<uint8_t> cookie_secret;
-    std::vector<std::vector<uint8_t>> out_cookies;
-    size_t event_count{0};
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
@@ -96,7 +118,9 @@ public:
        };
 
 private:
-    std::mutex mutex;
+    std::vector<std::vector<uint8_t>> out_cookies;
+    size_t event_count{0};
+    mutable std::mutex mutex;
 };
 
 namespace
@@ -119,7 +143,7 @@ bool wait_for_n_events(size_t n, ClientCookies* client_cookie)
     bool all_events = mt::spin_wait_for_condition_or_timeout(
         [&n, &client_cookie]
         {
-            return client_cookie->event_count >= n;
+            return client_cookie->get_event_count() >= n;
         },
         std::chrono::seconds{max_wait});
 
@@ -135,9 +159,10 @@ TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
     int events = 1;
     if (wait_for_n_events(events, this))
     {
-        ASSERT_FALSE(out_cookies.empty());
+        ASSERT_FALSE(cookies_empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back().data());
+        auto cookie = back_cookie();
+        auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(cookie.data());
         EXPECT_TRUE(factory->attest_timestamp(last_cookie));
     }
 }
@@ -150,8 +175,8 @@ TEST_F(ClientCookies, pointer_motion_events_do_not_have_attestable_cookies)
     int events = 2;
     if (wait_for_n_events(events, this))
     {
-        EXPECT_EQ(event_count, events);
-        EXPECT_TRUE(out_cookies.empty());
+        EXPECT_EQ(get_event_count(), events);
+        EXPECT_TRUE(cookies_empty());
     }
 }
 
@@ -163,9 +188,10 @@ TEST_F(ClientCookies, pointer_click_events_have_attestable_cookies)
     int events = 2;
     if (wait_for_n_events(events, this))
     {
-        ASSERT_FALSE(out_cookies.empty());
+        ASSERT_FALSE(cookies_empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back().data());
+        auto cookie = back_cookie();
+        auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(cookie.data());
         EXPECT_TRUE(factory->attest_timestamp(last_cookie));
     }
 }
@@ -186,8 +212,8 @@ TEST_F(ClientCookies, touch_motion_events_do_not_have_attestable_cookies)
     int events = 2;
     if (wait_for_n_events(events, this))
     {
-        EXPECT_EQ(event_count, events);
-        EXPECT_EQ(out_cookies.size(), 1);
+        EXPECT_EQ(get_event_count(), events);
+        EXPECT_EQ(cookie_size(), 1);
     }
 }
 
@@ -201,9 +227,10 @@ TEST_F(ClientCookies, touch_click_events_have_attestable_cookies)
     int events = 1;
     if (wait_for_n_events(events, this))
     {
-        ASSERT_FALSE(out_cookies.empty());
+        ASSERT_FALSE(cookies_empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back().data());
+        auto cookie = back_cookie();
+        auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(cookie.data());
         EXPECT_TRUE(factory->attest_timestamp(last_cookie));
     }
 }
