@@ -57,7 +57,12 @@ function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAK
   set(test_cmd_no_memcheck "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE}")
   set(test_cmd "${test_cmd_no_memcheck}")
   set(test_env ${ARGN} ${TEST_ENV_OPTIONS})
-  set(test_name ${EXECUTABLE}"---"${TEST_ENV_OPTIONS}"---")
+
+  if (TEST_ENV_OPTIONS)
+      set(test_name ${EXECUTABLE}---${TEST_ENV_OPTIONS}---)
+  else()
+      set(test_name ${EXECUTABLE})
+  endif()
   set(test_no_memcheck_filter)
   set(test_exclusion_filter)
 

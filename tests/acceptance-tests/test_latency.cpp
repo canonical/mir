@@ -228,7 +228,7 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
 };
 }
 
-TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
+TEST_F(ClientLatency, triple_buffered_client_has_less_latency_less_than_two_frames)
 {
     using namespace testing;
 
@@ -249,11 +249,9 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
     //       nbuffers instead of nbuffers-1. After dynamic queue scaling is
     //       enabled, the average will be lower than this.
     float const expected_max_latency = expected_client_buffers;
-//    float const expected_min_latency = expected_client_buffers - 1;
 
     auto observed_latency = display.group.average_latency();
 
-//    EXPECT_THAT(observed_latency, Gt(expected_min_latency-error_margin));
     EXPECT_THAT(observed_latency, Lt(expected_max_latency+error_margin));
     visible_surface.reset();
 }
