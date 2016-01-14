@@ -269,25 +269,36 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t
     auto const flags = 0;
     auto const edge_flags = 0;
     auto const button_state = 0;
-    bool done = false;
 
-    while(!done)
+    struct StateChange
     {
-        done = true;
+        int android_action;
+        size_t index;
+    };
+
+    std::vector<StateChange> state_changes;
+    for (size_t i = 0, e = mir_touch_event_point_count(touch); i != e; ++i)
+    {
+        auto const action = mir_touch_event_action(touch, i);
+        if (action == mir_touch_action_down)
+            state_changes.push_back(StateChange{AMOTION_EVENT_ACTION_DOWN, i});
+        if (action == mir_touch_action_up)
+            state_changes.push_back(StateChange{AMOTION_EVENT_ACTION_UP, i});
+    }
+
+    if (state_changes.empty())
+        state_changes.push_back(StateChange{AMOTION_EVENT_ACTION_MOVE, 0});
+
+    for (auto state_change : state_changes)
+    {
         std::memset(&coords, 0, sizeof(coords));
         std::memset(&properties, 0, sizeof(properties));
 
-        int android_action = AMOTION_EVENT_ACTION_MOVE;
         int contacts_in_event = 0;
-
+        int action_index = 0;
         for (size_t i = 0, e = mir_touch_event_point_count(touch); i != e; ++i)
         {
             auto const action = mir_touch_event_action(touch, i);
-            auto const already_sent = sent_indices.find(i) != sent_indices.end();
-            auto const encode_android_action = [&](int action) -> int
-            {
-                return (contacts_in_event << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT)|action;
-            };
             auto const add_contact_data = [&]()
             {
                 coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_X, mir_touch_event_axis_value(touch, i, mir_touch_axis_x));
@@ -301,52 +312,26 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t
                 ++contacts_in_event;
             };
 
-
-            if (action == mir_touch_action_up)
+            if (i == state_change.index)
             {
-                if (already_sent)
-                    continue;
-
-                if (android_action == AMOTION_EVENT_ACTION_MOVE)
-                {
-                    android_action = e > 1 ? encode_android_action(AMOTION_EVENT_ACTION_UP) : AMOTION_EVENT_ACTION_POINTER_UP;
-                    sent_indices.insert(i);
-                }
-                else
-                {
-                    done = false;
-                }
-
+                action_index = contacts_in_event;
                 add_contact_data();
             }
-            else if (action == mir_touch_action_down)
-            {
-                if (already_sent)
-                {
-                    add_contact_data();
-                }
-                else if (android_action == AMOTION_EVENT_ACTION_MOVE)
-                {
-                    android_action = e > 1 ? encode_android_action(AMOTION_EVENT_ACTION_DOWN) : AMOTION_EVENT_ACTION_POINTER_DOWN;
-                    add_contact_data();
-                    sent_indices.insert(i);
-                }
-                else
-                {
-                    done = false;
-                }
-            }
-            else
-            {
+
+            // before a touch up state change got processed it is treated as 'change', skipped otherwise
+            // after a touch down state change got processed it is treated as 'change', skipped otherwise
+            if ((i < state_change.index && action != mir_touch_action_up)
+                || (i > state_change.index && action != mir_touch_action_down))
                 add_contact_data();
-            }
         }
 
-        ret = publisher.publishMotionEvent(
-            seq, mir_input_event_get_device_id(input_event), AINPUT_SOURCE_TOUCHSCREEN, android_action, flags,
-            edge_flags, mia::android_modifiers_from_mir(mir_touch_event_modifiers(touch)), button_state, x_offset,
-            y_offset, x_precision, y_precision, event.motion.mac, event_time, event_time,
-            contacts_in_event, properties, coords);
+        state_change.android_action |= (action_index << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
+
+        ret = publisher.publishMotionEvent(seq, mir_input_event_get_device_id(input_event), AINPUT_SOURCE_TOUCHSCREEN,
+                                           state_change.android_action, flags, edge_flags,
+                                           mia::android_modifiers_from_mir(mir_touch_event_modifiers(touch)),
+                                           button_state, x_offset, y_offset, x_precision, y_precision, event.motion.mac,
+                                           event_time, event_time, contacts_in_event, properties, coords);
     }
 
     return ret;
