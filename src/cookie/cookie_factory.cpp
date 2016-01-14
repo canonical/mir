@@ -141,7 +141,7 @@ private:
     bool verify_mac(uint64_t timestamp, uint64_t const& mac)
     {
         // FIXME Soon to change to 160bits!
-        uint64_t calculated_mac;
+        uint64_t calculated_mac{0};
         uint8_t* message = reinterpret_cast<uint8_t*>(const_cast<decltype(timestamp)*>(&timestamp));
         hmac_sha1_update(&ctx, sizeof(timestamp), message);
         hmac_sha1_digest(&ctx, sizeof(calculated_mac), reinterpret_cast<uint8_t*>(&calculated_mac));

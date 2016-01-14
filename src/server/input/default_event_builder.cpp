@@ -35,8 +35,8 @@ mi::DefaultEventBuilder::DefaultEventBuilder(MirInputDeviceId device_id,
 mir::EventUPtr mi::DefaultEventBuilder::key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code,
                                                   int scan_code)
 {
-    // FIXME Moveing to 160bits soon
-    uint64_t mac = *(reinterpret_cast<uint64_t*>(cookie_factory->timestamp_to_mac(timestamp.count()).data()));
+    // FIXME Moving to 160bits soon
+    auto mac = *(reinterpret_cast<uint64_t*>(cookie_factory->timestamp_to_mac(timestamp.count()).data()));
     return me::make_event(device_id, timestamp, mac, action, key_code, scan_code, mir_input_event_modifier_none);
 }
 
@@ -52,8 +52,8 @@ void mi::DefaultEventBuilder::add_touch(MirEvent& event, MirTouchId touch_id, Mi
 {
     if (action == mir_touch_action_up || action == mir_touch_action_down)
     {
-        // FIXME Moveing to 160bits soon
-        uint64_t mac = *(reinterpret_cast<uint64_t*>(cookie_factory->timestamp_to_mac(event.motion.event_time.count()).data()));
+        // FIXME Moving to 160bits soon
+        auto mac = *(reinterpret_cast<uint64_t*>(cookie_factory->timestamp_to_mac(event.motion.event_time.count()).data()));
         event.motion.mac = mac;
     }
 
@@ -68,7 +68,7 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp, MirPo
     const float x_axis_value = 0;
     const float y_axis_value = 0;
     uint64_t mac = 0;
-    // FIXME Moveing to 160bits soon
+    // FIXME Moving to 160bits soon
     if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
         mac = *(reinterpret_cast<uint64_t*>(cookie_factory->timestamp_to_mac(timestamp.count()).data()));
     return me::make_event(device_id, timestamp, mac, mir_input_event_modifier_none, action, buttons_pressed, x_axis_value, y_axis_value,

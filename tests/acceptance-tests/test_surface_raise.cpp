@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -48,12 +48,6 @@ void cookie_capturing_callback(MirSurface* surface, MirEvent const* ev, void* ct
 
 struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
 {
-    ~RaiseSurfaces()
-    {
-        for (auto& e : out_cookies)
-            free(e);
-    }
-
     void SetUp() override
     {
         ConnectedClientHeadlessServer::SetUp();
@@ -86,12 +80,26 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
         EXPECT_TRUE(surface_fullscreen);
     }
 
+    void handle_input_event(MirInputEvent const* iev)
+    {
+        std::lock_guard<std::mutex> lk(mutex);
+        if (mir_input_event_has_cookie(iev))
+        {
+            auto const size = mir_input_event_get_cookie_size(iev);
+            std::vector<uint8_t> cookie(size);
+
+            mir_input_event_copy_cookie(iev, cookie.data());
+            out_cookies.push_back(cookie);
+        }
+        
+        event_count++;
+    }
+
     MirSurface* surface1;
     MirSurface* surface2;
 
-    std::vector<void*> out_cookies;
+    std::vector<std::vector<uint8_t>> out_cookies;
     size_t event_count{0};
-    std::mutex mutex;
 
     MirLifecycleState lifecycle_state{mir_lifecycle_state_resumed};
 
@@ -101,36 +109,23 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
     std::unique_ptr<mtf::FakeInputDevice> fake_pointer{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid", mi::DeviceCapability::pointer})
         };
+
+private:
+    std::mutex mutex;
 };
 
 namespace
 {
 
-void* get_cookie(MirInputEvent const* iev)
-{
-    auto const size = mir_input_event_get_cookie_size(iev);
-    void* cookie = malloc(size);
-    mir_input_event_copy_cookie(iev, cookie);
-
-    return cookie;
-}
-
 void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void* ctx)
 {
     auto const event_type = mir_event_get_type(ev);
-    auto raise_surfaces = reinterpret_cast<RaiseSurfaces*>(ctx);
+    auto raise_surfaces = static_cast<RaiseSurfaces*>(ctx);
     
     if (event_type == mir_event_type_input)
     {   
         auto const* iev = mir_event_get_input_event(ev);
-
-        std::lock_guard<std::mutex> lk(raise_surfaces->mutex);
-        if (mir_input_event_has_cookie(iev))
-        {
-            raise_surfaces->out_cookies.push_back(get_cookie(iev));
-        }
-        
-        raise_surfaces->event_count++;
+        raise_surfaces->handle_input_event(iev);
     }
 }
 
@@ -171,7 +166,7 @@ TEST_F(RaiseSurfaces, key_event_with_cookie)
     {
         ASSERT_FALSE(out_cookies.empty());
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
-        attempt_focus(surface2, out_cookies.back());
+        attempt_focus(surface2, out_cookies.back().data());
     }
 }
 
@@ -186,7 +181,7 @@ TEST_F(RaiseSurfaces, older_timestamp_does_not_focus)
         ASSERT_FALSE(out_cookies.empty());
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
 
-        mir_surface_raise_with_cookie(surface1, out_cookies.front());
+        mir_surface_raise_with_cookie(surface1, out_cookies.front().data());
 
         // Need to wait for this call to actually go through
         std::this_thread::sleep_for(std::chrono::milliseconds{1000});
@@ -205,7 +200,7 @@ TEST_F(RaiseSurfaces, motion_events_dont_prevent_raise)
         {
             ASSERT_FALSE(out_cookies.empty());
             EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
-            EXPECT_TRUE(attempt_focus(surface1, out_cookies.back()));
+            EXPECT_TRUE(attempt_focus(surface1, out_cookies.back().data()));
         }
     }
 }

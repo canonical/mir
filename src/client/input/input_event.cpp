@@ -405,14 +405,14 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev)
             return true;
         case mir_input_event_type_pointer:
         {
-            auto const* pev = mir_input_event_get_pointer_event(ev);
+            auto const pev = mir_input_event_get_pointer_event(ev);
             auto const pev_action = mir_pointer_event_action(pev);
             return (pev_action == mir_pointer_action_button_up ||
                     pev_action == mir_pointer_action_button_down);
         }
         case mir_input_event_type_touch:
         {
-            auto const* tev = mir_input_event_get_touch_event(ev);
+            auto const tev = mir_input_event_get_touch_event(ev);
             auto const point_count = mir_touch_event_point_count(tev);
             for (size_t i = 0; i < point_count; i++)
             {
@@ -442,7 +442,7 @@ size_t mir_input_event_get_cookie_size(MirInputEvent const* ev)
 
 void mir_input_event_copy_cookie(MirInputEvent const* ev, void* raw_cookie)
 {
-    auto const* old_ev = old_ev_from_new(ev);
+    auto const old_ev = old_ev_from_new(ev);
 
     if(mir_event_get_type(old_ev) != mir_event_type_input)
     {
@@ -450,7 +450,7 @@ void mir_input_event_copy_cookie(MirInputEvent const* ev, void* raw_cookie)
         abort();
     }
 
-    auto* cookie = static_cast<mir::cookie::MirCookie*>(raw_cookie);
+    auto cookie = static_cast<mir::cookie::MirCookie*>(raw_cookie);
     cookie->timestamp = mir_input_event_get_event_time(ev);
 
     switch (old_ev->type)

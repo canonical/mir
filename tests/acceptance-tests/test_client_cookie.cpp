@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -51,12 +51,6 @@ public:
             { return mir::cookie::CookieFactory::create_saving_secret(cookie_secret); });
     }
 
-    ~ClientCookies()
-    {
-        for (auto& e : out_cookies)
-            free(e);
-    }
-
     void SetUp() override
     {
         mtf::ConnectedClientWithASurface::SetUp();
@@ -71,10 +65,24 @@ public:
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
     }
 
+    void handle_input_event(MirInputEvent const* iev)
+    {
+        std::lock_guard<std::mutex> lk(mutex);
+        if (mir_input_event_has_cookie(iev))
+        {
+            auto const size = mir_input_event_get_cookie_size(iev);
+            std::vector<uint8_t> cookie(size);
+
+            mir_input_event_copy_cookie(iev, cookie.data());
+            out_cookies.push_back(cookie);
+        }
+
+        event_count++;
+    }
+
     std::vector<uint8_t> cookie_secret;
-    std::vector<void*> out_cookies;
+    std::vector<std::vector<uint8_t>> out_cookies;
     size_t event_count{0};
-    std::mutex mutex;
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
@@ -86,37 +94,23 @@ public:
        mtf::add_fake_input_device(mi::InputDeviceInfo{
        "touch screen", "touch-screen-uid", mi::DeviceCapability::touchscreen | mi::DeviceCapability::multitouch})
        };
+
+private:
+    std::mutex mutex;
 };
 
 namespace
 {
 
-void* get_cookie(MirInputEvent const* iev)
-{
-    auto const size = mir_input_event_get_cookie_size(iev);
-    void* cookie = malloc(size);
-    mir_input_event_copy_cookie(iev, cookie);
-
-    return cookie;
-}
-
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
 void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
 {
     auto const event_type = mir_event_get_type(ev);
-    auto client_cookie = reinterpret_cast<ClientCookies*>(ctx);
+    auto client_cookie = static_cast<ClientCookies*>(ctx);
 
     if (event_type == mir_event_type_input)
     {
         auto const* iev = mir_event_get_input_event(ev);
-
-        std::lock_guard<std::mutex> lk(client_cookie->mutex);
-        if (mir_input_event_has_cookie(iev))
-        {
-            client_cookie->out_cookies.push_back(get_cookie(iev));
-        }
-
-        client_cookie->event_count++;
+        client_cookie->handle_input_event(iev);
     }
 }
 
@@ -143,7 +137,7 @@ TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
     {
         ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        auto* last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back());
+        auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back().data());
         EXPECT_TRUE(factory->attest_timestamp(last_cookie));
     }
 }
@@ -171,7 +165,7 @@ TEST_F(ClientCookies, pointer_click_events_have_attestable_cookies)
     {
         ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        auto* last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back());
+        auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back().data());
         EXPECT_TRUE(factory->attest_timestamp(last_cookie));
     }
 }
@@ -209,7 +203,7 @@ TEST_F(ClientCookies, touch_click_events_have_attestable_cookies)
     {
         ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        auto* last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back());
+        auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back().data());
         EXPECT_TRUE(factory->attest_timestamp(last_cookie));
     }
 }
