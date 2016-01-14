@@ -31,7 +31,7 @@ mcl::ConnectionSurfaceMap::ConnectionSurfaceMap()
 
 mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
 {
-    std::unordered_map<frontend::SurfaceId, MirSurface*> surface_map;
+    std::unordered_map<frontend::SurfaceId, std::shared_ptr<MirSurface>> surface_map;
     std::unordered_map<frontend::BufferStreamId, StreamInfo> stream_map;
     {
         //Prevent TSAN from flagging lock ordering issues
@@ -42,18 +42,8 @@ mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
         stream_map = std::move(streams);
     }
 
-    // Unless the client has screwed up there should be no surfaces left
+    // Unless the client has screwed up there should be no streams left
     // here. (OTOH *we* don't need to leak memory when clients screw up.)
-    for (auto const& surface : surface_map)
-    {
-        // Note: is_valid is very important here. Not just for leaky clients
-        //       but tests like MirClientSurfaceTest will new/delete their own
-        //       MirSurfaces. So this check also avoids double-free in that
-        //       case.
-        if (MirSurface::is_valid(surface.second))
-            delete surface.second;
-    }
-
     for (auto const& info : stream_map)
     {
         if (info.second.owned)
@@ -69,7 +59,7 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
     if (it != surfaces.end())
     {
         auto const surface = it->second;
-        exec(surface);
+        exec(surface.get());
     }
     else
     {
@@ -79,7 +69,7 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
     }
 }
 
-void mcl::ConnectionSurfaceMap::insert(mf::SurfaceId surface_id, MirSurface* surface)
+void mcl::ConnectionSurfaceMap::insert(mf::SurfaceId surface_id, std::shared_ptr<MirSurface> const& surface)
 {
     // get_buffer_stream has internal locks - call before locking mutex to
     // avoid locking ordering issues
