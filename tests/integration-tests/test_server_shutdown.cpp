@@ -30,6 +30,7 @@
 #include "mir_test_framework/server_runner.h"
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test_framework/temporary_environment_value.h"
 
 #include "mir/test/doubles/null_display_buffer_compositor_factory.h"
 #include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
@@ -317,4 +318,20 @@ TEST(ServerShutdownWithThreadException,
     EXPECT_EQ(0, connector.use_count());
     EXPECT_EQ(0, input_manager.use_count());
     EXPECT_EQ(0, hub.use_count());
+}
+
+// This also acts as a regression test for LP: #1528135
+TEST(ServerShutdownWithException,
+     clean_shutdown_on_plugin_construction_exception)
+{
+    char const* argv = "ServerShutdownWithException";
+    mtf::TemporaryEnvironmentValue graphics_platform("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-throw.so").c_str());
+    mtf::TemporaryEnvironmentValue input_platform("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
+    mir::DefaultServerConfiguration config(1, &argv);
+
+    EXPECT_THROW(mir::run_mir(config,
+                              [](mir::DisplayServer&)
+                              {
+                              }),
+                 std::runtime_error);
 }
