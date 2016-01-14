@@ -29,6 +29,8 @@
 
 #include <linux/input.h>
 
+#include <mutex>
+
 namespace mtf = mir_test_framework;
 namespace mt = mir::test;
 namespace mi = mir::input;
@@ -72,6 +74,7 @@ public:
     std::vector<uint8_t> cookie_secret;
     std::vector<void*> out_cookies;
     size_t event_count{0};
+    std::mutex mutex;
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
@@ -92,7 +95,7 @@ void* get_cookie(MirInputEvent const* iev)
 {
     auto const size = mir_input_event_get_cookie_size(iev);
     void* cookie = malloc(size);
-    mir_input_event_copy_cookie(iev, cookie, size);
+    mir_input_event_copy_cookie(iev, cookie);
 
     return cookie;
 }
@@ -106,6 +109,8 @@ void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
     if (event_type == mir_event_type_input)
     {
         auto const* iev = mir_event_get_input_event(ev);
+
+        std::lock_guard<std::mutex> lk(client_cookie->mutex);
         if (mir_input_event_has_cookie(iev))
         {
             client_cookie->out_cookies.push_back(get_cookie(iev));

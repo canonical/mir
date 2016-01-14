@@ -33,6 +33,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <mutex>
+
 namespace mtf = mir_test_framework;
 namespace mt = mir::test;
 namespace mi = mir::input;
@@ -89,6 +91,7 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
 
     std::vector<void*> out_cookies;
     size_t event_count{0};
+    std::mutex mutex;
 
     MirLifecycleState lifecycle_state{mir_lifecycle_state_resumed};
 
@@ -107,7 +110,7 @@ void* get_cookie(MirInputEvent const* iev)
 {
     auto const size = mir_input_event_get_cookie_size(iev);
     void* cookie = malloc(size);
-    mir_input_event_copy_cookie(iev, cookie, size);
+    mir_input_event_copy_cookie(iev, cookie);
 
     return cookie;
 }
@@ -120,8 +123,10 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
     if (event_type == mir_event_type_input)
     {   
         auto const* iev = mir_event_get_input_event(ev);
+
+        std::lock_guard<std::mutex> lk(raise_surfaces->mutex);
         if (mir_input_event_has_cookie(iev))
-        {   
+        {
             raise_surfaces->out_cookies.push_back(get_cookie(iev));
         }
         

@@ -440,8 +440,7 @@ size_t mir_input_event_get_cookie_size(MirInputEvent const* ev)
     return 0;
 }
 
-// TODO size unused for now until we switch to 160bit for the MAC!
-void mir_input_event_copy_cookie(MirInputEvent const* ev, void* raw_cookie, size_t /*size*/)
+void mir_input_event_copy_cookie(MirInputEvent const* ev, void* raw_cookie)
 {
     auto const* old_ev = old_ev_from_new(ev);
 
@@ -451,7 +450,7 @@ void mir_input_event_copy_cookie(MirInputEvent const* ev, void* raw_cookie, size
         abort();
     }
 
-    auto* cookie = reinterpret_cast<mir::cookie::MirCookie*>(raw_cookie);
+    auto* cookie = static_cast<mir::cookie::MirCookie*>(raw_cookie);
     cookie->timestamp = mir_input_event_get_event_time(ev);
 
     switch (old_ev->type)
@@ -463,6 +462,9 @@ void mir_input_event_copy_cookie(MirInputEvent const* ev, void* raw_cookie, size
         cookie->mac = old_ev->key.mac;
         break;
     default:
+    {
+        mir::log_critical("expected a key or motion events, type was: " + mir::event_type_to_string(old_ev->type));
         abort();
+    }
     }
 }
