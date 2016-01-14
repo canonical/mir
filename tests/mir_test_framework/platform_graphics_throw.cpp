@@ -17,6 +17,7 @@
  */
 
 #include "mir/graphics/platform.h"
+#include "mir/test/doubles/null_platform.h"
 #include "mir/assert_module_entry_point.h"
 
 #include <boost/throw_exception.hpp>
@@ -29,6 +30,19 @@ namespace options
 {
 class ProgramOption;
 }
+}
+
+namespace
+{
+class ExceptionThrowingPlatform : public mir::test::doubles::NullPlatform
+{
+public:
+    ExceptionThrowingPlatform()
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Exception during construction"));
+    }
+};
+
 }
 
 mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*/)
@@ -50,13 +64,18 @@ mir::ModuleProperties const* describe_graphics_module()
     return &description;
 }
 
+void add_graphics_platform_options(boost::program_options::options_description&)
+{
+    mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
+}
+
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const&,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mg::DisplayReport> const&)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
-    BOOST_THROW_EXCEPTION(std::runtime_error("Exception during construction"));
+    return mir::make_module_ptr<ExceptionThrowingPlatform>();
 }
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
@@ -64,5 +83,5 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::NestedContext> const&)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
-    BOOST_THROW_EXCEPTION(std::runtime_error("Exception during construction"));
+    return mir::make_module_ptr<ExceptionThrowingPlatform>();
 }

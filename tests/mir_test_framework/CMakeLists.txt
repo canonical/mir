@@ -159,6 +159,12 @@ add_library(
   platform_graphics_throw.cpp
 )
 
+target_link_libraries(
+  mirplatformgraphicsthrow 
+
+  mirplatform
+)
+
 set_target_properties(
   mirplatformgraphicsthrow PROPERTIES;
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules

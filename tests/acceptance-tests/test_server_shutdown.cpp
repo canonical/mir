@@ -17,9 +17,12 @@
  */
 
 #include "mir/fatal.h"
+#include "mir/server.h"
 
 #include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir_test_framework/process.h"
+#include "mir_test_framework/temporary_environment_value.h"
+#include "mir_test_framework/executable_path.h"
 
 #include <gtest/gtest.h>
 
@@ -48,6 +51,19 @@ TEST_F(ServerShutdown, normal_exit_removes_endpoint)
         stop_server();
         EXPECT_FALSE(file_exists(mir_test_socket));
     }
+}
+
+// Regression test for LP: #1528135
+TEST(ServerShutdownWithException, clean_shutdown_on_plugin_construction_exception)
+{
+    char const* argv = "ServerShutdownWithException";
+    mtf::TemporaryEnvironmentValue graphics_platform("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-throw.so").c_str());
+    mtf::TemporaryEnvironmentValue input_platform("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
+    mir::Server server;
+
+    server.set_command_line(0, &argv);
+    server.apply_settings();
+    server.run();
 }
 
 using ServerShutdownDeathTest = ServerShutdown;
