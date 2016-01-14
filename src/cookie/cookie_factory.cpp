@@ -121,8 +121,11 @@ public:
 
     bool attest_timestamp(uint64_t const& timestamp, std::vector<uint8_t> const& mac) override
     {
+        uint64_t real_mac = 0;
+
         // FIXME Soon to come 160bit + a constant time memcmp!
-        uint64_t real_mac = *reinterpret_cast<uint64_t*>(const_cast<uint8_t*>(mac.data()));
+        if (!mac.empty())
+            real_mac = *reinterpret_cast<uint64_t*>(const_cast<uint8_t*>(mac.data()));
 
         return verify_mac(timestamp, real_mac);
     }

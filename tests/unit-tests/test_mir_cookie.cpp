@@ -39,7 +39,7 @@ TEST(MirCookieFactory, doesnt_attest_faked_timestamp)
     auto factory = mir::cookie::CookieFactory::create_from_secret(secret);
 
     uint64_t timestamp = 0x33221100;
-    std::vector<uint8_t> mac{0x33, 0x22, 0x11, 0x00};
+    std::vector<uint8_t> mac{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
 
     EXPECT_FALSE(factory->attest_timestamp(timestamp, mac));
 }
