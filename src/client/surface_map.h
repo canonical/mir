@@ -22,6 +22,7 @@
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/buffer_stream_id.h"
 #include <functional>
+#include <memory>
 
 struct MirSurface;
 
