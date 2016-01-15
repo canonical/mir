@@ -119,4 +119,5 @@ int main(int argc, char** argv)
         mir_buffer_stream_release_buffer_sync(stream, buffers[i]);
 
     //TODO: connection shutdown stuff
+    return 0;
 }
