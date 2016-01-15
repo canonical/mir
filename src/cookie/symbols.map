@@ -1,4 +1,4 @@
-MIR_COOKIE_1 {
+MIR_COOKIE_2 {
  global:
   extern "C++" {
     mir::cookie::CookieFactory::optimal_secret_size*;

@@ -17,7 +17,7 @@ include_directories(
   ${NETTLE_INCLUDE_DIRS}
 )
 
-set(MIRCOOKIE_ABI 1)
+set(MIRCOOKIE_ABI 2)
 set(symbol_map ${CMAKE_SOURCE_DIR}/src/cookie/symbols.map)
 
 add_library(mircookie SHARED
