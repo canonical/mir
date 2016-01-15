@@ -200,6 +200,21 @@ typedef struct MirPlatformPackage
     int fd[mir_platform_package_max];
 } MirPlatformPackage;
 
+/**
+ * Retrieved information about a loadable module. This allows clients to
+ * identify the underlying platform. E.g. whether the graphics are
+ * "mir:android" or "mir:mesa".
+ * Third party graphics platforms do not currently exist but should be
+ * named according to the vendor and platform. Vis: "<vendor>:<platform>"
+ */
+typedef struct MirModuleProperties
+{
+    char const *name;
+    int major_version;
+    int minor_version;
+    int micro_version;
+    char const *filename;
+} MirModuleProperties;
 
 /**
  * Retrieved information about a MirSurface. This is most useful for learning
