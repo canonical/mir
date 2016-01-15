@@ -24,6 +24,8 @@
 #include "buffer_stream.h"
 #include "client_buffer_stream_factory.h"
 
+#include "mir_toolkit/mir_buffer_stream_nbs.h"
+#include "mir_toolkit/mir_buffer.h"
 #include "mir/client_buffer.h"
 
 #include "mir/uncaught.h"
@@ -207,4 +209,73 @@ char const* mir_buffer_stream_get_error_message(MirBufferStream* opaque_stream)
 {
     auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(opaque_stream);
     return buffer_stream->get_error_message();
+}
+
+
+//private NBS api under development
+void mir_buffer_stream_allocate_buffer(
+    MirBufferStream*, 
+    int, int,
+    MirPixelFormat,
+    MirBufferUsage,
+    mir_buffer_callback, void*)
+{
+}
+
+MirBuffer* mir_buffer_stream_allocate_buffer_sync(
+    MirBufferStream*, int, int, MirPixelFormat, MirBufferUsage) 
+{
+    return nullptr;
+}
+
+void mir_buffer_stream_release_buffer(
+    MirBufferStream*, MirBuffer*, mir_buffer_stream_callback, void*)
+{
+}
+
+void mir_buffer_stream_release_buffer_sync(MirBufferStream*, MirBuffer*) 
+{
+}
+
+void mir_buffer_stream_submit_buffer(MirBufferStream* buffer_stream, MirBuffer* buffer,
+    mir_buffer_callback submission_callback, void* submission_context,
+    mir_buffer_callback available_callback, void* available_context)
+{
+    if (submission_callback)
+        submission_callback(buffer_stream, buffer, submission_context);
+    if (available_callback)
+        available_callback(buffer_stream, buffer, available_context);
+}
+
+MirFenceType mir_buffer_get_fence_type(MirBuffer*)
+{
+    return mir_no_fence;
+}
+
+MirNativeFence* mir_buffer_get_fence(MirBuffer*)
+{
+    return nullptr;
+}
+
+void mir_buffer_set_fence(MirBuffer*, MirNativeFence*, MirFenceType)
+{
+}
+
+int mir_buffer_clear_fence(MirBuffer*, MirFenceType, int)
+{
+    return 0;
+}
+
+MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirFenceType) 
+{
+    return nullptr;
+}
+
+MirGraphicsRegion* mir_buffer_lock(MirBuffer*, MirFenceType)
+{
+    return nullptr;
+}
+
+void mir_buffer_unlock(MirGraphicsRegion*) 
+{
 }
