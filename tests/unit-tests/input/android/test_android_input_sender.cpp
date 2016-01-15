@@ -22,6 +22,7 @@
 #include "src/server/input/android/android_input_channel.h"
 #include "src/server/input/android/input_sender.h"
 #include "src/server/report/null_report_factory.h"
+#include "src/server/input/default_event_builder.h"
 
 #include "mir/test/doubles/stub_scene_surface.h"
 #include "mir/test/doubles/mock_input_surface.h"
@@ -36,6 +37,7 @@
 #include "androidfw/InputTransport.h"
 
 #include "mir/input/input_report.h"
+#include "mir/cookie_factory.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -92,6 +94,14 @@ public:
     std::shared_ptr<ms::Observer> observer;
 };
 
+class StubCookieFactory : public mir::cookie::CookieFactory
+{
+public:
+    MirCookie timestamp_to_cookie(uint64_t const&) override { return {0, 0};}
+    bool attest_timestamp(MirCookie const&) override {return true;}
+    StubCookieFactory() = default;
+};
+
 }
 
 class AndroidInputSender : public ::testing::Test
@@ -101,7 +111,14 @@ public:
     size_t const test_pointer_count = 2;
     float test_x_coord[2] = {12, 23};
     float test_y_coord[2] = {17, 9};
-    
+    MirTouchTooltype const tool = mir_touch_tooltype_finger;
+    float const pressure = 0.6f;
+    float const major = 8;
+    float const minor = 4;
+    float const size = 8;
+    StubCookieFactory cookie_factory;
+    mi::DefaultEventBuilder builder{MirInputDeviceId(), mt::fake_shared(cookie_factory)};
+
     AndroidInputSender()
        : key_event(mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(1), 0, mir_keyboard_action_down,
                                     7, test_scan_code, mir_input_event_modifier_none)),
@@ -393,4 +410,151 @@ TEST_F(AndroidInputSender, observer_informed_about_closed_socket_on_send_event)
         send_failed(mt::MirKeyEventMatches(*key_event), &stub_surface, mir::input::InputSendObserver::socket_error));
     ::close(channel->client_fd());
     sender.send_event(*key_event, channel);
+}
+
+TEST_F(AndroidInputSender, encodes_multiple_touch_contact_downs_as_multiple_events)
+{
+    // TODO When the rework of the transport encoding is finished we might want to revisit this decision
+    register_surface();
+
+    auto touch_ev_with_simultaneous_down = builder.touch_event(std::chrono::nanoseconds(86));
+    builder.add_touch(*touch_ev_with_simultaneous_down, 2, mir_touch_action_down, tool, 50, 60, pressure, major, minor, size);
+    builder.add_touch(*touch_ev_with_simultaneous_down, 4, mir_touch_action_down, tool, 80, 90, pressure, major, minor, size);
+
+    sender.send_event(*touch_ev_with_simultaneous_down, channel);
+
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(86), &seq, &event));
+    EXPECT_EQ(&client_motion_event, event);
+    EXPECT_EQ(AMOTION_EVENT_ACTION_DOWN, client_motion_event.getActionMasked());
+    EXPECT_EQ(0, client_motion_event.getActionIndex());
+    EXPECT_EQ(2, client_motion_event.getPointerId(0));
+    EXPECT_EQ(1, client_motion_event.getPointerCount());
+
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(86), &seq, &event));
+    EXPECT_EQ(&client_motion_event, event);
+    EXPECT_EQ(AMOTION_EVENT_ACTION_DOWN, client_motion_event.getActionMasked());
+    EXPECT_EQ(1, client_motion_event.getActionIndex());
+    EXPECT_EQ(2, client_motion_event.getPointerId(0));
+    EXPECT_EQ(4, client_motion_event.getPointerId(1));
+    EXPECT_EQ(2, client_motion_event.getPointerCount());
+}
+
+TEST_F(AndroidInputSender, encodes_multiple_touch_contact_downs_as_multiple_events_but_keeps_only_moved_contacts_in_place)
+{
+    // TODO When the rework of the transport encoding is finished we might want to revisit this decision
+    register_surface();
+
+    auto touch_ev_with_simultaneous_down = builder.touch_event(std::chrono::nanoseconds(86));
+    builder.add_touch(*touch_ev_with_simultaneous_down, 2, mir_touch_action_down, tool, 50, 60, pressure, major, minor, size);
+    builder.add_touch(*touch_ev_with_simultaneous_down, 3, mir_touch_action_change, tool, 10, 10, pressure, major, minor, size);
+    builder.add_touch(*touch_ev_with_simultaneous_down, 4, mir_touch_action_down, tool, 80, 90, pressure, major, minor, size);
+
+    sender.send_event(*touch_ev_with_simultaneous_down, channel);
+
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(86), &seq, &event));
+    EXPECT_EQ(&client_motion_event, event);
+    EXPECT_EQ(AMOTION_EVENT_ACTION_DOWN, client_motion_event.getActionMasked());
+    EXPECT_EQ(0, client_motion_event.getActionIndex());
+    EXPECT_EQ(2, client_motion_event.getPointerId(0));
+    EXPECT_EQ(3, client_motion_event.getPointerId(1));
+    EXPECT_EQ(2, client_motion_event.getPointerCount());
+
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(86), &seq, &event));
+    EXPECT_EQ(&client_motion_event, event);
+    EXPECT_EQ(AMOTION_EVENT_ACTION_DOWN, client_motion_event.getActionMasked());
+    EXPECT_EQ(2, client_motion_event.getActionIndex());
+    EXPECT_EQ(2, client_motion_event.getPointerId(0));
+    EXPECT_EQ(3, client_motion_event.getPointerId(1));
+    EXPECT_EQ(4, client_motion_event.getPointerId(2));
+    EXPECT_EQ(3, client_motion_event.getPointerCount());
+}
+
+TEST_F(AndroidInputSender, encodes_multiple_releases_in_several_events)
+{
+    // TODO When the rework of the transport encoding is finished we might want to revisit this decision
+    register_surface();
+
+    auto touch_ev_with_simultaneous_down = builder.touch_event(std::chrono::nanoseconds(86));
+    builder.add_touch(*touch_ev_with_simultaneous_down, 2, mir_touch_action_up, tool, 50, 60, pressure, major, minor, size);
+    builder.add_touch(*touch_ev_with_simultaneous_down, 3, mir_touch_action_change, tool, 10, 10, pressure, major, minor, size);
+    builder.add_touch(*touch_ev_with_simultaneous_down, 4, mir_touch_action_up, tool, 80, 90, pressure, major, minor, size);
+
+    sender.send_event(*touch_ev_with_simultaneous_down, channel);
+
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(86), &seq, &event));
+    EXPECT_EQ(&client_motion_event, event);
+    EXPECT_EQ(AMOTION_EVENT_ACTION_UP, client_motion_event.getActionMasked());
+    EXPECT_EQ(0, client_motion_event.getActionIndex());
+    EXPECT_EQ(2, client_motion_event.getPointerId(0));
+    EXPECT_EQ(3, client_motion_event.getPointerId(1));
+    EXPECT_EQ(4, client_motion_event.getPointerId(2));
+    EXPECT_EQ(3, client_motion_event.getPointerCount());
+
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(86), &seq, &event));
+    EXPECT_EQ(&client_motion_event, event);
+    EXPECT_EQ(AMOTION_EVENT_ACTION_UP, client_motion_event.getActionMasked());
+    EXPECT_EQ(1, client_motion_event.getActionIndex());
+    EXPECT_EQ(3, client_motion_event.getPointerId(0));
+    EXPECT_EQ(4, client_motion_event.getPointerId(1));
+    EXPECT_EQ(2, client_motion_event.getPointerCount());
+}
+
+TEST_F(AndroidInputSender, encodes_combinations_of_up_and_down_one_by_one)
+{
+    // TODO When the rework of the transport encoding is finished we might want to revisit this decision
+    register_surface();
+
+    auto touch_ev_with_simultaneous_down = builder.touch_event(std::chrono::nanoseconds(86));
+    builder.add_touch(*touch_ev_with_simultaneous_down, 2, mir_touch_action_up, tool, 50, 60, pressure, major, minor, size);
+    builder.add_touch(*touch_ev_with_simultaneous_down, 3, mir_touch_action_change, tool, 10, 10, pressure, major, minor, size);
+    builder.add_touch(*touch_ev_with_simultaneous_down, 4, mir_touch_action_down, tool, 80, 90, pressure, major, minor, size);
+
+    sender.send_event(*touch_ev_with_simultaneous_down, channel);
+
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(86), &seq, &event));
+    EXPECT_EQ(&client_motion_event, event);
+    EXPECT_EQ(AMOTION_EVENT_ACTION_UP, client_motion_event.getActionMasked());
+    EXPECT_EQ(0, client_motion_event.getActionIndex());
+    EXPECT_EQ(2, client_motion_event.getPointerId(0));
+    EXPECT_EQ(3, client_motion_event.getPointerId(1));
+    EXPECT_EQ(2, client_motion_event.getPointerCount());
+
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(86), &seq, &event));
+    EXPECT_EQ(&client_motion_event, event);
+    EXPECT_EQ(AMOTION_EVENT_ACTION_DOWN, client_motion_event.getActionMasked());
+    EXPECT_EQ(1, client_motion_event.getActionIndex());
+    EXPECT_EQ(3, client_motion_event.getPointerId(0));
+    EXPECT_EQ(4, client_motion_event.getPointerId(1));
+    EXPECT_EQ(2, client_motion_event.getPointerCount());
+}
+
+TEST_F(AndroidInputSender, encodes_combinations_of_down_and_up_one_by_one)
+{
+    // TODO When the rework of the transport encoding is finished we might want to revisit this decision
+    register_surface();
+
+    auto touch_ev_with_simultaneous_down = builder.touch_event(std::chrono::nanoseconds(86));
+    builder.add_touch(*touch_ev_with_simultaneous_down, 2, mir_touch_action_down, tool, 50, 60, pressure, major, minor, size);
+    builder.add_touch(*touch_ev_with_simultaneous_down, 3, mir_touch_action_change, tool, 10, 10, pressure, major, minor, size);
+    builder.add_touch(*touch_ev_with_simultaneous_down, 4, mir_touch_action_up, tool, 80, 90, pressure, major, minor, size);
+
+    sender.send_event(*touch_ev_with_simultaneous_down, channel);
+
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(86), &seq, &event));
+    EXPECT_EQ(&client_motion_event, event);
+    EXPECT_EQ(AMOTION_EVENT_ACTION_DOWN, client_motion_event.getActionMasked());
+    EXPECT_EQ(0, client_motion_event.getActionIndex());
+    EXPECT_EQ(2, client_motion_event.getPointerId(0));
+    EXPECT_EQ(3, client_motion_event.getPointerId(1));
+    EXPECT_EQ(4, client_motion_event.getPointerId(2));
+    EXPECT_EQ(3, client_motion_event.getPointerCount());
+
+    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, std::chrono::nanoseconds(86), &seq, &event));
+    EXPECT_EQ(&client_motion_event, event);
+    EXPECT_EQ(AMOTION_EVENT_ACTION_UP, client_motion_event.getActionMasked());
+    EXPECT_EQ(2, client_motion_event.getActionIndex());
+    EXPECT_EQ(2, client_motion_event.getPointerId(0));
+    EXPECT_EQ(3, client_motion_event.getPointerId(1));
+    EXPECT_EQ(4, client_motion_event.getPointerId(2));
+    EXPECT_EQ(3, client_motion_event.getPointerCount());
 }
