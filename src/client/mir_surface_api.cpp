@@ -492,7 +492,7 @@ void mir_surface_raise_with_cookie(MirSurface* surf, void const* raw_cookie)
     try
     {
         auto cookie = static_cast<mir::cookie::MirCookie const*>(raw_cookie);
-        surf->raise_surface_with_cookie(cookie);
+        surf->raise_surface_with_cookie(*cookie);
     }
     catch (std::exception const& ex)
     {
