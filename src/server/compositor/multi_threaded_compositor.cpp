@@ -198,6 +198,22 @@ public:
         }
     }
 
+    void schedule_compositing(int num_frames, geometry::Rectangle const& damage)
+    {
+        bool took_damage = false;
+
+        std::lock_guard<std::mutex> lock{run_mutex};
+
+        group.for_each_display_buffer([&](mg::DisplayBuffer& buffer)
+            { if (damage.overlaps(buffer.view_area())) took_damage = true; });
+
+        if (took_damage && num_frames > frames_scheduled)
+        {
+            frames_scheduled = num_frames;
+            run_cv.notify_one();
+        }
+    }
+
     void stop()
     {
         std::lock_guard<std::mutex> lock{run_mutex};
@@ -252,9 +268,9 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     {
         schedule_compositing(1);
     },
-    [this](int num)
+    [this](int num, geometry::Rectangle const& damage)
     {
-        schedule_compositing(num);
+        schedule_compositing(num, damage);
     });
 }
 
@@ -268,6 +284,13 @@ void mc::MultiThreadedCompositor::schedule_compositing(int num)
     report->scheduled();
     for (auto& f : thread_functors)
         f->schedule_compositing(num);
+}
+
+void mc::MultiThreadedCompositor::schedule_compositing(int num, geometry::Rectangle const& damage) const
+{
+    report->scheduled();
+    for (auto& f : thread_functors)
+        f->schedule_compositing(num, damage);
 }
 
 void mc::MultiThreadedCompositor::start()
