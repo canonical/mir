@@ -156,7 +156,7 @@ size_t mir_input_event_get_cookie_size(MirInputEvent const* ev);
  * \params[in] cookie An allocated void* with exactly cookie_size bytes
  * \params[in] size   The size of the allocated void*
  */
-void mir_input_event_copy_cookie(MirInputEvent const* ev, void* cookie, size_t size);
+void mir_input_event_copy_cookie(MirInputEvent const* ev, MirCookie* cookie, size_t size);
 
 #ifdef __cplusplus
 }

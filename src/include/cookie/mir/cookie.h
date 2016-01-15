@@ -21,18 +21,10 @@
 
 #include <stdint.h>
 
-namespace mir
-{
-namespace cookie
-{
-
 struct MirCookie
 {
     uint64_t timestamp;
     uint64_t mac;
 };
-
-}
-}
 
 #endif // MIR_COOKIE_H_

@@ -22,11 +22,11 @@
 #include <memory>
 #include <vector>
 
+struct MirCookie;
 namespace mir
 {
 namespace cookie
 {
-struct MirCookie;
 
 using Secret = std::vector<uint8_t>;
 

@@ -482,7 +482,7 @@ MirWaitHandle* MirSurface::set_preferred_orientation(MirOrientationMode mode)
     return configure(mir_surface_attrib_preferred_orientation, mode);
 }
 
-void MirSurface::raise_surface_with_cookie(mir::cookie::MirCookie const& cookie)
+void MirSurface::raise_surface_with_cookie(MirCookie const& cookie)
 {
     mp::RaiseRequest raise_request;
 

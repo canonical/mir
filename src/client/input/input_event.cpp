@@ -436,12 +436,12 @@ size_t mir_input_event_get_cookie_size(MirInputEvent const* ev)
 {
     mir::require(mir_input_event_has_cookie(ev));
 
-    return sizeof(mir::cookie::MirCookie);
+    return sizeof(MirCookie);
 }
 
-void mir_input_event_copy_cookie(MirInputEvent const* ev, void* raw_cookie, size_t size)
+void mir_input_event_copy_cookie(MirInputEvent const* ev, MirCookie* cookie, size_t size)
 {
-    mir::require(size == sizeof(mir::cookie::MirCookie));
+    mir::require(size == sizeof(MirCookie));
 
     auto const old_ev = old_ev_from_new(ev);
 
@@ -451,7 +451,6 @@ void mir_input_event_copy_cookie(MirInputEvent const* ev, void* raw_cookie, size
         abort();
     }
 
-    auto cookie = static_cast<mir::cookie::MirCookie*>(raw_cookie);
     cookie->timestamp = mir_input_event_get_event_time(ev);
 
     switch (old_ev->type)

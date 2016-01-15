@@ -115,7 +115,7 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
             auto const size = mir_input_event_get_cookie_size(iev);
             std::vector<uint8_t> cookie(size);
 
-            mir_input_event_copy_cookie(iev, cookie.data(), size);
+            mir_input_event_copy_cookie(iev, reinterpret_cast<MirCookie*>(cookie.data()), size);
             raise_surfaces->out_cookies.push_back(cookie);
         }
         
@@ -137,7 +137,7 @@ bool wait_for_n_events(size_t n, RaiseSurfaces const* raise_surfaces)
    return all_events;
 }
 
-bool attempt_focus(MirSurface* surface, void const* cookie)
+bool attempt_focus(MirSurface* surface, MirCookie const* cookie)
 {
     mir_surface_raise_with_cookie(surface, cookie);
     bool surface_becomes_focused = mt::spin_wait_for_condition_or_timeout(
@@ -162,7 +162,7 @@ TEST_F(RaiseSurfaces, key_event_with_cookie)
         std::lock_guard<std::mutex> lk(mutex);
         ASSERT_FALSE(out_cookies.empty());
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
-        attempt_focus(surface2, out_cookies.back().data());
+        attempt_focus(surface2, reinterpret_cast<MirCookie const*>(out_cookies.back().data()));
     }
 }
 
@@ -178,7 +178,7 @@ TEST_F(RaiseSurfaces, older_timestamp_does_not_focus)
         ASSERT_FALSE(out_cookies.empty());
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
 
-        mir_surface_raise_with_cookie(surface1, out_cookies.front().data());
+        mir_surface_raise_with_cookie(surface1, reinterpret_cast<MirCookie const*>(out_cookies.front().data()));
 
         // Need to wait for this call to actually go through
         std::this_thread::sleep_for(std::chrono::milliseconds{1000});
@@ -198,7 +198,7 @@ TEST_F(RaiseSurfaces, motion_events_dont_prevent_raise)
             std::lock_guard<std::mutex> lk(mutex);
             ASSERT_FALSE(out_cookies.empty());
             EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
-            EXPECT_TRUE(attempt_focus(surface1, out_cookies.back().data()));
+            EXPECT_TRUE(attempt_focus(surface1, reinterpret_cast<MirCookie const*>(out_cookies.back().data())));
         }
     }
 }
