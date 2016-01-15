@@ -22,7 +22,7 @@ set(symbol_map ${CMAKE_SOURCE_DIR}/src/cookie/symbols.map)
 
 add_library(mircookie SHARED
 
-  cookie_factory.cpp
+  cookie_authority.cpp
 )
 
 set_target_properties(mircookie

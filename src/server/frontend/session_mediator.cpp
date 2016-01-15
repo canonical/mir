@@ -49,7 +49,7 @@
 #include "mir/frontend/security_check_failed.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
-#include "mir/cookie_factory.h"
+#include "mir/cookie_authority.h"
 
 #include "mir/geometry/rectangles.h"
 #include "buffer_stream_tracker.h"
@@ -89,7 +89,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<mi::CursorImages> const& cursor_images,
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
-    std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory) :
+    std::shared_ptr<mir::cookie::CookieAuthority> const& cookie_authority) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -105,7 +105,7 @@ mf::SessionMediator::SessionMediator(
     cursor_images(cursor_images),
     translator{translator},
     anr_detector{anr_detector},
-    cookie_factory(cookie_factory),
+    cookie_authority(cookie_authority),
     buffer_stream_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
@@ -1027,7 +1027,7 @@ void mf::SessionMediator::raise_surface_with_cookie(
     auto mac_ptr = reinterpret_cast<uint8_t const*>(&cookie_mac);
     std::vector<uint8_t> mac(mac_ptr, mac_ptr + sizeof(cookie.mac()));
 
-    if (!cookie_factory->attest_timestamp(cookie.timestamp(), mac))
+    if (!cookie_authority->attest_timestamp(cookie.timestamp(), mac))
         throw mir::SecurityCheckFailed();
 
     shell->raise_surface_with_timestamp(session, mf::SurfaceId{surface_id.value()}, cookie.timestamp());

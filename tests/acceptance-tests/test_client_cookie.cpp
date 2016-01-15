@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -23,7 +23,7 @@
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/spin_wait.h"
-#include "mir/cookie_factory.h"
+#include "mir/cookie_authority.h"
 
 #include "boost/throw_exception.hpp"
 
@@ -47,8 +47,8 @@ class ClientCookies : public mtf::ConnectedClientWithASurface
 public:
     ClientCookies()
     {
-        server.override_the_cookie_factory([this] ()
-            { return mir::cookie::CookieFactory::create_saving_secret(cookie_secret); });
+        server.override_the_cookie_authority([this] ()
+            { return mir::cookie::CookieAuthority::create_saving_secret(cookie_secret); });
     }
 
     void SetUp() override
@@ -100,7 +100,7 @@ void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
             auto const size = mir_input_event_get_cookie_size(iev);
             std::vector<uint8_t> cookie(size);
 
-            mir_input_event_copy_cookie(iev, cookie.data());
+            mir_input_event_copy_cookie(iev, cookie.data(), size);
             client_cookie->out_cookies.push_back(cookie);
         }
 
@@ -133,7 +133,7 @@ TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
         std::lock_guard<std::mutex> lk(mutex);
 
         ASSERT_FALSE(out_cookies.empty());
-        auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
+        auto factory = mir::cookie::CookieAuthority::create_from_secret(cookie_secret);
         auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back().data());
         EXPECT_TRUE(factory->attest_timestamp(last_cookie));
     }
@@ -163,7 +163,7 @@ TEST_F(ClientCookies, pointer_click_events_have_attestable_cookies)
     {
         std::lock_guard<std::mutex> lk(mutex);
         ASSERT_FALSE(out_cookies.empty());
-        auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
+        auto factory = mir::cookie::CookieAuthority::create_from_secret(cookie_secret);
         auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back().data());
         EXPECT_TRUE(factory->attest_timestamp(last_cookie));
     }
@@ -203,7 +203,7 @@ TEST_F(ClientCookies, touch_click_events_have_attestable_cookies)
     {
         std::lock_guard<std::mutex> lk(mutex);
         ASSERT_FALSE(out_cookies.empty());
-        auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
+        auto factory = mir::cookie::CookieAuthority::create_from_secret(cookie_secret);
         auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back().data());
         EXPECT_TRUE(factory->attest_timestamp(last_cookie));
     }

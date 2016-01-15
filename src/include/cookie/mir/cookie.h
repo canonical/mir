@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_TOOLKIT_COOKIE_FACTORY_H_
-#define MIR_TOOLKIT_COOKIE_FACTORY_H_
+#ifndef MIR_COOKIE_H_
+#define MIR_COOKIE_H_
 
 #include <stdint.h>
 
@@ -35,4 +35,4 @@ struct MirCookie
 }
 }
 
-#endif // MIR_TOOLKIT_COOKIE_FACTORY_H_
+#endif // MIR_COOKIE_H_

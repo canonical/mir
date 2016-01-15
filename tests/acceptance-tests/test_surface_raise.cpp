@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,7 +24,7 @@
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/wait_condition.h"
 #include "mir/test/spin_wait.h"
-#include "mir/cookie_factory.h"
+#include "mir/cookie_authority.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -115,7 +115,7 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
             auto const size = mir_input_event_get_cookie_size(iev);
             std::vector<uint8_t> cookie(size);
 
-            mir_input_event_copy_cookie(iev, cookie.data());
+            mir_input_event_copy_cookie(iev, cookie.data(), size);
             raise_surfaces->out_cookies.push_back(cookie);
         }
         

@@ -31,7 +31,6 @@
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/graphics/native_buffer.h"
-#include "mir/cookie_factory.h"
 
 #include <memory>
 #include <functional>

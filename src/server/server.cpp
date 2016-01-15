@@ -31,7 +31,7 @@
 #include "mir/main_loop.h"
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
-#include "mir/cookie_factory.h"
+#include "mir/cookie_authority.h"
 
 // TODO these are used to frig a stub renderer when running headless
 #include "mir/compositor/renderer.h"
@@ -67,7 +67,7 @@ namespace mo = mir::options;
     MACRO(session_mediator_report)\
     MACRO(shell)\
     MACRO(application_not_responding_detector)\
-    MACRO(cookie_factory)\
+    MACRO(cookie_authority)\
     MACRO(coordinate_translator)
 
 #define FOREACH_ACCESSOR(MACRO)\

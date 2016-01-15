@@ -29,7 +29,7 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/server_action_queue.h"
-#include "mir/cookie_factory.h"
+#include "mir/cookie_authority.h"
 #define MIR_LOG_COMPONENT "Input"
 #include "mir/log.h"
 
@@ -49,13 +49,13 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<TouchVisualizer> const& touch_visualizer,
     std::shared_ptr<CursorListener> const& cursor_listener,
     std::shared_ptr<InputRegion> const& input_region,
-    std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory)
+    std::shared_ptr<mir::cookie::CookieAuthority> const& cookie_authority)
     : input_dispatcher(input_dispatcher),
       input_dispatchable{input_multiplexer},
       observer_queue(observer_queue),
       device_queue(std::make_shared<dispatch::ActionQueue>()),
       input_region(input_region),
-      cookie_factory(cookie_factory),
+      cookie_authority(cookie_authority),
       seat(touch_visualizer, cursor_listener, input_region),
       device_id_generator{0}
 {
@@ -78,7 +78,7 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
     {
         // send input device info to observer loop..
         devices.push_back(std::make_unique<RegisteredDevice>(
-            device, create_new_device_id(), input_dispatcher, input_dispatchable, cookie_factory, this, &seat));
+            device, create_new_device_id(), input_dispatcher, input_dispatchable, cookie_authority, this, &seat));
 
         auto const& dev = devices.back();
         seat.add_device(dev->id());
@@ -142,10 +142,10 @@ mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
     MirInputDeviceId device_id,
     std::shared_ptr<InputDispatcher> const& dispatcher,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
-    std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory,
+    std::shared_ptr<mir::cookie::CookieAuthority> const& cookie_authority,
     DefaultInputDeviceHub* hub,
     Seat* seat)
-    : device_id(device_id), builder(device_id, cookie_factory), device(dev), dispatcher(dispatcher),
+    : device_id(device_id), builder(device_id, cookie_authority), device(dev), dispatcher(dispatcher),
       multiplexer(multiplexer), hub(hub), seat(seat)
 {
 }

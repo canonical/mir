@@ -32,7 +32,7 @@
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/test/fake_shared.h"
-#include "mir/cookie_factory.h"
+#include "mir/cookie_authority.h"
 #include "mir/test/event_matchers.h"
 
 namespace md = mir::dispatch;
@@ -51,7 +51,7 @@ struct X11PlatformTest : ::testing::Test
     NiceMock<mtd::MockInputSink> mock_keyboard_sink;
     NiceMock<mtd::MockX11> mock_x11;
     NiceMock<mtd::MockInputDeviceRegistry> mock_registry;
-    mir::input::DefaultEventBuilder builder{0, mir::cookie::CookieFactory::create_keeping_secret()};
+    mir::input::DefaultEventBuilder builder{0, mir::cookie::CookieAuthority::create_keeping_secret()};
 
     mir::input::X::XInputPlatform x11_platform{
         mt::fake_shared(mock_registry),

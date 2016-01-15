@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_COOKIE_COOKIE_FACTORY_H_
-#define MIR_COOKIE_COOKIE_FACTORY_H_
+#ifndef MIR_COOKIE_COOKIE_AUTHORITY_H_
+#define MIR_COOKIE_COOKIE_AUTHORITY_H_
 
 #include <memory>
 #include <vector>
@@ -41,7 +41,7 @@ using Secret = std::vector<uint8_t>;
  * to attempt to bypass focus stealing prevention.
  *
  */
-class CookieFactory
+class CookieAuthority
 {
 public:
     /**
@@ -54,32 +54,32 @@ public:
     static size_t optimal_secret_size();
 
     /**
-    *   Construction function used to create a CookieFactory. The secret size must be
+    *   Construction function used to create a CookieAuthority. The secret size must be
     *   no less then minimum_secret_size otherwise an exception will be thrown
     *
     *   \param [in] secret  A filled in secret used to set the key for the hash function
-    *   \return             A unique_ptr CookieFactory
+    *   \return             A unique_ptr CookieAuthority
     */
-    static std::unique_ptr<CookieFactory> create_from_secret(Secret const& secret);
+    static std::unique_ptr<CookieAuthority> create_from_secret(Secret const& secret);
 
     /**
-    *   Construction function used to create a CookieFactory as well as a secret.
+    *   Construction function used to create a CookieAuthority as well as a secret.
     *
     *   \param [out] save_secret  The secret that was created.
-    *   \return                   A unique_ptr CookieFactory
+    *   \return                   A unique_ptr CookieAuthority
     */
-    static std::unique_ptr<CookieFactory> create_saving_secret(Secret& save_secret);
+    static std::unique_ptr<CookieAuthority> create_saving_secret(Secret& save_secret);
 
     /**
-    *   Construction function used to create a CookieFactory and a secret which it keeps internally.
+    *   Construction function used to create a CookieAuthority and a secret which it keeps internally.
     *
-    *   \return                   A unique_ptr CookieFactory
+    *   \return                   A unique_ptr CookieAuthority
     */
-    static std::unique_ptr<CookieFactory> create_keeping_secret();
+    static std::unique_ptr<CookieAuthority> create_keeping_secret();
 
-    CookieFactory(CookieFactory const& factory) = delete;
-    CookieFactory& operator=(CookieFactory const& factory) = delete;
-    virtual ~CookieFactory() noexcept = default;
+    CookieAuthority(CookieAuthority const& factory) = delete;
+    CookieAuthority& operator=(CookieAuthority const& factory) = delete;
+    virtual ~CookieAuthority() noexcept = default;
 
     /**
     *   Turns a timestamp into a MAC and returns an std::vector<uint8_t> which represents a MAC.
@@ -107,16 +107,16 @@ public:
     virtual bool attest_timestamp(uint64_t const& timestamp, std::vector<uint8_t> const& mac) = 0;
 
     /**
-     * Absolute minimum size of secret key the CookieFactory will accept.
+     * Absolute minimum size of secret key the CookieAuthority will accept.
      *
      * Code should be using optimum_secret_size(); this minimum size is provided
      * as a user convenience to guard against catastrophically bad initialisation.
      */
     static unsigned const minimum_secret_size = 8;
 protected:
-    CookieFactory() = default;
+    CookieAuthority() = default;
 };
 
 }
 }
-#endif // MIR_COOKIE_COOKIE_FACTORY_H_
+#endif // MIR_COOKIE_COOKIE_AUTHORITY_H_

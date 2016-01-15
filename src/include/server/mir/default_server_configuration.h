@@ -33,7 +33,7 @@ class SharedLibraryProberReport;
 
 namespace cookie
 {
-class CookieFactory;
+class CookieAuthority;
 }
 namespace dispatch
 {
@@ -170,7 +170,7 @@ public:
     std::shared_ptr<graphics::Platform>     the_graphics_platform() override;
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<EmergencyCleanup>       the_emergency_cleanup() override;
-    std::shared_ptr<cookie::CookieFactory>  the_cookie_factory() override;
+    std::shared_ptr<cookie::CookieAuthority>  the_cookie_authority() override;
     /**
      * Function to call when a "fatal" error occurs. This implementation allows
      * the default strategy to be overridden by --on-fatal-error-abort to force a
@@ -416,7 +416,7 @@ protected:
     CachedPtr<shell::Shell> shell;
     CachedPtr<shell::ShellReport> shell_report;
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
-    CachedPtr<cookie::CookieFactory> cookie_factory;
+    CachedPtr<cookie::CookieAuthority> cookie_authority;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

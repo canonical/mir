@@ -22,6 +22,7 @@
 #include "mir/event_type_to_string.h"
 #include "mir/events/event_private.h"
 #include "mir/log.h"
+#include "mir/require.h"
 
 namespace ml = mir::logging;
 
@@ -433,15 +434,15 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev)
 // TODO Waiting for MAC to be 160bits to finish this correctly! For now its 8bytes!
 size_t mir_input_event_get_cookie_size(MirInputEvent const* ev)
 {
-    if (mir_input_event_has_cookie(ev))
-        return sizeof(mir::cookie::MirCookie);
+    mir::require(mir_input_event_has_cookie(ev));
 
-    /* No mac == no size! */
-    return 0;
+    return sizeof(mir::cookie::MirCookie);
 }
 
-void mir_input_event_copy_cookie(MirInputEvent const* ev, void* raw_cookie)
+void mir_input_event_copy_cookie(MirInputEvent const* ev, void* raw_cookie, size_t size)
 {
+    mir::require(size == sizeof(mir::cookie::MirCookie));
+
     auto const old_ev = old_ev_from_new(ev);
 
     if(mir_event_get_type(old_ev) != mir_event_type_input)

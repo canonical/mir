@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#include "mir/cookie_authority.h"
 #include "mir/cookie.h"
-#include "mir/cookie_factory.h"
 
 #include <algorithm>
 #include <random>
@@ -95,10 +95,10 @@ static mir::cookie::Secret get_random_data(unsigned size)
     return buffer;
 }
 
-class CookieFactoryNettle : public mir::cookie::CookieFactory
+class CookieAuthorityNettle : public mir::cookie::CookieAuthority
 {
 public:
-    CookieFactoryNettle(mir::cookie::Secret const& secret)
+    CookieAuthorityNettle(mir::cookie::Secret const& secret)
     {
         if (secret.size() < minimum_secret_size)
             BOOST_THROW_EXCEPTION(std::logic_error("Secret size " + std::to_string(secret.size()) + " is to small, require " +
@@ -107,7 +107,7 @@ public:
         hmac_sha1_set_key(&ctx, secret.size(), secret.data());
     }
 
-    virtual ~CookieFactoryNettle() noexcept = default;
+    virtual ~CookieAuthorityNettle() noexcept = default;
 
     std::vector<uint8_t> timestamp_to_mac(uint64_t const& timestamp) override
     {
@@ -155,7 +155,7 @@ private:
     struct hmac_sha1_ctx ctx;
 };
 
-size_t mir::cookie::CookieFactory::optimal_secret_size()
+size_t mir::cookie::CookieAuthority::optimal_secret_size()
 {
     // Secret keys smaller than this are internally zero-extended to this size.
     // Secret keys larger than this are internally hashed to this size.
@@ -163,19 +163,19 @@ size_t mir::cookie::CookieFactory::optimal_secret_size()
     return hmac_sha1_block_size;
 }
 
-std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_from_secret(mir::cookie::Secret const& secret)
+std::unique_ptr<mir::cookie::CookieAuthority> mir::cookie::CookieAuthority::create_from_secret(mir::cookie::Secret const& secret)
 {
-  return std::make_unique<CookieFactoryNettle>(secret);
+  return std::make_unique<CookieAuthorityNettle>(secret);
 }
 
-std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_saving_secret(mir::cookie::Secret& save_secret)
+std::unique_ptr<mir::cookie::CookieAuthority> mir::cookie::CookieAuthority::create_saving_secret(mir::cookie::Secret& save_secret)
 {
   save_secret = get_random_data(optimal_secret_size());
-  return std::make_unique<CookieFactoryNettle>(save_secret);
+  return std::make_unique<CookieAuthorityNettle>(save_secret);
 }
 
-std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_keeping_secret()
+std::unique_ptr<mir::cookie::CookieAuthority> mir::cookie::CookieAuthority::create_keeping_secret()
 {
   auto secret = get_random_data(optimal_secret_size());
-  return std::make_unique<CookieFactoryNettle>(secret);
+  return std::make_unique<CookieAuthorityNettle>(secret);
 }

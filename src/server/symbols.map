@@ -165,7 +165,7 @@ MIR_SERVER_0.19 {
     mir::Server::open_prompt_socket*;
     mir::Server::override_the_application_not_responding_detector*;
     mir::Server::override_the_compositor*;
-    mir::Server::override_the_cookie_factory*;
+    mir::Server::override_the_cookie_authority*;
     mir::Server::override_the_coordinate_translator*;
     mir::Server::override_the_cursor_images*;
     mir::Server::override_the_display_buffer_compositor_factory*;
@@ -677,7 +677,7 @@ MIR_SERVER_0.19 {
     mir::DefaultServerConfiguration::the_buffer_stream_factory*;
     mir::DefaultServerConfiguration::the_clock*;
     mir::DefaultServerConfiguration::the_composite_event_filter*;
-    mir::DefaultServerConfiguration::the_cookie_factory*;
+    mir::DefaultServerConfiguration::the_cookie_authority*;
     mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
     mir::DefaultServerConfiguration::the_surface_input_dispatcher;
     mir::DefaultServerConfiguration::the_compositor*;

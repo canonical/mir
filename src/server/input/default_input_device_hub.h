@@ -38,7 +38,7 @@ namespace mir
 class ServerActionQueue;
 namespace cookie
 {
-class CookieFactory;
+class CookieAuthority;
 }
 namespace dispatch
 {
@@ -65,7 +65,7 @@ public:
                           std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                           std::shared_ptr<CursorListener> const& cursor_listener,
                           std::shared_ptr<InputRegion> const& input_region,
-                          std::shared_ptr<cookie::CookieFactory> const& cookie_factory);
+                          std::shared_ptr<cookie::CookieAuthority> const& cookie_authority);
 
     // InputDeviceRegistry - calls from mi::Platform
     void add_device(std::shared_ptr<InputDevice> const& device) override;
@@ -85,7 +85,7 @@ private:
     std::shared_ptr<ServerActionQueue> const observer_queue;
     std::shared_ptr<dispatch::ActionQueue> const device_queue;
     std::shared_ptr<InputRegion> const input_region;
-    std::shared_ptr<cookie::CookieFactory> const cookie_factory;
+    std::shared_ptr<cookie::CookieAuthority> const cookie_authority;
     Seat seat;
 
     struct RegisteredDevice : public InputSink
@@ -95,7 +95,7 @@ private:
                          MirInputDeviceId dev_id,
                          std::shared_ptr<InputDispatcher> const& dispatcher,
                          std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
-                         std::shared_ptr<cookie::CookieFactory> const& cookie_factory,
+                         std::shared_ptr<cookie::CookieAuthority> const& cookie_authority,
                          DefaultInputDeviceHub* hub,
                          Seat* seat);
         void handle_input(MirEvent& event) override;
