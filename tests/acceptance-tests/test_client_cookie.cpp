@@ -65,47 +65,6 @@ public:
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
     }
 
-    void handle_input_event(MirInputEvent const* iev)
-    {
-        std::lock_guard<std::mutex> lk(mutex);
-        if (mir_input_event_has_cookie(iev))
-        {
-            auto const size = mir_input_event_get_cookie_size(iev);
-            std::vector<uint8_t> cookie(size);
-
-            mir_input_event_copy_cookie(iev, cookie.data());
-            out_cookies.push_back(cookie);
-        }
-
-        event_count++;
-    }
-
-    size_t get_event_count() const
-    {
-        std::lock_guard<std::mutex> lk(mutex);
-        return event_count;
-    }
-
-    size_t cookie_size() const
-    {
-        std::lock_guard<std::mutex> lk(mutex);
-        return out_cookies.size();
-    }
-
-    std::vector<uint8_t> back_cookie() const
-    {
-        std::lock_guard<std::mutex> lk(mutex);
-        return out_cookies.back();
-    }
-
-    bool cookies_empty() const
-    {
-        std::lock_guard<std::mutex> lk(mutex);
-        return out_cookies.empty();
-    }
-
-    std::vector<uint8_t> cookie_secret;
-
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
         };
@@ -117,8 +76,8 @@ public:
        "touch screen", "touch-screen-uid", mi::DeviceCapability::touchscreen | mi::DeviceCapability::multitouch})
        };
 
-private:
     std::vector<std::vector<uint8_t>> out_cookies;
+    std::vector<uint8_t> cookie_secret;
     size_t event_count{0};
     mutable std::mutex mutex;
 };
@@ -134,7 +93,18 @@ void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
     if (event_type == mir_event_type_input)
     {
         auto const* iev = mir_event_get_input_event(ev);
-        client_cookie->handle_input_event(iev);
+
+        std::lock_guard<std::mutex> lk(client_cookie->mutex);
+        if (mir_input_event_has_cookie(iev))
+        {
+            auto const size = mir_input_event_get_cookie_size(iev);
+            std::vector<uint8_t> cookie(size);
+
+            mir_input_event_copy_cookie(iev, cookie.data());
+            client_cookie->out_cookies.push_back(cookie);
+        }
+
+        client_cookie->event_count++;
     }
 }
 
@@ -143,7 +113,8 @@ bool wait_for_n_events(size_t n, ClientCookies* client_cookie)
     bool all_events = mt::spin_wait_for_condition_or_timeout(
         [&n, &client_cookie]
         {
-            return client_cookie->get_event_count() >= n;
+            std::lock_guard<std::mutex> lk(client_cookie->mutex);
+            return client_cookie->event_count >= n;
         },
         std::chrono::seconds{max_wait});
 
@@ -159,10 +130,11 @@ TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
     int events = 1;
     if (wait_for_n_events(events, this))
     {
-        ASSERT_FALSE(cookies_empty());
+        std::lock_guard<std::mutex> lk(mutex);
+
+        ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        auto cookie = back_cookie();
-        auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(cookie.data());
+        auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back().data());
         EXPECT_TRUE(factory->attest_timestamp(last_cookie));
     }
 }
@@ -175,8 +147,9 @@ TEST_F(ClientCookies, pointer_motion_events_do_not_have_attestable_cookies)
     int events = 2;
     if (wait_for_n_events(events, this))
     {
-        EXPECT_EQ(get_event_count(), events);
-        EXPECT_TRUE(cookies_empty());
+        std::lock_guard<std::mutex> lk(mutex);
+        EXPECT_EQ(event_count, events);
+        EXPECT_TRUE(out_cookies.empty());
     }
 }
 
@@ -188,10 +161,10 @@ TEST_F(ClientCookies, pointer_click_events_have_attestable_cookies)
     int events = 2;
     if (wait_for_n_events(events, this))
     {
-        ASSERT_FALSE(cookies_empty());
+        std::lock_guard<std::mutex> lk(mutex);
+        ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        auto cookie = back_cookie();
-        auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(cookie.data());
+        auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back().data());
         EXPECT_TRUE(factory->attest_timestamp(last_cookie));
     }
 }
@@ -212,8 +185,9 @@ TEST_F(ClientCookies, touch_motion_events_do_not_have_attestable_cookies)
     int events = 2;
     if (wait_for_n_events(events, this))
     {
-        EXPECT_EQ(get_event_count(), events);
-        EXPECT_EQ(cookie_size(), 1);
+        std::lock_guard<std::mutex> lk(mutex);
+        EXPECT_EQ(event_count, events);
+        EXPECT_EQ(out_cookies.size(), 1);
     }
 }
 
@@ -227,10 +201,10 @@ TEST_F(ClientCookies, touch_click_events_have_attestable_cookies)
     int events = 1;
     if (wait_for_n_events(events, this))
     {
-        ASSERT_FALSE(cookies_empty());
+        std::lock_guard<std::mutex> lk(mutex);
+        ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        auto cookie = back_cookie();
-        auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(cookie.data());
+        auto last_cookie = reinterpret_cast<mir::cookie::MirCookie*>(out_cookies.back().data());
         EXPECT_TRUE(factory->attest_timestamp(last_cookie));
     }
 }

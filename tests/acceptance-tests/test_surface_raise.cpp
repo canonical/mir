@@ -80,47 +80,12 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
         EXPECT_TRUE(surface_fullscreen);
     }
 
-    void handle_input_event(MirInputEvent const* iev)
-    {
-        std::lock_guard<std::mutex> lk(mutex);
-        if (mir_input_event_has_cookie(iev))
-        {
-            auto const size = mir_input_event_get_cookie_size(iev);
-            std::vector<uint8_t> cookie(size);
-
-            mir_input_event_copy_cookie(iev, cookie.data());
-            out_cookies.push_back(cookie);
-        }
-        
-        event_count++;
-    }
-
-    size_t get_event_count() const
-    {
-        std::lock_guard<std::mutex> lk(mutex);
-        return event_count;
-    }
-
-    std::vector<uint8_t> front_cookie() const
-    {
-        std::lock_guard<std::mutex> lk(mutex);
-        return out_cookies.front();
-    }
-
-    std::vector<uint8_t> back_cookie() const
-    {
-        std::lock_guard<std::mutex> lk(mutex);
-        return out_cookies.back();
-    }
-
-    bool cookies_empty() const
-    {
-        std::lock_guard<std::mutex> lk(mutex);
-        return out_cookies.empty();
-    }
-
     MirSurface* surface1;
     MirSurface* surface2;
+
+    std::vector<std::vector<uint8_t>> out_cookies;
+    size_t event_count{0};
+    mutable std::mutex mutex;
 
     MirLifecycleState lifecycle_state{mir_lifecycle_state_resumed};
 
@@ -130,11 +95,6 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
     std::unique_ptr<mtf::FakeInputDevice> fake_pointer{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid", mi::DeviceCapability::pointer})
         };
-
-private:
-    std::vector<std::vector<uint8_t>> out_cookies;
-    size_t event_count{0};
-    mutable std::mutex mutex;
 };
 
 namespace
@@ -148,7 +108,18 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
     if (event_type == mir_event_type_input)
     {   
         auto const* iev = mir_event_get_input_event(ev);
-        raise_surfaces->handle_input_event(iev);
+
+        std::lock_guard<std::mutex> lk(raise_surfaces->mutex);
+        if (mir_input_event_has_cookie(iev))
+        {
+            auto const size = mir_input_event_get_cookie_size(iev);
+            std::vector<uint8_t> cookie(size);
+
+            mir_input_event_copy_cookie(iev, cookie.data());
+            raise_surfaces->out_cookies.push_back(cookie);
+        }
+        
+        raise_surfaces->event_count++;
     }
 }
 
@@ -157,7 +128,8 @@ bool wait_for_n_events(size_t n, RaiseSurfaces const* raise_surfaces)
     bool all_events = mt::spin_wait_for_condition_or_timeout(
         [&n, &raise_surfaces]
         {
-            return raise_surfaces->get_event_count() >= n;
+            std::lock_guard<std::mutex> lk(raise_surfaces->mutex);
+            return raise_surfaces->event_count >= n;
         },
         std::chrono::seconds{max_wait});
 
@@ -187,9 +159,10 @@ TEST_F(RaiseSurfaces, key_event_with_cookie)
     int events = 1;
     if (wait_for_n_events(events, this))
     {
-        ASSERT_FALSE(cookies_empty());
+        std::lock_guard<std::mutex> lk(mutex);
+        ASSERT_FALSE(out_cookies.empty());
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
-        attempt_focus(surface2, back_cookie().data());
+        attempt_focus(surface2, out_cookies.back().data());
     }
 }
 
@@ -201,10 +174,11 @@ TEST_F(RaiseSurfaces, older_timestamp_does_not_focus)
     int events = 2;
     if (wait_for_n_events(events, this))
     {
-        ASSERT_FALSE(cookies_empty());
+        std::lock_guard<std::mutex> lk(mutex);
+        ASSERT_FALSE(out_cookies.empty());
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
 
-        mir_surface_raise_with_cookie(surface1, front_cookie().data());
+        mir_surface_raise_with_cookie(surface1, out_cookies.front().data());
 
         // Need to wait for this call to actually go through
         std::this_thread::sleep_for(std::chrono::milliseconds{1000});
@@ -221,9 +195,10 @@ TEST_F(RaiseSurfaces, motion_events_dont_prevent_raise)
         fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
         if (wait_for_n_events(1, this))
         {
-            ASSERT_FALSE(cookies_empty());
+            std::lock_guard<std::mutex> lk(mutex);
+            ASSERT_FALSE(out_cookies.empty());
             EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
-            EXPECT_TRUE(attempt_focus(surface1, back_cookie().data()));
+            EXPECT_TRUE(attempt_focus(surface1, out_cookies.back().data()));
         }
     }
 }
