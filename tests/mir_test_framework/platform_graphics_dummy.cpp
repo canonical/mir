@@ -37,7 +37,8 @@ mir::ModuleProperties const description {
     "dummy",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
+    MIR_VERSION_MICRO,
+    "dummy"
 };
 
 mir::ModuleProperties const* describe_graphics_module()

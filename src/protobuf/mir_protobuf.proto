@@ -142,10 +142,21 @@ message Buffer {
   optional string error = 127;
 }
 
+message ModuleProperties
+{
+    required string name = 1;
+    required uint32 major_version = 2;
+    required uint32 minor_version = 3;
+    required uint32 micro_version = 4;
+    required string file = 5;
+};
+
+
 message Platform {
   repeated sint32 fd = 1;
   repeated int32  data = 2;
   optional int32  fds_on_side_channel = 3;
+  optional ModuleProperties graphics_module = 4;
 
   optional string error = 127;
 }

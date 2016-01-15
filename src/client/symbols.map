@@ -207,6 +207,13 @@ MIR_CLIENT_9v18 {
     *;
 } MIR_CLIENT_9v17;
 
+MIR_CLIENT_unreleased {
+  global:
+    mir_connection_get_graphics_module;
+  local:
+    *;
+} MIR_CLIENT_9v18;
+
 MIR_CLIENT_DETAIL_9 {
   global:
     extern "C++" { 
@@ -265,4 +272,3 @@ MIR_CLIENT_DETAIL_unreleased {
   local:
     *;
 } MIR_CLIENT_DETAIL_9v18;
-

@@ -29,9 +29,9 @@ mcl::ProbingClientPlatformFactory::create_client_platform(mcl::ClientContext* co
                 return factory(context);
             }
         }
-        catch(std::runtime_error)
+        catch(std::runtime_error const&)
         {
-            // We were handled a SharedLibrary that's not a client platform module?
+            // We were handed a SharedLibrary that's not a client platform module?
         }
     }
     BOOST_THROW_EXCEPTION(std::runtime_error{"No appropriate client platform module found"});
