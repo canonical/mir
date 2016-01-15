@@ -35,7 +35,8 @@
 #include "androidfw/InputTransport.h"
 
 #include "mir/input/input_report.h"
-#include "mir/cookie_factory.h"
+#include "mir/cookie_authority.h"
+#include "mir/cookie.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -90,12 +91,13 @@ public:
     std::shared_ptr<ms::Observer> observer;
 };
 
-class StubCookieFactory : public mir::cookie::CookieFactory
+class StubCookieAuthority : public mir::cookie::CookieAuthority
 {
 public:
-    MirCookie timestamp_to_cookie(uint64_t const&) override { return {0, 0};}
-    bool attest_timestamp(MirCookie const&) override {return true;}
-    StubCookieFactory() = default;
+    std::vector<uint8_t> timestamp_to_mac(uint64_t const&) override { return std::vector<uint8_t>(sizeof(MirCookie)); }
+    bool attest_timestamp(MirCookie const*) override {return true;}
+    bool attest_timestamp(uint64_t const&, std::vector<uint8_t> const&) override {return true;}
+    StubCookieAuthority() = default;
 };
 
 }
@@ -113,8 +115,8 @@ public:
     float const minor = 4;
     float const size = 8;
     mir::geometry::Displacement const movement{10, -10};
-    StubCookieFactory cookie_factory;
-    mi::DefaultEventBuilder builder{MirInputDeviceId(), mt::fake_shared(cookie_factory)};
+    StubCookieAuthority cookie_authority;
+    mi::DefaultEventBuilder builder{MirInputDeviceId(), mt::fake_shared(cookie_authority)};
 
     AndroidInputSender()
         : key_event(builder.key_event(std::chrono::nanoseconds(1), mir_keyboard_action_down, 7, test_scan_code)),
