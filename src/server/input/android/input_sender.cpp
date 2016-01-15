@@ -1,6 +1,5 @@
 /*
  * Copyright © 2014-2015 Canonical Ltd.
-            // 
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -35,7 +34,6 @@
 #include <cstring>
 #include <algorithm>
 #include <iterator>
-#include <unordered_set>
 
 namespace mi = mir::input;
 namespace mia = mi::android;
@@ -247,7 +245,6 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t s
 
 droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t seq, MirEvent const& event)
 {
-    std::unordered_set<size_t> sent_indices;
     droidinput::status_t ret = droidinput::OK;
     droidinput::PointerCoords coords[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
     droidinput::PointerProperties properties[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
