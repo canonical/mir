@@ -1,3 +1,13 @@
+mir (0.18.1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.18.1 (https://launchpad.net/mir/+milestone/0.18.1)
+    - No ABI changes. Bug fix release only.
+    - Bug fixed:
+      . [regression] pinch to zoom not working reliably (LP: #1531517)
+    
+
+ -- Andreas Pokorny <andreas.pokorny@canonical.com>  Fri, 15 Jan 2016 12:18:35 +0100
+
 mir (0.18.0+16.04.20151216.1-0ubuntu1) xenial; urgency=medium
 
   [ Kevin DuBois ]
