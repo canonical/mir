@@ -261,7 +261,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         devices.reserve(seq.input_devices_size());
 
         for (auto const& dev : seq.input_devices())
-            devices.emplace_back(input::DeviceData{dev.id(), dev.capabilities(), dev.name(), dev.unique_id()});
+            devices.emplace_back(dev.id(), dev.capabilities(), dev.name(), dev.unique_id());
 
         input_devices->update_devices(std::move(devices));
     }

@@ -32,6 +32,10 @@ namespace input
 {
 struct DeviceData
 {
+    DeviceData() = default;
+    DeviceData(MirInputDeviceId id, uint32_t caps, std::string const& name, std::string const& unique_id)
+        : id(id), caps(caps), name(name), unique_id(unique_id)
+    {}
     MirInputDeviceId id;
     uint32_t caps;
     std::string name;
