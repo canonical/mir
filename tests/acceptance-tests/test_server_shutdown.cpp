@@ -61,6 +61,7 @@ TEST(ServerShutdownWithException, clean_shutdown_on_plugin_construction_exceptio
     mtf::TemporaryEnvironmentValue input_platform("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
     mir::Server server;
 
+    server.set_command_line_handler([](int, char const* const*){});
     server.set_command_line(0, &argv);
     server.apply_settings();
     server.run();
