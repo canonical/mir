@@ -37,7 +37,7 @@ mir::SharedLibrary::SharedLibrary(char const* library_name) :
 mir::SharedLibrary::SharedLibrary(std::string const& library_name) :
     SharedLibrary(library_name.c_str()) {}
 
-mir::SharedLibrary::~SharedLibrary()
+mir::SharedLibrary::~SharedLibrary() noexcept
 {
     dlclose(so);
 }

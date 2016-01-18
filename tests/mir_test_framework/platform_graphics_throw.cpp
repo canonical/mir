@@ -19,6 +19,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/test/doubles/null_platform.h"
 #include "mir/assert_module_entry_point.h"
+#include "mir/libname.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -55,7 +56,8 @@ mir::ModuleProperties const description {
     "throw-on-creation",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
+    MIR_VERSION_MICRO,
+    mir::libname()
 };
 
 mir::ModuleProperties const* describe_graphics_module()

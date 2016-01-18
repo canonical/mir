@@ -75,47 +75,53 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
         [this]()->std::shared_ptr<mg::Platform>
         {
             std::shared_ptr<mir::SharedLibrary> platform_library;
-            // fallback to standalone if host socket is unset
-            if (the_options()->is_set(options::platform_graphics_lib))
-            {
-                platform_library = std::make_shared<mir::SharedLibrary>(the_options()->get<std::string>(options::platform_graphics_lib));
-            }
-            else
-            {
-                auto const& path = the_options()->get<std::string>(options::platform_path);
-                auto platforms = mir::libraries_for_path(path, *the_shared_library_prober_report());
-                if (platforms.empty())
-                {
-                    auto msg = "Failed to find any platform plugins in: " + path;
-                    throw std::runtime_error(msg.c_str());
-                }
-                platform_library = mir::graphics::module_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()));
-            }
-            auto create_host_platform = platform_library->load_function<mg::CreateHostPlatform>(
-                "create_host_platform",
-                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-            auto create_guest_platform = platform_library->load_function<mg::CreateGuestPlatform>(
-                "create_guest_platform",
-                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-            auto describe_module = platform_library->load_function<mg::DescribeModule>(
-                "describe_graphics_module",
-                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-            auto description = describe_module();
-            mir::log_info("Selected driver: %s (version %d.%d.%d)",
-                          description->name,
-                          description->major_version,
-                          description->minor_version,
-                          description->micro_version);
-
             std::stringstream error_report;
             try
             {
-                if (!the_options()->is_set(options::host_socket_opt))
-                    return create_host_platform(the_options(), the_emergency_cleanup(), the_display_report());
+                // if a host socket is set we should use the host graphics module to create a "guest" platform
+                if (the_options()->is_set(options::host_socket_opt))
+                {
+                    auto const host_connection = the_host_connection();
+
+                    platform_library = std::make_shared<mir::SharedLibrary>(host_connection->graphics_platform_library());
+
+                    auto create_guest_platform = platform_library->load_function<mg::CreateGuestPlatform>(
+                        "create_guest_platform",
+                        MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+
+                    return create_guest_platform(the_display_report(), host_connection);
+                }
+
+                // fallback to standalone if host socket is unset
+                if (the_options()->is_set(options::platform_graphics_lib))
+                {
+                    platform_library = std::make_shared<mir::SharedLibrary>(the_options()->get<std::string>(options::platform_graphics_lib));
+                }
                 else
-                    return create_guest_platform(
-                        the_display_report(),
-                        the_host_connection());
+                {
+                    auto const& path = the_options()->get<std::string>(options::platform_path);
+                    auto platforms = mir::libraries_for_path(path, *the_shared_library_prober_report());
+                    if (platforms.empty())
+                    {
+                        auto msg = "Failed to find any platform plugins in: " + path;
+                        throw std::runtime_error(msg.c_str());
+                    }
+                    platform_library = mir::graphics::module_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()));
+                }
+                auto create_host_platform = platform_library->load_function<mg::CreateHostPlatform>(
+                    "create_host_platform",
+                    MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+                auto describe_module = platform_library->load_function<mg::DescribeModule>(
+                    "describe_graphics_module",
+                    MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+                auto description = describe_module();
+                mir::log_info("Selected driver: %s (version %d.%d.%d)",
+                              description->name,
+                              description->major_version,
+                              description->minor_version,
+                              description->micro_version);
+
+                return create_host_platform(the_options(), the_emergency_cleanup(), the_display_report());
             }
             catch(...)
             {
