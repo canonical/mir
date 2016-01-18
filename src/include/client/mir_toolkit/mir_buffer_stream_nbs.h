@@ -75,21 +75,22 @@ void mir_buffer_stream_release_buffer(
 void mir_buffer_stream_release_buffer_sync(MirBufferStream* stream, MirBuffer* buffer);
 
 /** Submit a buffer to the server so the server can display it.
- *   \warning: Once submitted, the buffer cannot be used until the server
+ *  The server will notify the client when the buffer is available again via the callback
+ *  registered during buffer creation.
+ *
+ *   \warning: Once submitted, the buffer cannot be used until the server 
  *             has returned it. There's no guarantee about how long a server
  *             may hold the submitted buffer.
  *
  *   \param [in] buffer_stream       The buffer stream
  *   \param [in] buffer              The buffer to be submitted
- *   \param [in] submission_callback A callback that will be called when the
- *                                   server has received the submission
- *   \param [in] submission_context  A context for the submission_callback
  *   \param [in] available_callback  A callback that will be called when the
  *                                   buffer is available for use again. 
  *   \param [in] available_context   A context for the available_callback
+ *   \return                         true if the submission succeeded,
+ *                                   false if it did not.
  **/
-void mir_buffer_stream_submit_buffer(MirBufferStream* buffer_stream, MirBuffer* buffer,
-    mir_buffer_callback submission_callback, void* submission_context,
+bool mir_buffer_stream_submit_buffer(MirBufferStream* buffer_stream, MirBuffer* buffer,
     mir_buffer_callback available_callback, void* available_context);
 
 #ifdef __cplusplus

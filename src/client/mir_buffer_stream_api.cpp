@@ -237,14 +237,12 @@ void mir_buffer_stream_release_buffer_sync(MirBufferStream*, MirBuffer*)
 {
 }
 
-void mir_buffer_stream_submit_buffer(MirBufferStream* buffer_stream, MirBuffer* buffer,
-    mir_buffer_callback submission_callback, void* submission_context,
+bool mir_buffer_stream_submit_buffer(MirBufferStream* buffer_stream, MirBuffer* buffer,
     mir_buffer_callback available_callback, void* available_context)
 {
-    if (submission_callback)
-        submission_callback(buffer_stream, buffer, submission_context);
     if (available_callback)
         available_callback(buffer_stream, buffer, available_context);
+    return true;
 }
 
 MirFenceType mir_buffer_get_fence_type(MirBuffer*)

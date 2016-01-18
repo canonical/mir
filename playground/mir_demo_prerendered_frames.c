@@ -109,8 +109,11 @@ int main(int argc, char** argv)
         buffer_available[i].available = 0;
         pthread_mutex_unlock(&buffer_available[i].lock);
 
-        mir_buffer_stream_submit_buffer(stream, buffers[i],
-            NULL, NULL, available_callback, &buffer_available[i]);
+        if (!mir_buffer_stream_submit_buffer(stream, buffers[i],
+            available_callback, &buffer_available[i]))
+        {
+            rendering = false;
+        }
 
         i = (i + 1) % num_prerendered_frames;
     }
