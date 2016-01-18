@@ -37,6 +37,7 @@
 #include "mir/options/configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/assert_module_entry_point.h"
+#include "mir/libname.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -197,12 +198,16 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*
     return err < 0 ? mg::PlatformPriority::unsupported : mg::PlatformPriority::best;
 }
 
+namespace
+{
 mir::ModuleProperties const description = {
-    "android",
+    "mir:android",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
+    MIR_VERSION_MICRO,
+    mir::libname()
 };
+}
 
 mir::ModuleProperties const* describe_graphics_module()
 {

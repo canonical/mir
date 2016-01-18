@@ -24,6 +24,8 @@
 
 namespace mir
 {
+struct ModuleProperties;
+
 namespace graphics
 {
 
@@ -32,8 +34,13 @@ namespace graphics
  */
 struct PlatformIPCPackage
 {
+    PlatformIPCPackage() : graphics_module(nullptr) {}
+    explicit PlatformIPCPackage(ModuleProperties const* graphics_module) : graphics_module(graphics_module) {}
+
     std::vector<int32_t> ipc_data;
     std::vector<int32_t> ipc_fds;
+
+    ModuleProperties const* graphics_module;
 };
 
 }
