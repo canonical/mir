@@ -54,6 +54,18 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
+struct BufferStreamCallback
+{
+    static void created(MirBufferStream* stream, void *client_context)
+    {
+        auto const context = reinterpret_cast<BufferStreamCallback*>(client_context);
+        context->invoked = true;
+        context->resulting_stream = stream;
+    }
+    bool invoked = false;
+    MirBufferStream* resulting_stream = nullptr;
+};
+
 struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
                         public mir::dispatch::Dispatchable
 {
@@ -89,11 +101,16 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
             response_message->mutable_id()->set_value(33);
             response_message->mutable_buffer_stream()->mutable_id()->set_value(33);
         }
-
+        else if (name == "create_buffer_stream")
+        {
+            auto response_message = static_cast<mp::BufferStream*>(response);
+            on_buffer_stream_create(*response_message, complete);
+        }
 
         complete->Run();
     }
 
+    MOCK_METHOD2(on_buffer_stream_create, void(mp::BufferStream&, google::protobuf::Closure* complete));
     MOCK_METHOD2(connect, void(mp::ConnectParameters const*,mp::Connection*));
     MOCK_METHOD1(configure_display_sent, void(mp::DisplayConfiguration const*));
     MOCK_METHOD2(platform_operation,
@@ -644,6 +661,67 @@ TEST_F(MirConnectionTest, contacts_server_if_client_platform_cannot_handle_platf
 
     EXPECT_THAT(mir_platform_message_get_opcode(returned_response), Eq(opcode));
     mir_platform_message_release(returned_response);
+}
+
+TEST_F(MirConnectionTest, wait_handle_is_signalled_during_stream_creation_error)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(Invoke([](mp::BufferStream& bs, google::protobuf::Closure*){ bs.set_error("danger will robertson"); }));
+    EXPECT_FALSE(connection->create_client_buffer_stream(
+        2, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, nullptr, nullptr)->is_pending()); 
+}
+
+TEST_F(MirConnectionTest, wait_handle_is_signalled_during_creation_exception)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(DoAll(
+            Invoke([](mp::BufferStream&, google::protobuf::Closure* c){ c->Run(); }),
+            Throw(std::runtime_error("pay no attention to the man behind the curtain"))));
+    auto wh = connection->create_client_buffer_stream(
+        2, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, nullptr, nullptr);
+    ASSERT_THAT(wh, Ne(nullptr));
+    EXPECT_FALSE(wh->is_pending()); 
+}
+
+TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_error_and_error_stream_created)
+{
+    using namespace testing;
+    BufferStreamCallback callback;
+    std::string error_msg = "danger will robertson";
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(Invoke([&](mp::BufferStream& bs, google::protobuf::Closure*)
+        {
+            bs.set_error(error_msg);
+        }));
+
+    connection->create_client_buffer_stream(
+        2, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware,
+        &BufferStreamCallback::created, &callback);
+    EXPECT_TRUE(callback.invoked);
+    ASSERT_TRUE(callback.resulting_stream);
+    EXPECT_THAT(mir_buffer_stream_get_error_message(callback.resulting_stream),
+        StrEq("Error processing buffer stream response: " + error_msg));
+}
+
+TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_exception_and_error_stream_created)
+{
+    using namespace testing;
+    BufferStreamCallback callback;
+
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(DoAll(
+            Invoke([](mp::BufferStream&, google::protobuf::Closure* c){ c->Run(); }),
+            Throw(std::runtime_error("pay no attention to the man behind the curtain"))));
+    connection->create_client_buffer_stream(
+        2, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware,
+        &BufferStreamCallback::created, &callback);
+
+    EXPECT_TRUE(callback.invoked);
+    ASSERT_TRUE(callback.resulting_stream);
+    EXPECT_THAT(mir_buffer_stream_get_error_message(callback.resulting_stream),
+        StrEq("Error processing buffer stream response: no ID in response (disconnected?)"));
 }
 
 TEST_F(MirConnectionTest, create_wait_handle_really_blocks)
