@@ -20,6 +20,7 @@
 #include "../X11_resources.h"
 #include "mir/module_properties.h"
 #include "mir/assert_module_entry_point.h"
+#include "mir/libname.h"
 
 namespace mo = mir::options;
 namespace mi = mir::input;
@@ -61,10 +62,11 @@ mi::PlatformPriority probe_input_platform(
 namespace
 {
 mir::ModuleProperties const description = {
-    "x11-input",
+    "mir:x11-input",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
+    MIR_VERSION_MICRO,
+    mir::libname()
 };
 }
 

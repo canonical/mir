@@ -142,10 +142,21 @@ message Buffer {
   optional string error = 127;
 }
 
+message ModuleProperties
+{
+    required string name = 1;
+    required uint32 major_version = 2;
+    required uint32 minor_version = 3;
+    required uint32 micro_version = 4;
+    required string file = 5;
+};
+
+
 message Platform {
   repeated sint32 fd = 1;
   repeated int32  data = 2;
   optional int32  fds_on_side_channel = 3;
+  optional ModuleProperties graphics_module = 4;
 
   optional string error = 127;
 }
@@ -254,6 +265,7 @@ message EventSequence {
   optional LifecycleEvent lifecycle_event = 3;
   optional BufferRequest buffer_request = 4;
   optional PingEvent ping_event = 5;
+  repeated InputDeviceInfo input_devices = 6;
 
   optional string error = 127;
 }
@@ -338,4 +350,11 @@ message Cookie {
 message RaiseRequest {
   required Cookie cookie = 1;
   required SurfaceId surface_id = 2;
+}
+
+message InputDeviceInfo {
+  optional int64 id = 1;
+  optional uint32 capabilities = 2;
+  optional string name = 3;
+  optional string unique_id = 4;
 }

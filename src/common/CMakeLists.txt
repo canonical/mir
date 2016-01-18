@@ -20,7 +20,8 @@ list(APPEND MIR_COMMON_SOURCES
   $<TARGET_OBJECTS:mirfatal>
   $<TARGET_OBJECTS:android-input-common>
   ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
-  )
+  ${CMAKE_CURRENT_SOURCE_DIR}/libname.cpp ${PROJECT_SOURCE_DIR}/include/common/mir/libname.h
+)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
