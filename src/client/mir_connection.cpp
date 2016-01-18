@@ -92,6 +92,7 @@ struct OnScopeExit
     ~OnScopeExit() { f(); }
     std::function<void()> const f;
 };
+
 mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
 {
     mp::SurfaceParameters message;
@@ -685,6 +686,32 @@ void MirConnection::populate_server_package(MirPlatformPackage& platform_package
     {
         platform_package.data_items = 0;
         platform_package.fd_items = 0;
+    }
+}
+
+void MirConnection::populate_graphics_module(MirModuleProperties& properties)
+{
+    // connect_result is write-once: once it's valid, we don't need to lock
+    // to use it.
+    if (connect_done &&
+        !connect_result->has_error() &&
+        connect_result->has_platform() &&
+        connect_result->platform().has_graphics_module())
+    {
+        auto const& graphics_module = connect_result->platform().graphics_module();
+        properties.name = graphics_module.name().c_str();
+        properties.major_version = graphics_module.major_version();
+        properties.minor_version = graphics_module.minor_version();
+        properties.micro_version = graphics_module.micro_version();
+        properties.filename = graphics_module.file().c_str();
+    }
+    else
+    {
+        properties.name = "(unknown)";
+        properties.major_version = 0;
+        properties.minor_version = 0;
+        properties.micro_version = 0;
+        properties.filename = nullptr;
     }
 }
 

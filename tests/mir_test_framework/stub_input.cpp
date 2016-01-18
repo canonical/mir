@@ -20,6 +20,8 @@
 #include "fake_input_device_impl.h"
 #include "mir/module_properties.h"
 #include "mir/assert_module_entry_point.h"
+#include "mir/libname.h"
+
 
 namespace mtf = mir_test_framework;
 namespace mo = mir::options;
@@ -52,10 +54,11 @@ mi::PlatformPriority probe_input_platform(
 namespace
 {
 mir::ModuleProperties const description = {
-    "stub-input",
+    "mir:stub-input",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
+    MIR_VERSION_MICRO,
+    mir::libname()
 };
 }
 
