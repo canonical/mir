@@ -210,7 +210,7 @@ TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_too_new)
     mir_connection_release(connection);
 }
 
-TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_epoch_too_new)
+TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_much_too_new)
 {
     std::ostringstream buffer;
     buffer << mir::protobuf::next_incompatible_protocol_version();
