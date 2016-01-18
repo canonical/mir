@@ -130,6 +130,7 @@ public:
                  * to ensure all surfaces' queues are fully drained.
                  */
                 frames_scheduled--;
+                not_posted_yet = false;
                 lock.unlock();
 
                 for (auto& tuple : compositors)
@@ -138,7 +139,6 @@ public:
                     compositor->composite(scene->scene_elements_for(compositor.get()));
                 }
                 group.post();
-                not_posted_yet = false;
 
                 /*
                  * "Predictive bypass" optimization: If the last frame was
@@ -201,9 +201,8 @@ public:
 
     void schedule_compositing(int num_frames, geometry::Rectangle const& damage)
     {
-        bool took_damage = not_posted_yet;
-
         std::lock_guard<std::mutex> lock{run_mutex};
+        bool took_damage = not_posted_yet;
 
         group.for_each_display_buffer([&](mg::DisplayBuffer& buffer)
             { if (damage.overlaps(buffer.view_area())) took_damage = true; });
