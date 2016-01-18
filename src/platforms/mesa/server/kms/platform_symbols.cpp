@@ -24,6 +24,7 @@
 #include "mir/udev/wrapper.h"
 #include "mir/module_deleter.h"
 #include "mir/assert_module_entry_point.h"
+#include "mir/libname.h"
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -211,12 +212,16 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
         mg::PlatformPriority::supported - 1);
 }
 
+namespace
+{
 mir::ModuleProperties const description = {
-    "mesa-kms",
+    "mir:mesa-kms",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
+    MIR_VERSION_MICRO,
+    mir::libname()
 };
+}
 
 mir::ModuleProperties const* describe_graphics_module()
 {
