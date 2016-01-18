@@ -138,6 +138,7 @@ public:
                     compositor->composite(scene->scene_elements_for(compositor.get()));
                 }
                 group.post();
+                not_posted_yet = false;
 
                 /*
                  * "Predictive bypass" optimization: If the last frame was
@@ -200,7 +201,7 @@ public:
 
     void schedule_compositing(int num_frames, geometry::Rectangle const& damage)
     {
-        bool took_damage = false;
+        bool took_damage = not_posted_yet;
 
         std::lock_guard<std::mutex> lock{run_mutex};
 
@@ -240,6 +241,7 @@ private:
     std::shared_ptr<CompositorReport> const report;
     std::promise<void> started;
     std::future<void> started_future;
+    bool not_posted_yet = true;
 };
 
 }
