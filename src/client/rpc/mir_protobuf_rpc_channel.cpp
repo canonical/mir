@@ -1,4 +1,5 @@
 /*
+
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -87,8 +88,8 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
         (*lifecycle_control)(mir_lifecycle_connection_lost);
     }
     pending_calls.force_completion();
-    //NB: once the old semantics are around, this explicit call to notify the buffer 
-    //isn't coming won't be needed
+    //NB: once the old semantics are not around, this explicit call to notify 
+    //the streams of disconnection shouldn't be needed.
     if (auto map = surface_map.lock()) 
     {
         map->with_all_streams_do(
