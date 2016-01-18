@@ -18,7 +18,6 @@ add_library(mirsharedsharedlibrary OBJECT
   module_deleter.cpp
   shared_library.cpp
   shared_library_prober.cpp
-  plugin.cpp
 )
 
 list(APPEND MIR_COMMON_SOURCES

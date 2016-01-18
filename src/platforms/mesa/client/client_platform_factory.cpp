@@ -23,6 +23,7 @@
 #include "buffer_file_ops.h"
 #include "mir/egl_native_display_container.h"
 #include "mir/assert_module_entry_point.h"
+#include "mir/module_deleter.h"
 
 #include <sys/mman.h>
 #include <unistd.h>
@@ -87,7 +88,7 @@ std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* 
         BOOST_THROW_EXCEPTION((std::runtime_error{"Attempted to create Mesa client platform on non-Mesa server"}));
     }
     auto buffer_file_ops = std::make_shared<RealBufferFileOps>();
-    return std::make_shared<mclm::ClientPlatform>(
+    return mir::make_module_ptr<mclm::ClientPlatform>(
         context, buffer_file_ops, mcl::EGLNativeDisplayContainer::instance());
 }
 

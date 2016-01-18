@@ -210,10 +210,5 @@ MIR_COMMON_unreleased { # New functions in Mir 0.19
       typeinfo?for?mir::logging::DumbConsoleLogger;
 
       mir::detail::libname_impl*;
-
-      typeinfo?for?mir::Plugin;
-      mir::Plugin::Plugin*;
-      mir::Plugin::?Plugin*;
-      mir::Plugin::keep_library_loaded*;
     };
 } MIR_COMMON_5.1;

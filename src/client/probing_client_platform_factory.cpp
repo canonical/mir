@@ -63,9 +63,7 @@ mcl::ProbingClientPlatformFactory::create_client_platform(mcl::ClientContext* co
             if (probe(context))
             {
                 auto factory = module->load_function<mir::client::CreateClientPlatform>("create_client_platform", CLIENT_PLATFORM_VERSION);
-                auto platform = factory(context);
-                platform->keep_library_loaded(module);
-                return platform;
+                return factory(context);
             }
         }
         catch(std::runtime_error const&)

@@ -475,7 +475,6 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
             };
 
         platform = client_platform_factory->create_client_platform(this);
-        platform_library = platform->keep_library_loaded();
         buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(
             platform, the_logger());
         native_display = platform->create_egl_native_display();
