@@ -211,37 +211,47 @@ char const* mir_buffer_stream_get_error_message(MirBufferStream* opaque_stream)
     return buffer_stream->get_error_message();
 }
 
+struct MirBufferStub
+{
+    MirBufferStub(MirBufferStream* stream, mir_buffer_callback cb, void* context) :
+        stream(stream),
+        cb(cb),
+        context(context)
+    {
+        ready();
+    }
+
+    void ready()
+    {
+        if (cb)
+            cb(stream, reinterpret_cast<MirBuffer*>(this), context);
+    }
+
+    MirBufferStream* const stream;
+    mir_buffer_callback const cb;
+    void* const context;
+};
 
 //private NBS api under development
 void mir_buffer_stream_allocate_buffer(
-    MirBufferStream*, 
+    MirBufferStream* stream, 
     int, int,
     MirPixelFormat,
     MirBufferUsage,
-    mir_buffer_callback, void*)
+    mir_buffer_callback cb, void* context)
 {
+    new MirBufferStub(stream, cb, context); 
 }
 
-MirBuffer* mir_buffer_stream_allocate_buffer_sync(
-    MirBufferStream*, int, int, MirPixelFormat, MirBufferUsage) 
+void mir_buffer_stream_release_buffer(MirBufferStream*, MirBuffer* buffer) 
 {
-    return nullptr;
+    delete reinterpret_cast<MirBufferStub*>(buffer);
 }
 
-void mir_buffer_stream_release_buffer(
-    MirBufferStream*, MirBuffer*, mir_buffer_stream_callback, void*)
+bool mir_buffer_stream_submit_buffer(MirBufferStream*, MirBuffer* buffer)
 {
-}
-
-void mir_buffer_stream_release_buffer(MirBufferStream*, MirBuffer*) 
-{
-}
-
-bool mir_buffer_stream_submit_buffer(MirBufferStream* buffer_stream, MirBuffer* buffer,
-    mir_buffer_callback available_callback, void* available_context)
-{
-    if (available_callback)
-        available_callback(buffer_stream, buffer, available_context);
+    auto b = reinterpret_cast<MirBufferStub*>(buffer);
+    b->ready();
     return true;
 }
 

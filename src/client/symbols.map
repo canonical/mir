@@ -263,7 +263,6 @@ MIR_CLIENT_DETAIL_9v18 {
 MIR_CLIENT_DETAIL_unreleased {
   global:
     mir_buffer_stream_allocate_buffer;
-    mir_buffer_stream_allocate_buffer_sync;
     mir_buffer_stream_release_buffer;
     mir_buffer_stream_submit_buffer;
     mir_buffer_get_fence_type;

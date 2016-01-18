@@ -29,34 +29,25 @@ extern "C" {
 #endif
 
 /** Allocate a MirBuffer and do not wait for the server to return it.
- *  New buffer will arrive via the buffer callback associated with the stream.
  *
- *   \param [in] buffer_stream    The buffer stream
- *   \param [in] width            Requested buffer width
- *   \param [in] height           Requested buffer height
- *   \param [in] buffer_usage     Requested buffer usage
- *   \param [in] callback         The callback
- *   \param [in] context          The context
+ *  The callback will be called when the buffer is available for use.
+ *  It will be called once when created, and once per every
+ *  mir_buffer_stream_submit_buffer.
+ *
+ *   \param [in] buffer_stream         The buffer stream
+ *   \param [in] width                 Requested buffer width
+ *   \param [in] height                Requested buffer height
+ *   \param [in] buffer_usage          Requested buffer usage
+ *   \param [in] available_callback    The callback called when the buffer is available
+ *   \param [in] available_context     The context for the available_callback
  **/
+
 void mir_buffer_stream_allocate_buffer(
     MirBufferStream* stream, 
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage buffer_usage,
-    mir_buffer_callback callback, void* context);
-
-/* Allocate a MirBuffer and wait for the allocation
- *   \param [in] buffer_stream    The buffer stream
- *   \param [in] width            Requested buffer width
- *   \param [in] height           Requested buffer height
- *   \param [in] buffer_usage     Requested buffer usage
- *   \return                      The buffer the server allocated
- **/
-MirBuffer* mir_buffer_stream_allocate_buffer_sync(
-    MirBufferStream* stream, 
-    int width, int height,
-    MirPixelFormat format,
-    MirBufferUsage buffer_usage);
+    mir_buffer_callback available_callback, void* available_context);
 
 /** release a MirBuffer
  *   \param [in] buffer_stream       The buffer stream
@@ -82,8 +73,7 @@ void mir_buffer_stream_release_buffer(
  *   \return                         true if the submission succeeded,
  *                                   false if it did not.
  **/
-bool mir_buffer_stream_submit_buffer(MirBufferStream* buffer_stream, MirBuffer* buffer,
-    mir_buffer_callback available_callback, void* available_context);
+bool mir_buffer_stream_submit_buffer(MirBufferStream* buffer_stream, MirBuffer* buffer);
 
 #ifdef __cplusplus
 }

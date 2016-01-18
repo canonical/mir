@@ -46,6 +46,7 @@ void fill_buffer(MirBuffer* buffer, int shade, int min, int max)
 typedef struct SubmissionInfo
 {
     int available;
+    MirBuffer* buffer;
     pthread_mutex_t lock;
     pthread_cond_t cv;
 } SubmissionInfo;
@@ -53,10 +54,10 @@ typedef struct SubmissionInfo
 static void available_callback(MirBufferStream* stream, MirBuffer* buffer, void* client_context)
 {
     (void) stream;
-    (void) buffer;
     SubmissionInfo* info = (SubmissionInfo*) client_context;
     pthread_mutex_lock(&info->lock);
     info->available = 1;
+    info->buffer = buffer;
     pthread_cond_broadcast(&info->cv);
     pthread_mutex_unlock(&info->lock);
 }
@@ -88,38 +89,44 @@ int main(int argc, char** argv)
     MirBufferUsage usage = mir_buffer_usage_software;
     MirPixelFormat format = mir_pixel_format_abgr_8888;
 
-    MirBuffer* buffers[num_prerendered_frames];
     SubmissionInfo buffer_available[num_prerendered_frames];
 
     for (int i = 0u; i < num_prerendered_frames; i++)
     {
-        buffers[i] = mir_buffer_stream_allocate_buffer_sync(stream, width, height, format, usage);
-        buffer_available[i].available = 1;
         pthread_cond_init(&buffer_available[i].cv, NULL);
         pthread_mutex_init(&buffer_available[i].lock, NULL);
-        fill_buffer(buffers[i], i, 0, num_prerendered_frames);
+        buffer_available[i].available = 0;
+        buffer_available[i].buffer = NULL;
+
+        mir_buffer_stream_allocate_buffer(
+            stream, width, height, format, usage, available_callback, &buffer_available[i]);
+
+        pthread_mutex_lock(&buffer_available[i].lock);
+        while(!buffer_available[i].buffer)
+            pthread_cond_wait(&buffer_available[i].cv, &buffer_available[i].lock);
+        fill_buffer(buffer_available[i].buffer, i, 0, num_prerendered_frames);
+        pthread_mutex_unlock(&buffer_available[i].lock);
     }
 
     int i = 0;
     while (rendering)
     {
+        MirBuffer* b;
         pthread_mutex_lock(&buffer_available[i].lock);
         while(!buffer_available[i].available)
             pthread_cond_wait(&buffer_available[i].cv, &buffer_available[i].lock);
         buffer_available[i].available = 0;
+        b = buffer_available[i].buffer;
         pthread_mutex_unlock(&buffer_available[i].lock);
 
-        if (!mir_buffer_stream_submit_buffer(stream, buffers[i],
-            available_callback, &buffer_available[i]))
-        {
+        if (!mir_buffer_stream_submit_buffer(stream, b))
             rendering = false;
-        }
 
         i = (i + 1) % num_prerendered_frames;
     }
 
     for (i = 0u; i < num_prerendered_frames; i++)
-        mir_buffer_stream_release_buffer(stream, buffers[i]);
+        mir_buffer_stream_release_buffer(stream, buffer_available[i].buffer);
 
     //TODO: connection shutdown stuff
     return 0;
