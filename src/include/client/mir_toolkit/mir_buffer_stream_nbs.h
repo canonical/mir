@@ -58,18 +58,16 @@ void mir_buffer_stream_release_buffer(
 
 
 /** Submit a buffer to the server so the server can display it.
+ *
  *  The server will notify the client when the buffer is available again via the callback
  *  registered during buffer creation.
  *
- *   \warning: Once submitted, the buffer cannot be used until the server 
+ *   \warning: Once submitted, the buffer cannot be modified until the server 
  *             has returned it. There's no guarantee about how long a server
  *             may hold the submitted buffer.
  *
  *   \param [in] buffer_stream       The buffer stream
  *   \param [in] buffer              The buffer to be submitted
- *   \param [in] available_callback  A callback that will be called when the
- *                                   buffer is available for use again. 
- *   \param [in] available_context   A context for the available_callback
  *   \return                         true if the submission succeeded,
  *                                   false if it did not.
  **/
