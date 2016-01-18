@@ -265,7 +265,6 @@ MIR_CLIENT_DETAIL_unreleased {
     mir_buffer_stream_allocate_buffer;
     mir_buffer_stream_allocate_buffer_sync;
     mir_buffer_stream_release_buffer;
-    mir_buffer_stream_release_buffer_sync;
     mir_buffer_stream_submit_buffer;
     mir_buffer_get_fence_type;
     mir_buffer_get_fence;

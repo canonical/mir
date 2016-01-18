@@ -61,18 +61,10 @@ MirBuffer* mir_buffer_stream_allocate_buffer_sync(
 /** release a MirBuffer
  *   \param [in] buffer_stream       The buffer stream
  *   \param [in] buffer              The buffer to be released
- *   \param [in] callback         The callback
- *   \param [in] context          The context
  **/
 void mir_buffer_stream_release_buffer(
-    MirBufferStream* stream, MirBuffer* buffer,
-    mir_buffer_stream_callback callback, void* context);
+    MirBufferStream* stream, MirBuffer* buffer);
 
-/** release a MirBuffer
- *   \param [in] buffer_stream       The buffer stream
- *   \param [in] buffer              The buffer to be released
- **/
-void mir_buffer_stream_release_buffer_sync(MirBufferStream* stream, MirBuffer* buffer);
 
 /** Submit a buffer to the server so the server can display it.
  *  The server will notify the client when the buffer is available again via the callback

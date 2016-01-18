@@ -233,7 +233,7 @@ void mir_buffer_stream_release_buffer(
 {
 }
 
-void mir_buffer_stream_release_buffer_sync(MirBufferStream*, MirBuffer*) 
+void mir_buffer_stream_release_buffer(MirBufferStream*, MirBuffer*) 
 {
 }
 

@@ -119,7 +119,7 @@ int main(int argc, char** argv)
     }
 
     for (i = 0u; i < num_prerendered_frames; i++)
-        mir_buffer_stream_release_buffer_sync(stream, buffers[i]);
+        mir_buffer_stream_release_buffer(stream, buffers[i]);
 
     //TODO: connection shutdown stuff
     return 0;
