@@ -35,7 +35,6 @@ namespace
 {
 char const* const disable_while_typing_opt = "disable-while-typing";
 char const* const mouse_acceleration_opt = "mouse-acceleration";
-char const* const acceleration_none = "none";
 char const* const acceleration_constant = "constant";
 char const* const acceleration_adaptive = "adaptive";
 char const* const mouse_cursor_acceleration_bias_opt = "mouse-cursor-acceleration-bias";
@@ -60,16 +59,16 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
                                     "Disable touchpad while typing on keyboard configuration [true, false]",
                                     false);
     server.add_configuration_option(mouse_acceleration_opt,
-                                    "Select acceleration profile for mice and trackballs [none, constant, adaptive]",
+                                    "Select acceleration profile for mice and trackballs [constant, adaptive]",
                                     acceleration_adaptive);
     server.add_configuration_option(mouse_cursor_acceleration_bias_opt,
-                                    "Bias to the acceleration curve within the range [-1.0, 1.0] for mice",
+                                    "Constant factor (+1) to velocity or bias to the acceleration curve within the range [-1.0, 1.0] for mice",
                                     0.0);
     server.add_configuration_option(mouse_scroll_speed_scale_opt,
                                     "Scales mice scroll events, use negative values for natural scrolling",
                                     1.0);
     server.add_configuration_option(touchpad_cursor_acceleration_bias_opt,
-                                    "Bias to the acceleration curve within the range [-1.0, 1.0] for touchpads",
+                                    "Constant factor (+1) to velocity or bias to the acceleration curve within the range [-1.0, 1.0] for touchpads",
                                     0.0);
     server.add_configuration_option(touchpad_scroll_speed_scale_opt,
                                     "Scales touchpad scroll events, use negative values for natural scrolling",
@@ -106,8 +105,6 @@ void me::add_input_device_configuration_options_to(mir::Server& server)
     {
         if (val == acceleration_constant)
             return mir_pointer_acceleration_constant;
-        if (val == acceleration_none)
-            return mir_pointer_acceleration_none;
         return mir_pointer_acceleration_adaptive;
     };
 

@@ -339,18 +339,10 @@ mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settin
     auto dev = device();
     auto const left_handed = (libinput_device_config_left_handed_get(dev) == 1);
     settings.handedness = left_handed? mir_pointer_handedness_left : mir_pointer_handedness_right;
-    switch(libinput_device_config_accel_get_profile(dev))
-    {
-    case LIBINPUT_CONFIG_ACCEL_PROFILE_NONE:
-        settings.acceleration = mir_pointer_acceleration_none;
-        break;
-    case LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT:
+    if (libinput_device_config_accel_get_profile(dev) == LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT)
         settings.acceleration = mir_pointer_acceleration_constant;
-        break;
-    case LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE:
+    else
         settings.acceleration = mir_pointer_acceleration_adaptive;
-        break;
-    }
 
     settings.cursor_acceleration_bias = libinput_device_config_accel_get_speed(dev);
     settings.vertical_scroll_scale = vertical_scroll_scale;
@@ -364,17 +356,15 @@ void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& sett
         return;
 
     auto dev = device();
+
+    auto accel_profile = settings.acceleration == mir_pointer_acceleration_adaptive ?
+        LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE :
+        LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT;
     libinput_device_config_accel_set_speed(dev, settings.cursor_acceleration_bias);
     libinput_device_config_left_handed_set(dev, mir_pointer_handedness_left == settings.handedness);
     vertical_scroll_scale = settings.vertical_scroll_scale;
     horizontal_scroll_scale = settings.horizontal_scroll_scale;
-    libinput_device_config_accel_set_profile(
-        dev,
-        (settings.acceleration == mir_pointer_acceleration_none) ?
-            LIBINPUT_CONFIG_ACCEL_PROFILE_NONE :
-            (settings.acceleration == mir_pointer_acceleration_constant) ?
-            LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT :
-            LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE);
+    libinput_device_config_accel_set_profile(dev, accel_profile);
 }
 
 mir::optional_value<mi::TouchpadSettings> mie::LibInputDevice::get_touchpad_settings() const

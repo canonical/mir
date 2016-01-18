@@ -217,8 +217,6 @@ struct LibInputDevice : public ::testing::Test
         ON_CALL(mock_libinput, libinput_device_config_accel_get_profile(dev))
             .WillByDefault(Return((profile == mir_pointer_acceleration_constant) ?
                                       LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT :
-                                      (profile == mir_pointer_acceleration_none) ?
-                                      LIBINPUT_CONFIG_ACCEL_PROFILE_NONE :
                                       LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE));
     }
 
@@ -812,7 +810,7 @@ TEST_F(LibInputDeviceOnMouse, reads_pointer_settings_from_libinput)
 
 TEST_F(LibInputDeviceOnMouse, applies_pointer_settings)
 {
-    setup_pointer_configuration(mouse.device(), 1, mir_pointer_handedness_right, mir_pointer_acceleration_none);
+    setup_pointer_configuration(mouse.device(), 1, mir_pointer_handedness_right, mir_pointer_acceleration_adaptive);
     mi::PointerSettings settings(mouse.get_pointer_settings().value());
     settings.cursor_acceleration_bias = 1.1;
     settings.handedness = mir_pointer_handedness_left;
@@ -827,7 +825,7 @@ TEST_F(LibInputDeviceOnMouse, applies_pointer_settings)
 
 TEST_F(LibInputDeviceOnLaptopKeyboardAndMouse, denies_pointer_settings_on_keyboards)
 {
-    setup_pointer_configuration(mouse.device(), 1, mir_pointer_handedness_right, mir_pointer_acceleration_none);
+    setup_pointer_configuration(mouse.device(), 1, mir_pointer_handedness_right, mir_pointer_acceleration_adaptive);
     auto settings_from_mouse = mouse.get_pointer_settings();
 
     EXPECT_CALL(mock_libinput,libinput_device_config_accel_set_speed(_, _)).Times(0);
