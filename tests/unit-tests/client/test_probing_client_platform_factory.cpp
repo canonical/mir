@@ -64,9 +64,7 @@ void populate_valid(MirPlatformPackage& pkg)
 void safely_unload(std::shared_ptr<mir::client::ClientPlatform>& platform)
 {
     ASSERT_TRUE(platform.unique());
-    auto library = platform->keep_library_loaded();
     platform.reset();
-    library.reset();
 }
 
 }

@@ -208,7 +208,6 @@ MIR_COMMON_unreleased { # New functions in Mir 0.19
       typeinfo?for?mir::time::SteadyClock;
       typeinfo?for?android::InputChannel;
       typeinfo?for?mir::logging::DumbConsoleLogger;
-
       mir::detail::libname_impl*;
     };
 } MIR_COMMON_5.1;
