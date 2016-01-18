@@ -398,13 +398,13 @@ mcl::BufferStream::BufferStream(
       mode(mode),
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
-      swap_interval_(1),
       scale_(1.0f),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
       ideal_buffer_size(ideal_size),
       nbuffers(nbuffers)
 {
+    init_swap_interval();
     created(nullptr, nullptr);
     if (!valid())
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
@@ -426,12 +426,12 @@ mcl::BufferStream::BufferStream(
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>()},
       closure{gp::NewPermanentCallback(this, &mcl::BufferStream::created, callback, context)},
-      swap_interval_(1),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
       ideal_buffer_size(parameters.width(), parameters.height()),
       nbuffers(nbuffers)
 {
+    init_swap_interval();
     perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
 
     create_wait_handle.expect_result();
@@ -447,6 +447,21 @@ mcl::BufferStream::BufferStream(
             callback(reinterpret_cast<MirBufferStream*>(this), context);
         if (create_wait_handle.is_pending())
             create_wait_handle.result_received();
+    }
+}
+
+void mcl::BufferStream::init_swap_interval()
+{
+    char const* env = getenv("MIR_CLIENT_FORCE_SWAP_INTERVAL");
+    if (env)
+    {
+        swap_interval_ = atoi(env);
+        fixed_swap_interval = true;
+    }
+    else
+    {
+        swap_interval_ = 1;
+        fixed_swap_interval = false;
     }
 }
 
@@ -492,6 +507,13 @@ void mcl::BufferStream::created(mir_buffer_stream_callback callback, void *conte
 
 
         egl_native_window_ = client_platform->create_egl_native_window(this);
+
+        // This might seem like something to provide during creation but
+        // knowing the swap interval is not a precondition to creation. It's
+        // only a precondition to your second and subsequent swaps, so don't
+        // bother the creation parameters with this stuff...
+        if (fixed_swap_interval)
+            force_swap_interval(swap_interval_);
 
         if (connection)
             connection->on_stream_created(protobuf_bs->id().value(), this);
@@ -666,6 +688,14 @@ int mcl::BufferStream::swap_interval() const
 }
 
 MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
+{
+    if (fixed_swap_interval)
+        return nullptr;
+    else
+        return force_swap_interval(interval);
+}
+
+MirWaitHandle* mcl::BufferStream::force_swap_interval(int interval)
 {
     if (mode != mcl::BufferStreamMode::Producer)
         BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
