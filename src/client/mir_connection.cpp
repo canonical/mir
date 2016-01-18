@@ -92,6 +92,7 @@ struct OnScopeExit
     ~OnScopeExit() { f(); }
     std::function<void()> const f;
 };
+
 mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
 {
     mp::SurfaceParameters message;
