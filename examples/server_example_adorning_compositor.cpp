@@ -132,7 +132,10 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
 
     glUseProgram(program.program);
     glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
-    
+
+    mg::RenderableList renderable_list;
+    renderable_list.reserve(scene_sequence.size());
+
     for(auto& element : scene_sequence)
     {
         //courteously inform the client that its rendered
@@ -140,6 +143,8 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
         element->rendered();
 
         auto const renderable = element->renderable();
+        renderable_list.push_back(renderable);
+
         float width  = renderable->screen_position().size.width.as_float();
         float height = renderable->screen_position().size.height.as_float();
         float x = renderable->screen_position().top_left.x.as_float() - db.view_area().top_left.x.as_float();
@@ -178,15 +183,10 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
         glDisableVertexAttribArray(vPositionAttr);
     }
 
-    mg::RenderableList renderable_list;
-    renderable_list.reserve(scene_sequence.size());
-    for (auto const& element : scene_sequence)
-    {
-        element->rendered();
-        renderable_list.push_back(element->renderable());
-    }
     report->renderables_in_frame(this, renderable_list);
     report->rendered_frame(this);
 
     render_target->swap_buffers();
+
+    report->finished_frame(this);
 }
