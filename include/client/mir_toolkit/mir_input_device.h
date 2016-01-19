@@ -37,10 +37,9 @@ typedef enum MirPointerHandedness
  * - mir_pointer_acceleration_constant: (acceleration bias + 1.0) is applied as
  *   a factor to the current velocity of the pointer. So a bias of -1 to results
  *   to no acceleration.
- * - mir_pointer_acceleration_adaptive: acceleration bias selects an acceleration
- *   function based on the current velocity that usually consists of a two linear
- *
- *   inclines separates by a plateau.
+ * - mir_pointer_acceleration_adaptive: acceleration bias selects an
+ *   acceleration function based on the current velocity that usually consists
+ *   of a two linear inclines separated by a plateau.
  */
 typedef enum MirPointerAcceleration
 {
