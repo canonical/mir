@@ -192,20 +192,3 @@ TEST_F(ClientCookies, touch_motion_events_do_not_have_unmarshabllable_cookies)
         EXPECT_EQ(out_cookies.size(), 1);
     }
 }
-
-TEST_F(ClientCookies, touch_click_events_have_unmarshabllable_cookies)
-{
-    fake_touch_screen->emit_event(
-         mis::a_touch_event()
-        .at_position({0, 0})
-        );
-
-    int events = 1;
-    if (wait_for_n_events(events, this))
-    {
-        std::lock_guard<std::mutex> lk(mutex);
-        ASSERT_FALSE(out_cookies.empty());
-        auto factory = mir::cookie::CookieAuthority::create_from_secret(cookie_secret);
-        EXPECT_NO_THROW(factory->unmarshall_cookie(out_cookies.back()));
-    }
-}
