@@ -34,9 +34,60 @@ ms::LegacySceneChangeNotification::LegacySceneChangeNotification(
 {
 }
 
+ms::LegacySceneChangeNotification::LegacySceneChangeNotification(
+    std::function<void()> const& scene_notify_change,
+    std::function<void(int frames, mir::geometry::Rectangle const& damage)> const& damage_notify_change) :
+    scene_notify_change(scene_notify_change),
+    damage_notify_change(damage_notify_change)
+{
+}
+
 ms::LegacySceneChangeNotification::~LegacySceneChangeNotification()
 {
     end_observation();
+}
+
+#include <iostream>
+namespace
+{
+class NonLegacySurfaceChangeNotification : public ms::LegacySurfaceChangeNotification
+{
+public:
+    NonLegacySurfaceChangeNotification(
+        std::function<void()> const& notify_scene_change,
+        std::function<void(int frames, mir::geometry::Rectangle const& damage)> const& damage_notify_change);
+
+    void init(ms::Surface* surface) { top_left = surface->top_left(); } // FRIG?
+
+    void moved_to(mir::geometry::Point const& /*top_left*/) override;
+    void frame_posted(int frames_available, mir::geometry::Size const& size) override;
+
+private:
+    mir::geometry::Point top_left;
+    std::function<void(int frames, mir::geometry::Rectangle const& damage)> const damage_notify_change;
+};
+
+NonLegacySurfaceChangeNotification::NonLegacySurfaceChangeNotification(
+    std::function<void()> const& notify_scene_change,
+    std::function<void(int frames, mir::geometry::Rectangle const& damage)> const& damage_notify_change) :
+    ms::LegacySurfaceChangeNotification(notify_scene_change, {}),
+    damage_notify_change(damage_notify_change)
+{
+}
+
+void NonLegacySurfaceChangeNotification::moved_to(mir::geometry::Point const& top_left)
+{
+    this->top_left = top_left;
+    ms::LegacySurfaceChangeNotification::moved_to(top_left);
+}
+
+void NonLegacySurfaceChangeNotification::frame_posted(int frames_available, mir::geometry::Size const& size)
+{
+    mir::geometry::Rectangle const update_region{top_left, size};
+    damage_notify_change(frames_available, update_region);
+//    std::cout << "Frame posted: " << update_region << std::endl;
+//    ms::LegacySurfaceChangeNotification::frame_posted(frames_available, size);
+}
 }
 
 void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surface)
@@ -48,11 +99,21 @@ void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surfac
             was_visible = surface->visible();
         };
 
-    auto observer = std::make_shared<ms::LegacySurfaceChangeNotification>(
-        notifier, buffer_notify_change);
-    surface->add_observer(observer);
-    
+    if (buffer_notify_change)
     {
+        auto observer = std::make_shared<LegacySurfaceChangeNotification>(notifier, buffer_notify_change);
+        surface->add_observer(observer);
+
+        std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
+        surface_observers[surface] = observer;
+    }
+    else
+    {
+        auto observer = std::make_shared<NonLegacySurfaceChangeNotification>(
+            notifier, damage_notify_change);
+        observer->init(surface); // FRIG?
+        surface->add_observer(observer);
+
         std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
         surface_observers[surface] = observer;
     }
