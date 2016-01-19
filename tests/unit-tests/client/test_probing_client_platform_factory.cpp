@@ -165,35 +165,6 @@ TEST(ProbingClientPlatformFactory, DoesNotLeakUnusedDriverModulesOnStartup)
     ASSERT_EQ(0, nloaded);
 }
 
-// Note "DeathTest" informs our scripts that we expect a leak from the
-// child process that died, and to ignore it.
-TEST(ProbingClientPlatformFactoryDeathTest, DiesOnUnsafeRelease)
-{
-    using namespace testing;
-    auto const modules = all_available_modules();
-    ASSERT_FALSE(modules.empty());
-    std::string const preferred_module = modules.front();
-
-    mir::client::ProbingClientPlatformFactory factory(
-        mir::report::null_shared_library_prober_report(),
-        {preferred_module},
-        {});
-
-    std::shared_ptr<mir::client::ClientPlatform> platform;
-    mtd::MockClientContext context;
-    ON_CALL(context, populate_server_package(_))
-            .WillByDefault(Invoke(populate_valid));
-
-    platform = factory.create_client_platform(&context);
-
-    // Google Test creates a child process to verify this:
-    ASSERT_DEATH({platform.reset();}, ".*still in use.*");
-
-    // ... but here in the parent process we need to actively avoid the
-    // death happening, so that our test completes:
-    safely_unload(platform);
-}
-
 #if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
 TEST(ProbingClientPlatformFactory, CreatesMesaPlatformWhenAppropriate)
 #else
