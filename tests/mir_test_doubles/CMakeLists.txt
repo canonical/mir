@@ -13,6 +13,7 @@ include_directories(
 set(
   TEST_UTILS_SRCS
 
+  mock_input_device.cpp
   mock_frame_dropping_policy_factory.cpp
   mock_timer.cpp
   stub_buffer.cpp

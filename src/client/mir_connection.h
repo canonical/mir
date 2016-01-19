@@ -137,7 +137,7 @@ public:
     std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
        mir::protobuf::BufferStream const& protobuf_bs, std::string const& surface_name, mir::geometry::Size);
 
-    mir::client::ClientBufferStream* create_client_buffer_stream(
+    MirWaitHandle* create_client_buffer_stream(
         int width, int height,
         MirPixelFormat format,
         MirBufferUsage buffer_usage,
@@ -190,6 +190,24 @@ private:
     };
     std::vector<std::shared_ptr<SurfaceCreationRequest>> surface_requests;
     void surface_created(SurfaceCreationRequest*);
+
+    struct StreamCreationRequest
+    {
+        StreamCreationRequest(
+            mir_buffer_stream_callback cb, void* context, mir::protobuf::BufferStreamParameters const& params) :
+            callback(cb), context(context), parameters(params), response(std::make_shared<mir::protobuf::BufferStream>()),
+            wh(std::make_shared<MirWaitHandle>())
+        {
+        }
+        mir_buffer_stream_callback callback;
+        void* context;
+        mir::protobuf::BufferStreamParameters const parameters;
+        std::shared_ptr<mir::protobuf::BufferStream> response;
+        std::shared_ptr<MirWaitHandle> const wh;
+    };
+    std::vector<std::shared_ptr<StreamCreationRequest>> stream_requests;
+    void stream_created(StreamCreationRequest*);
+    void stream_error(std::string const& error_msg, std::shared_ptr<StreamCreationRequest> const& request);
 
     void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.
@@ -260,6 +278,8 @@ private:
     void released(StreamRelease);
     void done_platform_operation(mir_platform_operation_callback, void* context);
     bool validate_user_display_config(MirDisplayConfiguration const* config);
+
+    int const nbuffers;
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */
