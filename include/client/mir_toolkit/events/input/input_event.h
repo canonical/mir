@@ -143,19 +143,40 @@ MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev
  */
 bool mir_input_event_has_cookie(MirInputEvent const* ev);
 
-/*
- * \params[in] ev     The input event
- * \return            An allocated and refed cookie
+/* Returns an allocated MirCookie that you must release with mir_cookie_release
+ *
+ * \params[in] ev The input event
+ * \return        An allocated and ref'ed cookie
  */
 MirCookie const* mir_input_event_get_cookie(MirInputEvent const* ev);
 
-
+/* The size of the buffer needed to serialize this MirCookie
+ *
+ * \params[in] cookie  The MirCookie
+ * \return             The size needed to allocate a buffer
+ */
 size_t mir_cookie_get_size(MirCookie const* cookie);
 
+/* Copy the MirCookie into an allocated buffer
+ *
+ * \params[in] cookie The MirCookie
+ * \params[in] buffer The allocated buffer to copy the MirCookie into
+ * \params[in] size   The size of the allocated buffer
+ */
 void mir_cookie_copy_to_buffer(MirCookie const* cookie, void* buffer, size_t size);
 
+/* Turns the user copyed buffer back into a MirCookie, which must be
+ * released with mir_cookie_release
+ *
+ * \params[in] buffer The buffer used to get a MirCookie back
+ * \return            A newely allocated MirCookie
+ */
 MirCookie const* mir_cookie_from_buffer(void const* buffer);
 
+/* Release the memory allocated by the MirCookie
+ *
+ * \params[in] cookie The cookie to release
+ */
 void mir_cookie_release(MirCookie const* cookie);
 
 #ifdef __cplusplus
