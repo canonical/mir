@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -321,7 +321,7 @@ public:
     /// \return the compositor.
     auto the_compositor() const -> std::shared_ptr<compositor::Compositor>;
 
-    /// \return the compositor.
+    /// \return the compositor report.
     auto the_compositor_report() const -> std::shared_ptr<compositor::CompositorReport>;
 
     /// \return the composite event filter.
