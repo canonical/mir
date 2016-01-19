@@ -26,6 +26,7 @@ add_subdirectory(android)
 add_library(mirsharedinput OBJECT
   ${ANDROID_SHARED_INPUT_SOURCES}
   input_event.cpp
+  input_devices.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/xkb_mapper.cpp
 )
 

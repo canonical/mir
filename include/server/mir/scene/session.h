@@ -29,6 +29,7 @@ namespace mir
 {
 namespace frontend { class EventSink; }
 namespace shell { struct StreamSpecification; }
+namespace input { class Device; }
 namespace scene
 {
 class Surface;
@@ -67,6 +68,7 @@ public:
     virtual void destroy_buffer_stream(frontend::BufferStreamId stream) = 0;
     virtual void configure_streams(Surface& surface, std::vector<shell::StreamSpecification> const& config) = 0;
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface) = 0;
+    virtual void send_input_device_change(std::vector<std::shared_ptr<input::Device>> const& devices) = 0;
 };
 }
 }
