@@ -269,7 +269,7 @@ void mir_buffer_set_fence(MirBuffer*, MirNativeFence*, MirFenceType)
 {
 }
 
-int mir_buffer_clear_fence(MirBuffer*, MirFenceType, int)
+int mir_buffer_wait_fence(MirBuffer*, MirFenceType, int)
 {
     return 0;
 }
