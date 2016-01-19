@@ -28,7 +28,6 @@
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
 
-#include "mir/cookie_factory.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/events/event_builders.h"
@@ -61,7 +60,7 @@ struct InputDeviceHubTest : ::testing::Test
     mir::dispatch::MultiplexingDispatchable multiplexer;
     mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_dispatcher), mt::fake_shared(multiplexer),
                                   mt::fake_shared(observer_loop), mt::fake_shared(stub_visualizer),
-                                  mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region), cookie_authority};
+                                  mt::fake_shared(stub_cursor_listener), mt::fake_shared(mock_region), cookie_authority};
     Nice<mtd::MockInputDeviceObserver> mock_observer;
     Nice<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
     Nice<mtd::MockInputDevice> another_device{"another_device","dev-2", mi::DeviceCapability::keyboard};
