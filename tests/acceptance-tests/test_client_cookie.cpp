@@ -97,11 +97,14 @@ void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
         std::lock_guard<std::mutex> lk(client_cookie->mutex);
         if (mir_input_event_has_cookie(iev))
         {
-            auto const size = mir_input_event_get_cookie_size(iev);
-            std::vector<uint8_t> cookie(size);
+            auto cookie = mir_input_event_get_cookie(iev);
+            size_t size = mir_cookie_get_size(cookie);
 
-            mir_input_event_copy_cookie(iev, reinterpret_cast<MirCookie*>(cookie.data()), size);
-            client_cookie->out_cookies.push_back(cookie);
+            std::vector<uint8_t> cookie_bytes(size);
+            mir_cookie_copy_to_buffer(cookie, cookie_bytes.data(), size);
+
+            mir_cookie_release(cookie);
+            client_cookie->out_cookies.push_back(cookie_bytes);
         }
 
         client_cookie->event_count++;
@@ -123,7 +126,7 @@ bool wait_for_n_events(size_t n, ClientCookies* client_cookie)
 }
 }
 
-TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
+TEST_F(ClientCookies, keyboard_events_have_unmarshallable_cookies)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
 
@@ -134,12 +137,12 @@ TEST_F(ClientCookies, keyboard_events_have_attestable_cookies)
 
         ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieAuthority::create_from_secret(cookie_secret);
-        auto last_cookie = reinterpret_cast<MirCookie*>(out_cookies.back().data());
-        EXPECT_TRUE(factory->attest_timestamp(last_cookie));
+
+        EXPECT_NO_THROW(factory->unmarshall_cookie(out_cookies.back()));
     }
 }
 
-TEST_F(ClientCookies, pointer_motion_events_do_not_have_attestable_cookies)
+TEST_F(ClientCookies, pointer_motion_events_do_not_have_unmarshallable_cookies)
 {
     // with movement generates 2 events
     fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
@@ -153,7 +156,7 @@ TEST_F(ClientCookies, pointer_motion_events_do_not_have_attestable_cookies)
     }
 }
 
-TEST_F(ClientCookies, pointer_click_events_have_attestable_cookies)
+TEST_F(ClientCookies, pointer_click_events_have_unmarshallable_cookies)
 {
     fake_pointer->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_pointer->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
@@ -164,12 +167,11 @@ TEST_F(ClientCookies, pointer_click_events_have_attestable_cookies)
         std::lock_guard<std::mutex> lk(mutex);
         ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieAuthority::create_from_secret(cookie_secret);
-        auto last_cookie = reinterpret_cast<MirCookie*>(out_cookies.back().data());
-        EXPECT_TRUE(factory->attest_timestamp(last_cookie));
+        EXPECT_NO_THROW(factory->unmarshall_cookie(out_cookies.back()));
     }
 }
 
-TEST_F(ClientCookies, touch_motion_events_do_not_have_attestable_cookies)
+TEST_F(ClientCookies, touch_motion_events_do_not_have_unmarshabllable_cookies)
 {
     fake_touch_screen->emit_event(
          mis::a_touch_event()
@@ -191,7 +193,7 @@ TEST_F(ClientCookies, touch_motion_events_do_not_have_attestable_cookies)
     }
 }
 
-TEST_F(ClientCookies, touch_click_events_have_attestable_cookies)
+TEST_F(ClientCookies, touch_click_events_have_unmarshabllable_cookies)
 {
     fake_touch_screen->emit_event(
          mis::a_touch_event()
@@ -204,7 +206,6 @@ TEST_F(ClientCookies, touch_click_events_have_attestable_cookies)
         std::lock_guard<std::mutex> lk(mutex);
         ASSERT_FALSE(out_cookies.empty());
         auto factory = mir::cookie::CookieAuthority::create_from_secret(cookie_secret);
-        auto last_cookie = reinterpret_cast<MirCookie*>(out_cookies.back().data());
-        EXPECT_TRUE(factory->attest_timestamp(last_cookie));
+        EXPECT_NO_THROW(factory->unmarshall_cookie(out_cookies.back()));
     }
 }

@@ -144,19 +144,19 @@ MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev
 bool mir_input_event_has_cookie(MirInputEvent const* ev);
 
 /*
- *
- * \params[in] ev The input event
- * \return        The number of bytes the MirCookie will require
- */
-size_t mir_input_event_get_cookie_size(MirInputEvent const* ev);
-
-/*
- *
  * \params[in] ev     The input event
- * \params[in] cookie An allocated void* with exactly cookie_size bytes
- * \params[in] size   The size of the allocated void*
+ * \return            An allocated and refed cookie
  */
-void mir_input_event_copy_cookie(MirInputEvent const* ev, MirCookie* cookie, size_t size);
+MirCookie const* mir_input_event_get_cookie(MirInputEvent const* ev);
+
+
+size_t mir_cookie_get_size(MirCookie const* cookie);
+
+void mir_cookie_copy_to_buffer(MirCookie const* cookie, void* buffer, size_t size);
+
+MirCookie const* mir_cookie_from_buffer(void const* buffer);
+
+void mir_cookie_release(MirCookie const* cookie);
 
 #ifdef __cplusplus
 }

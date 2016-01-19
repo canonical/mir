@@ -31,6 +31,8 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"
 
+#include "mir/cookie_array.h"
+
 #include "androidfw/Input.h"
 #include "androidfw/InputTransport.h"
 
@@ -90,16 +92,6 @@ public:
 
     std::shared_ptr<ms::Observer> observer;
 };
-
-class StubCookieAuthority : public mir::cookie::CookieAuthority
-{
-public:
-    std::vector<uint8_t> timestamp_to_mac(uint64_t const&) override { return std::vector<uint8_t>(sizeof(MirCookie)); }
-    bool attest_timestamp(MirCookie const*) override {return true;}
-    bool attest_timestamp(uint64_t const&, std::vector<uint8_t> const&) override {return true;}
-    StubCookieAuthority() = default;
-};
-
 }
 
 class AndroidInputSender : public ::testing::Test
@@ -115,11 +107,13 @@ public:
     float const minor = 4;
     float const size = 8;
     mir::geometry::Displacement const movement{10, -10};
-    StubCookieAuthority cookie_authority;
-    mi::DefaultEventBuilder builder{MirInputDeviceId(), mt::fake_shared(cookie_authority)};
+    std::shared_ptr<mir::cookie::CookieAuthority> const cookie_authority;
+    mi::DefaultEventBuilder builder;
 
     AndroidInputSender()
-        : key_event(builder.key_event(std::chrono::nanoseconds(1), mir_keyboard_action_down, 7, test_scan_code)),
+        : cookie_authority(mir::cookie::CookieAuthority::create_from_secret({0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88})),
+          builder(MirInputDeviceId(), cookie_authority),
+          key_event(builder.key_event(std::chrono::nanoseconds(1), mir_keyboard_action_down, 7, test_scan_code)),
           motion_event(builder.touch_event(std::chrono::nanoseconds(-1))),
           pointer_event(builder.pointer_event(std::chrono::nanoseconds(123), mir_pointer_action_motion,
                                         mir_pointer_button_primary, 0.0f, 0.0f,

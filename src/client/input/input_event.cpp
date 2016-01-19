@@ -24,6 +24,8 @@
 #include "mir/log.h"
 #include "mir/require.h"
 
+#include <string.h>
+
 namespace ml = mir::logging;
 
 namespace
@@ -431,18 +433,13 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev)
     return false;
 }
 
-// TODO Waiting for MAC to be 160bits to finish this correctly! For now its 8bytes!
-size_t mir_input_event_get_cookie_size(MirInputEvent const* ev)
+size_t mir_cookie_get_size(MirCookie const* /*cookie*/)
 {
-    mir::require(mir_input_event_has_cookie(ev));
-
-    return sizeof(MirCookie);
+    return mir::cookie::array_size;
 }
 
-void mir_input_event_copy_cookie(MirInputEvent const* ev, MirCookie* cookie, size_t size)
+MirCookie const* mir_input_event_get_cookie(MirInputEvent const* ev)
 {
-    mir::require(size == sizeof(MirCookie));
-
     auto const old_ev = old_ev_from_new(ev);
 
     if(mir_event_get_type(old_ev) != mir_event_type_input)
@@ -451,15 +448,21 @@ void mir_input_event_copy_cookie(MirInputEvent const* ev, MirCookie* cookie, siz
         abort();
     }
 
-    cookie->timestamp = mir_input_event_get_event_time(ev);
-
     switch (old_ev->type)
     {
     case mir_event_type_motion:
-        cookie->mac = old_ev->motion.mac;
+    {
+        auto new_cookie = new uint8_t[old_ev->motion.cookie.size()];
+        memcpy(new_cookie, old_ev->motion.cookie.data(), old_ev->motion.cookie.size());
+        return reinterpret_cast<MirCookie*>(new_cookie);
+    }
         break;
     case mir_event_type_key:
-        cookie->mac = old_ev->key.mac;
+    {
+        auto new_cookie = new uint8_t[old_ev->key.cookie.size()];
+        memcpy(new_cookie, old_ev->key.cookie.data(), old_ev->key.cookie.size());
+        return reinterpret_cast<MirCookie*>(new_cookie);
+    }
         break;
     default:
     {
@@ -467,4 +470,26 @@ void mir_input_event_copy_cookie(MirInputEvent const* ev, MirCookie* cookie, siz
         abort();
     }
     }
+}
+
+void mir_cookie_copy_to_buffer(MirCookie const* cookie, void* buffer, size_t size)
+{
+    mir::require(size == mir::cookie::array_size);
+    memcpy(buffer, cookie, size);
+}
+
+MirCookie const* mir_cookie_from_buffer(void const* cookie)
+{
+    MirCookie const* temp = static_cast<MirCookie const*>(cookie);
+    size_t size = mir_cookie_get_size(temp);
+
+    MirCookie* new_cookie = reinterpret_cast<MirCookie*>(new uint8_t[size]);
+    memcpy(new_cookie, temp, size);
+
+    return new_cookie;
+}
+
+void mir_cookie_release(MirCookie const* cookie)
+{
+    delete[] reinterpret_cast<uint8_t const*>(cookie);
 }

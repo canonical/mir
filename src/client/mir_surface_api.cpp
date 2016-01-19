@@ -491,7 +491,7 @@ void mir_surface_raise_with_cookie(MirSurface* surf, MirCookie const* cookie)
 
     try
     {
-        surf->raise_surface_with_cookie(*cookie);
+        surf->raise_surface_with_cookie(cookie);
     }
     catch (std::exception const& ex)
     {

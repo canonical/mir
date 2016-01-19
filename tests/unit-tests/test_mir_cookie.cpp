@@ -29,19 +29,22 @@ TEST(MirCookieAuthority, attests_real_timestamp)
 
     uint64_t mock_timestamp{0x322322322332};
 
-    auto mac = factory->timestamp_to_mac(mock_timestamp);
-    EXPECT_TRUE(factory->attest_timestamp(mock_timestamp, mac));
+    auto cookie = factory->timestamp_to_cookie(mock_timestamp);
+    EXPECT_NO_THROW({
+        factory->unmarshall_cookie(cookie->marshall());
+    });
 }
 
-TEST(MirCookieAuthority, doesnt_attest_faked_timestamp)
+TEST(MirCookieAuthority, doesnt_attest_faked_mac)
 {
     std::vector<uint8_t> secret{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
     auto factory = mir::cookie::CookieAuthority::create_from_secret(secret);
 
-    uint64_t timestamp = 0x33221100;
     std::vector<uint8_t> mac{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
 
-    EXPECT_FALSE(factory->attest_timestamp(timestamp, mac));
+    EXPECT_THROW({
+        factory->unmarshall_cookie(mac);
+    }, mir::cookie::SecurityCheckFailed);
 }
 
 TEST(MirCookieAuthority, timestamp_trusted_with_different_secret_doesnt_attest)
@@ -54,11 +57,13 @@ TEST(MirCookieAuthority, timestamp_trusted_with_different_secret_doesnt_attest)
 
     uint64_t mock_timestamp{0x01020304};
 
-    auto alices_cookie = alices_factory->timestamp_to_mac(mock_timestamp);
-    auto bobs_cookie = bobs_factory->timestamp_to_mac(mock_timestamp);
+    EXPECT_THROW({
+        auto alices_cookie = alices_factory->timestamp_to_cookie(mock_timestamp);
+        auto bobs_cookie   = bobs_factory->timestamp_to_cookie(mock_timestamp);
 
-    EXPECT_FALSE(alices_factory->attest_timestamp(mock_timestamp, bobs_cookie));
-    EXPECT_FALSE(bobs_factory->attest_timestamp(mock_timestamp, alices_cookie));
+        alices_factory->unmarshall_cookie(bobs_cookie->marshall());
+        bobs_factory->unmarshall_cookie(alices_cookie->marshall());
+    }, mir::cookie::SecurityCheckFailed);
 }
 
 TEST(MirCookieAuthority, throw_when_secret_size_to_small)
@@ -86,9 +91,11 @@ TEST(MirCookieAuthority, timestamp_trusted_with_saved_secret_does_attest)
 
     auto source_factory = mir::cookie::CookieAuthority::create_saving_secret(secret);
     auto sink_factory   = mir::cookie::CookieAuthority::create_from_secret(secret);
-    auto mac = source_factory->timestamp_to_mac(timestamp);
+    auto cookie = source_factory->timestamp_to_cookie(timestamp);
 
-    EXPECT_TRUE(sink_factory->attest_timestamp(timestamp, mac));
+    EXPECT_NO_THROW({
+        sink_factory->unmarshall_cookie(cookie->marshall());
+    });
 }
 
 TEST(MirCookieAuthority, internally_generated_secret_has_optimum_size)
@@ -107,16 +114,4 @@ TEST(MirCookieAuthority, optimal_secret_size_is_larger_than_minimum_size)
 
     EXPECT_THAT(mir::cookie::CookieAuthority::optimal_secret_size(),
         Ge(mir::cookie::CookieAuthority::minimum_secret_size));
-}
-
-// FIXME Remove me when we are no longer returning 8 byte MACS
-// We assert that what we return is 8 bytes, so lets test for that for now!
-TEST(MirCookieAuthority, assert_8_bytes_for_mac)
-{
-    std::vector<uint8_t> secret{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
-    auto factory = mir::cookie::CookieAuthority::create_from_secret(secret);
-    uint64_t mock_timestamp{0x322322322332};
-    auto mac = factory->timestamp_to_mac(mock_timestamp);
-
-    EXPECT_EQ(mac.size(), sizeof(uint64_t));
 }

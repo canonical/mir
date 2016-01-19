@@ -46,7 +46,6 @@
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
 #include "mir/frontend/buffer_stream.h"
-#include "mir/frontend/security_check_failed.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
 #include "mir/cookie_authority.h"
@@ -1034,15 +1033,12 @@ void mf::SessionMediator::raise_surface_with_cookie(
     auto const cookie     = request->cookie();
     auto const surface_id = request->surface_id();
 
-    // FIXME 160 bits coming soon!
-    auto cookie_mac = cookie.mac();
-    auto mac_ptr = reinterpret_cast<uint8_t const*>(&cookie_mac);
-    std::vector<uint8_t> mac(mac_ptr, mac_ptr + sizeof(cookie.mac()));
+    auto cookie_string = cookie.cookie();
 
-    if (!cookie_authority->attest_timestamp(cookie.timestamp(), mac))
-        throw mir::SecurityCheckFailed();
+    std::vector<uint8_t> cookie_bytes(cookie_string.begin(), cookie_string.end());
+    auto const& cookie_ptr = cookie_authority->unmarshall_cookie(cookie_bytes);
 
-    shell->raise_surface_with_timestamp(session, mf::SurfaceId{surface_id.value()}, cookie.timestamp());
+    shell->raise_surface_with_timestamp(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
 
     done->Run();
 }

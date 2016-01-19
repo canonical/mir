@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,10 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ *              Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
 #include "mir/cookie_authority.h"
-#include "mir/cookie.h"
+#include "mir/cookie_array.h"
+#include "hmac_cookie.h"
+#include "cookie_format.h"
 
 #include <algorithm>
 #include <random>
@@ -30,6 +33,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/select.h>
+#include <string.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -38,6 +42,19 @@ namespace
 std::string const random_device_path{"/dev/random"};
 std::string const urandom_device_path{"/dev/urandom"};
 int const wait_seconds{30};
+
+size_t cookie_size_from_format(mir::cookie::Format const& format)
+{
+    switch (format)
+    {
+        case mir::cookie::Format::HMAC_SHA_1_8:
+            return 17;
+        default:
+            break;
+    }
+
+    return 0;
+}
 }
 
 static mir::cookie::Secret get_random_data(unsigned size)
@@ -95,6 +112,11 @@ static mir::cookie::Secret get_random_data(unsigned size)
     return buffer;
 }
 
+mir::cookie::SecurityCheckFailed::SecurityCheckFailed() :
+    runtime_error("Invalid MirCookie")
+{
+}
+
 class CookieAuthorityNettle : public mir::cookie::CookieAuthority
 {
 public:
@@ -109,25 +131,51 @@ public:
 
     virtual ~CookieAuthorityNettle() noexcept = default;
 
-    std::vector<uint8_t> timestamp_to_mac(uint64_t const& timestamp) override
+
+    std::unique_ptr<mir::cookie::MirCookie> timestamp_to_cookie(uint64_t const& timestamp) override
     {
-        return calculate_mac(timestamp);
+        return std::unique_ptr<mir::cookie::MirCookie>(new mir::cookie::HMACMirCookie(timestamp, calculate_mac(timestamp), mir::cookie::Format::HMAC_SHA_1_8));
     }
 
-    bool attest_timestamp(MirCookie const* cookie) override
+    std::unique_ptr<mir::cookie::MirCookie> unmarshall_cookie(std::vector<uint8_t> const& raw_cookie)
     {
-        return verify_mac(cookie->timestamp, cookie->mac);
-    }
+        /*
+        SHA_1 Format:
+        1 byte  = FORMAT
+        8 btyes = TIMESTAMP
+        8 BYTES = MAC
+        */
 
-    bool attest_timestamp(uint64_t const& timestamp, std::vector<uint8_t> const& mac) override
-    {
-        uint64_t real_mac = 0;
+        if (raw_cookie.size() < cookie_size_from_format(mir::cookie::Format::HMAC_SHA_1_8))
+        {
+            throw mir::cookie::SecurityCheckFailed();
+        }
 
-        // FIXME Soon to come 160bit + a constant time memcmp!
-        if (!mac.empty())
-            real_mac = *reinterpret_cast<uint64_t*>(const_cast<uint8_t*>(mac.data()));
+        mir::cookie::Format format = static_cast<mir::cookie::Format>(raw_cookie[0]);
+        if (format != mir::cookie::Format::HMAC_SHA_1_8)
+        {
+            throw mir::cookie::SecurityCheckFailed();
+        }
 
-        return verify_mac(timestamp, real_mac);
+        uint64_t timestamp = 0;
+
+        auto ptr = raw_cookie.data();
+        ptr++;
+
+        // FIXME Soon to be 20 bytes
+        std::vector<uint8_t> mac(8);
+
+        timestamp = *(reinterpret_cast<uint64_t const*>(ptr));
+        ptr += sizeof(timestamp);
+        memcpy(mac.data(), ptr, mac.size());
+
+        std::unique_ptr<mir::cookie::MirCookie> cookie(new mir::cookie::HMACMirCookie(timestamp, mac, mir::cookie::Format::HMAC_SHA_1_8));
+        if (!verify_mac(timestamp, cookie))
+        {
+            throw mir::cookie::SecurityCheckFailed();
+        }
+
+        return cookie;
     }
 
 private:
@@ -141,15 +189,9 @@ private:
         return mac;
     }
 
-    bool verify_mac(uint64_t timestamp, uint64_t const& mac)
+    bool verify_mac(uint64_t const& timestamp, std::unique_ptr<mir::cookie::MirCookie> const& cookie)
     {
-        // FIXME Soon to change to 160bits!
-        uint64_t calculated_mac{0};
-        uint8_t* message = reinterpret_cast<uint8_t*>(const_cast<decltype(timestamp)*>(&timestamp));
-        hmac_sha1_update(&ctx, sizeof(timestamp), message);
-        hmac_sha1_digest(&ctx, sizeof(calculated_mac), reinterpret_cast<uint8_t*>(&calculated_mac));
-
-        return calculated_mac == mac;
+        return *cookie == *timestamp_to_cookie(timestamp);
     }
 
     struct hmac_sha1_ctx ctx;

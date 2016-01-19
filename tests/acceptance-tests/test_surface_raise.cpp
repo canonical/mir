@@ -112,11 +112,15 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
         std::lock_guard<std::mutex> lk(raise_surfaces->mutex);
         if (mir_input_event_has_cookie(iev))
         {
-            auto const size = mir_input_event_get_cookie_size(iev);
-            std::vector<uint8_t> cookie(size);
+            auto cookie = mir_input_event_get_cookie(iev);
+            size_t size = mir_cookie_get_size(cookie);
 
-            mir_input_event_copy_cookie(iev, reinterpret_cast<MirCookie*>(cookie.data()), size);
-            raise_surfaces->out_cookies.push_back(cookie);
+            std::vector<uint8_t> cookie_bytes(size);
+            mir_cookie_copy_to_buffer(cookie, cookie_bytes.data(), size);
+
+            mir_cookie_release(cookie);
+
+            raise_surfaces->out_cookies.push_back(cookie_bytes);
         }
         
         raise_surfaces->event_count++;

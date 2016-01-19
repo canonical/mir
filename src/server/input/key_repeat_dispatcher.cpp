@@ -25,6 +25,7 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <algorithm>
 #include <stdexcept>
 #include <string.h>
 
@@ -119,7 +120,9 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
                 std::lock_guard<std::mutex> lg(repeat_state_mutex);
 
                 ev.key.event_time = std::chrono::steady_clock::now().time_since_epoch();
-                ev.key.mac = *(reinterpret_cast<uint64_t*>(cookie_authority->timestamp_to_mac(ev.key.event_time.count()).data()));
+                auto const& cookie = cookie_authority->timestamp_to_cookie(ev.key.event_time.count());
+                auto const& marsharlled_cookie = cookie->marshall();
+                std::copy_n(std::begin(marsharlled_cookie), ev.key.cookie.size(), std::begin(ev.key.cookie));
                 next_dispatcher->dispatch(ev);
 
                 capture_alarm->reschedule_in(repeat_delay);

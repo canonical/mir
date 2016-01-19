@@ -21,8 +21,8 @@ set(MIRCOOKIE_ABI 2)
 set(symbol_map ${CMAKE_SOURCE_DIR}/src/cookie/symbols.map)
 
 add_library(mircookie SHARED
-
   cookie_authority.cpp
+  hmac_cookie.cpp
 )
 
 set_target_properties(mircookie

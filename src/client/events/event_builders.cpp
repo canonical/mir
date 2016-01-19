@@ -21,10 +21,13 @@
 #include "mir/log.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
+#include "mir/cookie_array.h"
 
 #include <string.h>
 
 #include <boost/throw_exception.hpp>
+
+#include <algorithm>
 #include <stdexcept>
 
 namespace mf = mir::frontend;
@@ -147,7 +150,7 @@ enum
 }
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    uint64_t mac, MirKeyboardAction action, xkb_keysym_t key_code,
+    std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers)
 {
     auto e = new MirEvent;
@@ -158,7 +161,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     kev.device_id = device_id;
     kev.source_id = AINPUT_SOURCE_KEYBOARD;
     kev.event_time = timestamp;
-    kev.mac = mac;
+    std::copy_n(std::begin(cookie), cookie.size(), std::begin(kev.cookie));
     kev.action = action;
     kev.key_code = key_code;
     kev.scan_code = scan_code;
@@ -166,7 +169,6 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
 
     return make_event_uptr(e);
 }
-
 
 void mev::set_modifier(MirEvent& event, MirInputEventModifiers modifiers)
 {
@@ -210,16 +212,24 @@ void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
     event.motion.buttons = button_state;
 }
 
+// Deprecated version with uint64_t mac
+mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    uint64_t /*mac*/, MirKeyboardAction action, xkb_keysym_t key_code,
+    int scan_code, MirInputEventModifiers modifiers)
+{
+    return make_event(device_id, timestamp, {{}}, action, key_code, scan_code, modifiers);
+}
+
 // Deprecated version without mac
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirKeyboardAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers)
 {
-    return make_event(device_id, timestamp, 0, action, key_code, scan_code, modifiers);
+    return make_event(device_id, timestamp, {{}}, action, key_code, scan_code, modifiers);
 }
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    uint64_t mac, MirInputEventModifiers modifiers)
+    std::vector<uint8_t> const& cookie, MirInputEventModifiers modifiers)
 {
     auto e = new MirEvent;
     memset(e, 0, sizeof (MirEvent));
@@ -228,18 +238,25 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     auto& mev = e->motion;
     mev.device_id = device_id;
     mev.event_time = timestamp;
-    mev.mac = mac;
+    std::copy_n(std::begin(cookie), cookie.size(), std::begin(mev.cookie));
     mev.modifiers = modifiers;
     mev.source_id = AINPUT_SOURCE_TOUCHSCREEN;
     
     return make_event_uptr(e);
 }
 
+// Deprecated version with uint64_t mac
+mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    uint64_t /*mac*/, MirInputEventModifiers modifiers)
+{
+    return make_event(device_id, timestamp, {{}}, modifiers);
+}
+
 // Deprecated version without mac
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers)
 {
-    return make_event(device_id, timestamp, 0, modifiers);
+    return make_event(device_id, timestamp, {{}}, modifiers);
 }
 
 void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
@@ -260,7 +277,7 @@ void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
 }
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    uint64_t mac, MirInputEventModifiers modifiers, MirPointerAction action,
+    std::vector<uint8_t> const& cookie, MirInputEventModifiers modifiers, MirPointerAction action,
     MirPointerButtons buttons_pressed,                               
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value,
@@ -273,7 +290,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     auto& mev = e->motion;
     mev.device_id = device_id;
     mev.event_time = timestamp;
-    mev.mac = mac;
+    std::copy_n(std::begin(cookie), cookie.size(), std::begin(mev.cookie));
     mev.modifiers = modifiers;
     mev.source_id = AINPUT_SOURCE_MOUSE;
     mev.buttons = buttons_pressed;
@@ -291,6 +308,19 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     return make_event_uptr(e);
 }
 
+// Deprecated version with uint64_t mac
+mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    uint64_t /*mac*/, MirInputEventModifiers modifiers, MirPointerAction action,
+    MirPointerButtons buttons_pressed,                               
+    float x_axis_value, float y_axis_value,
+    float hscroll_value, float vscroll_value,
+    float relative_x_value, float relative_y_value)
+{
+    return make_event(device_id, timestamp, {{}}, modifiers, action,
+                      buttons_pressed, x_axis_value, y_axis_value, hscroll_value,
+                      vscroll_value, relative_x_value, relative_y_value);
+}
+
 // Deprecated version without mac
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers, MirPointerAction action,
@@ -299,19 +329,19 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     float hscroll_value, float vscroll_value,
     float relative_x_value, float relative_y_value)
 {
-    return make_event(device_id, timestamp, 0, modifiers, action,
+    return make_event(device_id, timestamp, {{}}, modifiers, action,
                       buttons_pressed, x_axis_value, y_axis_value, hscroll_value,
                       vscroll_value, relative_x_value, relative_y_value);
 }
 
 // Deprecated version without relative axis
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    uint64_t mac, MirInputEventModifiers modifiers, MirPointerAction action,
+    uint64_t /*mac*/, MirInputEventModifiers modifiers, MirPointerAction action,
     MirPointerButtons buttons_pressed,                               
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value)
 {
-    return make_event(device_id, timestamp, mac, modifiers, action, buttons_pressed,
+    return make_event(device_id, timestamp, {{}}, modifiers, action, buttons_pressed,
                       x_axis_value, y_axis_value, hscroll_value, vscroll_value, 0, 0);
 }
 
@@ -322,7 +352,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value)
 {
-    return make_event(device_id, timestamp, 0, modifiers, action, buttons_pressed,
+    return make_event(device_id, timestamp, {{}}, modifiers, action, buttons_pressed,
                       x_axis_value, y_axis_value, hscroll_value, vscroll_value, 0, 0);
 }
 

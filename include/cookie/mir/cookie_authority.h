@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,7 +20,10 @@
 #define MIR_COOKIE_COOKIE_AUTHORITY_H_
 
 #include <memory>
+#include <stdexcept>
 #include <vector>
+
+#include "cookie.h"
 
 struct MirCookie;
 namespace mir
@@ -29,6 +32,11 @@ namespace cookie
 {
 
 using Secret = std::vector<uint8_t>;
+
+struct SecurityCheckFailed : std::runtime_error
+{
+    SecurityCheckFailed();
+};
 
 /**
  * \brief A source of moderately-difficult-to-spoof cookies.
@@ -82,36 +90,21 @@ public:
     virtual ~CookieAuthority() noexcept = default;
 
     /**
-    *   Turns a timestamp into a MAC and returns an std::vector<uint8_t> which represents a MAC.
+    *   Creates a cookie attesting the timestamp.
     *
-    *   \param [in] timestamp The timestamp
-    *   \return               std::vector<uint8_t> which represents the MAC
+    *   \param [in]  Timestamp to be attested
+    *   \return      A unique_ptr MirCookie
     */
-    virtual std::vector<uint8_t> timestamp_to_mac(uint64_t const& timestamp) = 0;
+    virtual std::unique_ptr<MirCookie> timestamp_to_cookie(uint64_t const& timestamp) = 0;
 
     /**
-    *   Checks that a MirCookie is valid.
+    *   Rebuilds a MirCookie from a stream of bytes and validates it
     *
-    *   \param [in] cookie A MirCookie
-    *   \return            True when the MirCookie is valid, False when not valid
+    *   \param [in]  A stream of bytes to be marshalled into a MirCookie
+    *   \return      A unique_ptr MirCookie
     */
-    virtual bool attest_timestamp(MirCookie const* cookie) = 0;
+    virtual std::unique_ptr<MirCookie> unmarshall_cookie(std::vector<uint8_t> const& raw_cookie) = 0;
 
-    /**
-    *   Checks that a timestamp and a MAC are valid.
-    *
-    *   \param [in] timestamp The timestamp used when creating the passed in MAC
-    *   \param [in] MAC       The MAC generated with timestamp_to_mac
-    *   \return               True when the timestamp and the MAC are valid, False when not valid
-    */
-    virtual bool attest_timestamp(uint64_t const& timestamp, std::vector<uint8_t> const& mac) = 0;
-
-    /**
-     * Absolute minimum size of secret key the CookieAuthority will accept.
-     *
-     * Code should be using optimum_secret_size(); this minimum size is provided
-     * as a user convenience to guard against catastrophically bad initialisation.
-     */
     static unsigned const minimum_secret_size = 8;
 protected:
     CookieAuthority() = default;

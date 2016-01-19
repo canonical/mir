@@ -14,6 +14,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/include/cookie
+  ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${GLIB_INCLUDE_DIRS}
 )
 add_definitions(-DMIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
