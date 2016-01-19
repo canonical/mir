@@ -355,6 +355,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
     void lost_connection() override
     {
+        vault.disconnected();
     }
 
     void set_buffer_cache_size(unsigned int) override
