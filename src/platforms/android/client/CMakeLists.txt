@@ -1,7 +1,5 @@
 include_directories(${client_common_include_dirs})
-include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/3rd_party/android-deps)
-include_directories(${CMAKE_SOURCE_DIR}/include/platform)
 
 add_definitions(-DANDROID)
 
@@ -36,7 +34,6 @@ target_link_libraries(mirclientplatformandroid
   mirclient
   client_platform_common
   mirsharedandroid-static
-  mirplatform
   ${LIBHARDWARE_LIBRARIES}
 )
 

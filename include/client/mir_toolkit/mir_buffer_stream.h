@@ -124,11 +124,20 @@ void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream);
  * Get the underlying platform type so the buffer obtained in "raw"
  * representation in mir_buffer_stream_get_current_buffer() 
  * may be understood
+ *
+ * \deprecated Use of this function is inherently non-portable in the presence
+ * of plug-in platform modules as these need not correspond to the available
+ * types. Use mir_buffer_stream_get_graphics_region() to safely interpret the
+ * buffer contents.
+ *
+ * \todo This should be removed from the public API at the next API break.
+ *
  *   \pre                     The surface is valid
  *   \param [in] surface      The surface
  *   \return                  One of mir_platform_type_android or 
  *                            mir_platform_type_gbm
  */
+__attribute__ ((deprecated))
 MirPlatformType mir_buffer_stream_get_platform_type(MirBufferStream *stream);
 
 /**

@@ -1,3 +1,5 @@
+pkg_check_modules(UUID REQUIRED uuid)
+
 add_definitions(
   -DMIR_LOG_COMPONENT_FALLBACK="mirserver"
   -DMIR_VERSION="${MIR_VERSION}"
@@ -119,7 +121,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
 )
 
-set(MIRSERVER_ABI 36) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 37) # Be sure to increment MIR_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(

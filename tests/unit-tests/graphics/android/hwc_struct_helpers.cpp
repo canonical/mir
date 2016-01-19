@@ -18,7 +18,7 @@
 
 #include <hardware/hwcomposer.h>
 #include "hwc_struct_helpers.h"
-#include "mir/graphics/android/native_buffer.h"
+#include "native_buffer.h"
 
 void PrintTo(const hwc_rect_t& rect, ::std::ostream* os)
 {

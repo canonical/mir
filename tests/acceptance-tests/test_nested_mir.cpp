@@ -92,6 +92,8 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
     void session_configure_surface_cursor_called(std::string const&) override {};
     void session_configure_display_called(std::string const&) override {};
     void session_set_base_display_configuration_called(std::string const&) override {};
+    void session_create_buffer_stream_called(std::string const&) override {}
+    void session_release_buffer_stream_called(std::string const&) override {}
     void session_error(const std::string&, const char*, const std::string&) override {};
 };
 
@@ -630,10 +632,11 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
     ClientWithAPaintedSurfaceAndABufferStream client(nested_mir);
     auto const mock_cursor = the_mock_cursor();
 
-    client.update_surface_spec(
-        [](MirSurfaceSpec* spec) { mir_surface_spec_set_fullscreen_on_output(spec, 1); });
-
     server.the_cursor_listener()->cursor_moved_to(489, 9);
+
+    // TODO workaround for lp:1523621
+    // (I don't see a way to detect that the host has placed focus on "Mir nested display for output #1")
+    std::this_thread::sleep_for(10ms);
 
     {
         mt::WaitCondition condition;
@@ -668,10 +671,11 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
     ClientWithAPaintedSurface client(nested_mir);
     auto const mock_cursor = the_mock_cursor();
 
-    client.update_surface_spec(
-        [](MirSurfaceSpec* spec) { mir_surface_spec_set_fullscreen_on_output(spec, 1); });
-
     server.the_cursor_listener()->cursor_moved_to(489, 9);
+
+    // TODO workaround for lp:1523621
+    // (I don't see a way to detect that the host has placed focus on "Mir nested display for output #1")
+    std::this_thread::sleep_for(10ms);
 
     for (auto const name : cursor_names)
     {
@@ -697,10 +701,11 @@ TEST_F(NestedServer, can_hide_the_host_cursor)
     ClientWithAPaintedSurfaceAndABufferStream client(nested_mir);
     auto const mock_cursor = the_mock_cursor();
 
-    client.update_surface_spec(
-        [](MirSurfaceSpec* spec) { mir_surface_spec_set_fullscreen_on_output(spec, 1); });
-
     server.the_cursor_listener()->cursor_moved_to(489, 9);
+
+    // TODO workaround for lp:1523621
+    // (I don't see a way to detect that the host has placed focus on "Mir nested display for output #1")
+    std::this_thread::sleep_for(10ms);
 
     {
         mt::WaitCondition condition;

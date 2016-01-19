@@ -28,7 +28,7 @@ class SharedLibrary
 public:
     explicit SharedLibrary(char const* library_name);
     explicit SharedLibrary(std::string const& library_name);
-    ~SharedLibrary();
+    ~SharedLibrary() noexcept;
 
     template<typename FunctionPtr>
     FunctionPtr load_function(char const* function_name) const

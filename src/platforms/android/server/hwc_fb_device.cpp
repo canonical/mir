@@ -22,8 +22,8 @@
 #include "hwc_wrapper.h"
 #include "hwc_fallback_gl_renderer.h"
 #include "mir/graphics/buffer.h"
-#include "mir/graphics/android/native_buffer.h"
-#include "mir/graphics/android/android_format_conversion-inl.h"
+#include "native_buffer.h"
+#include "android_format_conversion-inl.h"
 #include "swapping_gl_context.h"
 #include "hwc_layerlist.h"
 
@@ -117,9 +117,4 @@ void mga::HwcFbDevice::content_cleared()
 std::chrono::milliseconds mga::HwcFbDevice::recommended_sleep() const
 {
     return std::chrono::milliseconds::zero();
-}
-
-bool mga::HwcFbDevice::can_swap_buffers() const
-{
-    return false;
 }

@@ -37,10 +37,6 @@ namespace droidinput = android;
 namespace mir
 {
 class MainLoop;
-namespace time
-{
-class Alarm;
-}
 namespace compositor
 {
 class Scene;
@@ -52,17 +48,15 @@ class InputRegistrar;
 namespace input
 {
 class InputReport;
+class Surface;
 namespace android
 {
-class InputSendEntry;
-class Surface;
 
 class InputSender : public input::InputSender
 {
 public:
     InputSender(std::shared_ptr<compositor::Scene> const& scene,
                 std::shared_ptr<MainLoop> const& main_loop,
-                std::shared_ptr<InputSendObserver> const& observer,
                 std::shared_ptr<InputReport> const& report);
 
     void send_event(MirEvent const& event, std::shared_ptr<InputChannel> const& channel) override;
@@ -87,31 +81,24 @@ private:
     class ActiveTransfer
     {
     public:
-        ActiveTransfer(InputSenderState & state, int server_fd, input::Surface* surface);
+        ActiveTransfer(InputSenderState & state, std::shared_ptr<InputChannel> const& channel, input::Surface* surface);
         ~ActiveTransfer();
-        void send(InputSendEntry && item);
+        void send(uint32_t sequence_id, MirEvent const& event);
         bool used_for_surface(input::Surface const* surface) const;
-        void on_surface_disappeared();
         void subscribe();
         void unsubscribe();
 
     private:
         void on_finish_signal();
-        void on_response_timeout();
-        void update_timer();
-        void cancel_timer();
-        droidinput::status_t send_key_event(uint32_t sequence_id, MirKeyboardEvent const& event);
-        droidinput::status_t send_motion_event(uint32_t sequence_id, MirMotionEvent const& event);
-        InputSendEntry unqueue_entry(uint32_t sequence_id);
-        void enqueue_entry(InputSendEntry && entry);
+        droidinput::status_t send_key_event(uint32_t sequence_id, MirEvent const& event);
+        droidinput::status_t send_touch_event(uint32_t sequence_id, MirEvent const& event);
+        droidinput::status_t send_pointer_event(uint32_t sequence_id, MirEvent const& event);
 
         InputSenderState & state;
         droidinput::InputPublisher publisher;
-        input::Surface * surface;
-        std::vector<InputSendEntry> pending_responses;
-        std::mutex transfer_mutex;
+        input::Surface const* surface;
+        std::shared_ptr<InputChannel> const channel;
         std::atomic<bool> subscribed{false};
-        std::unique_ptr<time::Alarm> send_timer;
 
         ActiveTransfer& operator=(ActiveTransfer const&) = delete;
         ActiveTransfer(ActiveTransfer const&) = delete;
@@ -120,15 +107,13 @@ private:
     struct InputSenderState
     {
         InputSenderState(std::shared_ptr<MainLoop> const& main_loop,
-                         std::shared_ptr<InputSendObserver> const& observer,
                          std::shared_ptr<InputReport> const& report);
         void send_event(std::shared_ptr<InputChannel> const& channel, MirEvent const& event);
-        void add_transfer(int fd, input::Surface* surface);
+        void add_transfer(std::shared_ptr<InputChannel> const& channel, input::Surface* surface);
         void remove_transfer(int fd);
 
         std::shared_ptr<MainLoop> const main_loop;
         std::shared_ptr<InputReport> const report;
-        std::shared_ptr<InputSendObserver> const observer;
 
     private:
         std::shared_ptr<ActiveTransfer> get_transfer(int fd);

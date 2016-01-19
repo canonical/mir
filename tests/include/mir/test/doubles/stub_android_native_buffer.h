@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_ANDROID_NATIVE_BUFFER_H_
 #define MIR_TEST_DOUBLES_STUB_ANDROID_NATIVE_BUFFER_H_
 
-#include "mir/graphics/android/native_buffer.h"
+#include "src/platforms/android/include/native_buffer.h"
 #include "mir/geometry/size.h"
 
 namespace mir
@@ -46,9 +46,6 @@ struct StubAndroidNativeBuffer : public graphics::NativeBuffer
 
     void ensure_available_for(graphics::android::BufferAccess) {}
     void update_usage(graphics::android::NativeFence&, graphics::android::BufferAccess) {}
-
-    void lock_for_gpu() {};
-    void wait_for_unlock_by_gpu() {};
 
     ANativeWindowBuffer stub_anwb;
     native_handle_t native_handle;

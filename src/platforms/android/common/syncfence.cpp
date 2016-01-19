@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/sync_fence.h"
+#include "sync_fence.h"
 
 #include <unistd.h>
 #include <sys/ioctl.h>

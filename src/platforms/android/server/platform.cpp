@@ -25,11 +25,11 @@
 #include "hal_component_factory.h"
 #include "hwc_loggers.h"
 #include "ipc_operations.h"
+#include "sync_fence.h"
+#include "native_buffer.h"
 
-#include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_message.h"
-#include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/display_report.h"
 #include "mir/gl/default_program_factory.h"
@@ -37,6 +37,7 @@
 #include "mir/options/configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/assert_module_entry_point.h"
+#include "mir/libname.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -85,13 +86,11 @@ namespace
 mga::Platform::Platform(
     std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mga::DisplayComponentFactory> const& display_buffer_builder,
-    std::shared_ptr<CommandStreamSyncFactory> const& sync_factory,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     mga::OverlayOptimization overlay_option,
     std::shared_ptr<mga::DeviceQuirks> const& quirks) :
     buffer_allocator(buffer_allocator),
     display_buffer_builder(display_buffer_builder),
-    sync_factory(sync_factory),
     display_report(display_report),
     quirks(quirks),
     overlay_option(overlay_option)
@@ -155,13 +154,10 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     auto overlay_option = should_use_overlay_optimization(*options);
     hwc_report->report_overlay_optimization(overlay_option);
     auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
-    auto sync_factory = std::make_shared<mga::EGLSyncFactory>();
-    auto buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(sync_factory, quirks);
+    auto buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(quirks);
     auto component_factory = std::make_shared<mga::HalComponentFactory>(
         buffer_allocator, display_resource_factory, hwc_report, quirks);
-
-    return mir::make_module_ptr<mga::Platform>(
-        buffer_allocator, component_factory, component_factory, display_report, overlay_option, quirks);
+    return mir::make_module_ptr<mga::Platform>(buffer_allocator, component_factory, display_report, overlay_option, quirks);
 }
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
@@ -171,11 +167,10 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     //TODO: actually allow disabling quirks for guest platform
     auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
-    auto sync_factory = std::make_shared<mga::EGLSyncFactory>();
     //TODO: remove nullptr parameter once platform classes are sorted.
     //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder
-    auto const buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(sync_factory, quirks);
-    return mir::make_module_ptr<mga::Platform>(buffer_allocator, nullptr, sync_factory, display_report, mga::OverlayOptimization::disabled, quirks);
+    auto const buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(quirks);
+    return mir::make_module_ptr<mga::Platform>(buffer_allocator, nullptr, display_report, mga::OverlayOptimization::disabled, quirks);
 }
 
 void add_graphics_platform_options(
@@ -203,12 +198,16 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*
     return err < 0 ? mg::PlatformPriority::unsupported : mg::PlatformPriority::best;
 }
 
+namespace
+{
 mir::ModuleProperties const description = {
-    "android",
+    "mir:android",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
+    MIR_VERSION_MICRO,
+    mir::libname()
 };
+}
 
 mir::ModuleProperties const* describe_graphics_module()
 {

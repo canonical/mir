@@ -26,8 +26,10 @@
 
 #include "mir/geometry/size.h"
 #include "mir/client_platform.h"
+#include "mir/frontend/surface_id.h"
 #include "mir/client_context.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_surface.h"
 
 #include <atomic>
 #include <memory>
@@ -38,7 +40,6 @@
 
 namespace mir
 {
-class SharedLibrary;
 namespace protobuf
 {
 class BufferStream;
@@ -101,9 +102,9 @@ public:
         mir_surface_callback callback,
         void * context);
     MirWaitHandle* release_surface(
-            MirSurface *surface,
-            mir_surface_callback callback,
-            void *context);
+        MirSurface *surface,
+        mir_surface_callback callback,
+        void *context);
 
     MirPromptSession* create_prompt_session();
 
@@ -128,11 +129,10 @@ public:
     void register_display_change_callback(mir_display_config_callback callback, void* context);
 
     void populate(MirPlatformPackage& platform_package);
+    void populate_graphics_module(MirModuleProperties& properties);
     MirDisplayConfiguration* create_copy_of_display_config();
     void available_surface_formats(MirPixelFormat* formats,
                                    unsigned int formats_size, unsigned int& valid_formats);
-
-    std::shared_ptr<mir::client::ClientPlatform> get_client_platform();
 
     std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
        mir::protobuf::BufferStream const& protobuf_bs, std::string const& surface_name, mir::geometry::Size);
@@ -155,7 +155,6 @@ public:
     EGLNativeDisplayType egl_native_display();
     MirPixelFormat       egl_pixel_format(EGLDisplay, EGLConfig) const;
 
-    void on_surface_created(int id, MirSurface* surface);
     void on_stream_created(int id, mir::client::ClientBufferStream* stream);
 
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
@@ -170,17 +169,32 @@ public:
     }
 
     mir::client::rpc::DisplayServer& display_server();
+    mir::client::rpc::DisplayServerDebug& debug_display_server();
     std::shared_ptr<mir::logging::Logger> const& the_logger() const;
 
 private:
+    //google cant have callbacks with more than 2 args
+    struct SurfaceCreationRequest
+    {
+        SurfaceCreationRequest(mir_surface_callback cb, void* context,  MirSurfaceSpec const& spec) :
+            cb(cb), context(context), spec(spec),
+            response(std::make_shared<mir::protobuf::Surface>()),
+            wh(std::make_shared<MirWaitHandle>())
+        {
+        }
+        mir_surface_callback cb;
+        void* context;
+        MirSurfaceSpec const spec;
+        std::shared_ptr<mir::protobuf::Surface> response;
+        std::shared_ptr<MirWaitHandle> wh;
+    };
+    std::vector<std::shared_ptr<SurfaceCreationRequest>> surface_requests;
+    void surface_created(SurfaceCreationRequest*);
+
     void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.
     struct Deregisterer
     { MirConnection* const self; ~Deregisterer(); } deregisterer;
-
-    // MUST be placed before any variables for components that are loaded
-    // from a shared library, e.g., the ClientPlatform* objects.
-    std::shared_ptr<mir::SharedLibrary> const platform_library;
 
     mutable std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
@@ -197,6 +211,9 @@ private:
     std::unique_ptr<mir::protobuf::DisplayConfiguration> display_configuration_response;
     std::unique_ptr<mir::protobuf::Void> set_base_display_configuration_response;
     std::atomic<bool> disconnecting{false};
+
+    mir::frontend::SurfaceId next_error_id(std::unique_lock<std::mutex> const&);
+    int surface_error_id{-1};
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;

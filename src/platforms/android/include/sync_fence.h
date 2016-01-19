@@ -18,7 +18,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_SYNC_FENCE_H_
 #define MIR_GRAPHICS_ANDROID_SYNC_FENCE_H_
 
-#include "mir/graphics/android/fence.h"
+#include "fence.h"
 #include "mir/fd.h"
 #include <memory>
 

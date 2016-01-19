@@ -50,6 +50,7 @@
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
 #include "mir/cookie_factory.h"
+#include "mir/module_properties.h"
 
 #include "mir/geometry/rectangles.h"
 #include "buffer_stream_tracker.h"
@@ -143,6 +144,17 @@ void mf::SessionMediator::connect(
 
     for (auto& ipc_fds : ipc_package->ipc_fds)
         platform->add_fd(ipc_fds);
+
+    if (auto const graphics_module = ipc_package->graphics_module)
+    {
+        auto const module = platform->mutable_graphics_module();
+
+        module->set_name(graphics_module->name);
+        module->set_major_version(graphics_module->major_version);
+        module->set_minor_version(graphics_module->minor_version);
+        module->set_micro_version(graphics_module->micro_version);
+        module->set_file(graphics_module->file);
+    }
 
     auto display_config = display_changer->base_configuration();
     auto protobuf_config = response->mutable_display_configuration();
@@ -709,7 +721,7 @@ void mf::SessionMediator::create_buffer_stream(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_create_surface_called(session->name());
+    report->session_create_buffer_stream_called(session->name());
     
     auto const usage = (request->buffer_usage() == mir_buffer_usage_hardware) ?
         mg::BufferUsage::hardware : mg::BufferUsage::software;
@@ -749,7 +761,7 @@ void mf::SessionMediator::release_buffer_stream(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    report->session_create_surface_called(session->name());
+    report->session_release_buffer_stream_called(session->name());
 
     auto const id = BufferStreamId(request->value());
 

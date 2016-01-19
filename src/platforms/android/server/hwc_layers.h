@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_HWC_LAYERS_H_
 
 #include "mir/graphics/renderable.h"
-#include "mir/graphics/android/fence.h"
+#include "fence.h"
 #include "mir/geometry/rectangle.h"
 #include <hardware/hwcomposer.h>
 #include <memory>

@@ -19,9 +19,9 @@
 
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
-#include "mir/graphics/android/native_buffer.h"
-#include "mir/graphics/android/sync_fence.h"
-#include "mir/graphics/android/android_format_conversion-inl.h"
+#include "native_buffer.h"
+#include "sync_fence.h"
+#include "android_format_conversion-inl.h"
 #include "buffer.h"
 
 #include <system/window.h>
@@ -74,18 +74,6 @@ MirPixelFormat mga::Buffer::pixel_format() const
 void mga::Buffer::gl_bind_to_texture()
 {
     std::unique_lock<std::mutex> lk(content_lock);
-    bind(lk);
-    secure_for_render(lk);
-}
-
-void mga::Buffer::bind()
-{
-    std::unique_lock<std::mutex> lk(content_lock);
-    bind(lk);
-}
-
-void mga::Buffer::bind(std::unique_lock<std::mutex> const&)
-{
     native_buffer->ensure_available_for(mga::BufferAccess::read);
 
     DispContextPair current
@@ -125,6 +113,10 @@ void mga::Buffer::bind(std::unique_lock<std::mutex> const&)
     }
 
     egl_extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+
+    //TODO: we should make use of the android egl fence extension here to update the fence.
+    //      if the extension is not available, we should pass out a token that the user
+    //      will have to keep until the completion of the gl draw
 }
 
 std::shared_ptr<mg::NativeBuffer> mga::Buffer::native_buffer_handle() const
@@ -203,15 +195,4 @@ void mga::Buffer::read(std::function<void(unsigned char const*)> const& do_with_
 mg::NativeBufferBase* mga::Buffer::native_buffer_base()
 {
     return this;
-}
-
-void mga::Buffer::secure_for_render()
-{
-    std::unique_lock<std::mutex> lk(content_lock);
-    secure_for_render(lk);
-}
-
-void mga::Buffer::secure_for_render(std::unique_lock<std::mutex> const&)
-{
-    native_buffer->lock_for_gpu();
 }

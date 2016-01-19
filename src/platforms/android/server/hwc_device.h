@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_HWC_DEVICE_H_
 
 #include "mir_toolkit/common.h"
-#include "mir/graphics/android/sync_fence.h"
+#include "sync_fence.h"
 #include "display_device.h"
 #include "hwc_layerlist.h"
 #include <memory>
@@ -47,7 +47,6 @@ public:
     void commit(std::list<DisplayContents> const& contents) override;
     void content_cleared() override;
     std::chrono::milliseconds recommended_sleep() const override;
-    bool can_swap_buffers() const override;
 
 private:
     bool buffer_is_onscreen(Buffer const&) const;

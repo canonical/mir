@@ -18,13 +18,13 @@
 
 #include "src/platforms/android/server/display_buffer.h"
 #include "src/platforms/android/server/gl_context.h"
-#include "src/include/common/mir/graphics/android/android_format_conversion-inl.h"
+#include "android_format_conversion-inl.h"
 #include "mir/test/doubles/mock_display_device.h"
 #include "mir/test/doubles/mock_display_report.h"
 #include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
-#include "mir/graphics/android/mir_native_window.h"
+#include "mir_native_window.h"
 #include "mir/test/doubles/stub_driver_interpreter.h"
 #include "mir/test/doubles/stub_display_buffer.h"
 #include "mir/test/doubles/stub_buffer.h"
@@ -233,21 +233,6 @@ TEST_F(DisplayBuffer, release_current)
 {
     EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT));
     db.release_current();
-}
-
-//In HWC 1.0 notably we cannot eglSwapBuffers on the fb context.
-TEST_F(DisplayBuffer, swaps_when_allowed)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_display_device, can_swap_buffers())
-        .Times(2)
-        .WillOnce(Return(true))
-        .WillOnce(Return(false));
-    EXPECT_CALL(mock_egl, eglSwapBuffers(dummy_display, mock_egl.fake_egl_surface))
-        .Times(1);
-
-    db.swap_buffers();
-    db.swap_buffers();
 }
 
 TEST_F(DisplayBuffer, notifies_list_that_content_is_cleared)

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,22 +13,17 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "cmdstream_sync_factory.h"
-#include "mir/graphics/egl_sync_fence.h"
-namespace mg = mir::graphics;
-namespace mga = mir::graphics::android;
+#include "mir/libname.h"
 
-std::unique_ptr<mg::CommandStreamSync> mga::EGLSyncFactory::create_command_stream_sync()
+#include <dlfcn.h>
+
+char const* mir::detail::libname_impl(void* libname)
 {
-    try
-    {
-        return std::make_unique<EGLSyncFence>(std::make_shared<mg::EGLSyncExtensions>());
-    }
-    catch (std::runtime_error&)
-    {
-        return std::make_unique<NullCommandSync>();
-    }
+    Dl_info info;
+
+    dladdr(libname, &info);
+    return  info.dli_fname;
 }

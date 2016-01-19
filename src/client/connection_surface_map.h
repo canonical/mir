@@ -21,8 +21,8 @@
 
 #include "surface_map.h"
 
+#include <shared_mutex>
 #include <unordered_map>
-#include <mutex>
 
 namespace mir
 {
@@ -40,7 +40,7 @@ public:
     ~ConnectionSurfaceMap() noexcept;
 
     void with_surface_do(frontend::SurfaceId surface_id, std::function<void(MirSurface*)> const& exec) const override;
-    void insert(frontend::SurfaceId surface_id, MirSurface* surface);
+    void insert(frontend::SurfaceId surface_id, std::shared_ptr<MirSurface> const& surface);
     void erase(frontend::SurfaceId surface_id);
 
     void with_stream_do(frontend::BufferStreamId stream_id, std::function<void(ClientBufferStream*)> const& exec) const override;
@@ -49,8 +49,8 @@ public:
     void erase(frontend::BufferStreamId surface_id);
 
 private:
-    std::mutex mutable guard;
-    std::unordered_map<frontend::SurfaceId, MirSurface*> surfaces;
+    std::shared_timed_mutex mutable guard;
+    std::unordered_map<frontend::SurfaceId, std::shared_ptr<MirSurface>> surfaces;
     std::unordered_map<frontend::BufferStreamId, StreamInfo> streams;
 };
 
