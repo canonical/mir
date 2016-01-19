@@ -120,6 +120,8 @@ me::AdorningDisplayBufferCompositor::AdorningDisplayBufferCompositor(
 
 void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequence&& scene_sequence)
 {
+    report->began_frame(this);
+
     //note: If what should be drawn is expressible as a SceneElementSequence,
     //      mg::DisplayBuffer::post_renderables_if_optimizable() should be used,
     //      to give the the display hardware a chance at an optimized render of
