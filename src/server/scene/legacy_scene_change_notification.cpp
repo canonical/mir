@@ -47,7 +47,6 @@ ms::LegacySceneChangeNotification::~LegacySceneChangeNotification()
     end_observation();
 }
 
-#include <iostream>
 namespace
 {
 class NonLegacySurfaceChangeNotification : public ms::LegacySurfaceChangeNotification
@@ -55,9 +54,8 @@ class NonLegacySurfaceChangeNotification : public ms::LegacySurfaceChangeNotific
 public:
     NonLegacySurfaceChangeNotification(
         std::function<void()> const& notify_scene_change,
-        std::function<void(int frames, mir::geometry::Rectangle const& damage)> const& damage_notify_change);
-
-    void init(ms::Surface* surface) { top_left = surface->top_left(); } // FRIG?
+        std::function<void(int frames, mir::geometry::Rectangle const& damage)> const& damage_notify_change,
+        ms::Surface* surface);
 
     void moved_to(mir::geometry::Point const& /*top_left*/) override;
     void frame_posted(int frames_available, mir::geometry::Size const& size) override;
@@ -69,10 +67,12 @@ private:
 
 NonLegacySurfaceChangeNotification::NonLegacySurfaceChangeNotification(
     std::function<void()> const& notify_scene_change,
-    std::function<void(int frames, mir::geometry::Rectangle const& damage)> const& damage_notify_change) :
+    std::function<void(int frames, mir::geometry::Rectangle const& damage)> const& damage_notify_change,
+    ms::Surface* surface) :
     ms::LegacySurfaceChangeNotification(notify_scene_change, {}),
     damage_notify_change(damage_notify_change)
 {
+    top_left = surface->top_left();
 }
 
 void NonLegacySurfaceChangeNotification::moved_to(mir::geometry::Point const& top_left)
@@ -85,8 +85,6 @@ void NonLegacySurfaceChangeNotification::frame_posted(int frames_available, mir:
 {
     mir::geometry::Rectangle const update_region{top_left, size};
     damage_notify_change(frames_available, update_region);
-//    std::cout << "Frame posted: " << update_region << std::endl;
-//    ms::LegacySurfaceChangeNotification::frame_posted(frames_available, size);
 }
 }
 
@@ -109,9 +107,7 @@ void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surfac
     }
     else
     {
-        auto observer = std::make_shared<NonLegacySurfaceChangeNotification>(
-            notifier, damage_notify_change);
-        observer->init(surface); // FRIG?
+        auto observer = std::make_shared<NonLegacySurfaceChangeNotification>(notifier, damage_notify_change, surface);
         surface->add_observer(observer);
 
         std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
