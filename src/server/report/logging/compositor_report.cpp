@@ -94,7 +94,7 @@ void mrl::CompositorReport::Instance::log(ml::Logger& logger, SubCompositorId id
                 latency_sum - last_reported_latency_sum
             ).count();
 
-        long bypass_percent = (nbypassed - last_reported_bypassed) * 100L / dn;
+        long bypass_percent = dn ? (nbypassed - last_reported_bypassed) * 100L / dn : 0;
 
         // Keep everything premultiplied by 1000 to guarantee accuracy
         // and avoid floating point.
