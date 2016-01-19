@@ -340,7 +340,7 @@ mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settin
     auto const left_handed = (libinput_device_config_left_handed_get(dev) == 1);
     settings.handedness = left_handed? mir_pointer_handedness_left : mir_pointer_handedness_right;
     if (libinput_device_config_accel_get_profile(dev) == LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT)
-        settings.acceleration = mir_pointer_acceleration_constant;
+        settings.acceleration = mir_pointer_acceleration_none;
     else
         settings.acceleration = mir_pointer_acceleration_adaptive;
 

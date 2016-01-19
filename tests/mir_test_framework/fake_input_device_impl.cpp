@@ -91,7 +91,7 @@ mtf::FakeInputDeviceImpl::InputDevice::InputDevice(mi::InputDeviceInfo const& in
     : info(info), queue{dispatchable}, buttons{0}
 {
     // the default setup results in a direct mapping of input velocity to output velocity.
-    settings.acceleration = mir_pointer_acceleration_constant;
+    settings.acceleration = mir_pointer_acceleration_none;
     settings.cursor_acceleration_bias = -1.0;
 }
 
