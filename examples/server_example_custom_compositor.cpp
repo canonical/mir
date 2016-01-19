@@ -49,18 +49,20 @@ char const* const background_black = "black";
 class AdorningDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
 public:
-    AdorningDisplayBufferCompositorFactory(std::tuple<float, float, float> const& rgb_color) :
-        color(rgb_color)
+    AdorningDisplayBufferCompositorFactory(std::tuple<float, float, float> const& rgb_color,
+        std::shared_ptr<mc::CompositorReport> const& report) :
+        color(rgb_color), report(report)
     {
     }
 
     std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(
         mg::DisplayBuffer& display_buffer) override
     {
-        return std::make_unique<me::AdorningDisplayBufferCompositor>(display_buffer, color);
+        return std::make_unique<me::AdorningDisplayBufferCompositor>(display_buffer, color, report);
     }
 private:
     std::tuple<float, float, float> const color;
+    std::shared_ptr<mc::CompositorReport> const report;
 };
 }
 
@@ -89,7 +91,7 @@ void me::add_custom_compositor_option_to(Server& server)
                 color = std::make_tuple(0.0, 0.0, 0.0);
             else
                 throw mir::AbnormalExit("Unknown color selection: " + color_name);
-            return std::make_shared<AdorningDisplayBufferCompositorFactory>(color); 
+            return std::make_shared<AdorningDisplayBufferCompositorFactory>(color, server.the_compositor_report());
         }
         else if (selection == compositor_default)
         {

@@ -29,12 +29,17 @@ namespace graphics
 class DisplayBuffer;
 }
 namespace renderer { namespace gl { class RenderTarget; }}
+namespace compositor { class CompositorReport; }
+
 namespace examples
 {
 class AdorningDisplayBufferCompositor : public compositor::DisplayBufferCompositor
 {
 public:
-    AdorningDisplayBufferCompositor(graphics::DisplayBuffer&, std::tuple<float, float, float> const& background_rgb);
+    AdorningDisplayBufferCompositor(
+        graphics::DisplayBuffer&, std::tuple<float, float, float> const& background_rgb,
+        std::shared_ptr<compositor::CompositorReport> const& report);
+
     void composite(compositor::SceneElementSequence&& scene_sequence) override;
 private:
     graphics::DisplayBuffer& db;
@@ -77,6 +82,8 @@ private:
     GLuint posUniform;
     GLuint alphaUniform; 
     GLuint texture;
+
+    std::shared_ptr<compositor::CompositorReport> const report;
 };
 }
 }

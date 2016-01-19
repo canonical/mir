@@ -28,7 +28,7 @@
 
 namespace mir
 {
-namespace compositor { class Compositor; class DisplayBufferCompositorFactory; }
+namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; }
 namespace frontend { class SessionAuthorizer; class Session; class SessionMediatorReport; }
 namespace graphics { class Cursor; class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationReport; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class CursorImages; class TouchVisualizer; class InputDeviceHub;}
@@ -320,6 +320,9 @@ public:
  *  @{ */
     /// \return the compositor.
     auto the_compositor() const -> std::shared_ptr<compositor::Compositor>;
+
+    /// \return the compositor.
+    auto the_compositor_report() const -> std::shared_ptr<compositor::CompositorReport>;
 
     /// \return the composite event filter.
     auto the_composite_event_filter() const -> std::shared_ptr<input::CompositeEventFilter>;

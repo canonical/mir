@@ -21,6 +21,7 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
+#include "mir/compositor/compositor_report.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/renderer/gl/texture_source.h"
 #include "mir/renderer/gl/render_target.h"
@@ -68,7 +69,8 @@ me::AdorningDisplayBufferCompositor::Program::~Program()
 
 me::AdorningDisplayBufferCompositor::AdorningDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
-    std::tuple<float, float, float> const& background_rgb) :
+    std::tuple<float, float, float> const& background_rgb,
+    std::shared_ptr<mc::CompositorReport> const& report) :
     db{display_buffer},
     render_target{me::as_render_target(display_buffer)},
     vert_shader_src{
@@ -94,7 +96,8 @@ me::AdorningDisplayBufferCompositor::AdorningDisplayBufferCompositor(
     current(make_current(render_target)),
     vertex(&vert_shader_src, GL_VERTEX_SHADER),
     fragment(&frag_shader_src, GL_FRAGMENT_SHADER),
-    program(vertex,  fragment)
+    program(vertex,  fragment),
+    report(report)
 {
     glUseProgram(program.program);
     vPositionAttr = glGetAttribLocation(program.program, "vPosition");
@@ -174,6 +177,16 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
         glDisableVertexAttribArray(uvCoord);
         glDisableVertexAttribArray(vPositionAttr);
     }
+
+    mg::RenderableList renderable_list;
+    renderable_list.reserve(scene_sequence.size());
+    for (auto const& element : scene_sequence)
+    {
+        element->rendered();
+        renderable_list.push_back(element->renderable());
+    }
+    report->renderables_in_frame(this, renderable_list);
+    report->rendered_frame(this);
 
     render_target->swap_buffers();
 }
