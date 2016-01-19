@@ -19,6 +19,7 @@
 #include "mir/frontend/client_constants.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/variable_length_array.h"
+#include "mir/input/device.h"
 #include "event_sender.h"
 #include "mir/events/event_private.h"
 #include "message_sender.h"
@@ -85,6 +86,21 @@ void mfd::EventSender::send_ping(int32_t serial)
     auto protobuf_ping_event = seq.mutable_ping_event();
     protobuf_ping_event->set_serial(serial);
 
+    send_event_sequence(seq, {});
+}
+
+void mfd::EventSender::handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& devices)
+{
+    mp::EventSequence seq;
+
+    for(const auto & dev : devices)
+    {
+        auto dev_info = seq.add_input_devices();
+        dev_info->set_name(dev->name());
+        dev_info->set_id(dev->id());
+        dev_info->set_unique_id(dev->unique_id());
+        dev_info->set_capabilities(dev->capabilities().value());
+    }
     send_event_sequence(seq, {});
 }
 
