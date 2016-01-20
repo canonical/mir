@@ -71,6 +71,7 @@ add_library(mirclientobjects OBJECT
   periodic_perf_report.cpp
   mir_platform_message_api.cpp
   buffer_stream.cpp
+  screencast_stream.cpp
   buffer_vault.cpp
   mir_buffer_stream_api.cpp
   error_stream.cpp
