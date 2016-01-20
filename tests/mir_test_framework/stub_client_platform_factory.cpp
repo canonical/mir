@@ -20,7 +20,6 @@
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/client_buffer_factory.h"
 #include "mir/client_buffer.h"
-#include "mir/client_platform.h"
 #include "mir/client_context.h"
 
 #include <unistd.h>
@@ -31,65 +30,58 @@ namespace geom = mir::geometry;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
-namespace
-{
-struct StubClientPlatform : public mcl::ClientPlatform
-{
-    StubClientPlatform(mcl::ClientContext* context)
+mtf::StubClientPlatform::StubClientPlatform(mir::client::ClientContext* context)
         : context{context}
-    {
-    }
-
-    MirPlatformType platform_type() const
-    {
-        return mir_platform_type_gbm;
-    }
-
-    void populate(MirPlatformPackage& package) const
-    {
-        context->populate_server_package(package);
-    }
-
-    MirPlatformMessage* platform_operation(MirPlatformMessage const*) override
-    {
-        return nullptr;
-    }
-
-    std::shared_ptr<mcl::ClientBufferFactory> create_buffer_factory()
-    {
-        return std::make_shared<mtd::StubClientBufferFactory>();
-    }
-
-    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::EGLNativeSurface* surface)
-    {
-        auto fake_window = reinterpret_cast<EGLNativeWindowType>(surface);
-        return std::make_shared<EGLNativeWindowType>(fake_window);
-    }
-
-    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
-    {
-        auto fake_display = reinterpret_cast<EGLNativeDisplayType>(0x12345678lu);
-        return std::make_shared<EGLNativeDisplayType>(fake_display);
-    }
-
-    MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer* buf) const
-    {
-        static_cast<void>(buf);
-#if defined(MESA_KMS) || defined(MESA_X11)
-        return buf;
-#else
-        return nullptr;
-#endif
-    }
-
-    MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override
-    {
-        return mir_pixel_format_argb_8888;
-    }
-
-    mcl::ClientContext* const context;
-};
+{
 }
+
+MirPlatformType mtf::StubClientPlatform::platform_type() const
+{
+    return mir_platform_type_gbm;
+}
+
+void mtf::StubClientPlatform::populate(MirPlatformPackage& package) const
+{
+    context->populate_server_package(package);
+}
+
+MirPlatformMessage* mtf::StubClientPlatform::platform_operation(MirPlatformMessage const*)
+{
+    return nullptr;
+}
+
+std::shared_ptr<mir::client::ClientBufferFactory> mtf::StubClientPlatform::create_buffer_factory()
+{
+    return std::make_shared<mtd::StubClientBufferFactory>();
+}
+
+std::shared_ptr<EGLNativeWindowType> mtf::StubClientPlatform::create_egl_native_window(mir::client::EGLNativeSurface* surface)
+{
+    auto fake_window = reinterpret_cast<EGLNativeWindowType>(surface);
+    return std::make_shared<EGLNativeWindowType>(fake_window);
+}
+
+std::shared_ptr<EGLNativeDisplayType> mtf::StubClientPlatform::create_egl_native_display()
+{
+    auto fake_display = reinterpret_cast<EGLNativeDisplayType>(0x12345678lu);
+    return std::make_shared<EGLNativeDisplayType>(fake_display);
+}
+
+MirNativeBuffer* mtf::StubClientPlatform::convert_native_buffer(mir::graphics::NativeBuffer* buf) const
+{
+    static_cast<void>(buf);
+#if defined(MESA_KMS) || defined(MESA_X11)
+    return buf;
+#else
+    return nullptr;
+#endif
+}
+
+MirPixelFormat mtf::StubClientPlatform::get_egl_pixel_format(EGLDisplay, EGLConfig) const
+{
+    return mir_pixel_format_argb_8888;
+}
+
 
 std::shared_ptr<mcl::ClientPlatform>
 mtf::StubClientPlatformFactory::create_client_platform(mcl::ClientContext* context)
