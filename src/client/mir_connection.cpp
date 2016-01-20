@@ -33,6 +33,7 @@
 #include "lifecycle_control.h"
 #include "error_stream.h"
 #include "buffer_stream.h"
+#include "screencast_stream.h"
 #include "perf_report.h"
 #include "logging/perf_report.h"
 #include "lttng/perf_report.h"
@@ -843,7 +844,6 @@ void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<S
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
    mp::BufferStream const& protobuf_bs, mir::geometry::Size size)
 {
-
     return std::make_shared<mcl::ScreencastStream>(
         this, server, platform, protobuf_bs, size);
 }

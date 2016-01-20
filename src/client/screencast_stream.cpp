@@ -16,9 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#define MIR_LOG_COMPONENT "MirBufferStream"
-
-#include "buffer_stream.h"
+#include "screencast_stream.h"
 #include "make_protobuf_object.h"
 #include "mir_connection.h"
 #include "rpc/mir_display_server.h"
