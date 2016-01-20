@@ -28,6 +28,7 @@ namespace mir
 
 namespace input
 {
+class InputDevices;
 namespace receiver
 {
 class InputPlatform;
@@ -62,6 +63,7 @@ public:
     virtual std::shared_ptr<mir::logging::Logger> the_logger() = 0;
     virtual std::shared_ptr<ClientPlatformFactory> the_client_platform_factory() = 0;
     virtual std::shared_ptr<input::receiver::InputPlatform> the_input_platform() = 0;
+    virtual std::shared_ptr<input::InputDevices> the_input_devices() = 0;
     virtual std::shared_ptr<DisplayConfiguration> the_display_configuration() = 0;
     virtual std::shared_ptr<LifecycleControl> the_lifecycle_control() = 0;
     virtual std::shared_ptr<PingHandler> the_ping_handler() = 0;

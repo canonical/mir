@@ -47,8 +47,6 @@ class ClientBufferStream
 public:
     virtual ~ClientBufferStream() = default;
 
-    virtual MirWaitHandle* get_create_wait_handle() = 0;
-    
     virtual MirSurfaceParameters get_parameters() const = 0;
     virtual std::shared_ptr<ClientBuffer> get_current_buffer() = 0;
     virtual uint32_t get_current_buffer_id() = 0;
@@ -65,14 +63,13 @@ public:
 
     virtual frontend::BufferStreamId rpc_id() const = 0;
     
-    virtual MirWaitHandle* release(mir_buffer_stream_callback callback, void* context) = 0;
-
     virtual bool valid() const = 0;
     virtual void buffer_available(mir::protobuf::Buffer const& buffer) = 0;
     virtual void buffer_unavailable() = 0;
     virtual void set_size(geometry::Size) = 0;
     virtual MirWaitHandle* set_scale(float) = 0;
     virtual char const* get_error_message() const = 0;
+    virtual MirConnection* connection() const = 0;
 
 protected:
     ClientBufferStream() = default;
