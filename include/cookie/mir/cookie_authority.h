@@ -30,7 +30,6 @@ namespace mir
 {
 namespace cookie
 {
-
 using Secret = std::vector<uint8_t>;
 
 struct SecurityCheckFailed : std::runtime_error

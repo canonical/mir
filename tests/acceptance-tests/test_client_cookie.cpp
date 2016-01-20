@@ -184,11 +184,11 @@ TEST_F(ClientCookies, touch_motion_events_do_not_have_unmarshabllable_cookies)
         .at_position({1, 1})
         );
 
-    int events = 2;
+    int events = 1;
     if (wait_for_n_events(events, this))
     {
         std::lock_guard<std::mutex> lk(mutex);
-        EXPECT_EQ(event_count, events);
+        EXPECT_GE(event_count, events);
         EXPECT_EQ(out_cookies.size(), 1);
     }
 }

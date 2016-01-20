@@ -39,10 +39,6 @@
 
 namespace mir
 {
-namespace cookie
-{
-struct MirCookie;
-}
 namespace dispatch
 {
 class ThreadedDispatcher;
