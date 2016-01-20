@@ -115,7 +115,7 @@ private:
 
     void notify_disconnected();
 
-    std::shared_ptr<SurfaceMap> surface_map;
+    std::weak_ptr<SurfaceMap> surface_map;
     std::shared_ptr<DisplayConfiguration> display_configuration;
     std::shared_ptr<input::InputDevices> input_devices;
     std::shared_ptr<LifecycleControl> lifecycle_control;

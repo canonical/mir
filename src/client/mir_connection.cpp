@@ -236,6 +236,7 @@ MirConnection::MirConnection(std::string const& error_message) :
 MirConnection::MirConnection(
     mir::client::ConnectionConfiguration& conf) :
         deregisterer{this},
+        surface_map(conf.the_surface_map()),
         channel(conf.the_rpc_channel()),
         server(channel),
         debug(channel),
@@ -249,12 +250,10 @@ MirConnection::MirConnection(
         display_configuration_response{mcl::make_protobuf_object<mir::protobuf::DisplayConfiguration>()},
         set_base_display_configuration_response{mcl::make_protobuf_object<mir::protobuf::Void>()},
         client_platform_factory(conf.the_client_platform_factory()),
-        platform(client_platform_factory->create_client_platform(this)),
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
         lifecycle_control(conf.the_lifecycle_control()),
         ping_handler{conf.the_ping_handler()},
-        surface_map(conf.the_surface_map()),
         event_handler_register(conf.the_event_handler_register()),
         pong_callback(google::protobuf::NewPermanentCallback(&google::protobuf::DoNothing)),
         eventloop{new md::ThreadedDispatcher{"RPC Thread", std::dynamic_pointer_cast<md::Dispatchable>(channel)}},
@@ -273,6 +272,8 @@ MirConnection::~MirConnection() noexcept
     // We don't die while if are pending callbacks (as they touch this).
     // But, if after 500ms we don't get a call, assume it won't happen.
     connect_wait_handle.wait_for_pending(std::chrono::milliseconds(500));
+
+    surface_map.reset();
 
     std::lock_guard<decltype(mutex)> lock(mutex);
     if (connect_result && connect_result->has_platform())
@@ -567,6 +568,7 @@ void MirConnection::done_disconnect()
         for (auto handle : release_wait_handles)
             delete handle;
     }
+    surface_map.reset();
 
     // Ensure no racy lifecycle notifications can happen after disconnect completes
     lifecycle_control->set_callback([](MirLifecycleState){});

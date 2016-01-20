@@ -43,7 +43,8 @@ mcl::BufferVault::BufferVault(
     server_requests(server_requests),
     format(format),
     usage(usage),
-    size(size)
+    size(size),
+    disconnected_(false)
 {
     for (auto i = 0u; i < initial_nbuffers; i++)
         server_requests->allocate_buffer(size, format, usage);
@@ -51,8 +52,17 @@ mcl::BufferVault::BufferVault(
 
 mcl::BufferVault::~BufferVault()
 {
+    if (disconnected_)
+        return;
+
     for (auto& it : buffers)
+    try
+    {
         server_requests->free_buffer(it.first);
+    }
+    catch (...)
+    {
+    }
 }
 
 mcl::NoTLSFuture<mcl::BufferInfo> mcl::BufferVault::withdraw()
@@ -160,6 +170,13 @@ void mcl::BufferVault::set_size(geom::Size sz)
 {
     std::lock_guard<std::mutex> lk(mutex);
     size = sz;
+}
+
+void mcl::BufferVault::disconnected()
+{
+    std::lock_guard<std::mutex> lk(mutex);
+    disconnected_ = true;
+    promises.clear();
 }
 
 void mcl::BufferVault::set_scale(float scale)
