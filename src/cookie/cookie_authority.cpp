@@ -137,7 +137,7 @@ public:
         return std::unique_ptr<mir::cookie::MirCookie>(new mir::cookie::HMACMirCookie(timestamp, calculate_mac(timestamp), mir::cookie::Format::HMAC_SHA_1_8));
     }
 
-    std::unique_ptr<mir::cookie::MirCookie> unmarshall_cookie(std::vector<uint8_t> const& raw_cookie)
+    std::unique_ptr<mir::cookie::MirCookie> unmarshall_cookie(std::vector<uint8_t> const& raw_cookie) override
     {
         /*
         SHA_1 Format:
