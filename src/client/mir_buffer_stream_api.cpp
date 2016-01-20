@@ -211,40 +211,48 @@ char const* mir_buffer_stream_get_error_message(MirBufferStream* opaque_stream)
     return buffer_stream->get_error_message();
 }
 
+struct MirBufferStub
+{
+    MirBufferStub(MirBufferStream* stream, mir_buffer_callback cb, void* context) :
+        stream(stream),
+        cb(cb),
+        context(context)
+    {
+        ready();
+    }
+
+    void ready()
+    {
+        if (cb)
+            cb(stream, reinterpret_cast<MirBuffer*>(this), context);
+    }
+
+    MirBufferStream* const stream;
+    mir_buffer_callback const cb;
+    void* const context;
+};
 
 //private NBS api under development
 void mir_buffer_stream_allocate_buffer(
-    MirBufferStream*, 
+    MirBufferStream* stream, 
     int, int,
     MirPixelFormat,
     MirBufferUsage,
-    mir_buffer_callback, void*)
+    mir_buffer_callback cb, void* context)
 {
+    new MirBufferStub(stream, cb, context); 
 }
 
-MirBuffer* mir_buffer_stream_allocate_buffer_sync(
-    MirBufferStream*, int, int, MirPixelFormat, MirBufferUsage) 
+void mir_buffer_stream_release_buffer(MirBufferStream*, MirBuffer* buffer) 
 {
-    return nullptr;
+    delete reinterpret_cast<MirBufferStub*>(buffer);
 }
 
-void mir_buffer_stream_release_buffer(
-    MirBufferStream*, MirBuffer*, mir_buffer_stream_callback, void*)
+bool mir_buffer_stream_submit_buffer(MirBufferStream*, MirBuffer* buffer)
 {
-}
-
-void mir_buffer_stream_release_buffer_sync(MirBufferStream*, MirBuffer*) 
-{
-}
-
-void mir_buffer_stream_submit_buffer(MirBufferStream* buffer_stream, MirBuffer* buffer,
-    mir_buffer_callback submission_callback, void* submission_context,
-    mir_buffer_callback available_callback, void* available_context)
-{
-    if (submission_callback)
-        submission_callback(buffer_stream, buffer, submission_context);
-    if (available_callback)
-        available_callback(buffer_stream, buffer, available_context);
+    auto b = reinterpret_cast<MirBufferStub*>(buffer);
+    b->ready();
+    return true;
 }
 
 MirFenceType mir_buffer_get_fence_type(MirBuffer*)
@@ -261,7 +269,7 @@ void mir_buffer_set_fence(MirBuffer*, MirNativeFence*, MirFenceType)
 {
 }
 
-int mir_buffer_clear_fence(MirBuffer*, MirFenceType, int)
+int mir_buffer_wait_fence(MirBuffer*, MirFenceType, int)
 {
     return 0;
 }

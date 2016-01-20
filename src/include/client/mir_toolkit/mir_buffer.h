@@ -57,7 +57,9 @@ MirNativeFence* mir_buffer_get_fence(MirBuffer*);
  **/
 void mir_buffer_set_fence(MirBuffer* buffer, MirNativeFence* native_fence, MirFenceType fence_type);
 
-/** Wait for the fence associated with the buffer to signal.
+/** Wait for the fence associated with the buffer to signal. After returning,
+ *  it is permissible to access the buffer's content for the designated purpose in type.
+ *
  *   \param [in] buffer   The buffer
  *   \param [in] type     The type of fence to clear. 
  *   \param [in] timeout  The amount of time to wait for the fence in nanoseconds,
@@ -65,7 +67,7 @@ void mir_buffer_set_fence(MirBuffer* buffer, MirNativeFence* native_fence, MirFe
  *   \return              zero when fence was cleared successfully, or
  *                        a negative number when the timeout was reached before the fence signals
  **/
-int mir_buffer_clear_fence(MirBuffer* buffer, MirFenceType type, int timeout);
+int mir_buffer_wait_fence(MirBuffer* buffer, MirFenceType type, int timeout);
 
 /** Fenced Buffer content access functions.
  *
@@ -83,9 +85,11 @@ int mir_buffer_clear_fence(MirBuffer* buffer, MirFenceType type, int timeout);
  *   \param [in] buffer    The buffer
  *   \param [in] type      The type of fence to clear before returning.
  *   \return               The platform-defined native buffer associated with buffer
- *
- *   \warning                 The returned native buffer has the same lifetime as the MirBuffer.
- *                            It must not be deleted or past the lifetime of the buffer.
+ *   \warning              The returned native buffer has the same lifetime as the MirBuffer.
+ *                         It must not be deleted or past the lifetime of the buffer.
+ *   \warning              If mir_no_fence is designated as type, this function will not
+ *                         wait for the fence. The user must wait for the fence explicitly
+ *                         before using the contents of the buffer.
  **/
 MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirFenceType type);
 
@@ -96,9 +100,12 @@ MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirFenceType type);
  *   \param [in] buffer    The buffer
  *   \param [in] type      The type of fence to clear before returning.
  *   \return               The graphics region associated with the buffer.
- *   \warning: If mir_buffer_stream_submit_buffer() is called on a locked buffer,
+ *   \warning  If mir_buffer_stream_submit_buffer() is called on a locked buffer,
  *             corruption may occur. Make sure to call mir_buffer_unlock()
  *             before submission.
+ *   \warning  If mir_no_fence is designated as type, this function will not
+ *             wait for the fence. The user must wait for the fence explicitly
+ *             before using the contents of the buffer.
  **/
 MirGraphicsRegion* mir_buffer_lock(MirBuffer *buffer, MirFenceType type);
 
