@@ -1405,6 +1405,33 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_is_not_underestimated)
     q.compositor_release(c);
 }
 
+TEST_P(WithTwoOrMoreBuffers, buffers_ready_count_tapers_off)
+{  // Another test related to QtMir's style of doing things (LP: #1476201)
+    mc::BufferQueue q{nbuffers, allocator, basic_properties, policy_factory};
+
+    q.set_scaling_delay(3);
+
+    ASSERT_THAT(q.buffers_ready_for_compositor(this), Eq(0));
+
+    // Produce one frame
+    q.client_release(client_acquire_sync(q));
+
+    // Ensure we're told multiple frames are ready to facilitate the
+    // compositor detecting a slow client that misses the second one.
+    ASSERT_THAT(q.buffers_ready_for_compositor(this), Ge(2));
+
+    // Consume one frame
+    q.compositor_release(q.compositor_acquire(this));
+
+    // Finally verify the count is tapering off instead of dropping off
+    ASSERT_THAT(q.buffers_ready_for_compositor(this), Ge(1));
+
+    for (int flush = 0; flush < q.scaling_delay(); ++flush)
+        q.compositor_release(q.compositor_acquire(this));
+
+    ASSERT_THAT(q.buffers_ready_for_compositor(this), Eq(0));
+}
+
 TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
 {
     mc::BufferQueue q{nbuffers, allocator, basic_properties, policy_factory};
@@ -1425,11 +1452,12 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
     {
         ASSERT_NE(0, q.buffers_ready_for_compositor(&monitor[m]));
 
-        // Double consume to account for the +1 that
+        // Extra consume to account for the additional frames that
         // buffers_ready_for_compositor adds to do dynamic performance
         // detection.
-        q.compositor_release(q.compositor_acquire(&monitor[m]));
-        q.compositor_release(q.compositor_acquire(&monitor[m]));
+        int const nflush = (q.scaling_delay() > 0) ? q.scaling_delay() : 1;
+        for (int flush = 0; flush < nflush; ++flush)
+            q.compositor_release(q.compositor_acquire(&monitor[m]));
 
         ASSERT_EQ(0, q.buffers_ready_for_compositor(&monitor[m]));
     }
@@ -1711,6 +1739,91 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     EXPECT_THAT(buffers_acquired.size(), Eq(2));
 }
 
+TEST_P(WithThreeOrMoreBuffers, queue_size_scales_up_without_accumulator)
+{   // A regression test similar to above but designed to mimic QtMir
+    // for LP: #1476201.
+   
+    q.allow_framedropping(false);
+    std::unordered_set<mg::Buffer *> buffers_acquired;
+
+    int const delay = 3;
+    q.set_scaling_delay(delay);
+
+    int const nframes = 100;
+
+    std::shared_ptr<AcquireWaitHandle> client;
+
+    for (int frame = 0; frame < nframes; ++frame)
+    {
+        do
+        {
+            if (!client)
+                client = client_acquire_async(q);
+            if (client->has_acquired_buffer())
+            {
+                if (frame > delay)
+                    buffers_acquired.insert(client->buffer());
+                client->release_buffer();
+                client.reset();
+            }
+        } while (!client);
+
+        q.compositor_release(q.compositor_acquire(nullptr));
+    }
+    // Expect double-buffers for fast clients
+    EXPECT_THAT(buffers_acquired.size(), Eq(2));
+
+    // Now check what happens if the client becomes slow...
+    buffers_acquired.clear();
+    for (int frame = 0; frame < nframes;)
+    {
+        do
+        {
+            if (!client)
+                client = client_acquire_async(q);
+            if (client->has_acquired_buffer())
+            {
+                if (frame > delay)
+                    buffers_acquired.insert(client->buffer());
+                client->release_buffer();
+                client.reset();
+            }
+        } while (!client);
+
+        // Mimic QtMir in that it tests buffers ready as a boolean and does
+        // not keep its own accumulator in the compositor:
+        while (q.buffers_ready_for_compositor(nullptr))
+        {
+            q.compositor_release(q.compositor_acquire(nullptr));
+            ++frame;
+        }
+    }
+    // Expect at least triple buffers for sluggish clients
+    EXPECT_THAT(buffers_acquired.size(), Ge(3));
+
+    // And what happens if the client becomes fast again?...
+    buffers_acquired.clear();
+    for (int frame = 0; frame < nframes; ++frame)
+    {
+        do
+        {
+            if (!client)
+                client = client_acquire_async(q);
+            if (client->has_acquired_buffer())
+            {
+                if (frame > delay)
+                    buffers_acquired.insert(client->buffer());
+                client->release_buffer();
+                client.reset();
+            }
+        } while (!client);
+
+        q.compositor_release(q.compositor_acquire(nullptr));
+    }
+    // Expect double-buffers for fast clients
+    EXPECT_THAT(buffers_acquired.size(), Eq(2));
+}
+
 TEST_P(WithThreeOrMoreBuffers, greedy_compositors_need_triple_buffers)
 {
     /*
@@ -1755,8 +1868,7 @@ TEST_P(WithTwoOrMoreBuffers, compositor_double_rate_of_slow_client)
         ASSERT_EQ(0, q.buffers_ready_for_compositor(this));
         q.client_release(client_acquire_sync(q));
 
-        // Detecting a slow client requires scheduling at least one extra
-        // frame...
+        // Detecting a slow client requires scheduling extra frames
         int nready = q.buffers_ready_for_compositor(this);
         ASSERT_THAT(nready, Ge(2));
         for (int i = 0; i < nready; ++i)
