@@ -269,7 +269,7 @@ MIR_CLIENT_DETAIL_unreleased {
     mir_buffer_get_fence_type;
     mir_buffer_get_fence;
     mir_buffer_set_fence;
-    mir_buffer_clear_fence;
+    mir_buffer_wait_fence;
     mir_buffer_get_native_buffer;
     mir_buffer_lock;
     mir_buffer_unlock;
