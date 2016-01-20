@@ -559,6 +559,53 @@ TEST_F(Display, display_orientation_not_supported)
     });
 }
 
+//LP: #1535780
+TEST_F(Display, can_configure_orientation)
+{
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::enabled);
+
+    auto scale = 4.2f;
+    auto config = display.configuration();
+    config->for_each_output([&scale](mg::UserDisplayConfigurationOutput const& c){
+        c.scale = scale;
+    });
+    display.configure(*config); 
+
+    config = display.configuration();
+    config->for_each_output([&scale](mg::UserDisplayConfigurationOutput const& c){
+        if (c.id == primary_output_id)
+            EXPECT_THAT(c.scale, testing::FloatEq(scale));
+    });
+}
+
+TEST_F(Display, can_configure_form_factor)
+{
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::enabled);
+
+    auto form_factor = mir_form_factor_tablet;
+    auto config = display.configuration();
+    config->for_each_output([&form_factor](mg::UserDisplayConfigurationOutput const& c){
+        c.form_factor = form_factor;
+    });
+    display.configure(*config); 
+
+    config = display.configuration();
+    config->for_each_output([&form_factor](mg::UserDisplayConfigurationOutput const& c){
+        if (c.id == primary_output_id)
+            EXPECT_THAT(c.form_factor, testing::Eq(form_factor));
+    });
+}
+
 TEST_F(Display, keeps_subscription_to_hotplug)
 {
     using namespace testing;

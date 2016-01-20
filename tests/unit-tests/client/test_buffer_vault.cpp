@@ -401,7 +401,37 @@ TEST_F(StartedBufferVault, scaling_resizes_buffers_right_away)
 
     auto b3 = vault.withdraw().get().buffer;
     EXPECT_THAT(b3->size(), Eq(new_size));
+}
 
+TEST_F(BufferVault, waiting_threads_give_future_error_if_disconnected)
+{
+    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+        size, format, usage, initial_nbuffers);
+
+    auto future = vault.withdraw();
+    vault.disconnected();
+    EXPECT_THROW({
+        future.get();
+    }, std::exception);
+}
+
+TEST_F(BufferVault, makes_sure_rpc_calls_exceptions_are_caught_in_destructor)
+{
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(1)
+        .WillOnce(Throw(std::runtime_error("")));
+    EXPECT_NO_THROW({
+        mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+            size, format, usage, initial_nbuffers);
+        vault.wire_transfer_inbound(package);
+    });
+}
+
+TEST_F(StartedBufferVault, skips_free_buffer_rpc_calls_if_disconnected)
+{
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(0);
+    vault.disconnected();
 }
 
 TEST_F(StartedBufferVault, buffer_count_remains_the_same_after_scaling)
