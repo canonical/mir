@@ -500,7 +500,7 @@ TEST_F(NestedServer, shell_sees_set_scaling_factor)
     {
         auto const new_config = nested_mir.server.the_display()->configuration();
 
-        new_config->for_each_output([&done] (auto const& output)
+        new_config->for_each_output([&done, expected_scale, expected_form_factor] (auto const& output)
                                     {
                                         if (output.scale == expected_scale &&
                                             output.form_factor == expected_form_factor)
