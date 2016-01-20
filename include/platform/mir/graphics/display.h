@@ -153,7 +153,7 @@ public:
     virtual std::unique_ptr<GLContext> create_gl_context() = 0;
 
     Display() = default;
-    virtual ~Display() {/* TODO: make nothrow */}
+    virtual ~Display() = default;
 private:
     Display(Display const&) = delete;
     Display& operator=(Display const&) = delete;

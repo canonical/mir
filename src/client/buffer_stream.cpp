@@ -355,6 +355,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
     void lost_connection() override
     {
+        vault.disconnected();
     }
 
     void set_buffer_cache_size(unsigned int) override
@@ -392,7 +393,6 @@ mcl::BufferStream::BufferStream(
       display_server(server),
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
-      swap_interval_(1),
       scale_(1.0f),
       perf_report(perf_report),
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
@@ -400,6 +400,7 @@ mcl::BufferStream::BufferStream(
       nbuffers(nbuffers),
       creation_wait_handle(creation_wait_handle)
 {
+    init_swap_interval();
     if (!protobuf_bs->has_id())
     {
         if (!protobuf_bs->has_error())
@@ -432,6 +433,13 @@ mcl::BufferStream::BufferStream(
 
 
         egl_native_window_ = client_platform->create_egl_native_window(this);
+
+        // This might seem like something to provide during creation but
+        // knowing the swap interval is not a precondition to creation. It's
+        // only a precondition to your second and subsequent swaps, so don't
+        // bother the creation parameters with this stuff...
+        if (fixed_swap_interval)
+            force_swap_interval(swap_interval_);
     }
     catch (std::exception const& error)
     {
@@ -449,6 +457,22 @@ mcl::BufferStream::BufferStream(
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
     perf_report->name_surface(surface_name.c_str());
 }
+
+void mcl::BufferStream::init_swap_interval()
+{
+    char const* env = getenv("MIR_CLIENT_FORCE_SWAP_INTERVAL");
+    if (env)
+    {
+        swap_interval_ = atoi(env);
+        fixed_swap_interval = true;
+    }
+    else
+    {
+        swap_interval_ = 1;
+        fixed_swap_interval = false;
+    }
+}
+
 
 mcl::BufferStream::BufferStream(
     MirConnection* connection,
@@ -620,6 +644,14 @@ int mcl::BufferStream::swap_interval() const
 }
 
 MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
+{
+    if (fixed_swap_interval)
+        return nullptr;
+    else
+        return force_swap_interval(interval);
+}
+
+MirWaitHandle* mcl::BufferStream::force_swap_interval(int interval)
 {
     mp::StreamConfiguration configuration;
     configuration.mutable_id()->set_value(protobuf_bs->id().value());

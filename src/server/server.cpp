@@ -73,6 +73,7 @@ namespace mo = mir::options;
 #define FOREACH_ACCESSOR(MACRO)\
     MACRO(the_buffer_stream_factory)\
     MACRO(the_compositor)\
+    MACRO(the_compositor_report)\
     MACRO(the_composite_event_filter)\
     MACRO(the_cursor_listener)\
     MACRO(the_cursor)\

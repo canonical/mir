@@ -55,6 +55,7 @@ public:
     std::shared_ptr<mir::logging::Logger> the_logger() override;
     std::shared_ptr<ClientPlatformFactory> the_client_platform_factory() override;
     std::shared_ptr<input::receiver::InputPlatform> the_input_platform() override;
+    std::shared_ptr<input::InputDevices> the_input_devices() override;
     std::shared_ptr<DisplayConfiguration> the_display_configuration() override;
     std::shared_ptr<LifecycleControl> the_lifecycle_control() override;
     std::shared_ptr<PingHandler> the_ping_handler() override;
@@ -71,6 +72,7 @@ protected:
     CachedPtr<mir::logging::Logger> logger;
     CachedPtr<ClientPlatformFactory> client_platform_factory;
     CachedPtr<input::receiver::InputPlatform> input_platform;
+    CachedPtr<input::InputDevices> input_devices;
     CachedPtr<ConnectionSurfaceMap> surface_map;
     CachedPtr<DisplayConfiguration> display_configuration;
     CachedPtr<LifecycleControl> lifecycle_control;

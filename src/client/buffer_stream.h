@@ -133,6 +133,7 @@ private:
     void on_swap_interval_set(int interval);
     void on_scale_set(float scale);
     void release_cpu_region();
+    MirWaitHandle* force_swap_interval(int interval);
 
     mutable std::mutex mutex; // Protects all members of *this
 
@@ -143,6 +144,8 @@ private:
 
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 
+    void init_swap_interval();
+    bool fixed_swap_interval;
     int swap_interval_;
     float scale_;
 

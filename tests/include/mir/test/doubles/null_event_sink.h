@@ -36,11 +36,12 @@ namespace doubles
 {
 struct NullEventSink : public frontend::EventSink
 {
-    void handle_event(MirEvent const&) {}
-    void handle_lifecycle_event(MirLifecycleState) {}
-    void handle_display_config_change(graphics::DisplayConfiguration const&) {}
-    void send_ping(int32_t) {}
-    void send_buffer(frontend::BufferStreamId, graphics::Buffer&, graphics::BufferIpcMsgType) {}
+    void handle_event(MirEvent const&) override {}
+    void handle_lifecycle_event(MirLifecycleState) override {}
+    void handle_display_config_change(graphics::DisplayConfiguration const&) override {}
+    void send_ping(int32_t) override {}
+    void send_buffer(frontend::BufferStreamId, graphics::Buffer&, graphics::BufferIpcMsgType) override {}
+    void handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const&) override {};
 };
 
 std::unique_ptr<frontend::EventSink> null_sink_factory(std::shared_ptr<frontend::MessageSender> const&);
