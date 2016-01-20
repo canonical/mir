@@ -1036,7 +1036,7 @@ void mf::SessionMediator::raise_surface_with_cookie(
     auto cookie_string = cookie.cookie();
 
     std::vector<uint8_t> cookie_bytes(cookie_string.begin(), cookie_string.end());
-    auto const& cookie_ptr = cookie_authority->unmarshall_cookie(cookie_bytes);
+    auto const cookie_ptr = cookie_authority->unmarshall_cookie(cookie_bytes);
 
     shell->raise_surface_with_timestamp(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
 
