@@ -19,6 +19,7 @@
 
 #include <mir_toolkit/mir_buffer_stream_nbs.h>
 #include <mir_toolkit/mir_buffer.h>
+#include <sys/types.h>
 #include <signal.h>
 #include <string.h>
 #include <pthread.h>
@@ -63,7 +64,7 @@ static void available_callback(MirBufferStream* stream, MirBuffer* buffer, void*
 }
 
 volatile int rendering = 1;
-static void sig_handler(int signum)
+static void shutdown(int signum)
 {
     if ((signum == SIGTERM) || (signum == SIGINT))
         rendering = 0;
@@ -74,11 +75,8 @@ int main(int argc, char** argv)
     (void) argc;
     (void) argv;
 
-    struct sigaction action;
-    memset(&action, 0, sizeof(struct sigaction));
-    action.sa_handler = sig_handler;
-    sigaction(SIGTERM, &action, NULL);
-    sigaction(SIGINT, &action, NULL);
+    signal(SIGTERM, shutdown);
+    signal(SIGINT, shutdown);
 
     //TODO: add connection stuff
     MirBufferStream* stream = NULL;
