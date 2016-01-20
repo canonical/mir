@@ -19,7 +19,7 @@ add_library(playgroundserverconfig STATIC
 
 add_subdirectory(demo-shell/)
 
-add_executable(mir_demo_prerendered_frames
+mir_add_wrapped_executable(mir_demo_prerendered_frames
     mir_demo_prerendered_frames.c
 )
 
