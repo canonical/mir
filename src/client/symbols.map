@@ -210,6 +210,13 @@ MIR_CLIENT_9v18 {
 MIR_CLIENT_unreleased {
   global:
     mir_connection_get_graphics_module;
+    mir_surface_raise_with_cookie;
+    mir_input_event_has_cookie;
+    mir_cookie_get_size;
+    mir_input_event_get_cookie;
+    mir_cookie_copy_to_buffer;
+    mir_cookie_from_buffer;
+    mir_cookie_release;
   local:
     *;
 } MIR_CLIENT_9v18;
@@ -266,13 +273,6 @@ MIR_CLIENT_DETAIL_unreleased {
     extern "C++" { 
       mir::input::android::android_pointer_action_from_mir*;
     };
-    mir_surface_raise_with_cookie;
-    mir_input_event_has_cookie;
-    mir_cookie_get_size;
-    mir_input_event_get_cookie;
-    mir_cookie_copy_to_buffer;
-    mir_cookie_from_buffer;
-    mir_cookie_release;
   local:
     *;
 } MIR_CLIENT_DETAIL_9v18;

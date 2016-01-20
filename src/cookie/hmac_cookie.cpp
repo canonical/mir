@@ -54,8 +54,8 @@ std::vector<uint8_t> mir::cookie::HMACMirCookie::marshall() const
 
 bool mir::cookie::HMACMirCookie::operator==(MirCookie const& cookie) const
 {
-    auto const& this_stream  = marshall();
-    auto const& other_stream = cookie.marshall();
+    auto const this_stream  = marshall();
+    auto const other_stream = cookie.marshall();
 
     // FIXME Need to do a constant memcmp here!
     return std::equal(std::begin(this_stream), std::end(this_stream), std::begin(other_stream));

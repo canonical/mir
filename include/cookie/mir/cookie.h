@@ -27,11 +27,6 @@ namespace mir
 namespace cookie
 {
 
-enum class Format : uint8_t
-{
-    HMAC_SHA_1_8
-};
-
 class MirCookie
 {
 public:

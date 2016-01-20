@@ -167,7 +167,7 @@ TEST_F(RaiseSurfaces, key_event_with_cookie)
         ASSERT_FALSE(out_cookies.empty());
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
 
-        MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.back().data());
+        MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.back().data(), out_cookies.back().size());
         attempt_focus(surface2, cookie);
 
         mir_cookie_release(cookie);
@@ -186,7 +186,7 @@ TEST_F(RaiseSurfaces, older_timestamp_does_not_focus)
         ASSERT_FALSE(out_cookies.empty());
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
 
-        MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.front().data());
+        MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.front().data(), out_cookies.front().size());
         mir_surface_raise_with_cookie(surface1, cookie);
 
         mir_cookie_release(cookie);
@@ -209,7 +209,7 @@ TEST_F(RaiseSurfaces, motion_events_dont_prevent_raise)
             std::lock_guard<std::mutex> lk(mutex);
             ASSERT_FALSE(out_cookies.empty());
             EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
-            MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.back().data());
+            MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.back().data(), out_cookies.back().size());
             EXPECT_TRUE(attempt_focus(surface1, cookie));
             mir_cookie_release(cookie);
         }

@@ -478,10 +478,12 @@ void mir_cookie_copy_to_buffer(MirCookie const* cookie, void* buffer, size_t siz
     memcpy(buffer, cookie, size);
 }
 
-MirCookie const* mir_cookie_from_buffer(void const* cookie)
+MirCookie const* mir_cookie_from_buffer(void const* cookie, size_t size)
 {
+    if (size != mir::cookie::array_size)
+        return NULL;
+
     MirCookie const* temp = static_cast<MirCookie const*>(cookie);
-    size_t size = mir_cookie_get_size(temp);
 
     MirCookie* new_cookie = reinterpret_cast<MirCookie*>(new uint8_t[size]);
     memcpy(new_cookie, temp, size);

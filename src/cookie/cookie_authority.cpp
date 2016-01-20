@@ -47,8 +47,8 @@ size_t cookie_size_from_format(mir::cookie::Format const& format)
 {
     switch (format)
     {
-        case mir::cookie::Format::HMAC_SHA_1_8:
-            return 17;
+        case mir::cookie::Format::hmac_sha_1_8:
+            return mir::cookie::array_size;
         default:
             break;
     }
@@ -134,7 +134,7 @@ public:
 
     std::unique_ptr<mir::cookie::MirCookie> timestamp_to_cookie(uint64_t const& timestamp) override
     {
-        return std::unique_ptr<mir::cookie::MirCookie>(new mir::cookie::HMACMirCookie(timestamp, calculate_mac(timestamp), mir::cookie::Format::HMAC_SHA_1_8));
+        return std::unique_ptr<mir::cookie::MirCookie>(new mir::cookie::HMACMirCookie(timestamp, calculate_mac(timestamp), mir::cookie::Format::hmac_sha_1_8));
     }
 
     std::unique_ptr<mir::cookie::MirCookie> unmarshall_cookie(std::vector<uint8_t> const& raw_cookie) override
@@ -146,13 +146,13 @@ public:
         8 BYTES = MAC
         */
 
-        if (raw_cookie.size() < cookie_size_from_format(mir::cookie::Format::HMAC_SHA_1_8))
+        if (raw_cookie.size() != cookie_size_from_format(mir::cookie::Format::hmac_sha_1_8))
         {
             throw mir::cookie::SecurityCheckFailed();
         }
 
         mir::cookie::Format format = static_cast<mir::cookie::Format>(raw_cookie[0]);
-        if (format != mir::cookie::Format::HMAC_SHA_1_8)
+        if (format != mir::cookie::Format::hmac_sha_1_8)
         {
             throw mir::cookie::SecurityCheckFailed();
         }
@@ -169,7 +169,7 @@ public:
         ptr += sizeof(timestamp);
         memcpy(mac.data(), ptr, mac.size());
 
-        std::unique_ptr<mir::cookie::MirCookie> cookie(new mir::cookie::HMACMirCookie(timestamp, mac, mir::cookie::Format::HMAC_SHA_1_8));
+        std::unique_ptr<mir::cookie::MirCookie> cookie(new mir::cookie::HMACMirCookie(timestamp, mac, mir::cookie::Format::hmac_sha_1_8));
         if (!verify_mac(timestamp, cookie))
         {
             throw mir::cookie::SecurityCheckFailed();

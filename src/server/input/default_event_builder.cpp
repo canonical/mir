@@ -37,7 +37,7 @@ mi::DefaultEventBuilder::DefaultEventBuilder(MirInputDeviceId device_id,
 mir::EventUPtr mi::DefaultEventBuilder::key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code,
                                                   int scan_code)
 {
-    auto const& cookie = cookie_authority->timestamp_to_cookie(timestamp.count());
+    auto const cookie = cookie_authority->timestamp_to_cookie(timestamp.count());
     return me::make_event(device_id, timestamp, cookie->marshall(), action, key_code, scan_code, mir_input_event_modifier_none);
 }
 
@@ -53,8 +53,8 @@ void mi::DefaultEventBuilder::add_touch(MirEvent& event, MirTouchId touch_id, Mi
 {
     if (action == mir_touch_action_up || action == mir_touch_action_down)
     {
-        auto const& cookie = cookie_authority->timestamp_to_cookie(event.motion.event_time.count());
-        auto const& marshalled_cookie = cookie->marshall();
+        auto const cookie = cookie_authority->timestamp_to_cookie(event.motion.event_time.count());
+        auto const marshalled_cookie = cookie->marshall();
         std::copy_n(std::begin(marshalled_cookie), event.motion.cookie.size(), std::begin(event.motion.cookie));
     }
 
@@ -72,7 +72,7 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp, MirPo
     // FIXME Moving to 160bits soon
     if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
     {
-        auto const& cookie = cookie_authority->timestamp_to_cookie(timestamp.count());
+        auto const cookie = cookie_authority->timestamp_to_cookie(timestamp.count());
         vec_cookie = cookie->marshall();
     }
     return me::make_event(device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis_value, y_axis_value,

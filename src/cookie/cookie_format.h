@@ -21,9 +21,15 @@
 
 #include <stdint.h>
 
+namespace mir
+{
+namespace cookie
+{
 enum class Format : uint8_t
 {
-    HMAC_SHA_1_8
+    hmac_sha_1_8,
 };
+}
+}
 
 #endif // MIR_COOKIE_COOKIE_FORMAT_H_
