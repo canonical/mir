@@ -43,7 +43,7 @@ mir::EventUPtr mi::DefaultEventBuilder::key_event(Timestamp timestamp, MirKeyboa
 
 mir::EventUPtr mi::DefaultEventBuilder::touch_event(Timestamp timestamp)
 {
-    return me::make_event(device_id, timestamp, {{}}, mir_input_event_modifier_none);
+    return me::make_event(device_id, timestamp, std::vector<uint8_t>{}, mir_input_event_modifier_none);
 }
 
 void mi::DefaultEventBuilder::add_touch(MirEvent& event, MirTouchId touch_id, MirTouchAction action,
