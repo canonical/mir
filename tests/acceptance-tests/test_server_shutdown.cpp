@@ -23,11 +23,13 @@
 #include "mir_test_framework/process.h"
 #include "mir_test_framework/temporary_environment_value.h"
 #include "mir_test_framework/executable_path.h"
+#include "mir/test/doubles/null_logger.h"
 
 #include <gtest/gtest.h>
 
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
+namespace mtd = mt::doubles;
 
 using ServerShutdown = mtf::InterprocessClientServerTest;
 
@@ -61,6 +63,7 @@ TEST(ServerShutdownWithException, clean_shutdown_on_plugin_construction_exceptio
     mtf::TemporaryEnvironmentValue input_platform("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
     mir::Server server;
 
+    server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);
     server.set_command_line_handler([](int, char const* const*){});
     server.set_command_line(0, &argv);
     server.apply_settings();
