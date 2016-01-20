@@ -217,7 +217,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     uint64_t /*mac*/, MirKeyboardAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers)
 {
-    return make_event(device_id, timestamp, {{}}, action, key_code, scan_code, modifiers);
+    return make_event(device_id, timestamp, std::vector<uint8_t>{}, action, key_code, scan_code, modifiers);
 }
 
 // Deprecated version without mac
@@ -225,7 +225,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     MirKeyboardAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers)
 {
-    return make_event(device_id, timestamp, {{}}, action, key_code, scan_code, modifiers);
+    return make_event(device_id, timestamp, std::vector<uint8_t>{}, action, key_code, scan_code, modifiers);
 }
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
@@ -249,14 +249,14 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     uint64_t /*mac*/, MirInputEventModifiers modifiers)
 {
-    return make_event(device_id, timestamp, {{}}, modifiers);
+    return make_event(device_id, timestamp, std::vector<uint8_t>{}, modifiers);
 }
 
 // Deprecated version without mac
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers)
 {
-    return make_event(device_id, timestamp, {{}}, modifiers);
+    return make_event(device_id, timestamp, std::vector<uint8_t>{}, modifiers);
 }
 
 void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
@@ -316,7 +316,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     float hscroll_value, float vscroll_value,
     float relative_x_value, float relative_y_value)
 {
-    return make_event(device_id, timestamp, {{}}, modifiers, action,
+    return make_event(device_id, timestamp, std::vector<uint8_t>{}, modifiers, action,
                       buttons_pressed, x_axis_value, y_axis_value, hscroll_value,
                       vscroll_value, relative_x_value, relative_y_value);
 }
@@ -329,7 +329,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     float hscroll_value, float vscroll_value,
     float relative_x_value, float relative_y_value)
 {
-    return make_event(device_id, timestamp, {{}}, modifiers, action,
+    return make_event(device_id, timestamp, std::vector<uint8_t>{}, modifiers, action,
                       buttons_pressed, x_axis_value, y_axis_value, hscroll_value,
                       vscroll_value, relative_x_value, relative_y_value);
 }
@@ -341,7 +341,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value)
 {
-    return make_event(device_id, timestamp, {{}}, modifiers, action, buttons_pressed,
+    return make_event(device_id, timestamp, std::vector<uint8_t>{}, modifiers, action, buttons_pressed,
                       x_axis_value, y_axis_value, hscroll_value, vscroll_value, 0, 0);
 }
 
@@ -352,7 +352,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value)
 {
-    return make_event(device_id, timestamp, {{}}, modifiers, action, buttons_pressed,
+    return make_event(device_id, timestamp, std::vector<uint8_t>{}, modifiers, action, buttons_pressed,
                       x_axis_value, y_axis_value, hscroll_value, vscroll_value, 0, 0);
 }
 

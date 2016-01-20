@@ -35,7 +35,7 @@ namespace
 
 static int map_key(mircv::XKBMapper &mapper, MirKeyboardAction action, int scan_code)
 {
-    auto ev = mev::make_event(MirInputDeviceId(0), std::chrono::nanoseconds(0), {{}}, action,
+    auto ev = mev::make_event(MirInputDeviceId(0), std::chrono::nanoseconds(0), std::vector<uint8_t>{}, action,
                               0, scan_code, mir_input_event_modifier_none);
 
     mapper.update_state_and_map_event(*ev);
