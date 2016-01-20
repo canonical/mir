@@ -74,6 +74,8 @@ std::shared_ptr<mg::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
             << boost::errinfo_errno(-ret));
     }
 
+
+    printf("BUF HAN %i\n", buf_handle->numInts);
     AndroidBufferHandleDeleter del1(alloc_dev);
     std::shared_ptr<native_handle_t const> handle(buf_handle, del1);
 

@@ -70,7 +70,6 @@ mcl::ScreencastStream::ScreencastStream(
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
 
     cached_buffer_size = geom::Size{protobuf_bs->buffer().width(), protobuf_bs->buffer().height()};
-
     
     try
     {
@@ -110,6 +109,7 @@ void mcl::ScreencastStream::process_buffer(protobuf::Buffer const& buffer, std::
     try
     {
         auto package = std::make_shared<MirBufferPackage>();
+
         package->data_items = buffer.data_size();
         package->fd_items = buffer.fd_size();
         for (int i = 0; i != buffer.data_size(); ++i)
@@ -122,8 +122,9 @@ void mcl::ScreencastStream::process_buffer(protobuf::Buffer const& buffer, std::
         package->height = buffer.height();
         current_buffer = factory->create_buffer(
             package,
-            cached_buffer_size, mir_pixel_format_abgr_8888);
-//            static_cast<MirPixelFormat>(buffer.pixel_format()));
+            cached_buffer_size,
+            static_cast<MirPixelFormat>(protobuf_bs->pixel_format()));
+        current_id = buffer.buffer_id();
     }
     catch (const std::runtime_error& err)
     {
@@ -182,7 +183,11 @@ std::shared_ptr<mcl::MemoryRegion> mcl::ScreencastStream::secure_for_cpu_write()
 
 void mcl::ScreencastStream::screencast_buffer_received(std::function<void()> done)
 {
-    process_buffer(protobuf_bs->buffer());
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    if(protobuf_bs->buffer().buffer_id() != current_id)
+        process_buffer(protobuf_bs->buffer(), lock);
+    lock.unlock();
+
     done();
     screencast_wait_handle.result_received();
 }

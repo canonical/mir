@@ -49,6 +49,7 @@ void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer
 
     if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
+        printf("FULL MESSAGE\n");
         auto buffer_handle = native_buffer->handle();
         int offset = 0;
 
@@ -64,6 +65,7 @@ void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer
         msg.pack_stride(buffer.stride());
         msg.pack_size(buffer.size());
     }
+    else { printf("PARTIAL\n");}
 }
 
 void mga::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
