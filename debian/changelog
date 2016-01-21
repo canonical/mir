@@ -1,8 +1,43 @@
-mir (0.19.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.19.0) UNRELEASED; urgency=medium
 
-  * placeholder for 0.19 release
+  * New upstream release 0.19.0
+    - API summary:
+      . mirclient abi unchanged at 9
+      . mirserver abi bumped to 37
+      . mircommon abi unchanged at 5
+      . mirplatform abi unchanged at 11
+      . mirprotobuf abi unchanged at 3
+      . mirplatformgraphics abi bumped to 7
+      . mirclientplatform abi bumped to 4
+      . mirinputplatform abi bumped to 5
+      . mircookie abi bumped to 2
+    - Bug fix:
+      . Mir servers crash on mouse input (LP: #1528438)
+      . Pinch to zoom not working reliably (LP: #1531517)
+      . Passing DisplayConfiguration scale property from
+        nested server to host appears to not work (LP: #1535780)
+      . Various TSan reports when running test suite
+        on a mir tsan enabled build (LP: #1523647)
+      . Buffer leak during repeated mirscreencasts
+        causes server to be killed (LP: #1523900)
+      . Cursor now displays correctly (LP: #1526779)
+      .ProgramOption::parse_file() reports problems to cerr (LP: #1190165)
+      . Nested servers can select wrong platform (LP: #1515558)
+      . There seems to be missing RTTI information
+         when linking with UBSan enabled (LP: #1521930)
+      . Mir threadsanitizer build fails with GCC (LP: #1522581)
+      . After "make install" mir_demo_server cannot
+        find shared object file in /usr/local/lib (LP: #1522836)
+      . Fixed a test in TestClientInput (LP: #1523965)
+      . Mir servers choose graphics-dummy (or no driver at all)
+        over mesa-kms on a desktop (LP: #1528082)
+      . Function mir_event_get_close_surface_event is never used (LP: #1447690)
+      . mir::input::Surface::consume(MirEvent const& event)
+        should not take a reference to an opaque type (LP: #1450797)
+      . lintian: E: mir-doc: privacy-breach-logo (LP: #1483471)
 
- -- Kevin DuBois <kevin.dubois@canonical.com>  Tue, 22 Dec 2015 14:05:47 -0500
+
+ -- Brandon Schaefer <brandontschaefer@gmail.com>  Thu, 21 Jan 2016 12:14:58 -0600
 
 mir (0.18.1+16.04.20160115-0ubuntu1) xenial; urgency=medium
 
@@ -23,14 +58,14 @@ mir (0.18.0+16.04.20151216.1-0ubuntu1) xenial; urgency=medium
   [ Kevin DuBois ]
   * New upstream release 0.18.0 (https://launchpad.net/mir/+milestone/0.18.0)
     - ABI summary: Only servers need rebuilding;
-      . Mirclient ABI unchanged at 9
-      . Mirserver ABI bumped to 36
-      . Mircommon ABI unchanged at 5
-      . Mirplatform ABI unchanged at 11
-      . Mirprotobuf ABI unchanged at 3
-      . Mirplatformgraphics ABI bumped to 7
-      . Mirclientplatform ABI unchanged at 3
-      . Mirinputplatform ABI added. Current version is 4
+      . mirclient abi unchanged at 9
+      . mirserver abi bumped to 36
+      . mircommon abi unchanged at 5
+      . mirplatform abi unchanged at 11
+      . mirprotobuf abi unchanged at 3
+      . mirplatformgraphics abi bumped to 7
+      . mirclientplatform abi unchanged at 3
+      . mirinputplatform abi added. current version is 4
     - Enhancements:
       . Use libinput by default, and remove the android input stack
       . Add x11 input probing

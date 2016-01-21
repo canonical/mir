@@ -261,9 +261,9 @@ MIR_CLIENT_DETAIL_9v18 {
     };
 } MIR_CLIENT_DETAIL_9;
 
-MIR_CLIENT_DETAIL_9v18 {
+MIR_CLIENT_DETAIL_9v18v1 {
   global:
     extern "C++" { 
       mir::input::android::android_pointer_action_from_mir*;
     };
-};
+} MIR_CLIENT_DETAIL_9v18;
