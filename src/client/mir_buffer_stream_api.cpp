@@ -260,21 +260,21 @@ MirNativeFence* mir_buffer_get_fence(MirBuffer*)
     return nullptr;
 }
 
-void mir_buffer_set_fence(MirBuffer*, MirNativeFence*, MirFenceType)
+void mir_buffer_associate_fence(MirBuffer*, MirNativeFence*, MirBufferAccess)
 {
 }
 
-int mir_buffer_wait_fence(MirBuffer*, MirFenceType, int)
+int mir_buffer_wait_fence(MirBuffer*, MirBufferAccess, int)
 {
     return 0;
 }
 
-MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirFenceType) 
+MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirBufferAccess) 
 {
     return nullptr;
 }
 
-MirGraphicsRegion* mir_buffer_lock(MirBuffer*, MirFenceType)
+MirGraphicsRegion* mir_buffer_lock(MirBuffer*, MirBufferAccess)
 {
     return nullptr;
 }

@@ -28,7 +28,7 @@ void fill_buffer(MirBuffer* buffer, int shade, int min, int max)
 {
     unsigned char val = (unsigned char) (((float) shade / (max-min)) + min) * 0xFF;
     
-    MirGraphicsRegion* region = mir_buffer_lock(buffer, mir_write_fence);
+    MirGraphicsRegion* region = mir_buffer_lock(buffer, mir_read_write);
     if (!region)
         return;
 

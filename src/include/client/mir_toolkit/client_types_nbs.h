@@ -32,12 +32,12 @@ extern "C" {
 typedef struct MirBuffer MirBuffer;
 typedef void* MirNativeFence;
 typedef void (*mir_buffer_callback)(MirBufferStream*, MirBuffer*, void* context);
-typedef enum MirFenceType
+typedef enum MirBufferAccess
 {
-    mir_no_fence,
-    mir_read_fence,
-    mir_write_fence
-} MirFenceType;
+    mir_none,
+    mir_read,
+    mir_read_write,
+} MirBufferAccess;
 
 #ifdef __cplusplus
 }
