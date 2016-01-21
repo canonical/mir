@@ -489,8 +489,6 @@ TEST_F(NestedServer, shell_sees_set_scaling_factor)
 
     configurator->set_base_configuration(config);
 
-    auto base_configuration_now_set = std::make_shared<mt::Signal>();
-
     /* Now, because we have absolutely no idea when the call to set_base_configuration will *actually*
      * set the base configuration we get to poll configuration() until we see that it's actually changed.
      */
