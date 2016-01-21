@@ -61,12 +61,6 @@ void populate_valid(MirPlatformPackage& pkg)
     pkg.fd[0] = 23;
 }
 
-void safely_unload(std::shared_ptr<mir::client::ClientPlatform>& platform)
-{
-    ASSERT_TRUE(platform.unique());
-    platform.reset();
-}
-
 }
 
 TEST(ProbingClientPlatformFactory, ThrowsErrorWhenConstructedWithNoPlatforms)
@@ -122,7 +116,7 @@ TEST(ProbingClientPlatformFactory, DoesNotLeakTheUsedDriverModuleOnShutdown)
     ASSERT_FALSE(loaded(preferred_module));
     platform = factory.create_client_platform(&context);
     ASSERT_TRUE(loaded(preferred_module));
-    safely_unload(platform);
+    platform.reset();
     EXPECT_FALSE(loaded(preferred_module));
 }
 
@@ -155,9 +149,9 @@ TEST(ProbingClientPlatformFactory, DoesNotLeakUnusedDriverModulesOnStartup)
     nloaded = 0;
     for (auto const& m : modules)
         if (loaded(m)) ++nloaded;
-    EXPECT_EQ(1, nloaded);  // expect not assert, because we need safely_unload
+    EXPECT_EQ(1, nloaded);  // expect not assert, because we need to safely unload
 
-    safely_unload(platform);
+    platform.reset();
 
     nloaded = 0;
     for (auto const& m : modules)
@@ -190,7 +184,7 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformWhenAppropriate)
                            }));
     auto platform = factory.create_client_platform(&context);
     EXPECT_EQ(mir_platform_type_gbm, platform->platform_type());
-    safely_unload(platform);
+    platform.reset();
 }
 
 #ifdef MIR_BUILD_PLATFORM_ANDROID
@@ -217,7 +211,7 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesAndroidPlatformWhenAppropriat
 
     auto platform = factory.create_client_platform(&context);
     EXPECT_EQ(mir_platform_type_android, platform->platform_type());
-    safely_unload(platform);
+    platform.reset();
 }
 
 TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
@@ -242,5 +236,5 @@ TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
                            }));
 
     auto platform = factory.create_client_platform(&context);
-    safely_unload(platform);
+    platform.reset();
 }
