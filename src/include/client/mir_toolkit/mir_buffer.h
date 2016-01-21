@@ -84,7 +84,8 @@ void mir_buffer_unlock(MirGraphicsRegion* region);
 MirNativeFence* mir_buffer_get_fence(MirBuffer*);
 
 /**
- * Set the native fence associated with this buffer
+ * Protect the buffer's contents by associating a native fence with it.
+ *
  *   \warning                 any fence currently associated with buffer will be replaced in favor
  *                            of native_fence without waiting for the replaced fence to clear
  *   \param [in] buffer       The buffer
