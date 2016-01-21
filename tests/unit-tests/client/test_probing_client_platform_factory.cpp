@@ -184,7 +184,6 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformWhenAppropriate)
                            }));
     auto platform = factory.create_client_platform(&context);
     EXPECT_EQ(mir_platform_type_gbm, platform->platform_type());
-    platform.reset();
 }
 
 #ifdef MIR_BUILD_PLATFORM_ANDROID
@@ -211,7 +210,6 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesAndroidPlatformWhenAppropriat
 
     auto platform = factory.create_client_platform(&context);
     EXPECT_EQ(mir_platform_type_android, platform->platform_type());
-    platform.reset();
 }
 
 TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
@@ -236,5 +234,4 @@ TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
                            }));
 
     auto platform = factory.create_client_platform(&context);
-    platform.reset();
 }
