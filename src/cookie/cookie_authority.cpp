@@ -162,11 +162,11 @@ public:
         auto ptr = raw_cookie.data();
         ptr++;
 
+        memcpy(&timestamp, ptr, 8);
+        ptr += sizeof(timestamp);
+
         // FIXME Soon to be 20 bytes
         std::vector<uint8_t> mac(8);
-
-        timestamp = *(reinterpret_cast<uint64_t const*>(ptr));
-        ptr += sizeof(timestamp);
         memcpy(mac.data(), ptr, mac.size());
 
         std::unique_ptr<mir::cookie::MirCookie> cookie(new mir::cookie::HMACMirCookie(timestamp, mac, mir::cookie::Format::hmac_sha_1_8));
