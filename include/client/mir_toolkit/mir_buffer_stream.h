@@ -127,8 +127,9 @@ void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream);
  *
  * \deprecated Use of this function is inherently non-portable in the presence
  * of plug-in platform modules as these need not correspond to the available
- * types. Use mir_buffer_stream_get_graphics_region() to safely interpret the
- * buffer contents.
+ * types. To identify the graphics platform use
+ * mir_connection_get_graphics_module(). To safely interpret the
+ * buffer contents use mir_buffer_stream_get_graphics_region().
  *
  * \todo This should be removed from the public API at the next API break.
  *
