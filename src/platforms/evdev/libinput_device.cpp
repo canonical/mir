@@ -167,9 +167,8 @@ mir::EventUPtr mie::LibInputDevice::convert_motion_event(libinput_event_pointer*
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
 
-    mir::geometry::Displacement const movement{
-        libinput_event_pointer_get_dx(pointer),
-        libinput_event_pointer_get_dy(pointer)};
+    mir::geometry::Displacement const movement{libinput_event_pointer_get_dx(pointer),
+                                               libinput_event_pointer_get_dy(pointer)};
 
     return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, movement.dx.as_float(),
                                   movement.dy.as_float());
@@ -336,15 +335,18 @@ mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settin
     if (!contains(info.capabilities, mi::DeviceCapability::pointer))
         return {};
 
-    auto dev = device();
-    auto accel_bias = libinput_device_config_accel_get_speed(dev);
-    auto left_handed = (libinput_device_config_left_handed_get(dev) == 1);
-
     mi::PointerSettings settings;
-    settings.cursor_acceleration_bias = accel_bias;
+    auto dev = device();
+    auto const left_handed = (libinput_device_config_left_handed_get(dev) == 1);
+    settings.handedness = left_handed? mir_pointer_handedness_left : mir_pointer_handedness_right;
+    if (libinput_device_config_accel_get_profile(dev) == LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT)
+        settings.acceleration = mir_pointer_acceleration_none;
+    else
+        settings.acceleration = mir_pointer_acceleration_adaptive;
+
+    settings.cursor_acceleration_bias = libinput_device_config_accel_get_speed(dev);
     settings.vertical_scroll_scale = vertical_scroll_scale;
     settings.horizontal_scroll_scale = horizontal_scroll_scale;
-    settings.handedness = left_handed? mir_pointer_handedness_left : mir_pointer_handedness_right;
     return settings;
 }
 
@@ -354,10 +356,15 @@ void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& sett
         return;
 
     auto dev = device();
+
+    auto accel_profile = settings.acceleration == mir_pointer_acceleration_adaptive ?
+        LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE :
+        LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT;
     libinput_device_config_accel_set_speed(dev, settings.cursor_acceleration_bias);
     libinput_device_config_left_handed_set(dev, mir_pointer_handedness_left == settings.handedness);
     vertical_scroll_scale = settings.vertical_scroll_scale;
     horizontal_scroll_scale = settings.horizontal_scroll_scale;
+    libinput_device_config_accel_set_profile(dev, accel_profile);
 }
 
 mir::optional_value<mi::TouchpadSettings> mie::LibInputDevice::get_touchpad_settings() const
