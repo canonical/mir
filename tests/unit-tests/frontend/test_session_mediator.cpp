@@ -1300,3 +1300,13 @@ TEST_F(SessionMediator, sanitizes_base_display_configuration_before_setting)
     mediator->connect(&connect_parameters, &connection, null_callback.get());
     mediator->set_base_display_configuration(&request, &response, null_callback.get());
 }
+
+TEST_F(SessionMediator, raise_with_invalid_cookie_throws)
+{
+    mp::RaiseRequest raise_request;
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+
+    EXPECT_THROW({
+        mediator.raise_surface_with_cookie(&raise_request, &void_response, null_callback.get());
+    }, mir::cookie::SecurityCheckFailed);
+}
