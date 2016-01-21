@@ -5,13 +5,20 @@ add_library(
   mirplatformservermesax11sharedresources OBJECT
   X11_resources.cpp
 )
-add_library(
-    mirplatformservermesax11 MODULE
-    $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
-    $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
-    $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects-symbols>
-    $<TARGET_OBJECTS:mirplatforminputmesax11objects>
-    $<TARGET_OBJECTS:mirplatforminputmesax11objects-symbols>)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
+    ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
+set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
+
+mir_add_library_with_symbols(mirplatformservermesax11 MODULE
+  ${symbol_map}
+
+  $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
+  $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
+  $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects-symbols>
+  $<TARGET_OBJECTS:mirplatforminputmesax11objects>
+  $<TARGET_OBJECTS:mirplatforminputmesax11objects-symbols>
+)
 
 
 target_link_libraries(
@@ -26,10 +33,6 @@ target_link_libraries(
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
 )
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
-    ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
-set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
 set_target_properties(
   mirplatformservermesax11 PROPERTIES
