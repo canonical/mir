@@ -4,6 +4,20 @@ mir (0.19.0-0ubuntu1) UNRELEASED; urgency=medium
 
  -- Kevin DuBois <kevin.dubois@canonical.com>  Tue, 22 Dec 2015 14:05:47 -0500
 
+mir (0.18.1+16.04.20160115-0ubuntu1) xenial; urgency=medium
+
+  [ Andreas Pokorny ]
+  * New upstream release 0.18.1 (https://launchpad.net/mir/+milestone/0.18.1)
+    - No ABI changes. Bug fix release only.
+    - Bug fixed:
+      . [regression] pinch to zoom not working reliably (LP: #1531517)
+    
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- kevin gunn <kevin.gunn@canonical.com>  Fri, 15 Jan 2016 11:45:05 +0000
+
 mir (0.18.0+16.04.20151216.1-0ubuntu1) xenial; urgency=medium
 
   [ Kevin DuBois ]
@@ -124,7 +138,10 @@ mir (0.18.0+16.04.20151216.1-0ubuntu1) xenial; urgency=medium
       . Cross compiling Mir from a xenial host fails (dpkg-checkbuilddeps:
         error: Unmet build dependencies: ...) (LP: #1523801)
 
- -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 30 Nov 2015 14:09:31 -0500
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Wed, 16 Dec 2015 18:24:40 +0000
 
 mir (0.17.1+16.04.20151105.1-0ubuntu1) xenial; urgency=medium
 
