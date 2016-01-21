@@ -338,7 +338,10 @@ std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
         PRINT_EVENT(surface);
         PRINT_EVENT(resize);
         PRINT_EVENT(orientation);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         PRINT_EVENT(close_surface);
+#pragma GCC diagnostic pop
         PRINT_EVENT(input);
         PRINT_EVENT(keymap);
     case mir_event_type_prompt_session_state_change:
