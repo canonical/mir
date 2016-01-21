@@ -265,7 +265,6 @@ Description: API documentation for mir
 
 Package: mir-test-tools
 Architecture: linux-any
-Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
