@@ -274,11 +274,11 @@ MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirBufferAccess)
     return nullptr;
 }
 
-MirGraphicsRegion* mir_buffer_lock(MirBuffer*, MirBufferAccess)
+MirGraphicsRegion* mir_buffer_acquire_region(MirBuffer*, MirBufferAccess)
 {
     return nullptr;
 }
 
-void mir_buffer_unlock(MirGraphicsRegion*) 
+void mir_buffer_release_region(MirGraphicsRegion*) 
 {
 }

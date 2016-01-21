@@ -34,16 +34,16 @@ extern "C" {
  * Note: the following functions (mir_buffer_get_native_buffer, mir_buffer_lock, mir_buffer_unlock)
  * can only be used when the buffer is not submitted to the server.
  *
- * These functions will implicitly clear the fences designated when called.
- * If used with mir_none, no fences will be cleared, and the user is left to manage fences
- * to ensure that the buffer contents are not accessed at inapproprate times.
+ * These functions will wait until it is safe to access the buffer for the given purpose.
+ * If used with mir_none, the buffer will be given the buffer immediately, and without synchronization.
+ * It is then up to the user to ensure that the buffer contents are not accessed at inapproprate times.
  **/
 
-/** The native buffer associated with MirBuffer
- *  This will clear the buffers fence (allowing for write access)
+/** Access the native buffer associated with MirBuffer for a given purpose.
+ *  This will synchronize the buffer for the given purpose.
  *
  *   \param [in] buffer    The buffer
- *   \param [in] type      The type of fence to clear before returning.
+ *   \param [in] access    The access that is needed for the native buffers content.
  *   \return               The platform-defined native buffer associated with buffer
  *   \warning              The returned native buffer has the same lifetime as the MirBuffer.
  *                         It must not be deleted or past the lifetime of the buffer.
@@ -53,9 +53,8 @@ extern "C" {
  **/
 MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirBufferAccess access);
 
-/** access a CPU-mapped region associated with a given buffer. If the fence
- *  associated with the buffer needs clearing, this function will wait for the
- *  fence to signal.
+/** Access a CPU-mapped region associated with a given buffer for the given purpose.
+ *  This will synchronize the buffer for the given purpose.
  *
  *   \param [in] buffer    The buffer
  *   \param [in] type      The type of fence to clear before returning.
@@ -67,12 +66,12 @@ MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirBufferAccess access
  *             wait for the fence. The user must wait for the fence explicitly
  *             before using the contents of the buffer.
  **/
-MirGraphicsRegion* mir_buffer_lock(MirBuffer *buffer, MirBufferAccess access);
+MirGraphicsRegion* mir_buffer_acquire_region(MirBuffer *buffer, MirBufferAccess access);
 
 /** relinquish access to a CPU-mapped region associated with a buffer.
  *   \param [in] region       The region
  **/
-void mir_buffer_unlock(MirGraphicsRegion* region);
+void mir_buffer_release_region(MirGraphicsRegion* region);
 
 /**
  * Retreive the native fence associated with this buffer
