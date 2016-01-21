@@ -149,7 +149,7 @@ TEST(ProbingClientPlatformFactory, DoesNotLeakUnusedDriverModulesOnStartup)
     nloaded = 0;
     for (auto const& m : modules)
         if (loaded(m)) ++nloaded;
-    EXPECT_EQ(1, nloaded);  // expect not assert, because we need to safely unload
+    EXPECT_EQ(1, nloaded);
 
     platform.reset();
 
