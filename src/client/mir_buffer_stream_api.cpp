@@ -255,11 +255,6 @@ bool mir_buffer_stream_submit_buffer(MirBufferStream*, MirBuffer* buffer)
     return true;
 }
 
-MirFenceType mir_buffer_get_fence_type(MirBuffer*)
-{
-    return mir_no_fence;
-}
-
 MirNativeFence* mir_buffer_get_fence(MirBuffer*)
 {
     return nullptr;

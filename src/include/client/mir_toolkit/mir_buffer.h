@@ -29,12 +29,6 @@
 extern "C" {
 #endif
 
-/** determine if the content in the MirBuffer is available for the given operation.
- *   \param [in] buffer     The buffer
- *   \return                The fence type protecting this buffer
- **/
-MirFenceType mir_buffer_get_fence_type(MirBuffer);
-
 /**
  * Retreive the native fence associated with this buffer
  *
