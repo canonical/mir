@@ -535,22 +535,26 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
 
     Client client{nested_mir};
 
-    auto surface = mtf::make_any_surface(client.connection);
+    auto spec = mir_connection_create_spec_for_normal_surface(client.connection,
+        800, 600,
+        mir_pixel_format_abgr_8888);
 
     mt::Signal surface_event_received;
-    mir_surface_set_event_handler(surface, [](MirSurface*, MirEvent const* event, void* ctx)
+    mir_surface_spec_set_event_handler(spec, [](MirSurface*, MirEvent const* event, void* ctx)
         {
             if (mir_event_get_type(event) == mir_event_type_surface_output)
             {
                 auto surface_event = mir_event_get_surface_output_event(event);
                 EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_event), Eq(expected_form_factor));
                 EXPECT_THAT(mir_surface_output_event_get_scale(surface_event), Eq(expected_scale));
-
                 auto signal = static_cast<mt::Signal*>(ctx);
                 signal->raise();
             }
         },
         &surface_event_received);
+
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
 
     auto stream = mir_surface_get_buffer_stream(surface);
     mir_buffer_stream_swap_buffers_sync(stream);
