@@ -104,6 +104,12 @@ public:
     */
     virtual std::unique_ptr<Cookie> make_cookie(std::vector<uint8_t> const& raw_cookie) = 0;
 
+    /**
+    * Absolute minimum size of secret key the CookieFactory will accept.
+    *
+    * Code should be using optimum_secret_size(); this minimum size is provided
+    * as a user convenience to guard against catastrophically bad initialisation.
+    */
     static unsigned const minimum_secret_size = 8;
 protected:
     Authority() = default;
