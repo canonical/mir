@@ -36,7 +36,7 @@ public:
     mir::cookie::Blob blob() const;
 
 private:
-    mir::cookie::Blob blob_{};
+    mir::cookie::Blob blob_;
 };
 
 #endif // MIR_CLIENT_MIR_COOKIE_H_
