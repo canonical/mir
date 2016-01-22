@@ -278,14 +278,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirOrientationEvent const& even
 
 std::ostream& mir::operator<<(std::ostream& out, MirKeymapEvent const& event)
 {
-    xkb_rule_names names;
-    mir_keymap_event_get_rules(&event, &names);
-    return out << "keymap_event("
-        << (names.rules?names.rules:"default rules") << ", "
-        << (names.model?names.model:"default model") << ", "
-        << (names.layout?names.layout:"default layout") << ", "
-        << (names.variant?names.variant:"no variant") << ", "
-        << (names.options?names.options:"no options") << ")";
+    return out << "keymap_event(blob, device_id=" << mir_keymap_event_get_device_id(&event) << ")";
 }
 
 std::ostream& mir::operator<<(std::ostream& out, MirCloseSurfaceEvent const&)

@@ -599,18 +599,15 @@ TEST_F(TestClientInput, clients_receive_keymap_change_events)
 {
     Client first_client(new_connection(), first);
 
-    xkb_rule_names names;
-    names.rules = "evdev";
-    names.model = "pc105";
-    names.layout = "dvorak";
-    names.variant = "";
-    names.options = "";
+    std::string const model = "pc105";
+    std::string const layout = "dvorak";
+    MirInputDeviceId const id = 1;
 
-    EXPECT_CALL(first_client, handle_keymap(mt::KeymapEventWithRules(names)))
+    EXPECT_CALL(first_client, handle_keymap(mt::KeymapEventForDevice(id)))
         .Times(1)
         .WillOnce(mt::WakeUp(&first_client.all_events_received));
 
-    server.the_shell()->focused_surface()->set_keymap(names);
+    server.the_shell()->focused_surface()->set_keymap(id, model, layout, "", "");
     first_client.all_events_received.wait_for_at_most_seconds(2);
 }
 
@@ -618,12 +615,10 @@ TEST_F(TestClientInput, keymap_changes_change_keycode_received)
 {
     Client first_client(new_connection(), first);
 
-    xkb_rule_names names;
-    names.rules = "evdev";
-    names.model = "pc105";
-    names.layout = "us";
-    names.variant = "dvorak";
-    names.options = "";
+    MirInputDeviceId const id = 1;
+    std::string const model = "pc105";
+    std::string const layout = "us";
+    std::string const variant = "dvorak";
 
     mt::WaitCondition first_event_received,
         client_sees_keymap_change;
@@ -632,7 +627,7 @@ TEST_F(TestClientInput, keymap_changes_change_keycode_received)
     EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_n))));
     EXPECT_CALL(first_client, handle_input(mt::KeyUpEvent()))
         .WillOnce(mt::WakeUp(&first_event_received));
-    EXPECT_CALL(first_client, handle_keymap(mt::KeymapEventWithRules(names)))
+    EXPECT_CALL(first_client, handle_keymap(mt::KeymapEventForDevice(id)))
         .WillOnce(mt::WakeUp(&client_sees_keymap_change));
 
     EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_b))));
@@ -644,7 +639,7 @@ TEST_F(TestClientInput, keymap_changes_change_keycode_received)
 
     first_event_received.wait_for_at_most_seconds(60);
 
-    server.the_shell()->focused_surface()->set_keymap(names);
+    server.the_shell()->focused_surface()->set_keymap(id, model, layout, variant, "");
 
     client_sees_keymap_change.wait_for_at_most_seconds(60);
 

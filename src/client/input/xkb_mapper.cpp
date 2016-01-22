@@ -19,43 +19,60 @@
 #include "mir/input/xkb_mapper.h"
 #include "mir/events/event_private.h"
 
-namespace mircv = mir::input::receiver;
+#include <boost/throw_exception.hpp>
+
+namespace mi = mir::input;
+namespace mircv = mi::receiver;
+
+mi::XKBContextPtr mi::make_unique_context()
+{
+    return {xkb_context_new(xkb_context_flags(0)), &xkb_context_unref};
+}
+
+mi::XKBKeymapPtr mi::make_unique_keymap(xkb_context *context, std::string const &model, std::string const &layout,
+                                std::string const &variant, std::string const &options)
+{
+    xkb_rule_names keymap_names
+    {
+        "evdev",
+        model.c_str(),
+        layout.c_str(),
+        variant.c_str(),
+        options.c_str()
+    };
+    return {xkb_keymap_new_from_names(context, &keymap_names, xkb_keymap_compile_flags(0)), &xkb_keymap_unref};
+}
+
+mi::XKBKeymapPtr mi::make_unique_keymap(xkb_context* context, char const* buffer, size_t size)
+{
+    return {xkb_keymap_new_from_buffer(context, buffer, size, XKB_KEYMAP_FORMAT_TEXT_V1, xkb_keymap_compile_flags(0)),
+            &xkb_keymap_unref};
+}
+
+using XKBStatePtr = std::unique_ptr<xkb_state, void(*)(xkb_state*)>;
+mi::XKBStatePtr mi::make_unique_state(xkb_keymap* keymap)
+{
+    return {xkb_state_new(keymap), xkb_state_unref};
+}
 
 namespace
 {
-struct XKBContextDeleter
+void do_nothing_with_xkb_state(xkb_state*) {}
+mi::XKBStatePtr make_empty_state()
 {
-    void operator()(xkb_context *c)
-    {
-        xkb_context_unref(c);
-    }
-};
-struct XKBKeymapDeleter
-{
-    void operator()(xkb_keymap *k)
-    {
-        xkb_map_unref(k);
-    }
-};
-struct XKBStateDeleter
-{
-    void operator()(xkb_state *s)
-    {
-        xkb_state_unref(s);
-    }
-};
+    return {nullptr, &do_nothing_with_xkb_state};
+}
 }
 
-mircv::XKBMapper::XKBMapper()
+mircv::XKBMapper::XKBMapper() :
+    context(make_unique_context()),
+    keymap(make_unique_keymap(context.get(), "pc105+inet", "us", "", "")),
+    state(make_empty_state())
 {
-    xkb_rule_names names;
-    names.rules = "evdev";
-    names.model = "pc105";
-    names.layout = "us";
-    names.variant = "";
-    names.options = "";
-
-    set_rules(names);
+    if (keymap.get())
+        state = make_unique_state(keymap.get());
+    else
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create keymap"));
 }
 
 namespace
@@ -82,12 +99,12 @@ static xkb_keysym_t keysym_for_scan_code(xkb_state *state, uint32_t xkb_scan_cod
 
 }
 
-void mircv::XKBMapper::update_state_and_map_event(MirEvent &ev)
+void mircv::XKBMapper::update_state_and_map_event(MirEvent& ev)
 {
     std::lock_guard<std::mutex> lg(guard);
-    
-    auto &key_ev = ev.key;
-                              
+
+    auto& key_ev = ev.key;
+
     xkb_key_direction direction = XKB_KEY_DOWN;
 
     bool update_state = true;
@@ -105,11 +122,19 @@ void mircv::XKBMapper::update_state_and_map_event(MirEvent &ev)
     key_ev.key_code = keysym_for_scan_code(state.get(), xkb_scan_code);
 }
 
-void mircv::XKBMapper::set_rules(xkb_rule_names const& names)
+// id should be used in the future to implement per device keymaps
+void mircv::XKBMapper::set_keymap(MirInputDeviceId /*id*/, XKBKeymapPtr new_keymap)
 {
     std::lock_guard<std::mutex> lg(guard);
 
-    context = std::shared_ptr<xkb_context>(xkb_context_new(xkb_context_flags(0)), XKBContextDeleter());
-    map = std::shared_ptr<xkb_keymap>(xkb_map_new_from_names(context.get(), &names, xkb_map_compile_flags(0)), XKBKeymapDeleter());
-    state = std::shared_ptr<xkb_state>(xkb_state_new(map.get()), XKBStateDeleter());
+    if(new_keymap.get())
+    {
+        keymap = std::move(new_keymap);
+        state = make_unique_state(keymap.get());
+    }
+}
+
+xkb_context* mircv::XKBMapper::get_context() const
+{
+    return context.get();
 }

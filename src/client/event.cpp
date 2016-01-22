@@ -29,8 +29,8 @@
 #include "mir_toolkit/events/prompt_session_event.h"
 #include "mir_toolkit/events/orientation_event.h"
 
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 namespace ml = mir::logging;
 
@@ -202,10 +202,19 @@ MirOrientation mir_orientation_event_get_direction(MirOrientationEvent const* ev
 
 /* Keymap event accessors */
 
-void mir_keymap_event_get_rules(MirKeymapEvent const* ev, xkb_rule_names *out_names)
+void mir_keymap_event_get_keymap_buffer(MirKeymapEvent const* ev, char const** buffer, size_t* length)
 {
     expect_event_type(ev, mir_event_type_keymap);
-    *out_names = ev->rules;
+
+    *buffer = ev->buffer;
+    *length = ev->size;
+}
+
+MirInputDeviceId mir_keymap_event_get_device_id(MirKeymapEvent const* ev)
+{
+    expect_event_type(ev, mir_event_type_keymap);
+
+    return ev->device_id;
 }
 
 /* Input configuration event accessors */
@@ -260,6 +269,14 @@ MirEvent const* mir_event_ref(MirEvent const* ev)
 {
     MirEvent *new_ev = new MirEvent;
     memcpy(new_ev, ev, sizeof(MirEvent));
+
+    if (mir_event_get_type(new_ev) == mir_event_type_keymap)
+    {
+        // malloc to match xkbcommons allocation behavior
+        auto buffer  = static_cast<char*>(malloc(new_ev->keymap.size));
+        std::memcpy(buffer, ev->keymap.buffer, new_ev->keymap.size);
+        new_ev->keymap.buffer = buffer;
+    }
     return new_ev;
 }
 
