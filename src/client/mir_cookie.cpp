@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Brandon Schaefer <brandon.schaefer@gmail.com>
+ * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
 #include "mir_cookie.h"
@@ -29,7 +29,7 @@ MirCookie::MirCookie(void const* buffer, size_t size)
 }
 
 MirCookie::MirCookie(mir::cookie::Blob const& blob) :
-    blob_{blob}
+    blob_(blob)
 {
 }
 
