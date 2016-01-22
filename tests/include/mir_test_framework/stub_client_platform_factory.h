@@ -20,9 +20,24 @@
 #define MIR_TEST_FRAMEWORK_STUB_CLIENT_PLATFORM_FACTORY_
 
 #include "mir/client_platform_factory.h"
+#include "mir/client_platform.h"
 
 namespace mir_test_framework
 {
+
+struct StubClientPlatform : public mir::client::ClientPlatform
+{
+    StubClientPlatform(mir::client::ClientContext* context);
+    MirPlatformType platform_type() const;
+    void populate(MirPlatformPackage& package) const;
+    MirPlatformMessage* platform_operation(MirPlatformMessage const*) override;
+    std::shared_ptr<mir::client::ClientBufferFactory> create_buffer_factory();
+    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mir::client::EGLNativeSurface* surface);
+    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display();
+    MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer* buf) const;
+    MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
+    mir::client::ClientContext* const context;
+};
 
 struct StubClientPlatformFactory : public mir::client::ClientPlatformFactory
 {

@@ -20,7 +20,9 @@ include_directories(
 set(MIRCOOKIE_ABI 2)
 set(symbol_map ${CMAKE_SOURCE_DIR}/src/cookie/symbols.map)
 
-add_library(mircookie SHARED
+mir_add_library_with_symbols(mircookie SHARED
+
+  ${symbol_map}
   authority.cpp
   hmac_cookie.cpp
 )

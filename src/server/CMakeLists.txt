@@ -91,7 +91,8 @@ set(MIR_SERVER_REFERENCES
 set(MIR_SERVER_OBJECTS ${MIR_SERVER_OBJECTS} PARENT_SCOPE)
 set(MIR_SERVER_REFERENCES ${MIR_SERVER_REFERENCES} PARENT_SCOPE)
 
-add_library(mirserver SHARED
+mir_add_library_with_symbols(mirserver SHARED
+  symbols.map
   ${MIR_SERVER_OBJECTS}
 )
 
