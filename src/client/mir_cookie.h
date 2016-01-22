@@ -25,8 +25,6 @@
 class MirCookie
 {
 public:
-    MirCookie() = delete;
-
     explicit MirCookie(void const* buffer, size_t size);
     explicit MirCookie(mir::cookie::Blob const& blob);
 

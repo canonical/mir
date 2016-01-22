@@ -24,7 +24,6 @@
 
 MirCookie::MirCookie(void const* buffer, size_t size)
 {
-    mir::require(size == mir::cookie::default_blob_size);
     memcpy(blob_.data(), buffer, size);
 }
 

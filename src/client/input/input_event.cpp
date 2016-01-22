@@ -436,7 +436,7 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev)
     return false;
 }
 
-size_t mir_cookie_size(MirCookie const* cookie)
+size_t mir_cookie_buffer_size(MirCookie const* cookie)
 {
     return cookie->size();
 }
@@ -466,6 +466,9 @@ void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size)
 
 MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size)
 {
+    if (size != mir::cookie::default_blob_size)
+        return NULL;
+
     return new MirCookie(buffer, size);
 }
 
