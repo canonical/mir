@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,9 +16,11 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
+#include "make_empty_event.h"
 #include "mir/events/serialization.h"
 #include "mir/events/event_private.h"
 
+#include <boost/throw_exception.hpp>
 #include <cstring>
 
 namespace mev = mir::events;
@@ -66,12 +68,14 @@ std::string mev::serialize_event(MirEvent const& event)
     }
 }
 
-bool  mev::deserialize_event(MirEvent& event, std::string const& raw)
+mir::EventUPtr mev::deserialize_event(std::string const& raw)
 {
+    auto ev = make_empty_event();
+    auto& event = *ev;
     auto minimal_event_size = sizeof event.type;
     auto const stream_size = raw.size();
     if (stream_size < minimal_event_size)
-        return false;
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to deserialize event"));
 
     char const* pos = consume(raw.data(), event.type);
 
@@ -83,7 +87,7 @@ bool  mev::deserialize_event(MirEvent& event, std::string const& raw)
         minimal_event_size += sizeof keymap.surface_id + sizeof keymap.device_id + sizeof keymap.size;
 
         if (stream_size < minimal_event_size)
-            return false;
+            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to deserialize event"));
         pos = consume(pos, keymap.surface_id);
         pos = consume(pos, keymap.device_id);
         pos = consume(pos, keymap.size);
@@ -91,15 +95,17 @@ bool  mev::deserialize_event(MirEvent& event, std::string const& raw)
         minimal_event_size += keymap.size;
 
         if (stream_size < minimal_event_size)
-            return false;
+            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to deserialize event"));
 
         auto buffer  = static_cast<char*>(malloc(keymap.size));
         std::memcpy(buffer, pos, keymap.size);
         keymap.buffer = buffer;
-        return true;
+        break;
     }
     default:
         consume(raw.data(), event);
-        return true;
+        break;
     }
+
+    return ev;
 }

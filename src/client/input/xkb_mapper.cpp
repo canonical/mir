@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -29,8 +29,8 @@ mi::XKBContextPtr mi::make_unique_context()
     return {xkb_context_new(xkb_context_flags(0)), &xkb_context_unref};
 }
 
-mi::XKBKeymapPtr mi::make_unique_keymap(xkb_context *context, std::string const &model, std::string const &layout,
-                                std::string const &variant, std::string const &options)
+mi::XKBKeymapPtr mi::make_unique_keymap(xkb_context* context, std::string const& model, std::string const& layout,
+                                std::string const& variant, std::string const& options)
 {
     xkb_rule_names keymap_names
     {
@@ -84,9 +84,9 @@ static uint32_t to_xkb_scan_code(uint32_t evdev_scan_code)
     return evdev_scan_code + 8;
 }
 
-static xkb_keysym_t keysym_for_scan_code(xkb_state *state, uint32_t xkb_scan_code)
+static xkb_keysym_t keysym_for_scan_code(xkb_state* state, uint32_t xkb_scan_code)
 {
-    const xkb_keysym_t *syms;
+    const xkb_keysym_t* syms;
     uint32_t num_syms = xkb_key_get_syms(state, xkb_scan_code, &syms);
 
     if (num_syms == 1)

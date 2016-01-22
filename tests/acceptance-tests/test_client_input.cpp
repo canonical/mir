@@ -626,7 +626,7 @@ TEST_F(TestClientInput, keymap_changes_change_keycode_received)
     InSequence seq;
     EXPECT_CALL(first_client, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_n))));
     EXPECT_CALL(first_client, handle_input(mt::KeyUpEvent()))
-        .WillOnce(mt::WakeUp(&first_event_received));
+         .WillOnce(mt::WakeUp(&first_event_received));
     EXPECT_CALL(first_client, handle_keymap(mt::KeymapEventForDevice(id)))
         .WillOnce(mt::WakeUp(&client_sees_keymap_change));
 
@@ -647,6 +647,25 @@ TEST_F(TestClientInput, keymap_changes_change_keycode_received)
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_N));
 
     first_client.all_events_received.wait_for_at_most_seconds(5);
+}
+
+
+TEST_F(TestClientInput, sends_no_wrong_keymaps_to_clients)
+{
+    Client first_client(new_connection(), first);
+
+    MirInputDeviceId const id = 1;
+    std::string const model = "thargoid207";
+    std::string const layout = "polaris";
+
+    mt::WaitCondition first_event_received,
+        client_sees_keymap_change;
+
+    EXPECT_CALL(first_client, handle_keymap(mt::KeymapEventForDevice(id))).Times(0);
+
+    EXPECT_THROW(
+        {server.the_shell()->focused_surface()->set_keymap(id, model, layout, "", "");},
+        std::runtime_error);
 }
 
 TEST_F(TestClientInput, event_filter_may_consume_events)
