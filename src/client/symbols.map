@@ -261,6 +261,15 @@ MIR_CLIENT_DETAIL_9v18 {
     };
 } MIR_CLIENT_DETAIL_9;
 
+MIR_CLIENT_DETAIL_9v19 {
+  global:
+    extern "C++" { 
+      mir::input::android::android_pointer_action_from_mir*;
+    };
+  local:
+    *;
+} MIR_CLIENT_DETAIL_9v18;
+
 MIR_CLIENT_DETAIL_unreleased {
   global:
     mir_buffer_stream_allocate_buffer;
@@ -272,9 +281,6 @@ MIR_CLIENT_DETAIL_unreleased {
     mir_buffer_get_native_buffer;
     mir_buffer_acquire_region;
     mir_buffer_release_region;
-    extern "C++" { 
-      mir::input::android::android_pointer_action_from_mir*;
-    };
   local:
     *;
-} MIR_CLIENT_DETAIL_9v18;
+} MIR_CLIENT_DETAIL_9v19;
