@@ -30,7 +30,11 @@ namespace cookie
 class Cookie
 {
 public:
+    Cookie() = default;
     virtual ~Cookie() = default;
+
+    Cookie(Cookie const& cookie) = delete;
+    Cookie& operator=(Cookie const& cookie) = delete;
 
     /**
     *  Returns the timestamp that the cookie is built with

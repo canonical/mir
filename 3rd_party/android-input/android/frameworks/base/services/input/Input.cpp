@@ -127,7 +127,7 @@ void KeyEvent::initialize(
         int32_t scanCode,
         int32_t metaState,
         int32_t repeatCount,
-        mir::cookie::Blob const& cookie,
+        mir::cookie::Blob const& cookieBlob,
         std::chrono::nanoseconds downTime,
         std::chrono::nanoseconds eventTime) {
     InputEvent::initialize(deviceId, source);
@@ -137,7 +137,7 @@ void KeyEvent::initialize(
     mScanCode = scanCode;
     mMetaState = metaState;
     mRepeatCount = repeatCount;
-    mCookie = cookie;
+    mCookieBlob = cookieBlob;
     mDownTime = downTime;
     mEventTime = eventTime;
 }
@@ -150,7 +150,7 @@ void KeyEvent::initialize(const KeyEvent& from) {
     mScanCode = from.mScanCode;
     mMetaState = from.mMetaState;
     mRepeatCount = from.mRepeatCount;
-    mCookie = from.mCookie;
+    mCookieBlob = from.mCookieBlob;
     mDownTime = from.mDownTime;
     mEventTime = from.mEventTime;
 }
@@ -294,7 +294,7 @@ void MotionEvent::initialize(
         float yOffset,
         float xPrecision,
         float yPrecision,
-        mir::cookie::Blob const& cookie,
+        mir::cookie::Blob const& cookieBlob,
         std::chrono::nanoseconds downTime,
         std::chrono::nanoseconds eventTime,
         size_t pointerCount,
@@ -310,7 +310,7 @@ void MotionEvent::initialize(
     mYOffset = yOffset;
     mXPrecision = xPrecision;
     mYPrecision = yPrecision;
-    mCookie = cookie;
+    mCookieBlob = cookieBlob;
     mDownTime = downTime;
     mPointerProperties.clear();
     mPointerProperties.appendArray(pointerProperties, pointerCount);
@@ -330,7 +330,7 @@ void MotionEvent::copyFrom(const MotionEvent* other, bool keepHistory) {
     mYOffset = other->mYOffset;
     mXPrecision = other->mXPrecision;
     mYPrecision = other->mYPrecision;
-    mCookie = other->mCookie;
+    mCookieBlob = other->mCookieBlob;
     mDownTime = other->mDownTime;
     mPointerProperties = other->mPointerProperties;
 

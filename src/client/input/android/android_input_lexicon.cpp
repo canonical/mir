@@ -39,7 +39,7 @@ mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_eve
         case AINPUT_EVENT_TYPE_KEY:
         {
             auto kev = static_cast<const droidinput::KeyEvent*>(android_event);
-            auto const cookie = kev->getCookie();
+            auto const cookie = kev->getCookieAsBlob();
             return mev::make_event(MirInputDeviceId(android_event->getDeviceId()),
                                    kev->getEventTime(),
                                    {std::begin(cookie), std::end(cookie)},
@@ -53,7 +53,7 @@ mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_eve
             if (mia::android_source_id_is_pointer_device(android_event->getSource()))
             {
                 auto mev = static_cast<const droidinput::MotionEvent*>(android_event);
-                auto const cookie = mev->getCookie();
+                auto const cookie = mev->getCookieAsBlob();
                 return mev::make_event(MirInputDeviceId(android_event->getDeviceId()),
                                        mev->getEventTime(),
                                        {std::begin(cookie), std::end(cookie)},
@@ -69,7 +69,7 @@ mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_eve
             else
             {
                 auto mev = static_cast<const droidinput::MotionEvent*>(android_event);
-                auto const cookie = mev->getCookie();
+                auto const cookie = mev->getCookieAsBlob();
                 auto ev = mev::make_event(MirInputDeviceId(android_event->getDeviceId()),
                                           mev->getEventTime(),
                                           {std::begin(cookie), std::end(cookie)},

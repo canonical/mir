@@ -236,7 +236,7 @@ status_t InputPublisher::publishKeyEvent(
         int32_t scanCode,
         int32_t metaState,
         int32_t repeatCount,
-        mir::cookie::Blob const& cookie,
+        mir::cookie::Blob const& cookieBlob,
         std::chrono::nanoseconds downTime,
         std::chrono::nanoseconds eventTime) {
 #if DEBUG_TRANSPORT_ACTIONS
@@ -264,7 +264,7 @@ status_t InputPublisher::publishKeyEvent(
     msg.body.key.scanCode = scanCode;
     msg.body.key.metaState = metaState;
     msg.body.key.repeatCount = repeatCount;
-    msg.body.key.cookie = cookie;
+    msg.body.key.cookieBlob = cookieBlob;
     msg.body.key.downTime = downTime.count();
     msg.body.key.eventTime = eventTime.count();
     return mChannel->sendMessage(&msg);
@@ -283,7 +283,7 @@ status_t InputPublisher::publishMotionEvent(
         float yOffset,
         float xPrecision,
         float yPrecision,
-        mir::cookie::Blob const& cookie,
+        mir::cookie::Blob const& cookieBlob,
         std::chrono::nanoseconds downTime,
         std::chrono::nanoseconds eventTime,
         size_t pointerCount,
@@ -325,7 +325,7 @@ status_t InputPublisher::publishMotionEvent(
     msg.body.motion.yOffset = yOffset;
     msg.body.motion.xPrecision = xPrecision;
     msg.body.motion.yPrecision = yPrecision;
-    msg.body.motion.cookie = cookie;
+    msg.body.motion.cookieBlob = cookieBlob;
     msg.body.motion.downTime = downTime.count();
     msg.body.motion.eventTime = eventTime.count();
     msg.body.motion.pointerCount = pointerCount;
@@ -882,7 +882,7 @@ void InputConsumer::initializeKeyEvent(KeyEvent* event, const InputMessage* msg)
             msg->body.key.scanCode,
             msg->body.key.metaState,
             msg->body.key.repeatCount,
-            msg->body.key.cookie,
+            msg->body.key.cookieBlob,
             std::chrono::nanoseconds(msg->body.key.downTime),
             std::chrono::nanoseconds(msg->body.key.eventTime));
 }
@@ -908,7 +908,7 @@ void InputConsumer::initializeMotionEvent(MotionEvent* event, const InputMessage
             msg->body.motion.yOffset,
             msg->body.motion.xPrecision,
             msg->body.motion.yPrecision,
-            msg->body.motion.cookie,
+            msg->body.motion.cookieBlob,
             std::chrono::nanoseconds(msg->body.motion.downTime),
             std::chrono::nanoseconds(msg->body.motion.eventTime),
             pointerCount,

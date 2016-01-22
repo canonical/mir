@@ -278,7 +278,7 @@ public:
 
     inline int32_t getRepeatCount() const { return mRepeatCount; }
 
-    inline mir::cookie::Blob const& getCookie() const { return mCookie; }
+    inline mir::cookie::Blob const& getCookieAsBlob() const { return mCookieBlob; }
 
     inline std::chrono::nanoseconds getDownTime() const { return mDownTime; }
 
@@ -313,7 +313,7 @@ protected:
     int32_t mScanCode;
     int32_t mMetaState;
     int32_t mRepeatCount;
-    mir::cookie::Blob mCookie;
+    mir::cookie::Blob mCookieBlob;
     std::chrono::nanoseconds mDownTime;
     std::chrono::nanoseconds mEventTime;
 };
@@ -360,7 +360,7 @@ public:
 
     inline float getYPrecision() const { return mYPrecision; }
 
-    inline mir::cookie::Blob const& getCookie() const { return mCookie; }
+    inline mir::cookie::Blob const& getCookieAsBlob() const { return mCookieBlob; }
 
     inline std::chrono::nanoseconds getDownTime() const { return mDownTime; }
 
@@ -563,7 +563,7 @@ protected:
     float mYOffset;
     float mXPrecision;
     float mYPrecision;
-    mir::cookie::Blob mCookie;
+    mir::cookie::Blob mCookieBlob;
     std::chrono::nanoseconds mDownTime;
     Vector<PointerProperties> mPointerProperties;
     Vector<std::chrono::nanoseconds> mSampleEventTimes;

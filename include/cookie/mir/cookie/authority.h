@@ -24,7 +24,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "cookie.h"
+#include "mir/cookie/cookie.h"
 
 namespace mir
 {
@@ -65,7 +65,7 @@ public:
     *   no less then minimum_secret_size otherwise an exception will be thrown
     *
     *   \param [in] secret  A secret used to set the key for the hash function
-    *   \return             A unique_ptr Authority
+    *   \return             An Authority
     */
     static std::unique_ptr<Authority> create_from(Secret const& secret);
 
@@ -73,14 +73,14 @@ public:
     *   Construction function used to create a Authority as well as a secret.
     *
     *   \param [out] save_secret  The secret that was created.
-    *   \return                   A unique_ptr Authority
+    *   \return                   An Authority
     */
     static std::unique_ptr<Authority> create_saving(Secret& save_secret);
 
     /**
     *   Construction function used to create a Authority and a secret which it keeps internally.
     *
-    *   \return                   A unique_ptr Authority
+    *   \return                   An Authority
     */
     static std::unique_ptr<Authority> create();
 
