@@ -37,7 +37,7 @@ namespace options { class Option; }
 namespace cookie
 {
 using Secret = std::vector<uint8_t>;
-class CookieAuthority;
+class Authority;
 }
 namespace shell
 {
@@ -90,7 +90,7 @@ public:
     /// A secret can be saved and any process this secret is shared
     /// with can verify Mir-generated cookies, or produce their own.
     void override_the_cookie_authority(
-        std::function<std::shared_ptr<cookie::CookieAuthority>()> const& cookie_authority_builder);
+        std::function<std::shared_ptr<cookie::Authority>()> const& cookie_authority_builder);
 
     /// Applies any configuration options, hooks, or custom implementations.
     /// Must be called before calling run() or accessing any mir subsystems.

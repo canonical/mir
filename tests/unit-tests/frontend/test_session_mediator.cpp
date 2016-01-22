@@ -59,7 +59,7 @@
 #include "mir/test/signal.h"
 #include "mir/frontend/connector.h"
 #include "mir/frontend/event_sink.h"
-#include "mir/cookie_authority.h"
+#include "mir/cookie/authority.h"
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 
@@ -231,7 +231,7 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<mtd::NullMessageSender>(),
             resource_cache, stub_screencast, &connector, nullptr, nullptr,
             std::make_shared<mtd::NullANRDetector>(),
-            mir::cookie::CookieAuthority::create_keeping_secret()}
+            mir::cookie::Authority::create()}
     {
         using namespace ::testing;
 
@@ -256,7 +256,7 @@ struct SessionMediator : public ::testing::Test
             resource_cache, std::make_shared<mtd::NullScreencast>(),
             nullptr, nullptr, nullptr,
             std::make_shared<mtd::NullANRDetector>(),
-            mir::cookie::CookieAuthority::create_keeping_secret());
+            mir::cookie::Authority::create());
     }
 
     MockConnector connector;
@@ -310,7 +310,7 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
         std::make_shared<mtd::NullMessageSender>(),
         resource_cache, stub_screencast, context, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>(),
-        mir::cookie::CookieAuthority::create_keeping_secret()};
+        mir::cookie::Authority::create()};
 
     EXPECT_THAT(connects_handled_count, Eq(0));
 
@@ -854,7 +854,7 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
         std::make_shared<mtd::NullMessageSender>(),
         mt::fake_shared(mock_cache), stub_screencast, &connector, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>(),
-        mir::cookie::CookieAuthority::create_keeping_secret()};
+        mir::cookie::Authority::create()};
 
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
@@ -968,7 +968,7 @@ TEST_F(SessionMediator, sends_a_buffer_when_submit_buffer_is_called)
         nullptr,
         nullptr,
         std::make_shared<mtd::NullANRDetector>(),
-        mir::cookie::CookieAuthority::create_keeping_secret()};
+        mir::cookie::Authority::create()};
 
     mp::Void null;
     mp::BufferRequest request;
@@ -1059,7 +1059,7 @@ TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_submit)
         std::make_shared<mtd::NullMessageSender>(),
         resource_cache, stub_screencast, nullptr, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>(),
-        mir::cookie::CookieAuthority::create_keeping_secret()};
+        mir::cookie::Authority::create()};
 
     mp::Void null;
     mp::BufferRequest request;
@@ -1203,7 +1203,7 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         mock_sender,
         resource_cache, stub_screencast, nullptr, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>(),
-        mir::cookie::CookieAuthority::create_keeping_secret()};
+        mir::cookie::Authority::create()};
 
     ON_CALL(*shell, create_surface( _, _, _))
         .WillByDefault(
@@ -1307,6 +1307,6 @@ TEST_F(SessionMediator, raise_with_invalid_cookie_throws)
     mediator.connect(&connect_parameters, &connection, null_callback.get());
 
     EXPECT_THROW({
-        mediator.raise_surface_with_cookie(&raise_request, &void_response, null_callback.get());
-    }, mir::cookie::SecurityCheckFailed);
+        mediator.raise_surface(&raise_request, &void_response, null_callback.get());
+    }, mir::cookie::SecurityCheckError);
 }

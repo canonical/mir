@@ -26,7 +26,7 @@
 #include "mir/frontend/session_authorizer.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/cookie_authority.h"
+#include "mir/cookie/authority.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -44,7 +44,7 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     std::shared_ptr<mi::CursorImages> const& cursor_images,
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
-    std::shared_ptr<mir::cookie::CookieAuthority> const& cookie_authority) :
+    std::shared_ptr<mir::cookie::Authority> const& cookie_authority) :
     shell(shell),
     no_prompt_shell(std::make_shared<NoPromptShell>(shell)),
     sm_report(sm_report),

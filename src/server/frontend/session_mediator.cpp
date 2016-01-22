@@ -48,7 +48,7 @@
 #include "mir/frontend/buffer_stream.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
-#include "mir/cookie_authority.h"
+#include "mir/cookie/authority.h"
 #include "mir/module_properties.h"
 
 #include "mir/geometry/rectangles.h"
@@ -89,7 +89,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<mi::CursorImages> const& cursor_images,
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
-    std::shared_ptr<mir::cookie::CookieAuthority> const& cookie_authority) :
+    std::shared_ptr<mir::cookie::Authority> const& cookie_authority) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -1021,7 +1021,7 @@ void mf::SessionMediator::configure_buffer_stream(
     done->Run();
 }
 
-void mf::SessionMediator::raise_surface_with_cookie(
+void mf::SessionMediator::raise_surface(
     mir::protobuf::RaiseRequest const* request,
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
@@ -1036,9 +1036,9 @@ void mf::SessionMediator::raise_surface_with_cookie(
     auto cookie_string = cookie.cookie();
 
     std::vector<uint8_t> cookie_bytes(cookie_string.begin(), cookie_string.end());
-    auto const cookie_ptr = cookie_authority->unmarshall_cookie(cookie_bytes);
+    auto const cookie_ptr = cookie_authority->make_cookie(cookie_bytes);
 
-    shell->raise_surface_with_timestamp(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
+    shell->raise_surface(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
 
     done->Run();
 }

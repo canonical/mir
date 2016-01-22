@@ -32,7 +32,7 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/events/event_builders.h"
 #include "mir/input/cursor_listener.h"
-#include "mir/cookie_authority.h"
+#include "mir/cookie/authority.h"
 #include "mir/input/device.h"
 #include "mir/input/input_device.h"
 
@@ -54,7 +54,7 @@ struct InputDeviceHubTest : ::testing::Test
     mtd::TriggeredMainLoop observer_loop;
     Nice<mtd::MockInputDispatcher> mock_dispatcher;
     Nice<mtd::MockInputRegion> mock_region;
-    std::shared_ptr<mir::cookie::CookieAuthority> cookie_authority = mir::cookie::CookieAuthority::create_keeping_secret();
+    std::shared_ptr<mir::cookie::Authority> cookie_authority = mir::cookie::Authority::create();
     mtd::StubCursorListener stub_cursor_listener;
     mtd::StubTouchVisualizer stub_visualizer;
     mir::dispatch::MultiplexingDispatchable multiplexer;

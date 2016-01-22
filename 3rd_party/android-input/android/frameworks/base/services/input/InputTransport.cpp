@@ -236,7 +236,7 @@ status_t InputPublisher::publishKeyEvent(
         int32_t scanCode,
         int32_t metaState,
         int32_t repeatCount,
-        mir::cookie::Array const& cookie,
+        mir::cookie::Blob const& cookie,
         std::chrono::nanoseconds downTime,
         std::chrono::nanoseconds eventTime) {
 #if DEBUG_TRANSPORT_ACTIONS
@@ -283,7 +283,7 @@ status_t InputPublisher::publishMotionEvent(
         float yOffset,
         float xPrecision,
         float yPrecision,
-        mir::cookie::Array const& cookie,
+        mir::cookie::Blob const& cookie,
         std::chrono::nanoseconds downTime,
         std::chrono::nanoseconds eventTime,
         size_t pointerCount,

@@ -19,28 +19,28 @@
 #ifndef MIR_COOKIE_HMAC_COOKIE_H_
 #define MIR_COOKIE_HMAC_COOKIE_H_
 
-#include "mir/cookie.h"
-#include "cookie_format.h"
+#include "mir/cookie/cookie.h"
+#include "format.h"
 
 namespace mir
 {
 namespace cookie
 {
 
-class HMACMirCookie : public mir::cookie::MirCookie
+class HMACCookie : public mir::cookie::Cookie
 {
 public:
-    HMACMirCookie() = delete;
+    HMACCookie() = delete;
 
-    explicit HMACMirCookie(uint64_t const& timestamp,
-                       std::vector<uint8_t> const& mac,
-                       mir::cookie::Format const& format);
+    explicit HMACCookie(uint64_t const& timestamp,
+                        std::vector<uint8_t> const& mac,
+                        mir::cookie::Format const& format);
 
     uint64_t timestamp() const override;
-    std::vector<uint8_t> marshall() const override;
+    std::vector<uint8_t> serialize() const override;
 
-    bool operator==(MirCookie const& cookie) const override;
-    bool operator!=(MirCookie const& cookie) const override;
+    bool operator==(Cookie const& cookie) const override;
+    bool operator!=(Cookie const& cookie) const override;
 
 private:
     uint64_t timestamp_;

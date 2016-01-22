@@ -31,7 +31,7 @@
 
 #include <chrono>
 
-#include "mir/cookie_array.h"
+#include "mir/cookie/blob.h"
 
 #ifdef HAVE_ANDROID_OS
 class SkMatrix;
@@ -278,7 +278,7 @@ public:
 
     inline int32_t getRepeatCount() const { return mRepeatCount; }
 
-    inline mir::cookie::Array const& getCookie() const { return mCookie; }
+    inline mir::cookie::Blob const& getCookie() const { return mCookie; }
 
     inline std::chrono::nanoseconds getDownTime() const { return mDownTime; }
 
@@ -301,7 +301,7 @@ public:
             int32_t scanCode,
             int32_t metaState,
             int32_t repeatCount,
-            mir::cookie::Array const& cookie,
+            mir::cookie::Blob const& cookie,
             std::chrono::nanoseconds downTime,
             std::chrono::nanoseconds eventTime);
     void initialize(const KeyEvent& from);
@@ -313,7 +313,7 @@ protected:
     int32_t mScanCode;
     int32_t mMetaState;
     int32_t mRepeatCount;
-    mir::cookie::Array mCookie;
+    mir::cookie::Blob mCookie;
     std::chrono::nanoseconds mDownTime;
     std::chrono::nanoseconds mEventTime;
 };
@@ -360,7 +360,7 @@ public:
 
     inline float getYPrecision() const { return mYPrecision; }
 
-    inline mir::cookie::Array const& getCookie() const { return mCookie; }
+    inline mir::cookie::Blob const& getCookie() const { return mCookie; }
 
     inline std::chrono::nanoseconds getDownTime() const { return mDownTime; }
 
@@ -515,7 +515,7 @@ public:
             float yOffset,
             float xPrecision,
             float yPrecision,
-            mir::cookie::Array const& cookie,
+            mir::cookie::Blob const& cookie,
             std::chrono::nanoseconds downTime,
             std::chrono::nanoseconds eventTime,
             size_t pointerCount,
@@ -563,7 +563,7 @@ protected:
     float mYOffset;
     float mXPrecision;
     float mYPrecision;
-    mir::cookie::Array mCookie;
+    mir::cookie::Blob mCookie;
     std::chrono::nanoseconds mDownTime;
     Vector<PointerProperties> mPointerProperties;
     Vector<std::chrono::nanoseconds> mSampleEventTimes;

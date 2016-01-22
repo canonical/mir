@@ -485,13 +485,13 @@ MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrient
     return result;
 }
 
-void mir_surface_raise_with_cookie(MirSurface* surf, MirCookie const* cookie)
+void mir_surface_raise(MirSurface* surf, MirCookie const* cookie)
 {
     mir::require(mir_surface_is_valid(surf));
 
     try
     {
-        surf->raise_surface_with_cookie(cookie);
+        surf->raise_surface(cookie);
     }
     catch (std::exception const& ex)
     {

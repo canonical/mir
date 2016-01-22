@@ -127,7 +127,7 @@ void KeyEvent::initialize(
         int32_t scanCode,
         int32_t metaState,
         int32_t repeatCount,
-        mir::cookie::Array const& cookie,
+        mir::cookie::Blob const& cookie,
         std::chrono::nanoseconds downTime,
         std::chrono::nanoseconds eventTime) {
     InputEvent::initialize(deviceId, source);
@@ -294,7 +294,7 @@ void MotionEvent::initialize(
         float yOffset,
         float xPrecision,
         float yPrecision,
-        mir::cookie::Array const& cookie,
+        mir::cookie::Blob const& cookie,
         std::chrono::nanoseconds downTime,
         std::chrono::nanoseconds eventTime,
         size_t pointerCount,

@@ -24,7 +24,6 @@
 #include "mir/scene/surface.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
-#include "mir/cookie_authority.h"
 
 #include <string.h>
 

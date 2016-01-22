@@ -18,7 +18,7 @@
 
 #include "display_server.h"
 #include "protobuf_message_processor.h"
-#include "mir/cookie_authority.h"
+#include "mir/cookie/authority.h"
 #include "mir/frontend/message_processor_report.h"
 #include "mir/frontend/protobuf_message_sender.h"
 #include "mir/frontend/template_protobuf_message_processor.h"
@@ -136,7 +136,7 @@ void invoke(
             result_message.get(),
             callback);
     }
-    catch (mir::cookie::SecurityCheckFailed const& /*err*/)
+    catch (mir::cookie::SecurityCheckError const& /*err*/)
     {
         throw;
     }
@@ -315,9 +315,9 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::configure_buffer_stream, invocation);
         }
-        else if ("raise_surface_with_cookie" == invocation.method_name())
+        else if ("raise_surface" == invocation.method_name())
         {
-            invoke(this, display_server.get(), &DisplayServer::raise_surface_with_cookie, invocation);
+            invoke(this, display_server.get(), &DisplayServer::raise_surface, invocation);
         }
         else if ("translate_surface_to_screen" == invocation.method_name())
         {

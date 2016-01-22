@@ -16,8 +16,8 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#ifndef MIR_COOKIE_COOKIE_ARRAY_H_
-#define MIR_COOKIE_COOKIE_ARRAY_H_
+#ifndef MIR_COOKIE_BLOB_H_
+#define MIR_COOKIE_BLOB_H_
 
 #include <array>
 
@@ -25,9 +25,9 @@ namespace mir
 {
 namespace cookie
 {
-size_t const array_size = 17;
-using Array = std::array<uint8_t, array_size>;
+size_t const default_blob_size = 17;
+using Blob = std::array<uint8_t, default_blob_size>;
 }
 }
 
-#endif // MIR_COOKIE_COOKIE_ARRAY_H_
+#endif // MIR_COOKIE_BLOB_H_

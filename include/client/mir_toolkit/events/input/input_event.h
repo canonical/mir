@@ -164,7 +164,7 @@ size_t mir_cookie_get_size(MirCookie const* cookie);
  * \params[in] buffer The allocated buffer to copy the MirCookie into
  * \params[in] size   The size of the allocated buffer
  */
-void mir_cookie_copy_to_buffer(MirCookie const* cookie, void* buffer, size_t size);
+void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size);
 
 /* Create a MirCookie from a serialised representation
  *

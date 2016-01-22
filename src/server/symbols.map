@@ -240,7 +240,7 @@ MIR_SERVER_0.19 {
     mir::shell::AbstractShell::modify_surface*;
     mir::shell::AbstractShell::open_session*;
     mir::shell::AbstractShell::raise*;
-    mir::shell::AbstractShell::raise_surface_with_timestamp*;
+    mir::shell::AbstractShell::raise_surface*;
     mir::shell::AbstractShell::remove_display*;
     mir::shell::AbstractShell::set_focus_to*;
     mir::shell::AbstractShell::set_surface_attribute*;
@@ -282,7 +282,7 @@ MIR_SERVER_0.19 {
     mir::shell::ShellWrapper::modify_surface*;
     mir::shell::ShellWrapper::open_session*;
     mir::shell::ShellWrapper::raise*;
-    mir::shell::ShellWrapper::raise_surface_with_timestamp*;
+    mir::shell::ShellWrapper::raise_surface*;
     mir::shell::ShellWrapper::remove_display*;
     mir::shell::ShellWrapper::set_focus_to*;
     mir::shell::ShellWrapper::set_surface_attribute*;
@@ -395,7 +395,7 @@ MIR_SERVER_0.19 {
     non-virtual?thunk?to?mir::shell::AbstractShell::modify_surface*;
     non-virtual?thunk?to?mir::shell::AbstractShell::open_session*;
     non-virtual?thunk?to?mir::shell::AbstractShell::raise*;
-    non-virtual?thunk?to?mir::shell::AbstractShell::raise_surface_with_timestamp*;
+    non-virtual?thunk?to?mir::shell::AbstractShell::raise_surface*;
     non-virtual?thunk?to?mir::shell::AbstractShell::remove_display*;
     non-virtual?thunk?to?mir::shell::AbstractShell::set_focus_to*;
     non-virtual?thunk?to?mir::shell::AbstractShell::set_surface_attribute*;
@@ -422,7 +422,7 @@ MIR_SERVER_0.19 {
     non-virtual?thunk?to?mir::shell::ShellWrapper::modify_surface*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::open_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::raise*;
-    non-virtual?thunk?to?mir::shell::ShellWrapper::raise_surface_with_timestamp*;
+    non-virtual?thunk?to?mir::shell::ShellWrapper::raise_surface*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::remove_display*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::set_focus_to*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::set_surface_attribute*;

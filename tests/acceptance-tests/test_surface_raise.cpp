@@ -24,7 +24,7 @@
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/wait_condition.h"
 #include "mir/test/spin_wait.h"
-#include "mir/cookie_authority.h"
+#include "mir/cookie/authority.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -116,7 +116,7 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
             size_t size = mir_cookie_get_size(cookie);
 
             std::vector<uint8_t> cookie_bytes(size);
-            mir_cookie_copy_to_buffer(cookie, cookie_bytes.data(), size);
+            mir_cookie_to_buffer(cookie, cookie_bytes.data(), size);
 
             mir_cookie_release(cookie);
 
@@ -143,7 +143,7 @@ bool wait_for_n_events(size_t n, RaiseSurfaces const* raise_surfaces)
 
 bool attempt_focus(MirSurface* surface, MirCookie const* cookie)
 {
-    mir_surface_raise_with_cookie(surface, cookie);
+    mir_surface_raise(surface, cookie);
     bool surface_becomes_focused = mt::spin_wait_for_condition_or_timeout(
         [&surface]
         {
@@ -187,7 +187,7 @@ TEST_F(RaiseSurfaces, older_timestamp_does_not_focus)
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
 
         MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.front().data(), out_cookies.front().size());
-        mir_surface_raise_with_cookie(surface1, cookie);
+        mir_surface_raise(surface1, cookie);
 
         mir_cookie_release(cookie);
 

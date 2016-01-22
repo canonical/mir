@@ -19,7 +19,7 @@
 
 #include "default_event_builder.h"
 #include "mir/events/event_builders.h"
-#include "mir/cookie_authority.h"
+#include "mir/cookie/authority.h"
 #include "mir/events/event_private.h"
 
 #include <algorithm>
@@ -28,7 +28,7 @@ namespace me = mir::events;
 namespace mi = mir::input;
 
 mi::DefaultEventBuilder::DefaultEventBuilder(MirInputDeviceId device_id,
-                                             std::shared_ptr<mir::cookie::CookieAuthority> const& cookie_authority)
+                                             std::shared_ptr<mir::cookie::Authority> const& cookie_authority)
     : device_id(device_id),
       cookie_authority(cookie_authority)
 {
@@ -37,8 +37,8 @@ mi::DefaultEventBuilder::DefaultEventBuilder(MirInputDeviceId device_id,
 mir::EventUPtr mi::DefaultEventBuilder::key_event(Timestamp timestamp, MirKeyboardAction action, xkb_keysym_t key_code,
                                                   int scan_code)
 {
-    auto const cookie = cookie_authority->timestamp_to_cookie(timestamp.count());
-    return me::make_event(device_id, timestamp, cookie->marshall(), action, key_code, scan_code, mir_input_event_modifier_none);
+    auto const cookie = cookie_authority->make_cookie(timestamp.count());
+    return me::make_event(device_id, timestamp, cookie->serialize(), action, key_code, scan_code, mir_input_event_modifier_none);
 }
 
 mir::EventUPtr mi::DefaultEventBuilder::touch_event(Timestamp timestamp)
@@ -53,9 +53,9 @@ void mi::DefaultEventBuilder::add_touch(MirEvent& event, MirTouchId touch_id, Mi
 {
     if (action == mir_touch_action_up || action == mir_touch_action_down)
     {
-        auto const cookie = cookie_authority->timestamp_to_cookie(event.motion.event_time.count());
-        auto const marshalled_cookie = cookie->marshall();
-        std::copy_n(std::begin(marshalled_cookie), event.motion.cookie.size(), std::begin(event.motion.cookie));
+        auto const cookie = cookie_authority->make_cookie(event.motion.event_time.count());
+        auto const serialized_cookie = cookie->serialize();
+        std::copy_n(std::begin(serialized_cookie), event.motion.cookie.size(), std::begin(event.motion.cookie));
     }
 
     me::add_touch(event, touch_id, action, tooltype, x_axis_value, y_axis_value, pressure_value, touch_major_value,
@@ -72,8 +72,8 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp, MirPo
     // FIXME Moving to 160bits soon
     if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
     {
-        auto const cookie = cookie_authority->timestamp_to_cookie(timestamp.count());
-        vec_cookie = cookie->marshall();
+        auto const cookie = cookie_authority->make_cookie(timestamp.count());
+        vec_cookie = cookie->serialize();
     }
     return me::make_event(device_id, timestamp, vec_cookie, mir_input_event_modifier_none, action, buttons_pressed, x_axis_value, y_axis_value,
                           hscroll_value, vscroll_value, relative_x_value, relative_y_value);

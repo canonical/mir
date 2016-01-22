@@ -27,7 +27,7 @@
 #include "mir/test/fake_shared.h"
 
 #include "mir/dispatch/multiplexing_dispatchable.h"
-#include "mir/cookie_authority.h"
+#include "mir/cookie/authority.h"
 
 #include "mir/input/cursor_listener.h"
 #include "mir/input/device.h"
@@ -67,7 +67,7 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     mtd::TriggeredMainLoop observer_loop;
     NiceMock<mtd::MockInputDispatcher> mock_dispatcher;
     NiceMock<mtd::MockInputRegion> mock_region;
-    std::shared_ptr<mir::cookie::CookieAuthority> cookie_authority = mir::cookie::CookieAuthority::create_keeping_secret();
+    std::shared_ptr<mir::cookie::Authority> cookie_authority = mir::cookie::Authority::create();
     NiceMock<MockCursorListener> mock_cursor_listener;
     NiceMock<MockTouchVisualizer> mock_visualizer;
     mir::dispatch::MultiplexingDispatchable multiplexer;

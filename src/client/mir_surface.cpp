@@ -30,7 +30,8 @@
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/input/input_platform.h"
 #include "mir/input/xkb_mapper.h"
-#include "mir/cookie.h"
+#include "mir/cookie/cookie.h"
+#include "mir_cookie.h"
 
 #include <cassert>
 #include <unistd.h>
@@ -482,7 +483,7 @@ MirWaitHandle* MirSurface::set_preferred_orientation(MirOrientationMode mode)
     return configure(mir_surface_attrib_preferred_orientation, mode);
 }
 
-void MirSurface::raise_surface_with_cookie(MirCookie const* cookie)
+void MirSurface::raise_surface(MirCookie const* cookie)
 {
     mp::RaiseRequest raise_request;
 
@@ -490,11 +491,10 @@ void MirSurface::raise_surface_with_cookie(MirCookie const* cookie)
     raise_request.mutable_surface_id()->set_value(surface->id().value());
 
     auto const event_cookie = raise_request.mutable_cookie();
-    size_t cookie_size = mir_cookie_get_size(cookie);
 
-    event_cookie->set_cookie(cookie, cookie_size);
+    event_cookie->set_cookie(cookie->blob().data(), cookie->size());
 
-    server->raise_surface_with_cookie(
+    server->raise_surface(
         &raise_request,
         void_response.get(),
         google::protobuf::NewCallback(google::protobuf::DoNothing));

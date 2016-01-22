@@ -21,7 +21,7 @@
 #include "mir/log.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
-#include "mir/cookie_array.h"
+#include "mir/cookie/blob.h"
 
 #include <string.h>
 

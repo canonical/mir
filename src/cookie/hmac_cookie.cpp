@@ -20,25 +20,25 @@
 
 #include <string.h>
 
-mir::cookie::HMACMirCookie::HMACMirCookie(uint64_t const& timestamp,
-                                                std::vector<uint8_t> const& mac,
-                                                mir::cookie::Format const& format) :
+mir::cookie::HMACCookie::HMACCookie(uint64_t const& timestamp,
+                                    std::vector<uint8_t> const& mac,
+                                    mir::cookie::Format const& format) :
     timestamp_(timestamp),
     mac_(mac),
     format_(format)
 {
 }
 
-uint64_t mir::cookie::HMACMirCookie::timestamp() const
+uint64_t mir::cookie::HMACCookie::timestamp() const
 {
     return timestamp_;
 }
 
-std::vector<uint8_t> mir::cookie::HMACMirCookie::marshall() const
+std::vector<uint8_t> mir::cookie::HMACCookie::serialize() const
 {
-    std::vector<uint8_t> marshalled_cookie(sizeof(format_) + sizeof(timestamp_) + mac_.size());
+    std::vector<uint8_t> serialized_cookie(sizeof(format_) + sizeof(timestamp_) + mac_.size());
 
-    auto cookie_ptr = marshalled_cookie.data();
+    auto cookie_ptr = serialized_cookie.data();
 
     cookie_ptr[0] = static_cast<uint8_t>(format_);
     cookie_ptr += sizeof(format_);
@@ -49,19 +49,19 @@ std::vector<uint8_t> mir::cookie::HMACMirCookie::marshall() const
 
     memcpy(cookie_ptr, mac_.data(), mac_.size());
     
-    return marshalled_cookie;
+    return serialized_cookie;
 }
 
-bool mir::cookie::HMACMirCookie::operator==(MirCookie const& cookie) const
+bool mir::cookie::HMACCookie::operator==(Cookie const& cookie) const
 {
-    auto const this_stream  = marshall();
-    auto const other_stream = cookie.marshall();
+    auto const this_stream  = serialize();
+    auto const other_stream = cookie.serialize();
 
     // FIXME Need to do a constant memcmp here!
     return std::equal(std::begin(this_stream), std::end(this_stream), std::begin(other_stream));
 }
 
-bool mir::cookie::HMACMirCookie::operator!=(MirCookie const& cookie) const
+bool mir::cookie::HMACCookie::operator!=(Cookie const& cookie) const
 {
     return !(*this == cookie);
 }

@@ -27,10 +27,10 @@ namespace mir
 namespace cookie
 {
 
-class MirCookie
+class Cookie
 {
 public:
-    virtual ~MirCookie() = default;
+    virtual ~Cookie() = default;
 
     /**
     *  Returns the timestamp that the cookie is built with
@@ -42,12 +42,12 @@ public:
     /**
     *  Converts the cookie into a stream of bytes.
     *
-    *  \return  The stream of bytes formated to be unmarshalled
+    *  \return  The stream of bytes formatted
     */
-    virtual std::vector<uint8_t> marshall() const = 0;
+    virtual std::vector<uint8_t> serialize() const = 0;
 
-    virtual bool operator==(MirCookie const& cookie) const = 0;
-    virtual bool operator!=(MirCookie const& cookie) const = 0;
+    virtual bool operator==(Cookie const& cookie) const = 0;
+    virtual bool operator!=(Cookie const& cookie) const = 0;
 };
 
 }

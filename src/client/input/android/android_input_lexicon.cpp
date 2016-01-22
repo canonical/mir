@@ -20,7 +20,7 @@
 #include "mir/input/android/android_input_lexicon.h"
 #include "mir/input/android/event_conversion_helpers.h"
 #include "mir/events/event_builders.h"
-#include "mir/cookie_array.h"
+#include "mir/cookie/blob.h"
 
 #include <androidfw/Input.h>
 

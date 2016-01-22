@@ -1,10 +1,10 @@
 MIR_COOKIE_2 {
  global:
   extern "C++" {
-    mir::cookie::CookieAuthority::optimal_secret_size*;
-    mir::cookie::CookieAuthority::create_from_secret*;
-    mir::cookie::CookieAuthority::create_saving_secret*;
-    mir::cookie::CookieAuthority::create_keeping_secret*;
+    mir::cookie::Authority::optimal_secret_size*;
+    mir::cookie::Authority::create_from*;
+    mir::cookie::Authority::create_saving*;
+    mir::cookie::Authority::create*;
   };
  local: *;
 };

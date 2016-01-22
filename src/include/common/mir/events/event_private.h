@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include "mir_toolkit/event.h"
 #include "mir_toolkit/common.h"
-#include "mir/cookie_array.h"
+#include "mir/cookie/blob.h"
 
 #include <xkbcommon/xkbcommon.h>
 #include <array>
@@ -61,7 +61,7 @@ struct MirKeyboardEvent
     int32_t scan_code;
 
     std::chrono::nanoseconds event_time;
-    mir::cookie::Array cookie;
+    mir::cookie::Blob cookie;
 };
 
 typedef struct
@@ -99,7 +99,7 @@ typedef struct
 
     MirPointerButtons buttons;
     std::chrono::nanoseconds event_time;
-    mir::cookie::Array cookie;
+    mir::cookie::Blob cookie;
 
     size_t pointer_count;
     MirMotionPointer pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];

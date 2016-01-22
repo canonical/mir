@@ -763,7 +763,7 @@ MirPersistentId* mir_persistent_id_from_string(char const* string_representation
 *   \param [in] cookie  The MirCookie from an input event.
 *   \post               Sumbittiming an invalid cookie will temrinate your connection.
 */
-void mir_surface_raise_with_cookie(MirSurface* surface, MirCookie const* cookie);
+void mir_surface_raise(MirSurface* surface, MirCookie const* cookie);
 
 #ifdef __cplusplus
 }

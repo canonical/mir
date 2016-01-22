@@ -23,7 +23,7 @@
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/spin_wait.h"
-#include "mir/cookie_authority.h"
+#include "mir/cookie/authority.h"
 
 #include "boost/throw_exception.hpp"
 
@@ -48,7 +48,7 @@ public:
     ClientCookies()
     {
         server.override_the_cookie_authority([this] ()
-            { return mir::cookie::CookieAuthority::create_saving_secret(cookie_secret); });
+            { return mir::cookie::Authority::create_saving(cookie_secret); });
     }
 
     void SetUp() override
@@ -101,7 +101,7 @@ void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
             size_t size = mir_cookie_get_size(cookie);
 
             std::vector<uint8_t> cookie_bytes(size);
-            mir_cookie_copy_to_buffer(cookie, cookie_bytes.data(), size);
+            mir_cookie_to_buffer(cookie, cookie_bytes.data(), size);
 
             mir_cookie_release(cookie);
             client_cookie->out_cookies.push_back(cookie_bytes);
@@ -126,7 +126,7 @@ bool wait_for_n_events(size_t n, ClientCookies* client_cookie)
 }
 }
 
-TEST_F(ClientCookies, keyboard_events_have_unmarshallable_cookies)
+TEST_F(ClientCookies, keyboard_events_have_cookies)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
 
@@ -136,13 +136,13 @@ TEST_F(ClientCookies, keyboard_events_have_unmarshallable_cookies)
         std::lock_guard<std::mutex> lk(mutex);
 
         ASSERT_FALSE(out_cookies.empty());
-        auto factory = mir::cookie::CookieAuthority::create_from_secret(cookie_secret);
+        auto authority = mir::cookie::Authority::create_from(cookie_secret);
 
-        EXPECT_NO_THROW(factory->unmarshall_cookie(out_cookies.back()));
+        EXPECT_NO_THROW(authority->make_cookie(out_cookies.back()));
     }
 }
 
-TEST_F(ClientCookies, pointer_motion_events_do_not_have_unmarshallable_cookies)
+TEST_F(ClientCookies, pointer_motion_events_do_not_have_cookies)
 {
     // with movement generates 2 events
     fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
@@ -156,7 +156,7 @@ TEST_F(ClientCookies, pointer_motion_events_do_not_have_unmarshallable_cookies)
     }
 }
 
-TEST_F(ClientCookies, pointer_click_events_have_unmarshallable_cookies)
+TEST_F(ClientCookies, pointer_click_events_have_cookies)
 {
     fake_pointer->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_pointer->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
@@ -166,12 +166,12 @@ TEST_F(ClientCookies, pointer_click_events_have_unmarshallable_cookies)
     {
         std::lock_guard<std::mutex> lk(mutex);
         ASSERT_FALSE(out_cookies.empty());
-        auto factory = mir::cookie::CookieAuthority::create_from_secret(cookie_secret);
-        EXPECT_NO_THROW(factory->unmarshall_cookie(out_cookies.back()));
+        auto authority = mir::cookie::Authority::create_from(cookie_secret);
+        EXPECT_NO_THROW(authority->make_cookie(out_cookies.back()));
     }
 }
 
-TEST_F(ClientCookies, touch_motion_events_do_not_have_unmarshabllable_cookies)
+TEST_F(ClientCookies, touch_motion_events_do_not_have_cookies)
 {
     fake_touch_screen->emit_event(
          mis::a_touch_event()

@@ -31,14 +31,13 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"
 
-#include "mir/cookie_array.h"
 
 #include "androidfw/Input.h"
 #include "androidfw/InputTransport.h"
 
 #include "mir/input/input_report.h"
-#include "mir/cookie_authority.h"
-#include "mir/cookie.h"
+#include "mir/cookie/authority.h"
+#include "mir/cookie/blob.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -107,11 +106,11 @@ public:
     float const minor = 4;
     float const size = 8;
     mir::geometry::Displacement const movement{10, -10};
-    std::shared_ptr<mir::cookie::CookieAuthority> const cookie_authority;
+    std::shared_ptr<mir::cookie::Authority> const cookie_authority;
     mi::DefaultEventBuilder builder;
 
     AndroidInputSender()
-        : cookie_authority(mir::cookie::CookieAuthority::create_from_secret({0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88})),
+        : cookie_authority(mir::cookie::Authority::create_from({0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88})),
           builder(MirInputDeviceId(), cookie_authority),
           key_event(builder.key_event(std::chrono::nanoseconds(1), mir_keyboard_action_down, 7, test_scan_code)),
           motion_event(builder.touch_event(std::chrono::nanoseconds(-1))),

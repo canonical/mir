@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -18,11 +18,13 @@
 
 #define MIR_LOG_COMPONENT "input-event-access"
 
-#include "mir/cookie.h"
+#include "mir/cookie/cookie.h"
 #include "mir/event_type_to_string.h"
 #include "mir/events/event_private.h"
 #include "mir/log.h"
 #include "mir/require.h"
+
+#include "../mir_cookie.h"
 
 #include <string.h>
 
@@ -433,65 +435,40 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev)
     return false;
 }
 
-size_t mir_cookie_get_size(MirCookie const* /*cookie*/)
+size_t mir_cookie_get_size(MirCookie const* cookie)
 {
-    return mir::cookie::array_size;
+    return cookie->size();
 }
 
-MirCookie const* mir_input_event_get_cookie(MirInputEvent const* ev)
+MirCookie const* mir_input_event_get_cookie(MirInputEvent const* iev)
 {
-    auto const old_ev = old_ev_from_new(ev);
+    auto const ev = old_ev_from_new(iev);
 
-    if(mir_event_get_type(old_ev) != mir_event_type_input)
-    {
-        mir::log_critical("expected input event but event was of type " + mir::event_type_to_string(old_ev->type));
-        abort();
-    }
-
-    switch (old_ev->type)
+    switch (ev->type)
     {
     case mir_event_type_motion:
-    {
-        auto new_cookie = new uint8_t[old_ev->motion.cookie.size()];
-        memcpy(new_cookie, old_ev->motion.cookie.data(), old_ev->motion.cookie.size());
-        return reinterpret_cast<MirCookie*>(new_cookie);
-    }
-        break;
+        return new MirCookie(ev->motion.cookie);
     case mir_event_type_key:
-    {
-        auto new_cookie = new uint8_t[old_ev->key.cookie.size()];
-        memcpy(new_cookie, old_ev->key.cookie.data(), old_ev->key.cookie.size());
-        return reinterpret_cast<MirCookie*>(new_cookie);
-    }
-        break;
+        return new MirCookie(ev->key.cookie);
     default:
     {
-        mir::log_critical("expected a key or motion events, type was: " + mir::event_type_to_string(old_ev->type));
+        mir::log_critical("expected a key or motion events, type was: " + mir::event_type_to_string(ev->type));
         abort();
     }
     }
 }
 
-void mir_cookie_copy_to_buffer(MirCookie const* cookie, void* buffer, size_t size)
+void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size)
 {
-    mir::require(size == mir::cookie::array_size);
-    memcpy(buffer, cookie, size);
+    return cookie->copy_to(buffer, size);
 }
 
-MirCookie const* mir_cookie_from_buffer(void const* cookie, size_t size)
+MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size)
 {
-    if (size != mir::cookie::array_size)
-        return NULL;
-
-    MirCookie const* temp = static_cast<MirCookie const*>(cookie);
-
-    MirCookie* new_cookie = reinterpret_cast<MirCookie*>(new uint8_t[size]);
-    memcpy(new_cookie, temp, size);
-
-    return new_cookie;
+    return new MirCookie(buffer, size);
 }
 
 void mir_cookie_release(MirCookie const* cookie)
 {
-    delete[] reinterpret_cast<uint8_t const*>(cookie);
+    delete cookie;
 }

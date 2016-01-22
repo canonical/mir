@@ -14,10 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ *              Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#ifndef MIR_COOKIE_COOKIE_AUTHORITY_H_
-#define MIR_COOKIE_COOKIE_AUTHORITY_H_
+#ifndef MIR_COOKIE_AUTHORITY_H_
+#define MIR_COOKIE_AUTHORITY_H_
 
 #include <memory>
 #include <stdexcept>
@@ -25,16 +26,15 @@
 
 #include "cookie.h"
 
-struct MirCookie;
 namespace mir
 {
 namespace cookie
 {
 using Secret = std::vector<uint8_t>;
 
-struct SecurityCheckFailed : std::runtime_error
+struct SecurityCheckError : std::runtime_error
 {
-    SecurityCheckFailed();
+    SecurityCheckError();
 };
 
 /**
@@ -48,7 +48,7 @@ struct SecurityCheckFailed : std::runtime_error
  * to attempt to bypass focus stealing prevention.
  *
  */
-class CookieAuthority
+class Authority
 {
 public:
     /**
@@ -61,52 +61,52 @@ public:
     static size_t optimal_secret_size();
 
     /**
-    *   Construction function used to create a CookieAuthority. The secret size must be
+    *   Construction function used to create a Authority. The secret size must be
     *   no less then minimum_secret_size otherwise an exception will be thrown
     *
     *   \param [in] secret  A filled in secret used to set the key for the hash function
-    *   \return             A unique_ptr CookieAuthority
+    *   \return             A unique_ptr Authority
     */
-    static std::unique_ptr<CookieAuthority> create_from_secret(Secret const& secret);
+    static std::unique_ptr<Authority> create_from(Secret const& secret);
 
     /**
-    *   Construction function used to create a CookieAuthority as well as a secret.
+    *   Construction function used to create a Authority as well as a secret.
     *
     *   \param [out] save_secret  The secret that was created.
-    *   \return                   A unique_ptr CookieAuthority
+    *   \return                   A unique_ptr Authority
     */
-    static std::unique_ptr<CookieAuthority> create_saving_secret(Secret& save_secret);
+    static std::unique_ptr<Authority> create_saving(Secret& save_secret);
 
     /**
-    *   Construction function used to create a CookieAuthority and a secret which it keeps internally.
+    *   Construction function used to create a Authority and a secret which it keeps internally.
     *
-    *   \return                   A unique_ptr CookieAuthority
+    *   \return                   A unique_ptr Authority
     */
-    static std::unique_ptr<CookieAuthority> create_keeping_secret();
+    static std::unique_ptr<Authority> create();
 
-    CookieAuthority(CookieAuthority const& factory) = delete;
-    CookieAuthority& operator=(CookieAuthority const& factory) = delete;
-    virtual ~CookieAuthority() noexcept = default;
+    Authority(Authority const& authority) = delete;
+    Authority& operator=(Authority const& authority) = delete;
+    virtual ~Authority() noexcept = default;
 
     /**
     *   Creates a cookie attesting the timestamp.
     *
     *   \param [in]  Timestamp to be attested
-    *   \return      A unique_ptr MirCookie
+    *   \return      A unique_ptr Cookie
     */
-    virtual std::unique_ptr<MirCookie> timestamp_to_cookie(uint64_t const& timestamp) = 0;
+    virtual std::unique_ptr<Cookie> make_cookie(uint64_t const& timestamp) = 0;
 
     /**
-    *   Rebuilds a MirCookie from a stream of bytes and validates it
+    *   Rebuilds a Cookie from a stream of bytes and validates it
     *
-    *   \param [in]  A stream of bytes to be marshalled into a MirCookie
-    *   \return      A unique_ptr MirCookie
+    *   \param [in]  A stream of bytes to be marshalled into a Cookie
+    *   \return      A unique_ptr Cookie
     */
-    virtual std::unique_ptr<MirCookie> unmarshall_cookie(std::vector<uint8_t> const& raw_cookie) = 0;
+    virtual std::unique_ptr<Cookie> make_cookie(std::vector<uint8_t> const& raw_cookie) = 0;
 
     static unsigned const minimum_secret_size = 8;
 protected:
-    CookieAuthority() = default;
+    Authority() = default;
 };
 
 }

@@ -22,7 +22,7 @@
 #include "mir/events/event_builders.h"
 #include "mir/time/alarm.h"
 #include "mir/time/alarm_factory.h"
-#include "mir/cookie_authority.h"
+#include "mir/cookie/authority.h"
 
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
@@ -67,7 +67,7 @@ struct KeyRepeatDispatcher : public testing::Test
     }
     std::shared_ptr<mtd::MockInputDispatcher> mock_next_dispatcher = std::make_shared<mtd::MockInputDispatcher>();
     std::shared_ptr<MockAlarmFactory> mock_alarm_factory = std::make_shared<MockAlarmFactory>();
-    std::shared_ptr<mir::cookie::CookieAuthority> cookie_authority = mir::cookie::CookieAuthority::create_keeping_secret();
+    std::shared_ptr<mir::cookie::Authority> cookie_authority = mir::cookie::Authority::create();
     std::chrono::milliseconds const repeat_time{2};
     std::chrono::milliseconds const repeat_delay{1};
     mi::KeyRepeatDispatcher dispatcher;
