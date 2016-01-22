@@ -198,7 +198,6 @@ private:
 
         // FIXME Need to do a constant memcmp here!
         return std::equal(std::begin(this_stream), std::end(this_stream), std::begin(other_stream));
-        //return *cookie == *make_cookie(timestamp);
     }
 
     struct hmac_sha1_ctx ctx;
