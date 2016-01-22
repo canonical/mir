@@ -113,7 +113,7 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
         if (mir_input_event_has_cookie(iev))
         {
             auto cookie = mir_input_event_get_cookie(iev);
-            size_t size = mir_cookie_get_size(cookie);
+            size_t size = mir_cookie_size(cookie);
 
             std::vector<uint8_t> cookie_bytes(size);
             mir_cookie_to_buffer(cookie, cookie_bytes.data(), size);

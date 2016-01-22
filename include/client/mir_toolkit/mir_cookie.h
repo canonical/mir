@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+* Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -34,11 +34,11 @@ extern "C" {
  * \params[in] cookie A cookie instance
  * \return            The size of the serialized representation of the given cookie
  */
-size_t mir_cookie_get_size(MirCookie const* cookie);
+size_t mir_cookie_size(MirCookie const* cookie);
 
 /* Serializes a cookie into the given buffer
  *
- * \pre The size must be equal to mir_cookie_get_size
+ * \pre The size must be equal to mir_cookie_size
  * \params[in] cookie A cookie instance
  * \params[in] buffer A buffer which is filled with the serialized representation
                       of the given cookie
@@ -48,7 +48,7 @@ void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size);
 
 /* Create a cookie from a serialized representation
  *
- * \pre The size must be equal to mir_cookie_get_size
+ * \pre The size must be equal to mir_cookie_size
  * \params[in] buffer The buffer containing a serialized cookie.
  *                    The buffer may be freed immediately after this call.
  * \return            A MirCookie instance. The instance must be released
