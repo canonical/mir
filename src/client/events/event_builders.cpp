@@ -41,6 +41,22 @@ namespace
     {
         return mir::EventUPtr(e, delete_event);
     }
+
+    void copy_vector_to_array(std::vector<uint8_> const& vector, size_t size)
+    {
+        std::array<uint8_t, size> array{};
+
+        if (vector.size() > array.size())
+        {
+            throw std::runtime_error("Vector size " + std::to_string(vector.size()) +
+                                     " is larger then array size: " +
+                                     std::to_string(array.size()));
+        }
+
+        std::copy_n(vector.begin(), vector.size(), array.begin());
+
+        return array;
+    }
 }
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirOrientation orientation)
@@ -161,7 +177,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     kev.device_id = device_id;
     kev.source_id = AINPUT_SOURCE_KEYBOARD;
     kev.event_time = timestamp;
-    std::copy_n(std::begin(cookie), cookie.size(), std::begin(kev.cookie));
+    kev.cookie = copy_vector_to_array(cookie);
     kev.action = action;
     kev.key_code = key_code;
     kev.scan_code = scan_code;
@@ -238,7 +254,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     auto& mev = e->motion;
     mev.device_id = device_id;
     mev.event_time = timestamp;
-    std::copy_n(std::begin(cookie), cookie.size(), std::begin(mev.cookie));
+    mev.cookie = copy_vector_to_array(cookie);
     mev.modifiers = modifiers;
     mev.source_id = AINPUT_SOURCE_TOUCHSCREEN;
     
@@ -290,7 +306,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     auto& mev = e->motion;
     mev.device_id = device_id;
     mev.event_time = timestamp;
-    std::copy_n(std::begin(cookie), cookie.size(), std::begin(mev.cookie));
+    mev.cookie = copy_vector_to_array(cookie);
     mev.modifiers = modifiers;
     mev.source_id = AINPUT_SOURCE_MOUSE;
     mev.buttons = buttons_pressed;

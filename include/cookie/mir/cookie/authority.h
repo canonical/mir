@@ -75,6 +75,7 @@ public:
     *   \param [out] save_secret  The secret that was created.
     *   \return                   An Authority
     */
+    // TODO Soon to be removed! 
     static std::unique_ptr<Authority> create_saving(Secret& save_secret);
 
     /**

@@ -134,7 +134,7 @@ public:
 
     std::unique_ptr<mir::cookie::Cookie> make_cookie(uint64_t const& timestamp) override
     {
-        return std::unique_ptr<mir::cookie::Cookie>(new mir::cookie::HMACCookie(timestamp, calculate_cookie(timestamp), mir::cookie::Format::hmac_sha_1_8));
+        return std::make_unique<mir::cookie::HMACCookie>(timestamp, calculate_cookie(timestamp), mir::cookie::Format::hmac_sha_1_8);
     }
 
     std::unique_ptr<mir::cookie::Cookie> make_cookie(std::vector<uint8_t> const& raw_cookie) override
@@ -169,7 +169,7 @@ public:
         std::vector<uint8_t> mac(8);
         memcpy(mac.data(), ptr, mac.size());
 
-        std::unique_ptr<mir::cookie::Cookie> cookie(new mir::cookie::HMACCookie(timestamp, mac, mir::cookie::Format::hmac_sha_1_8));
+        auto cookie = std::make_unique<mir::cookie::HMACCookie>(timestamp, calculate_cookie(timestamp), mir::cookie::Format::hmac_sha_1_8);
         if (!verify_cookie(timestamp, cookie))
         {
             BOOST_THROW_EXCEPTION(mir::cookie::SecurityCheckError());
@@ -189,7 +189,7 @@ private:
         return mac;
     }
 
-    bool verify_cookie(uint64_t const& timestamp, std::unique_ptr<mir::cookie::Cookie> const& cookie)
+    bool verify_cookie(uint64_t const& timestamp, std::unique_ptr<mir::cookie::HMACCookie> const& cookie)
     {
         auto const calculated_cookie = make_cookie(timestamp);
 
