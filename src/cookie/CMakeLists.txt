@@ -19,8 +19,9 @@ include_directories(
 set(MIRCOOKIE_ABI 1)
 set(symbol_map ${CMAKE_SOURCE_DIR}/src/cookie/symbols.map)
 
-add_library(mircookie SHARED
+mir_add_library_with_symbols(mircookie SHARED
 
+  ${symbol_map}
   cookie_factory.cpp
 )
 

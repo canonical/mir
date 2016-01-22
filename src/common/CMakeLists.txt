@@ -33,18 +33,18 @@ set(
   ${MIR_GENERATED_INCLUDE_DIRECTORIES}
   PARENT_SCOPE)
 
-add_library(mircommon
-  SHARED
+# TODO we need a place to manage ABI and related versioning but use this as placeholder
+set(MIRCOMMON_ABI 5)
+set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
+
+mir_add_library_with_symbols(mircommon SHARED
+  ${symbol_map}
   ${MIR_COMMON_SOURCES}
 )
 
 target_link_libraries(mircommon
   ${MIR_COMMON_REFERENCES}
 )
-
-# TODO we need a place to manage ABI and related versioning but use this as placeholder
-set(MIRCOMMON_ABI 5)
-set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(mircommon
 

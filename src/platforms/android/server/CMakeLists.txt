@@ -39,8 +39,13 @@ add_library(mirplatformgraphicsandroidobjects OBJECT
   hwc_blanking_control.cpp
 )
 
-add_library(mirplatformgraphicsandroid SHARED
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
+    ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
+set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
+mir_add_library_with_symbols(mirplatformgraphicsandroid SHARED
+
+  ${symbol_map}
   $<TARGET_OBJECTS:mirplatformgraphicsandroidobjects>
   $<TARGET_OBJECTS:mirgl>
 )
@@ -56,10 +61,6 @@ target_link_libraries(
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${ANDROID_PROPERTIES_LDFLAGS}
 )
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
-    ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
-set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
 set_target_properties(
   mirplatformgraphicsandroid PROPERTIES
