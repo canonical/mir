@@ -23,6 +23,7 @@
 #include "mir/events/event_private.h"
 #include "mir/log.h"
 #include "mir/require.h"
+#include "mir_toolkit/mir_cookie.h"
 
 #include "../mir_cookie.h"
 

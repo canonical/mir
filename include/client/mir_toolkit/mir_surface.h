@@ -757,11 +757,11 @@ char const* mir_persistent_id_as_string(MirPersistentId* id);
 MirPersistentId* mir_persistent_id_from_string(char const* string_representation);
 
 /*
-* Attempts to raise the surface based on a keyboard/touch/pointer cookie.
+* Attempts to raise the surface to the front.
 *
-*   \param [in] surface The surface to operate on.
-*   \param [in] cookie  The MirCookie from an input event.
-*   \post               Sumbittiming an invalid cookie will temrinate your connection.
+* \param [in] surface The surface to raise
+* \param [in] cookie  A cookie instance obtained from an input event.
+*                     An invalid cookie will terminate the client connection.
 */
 void mir_surface_raise(MirSurface* surface, MirCookie const* cookie);
 

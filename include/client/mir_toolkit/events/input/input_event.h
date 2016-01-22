@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -133,54 +133,21 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev);
  */
 MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev);
 
-
-/* Tells if the MirInputEvent has a MirCookie
+/* Query if an input event contains a cookie
  *
  * \params[in] ev The input event
- * \return        True if the input event has a MirCookie
+ * \return        True if the input event contains a cookie
  */
 bool mir_input_event_has_cookie(MirInputEvent const* ev);
 
-/* Returns the MirCookie associated with this input event.
+/* Returns the cookie associated with an input event.
  *
- * \pre           The input event must have a MirCookie
- * \params[in] ev The input event
- * \return        A reference to the MirCookie associated with this input event
- *                This must be released with a call to mir_cookie_release()
+ * \pre The input event must have a MirCookie
+ * \params[in] ev An input event
+ * \return        The cookie associated with the given input event
+ *                The cookie must be released by calling mir_cookie_release
  */
 MirCookie const* mir_input_event_get_cookie(MirInputEvent const* ev);
-
-/* The size of the buffer needed to serialize this MirCookie
- *
- * \params[in] cookie  The MirCookie
- * \return             The size needed for a buffer
- */
-size_t mir_cookie_get_size(MirCookie const* cookie);
-
-/* Copy the MirCookie into an allocated buffer
- *
- * \pre               The size must be equal to mir_cookie_get_size
- * \params[in] cookie The MirCookie
- * \params[in] buffer The allocated buffer to copy the MirCookie into
- * \params[in] size   The size of the allocated buffer
- */
-void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size);
-
-/* Create a MirCookie from a serialised representation
- *
- * \pre               The size must be equal to mir_cookie_get_size
- * \params[in] buffer The buffer containing a serialised MirCookie.
- *                    The buffer may be freed immediately after this call.
- * \return            A reference to a MirCookie.
- *                    This must be released with a call to mir_cookie_release().
- */
-MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size);
-
-/* Release the MirCookie
- *
- * \params[in] cookie The cookie to release
- */
-void mir_cookie_release(MirCookie const* cookie);
 
 #ifdef __cplusplus
 }

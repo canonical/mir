@@ -64,7 +64,7 @@ public:
     *   Construction function used to create a Authority. The secret size must be
     *   no less then minimum_secret_size otherwise an exception will be thrown
     *
-    *   \param [in] secret  A filled in secret used to set the key for the hash function
+    *   \param [in] secret  A secret used to set the key for the hash function
     *   \return             A unique_ptr Authority
     */
     static std::unique_ptr<Authority> create_from(Secret const& secret);
@@ -89,18 +89,18 @@ public:
     virtual ~Authority() noexcept = default;
 
     /**
-    *   Creates a cookie attesting the timestamp.
+    * Creates a cookie from a timestamp.
     *
-    *   \param [in]  Timestamp to be attested
-    *   \return      A unique_ptr Cookie
+    * \param [in] timestamp A timestamp
+    * \return               A cookie instance
     */
     virtual std::unique_ptr<Cookie> make_cookie(uint64_t const& timestamp) = 0;
 
     /**
-    *   Rebuilds a Cookie from a stream of bytes and validates it
+    * Creates a cookie from a serialized representation
     *
-    *   \param [in]  A stream of bytes to be marshalled into a Cookie
-    *   \return      A unique_ptr Cookie
+    * \param [in] blob A blob of bytes representing a serialized cookie
+    * \return          A cookie instance
     */
     virtual std::unique_ptr<Cookie> make_cookie(std::vector<uint8_t> const& raw_cookie) = 0;
 
