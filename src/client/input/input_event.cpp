@@ -436,12 +436,15 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev)
     return false;
 }
 
-size_t mir_cookie_buffer_size(MirCookie const* cookie)
+size_t mir_cookie_buffer_size(MirCookie const* cookie) try
 {
     return cookie->size();
+} catch (...)
+{
+    abort();
 }
 
-MirCookie const* mir_input_event_get_cookie(MirInputEvent const* iev)
+MirCookie const* mir_input_event_get_cookie(MirInputEvent const* iev) try
 {
     auto const ev = old_ev_from_new(iev);
 
@@ -457,22 +460,34 @@ MirCookie const* mir_input_event_get_cookie(MirInputEvent const* iev)
         abort();
     }
     }
+} catch (...)
+{
+    abort();
 }
 
-void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size)
+void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size) try
 {
     return cookie->copy_to(buffer, size);
+} catch (...)
+{
+    abort();
 }
 
-MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size)
+MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size) try
 {
     if (size != mir::cookie::default_blob_size)
         return NULL;
 
     return new MirCookie(buffer, size);
+} catch (...)
+{
+    abort();
 }
 
-void mir_cookie_release(MirCookie const* cookie)
+void mir_cookie_release(MirCookie const* cookie) try
 {
     delete cookie;
+} catch (...)
+{
+    abort();
 }
