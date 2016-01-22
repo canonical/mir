@@ -148,13 +148,13 @@ public:
 
         if (raw_cookie.size() != cookie_size_from_format(mir::cookie::Format::hmac_sha_1_8))
         {
-            throw mir::cookie::SecurityCheckError();
+           BOOST_THROW_EXCEPTION(mir::cookie::SecurityCheckError());
         }
 
         mir::cookie::Format format = static_cast<mir::cookie::Format>(raw_cookie[0]);
         if (format != mir::cookie::Format::hmac_sha_1_8)
         {
-            throw mir::cookie::SecurityCheckError();
+            BOOST_THROW_EXCEPTION(mir::cookie::SecurityCheckError());
         }
 
         uint64_t timestamp = 0;
@@ -172,7 +172,7 @@ public:
         std::unique_ptr<mir::cookie::Cookie> cookie(new mir::cookie::HMACCookie(timestamp, mac, mir::cookie::Format::hmac_sha_1_8));
         if (!verify_cookie(timestamp, cookie))
         {
-            throw mir::cookie::SecurityCheckError();
+            BOOST_THROW_EXCEPTION(mir::cookie::SecurityCheckError());
         }
 
         return cookie;
