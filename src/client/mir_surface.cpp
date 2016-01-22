@@ -20,7 +20,6 @@
 #include "mir_connection.h"
 #include "cursor_configuration.h"
 #include "client_buffer_stream.h"
-#include "client_buffer_stream_factory.h"
 #include "make_protobuf_object.h"
 #include "mir_protobuf.pb.h"
 

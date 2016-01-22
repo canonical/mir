@@ -22,7 +22,6 @@
 #include "mir_surface.h"
 #include "mir_connection.h"
 #include "buffer_stream.h"
-#include "client_buffer_stream_factory.h"
 
 #include "mir/client_buffer.h"
 
