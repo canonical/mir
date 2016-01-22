@@ -45,9 +45,6 @@ public:
     *  \return  The stream of bytes formatted
     */
     virtual std::vector<uint8_t> serialize() const = 0;
-
-    virtual bool operator==(Cookie const& cookie) const = 0;
-    virtual bool operator!=(Cookie const& cookie) const = 0;
 };
 
 }

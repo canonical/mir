@@ -134,7 +134,7 @@ public:
 
     std::unique_ptr<mir::cookie::Cookie> make_cookie(uint64_t const& timestamp) override
     {
-        return std::unique_ptr<mir::cookie::Cookie>(new mir::cookie::HMACCookie(timestamp, calculate_mac(timestamp), mir::cookie::Format::hmac_sha_1_8));
+        return std::unique_ptr<mir::cookie::Cookie>(new mir::cookie::HMACCookie(timestamp, calculate_cookie(timestamp), mir::cookie::Format::hmac_sha_1_8));
     }
 
     std::unique_ptr<mir::cookie::Cookie> make_cookie(std::vector<uint8_t> const& raw_cookie) override
@@ -170,7 +170,7 @@ public:
         memcpy(mac.data(), ptr, mac.size());
 
         std::unique_ptr<mir::cookie::Cookie> cookie(new mir::cookie::HMACCookie(timestamp, mac, mir::cookie::Format::hmac_sha_1_8));
-        if (!verify_mac(timestamp, cookie))
+        if (!verify_cookie(timestamp, cookie))
         {
             throw mir::cookie::SecurityCheckError();
         }
@@ -179,7 +179,7 @@ public:
     }
 
 private:
-    std::vector<uint8_t> calculate_mac(uint64_t const& timestamp)
+    std::vector<uint8_t> calculate_cookie(uint64_t const& timestamp)
     {
         // FIXME Soon to change to 160bits, for now uint64_t
         std::vector<uint8_t> mac(sizeof(uint64_t));
@@ -189,9 +189,16 @@ private:
         return mac;
     }
 
-    bool verify_mac(uint64_t const& timestamp, std::unique_ptr<mir::cookie::Cookie> const& cookie)
+    bool verify_cookie(uint64_t const& timestamp, std::unique_ptr<mir::cookie::Cookie> const& cookie)
     {
-        return *cookie == *make_cookie(timestamp);
+        auto const calculated_cookie = make_cookie(timestamp);
+
+        auto const this_stream  = cookie->serialize();
+        auto const other_stream = calculated_cookie->serialize();
+
+        // FIXME Need to do a constant memcmp here!
+        return std::equal(std::begin(this_stream), std::end(this_stream), std::begin(other_stream));
+        //return *cookie == *make_cookie(timestamp);
     }
 
     struct hmac_sha1_ctx ctx;

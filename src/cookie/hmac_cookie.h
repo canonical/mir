@@ -39,9 +39,6 @@ public:
     uint64_t timestamp() const override;
     std::vector<uint8_t> serialize() const override;
 
-    bool operator==(Cookie const& cookie) const override;
-    bool operator!=(Cookie const& cookie) const override;
-
 private:
     uint64_t timestamp_;
     std::vector<uint8_t> mac_;

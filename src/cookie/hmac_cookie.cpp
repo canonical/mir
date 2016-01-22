@@ -51,17 +51,3 @@ std::vector<uint8_t> mir::cookie::HMACCookie::serialize() const
     
     return serialized_cookie;
 }
-
-bool mir::cookie::HMACCookie::operator==(Cookie const& cookie) const
-{
-    auto const this_stream  = serialize();
-    auto const other_stream = cookie.serialize();
-
-    // FIXME Need to do a constant memcmp here!
-    return std::equal(std::begin(this_stream), std::end(this_stream), std::begin(other_stream));
-}
-
-bool mir::cookie::HMACCookie::operator!=(Cookie const& cookie) const
-{
-    return !(*this == cookie);
-}
