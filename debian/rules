@@ -55,4 +55,4 @@ override_dh_install:
 # accidentally.
 	-rm debian/tmp/usr/lib/*/libmirprotobuf.so
 	dh_install -p libmirplatform-dev -Xmesa --fail-missing
-	dh_install --remaining-packages --fail-missing
+	dh_install --remaining-packages --fail-missing -Xjquery.js
