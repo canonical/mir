@@ -44,7 +44,8 @@ public:
     void reception_mode_set_to(input::InputReceptionMode mode) override;
     void cursor_image_set_to(graphics::CursorImage const& image) override;
     void client_surface_close_requested() override;
-    void keymap_changed(xkb_rule_names const& names) override;
+    void keymap_changed(MirInputDeviceId id, std::string const& model, std::string const& layout,
+                        std::string const& variant, std::string const& options) override;
     void renamed(char const*) override;
     void cursor_image_removed() override;
 };

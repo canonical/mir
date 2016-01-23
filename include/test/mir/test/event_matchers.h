@@ -459,26 +459,13 @@ MATCHER_P2(SurfaceEvent, attrib, value, "")
     return true;
 }
 
-MATCHER_P(KeymapEventWithRules, expected_rules, "")
+MATCHER_P(KeymapEventForDevice, device_id, "")
 {
     auto as_address = to_address(arg);
     if (mir_event_get_type(as_address) != mir_event_type_keymap)
         return false;
     auto kmev = mir_event_get_keymap_event(as_address);
-    xkb_rule_names received_rules;
-    mir_keymap_event_get_rules(kmev, &received_rules);
-
-    if (strcmp(received_rules.rules, expected_rules.rules) != 0)
-        return false;
-    if (strcmp(received_rules.layout, expected_rules.layout) != 0)
-        return false;
-    if (strcmp(received_rules.model, expected_rules.model) != 0)
-        return false;
-    if (strcmp(received_rules.variant, expected_rules.variant) != 0)
-        return false;
-    if (strcmp(received_rules.options, expected_rules.options) != 0)
-        return false;
-    return true;
+    return device_id == mir_keymap_event_get_device_id(kmev);
 }
 
 MATCHER_P(OrientationEvent, direction, "")

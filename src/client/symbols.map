@@ -210,6 +210,8 @@ MIR_CLIENT_9v18 {
 MIR_CLIENT_unreleased {
   global:
     mir_connection_get_graphics_module;
+    mir_keymap_event_get_keymap_buffer;
+    mir_keymap_event_get_device_id;
   local:
     *;
 } MIR_CLIENT_9v18;
@@ -265,6 +267,8 @@ MIR_CLIENT_DETAIL_unreleased {
   global:
     extern "C++" { 
       mir::input::android::android_pointer_action_from_mir*;
+      mir::events::serialize_event*;
+      mir::events::deserialize_event*;
     };
   local:
     *;

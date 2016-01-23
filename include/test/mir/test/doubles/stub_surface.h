@@ -67,7 +67,8 @@ struct StubSurface : scene::Surface
     std::shared_ptr<Surface> parent() const override;
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer) override;
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) override;
-    void set_keymap(xkb_rule_names const& rules) override;
+    void set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,
+                    std::string const& variant, std::string const& options) override;
     void rename(std::string const& title) override;
 };
 }

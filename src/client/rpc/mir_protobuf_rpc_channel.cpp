@@ -27,7 +27,9 @@
 #include "../make_protobuf_object.h"
 #include "mir/input/input_devices.h"
 #include "mir/variable_length_array.h"
+#include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
+#include "mir/events/serialization.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
@@ -36,8 +38,10 @@
 #include <endian.h>
 
 #include <stdexcept>
+#include <cstring>
 
 namespace mf = mir::frontend;
+namespace mev = mir::events;
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
 namespace md = mir::dispatch;
@@ -308,58 +312,53 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         mp::Event const& event = seq.event(i);
         if (event.has_raw())
         {
-            std::string const& raw_event = event.raw();
-
             // In future, events might be compressed where possible.
             // But that's a job for later...
-            if (raw_event.size() == sizeof(MirEvent))
+            try
             {
-                MirEvent e;
-
-                // Make a copy to ensure integer fields get correct memory
-                // alignment, which is critical on many non-x86
-                // architectures.
-                memcpy(&e, raw_event.data(), sizeof e);
-
-                rpc_report->event_parsing_succeeded(e);
-
-                auto const send_e = [&e](MirSurface* surface)
-                    { surface->handle_event(e); };
-
-                switch (e.type)
+                auto e = mev::deserialize_event(event.raw());
+                if (e)
                 {
-                case mir_event_type_surface:
-                    if (auto map = surface_map.lock()) 
-                        map->with_surface_do(mf::SurfaceId(e.surface.id), send_e);
-                    break;
+                    rpc_report->event_parsing_succeeded(*e);
 
-                case mir_event_type_resize:
-                    if (auto map = surface_map.lock()) 
-                        map->with_surface_do(mf::SurfaceId(e.resize.surface_id), send_e);
-                    break;
+                    auto const send_e = [&e](MirSurface* surface)
+                        { surface->handle_event(*e); };
 
-                case mir_event_type_orientation:
-                    if (auto map = surface_map.lock()) 
-                        map->with_surface_do(mf::SurfaceId(e.orientation.surface_id), send_e);
-                    break;
+                    switch (e->type)
+                    {
+                    case mir_event_type_surface:
+                        if (auto map = surface_map.lock())
+                            map->with_surface_do(mf::SurfaceId(e->surface.id), send_e);
+                        break;
 
-                case mir_event_type_close_surface:
-                    if (auto map = surface_map.lock()) 
-                        map->with_surface_do(mf::SurfaceId(e.close_surface.surface_id), send_e);
-                    break;
-                case mir_event_type_keymap:
-                    if (auto map = surface_map.lock()) 
-                        map->with_surface_do(mf::SurfaceId(e.keymap.surface_id), send_e);
-                    break;
-                case mir_event_type_surface_output:
-                    if (auto map = surface_map.lock()) 
-                        map->with_surface_do(mf::SurfaceId(e.surface_output.surface_id), send_e);
-                    break;
-                default:
-                    event_sink->handle_event(e);
+                    case mir_event_type_resize:
+                        if (auto map = surface_map.lock())
+                            map->with_surface_do(mf::SurfaceId(e->resize.surface_id), send_e);
+                        break;
+
+                    case mir_event_type_orientation:
+                        if (auto map = surface_map.lock())
+                            map->with_surface_do(mf::SurfaceId(e->orientation.surface_id), send_e);
+                        break;
+
+                    case mir_event_type_close_surface:
+                        if (auto map = surface_map.lock())
+                            map->with_surface_do(mf::SurfaceId(e->close_surface.surface_id), send_e);
+                        break;
+                    case mir_event_type_keymap:
+                        if (auto map = surface_map.lock())
+                            map->with_surface_do(mf::SurfaceId(e->keymap.surface_id), send_e);
+                        break;
+                    case mir_event_type_surface_output:
+                        if (auto map = surface_map.lock())
+                            map->with_surface_do(mf::SurfaceId(e->surface_output.surface_id), send_e);
+                        break;
+                    default:
+                        event_sink->handle_event(*e);
+                    }
                 }
             }
-            else
+            catch(...)
             {
                 rpc_report->event_parsing_failed(event);
             }

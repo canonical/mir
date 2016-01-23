@@ -39,7 +39,8 @@
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
-namespace mircv = mir::input::receiver;
+namespace mi = mir::input;
+namespace mircv = mi::receiver;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 namespace md = mir::dispatch;
@@ -436,9 +437,12 @@ void MirSurface::handle_event(MirEvent const& e)
         break;
     case mir_event_type_keymap:
     {
-        xkb_rule_names names;
-        mir_keymap_event_get_rules(mir_event_get_keymap_event(&e), &names);
-        keymapper->set_rules(names);
+        char const* buffer = nullptr;
+        size_t length = 0;
+        auto keymap_event = mir_event_get_keymap_event(&e);
+        mir_keymap_event_get_keymap_buffer(keymap_event, &buffer, &length);
+        keymapper->set_keymap(mir_keymap_event_get_device_id(keymap_event),
+                              mi::make_unique_keymap(keymapper->get_context(), buffer, length));
         break;
     }
     case mir_event_type_resize:
