@@ -87,8 +87,6 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
     size_t event_count{0};
     mutable std::mutex mutex;
 
-    MirLifecycleState lifecycle_state{mir_lifecycle_state_resumed};
-
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid", mi::DeviceCapability::keyboard})
         };

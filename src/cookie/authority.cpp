@@ -169,7 +169,9 @@ public:
         std::vector<uint8_t> mac(8);
         memcpy(mac.data(), ptr, mac.size());
 
-        auto cookie = std::make_unique<mir::cookie::HMACCookie>(timestamp, mac, mir::cookie::Format::hmac_sha_1_8);
+        std::unique_ptr<mir::cookie::Cookie> cookie =
+            std::make_unique<mir::cookie::HMACCookie>(timestamp, mac, mir::cookie::Format::hmac_sha_1_8);
+
         if (!verify_cookie(timestamp, cookie))
         {
             BOOST_THROW_EXCEPTION(mir::cookie::SecurityCheckError());
@@ -189,7 +191,7 @@ private:
         return mac;
     }
 
-    bool verify_cookie(uint64_t const& timestamp, std::unique_ptr<mir::cookie::HMACCookie> const& cookie)
+    bool verify_cookie(uint64_t const& timestamp, std::unique_ptr<mir::cookie::Cookie> const& cookie)
     {
         auto const calculated_cookie = make_cookie(timestamp);
 
