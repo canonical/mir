@@ -44,7 +44,7 @@ namespace
 
     mir::cookie::Blob copy_vector_to_cookie_blob(std::vector<uint8_t> const& vector)
     {
-        mir::cookie::Blob blob{};
+        mir::cookie::Blob blob{{}};
 
         if (vector.size() > blob.size())
         {
