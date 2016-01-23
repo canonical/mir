@@ -77,15 +77,22 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
             },
             std::chrono::seconds{max_wait});
 
+        ready_to_accept_events.wait_for_at_most_seconds(max_wait);
+        if (!ready_to_accept_events.woken())
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become focused and exposed"));
+
         EXPECT_TRUE(surface_fullscreen);
     }
 
     MirSurface* surface1;
     MirSurface* surface2;
 
+    mir::test::WaitCondition ready_to_accept_events;
     std::vector<std::vector<uint8_t>> out_cookies;
     size_t event_count{0};
     mutable std::mutex mutex;
+    bool exposed{false};
+    bool focused{false};
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid", mi::DeviceCapability::keyboard})
@@ -102,8 +109,30 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
 {
     auto const event_type = mir_event_get_type(ev);
     auto raise_surfaces = static_cast<RaiseSurfaces*>(ctx);
-    
-    if (event_type == mir_event_type_input)
+
+    if (event_type == mir_event_type_surface)
+    {
+        auto event = mir_event_get_surface_event(ev);
+        auto const attrib = mir_surface_event_get_attribute(event);
+        auto const value = mir_surface_event_get_attribute_value(event);
+
+        std::lock_guard<std::mutex> lk(raise_surfaces->mutex);
+        if (mir_surface_attrib_visibility == attrib &&
+            mir_surface_visibility_exposed == value)
+        {
+            raise_surfaces->exposed = true;
+        }
+
+        if (mir_surface_attrib_focus == attrib &&
+            mir_surface_focused == value)
+        {
+            raise_surfaces->focused = true;
+        }
+
+        if (raise_surfaces->exposed && raise_surfaces->focused)
+            raise_surfaces->ready_to_accept_events.wake_up_everyone();
+    }
+    else if (event_type == mir_event_type_input)
     {   
         auto const* iev = mir_event_get_input_event(ev);
 
@@ -199,17 +228,21 @@ TEST_F(RaiseSurfaces, motion_events_dont_prevent_raise)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_M));
-    if (wait_for_n_events(2, this))
+    int events = 2;
+    if (wait_for_n_events(events, this))
     {
         fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
-        if (wait_for_n_events(1, this))
+        EXPECT_EQ(out_cookies.size(), events);
+
+        if (wait_for_n_events(events + 1, this))
         {
             std::lock_guard<std::mutex> lk(mutex);
             ASSERT_FALSE(out_cookies.empty());
             EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
-            MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.back().data(), out_cookies.back().size());
-            EXPECT_TRUE(attempt_focus(surface1, cookie));
-            mir_cookie_release(cookie);
+
+            // We still have 2 cookie, but have gotten more then 2 events
+            EXPECT_EQ(out_cookies.size(), events);
+            EXPECT_GE(event_count, events + 1);
         }
     }
 }
