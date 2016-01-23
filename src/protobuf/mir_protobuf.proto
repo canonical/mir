@@ -343,8 +343,7 @@ message CoordinateTranslationResponse {
 }
 
 message Cookie {
-  required uint64 timestamp = 1;
-  required uint64 mac = 2;
+  required bytes cookie = 1;
 }
 
 message RaiseRequest {

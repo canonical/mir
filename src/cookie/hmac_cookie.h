@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,19 +16,36 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#ifndef MIR_SECURITY_CHECK_FAILED_H_
-#define MIR_SECURITY_CHECK_FAILED_H_
+#ifndef MIR_COOKIE_HMAC_COOKIE_H_
+#define MIR_COOKIE_HMAC_COOKIE_H_
 
-#include <stdexcept>
+#include "mir/cookie/cookie.h"
+#include "format.h"
 
 namespace mir
 {
-
-struct SecurityCheckFailed : std::runtime_error
+namespace cookie
 {
-    SecurityCheckFailed();
+
+class HMACCookie : public mir::cookie::Cookie
+{
+public:
+    HMACCookie() = delete;
+
+    explicit HMACCookie(uint64_t const& timestamp,
+                        std::vector<uint8_t> const& mac,
+                        mir::cookie::Format const& format);
+
+    uint64_t timestamp() const override;
+    std::vector<uint8_t> serialize() const override;
+
+private:
+    uint64_t timestamp_;
+    std::vector<uint8_t> mac_;
+    mir::cookie::Format format_;
 };
 
 }
+}
 
-#endif /* MIR_SECURITY_CHECK_FAILED_H_ */
+#endif // MIR_COOKIE_HMAC_COOKIE_H_

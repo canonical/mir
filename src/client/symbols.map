@@ -210,6 +210,13 @@ MIR_CLIENT_9v18 {
 MIR_CLIENT_unreleased {
   global:
     mir_connection_get_graphics_module;
+    mir_surface_raise;
+    mir_input_event_has_cookie;
+    mir_cookie_buffer_size;
+    mir_input_event_get_cookie;
+    mir_cookie_to_buffer;
+    mir_cookie_from_buffer;
+    mir_cookie_release;
     mir_keymap_event_get_keymap_buffer;
     mir_keymap_event_get_device_id;
   local:

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,18 +13,28 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#ifndef MIR_CLIENT_LIBRARY_H
-#define MIR_CLIENT_LIBRARY_H
 
-#include <mir_toolkit/mir_connection.h>
-#include <mir_toolkit/mir_surface.h>
-#include <mir_toolkit/mir_wait.h>
-#include <mir_toolkit/mir_buffer_stream.h>
-#include <mir_toolkit/version.h>
-#include <mir_toolkit/mir_platform_message.h>
-#include <mir_toolkit/cursors.h>
-#include <mir_toolkit/mir_cookie.h>
+#ifndef MIR_CLIENT_MIR_COOKIE_H_
+#define MIR_CLIENT_MIR_COOKIE_H_
 
-#endif /* MIR_CLIENT_LIBRARY_H */
+#include "mir/cookie/blob.h"
+
+class MirCookie
+{
+public:
+    explicit MirCookie(void const* buffer, size_t size);
+    explicit MirCookie(mir::cookie::Blob const& blob);
+
+    void copy_to(void* buffer, size_t size) const;
+    size_t size() const;
+
+    mir::cookie::Blob blob() const;
+
+private:
+    mir::cookie::Blob blob_;
+};
+
+#endif // MIR_CLIENT_MIR_COOKIE_H_
