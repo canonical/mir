@@ -47,7 +47,8 @@ EventUPtr make_event(frontend::SurfaceId const& surface_id, MirSurfaceAttrib att
 // Close surface event
 EventUPtr make_event(frontend::SurfaceId const& surface_id);
 // Keymap event
-EventUPtr make_event(frontend::SurfaceId const& surface_id, xkb_rule_names const& names);
+EventUPtr make_event(frontend::SurfaceId const& surface_id, MirInputDeviceId id, std::string const& model,
+                     std::string const& layout, std::string const& variant, std::string const& options);
 // Surface output event
 EventUPtr make_event(
     frontend::SurfaceId const& surface_id,

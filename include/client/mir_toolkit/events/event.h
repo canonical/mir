@@ -149,9 +149,15 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev);
  * type mir_event_type_close_surface. The event is a request to close
  * the surface it is delivered to and has no accessors.
  *
+ * \deprecated Use of this function is pointless as there is no way to use the
+ * return value.
+ *
+ * \todo This should be removed from the public API at the next API break.
+ *
  * \param [in] event The event
  * \return           The associated MirCloseSurfaceEvent
  */
+__attribute__ ((deprecated))
 MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev);
 
 /*

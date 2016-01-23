@@ -161,7 +161,9 @@ struct MirKeymapEvent
     MirEventType type;
 
     int surface_id;
-    struct xkb_rule_names rules;
+    MirInputDeviceId device_id;
+    char const* buffer;
+    size_t size;
 };
 
 struct MirSurfaceOutputEvent
