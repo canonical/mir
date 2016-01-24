@@ -187,7 +187,7 @@ private:
     {
         std::vector<uint8_t> mac(mac_byte_size);
         hmac_sha1_update(&ctx, sizeof(timestamp), reinterpret_cast<uint8_t const*>(&timestamp));
-        hmac_sha1_digest(&ctx, sizeof(mir::cookie::default_blob_size), reinterpret_cast<uint8_t*>(mac.data()));
+        hmac_sha1_digest(&ctx, sizeof(mir::cookie::default_blob_size), mac.data());
 
         return mac;
     }
