@@ -45,6 +45,7 @@ Build-Depends: cmake,
                python3:any,
                dh-python,
                nettle-dev,
+               libsodium-dev,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
