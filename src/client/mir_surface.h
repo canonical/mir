@@ -122,6 +122,7 @@ struct MirSurfaceSpec
         void* context;
     };
     mir::optional_value<EventHandler> event_handler;
+    mir::optional_value<MirShellChrome> shell_chrome;
 };
 
 struct MirPersistentId

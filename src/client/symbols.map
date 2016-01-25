@@ -212,8 +212,7 @@ MIR_CLIENT_unreleased {
     mir_connection_get_graphics_module;
     mir_keymap_event_get_keymap_buffer;
     mir_keymap_event_get_device_id;
-  local:
-    *;
+    mir_surface_spec_set_shell_chrome;
 } MIR_CLIENT_9v18;
 
 MIR_CLIENT_DETAIL_9 {
