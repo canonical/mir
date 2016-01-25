@@ -13,9 +13,10 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/egl_sync_fence.h"
 #include "android_native_buffer.h"
 #include "sync_fence.h"
 #include "gralloc_registrar.h"
@@ -82,7 +83,8 @@ std::shared_ptr<mg::NativeBuffer> create_native_buffer(
     anwb->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     anwb->handle = handle.get();
 
-    return std::make_shared<mga::AndroidNativeBuffer>(anwb, fence, mga::BufferAccess::read);
+    auto sync = std::make_shared<mg::NullCommandSync>(); //no need for eglsync client side
+    return std::make_shared<mga::AndroidNativeBuffer>(anwb, sync, fence, mga::BufferAccess::read);
 }
 }
 std::shared_ptr<mg::NativeBuffer> mcla::GrallocRegistrar::register_buffer(

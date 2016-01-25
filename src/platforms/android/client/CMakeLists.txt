@@ -35,6 +35,7 @@ target_link_libraries(mirclientplatformandroid
   mirclient
   client_platform_common
   mirsharedandroid-static
+  mirplatform
   ${LIBHARDWARE_LIBRARIES}
 )
 
