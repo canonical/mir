@@ -20,6 +20,7 @@
 #include "mir/cookie/authority.h"
 #include "mir/cookie/blob.h"
 #include "hmac_cookie.h"
+#include "const_memcmp.h"
 #include "format.h"
 
 #include <algorithm>
@@ -44,22 +45,6 @@ std::string const random_device_path{"/dev/random"};
 std::string const urandom_device_path{"/dev/urandom"};
 uint32_t const wait_seconds{30};
 uint32_t const mac_byte_size{20};
-
-int
-const_memcmp(void const* const b1_, void const* const b2_, size_t len)
-{
-    volatile unsigned char const* b1 = (volatile unsigned char const*) b1_;
-    volatile unsigned char const* b2 = (volatile unsigned char const*) b2_;
-
-    size_t        i;
-    unsigned char d = (unsigned char) 0U;
-
-    for (i = 0U; i < len; i++)
-    {
-        d |= b1[i] ^ b2[i];
-    }
-    return (1 & ((d - 1) >> 8)) - 1;
-}
 
 size_t cookie_size_from_format(mir::cookie::Format const& format)
 {
@@ -215,7 +200,7 @@ private:
         auto const other_stream = calculated_cookie->serialize();
 
         return this_stream.size() == other_stream.size() &&
-               const_memcmp(this_stream.data(), other_stream.data(), this_stream.size()) == 0;
+               mir::cookie::const_memcmp(this_stream.data(), other_stream.data(), this_stream.size()) == 0;
     }
 
     struct hmac_sha1_ctx ctx;
