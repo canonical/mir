@@ -1,5 +1,4 @@
 pkg_check_modules(NETTLE REQUIRED nettle)
-pkg_check_modules(SODIUM REQUIRED libsodium)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -16,7 +15,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${PROJECT_SOURCE_DIR}/include/cookie
   ${NETTLE_INCLUDE_DIRS}
-  ${SODIUM_INCLUDE_DIRS}
 )
 
 set(MIRCOOKIE_ABI 2)
@@ -37,7 +35,6 @@ set_target_properties(mircookie
 
 target_link_libraries(mircookie
   ${NETTLE_LDFLAGS} ${NETTLE_LIBS}
-  ${SODIUM_LDFLAGS} ${SODIUM_LIBS}
 )
 
 install(
