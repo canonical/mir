@@ -63,6 +63,7 @@ private:
     std::shared_ptr<FramebufferBundle> framebuffers;
     bool force_backup_display;
     size_t num_framebuffers;
+    bool working_egl_sync;
 
     std::shared_ptr<HwcWrapper> hwc_wrapper;
     std::shared_ptr<framebuffer_device_t> fb_native;

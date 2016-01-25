@@ -46,7 +46,8 @@ mga::HalComponentFactory::HalComponentFactory(
       res_factory(res_factory),
       hwc_report(hwc_report),
       force_backup_display(false),
-      num_framebuffers{quirks->num_framebuffers()}
+      num_framebuffers{quirks->num_framebuffers()},
+      working_egl_sync(quirks->working_egl_sync())
 {
     try
     {
@@ -68,6 +69,9 @@ mga::HalComponentFactory::HalComponentFactory(
 std::unique_ptr<mg::CommandStreamSync> mga::HalComponentFactory::create_command_stream_sync()
 {
     if (hwc_version == mga::HwcVersion::hwc10)
+        return std::make_unique<NullCommandSync>();
+
+    if (!working_egl_sync)
         return std::make_unique<NullCommandSync>();
 
     try

@@ -48,4 +48,6 @@ mg::EGLSyncExtensions::EGLSyncExtensions() :
 {
     if (!eglCreateSyncKHR || !eglDestroySyncKHR || !eglClientWaitSyncKHR)
         BOOST_THROW_EXCEPTION(std::runtime_error("EGL doesn't support the KHR_reusable_sync extension"));
+
+    //if (
 }

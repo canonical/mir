@@ -118,6 +118,12 @@ int mga::DeviceQuirks::fb_gralloc_bits() const
     return GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE;
 }
 
+bool mga::DeviceQuirks::working_egl_sync() const
+{
+    //FIXME: this really should be all powervr devices.
+    return device_name != "mx4";
+}
+
 void mga::DeviceQuirks::add_options(boost::program_options::options_description& config)
 {
     config.add_options()
