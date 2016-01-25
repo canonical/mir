@@ -555,6 +555,7 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
     COPY_IF_SET(max_height);
     COPY_IF_SET(width_inc);
     COPY_IF_SET(height_inc);
+    COPY_IF_SET(shell_chrome);
     // min_aspect is a special case (below)
     // max_aspect is a special case (below)
     #undef COPY_IF_SET

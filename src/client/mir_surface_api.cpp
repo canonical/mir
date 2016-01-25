@@ -224,6 +224,12 @@ void mir_surface_spec_set_event_handler(MirSurfaceSpec* spec,
     spec->event_handler = MirSurfaceSpec::EventHandler{callback, context};
 }
 
+void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome style)
+{
+    mir::require(spec);
+    spec->shell_chrome = style;
+}
+
 void mir_surface_spec_release(MirSurfaceSpec* spec)
 {
     delete spec;

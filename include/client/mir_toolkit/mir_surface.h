@@ -499,6 +499,16 @@ void mir_surface_spec_set_event_handler(
     mir_surface_event_callback callback,
     void* context);
 
+
+/**
+ * Ask the shell to customize "chrome" for this surface.
+ * For example, on the phone hide indicators when this surface is active.
+ *
+ * \param [in] spec The spec to accumulate the request in.
+ * \param [in] style The requested level of "chrome"
+ */
+void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome style);
+
 /**
  * Set the event handler to be called when events arrive for a surface.
  *   \warning event_handler could be called from another thread. You must do
