@@ -86,7 +86,7 @@ public:
     /// This must remain valid while apply_settings() and run() are called.
     void set_command_line(int argc, char const* argv[]);
 
-    /// Sets an override functor for creating the cookie factory.
+    /// Sets an override functor for creating the cookie authority.
     /// A secret can be saved and any process this secret is shared
     /// with can verify Mir-generated cookies, or produce their own.
     void override_the_cookie_authority(

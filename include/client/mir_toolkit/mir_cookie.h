@@ -52,7 +52,7 @@ void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size);
  *                    The buffer may be freed immediately after this call.
  * \return            A MirCookie instance. The instance must be released
  *                    with a call to mir_cookie_release.
- *                    NULL will be returned if the buffer and size dont describe
+ *                    NULL will be returned if the buffer and size don't describe
  *                    the contents of a MirCookie.
  */
 MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size);

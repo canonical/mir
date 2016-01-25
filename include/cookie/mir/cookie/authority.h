@@ -61,7 +61,7 @@ public:
     static size_t optimal_secret_size();
 
     /**
-    *   Construction function used to create a Authority. The secret size must be
+    *   Construction function used to create an Authority. The secret size must be
     *   no less then minimum_secret_size otherwise an exception will be thrown
     *
     *   \param [in] secret  A secret used to set the key for the hash function
@@ -70,16 +70,15 @@ public:
     static std::unique_ptr<Authority> create_from(Secret const& secret);
 
     /**
-    *   Construction function used to create a Authority as well as a secret.
+    *   Construction function used to create an Authority as well as a secret.
     *
     *   \param [out] save_secret  The secret that was created.
     *   \return                   An Authority
     */
-    // TODO Soon to be removed! 
     static std::unique_ptr<Authority> create_saving(Secret& save_secret);
 
     /**
-    *   Construction function used to create a Authority and a secret which it keeps internally.
+    *   Construction function used to create an Authority and a secret which it keeps internally.
     *
     *   \return                   An Authority
     */

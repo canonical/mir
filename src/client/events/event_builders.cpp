@@ -41,7 +41,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
-    mir::cookie::Blob copy_vector_to_cookie_blob(std::vector<uint8_t> const& vector)
+    mir::cookie::Blob vector_to_cookie_as_blob(std::vector<uint8_t> const& vector)
     {
         mir::cookie::Blob blob{{}};
 
@@ -169,7 +169,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     kev.device_id = device_id;
     kev.source_id = AINPUT_SOURCE_KEYBOARD;
     kev.event_time = timestamp;
-    kev.cookie = copy_vector_to_cookie_blob(cookie);
+    kev.cookie = vector_to_cookie_as_blob(cookie);
     kev.action = action;
     kev.key_code = key_code;
     kev.scan_code = scan_code;
@@ -245,7 +245,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     auto& mev = e->motion;
     mev.device_id = device_id;
     mev.event_time = timestamp;
-    mev.cookie = copy_vector_to_cookie_blob(cookie);
+    mev.cookie = vector_to_cookie_as_blob(cookie);
     mev.modifiers = modifiers;
     mev.source_id = AINPUT_SOURCE_TOUCHSCREEN;
 
@@ -296,7 +296,7 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     auto& mev = e->motion;
     mev.device_id = device_id;
     mev.event_time = timestamp;
-    mev.cookie = copy_vector_to_cookie_blob(cookie);
+    mev.cookie = vector_to_cookie_as_blob(cookie);
     mev.modifiers = modifiers;
     mev.source_id = AINPUT_SOURCE_MOUSE;
     mev.buttons = buttons_pressed;
