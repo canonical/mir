@@ -17,6 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/egl_sync_fence.h"
 #include "android_native_buffer.h"
 #include "sync_fence.h"
 #include "android_format_conversion-inl.h"
