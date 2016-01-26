@@ -28,11 +28,11 @@
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
 
-#include "mir/cookie_factory.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/events/event_builders.h"
 #include "mir/input/cursor_listener.h"
+#include "mir/cookie/authority.h"
 #include "mir/input/device.h"
 #include "mir/input/input_device.h"
 
@@ -54,13 +54,13 @@ struct InputDeviceHubTest : ::testing::Test
     mtd::TriggeredMainLoop observer_loop;
     Nice<mtd::MockInputDispatcher> mock_dispatcher;
     Nice<mtd::MockInputRegion> mock_region;
-    std::shared_ptr<mir::cookie::CookieFactory> cookie_factory = mir::cookie::CookieFactory::create_keeping_secret();
+    std::shared_ptr<mir::cookie::Authority> cookie_authority = mir::cookie::Authority::create();
     mtd::StubCursorListener stub_cursor_listener;
     mtd::StubTouchVisualizer stub_visualizer;
     mir::dispatch::MultiplexingDispatchable multiplexer;
     mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_dispatcher), mt::fake_shared(multiplexer),
                                   mt::fake_shared(observer_loop), mt::fake_shared(stub_visualizer),
-                                  mt::fake_shared(stub_cursor_listener), mt::fake_shared(mock_region), cookie_factory};
+                                  mt::fake_shared(stub_cursor_listener), mt::fake_shared(mock_region), cookie_authority};
     Nice<mtd::MockInputDeviceObserver> mock_observer;
     Nice<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
     Nice<mtd::MockInputDevice> another_device{"another_device","dev-2", mi::DeviceCapability::keyboard};

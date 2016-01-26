@@ -46,10 +46,9 @@
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
 #include "mir/frontend/buffer_stream.h"
-#include "mir/frontend/security_check_failed.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
-#include "mir/cookie_factory.h"
+#include "mir/cookie/authority.h"
 #include "mir/module_properties.h"
 
 #include "mir/geometry/rectangles.h"
@@ -90,7 +89,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<mi::CursorImages> const& cursor_images,
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
-    std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory) :
+    std::shared_ptr<mir::cookie::Authority> const& cookie_authority) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -106,7 +105,7 @@ mf::SessionMediator::SessionMediator(
     cursor_images(cursor_images),
     translator{translator},
     anr_detector{anr_detector},
-    cookie_factory(cookie_factory),
+    cookie_authority(cookie_authority),
     buffer_stream_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
@@ -269,6 +268,7 @@ void mf::SessionMediator::create_surface(
     COPY_IF_SET(max_height);
     COPY_IF_SET(width_inc);
     COPY_IF_SET(height_inc);
+    COPY_IF_SET(shell_chrome);
 
     #undef COPY_IF_SET
 
@@ -568,6 +568,7 @@ void mf::SessionMediator::modify_surface(
     COPY_IF_SET(max_height);
     COPY_IF_SET(width_inc);
     COPY_IF_SET(height_inc);
+    COPY_IF_SET(shell_chrome);
     // min_aspect is a special case (below)
     // max_aspect is a special case (below)
 
@@ -1022,7 +1023,7 @@ void mf::SessionMediator::configure_buffer_stream(
     done->Run();
 }
 
-void mf::SessionMediator::raise_surface_with_cookie(
+void mf::SessionMediator::raise_surface(
     mir::protobuf::RaiseRequest const* request,
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
@@ -1034,11 +1035,12 @@ void mf::SessionMediator::raise_surface_with_cookie(
     auto const cookie     = request->cookie();
     auto const surface_id = request->surface_id();
 
-    MirCookie const mir_cookie = {cookie.timestamp(), cookie.mac()};
-    if (!cookie_factory->attest_timestamp(mir_cookie))
-        throw mir::SecurityCheckFailed();
+    auto cookie_string = cookie.cookie();
 
-    shell->raise_surface_with_timestamp(session, mf::SurfaceId{surface_id.value()}, cookie.timestamp());
+    std::vector<uint8_t> cookie_bytes(cookie_string.begin(), cookie_string.end());
+    auto const cookie_ptr = cookie_authority->make_cookie(cookie_bytes);
+
+    shell->raise_surface(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
 
     done->Run();
 }

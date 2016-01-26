@@ -31,7 +31,6 @@
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/graphics/native_buffer.h"
-#include "mir/cookie_factory.h"
 
 #include <memory>
 #include <functional>
@@ -122,6 +121,7 @@ struct MirSurfaceSpec
         void* context;
     };
     mir::optional_value<EventHandler> event_handler;
+    mir::optional_value<MirShellChrome> shell_chrome;
 };
 
 struct MirPersistentId
@@ -175,7 +175,7 @@ public:
     MirOrientation get_orientation() const;
     MirWaitHandle* set_preferred_orientation(MirOrientationMode mode);
 
-    void raise_surface_with_cookie(MirCookie const& cookie);
+    void raise_surface(MirCookie const* cookie);
 
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 

@@ -210,7 +210,7 @@ void mclr::DisplayServer::configure_buffer_stream(
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
-void mclr::DisplayServer::raise_surface_with_cookie(
+void mclr::DisplayServer::raise_surface(
     mir::protobuf::RaiseRequest const* request,
     mir::protobuf::Void* response,
     google::protobuf::Closure* done)
