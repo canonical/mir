@@ -20,7 +20,6 @@
 #include "mir_connection.h"
 #include "cursor_configuration.h"
 #include "client_buffer_stream.h"
-#include "client_buffer_stream_factory.h"
 #include "make_protobuf_object.h"
 #include "mir_protobuf.pb.h"
 
@@ -30,7 +29,8 @@
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/input/input_platform.h"
 #include "mir/input/xkb_mapper.h"
-#include "mir_toolkit/cookie.h"
+#include "mir/cookie/cookie.h"
+#include "mir_cookie.h"
 
 #include <cassert>
 #include <unistd.h>
@@ -40,7 +40,8 @@
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
-namespace mircv = mir::input::receiver;
+namespace mi = mir::input;
+namespace mircv = mi::receiver;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 namespace md = mir::dispatch;
@@ -437,9 +438,12 @@ void MirSurface::handle_event(MirEvent const& e)
         break;
     case mir_event_type_keymap:
     {
-        xkb_rule_names names;
-        mir_keymap_event_get_rules(mir_event_get_keymap_event(&e), &names);
-        keymapper->set_rules(names);
+        char const* buffer = nullptr;
+        size_t length = 0;
+        auto keymap_event = mir_event_get_keymap_event(&e);
+        mir_keymap_event_get_keymap_buffer(keymap_event, &buffer, &length);
+        keymapper->set_keymap(mir_keymap_event_get_device_id(keymap_event),
+                              mi::make_unique_keymap(keymapper->get_context(), buffer, length));
         break;
     }
     case mir_event_type_resize:
@@ -482,7 +486,7 @@ MirWaitHandle* MirSurface::set_preferred_orientation(MirOrientationMode mode)
     return configure(mir_surface_attrib_preferred_orientation, mode);
 }
 
-void MirSurface::raise_surface_with_cookie(MirCookie const& cookie)
+void MirSurface::raise_surface(MirCookie const* cookie)
 {
     mp::RaiseRequest raise_request;
 
@@ -491,10 +495,9 @@ void MirSurface::raise_surface_with_cookie(MirCookie const& cookie)
 
     auto const event_cookie = raise_request.mutable_cookie();
 
-    event_cookie->set_timestamp(cookie.timestamp);
-    event_cookie->set_mac(cookie.mac);
+    event_cookie->set_cookie(cookie->blob().data(), cookie->size());
 
-    server->raise_surface_with_cookie(
+    server->raise_surface(
         &raise_request,
         void_response.get(),
         google::protobuf::NewCallback(google::protobuf::DoNothing));
@@ -552,6 +555,7 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
     COPY_IF_SET(max_height);
     COPY_IF_SET(width_inc);
     COPY_IF_SET(height_inc);
+    COPY_IF_SET(shell_chrome);
     // min_aspect is a special case (below)
     // max_aspect is a special case (below)
     #undef COPY_IF_SET

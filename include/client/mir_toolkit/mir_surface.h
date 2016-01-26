@@ -499,6 +499,16 @@ void mir_surface_spec_set_event_handler(
     mir_surface_event_callback callback,
     void* context);
 
+
+/**
+ * Ask the shell to customize "chrome" for this surface.
+ * For example, on the phone hide indicators when this surface is active.
+ *
+ * \param [in] spec The spec to accumulate the request in.
+ * \param [in] style The requested level of "chrome"
+ */
+void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome style);
+
 /**
  * Set the event handler to be called when events arrive for a surface.
  *   \warning event_handler could be called from another thread. You must do
@@ -755,6 +765,15 @@ char const* mir_persistent_id_as_string(MirPersistentId* id);
  * \return The deserialised MirSurfaceId
  */
 MirPersistentId* mir_persistent_id_from_string(char const* string_representation);
+
+/*
+* Attempts to raise the surface to the front.
+*
+* \param [in] surface The surface to raise
+* \param [in] cookie  A cookie instance obtained from an input event.
+*                     An invalid cookie will terminate the client connection.
+*/
+void mir_surface_raise(MirSurface* surface, MirCookie const* cookie);
 
 #ifdef __cplusplus
 }

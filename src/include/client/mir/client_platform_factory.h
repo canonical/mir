@@ -18,6 +18,7 @@
 #ifndef MIR_CLIENT_CLIENT_PLATFORM_FACTORY_H_
 #define MIR_CLIENT_CLIENT_PLATFORM_FACTORY_H_
 
+#include "mir/module_deleter.h"
 #include <memory>
 
 namespace mir
@@ -41,12 +42,12 @@ protected:
     ClientPlatformFactory& operator=(ClientPlatformFactory const& p) = delete;
 };
 
-extern "C" typedef std::shared_ptr<ClientPlatform>(*CreateClientPlatform)(ClientContext* context);
+extern "C" typedef mir::UniqueModulePtr<ClientPlatform>(*CreateClientPlatform)(ClientContext* context);
 extern "C" typedef bool (*ClientPlatformProbe)(ClientContext* context);
 }
 }
 
-extern "C" std::shared_ptr<mir::client::ClientPlatform> create_client_platform(mir::client::ClientContext* context);
+extern "C" mir::UniqueModulePtr<mir::client::ClientPlatform> create_client_platform(mir::client::ClientContext* context);
 extern "C" bool is_appropriate_module(mir::client::ClientContext* context);
 
 #endif /* MIR_CLIENT_CLIENT_PLATFORM_FACTORY_H_ */

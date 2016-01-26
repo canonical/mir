@@ -33,9 +33,15 @@ add_library(
   real_kms_output_container.cpp
 )
 
-add_library(
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
+    ${CMAKE_CURRENT_BINARY_DIR}/symbols.map
+    )
+set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
+
+mir_add_library_with_symbols(
   mirplatformgraphicsmesakms MODULE
 
+  ${symbol_map}
   platform_symbols.cpp
   $<TARGET_OBJECTS:mirplatformgraphicsmesakmsobjects>
 )
@@ -51,11 +57,6 @@ target_link_libraries(
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
-    ${CMAKE_CURRENT_BINARY_DIR}/symbols.map
-    )
-set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
 set_target_properties(
   mirplatformgraphicsmesakms PROPERTIES

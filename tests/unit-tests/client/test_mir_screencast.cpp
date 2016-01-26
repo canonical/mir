@@ -22,8 +22,6 @@
 #include "mir/client_buffer_factory.h"
 #include "mir/client_platform.h"
 
-#include "mir/test/doubles/stub_client_buffer_stream_factory.h"
-#include "mir/test/doubles/mock_client_buffer_stream_factory.h"
 #include "mir/test/doubles/mock_client_buffer_stream.h"
 #include "mir/test/doubles/null_client_buffer.h"
 #include "mir/test/doubles/stub_display_server.h"
@@ -160,15 +158,8 @@ public:
     MirScreencastTest()
         : default_size{1, 1},
           default_region{{0, 0}, {1, 1}},
-          default_pixel_format{mir_pixel_format_xbgr_8888},
-          stub_buffer_stream_factory{std::make_shared<mtd::StubClientBufferStreamFactory>()},
-          mock_buffer_stream_factory{std::make_shared<mtd::MockClientBufferStreamFactory>()}
+          default_pixel_format{mir_pixel_format_xbgr_8888}
     {
-        using namespace ::testing;
-
-        ON_CALL(*mock_buffer_stream_factory,
-        make_consumer_stream(_,_,_,_,_)).WillByDefault(
-            Return(mt::fake_shared(mock_bs)));
     }
 
     testing::NiceMock<MockProtobufServer> mock_server;
@@ -176,8 +167,6 @@ public:
     mir::geometry::Size default_size;
     mir::geometry::Rectangle default_region;
     MirPixelFormat default_pixel_format;
-    std::shared_ptr<mtd::StubClientBufferStreamFactory> const stub_buffer_stream_factory;
-    std::shared_ptr<mtd::MockClientBufferStreamFactory> const mock_buffer_stream_factory;
     mtd::MockClientBufferStream mock_bs;
 };
 

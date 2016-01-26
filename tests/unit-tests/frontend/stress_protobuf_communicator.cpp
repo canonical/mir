@@ -35,6 +35,7 @@
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "src/client/rpc/mir_display_server.h"
+#include "mir/input/input_devices.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -179,6 +180,7 @@ StubProtobufClient::StubProtobufClient(
         socket_file,
         std::make_shared<mir::client::ConnectionSurfaceMap>(),
         std::make_shared<mir::client::DisplayConfiguration>(),
+        std::make_shared<mir::input::InputDevices>(),
         rpc_report,
         std::make_shared<mir::client::LifecycleControl>(),
         std::make_shared<mir::client::PingHandler>(),

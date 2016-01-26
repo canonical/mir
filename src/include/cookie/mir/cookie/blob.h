@@ -1,9 +1,9 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,18 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#include "mir/frontend/security_check_failed.h"
+#ifndef MIR_COOKIE_BLOB_H_
+#define MIR_COOKIE_BLOB_H_
 
-mir::SecurityCheckFailed::SecurityCheckFailed() :
-    runtime_error("Invalid MirCookie")
+#include <array>
+
+namespace mir
 {
+namespace cookie
+{
+size_t const default_blob_size = 29;
+using Blob = std::array<uint8_t, default_blob_size>;
 }
+}
+
+#endif // MIR_COOKIE_BLOB_H_

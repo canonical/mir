@@ -117,6 +117,18 @@ int demo_client(const char* server, int buffer_swap_count)
         assert(0 <= platform_package.fd_items);
     }
 
+    {
+        MirModuleProperties properties = { NULL, -1, -1, -1, NULL };
+
+        mir_connection_get_graphics_module(mcd.connection, &properties);
+
+        assert(NULL != properties.name);
+        assert(0 <= properties.major_version);
+        assert(0 <= properties.minor_version);
+        assert(0 <= properties.micro_version);
+        assert(NULL != properties.filename);
+    }
+
     // Identify a supported pixel format
     MirPixelFormat pixel_format = mir_pixel_format_invalid;
     unsigned int valid_formats;
@@ -160,15 +172,9 @@ int demo_client(const char* server, int buffer_swap_count)
             MirNativeBuffer* buffer_package = NULL;
             mir_buffer_stream_get_current_buffer(bs, &buffer_package);
             assert(buffer_package != NULL);
-            MirPlatformType platform_type =
-                mir_buffer_stream_get_platform_type(bs);
-            if (mir_platform_type_gbm == platform_type)
-            {
-                // Interpret buffer_package as MirBufferPackage
-            } else if (mir_platform_type_android == platform_type)
-            {
-                // Interpret buffer_package as ANativeWindowBuffer
-            }
+            MirGraphicsRegion graphics_region;
+            mir_buffer_stream_get_graphics_region(bs, &graphics_region);
+
             ///\internal [get_current_buffer_tag]
             // In a real application we'd render into the current buffer
         }

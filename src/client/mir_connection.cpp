@@ -92,6 +92,7 @@ struct OnScopeExit
     ~OnScopeExit() { f(); }
     std::function<void()> const f;
 };
+
 mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
 {
     mp::SurfaceParameters message;
@@ -116,6 +117,7 @@ mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
     SERIALIZE_OPTION_IF_SET(max_height);
     SERIALIZE_OPTION_IF_SET(width_inc);
     SERIALIZE_OPTION_IF_SET(height_inc);
+    SERIALIZE_OPTION_IF_SET(shell_chrome);
     // min_aspect is a special case (below)
     // max_aspect is a special case (below)
 
@@ -249,7 +251,6 @@ MirConnection::MirConnection(
         display_configuration_response{mcl::make_protobuf_object<mir::protobuf::DisplayConfiguration>()},
         set_base_display_configuration_response{mcl::make_protobuf_object<mir::protobuf::Void>()},
         client_platform_factory(conf.the_client_platform_factory()),
-        platform(client_platform_factory->create_client_platform(this)),
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
         lifecycle_control(conf.the_lifecycle_control()),
@@ -463,7 +464,7 @@ MirWaitHandle* MirConnection::release_surface(
         release_wait_handles.push_back(new_wait_handle);
     }
 
-    if (strncmp(surface->get_error_message(), "", 1))
+    if (!mir_surface_is_valid(surface))
     {
         new_wait_handle->expect_result();
         new_wait_handle->result_received();
@@ -685,6 +686,32 @@ void MirConnection::populate_server_package(MirPlatformPackage& platform_package
     {
         platform_package.data_items = 0;
         platform_package.fd_items = 0;
+    }
+}
+
+void MirConnection::populate_graphics_module(MirModuleProperties& properties)
+{
+    // connect_result is write-once: once it's valid, we don't need to lock
+    // to use it.
+    if (connect_done &&
+        !connect_result->has_error() &&
+        connect_result->has_platform() &&
+        connect_result->platform().has_graphics_module())
+    {
+        auto const& graphics_module = connect_result->platform().graphics_module();
+        properties.name = graphics_module.name().c_str();
+        properties.major_version = graphics_module.major_version();
+        properties.minor_version = graphics_module.minor_version();
+        properties.micro_version = graphics_module.micro_version();
+        properties.filename = graphics_module.file().c_str();
+    }
+    else
+    {
+        properties.name = "(unknown)";
+        properties.major_version = 0;
+        properties.minor_version = 0;
+        properties.micro_version = 0;
+        properties.filename = nullptr;
     }
 }
 

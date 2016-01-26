@@ -22,6 +22,8 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir_toolkit/client_types.h"
 #include <memory>
+#include <mutex>
+#include <unordered_map>
 
 namespace mir
 {
@@ -45,7 +47,25 @@ public:
 
 private:
     std::shared_ptr<MirDisplayConfiguration> display_config;
+
+    /*
+     * The client display config doesn't currently expose the form factor or scaling factor, nor is it
+     * entirely clear that it should allow a client to set them.
+     *
+     * We therefore need to store these explicitly in the NestedConfiguration.
+     */
+    std::mutex mutable local_config_mutex;
+    struct LocalOutputConfig
+    {
+        float scale;
+        MirFormFactor form_factor;
+    };
+    std::unordered_map<uint32_t, LocalOutputConfig> mutable local_config;
+
+    LocalOutputConfig get_local_config_for(uint32_t output_id) const;
+    void set_local_config_for(uint32_t output_id, LocalOutputConfig const& config);
 };
+
 }
 }
 }

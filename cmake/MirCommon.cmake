@@ -265,3 +265,21 @@ function (mir_check_no_unreleased_symbols TARGET DEPENDENT_TARGET)
   )
   add_dependencies(${DEPENDENT_TARGET} ${TARGET_NAME})
 endfunction()
+
+function (mir_add_library_with_symbols TARGET TYPE SYMBOLS_FILE)
+  # Bask in the majesty of CMake!
+  #
+  # You can't just depend on an arbitary file. Oh, no!
+  #
+  # Instead, we add a custom command to generate an empty C++ source
+  # file, depending on the symbols file, and then add that empty C++
+  # source to the library.
+  set(HACK_OUTPUT ${TARGET}_abysmal_hack.cpp)
+
+  add_custom_command(OUTPUT ${HACK_OUTPUT}
+    COMMAND touch ${HACK_OUTPUT}
+    DEPENDS ${SYMBOLS_FILE}
+  )
+
+  add_library(${TARGET} ${TYPE} ${HACK_OUTPUT} ${ARGN})
+endfunction()

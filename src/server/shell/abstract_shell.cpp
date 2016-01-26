@@ -164,7 +164,7 @@ int msh::AbstractShell::get_surface_attribute(
     return surface->query(attrib);
 }
 
-void msh::AbstractShell::raise_surface_with_timestamp(
+void msh::AbstractShell::raise_surface(
     std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<ms::Surface> const& surface,
     uint64_t timestamp)
