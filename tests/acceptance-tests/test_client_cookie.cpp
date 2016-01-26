@@ -23,6 +23,7 @@
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/spin_wait.h"
+#include "mir/test/wait_condition.h"
 #include "mir/cookie/authority.h"
 
 #include "boost/throw_exception.hpp"
@@ -63,6 +64,10 @@ public:
 
         mir_surface_set_event_handler(surface, &cookie_capturing_callback, this);
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+
+        ready_to_accept_events.wait_for_at_most_seconds(max_wait);
+        if (!ready_to_accept_events.woken())
+            BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become focused and exposed"));
     }
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
@@ -71,15 +76,18 @@ public:
     std::unique_ptr<mtf::FakeInputDevice> fake_pointer{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})
         };
-   std::unique_ptr<mtf::FakeInputDevice> fake_touch_screen{
+    std::unique_ptr<mtf::FakeInputDevice> fake_touch_screen{
        mtf::add_fake_input_device(mi::InputDeviceInfo{
        "touch screen", "touch-screen-uid", mi::DeviceCapability::touchscreen | mi::DeviceCapability::multitouch})
        };
 
+    mir::test::WaitCondition ready_to_accept_events;
     std::vector<std::vector<uint8_t>> out_cookies;
     std::vector<uint8_t> cookie_secret;
     size_t event_count{0};
     mutable std::mutex mutex;
+    bool exposed{false};
+    bool focused{false};
 };
 
 namespace
@@ -90,7 +98,29 @@ void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
     auto const event_type = mir_event_get_type(ev);
     auto client_cookie = static_cast<ClientCookies*>(ctx);
 
-    if (event_type == mir_event_type_input)
+    if (event_type == mir_event_type_surface)
+    {
+        auto event = mir_event_get_surface_event(ev);
+        auto const attrib = mir_surface_event_get_attribute(event);
+        auto const value = mir_surface_event_get_attribute_value(event);
+
+        std::lock_guard<std::mutex> lk(client_cookie->mutex);
+        if (attrib == mir_surface_attrib_visibility &&
+            value == mir_surface_visibility_exposed)
+        {
+            client_cookie->exposed = true;
+        }
+
+        if (attrib == mir_surface_attrib_focus &&
+            value == mir_surface_focused)
+        {
+            client_cookie->focused = true;
+        }
+
+        if (client_cookie->exposed && client_cookie->focused)
+            client_cookie->ready_to_accept_events.wake_up_everyone();
+    }
+    else if (event_type == mir_event_type_input)
     {
         auto const* iev = mir_event_get_input_event(ev);
 
