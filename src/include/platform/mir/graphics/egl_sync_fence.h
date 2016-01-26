@@ -20,33 +20,14 @@
 #define MIR_GRAPHICS_EGL_SYNC_FENCE_H_
 
 #include "egl_extensions.h"
+#include "command_stream_sync.h"
 #include <memory>
-#include <chrono>
 #include <mutex>
 
 namespace mir
 {
 namespace graphics
 {
-class CommandStreamSync
-{
-public:
-    //insert a sync object into the GL command stream of the current context.
-    // \warning the calling thread should have a current egl context and display
-    virtual void raise() = 0;
-    // remove fence without waiting.
-    virtual void reset() = 0;
-    //wait for fence.
-    // \ param [in] ns  The amount of time to wait for the fence to become signalled
-    // \ returns        true if the fence was signalled, false if timeout
-    virtual bool wait_for(std::chrono::nanoseconds ns) = 0;
-
-    virtual ~CommandStreamSync() = default;
-    CommandStreamSync() = default; 
-    CommandStreamSync(CommandStreamSync const&) = delete;
-    CommandStreamSync& operator=(CommandStreamSync const&) = delete;
-};
-
 class NullCommandSync : public CommandStreamSync
 {
     void raise() override;
