@@ -135,7 +135,7 @@ public:
         mir::protobuf::StreamConfiguration const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) = 0;
-    virtual void raise_surface_with_cookie(
+    virtual void raise_surface(
         mir::protobuf::RaiseRequest const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) = 0;

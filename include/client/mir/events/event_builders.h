@@ -28,6 +28,7 @@
 #include <memory>
 #include <functional>
 #include <chrono>
+#include <vector>
 
 namespace mir
 {
@@ -58,12 +59,17 @@ EventUPtr make_event(
 
 // Key event
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    uint64_t mac, MirKeyboardAction action, xkb_keysym_t key_code,
+    std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers);
 
 void set_modifier(MirEvent& event, MirInputEventModifiers modifiers);
 void set_cursor_position(MirEvent& event, mir::geometry::Point const& pos);
 void set_button_state(MirEvent& event, MirPointerButtons button_state);
+
+// Deprecated version with uint64_t mac
+EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    uint64_t mac, MirKeyboardAction action, xkb_keysym_t key_code,
+    int scan_code, MirInputEventModifiers modifiers) __attribute__ ((deprecated));
 
 // Deprecated version without mac
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
@@ -72,7 +78,11 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
 
 // Touch event
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    uint64_t mac, MirInputEventModifiers modifiers);
+    std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers);
+
+// Deprecated version with uint64_t mac
+EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    uint64_t mac, MirInputEventModifiers modifiers) __attribute__ ((deprecated));
 
 // Deprecated version without mac
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
@@ -98,11 +108,19 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
     float hscroll_value, float vscroll_value) __attribute__ ((deprecated));
 
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    uint64_t mac, MirInputEventModifiers modifiers, MirPointerAction action,
+    std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers, MirPointerAction action,
     MirPointerButtons buttons_pressed,
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value,
     float relative_x_value, float relative_y_value);
+
+// Deprecated version with uint64_t mac
+EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    uint64_t mac, MirInputEventModifiers modifiers, MirPointerAction action,
+    MirPointerButtons buttons_pressed,
+    float x_axis_value, float y_axis_value,
+    float hscroll_value, float vscroll_value,
+    float relative_x_value, float relative_y_value) __attribute__ ((deprecated));
 
 // Deprecated version without mac
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,

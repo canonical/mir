@@ -116,11 +116,10 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
         auto const hscroll_value = 0.0;
         auto const vscroll_value = 0.0;
         auto const action = mir_pointer_action_button_down;
-        auto const mac = 0;
         auto const relative_x_value = 0.0;
         auto const relative_y_value = 0.0;
 
-        auto const click_event = mev::make_event(device_id, timestamp, mac, modifiers,
+        auto const click_event = mev::make_event(device_id, timestamp, cookie, modifiers,
                                                  action, mir_pointer_button_tertiary,
                                                  x_axis_value, y_axis_value,
                                                  hscroll_value, vscroll_value,
@@ -138,11 +137,10 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
         auto const hscroll_value = 0.0;
         auto const vscroll_value = 0.0;
         auto const action = mir_pointer_action_motion;
-        auto const mac = 0;
         auto const relative_x_value = 0.0;
         auto const relative_y_value = 0.0;
 
-        auto const drag_event = mev::make_event(device_id, timestamp, mac, modifiers,
+        auto const drag_event = mev::make_event(device_id, timestamp, cookie, modifiers,
                                                 action, mir_pointer_button_tertiary,
                                                 x_axis_value, y_axis_value,
                                                 hscroll_value, vscroll_value,
@@ -172,6 +170,7 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
 private:
     std::shared_ptr<mtd::WrapShellToTrackLatestSurface> shell;
     mt::Signal signal_change;
+    std::vector<uint8_t> cookie;
 
     void init_pixel_format()
     {
