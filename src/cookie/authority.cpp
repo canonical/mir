@@ -20,6 +20,7 @@
 #include "mir/cookie/authority.h"
 #include "mir/cookie/blob.h"
 #include "hmac_cookie.h"
+#include "const_memcmp.h"
 #include "format.h"
 
 #include <algorithm>
@@ -28,6 +29,7 @@
 #include <system_error>
 
 #include <nettle/hmac.h>
+
 #include <linux/random.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -41,7 +43,8 @@ namespace
 {
 std::string const random_device_path{"/dev/random"};
 std::string const urandom_device_path{"/dev/urandom"};
-int const wait_seconds{30};
+uint32_t const wait_seconds{30};
+uint32_t const mac_byte_size{20};
 
 size_t cookie_size_from_format(mir::cookie::Format const& format)
 {
@@ -141,9 +144,9 @@ public:
     {
         /*
         SHA_1 Format:
-        1 byte  = FORMAT
-        8 btyes = TIMESTAMP
-        8 BYTES = MAC
+        1  byte  = FORMAT
+        8  bytes = TIMESTAMP
+        20 bytes = MAC
         */
 
         if (raw_cookie.size() != cookie_size_from_format(mir::cookie::Format::hmac_sha_1_8))
@@ -162,11 +165,10 @@ public:
         auto ptr = raw_cookie.data();
         ptr++;
 
-        memcpy(&timestamp, ptr, 8);
+        memcpy(&timestamp, ptr, sizeof(uint64_t));
         ptr += sizeof(timestamp);
 
-        // FIXME Soon to be 20 bytes
-        std::vector<uint8_t> mac(8);
+        std::vector<uint8_t> mac(mac_byte_size);
         memcpy(mac.data(), ptr, mac.size());
 
         std::unique_ptr<mir::cookie::Cookie> cookie =
@@ -183,10 +185,9 @@ public:
 private:
     std::vector<uint8_t> calculate_cookie(uint64_t const& timestamp)
     {
-        // FIXME Soon to change to 160bits, for now uint64_t
-        std::vector<uint8_t> mac(sizeof(uint64_t));
+        std::vector<uint8_t> mac(mac_byte_size);
         hmac_sha1_update(&ctx, sizeof(timestamp), reinterpret_cast<uint8_t const*>(&timestamp));
-        hmac_sha1_digest(&ctx, sizeof(uint64_t), reinterpret_cast<uint8_t*>(mac.data()));
+        hmac_sha1_digest(&ctx, mac.size(), mac.data());
 
         return mac;
     }
@@ -198,8 +199,8 @@ private:
         auto const this_stream  = cookie->serialize();
         auto const other_stream = calculated_cookie->serialize();
 
-        // FIXME Need to do a constant memcmp here!
-        return std::equal(std::begin(this_stream), std::end(this_stream), std::begin(other_stream));
+        return this_stream.size() == other_stream.size() &&
+               mir::cookie::const_memcmp(this_stream.data(), other_stream.data(), this_stream.size()) == 0;
     }
 
     struct hmac_sha1_ctx ctx;

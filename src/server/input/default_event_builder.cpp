@@ -69,7 +69,6 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(Timestamp timestamp, MirPo
     const float x_axis_value = 0;
     const float y_axis_value = 0;
     std::vector<uint8_t> vec_cookie{};
-    // FIXME Moving to 160bits soon
     if (action == mir_pointer_action_button_up || action == mir_pointer_action_button_down)
     {
         auto const cookie = cookie_authority->make_cookie(timestamp.count());

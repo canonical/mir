@@ -25,7 +25,7 @@ namespace mir
 {
 namespace cookie
 {
-size_t const default_blob_size = 17;
+size_t const default_blob_size = 29;
 using Blob = std::array<uint8_t, default_blob_size>;
 }
 }

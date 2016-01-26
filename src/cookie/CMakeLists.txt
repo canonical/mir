@@ -24,6 +24,7 @@ mir_add_library_with_symbols(mircookie SHARED
 
   ${symbol_map}
   authority.cpp
+  const_memcmp.cpp
   hmac_cookie.cpp
 )
 
