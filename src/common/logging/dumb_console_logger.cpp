@@ -42,10 +42,9 @@ void ml::DumbConsoleLogger::log(ml::Severity severity,
 
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
-    char datetime[32];
     char now[32];
-    strftime(datetime, sizeof(datetime), "%F %T", localtime(&ts.tv_sec));
-    snprintf(now, sizeof(now), "%s.%06ld", datetime, ts.tv_nsec / 1000);
+    auto offset = strftime(now, sizeof(now), "%F %T", localtime(&ts.tv_sec));
+    snprintf(now+offset, sizeof(now)-offset, ".%06ld", ts.tv_nsec / 1000);
 
     out << "["
         << now
