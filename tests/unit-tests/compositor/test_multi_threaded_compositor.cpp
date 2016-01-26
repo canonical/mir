@@ -889,7 +889,7 @@ TEST(MultiThreadedCompositor, notifies_about_display_additions_and_removals)
     compositor.stop();
 }
 
-TEST(MultiThreadedCompositor, does_not_block_in_start_when_compositor_thread_fails)
+TEST(MultiThreadedCompositor, when_compositor_thread_fails_start_reports_error)
 {
     using namespace testing;
     unsigned int const nbuffers{3};
@@ -914,7 +914,7 @@ TEST(MultiThreadedCompositor, does_not_block_in_start_when_compositor_thread_fai
     EXPECT_CALL(*mock_display_listener, add_display(_))
         .WillRepeatedly(Throw(std::runtime_error("Failed to add display")));
 
-    compositor.start();
+    EXPECT_THROW(compositor.start(), std::runtime_error);
 }
 
 //LP: 1481418
