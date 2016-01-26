@@ -58,6 +58,8 @@ typedef struct MirKeymapEvent MirKeymapEvent;
 typedef struct MirInputConfigurationEvent MirInputConfigurationEvent;
 typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent;
 
+typedef struct MirCookie MirCookie;
+
 typedef union MirEvent MirEvent;
 
 #ifdef __cplusplus

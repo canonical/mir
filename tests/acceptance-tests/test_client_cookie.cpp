@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -23,11 +23,13 @@
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/spin_wait.h"
-#include "mir/cookie_factory.h"
+#include "mir/cookie/authority.h"
 
 #include "boost/throw_exception.hpp"
 
 #include <linux/input.h>
+
+#include <mutex>
 
 namespace mtf = mir_test_framework;
 namespace mt = mir::test;
@@ -45,8 +47,8 @@ class ClientCookies : public mtf::ConnectedClientWithASurface
 public:
     ClientCookies()
     {
-        server.override_the_cookie_factory([this] ()
-            { return mir::cookie::CookieFactory::create_saving_secret(cookie_secret); });
+        server.override_the_cookie_authority([this] ()
+            { return mir::cookie::Authority::create_saving(cookie_secret); });
     }
 
     void SetUp() override
@@ -63,9 +65,6 @@ public:
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
     }
 
-    std::vector<uint8_t> cookie_secret;
-    std::vector<MirCookie> out_cookies;
-
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
         };
@@ -76,21 +75,49 @@ public:
        mtf::add_fake_input_device(mi::InputDeviceInfo{
        "touch screen", "touch-screen-uid", mi::DeviceCapability::touchscreen | mi::DeviceCapability::multitouch})
        };
+
+    std::vector<std::vector<uint8_t>> out_cookies;
+    std::vector<uint8_t> cookie_secret;
+    size_t event_count{0};
+    mutable std::mutex mutex;
 };
 
 namespace
 {
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-void cookie_capturing_callback(MirSurface*, MirEvent const* /*ev*/, void* /*ctx*/)
+
+void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
 {
+    auto const event_type = mir_event_get_type(ev);
+    auto client_cookie = static_cast<ClientCookies*>(ctx);
+
+    if (event_type == mir_event_type_input)
+    {
+        auto const* iev = mir_event_get_input_event(ev);
+
+        std::lock_guard<std::mutex> lk(client_cookie->mutex);
+        if (mir_input_event_has_cookie(iev))
+        {
+            auto cookie = mir_input_event_get_cookie(iev);
+            size_t size = mir_cookie_buffer_size(cookie);
+
+            std::vector<uint8_t> cookie_bytes(size);
+            mir_cookie_to_buffer(cookie, cookie_bytes.data(), size);
+
+            mir_cookie_release(cookie);
+            client_cookie->out_cookies.push_back(cookie_bytes);
+        }
+
+        client_cookie->event_count++;
+    }
 }
 
-bool wait_for_n_events(size_t n, std::vector<MirCookie>& cookies)
+bool wait_for_n_events(size_t n, ClientCookies* client_cookie)
 {
     bool all_events = mt::spin_wait_for_condition_or_timeout(
-        [&n, &cookies]
+        [&n, &client_cookie]
         {
-            return cookies.size() >= n;
+            std::lock_guard<std::mutex> lk(client_cookie->mutex);
+            return client_cookie->event_count >= n;
         },
         std::chrono::seconds{max_wait});
 
@@ -99,41 +126,52 @@ bool wait_for_n_events(size_t n, std::vector<MirCookie>& cookies)
 }
 }
 
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-TEST_F(ClientCookies, DISABLED_keyboard_events_have_attestable_cookies)
+TEST_F(ClientCookies, keyboard_events_have_cookies)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
-    if (wait_for_n_events(1, out_cookies))
+
+    int events = 1;
+    if (wait_for_n_events(events, this))
     {
-        auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        EXPECT_TRUE(factory->attest_timestamp(out_cookies.back()));
+        std::lock_guard<std::mutex> lk(mutex);
+
+        ASSERT_FALSE(out_cookies.empty());
+        auto authority = mir::cookie::Authority::create_from(cookie_secret);
+
+        EXPECT_NO_THROW(authority->make_cookie(out_cookies.back()));
     }
 }
 
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-TEST_F(ClientCookies, DISABLED_pointer_motion_events_do_not_have_attestable_cookies)
+TEST_F(ClientCookies, pointer_motion_events_do_not_have_cookies)
 {
+    // with movement generates 2 events
     fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
-    if (wait_for_n_events(1, out_cookies))
+
+    int events = 2;
+    if (wait_for_n_events(events, this))
     {
-        auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        EXPECT_FALSE(factory->attest_timestamp(out_cookies.back()));
+        std::lock_guard<std::mutex> lk(mutex);
+        EXPECT_EQ(event_count, events);
+        EXPECT_TRUE(out_cookies.empty());
     }
 }
 
-TEST_F(ClientCookies, DISABLED_pointer_click_events_have_attestable_cookies)
+TEST_F(ClientCookies, pointer_click_events_have_cookies)
 {
     fake_pointer->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_pointer->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
-    if (wait_for_n_events(2, out_cookies))
+
+    int events = 2;
+    if (wait_for_n_events(events, this))
     {
-        auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        EXPECT_TRUE(factory->attest_timestamp(out_cookies.back()));
+        std::lock_guard<std::mutex> lk(mutex);
+        ASSERT_FALSE(out_cookies.empty());
+        auto authority = mir::cookie::Authority::create_from(cookie_secret);
+        EXPECT_NO_THROW(authority->make_cookie(out_cookies.back()));
     }
 }
 
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-TEST_F(ClientCookies, DISABLED_touch_motion_events_do_not_have_attestable_cookies)
+TEST_F(ClientCookies, touch_motion_events_do_not_have_cookies)
 {
     fake_touch_screen->emit_event(
          mis::a_touch_event()
@@ -146,24 +184,11 @@ TEST_F(ClientCookies, DISABLED_touch_motion_events_do_not_have_attestable_cookie
         .at_position({1, 1})
         );
 
-    if (wait_for_n_events(2, out_cookies))
+    int events = 1;
+    if (wait_for_n_events(events, this))
     {
-        auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        EXPECT_FALSE(factory->attest_timestamp(out_cookies.back()));
-    }
-}
-
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-TEST_F(ClientCookies, DISABLED_touch_click_events_have_attestable_cookies)
-{
-    fake_touch_screen->emit_event(
-         mis::a_touch_event()
-        .at_position({0, 0})
-        );
-
-    if (wait_for_n_events(1, out_cookies))
-    {
-        auto factory = mir::cookie::CookieFactory::create_from_secret(cookie_secret);
-        EXPECT_TRUE(factory->attest_timestamp(out_cookies.back()));
+        std::lock_guard<std::mutex> lk(mutex);
+        EXPECT_GE(event_count, events);
+        EXPECT_EQ(out_cookies.size(), 1);
     }
 }

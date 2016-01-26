@@ -20,9 +20,9 @@ configure_file(
 include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
-  ${PROJECT_SOURCE_DIR}/include/cookie
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/src/include/client
+  ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${DRM_INCLUDE_DIRS}
 )
 
@@ -49,6 +49,7 @@ add_library(mirclientobjects OBJECT
   event.cpp
   event_printer.cpp
   mir_blob.cpp
+  mir_cookie.cpp
   mir_connection.cpp
   mir_connection_api.cpp
   mir_wait_handle.cpp
@@ -95,6 +96,7 @@ set_target_properties(mirclient
 set(LINKS
   mircommon
   mirprotobuf
+  mircookie
 
   ${XKBCOMMON_LIBRARIES}
 )

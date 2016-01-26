@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,9 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ *              Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#include "mir/cookie_factory.h"
+#include "mir/cookie/authority.h"
+#include "mir/cookie/blob.h"
+#include "hmac_cookie.h"
+#include "format.h"
 
 #include <algorithm>
 #include <random>
@@ -29,6 +33,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/select.h>
+#include <string.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -37,6 +42,19 @@ namespace
 std::string const random_device_path{"/dev/random"};
 std::string const urandom_device_path{"/dev/urandom"};
 int const wait_seconds{30};
+
+size_t cookie_size_from_format(mir::cookie::Format const& format)
+{
+    switch (format)
+    {
+        case mir::cookie::Format::hmac_sha_1_8:
+            return mir::cookie::default_blob_size;
+        default:
+            break;
+    }
+
+    return 0;
+}
 }
 
 static mir::cookie::Secret get_random_data(unsigned size)
@@ -94,10 +112,15 @@ static mir::cookie::Secret get_random_data(unsigned size)
     return buffer;
 }
 
-class CookieFactoryNettle : public mir::cookie::CookieFactory
+mir::cookie::SecurityCheckError::SecurityCheckError() :
+    runtime_error("Invalid Cookie")
+{
+}
+
+class AuthorityNettle : public mir::cookie::Authority
 {
 public:
-    CookieFactoryNettle(mir::cookie::Secret const& secret)
+    AuthorityNettle(mir::cookie::Secret const& secret)
     {
         if (secret.size() < minimum_secret_size)
             BOOST_THROW_EXCEPTION(std::logic_error("Secret size " + std::to_string(secret.size()) + " is to small, require " +
@@ -106,41 +129,83 @@ public:
         hmac_sha1_set_key(&ctx, secret.size(), secret.data());
     }
 
-    virtual ~CookieFactoryNettle() noexcept = default;
+    virtual ~AuthorityNettle() noexcept = default;
 
-    MirCookie timestamp_to_cookie(uint64_t const& timestamp) override
+
+    std::unique_ptr<mir::cookie::Cookie> make_cookie(uint64_t const& timestamp) override
     {
-        MirCookie cookie { timestamp, 0 };
-        calculate_mac(cookie);
+        return std::make_unique<mir::cookie::HMACCookie>(timestamp, calculate_cookie(timestamp), mir::cookie::Format::hmac_sha_1_8);
+    }
+
+    std::unique_ptr<mir::cookie::Cookie> make_cookie(std::vector<uint8_t> const& raw_cookie) override
+    {
+        /*
+        SHA_1 Format:
+        1 byte  = FORMAT
+        8 btyes = TIMESTAMP
+        8 BYTES = MAC
+        */
+
+        if (raw_cookie.size() != cookie_size_from_format(mir::cookie::Format::hmac_sha_1_8))
+        {
+           BOOST_THROW_EXCEPTION(mir::cookie::SecurityCheckError());
+        }
+
+        mir::cookie::Format format = static_cast<mir::cookie::Format>(raw_cookie[0]);
+        if (format != mir::cookie::Format::hmac_sha_1_8)
+        {
+            BOOST_THROW_EXCEPTION(mir::cookie::SecurityCheckError());
+        }
+
+        uint64_t timestamp = 0;
+
+        auto ptr = raw_cookie.data();
+        ptr++;
+
+        memcpy(&timestamp, ptr, 8);
+        ptr += sizeof(timestamp);
+
+        // FIXME Soon to be 20 bytes
+        std::vector<uint8_t> mac(8);
+        memcpy(mac.data(), ptr, mac.size());
+
+        std::unique_ptr<mir::cookie::Cookie> cookie =
+            std::make_unique<mir::cookie::HMACCookie>(timestamp, mac, mir::cookie::Format::hmac_sha_1_8);
+
+        if (!verify_cookie(timestamp, cookie))
+        {
+            BOOST_THROW_EXCEPTION(mir::cookie::SecurityCheckError());
+        }
+
         return cookie;
     }
 
-    bool attest_timestamp(MirCookie const& cookie) override
-    {
-        return verify_mac(cookie);
-    }
-
 private:
-    void calculate_mac(MirCookie& cookie)
+    std::vector<uint8_t> calculate_cookie(uint64_t const& timestamp)
     {
-        hmac_sha1_update(&ctx, sizeof(cookie.timestamp), reinterpret_cast<uint8_t*>(&cookie.timestamp));
-        hmac_sha1_digest(&ctx, sizeof(cookie.mac), reinterpret_cast<uint8_t*>(&cookie.mac));
+        // FIXME Soon to change to 160bits, for now uint64_t
+        std::vector<uint8_t> mac(sizeof(uint64_t));
+        hmac_sha1_update(&ctx, sizeof(timestamp), reinterpret_cast<uint8_t const*>(&timestamp));
+        hmac_sha1_digest(&ctx, sizeof(uint64_t), reinterpret_cast<uint8_t*>(mac.data()));
+
+        return mac;
     }
 
-    bool verify_mac(MirCookie const& cookie)
+    bool verify_cookie(uint64_t const& timestamp, std::unique_ptr<mir::cookie::Cookie> const& cookie)
     {
-        decltype(cookie.mac) calculated_mac;
-        uint8_t* message = reinterpret_cast<uint8_t*>(const_cast<decltype(cookie.timestamp)*>(&cookie.timestamp));
-        hmac_sha1_update(&ctx, sizeof(cookie.timestamp), message);
-        hmac_sha1_digest(&ctx, sizeof(calculated_mac), reinterpret_cast<uint8_t*>(&calculated_mac));
+        auto const calculated_cookie = make_cookie(timestamp);
 
-        return calculated_mac == cookie.mac;
+        auto const this_stream  = cookie->serialize();
+        auto const other_stream = calculated_cookie->serialize();
+
+        // FIXME Need to do a constant memcmp here!
+        return std::equal(std::begin(this_stream), std::end(this_stream), std::begin(other_stream));
     }
 
     struct hmac_sha1_ctx ctx;
 };
 
-size_t mir::cookie::CookieFactory::optimal_secret_size()
+size_t mir::cookie::Authority::optimal_secret_size()
 {
     // Secret keys smaller than this are internally zero-extended to this size.
     // Secret keys larger than this are internally hashed to this size.
@@ -148,19 +213,19 @@ size_t mir::cookie::CookieFactory::optimal_secret_size()
     return hmac_sha1_block_size;
 }
 
-std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_from_secret(mir::cookie::Secret const& secret)
+std::unique_ptr<mir::cookie::Authority> mir::cookie::Authority::create_from(mir::cookie::Secret const& secret)
 {
-  return std::make_unique<CookieFactoryNettle>(secret);
+  return std::make_unique<AuthorityNettle>(secret);
 }
 
-std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_saving_secret(mir::cookie::Secret& save_secret)
+std::unique_ptr<mir::cookie::Authority> mir::cookie::Authority::create_saving(mir::cookie::Secret& save_secret)
 {
   save_secret = get_random_data(optimal_secret_size());
-  return std::make_unique<CookieFactoryNettle>(save_secret);
+  return std::make_unique<AuthorityNettle>(save_secret);
 }
 
-std::unique_ptr<mir::cookie::CookieFactory> mir::cookie::CookieFactory::create_keeping_secret()
+std::unique_ptr<mir::cookie::Authority> mir::cookie::Authority::create()
 {
   auto secret = get_random_data(optimal_secret_size());
-  return std::make_unique<CookieFactoryNettle>(secret);
+  return std::make_unique<AuthorityNettle>(secret);
 }

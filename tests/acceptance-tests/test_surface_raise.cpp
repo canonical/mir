@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,7 +24,7 @@
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/wait_condition.h"
 #include "mir/test/spin_wait.h"
-#include "mir/cookie_factory.h"
+#include "mir/cookie/authority.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -32,6 +32,8 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <mutex>
 
 namespace mtf = mir_test_framework;
 namespace mt = mir::test;
@@ -42,7 +44,6 @@ namespace
 {
 std::chrono::seconds const max_wait{4};
 void cookie_capturing_callback(MirSurface* surface, MirEvent const* ev, void* ctx);
-void lifecycle_changed(MirConnection* /* connection */, MirLifecycleState state, void* ctx);
 }
 
 struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
@@ -77,17 +78,14 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
             std::chrono::seconds{max_wait});
 
         EXPECT_TRUE(surface_fullscreen);
-
-        mir_connection_set_lifecycle_event_callback(connection, lifecycle_changed, this);
     }
 
     MirSurface* surface1;
     MirSurface* surface2;
 
-    std::vector<MirCookie> key_cookies;
-    std::vector<MirCookie> pointer_cookies;
-
-    MirLifecycleState lifecycle_state{mir_lifecycle_state_resumed};
+    std::vector<std::vector<uint8_t>> out_cookies;
+    size_t event_count{0};
+    mutable std::mutex mutex;
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid", mi::DeviceCapability::keyboard})
@@ -99,23 +97,41 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
 
 namespace
 {
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* /*ev*/, void* /*ctx*/)
+
+void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void* ctx)
 {
+    auto const event_type = mir_event_get_type(ev);
+    auto raise_surfaces = static_cast<RaiseSurfaces*>(ctx);
+    
+    if (event_type == mir_event_type_input)
+    {   
+        auto const* iev = mir_event_get_input_event(ev);
+
+        std::lock_guard<std::mutex> lk(raise_surfaces->mutex);
+        if (mir_input_event_has_cookie(iev))
+        {
+            auto cookie = mir_input_event_get_cookie(iev);
+            size_t size = mir_cookie_buffer_size(cookie);
+
+            std::vector<uint8_t> cookie_bytes(size);
+            mir_cookie_to_buffer(cookie, cookie_bytes.data(), size);
+
+            mir_cookie_release(cookie);
+
+            raise_surfaces->out_cookies.push_back(cookie_bytes);
+        }
+        
+        raise_surfaces->event_count++;
+    }
 }
 
-void lifecycle_changed(MirConnection* /*connection*/, MirLifecycleState state, void* ctx)
-{
-    auto client = reinterpret_cast<RaiseSurfaces*>(ctx);
-    client->lifecycle_state = state;
-}
-
-bool wait_for_n_events(size_t n, std::vector<MirCookie>& cookies)
+bool wait_for_n_events(size_t n, RaiseSurfaces const* raise_surfaces)
 {
     bool all_events = mt::spin_wait_for_condition_or_timeout(
-        [&n, &cookies]
+        [&n, &raise_surfaces]
         {
-            return cookies.size() >= n;
+            std::lock_guard<std::mutex> lk(raise_surfaces->mutex);
+            return raise_surfaces->event_count >= n;
         },
         std::chrono::seconds{max_wait});
 
@@ -123,30 +139,55 @@ bool wait_for_n_events(size_t n, std::vector<MirCookie>& cookies)
    return all_events;
 }
 
+bool attempt_focus(MirSurface* surface, MirCookie const* cookie)
+{
+    mir_surface_raise(surface, cookie);
+    bool surface_becomes_focused = mt::spin_wait_for_condition_or_timeout(
+        [&surface]
+        {
+            return mir_surface_get_focus(surface) == mir_surface_focused;
+        },
+        std::chrono::seconds{max_wait});
+ 
+    return surface_becomes_focused;
 }
 
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-TEST_F(RaiseSurfaces, DISABLED_key_event_with_cookie)
+}
+
+TEST_F(RaiseSurfaces, key_event_with_cookie)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
-    if (wait_for_n_events(1, key_cookies))
+
+    int events = 1;
+    if (wait_for_n_events(events, this))
     {
+        std::lock_guard<std::mutex> lk(mutex);
+        ASSERT_FALSE(out_cookies.empty());
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
-        // EXPECT_TRUE attempt_focus surface2 key_cookies.back()
+
+        MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.back().data(), out_cookies.back().size());
+        attempt_focus(surface2, cookie);
+
+        mir_cookie_release(cookie);
     }
 }
 
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-TEST_F(RaiseSurfaces, DISABLED_older_timestamp_does_not_focus)
+TEST_F(RaiseSurfaces, older_timestamp_does_not_focus)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_M));
-    if (wait_for_n_events(2, key_cookies))
+
+    int events = 2;
+    if (wait_for_n_events(events, this))
     {
-        EXPECT_TRUE(key_cookies.front().timestamp < key_cookies.back().timestamp);
+        std::lock_guard<std::mutex> lk(mutex);
+        ASSERT_FALSE(out_cookies.empty());
         EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
 
-        // mir_surface_raise_with_cookie
+        MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.front().data(), out_cookies.front().size());
+        mir_surface_raise(surface1, cookie);
+
+        mir_cookie_release(cookie);
 
         // Need to wait for this call to actually go through
         std::this_thread::sleep_for(std::chrono::milliseconds{1000});
@@ -154,33 +195,21 @@ TEST_F(RaiseSurfaces, DISABLED_older_timestamp_does_not_focus)
     }
 }
 
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-TEST_F(RaiseSurfaces, DISABLED_motion_events_dont_prevent_raise)
+TEST_F(RaiseSurfaces, motion_events_dont_prevent_raise)
 {
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_M));
-    if (wait_for_n_events(2, key_cookies))
+    if (wait_for_n_events(2, this))
     {
         fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
-        if (wait_for_n_events(1, pointer_cookies))
+        if (wait_for_n_events(1, this))
         {
+            std::lock_guard<std::mutex> lk(mutex);
+            ASSERT_FALSE(out_cookies.empty());
             EXPECT_EQ(mir_surface_get_focus(surface2), mir_surface_focused);
-            // EXPECT_TRUE attempt_focus surface1 key_cookies.back()
+            MirCookie const* cookie = mir_cookie_from_buffer(out_cookies.back().data(), out_cookies.back().size());
+            EXPECT_TRUE(attempt_focus(surface1, cookie));
+            mir_cookie_release(cookie);
         }
     }
-}
-
-// FIXME Removing the public API calls for the mir cookie, fix coming in 0.19
-TEST_F(RaiseSurfaces, DISABLED_client_connection_close_invalid_cookie)
-{
-    // mir_surface_raise_with_cookie
-
-    bool connection_close = mt::spin_wait_for_condition_or_timeout(
-        [this]
-        {
-            return lifecycle_state == mir_lifecycle_connection_lost;
-        },
-        std::chrono::seconds{max_wait});
-
-    EXPECT_TRUE(connection_close);
 }

@@ -148,12 +148,12 @@ int msh::FrontendShell::get_surface_attribute(
     return wrapped->get_surface_attribute(surface, attrib);
 }
 
-void msh::FrontendShell::raise_surface_with_timestamp(
+void msh::FrontendShell::raise_surface(
     std::shared_ptr<mf::Session> const& session,
     mf::SurfaceId surface_id,
     uint64_t timestamp)
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
     auto const surface = scene_session->surface(surface_id);
-    wrapped->raise_surface_with_timestamp(scene_session, surface, timestamp);
+    wrapped->raise_surface(scene_session, surface, timestamp);
 }

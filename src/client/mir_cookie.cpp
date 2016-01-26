@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,18 +13,37 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#ifndef MIR_CLIENT_LIBRARY_H
-#define MIR_CLIENT_LIBRARY_H
+#include "mir_cookie.h"
 
-#include <mir_toolkit/mir_connection.h>
-#include <mir_toolkit/mir_surface.h>
-#include <mir_toolkit/mir_wait.h>
-#include <mir_toolkit/mir_buffer_stream.h>
-#include <mir_toolkit/version.h>
-#include <mir_toolkit/mir_platform_message.h>
-#include <mir_toolkit/cursors.h>
-#include <mir_toolkit/mir_cookie.h>
+#include "mir/require.h"
 
-#endif /* MIR_CLIENT_LIBRARY_H */
+#include <string.h>
+
+MirCookie::MirCookie(void const* buffer, size_t size)
+{
+    memcpy(blob_.data(), buffer, size);
+}
+
+MirCookie::MirCookie(mir::cookie::Blob const& blob) :
+    blob_(blob)
+{
+}
+
+void MirCookie::copy_to(void* buffer, size_t size) const
+{
+    mir::require(size == blob_.size());
+    memcpy(buffer, blob_.data(), size);
+}
+
+size_t MirCookie::size() const
+{
+    return blob_.size();
+}
+
+mir::cookie::Blob MirCookie::blob() const
+{
+    return blob_;
+}

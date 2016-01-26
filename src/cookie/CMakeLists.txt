@@ -12,17 +12,19 @@ configure_file(
 )
 
 include_directories(
+  ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${PROJECT_SOURCE_DIR}/include/cookie
   ${NETTLE_INCLUDE_DIRS}
 )
 
-set(MIRCOOKIE_ABI 1)
+set(MIRCOOKIE_ABI 2)
 set(symbol_map ${CMAKE_SOURCE_DIR}/src/cookie/symbols.map)
 
 mir_add_library_with_symbols(mircookie SHARED
 
   ${symbol_map}
-  cookie_factory.cpp
+  authority.cpp
+  hmac_cookie.cpp
 )
 
 set_target_properties(mircookie
@@ -41,7 +43,7 @@ install(
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/include/cookie/mir ${CMAKE_SOURCE_DIR}/include/cookie/mir_toolkit
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/cookie/mir
   DESTINATION "include/mircookie"
 )
 
