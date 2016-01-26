@@ -281,7 +281,7 @@ void mc::MultiThreadedCompositor::start()
 
     /* To cleanup state if any code below throws */
     auto cleanup_if_unwinding = on_unwind(
-        [this]{ destroy_compositing_threads(); });
+        [this]{ destroy_compositing_threads(); state = CompositorState::stopped; });
 
     create_compositing_threads();
 
@@ -291,6 +291,8 @@ void mc::MultiThreadedCompositor::start()
     /* Optional first render */
     if (compose_on_start)
         schedule_compositing(1);
+
+    state = CompositorState::started;
 }
 
 void mc::MultiThreadedCompositor::stop()
@@ -299,8 +301,6 @@ void mc::MultiThreadedCompositor::stop()
 
     if (!state.compare_exchange_strong(started, CompositorState::stopping))
         return;
-
-    state = CompositorState::stopping;
 
     /* To cleanup state if any code below throws */
     auto cleanup_if_unwinding = on_unwind(
@@ -314,6 +314,10 @@ void mc::MultiThreadedCompositor::stop()
     // If the compositor is restarted we've likely got clients blocked
     // so we will need to schedule compositing immediately
     compose_on_start = true;
+
+    report->stopped();
+
+    state = CompositorState::stopped;
 }
 
 void mc::MultiThreadedCompositor::create_compositing_threads()
@@ -333,8 +337,6 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
 
     for (auto& functor : thread_functors)
         functor->wait_until_started();
-
-    state = CompositorState::started;
 }
 
 void mc::MultiThreadedCompositor::destroy_compositing_threads()
@@ -347,8 +349,4 @@ void mc::MultiThreadedCompositor::destroy_compositing_threads()
 
     thread_functors.clear();
     futures.clear();
-
-    report->stopped();
-
-    state = CompositorState::stopped;
 }
