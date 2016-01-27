@@ -27,7 +27,7 @@
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/event_handler_register.h"
 
-#include "mir/graphics/virtual_display.h"
+#include "mir/graphics/virtual_output.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/display_configuration_policy.h"
@@ -388,7 +388,7 @@ void mgm::Display::clear_connected_unused_outputs()
     });
 }
 
-std::unique_ptr<mg::VirtualDisplay> mgm::Display::create_virtual_display(int /*width*/, int /*height*/)
+std::unique_ptr<mg::VirtualOutput> mgm::Display::create_virtual_output(int /*width*/, int /*height*/)
 {
     return nullptr;
 }

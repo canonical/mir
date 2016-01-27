@@ -16,35 +16,28 @@
  * Authored by: Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_VIRTUAL_DISPLAY_H_
-#define MIR_GRAPHICS_ANDROID_VIRTUAL_DISPLAY_H_
+#include "virtual_output.h"
 
-#include "mir/graphics/virtual_display.h"
+namespace mga=mir::graphics::android;
 
-#include <functional>
-
-namespace mir
+mga::VirtualOutput::VirtualOutput(std::function<void()> enable_virtual_output,
+                                  std::function<void()> disable_virtual_output)
+    : enable_virtual_output{enable_virtual_output},
+      disable_virtual_output{disable_virtual_output}
 {
-namespace graphics
-{
-namespace android
-{
-
-class VirtualDisplay : public graphics::VirtualDisplay
-{
-public:
-    explicit VirtualDisplay(std::function<void()> enable_virtual_display,
-                            std::function<void()> disable_virtual_display);
-    ~VirtualDisplay();
-
-    void enable() override;
-    void disable() override;
-private:
-    std::function<void()> enable_virtual_display;
-    std::function<void()> disable_virtual_display;
-};
-
 }
+
+mga::VirtualOutput::~VirtualOutput()
+{
+    disable();
 }
+
+void mga::VirtualOutput::enable()
+{
+    enable_virtual_output();
 }
-#endif
+
+void mga::VirtualOutput::disable()
+{
+    disable_virtual_output();
+}

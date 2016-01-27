@@ -29,7 +29,7 @@
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
-#include "mir/graphics/virtual_display.h"
+#include "mir/graphics/virtual_output.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir/raii.h"
 
@@ -353,7 +353,7 @@ std::unique_ptr<mg::GLContext> mgn::Display::create_gl_context()
     return std::make_unique<SurfacelessEGLContext>(egl_display, EGL_NO_CONTEXT);
 }
 
-std::unique_ptr<mg::VirtualDisplay> mgn::Display::create_virtual_display(int /*width*/, int /*height*/)
+std::unique_ptr<mg::VirtualOutput> mgn::Display::create_virtual_output(int /*width*/, int /*height*/)
 {
     return nullptr;
 }

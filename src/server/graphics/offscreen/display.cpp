@@ -20,7 +20,7 @@
 #include "display_buffer.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/egl_error.h"
-#include "mir/graphics/virtual_display.h"
+#include "mir/graphics/virtual_output.h"
 #include "mir/geometry/size.h"
 
 #include <boost/throw_exception.hpp>
@@ -191,7 +191,7 @@ std::unique_ptr<mg::GLContext> mgo::Display::create_gl_context()
     return std::make_unique<SurfacelessEGLContext>(egl_display, egl_context_shared);
 }
 
-std::unique_ptr<mg::VirtualDisplay> mgo::Display::create_virtual_display(int /*width*/, int /*height*/)
+std::unique_ptr<mg::VirtualOutput> mgo::Display::create_virtual_output(int /*width*/, int /*height*/)
 {
     return nullptr;
 }

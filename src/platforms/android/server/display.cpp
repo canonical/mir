@@ -23,7 +23,7 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "display.h"
-#include "virtual_display.h"
+#include "virtual_output.h"
 #include "display_component_factory.h"
 #include "interpreter_cache.h"
 #include "server_render_window.h"
@@ -334,7 +334,7 @@ std::unique_ptr<mg::GLContext> mga::Display::create_gl_context()
     return std::unique_ptr<mg::GLContext>{new mga::PbufferGLContext(gl_context)};
 }
 
-std::unique_ptr<mg::VirtualDisplay> mga::Display::create_virtual_display(int width, int height)
+std::unique_ptr<mg::VirtualOutput> mga::Display::create_virtual_output(int width, int height)
 {
     auto enable_virtual_display = [this, width, height]
     {
@@ -346,5 +346,5 @@ std::unique_ptr<mg::VirtualDisplay> mga::Display::create_virtual_display(int wid
         config.disable_virtual_output();
         on_hotplug();
     };
-    return {std::make_unique<mga::VirtualDisplay>(enable_virtual_display, disable_virtual_display)};
+    return {std::make_unique<mga::VirtualOutput>(enable_virtual_display, disable_virtual_display)};
 }

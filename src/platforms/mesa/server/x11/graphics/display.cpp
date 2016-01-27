@@ -20,7 +20,7 @@
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/egl_resources.h"
 #include "mir/graphics/egl_error.h"
-#include "mir/graphics/virtual_display.h"
+#include "mir/graphics/virtual_output.h"
 #include "display_configuration.h"
 #include "display.h"
 #include "display_buffer.h"
@@ -321,7 +321,7 @@ std::unique_ptr<mg::GLContext> mgx::Display::create_gl_context()
     return std::make_unique<mgx::XGLContext>(egl_display, egl_surface, egl_context);
 }
 
-std::unique_ptr<mg::VirtualDisplay> mgx::Display::create_virtual_display(int /*width*/, int /*height*/)
+std::unique_ptr<mg::VirtualOutput> mgx::Display::create_virtual_output(int /*width*/, int /*height*/)
 {
     return nullptr;
 }

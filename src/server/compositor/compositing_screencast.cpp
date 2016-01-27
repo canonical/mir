@@ -21,7 +21,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/display.h"
-#include "mir/graphics/virtual_display.h"
+#include "mir/graphics/virtual_output.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
@@ -55,11 +55,11 @@ bool needs_virtual_display(mg::DisplayConfiguration const& conf, geom::Rectangle
     return empty == disp_rects.bounding_rectangle().intersection_with(region);
 }
 
-std::unique_ptr<mg::VirtualDisplay> make_virtual_display(mg::Display& display, geom::Rectangle const& rect)
+std::unique_ptr<mg::VirtualOutput> make_virtual_display(mg::Display& display, geom::Rectangle const& rect)
 {
     if (needs_virtual_display(*display.configuration(), rect))
     {
-        return display.create_virtual_display(rect.size.width.as_int(), rect.size.height.as_int());
+        return display.create_virtual_output(rect.size.width.as_int(), rect.size.height.as_int());
     }
     return nullptr;
 }
@@ -73,7 +73,7 @@ struct mc::detail::ScreencastSessionContext
         std::unique_ptr<graphics::GLContext> gl_context,
         std::unique_ptr<graphics::DisplayBuffer> display_buffer,
         std::unique_ptr<compositor::DisplayBufferCompositor> display_buffer_compositor,
-        std::unique_ptr<graphics::VirtualDisplay> a_virtual_display) :
+        std::unique_ptr<graphics::VirtualOutput> a_virtual_display) :
     scene{scene},
     buffer{buffer},
     gl_context{std::move(gl_context)},
@@ -95,7 +95,7 @@ struct mc::detail::ScreencastSessionContext
     std::unique_ptr<graphics::GLContext> gl_context;
     std::unique_ptr<graphics::DisplayBuffer> display_buffer;
     std::unique_ptr<compositor::DisplayBufferCompositor> display_buffer_compositor;
-    std::unique_ptr<graphics::VirtualDisplay> virtual_display;
+    std::unique_ptr<graphics::VirtualOutput> virtual_display;
 };
 
 

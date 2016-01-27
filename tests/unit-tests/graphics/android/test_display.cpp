@@ -18,7 +18,7 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/graphics/virtual_display.h"
+#include "mir/graphics/virtual_output.h"
 #include "mir/logging/logger.h"
 #include "src/platforms/android/server/display.h"
 #include "src/server/report/null_report_factory.h"
@@ -1066,7 +1066,7 @@ TEST_F(Display, enabling_virtual_display_updates_display_configuration)
     int const virtual_display_width{1234};
     int const virtual_display_height{1345};
 
-    auto virtual_display = display.create_virtual_display(virtual_display_width, virtual_display_height);
+    auto virtual_display = display.create_virtual_output(virtual_display_width, virtual_display_height);
     ASSERT_THAT(virtual_display.get(), NotNull());
 
     virtual_display->enable();

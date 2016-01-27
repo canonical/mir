@@ -54,7 +54,7 @@ namespace geom = mir::geometry;
 namespace
 {
 
-class StubVirtualDisplay : public mg::VirtualDisplay
+class StubVirtualDisplay : public mg::VirtualOutput
 {
 public:
     StubVirtualDisplay(std::function<void()> notify_enable)
@@ -88,7 +88,7 @@ public:
         return {std::make_unique<mtd::StubDisplayConfig>(display_regions)};
     }
 
-    std::unique_ptr<mg::VirtualDisplay> create_virtual_display(int /*width*/, int /*height*/) override
+    std::unique_ptr<mg::VirtualOutput> create_virtual_output(int /*width*/, int /*height*/) override
     {
         virtual_display_created = true;
         return {std::make_unique<StubVirtualDisplay>([this] { virtual_display_enabled = true; })};

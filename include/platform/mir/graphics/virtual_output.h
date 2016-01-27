@@ -16,8 +16,8 @@
  * Authored by: Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_VIRTUAL_DISPLAY_H_
-#define MIR_GRAPHICS_VIRTUAL_DISPLAY_H_
+#ifndef MIR_GRAPHICS_VIRTUAL_OUTPUT_H_
+#define MIR_GRAPHICS_VIRTUAL_OUTPUT_H_
 
 namespace mir
 {
@@ -26,13 +26,13 @@ namespace graphics
 {
 
 /**
- * Interface to a virtual display
+ * Interface to a virtual output
  */
-class VirtualDisplay
+class VirtualOutput
 {
 public:
 
-    /** Enables the virtual display.
+    /** Enables the virtual output.
      *
      *  This will initiate the same response as when a physical display is
      *  hotplugged into a system. A configuration change notification will be
@@ -40,7 +40,7 @@ public:
     **/
     virtual void enable() = 0;
 
-    /** Disable the virtual display.
+    /** Disable the virtual output.
      *
      *  This will initiate the same response as when a physical display is
      *  unplugged from a system. A configuration change notification will be
@@ -49,13 +49,13 @@ public:
     **/
     virtual void disable() = 0;
 
-    VirtualDisplay() = default;
-    virtual ~VirtualDisplay() = default;
+    VirtualOutput() = default;
+    virtual ~VirtualOutput() = default;
 private:
-    VirtualDisplay(VirtualDisplay const&) = delete;
-    VirtualDisplay& operator=(VirtualDisplay const&) = delete;
+    VirtualOutput(VirtualOutput const&) = delete;
+    VirtualOutput& operator=(VirtualOutput const&) = delete;
 };
 }
 }
 
-#endif /* MIR_GRAPHICS_VIRTUAL_DISPLAY_H_ */
+#endif /* MIR_GRAPHICS_VIRTUAL_OUTPUT_H_ */

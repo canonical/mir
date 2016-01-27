@@ -160,9 +160,9 @@ struct WrappingDisplay : mg::Display
     {
         return display->create_gl_context();
     }
-    std::unique_ptr<mg::VirtualDisplay> create_virtual_display(int width, int height) override
+    std::unique_ptr<mg::VirtualOutput> create_virtual_output(int width, int height) override
     {
-        return display->create_virtual_display(width, height);
+        return display->create_virtual_output(width, height);
     }
 
     std::shared_ptr<Display> const display;
