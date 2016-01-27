@@ -207,7 +207,7 @@ MIR_CLIENT_9v18 {
     *;
 } MIR_CLIENT_9v17;
 
-MIR_CLIENT_unreleased {
+MIR_CLIENT_9v19 {
   global:
     mir_connection_get_graphics_module;
     mir_surface_raise;
