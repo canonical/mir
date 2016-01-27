@@ -345,7 +345,7 @@ TEST_F(CompositingScreencastTest, registers_and_unregisters_from_scene)
     screencast_local.destroy_session(session_id);
 }
 
-TEST_F(CompositingScreencastTest, attempts_to_create_virtual_display_when_given_region_outside_any_display)
+TEST_F(CompositingScreencastTest, attempts_to_create_output_display_when_given_region_outside_any_display)
 {
     using namespace testing;
 
@@ -364,7 +364,7 @@ TEST_F(CompositingScreencastTest, attempts_to_create_virtual_display_when_given_
     EXPECT_TRUE(stub_display.virtual_output_enabled);
 }
 
-TEST_F(CompositingScreencastTest, does_not_create_virtual_display_when_given_region_that_covers_any_display)
+TEST_F(CompositingScreencastTest, does_not_create_virtual_output_when_given_region_that_covers_any_display)
 {
     using namespace testing;
 

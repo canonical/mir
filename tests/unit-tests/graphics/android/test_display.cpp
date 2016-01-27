@@ -1053,7 +1053,7 @@ TEST_F(Display, does_not_remove_dbs_when_enumerating_display_groups)
     EXPECT_THAT(db_count, Eq(expected_buffer_count));
 }
 
-TEST_F(Display, enabling_virtual_display_updates_display_configuration)
+TEST_F(Display, enabling_virtual_output_updates_display_configuration)
 {
     using namespace testing;
     mga::Display display(
@@ -1063,10 +1063,10 @@ TEST_F(Display, enabling_virtual_display_updates_display_configuration)
         null_display_report,
         mga::OverlayOptimization::enabled);
 
-    int const virtual_display_width{1234};
-    int const virtual_display_height{1345};
+    int const virtual_output_width{1234};
+    int const virtual_output_height{1345};
 
-    auto virtual_output = display.create_virtual_output(virtual_display_width, virtual_display_height);
+    auto virtual_output = display.create_virtual_output(virtual_output_width, virtual_output_height);
     ASSERT_THAT(virtual_output.get(), NotNull());
 
     virtual_output->enable();
@@ -1074,7 +1074,7 @@ TEST_F(Display, enabling_virtual_display_updates_display_configuration)
     bool found_matching_size{false};
     display.configuration()->for_each_output([&found_matching_size](mg::DisplayConfigurationOutput const& output)
     {
-        if(output.extents().size == geom::Size{virtual_display_width, virtual_display_height})
+        if(output.extents().size == geom::Size{virtual_output_width, virtual_output_height})
             found_matching_size = true;
     });
 

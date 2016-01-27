@@ -73,17 +73,17 @@ struct mc::detail::ScreencastSessionContext
         std::unique_ptr<graphics::GLContext> gl_context,
         std::unique_ptr<graphics::DisplayBuffer> display_buffer,
         std::unique_ptr<compositor::DisplayBufferCompositor> display_buffer_compositor,
-        std::unique_ptr<graphics::VirtualOutput> a_virtual_display) :
+        std::unique_ptr<graphics::VirtualOutput> a_virtual_output) :
     scene{scene},
     buffer{buffer},
     gl_context{std::move(gl_context)},
     display_buffer{std::move(display_buffer)},
     display_buffer_compositor{std::move(display_buffer_compositor)},
-    virtual_display{std::move(a_virtual_display)}
+    virtual_output{std::move(a_virtual_output)}
     {
         scene->register_compositor(this);
-        if (virtual_display)
-            virtual_display->enable();
+        if (virtual_output)
+            virtual_output->enable();
     }
     ~ScreencastSessionContext()
     {
@@ -95,7 +95,7 @@ struct mc::detail::ScreencastSessionContext
     std::unique_ptr<graphics::GLContext> gl_context;
     std::unique_ptr<graphics::DisplayBuffer> display_buffer;
     std::unique_ptr<compositor::DisplayBufferCompositor> display_buffer_compositor;
-    std::unique_ptr<graphics::VirtualOutput> virtual_display;
+    std::unique_ptr<graphics::VirtualOutput> virtual_output;
 };
 
 
@@ -195,7 +195,7 @@ mc::CompositingScreencast::create_session_context(
     auto buffer = buffer_allocator->alloc_buffer(buffer_properties);
     auto display_buffer = std::make_unique<ScreencastDisplayBuffer>(rect, *buffer);
     auto db_compositor = db_compositor_factory->create_compositor_for(*display_buffer);
-    auto virtual_display = make_virtual_output(*display, rect);
+    auto virtual_output = make_virtual_output(*display, rect);
     return std::shared_ptr<detail::ScreencastSessionContext>(
         new detail::ScreencastSessionContext{
             scene,
@@ -203,5 +203,5 @@ mc::CompositingScreencast::create_session_context(
             std::move(gl_context),
             std::move(display_buffer),
             std::move(db_compositor),
-            std::move(virtual_display)});
+            std::move(virtual_output)});
 }
