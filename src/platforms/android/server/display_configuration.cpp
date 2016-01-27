@@ -35,7 +35,7 @@ mg::DisplayConfigurationOutput make_virtual_config()
 {
     auto const name = mga::DisplayName::virt;
     double const vrefresh_hz{60.0};
-    geom::Size const mm_size{25, 25};
+    geom::Size const mm_size{660, 370};
     auto const display_format = mir_pixel_format_argb_8888;
     geom::Point const origin{0,0};
     auto const external_mode = mir_power_mode_off;
