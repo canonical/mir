@@ -27,6 +27,11 @@ mga::VirtualDisplay::VirtualDisplay(std::function<void()> enable_virtual_display
 {
 }
 
+mga::VirtualDisplay::~VirtualDisplay()
+{
+    disable();
+}
+
 void mga::VirtualDisplay::enable()
 {
     enable_virtual_display();

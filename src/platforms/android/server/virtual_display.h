@@ -35,6 +35,7 @@ class VirtualDisplay : public graphics::VirtualDisplay
 public:
     explicit VirtualDisplay(std::function<void()> enable_virtual_display,
                             std::function<void()> disable_virtual_display);
+    ~VirtualDisplay();
 
     void enable() override;
     void disable() override;
