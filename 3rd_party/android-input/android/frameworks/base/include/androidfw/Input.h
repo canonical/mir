@@ -31,6 +31,8 @@
 
 #include <chrono>
 
+#include "mir/cookie/blob.h"
+
 #ifdef HAVE_ANDROID_OS
 class SkMatrix;
 #endif
@@ -276,7 +278,7 @@ public:
 
     inline int32_t getRepeatCount() const { return mRepeatCount; }
 
-    inline uint64_t getMac() const { return mMac; }
+    inline mir::cookie::Blob const& getCookieAsBlob() const { return mCookieBlob; }
 
     inline std::chrono::nanoseconds getDownTime() const { return mDownTime; }
 
@@ -299,7 +301,7 @@ public:
             int32_t scanCode,
             int32_t metaState,
             int32_t repeatCount,
-            uint64_t mac,
+            mir::cookie::Blob const& cookie,
             std::chrono::nanoseconds downTime,
             std::chrono::nanoseconds eventTime);
     void initialize(const KeyEvent& from);
@@ -311,7 +313,7 @@ protected:
     int32_t mScanCode;
     int32_t mMetaState;
     int32_t mRepeatCount;
-    uint64_t mMac;
+    mir::cookie::Blob mCookieBlob;
     std::chrono::nanoseconds mDownTime;
     std::chrono::nanoseconds mEventTime;
 };
@@ -358,7 +360,7 @@ public:
 
     inline float getYPrecision() const { return mYPrecision; }
 
-    inline uint64_t getMac() const { return mMac; }
+    inline mir::cookie::Blob const& getCookieAsBlob() const { return mCookieBlob; }
 
     inline std::chrono::nanoseconds getDownTime() const { return mDownTime; }
 
@@ -513,7 +515,7 @@ public:
             float yOffset,
             float xPrecision,
             float yPrecision,
-            uint64_t mac,
+            mir::cookie::Blob const& cookie,
             std::chrono::nanoseconds downTime,
             std::chrono::nanoseconds eventTime,
             size_t pointerCount,
@@ -561,7 +563,7 @@ protected:
     float mYOffset;
     float mXPrecision;
     float mYPrecision;
-    uint64_t mMac;
+    mir::cookie::Blob mCookieBlob;
     std::chrono::nanoseconds mDownTime;
     Vector<PointerProperties> mPointerProperties;
     Vector<std::chrono::nanoseconds> mSampleEventTimes;

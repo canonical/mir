@@ -17,14 +17,19 @@
  */
 
 #include "mir/fatal.h"
+#include "mir/server.h"
 
 #include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir_test_framework/process.h"
+#include "mir_test_framework/temporary_environment_value.h"
+#include "mir_test_framework/executable_path.h"
+#include "mir/test/doubles/null_logger.h"
 
 #include <gtest/gtest.h>
 
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
+namespace mtd = mt::doubles;
 
 using ServerShutdown = mtf::InterprocessClientServerTest;
 
@@ -48,6 +53,21 @@ TEST_F(ServerShutdown, normal_exit_removes_endpoint)
         stop_server();
         EXPECT_FALSE(file_exists(mir_test_socket));
     }
+}
+
+// Regression test for LP: #1528135
+TEST(ServerShutdownWithException, clean_shutdown_on_plugin_construction_exception)
+{
+    char const* argv = "ServerShutdownWithException";
+    mtf::TemporaryEnvironmentValue graphics_platform("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-throw.so").c_str());
+    mtf::TemporaryEnvironmentValue input_platform("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
+    mir::Server server;
+
+    server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);
+    server.set_command_line_handler([](int, char const* const*){});
+    server.set_command_line(0, &argv);
+    server.apply_settings();
+    server.run();
 }
 
 using ServerShutdownDeathTest = ServerShutdown;

@@ -22,7 +22,6 @@
 #include "mir_surface.h"
 #include "mir_connection.h"
 #include "buffer_stream.h"
-#include "client_buffer_stream_factory.h"
 
 #include "mir_toolkit/mir_buffer_stream_nbs.h"
 #include "mir_toolkit/mir_buffer.h"
@@ -255,35 +254,30 @@ bool mir_buffer_stream_submit_buffer(MirBufferStream*, MirBuffer* buffer)
     return true;
 }
 
-MirFenceType mir_buffer_get_fence_type(MirBuffer*)
-{
-    return mir_no_fence;
-}
-
 MirNativeFence* mir_buffer_get_fence(MirBuffer*)
 {
     return nullptr;
 }
 
-void mir_buffer_set_fence(MirBuffer*, MirNativeFence*, MirFenceType)
+void mir_buffer_associate_fence(MirBuffer*, MirNativeFence*, MirBufferAccess)
 {
 }
 
-int mir_buffer_wait_fence(MirBuffer*, MirFenceType, int)
+int mir_buffer_wait_fence(MirBuffer*, MirBufferAccess, int)
 {
     return 0;
 }
 
-MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirFenceType) 
+MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirBufferAccess) 
 {
     return nullptr;
 }
 
-MirGraphicsRegion* mir_buffer_lock(MirBuffer*, MirFenceType)
+MirGraphicsRegion* mir_buffer_acquire_region(MirBuffer*, MirBufferAccess)
 {
     return nullptr;
 }
 
-void mir_buffer_unlock(MirGraphicsRegion*) 
+void mir_buffer_release_region(MirGraphicsRegion*) 
 {
 }

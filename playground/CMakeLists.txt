@@ -19,10 +19,10 @@ add_library(playgroundserverconfig STATIC
 
 add_subdirectory(demo-shell/)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
 mir_add_wrapped_executable(mir_demo_prerendered_frames
     mir_demo_prerendered_frames.c
 )
-set_property(TARGET mir_demo_prerendered_frames PROPERTY C_STANDARD 99)
 
 target_link_libraries(mir_demo_prerendered_frames
     mirclient

@@ -19,6 +19,7 @@
 
 #include <mir_toolkit/mir_buffer_stream_nbs.h>
 #include <mir_toolkit/mir_buffer.h>
+#include <sys/types.h>
 #include <signal.h>
 #include <string.h>
 #include <pthread.h>
@@ -27,7 +28,7 @@ void fill_buffer(MirBuffer* buffer, int shade, int min, int max)
 {
     unsigned char val = (unsigned char) (((float) shade / (max-min)) + min) * 0xFF;
     
-    MirGraphicsRegion* region = mir_buffer_lock(buffer, mir_write_fence);
+    MirGraphicsRegion* region = mir_buffer_acquire_region(buffer, mir_read_write);
     if (!region)
         return;
 
@@ -40,7 +41,7 @@ void fill_buffer(MirBuffer* buffer, int shade, int min, int max)
             px[j] = val;
         }
     }
-    mir_buffer_unlock(region);
+    mir_buffer_release_region(region);
 }
 
 typedef struct SubmissionInfo
@@ -63,7 +64,7 @@ static void available_callback(MirBufferStream* stream, MirBuffer* buffer, void*
 }
 
 volatile int rendering = 1;
-static void sig_handler(int signum)
+static void shutdown(int signum)
 {
     if ((signum == SIGTERM) || (signum == SIGINT))
         rendering = 0;
@@ -74,11 +75,8 @@ int main(int argc, char** argv)
     (void) argc;
     (void) argv;
 
-    struct sigaction action;
-    memset(&action, 0, sizeof(struct sigaction));
-    action.sa_handler = sig_handler;
-    sigaction(SIGTERM, &action, NULL);
-    sigaction(SIGINT, &action, NULL);
+    signal(SIGTERM, shutdown);
+    signal(SIGINT, shutdown);
 
     //TODO: add connection stuff
     MirBufferStream* stream = NULL;

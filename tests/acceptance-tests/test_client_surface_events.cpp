@@ -327,7 +327,10 @@ void raise_signal_on_close_event(MirSurface*, MirEvent const* ev, void* ctx)
 {
     if (mir_event_get_type(ev) == mir_event_type_close_surface)
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_event_get_close_surface_event(ev);
+#pragma GCC diagnostic pop
         auto signal = reinterpret_cast<mt::Signal*>(ctx);
         signal->raise();
     }

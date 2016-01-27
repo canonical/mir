@@ -118,6 +118,7 @@ mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
     SERIALIZE_OPTION_IF_SET(max_height);
     SERIALIZE_OPTION_IF_SET(width_inc);
     SERIALIZE_OPTION_IF_SET(height_inc);
+    SERIALIZE_OPTION_IF_SET(shell_chrome);
     // min_aspect is a special case (below)
     // max_aspect is a special case (below)
 
