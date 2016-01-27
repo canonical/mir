@@ -323,6 +323,25 @@ TEST_F(DeviceQuirks, width_alignment_quirk_can_be_disabled)
     EXPECT_THAT(quirks.aligned_width(720), Eq(720));
 }
 
+TEST_F(DeviceQuirks, returns_correct_gralloc_bits_with_fb_ion_quirk_for_device)
+{
+    using namespace testing;
+    char const default_str[] = "";
+    char const name_str[] = "Aquaris_M10_FHD";
+    MockOps mock_ops;
+    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
+        .Times(1)
+        .WillOnce(Invoke([&](char const*, char* value, char const*)
+        {
+            strncpy(value, name_str, PROP_VALUE_MAX);
+            return 0;
+        }));
+
+    mga::DeviceQuirks quirks(mock_ops, options);
+    EXPECT_THAT(quirks.fb_gralloc_bits(),
+        testing::Eq(GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_TEXTURE));
+}
+
 TEST_F(DeviceQuirks, returns_correct_gralloc_bits_without_fb_ion_quirk)
 {
     MockOps mock_ops;
