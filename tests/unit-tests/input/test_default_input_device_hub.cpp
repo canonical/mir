@@ -30,6 +30,7 @@
 
 #include "mir/cookie_factory.h"
 #include "mir/dispatch/action_queue.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/events/event_builders.h"
 #include "mir/input/cursor_listener.h"

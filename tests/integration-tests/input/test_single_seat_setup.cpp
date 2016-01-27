@@ -34,6 +34,7 @@
 #include "mir/input/device_capability.h"
 #include "mir/input/pointer_configuration.h"
 #include "mir/input/touchpad_configuration.h"
+#include "mir/graphics/display_configuration.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

@@ -36,6 +36,7 @@ class MockInputRegion : public input::InputRegion
 {
 public:
     MOCK_METHOD0(bounding_rectangle, geometry::Rectangle());
+    MOCK_METHOD1(set_display_configuration, void(graphics::DisplayConfiguration const&));
     MOCK_METHOD1(confine, void(geometry::Point&));
 };
 

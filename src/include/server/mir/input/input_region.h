@@ -26,6 +26,10 @@ namespace geometry
 struct Rectangle;
 struct Point;
 }
+namespace graphics
+{
+struct DisplayConfiguration;
+}
 namespace input
 {
 
@@ -50,6 +54,7 @@ public:
      * @param [in,out] point the point to confine
      */
     virtual void confine(geometry::Point& point) = 0;
+    virtual void set_display_configuration(mir::graphics::DisplayConfiguration const& config) = 0;
 
 protected:
     InputRegion() = default;

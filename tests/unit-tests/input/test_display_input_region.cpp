@@ -45,7 +45,8 @@ TEST(DisplayInputRegionTest, returns_correct_bounding_rectangle)
     geom::Rectangle const expected_bounding_rect{geom::Point{0,0}, geom::Size{800,600}};
     auto stub_display = std::make_shared<mtd::StubDisplay>(rects);
 
-    mi::DisplayInputRegion input_region{stub_display};
+    mi::DisplayInputRegion input_region;
+    input_region.set_display_configuration(*stub_display->configuration());
 
     auto rect = input_region.bounding_rectangle();
     EXPECT_EQ(expected_bounding_rect, rect);
@@ -55,7 +56,8 @@ TEST(DisplayInputRegionTest, confines_point_to_closest_valid_position)
 {
     auto stub_display = std::make_shared<mtd::StubDisplay>(rects);
 
-    mi::DisplayInputRegion input_region{stub_display};
+    mi::DisplayInputRegion input_region;
+    input_region.set_display_configuration(*stub_display->configuration());
 
     std::vector<std::tuple<geom::Point,geom::Point>> point_tuples{
         std::make_tuple(geom::Point{0,0}, geom::Point{0,0}),
@@ -86,7 +88,8 @@ TEST(DisplayInputRegionTest, returns_empty_bounding_rectangle_when_there_are_no_
     geom::Rectangle const empty_rect{};
     auto const stub_display = std::make_shared<mtd::StubDisplay>(0);
 
-    mi::DisplayInputRegion input_region{stub_display};
+    mi::DisplayInputRegion input_region;
+    input_region.set_display_configuration(*stub_display->configuration());
 
     auto const bounding_rect = input_region.bounding_rectangle();
     EXPECT_EQ(empty_rect, bounding_rect);

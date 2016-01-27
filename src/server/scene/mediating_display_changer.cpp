@@ -32,6 +32,7 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
+namespace mi = mir::input;
 
 namespace
 {
@@ -66,7 +67,8 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<SessionContainer> const& session_container,
     std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
     std::shared_ptr<ServerActionQueue> const& server_action_queue,
-    std::shared_ptr<mg::DisplayConfigurationReport> const& report)
+    std::shared_ptr<mg::DisplayConfigurationReport> const& report,
+    std::shared_ptr<mi::InputRegion> const& region)
     : display{display},
       compositor{compositor},
       display_configuration_policy{display_configuration_policy},
@@ -75,7 +77,8 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
       server_action_queue{server_action_queue},
       report{report},
       base_configuration_{display->configuration()},
-      base_configuration_applied{true}
+      base_configuration_applied{true},
+      region{region}
 {
     session_event_handler_register->register_focus_change_handler(
         [this](std::shared_ptr<ms::Session> const& session)
@@ -112,6 +115,7 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
         });
 
     report->initial_configuration(*base_configuration_);
+    region->set_display_configuration(*base_configuration_);
 }
 
 void ms::MediatingDisplayChanger::configure(
@@ -204,6 +208,7 @@ void ms::MediatingDisplayChanger::apply_config(
     {
         display->configure(*conf);
     }
+    region->set_display_configuration(*conf);
 
     base_configuration_applied = false;
 }
