@@ -21,11 +21,13 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/display.h"
+#include "mir/graphics/virtual_display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
+#include "mir/geometry/rectangles.h"
 #include "mir/raii.h"
 
 #include <boost/throw_exception.hpp>
@@ -38,6 +40,29 @@ namespace geom = mir::geometry;
 namespace
 {
 uint32_t const max_screencast_sessions{100};
+
+bool needs_virtual_display(mg::DisplayConfiguration const& conf, geom::Rectangle const& region)
+{
+    geom::Rectangles disp_rects;
+    conf.for_each_output([&disp_rects](mg::DisplayConfigurationOutput const& disp_conf)
+    {
+        if (disp_conf.connected)
+            disp_rects.add(disp_conf.extents());
+    });
+
+    geom::Rectangle empty{};
+
+    return empty == disp_rects.bounding_rectangle().intersection_with(region);
+}
+
+std::unique_ptr<mg::VirtualDisplay> make_virtual_display(mg::Display& display, geom::Rectangle const& rect)
+{
+    if (needs_virtual_display(*display.configuration(), rect))
+    {
+        return display.create_virtual_display(rect.size.width.as_int(), rect.size.height.as_int());
+    }
+    return nullptr;
+}
 }
 
 struct mc::detail::ScreencastSessionContext
@@ -47,14 +72,18 @@ struct mc::detail::ScreencastSessionContext
         std::shared_ptr<graphics::Buffer> const& buffer,
         std::unique_ptr<graphics::GLContext> gl_context,
         std::unique_ptr<graphics::DisplayBuffer> display_buffer,
-        std::unique_ptr<compositor::DisplayBufferCompositor> display_buffer_compositor) :
+        std::unique_ptr<compositor::DisplayBufferCompositor> display_buffer_compositor,
+        std::unique_ptr<graphics::VirtualDisplay> a_virtual_display) :
     scene{scene},
     buffer{buffer},
     gl_context{std::move(gl_context)},
     display_buffer{std::move(display_buffer)},
-    display_buffer_compositor{std::move(display_buffer_compositor)}
+    display_buffer_compositor{std::move(display_buffer_compositor)},
+    virtual_display{std::move(a_virtual_display)}
     {
         scene->register_compositor(this);
+        if (virtual_display)
+            virtual_display->enable();
     }
     ~ScreencastSessionContext()
     {
@@ -66,6 +95,7 @@ struct mc::detail::ScreencastSessionContext
     std::unique_ptr<graphics::GLContext> gl_context;
     std::unique_ptr<graphics::DisplayBuffer> display_buffer;
     std::unique_ptr<compositor::DisplayBufferCompositor> display_buffer_compositor;
+    std::unique_ptr<graphics::VirtualDisplay> virtual_display;
 };
 
 
@@ -165,12 +195,13 @@ mc::CompositingScreencast::create_session_context(
     auto buffer = buffer_allocator->alloc_buffer(buffer_properties);
     auto display_buffer = std::make_unique<ScreencastDisplayBuffer>(rect, *buffer);
     auto db_compositor = db_compositor_factory->create_compositor_for(*display_buffer);
-
+    auto virtual_display = make_virtual_display(*display, rect);
     return std::shared_ptr<detail::ScreencastSessionContext>(
         new detail::ScreencastSessionContext{
             scene,
             buffer,
             std::move(gl_context),
             std::move(display_buffer),
-            std::move(db_compositor)});
+            std::move(db_compositor),
+            std::move(virtual_display)});
 }

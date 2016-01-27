@@ -23,6 +23,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/geometry/rectangles.h"
 
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/null_display_buffer_compositor_factory.h"
@@ -53,41 +54,67 @@ namespace geom = mir::geometry;
 namespace
 {
 
+class StubVirtualDisplay : public mg::VirtualDisplay
+{
+public:
+    StubVirtualDisplay(std::function<void()> notify_enable)
+        : notify_enable{notify_enable}
+    {
+    }
+
+    void enable() override
+    {
+        notify_enable();
+    }
+
+    void disable() override
+    {
+    }
+
+private:
+    std::function<void()> notify_enable;
+};
+
 class StubDisplay : public mtd::NullDisplay
 {
 public:
     StubDisplay()
-        : connected_used_outputs{{connected,!used}, {connected,used}},
-          stub_config{connected_used_outputs}
+        : display_regions{{{0, 0}, {1920, 1080}}, {{1920, 0}, {640,480}}}
     {
     }
 
     std::unique_ptr<mg::DisplayConfiguration> configuration() const override
     {
-        return std::unique_ptr<mg::DisplayConfiguration>{
-            new mtd::StubDisplayConfig{connected_used_outputs}};
+        return {std::make_unique<mtd::StubDisplayConfig>(display_regions)};
     }
 
-    mg::DisplayConfigurationOutput const& output_with(mg::DisplayConfigurationOutputId id)
+    std::unique_ptr<mg::VirtualDisplay> create_virtual_display(int /*width*/, int /*height*/) override
     {
-        for (auto const& output : stub_config.outputs)
-        {
-            if (output.id == id)
-                return output;
-        }
-
-        BOOST_THROW_EXCEPTION(std::logic_error("Can't find stub output"));
+        virtual_display_created = true;
+        return {std::make_unique<StubVirtualDisplay>([this] { virtual_display_enabled = true; })};
     }
 
-private:
-    std::vector<std::pair<bool,bool>> const connected_used_outputs;
-    mtd::StubDisplayConfig const stub_config;
-    static bool const connected;
-    static bool const used;
-};
+    geom::Rectangle extents()
+    {
+        geom::Rectangles disp_rects;
+        configuration()->for_each_output([&disp_rects](mg::DisplayConfigurationOutput const& disp_conf)
+        {
+            if (disp_conf.connected)
+                disp_rects.add(disp_conf.extents());
+        });
+        return disp_rects.bounding_rectangle();
+    }
 
-bool const StubDisplay::connected{true};
-bool const StubDisplay::used{true};
+    geom::Point adjacent_point()
+    {
+        return {extents().size.width.as_int(), 0};
+    }
+
+    bool virtual_display_created{false};
+    bool virtual_display_enabled{false};
+private:
+    std::vector<geom::Rectangle> const display_regions;
+};
 
 struct MockDisplayBufferCompositor : mc::DisplayBufferCompositor
 {
@@ -142,11 +169,6 @@ struct MockDisplayBufferCompositorFactory : mc::DisplayBufferCompositorFactory
 MATCHER_P(DisplayBufferCoversArea, output_extents, "")
 {
     return arg.view_area() == output_extents;
-}
-
-MATCHER_P(BufferPropertiesMatchOutput, output, "")
-{
-    return arg.size == output.extents().size;
 }
 
 MATCHER_P(BufferPropertiesMatchSize, size, "")
@@ -322,3 +344,43 @@ TEST_F(CompositingScreencastTest, registers_and_unregisters_from_scene)
     auto session_id = screencast_local.create_session(default_region, default_size, default_pixel_format);
     screencast_local.destroy_session(session_id);
 }
+
+TEST_F(CompositingScreencastTest, attempts_to_create_virtual_display_when_given_region_outside_any_display)
+{
+    using namespace testing;
+
+    geom::Rectangle region_outside_display{stub_display.adjacent_point(), default_size};
+
+    mc::CompositingScreencast screencast_local{
+        mt::fake_shared(stub_scene),
+        mt::fake_shared(stub_display),
+        mt::fake_shared(stub_buffer_allocator),
+        mt::fake_shared(stub_db_compositor_factory)};
+
+    auto session_id = screencast_local.create_session(region_outside_display, default_size, default_pixel_format);
+    screencast_local.destroy_session(session_id);
+
+    EXPECT_TRUE(stub_display.virtual_display_created);
+    EXPECT_TRUE(stub_display.virtual_display_enabled);
+}
+
+TEST_F(CompositingScreencastTest, does_not_create_virtual_display_when_given_region_that_covers_any_display)
+{
+    using namespace testing;
+
+    geom::Rectangle region_inside_display{stub_display.extents().top_left, default_size};
+
+    mc::CompositingScreencast screencast_local{
+        mt::fake_shared(stub_scene),
+        mt::fake_shared(stub_display),
+        mt::fake_shared(stub_buffer_allocator),
+        mt::fake_shared(stub_db_compositor_factory)};
+
+    auto session_id = screencast_local.create_session(region_inside_display, default_size, default_pixel_format);
+    screencast_local.destroy_session(session_id);
+
+    EXPECT_FALSE(stub_display.virtual_display_created);
+    EXPECT_FALSE(stub_display.virtual_display_enabled);
+}
+
+
