@@ -23,6 +23,7 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "display.h"
+#include "virtual_display.h"
 #include "display_component_factory.h"
 #include "interpreter_cache.h"
 #include "server_render_window.h"
@@ -34,6 +35,7 @@
 #include "mir/gl/program_factory.h"
 #include "mir/fd.h"
 
+#include <memory>
 #include <boost/throw_exception.hpp>
 #include <fcntl.h>
 
@@ -215,7 +217,8 @@ void mga::Display::update_configuration(std::lock_guard<std::mutex> const&) cons
             hwc_config->active_config_for(mga::DisplayName::primary),
             config.primary().power_mode,
             std::move(external_config),
-            config.external().power_mode);
+            config.external().power_mode,
+            config.virt());
         configuration_dirty = false;
     }
 }
@@ -272,7 +275,7 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
             power_mode(mga::DisplayName::primary, *hwc_config, config.primary(), output.power_mode);
             displays.configure(mga::DisplayName::primary, output.power_mode, output.orientation, offset);
         }
-        else if (config.external().connected)
+        else if (config.external().id == output.id && config.external().connected)
         {
             power_mode(mga::DisplayName::external, *hwc_config, config.external(), output.power_mode);
             displays.configure(mga::DisplayName::external, output.power_mode, output.orientation, offset);
@@ -329,4 +332,19 @@ auto mga::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
 std::unique_ptr<mg::GLContext> mga::Display::create_gl_context()
 {
     return std::unique_ptr<mg::GLContext>{new mga::PbufferGLContext(gl_context)};
+}
+
+std::unique_ptr<mg::VirtualDisplay> mga::Display::create_virtual_display(int width, int height)
+{
+    auto enable_virtual_display = [this, width, height]
+    {
+        config.set_virtual_output_to(width, height);
+        on_hotplug();
+    };
+    auto disable_virtual_display = [this]
+    {
+        config.disable_virtual_output();
+        on_hotplug();
+    };
+    return {std::make_unique<mga::VirtualDisplay>(enable_virtual_display, disable_virtual_display)};
 }

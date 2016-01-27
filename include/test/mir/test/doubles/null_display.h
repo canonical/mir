@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_NULL_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/virtual_display.h"
 #include "mir/test/doubles/null_gl_context.h"
 #include "mir/test/doubles/null_display_configuration.h"
 #include "mir/test/doubles/null_display_sync_group.h"
@@ -65,6 +66,10 @@ class NullDisplay : public graphics::Display
     std::unique_ptr<graphics::GLContext> create_gl_context() override
     {
         return std::unique_ptr<NullGLContext>{new NullGLContext()};
+    }
+    std::unique_ptr<graphics::VirtualDisplay> create_virtual_display(int /*width*/, int /*height*/) override
+    {
+        return nullptr;
     }
     NullDisplaySyncGroup group;
 };
