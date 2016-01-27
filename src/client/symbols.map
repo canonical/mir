@@ -278,7 +278,7 @@ MIR_CLIENT_DETAIL_9v19 {
     };
 } MIR_CLIENT_DETAIL_9v18;
 
-MIR_CLIENT_DETAIL_unreleased {
+MIR_CLIENT_DETAIL_private_buffer_semantics {
   global:
     mir_buffer_stream_allocate_buffer;
     mir_buffer_stream_release_buffer;
