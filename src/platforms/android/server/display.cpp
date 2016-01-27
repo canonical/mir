@@ -336,15 +336,15 @@ std::unique_ptr<mg::GLContext> mga::Display::create_gl_context()
 
 std::unique_ptr<mg::VirtualOutput> mga::Display::create_virtual_output(int width, int height)
 {
-    auto enable_virtual_display = [this, width, height]
+    auto enable_virtual_output = [this, width, height]
     {
         config.set_virtual_output_to(width, height);
         on_hotplug();
     };
-    auto disable_virtual_display = [this]
+    auto disable_virtual_output = [this]
     {
         config.disable_virtual_output();
         on_hotplug();
     };
-    return {std::make_unique<mga::VirtualOutput>(enable_virtual_display, disable_virtual_display)};
+    return {std::make_unique<mga::VirtualOutput>(enable_virtual_output, disable_virtual_output)};
 }

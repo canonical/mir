@@ -41,7 +41,7 @@ namespace
 {
 uint32_t const max_screencast_sessions{100};
 
-bool needs_virtual_display(mg::DisplayConfiguration const& conf, geom::Rectangle const& region)
+bool needs_virtual_output(mg::DisplayConfiguration const& conf, geom::Rectangle const& region)
 {
     geom::Rectangles disp_rects;
     conf.for_each_output([&disp_rects](mg::DisplayConfigurationOutput const& disp_conf)
@@ -55,9 +55,9 @@ bool needs_virtual_display(mg::DisplayConfiguration const& conf, geom::Rectangle
     return empty == disp_rects.bounding_rectangle().intersection_with(region);
 }
 
-std::unique_ptr<mg::VirtualOutput> make_virtual_display(mg::Display& display, geom::Rectangle const& rect)
+std::unique_ptr<mg::VirtualOutput> make_virtual_output(mg::Display& display, geom::Rectangle const& rect)
 {
-    if (needs_virtual_display(*display.configuration(), rect))
+    if (needs_virtual_output(*display.configuration(), rect))
     {
         return display.create_virtual_output(rect.size.width.as_int(), rect.size.height.as_int());
     }
@@ -195,7 +195,7 @@ mc::CompositingScreencast::create_session_context(
     auto buffer = buffer_allocator->alloc_buffer(buffer_properties);
     auto display_buffer = std::make_unique<ScreencastDisplayBuffer>(rect, *buffer);
     auto db_compositor = db_compositor_factory->create_compositor_for(*display_buffer);
-    auto virtual_display = make_virtual_display(*display, rect);
+    auto virtual_display = make_virtual_output(*display, rect);
     return std::shared_ptr<detail::ScreencastSessionContext>(
         new detail::ScreencastSessionContext{
             scene,

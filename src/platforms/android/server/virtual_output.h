@@ -16,8 +16,8 @@
  * Authored by: Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_VIRTUAL_DISPLAY_H_
-#define MIR_GRAPHICS_ANDROID_VIRTUAL_DISPLAY_H_
+#ifndef MIR_GRAPHICS_ANDROID_VIRTUAL_OUTPUT_H_
+#define MIR_GRAPHICS_ANDROID_VIRTUAL_OUTPUT_H_
 
 #include "mir/graphics/virtual_output.h"
 

@@ -54,10 +54,10 @@ namespace geom = mir::geometry;
 namespace
 {
 
-class StubVirtualDisplay : public mg::VirtualOutput
+class StubVirtualOutput : public mg::VirtualOutput
 {
 public:
-    StubVirtualDisplay(std::function<void()> notify_enable)
+    StubVirtualOutput(std::function<void()> notify_enable)
         : notify_enable{notify_enable}
     {
     }
@@ -90,8 +90,8 @@ public:
 
     std::unique_ptr<mg::VirtualOutput> create_virtual_output(int /*width*/, int /*height*/) override
     {
-        virtual_display_created = true;
-        return {std::make_unique<StubVirtualDisplay>([this] { virtual_display_enabled = true; })};
+        virtual_output_created = true;
+        return {std::make_unique<StubVirtualOutput>([this] { virtual_output_enabled = true; })};
     }
 
     geom::Rectangle extents()
@@ -110,8 +110,8 @@ public:
         return {extents().size.width.as_int(), 0};
     }
 
-    bool virtual_display_created{false};
-    bool virtual_display_enabled{false};
+    bool virtual_output_created{false};
+    bool virtual_output_enabled{false};
 private:
     std::vector<geom::Rectangle> const display_regions;
 };
@@ -360,8 +360,8 @@ TEST_F(CompositingScreencastTest, attempts_to_create_virtual_display_when_given_
     auto session_id = screencast_local.create_session(region_outside_display, default_size, default_pixel_format);
     screencast_local.destroy_session(session_id);
 
-    EXPECT_TRUE(stub_display.virtual_display_created);
-    EXPECT_TRUE(stub_display.virtual_display_enabled);
+    EXPECT_TRUE(stub_display.virtual_output_created);
+    EXPECT_TRUE(stub_display.virtual_output_enabled);
 }
 
 TEST_F(CompositingScreencastTest, does_not_create_virtual_display_when_given_region_that_covers_any_display)
@@ -379,8 +379,8 @@ TEST_F(CompositingScreencastTest, does_not_create_virtual_display_when_given_reg
     auto session_id = screencast_local.create_session(region_inside_display, default_size, default_pixel_format);
     screencast_local.destroy_session(session_id);
 
-    EXPECT_FALSE(stub_display.virtual_display_created);
-    EXPECT_FALSE(stub_display.virtual_display_enabled);
+    EXPECT_FALSE(stub_display.virtual_output_created);
+    EXPECT_FALSE(stub_display.virtual_output_enabled);
 }
 
 
