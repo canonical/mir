@@ -77,7 +77,7 @@ void mi::DefaultInputManager::start()
         });
 
     multiplexer->add_watch(queue);
-    auto unregister_queue = on_unwind([this]{multiplexer->remove_watch(queue);});
+    auto unregister_queue = on_unwind([this]{ if (state == State::starting) multiplexer->remove_watch(queue);});
 
 
     auto started_promise = std::make_shared<std::promise<void>>();
@@ -137,7 +137,7 @@ void mi::DefaultInputManager::stop()
     auto restore_platforms = on_unwind(
         [this]
         {
-            queue->enqueue([this](){ start_platforms(); });
+            if (state == State::stopping) queue->enqueue([this](){ start_platforms(); });
         });
 
     multiplexer->remove_watch(queue);
