@@ -899,15 +899,6 @@ TEST(MultiThreadedCompositor, when_compositor_thread_fails_start_reports_error)
     auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
     auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
 
-    // Ignore SIGTERM. We must keep ignoring SIGTERM until the compositor is
-    // destroyed/stopped (hence sigterm_raii must be created before the compositor),
-    // since even after compositor.start() has returned because of an error the
-    // compositing threads may not have finished and could emit SIGTERM.
-    sighandler_t old_sigterm_handler = nullptr;
-    auto const sigterm_raii = mir::raii::paired_calls(
-        [&] { old_sigterm_handler = signal(SIGTERM, SIG_IGN); },
-        [&] { signal(SIGTERM, old_sigterm_handler); });
-
     mc::MultiThreadedCompositor compositor{
         display, stub_scene, db_compositor_factory, mock_display_listener, mock_report, default_delay, true};
 
