@@ -23,6 +23,7 @@
 #include "session_event_handler_register.h"
 #include "mir/graphics/display.h"
 #include "mir/compositor/compositor.h"
+#include "mir/geometry/rectangles.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_report.h"
@@ -115,7 +116,7 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
         });
 
     report->initial_configuration(*base_configuration_);
-    region->set_display_configuration(*base_configuration_);
+    update_input_rectangles(*base_configuration_);
 }
 
 void ms::MediatingDisplayChanger::configure(
@@ -208,7 +209,7 @@ void ms::MediatingDisplayChanger::apply_config(
     {
         display->configure(*conf);
     }
-    region->set_display_configuration(*conf);
+    update_input_rectangles(*conf);
 
     base_configuration_applied = false;
 }
@@ -286,4 +287,16 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
 
             send_config_to_all_sessions(conf);
         });
+}
+
+void ms::MediatingDisplayChanger::update_input_rectangles(mg::DisplayConfiguration const& config)
+{
+    geometry::Rectangles rectangles;
+    config.for_each_output(
+        [&rectangles](mg::DisplayConfigurationOutput const& output)
+        {
+            if (output.power_mode == mir_power_mode_on && -output.current_mode_index < output.modes.size())
+                rectangles.add(geometry::Rectangle(output.top_left, output.modes[output.current_mode_index].size));
+        });
+    region->set_input_rectangles(rectangles);
 }

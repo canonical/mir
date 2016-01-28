@@ -26,21 +26,10 @@ namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
-void mi::DisplayInputRegion::set_display_configuration(mg::DisplayConfiguration const& config)
+void mi::DisplayInputRegion::set_input_rectangles(geometry::Rectangles const& config)
 {
     std::unique_lock<std::mutex> lock(rectangle_guard);
-    rectangles.clear();
-    apply_config(config);
-}
-
-void mi::DisplayInputRegion::apply_config(mg::DisplayConfiguration const& config)
-{
-    config.for_each_output([this](mg::DisplayConfigurationOutput const& output)
-                           {
-                                if (output.power_mode == mir_power_mode_on &&
-                                    output.current_mode_index < output.modes.size())
-                                    rectangles.add(geom::Rectangle(output.top_left, output.modes[output.current_mode_index].size));
-                           });
+    rectangles = config;
 }
 
 geom::Rectangle mi::DisplayInputRegion::bounding_rectangle()

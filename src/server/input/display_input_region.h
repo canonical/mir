@@ -27,10 +27,6 @@
 
 namespace mir
 {
-namespace graphics
-{
-class Display;
-}
 namespace input
 {
 
@@ -41,10 +37,9 @@ public:
 
     geometry::Rectangle bounding_rectangle() override;
     void confine(geometry::Point& point) override;
-    void set_display_configuration(graphics::DisplayConfiguration const& display) override;
+    void set_input_rectangles(geometry::Rectangles const& rectangles) override;
 
 private:
-    void apply_config(graphics::DisplayConfiguration const& display);
     std::mutex rectangle_guard;
     geometry::Rectangles rectangles;
 };

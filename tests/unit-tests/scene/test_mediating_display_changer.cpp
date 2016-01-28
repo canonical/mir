@@ -20,6 +20,7 @@
 #include "src/server/scene/session_container.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration_report.h"
+#include "mir/geometry/rectangles.h"
 #include "src/server/scene/broadcasting_session_event_sink.h"
 #include "mir/server_action_queue.h"
 
@@ -603,7 +604,7 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_set_base_configurat
 TEST_F(MediatingDisplayChangerTest, input_region_receives_display_configuration_on_start)
 {
     using namespace testing;
-    EXPECT_CALL(mock_input_region, set_display_configuration(_));
+    EXPECT_CALL(mock_input_region, set_input_rectangles(_));
 
     ms::MediatingDisplayChanger display_changer(
         mt::fake_shared(mock_display),
@@ -620,7 +621,8 @@ TEST_F(MediatingDisplayChangerTest, notifies_input_region_on_new_configuration)
 {
     using namespace testing;
     mtd::NullDisplayConfiguration conf;
-    EXPECT_CALL(mock_input_region, set_display_configuration(Ref(conf)));
+    mir::geometry::Rectangles expected_rectangles;
+    EXPECT_CALL(mock_input_region, set_input_rectangles(expected_rectangles));
 
     auto session = std::make_shared<mtd::StubSession>();
 
