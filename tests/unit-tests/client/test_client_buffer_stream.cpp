@@ -26,6 +26,7 @@
 #include "mir/test/doubles/mock_client_buffer_factory.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/null_logger.h"
+#include "mir/test/doubles/mock_protobuf_server.h"
 #include "mir/test/fake_shared.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -47,60 +48,10 @@ using namespace testing;
 namespace
 {
 
-ACTION(RunProtobufClosure)
-{
-    arg2->Run();
-}
-
 ACTION_P(SetResponseError, message)
 {
     arg1->set_error(message);
 }
-
-struct MockProtobufServer : public mclr::DisplayServer
-{
-    MockProtobufServer() : mclr::DisplayServer(nullptr)
-    {
-        ON_CALL(*this, configure_buffer_stream(_,_,_))
-            .WillByDefault(RunProtobufClosure());
-        ON_CALL(*this, submit_buffer(_,_,_))
-            .WillByDefault(RunProtobufClosure());
-        ON_CALL(*this, allocate_buffers(_,_,_))
-            .WillByDefault(DoAll(InvokeWithoutArgs([this]{ alloc_count++; }), RunProtobufClosure()));
-        ON_CALL(*this, release_buffers(_,_,_))
-            .WillByDefault(RunProtobufClosure());
-    }
-
-    MOCK_METHOD3(configure_buffer_stream, void(
-        mir::protobuf::StreamConfiguration const*, 
-        mp::Void*,
-        google::protobuf::Closure*));
-    MOCK_METHOD3(screencast_buffer, void(
-        mp::ScreencastId const* /*request*/,
-        mp::Buffer* /*response*/,
-        google::protobuf::Closure* /*done*/));
-    MOCK_METHOD3(allocate_buffers, void(
-        mir::protobuf::BufferAllocation const*,
-        mir::protobuf::Void*,
-        google::protobuf::Closure*));
-    MOCK_METHOD3(release_buffers, void(
-        mir::protobuf::BufferRelease const*,
-        mir::protobuf::Void*,
-        google::protobuf::Closure*));
-    MOCK_METHOD3(submit_buffer, void(
-        mp::BufferRequest const* /*request*/,
-        mp::Void* /*response*/,
-        google::protobuf::Closure* /*done*/));
-    MOCK_METHOD3(exchange_buffer, void(
-        mp::BufferRequest const* /*request*/,
-        mp::Buffer* /*response*/,
-        google::protobuf::Closure* /*done*/));
-    MOCK_METHOD3(create_buffer_stream, void(
-        mp::BufferStreamParameters const* /*request*/,
-        mp::BufferStream* /*response*/,
-        google::protobuf::Closure* /*done*/));
-    unsigned int alloc_count{0};
-};
 
 struct StubClientPlatform : public mcl::ClientPlatform
 {
@@ -241,7 +192,7 @@ struct ClientBufferStream : TestWithParam<bool>
     testing::NiceMock<mtd::MockClientBufferFactory> mock_factory;
     mtd::StubClientBufferFactory stub_factory;
 
-    testing::NiceMock<MockProtobufServer> mock_protobuf_server;
+    testing::NiceMock<mtd::MockProtobufServer> mock_protobuf_server;
 
     MirPixelFormat const default_pixel_format = mir_pixel_format_argb_8888;
     MirBufferUsage const default_buffer_usage = mir_buffer_usage_hardware;
@@ -337,7 +288,7 @@ TEST_P(ClientBufferStream, uses_buffer_message_from_server)
 TEST_P(ClientBufferStream, producer_streams_call_submit_buffer_on_next_buffer)
 {
     EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))
-        .WillOnce(RunProtobufClosure());
+        .WillOnce(mtd::RunProtobufClosure());
     mcl::BufferStream bs{
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
@@ -357,7 +308,7 @@ TEST_P(ClientBufferStream, invokes_callback_on_next_buffer)
     service_requests_for(bs, mock_protobuf_server.alloc_count);
     ON_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillByDefault(DoAll(
-            RunProtobufClosure(),
+            mtd::RunProtobufClosure(),
             InvokeWithoutArgs([&bs, &buffer]{ bs.buffer_available(buffer);})));
 
     bool callback_invoked = false;
@@ -533,7 +484,7 @@ TEST_P(ClientBufferStream, receives_unsolicited_buffer)
     EXPECT_CALL(mock_factory, create_buffer(_,_,_))
         .WillOnce(Return(mt::fake_shared(second_mock_client_buffer)));
     EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))
-        .WillOnce(RunProtobufClosure());
+        .WillOnce(mtd::RunProtobufClosure());
     bs.buffer_available(another_buffer_package);
     bs.next_buffer([]{});
 
@@ -548,7 +499,7 @@ TEST_P(ClientBufferStream, waiting_client_can_unblock_on_shutdown)
     ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
     ON_CALL(mock_protobuf_server, submit_buffer(_,_,_))
-        .WillByDefault(RunProtobufClosure());
+        .WillByDefault(mtd::RunProtobufClosure());
 
     std::mutex mutex;
     std::condition_variable cv;

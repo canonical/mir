@@ -67,7 +67,6 @@ mcl::ScreencastStream::ScreencastStream(
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
 
     buffer_size = geom::Size{protobuf_bs->buffer().width(), protobuf_bs->buffer().height()};
-    
     process_buffer(protobuf_bs->buffer());
     egl_native_window_ = client_platform->create_egl_native_window(this);
 
