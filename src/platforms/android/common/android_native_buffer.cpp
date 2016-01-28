@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/command_stream_sync.h"
+#include "command_stream_sync.h"
 #include "android_native_buffer.h"
 
 namespace mga=mir::graphics::android;

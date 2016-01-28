@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_EGL_SYNC_FENCE_H_
 #define MIR_GRAPHICS_EGL_SYNC_FENCE_H_
 
-#include "egl_extensions.h"
+#include "egl_sync_extensions.h"
 #include "command_stream_sync.h"
 #include <memory>
 #include <mutex>

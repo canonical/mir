@@ -27,7 +27,7 @@
 #include "android_alloc_adaptor.h"
 #include "buffer.h"
 #include "device_quirks.h"
-#include "mir/graphics/egl_sync_fence.h"
+#include "egl_sync_fence.h"
 
 #include <boost/throw_exception.hpp>
 
