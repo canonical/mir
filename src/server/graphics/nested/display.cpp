@@ -67,7 +67,8 @@ mgn::detail::EGLDisplayHandle::EGLDisplayHandle(
     std::shared_ptr<GLConfig> const& gl_config)
     : egl_display(EGL_NO_DISPLAY),
       egl_context_(EGL_NO_CONTEXT),
-      gl_config{gl_config}
+      gl_config{gl_config},
+      pixel_format{mir_pixel_format_invalid}
 {
     egl_display = eglGetDisplay(native_display);
     if (egl_display == EGL_NO_DISPLAY)
@@ -84,6 +85,7 @@ void mgn::detail::EGLDisplayHandle::initialize(MirPixelFormat format)
         BOOST_THROW_EXCEPTION(mg::egl_error("Nested Mir Display Error: Failed to initialize EGL."));
     }
 
+    pixel_format = format;
     egl_context_ = eglCreateContext(egl_display, choose_windowed_es_config(format), EGL_NO_CONTEXT, detail::nested_egl_context_attribs);
 
     if (egl_context_ == EGL_NO_CONTEXT)
@@ -117,6 +119,23 @@ EGLConfig mgn::detail::EGLDisplayHandle::choose_windowed_es_config(MirPixelForma
 EGLContext mgn::detail::EGLDisplayHandle::egl_context() const
 {
     return egl_context_;
+}
+
+std::unique_ptr<mg::GLContext> mgn::detail::EGLDisplayHandle::create_gl_context()
+{
+    EGLint const attribs[] =
+    {
+       EGL_SURFACE_TYPE, EGL_DONT_CARE,
+       EGL_RED_SIZE, mg::red_channel_depth(pixel_format),
+       EGL_GREEN_SIZE, mg::green_channel_depth(pixel_format),
+       EGL_BLUE_SIZE, mg::blue_channel_depth(pixel_format),
+       EGL_ALPHA_SIZE, mg::alpha_channel_depth(pixel_format),
+       EGL_DEPTH_SIZE, gl_config->depth_buffer_bits(),
+       EGL_STENCIL_SIZE, gl_config->stencil_buffer_bits(),
+       EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+       EGL_NONE
+    };
+    return std::make_unique<SurfacelessEGLContext>(egl_display, attribs, EGL_NO_CONTEXT);
 }
 
 mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
@@ -349,5 +368,5 @@ auto mgn::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
 
 std::unique_ptr<mg::GLContext> mgn::Display::create_gl_context()
 {
-    return std::make_unique<SurfacelessEGLContext>(egl_display, EGL_NO_CONTEXT);
+    return egl_display.create_gl_context();
 }
