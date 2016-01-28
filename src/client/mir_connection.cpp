@@ -845,10 +845,10 @@ void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<S
 }
 
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
-   mp::BufferStream const& protobuf_bs, mir::geometry::Size size)
+   mp::BufferStream const& protobuf_bs, mir::geometry::Size)
 {
     return std::make_shared<mcl::ScreencastStream>(
-        this, server, platform, protobuf_bs, size);
+        this, server, platform, protobuf_bs);
 }
 
 EGLNativeDisplayType MirConnection::egl_native_display()

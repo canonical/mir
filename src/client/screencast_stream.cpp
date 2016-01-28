@@ -48,16 +48,13 @@ mcl::ScreencastStream::ScreencastStream(
     MirConnection* connection,
     mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
-    mp::BufferStream const& a_protobuf_bs,
-    geom::Size ideal_size) :
-      connection_(connection),
-      display_server(server),
-      client_platform(client_platform),
-      factory(client_platform->create_buffer_factory()),
-      protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
-      swap_interval_(1),
-      protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
-      ideal_buffer_size(ideal_size)
+    mp::BufferStream const& a_protobuf_bs) :
+    connection_(connection),
+    display_server(server),
+    client_platform(client_platform),
+    factory(client_platform->create_buffer_factory()),
+    protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
+    protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
 {
     if (!protobuf_bs->has_id())
     {
@@ -69,23 +66,10 @@ mcl::ScreencastStream::ScreencastStream(
     if (protobuf_bs->has_error())
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
 
-    cached_buffer_size = geom::Size{protobuf_bs->buffer().width(), protobuf_bs->buffer().height()};
+    buffer_size = geom::Size{protobuf_bs->buffer().width(), protobuf_bs->buffer().height()};
     
-    try
-    {
-        process_buffer(protobuf_bs->buffer());
-        egl_native_window_ = client_platform->create_egl_native_window(this);
-    }
-    catch (std::exception const& error)
-    {
-        protobuf_bs->set_error(std::string{"Error processing buffer stream creating response:"} +
-                               boost::diagnostic_information(error));
-        if (!current_buffer)
-        {
-            for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
-                ::close(protobuf_bs->buffer().fd(i));
-        }
-    }
+    process_buffer(protobuf_bs->buffer());
+    egl_native_window_ = client_platform->create_egl_native_window(this);
 
     if (!valid())
         BOOST_THROW_EXCEPTION(std::runtime_error("Can not create buffer stream: " + std::string(protobuf_bs->error())));
@@ -100,42 +84,45 @@ void mcl::ScreencastStream::process_buffer(mp::Buffer const& buffer)
 
 void mcl::ScreencastStream::process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>&)
 {
-    if (buffer.has_width() && buffer.has_height())
-        cached_buffer_size = geom::Size{buffer.width(), buffer.height()};
-
     if (buffer.has_error())
         BOOST_THROW_EXCEPTION(std::runtime_error("BufferStream received buffer with error:" + buffer.error()));
+    if (buffer.has_width() && buffer.has_height())
+        buffer_size = geom::Size{buffer.width(), buffer.height()};
 
-    try
+    auto package = std::make_shared<MirBufferPackage>();
+    package->data_items = buffer.data_size();
+    package->fd_items = buffer.fd_size();
+    for (int i = 0; i != buffer.data_size(); ++i)
+        package->data[i] = buffer.data(i);
+    for (int i = 0; i != buffer.fd_size(); ++i)
+        package->fd[i] = buffer.fd(i);
+    package->stride = buffer.stride();
+    package->flags = buffer.flags();
+    package->width = buffer.width();
+    package->height = buffer.height();
+    if (current_id != buffer.buffer_id())
     {
-        auto package = std::make_shared<MirBufferPackage>();
-
-        package->data_items = buffer.data_size();
-        package->fd_items = buffer.fd_size();
-        for (int i = 0; i != buffer.data_size(); ++i)
-            package->data[i] = buffer.data(i);
-        for (int i = 0; i != buffer.fd_size(); ++i)
-            package->fd[i] = buffer.fd(i);
-        package->stride = buffer.stride();
-        package->flags = buffer.flags();
-        package->width = buffer.width();
-        package->height = buffer.height();
-        current_buffer = factory->create_buffer(
-            package,
-            cached_buffer_size,
-            static_cast<MirPixelFormat>(protobuf_bs->pixel_format()));
+        try
+        {
+            current_buffer = factory->create_buffer(
+                package, buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()));
+        }
+        catch (const std::runtime_error& error)
+        {
+            for (int i = 0; i < buffer.fd_size(); i++)
+                ::close(buffer.fd(i));
+            protobuf_bs->set_error(
+                std::string{"Error processing buffer stream creating response:"} +
+                boost::diagnostic_information(error));
+            throw error;
+        }
         current_id = buffer.buffer_id();
-    }
-    catch (const std::runtime_error& err)
-    {
-        mir::log_error("Error processing incoming buffer " + std::string(err.what()));
     }
 }
 
 MirWaitHandle* mcl::ScreencastStream::next_buffer(std::function<void()> const& done)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-
     secured_region.reset();
 
     mp::ScreencastId screencast_id;
@@ -162,15 +149,7 @@ std::shared_ptr<mcl::ClientBuffer> mcl::ScreencastStream::get_current_buffer()
 
 EGLNativeWindowType mcl::ScreencastStream::egl_native_window()
 {
-    //probabbly dont need to lock
-    std::unique_lock<decltype(mutex)> lock(mutex);
     return *egl_native_window_;
-}
-
-void mcl::ScreencastStream::release_cpu_region()
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    secured_region.reset();
 }
 
 std::shared_ptr<mcl::MemoryRegion> mcl::ScreencastStream::secure_for_cpu_write()
@@ -192,14 +171,13 @@ void mcl::ScreencastStream::screencast_buffer_received(std::function<void()> don
     screencast_wait_handle.result_received();
 }
 
-/* mcl::EGLNativeSurface interface for EGLNativeWindow integration */
 MirSurfaceParameters mcl::ScreencastStream::get_parameters() const
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     return MirSurfaceParameters{
-        "",
-        cached_buffer_size.width.as_int(),
-        cached_buffer_size.height.as_int(),
+        "Screencast",
+        buffer_size.width.as_int(),
+        buffer_size.height.as_int(),
         static_cast<MirPixelFormat>(protobuf_bs->pixel_format()),
         static_cast<MirBufferUsage>(protobuf_bs->buffer_usage()),
         mir_display_output_id_invalid};
@@ -210,37 +188,15 @@ void mcl::ScreencastStream::request_and_wait_for_next_buffer()
     next_buffer([](){})->wait_for_all();
 }
 
-void mcl::ScreencastStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, int interval)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    if (attrib != mir_surface_attrib_swapinterval)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to configure surface attribute " + std::to_string(attrib) +
-        " on BufferStream but only mir_surface_attrib_swapinterval is supported")); 
-    }
-
-    auto i = interval;
-    lock.unlock();
-    set_swap_interval(i);
-    interval_wait_handle.wait_for_all();
-}
-
 uint32_t mcl::ScreencastStream::get_current_buffer_id()
 {
-//    std::unique_lock<decltype(mutex)> lock(mutex);
-//    return buffer_depository->current_buffer_id();
-    return 0;
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    return current_id;
 }
 
 int mcl::ScreencastStream::swap_interval() const
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
     return swap_interval_;
-}
-
-MirWaitHandle* mcl::ScreencastStream::set_swap_interval(int)
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
 }
 
 MirNativeBuffer* mcl::ScreencastStream::get_current_buffer_package()
@@ -267,12 +223,6 @@ bool mcl::ScreencastStream::valid() const
     return protobuf_bs->has_id() && !protobuf_bs->has_error();
 }
 
-void mcl::ScreencastStream::set_buffer_cache_size(unsigned int)
-{
-//    std::unique_lock<std::mutex> lock(mutex);
-//    buffer_depository->set_buffer_cache_size(cache_size);
-}
-
 void mcl::ScreencastStream::buffer_available(mir::protobuf::Buffer const& buffer)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -281,8 +231,34 @@ void mcl::ScreencastStream::buffer_available(mir::protobuf::Buffer const& buffer
 
 void mcl::ScreencastStream::buffer_unavailable()
 {
-//    std::unique_lock<decltype(mutex)> lock(mutex);
-//    buffer_depository->lost_connection(); 
+}
+
+char const * mcl::ScreencastStream::get_error_message() const
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    if (protobuf_bs->has_error())
+        return protobuf_bs->error().c_str();
+    return error_message.c_str();
+}
+
+MirConnection* mcl::ScreencastStream::connection() const
+{
+    return connection_;
+}
+
+void mcl::ScreencastStream::set_buffer_cache_size(unsigned int)
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set cache size on screencast is invalid"));
+}
+
+void mcl::ScreencastStream::request_and_wait_for_configure(MirSurfaceAttrib, int)
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set attrib on screencast is invalid"));
+}
+
+MirWaitHandle* mcl::ScreencastStream::set_swap_interval(int)
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
 }
 
 void mcl::ScreencastStream::set_size(geom::Size)
@@ -293,18 +269,4 @@ void mcl::ScreencastStream::set_size(geom::Size)
 MirWaitHandle* mcl::ScreencastStream::set_scale(float)
 {
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set scale on screencast is invalid"));
-}
-
-char const * mcl::ScreencastStream::get_error_message() const
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-    if (protobuf_bs->has_error())
-        return protobuf_bs->error().c_str();
-
-    return error_message.c_str();
-}
-
-MirConnection* mcl::ScreencastStream::connection() const
-{
-    return connection_;
 }

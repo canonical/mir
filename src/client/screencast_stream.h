@@ -71,8 +71,7 @@ public:
         MirConnection* connection,
         mir::client::rpc::DisplayServer& server,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
-        mir::protobuf::BufferStream const& protobuf_bs,
-        geometry::Size ideal_size);
+        mir::protobuf::BufferStream const& protobuf_bs);
 
     MirSurfaceParameters get_parameters() const override;
     MirWaitHandle* next_buffer(std::function<void()> const& done) override;
@@ -99,21 +98,20 @@ public:
     MirWaitHandle* set_scale(float scale) override;
     char const* get_error_message() const override;
     MirConnection* connection() const override;
+
 private:
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>&);
     void screencast_buffer_received(std::function<void()> done);
-    void release_cpu_region();
 
-    mutable std::mutex mutex; // Protects all members of *this
+    mutable std::mutex mutex;
 
     MirConnection* connection_;
     mir::client::rpc::DisplayServer& display_server;
     std::shared_ptr<ClientPlatform> const client_platform;
     std::shared_ptr<ClientBufferFactory> const factory;
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
-
-    int const swap_interval_;
+    int const swap_interval_{1};
 
     std::shared_ptr<EGLNativeWindowType> egl_native_window_;
 
@@ -125,12 +123,10 @@ private:
 
     std::shared_ptr<MemoryRegion> secured_region;
 
-    geometry::Size cached_buffer_size;
-
-    geometry::Size ideal_buffer_size;
+    geometry::Size buffer_size;
     std::string error_message;
     std::shared_ptr<ClientBuffer> current_buffer;
-    int current_id;
+    int current_id {-1};
 };
 
 }

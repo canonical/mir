@@ -66,7 +66,6 @@ class PerfReport;
 struct MemoryRegion;
 
 class ServerBufferSemantics;
-
 class BufferStream : public EGLNativeSurface, public ClientBufferStream
 {
 public:
@@ -134,27 +133,22 @@ private:
     void on_scale_set(float scale);
     void release_cpu_region();
     MirWaitHandle* force_swap_interval(int interval);
+    void init_swap_interval();
 
     mutable std::mutex mutex; // Protects all members of *this
 
     MirConnection* connection_;
     mir::client::rpc::DisplayServer& display_server;
-
     std::shared_ptr<ClientPlatform> const client_platform;
-
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 
-    void init_swap_interval();
     bool fixed_swap_interval;
     int swap_interval_;
     float scale_;
 
     std::shared_ptr<mir::client::PerfReport> const perf_report;
-
     std::shared_ptr<EGLNativeWindowType> egl_native_window_;
 
-    MirWaitHandle create_wait_handle;
-    MirWaitHandle release_wait_handle;
     MirWaitHandle interval_wait_handle;
     std::unique_ptr<mir::protobuf::Void> protobuf_void;
 

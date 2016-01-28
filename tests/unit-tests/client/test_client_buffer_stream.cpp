@@ -347,24 +347,6 @@ TEST_P(ClientBufferStream, producer_streams_call_submit_buffer_on_next_buffer)
     bs.next_buffer([]{});
 }
 
-
-#if 0
-TEST_P(ClientBufferStream, consumer_streams_call_screencast_buffer_on_next_buffer)
-{
-    using namespace testing;
-    EXPECT_CALL(mock_protobuf_server, screencast_buffer(_,_,_))
-        .WillOnce(RunProtobufClosure());
-    mcl::BufferStream bs(
-        nullptr, wait_handle, mock_protobuf_server, mcl::BufferStreamMode::Consumer,
-        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
-        response, perf_report, "", size, nbuffers);
-    service_requests_for(bs, mock_protobuf_server.alloc_count);
-    auto wh = bs.next_buffer([]{});
-    ASSERT_THAT(wh, NotNull());
-    EXPECT_FALSE(wh->is_pending());
-}
-#endif 
-
 TEST_P(ClientBufferStream, invokes_callback_on_next_buffer)
 {
     mp::Buffer buffer;
