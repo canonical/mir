@@ -20,7 +20,6 @@
 
 #include "mir_toolkit/mir_surface.h"
 #include "mir_toolkit/mir_wait.h"
-#include "mir_toolkit/cookie.h"
 #include "mir/require.h"
 
 #include "mir_connection.h"
@@ -152,9 +151,6 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
     }
     catch (std::exception const& error)
     {
-        auto error_surf = new MirSurface{std::string{"Failed to create surface: "} +
-                                         boost::diagnostic_information(error)};
-        (*callback)(error_surf, context);
         return nullptr;
     }
 }
@@ -227,6 +223,12 @@ void mir_surface_spec_set_event_handler(MirSurfaceSpec* spec,
     spec->event_handler = MirSurfaceSpec::EventHandler{callback, context};
 }
 
+void mir_surface_spec_set_shell_chrome(MirSurfaceSpec* spec, MirShellChrome style)
+{
+    mir::require(spec);
+    spec->shell_chrome = style;
+}
+
 void mir_surface_spec_release(MirSurfaceSpec* spec)
 {
     delete spec;
@@ -258,9 +260,10 @@ MirWaitHandle* mir_surface_release(
     MirSurface* surface,
     mir_surface_callback callback, void* context)
 {
+    auto connection = surface->connection();
     try
     {
-        return surface->release_surface(callback, context);
+        return connection->release_surface(surface, callback, context);
     }
     catch (std::exception const& ex)
     {
@@ -488,13 +491,13 @@ MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrient
     return result;
 }
 
-void mir_surface_raise_with_cookie(MirSurface* surf, MirCookie const cookie)
+void mir_surface_raise(MirSurface* surf, MirCookie const* cookie)
 {
     mir::require(mir_surface_is_valid(surf));
 
     try
     {
-        surf->raise_surface_with_cookie(cookie);
+        surf->raise_surface(cookie);
     }
     catch (std::exception const& ex)
     {

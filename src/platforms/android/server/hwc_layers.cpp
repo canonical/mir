@@ -18,8 +18,8 @@
 
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
-#include "mir/graphics/android/sync_fence.h"
-#include "mir/graphics/android/native_buffer.h"
+#include "sync_fence.h"
+#include "native_buffer.h"
 #include "hwc_layerlist.h"
 
 #include <limits>

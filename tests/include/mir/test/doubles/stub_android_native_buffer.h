@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_ANDROID_NATIVE_BUFFER_H_
 #define MIR_TEST_DOUBLES_STUB_ANDROID_NATIVE_BUFFER_H_
 
-#include "mir/graphics/android/native_buffer.h"
+#include "src/platforms/android/include/native_buffer.h"
 #include "mir/geometry/size.h"
 
 namespace mir

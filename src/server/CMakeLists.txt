@@ -1,3 +1,5 @@
+pkg_check_modules(UUID REQUIRED uuid)
+
 add_definitions(
   -DMIR_LOG_COMPONENT_FALLBACK="mirserver"
   -DMIR_VERSION="${MIR_VERSION}"
@@ -12,6 +14,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/client
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/include/cookie
+  ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${GLIB_INCLUDE_DIRS}
 )
 add_definitions(-DMIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
@@ -88,7 +91,8 @@ set(MIR_SERVER_REFERENCES
 set(MIR_SERVER_OBJECTS ${MIR_SERVER_OBJECTS} PARENT_SCOPE)
 set(MIR_SERVER_REFERENCES ${MIR_SERVER_REFERENCES} PARENT_SCOPE)
 
-add_library(mirserver SHARED
+mir_add_library_with_symbols(mirserver SHARED
+  symbols.map
   ${MIR_SERVER_OBJECTS}
 )
 
@@ -119,7 +123,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
 )
 
-set(MIRSERVER_ABI 36) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 37) # Be sure to increment MIR_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(

@@ -121,7 +121,8 @@ private:
 
 ms::SurfaceStack::SurfaceStack(
     std::shared_ptr<SceneReport> const& report) :
-    report{report}
+    report{report},
+    scene_changed{false}
 {
 }
 
@@ -160,10 +161,7 @@ int ms::SurfaceStack::frames_pending(mc::CompositorID id) const
     int result = scene_changed ? 1 : 0;
     for (auto const& surface : surfaces)
     {
-        // TODO: Rename mir_surface_attrib_visibility as it's obviously
-        //       confusing with visible()
-        if (surface->visible() &&
-            surface->query(mir_surface_attrib_visibility) == mir_surface_visibility_exposed)
+        if (surface->visible())
         {
             auto const tracker = rendering_trackers.find(surface.get());
             if (tracker != rendering_trackers.end() && tracker->second->is_exposed_in(id))

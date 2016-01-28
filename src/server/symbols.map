@@ -1,4 +1,4 @@
-MIR_SERVER_0.18 {
+MIR_SERVER_0.19 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -165,7 +165,7 @@ MIR_SERVER_0.18 {
     mir::Server::open_prompt_socket*;
     mir::Server::override_the_application_not_responding_detector*;
     mir::Server::override_the_compositor*;
-    mir::Server::override_the_cookie_factory*;
+    mir::Server::override_the_cookie_authority*;
     mir::Server::override_the_coordinate_translator*;
     mir::Server::override_the_cursor_images*;
     mir::Server::override_the_display_buffer_compositor_factory*;
@@ -240,7 +240,7 @@ MIR_SERVER_0.18 {
     mir::shell::AbstractShell::modify_surface*;
     mir::shell::AbstractShell::open_session*;
     mir::shell::AbstractShell::raise*;
-    mir::shell::AbstractShell::raise_surface_with_timestamp*;
+    mir::shell::AbstractShell::raise_surface*;
     mir::shell::AbstractShell::remove_display*;
     mir::shell::AbstractShell::set_focus_to*;
     mir::shell::AbstractShell::set_surface_attribute*;
@@ -282,7 +282,7 @@ MIR_SERVER_0.18 {
     mir::shell::ShellWrapper::modify_surface*;
     mir::shell::ShellWrapper::open_session*;
     mir::shell::ShellWrapper::raise*;
-    mir::shell::ShellWrapper::raise_surface_with_timestamp*;
+    mir::shell::ShellWrapper::raise_surface*;
     mir::shell::ShellWrapper::remove_display*;
     mir::shell::ShellWrapper::set_focus_to*;
     mir::shell::ShellWrapper::set_surface_attribute*;
@@ -395,7 +395,7 @@ MIR_SERVER_0.18 {
     non-virtual?thunk?to?mir::shell::AbstractShell::modify_surface*;
     non-virtual?thunk?to?mir::shell::AbstractShell::open_session*;
     non-virtual?thunk?to?mir::shell::AbstractShell::raise*;
-    non-virtual?thunk?to?mir::shell::AbstractShell::raise_surface_with_timestamp*;
+    non-virtual?thunk?to?mir::shell::AbstractShell::raise_surface*;
     non-virtual?thunk?to?mir::shell::AbstractShell::remove_display*;
     non-virtual?thunk?to?mir::shell::AbstractShell::set_focus_to*;
     non-virtual?thunk?to?mir::shell::AbstractShell::set_surface_attribute*;
@@ -422,7 +422,7 @@ MIR_SERVER_0.18 {
     non-virtual?thunk?to?mir::shell::ShellWrapper::modify_surface*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::open_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::raise*;
-    non-virtual?thunk?to?mir::shell::ShellWrapper::raise_surface_with_timestamp*;
+    non-virtual?thunk?to?mir::shell::ShellWrapper::raise_surface*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::remove_display*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::set_focus_to*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::set_surface_attribute*;
@@ -677,7 +677,7 @@ MIR_SERVER_0.18 {
     mir::DefaultServerConfiguration::the_buffer_stream_factory*;
     mir::DefaultServerConfiguration::the_clock*;
     mir::DefaultServerConfiguration::the_composite_event_filter*;
-    mir::DefaultServerConfiguration::the_cookie_factory*;
+    mir::DefaultServerConfiguration::the_cookie_authority*;
     mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
     mir::DefaultServerConfiguration::the_surface_input_dispatcher;
     mir::DefaultServerConfiguration::the_compositor*;
@@ -722,7 +722,6 @@ MIR_SERVER_0.18 {
     mir::DefaultServerConfiguration::the_input_report*;
     mir::DefaultServerConfiguration::the_input_scene*;
     mir::DefaultServerConfiguration::the_input_sender*;
-    mir::DefaultServerConfiguration::the_input_send_observer*;
     mir::DefaultServerConfiguration::the_input_target_enumerator*;
     mir::DefaultServerConfiguration::the_input_targeter*;
     mir::DefaultServerConfiguration::the_input_translator*;

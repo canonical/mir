@@ -56,6 +56,12 @@ protected:
     TouchVisualizer& operator=(const TouchVisualizer&) = delete;
 };
 
+inline bool operator==(TouchVisualizer::Spot const &lhs, TouchVisualizer::Spot const& rhs)
+{
+    return lhs.touch_location == rhs.touch_location &&
+        lhs.pressure == rhs.pressure;
+}
+
 }
 }
 

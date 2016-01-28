@@ -53,6 +53,7 @@ public:
 
     void set_cursor_image(CursorImage const& image) override;
     void hide_cursor() override;
+    auto graphics_platform_library() -> std::string override;
 
     virtual PlatformOperationMessage platform_operation(
         unsigned int op, PlatformOperationMessage const& request) override;

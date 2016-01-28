@@ -294,9 +294,9 @@ void ms::ApplicationSession::show()
 
 void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const& info)
 {
-    event_sink->handle_display_config_change(info);
-
     output_cache.update_from(info);
+
+    event_sink->handle_display_config_change(info);
 
     std::lock_guard<std::mutex> lock{surfaces_and_streams_mutex};
     for (auto& surface : surfaces)
@@ -317,6 +317,11 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
                     ));
         }
     }
+}
+
+void ms::ApplicationSession::send_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& devices)
+{
+    event_sink->handle_input_device_change(devices);
 }
 
 void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)

@@ -207,6 +207,21 @@ MIR_CLIENT_9v18 {
     *;
 } MIR_CLIENT_9v17;
 
+MIR_CLIENT_9v19 {
+  global:
+    mir_connection_get_graphics_module;
+    mir_surface_raise;
+    mir_input_event_has_cookie;
+    mir_cookie_buffer_size;
+    mir_input_event_get_cookie;
+    mir_cookie_to_buffer;
+    mir_cookie_from_buffer;
+    mir_cookie_release;
+    mir_keymap_event_get_keymap_buffer;
+    mir_keymap_event_get_device_id;
+    mir_surface_spec_set_shell_chrome;
+} MIR_CLIENT_9v18;
+
 MIR_CLIENT_DETAIL_9 {
   global:
     extern "C++" { 
@@ -247,16 +262,33 @@ MIR_CLIENT_DETAIL_9 {
 MIR_CLIENT_DETAIL_9v18 {
   global:
     extern "C++" { 
+      mir::client::DefaultConnectionConfiguration::the_input_devices*;
       mir::events::set_modifier*;
       mir::events::set_cursor_position*;
       mir::events::set_button_state*;
     };
 } MIR_CLIENT_DETAIL_9;
 
-MIR_CLIENT_DETAIL_9v18v1 {
+MIR_CLIENT_DETAIL_9v19 {
   global:
     extern "C++" { 
       mir::input::android::android_pointer_action_from_mir*;
+      mir::events::serialize_event*;
+      mir::events::deserialize_event*;
     };
 } MIR_CLIENT_DETAIL_9v18;
 
+MIR_CLIENT_DETAIL_private_buffer_semantics {
+  global:
+    mir_buffer_stream_allocate_buffer;
+    mir_buffer_stream_release_buffer;
+    mir_buffer_stream_submit_buffer;
+    mir_buffer_get_fence;
+    mir_buffer_associate_fence;
+    mir_buffer_wait_fence;
+    mir_buffer_get_native_buffer;
+    mir_buffer_acquire_region;
+    mir_buffer_release_region;
+  local:
+    *;
+} MIR_CLIENT_DETAIL_9v19;

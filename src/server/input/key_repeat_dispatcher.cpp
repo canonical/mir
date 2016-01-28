@@ -21,10 +21,11 @@
 #include "mir/time/alarm_factory.h"
 #include "mir/time/alarm.h"
 #include "mir/events/event_private.h"
-#include "mir/cookie_factory.h"
+#include "mir/cookie/authority.h"
 
 #include <boost/throw_exception.hpp>
 
+#include <algorithm>
 #include <stdexcept>
 #include <string.h>
 
@@ -33,13 +34,13 @@ namespace mi = mir::input;
 mi::KeyRepeatDispatcher::KeyRepeatDispatcher(
     std::shared_ptr<mi::InputDispatcher> const& next_dispatcher,
     std::shared_ptr<mir::time::AlarmFactory> const& factory,
-    std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory,
+    std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
     bool repeat_enabled,
     std::chrono::milliseconds repeat_timeout,
     std::chrono::milliseconds repeat_delay)
     : next_dispatcher(next_dispatcher),
       alarm_factory(factory),
-      cookie_factory(cookie_factory),
+      cookie_authority(cookie_authority),
       repeat_enabled(repeat_enabled),
       repeat_timeout(repeat_timeout),
       repeat_delay(repeat_delay)
@@ -119,7 +120,9 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
                 std::lock_guard<std::mutex> lg(repeat_state_mutex);
 
                 ev.key.event_time = std::chrono::steady_clock::now().time_since_epoch();
-                ev.key.mac = cookie_factory->timestamp_to_cookie(ev.key.event_time.count()).mac;
+                auto const cookie = cookie_authority->make_cookie(ev.key.event_time.count());
+                auto const serialized_cookie = cookie->serialize();
+                std::copy_n(std::begin(serialized_cookie), ev.key.cookie.size(), std::begin(ev.key.cookie));
                 next_dispatcher->dispatch(ev);
 
                 capture_alarm->reschedule_in(repeat_delay);

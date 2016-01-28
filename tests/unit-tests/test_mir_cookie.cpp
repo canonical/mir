@@ -16,94 +16,102 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir/cookie_factory.h"
+#include "mir/cookie/authority.h"
+#include "mir/cookie/cookie.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-TEST(MirCookieFactory, attests_real_timestamp)
+TEST(MirCookieAuthority, attests_real_timestamp)
 {
     std::vector<uint8_t> secret{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
-    auto factory = mir::cookie::CookieFactory::create_from_secret(secret);
+    auto authority = mir::cookie::Authority::create_from(secret);
 
     uint64_t mock_timestamp{0x322322322332};
 
-    auto cookie = factory->timestamp_to_cookie(mock_timestamp);
-
-    EXPECT_TRUE(factory->attest_timestamp(cookie));
+    auto cookie = authority->make_cookie(mock_timestamp);
+    EXPECT_NO_THROW({
+        authority->make_cookie(cookie->serialize());
+    });
 }
 
-TEST(MirCookieFactory, doesnt_attest_faked_timestamp)
+TEST(MirCookieAuthority, doesnt_attest_faked_mac)
 {
     std::vector<uint8_t> secret{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
-    auto factory = mir::cookie::CookieFactory::create_from_secret(secret);
+    auto authority = mir::cookie::Authority::create_from(secret);
 
-    MirCookie bad_client_no_biscuit{ 0x33221100, 0x33221100 };
+    std::vector<uint8_t> cookie{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
 
-    EXPECT_FALSE(factory->attest_timestamp(bad_client_no_biscuit));
+    EXPECT_THROW({
+        authority->make_cookie(cookie);
+    }, mir::cookie::SecurityCheckError);
 }
 
-TEST(MirCookieFactory, timestamp_trusted_with_different_secret_doesnt_attest)
+TEST(MirCookieAuthority, timestamp_trusted_with_different_secret_doesnt_attest)
 {
     std::vector<uint8_t> alice{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
     std::vector<uint8_t> bob{ 0x01, 0x02, 0x44, 0xd8, 0xee, 0x0f, 0xde, 0x01 };
 
-    auto alices_factory = mir::cookie::CookieFactory::create_from_secret(alice);
-    auto bobs_factory   = mir::cookie::CookieFactory::create_from_secret(bob);
+    auto alices_authority = mir::cookie::Authority::create_from(alice);
+    auto bobs_authority   = mir::cookie::Authority::create_from(bob);
 
     uint64_t mock_timestamp{0x01020304};
 
-    auto alices_cookie = alices_factory->timestamp_to_cookie(mock_timestamp);
-    auto bobs_cookie = bobs_factory->timestamp_to_cookie(mock_timestamp);
+    EXPECT_THROW({
+        auto alices_cookie = alices_authority->make_cookie(mock_timestamp);
+        auto bobs_cookie   = bobs_authority->make_cookie(mock_timestamp);
 
-    EXPECT_FALSE(alices_factory->attest_timestamp(bobs_cookie));
-    EXPECT_FALSE(bobs_factory->attest_timestamp(alices_cookie));
+        alices_authority->make_cookie(bobs_cookie->serialize());
+        bobs_authority->make_cookie(alices_cookie->serialize());
+    }, mir::cookie::SecurityCheckError);
 }
 
-TEST(MirCookieFactory, throw_when_secret_size_to_small)
+TEST(MirCookieAuthority, throw_when_secret_size_to_small)
 {
-    std::vector<uint8_t> bob(mir::cookie::CookieFactory::minimum_secret_size - 1);
+    std::vector<uint8_t> bob(mir::cookie::Authority::minimum_secret_size - 1);
     EXPECT_THROW({
-        auto factory = mir::cookie::CookieFactory::create_from_secret(bob);
+        auto authority = mir::cookie::Authority::create_from(bob);
     }, std::logic_error);
 }
 
-TEST(MirCookieFactory, saves_a_secret)
+TEST(MirCookieAuthority, saves_a_secret)
 {
     using namespace testing;
     std::vector<uint8_t> secret;
 
-    mir::cookie::CookieFactory::create_saving_secret(secret);
+    mir::cookie::Authority::create_saving(secret);
 
-    EXPECT_THAT(secret.size(), Ge(mir::cookie::CookieFactory::minimum_secret_size));
+    EXPECT_THAT(secret.size(), Ge(mir::cookie::Authority::minimum_secret_size));
 }
 
-TEST(MirCookieFactory, timestamp_trusted_with_saved_secret_does_attest)
+TEST(MirCookieAuthority, timestamp_trusted_with_saved_secret_does_attest)
 {
     uint64_t timestamp   = 23;
     std::vector<uint8_t> secret;
 
-    auto source_factory = mir::cookie::CookieFactory::create_saving_secret(secret);
-    auto sink_factory   = mir::cookie::CookieFactory::create_from_secret(secret);
-    auto cookie = source_factory->timestamp_to_cookie(timestamp);
+    auto source_authority = mir::cookie::Authority::create_saving(secret);
+    auto sink_authority   = mir::cookie::Authority::create_from(secret);
+    auto cookie = source_authority->make_cookie(timestamp);
 
-    EXPECT_TRUE(sink_factory->attest_timestamp(cookie));
+    EXPECT_NO_THROW({
+        sink_authority->make_cookie(cookie->serialize());
+    });
 }
 
-TEST(MirCookieFactory, internally_generated_secret_has_optimum_size)
+TEST(MirCookieAuthority, internally_generated_secret_has_optimum_size)
 {
     using namespace testing;
     std::vector<uint8_t> secret;
 
-    mir::cookie::CookieFactory::create_saving_secret(secret);
+    mir::cookie::Authority::create_saving(secret);
 
-    EXPECT_THAT(secret.size(), Eq(mir::cookie::CookieFactory::optimal_secret_size()));
+    EXPECT_THAT(secret.size(), Eq(mir::cookie::Authority::optimal_secret_size()));
 }
 
-TEST(MirCookieFactory, optimal_secret_size_is_larger_than_minimum_size)
+TEST(MirCookieAuthority, optimal_secret_size_is_larger_than_minimum_size)
 {
     using namespace testing;
 
-    EXPECT_THAT(mir::cookie::CookieFactory::optimal_secret_size(),
-        Ge(mir::cookie::CookieFactory::minimum_secret_size));
+    EXPECT_THAT(mir::cookie::Authority::optimal_secret_size(),
+        Ge(mir::cookie::Authority::minimum_secret_size));
 }

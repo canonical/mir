@@ -19,8 +19,9 @@
 #include "mir/frontend/client_constants.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/variable_length_array.h"
+#include "mir/input/device.h"
 #include "event_sender.h"
-#include "mir/events/event_private.h"
+#include "mir/events/serialization.h"
 #include "message_sender.h"
 #include "protobuf_buffer_packer.h"
 
@@ -31,6 +32,7 @@
 
 namespace mg = mir::graphics;
 namespace mfd = mir::frontend::detail;
+namespace mev = mir::events;
 namespace mp = mir::protobuf;
 
 mfd::EventSender::EventSender(
@@ -44,13 +46,13 @@ mfd::EventSender::EventSender(
 void mfd::EventSender::handle_event(MirEvent const& e)
 {
     // Limit the types of events we wish to send over protobuf, for now.
-    if (e.type != mir_event_type_key && e.type != mir_event_type_motion)
+    if (mir_event_get_type(&e) != mir_event_type_input)
     {
         // In future we might send multiple events, or insert them into messages
         // containing other responses, but for now we send them individually.
         mp::EventSequence seq;
         mp::Event *ev = seq.add_event();
-        ev->set_raw(&e, sizeof(MirEvent));
+        ev->set_raw(mev::serialize_event(e));
 
         send_event_sequence(seq, {});
     }
@@ -85,6 +87,21 @@ void mfd::EventSender::send_ping(int32_t serial)
     auto protobuf_ping_event = seq.mutable_ping_event();
     protobuf_ping_event->set_serial(serial);
 
+    send_event_sequence(seq, {});
+}
+
+void mfd::EventSender::handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& devices)
+{
+    mp::EventSequence seq;
+
+    for(const auto & dev : devices)
+    {
+        auto dev_info = seq.add_input_devices();
+        dev_info->set_name(dev->name());
+        dev_info->set_id(dev->id());
+        dev_info->set_unique_id(dev->unique_id());
+        dev_info->set_capabilities(dev->capabilities().value());
+    }
     send_event_sequence(seq, {});
 }
 

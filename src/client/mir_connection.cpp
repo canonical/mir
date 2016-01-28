@@ -20,7 +20,6 @@
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
 #include "mir_protobuf.pb.h"
-#include "default_client_buffer_stream_factory.h"
 #include "make_protobuf_object.h"
 #include "mir_toolkit/mir_platform_message.h"
 #include "mir/client_platform.h"
@@ -32,6 +31,11 @@
 #include "display_configuration.h"
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
+#include "error_stream.h"
+#include "buffer_stream.h"
+#include "perf_report.h"
+#include "logging/perf_report.h"
+#include "lttng/perf_report.h"
 
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
@@ -50,9 +54,116 @@ namespace mev = mir::events;
 namespace gp = google::protobuf;
 namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
+namespace ml = mir::logging;
 
 namespace
 {
+std::shared_ptr<mcl::PerfReport>
+make_perf_report(std::shared_ptr<ml::Logger> const& logger)
+{
+    // TODO: It seems strange that this directly uses getenv
+    const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
+    if (report_target && !strcmp(report_target, "log"))
+    {
+        return std::make_shared<mcl::logging::PerfReport>(logger);
+    }
+    else if (report_target && !strcmp(report_target, "lttng"))
+    {
+        return std::make_shared<mcl::lttng::PerfReport>();
+    }
+    else
+    {
+        return std::make_shared<mcl::NullPerfReport>();
+    }
+}
+
+size_t get_nbuffers_from_env()
+{
+    //TODO: (kdub) cannot set nbuffers == 2 in production until we have client-side
+    //      timeout-based overallocation for timeout-based framedropping.
+    const char* nbuffers_opt = getenv("MIR_CLIENT_NBUFFERS");
+    if (nbuffers_opt && !strcmp(nbuffers_opt, "2"))
+        return 2u;
+    return 3u;
+}
+
+struct OnScopeExit
+{
+    ~OnScopeExit() { f(); }
+    std::function<void()> const f;
+};
+
+mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
+{
+    mp::SurfaceParameters message;
+
+#define SERIALIZE_OPTION_IF_SET(option) \
+    if (spec.option.is_set()) \
+        message.set_##option(spec.option.value());
+
+    SERIALIZE_OPTION_IF_SET(width);
+    SERIALIZE_OPTION_IF_SET(height);
+    SERIALIZE_OPTION_IF_SET(pixel_format);
+    SERIALIZE_OPTION_IF_SET(buffer_usage);
+    SERIALIZE_OPTION_IF_SET(surface_name);
+    SERIALIZE_OPTION_IF_SET(output_id);
+    SERIALIZE_OPTION_IF_SET(type);
+    SERIALIZE_OPTION_IF_SET(state);
+    SERIALIZE_OPTION_IF_SET(pref_orientation);
+    SERIALIZE_OPTION_IF_SET(edge_attachment);
+    SERIALIZE_OPTION_IF_SET(min_width);
+    SERIALIZE_OPTION_IF_SET(min_height);
+    SERIALIZE_OPTION_IF_SET(max_width);
+    SERIALIZE_OPTION_IF_SET(max_height);
+    SERIALIZE_OPTION_IF_SET(width_inc);
+    SERIALIZE_OPTION_IF_SET(height_inc);
+    SERIALIZE_OPTION_IF_SET(shell_chrome);
+    // min_aspect is a special case (below)
+    // max_aspect is a special case (below)
+
+    if (spec.parent.is_set() && spec.parent.value() != nullptr)
+        message.set_parent_id(spec.parent.value()->id());
+
+    if (spec.parent_id)
+    {
+        auto id = message.mutable_parent_persistent_id();
+        id->set_value(spec.parent_id->as_string());
+    }
+
+    if (spec.aux_rect.is_set())
+    {
+        message.mutable_aux_rect()->set_left(spec.aux_rect.value().left);
+        message.mutable_aux_rect()->set_top(spec.aux_rect.value().top);
+        message.mutable_aux_rect()->set_width(spec.aux_rect.value().width);
+        message.mutable_aux_rect()->set_height(spec.aux_rect.value().height);
+    }
+
+    if (spec.min_aspect.is_set())
+    {
+        message.mutable_min_aspect()->set_width(spec.min_aspect.value().width);
+        message.mutable_min_aspect()->set_height(spec.min_aspect.value().height);
+    }
+
+    if (spec.max_aspect.is_set())
+    {
+        message.mutable_max_aspect()->set_width(spec.max_aspect.value().width);
+        message.mutable_max_aspect()->set_height(spec.max_aspect.value().height);
+    }
+
+    if (spec.input_shape.is_set())
+    {
+        for (auto const& rect : spec.input_shape.value())
+        {
+            auto const new_shape = message.add_input_shape();
+            new_shape->set_left(rect.left);
+            new_shape->set_top(rect.top);
+            new_shape->set_width(rect.width);
+            new_shape->set_height(rect.height);
+        }
+    }
+
+    return message;
+}
 
 class MirDisplayConfigurationStore
 {
@@ -118,13 +229,15 @@ MirConnection::MirConnection(std::string const& error_message) :
     channel(),
     server(nullptr),
     debug(nullptr),
-    error_message(error_message)
+    error_message(error_message),
+    nbuffers(get_nbuffers_from_env())
 {
 }
 
 MirConnection::MirConnection(
     mir::client::ConnectionConfiguration& conf) :
         deregisterer{this},
+        surface_map(conf.the_surface_map()),
         channel(conf.the_rpc_channel()),
         server(channel),
         debug(channel),
@@ -142,10 +255,10 @@ MirConnection::MirConnection(
         display_configuration(conf.the_display_configuration()),
         lifecycle_control(conf.the_lifecycle_control()),
         ping_handler{conf.the_ping_handler()},
-        surface_map(conf.the_surface_map()),
         event_handler_register(conf.the_event_handler_register()),
         pong_callback(google::protobuf::NewPermanentCallback(&google::protobuf::DoNothing)),
-        eventloop{new md::ThreadedDispatcher{"RPC Thread", std::dynamic_pointer_cast<md::Dispatchable>(channel)}}
+        eventloop{new md::ThreadedDispatcher{"RPC Thread", std::dynamic_pointer_cast<md::Dispatchable>(channel)}},
+        nbuffers(get_nbuffers_from_env())
 {
     connect_result->set_error("connect not called");
     {
@@ -161,6 +274,8 @@ MirConnection::~MirConnection() noexcept
     // But, if after 500ms we don't get a call, assume it won't happen.
     connect_wait_handle.wait_for_pending(std::chrono::milliseconds(500));
 
+    surface_map.reset();
+
     std::lock_guard<decltype(mutex)> lock(mutex);
     if (connect_result && connect_result->has_platform())
     {
@@ -175,10 +290,108 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_callback callback,
     void * context)
 {
-    auto surface = new MirSurface(this, server, &debug, buffer_stream_factory,
-        input_platform, spec, callback, context);
+    auto response = std::make_shared<mp::Surface>();
+    auto c = std::make_shared<MirConnection::SurfaceCreationRequest>(callback, context, spec);
+    c->wh->expect_result();
+    auto const message = serialize_spec(spec);
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        surface_requests.emplace_back(c);
+    }
 
-    return surface->get_create_wait_handle();
+    try 
+    {
+        server.create_surface(&message, c->response.get(),
+            gp::NewCallback(this, &MirConnection::surface_created, c.get()));
+    }
+    catch (std::exception const& ex)
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        auto request = std::find_if(surface_requests.begin(), surface_requests.end(),
+            [&](std::shared_ptr<MirConnection::SurfaceCreationRequest> c2) { return c.get() == c2.get(); });
+        if (request != surface_requests.end())
+        {
+            auto id = next_error_id(lock);
+            auto surf = std::make_shared<MirSurface>(
+                std::string{"Error creating surface: "} + boost::diagnostic_information(ex), this, id, (*request)->wh);
+            surface_map->insert(id, surf);
+            auto wh = (*request)->wh;
+            surface_requests.erase(request);
+
+            lock.unlock();
+            callback(surf.get(), context);
+            wh->result_received();
+        }
+    }
+    return c->wh.get();
+}
+
+mf::SurfaceId MirConnection::next_error_id(std::unique_lock<std::mutex> const&)
+{
+    return mf::SurfaceId{surface_error_id--};
+}
+
+void MirConnection::surface_created(SurfaceCreationRequest* request)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    std::shared_ptr<MirSurface> surf {nullptr};
+    std::shared_ptr<mcl::ClientBufferStream> stream {nullptr};
+    //make sure this request actually was made.
+    auto request_it = std::find_if(surface_requests.begin(), surface_requests.end(),
+        [&request](std::shared_ptr<MirConnection::SurfaceCreationRequest> r){ return request == r.get(); });
+    if (request_it == surface_requests.end())
+        return;
+
+    auto surface_proto = request->response; 
+    auto callback = request->cb;
+    auto context = request->context;
+    auto const& spec = request->spec;
+
+    try
+    {
+        stream = std::make_shared<mcl::BufferStream>(
+            this, request->wh, server, mcl::BufferStreamMode::Producer, platform,
+            surface_proto->buffer_stream(), make_perf_report(logger), std::string{},
+            mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
+    }
+    catch (std::exception const& error)
+    {
+        if (!surface_proto->has_error())
+            surface_proto->set_error(error.what());
+        // failed to create buffer_stream, so clean up FDs it doesn't own
+        for (auto i = 0; i < surface_proto->fd_size(); i++)
+            ::close(surface_proto->fd(i));
+        if (surface_proto->has_buffer_stream() && surface_proto->buffer_stream().has_buffer())
+            for (int i = 0; i < surface_proto->buffer_stream().buffer().fd_size(); i++)
+                ::close(surface_proto->buffer_stream().buffer().fd(i));
+    }
+
+    if (surface_proto->has_error() || !surface_proto->has_id())
+    {
+        std::string reason;
+        if (surface_proto->has_error())
+            reason += surface_proto->error();
+        if (surface_proto->has_error() && !surface_proto->has_id())
+            reason += " and ";
+        if (!surface_proto->has_id()) 
+            reason +=  "Server assigned surface no id";
+        auto id = next_error_id(lock);
+        surf = std::make_shared<MirSurface>(reason, this, id, request->wh);
+        surface_map->insert(id, surf);
+    }
+    else
+    {
+        surf = std::make_shared<MirSurface>(
+            this, server, &debug, stream, input_platform, spec, *surface_proto, request->wh);
+
+        surface_map->insert(mf::SurfaceId{surface_proto->id().value()}, surf);
+        surface_map->insert(mf::BufferStreamId{surface_proto->id().value()}, stream);
+    }
+
+    callback(surf.get(), context);
+    request->wh->result_received();
+
+    surface_requests.erase(request_it);
 }
 
 char const * MirConnection::get_error_message()
@@ -219,18 +432,15 @@ struct MirConnection::StreamRelease
 
 void MirConnection::released(StreamRelease data)
 {
-    surface_map->erase(mf::BufferStreamId(data.stream->rpc_id()));
     if (data.callback)
         data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
     data.handle->result_received();
-    delete data.stream;
+    surface_map->erase(mf::BufferStreamId(data.stream->rpc_id()));
 }
 
 void MirConnection::released(SurfaceRelease data)
 {
-    surface_map->erase(mf::SurfaceId(data.surface->id()));
-
-    // Erasing this surface from surface_map means that it will no longer receive events
+    // releasing this surface from surface_map means that it will no longer receive events
     // If it's still focused, send an unfocused event before we kill it entirely
     if (data.surface->attrib(mir_surface_attrib_focus) == mir_surface_focused)
     {
@@ -239,7 +449,8 @@ void MirConnection::released(SurfaceRelease data)
     }
     data.callback(data.surface, data.context);
     data.handle->result_received();
-    delete data.surface;
+    surface_map->erase(mf::BufferStreamId(data.surface->id()));
+    surface_map->erase(mf::SurfaceId(data.surface->id()));
 }
 
 MirWaitHandle* MirConnection::release_surface(
@@ -248,16 +459,25 @@ MirWaitHandle* MirConnection::release_surface(
         void * context)
 {
     auto new_wait_handle = new MirWaitHandle;
+    {
+        std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
+        release_wait_handles.push_back(new_wait_handle);
+    }
+
+    if (!mir_surface_is_valid(surface))
+    {
+        new_wait_handle->expect_result();
+        new_wait_handle->result_received();
+        callback(surface, context);
+        auto id = surface->id();
+        surface_map->erase(mf::SurfaceId(id));
+        return new_wait_handle;    
+    }
 
     SurfaceRelease surf_release{surface, new_wait_handle, callback, context};
 
     mp::SurfaceId message;
     message.set_value(surface->id());
-
-    {
-        std::lock_guard<decltype(release_wait_handle_guard)> rel_lock(release_wait_handle_guard);
-        release_wait_handles.push_back(new_wait_handle);
-    }
 
     new_wait_handle->expect_result();
     server.release_surface(&message, void_response.get(),
@@ -302,8 +522,6 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
             };
 
         platform = client_platform_factory->create_client_platform(this);
-        buffer_stream_factory = std::make_shared<mcl::DefaultClientBufferStreamFactory>(
-            platform, the_logger());
         native_display = platform->create_egl_native_display();
         display_configuration->set_configuration(connect_result->display_configuration());
         lifecycle_control->set_callback(default_lifecycle_event_handler);
@@ -351,6 +569,7 @@ void MirConnection::done_disconnect()
         for (auto handle : release_wait_handles)
             delete handle;
     }
+    surface_map.reset();
 
     // Ensure no racy lifecycle notifications can happen after disconnect completes
     lifecycle_control->set_callback([](MirLifecycleState){});
@@ -470,6 +689,32 @@ void MirConnection::populate_server_package(MirPlatformPackage& platform_package
     }
 }
 
+void MirConnection::populate_graphics_module(MirModuleProperties& properties)
+{
+    // connect_result is write-once: once it's valid, we don't need to lock
+    // to use it.
+    if (connect_done &&
+        !connect_result->has_error() &&
+        connect_result->has_platform() &&
+        connect_result->platform().has_graphics_module())
+    {
+        auto const& graphics_module = connect_result->platform().graphics_module();
+        properties.name = graphics_module.name().c_str();
+        properties.major_version = graphics_module.major_version();
+        properties.minor_version = graphics_module.minor_version();
+        properties.micro_version = graphics_module.micro_version();
+        properties.filename = graphics_module.file().c_str();
+    }
+    else
+    {
+        properties.name = "(unknown)";
+        properties.major_version = 0;
+        properties.minor_version = 0;
+        properties.micro_version = 0;
+        properties.filename = nullptr;
+    }
+}
+
 MirDisplayConfiguration* MirConnection::create_copy_of_display_config()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
@@ -497,15 +742,60 @@ void MirConnection::available_surface_formats(
     }
 }
 
-std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform()
+void MirConnection::stream_created(StreamCreationRequest* request_raw)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::shared_ptr<StreamCreationRequest> request {nullptr};
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        auto stream_it = std::find_if(stream_requests.begin(), stream_requests.end(),
+            [&request_raw] (std::shared_ptr<StreamCreationRequest> const& req)
+            { return req.get() == request_raw; });
+        if (stream_it == stream_requests.end())
+            return;
+        request = *stream_it;
+        stream_requests.erase(stream_it);
+    }
+    auto& protobuf_bs = request->response;
 
-    return platform;
+    if (!protobuf_bs->has_id())
+    {
+        if (!protobuf_bs->has_error())
+            protobuf_bs->set_error("no ID in response (disconnected?)");
+    }
+
+    if (protobuf_bs->has_error())
+    {
+        for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
+            ::close(protobuf_bs->buffer().fd(i));
+        stream_error(
+            std::string{"Error processing buffer stream response: "} + protobuf_bs->error(),
+            request);
+        return;
+    }
+
+    try
+    {
+        auto stream = std::make_shared<mcl::BufferStream>(
+            this, request->wh, server, mcl::BufferStreamMode::Producer, platform,
+            *protobuf_bs, make_perf_report(logger), std::string{}, mir::geometry::Size{0,0}, nbuffers);
+        surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
+
+        if (request->callback)
+            request->callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
+        request->wh->result_received();
+    }
+    catch (std::exception const& error)
+    {
+        for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
+            ::close(protobuf_bs->buffer().fd(i));
+
+        stream_error(
+            std::string{"Error processing buffer stream creating response:"} + boost::diagnostic_information(error),
+            request);
+    }
 }
 
-
-mir::client::ClientBufferStream* MirConnection::create_client_buffer_stream(
+MirWaitHandle* MirConnection::create_client_buffer_stream(
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage buffer_usage,
@@ -518,13 +808,47 @@ mir::client::ClientBufferStream* MirConnection::create_client_buffer_stream(
     params.set_pixel_format(format);
     params.set_buffer_usage(buffer_usage);
 
-    return buffer_stream_factory->make_producer_stream(this, server, params, callback, context);
+    auto request = std::make_shared<StreamCreationRequest>(callback, context, params);
+    request->wh->expect_result();
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        stream_requests.push_back(request);
+    }
+
+    try
+    {
+        server.create_buffer_stream(&params, request->response.get(),
+            gp::NewCallback(this, &MirConnection::stream_created, request.get()));
+    } catch (std::exception& e)
+    {
+        //if this throws, our socket code will run the closure, which will make an error object.
+        //its nicer to return an stream with a error message, so just ignore the exception.
+    }
+
+    return request->wh.get();
+}
+
+void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<StreamCreationRequest> const& request)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    mf::BufferStreamId id(next_error_id(lock).as_value());
+    auto stream = std::make_shared<mcl::ErrorStream>(error_msg, this, id, request->wh);
+    surface_map->insert(id, stream); 
+
+    if (request->callback)
+    {
+        request->callback(reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
+    }
+    request->wh->result_received();
 }
 
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
    mp::BufferStream const& protobuf_bs, std::string const& surface_name, mir::geometry::Size size)
 {
-    return buffer_stream_factory->make_consumer_stream(this, server, protobuf_bs, surface_name, size);
+    return std::make_shared<mcl::BufferStream>(
+        this, nullptr, server, mcl::BufferStreamMode::Consumer, platform,
+        protobuf_bs, make_perf_report(logger), surface_name, size, nbuffers);
 }
 
 EGLNativeDisplayType MirConnection::egl_native_display()
@@ -538,16 +862,6 @@ MirPixelFormat MirConnection::egl_pixel_format(EGLDisplay disp, EGLConfig conf) 
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     return platform->get_egl_pixel_format(disp, conf);
-}
-
-void MirConnection::on_stream_created(int id, mcl::ClientBufferStream* stream)
-{
-    surface_map->insert(mf::BufferStreamId(id), stream);
-}
-
-void MirConnection::on_surface_created(int id, MirSurface* surface)
-{
-    surface_map->insert(mf::SurfaceId(id), surface);
 }
 
 void MirConnection::register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context)

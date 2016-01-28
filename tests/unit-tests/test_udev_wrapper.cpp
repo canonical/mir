@@ -119,6 +119,19 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevNode)
     ASSERT_STREQ("/dev/dri/card0", dev->devnode());
 }
 
+TEST_F(UdevWrapperTest, UdevDeviceHasCorrectProperties)
+{
+    auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {},
+        {"AWESOME", "yes", "REALLY", "absolutely"});
+
+    mir::udev::Context ctx;
+    auto dev = ctx.device_from_syspath(sysfs_path);
+
+    ASSERT_STREQ("yes", dev->property("AWESOME"));
+    ASSERT_STREQ("absolutely", dev->property("REALLY"));
+    ASSERT_EQ(NULL, dev->property("SOMETHING_ELSE"));
+}
+
 TEST_F(UdevWrapperTest, UdevDeviceComparisonIsReflexive)
 {
     auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});

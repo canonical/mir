@@ -1,5 +1,4 @@
 include_directories(${client_common_include_dirs})
-include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/3rd_party/android-deps)
 
 add_definitions(-DANDROID)
@@ -16,9 +15,10 @@ add_library(mirclientplatformandroidobjects OBJECT
   android_native_display_container.cpp
 )
 
-add_library(
+mir_add_library_with_symbols(
   mirclientplatformandroid MODULE
 
+  ${symbol_map}
   $<TARGET_OBJECTS:mirclientplatformandroidobjects>
 )
 

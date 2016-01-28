@@ -407,16 +407,16 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
         std::shared_ptr<mg::CursorImage>(),
         report);
 
-    auto key_event = mev::make_event(MirInputDeviceId(0), std::chrono::nanoseconds(0), 0,
+    auto key_event = mev::make_event(MirInputDeviceId(0), std::chrono::nanoseconds(0), std::vector<uint8_t>{},
                                      mir_keyboard_action_down, 0, 0, mir_input_event_modifier_none);
-    auto touch_event = mev::make_event(MirInputDeviceId(0), std::chrono::nanoseconds(0), 0,
+    auto touch_event = mev::make_event(MirInputDeviceId(0), std::chrono::nanoseconds(0), std::vector<uint8_t>{},
                                        mir_input_event_modifier_none);
     mev::add_touch(*touch_event, 0, mir_touch_action_down, mir_touch_tooltype_finger, 0, 0,
         0, 0, 0, 0);
 
-    EXPECT_CALL(mock_sender, send_event(mt::MirKeyEventMatches(*key_event), _)).Times(1);
+    EXPECT_CALL(mock_sender, send_event(mt::MirKeyboardEventMatches(*key_event), _)).Times(1);
     EXPECT_CALL(mock_sender, send_event(mt::MirTouchEventMatches(*touch_event), _)).Times(1);
 
-    surface.consume(*key_event);
-    surface.consume(*touch_event);
+    surface.consume(key_event.get());
+    surface.consume(touch_event.get());
 }

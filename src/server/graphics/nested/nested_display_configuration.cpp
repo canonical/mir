@@ -59,6 +59,8 @@ mgn::NestedDisplayConfiguration::NestedDisplayConfiguration(
     : mg::DisplayConfiguration(),
       display_config{copy_config(other.display_config.get())}
 {
+    std::lock_guard<std::mutex> lock{other.local_config_mutex};
+    local_config = other.local_config;
 }
 
 void mgn::NestedDisplayConfiguration::for_each_card(
@@ -78,7 +80,7 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
     std::for_each(
         display_config->outputs,
         display_config->outputs+display_config->num_outputs,
-        [&f](MirDisplayOutput const& mir_output)
+        [&f, this](MirDisplayOutput const& mir_output)
         {
             std::vector<MirPixelFormat> formats;
             formats.reserve(mir_output.num_output_formats);
@@ -89,6 +91,8 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
             modes.reserve(mir_output.num_modes);
             for (auto p = mir_output.modes; p != mir_output.modes+mir_output.num_modes; ++p)
                 modes.push_back(DisplayConfigurationMode{{p->horizontal_resolution, p->vertical_resolution}, p->refresh_rate});
+
+            auto local_config = get_local_config_for(mir_output.output_id);
 
             DisplayConfigurationOutput const output{
                 DisplayConfigurationOutputId(mir_output.output_id),
@@ -105,8 +109,8 @@ void mgn::NestedDisplayConfiguration::for_each_output(std::function<void(Display
                 mir_output.current_format,
                 mir_output.power_mode,
                 mir_output.orientation,
-                1.0f,
-                mir_form_factor_monitor
+                local_config.scale,
+                local_config.form_factor
             };
 
             f(output);
@@ -122,7 +126,7 @@ void mgn::NestedDisplayConfiguration::for_each_output(
     std::for_each(
         display_config->outputs,
         display_config->outputs+display_config->num_outputs,
-        [&f](MirDisplayOutput& mir_output)
+        [&f, this](MirDisplayOutput& mir_output)
         {
             std::vector<MirPixelFormat> formats;
             formats.reserve(mir_output.num_output_formats);
@@ -145,6 +149,8 @@ void mgn::NestedDisplayConfiguration::for_each_output(
                         p->refresh_rate});
             }
 
+            auto local_config = get_local_config_for(mir_output.output_id);
+
             DisplayConfigurationOutput output{
                 DisplayConfigurationOutputId(mir_output.output_id),
                 DisplayConfigurationCardId(mir_output.card_id),
@@ -161,12 +167,14 @@ void mgn::NestedDisplayConfiguration::for_each_output(
                 mir_output.current_format,
                 mir_output.power_mode,
                 mir_output.orientation,
-                1.0f,
-                mir_form_factor_monitor
+                local_config.scale,
+                local_config.form_factor
             };
             UserDisplayConfigurationOutput user(output);
 
             f(user);
+
+            set_local_config_for(mir_output.output_id, {user.scale, user.form_factor });
 
             mir_output.current_mode = output.current_mode_index;
             mir_output.current_format = output.current_format;
@@ -181,4 +189,27 @@ void mgn::NestedDisplayConfiguration::for_each_output(
 std::unique_ptr<mg::DisplayConfiguration> mgn::NestedDisplayConfiguration::clone() const
 {
     return std::make_unique<mgn::NestedDisplayConfiguration>(*this);
+}
+
+mgn::NestedDisplayConfiguration::LocalOutputConfig
+mgn::NestedDisplayConfiguration::get_local_config_for(uint32_t output_id) const
+{
+    std::lock_guard<std::mutex> lock{local_config_mutex};
+
+    constexpr LocalOutputConfig default_values {1.0f, mir_form_factor_monitor };
+
+    bool inserted;
+    decltype(local_config)::iterator keypair;
+
+    std::tie(keypair, inserted) = local_config.insert(std::make_pair(output_id, default_values));
+
+    // We don't care whether we inserted the default values or retrieved the previously set value.
+    return keypair->second;
+}
+
+void mgn::NestedDisplayConfiguration::set_local_config_for(uint32_t output_id, LocalOutputConfig const& config)
+{
+    std::lock_guard<std::mutex> lock{local_config_mutex};
+
+    local_config[output_id] = config;
 }

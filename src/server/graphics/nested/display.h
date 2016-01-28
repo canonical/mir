@@ -160,7 +160,6 @@ private:
     std::unique_ptr<NestedDisplayConfiguration> current_configuration;
 
     void create_surfaces(mir::graphics::DisplayConfiguration const& configuration);
-    void apply_to_connection(mir::graphics::DisplayConfiguration const& configuration);
     void complete_display_initialization(MirPixelFormat format);
 };
 

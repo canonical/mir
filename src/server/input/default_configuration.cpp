@@ -29,7 +29,6 @@
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
 #include "builtin_cursor_images.h"
-#include "null_input_send_observer.h"
 #include "null_input_channel_factory.h"
 #include "default_input_device_hub.h"
 #include "default_input_manager.h"
@@ -107,20 +106,9 @@ mir::DefaultServerConfiguration::the_input_sender()
         if (!the_options()->get<bool>(options::enable_input_opt))
             return std::make_shared<NullInputSender>();
         else
-            return std::make_shared<mia::InputSender>(the_scene(), the_main_loop(), the_input_send_observer(), the_input_report());
+            return std::make_shared<mia::InputSender>(the_scene(), the_main_loop(), the_input_report());
         });
 }
-
-std::shared_ptr<mi::InputSendObserver>
-mir::DefaultServerConfiguration::the_input_send_observer()
-{
-    return input_send_observer(
-        [this]()
-        {
-            return std::make_shared<mi::NullInputSendObserver>();
-        });
-}
-
 
 std::shared_ptr<msh::InputTargeter>
 mir::DefaultServerConfiguration::the_input_targeter()
@@ -159,7 +147,7 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
             auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
-                the_event_filter_chain_dispatcher(), the_main_loop(), the_cookie_factory(),
+                the_event_filter_chain_dispatcher(), the_main_loop(), the_cookie_authority(),
                 enable_repeat, key_repeat_timeout, key_repeat_delay);
         });
 }
@@ -290,7 +278,7 @@ std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_in
                                             the_touch_visualizer(),
                                             the_cursor_listener(),
                                             the_input_region(),
-                                            the_cookie_factory());
+                                            the_cookie_authority());
                                     });
 }
 
@@ -305,6 +293,6 @@ std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_d
                                             the_touch_visualizer(),
                                             the_cursor_listener(),
                                             the_input_region(),
-                                            the_cookie_factory());
+                                            the_cookie_authority());
                                     });
 }

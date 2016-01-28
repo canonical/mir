@@ -1,3 +1,5 @@
+pkg_check_modules(LIBINPUT REQUIRED libinput)
+
 include_directories(
   ${LIBINPUT_CFLAGS} 
   ${PROJECT_SOURCE_DIR}/include/platform
@@ -18,7 +20,9 @@ add_library(mirplatforminputevdevobjects OBJECT
     platform.cpp
     )
 
-add_library(mirplatforminputevdev MODULE
+mir_add_library_with_symbols(mirplatforminputevdev MODULE
+  ${MIR_INPUT_PLATFORM_VERSION_SCRIPT}
+
   platform_factory.cpp
   $<TARGET_OBJECTS:mirplatforminputevdevobjects>
   $<TARGET_OBJECTS:mirevdevutilsobjects>

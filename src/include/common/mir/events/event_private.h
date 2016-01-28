@@ -29,10 +29,10 @@
 #include <stdint.h>
 #include "mir_toolkit/event.h"
 #include "mir_toolkit/common.h"
+#include "mir/cookie/blob.h"
 
 #include <xkbcommon/xkbcommon.h>
-#include <chrono>
-
+#include <array>
 #include <chrono>
 
 #ifdef __cplusplus
@@ -46,9 +46,9 @@ extern "C" {
 #define MIR_INPUT_EVENT_MAX_POINTER_COUNT 16
 
 // PRIVATE
-// Direct access to MirKeyEvent is deprecated. Please use mir_event_get_input_event
+// Direct access to MirKeyboardEvent is deprecated. Please use mir_event_get_input_event
 // and the mir_input_event* family of functions.
-typedef struct
+struct MirKeyboardEvent
 {
     MirEventType type;
 
@@ -61,8 +61,8 @@ typedef struct
     int32_t scan_code;
 
     std::chrono::nanoseconds event_time;
-    uint64_t mac;
-} MirKeyEvent;
+    mir::cookie::Blob cookie;
+};
 
 typedef struct
 {
@@ -99,7 +99,7 @@ typedef struct
 
     MirPointerButtons buttons;
     std::chrono::nanoseconds event_time;
-    uint64_t mac;
+    mir::cookie::Blob cookie;
 
     size_t pointer_count;
     MirMotionPointer pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
@@ -161,7 +161,9 @@ struct MirKeymapEvent
     MirEventType type;
 
     int surface_id;
-    struct xkb_rule_names rules;
+    MirInputDeviceId device_id;
+    char const* buffer;
+    size_t size;
 };
 
 struct MirSurfaceOutputEvent
@@ -178,11 +180,11 @@ struct MirSurfaceOutputEvent
 // Access to MirEvent is deprecated
 union MirEvent
 {
-    MirEventType    type;
-    MirKeyEvent     key;
-    MirMotionEvent  motion;
-    MirSurfaceEvent surface;
-    MirResizeEvent  resize;
+    MirEventType     type;
+    MirKeyboardEvent key;
+    MirMotionEvent   motion;
+    MirSurfaceEvent  surface;
+    MirResizeEvent   resize;
     MirPromptSessionEvent  prompt_session;
     MirOrientationEvent orientation;
     MirCloseSurfaceEvent   close_surface;

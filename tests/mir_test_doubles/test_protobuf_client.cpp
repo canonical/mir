@@ -25,24 +25,27 @@
 #include "src/client/lifecycle_control.h"
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
+#include "mir/input/input_devices.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/events/event_private.h"
 
+#include <boost/throw_exception.hpp>
+
+#include <stdexcept>
 #include <thread>
 
 namespace mtd = mir::test::doubles;
 namespace mclr = mir::client::rpc;
 namespace md = mir::dispatch;
 
-mir::test::TestProtobufClient::TestProtobufClient(
-    std::string socket_file,
-    int timeout_ms) :
+mir::test::TestProtobufClient::TestProtobufClient(std::string socket_file, int timeout_ms) :
     rpc_report(std::make_shared<testing::NiceMock<doubles::MockRpcReport>>()),
     channel(mclr::make_rpc_channel(
         socket_file,
         std::make_shared<mir::client::ConnectionSurfaceMap>(),
         std::make_shared<mir::client::DisplayConfiguration>(),
+        std::make_shared<mir::input::InputDevices>(),
         rpc_report,
         std::make_shared<mir::client::LifecycleControl>(),
         std::make_shared<mir::client::AtomicCallback<int32_t>>(),
@@ -54,13 +57,9 @@ mir::test::TestProtobufClient::TestProtobufClient(
     create_surface_called(false),
     next_buffer_called(false),
     exchange_buffer_called(false),
-    release_surface_called(false),
     disconnect_done_called(false),
     configure_display_done_called(false),
-    tfd_done_called(false),
-    connect_done_count(0),
-    create_surface_done_count(0),
-    disconnect_done_count(0)
+    create_surface_done_count(0)
 {
     surface_parameters.set_width(640);
     surface_parameters.set_height(480);
@@ -76,177 +75,133 @@ mir::test::TestProtobufClient::TestProtobufClient(
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_create_surface_done));
     ON_CALL(*this, next_buffer_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_next_buffer_done));
-    ON_CALL(*this, exchange_buffer_done())
-        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_exchange_buffer_done));
-    ON_CALL(*this, release_surface_done())
-        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_release_surface_done));
     ON_CALL(*this, disconnect_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_disconnect_done));
     ON_CALL(*this, display_configure_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_configure_display_done));
-    ON_CALL(*this, prompt_session_start_done())
-        .WillByDefault(testing::Invoke(&wc_prompt_session_start, &WaitCondition::wake_up_everyone));
-    ON_CALL(*this, prompt_session_stop_done())
-        .WillByDefault(testing::Invoke(&wc_prompt_session_stop, &WaitCondition::wake_up_everyone));
+}
+
+void mir::test::TestProtobufClient::signal_condition(bool& condition)
+{
+    std::lock_guard<decltype(guard)> lk{guard};
+    condition = true;
+    cv.notify_all();
+}
+
+void mir::test::TestProtobufClient::reset_condition(bool& condition)
+{
+    std::lock_guard<decltype(guard)> lk{guard};
+    condition = false;
 }
 
 void mir::test::TestProtobufClient::on_connect_done()
 {
-    connect_done_called.store(true);
-
-    auto old = connect_done_count.load();
-
-    while (!connect_done_count.compare_exchange_weak(old, old+1));
+    signal_condition(connect_done_called);
 }
 
 void mir::test::TestProtobufClient::on_create_surface_done()
 {
-    create_surface_called.store(true);
-
-    auto old = create_surface_done_count.load();
-
-    while (!create_surface_done_count.compare_exchange_weak(old, old+1));
+    std::lock_guard<decltype(guard)> lk{guard};
+    create_surface_called = true;
+    create_surface_done_count++;
+    cv.notify_all();
 }
 
 void mir::test::TestProtobufClient::on_next_buffer_done()
 {
-    next_buffer_called.store(true);
-}
-
-void mir::test::TestProtobufClient::on_exchange_buffer_done()
-{
-    exchange_buffer_called.store(true);
-}
-
-void mir::test::TestProtobufClient::on_release_surface_done()
-{
-    release_surface_called.store(true);
+    signal_condition(next_buffer_called);
 }
 
 void mir::test::TestProtobufClient::on_disconnect_done()
 {
-    disconnect_done_called.store(true);
-
-    auto old = disconnect_done_count.load();
-
-    while (!disconnect_done_count.compare_exchange_weak(old, old+1));
+    signal_condition(disconnect_done_called);
 }
 
 void mir::test::TestProtobufClient::on_configure_display_done()
 {
-    configure_display_done_called.store(true);
+    signal_condition(configure_display_done_called);
+}
+
+void mir::test::TestProtobufClient::connect()
+{
+    reset_condition(connect_done_called);
+    display_server.connect(
+        &connect_parameters,
+        &connection,
+        google::protobuf::NewCallback(this, &TestProtobufClient::connect_done));
+}
+
+void mir::test::TestProtobufClient::disconnect()
+{
+    reset_condition(disconnect_done_called);
+    display_server.disconnect(
+        &ignored,
+        &ignored,
+        google::protobuf::NewCallback(this, &TestProtobufClient::disconnect_done));
+}
+
+void mir::test::TestProtobufClient::create_surface()
+{
+    reset_condition(create_surface_called);
+    display_server.create_surface(
+        &surface_parameters,
+        &surface,
+        google::protobuf::NewCallback(this, &TestProtobufClient::create_surface_done));
+}
+
+void mir::test::TestProtobufClient::next_buffer()
+{
+    reset_condition(next_buffer_called);
+    display_server.next_buffer(
+        &surface.id(),
+        surface.mutable_buffer(),
+        google::protobuf::NewCallback(this, &TestProtobufClient::next_buffer_done));
+}
+
+void mir::test::TestProtobufClient::configure_display()
+{
+    reset_condition(configure_display_done_called);
+    display_server.configure_display(
+        &disp_config,
+        &disp_config_response,
+        google::protobuf::NewCallback(this, &TestProtobufClient::display_configure_done));
 }
 
 void mir::test::TestProtobufClient::wait_for_configure_display_done()
 {
-    for (int i = 0; !configure_display_done_called.load() && i < maxwait; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::this_thread::yield();
-    }
-
-    configure_display_done_called.store(false);
+    wait_for([this]{ return configure_display_done_called; }, "Timed out waiting to configure display");
 }
 
 void mir::test::TestProtobufClient::wait_for_connect_done()
 {
-    for (int i = 0; !connect_done_called.load() && i < maxwait; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::this_thread::yield();
-    }
-
-    connect_done_called.store(false);
+    wait_for([this]{ return connect_done_called; }, "Timed out waiting to connect");
 }
 
 void mir::test::TestProtobufClient::wait_for_create_surface()
 {
-    for (int i = 0; !create_surface_called.load() && i < maxwait; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::this_thread::yield();
-    }
-    create_surface_called.store(false);
+    wait_for([this]{ return create_surface_called; }, "Timed out waiting create surface");
 }
 
 void mir::test::TestProtobufClient::wait_for_next_buffer()
 {
-    for (int i = 0; !next_buffer_called.load() && i < maxwait; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::this_thread::yield();
-    }
-    next_buffer_called.store(false);
-}
-
-void mir::test::TestProtobufClient::wait_for_exchange_buffer()
-{
-    for (int i = 0; !exchange_buffer_called.load() && i < maxwait; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::this_thread::yield();
-    }
-    exchange_buffer_called.store(false);
-}
-
-void mir::test::TestProtobufClient::wait_for_release_surface()
-{
-    for (int i = 0; !release_surface_called.load() && i < maxwait; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::this_thread::yield();
-    }
-    release_surface_called.store(false);
+    wait_for([this] { return next_buffer_called; }, "Timed out waiting for next buffer");
 }
 
 void mir::test::TestProtobufClient::wait_for_disconnect_done()
 {
-    for (int i = 0; !disconnect_done_called.load() && i < maxwait; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::this_thread::yield();
-    }
-    disconnect_done_called.store(false);
+    wait_for([this] { return disconnect_done_called; }, "Timed out waiting to disconnect");
 }
 
 void mir::test::TestProtobufClient::wait_for_surface_count(int count)
 {
-    for (int i = 0; count != create_surface_done_count.load() && i < 10000; ++i)
+    wait_for([this, count] { return create_surface_done_count == count; }, "Timed out waiting for surface count");
+}
+
+void mir::test::TestProtobufClient::wait_for(std::function<bool()> const& predicate, std::string const& error_message)
+{
+    std::unique_lock<decltype(guard)> lk{guard};
+    if (!cv.wait_for(lk, std::chrono::milliseconds(maxwait), predicate))
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        std::this_thread::yield();
+        BOOST_THROW_EXCEPTION(std::runtime_error(error_message));
     }
-}
-
-void mir::test::TestProtobufClient::wait_for_disconnect_count(int count)
-{
-    for (int i = 0; count != disconnect_done_count.load() && i < 10000; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        std::this_thread::yield();
-    }
-}
-
-void mir::test::TestProtobufClient::tfd_done()
-{
-    tfd_done_called.store(true);
-}
-
-void mir::test::TestProtobufClient::wait_for_tfd_done()
-{
-    for (int i = 0; !tfd_done_called.load() && i < maxwait; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    tfd_done_called.store(false);
-}
-
-void mir::test::TestProtobufClient::wait_for_prompt_session_start_done()
-{
-    wc_prompt_session_start.wait_for_at_most_seconds(maxwait);
-}
-
-void mir::test::TestProtobufClient::wait_for_prompt_session_stop_done()
-{
-    wc_prompt_session_stop.wait_for_at_most_seconds(maxwait);
 }

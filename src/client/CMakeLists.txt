@@ -1,3 +1,5 @@
+find_package(XKBCOMMON REQUIRED)
+
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
@@ -18,9 +20,9 @@ configure_file(
 include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
-  ${PROJECT_SOURCE_DIR}/include/cookie
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/src/include/client
+  ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${DRM_INCLUDE_DIRS}
 )
 
@@ -47,6 +49,7 @@ add_library(mirclientobjects OBJECT
   event.cpp
   event_printer.cpp
   mir_blob.cpp
+  mir_cookie.cpp
   mir_connection.cpp
   mir_connection_api.cpp
   mir_wait_handle.cpp
@@ -71,7 +74,7 @@ add_library(mirclientobjects OBJECT
   buffer_stream.cpp
   buffer_vault.cpp
   mir_buffer_stream_api.cpp
-  default_client_buffer_stream_factory.cpp
+  error_stream.cpp
   ${MIR_CLIENT_SOURCES}
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/events/surface_output_event.h
 )
@@ -80,7 +83,7 @@ add_library(mirclientobjects OBJECT
 # trying to compile mirclientobjects
 add_dependencies(mirclientobjects mirprotobuf)
 
-add_library(mirclient SHARED $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
+mir_add_library_with_symbols(mirclient SHARED ${symbol_map} $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
 add_library(mirclient-static STATIC $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
 
 set_target_properties(mirclient
@@ -93,6 +96,7 @@ set_target_properties(mirclient
 set(LINKS
   mircommon
   mirprotobuf
+  mircookie
 
   ${XKBCOMMON_LIBRARIES}
 )
@@ -123,8 +127,10 @@ install(
 )
 
 set(MIRCLIENT_DEBUG_EXTENSION_ABI 1)
+set(debug_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-debug.map)
 
-add_library(mirclient-debug-extension SHARED
+mir_add_library_with_symbols(mirclient-debug-extension SHARED
+  ${debug_symbol_map}
   mir_debug_api.cpp
 )
 
@@ -138,8 +144,6 @@ target_link_libraries(mirclient-debug-extension
   PUBLIC
   ${LINKS}
 )
-
-set(debug_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-debug.map)
 
 set_target_properties(
   mirclient-debug-extension
