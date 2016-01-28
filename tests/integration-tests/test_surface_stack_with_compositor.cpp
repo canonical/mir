@@ -144,7 +144,7 @@ struct SurfaceStackCompositor : public testing::Test
     std::shared_ptr<mtd::MockBufferBundle> mock_buffer_stream;
     std::shared_ptr<ms::BasicSurface> stub_surface;
     ms::SurfaceCreationParameters default_params;
-    mtd::StubBuffer stubbuf;
+    mtd::StubBuffer stubbuf{geom::Size{1,1}};
     CountingDisplaySyncGroup stub_primary_db;
     CountingDisplaySyncGroup stub_secondary_db;
     StubDisplay stub_display{stub_primary_db, stub_secondary_db};
