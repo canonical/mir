@@ -62,7 +62,7 @@ struct InputMessage {
         struct Key {
             uint32_t seq;
             int64_t eventTime;
-            uint64_t mac;
+            mir::cookie::Blob cookieBlob;
             int32_t deviceId;
             int32_t source;
             int32_t action;
@@ -81,7 +81,7 @@ struct InputMessage {
         struct Motion {
             uint32_t seq;
             int64_t eventTime;
-            uint64_t mac;
+            mir::cookie::Blob cookieBlob;
             int32_t deviceId;
             int32_t source;
             int32_t action;
@@ -212,7 +212,7 @@ public:
             int32_t scanCode,
             int32_t metaState,
             int32_t repeatCount,
-            uint64_t mac,
+            mir::cookie::Blob const& cookieBlob,
             std::chrono::nanoseconds downTime,
             std::chrono::nanoseconds eventTime);
 
@@ -237,7 +237,7 @@ public:
             float yOffset,
             float xPrecision,
             float yPrecision,
-            uint64_t mac,
+            mir::cookie::Blob const& cookieBlob,
             std::chrono::nanoseconds downTime,
             std::chrono::nanoseconds eventTime,
             size_t pointerCount,

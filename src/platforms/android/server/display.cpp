@@ -261,6 +261,8 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
             BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
 
         config[output.id].orientation = output.orientation;
+        config[output.id].form_factor = output.form_factor;
+        config[output.id].scale = output.scale;
 
         geom::Displacement offset(output.top_left - origin);
         config[output.id].top_left = output.top_left;

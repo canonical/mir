@@ -31,6 +31,7 @@
 
 namespace mir
 {
+namespace geometry { class Rectangle; }
 namespace graphics
 {
 class Display;
@@ -91,6 +92,7 @@ private:
     bool compose_on_start;
 
     void schedule_compositing(int number_composites);
+    void schedule_compositing(int number_composites, geometry::Rectangle const& damage) const;
 
     std::shared_ptr<mir::scene::Observer> observer;
     mir::thread::BasicThreadPool thread_pool;

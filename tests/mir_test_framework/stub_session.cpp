@@ -136,6 +136,9 @@ void mtd::StubSession::destroy_surface(std::weak_ptr<scene::Surface> const& /*su
 {
 }
 
+void mtd::StubSession::send_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& /*devices*/)
+{
+}
 
 namespace
 {

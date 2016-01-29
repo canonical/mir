@@ -4,6 +4,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
+  ${PROJECT_SOURCE_DIR}/src/include/cookie
 
     ${Boost_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}

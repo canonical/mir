@@ -99,7 +99,8 @@ public:
 
     std::shared_ptr<mir::scene::Surface> parent() const override { return nullptr; }
 
-    void set_keymap(xkb_rule_names const&) {}
+    void set_keymap(MirInputDeviceId, std::string const&, std::string const&, std::string const&, std::string const&) override
+    {}
 
     void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&) {}
     void rename(std::string const&) {}

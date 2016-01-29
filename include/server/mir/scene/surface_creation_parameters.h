@@ -100,6 +100,7 @@ struct SurfaceCreationParameters
     mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
 
     mir::optional_value<std::vector<geometry::Rectangle>> input_shape;
+    mir::optional_value<MirShellChrome> shell_chrome;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);

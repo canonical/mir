@@ -38,7 +38,7 @@ namespace mir
 class ServerActionQueue;
 namespace cookie
 {
-class CookieFactory;
+class Authority;
 }
 namespace dispatch
 {
@@ -59,7 +59,7 @@ public:
     DefaultInputDeviceHub(std::shared_ptr<Seat> const& seat,
                           std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
                           std::shared_ptr<ServerActionQueue> const& observer_queue,
-                          std::shared_ptr<cookie::CookieFactory> const& cookie_factory);
+                          std::shared_ptr<cookie::Authority> const& cookie_authority);
 
     // InputDeviceRegistry - calls from mi::Platform
     void add_device(std::shared_ptr<InputDevice> const& device) override;
@@ -78,7 +78,7 @@ private:
     std::shared_ptr<dispatch::MultiplexingDispatchable> const input_dispatchable;
     std::shared_ptr<ServerActionQueue> const observer_queue;
     std::shared_ptr<dispatch::ActionQueue> const device_queue;
-    std::shared_ptr<cookie::CookieFactory> const cookie_factory;
+    std::shared_ptr<cookie::Authority> const cookie_authority;
 
     struct RegisteredDevice : public InputSink
     {
@@ -86,7 +86,7 @@ private:
         RegisteredDevice(std::shared_ptr<InputDevice> const& dev,
                          MirInputDeviceId dev_id,
                          std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
-                         std::shared_ptr<cookie::CookieFactory> const& cookie_factory,
+                         std::shared_ptr<cookie::Authority> const& cookie_authority,
                          std::shared_ptr<DefaultDevice> const& handle);
         void handle_input(MirEvent& event) override;
         mir::geometry::Rectangle bounding_rectangle() const override;

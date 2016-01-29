@@ -76,6 +76,8 @@ public:
     void hide_cursor()
     {
     }
+
+    auto graphics_platform_library() -> std::string { return {}; }
 };
 
 

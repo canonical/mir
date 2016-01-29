@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -28,7 +28,7 @@
 
 namespace mir
 {
-namespace compositor { class Compositor; class DisplayBufferCompositorFactory; }
+namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; }
 namespace frontend { class SessionAuthorizer; class Session; class SessionMediatorReport; }
 namespace graphics { class Cursor; class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationReport; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class CursorImages; class TouchVisualizer; class InputDeviceHub;}
@@ -37,7 +37,7 @@ namespace options { class Option; }
 namespace cookie
 {
 using Secret = std::vector<uint8_t>;
-class CookieFactory;
+class Authority;
 }
 namespace shell
 {
@@ -86,11 +86,11 @@ public:
     /// This must remain valid while apply_settings() and run() are called.
     void set_command_line(int argc, char const* argv[]);
 
-    /// Sets an override functor for creating the cookie factory.
+    /// Sets an override functor for creating the cookie authority.
     /// A secret can be saved and any process this secret is shared
     /// with can verify Mir-generated cookies, or produce their own.
-    void override_the_cookie_factory(
-        std::function<std::shared_ptr<cookie::CookieFactory>()> const& cookie_factory_builder);
+    void override_the_cookie_authority(
+        std::function<std::shared_ptr<cookie::Authority>()> const& cookie_authority_builder);
 
     /// Applies any configuration options, hooks, or custom implementations.
     /// Must be called before calling run() or accessing any mir subsystems.
@@ -320,6 +320,9 @@ public:
  *  @{ */
     /// \return the compositor.
     auto the_compositor() const -> std::shared_ptr<compositor::Compositor>;
+
+    /// \return the compositor report.
+    auto the_compositor_report() const -> std::shared_ptr<compositor::CompositorReport>;
 
     /// \return the composite event filter.
     auto the_composite_event_filter() const -> std::shared_ptr<input::CompositeEventFilter>;

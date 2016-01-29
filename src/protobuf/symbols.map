@@ -360,6 +360,14 @@ MIR_PROTOBUF_3 {
     mir::protobuf::EventSequence::Swap*;
     mir::protobuf::Event::SerializeWithCachedSizes*;
     mir::protobuf::Event::Swap*;
+    mir::protobuf::InputDeviceEvent::?InputDeviceEvent*;
+    mir::protobuf::InputDeviceEvent::InputDeviceEvent*;
+    mir::protobuf::InputDeviceEvent::New*;
+    mir::protobuf::InputDeviceEvent::Swap*;
+    mir::protobuf::InputDeviceInfo::?InputDeviceInfo*;
+    mir::protobuf::InputDeviceInfo::InputDeviceInfo*;
+    mir::protobuf::InputDeviceInfo::New*;
+    mir::protobuf::InputDeviceInfo::Swap*;
     mir::protobuf::LifecycleEvent::ByteSize*;
     mir::protobuf::LifecycleEvent::CheckTypeAndMergeFrom*;
     mir::protobuf::LifecycleEvent::Clear*;
@@ -901,6 +909,8 @@ MIR_PROTOBUF_3 {
     typeinfo?for?mir::protobuf::DisplayOutput;
     typeinfo?for?mir::protobuf::Event;
     typeinfo?for?mir::protobuf::EventSequence;
+    typeinfo?for?mir::protobuf::InputDeviceEvent;
+    typeinfo?for?mir::protobuf::InputDeviceInfo;
     typeinfo?for?mir::protobuf::LifecycleEvent;
     typeinfo?for?mir::protobuf::PersistentSurfaceId;
     typeinfo?for?mir::protobuf::PingEvent;
@@ -946,6 +956,8 @@ MIR_PROTOBUF_3 {
     vtable?for?mir::protobuf::DisplayOutput;
     vtable?for?mir::protobuf::Event;
     vtable?for?mir::protobuf::EventSequence;
+    vtable?for?mir::protobuf::InputDeviceEvent;
+    vtable?for?mir::protobuf::InputDeviceInfo;
     vtable?for?mir::protobuf::LifecycleEvent;
     vtable?for?mir::protobuf::PersistentSurfaceId;
     vtable?for?mir::protobuf::PingEvent;
@@ -975,3 +987,30 @@ MIR_PROTOBUF_3 {
   };
  local: *;
 };
+
+MIR_PROTOBUF_3_unreleased {
+ global:
+  extern "C++" {
+    mir::protobuf::ModuleProperties::ByteSize*;
+    mir::protobuf::ModuleProperties::CheckTypeAndMergeFrom*;
+    mir::protobuf::ModuleProperties::Clear*;
+    mir::protobuf::ModuleProperties::?ModuleProperties*;
+    mir::protobuf::ModuleProperties::ModuleProperties*;
+    mir::protobuf::ModuleProperties::CopyFrom*;
+    mir::protobuf::ModuleProperties::default_instance*;
+    mir::protobuf::ModuleProperties::DiscardUnknownFields*;
+    mir::protobuf::ModuleProperties::GetTypeName*;
+    mir::protobuf::ModuleProperties::IsInitialized*;
+    mir::protobuf::ModuleProperties::kDisplayConfigurationFieldNumber*;
+    mir::protobuf::ModuleProperties::kDisplayOutputFieldNumber*;
+    mir::protobuf::ModuleProperties::kErrorFieldNumber*;
+    mir::protobuf::ModuleProperties::kPlatformFieldNumber*;
+    mir::protobuf::ModuleProperties::kSurfacePixelFormatFieldNumber*;
+    mir::protobuf::ModuleProperties::MergeFrom*;
+    mir::protobuf::ModuleProperties::MergePartialFromCodedStream*;
+    mir::protobuf::ModuleProperties::New*;
+    mir::protobuf::ModuleProperties::SerializeWithCachedSizes*;
+    mir::protobuf::ModuleProperties::Swap*;
+    typeinfo?for?mir::protobuf::ModuleProperties;
+  };
+} MIR_PROTOBUF_3;

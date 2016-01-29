@@ -16,9 +16,10 @@ add_library(mirclientplatformmesaobjects OBJECT
   native_surface.cpp
 )
 
-add_library(
+mir_add_library_with_symbols(
   mirclientplatformmesa MODULE
 
+  ${symbol_map}
   $<TARGET_OBJECTS:mirclientplatformmesaobjects>
 )
 

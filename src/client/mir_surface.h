@@ -25,12 +25,12 @@
 #include "rpc/mir_display_server_debug.h"
 
 #include "mir/client_platform.h"
+#include "mir/frontend/surface_id.h"
 #include "mir/optional_value.h"
 #include "mir/geometry/dimensions.h"
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/graphics/native_buffer.h"
-#include "mir/cookie_factory.h"
 
 #include <memory>
 #include <functional>
@@ -100,7 +100,7 @@ struct MirSurfaceSpec
     mir::optional_value<MirOrientationMode> pref_orientation;
 
     mir::optional_value<MirSurface*> parent;
-    std::unique_ptr<MirPersistentId> parent_id;
+    std::shared_ptr<MirPersistentId> parent_id;
     mir::optional_value<MirRectangle> aux_rect;
     mir::optional_value<MirEdgeAttachment> edge_attachment;
 
@@ -121,6 +121,7 @@ struct MirSurfaceSpec
         void* context;
     };
     mir::optional_value<EventHandler> event_handler;
+    mir::optional_value<MirShellChrome> shell_chrome;
 };
 
 struct MirPersistentId
@@ -140,28 +141,27 @@ public:
     MirSurface(MirSurface const &) = delete;
     MirSurface& operator=(MirSurface const &) = delete;
 
-    MirSurface(std::string const& error);
+    MirSurface(
+        std::string const& error,
+        MirConnection *allocating_connection,
+        mir::frontend::SurfaceId surface_id,
+        std::shared_ptr<MirWaitHandle> const& handle);
 
     MirSurface(
         MirConnection *allocating_connection,
         mir::client::rpc::DisplayServer& server,
         mir::client::rpc::DisplayServerDebug* debug,
-        std::shared_ptr<mir::client::ClientBufferStreamFactory> const& buffer_stream_factory,
+        std::shared_ptr<mir::client::ClientBufferStream> const& buffer_stream,
         std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
-        MirSurfaceSpec const& spec,
-        mir_surface_callback callback, void * context);
+        MirSurfaceSpec const& spec, mir::protobuf::Surface const& surface_proto,
+        std::shared_ptr<MirWaitHandle> const& handle);
 
     ~MirSurface();
-
-    MirWaitHandle* release_surface(
-        mir_surface_callback callback,
-        void *context);
 
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();
     int id() const;
 
-    MirWaitHandle* get_create_wait_handle();
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
 
     // TODO: Some sort of extension mechanism so that this can be moved
@@ -175,7 +175,7 @@ public:
     MirOrientation get_orientation() const;
     MirWaitHandle* set_preferred_orientation(MirOrientationMode mode);
 
-    void raise_surface_with_cookie(MirCookie const& cookie);
+    void raise_surface(MirCookie const* cookie);
 
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
@@ -192,12 +192,12 @@ public:
     static bool is_valid(MirSurface* query);
 
     MirWaitHandle* request_persistent_id(mir_surface_id_callback callback, void* context);
+    MirConnection* connection() const;
 private:
     std::mutex mutable mutex; // Protects all members of *this
 
     void on_configured();
     void on_cursor_configured();
-    void created(mir_surface_callback callback, void* context);
     void acquired_persistent_id(mir_surface_id_callback callback, void* context);
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
 
@@ -213,14 +213,12 @@ private:
     MirWaitHandle modify_wait_handle;
     std::unique_ptr<mir::protobuf::Void> const modify_result;
 
-    MirConnection* const connection{nullptr};
+    MirConnection* const connection_;
 
-    MirWaitHandle create_wait_handle;
     MirWaitHandle configure_wait_handle;
     MirWaitHandle configure_cursor_wait_handle;
     MirWaitHandle persistent_id_wait_handle;
 
-    std::shared_ptr<mir::client::ClientBufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
     std::shared_ptr<mir::input::receiver::XKBMapper> const keymapper;
@@ -234,6 +232,10 @@ private:
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;
     bool auto_resize_stream{true};
+
+    //a bit batty, but the creation handle has to exist for as long as the MirSurface does,
+    //as we don't really manage the lifetime of MirWaitHandle sensibly.
+    std::shared_ptr<MirWaitHandle> const creation_handle;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

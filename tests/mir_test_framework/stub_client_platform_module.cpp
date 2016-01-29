@@ -21,20 +21,23 @@
 
 #include "mir_test_framework/stub_client_platform_factory.h"
 #include "mir_test_framework/stub_platform_helpers.h"
+#include "mir/assert_module_entry_point.h"
 #include <memory>
 #include <gmock/gmock.h>
 
 namespace mtf = mir_test_framework;
 namespace mcl = mir::client;
 
-std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* context)
+mir::UniqueModulePtr<mcl::ClientPlatform> create_client_platform(mcl::ClientContext* context)
 {
-    return mtf::StubClientPlatformFactory{}.create_client_platform(context);
+    mir::assert_entry_point_signature<mcl::CreateClientPlatform>(&create_client_platform);
+    return mir::make_module_ptr<mtf::StubClientPlatform>(context);
 }
 
 bool is_appropriate_module(mcl::ClientContext* context)
 {
     using namespace testing;
+    mir::assert_entry_point_signature<mcl::ClientPlatformProbe>(&is_appropriate_module);
     MirPlatformPackage package;
     context->populate_server_package(package);
     return Matches(mtf::IsStubPlatformPackage())(package);

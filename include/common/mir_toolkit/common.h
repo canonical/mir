@@ -204,6 +204,15 @@ typedef enum MirFormFactor
     mir_form_factor_projector,
 } MirFormFactor;
 
+/**
+ * Shell chrome
+ */
+typedef enum MirShellChrome
+{
+    mir_shell_chrome_normal,
+    mir_shell_chrome_low,
+} MirShellChrome;
+
 /**@}*/
 
 #endif

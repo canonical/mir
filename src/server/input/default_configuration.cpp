@@ -148,7 +148,7 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
             auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
-                the_event_filter_chain_dispatcher(), the_main_loop(), the_cookie_factory(),
+                the_event_filter_chain_dispatcher(), the_main_loop(), the_cookie_authority(),
                 enable_repeat, key_repeat_timeout, key_repeat_delay);
         });
 }
@@ -280,7 +280,7 @@ std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_in
                                                 the_input_region()),
                                             the_input_reading_multiplexer(),
                                             the_main_loop(),
-                                            the_cookie_factory());
+                                            the_cookie_authority());
                                     });
 }
 
@@ -297,6 +297,6 @@ std::make_shared<mi::BasicSeat>(
 
                                             the_input_reading_multiplexer(),
                                             the_main_loop(),
-                                            the_cookie_factory());
+                                            the_cookie_authority());
                                     });
 }

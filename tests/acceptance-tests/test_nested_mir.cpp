@@ -42,6 +42,7 @@
 #include "mir/test/doubles/fake_display.h"
 #include "mir/test/doubles/stub_cursor.h"
 #include "mir/test/doubles/stub_display_configuration.h"
+#include "mir/test/signal.h"
 
 #include "mir/test/doubles/nested_mock_egl.h"
 #include "mir/test/fake_shared.h"
@@ -329,6 +330,46 @@ struct NestedServer : mtf::HeadlessInProcessServer
 
         return  std::make_shared<mtd::StubDisplayConfig>(new_displays);
     }
+
+    void change_display_configuration(NestedMirRunner& nested_mir, float scale, MirFormFactor form_factor)
+    {
+        auto const configurator = nested_mir.server.the_display_configuration_controller();
+        std::shared_ptr<mg::DisplayConfiguration> config = nested_mir.server.the_display()->configuration();
+
+        config->for_each_output([scale, form_factor] (mg::UserDisplayConfigurationOutput& output)
+        {
+            output.scale = scale;
+            output.form_factor = form_factor;
+        });
+
+        configurator->set_base_configuration(config);
+    }
+
+    bool wait_for_display_configuration_change(NestedMirRunner& nested_mir, float expected_scale, MirFormFactor expected_form_factor)
+    {
+        using namespace std::literals::chrono_literals;
+        /* Now, because we have absolutely no idea when the call to set_base_configuration will *actually*
+        * set the base configuration we get to poll configuration() until we see that it's actually changed.
+        */
+       auto const end_time = std::chrono::steady_clock::now() + 10s;
+       bool done{false};
+       while (!done && (std::chrono::steady_clock::now() < end_time))
+       {
+           auto const new_config = nested_mir.server.the_display()->configuration();
+
+           new_config->for_each_output([&done, expected_scale, expected_form_factor] (auto const& output)
+           {
+               if (output.scale == expected_scale &&
+                   output.form_factor == expected_form_factor)
+               {
+                   done = true;
+               }
+           });
+           if (!done)
+               std::this_thread::sleep_for(100ms);
+       }
+       return done;
+    }
 };
 
 struct Client
@@ -467,6 +508,58 @@ TEST_F(NestedServer, sees_expected_outputs)
         });
 
     EXPECT_THAT(outputs, ContainerEq(display_geometry));
+}
+
+TEST_F(NestedServer, shell_sees_set_scaling_factor)
+{
+    NestedMirRunner nested_mir{new_connection()};
+
+    constexpr float expected_scale{2.3f};
+    constexpr MirFormFactor expected_form_factor{mir_form_factor_tv};
+
+    change_display_configuration(nested_mir, expected_scale, expected_form_factor);
+    auto const config_applied = wait_for_display_configuration_change(nested_mir, expected_scale, expected_form_factor);
+
+    EXPECT_TRUE(config_applied);
+}
+
+TEST_F(NestedServer, client_sees_set_scaling_factor)
+{
+    NestedMirRunner nested_mir{new_connection()};
+
+    constexpr float expected_scale{2.3f};
+    constexpr MirFormFactor expected_form_factor{mir_form_factor_tv};
+
+    change_display_configuration(nested_mir, expected_scale, expected_form_factor);
+    auto const config_applied = wait_for_display_configuration_change(nested_mir, expected_scale, expected_form_factor);
+    EXPECT_TRUE(config_applied);
+
+    Client client{nested_mir};
+
+    auto spec = mir_connection_create_spec_for_normal_surface(client.connection,
+        800, 600,
+        mir_pixel_format_abgr_8888);
+
+    mt::Signal surface_event_received;
+    mir_surface_spec_set_event_handler(spec, [](MirSurface*, MirEvent const* event, void* ctx)
+        {
+            if (mir_event_get_type(event) == mir_event_type_surface_output)
+            {
+                auto surface_event = mir_event_get_surface_output_event(event);
+                EXPECT_THAT(mir_surface_output_event_get_form_factor(surface_event), Eq(expected_form_factor));
+                EXPECT_THAT(mir_surface_output_event_get_scale(surface_event), Eq(expected_scale));
+                auto signal = static_cast<mt::Signal*>(ctx);
+                signal->raise();
+            }
+        },
+        &surface_event_received);
+
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    EXPECT_TRUE(surface_event_received.wait_for(30s));
+
+    mir_surface_release_sync(surface);
 }
 
 //////////////////////////////////////////////////////////////////
