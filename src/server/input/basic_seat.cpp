@@ -21,6 +21,8 @@
 #include "mir/input/device.h"
 #include "mir/input/input_region.h"
 
+#include <algorithm>
+
 namespace mi = mir::input;
 
 mi::BasicSeat::BasicSeat(std::shared_ptr<mi::InputDispatcher> const& dispatcher,
@@ -34,10 +36,12 @@ mi::BasicSeat::BasicSeat(std::shared_ptr<mi::InputDispatcher> const& dispatcher,
 void mi::BasicSeat::add_device(std::shared_ptr<input::Device> const& device)
 {
     input_state_tracker.add_device(device->id());
+    devices.push_back(device);
 }
 
 void mi::BasicSeat::remove_device(std::shared_ptr<input::Device> const& device)
 {
+    devices.erase(std::remove(begin(devices), end(devices), device));
     input_state_tracker.remove_device(device->id());
 }
 

@@ -27,7 +27,7 @@
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
 
-#include "mir/cookie_factory.h"
+#include "mir/cookie/authority.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -53,7 +53,7 @@ struct SeatInputDeviceTracker : ::testing::Test
     MirInputDeviceId some_device{8712};
     MirInputDeviceId another_device{1246};
     MirInputDeviceId third_device{86};
-    std::shared_ptr<mir::cookie::CookieFactory> cookie_factory = mir::cookie::CookieFactory::create_keeping_secret();
+    std::shared_ptr<mir::cookie::Authority> cookie_factory = mir::cookie::Authority::create();
 
     mi::DefaultEventBuilder some_device_builder{some_device, cookie_factory};
     mi::DefaultEventBuilder another_device_builder{another_device, cookie_factory};

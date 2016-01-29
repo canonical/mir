@@ -45,7 +45,6 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
       input_dispatchable{input_multiplexer},
       observer_queue(observer_queue),
       device_queue(std::make_shared<dispatch::ActionQueue>()),
-      cookie_factory(cookie_factory),
       cookie_authority(cookie_authority),
       device_id_generator{0}
 {
