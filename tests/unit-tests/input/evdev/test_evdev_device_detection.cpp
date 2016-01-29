@@ -16,10 +16,13 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "src/platforms/evdev/evdev_device_detection.h"
 #include "mir/input/device_capability.h"
+#include "src/platforms/evdev/libinput_ptr.h"
+#include "src/platforms/evdev/libinput_device_ptr.h"
+#include "src/platforms/evdev/libinput_device.h"
+#include "src/server/report/null_report_factory.h"
 
-#include "mir_test_framework/udev_environment.h"
+#include "mir_test_framework/libinput_environment.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -29,58 +32,54 @@ namespace mtf = mir_test_framework;
 namespace mi = mir::input;
 namespace mie = mi::evdev;
 
-struct EvdevDeviceDetection : public ::testing::TestWithParam<std::tuple<char const*, char const*, mi::DeviceCapabilities>>
+struct EvdevDeviceDetection : public ::testing::TestWithParam<std::tuple<std::string, mi::DeviceCapabilities>>
 {
-    mtf::UdevEnvironment env;
+    mtf::LibInputEnvironment env;
 };
 
 TEST_P(EvdevDeviceDetection, evaluates_expected_input_class)
 {
     using namespace testing;
     auto const& param = GetParam();
-    env.add_standard_device(std::get<0>(param));
-    EXPECT_THAT(mie::detect_device_capabilities((std::get<1>(param))),Eq(std::get<2>(param)));
+    udev* ctx = reinterpret_cast<udev*>(1);
+    auto dev = env.setup_device(std::get<0>(param));
+    std::shared_ptr<libinput> lib = mie::make_libinput(ctx);
+    mie::LibInputDevice device(mir::report::null_input_report(), mie::make_libinput_device(lib, dev));
+    auto info = device.get_device_info();
+    EXPECT_THAT(info.capabilities, Eq(std::get<1>(param)));
 }
 
 INSTANTIATE_TEST_CASE_P(InputDeviceCapabilityDetection,
                         EvdevDeviceDetection,
                         ::testing::Values(
                             std::make_tuple(
-                                "synaptics-touchpad",
-                                "/dev/input/event12",
+                                mtf::LibInputEnvironment::synaptics_touchpad,
                                 mi::DeviceCapability::touchpad|mi::DeviceCapability::pointer
                                 ),
                             std::make_tuple(
-                                "laptop-keyboard",
-                                "/dev/input/event4",
+                                mtf::LibInputEnvironment::laptop_keyboard,
                                 mi::DeviceCapability::keyboard|mi::DeviceCapability::alpha_numeric
                                 ),
                             std::make_tuple(
-                                "usb-keyboard",
-                                "/dev/input/event14",
+                                mtf::LibInputEnvironment::usb_keyboard,
                                 mi::DeviceCapability::keyboard|mi::DeviceCapability::alpha_numeric
                                 ),
                             std::make_tuple(
-                                "usb-mouse",
-                                "/dev/input/event13",
+                                mtf::LibInputEnvironment::usb_mouse,
                                 mi::DeviceCapability::pointer
                                 ),
                             std::make_tuple(
-                                "bluetooth-magic-trackpad",
-                                "/dev/input/event13",
+                                mtf::LibInputEnvironment::bluetooth_magic_trackpad,
                                 mi::DeviceCapability::touchpad|mi::DeviceCapability::pointer
                                 ),
                             std::make_tuple(
-                                "mt-screen-detection", // device also reports available keys..
-                                "/dev/input/event4",
+                                mtf::LibInputEnvironment::mtk_tpd, // device also reports available keys..
                                 mi::DeviceCapabilities{mi::DeviceCapability::touchscreen}|
                                     mi::DeviceCapability::keyboard
                                 ),
                             std::make_tuple(
-                                "joystick-detection",
-                                "/dev/input/event13",
+                                mtf::LibInputEnvironment::usb_joystick,
                                 mi::DeviceCapabilities{mi::DeviceCapability::joystick}|
-                                    mi::DeviceCapability::gamepad|
                                     mi::DeviceCapability::keyboard
                                 )
                             ));

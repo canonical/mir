@@ -74,9 +74,7 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mi::InputReport> const& report)
 {
     mir::assert_entry_point_signature<mi::CreatePlatform>(&create_input_platform);
-    auto ctx = std::make_unique<mu::Context>();
-    auto monitor = std::make_unique<mu::Monitor>(*ctx.get());
-    return mir::make_module_ptr<mie::Platform>(input_device_registry, report, std::move(ctx), std::move(monitor));
+    return mir::make_module_ptr<mie::Platform>(input_device_registry, report, std::make_unique<mu::Context>());
 }
 
 void add_input_platform_options(

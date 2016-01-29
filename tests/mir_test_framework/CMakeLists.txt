@@ -48,6 +48,7 @@ add_library(mir-public-test-framework OBJECT
   testing_server_options.cpp
   temporary_environment_value.cpp
   using_stub_client_platform.cpp
+  libinput_environment.cpp
 )
 
 # Umockdev uses glib, which uses the deprecated "register" storage qualifier
@@ -57,9 +58,16 @@ add_library(mir-protected-test-framework OBJECT
 
   fake_input_server_configuration.cpp
   input_testing_server_options.cpp
-  udev_environment.cpp
 )
 
+add_library(mir-libinput-test-framework OBJECT
+
+  libinput_environment.cpp
+)
+
+add_library(mir-umock-test-framework OBJECT
+  udev_environment.cpp
+)
 
 add_library(mir-test-framework-static STATIC
   $<TARGET_OBJECTS:mir-public-test-framework>

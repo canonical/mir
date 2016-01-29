@@ -19,6 +19,7 @@
 #include "mir/test/doubles/mock_libinput.h"
 
 namespace mtd = mir::test::doubles;
+using namespace testing;
 
 namespace
 {
@@ -27,12 +28,21 @@ mtd::MockLibInput* global_libinput = nullptr;
 
 mtd::MockLibInput::MockLibInput()
 {
-    using namespace testing;
     assert(global_libinput == NULL && "Only one mock object per process is allowed");
     global_libinput = this;
 
     ON_CALL(*this, libinput_device_ref(_)).WillByDefault(ReturnArg<0>());
     ON_CALL(*this, libinput_get_fd(_)).WillByDefault(Return(int(libinput_simulation_queue.watch_fd())));
+    ON_CALL(*this, libinput_get_event(_))
+        .WillByDefault(Invoke([this](libinput*) -> libinput_event*
+                              {
+                                  if (events.empty())
+                                      return nullptr;
+                                  auto ret = events.front();
+                                  events.erase(events.begin());
+                                  return ret;
+                              }
+                             ));
     ON_CALL(*this, libinput_device_config_left_handed_set(_, _))
         .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
     ON_CALL(*this, libinput_device_config_accel_set_speed(_, _))
@@ -58,15 +68,20 @@ void mtd::MockLibInput::wake()
     libinput_simulation_queue.enqueue([]{});
 }
 
-void mtd::MockLibInput::setup_device(libinput* ptr, libinput_device* dev, char const* path, char const* name, unsigned int vendor, unsigned int product)
+void mtd::MockLibInput::push_back(libinput_event* event)
 {
-    using namespace ::testing;
-    ON_CALL(*this, libinput_path_add_device(ptr, StrEq(path)))
-        .WillByDefault(Return(dev));
+    events.push_back(event);
+    wake();
+}
+
+void mtd::MockLibInput::setup_device(libinput_device* dev, libinput_device_group* group, udev_device* u_dev, char const* name, unsigned int vendor, unsigned int product)
+{
     ON_CALL(*this, libinput_device_get_name(dev))
         .WillByDefault(Return(name));
     ON_CALL(*this, libinput_device_get_sysname(dev))
         .WillByDefault(Return(name));
+    ON_CALL(*this, libinput_device_get_device_group(dev))
+        .WillByDefault(Return(group));
     ON_CALL(*this, libinput_device_get_id_product(dev))
         .WillByDefault(Return(product));
     ON_CALL(*this, libinput_device_ref(dev))
@@ -75,6 +90,8 @@ void mtd::MockLibInput::setup_device(libinput* ptr, libinput_device* dev, char c
         .WillByDefault(Return(vendor));
     ON_CALL(*this, libinput_device_unref(dev))
         .WillByDefault(Return(nullptr));
+    ON_CALL(*this, libinput_device_get_udev_device(dev))
+        .WillByDefault(Return(u_dev));
 }
 
 mtd::MockLibInput::~MockLibInput() noexcept
@@ -287,6 +304,16 @@ double libinput_event_touch_get_orientation(libinput_event_touch* event)
     return global_libinput->libinput_event_touch_get_orientation(event);
 }
 
+libinput* libinput_udev_create_context(const libinput_interface* interface, void* user_data, struct udev* udev)
+{
+    return global_libinput->libinput_udev_create_context(interface, user_data, udev);
+}
+
+int libinput_udev_assign_seat(libinput* ctx, char const* seat)
+{
+    return global_libinput->libinput_udev_assign_seat(ctx, seat);
+}
+
 libinput* libinput_path_create_context(const libinput_interface* interface, void* user_data)
 {
     return global_libinput->libinput_path_create_context(interface, user_data);
@@ -340,6 +367,11 @@ libinput_device* libinput_device_unref(libinput_device* device)
 char const* libinput_device_get_name(libinput_device* device)
 {
     return global_libinput->libinput_device_get_name(device);
+}
+
+udev_device* libinput_device_get_udev_device(libinput_device* device)
+{
+    return global_libinput->libinput_device_get_udev_device(device);
 }
 
 unsigned int libinput_device_get_id_vendor(libinput_device* device)
@@ -591,4 +623,238 @@ libinput_config_dwt_state libinput_device_config_dwt_get_enabled(libinput_device
 libinput_config_dwt_state libinput_device_config_dwt_get_default_enabled(libinput_device *device)
 {
     return global_libinput->libinput_device_config_dwt_get_default_enabled(device);
+}
+
+libinput_event* mtd::MockLibInput::setup_touch_event(libinput_device* dev, libinput_event_type type, uint64_t event_time, int slot,
+                                                     float x, float y, float major, float minor, float pressure)
+{
+    auto event = get_next_fake_ptr<libinput_event*>();
+    auto touch_event = reinterpret_cast<libinput_event_touch*>(event);
+    push_back(event);
+
+    ON_CALL(*this, libinput_event_get_type(event))
+        .WillByDefault(Return(type));
+    ON_CALL(*this, libinput_event_get_device(event))
+        .WillByDefault(Return(dev));
+    ON_CALL(*this, libinput_event_get_touch_event(event))
+        .WillByDefault(Return(touch_event));
+    ON_CALL(*this, libinput_event_touch_get_slot(touch_event))
+        .WillByDefault(Return(slot));
+    ON_CALL(*this, libinput_event_touch_get_x_transformed(touch_event, _))
+        .WillByDefault(Return(x));
+    ON_CALL(*this, libinput_event_touch_get_y_transformed(touch_event, _))
+        .WillByDefault(Return(y));
+    ON_CALL(*this, libinput_event_touch_get_time_usec(touch_event))
+        .WillByDefault(Return(event_time));
+    ON_CALL(*this, libinput_event_touch_get_major_transformed(touch_event, _, _))
+        .WillByDefault(Return(major));
+    ON_CALL(*this, libinput_event_touch_get_minor_transformed(touch_event, _, _))
+        .WillByDefault(Return(minor));
+    ON_CALL(*this, libinput_event_touch_get_pressure(touch_event))
+        .WillByDefault(Return(pressure));
+
+    return event;
+}
+
+
+libinput_event* mtd::MockLibInput::setup_touch_frame(libinput_device *dev, uint64_t event_time)
+{
+    auto event = get_next_fake_ptr<libinput_event*>();
+    auto touch_event = reinterpret_cast<libinput_event_touch*>(event);
+    push_back(event);
+
+    ON_CALL(*this, libinput_event_get_device(event))
+        .WillByDefault(Return(dev));
+    ON_CALL(*this, libinput_event_get_type(event))
+        .WillByDefault(Return(LIBINPUT_EVENT_TOUCH_FRAME));
+    ON_CALL(*this, libinput_event_get_touch_event(event))
+        .WillByDefault(Return(touch_event));
+    ON_CALL(*this, libinput_event_touch_get_time_usec(touch_event))
+        .WillByDefault(Return(event_time));
+
+    return event;
+}
+
+libinput_event* mtd::MockLibInput::setup_touch_up_event(libinput_device* dev, uint64_t event_time, int slot)
+{
+    auto event = get_next_fake_ptr<libinput_event*>();
+    auto touch_event = reinterpret_cast<libinput_event_touch*>(event);
+    push_back(event);
+
+    ON_CALL(*this, libinput_event_get_type(event))
+        .WillByDefault(Return(LIBINPUT_EVENT_TOUCH_UP));
+    ON_CALL(*this, libinput_event_get_device(event))
+        .WillByDefault(Return(dev));
+    ON_CALL(*this, libinput_event_get_touch_event(event))
+        .WillByDefault(Return(touch_event));
+    ON_CALL(*this, libinput_event_touch_get_slot(touch_event))
+        .WillByDefault(Return(slot));
+    ON_CALL(*this, libinput_event_touch_get_time_usec(touch_event))
+        .WillByDefault(Return(event_time));
+
+    return event;
+}
+
+libinput_event* mtd::MockLibInput::setup_key_event(libinput_device* dev, uint64_t event_time, uint32_t key, libinput_key_state state)
+{
+    auto event = get_next_fake_ptr<libinput_event*>();
+    auto key_event = reinterpret_cast<libinput_event_keyboard*>(event);
+    push_back(event);
+
+    ON_CALL(*this, libinput_event_get_type(event))
+        .WillByDefault(Return(LIBINPUT_EVENT_KEYBOARD_KEY));
+    ON_CALL(*this, libinput_event_get_device(event))
+        .WillByDefault(Return(dev));
+    ON_CALL(*this, libinput_event_get_keyboard_event(event))
+        .WillByDefault(Return(key_event));
+    ON_CALL(*this, libinput_event_keyboard_get_time_usec(key_event))
+        .WillByDefault(Return(event_time));
+    ON_CALL(*this, libinput_event_keyboard_get_key(key_event))
+        .WillByDefault(Return(key));
+    ON_CALL(*this, libinput_event_keyboard_get_key_state(key_event))
+        .WillByDefault(Return(state));
+
+    return event;
+}
+
+libinput_event* mtd::MockLibInput::setup_pointer_event(libinput_device* dev, uint64_t event_time, float relatve_x, float relatve_y)
+{
+    auto event = get_next_fake_ptr<libinput_event*>();
+    auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
+    push_back(event);
+
+    ON_CALL(*this, libinput_event_get_type(event))
+        .WillByDefault(Return(LIBINPUT_EVENT_POINTER_MOTION));
+    ON_CALL(*this, libinput_event_get_device(event))
+        .WillByDefault(Return(dev));
+    ON_CALL(*this, libinput_event_get_pointer_event(event))
+        .WillByDefault(Return(pointer_event));
+    ON_CALL(*this, libinput_event_pointer_get_time_usec(pointer_event))
+        .WillByDefault(Return(event_time));
+    ON_CALL(*this, libinput_event_pointer_get_dx(pointer_event))
+        .WillByDefault(Return(relatve_x));
+    ON_CALL(*this, libinput_event_pointer_get_dy(pointer_event))
+        .WillByDefault(Return(relatve_y));
+    return event;
+}
+
+libinput_event* mtd::MockLibInput::setup_absolute_pointer_event(libinput_device* dev, uint64_t event_time, float x, float y)
+{
+    auto event = get_next_fake_ptr<libinput_event*>();
+    auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
+    push_back(event);
+
+    ON_CALL(*this, libinput_event_get_type(event))
+        .WillByDefault(Return(LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE));
+    ON_CALL(*this, libinput_event_get_device(event))
+        .WillByDefault(Return(dev));
+    ON_CALL(*this, libinput_event_get_pointer_event(event))
+        .WillByDefault(Return(pointer_event));
+    ON_CALL(*this, libinput_event_pointer_get_time_usec(pointer_event))
+        .WillByDefault(Return(event_time));
+    ON_CALL(*this, libinput_event_pointer_get_absolute_x_transformed(pointer_event, _))
+        .WillByDefault(Return(x));
+    ON_CALL(*this, libinput_event_pointer_get_absolute_y_transformed(pointer_event, _))
+        .WillByDefault(Return(y));
+    return event;
+}
+
+libinput_event* mtd::MockLibInput::setup_button_event(libinput_device* dev, uint64_t event_time, int button, libinput_button_state state)
+{
+    auto event = get_next_fake_ptr<libinput_event*>();
+    auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
+    push_back(event);
+
+    ON_CALL(*this, libinput_event_get_type(event))
+        .WillByDefault(Return(LIBINPUT_EVENT_POINTER_BUTTON));
+    ON_CALL(*this, libinput_event_get_device(event))
+        .WillByDefault(Return(dev));
+    ON_CALL(*this, libinput_event_get_pointer_event(event))
+        .WillByDefault(Return(pointer_event));
+    ON_CALL(*this, libinput_event_pointer_get_time_usec(pointer_event))
+        .WillByDefault(Return(event_time));
+    ON_CALL(*this, libinput_event_pointer_get_button(pointer_event))
+        .WillByDefault(Return(button));
+    ON_CALL(*this, libinput_event_pointer_get_button_state(pointer_event))
+        .WillByDefault(Return(state));
+    return event;
+}
+
+libinput_event* mtd::MockLibInput::setup_axis_event(libinput_device* dev, uint64_t event_time, double horizontal, double vertical)
+{
+    auto event = get_next_fake_ptr<libinput_event*>();
+    auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
+    push_back(event);
+
+    ON_CALL(*this, libinput_event_get_type(event))
+        .WillByDefault(Return(LIBINPUT_EVENT_POINTER_AXIS));
+    ON_CALL(*this, libinput_event_get_pointer_event(event))
+        .WillByDefault(Return(pointer_event));
+    ON_CALL(*this, libinput_event_get_device(event))
+        .WillByDefault(Return(dev));
+    ON_CALL(*this, libinput_event_pointer_get_time_usec(pointer_event))
+        .WillByDefault(Return(event_time));
+    ON_CALL(*this, libinput_event_pointer_get_axis_source(pointer_event))
+        .WillByDefault(Return(LIBINPUT_POINTER_AXIS_SOURCE_WHEEL));
+    ON_CALL(*this, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+        .WillByDefault(Return(horizontal!=0.0));
+    ON_CALL(*this, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+        .WillByDefault(Return(vertical!=0.0));
+    ON_CALL(*this, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+        .WillByDefault(Return(vertical));
+    ON_CALL(*this, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+        .WillByDefault(Return(horizontal));
+    return event;
+}
+
+libinput_event* mtd::MockLibInput::setup_finger_axis_event(libinput_device* dev, uint64_t event_time, double horizontal, double vertical)
+{
+    auto event = get_next_fake_ptr<libinput_event*>();
+    auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
+    push_back(event);
+
+    ON_CALL(*this, libinput_event_get_type(event))
+        .WillByDefault(Return(LIBINPUT_EVENT_POINTER_AXIS));
+    ON_CALL(*this, libinput_event_get_device(event))
+        .WillByDefault(Return(dev));
+    ON_CALL(*this, libinput_event_get_pointer_event(event))
+        .WillByDefault(Return(pointer_event));
+    ON_CALL(*this, libinput_event_pointer_get_time_usec(pointer_event))
+        .WillByDefault(Return(event_time));
+    ON_CALL(*this, libinput_event_pointer_get_axis_source(pointer_event))
+        .WillByDefault(Return(LIBINPUT_POINTER_AXIS_SOURCE_FINGER));
+    ON_CALL(*this, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+        .WillByDefault(Return(horizontal!=0.0));
+    ON_CALL(*this, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+        .WillByDefault(Return(vertical!=0.0));
+    ON_CALL(*this, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
+        .WillByDefault(Return(vertical));
+    ON_CALL(*this, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
+        .WillByDefault(Return(horizontal));
+    return event;
+}
+
+libinput_event* mtd::MockLibInput::setup_device_add_event(libinput_device* dev)
+{
+    auto event = get_next_fake_ptr<libinput_event*>();
+    push_back(event);
+
+    ON_CALL(*this, libinput_event_get_type(event))
+        .WillByDefault(Return(LIBINPUT_EVENT_DEVICE_ADDED));
+    ON_CALL(*this, libinput_event_get_device(event))
+        .WillByDefault(Return(dev));
+    return event;
+}
+
+libinput_event* mtd::MockLibInput::setup_device_remove_event(libinput_device* dev)
+{
+    auto event = get_next_fake_ptr<libinput_event*>();
+    push_back(event);
+
+    ON_CALL(*this, libinput_event_get_type(event))
+        .WillByDefault(Return(LIBINPUT_EVENT_DEVICE_REMOVED));
+    ON_CALL(*this, libinput_event_get_device(event))
+        .WillByDefault(Return(dev));
+    return event;
+
 }

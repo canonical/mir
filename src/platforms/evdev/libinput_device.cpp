@@ -46,23 +46,16 @@ namespace mi = mir::input;
 namespace mie = mi::evdev;
 using namespace std::literals::chrono_literals;
 
-mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& report, char const* path,
-                                    LibInputDevicePtr dev)
+mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& report, LibInputDevicePtr dev)
     : report{report}, pointer_pos{0, 0}, button_state{0}
 {
-    add_device_of_group(path, std::move(dev));
+    add_device_of_group(std::move(dev));
 }
 
-void mie::LibInputDevice::add_device_of_group(char const* path, LibInputDevicePtr dev)
+void mie::LibInputDevice::add_device_of_group(LibInputDevicePtr dev)
 {
-    paths.emplace_back(path);
     devices.emplace_back(std::move(dev));
     update_device_info();
-}
-
-bool mie::LibInputDevice::is_in_group(char const* path)
-{
-    return end(paths) != find(begin(paths), end(paths), std::string{path});
 }
 
 mie::LibInputDevice::~LibInputDevice() = default;
@@ -315,8 +308,33 @@ void mie::LibInputDevice::update_device_info()
         libinput_device_get_id_product(dev);
     mi::DeviceCapabilities caps;
 
-    for (auto const& path : paths)
-        caps |= mie::detect_device_capabilities(path.c_str());
+    using Caps = mi::DeviceCapabilities;
+    using Mapping = std::pair<char const*, Caps>;
+    auto const mappings = {
+        Mapping{"ID_INPUT_MOUSE", mi::DeviceCapability::pointer},
+        Mapping{"ID_INPUT_TOUCHSCREEN", mi::DeviceCapability::touchscreen},
+        Mapping{"ID_INPUT_TOUCHPAD", Caps(mi::DeviceCapability::touchpad)|mi::DeviceCapability::pointer},
+        Mapping{"ID_INPUT_JOYSTICK", mi::DeviceCapability::joystick},
+        Mapping{"ID_INPUT_KEY", mi::DeviceCapability::keyboard},
+        Mapping{"ID_INPUT_KEYBOARD", mi::DeviceCapability::alpha_numeric},
+    };
+
+    for (auto const& dev : devices)
+    {
+        auto* u_dev = libinput_device_get_udev_device(dev.get());
+        for (auto const mapping : mappings)
+        {
+            int detected = 0;
+            auto value = udev_device_get_property_value(u_dev, mapping.first);
+            if (!value)
+                continue;
+
+            std::stringstream property_value(value);
+            property_value >> detected;
+            if (detected)
+                caps |= mapping.second;
+        }
+    }
 
     info = mi::InputDeviceInfo{name, unique_id.str(), caps};
 }

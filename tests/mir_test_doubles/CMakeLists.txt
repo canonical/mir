@@ -28,6 +28,10 @@ set(
 )
 
 set(
+    MIR_TEST_DOUBLES_UDEV_SRCS
+  ${CMAKE_CURRENT_SOURCE_DIR}/mock_udev.cpp
+)
+set(
   MIR_TEST_DOUBLES_PLATFORM_SRCS
 
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_libinput.cpp
@@ -109,4 +113,8 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+)
+
+add_library(mir-test-doubles-udev OBJECT
+  ${MIR_TEST_DOUBLES_UDEV_SRCS}
 )
