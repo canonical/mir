@@ -295,7 +295,7 @@ void ms::MediatingDisplayChanger::update_input_rectangles(mg::DisplayConfigurati
     config.for_each_output(
         [&rectangles](mg::DisplayConfigurationOutput const& output)
         {
-            if (output.power_mode == mir_power_mode_on && -output.current_mode_index < output.modes.size())
+            if (output.power_mode == mir_power_mode_on && output.current_mode_index < output.modes.size())
                 rectangles.add(geometry::Rectangle(output.top_left, output.modes[output.current_mode_index].size));
         });
     region->set_input_rectangles(rectangles);
