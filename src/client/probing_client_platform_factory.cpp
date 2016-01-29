@@ -39,18 +39,15 @@ mcl::ProbingClientPlatformFactory::create_client_platform(mcl::ClientContext* co
             if (probe(context))
             {
                 platform_modules.push_back(module);
-                return SharedLibrarySelection::quit;
-            }
-            else
-            {
-                return SharedLibrarySelection::persist;
+                return Selection::quit;
             }
         }
         catch (std::runtime_error const&)
         {
-            // We were handed a SharedLibrary that's not a client platform module of the correct vintage?
-            return SharedLibrarySelection::persist;
+            // Assume we were handed a SharedLibrary that's not a client platform module of the correct vintage.
         }
+
+        return Selection::persist;
     };
 
     if (!platform_overrides.empty())

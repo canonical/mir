@@ -65,7 +65,7 @@ bool greater_soname_version(boost::filesystem::path const& lhs, boost::filesyste
 
 void mir::select_libraries_for_path(
     std::string const& path,
-    std::function<SharedLibrarySelection(std::shared_ptr<mir::SharedLibrary> const&)> const& selector,
+    std::function<Selection(std::shared_ptr<mir::SharedLibrary> const&)> const& selector,
     mir::SharedLibraryProberReport& report)
 {
     report.probing_path(path);
@@ -96,7 +96,7 @@ void mir::select_libraries_for_path(
             report.loading_library(lib);
             auto const shared_lib = std::make_shared<mir::SharedLibrary>(lib.string());
 
-            if (selector(shared_lib) == SharedLibrarySelection::quit)
+            if (selector(shared_lib) == Selection::quit)
                 return;
         }
         catch (std::runtime_error const& err)
@@ -114,7 +114,7 @@ mir::libraries_for_path(std::string const& path, mir::SharedLibraryProberReport&
     select_libraries_for_path(
         path,
         [&](std::shared_ptr<mir::SharedLibrary> const& shared_lib)
-            { result.push_back(shared_lib); return SharedLibrarySelection::persist; },
+            { result.push_back(shared_lib); return Selection::persist; },
         report);
 
     return result;
