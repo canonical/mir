@@ -25,7 +25,7 @@
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/server_action_queue.h"
-#include "mir/cookie_factory.h"
+#include "mir/cookie/authority.h"
 #define MIR_LOG_COMPONENT "Input"
 #include "mir/log.h"
 
@@ -40,12 +40,12 @@ mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
     std::shared_ptr<mir::ServerActionQueue> const& observer_queue,
-    std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory)
+    std::shared_ptr<mir::cookie::Authority> const& cookie_authority)
     : seat{seat},
       input_dispatchable{input_multiplexer},
       observer_queue(observer_queue),
       device_queue(std::make_shared<dispatch::ActionQueue>()),
-      cookie_factory(cookie_factory),
+      cookie_authority(cookie_authority),
       device_id_generator{0}
 {
     input_dispatchable->add_watch(device_queue);
@@ -69,7 +69,8 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
         auto handle = std::make_shared<DefaultDevice>(id, device_queue, device);
         // send input device info to observer loop..
         devices.push_back(std::make_unique<RegisteredDevice>(
-            device, id, input_dispatchable, cookie_factory, handle));
+            device, id, input_dispatchable, cookie_authority, handle));
+
         auto const& dev = devices.back();
 
         seat->add_device(handle);
@@ -133,9 +134,9 @@ mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
     std::shared_ptr<InputDevice> const& dev,
     MirInputDeviceId device_id,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
-    std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory,
+    std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
     std::shared_ptr<mi::DefaultDevice> const& handle)
-    : handle(handle), device_id(device_id), builder(device_id, cookie_factory), device(dev), multiplexer(multiplexer)
+    : handle(handle), device_id(device_id), builder(device_id, cookie_authority), device(dev), multiplexer(multiplexer)
 {
 }
 

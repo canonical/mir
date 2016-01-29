@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_NATIVE_ANDROID_EGL_NATIVE_SURFACE_INTERPRETER_H_
 #define MIR_CLIENT_NATIVE_ANDROID_EGL_NATIVE_SURFACE_INTERPRETER_H_
 
-#include "mir/graphics/android/android_driver_interpreter.h"
+#include "android_driver_interpreter.h"
 #include "mir/egl_native_surface.h"
 
 namespace mir

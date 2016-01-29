@@ -32,7 +32,7 @@
 #include "mir/test/doubles/stub_gl_program_factory.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_renderable.h"
-#include "mir/graphics/android/mir_native_window.h"
+#include "mir_native_window.h"
 #include "mir/test/doubles/stub_driver_interpreter.h"
 
 #include <gtest/gtest.h>
@@ -141,7 +141,7 @@ TEST_F(Display, selects_usable_egl_configuration)
     int const correct_visual_id = 1;
     EGLint const num_cfgs = 45;
     EGLint const expected_cfg_attr [] = {
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT | EGL_PBUFFER_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_DEPTH_SIZE, 0,
         EGL_STENCIL_SIZE, 0,
@@ -556,6 +556,53 @@ TEST_F(Display, display_orientation_not_supported)
     config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
         if (c.id == primary_output_id)
             EXPECT_EQ(mir_orientation_left, c.orientation);
+    });
+}
+
+//LP: #1535780
+TEST_F(Display, can_configure_orientation)
+{
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::enabled);
+
+    auto scale = 4.2f;
+    auto config = display.configuration();
+    config->for_each_output([&scale](mg::UserDisplayConfigurationOutput const& c){
+        c.scale = scale;
+    });
+    display.configure(*config); 
+
+    config = display.configuration();
+    config->for_each_output([&scale](mg::UserDisplayConfigurationOutput const& c){
+        if (c.id == primary_output_id)
+            EXPECT_THAT(c.scale, testing::FloatEq(scale));
+    });
+}
+
+TEST_F(Display, can_configure_form_factor)
+{
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::enabled);
+
+    auto form_factor = mir_form_factor_tablet;
+    auto config = display.configuration();
+    config->for_each_output([&form_factor](mg::UserDisplayConfigurationOutput const& c){
+        c.form_factor = form_factor;
+    });
+    display.configure(*config); 
+
+    config = display.configuration();
+    config->for_each_output([&form_factor](mg::UserDisplayConfigurationOutput const& c){
+        if (c.id == primary_output_id)
+            EXPECT_THAT(c.form_factor, testing::Eq(form_factor));
     });
 }
 

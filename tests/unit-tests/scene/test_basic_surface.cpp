@@ -706,7 +706,7 @@ TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
 
     EXPECT_CALL(mock_sender, send_event(_,_));
 
-    surface.consume(*mev::make_event(mir_prompt_session_state_started));
+    surface.consume(mev::make_event(mir_prompt_session_state_started).get());
 }
 
 TEST_F(BasicSurfaceTest, observer_can_trigger_state_change_within_notification)

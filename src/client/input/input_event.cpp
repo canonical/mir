@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -18,9 +18,16 @@
 
 #define MIR_LOG_COMPONENT "input-event-access"
 
+#include "mir/cookie/cookie.h"
 #include "mir/event_type_to_string.h"
 #include "mir/events/event_private.h"
 #include "mir/log.h"
+#include "mir/require.h"
+#include "mir_toolkit/mir_cookie.h"
+
+#include "../mir_cookie.h"
+
+#include <string.h>
 
 namespace ml = mir::logging;
 
@@ -394,4 +401,93 @@ float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis ax
        mir::log_critical("Invalid axis enumeration " + std::to_string(axis));
        abort();
    }
+}
+
+bool mir_input_event_has_cookie(MirInputEvent const* ev)
+{
+    switch (mir_input_event_get_type(ev))
+    {
+        case mir_input_event_type_key:
+            return true;
+        case mir_input_event_type_pointer:
+        {
+            auto const pev = mir_input_event_get_pointer_event(ev);
+            auto const pev_action = mir_pointer_event_action(pev);
+            return (pev_action == mir_pointer_action_button_up ||
+                    pev_action == mir_pointer_action_button_down);
+        }
+        case mir_input_event_type_touch:
+        {
+            auto const tev = mir_input_event_get_touch_event(ev);
+            auto const point_count = mir_touch_event_point_count(tev);
+            for (size_t i = 0; i < point_count; i++)
+            {
+                auto const tev_action = mir_touch_event_action(tev, i);
+                if (tev_action == mir_touch_action_up ||
+                    tev_action == mir_touch_action_down)
+                {
+                    return true;
+                }
+            }
+            break;
+        }
+    }
+
+    return false;
+}
+
+size_t mir_cookie_buffer_size(MirCookie const* cookie) try
+{
+    return cookie->size();
+} catch (...)
+{
+    abort();
+}
+
+MirCookie const* mir_input_event_get_cookie(MirInputEvent const* iev) try
+{
+    auto const ev = old_ev_from_new(iev);
+
+    switch (ev->type)
+    {
+    case mir_event_type_motion:
+        return new MirCookie(ev->motion.cookie);
+    case mir_event_type_key:
+        return new MirCookie(ev->key.cookie);
+    default:
+    {
+        mir::log_critical("expected a key or motion events, type was: " + mir::event_type_to_string(ev->type));
+        abort();
+    }
+    }
+} catch (...)
+{
+    abort();
+}
+
+void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size) try
+{
+    return cookie->copy_to(buffer, size);
+} catch (...)
+{
+    abort();
+}
+
+MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size) try
+{
+    if (size != mir::cookie::default_blob_size)
+        return NULL;
+
+    return new MirCookie(buffer, size);
+} catch (...)
+{
+    abort();
+}
+
+void mir_cookie_release(MirCookie const* cookie) try
+{
+    delete cookie;
+} catch (...)
+{
+    abort();
 }

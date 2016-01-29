@@ -100,7 +100,7 @@ bool mtd::StubSurface::input_area_contains(mir::geometry::Point const& /*point*/
     return false;
 }
 
-void mtd::StubSurface::consume(MirEvent const& /*event*/)
+void mtd::StubSurface::consume(MirEvent const* /*event*/)
 {
 }
 
@@ -191,7 +191,8 @@ void mtd::StubSurface::remove_observer(std::weak_ptr < mir::scene::SurfaceObserv
 {
 }
 
-void mtd::StubSurface::set_keymap(xkb_rule_names const& /*rules*/)
+void mtd::StubSurface::set_keymap(MirInputDeviceId /*id*/, std::string const& /*model*/, std::string const& /*layout*/,
+                                  std::string const& /*variant*/, std::string const& /*options*/)
 {
 }
 

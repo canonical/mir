@@ -180,7 +180,10 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
     set_rotation(0.0f);
 }
 
-mrg::Renderer::~Renderer() = default;
+mrg::Renderer::~Renderer()
+{
+    render_target.ensure_current();
+}
 
 void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
                                 mg::Renderable const& renderable) const

@@ -38,6 +38,7 @@ message SurfaceParameters {
 
   optional PersistentSurfaceId parent_persistent_id = 21;
   repeated Rectangle input_shape = 22;
+  optional int32 shell_chrome = 24;
 }
 
 message SurfaceAspectRatio
@@ -76,6 +77,7 @@ message SurfaceSpecification {
 
   optional PersistentSurfaceId parent_persistent_id = 22;
   repeated Rectangle input_shape = 23;
+  optional int32 shell_chrome = 24;
 }
 
 message StreamConfiguration {
@@ -142,10 +144,21 @@ message Buffer {
   optional string error = 127;
 }
 
+message ModuleProperties
+{
+    required string name = 1;
+    required uint32 major_version = 2;
+    required uint32 minor_version = 3;
+    required uint32 micro_version = 4;
+    required string file = 5;
+};
+
+
 message Platform {
   repeated sint32 fd = 1;
   repeated int32  data = 2;
   optional int32  fds_on_side_channel = 3;
+  optional ModuleProperties graphics_module = 4;
 
   optional string error = 127;
 }
@@ -332,8 +345,7 @@ message CoordinateTranslationResponse {
 }
 
 message Cookie {
-  required uint64 timestamp = 1;
-  required uint64 mac = 2;
+  required bytes cookie = 1;
 }
 
 message RaiseRequest {

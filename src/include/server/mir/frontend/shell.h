@@ -82,7 +82,7 @@ public:
         SurfaceId surface_id,
         MirSurfaceAttrib attrib) = 0;
 
-    virtual void raise_surface_with_timestamp(
+    virtual void raise_surface(
         std::shared_ptr<Session> const& session,
         SurfaceId surface_id,
         uint64_t timestamp) = 0;

@@ -24,6 +24,7 @@
 #include "mir/udev/wrapper.h"
 #include "mir/module_deleter.h"
 #include "mir/assert_module_entry_point.h"
+#include "mir/libname.h"
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -190,15 +191,37 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
     if (platform_option_used)
         return mg::PlatformPriority::best;
 
-    return mg::PlatformPriority::unsupported;
+    /* We failed to set mastership. However, still on most systems mesa-kms
+     * is the right driver to choose. Landing here just means the user did
+     * not specify --vt or is running from ssh. Still in most cases mesa-kms
+     * is the correct option so give it a go. Better to fail trying to switch
+     * VTs (and tell the user that) than to refuse to load the correct
+     * driver at all. (LP: #1528082)
+     *
+     * Just make sure we are below PlatformPriority::supported in case
+     * mesa-x11 or android can be used instead.
+     *
+     * TODO: Revisit the priority terminology. having a range of values between
+     *       "supported" and "unsupported" is potentially confusing.
+     * TODO: Revisit the return code of this function. We document that
+     *       integer values outside the enum are allowed but C++ disallows it
+     *       without a cast. So we should return an int or typedef to int
+     *       instead.
+     */
+    return static_cast<mg::PlatformPriority>(
+        mg::PlatformPriority::supported - 1);
 }
 
+namespace
+{
 mir::ModuleProperties const description = {
-    "mesa-kms",
+    "mir:mesa-kms",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
+    MIR_VERSION_MICRO,
+    mir::libname()
 };
+}
 
 mir::ModuleProperties const* describe_graphics_module()
 {

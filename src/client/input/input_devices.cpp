@@ -21,18 +21,9 @@
 namespace mi = mir::input;
 mi::InputDevices::InputDevices() = default; //necessary to make sure the linker does not discard this yet unused class
 
-void mi::InputDevices::clear()
+void  mi::InputDevices::update_devices(std::vector<DeviceData> && data)
 {
-    devices.clear();
-}
-
-void  mi::InputDevices::add_device(DeviceData && dev)
-{
-    devices.emplace_back(std::move(dev));
-}
-
-void  mi::InputDevices::notify_changes()
-{
-    // does nothing yet
+    std::unique_lock<std::mutex> lock(devices_access);
+    devices = std::move(data);
 }
 

@@ -39,17 +39,14 @@ mi::BasicSeat::BasicSeat(std::shared_ptr<mf::EventSink> const& event_sink,
 void mi::BasicSeat::add_device(std::shared_ptr<input::Device> const& device)
 {
     input_state_tracker.add_device(device->id());
-
     devices.push_back(device);
-
     event_sink->handle_input_device_change(devices);
 }
 
 void mi::BasicSeat::remove_device(std::shared_ptr<input::Device> const& device)
 {
+    devices.erase(remove(begin(devices), end(devices), device));
     input_state_tracker.remove_device(device->id());
-
-    devices.erase(remove(begin(devices), end(devices), device), end(devices));
     event_sink->handle_input_device_change(devices);
 }
 

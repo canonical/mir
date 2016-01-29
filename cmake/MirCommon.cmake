@@ -155,9 +155,20 @@ function (mir_precompiled_header TARGET HEADER)
       endif()
     endforeach()
 
+    # So.
+    # ${CMAKE_CXX_FLAGS} *only* includes the base flags, not any extra flags set by the build target.
+    # The build targets set flags which affect the precompiled headers - -g verses no debug for the Debug build,
+    # -g -O2 -NDEBUG versus no specified optimisation for RelWithDebugInfo, etc.
+    #
+    # The various CMAKE_CXX_FLAGS_DEBUG, CMAKE_CXX_FLAGS_RELWITHDEBUGINFO, etc variables have the extra flags
+    # to add. CMAKE_BUILD_TYPE contains "Debug" or "RelWithDebugInfo" or "Release" etc, however, so first
+    # we need to uppercase CMAKE_BUILD_TYPE, then dereference ${CMAKE_CXX_FLAGS_${UC_BUILD_TYPE}}.
+    #
+    # I'm unaware of a less roundabout method of getting the *actual* build flags for a target.
+    string(TOUPPER "${CMAKE_BUILD_TYPE}" UC_BUILD_TYPE)
     separate_arguments(
       PCH_CXX_FLAGS UNIX_COMMAND
-      "${CMAKE_CXX_FLAGS} ${TARGET_COMPILE_FLAGS} ${TARGET_INCLUDE_DIRECTORIES_STRING}"
+      "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${UC_BUILD_TYPE}} ${TARGET_COMPILE_FLAGS} ${TARGET_INCLUDE_DIRECTORIES_STRING}"
     )
 
     add_custom_command(
@@ -244,4 +255,22 @@ function (mir_check_no_unreleased_symbols TARGET DEPENDENT_TARGET)
     VERBATIM
   )
   add_dependencies(${DEPENDENT_TARGET} ${TARGET_NAME})
+endfunction()
+
+function (mir_add_library_with_symbols TARGET TYPE SYMBOLS_FILE)
+  # Bask in the majesty of CMake!
+  #
+  # You can't just depend on an arbitary file. Oh, no!
+  #
+  # Instead, we add a custom command to generate an empty C++ source
+  # file, depending on the symbols file, and then add that empty C++
+  # source to the library.
+  set(HACK_OUTPUT ${TARGET}_abysmal_hack.cpp)
+
+  add_custom_command(OUTPUT ${HACK_OUTPUT}
+    COMMAND touch ${HACK_OUTPUT}
+    DEPENDS ${SYMBOLS_FILE}
+  )
+
+  add_library(${TARGET} ${TYPE} ${HACK_OUTPUT} ${ARGN})
 endfunction()

@@ -1,4 +1,4 @@
-MIR_CLIENT_PLATFORM_3 {
+MIR_CLIENT_PLATFORM_4 {
   global:
     create_client_platform;
     is_appropriate_module;

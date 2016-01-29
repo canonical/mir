@@ -1,12 +1,7 @@
 include_directories(
-    ${server_common_include_dirs}
-)
-
-include_directories(
     ${PROJECT_SOURCE_DIR}/src/include/gl
 )
 
-include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 include_directories(
     ${EGL_INCLUDE_DIRS}
     ${GLESv2_INCLUDE_DIRS}
@@ -15,7 +10,6 @@ include_directories(
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/3rd_party/android-deps)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
-add_definitions( -DANDROID )
 
 add_library(mirplatformgraphicsandroidobjects OBJECT
   platform.cpp
@@ -45,8 +39,13 @@ add_library(mirplatformgraphicsandroidobjects OBJECT
   hwc_blanking_control.cpp
 )
 
-add_library(mirplatformgraphicsandroid SHARED
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
+    ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
+set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
+mir_add_library_with_symbols(mirplatformgraphicsandroid SHARED
+
+  ${symbol_map}
   $<TARGET_OBJECTS:mirplatformgraphicsandroidobjects>
   $<TARGET_OBJECTS:mirgl>
 )
@@ -62,10 +61,6 @@ target_link_libraries(
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${ANDROID_PROPERTIES_LDFLAGS}
 )
-
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
-    ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
-set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
 set_target_properties(
   mirplatformgraphicsandroid PROPERTIES

@@ -287,3 +287,76 @@ TEST_F(CustomWindowManagement, state_change_requests_are_associated_with_correct
     for (auto const surface : client_surface)
         mir_surface_release_sync(surface);
 }
+
+TEST_F(CustomWindowManagement, create_low_chrome_surface_from_spec)
+{
+    start_server();
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    int const width{800}, height{600};
+    MirPixelFormat const format{mir_pixel_format_bgr_888};
+    auto surface_spec = mir_connection_create_spec_for_normal_surface(connection,
+                                                                      width, height,
+                                                                      format);
+
+    mir_surface_spec_set_shell_chrome(surface_spec, mir_shell_chrome_low);
+
+    auto const check_add_surface = [](
+        std::shared_ptr<ms::Session> const& session,
+        ms::SurfaceCreationParameters const& params,
+        std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
+            {
+                EXPECT_TRUE(params.shell_chrome.is_set());
+                return build(session, params);
+            };
+
+    EXPECT_CALL(window_manager, add_surface(_,_,_)).WillOnce(Invoke(check_add_surface));
+
+    auto surface = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(CustomWindowManagement, apply_low_chrome_to_surface)
+{
+    start_server();
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    int const width{800}, height{600};
+    MirPixelFormat const format{mir_pixel_format_bgr_888};
+    auto surface_spec = mir_connection_create_spec_for_normal_surface(connection,
+                                                                      width, height,
+                                                                      format);
+
+    auto surface = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    surface_spec = mir_connection_create_spec_for_changes(connection);
+
+    mt::Signal received;
+
+    mir_surface_spec_set_shell_chrome(surface_spec, mir_shell_chrome_low);
+
+    auto const check_apply_surface = [&received](
+        std::shared_ptr<ms::Session> const&,
+        std::shared_ptr<ms::Surface> const&,
+        msh::SurfaceSpecification const& spec)
+        {
+            EXPECT_TRUE(spec.shell_chrome.is_set());
+            received.raise();
+        };
+
+    EXPECT_CALL(window_manager, modify_surface(_,_,_)).WillOnce(Invoke(check_apply_surface));
+
+    mir_surface_apply_spec(surface, surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    EXPECT_TRUE(received.wait_for(400ms));
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
