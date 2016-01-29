@@ -85,7 +85,6 @@ int main(int argc, char** argv)
     int height = 25;
     MirPixelFormat format = mir_pixel_format_abgr_8888;
 
-    //TODO: add connection stuff
     MirConnection* connection = mir_connect_sync(NULL, "prerendered_frames");
 
     MirSurfaceSpec* spec =
