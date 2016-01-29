@@ -18,7 +18,9 @@ list(APPEND UNIT_TEST_SOURCES
 )
 
 list(APPEND UMOCK_UNIT_TEST_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_input_platform_probing.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_input_platform_probing.cpp
+    $<TARGET_OBJECTS:mirplatforminputevdevobjects>
+    $<TARGET_OBJECTS:mirevdevutilsobjects>
 )
 if (MIR_BUILD_PLATFORM_MESA_X11)
 list(APPEND UMOCK_UNIT_TEST_SOURCES
@@ -26,8 +28,6 @@ list(APPEND UMOCK_UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_x11_module.cpp
     $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
     $<TARGET_OBJECTS:mirplatforminputmesax11objects>
-    $<TARGET_OBJECTS:mirplatforminputevdevobjects>
-    $<TARGET_OBJECTS:mirevdevutilsobjects>
 )
 endif()
 
