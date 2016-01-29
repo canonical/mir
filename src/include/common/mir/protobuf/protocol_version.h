@@ -19,29 +19,27 @@
 #ifndef MIR_PROTOBUF_PROTOCOL_VERSION_H
 #define MIR_PROTOBUF_PROTOCOL_VERSION_H
 
-#include "mir_toolkit/version.h"
+#include "mir_toolkit/mir_version_number.h"
 
 namespace mir
 {
 namespace protobuf
 {
-// For the present we use the client API protocol_version as a proxy for the protocol
-// version as the protocol is typically updated to support API changes.
-// If we need to break protocol without a corresponding ABI break then we need to bump "epoch"
-inline constexpr int protocol_version(int major, int minor, int epoch = 0)
-{
-    return MIR_VERSION_NUMBER(epoch, major, minor);
-}
-
 inline constexpr int current_protocol_version()
 { 
-    return protocol_version(MIR_CLIENT_MAJOR_VERSION, MIR_CLIENT_MINOR_VERSION); 
+    return MIR_VERSION_NUMBER(0,3,2);
 }
 
-// Client libraries older than last ABI break may make calls we can't understand
 inline constexpr int oldest_compatible_protocol_version()
 {
-    return protocol_version(MIR_CLIENT_MAJOR_VERSION, 0);
+    return MIR_VERSION_NUMBER(0,3,0);
+}
+
+inline constexpr int next_incompatible_protocol_version()
+{
+    // For now we're very cautious/pessimistic. Maybe we can be more flexible
+    // in the more distant future...
+    return current_protocol_version() + MIR_VERSION_NUMBER(0,0,1);
 }
 }
 }
