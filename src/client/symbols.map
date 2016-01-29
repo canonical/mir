@@ -207,7 +207,7 @@ MIR_CLIENT_9v18 {
     *;
 } MIR_CLIENT_9v17;
 
-MIR_CLIENT_unreleased {
+MIR_CLIENT_9v19 {
   global:
     mir_connection_get_graphics_module;
     mir_surface_raise;
@@ -280,7 +280,7 @@ MIR_CLIENT_DETAIL_9v19 {
     *;
 } MIR_CLIENT_DETAIL_9v18;
 
-MIR_CLIENT_DETAIL_unreleased {
+MIR_CLIENT_DETAIL_private_buffer_semantics {
   global:
     mir_buffer_stream_allocate_buffer;
     mir_buffer_stream_release_buffer;
