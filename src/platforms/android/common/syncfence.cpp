@@ -20,7 +20,7 @@
 
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <android/linux/sync.h>
+#include <linux/sync.h>  // This will come from /usr/include/android{,-19}/
 
 namespace mga = mir::graphics::android;
 
