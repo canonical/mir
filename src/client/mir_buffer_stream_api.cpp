@@ -212,7 +212,7 @@ char const* mir_buffer_stream_get_error_message(MirBufferStream* opaque_stream)
 
 struct MirBufferStub
 {
-    MirBufferStub(MirBufferStream* stream, mir_buffer_callback cb, void* context) :
+    MirBufferStub(MirBufferContext* stream, mir_buffer_callback cb, void* context) :
         stream(stream),
         cb(cb),
         context(context)
@@ -226,14 +226,14 @@ struct MirBufferStub
             cb(stream, reinterpret_cast<MirBuffer*>(this), context);
     }
 
-    MirBufferStream* const stream;
+    MirBufferContext* const stream;
     mir_buffer_callback const cb;
     void* const context;
 };
 
 //private NBS api under development
-void mir_buffer_stream_allocate_buffer(
-    MirBufferStream* stream, 
+void mir_buffer_context_allocate_buffer(
+    MirBufferContext* stream, 
     int, int,
     MirPixelFormat,
     MirBufferUsage,
@@ -242,12 +242,12 @@ void mir_buffer_stream_allocate_buffer(
     new MirBufferStub(stream, cb, context); 
 }
 
-void mir_buffer_stream_release_buffer(MirBufferStream*, MirBuffer* buffer) 
+void mir_buffer_context_release_buffer(MirBufferContext*, MirBuffer* buffer) 
 {
     delete reinterpret_cast<MirBufferStub*>(buffer);
 }
 
-bool mir_buffer_stream_submit_buffer(MirBufferStream*, MirBuffer* buffer)
+bool mir_buffer_context_submit_buffer(MirBufferContext*, MirBuffer* buffer)
 {
     auto b = reinterpret_cast<MirBufferStub*>(buffer);
     b->ready();
@@ -279,5 +279,29 @@ MirGraphicsRegion* mir_buffer_acquire_region(MirBuffer*, MirBufferAccess)
 }
 
 void mir_buffer_release_region(MirGraphicsRegion*) 
+{
+}
+
+bool mir_buffer_context_is_valid(MirBufferContext*)
+{
+    return true;
+}
+
+char const *mir_buffer_context_get_error_message(MirBufferContext*)
+{
+    return "";
+}
+
+MirWaitHandle* mir_connection_create_buffer_context(MirConnection*, mir_buffer_context_callback, void*)
+{
+    return nullptr;
+}
+
+MirBufferContext* mir_connection_create_buffer_context_sync(MirConnection*)
+{
+    return nullptr;
+}
+
+void mir_buffer_context_release(MirBufferContext*)
 {
 }

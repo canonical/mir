@@ -17,6 +17,9 @@
  *
  */
 
+#include <mir_toolkit/mir_connection.h>
+#include <mir_toolkit/mir_buffer_stream.h>
+#include <mir_toolkit/mir_surface.h>
 #include <mir_toolkit/mir_buffer_stream_nbs.h>
 #include <mir_toolkit/mir_buffer.h>
 #include <sys/types.h>
@@ -52,7 +55,7 @@ typedef struct SubmissionInfo
     pthread_cond_t cv;
 } SubmissionInfo;
 
-static void available_callback(MirBufferStream* stream, MirBuffer* buffer, void* client_context)
+static void available_callback(MirBufferContext* stream, MirBuffer* buffer, void* client_context)
 {
     (void) stream;
     SubmissionInfo* info = (SubmissionInfo*) client_context;
@@ -78,15 +81,34 @@ int main(int argc, char** argv)
     signal(SIGTERM, shutdown);
     signal(SIGINT, shutdown);
 
-    //TODO: add connection stuff
-    MirBufferStream* stream = NULL;
-
-    int num_prerendered_frames = 20;
     int width = 20;
     int height = 25;
-    MirBufferUsage usage = mir_buffer_usage_software;
     MirPixelFormat format = mir_pixel_format_abgr_8888;
 
+    //TODO: add connection stuff
+    MirConnection* connection = mir_connect_sync(NULL, "prerendered_frames");
+
+    MirSurfaceSpec* spec =
+        mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+    MirSurface* surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    MirBufferContext* context =  mir_connection_create_buffer_context_sync(connection);
+    if (!mir_buffer_context_is_valid(context))
+        return -1;
+
+    //reassociate for advanced control
+    MirBufferStreamInfo info;
+    info.displacement_x = 0;
+    info.displacement_y = 0;
+    //will make this a union.
+    info.stream = (MirBufferStream*) context;
+    spec = mir_create_surface_spec(connection);
+    mir_surface_spec_set_streams(spec, &info, 1);
+    mir_surface_spec_release(spec);
+
+    int num_prerendered_frames = 20;
+    MirBufferUsage usage = mir_buffer_usage_software;
     SubmissionInfo buffer_available[num_prerendered_frames];
 
     for (int i = 0u; i < num_prerendered_frames; i++)
@@ -96,8 +118,8 @@ int main(int argc, char** argv)
         buffer_available[i].available = 0;
         buffer_available[i].buffer = NULL;
 
-        mir_buffer_stream_allocate_buffer(
-            stream, width, height, format, usage, available_callback, &buffer_available[i]);
+        mir_buffer_context_allocate_buffer(
+            context, width, height, format, usage, available_callback, &buffer_available[i]);
 
         pthread_mutex_lock(&buffer_available[i].lock);
         while(!buffer_available[i].buffer)
@@ -117,15 +139,16 @@ int main(int argc, char** argv)
         b = buffer_available[i].buffer;
         pthread_mutex_unlock(&buffer_available[i].lock);
 
-        if (!mir_buffer_stream_submit_buffer(stream, b))
+        if (!mir_buffer_context_submit_buffer(context, b))
             rendering = false;
 
         i = (i + 1) % num_prerendered_frames;
     }
 
     for (i = 0u; i < num_prerendered_frames; i++)
-        mir_buffer_stream_release_buffer(stream, buffer_available[i].buffer);
-
-    //TODO: connection shutdown stuff
+        mir_buffer_context_release_buffer(context, buffer_available[i].buffer);
+    mir_buffer_context_release(context);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
     return 0;
 }
