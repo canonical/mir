@@ -34,6 +34,7 @@ add_library(mir-public-test-framework OBJECT
   headless_test.cpp
   interprocess_client_server_test.cpp
   main.cpp
+  libinput_environment.cpp
   placement_applying_shell.cpp
   process.cpp
   server_runner.cpp
@@ -58,9 +59,16 @@ add_library(mir-protected-test-framework OBJECT
 
   fake_input_server_configuration.cpp
   input_testing_server_options.cpp
-  udev_environment.cpp
 )
 
+add_library(mir-libinput-test-framework OBJECT
+
+  libinput_environment.cpp
+)
+
+add_library(mir-umock-test-framework OBJECT
+  udev_environment.cpp
+)
 
 add_library(mir-test-framework-static STATIC
   $<TARGET_OBJECTS:mir-public-test-framework>
