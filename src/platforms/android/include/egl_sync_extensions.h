@@ -21,6 +21,9 @@
 
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
+
+//Xenial egl has started needing a header (android/native_window.h)
+//That we don't have in the android-headers package yet.
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>

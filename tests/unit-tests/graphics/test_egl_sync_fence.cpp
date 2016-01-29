@@ -17,7 +17,7 @@
  */
 
 #include <mir/test/doubles/mock_egl.h>
-#include "mir/graphics/egl_sync_fence.h"
+#include "egl_sync_fence.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <array>
