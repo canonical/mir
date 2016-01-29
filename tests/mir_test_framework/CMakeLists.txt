@@ -34,6 +34,7 @@ add_library(mir-public-test-framework OBJECT
   headless_test.cpp
   interprocess_client_server_test.cpp
   main.cpp
+  libinput_environment.cpp
   placement_applying_shell.cpp
   process.cpp
   server_runner.cpp
@@ -48,7 +49,7 @@ add_library(mir-public-test-framework OBJECT
   testing_server_options.cpp
   temporary_environment_value.cpp
   using_stub_client_platform.cpp
-  libinput_environment.cpp
+  visible_surface.cpp
 )
 
 # Umockdev uses glib, which uses the deprecated "register" storage qualifier
@@ -100,6 +101,7 @@ target_link_libraries(
   mirclientplatformstub
 
   mir-test-framework-static
+  mircommon
   ${UMOCKDEV_LDFLAGS} ${UMOCKDEV_LIBRARIES}
 )
 
@@ -161,6 +163,25 @@ set_target_properties(
   LINK_FLAGS "-Wl,--version-script,${server_symbol_map}"
 )
 
+add_library(
+  mirplatformgraphicsthrow MODULE
+  platform_graphics_throw.cpp
+)
+
+target_link_libraries(
+  mirplatformgraphicsthrow 
+
+  mirplatform
+)
+
+set_target_properties(
+  mirplatformgraphicsthrow PROPERTIES;
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/server-modules
+  OUTPUT_NAME graphics-throw
+  PREFIX ""
+  LINK_FLAGS "-Wl,--version-script,${server_symbol_map}"
+)
+
 add_custom_command(TARGET mir-test-framework-static POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
   ${CMAKE_CURRENT_SOURCE_DIR}/udev_recordings ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/udev_recordings
@@ -175,6 +196,7 @@ add_custom_command(TARGET mir-test-framework-static POST_BUILD
 string (REPLACE " -Wl,--no-undefined" " " CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
 
 install(TARGETS mirplatformgraphicsstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
+install(TARGETS mirplatformgraphicsthrow LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
 
 install(TARGETS mirclientplatformstub LIBRARY DESTINATION ${MIR_CLIENT_PLATFORM_PATH})
 

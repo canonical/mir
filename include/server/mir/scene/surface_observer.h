@@ -20,11 +20,12 @@
 #define MIR_SCENE_SURFACE_OBSERVER_H_
 
 #include "mir_toolkit/common.h"
+#include "mir_toolkit/events/event.h"
 
 #include "mir/input/input_reception_mode.h"
 
 #include <glm/glm.hpp>
-#include <xkbcommon/xkbcommon.h>
+#include <string>
 
 namespace mir
 {
@@ -54,7 +55,8 @@ public:
     virtual void reception_mode_set_to(input::InputReceptionMode mode) = 0;
     virtual void cursor_image_set_to(graphics::CursorImage const& image) = 0;
     virtual void client_surface_close_requested() = 0;
-    virtual void keymap_changed(xkb_rule_names const& names) = 0;
+    virtual void keymap_changed(MirInputDeviceId id, std::string const& model, std::string const& layout,
+                                std::string const& variant, std::string const& options) = 0;
     virtual void renamed(char const* name) = 0;
     virtual void cursor_image_removed() = 0;
 

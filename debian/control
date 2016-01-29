@@ -265,7 +265,6 @@ Description: API documentation for mir
 
 Package: mir-test-tools
 Architecture: linux-any
-Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
@@ -421,7 +420,7 @@ Description: Display server for Ubuntu - android driver metapackage
  This package depends on a full set of graphics drivers for running Mir on top
  of an existing Android driver stack.
 
-Package: libmircookie1
+Package: libmircookie2
 Section: libs
 Architecture: any
 Multi-Arch: same
@@ -440,7 +439,7 @@ Section: libdevel
 Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircookie1 (= ${binary:Version}),
+Depends: libmircookie2 (= ${binary:Version}),
          ${misc:Depends},
 Description: Produce and verify spoof-resistant timestamps - development headers
  libmircookie provides a simple mechanism for a group of cooperating processes

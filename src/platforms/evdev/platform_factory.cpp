@@ -20,6 +20,7 @@
 #include "mir/udev/wrapper.h"
 #include "mir/fd.h"
 #include "mir/assert_module_entry_point.h"
+#include "mir/libname.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -37,12 +38,15 @@ namespace mie = mi::evdev;
 namespace
 {
 char const* const host_socket_opt = "host-socket";
+
 mir::ModuleProperties const description = {
-    "evdev-input",
+    "mir:evdev-input",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO
+    MIR_VERSION_MICRO,
+    mir::libname()
 };
+
 bool can_open_input_devices()
 {
     mu::Enumerator input_enumerator{std::make_shared<mu::Context>()};

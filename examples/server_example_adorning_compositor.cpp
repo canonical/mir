@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015, 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -21,6 +21,7 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
+#include "mir/compositor/compositor_report.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/renderer/gl/texture_source.h"
 #include "mir/renderer/gl/render_target.h"
@@ -68,7 +69,8 @@ me::AdorningDisplayBufferCompositor::Program::~Program()
 
 me::AdorningDisplayBufferCompositor::AdorningDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
-    std::tuple<float, float, float> const& background_rgb) :
+    std::tuple<float, float, float> const& background_rgb,
+    std::shared_ptr<mc::CompositorReport> const& report) :
     db{display_buffer},
     render_target{me::as_render_target(display_buffer)},
     vert_shader_src{
@@ -94,7 +96,8 @@ me::AdorningDisplayBufferCompositor::AdorningDisplayBufferCompositor(
     current(make_current(render_target)),
     vertex(&vert_shader_src, GL_VERTEX_SHADER),
     fragment(&frag_shader_src, GL_FRAGMENT_SHADER),
-    program(vertex,  fragment)
+    program(vertex,  fragment),
+    report(report)
 {
     glUseProgram(program.program);
     vPositionAttr = glGetAttribLocation(program.program, "vPosition");
@@ -117,6 +120,8 @@ me::AdorningDisplayBufferCompositor::AdorningDisplayBufferCompositor(
 
 void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequence&& scene_sequence)
 {
+    report->began_frame(this);
+
     //note: If what should be drawn is expressible as a SceneElementSequence,
     //      mg::DisplayBuffer::post_renderables_if_optimizable() should be used,
     //      to give the the display hardware a chance at an optimized render of
@@ -129,7 +134,10 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
 
     glUseProgram(program.program);
     glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
-    
+
+    mg::RenderableList renderable_list;
+    renderable_list.reserve(scene_sequence.size());
+
     for(auto& element : scene_sequence)
     {
         //courteously inform the client that its rendered
@@ -137,6 +145,8 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
         element->rendered();
 
         auto const renderable = element->renderable();
+        renderable_list.push_back(renderable);
+
         float width  = renderable->screen_position().size.width.as_float();
         float height = renderable->screen_position().size.height.as_float();
         float x = renderable->screen_position().top_left.x.as_float() - db.view_area().top_left.x.as_float();
@@ -175,5 +185,10 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
         glDisableVertexAttribArray(vPositionAttr);
     }
 
+    report->renderables_in_frame(this, renderable_list);
+    report->rendered_frame(this);
+
     render_target->swap_buffers();
+
+    report->finished_frame(this);
 }

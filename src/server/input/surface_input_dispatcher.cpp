@@ -24,7 +24,6 @@
 #include "mir/scene/surface.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
-#include "mir/cookie_factory.h"
 
 #include <string.h>
 
@@ -221,7 +220,7 @@ void mi::SurfaceInputDispatcher::send_enter_exit_event(std::shared_ptr<mi::Surfa
     
     deliver(surface, &*mev::make_event(mir_input_event_get_device_id(iev),
         std::chrono::nanoseconds(mir_input_event_get_event_time(iev)),
-        0, // FIXME Revet cookie API, fix incoming for 0.19
+        std::vector<uint8_t>{},
         mir_pointer_event_modifiers(pev),
         action, mir_pointer_event_buttons(pev),
         mir_pointer_event_axis_value(pev,mir_pointer_axis_x),

@@ -265,6 +265,8 @@ TEST_F(GLRenderer, makes_display_buffer_current_when_created)
     EXPECT_CALL(mock_display_buffer, make_current());
 
     mrg::Renderer renderer(mock_display_buffer);
+
+    testing::Mock::VerifyAndClearExpectations(&mock_display_buffer);
 }
 
 TEST_F(GLRenderer, releases_display_buffer_current_when_destroyed)
@@ -272,6 +274,21 @@ TEST_F(GLRenderer, releases_display_buffer_current_when_destroyed)
     mrg::Renderer renderer(mock_display_buffer);
 
     EXPECT_CALL(mock_display_buffer, release_current());
+}
+
+TEST_F(GLRenderer, makes_display_buffer_current_before_deleting_programs)
+{
+    mrg::Renderer renderer(mock_display_buffer);
+
+    InSequence seq;
+    EXPECT_CALL(mock_display_buffer, make_current());
+    EXPECT_CALL(mock_display_buffer, swap_buffers());
+    EXPECT_CALL(mock_display_buffer, make_current());
+    EXPECT_CALL(mock_gl, glDeleteProgram(_)).Times(AtLeast(1));
+    EXPECT_CALL(mock_gl, glDeleteShader(_)).Times(AtLeast(1));
+    EXPECT_CALL(mock_display_buffer, release_current());
+
+    renderer.render(renderable_list);
 }
 
 TEST_F(GLRenderer, makes_display_buffer_current_before_rendering)
@@ -283,6 +300,8 @@ TEST_F(GLRenderer, makes_display_buffer_current_before_rendering)
     EXPECT_CALL(mock_gl, glClear(_));
 
     renderer.render(renderable_list);
+
+    testing::Mock::VerifyAndClearExpectations(&mock_display_buffer);
 }
 
 TEST_F(GLRenderer, swaps_buffers_after_rendering)

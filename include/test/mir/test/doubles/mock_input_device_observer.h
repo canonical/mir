@@ -13,22 +13,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
+#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_OBSERVER_H_
+#define MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_OBSERVER_H_
 
-#ifndef MIR_SECURITY_CHECK_FAILED_H_
-#define MIR_SECURITY_CHECK_FAILED_H_
+#include "mir/input/input_device_observer.h"
 
-#include <stdexcept>
+#include <gmock/gmock.h>
 
 namespace mir
 {
-
-struct SecurityCheckFailed : std::runtime_error
+namespace test
 {
-    SecurityCheckFailed();
+namespace doubles
+{
+
+struct MockInputDeviceObserver : input::InputDeviceObserver
+{
+    MOCK_METHOD1(device_added, void(std::shared_ptr<input::Device> const& device));
+    MOCK_METHOD1(device_changed, void(std::shared_ptr<input::Device> const& device));
+    MOCK_METHOD1(device_removed, void(std::shared_ptr<input::Device> const& device));
+    MOCK_METHOD0(changes_complete, void());
 };
 
 }
+}
+}
 
-#endif /* MIR_SECURITY_CHECK_FAILED_H_ */
+#endif

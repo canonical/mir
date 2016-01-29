@@ -20,6 +20,7 @@
 #include "mir/input/android/android_input_lexicon.h"
 #include "mir/input/android/event_conversion_helpers.h"
 #include "mir/events/event_builders.h"
+#include "mir/cookie/blob.h"
 
 #include <androidfw/Input.h>
 
@@ -38,9 +39,10 @@ mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_eve
         case AINPUT_EVENT_TYPE_KEY:
         {
             auto kev = static_cast<const droidinput::KeyEvent*>(android_event);
+            auto const cookie = kev->getCookieAsBlob();
             return mev::make_event(MirInputDeviceId(android_event->getDeviceId()),
                                    kev->getEventTime(),
-                                   kev->getMac(),
+                                   {std::begin(cookie), std::end(cookie)},
                                    mia::mir_keyboard_action_from_android(kev->getAction(), kev->getRepeatCount()),
                                    kev->getKeyCode(),
                                    kev->getScanCode(),
@@ -51,9 +53,10 @@ mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_eve
             if (mia::android_source_id_is_pointer_device(android_event->getSource()))
             {
                 auto mev = static_cast<const droidinput::MotionEvent*>(android_event);
+                auto const cookie = mev->getCookieAsBlob();
                 return mev::make_event(MirInputDeviceId(android_event->getDeviceId()),
                                        mev->getEventTime(),
-                                       mev->getMac(),
+                                       {std::begin(cookie), std::end(cookie)},
                                        mia::mir_modifiers_from_android(mev->getMetaState()),
                                        mia::mir_pointer_action_from_masked_android(mev->getAction() & AMOTION_EVENT_ACTION_MASK),
                                        mia::mir_pointer_buttons_from_android(mev->getButtonState()),
@@ -66,9 +69,10 @@ mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_eve
             else
             {
                 auto mev = static_cast<const droidinput::MotionEvent*>(android_event);
+                auto const cookie = mev->getCookieAsBlob();
                 auto ev = mev::make_event(MirInputDeviceId(android_event->getDeviceId()),
                                           mev->getEventTime(),
-                                          mev->getMac(),
+                                          {std::begin(cookie), std::end(cookie)},
                                           mia::mir_modifiers_from_android(mev->getMetaState()));
                 auto action = mev->getAction();
                 size_t index_with_action = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;

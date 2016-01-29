@@ -138,6 +138,8 @@ public:
     MOCK_METHOD2(libinput_device_config_accel_set_speed, libinput_config_status(libinput_device*, double speed));
     MOCK_METHOD1(libinput_device_config_accel_get_speed, double(libinput_device*));
     MOCK_METHOD1(libinput_device_config_accel_get_default_speed, double(libinput_device*));
+    MOCK_METHOD2(libinput_device_config_accel_set_profile, libinput_config_status(libinput_device*, libinput_config_accel_profile));
+    MOCK_METHOD1(libinput_device_config_accel_get_profile, libinput_config_accel_profile(libinput_device*));
     MOCK_METHOD1(libinput_device_config_scroll_has_natural_scroll, int(libinput_device*));
     MOCK_METHOD2(libinput_device_config_scroll_set_natural_scroll_enabled, libinput_config_status(libinput_device*, int enable));
     MOCK_METHOD1(libinput_device_config_scroll_get_natural_scroll_enabled, int(libinput_device*));

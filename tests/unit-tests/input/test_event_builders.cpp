@@ -29,7 +29,7 @@ struct InputEventBuilder : public testing::Test
 {
     MirInputDeviceId const device_id = 7;
     std::chrono::nanoseconds const timestamp = std::chrono::nanoseconds(39);
-    uint64_t const mac = 12;
+    std::vector<uint8_t> const cookie{};
     MirInputEventModifiers const modifiers = mir_input_event_modifier_meta;
 };
 }
@@ -41,7 +41,7 @@ TEST_F(InputEventBuilder, makes_valid_key_event)
     int const scan_code = 17;
 
    auto ev = mev::make_event(device_id, timestamp,
-       mac, action, key_code, scan_code, modifiers);
+       cookie, action, key_code, scan_code, modifiers);
    auto e = ev.get();
 
    EXPECT_EQ(mir_event_type_input, mir_event_get_type(e));
@@ -52,7 +52,6 @@ TEST_F(InputEventBuilder, makes_valid_key_event)
    EXPECT_EQ(key_code, mir_keyboard_event_key_code(kev));
    EXPECT_EQ(scan_code, mir_keyboard_event_scan_code(kev));
    EXPECT_EQ(modifiers, mir_keyboard_event_modifiers(kev));
-   // FIXME Test the mac value once the public API has landed in 0.19
 }
 
 TEST_F(InputEventBuilder, makes_valid_touch_event)
@@ -69,7 +68,7 @@ TEST_F(InputEventBuilder, makes_valid_touch_event)
     float size_values[] = {4, 9, 6};
 
    auto ev = mev::make_event(device_id, timestamp,
-       mac, modifiers);
+       cookie, modifiers);
    for (unsigned i = 0; i < touch_count; i++)
    {
        mev::add_touch(*ev, touch_ids[i], actions[i], tooltypes[i], x_axis_values[i], y_axis_values[i],
@@ -83,7 +82,6 @@ TEST_F(InputEventBuilder, makes_valid_touch_event)
    auto tev = mir_input_event_get_touch_event(ie);
    EXPECT_EQ(modifiers, mir_touch_event_modifiers(tev));
    EXPECT_EQ(touch_count, mir_touch_event_point_count(tev));
-   // FIXME Test the mac value once the public API has landed in 0.19
 
    for (unsigned i = 0; i < touch_count; i++)
    {
@@ -106,7 +104,7 @@ TEST_F(InputEventBuilder, makes_valid_pointer_event)
     float x_axis_value = 3.9, y_axis_value = 7.4, hscroll_value = .9, vscroll_value = .3;
     auto const relative_x_value = 0.0;
     auto const relative_y_value = 0.0;
-    auto ev = mev::make_event(device_id, timestamp, mac, modifiers, 
+    auto ev = mev::make_event(device_id, timestamp, cookie, modifiers, 
         action, depressed_buttons, x_axis_value, y_axis_value,
         hscroll_value, vscroll_value, relative_x_value, relative_y_value);
     auto e = ev.get();
@@ -117,7 +115,6 @@ TEST_F(InputEventBuilder, makes_valid_pointer_event)
     auto pev = mir_input_event_get_pointer_event(ie);
     EXPECT_EQ(modifiers, mir_pointer_event_modifiers(pev));
     EXPECT_EQ(action, mir_pointer_event_action(pev));
-    // FIXME Test the mac value once the public API has landed in 0.19
     EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_back));
     EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_tertiary));
     EXPECT_FALSE(mir_pointer_event_button_state(pev, mir_pointer_button_primary));
@@ -136,7 +133,7 @@ TEST_F(InputEventBuilder, maps_single_touch_down_to_motion_down)
 {
     MirTouchAction action =  mir_touch_action_down;
 
-    auto ev = mev::make_event(device_id, timestamp, mac, modifiers);
+    auto ev = mev::make_event(device_id, timestamp, cookie, modifiers);
     mev::add_touch(*ev, 0, action, mir_touch_tooltype_finger, 0, 0, 0, 0, 0, 0);
     auto e = ev.get();
 
@@ -152,7 +149,7 @@ TEST_F(InputEventBuilder, maps_single_touch_up_to_motion_up)
 {
     MirTouchAction action =  mir_touch_action_up;
 
-    auto ev = mev::make_event(device_id, timestamp, mac, modifiers);
+    auto ev = mev::make_event(device_id, timestamp, cookie, modifiers);
     mev::add_touch(*ev, 0, action, mir_touch_tooltype_finger, 0, 0, 0, 0, 0, 0);
     auto e = ev.get();
 
@@ -162,7 +159,6 @@ TEST_F(InputEventBuilder, maps_single_touch_up_to_motion_up)
     auto tev = mir_input_event_get_touch_event(ie);
 
     EXPECT_EQ(action, mir_touch_event_action(tev, 0));
-    // FIXME Test the mac value once the public API has landed in 0.19
 }
 
 TEST_F(InputEventBuilder, map_to_hover_if_no_button_pressed)
@@ -171,7 +167,7 @@ TEST_F(InputEventBuilder, map_to_hover_if_no_button_pressed)
     auto const relative_x_value = 0.0;
     auto const relative_y_value = 0.0;
     MirPointerAction action = mir_pointer_action_motion;
-    auto ev = mev::make_event(device_id, timestamp, mac, modifiers,
+    auto ev = mev::make_event(device_id, timestamp, cookie, modifiers,
         action, 0, x_axis_value, y_axis_value,
         hscroll_value, vscroll_value, relative_x_value, relative_y_value);
     auto e = ev.get();
@@ -181,5 +177,4 @@ TEST_F(InputEventBuilder, map_to_hover_if_no_button_pressed)
     auto pev = mir_input_event_get_pointer_event(ie);
     EXPECT_EQ(modifiers, mir_pointer_event_modifiers(pev));
     EXPECT_EQ(action, mir_pointer_event_action(pev));
-    // FIXME Test the mac value once the public API has landed in 0.19
 }

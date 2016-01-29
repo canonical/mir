@@ -15,9 +15,10 @@ add_library(mirclientplatformandroidobjects OBJECT
   android_native_display_container.cpp
 )
 
-add_library(
+mir_add_library_with_symbols(
   mirclientplatformandroid MODULE
 
+  ${symbol_map}
   $<TARGET_OBJECTS:mirclientplatformandroidobjects>
 )
 

@@ -28,6 +28,7 @@
 #include "mir/fd.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/test/pipe.h"
+#include "mir/libname.h"
 
 #ifdef ANDROID
 #include "mir/test/doubles/stub_android_native_buffer.h"
@@ -50,6 +51,17 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
+namespace
+{
+mir::ModuleProperties const module_properties = {
+    "mir:stub-graphics",
+    MIR_VERSION_MAJOR,
+    MIR_VERSION_MINOR,
+    MIR_VERSION_MICRO,
+    mir::libname()
+};
+}
+
 class StubFDBuffer : public mtd::StubBuffer
 {
 public:
@@ -203,7 +215,7 @@ class StubIpcOps : public mg::PlatformIpcOperations
 
     std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
-        auto package = std::make_shared<mg::PlatformIPCPackage>();
+        auto package = std::make_shared<mg::PlatformIPCPackage>(&module_properties);
         mtf::pack_stub_ipc_package(*package);
         return package;
     }

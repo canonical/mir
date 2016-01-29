@@ -27,47 +27,33 @@ namespace mtd = mir::test::doubles;
 
 struct ConnectionResourceMap : testing::Test
 {
-    MirSurface surface{"a string"};
-    mtd::MockClientBufferStream stream; 
+    std::shared_ptr<MirWaitHandle> wh { std::make_shared<MirWaitHandle>() };
+    std::shared_ptr<MirSurface> surface{std::make_shared<MirSurface>("a string", nullptr, mf::SurfaceId{2}, wh)};
+    std::shared_ptr<mcl::ClientBufferStream> stream{ std::make_shared<mtd::MockClientBufferStream>() }; 
     mf::SurfaceId const surface_id{43};
     mf::BufferStreamId const stream_id{43};
 };
 
-TEST_F(ConnectionResourceMap, maps_surface_and_bufferstream_when_surface_inserted)
+TEST_F(ConnectionResourceMap, maps_surface_when_surface_inserted)
 {
     using namespace testing;
     auto surface_called = false;
-    auto stream_called = false;
     mcl::ConnectionSurfaceMap map;
-    map.insert(surface_id, &surface);
+    map.insert(surface_id, surface);
     map.with_surface_do(surface_id, [&](MirSurface* surf) {
-        EXPECT_THAT(surf, Eq(&surface));
+        EXPECT_THAT(surf, Eq(surface.get()));
         surface_called = true;
     });
 
-    map.with_stream_do(stream_id, [&](mcl::ClientBufferStream* stream) {
-        EXPECT_THAT(stream, Eq(surface.get_buffer_stream()));
-        stream_called = true;
-    });
-
     EXPECT_TRUE(surface_called);
-    EXPECT_TRUE(stream_called);
 }
 
-TEST_F(ConnectionResourceMap, removes_surface_and_bufferstream_when_surface_removed)
+TEST_F(ConnectionResourceMap, removes_surface_when_surface_removed)
 {
     using namespace testing;
-    auto stream_called = false;
     mcl::ConnectionSurfaceMap map;
-    map.insert(surface_id, &surface);
-    map.with_stream_do(stream_id, [&](mcl::ClientBufferStream* stream) {
-        EXPECT_THAT(stream, Eq(surface.get_buffer_stream()));
-        stream_called = true;
-    });
-    EXPECT_TRUE(stream_called);
-
+    map.insert(surface_id, surface);
     map.erase(surface_id);
-
     EXPECT_THROW({
         map.with_stream_do(stream_id, [](mcl::ClientBufferStream*){});
     }, std::runtime_error);
@@ -78,9 +64,9 @@ TEST_F(ConnectionResourceMap, maps_streams)
     using namespace testing;
     auto stream_called = false;
     mcl::ConnectionSurfaceMap map;
-    map.insert(stream_id, &stream);
+    map.insert(stream_id, stream);
     map.with_stream_do(stream_id, [&](mcl::ClientBufferStream* str) {
-        EXPECT_THAT(str, Eq(&stream));
+        EXPECT_THAT(str, Eq(stream.get()));
         stream_called = true;
     });
     EXPECT_TRUE(stream_called);

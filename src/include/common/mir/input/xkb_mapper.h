@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,7 +13,9 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by:
+ *   Robert Carr <robert.carr@canonical.com>
+ *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #ifndef MIR_INPUT_RECEIVER_XKB_MAPPER_H_
@@ -30,6 +32,18 @@ namespace mir
 {
 namespace input
 {
+
+using XKBContextPtr = std::unique_ptr<xkb_context, void(*)(xkb_context*)>;
+XKBContextPtr make_unique_context();
+
+using XKBKeymapPtr = std::unique_ptr<xkb_keymap, void (*)(xkb_keymap*)>;
+XKBKeymapPtr make_unique_keymap(xkb_context* context, std::string const& model, std::string const& layout,
+                                std::string const& variant, std::string const& options);
+XKBKeymapPtr make_unique_keymap(xkb_context* context, char const* buffer, size_t size);
+
+using XKBStatePtr = std::unique_ptr<xkb_state, void(*)(xkb_state*)>;
+XKBStatePtr make_unique_state(xkb_keymap* keymap);
+
 namespace receiver
 {
 
@@ -39,7 +53,8 @@ public:
     XKBMapper();
     virtual ~XKBMapper() = default;
 
-    void set_rules(xkb_rule_names const& names);
+    xkb_context* get_context() const;
+    void set_keymap(MirInputDeviceId device_id, XKBKeymapPtr names);
 
     void update_state_and_map_event(MirEvent& ev);
 
@@ -49,10 +64,10 @@ protected:
 
 private:
     std::mutex guard;
-    
-    std::shared_ptr<xkb_context> context;
-    std::shared_ptr<xkb_keymap> map;
-    std::shared_ptr<xkb_state> state;
+
+    XKBContextPtr context;
+    XKBKeymapPtr keymap;
+    XKBStatePtr state;
 };
 
 }
