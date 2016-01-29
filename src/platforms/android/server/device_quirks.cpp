@@ -66,6 +66,11 @@ bool clear_fb_context_fence_for(std::string const& device_name)
     return device_name == "krillin" || device_name == "mx4" || device_name == "manta";
 }
 
+bool device_has_fb_ion_heap(std::string const& device_name, bool quirk_enabled)
+{
+    return quirk_enabled && (device_name != "Aquaris_M10_FHD");
+}
+
 }
 
 mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties)
@@ -74,7 +79,7 @@ mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties)
       gralloc_cannot_be_closed_safely_(gralloc_cannot_be_closed_safely_for(device_name, true)),
       enable_width_alignment_quirk{true},
       clear_fb_context_fence_{clear_fb_context_fence_for(device_name)},
-      fb_ion_heap_{true}
+      fb_ion_heap_{device_has_fb_ion_heap(device_name, true)}
 {
 }
 
@@ -84,7 +89,7 @@ mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties, mo::Option 
       gralloc_cannot_be_closed_safely_(gralloc_cannot_be_closed_safely_for(device_name, options.get(gralloc_cannot_be_closed_safely_opt, true))),
       enable_width_alignment_quirk(options.get(width_alignment_opt, true)),
       clear_fb_context_fence_{clear_fb_context_fence_for(device_name)},
-      fb_ion_heap_{options.get(fb_ion_heap_opt, true)}
+      fb_ion_heap_{device_has_fb_ion_heap(device_name, options.get(fb_ion_heap_opt, true))}
 {
 }
 
