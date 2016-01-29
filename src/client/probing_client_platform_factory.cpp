@@ -31,6 +31,28 @@ mcl::ProbingClientPlatformFactory::create_client_platform(mcl::ClientContext* co
     // than it takes to choose the right one. So this list is local:
     std::vector<std::shared_ptr<mir::SharedLibrary>> platform_modules;
 
+    auto const module_selector = [context, &platform_modules](std::shared_ptr<mir::SharedLibrary> const& module)
+    {
+        try
+        {
+            auto probe = module->load_function<ClientPlatformProbe>("is_appropriate_module", CLIENT_PLATFORM_VERSION);
+            if (probe(context))
+            {
+                platform_modules.push_back(module);
+                return SharedLibrarySelection::quit;
+            }
+            else
+            {
+                return SharedLibrarySelection::persist;
+            }
+        }
+        catch (std::runtime_error const&)
+        {
+            // We were handed a SharedLibrary that's not a client platform module of the correct vintage?
+            return SharedLibrarySelection::persist;
+        }
+    };
+
     if (!platform_overrides.empty())
     {
         // Even forcing a choice, platform is only loaded on demand. It's good
@@ -39,37 +61,19 @@ mcl::ProbingClientPlatformFactory::create_client_platform(mcl::ClientContext* co
         // if you really wanted to.
 
         for (auto const& platform : platform_overrides)
-            platform_modules.push_back(
-                std::make_shared<mir::SharedLibrary>(platform));
+            module_selector(std::make_shared<mir::SharedLibrary>(platform));
     }
     else
     {
         for (auto const& path : platform_paths)
-        {
-            // This is sub-optimal. We shouldn't need to have all drivers
-            // loaded simultaneously, but we do for now due to this API:
-            auto modules = mir::libraries_for_path(path,
-                                               *shared_library_prober_report);
-            for (auto const& module : modules)
-                 platform_modules.push_back(module);
-        }
+            select_libraries_for_path(path, module_selector, *shared_library_prober_report);
     }
 
     for (auto& module : platform_modules)
     {
-        try
-        {
-            auto probe = module->load_function<mir::client::ClientPlatformProbe>("is_appropriate_module", CLIENT_PLATFORM_VERSION);
-            if (probe(context))
-            {
-                auto factory = module->load_function<mir::client::CreateClientPlatform>("create_client_platform", CLIENT_PLATFORM_VERSION);
-                return factory(context);
-            }
-        }
-        catch(std::runtime_error const&)
-        {
-            // We were handed a SharedLibrary that's not a client platform module?
-        }
+        auto factory = module->load_function<CreateClientPlatform>("create_client_platform", CLIENT_PLATFORM_VERSION);
+        return factory(context);
     }
+
     BOOST_THROW_EXCEPTION(std::runtime_error{"No appropriate client platform module found"});
 }

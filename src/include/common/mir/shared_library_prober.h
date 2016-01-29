@@ -28,8 +28,15 @@
 namespace mir
 {
 class SharedLibrary;
+enum class SharedLibrarySelection { persist, quit };
 
-std::vector<std::shared_ptr<SharedLibrary>> libraries_for_path(std::string const& path, SharedLibraryProberReport& report);
+auto libraries_for_path(std::string const& path, SharedLibraryProberReport& report)
+-> std::vector<std::shared_ptr<SharedLibrary>>;
+
+void select_libraries_for_path(
+    std::string const& path,
+    std::function<SharedLibrarySelection(std::shared_ptr<SharedLibrary> const&)> const& selector,
+    SharedLibraryProberReport& report);
 }
 
 
