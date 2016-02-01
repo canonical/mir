@@ -241,11 +241,15 @@ function (mir_check_no_unreleased_symbols TARGET DEPENDENT_TARGET)
     #
     # $ADDRESS $FLAGS $SECTION $SIZE $SYMVER $NAME
     #
+    # Cut first five lines which don't contain any symbol information
+    # Cut any lines for undefined symbols
+    # Cut adress and flags which are fixed width
+    # Convert tabs to spaces
     # Whitespace between fields is collapsed to one character
-    # Cut then extracts the 5th field (the symbol version)
-    # grep will set exit code to 0 if any symbols contain unreleased
-    # and finally the exit code is inverted
-    COMMAND /bin/sh -c "objdump -T $<TARGET_FILE:${TARGET}> | tr -s ' ' | cut -d ' ' -f 5 | grep -q unreleased ; test $? -gt 0"
+    # Extract the symbol version (3rd field)
+    # Check for unreleased symbols - grep will set exit code to 0 if any are found
+    # finally invert the exit code
+    COMMAND /bin/sh -c "objdump -T $<TARGET_FILE:${TARGET}> | tail -n+5 | grep -v 'UND' | cut -c 26- | sed $'s/\t/ /g' | tr -s ' ' | cut -d ' ' -f 3 | grep -q unreleased ; test $? -gt 0"
     VERBATIM
   )
   add_dependencies(${DEPENDENT_TARGET} ${TARGET_NAME})
