@@ -218,6 +218,14 @@ MirDisplayConfiguration* mir_connection_create_display_config(
     return nullptr;
 }
 
+MirInputDevices* mir_connection_create_input_devices(
+    MirConnection* connection)
+{
+    if (connection)
+        return connection->create_copy_of_input_devices();
+    return nullptr;
+}
+
 void mir_connection_set_display_config_change_callback(
     MirConnection* connection,
     mir_display_config_callback callback,

@@ -49,6 +49,8 @@ typedef enum MirTouchpadScrollMode
 } MirTouchpadScrollMode;
 typedef unsigned int MirTouchpadScrollModes;
 
+typedef struct MirInputDevices MirInputDevices;
+
 #ifdef __cplusplus
 }
 #endif
