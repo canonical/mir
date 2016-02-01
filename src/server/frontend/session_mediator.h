@@ -52,6 +52,7 @@ class GraphicBufferAllocator;
 namespace input
 {
 class CursorImages;
+class Seat;
 }
 
 namespace scene
@@ -105,7 +106,9 @@ public:
         std::shared_ptr<input::CursorImages> const& cursor_images,
         std::shared_ptr<scene::CoordinateTranslator> const& translator,
         std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
-        std::shared_ptr<cookie::Authority> const& cookie_authority);
+        std::shared_ptr<cookie::Authority> const& cookie_authority,
+        std::shared_ptr<input::Seat> const& seat
+        );
 
     ~SessionMediator() noexcept;
 
@@ -260,6 +263,7 @@ private:
     std::shared_ptr<scene::CoordinateTranslator> const translator;
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const anr_detector;
     std::shared_ptr<cookie::Authority> const cookie_authority;
+    std::shared_ptr<input::Seat> const seat;
 
     BufferStreamTracker buffer_stream_tracker;
 

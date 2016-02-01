@@ -39,13 +39,21 @@ mi::BasicSeat::BasicSeat(std::shared_ptr<mf::EventSink> const& event_sink,
 void mi::BasicSeat::add_device(std::shared_ptr<input::Device> const& device)
 {
     input_state_tracker.add_device(device->id());
-    devices.push_back(device);
+
+    {
+        std::unique_lock<std::mutex> lock(devices_guard);
+        devices.push_back(device);
+    }
+
     event_sink->handle_input_device_change(devices);
 }
 
 void mi::BasicSeat::remove_device(std::shared_ptr<input::Device> const& device)
 {
-    devices.erase(remove(begin(devices), end(devices), device));
+    {
+        std::unique_lock<std::mutex> lock(devices_guard);
+        devices.erase(remove(begin(devices), end(devices), device));
+    }
     input_state_tracker.remove_device(device->id());
     event_sink->handle_input_device_change(devices);
 }
@@ -61,4 +69,10 @@ mir::geometry::Rectangle mi::BasicSeat::get_rectangle_for(std::shared_ptr<input:
     // should return the outputs rectangle instead of the rectangle of the
     // first output
     return input_region->bounding_rectangle();
+}
+
+void mi::BasicSeat::for_each_input_device(std::function<void(std::shared_ptr<Device>const& dev)> const& callback)
+{
+    std::unique_lock<std::mutex> lock(devices_guard);
+    std::for_each(begin(devices), end(devices), callback);
 }

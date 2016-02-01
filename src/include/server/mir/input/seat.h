@@ -39,6 +39,7 @@ public:
     virtual void remove_device(std::shared_ptr<Device> const& device) = 0;
     virtual void dispatch_event(MirEvent& event) = 0;
     virtual geometry::Rectangle get_rectangle_for(std::shared_ptr<Device> const& dev) = 0;
+    virtual void for_each_input_device(std::function<void(std::shared_ptr<Device>const& dev)> const& callback) = 0;
 private:
     Seat(Seat const&) = delete;
     Seat& operator=(Seat const&) = delete;

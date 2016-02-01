@@ -28,6 +28,7 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_input_device.h"
 #include "mir/test/doubles/mock_platform_ipc_operations.h"
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
