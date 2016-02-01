@@ -80,12 +80,15 @@ public:
     void initialize(MirPixelFormat format);
     EGLConfig choose_windowed_es_config(MirPixelFormat format) const;
     EGLContext egl_context() const;
+    std::unique_ptr<graphics::GLContext> create_gl_context();
+
     operator EGLDisplay() const { return egl_display; }
 
 private:
     EGLDisplay egl_display;
     EGLContext egl_context_;
     std::shared_ptr<GLConfig> const gl_config;
+    MirPixelFormat pixel_format;
 
     EGLDisplayHandle(EGLDisplayHandle const&) = delete;
     EGLDisplayHandle operator=(EGLDisplayHandle const&) = delete;
