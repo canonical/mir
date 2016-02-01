@@ -1,5 +1,6 @@
-mir (0.19.0) UNRELEASED; urgency=medium
+mir (0.19.0+16.04.20160128-0ubuntu1) xenial; urgency=medium
 
+  [ Brandon Schaefer ]
   * New upstream release 0.19.0
     - API summary:
       . mirclient abi unchanged at 9
@@ -37,7 +38,10 @@ mir (0.19.0) UNRELEASED; urgency=medium
       . lintian: E: mir-doc: privacy-breach-logo (LP: #1483471)
 
 
- -- Brandon Schaefer <brandontschaefer@gmail.com>  Thu, 21 Jan 2016 12:14:58 -0600
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Brandon Schaefer <ci-train-bot@canonical.com>  Thu, 28 Jan 2016 12:19:47 +0000
 
 mir (0.18.1+16.04.20160115-0ubuntu1) xenial; urgency=medium
 
