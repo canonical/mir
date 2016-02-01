@@ -29,6 +29,7 @@
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
+#include "mir/graphics/virtual_output.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir/raii.h"
 
@@ -369,4 +370,9 @@ auto mgn::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
 std::unique_ptr<mg::GLContext> mgn::Display::create_gl_context()
 {
     return egl_display.create_gl_context();
+}
+
+std::unique_ptr<mg::VirtualOutput> mgn::Display::create_virtual_output(int /*width*/, int /*height*/)
+{
+    return nullptr;
 }

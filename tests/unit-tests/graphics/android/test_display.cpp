@@ -18,6 +18,7 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/graphics/virtual_output.h"
 #include "mir/logging/logger.h"
 #include "src/platforms/android/server/display.h"
 #include "src/server/report/null_report_factory.h"
@@ -431,7 +432,7 @@ TEST_F(Display, returns_correct_config_with_one_connected_output_at_start)
     config->for_each_output([&](mg::DisplayConfigurationOutput const& disp_conf) {
         outputs.push_back(disp_conf);
     });
-    ASSERT_EQ(2u, outputs.size());
+    ASSERT_EQ(3u, outputs.size());
 
     ASSERT_EQ(1u, outputs[0].modes.size());
     auto& disp_mode = outputs[0].modes[0];
@@ -447,6 +448,8 @@ TEST_F(Display, returns_correct_config_with_one_connected_output_at_start)
 
     EXPECT_FALSE(outputs[1].connected);
     EXPECT_FALSE(outputs[1].used);
+    EXPECT_FALSE(outputs[2].connected);
+    EXPECT_FALSE(outputs[2].used);
 }
 
 TEST_F(Display, returns_correct_config_with_external_and_primary_output_at_start)
@@ -480,7 +483,7 @@ TEST_F(Display, returns_correct_config_with_external_and_primary_output_at_start
     config->for_each_output([&](mg::DisplayConfigurationOutput const& disp_conf) {
         outputs.push_back(disp_conf);
     });
-    ASSERT_EQ(2u, outputs.size());
+    ASSERT_EQ(3u, outputs.size());
     ASSERT_EQ(1u, outputs[0].modes.size());
     auto& disp_mode = outputs[0].modes[0];
     EXPECT_EQ(primary_pixel_size, disp_mode.size);
@@ -510,6 +513,9 @@ TEST_F(Display, returns_correct_config_with_external_and_primary_output_at_start
     EXPECT_EQ(format, outputs[1].current_format);
     ASSERT_EQ(1, outputs[1].pixel_formats.size());
     EXPECT_EQ(format, outputs[1].pixel_formats[0]);
+
+    EXPECT_FALSE(outputs[2].connected);
+    EXPECT_FALSE(outputs[2].used);
 }
 
 TEST_F(Display, incorrect_display_configure_throws)
@@ -675,14 +681,16 @@ TEST_F(Display, will_requery_display_configuration_after_hotplug)
 
     auto config = display.configuration();
     config->for_each_output([&](mg::UserDisplayConfigurationOutput const& c){
-        EXPECT_THAT(c.modes[c.current_mode_index].size, Eq(attribs1.modes[attribs1.current_mode_index].size));
+        if (c.connected)
+            EXPECT_THAT(c.modes[c.current_mode_index].size, Eq(attribs1.modes[attribs1.current_mode_index].size));
     });
 
     hotplug_fn();
     config = display.configuration();
     config = display.configuration();
     config->for_each_output([&](mg::UserDisplayConfigurationOutput const& c){
-        EXPECT_THAT(c.modes[c.current_mode_index].size, Eq(attribs2.modes[attribs2.current_mode_index].size));
+        if (c.connected)
+            EXPECT_THAT(c.modes[c.current_mode_index].size, Eq(attribs2.modes[attribs2.current_mode_index].size));
     });
 }
 
@@ -892,7 +900,7 @@ TEST_F(Display, reports_correct_card_information)
     display.configuration()->for_each_card(
         [&](mg::DisplayConfigurationCard const& config)
         {
-            EXPECT_THAT(config.max_simultaneous_outputs, Eq(2));
+            EXPECT_THAT(config.max_simultaneous_outputs, Eq(3));
             num_cards++;
         });
     EXPECT_THAT(num_cards, Eq(1));
@@ -1043,4 +1051,32 @@ TEST_F(Display, does_not_remove_dbs_when_enumerating_display_groups)
     db_count = 0;
     display.for_each_display_sync_group(db_group_counter);
     EXPECT_THAT(db_count, Eq(expected_buffer_count));
+}
+
+TEST_F(Display, enabling_virtual_output_updates_display_configuration)
+{
+    using namespace testing;
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report,
+        mga::OverlayOptimization::enabled);
+
+    int const virtual_output_width{1234};
+    int const virtual_output_height{1345};
+
+    auto virtual_output = display.create_virtual_output(virtual_output_width, virtual_output_height);
+    ASSERT_THAT(virtual_output.get(), NotNull());
+
+    virtual_output->enable();
+
+    bool found_matching_size{false};
+    display.configuration()->for_each_output([&found_matching_size](mg::DisplayConfigurationOutput const& output)
+    {
+        if(output.extents().size == geom::Size{virtual_output_width, virtual_output_height})
+            found_matching_size = true;
+    });
+
+    EXPECT_TRUE(found_matching_size);
 }
