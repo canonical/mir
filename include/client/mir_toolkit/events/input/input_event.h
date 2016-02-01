@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -22,6 +22,7 @@
 #include "mir_toolkit/events/event.h"
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 /**
@@ -131,6 +132,22 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev);
  *                  mir_input_event_type_pointer
  */
 MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev);
+
+/* Query if an input event contains a cookie
+ *
+ * \params[in] ev The input event
+ * \return        True if the input event contains a cookie
+ */
+bool mir_input_event_has_cookie(MirInputEvent const* ev);
+
+/* Returns the cookie associated with an input event.
+ *
+ * \pre The input event must have a MirCookie
+ * \params[in] ev An input event
+ * \return        The cookie associated with the given input event
+ *                The cookie must be released by calling mir_cookie_release
+ */
+MirCookie const* mir_input_event_get_cookie(MirInputEvent const* ev);
 
 #ifdef __cplusplus
 }

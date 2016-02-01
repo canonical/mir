@@ -33,7 +33,7 @@ class SharedLibraryProberReport;
 
 namespace cookie
 {
-class CookieFactory;
+class Authority;
 }
 namespace dispatch
 {
@@ -132,6 +132,7 @@ class TouchVisualizer;
 class InputRegion;
 class InputSender;
 class CursorImages;
+class Seat;
 }
 
 namespace logging
@@ -170,7 +171,7 @@ public:
     std::shared_ptr<graphics::Platform>     the_graphics_platform() override;
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<EmergencyCleanup>       the_emergency_cleanup() override;
-    std::shared_ptr<cookie::CookieFactory>  the_cookie_factory() override;
+    std::shared_ptr<cookie::Authority>      the_cookie_authority() override;
     /**
      * Function to call when a "fatal" error occurs. This implementation allows
      * the default strategy to be overridden by --on-fatal-error-abort to force a
@@ -302,6 +303,7 @@ public:
     virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
     virtual std::shared_ptr<input::InputSender>    the_input_sender();
+    virtual std::shared_ptr<input::Seat> the_seat();
 
     // new input reading related parts:
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
@@ -364,6 +366,7 @@ protected:
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<input::CursorListener> cursor_listener;
     CachedPtr<input::TouchVisualizer> touch_visualizer;
+    CachedPtr<input::Seat> seat;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::Display>      display;
@@ -416,7 +419,7 @@ protected:
     CachedPtr<shell::Shell> shell;
     CachedPtr<shell::ShellReport> shell_report;
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
-    CachedPtr<cookie::CookieFactory> cookie_factory;
+    CachedPtr<cookie::Authority> cookie_authority;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

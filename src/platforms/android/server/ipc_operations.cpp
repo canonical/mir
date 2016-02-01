@@ -17,13 +17,17 @@
  */
 
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/module_properties.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_operation_message.h"
-#include "mir/graphics/android/android_native_buffer.h"
+#include "mir/libname.h"
+#include "android_native_buffer.h"
 #include "ipc_operations.h"
-#include <stdexcept>
+
 #include <boost/throw_exception.hpp>
+
+#include <stdexcept>
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
@@ -66,9 +70,20 @@ void mga::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 {
 }
 
+namespace
+{
+mir::ModuleProperties const properties = {
+    "mir:android",
+    MIR_VERSION_MAJOR,
+    MIR_VERSION_MINOR,
+    MIR_VERSION_MICRO,
+    mir::libname()
+};
+}
+
 std::shared_ptr<mg::PlatformIPCPackage> mga::IpcOperations::connection_ipc_package()
 {
-    return std::make_shared<mg::PlatformIPCPackage>();
+    return std::make_shared<mg::PlatformIPCPackage>(&properties);
 }
 
 mg::PlatformOperationMessage mga::IpcOperations::platform_operation(

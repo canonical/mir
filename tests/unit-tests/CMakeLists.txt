@@ -26,6 +26,7 @@ include_directories(
   ${UMOCKDEV_INCLUDE_DIRS}
 
   ${PROJECT_SOURCE_DIR}/include/cookie
+  ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
@@ -33,6 +34,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/gl
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
   ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
+  ${PROJECT_SOURCE_DIR}/src/platforms/android/include
   ${GLIB_INCLUDE_DIRS}
 )
 

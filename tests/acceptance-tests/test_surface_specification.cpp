@@ -22,6 +22,7 @@
 
 #include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
 #include "mir_test_framework/connected_client_headless_server.h"
+#include "mir_test_framework/visible_surface.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/signal.h"
 #include "mir_toolkit/common.h"
@@ -43,63 +44,6 @@ using namespace std::chrono_literals;
 
 namespace
 {
-class SurfaceHandle
-{
-public:
-    explicit SurfaceHandle(MirSurfaceSpec* spec) :
-        visible{false}
-    {
-        mir_surface_spec_set_event_handler(spec, SurfaceHandle::event_callback, this);
-        surface = mir_surface_create_sync(spec);
-        // Swap buffers to ensure surface is visible for event based tests
-        if (mir_surface_is_valid(surface))
-        {
-            mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
-
-            std::unique_lock<std::mutex> lk(mutex);
-            if (!cv.wait_for(lk, std::chrono::seconds(5), [this] { return visible; }))
-                throw std::runtime_error("timeout waiting for visibility of surface");
-        }
-    }
-
-    ~SurfaceHandle() { if (surface) mir_surface_release_sync(surface); }
-
-    static void event_callback(MirSurface* surf, MirEvent const* ev, void* context)
-    {
-        if (mir_event_get_type(ev) == mir_event_type_surface)
-        {
-            if (mir_surface_event_get_attribute(mir_event_get_surface_event(ev)) == mir_surface_attrib_visibility)
-            {
-                auto ctx = reinterpret_cast<SurfaceHandle*>(context);
-                ctx->set_visibility(surf, mir_surface_event_get_attribute_value(mir_event_get_surface_event(ev)));
-            }
-        }
-    }
-
-    void set_visibility(MirSurface* surf, bool vis)
-    {
-        std::lock_guard<std::mutex> lk(mutex);
-        if (surf != surface) return;
-        visible = vis;
-        cv.notify_all();
-    }
-
-    operator MirSurface*() const { return surface; }
-    SurfaceHandle(SurfaceHandle&& that) : surface{that.surface} { that.surface = nullptr; }
-private:
-    std::mutex mutex;
-    std::condition_variable cv;
-
-    SurfaceHandle(SurfaceHandle const&) = delete;
-    MirSurface* surface;
-    bool visible;
-};
-
-//gmocks printer has problems with printing this type
-::std::ostream& operator<<(::std::ostream& os, const SurfaceHandle& handle) {
-    return os << static_cast<MirSurface*>(handle);
-}
-
 class MockSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
@@ -146,12 +90,12 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
     }
 
     template<typename Specifier>
-    SurfaceHandle create_surface(Specifier const& specifier)
+    mtf::VisibleSurface create_surface(Specifier const& specifier)
     {
         auto del = [] (MirSurfaceSpec* spec) { mir_surface_spec_release(spec); };
         std::unique_ptr<MirSurfaceSpec, decltype(del)> spec(mir_create_surface_spec(connection), del);
         specifier(spec.get());
-        return SurfaceHandle{spec.get()};
+        return mtf::VisibleSurface{spec.get()};
     }
 
     NiceMock<MockSurfaceObserver> surface_observer;
@@ -172,11 +116,10 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
         auto const hscroll_value = 0.0;
         auto const vscroll_value = 0.0;
         auto const action = mir_pointer_action_button_down;
-        auto const mac = 0;
         auto const relative_x_value = 0.0;
         auto const relative_y_value = 0.0;
 
-        auto const click_event = mev::make_event(device_id, timestamp, mac, modifiers,
+        auto const click_event = mev::make_event(device_id, timestamp, cookie, modifiers,
                                                  action, mir_pointer_button_tertiary,
                                                  x_axis_value, y_axis_value,
                                                  hscroll_value, vscroll_value,
@@ -194,11 +137,10 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
         auto const hscroll_value = 0.0;
         auto const vscroll_value = 0.0;
         auto const action = mir_pointer_action_motion;
-        auto const mac = 0;
         auto const relative_x_value = 0.0;
         auto const relative_y_value = 0.0;
 
-        auto const drag_event = mev::make_event(device_id, timestamp, mac, modifiers,
+        auto const drag_event = mev::make_event(device_id, timestamp, cookie, modifiers,
                                                 action, mir_pointer_button_tertiary,
                                                 x_axis_value, y_axis_value,
                                                 hscroll_value, vscroll_value,
@@ -228,6 +170,7 @@ struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
 private:
     std::shared_ptr<mtd::WrapShellToTrackLatestSurface> shell;
     mt::Signal signal_change;
+    std::vector<uint8_t> cookie;
 
     void init_pixel_format()
     {

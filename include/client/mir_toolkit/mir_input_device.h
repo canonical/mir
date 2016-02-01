@@ -32,6 +32,21 @@ typedef enum MirPointerHandedness
     mir_pointer_handedness_left = 1
 } MirPointerHandedness;
 
+/**
+ * MirPointerAcceleration describes the way pointer movement is filtered:
+ * - mir_pointer_acceleration_none: (acceleration bias + 1.0) is applied as
+ *   a factor to the current velocity of the pointer. So a bias of 0 to results
+ *   to no change of velocity.
+ * - mir_pointer_acceleration_adaptive: acceleration bias selects an
+ *   acceleration function based on the current velocity that usually consists
+ *   of two linear inclines separated by a plateau.
+ */
+typedef enum MirPointerAcceleration
+{
+    mir_pointer_acceleration_none = 1,
+    mir_pointer_acceleration_adaptive = 2
+} MirPointerAcceleration;
+
 typedef enum MirTouchpadClickMode
 {
     mir_touchpad_click_mode_none          = 0,

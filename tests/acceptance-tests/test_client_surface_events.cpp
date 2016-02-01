@@ -327,7 +327,10 @@ void raise_signal_on_close_event(MirSurface*, MirEvent const* ev, void* ctx)
 {
     if (mir_event_get_type(ev) == mir_event_type_close_surface)
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_event_get_close_surface_event(ev);
+#pragma GCC diagnostic pop
         auto signal = reinterpret_cast<mt::Signal*>(ctx);
         signal->raise();
     }
@@ -408,10 +411,18 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
                 display_ids.push_back(static_cast<uint32_t>(output_config.id.as_value()));
             });
 
+        set_event_filter(mir_event_type_surface_output);
+        reset_last_event();
+
         auto const display_controller = server.the_display_configuration_controller();
         display_controller->set_base_configuration(display_configuration);
 
         ASSERT_TRUE(display_config_changed.wait_for(1s));
+
+        //Wait until the existing surface has received the surface output event
+        //to avoid racing against this source output event notification and the
+        //one given during surface creation.
+        ASSERT_TRUE(wait_for_event(1s));
     }
 
     EventContext context;

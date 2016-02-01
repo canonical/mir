@@ -294,9 +294,9 @@ void ms::ApplicationSession::show()
 
 void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const& info)
 {
-    event_sink->handle_display_config_change(info);
-
     output_cache.update_from(info);
+
+    event_sink->handle_display_config_change(info);
 
     std::lock_guard<std::mutex> lock{surfaces_and_streams_mutex};
     for (auto& surface : surfaces)

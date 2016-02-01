@@ -24,6 +24,7 @@
 
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/any_surface.h"
+#include "mir_test_framework/visible_surface.h"
 
 #include "mir/test/validity_matchers.h"
 
@@ -121,48 +122,34 @@ struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
         mtf::ConnectedClientHeadlessServer::TearDown();
     }
 
-    std::shared_ptr<MirSurface> create_non_fullscreen_surface_for(MirDisplayOutput const& output)
+    std::shared_ptr<mtf::VisibleSurface> create_non_fullscreen_surface_for(MirDisplayOutput const& output)
     {
         auto const& mode = output.modes[output.current_mode];
 
-        auto spec = mir_connection_create_spec_for_normal_surface(connection, 
-            static_cast<int>(mode.horizontal_resolution) - 1,
-            static_cast<int>(mode.vertical_resolution) + 1,
-            mir_pixel_format_abgr_8888);
-        mir_surface_spec_set_fullscreen_on_output(spec, output.output_id);
-        
-        auto surface_raw = mir_surface_create_sync(spec);
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface_raw));
-        mir_surface_spec_release(spec);
-
-        return shared_ptr_surface(surface_raw);
+        auto del = [] (MirSurfaceSpec* spec) { mir_surface_spec_release(spec); };
+        std::unique_ptr<MirSurfaceSpec, decltype(del)> spec(
+            mir_connection_create_spec_for_normal_surface(connection, 
+                static_cast<int>(mode.horizontal_resolution) - 1,
+                static_cast<int>(mode.vertical_resolution) + 1,
+                mir_pixel_format_abgr_8888),
+            del);
+        mir_surface_spec_set_fullscreen_on_output(spec.get(), output.output_id);
+        return std::make_shared<mtf::VisibleSurface>(spec.get());
     }
 
-    std::shared_ptr<MirSurface> create_fullscreen_surface_for(MirDisplayOutput const& output)
+    std::shared_ptr<mtf::VisibleSurface> create_fullscreen_surface_for(MirDisplayOutput const& output)
     {
         auto const& mode = output.modes[output.current_mode];
 
-        auto spec = mir_connection_create_spec_for_normal_surface(connection,
-            static_cast<int>(mode.horizontal_resolution),
-            static_cast<int>(mode.vertical_resolution),
-            mir_pixel_format_abgr_8888);
-        mir_surface_spec_set_fullscreen_on_output(spec, output.output_id);
-
-        auto surface_raw = mir_surface_create_sync(spec);
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface_raw));
-        mir_surface_spec_release(spec);
-
-        return shared_ptr_surface(surface_raw);
-    }
-
-    std::shared_ptr<MirSurface> shared_ptr_surface(MirSurface* surface_raw)
-    {
-        return std::shared_ptr<MirSurface>{
-            surface_raw,
-            [](MirSurface* surface)
-            {
-                mir_surface_release_sync(surface);
-            }};
+        auto del = [] (MirSurfaceSpec* spec) { mir_surface_spec_release(spec); };
+        std::unique_ptr<MirSurfaceSpec, decltype(del)> spec(
+            mir_connection_create_spec_for_normal_surface(connection,
+                static_cast<int>(mode.horizontal_resolution),
+                static_cast<int>(mode.vertical_resolution),
+                mir_pixel_format_abgr_8888),
+            del);
+        mir_surface_spec_set_fullscreen_on_output(spec.get(), output.output_id);
+        return std::make_shared<mtf::VisibleSurface>(spec.get());
     }
 
     std::vector<geom::Rectangle> const display_rects{
@@ -173,17 +160,16 @@ struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
 
     std::shared_ptr<TrackingShell> tracking_shell;
 };
-
 }
 
 TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_correct_output)
 {
-    std::vector<std::shared_ptr<MirSurface>> surfaces;
+    std::vector<std::shared_ptr<mtf::VisibleSurface>> surfaces;
 
     for (uint32_t n = 0; n < config->num_outputs; ++n)
     {
         auto surface = create_fullscreen_surface_for(config->outputs[n]);
-        EXPECT_TRUE(mir_surface_is_valid(surface.get()));
+        EXPECT_TRUE(mir_surface_is_valid(*surface));
         surfaces.push_back(surface);
     }
 
@@ -199,12 +185,12 @@ TEST_F(SurfacesWithOutputId, requested_size_is_ignored_in_favour_of_display_size
     using namespace testing;
 
     std::vector<std::pair<int, int>> expected_dimensions;
-    std::vector<std::shared_ptr<MirSurface>> surfaces;
+    std::vector<std::shared_ptr<mtf::VisibleSurface>> surfaces;
     for (uint32_t n = 0; n < config->num_outputs; ++n)
     {
         auto surface = create_non_fullscreen_surface_for(config->outputs[n]);
 
-        EXPECT_THAT(surface.get(), IsValid());
+        EXPECT_TRUE(mir_surface_is_valid(*surface));
         surfaces.push_back(surface);
 
         auto expected_mode = config->outputs[n].modes[config->outputs[n].current_mode];

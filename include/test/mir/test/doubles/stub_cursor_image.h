@@ -31,8 +31,8 @@ namespace doubles
 struct StubCursorImage : public mir::graphics::CursorImage
 {
     void const* as_argb_8888() const override { return nullptr; }
-    mir::geometry::Size size() const override { return geom::Size{16, 16}; }
-    mir::geometry::Displacement hotspot() const override { return geom::Displacement{0, 0}; }
+    geometry::Size size() const override { return geometry::Size{16, 16}; }
+    geometry::Displacement hotspot() const override { return geometry::Displacement{0, 0}; }
 };
 
 }

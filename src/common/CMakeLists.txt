@@ -4,10 +4,6 @@ set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 set(MIR_COMMON_SOURCES)
 set(MIR_COMMON_REFERENCES)
 
-if (MIR_BUILD_PLATFORM_ANDROID)
-  add_subdirectory(graphics/android)
-endif()
-
 add_subdirectory(fd)
 add_subdirectory(geometry)
 add_subdirectory(logging)
@@ -24,7 +20,8 @@ list(APPEND MIR_COMMON_SOURCES
   $<TARGET_OBJECTS:mirfatal>
   $<TARGET_OBJECTS:android-input-common>
   ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
-  )
+  ${CMAKE_CURRENT_SOURCE_DIR}/libname.cpp ${PROJECT_SOURCE_DIR}/include/common/mir/libname.h
+)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -36,18 +33,18 @@ set(
   ${MIR_GENERATED_INCLUDE_DIRECTORIES}
   PARENT_SCOPE)
 
-add_library(mircommon
-  SHARED
+# TODO we need a place to manage ABI and related versioning but use this as placeholder
+set(MIRCOMMON_ABI 5)
+set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
+
+mir_add_library_with_symbols(mircommon SHARED
+  ${symbol_map}
   ${MIR_COMMON_SOURCES}
 )
 
 target_link_libraries(mircommon
   ${MIR_COMMON_REFERENCES}
 )
-
-# TODO we need a place to manage ABI and related versioning but use this as placeholder
-set(MIRCOMMON_ABI 5)
-set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(mircommon
 

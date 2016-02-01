@@ -31,7 +31,7 @@
 #include "mir/test/doubles/mock_libinput.h"
 #include "mir/test/gmock_fixes.h"
 #include "mir/udev/wrapper.h"
-#include "mir/cookie_factory.h"
+#include "mir/cookie/authority.h"
 #include "mir_test_framework/udev_environment.h"
 
 #include <gmock/gmock.h>
@@ -74,8 +74,8 @@ struct MockInputSink : mi::InputSink
 
 struct MockEventBuilder : mi::EventBuilder
 {
-    std::shared_ptr<mir::cookie::CookieFactory> const cookie_factory = mir::cookie::CookieFactory::create_keeping_secret();
-    mi::DefaultEventBuilder builder{MirInputDeviceId{3}, cookie_factory};
+    std::shared_ptr<mir::cookie::Authority> const cookie_authority = mir::cookie::Authority::create();
+    mi::DefaultEventBuilder builder{MirInputDeviceId{3}, cookie_authority};
     MockEventBuilder()
     {
         ON_CALL(*this, key_event(_,_,_,_))
@@ -208,12 +208,16 @@ struct LibInputDevice : public ::testing::Test
         return device_path;
     }
 
-    void setup_pointer_configuration(libinput_device* dev, double accel_speed, MirPointerHandedness handedness)
+    void setup_pointer_configuration(libinput_device* dev, double accel_speed, MirPointerHandedness handedness, MirPointerAcceleration profile)
     {
         ON_CALL(mock_libinput, libinput_device_config_accel_get_speed(dev))
             .WillByDefault(Return(accel_speed));
         ON_CALL(mock_libinput, libinput_device_config_left_handed_get(dev))
             .WillByDefault(Return(handedness == mir_pointer_handedness_left));
+        ON_CALL(mock_libinput, libinput_device_config_accel_get_profile(dev))
+            .WillByDefault(Return((profile == mir_pointer_acceleration_none) ?
+                                      LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT :
+                                      LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE));
     }
 
     void setup_touchpad_configuration(libinput_device* dev,
@@ -779,7 +783,7 @@ TEST_F(LibInputDeviceOnLaptopKeyboard, provides_no_pointer_settings_for_non_poin
 
 TEST_F(LibInputDeviceOnMouse, reads_pointer_settings_from_libinput)
 {
-    setup_pointer_configuration(mouse.device(), 1, mir_pointer_handedness_right);
+    setup_pointer_configuration(mouse.device(), 1, mir_pointer_handedness_right, mir_pointer_acceleration_none);
     auto optional_settings = mouse.get_pointer_settings();
 
     EXPECT_THAT(optional_settings.is_set(), Eq(true));
@@ -789,8 +793,9 @@ TEST_F(LibInputDeviceOnMouse, reads_pointer_settings_from_libinput)
     EXPECT_THAT(ptr_settings.cursor_acceleration_bias, Eq(1.0));
     EXPECT_THAT(ptr_settings.horizontal_scroll_scale, Eq(1.0));
     EXPECT_THAT(ptr_settings.vertical_scroll_scale, Eq(1.0));
+    EXPECT_THAT(ptr_settings.acceleration, Eq(mir_pointer_acceleration_none));
 
-    setup_pointer_configuration(mouse.device(), 0.0, mir_pointer_handedness_left);
+    setup_pointer_configuration(mouse.device(), 0.0, mir_pointer_handedness_left, mir_pointer_acceleration_adaptive);
     optional_settings = mouse.get_pointer_settings();
 
     EXPECT_THAT(optional_settings.is_set(), Eq(true));
@@ -800,23 +805,27 @@ TEST_F(LibInputDeviceOnMouse, reads_pointer_settings_from_libinput)
     EXPECT_THAT(ptr_settings.cursor_acceleration_bias, Eq(0.0));
     EXPECT_THAT(ptr_settings.horizontal_scroll_scale, Eq(1.0));
     EXPECT_THAT(ptr_settings.vertical_scroll_scale, Eq(1.0));
+    EXPECT_THAT(ptr_settings.acceleration, Eq(mir_pointer_acceleration_adaptive));
 }
 
 TEST_F(LibInputDeviceOnMouse, applies_pointer_settings)
 {
-    setup_pointer_configuration(mouse.device(), 1, mir_pointer_handedness_right);
+    setup_pointer_configuration(mouse.device(), 1, mir_pointer_handedness_right, mir_pointer_acceleration_adaptive);
     mi::PointerSettings settings(mouse.get_pointer_settings().value());
     settings.cursor_acceleration_bias = 1.1;
     settings.handedness = mir_pointer_handedness_left;
+    settings.acceleration = mir_pointer_acceleration_none;
 
-    EXPECT_CALL(mock_libinput,libinput_device_config_accel_set_speed(mouse.device(), 1.1)).Times(1);
-    EXPECT_CALL(mock_libinput,libinput_device_config_left_handed_set(mouse.device(), true)).Times(1);
+    EXPECT_CALL(mock_libinput, libinput_device_config_accel_set_speed(mouse.device(), 1.1)).Times(1);
+    EXPECT_CALL(mock_libinput, libinput_device_config_accel_set_profile(mouse.device(), LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT)).Times(1);
+    EXPECT_CALL(mock_libinput, libinput_device_config_left_handed_set(mouse.device(), true)).Times(1);
 
     mouse.apply_settings(settings);
 }
 
 TEST_F(LibInputDeviceOnLaptopKeyboardAndMouse, denies_pointer_settings_on_keyboards)
 {
+    setup_pointer_configuration(mouse.device(), 1, mir_pointer_handedness_right, mir_pointer_acceleration_adaptive);
     auto settings_from_mouse = mouse.get_pointer_settings();
 
     EXPECT_CALL(mock_libinput,libinput_device_config_accel_set_speed(_, _)).Times(0);
@@ -834,7 +843,7 @@ TEST_F(LibInputDeviceOnMouse, scroll_speed_scales_scroll_events)
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 3.0f)));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, -10.0f)));
 
-    setup_pointer_configuration(mouse.device(), 1, mir_pointer_handedness_right);
+    setup_pointer_configuration(mouse.device(), 1, mir_pointer_handedness_right, mir_pointer_acceleration_none);
     mi::PointerSettings settings(mouse.get_pointer_settings().value());
     settings.vertical_scroll_scale = -1.0;
     settings.horizontal_scroll_scale = 5.0;

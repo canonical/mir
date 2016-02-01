@@ -28,7 +28,7 @@
 #include "server_render_window.h"
 #include "display_buffer.h"
 #include "hwc_layerlist.h"
-#include "mir/graphics/android/mir_native_window.h"
+#include "mir_native_window.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/event_handler_register.h"
 #include "mir/gl/program_factory.h"
@@ -261,6 +261,8 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
             BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
 
         config[output.id].orientation = output.orientation;
+        config[output.id].form_factor = output.form_factor;
+        config[output.id].scale = output.scale;
 
         geom::Displacement offset(output.top_left - origin);
         config[output.id].top_left = output.top_left;

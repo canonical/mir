@@ -23,6 +23,7 @@
 #include "mir_toolkit/client_types.h"
 
 #include <vector>
+#include <mutex>
 #include <string>
 
 namespace mir
@@ -31,6 +32,10 @@ namespace input
 {
 struct DeviceData
 {
+    DeviceData() = default;
+    DeviceData(MirInputDeviceId id, uint32_t caps, std::string const& name, std::string const& unique_id)
+        : id(id), caps(caps), name(name), unique_id(unique_id)
+    {}
     MirInputDeviceId id;
     uint32_t caps;
     std::string name;
@@ -41,10 +46,9 @@ class InputDevices
 {
 public:
     InputDevices();
-    void clear();
-    void add_device(DeviceData && dev);
-    void notify_changes();
+    void update_devices(std::vector<DeviceData> && data);
 private:
+    std::mutex devices_access;
     std::vector<DeviceData> devices;
 };
 

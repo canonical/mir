@@ -84,7 +84,7 @@ public:
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const&) override {}
 
     void set_reception_mode(input::InputReceptionMode mode) override { input_mode = mode; }
-    void consume(MirEvent const&) override {}
+    void consume(MirEvent const*) override {}
 
     void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& /* image */) {}
     std::shared_ptr<graphics::CursorImage> cursor_image() const { return {}; }
@@ -99,7 +99,8 @@ public:
 
     std::shared_ptr<mir::scene::Surface> parent() const override { return nullptr; }
 
-    void set_keymap(xkb_rule_names const&) {}
+    void set_keymap(MirInputDeviceId, std::string const&, std::string const&, std::string const&, std::string const&) override
+    {}
 
     void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&) {}
     void rename(std::string const&) {}

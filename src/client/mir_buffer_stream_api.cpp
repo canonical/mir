@@ -22,8 +22,9 @@
 #include "mir_surface.h"
 #include "mir_connection.h"
 #include "buffer_stream.h"
-#include "client_buffer_stream_factory.h"
 
+#include "mir_toolkit/mir_buffer_stream_nbs.h"
+#include "mir_toolkit/mir_buffer.h"
 #include "mir/client_buffer.h"
 
 #include "mir/uncaught.h"
@@ -55,9 +56,8 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     void *context)
 try
 {
-    auto stream = connection->create_client_buffer_stream(
+    return connection->create_client_buffer_stream(
         width, height, format, buffer_usage, callback, context);
-    return stream->get_create_wait_handle();
 }
 catch (std::exception const& ex)
 {
@@ -71,10 +71,10 @@ MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connect
     MirBufferUsage buffer_usage)
 try
 {
-    mcl::BufferStream *stream = nullptr;
+    MirBufferStream *stream = nullptr;
     mir_connection_create_buffer_stream(connection, width, height, format, buffer_usage,
         reinterpret_cast<mir_buffer_stream_callback>(assign_result), &stream)->wait_for_all();
-    return reinterpret_cast<MirBufferStream*>(dynamic_cast<mcl::ClientBufferStream*>(stream));
+    return stream;
 }
 catch (std::exception const& ex)
 {
@@ -82,13 +82,14 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-MirWaitHandle *mir_buffer_stream_release(
-    MirBufferStream * buffer_stream,
+MirWaitHandle* mir_buffer_stream_release(
+    MirBufferStream* buffer_stream,
     mir_buffer_stream_callback callback,
-    void *context)
+    void* context)
 {
-    auto *bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
-    return bs->release(callback, context);
+    auto bs = reinterpret_cast<mcl::ClientBufferStream*>(buffer_stream);
+    auto connection = bs->connection();
+    return connection->release_buffer_stream(bs, callback, context);
 }
 
 void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
@@ -207,4 +208,76 @@ char const* mir_buffer_stream_get_error_message(MirBufferStream* opaque_stream)
 {
     auto buffer_stream = reinterpret_cast<mcl::ClientBufferStream*>(opaque_stream);
     return buffer_stream->get_error_message();
+}
+
+struct MirBufferStub
+{
+    MirBufferStub(MirBufferStream* stream, mir_buffer_callback cb, void* context) :
+        stream(stream),
+        cb(cb),
+        context(context)
+    {
+        ready();
+    }
+
+    void ready()
+    {
+        if (cb)
+            cb(stream, reinterpret_cast<MirBuffer*>(this), context);
+    }
+
+    MirBufferStream* const stream;
+    mir_buffer_callback const cb;
+    void* const context;
+};
+
+//private NBS api under development
+void mir_buffer_stream_allocate_buffer(
+    MirBufferStream* stream, 
+    int, int,
+    MirPixelFormat,
+    MirBufferUsage,
+    mir_buffer_callback cb, void* context)
+{
+    new MirBufferStub(stream, cb, context); 
+}
+
+void mir_buffer_stream_release_buffer(MirBufferStream*, MirBuffer* buffer) 
+{
+    delete reinterpret_cast<MirBufferStub*>(buffer);
+}
+
+bool mir_buffer_stream_submit_buffer(MirBufferStream*, MirBuffer* buffer)
+{
+    auto b = reinterpret_cast<MirBufferStub*>(buffer);
+    b->ready();
+    return true;
+}
+
+MirNativeFence* mir_buffer_get_fence(MirBuffer*)
+{
+    return nullptr;
+}
+
+void mir_buffer_associate_fence(MirBuffer*, MirNativeFence*, MirBufferAccess)
+{
+}
+
+int mir_buffer_wait_fence(MirBuffer*, MirBufferAccess, int)
+{
+    return 0;
+}
+
+MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirBufferAccess) 
+{
+    return nullptr;
+}
+
+MirGraphicsRegion* mir_buffer_acquire_region(MirBuffer*, MirBufferAccess)
+{
+    return nullptr;
+}
+
+void mir_buffer_release_region(MirGraphicsRegion*) 
+{
 }

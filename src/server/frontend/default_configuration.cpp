@@ -163,5 +163,6 @@ mir::DefaultServerConfiguration::new_ipc_factory(
                 the_cursor_images(),
                 the_coordinate_translator(),
                 the_application_not_responding_detector(),
-                the_cookie_factory());
+                the_cookie_authority(),
+                the_seat());
 }

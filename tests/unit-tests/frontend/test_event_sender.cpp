@@ -28,6 +28,7 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_input_device.h"
 #include "mir/test/doubles/mock_platform_ipc_operations.h"
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
@@ -59,7 +60,8 @@ bool operator==(InputDeviceInfo const& info, std::shared_ptr<mi::Device> const& 
         info.name() == device->name() &&
         info.unique_id() == device->unique_id();
 }
-
+static void PrintTo(mir::protobuf::InputDeviceInfo const &, ::std::ostream*) __attribute__ ((unused));
+void PrintTo(mir::protobuf::InputDeviceInfo const&, ::std::ostream*) {}
 }
 }
 namespace
@@ -167,8 +169,7 @@ TEST_F(EventSender, never_sends_input_events)
 {
     using namespace testing;
 
-    auto mac = 0;
-    auto ev = mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(0), mac, MirKeyboardAction(),
+    auto ev = mev::make_event(MirInputDeviceId(), std::chrono::nanoseconds(0), std::vector<uint8_t>{}, MirKeyboardAction(),
                               0, 0, MirInputEventModifiers());
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))

@@ -40,7 +40,7 @@ namespace mir
 {
 namespace cookie
 {
-class CookieFactory;
+class Authority;
 }
 namespace graphics
 {
@@ -52,6 +52,7 @@ class GraphicBufferAllocator;
 namespace input
 {
 class CursorImages;
+class Seat;
 }
 
 namespace scene
@@ -105,7 +106,9 @@ public:
         std::shared_ptr<input::CursorImages> const& cursor_images,
         std::shared_ptr<scene::CoordinateTranslator> const& translator,
         std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
-        std::shared_ptr<cookie::CookieFactory> const& cookie_factory);
+        std::shared_ptr<cookie::Authority> const& cookie_authority,
+        std::shared_ptr<input::Seat> const& seat
+        );
 
     ~SessionMediator() noexcept;
 
@@ -215,7 +218,7 @@ public:
         mir::protobuf::StreamConfiguration const* request,
         mir::protobuf::Void*,
         google::protobuf::Closure* done) override;
-    void raise_surface_with_cookie(
+    void raise_surface(
         mir::protobuf::RaiseRequest const* request,
         mir::protobuf::Void*,
         google::protobuf::Closure* done) override;
@@ -259,7 +262,8 @@ private:
     std::shared_ptr<input::CursorImages> const cursor_images;
     std::shared_ptr<scene::CoordinateTranslator> const translator;
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const anr_detector;
-    std::shared_ptr<cookie::CookieFactory> const cookie_factory;
+    std::shared_ptr<cookie::Authority> const cookie_authority;
+    std::shared_ptr<input::Seat> const seat;
 
     BufferStreamTracker buffer_stream_tracker;
 

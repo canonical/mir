@@ -46,10 +46,12 @@
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
 #include "mir/frontend/buffer_stream.h"
-#include "mir/frontend/security_check_failed.h"
+#include "mir/input/seat.h"
+#include "mir/input/device.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
-#include "mir/cookie_factory.h"
+#include "mir/cookie/authority.h"
+#include "mir/module_properties.h"
 
 #include "mir/geometry/rectangles.h"
 #include "buffer_stream_tracker.h"
@@ -89,7 +91,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<mi::CursorImages> const& cursor_images,
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
-    std::shared_ptr<mir::cookie::CookieFactory> const& cookie_factory) :
+    std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
+    std::shared_ptr<mir::input::Seat> const& seat) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -105,7 +108,8 @@ mf::SessionMediator::SessionMediator(
     cursor_images(cursor_images),
     translator{translator},
     anr_detector{anr_detector},
-    cookie_factory(cookie_factory),
+    cookie_authority(cookie_authority),
+    seat(seat),
     buffer_stream_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
@@ -144,9 +148,30 @@ void mf::SessionMediator::connect(
     for (auto& ipc_fds : ipc_package->ipc_fds)
         platform->add_fd(ipc_fds);
 
+    if (auto const graphics_module = ipc_package->graphics_module)
+    {
+        auto const module = platform->mutable_graphics_module();
+
+        module->set_name(graphics_module->name);
+        module->set_major_version(graphics_module->major_version);
+        module->set_minor_version(graphics_module->minor_version);
+        module->set_micro_version(graphics_module->micro_version);
+        module->set_file(graphics_module->file);
+    }
+
     auto display_config = display_changer->base_configuration();
     auto protobuf_config = response->mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, *display_config);
+
+    seat->for_each_input_device(
+        [response](auto const& dev)
+        {
+            auto dev_info = response->add_input_devices();
+            dev_info->set_name(dev->name());
+            dev_info->set_id(dev->id());
+            dev_info->set_unique_id(dev->unique_id());
+            dev_info->set_capabilities(dev->capabilities().value());
+        });
 
     for (auto pf : surface_pixel_formats)
         response->add_surface_pixel_format(static_cast<::google::protobuf::uint32>(pf));
@@ -257,6 +282,7 @@ void mf::SessionMediator::create_surface(
     COPY_IF_SET(max_height);
     COPY_IF_SET(width_inc);
     COPY_IF_SET(height_inc);
+    COPY_IF_SET(shell_chrome);
 
     #undef COPY_IF_SET
 
@@ -556,6 +582,7 @@ void mf::SessionMediator::modify_surface(
     COPY_IF_SET(max_height);
     COPY_IF_SET(width_inc);
     COPY_IF_SET(height_inc);
+    COPY_IF_SET(shell_chrome);
     // min_aspect is a special case (below)
     // max_aspect is a special case (below)
 
@@ -1010,7 +1037,7 @@ void mf::SessionMediator::configure_buffer_stream(
     done->Run();
 }
 
-void mf::SessionMediator::raise_surface_with_cookie(
+void mf::SessionMediator::raise_surface(
     mir::protobuf::RaiseRequest const* request,
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
@@ -1022,11 +1049,12 @@ void mf::SessionMediator::raise_surface_with_cookie(
     auto const cookie     = request->cookie();
     auto const surface_id = request->surface_id();
 
-    MirCookie const mir_cookie = {cookie.timestamp(), cookie.mac()};
-    if (!cookie_factory->attest_timestamp(mir_cookie))
-        throw mir::SecurityCheckFailed();
+    auto cookie_string = cookie.cookie();
 
-    shell->raise_surface_with_timestamp(session, mf::SurfaceId{surface_id.value()}, cookie.timestamp());
+    std::vector<uint8_t> cookie_bytes(cookie_string.begin(), cookie_string.end());
+    auto const cookie_ptr = cookie_authority->make_cookie(cookie_bytes);
+
+    shell->raise_surface(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
 
     done->Run();
 }

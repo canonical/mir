@@ -21,7 +21,7 @@
 #include "mir/variable_length_array.h"
 #include "mir/input/device.h"
 #include "event_sender.h"
-#include "mir/events/event_private.h"
+#include "mir/events/serialization.h"
 #include "message_sender.h"
 #include "protobuf_buffer_packer.h"
 
@@ -32,6 +32,7 @@
 
 namespace mg = mir::graphics;
 namespace mfd = mir::frontend::detail;
+namespace mev = mir::events;
 namespace mp = mir::protobuf;
 
 mfd::EventSender::EventSender(
@@ -45,13 +46,13 @@ mfd::EventSender::EventSender(
 void mfd::EventSender::handle_event(MirEvent const& e)
 {
     // Limit the types of events we wish to send over protobuf, for now.
-    if (e.type != mir_event_type_key && e.type != mir_event_type_motion)
+    if (mir_event_get_type(&e) != mir_event_type_input)
     {
         // In future we might send multiple events, or insert them into messages
         // containing other responses, but for now we send them individually.
         mp::EventSequence seq;
         mp::Event *ev = seq.add_event();
-        ev->set_raw(&e, sizeof(MirEvent));
+        ev->set_raw(mev::serialize_event(e));
 
         send_event_sequence(seq, {});
     }
