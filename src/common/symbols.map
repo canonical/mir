@@ -211,3 +211,10 @@ MIR_COMMON_5v19 { # New functions in Mir 0.19
       mir::detail::libname_impl*;
     };
 } MIR_COMMON_5.1;
+
+MIR_COMMON_unreleased { # New functions in Mir 0.20
+  global:
+    extern "C++" {
+      mir::select_libraries_for_path*;
+    };
+} MIR_COMMON_5v19;

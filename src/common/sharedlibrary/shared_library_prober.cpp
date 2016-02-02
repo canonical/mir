@@ -63,8 +63,10 @@ bool greater_soname_version(boost::filesystem::path const& lhs, boost::filesyste
 }
 }
 
-std::vector<std::shared_ptr<mir::SharedLibrary>>
-mir::libraries_for_path(std::string const& path, mir::SharedLibraryProberReport& report)
+void mir::select_libraries_for_path(
+    std::string const& path,
+    std::function<Selection(std::shared_ptr<mir::SharedLibrary> const&)> const& selector,
+    mir::SharedLibraryProberReport& report)
 {
     report.probing_path(path);
     // We use the error_code overload because we want to throw a std::system_error
@@ -87,20 +89,33 @@ mir::libraries_for_path(std::string const& path, mir::SharedLibraryProberReport&
 
     std::sort(libraries.begin(), libraries.end(), &greater_soname_version);
 
-    std::vector<std::shared_ptr<mir::SharedLibrary>> result;
-
     for(auto& lib : libraries)
     {
         try
         {
             report.loading_library(lib);
-            result.emplace_back(std::make_shared<mir::SharedLibrary>(lib.string()));
+            auto const shared_lib = std::make_shared<mir::SharedLibrary>(lib.string());
+
+            if (selector(shared_lib) == Selection::quit)
+                return;
         }
         catch (std::runtime_error const& err)
         {
             report.loading_failed(lib, err);
         }
     }
+}
+
+std::vector<std::shared_ptr<mir::SharedLibrary>>
+mir::libraries_for_path(std::string const& path, mir::SharedLibraryProberReport& report)
+{
+    std::vector<std::shared_ptr<mir::SharedLibrary>> result;
+
+    select_libraries_for_path(
+        path,
+        [&](std::shared_ptr<mir::SharedLibrary> const& shared_lib)
+            { result.push_back(shared_lib); return Selection::persist; },
+        report);
 
     return result;
 }
