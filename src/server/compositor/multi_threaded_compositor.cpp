@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2015 Canonical Ltd.
+ * Copyright © 2013-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -110,81 +110,82 @@ public:
 
         started.set_value();
 
-        std::unique_lock<std::mutex> lock{run_mutex};
-        while (running)
+        try
         {
-            /* Wait until compositing has been scheduled or we are stopped */
-            run_cv.wait(lock, [&]{ return (frames_scheduled > 0) || !running; });
-
-            /*
-             * Check if we are running before compositing, since we may have
-             * been stopped while waiting for the run_cv above.
-             */
-            if (running)
+            std::unique_lock<std::mutex> lock{run_mutex};
+            while (running)
             {
-                /*
-                 * Each surface could have a number of frames ready in its buffer
-                 * queue. And we need to ensure that we render all of them so that
-                 * none linger in the queue indefinitely (seen as input lag).
-                 * frames_scheduled indicates the number of frames that are scheduled
-                 * to ensure all surfaces' queues are fully drained.
-                 */
-                frames_scheduled--;
-                lock.unlock();
+                /* Wait until compositing has been scheduled or we are stopped */
+                run_cv.wait(lock, [&]{ return (frames_scheduled > 0) || !running; });
 
-                for (auto& tuple : compositors)
+                /*
+                 * Check if we are running before compositing, since we may have
+                 * been stopped while waiting for the run_cv above.
+                 */
+                if (running)
                 {
-                    auto& compositor = std::get<1>(tuple);
-                    compositor->composite(scene->scene_elements_for(compositor.get()));
+                    /*
+                     * Each surface could have a number of frames ready in its buffer
+                     * queue. And we need to ensure that we render all of them so that
+                     * none linger in the queue indefinitely (seen as input lag).
+                     * frames_scheduled indicates the number of frames that are scheduled
+                     * to ensure all surfaces' queues are fully drained.
+                     */
+                    frames_scheduled--;
+                    lock.unlock();
+
+                    for (auto& tuple : compositors)
+                    {
+                        auto& compositor = std::get<1>(tuple);
+                        compositor->composite(scene->scene_elements_for(compositor.get()));
+                    }
+                    group.post();
+
+                    /*
+                     * "Predictive bypass" optimization: If the last frame was
+                     * bypassed/overlayed or you simply have a fast GPU, it is
+                     * beneficial to sleep for most of the next frame. This reduces
+                     * the latency between snapshotting the scene and post()
+                     * completing by almost a whole frame.
+                     */
+                    auto delay = force_sleep >= std::chrono::milliseconds::zero() ?
+                                 force_sleep : group.recommended_sleep();
+                    std::this_thread::sleep_for(delay);
+
+                    lock.lock();
+
+                    /*
+                     * Note the compositor may have chosen to ignore any number
+                     * of renderables and not consumed buffers from them. So it's
+                     * important to re-count number of frames pending, separately
+                     * to the initial scene_elements_for()...
+                     */
+                    int pending = 0;
+                    for (auto& compositor : compositors)
+                    {
+                        auto const comp_id = std::get<1>(compositor).get();
+                        int pend = scene->frames_pending(comp_id);
+                        if (pend > pending)
+                            pending = pend;
+                    }
+
+                    if (pending > frames_scheduled)
+                        frames_scheduled = pending;
                 }
-                group.post();
-
-                /*
-                 * "Predictive bypass" optimization: If the last frame was
-                 * bypassed/overlayed or you simply have a fast GPU, it is
-                 * beneficial to sleep for most of the next frame. This reduces
-                 * the latency between snapshotting the scene and post()
-                 * completing by almost a whole frame.
-                 */
-                auto delay = force_sleep >= std::chrono::milliseconds::zero() ?
-                             force_sleep : group.recommended_sleep();
-                std::this_thread::sleep_for(delay);
-
-                lock.lock();
-
-                /*
-                 * Note the compositor may have chosen to ignore any number
-                 * of renderables and not consumed buffers from them. So it's
-                 * important to re-count number of frames pending, separately
-                 * to the initial scene_elements_for()...
-                 */
-                int pending = 0;
-                for (auto& compositor : compositors)
-                {
-                    auto const comp_id = std::get<1>(compositor).get();
-                    int pend = scene->frames_pending(comp_id);
-                    if (pend > pending)
-                        pending = pend;
-                }
-
-                if (pending > frames_scheduled)
-                    frames_scheduled = pending;
             }
+        }
+        catch (...)
+        {
+            mir::terminate_with_current_exception();
         }
     }
     catch(...)
     {
-        try
-        {
-            //Move the promise so that the promise destructor occurs here rather than in the thread
-            //destroying CompositingFunctor, mostly to appease TSan
-            auto promise = std::move(started);
-            promise.set_exception(std::current_exception());
-        }
-        catch(...)
-        {
-        }
-        mir::terminate_with_current_exception();
+        started.set_exception(std::current_exception());
+
+        //Move the promise so that the promise destructor occurs here rather than in the thread
+        //destroying CompositingFunctor, mostly to appease TSan
+        auto promise = std::move(started);
     }
 
     void schedule_compositing(int num_frames)
@@ -209,6 +210,8 @@ public:
     {
         if (started_future.wait_for(10s) != std::future_status::ready)
             BOOST_THROW_EXCEPTION(std::runtime_error("Compositor thread failed to start"));
+
+        started_future.get();
     }
 
 private:
@@ -273,7 +276,7 @@ void mc::MultiThreadedCompositor::schedule_compositing(int num)
 void mc::MultiThreadedCompositor::start()
 {
     auto stopped = CompositorState::stopped;
-    
+
     if (!state.compare_exchange_strong(stopped, CompositorState::starting))
         return;
 
@@ -281,7 +284,7 @@ void mc::MultiThreadedCompositor::start()
 
     /* To cleanup state if any code below throws */
     auto cleanup_if_unwinding = on_unwind(
-        [this]{ destroy_compositing_threads(); });
+        [this]{ destroy_compositing_threads(); state = CompositorState::stopped; });
 
     create_compositing_threads();
 
@@ -291,6 +294,8 @@ void mc::MultiThreadedCompositor::start()
     /* Optional first render */
     if (compose_on_start)
         schedule_compositing(1);
+
+    state = CompositorState::started;
 }
 
 void mc::MultiThreadedCompositor::stop()
@@ -299,8 +304,6 @@ void mc::MultiThreadedCompositor::stop()
 
     if (!state.compare_exchange_strong(started, CompositorState::stopping))
         return;
-
-    state = CompositorState::stopping;
 
     /* To cleanup state if any code below throws */
     auto cleanup_if_unwinding = on_unwind(
@@ -314,6 +317,10 @@ void mc::MultiThreadedCompositor::stop()
     // If the compositor is restarted we've likely got clients blocked
     // so we will need to schedule compositing immediately
     compose_on_start = true;
+
+    report->stopped();
+
+    state = CompositorState::stopped;
 }
 
 void mc::MultiThreadedCompositor::create_compositing_threads()
@@ -333,8 +340,6 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
 
     for (auto& functor : thread_functors)
         functor->wait_until_started();
-
-    state = CompositorState::started;
 }
 
 void mc::MultiThreadedCompositor::destroy_compositing_threads()
@@ -347,8 +352,4 @@ void mc::MultiThreadedCompositor::destroy_compositing_threads()
 
     thread_functors.clear();
     futures.clear();
-
-    report->stopped();
-
-    state = CompositorState::stopped;
 }
