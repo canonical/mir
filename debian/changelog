@@ -21,7 +21,8 @@ mir (0.19.0+16.04.20160128-0ubuntu1) xenial; urgency=medium
       . mirinputplatform ABI bumped to 5
       . mircookie ABI bumped to 2
     - Enhancements:
-      . TODO: Someone please list these.
+      . Improve compositor start loggging
+      . Mir cookie support added for copy paste use
     - Bugs fixed:
       . [regression] Mir servers crash on mouse input -
         std::exception::what: Client input channel write blocked : 11,
