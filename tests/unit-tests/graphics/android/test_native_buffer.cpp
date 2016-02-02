@@ -17,7 +17,7 @@
  */
 
 #include "android_native_buffer.h"
-#include "mir/graphics/egl_sync_fence.h"
+#include "egl_sync_fence.h"
 #include "mir/test/doubles/mock_fence.h"
 #include <memory>
 #include <gtest/gtest.h>
