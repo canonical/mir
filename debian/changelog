@@ -1,3 +1,9 @@
+mir (0.20.0) UNRELEASED; urgency=medium
+
+  * Placeholder for 0.20 release
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Mon, 01 Feb 2016 13:20:02 -0600
+
 mir (0.19.0+16.04.20160128-0ubuntu1) xenial; urgency=medium
 
   [ Brandon Schaefer ]
