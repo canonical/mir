@@ -1,8 +1,110 @@
-mir (0.19.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.20.0) UNRELEASED; urgency=medium
 
-  * placeholder for 0.19 release
+  * Placeholder for 0.20 release
 
- -- Kevin DuBois <kevin.dubois@canonical.com>  Tue, 22 Dec 2015 14:05:47 -0500
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Mon, 01 Feb 2016 13:20:02 -0600
+
+mir (0.19.0+16.04.20160128-0ubuntu1) xenial; urgency=medium
+
+  [ Brandon Schaefer ]
+  * New upstream release 0.19.0 (https://launchpad.net/mir/+milestone/0.19.0)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . mirserver ABI bumped to 37
+      . mircommon ABI unchanged at 5
+      . mirplatform ABI unchanged at 11
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI bumped to 7
+      . mirclientplatform ABI bumped to 4
+      . mirinputplatform ABI bumped to 5
+      . mircookie ABI bumped to 2
+    - Enhancements:
+      . TODO: Someone please list these.
+    - Bugs fixed:
+      . [regression] Mir servers crash on mouse input -
+        std::exception::what: Client input channel write blocked : 11,
+        "Resource temporarily unavailable" (LP: #1528438)
+      . [regression] pinch to zoom not working reliably (LP: #1531517)
+      . Passing DisplayConfiguration scale property from nested server to host
+        appears to not work (LP: #1535780)
+      . [enhancement] Support copy-paste between X and Mir (LP: #1471998)
+      . Various TSan reports when running test suite on a mir tsan enabled
+        build (LP: #1523647)
+      . [testsfail] Intermittent failure in
+        TestClientInput.clients_receive_relative_pointer_events (LP: #1523872)
+      . Buffer leak during repeated mirscreencasts causes server to be killed
+        (LP: #1523900)
+      . Mir clients (including Unity8 itself) crash in XGetXCBConnection() if
+        multiple versions of mir-client-platform-mesa are installed.
+        (LP: #1526658)
+      . Cursor displayed incorrectly (looks like incorrect stride)
+        (LP: #1526779)
+      . [regression] Mir servers just segfault just after "Selected driver:"
+        instead of reporting exceptions (LP: #1528135)
+      . Setting a surface keymap crashes in xkbcommon:
+        xkb_keymap_new_from_names() (LP: #1530946)
+      . [enhancement] Implement support for QWindow::visibility set to
+        Automatic (LP: #1535397)
+      . ProgramOption::parse_file() reports problems to cerr (LP: #1190165)
+      . Dynamic double buffering fails to detect inertial dash scrolling as
+        slow; and stutters instead of scaling up to triple buffers.
+        (LP: #1476201)
+      . CI Failures: ClientLatency.throttled_input_rate_yields_lower_latency
+        (LP: #1509291)
+      . [regression] Nested servers can select wrong platform (LP: #1515558)
+      . "there seems to be missing RTTI information when linking with UBSan
+        enabled" (LP: #1521930)
+      . Mir threadsanitizer build fails with GCC (LP: #1522581)
+      . After "make install" mir_demo_server cannot find shared object file in
+        /usr/local/lib (LP: #1522836)
+      . [testfail] Intermittent failure in TestClientInput.clients_receive_
+        pointer_within_coordinate_system_of_window (LP: #1523965)
+      . [regression] [ FAILED ]
+        ClientSurfaceEvents.surface_receives_output_event_on_creation
+        (LP: #1524161)
+      . [ FAILED ] TestClientInput.scene_obscure_motion_events_by_stacking
+        (LP: #1524230)
+      . There's something racy in ServerDisconnect.is_detected_by_client
+        (LP: #1526248)
+      . Mir clients leak all driver modules including the unused ones, keeping
+        them resident (LP: #1527449)
+      . [regression] Mir servers choose graphics-dummy (or no driver at all)
+        over mesa-kms on a desktop (LP: #1528082)
+      . Function 'mir_event_get_close_surface_event' is never used
+        (LP: #1447690)
+      . mir::input::Surface::consume(MirEvent const& event) should not take a
+        reference to an opaque type (LP: #1450797)
+      . lintian: E: mir-doc: privacy-breach-logo
+        usr/share/doc/mir-doc/html/cppguide/index.html
+        (http://www.google.com/favicon.ico) (LP: #1483471)
+      . lintian: W: mir-doc: embedded-javascript-library
+        usr/share/doc/mir-doc/html/jquery.js please use libjs-jquery
+        (LP: #1483472)
+      . lintian: E: mir-test-tools:
+        arch-dependent-file-not-in-arch-specific-directory (LP: #1483475)
+      . incorrect reporting in mf::SessionMediator::release_buffer_stream()
+        (LP: #1499777)
+      . [testsfail] Segmentation fault SystemCompositorWindowManager.
+        if_a_surface_posts_client_gets_focus (LP: #1522356)
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Brandon Schaefer <ci-train-bot@canonical.com>  Thu, 28 Jan 2016 12:19:47 +0000
+
+mir (0.18.1+16.04.20160115-0ubuntu1) xenial; urgency=medium
+
+  [ Andreas Pokorny ]
+  * New upstream release 0.18.1 (https://launchpad.net/mir/+milestone/0.18.1)
+    - No ABI changes. Bug fix release only.
+    - Bug fixed:
+      . [regression] pinch to zoom not working reliably (LP: #1531517)
+    
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- kevin gunn <kevin.gunn@canonical.com>  Fri, 15 Jan 2016 11:45:05 +0000
 
 mir (0.18.0+16.04.20151216.1-0ubuntu1) xenial; urgency=medium
 
@@ -124,7 +226,10 @@ mir (0.18.0+16.04.20151216.1-0ubuntu1) xenial; urgency=medium
       . Cross compiling Mir from a xenial host fails (dpkg-checkbuilddeps:
         error: Unmet build dependencies: ...) (LP: #1523801)
 
- -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 30 Nov 2015 14:09:31 -0500
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Wed, 16 Dec 2015 18:24:40 +0000
 
 mir (0.17.1+16.04.20151105.1-0ubuntu1) xenial; urgency=medium
 

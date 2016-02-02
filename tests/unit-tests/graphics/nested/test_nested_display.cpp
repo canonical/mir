@@ -200,3 +200,47 @@ TEST_F(NestedDisplay, makes_context_current_on_creation_and_releases_on_destruct
     EXPECT_CALL(mock_egl,
                 eglMakeCurrent(_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT));
 }
+
+TEST_F(NestedDisplay, shared_context_uses_matching_egl_attributes)
+{
+    using namespace testing;
+
+    NiceMock<mtd::MockGLConfig> mock_gl_config;
+    EGLint const depth_bits{24};
+    EGLint const stencil_bits{8};
+
+    std::string extensions{"EGL_KHR_surfaceless_context"};
+    ON_CALL(mock_gl_config, depth_buffer_bits())
+        .WillByDefault(Return(depth_bits));
+    ON_CALL(mock_gl_config, stencil_buffer_bits())
+        .WillByDefault(Return(stencil_bits));
+    ON_CALL(mock_egl, eglChooseConfig(_,_,_,_,_))
+        .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                       SetArgPointee<4>(1),
+                       Return(EGL_TRUE)));
+    ON_CALL(mock_egl, eglQueryString(_, EGL_EXTENSIONS))
+        .WillByDefault(Return(extensions.c_str()));
+
+    // mt::build_trivial_configuration sets mir_pixel_format_abgr_8888
+    EGLint const expected_alpha_bits = 8;
+    EGLint const expected_red_bits = 8;
+    EGLint const expected_green_bits = 8;
+    EGLint const expected_blue_bits = 8;
+    EXPECT_CALL(mock_egl,
+                eglChooseConfig(
+                    _,
+                    AllOf(mtd::EGLConfigContainsAttrib(EGL_DEPTH_SIZE, depth_bits),
+                          mtd::EGLConfigContainsAttrib(EGL_STENCIL_SIZE, stencil_bits),
+                          mtd::EGLConfigContainsAttrib(EGL_RED_SIZE, expected_red_bits),
+                          mtd::EGLConfigContainsAttrib(EGL_GREEN_SIZE, expected_green_bits),
+                          mtd::EGLConfigContainsAttrib(EGL_BLUE_SIZE, expected_blue_bits),
+                          mtd::EGLConfigContainsAttrib(EGL_ALPHA_SIZE, expected_alpha_bits)),
+                    _,_,_))
+        .Times(AtLeast(1));
+
+    auto const nested_display = create_nested_display(
+        null_platform,
+        mt::fake_shared(mock_gl_config));
+
+    auto dummy_context = nested_display->create_gl_context();
+}
