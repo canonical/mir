@@ -138,7 +138,7 @@ TEST_F(SeatInputDeviceTracker, removal_of_touch_device_removes_spots)
     tracker.remove_device(some_device);
 }
 
-TEST_F(SeatInputDeviceTracker, forwards_pointer_updates_to_cursor_listener)
+TEST_F(SeatInputDeviceTracker, pointer_movement_updates_cursor)
 {
     auto const move_x = 20.0f, move_y = 40.0f;
     EXPECT_CALL(mock_cursor_listener, cursor_moved_to(move_x, move_y)).Times(1);
@@ -148,7 +148,7 @@ TEST_F(SeatInputDeviceTracker, forwards_pointer_updates_to_cursor_listener)
                                                         move_x, move_y));
 }
 
-TEST_F(SeatInputDeviceTracker, tracks_modifier)
+TEST_F(SeatInputDeviceTracker, key_strokes_of_modifier_key_update_modifier)
 {
     const MirInputEventModifiers shift_left = mir_input_event_modifier_shift_left | mir_input_event_modifier_shift;
     InSequence seq;
@@ -160,7 +160,7 @@ TEST_F(SeatInputDeviceTracker, tracks_modifier)
     tracker.dispatch(*some_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_up, 0, KEY_LEFTSHIFT));
 }
 
-TEST_F(SeatInputDeviceTracker, modifiers_not_unified_over_keyboards)
+TEST_F(SeatInputDeviceTracker, modifier_events_on_different_keyboards_do_not_change_modifier_state)
 {
     const MirInputEventModifiers shift_left = mir_input_event_modifier_shift_left | mir_input_event_modifier_shift;
     InSequence seq;
@@ -173,7 +173,7 @@ TEST_F(SeatInputDeviceTracker, modifiers_not_unified_over_keyboards)
     tracker.dispatch(*another_device_builder.key_event(arbitrary_timestamp, mir_keyboard_action_up, 0, KEY_A));
 }
 
-TEST_F(SeatInputDeviceTracker, modifiers_unified_for_pointer_events)
+TEST_F(SeatInputDeviceTracker, modifier_events_on_different_keyboards_contribute_to_pointer_event_modifier_state)
 {
     const MirInputEventModifiers r_alt_modifier = mir_input_event_modifier_alt_right | mir_input_event_modifier_alt;
     const MirInputEventModifiers shift_right = mir_input_event_modifier_shift_right | mir_input_event_modifier_shift;
@@ -191,7 +191,8 @@ TEST_F(SeatInputDeviceTracker, modifiers_unified_for_pointer_events)
     tracker.dispatch(
         *third_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0, 0, 12, 40));
 }
-TEST_F(SeatInputDeviceTracker, reduces_modifiers_on_removal)
+
+TEST_F(SeatInputDeviceTracker, device_removal_removes_modifier_flags)
 {
     const MirInputEventModifiers r_alt_modifier = mir_input_event_modifier_alt_right | mir_input_event_modifier_alt;
     const MirInputEventModifiers shift_right = mir_input_event_modifier_shift_right | mir_input_event_modifier_shift;
@@ -211,7 +212,7 @@ TEST_F(SeatInputDeviceTracker, reduces_modifiers_on_removal)
         *third_device_builder.pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0, 0, 12, 40));
 }
 
-TEST_F(SeatInputDeviceTracker, single_pointer_position_and_movement)
+TEST_F(SeatInputDeviceTracker, pointer_movement_from_different_devices_change_cursor_position)
 {
     InSequence seq;
     EXPECT_CALL(mock_cursor_listener, cursor_moved_to(23, 20));
@@ -253,7 +254,7 @@ TEST_F(SeatInputDeviceTracker, tracks_a_single_button_state_for_multiple_pointin
                                                            no_buttons, 0, 0, 0, 0));
 }
 
-TEST_F(SeatInputDeviceTracker, updates_button_state_on_removal)
+TEST_F(SeatInputDeviceTracker, poiniting_device_removal_removes_pressed_button_state)
 {
     int const x = 0, y = 0;
 
