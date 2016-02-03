@@ -463,9 +463,9 @@ struct FullscreenDisabledCursorClient : CursorClient
 
     void setup_cursor(MirSurface* surface) override
     {
-        mir_wait_for(mir_surface_set_state(surface, mir_surface_state_fullscreen));
+        mir_surface_set_state(surface, mir_surface_state_fullscreen);
         auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
-        mir_wait_for(mir_surface_configure_cursor(surface, conf));
+        mir_surface_configure_cursor(surface, conf);
         mir_cursor_configuration_destroy(conf);
     }
 };
