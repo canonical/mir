@@ -1,4 +1,4 @@
-mir (0.19.1+16.04.20160128-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.19.1-0ubuntu1) UNRELEASED; urgency=medium
 
   [ Kevin Gunn ]
   * New upstream release 0.19.1 (https://launchpad.net/mir/+milestone/0.19.1)
