@@ -52,8 +52,9 @@ void mi::BasicSeat::dispatch_event(MirEvent& event)
 
 mir::geometry::Rectangle mi::BasicSeat::get_rectangle_for(std::shared_ptr<input::Device> const&)
 {
-    // TODO: With knowledge of the outputs attached to this seat this method
-    // should return the outputs rectangle instead of the rectangle of the
-    // first output
+    // TODO: With knowledge of the outputs attached to this seat and the output the given input
+    // device is associated this method should only return the rectangle of that output. For now
+    // we rely on the existing workaround in DisplayInputRegion::bounding_rectangle() which
+    // assumes that only the first output may have a touch screen associated to it.
     return input_region->bounding_rectangle();
 }
