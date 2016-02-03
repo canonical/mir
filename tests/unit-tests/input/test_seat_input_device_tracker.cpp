@@ -27,6 +27,7 @@
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
 
+#include "mir/geometry/rectangles.h"
 #include "mir/cookie/authority.h"
 
 #include <gmock/gmock.h>

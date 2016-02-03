@@ -63,7 +63,7 @@ std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_regi
     return input_region(
         [this]()
         {
-            return std::make_shared<mi::DisplayInputRegion>(the_display());
+            return std::make_shared<mi::DisplayInputRegion>();
         });
 }
 
