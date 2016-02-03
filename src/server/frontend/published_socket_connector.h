@@ -25,7 +25,6 @@
 
 #include <thread>
 #include <string>
-#include <vector>
 #include <functional>
 
 namespace google
@@ -51,7 +50,6 @@ class BasicConnector : public Connector
 public:
     explicit BasicConnector(
         std::shared_ptr<ConnectionCreator> const& connection_creator,
-        int threads,
         std::shared_ptr<ConnectorReport> const& report);
     ~BasicConnector() noexcept;
     void start() override;
@@ -69,7 +67,7 @@ protected:
     std::shared_ptr<ConnectorReport> const report;
 
 private:
-    std::vector<std::thread> io_service_threads;
+    std::thread io_service_thread;
     std::shared_ptr<ConnectionCreator> const connection_creator;
 };
 
@@ -80,7 +78,6 @@ public:
     explicit PublishedSocketConnector(
         const std::string& socket_file,
         std::shared_ptr<ConnectionCreator> const& connection_creator,
-        int threads,
         EmergencyCleanupRegistry& emergency_cleanup_registry,
         std::shared_ptr<ConnectorReport> const& report);
     ~PublishedSocketConnector() noexcept;
