@@ -169,8 +169,6 @@ void mf::BasicConnector::start()
         }
     };
 
-    report->starting_threads(1);
-
     io_service_thread = std::thread(run_io_service);
 }
 
@@ -178,8 +176,6 @@ void mf::BasicConnector::stop()
 {
     /* Stop processing new requests */
     io_service.stop();
-
-    report->stopping_threads(1);
 
     /* Wait for io processing thread to finish */
     if (io_service_thread.joinable())
