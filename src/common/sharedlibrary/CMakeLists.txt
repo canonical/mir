@@ -17,7 +17,7 @@
 add_library(mirsharedsharedlibrary OBJECT
   module_deleter.cpp
   shared_library.cpp
-  shared_library_prober.cpp
+  shared_library_prober.cpp ${PROJECT_SOURCE_DIR}/src/include/common/mir/shared_library_prober.h
 )
 
 list(APPEND MIR_COMMON_SOURCES
