@@ -468,9 +468,9 @@ struct FullscreenDisabledCursorClient : CursorClient
         // for the test logic. - alan_g
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
 
-        mir_surface_set_state(surface, mir_surface_state_fullscreen);
+        mir_wait_for(mir_surface_set_state(surface, mir_surface_state_fullscreen));
         auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
-        mir_surface_configure_cursor(surface, conf);
+        mir_wait_for(mir_surface_configure_cursor(surface, conf));
         mir_cursor_configuration_destroy(conf);
     }
 };
