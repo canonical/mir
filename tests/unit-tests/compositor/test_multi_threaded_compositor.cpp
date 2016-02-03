@@ -889,7 +889,7 @@ TEST(MultiThreadedCompositor, notifies_about_display_additions_and_removals)
     compositor.stop();
 }
 
-TEST(MultiThreadedCompositor, does_not_block_in_start_when_compositor_thread_fails)
+TEST(MultiThreadedCompositor, when_compositor_thread_fails_start_reports_error)
 {
     using namespace testing;
     unsigned int const nbuffers{3};
@@ -899,22 +899,13 @@ TEST(MultiThreadedCompositor, does_not_block_in_start_when_compositor_thread_fai
     auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
     auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
 
-    // Ignore SIGTERM. We must keep ignoring SIGTERM until the compositor is
-    // destroyed/stopped (hence sigterm_raii must be created before the compositor),
-    // since even after compositor.start() has returned because of an error the
-    // compositing threads may not have finished and could emit SIGTERM.
-    sighandler_t old_sigterm_handler = nullptr;
-    auto const sigterm_raii = mir::raii::paired_calls(
-        [&] { old_sigterm_handler = signal(SIGTERM, SIG_IGN); },
-        [&] { signal(SIGTERM, old_sigterm_handler); });
-
     mc::MultiThreadedCompositor compositor{
         display, stub_scene, db_compositor_factory, mock_display_listener, mock_report, default_delay, true};
 
     EXPECT_CALL(*mock_display_listener, add_display(_))
         .WillRepeatedly(Throw(std::runtime_error("Failed to add display")));
 
-    compositor.start();
+    EXPECT_THROW(compositor.start(), std::runtime_error);
 }
 
 //LP: 1481418

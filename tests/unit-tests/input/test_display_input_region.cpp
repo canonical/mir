@@ -18,22 +18,16 @@
 
 #include "src/server/input/display_input_region.h"
 
-#include "mir/test/doubles/null_display.h"
-#include "mir/test/doubles/stub_display.h"
-
-#include <vector>
 #include <tuple>
 
 #include <gtest/gtest.h>
 
 namespace mi = mir::input;
-namespace mg = mir::graphics;
-namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
 
 namespace
 {
-std::vector<geom::Rectangle> const rects{
+geom::Rectangles const rects{
     geom::Rectangle{{0,0}, {800,600}},
     geom::Rectangle{{0,600}, {100,100}},
     geom::Rectangle{{800,0}, {100,100}}
@@ -43,9 +37,9 @@ std::vector<geom::Rectangle> const rects{
 TEST(DisplayInputRegionTest, returns_correct_bounding_rectangle)
 {
     geom::Rectangle const expected_bounding_rect{geom::Point{0,0}, geom::Size{800,600}};
-    auto stub_display = std::make_shared<mtd::StubDisplay>(rects);
 
-    mi::DisplayInputRegion input_region{stub_display};
+    mi::DisplayInputRegion input_region;
+    input_region.set_input_rectangles(rects);
 
     auto rect = input_region.bounding_rectangle();
     EXPECT_EQ(expected_bounding_rect, rect);
@@ -53,9 +47,8 @@ TEST(DisplayInputRegionTest, returns_correct_bounding_rectangle)
 
 TEST(DisplayInputRegionTest, confines_point_to_closest_valid_position)
 {
-    auto stub_display = std::make_shared<mtd::StubDisplay>(rects);
-
-    mi::DisplayInputRegion input_region{stub_display};
+    mi::DisplayInputRegion input_region;
+    input_region.set_input_rectangles(rects);
 
     std::vector<std::tuple<geom::Point,geom::Point>> point_tuples{
         std::make_tuple(geom::Point{0,0}, geom::Point{0,0}),
@@ -83,10 +76,11 @@ TEST(DisplayInputRegionTest, confines_point_to_closest_valid_position)
 
 TEST(DisplayInputRegionTest, returns_empty_bounding_rectangle_when_there_are_no_outputs)
 {
+    geom::Rectangles const empty_rects{};
     geom::Rectangle const empty_rect{};
-    auto const stub_display = std::make_shared<mtd::StubDisplay>(0);
 
-    mi::DisplayInputRegion input_region{stub_display};
+    mi::DisplayInputRegion input_region;
+    input_region.set_input_rectangles(empty_rects);
 
     auto const bounding_rect = input_region.bounding_rectangle();
     EXPECT_EQ(empty_rect, bounding_rect);

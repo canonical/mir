@@ -988,7 +988,7 @@ MIR_PROTOBUF_3 {
  local: *;
 };
 
-MIR_PROTOBUF_3_unreleased {
+MIR_PROTOBUF_3v19 {
  global:
   extern "C++" {
     mir::protobuf::ModuleProperties::ByteSize*;

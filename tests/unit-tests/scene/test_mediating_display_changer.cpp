@@ -20,6 +20,7 @@
 #include "src/server/scene/session_container.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration_report.h"
+#include "mir/geometry/rectangles.h"
 #include "src/server/scene/broadcasting_session_event_sink.h"
 #include "mir/server_action_queue.h"
 
@@ -28,6 +29,7 @@
 #include "mir/test/doubles/null_display_configuration.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/mock_scene_session.h"
+#include "mir/test/doubles/mock_input_region.h"
 #include "mir/test/doubles/stub_session.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/display_config_matchers.h"
@@ -135,7 +137,8 @@ struct MediatingDisplayChangerTest : public ::testing::Test
                       mt::fake_shared(stub_session_container),
                       mt::fake_shared(session_event_sink),
                       mt::fake_shared(server_action_queue),
-                      mt::fake_shared(display_configuration_report));
+                      mt::fake_shared(display_configuration_report),
+                      mt::fake_shared(mock_input_region));
     }
 
     testing::NiceMock<MockDisplay> mock_display;
@@ -146,6 +149,7 @@ struct MediatingDisplayChangerTest : public ::testing::Test
     mtd::StubDisplayConfig base_config;
     StubServerActionQueue server_action_queue;
     StubDisplayConfigurationReport display_configuration_report;
+    testing::NiceMock<mtd::MockInputRegion> mock_input_region;
     std::shared_ptr<ms::MediatingDisplayChanger> changer;
 };
 
@@ -428,7 +432,8 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
       mt::fake_shared(stub_session_container),
       mt::fake_shared(session_event_sink),
       mt::fake_shared(mock_server_action_queue),
-      mt::fake_shared(display_configuration_report));
+      mt::fake_shared(display_configuration_report),
+      mt::fake_shared(mock_input_region));
 
     void const* owner{nullptr};
 
@@ -483,7 +488,8 @@ TEST_F(MediatingDisplayChangerTest, does_not_block_IPC_thread_for_inactive_sessi
         mt::fake_shared(stub_session_container),
         mt::fake_shared(session_event_sink),
         mt::fake_shared(mock_server_action_queue),
-        mt::fake_shared(display_configuration_report));
+        mt::fake_shared(display_configuration_report),
+        mt::fake_shared(mock_input_region));
 
     EXPECT_CALL(mock_server_action_queue, enqueue(_, _));
     session_event_sink.handle_focus_change(active_session);
@@ -593,4 +599,34 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_set_base_configurat
     EXPECT_CALL(mock_session2, send_display_config(_));
 
     changer->set_base_configuration(mt::fake_shared(conf));
+}
+
+TEST_F(MediatingDisplayChangerTest, input_region_receives_display_configuration_on_start)
+{
+    using namespace testing;
+    EXPECT_CALL(mock_input_region, set_input_rectangles(_));
+
+    ms::MediatingDisplayChanger display_changer(
+        mt::fake_shared(mock_display),
+        mt::fake_shared(mock_compositor),
+        mt::fake_shared(mock_conf_policy),
+        mt::fake_shared(stub_session_container),
+        mt::fake_shared(session_event_sink),
+        mt::fake_shared(server_action_queue),
+        mt::fake_shared(display_configuration_report),
+        mt::fake_shared(mock_input_region));
+}
+
+TEST_F(MediatingDisplayChangerTest, notifies_input_region_on_new_configuration)
+{
+    using namespace testing;
+    mtd::NullDisplayConfiguration conf;
+    mir::geometry::Rectangles expected_rectangles;
+    EXPECT_CALL(mock_input_region, set_input_rectangles(expected_rectangles));
+
+    auto session = std::make_shared<mtd::StubSession>();
+
+    session_event_sink.handle_focus_change(session);
+    changer->configure(session,
+                       mt::fake_shared(conf));
 }

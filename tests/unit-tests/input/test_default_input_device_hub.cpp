@@ -30,6 +30,7 @@
 #include "mir/test/fake_shared.h"
 
 #include "mir/dispatch/action_queue.h"
+#include "mir/geometry/rectangles.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/events/event_builders.h"
 #include "mir/input/cursor_listener.h"
