@@ -57,6 +57,7 @@
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/stub_input_device.h"
 #include "mir/test/display_config_matchers.h"
+#include "mir/test/input_devices_matcher.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/signal.h"
 #include "mir/frontend/connector.h"
@@ -88,25 +89,6 @@ namespace mr = mir::report;
 
 namespace
 {
-
-MATCHER_P(InputDevicesMatch, array, "")
-{
-    using std::begin;
-    using std::end;
-    if (end(array) - begin(array) != end(arg) - begin(arg))
-        return false;
-
-    return std::equal(begin(arg), end(arg),
-                      begin(array),
-                      [](auto const& lhs, std::shared_ptr<mi::Device> const& rhs)
-                      {
-                          return lhs.id() == rhs->id() &&
-                              lhs.name() == rhs->name() &&
-                              lhs.unique_id() == rhs->unique_id() &&
-                              lhs.capabilities() == rhs->capabilities().value();
-                      });
-
-}
 
 struct MockResourceCache : public mf::MessageResourceCache
 {
@@ -1358,5 +1340,5 @@ TEST_F(SessionMediator, connect_sends_input_devices_at_seat)
 
     mediator.connect(&connect_parameters, &connection, null_callback.get());
 
-    EXPECT_THAT(connection.input_devices(), InputDevicesMatch(devices));
+    EXPECT_THAT(connection.input_devices(), mt::InputDevicesMatch(devices));
 }
