@@ -49,11 +49,7 @@ set_target_properties(
 # Umockdev uses glib, which uses the deprecated "register" allocation specifier
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
-set(
-  UMOCK_UNIT_TEST_SOURCES
-
-  test_udev_wrapper.cpp
-)
+set(UMOCK_UNIT_TEST_SOURCES test_udev_wrapper.cpp)
 
 set(
   UNIT_TEST_SOURCES

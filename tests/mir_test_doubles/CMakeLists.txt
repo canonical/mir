@@ -29,10 +29,8 @@ set(
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_event_sink_factory.h
 )
 
-set(
-    MIR_TEST_DOUBLES_UDEV_SRCS
-  ${CMAKE_CURRENT_SOURCE_DIR}/mock_udev.cpp
-)
+set(MIR_TEST_DOUBLES_UDEV_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/mock_udev.cpp)
+
 set(
   MIR_TEST_DOUBLES_PLATFORM_SRCS
 

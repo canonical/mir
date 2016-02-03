@@ -61,14 +61,9 @@ add_library(mir-protected-test-framework OBJECT
   input_testing_server_options.cpp
 )
 
-add_library(mir-libinput-test-framework OBJECT
+add_library(mir-libinput-test-framework OBJECT libinput_environment.cpp)
+add_library(mir-umock-test-framework OBJECT udev_environment.cpp)
 
-  libinput_environment.cpp
-)
-
-add_library(mir-umock-test-framework OBJECT
-  udev_environment.cpp
-)
 
 add_library(mir-test-framework-static STATIC
   $<TARGET_OBJECTS:mir-public-test-framework>
