@@ -3,7 +3,7 @@ mir (0.19.1-0ubuntu1) UNRELEASED; urgency=medium
   [ Kevin Gunn ]
   * New upstream release 0.19.1 (https://launchpad.net/mir/+milestone/0.19.1)
     - Improved reporting to assist in critical debug
-    - Improved on the fixe for LP: #1527449 and LP: #1526658 in order to
+    - Improved on the fix for LP: #1527449 and LP: #1526658 in order to
       avoid Unity8 crashing on upgraded xenial desktops.
 
  -- Kevin Gunn <kevin.gunn@canonical.com>  Tue, 02 Feb 2016 11:59:26 -0600
