@@ -70,10 +70,14 @@ void mi::DefaultInputManager::start()
     if (!state.compare_exchange_strong(expected, State::starting))
         return;
 
-    auto reset_to_stopped_on_failure = on_unwind([this]{state = State::stopped;});
+    auto reset_to_stopped_on_failure = on_unwind([this]
+        {
+            auto expected = State::starting;
+            state.compare_exchange_strong(expected, State::stopped);
+        });
 
     multiplexer->add_watch(queue);
-    auto unregister_queue = on_unwind([this]{multiplexer->remove_watch(queue);});
+    auto unregister_queue = on_unwind([this]{ if (state == State::starting) multiplexer->remove_watch(queue);});
 
 
     auto started_promise = std::make_shared<std::promise<void>>();
@@ -114,7 +118,11 @@ void mi::DefaultInputManager::stop()
     if (!state.compare_exchange_strong(expected, State::stopping))
         return;
 
-    auto reset_to_started_on_failure = on_unwind([this]{state = State::started;});
+    auto reset_to_started_on_failure = on_unwind([this]
+        {
+            auto expected = State::stopping;
+            state.compare_exchange_strong(expected, State::started);
+        });
 
     auto const stop_promise = std::make_shared<std::promise<void>>();
 
@@ -129,7 +137,7 @@ void mi::DefaultInputManager::stop()
     auto restore_platforms = on_unwind(
         [this]
         {
-            queue->enqueue([this](){ start_platforms(); });
+            if (state == State::stopping) queue->enqueue([this](){ start_platforms(); });
         });
 
     multiplexer->remove_watch(queue);

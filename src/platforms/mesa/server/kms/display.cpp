@@ -27,6 +27,7 @@
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/event_handler_register.h"
 
+#include "mir/graphics/virtual_output.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/display_configuration_policy.h"
@@ -385,4 +386,9 @@ void mgm::Display::clear_connected_unused_outputs()
             kms_output->set_power_mode(conf_output.power_mode);
         }
     });
+}
+
+std::unique_ptr<mg::VirtualOutput> mgm::Display::create_virtual_output(int /*width*/, int /*height*/)
+{
+    return nullptr;
 }

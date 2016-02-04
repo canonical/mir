@@ -250,7 +250,7 @@ mir::geometry::Rectangle extents_of(
     MirOrientation orientation,
     mir::geometry::Point top_left)
 {
-    if (current_mode_index > modes.size())
+    if (current_mode_index >= modes.size())
         return mir::geometry::Rectangle();
 
     auto const& size = modes[current_mode_index].size;

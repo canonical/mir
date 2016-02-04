@@ -22,8 +22,6 @@ namespace mrn = mir::report::null;
 
 void mrn::ConnectorReport::thread_start() {}
 void mrn::ConnectorReport::thread_end() {}
-void mrn::ConnectorReport::starting_threads(int /*count*/) {}
-void mrn::ConnectorReport::stopping_threads(int /*count*/) {}
 void mrn::ConnectorReport::creating_session_for(int /*socket_handle*/) {}
 void mrn::ConnectorReport::creating_socket_pair(int /*server_handle*/, int /*client_handle*/) {}
 void mrn::ConnectorReport::listening_on(std::string const& /*endpoint*/) {}
