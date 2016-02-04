@@ -66,6 +66,74 @@ typedef unsigned int MirTouchpadScrollModes;
 
 typedef struct MirInputDevices MirInputDevices;
 
+/**
+ * Retrieve the number of available input devices.
+ *
+ * \param [in] devices  The input devices
+ *
+ * \return              Number of input devices
+ */
+size_t mir_input_devices_count(MirInputDevices const* devices);
+
+/**
+ * Release this copy of the available input devices.
+ * This invalidates any pointers retrieved from this set of input devices.
+ *
+ * \param [in] devices  The input devices
+ */
+void mir_input_devices_destroy(MirInputDevices const* devices);
+
+/**
+ * Retrieve the capabilities of the input device at the given index.
+ *
+ * \param [in] devices  The input devices
+ * \param [in] index    The device index. Must be less than
+ *                      (mir_input_devices_count - 1).
+ *
+ * \return              The capability flags of the input device at index.
+ */
+uint32_t mir_input_devices_get_capabilities(MirInputDevices const* devices, size_t index);
+
+/**
+ * Retrieve the device id of the input device at the given index.
+ * The device id is a unique integer value, only valid while the device is
+ * attached. The device id matches the device ids attached to input events.
+ *
+ * \param [in] devices  The input devices
+ * \param [in] index    The device index. Must be less than
+ *                      (mir_input_devices_count - 1).
+ *
+ * \return              The device id of the input device at the given index.
+ */
+MirInputDeviceId mir_input_devices_get_id(MirInputDevices const* devices, size_t index);
+
+/**
+ * Retrieve the name of the input device at the given index.
+ * The string pointed to will be valid as long as MirInputDevices is valid.
+ * The name may be empty but never NULL.
+ *
+ * \param [in] devices  The input devices
+ * \param [in] index    The device index. Must be less than
+ *                      (mir_input_devices_count - 1).
+ *
+ * \return              The name of the input device at the given index.
+ */
+char const* mir_input_devices_get_name(MirInputDevices const* devices, size_t index);
+
+/**
+ * Retrieve the unique id of the input device at the given index.
+ * The string pointed to will be valid as long as MirInputDevices is valid.
+ * The value of the unique id of a given device should be valid across mir
+ * connections session and servers of the same version.
+ *
+ * \param [in] devices  The input devices
+ * \param [in] index    The device index. Must be less than
+ *                      (mir_input_devices_count - 1).
+ *
+ * \return              The unique id of the input device at the given index.
+ */
+char const* mir_input_devices_get_unique_id(MirInputDevices const* devices, size_t index);
+
 #ifdef __cplusplus
 }
 #endif
