@@ -23,7 +23,7 @@
 #include "mir_connection.h"
 #include "buffer_stream.h"
 
-#include "mir_toolkit/mir_buffer_stream_nbs.h"
+#include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "mir/client_buffer.h"
 
@@ -212,7 +212,7 @@ char const* mir_buffer_stream_get_error_message(MirBufferStream* opaque_stream)
 
 struct MirBufferStub
 {
-    MirBufferStub(MirBufferContext* stream, mir_buffer_callback cb, void* context) :
+    MirBufferStub(MirPresentationChain* stream, mir_buffer_callback cb, void* context) :
         stream(stream),
         cb(cb),
         context(context)
@@ -226,14 +226,14 @@ struct MirBufferStub
             cb(stream, reinterpret_cast<MirBuffer*>(this), context);
     }
 
-    MirBufferContext* const stream;
+    MirPresentationChain* const stream;
     mir_buffer_callback const cb;
     void* const context;
 };
 
 //private NBS api under development
-void mir_buffer_context_allocate_buffer(
-    MirBufferContext* stream, 
+void mir_presentation_chain_allocate_buffer(
+    MirPresentationChain* stream, 
     int, int,
     MirPixelFormat,
     MirBufferUsage,
@@ -242,12 +242,12 @@ void mir_buffer_context_allocate_buffer(
     new MirBufferStub(stream, cb, context); 
 }
 
-void mir_buffer_context_release_buffer(MirBufferContext*, MirBuffer* buffer) 
+void mir_presentation_chain_release_buffer(MirPresentationChain*, MirBuffer* buffer) 
 {
     delete reinterpret_cast<MirBufferStub*>(buffer);
 }
 
-bool mir_buffer_context_submit_buffer(MirBufferContext*, MirBuffer* buffer)
+bool mir_presentation_chain_submit_buffer(MirPresentationChain*, MirBuffer* buffer)
 {
     auto b = reinterpret_cast<MirBufferStub*>(buffer);
     b->ready();
@@ -282,26 +282,26 @@ void mir_buffer_release_region(MirGraphicsRegion*)
 {
 }
 
-bool mir_buffer_context_is_valid(MirBufferContext*)
+bool mir_presentation_chain_is_valid(MirPresentationChain*)
 {
     return true;
 }
 
-char const *mir_buffer_context_get_error_message(MirBufferContext*)
+char const *mir_presentation_chain_get_error_message(MirPresentationChain*)
 {
     return "";
 }
 
-MirWaitHandle* mir_connection_create_buffer_context(MirConnection*, mir_buffer_context_callback, void*)
+MirWaitHandle* mir_connection_create_presentation_chain(MirConnection*, mir_presentation_chain_callback, void*)
 {
     return nullptr;
 }
 
-MirBufferContext* mir_connection_create_buffer_context_sync(MirConnection*)
+MirPresentationChain* mir_connection_create_presentation_chain_sync(MirConnection*)
 {
     return nullptr;
 }
 
-void mir_buffer_context_release(MirBufferContext*)
+void mir_presentation_chain_release(MirPresentationChain*)
 {
 }
