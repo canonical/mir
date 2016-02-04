@@ -137,7 +137,7 @@ mc::BufferQueue::BufferQueue(
     graphics::BufferProperties const& props,
     mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
-      frame_deadlines_threshold{3},
+      frame_deadlines_threshold{-1},  // Disable scaling by default
       frame_deadlines_met{0},
       scheduled_extra_frames{0},
       frame_dropping_enabled{false},
