@@ -17,7 +17,7 @@
  */
 
 #include "mir/test/doubles/mock_protobuf_server.h"
-#include "src/client/buffer_context.h"
+#include "src/client/presentation_chain.h"
 #include "mir/client_buffer_factory.h"
 
 #include <mutex>
@@ -36,9 +36,9 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
         std::shared_ptr<MirBufferPackage> const&, geom::Size, MirPixelFormat));
 };
 
-struct BufferContext : Test
+struct PresentationChain : Test
 {
-    BufferContext()
+    PresentationChain()
     {
         ipc_buf.set_width(size.width.as_int());
         ipc_buf.set_height(size.height.as_int());
@@ -134,19 +134,19 @@ MATCHER_P(BufferReleaseMatches, val, "")
         (arg->buffers(0).buffer_id() == val.buffers(0).buffer_id()));
 }
 
-TEST_F(BufferContext, returns_associated_connection)
+TEST_F(PresentationChain, returns_associated_connection)
 {
-    mcl::BufferContext context(connection, wait_handle, rpc_id, mock_server, factory);
-    EXPECT_THAT(context.connection(), Eq(connection));
+    mcl::PresentationChain chain(connection, wait_handle, rpc_id, mock_server, factory);
+    EXPECT_THAT(chain.connection(), Eq(connection));
 }
 
-TEST_F(BufferContext, returns_associated_rpc_id)
+TEST_F(PresentationChain, returns_associated_rpc_id)
 {
-    mcl::BufferContext context(connection, wait_handle, rpc_id, mock_server, factory);
-    EXPECT_THAT(context.rpc_id(), Eq(rpc_id));
+    mcl::PresentationChain chain(connection, wait_handle, rpc_id, mock_server, factory);
+    EXPECT_THAT(chain.rpc_id(), Eq(rpc_id));
 }
 
-TEST_F(BufferContext, creates_buffer_when_asked)
+TEST_F(PresentationChain, creates_buffer_when_asked)
 {
     BufferCallbackContext buffer;
     mp::BufferAllocation mp_alloc;
@@ -161,20 +161,20 @@ TEST_F(BufferContext, creates_buffer_when_asked)
         .WillOnce(mtd::RunProtobufClosure());
     EXPECT_CALL(*factory, create_buffer(_, size, format));
  
-    mcl::BufferContext context(connection, wait_handle, rpc_id, mock_server, factory);
-    context.allocate_buffer(size, format, usage, buffer_callback, &buffer);
+    mcl::PresentationChain chain(connection, wait_handle, rpc_id, mock_server, factory);
+    chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
 
     EXPECT_FALSE(buffer.buffer_is_set());
 
     mp::Buffer ipc_buf;
     ipc_buf.set_width(size.width.as_int());
     ipc_buf.set_height(size.height.as_int());
-    context.buffer_available(ipc_buf);
+    chain.buffer_available(ipc_buf);
 
     EXPECT_TRUE(buffer.wait_for_buffer());
 }
 
-TEST_F(BufferContext, creates_correct_buffer_when_buffers_arrive)
+TEST_F(PresentationChain, creates_correct_buffer_when_buffers_arrive)
 {
     size_t const num_buffers = 3u;
     std::array<geom::Size, num_buffers> sizes {
@@ -205,25 +205,25 @@ TEST_F(BufferContext, creates_correct_buffer_when_buffers_arrive)
         ipc_buf[i].set_height(sizes[i].height.as_int());
     }
 
-    mcl::BufferContext context(connection, wait_handle, rpc_id, mock_server, factory);
+    mcl::PresentationChain chain(connection, wait_handle, rpc_id, mock_server, factory);
 
     for (auto i = 0u; i < num_buffers; i++)
-        context.allocate_buffer(sizes[i], format, usage, buffer_callback, &buffer[i]);
+        chain.allocate_buffer(sizes[i], format, usage, buffer_callback, &buffer[i]);
 
-    context.buffer_available(ipc_buf[1]);
+    chain.buffer_available(ipc_buf[1]);
     EXPECT_FALSE(buffer[0].buffer_is_set());
     EXPECT_TRUE(buffer[1].wait_for_buffer());
     EXPECT_FALSE(buffer[2].buffer_is_set());
 
-    context.buffer_available(ipc_buf[2]);
+    chain.buffer_available(ipc_buf[2]);
     EXPECT_FALSE(buffer[0].buffer_is_set());
     EXPECT_TRUE(buffer[2].wait_for_buffer());
 
-    context.buffer_available(ipc_buf[0]);
+    chain.buffer_available(ipc_buf[0]);
     EXPECT_TRUE(buffer[0].wait_for_buffer());
 }
 
-TEST_F(BufferContext, frees_buffer_when_asked)
+TEST_F(PresentationChain, frees_buffer_when_asked)
 {
     BufferCallbackContext buffer;
     mp::BufferRelease release_msg;
@@ -236,17 +236,17 @@ TEST_F(BufferContext, frees_buffer_when_asked)
     EXPECT_CALL(mock_server, release_buffers(BufferReleaseMatches(release_msg),_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    mcl::BufferContext context(connection, wait_handle, rpc_id, mock_server, factory);
-    context.allocate_buffer(size, format, usage, buffer_callback, &buffer);
-    context.buffer_available(ipc_buf);
+    mcl::PresentationChain chain(connection, wait_handle, rpc_id, mock_server, factory);
+    chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
+    chain.buffer_available(ipc_buf);
     auto b = buffer.wait_for_buffer();
     ASSERT_THAT(b, Ne(nullptr));
 
-    context.release_buffer(b);
+    chain.release_buffer(b);
 
 } 
 
-TEST_F(BufferContext, submits_buffer_when_asked)
+TEST_F(PresentationChain, submits_buffer_when_asked)
 {
     BufferCallbackContext buffer;
     mp::BufferRequest request;
@@ -258,16 +258,16 @@ TEST_F(BufferContext, submits_buffer_when_asked)
     EXPECT_CALL(mock_server, submit_buffer(BufferRequestMatches(request),_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    mcl::BufferContext context(connection, wait_handle, rpc_id, mock_server, factory);
-    context.allocate_buffer(size, format, usage, buffer_callback, &buffer);
-    context.buffer_available(ipc_buf);
+    mcl::PresentationChain chain(connection, wait_handle, rpc_id, mock_server, factory);
+    chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
+    chain.buffer_available(ipc_buf);
     auto b = buffer.wait_for_buffer();
     ASSERT_THAT(b, Ne(nullptr));
 
-    context.submit_buffer(b);
+    chain.submit_buffer(b);
 } 
 
-TEST_F(BufferContext, double_submission_throws)
+TEST_F(PresentationChain, double_submission_throws)
 {
     BufferCallbackContext buffer;
 
@@ -276,19 +276,19 @@ TEST_F(BufferContext, double_submission_throws)
     EXPECT_CALL(mock_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    mcl::BufferContext context(connection, wait_handle, rpc_id, mock_server, factory);
-    context.allocate_buffer(size, format, usage, buffer_callback, &buffer);
-    context.buffer_available(ipc_buf);
+    mcl::PresentationChain chain(connection, wait_handle, rpc_id, mock_server, factory);
+    chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
+    chain.buffer_available(ipc_buf);
     auto b = buffer.wait_for_buffer();
     ASSERT_THAT(b, Ne(nullptr));
 
-    context.submit_buffer(b);
+    chain.submit_buffer(b);
     EXPECT_THROW({
-        context.submit_buffer(b);
+        chain.submit_buffer(b);
     }, std::logic_error);
 }
 
-TEST_F(BufferContext, callback_invoked_when_buffer_returned_from_allocation_and_submission)
+TEST_F(PresentationChain, callback_invoked_when_buffer_returned_from_allocation_and_submission)
 {
     BufferCount counter;
 
@@ -297,15 +297,15 @@ TEST_F(BufferContext, callback_invoked_when_buffer_returned_from_allocation_and_
     EXPECT_CALL(mock_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    mcl::BufferContext context(connection, wait_handle, rpc_id, mock_server, factory);
-    context.allocate_buffer(size, format, usage, counting_buffer_callback, &counter);
-    context.buffer_available(ipc_buf);
+    mcl::PresentationChain chain(connection, wait_handle, rpc_id, mock_server, factory);
+    chain.allocate_buffer(size, format, usage, counting_buffer_callback, &counter);
+    chain.buffer_available(ipc_buf);
     std::unique_lock<std::mutex> lk(counter.mut);
     EXPECT_TRUE(counter.cv.wait_for(lk, std::chrono::seconds(5), [&] { return counter.buffer; }));
     lk.unlock();
 
-    context.submit_buffer(counter.buffer);
-    context.buffer_available(ipc_buf);
+    chain.submit_buffer(counter.buffer);
+    chain.buffer_available(ipc_buf);
 
     lk.lock();
     EXPECT_THAT(counter.count, Eq(2));

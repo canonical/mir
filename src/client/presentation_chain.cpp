@@ -19,7 +19,7 @@
 #include "mir/client_buffer_factory.h"
 #include "mir/client_buffer.h"
 #include "rpc/mir_display_server.h"
-#include "buffer_context.h"
+#include "presentation_chain.h"
 #include <boost/throw_exception.hpp>
 #include <algorithm>
 
@@ -28,7 +28,7 @@ namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
-mcl::BufferContext::BufferContext(
+mcl::PresentationChain::PresentationChain(
     MirConnection* connection,
     std::shared_ptr<MirWaitHandle> const& wh,
     int stream_id,
@@ -47,7 +47,7 @@ static void ignore_response(mp::Void* response)
     delete response;
 }
 
-void mcl::BufferContext::allocate_buffer(
+void mcl::PresentationChain::allocate_buffer(
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback cb, void* cb_context)
 {
@@ -69,7 +69,7 @@ void mcl::BufferContext::allocate_buffer(
     server.allocate_buffers(&request, ignored, gp::NewCallback(ignore_response, ignored));
 }
 
-void mcl::BufferContext::submit_buffer(MirBuffer* buffer)
+void mcl::PresentationChain::submit_buffer(MirBuffer* buffer)
 {
     mp::BufferRequest request;
     {
@@ -89,7 +89,7 @@ void mcl::BufferContext::submit_buffer(MirBuffer* buffer)
     server.submit_buffer(&request, ignored, gp::NewCallback(ignore_response, ignored));
 }
 
-void mcl::BufferContext::release_buffer(MirBuffer* buffer)
+void mcl::PresentationChain::release_buffer(MirBuffer* buffer)
 {
     mp::BufferRelease request;
     {
@@ -111,7 +111,7 @@ void mcl::BufferContext::release_buffer(MirBuffer* buffer)
     server.release_buffers(&request, ignored, gp::NewCallback(ignore_response, ignored));
 }
 
-void mcl::BufferContext::buffer_available(mp::Buffer const& buffer)
+void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     //first see if this buffer has been here before
@@ -153,17 +153,17 @@ void mcl::BufferContext::buffer_available(mp::Buffer const& buffer)
     allocation_requests.erase(request_it);
 }
 
-int mcl::BufferContext::rpc_id() const
+int mcl::PresentationChain::rpc_id() const
 {
     return stream_id;
 }
 
-MirConnection* mcl::BufferContext::connection() const
+MirConnection* mcl::PresentationChain::connection() const
 {
     return connection_;
 }
 
-mcl::BufferContext::AllocationRequest::AllocationRequest(
+mcl::PresentationChain::AllocationRequest::AllocationRequest(
     geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback cb, void* cb_context) :
     size(size),

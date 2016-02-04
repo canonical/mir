@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_BUFFER_CONTEXT_H
-#define MIR_CLIENT_BUFFER_CONTEXT_H
+#ifndef MIR_CLIENT_PRESENTATION_CHAIN_H
+#define MIR_CLIENT_PRESENTATION_CHAIN_H
 
 #include "mir/geometry/size.h"
 #include "mir_toolkit/mir_presentation_chain.h"
@@ -36,10 +36,10 @@ namespace rpc
 {
 class DisplayServer;
 }
-class BufferContext
+class PresentationChain
 {
 public:
-    BufferContext(
+    PresentationChain(
         MirConnection* connection,
         std::shared_ptr<MirWaitHandle> const&,
         int rpc_id,
@@ -82,4 +82,4 @@ private:
 };
 }
 }
-#endif /* MIR_CLIENT_BUFFER_CONTEXT_H */
+#endif /* MIR_CLIENT_PRESENTATION_CHAIN_H */
