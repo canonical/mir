@@ -38,7 +38,14 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
 
 struct BufferContext : Test
 {
-    int rpc_id = 33;
+    BufferContext()
+    {
+        ipc_buf.set_width(size.width.as_int());
+        ipc_buf.set_height(size.height.as_int());
+        ipc_buf.set_buffer_id(buffer_id);
+    }
+
+    int rpc_id { 33 };
     MirConnection* connection {reinterpret_cast<MirConnection*>(this)};
     std::shared_ptr<MirWaitHandle> wait_handle;
     geom::Size size {100, 200};
@@ -47,10 +54,34 @@ struct BufferContext : Test
     mtd::MockProtobufServer mock_server;
     std::shared_ptr<MockClientBufferFactory> const factory {
         std::make_shared<NiceMock<MockClientBufferFactory>>() };
+    int buffer_id {4312};
+    mp::Buffer ipc_buf;
 };
 
-struct BContext
+struct BufferCallbackContext
 {
+    void set_buffer(MirBuffer* b)
+    {
+        std::unique_lock<std::mutex> lk(mut);
+        buffer = b;
+        cv.notify_all();
+    }
+
+    bool buffer_is_set()
+    {
+        std::unique_lock<std::mutex> lk(mut);
+        return buffer;
+    }
+
+    MirBuffer* wait_for_buffer()
+    {
+        std::unique_lock<std::mutex> lk(mut);
+        if (!cv.wait_for(lk, std::chrono::seconds(5), [this] { return buffer; }))
+            throw std::runtime_error("timeout waiting for buffer");
+        return buffer;
+    }
+
+private:
     std::mutex mut;
     std::condition_variable cv;
     MirBuffer* buffer = nullptr;
@@ -58,10 +89,7 @@ struct BContext
 
 static void buffer_callback(MirBufferContext*, MirBuffer* buffer, void* context)
 {
-    auto c = static_cast<BContext*>(context);
-    std::unique_lock<std::mutex> lk(c->mut);
-    c->buffer = buffer;
-    c->cv.notify_all();
+    static_cast<BufferCallbackContext*>(context)->set_buffer(buffer);
 }
 
 struct BufferCount
@@ -120,7 +148,7 @@ TEST_F(BufferContext, returns_associated_rpc_id)
 
 TEST_F(BufferContext, creates_buffer_when_asked)
 {
-    BContext buffer;
+    BufferCallbackContext buffer;
     mp::BufferAllocation mp_alloc;
     auto params = mp_alloc.add_buffer_requests();
     params->set_width(size.width.as_int());
@@ -136,17 +164,14 @@ TEST_F(BufferContext, creates_buffer_when_asked)
     mcl::BufferContext context(connection, wait_handle, rpc_id, mock_server, factory);
     context.allocate_buffer(size, format, usage, buffer_callback, &buffer);
 
-    std::unique_lock<std::mutex> lk(buffer.mut);
-    EXPECT_THAT(buffer.buffer, Eq(nullptr));
-    lk.unlock();
+    EXPECT_FALSE(buffer.buffer_is_set());
 
     mp::Buffer ipc_buf;
     ipc_buf.set_width(size.width.as_int());
     ipc_buf.set_height(size.height.as_int());
     context.buffer_available(ipc_buf);
 
-    lk.lock();
-    EXPECT_TRUE(buffer.cv.wait_for(lk, std::chrono::seconds(5), [&] { return buffer.buffer; }));
+    EXPECT_TRUE(buffer.wait_for_buffer());
 }
 
 TEST_F(BufferContext, creates_correct_buffer_when_buffers_arrive)
@@ -159,7 +184,7 @@ TEST_F(BufferContext, creates_correct_buffer_when_buffers_arrive)
     };
 
     std::array<mp::Buffer, num_buffers> ipc_buf;
-    std::array<BContext, num_buffers> buffer;
+    std::array<BufferCallbackContext, num_buffers> buffer;
     std::array<mp::BufferAllocation, num_buffers> mp_alloc;
     Sequence seq;
     for (auto i = 0u; i < num_buffers; i++)
@@ -186,27 +211,21 @@ TEST_F(BufferContext, creates_correct_buffer_when_buffers_arrive)
         context.allocate_buffer(sizes[i], format, usage, buffer_callback, &buffer[i]);
 
     context.buffer_available(ipc_buf[1]);
-    EXPECT_THAT(buffer[0].buffer, Eq(nullptr));
-    EXPECT_THAT(buffer[1].buffer, Ne(nullptr));
-    EXPECT_THAT(buffer[2].buffer, Eq(nullptr));
+    EXPECT_FALSE(buffer[0].buffer_is_set());
+    EXPECT_TRUE(buffer[1].wait_for_buffer());
+    EXPECT_FALSE(buffer[2].buffer_is_set());
 
     context.buffer_available(ipc_buf[2]);
-    EXPECT_THAT(buffer[0].buffer, Eq(nullptr));
-    EXPECT_THAT(buffer[2].buffer, Ne(nullptr));
+    EXPECT_FALSE(buffer[0].buffer_is_set());
+    EXPECT_TRUE(buffer[2].wait_for_buffer());
 
     context.buffer_available(ipc_buf[0]);
-    EXPECT_THAT(buffer[0].buffer, Ne(nullptr));
+    EXPECT_TRUE(buffer[0].wait_for_buffer());
 }
 
 TEST_F(BufferContext, frees_buffer_when_asked)
 {
-    BContext buffer;
-    int buffer_id = 4312;
-    mp::Buffer ipc_buf;
-    ipc_buf.set_width(size.width.as_int());
-    ipc_buf.set_height(size.height.as_int());
-    ipc_buf.set_buffer_id(buffer_id);
-    gp::Closure* closure = nullptr;
+    BufferCallbackContext buffer;
     mp::BufferRelease release_msg;
     release_msg.mutable_id()->set_value(rpc_id);
     auto released_buffer = release_msg.add_buffers();
@@ -220,24 +239,16 @@ TEST_F(BufferContext, frees_buffer_when_asked)
     mcl::BufferContext context(connection, wait_handle, rpc_id, mock_server, factory);
     context.allocate_buffer(size, format, usage, buffer_callback, &buffer);
     context.buffer_available(ipc_buf);
-    std::unique_lock<std::mutex> lk(buffer.mut);
-    EXPECT_TRUE(buffer.cv.wait_for(lk, std::chrono::seconds(5), [&] { return buffer.buffer; }));
+    auto b = buffer.wait_for_buffer();
+    ASSERT_THAT(b, Ne(nullptr));
 
-    ASSERT_THAT(buffer.buffer, Ne(nullptr));
-    context.release_buffer(buffer.buffer);
+    context.release_buffer(b);
 
 } 
 
 TEST_F(BufferContext, submits_buffer_when_asked)
 {
-    BContext buffer;
-    gp::Closure* closure = nullptr;
-    int buffer_id = 4312;
-
-    mp::Buffer ipc_buf;
-    ipc_buf.set_width(size.width.as_int());
-    ipc_buf.set_height(size.height.as_int());
-    ipc_buf.set_buffer_id(buffer_id);
+    BufferCallbackContext buffer;
     mp::BufferRequest request;
     request.mutable_id()->set_value(rpc_id);
     request.mutable_buffer()->set_buffer_id(buffer_id);
@@ -250,21 +261,15 @@ TEST_F(BufferContext, submits_buffer_when_asked)
     mcl::BufferContext context(connection, wait_handle, rpc_id, mock_server, factory);
     context.allocate_buffer(size, format, usage, buffer_callback, &buffer);
     context.buffer_available(ipc_buf);
-    std::unique_lock<std::mutex> lk(buffer.mut);
-    EXPECT_TRUE(buffer.cv.wait_for(lk, std::chrono::seconds(5), [&] { return buffer.buffer; }));
+    auto b = buffer.wait_for_buffer();
+    ASSERT_THAT(b, Ne(nullptr));
 
-    context.submit_buffer(buffer.buffer);
+    context.submit_buffer(b);
 } 
 
 TEST_F(BufferContext, double_submission_throws)
 {
-    BContext buffer;
-    gp::Closure* closure = nullptr;
-    int buffer_id = 4312;
-    mp::Buffer ipc_buf;
-    ipc_buf.set_width(size.width.as_int());
-    ipc_buf.set_height(size.height.as_int());
-    ipc_buf.set_buffer_id(buffer_id);
+    BufferCallbackContext buffer;
 
     EXPECT_CALL(mock_server, allocate_buffers(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
@@ -274,24 +279,18 @@ TEST_F(BufferContext, double_submission_throws)
     mcl::BufferContext context(connection, wait_handle, rpc_id, mock_server, factory);
     context.allocate_buffer(size, format, usage, buffer_callback, &buffer);
     context.buffer_available(ipc_buf);
-    std::unique_lock<std::mutex> lk(buffer.mut);
-    EXPECT_TRUE(buffer.cv.wait_for(lk, std::chrono::seconds(5), [&] { return buffer.buffer; }));
+    auto b = buffer.wait_for_buffer();
+    ASSERT_THAT(b, Ne(nullptr));
 
-    context.submit_buffer(buffer.buffer);
+    context.submit_buffer(b);
     EXPECT_THROW({
-        context.submit_buffer(buffer.buffer);
+        context.submit_buffer(b);
     }, std::logic_error);
 }
 
 TEST_F(BufferContext, callback_invoked_when_buffer_returned_from_allocation_and_submission)
 {
     BufferCount counter;
-    gp::Closure* closure = nullptr;
-    int buffer_id = 4312;
-    mp::Buffer ipc_buf;
-    ipc_buf.set_width(size.width.as_int());
-    ipc_buf.set_height(size.height.as_int());
-    ipc_buf.set_buffer_id(buffer_id);
 
     EXPECT_CALL(mock_server, allocate_buffers(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
