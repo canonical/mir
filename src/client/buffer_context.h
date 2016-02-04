@@ -20,7 +20,7 @@
 #define MIR_CLIENT_BUFFER_CONTEXT_H
 
 #include "mir/geometry/size.h"
-#include "mir_toolkit/mir_buffer_stream_nbs.h"
+#include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_protobuf.pb.h"
 #include "buffer.h"
 #include <mutex>

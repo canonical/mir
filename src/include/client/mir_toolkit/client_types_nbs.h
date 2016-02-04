@@ -29,12 +29,12 @@ extern "C" {
 #endif
 
 /* NOTE: this file will be rolled into mir_toolkit/client_types.h when made public. */
-typedef struct MirBufferContext MirBufferContext;
+typedef struct MirPresentationChain MirPresentationChain;
 typedef struct MirBuffer MirBuffer;
 typedef void* MirNativeFence;
 
-typedef void (*mir_buffer_callback)(MirBufferContext*, MirBuffer*, void* context);
-typedef void (*mir_buffer_context_callback)(MirBufferContext*, void* context);
+typedef void (*mir_buffer_callback)(MirPresentationChain*, MirBuffer*, void* context);
+typedef void (*mir_presentation_chain_callback)(MirPresentationChain*, void* context);
 typedef enum MirBufferAccess
 {
     mir_none,

@@ -87,7 +87,7 @@ private:
     MirBuffer* buffer = nullptr;
 };
 
-static void buffer_callback(MirBufferContext*, MirBuffer* buffer, void* context)
+static void buffer_callback(MirPresentationChain*, MirBuffer* buffer, void* context)
 {
     static_cast<BufferCallbackContext*>(context)->set_buffer(buffer);
 }
@@ -100,7 +100,7 @@ struct BufferCount
     unsigned int count = 0;
 };
 
-static void counting_buffer_callback(MirBufferContext*, MirBuffer* buffer, void* context)
+static void counting_buffer_callback(MirPresentationChain*, MirBuffer* buffer, void* context)
 {
     BufferCount* c = static_cast<BufferCount*>(context);
     c->buffer = buffer;

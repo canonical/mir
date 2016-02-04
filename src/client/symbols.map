@@ -282,20 +282,20 @@ MIR_CLIENT_DETAIL_9v19 {
 
 MIR_CLIENT_DETAIL_private_buffer_semantics {
   global:
-    mir_buffer_context_allocate_buffer;
-    mir_buffer_context_release_buffer;
-    mir_buffer_context_submit_buffer;
     mir_buffer_get_fence;
     mir_buffer_associate_fence;
     mir_buffer_wait_fence;
     mir_buffer_get_native_buffer;
     mir_buffer_acquire_region;
     mir_buffer_release_region;
-    mir_buffer_context_is_valid;
-    mir_buffer_context_get_error_message;
-    mir_connection_create_buffer_context;
-    mir_connection_create_buffer_context_sync;
-    mir_buffer_context_release;
+    mir_buffer_release;
+    mir_connection_create_presentation_chain_sync;
+    mir_presentation_chain_is_valid;
+    mir_presentation_chain_get_error_message;
+    mir_connection_create_presentation_chain;
+    mir_presentation_chain_allocate_buffer;
+    mir_presentation_chain_submit_buffer;
+    mir_presentation_chain_release;
   local:
     *;
 } MIR_CLIENT_DETAIL_9v19;

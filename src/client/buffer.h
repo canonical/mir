@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_BUFFER_H
 #define MIR_CLIENT_BUFFER_H
 
-#include "mir_toolkit/mir_buffer_stream_nbs.h"
+#include "mir_toolkit/mir_buffer.h"
 #include <memory>
 
 namespace mir
