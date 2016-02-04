@@ -40,6 +40,7 @@
 #include "mir/input/touchpad_configuration.h"
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_device_info.h"
+#include "mir/geometry/rectangles.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

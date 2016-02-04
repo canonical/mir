@@ -35,6 +35,7 @@ class Cursor;
 class CursorImage;
 class GLContext;
 class EventHandlerRegister;
+class VirtualOutput;
 
 typedef std::function<bool()> DisplayPauseHandler;
 typedef std::function<bool()> DisplayResumeHandler;
@@ -151,6 +152,12 @@ public:
      * to access graphics resources from an arbitrary thread.
      */
     virtual std::unique_ptr<GLContext> create_gl_context() = 0;
+
+    /**
+     * Creates a virtual output
+     *  \returns null if the implementation does not support virtual outputs
+     */
+    virtual std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) = 0;
 
     Display() = default;
     virtual ~Display() = default;

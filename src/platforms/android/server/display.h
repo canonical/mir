@@ -77,6 +77,7 @@ public:
 
     std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
+    std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
 
 private:
     void on_hotplug();

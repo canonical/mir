@@ -20,28 +20,28 @@
 #define MIR_INPUT_DISPLAY_INPUT_REGION_H_
 
 #include "mir/input/input_region.h"
+#include "mir/geometry/rectangles.h"
 
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
-namespace graphics
-{
-class Display;
-}
 namespace input
 {
 
 class DisplayInputRegion : public InputRegion
 {
 public:
-    DisplayInputRegion(std::shared_ptr<graphics::Display> const& display);
+    DisplayInputRegion() = default;
 
-    geometry::Rectangle bounding_rectangle();
-    void confine(geometry::Point& point);
+    geometry::Rectangle bounding_rectangle() override;
+    void confine(geometry::Point& point) override;
+    void set_input_rectangles(geometry::Rectangles const& rectangles) override;
 
 private:
-    std::shared_ptr<graphics::Display> const display;
+    std::mutex rectangle_guard;
+    geometry::Rectangles rectangles;
 };
 
 }
