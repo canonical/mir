@@ -58,8 +58,6 @@ void mcl::BufferContext::allocate_buffer(
 
         allocation_requests.emplace_back(
             std::make_unique<AllocationRequest>(size, format, usage, cb, cb_context));
-//std::unique_ptr<AllocationRequest>(
-//            new AllocationRequest{size, format, usage, cb, cb_context}));
     }
 
     mp::BufferAllocation request;
