@@ -242,7 +242,7 @@ void mir_presentation_chain_allocate_buffer(
     new MirBufferStub(stream, cb, context); 
 }
 
-void mir_presentation_chain_release_buffer(MirPresentationChain*, MirBuffer* buffer) 
+void mir_buffer_release(MirBuffer* buffer) 
 {
     delete reinterpret_cast<MirBufferStub*>(buffer);
 }

@@ -145,7 +145,7 @@ int main(int argc, char** argv)
     }
 
     for (i = 0u; i < num_prerendered_frames; i++)
-        mir_presentation_chain_release_buffer(chain, buffer_available[i].buffer);
+        mir_buffer_release(buffer_available[i].buffer);
     mir_presentation_chain_release(chain);
     mir_surface_release_sync(surface);
     mir_connection_release(connection);

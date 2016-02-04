@@ -15,8 +15,8 @@
  *
  */
 
-#ifndef MIR_TOOLKIT_MIR_PRESENTATION_CHAIN_NBS_H_
-#define MIR_TOOLKIT_MIR_PRESENTATION_CHAIN_NBS_H_
+#ifndef MIR_TOOLKIT_MIR_PRESENTATION_CHAIN_H_
+#define MIR_TOOLKIT_MIR_PRESENTATION_CHAIN_H_
 
 #include <mir_toolkit/client_types_nbs.h>
 
@@ -104,14 +104,6 @@ void mir_presentation_chain_allocate_buffer(
     MirBufferUsage buffer_usage,
     mir_buffer_callback available_callback, void* available_context);
 
-/** release a MirBuffer
- *   \param [in] presentation_chain  The presentation chain
- *   \param [in] buffer              The buffer to be released
- **/
-void mir_presentation_chain_release_buffer(
-    MirPresentationChain* presentation_chain, MirBuffer* buffer);
-
-
 /** Submit a buffer to the server so the server can display it.
  *
  *  The server will notify the client when the buffer is available again via
@@ -134,4 +126,4 @@ bool mir_presentation_chain_submit_buffer(
 /**@}*/
 #endif
 
-#endif // MIR_TOOLKIT_MIR_PRESENTATION_CHAIN_NBS_H_
+#endif // MIR_TOOLKIT_MIR_PRESENTATION_CHAIN_H_
