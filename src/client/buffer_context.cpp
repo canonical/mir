@@ -53,9 +53,6 @@ void mcl::BufferContext::allocate_buffer(
 {
     {
         std::lock_guard<decltype(mutex)> lk(mutex);
-
-        auto i = std::make_unique<int>(3333);
-
         allocation_requests.emplace_back(
             std::make_unique<AllocationRequest>(size, format, usage, cb, cb_context));
     }
