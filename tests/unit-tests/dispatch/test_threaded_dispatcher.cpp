@@ -322,7 +322,6 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
 {
     using namespace std::chrono_literals;
     mt::CrossProcessAction stop_and_restart_process;
-    std::cout << "" << std::endl;
 
     auto child = mir_test_framework::fork_and_run_in_a_different_process(
         [&]
@@ -330,8 +329,7 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
             {
                 auto dispatched = std::make_shared<mt::Signal>();
                 auto dispatchable = std::make_shared<mt::TestDispatchable>(
-                    [dispatched]() { std::cout << "got dispatched" << std::endl;
-                    dispatched->raise(); std::cout << "got dispatched done" << std::endl;});
+                    [dispatched]() { dispatched->raise(); });
 
                 /* When there's no SIGCONT handler installed a SIGSTOP/SIGCONT
                  * pair POSIX mandates that a SIGSTOP/SIGCONT pair will *not*
@@ -356,7 +354,6 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
                 dispatched->reset();
                 // The dispatcher shouldn't have been affected by the signal
                 dispatchable->trigger();
-                std::cout << "triggering the dispatchable " << std::endl;
                 EXPECT_TRUE(dispatched->wait_for(5s));
 
                 // Because we terminate this process with an explicit call to
@@ -381,7 +378,7 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
             }
         });
 
-    auto const result = child->wait_for_termination(40s);
+    auto const result = child->wait_for_termination(30s);
     EXPECT_TRUE(result.succeeded());
 }
 
