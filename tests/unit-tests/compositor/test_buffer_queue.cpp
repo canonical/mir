@@ -519,6 +519,7 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
             ASSERT_THAT(q.scaling_delay(), Ge(0));
             ++throttled_count;
             ASSERT_THAT(throttled_count, Le(nbuffers));
+            onscreen = q.compositor_acquire(this);
         }
     }
 }
