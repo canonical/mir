@@ -480,6 +480,8 @@ TEST_P(WithAnyNumberOfBuffers, compositor_can_acquire_and_release)
 TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
 {   // Regression test for LP: #1480164
     q.allow_framedropping(false);
+
+    // The design of this test requires dynamic scaling be disabled:
     q.set_scaling_delay(-1);
 
     // Skip over the first frame. The early release optimization is too
@@ -506,7 +508,6 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
     {
         ASSERT_FALSE(handle->has_acquired_buffer());
         q.compositor_release(onscreen);
-        // Note: This is only reliably true when queue scaling is disabled:
         ASSERT_TRUE(handle->has_acquired_buffer()) << "frame# " << f;
         handle->release_buffer();
         onscreen = q.compositor_acquire(this);
@@ -517,7 +518,6 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
 TEST_P(WithTwoOrMoreBuffers, short_buffer_holds_dont_overclock_multimonitor)
 {   // Regression test related to LP: #1480164
     q.allow_framedropping(false);
-    q.set_scaling_delay(-1);
 
     // Skip over the first frame. The early release optimization is too
     // conservative to allow it to happen right at the start (so as to
@@ -545,7 +545,7 @@ TEST_P(WithTwoOrMoreBuffers, short_buffer_holds_dont_overclock_multimonitor)
 
     for (int f = 0; f < 100; ++f)
     {
-        // These first two assertions are the important ones:
+        // These two assertions are the important ones:
         ASSERT_FALSE(handle->has_acquired_buffer());
         q.compositor_release(left);
         q.compositor_release(right);
@@ -553,9 +553,11 @@ TEST_P(WithTwoOrMoreBuffers, short_buffer_holds_dont_overclock_multimonitor)
         left = q.compositor_acquire(leftid);
         right = q.compositor_acquire(rightid);
         // Note: This is only reliably true when queue scaling is disabled:
-        ASSERT_TRUE(handle->has_acquired_buffer());
-        handle->release_buffer();
-        handle = client_acquire_async(q);
+        if (handle->has_acquired_buffer())
+        {
+            handle->release_buffer();
+            handle = client_acquire_async(q);
+        } // else dynamic queue scaling is throttling us.
     }
 }
 
