@@ -32,16 +32,6 @@ namespace gp = google::protobuf;
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory
 {
-    MockClientBufferFactory()
-    {
-/*        ON_CALL(*this, create_buffer(_,_,_))
-            .WillByDefault(Invoke([](
-                    std::shared_ptr<MirBufferPackage> const&, geom::Size size, MirPixelFormat)
-                {
-                    return std::make_shared<NiceMock<MockBuffer>>(size);
-                }));
-*/
-    }
     MOCK_METHOD3(create_buffer, std::shared_ptr<mcl::ClientBuffer>(
         std::shared_ptr<MirBufferPackage> const&, geom::Size, MirPixelFormat));
 };
@@ -91,15 +81,10 @@ static void counting_buffer_callback(MirBufferContext*, MirBuffer* buffer, void*
 
 MATCHER_P(BufferRequestMatches, val, "")
 {
-#if 0
     return ((arg->id().value() == val.id().value()) &&
         arg->has_buffer() &&
         val.has_buffer() &&
         arg->buffer().buffer_id() == val.buffer().buffer_id());
-#else
-    (void)arg; (void)val;
-    return true;
-#endif
 }
 
 MATCHER_P(BufferAllocationMatches, val, "")
