@@ -30,6 +30,8 @@ namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
+namespace
+{
 struct MockClientBufferFactory : public mcl::ClientBufferFactory
 {
     MockClientBufferFactory()
@@ -92,11 +94,6 @@ private:
     MirBuffer* buffer = nullptr;
 };
 
-static void buffer_callback(MirPresentationChain*, MirBuffer* buffer, void* context)
-{
-    static_cast<BufferCallbackContext*>(context)->set_buffer(buffer);
-}
-
 struct BufferCount
 {
     std::mutex mut;
@@ -104,13 +101,6 @@ struct BufferCount
     MirBuffer* buffer = nullptr;
     unsigned int count = 0;
 };
-
-static void counting_buffer_callback(MirPresentationChain*, MirBuffer* buffer, void* context)
-{
-    BufferCount* c = static_cast<BufferCount*>(context);
-    c->buffer = buffer;
-    c->count = c->count + 1;
-}
 
 MATCHER_P(BufferRequestMatches, val, "")
 {
@@ -137,6 +127,19 @@ MATCHER_P(BufferReleaseMatches, val, "")
         (arg->buffers_size() == 1) &&
         (val.buffers_size() == 1) &&
         (arg->buffers(0).buffer_id() == val.buffers(0).buffer_id()));
+}
+}
+
+static void buffer_callback(MirPresentationChain*, MirBuffer* buffer, void* context)
+{
+    static_cast<BufferCallbackContext*>(context)->set_buffer(buffer);
+}
+
+static void counting_buffer_callback(MirPresentationChain*, MirBuffer* buffer, void* context)
+{
+    BufferCount* c = static_cast<BufferCount*>(context);
+    c->buffer = buffer;
+    c->count = c->count + 1;
 }
 
 TEST_F(PresentationChain, returns_associated_connection)
