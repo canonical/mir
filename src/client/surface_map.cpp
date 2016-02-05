@@ -57,7 +57,7 @@ void mcl::ConnectionSurfaceMap::erase(mf::SurfaceId surface_id)
 }
 
 void mcl::ConnectionSurfaceMap::with_stream_do(
-    mf::BufferStreamId stream_id, std::function<void(ClientBufferStream*)> const& exec) const
+    mf::BufferStreamId stream_id, std::function<void(BufferReceiver*)> const& exec) const
 {
     std::shared_lock<decltype(guard)> lk(guard);
     auto const it = streams.find(stream_id);
@@ -68,62 +68,13 @@ void mcl::ConnectionSurfaceMap::with_stream_do(
     }
     else
     {
-        auto const cit = contexts.find(stream_id);
-        if (cit != contexts.end())
-        {
-            struct Wrapper : ClientBufferStream
-            {
-                Wrapper(std::shared_ptr<mcl::PresentationChain> context) : context(context) {}
-                MirSurfaceParameters get_parameters() const
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                std::shared_ptr<ClientBuffer> get_current_buffer()
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                uint32_t get_current_buffer_id()
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                EGLNativeWindowType egl_native_window()
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                MirWaitHandle* next_buffer(std::function<void()> const&)
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                std::shared_ptr<MemoryRegion> secure_for_cpu_write()
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                int swap_interval() const
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                MirWaitHandle* set_swap_interval(int)
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                MirNativeBuffer* get_current_buffer_package()
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                MirPlatformType platform_type()
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                frontend::BufferStreamId rpc_id() const
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                bool valid() const
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                void buffer_unavailable()
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                void set_size(geometry::Size)
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                MirWaitHandle* set_scale(float)
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                char const* get_error_message() const
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-                MirConnection* connection() const
-                { BOOST_THROW_EXCEPTION(std::runtime_error("NO")); }
-
-                void buffer_available(mir::protobuf::Buffer const& b)
-                    { context->buffer_available(b); }
-                std::shared_ptr<mcl::PresentationChain> const context;
-            } w(cit->second);
-            exec(&w);
-            return;
-        }
-
         std::stringstream ss;
         ss << __PRETTY_FUNCTION__ << "executed with non-existent stream ID " << stream_id;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 }
 
-void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBufferStream*)> const& fn) const
+void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(BufferReceiver*)> const& fn) const
 {
     std::shared_lock<decltype(guard)> lk(guard);
     for(auto const& stream : streams)
@@ -131,14 +82,7 @@ void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBuf
 }
 
 void mcl::ConnectionSurfaceMap::insert(
-    mf::BufferStreamId stream_id, std::shared_ptr<PresentationChain> const& context)
-{
-    std::lock_guard<decltype(guard)> lk(guard);
-    contexts[stream_id] = context;
-}
-
-void mcl::ConnectionSurfaceMap::insert(
-    mf::BufferStreamId stream_id, std::shared_ptr<ClientBufferStream> const& stream)
+    mf::BufferStreamId stream_id, std::shared_ptr<BufferReceiver> const& stream)
 {
     std::lock_guard<decltype(guard)> lk(guard);
     streams[stream_id] = stream;
