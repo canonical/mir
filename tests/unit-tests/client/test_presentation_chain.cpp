@@ -182,11 +182,11 @@ TEST_F(PresentationChain, creates_buffer_when_asked)
 TEST_F(PresentationChain, creates_correct_buffer_when_buffers_arrive)
 {
     size_t const num_buffers = 3u;
-    std::array<geom::Size, num_buffers> sizes {
+    std::array<geom::Size, num_buffers> sizes { {
         geom::Size{2,2},
         geom::Size{2,1},
         geom::Size{1,2}
-    };
+    } };
 
     std::array<mp::Buffer, num_buffers> ipc_buf;
     std::array<BufferCallbackContext, num_buffers> buffer;
