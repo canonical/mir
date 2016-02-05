@@ -32,6 +32,11 @@ namespace gp = google::protobuf;
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory
 {
+    MockClientBufferFactory()
+    {
+        ON_CALL(*this, create_buffer(_,_,_))
+            .WillByDefault(Return(nullptr));
+    }
     MOCK_METHOD3(create_buffer, std::shared_ptr<mcl::ClientBuffer>(
         std::shared_ptr<MirBufferPackage> const&, geom::Size, MirPixelFormat));
 };
