@@ -22,6 +22,7 @@
 #include "mir/test/doubles/mock_input_device_observer.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/doubles/mock_input_region.h"
+#include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/stub_cursor_listener.h"
 #include "mir/test/doubles/stub_touch_visualizer.h"
 #include "mir/test/doubles/triggered_main_loop.h"
@@ -53,15 +54,11 @@ using Nice = ::testing::NiceMock<Type>;
 struct InputDeviceHubTest : ::testing::Test
 {
     mtd::TriggeredMainLoop observer_loop;
-    Nice<mtd::MockInputDispatcher> mock_dispatcher;
-    Nice<mtd::MockInputRegion> mock_region;
     std::shared_ptr<mir::cookie::Authority> cookie_authority = mir::cookie::Authority::create();
-    mtd::StubCursorListener stub_cursor_listener;
-    mtd::StubTouchVisualizer stub_visualizer;
     mir::dispatch::MultiplexingDispatchable multiplexer;
-    mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_dispatcher), mt::fake_shared(multiplexer),
-                                  mt::fake_shared(observer_loop), mt::fake_shared(stub_visualizer),
-                                  mt::fake_shared(stub_cursor_listener), mt::fake_shared(mock_region), cookie_authority};
+    Nice<mtd::MockInputSeat> mock_seat;
+    mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_seat), mt::fake_shared(multiplexer),
+                                  mt::fake_shared(observer_loop), cookie_authority};
     Nice<mtd::MockInputDeviceObserver> mock_observer;
     Nice<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
     Nice<mtd::MockInputDevice> another_device{"another_device","dev-2", mi::DeviceCapability::keyboard};
@@ -98,7 +95,6 @@ TEST_F(InputDeviceHubTest, input_device_hub_stops_device_on_removal)
 
 TEST_F(InputDeviceHubTest, input_device_hub_ignores_removal_of_unknown_devices)
 {
-
     EXPECT_CALL(device,start(_,_)).Times(0);
     EXPECT_CALL(device,stop()).Times(0);
 
@@ -148,6 +144,18 @@ TEST_F(InputDeviceHubTest, observers_receive_devices_on_add)
 
     EXPECT_THAT(handle_1,Ne(handle_2));
     EXPECT_THAT(handle_1->unique_id(),Ne(handle_2->unique_id()));
+}
+
+TEST_F(InputDeviceHubTest, seat_receives_devices)
+{
+    InSequence seq;
+    EXPECT_CALL(mock_seat, add_device(WithName("device")));
+    EXPECT_CALL(mock_seat, add_device(WithName("another_device")));
+    EXPECT_CALL(mock_seat, remove_device(WithName("device")));
+
+    hub.add_device(mt::fake_shared(device));
+    hub.add_device(mt::fake_shared(another_device));
+    hub.remove_device(mt::fake_shared(device));
 }
 
 TEST_F(InputDeviceHubTest, throws_on_duplicate_add)

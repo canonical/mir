@@ -20,10 +20,10 @@
 #define MIR_INPUT_DEFAULT_INPUT_DEVICE_HUB_H_
 
 #include "default_event_builder.h"
-#include "seat.h"
 
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_sink.h"
+#include "mir/input/seat.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/input_device_info.h"
 
@@ -48,23 +48,17 @@ class ActionQueue;
 }
 namespace input
 {
-class InputDispatcher;
 class InputSink;
 class InputDeviceObserver;
-class TouchVisualizer;
-class InputRegion;
-class CursorListener;
 class DefaultDevice;
+class Seat;
 
 class DefaultInputDeviceHub : public InputDeviceRegistry, public InputDeviceHub
 {
 public:
-    DefaultInputDeviceHub(std::shared_ptr<InputDispatcher> const& input_dispatcher,
+    DefaultInputDeviceHub(std::shared_ptr<Seat> const& seat,
                           std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
                           std::shared_ptr<ServerActionQueue> const& observer_queue,
-                          std::shared_ptr<TouchVisualizer> const& touch_visualizer,
-                          std::shared_ptr<CursorListener> const& cursor_listener,
-                          std::shared_ptr<InputRegion> const& input_region,
                           std::shared_ptr<cookie::Authority> const& cookie_authority);
 
     // InputDeviceRegistry - calls from mi::Platform
@@ -80,39 +74,33 @@ private:
     void add_device_handle(std::shared_ptr<DefaultDevice> const& handle);
     void remove_device_handle(MirInputDeviceId id);
     MirInputDeviceId create_new_device_id();
-    std::shared_ptr<InputDispatcher> const input_dispatcher;
+    std::shared_ptr<Seat> const seat;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const input_dispatchable;
     std::shared_ptr<ServerActionQueue> const observer_queue;
     std::shared_ptr<dispatch::ActionQueue> const device_queue;
-    std::shared_ptr<InputRegion> const input_region;
     std::shared_ptr<cookie::Authority> const cookie_authority;
-    Seat seat;
 
     struct RegisteredDevice : public InputSink
     {
     public:
         RegisteredDevice(std::shared_ptr<InputDevice> const& dev,
                          MirInputDeviceId dev_id,
-                         std::shared_ptr<InputDispatcher> const& dispatcher,
                          std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
                          std::shared_ptr<cookie::Authority> const& cookie_authority,
-                         DefaultInputDeviceHub* hub,
-                         Seat* seat);
+                         std::shared_ptr<DefaultDevice> const& handle);
         void handle_input(MirEvent& event) override;
         mir::geometry::Rectangle bounding_rectangle() const override;
         bool device_matches(std::shared_ptr<InputDevice> const& dev) const;
-        void start();
+        void start(std::shared_ptr<Seat> const& seat);
         void stop();
         MirInputDeviceId id();
+        std::shared_ptr<Seat> seat;
+        const std::shared_ptr<DefaultDevice> handle;
     private:
         MirInputDeviceId device_id;
         DefaultEventBuilder builder;
         std::shared_ptr<InputDevice> const device;
-        std::shared_ptr<InputDispatcher> const dispatcher;
         std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
-        DefaultInputDeviceHub* hub;
-        Seat* seat;
-        friend class DefaultInputDeviceHub;
     };
 
     std::vector<std::shared_ptr<DefaultDevice>> handles;
