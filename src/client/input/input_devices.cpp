@@ -19,11 +19,28 @@
 #include "mir/input/input_devices.h"
 
 namespace mi = mir::input;
-mi::InputDevices::InputDevices() = default; //necessary to make sure the linker does not discard this yet unused class
 
 void  mi::InputDevices::update_devices(std::vector<DeviceData> && data)
 {
-    std::unique_lock<std::mutex> lock(devices_access);
-    devices = std::move(data);
+    std::function<void()> stored_callback;
+
+    {
+        std::unique_lock<std::mutex> lock(devices_access);
+        devices = std::move(data);
+        stored_callback = callback;
+    }
+
+    stored_callback();
 }
 
+std::vector<mi::DeviceData> mi::InputDevices::copy_devices()
+{
+    std::unique_lock<std::mutex> lock(devices_access);
+    return devices;
+}
+
+void mi::InputDevices::set_change_callback(std::function<void()> const& new_callback)
+{
+    std::unique_lock<std::mutex> lock(devices_access);
+    callback = new_callback;
+}

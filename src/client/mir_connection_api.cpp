@@ -21,6 +21,7 @@
 #include "mir_connection_api.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir/default_configuration.h"
+#include "mir/input/input_devices.h"
 #include "mir/raii.h"
 #include "mir/require.h"
 
@@ -235,9 +236,27 @@ MirDisplayConfiguration* mir_connection_create_display_config(
 MirInputDevices* mir_connection_create_input_devices(
     MirConnection* connection)
 {
-    if (connection)
-        return connection->create_copy_of_input_devices();
-    return nullptr;
+    if (!connection)
+        return nullptr;
+    auto devices = connection->the_input_devices();
+    return reinterpret_cast<MirInputDevices*>(new std::vector<mir::input::DeviceData>(devices->copy_devices()));
+}
+
+void mir_connection_set_input_devices_change_callback(
+    MirConnection* connection,
+    mir_input_devices_callback callback,
+    void* context)
+{
+    if (!connection)
+        return;
+    auto devices = connection->the_input_devices();
+    devices->set_change_callback([connection, context, callback]{callback(connection, context);});
+}
+
+void mir_input_devices_destroy(MirInputDevices const* devices)
+{
+    auto device_vector = reinterpret_cast<std::vector<mir::input::DeviceData>const*>(devices);
+    delete device_vector;
 }
 
 void mir_connection_set_display_config_change_callback(

@@ -273,7 +273,15 @@ MirWaitHandle* mir_connection_platform_operation(
  *   \param [in]  connection        The connection
  *   \return                        structure that describes the display configuration
  */
-MirDisplayConfiguration* mir_connection_create_input_devices(MirConnection *connection);
+MirInputDevices* mir_connection_create_input_devices(MirConnection *connection);
+
+/**
+ * Release this copy of the available input devices.
+ * This invalidates any pointers retrieved from this set of input devices.
+ *
+ * \param [in] devices  The input devices
+ */
+void mir_input_devices_destroy(MirInputDevices const* devices);
 
 /**
  * Register a callback to be called when the input devices change.
@@ -288,7 +296,6 @@ MirDisplayConfiguration* mir_connection_create_input_devices(MirConnection *conn
 void mir_connection_set_input_devices_change_callback(
     MirConnection* connection,
     mir_input_devices_callback callback, void* context);
-
 
 
 #ifdef __cplusplus

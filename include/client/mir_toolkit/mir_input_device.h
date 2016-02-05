@@ -18,6 +18,8 @@
 #ifndef MIR_TOOLKIT_MIR_INPUT_DEVICE_H_
 #define MIR_TOOLKIT_MIR_INPUT_DEVICE_H_
 
+#include "mir_toolkit/client_types.h"
+
 /**
  * \addtogroup mir_toolkit
  * @{
@@ -64,7 +66,20 @@ typedef enum MirTouchpadScrollMode
 } MirTouchpadScrollMode;
 typedef unsigned int MirTouchpadScrollModes;
 
-typedef struct MirInputDevices MirInputDevices;
+enum MirInputDeviceCapability
+{
+    mir_input_device_capability_none        = 0,
+    mir_input_device_capability_pointer     = 1<<1,
+    mir_input_device_capability_keyboard    = 1<<2,
+    mir_input_device_capability_touchpad    = 1<<3,
+    mir_input_device_capability_touchscreen = 1<<4,
+    mir_input_device_capability_gamepad     = 1<<5,
+    mir_input_device_capability_joystick    = 1<<6,
+    mir_input_device_capability_switch      = 1<<7,
+    mir_input_device_capability_multitouch  = 1<<8,  //! capable to detect multiple contacts
+    mir_input_device_capability_alpha_numeric = 1<<9 //! offers enough keys for text entry
+};
+typedef unsigned int MirInputDeviceCapabilities;
 
 /**
  * Retrieve the number of available input devices.
@@ -76,14 +91,6 @@ typedef struct MirInputDevices MirInputDevices;
 size_t mir_input_devices_count(MirInputDevices const* devices);
 
 /**
- * Release this copy of the available input devices.
- * This invalidates any pointers retrieved from this set of input devices.
- *
- * \param [in] devices  The input devices
- */
-void mir_input_devices_destroy(MirInputDevices const* devices);
-
-/**
  * Retrieve the capabilities of the input device at the given index.
  *
  * \param [in] devices  The input devices
@@ -92,7 +99,8 @@ void mir_input_devices_destroy(MirInputDevices const* devices);
  *
  * \return              The capability flags of the input device at index.
  */
-uint32_t mir_input_devices_get_capabilities(MirInputDevices const* devices, size_t index);
+MirInputDeviceCapabilities mir_input_devices_get_capabilities(
+    MirInputDevices const* devices, size_t index);
 
 /**
  * Retrieve the device id of the input device at the given index.
