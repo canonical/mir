@@ -1858,7 +1858,7 @@ TEST_P(WithThreeOrMoreBuffers, greedy_compositors_need_triple_buffers)
     std::unordered_set<mg::Buffer *> buffers_acquired;
     int const delay = q.scaling_delay();
 
-    for (int frame = 0; frame < 10; frame++)
+    for (int frame = 0; frame < delay+10; frame++)
     {
         auto handle = client_acquire_async(q);
         handle->wait_for(std::chrono::seconds(1));
