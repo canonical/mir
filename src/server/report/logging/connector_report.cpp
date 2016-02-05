@@ -52,20 +52,6 @@ void mrl::ConnectorReport::thread_end()
     logger->log(ml::Severity::informational, ss.str(), component);
 }
 
-void mrl::ConnectorReport::starting_threads(int count)
-{
-    std::stringstream ss;
-    ss << "Starting " << count << " threads.";
-    logger->log(ml::Severity::informational, ss.str(), component);
-}
-
-void mrl::ConnectorReport::stopping_threads(int count)
-{
-    std::stringstream ss;
-    ss << "Stopping " << count << " threads.";
-    logger->log(ml::Severity::informational, ss.str(), component);
-}
-
 void mrl::ConnectorReport::creating_session_for(int socket_handle)
 {
     std::stringstream ss;

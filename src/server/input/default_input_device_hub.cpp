@@ -19,13 +19,9 @@
 #include "default_input_device_hub.h"
 #include "default_device.h"
 
-#include "seat.h"
-#include "mir/input/input_dispatcher.h"
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_observer.h"
-#include "mir/input/input_region.h"
 #include "mir/geometry/point.h"
-#include "mir/events/event_builders.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/server_action_queue.h"
@@ -39,24 +35,17 @@
 #include <atomic>
 
 namespace mi = mir::input;
-namespace geom = mir::geometry;
-namespace mev = mir::events;
 
 mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
-    std::shared_ptr<mi::InputDispatcher> const& input_dispatcher,
+    std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
     std::shared_ptr<mir::ServerActionQueue> const& observer_queue,
-    std::shared_ptr<TouchVisualizer> const& touch_visualizer,
-    std::shared_ptr<CursorListener> const& cursor_listener,
-    std::shared_ptr<InputRegion> const& input_region,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority)
-    : input_dispatcher(input_dispatcher),
+    : seat{seat},
       input_dispatchable{input_multiplexer},
       observer_queue(observer_queue),
       device_queue(std::make_shared<dispatch::ActionQueue>()),
-      input_region(input_region),
       cookie_authority(cookie_authority),
-      seat(touch_visualizer, cursor_listener, input_region),
       device_id_generator{0}
 {
     input_dispatchable->add_watch(device_queue);
@@ -76,14 +65,16 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
 
     if (it == end(devices))
     {
+        auto id = create_new_device_id();
+        auto handle = std::make_shared<DefaultDevice>(id, device_queue, device);
         // send input device info to observer loop..
         devices.push_back(std::make_unique<RegisteredDevice>(
-            device, create_new_device_id(), input_dispatcher, input_dispatchable, cookie_authority, this, &seat));
+            device, id, input_dispatchable, cookie_authority, handle));
 
         auto const& dev = devices.back();
-        seat.add_device(dev->id());
 
-        auto handle = std::make_shared<DefaultDevice>(dev->id(), device_queue, device);
+        seat->add_device(handle);
+        dev->start(seat);
 
         // pass input device handle to observer loop..
         observer_queue->enqueue(this,
@@ -92,8 +83,6 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
                                     add_device_handle(handle);
                                 });
 
-        // TODO let shell decide if device should be observed / exposed to clients.
-        devices.back()->start();
     }
     else
     {
@@ -114,9 +103,12 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
         {
             if (item->device_matches(device))
             {
-                item->stop();
-                seat.remove_device(item->id());
-
+                auto seat = item->seat;
+                if (seat)
+                {
+                    seat->remove_device(item->handle);
+                    item->stop();
+                }
                 // send input device info to observer queue..
                 observer_queue->enqueue(
                     this,
@@ -124,6 +116,7 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
                     {
                         remove_device_handle(id);
                     });
+
                 return true;
             }
             return false;
@@ -140,13 +133,10 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
 mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
     std::shared_ptr<InputDevice> const& dev,
     MirInputDeviceId device_id,
-    std::shared_ptr<InputDispatcher> const& dispatcher,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
-    DefaultInputDeviceHub* hub,
-    Seat* seat)
-    : device_id(device_id), builder(device_id, cookie_authority), device(dev), dispatcher(dispatcher),
-      multiplexer(multiplexer), hub(hub), seat(seat)
+    std::shared_ptr<mi::DefaultDevice> const& handle)
+    : handle(handle), device_id(device_id), builder(device_id, cookie_authority), device(dev), multiplexer(multiplexer)
 {
 }
 
@@ -165,23 +155,12 @@ void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(MirEvent& event)
     auto type = mir_event_get_type(&event);
 
     if (type != mir_event_type_input)
-        BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid input event receivd from device"));
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Invalid input event received from device"));
 
-    auto input_event = mir_event_get_input_event(&event);
-    seat->update_seat_properties(input_event);
+    if (!seat)
+        return;
 
-    if (mir_input_event_type_key  == mir_input_event_get_type(input_event))
-        mev::set_modifier(event, seat->event_modifier(mir_input_event_get_device_id(input_event)));
-    else
-        mev::set_modifier(event, seat->event_modifier());
-
-    if (mir_input_event_type_pointer == mir_input_event_get_type(input_event))
-    {
-        mev::set_cursor_position(event, seat->cursor_position());
-        mev::set_button_state(event, seat->button_state());
-    }
-
-    dispatcher->dispatch(event);
+    seat->dispatch_event(event);
 }
 
 bool mi::DefaultInputDeviceHub::RegisteredDevice::device_matches(std::shared_ptr<InputDevice> const& dev) const
@@ -189,20 +168,24 @@ bool mi::DefaultInputDeviceHub::RegisteredDevice::device_matches(std::shared_ptr
     return dev == device;
 }
 
-void mi::DefaultInputDeviceHub::RegisteredDevice::start()
+void mi::DefaultInputDeviceHub::RegisteredDevice::start(std::shared_ptr<Seat> const& seat)
 {
+    this->seat = seat;
     device->start(this, &builder);
 }
 
 void mi::DefaultInputDeviceHub::RegisteredDevice::stop()
 {
     device->stop();
+    seat = nullptr;
 }
 
 mir::geometry::Rectangle mi::DefaultInputDeviceHub::RegisteredDevice::bounding_rectangle() const
 {
-    // TODO touchscreens only need the bounding rectangle of one output
-    return hub->input_region->bounding_rectangle();
+    if (!seat)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Device not started and has no seat assigned"));
+
+    return seat->get_rectangle_for(handle);
 }
 
 void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver> const& observer)

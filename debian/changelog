@@ -19,7 +19,7 @@ mir (0.19.0+16.04.20160128-0ubuntu1) xenial; urgency=medium
       . mirinputplatform ABI bumped to 5
       . mircookie ABI bumped to 2
     - Enhancements:
-      . Improve compositor start loggging
+      . Improve compositor start logging
       . Mir cookie support added for copy paste use
     - Bugs fixed:
       . [regression] Mir servers crash on mouse input -
