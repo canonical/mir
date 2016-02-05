@@ -19,6 +19,7 @@
 #ifndef MIR_CLIENT_PRESENTATION_CHAIN_H
 #define MIR_CLIENT_PRESENTATION_CHAIN_H
 
+#include "buffer_receiver.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_protobuf.pb.h"
@@ -36,7 +37,7 @@ namespace rpc
 {
 class DisplayServer;
 }
-class PresentationChain
+class PresentationChain : public BufferReceiver
 {
 public:
     PresentationChain(
@@ -50,7 +51,9 @@ public:
     void submit_buffer(MirBuffer* buffer);
     void release_buffer(MirBuffer* buffer);
 
-    void buffer_available(mir::protobuf::Buffer const& buffer);
+    void buffer_available(mir::protobuf::Buffer const& buffer) override;
+    void buffer_unavailable() override;
+
     MirConnection* connection() const;
     int rpc_id() const;
 private:
