@@ -77,6 +77,8 @@ add_library(mirclientobjects OBJECT
   error_stream.cpp
   buffer.cpp
   presentation_chain.cpp
+  mir_presentation_chain_api.cpp
+  mir_buffer_api.cpp
   ${MIR_CLIENT_SOURCES}
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/events/surface_output_event.h
 )
