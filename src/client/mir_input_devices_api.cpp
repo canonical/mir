@@ -29,35 +29,35 @@ inline std::vector<mir::input::DeviceData> const& as_vector(MirInputDevices cons
 
 size_t mir_input_devices_count(MirInputDevices const* devices)
 {
-    auto device_vector = as_vector(devices);
+    auto& device_vector = as_vector(devices);
 
     return device_vector.size();
 }
 
 uint32_t mir_input_devices_get_capabilities(MirInputDevices const* devices, size_t index)
 {
-    auto device_vector = as_vector(devices);
+    auto& device_vector = as_vector(devices);
 
     return device_vector[index].caps;
 }
 
 MirInputDeviceId mir_input_devices_get_id(MirInputDevices const* devices, size_t index)
 {
-    auto device_vector = as_vector(devices);
+    auto& device_vector = as_vector(devices);
 
     return device_vector[index].id;
 }
 
 char const* mir_input_devices_get_name(MirInputDevices const* devices, size_t index)
 {
-    auto device_vector = as_vector(devices);
+    auto& device_vector = as_vector(devices);
 
     return device_vector[index].name.c_str();
 }
 
 char const* mir_input_devices_get_unique_id(MirInputDevices const* devices, size_t index)
 {
-    auto device_vector = as_vector(devices);
+    auto& device_vector = as_vector(devices);
 
     return device_vector[index].unique_id.c_str();
 }
