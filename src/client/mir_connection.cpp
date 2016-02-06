@@ -531,6 +531,18 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
         {
             this->pong(serial);
         });
+
+        if (connect_result->input_devices_size())
+        {
+            std::vector<mir::input::DeviceData> devices;
+
+            devices.reserve(connect_result->input_devices_size());
+
+            for (auto const& dev : connect_result->input_devices())
+                devices.emplace_back(dev.id(), dev.capabilities(), dev.name(), dev.unique_id());
+
+            input_devices->update_devices(std::move(devices));
+        }
     }
     catch (std::exception const& e)
     {

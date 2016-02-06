@@ -43,19 +43,19 @@ void mi::BasicSeat::add_device(std::shared_ptr<input::Device> const& device)
     {
         std::unique_lock<std::mutex> lock(devices_guard);
         devices.push_back(device);
+        event_sink->handle_input_device_change(devices);
     }
 
-    event_sink->handle_input_device_change(devices);
 }
 
 void mi::BasicSeat::remove_device(std::shared_ptr<input::Device> const& device)
 {
+    input_state_tracker.remove_device(device->id());
     {
         std::unique_lock<std::mutex> lock(devices_guard);
         devices.erase(remove(begin(devices), end(devices), device));
+        event_sink->handle_input_device_change(devices);
     }
-    input_state_tracker.remove_device(device->id());
-    event_sink->handle_input_device_change(devices);
 }
 
 void mi::BasicSeat::dispatch_event(MirEvent& event)

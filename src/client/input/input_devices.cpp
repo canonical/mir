@@ -20,7 +20,7 @@
 
 namespace mi = mir::input;
 
-void  mi::InputDevices::update_devices(std::vector<DeviceData> && data)
+void mi::InputDevices::update_devices(std::vector<DeviceData> && data)
 {
     std::function<void()> stored_callback;
 
@@ -30,7 +30,8 @@ void  mi::InputDevices::update_devices(std::vector<DeviceData> && data)
         stored_callback = callback;
     }
 
-    stored_callback();
+    if (stored_callback)
+        stored_callback();
 }
 
 std::vector<mi::DeviceData> mi::InputDevices::copy_devices()
