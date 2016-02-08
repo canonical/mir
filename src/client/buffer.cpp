@@ -16,39 +16,39 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_toolkit/mir_presentation_chain.h"
-#include "mir_toolkit/mir_buffer.h"
 #include "buffer.h"
+#include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
-//private NBS api under development
-bool mir_presentation_chain_submit_buffer(MirPresentationChain*, MirBuffer* buffer)
+
+mcl::Buffer::Buffer(
+    mir_buffer_callback cb, void* context,
+    int buffer_id,
+    std::shared_ptr<ClientBuffer> const& buffer) :
+    cb(cb),
+    cb_context(context),
+    buffer_id(buffer_id),
+    buffer(buffer),
+    owned(true)
 {
-    auto b = reinterpret_cast<mcl::Buffer*>(buffer);
-    b->received();
-    return true;
+    cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
 }
 
-bool mir_presentation_chain_is_valid(MirPresentationChain*)
+int mcl::Buffer::rpc_id() const
 {
-    return true;
+    return buffer_id;
 }
 
-char const *mir_presentation_chain_get_error_message(MirPresentationChain*)
+void mcl::Buffer::submitted()
 {
-    return "";
+    if (!owned)
+        BOOST_THROW_EXCEPTION(std::logic_error("cannot submit unowned buffer"));
+    owned = false;
 }
 
-MirWaitHandle* mir_connection_create_presentation_chain(MirConnection*, mir_presentation_chain_callback, void*)
+void mcl::Buffer::received()
 {
-    return nullptr;
-}
-
-MirPresentationChain* mir_connection_create_presentation_chain_sync(MirConnection*)
-{
-    return nullptr;
-}
-
-void mir_presentation_chain_release(MirPresentationChain*)
-{
+    if (!owned)
+        cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
+    owned = true;
 }
