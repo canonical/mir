@@ -1,4 +1,4 @@
-mir (0.19.1-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.19.1+16.04.20160204-0ubuntu1) xenial; urgency=medium
 
   [ Kevin Gunn ]
   * New upstream release 0.19.1 (https://launchpad.net/mir/+milestone/0.19.1)
@@ -6,7 +6,10 @@ mir (0.19.1-0ubuntu1) UNRELEASED; urgency=medium
     - Improved on the fix for LP: #1527449 and LP: #1526658 in order to
       avoid Unity8 crashing on upgraded xenial desktops.
 
- -- Kevin Gunn <kevin.gunn@canonical.com>  Tue, 02 Feb 2016 11:59:26 -0600
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- kevin gunn <kevin.gunn@canonical.com>  Thu, 04 Feb 2016 21:13:57 +0000
 
 mir (0.19.0+16.04.20160128-0ubuntu1) xenial; urgency=medium
 
