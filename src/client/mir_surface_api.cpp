@@ -20,6 +20,7 @@
 
 #include "mir_toolkit/mir_surface.h"
 #include "mir_toolkit/mir_wait.h"
+#include "mir_toolkit/mir_presentation_chain.h"
 #include "mir/require.h"
 
 #include "mir_connection.h"
@@ -565,6 +566,12 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_set_content(MirSurfaceSpec*,
+                                  MirSurfaceContent*,
+                                  unsigned int)
+{
 }
 
 void mir_surface_spec_set_input_shape(MirSurfaceSpec *spec, MirRectangle const* rectangles,

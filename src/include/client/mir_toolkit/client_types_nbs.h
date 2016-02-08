@@ -42,6 +42,31 @@ typedef enum MirBufferAccess
     mir_read_write,
 } MirBufferAccess;
 
+typedef struct MirPresentationChainInfo
+{
+    MirPresentationChain* chain;
+    int displacement_x;
+    int displacement_y;
+    int width;
+    int height;
+    int reserved[16]; 
+} MirPresentationChainInfo;
+
+typedef enum MirSurfaceContentType
+{
+    mir_content_buffer_stream,
+    mir_content_presentation_chain
+} MirSurfaceContentType;
+
+typedef struct MirSurfaceContent 
+{
+    MirSurfaceContentType type;
+    union {
+        MirPresentationChainInfo* chain;
+        MirBufferStreamInfo* stream;
+    } info;
+} MirSurfaceContent;
+
 #ifdef __cplusplus
 }
 /**@}*/

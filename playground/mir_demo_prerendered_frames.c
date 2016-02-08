@@ -97,13 +97,19 @@ int main(int argc, char** argv)
         return -1;
 
     //reassociate for advanced control
-    MirBufferStreamInfo info;
+    MirPresentationChainInfo info;
+    MirSurfaceContent content;
     info.displacement_x = 0;
     info.displacement_y = 0;
-    //will make this a union.
-    info.stream = (MirBufferStream*) chain;
+    info.width = width;
+    info.height = height;
+    info.chain = chain;
+
+    content.info.chain = &info;
+    content.type = mir_content_presentation_chain;
+
     spec = mir_create_surface_spec(connection);
-    mir_surface_spec_set_streams(spec, &info, 1);
+    mir_surface_spec_set_content(spec, &content, 1);
     mir_surface_spec_release(spec);
 
     int num_prerendered_frames = 20;

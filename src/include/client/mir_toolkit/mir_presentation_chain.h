@@ -121,6 +121,29 @@ void mir_presentation_chain_allocate_buffer(
 bool mir_presentation_chain_submit_buffer(
     MirPresentationChain* presentation_chain, MirBuffer* buffer);
 
+/**
+ * Set the content associated with the spec.
+ * content[0] is the bottom-most stream, and content[size-1] is the topmost.
+ * On application of the spec, the stream or chain that is present in the
+ * surface, but is not in the list will be disassociated from the surface.
+ * On application of the spec, a stream or chain that is not present in the
+ * surface, but is in the list will be associated with the surface.
+ *
+ * Streams set a displacement from the top-left corner of the surface.
+ * 
+ * \warning disassociating streams from the surface will not release() them.
+ * \warning It is wiser to arrange the streams within the bounds of the
+ *          surface the spec is applied to. Shells can define their own
+ *          behavior as to what happens to an out-of-bound stream.
+ * 
+ * \param [in] spec        The spec to accumulate the request in.
+ * \param [in] streams     An array of non-null streams info.
+ * \param [in] num_streams The number of elements in the streams array.
+ */
+void mir_surface_spec_set_content(MirSurfaceSpec* spec,
+                                  MirSurfaceContent* content,
+                                  unsigned int num_content);
+
 #ifdef __cplusplus
 }
 /**@}*/
