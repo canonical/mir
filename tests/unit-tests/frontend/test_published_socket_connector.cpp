@@ -64,8 +64,6 @@ public:
         using namespace testing;
         EXPECT_CALL(*this, thread_start()).Times(AnyNumber());
         EXPECT_CALL(*this, thread_end()).Times(AnyNumber());
-        EXPECT_CALL(*this, starting_threads(_)).Times(AnyNumber());
-        EXPECT_CALL(*this, stopping_threads(_)).Times(AnyNumber());
         EXPECT_CALL(*this, creating_session_for(_)).Times(AnyNumber());
         EXPECT_CALL(*this, creating_socket_pair(_, _)).Times(AnyNumber());
         EXPECT_CALL(*this, listening_on(_)).Times(AnyNumber());
@@ -76,8 +74,6 @@ public:
 
     MOCK_METHOD0(thread_start, void ());
     MOCK_METHOD0(thread_end, void());
-    MOCK_METHOD1(starting_threads, void (int count));
-    MOCK_METHOD1(stopping_threads, void(int count));
 
     MOCK_METHOD1(creating_session_for, void(int socket_handle));
     MOCK_METHOD2(creating_socket_pair, void(int server_handle, int client_handle));

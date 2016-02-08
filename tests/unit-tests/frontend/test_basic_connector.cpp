@@ -46,9 +46,8 @@ TEST(BasicConnector, names_ipc_threads)
     using namespace testing;
 
     StubConnectorReport report;
-    int const num_threads = 1;
-    mir::frontend::BasicConnector connector{
-        {}, num_threads, mt::fake_shared(report)};
+
+    mir::frontend::BasicConnector connector{{}, mt::fake_shared(report)};
 
     connector.start();
     connector.stop();

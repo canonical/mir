@@ -7,7 +7,7 @@
 INCLUDE(FindPackageHandleStandardArgs)
 
 find_package( PkgConfig )
-pkg_check_modules(ANDROID_HEADERS REQUIRED android-headers)
+pkg_search_module(ANDROID_HEADERS REQUIRED android-headers-19 android-headers)
 set(LIBHARDWARE_INCLUDE_DIRS ${ANDROID_HEADERS_INCLUDE_DIRS})
 
 find_library(LIBHARDWARE_LIBRARY

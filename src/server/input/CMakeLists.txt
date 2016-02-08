@@ -4,6 +4,7 @@ include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 set(
   INPUT_SOURCES
 
+  basic_seat.cpp
   builtin_cursor_images.cpp
   cursor_controller.cpp
   default_configuration.cpp
@@ -18,7 +19,7 @@ set(
   key_repeat_dispatcher.cpp
   null_input_channel_factory.cpp
   null_input_dispatcher.cpp
-  seat.cpp
+  seat_input_device_tracker.cpp
   surface_input_dispatcher.cpp
   touchspot_controller.cpp
   validator.cpp
