@@ -266,6 +266,38 @@ MirWaitHandle* mir_connection_platform_operation(
     MirPlatformMessage const* request,
     mir_platform_operation_callback callback, void* context);
 
+/**
+ * Query the attached input devices
+ *   \warning return value must be destroyed via mir_input_devices_destroy()
+ *   \warning may return null if connection is invalid
+ *   \param [in]  connection        The connection
+ *   \return                        structure that describes the display configuration
+ */
+MirInputDevices* mir_connection_create_input_devices(MirConnection *connection);
+
+/**
+ * Release this copy of the available input devices.
+ * This invalidates any pointers retrieved from this set of input devices.
+ *
+ * \param [in] devices  The input devices
+ */
+void mir_input_devices_destroy(MirInputDevices const* devices);
+
+/**
+ * Register a callback to be called when the input devices change.
+ *
+ * Once a change has occurred, you can use mir_connection_create_input_config to
+ * see the new input devices.
+ *
+ *   \param [in] connection  The connection
+ *   \param [in] callback    The function to be called when a change occurs
+ *   \param [in,out] context User data passed to the callback function
+ */
+void mir_connection_set_input_devices_change_callback(
+    MirConnection* connection,
+    mir_input_devices_callback callback, void* context);
+
+
 #ifdef __cplusplus
 }
 /**@}*/

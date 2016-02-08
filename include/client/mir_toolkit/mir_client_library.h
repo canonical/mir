@@ -26,5 +26,6 @@
 #include <mir_toolkit/mir_platform_message.h>
 #include <mir_toolkit/cursors.h>
 #include <mir_toolkit/mir_cookie.h>
+#include <mir_toolkit/mir_input_device.h>
 
 #endif /* MIR_CLIENT_LIBRARY_H */

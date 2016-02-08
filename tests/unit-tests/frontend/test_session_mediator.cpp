@@ -54,7 +54,10 @@
 #include "mir/test/doubles/mock_platform_ipc_operations.h"
 #include "mir/test/doubles/null_message_sender.h"
 #include "mir/test/doubles/mock_message_sender.h"
+#include "mir/test/doubles/mock_input_seat.h"
+#include "mir/test/doubles/stub_input_device.h"
 #include "mir/test/display_config_matchers.h"
+#include "mir/test/input_devices_matcher.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/signal.h"
 #include "mir/frontend/connector.h"
@@ -70,9 +73,11 @@
 #include <gmock/gmock.h>
 
 #include <stdexcept>
+#include <algorithm>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace mi = mir::input;
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
@@ -231,7 +236,8 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<mtd::NullMessageSender>(),
             resource_cache, stub_screencast, &connector, nullptr, nullptr,
             std::make_shared<mtd::NullANRDetector>(),
-            mir::cookie::Authority::create()}
+            mir::cookie::Authority::create(),
+            mt::fake_shared(mock_seat)}
     {
         using namespace ::testing;
 
@@ -256,11 +262,13 @@ struct SessionMediator : public ::testing::Test
             resource_cache, std::make_shared<mtd::NullScreencast>(),
             nullptr, nullptr, nullptr,
             std::make_shared<mtd::NullANRDetector>(),
-            mir::cookie::Authority::create());
+            mir::cookie::Authority::create(),
+            mt::fake_shared(mock_seat));
     }
 
     MockConnector connector;
     testing::NiceMock<mtd::MockPlatformIpcOperations> mock_ipc_operations;
+    testing::NiceMock<mtd::MockInputSeat> mock_seat;
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<mf::DisplayChanger> const graphics_changer;
     std::vector<MirPixelFormat> const surface_pixel_formats;
@@ -310,7 +318,8 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
         std::make_shared<mtd::NullMessageSender>(),
         resource_cache, stub_screencast, context, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>(),
-        mir::cookie::Authority::create()};
+        mir::cookie::Authority::create(),
+        mt::fake_shared(mock_seat)};
 
     EXPECT_THAT(connects_handled_count, Eq(0));
 
@@ -854,7 +863,8 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
         std::make_shared<mtd::NullMessageSender>(),
         mt::fake_shared(mock_cache), stub_screencast, &connector, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>(),
-        mir::cookie::Authority::create()};
+        mir::cookie::Authority::create(),
+        mt::fake_shared(mock_seat)};
 
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
@@ -968,7 +978,8 @@ TEST_F(SessionMediator, sends_a_buffer_when_submit_buffer_is_called)
         nullptr,
         nullptr,
         std::make_shared<mtd::NullANRDetector>(),
-        mir::cookie::Authority::create()};
+        mir::cookie::Authority::create(),
+        mt::fake_shared(mock_seat)};
 
     mp::Void null;
     mp::BufferRequest request;
@@ -1059,7 +1070,8 @@ TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_submit)
         std::make_shared<mtd::NullMessageSender>(),
         resource_cache, stub_screencast, nullptr, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>(),
-        mir::cookie::Authority::create()};
+        mir::cookie::Authority::create(),
+        mt::fake_shared(mock_seat)};
 
     mp::Void null;
     mp::BufferRequest request;
@@ -1203,7 +1215,8 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         mock_sender,
         resource_cache, stub_screencast, nullptr, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>(),
-        mir::cookie::Authority::create()};
+        mir::cookie::Authority::create(),
+        mt::fake_shared(mock_seat)};
 
     ON_CALL(*shell, create_surface( _, _, _))
         .WillByDefault(
@@ -1309,4 +1322,23 @@ TEST_F(SessionMediator, raise_with_invalid_cookie_throws)
     EXPECT_THROW({
         mediator.raise_surface(&raise_request, &void_response, null_callback.get());
     }, mir::cookie::SecurityCheckError);
+}
+
+TEST_F(SessionMediator, connect_sends_input_devices_at_seat)
+{
+    using namespace testing;
+    mtd::StubDevice dev1{MirInputDeviceId{3}, mi::DeviceCapability::keyboard, "kbd", "kbd-aaf474"};
+    mtd::StubDevice dev2{MirInputDeviceId{7}, mi::DeviceCapability::touchscreen, "ts", "ts-ewrkw2"};
+    std::vector<std::shared_ptr<mir::input::Device>> devices{mt::fake_shared(dev1), mt::fake_shared(dev2)};
+    ON_CALL(mock_seat, for_each_input_device(_))
+        .WillByDefault(Invoke(
+            [&](std::function<void(std::shared_ptr<mir::input::Device> const&)> const& callback)
+            {
+                for(auto const& dev : devices)
+                    callback(dev);
+            }));
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+
+    EXPECT_THAT(connection.input_devices(), mt::InputDevicesMatch(devices));
 }

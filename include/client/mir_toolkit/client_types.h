@@ -335,6 +335,8 @@ typedef struct MirRectangle
     unsigned int height;
 } MirRectangle;
 
+typedef struct MirInputDevices MirInputDevices;
+
 /**
  * MirScreencastParameters is the structure of required information that
  * you must provide to Mir in order to create a MirScreencast.
@@ -394,6 +396,18 @@ typedef void (*mir_prompt_session_state_change_callback)(
  */
 typedef void (*mir_platform_operation_callback)(
     MirConnection* connection, MirPlatformMessage* reply, void* context);
+
+/**
+ * Callback called when a change of input devices has occurred
+ *   \param [in] connection     The connection associated with the input device change
+ *   \param [in,out] context    The context provided by client
+ */
+
+typedef void (*mir_input_devices_callback)(
+    MirConnection* connection, void* context);
+
+
+
 
 #ifdef __cplusplus
 }
