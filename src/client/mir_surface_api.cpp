@@ -555,11 +555,14 @@ try
 {
     mir::require(spec);
 
-    std::vector<MirBufferStreamInfo> copy;
+    std::vector<ContentInfo> copy;
     for (auto i = 0u; i < size; i++)
     {
         mir::require(mir_buffer_stream_is_valid(streams[i].stream));
-        copy.emplace_back(streams[i]);
+        copy.emplace_back(ContentInfo{
+            mir::geometry::Displacement{streams[i].displacement_x, streams[i].displacement_y},
+            reinterpret_cast<mcl::ClientBufferStream*>(streams[i].stream)->rpc_id().as_value(),
+            {}});
     }
     spec->streams = copy;
 }
@@ -568,10 +571,44 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_surface_spec_set_content(MirSurfaceSpec*,
-                                  MirSurfaceContent*,
-                                  unsigned int)
+void mir_surface_spec_set_content(MirSurfaceSpec* spec,
+                                  MirSurfaceContent* content,
+                                  unsigned int size)
+try
 {
+    mir::require(spec);
+
+    std::vector<ContentInfo> copy;
+    for (auto i = 0u; i < size; i++)
+    {
+        mir::require(content[i].type == mir_content_buffer_stream ||
+            content[i].type == mir_content_presentation_chain);
+
+        if (content[i].type == mir_content_buffer_stream)
+        {
+            auto info = content[i].info.stream;
+            mir::require(info);
+            copy.emplace_back(ContentInfo{
+                mir::geometry::Displacement{info->displacement_x, info->displacement_y},
+                reinterpret_cast<mcl::ClientBufferStream*>(info->stream)->rpc_id().as_value(),
+                {}});
+        }
+        else
+        {
+            auto info = content[i].info.chain;
+            mir::require(info);
+            copy.emplace_back(ContentInfo{
+                mir::geometry::Displacement{info->displacement_x, info->displacement_y},
+
+                reinterpret_cast<mcl::PresentationChain*>(streams[i].stream)->rpc_id().as_value(),
+                {}});*/
+        } 
+
+    }
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 void mir_surface_spec_set_input_shape(MirSurfaceSpec *spec, MirRectangle const* rectangles,
