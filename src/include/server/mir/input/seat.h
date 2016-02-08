@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,39 +13,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by:
+ *   Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_DISPLAY_INPUT_REGION_H_
-#define MIR_INPUT_DISPLAY_INPUT_REGION_H_
+#ifndef MIR_INPUT_SEAT_H_
+#define MIR_INPUT_SEAT_H_
 
-#include "mir/input/input_region.h"
-#include "mir/geometry/rectangles.h"
+#include "mir/geometry/rectangle.h"
+#include "mir_toolkit/event.h"
 
 #include <memory>
-#include <mutex>
 
 namespace mir
 {
 namespace input
 {
-
-class DisplayInputRegion : public InputRegion
+class Device;
+class Seat
 {
 public:
-    DisplayInputRegion() = default;
-
-    geometry::Rectangle bounding_rectangle() override;
-    void confine(geometry::Point& point) override;
-    void set_input_rectangles(geometry::Rectangles const& rectangles) override;
-
+    Seat()=default;
+    virtual ~Seat() = default;
+    virtual void add_device(std::shared_ptr<Device> const& device) = 0;
+    virtual void remove_device(std::shared_ptr<Device> const& device) = 0;
+    virtual void dispatch_event(MirEvent& event) = 0;
+    virtual geometry::Rectangle get_rectangle_for(std::shared_ptr<Device> const& dev) = 0;
 private:
-    std::mutex rectangle_guard;
-    geometry::Rectangles rectangles;
+    Seat(Seat const&) = delete;
+    Seat& operator=(Seat const&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_INPUT_DISPLAY_INPUT_REGION_H_ */
-
+#endif

@@ -63,7 +63,6 @@ char const* const mo::platform_path = "platform-path";
 
 namespace
 {
-int const default_ipc_threads          = 1;
 bool const enable_input_default        = true;
 }
 
@@ -173,8 +172,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the SharedLibraryProber report. [{log,lttng,off}]")
         (shell_report_opt, po::value<std::string>()->default_value(off_opt_value),
          "How to handle the Shell report. [{log,off}]")
-        (frontend_threads_opt, po::value<int>()->default_value(default_ipc_threads),
-            "threads in frontend thread pool.")
         (nbuffers_opt, po::value<int>()->default_value(3),
             "Number of buffers per surface.")
         (composite_delay_opt, po::value<int>()->default_value(-1),

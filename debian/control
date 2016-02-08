@@ -289,7 +289,7 @@ Description: Display server for Ubuntu - shared library
  Contains the shared libraries required for the Mir server and client.
 
 # Longer-term these drivers should move out-of-tree
-Package: mir-platform-graphics-mesa-x7
+Package: mir-platform-graphics-mesa-x8
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -303,7 +303,7 @@ Description: Display server for Ubuntu - platform library for X11 Mesa
  Contains the shared libraries required for the Mir server to interact with
  the X11 platform using the Mesa drivers.
 
-Package: mir-platform-graphics-mesa-kms7
+Package: mir-platform-graphics-mesa-kms8
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -317,7 +317,7 @@ Description: Display server for Ubuntu - platform library for KMS Mesa
  Contains the shared libraries required for the Mir server to interact with
  the hardware platform using the Mesa drivers.
 
-Package: mir-platform-graphics-android7
+Package: mir-platform-graphics-android8
 Section: libs
 Architecture: i386 amd64 armhf
 Multi-Arch: same
@@ -393,8 +393,8 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-mesa-kms7,
-         mir-platform-graphics-mesa-x7,
+         mir-platform-graphics-mesa-kms8,
+         mir-platform-graphics-mesa-x8,
          mir-client-platform-mesa4,
          mir-platform-input-evdev5,
 Description: Display server for Ubuntu - desktop driver metapackage
@@ -410,7 +410,7 @@ Architecture: i386 amd64 armhf
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-android7,
+         mir-platform-graphics-android8,
          mir-client-platform-android4,
          mir-platform-input-evdev5,
 Description: Display server for Ubuntu - android driver metapackage
