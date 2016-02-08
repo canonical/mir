@@ -675,7 +675,7 @@ TEST_F(MirConnectionTest, wait_handle_is_signalled_during_stream_creation_error)
 TEST_F(MirConnectionTest, wait_handle_is_signalled_during_creation_exception)
 {
     using namespace testing;
-   EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
         .WillOnce(DoAll(
             Invoke([](mp::BufferStream&, google::protobuf::Closure* c){ c->Run(); }),
             Throw(std::runtime_error("pay no attention to the man behind the curtain"))));
