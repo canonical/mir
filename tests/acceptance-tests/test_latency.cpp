@@ -201,7 +201,6 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
 {
     void SetUp() override
     {
-        
         preset_display(mt::fake_shared(display));
         mtf::ConnectedClientHeadlessServer::SetUp();
 
