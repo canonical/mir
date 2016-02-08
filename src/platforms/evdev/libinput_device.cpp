@@ -312,7 +312,7 @@ void mie::LibInputDevice::update_device_info()
     auto const mappings = {
         Mapping{"ID_INPUT_MOUSE", mi::DeviceCapability::pointer},
         Mapping{"ID_INPUT_TOUCHSCREEN", mi::DeviceCapability::touchscreen},
-        Mapping{"ID_INPUT_TOUCHPAD", Caps(mi::DeviceCapability::touchpad)|mi::DeviceCapability::pointer},
+        Mapping{"ID_INPUT_TOUCHPAD", Caps(mi::DeviceCapability::touchpad) | mi::DeviceCapability::pointer},
         Mapping{"ID_INPUT_JOYSTICK", mi::DeviceCapability::joystick},
         Mapping{"ID_INPUT_KEY", mi::DeviceCapability::keyboard},
         Mapping{"ID_INPUT_KEYBOARD", mi::DeviceCapability::alpha_numeric},
@@ -321,7 +321,7 @@ void mie::LibInputDevice::update_device_info()
     for (auto const& dev : devices)
     {
         auto* u_dev = libinput_device_get_udev_device(dev.get());
-        for (auto const mapping : mappings)
+        for (auto const& mapping : mappings)
         {
             int detected = 0;
             auto value = udev_device_get_property_value(u_dev, mapping.first);
