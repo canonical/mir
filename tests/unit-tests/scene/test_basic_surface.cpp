@@ -811,10 +811,10 @@ TEST_F(BasicSurfaceTest, adds_buffer_streams)
     auto buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0}},
-        { buffer_stream0, d0 },
-        { buffer_stream1, d1 },
-        { buffer_stream2, d2 }
+        { mock_buffer_stream, {0,0}, {}},
+        { buffer_stream0, d0, {} },
+        { buffer_stream1, d1, {} },
+        { buffer_stream2, d2, {} }
     };
     surface.set_streams(streams);
 
@@ -835,8 +835,8 @@ TEST_F(BasicSurfaceTest, moving_surface_repositions_all_associated_streams)
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0}},
-        { buffer_stream, d }
+        { mock_buffer_stream, {0,0}, {} },
+        { buffer_stream, d, {} } 
     };
 
     surface.set_streams(streams);
@@ -867,7 +867,7 @@ TEST_F(BasicSurfaceTest, cannot_remove_primary_buffer_stream_for_now)
     auto buffer_stream2 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0} },
+        { mock_buffer_stream, {0,0}, {} },
     };
     surface.set_streams(streams);
     auto renderables = surface.generate_renderables(this);
@@ -884,8 +884,8 @@ TEST_F(BasicSurfaceTest, showing_brings_all_streams_up_to_date)
     using namespace testing;
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0} },
-        { buffer_stream, {0,0} }
+        { mock_buffer_stream, {0,0}, {} },
+        { buffer_stream, {0,0}, {} }
     };
     surface.set_streams(streams);
 
@@ -905,8 +905,8 @@ TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
     
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0} },
-        { buffer_stream, {0,0} }
+        { mock_buffer_stream, {0,0}, {} },
+        { buffer_stream, {0,0}, {} }
     };
 
     surface.set_streams(streams);
@@ -928,8 +928,8 @@ TEST_F(BasicSurfaceTest, changing_inverval_effects_all_streams)
     
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0} },
-        { buffer_stream, {0,0} }
+        { mock_buffer_stream, {0,0}, {} },
+        { buffer_stream, {0,0}, {} }
     };
 
     EXPECT_CALL(*mock_buffer_stream, allow_framedropping(true));
@@ -951,8 +951,8 @@ TEST_F(BasicSurfaceTest, visibility_matches_produced_list)
     ON_CALL(*mock_buffer_stream1, has_submitted_buffer())
         .WillByDefault(Invoke([&stream2_visible] { return stream2_visible; }));
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0} },
-        { mock_buffer_stream1, displacement },
+        { mock_buffer_stream, {0,0}, {} },
+        { mock_buffer_stream1, displacement, {} },
     };
     surface.set_streams(streams);
 
@@ -990,9 +990,9 @@ TEST_F(BasicSurfaceTest, buffers_ready_correctly_reported)
         .WillOnce(Return(1));
 
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, {0,0}},
-        { buffer_stream0, {0,0} },
-        { buffer_stream1, {0,0} },
+        { mock_buffer_stream, {0,0}, {} },
+        { buffer_stream0, {0,0}, {} },
+        { buffer_stream1, {0,0}, {} },
     };
     surface.set_streams(streams);
     EXPECT_THAT(surface.buffers_ready_for_compositor(this), Eq(3));
@@ -1014,8 +1014,8 @@ TEST_F(BasicSurfaceTest, buffer_streams_produce_correctly_sized_renderables)
         .WillByDefault(Return(size1));
 
     std::list<ms::StreamInfo> streams = {
-        { mock_buffer_stream, d0 },
-        { buffer_stream, d1 },
+        { mock_buffer_stream, d0, {} },
+        { buffer_stream, d1, {} },
     };
     surface.set_streams(streams);
 

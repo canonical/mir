@@ -25,6 +25,7 @@
 
 #include "mir_connection.h"
 #include "mir_surface.h"
+#include "presentation_chain.h"
 #include "error_connections.h"
 #include "mir/uncaught.h"
 
@@ -577,7 +578,6 @@ void mir_surface_spec_set_content(MirSurfaceSpec* spec,
 try
 {
     mir::require(spec);
-
     std::vector<ContentInfo> copy;
     for (auto i = 0u; i < size; i++)
     {
@@ -599,11 +599,9 @@ try
             mir::require(info);
             copy.emplace_back(ContentInfo{
                 mir::geometry::Displacement{info->displacement_x, info->displacement_y},
-
-                reinterpret_cast<mcl::PresentationChain*>(streams[i].stream)->rpc_id().as_value(),
-                {}});*/
+                reinterpret_cast<mcl::PresentationChain*>(info->chain)->rpc_id(),
+                mir::geometry::Size{info->width, info->height}});
         } 
-
     }
 }
 catch (std::exception const& ex)

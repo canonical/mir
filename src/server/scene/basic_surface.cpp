@@ -222,7 +222,7 @@ ms::BasicSurface::BasicSurface(
     cursor_image_(cursor_image),
     report(report),
     parent_(parent),
-    layers({StreamInfo{buffer_stream, {0,0}}}),
+    layers({StreamInfo{buffer_stream, {0,0}, {}}}),
     cursor_stream_adapter{std::make_unique<ms::CursorStreamImageAdapter>(*this)},
     input_validator([this](MirEvent const& ev) { this->input_sender->send_event(ev, server_input_channel); })
 {
@@ -886,9 +886,15 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
     {
         if (info.stream->has_submitted_buffer())
         {
+            geom::Size size;
+            if (info.size.is_set())
+                size = info.size.value();
+            else
+                size = info.stream->stream_size();
+
             list.emplace_back(std::make_shared<SurfaceSnapshot>(
                 info.stream, id,
-                geom::Rectangle{surface_rect.top_left + info.displacement, info.stream->stream_size()},
+                geom::Rectangle{surface_rect.top_left + info.displacement, std::move(size)},
                 transformation_matrix, surface_alpha, nonrectangular, info.stream.get()));
         }
     }

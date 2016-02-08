@@ -23,6 +23,7 @@
 #include "mir/input/surface.h"
 #include "mir/frontend/surface.h"
 #include "mir/compositor/compositor_id.h"
+#include "mir/optional_value.h"
 
 #include <vector>
 #include <list>
@@ -40,6 +41,7 @@ struct StreamInfo
 {
     std::shared_ptr<compositor::BufferStream> stream;
     geometry::Displacement displacement;
+    optional_value<geometry::Size> size;
 };
 
 class SurfaceObserver;
