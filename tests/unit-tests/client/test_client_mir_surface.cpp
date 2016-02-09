@@ -538,7 +538,6 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_customized_st
     std::vector<ContentInfo> info =
         { ContentInfo{ geom::Displacement{0,0}, 2, geom::Size{1,1}} };
     spec.streams = info;
-
     surface.modify(spec)->wait_for_all();
     surface.handle_event(*ev);
     surface_map->erase(mir::frontend::BufferStreamId(2));

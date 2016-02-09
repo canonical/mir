@@ -922,6 +922,30 @@ TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
     EXPECT_THAT(renderables[1], IsRenderableOfAlpha(alpha));
 }
 
+TEST_F(BasicSurfaceTest, setting_streams_with_size_changes_sizes)
+{
+    using namespace testing;
+   
+    geom::Size size0 {100, 25 };
+    geom::Size size1 { 32, 44 };
+    geom::Size bad_size { 12, 11 }; 
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    ON_CALL(*mock_buffer_stream, stream_size())
+        .WillByDefault(Return(bad_size));
+    ON_CALL(*buffer_stream, stream_size())
+        .WillByDefault(Return(bad_size));
+    std::list<ms::StreamInfo> streams = {
+        { mock_buffer_stream, {0,0}, size0 },
+        { buffer_stream, {0,0}, size1 }
+    };
+
+    surface.set_streams(streams);
+    auto renderables = surface.generate_renderables(this);
+    ASSERT_THAT(renderables.size(), Eq(2));
+    EXPECT_THAT(renderables[0], IsRenderableOfSize(size0));
+    EXPECT_THAT(renderables[1], IsRenderableOfSize(size1));
+}
+
 TEST_F(BasicSurfaceTest, changing_inverval_effects_all_streams)
 {
     using namespace testing;
