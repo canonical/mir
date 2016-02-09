@@ -110,6 +110,7 @@ int main(int argc, char** argv)
 
     spec = mir_create_surface_spec(connection);
     mir_surface_spec_set_content(spec, &content, 1);
+    mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
 
     int num_prerendered_frames = 20;
