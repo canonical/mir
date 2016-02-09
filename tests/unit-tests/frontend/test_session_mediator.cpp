@@ -54,7 +54,7 @@
 #include "mir/test/doubles/mock_platform_ipc_operations.h"
 #include "mir/test/doubles/null_message_sender.h"
 #include "mir/test/doubles/mock_message_sender.h"
-#include "mir/test/doubles/mock_input_seat.h"
+#include "mir/test/doubles/mock_input_device_hub.h"
 #include "mir/test/doubles/stub_input_device.h"
 #include "mir/test/display_config_matchers.h"
 #include "mir/test/input_devices_matcher.h"
@@ -237,7 +237,7 @@ struct SessionMediator : public ::testing::Test
             resource_cache, stub_screencast, &connector, nullptr, nullptr,
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
-            mt::fake_shared(mock_seat)}
+            mt::fake_shared(mock_hub)}
     {
         using namespace ::testing;
 
@@ -263,12 +263,12 @@ struct SessionMediator : public ::testing::Test
             nullptr, nullptr, nullptr,
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
-            mt::fake_shared(mock_seat));
+            mt::fake_shared(mock_hub));
     }
 
     MockConnector connector;
     testing::NiceMock<mtd::MockPlatformIpcOperations> mock_ipc_operations;
-    testing::NiceMock<mtd::MockInputSeat> mock_seat;
+    testing::NiceMock<mtd::MockInputDeviceHub> mock_hub;
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<mf::DisplayChanger> const graphics_changer;
     std::vector<MirPixelFormat> const surface_pixel_formats;
@@ -319,7 +319,7 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
         resource_cache, stub_screencast, context, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
-        mt::fake_shared(mock_seat)};
+        mt::fake_shared(mock_hub)};
 
     EXPECT_THAT(connects_handled_count, Eq(0));
 
@@ -864,7 +864,7 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
         mt::fake_shared(mock_cache), stub_screencast, &connector, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
-        mt::fake_shared(mock_seat)};
+        mt::fake_shared(mock_hub)};
 
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
@@ -979,7 +979,7 @@ TEST_F(SessionMediator, sends_a_buffer_when_submit_buffer_is_called)
         nullptr,
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
-        mt::fake_shared(mock_seat)};
+        mt::fake_shared(mock_hub)};
 
     mp::Void null;
     mp::BufferRequest request;
@@ -1071,7 +1071,7 @@ TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_submit)
         resource_cache, stub_screencast, nullptr, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
-        mt::fake_shared(mock_seat)};
+        mt::fake_shared(mock_hub)};
 
     mp::Void null;
     mp::BufferRequest request;
@@ -1216,7 +1216,7 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         resource_cache, stub_screencast, nullptr, nullptr, nullptr,
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
-        mt::fake_shared(mock_seat)};
+        mt::fake_shared(mock_hub)};
 
     ON_CALL(*shell, create_surface( _, _, _))
         .WillByDefault(
@@ -1330,7 +1330,7 @@ TEST_F(SessionMediator, connect_sends_input_devices_at_seat)
     mtd::StubDevice dev1{MirInputDeviceId{3}, mi::DeviceCapability::keyboard, "kbd", "kbd-aaf474"};
     mtd::StubDevice dev2{MirInputDeviceId{7}, mi::DeviceCapability::touchscreen, "ts", "ts-ewrkw2"};
     std::vector<std::shared_ptr<mir::input::Device>> devices{mt::fake_shared(dev1), mt::fake_shared(dev2)};
-    ON_CALL(mock_seat, for_each_input_device(_))
+    ON_CALL(mock_hub, for_each_input_device(_))
         .WillByDefault(Invoke(
             [&](std::function<void(std::shared_ptr<mir::input::Device> const&)> const& callback)
             {

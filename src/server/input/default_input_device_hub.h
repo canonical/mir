@@ -32,10 +32,15 @@
 #include <linux/input.h>
 #include <vector>
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
 class ServerActionQueue;
+namespace frontend
+{
+class EventSink;
+}
 namespace cookie
 {
 class Authority;
@@ -56,7 +61,8 @@ class Seat;
 class DefaultInputDeviceHub : public InputDeviceRegistry, public InputDeviceHub
 {
 public:
-    DefaultInputDeviceHub(std::shared_ptr<Seat> const& seat,
+    DefaultInputDeviceHub(std::shared_ptr<frontend::EventSink> const& sink,
+                          std::shared_ptr<Seat> const& seat,
                           std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
                           std::shared_ptr<ServerActionQueue> const& observer_queue,
                           std::shared_ptr<cookie::Authority> const& cookie_authority);
@@ -68,6 +74,7 @@ public:
     // InputDeviceHub - calls from server components / shell
     void add_observer(std::shared_ptr<InputDeviceObserver> const&) override;
     void remove_observer(std::weak_ptr<InputDeviceObserver> const&) override;
+    void for_each_input_device(std::function<void(std::shared_ptr<Device>const& device)> const& callback) override;
 
 private:
     void update_spots();
@@ -75,7 +82,9 @@ private:
     void remove_device_handle(MirInputDeviceId id);
     MirInputDeviceId create_new_device_id();
     std::shared_ptr<Seat> const seat;
+    std::shared_ptr<frontend::EventSink> const sink;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const input_dispatchable;
+    std::mutex observer_guard;
     std::shared_ptr<ServerActionQueue> const observer_queue;
     std::shared_ptr<dispatch::ActionQueue> const device_queue;
     std::shared_ptr<cookie::Authority> const cookie_authority;
@@ -103,7 +112,7 @@ private:
         std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
     };
 
-    std::vector<std::shared_ptr<DefaultDevice>> handles;
+    std::vector<std::shared_ptr<Device>> handles;
     std::vector<std::unique_ptr<RegisteredDevice>> devices;
     std::vector<std::shared_ptr<InputDeviceObserver>> observers;
 

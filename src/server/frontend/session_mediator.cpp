@@ -46,7 +46,7 @@
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
 #include "mir/frontend/buffer_stream.h"
-#include "mir/input/seat.h"
+#include "mir/input/input_device_hub.h"
 #include "mir/input/device.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
@@ -92,7 +92,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
-    std::shared_ptr<mir::input::Seat> const& seat) :
+    std::shared_ptr<mir::input::InputDeviceHub> const& hub) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -109,7 +109,7 @@ mf::SessionMediator::SessionMediator(
     translator{translator},
     anr_detector{anr_detector},
     cookie_authority(cookie_authority),
-    seat(seat),
+    hub(hub),
     buffer_stream_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
@@ -163,7 +163,7 @@ void mf::SessionMediator::connect(
     auto protobuf_config = response->mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, *display_config);
 
-    seat->for_each_input_device(
+    hub->for_each_input_device(
         [response](auto const& dev)
         {
             auto dev_info = response->add_input_devices();

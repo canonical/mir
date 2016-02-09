@@ -35,7 +35,7 @@ class GraphicBufferAllocator;
 namespace input
 {
 class CursorImages;
-class Seat;
+class InputDeviceHub;
 }
 
 namespace scene
@@ -68,7 +68,7 @@ public:
         std::shared_ptr<scene::CoordinateTranslator> const& translator,
         std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
         std::shared_ptr<cookie::Authority> const& cookie_authority,
-        std::shared_ptr<input::Seat> const& seat);
+        std::shared_ptr<input::InputDeviceHub> const& seat);
 
     std::shared_ptr<detail::DisplayServer> make_ipc_server(
         SessionCredentials const &creds,
@@ -104,7 +104,7 @@ private:
     std::shared_ptr<scene::CoordinateTranslator> const translator;
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const anr_detector;
     std::shared_ptr<cookie::Authority> const cookie_authority;
-    std::shared_ptr<input::Seat> const seat;
+    std::shared_ptr<input::InputDeviceHub> const hub;
 };
 }
 }

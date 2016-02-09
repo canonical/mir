@@ -52,6 +52,17 @@ namespace geom = mir::geometry;
 using namespace std::literals::chrono_literals;
 using namespace ::testing;
 
+namespace mir
+{
+namespace input
+{
+void PrintTo(mir::input::InputDeviceInfo const &info, ::std::ostream* out)
+{
+    *out << info.name << " " << info.unique_id << " " << info.capabilities.value();
+}
+}
+}
+
 MATCHER_P(DeviceMatches, device_info, "")
 {
     return arg->name() == device_info.name &&
@@ -68,9 +79,9 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     NiceMock<mtd::MockCursorListener> mock_cursor_listener;
     NiceMock<mtd::MockTouchVisualizer> mock_visualizer;
     mir::dispatch::MultiplexingDispatchable multiplexer;
-    mi::BasicSeat seat{mt::fake_shared(mock_sink), mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer),
+    mi::BasicSeat seat{mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer),
                        mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region)};
-    mi::DefaultInputDeviceHub hub{mt::fake_shared(seat), mt::fake_shared(multiplexer), mt::fake_shared(observer_loop),
+    mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_sink), mt::fake_shared(seat), mt::fake_shared(multiplexer), mt::fake_shared(observer_loop),
                                   cookie_authority};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
     NiceMock<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};

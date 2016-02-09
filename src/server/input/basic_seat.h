@@ -38,24 +38,19 @@ class InputDispatcher;
 class BasicSeat : public Seat
 {
 public:
-    BasicSeat(std::shared_ptr<frontend::EventSink> const& event_sink,
-              std::shared_ptr<InputDispatcher> const& dispatcher,
+    BasicSeat(std::shared_ptr<InputDispatcher> const& dispatcher,
               std::shared_ptr<TouchVisualizer> const& touch_visualizer,
               std::shared_ptr<CursorListener> const& cursor_listener,
               std::shared_ptr<InputRegion> const& input_region);
     // Seat methods:
-    void add_device(std::shared_ptr<Device> const& device) override;
-    void remove_device(std::shared_ptr<Device> const& device) override;
+    void add_device(Device const& device) override;
+    void remove_device(Device const& device) override;
     void dispatch_event(MirEvent& event) override;
-    geometry::Rectangle get_rectangle_for(std::shared_ptr<Device> const& dev) override;
-    void for_each_input_device(std::function<void(std::shared_ptr<Device>const& dev)> const& callback) override;
+    geometry::Rectangle get_rectangle_for(Device const& dev) override;
 
 private:
-    std::mutex devices_guard;
-    std::vector<std::shared_ptr<Device>> devices;
     SeatInputDeviceTracker input_state_tracker;
     std::shared_ptr<InputRegion> const input_region;
-    std::shared_ptr<frontend::EventSink> const event_sink;
 };
 }
 }
