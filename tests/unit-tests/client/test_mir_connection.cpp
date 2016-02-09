@@ -29,6 +29,7 @@
 #include "mir/dispatch/dispatchable.h"
 #include "mir/events/event_builders.h"
 #include "mir/geometry/rectangle.h"
+#include "mir_toolkit/mir_presentation_chain.h"
 
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir/test/test_protobuf_server.h"
@@ -72,10 +73,10 @@ struct PresentationChainCallback
     {
         auto const context = reinterpret_cast<PresentationChainCallback*>(client_context);
         context->invoked = true;
-        context->resulting_context = c;
+        context->resulting_chain = c;
     }
     bool invoked = false;
-    MirPresentationChain* resulting_context = nullptr;
+    MirPresentationChain* resulting_chain = nullptr;
 };
 
 struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
@@ -763,22 +764,7 @@ TEST_F(MirConnectionTest, create_wait_handle_really_blocks)
     EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-TEST_F(MirConnectionTest, wait_handle_is_signalled_during_context_creation_error)
+TEST_F(MirConnectionTest, wait_handle_is_signalled_during_chain_creation_error)
 {
     using namespace testing;
     EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
@@ -786,7 +772,7 @@ TEST_F(MirConnectionTest, wait_handle_is_signalled_during_context_creation_error
     EXPECT_FALSE(connection->create_presentation_chain(nullptr, nullptr)->is_pending()); 
 }
 
-TEST_F(MirConnectionTest, wait_handle_is_signalled_during_context_creation_exception)
+TEST_F(MirConnectionTest, wait_handle_is_signalled_during_chain_creation_exception)
 {
     using namespace testing;
     EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
@@ -798,7 +784,7 @@ TEST_F(MirConnectionTest, wait_handle_is_signalled_during_context_creation_excep
     EXPECT_FALSE(wh->is_pending()); 
 }
 
-TEST_F(MirConnectionTest, callback_is_invoked_after_context_creation_error)
+TEST_F(MirConnectionTest, callback_is_invoked_after_chain_creation_error)
 {
     using namespace testing;
     PresentationChainCallback callback;
@@ -810,12 +796,12 @@ TEST_F(MirConnectionTest, callback_is_invoked_after_context_creation_error)
     connection->create_presentation_chain(
         &PresentationChainCallback::created, &callback);
     EXPECT_TRUE(callback.invoked);
-    ASSERT_TRUE(callback.resulting_context);
-//    EXPECT_THAT(mir_presentation_chain_get_error_message(callback.resulting_context),
-//        StrEq("Error processing buffer stream response: " + error_msg));
+    ASSERT_TRUE(callback.resulting_chain);
+    EXPECT_THAT(mir_presentation_chain_get_error_message(callback.resulting_chain),
+        StrEq("Error creating MirPresentationChain: " + error_msg));
 }
 
-TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_exception_and_error_context_created)
+TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_exception_and_error_chain_created)
 {
     using namespace testing;
     PresentationChainCallback callback;
@@ -828,7 +814,7 @@ TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_exception_and
         &PresentationChainCallback::created, &callback);
 
     EXPECT_TRUE(callback.invoked);
-    ASSERT_TRUE(callback.resulting_context);
-//    EXPECT_THAT(mir_buffer_stream_get_error_message(callback.resulting_stream),
-//        StrEq("Error processing buffer stream response: no ID in response (disconnected?)"));
+    ASSERT_TRUE(callback.resulting_chain);
+    EXPECT_THAT(mir_presentation_chain_get_error_message(callback.resulting_chain),
+        StrEq("Error creating MirPresentationChain (no ID in response)"));
 }
