@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,32 +16,27 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_DEVICE_HUB_H_
-#define MIR_INPUT_INPUT_DEVICE_HUB_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_HUB_H_
+#define MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_HUB_H_
 
-#include <memory>
+#include "mir/input/input_device_hub.h"
 
 namespace mir
 {
-namespace input
+namespace test
 {
-class InputDeviceInfo;
-class InputDeviceObserver;
-
-class InputDeviceHub
+namespace doubles
 {
-public:
-    InputDeviceHub() = default;
-    virtual ~InputDeviceHub() = default;
 
-    virtual void add_observer(std::shared_ptr<InputDeviceObserver> const&) = 0;
-    virtual void remove_observer(std::weak_ptr<InputDeviceObserver> const&) = 0;
-    virtual void for_each_input_device(std::function<void(std::shared_ptr<Device>const& device)> const& callback) = 0;
+struct MockInputDeviceHub : input::InputDeviceHub
+{
+    MOCK_METHOD1(add_observer, void(std::shared_ptr<input::InputDeviceObserver> const&));
+    MOCK_METHOD1(remove_observer, void(std::weak_ptr<input::InputDeviceObserver> const&));
+    MOCK_METHOD1(for_each_input_device, void(std::function<void(std::shared_ptr<input::Device>const&)> const&));
 
-    InputDeviceHub(InputDeviceHub const&) = delete;
-    InputDeviceHub& operator=(InputDeviceHub const&) = delete;
 };
 
+}
 }
 }
 

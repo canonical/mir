@@ -68,9 +68,9 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     NiceMock<mtd::MockCursorListener> mock_cursor_listener;
     NiceMock<mtd::MockTouchVisualizer> mock_visualizer;
     mir::dispatch::MultiplexingDispatchable multiplexer;
-    mi::BasicSeat seat{mt::fake_shared(mock_sink), mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer),
+    mi::BasicSeat seat{mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer),
                        mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region)};
-    mi::DefaultInputDeviceHub hub{mt::fake_shared(seat), mt::fake_shared(multiplexer), mt::fake_shared(observer_loop),
+    mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_sink), mt::fake_shared(seat), mt::fake_shared(multiplexer), mt::fake_shared(observer_loop),
                                   cookie_authority};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
     NiceMock<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
