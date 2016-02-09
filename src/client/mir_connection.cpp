@@ -587,7 +587,6 @@ MirWaitHandle* MirConnection::disconnect()
         stream->buffer_unavailable();
     });
 
-    printf("DISCONNECTING.\n");
     disconnect_wait_handle.expect_result();
     server.disconnect(ignored.get(), ignored.get(),
                       google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
