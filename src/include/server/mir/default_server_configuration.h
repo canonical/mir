@@ -25,6 +25,8 @@
 #include <memory>
 #include <string>
 
+struct MirConnection;
+
 namespace mir
 {
 class ServerActionQueue;
@@ -191,6 +193,7 @@ public:
     virtual std::shared_ptr<shell::DisplayConfigurationController> the_display_configuration_controller();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
+    virtual std::shared_ptr<MirConnection> the_connection();
     virtual std::shared_ptr<graphics::GLConfig> the_gl_config();
     /** @} */
 
@@ -406,6 +409,7 @@ protected:
     CachedPtr<ServerStatusListener> server_status_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
     CachedPtr<graphics::nested::HostConnection> host_connection;
+    CachedPtr<MirConnection> connection;
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<graphics::GLConfig> gl_config;
     CachedPtr<scene::PromptSessionListener> prompt_session_listener;

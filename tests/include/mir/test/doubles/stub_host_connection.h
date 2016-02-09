@@ -78,6 +78,8 @@ public:
     }
 
     auto graphics_platform_library() -> std::string { return {}; }
+
+    auto connection() -> std::shared_ptr<MirConnection> { return {};}
 };
 
 

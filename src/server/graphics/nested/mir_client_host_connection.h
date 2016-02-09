@@ -31,6 +31,10 @@ namespace msh = mir::shell;
 
 namespace mir
 {
+namespace input
+{
+class DeviceChangeListener;
+}
 namespace graphics
 {
 namespace nested
@@ -39,8 +43,8 @@ namespace nested
 class MirClientHostConnection : public HostConnection
 {
 public:
-    MirClientHostConnection(std::string const& host_socket, std::string const& name, std::shared_ptr<msh::HostLifecycleEventListener> const& host_lifecycle_event_listener);
-    ~MirClientHostConnection();
+    MirClientHostConnection(std::shared_ptr<MirConnection> const& con,
+                            std::shared_ptr<msh::HostLifecycleEventListener> const& host_lifecycle_event_listener);
 
     std::vector<int> platform_fd_items() override;
     EGLNativeDisplayType egl_native_display() override;
@@ -58,10 +62,11 @@ public:
     virtual PlatformOperationMessage platform_operation(
         unsigned int op, PlatformOperationMessage const& request) override;
 
+    std::shared_ptr<MirConnection> connection() override;
 private:
     std::mutex surfaces_mutex;
-    
-    MirConnection* const mir_connection;
+
+    std::shared_ptr<MirConnection> const mir_connection;
     std::function<void()> conf_change_callback;
     std::shared_ptr<msh::HostLifecycleEventListener> const host_lifecycle_event_listener;
 

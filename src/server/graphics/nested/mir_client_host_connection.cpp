@@ -176,51 +176,36 @@ private:
 }
 
 mgn::MirClientHostConnection::MirClientHostConnection(
-    std::string const& host_socket,
-    std::string const& name,
+    std::shared_ptr<MirConnection> const& connection,
     std::shared_ptr<msh::HostLifecycleEventListener> const& host_lifecycle_event_listener)
-    : mir_connection{mir_connect_sync(host_socket.c_str(), name.c_str())},
+    : mir_connection{connection},
       conf_change_callback{[]{}},
       host_lifecycle_event_listener{host_lifecycle_event_listener}
 {
-    if (!mir_connection_is_valid(mir_connection))
-    {
-        std::string const msg =
-            "Nested Mir Platform Connection Error: " +
-            std::string(mir_connection_get_error_message(mir_connection));
-
-        BOOST_THROW_EXCEPTION(std::runtime_error(msg));
-    }
-
     mir_connection_set_lifecycle_event_callback(
-        mir_connection,
+        mir_connection.get(),
         nested_lifecycle_event_callback_thunk,
         std::static_pointer_cast<void>(host_lifecycle_event_listener).get());
-}
-
-mgn::MirClientHostConnection::~MirClientHostConnection()
-{
-    mir_connection_release(mir_connection);
 }
 
 std::vector<int> mgn::MirClientHostConnection::platform_fd_items()
 {
     MirPlatformPackage pkg;
-    mir_connection_get_platform(mir_connection, &pkg);
+    mir_connection_get_platform(mir_connection.get(), &pkg);
     return std::vector<int>(pkg.fd, pkg.fd + pkg.fd_items);
 }
 
 EGLNativeDisplayType mgn::MirClientHostConnection::egl_native_display()
 {
     return reinterpret_cast<EGLNativeDisplayType>(
-        mir_connection_get_egl_native_display(mir_connection));
+        mir_connection_get_egl_native_display(mir_connection.get()));
 }
 
 auto mgn::MirClientHostConnection::create_display_config()
     -> std::shared_ptr<MirDisplayConfiguration>
 {
     return std::shared_ptr<MirDisplayConfiguration>(
-        mir_connection_create_display_config(mir_connection),
+        mir_connection_create_display_config(mir_connection.get()),
         [] (MirDisplayConfiguration* c)
         {
             if (c) mir_display_config_destroy(c);
@@ -231,7 +216,7 @@ void mgn::MirClientHostConnection::set_display_config_change_callback(
     std::function<void()> const& callback)
 {
     mir_connection_set_display_config_change_callback(
-        mir_connection,
+        mir_connection.get(),
         &display_config_callback_thunk,
         &(conf_change_callback = callback));
 }
@@ -239,7 +224,7 @@ void mgn::MirClientHostConnection::set_display_config_change_callback(
 void mgn::MirClientHostConnection::apply_display_config(
     MirDisplayConfiguration& display_config)
 {
-    mir_wait_for(mir_connection_apply_display_config(mir_connection, &display_config));
+    mir_wait_for(mir_connection_apply_display_config(mir_connection.get(), &display_config));
 }
 
 std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
@@ -248,7 +233,7 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
 {
     std::lock_guard<std::mutex> lg(surfaces_mutex);
     auto spec = mir::raii::deleter_for(
-        mir_connection_create_spec_for_normal_surface(mir_connection, width, height, pf),
+        mir_connection_create_spec_for_normal_surface(mir_connection.get(), width, height, pf),
         mir_surface_spec_release);
 
     mir_surface_spec_set_name(spec.get(), name);
@@ -256,7 +241,7 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
     mir_surface_spec_set_fullscreen_on_output(spec.get(), output_id);
 
     auto surf = std::shared_ptr<MirClientHostSurface>(
-        new MirClientHostSurface(mir_connection, spec.get()),
+        new MirClientHostSurface(mir_connection.get(), spec.get()),
         [this](MirClientHostSurface *surf)
         {
             std::lock_guard<std::mutex> lg(surfaces_mutex);
@@ -282,7 +267,7 @@ mg::PlatformOperationMessage mgn::MirClientHostConnection::platform_operation(
     MirPlatformMessage* raw_reply{nullptr};
 
     auto const wh = mir_connection_platform_operation(
-        mir_connection, msg.get(), platform_operation_callback, &raw_reply);
+        mir_connection.get(), msg.get(), platform_operation_callback, &raw_reply);
     mir_wait_for(wh);
 
     auto const reply = mir::raii::deleter_for(
@@ -322,7 +307,7 @@ auto mgn::MirClientHostConnection::graphics_platform_library() -> std::string
 {
     MirModuleProperties properties = { nullptr, 0, 0, 0, nullptr };
 
-    mir_connection_get_graphics_module(mir_connection, &properties);
+    mir_connection_get_graphics_module(mir_connection.get(), &properties);
 
     if (properties.filename == nullptr)
     {
@@ -330,4 +315,9 @@ auto mgn::MirClientHostConnection::graphics_platform_library() -> std::string
     }
 
     return properties.filename;
+}
+
+std::shared_ptr<MirConnection> mgn::MirClientHostConnection::connection()
+{
+    return mir_connection;
 }
