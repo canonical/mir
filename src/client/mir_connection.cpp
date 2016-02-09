@@ -34,6 +34,7 @@
 #include "error_stream.h"
 #include "buffer_stream.h"
 #include "perf_report.h"
+#include "presentation_chain.h"
 #include "logging/perf_report.h"
 #include "lttng/perf_report.h"
 
@@ -1003,4 +1004,104 @@ MirWaitHandle* MirConnection::release_buffer_stream(
 void MirConnection::release_consumer_stream(mir::client::ClientBufferStream* stream)
 {
     surface_map->erase(stream->rpc_id());
+}
+
+MirWaitHandle* MirConnection::create_presentation_chain(
+    mir_presentation_chain_callback callback,
+    void *context)
+{
+    mir::protobuf::BufferStreamParameters params;
+    /* all these are "required". fill with garbage, don't use required in protocol */
+    params.set_height(3);
+    params.set_width(-1);
+    params.set_pixel_format(102);
+    params.set_buffer_usage(22);
+    auto request = std::make_shared<ContextCreationRequest>(callback, context);
+    request->wh->expect_result();
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        context_requests.push_back(request);
+    }
+
+    try
+    {
+        server.create_buffer_stream(&params, request->response.get(),
+            gp::NewCallback(this, &MirConnection::context_created, request.get()));
+    } catch (std::exception& e)
+    {
+        //if this throws, our socket code will run the closure, which will make an error object.
+        //its nicer to return an stream with a error message, so just ignore the exception.
+    }
+
+    return request->wh.get();
+}
+
+void MirConnection::context_created(ContextCreationRequest* request_raw)
+{
+    std::shared_ptr<ContextCreationRequest> request {nullptr};
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        auto context_it = std::find_if(context_requests.begin(), context_requests.end(),
+            [&request_raw] (std::shared_ptr<ContextCreationRequest> const& req)
+            { return req.get() == request_raw; });
+        if (context_it == context_requests.end())
+            return;
+        request = *context_it;
+        context_requests.erase(context_it);
+    }
+
+    auto& protobuf_bs = request->response;
+    if (!protobuf_bs->has_id() && !protobuf_bs->has_error())
+        protobuf_bs->set_error("no ID in response (disconnected?)");
+
+    if (protobuf_bs->has_error())
+    {
+        for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
+            ::close(protobuf_bs->buffer().fd(i));
+        context_error(
+            std::string{"Error processing buffer stream response: "} + protobuf_bs->error(),
+            request);
+        return;
+    }
+
+    try
+    {
+        auto context = std::make_shared<mcl::PresentationChain>(
+            this, request->wh, protobuf_bs->id().value(), server, platform->create_buffer_factory());
+
+        surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), context);
+
+        if (request->callback)
+            request->callback(reinterpret_cast<MirPresentationChain*>(context.get()), request->context);
+        request->wh->result_received();
+    }
+    catch (std::exception const& error)
+    {
+        for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
+            ::close(protobuf_bs->buffer().fd(i));
+
+        context_error(
+            std::string{"Error processing buffer stream creating response:"} + boost::diagnostic_information(error),
+            request);
+    }
+
+}
+
+void MirConnection::context_error(
+    std::string const& error_msg, std::shared_ptr<ContextCreationRequest> const& request)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    mf::BufferStreamId id(next_error_id(lock).as_value());
+    auto stream = std::make_shared<mcl::ErrorStream>(error_msg, this, id, request->wh);
+    surface_map->insert(id, stream); 
+
+    if (request->callback)
+        request->callback(reinterpret_cast<MirPresentationChain*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
+    request->wh->result_received();
+}
+
+void MirConnection::release_presentation_chain(MirPresentationChain* context)
+{
+    (void)context;
 }

@@ -66,6 +66,18 @@ struct BufferStreamCallback
     MirBufferStream* resulting_stream = nullptr;
 };
 
+struct PresentationChainCallback
+{
+    static void created(MirPresentationChain* c, void *client_context)
+    {
+        auto const context = reinterpret_cast<PresentationChainCallback*>(client_context);
+        context->invoked = true;
+        context->resulting_context = c;
+    }
+    bool invoked = false;
+    MirPresentationChain* resulting_context = nullptr;
+};
+
 struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
                         public mir::dispatch::Dispatchable
 {
@@ -749,4 +761,74 @@ TEST_F(MirConnectionTest, create_wait_handle_really_blocks)
     wait_handle->wait_for_pending(pause_time);
 
     EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TEST_F(MirConnectionTest, wait_handle_is_signalled_during_context_creation_error)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(Invoke([](mp::BufferStream& bs, google::protobuf::Closure*){ bs.set_error("bad"); }));
+    EXPECT_FALSE(connection->create_presentation_chain(nullptr, nullptr)->is_pending()); 
+}
+
+TEST_F(MirConnectionTest, wait_handle_is_signalled_during_context_creation_exception)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(DoAll(
+            Invoke([](mp::BufferStream&, google::protobuf::Closure* c){ c->Run(); }),
+            Throw(std::runtime_error("pay no attention to the man behind the curtain"))));
+    auto wh = connection->create_presentation_chain(nullptr, nullptr);
+    ASSERT_THAT(wh, Ne(nullptr));
+    EXPECT_FALSE(wh->is_pending()); 
+}
+
+TEST_F(MirConnectionTest, callback_is_invoked_after_context_creation_error)
+{
+    using namespace testing;
+    PresentationChainCallback callback;
+    std::string error_msg = "danger will robertson";
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(Invoke([&](mp::BufferStream& bs, google::protobuf::Closure*)
+        { bs.set_error(error_msg); }));
+
+    connection->create_presentation_chain(
+        &PresentationChainCallback::created, &callback);
+    EXPECT_TRUE(callback.invoked);
+    ASSERT_TRUE(callback.resulting_context);
+//    EXPECT_THAT(mir_presentation_chain_get_error_message(callback.resulting_context),
+//        StrEq("Error processing buffer stream response: " + error_msg));
+}
+
+TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_exception_and_error_context_created)
+{
+    using namespace testing;
+    PresentationChainCallback callback;
+
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(DoAll(
+            Invoke([](mp::BufferStream&, google::protobuf::Closure* c){ c->Run(); }),
+            Throw(std::runtime_error("pay no attention to the man behind the curtain"))));
+    connection->create_presentation_chain(
+        &PresentationChainCallback::created, &callback);
+
+    EXPECT_TRUE(callback.invoked);
+    ASSERT_TRUE(callback.resulting_context);
+//    EXPECT_THAT(mir_buffer_stream_get_error_message(callback.resulting_stream),
+//        StrEq("Error processing buffer stream response: no ID in response (disconnected?)"));
 }
