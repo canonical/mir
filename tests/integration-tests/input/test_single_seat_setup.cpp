@@ -52,6 +52,17 @@ namespace geom = mir::geometry;
 using namespace std::literals::chrono_literals;
 using namespace ::testing;
 
+namespace mir
+{
+namespace input
+{
+void PrintTo(mir::input::InputDeviceInfo const &info, ::std::ostream* out)
+{
+    *out << info.name << " " << info.unique_id << " " << info.capabilities.value();
+}
+}
+}
+
 MATCHER_P(DeviceMatches, device_info, "")
 {
     return arg->name() == device_info.name &&
