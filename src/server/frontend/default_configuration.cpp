@@ -53,13 +53,10 @@ mir::DefaultServerConfiguration::the_connector()
     return connector(
         [&,this]() -> std::shared_ptr<mf::Connector>
         {
-            auto const threads = the_options()->get<int>(options::frontend_threads_opt);
-
             if (the_options()->is_set(options::no_server_socket_opt))
             {
                 return std::make_shared<mf::BasicConnector>(
                     the_connection_creator(),
-                    threads,
                     the_connector_report());
             }
             else
@@ -67,7 +64,6 @@ mir::DefaultServerConfiguration::the_connector()
                 auto const result = std::make_shared<mf::PublishedSocketConnector>(
                     the_socket_file(),
                     the_connection_creator(),
-                    threads,
                     *the_emergency_cleanup(),
                     the_connector_report());
 
@@ -127,14 +123,11 @@ mir::DefaultServerConfiguration::the_prompt_connector()
     return prompt_connector(
         [&,this]() -> std::shared_ptr<mf::Connector>
         {
-            auto const threads = the_options()->get<int>(options::frontend_threads_opt);
-
             if (the_options()->is_set(options::prompt_socket_opt))
             {
                 return std::make_shared<mf::PublishedSocketConnector>(
                     the_socket_file() + "_trusted",
                     the_prompt_connection_creator(),
-                    threads,
                     *the_emergency_cleanup(),
                     the_connector_report());
             }
@@ -142,7 +135,6 @@ mir::DefaultServerConfiguration::the_prompt_connector()
             {
                 return std::make_shared<mf::BasicConnector>(
                     the_prompt_connection_creator(),
-                    threads,
                     the_connector_report());
             }
         });

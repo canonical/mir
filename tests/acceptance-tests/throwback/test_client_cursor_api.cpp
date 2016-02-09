@@ -463,6 +463,11 @@ struct FullscreenDisabledCursorClient : CursorClient
 
     void setup_cursor(MirSurface* surface) override
     {
+        // Workaround race condition (lp:1525003). I've tried, but I've not
+        // found a better way to ensure that the host Mir server is "ready"
+        // for the test logic. - alan_g
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+
         mir_surface_set_state(surface, mir_surface_state_fullscreen);
         auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
         mir_surface_configure_cursor(surface, conf);
@@ -483,11 +488,11 @@ TEST_F(TestClientCursorAPI, cursor_passed_through_nested_server)
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
     { // Ensure we finalize the client prior stopping the nested server
-    FullscreenDisabledCursorClient client{nested_mir.new_connection(), client_name_1};
-    client.run();
+        FullscreenDisabledCursorClient client{nested_mir.new_connection(), client_name_1};
+        client.run();
 
-    expectations_satisfied.wait_for_at_most_seconds(60);
-    expect_client_shutdown();
+        expectations_satisfied.wait_for_at_most_seconds(60);
+        expect_client_shutdown();
     }
     
     nested_mir.stop_server();

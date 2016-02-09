@@ -47,7 +47,6 @@ std::shared_ptr<mf::Connector> make_connector(
             std::make_shared<mtd::StubSessionAuthorizer>(),
             std::make_shared<mtd::NullPlatformIpcOperations>(),
             mr::null_message_processor_report()),
-        10,
         null_emergency_cleanup,
         report);
 }
