@@ -816,5 +816,5 @@ TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_exception_and
     EXPECT_TRUE(callback.invoked);
     ASSERT_TRUE(callback.resulting_chain);
     EXPECT_THAT(mir_presentation_chain_get_error_message(callback.resulting_chain),
-        StrEq("Error creating MirPresentationChain (no ID in response)"));
+        StrEq("Error creating MirPresentationChain: no ID in response"));
 }

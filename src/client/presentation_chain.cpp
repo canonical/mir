@@ -177,3 +177,65 @@ mcl::PresentationChain::AllocationRequest::AllocationRequest(
     cb_context(cb_context)
 {
 }
+
+std::string mcl::PresentationChain::error_msg() const
+{
+    return {""};
+}
+
+
+
+
+
+
+
+mcl::ErrorChain::ErrorChain(
+    MirConnection* connection,
+    std::shared_ptr<MirWaitHandle> const& wh,
+    int id,
+    std::string const& error_msg) :
+    connection_(connection),
+    wait_handle(wh),
+    stream_id(id),
+    error(error_msg)
+{
+}
+
+std::string mcl::ErrorChain::error_msg() const
+{
+    return error;
+}
+
+MirConnection* mcl::ErrorChain::connection() const
+{
+    return connection_;
+}
+
+int mcl::ErrorChain::rpc_id() const
+{
+    return stream_id;
+}
+
+void mcl::ErrorChain::allocate_buffer(
+    geometry::Size, MirPixelFormat, MirBufferUsage, mir_buffer_callback, void*)
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot allocate: invalid MirPresentationChain"));
+}
+
+void mcl::ErrorChain::submit_buffer(MirBuffer*)
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot submit: invalid MirPresentationChain"));
+}
+
+void mcl::ErrorChain::release_buffer(MirBuffer*)
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot release: invalid MirPresentationChain"));
+}
+
+void mcl::ErrorChain::buffer_available(mir::protobuf::Buffer const&)
+{
+}
+
+void mcl::ErrorChain::buffer_unavailable()
+{
+}

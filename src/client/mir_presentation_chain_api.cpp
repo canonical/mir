@@ -39,7 +39,7 @@ void assign_result(void* result, void** context)
 bool mir_presentation_chain_submit_buffer(MirPresentationChain* client_chain, MirBuffer* buffer)
 try
 {
-    auto chain = reinterpret_cast<mcl::PresentationChain*>(client_chain);
+    auto chain = reinterpret_cast<mcl::MirPresentationChain*>(client_chain);
     chain->submit_buffer(buffer);
     return true;
 }
@@ -49,14 +49,15 @@ catch (std::exception const& ex)
     return false;
 }
 
-bool mir_presentation_chain_is_valid(MirPresentationChain*)
+bool mir_presentation_chain_is_valid(MirPresentationChain* chain)
 {
-    return true;
+    return mir_presentation_chain_get_error_message(chain) == std::string("");
 }
 
-char const *mir_presentation_chain_get_error_message(MirPresentationChain*)
+char const *mir_presentation_chain_get_error_message(MirPresentationChain* client_chain)
 {
-    return "";
+    auto chain = reinterpret_cast<mcl::MirPresentationChain*>(client_chain);
+    return chain->error_msg().c_str();
 }
 
 MirWaitHandle* mir_connection_create_presentation_chain(

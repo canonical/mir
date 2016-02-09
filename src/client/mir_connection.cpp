@@ -1016,7 +1016,7 @@ MirWaitHandle* MirConnection::create_presentation_chain(
     params.set_width(-1);
     params.set_pixel_format(102);
     params.set_buffer_usage(22);
-    auto request = std::make_shared<ContextCreationRequest>(callback, context);
+    auto request = std::make_shared<ChainCreationRequest>(callback, context);
     request->wh->expect_result();
 
     {
@@ -1037,13 +1037,13 @@ MirWaitHandle* MirConnection::create_presentation_chain(
     return request->wh.get();
 }
 
-void MirConnection::context_created(ContextCreationRequest* request_raw)
+void MirConnection::context_created(ChainCreationRequest* request_raw)
 {
-    std::shared_ptr<ContextCreationRequest> request {nullptr};
+    std::shared_ptr<ChainCreationRequest> request {nullptr};
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         auto context_it = std::find_if(context_requests.begin(), context_requests.end(),
-            [&request_raw] (std::shared_ptr<ContextCreationRequest> const& req)
+            [&request_raw] (std::shared_ptr<ChainCreationRequest> const& req)
             { return req.get() == request_raw; });
         if (context_it == context_requests.end())
             return;
@@ -1053,14 +1053,14 @@ void MirConnection::context_created(ContextCreationRequest* request_raw)
 
     auto& protobuf_bs = request->response;
     if (!protobuf_bs->has_id() && !protobuf_bs->has_error())
-        protobuf_bs->set_error("no ID in response (disconnected?)");
+        protobuf_bs->set_error("no ID in response");
 
     if (protobuf_bs->has_error())
     {
         for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
             ::close(protobuf_bs->buffer().fd(i));
-        context_error(
-            std::string{"Error processing buffer stream response: "} + protobuf_bs->error(),
+        chain_error(
+            std::string{"Error creating MirPresentationChain: "} + protobuf_bs->error(),
             request);
         return;
     }
@@ -1081,23 +1081,23 @@ void MirConnection::context_created(ContextCreationRequest* request_raw)
         for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
             ::close(protobuf_bs->buffer().fd(i));
 
-        context_error(
-            std::string{"Error processing buffer stream creating response:"} + boost::diagnostic_information(error),
+        chain_error(
+            std::string{"Error creating MirPresentationChain: "} + boost::diagnostic_information(error),
             request);
     }
 
 }
 
-void MirConnection::context_error(
-    std::string const& error_msg, std::shared_ptr<ContextCreationRequest> const& request)
+void MirConnection::chain_error(
+    std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     mf::BufferStreamId id(next_error_id(lock).as_value());
-    auto stream = std::make_shared<mcl::ErrorStream>(error_msg, this, id, request->wh);
+    auto stream = std::make_shared<mcl::ErrorChain>(this, request->wh, id.as_value(), error_msg);
     surface_map->insert(id, stream); 
 
     if (request->callback)
-        request->callback(reinterpret_cast<MirPresentationChain*>(dynamic_cast<mcl::ClientBufferStream*>(stream.get())), request->context);
+        request->callback(reinterpret_cast<MirPresentationChain*>(stream.get()), request->context);
     request->wh->result_received();
 }
 
