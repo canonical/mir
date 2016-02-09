@@ -603,6 +603,7 @@ try
                 mir::geometry::Size{info->width, info->height}});
         } 
     }
+    spec->streams = copy;
 }
 catch (std::exception const& ex)
 {
