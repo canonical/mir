@@ -98,6 +98,9 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
 void mga::DisplayBuffer::swap_buffers()
 {
     layer_list->update_list({}, offset_from_origin);
+    //HWC 1.0 cannot call eglSwapBuffers() on the display context
+    if (display_device->can_swap_buffers())
+        gl_context.swap_buffers();
 }
 
 MirOrientation mga::DisplayBuffer::orientation() const
