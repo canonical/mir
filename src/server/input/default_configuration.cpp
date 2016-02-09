@@ -274,7 +274,6 @@ std::shared_ptr<mi::Seat> mir::DefaultServerConfiguration::the_seat()
         [this]()
         {
             return std::make_shared<mi::BasicSeat>(
-                    the_global_event_sink(),
                     the_input_dispatcher(),
                     the_touch_visualizer(),
                     the_cursor_listener(),
@@ -288,11 +287,12 @@ std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_in
         [this]()
         {
             return std::make_shared<mi::DefaultInputDeviceHub>(
+                the_global_event_sink(),
                 the_seat(),
                 the_input_reading_multiplexer(),
                 the_main_loop(),
                 the_cookie_authority());
-                });
+        });
 }
 
 std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_device_hub()
@@ -301,6 +301,7 @@ std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_d
         [this]()
         {
             return std::make_shared<mi::DefaultInputDeviceHub>(
+                the_global_event_sink(),
                 the_seat(),
                 the_input_reading_multiplexer(),
                 the_main_loop(),
