@@ -270,6 +270,7 @@ public:
 
     void free_buffer(int buffer_id) override
     {
+        printf("FREE BUFFER.\n");
         mp::BufferRelease request;
         request.mutable_id()->set_value(stream_id);
         request.add_buffers()->set_buffer_id(buffer_id);
@@ -294,6 +295,7 @@ public:
 
     static void ignore_response(mp::Void* void_response)
     {
+        printf("cleanup BUFFER.\n");
         delete void_response;
     }
 
