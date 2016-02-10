@@ -139,8 +139,8 @@ bool mir_presentation_chain_submit_buffer(
  * \param spec             The surface_spec to be updated.
  * \param width            The width that the content will displayed at.
  * \param height           The height that the content will be displayed at.
- * \param displacement_x   The width that the content will displayed at.
- * \param displacement_y   The height that the content will be displayed at.
+ * \param displacement_x   The x displacement from the top-left corner of the MirSurface.
+ * \param displacement_y   The y displacement from the top-left corner of the MirSurface.
  * \param chain            The chain containing the content to be displayed.
  */
 void mir_surface_spec_set_presentation_chain(
@@ -161,8 +161,8 @@ void mir_surface_spec_set_presentation_chain(
  *                  of the MirSurface, at the server's discretion.
  *
  * \param spec             The surface_spec to be updated.
- * \param displacement_x   The width that the content will displayed at.
- * \param displacement_y   The height that the content will be displayed at.
+ * \param displacement_x   The x displacement from the top-left corner of the MirSurface.
+ * \param displacement_y   The y displacement from the top-left corner of the MirSurface.
  * \param stream           The stream containing the content to be displayed.
  */
 void mir_surface_spec_set_buffer_stream(

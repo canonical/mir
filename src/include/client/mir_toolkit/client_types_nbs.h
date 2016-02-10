@@ -42,7 +42,6 @@ typedef enum MirBufferAccess
     mir_read_write,
 } MirBufferAccess;
 
-
 #ifdef __cplusplus
 }
 /**@}*/
