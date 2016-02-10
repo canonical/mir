@@ -19,6 +19,7 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
+#include "presentation_chain.h"
 #include "mir_protobuf.pb.h"
 #include "make_protobuf_object.h"
 #include "mir_toolkit/mir_platform_message.h"
@@ -429,14 +430,16 @@ struct MirConnection::StreamRelease
     MirWaitHandle* handle;
     mir_buffer_stream_callback callback;
     void* context;
+    int rpc_id;
 };
 
 void MirConnection::released(StreamRelease data)
 {
     if (data.callback)
         data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
-    data.handle->result_received();
-    surface_map->erase(mf::BufferStreamId(data.stream->rpc_id()));
+    if (data.handle)
+        data.handle->result_received();
+    surface_map->erase(mf::BufferStreamId(data.rpc_id));
 }
 
 void MirConnection::released(SurfaceRelease data)
@@ -984,7 +987,7 @@ MirWaitHandle* MirConnection::release_buffer_stream(
 {
     auto new_wait_handle = new MirWaitHandle;
 
-    StreamRelease stream_release{stream, new_wait_handle, callback, context};
+    StreamRelease stream_release{stream, new_wait_handle, callback, context, stream->rpc_id().as_value() };
 
     mp::BufferStreamId buffer_stream_id;
     buffer_stream_id.set_value(stream->rpc_id().as_value());
@@ -1101,7 +1104,22 @@ void MirConnection::chain_error(
     request->wh->result_received();
 }
 
-void MirConnection::release_presentation_chain(MirPresentationChain* context)
+void MirConnection::release_presentation_chain(MirPresentationChain* c)
 {
-    (void)context;
+    auto chain = reinterpret_cast<mcl::MirPresentationChain*>(c);
+    auto id = chain->rpc_id();
+
+    if (id > 0)
+    {
+        StreamRelease stream_release{nullptr, nullptr, nullptr, nullptr, chain->rpc_id()};
+        mp::BufferStreamId buffer_stream_id;
+        buffer_stream_id.set_value(chain->rpc_id());
+        server.release_buffer_stream(
+            &buffer_stream_id, void_response.get(),
+            google::protobuf::NewCallback(this, &MirConnection::released, stream_release));
+    }
+    else
+    {
+        surface_map->erase(mf::BufferStreamId(id));
+    }
 }
