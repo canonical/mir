@@ -1014,11 +1014,12 @@ MirWaitHandle* MirConnection::create_presentation_chain(
     void *context)
 {
     mir::protobuf::BufferStreamParameters params;
-    /* all these are "required". fill with garbage, don't use required in protocol */
-    params.set_height(3);
+    // all these are "required" protobuf fields. The MirBuffers manage this
+    // information, so fill with garbage.
+    params.set_height(-1);
     params.set_width(-1);
-    params.set_pixel_format(102);
-    params.set_buffer_usage(22);
+    params.set_pixel_format(-1);
+    params.set_buffer_usage(-1);
     auto request = std::make_shared<ChainCreationRequest>(callback, context);
     request->wh->expect_result();
 
@@ -1070,13 +1071,13 @@ void MirConnection::context_created(ChainCreationRequest* request_raw)
 
     try
     {
-        auto context = std::make_shared<mcl::PresentationChain>(
+        auto chain = std::make_shared<mcl::PresentationChain>(
             this, request->wh, protobuf_bs->id().value(), server, platform->create_buffer_factory());
 
-        surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), context);
+        surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), chain);
 
         if (request->callback)
-            request->callback(reinterpret_cast<MirPresentationChain*>(context.get()), request->context);
+            request->callback(reinterpret_cast<MirPresentationChain*>(chain.get()), request->context);
         request->wh->result_received();
     }
     catch (std::exception const& error)
@@ -1088,7 +1089,6 @@ void MirConnection::context_created(ChainCreationRequest* request_raw)
             std::string{"Error creating MirPresentationChain: "} + boost::diagnostic_information(error),
             request);
     }
-
 }
 
 void MirConnection::chain_error(
@@ -1096,11 +1096,11 @@ void MirConnection::chain_error(
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     mf::BufferStreamId id(next_error_id(lock).as_value());
-    auto stream = std::make_shared<mcl::ErrorChain>(this, request->wh, id.as_value(), error_msg);
-    surface_map->insert(id, stream); 
+    auto chain = std::make_shared<mcl::ErrorChain>(this, request->wh, id.as_value(), error_msg);
+    surface_map->insert(id, chain); 
 
     if (request->callback)
-        request->callback(reinterpret_cast<MirPresentationChain*>(stream.get()), request->context);
+        request->callback(reinterpret_cast<MirPresentationChain*>(chain.get()), request->context);
     request->wh->result_received();
 }
 
@@ -1108,7 +1108,6 @@ void MirConnection::release_presentation_chain(MirPresentationChain* c)
 {
     auto chain = reinterpret_cast<mcl::MirPresentationChain*>(c);
     auto id = chain->rpc_id();
-
     if (id > 0)
     {
         StreamRelease stream_release{nullptr, nullptr, nullptr, nullptr, chain->rpc_id()};

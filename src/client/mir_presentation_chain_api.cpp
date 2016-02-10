@@ -80,6 +80,13 @@ MirPresentationChain* mir_connection_create_presentation_chain_sync(MirConnectio
     return context;
 }
 
-void mir_presentation_chain_release(MirPresentationChain*)
+void mir_presentation_chain_release(MirPresentationChain* client_chain)
+try
 {
+    auto chain = reinterpret_cast<mcl::MirPresentationChain*>(client_chain);
+    chain->connection()->release_presentation_chain(client_chain);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
