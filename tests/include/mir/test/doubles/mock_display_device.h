@@ -39,6 +39,8 @@ public:
     {
         ON_CALL(*this, compatible_renderlist(testing::_))
             .WillByDefault(testing::Return(true));
+        ON_CALL(*this, can_swap_buffers())
+            .WillByDefault(testing::Return(true));
     }
     ~MockDisplayDevice() noexcept {}
     MOCK_METHOD0(content_cleared, void());
@@ -46,6 +48,7 @@ public:
     MOCK_METHOD1(compatible_renderlist, bool(
         graphics::RenderableList const&));
     MOCK_CONST_METHOD0(recommended_sleep, std::chrono::milliseconds());
+    MOCK_CONST_METHOD0(can_swap_buffers, bool());
 };
 }
 }

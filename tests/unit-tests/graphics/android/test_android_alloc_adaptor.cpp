@@ -18,11 +18,13 @@
 
 #include "src/platforms/android/server/android_alloc_adaptor.h"
 #include "src/platforms/android/server/device_quirks.h"
+#include "src/platforms/android/server/cmdstream_sync_factory.h"
 #include "mir/options/program_option.h"
 #include "native_buffer.h"
 
 #include "mir/test/doubles/mock_android_alloc_device.h"
 #include "mir/test/doubles/mock_alloc_adaptor.h"
+#include "mir/test/doubles/mock_egl.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -32,7 +34,6 @@ namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
-
 
 class AdaptorICSTest : public ::testing::Test
 {
@@ -47,13 +48,15 @@ public:
         mock_alloc_device = std::make_shared<NiceMock<mtd::MockAllocDevice>>();
 
         auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
-        alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device, quirks);
+        alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device, sync_factory, quirks);
 
         pf = mir_pixel_format_abgr_8888;
         size = geom::Size{300, 200};
         usage = mga::BufferUsage::use_hardware;
     }
 
+    mtd::MockEGL mock_egl;
+    std::shared_ptr<mga::CommandStreamSyncFactory> sync_factory{std::make_shared<mga::EGLSyncFactory>()};
     std::shared_ptr<mtd::MockAllocDevice> mock_alloc_device;
     std::shared_ptr<mga::AndroidAllocAdaptor> alloc_adaptor;
 
@@ -198,7 +201,7 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion_fb_gles_with_quirk)
     options.parse_arguments(description, args.size(), args.data());
     auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}, options);
 
-    alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device, quirks);
+    alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device, sync_factory, quirks);
 
     EXPECT_CALL(*mock_alloc_device, alloc_interface(_,_,_,_,fb_usage_flags_broken_device,_,_));
     EXPECT_CALL(*mock_alloc_device, free_interface(_,_));
