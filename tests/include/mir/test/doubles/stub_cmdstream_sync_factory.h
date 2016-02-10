@@ -13,14 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_GL_BUFFER_H_
-#define MIR_TEST_DOUBLES_MOCK_GL_BUFFER_H_
+#ifndef MIR_TEST_DOUBLES_STUB_CMDSTREAM_SYNC_FACTORY_H_
+#define MIR_TEST_DOUBLES_STUB_CMDSTREAM_SYNC_FACTORY_H_
 
-#include "mock_buffer.h"
-#include "mir/renderer/gl/texture_source.h"
+#include "src/platforms/android/server/cmdstream_sync_factory.h"
 
 namespace mir
 {
@@ -28,20 +27,15 @@ namespace test
 {
 namespace doubles
 {
-
-struct MockGLBuffer : public MockBuffer,
-                      public renderer::gl::TextureSource
+struct StubCmdStreamSyncFactory : graphics::android::CommandStreamSyncFactory
 {
- public:
-    using MockBuffer::MockBuffer;
-
-    MOCK_METHOD0(gl_bind_to_texture, void());
-    MOCK_METHOD0(secure_for_render, void());
-    MOCK_METHOD0(bind, void());
+    std::unique_ptr<graphics::CommandStreamSync> create_command_stream_sync() override
+    {
+        return std::make_unique<graphics::NullCommandSync>();
+    }
 };
-
 }
 }
 }
 
-#endif
+#endif /* MIR_TEST_DOUBLES_STUB_CMDSTREAM_SYNC_FACTORY_H_ */
