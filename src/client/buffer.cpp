@@ -49,6 +49,8 @@ void mcl::Buffer::submitted()
 void mcl::Buffer::received()
 {
     if (!owned)
+    {
+        owned = true;
         cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
-    owned = true;
+    }
 }
