@@ -23,6 +23,7 @@
 #include "session_event_handler_register.h"
 #include "mir/graphics/display.h"
 #include "mir/compositor/compositor.h"
+#include "mir/geometry/rectangles.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_report.h"
@@ -32,6 +33,7 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
+namespace mi = mir::input;
 
 namespace
 {
@@ -66,7 +68,8 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<SessionContainer> const& session_container,
     std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
     std::shared_ptr<ServerActionQueue> const& server_action_queue,
-    std::shared_ptr<mg::DisplayConfigurationReport> const& report)
+    std::shared_ptr<mg::DisplayConfigurationReport> const& report,
+    std::shared_ptr<mi::InputRegion> const& region)
     : display{display},
       compositor{compositor},
       display_configuration_policy{display_configuration_policy},
@@ -75,7 +78,8 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
       server_action_queue{server_action_queue},
       report{report},
       base_configuration_{display->configuration()},
-      base_configuration_applied{true}
+      base_configuration_applied{true},
+      region{region}
 {
     session_event_handler_register->register_focus_change_handler(
         [this](std::shared_ptr<ms::Session> const& session)
@@ -112,6 +116,7 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
         });
 
     report->initial_configuration(*base_configuration_);
+    update_input_rectangles(*base_configuration_);
 }
 
 void ms::MediatingDisplayChanger::configure(
@@ -204,6 +209,7 @@ void ms::MediatingDisplayChanger::apply_config(
     {
         display->configure(*conf);
     }
+    update_input_rectangles(*conf);
 
     base_configuration_applied = false;
 }
@@ -281,4 +287,16 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
 
             send_config_to_all_sessions(conf);
         });
+}
+
+void ms::MediatingDisplayChanger::update_input_rectangles(mg::DisplayConfiguration const& config)
+{
+    geometry::Rectangles rectangles;
+    config.for_each_output(
+        [&rectangles](mg::DisplayConfigurationOutput const& output)
+        {
+            if (output.power_mode == mir_power_mode_on && output.current_mode_index < output.modes.size())
+                rectangles.add(geometry::Rectangle(output.top_left, output.modes[output.current_mode_index].size));
+        });
+    region->set_input_rectangles(rectangles);
 }

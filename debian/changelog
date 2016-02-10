@@ -1,3 +1,14 @@
+mir (0.19.2) UNRELEASED; urgency=medium
+
+  * New upstream release 0.19.2 (https://launchpad.net/mir/+milestone/0.19.2)
+    - Bugs fixed:
+      . Lock ordering issues causing deadlocks between input and display
+        configuration (LP: #1538632, LP: #1543594, LP: #1532607)
+      . Workaound for a g++ 4.9 bug where std::uncaught_exception() 
+        unexpectedly returns true
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Tue, 09 Feb 2016 18:29:17 -0600
+
 mir (0.19.1+16.04.20160204-0ubuntu1) xenial; urgency=medium
 
   [ Kevin Gunn ]

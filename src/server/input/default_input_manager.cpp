@@ -77,7 +77,15 @@ void mi::DefaultInputManager::start()
         });
 
     multiplexer->add_watch(queue);
-    auto unregister_queue = on_unwind([this]{ if (state == State::starting) multiplexer->remove_watch(queue);});
+    auto unregister_queue = on_unwind([this]
+        {
+            // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=62258
+            // After using rethrow_exception() (and catching the exception),
+            // all subsequent calls to uncaught_exception() return `true'.
+            if (state == State::started) return;
+
+            multiplexer->remove_watch(queue);
+        });
 
 
     auto started_promise = std::make_shared<std::promise<void>>();
@@ -137,11 +145,24 @@ void mi::DefaultInputManager::stop()
     auto restore_platforms = on_unwind(
         [this]
         {
-            if (state == State::stopping) queue->enqueue([this](){ start_platforms(); });
+            // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=62258
+            // After using rethrow_exception() (and catching the exception),
+            // all subsequent calls to uncaught_exception() return `true'.
+            if (state == State::stopped) return;
+
+            queue->enqueue([this](){ start_platforms(); });
         });
 
     multiplexer->remove_watch(queue);
-    auto register_queue = on_unwind([this]{multiplexer->add_watch(queue);});
+    auto register_queue = on_unwind([this]
+        {
+            // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=62258
+            // After using rethrow_exception() (and catching the exception),
+            // all subsequent calls to uncaught_exception() return `true'.
+            if (state == State::stopped) return;
+
+            multiplexer->add_watch(queue);
+        });
 
     input_thread.reset();
 
