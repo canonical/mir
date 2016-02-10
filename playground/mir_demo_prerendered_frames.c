@@ -83,33 +83,27 @@ int main(int argc, char** argv)
 
     int width = 20;
     int height = 25;
+    int displacement_x = 0;
+    int displacement_y = 0;
     MirPixelFormat format = mir_pixel_format_abgr_8888;
 
     MirConnection* connection = mir_connect_sync(NULL, "prerendered_frames");
-
-    MirSurfaceSpec* spec =
-        mir_connection_create_spec_for_normal_surface(connection, width, height, format);
-    MirSurface* surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
-
     MirPresentationChain* chain =  mir_connection_create_presentation_chain_sync(connection);
     if (!mir_presentation_chain_is_valid(chain))
         return -1;
 
+    MirSurfaceSpec* spec =
+         mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+    MirSurface* surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
     //reassociate for advanced control
-    MirPresentationChainInfo info;
-    MirSurfaceContent content;
-    info.displacement_x = 0;
-    info.displacement_y = 0;
-    info.width = width;
-    info.height = height;
-    info.chain = chain;
-
-    content.info.chain = &info;
-    content.type = mir_content_presentation_chain;
-
     spec = mir_create_surface_spec(connection);
-    mir_surface_spec_set_content(spec, &content, 1);
+    MirSurfaceContent* content = mir_surface_spec_create_surface_content();
+    mir_surface_content_set_presentation_chain(
+        content, width, height, displacement_x, displacement_y, chain);
+    mir_surface_spec_destroy_surface_content(content);
+    mir_surface_spec_set_content(spec, content);
     mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
 

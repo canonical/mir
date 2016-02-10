@@ -32,6 +32,7 @@ extern "C" {
 typedef struct MirPresentationChain MirPresentationChain;
 typedef struct MirBuffer MirBuffer;
 typedef void* MirNativeFence;
+typedef struct MirSurfaceContent MirSurfaceContent;
 
 typedef void (*mir_buffer_callback)(MirPresentationChain*, MirBuffer*, void* context);
 typedef void (*mir_presentation_chain_callback)(MirPresentationChain*, void* context);
@@ -42,30 +43,6 @@ typedef enum MirBufferAccess
     mir_read_write,
 } MirBufferAccess;
 
-typedef struct MirPresentationChainInfo
-{
-    MirPresentationChain* chain;
-    int displacement_x;
-    int displacement_y;
-    int width;
-    int height;
-    int reserved[16]; 
-} MirPresentationChainInfo;
-
-typedef enum MirSurfaceContentType
-{
-    mir_content_buffer_stream,
-    mir_content_presentation_chain
-} MirSurfaceContentType;
-
-typedef struct MirSurfaceContent 
-{
-    MirSurfaceContentType type;
-    union {
-        MirPresentationChainInfo* chain;
-        MirBufferStreamInfo* stream;
-    } info;
-} MirSurfaceContent;
 
 #ifdef __cplusplus
 }
