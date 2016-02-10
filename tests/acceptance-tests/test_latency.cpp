@@ -70,16 +70,12 @@ public:
         {
             if (i->buffer_id == submission_id)
             {
-            #if 0
                 // The server is skipping a frame we gave it, which may or
                 // may not be a bug. TODO: investigate.
-                EXPECT_TRUE(i == submissions.begin())
-                    << "Compositor missed a frame!";
-
+                // EXPECT_TRUE(i == submissions.begin());
                 // Fix it up so our stats aren't skewed by the miss:
                 if (i != submissions.begin())
                     i = submissions.erase(submissions.begin(), i);
-            #endif
 
                 latency = post_count - i->time;
                 submissions.erase(i);
