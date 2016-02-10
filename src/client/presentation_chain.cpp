@@ -42,6 +42,13 @@ mcl::PresentationChain::PresentationChain(
 {
 }
 
+//note: the caller of the mir::client::rpc::DisplayServer interface
+//      has to provide the object for the server to fill when we get a
+//      response, but we can't pass ownership of the response object to
+//      the server given the current interface, nor do we know when the
+//      server has been destroyed, so we have to allow for responses
+//      to complete after the PresentationChain object has been deleted.
+//      (mcl::BufferStream has a similar situation)
 static void ignore_response(mp::Void* response)
 {
     delete response;
