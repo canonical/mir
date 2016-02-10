@@ -26,15 +26,25 @@ namespace mir
 {
 namespace client
 {
-class MirBufferStub
+class ClientBuffer;
+//this is the type backing MirBuffer* 
+class Buffer
 {
 public:
-    MirBufferStub(MirPresentationChain* stream, mir_buffer_callback cb, void* context);
-    void ready();
+    Buffer(
+        mir_buffer_callback cb, void* context,
+        int buffer_id,
+        std::shared_ptr<ClientBuffer> const& buffer);
+    int rpc_id() const;
+
+    void submitted();
+    void received();
 private:
-    MirPresentationChain* const stream;
-    mir_buffer_callback const cb;
-    void* const context;
+    mir_buffer_callback cb;
+    void* cb_context;
+    int const buffer_id;
+    std::shared_ptr<ClientBuffer> buffer;
+    bool owned;
 };
 }
 }

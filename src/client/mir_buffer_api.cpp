@@ -23,35 +23,22 @@
 
 namespace mcl = mir::client;
 
-mcl::MirBufferStub::MirBufferStub(MirPresentationChain* stream, mir_buffer_callback cb, void* context) :
-    stream(stream),
-    cb(cb),
-    context(context)
-{
-    ready();
-}
-
-void mcl::MirBufferStub::ready()
-{
-    if (cb)
-        cb(stream, reinterpret_cast<MirBuffer*>(this), context);
-}
-
 //private NBS api under development
 void mir_presentation_chain_allocate_buffer(
-    MirPresentationChain* stream, 
+    MirPresentationChain*, 
     int, int,
     MirPixelFormat,
     MirBufferUsage,
     mir_buffer_callback cb, void* context)
 {
-    new mcl::MirBufferStub(stream, cb, context); 
+    int fake_id = 3;
+    new mcl::Buffer(cb, context, fake_id, nullptr); 
 }
 
 
 void mir_buffer_release(MirBuffer* buffer) 
 {
-    delete reinterpret_cast<mcl::MirBufferStub*>(buffer);
+    delete reinterpret_cast<mcl::Buffer*>(buffer);
 }
 
 MirNativeFence* mir_buffer_get_fence(MirBuffer*)
