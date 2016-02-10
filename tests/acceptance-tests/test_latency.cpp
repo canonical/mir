@@ -69,6 +69,13 @@ public:
         {
             if (i->buffer_id == submission_id)
             {
+                // Gtest can't understand this equality otherwise...
+                EXPECT_TRUE(i == submissions.begin())
+                    << "Compositor missed a frame!";
+                // Fix it up so our stats aren't skewed by the miss:
+                if (i != submissions.begin())
+                    i = submissions.erase(submissions.begin(), i);
+
                 latency = post_count - i->time;
                 submissions.erase(i);
                 break;
@@ -220,6 +227,9 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
 {
     using namespace testing;
 
+    // FIXME: This works around the above "Compositor missed a frame!"
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
     auto stream = mir_surface_get_buffer_stream(surface);
     for(auto i = 0u; i < test_submissions; i++) {
         auto submission_id = mir_debug_surface_current_buffer_id(surface);
@@ -248,6 +258,9 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
 TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
 {
     using namespace testing;
+
+    // FIXME: This works around the above "Compositor missed a frame!"
+    std::this_thread::sleep_for(std::chrono::seconds(2));
 
     int const throttled_input_rate = refresh_rate - 1;
     std::chrono::microseconds const input_interval(1000000/throttled_input_rate);
