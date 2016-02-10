@@ -12,4 +12,6 @@ add_library(
   refcounted_buffer.cpp
   android_native_buffer.cpp
   syncfence.cpp
+  egl_sync_fence.cpp
+  egl_sync_extensions.cpp
 )

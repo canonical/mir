@@ -397,7 +397,6 @@ mcl::BufferStream::BufferStream(
     MirConnection* connection,
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
-    mcl::BufferStreamMode mode,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
     mp::BufferStream const& a_protobuf_bs,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
@@ -406,7 +405,6 @@ mcl::BufferStream::BufferStream(
     size_t nbuffers)
     : connection_(connection),
       display_server(server),
-      mode(mode),
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
       scale_(1.0f),
@@ -502,7 +500,6 @@ mcl::BufferStream::BufferStream(
     size_t nbuffers)
     : connection_(connection),
       display_server(server),
-      mode(BufferStreamMode::Producer),
       client_platform(client_platform),
       protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>()},
       swap_interval_(1),
@@ -579,29 +576,9 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 
     // TODO: We can fix the strange "ID casting" used below in the second phase
     // of buffer stream which generalizes and clarifies the server side logic.
-    if (mode == mcl::BufferStreamMode::Producer)
-    {
-        lock.unlock();
-        return buffer_depository->submit(done, cached_buffer_size,
-            static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), protobuf_bs->id().value());
-    }
-    else
-    {
-        mp::ScreencastId screencast_id;
-        screencast_id.set_value(protobuf_bs->id().value());
-
-        lock.unlock();
-        screencast_wait_handle.expect_result();
-
-        display_server.screencast_buffer(
-            &screencast_id,
-            protobuf_bs->mutable_buffer(),
-            google::protobuf::NewCallback(
-            this, &mcl::BufferStream::screencast_buffer_received,
-            done));
-    }
-
-    return &screencast_wait_handle;
+    lock.unlock();
+    return buffer_depository->submit(done, cached_buffer_size,
+        static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), protobuf_bs->id().value());
 }
 
 std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
@@ -629,14 +606,6 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
     if (!secured_region)
         secured_region = buffer->secure_for_cpu_write();
     return secured_region;
-}
-
-void mcl::BufferStream::screencast_buffer_received(std::function<void()> done)
-{
-    process_buffer(protobuf_bs->buffer());
-
-    done();
-    screencast_wait_handle.result_received();
 }
 
 /* mcl::EGLNativeSurface interface for EGLNativeWindow integration */
@@ -700,9 +669,6 @@ MirWaitHandle* mcl::BufferStream::set_swap_interval(int interval)
 
 MirWaitHandle* mcl::BufferStream::force_swap_interval(int interval)
 {
-    if (mode != mcl::BufferStreamMode::Producer)
-        BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set swap interval on screencast is invalid"));
-
     mp::StreamConfiguration configuration;
     configuration.mutable_id()->set_value(protobuf_bs->id().value());
     configuration.set_swapinterval(interval);
