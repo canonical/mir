@@ -36,6 +36,7 @@ target_link_libraries(mirclientplatformandroid
   client_platform_common
   mirsharedandroid-static
   ${LIBHARDWARE_LIBRARIES}
+  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
 )
 
 install(TARGETS mirclientplatformandroid LIBRARY DESTINATION ${MIR_CLIENT_PLATFORM_PATH})

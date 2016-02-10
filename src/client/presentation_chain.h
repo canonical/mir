@@ -91,7 +91,8 @@ public:
         rpc::DisplayServer& server,
         std::shared_ptr<ClientBufferFactory> const& factory);
     void allocate_buffer(
-        geometry::Size size, MirPixelFormat format, MirBufferUsage usage, mir_buffer_callback, void*) override;
+        geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
+        mir_buffer_callback callback, void* context) override;
     void submit_buffer(MirBuffer* buffer) override;
     void release_buffer(MirBuffer* buffer) override;
 

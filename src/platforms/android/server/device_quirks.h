@@ -65,6 +65,7 @@ public:
     int aligned_width(int width) const;
     bool clear_fb_context_fence() const;
     int fb_gralloc_bits() const;
+    bool working_egl_sync() const;
 
     static void add_options(boost::program_options::options_description& config);
 

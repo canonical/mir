@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,13 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_EGL_SYNC_FENCE_H_
-#define MIR_GRAPHICS_EGL_SYNC_FENCE_H_
+#ifndef MIR_GRAPHICS_COMMAND_STREAM_SYNC_H_
+#define MIR_GRAPHICS_COMMAND_STREAM_SYNC_H_
 
-#include "egl_extensions.h"
-#include <memory>
 #include <chrono>
-#include <mutex>
 
 namespace mir
 {
@@ -47,36 +44,8 @@ public:
     CommandStreamSync& operator=(CommandStreamSync const&) = delete;
 };
 
-class NullCommandSync : public CommandStreamSync
-{
-    void raise() override;
-    void reset() override;
-    bool wait_for(std::chrono::nanoseconds ns) override;
-};
-
-class EGLSyncFence : public CommandStreamSync
-{
-public:
-    EGLSyncFence(std::shared_ptr<EGLSyncExtensions> const&);
-    ~EGLSyncFence();
-
-    void raise() override;
-    void reset() override;
-    bool wait_for(std::chrono::nanoseconds ns) override;
-private:
-    void reset(std::unique_lock<std::mutex> const&);
-    bool wait_for(std::unique_lock<std::mutex> const&, std::chrono::nanoseconds ns);
-
-    std::shared_ptr<EGLSyncExtensions> const egl;
-    std::chrono::nanoseconds const default_timeout{
-        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(1))};
-
-    std::mutex mutex;
-    EGLDisplay fence_display;
-    EGLSyncKHR sync_point;
-};
 
 }
 }
 
-#endif /* MIR_GRAPHICS_EGL_SYNC_FENCE_H_ */
+#endif /* MIR_GRAPHICS_COMMAND_STREAM_SYNC_H_ */

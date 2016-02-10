@@ -34,6 +34,7 @@
 #include "lifecycle_control.h"
 #include "error_stream.h"
 #include "buffer_stream.h"
+#include "screencast_stream.h"
 #include "perf_report.h"
 #include "presentation_chain.h"
 #include "logging/perf_report.h"
@@ -352,7 +353,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
     try
     {
         stream = std::make_shared<mcl::BufferStream>(
-            this, request->wh, server, mcl::BufferStreamMode::Producer, platform,
+            this, request->wh, server, platform,
             surface_proto->buffer_stream(), make_perf_report(logger), std::string{},
             mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
     }
@@ -780,7 +781,7 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
     try
     {
         auto stream = std::make_shared<mcl::BufferStream>(
-            this, request->wh, server, mcl::BufferStreamMode::Producer, platform,
+            this, request->wh, server, platform,
             *protobuf_bs, make_perf_report(logger), std::string{}, mir::geometry::Size{0,0}, nbuffers);
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
 
@@ -848,11 +849,10 @@ void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<S
 }
 
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
-   mp::BufferStream const& protobuf_bs, std::string const& surface_name, mir::geometry::Size size)
+   mp::BufferStream const& protobuf_bs, mir::geometry::Size)
 {
-    return std::make_shared<mcl::BufferStream>(
-        this, nullptr, server, mcl::BufferStreamMode::Consumer, platform,
-        protobuf_bs, make_perf_report(logger), surface_name, size, nbuffers);
+    return std::make_shared<mcl::ScreencastStream>(
+        this, server, platform, protobuf_bs);
 }
 
 EGLNativeDisplayType MirConnection::egl_native_display()

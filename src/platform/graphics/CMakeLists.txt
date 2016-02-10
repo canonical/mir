@@ -6,7 +6,6 @@ set(
   egl_extensions.cpp
   egl_resources.cpp
   egl_error.cpp
-  egl_sync_fence.cpp
   display_configuration.cpp
   buffer_basic.cpp
   pixel_format_utils.cpp
