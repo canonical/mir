@@ -17,7 +17,7 @@
  * Originally by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/gl/recently_used_cache.h"
+#include "src/gl/recently_used_cache.h"
 #include "mir/test/doubles/mock_gl_buffer.h"
 #include "mir/test/doubles/mock_renderable.h"
 #include "mir/test/doubles/mock_gl.h"
@@ -75,6 +75,7 @@ TEST_F(RecentlyUsedCache, caches_and_uploads_texture_only_on_buffer_changes)
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(*mock_buffer,gl_bind_to_texture())
         .Times(0);
+    EXPECT_CALL(*mock_buffer, used_as_texture());
 
     // Frame 3: Texture found in cache but refreshed with new buffer
     EXPECT_CALL(*mock_buffer, id())
@@ -92,6 +93,7 @@ TEST_F(RecentlyUsedCache, caches_and_uploads_texture_only_on_buffer_changes)
     EXPECT_CALL(*mock_buffer, id())
         .WillOnce(Return(mg::BufferID(456)));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
+    EXPECT_CALL(*mock_buffer, used_as_texture());
 
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
 

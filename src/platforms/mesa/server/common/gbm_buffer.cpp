@@ -197,3 +197,12 @@ mg::NativeBufferBase* mgm::GBMBuffer::native_buffer_base()
 {
     return this;
 }
+
+void mgm::GBMBuffer::secure_for_render()
+{
+}
+
+void mgm::GBMBuffer::bind()
+{
+    gl_bind_to_texture();
+}
