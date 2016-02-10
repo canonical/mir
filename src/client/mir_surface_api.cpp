@@ -572,53 +572,42 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-struct MirSurfaceContent
-{
-    std::vector<ContentInfo> info;
-};
-
-MirSurfaceContent* mir_surface_spec_create_surface_content()
-{
-    return new MirSurfaceContent;
-}
-
-void mir_surface_spec_destroy_surface_content(MirSurfaceContent* surface_content)
-{
-    delete surface_content;
-}
-
-void mir_surface_content_set_presentation_chain(
-    MirSurfaceContent* content,
+void mir_surface_spec_set_presentation_chain(
+    MirSurfaceSpec* spec,
     int width, int height,
     int displacement_x, int displacement_y,
     MirPresentationChain* client_chain)
-{
-    mir::require(content && client_chain);
-    auto chain = reinterpret_cast<mcl::PresentationChain*>(client_chain);
-    content->info.push_back(
-        ContentInfo{
-            {displacement_x, displacement_y},
-            chain->rpc_id(),
-            mir::geometry::Size{width, height}});
-}
-
-void mir_surface_content_set_buffer_stream(
-    MirSurfaceContent* content,
-    int displacement_x, int displacement_y,
-    MirBufferStream* stream)
-{
-    mir::require(content && stream);
-    auto bs = reinterpret_cast<mcl::ClientBufferStream*>(stream);
-    content->info.push_back(
-        ContentInfo{{displacement_x, displacement_y}, bs->rpc_id().as_value(), {}});
-}
-
-void mir_surface_spec_set_content(MirSurfaceSpec* spec, MirSurfaceContent* content)
 try
 {
-    mir::require(spec && content);
-    std::vector<ContentInfo> copy;
-    spec->streams = content->info;
+    mir::require(spec && client_chain);
+    auto chain = reinterpret_cast<mcl::PresentationChain*>(client_chain);
+
+    ContentInfo info{
+        {displacement_x, displacement_y}, chain->rpc_id(), mir::geometry::Size{width, height}};
+    if (spec->streams.is_set())
+        spec->streams.value().push_back(info);
+    else
+        spec->streams = std::vector<ContentInfo>{info}; 
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_set_buffer_stream(
+    MirSurfaceSpec* spec,
+    int displacement_x, int displacement_y,
+    MirBufferStream* stream)
+try
+{
+    mir::require(spec && stream);
+    auto bs = reinterpret_cast<mcl::ClientBufferStream*>(stream);
+    ContentInfo info{{displacement_x, displacement_y}, bs->rpc_id().as_value(), {}};
+
+    if (spec->streams.is_set())
+        spec->streams.value().push_back(info);
+    else
+        spec->streams = std::vector<ContentInfo>{info}; 
 }
 catch (std::exception const& ex)
 {

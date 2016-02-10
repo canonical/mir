@@ -296,11 +296,8 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_presentation_chain_allocate_buffer;
     mir_presentation_chain_submit_buffer;
     mir_presentation_chain_release;
-    mir_surface_spec_set_content;
-    mir_surface_spec_create_surface_content;
-    mir_surface_spec_destroy_surface_content;
-    mir_surface_content_set_presentation_chain;
-    mir_surface_content_set_buffer_stream;
+    mir_surface_spec_set_presentation_chain;
+    mir_surface_spec_set_buffer_stream;
   local:
     *;
 } MIR_CLIENT_DETAIL_9v19;

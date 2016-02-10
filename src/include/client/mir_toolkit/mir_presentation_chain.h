@@ -122,46 +122,29 @@ bool mir_presentation_chain_submit_buffer(
     MirPresentationChain* presentation_chain, MirBuffer* buffer);
 
 /**
- *  Create a MirSurfaceContent item that can be passed to 
- *  mir_surface_spec_set_content() to designate the content
- *  of a surface.
- *  Must be destroyed via mir_surface_spec_destroy_surface_content.
- *
- *  \return     A MirSurfaceContent object.
- */
-MirSurfaceContent* mir_surface_spec_create_surface_content();
-
-/**
- *  Destroy a MirSurfaceContent item
- *
- *  \param surface_content      The content to be destroyed.
- */
-void mir_surface_spec_destroy_surface_content(MirSurfaceContent* surface_content);
-
-/**
  * Set the MirSurfaceContent to display a MirPresentationChain.
  *
  * The width and height can be different from the physical dimensions
  * of the MirBuffer's in the MirPresentationChain. If the two differ,
  * the content will be scaled to fit width and height.
  *
- * The initial call to mir_surface_content_set_presentation_chain or
- * mir_surface_content_set_buffer_stream will set the bottom-most content,
+ * The initial call to mir_surface_spec_set_presentation_chain or
+ * mir_surface_spec_set_buffer_stream will set the bottom-most content,
  * and subsequent calls to either will stack the content on top.
  *
  * \warning         Setting the dimensions or displacements to exceed the 
  *                  bounds of MirSurface may result in clipping to the size
  *                  of the MirSurface, at the server's discretion.
  *
- * \param content          The surface_content to be updated.
+ * \param spec             The surface_spec to be updated.
  * \param width            The width that the content will displayed at.
  * \param height           The height that the content will be displayed at.
  * \param displacement_x   The width that the content will displayed at.
  * \param displacement_y   The height that the content will be displayed at.
  * \param chain            The chain containing the content to be displayed.
  */
-void mir_surface_content_set_presentation_chain(
-    MirSurfaceContent* content,
+void mir_surface_spec_set_presentation_chain(
+    MirSurfaceSpec* spec,
     int width, int height,
     int displacement_x, int displacement_y,
     MirPresentationChain* chain);
@@ -169,49 +152,23 @@ void mir_surface_content_set_presentation_chain(
 /**
  * Set the MirSurfaceContent to display a MirBufferStream.
  *
- * The initial call to mir_surface_content_set_presentation_chain or
- * mir_surface_content_set_buffer_stream will set the bottom-most content,
+ * The initial call to mir_surface_spec_set_presentation_chain or
+ * mir_surface_spec_set_buffer_stream will set the bottom-most content,
  * and subsequent calls to either will stack the content on top.
  *
  * \warning         Setting the displacements to exceed the 
  *                  bounds of MirSurface may result in clipping to the size
  *                  of the MirSurface, at the server's discretion.
  *
- * \param content          The surface_content to be updated.
+ * \param spec             The surface_spec to be updated.
  * \param displacement_x   The width that the content will displayed at.
  * \param displacement_y   The height that the content will be displayed at.
  * \param stream           The stream containing the content to be displayed.
  */
-void mir_surface_content_set_buffer_stream(
-    MirSurfaceContent* content,
+void mir_surface_spec_set_buffer_stream(
+    MirSurfaceSpec* spec,
     int displacement_x, int displacement_y,
     MirBufferStream* stream);
-
-/**
- * Set the content associated with the spec.
- * content[0] is the bottom-most content, and content[size-1] is the topmost.
- * On application of the spec, the stream or chain that is present in the
- * surface, but is not in the list will be disassociated from the surface.
- * On application of the spec, a stream or chain that is not present in the
- * surface, but is in the list will be associated with the surface.
- *
- * The content is displaced from the top-left corner of the surface.
- *
- * In the case of MirPresentationChains, the displayed size is set by
- * width and height. If the displayed size is different than the physical size
- * of the MirBuffer's that the chain has, the buffers will be scaled.
- *
- * \warning disassociating chains or streams from the surface will not
- *          release() them.
- * \warning It is wiser to arrange the content within the bounds of the
- *          surface the spec is applied to. Shells can define their own
- *          behavior as to what happens to out-of-bound contents.
- * 
- * \param [in] spec        The spec to accumulate the request in.
- * \param [in] content     The MirSurfaceContent describing the request.
- */
-void mir_surface_spec_set_content(MirSurfaceSpec* spec,
-                                  MirSurfaceContent* content);
 
 #ifdef __cplusplus
 }
