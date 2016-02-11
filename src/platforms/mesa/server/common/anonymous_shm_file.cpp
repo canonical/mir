@@ -45,6 +45,14 @@ mir::Fd create_anonymous_file(size_t size)
     {
         char template_filename[] = "/dev/shm/mir-buffer-XXXXXX";
         raw_fd = mkostemp(template_filename, O_CLOEXEC);
+        if (raw_fd != -1)
+        {
+            if (unlink(template_filename) < 0 || ftruncate(raw_fd, size) < 0)
+            {
+                close(raw_fd);
+                raw_fd = -1;
+            }
+        }
     }
 
     if (raw_fd == -1)
