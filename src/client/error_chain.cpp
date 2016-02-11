@@ -22,7 +22,6 @@
 namespace mcl = mir::client;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
-namespace gp = google::protobuf;
 
 mcl::ErrorChain::ErrorChain(
     MirConnection* connection,

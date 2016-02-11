@@ -21,7 +21,6 @@
 #include "presentation_chain.h"
 #include "buffer.h"
 #include "mir/uncaught.h"
-#include "mir/client_buffer.h"
 #include "mir/require.h"
 #include <stdexcept>
 #include <boost/throw_exception.hpp>

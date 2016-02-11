@@ -20,7 +20,7 @@
 #include "mir_toolkit/mir_buffer.h"
 #include "mir_connection.h"
 #include "buffer.h"
-#include "presentation_chain.h"
+#include "mir_presentation_chain.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
 #include <stdexcept>
