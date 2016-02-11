@@ -52,7 +52,7 @@ include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
 include (GNUInstallDirs)
 
-set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer")
+set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer;UBSanitizer")
 # Change informational string for CMAKE_BUILD_TYPE
 set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "${build_types}" FORCE)
 # Enable cmake-gui to display a drop down list for CMAKE_BUILD_TYPE
