@@ -19,7 +19,6 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
-#include "presentation_chain.h"
 #include "mir_protobuf.pb.h"
 #include "make_protobuf_object.h"
 #include "mir_toolkit/mir_platform_message.h"
@@ -37,6 +36,7 @@
 #include "screencast_stream.h"
 #include "perf_report.h"
 #include "presentation_chain.h"
+#include "error_chain.h"
 #include "logging/perf_report.h"
 #include "lttng/perf_report.h"
 
@@ -1077,7 +1077,7 @@ void MirConnection::context_created(ChainCreationRequest* request_raw)
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), chain);
 
         if (request->callback)
-            request->callback(reinterpret_cast<MirPresentationChain*>(chain.get()), request->context);
+            request->callback(static_cast<MirPresentationChain*>(chain.get()), request->context);
         request->wh->result_received();
     }
     catch (std::exception const& error)
@@ -1100,13 +1100,12 @@ void MirConnection::chain_error(
     surface_map->insert(id, chain); 
 
     if (request->callback)
-        request->callback(reinterpret_cast<MirPresentationChain*>(chain.get()), request->context);
+        request->callback(static_cast<MirPresentationChain*>(chain.get()), request->context);
     request->wh->result_received();
 }
 
-void MirConnection::release_presentation_chain(MirPresentationChain* c)
+void MirConnection::release_presentation_chain(MirPresentationChain* chain)
 {
-    auto chain = reinterpret_cast<mcl::MirPresentationChain*>(c);
     auto id = chain->rpc_id();
     if (id > 0)
     {

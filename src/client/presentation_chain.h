@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_PRESENTATION_CHAIN_H
 #define MIR_CLIENT_PRESENTATION_CHAIN_H
 
-#include "buffer_receiver.h"
+#include "mir_presentation_chain.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_protobuf.pb.h"
@@ -37,49 +37,6 @@ namespace rpc
 {
 class DisplayServer;
 }
-
-class MirPresentationChain : public BufferReceiver
-{
-public:
-    ~MirPresentationChain() = default;
-    virtual void allocate_buffer(
-        geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
-        mir_buffer_callback, void*) = 0;
-    virtual void submit_buffer(MirBuffer* buffer) = 0;
-    virtual void release_buffer(MirBuffer* buffer) = 0;
-    virtual MirConnection* connection() const = 0;
-    virtual int rpc_id() const = 0;
-    virtual std::string error_msg() const = 0;
-
-protected:
-    MirPresentationChain(MirPresentationChain const&) = delete;
-    MirPresentationChain& operator=(MirPresentationChain const&) = delete;
-    MirPresentationChain() = default;
-};
-
-class ErrorChain : public MirPresentationChain
-{
-public:
-    ErrorChain(
-        MirConnection* connection,
-        std::shared_ptr<MirWaitHandle> const&,
-        int id,
-        std::string const& error_msg);
-    void allocate_buffer(
-        geometry::Size size, MirPixelFormat format, MirBufferUsage usage, mir_buffer_callback, void*);
-    void submit_buffer(MirBuffer* buffer);
-    void release_buffer(MirBuffer* buffer);
-    void buffer_available(mir::protobuf::Buffer const& buffer) override;
-    void buffer_unavailable() override;
-    MirConnection* connection() const;
-    int rpc_id() const override;
-    std::string error_msg() const override;
-private:
-    MirConnection* const connection_;
-    std::shared_ptr<MirWaitHandle> const wait_handle;
-    int const stream_id;
-    std::string const error;
-};
 
 class PresentationChain : public MirPresentationChain
 {

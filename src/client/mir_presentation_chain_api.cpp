@@ -22,24 +22,24 @@
 #include "buffer.h"
 #include "presentation_chain.h"
 #include "mir/uncaught.h"
+#include "mir/require.h"
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 namespace mcl = mir::client;
 
 namespace
 {
-// assign_result is compatible with all 2-parameter callbacks
-void assign_result(void* result, void** context)
+void set_result(MirPresentationChain* result, void* context)
 {
     if (context)
-        *context = result;
+        context = result;
 }
 }
 //private NBS api under development
-bool mir_presentation_chain_submit_buffer(MirPresentationChain* client_chain, MirBuffer* buffer)
+bool mir_presentation_chain_submit_buffer(MirPresentationChain* chain, MirBuffer* buffer)
 try
 {
-    auto chain = reinterpret_cast<mcl::MirPresentationChain*>(client_chain);
+    mir::require(chain && buffer && mir_presentation_chain_is_valid(chain));
     chain->submit_buffer(buffer);
     return true;
 }
@@ -54,9 +54,9 @@ bool mir_presentation_chain_is_valid(MirPresentationChain* chain)
     return mir_presentation_chain_get_error_message(chain) == std::string("");
 }
 
-char const *mir_presentation_chain_get_error_message(MirPresentationChain* client_chain)
+char const *mir_presentation_chain_get_error_message(MirPresentationChain* chain)
 {
-    auto chain = reinterpret_cast<mcl::MirPresentationChain*>(client_chain);
+    mir::require(chain);
     return chain->error_msg().c_str();
 }
 
@@ -76,15 +76,15 @@ MirPresentationChain* mir_connection_create_presentation_chain_sync(MirConnectio
 {
     MirPresentationChain *context = nullptr;
     mir_connection_create_presentation_chain(connection,
-        reinterpret_cast<mir_presentation_chain_callback>(assign_result), &context)->wait_for_all();
+        reinterpret_cast<mir_presentation_chain_callback>(set_result), &context)->wait_for_all();
     return context;
 }
 
-void mir_presentation_chain_release(MirPresentationChain* client_chain)
+void mir_presentation_chain_release(MirPresentationChain* chain)
 try
 {
-    auto chain = reinterpret_cast<mcl::MirPresentationChain*>(client_chain);
-    chain->connection()->release_presentation_chain(client_chain);
+    mir::require(chain);
+    chain->connection()->release_presentation_chain(chain);
 }
 catch (std::exception const& ex)
 {
