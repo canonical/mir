@@ -1,0 +1,117 @@
+/*
+ * Copyright © 2016 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ */
+
+#include "mir/test/doubles/mock_client_buffer.h"
+#include "src/client/buffer.h"
+#include <gtest/gtest.h>
+
+namespace mcl = mir::client;
+namespace mtd = mir::test::doubles;
+namespace geom = mir::geometry;
+using namespace testing;
+
+namespace
+{
+
+void buffer_callback(MirPresentationChain*, MirBuffer*, void*)
+{
+}
+
+struct MirBufferTest : Test
+{
+    MirGraphicsRegion region;
+    int buffer_id { 32 };
+    geom::Width width { 190 };
+    geom::Height height { 119 };
+    geom::Stride stride { 2211 };
+    MirPixelFormat format { mir_pixel_format_abgr_8888 };
+    std::shared_ptr<char> vaddr { std::make_shared<char>('~') };
+    mir_buffer_callback cb { buffer_callback };
+    std::shared_ptr<mtd::MockClientBuffer> const mock_client_buffer {
+        std::make_shared<NiceMock<mtd::MockClientBuffer>>() };
+};
+
+}
+
+TEST_F(MirBufferTest, fills_region_with_correct_info_when_securing)
+{
+    auto region = std::make_shared<mcl::MemoryRegion>(
+        mcl::MemoryRegion{width, height, stride, format, vaddr});
+    EXPECT_CALL(*mock_client_buffer, secure_for_cpu_write())
+        .WillOnce(Return(region));
+
+    MirGraphicsRegion out_region;
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer);
+    buffer.map_to_region(out_region);
+
+    EXPECT_THAT(out_region.width, Eq(width.as_int()));
+    EXPECT_THAT(out_region.height, Eq(height.as_int()));
+    EXPECT_THAT(out_region.stride, Eq(stride.as_int()));
+    EXPECT_THAT(out_region.pixel_format, Eq(format));
+    EXPECT_THAT(out_region.vaddr, Eq(vaddr.get()));
+}
+
+TEST_F(MirBufferTest, releases_buffer_refcount_manually)
+{
+    auto region = std::make_shared<mcl::MemoryRegion>(
+        mcl::MemoryRegion{width, height, stride, format, vaddr});
+    EXPECT_CALL(*mock_client_buffer, secure_for_cpu_write())
+        .WillOnce(Return(region));
+
+    MirGraphicsRegion out_region;
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer);
+
+    auto use_count_before = region.use_count();
+    buffer.map_to_region(out_region);
+
+    EXPECT_THAT(use_count_before, Lt(region.use_count()));
+
+    buffer.unmap();
+
+    EXPECT_THAT(use_count_before, Eq(region.use_count()));
+}
+
+TEST_F(MirBufferTest, releases_buffer_refcount_implicitly_on_submit)
+{
+    auto region = std::make_shared<mcl::MemoryRegion>(
+        mcl::MemoryRegion{width, height, stride, format, vaddr});
+    EXPECT_CALL(*mock_client_buffer, secure_for_cpu_write())
+        .WillOnce(Return(region));
+
+    MirGraphicsRegion out_region;
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer);
+
+    auto use_count_before = region.use_count();
+    buffer.map_to_region(out_region);
+
+    EXPECT_THAT(use_count_before, Lt(region.use_count()));
+
+    buffer.submitted();
+
+    EXPECT_THAT(use_count_before, Eq(region.use_count()));
+}
+
+TEST_F(MirBufferTest, returns_correct_native_buffer)
+{
+    int fake { 4321 };
+    EXPECT_CALL(*mock_client_buffer, as_mir_native_buffer())
+        .WillOnce(Return(reinterpret_cast<MirNativeBuffer*>(&fake)));
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer);
+
+    EXPECT_THAT(buffer.as_mir_native_buffer(), Eq(reinterpret_cast<MirNativeBuffer*>(&fake)));
+}

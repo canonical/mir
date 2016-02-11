@@ -37,8 +37,14 @@ public:
         std::shared_ptr<ClientBuffer> const& buffer);
     int rpc_id() const;
 
+    void map_to_region(MirGraphicsRegion& out_region);
+    void unmap();
+
     void submitted();
     void received();
+
+    MirNativeBuffer* as_mir_native_buffer() const;
+
 private:
     mir_buffer_callback cb;
     void* cb_context;

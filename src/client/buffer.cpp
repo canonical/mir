@@ -54,3 +54,17 @@ void mcl::Buffer::received()
         cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
     }
 }
+    
+void mcl::Buffer::map_to_region(MirGraphicsRegion& out_region)
+{
+    (void) out_region;
+}
+
+void mcl::Buffer::unmap()
+{
+}
+
+MirNativeBuffer* mcl::Buffer::as_mir_native_buffer() const
+{
+    return nullptr;
+}
