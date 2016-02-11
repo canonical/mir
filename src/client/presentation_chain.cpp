@@ -160,6 +160,10 @@ void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
     allocation_requests.erase(request_it);
 }
 
+void mcl::PresentationChain::buffer_unavailable()
+{
+}
+
 int mcl::PresentationChain::rpc_id() const
 {
     return stream_id;
