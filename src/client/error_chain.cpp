@@ -16,12 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/client_buffer_factory.h"
-#include "mir/client_buffer.h"
-#include "rpc/mir_display_server.h"
-#include "presentation_chain.h"
+#include "error_chain.h"
 #include <boost/throw_exception.hpp>
-#include <algorithm>
 
 namespace mcl = mir::client;
 namespace geom = mir::geometry;

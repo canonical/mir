@@ -853,7 +853,7 @@ TEST_F(MirConnectionTest, release_chain_calls_server)
 
     mp::BufferStreamId expected_request;
     expected_request.set_value(
-        reinterpret_cast<mcl::MirPresentationChain*>(callback.resulting_chain)->rpc_id());
+        static_cast<MirPresentationChain*>(callback.resulting_chain)->rpc_id());
 
     EXPECT_CALL(*mock_channel, buffer_stream_release(ReleaseRequestHasId(expected_request)))
         .Times(0);
@@ -871,7 +871,7 @@ TEST_F(MirConnectionTest, release_error_chain_doesnt_call_server)
 
     mp::BufferStreamId expected_request;
     expected_request.set_value(
-        reinterpret_cast<mcl::MirPresentationChain*>(callback.resulting_chain)->rpc_id());
+        static_cast<MirPresentationChain*>(callback.resulting_chain)->rpc_id());
 
     EXPECT_CALL(*mock_channel, buffer_stream_release(ReleaseRequestHasId(expected_request)))
         .Times(0);

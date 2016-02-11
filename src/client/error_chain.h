@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_ERROR_CHAIN_H
 #define MIR_CLIENT_ERROR_CHAIN_H
 
-#include "buffer_receiver.h"
+#include "mir_presentation_chain.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_protobuf.pb.h"

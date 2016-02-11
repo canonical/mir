@@ -70,6 +70,7 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return "error accessing error message";
 }
 
 MirWaitHandle* mir_connection_create_presentation_chain(
