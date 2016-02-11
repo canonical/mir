@@ -29,10 +29,10 @@ namespace mcl = mir::client;
 
 namespace
 {
-void set_result(MirPresentationChain* result, void* context)
+void set_result(MirPresentationChain* result, MirPresentationChain** context)
 {
     if (context)
-        context = result;
+        *context = result;
 }
 }
 //private NBS api under development
