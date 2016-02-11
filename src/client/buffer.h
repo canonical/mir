@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/mir_buffer.h"
 #include <memory>
+#include <chrono>
 
 namespace mir
 {
@@ -37,13 +38,16 @@ public:
         std::shared_ptr<ClientBuffer> const& buffer);
     int rpc_id() const;
 
-    void map_to_region(MirGraphicsRegion& out_region);
-    void unmap();
-
     void submitted();
     void received();
 
     MirNativeBuffer* as_mir_native_buffer() const;
+    void map_to_region(MirGraphicsRegion& out_region);
+    void unmap();
+
+    void set_fence(MirNativeFence*, MirBufferAccess);
+    MirNativeFence* get_fence() const;
+    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds);
 
 private:
     mir_buffer_callback cb;

@@ -26,6 +26,7 @@
 #include "mir/geometry/size.h"
 
 #include <memory>
+#include <chrono>
 
 /**
  * \addtogroup mir_toolkit

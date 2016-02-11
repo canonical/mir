@@ -44,6 +44,7 @@ struct MirBufferTest : Test
     mir_buffer_callback cb { buffer_callback };
     std::shared_ptr<mtd::MockClientBuffer> const mock_client_buffer {
         std::make_shared<NiceMock<mtd::MockClientBuffer>>() };
+    std::chrono::nanoseconds timeout { 101 };
 };
 
 }
@@ -114,4 +115,41 @@ TEST_F(MirBufferTest, returns_correct_native_buffer)
     mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer);
 
     EXPECT_THAT(buffer.as_mir_native_buffer(), Eq(reinterpret_cast<MirNativeBuffer*>(&fake)));
+}
+
+TEST_F(MirBufferTest, set_fence)
+{
+    int fakefence { 19 };
+    MirNativeFence* fence = reinterpret_cast<MirNativeFence*>(&fakefence);
+    auto access = MirBufferAccess::mir_read_write;
+
+    EXPECT_CALL(*mock_client_buffer, set_fence(fence, access));
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer);
+    buffer.set_fence(fence, access);
+}
+
+TEST_F(MirBufferTest, get_fence)
+{
+    int fakefence { 19 };
+    MirNativeFence* fence = reinterpret_cast<MirNativeFence*>(&fakefence);
+
+    EXPECT_CALL(*mock_client_buffer, get_fence())
+        .WillOnce(Return(fence));
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer);
+    EXPECT_THAT(fence, Eq(buffer.get_fence()));
+}
+
+TEST_F(MirBufferTest, wait_fence_read)
+{
+    int fakefence { 19 };
+    MirNativeFence* fence = reinterpret_cast<MirNativeFence*>(&fakefence);
+    auto current_access = MirBufferAccess::mir_read;
+    auto needed_access = MirBufferAccess::mir_read_write;
+
+    EXPECT_CALL(*mock_client_buffer, set_fence(fence, current_access));
+    EXPECT_CALL(*mock_client_buffer, wait_fence(needed_access, timeout));
+
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer);
+    buffer.set_fence(fence, current_access);
+    buffer.wait_fence(needed_access, timeout);
 }
