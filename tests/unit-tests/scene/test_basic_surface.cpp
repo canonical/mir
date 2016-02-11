@@ -885,23 +885,27 @@ TEST_F(BasicSurfaceTest, stream_observers_are_added_and_removed_appropriately)
     auto buffer_stream0 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
 
+
     Sequence seq0;
+    EXPECT_CALL(*buffer_stream0, add_observer(_))
+        .InSequence(seq0);
+    EXPECT_CALL(*buffer_stream0, remove_observer(_))
+        .InSequence(seq0);
+    EXPECT_CALL(*buffer_stream0, add_observer(_))
+        .InSequence(seq0);
+    EXPECT_CALL(*buffer_stream0, remove_observer(_))
+        .InSequence(seq0);
+    EXPECT_CALL(*buffer_stream0, add_observer(_))
+        .InSequence(seq0);
+
     Sequence seq1;
-
-    EXPECT_CALL(*buffer_stream0, add_observer(_))
-        .InSequence(seq0);
-    EXPECT_CALL(*buffer_stream0, remove_observer(_))
-        .InSequence(seq0);
-    EXPECT_CALL(*buffer_stream0, add_observer(_))
-        .InSequence(seq0);
-
     EXPECT_CALL(*buffer_stream1, add_observer(_))
         .InSequence(seq1);
-    EXPECT_CALL(*buffer_stream0, remove_observer(_))
+    EXPECT_CALL(*buffer_stream1, remove_observer(_))
         .InSequence(seq1);
     EXPECT_CALL(*buffer_stream1, add_observer(_))
         .InSequence(seq1);
-    EXPECT_CALL(*buffer_stream0, remove_observer(_))
+    EXPECT_CALL(*buffer_stream1, remove_observer(_))
         .InSequence(seq1);
 
     std::list<ms::StreamInfo> streams = {
