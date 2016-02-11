@@ -50,20 +50,33 @@ catch (std::exception const& ex)
 }
 
 bool mir_presentation_chain_is_valid(MirPresentationChain* chain)
+try
 {
+    mir::require(chain);
     return mir_presentation_chain_get_error_message(chain) == std::string("");
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
 }
 
 char const *mir_presentation_chain_get_error_message(MirPresentationChain* chain)
+try
 {
     mir::require(chain);
     return chain->error_msg().c_str();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 MirWaitHandle* mir_connection_create_presentation_chain(
     MirConnection* connection, mir_presentation_chain_callback callback, void* context)
 try
 {
+    mir::require(connection);
     return connection->create_presentation_chain(callback, context);
 }
 catch (std::exception const& ex)
