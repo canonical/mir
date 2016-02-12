@@ -58,7 +58,7 @@ catch (std::exception const& ex)
 void mir_buffer_associate_fence(MirBuffer* b, MirNativeFence* fence, MirBufferAccess access)
 try
 {
-    mir::require(b && fence);
+    mir::require(b);
     auto buffer = reinterpret_cast<mcl::Buffer*>(b);
     buffer->set_fence(fence, access);
 }
@@ -103,9 +103,11 @@ try
     if (!buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
         BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffer"));
 
-    auto region = new MirGraphicsRegion;
-    buffer->map_to_region(*region); 
-    return region;
+    auto region = std::make_unique<MirGraphicsRegion>();
+    buffer->map_to_region(*region);
+    auto region_raw = region.get();
+    region.release();
+    return region_raw;
 }
 catch (std::exception const& ex)
 {
