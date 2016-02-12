@@ -108,7 +108,8 @@ TEST_F(GLMark2Test, fullscreen_default)
 /*
  * FIXME: These all fail because the test server doesn't start more than once:
  *        "std::exception::what: Exception while creating graphics platform
- *       Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"
+ *        Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same
+ *        socket file to accept connections!"
  */
 TEST_F(GLMark2Test, windowed_default)
 {
