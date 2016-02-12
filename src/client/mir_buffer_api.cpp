@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "buffer.h"
+#include "mir/require.h"
 #include "mir/uncaught.h"
 
 namespace mcl = mir::client;
@@ -41,30 +42,83 @@ void mir_buffer_release(MirBuffer* buffer)
     delete reinterpret_cast<mcl::Buffer*>(buffer);
 }
 
-MirNativeFence* mir_buffer_get_fence(MirBuffer*)
+MirNativeFence* mir_buffer_get_fence(MirBuffer* b)
+try
 {
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->get_fence();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
 }
 
-void mir_buffer_associate_fence(MirBuffer*, MirNativeFence*, MirBufferAccess)
+void mir_buffer_associate_fence(MirBuffer* b, MirNativeFence* fence, MirBufferAccess access)
+try
 {
+    mir::require(b && fence);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    buffer->set_fence(fence, access);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-int mir_buffer_wait_fence(MirBuffer*, MirBufferAccess, int)
+int mir_buffer_wait_for_access(MirBuffer* b, MirBufferAccess access, int timeout)
+try
 {
-    return 0;
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->wait_fence(access, std::chrono::nanoseconds(timeout));
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return -1;
 }
 
-MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirBufferAccess) 
+MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer* b, MirBufferAccess access) 
+try
 {
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    if (buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
+        BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffer"));
+    return buffer->as_mir_native_buffer();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
 }
 
-MirGraphicsRegion* mir_buffer_acquire_region(MirBuffer*, MirBufferAccess)
+MirGraphicsRegion* mir_buffer_acquire_region(MirBuffer* b, MirBufferAccess access)
+try
 {
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    if (buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
+        BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffer"));
+
+    auto region = new MirGraphicsRegion;
+    buffer->map_to_region(*region); 
+    return region;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
 }
 
-void mir_buffer_release_region(MirGraphicsRegion*) 
+void mir_buffer_release_region(MirGraphicsRegion* region)
+try
 {
+    delete region;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
