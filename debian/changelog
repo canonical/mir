@@ -8,7 +8,7 @@ mir (0.20.0) UNRELEASED; urgency=medium
       . mircommon abi unchanged at 5
       . mirplatform abi unchanged at 11
       . mirprotobuf abi unchanged at 3
-      . mirplatformgraphics abi unchanged at 7
+      . mirplatformgraphics abi bumped to 8
       . mirclientplatform abi unchanged at 4
       . mirinputplatform abi unchanged at 5
     - Enhancements:
