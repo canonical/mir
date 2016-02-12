@@ -27,11 +27,30 @@ struct GLMark2Test : testing::Test, mtf::AsyncServerRunner
     }
 
     enum ResultFileType {raw, json};
-    virtual void run_glmark2(char const* output_filename, ResultFileType file_type)
+    virtual int run_glmark2(char const* args)
     {
-        auto const cmd = "MIR_SOCKET=" + new_connection() + " glmark2-es2-mir --fullscreen";
+        ResultFileType file_type = raw; // Should this still be selectable?
+
+        char const* selection = getenv("MIR_GLMARK2_TEST_QUICK") ?
+                                "-b build " : "";
+
+        auto const cmd = "MIR_SOCKET=" + new_connection()
+                       + " glmark2-es2-mir "
+                       + selection
+                       + args;
         mir::test::Popen p(cmd);
-       
+
+        const ::testing::TestInfo* const test_info =
+          ::testing::UnitTest::GetInstance()->current_test_info();
+
+        char output_filename[256];
+        snprintf(output_filename, sizeof(output_filename) - 1,
+                 "/tmp/%s_%s.log",
+                 test_info->test_case_name(), test_info->name());
+
+        printf("Saving GLMark2 detailed results to: %s\n", output_filename);
+        // ^ Although I would vote to just print them to stdout instead
+
         std::string line;
         std::ofstream glmark2_output;
         int score = -1;
@@ -50,9 +69,6 @@ struct GLMark2Test : testing::Test, mtf::AsyncServerRunner
             }
         }
         
-        auto const minimum_acceptable_score = 52;
-        EXPECT_THAT(score, ::testing::Ge(minimum_acceptable_score));
-
         if (file_type == json)
         {
             std::string json =  "{";
@@ -62,11 +78,57 @@ struct GLMark2Test : testing::Test, mtf::AsyncServerRunner
                 json += "}";
             glmark2_output << json;
         }
+
+        return score;
     }
 };
 
-TEST_F(GLMark2Test, benchmark_fullscreen_default)
+TEST_F(GLMark2Test, fullscreen_default)
 {
-    run_glmark2("/tmp/glmark2_fullscreen_default.results", raw);
+    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(56));
 }
+
+// FIXME: These all fail because the test server doesn't start more than once:
+//        "std::exception::what: Exception while creating graphics platform
+//        Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"
+
+TEST_F(GLMark2Test, windowed_default)
+{
+    EXPECT_THAT(run_glmark2(""), ::testing::Ge(56));
+}
+
+TEST_F(GLMark2Test, fullscreen_interval1)
+{
+    add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "1");
+    // Our devices seem to range 57-67Hz
+    EXPECT_NEAR(60, run_glmark2("--fullscreen"), 10);
+}
+
+TEST_F(GLMark2Test, windowed_interval1)
+{
+    add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "1");
+    // Our devices seem to range 57-67Hz
+    EXPECT_NEAR(60, run_glmark2(""), 10);
+}
+
+#ifdef ANDROID
+TEST_F(GLMark2Test, DISABLED_fullscreen_interval0) // LP: #1369763
+#else
+TEST_F(GLMark2Test, fullscreen_interval0)
+#endif
+{
+    add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "0");
+    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(100));
+}
+
+#ifdef ANDROID
+TEST_F(GLMark2Test, DISABLED_windowed_interval0) // LP: #1369763
+#else
+TEST_F(GLMark2Test, windowed_interval0)
+#endif
+{
+    add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "0");
+    EXPECT_THAT(run_glmark2(""), ::testing::Ge(100));
+}
+
 }
