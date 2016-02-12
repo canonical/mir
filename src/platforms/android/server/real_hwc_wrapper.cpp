@@ -89,6 +89,9 @@ mga::RealHwcWrapper::RealHwcWrapper(
     std::unique_lock<std::mutex> lk(callback_lock);
     hwc_callbacks.self = this;
     hwc_device->registerProcs(hwc_device.get(), reinterpret_cast<hwc_procs_t*>(&hwc_callbacks));
+    is_plugged[HWC_DISPLAY_PRIMARY].store(true);
+    is_plugged[HWC_DISPLAY_EXTERNAL].store(false);
+    is_plugged[HWC_DISPLAY_VIRTUAL].store(true);
 }
 
 mga::RealHwcWrapper::~RealHwcWrapper()
@@ -215,7 +218,7 @@ void mga::RealHwcWrapper::vsync(DisplayName name, std::chrono::nanoseconds times
 
 void mga::RealHwcWrapper::hotplug(DisplayName name, bool connected) noexcept
 {
-    is_plugged_map[name] = connected;
+    is_plugged[mga::as_hwc_display(name)].store(connected);
 
     std::unique_lock<std::mutex> lk(callback_map_lock);
     for(auto const& callbacks : callback_map)
@@ -249,8 +252,7 @@ std::vector<mga::ConfigId> mga::RealHwcWrapper::display_configs(DisplayName disp
 {
     //Check first if display is unplugged, as some hw composers incorrectly report display configurations
     //when they have already triggered an unplug event.
-    const auto plugged_it = is_plugged_map.find(display_name);
-    if (plugged_it != is_plugged_map.end() && plugged_it->second == false)
+    if (is_plugged[mga::as_hwc_display(display_name)].load() == false)
         return {};
 
     //No way to get the number of display configs. SF uses 128 possible spots, but that seems excessive.
