@@ -51,6 +51,8 @@ mir (0.20.0) UNRELEASED; urgency=medium
       . scene: make sure not to set the swapinterval to 0 when an independent
         stream is created. The default should be 1 (like the stream created as
         part of surface creation).
+      . Track the displays plugged state to avoid reporting configurations in
+        case they are unplugged (LP #1531503). [Cherrypicked from 0.21]
 
  -- Alan Griffiths <alan@Octopull-desktop>  Fri, 12 Feb 2016 12:56:45 +0000
 
