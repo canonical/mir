@@ -38,7 +38,23 @@ namespace
 
 mir::Fd create_anonymous_file(size_t size)
 {
-    auto const raw_fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
+    auto raw_fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
+
+    // Workaround for filesystems that don't support O_TMPFILE
+    if (raw_fd == -1 && errno == EINVAL)
+    {
+        char template_filename[] = "/dev/shm/mir-buffer-XXXXXX";
+        raw_fd = mkostemp(template_filename, O_CLOEXEC);
+        if (raw_fd != -1)
+        {
+            if (unlink(template_filename) < 0 || ftruncate(raw_fd, size) < 0)
+            {
+                close(raw_fd);
+                raw_fd = -1;
+            }
+        }
+    }
+
     if (raw_fd == -1)
         BOOST_THROW_EXCEPTION(boost::enable_error_info(
             std::runtime_error("Failed to open temporary file"))

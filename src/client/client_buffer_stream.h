@@ -19,6 +19,7 @@
 #ifndef MIR_CLIENT_CLIENT_BUFFER_STREAM_H_
 #define MIR_CLIENT_CLIENT_BUFFER_STREAM_H_
 
+#include "buffer_receiver.h"
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/geometry/size.h"
 
@@ -42,7 +43,7 @@ namespace client
 class ClientBuffer;
 class MemoryRegion;
 
-class ClientBufferStream
+class ClientBufferStream : public BufferReceiver
 {
 public:
     virtual ~ClientBufferStream() = default;
@@ -64,8 +65,6 @@ public:
     virtual frontend::BufferStreamId rpc_id() const = 0;
     
     virtual bool valid() const = 0;
-    virtual void buffer_available(mir::protobuf::Buffer const& buffer) = 0;
-    virtual void buffer_unavailable() = 0;
     virtual void set_size(geometry::Size) = 0;
     virtual MirWaitHandle* set_scale(float) = 0;
     virtual char const* get_error_message() const = 0;

@@ -2,3 +2,5 @@ race:libglib*
 race:libgio*
 race:testing::internal::FunctionMockerBase
 race:std::__future_base::_State_baseV2::wait()
+race:std::unique_ptr<std::__future_base::_Result_base, std::__future_base::_Result_base::_Deleter>::operator*() const
+race:nettle_hmac_digest
