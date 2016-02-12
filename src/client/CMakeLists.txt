@@ -107,10 +107,10 @@ set(LINKS
 )
 
 target_link_libraries(mirclient
-  PRIVATE
+  LINK_PRIVATE
   mirclientrpc-static
   mirclientlttng-static
-  PUBLIC
+  LINK_PUBLIC
   ${MIR_CLIENT_REFERENCES}
   ${LINKS}
 )

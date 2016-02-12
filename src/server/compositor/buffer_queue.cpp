@@ -679,6 +679,7 @@ void mc::BufferQueue::drop_old_buffers()
        release(buffer, std::move(lock));
     }
 
+    std::lock_guard<decltype(guard)> lock(guard);
     scheduled_extra_frames = 0;
 }
 
