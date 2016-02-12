@@ -36,9 +36,9 @@ public:
         int id,
         std::string const& error_msg);
     void allocate_buffer(
-        geometry::Size size, MirPixelFormat format, MirBufferUsage usage, mir_buffer_callback, void*);
-    void submit_buffer(MirBuffer* buffer);
-    void release_buffer(MirBuffer* buffer);
+        geometry::Size size, MirPixelFormat format, MirBufferUsage usage, mir_buffer_callback, void*) override;
+    void submit_buffer(MirBuffer* buffer) override;
+    void release_buffer(MirBuffer* buffer) override;
     void buffer_available(mir::protobuf::Buffer const& buffer) override;
     void buffer_unavailable() override;
     MirConnection* connection() const;
