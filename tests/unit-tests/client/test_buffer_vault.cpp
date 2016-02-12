@@ -43,11 +43,6 @@ using namespace testing;
 
 namespace
 {
-//        ON_CALL(*this, size())
-//            .WillByDefault(Return(sz));
-//        ON_CALL(*this, mark_as_submitted())
-//            .WillByDefault(Invoke([this](){this->AgingBuffer::mark_as_submitted();}));
-
 struct MockClientBufferFactory : public mcl::ClientBufferFactory
 {
     MockClientBufferFactory()
@@ -59,9 +54,6 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
                     auto buffer = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
                     ON_CALL(*buffer, size())
                         .WillByDefault(Return(size));
-            //        ON_CALL(*this, mark_as_submitted())
-            //            .WillByDefault(Invoke([this](){this->AgingBuffer::mark_as_submitted();}));
-            
                     return buffer;
                 }));
     }

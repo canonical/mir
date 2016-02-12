@@ -30,9 +30,6 @@ namespace mcl=mir::client;
 namespace mclg=mir::client::mesa;
 namespace geom=mir::geometry;
 
-//        ON_CALL(*this, native_buffer_handle())
-//            .WillByDefault(testing::Return(std::make_shared<MirBufferPackage>()));
-
 class MesaClientNativeSurfaceTest : public ::testing::Test
 {
 public:
