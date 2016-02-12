@@ -8,23 +8,49 @@ mir (0.20.0) UNRELEASED; urgency=medium
       . mircommon abi unchanged at 5
       . mirplatform abi unchanged at 11
       . mirprotobuf abi unchanged at 3
-      . mirplatformgraphics abi bumped to 7
-      . mirclientplatform abi bumped to 4
-      . mirinputplatform abi added. current version is 4
+      . mirplatformgraphics abi unchanged at 7
+      . mirclientplatform abi unchanged at 4
+      . mirinputplatform abi unchanged at 5
     - Enhancements:
-      . Virtual output for Miracast
+      . Allow screencasting to create a virtual output (for Miracast)
+      . Separate the protocol version number from the client API version macros.
+        They're not meant to be related concepts.
+      . Add UBSanitizer to the list of build types.
+      . logging: Human readable timestamps in DumbConsoleLogger.
+      . examples: AdorningDisplayBufferCompositor::composite() no long ignores
+        output boundaries and occlusions.
+      . examples: Add -a <app name> option to eglapps.
+      . common, client: a more flexible way to probe modules: once we've found
+        a good current platform we don't even try to load an older one.
+      . Fix build and test run with CMAKE_BUILD_TYPE=ThreadSanitizer (missing
+        locks).
+      . Add MIR_USE_LD_GOLD build option.
     - Bug fixes:
-      . unity-system-compositor crashed with std::runtime_error in mir::compositor::CompositingFunctor::wait_until_started() from usc::MirScreen::set_screen_power_mode (mir_power_mode_on) (LP: #1528384)
-      . Phone not usable while a call comes in - followed by "restart" (LP: #1532607)
-      . ui freezes when simultaneously moving mouse & plug/unplug hdmi (LP: #1538632)
-      . Mir fails to build on xenial today: android_graphic_buffer_allocator.h:23:31: fatal error: hardware/hardware.h: No such file or directory (LP: #1539338)
-      . [mali] egl_demo_client_flicker has graphics corruption on android (LP: #1517205)
-      . [testsfail] Intermittent failure in TestClientCursorAPI.cursor_passed_through_nested_server (LP: #1525003)
+      . unity-system-compositor crashed with std::runtime_error in
+        mir::compositor::CompositingFunctor::wait_until_started() from
+        usc::MirScreen::set_screen_power_mode (mir_power_mode_on)
+        (LP: #1528384)
+      . Phone not usable while a call comes in - followed by "restart"
+        (LP: #1532607)
+      . ui freezes when simultaneously moving mouse & plug/unplug hdmi
+        (LP: #1538632)
+      . Mir fails to build on xenial today: android_graphic_buffer_allocator.h
+        fatal error: hardware/hardware.h: No such file or directory
+        (LP: #1539338)
+      . [mali] egl_demo_client_flicker has graphics corruption on android
+        (LP: #1517205)
+      . [testsfail] Intermittent failure in
+        TestClientCursorAPI.cursor_passed_through_nested_server (LP: #1525003)
       . [android] External monitor slows rendering (LP: #1532202)
-      . Display::create_gl_context may create context with incorrect attributes (LP: #1539268)
+      . Display::create_gl_context may create context with incorrect attributes
+        (LP: #1539268)
       . unity-system-compositor locked up in __libc_do_syscall() (LP: #1543594)
-      . NestedServer.client_sees_set_scaling_factor intermittent failure (LP: #1537798)
+      . NestedServer.client_sees_set_scaling_factor intermittent failure
+        (LP: #1537798)
       . [android] External monitor slows rendering - part 2 (LP: #1535894)
+      . scene: make sure not to set the swapinterval to 0 when an independent
+        stream is created. The default should be 1 (like the stream created as
+        part of surface creation).
 
  -- Alan Griffiths <alan@Octopull-desktop>  Fri, 12 Feb 2016 12:56:45 +0000
 
