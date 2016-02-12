@@ -1035,7 +1035,7 @@ MirWaitHandle* MirConnection::create_presentation_chain(
     } catch (std::exception& e)
     {
         //if this throws, our socket code will run the closure, which will make an error object.
-        //its nicer to return an stream with a error message, so just ignore the exception.
+        //its nicer to return a chain with a error message, so just ignore the exception.
     }
 
     return request->wh.get();
