@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/client_buffer.h"
 #include "buffer.h"
 #include <boost/throw_exception.hpp>
 
@@ -41,13 +42,16 @@ int mcl::Buffer::rpc_id() const
 
 void mcl::Buffer::submitted()
 {
+    std::lock_guard<decltype(mutex)> lk(mutex);
     if (!owned)
         BOOST_THROW_EXCEPTION(std::logic_error("cannot submit unowned buffer"));
+    mapped_region.reset();
     owned = false;
 }
 
 void mcl::Buffer::received()
 {
+    std::lock_guard<decltype(mutex)> lk(mutex);
     if (!owned)
     {
         owned = true;
@@ -57,14 +61,36 @@ void mcl::Buffer::received()
     
 void mcl::Buffer::map_to_region(MirGraphicsRegion& out_region)
 {
-    (void) out_region;
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    mapped_region = buffer->secure_for_cpu_write();
+    out_region.width = mapped_region->width.as_int();
+    out_region.height = mapped_region->height.as_int();
+    out_region.stride = mapped_region->stride.as_int();
+    out_region.pixel_format = mapped_region->format;
+    out_region.vaddr = mapped_region->vaddr.get(); 
 }
 
 void mcl::Buffer::unmap()
 {
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    mapped_region.reset();
 }
 
 MirNativeBuffer* mcl::Buffer::as_mir_native_buffer() const
 {
     return nullptr;
+}
+
+void mcl::Buffer::set_fence(MirNativeFence*, MirBufferAccess)
+{
+}
+
+MirNativeFence* mcl::Buffer::get_fence() const
+{
+    return nullptr;
+}
+
+bool mcl::Buffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
+{
+    return true;
 }

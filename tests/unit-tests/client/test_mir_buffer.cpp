@@ -28,8 +28,10 @@ using namespace testing;
 namespace
 {
 
-void buffer_callback(MirPresentationChain*, MirBuffer*, void*)
+void buffer_callback(MirPresentationChain*, MirBuffer*, void* call_count_context)
 {
+    if (call_count_context)
+        (*static_cast<int*>(call_count_context))++;
 }
 
 struct MirBufferTest : Test
@@ -147,9 +149,37 @@ TEST_F(MirBufferTest, wait_fence_read)
     auto needed_access = MirBufferAccess::mir_read_write;
 
     EXPECT_CALL(*mock_client_buffer, set_fence(fence, current_access));
-    EXPECT_CALL(*mock_client_buffer, wait_fence(needed_access, timeout));
+    EXPECT_CALL(*mock_client_buffer, wait_fence(needed_access, timeout))
+        .WillOnce(Return(true));
 
     mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer);
     buffer.set_fence(fence, current_access);
-    buffer.wait_fence(needed_access, timeout);
+    EXPECT_TRUE(buffer.wait_fence(needed_access, timeout));
+}
+
+TEST_F(MirBufferTest, callback_called_when_available_from_creation)
+{
+    int call_count = 0;
+    mcl::Buffer buffer(cb, &call_count, buffer_id, mock_client_buffer);
+    EXPECT_THAT(call_count, Eq(1));
+}
+
+TEST_F(MirBufferTest, callback_called_when_available_from_server_return)
+{
+    int call_count = 0;
+    mcl::Buffer buffer(cb, &call_count, buffer_id, mock_client_buffer);
+
+    buffer.submitted();
+    buffer.received();
+    EXPECT_THAT(call_count, Eq(2));
+}
+
+TEST_F(MirBufferTest, submitting_unowned_buffer_throws)
+{
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer);
+    buffer.submitted();
+
+    EXPECT_THROW({ 
+        buffer.submitted();
+    }, std::logic_error);
 }

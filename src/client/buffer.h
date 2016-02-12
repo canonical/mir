@@ -22,12 +22,14 @@
 #include "mir_toolkit/mir_buffer.h"
 #include <memory>
 #include <chrono>
+#include <mutex>
 
 namespace mir
 {
 namespace client
 {
 class ClientBuffer;
+class MemoryRegion;
 //this is the type backing MirBuffer* 
 class Buffer
 {
@@ -54,7 +56,10 @@ private:
     void* cb_context;
     int const buffer_id;
     std::shared_ptr<ClientBuffer> buffer;
+
+    std::mutex mutex;
     bool owned;
+    std::shared_ptr<MemoryRegion> mapped_region;
 };
 }
 }
