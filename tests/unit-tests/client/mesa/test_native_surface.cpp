@@ -19,6 +19,7 @@
 #include "src/platforms/mesa/client/native_surface.h"
 #include "mir/client_buffer.h"
 #include "mir/test/doubles/mock_egl_native_surface.h"
+#include "mir/test/doubles/mock_client_buffer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -29,32 +30,8 @@ namespace mcl=mir::client;
 namespace mclg=mir::client::mesa;
 namespace geom=mir::geometry;
 
-namespace
-{
-
-struct MockClientBuffer : public mcl::ClientBuffer
-{
-    MockClientBuffer()
-    {
-        ON_CALL(*this, native_buffer_handle())
-            .WillByDefault(testing::Return(std::make_shared<MirBufferPackage>()));
-    }
-    ~MockClientBuffer() noexcept {}
-
-    MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
-    MOCK_CONST_METHOD0(size, geom::Size());
-    MOCK_CONST_METHOD0(stride, geom::Stride());
-    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
-
-    MOCK_CONST_METHOD0(age, uint32_t());
-    MOCK_METHOD0(mark_as_submitted, void());
-    MOCK_METHOD0(increment_age, void());
-    MOCK_METHOD1(update_from, void(MirBufferPackage const&));
-    MOCK_METHOD1(fill_update_msg, void(MirBufferPackage&));
-    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<MirNativeBuffer>());
-};
-
-}
+//        ON_CALL(*this, native_buffer_handle())
+//            .WillByDefault(testing::Return(std::make_shared<MirBufferPackage>()));
 
 class MesaClientNativeSurfaceTest : public ::testing::Test
 {
@@ -70,7 +47,7 @@ public:
             .WillByDefault(Return(surf_params));
         ON_CALL(mock_surface, get_current_buffer())
             .WillByDefault(Return(
-                std::make_shared<NiceMock<MockClientBuffer>>()));
+                std::make_shared<NiceMock<mtd::MockClientBuffer>>()));
     }
 
     MirSurfaceParameters surf_params;

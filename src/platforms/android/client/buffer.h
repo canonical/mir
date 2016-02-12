@@ -49,6 +49,10 @@ public:
     std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override;
     void update_from(MirBufferPackage const& update_package) override;
     void fill_update_msg(MirBufferPackage& message) override;
+    MirNativeBuffer* as_mir_native_buffer() const override;
+    void set_fence(MirNativeFence*, MirBufferAccess) override;
+    MirNativeFence* get_fence() const override;
+    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds timeout) override;
 
     Buffer(const Buffer&) = delete;
     Buffer& operator=(const Buffer&) = delete;

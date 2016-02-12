@@ -27,6 +27,7 @@
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/null_logger.h"
 #include "mir/test/doubles/mock_protobuf_server.h"
+#include "mir/test/doubles/mock_client_buffer.h"
 #include "mir/test/fake_shared.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -101,15 +102,6 @@ struct MockPerfReport : public mcl::PerfReport
     MOCK_METHOD1(name_surface, void(char const*));
     MOCK_METHOD1(begin_frame, void(int));
     MOCK_METHOD1(end_frame, void(int));
-};
-
-struct MockClientBuffer : public mtd::NullClientBuffer
-{
-    MockClientBuffer(geom::Size size) :
-        mtd::NullClientBuffer(size)
-    {
-    }
-    MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
 };
 
 EGLNativeWindowType StubClientPlatform::egl_native_window{
@@ -410,7 +402,9 @@ TEST_P(ClientBufferStream, gets_egl_native_window)
 
 TEST_P(ClientBufferStream, map_graphics_region)
 {
-    MockClientBuffer mock_client_buffer(size);
+    mtd::MockClientBuffer mock_client_buffer;
+    ON_CALL(mock_client_buffer, size())
+        .WillByDefault(Return(size));
     EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
 
@@ -429,7 +423,9 @@ TEST_P(ClientBufferStream, map_graphics_region)
 //lp: #1463873
 TEST_P(ClientBufferStream, maps_graphics_region_only_once_per_swapbuffers)
 {
-    MockClientBuffer mock_client_buffer(size);
+    mtd::MockClientBuffer mock_client_buffer;
+    ON_CALL(mock_client_buffer, size())
+        .WillByDefault(Return(size));
     ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
     mcl::BufferStream bs(
@@ -468,8 +464,12 @@ TEST_P(ClientBufferStream, passes_name_to_perf_report)
 TEST_P(ClientBufferStream, receives_unsolicited_buffer)
 {
     int id = 88;
-    MockClientBuffer mock_client_buffer(size);
-    MockClientBuffer second_mock_client_buffer(size);
+    mtd::MockClientBuffer mock_client_buffer;
+    ON_CALL(mock_client_buffer, size())
+        .WillByDefault(Return(size));
+    mtd::MockClientBuffer second_mock_client_buffer;
+    ON_CALL(second_mock_client_buffer, size())
+        .WillByDefault(Return(size));
     EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
 
@@ -495,7 +495,7 @@ TEST_P(ClientBufferStream, receives_unsolicited_buffer)
 TEST_P(ClientBufferStream, waiting_client_can_unblock_on_shutdown)
 {
     using namespace std::literals::chrono_literals;
-    MockClientBuffer mock_client_buffer(size);
+    mtd::MockClientBuffer mock_client_buffer;//(size);
     ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
     ON_CALL(mock_protobuf_server, submit_buffer(_,_,_))
