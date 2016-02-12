@@ -252,7 +252,7 @@ std::vector<mga::ConfigId> mga::RealHwcWrapper::display_configs(DisplayName disp
 {
     //Check first if display is unplugged, as some hw composers incorrectly report display configurations
     //when they have already triggered an unplug event.
-    if (is_plugged[mga::as_hwc_display(display_name)].load() == false)
+    if (!is_plugged[mga::as_hwc_display(display_name)].load())
         return {};
 
     //No way to get the number of display configs. SF uses 128 possible spots, but that seems excessive.
