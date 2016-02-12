@@ -215,6 +215,8 @@ void mga::RealHwcWrapper::vsync(DisplayName name, std::chrono::nanoseconds times
 
 void mga::RealHwcWrapper::hotplug(DisplayName name, bool connected) noexcept
 {
+    is_plugged_map[name] = connected;
+
     std::unique_lock<std::mutex> lk(callback_map_lock);
     for(auto const& callbacks : callback_map)
     {
@@ -245,6 +247,12 @@ void mga::RealHwcWrapper::invalidate() noexcept
 
 std::vector<mga::ConfigId> mga::RealHwcWrapper::display_configs(DisplayName display_name) const
 {
+    //Check first if display is unplugged, as some hw composers incorrectly report display configurations
+    //when they have already triggered an unplug event.
+    const auto plugged_it = is_plugged_map.find(display_name);
+    if (plugged_it != is_plugged_map.end() && plugged_it->second == false)
+        return {};
+
     //No way to get the number of display configs. SF uses 128 possible spots, but that seems excessive.
     static size_t const max_configs = 16;
     size_t num_configs = max_configs;
