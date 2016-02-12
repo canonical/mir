@@ -1,3 +1,19 @@
+/*
+ * Copyright © 2014-2016 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "mir_test_framework/async_server_runner.h"
 #include "mir/test/popen.h"
 
@@ -88,10 +104,12 @@ TEST_F(GLMark2Test, fullscreen_default)
     EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(56));
 }
 
-// FIXME: These all fail because the test server doesn't start more than once:
-//        "std::exception::what: Exception while creating graphics platform
-//        Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"
-
+#if 0
+/*
+ * FIXME: These all fail because the test server doesn't start more than once:
+ *        "std::exception::what: Exception while creating graphics platform
+ *       Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same socket file to accept connections!"
+ */
 TEST_F(GLMark2Test, windowed_default)
 {
     EXPECT_THAT(run_glmark2(""), ::testing::Ge(56));
@@ -130,5 +148,6 @@ TEST_F(GLMark2Test, windowed_interval0)
     add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "0");
     EXPECT_THAT(run_glmark2(""), ::testing::Ge(100));
 }
+#endif
 
 }
