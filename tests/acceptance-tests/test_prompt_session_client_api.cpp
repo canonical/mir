@@ -383,7 +383,7 @@ TEST_F(PromptSessionClientAPI,
     mir_prompt_session_release_sync(prompt_session);
 }
 
-TEST_F(PromptSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
+TEST_F(PromptSessionClientAPI, client_pid_is_associated_with_session)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
