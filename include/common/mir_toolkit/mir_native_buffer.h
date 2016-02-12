@@ -22,14 +22,6 @@
 
 enum { mir_buffer_package_max = 30 };
 
-typedef void* MirNativeFence;
-typedef enum MirBufferAccess
-{
-    mir_none,
-    mir_read,
-    mir_read_write,
-} MirBufferAccess;
-
 typedef enum
 {
     mir_buffer_flag_can_scanout = 1

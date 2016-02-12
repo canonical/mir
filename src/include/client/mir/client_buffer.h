@@ -20,6 +20,7 @@
 #ifndef MIR_CLIENT_CLIENT_BUFFER_H_
 #define MIR_CLIENT_CLIENT_BUFFER_H_
 
+#include <mir_toolkit/client_types_nbs.h>
 #include <mir_toolkit/mir_native_buffer.h>
 #include "mir/graphics/native_buffer.h"
 #include "mir_toolkit/common.h"
