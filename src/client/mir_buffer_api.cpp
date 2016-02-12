@@ -85,7 +85,7 @@ try
 {
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::Buffer*>(b);
-    if (buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
+    if (!buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
         BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffer"));
     return buffer->as_mir_native_buffer();
 }
@@ -100,7 +100,7 @@ try
 {
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::Buffer*>(b);
-    if (buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
+    if (!buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
         BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffer"));
 
     auto region = new MirGraphicsRegion;
