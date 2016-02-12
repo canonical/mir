@@ -78,19 +78,20 @@ void mcl::Buffer::unmap()
 
 MirNativeBuffer* mcl::Buffer::as_mir_native_buffer() const
 {
-    return nullptr;
+    return buffer->as_mir_native_buffer();
 }
 
-void mcl::Buffer::set_fence(MirNativeFence*, MirBufferAccess)
+void mcl::Buffer::set_fence(MirNativeFence* native_fence, MirBufferAccess access)
 {
+    buffer->set_fence(native_fence, access);
 }
 
 MirNativeFence* mcl::Buffer::get_fence() const
 {
-    return nullptr;
+    return buffer->get_fence();
 }
 
-bool mcl::Buffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
+bool mcl::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds timeout)
 {
-    return true;
+    return buffer->wait_fence(access, timeout);
 }
