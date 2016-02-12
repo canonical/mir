@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 
     //reassociate for advanced control
     spec = mir_create_surface_spec(connection);
-    mir_surface_spec_set_presentation_chain(
+    mir_surface_spec_add_presentation_chain(
         spec, width, height, displacement_x, displacement_y, chain);
     mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);

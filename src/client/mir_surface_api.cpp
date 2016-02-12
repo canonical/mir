@@ -572,7 +572,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_surface_spec_set_presentation_chain(
+void mir_surface_spec_add_presentation_chain(
     MirSurfaceSpec* spec,
     int width, int height,
     int displacement_x, int displacement_y,
@@ -594,7 +594,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_surface_spec_set_buffer_stream(
+void mir_surface_spec_add_buffer_stream(
     MirSurfaceSpec* spec,
     int displacement_x, int displacement_y,
     MirBufferStream* stream)

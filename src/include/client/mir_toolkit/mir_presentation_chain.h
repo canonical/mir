@@ -128,8 +128,8 @@ bool mir_presentation_chain_submit_buffer(
  * of the MirBuffer's in the MirPresentationChain. If the two differ,
  * the content will be scaled to fit width and height.
  *
- * The initial call to mir_surface_spec_set_presentation_chain or
- * mir_surface_spec_set_buffer_stream will set the bottom-most content,
+ * The initial call to mir_surface_spec_add_presentation_chain or
+ * mir_surface_spec_add_buffer_stream will set the bottom-most content,
  * and subsequent calls to either will stack the content on top.
  *
  * \warning         Setting the dimensions or displacements to exceed the 
@@ -143,7 +143,7 @@ bool mir_presentation_chain_submit_buffer(
  * \param displacement_y   The y displacement from the top-left corner of the MirSurface.
  * \param chain            The chain containing the content to be displayed.
  */
-void mir_surface_spec_set_presentation_chain(
+void mir_surface_spec_add_presentation_chain(
     MirSurfaceSpec* spec,
     int width, int height,
     int displacement_x, int displacement_y,
@@ -152,8 +152,8 @@ void mir_surface_spec_set_presentation_chain(
 /**
  * Set the MirSurfaceContent to display a MirBufferStream.
  *
- * The initial call to mir_surface_spec_set_presentation_chain or
- * mir_surface_spec_set_buffer_stream will set the bottom-most content,
+ * The initial call to mir_surface_spec_add_presentation_chain or
+ * mir_surface_spec_add_buffer_stream will set the bottom-most content,
  * and subsequent calls to either will stack the content on top.
  *
  * \warning         Setting the displacements to exceed the 
@@ -165,7 +165,7 @@ void mir_surface_spec_set_presentation_chain(
  * \param displacement_y   The y displacement from the top-left corner of the MirSurface.
  * \param stream           The stream containing the content to be displayed.
  */
-void mir_surface_spec_set_buffer_stream(
+void mir_surface_spec_add_buffer_stream(
     MirSurfaceSpec* spec,
     int displacement_x, int displacement_y,
     MirBufferStream* stream);
