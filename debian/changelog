@@ -1,8 +1,21 @@
 mir (0.20.0) UNRELEASED; urgency=medium
 
-  * Placeholder for 0.20 release
+  [ Alan Griffiths ]
+  * New upstream release 0.20.0 (https://launchpad.net/mir/+milestone/0.20.0)
+    - ABI summary: Only servers need rebuilding;
+      . mirclient abi unchanged at 9
+      . mirserver abi bumped to 38
+      . mircommon abi unchanged at 5
+      . mirplatform abi unchanged at 11
+      . mirprotobuf abi unchanged at 3
+      . mirplatformgraphics abi bumped to 7
+      . mirclientplatform abi bumped to 4
+      . mirinputplatform abi added. current version is 4
+    - Enhancements:
+      .
+    - Bug fixes:
 
- -- Alberto Aguirre <alberto.aguirre@canonical.com>  Mon, 01 Feb 2016 13:20:02 -0600
+ -- Alan Griffiths <alan@Octopull-desktop>  Fri, 12 Feb 2016 12:56:45 +0000
 
 mir (0.19.2+16.04.20160210-0ubuntu1) xenial; urgency=medium
 
