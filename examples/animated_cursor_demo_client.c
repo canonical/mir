@@ -55,7 +55,7 @@ void animate_cursor(MirBufferStream *stream)
     static float theta = 0.0f;
     theta += 0.000234567f;
 
-    char *origin = region.vaddr + (region.height/2)*region.stride;
+    char* origin = region.vaddr + (region.height/2)*region.stride;
 
     for (int x = 0; x < region.width; ++x)
     {
