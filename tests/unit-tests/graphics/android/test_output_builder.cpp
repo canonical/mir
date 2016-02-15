@@ -192,7 +192,7 @@ TEST_F(HalComponentFactory, determine_fbnum_always_reports_2_minimum)
         .WillOnce(Throw(std::runtime_error("")));
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
         .WillOnce(Return(std::make_shared<mtd::MockFBHalDevice>(
-            0, 0, mir_pixel_format_abgr_8888, 0)));
+            0, 0, mir_pixel_format_abgr_8888, 0, 0.0, 0.0)));
     EXPECT_CALL(mock_buffer_allocator, alloc_buffer_platform(_,_,_))
         .Times(2);
 
