@@ -32,6 +32,7 @@
 #include "mir/geometry/displacement.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/fd.h"
+#include "mir/raii.h"
 
 #include <libinput.h>
 #include <linux/input.h>  // only used to get constants for input reports
@@ -320,17 +321,17 @@ void mie::LibInputDevice::update_device_info()
 
     for (auto const& dev : devices)
     {
-        auto* u_dev = libinput_device_get_udev_device(dev.get());
+        auto const u_dev = mir::raii::deleter_for(libinput_device_get_udev_device(dev.get()), &udev_device_unref);
         for (auto const& mapping : mappings)
         {
             int detected = 0;
-            auto value = udev_device_get_property_value(u_dev, mapping.first);
+            auto value = udev_device_get_property_value(u_dev.get(), mapping.first);
             if (!value)
                 continue;
 
             std::stringstream property_value(value);
             property_value >> detected;
-            if (detected)
+            if (!property_value.fail() && detected)
                 caps |= mapping.second;
         }
     }

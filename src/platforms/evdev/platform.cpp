@@ -30,6 +30,7 @@
 #include "mir/input/input_device.h"
 #include "mir/input/input_report.h"
 #include "mir/fd.h"
+#include "mir/raii.h"
 
 #define MIR_LOG_COMPONENT "evdev-input"
 #include "mir/log.h"
@@ -50,10 +51,10 @@ namespace
 
 std::string describe(libinput_device* dev)
 {
-    udev_device *udev_dev = libinput_device_get_udev_device(dev);
-    std::string desc(udev_device_get_devnode(udev_dev));
+    auto const udev_dev = mir::raii::deleter_for(libinput_device_get_udev_device(dev), &udev_device_unref);
+    std::string desc(udev_device_get_devnode(udev_dev.get()));
 
-    char const * const model = udev_device_get_property_value(udev_dev, "ID_MODEL");
+    char const * const model = udev_device_get_property_value(udev_dev.get(), "ID_MODEL");
     if (model)
         desc += ": " + std::string(model);
 
@@ -112,9 +113,13 @@ void mie::Platform::process_input_events()
         auto device = libinput_event_get_device(ev.get());
 
         if (type == LIBINPUT_EVENT_DEVICE_ADDED)
+	{
             device_added(device);
+	}
         else if(type == LIBINPUT_EVENT_DEVICE_REMOVED)
+	{
             device_removed(device);
+	}
         else
         {
             auto dev = find_device(

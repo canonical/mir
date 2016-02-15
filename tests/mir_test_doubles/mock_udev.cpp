@@ -46,3 +46,8 @@ char const* udev_device_get_property_value(udev_device* dev, char const* propert
 {
     return global_udev->udev_device_get_property_value(dev, property);
 }
+
+udev_device* udev_device_unref(udev_device* device)
+{
+    return global_udev->udev_device_unref(device);
+}
