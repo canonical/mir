@@ -53,6 +53,8 @@ mir (0.20.0) UNRELEASED; urgency=medium
         part of surface creation).
       . Track the displays plugged state to avoid reporting configurations in
         case they are unplugged (LP #1531503). [Cherrypicked from 0.21]
+      . mouse pointer support on emulator is broken (LP: #1517597).
+        [Cherrypicked from 0.21]
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Fri, 12 Feb 2016 12:56:45 +0000
 
