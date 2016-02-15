@@ -83,7 +83,6 @@ function (mir_discover_tests_internal EXECUTABLE DETECT_FD_LEAKS)
   endif()
 
   if(cmake_build_type_lower MATCHES "ubsanitizer")
-    # Space after ${TSAN_EXTRA_OPTIONS} works around bug in TSAN env. variable parsing
     list(APPEND test_env "UBSAN_OPTIONS=\"suppressions=${CMAKE_SOURCE_DIR}/tools/ubsan-suppressions print_stacktrace=1 die_after_fork=0\"")
     set(test_exclusion_filter "${test_exclusion_filter}:*DeathTest*")
   endif()
