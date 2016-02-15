@@ -24,6 +24,7 @@
 #include "fb_device.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
+#include "mir/geometry/length.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -57,6 +58,18 @@ mg::DisplayConfigurationOutput mga::FbControl::active_config_for(DisplayName dis
 {
     auto const connected = (display_name == DisplayName::primary);
 
+    geom::Length length_x_inches{0, geom::Length::Units::inches};
+    geom::Length length_y_inches{0, geom::Length::Units::inches};
+    if (fb_device->xdpi != 0)
+        length_x_inches = geom::Length(fb_device->width / fb_device->xdpi, geom::Length::Units::inches);
+    if (fb_device->ydpi != 0)
+        length_y_inches = geom::Length(fb_device->height / fb_device->ydpi, geom::Length::Units::inches);
+
+    geom::Size display_size_mm{
+        length_x_inches.as(geom::Length::Units::millimetres),
+        length_y_inches.as(geom::Length::Units::millimetres),
+    };
+
     return {
         as_output_id(display_name),
         mg::DisplayConfigurationCardId{0},
@@ -66,7 +79,7 @@ mg::DisplayConfigurationOutput mga::FbControl::active_config_for(DisplayName dis
             mg::DisplayConfigurationMode{{fb_device->width, fb_device->height}, fb_device->fps}
         },
         0,
-        {0,0},
+        display_size_mm,
         connected,
         connected,
         {0,0},

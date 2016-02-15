@@ -276,8 +276,6 @@ MIR_CLIENT_DETAIL_9v19 {
       mir::events::serialize_event*;
       mir::events::deserialize_event*;
     };
-  local:
-    *;
 } MIR_CLIENT_DETAIL_9v18;
 
 MIR_CLIENT_DETAIL_private_buffer_semantics {
