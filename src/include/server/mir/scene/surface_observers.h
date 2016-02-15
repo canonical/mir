@@ -32,6 +32,7 @@ class SurfaceObservers : public SurfaceObserver, BasicObservers<SurfaceObserver>
 public:
     using BasicObservers<SurfaceObserver>::add;
     using BasicObservers<SurfaceObserver>::remove;
+    using BasicObservers<SurfaceObserver>::for_each;
 
     void attrib_changed(MirSurfaceAttrib attrib, int value) override;
     void resized_to(geometry::Size const& size) override;
