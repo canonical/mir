@@ -3,14 +3,14 @@ mir (0.20.0) UNRELEASED; urgency=medium
   [ Alan Griffiths ]
   * New upstream release 0.20.0 (https://launchpad.net/mir/+milestone/0.20.0)
     - ABI summary: Only servers need rebuilding;
-      . mirclient abi unchanged at 9
-      . mirserver abi bumped to 38
-      . mircommon abi unchanged at 5
-      . mirplatform abi unchanged at 11
-      . mirprotobuf abi unchanged at 3
-      . mirplatformgraphics abi bumped to 8
-      . mirclientplatform abi unchanged at 4
-      . mirinputplatform abi unchanged at 5
+      . mirclient ABI unchanged at 9
+      . mirserver ABI bumped to 38
+      . mircommon ABI unchanged at 5
+      . mirplatform ABI unchanged at 11
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI bumped to 8
+      . mirclientplatform ABI unchanged at 4
+      . mirinputplatform ABI unchanged at 5
     - Enhancements:
       . Allow screencasting to create a virtual output (for Miracast)
       . Separate the protocol version number from the client API version macros.
@@ -54,7 +54,7 @@ mir (0.20.0) UNRELEASED; urgency=medium
       . Track the displays plugged state to avoid reporting configurations in
         case they are unplugged (LP #1531503). [Cherrypicked from 0.21]
 
- -- Alan Griffiths <alan@Octopull-desktop>  Fri, 12 Feb 2016 12:56:45 +0000
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Fri, 12 Feb 2016 12:56:45 +0000
 
 mir (0.19.2+16.04.20160210-0ubuntu1) xenial; urgency=medium
 
