@@ -16,12 +16,13 @@
  * Author: Robert Carr <robert.carr@canonical.com>
  */
 
-#define _GNU_SOURCE // for nanosleep
+#define _GNU_SOURCE
 
 #include "eglapp.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,19 +34,38 @@
 
 void animate_cursor(MirBufferStream *stream)
 {
-    static double alpha = 0.0;
-    char fill_color = 0xff * alpha;
-    
+    // mir_pixel_format_argb_8888 as set below
+    int const bpp = 4;
+    uint32_t const background = 0x00000000;
+    uint32_t const foreground = 0xffffffff;
+
     MirGraphicsRegion region;
     mir_buffer_stream_get_graphics_region(stream, &region);
     
-    memset(region.vaddr, fill_color, region.stride*region.height);
+    for (int y = 0; y < region.height; ++y)
+    {
+        for (int x = 0; x < region.width; ++x)
+        {
+            uint32_t* pixel = (uint32_t*)
+                              (region.vaddr + y * region.stride + x * bpp);
+            *pixel = background;
+        }
+    }
+
+    static float theta = 0.0f;
+    theta += 0.000234567f;
+
+    char *origin = region.vaddr + (region.height/2)*region.stride;
+
+    for (int x = 0; x < region.width; ++x)
+    {
+        int const magnitude = region.height / 3;
+        int y = magnitude * sinf(theta + x * 2 * M_PI / region.width);
+        uint32_t* pixel = (uint32_t*)(origin + x*bpp + y*region.stride);
+        *pixel = foreground;
+    }
     
     mir_buffer_stream_swap_buffers_sync(stream);
-    alpha += 0.01;
-    if (alpha >= 1.0)
-        alpha = 0.0;
-    
 }
 
 MirBufferStream* make_cursor_stream(MirConnection *connection, MirSurface *surface)
@@ -76,13 +96,8 @@ int main(int argc, char *argv[])
     MirBufferStream* stream = make_cursor_stream(mir_eglapp_native_connection(),
         mir_eglapp_native_surface());
 
-    struct timespec onehundred_millis = {
-        0, 100*1000000
-    };
-
     while (mir_eglapp_running())
     {
-        nanosleep(&onehundred_millis, &onehundred_millis);
         animate_cursor(stream);
     }
 
