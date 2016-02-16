@@ -56,6 +56,7 @@ public:
 
     MOCK_METHOD1(XOpenDisplay, Display*(const char*));
     MOCK_METHOD1(XCloseDisplay, int(Display*));
+    MOCK_METHOD1(XPending, int(Display*));
     MOCK_METHOD4(XGetVisualInfo, XVisualInfo*(Display*, long, XVisualInfo*, int*));
     MOCK_METHOD4(XCreateColormap, Colormap(Display*, Window, Visual*, int));
     /* Too long to mock, use wrapper instead.
