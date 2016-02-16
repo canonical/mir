@@ -906,6 +906,17 @@ MATCHER(ConfigEq, "stream configurations are equivalent")
            (std::get<0>(arg).displacement == std::get<1>(arg).displacement);
 }
 
+namespace mir
+{
+namespace shell
+{
+void PrintTo(msh::StreamSpecification const& s, std::ostream* os)
+{
+    *os << "streams with id: " << s.stream_id.as_value(); 
+}
+}
+}
+
 MATCHER_P(StreamsAre, value, "configuration streams match")
 {
     if(!arg.streams.is_set())
