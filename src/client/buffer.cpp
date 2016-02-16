@@ -70,12 +70,6 @@ void mcl::Buffer::map_to_region(MirGraphicsRegion& out_region)
     out_region.vaddr = mapped_region->vaddr.get(); 
 }
 
-void mcl::Buffer::unmap()
-{
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    mapped_region.reset();
-}
-
 MirNativeBuffer* mcl::Buffer::as_mir_native_buffer() const
 {
     return buffer->as_mir_native_buffer();

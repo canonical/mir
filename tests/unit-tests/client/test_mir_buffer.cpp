@@ -69,7 +69,7 @@ TEST_F(MirBufferTest, fills_region_with_correct_info_when_securing)
     EXPECT_THAT(out_region.vaddr, Eq(vaddr.get()));
 }
 
-TEST_F(MirBufferTest, releases_buffer_refcount_manually)
+TEST_F(MirBufferTest, releases_buffer_refcount_on_submission)
 {
     auto region = std::make_shared<mcl::MemoryRegion>(
         mcl::MemoryRegion{width, height, stride, format, vaddr});
@@ -84,7 +84,7 @@ TEST_F(MirBufferTest, releases_buffer_refcount_manually)
 
     EXPECT_THAT(use_count_before, Lt(region.use_count()));
 
-    buffer.unmap();
+    buffer.submitted();
 
     EXPECT_THAT(use_count_before, Eq(region.use_count()));
 }

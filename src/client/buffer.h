@@ -45,7 +45,6 @@ public:
 
     MirNativeBuffer* as_mir_native_buffer() const;
     void map_to_region(MirGraphicsRegion& out_region);
-    void unmap();
 
     void set_fence(MirNativeFence*, MirBufferAccess);
     MirNativeFence* get_fence() const;
