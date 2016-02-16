@@ -17,6 +17,7 @@
  */
 
 #include "src/platforms/evdev/libinput_device.h"
+#include "src/platforms/evdev/button_utils.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/input/default_event_builder.h"
 
@@ -634,6 +635,38 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_press_and_release)
     mouse.process_event(fake_event_2);
     mouse.process_event(fake_event_3);
     mouse.process_event(fake_event_4);
+}
+
+TEST_F(LibInputDeviceOnMouse, process_event_handles_exotic_mouse_buttons)
+{
+    float const x = 0;
+    float const y = 0;
+    geom::Point const pos{x, y};
+
+    setup_button_event(fake_event_1, event_time_1, BTN_SIDE, LIBINPUT_BUTTON_STATE_PRESSED);
+    setup_button_event(fake_event_2, event_time_2, BTN_EXTRA, LIBINPUT_BUTTON_STATE_PRESSED);
+    setup_button_event(fake_event_3, event_time_3, BTN_TASK, LIBINPUT_BUTTON_STATE_PRESSED);
+
+    InSequence seq;
+    EXPECT_CALL(mock_sink, handle_input(mt::ButtonDownEventWithButton(pos, mir_pointer_button_side)));
+    EXPECT_CALL(mock_sink, handle_input(mt::ButtonDownEventWithButton(pos, mir_pointer_button_extra)));
+    EXPECT_CALL(mock_sink, handle_input(mt::ButtonDownEventWithButton(pos, mir_pointer_button_task)));
+
+    mouse.start(&mock_sink, &mock_builder);
+    mouse.process_event(fake_event_1);
+    mouse.process_event(fake_event_2);
+    mouse.process_event(fake_event_3);
+}
+
+TEST_F(LibInputDeviceOnMouse, process_ignores_events_when_button_conversion_fails)
+{
+    EXPECT_THROW({mir::input::evdev::to_pointer_button(BTN_JOYSTICK, mir_pointer_handedness_right);},
+                 std::runtime_error);
+    setup_button_event(fake_event_1, event_time_1, BTN_JOYSTICK, LIBINPUT_BUTTON_STATE_PRESSED);
+
+    InSequence seq;
+    EXPECT_CALL(mock_sink, handle_input(_)).Times(0);
+    mouse.process_event(fake_event_1);
 }
 
 TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
