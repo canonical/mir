@@ -65,11 +65,19 @@ void add_launcher_option_to(mir::Server& server)
         const auto options = server.get_options();
         if (options->is_set(launch_child_opt))
         {
-            auto const cmd = "MIR_SOCKET=" + connection(server.open_client_socket()) + " " +
-                options->get<std::string>(launch_child_opt) + "&";
+            auto const value = options->get<std::string>(launch_child_opt);
 
-            auto ignore = std::system(cmd.c_str());
-            (void)(ignore);
+            for (auto i = begin(value); i != end(value); )
+            {
+                auto const j = find(i, end(value), '&');
+
+                auto const cmd = "MIR_SOCKET=" + connection(server.open_client_socket()) + " " + std::string{i, j} + "&";
+
+                auto ignore = std::system(cmd.c_str());
+                (void)(ignore);
+
+                if ((i = j) != end(value)) ++i;
+            }
         }
     });
 }
