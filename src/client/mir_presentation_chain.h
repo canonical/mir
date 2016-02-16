@@ -34,7 +34,7 @@ public:
     virtual void release_buffer(MirBuffer* buffer) = 0;
     virtual MirConnection* connection() const = 0;
     virtual int rpc_id() const = 0;
-    virtual std::string error_msg() const = 0;
+    virtual char const* error_msg() const = 0;
 
 protected:
     MirPresentationChain(MirPresentationChain const&) = delete;

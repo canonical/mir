@@ -58,7 +58,7 @@ public:
 
     MirConnection* connection() const override;
     int rpc_id() const override;
-    std::string error_msg() const override;
+    char const* error_msg() const override;
 private:
 
     MirConnection* const connection_;

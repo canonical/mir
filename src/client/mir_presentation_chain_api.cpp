@@ -63,7 +63,7 @@ char const *mir_presentation_chain_get_error_message(MirPresentationChain* chain
 try
 {
     mir::require(chain);
-    return chain->error_msg().c_str();
+    return chain->error_msg();
 }
 catch (std::exception const& ex)
 {

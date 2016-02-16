@@ -35,9 +35,9 @@ mcl::ErrorChain::ErrorChain(
 {
 }
 
-std::string mcl::ErrorChain::error_msg() const
+char const* mcl::ErrorChain::error_msg() const
 {
-    return error;
+    return error.c_str();
 }
 
 MirConnection* mcl::ErrorChain::connection() const

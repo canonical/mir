@@ -185,7 +185,7 @@ mcl::PresentationChain::AllocationRequest::AllocationRequest(
 {
 }
 
-std::string mcl::PresentationChain::error_msg() const
+char const* mcl::PresentationChain::error_msg() const
 {
-    return {""};
+    return "";
 }
