@@ -58,21 +58,15 @@ MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirBufferAccess access
  *
  *   \param [in] buffer    The buffer
  *   \param [in] type      The type of fence to clear before returning.
- *   \return               The graphics region associated with the buffer.
+ *   \param [out] region   The graphics region associated with the buffer.
  *   \warning  The returned region is only valid until the MirBuffer is
- *             submitted to the server. It must be cleaned up via
- *             mir_buffer_release_region.  
- *
+ *             submitted to the server. When the buffer is available again,
+ *             this function must be called before accessing the region again.
  *   \warning  If mir_none is designated as access, this function will not
  *             wait for the fence. The user must wait for the fence explicitly
  *             before using the contents of the buffer.
  **/
-MirGraphicsRegion* mir_buffer_acquire_region(MirBuffer *buffer, MirBufferAccess access);
-
-/** relinquish access to a CPU-mapped region associated with a buffer.
- *   \param [in] region       The region
- **/
-void mir_buffer_release_region(MirGraphicsRegion* region);
+void mir_buffer_acquire_region(MirBuffer *buffer, MirBufferAccess access, MirGraphicsRegion* region);
 
 /**
  * Retreive the native fence associated with this buffer

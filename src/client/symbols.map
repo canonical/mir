@@ -285,7 +285,6 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_wait_fence;
     mir_buffer_get_native_buffer;
     mir_buffer_acquire_region;
-    mir_buffer_release_region;
     mir_buffer_release;
     mir_connection_create_presentation_chain_sync;
     mir_presentation_chain_is_valid;
