@@ -26,7 +26,7 @@ include_directories(
   ${DRM_INCLUDE_DIRS}
 )
 
-set(MIRCLIENT_ABI 10)
+set(MIRCLIENT_ABI 9)
 set(symbol_map ${CMAKE_SOURCE_DIR}/src/client/symbols.map)
 
 add_definitions(-DMIR_CLIENT_PLATFORM_PATH="${MIR_CLIENT_PLATFORM_PATH}/")
