@@ -41,7 +41,7 @@ public:
     void release_buffer(MirBuffer* buffer) override;
     void buffer_available(mir::protobuf::Buffer const& buffer) override;
     void buffer_unavailable() override;
-    MirConnection* connection() const;
+    MirConnection* connection() const override;
     int rpc_id() const override;
     std::string error_msg() const override;
 private:
