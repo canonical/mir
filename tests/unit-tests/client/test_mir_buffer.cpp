@@ -42,7 +42,7 @@ struct MirBufferTest : Test
     geom::Height height { 119 };
     geom::Stride stride { 2211 };
     MirPixelFormat format { mir_pixel_format_abgr_8888 };
-    std::shared_ptr<char> vaddr { std::make_shared<char>('~') };
+    std::shared_ptr<char> vaddr { std::make_shared<char>('\0') };
     mir_buffer_callback cb { buffer_callback };
     std::shared_ptr<mtd::MockClientBuffer> const mock_client_buffer {
         std::make_shared<NiceMock<mtd::MockClientBuffer>>() };
