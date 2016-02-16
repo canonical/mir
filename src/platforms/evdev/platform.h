@@ -27,6 +27,7 @@
 #include <vector>
 
 struct libinput_device_group;
+struct libinput_device;
 
 namespace mir
 {
@@ -55,37 +56,28 @@ class Platform : public input::Platform
 public:
     Platform(std::shared_ptr<InputDeviceRegistry> const& registry,
              std::shared_ptr<InputReport> const& report,
-             std::unique_ptr<udev::Context>&& udev_context,
-             std::unique_ptr<udev::Monitor>&& monitor);
+             std::unique_ptr<udev::Context>&& udev_context);
     std::shared_ptr<mir::dispatch::Dispatchable> dispatchable() override;
     void start() override;
     void stop() override;
 
 private:
     void scan_for_devices();
-    void process_changes();
-    void device_added(udev::Device const& dev);
-    void device_removed(udev::Device const& dev);
-    void device_changed(udev::Device const& dev);
+    void device_added(libinput_device* dev);
+    void device_removed(libinput_device* dev);
     void process_input_events();
 
     std::shared_ptr<LibInputDevice> create_device(udev::Device const& dev) const;
 
     std::shared_ptr<InputReport> const report;
     std::shared_ptr<udev::Context> const udev_context;
-    std::unique_ptr<udev::Monitor> const monitor;
     std::shared_ptr<InputDeviceRegistry> const input_device_registry;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const platform_dispatchable;
-    std::shared_ptr<dispatch::ReadableFd> const monitor_dispatchable;
     std::shared_ptr<::libinput> const lib;
     std::shared_ptr<dispatch::ReadableFd> const libinput_dispatchable;
 
     std::vector<std::shared_ptr<LibInputDevice>> devices;
-    auto find_device(char const* devnode) -> decltype(devices)::iterator;
-    auto find_device(libinput_device *) -> decltype(devices)::iterator;
     auto find_device(libinput_device_group const* group) -> decltype(devices)::iterator;
-
-    friend class MonitorDispatchable;
 };
 }
 }
