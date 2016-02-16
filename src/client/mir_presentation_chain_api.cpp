@@ -36,17 +36,15 @@ void set_result(MirPresentationChain* result, MirPresentationChain** context)
 }
 }
 //private NBS api under development
-bool mir_presentation_chain_submit_buffer(MirPresentationChain* chain, MirBuffer* buffer)
+void mir_presentation_chain_submit_buffer(MirPresentationChain* chain, MirBuffer* buffer)
 try
 {
     mir::require(chain && buffer && mir_presentation_chain_is_valid(chain));
     chain->submit_buffer(buffer);
-    return true;
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return false;
 }
 
 bool mir_presentation_chain_is_valid(MirPresentationChain* chain)
