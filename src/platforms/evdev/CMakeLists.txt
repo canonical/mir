@@ -3,7 +3,8 @@ pkg_check_modules(LIBINPUT REQUIRED libinput)
 include_directories(
   ${LIBINPUT_CFLAGS} 
   ${PROJECT_SOURCE_DIR}/include/platform
-  ${PROJECT_SOURCE_DIR}/src/include/platform # udev wrapper
+  ${PROJECT_SOURCE_DIR}/src/include/platform # udev Context
+  ${PROJECT_SOURCE_DIR}/src/include/common # raii.h
   ${PROJECT_SOURCE_DIR}/include/common
   ${PROJECT_SOURCE_DIR}/include/client
   )
