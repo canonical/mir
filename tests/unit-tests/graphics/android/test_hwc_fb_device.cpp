@@ -56,7 +56,7 @@ protected:
         test_size = geom::Size{width, height};
         int fbnum = 558;
         mock_fb_device = std::make_shared<mtd::MockFBHalDevice>(
-            width, height, HAL_PIXEL_FORMAT_RGBA_8888, fbnum);
+            width, height, HAL_PIXEL_FORMAT_RGBA_8888, fbnum, 11, 12);
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
         mock_hwc_device_wrapper = std::make_shared<testing::NiceMock<mtd::MockHWCDeviceWrapper>>();
 

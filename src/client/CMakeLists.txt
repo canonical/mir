@@ -76,6 +76,8 @@ add_library(mirclientobjects OBJECT
   buffer_vault.cpp
   mir_buffer_stream_api.cpp
   error_stream.cpp
+  buffer.cpp
+  presentation_chain.cpp
   mir_presentation_chain_api.cpp
   mir_buffer_api.cpp
   ${MIR_CLIENT_SOURCES}
@@ -105,10 +107,10 @@ set(LINKS
 )
 
 target_link_libraries(mirclient
-  PRIVATE
+  LINK_PRIVATE
   mirclientrpc-static
   mirclientlttng-static
-  PUBLIC
+  LINK_PUBLIC
   ${MIR_CLIENT_REFERENCES}
   ${LINKS}
 )

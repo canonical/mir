@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,31 +13,33 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVDEV_LIBINPUT_PTR_H_
-#define MIR_INPUT_EVDEV_LIBINPUT_PTR_H_
-
-#include "mir_toolkit/event.h"
-
-#include <memory>
-#include <list>
-
-struct libinput;
-struct udev;
+#ifndef MIR_CLIENT_BUFFER_RECEIVER_H_
+#define MIR_CLIENT_BUFFER_RECEIVER_H_
 
 namespace mir
 {
-namespace input
+namespace protobuf
 {
-namespace evdev
+class Buffer;
+}
+namespace client
 {
-using LibInputPtr = std::unique_ptr<libinput, libinput*(*)(libinput*)>;
 
-LibInputPtr make_libinput(::udev* context);
-}
-}
-}
+class BufferReceiver
+{
+public:
+    virtual void buffer_available(mir::protobuf::Buffer const& buffer) = 0;
+    virtual void buffer_unavailable() = 0;
+protected:
+    virtual ~BufferReceiver() = default;
+    BufferReceiver() = default;
+    BufferReceiver(const BufferReceiver&) = delete;
+    BufferReceiver& operator=(const BufferReceiver&) = delete;
+};
 
-#endif
+}
+}
+#endif /* MIR_CLIENT_BUFFER_RECEIVER_H_ */

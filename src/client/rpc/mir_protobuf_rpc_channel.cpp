@@ -99,8 +99,8 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
     if (auto map = surface_map.lock()) 
     {
         map->with_all_streams_do(
-            [](mcl::ClientBufferStream* stream) {
-                if (stream) stream->buffer_unavailable();
+            [](mcl::BufferReceiver* receiver) {
+                if (receiver) receiver->buffer_unavailable();
             });
     }
 }
@@ -308,9 +308,9 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         try
         {
             map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
-            [&] (mcl::ClientBufferStream* stream) {
-                if (stream)
-                    stream->buffer_available(seq.buffer_request().buffer());
+            [&] (mcl::BufferReceiver* receiver) {
+                if (receiver)
+                    receiver->buffer_available(seq.buffer_request().buffer());
             });
         }
         catch (std::exception& e)

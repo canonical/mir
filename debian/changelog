@@ -4,6 +4,34 @@ mir (0.20.0) UNRELEASED; urgency=medium
 
  -- Alberto Aguirre <alberto.aguirre@canonical.com>  Mon, 01 Feb 2016 13:20:02 -0600
 
+mir (0.19.2+16.04.20160210-0ubuntu1) xenial; urgency=medium
+
+  [ Alberto Aguirre ]
+  * New upstream release 0.19.2 (https://launchpad.net/mir/+milestone/0.19.2)
+    - Bugs fixed:
+      . Lock ordering issues causing deadlocks between input and display
+        configuration (LP: #1538632, LP: #1543594, LP: #1532607)
+      . Workaound for a g++ 4.9 bug where std::uncaught_exception() 
+        unexpectedly returns true
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Wed, 10 Feb 2016 00:57:06 +0000
+
+mir (0.19.1+16.04.20160204-0ubuntu1) xenial; urgency=medium
+
+  [ Kevin Gunn ]
+  * New upstream release 0.19.1 (https://launchpad.net/mir/+milestone/0.19.1)
+    - Improved reporting to assist in critical debug
+    - Improved on the fix for LP: #1527449 and LP: #1526658 in order to
+      avoid Unity8 crashing on upgraded xenial desktops.
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- kevin gunn <kevin.gunn@canonical.com>  Thu, 04 Feb 2016 21:13:57 +0000
+
 mir (0.19.0+16.04.20160128-0ubuntu1) xenial; urgency=medium
 
   [ Brandon Schaefer ]
@@ -112,14 +140,14 @@ mir (0.18.0+16.04.20151216.1-0ubuntu1) xenial; urgency=medium
   [ Kevin DuBois ]
   * New upstream release 0.18.0 (https://launchpad.net/mir/+milestone/0.18.0)
     - ABI summary: Only servers need rebuilding;
-      . Mirclient ABI unchanged at 9
-      . Mirserver ABI bumped to 36
-      . Mircommon ABI unchanged at 5
-      . Mirplatform ABI unchanged at 11
-      . Mirprotobuf ABI unchanged at 3
-      . Mirplatformgraphics ABI bumped to 7
-      . Mirclientplatform ABI unchanged at 3
-      . Mirinputplatform ABI added. Current version is 4
+      . mirclient abi unchanged at 9
+      . mirserver abi bumped to 36
+      . mircommon abi unchanged at 5
+      . mirplatform abi unchanged at 11
+      . mirprotobuf abi unchanged at 3
+      . mirplatformgraphics abi bumped to 7
+      . mirclientplatform abi unchanged at 3
+      . mirinputplatform abi added. current version is 4
     - Enhancements:
       . Use libinput by default, and remove the android input stack
       . Add x11 input probing
