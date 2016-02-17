@@ -255,6 +255,7 @@ MIRPLATFORM_11 {
     mir::graphics::tessellate_renderable_into_rectangle*;
     mir::udev::Context::?Context*;
     mir::udev::Context::Context*;
+    mir::udev::Context::ctx*;
     mir::udev::Enumerator::begin*;
     mir::udev::Enumerator::end*;
     mir::udev::Enumerator::?Enumerator*;

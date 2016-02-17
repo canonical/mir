@@ -19,6 +19,8 @@
 #include "libinput.h"
 #include "libinput_ptr.h"
 
+#include <boost/throw_exception.hpp>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -51,9 +53,14 @@ void fd_close(int fd, void* /*userdata*/)
 }
 
 const libinput_interface fd_ops = {fd_open, fd_close};
+char const default_seat[] = "seat0";
 }
 
-mie::LibInputPtr mie::make_libinput()
+mie::LibInputPtr mie::make_libinput(udev* context)
 {
-    return mie::LibInputPtr{libinput_path_create_context(&fd_ops, nullptr),libinput_unref};
+    auto ret = mie::LibInputPtr{libinput_udev_create_context(&fd_ops, nullptr, context), libinput_unref};
+    // Temporary technical debt - pick the first seat as default.
+    if (libinput_udev_assign_seat(ret.get(), default_seat) != 0)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failure assigning udev seat"));
+    return ret;
 }
