@@ -122,6 +122,8 @@ int main(int argc, char** argv)
     signal(SIGTERM, shutdown);
     signal(SIGINT, shutdown);
 
+    int width = 20;
+    int height = 25;
     int displacement_x = 0;
     int displacement_y = 0;
     unsigned int fg = 0xFF1448DD;
