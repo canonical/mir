@@ -32,7 +32,7 @@
 #include "mir/test/gmock_fixes.h"
 #include "mir/udev/wrapper.h"
 #include "mir/cookie/authority.h"
-#include "mir_test_framework/udev_environment.h"
+#include "mir_test_framework/libinput_environment.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -122,23 +122,10 @@ struct MockEventBuilder : mi::EventBuilder
 
 struct LibInputDevice : public ::testing::Test
 {
-    mtf::UdevEnvironment env;
-    ::testing::NiceMock<mir::test::doubles::MockLibInput> mock_libinput;
+    mtf::LibInputEnvironment env;
     ::testing::NiceMock<MockInputSink> mock_sink;
     ::testing::NiceMock<MockEventBuilder> mock_builder;
     std::shared_ptr<libinput> lib;
-
-    libinput* fake_input = reinterpret_cast<libinput*>(0xF4C3);
-    libinput_device* fake_device = reinterpret_cast<libinput_device*>(0xF4C4);
-    libinput_event* fake_event_1 = reinterpret_cast<libinput_event*>(0xF4C5);
-    libinput_event* fake_event_2 = reinterpret_cast<libinput_event*>(0xF4C6);
-    libinput_event* fake_event_3 = reinterpret_cast<libinput_event*>(0xF4C7);
-    libinput_event* fake_event_4 = reinterpret_cast<libinput_event*>(0xF4C8);
-    libinput_event* fake_event_5 = reinterpret_cast<libinput_event*>(0xF4D0);
-    libinput_event* fake_event_6 = reinterpret_cast<libinput_event*>(0xF4D1);
-    libinput_event* fake_event_7 = reinterpret_cast<libinput_event*>(0xF4D2);
-    libinput_event* fake_event_8 = reinterpret_cast<libinput_event*>(0xF4D3);
-    libinput_device* second_fake_device = reinterpret_cast<libinput_device*>(0xF4C9);
 
     const uint64_t event_time_1 = 1000;
     const mi::EventBuilder::Timestamp time_stamp_1{std::chrono::microseconds{event_time_1}};
@@ -149,72 +136,45 @@ struct LibInputDevice : public ::testing::Test
     const uint64_t event_time_4 = 4000;
     const mi::EventBuilder::Timestamp time_stamp_4{std::chrono::microseconds{event_time_4}};
 
-    char const* laptop_keyboard_device_path = "/dev/input/event4";
-    char const* trackpad_dev_path = "/dev/input/event13";
-    char const* touch_screen_dev_path = "/dev/input/event4";
-    char const* usb_mouse_dev_path = "/dev/input/event13";
-    char const* touchpad_dev_path = "/dev/input/event12";
+    udev *const fake_udev = reinterpret_cast<udev*>(0xFACE01);
 
     LibInputDevice()
     {
-        ON_CALL(mock_libinput, libinput_path_create_context(_,_))
-            .WillByDefault(Return(fake_input));
-        lib = mie::make_libinput();
+        lib = mie::make_libinput(fake_udev);
     }
 
-    char const* setup_laptop_keyboard(libinput_device* dev)
+    libinput_device* setup_laptop_keyboard()
     {
-        return setup_device(dev, laptop_keyboard_device_path, "laptop-keyboard", 5252, 3113);
+        return env.setup_device(mtf::LibInputEnvironment::laptop_keyboard);
     }
 
-    char const* setup_trackpad(libinput_device* dev)
+    libinput_device* setup_trackpad()
     {
-        return setup_device(dev, trackpad_dev_path, "bluetooth-magic-trackpad", 9663, 1234);
+        return env.setup_device(mtf::LibInputEnvironment::bluetooth_magic_trackpad);
     }
 
-    char const* setup_touch_screen(libinput_device* dev)
+    libinput_device* setup_touchscreen()
     {
-        return setup_device(dev, touch_screen_dev_path, "mt-screen-detection", 858, 484);
+        return env.setup_device(mtf::LibInputEnvironment::mtk_tpd);
     }
 
-    char const* setup_touchpad(libinput_device* dev)
+    libinput_device* setup_touchpad()
     {
-        return setup_device(dev, touchpad_dev_path, "synaptics-touchpad", 858, 484);
+        return env.setup_device(mtf::LibInputEnvironment::synaptics_touchpad);
     }
 
-    char const* setup_mouse(libinput_device* dev)
+    libinput_device* setup_mouse()
     {
-        return setup_device(dev, usb_mouse_dev_path, "usb-mouse", 858, 484);
-    }
-
-    void remove_devices()
-    {
-        mir::udev::Enumerator devices{std::make_shared<mir::udev::Context>()};
-        devices.scan_devices();
-
-        for (auto& device : devices)
-        {
-            if (device.devnode() && (std::string(device.devnode()).find("input/event") != std::string::npos))
-            {
-                env.remove_device((std::string("/sys") + device.devpath()).c_str());
-            }
-        }
-    }
-
-    char const* setup_device(libinput_device* dev, char const* device_path, char const* umock_name, unsigned int vendor_id, unsigned int product_id)
-    {
-        env.add_standard_device(umock_name);
-        mock_libinput.setup_device(fake_input, dev, device_path, umock_name, vendor_id, product_id);
-        return device_path;
+        return env.setup_device(mtf::LibInputEnvironment::usb_mouse);
     }
 
     void setup_pointer_configuration(libinput_device* dev, double accel_speed, MirPointerHandedness handedness, MirPointerAcceleration profile)
     {
-        ON_CALL(mock_libinput, libinput_device_config_accel_get_speed(dev))
+        ON_CALL(env.mock_libinput, libinput_device_config_accel_get_speed(dev))
             .WillByDefault(Return(accel_speed));
-        ON_CALL(mock_libinput, libinput_device_config_left_handed_get(dev))
+        ON_CALL(env.mock_libinput, libinput_device_config_left_handed_get(dev))
             .WillByDefault(Return(handedness == mir_pointer_handedness_left));
-        ON_CALL(mock_libinput, libinput_device_config_accel_get_profile(dev))
+        ON_CALL(env.mock_libinput, libinput_device_config_accel_get_profile(dev))
             .WillByDefault(Return((profile == mir_pointer_acceleration_none) ?
                                       LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT :
                                       LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE));
@@ -243,270 +203,110 @@ struct LibInputDevice : public ::testing::Test
         if (scroll_mode & mir_touchpad_scroll_mode_button_down_scroll)
             scroll_method |= LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN;
 
-        ON_CALL(mock_libinput, libinput_device_config_click_get_method(dev))
+        ON_CALL(env.mock_libinput, libinput_device_config_click_get_method(dev))
             .WillByDefault(Return(static_cast<libinput_config_click_method>(click_method.value())));
-        ON_CALL(mock_libinput, libinput_device_config_scroll_get_method(dev))
+        ON_CALL(env.mock_libinput, libinput_device_config_scroll_get_method(dev))
             .WillByDefault(Return(static_cast<libinput_config_scroll_method>(scroll_method.value())));
-        ON_CALL(mock_libinput, libinput_device_config_scroll_get_button(dev))
+        ON_CALL(env.mock_libinput, libinput_device_config_scroll_get_button(dev))
             .WillByDefault(Return(scroll_button));
-        ON_CALL(mock_libinput, libinput_device_config_tap_get_enabled(dev))
+        ON_CALL(env.mock_libinput, libinput_device_config_tap_get_enabled(dev))
             .WillByDefault(Return(tap_to_click?
                                    LIBINPUT_CONFIG_TAP_ENABLED:
                                    LIBINPUT_CONFIG_TAP_DISABLED));
-        ON_CALL(mock_libinput, libinput_device_config_dwt_get_enabled(dev))
+        ON_CALL(env.mock_libinput, libinput_device_config_dwt_get_enabled(dev))
             .WillByDefault(Return(disable_while_typing?
                                    LIBINPUT_CONFIG_DWT_ENABLED:
                                    LIBINPUT_CONFIG_DWT_DISABLED));
-        ON_CALL(mock_libinput, libinput_device_config_send_events_get_mode(dev))
+        ON_CALL(env.mock_libinput, libinput_device_config_send_events_get_mode(dev))
             .WillByDefault(Return(disable_with_mouse?
                                    LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE:
                                    LIBINPUT_CONFIG_SEND_EVENTS_ENABLED));
-        ON_CALL(mock_libinput, libinput_device_config_middle_emulation_get_enabled(dev))
+        ON_CALL(env.mock_libinput, libinput_device_config_middle_emulation_get_enabled(dev))
             .WillByDefault(Return(middle_button_emulation?
                                    LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED:
                                    LIBINPUT_CONFIG_MIDDLE_EMULATION_DISABLED));
 
     }
 
-    void setup_key_event(libinput_event* event, uint64_t event_time, uint32_t key, libinput_key_state state)
+    void process_events(mie::LibInputDevice& device)
     {
-        auto key_event = reinterpret_cast<libinput_event_keyboard*>(event);
-
-        ON_CALL(mock_libinput, libinput_event_get_type(event))
-            .WillByDefault(Return(LIBINPUT_EVENT_KEYBOARD_KEY));
-        ON_CALL(mock_libinput, libinput_event_get_keyboard_event(event))
-            .WillByDefault(Return(key_event));
-        ON_CALL(mock_libinput, libinput_event_keyboard_get_time_usec(key_event))
-            .WillByDefault(Return(event_time));
-        ON_CALL(mock_libinput, libinput_event_keyboard_get_key(key_event))
-            .WillByDefault(Return(key));
-        ON_CALL(mock_libinput, libinput_event_keyboard_get_key_state(key_event))
-            .WillByDefault(Return(state));
-    }
-
-    void setup_pointer_event(libinput_event* event, uint64_t event_time, float relatve_x, float relatve_y)
-    {
-        auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
-
-        ON_CALL(mock_libinput, libinput_event_get_type(event))
-            .WillByDefault(Return(LIBINPUT_EVENT_POINTER_MOTION));
-        ON_CALL(mock_libinput, libinput_event_get_pointer_event(event))
-            .WillByDefault(Return(pointer_event));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_time_usec(pointer_event))
-            .WillByDefault(Return(event_time));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_dx(pointer_event))
-            .WillByDefault(Return(relatve_x));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_dy(pointer_event))
-            .WillByDefault(Return(relatve_y));
-    }
-
-    void setup_absolute_pointer_event(libinput_event* event, uint64_t event_time, float x, float y)
-    {
-        auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
-
-        ON_CALL(mock_libinput, libinput_event_get_type(event))
-            .WillByDefault(Return(LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE));
-        ON_CALL(mock_libinput, libinput_event_get_pointer_event(event))
-            .WillByDefault(Return(pointer_event));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_time_usec(pointer_event))
-            .WillByDefault(Return(event_time));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_absolute_x_transformed(pointer_event, _))
-            .WillByDefault(Return(x));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_absolute_y_transformed(pointer_event, _))
-            .WillByDefault(Return(y));
-    }
-
-    void setup_button_event(libinput_event* event, uint64_t event_time, int button, libinput_button_state state)
-    {
-        auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
-
-        ON_CALL(mock_libinput, libinput_event_get_type(event))
-            .WillByDefault(Return(LIBINPUT_EVENT_POINTER_BUTTON));
-        ON_CALL(mock_libinput, libinput_event_get_pointer_event(event))
-            .WillByDefault(Return(pointer_event));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_time_usec(pointer_event))
-            .WillByDefault(Return(event_time));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_button(pointer_event))
-            .WillByDefault(Return(button));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_button_state(pointer_event))
-            .WillByDefault(Return(state));
-    }
-
-    void setup_axis_event(libinput_event* event, uint64_t event_time, double horizontal, double vertical)
-    {
-        auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
-
-        ON_CALL(mock_libinput, libinput_event_get_type(event))
-            .WillByDefault(Return(LIBINPUT_EVENT_POINTER_AXIS));
-        ON_CALL(mock_libinput, libinput_event_get_pointer_event(event))
-            .WillByDefault(Return(pointer_event));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_time_usec(pointer_event))
-            .WillByDefault(Return(event_time));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_axis_source(pointer_event))
-            .WillByDefault(Return(LIBINPUT_POINTER_AXIS_SOURCE_WHEEL));
-        ON_CALL(mock_libinput, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
-            .WillByDefault(Return(horizontal!=0.0));
-        ON_CALL(mock_libinput, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
-            .WillByDefault(Return(vertical!=0.0));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
-            .WillByDefault(Return(vertical));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
-            .WillByDefault(Return(horizontal));
-    }
-
-    void setup_finger_axis_event(libinput_event* event, uint64_t event_time, double horizontal, double vertical)
-    {
-        auto pointer_event = reinterpret_cast<libinput_event_pointer*>(event);
-
-        ON_CALL(mock_libinput, libinput_event_get_type(event))
-            .WillByDefault(Return(LIBINPUT_EVENT_POINTER_AXIS));
-        ON_CALL(mock_libinput, libinput_event_get_pointer_event(event))
-            .WillByDefault(Return(pointer_event));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_time_usec(pointer_event))
-            .WillByDefault(Return(event_time));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_axis_source(pointer_event))
-            .WillByDefault(Return(LIBINPUT_POINTER_AXIS_SOURCE_FINGER));
-        ON_CALL(mock_libinput, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
-            .WillByDefault(Return(horizontal!=0.0));
-        ON_CALL(mock_libinput, libinput_event_pointer_has_axis(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
-            .WillByDefault(Return(vertical!=0.0));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
-            .WillByDefault(Return(vertical));
-        ON_CALL(mock_libinput, libinput_event_pointer_get_axis_value(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
-            .WillByDefault(Return(horizontal));
-    }
-
-    void setup_touch_event(libinput_event* event, libinput_event_type type, uint64_t event_time, int slot, float x,
-                           float y, float major, float minor, float pressure)
-    {
-        auto touch_event = reinterpret_cast<libinput_event_touch*>(event);
-
-        ON_CALL(mock_libinput, libinput_event_get_type(event))
-            .WillByDefault(Return(type));
-        ON_CALL(mock_libinput, libinput_event_get_touch_event(event))
-            .WillByDefault(Return(touch_event));
-        ON_CALL(mock_libinput, libinput_event_touch_get_slot(touch_event))
-            .WillByDefault(Return(slot));
-        ON_CALL(mock_libinput, libinput_event_touch_get_x_transformed(touch_event, _))
-            .WillByDefault(Return(x));
-        ON_CALL(mock_libinput, libinput_event_touch_get_y_transformed(touch_event, _))
-            .WillByDefault(Return(y));
-        ON_CALL(mock_libinput, libinput_event_touch_get_time_usec(touch_event))
-            .WillByDefault(Return(event_time));
-        ON_CALL(mock_libinput, libinput_event_touch_get_major_transformed(touch_event, _, _))
-            .WillByDefault(Return(major));
-        ON_CALL(mock_libinput, libinput_event_touch_get_minor_transformed(touch_event, _, _))
-            .WillByDefault(Return(minor));
-        ON_CALL(mock_libinput, libinput_event_touch_get_pressure(touch_event))
-            .WillByDefault(Return(pressure));
-    }
-
-    void setup_touch_up_event(libinput_event* event, uint64_t event_time, int slot)
-    {
-        auto touch_event = reinterpret_cast<libinput_event_touch*>(event);
-
-        ON_CALL(mock_libinput, libinput_event_get_type(event))
-            .WillByDefault(Return(LIBINPUT_EVENT_TOUCH_UP));
-        ON_CALL(mock_libinput, libinput_event_get_touch_event(event))
-            .WillByDefault(Return(touch_event));
-        ON_CALL(mock_libinput, libinput_event_touch_get_slot(touch_event))
-            .WillByDefault(Return(slot));
-        ON_CALL(mock_libinput, libinput_event_touch_get_time_usec(touch_event))
-            .WillByDefault(Return(event_time));
-    }
-
-    void setup_touch_frame(libinput_event* event, uint64_t event_time)
-    {
-        auto touch_event = reinterpret_cast<libinput_event_touch*>(event);
-
-        ON_CALL(mock_libinput, libinput_event_get_type(event))
-            .WillByDefault(Return(LIBINPUT_EVENT_TOUCH_FRAME));
-        ON_CALL(mock_libinput, libinput_event_get_touch_event(event))
-            .WillByDefault(Return(touch_event));
-        ON_CALL(mock_libinput, libinput_event_touch_get_time_usec(touch_event))
-            .WillByDefault(Return(event_time));
+        for (auto event : env.mock_libinput.events)
+            device.process_event(event);
     }
 };
 
 struct LibInputDeviceOnLaptopKeyboard : public LibInputDevice
 {
-    char const* keyboard_path = setup_laptop_keyboard(fake_device);
-    mie::LibInputDevice keyboard{mir::report::null_input_report(), keyboard_path, mie::make_libinput_device(lib, keyboard_path)};
+    libinput_device*const fake_device = setup_laptop_keyboard();
+    mie::LibInputDevice keyboard{mir::report::null_input_report(), mie::make_libinput_device(lib, fake_device)};
 };
 
 struct LibInputDeviceOnMouse : public LibInputDevice
 {
-    char const* mouse_path = setup_mouse(fake_device);
-    mie::LibInputDevice mouse{mir::report::null_input_report(), mouse_path, mie::make_libinput_device(lib, mouse_path)};
+    libinput_device*const fake_device = setup_mouse();
+    mie::LibInputDevice mouse{mir::report::null_input_report(), mie::make_libinput_device(lib, fake_device)};
 };
 
 struct LibInputDeviceOnLaptopKeyboardAndMouse : public LibInputDevice
 {
-    char const* mouse_path = setup_mouse(fake_device);
-    char const* keyboard_path = setup_laptop_keyboard(fake_device);
-    mie::LibInputDevice keyboard{mir::report::null_input_report(), keyboard_path, mie::make_libinput_device(lib, keyboard_path)};
-    mie::LibInputDevice mouse{mir::report::null_input_report(), mouse_path, mie::make_libinput_device(lib, mouse_path)};
+    libinput_device*const fake_device = setup_mouse();
+    libinput_device*const fake_device_2 = setup_laptop_keyboard();
+    mie::LibInputDevice keyboard{mir::report::null_input_report(), mie::make_libinput_device(lib, fake_device_2)};
+    mie::LibInputDevice mouse{mir::report::null_input_report(), mie::make_libinput_device(lib, fake_device)};
 };
 
 struct LibInputDeviceOnTouchScreen : public LibInputDevice
 {
-    char const* touch_screen_path = setup_touch_screen(fake_device);
-    mie::LibInputDevice touch_screen{mir::report::null_input_report(), touch_screen_path, mie::make_libinput_device(lib, touch_screen_path)};
+    libinput_device*const fake_device = setup_touchscreen();
+    mie::LibInputDevice touch_screen{mir::report::null_input_report(), mie::make_libinput_device(lib, fake_device)};
 };
 
 struct LibInputDeviceOnTouchpad : public LibInputDevice
 {
-    char const* touchpad_path = setup_touchpad(fake_device);
-    mie::LibInputDevice touchpad{mir::report::null_input_report(), touchpad_path, mie::make_libinput_device(lib, touchpad_path)};
+    libinput_device*const fake_device = setup_touchpad();
+    mie::LibInputDevice touchpad{mir::report::null_input_report(), mie::make_libinput_device(lib, fake_device)};
 };
 }
 
-TEST_F(LibInputDevice, start_creates_and_unrefs_libinput_device_from_path)
+TEST_F(LibInputDevice, start_creates_and_refs_libinput_device)
 {
-    char const * path = setup_laptop_keyboard(fake_device);
+    auto * const fake_device = setup_laptop_keyboard();
 
-    EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(path)))
-        .Times(1);
-    // according to manual libinput_path_add_device creates a temporary device with a ref count 0.
-    // hence it needs a manual ref call
-    EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device))
+    // according to manual when a new device is detected by udev libinput creates a temporary
+    // device with a ref count 0, which gets distributed via its event loop, and would be removed
+    // after event dispatch. So it needs a manual ref call
+    EXPECT_CALL(env.mock_libinput, libinput_device_ref(fake_device))
         .Times(1);
 
     mie::LibInputDevice dev(mir::report::null_input_report(),
-                            path,
-                            std::move(mie::make_libinput_device(lib, path)));
+                            mie::make_libinput_device(lib, fake_device));
     dev.start(&mock_sink, &mock_builder);
 }
 
 TEST_F(LibInputDevice, open_device_of_group)
 {
-    char const* first_path = setup_laptop_keyboard(fake_device);
-    char const* second_path = setup_trackpad(second_fake_device);
+    auto fake_device = setup_laptop_keyboard();
+    auto second_fake_device = setup_trackpad();
 
     InSequence seq;
-    EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(first_path))).Times(1);
-    // according to manual libinput_path_add_device creates a temporary device with a ref count 0.
-    // hence it needs a manual ref call
-    EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device)).Times(1);
-    EXPECT_CALL(mock_libinput, libinput_path_add_device(fake_input,StrEq(second_path))).Times(1);
-    EXPECT_CALL(mock_libinput, libinput_device_ref(second_fake_device)).Times(1);
+    // See previous test
+    EXPECT_CALL(env.mock_libinput, libinput_device_ref(fake_device)).Times(1);
+    EXPECT_CALL(env.mock_libinput, libinput_device_ref(second_fake_device)).Times(1);
 
     mie::LibInputDevice dev(mir::report::null_input_report(),
-                            first_path,
-                            std::move(mie::make_libinput_device(lib, first_path)));
-    dev.add_device_of_group(second_path, mie::make_libinput_device(lib, second_path));
+                            mie::make_libinput_device(lib, fake_device));
+    dev.add_device_of_group(mie::make_libinput_device(lib, second_fake_device));
     dev.start(&mock_sink, &mock_builder);
 }
 
 TEST_F(LibInputDevice, input_info_combines_capabilities)
 {
-    char const* first_dev = setup_laptop_keyboard(fake_device);
-    char const* second_dev = setup_trackpad(second_fake_device);
+    auto fake_device = setup_laptop_keyboard();
+    auto second_fake_device = setup_trackpad();
 
     mie::LibInputDevice dev(mir::report::null_input_report(),
-                            first_dev,
-                            mie::make_libinput_device(lib, first_dev));
-    dev.add_device_of_group(second_dev, mie::make_libinput_device(lib, second_dev));
+                            mie::make_libinput_device(lib, fake_device));
+    dev.add_device_of_group(mie::make_libinput_device(lib, second_fake_device));
     auto info = dev.get_device_info();
 
     EXPECT_THAT(info.capabilities, Eq(mi::DeviceCapability::touchpad |
@@ -517,35 +317,29 @@ TEST_F(LibInputDevice, input_info_combines_capabilities)
 
 TEST_F(LibInputDevice, removal_unrefs_libinput_device)
 {
-    char const* path = setup_laptop_keyboard(fake_device);
+    auto fake_device = setup_laptop_keyboard();
 
-    EXPECT_CALL(mock_libinput, libinput_device_unref(fake_device))
+    EXPECT_CALL(env.mock_libinput, libinput_device_unref(fake_device))
         .Times(1);
 
-    mie::LibInputDevice dev(mir::report::null_input_report(), path, mie::make_libinput_device(lib, path));
+    mie::LibInputDevice dev(mir::report::null_input_report(), mie::make_libinput_device(lib, fake_device));
 }
 
 TEST_F(LibInputDeviceOnLaptopKeyboard, process_event_converts_key_event)
 {
-    setup_key_event(fake_event_1, event_time_1, KEY_A, LIBINPUT_KEY_STATE_PRESSED);
-    setup_key_event(fake_event_2, event_time_2, KEY_A, LIBINPUT_KEY_STATE_RELEASED);
-
     EXPECT_CALL(mock_builder, key_event(time_stamp_1, mir_keyboard_action_down, _, KEY_A));
     EXPECT_CALL(mock_sink, handle_input(AllOf(mt::KeyOfScanCode(KEY_A),mt::KeyDownEvent())));
     EXPECT_CALL(mock_builder, key_event(time_stamp_2, mir_keyboard_action_up, _, KEY_A));
     EXPECT_CALL(mock_sink, handle_input(AllOf(mt::KeyOfScanCode(KEY_A),mt::KeyUpEvent())));
 
     keyboard.start(&mock_sink, &mock_builder);
-    keyboard.process_event(fake_event_1);
-    keyboard.process_event(fake_event_2);
+    env.mock_libinput.setup_key_event(fake_device, event_time_1, KEY_A, LIBINPUT_KEY_STATE_PRESSED);
+    env.mock_libinput.setup_key_event(fake_device, event_time_2, KEY_A, LIBINPUT_KEY_STATE_RELEASED);
+    process_events(keyboard);
 }
 
 TEST_F(LibInputDeviceOnLaptopKeyboard, process_event_accumulates_key_state)
 {
-    setup_key_event(fake_event_1, event_time_1, KEY_C, LIBINPUT_KEY_STATE_PRESSED);
-    setup_key_event(fake_event_2, event_time_2, KEY_LEFTALT, LIBINPUT_KEY_STATE_PRESSED);
-    setup_key_event(fake_event_3, event_time_3, KEY_C, LIBINPUT_KEY_STATE_RELEASED);
-
     InSequence seq;
     EXPECT_CALL(mock_builder, key_event(time_stamp_1, mir_keyboard_action_down, _, KEY_C));
     EXPECT_CALL(mock_sink, handle_input(AllOf(mt::KeyOfScanCode(KEY_C),mt::KeyDownEvent())));
@@ -556,9 +350,10 @@ TEST_F(LibInputDeviceOnLaptopKeyboard, process_event_accumulates_key_state)
                                               mt::KeyUpEvent())));
 
     keyboard.start(&mock_sink, &mock_builder);
-    keyboard.process_event(fake_event_1);
-    keyboard.process_event(fake_event_2);
-    keyboard.process_event(fake_event_3);
+    env.mock_libinput.setup_key_event(fake_device, event_time_1, KEY_C, LIBINPUT_KEY_STATE_PRESSED);
+    env.mock_libinput.setup_key_event(fake_device, event_time_2, KEY_LEFTALT, LIBINPUT_KEY_STATE_PRESSED);
+    env.mock_libinput.setup_key_event(fake_device, event_time_3, KEY_C, LIBINPUT_KEY_STATE_RELEASED);
+    process_events(keyboard);
 }
 
 TEST_F(LibInputDeviceOnMouse, process_event_converts_pointer_event)
@@ -567,15 +362,14 @@ TEST_F(LibInputDeviceOnMouse, process_event_converts_pointer_event)
     float y_movement_1 = 17;
     float x_movement_2 = 20;
     float y_movement_2 = 40;
-    setup_pointer_event(fake_event_1, event_time_1, x_movement_1, y_movement_1);
-    setup_pointer_event(fake_event_2, event_time_2, x_movement_2, y_movement_2);
 
     EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x_movement_1,y_movement_1)));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x_movement_2,y_movement_2)));
 
     mouse.start(&mock_sink, &mock_builder);
-    mouse.process_event(fake_event_1);
-    mouse.process_event(fake_event_2);
+    env.mock_libinput.setup_pointer_event(fake_device, event_time_1, x_movement_1, y_movement_1);
+    env.mock_libinput.setup_pointer_event(fake_device, event_time_2, x_movement_2, y_movement_2);
+    process_events(mouse);
 }
 
 TEST_F(LibInputDeviceOnMouse, process_event_handles_absolute_pointer_events)
@@ -584,16 +378,14 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_absolute_pointer_events)
     float y1 = 17;
     float x2 = 40;
     float y2 = 10;
-    setup_absolute_pointer_event(fake_event_1, event_time_1, x1, y1);
-    setup_absolute_pointer_event(fake_event_2, event_time_2, x2, y2);
 
     EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x1, y1)));
-    EXPECT_CALL(mock_sink,
-                handle_input(mt::PointerEventWithDiff(x2 - x1, y2 - y1)));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x2 - x1, y2 - y1)));
 
     mouse.start(&mock_sink, &mock_builder);
-    mouse.process_event(fake_event_1);
-    mouse.process_event(fake_event_2);
+    env.mock_libinput.setup_absolute_pointer_event(fake_device, event_time_1, x1, y1);
+    env.mock_libinput.setup_absolute_pointer_event(fake_device, event_time_2, x2, y2);
+    process_events(mouse);
 }
 
 TEST_F(LibInputDeviceOnMouse, process_event_motion_events_with_relative_changes)
@@ -601,15 +393,13 @@ TEST_F(LibInputDeviceOnMouse, process_event_motion_events_with_relative_changes)
     float x1 = 15, x2 = 23;
     float y1 = 17, y2 = 21;
 
-    setup_pointer_event(fake_event_1, event_time_1, x1, y1);
-    setup_pointer_event(fake_event_2, event_time_2, x2, y2);
-
     EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x1,y1)));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x2,y2)));
 
     mouse.start(&mock_sink, &mock_builder);
-    mouse.process_event(fake_event_1);
-    mouse.process_event(fake_event_2);
+    env.mock_libinput.setup_pointer_event(fake_device, event_time_1, x1, y1);
+    env.mock_libinput.setup_pointer_event(fake_device, event_time_2, x2, y2);
+    process_events(mouse);
 }
 
 TEST_F(LibInputDeviceOnMouse, process_event_handles_press_and_release)
@@ -618,11 +408,6 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_press_and_release)
     float const y = 0;
     geom::Point const pos{x, y};
 
-    setup_button_event(fake_event_1, event_time_1, BTN_LEFT, LIBINPUT_BUTTON_STATE_PRESSED);
-    setup_button_event(fake_event_2, event_time_2, BTN_RIGHT, LIBINPUT_BUTTON_STATE_PRESSED);
-    setup_button_event(fake_event_3, event_time_3, BTN_RIGHT, LIBINPUT_BUTTON_STATE_RELEASED);
-    setup_button_event(fake_event_4, event_time_4, BTN_LEFT, LIBINPUT_BUTTON_STATE_RELEASED);
-
     InSequence seq;
     EXPECT_CALL(mock_sink, handle_input(mt::ButtonDownEventWithButton(pos, mir_pointer_button_primary)));
     EXPECT_CALL(mock_sink, handle_input(mt::ButtonDownEventWithButton(pos, mir_pointer_button_secondary)));
@@ -630,17 +415,15 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_press_and_release)
     EXPECT_CALL(mock_sink, handle_input(mt::ButtonUpEventWithButton(pos, mir_pointer_button_primary)));
 
     mouse.start(&mock_sink, &mock_builder);
-    mouse.process_event(fake_event_1);
-    mouse.process_event(fake_event_2);
-    mouse.process_event(fake_event_3);
-    mouse.process_event(fake_event_4);
+    env.mock_libinput.setup_button_event(fake_device, event_time_1, BTN_LEFT, LIBINPUT_BUTTON_STATE_PRESSED);
+    env.mock_libinput.setup_button_event(fake_device, event_time_2, BTN_RIGHT, LIBINPUT_BUTTON_STATE_PRESSED);
+    env.mock_libinput.setup_button_event(fake_device, event_time_3, BTN_RIGHT, LIBINPUT_BUTTON_STATE_RELEASED);
+    env.mock_libinput.setup_button_event(fake_device, event_time_4, BTN_LEFT, LIBINPUT_BUTTON_STATE_RELEASED);
+    process_events(mouse);
 }
 
 TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
 {
-    setup_axis_event(fake_event_1, event_time_1, 0.0, 20.0);
-    setup_axis_event(fake_event_2, event_time_2, 5.0, 0.0);
-
     InSequence seq;
     // expect two scroll events..
     EXPECT_CALL(mock_builder,
@@ -651,8 +434,9 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_scroll)
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 5.0f)));
 
     mouse.start(&mock_sink, &mock_builder);
-    mouse.process_event(fake_event_1);
-    mouse.process_event(fake_event_2);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_1, 0.0, 20.0);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_2, 5.0, 0.0);
+    process_events(mouse);
 }
 
 TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_down_events)
@@ -664,9 +448,6 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_down_events)
     float x = 100;
     float y = 7;
 
-    setup_touch_event(fake_event_1, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot, x, y, major, minor, pressure);
-    setup_touch_frame(fake_event_2, event_time_1);
-
     InSequence seq;
     EXPECT_CALL(mock_builder, touch_event(time_stamp_1));
     EXPECT_CALL(mock_builder, add_touch(_, MirTouchId{0}, mir_touch_action_down, mir_touch_tooltype_finger, x, y,
@@ -674,8 +455,10 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_down_events)
     EXPECT_CALL(mock_sink, handle_input(mt::TouchEvent(x, y)));
 
     touch_screen.start(&mock_sink, &mock_builder);
-    touch_screen.process_event(fake_event_1);
-    touch_screen.process_event(fake_event_2);
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot, x, y, major, minor,
+                                        pressure);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+    process_events(touch_screen);
 }
 
 TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_move_events)
@@ -687,9 +470,6 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_move_events)
     float x = 100;
     float y = 7;
 
-    setup_touch_event(fake_event_1, LIBINPUT_EVENT_TOUCH_MOTION, event_time_1, slot, x, y, major, minor, pressure);
-    setup_touch_frame(fake_event_2, event_time_1);
-
     InSequence seq;
     EXPECT_CALL(mock_builder, touch_event(time_stamp_1));
     EXPECT_CALL(mock_builder, add_touch(_, MirTouchId{0}, mir_touch_action_change, mir_touch_tooltype_finger, x, y,
@@ -697,8 +477,10 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_move_events)
     EXPECT_CALL(mock_sink, handle_input(mt::TouchMovementEvent()));
 
     touch_screen.start(&mock_sink, &mock_builder);
-    touch_screen.process_event(fake_event_1);
-    touch_screen.process_event(fake_event_2);
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_MOTION, event_time_1, slot, x, y, major,
+                                        minor, pressure);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+    process_events(touch_screen);
 }
 
 TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_up_events_without_querying_properties)
@@ -709,11 +491,6 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_up_events_withou
     float pressure = 0.6f;
     float x = 30;
     float y = 20;
-
-    setup_touch_event(fake_event_1, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot, x, y, major, minor, pressure);
-    setup_touch_frame(fake_event_2, event_time_1);
-    setup_touch_up_event(fake_event_3, event_time_2, slot);
-    setup_touch_frame(fake_event_4, event_time_2);
 
     InSequence seq;
     EXPECT_CALL(mock_builder, touch_event(time_stamp_1));
@@ -727,10 +504,12 @@ TEST_F(LibInputDeviceOnTouchScreen, process_event_handles_touch_up_events_withou
     EXPECT_CALL(mock_sink, handle_input(mt::TouchUpEvent(x, y)));
 
     touch_screen.start(&mock_sink, &mock_builder);
-    touch_screen.process_event(fake_event_1);
-    touch_screen.process_event(fake_event_2);
-    touch_screen.process_event(fake_event_3);
-    touch_screen.process_event(fake_event_4);
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, slot, x, y, major, minor,
+                                        pressure);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+    env.mock_libinput.setup_touch_up_event(fake_device, event_time_2, slot);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_2);
+    process_events(touch_screen);
 }
 
 TEST_F(LibInputDeviceOnTouchScreen, sends_complete_events)
@@ -745,15 +524,6 @@ TEST_F(LibInputDeviceOnTouchScreen, sends_complete_events)
     const float second_x = 90;
     const float second_y = 90;
 
-    setup_touch_event(fake_event_1, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, first_slot, first_x, first_y, major, minor, pressure);
-    setup_touch_frame(fake_event_2, event_time_1);
-    setup_touch_event(fake_event_3, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, second_slot, second_x, second_y, major, minor, pressure);
-    setup_touch_frame(fake_event_4, event_time_1);
-    setup_touch_event(fake_event_5, LIBINPUT_EVENT_TOUCH_MOTION, event_time_2, first_slot, first_x, first_y + 5, major, minor, pressure);
-    setup_touch_frame(fake_event_6, event_time_2);
-    setup_touch_event(fake_event_7, LIBINPUT_EVENT_TOUCH_MOTION, event_time_2, second_slot, second_x + 5, second_y, major, minor, pressure);
-    setup_touch_frame(fake_event_8, event_time_2);
-
     InSequence seq;
     EXPECT_CALL(mock_sink, handle_input(mt::TouchContact(0, mir_touch_action_down, first_x, first_y)));
     EXPECT_CALL(mock_sink, handle_input(AllOf(mt::TouchContact(0, mir_touch_action_change, first_x, first_y),
@@ -763,16 +533,21 @@ TEST_F(LibInputDeviceOnTouchScreen, sends_complete_events)
     EXPECT_CALL(mock_sink, handle_input(AllOf(mt::TouchContact(0, mir_touch_action_change, first_x, first_y + 5),
                                               mt::TouchContact(1, mir_touch_action_change, second_x + 5, second_y))));
 
-
     touch_screen.start(&mock_sink, &mock_builder);
-    touch_screen.process_event(fake_event_1);
-    touch_screen.process_event(fake_event_2);
-    touch_screen.process_event(fake_event_3);
-    touch_screen.process_event(fake_event_4);
-    touch_screen.process_event(fake_event_5);
-    touch_screen.process_event(fake_event_6);
-    touch_screen.process_event(fake_event_7);
-    touch_screen.process_event(fake_event_8);
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, first_slot, first_x,
+                                        first_y, major, minor, pressure);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_DOWN, event_time_1, second_slot, second_x,
+                                        second_y, major, minor, pressure);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_1);
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_MOTION, event_time_2, first_slot, first_x,
+                                        first_y + 5, major, minor, pressure);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_2);
+    env.mock_libinput.setup_touch_event(fake_device, LIBINPUT_EVENT_TOUCH_MOTION, event_time_2, second_slot,
+                                        second_x + 5, second_y, major, minor, pressure);
+    env.mock_libinput.setup_touch_frame(fake_device, event_time_2);
+
+    process_events(touch_screen);
 }
 
 TEST_F(LibInputDeviceOnLaptopKeyboard, provides_no_pointer_settings_for_non_pointing_devices)
@@ -816,9 +591,9 @@ TEST_F(LibInputDeviceOnMouse, applies_pointer_settings)
     settings.handedness = mir_pointer_handedness_left;
     settings.acceleration = mir_pointer_acceleration_none;
 
-    EXPECT_CALL(mock_libinput, libinput_device_config_accel_set_speed(mouse.device(), 1.1)).Times(1);
-    EXPECT_CALL(mock_libinput, libinput_device_config_accel_set_profile(mouse.device(), LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT)).Times(1);
-    EXPECT_CALL(mock_libinput, libinput_device_config_left_handed_set(mouse.device(), true)).Times(1);
+    EXPECT_CALL(env.mock_libinput, libinput_device_config_accel_set_speed(mouse.device(), 1.1)).Times(1);
+    EXPECT_CALL(env.mock_libinput, libinput_device_config_accel_set_profile(mouse.device(), LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT)).Times(1);
+    EXPECT_CALL(env.mock_libinput, libinput_device_config_left_handed_set(mouse.device(), true)).Times(1);
 
     mouse.apply_settings(settings);
 }
@@ -828,17 +603,14 @@ TEST_F(LibInputDeviceOnLaptopKeyboardAndMouse, denies_pointer_settings_on_keyboa
     setup_pointer_configuration(mouse.device(), 1, mir_pointer_handedness_right, mir_pointer_acceleration_adaptive);
     auto settings_from_mouse = mouse.get_pointer_settings();
 
-    EXPECT_CALL(mock_libinput,libinput_device_config_accel_set_speed(_, _)).Times(0);
-    EXPECT_CALL(mock_libinput,libinput_device_config_left_handed_set(_, _)).Times(0);
+    EXPECT_CALL(env.mock_libinput,libinput_device_config_accel_set_speed(_, _)).Times(0);
+    EXPECT_CALL(env.mock_libinput,libinput_device_config_left_handed_set(_, _)).Times(0);
 
     keyboard.apply_settings(settings_from_mouse.value());
 }
 
 TEST_F(LibInputDeviceOnMouse, scroll_speed_scales_scroll_events)
 {
-    setup_axis_event(fake_event_1, event_time_1, 0.0, 3.0);
-    setup_axis_event(fake_event_2, event_time_2, -2.0, 0.0);
-
     // expect two scroll events..
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_vscroll, 3.0f)));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, -10.0f)));
@@ -849,9 +621,11 @@ TEST_F(LibInputDeviceOnMouse, scroll_speed_scales_scroll_events)
     settings.horizontal_scroll_scale = 5.0;
     mouse.apply_settings(settings);
 
+    env.mock_libinput.setup_axis_event(fake_device, event_time_1, 0.0, 3.0);
+    env.mock_libinput.setup_axis_event(fake_device, event_time_2, -2.0, 0.0);
+
     mouse.start(&mock_sink, &mock_builder);
-    mouse.process_event(fake_event_1);
-    mouse.process_event(fake_event_2);
+    process_events(mouse);
 }
 
 TEST_F(LibInputDeviceOnLaptopKeyboardAndMouse, provides_no_touchpad_settings_for_non_touchpad_devices)
@@ -864,9 +638,6 @@ TEST_F(LibInputDeviceOnLaptopKeyboardAndMouse, provides_no_touchpad_settings_for
 
 TEST_F(LibInputDeviceOnTouchpad, process_event_handles_scroll)
 {
-    setup_finger_axis_event(fake_event_1, event_time_1, 0.0, 150.0);
-    setup_finger_axis_event(fake_event_2, event_time_2, 15.0, 0.0);
-
     InSequence seq;
     // expect two scroll events..
     EXPECT_CALL(mock_builder,
@@ -876,9 +647,10 @@ TEST_F(LibInputDeviceOnTouchpad, process_event_handles_scroll)
                 pointer_event(time_stamp_2, mir_pointer_action_motion, 0, 1.0f, 0.0f, 0.0f, 0.0f));
     EXPECT_CALL(mock_sink, handle_input(mt::PointerAxisChange(mir_pointer_axis_hscroll, 1.0f)));
 
+    env.mock_libinput.setup_finger_axis_event(fake_device, event_time_1, 0.0, 150.0);
+    env.mock_libinput.setup_finger_axis_event(fake_device, event_time_2, 15.0, 0.0);
     touchpad.start(&mock_sink, &mock_builder);
-    touchpad.process_event(fake_event_1);
-    touchpad.process_event(fake_event_2);
+    process_events(touchpad);
 
 }
 
@@ -910,32 +682,33 @@ TEST_F(LibInputDeviceOnTouchpad, applies_touchpad_settings)
     settings.disable_with_mouse = true;
     settings.middle_mouse_button_emulation = true;
 
-    EXPECT_CALL(mock_libinput,
+    EXPECT_CALL(env.mock_libinput,
                 libinput_device_config_scroll_set_method(touchpad.device(), LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN));
-    EXPECT_CALL(mock_libinput,
+    EXPECT_CALL(env.mock_libinput,
                 libinput_device_config_click_set_method(touchpad.device(), LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER));
-    EXPECT_CALL(mock_libinput, libinput_device_config_scroll_set_button(touchpad.device(), KEY_A));
-    EXPECT_CALL(mock_libinput, libinput_device_config_tap_set_enabled(touchpad.device(), LIBINPUT_CONFIG_TAP_ENABLED));
-    EXPECT_CALL(mock_libinput,
+    EXPECT_CALL(env.mock_libinput, libinput_device_config_scroll_set_button(touchpad.device(), KEY_A));
+    EXPECT_CALL(env.mock_libinput,
+                libinput_device_config_tap_set_enabled(touchpad.device(), LIBINPUT_CONFIG_TAP_ENABLED));
+    EXPECT_CALL(env.mock_libinput,
                 libinput_device_config_dwt_set_enabled(touchpad.device(), LIBINPUT_CONFIG_DWT_DISABLED));
-    EXPECT_CALL(mock_libinput, libinput_device_config_send_events_set_mode(
-                                   touchpad.device(), LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE));
-    EXPECT_CALL(mock_libinput, libinput_device_config_middle_emulation_set_enabled(
-                                   touchpad.device(), LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED));
+    EXPECT_CALL(env.mock_libinput, libinput_device_config_send_events_set_mode(
+                                       touchpad.device(), LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE));
+    EXPECT_CALL(env.mock_libinput, libinput_device_config_middle_emulation_set_enabled(
+                                       touchpad.device(), LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED));
 
     touchpad.apply_settings(settings);
 }
 
 TEST_F(LibInputDevice, device_ptr_keeps_libinput_context_alive)
 {
+    auto fake_dev = setup_touchpad();
+
     InSequence seq;
-    EXPECT_CALL(mock_libinput, libinput_device_ref(fake_device));
-    EXPECT_CALL(mock_libinput, libinput_device_unref(fake_device));
-    EXPECT_CALL(mock_libinput, libinput_unref(fake_input));
+    EXPECT_CALL(env.mock_libinput, libinput_device_ref(fake_dev));
+    EXPECT_CALL(env.mock_libinput, libinput_device_unref(fake_dev));
+    EXPECT_CALL(env.mock_libinput, libinput_unref(env.li_context));
 
-    mock_libinput.setup_device(fake_input, fake_device, "/dev/test/path", "name", 1, 2);
-
-    auto device_ptr = mie::make_libinput_device(lib, "/dev/test/path");
+    auto device_ptr = mie::make_libinput_device(lib, fake_dev);
 
     lib.reset();
     device_ptr.reset();

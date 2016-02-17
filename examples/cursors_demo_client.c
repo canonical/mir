@@ -16,6 +16,8 @@
  * Author: Robert Carr <robert.carr@canonical.com>
  */
 
+#define _BSD_SOURCE /* for usleep() */
+
 #include "mir_toolkit/mir_client_library.h"
 
 #include "eglapp.h"
@@ -26,7 +28,6 @@
 void configure_cursor(MirSurface *surface, unsigned int cursor_index)
 {
     char const *const cursors[] = {
-        mir_arrow_cursor_name,
         mir_busy_cursor_name,
         mir_caret_cursor_name,
         mir_pointing_hand_cursor_name,
@@ -67,7 +68,7 @@ int main(int argc, char *argv[])
     while (mir_eglapp_running())
     {
         configure_cursor(mir_eglapp_native_surface(), cursor_index++);
-        sleep(1);
+        usleep(100000);
     }
 
     mir_eglapp_shutdown();

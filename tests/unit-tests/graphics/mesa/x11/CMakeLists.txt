@@ -7,6 +7,7 @@ mir_add_wrapped_executable(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_generic.cpp
   $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
   $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
+  $<TARGET_OBJECTS:mir-umock-test-framework>
 )
 
 add_dependencies(mir_unit_tests_mesa-x11 GMock)
