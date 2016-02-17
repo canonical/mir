@@ -21,8 +21,6 @@
 
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_device_info.h"
-#include "mir/input/event_builder.h"
-#include "mir/input/input_sink.h"
 #include "mir/dispatch/readable_fd.h"
 
 #define MIR_LOG_COMPONENT "x11-input"
@@ -36,13 +34,14 @@
 
 #include <chrono>
 // Uncomment for verbose output with log_info.
-//#define MIR_ON_X11_INPUT_VERBOSE
+#define MIR_ON_X11_INPUT_VERBOSE
 
 // Due to a bug in Unity when keyboard is grabbed,
 // client cannot be resized. This helps in debugging.
 #define GRAB_KBD
 
 namespace mi = mir::input;
+namespace geom = mir::geometry;
 namespace md = mir::dispatch;
 namespace mix = mi::X;
 
@@ -81,30 +80,29 @@ void mix::XInputPlatform::stop()
 
 void mix::XInputPlatform::process_input_event()
 {
-    while(XPending(x11_connection.get()))
+    do
     {
-
         // This code is based on :
         // https://tronche.com/gui/x/xlib/events/keyboard-pointer/keyboard-pointer.html
         XEvent xev;
 
         XNextEvent(x11_connection.get(), &xev);
 
-        if (core_keyboard->sink || core_pointer->sink)
+        if (core_keyboard->started() && core_pointer->started())
         {
             switch (xev.type)
             {
 #ifdef GRAB_KBD
             case FocusIn:
                 {
-                    auto const& xfiev = (XFocusInEvent&)xev;
+                    auto const& xfiev = xev.xfocus;
                     XGrabKeyboard(xfiev.display, xfiev.window, True, GrabModeAsync, GrabModeAsync, CurrentTime);
                     break;
                 }
 
             case FocusOut:
                 {
-                    auto const& xfoev = (XFocusOutEvent&)xev;
+                    auto const& xfoev = xev.xfocus;
                     XUngrabKeyboard(xfoev.display, CurrentTime);
                     break;
                 }
@@ -112,7 +110,7 @@ void mix::XInputPlatform::process_input_event()
             case KeyPress:
             case KeyRelease:
                 {
-                    auto& xkev = (XKeyEvent&)xev;
+                    auto & xkev = xev.xkey;
                     static const int STRMAX = 32;
                     char str[STRMAX];
                     KeySym keysym;
@@ -130,7 +128,7 @@ void mix::XInputPlatform::process_input_event()
 #endif
                         XLookupString(&xkev, str, STRMAX, &keysym, NULL);
 
-                    auto event_time =
+                    auto const event_time =
                         std::chrono::duration_cast<std::chrono::nanoseconds>(
                             std::chrono::milliseconds{xkev.time});
 
@@ -138,26 +136,23 @@ void mix::XInputPlatform::process_input_event()
                     for (int i=0; i<count; i++)
                         mir::log_info("buffer[%d]='%c'", i, str[i]);
                     mir::log_info("Mir key event : "
-                                  "key_code=%d, scan_code=%d, modifiers=0x%0X, event_time=%" PRId64,
-                                  keysym, xkev.keycode-8, modifiers, event_time);
+                                  "key_code=%d, scan_code=%d, event_time=%" PRId64,
+                                  keysym, xkev.keycode-8, event_time);
 #endif
-                    core_keyboard->sink->handle_input(
-                        *core_keyboard->builder->key_event(
-                            event_time,
-                            xkev.type == KeyPress ?
-                            mir_keyboard_action_down :
-                            mir_keyboard_action_up,
-                            keysym,
-                            xkev.keycode-8
-                            )
-                        );
+
+                    if (xkev.type == KeyPress)
+                        core_keyboard->key_press(event_time, keysym, xkev.keycode - 8);
+                    else
+                        core_keyboard->key_release(event_time, keysym, xkev.keycode - 8);
+
                     break;
                 }
 
             case ButtonPress:
             case ButtonRelease:
                 {
-                    auto const& xbev = (XButtonEvent&)xev;
+                    auto const& xbev = xev.xbutton;
+                    auto const up = 4, down = 5, left = 6, right = 7;
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                     mir::log_info("X11 button event :"
@@ -169,84 +164,45 @@ void mix::XInputPlatform::process_input_event()
                                   xbev.subwindow, xbev.time, xbev.x, xbev.y, xbev.x_root,
                                   xbev.y_root, xbev.state, xbev.button, xbev.same_screen);
 #endif
-                    if ((xbev.type == ButtonRelease) &&
-                        ((xbev.button == Button4) || (xbev.button == Button5)))
+                    if (xbev.type == ButtonRelease && xbev.button >= up && xbev.button <= right)
                     {
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                         mir::log_info("Swallowed");
 #endif
                         break;
                     }
-                    auto event_time =
+                    auto const event_time =
                         std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds{xbev.time});
 
-                    MirPointerButtons buttons_pressed = 0;
-                    if (xbev.type == ButtonPress)
-                    {
-                        if (xbev.button == Button1)
-                            buttons_pressed |= mir_pointer_button_primary;
-                        if (xbev.button == Button2) // tertiary (middle) button is Button2 in X
-                            buttons_pressed |= mir_pointer_button_tertiary;
-                        if (xbev.button == Button3)
-                            buttons_pressed |= mir_pointer_button_secondary;
-                        if (xbev.button == 6)
-                            buttons_pressed |= mir_pointer_button_back;
-                        if (xbev.button == 7)
-                            buttons_pressed |= mir_pointer_button_forward;
-                        if (xbev.button == 8)
-                            buttons_pressed |= mir_pointer_button_side;
-                        if (xbev.button == 9)
-                            buttons_pressed |= mir_pointer_button_extra;
-                        if (xbev.button == 10)
-                            buttons_pressed |= mir_pointer_button_task;
-                    }
-
-#ifdef MIR_ON_X11_INPUT_VERBOSE
-                    mir::log_info("Mir button event : x=%d, y=%d, "
-                                  "buttons_pressed=0x%0X, event_time=%" PRId64,
-                                  xbev.x, xbev.y, buttons_pressed, event_time);
-#endif
-
-                    if ((xbev.button == Button4) || (xbev.button == Button5))
-                    { // scroll event
-                        core_pointer->sink->handle_input(
-                            *core_pointer->builder->pointer_event(
-                                event_time,
-                                mir_pointer_action_motion,
-                                0,
-                                0.0f,
-                                (xbev.button == Button4) ? 1.0f : -1.0f,
-                                0.0f,
-                                0.0f
-                                )
-                            );
+                    if (xbev.button >= up && xbev.button <= right)
+                    {  // scroll event
+                        core_pointer->pointer_motion(
+                            event_time,
+                            geom::Point{xbev.x, xbev.y},
+                            geom::Displacement{xbev.button == right ? 1 : xbev.button == left ? -1 : 0,
+                                               xbev.button == up ? 1 : xbev.button == down ? -1 : 0});
                     }
                     else
                     {
-                        auto const old_pointer_pos = core_pointer->pointer_pos;
-                        core_pointer->pointer_pos = geometry::Point{xbev.x, xbev.y};
-                        auto const movement = core_pointer->pointer_pos - old_pointer_pos;
-
-                        core_pointer->sink->handle_input(
-                            *core_pointer->builder->pointer_event(
+                        if (xbev.type == ButtonPress)
+                            core_pointer->pointer_press(
                                 event_time,
-                                xbev.type == ButtonPress ?
-                                mir_pointer_action_button_down :
-                                mir_pointer_action_button_up,
-                                buttons_pressed,
-                                0.0f,
-                                0.0f,
-                                movement.dx.as_float(),
-                                movement.dy.as_float()
-                                )
-                            );
+                                xbev.button,
+                                geom::Point{xbev.x, xbev.y},
+                                geom::Displacement{0, 0});
+                        else
+                            core_pointer->pointer_release(
+                                event_time,
+                                xbev.button,
+                                geom::Point{xbev.x, xbev.y},
+                                geom::Displacement{0, 0});
                     }
                     break;
                 }
 
             case MotionNotify:
                 {
-                    auto const& xmev = (XMotionEvent&)xev;
+                    auto const& xmev = xev.xmotion;
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                     mir::log_info("X11 motion event :"
@@ -258,49 +214,16 @@ void mix::XInputPlatform::process_input_event()
                                   xmev.y_root, xmev.state, xmev.is_hint == NotifyNormal ? "no" : "yes", xmev.same_screen);
 #endif
 
-                    auto event_time =
-                        std::chrono::duration_cast<std::chrono::nanoseconds>(
-                            std::chrono::milliseconds{xmev.time});
+                    core_pointer->pointer_motion(
+                        std::chrono::milliseconds{xmev.time}, geom::Point{xmev.x, xmev.y}, geom::Displacement{0, 0});
 
-                    MirPointerButtons buttons_pressed = 0;
-                    if (xmev.state & Button1Mask)
-                        buttons_pressed |= mir_pointer_button_primary;
-                    if (xmev.state & Button2Mask) // tertiary (middle) button is Button2 in X
-                        buttons_pressed |= mir_pointer_button_tertiary;
-                    if (xmev.state & Button3Mask)
-                        buttons_pressed |= mir_pointer_button_secondary;
-                    if (xmev.state & Button4Mask)
-                        buttons_pressed |= mir_pointer_button_back;
-                    if (xmev.state & Button5Mask)
-                        buttons_pressed |= mir_pointer_button_forward;
-
-#ifdef MIR_ON_X11_INPUT_VERBOSE
-                    mir::log_info("Mir pointer event : "
-                                  "x=%d, y=%d, buttons_pressed=0x%0X, event_time=%" PRId64,
-                                  xmev.x, xmev.y, buttons_pressed, event_time);
-#endif
-                    auto const old_pointer_pos = core_pointer->pointer_pos;
-                    core_pointer->pointer_pos = geometry::Point{xmev.x, xmev.y};
-                    auto const movement = core_pointer->pointer_pos - old_pointer_pos;
-
-                    core_pointer->sink->handle_input(
-                        *core_pointer->builder->pointer_event(
-                            event_time,
-                            mir_pointer_action_motion,
-                            buttons_pressed,
-                            0.0f,
-                            0.0f,
-                            movement.dx.as_float(),
-                            movement.dy.as_float()
-                            )
-                        );
                     break;
                 }
 
             case ConfigureNotify:
                 {
 #ifdef MIR_ON_X11_INPUT_VERBOSE
-                    auto const& xcev = (XConfigureEvent&)xev;
+                    auto const& xcev = xev.xconfigure;
                     mir::log_info("Window size : %dx%d", xcev.width, xcev.height);
 #endif
                     break;
@@ -310,7 +233,7 @@ void mix::XInputPlatform::process_input_event()
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                 mir::log_info("Keyboard mapping changed at server. Refreshing the cache.");
 #endif
-                XRefreshKeyboardMapping((XMappingEvent*)&xev);
+                XRefreshKeyboardMapping(&(xev.xmapping));
                 break;
 
             default:
@@ -323,4 +246,5 @@ void mix::XInputPlatform::process_input_event()
         else
             mir::log_error("input event received with no sink to handle it");
     }
+    while(XPending(x11_connection.get()));
 }

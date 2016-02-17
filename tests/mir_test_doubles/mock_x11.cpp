@@ -40,6 +40,7 @@ mtd::FakeX11Resources::FakeX11Resources()
     vscroll_event_return.type = ButtonPress;
     XButtonEvent& xbev = (XButtonEvent&)vscroll_event_return;
     xbev.button = Button4;
+    motion_event_return.type = MotionNotify;
 }
 
 mtd::MockX11::MockX11()

@@ -46,6 +46,7 @@ public:
     XEvent focus_in_event_return = { 0 };
     XEvent focus_out_event_return = { 0 };
     XEvent vscroll_event_return = { 0 };
+    XEvent motion_event_return = { 0 };
 };
 
 class MockX11
