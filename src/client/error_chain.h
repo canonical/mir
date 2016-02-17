@@ -16,76 +16,41 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_PRESENTATION_CHAIN_H
-#define MIR_CLIENT_PRESENTATION_CHAIN_H
+#ifndef MIR_CLIENT_ERROR_CHAIN_H
+#define MIR_CLIENT_ERROR_CHAIN_H
 
 #include "mir_presentation_chain.h"
-#include "mir/geometry/size.h"
-#include "mir_toolkit/mir_presentation_chain.h"
-#include "mir_protobuf.pb.h"
-#include "buffer.h"
-#include <mutex>
 #include <memory>
 
 namespace mir
 {
 namespace client
 {
-class ClientBufferFactory;
-class ClientBuffer;
-namespace rpc
-{
-class DisplayServer;
-}
 
-class PresentationChain : public MirPresentationChain
+class ErrorChain : public MirPresentationChain
 {
 public:
-    PresentationChain(
+    ErrorChain(
         MirConnection* connection,
         std::shared_ptr<MirWaitHandle> const&,
-        int rpc_id,
-        rpc::DisplayServer& server,
-        std::shared_ptr<ClientBufferFactory> const& factory);
+        int id,
+        std::string const& error_msg);
     void allocate_buffer(
-        geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
-        mir_buffer_callback callback, void* context) override;
+        geometry::Size size, MirPixelFormat format, MirBufferUsage usage, mir_buffer_callback, void*) override;
     void submit_buffer(MirBuffer* buffer) override;
     void release_buffer(MirBuffer* buffer) override;
-
     void buffer_available(mir::protobuf::Buffer const& buffer) override;
     void buffer_unavailable() override;
-
     MirConnection* connection() const override;
     int rpc_id() const override;
     char const* error_msg() const override;
 private:
-
     MirConnection* const connection_;
     std::shared_ptr<MirWaitHandle> const wait_handle;
     int const stream_id;
-    rpc::DisplayServer& server;
-    std::shared_ptr<ClientBufferFactory> const factory;
-
-    std::mutex mutex;
-    struct AllocationRequest
-    {
-        AllocationRequest(
-            geometry::Size size,
-            MirPixelFormat format,
-            MirBufferUsage usage,
-            mir_buffer_callback cb,
-            void* cb_context);
-
-        geometry::Size size;
-        MirPixelFormat format;
-        MirBufferUsage usage;
-        mir_buffer_callback cb;
-        void* cb_context;
-    };
-    std::vector<std::unique_ptr<AllocationRequest>> allocation_requests;
-    std::vector<std::unique_ptr<Buffer>> buffers;
+    std::string const error;
 };
+
 }
 }
-#endif /* MIR_CLIENT_PRESENTATION_CHAIN_H */
+#endif /* MIR_CLIENT_ERROR_CHAIN_H */
