@@ -104,13 +104,6 @@ TEST_F(GLMark2Test, fullscreen_default)
     EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(56));
 }
 
-#if 0
-/*
- * FIXME: These all fail because the test server doesn't start more than once:
- *        "std::exception::what: Exception while creating graphics platform
- *        Exiting Mir! Reason: Nested Mir and Host Mir cannot use the same
- *        socket file to accept connections!"
- */
 TEST_F(GLMark2Test, windowed_default)
 {
     EXPECT_THAT(run_glmark2(""), ::testing::Ge(56));
@@ -149,6 +142,5 @@ TEST_F(GLMark2Test, windowed_interval0)
     add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "0");
     EXPECT_THAT(run_glmark2(""), ::testing::Ge(100));
 }
-#endif
 
 }
