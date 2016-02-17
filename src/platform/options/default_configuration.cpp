@@ -305,13 +305,6 @@ void mo::DefaultConfiguration::parse_environment(
     boost::program_options::options_description& desc,
     mo::ProgramOption& options) const
 {
-    // If MIR_SERVER_HOST_SOCKET is unset, we want to substitute the value of
-    // MIR_SOCKET.  Do this now, because MIR_SOCKET will get overwritten later.
-    auto host_socket = getenv("MIR_SERVER_HOST_SOCKET");
-    auto mir_socket = getenv("MIR_SOCKET");
-    if (!host_socket && mir_socket)
-        setenv("MIR_SERVER_HOST_SOCKET", mir_socket, 1);
-
     options.parse_environment(desc, "MIR_SERVER_");
 }
 
