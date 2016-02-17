@@ -34,7 +34,7 @@
 
 #include <chrono>
 // Uncomment for verbose output with log_info.
-#define MIR_ON_X11_INPUT_VERBOSE
+//#define MIR_ON_X11_INPUT_VERBOSE
 
 // Due to a bug in Unity when keyboard is grabbed,
 // client cannot be resized. This helps in debugging.
