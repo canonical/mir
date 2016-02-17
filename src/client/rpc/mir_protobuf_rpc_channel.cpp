@@ -309,8 +309,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         {
             map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
             [&] (mcl::BufferReceiver* receiver) {
-                if (receiver)
-                    receiver->buffer_available(seq.buffer_request().buffer());
+                receiver->buffer_available(seq.buffer_request().buffer());
             });
         }
         catch (std::exception& e)
