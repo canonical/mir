@@ -32,11 +32,14 @@
 #include "mir/geometry/displacement.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/fd.h"
+#define MIR_LOG_COMPONENT "evdev"
+#include "mir/log.h"
 #include "mir/raii.h"
 
 #include <libinput.h>
 #include <linux/input.h>  // only used to get constants for input reports
 
+#include <boost/exception/diagnostic_information.hpp>
 #include <cstring>
 #include <chrono>
 #include <sstream>
@@ -78,41 +81,48 @@ void mie::LibInputDevice::process_event(libinput_event* event)
     if (!sink)
         return;
 
-    switch(libinput_event_get_type(event))
+    try
     {
-    case LIBINPUT_EVENT_KEYBOARD_KEY:
-        sink->handle_input(*convert_event(libinput_event_get_keyboard_event(event)));
-        break;
-    case LIBINPUT_EVENT_POINTER_MOTION:
-        sink->handle_input(*convert_motion_event(libinput_event_get_pointer_event(event)));
-        break;
-    case LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE:
-        sink->handle_input(*convert_absolute_motion_event(libinput_event_get_pointer_event(event)));
-        break;
-    case LIBINPUT_EVENT_POINTER_BUTTON:
-        sink->handle_input(*convert_button_event(libinput_event_get_pointer_event(event)));
-        break;
-    case LIBINPUT_EVENT_POINTER_AXIS:
-        sink->handle_input(*convert_axis_event(libinput_event_get_pointer_event(event)));
-        break;
-    // touch events are processed as a batch of changes over all touch pointts
-    case LIBINPUT_EVENT_TOUCH_DOWN:
-        handle_touch_down(libinput_event_get_touch_event(event));
-        break;
-    case LIBINPUT_EVENT_TOUCH_UP:
-        handle_touch_up(libinput_event_get_touch_event(event));
-        break;
-    case LIBINPUT_EVENT_TOUCH_MOTION:
-        handle_touch_motion(libinput_event_get_touch_event(event));
-        break;
-    case LIBINPUT_EVENT_TOUCH_CANCEL:
-        // Not yet provided by libinput.
-        break;
-    case LIBINPUT_EVENT_TOUCH_FRAME:
-        sink->handle_input(*convert_touch_frame(libinput_event_get_touch_event(event)));
-        break;
-    default:
-        break;
+        switch(libinput_event_get_type(event))
+        {
+        case LIBINPUT_EVENT_KEYBOARD_KEY:
+            sink->handle_input(*convert_event(libinput_event_get_keyboard_event(event)));
+            break;
+        case LIBINPUT_EVENT_POINTER_MOTION:
+            sink->handle_input(*convert_motion_event(libinput_event_get_pointer_event(event)));
+            break;
+        case LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE:
+            sink->handle_input(*convert_absolute_motion_event(libinput_event_get_pointer_event(event)));
+            break;
+        case LIBINPUT_EVENT_POINTER_BUTTON:
+            sink->handle_input(*convert_button_event(libinput_event_get_pointer_event(event)));
+            break;
+        case LIBINPUT_EVENT_POINTER_AXIS:
+            sink->handle_input(*convert_axis_event(libinput_event_get_pointer_event(event)));
+            break;
+        // touch events are processed as a batch of changes over all touch pointts
+        case LIBINPUT_EVENT_TOUCH_DOWN:
+            handle_touch_down(libinput_event_get_touch_event(event));
+            break;
+        case LIBINPUT_EVENT_TOUCH_UP:
+            handle_touch_up(libinput_event_get_touch_event(event));
+            break;
+        case LIBINPUT_EVENT_TOUCH_MOTION:
+            handle_touch_motion(libinput_event_get_touch_event(event));
+            break;
+        case LIBINPUT_EVENT_TOUCH_CANCEL:
+            // Not yet provided by libinput.
+            break;
+        case LIBINPUT_EVENT_TOUCH_FRAME:
+            sink->handle_input(*convert_touch_frame(libinput_event_get_touch_event(event)));
+            break;
+        default:
+            break;
+        }
+    }
+    catch(std::exception const& error)
+    {
+        mir::log_error("Failure processing input event received from libinput: " + boost::diagnostic_information(error));
     }
 }
 
