@@ -25,6 +25,7 @@
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/filesystem.hpp>
+#include <iostream>
 
 std::string mir_test_framework::executable_path()
 {
@@ -50,22 +51,25 @@ std::string mir_test_framework::server_platform_path()
     for (auto const& option : {library_path() + "/server-modules/",
                                library_path() + "/server-platform/",
                                std::string(MIR_SERVER_PLATFORM_PATH) + '/'})
+    {
+        std::cerr << "server_platform_path: " << option << std::endl;
         if (boost::filesystem::exists(option))
             return option;
+    }
     BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find server platform in standard search locations"));
 }
 
-std::string mir_test_framework::udev_recordings_path()
+std::string mir_test_framework::test_data_path()
 {
-    std::string run_path     = executable_path() + "/udev_recordings";
-    std::string install_path = MIR_INSTALL_PREFIX"/share/udev_recordings";
+    std::string run_path     = executable_path() + "/test-data";
+    std::string install_path = MIR_INSTALL_PREFIX"/share/mir-test-data";
 
     if (boost::filesystem::exists(run_path))
         return run_path;
     else if (boost::filesystem::exists(install_path))
         return install_path;
 
-    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find udev_recordings in standard search locations"));
+    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find test data in standard search locations"));
 }
 
 std::string mir_test_framework::server_platform(std::string const& name)
@@ -79,6 +83,7 @@ std::string mir_test_framework::server_platform(std::string const& name)
          {library_path() + "/server-modules/", library_path() + "/server-platform/", std::string(MIR_SERVER_PLATFORM_PATH) + '/'})
     {
         auto path_to_test = option + libname;
+        std::cerr << "server_platform: " << path_to_test << std::endl;
         if (boost::filesystem::exists(path_to_test))
             return path_to_test;
     }
@@ -97,11 +102,12 @@ std::string mir_test_framework::server_input_platform(std::string const& name)
          {library_path() + "/server-modules/", library_path() + "/server-platform/", std::string(MIR_SERVER_PLATFORM_PATH) + '/'})
     {
         auto path_to_test = option + libname;
+        std::cerr << "server_input_platform: " << path_to_test << std::endl;
         if (boost::filesystem::exists(path_to_test))
             return path_to_test;
     }
 
-    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find server platform in standard search locations"));
+    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find server input platform in standard search locations"));
 }
 
 std::string mir_test_framework::client_platform(std::string const& name)
@@ -115,9 +121,10 @@ std::string mir_test_framework::client_platform(std::string const& name)
          {library_path() + "/client-modules/", library_path() + "/client-platform/", std::string(MIR_CLIENT_PLATFORM_PATH) + '/'})
     {
         auto path_to_test = option + libname;
+        std::cerr << "client_platform: " << path_to_test << std::endl;
         if (boost::filesystem::exists(path_to_test))
             return path_to_test;
     }
 
-    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find server platform in standard search locations"));
+    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find client platform in standard search locations"));
 }
