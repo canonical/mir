@@ -55,6 +55,8 @@ mir (0.20.0) UNRELEASED; urgency=medium
         case they are unplugged (LP #1531503). [Cherrypicked from 0.21]
       . mouse pointer support on emulator is broken (LP: #1517597).
         [Cherrypicked from 0.21]
+      . move an android-only test that ended up in tests/unit-tests/graphics.
+        (LP: ##1546676) [Cherrypicked from 0.21]
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Fri, 12 Feb 2016 12:56:45 +0000
 
