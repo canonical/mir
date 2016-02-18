@@ -18,37 +18,87 @@
 
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "mir_connection.h"
 #include "buffer.h"
-
+#include "mir_presentation_chain.h"
+#include "mir/uncaught.h"
+#include "mir/require.h"
+#include <stdexcept>
+#include <boost/throw_exception.hpp>
 namespace mcl = mir::client;
+
+namespace
+{
+void set_result(MirPresentationChain* result, MirPresentationChain** context)
+{
+    if (context)
+        *context = result;
+}
+}
 //private NBS api under development
-bool mir_presentation_chain_submit_buffer(MirPresentationChain*, MirBuffer* buffer)
+void mir_presentation_chain_submit_buffer(MirPresentationChain* chain, MirBuffer* buffer)
+try
 {
-    auto b = reinterpret_cast<mcl::Buffer*>(buffer);
-    b->received();
-    return true;
+    mir::require(chain && buffer && mir_presentation_chain_is_valid(chain));
+    chain->submit_buffer(buffer);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-bool mir_presentation_chain_is_valid(MirPresentationChain*)
+bool mir_presentation_chain_is_valid(MirPresentationChain* chain)
+try
 {
-    return true;
+    mir::require(chain);
+    return mir_presentation_chain_get_error_message(chain) == std::string("");
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
 }
 
-char const *mir_presentation_chain_get_error_message(MirPresentationChain*)
+char const *mir_presentation_chain_get_error_message(MirPresentationChain* chain)
+try
 {
-    return "";
+    mir::require(chain);
+    return chain->error_msg();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return "error accessing error message";
 }
 
-MirWaitHandle* mir_connection_create_presentation_chain(MirConnection*, mir_presentation_chain_callback, void*)
+MirWaitHandle* mir_connection_create_presentation_chain(
+    MirConnection* connection, mir_presentation_chain_callback callback, void* context)
+try
 {
+    mir::require(connection);
+    return connection->create_presentation_chain(callback, context);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
 }
 
-MirPresentationChain* mir_connection_create_presentation_chain_sync(MirConnection*)
+MirPresentationChain* mir_connection_create_presentation_chain_sync(MirConnection* connection)
 {
-    return nullptr;
+    MirPresentationChain *context = nullptr;
+    mir_connection_create_presentation_chain(connection,
+        reinterpret_cast<mir_presentation_chain_callback>(set_result), &context)->wait_for_all();
+    return context;
 }
 
-void mir_presentation_chain_release(MirPresentationChain*)
+void mir_presentation_chain_release(MirPresentationChain* chain)
+try
 {
+    mir::require(chain);
+    chain->connection()->release_presentation_chain(chain);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
