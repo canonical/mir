@@ -100,19 +100,31 @@ TEST_F(GLMark2Test, fullscreen_default)
     EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(56));
 }
 
+#ifdef ANDROID
+TEST_F(GLMark2Test, DISABLED_windowed_default) // Android bug LP: #1546912
+#else
 TEST_F(GLMark2Test, windowed_default)
+#endif
 {
     EXPECT_THAT(run_glmark2(""), ::testing::Ge(56));
 }
 
+#ifdef ANDROID
+TEST_F(GLMark2Test, DISABLED_fullscreen_interval1) // Android bug LP: #1546912
+#else
 TEST_F(GLMark2Test, fullscreen_interval1)
+#endif
 {
     add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "1");
     // Our devices seem to range 57-67Hz
     EXPECT_NEAR(60, run_glmark2("--fullscreen"), 10);
 }
 
+#ifdef ANDROID
+TEST_F(GLMark2Test, DISABLED_windowed_interval1) // Android bug LP: #1546912
+#else
 TEST_F(GLMark2Test, windowed_interval1)
+#endif
 {
     add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "1");
     // Our devices seem to range 57-67Hz
@@ -120,7 +132,8 @@ TEST_F(GLMark2Test, windowed_interval1)
 }
 
 #ifdef ANDROID
-TEST_F(GLMark2Test, DISABLED_fullscreen_interval0) // LP: #1369763
+TEST_F(GLMark2Test, DISABLED_fullscreen_interval0) // Android bug LP: #1369763
+                                                   // and LP: #1546912
 #else
 TEST_F(GLMark2Test, fullscreen_interval0)
 #endif
@@ -130,7 +143,8 @@ TEST_F(GLMark2Test, fullscreen_interval0)
 }
 
 #ifdef ANDROID
-TEST_F(GLMark2Test, DISABLED_windowed_interval0) // LP: #1369763
+TEST_F(GLMark2Test, DISABLED_windowed_interval0) // Android bug LP: #1369763
+                                                 // and LP: #1546912
 #else
 TEST_F(GLMark2Test, windowed_interval0)
 #endif
