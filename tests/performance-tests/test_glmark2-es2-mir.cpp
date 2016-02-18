@@ -47,12 +47,8 @@ struct GLMark2Test : testing::Test, mtf::AsyncServerRunner
     {
         ResultFileType file_type = raw; // Should this still be selectable?
 
-        char const* selection = getenv("MIR_GLMARK2_TEST_QUICK") ?
-                                "-b build " : "";
-
         auto const cmd = "MIR_SOCKET=" + new_connection()
-                       + " glmark2-es2-mir "
-                       + selection
+                       + " glmark2-es2-mir -b build "
                        + args;
         mir::test::Popen p(cmd);
 
