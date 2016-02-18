@@ -274,7 +274,8 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
     float const expected_max_latency = expected_client_buffers;
     float const expected_min_latency = expected_client_buffers - 1;
 
-    display.group.dump_latency();
+    if (0) // A handy debugging feature
+        display.group.dump_latency();
 
     auto observed_latency = display.group.average_latency();
 
@@ -322,7 +323,8 @@ TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
     ASSERT_TRUE(stats.wait_for_posts(test_submissions,
                                      std::chrono::seconds(60)));
 
-    display.group.dump_latency();
+    if (0) // A handy debugging feature
+        display.group.dump_latency();
 
     // As the client is producing frames slower than the compositor consumes
     // them, the buffer queue never fills. So latency is low;
