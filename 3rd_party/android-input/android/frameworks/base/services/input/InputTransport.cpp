@@ -663,8 +663,6 @@ void InputConsumer::rewriteMessage(const TouchState& state, InputMessage* msg) {
 #endif
             msgCoords.setAxisValue(AMOTION_EVENT_AXIS_X, resampleCoords.getX());
             msgCoords.setAxisValue(AMOTION_EVENT_AXIS_Y, resampleCoords.getY());
-
-            /// TODO ADD ACCUMULATED H scroll and vscroll here..
         }
     }
 }
