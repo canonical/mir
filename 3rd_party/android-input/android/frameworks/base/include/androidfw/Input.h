@@ -554,6 +554,7 @@ public:
     }
 
 protected:
+    float getAccumulatedAxisValue(int32_t axis, size_t pointerIndex) const;
     int32_t mAction;
     int32_t mFlags;
     int32_t mEdgeFlags;

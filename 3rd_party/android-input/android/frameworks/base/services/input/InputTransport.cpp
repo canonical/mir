@@ -28,7 +28,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <math.h>
-
+#include <iostream>
 
 namespace android {
 
@@ -551,8 +551,10 @@ status_t InputConsumer::consumeSamples(InputEventFactoryInterface* factory,
             seqChain.seq = msg.body.motion.seq;
             seqChain.chain = chain;
             mSeqChains.push(seqChain);
+            std::cout <<" adding a sample to moto motion Event..." << std::endl;
             addSample(motionEvent, &msg);
         } else {
+            std::cout <<" initioal data to new Motopn Event" << std::endl;
             initializeMotionEvent(motionEvent, &msg);
         }
         chain = msg.body.motion.seq;
@@ -661,6 +663,8 @@ void InputConsumer::rewriteMessage(const TouchState& state, InputMessage* msg) {
 #endif
             msgCoords.setAxisValue(AMOTION_EVENT_AXIS_X, resampleCoords.getX());
             msgCoords.setAxisValue(AMOTION_EVENT_AXIS_Y, resampleCoords.getY());
+
+            /// TODO ADD ACCUMULATED H scroll and vscroll here..
         }
     }
 }
