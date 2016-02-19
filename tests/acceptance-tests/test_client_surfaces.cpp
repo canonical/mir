@@ -412,8 +412,9 @@ TEST_F(ClientSurfaces, reports_performance)
     mir_surface_spec_release(spec);
 
     int const target_fps = 10;
+    int const nseconds = 3;
     auto bs = mir_surface_get_buffer_stream(surf);
-    for (int s = 0; s < 3; ++s)
+    for (int s = 0; s < nseconds; ++s)
     {
         for (int f = 0; f < target_fps; ++f)
             mir_buffer_stream_swap_buffers_sync(bs);
@@ -422,10 +423,12 @@ TEST_F(ClientSurfaces, reports_performance)
         save_log();
     }
 
+    int reports = 0;
     while (auto line = read_log())
     {
         if (auto perf = strstr(line, " perf: "))
         {
+            ++reports;
             char name[256];
             float fps;
             int fields = sscanf(perf, " perf: %255[^:]: %f FPS,", name, &fps);
@@ -434,6 +437,8 @@ TEST_F(ClientSurfaces, reports_performance)
             EXPECT_NEAR(target_fps, fps, 3.0f);
         }
     }
+
+    EXPECT_THAT(reports, ::testing::Ge(nseconds-1));
 
     mir_surface_release_sync(surf);
 
