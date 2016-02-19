@@ -47,7 +47,7 @@ override_dh_auto_build-indep:
 
 # TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
-	dh_makeshlibs -V -Xmir-test-data
+	dh_makeshlibs -V -Nmir-test-tools
 
 override_dh_install:
 # Nothing outside Mir should link to libmirprotobuf directly.
