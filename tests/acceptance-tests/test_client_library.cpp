@@ -24,6 +24,7 @@
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/validity_matchers.h"
+#include "src/include/common/mir/protobuf/protocol_version.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -132,8 +133,6 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
     }
     
     mtf::UsingStubClientPlatform using_stub_client_platform;
-
-    static auto constexpr current_protocol_epoch = 0;
 };
 
 auto const* const protocol_version_override = "MIR_CLIENT_TEST_OVERRRIDE_PROTOCOL_VERSION";
@@ -168,7 +167,7 @@ TEST_F(ClientLibrary, synchronous_connection)
 TEST_F(ClientLibrary, connects_when_protobuf_protocol_oldest_supported)
 {
     std::ostringstream buffer;
-    buffer << MIR_VERSION_NUMBER(current_protocol_epoch, MIR_CLIENT_MAJOR_VERSION, 0);
+    buffer << mir::protobuf::oldest_compatible_protocol_version();
 
     add_to_environment(protocol_version_override, buffer.str().c_str());
 
@@ -184,7 +183,7 @@ TEST_F(ClientLibrary, connects_when_protobuf_protocol_oldest_supported)
 TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_obsolete)
 {
     std::ostringstream buffer;
-    buffer << MIR_VERSION_NUMBER(current_protocol_epoch, MIR_CLIENT_MAJOR_VERSION-1, 0);
+    buffer << (mir::protobuf::oldest_compatible_protocol_version() - 1);
     add_to_environment(protocol_version_override, buffer.str().c_str());
 
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -199,7 +198,7 @@ TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_obsolete)
 TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_too_new)
 {
     std::ostringstream buffer;
-    buffer << MIR_VERSION_NUMBER(current_protocol_epoch, MIR_CLIENT_MAJOR_VERSION, MIR_CLIENT_MINOR_VERSION+1);
+    buffer << mir::protobuf::current_protocol_version() + 1;
     add_to_environment(protocol_version_override, buffer.str().c_str());
 
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -211,10 +210,10 @@ TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_too_new)
     mir_connection_release(connection);
 }
 
-TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_epoch_too_new)
+TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_much_too_new)
 {
     std::ostringstream buffer;
-    buffer << MIR_VERSION_NUMBER(current_protocol_epoch+1, MIR_CLIENT_MAJOR_VERSION, MIR_CLIENT_MINOR_VERSION);
+    buffer << mir::protobuf::next_incompatible_protocol_version();
     add_to_environment(protocol_version_override, buffer.str().c_str());
 
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);

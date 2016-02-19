@@ -383,6 +383,7 @@ TEST_F(PromptSessionClientAPI,
     mir_prompt_session_release_sync(prompt_session);
 }
 
+// TODO reinstate this test: We appear to hit lp:1540731 on the 4.2.0-27-generic arm64 and ppc64el silo builds
 TEST_F(PromptSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);

@@ -37,6 +37,8 @@ add_library(mirplatformgraphicsandroidobjects OBJECT
   hwc_fallback_gl_renderer.cpp
   ipc_operations.cpp
   hwc_blanking_control.cpp
+  egl_sync_factory.cpp
+  virtual_output.cpp
 )
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in

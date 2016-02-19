@@ -36,6 +36,12 @@ public:
                          DisplayConfigurationOutput external,
                          MirPowerMode external_mode);
 
+    DisplayConfiguration(DisplayConfigurationOutput primary,
+                         MirPowerMode primary_mode,
+                         DisplayConfigurationOutput external,
+                         MirPowerMode external_mode,
+                         DisplayConfigurationOutput virt_config);
+
     DisplayConfiguration(DisplayConfiguration const& other);
     DisplayConfiguration& operator=(DisplayConfiguration const& other);
 
@@ -48,10 +54,14 @@ public:
 
     DisplayConfigurationOutput& primary();
     DisplayConfigurationOutput& external();
+    DisplayConfigurationOutput& virt();
     DisplayConfigurationOutput& operator[](DisplayConfigurationOutputId const&);
 
+    void set_virtual_output_to(int width, int height);
+    void disable_virtual_output();
+
 private:
-    std::array<DisplayConfigurationOutput, 2> configurations;
+    std::array<DisplayConfigurationOutput, 3> configurations;
     DisplayConfigurationCard card;
 };
 

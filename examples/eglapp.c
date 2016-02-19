@@ -29,7 +29,7 @@
 
 float mir_eglapp_background_opacity = 1.0f;
 
-static const char appname[] = "egldemo";
+static const char* appname = "egldemo";
 
 static MirConnection *connection;
 static MirSurface *surface;
@@ -214,6 +214,9 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
                 switch (arg[1])
                 {
+                case 'a':
+                    appname = argv[++i];
+                    break;
                 case 'b':
                     {
                         float alpha = 1.0f;
@@ -323,6 +326,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
             if (help)
             {
                 printf("Usage: %s [<options>]\n"
+                       "  -a name          Set application name\n"
                        "  -b               Background opacity (0.0 - 1.0)\n"
                        "  -e               EGL colour channel size in bits\n"
                        "  -h               Show this help text\n"

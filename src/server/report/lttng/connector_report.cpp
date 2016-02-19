@@ -33,16 +33,6 @@ CONNECTOR_TRACE_CALL(thread_end)
 
 #undef CONNECTOR_TRACE_CALL
 
-void mir::report::lttng::ConnectorReport::starting_threads(int count)
-{
-    mir_tracepoint(mir_server_connector, starting_threads, count);
-}
-
-void mir::report::lttng::ConnectorReport::stopping_threads(int count)
-{
-    mir_tracepoint(mir_server_connector, stopping_threads, count);
-}
-
 void mir::report::lttng::ConnectorReport::creating_session_for(int socket_handle)
 {
     mir_tracepoint(mir_server_connector, creating_session_for, socket_handle);

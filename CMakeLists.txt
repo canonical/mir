@@ -22,13 +22,14 @@ project(Mir)
 cmake_minimum_required(VERSION 2.8)
 
 cmake_policy(SET CMP0015 NEW)
+cmake_policy(SET CMP0022 NEW)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 19)
-set(MIR_VERSION_PATCH 3)
+set(MIR_VERSION_MINOR 20)
+set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
 add_definitions(-DMIR_VERSION_MINOR=${MIR_VERSION_MINOR})
@@ -51,7 +52,7 @@ include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
 include (GNUInstallDirs)
 
-set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer")
+set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer;UBSanitizer")
 # Change informational string for CMAKE_BUILD_TYPE
 set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "${build_types}" FORCE)
 # Enable cmake-gui to display a drop down list for CMAKE_BUILD_TYPE
@@ -59,6 +60,15 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${build_types}")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -g -Werror -Wall -pedantic -Wextra -fPIC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -g -std=c++14 -Werror -Wall -fno-strict-aliasing -pedantic -Wnon-virtual-dtor -Wextra -fPIC")
+
+option(MIR_USE_LD_GOLD "Enables the \"gold\" linker." OFF)
+if(MIR_USE_LD_GOLD)
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=gold")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
+  set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold")
+  set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=gold")
+  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
+endif()
 
 if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-return-type-c-linkage -Wno-mismatched-tags")
@@ -98,16 +108,6 @@ if(cmake_build_type_lower MATCHES "addresssanitizer")
 elseif(cmake_build_type_lower MATCHES "threadsanitizer")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fno-omit-frame-pointer")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread -fno-omit-frame-pointer")
-  if (CMAKE_COMPILER_IS_GNUCXX)
-    # Work around GCC bug. It should automatically link to tsan when
-    # -fsanitize=thread is used, but doesn't.
-    #
-    # Linking everything with tsan is harmless and simple, so do that.
-    if (CMAKE_VERSION VERSION_GREATER 3.2.1)
-      cmake_policy(SET CMP0022 OLD)
-    endif()
-    link_libraries(tsan)
-  endif()
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=thread")
 elseif(cmake_build_type_lower MATCHES "ubsanitizer")
@@ -253,6 +253,7 @@ add_custom_target(ptest
 add_custom_target(release-checks)
 
 mir_check_no_unreleased_symbols(mirclient release-checks)
+mir_check_no_unreleased_symbols(mircommon release-checks)
 mir_check_no_unreleased_symbols(mircookie release-checks)
 mir_check_no_unreleased_symbols(mirplatform release-checks)
 mir_check_no_unreleased_symbols(mirprotobuf release-checks)

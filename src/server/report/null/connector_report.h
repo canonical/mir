@@ -33,8 +33,6 @@ class ConnectorReport : public frontend::ConnectorReport
 public:
     void thread_start() override;
     void thread_end() override;
-    void starting_threads(int count) override;
-    void stopping_threads(int count) override;
 
     void creating_session_for(int socket_handle) override;
     void creating_socket_pair(int server_handle, int client_handle) override;

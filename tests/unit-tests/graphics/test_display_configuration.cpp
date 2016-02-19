@@ -348,3 +348,14 @@ TEST(DisplayConfiguration, unsupported_preferred_mode_valid)
 
     EXPECT_TRUE(out.valid());
 }
+
+TEST(DisplayConfiguration, output_extents_empty_when_there_are_no_modes)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+
+    out.modes.clear();
+    out.current_mode_index = 0;
+
+    geom::Rectangle empty{};
+    EXPECT_EQ(empty, out.extents());
+}

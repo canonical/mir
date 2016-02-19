@@ -58,9 +58,9 @@ struct MockSurfaceMap : mcl::SurfaceMap
     MOCK_CONST_METHOD2(with_surface_do,
         void(mir::frontend::SurfaceId, std::function<void(MirSurface*)> const&));
     MOCK_CONST_METHOD2(with_stream_do,
-        void(mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&));
+        void(mir::frontend::BufferStreamId, std::function<void(mcl::BufferReceiver*)> const&));
     MOCK_CONST_METHOD1(with_all_streams_do,
-        void(std::function<void(mcl::ClientBufferStream*)> const&));
+        void(std::function<void(mcl::BufferReceiver*)> const&));
 }; 
  
 class StubSurfaceMap : public mcl::SurfaceMap
@@ -71,10 +71,10 @@ public:
     {
     }
     void with_stream_do(
-        mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&) const override
+        mir::frontend::BufferStreamId, std::function<void(mcl::BufferReceiver*)> const&) const override
     {
     }
-    void with_all_streams_do(std::function<void(mcl::ClientBufferStream*)> const&) const override
+    void with_all_streams_do(std::function<void(mcl::BufferReceiver*)> const&) const override
     {
     }
 };

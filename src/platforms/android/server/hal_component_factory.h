@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HAL_COMPONENT_FACTORY_H_
 #define MIR_GRAPHICS_ANDROID_HAL_COMPONENT_FACTORY_H_
 
+#include "cmdstream_sync_factory.h"
 #include "display_component_factory.h"
 #include "display_resource_factory.h"
 
@@ -39,7 +40,7 @@ class DeviceQuirks;
 
 //NOTE: this should be the only class that inspects the HWC version and assembles
 //the components accordingly
-class HalComponentFactory : public DisplayComponentFactory
+class HalComponentFactory : public DisplayComponentFactory, public CommandStreamSyncFactory
 {
 public:
     HalComponentFactory(
@@ -48,6 +49,7 @@ public:
         std::shared_ptr<HwcReport> const& hwc_report,
         std::shared_ptr<DeviceQuirks> const& quirks);
 
+    std::unique_ptr<CommandStreamSync> create_command_stream_sync() override;
     std::unique_ptr<FramebufferBundle> create_framebuffers(DisplayConfigurationOutput const&) override;
     std::unique_ptr<DisplayDevice> create_display_device() override;
     std::unique_ptr<HwcConfiguration> create_hwc_configuration() override;
@@ -61,6 +63,7 @@ private:
     std::shared_ptr<FramebufferBundle> framebuffers;
     bool force_backup_display;
     size_t num_framebuffers;
+    bool working_egl_sync;
 
     std::shared_ptr<HwcWrapper> hwc_wrapper;
     std::shared_ptr<framebuffer_device_t> fb_native;

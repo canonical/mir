@@ -56,7 +56,7 @@ protected:
         test_size = geom::Size{width, height};
         int fbnum = 558;
         mock_fb_device = std::make_shared<mtd::MockFBHalDevice>(
-            width, height, HAL_PIXEL_FORMAT_RGBA_8888, fbnum);
+            width, height, HAL_PIXEL_FORMAT_RGBA_8888, fbnum, 11, 12);
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
         mock_hwc_device_wrapper = std::make_shared<testing::NiceMock<mtd::MockHWCDeviceWrapper>>();
 
@@ -102,6 +102,12 @@ protected:
     mga::LayerList list{std::make_shared<mga::Hwc10Adapter>(), {}, geom::Displacement{}};
     hwc_layer_1_t skip_layer;
 };
+}
+
+TEST_F(HwcFbDevice, reports_it_cannot_swap)
+{
+    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device);
+    EXPECT_FALSE(device.can_swap_buffers());
 }
 
 TEST_F(HwcFbDevice, hwc10_subscribes_to_vsync_events)
