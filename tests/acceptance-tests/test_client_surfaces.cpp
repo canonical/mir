@@ -430,7 +430,7 @@ TEST_F(ClientSurfaces, reports_performance)
             float fps;
             int fields = sscanf(perf, " perf: %255[^:]: %f FPS,", name, &fps);
             ASSERT_EQ(2, fields) << "Log line = {" << line << "}";
-            EXPECT_EQ("Foo", name);
+            EXPECT_STREQ("Foo", name);
             EXPECT_NEAR(target_fps, fps, 3.0f);
         }
     }
