@@ -424,11 +424,11 @@ TEST_F(ClientSurfaces, reports_performance)
 
     while (auto line = read_log())
     {
-        if (strstr(line, " perf: "))
+        if (auto perf = strstr(line, " perf: "))
         {
             char name[256];
             float fps;
-            int fields = sscanf(line, " perf: %255[^:]: %f FPS,", name, &fps);
+            int fields = sscanf(perf, " perf: %255[^:]: %f FPS,", name, &fps);
             ASSERT_EQ(2, fields) << "Log line = {" << line << "}";
             EXPECT_EQ("Foo", name);
             EXPECT_NEAR(target_fps, fps, 3.0f);
