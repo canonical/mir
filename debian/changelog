@@ -60,6 +60,21 @@ mir (0.20.0) UNRELEASED; urgency=medium
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Fri, 12 Feb 2016 12:56:45 +0000
 
+mir (0.19.3+16.04.20160212-0ubuntu1) xenial; urgency=medium
+
+  [ Kevin DuBois ]
+  * New upstream release 0.19.3 (https://launchpad.net/mir/+milestone/0.19.3)
+    - ABI summary:
+      . no abi changes in any libraries. bugfix release only
+    - Bugs fixed:
+      . Workaround for broken hwc implementations that dont allow querying
+        display information during hotplug (LP: #1531503)
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- kevin gunn <kevin.gunn@canonical.com>  Fri, 12 Feb 2016 18:50:06 +0000
+
 mir (0.19.2+16.04.20160210-0ubuntu1) xenial; urgency=medium
 
   [ Alberto Aguirre ]
