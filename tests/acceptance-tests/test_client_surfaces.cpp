@@ -34,6 +34,7 @@
 
 #include <condition_variable>
 #include <mutex>
+#include <fcntl.h>
 
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
@@ -81,6 +82,59 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
 {
     static const int max_surface_count = 5;
     SurfaceSync ssync[max_surface_count];
+    int log_pipe[2];
+    std::string log;
+
+    ClientSurfaces()
+    {
+        pipe2(log_pipe, O_NONBLOCK);
+
+        // This will work providing no logging has occurred yet
+        char fdstr[8];
+        snprintf(fdstr, sizeof(fdstr)-1, "%d", log_pipe[1]);
+        setenv("MIR_LOG_FD", fdstr, 1);
+    }
+
+    ~ClientSurfaces()
+    {
+        close(log_pipe[0]);
+        close(log_pipe[1]);
+    }
+
+    void save_log()
+    {
+        char buf[1024];
+        ssize_t got;
+
+        while ((got = read(log_pipe[0], buf, sizeof(buf)-1)) > 0)
+        {
+            buf[got] = '\0';
+            log += buf;
+        }
+    }
+
+    char const* read_log()
+    {
+        std::string newline_or_nul{"\nx"};
+        newline_or_nul[1] = '\0';
+        auto sep = log.find_first_of(newline_or_nul);
+        if (sep == log.npos)
+            return NULL;
+
+        if (log[sep] == '\0')
+        {
+            log = log.substr(sep+1);
+            sep = log.find_first_of('\n');
+        }
+
+        if (log[sep] == '\n')
+        {
+            log[sep] = '\0';
+            return log.data();
+        }
+
+        return NULL;
+    }
 
     void SetUp() override
     {
@@ -89,6 +143,7 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
             return mt::fake_shared(window_manager);
         });
         ConnectedClientHeadlessServer::SetUp();
+        log.clear();
     }
 
     testing::NiceMock<mtd::MockWindowManager> window_manager;
@@ -340,6 +395,52 @@ TEST_F(ClientSurfaces, can_be_renamed)
     mir_surface_spec_release(spec);
 
     mir_surface_release_sync(surf);
+}
+
+TEST_F(ClientSurfaces, reports_performance)
+{
+    char const *old_perf = getenv("MIR_CLIENT_PERF_REPORT");
+    setenv("MIR_CLIENT_PERF_REPORT", "log", 1);
+
+    auto spec = mir_connection_create_spec_for_normal_surface(
+                   connection, 123, 456, mir_pixel_format_abgr_8888);
+    ASSERT_THAT(spec, NotNull());
+    mir_surface_spec_set_name(spec, "Foo");
+    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    auto surf = mir_surface_create_sync(spec);
+    ASSERT_THAT(surf, NotNull());
+    mir_surface_spec_release(spec);
+
+    int const target_fps = 10;
+    auto bs = mir_surface_get_buffer_stream(surf);
+    for (int s = 0; s < 3; ++s)
+    {
+        for (int f = 0; f < target_fps; ++f)
+            mir_buffer_stream_swap_buffers_sync(bs);
+
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        save_log();
+    }
+
+    while (auto line = read_log())
+    {
+        if (strstr(line, " perf: "))
+        {
+            char name[256];
+            float fps;
+            int fields = sscanf(line, " perf: %255[^:]: %f FPS,", name, &fps);
+            ASSERT_EQ(2, fields) << "Log line = {" << line << "}";
+            EXPECT_EQ("Foo", name);
+            EXPECT_NEAR(target_fps, fps, 3.0f);
+        }
+    }
+
+    mir_surface_release_sync(surf);
+
+    if (old_perf)
+        setenv("MIR_CLIENT_PERF_REPORT", old_perf, 1);
+    else
+        unsetenv("MIR_CLIENT_PERF_REPORT");
 }
 
 TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)

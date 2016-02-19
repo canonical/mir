@@ -18,7 +18,8 @@
 
 #include "mir/logging/dumb_console_logger.h"
 
-#include <iostream>
+#include <mutex>
+#include <unistd.h>
 #include <ctime>
 #include <cstdio>
 
@@ -38,7 +39,14 @@ void ml::DumbConsoleLogger::log(ml::Severity severity,
         "<DEBUG> "
     };
 
-    std::ostream& out = severity < ml::Severity::informational ? std::cerr : std::cout;
+    static int fd = severity < ml::Severity::informational ? 2 : 1;
+    static std::once_flag customize_fd;
+    std::call_once(customize_fd,
+        []()
+        {
+            char const* env = getenv("MIR_LOG_FD");
+            if (env) fd = atoi(env);
+        });
 
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
@@ -46,12 +54,8 @@ void ml::DumbConsoleLogger::log(ml::Severity severity,
     auto offset = strftime(now, sizeof(now), "%F %T", localtime(&ts.tv_sec));
     snprintf(now+offset, sizeof(now)-offset, ".%06ld", ts.tv_nsec / 1000);
 
-    out << "["
-        << now
-        << "] "
-        << lut[static_cast<int>(severity)]
-        << component
-        << ": "
-        << message
-        << std::endl;
+    auto line = std::string{"["} + now + "] " +
+               lut[static_cast<int>(severity)] + component + ": " +
+               message + "\n";
+    write(fd, line.data(), line.size());
 }
