@@ -47,7 +47,7 @@ override_dh_auto_build-indep:
 
 # TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
-	dh_makeshlibs -V
+	dh_makeshlibs -V -Xmir-test-data
 
 override_dh_install:
 # Nothing outside Mir should link to libmirprotobuf directly.
@@ -56,3 +56,11 @@ override_dh_install:
 	-rm debian/tmp/usr/lib/*/libmirprotobuf.so
 	dh_install -p libmirplatform-dev -Xmesa --fail-missing
 	dh_install --remaining-packages --fail-missing -Xjquery.js
+
+# Don't try to strip libraries used as test data
+override_dh_strip:
+	dh_strip -Xmir-test-data
+
+# Don't try to find dependencies of libraries used as test data
+override_dh_shlibdeps:
+	dh_shlibdeps -Xmir-test-data
