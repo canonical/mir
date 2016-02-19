@@ -125,6 +125,8 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
         {
             log = log.substr(sep+1);
             sep = log.find_first_of('\n');
+            if (sep == log.npos)
+                return NULL;
         }
 
         if (log[sep] == '\n')
