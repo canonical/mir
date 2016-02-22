@@ -381,7 +381,7 @@ float MotionEvent::getRawAxisValue(int32_t axis, size_t pointerIndex) const {
 }
 
 float MotionEvent::getAxisValue(int32_t axis, size_t pointerIndex) const {
-    float value = getRawPointerCoords(pointerIndex)->getAxisValue(axis);
+    float value = getRawAxisValue(axis, pointerIndex);
     switch (axis) {
     case AMOTION_EVENT_AXIS_X:
         return value + mXOffset;

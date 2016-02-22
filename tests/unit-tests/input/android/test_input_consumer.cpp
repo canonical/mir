@@ -69,6 +69,11 @@ struct InputConsumerTest : ::testing::Test
     droidinput::InputPublisher publisher{server_channel};
     droidinput::InputConsumer consumer{client_channel};
 
+    InputConsumerTest()
+    {
+        std::memset(&default_cookie, 0, sizeof default_cookie);
+    }
+
     const MirInputDeviceId touchscreen_device = 2;
     const MirInputDeviceId mouse_device = 3;
     struct TouchEvent
