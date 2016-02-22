@@ -39,7 +39,8 @@ void ml::DumbConsoleLogger::log(ml::Severity severity,
         "<DEBUG> "
     };
 
-    static int fd = severity < ml::Severity::informational ? 2 : 1;
+    static int fd = severity < ml::Severity::informational ?
+                    STDERR_FILENO : STDOUT_FILENO; 
     static std::once_flag customize_fd;
     std::call_once(customize_fd,
         []()
