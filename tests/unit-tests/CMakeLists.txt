@@ -1,7 +1,6 @@
 include(CMakeDependentOption)
 
 add_definitions(
-  -DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/"
   -DMIR_CLIENT_PLATFORM_VERSION="${MIR_CLIENT_PLATFORM_VERSION}"
 )
 
@@ -42,12 +41,19 @@ add_library(example SHARED library_example.cpp)
 target_link_libraries(example mircommon)
 set_target_properties(
   example PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/shared-libraries
   OUTPUT_NAME example
   PREFIX ""
 )
+install(TARGETS example
+  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/share/mir-test-data/shared-libraries
+)
+
 
 # Umockdev uses glib, which uses the deprecated "register" allocation specifier
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
+
+set(UMOCK_UNIT_TEST_SOURCES test_udev_wrapper.cpp)
 
 set(
   UNIT_TEST_SOURCES
@@ -57,7 +63,6 @@ set(
   test_glib_main_loop.cpp
   shared_library_test.cpp
   test_raii.cpp
-  test_udev_wrapper.cpp
   test_variable_length_array.cpp
   test_thread_name.cpp
   test_default_emergency_cleanup.cpp
@@ -97,6 +102,9 @@ link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 mir_add_wrapped_executable(mir_unit_tests
   ${UNIT_TEST_SOURCES}
+  $<TARGET_OBJECTS:mir-libinput-test-framework>
+  $<TARGET_OBJECTS:mir-test-doubles-udev>
+
   ${MIR_SERVER_OBJECTS}
   ${MIR_PLATFORM_OBJECTS}
   ${MIR_COMMON_OBJECTS}
@@ -129,6 +137,40 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${Boost_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+)
+
+mir_add_wrapped_executable(mir_umock_unit_tests
+  ${UMOCK_UNIT_TEST_SOURCES}
+  $<TARGET_OBJECTS:mir-umock-test-framework>
+  ${MIR_SERVER_OBJECTS}
+  ${MIR_PLATFORM_OBJECTS}
+  ${MIR_COMMON_OBJECTS}
+)
+
+add_dependencies(mir_umock_unit_tests GMock)
+
+target_link_libraries(
+  mir_umock_unit_tests
+
+  exampleserverconfig
+  mirdraw
+  demo-shell
+  mircommon
+  client_platform_common
+
+  mirclient-static
+  mirclientrpc-static
+  mirclientlttng-static
+
+  mir-test-static
+  mir-test-framework-static
+
+  ${PROTOBUF_LITE_LIBRARIES}
+  ${GTEST_BOTH_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
+  ${Boost_LIBRARIES}
   ${UMOCKDEV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
@@ -137,9 +179,18 @@ if(MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11
 target_link_libraries(mir_unit_tests
   mirsharedmesaservercommon-static
 )
+target_link_libraries(mir_umock_unit_tests
+  mirsharedmesaservercommon-static
+)
 endif()
 
 if (MIR_BUILD_PLATFORM_ANDROID)
+target_link_libraries(mir_umock_unit_tests
+  mirsharedandroid-static
+  ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
+  ${ANDROID_PROPERTIES_LDFLAGS} ${ANDROID_PROPERTIES_LIBRARIES}
+)
+
 target_link_libraries(mir_unit_tests 
   mirsharedandroid-static
   ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
@@ -153,22 +204,34 @@ target_link_libraries(mir_unit_tests
   mir-test-doubles-platform-static
   )
 
+target_link_libraries(mir_umock_unit_tests
+
+  mir-test-doubles-static
+  mir-test-doubles-platform-static
+  )
+
 if (MIR_RUN_UNIT_TESTS)
-  mir_discover_tests_with_fd_leak_detection(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0 G_SLICE=always-malloc G_DEBUG=gc-friendly)
+  mir_discover_tests_with_fd_leak_detection(mir_unit_tests G_SLICE=always-malloc G_DEBUG=gc-friendly)
+  mir_discover_tests_with_fd_leak_detection(mir_umock_unit_tests LD_PRELOAD=libumockdev-preload.so.0 G_SLICE=always-malloc G_DEBUG=gc-friendly)
 endif (MIR_RUN_UNIT_TESTS)
 
 add_custom_command(TARGET mir_unit_tests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_data ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_data
+  ${CMAKE_CURRENT_SOURCE_DIR}/shared-libraries ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/shared-libraries
   COMMENT "Copying test data to build dir..."
 )
+file(GLOB SO_FILES ${CMAKE_CURRENT_SOURCE_DIR}/shared-libraries/*.so*)
+install(FILES ${SO_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/mir-test-data/shared-libraries)
 
-add_library(loadable_test_dso SHARED ${CMAKE_CURRENT_SOURCE_DIR}/test_data/empty_input.c)
+add_library(loadable_test_dso SHARED ${CMAKE_CURRENT_SOURCE_DIR}/shared-libraries/empty_input.c)
 
 set_target_properties(loadable_test_dso PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_data
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/shared-libraries
   COMPILE_FLAGS "-Wno-pedantic"
   OUTPUT_NAME this-arch
+)
+install(TARGETS loadable_test_dso
+  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/share/mir-test-data/shared-libraries
 )
 
 add_dependencies(mir_unit_tests loadable_test_dso)

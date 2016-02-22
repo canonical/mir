@@ -115,10 +115,8 @@ void mir_presentation_chain_allocate_buffer(
  *
  *   \param [in] presentation_chain  The presentation chain
  *   \param [in] buffer              The buffer to be submitted
- *   \return                         true if the submission succeeded,
- *                                   false if it did not.
  **/
-bool mir_presentation_chain_submit_buffer(
+void mir_presentation_chain_submit_buffer(
     MirPresentationChain* presentation_chain, MirBuffer* buffer);
 
 #ifdef __cplusplus

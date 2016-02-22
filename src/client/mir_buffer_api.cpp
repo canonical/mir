@@ -18,24 +18,32 @@
 
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "presentation_chain.h"
 #include "buffer.h"
 #include "mir/require.h"
 #include "mir/uncaught.h"
+#include "mir/require.h"
+#include <stdexcept>
+#include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
 
 //private NBS api under development
 void mir_presentation_chain_allocate_buffer(
-    MirPresentationChain*, 
-    int, int,
-    MirPixelFormat,
-    MirBufferUsage,
+    MirPresentationChain* chain, 
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage usage,
     mir_buffer_callback cb, void* context)
+try
 {
-    int fake_id = 3;
-    new mcl::Buffer(cb, context, fake_id, nullptr); 
+    mir::require(chain);
+    chain->allocate_buffer(mir::geometry::Size{width, height}, format, usage, cb, context);
 }
-
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
 
 void mir_buffer_release(MirBuffer* buffer) 
 {

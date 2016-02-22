@@ -184,3 +184,8 @@ mcl::PresentationChain::AllocationRequest::AllocationRequest(
     cb_context(cb_context)
 {
 }
+
+char const* mcl::PresentationChain::error_msg() const
+{
+    return "";
+}

@@ -47,7 +47,7 @@ mir::Fd create_anonymous_file(size_t size)
         raw_fd = mkostemp(template_filename, O_CLOEXEC);
         if (raw_fd != -1)
         {
-            if (unlink(template_filename) < 0 || ftruncate(raw_fd, size) < 0)
+            if (unlink(template_filename) < 0)
             {
                 close(raw_fd);
                 raw_fd = -1;

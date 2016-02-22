@@ -137,8 +137,7 @@ int main(int argc, char** argv)
         b = buffer_available[i].buffer;
         pthread_mutex_unlock(&buffer_available[i].lock);
 
-        if (!mir_presentation_chain_submit_buffer(chain, b))
-            rendering = false;
+        mir_presentation_chain_submit_buffer(chain, b);
 
         i = (i + 1) % num_prerendered_frames;
     }

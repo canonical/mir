@@ -35,7 +35,7 @@ class MockFBHalDevice : public framebuffer_device_t
 {
 public:
     MockFBHalDevice(unsigned int const width, unsigned int const height,
-                    int const pf, int const numfbs)
+                    int const pf, int const numfbs, float dpi_x, float dpi_y)
         : framebuffer_device_t({
             hw_device_t(),
             0,
@@ -43,8 +43,8 @@ public:
             height,
             0,
             pf,
-            0.0f,
-            0.0f,
+            dpi_x,
+            dpi_y,
             0.0f,
             0,
             1,
@@ -60,7 +60,7 @@ public:
     }
 
     MockFBHalDevice()
-        : MockFBHalDevice(1,1,1,1)
+        : MockFBHalDevice(1,1,1,1, 1.0f, 1.0f)
     {
     }
 
