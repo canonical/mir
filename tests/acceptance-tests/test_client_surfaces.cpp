@@ -112,7 +112,7 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
         }
     }
 
-    char const* read_log()
+    char const* next_log_line()
     {
         std::string newline_or_nul{"\nx"};
         newline_or_nul[1] = '\0';
@@ -425,7 +425,7 @@ TEST_F(ClientSurfaces, reports_performance)
     }
 
     int reports = 0;
-    while (auto line = read_log())
+    while (auto line = next_log_line())
     {
         if (auto perf = strstr(line, " perf: "))
         {
