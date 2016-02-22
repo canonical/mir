@@ -29,10 +29,18 @@ namespace mcl = mir::client;
 
 namespace
 {
-void set_result(MirPresentationChain* result, MirPresentationChain** context)
+struct ChainResultInfo
 {
-    if (context)
-        *context = result;
+    MirPresentationChain* chain = nullptr;
+    std::mutex mutex;
+    std::condition_variable cv;
+};
+
+void set_result(MirPresentationChain* result, ChainResultInfo* context)
+{
+    std::unique_lock<decltype(context->mutex)> lk(context->mutex);
+    context->chain = result;
+    context->cv.notify_all();
 }
 }
 //private NBS api under development
@@ -71,25 +79,27 @@ catch (std::exception const& ex)
     return "error accessing error message";
 }
 
-MirWaitHandle* mir_connection_create_presentation_chain(
+void mir_connection_create_presentation_chain(
     MirConnection* connection, mir_presentation_chain_callback callback, void* context)
 try
 {
     mir::require(connection);
-    return connection->create_presentation_chain(callback, context);
+    connection->create_presentation_chain(callback, context);
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
 }
 
 MirPresentationChain* mir_connection_create_presentation_chain_sync(MirConnection* connection)
 {
-    MirPresentationChain *context = nullptr;
+    ChainResultInfo info;
     mir_connection_create_presentation_chain(connection,
-        reinterpret_cast<mir_presentation_chain_callback>(set_result), &context)->wait_for_all();
-    return context;
+        reinterpret_cast<mir_presentation_chain_callback>(set_result), &info);
+
+    std::unique_lock<decltype(info.mutex)> lk(info.mutex);
+    info.cv.wait(lk, [&] { return info.chain; });
+    return info.chain;
 }
 
 void mir_presentation_chain_release(MirPresentationChain* chain)

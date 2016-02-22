@@ -149,7 +149,7 @@ public:
         mir_buffer_stream_callback callback,
         void *context);
 
-    MirWaitHandle* create_presentation_chain(
+    void create_presentation_chain(
         mir_presentation_chain_callback callback,
         void *context);
     void release_presentation_chain(MirPresentationChain* context);
@@ -219,15 +219,13 @@ private:
     {
         ChainCreationRequest(mir_presentation_chain_callback cb, void* context) :
             callback(cb), context(context),
-            response(std::make_shared<mir::protobuf::BufferStream>()),
-            wh(std::make_shared<MirWaitHandle>())
+            response(std::make_shared<mir::protobuf::BufferStream>())
         {
         }
 
         mir_presentation_chain_callback callback;
         void* context;
         std::shared_ptr<mir::protobuf::BufferStream> response;
-        std::shared_ptr<MirWaitHandle> const wh;
     };
     std::vector<std::shared_ptr<ChainCreationRequest>> context_requests;
     void context_created(ChainCreationRequest*);
