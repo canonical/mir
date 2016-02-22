@@ -179,12 +179,12 @@ set_target_properties(
 
 add_custom_command(TARGET mir-test-framework-static POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/udev_recordings ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/udev_recordings
+  ${CMAKE_CURRENT_SOURCE_DIR}/udev-recordings ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/udev-recordings
   COMMENT "Copying umockdev recordings to build dir..."
 )
 add_custom_command(TARGET mir-test-framework-static POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/testing-cursor-theme ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/testing-cursor-theme
+  ${CMAKE_CURRENT_SOURCE_DIR}/testing-cursor-theme ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/testing-cursor-theme
   COMMENT "Copying testing cursor themes to build dir..."
 )
 
@@ -195,4 +195,5 @@ install(TARGETS mirplatformgraphicsthrow LIBRARY DESTINATION ${MIR_SERVER_PLATFO
 
 install(TARGETS mirclientplatformstub LIBRARY DESTINATION ${MIR_CLIENT_PLATFORM_PATH})
 
-add_subdirectory(udev_recordings/)
+add_subdirectory(udev-recordings/)
+add_subdirectory(testing-cursor-theme/)
