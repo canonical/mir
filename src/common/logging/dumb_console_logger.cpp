@@ -18,7 +18,6 @@
 
 #include "mir/logging/dumb_console_logger.h"
 
-#include <mutex>
 #include <unistd.h>
 #include <ctime>
 #include <cstdio>
@@ -39,15 +38,11 @@ void ml::DumbConsoleLogger::log(ml::Severity severity,
         "<DEBUG> "
     };
 
-    static int fd = severity < ml::Severity::informational ?
+    int fd = severity < ml::Severity::informational ?
                     STDERR_FILENO : STDOUT_FILENO; 
-    static std::once_flag customize_fd;
-    std::call_once(customize_fd,
-        []()
-        {
-            char const* env = getenv("MIR_LOG_FD");
-            if (env) fd = atoi(env);
-        });
+    char const* env = getenv("MIR_LOG_FD");
+    if (env)
+        fd = atoi(env);
 
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);

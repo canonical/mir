@@ -89,7 +89,6 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
     {
         pipe2(log_pipe, O_NONBLOCK);
 
-        // This will work providing no logging has occurred yet
         char fdstr[8];
         snprintf(fdstr, sizeof(fdstr)-1, "%d", log_pipe[1]);
         setenv("MIR_LOG_FD", fdstr, 1);
