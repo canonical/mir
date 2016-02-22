@@ -49,7 +49,7 @@ struct KeyboardState;
 class LibInputDevice : public input::InputDevice
 {
 public:
-    LibInputDevice(std::shared_ptr<InputReport> const& report, char const* path, LibInputDevicePtr dev);
+    LibInputDevice(std::shared_ptr<InputReport> const& report, LibInputDevicePtr dev);
     ~LibInputDevice();
     void start(InputSink* sink, EventBuilder* builder) override;
     void stop() override;
@@ -62,8 +62,7 @@ public:
     void process_event(libinput_event* event);
     ::libinput_device* device() const;
     ::libinput_device_group* group();
-    void add_device_of_group(char const* path, LibInputDevicePtr ptr);
-    bool is_in_group(char const* path);
+    void add_device_of_group(LibInputDevicePtr ptr);
 private:
     EventUPtr convert_event(libinput_event_keyboard* keyboard);
     EventUPtr convert_button_event(libinput_event_pointer* pointer);
@@ -78,7 +77,6 @@ private:
 
     std::shared_ptr<InputReport> report;
     std::shared_ptr<::libinput> lib;
-    std::vector<std::string> paths;
     std::vector<LibInputDevicePtr> devices;
     std::shared_ptr<dispatch::Dispatchable> dispatchable_fd;
 

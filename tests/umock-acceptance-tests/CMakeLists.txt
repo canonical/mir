@@ -11,6 +11,7 @@ mir_add_wrapped_executable(
   mir_umock_acceptance_tests
 
   test_libinput.cpp
+  $<TARGET_OBJECTS:mir-umock-test-framework>
   )
 
 add_dependencies(mir_umock_acceptance_tests GMock)

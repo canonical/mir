@@ -29,6 +29,7 @@
 #include "mir/frontend/surface_id.h"
 #include "mir/client_context.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/client_types_nbs.h"
 #include "mir_surface.h"
 
 #include <atomic>
@@ -135,7 +136,7 @@ public:
                                    unsigned int formats_size, unsigned int& valid_formats);
 
     std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
-       mir::protobuf::BufferStream const& protobuf_bs, std::string const& surface_name, mir::geometry::Size);
+       mir::protobuf::BufferStream const& protobuf_bs, mir::geometry::Size);
 
     MirWaitHandle* create_client_buffer_stream(
         int width, int height,
@@ -147,6 +148,11 @@ public:
         mir::client::ClientBufferStream*,
         mir_buffer_stream_callback callback,
         void *context);
+
+    MirWaitHandle* create_presentation_chain(
+        mir_presentation_chain_callback callback,
+        void *context);
+    void release_presentation_chain(MirPresentationChain* context);
 
     void release_consumer_stream(mir::client::ClientBufferStream*);
 
@@ -208,6 +214,24 @@ private:
     std::vector<std::shared_ptr<StreamCreationRequest>> stream_requests;
     void stream_created(StreamCreationRequest*);
     void stream_error(std::string const& error_msg, std::shared_ptr<StreamCreationRequest> const& request);
+
+    struct ChainCreationRequest
+    {
+        ChainCreationRequest(mir_presentation_chain_callback cb, void* context) :
+            callback(cb), context(context),
+            response(std::make_shared<mir::protobuf::BufferStream>()),
+            wh(std::make_shared<MirWaitHandle>())
+        {
+        }
+
+        mir_presentation_chain_callback callback;
+        void* context;
+        std::shared_ptr<mir::protobuf::BufferStream> response;
+        std::shared_ptr<MirWaitHandle> const wh;
+    };
+    std::vector<std::shared_ptr<ChainCreationRequest>> context_requests;
+    void context_created(ChainCreationRequest*);
+    void chain_error(std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request);
 
     void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.

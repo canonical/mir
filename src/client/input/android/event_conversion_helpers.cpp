@@ -108,36 +108,18 @@ int32_t mia::android_keyboard_action_from_mir(int32_t& repeat_count_out, MirKeyb
 
 MirPointerButtons mia::mir_pointer_buttons_from_android(int32_t android_state)
 {
-    MirPointerButtons buttons = 0;
-    
-    if (android_state & AMOTION_EVENT_BUTTON_PRIMARY)
-        buttons |= mir_pointer_button_primary;
-    if (android_state & AMOTION_EVENT_BUTTON_SECONDARY)
-        buttons |= mir_pointer_button_secondary;
-    if (android_state & AMOTION_EVENT_BUTTON_TERTIARY)
-        buttons |= mir_pointer_button_tertiary;
-    if (android_state & AMOTION_EVENT_BUTTON_BACK)
-        buttons |= mir_pointer_button_back;
-    if (android_state & AMOTION_EVENT_BUTTON_FORWARD)
-        buttons |= mir_pointer_button_forward;
-
-    return buttons;
+    static_assert(int32_t(mir_pointer_button_primary) == AMOTION_EVENT_BUTTON_PRIMARY &&
+                      int32_t(mir_pointer_button_secondary) == AMOTION_EVENT_BUTTON_SECONDARY &&
+                      int32_t(mir_pointer_button_tertiary) == AMOTION_EVENT_BUTTON_TERTIARY &&
+                      int32_t(mir_pointer_button_back) == AMOTION_EVENT_BUTTON_BACK &&
+                      int32_t(mir_pointer_button_forward) == AMOTION_EVENT_BUTTON_FORWARD,
+                  "pointer button enumeration out of sync with android definition");
+    return static_cast<MirPointerButtons>(android_state);
 }
 
 int32_t mia::android_pointer_buttons_from_mir(MirPointerButtons buttons)
 {
-    int32_t android_state = 0;
-    if (buttons & mir_pointer_button_primary)
-        android_state |= AMOTION_EVENT_BUTTON_PRIMARY;
-    if (buttons & mir_pointer_button_secondary)
-        android_state |= AMOTION_EVENT_BUTTON_SECONDARY;
-    if (buttons & mir_pointer_button_tertiary)
-        android_state |= AMOTION_EVENT_BUTTON_TERTIARY;
-    if (buttons & mir_pointer_button_back)
-        android_state |= AMOTION_EVENT_BUTTON_BACK;
-    if (buttons & mir_pointer_button_forward)
-        android_state |= AMOTION_EVENT_BUTTON_FORWARD;
-    return android_state;
+    return static_cast<int32_t>(buttons);
 }
 
 MirTouchTooltype mia::mir_tool_type_from_android(int32_t android_tooltype)
@@ -263,6 +245,9 @@ int count_buttons(MirPointerButtons buttons)
     if (buttons & mir_pointer_button_tertiary) ret++;
     if (buttons & mir_pointer_button_forward) ret++;
     if (buttons & mir_pointer_button_back) ret++;
+    if (buttons & mir_pointer_button_side) ret++;
+    if (buttons & mir_pointer_button_extra) ret++;
+    if (buttons & mir_pointer_button_task) ret++;
 
     return ret;
 }

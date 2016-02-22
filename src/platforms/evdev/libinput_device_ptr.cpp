@@ -26,9 +26,9 @@ void mie::LibInputDeviceDeleter::operator()(::libinput_device* device) const
     libinput_device_unref(device);
 }
 
-mie::LibInputDevicePtr mie::make_libinput_device(std::shared_ptr<libinput> const& lib, char const* path)
+mie::LibInputDevicePtr mie::make_libinput_device(std::shared_ptr<libinput> const& lib, libinput_device* dev)
 {
-    auto ret = mie::LibInputDevicePtr(::libinput_path_add_device(lib.get(), path), lib);
+    auto ret = mie::LibInputDevicePtr(dev, lib);
     if (ret)
         libinput_device_ref(ret.get());
     return ret;

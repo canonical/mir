@@ -22,6 +22,7 @@ project(Mir)
 cmake_minimum_required(VERSION 2.8)
 
 cmake_policy(SET CMP0015 NEW)
+cmake_policy(SET CMP0022 NEW)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -51,7 +52,7 @@ include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
 include (GNUInstallDirs)
 
-set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer")
+set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer;UBSanitizer")
 # Change informational string for CMAKE_BUILD_TYPE
 set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "${build_types}" FORCE)
 # Enable cmake-gui to display a drop down list for CMAKE_BUILD_TYPE
@@ -107,16 +108,6 @@ if(cmake_build_type_lower MATCHES "addresssanitizer")
 elseif(cmake_build_type_lower MATCHES "threadsanitizer")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fno-omit-frame-pointer")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread -fno-omit-frame-pointer")
-  if (CMAKE_COMPILER_IS_GNUCXX)
-    # Work around GCC bug. It should automatically link to tsan when
-    # -fsanitize=thread is used, but doesn't.
-    #
-    # Linking everything with tsan is harmless and simple, so do that.
-    if (CMAKE_VERSION VERSION_GREATER 3.2.1)
-      cmake_policy(SET CMP0022 OLD)
-    endif()
-    link_libraries(tsan)
-  endif()
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=thread")
 elseif(cmake_build_type_lower MATCHES "ubsanitizer")

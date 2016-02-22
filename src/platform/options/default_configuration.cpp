@@ -63,7 +63,6 @@ char const* const mo::platform_path = "platform-path";
 
 namespace
 {
-int const default_ipc_threads          = 1;
 bool const enable_input_default        = true;
 }
 
@@ -173,8 +172,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the SharedLibraryProber report. [{log,lttng,off}]")
         (shell_report_opt, po::value<std::string>()->default_value(off_opt_value),
          "How to handle the Shell report. [{log,off}]")
-        (frontend_threads_opt, po::value<int>()->default_value(default_ipc_threads),
-            "threads in frontend thread pool.")
         (nbuffers_opt, po::value<int>()->default_value(3),
             "Number of buffers per surface.")
         (composite_delay_opt, po::value<int>()->default_value(-1),
@@ -308,13 +305,6 @@ void mo::DefaultConfiguration::parse_environment(
     boost::program_options::options_description& desc,
     mo::ProgramOption& options) const
 {
-    // If MIR_SERVER_HOST_SOCKET is unset, we want to substitute the value of
-    // MIR_SOCKET.  Do this now, because MIR_SOCKET will get overwritten later.
-    auto host_socket = getenv("MIR_SERVER_HOST_SOCKET");
-    auto mir_socket = getenv("MIR_SOCKET");
-    if (!host_socket && mir_socket)
-        setenv("MIR_SERVER_HOST_SOCKET", mir_socket, 1);
-
     options.parse_environment(desc, "MIR_SERVER_");
 }
 

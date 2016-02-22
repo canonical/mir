@@ -33,8 +33,6 @@ public:
 
     virtual void thread_start() = 0;
     virtual void thread_end() = 0;
-    virtual void starting_threads(int count) = 0;
-    virtual void stopping_threads(int count) = 0;
 
     virtual void creating_session_for(int socket_handle) = 0;
     virtual void creating_socket_pair(int server_handle, int client_handle) = 0;

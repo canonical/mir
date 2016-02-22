@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/egl_sync_fence.h"
+#include "egl_sync_fence.h"
 #include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;

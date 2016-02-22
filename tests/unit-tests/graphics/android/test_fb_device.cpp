@@ -40,18 +40,17 @@ namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 namespace mt=mir::test;
+using namespace testing;
 
 struct FBDevice : public ::testing::Test
 {
     virtual void SetUp()
     {
-        using namespace testing;
-
         fbnum = 4;
         format = HAL_PIXEL_FORMAT_RGBA_8888;
 
         fb_hal_mock = std::make_shared<NiceMock<mtd::MockFBHalDevice>>(
-            display_size.width.as_int(), display_size.height.as_int(), format, fbnum);
+            display_size.width.as_int(), display_size.height.as_int(), format, fbnum, dpi_x, dpi_y);
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
         native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
         ON_CALL(*mock_buffer, native_buffer_handle())
@@ -60,6 +59,8 @@ struct FBDevice : public ::testing::Test
             .WillByDefault(Return(mock_buffer));
     }
 
+    float dpi_x{160.0f};
+    float dpi_y{150.0f};
     unsigned int format, fbnum;
     geom::Size display_size{413, 516};
     std::shared_ptr<mtd::MockFBHalDevice> fb_hal_mock;
@@ -71,6 +72,12 @@ struct FBDevice : public ::testing::Test
     mtd::StubRenderableListCompositor stub_compositor;
     mga::DisplayName primary{mga::DisplayName::primary};
 };
+
+TEST_F(FBDevice, reports_it_can_swap)
+{
+    mga::FBDevice fbdev(fb_hal_mock);
+    EXPECT_TRUE(fbdev.can_swap_buffers());
+}
 
 TEST_F(FBDevice, rejects_renderables)
 {
@@ -86,12 +93,13 @@ TEST_F(FBDevice, rejects_renderables)
 
 TEST_F(FBDevice, commits_frame)
 {
-    using namespace testing;
     EXPECT_CALL(*fb_hal_mock, post_interface(fb_hal_mock.get(), native_buffer->handle()))
         .Times(2)
         .WillOnce(Return(-1))
         .WillOnce(Return(0));
 
+    EXPECT_CALL(mock_context, swap_buffers())
+        .Times(0);
     mga::FBDevice fbdev(fb_hal_mock);
     mga::DisplayContents content{primary, list, geom::Displacement{}, mock_context, stub_compositor};
 
@@ -114,7 +122,6 @@ TEST_F(FBDevice, does_not_segfault_if_null_swapinterval_hook)
 
 TEST_F(FBDevice, can_screen_on_off)
 {
-    using namespace testing;
     Sequence seq;
     EXPECT_CALL(*fb_hal_mock, setSwapInterval_interface(fb_hal_mock.get(), 1))
         .Times(1);
@@ -140,11 +147,33 @@ TEST_F(FBDevice, can_screen_on_off)
 
 TEST_F(FBDevice, bundle_from_fb)
 {
-    using namespace testing;
     mga::FbControl fb_control(fb_hal_mock);
     auto attribs = fb_control.active_config_for(mga::DisplayName::primary);
     EXPECT_EQ(display_size, attribs.modes[attribs.current_mode_index].size);
     EXPECT_EQ(mir_pixel_format_abgr_8888, attribs.current_format);
+}
+
+//LP: #1517597
+TEST_F(FBDevice, reports_dpi)
+{
+    float mm_per_inch = 25.4;
+    geom::Size physical_size_mm = {
+        display_size.width.as_int() / dpi_x * mm_per_inch ,
+        display_size.height.as_int() / dpi_y * mm_per_inch };
+
+    mga::FbControl fb_control(fb_hal_mock);
+    auto attribs = fb_control.active_config_for(mga::DisplayName::primary);
+    EXPECT_EQ(physical_size_mm, attribs.physical_size_mm);
+}
+
+TEST_F(FBDevice, reports_0_when_0_dpi)
+{
+    geom::Size physical_size_mm = { 0, 0 };
+    fb_hal_mock = std::make_shared<NiceMock<mtd::MockFBHalDevice>>(
+        display_size.width.as_int(), display_size.height.as_int(), format, fbnum, 0.0f, 0.0f);
+    mga::FbControl fb_control(fb_hal_mock);
+    auto attribs = fb_control.active_config_for(mga::DisplayName::primary);
+    EXPECT_EQ(physical_size_mm, attribs.physical_size_mm);
 }
 
 TEST_F(FBDevice, supports_primary_display)
