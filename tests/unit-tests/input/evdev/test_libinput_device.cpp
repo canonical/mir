@@ -17,6 +17,7 @@
  */
 
 #include "src/platforms/evdev/libinput_device.h"
+#include "src/platforms/evdev/button_utils.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/input/default_event_builder.h"
 
@@ -419,6 +420,36 @@ TEST_F(LibInputDeviceOnMouse, process_event_handles_press_and_release)
     env.mock_libinput.setup_button_event(fake_device, event_time_2, BTN_RIGHT, LIBINPUT_BUTTON_STATE_PRESSED);
     env.mock_libinput.setup_button_event(fake_device, event_time_3, BTN_RIGHT, LIBINPUT_BUTTON_STATE_RELEASED);
     env.mock_libinput.setup_button_event(fake_device, event_time_4, BTN_LEFT, LIBINPUT_BUTTON_STATE_RELEASED);
+    process_events(mouse);
+}
+
+TEST_F(LibInputDeviceOnMouse, process_event_handles_exotic_mouse_buttons)
+{
+    float const x = 0;
+    float const y = 0;
+    geom::Point const pos{x, y};
+
+    InSequence seq;
+    EXPECT_CALL(mock_sink, handle_input(mt::ButtonDownEventWithButton(pos, mir_pointer_button_side)));
+    EXPECT_CALL(mock_sink, handle_input(mt::ButtonDownEventWithButton(pos, mir_pointer_button_extra)));
+    EXPECT_CALL(mock_sink, handle_input(mt::ButtonDownEventWithButton(pos, mir_pointer_button_task)));
+
+    mouse.start(&mock_sink, &mock_builder);
+    env.mock_libinput.setup_button_event(fake_device, event_time_1, BTN_SIDE, LIBINPUT_BUTTON_STATE_PRESSED);
+    env.mock_libinput.setup_button_event(fake_device, event_time_2, BTN_EXTRA, LIBINPUT_BUTTON_STATE_PRESSED);
+    env.mock_libinput.setup_button_event(fake_device, event_time_3, BTN_TASK, LIBINPUT_BUTTON_STATE_PRESSED);
+    process_events(mouse);
+}
+
+TEST_F(LibInputDeviceOnMouse, process_ignores_events_when_button_conversion_fails)
+{
+    EXPECT_THROW({mir::input::evdev::to_pointer_button(BTN_JOYSTICK, mir_pointer_handedness_right);},
+                 std::runtime_error);
+
+    InSequence seq;
+    EXPECT_CALL(mock_sink, handle_input(_)).Times(0);
+    mouse.start(&mock_sink, &mock_builder);
+    env.mock_libinput.setup_button_event(fake_device, event_time_1, BTN_JOYSTICK, LIBINPUT_BUTTON_STATE_PRESSED);
     process_events(mouse);
 }
 

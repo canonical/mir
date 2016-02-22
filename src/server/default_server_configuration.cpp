@@ -80,11 +80,6 @@ std::string mir::DefaultServerConfiguration::the_socket_file() const
 {
     auto socket_file = the_options()->get<std::string>(options::server_socket_opt);
 
-    // Record this for any children that want to know how to connect to us.
-    // By both listening to this env var on startup and resetting it here,
-    // we make it easier to nest Mir servers.
-    setenv("MIR_SOCKET", socket_file.c_str(), 1);
-
     return socket_file;
 }
 
