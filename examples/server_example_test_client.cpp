@@ -17,6 +17,7 @@
  */
 
 #include "server_example_test_client.h"
+#include "mir/fd.h"
 #include "mir/server.h"
 #include "mir/main_loop.h"
 #include "mir/logging/logger.h"
@@ -100,10 +101,20 @@ void me::add_test_client_option_to(mir::Server& server, me::ClientContext& conte
         {
             context.test_failed = true;
 
+            auto const client_fd = server.open_client_socket();
+
             auto const pid = fork();
 
             if (pid == 0)
             {
+                char connect_string[64] = {0};
+                // We can't have both the server and the client owning the same fd, since
+                // that will result in a double-close(). We give the client a duplicate which
+                // the client can safely own (and should close when done).
+                sprintf(connect_string, "fd://%d", dup(client_fd));
+
+                setenv("MIR_SOCKET", connect_string, 1);
+
                 auto const client = options->get<std::string>(test_client_opt);
                 execl(client.c_str(), client.c_str(), static_cast<char const*>(nullptr));
                 ml::log(ml::Severity::critical, "Failed to execute client", component);

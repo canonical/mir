@@ -23,9 +23,10 @@
 #include "mir/dispatch/dispatchable.h"
 
 #include "mir/udev/wrapper.h"
-#include "mir_test_framework/udev_environment.h"
+#include "mir_test_framework/libinput_environment.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_libinput.h"
+#include "mir/test/doubles/mock_udev.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -41,8 +42,9 @@ namespace mr = mir::report;
 namespace mu = mir::udev;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
+namespace mtf = mir_test_framework;
 
-using ::testing::_;
+using namespace ::testing;
 namespace
 {
 
@@ -54,51 +56,8 @@ struct MockInputDeviceRegistry : public mi::InputDeviceRegistry
 
 struct EvdevInputPlatform : public ::testing::TestWithParam<std::string>
 {
-    mir_test_framework::UdevEnvironment env;
-    testing::NiceMock<mtd::MockLibInput> mock_libinput;
     testing::NiceMock<MockInputDeviceRegistry> mock_registry;
-    libinput *li_context{reinterpret_cast<libinput*>(0xFEBA)};
-
-    std::vector<std::pair<std::string, libinput_device*>> devices;
-    std::vector<std::pair<libinput_device_group*, std::vector<libinput_device*>>> groups;
-
-    EvdevInputPlatform()
-    {
-        using namespace testing;
-        ON_CALL(mock_libinput, libinput_path_create_context(_,_))
-            .WillByDefault(Return(li_context));
-        ON_CALL(mock_libinput, libinput_path_add_device(li_context,_))
-            .WillByDefault(Invoke(
-                    [this](libinput const*, char const* path) -> libinput_device*
-                    {
-                        return open_device_from_path(path);
-                    }
-                    ));
-        ON_CALL(mock_libinput, libinput_device_get_device_group(_))
-            .WillByDefault(Invoke(
-                    [this](libinput_device *dev)
-                    {
-                        return get_device_group(dev);
-                    }));
-    }
-
-    auto get_device_group(libinput_device *dev) -> libinput_device_group*
-    {
-        auto it = find_if(begin(groups),
-                          end(groups),
-                          [dev] (auto const& item)
-                          {
-                              return end(item.second) != find(begin(item.second), end(item.second), dev);
-                          });
-        if (end(groups) == it)
-        {
-            groups.emplace_back(get_next_fake_ptr<libinput_device_group*>(groups), std::vector<libinput_device*>{dev});
-            return groups.back().first;
-        }
-
-        return it->first;
-    }
-
+    mtf::LibInputEnvironment env;
 
     template<typename PtrT>
     PtrT to_fake_ptr(unsigned int number)
@@ -114,63 +73,24 @@ struct EvdevInputPlatform : public ::testing::TestWithParam<std::string>
 
     void setup_groupped_devices(std::initializer_list<libinput_device*> devices)
     {
-        groups.emplace_back(get_next_fake_ptr<libinput_device_group*>(groups), devices);
-    }
+        auto next_group = env.mock_libinput.get_next_fake_ptr<libinput_device_group*>();
 
-    auto open_device_from_path(char const* path) -> libinput_device*
-    {
-        auto it = find_if(begin(devices),
-                          end(devices),
-                          [path] (auto const& item)
-                          {
-                              return item.first == path;
-                          });
-        if (end(devices) == it)
-        {
-            auto dev_ptr = get_next_fake_ptr<libinput_device*>(devices);
-            devices.emplace_back(path, dev_ptr);
-            auto const& dev_entry = devices.back();
-            mock_libinput.setup_device(li_context, dev_ptr, dev_entry.first.c_str(), dev_entry.first.c_str(), 123, 456);
-            return devices.back().second;
-        }
-
-        return it->second;
+        for (auto dev : devices)
+            ON_CALL(env.mock_libinput, libinput_device_get_device_group(dev)).WillByDefault(Return(next_group));
     }
 
     auto create_input_platform()
     {
         auto ctx = std::make_unique<mu::Context>();
-        auto monitor = std::make_unique<mu::Monitor>(*ctx.get());
-        return std::make_unique<mie::Platform>(mt::fake_shared(mock_registry), mr::null_input_report(), std::move(ctx),
-                                               std::move(monitor));
-    }
-
-    void remove_devices()
-    {
-        mir::udev::Enumerator devices{std::make_shared<mir::udev::Context>()};
-        devices.scan_devices();
-
-        for (auto& device : devices)
-        {
-            /*
-             * Remove just the device providing dev/input/event*
-             * If we remove more, it's possible that we'll remove the parent of the
-             * /dev/input device, and umockdev will not generate a remove event
-             * in that case.
-             */
-            if (device.devnode() && (std::string(device.devnode()).find("input/event") != std::string::npos))
-            {
-                env.remove_device((std::string("/sys") + device.devpath()).c_str());
-            }
-        }
+        return std::make_unique<mie::Platform>(mt::fake_shared(mock_registry), mr::null_input_report(), std::move(ctx));
     }
 };
 
-}
-
-inline void run_dispatchable( mir::input::Platform& platform)
+void run_dispatchable(mir::input::Platform& platform)
 {
     platform.dispatchable()->dispatch(mir::dispatch::FdEvent::readable);
+}
+
 }
 
 TEST_P(EvdevInputPlatform, scans_on_start)
@@ -183,6 +103,7 @@ TEST_P(EvdevInputPlatform, scans_on_start)
     EXPECT_CALL(mock_registry, add_device(_));
 
     platform->start();
+    run_dispatchable(*platform);
 }
 
 TEST_P(EvdevInputPlatform, detects_on_hotplug)
@@ -213,7 +134,7 @@ TEST_P(EvdevInputPlatform, detects_hot_removal)
 
         env.add_standard_device(GetParam());
         run_dispatchable(*platform);
-        remove_devices();
+        env.remove_standard_device(GetParam());
         run_dispatchable(*platform);
     }
 }
@@ -226,19 +147,18 @@ TEST_P(EvdevInputPlatform, removes_devices_on_stop)
     env.add_standard_device(GetParam());
     platform->start();
 
+    run_dispatchable(*platform);
     EXPECT_CALL(mock_registry, remove_device(_));
     platform->stop();
 }
 
 INSTANTIATE_TEST_CASE_P(DeviceHandling,
                         EvdevInputPlatform,
-                        ::testing::Values(std::string("synaptics-touchpad"),
-                                          std::string("usb-keyboard"),
-                                          std::string("usb-mouse"),
-                                          std::string("laptop-keyboard"),
-                                          std::string("bluetooth-magic-trackpad")));
-
-
+                        ::testing::Values(mtf::LibInputEnvironment::synaptics_touchpad,
+                                          mtf::LibInputEnvironment::usb_keyboard,
+                                          mtf::LibInputEnvironment::usb_mouse,
+                                          mtf::LibInputEnvironment::mtk_tpd,
+                                          mtf::LibInputEnvironment::bluetooth_magic_trackpad));
 
 TEST_F(EvdevInputPlatform, register_ungrouped_devices)
 {
@@ -247,8 +167,8 @@ TEST_F(EvdevInputPlatform, register_ungrouped_devices)
 
     EXPECT_CALL(mock_registry, add_device(_)).Times(2);
 
-    env.add_standard_device("synaptics-touchpad");
-    env.add_standard_device("usb-keyboard");
+    env.add_standard_device(mtf::LibInputEnvironment::synaptics_touchpad);
+    env.add_standard_device(mtf::LibInputEnvironment::usb_keyboard);
     run_dispatchable(*platform);
 }
 
@@ -259,21 +179,10 @@ TEST_F(EvdevInputPlatform, ignore_devices_from_same_group)
 
     EXPECT_CALL(mock_registry, add_device(_)).Times(1);
 
-    setup_groupped_devices({to_fake_ptr<libinput_device*>(1), to_fake_ptr<libinput_device*>(2)});
-
-    env.add_standard_device("synaptics-touchpad");
-    env.add_standard_device("usb-keyboard");
-    run_dispatchable(*platform);
-}
-
-TEST_F(EvdevInputPlatform, ignore_non_input_devices)
-{
-    auto platform = create_input_platform();
-    platform->start();
-
-    EXPECT_CALL(mock_registry, add_device(_)).Times(0);
-    EXPECT_CALL(mock_libinput, libinput_path_add_device(_,_)).Times(0);
-
-    env.add_standard_device("standard-drm-devices");
+    auto touch_pad = env.setup_device(mtf::LibInputEnvironment::synaptics_touchpad);
+    auto keyboard = env.setup_device(mtf::LibInputEnvironment::usb_keyboard);
+    setup_groupped_devices({touch_pad, keyboard});
+    env.mock_libinput.setup_device_add_event(touch_pad);
+    env.mock_libinput.setup_device_add_event(keyboard);
     run_dispatchable(*platform);
 }
