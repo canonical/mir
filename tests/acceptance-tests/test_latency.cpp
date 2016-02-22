@@ -285,6 +285,7 @@ TEST_F(ClientLatency, latency_is_limited_to_nbuffers)
 
     auto max_latency = display.group.max_latency();
     EXPECT_THAT(max_latency, Le(expected_client_buffers));
+    visible_surface.reset();
 }
 
 TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
