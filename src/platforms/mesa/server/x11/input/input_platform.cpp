@@ -152,7 +152,7 @@ void mix::XInputPlatform::process_input_event()
             case ButtonRelease:
                 {
                     auto const& xbev = xev.xbutton;
-                    auto const up = 4, down = 5, left = 6, right = 7;
+                    auto const up = Button4, down = Button5, left = 6, right = 7;
 
 #ifdef MIR_ON_X11_INPUT_VERBOSE
                     mir::log_info("X11 button event :"
@@ -173,6 +173,7 @@ void mix::XInputPlatform::process_input_event()
                     }
                     auto const event_time =
                         std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds{xbev.time});
+                    core_pointer->update_button_state(xbev.state);
 
                     if (xbev.button >= up && xbev.button <= right)
                     {  // scroll event
@@ -214,6 +215,7 @@ void mix::XInputPlatform::process_input_event()
                                   xmev.y_root, xmev.state, xmev.is_hint == NotifyNormal ? "no" : "yes", xmev.same_screen);
 #endif
 
+                    core_pointer->update_button_state(xmev.state);
                     core_pointer->pointer_motion(
                         std::chrono::milliseconds{xmev.time}, geom::Point{xmev.x, xmev.y}, geom::Displacement{0, 0});
 

@@ -34,19 +34,31 @@ namespace mix = mi::X;
 
 namespace
 {
-MirPointerButtons to_button_state(int button)
+MirPointerButtons to_mir_button(int button)
 {
+    auto const button_side = 8;
+    auto const button_extra = 9;
     if (button == Button1)
         return mir_pointer_button_primary;
     if (button == Button2)  // tertiary (middle) button is Button2 in X
         return mir_pointer_button_tertiary;
     if (button == Button3)
         return mir_pointer_button_secondary;
-    if (button == 8)
+    if (button == button_side)
         return mir_pointer_button_side;
-    if (button == 9)
+    if (button == button_extra)
         return mir_pointer_button_extra;
     return 0;
+}
+
+MirPointerButtons to_mir_button_state(int x_button_key_state)
+{
+    // the state variable contains modifier and button state.
+    MirPointerButtons button_state = x_button_key_state << 8;
+    button_state = (button_state & ~(mir_pointer_button_secondary|mir_pointer_button_tertiary)) // second and middle button are swaped in X11
+                   | ((button_state & mir_pointer_button_secondary) >> 1)
+                   | ((button_state & mir_pointer_button_tertiary) << 1);
+    return button_state;
 }
 
 }
@@ -70,6 +82,9 @@ void mix::XInputDevice::stop()
 
 mi::InputDeviceInfo mix::XInputDevice::get_device_info()
 {
+    // TODO Make use if X11-XInput2 to get raw device information
+    // and support other devices than just the unified pointer and
+    // keyboards.
     return info;
 }
 
@@ -84,7 +99,6 @@ mir::optional_value<mi::PointerSettings> mix::XInputDevice::get_pointer_settings
 
 void mix::XInputDevice::apply_settings(PointerSettings const&)
 {
-    // TODO Make use if X11-XInput2
 }
 
 mir::optional_value<mi::TouchpadSettings> mix::XInputDevice::get_touchpad_settings() const
@@ -130,9 +144,14 @@ void mix::XInputDevice::key_release(std::chrono::nanoseconds event_time, xkb_key
         );
 }
 
+void mix::XInputDevice::update_button_state(int button)
+{
+    button_state = to_mir_button_state(button);
+}
+
 void mix::XInputDevice::pointer_press(std::chrono::nanoseconds event_time, int button, mir::geometry::Point const& pos, mir::geometry::Displacement scroll)
 {
-    button_state |= to_button_state(button);
+    button_state |= to_mir_button(button);
 
     auto const movement = pos - pointer_pos;
     pointer_pos = pos;
@@ -151,7 +170,7 @@ void mix::XInputDevice::pointer_press(std::chrono::nanoseconds event_time, int b
 
 void mix::XInputDevice::pointer_release(std::chrono::nanoseconds event_time, int button, mir::geometry::Point const& pos, mir::geometry::Displacement scroll)
 {
-    button_state = button_state & ~(to_button_state(button));
+    button_state &= ~to_mir_button(button);
 
     auto const movement = pos - pointer_pos;
     pointer_pos = pos;
@@ -171,7 +190,6 @@ void mix::XInputDevice::pointer_release(std::chrono::nanoseconds event_time, int
 
 void mix::XInputDevice::pointer_motion(std::chrono::nanoseconds event_time, mir::geometry::Point const& pos, mir::geometry::Displacement scroll)
 {
-    std::cout << "pos " << pos.x.as_float() << std::endl;
     auto const movement = pos - pointer_pos;
     pointer_pos = pos;
     sink->handle_input(
