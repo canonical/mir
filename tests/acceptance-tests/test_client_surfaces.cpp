@@ -87,7 +87,8 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
 
     ClientSurfaces()
     {
-        pipe2(log_pipe, O_NONBLOCK);
+        if (pipe2(log_pipe, O_NONBLOCK))
+            throw std::runtime_error("ClientSurfaces: pipe2 failed");
 
         char fdstr[8];
         snprintf(fdstr, sizeof(fdstr)-1, "%d", log_pipe[1]);
