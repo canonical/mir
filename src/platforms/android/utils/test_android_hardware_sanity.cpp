@@ -21,17 +21,18 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/graphics/renderable.h"
+#include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/buffer_properties.h"
 
 #include "mir_test_framework/server_runner.h"
-#include "mir/test/doubles/stub_display.h"
-#include "mir/test/doubles/stub_renderable.h"
+//#include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/validity_matchers.h"
 #include "mir/test/as_render_target.h"
 #include "patterns.h"
-#include "examples/graphics.h"
+#include "graphics.h"
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 
@@ -230,7 +231,7 @@ TEST_F(AndroidHardwareSanity, display_can_post_overlay)
                 area.size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
             auto buffer = runner->config.the_buffer_allocator()->alloc_buffer(properties);
             mg::RenderableList list{
-                std::make_shared<mt::doubles::StubRenderable>(buffer, area)
+//                std::make_shared<mt::doubles::StubRenderable>(buffer, area)
             };
 
             db.post_renderables_if_optimizable(list);
