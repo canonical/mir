@@ -59,15 +59,17 @@ void mcl::Buffer::received()
     }
 }
     
-void mcl::Buffer::map_to_region(MirGraphicsRegion& out_region)
+MirGraphicsRegion mcl::Buffer::map_region()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     mapped_region = buffer->secure_for_cpu_write();
-    out_region.width = mapped_region->width.as_int();
-    out_region.height = mapped_region->height.as_int();
-    out_region.stride = mapped_region->stride.as_int();
-    out_region.pixel_format = mapped_region->format;
-    out_region.vaddr = mapped_region->vaddr.get(); 
+    return MirGraphicsRegion {
+        mapped_region->width.as_int(),
+        mapped_region->height.as_int(),
+        mapped_region->stride.as_int(),
+        mapped_region->format,
+        mapped_region->vaddr.get()
+    };
 }
 
 MirNativeBuffer* mcl::Buffer::as_mir_native_buffer() const

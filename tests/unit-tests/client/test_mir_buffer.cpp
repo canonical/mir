@@ -58,9 +58,8 @@ TEST_F(MirBufferTest, fills_region_with_correct_info_when_securing)
     EXPECT_CALL(*mock_client_buffer, secure_for_cpu_write())
         .WillOnce(Return(region));
 
-    MirGraphicsRegion out_region;
     mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer);
-    buffer.map_to_region(out_region);
+    auto out_region = buffer.map_region();
 
     EXPECT_THAT(out_region.width, Eq(width.as_int()));
     EXPECT_THAT(out_region.height, Eq(height.as_int()));
@@ -76,11 +75,10 @@ TEST_F(MirBufferTest, releases_buffer_refcount_on_submission)
     EXPECT_CALL(*mock_client_buffer, secure_for_cpu_write())
         .WillOnce(Return(region));
 
-    MirGraphicsRegion out_region;
     mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer);
 
     auto use_count_before = region.use_count();
-    buffer.map_to_region(out_region);
+    buffer.map_region();
 
     EXPECT_THAT(use_count_before, Lt(region.use_count()));
 
@@ -96,11 +94,10 @@ TEST_F(MirBufferTest, releases_buffer_refcount_implicitly_on_submit)
     EXPECT_CALL(*mock_client_buffer, secure_for_cpu_write())
         .WillOnce(Return(region));
 
-    MirGraphicsRegion out_region;
     mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer);
 
     auto use_count_before = region.use_count();
-    buffer.map_to_region(out_region);
+    buffer.map_region();
 
     EXPECT_THAT(use_count_before, Lt(region.use_count()));
 

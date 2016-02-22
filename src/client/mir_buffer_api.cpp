@@ -95,18 +95,18 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-void mir_buffer_acquire_region(MirBuffer* b, MirBufferAccess access, MirGraphicsRegion* region)
+MirGraphicsRegion mir_buffer_acquire_region(MirBuffer* b, MirBufferAccess access)
 try
 {
-    mir::require(b && region);
+    mir::require(b);
     auto buffer = reinterpret_cast<mcl::Buffer*>(b);
     if (!buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
         BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffer"));
-    buffer->map_to_region(*region);
+
+    return buffer->map_region();
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    if (region)
-        region->vaddr = nullptr;
+    return MirGraphicsRegion { 0, 0, 0, mir_pixel_format_invalid, nullptr };
 }
