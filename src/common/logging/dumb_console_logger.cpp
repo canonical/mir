@@ -38,8 +38,8 @@ void ml::DumbConsoleLogger::log(ml::Severity severity,
         "<DEBUG> "
     };
 
-    int fd = severity < ml::Severity::informational ?
-                    STDERR_FILENO : STDOUT_FILENO; 
+    int fd = severity < ml::Severity::informational ? STDERR_FILENO
+                                                    : STDOUT_FILENO; 
     char const* env = getenv("MIR_LOG_FD");
     if (env)
         fd = atoi(env);
