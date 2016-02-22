@@ -366,6 +366,7 @@ float MotionEvent::getAccumulatedAxisValue(int32_t axis, size_t pointerIndex) co
         acc += mSamplePointerCoords[i * pointerCount + pointerIndex].getAxisValue(axis);
     return acc;
 }
+
 float MotionEvent::getRawAxisValue(int32_t axis, size_t pointerIndex) const {
     switch (axis)
     {
@@ -374,7 +375,6 @@ float MotionEvent::getRawAxisValue(int32_t axis, size_t pointerIndex) const {
     case AMOTION_EVENT_AXIS_VSCROLL:
     case AMOTION_EVENT_AXIS_HSCROLL:
         return getAccumulatedAxisValue(axis, pointerIndex);
-        break;
     default:
         return getRawPointerCoords(pointerIndex)->getAxisValue(axis);
     }
