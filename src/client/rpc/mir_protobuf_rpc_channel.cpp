@@ -298,26 +298,28 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 seq.mutable_buffer_request()->mutable_buffer()->add_fd(fd);
         }
 
-        auto map = surface_map.lock();
-        if (!map)
+        if (auto map = surface_map.lock())
+        {
+            try
+            {
+                map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
+                [&] (mcl::BufferReceiver* receiver) {
+                    receiver->buffer_available(seq.buffer_request().buffer());
+                });
+            }
+            catch (std::exception& e)
+            {
+                for(auto i = 0; i < seq.buffer_request().buffer().fd_size(); i++)
+                    close(seq.buffer_request().buffer().fd(i));
+                throw e;
+            }
+        }
+        else
         {
             for(auto i = 0; i < seq.buffer_request().buffer().fd_size(); i++)
                 close(seq.buffer_request().buffer().fd(i));
         }
 
-        try
-        {
-            map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
-            [&] (mcl::BufferReceiver* receiver) {
-                receiver->buffer_available(seq.buffer_request().buffer());
-            });
-        }
-        catch (std::exception& e)
-        {
-            for(auto i = 0; i < seq.buffer_request().buffer().fd_size(); i++)
-                close(seq.buffer_request().buffer().fd(i));
-            throw e;
-        }
     }
 
     int const nevents = seq.event_size();
