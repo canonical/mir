@@ -68,25 +68,6 @@ TEST_F(MirBufferTest, fills_region_with_correct_info_when_securing)
     EXPECT_THAT(out_region.vaddr, Eq(vaddr.get()));
 }
 
-TEST_F(MirBufferTest, releases_buffer_refcount_on_submission)
-{
-    auto region = std::make_shared<mcl::MemoryRegion>(
-        mcl::MemoryRegion{width, height, stride, format, vaddr});
-    EXPECT_CALL(*mock_client_buffer, secure_for_cpu_write())
-        .WillOnce(Return(region));
-
-    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer);
-
-    auto use_count_before = region.use_count();
-    buffer.map_region();
-
-    EXPECT_THAT(use_count_before, Lt(region.use_count()));
-
-    buffer.submitted();
-
-    EXPECT_THAT(use_count_before, Eq(region.use_count()));
-}
-
 TEST_F(MirBufferTest, releases_buffer_refcount_implicitly_on_submit)
 {
     auto region = std::make_shared<mcl::MemoryRegion>(
@@ -116,7 +97,7 @@ TEST_F(MirBufferTest, returns_correct_native_buffer)
     EXPECT_THAT(buffer.as_mir_native_buffer(), Eq(reinterpret_cast<MirNativeBuffer*>(&fake)));
 }
 
-TEST_F(MirBufferTest, set_fence)
+TEST_F(MirBufferTest, sets_client_buffers_fence)
 {
     int fakefence { 19 };
     MirNativeFence* fence = reinterpret_cast<MirNativeFence*>(&fakefence);
@@ -127,7 +108,7 @@ TEST_F(MirBufferTest, set_fence)
     buffer.set_fence(fence, access);
 }
 
-TEST_F(MirBufferTest, get_fence)
+TEST_F(MirBufferTest, gets_fence_from_client_buffer)
 {
     int fakefence { 19 };
     MirNativeFence* fence = reinterpret_cast<MirNativeFence*>(&fakefence);
@@ -138,7 +119,7 @@ TEST_F(MirBufferTest, get_fence)
     EXPECT_THAT(fence, Eq(buffer.get_fence()));
 }
 
-TEST_F(MirBufferTest, wait_fence_read)
+TEST_F(MirBufferTest, waits_for_proper_access)
 {
     int fakefence { 19 };
     MirNativeFence* fence = reinterpret_cast<MirNativeFence*>(&fakefence);
