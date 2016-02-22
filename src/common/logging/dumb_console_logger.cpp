@@ -58,5 +58,5 @@ void ml::DumbConsoleLogger::log(ml::Severity severity,
     auto line = std::string{"["} + now + "] " +
                 lut[static_cast<int>(severity)] + component + ": " +
                 message + "\n";
-    write(fd, line.data(), line.size());
+    (void)write(fd, line.data(), line.size());
 }
