@@ -363,8 +363,7 @@ TEST_F(ClientSurfaces, can_be_renamed)
 
 TEST_F(ClientSurfaces, reports_performance)
 {
-    char const *old_perf = getenv("MIR_CLIENT_PERF_REPORT");
-    setenv("MIR_CLIENT_PERF_REPORT", "log", 1);
+    mtf::TemporaryEnvironmentValue("MIR_CLIENT_PERF_REPORT", "log");
 
     auto spec = mir_connection_create_spec_for_normal_surface(
                    connection, 123, 456, mir_pixel_format_abgr_8888);
@@ -410,11 +409,6 @@ TEST_F(ClientSurfaces, reports_performance)
     EXPECT_THAT(reports, ::testing::Ge(nseconds-1));
 
     mir_surface_release_sync(surf);
-
-    if (old_perf)
-        setenv("MIR_CLIENT_PERF_REPORT", old_perf, 1);
-    else
-        unsetenv("MIR_CLIENT_PERF_REPORT");
 }
 
 TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
