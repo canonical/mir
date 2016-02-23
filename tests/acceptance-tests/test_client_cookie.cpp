@@ -25,6 +25,7 @@
 #include "mir/test/spin_wait.h"
 #include "mir/test/wait_condition.h"
 #include "mir/cookie/authority.h"
+#include "mir_test_framework/visible_surface.h"
 
 #include "boost/throw_exception.hpp"
 
@@ -43,7 +44,7 @@ std::chrono::seconds const max_wait{4};
 void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx);
 }
 
-class ClientCookies : public mtf::ConnectedClientWithASurface
+class ClientCookies : public mtf::ConnectedClientHeadlessServer
 {
 public:
     ClientCookies()
@@ -54,15 +55,16 @@ public:
 
     void SetUp() override
     {
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientHeadlessServer::SetUp();
 
         // Need fullscreen for the cursor events
-        auto const spec = mir_connection_create_spec_for_changes(connection);
+        auto const spec = mir_connection_create_spec_for_normal_surface(
+            connection, 100, 100, mir_pixel_format_abgr_8888);
         mir_surface_spec_set_fullscreen_on_output(spec, 1);
-        mir_surface_apply_spec(surface, spec);
+        mir_surface_spec_set_event_handler(spec, &cookie_capturing_callback, this);
+        surface = mir_surface_create_sync(spec);
         mir_surface_spec_release(spec);
 
-        mir_surface_set_event_handler(surface, &cookie_capturing_callback, this);
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
 
         ready_to_accept_events.wait_for_at_most_seconds(max_wait);
@@ -88,6 +90,7 @@ public:
     mutable std::mutex mutex;
     bool exposed{false};
     bool focused{false};
+    MirSurface* surface;
 };
 
 namespace

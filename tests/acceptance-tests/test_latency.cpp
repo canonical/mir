@@ -25,6 +25,7 @@
 #include "mir/test/doubles/null_display_buffer.h"
 #include "mir/test/doubles/null_display_sync_group.h"
 #include "mir/test/fake_shared.h"
+#include "mir_test_framework/visible_surface.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -212,12 +213,26 @@ struct TimeTrackingDisplay : mtd::NullDisplay
     TimeTrackingGroup group;
 };
  
-struct ClientLatency : mtf::ConnectedClientWithASurface
+struct ClientLatency : mtf::ConnectedClientHeadlessServer
 {
     void SetUp() override
     {
         preset_display(mt::fake_shared(display));
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientHeadlessServer::SetUp();
+
+        auto del = [] (MirSurfaceSpec* spec) { mir_surface_spec_release(spec); };
+        std::unique_ptr<MirSurfaceSpec, decltype(del)> spec(
+            mir_connection_create_spec_for_normal_surface(
+                connection, 100, 100, mir_pixel_format_abgr_8888),
+            del);
+        visible_surface = std::make_unique<mtf::VisibleSurface>(spec.get());
+        surface =  *visible_surface;
+    }
+
+    void TearDown() override
+    {
+        visible_surface.reset();
+        mtf::ConnectedClientHeadlessServer::TearDown();
     }
 
     Stats stats;
@@ -229,10 +244,12 @@ struct ClientLatency : mtf::ConnectedClientWithASurface
     // affecting results will be the first few frames before the buffer
     // quere is full (during which there will be no buffer latency).
     float const error_margin = 0.4f;
+    std::unique_ptr<mtf::VisibleSurface> visible_surface;
+    MirSurface* surface;
 };
 }
 
-TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
+TEST_F(ClientLatency, triple_buffered_client_has_less_than_two_frames_latency)
 {
     using namespace testing;
 
@@ -251,11 +268,9 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
     //       nbuffers instead of nbuffers-1. After dynamic queue scaling is
     //       enabled, the average will be lower than this.
     float const expected_max_latency = expected_client_buffers;
-    float const expected_min_latency = expected_client_buffers - 1;
 
     auto observed_latency = display.group.average_latency();
 
-    EXPECT_THAT(observed_latency, Gt(expected_min_latency-error_margin));
     EXPECT_THAT(observed_latency, Lt(expected_max_latency+error_margin));
 }
 
