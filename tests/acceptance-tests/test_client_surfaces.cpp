@@ -28,6 +28,7 @@
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/validity_matchers.h"
 #include "mir/test/fake_shared.h"
+#include "mir/test/pipe.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -82,23 +83,14 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
 {
     static const int max_surface_count = 5;
     SurfaceSync ssync[max_surface_count];
-    int log_pipe[2];
+    mt::Pipe log_pipe{O_NONBLOCK};
     std::string log;
 
     ClientSurfaces()
     {
-        if (pipe2(log_pipe, O_NONBLOCK))
-            throw std::runtime_error("ClientSurfaces: pipe2 failed");
-
         char fdstr[8];
-        snprintf(fdstr, sizeof(fdstr)-1, "%d", log_pipe[1]);
+        snprintf(fdstr, sizeof(fdstr)-1, "%d", (int)log_pipe.write_fd());
         setenv("MIR_LOG_FD", fdstr, 1);
-    }
-
-    ~ClientSurfaces()
-    {
-        close(log_pipe[0]);
-        close(log_pipe[1]);
     }
 
     void save_log()
@@ -106,7 +98,7 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
         char buf[1024];
         ssize_t got;
 
-        while ((got = read(log_pipe[0], buf, sizeof(buf)-1)) > 0)
+        while ((got = read(log_pipe.read_fd(), buf, sizeof(buf)-1)) > 0)
         {
             buf[got] = '\0';
             log += buf;
