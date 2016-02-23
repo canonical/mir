@@ -94,7 +94,6 @@ struct X11PlatformTest : ::testing::Test
 MATCHER(ButtonUpEventWithNoButtonsPressed, "")
 {
     auto pev = mt::maybe_pointer_event(mt::to_address(arg));
-    if (!pev) std::cout << "Not a Pointer event" << std::endl;
     return mt::button_event_matches(pev, 0, 0, mir_pointer_action_button_up, 0, true, true, false);
 }
 

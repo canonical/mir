@@ -234,25 +234,13 @@ inline bool button_event_matches(MirPointerEvent const* pev, float x, float y, M
     if (pev == nullptr)
         return false;
     if (check_action && mir_pointer_event_action(pev) != action)
-    {
-        std::cout << "wrong action " << mir_pointer_event_action(pev) << " instead of " << action << std::endl;
         return false;
-    }
     if (check_buttons && mir_pointer_event_buttons(pev) != button_state)
-    {
-        std::cout << "wrong button state " << mir_pointer_event_buttons(pev) << " instead of " << button_state << std::endl;
         return false;
-    }
     if (check_axes && mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != x)
-    {
-        std::cout << "wrong action " << mir_pointer_event_axis_value(pev, mir_pointer_axis_x) << " instead of " << x << std::endl;
         return false;
-    }
     if (check_axes && mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != y)
-    {
-        std::cout << "wrong action " << mir_pointer_event_axis_value(pev, mir_pointer_axis_y) << " instead of " << y << std::endl;
         return false;
-    }
     return true;
 }
 
