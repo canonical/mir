@@ -1,4 +1,4 @@
-mir (0.20.0) UNRELEASED; urgency=medium
+mir (0.20.0+16.04.20160219-0ubuntu1) xenial; urgency=medium
 
   [ Alan Griffiths ]
   * New upstream release 0.20.0 (https://launchpad.net/mir/+milestone/0.20.0)
@@ -58,7 +58,25 @@ mir (0.20.0) UNRELEASED; urgency=medium
       . move an android-only test that ended up in tests/unit-tests/graphics.
         (LP: ##1546676) [Cherrypicked from 0.21]
 
- -- Alan Griffiths <alan.griffiths@canonical.com>  Fri, 12 Feb 2016 12:56:45 +0000
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Alan Griffiths <ci-train-bot@canonical.com>  Fri, 19 Feb 2016 10:40:59 +0000
+
+mir (0.19.3+16.04.20160212-0ubuntu1) xenial; urgency=medium
+
+  [ Kevin DuBois ]
+  * New upstream release 0.19.3 (https://launchpad.net/mir/+milestone/0.19.3)
+    - ABI summary:
+      . no abi changes in any libraries. bugfix release only
+    - Bugs fixed:
+      . Workaround for broken hwc implementations that dont allow querying
+        display information during hotplug (LP: #1531503)
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- kevin gunn <kevin.gunn@canonical.com>  Fri, 12 Feb 2016 18:50:06 +0000
 
 mir (0.19.2+16.04.20160210-0ubuntu1) xenial; urgency=medium
 
