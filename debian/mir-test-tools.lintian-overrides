@@ -1,2 +1,5 @@
+arch-dependent-file-in-usr-share
+binary-from-other-architecture
 package-name-doesnt-match-sonames
 shlib-without-versioned-soname
+unstripped-binary-or-object
