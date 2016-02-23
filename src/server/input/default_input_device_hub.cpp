@@ -70,7 +70,7 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
     if (it == end(devices))
     {
         auto id = create_new_device_id();
-        auto handle = std::make_shared<DefaultDevice>(id, device_queue, device);
+        auto handle = std::make_shared<DefaultDevice>(id, device_queue, *device);
         // send input device info to observer loop..
         devices.push_back(std::make_unique<RegisteredDevice>(
             device, id, input_dispatchable, cookie_authority, handle));
