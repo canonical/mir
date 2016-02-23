@@ -347,10 +347,11 @@ TEST_F(ClientSurfaces, can_be_renamed)
 TEST_F(ClientSurfaces, reports_performance)
 {
     mt::Pipe log_pipe(O_NONBLOCK);
-    mtf::TemporaryEnvironmentValue env_mir_log_fd(
-        "MIR_LOG_FD", std::to_string((int)log_pipe.write_fd()).c_str());
-    mtf::TemporaryEnvironmentValue env_perf(
-        "MIR_CLIENT_PERF_REPORT", "log");
+    mtf::TemporaryEnvironmentValue env[] =
+    {
+        {"MIR_LOG_FD", std::to_string((int)log_pipe.write_fd()).c_str()},
+        {"MIR_CLIENT_PERF_REPORT", "log"}
+    };
     std::string log;
 
     auto spec = mir_connection_create_spec_for_normal_surface(
