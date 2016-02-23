@@ -100,10 +100,9 @@ std::string remove_if_stale(std::string const& socket_name)
 mf::PublishedSocketConnector::PublishedSocketConnector(
     const std::string& socket_file,
     std::shared_ptr<ConnectionCreator> const& connection_creator,
-    int threads,
     EmergencyCleanupRegistry& emergency_cleanup_registry,
     std::shared_ptr<ConnectorReport> const& report)
-:   BasicConnector(connection_creator, threads, report),
+:   BasicConnector(connection_creator, report),
     socket_file(remove_if_stale(socket_file)),
     acceptor(io_service, socket_file)
 {
@@ -144,11 +143,9 @@ void mf::PublishedSocketConnector::on_new_connection(
 
 mf::BasicConnector::BasicConnector(
     std::shared_ptr<ConnectionCreator> const& connection_creator,
-    int threads,
     std::shared_ptr<ConnectorReport> const& report)
 :   work(io_service),
     report(report),
-    io_service_threads(threads),
     connection_creator{connection_creator}
 {
 }
@@ -172,11 +169,7 @@ void mf::BasicConnector::start()
         }
     };
 
-    report->starting_threads(io_service_threads.size());
-    for (auto& thread : io_service_threads)
-    {
-        thread = std::thread(run_io_service);
-    }
+    io_service_thread = std::thread(run_io_service);
 }
 
 void mf::BasicConnector::stop()
@@ -184,16 +177,9 @@ void mf::BasicConnector::stop()
     /* Stop processing new requests */
     io_service.stop();
 
-    report->stopping_threads(io_service_threads.size());
-
-    /* Wait for all io processing threads to finish */
-    for (auto& thread : io_service_threads)
-    {
-        if (thread.joinable())
-        {
-            thread.join();
-        }
-    }
+    /* Wait for io processing thread to finish */
+    if (io_service_thread.joinable())
+        io_service_thread.join();
 
     /* Prepare for a potential restart */
     io_service.reset();

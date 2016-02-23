@@ -21,13 +21,11 @@
 #include "mir/input/touchpad_configuration.h"
 #include "mir/input/pointer_configuration.h"
 #include "mir/dispatch/action_queue.h"
-#include "mir/test/fake_shared.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <stdexcept>
 
 namespace mi = mir::input;
-namespace mt = mir::test;
 namespace md = mir::dispatch;
 using namespace ::testing;
 namespace
@@ -77,7 +75,7 @@ struct DefaultDevice : Test
 
 TEST_F(DefaultDevice, refuses_touchpad_config_on_mice)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mt::fake_shared(mouse));
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mouse);
     mi::TouchpadConfiguration touch_conf;
 
     EXPECT_THROW({dev.apply_touchpad_configuration(touch_conf);}, std::invalid_argument);
@@ -85,7 +83,7 @@ TEST_F(DefaultDevice, refuses_touchpad_config_on_mice)
 
 TEST_F(DefaultDevice, refuses_touchpad_and_pointer_settings_on_keyboards)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mt::fake_shared(keyboard));
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, keyboard);
     mi::TouchpadConfiguration touch_conf;
     mi::PointerConfiguration pointer_conf;
 
@@ -96,7 +94,7 @@ TEST_F(DefaultDevice, refuses_touchpad_and_pointer_settings_on_keyboards)
 
 TEST_F(DefaultDevice, accepts_pointer_config_on_mice)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mt::fake_shared(mouse));
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mouse);
     mi::PointerConfiguration pointer_conf;
 
     EXPECT_CALL(mouse, apply_settings(Matcher<mi::PointerSettings const&>(_)));
@@ -107,7 +105,7 @@ TEST_F(DefaultDevice, accepts_pointer_config_on_mice)
 
 TEST_F(DefaultDevice, accepts_touchpad_and_pointer_config_on_touchpads)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mt::fake_shared(touchpad));
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad);
     mi::TouchpadConfiguration touch_conf;
     mi::PointerConfiguration pointer_conf;
 
@@ -122,7 +120,7 @@ TEST_F(DefaultDevice, accepts_touchpad_and_pointer_config_on_touchpads)
 
 TEST_F(DefaultDevice, ensures_cursor_accleration_bias_is_in_range)
 {
-    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, mt::fake_shared(touchpad));
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad);
 
     mi::PointerConfiguration pointer_conf;
     pointer_conf.cursor_acceleration_bias = 3.0;

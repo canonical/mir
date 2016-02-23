@@ -255,7 +255,7 @@ TEST_F(SeatInputDeviceTracker, tracks_a_single_button_state_for_multiple_pointin
                                                            no_buttons, 0, 0, 0, 0));
 }
 
-TEST_F(SeatInputDeviceTracker, poiniting_device_removal_removes_pressed_button_state)
+TEST_F(SeatInputDeviceTracker, pointing_device_removal_removes_pressed_button_state)
 {
     int const x = 0, y = 0;
 

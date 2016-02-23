@@ -37,10 +37,6 @@ CONNECTOR_TRACE_POINT(scheduled)
 
 #undef CONNECTOR_TRACE_POINT
 
-TRACEPOINT_EVENT(TRACEPOINT_PROVIDER, starting_threads, TP_ARGS(int, count), TP_FIELDS(ctf_integer(int, count, count)))
-
-TRACEPOINT_EVENT(TRACEPOINT_PROVIDER, stopping_threads, TP_ARGS(int, count), TP_FIELDS(ctf_integer(int, count, count)))
-
 TRACEPOINT_EVENT(TRACEPOINT_PROVIDER,
                  creating_session_for,
                  TP_ARGS(int, socket),

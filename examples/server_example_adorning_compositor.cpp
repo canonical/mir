@@ -118,9 +118,67 @@ me::AdorningDisplayBufferCompositor::AdorningDisplayBufferCompositor(
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 }
 
+namespace
+{
+bool renderable_is_occluded(
+    mg::Renderable const& renderable,
+    mir::geometry::Rectangle const& area,
+    std::vector<mir::geometry::Rectangle>& coverage)
+{
+    static glm::mat4 const identity;
+    static mir::geometry::Rectangle const empty{};
+
+    if (renderable.transformation() != identity)
+        return false;  // Weirdly transformed. Assume never occluded.
+
+    auto const& window = renderable.screen_position();
+    auto const& clipped_window = window.intersection_with(area);
+
+    if (clipped_window == empty)
+        return true;  // Not in the area; definitely occluded.
+
+    bool occluded = false;
+    for (auto const& r : coverage)
+    {
+        if (r.contains(clipped_window))
+        {
+            occluded = true;
+            break;
+        }
+    }
+
+    if (!occluded && renderable.alpha() == 1.0f && !renderable.shaped())
+        coverage.push_back(clipped_window);
+
+    return occluded;
+}
+
+void remove_occlusions_from(mc::SceneElementSequence& elements, mir::geometry::Rectangle const& area)
+{
+    std::vector<mir::geometry::Rectangle> coverage;
+
+    auto it = elements.rbegin();
+    while (it != elements.rend())
+    {
+        auto const renderable = (*it)->renderable();
+        if (renderable_is_occluded(*renderable, area, coverage))
+        {
+            (*it)->occluded();
+            it = mc::SceneElementSequence::reverse_iterator(elements.erase(std::prev(it.base())));
+        }
+        else
+        {
+            it++;
+        }
+    }
+}
+}
+
 void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequence&& scene_sequence)
 {
     report->began_frame(this);
+
+    remove_occlusions_from(scene_sequence, db.view_area());
 
     //note: If what should be drawn is expressible as a SceneElementSequence,
     //      mg::DisplayBuffer::post_renderables_if_optimizable() should be used,
@@ -133,6 +191,7 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
     auto display_height = db.view_area().size.height.as_float();
 
     glUseProgram(program.program);
+    glViewport(0, 0, display_width, display_height);
     glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
 
     mg::RenderableList renderable_list;

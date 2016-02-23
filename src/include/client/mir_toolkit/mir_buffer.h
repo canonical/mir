@@ -113,6 +113,10 @@ int mir_buffer_wait_for_access(
     MirBufferAccess access,
     int timeout);
 
+/** release a MirBuffer
+ *   \param [in] buffer              The buffer to be released
+ **/
+void mir_buffer_release(MirBuffer* buffer);
 
 #ifdef __cplusplus
 }
