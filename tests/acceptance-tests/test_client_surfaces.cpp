@@ -84,14 +84,9 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
     static const int max_surface_count = 5;
     SurfaceSync ssync[max_surface_count];
     mt::Pipe log_pipe{O_NONBLOCK};
+    mtf::TemporaryEnvironmentValue env_mir_log_fd{
+        "MIR_LOG_FD", std::to_string((int)log_pipe.write_fd()).c_str()};
     std::string log;
-
-    ClientSurfaces()
-    {
-        char fdstr[8];
-        snprintf(fdstr, sizeof(fdstr)-1, "%d", (int)log_pipe.write_fd());
-        setenv("MIR_LOG_FD", fdstr, 1);
-    }
 
     void save_log()
     {
