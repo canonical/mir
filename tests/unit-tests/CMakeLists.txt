@@ -1,7 +1,6 @@
 include(CMakeDependentOption)
 
 add_definitions(
-  -DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/"
   -DMIR_CLIENT_PLATFORM_VERSION="${MIR_CLIENT_PLATFORM_VERSION}"
 )
 
@@ -42,9 +41,14 @@ add_library(example SHARED library_example.cpp)
 target_link_libraries(example mircommon)
 set_target_properties(
   example PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/shared-libraries
   OUTPUT_NAME example
   PREFIX ""
 )
+install(TARGETS example
+  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/share/mir-test-data/shared-libraries
+)
+
 
 # Umockdev uses glib, which uses the deprecated "register" allocation specifier
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
@@ -213,16 +217,21 @@ endif (MIR_RUN_UNIT_TESTS)
 
 add_custom_command(TARGET mir_unit_tests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_data ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_data
+  ${CMAKE_CURRENT_SOURCE_DIR}/shared-libraries ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/shared-libraries
   COMMENT "Copying test data to build dir..."
 )
+file(GLOB SO_FILES ${CMAKE_CURRENT_SOURCE_DIR}/shared-libraries/*.so*)
+install(FILES ${SO_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/mir-test-data/shared-libraries)
 
-add_library(loadable_test_dso SHARED ${CMAKE_CURRENT_SOURCE_DIR}/test_data/empty_input.c)
+add_library(loadable_test_dso SHARED ${CMAKE_CURRENT_SOURCE_DIR}/shared-libraries/empty_input.c)
 
 set_target_properties(loadable_test_dso PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_data
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/shared-libraries
   COMPILE_FLAGS "-Wno-pedantic"
   OUTPUT_NAME this-arch
+)
+install(TARGETS loadable_test_dso
+  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/share/mir-test-data/shared-libraries
 )
 
 add_dependencies(mir_unit_tests loadable_test_dso)
