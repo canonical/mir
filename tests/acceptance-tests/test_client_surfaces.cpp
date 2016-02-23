@@ -86,9 +86,8 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
     mt::Pipe log_pipe{O_NONBLOCK};
     mtf::TemporaryEnvironmentValue env_mir_log_fd{
         "MIR_LOG_FD", std::to_string((int)log_pipe.write_fd()).c_str()};
-    std::string log;
 
-    void save_log()
+    void save_log(std::string& log)
     {
         char buf[1024];
         ssize_t got;
@@ -107,7 +106,6 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
             return mt::fake_shared(window_manager);
         });
         ConnectedClientHeadlessServer::SetUp();
-        log.clear();
     }
 
     testing::NiceMock<mtd::MockWindowManager> window_manager;
@@ -364,6 +362,7 @@ TEST_F(ClientSurfaces, can_be_renamed)
 TEST_F(ClientSurfaces, reports_performance)
 {
     mtf::TemporaryEnvironmentValue env_perf("MIR_CLIENT_PERF_REPORT", "log");
+    std::string log;
 
     auto spec = mir_connection_create_spec_for_normal_surface(
                    connection, 123, 456, mir_pixel_format_abgr_8888);
@@ -383,7 +382,7 @@ TEST_F(ClientSurfaces, reports_performance)
             mir_buffer_stream_swap_buffers_sync(bs);
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        save_log();
+        save_log(log);
     }
 
     int reports = 0;
