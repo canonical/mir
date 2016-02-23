@@ -113,31 +113,6 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
         }
     }
 
-    char const* next_log_line()
-    {
-        std::string newline_or_nul{"\nx"};
-        newline_or_nul[1] = '\0';
-        auto sep = log.find_first_of(newline_or_nul);
-        if (sep == log.npos)
-            return NULL;
-
-        if (log[sep] == '\0')
-        {
-            log = log.substr(sep+1);
-            sep = log.find_first_of('\n');
-            if (sep == log.npos)
-                return NULL;
-        }
-
-        if (log[sep] == '\n')
-        {
-            log[sep] = '\0';
-            return log.data();
-        }
-
-        return NULL;
-    }
-
     void SetUp() override
     {
         server.override_the_window_manager_builder([this](msh::FocusController*)
@@ -426,14 +401,19 @@ TEST_F(ClientSurfaces, reports_performance)
     }
 
     int reports = 0;
-    while (auto line = next_log_line())
+    std::stringstream log_stream(log);
+    while (!log_stream.eof())
     {
-        if (auto perf = strstr(line, " perf: "))
+        std::string line;
+        std::getline(log_stream, line);
+        auto perf = line.find(" perf: ");
+        if (perf != line.npos)
         {
             ++reports;
             char name[256];
             float fps;
-            int fields = sscanf(perf, " perf: %255[^:]: %f FPS,", name, &fps);
+            int fields = sscanf(&line[perf],
+                                " perf: %255[^:]: %f FPS,", name, &fps);
             ASSERT_EQ(2, fields) << "Log line = {" << line << "}";
             EXPECT_STREQ("Foo", name);
             EXPECT_NEAR(target_fps, fps, 3.0f);
