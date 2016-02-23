@@ -25,6 +25,8 @@
 #include "mir/test/doubles/null_display_buffer.h"
 #include "mir/test/doubles/null_display_sync_group.h"
 #include "mir/test/fake_shared.h"
+#include "mir/options/option.h"
+#include "mir/test/doubles/null_logger.h"  // for mtd::logging_opt
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -274,7 +276,7 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
     float const expected_max_latency = expected_client_buffers;
     float const expected_min_latency = expected_client_buffers - 1;
 
-    if (0) // A handy debugging feature
+    if (server.get_options()->get<bool>(mtd::logging_opt))
         display.group.dump_latency();
 
     auto observed_latency = display.group.average_latency();
@@ -323,7 +325,7 @@ TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
     ASSERT_TRUE(stats.wait_for_posts(test_submissions,
                                      std::chrono::seconds(60)));
 
-    if (0) // A handy debugging feature
+    if (server.get_options()->get<bool>(mtd::logging_opt))
         display.group.dump_latency();
 
     // As the client is producing frames slower than the compositor consumes
