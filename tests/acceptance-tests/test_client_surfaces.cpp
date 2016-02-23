@@ -93,18 +93,6 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
         ConnectedClientHeadlessServer::SetUp();
     }
 
-    void save_log(mt::Pipe const& log_pipe, std::string& log) const
-    {
-        char buf[1024];
-        ssize_t got;
-
-        while ((got = read(log_pipe.read_fd(), buf, sizeof(buf)-1)) > 0)
-        {
-            buf[got] = '\0';
-            log += buf;
-        }
-    }
-
     testing::NiceMock<mtd::MockWindowManager> window_manager;
 };
 
@@ -383,7 +371,14 @@ TEST_F(ClientSurfaces, reports_performance)
             mir_buffer_stream_swap_buffers_sync(bs);
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        save_log(log_pipe, log);
+
+        char buf[1024];
+        ssize_t got;
+        while ((got = read(log_pipe.read_fd(), buf, sizeof(buf)-1)) > 0)
+        {
+            buf[got] = '\0';
+            log += buf;
+        }
     }
 
     int reports = 0;
