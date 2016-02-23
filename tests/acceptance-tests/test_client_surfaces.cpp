@@ -363,7 +363,7 @@ TEST_F(ClientSurfaces, can_be_renamed)
 
 TEST_F(ClientSurfaces, reports_performance)
 {
-    mtf::TemporaryEnvironmentValue("MIR_CLIENT_PERF_REPORT", "log");
+    mtf::TemporaryEnvironmentValue env_perf("MIR_CLIENT_PERF_REPORT", "log");
 
     auto spec = mir_connection_create_spec_for_normal_surface(
                    connection, 123, 456, mir_pixel_format_abgr_8888);
