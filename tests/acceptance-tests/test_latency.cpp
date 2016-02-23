@@ -229,6 +229,12 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
         surface =  *visible_surface;
     }
 
+    void TearDown() override
+    {
+        visible_surface.reset();
+        mtf::ConnectedClientHeadlessServer::TearDown();
+    }
+
     Stats stats;
     TimeTrackingDisplay display{stats};
     unsigned int test_submissions{100};
@@ -266,7 +272,6 @@ TEST_F(ClientLatency, triple_buffered_client_has_less_than_two_frames_latency)
     auto observed_latency = display.group.average_latency();
 
     EXPECT_THAT(observed_latency, Lt(expected_max_latency+error_margin));
-    visible_surface.reset();
 }
 
 TEST_F(ClientLatency, latency_is_limited_to_nbuffers)
@@ -285,7 +290,6 @@ TEST_F(ClientLatency, latency_is_limited_to_nbuffers)
 
     auto max_latency = display.group.max_latency();
     EXPECT_THAT(max_latency, Le(expected_client_buffers));
-    visible_surface.reset();
 }
 
 TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
@@ -315,5 +319,4 @@ TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
     float const observed_latency = display.group.average_latency();
     EXPECT_THAT(observed_latency, Ge(0.0f));
     EXPECT_THAT(observed_latency, Le(1.0f + error_margin));
-    visible_surface.reset();
 }
