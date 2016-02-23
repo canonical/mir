@@ -20,11 +20,14 @@
 #ifndef MIR_CLIENT_CLIENT_BUFFER_H_
 #define MIR_CLIENT_CLIENT_BUFFER_H_
 
+#include <mir_toolkit/client_types_nbs.h>
+#include <mir_toolkit/mir_native_buffer.h>
 #include "mir/graphics/native_buffer.h"
 #include "mir_toolkit/common.h"
 #include "mir/geometry/size.h"
 
 #include <memory>
+#include <chrono>
 
 /**
  * \addtogroup mir_toolkit
@@ -65,6 +68,10 @@ public:
     virtual void update_from(MirBufferPackage const& update_package) = 0;
     virtual void fill_update_msg(MirBufferPackage& message) = 0;
 
+    virtual MirNativeBuffer* as_mir_native_buffer() const = 0;
+    virtual void set_fence(MirNativeFence*, MirBufferAccess) = 0;
+    virtual MirNativeFence* get_fence() const = 0;
+    virtual bool wait_fence(MirBufferAccess, std::chrono::nanoseconds timeout) = 0;
 protected:
     ClientBuffer() = default;
     ClientBuffer(ClientBuffer const&) = delete;

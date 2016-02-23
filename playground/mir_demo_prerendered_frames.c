@@ -30,21 +30,20 @@
 void fill_buffer(MirBuffer* buffer, int shade, int min, int max)
 {
     unsigned char val = (unsigned char) (((float) shade / (max-min)) + min) * 0xFF;
-    
-    MirGraphicsRegion* region = mir_buffer_acquire_region(buffer, mir_read_write);
-    if (!region)
+
+    MirGraphicsRegion region = mir_buffer_get_graphics_region(buffer, mir_read_write);
+    if (!region.vaddr)
         return;
 
-    unsigned char* px = (unsigned char*) region->vaddr;
-    for(int i = 0; i < region->height; i++)
+    unsigned char* px = (unsigned char*) region.vaddr;
+    for(int i = 0; i < region.height; i++)
     {
-        px += region->stride; 
-        for(int j = 0; j < region->width; j++)
+        px += region.stride; 
+        for(int j = 0; j < region.width; j++)
         {
             px[j] = val;
         }
     }
-    mir_buffer_release_region(region);
 }
 
 typedef struct SubmissionInfo
