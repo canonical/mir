@@ -83,11 +83,17 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
 {
     static const int max_surface_count = 5;
     SurfaceSync ssync[max_surface_count];
-    mt::Pipe log_pipe{O_NONBLOCK};
-    mtf::TemporaryEnvironmentValue env_mir_log_fd{
-        "MIR_LOG_FD", std::to_string((int)log_pipe.write_fd()).c_str()};
 
-    void save_log(std::string& log)
+    void SetUp() override
+    {
+        server.override_the_window_manager_builder([this](msh::FocusController*)
+        {
+            return mt::fake_shared(window_manager);
+        });
+        ConnectedClientHeadlessServer::SetUp();
+    }
+
+    void save_log(mt::Pipe const& log_pipe, std::string& log) const
     {
         char buf[1024];
         ssize_t got;
@@ -97,15 +103,6 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
             buf[got] = '\0';
             log += buf;
         }
-    }
-
-    void SetUp() override
-    {
-        server.override_the_window_manager_builder([this](msh::FocusController*)
-        {
-            return mt::fake_shared(window_manager);
-        });
-        ConnectedClientHeadlessServer::SetUp();
     }
 
     testing::NiceMock<mtd::MockWindowManager> window_manager;
@@ -361,6 +358,9 @@ TEST_F(ClientSurfaces, can_be_renamed)
 
 TEST_F(ClientSurfaces, reports_performance)
 {
+    mt::Pipe log_pipe{O_NONBLOCK};
+    mtf::TemporaryEnvironmentValue env_mir_log_fd{
+        "MIR_LOG_FD", std::to_string((int)log_pipe.write_fd()).c_str()};
     mtf::TemporaryEnvironmentValue env_perf("MIR_CLIENT_PERF_REPORT", "log");
     std::string log;
 
@@ -382,7 +382,7 @@ TEST_F(ClientSurfaces, reports_performance)
             mir_buffer_stream_swap_buffers_sync(bs);
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        save_log(log);
+        save_log(log_pipe, log);
     }
 
     int reports = 0;
