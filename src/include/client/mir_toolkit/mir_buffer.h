@@ -66,7 +66,7 @@ MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirBufferAccess access
  *             wait for the fence. The user must wait for the fence explicitly
  *             before using the contents of the buffer.
  **/
-MirGraphicsRegion mir_buffer_acquire_region(MirBuffer* buffer, MirBufferAccess access);
+MirGraphicsRegion mir_buffer_get_graphics_region(MirBuffer* buffer, MirBufferAccess access);
 
 /**
  * Retreive the native fence associated with this buffer

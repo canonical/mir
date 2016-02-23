@@ -103,7 +103,7 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-MirGraphicsRegion mir_buffer_acquire_region(MirBuffer* b, MirBufferAccess access)
+MirGraphicsRegion mir_buffer_get_graphics_region(MirBuffer* b, MirBufferAccess access)
 try
 {
     mir::require(b);
