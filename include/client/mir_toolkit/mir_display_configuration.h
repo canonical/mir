@@ -97,7 +97,7 @@ int mir_output_get_num_modes(MirOutput const* output);
  * The list of supported modes is retrieved from the hardware, possibly modified by any applicable quirk tables,
  * and may not be exhaustive.
  *
- * \pre 0 ≤ index < mir_output_get_num_modes(output)
+ * \pre 0 <= index < mir_output_get_num_modes(output)
  * \note    The handle remains valid as long as \param output is valid.
  * \param [in]  output  The MirOutput to query
  * \param [in]  index   The index of the mode to retrieve.
@@ -145,7 +145,7 @@ int mir_output_get_num_pixel_formats(MirOutput const* output);
 /**
  * Get a pixel format from the list of supported formats
  *
- * \pre 0 ≤ index < mir_output_get_num_pixel_formats(output)
+ * \pre 0 <= index < mir_output_get_num_pixel_formats(output)
  * \param [in]  output  The MirOutput to query
  * \param [in]  index   The index of the format to query
  * \returns     The \param index 'th supported pixel format.
