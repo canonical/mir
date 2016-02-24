@@ -53,11 +53,17 @@ MirPointerButtons to_mir_button(int button)
 
 MirPointerButtons to_mir_button_state(int x_button_key_state)
 {
-    // the state variable contains modifier and button state.
-    MirPointerButtons button_state = x_button_key_state << 8;
-    button_state = (button_state & ~(mir_pointer_button_secondary|mir_pointer_button_tertiary)) // second and middle button are swaped in X11
-                   | ((button_state & mir_pointer_button_secondary) >> 1)
-                   | ((button_state & mir_pointer_button_tertiary) << 1);
+    MirPointerButtons button_state = 0;
+    if (x_button_key_state & Button1Mask)
+        button_state |= mir_pointer_button_primary;
+    if (x_button_key_state & Button2Mask)
+        button_state |= mir_pointer_button_tertiary;
+    if (x_button_key_state & Button3Mask)
+        button_state |= mir_pointer_button_secondary;
+    if (x_button_key_state & Button4Mask)
+        button_state |= mir_pointer_button_back;
+    if (x_button_key_state & Button5Mask)
+        button_state |= mir_pointer_button_forward;
     return button_state;
 }
 
