@@ -33,3 +33,8 @@ std::unique_ptr<mg::CommandStreamSync> mga::EGLSyncFactory::create_command_strea
         return std::make_unique<NullCommandSync>();
     }
 }
+
+std::unique_ptr<mg::CommandStreamSync> mga::NullCommandStreamSyncFactory::create_command_stream_sync()
+{
+    return std::make_unique<NullCommandSync>();
+}
