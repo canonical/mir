@@ -46,6 +46,13 @@ typedef struct MirBufferStream MirBufferStream;
 typedef struct MirPersistentId MirPersistentId;
 typedef struct MirBlob MirBlob;
 typedef struct MirDisplayConfig MirDisplayConfig;
+
+/**
+ * Descriptor for an output connection.
+ *
+ *  Each MirOutput corresponds to a video output. This may be a physical connection on the system,
+ *  like HDMI or DisplayPort, or may be a virtual output such as a remote display or screencast display.
+ */
 typedef struct MirOutput MirOutput;
 
 /**
