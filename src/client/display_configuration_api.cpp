@@ -219,7 +219,7 @@ int mir_output_get_position_y(MirOutput const* client_output)
     return output->position_y;
 }
 
-MirOutputConnection mir_output_is_connected(MirOutput const* client_output)
+MirOutputConnection mir_output_get_connection_state(MirOutput const *client_output)
 {
     auto output = client_to_output(client_output);
 

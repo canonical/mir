@@ -247,7 +247,7 @@ typedef enum
  * \param [in]  output  The MirOutput to query
  * \returns     Whether there is a display connected to this output.
  */
-MirOutputConnection mir_output_is_connected(MirOutput const* output);
+MirOutputConnection mir_output_get_connection_state(MirOutput const *output);
 
 /**
  * Get whether this output is enabled in the current configuration.
