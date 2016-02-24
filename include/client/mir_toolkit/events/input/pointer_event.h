@@ -77,7 +77,10 @@ typedef enum {
     mir_pointer_button_secondary = 1 << 1,
     mir_pointer_button_tertiary  = 1 << 2,
     mir_pointer_button_back      = 1 << 3,
-    mir_pointer_button_forward   = 1 << 4
+    mir_pointer_button_forward   = 1 << 4,
+    mir_pointer_button_side      = 1 << 5,
+    mir_pointer_button_extra     = 1 << 6,
+    mir_pointer_button_task      = 1 << 7
 } MirPointerButton;
 typedef unsigned int MirPointerButtons;
 
