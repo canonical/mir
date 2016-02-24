@@ -47,7 +47,8 @@ mga::HalComponentFactory::HalComponentFactory(
       hwc_report(hwc_report),
       force_backup_display(false),
       num_framebuffers{quirks->num_framebuffers()},
-      working_egl_sync(quirks->working_egl_sync())
+      working_egl_sync(quirks->working_egl_sync()),
+      hwc_version{mga::HwcVersion::unknown}
 {
     try
     {
