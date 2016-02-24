@@ -185,28 +185,28 @@ MirOutputMode const* mir_output_get_mode(MirOutput const* client_output, size_t 
     return reinterpret_cast<MirOutputMode const*>(&output->modes[index]);
 }
 
-int mir_output_get_num_output_formats(MirOutput const* client_output)
+int mir_output_get_num_pixel_formats(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
 
     return output->num_output_formats;
 }
 
-MirPixelFormat mir_output_get_format(MirOutput const* client_output, size_t index)
+MirPixelFormat mir_output_get_pixel_format(MirOutput const* client_output, size_t index)
 {
     auto output = client_to_output(client_output);
 
     return output->output_formats[index];
 }
 
-MirPixelFormat mir_output_get_current_format(MirOutput const* client_output)
+MirPixelFormat mir_output_get_current_pixel_format(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
 
     return output->current_format;
 }
 
-void mir_output_set_format(MirOutput* client_output, MirPixelFormat format)
+void mir_output_set_pixel_format(MirOutput* client_output, MirPixelFormat format)
 {
     auto output = client_to_output(client_output);
 

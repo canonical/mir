@@ -385,7 +385,7 @@ TEST_P(DisplayFormatSetting, can_get_all_output_format)
     {
         auto output = mir_display_config_get_output(client_config.get(), i);
 
-        EXPECT_THAT(mir_output_get_current_format(output), Eq(format));
+        EXPECT_THAT(mir_output_get_current_pixel_format(output), Eq(format));
     }
 
     client.disconnect();

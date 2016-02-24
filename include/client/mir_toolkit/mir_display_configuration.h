@@ -140,17 +140,17 @@ MirOutputMode const* mir_output_get_current_mode(MirOutput const* output);
  * \param [in]  output  The MirOutput to query
  * \returns     The number of pixel formats for \param output.
  */
-int mir_output_get_num_output_formats(MirOutput const* output);
+int mir_output_get_num_pixel_formats(MirOutput const* output);
 
 /**
  * Get a pixel format from the list of supported formats
  *
- * \pre 0 ≤ index < mir_output_get_num_output_formats(output)
+ * \pre 0 ≤ index < mir_output_get_num_pixel_formats(output)
  * \param [in]  output  The MirOutput to query
  * \param [in]  index   The index of the format to query
  * \returns     The \param index 'th supported pixel format.
  */
-MirPixelFormat mir_output_get_format(MirOutput const* output, size_t index);
+MirPixelFormat mir_output_get_pixel_format(MirOutput const* output, size_t index);
 
 /**
  * Get the current pixel format.
@@ -159,7 +159,7 @@ MirPixelFormat mir_output_get_format(MirOutput const* output, size_t index);
  * \returns     The current pixel format. This may be mir_pixel_format_invalid (for example, if the output is not
  *              currently enabled).
  */
-MirPixelFormat mir_output_get_current_format(MirOutput const* output);
+MirPixelFormat mir_output_get_current_pixel_format(MirOutput const* output);
 
 /**
  * Set the output format
@@ -167,7 +167,7 @@ MirPixelFormat mir_output_get_current_format(MirOutput const* output);
  * \param [in]  output  The MirOutput to modify
  * \param [in]  format  The MirPixelFormat to set
  */
-void mir_output_set_format(MirOutput* output, MirPixelFormat format);
+void mir_output_set_pixel_format(MirOutput* output, MirPixelFormat format);
 
 /**
  * Get the ID of an output

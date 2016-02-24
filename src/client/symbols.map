@@ -241,13 +241,13 @@ MIR_CLIENT_9_unreleased {
     mir_output_get_position_x;
     mir_output_get_position_y;
     mir_output_get_current_mode;
-    mir_output_get_current_format;
+    mir_output_get_current_pixel_format;
     mir_output_get_power_mode;
     mir_output_get_orientation;
     mir_output_get_num_modes;
     mir_output_get_mode;
-    mir_output_get_num_output_formats;
-    mir_output_get_format;
+    mir_output_get_num_pixel_formats;
+    mir_output_get_pixel_format;
     mir_output_mode_get_width;
     mir_output_mode_get_height;
     mir_output_mode_get_refresh_rate;

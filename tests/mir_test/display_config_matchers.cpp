@@ -209,7 +209,7 @@ public:
                     geom::Point{mir_output_get_position_x(client_output),
                         mir_output_get_position_y(client_output)},
                     static_cast<uint32_t>(find_mode_index(client_output, (mir_output_get_current_mode(client_output)))),
-                    mir_output_get_current_format(client_output),
+                    mir_output_get_current_pixel_format(client_output),
                     mir_output_get_power_mode(client_output),
                     mir_output_get_orientation(client_output),
                     1.0f,
@@ -233,9 +233,9 @@ public:
 
             /* Pixel formats */
             std::vector<MirPixelFormat> pixel_formats;
-            for (int n = 0; n < mir_output_get_num_output_formats(client_output); n++)
+            for (int n = 0; n < mir_output_get_num_pixel_formats(client_output); n++)
             {
-                pixel_formats.push_back(mir_output_get_format(client_output, n));
+                pixel_formats.push_back(mir_output_get_pixel_format(client_output, n));
             }
             display_output.pixel_formats = pixel_formats;
 
