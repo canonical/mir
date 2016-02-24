@@ -480,7 +480,82 @@ TEST_F(DisplayConfigurationTest, client_receives_correct_mode_information)
     client.disconnect();
 }
 
-TEST_F(DisplayConfigurationTest, client_receives_correct_output_positions)
+TEST_F(DisplayConfigurationTest, mode_width_and_height_are_independent_of_orientation)
+{
+    mg::DisplayConfigurationMode hd{{1280, 720}, 60.0};
+    mg::DisplayConfigurationMode fhd{{1920, 1080}, 60.0};
+    mg::DisplayConfigurationMode proper_size{{1920, 1200}, 60.0};
+    mg::DisplayConfigurationMode retina{{3210, 2800}, 60.0};
+
+    mg::DisplayConfigurationOutputId const id{2};
+
+    std::vector<mg::DisplayConfigurationMode> modes{hd, fhd, proper_size, retina};
+
+    mtd::StubDisplayConfigurationOutput monitor{
+        id,
+        modes,
+        {mir_pixel_format_abgr_8888}};
+
+    std::vector<mg::DisplayConfigurationOutput> outputs{monitor};
+
+    std::shared_ptr<mg::DisplayConfiguration> server_config;
+    server_config = std::make_shared<mtd::StubDisplayConfig>(outputs);
+    mock_display.emit_configuration_change_event(server_config);
+    mock_display.wait_for_configuration_change_handler();
+
+    DisplayClient client{new_connection()};
+    client.connect();
+
+
+    DisplayConfigMatchingContext context;
+    context.matcher = [&server_config](MirDisplayConfig* conf)
+        {
+            EXPECT_THAT(conf, mt::DisplayConfigMatches(std::cref(*server_config)));
+        };
+
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &new_display_config_matches,
+        &context);
+
+    for (auto const orientation :
+        {mir_orientation_normal, mir_orientation_left, mir_orientation_inverted, mir_orientation_right})
+    {
+        server_config = server.the_display()->configuration();
+        server_config->for_each_output(
+            [orientation](mg::UserDisplayConfigurationOutput& output)
+            {
+                output.orientation = orientation;
+            });
+        server.the_display_configuration_controller()->set_base_configuration(server_config);
+
+        EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{10}));
+        context.done.reset();
+
+        auto config = client.get_base_config();
+        ASSERT_THAT(mir_display_config_get_num_outputs(config.get()), Eq(1));
+
+        std::vector<mg::DisplayConfigurationMode> received_modes;
+
+        auto output = mir_display_config_get_output(config.get(), 0);
+
+        for (auto i = 0; i < mir_output_get_num_modes(output) ; ++i)
+        {
+            auto mode = mir_output_get_mode(output, i);
+            auto width = mir_output_mode_get_width(mode);
+            auto height = mir_output_mode_get_height(mode);
+            auto refresh = mir_output_mode_get_refresh_rate(mode);
+
+            received_modes.push_back(mg::DisplayConfigurationMode{{width, height}, refresh});
+        }
+
+        EXPECT_THAT(received_modes, ContainerEq(modes));
+    }
+
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, output_position_is_independent_of_orientation)
 {
     mir::geometry::Point const a{-100, 10};
     mir::geometry::Point const b{100, 10000};
@@ -494,6 +569,68 @@ TEST_F(DisplayConfigurationTest, client_receives_correct_output_positions)
             output.top_left = *position;
             ++position;
         });
+    server.the_display_configuration_controller()->set_base_configuration(server_config);
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    DisplayConfigMatchingContext context;
+    context.matcher = [&server_config](MirDisplayConfig* conf)
+        {
+            EXPECT_THAT(conf, mt::DisplayConfigMatches(std::cref(*server_config)));
+        };
+
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &new_display_config_matches,
+        &context);
+
+    for (auto const orientation :
+        {mir_orientation_normal, mir_orientation_left, mir_orientation_inverted, mir_orientation_right})
+    {
+        server_config = server.the_display()->configuration();
+        server_config->for_each_output(
+            [orientation](mg::UserDisplayConfigurationOutput& output)
+                {
+                    output.orientation = orientation;
+                });
+        server.the_display_configuration_controller()->set_base_configuration(server_config);
+
+        EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{10}));
+        context.done.reset();
+
+        auto config = client.get_base_config();
+
+        auto position = positions.begin();
+        for (auto i = 0; i < mir_display_config_get_num_outputs(config.get()); ++i)
+        {
+            auto output = mir_display_config_get_output(config.get(), i);
+
+            EXPECT_THAT(mir_output_get_position_x(output), Eq(position->x.as_int()));
+            EXPECT_THAT(mir_output_get_position_y(output), Eq(position->y.as_int()));
+
+            ++position;
+        }
+    }
+
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, client_receives_correct_output_positions)
+{
+    mir::geometry::Point const a{-100, 10};
+    mir::geometry::Point const b{100, 10000};
+    mir::geometry::Point const c{1, -2};
+    std::array<mir::geometry::Point, 3> const positions = { a, b, c };
+
+    std::shared_ptr<mg::DisplayConfiguration> server_config = server.the_display()->configuration();
+    server_config->for_each_output(
+    [position = positions.begin()](mg::UserDisplayConfigurationOutput& output) mutable
+    {
+        output.top_left = *position;
+        ++position;
+    });
 
     DisplayClient client{new_connection()};
 

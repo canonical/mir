@@ -297,6 +297,7 @@ MirOrientation mir_output_get_orientation(MirOutput const* output);
 /**
  * Get the width, in pixels, of a MirOutputMode
  *
+ * \note    This is unaffected by the orientation of the output
  * \param [in]  mode    The MirOutputMode to query
  * \returns     The width, in pixels, of \param mode.
  */
@@ -305,6 +306,7 @@ int mir_output_mode_get_width(MirOutputMode const* mode);
 /**
  * Get the height, in pixels, of a MirOutputMode
  *
+ * \note    This is unaffected by the orientation of the output
  * \param [in]  mode    The MirOutputMode to query
  * \returns     The height, in pixels, of \param mode.
  */
