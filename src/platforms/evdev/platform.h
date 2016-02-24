@@ -73,8 +73,8 @@ private:
     std::shared_ptr<udev::Context> const udev_context;
     std::shared_ptr<InputDeviceRegistry> const input_device_registry;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const platform_dispatchable;
-    std::shared_ptr<::libinput> const lib;
-    std::shared_ptr<dispatch::ReadableFd> const libinput_dispatchable;
+    std::shared_ptr<::libinput> lib;
+    std::shared_ptr<dispatch::ReadableFd> libinput_dispatchable;
 
     std::vector<std::shared_ptr<LibInputDevice>> devices;
     auto find_device(libinput_device_group const* group) -> decltype(devices)::iterator;

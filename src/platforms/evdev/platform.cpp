@@ -73,15 +73,8 @@ mie::Platform::Platform(std::shared_ptr<InputDeviceRegistry> const& registry,
     report(report),
     udev_context(std::move(udev_context)),
     input_device_registry(registry),
-    platform_dispatchable{std::make_shared<md::MultiplexingDispatchable>()},
-    lib{make_libinput(this->udev_context->ctx())},
-    libinput_dispatchable{
-        std::make_shared<md::ReadableFd>(
-            Fd{IntOwnedFd{libinput_get_fd(lib.get())}},
-            [this](){process_input_events();}
-            )}
+    platform_dispatchable{std::make_shared<md::MultiplexingDispatchable>()}
 {
-
 }
 
 std::shared_ptr<mir::dispatch::Dispatchable> mie::Platform::dispatchable()
@@ -91,6 +84,12 @@ std::shared_ptr<mir::dispatch::Dispatchable> mie::Platform::dispatchable()
 
 void mie::Platform::start()
 {
+
+    lib = make_libinput(udev_context->ctx());
+    libinput_dispatchable =
+        std::make_shared<md::ReadableFd>(
+            Fd{IntOwnedFd{libinput_get_fd(lib.get())}}, [this]{process_input_events();}
+        );
     platform_dispatchable->add_watch(libinput_dispatchable);
 }
 
@@ -113,13 +112,13 @@ void mie::Platform::process_input_events()
         auto device = libinput_event_get_device(ev.get());
 
         if (type == LIBINPUT_EVENT_DEVICE_ADDED)
-	{
+        {
             device_added(device);
-	}
+        }
         else if(type == LIBINPUT_EVENT_DEVICE_REMOVED)
-	{
+        {
             device_removed(device);
-	}
+        }
         else
         {
             auto dev = find_device(
@@ -193,4 +192,6 @@ void mie::Platform::stop()
         input_device_registry->remove_device(devices.back());
         devices.pop_back();
     }
+    libinput_dispatchable.reset();
+    lib.reset();
 }

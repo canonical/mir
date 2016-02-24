@@ -186,3 +186,15 @@ TEST_F(EvdevInputPlatform, ignore_devices_from_same_group)
     env.mock_libinput.setup_device_add_event(keyboard);
     run_dispatchable(*platform);
 }
+
+TEST_F(EvdevInputPlatform, creates_new_context_on_resume)
+{
+    using namespace ::testing;
+    auto platform = create_input_platform();
+
+    platform->start();
+    platform->stop();
+
+    EXPECT_CALL(env.mock_libinput, libinput_udev_create_context(_,_,_));
+    platform->start();
+}
