@@ -677,3 +677,63 @@ INSTANTIATE_TEST_CASE_P(DisplayConfiguration, DisplayPowerSetting,
 
 INSTANTIATE_TEST_CASE_P(DisplayConfiguration, DisplayFormatSetting,
     ValuesIn(formats));
+
+TEST_F(DisplayConfigurationTest, can_set_display_mode)
+{
+    mg::DisplayConfigurationMode hd{{1280, 720}, 60.0};
+    mg::DisplayConfigurationMode fhd{{1920, 1080}, 60.0};
+    mg::DisplayConfigurationMode proper_size{{1920, 1200}, 60.0};
+    mg::DisplayConfigurationMode retina{{3210, 2800}, 60.0};
+
+    mtd::StubDisplayConfigurationOutput tv{
+        mg::DisplayConfigurationOutputId{1},
+        {hd, fhd},
+        {mir_pixel_format_abgr_8888}};
+    mtd::StubDisplayConfigurationOutput monitor{
+        mg::DisplayConfigurationOutputId{2},
+        {hd, fhd, proper_size, retina},
+        {mir_pixel_format_abgr_8888}};
+
+    std::vector<mg::DisplayConfigurationOutput> outputs{tv, monitor};
+
+    mock_display.emit_configuration_change_event(std::make_shared<mtd::StubDisplayConfig>(outputs));
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    for (size_t tv_index = 0; tv_index < tv.modes.size(); ++tv_index)
+    {
+        for (size_t monitor_index = 0; monitor_index < monitor.modes.size(); ++monitor_index)
+        {
+            auto config = client.get_base_config();
+
+            for (int i = 0; i < mir_display_config_get_num_outputs(config.get()); ++i)
+            {
+                auto output = mir_display_config_get_mutable_output(config.get(), i);
+
+                if (mir_output_get_num_modes(output) == static_cast<int>(monitor.modes.size()))
+                {
+                    mir_output_set_current_mode(output, mir_output_get_mode(output, monitor_index));
+                }
+                else if (mir_output_get_num_modes(output) == static_cast<int>(tv.modes.size()))
+                {
+                    mir_output_set_current_mode(output, mir_output_get_mode(output, tv_index));
+                }
+                else
+                {
+                    FAIL() << "Unexpected output in configuration";
+                }
+            }
+
+            EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(config.get())));
+            mir_wait_for(mir_connection_apply_display_configuration(client.connection, config.get()));
+
+            wait_for_server_actions_to_finish(*server.the_main_loop());
+            Mock::VerifyAndClearExpectations(&mock_display);
+        }
+    }
+
+    EXPECT_CALL(mock_display, configure(_)).Times(AnyNumber());
+    client.disconnect();
+}
