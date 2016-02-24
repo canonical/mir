@@ -127,7 +127,7 @@ int mir_output_get_num_modes(MirOutput const* client_output)
     return output->num_modes;
 }
 
-MirDisplayMode const* mir_output_get_preferred_mode(MirOutput const* client_output)
+MirOutputMode const* mir_output_get_preferred_mode(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
 
@@ -137,11 +137,11 @@ MirDisplayMode const* mir_output_get_preferred_mode(MirOutput const* client_outp
     }
     else
     {
-        return &output->modes[output->preferred_mode];
+        return reinterpret_cast<MirOutputMode const*>(&output->modes[output->preferred_mode]);
     }
 }
 
-MirDisplayMode const* mir_output_get_current_mode(MirOutput const* client_output)
+MirOutputMode const* mir_output_get_current_mode(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
 
@@ -151,15 +151,16 @@ MirDisplayMode const* mir_output_get_current_mode(MirOutput const* client_output
     }
     else
     {
-        return &output->modes[output->current_mode];
+        return reinterpret_cast<MirOutputMode const*>(&output->modes[output->current_mode]);
     }
 }
 
-void mir_output_set_current_mode(MirOutput* client_output, MirDisplayMode const* mode)
+void mir_output_set_current_mode(MirOutput* client_output, MirOutputMode const* mode)
 {
     auto output = client_to_output(client_output);
 
-    ptrdiff_t offset = mode - output->modes;
+    auto internal_mode = reinterpret_cast<MirDisplayMode const*>(mode);
+    ptrdiff_t offset = internal_mode - output->modes;
     int index = offset / sizeof(MirDisplayMode);
 
     mir::require(index >= 0);
@@ -168,11 +169,11 @@ void mir_output_set_current_mode(MirOutput* client_output, MirDisplayMode const*
     output->current_mode = static_cast<uint32_t>(index);
 }
 
-MirDisplayMode const* mir_output_get_mode(MirOutput const* client_output, size_t index)
+MirOutputMode const* mir_output_get_mode(MirOutput const* client_output, size_t index)
 {
     auto output = client_to_output(client_output);
 
-    return &output->modes[index];
+    return reinterpret_cast<MirOutputMode const*>(&output->modes[index]);
 }
 
 int mir_output_get_num_output_formats(MirOutput const* client_output)
@@ -259,4 +260,20 @@ void mir_output_set_orientation(MirOutput* client_output, MirOrientation orienta
     auto output = client_to_output(client_output);
 
     output->orientation = orientation;
+}
+
+MirExtent const* mir_output_mode_get_resolution(MirOutputMode const* mode)
+{
+    /* MirExtent has the same layout as the initial two elements of MirDisplayMode.
+     *
+     * Exploit this until we replace the internals.
+     */
+    return reinterpret_cast<MirExtent const*>(mode);
+}
+
+double mir_output_mode_get_refresh_rate(MirOutputMode const* mode)
+{
+    auto internal_mode = reinterpret_cast<MirDisplayMode const *>(mode);
+
+    return internal_mode->refresh_rate;
 }

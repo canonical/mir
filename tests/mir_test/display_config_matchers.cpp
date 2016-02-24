@@ -31,7 +31,7 @@ namespace mt = mir::test;
 namespace
 {
 
-size_t find_mode_index(MirOutput const* output, MirDisplayMode const* mode)
+size_t find_mode_index(MirOutput const* output, MirOutputMode const* mode)
 {
     for (int i = 0; i < mir_output_get_num_modes(output); ++i)
     {
@@ -221,11 +221,11 @@ public:
             for (int n = 0; n < mir_output_get_num_modes(client_output); n++)
             {
                 auto const client_mode = mir_output_get_mode(client_output, n);
+                auto const resolution = mir_output_mode_get_resolution(client_mode);
                 modes.push_back(
                     {
-                        geom::Size{client_mode->horizontal_resolution,
-                            client_mode->vertical_resolution},
-                        client_mode->refresh_rate
+                        geom::Size{resolution->width, resolution->height},
+                        mir_output_mode_get_refresh_rate(client_mode)
                     });
             }
             display_output.modes = modes;

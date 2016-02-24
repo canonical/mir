@@ -337,6 +337,12 @@ typedef struct MirRectangle
     unsigned int height;
 } MirRectangle;
 
+typedef struct MirExtent
+{
+    uint32_t height;
+    uint32_t width;
+} MirExtent;
+
 /**
  * MirScreencastParameters is the structure of required information that
  * you must provide to Mir in order to create a MirScreencast.

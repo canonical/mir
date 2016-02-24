@@ -737,3 +737,49 @@ TEST_F(DisplayConfigurationTest, can_set_display_mode)
     EXPECT_CALL(mock_display, configure(_)).Times(AnyNumber());
     client.disconnect();
 }
+
+TEST_F(DisplayConfigurationTest, client_receives_correct_mode_information)
+{
+    mg::DisplayConfigurationMode hd{{1280, 720}, 60.0};
+    mg::DisplayConfigurationMode fhd{{1920, 1080}, 60.0};
+    mg::DisplayConfigurationMode proper_size{{1920, 1200}, 60.0};
+    mg::DisplayConfigurationMode retina{{3210, 2800}, 60.0};
+
+    mg::DisplayConfigurationOutputId const id{2};
+
+    std::vector<mg::DisplayConfigurationMode> modes{hd, fhd, proper_size, retina};
+
+    mtd::StubDisplayConfigurationOutput monitor{
+        id,
+        modes,
+        {mir_pixel_format_abgr_8888}};
+
+    std::vector<mg::DisplayConfigurationOutput> outputs{monitor};
+
+    mock_display.emit_configuration_change_event(std::make_shared<mtd::StubDisplayConfig>(outputs));
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto config = client.get_base_config();
+
+    ASSERT_THAT(mir_display_config_get_num_outputs(config.get()), Eq(1));
+
+    std::vector<mg::DisplayConfigurationMode> received_modes;
+
+    auto output = mir_display_config_get_output(config.get(), 0);
+
+    for (auto i = 0; i < mir_output_get_num_modes(output) ; ++i)
+    {
+        auto mode = mir_output_get_mode(output, i);
+        auto resolution = mir_output_mode_get_resolution(mode);
+        auto refresh = mir_output_mode_get_refresh_rate(mode);
+
+        received_modes.push_back(mg::DisplayConfigurationMode{{resolution->width, resolution->height}, refresh});
+    }
+
+    EXPECT_THAT(received_modes, ContainerEq(modes));
+
+    client.disconnect();
+}

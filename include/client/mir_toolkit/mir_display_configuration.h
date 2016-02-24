@@ -25,6 +25,8 @@
 extern "C" {
 #endif
 
+typedef struct MirOutputMode MirOutputMode;
+
 /**
  * Release resources associated with a MirDisplayConfig handle.
  *
@@ -100,7 +102,7 @@ int mir_output_get_num_modes(MirOutput const* output);
  * \returns     A handle for a description of the supported mode. This is valid for as long as \param output is
  *              valid. The return value is never null.
  */
-MirDisplayMode const* mir_output_get_mode(MirOutput const* output, size_t index);
+MirOutputMode const* mir_output_get_mode(MirOutput const* output, size_t index);
 
 /**
  * Get a handle to the output's preferred mode.
@@ -115,7 +117,7 @@ MirDisplayMode const* mir_output_get_mode(MirOutput const* output, size_t index)
  * \returns     A handle for a description of the supported mode. This is valid for as long as \param output is
  *              valid. If the output does not have a preferred mode, it returns NULL.
  */
-MirDisplayMode const* mir_output_get_preferred_mode(MirOutput const* output);
+MirOutputMode const* mir_output_get_preferred_mode(MirOutput const* output);
 
 /**
  * Get a handle to the output's current mode.
@@ -128,7 +130,7 @@ MirDisplayMode const* mir_output_get_preferred_mode(MirOutput const* output);
  * \returns     A handle for a description of the supported mode. This is valid for as long as \param output is
  *              valid. If the output does not have a current mode, it returns NULL.
  */
-MirDisplayMode const* mir_output_get_current_mode(MirOutput const* output);
+MirOutputMode const* mir_output_get_current_mode(MirOutput const* output);
 
 /**
  * Set the current mode of an output.
@@ -139,7 +141,7 @@ MirDisplayMode const* mir_output_get_current_mode(MirOutput const* output);
  * \param [in]  output  The MirOutput to change
  * \param [in]  mode    Handle to the mode to set
  */
-void mir_output_set_current_mode(MirOutput* output, MirDisplayMode const* mode);
+void mir_output_set_current_mode(MirOutput* output, MirOutputMode const* mode);
 
 /**
  * Get the number of pixel formats supported by this output
@@ -334,6 +336,23 @@ MirOrientation mir_output_get_orientation(MirOutput const* output);
  * \param [in]  orientation The requested display orientation
  */
 void mir_output_set_orientation(MirOutput* output, MirOrientation orientation);
+
+/**
+ * Get the resolution of a MirOutputMode
+ *
+ * \param [in]  mode    The MirOutputMode to query
+ * \returns     A reference to a MirExtent containing the pixel width and pixel height of the mode.
+ *              This is guaranteed non-NULL.
+ */
+MirExtent const* mir_output_mode_get_resolution(MirOutputMode const* mode);
+
+/**
+ * Get the refresh rate, in Hz, of a MirOutputMode
+ *
+ * \param [in]  mode    The MirOutputMode to query
+ * \returns     The refresh rate, in Hz, of \param mode
+ */
+double mir_output_mode_get_refresh_rate(MirOutputMode const* mode);
 
 #ifdef __cplusplus
 }
