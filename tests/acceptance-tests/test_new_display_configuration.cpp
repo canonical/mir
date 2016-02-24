@@ -496,12 +496,24 @@ TEST_F(DisplayConfigurationTest, client_receives_correct_output_positions)
             ++position;
         });
 
-    mock_display.emit_configuration_change_event(server_config);
-    mock_display.wait_for_configuration_change_handler();
-
     DisplayClient client{new_connection()};
 
     client.connect();
+
+    DisplayConfigMatchingContext context;
+    context.matcher = [server_config](MirDisplayConfig* conf)
+        {
+            EXPECT_THAT(conf, mt::DisplayConfigMatches(std::cref(*server_config)));
+        };
+
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &new_display_config_matches,
+        &context);
+
+    server.the_display_configuration_controller()->set_base_configuration(server_config);
+
+    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{10}));
 
     auto config = client.get_base_config();
 
@@ -515,8 +527,6 @@ TEST_F(DisplayConfigurationTest, client_receives_correct_output_positions)
 
         ++position;
     }
-
-    EXPECT_THAT(config.get(), mt::DisplayConfigMatches(std::cref(*server_config)));
 
     client.disconnect();
 }
