@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  *              Kevin DuBois <kevin.dubois@canonical.com>
+ *              Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
 #include "mir/main_loop.h"
