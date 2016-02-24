@@ -273,13 +273,6 @@ MirOrientation mir_output_get_orientation(MirOutput const* client_output)
     return output->orientation;
 }
 
-void mir_output_set_orientation(MirOutput* client_output, MirOrientation orientation)
-{
-    auto output = client_to_output(client_output);
-
-    output->orientation = orientation;
-}
-
 int mir_output_mode_get_width(MirOutputMode const* mode)
 {
     auto internal_mode = reinterpret_cast<MirDisplayMode const *>(mode);

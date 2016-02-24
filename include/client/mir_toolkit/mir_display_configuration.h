@@ -195,8 +195,8 @@ MirOutputType mir_output_get_type(MirOutput const* output);
  * Outputs can be thought of as viewports into a virtual display space. They may freely overlap, coincide, or
  * be disjoint as desired.
  *
- * Output orientation, as set by mir_output_set_orientation(), changes the orientation of the output rectangle
- * in virtual display space, but does not change its top-left corner.
+ * Output orientation changes the orientation of the output rectangle in virtual display space,
+ * but does not change its top-left corner.
  *
  * \param [in]  output  The MirOutput to query
  * \returns     The x coordinate of the top-left point of the output in the virtual display space.
@@ -209,8 +209,8 @@ int mir_output_get_position_x(MirOutput const* output);
  * Outputs can be thought of as viewports into a virtual display space. They may freely overlap, coincide, or
  * be disjoint as desired.
  *
- * Output orientation, as set by mir_output_set_orientation(), changes the orientation of the output rectangle
- * in virtual display space, but does not change its top-left corner.
+ * Output orientation changes the orientation of the output rectangle in virtual display space,
+ * but does not change its top-left corner.
  *
  * \param [in]  output  The MirOutput to query
  * \returns     The y coordinate of the top-left point of the output in the virtual display space.
