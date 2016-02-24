@@ -174,7 +174,6 @@ void mir_output_set_pixel_format(MirOutput* output, MirPixelFormat format);
  *
  * This can be used to refer to the output in other APIs, such as mir_surface_spec_set_fullscreen_on_output().
  *
- * \note    This may be removed in future, in favour of passing the MirOutput* directly to such APIs.
  * \param [in]  output  The MirOutput to query.
  * \returns     The ID of \param output, which may be used to refer to it in other APIs.
  */
