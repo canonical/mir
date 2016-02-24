@@ -113,13 +113,6 @@ MirDisplayOutputType mir_output_get_type(MirOutput const* client_output)
     return output->type;
 }
 
-int mir_output_get_preferred_mode(MirOutput const* client_output)
-{
-    auto output = client_to_output(client_output);
-
-    return output->preferred_mode;
-}
-
 int mir_output_physical_width_mm(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
@@ -134,17 +127,42 @@ int mir_output_get_num_modes(MirOutput const* client_output)
     return output->num_modes;
 }
 
-int mir_output_get_current_mode(MirOutput const* client_output)
+MirDisplayMode const* mir_output_get_preferred_mode(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
 
-    return output->current_mode;
+    if (output->preferred_mode >= output->num_modes)
+    {
+        return nullptr;
+    }
+    else
+    {
+        return &output->modes[output->preferred_mode];
+    }
 }
 
-void mir_output_set_current_mode(MirOutput* client_output, size_t index)
+MirDisplayMode const* mir_output_get_current_mode(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
 
+    if (output->current_mode >= output->num_modes)
+    {
+        return nullptr;
+    }
+    else
+    {
+        return &output->modes[output->current_mode];
+    }
+}
+
+void mir_output_set_current_mode(MirOutput* client_output, MirDisplayMode const* mode)
+{
+    auto output = client_to_output(client_output);
+
+    auto offset = mode - output->modes;
+    auto index = offset / sizeof(MirDisplayMode);
+
+    mir::require(index > 0);
     mir::require(index < output->num_modes);
 
     output->current_mode = static_cast<uint32_t>(index);

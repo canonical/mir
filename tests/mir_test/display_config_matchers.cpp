@@ -31,6 +31,18 @@ namespace mt = mir::test;
 namespace
 {
 
+size_t find_mode_index(MirOutput const* output, MirDisplayMode const* mode)
+{
+    for (int i = 0; i < mir_output_get_num_modes(output); ++i)
+    {
+        if (mir_output_get_mode(output, i) == mode)
+        {
+            return i;
+        }
+    }
+    return static_cast<size_t>(-1);
+}
+
 class TestDisplayConfiguration : public mg::DisplayConfiguration
 {
 public:
@@ -189,14 +201,14 @@ public:
                     static_cast<mg::DisplayConfigurationOutputType>(mir_output_get_type(client_output)),
                     {},
                     {},
-                    static_cast<uint32_t>(mir_output_get_preferred_mode(client_output)),
+                    static_cast<uint32_t>(find_mode_index(client_output, mir_output_get_preferred_mode(client_output))),
                     geom::Size{mir_output_physical_width_mm(client_output),
                         mir_output_physical_height_mm(client_output)},
                     mir_output_is_connected(client_output),
                     mir_output_is_enabled(client_output),
                     geom::Point{mir_output_get_position_x(client_output),
                         mir_output_get_position_y(client_output)},
-                    static_cast<uint32_t>(mir_output_get_current_mode(client_output)),
+                    static_cast<uint32_t>(find_mode_index(client_output, (mir_output_get_current_mode(client_output)))),
                     mir_output_get_current_format(client_output),
                     mir_output_get_power_mode(client_output),
                     mir_output_get_orientation(client_output),

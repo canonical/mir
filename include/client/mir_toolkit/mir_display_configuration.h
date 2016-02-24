@@ -42,13 +42,13 @@ MirOutput* mir_display_config_get_mutable_output(MirDisplayConfig* config, size_
 
 int mir_output_get_num_modes(MirOutput const* output);
 
-int mir_output_get_preferred_mode(MirOutput const* output);
-
-int mir_output_get_current_mode(MirOutput const* output);
-
-void mir_output_set_current_mode(MirOutput* output, int index);
-
 MirDisplayMode const* mir_output_get_mode(MirOutput const* output, size_t index);
+
+MirDisplayMode const* mir_output_get_preferred_mode(MirOutput const* output);
+
+MirDisplayMode const* mir_output_get_current_mode(MirOutput const* output);
+
+void mir_output_set_current_mode(MirOutput* output, MirDisplayMode const* mode);
 
 int mir_output_get_num_output_formats(MirOutput const* output);
 
