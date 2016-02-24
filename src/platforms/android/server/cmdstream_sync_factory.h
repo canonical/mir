@@ -25,6 +25,7 @@ namespace mir
 namespace graphics
 {
 class CommandStreamSync;
+class DeviceQuirks;
 namespace android
 {
 class CommandStreamSyncFactory
@@ -40,8 +41,17 @@ protected:
 
 class EGLSyncFactory : public CommandStreamSyncFactory
 {
+public:
+    std::unique_ptr<CommandStreamSync> create_command_stream_sync() override;
+private:
+    std::shared_ptr<DeviceQuirks> const quirks;
+};
+
+class NullCommandStreamSyncFactory : public CommandStreamSyncFactory
+{
     std::unique_ptr<CommandStreamSync> create_command_stream_sync() override;
 };
+
 }
 }
 }

@@ -29,6 +29,8 @@
 #include "hwc_layers.h"
 #include "hwc_device.h"
 #include "hwc_fb_device.h"
+#include "android_graphic_buffer_allocator.h"
+#include "cmdstream_sync_factory.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -38,12 +40,10 @@ namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 
 mga::HalComponentFactory::HalComponentFactory(
-    std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mga::DisplayResourceFactory> const& res_factory,
     std::shared_ptr<HwcReport> const& hwc_report,
     std::shared_ptr<mga::DeviceQuirks> const& quirks)
-    : buffer_allocator(buffer_allocator),
-      res_factory(res_factory),
+    : res_factory(res_factory),
       hwc_report(hwc_report),
       force_backup_display(false),
       num_framebuffers{quirks->num_framebuffers()},
@@ -64,23 +64,29 @@ mga::HalComponentFactory::HalComponentFactory(
         //guarantee always 2 fb's allocated
         num_framebuffers = std::max(2u, static_cast<unsigned int>(fb_native->numFramebuffers));
     }
+
+    command_stream_sync_factory = create_command_stream_sync_factory();
+    buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(
+        command_stream_sync_factory, quirks);
 }
 
 std::unique_ptr<mg::CommandStreamSync> mga::HalComponentFactory::create_command_stream_sync()
 {
-    if (hwc_version == mga::HwcVersion::hwc10)
-        return std::make_unique<NullCommandSync>();
+    return command_stream_sync_factory->create_command_stream_sync();
+}
 
-    if (!working_egl_sync)
-        return std::make_unique<NullCommandSync>();
+std::unique_ptr<mga::CommandStreamSyncFactory> mga::HalComponentFactory::create_command_stream_sync_factory()
+{
+    if ((hwc_version == mga::HwcVersion::hwc10) || !working_egl_sync)
+        return std::make_unique<mga::NullCommandStreamSyncFactory>();
 
     try
     {
-        return std::make_unique<EGLSyncFence>(std::make_shared<mg::EGLSyncExtensions>());
+        return std::make_unique<mga::EGLSyncFactory>();
     }
     catch (std::runtime_error&)
     {
-        return std::make_unique<NullCommandSync>();
+        return std::make_unique<mga::NullCommandStreamSyncFactory>();
     }
 }
 
@@ -156,4 +162,9 @@ std::unique_ptr<mga::HwcConfiguration> mga::HalComponentFactory::create_hwc_conf
         return std::unique_ptr<mga::HwcConfiguration>(new mga::HwcBlankingControl(hwc_wrapper));
     else
         return std::unique_ptr<mga::HwcConfiguration>(new mga::HwcPowerModeControl(hwc_wrapper));
+}
+
+std::shared_ptr<mg::GraphicBufferAllocator> mga::HalComponentFactory::the_buffer_allocator()
+{
+    return buffer_allocator;
 }
