@@ -168,9 +168,9 @@ void mir_output_set_current_mode(MirOutput* client_output, MirOutputMode const* 
 {
     auto output = client_to_output(client_output);
 
-    auto internal_mode = reinterpret_cast<MirDisplayMode const*>(mode);
-    ptrdiff_t offset = internal_mode - output->modes;
-    int index = offset / sizeof(MirDisplayMode);
+    int index = std::distance(
+        const_cast<MirDisplayMode const*>(output->modes),
+        reinterpret_cast<MirDisplayMode const*>(mode));
 
     mir::require(index >= 0);
     mir::require(index < static_cast<int>(output->num_modes));
