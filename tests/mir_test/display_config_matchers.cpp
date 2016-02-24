@@ -20,6 +20,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir_protobuf.pb.h"
 #include "mir_toolkit/client_types.h"
+#include "mir_toolkit/mir_display_configuration.h"
 #include <gtest/gtest.h>
 
 namespace mg = mir::graphics;
@@ -161,6 +162,67 @@ public:
             for (size_t n = 0; n < client_output.num_output_formats; n++)
             {
                 pixel_formats.push_back(client_output.output_formats[n]);
+            }
+            display_output.pixel_formats = pixel_formats;
+
+            outputs.push_back(display_output);
+        }
+    }
+
+    TestDisplayConfiguration(MirDisplayConfig const* config)
+    {
+        /* Cards; fake it, 'cause we only ever support 1 card at the moment */
+        cards.push_back(
+            mg::DisplayConfigurationCard{
+                mg::DisplayConfigurationCardId{1},
+                static_cast<size_t>(mir_display_config_get_max_simultaneous_outputs(config))
+            });
+
+        /* Outputs */
+        for (int i = 0; i < mir_display_config_get_num_outputs(config); i++)
+        {
+            auto const client_output = mir_display_config_get_output(config, i);
+            mg::DisplayConfigurationOutput display_output
+                {
+                    mg::DisplayConfigurationOutputId(mir_output_get_id(client_output)),
+                    mg::DisplayConfigurationCardId(1),
+                    static_cast<mg::DisplayConfigurationOutputType>(mir_output_get_type(client_output)),
+                    {},
+                    {},
+                    static_cast<uint32_t>(mir_output_get_preferred_mode(client_output)),
+                    geom::Size{mir_output_physical_width_mm(client_output),
+                        mir_output_physical_height_mm(client_output)},
+                    mir_output_is_connected(client_output),
+                    mir_output_is_enabled(client_output),
+                    geom::Point{mir_output_get_position_x(client_output),
+                        mir_output_get_position_y(client_output)},
+                    static_cast<uint32_t>(mir_output_get_current_mode(client_output)),
+                    mir_output_get_current_format(client_output),
+                    mir_output_get_power_mode(client_output),
+                    mir_output_get_orientation(client_output),
+                    1.0f,
+                    mir_form_factor_monitor
+                };
+
+            /* Modes */
+            std::vector<mg::DisplayConfigurationMode> modes;
+            for (int n = 0; n < mir_output_get_num_modes(client_output); n++)
+            {
+                auto const client_mode = mir_output_get_mode(client_output, n);
+                modes.push_back(
+                    {
+                        geom::Size{client_mode->horizontal_resolution,
+                            client_mode->vertical_resolution},
+                        client_mode->refresh_rate
+                    });
+            }
+            display_output.modes = modes;
+
+            /* Pixel formats */
+            std::vector<MirPixelFormat> pixel_formats;
+            for (int n = 0; n < mir_output_get_num_output_formats(client_output); n++)
+            {
+                pixel_formats.push_back(mir_output_get_format(client_output, n));
             }
             display_output.pixel_formats = pixel_formats;
 
@@ -322,4 +384,19 @@ bool mt::compare_display_configurations(MirDisplayConfiguration const* display_c
 {
     TestDisplayConfiguration config2{*display_config2};
     return compare_display_configurations(display_config1, config2);
+}
+
+bool mt::compare_display_configurations(MirDisplayConfig const* client_config,
+    mg::DisplayConfiguration const& server_config)
+{
+    TestDisplayConfiguration translated_config{client_config};
+    return compare_display_configurations(server_config, translated_config);
+}
+
+bool mt::compare_display_configurations(MirDisplayConfig const* config1,
+    MirDisplayConfig const* config2)
+{
+    TestDisplayConfiguration translated_config_one{config1};
+    TestDisplayConfiguration translated_config_two{config2};
+    return compare_display_configurations(translated_config_one, translated_config_two);
 }

@@ -232,6 +232,12 @@ MirDisplayConfiguration* mir_connection_create_display_config(
     return nullptr;
 }
 
+MirDisplayConfig* mir_connection_create_display_configuration(
+    MirConnection* /*connection*/)
+{
+    return nullptr;
+}
+
 void mir_connection_set_display_config_change_callback(
     MirConnection* connection,
     mir_display_config_callback callback,
@@ -261,6 +267,13 @@ MirWaitHandle* mir_connection_apply_display_config(
     }
 }
 
+MirWaitHandle* mir_connection_apply_display_configuration(
+    MirConnection* /*connection*/,
+    MirDisplayConfig const* /*display_configuration*/)
+{
+    return nullptr;
+}
+
 MirWaitHandle* mir_connection_set_base_display_config(
     MirConnection* connection,
     MirDisplayConfiguration const* display_configuration)
@@ -274,6 +287,13 @@ MirWaitHandle* mir_connection_set_base_display_config(
         MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
+}
+
+MirWaitHandle* mir_connection_set_base_display_configuration(
+    MirConnection* /*connection*/,
+    MirDisplayConfig const* /*display_configuration*/)
+{
+    return nullptr;
 }
 
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(

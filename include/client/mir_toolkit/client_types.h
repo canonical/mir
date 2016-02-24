@@ -45,6 +45,8 @@ typedef struct MirPromptSession MirPromptSession;
 typedef struct MirBufferStream MirBufferStream;
 typedef struct MirPersistentId MirPersistentId;
 typedef struct MirBlob MirBlob;
+typedef struct MirDisplayConfig MirDisplayConfig;
+typedef struct MirOutput MirOutput;
 
 /**
  * Returned by asynchronous functions. Must not be free'd by

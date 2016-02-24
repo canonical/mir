@@ -222,6 +222,39 @@ MIR_CLIENT_9v19 {
     mir_surface_spec_set_shell_chrome;
 } MIR_CLIENT_9v18;
 
+MIR_CLIENT_9_unreleased {
+  global:
+    mir_connection_create_display_configuration;
+    mir_display_config_release;
+    mir_display_config_get_num_outputs;
+    mir_connection_apply_display_configuration;
+    mir_connection_set_base_display_configuration;
+    mir_display_config_get_output;
+    mir_display_config_get_mutable_output;
+    mir_output_is_enabled;
+    mir_output_enable;
+    mir_output_disable;
+    mir_display_config_get_max_simultaneous_outputs;
+    mir_output_get_id;
+    mir_output_get_type;
+    mir_output_get_preferred_mode;
+    mir_output_physical_width_mm;
+    mir_output_physical_height_mm;
+    mir_output_is_connected;
+    mir_output_get_position_x;
+    mir_output_get_position_y;
+    mir_output_get_current_mode;
+    mir_output_get_current_format;
+    mir_output_get_power_mode;
+    mir_output_get_orientation;
+    mir_output_get_num_modes;
+    mir_output_get_mode;
+    mir_output_get_num_output_formats;
+    mir_output_get_format;
+  local:
+    *;
+} MIR_CLIENT_9v19;
+
 MIR_CLIENT_DETAIL_9 {
   global:
     extern "C++" { 
