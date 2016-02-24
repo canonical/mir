@@ -1012,7 +1012,7 @@ void MirConnection::release_consumer_stream(mir::client::ClientBufferStream* str
     surface_map->erase(stream->rpc_id());
 }
 
-MirWaitHandle* MirConnection::create_presentation_chain(
+void MirConnection::create_presentation_chain(
     mir_presentation_chain_callback callback,
     void *context)
 {
@@ -1024,7 +1024,6 @@ MirWaitHandle* MirConnection::create_presentation_chain(
     params.set_pixel_format(-1);
     params.set_buffer_usage(-1);
     auto request = std::make_shared<ChainCreationRequest>(callback, context);
-    request->wh->expect_result();
 
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
@@ -1040,8 +1039,6 @@ MirWaitHandle* MirConnection::create_presentation_chain(
         //if this throws, our socket code will run the closure, which will make an error object.
         //its nicer to return a chain with a error message, so just ignore the exception.
     }
-
-    return request->wh.get();
 }
 
 void MirConnection::context_created(ChainCreationRequest* request_raw)
@@ -1075,13 +1072,12 @@ void MirConnection::context_created(ChainCreationRequest* request_raw)
     try
     {
         auto chain = std::make_shared<mcl::PresentationChain>(
-            this, request->wh, protobuf_bs->id().value(), server, platform->create_buffer_factory());
+            this, protobuf_bs->id().value(), server, platform->create_buffer_factory());
 
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), chain);
 
         if (request->callback)
             request->callback(static_cast<MirPresentationChain*>(chain.get()), request->context);
-        request->wh->result_received();
     }
     catch (std::exception const& error)
     {
@@ -1099,12 +1095,11 @@ void MirConnection::chain_error(
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     mf::BufferStreamId id(next_error_id(lock).as_value());
-    auto chain = std::make_shared<mcl::ErrorChain>(this, request->wh, id.as_value(), error_msg);
+    auto chain = std::make_shared<mcl::ErrorChain>(this, id.as_value(), error_msg);
     surface_map->insert(id, chain); 
 
     if (request->callback)
         request->callback(static_cast<MirPresentationChain*>(chain.get()), request->context);
-    request->wh->result_received();
 }
 
 void MirConnection::release_presentation_chain(MirPresentationChain* chain)

@@ -1,8 +1,82 @@
-mir (0.20.0) UNRELEASED; urgency=medium
+mir (0.20.0+16.04.20160219-0ubuntu1) xenial; urgency=medium
 
-  * Placeholder for 0.20 release
+  [ Alan Griffiths ]
+  * New upstream release 0.20.0 (https://launchpad.net/mir/+milestone/0.20.0)
+    - ABI summary: Only servers need rebuilding;
+      . mirclient ABI unchanged at 9
+      . mirserver ABI bumped to 38
+      . mircommon ABI unchanged at 5
+      . mirplatform ABI unchanged at 11
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI bumped to 8
+      . mirclientplatform ABI unchanged at 4
+      . mirinputplatform ABI unchanged at 5
+    - Enhancements:
+      . Allow screencasting to create a virtual output (for Miracast)
+      . Separate the protocol version number from the client API version macros.
+        They're not meant to be related concepts.
+      . Add UBSanitizer to the list of build types.
+      . logging: Human readable timestamps in DumbConsoleLogger.
+      . examples: AdorningDisplayBufferCompositor::composite() no long ignores
+        output boundaries and occlusions.
+      . examples: Add -a <app name> option to eglapps.
+      . common, client: a more flexible way to probe modules: once we've found
+        a good current platform we don't even try to load an older one.
+      . Fix build and test run with CMAKE_BUILD_TYPE=ThreadSanitizer (missing
+        locks).
+      . Add MIR_USE_LD_GOLD build option.
+    - Bug fixes:
+      . unity-system-compositor crashed with std::runtime_error in
+        mir::compositor::CompositingFunctor::wait_until_started() from
+        usc::MirScreen::set_screen_power_mode (mir_power_mode_on)
+        (LP: #1528384)
+      . Phone not usable while a call comes in - followed by "restart"
+        (LP: #1532607)
+      . ui freezes when simultaneously moving mouse & plug/unplug hdmi
+        (LP: #1538632)
+      . Mir fails to build on xenial today: android_graphic_buffer_allocator.h
+        fatal error: hardware/hardware.h: No such file or directory
+        (LP: #1539338)
+      . [mali] egl_demo_client_flicker has graphics corruption on android
+        (LP: #1517205)
+      . [testsfail] Intermittent failure in
+        TestClientCursorAPI.cursor_passed_through_nested_server (LP: #1525003)
+      . [android] External monitor slows rendering (LP: #1532202)
+      . Display::create_gl_context may create context with incorrect attributes
+        (LP: #1539268)
+      . unity-system-compositor locked up in __libc_do_syscall() (LP: #1543594)
+      . NestedServer.client_sees_set_scaling_factor intermittent failure
+        (LP: #1537798)
+      . [android] External monitor slows rendering - part 2 (LP: #1535894)
+      . scene: make sure not to set the swapinterval to 0 when an independent
+        stream is created. The default should be 1 (like the stream created as
+        part of surface creation).
+      . Track the displays plugged state to avoid reporting configurations in
+        case they are unplugged (LP #1531503). [Cherrypicked from 0.21]
+      . mouse pointer support on emulator is broken (LP: #1517597).
+        [Cherrypicked from 0.21]
+      . move an android-only test that ended up in tests/unit-tests/graphics.
+        (LP: ##1546676) [Cherrypicked from 0.21]
 
- -- Alberto Aguirre <alberto.aguirre@canonical.com>  Mon, 01 Feb 2016 13:20:02 -0600
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Alan Griffiths <ci-train-bot@canonical.com>  Fri, 19 Feb 2016 10:40:59 +0000
+
+mir (0.19.3+16.04.20160212-0ubuntu1) xenial; urgency=medium
+
+  [ Kevin DuBois ]
+  * New upstream release 0.19.3 (https://launchpad.net/mir/+milestone/0.19.3)
+    - ABI summary:
+      . no abi changes in any libraries. bugfix release only
+    - Bugs fixed:
+      . Workaround for broken hwc implementations that dont allow querying
+        display information during hotplug (LP: #1531503)
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- kevin gunn <kevin.gunn@canonical.com>  Fri, 12 Feb 2016 18:50:06 +0000
 
 mir (0.19.2+16.04.20160210-0ubuntu1) xenial; urgency=medium
 

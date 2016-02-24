@@ -43,7 +43,6 @@ class PresentationChain : public MirPresentationChain
 public:
     PresentationChain(
         MirConnection* connection,
-        std::shared_ptr<MirWaitHandle> const&,
         int rpc_id,
         rpc::DisplayServer& server,
         std::shared_ptr<ClientBufferFactory> const& factory);
@@ -62,7 +61,6 @@ public:
 private:
 
     MirConnection* const connection_;
-    std::shared_ptr<MirWaitHandle> const wait_handle;
     int const stream_id;
     rpc::DisplayServer& server;
     std::shared_ptr<ClientBufferFactory> const factory;

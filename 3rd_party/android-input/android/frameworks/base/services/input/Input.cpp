@@ -359,12 +359,29 @@ const PointerCoords* MotionEvent::getRawPointerCoords(size_t pointerIndex) const
     return &mSamplePointerCoords[getHistorySize() * getPointerCount() + pointerIndex];
 }
 
+float MotionEvent::getAccumulatedAxisValue(int32_t axis, size_t pointerIndex) const {
+    float acc = 0;
+    auto const pointerCount = getPointerCount();
+    for (size_t i = 0, num_entries = getHistorySize() + 1; i != num_entries; ++i)
+        acc += mSamplePointerCoords[i * pointerCount + pointerIndex].getAxisValue(axis);
+    return acc;
+}
+
 float MotionEvent::getRawAxisValue(int32_t axis, size_t pointerIndex) const {
-    return getRawPointerCoords(pointerIndex)->getAxisValue(axis);
+    switch (axis)
+    {
+    case AMOTION_EVENT_AXIS_RX:  // joystick rotation axis are abused as relative x and y
+    case AMOTION_EVENT_AXIS_RY:
+    case AMOTION_EVENT_AXIS_VSCROLL:
+    case AMOTION_EVENT_AXIS_HSCROLL:
+        return getAccumulatedAxisValue(axis, pointerIndex);
+    default:
+        return getRawPointerCoords(pointerIndex)->getAxisValue(axis);
+    }
 }
 
 float MotionEvent::getAxisValue(int32_t axis, size_t pointerIndex) const {
-    float value = getRawPointerCoords(pointerIndex)->getAxisValue(axis);
+    float value = getRawAxisValue(axis, pointerIndex);
     switch (axis) {
     case AMOTION_EVENT_AXIS_X:
         return value + mXOffset;
