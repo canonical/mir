@@ -243,6 +243,7 @@ MIR_CLIENT_9_unreleased {
     mir_output_get_connection_state;
     mir_output_get_position_x;
     mir_output_get_position_y;
+    mir_output_set_position;
     mir_output_get_current_mode;
     mir_output_set_current_mode;
     mir_output_get_current_format;

@@ -228,6 +228,14 @@ int mir_output_get_position_y(MirOutput const* client_output)
     return output->position_y;
 }
 
+void mir_output_set_position(MirOutput* client_output, int x, int y)
+{
+    auto output = client_to_output(client_output);
+
+    output->position_x = x;
+    output->position_y = y;
+}
+
 MirOutputConnection mir_output_get_connection_state(MirOutput const *client_output)
 {
     auto output = client_to_output(client_output);

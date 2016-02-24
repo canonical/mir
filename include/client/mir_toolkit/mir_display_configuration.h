@@ -221,6 +221,8 @@ int mir_output_get_position_x(MirOutput const* output);
  */
 int mir_output_get_position_y(MirOutput const* output);
 
+void mir_output_set_position(MirOutput* output, int x, int y);
+
 typedef enum
 {
     mir_output_disconnected = 0,
