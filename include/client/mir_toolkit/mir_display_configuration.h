@@ -236,6 +236,19 @@ int mir_output_get_position_x(MirOutput const* output);
  */
 int mir_output_get_position_y(MirOutput const* output);
 
+/**
+ * Set the position of the top-left corner of this output in the virtual display space.
+ *
+ * Outputs can be thought of as viewports into a virtual display space. They may freely overlap, coincide, or
+ * be disjoint as desired.
+ *
+ * Output orientation, as set by mir_output_set_orientation(), changes the orientation of the output rectangle
+ * in virtual display space, but does not change its top-left corner.
+ *
+ * \param [in]  output  The MirOutput to modify
+ * \param [in]  x       The new x coördinate of the top-left of the output rectangle
+ * \param [in]  y       The new y coördinate of the top-left of the output rectangle
+ */
 void mir_output_set_position(MirOutput* output, int x, int y);
 
 typedef enum
