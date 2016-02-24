@@ -25,6 +25,13 @@
 extern "C" {
 #endif
 
+/**
+ * A descriptor for a display mode.
+ *
+ * A display mode contains all the information necessary to drive a display.
+ * It includes resolution and refresh rate, but also pixel clock, vsync and hsync
+ * timings, and so on.
+ */
 typedef struct MirOutputMode MirOutputMode;
 
 /**
@@ -46,7 +53,15 @@ void mir_display_config_release(MirDisplayConfig* config);
 int mir_display_config_get_max_simultaneous_outputs(MirDisplayConfig const* config);
 
 /**
- * Get the number of outputs in this display configuration.
+ * Get the number of outputs available in this display configuration.
+ *
+ * This returns the total number of outputs the system has. This includes both enabled and disabled output
+ * connections, and is typically larger than the value returned from
+ * mir_display_config_get_max_simultaneous_outputs().
+ *
+ * Typically this will be constant over the lifetime of a client as devices usually do not gain extra
+ * physical ports at runtime. However, hotpluggable display devices exist and the number of virtual outputs
+ * may change at runtime, so this should always be called to determine the number of outputs to iterate over.
  *
  * \param [in]  config    The configuration to query
  * \returns      The number of outputs available in this configuration.
