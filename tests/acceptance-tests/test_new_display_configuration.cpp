@@ -479,3 +479,44 @@ TEST_F(DisplayConfigurationTest, client_receives_correct_mode_information)
 
     client.disconnect();
 }
+
+TEST_F(DisplayConfigurationTest, client_receives_correct_output_positions)
+{
+    std::array<mir::geometry::Point, 3> const positions = {
+        mir::geometry::Point(-100, 10),
+        mir::geometry::Point(100, 10000),
+        mir::geometry::Point(1, -2)
+    };
+
+    std::shared_ptr<mg::DisplayConfiguration> server_config = server.the_display()->configuration();
+    server_config->for_each_output(
+        [position = positions.begin()](mg::UserDisplayConfigurationOutput& output) mutable
+        {
+            output.top_left = *position;
+            ++position;
+        });
+
+    mock_display.emit_configuration_change_event(server_config);
+    mock_display.wait_for_configuration_change_handler();
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto config = client.get_base_config();
+
+    auto position = positions.begin();
+    for (auto i = 0; i < mir_display_config_get_num_outputs(config.get()); ++i)
+    {
+        auto output = mir_display_config_get_output(config.get(), i);
+
+        EXPECT_THAT(mir_output_get_position_x(output), Eq(position->x.as_int()));
+        EXPECT_THAT(mir_output_get_position_y(output), Eq(position->y.as_int()));
+
+        ++position;
+    }
+
+    EXPECT_THAT(config.get(), mt::DisplayConfigMatches(std::cref(*server_config)));
+
+    client.disconnect();
+}
