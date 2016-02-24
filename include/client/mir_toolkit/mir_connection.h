@@ -145,6 +145,9 @@ void mir_connection_pong(MirConnection* connection, int32_t serial);
 
 /**
  * Query the display
+ *
+ *   \deprecated  Use mir_connection_create_display_configuration() instead.
+ *
  *   \warning return value must be destroyed via mir_display_config_destroy()
  *   \warning may return null if connection is invalid
  *   \param [in]  connection        The connection
@@ -154,17 +157,19 @@ MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *con
 
 /**
  * Query the display
- *   \warning return value must be destroyed via mir_display_config_destroy()
- *   \warning may return null if connection is invalid
- *   \param [in]  connection        The connection
- *   \return                        structure that describes the display configuration
+ *
+ * \pre mir_connection_is_valid(connection) == true
+ * \warning return value must be destroyed via mir_display_config_release()
+ *
+ * \param [in]  connection        The connection
+ * \return                        structure that describes the display configuration
  */
 MirDisplayConfig* mir_connection_create_display_configuration(MirConnection* connection);
 
 /**
  * Register a callback to be called when the hardware display configuration changes
  *
- * Once a change has occurred, you can use mir_connection_create_display_config to see
+ * Once a change has occurred, you can use mir_connection_create_display_configuration to see
  * the new configuration.
  *
  *   \param [in] connection  The connection
