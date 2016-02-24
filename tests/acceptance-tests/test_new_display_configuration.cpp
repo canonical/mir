@@ -563,6 +563,7 @@ TEST_F(DisplayConfigurationTest,
 
 
 struct DisplayPowerSetting : public DisplayConfigurationTest, public ::testing::WithParamInterface<MirPowerMode> {};
+struct DisplayOrientationSetting : public DisplayConfigurationTest, public ::testing::WithParamInterface<MirOrientation> {};
 struct DisplayFormatSetting : public DisplayConfigurationTest, public ::testing::WithParamInterface<MirPixelFormat> {};
 
 TEST_P(DisplayPowerSetting, can_set_power_mode)
@@ -584,7 +585,42 @@ TEST_P(DisplayPowerSetting, can_set_power_mode)
     }
 
     EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(config.get())));
-    mir_connection_apply_display_configuration(client.connection, config.get());
+    mir_wait_for(mir_connection_apply_display_configuration(client.connection, config.get()));
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(mock_display, configure(_)).Times(AnyNumber());
+    client.disconnect();
+}
+
+TEST_P(DisplayOrientationSetting, can_set_orientation)
+{
+    using namespace testing;
+
+    auto orientation = GetParam();
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto config = client.get_base_config();
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(config.get()); ++i)
+    {
+        auto output = mir_display_config_get_mutable_output(config.get(), i);
+
+        mir_output_set_orientation(output, orientation);
+    }
+
+    EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(config.get())));
+    mir_wait_for(mir_connection_apply_display_configuration(client.connection, config.get()));
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(mock_display, configure(_)).Times(AnyNumber());
+    client.disconnect();
+}
 
 namespace
 {

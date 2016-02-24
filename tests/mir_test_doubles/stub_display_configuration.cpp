@@ -19,6 +19,7 @@
 #include "mir/test/doubles/stub_display_configuration.h"
 
 #include <limits>
+#include <boost/throw_exception.hpp>
 
 namespace mtd = mir::test::doubles;
 
@@ -50,6 +51,35 @@ mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
             mir_form_factor_monitor
         }
 {
+}
+
+mtd::StubDisplayConfigurationOutput::StubDisplayConfigurationOutput(
+    graphics::DisplayConfigurationOutputId id,
+    std::vector<graphics::DisplayConfigurationMode> modes,
+    std::vector<MirPixelFormat> formats)
+    : DisplayConfigurationOutput{
+        id,
+        graphics::DisplayConfigurationCardId{0},
+        graphics::DisplayConfigurationOutputType::edp,
+        formats,
+        modes,
+        static_cast<uint32_t>(modes.size() - 1),
+        {200, 200},
+        true,
+        true,
+        {0, 0},
+        0,
+        formats[0],
+        mir_power_mode_on,
+        mir_orientation_normal,
+        1.0f,
+        mir_form_factor_monitor
+    }
+{
+    if (modes.empty())
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error{"Attempted to create a stub output with no modes"});
+    }
 }
 
 mtd::StubDisplayConfig::StubDisplayConfig() :
