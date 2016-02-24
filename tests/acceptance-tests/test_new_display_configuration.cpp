@@ -645,6 +645,7 @@ TEST_P(DisplayFormatSetting, can_set_output_format)
     mtd::StubDisplayConfig all_format_config(1, formats);
 
     mock_display.emit_configuration_change_event(mt::fake_shared(all_format_config));
+    mock_display.wait_for_configuration_change_handler();
 
     DisplayClient client{new_connection()};
 
@@ -697,6 +698,7 @@ TEST_F(DisplayConfigurationTest, can_set_display_mode)
     std::vector<mg::DisplayConfigurationOutput> outputs{tv, monitor};
 
     mock_display.emit_configuration_change_event(std::make_shared<mtd::StubDisplayConfig>(outputs));
+    mock_display.wait_for_configuration_change_handler();
 
     DisplayClient client{new_connection()};
 
@@ -757,6 +759,7 @@ TEST_F(DisplayConfigurationTest, client_receives_correct_mode_information)
     std::vector<mg::DisplayConfigurationOutput> outputs{monitor};
 
     mock_display.emit_configuration_change_event(std::make_shared<mtd::StubDisplayConfig>(outputs));
+    mock_display.wait_for_configuration_change_handler();
 
     DisplayClient client{new_connection()};
 
