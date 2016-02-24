@@ -25,15 +25,6 @@ namespace mcl = mir::client;
 
 namespace
 {
-std::shared_ptr<mcl::DisplayConfiguration::Config>& client_to_config(MirDisplayConfig* config) __attribute__((pure));
-std::shared_ptr<mcl::DisplayConfiguration::Config const>& client_to_config(MirDisplayConfig const* config) __attribute__((pure));
-
-MirOutput* output_to_client(MirDisplayOutput* output) __attribute__((pure));
-MirOutput const* output_to_client(MirDisplayOutput const* output) __attribute__((pure));
-MirDisplayOutput* client_to_output(MirOutput* client) __attribute__((pure));
-MirDisplayOutput const* client_to_output(MirOutput const* client) __attribute__((pure));
-
-
 std::shared_ptr<mcl::DisplayConfiguration::Config>& client_to_config(MirDisplayConfig* config)
 {
     return *reinterpret_cast<std::shared_ptr<mcl::DisplayConfiguration::Config>*>(config);
