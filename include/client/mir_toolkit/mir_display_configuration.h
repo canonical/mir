@@ -81,19 +81,6 @@ int mir_display_config_get_num_outputs(MirDisplayConfig const* config);
 MirOutput const* mir_display_config_get_output(MirDisplayConfig const* config, size_t index);
 
 /**
- * Get a handle to the \param index 'th output of this configuration which can be used
- * to change the state.
- *
- * \note The MirOutput handle is only valid while \param config is valid.
- * \pre 0 <= index < mir_display_config_get_num_outputs(config)
- * \param [in]  config  The configuration to query
- * \param [in]  index   The index of the output to get.
- * \returns     A handle to a MirOutput within \param config which is valid until
- *              mir_display_config_release(config) is called.
- */
-MirOutput* mir_display_config_get_mutable_output(MirDisplayConfig* config, size_t index);
-
-/**
  * Get the number of modes in the supported mode list of this output.
  *
  * The list of supported modes is retrieved from the hardware, possibly modified by any applicable quirk tables,
@@ -146,17 +133,6 @@ MirOutputMode const* mir_output_get_preferred_mode(MirOutput const* output);
  *              valid. If the output does not have a current mode, it returns NULL.
  */
 MirOutputMode const* mir_output_get_current_mode(MirOutput const* output);
-
-/**
- * Set the current mode of an output.
- *
- * \note    Currently, \param mode must be a pointer returned from mir_output_get_mode.
- *          This limitation should be relaxed in future, allowing modes not on the supported mode list to be
- *          set.
- * \param [in]  output  The MirOutput to change
- * \param [in]  mode    Handle to the mode to set
- */
-void mir_output_set_current_mode(MirOutput* output, MirOutputMode const* mode);
 
 /**
  * Get the number of pixel formats supported by this output
@@ -242,21 +218,6 @@ int mir_output_get_position_x(MirOutput const* output);
  */
 int mir_output_get_position_y(MirOutput const* output);
 
-/**
- * Set the position of the top-left corner of this output in the virtual display space.
- *
- * Outputs can be thought of as viewports into a virtual display space. They may freely overlap, coincide, or
- * be disjoint as desired.
- *
- * Output orientation, as set by mir_output_set_orientation(), changes the orientation of the output rectangle
- * in virtual display space, but does not change its top-left corner.
- *
- * \param [in]  output  The MirOutput to modify
- * \param [in]  x       The new x coördinate of the top-left of the output rectangle
- * \param [in]  y       The new y coördinate of the top-left of the output rectangle
- */
-void mir_output_set_position(MirOutput* output, int x, int y);
-
 typedef enum
 {
     mir_output_disconnected = 0,
@@ -292,20 +253,6 @@ MirOutputConnection mir_output_get_connection_state(MirOutput const *output);
  * \returns     Whether the output is enabled.
  */
 bool mir_output_is_enabled(MirOutput const* output);
-
-/**
- * Enable the output.
- *
- * \param [in]  output  the MirOutput to enable
- */
-void mir_output_enable(MirOutput* output);
-
-/**
- * Disable the output.
- *
- * \param [in]  output  the MirOutput to disable
- */
-void mir_output_disable(MirOutput* output);
 
 /**
  * Get the physical width of the connected display, in millimetres.
@@ -348,30 +295,12 @@ int mir_output_get_physical_height_mm(MirOutput const *output);
 MirPowerMode mir_output_get_power_mode(MirOutput const* output);
 
 /**
- * Set the power state of a display.
- *
- * It is not an error to set the power state of an unconnected display, but it may have no effect.
- *
- * \param [in]  output  The MirOutput to modify
- * \param [in]  mode    The requested power state of \param output
- */
-void mir_output_set_power_mode(MirOutput* output, MirPowerMode mode);
-
-/**
  * Get the orientation of a display.
  *
  * \param [in]  output  The MirOutput to query
  * \returns     The orientation of \param output
  */
 MirOrientation mir_output_get_orientation(MirOutput const* output);
-
-/**
- * Set the orientation of a display.
- *
- * \param [in]  output  The MirOutput to modify
- * \param [in]  orientation The requested display orientation
- */
-void mir_output_set_orientation(MirOutput* output, MirOrientation orientation);
 
 /**
  * Get the width, in pixels, of a MirOutputMode

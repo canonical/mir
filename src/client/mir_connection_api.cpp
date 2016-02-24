@@ -275,24 +275,6 @@ MirWaitHandle* mir_connection_apply_display_config(
     }
 }
 
-MirWaitHandle* mir_connection_apply_display_configuration(
-    MirConnection* connection,
-    MirDisplayConfig const* display_configuration)
-{
-    mir::require(mir_connection_is_valid(connection));
-
-    try
-    {
-        auto config = reinterpret_cast<std::shared_ptr<mcl::DisplayConfiguration::Config> const*>(display_configuration);
-        return connection->configure_display(**config);
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-        return nullptr;
-    }
-}
-
 MirWaitHandle* mir_connection_set_base_display_config(
     MirConnection* connection,
     MirDisplayConfiguration const* display_configuration)
@@ -300,24 +282,6 @@ MirWaitHandle* mir_connection_set_base_display_config(
     try
     {
         return connection ? connection->set_base_display_configuration(display_configuration) : nullptr;
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-        return nullptr;
-    }
-}
-
-MirWaitHandle* mir_connection_set_base_display_configuration(
-    MirConnection* connection,
-    MirDisplayConfig const* display_configuration)
-{
-    mir::require(mir_connection_is_valid(connection));
-
-    try
-    {
-        auto config = reinterpret_cast<std::shared_ptr<mcl::DisplayConfiguration::Config> const*>(display_configuration);
-        return connection->set_base_display_configuration(**config);
     }
     catch (std::exception const& ex)
     {

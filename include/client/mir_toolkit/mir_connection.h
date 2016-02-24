@@ -202,23 +202,6 @@ void mir_display_config_destroy(MirDisplayConfiguration* display_configuration);
 MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration);
 
 /**
- * Apply the display configuration
- *
- * The display configuration is applied to this connection only (per-connection
- * configuration) and is invalidated when a hardware change occurs. Clients should
- * register a callback with mir_connection_set_display_configuration_change_callback()
- * to get notified about hardware changes, so that the can apply a new configuration.
- *
- *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
- *   \param [in] connection             The connection
- *   \param [in] display_configuration  The display_configuration to apply
- *   \return                            A handle that can be passed to mir_wait_for
- */
-MirWaitHandle* mir_connection_apply_display_configuration(
-    MirConnection *connection,
-    MirDisplayConfig const* display_configuration);
-
-/**
  * Set the base display configuration
  *
  * The base display configuration is the configuration the server applies when
@@ -242,31 +225,6 @@ MirWaitHandle* mir_connection_apply_display_configuration(
 MirWaitHandle* mir_connection_set_base_display_config(
     MirConnection* connection,
     MirDisplayConfiguration const* display_configuration);
-
-/**
- * Set the base display configuration
- *
- * The base display configuration is the configuration the server applies when
- * there is no active per-connection configuration.
- *
- * When the wait handle returned by this function becomes ready, clients can use
- * mir_connection_get_error_message() to check if an authorization error occurred.
- * Only authorization errors are guaranteed to return an error message for this
- * operation.
- *
- * A successful result (i.e. no error) does not guarantee that the base display
- * configuration has been changed to the desired value. Clients should register
- * a callback with mir_connection_set_display_config_change_callback() to monitor
- * actual base display configuration changes.
- *
- *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
- *   \param [in] connection             The connection
- *   \param [in] display_configuration  The display_configuration to set as base
- *   \return                            A handle that can be passed to mir_wait_for
- */
-MirWaitHandle* mir_connection_set_base_display_configuration(
-    MirConnection* connection,
-    MirDisplayConfig const* display_configuration);
 
 /**
  * Get a display type that can be used for OpenGL ES 2.0 acceleration.
