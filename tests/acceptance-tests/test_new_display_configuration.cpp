@@ -619,10 +619,14 @@ TEST_F(DisplayConfigurationTest, output_position_is_independent_of_orientation)
 
 TEST_F(DisplayConfigurationTest, client_receives_correct_output_positions)
 {
-    mir::geometry::Point const a{-100, 10};
-    mir::geometry::Point const b{100, 10000};
+
+    ;
     mir::geometry::Point const c{1, -2};
-    std::array<mir::geometry::Point, 3> const positions = { a, b, c };
+    std::array<mir::geometry::Point, 3> const positions = {{
+        mir::geometry::Point{-100, 10},
+        mir::geometry::Point{100, 10000},
+        mir::geometry::Point{-100, 10}
+    }};
 
     std::shared_ptr<mg::DisplayConfiguration> server_config = server.the_display()->configuration();
     server_config->for_each_output(
