@@ -354,6 +354,8 @@ TEST_F(ClientSurfaces, reports_performance)
     };
     std::string log;
 
+    (void)env; // Avoid clang warning/error
+
     auto spec = mir_connection_create_spec_for_normal_surface(
                    connection, 123, 456, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
