@@ -224,19 +224,19 @@ int mir_output_get_position_y(MirOutput const* output);
  * an image being displayed to the user.
  *
  * The accuracy of this determination varies with connection type - for example, for
- * DisplayPort and HDMI connections a return value of mir_output_connected is usually
- * a reliable indicator that there is a powered-on display connected.
+ * DisplayPort and HDMI connections a return value of mir_output_connection_state_connected
+ * is usually a reliable indicator that there is a powered-on display connected.
  *
  * VGA and DVI connectors can usually determine whether or not there is a physically connected
  * display, but cannot distinguish between a powered or unpowered display.
  *
  * It is not always possible to determine whether or not there is a display connected;
- * in such cases mir_output_connection_unknown is returned.
+ * in such cases mir_output_connection_state_unknown is returned.
  *
  * \param [in]  output  The MirOutput to query
  * \returns     Whether there is a display connected to this output.
  */
-MirOutputConnection mir_output_get_connection_state(MirOutput const *output);
+MirOutputConnectionState mir_output_get_connection_state(MirOutput const *output);
 
 /**
  * Get whether this output is enabled in the current configuration.

@@ -300,12 +300,12 @@ typedef enum MirOutputType
     mir_output_type_edp
 } MirOutputType;
 
-typedef enum MirOutputConnection
+typedef enum MirOutputConnectionState
 {
-    mir_output_disconnected = 0,
-    mir_output_connected,
-    mir_output_connection_unknown
-} MirOutputConnection;
+    mir_output_connection_state_disconnected = 0,
+    mir_output_connection_state_connected,
+    mir_output_connection_state_unknown
+} MirOutputConnectionState;
 
 typedef struct MirDisplayMode
 {

@@ -236,12 +236,13 @@ void mir_output_set_position(MirOutput* client_output, int x, int y)
     output->position_y = y;
 }
 
-MirOutputConnection mir_output_get_connection_state(MirOutput const *client_output)
+MirOutputConnectionState mir_output_get_connection_state(MirOutput const *client_output)
 {
     auto output = client_to_output(client_output);
 
-    // TODO: actually plumb through mir_output_connection_unknown.
-    return output->connected == 0 ? mir_output_disconnected : mir_output_connected;
+    // TODO: actually plumb through mir_output_connection_state_unknown.
+    return output->connected == 0 ? mir_output_connection_state_disconnected :
+           mir_output_connection_state_connected;
 }
 
 int mir_output_get_physical_height_mm(MirOutput const *client_output)

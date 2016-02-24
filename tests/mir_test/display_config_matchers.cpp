@@ -204,7 +204,7 @@ public:
                     static_cast<uint32_t>(find_mode_index(client_output, mir_output_get_preferred_mode(client_output))),
                     geom::Size{mir_output_get_physical_width_mm(client_output),
                                mir_output_get_physical_height_mm(client_output)},
-                    mir_output_get_connection_state(client_output) == mir_output_connected,
+                    mir_output_get_connection_state(client_output) == mir_output_connection_state_connected,
                     mir_output_is_enabled(client_output),
                     geom::Point{mir_output_get_position_x(client_output),
                         mir_output_get_position_y(client_output)},
