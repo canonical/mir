@@ -1,3 +1,15 @@
+mir (0.20.1-0ubuntu1) UNRELEASED; urgency=medium
+
+  [ Kevin DuBois ]
+  * New upstream release 0.20.1 (https://launchpad.net/mir/+milestone/0.20.1)
+    - ABI summary:
+      . no abi changes in any libraries. bugfix release only
+    - Bugs fixed:
+      . Accommodate system image device name change for arale device
+        that broke android quirk detection (LP: #1549226)
+
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Wed, 24 Feb 2016 08:33:20 -0500
+
 mir (0.20.0+16.04.20160219-0ubuntu1) xenial; urgency=medium
 
   [ Alan Griffiths ]
