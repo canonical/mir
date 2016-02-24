@@ -131,7 +131,7 @@ mtd::StubDisplayConfig::StubDisplayConfig(unsigned int num_displays, std::vector
         geometry::Point top_left{};
         graphics::DisplayConfigurationOutput output{
             graphics::DisplayConfigurationOutputId{static_cast<int>(i + 1)},
-            graphics::DisplayConfigurationCardId{static_cast<int>(i)},
+            graphics::DisplayConfigurationCardId{1},
             graphics::DisplayConfigurationOutputType::vga,
             pfs,
             connected(i) ? modes : std::vector<graphics::DisplayConfigurationMode>{},
@@ -148,14 +148,13 @@ mtd::StubDisplayConfig::StubDisplayConfig(unsigned int num_displays, std::vector
         };
 
         outputs.push_back(output);
-
-        graphics::DisplayConfigurationCard card{
-            graphics::DisplayConfigurationCardId{static_cast<int>(i)},
-            i + 1
-        };
-
-        cards.push_back(card);
     }
+    graphics::DisplayConfigurationCard card{
+        graphics::DisplayConfigurationCardId{1},
+        5
+    };
+
+    cards.push_back(card);
 }
 
 mtd::StubDisplayConfig::StubDisplayConfig(std::vector<geometry::Rectangle> const& rects)
