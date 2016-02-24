@@ -63,7 +63,7 @@ bool gralloc_cannot_be_closed_safely_for(std::string const& device_name, bool qu
 
 bool clear_fb_context_fence_for(std::string const& device_name)
 {
-    return device_name == "krillin" || device_name == "mx4" || device_name == "manta";
+    return device_name == "krillin" || device_name == "arale" || device_name == "manta";
 }
 
 bool device_has_fb_ion_heap(std::string const& device_name, bool quirk_enabled)
@@ -126,7 +126,7 @@ int mga::DeviceQuirks::fb_gralloc_bits() const
 bool mga::DeviceQuirks::working_egl_sync() const
 {
     //FIXME: this really should be all powervr devices.
-    return device_name != "mx4";
+    return device_name != "arale";
 }
 
 void mga::DeviceQuirks::add_options(boost::program_options::options_description& config)
