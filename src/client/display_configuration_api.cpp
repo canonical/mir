@@ -115,11 +115,11 @@ int mir_output_get_id(MirOutput const* client_output)
     return output->output_id;
 }
 
-MirDisplayOutputType mir_output_get_type(MirOutput const* client_output)
+MirOutputType mir_output_get_type(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
 
-    return output->type;
+    return static_cast<MirOutputType>(output->type);
 }
 
 int mir_output_get_physical_width_mm(MirOutput const *client_output)

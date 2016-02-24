@@ -185,9 +185,9 @@ int mir_output_get_id(MirOutput const* output);
  * This is a best-effort determination, and may be incorrect.
  *
  * \param [in]  output  The MirOutput to query
- * \returns     The type of the display connection, or mir_display_output_type_unknown if it cannot be determined.
+ * \returns     The type of the display connection, or mir_output_type_unknown if it cannot be determined.
  */
-MirDisplayOutputType mir_output_get_type(MirOutput const* output);
+MirOutputType mir_output_get_type(MirOutput const* output);
 
 /**
  * Get the x coordinate of the top-left point of the output in the virtual display space.
@@ -216,13 +216,6 @@ int mir_output_get_position_x(MirOutput const* output);
  * \returns     The y coordinate of the top-left point of the output in the virtual display space.
  */
 int mir_output_get_position_y(MirOutput const* output);
-
-typedef enum
-{
-    mir_output_disconnected = 0,
-    mir_output_connected,
-    mir_output_connection_unknown
-} MirOutputConnection;
 
 /**
  * Get whether there is a display physically connected to the output.

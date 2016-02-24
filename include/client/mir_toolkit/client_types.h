@@ -281,6 +281,32 @@ typedef enum MirDisplayOutputType
     mir_display_output_type_edp
 } MirDisplayOutputType;
 
+typedef enum MirOutputType
+{
+    mir_output_type_unknown,
+    mir_output_type_vga,
+    mir_output_type_dvii,
+    mir_output_type_dvid,
+    mir_output_type_dvia,
+    mir_output_type_composite,
+    mir_output_type_svideo,
+    mir_output_type_lvds,
+    mir_output_type_component,
+    mir_output_type_ninepindin,
+    mir_output_type_displayport,
+    mir_output_type_hdmia,
+    mir_output_type_hdmib,
+    mir_output_type_tv,
+    mir_output_type_edp
+} MirOutputType;
+
+typedef enum MirOutputConnection
+{
+    mir_output_disconnected = 0,
+    mir_output_connected,
+    mir_output_connection_unknown
+} MirOutputConnection;
+
 typedef struct MirDisplayMode
 {
     uint32_t vertical_resolution;
