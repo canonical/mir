@@ -560,3 +560,37 @@ TEST_F(DisplayConfigurationTest,
     wait_for_server_actions_to_finish(*server.the_main_loop());
     testing::Mock::VerifyAndClearExpectations(&mock_display);
 }
+
+
+struct DisplayPowerSetting : public DisplayConfigurationTest, public ::testing::WithParamInterface<MirPowerMode> {};
+
+TEST_P(DisplayPowerSetting, can_set_power_mode)
+{
+    using namespace testing;
+
+    auto mode = GetParam();
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto config = client.get_base_config();
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(config.get()); ++i)
+    {
+        auto output = mir_display_config_get_mutable_output(config.get(), i);
+
+        mir_output_set_power_mode(output, mode);
+    }
+
+    EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(config.get())));
+    mir_connection_apply_display_configuration(client.connection, config.get());
+
+    wait_for_server_actions_to_finish(*server.the_main_loop());
+    Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(mock_display, configure(_)).Times(AnyNumber());
+    client.disconnect();
+}
+
+INSTANTIATE_TEST_CASE_P(DisplayConfiguration, DisplayPowerSetting,
+                        Values(mir_power_mode_on, mir_power_mode_standby, mir_power_mode_suspend, mir_power_mode_off));

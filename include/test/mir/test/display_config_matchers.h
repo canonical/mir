@@ -79,6 +79,9 @@ bool compare_display_configurations(MirDisplayConfiguration const* display_confi
 bool compare_display_configurations(MirDisplayConfig const* client_config,
                                    graphics::DisplayConfiguration const& server_config);
 
+bool compare_display_configurations(graphics::DisplayConfiguration const& server_config,
+    MirDisplayConfig const* client_config);
+
 bool compare_display_configurations(MirDisplayConfig const* config1,
     MirDisplayConfig const* config2);
 

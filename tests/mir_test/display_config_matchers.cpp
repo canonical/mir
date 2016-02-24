@@ -405,6 +405,13 @@ bool mt::compare_display_configurations(MirDisplayConfig const* client_config,
     return compare_display_configurations(server_config, translated_config);
 }
 
+bool mt::compare_display_configurations(mg::DisplayConfiguration const& server_config,
+    MirDisplayConfig const* client_config)
+{
+    TestDisplayConfiguration translated_config{client_config};
+    return compare_display_configurations(server_config, translated_config);
+}
+
 bool mt::compare_display_configurations(MirDisplayConfig const* config1,
     MirDisplayConfig const* config2)
 {

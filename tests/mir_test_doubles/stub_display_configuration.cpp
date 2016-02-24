@@ -95,7 +95,7 @@ mtd::StubDisplayConfig::StubDisplayConfig(std::vector<std::pair<bool,bool>> cons
 mtd::StubDisplayConfig::StubDisplayConfig(unsigned int num_displays, std::vector<MirPixelFormat> const& pfs)
 {
     /* construct a non-trivial dummy display config to send */
-    int mode_index = 0;
+    int mode_index = 1;
     for (auto i = 0u; i < num_displays; i++)
     {
         std::vector<graphics::DisplayConfigurationMode> modes;
