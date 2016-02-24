@@ -238,8 +238,8 @@ MIR_CLIENT_9_unreleased {
     mir_output_get_id;
     mir_output_get_type;
     mir_output_get_preferred_mode;
-    mir_output_physical_width_mm;
-    mir_output_physical_height_mm;
+    mir_output_get_physical_width_mm;
+    mir_output_get_physical_height_mm;
     mir_output_get_connection_state;
     mir_output_get_position_x;
     mir_output_get_position_y;

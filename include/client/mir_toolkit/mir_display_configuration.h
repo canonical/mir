@@ -284,7 +284,7 @@ void mir_output_disable(MirOutput* output);
  * \param [in]  output  the MirOutput to query
  * \returns     Physical width of the connected display, in mm.
  */
-int mir_output_physical_width_mm(MirOutput const* output);
+int mir_output_get_physical_width_mm(MirOutput const *output);
 
 /**
  * Get the physical height of the connected display, in millimetres.
@@ -299,7 +299,7 @@ int mir_output_physical_width_mm(MirOutput const* output);
  * \param [in]  output  the MirOutput to query
  * \returns     Physical height of the connected display, in mm.
  */
-int mir_output_physical_height_mm(MirOutput const* output);
+int mir_output_get_physical_height_mm(MirOutput const *output);
 
 /**
  * Get the power state of a connected display.
