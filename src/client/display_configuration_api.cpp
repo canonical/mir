@@ -196,12 +196,12 @@ MirPixelFormat mir_output_get_current_format(MirOutput const* client_output)
     return output->current_format;
 }
 
-void mir_output_set_format(MirOutput* client_output, size_t index)
+void mir_output_set_format(MirOutput* client_output, MirPixelFormat format)
 {
     auto output = client_to_output(client_output);
 
-    mir::require(index < output->num_output_formats);
-    output->current_format = output->output_formats[index];
+    // TODO: Maybe check format validity?
+    output->current_format = format;
 }
 
 int mir_output_get_position_x(MirOutput const* client_output)

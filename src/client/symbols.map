@@ -248,10 +248,12 @@ MIR_CLIENT_9_unreleased {
     mir_output_get_power_mode;
     mir_output_set_power_mode;
     mir_output_get_orientation;
+    mir_output_set_orientation;
     mir_output_get_num_modes;
     mir_output_get_mode;
     mir_output_get_num_output_formats;
     mir_output_get_format;
+    mir_output_set_format;
   local:
     *;
 } MIR_CLIENT_9v19;

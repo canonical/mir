@@ -174,7 +174,7 @@ MirPixelFormat mir_output_get_current_format(MirOutput const* output);
  * \param [in]  output  The MirOutput to modify
  * \param [in]  format  The MirPixelFormat to set
  */
-void mir_output_set_format(MirOutput* output, int index);
+void mir_output_set_format(MirOutput* output, MirPixelFormat format);
 
 /**
  * Get the ID of an output

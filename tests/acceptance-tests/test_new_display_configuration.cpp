@@ -563,6 +563,7 @@ TEST_F(DisplayConfigurationTest,
 
 
 struct DisplayPowerSetting : public DisplayConfigurationTest, public ::testing::WithParamInterface<MirPowerMode> {};
+struct DisplayFormatSetting : public DisplayConfigurationTest, public ::testing::WithParamInterface<MirPixelFormat> {};
 
 TEST_P(DisplayPowerSetting, can_set_power_mode)
 {
@@ -585,6 +586,49 @@ TEST_P(DisplayPowerSetting, can_set_power_mode)
     EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(config.get())));
     mir_connection_apply_display_configuration(client.connection, config.get());
 
+namespace
+{
+std::vector<MirPixelFormat> const formats{
+    mir_pixel_format_abgr_8888,
+    mir_pixel_format_xbgr_8888,
+    mir_pixel_format_argb_8888,
+    mir_pixel_format_xrgb_8888,
+    mir_pixel_format_bgr_888,
+    mir_pixel_format_rgb_888,
+    mir_pixel_format_rgb_565,
+    mir_pixel_format_rgba_5551,
+    mir_pixel_format_rgba_4444,
+};
+}
+
+TEST_P(DisplayFormatSetting, can_set_output_format)
+{
+    using namespace testing;
+    auto format = GetParam();
+
+    mtd::StubDisplayConfig all_format_config(1, formats);
+
+    mock_display.emit_configuration_change_event(mt::fake_shared(all_format_config));
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto config = client.get_base_config();
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(config.get()); ++i)
+    {
+        auto output = mir_display_config_get_mutable_output(config.get(), i);
+
+        if (mir_output_is_enabled(output))
+        {
+            mir_output_set_format(output, format);
+        }
+    }
+
+    EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(config.get())));
+    mir_wait_for(mir_connection_apply_display_configuration(client.connection, config.get()));
+
     wait_for_server_actions_to_finish(*server.the_main_loop());
     Mock::VerifyAndClearExpectations(&mock_display);
 
@@ -593,4 +637,7 @@ TEST_P(DisplayPowerSetting, can_set_power_mode)
 }
 
 INSTANTIATE_TEST_CASE_P(DisplayConfiguration, DisplayPowerSetting,
-                        Values(mir_power_mode_on, mir_power_mode_standby, mir_power_mode_suspend, mir_power_mode_off));
+    Values(mir_power_mode_on, mir_power_mode_standby, mir_power_mode_suspend, mir_power_mode_off));
+
+INSTANTIATE_TEST_CASE_P(DisplayConfiguration, DisplayFormatSetting,
+    ValuesIn(formats));
