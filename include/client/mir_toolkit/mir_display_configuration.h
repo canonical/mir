@@ -36,9 +36,9 @@ int mir_display_config_get_max_simultaneous_outputs(MirDisplayConfig const* conf
 
 int mir_display_config_get_num_outputs(MirDisplayConfig const* config);
 
-MirOutput const* mir_display_config_get_output(MirDisplayConfig const* config, int index);
+MirOutput const* mir_display_config_get_output(MirDisplayConfig const* config, size_t index);
 
-MirOutput* mir_display_config_get_mutable_output(MirDisplayConfig* config, int index);
+MirOutput* mir_display_config_get_mutable_output(MirDisplayConfig* config, size_t index);
 
 int mir_output_get_num_modes(MirOutput const* output);
 
@@ -48,11 +48,11 @@ int mir_output_get_current_mode(MirOutput const* output);
 
 void mir_output_set_current_mode(MirOutput* output, int index);
 
-MirDisplayMode* mir_output_get_mode(MirOutput const* output, int index);
+MirDisplayMode const* mir_output_get_mode(MirOutput const* output, size_t index);
 
 int mir_output_get_num_output_formats(MirOutput const* output);
 
-MirPixelFormat mir_output_get_format(MirOutput const* output, int index);
+MirPixelFormat mir_output_get_format(MirOutput const* output, size_t index);
 
 MirPixelFormat mir_output_get_current_format(MirOutput const* output);
 
