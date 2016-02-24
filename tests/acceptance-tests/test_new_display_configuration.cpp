@@ -482,11 +482,10 @@ TEST_F(DisplayConfigurationTest, client_receives_correct_mode_information)
 
 TEST_F(DisplayConfigurationTest, client_receives_correct_output_positions)
 {
-    std::array<mir::geometry::Point, 3> const positions = {
-        mir::geometry::Point(-100, 10),
-        mir::geometry::Point(100, 10000),
-        mir::geometry::Point(1, -2)
-    };
+    mir::geometry::Point const a{-100, 10};
+    mir::geometry::Point const b{100, 10000};
+    mir::geometry::Point const c{1, -2};
+    std::array<mir::geometry::Point, 3> const positions = { a, b, c };
 
     std::shared_ptr<mg::DisplayConfiguration> server_config = server.the_display()->configuration();
     server_config->for_each_output(
