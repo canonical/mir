@@ -31,6 +31,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/client_types_nbs.h"
 #include "mir_surface.h"
+#include "display_configuration.h"
 
 #include <atomic>
 #include <memory>
@@ -132,6 +133,7 @@ public:
     void populate(MirPlatformPackage& platform_package);
     void populate_graphics_module(MirModuleProperties& properties);
     MirDisplayConfiguration* create_copy_of_display_config();
+    std::shared_ptr<mir::client::DisplayConfiguration::Config> snapshot_display_configuration() const;
     void available_surface_formats(MirPixelFormat* formats,
                                    unsigned int formats_size, unsigned int& valid_formats);
 
@@ -164,9 +166,11 @@ public:
     void on_stream_created(int id, mir::client::ClientBufferStream* stream);
 
     MirWaitHandle* configure_display(MirDisplayConfiguration* configuration);
+    MirWaitHandle* configure_display(mir::client::DisplayConfiguration::Config const& configuration);
     void done_display_configure();
 
     MirWaitHandle* set_base_display_configuration(MirDisplayConfiguration const* configuration);
+    MirWaitHandle* set_base_display_configuration(mir::client::DisplayConfiguration::Config const& configuration);
     void done_set_base_display_configuration();
 
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> rpc_channel() const

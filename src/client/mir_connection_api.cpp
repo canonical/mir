@@ -233,9 +233,17 @@ MirDisplayConfiguration* mir_connection_create_display_config(
 }
 
 MirDisplayConfig* mir_connection_create_display_configuration(
-    MirConnection* /*connection*/)
+    MirConnection* connection)
 {
-    return nullptr;
+    mir::require(mir_connection_is_valid(connection));
+
+    return reinterpret_cast<MirDisplayConfig*>(new std::shared_ptr<mcl::DisplayConfiguration::Config>{connection->snapshot_display_configuration()});
+}
+
+void mir_display_config_release(MirDisplayConfig* user_config)
+{
+    auto config = reinterpret_cast<std::shared_ptr<mcl::DisplayConfiguration::Config>*>(user_config);
+    delete config;
 }
 
 void mir_connection_set_display_config_change_callback(
@@ -268,10 +276,21 @@ MirWaitHandle* mir_connection_apply_display_config(
 }
 
 MirWaitHandle* mir_connection_apply_display_configuration(
-    MirConnection* /*connection*/,
-    MirDisplayConfig const* /*display_configuration*/)
+    MirConnection* connection,
+    MirDisplayConfig const* display_configuration)
 {
-    return nullptr;
+    mir::require(mir_connection_is_valid(connection));
+
+    try
+    {
+        auto config = reinterpret_cast<std::shared_ptr<mcl::DisplayConfiguration::Config> const*>(display_configuration);
+        return connection->configure_display(**config);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+        return nullptr;
+    }
 }
 
 MirWaitHandle* mir_connection_set_base_display_config(
@@ -290,10 +309,21 @@ MirWaitHandle* mir_connection_set_base_display_config(
 }
 
 MirWaitHandle* mir_connection_set_base_display_configuration(
-    MirConnection* /*connection*/,
-    MirDisplayConfig const* /*display_configuration*/)
+    MirConnection* connection,
+    MirDisplayConfig const* display_configuration)
 {
-    return nullptr;
+    mir::require(mir_connection_is_valid(connection));
+
+    try
+    {
+        auto config = reinterpret_cast<std::shared_ptr<mcl::DisplayConfiguration::Config> const*>(display_configuration);
+        return connection->set_base_display_configuration(**config);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+        return nullptr;
+    }
 }
 
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(
