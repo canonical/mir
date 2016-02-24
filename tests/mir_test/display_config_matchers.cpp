@@ -221,10 +221,11 @@ public:
             for (int n = 0; n < mir_output_get_num_modes(client_output); n++)
             {
                 auto const client_mode = mir_output_get_mode(client_output, n);
-                auto const resolution = mir_output_mode_get_resolution(client_mode);
                 modes.push_back(
                     {
-                        geom::Size{resolution->width, resolution->height},
+                        geom::Size{
+                            mir_output_mode_get_width(client_mode),
+                            mir_output_mode_get_height(client_mode)},
                         mir_output_mode_get_refresh_rate(client_mode)
                     });
             }

@@ -773,10 +773,11 @@ TEST_F(DisplayConfigurationTest, client_receives_correct_mode_information)
     for (auto i = 0; i < mir_output_get_num_modes(output) ; ++i)
     {
         auto mode = mir_output_get_mode(output, i);
-        auto resolution = mir_output_mode_get_resolution(mode);
+        auto width = mir_output_mode_get_width(mode);
+        auto height = mir_output_mode_get_height(mode);
         auto refresh = mir_output_mode_get_refresh_rate(mode);
 
-        received_modes.push_back(mg::DisplayConfigurationMode{{resolution->width, resolution->height}, refresh});
+        received_modes.push_back(mg::DisplayConfigurationMode{{width, height}, refresh});
     }
 
     EXPECT_THAT(received_modes, ContainerEq(modes));

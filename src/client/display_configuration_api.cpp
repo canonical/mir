@@ -262,13 +262,18 @@ void mir_output_set_orientation(MirOutput* client_output, MirOrientation orienta
     output->orientation = orientation;
 }
 
-MirExtent const* mir_output_mode_get_resolution(MirOutputMode const* mode)
+int mir_output_mode_get_width(MirOutputMode const* mode)
 {
-    /* MirExtent has the same layout as the initial two elements of MirDisplayMode.
-     *
-     * Exploit this until we replace the internals.
-     */
-    return reinterpret_cast<MirExtent const*>(mode);
+    auto internal_mode = reinterpret_cast<MirDisplayMode const *>(mode);
+
+    return internal_mode->horizontal_resolution;
+}
+
+int mir_output_mode_get_height(MirOutputMode const* mode)
+{
+    auto internal_mode = reinterpret_cast<MirDisplayMode const *>(mode);
+
+    return internal_mode->vertical_resolution;
 }
 
 double mir_output_mode_get_refresh_rate(MirOutputMode const* mode)

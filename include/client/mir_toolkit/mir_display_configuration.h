@@ -338,13 +338,20 @@ MirOrientation mir_output_get_orientation(MirOutput const* output);
 void mir_output_set_orientation(MirOutput* output, MirOrientation orientation);
 
 /**
- * Get the resolution of a MirOutputMode
+ * Get the width, in pixels, of a MirOutputMode
  *
  * \param [in]  mode    The MirOutputMode to query
- * \returns     A reference to a MirExtent containing the pixel width and pixel height of the mode.
- *              This is guaranteed non-NULL.
+ * \returns     The width, in pixels, of \param mode.
  */
-MirExtent const* mir_output_mode_get_resolution(MirOutputMode const* mode);
+int mir_output_mode_get_width(MirOutputMode const* mode);
+
+/**
+ * Get the height, in pixels, of a MirOutputMode
+ *
+ * \param [in]  mode    The MirOutputMode to query
+ * \returns     The height, in pixels, of \param mode.
+ */
+int mir_output_mode_get_height(MirOutputMode const* mode);
 
 /**
  * Get the refresh rate, in Hz, of a MirOutputMode
