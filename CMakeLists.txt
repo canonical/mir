@@ -214,6 +214,12 @@ endmacro()
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
+if ("${LIBINPUT_VERSION}" VERSION_LESS "1.1")
+  add_definitions(-DLIBINPUT_HAS_ACCEL_PROFILE=0)
+else ()
+  add_definitions(-DLIBINPUT_HAS_ACCEL_PROFILE=1)
+endif ()
+
 option(MIR_ENABLE_TESTS "Build tests" ON)
 
 add_subdirectory(benchmarks/)
