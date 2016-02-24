@@ -218,11 +218,12 @@ int mir_output_get_position_y(MirOutput const* client_output)
     return output->position_y;
 }
 
-bool mir_output_is_connected(MirOutput const* client_output)
+MirOutputConnection mir_output_is_connected(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
 
-    return (output->connected != 0);
+    // TODO: actually plumb through mir_output_connection_unknown.
+    return output->connected == 0 ? mir_output_disconnected : mir_output_connected;
 }
 
 int mir_output_physical_height_mm(MirOutput const* client_output)

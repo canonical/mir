@@ -219,12 +219,12 @@ int mir_output_get_position_x(MirOutput const* output);
  */
 int mir_output_get_position_y(MirOutput const* output);
 
-enum MirOutputConnection
+typedef enum
 {
     mir_output_disconnected = 0,
     mir_output_connected,
     mir_output_connection_unknown
-};
+} MirOutputConnection;
 
 /**
  * Get whether there is a display physically connected to the output.
