@@ -22,6 +22,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <chrono>
+#include <fcntl.h>
+
 TEST(MirCookieAuthority, attests_real_timestamp)
 {
     std::vector<uint8_t> secret{ 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0xde, 0x01 };
@@ -114,4 +117,24 @@ TEST(MirCookieAuthority, optimal_secret_size_is_larger_than_minimum_size)
 
     EXPECT_THAT(mir::cookie::Authority::optimal_secret_size(),
         Ge(mir::cookie::Authority::minimum_secret_size));
+}
+
+TEST(MirCookieAuthority, DISABLED_does_not_hang_or_crash)
+{   // Regression test for LP: #1536662 and LP: #1541188
+    using namespace testing;
+
+    // Flush the entropy pool
+    int fd = open("/dev/random", O_RDONLY | O_NONBLOCK);
+    ASSERT_THAT(fd, Ge(0));
+    char buf[256];
+    while (read(fd, buf, sizeof buf) > 0) {}
+    close(fd);
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    EXPECT_NO_THROW( mir::cookie::Authority::create() );
+
+    auto duration = std::chrono::high_resolution_clock::now() - start;
+    int seconds = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+    EXPECT_THAT(seconds, Lt(20));
 }
