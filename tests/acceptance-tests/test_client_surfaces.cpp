@@ -352,7 +352,7 @@ TEST_F(ClientSurfaces, reports_performance)
         {"MIR_LOG_FD", std::to_string((int)log_pipe.write_fd()).c_str()},
         {"MIR_CLIENT_PERF_REPORT", "log"}
     };
-    std::string log;
+    std::stringstream log;
 
     (void)env; // Avoid clang warning/error
 
@@ -380,16 +380,15 @@ TEST_F(ClientSurfaces, reports_performance)
         while ((got = read(log_pipe.read_fd(), buf, sizeof(buf)-1)) > 0)
         {
             buf[got] = '\0';
-            log += buf;
+            log << buf;
         }
     }
 
     int reports = 0;
-    std::stringstream log_stream(log);
-    while (!log_stream.eof())
+    while (!log.eof())
     {
         std::string line;
-        std::getline(log_stream, line);
+        std::getline(log, line);
         auto perf = line.find(" perf: ");
         if (perf != line.npos)
         {
