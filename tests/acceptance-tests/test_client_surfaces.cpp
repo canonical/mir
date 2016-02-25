@@ -395,7 +395,7 @@ TEST_F(ClientSurfaces, reports_performance)
             ++reports;
             char name[256];
             float fps;
-            int fields = sscanf(&line[perf],
+            int fields = sscanf(line.c_str() + perf,
                                 " perf: %255[^:]: %f FPS,", name, &fps);
             ASSERT_EQ(2, fields) << "Log line = {" << line << "}";
             EXPECT_STREQ("Foo", name);
