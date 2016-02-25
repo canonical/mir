@@ -378,10 +378,7 @@ TEST_F(ClientSurfaces, reports_performance)
         char buf[1024];
         ssize_t got;
         while ((got = read(log_pipe.read_fd(), buf, sizeof(buf)-1)) > 0)
-        {
-            buf[got] = '\0';
-            log << buf;
-        }
+            log.write(buf, got);
     }
 
     int reports = 0;
