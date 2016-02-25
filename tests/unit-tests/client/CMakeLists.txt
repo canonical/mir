@@ -20,6 +20,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_screencast_stream.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_connection_resource_map.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_presentation_chain.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_mir_buffer.cpp
 )
 
 if(MIR_TEST_PLATFORM STREQUAL "android")

@@ -40,8 +40,7 @@ float distance(int x0, int y0, int x1, int y1)
 void fill_buffer_with_centered_circle_abgr(
     MirBuffer* buffer, float radius, unsigned int fg, unsigned int bg)
 {
-    MirGraphicsRegion region;
-    mir_buffer_acquire_region(buffer, mir_read_write, &region);
+    MirGraphicsRegion region = mir_buffer_get_graphics_region(buffer, mir_read_write);
     if ((!region.vaddr) || (region.pixel_format != mir_pixel_format_abgr_8888))
         return;
     int const center_x = region.width / 2;
@@ -122,8 +121,6 @@ int main(int argc, char** argv)
     signal(SIGTERM, shutdown);
     signal(SIGINT, shutdown);
 
-    int width = 20;
-    int height = 25;
     int displacement_x = 0;
     int displacement_y = 0;
     unsigned int fg = 0xFF1448DD;

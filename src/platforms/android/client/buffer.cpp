@@ -100,3 +100,22 @@ void mcla::Buffer::fill_update_msg(MirBufferPackage& message)
         message.fd_items = 0; 
     }
 }
+
+MirNativeBuffer* mcla::Buffer::as_mir_native_buffer() const
+{
+    return native_buffer->anwb();
+}
+
+void mcla::Buffer::set_fence(MirNativeFence*, MirBufferAccess)
+{
+}
+
+MirNativeFence* mcla::Buffer::get_fence() const
+{
+    return nullptr;
+}
+
+bool mcla::Buffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
+{
+    return true;
+}

@@ -34,7 +34,7 @@ TEST(ModuleDeleter, module_ptr_may_outlive_local_library)
 {
     mir::UniqueModulePtr<SomeInterface> module_object;
     {
-        mir::SharedLibrary lib(mir_test_framework::library_path() + "/example.so");
+        mir::SharedLibrary lib(mir_test_framework::test_data_path() + "/shared-libraries/example.so");
         auto function = lib.load_function<ModuleFunction>("module_create_instance");
         module_object = function();
     }
@@ -45,7 +45,7 @@ TEST(ModuleDeleter, shared_ptr_can_keep_library_alive)
 {
     std::shared_ptr<SomeInterface> module_object;
     {
-        mir::SharedLibrary lib(mir_test_framework::library_path() + "/example.so");
+        mir::SharedLibrary lib(mir_test_framework::test_data_path() + "/shared-libraries/example.so");
         auto function = lib.load_function<ModuleFunction>("module_create_instance");
         module_object = function();
     }

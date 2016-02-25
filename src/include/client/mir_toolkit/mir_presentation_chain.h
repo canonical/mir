@@ -59,9 +59,8 @@ char const *mir_presentation_chain_get_error_message(
  *                                 MirPresentationChain*, but the chain may be
  *                                 invalid in case of an error.
  * \param [in] presentation_chain  Userdata to pass to callback function
- * \return                         A handle that can be supplied to mir_wait_for
  */
-MirWaitHandle* mir_connection_create_presentation_chain(
+void mir_connection_create_presentation_chain(
     MirConnection* connection,
     mir_presentation_chain_callback callback,
     void* context);

@@ -38,7 +38,21 @@ public:
     MockLibInput();
     ~MockLibInput() noexcept;
     void wake();
-    void setup_device(libinput* ptr, libinput_device* device, char const* path, char const* name, unsigned int vendor, unsigned int product);
+    void setup_device(libinput_device* device, libinput_device_group* group, udev_device* u_dev, char const* name,
+                      unsigned int vendor, unsigned int product);
+
+    libinput_event* setup_touch_event(libinput_device* dev, libinput_event_type type, uint64_t event_time, int slot,
+                                      float x, float y, float major, float minor, float pressure);
+    libinput_event* setup_touch_frame(libinput_device *dev, uint64_t event_time);
+    libinput_event* setup_touch_up_event(libinput_device* dev, uint64_t event_time, int slot);
+    libinput_event* setup_key_event(libinput_device* dev, uint64_t event_time, uint32_t key, libinput_key_state state);
+    libinput_event* setup_pointer_event(libinput_device* dev, uint64_t event_time, float relatve_x, float relatve_y);
+    libinput_event* setup_absolute_pointer_event(libinput_device* dev, uint64_t event_time, float x, float y);
+    libinput_event* setup_button_event(libinput_device* dev, uint64_t event_time, int button, libinput_button_state state);
+    libinput_event* setup_axis_event(libinput_device* dev, uint64_t event_time, double horizontal, double vertical);
+    libinput_event* setup_finger_axis_event(libinput_device* dev, uint64_t event_time, double horizontal, double vertical);
+    libinput_event* setup_device_add_event(libinput_device* dev);
+    libinput_event* setup_device_remove_event(libinput_device* dev);
 
     MOCK_METHOD1(libinput_ref, libinput*(libinput*));
     MOCK_METHOD1(libinput_unref, libinput*(libinput*));
@@ -90,6 +104,8 @@ public:
     MOCK_METHOD3(libinput_event_touch_get_major_transformed, double(libinput_event_touch*, uint32_t, uint32_t));
     MOCK_METHOD1(libinput_event_touch_get_orientation, double(libinput_event_touch*));
 
+    MOCK_METHOD3(libinput_udev_create_context, libinput*(const libinput_interface *, void*, struct udev* udev));
+    MOCK_METHOD2(libinput_udev_assign_seat, int(const libinput*, char const* seat));
     MOCK_METHOD2(libinput_path_create_context, libinput*(const libinput_interface *, void*));
     MOCK_METHOD2(libinput_path_add_device, libinput_device*(const libinput*, const char*));
     MOCK_METHOD1(libinput_path_remove_device, void(libinput_device*));
@@ -97,6 +113,7 @@ public:
     MOCK_METHOD1(libinput_device_unref, libinput_device*(libinput_device*));
     MOCK_METHOD1(libinput_device_ref, libinput_device*(libinput_device*));
     MOCK_METHOD1(libinput_device_get_name, char const*(libinput_device*));
+    MOCK_METHOD1(libinput_device_get_udev_device, udev_device*(libinput_device*));
     MOCK_METHOD1(libinput_device_get_id_product, unsigned int(libinput_device*));
     MOCK_METHOD1(libinput_device_get_id_vendor, unsigned int(libinput_device*));
     MOCK_METHOD1(libinput_device_get_sysname, char const*(libinput_device*));
@@ -121,8 +138,10 @@ public:
     MOCK_METHOD2(libinput_device_config_accel_set_speed, libinput_config_status(libinput_device*, double speed));
     MOCK_METHOD1(libinput_device_config_accel_get_speed, double(libinput_device*));
     MOCK_METHOD1(libinput_device_config_accel_get_default_speed, double(libinput_device*));
+#if MIR_LIBINPUT_HAS_ACCEL_PROFILE
     MOCK_METHOD2(libinput_device_config_accel_set_profile, libinput_config_status(libinput_device*, libinput_config_accel_profile));
     MOCK_METHOD1(libinput_device_config_accel_get_profile, libinput_config_accel_profile(libinput_device*));
+#endif
     MOCK_METHOD1(libinput_device_config_scroll_has_natural_scroll, int(libinput_device*));
     MOCK_METHOD2(libinput_device_config_scroll_set_natural_scroll_enabled, libinput_config_status(libinput_device*, int enable));
     MOCK_METHOD1(libinput_device_config_scroll_get_natural_scroll_enabled, int(libinput_device*));
@@ -151,8 +170,17 @@ public:
     MOCK_METHOD1(libinput_device_config_dwt_get_enabled, libinput_config_dwt_state(libinput_device*));
     MOCK_METHOD1(libinput_device_config_dwt_get_default_enabled, libinput_config_dwt_state(libinput_device*));
 
+    template<typename PtrT>
+    PtrT get_next_fake_ptr()
+    {
+        return reinterpret_cast<PtrT>(++last_fake_ptr);
+    }
+
+    std::vector<libinput_event*> events;
 private:
     dispatch::ActionQueue libinput_simulation_queue;
+    unsigned int last_fake_ptr{0};
+    void push_back(libinput_event* event);
 };
 
 }

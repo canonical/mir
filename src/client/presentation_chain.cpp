@@ -30,12 +30,10 @@ namespace gp = google::protobuf;
 
 mcl::PresentationChain::PresentationChain(
     MirConnection* connection,
-    std::shared_ptr<MirWaitHandle> const& wh,
     int stream_id,
     mir::client::rpc::DisplayServer& server,
     std::shared_ptr<mcl::ClientBufferFactory> const& factory) :
     connection_(connection),
-    wait_handle(wh),
     stream_id(stream_id),
     server(server),
     factory(factory)

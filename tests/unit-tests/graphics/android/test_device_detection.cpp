@@ -136,14 +136,14 @@ TEST(DeviceDetection, clears_gl_context_fence_on_manta)
 {
     using namespace testing;
     char const default_str[] = "";
-    char const mx4_name_str[] = "manta";
+    char const manta_name_str[] = "manta";
 
     MockOps mock_ops;
     EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
         .Times(1)
         .WillOnce(Invoke([&](char const*, char* value, char const*)
         {
-            strncpy(value, mx4_name_str, PROP_VALUE_MAX);
+            strncpy(value, manta_name_str, PROP_VALUE_MAX);
             return 0;
         }));
 
@@ -151,18 +151,18 @@ TEST(DeviceDetection, clears_gl_context_fence_on_manta)
     EXPECT_TRUE(quirks.clear_fb_context_fence());
 }
 
-TEST(DeviceDetection, clears_gl_context_fence_on_mx4)
+TEST(DeviceDetection, clears_gl_context_fence_on_arale)
 {
     using namespace testing;
     char const default_str[] = "";
-    char const mx4_name_str[] = "mx4";
+    char const arale_name_str[] = "arale";
 
     MockOps mock_ops;
     EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
         .Times(1)
         .WillOnce(Invoke([&](char const*, char* value, char const*)
         {
-            strncpy(value, mx4_name_str, PROP_VALUE_MAX);
+            strncpy(value, arale_name_str, PROP_VALUE_MAX);
             return 0;
         }));
 
@@ -193,14 +193,14 @@ TEST(DeviceDetection, does_not_clear_gl_context_fence_on_others)
 {
     using namespace testing;
     char const default_str[] = "";
-    char const mx4_name_str[] = "others";
+    char const other_name_str[] = "others";
 
     MockOps mock_ops;
     EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
         .Times(1)
         .WillOnce(Invoke([&](char const*, char* value, char const*)
         {
-            strncpy(value, mx4_name_str, PROP_VALUE_MAX);
+            strncpy(value, other_name_str, PROP_VALUE_MAX);
             return 0;
         }));
 
