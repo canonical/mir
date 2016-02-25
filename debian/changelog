@@ -1,3 +1,17 @@
+mir (0.20.1-0ubuntu1) UNRELEASED; urgency=medium
+
+  [ Kevin DuBois ]
+  * New upstream release 0.20.1 (https://launchpad.net/mir/+milestone/0.20.1)
+    - ABI summary:
+      . No ABI changes in any libraries. Bugfix release only.
+    - Bugs fixed:
+      . On arale; top panel drop down menu is semi-transparent and items are
+        unreadable. Accommodate system image device name change for arale
+        device that broke android quirk detection (LP: #1549226)
+      . Crash when side mouse buttons are pressed (LP: #1544878)
+
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Wed, 24 Feb 2016 08:33:20 -0500
+
 mir (0.20.0+16.04.20160219-0ubuntu1) xenial; urgency=medium
 
   [ Alan Griffiths ]
@@ -56,7 +70,7 @@ mir (0.20.0+16.04.20160219-0ubuntu1) xenial; urgency=medium
       . mouse pointer support on emulator is broken (LP: #1517597).
         [Cherrypicked from 0.21]
       . move an android-only test that ended up in tests/unit-tests/graphics.
-        (LP: ##1546676) [Cherrypicked from 0.21]
+        (LP: #1546676) [Cherrypicked from 0.21]
 
   [ CI Train Bot ]
   * No-change rebuild.

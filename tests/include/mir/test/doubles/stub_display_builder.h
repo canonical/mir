@@ -94,6 +94,11 @@ struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
     {
     }
 
+    std::shared_ptr<graphics::GraphicBufferAllocator> the_buffer_allocator()
+    {
+        return nullptr;
+    }
+
     std::unique_ptr<graphics::android::LayerList> create_layer_list()
     {
         return std::unique_ptr<graphics::android::LayerList>(

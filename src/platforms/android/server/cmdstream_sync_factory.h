@@ -42,6 +42,12 @@ class EGLSyncFactory : public CommandStreamSyncFactory
 {
     std::unique_ptr<CommandStreamSync> create_command_stream_sync() override;
 };
+
+class NullCommandStreamSyncFactory : public CommandStreamSyncFactory
+{
+    std::unique_ptr<CommandStreamSync> create_command_stream_sync() override;
+};
+
 }
 }
 }
