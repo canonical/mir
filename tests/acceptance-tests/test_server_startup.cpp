@@ -18,11 +18,13 @@
  */
 
 #include "mir_test_framework/interprocess_client_server_test.h"
+#include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/detect_server.h"
 
 #include <chrono>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <fcntl.h>
 
 namespace mf = mir::frontend;
 namespace mc = mir::compositor;
@@ -64,4 +66,31 @@ TEST_F(ServerStartup, after_server_sigkilled_can_start_new_instance)
             EXPECT_TRUE(mtf::detect_server(mtf::test_socket_file(),
                                            std::chrono::milliseconds(100)));
         });
+}
+
+TEST(ServerStartupReliability, starts_with_low_entropy)
+{   // Regression test for LP: #1536662 and LP: #1541188
+    using namespace ::testing;
+
+    // Flush the entropy pool
+    int fd = open("/dev/random", O_RDONLY | O_NONBLOCK);
+    ASSERT_THAT(fd, Ge(0));
+    char buf[256];
+    while (read(fd, buf, sizeof buf) > 0) {}
+    close(fd);
+
+    struct Server : mtf::HeadlessInProcessServer
+    {
+        void TestBody() override {}
+    } server;
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    EXPECT_NO_THROW(server.SetUp(););
+
+    auto duration = std::chrono::high_resolution_clock::now() - start;
+    int seconds = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+    EXPECT_THAT(seconds, Lt(10));
+
+    server.TearDown();
 }
