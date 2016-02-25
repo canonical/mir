@@ -39,11 +39,11 @@ namespace mga=mir::graphics::android;
 
 namespace
 {
-//krillin and mx4 need to clear their fences before hwc commit.
+//krillin and arale need to clear their fences before hwc commit.
 struct StubPropertiesWrapper : mga::PropertiesWrapper
 {
     StubPropertiesWrapper(bool should_clear_fence) :
-        name(should_clear_fence ? "mx4" : "otherdevice")
+        name(should_clear_fence ? "arale" : "otherdevice")
     {
     }
 
