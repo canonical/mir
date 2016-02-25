@@ -79,12 +79,12 @@ TEST(ServerStartupReliability, DISABLED_starts_with_low_entropy)
     while (read(fd, buf, sizeof buf) > 0) {}
     close(fd);
 
+    auto start = std::chrono::high_resolution_clock::now();
+
     struct Server : mtf::HeadlessInProcessServer
     {
         void TestBody() override {}
     } server;
-
-    auto start = std::chrono::high_resolution_clock::now();
 
     EXPECT_NO_THROW(server.SetUp(););
 
