@@ -1,20 +1,3 @@
-mir (0.20.1) UNRELEASED; urgency=medium
-
-  * New upstream release 0.20.1 (https://launchpad.net/mir/+milestone/0.20.1)
-    - ABI summary: no rebuild required;
-      . mirclient ABI unchanged at 9
-      . mirserver ABI unchanged to 38
-      . mircommon ABI unchanged at 5
-      . mirplatform ABI unchanged at 11
-      . mirprotobuf ABI unchanged at 3
-      . mirplatformgraphics ABI unchanged to 8
-      . mirclientplatform ABI unchanged at 4
-      . mirinputplatform ABI unchanged at 5
-    - Bug fixes:
-      . crash when side mouse button are pressed (LP: #1544878)
-
- -- Andreas Pokorny <andreas.pokorny@canonical.com>  Wed, 24 Feb 2016 14:04:43 +0100
-
 mir (0.20.0+16.04.20160219-0ubuntu1) xenial; urgency=medium
 
   [ Alan Griffiths ]
