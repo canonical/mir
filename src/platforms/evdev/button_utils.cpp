@@ -38,6 +38,9 @@ MirPointerButton mie::to_pointer_button(int button, MirPointerHandedness handedn
     case BTN_MIDDLE: return mir_pointer_button_tertiary;
     case BTN_BACK: return mir_pointer_button_back;
     case BTN_FORWARD: return mir_pointer_button_forward;
+    case BTN_SIDE: return mir_pointer_button_side;
+    case BTN_EXTRA: return mir_pointer_button_extra;
+    case BTN_TASK: return mir_pointer_button_task;
     }
     BOOST_THROW_EXCEPTION(std::runtime_error("Invalid mouse button"));
 }
