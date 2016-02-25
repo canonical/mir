@@ -35,6 +35,8 @@
 #include "buffer_stream.h"
 #include "screencast_stream.h"
 #include "perf_report.h"
+#include "presentation_chain.h"
+#include "error_chain.h"
 #include "logging/perf_report.h"
 #include "lttng/perf_report.h"
 
@@ -429,14 +431,16 @@ struct MirConnection::StreamRelease
     MirWaitHandle* handle;
     mir_buffer_stream_callback callback;
     void* context;
+    int rpc_id;
 };
 
 void MirConnection::released(StreamRelease data)
 {
     if (data.callback)
         data.callback(reinterpret_cast<MirBufferStream*>(data.stream), data.context);
-    data.handle->result_received();
-    surface_map->erase(mf::BufferStreamId(data.stream->rpc_id()));
+    if (data.handle)
+        data.handle->result_received();
+    surface_map->erase(mf::BufferStreamId(data.rpc_id));
 }
 
 void MirConnection::released(SurfaceRelease data)
@@ -983,7 +987,7 @@ MirWaitHandle* MirConnection::release_buffer_stream(
 {
     auto new_wait_handle = new MirWaitHandle;
 
-    StreamRelease stream_release{stream, new_wait_handle, callback, context};
+    StreamRelease stream_release{stream, new_wait_handle, callback, context, stream->rpc_id().as_value() };
 
     mp::BufferStreamId buffer_stream_id;
     buffer_stream_id.set_value(stream->rpc_id().as_value());
@@ -1003,4 +1007,112 @@ MirWaitHandle* MirConnection::release_buffer_stream(
 void MirConnection::release_consumer_stream(mir::client::ClientBufferStream* stream)
 {
     surface_map->erase(stream->rpc_id());
+}
+
+void MirConnection::create_presentation_chain(
+    mir_presentation_chain_callback callback,
+    void *context)
+{
+    mir::protobuf::BufferStreamParameters params;
+    // all these are "required" protobuf fields. The MirBuffers manage this
+    // information, so fill with garbage.
+    params.set_height(-1);
+    params.set_width(-1);
+    params.set_pixel_format(-1);
+    params.set_buffer_usage(-1);
+    auto request = std::make_shared<ChainCreationRequest>(callback, context);
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        context_requests.push_back(request);
+    }
+
+    try
+    {
+        server.create_buffer_stream(&params, request->response.get(),
+            gp::NewCallback(this, &MirConnection::context_created, request.get()));
+    } catch (std::exception& e)
+    {
+        //if this throws, our socket code will run the closure, which will make an error object.
+        //its nicer to return a chain with a error message, so just ignore the exception.
+    }
+}
+
+void MirConnection::context_created(ChainCreationRequest* request_raw)
+{
+    std::shared_ptr<ChainCreationRequest> request {nullptr};
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        auto context_it = std::find_if(context_requests.begin(), context_requests.end(),
+            [&request_raw] (std::shared_ptr<ChainCreationRequest> const& req)
+            { return req.get() == request_raw; });
+        if (context_it == context_requests.end())
+            return;
+        request = *context_it;
+        context_requests.erase(context_it);
+    }
+
+    auto& protobuf_bs = request->response;
+    if (!protobuf_bs->has_id() && !protobuf_bs->has_error())
+        protobuf_bs->set_error("no ID in response");
+
+    if (protobuf_bs->has_error())
+    {
+        for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
+            ::close(protobuf_bs->buffer().fd(i));
+        chain_error(
+            std::string{"Error creating MirPresentationChain: "} + protobuf_bs->error(),
+            request);
+        return;
+    }
+
+    try
+    {
+        auto chain = std::make_shared<mcl::PresentationChain>(
+            this, protobuf_bs->id().value(), server, platform->create_buffer_factory());
+
+        surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), chain);
+
+        if (request->callback)
+            request->callback(static_cast<MirPresentationChain*>(chain.get()), request->context);
+    }
+    catch (std::exception const& error)
+    {
+        for (int i = 0; i < protobuf_bs->buffer().fd_size(); i++)
+            ::close(protobuf_bs->buffer().fd(i));
+
+        chain_error(
+            std::string{"Error creating MirPresentationChain: "} + boost::diagnostic_information(error),
+            request);
+    }
+}
+
+void MirConnection::chain_error(
+    std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    mf::BufferStreamId id(next_error_id(lock).as_value());
+    auto chain = std::make_shared<mcl::ErrorChain>(this, id.as_value(), error_msg);
+    surface_map->insert(id, chain); 
+
+    if (request->callback)
+        request->callback(static_cast<MirPresentationChain*>(chain.get()), request->context);
+}
+
+void MirConnection::release_presentation_chain(MirPresentationChain* chain)
+{
+    auto id = chain->rpc_id();
+    if (id > 0)
+    {
+        StreamRelease stream_release{nullptr, nullptr, nullptr, nullptr, chain->rpc_id()};
+        mp::BufferStreamId buffer_stream_id;
+        buffer_stream_id.set_value(chain->rpc_id());
+        server.release_buffer_stream(
+            &buffer_stream_id, void_response.get(),
+            google::protobuf::NewCallback(this, &MirConnection::released, stream_release));
+    }
+    else
+    {
+        surface_map->erase(mf::BufferStreamId(id));
+    }
 }

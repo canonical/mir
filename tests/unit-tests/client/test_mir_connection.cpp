@@ -21,6 +21,7 @@
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "src/client/display_configuration.h"
 #include "src/client/mir_surface.h"
+#include "src/client/presentation_chain.h"
 
 #include "mir/client_platform.h"
 #include "mir/client_platform_factory.h"
@@ -29,6 +30,7 @@
 #include "mir/dispatch/dispatchable.h"
 #include "mir/events/event_builders.h"
 #include "mir/geometry/rectangle.h"
+#include "mir_toolkit/mir_presentation_chain.h"
 
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir/test/test_protobuf_server.h"
@@ -64,6 +66,18 @@ struct BufferStreamCallback
     }
     bool invoked = false;
     MirBufferStream* resulting_stream = nullptr;
+};
+
+struct PresentationChainCallback
+{
+    static void created(MirPresentationChain* c, void *client_context)
+    {
+        auto const context = reinterpret_cast<PresentationChainCallback*>(client_context);
+        context->invoked = true;
+        context->resulting_chain = c;
+    }
+    bool invoked = false;
+    MirPresentationChain* resulting_chain = nullptr;
 };
 
 struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
@@ -106,6 +120,11 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
             auto response_message = static_cast<mp::BufferStream*>(response);
             on_buffer_stream_create(*response_message, complete);
         }
+        else if (name == "release_buffer_stream")
+        {
+            auto const request_message = static_cast<mp::BufferStreamId const*>(parameters);
+            buffer_stream_release(request_message);
+        }
 
         complete->Run();
     }
@@ -115,6 +134,7 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
     MOCK_METHOD1(configure_display_sent, void(mp::DisplayConfiguration const*));
     MOCK_METHOD2(platform_operation,
                  void(mp::PlatformOperationMessage const*, mp::PlatformOperationMessage*));
+    MOCK_METHOD1(buffer_stream_release, void(mp::BufferStreamId const*));
 
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());
     MOCK_METHOD1(dispatch, bool(md::FdEvents));
@@ -749,4 +769,92 @@ TEST_F(MirConnectionTest, create_wait_handle_really_blocks)
     wait_handle->wait_for_pending(pause_time);
 
     EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
+}
+
+TEST_F(MirConnectionTest, callback_is_invoked_after_chain_creation_error)
+{
+    using namespace testing;
+    PresentationChainCallback callback;
+    std::string error_msg = "danger will robertson";
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(Invoke([&](mp::BufferStream& bs, google::protobuf::Closure*)
+        { bs.set_error(error_msg); }));
+
+    connection->create_presentation_chain(
+        &PresentationChainCallback::created, &callback);
+    EXPECT_TRUE(callback.invoked);
+    ASSERT_TRUE(callback.resulting_chain);
+    EXPECT_THAT(mir_presentation_chain_get_error_message(callback.resulting_chain),
+        StrEq("Error creating MirPresentationChain: " + error_msg));
+}
+
+TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_exception_and_error_chain_created)
+{
+    using namespace testing;
+    PresentationChainCallback callback;
+
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(DoAll(
+            Invoke([](mp::BufferStream&, google::protobuf::Closure* c){ c->Run(); }),
+            Throw(std::runtime_error("pay no attention to the man behind the curtain"))));
+    connection->create_presentation_chain(
+        &PresentationChainCallback::created, &callback);
+
+    EXPECT_TRUE(callback.invoked);
+    ASSERT_TRUE(callback.resulting_chain);
+    EXPECT_THAT(mir_presentation_chain_get_error_message(callback.resulting_chain),
+        StrEq("Error creating MirPresentationChain: no ID in response"));
+}
+
+namespace
+{
+MATCHER_P(ReleaseRequestHasId, val, "")
+{
+    return arg->value() == val.value();
+}
+}
+
+TEST_F(MirConnectionTest, release_chain_calls_server)
+{
+    using namespace testing;
+    connection->connect("MirClientSurfaceTest", connected_callback, nullptr)->wait_for_all();
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(Invoke([](mp::BufferStream& stream, google::protobuf::Closure*)
+        {
+            stream.mutable_id()->set_value(0);
+        }));
+
+    PresentationChainCallback callback;
+    connection->create_presentation_chain(
+        &PresentationChainCallback::created, &callback);
+
+    EXPECT_TRUE(callback.invoked);
+    ASSERT_TRUE(callback.resulting_chain);
+
+    mp::BufferStreamId expected_request;
+    expected_request.set_value(
+        static_cast<MirPresentationChain*>(callback.resulting_chain)->rpc_id());
+
+    EXPECT_CALL(*mock_channel, buffer_stream_release(ReleaseRequestHasId(expected_request)))
+        .Times(0);
+
+    connection->release_presentation_chain(callback.resulting_chain);
+}
+
+TEST_F(MirConnectionTest, release_error_chain_doesnt_call_server)
+{
+    PresentationChainCallback callback;
+    connection->create_presentation_chain(
+        &PresentationChainCallback::created, &callback);
+    EXPECT_TRUE(callback.invoked);
+    ASSERT_TRUE(callback.resulting_chain);
+
+    mp::BufferStreamId expected_request;
+    expected_request.set_value(
+        static_cast<MirPresentationChain*>(callback.resulting_chain)->rpc_id());
+
+    EXPECT_CALL(*mock_channel, buffer_stream_release(ReleaseRequestHasId(expected_request)))
+        .Times(0);
+
+    connection->release_presentation_chain(callback.resulting_chain);
 }

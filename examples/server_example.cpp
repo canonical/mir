@@ -29,6 +29,7 @@
 
 #include "mir/server.h"
 #include "mir/main_loop.h"
+#include "mir/fd.h"
 
 #include "mir/report_exception.h"
 #include "mir/options/option.h"
@@ -43,6 +44,16 @@ namespace me = mir::examples;
 
 namespace
 {
+auto connection(int fd) -> std::string
+{
+    char connect_string[64] = {0};
+    // We can't have both the server and the client owning the same fd, since
+    // that will result in a double-close(). We give the client a duplicate which
+    // the client can safely own (and should close when done).
+    sprintf(connect_string, "fd://%d", dup(fd));
+    return connect_string;
+}
+
 void add_launcher_option_to(mir::Server& server)
 {
     static const char* const launch_child_opt = "launch-client";
@@ -54,8 +65,19 @@ void add_launcher_option_to(mir::Server& server)
         const auto options = server.get_options();
         if (options->is_set(launch_child_opt))
         {
-            auto ignore = std::system((options->get<std::string>(launch_child_opt) + "&").c_str());
-            (void)(ignore);
+            auto const value = options->get<std::string>(launch_child_opt);
+
+            for (auto i = begin(value); i != end(value); )
+            {
+                auto const j = find(i, end(value), '&');
+
+                auto const cmd = "MIR_SOCKET=" + connection(server.open_client_socket()) + " " + std::string{i, j} + "&";
+
+                auto ignore = std::system(cmd.c_str());
+                (void)(ignore);
+
+                if ((i = j) != end(value)) ++i;
+            }
         }
     });
 }

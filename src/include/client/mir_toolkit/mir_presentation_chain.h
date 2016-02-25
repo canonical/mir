@@ -59,9 +59,8 @@ char const *mir_presentation_chain_get_error_message(
  *                                 MirPresentationChain*, but the chain may be
  *                                 invalid in case of an error.
  * \param [in] presentation_chain  Userdata to pass to callback function
- * \return                         A handle that can be supplied to mir_wait_for
  */
-MirWaitHandle* mir_connection_create_presentation_chain(
+void mir_connection_create_presentation_chain(
     MirConnection* connection,
     mir_presentation_chain_callback callback,
     void* context);
@@ -115,10 +114,8 @@ void mir_presentation_chain_allocate_buffer(
  *
  *   \param [in] presentation_chain  The presentation chain
  *   \param [in] buffer              The buffer to be submitted
- *   \return                         true if the submission succeeded,
- *                                   false if it did not.
  **/
-bool mir_presentation_chain_submit_buffer(
+void mir_presentation_chain_submit_buffer(
     MirPresentationChain* presentation_chain, MirBuffer* buffer);
 
 /**

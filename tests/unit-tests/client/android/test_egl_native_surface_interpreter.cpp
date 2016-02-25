@@ -23,6 +23,7 @@
 #include "mir/frontend/client_constants.h"
 #include "src/platforms/android/client/egl_native_surface_interpreter.h"
 #include "mir/test/doubles/stub_android_native_buffer.h"
+#include "mir/test/doubles/mock_client_buffer.h"
 #include "mir/test/fake_shared.h"
 #include <system/window.h>
 #include <hardware/gralloc.h>
@@ -36,45 +37,21 @@ namespace geom=mir::geometry;
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 
-struct MockClientBuffer : public mcl::ClientBuffer
-{
-    MockClientBuffer()
-    {
-        using namespace testing;
-        buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
-
-        ON_CALL(*this, native_buffer_handle())
-            .WillByDefault(Return(buffer));
-    }
-    ~MockClientBuffer() noexcept {}
-
-    MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
-    MOCK_CONST_METHOD0(size, geom::Size());
-    MOCK_CONST_METHOD0(stride, geom::Stride());
-    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
-
-    MOCK_CONST_METHOD0(age, uint32_t());
-    MOCK_METHOD0(mark_as_submitted, void());
-    MOCK_METHOD0(increment_age, void());
-    MOCK_METHOD1(update_from, void(MirBufferPackage const&));
-    MOCK_METHOD1(fill_update_msg, void(MirBufferPackage&));
-    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mir::graphics::NativeBuffer>());
-
-    std::shared_ptr<mir::graphics::NativeBuffer> buffer;
-    native_handle_t handle;
-};
-
 struct MockMirSurface : public mcl::EGLNativeSurface
 {
-    MockMirSurface(MirSurfaceParameters params)
-     : params(params)
+    MockMirSurface(MirSurfaceParameters params) :
+        params(params),
+        client_buffer(std::make_shared<mtd::MockClientBuffer>()),
+        buffer(std::make_shared<mtd::StubAndroidNativeBuffer>())
     {
         using namespace testing;
         ON_CALL(*this, get_parameters())
             .WillByDefault(Return(params));
+        ON_CALL(*client_buffer, native_buffer_handle())
+            .WillByDefault(Return(buffer)); 
         ON_CALL(*this, get_current_buffer())
             .WillByDefault(Return(
-                std::make_shared<NiceMock<MockClientBuffer>>()));
+                std::make_shared<NiceMock<mtd::MockClientBuffer>>()));
     }
 
     MOCK_CONST_METHOD0(get_parameters, MirSurfaceParameters());
@@ -83,6 +60,8 @@ struct MockMirSurface : public mcl::EGLNativeSurface
     MOCK_METHOD2(request_and_wait_for_configure, void(MirSurfaceAttrib, int));
     MOCK_METHOD1(set_buffer_cache_size, void(unsigned int));
     MirSurfaceParameters params;
+    std::shared_ptr<mtd::MockClientBuffer> client_buffer;
+    std::shared_ptr<mir::graphics::NativeBuffer> buffer;
 };
 
 class AndroidInterpreter : public ::testing::Test
@@ -95,11 +74,13 @@ protected:
         surf_params.height = 715;
         surf_params.pixel_format = mir_pixel_format_abgr_8888;
 
-        mock_client_buffer = std::make_shared<NiceMock<MockClientBuffer>>();
+        mock_client_buffer = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
+        ON_CALL(*mock_client_buffer, native_buffer_handle())
+            .WillByDefault(Return(std::make_shared<mtd::StubAndroidNativeBuffer>()));
     }
 
     MirSurfaceParameters surf_params;
-    std::shared_ptr<MockClientBuffer> mock_client_buffer;
+    std::shared_ptr<mtd::MockClientBuffer> mock_client_buffer;
 };
 
 TEST_F(AndroidInterpreter, gets_buffer_via_the_surface_on_request)
