@@ -53,7 +53,7 @@ void fill_buffer_with_centered_circle_abgr(
         {
             int const centered_i = i - center_y;
             int const centered_j = j - center_x; 
-            if (sqrt((centered_i * centered_i + centered_j * centered_j)) > radius)
+            if (distance(0,0, centered_i, centered_j) > radius)
                 pixel[j] = bg;
             else
                 pixel[j] = fg;
@@ -141,8 +141,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    MirSurfaceSpec* spec =
-         mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+    MirSurfaceSpec* spec = mir_connection_create_spec_for_normal_surface(connection, width, height, format);
     MirSurface* surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
