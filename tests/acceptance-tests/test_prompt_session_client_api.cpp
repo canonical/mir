@@ -39,6 +39,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <atomic>
+#include <fcntl.h>
 
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
@@ -611,3 +612,29 @@ TEST_F(PromptSessionClientAPI, when_application_pid_is_invalid_starting_a_prompt
 
     mir_prompt_session_release_sync(prompt_session);
 }
+
+TEST(PromptSessionReliability, starts_quickly_and_without_crashing)
+{
+    // Flush the entropy pool
+    int fd = open("/dev/random", O_RDONLY | O_NONBLOCK);
+    ASSERT_THAT(fd, Ge(0));
+    char buf[256];
+    while (read(fd, buf, sizeof buf) > 0) {}
+    close(fd);
+
+    struct Server : mtf::HeadlessInProcessServer
+    {
+        void TestBody() override {}
+    } server;
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    EXPECT_NO_THROW(server.SetUp(););
+
+    auto duration = std::chrono::high_resolution_clock::now() - start;
+    int seconds = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+    EXPECT_THAT(seconds, Lt(10));
+
+    server.TearDown();
+}
+
