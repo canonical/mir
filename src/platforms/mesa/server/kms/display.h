@@ -25,8 +25,8 @@
 #include "display_helpers.h"
 #include "platform_common.h"
 
+#include <atomic>
 #include <mutex>
-
 #include <vector>
 
 namespace mir
@@ -106,6 +106,7 @@ private:
     std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
     RealKMSOutputContainer output_container;
     mutable RealKMSDisplayConfiguration current_display_configuration;
+    mutable std::atomic<bool> dirty_configuration;
 
     BypassOption bypass_option;
     std::weak_ptr<Cursor> cursor;
