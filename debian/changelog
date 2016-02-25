@@ -8,6 +8,7 @@ mir (0.20.1-0ubuntu1) UNRELEASED; urgency=medium
       . On arale; top panel drop down menu is semi-transparent and items are
         unreadable. Accommodate system image device name change for arale
         device that broke android quirk detection (LP: #1549226)
+      . Crash when side mouse buttons are pressed (LP: #1544878)
 
  -- Kevin DuBois <kevin.dubois@canonical.com>  Wed, 24 Feb 2016 08:33:20 -0500
 
