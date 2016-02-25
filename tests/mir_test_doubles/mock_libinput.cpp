@@ -61,7 +61,7 @@ mtd::MockLibInput::MockLibInput()
         .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
     ON_CALL(*this, libinput_device_config_middle_emulation_set_enabled(_, _))
         .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
-#if LIBINPUT_HAS_ACCEL_PROFILE
+#if MIR_LIBINPUT_HAS_ACCEL_PROFILE
     ON_CALL(*this, libinput_device_config_accel_set_profile(_, _))
         .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
 #endif
@@ -494,7 +494,7 @@ double libinput_device_config_accel_get_default_speed(libinput_device *device)
     return global_libinput->libinput_device_config_accel_get_default_speed(device);
 }
 
-#if LIBINPUT_HAS_ACCEL_PROFILE
+#if MIR_LIBINPUT_HAS_ACCEL_PROFILE
 libinput_config_status libinput_device_config_accel_set_profile(libinput_device* dev, libinput_config_accel_profile profile)
 {
     return global_libinput->libinput_device_config_accel_set_profile(dev, profile);

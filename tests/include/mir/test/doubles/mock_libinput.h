@@ -138,7 +138,7 @@ public:
     MOCK_METHOD2(libinput_device_config_accel_set_speed, libinput_config_status(libinput_device*, double speed));
     MOCK_METHOD1(libinput_device_config_accel_get_speed, double(libinput_device*));
     MOCK_METHOD1(libinput_device_config_accel_get_default_speed, double(libinput_device*));
-#if LIBINPUT_HAS_ACCEL_PROFILE
+#if MIR_LIBINPUT_HAS_ACCEL_PROFILE
     MOCK_METHOD2(libinput_device_config_accel_set_profile, libinput_config_status(libinput_device*, libinput_config_accel_profile));
     MOCK_METHOD1(libinput_device_config_accel_get_profile, libinput_config_accel_profile(libinput_device*));
 #endif

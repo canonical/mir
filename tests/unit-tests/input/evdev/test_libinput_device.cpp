@@ -175,7 +175,7 @@ struct LibInputDevice : public ::testing::Test
             .WillByDefault(Return(accel_speed));
         ON_CALL(env.mock_libinput, libinput_device_config_left_handed_get(dev))
             .WillByDefault(Return(handedness == mir_pointer_handedness_left));
-#if LIBINPUT_HAS_ACCEL_PROFILE
+#if MIR_LIBINPUT_HAS_ACCEL_PROFILE
         ON_CALL(env.mock_libinput, libinput_device_config_accel_get_profile(dev))
             .WillByDefault(Return((profile == mir_pointer_acceleration_none) ?
                                       LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT :
@@ -627,7 +627,7 @@ TEST_F(LibInputDeviceOnMouse, applies_pointer_settings)
     settings.acceleration = mir_pointer_acceleration_none;
 
     EXPECT_CALL(env.mock_libinput, libinput_device_config_accel_set_speed(mouse.device(), 1.1)).Times(1);
-#if LIBINPUT_HAS_ACCEL_PROFILE
+#if MIR_LIBINPUT_HAS_ACCEL_PROFILE
     EXPECT_CALL(env.mock_libinput, libinput_device_config_accel_set_profile(mouse.device(), LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT)).Times(1);
 #endif
     EXPECT_CALL(env.mock_libinput, libinput_device_config_left_handed_set(mouse.device(), true)).Times(1);

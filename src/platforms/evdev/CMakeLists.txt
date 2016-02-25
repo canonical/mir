@@ -1,9 +1,9 @@
 pkg_check_modules(LIBINPUT REQUIRED libinput)
 
 if ("${LIBINPUT_VERSION}" VERSION_LESS "1.1")
-  add_definitions(-DLIBINPUT_HAS_ACCEL_PROFILE=0)
+  add_definitions(-DMIR_LIBINPUT_HAS_ACCEL_PROFILE=0)
 else ()
-  add_definitions(-DLIBINPUT_HAS_ACCEL_PROFILE=1)
+  add_definitions(-DMIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
 endif ()
 
 include_directories(
