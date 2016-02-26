@@ -53,6 +53,13 @@ mcl::DisplayOutput::DisplayOutput(size_t num_modes_, size_t num_formats)
     output_formats = new MirPixelFormat[num_formats];
 }
 
+mcl::DisplayOutput::DisplayOutput(DisplayOutput&& rhs)
+{
+    std::memcpy(this, &rhs, sizeof(*this));
+    rhs.modes = nullptr;
+    rhs.output_formats = nullptr;
+}
+
 mcl::DisplayOutput::~DisplayOutput()
 {
     delete[] modes;
@@ -103,7 +110,8 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
 }
 
 mcl::DisplayConfiguration::DisplayConfiguration()
-    : notify_change([]{})
+    : config{std::make_shared<Config>()},
+      notify_change([]{})
 {
 }
 
@@ -113,25 +121,25 @@ mcl::DisplayConfiguration::~DisplayConfiguration()
 
 void mcl::DisplayConfiguration::set_configuration(mp::DisplayConfiguration const& msg)
 {
-    std::lock_guard<std::mutex> lk(guard);
+    auto new_config = std::make_shared<Config>();
 
-    cards.clear();
     for (auto i = 0; i < msg.display_card_size(); i++)
     {
         auto const& msg_card = msg.display_card(i);
         MirDisplayCard card;
         fill_display_card(card, msg_card);
-        cards.push_back(card);
+        new_config->cards.push_back(card);
     }
 
-    outputs.clear();
     for (auto i = 0; i < msg.display_output_size(); i++)
     {
         auto const& msg_output = msg.display_output(i);
-        auto output = std::make_shared<mcl::DisplayOutput>(msg_output.mode_size(), msg_output.pixel_format_size());
-        fill_display_output(*output, msg_output);
-        outputs.push_back(output);
+        new_config->outputs.emplace_back(msg_output.mode_size(), msg_output.pixel_format_size());
+        fill_display_output(new_config->outputs.back(), msg_output);
     }
+
+    std::lock_guard<std::mutex> lk{guard};
+    config = new_config;
 }
 
 void mcl::DisplayConfiguration::update_configuration(mp::DisplayConfiguration const& msg)
@@ -144,24 +152,24 @@ void mcl::DisplayConfiguration::update_configuration(mp::DisplayConfiguration co
 //user is responsible for freeing the returned value
 MirDisplayConfiguration* mcl::DisplayConfiguration::copy_to_client() const
 {
-    std::lock_guard<std::mutex> lk(guard);
+    auto snapshot = take_snapshot();
     auto new_config = new MirDisplayConfiguration;
 
     /* Cards */
-    new_config->num_cards = cards.size();
+    new_config->num_cards = snapshot->cards.size();
     new_config->cards = new MirDisplayCard[new_config->num_cards];
 
-    for (auto i = 0u; i < cards.size(); i++)
-        new_config->cards[i] = cards[i];
+    for (auto i = 0u; i < snapshot->cards.size(); i++)
+        new_config->cards[i] = snapshot->cards[i];
 
     /* Outputs */
-    new_config->num_outputs = outputs.size();
+    new_config->num_outputs = snapshot->outputs.size();
     new_config->outputs = new MirDisplayOutput[new_config->num_outputs];
 
-    for (auto i = 0u; i < outputs.size(); i++)
+    for (auto i = 0u; i < snapshot->outputs.size(); i++)
     {
         auto new_info = &new_config->outputs[i];
-        MirDisplayOutput* output = outputs[i].get();
+        MirDisplayOutput* output = &snapshot->outputs[i];
         std::memcpy(new_info, output, sizeof(MirDisplayOutput));
 
         new_info->output_formats = new MirPixelFormat[new_info->num_output_formats];
@@ -174,6 +182,12 @@ MirDisplayConfiguration* mcl::DisplayConfiguration::copy_to_client() const
     }
 
     return new_config;
+}
+
+auto mcl::DisplayConfiguration::take_snapshot() const -> std::shared_ptr<Config>
+{
+    std::lock_guard<std::mutex> lk{guard};
+    return config;
 }
 
 void mcl::DisplayConfiguration::set_display_change_handler(std::function<void()> const& fn)

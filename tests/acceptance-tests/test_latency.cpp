@@ -25,6 +25,8 @@
 #include "mir/test/doubles/null_display_buffer.h"
 #include "mir/test/doubles/null_display_sync_group.h"
 #include "mir/test/fake_shared.h"
+#include "mir/options/option.h"
+#include "mir/test/doubles/null_logger.h"  // for mtd::logging_opt
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -185,6 +187,27 @@ public:
         return static_cast<float>(sum) / latency_list.size();
     }
 
+    void dump_latency()
+    {
+        FILE* file = stdout;  // gtest seems to use this
+        char const prefix[] = "[  debug   ] ";
+        unsigned const size = latency_list.size();
+        unsigned const cols = 10u;
+
+        fprintf(file, "%s%u frames sampled, averaging %.1f frames latency\n",
+                prefix, size, average_latency());
+        for (unsigned i = 0; i < size; ++i)
+        {
+            if ((i % cols) == 0)
+                fprintf(file, "%s%2u:", prefix, i);
+            fprintf(file, " %2d", latency_list[i]);
+            if ((i % cols) == cols-1)
+                fprintf(file, "\n");
+        }
+        if (size % cols)
+            fprintf(file, "\n");
+    }
+
     unsigned int max_latency() const
     {
         return max;
@@ -253,6 +276,9 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
     float const expected_max_latency = expected_client_buffers;
     float const expected_min_latency = expected_client_buffers - 1;
 
+    if (server.get_options()->get<bool>(mtd::logging_opt))
+        display.group.dump_latency();
+
     auto observed_latency = display.group.average_latency();
 
     EXPECT_THAT(observed_latency, Gt(expected_min_latency-error_margin));
@@ -298,6 +324,9 @@ TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
 
     ASSERT_TRUE(stats.wait_for_posts(test_submissions,
                                      std::chrono::seconds(60)));
+
+    if (server.get_options()->get<bool>(mtd::logging_opt))
+        display.group.dump_latency();
 
     // As the client is producing frames slower than the compositor consumes
     // them, the buffer queue never fills. So latency is low;
