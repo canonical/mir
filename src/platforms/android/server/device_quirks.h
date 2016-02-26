@@ -78,6 +78,7 @@ private:
     bool const enable_width_alignment_quirk;
     bool const clear_fb_context_fence_;
     bool const fb_ion_heap_;
+    bool const working_egl_sync_; 
 };
 }
 }

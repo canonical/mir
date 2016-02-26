@@ -30,6 +30,7 @@ namespace graphics
 {
 class DisplayConfigurationOutput;
 class CommandStreamSync;
+class GraphicBufferAllocator;
 namespace android
 {
 class HwcConfiguration;
@@ -45,6 +46,7 @@ public:
     virtual std::unique_ptr<HwcConfiguration> create_hwc_configuration() = 0;
     virtual std::unique_ptr<LayerList> create_layer_list() = 0;
 
+    virtual std::shared_ptr<graphics::GraphicBufferAllocator> the_buffer_allocator() = 0;
 protected:
     DisplayComponentFactory() = default;
     DisplayComponentFactory(DisplayComponentFactory const&) = delete;

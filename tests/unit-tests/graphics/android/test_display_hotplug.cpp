@@ -108,6 +108,11 @@ struct DisplayHotplug : ::testing::Test
             return nullptr;
         }
 
+        std::shared_ptr<mg::GraphicBufferAllocator> the_buffer_allocator()
+        {
+            return nullptr;
+        }
+
         StubHwcConfig stub_config;
     };
 

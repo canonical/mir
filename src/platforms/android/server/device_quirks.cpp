@@ -39,6 +39,12 @@ char const* const num_framebuffers_opt = "enable-num-framebuffers-quirk";
 char const* const gralloc_cannot_be_closed_safely_opt = "enable-gralloc-cannot-be-closed-safely-quirk";
 char const* const width_alignment_opt = "enable-width-alignment-quirk";
 char const* const fb_ion_heap_opt = "fb-ion-heap";
+char const* const working_egl_sync_opt = "use-eglsync-quirk";
+std::string const egl_sync_default = "default";
+std::string const egl_sync_force_on = "force_on";
+std::string const egl_sync_force_off = "force_off";
+ 
+
 std::string determine_device_name(mga::PropertiesWrapper const& properties)
 {
     char const default_value[] = "";
@@ -63,12 +69,24 @@ bool gralloc_cannot_be_closed_safely_for(std::string const& device_name, bool qu
 
 bool clear_fb_context_fence_for(std::string const& device_name)
 {
-    return device_name == "krillin" || device_name == "mx4" || device_name == "manta";
+    return device_name == "krillin" || device_name == "arale" || device_name == "manta";
 }
 
 bool device_has_fb_ion_heap(std::string const& device_name, bool quirk_enabled)
 {
     return quirk_enabled && (device_name != "Aquaris_M10_FHD");
+}
+
+bool device_has_working_egl_sync(std::string const& device_name, std::string const& option)
+{
+    if (option == egl_sync_force_on)
+        return true;
+    if (option == egl_sync_force_off)
+        return false;
+
+    if (device_name == "arale")
+        return false;
+    return true;
 }
 
 }
@@ -79,7 +97,8 @@ mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties)
       gralloc_cannot_be_closed_safely_(gralloc_cannot_be_closed_safely_for(device_name, true)),
       enable_width_alignment_quirk{true},
       clear_fb_context_fence_{clear_fb_context_fence_for(device_name)},
-      fb_ion_heap_{device_has_fb_ion_heap(device_name, true)}
+      fb_ion_heap_{device_has_fb_ion_heap(device_name, true)},
+      working_egl_sync_{device_has_working_egl_sync(device_name, egl_sync_default)}
 {
 }
 
@@ -89,7 +108,9 @@ mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties, mo::Option 
       gralloc_cannot_be_closed_safely_(gralloc_cannot_be_closed_safely_for(device_name, options.get(gralloc_cannot_be_closed_safely_opt, true))),
       enable_width_alignment_quirk(options.get(width_alignment_opt, true)),
       clear_fb_context_fence_{clear_fb_context_fence_for(device_name)},
-      fb_ion_heap_{device_has_fb_ion_heap(device_name, options.get(fb_ion_heap_opt, true))}
+      fb_ion_heap_{device_has_fb_ion_heap(device_name, options.get(fb_ion_heap_opt, true))},
+      working_egl_sync_{device_has_working_egl_sync(
+        device_name, options.get(working_egl_sync_opt, egl_sync_default.c_str()))}
 {
 }
 
@@ -125,8 +146,7 @@ int mga::DeviceQuirks::fb_gralloc_bits() const
 
 bool mga::DeviceQuirks::working_egl_sync() const
 {
-    //FIXME: this really should be all powervr devices.
-    return device_name != "mx4";
+    return working_egl_sync_;
 }
 
 void mga::DeviceQuirks::add_options(boost::program_options::options_description& config)
@@ -143,6 +163,8 @@ void mga::DeviceQuirks::add_options(boost::program_options::options_description&
           "[platform-specific] Enable width alignment (vegetahd quirk) [{true,false}]")
          (fb_ion_heap_opt,
           boost::program_options::value<bool>()->default_value(true),
-          "[platform-specific] device has ion heap for framebuffer allocation available [{true, false}]");
-
+          "[platform-specific] device has ion heap for framebuffer allocation available [{true, false}]")
+         (working_egl_sync_opt,
+          boost::program_options::value<std::string>()->default_value(egl_sync_default),
+          "[platform-specific] use KHR_reusable_sync extension [{default, force_on, force_off}]");
 }
