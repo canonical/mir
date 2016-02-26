@@ -28,3 +28,7 @@ target_link_libraries(
   mir-test-framework-static
   ${LIBHARDWARE_LIBRARIES}
 )
+
+install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir_android_diagnostics
+  DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
