@@ -21,7 +21,7 @@
 #include "android_native_buffer.h"
 #include "sync_fence.h"
 #include "android_format_conversion-inl.h"
-#include "android_alloc_adaptor.h"
+#include "gralloc_module.h"
 #include "device_quirks.h"
 #include "cmdstream_sync_factory.h"
 
@@ -50,7 +50,7 @@ private:
 };
 }
 
-mga::GrallocAllocationModule::GrallocAllocationModule(
+mga::GrallocModule::GrallocModule(
     std::shared_ptr<struct alloc_device_t> const& alloc_device,
     std::shared_ptr<CommandStreamSyncFactory> const& sync_factory,
     std::shared_ptr<DeviceQuirks> const& quirks) :
@@ -60,19 +60,19 @@ mga::GrallocAllocationModule::GrallocAllocationModule(
 {
 }
 
-std::shared_ptr<mg::NativeBuffer> mga::GrallocAllocationModule::alloc_buffer(
+std::shared_ptr<mg::NativeBuffer> mga::GrallocModule::alloc_buffer(
     geometry::Size size, MirPixelFormat pf, BufferUsage usage)
 {
     return alloc_buffer(size, pf, convert_to_android_usage(usage));
 }
 
-std::shared_ptr<mg::NativeBuffer> mga::GrallocAllocationModule::alloc_framebuffer(
+std::shared_ptr<mg::NativeBuffer> mga::GrallocModule::alloc_framebuffer(
     geometry::Size size, MirPixelFormat pf)
 {
     return alloc_buffer(size, pf, quirks->fb_gralloc_bits());
 }
 
-std::shared_ptr<mg::NativeBuffer> mga::GrallocAllocationModule::alloc_buffer(
+std::shared_ptr<mg::NativeBuffer> mga::GrallocModule::alloc_buffer(
     geometry::Size size, MirPixelFormat pf, unsigned int usage_flag)
 {
     buffer_handle_t buf_handle = NULL;
@@ -115,7 +115,7 @@ std::shared_ptr<mg::NativeBuffer> mga::GrallocAllocationModule::alloc_buffer(
         fence, mga::BufferAccess::read);
 }
 
-unsigned int mga::GrallocAllocationModule::convert_to_android_usage(BufferUsage usage)
+unsigned int mga::GrallocModule::convert_to_android_usage(BufferUsage usage)
 {
     switch (usage)
     {

@@ -15,10 +15,10 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_ALLOC_ADAPTOR_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_ALLOC_ADAPTOR_H_
+#ifndef MIR_GRAPHICS_ANDROID_GRALLOC_MODULE_H_
+#define MIR_GRAPHICS_ANDROID_GRALLOC_MODULE_H_
 
-#include "graphic_alloc_adaptor.h"
+#include "gralloc.h"
 
 #include <hardware/gralloc.h>
 #include <memory>
@@ -33,10 +33,10 @@ namespace android
 class DeviceQuirks;
 class CommandStreamSyncFactory;
 
-class GrallocAllocationModule : public Gralloc
+class GrallocModule : public Gralloc
 {
 public:
-    explicit GrallocAllocationModule(
+    explicit GrallocModule(
         std::shared_ptr<struct alloc_device_t> const& alloc_device,
         std::shared_ptr<CommandStreamSyncFactory> const& cmdstream_sync_factory,
         std::shared_ptr<DeviceQuirks> const& quirks);
@@ -58,4 +58,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_ALLOC_ADAPTOR_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_GRALLOC_MODULE_H_ */

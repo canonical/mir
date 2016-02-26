@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
-#define MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
+#ifndef MIR_GRAPHICS_ANDROID_GRALLOC_H_
+#define MIR_GRAPHICS_ANDROID_GRALLOC_H_
 
 #include "mir/graphics/buffer_properties.h"
 #include <memory>
@@ -51,4 +51,4 @@ protected:
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_GRALLOC_H_ */

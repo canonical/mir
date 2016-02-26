@@ -18,7 +18,7 @@
  */
 
 #include "framebuffers.h"
-#include "android_graphic_buffer_allocator.h"
+#include "graphic_buffer_allocator.h"
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;

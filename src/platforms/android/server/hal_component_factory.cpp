@@ -29,7 +29,7 @@
 #include "hwc_layers.h"
 #include "hwc_device.h"
 #include "hwc_fb_device.h"
-#include "android_graphic_buffer_allocator.h"
+#include "graphic_buffer_allocator.h"
 #include "cmdstream_sync_factory.h"
 
 #include <boost/throw_exception.hpp>

@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platforms/android/server/android_graphic_buffer_allocator.h"
+#include "src/platforms/android/server/graphic_buffer_allocator.h"
 #include "src/platforms/android/server/device_quirks.h"
 #include "src/platforms/android/server/cmdstream_sync_factory.h"
 #include "mir/test/doubles/mock_android_hw.h"
@@ -38,19 +38,20 @@ namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
 using namespace testing;
 
-struct GraphicBufferAllocatorTest : public ::testing::Test
+namespace
 {
-    testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
-    testing::NiceMock<mtd::MockEGL> mock_egl;
+struct GraphicBufferAllocator : Test
+{
+    NiceMock<mtd::HardwareAccessMock> hw_access_mock;
+    NiceMock<mtd::MockEGL> mock_egl;
     mga::GraphicBufferAllocator allocator{
         std::make_shared<mga::NullCommandStreamSyncFactory>(),
         std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{})};
 };
+}
 
-TEST_F(GraphicBufferAllocatorTest, allocator_accesses_gralloc_module)
+TEST_F(GraphicBufferAllocator, allocator_accesses_gralloc_module)
 {
-    using namespace testing;
-
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
@@ -58,7 +59,7 @@ TEST_F(GraphicBufferAllocatorTest, allocator_accesses_gralloc_module)
     mga::GraphicBufferAllocator allocator{std::make_shared<mtd::StubCmdStreamSyncFactory>(), quirks};
 }
 
-TEST_F(GraphicBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
+TEST_F(GraphicBufferAllocator, supported_pixel_formats_contain_common_formats)
 {
     auto supported_pixel_formats = allocator.supported_pixel_formats();
 
@@ -89,7 +90,7 @@ TEST_F(GraphicBufferAllocatorTest, supported_pixel_formats_contain_common_format
     EXPECT_EQ(1, rgb_565_count);
 }
 
-TEST_F(GraphicBufferAllocatorTest, supported_pixel_formats_have_sane_default_in_first_position)
+TEST_F(GraphicBufferAllocator, supported_pixel_formats_have_sane_default_in_first_position)
 {
     auto supported_pixel_formats = allocator.supported_pixel_formats();
 
@@ -108,7 +109,7 @@ void dec_ref(struct android_native_base_t*)
     dec_count++;
 }
 
-TEST_F(GraphicBufferAllocatorTest, test_buffer_reconstruction_from_MirNativeBuffer)
+TEST_F(GraphicBufferAllocator, test_buffer_reconstruction_from_MirNativeBuffer)
 {
     inc_count = 0;
     dec_count = 0;
@@ -131,7 +132,7 @@ TEST_F(GraphicBufferAllocatorTest, test_buffer_reconstruction_from_MirNativeBuff
     EXPECT_THAT(dec_count, Eq(1));
 }
 
-TEST_F(GraphicBufferAllocatorTest, throws_if_cannot_share_anwb_ownership)
+TEST_F(GraphicBufferAllocator, throws_if_cannot_share_anwb_ownership)
 {
     auto anwb = std::make_unique<ANativeWindowBuffer>();
     anwb->common.incRef = nullptr;

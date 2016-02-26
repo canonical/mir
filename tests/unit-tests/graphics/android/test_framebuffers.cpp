@@ -17,7 +17,7 @@
  */
 
 #include "src/platforms/android/server/framebuffers.h"
-#include "src/platforms/android/server/android_graphic_buffer_allocator.h"
+#include "src/platforms/android/server/graphic_buffer_allocator.h"
 #include "src/platforms/android/server/cmdstream_sync_factory.h"
 #include "src/platforms/android/server/device_quirks.h"
 #include "mir/test/doubles/mock_android_hw.h"

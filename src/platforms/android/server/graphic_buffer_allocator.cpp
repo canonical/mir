@@ -23,8 +23,8 @@
 #include "cmdstream_sync_factory.h"
 #include "sync_fence.h"
 #include "android_native_buffer.h"
-#include "android_graphic_buffer_allocator.h"
-#include "android_alloc_adaptor.h"
+#include "graphic_buffer_allocator.h"
+#include "gralloc_module.h"
 #include "buffer.h"
 #include "device_quirks.h"
 #include "egl_sync_fence.h"
@@ -75,7 +75,7 @@ mga::GraphicBufferAllocator::GraphicBufferAllocator(
     std::shared_ptr<struct alloc_device_t> alloc_dev_ptr(
         alloc_dev,
         quirks->gralloc_cannot_be_closed_safely() ? null_alloc_dev_deleter : alloc_dev_deleter);
-    alloc_device = std::make_shared<mga::GrallocAllocationModule>(
+    alloc_device = std::make_shared<mga::GrallocModule>(
         alloc_dev_ptr, cmdstream_sync_factory, quirks);
 }
 
