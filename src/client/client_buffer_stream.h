@@ -27,6 +27,8 @@
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir_wait_handle.h"
 
+#include <memory>
+#include <functional>
 #include <EGL/eglplatform.h>
 
 /*
@@ -50,8 +52,8 @@ static_assert(
     std::is_pod<EGLNativeWindowType>::value,
     "The ClientBufferStream requires that EGLNativeWindowType be no-op convertible to void*");
 
-#include <memory>
-#include <functional>
+#undef EGLNativeWindowType
+#define EGLNativeWindowType void*
 
 namespace mir
 {

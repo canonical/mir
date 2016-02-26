@@ -113,7 +113,7 @@ private:
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
     int const swap_interval_{1};
 
-    std::shared_ptr<EGLNativeWindowType> egl_native_window_;
+    std::shared_ptr<void> egl_native_window_;
 
     MirWaitHandle create_wait_handle;
     MirWaitHandle release_wait_handle;
