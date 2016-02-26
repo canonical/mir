@@ -315,6 +315,7 @@ void mir_input_config_destroy(MirInputConfig const* config)
 {
     auto device_vector = reinterpret_cast<std::vector<mir::input::DeviceData>const*>(config);
     delete device_vector;
+}
 
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(
     MirConnection* connection)
