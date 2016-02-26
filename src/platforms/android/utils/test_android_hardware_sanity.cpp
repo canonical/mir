@@ -28,7 +28,6 @@
 #include "mir/graphics/buffer_properties.h"
 
 #include "mir_test_framework/server_runner.h"
-//#include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/validity_matchers.h"
 #include "mir/test/as_render_target.h"
 #include "patterns.h"
@@ -87,7 +86,7 @@ struct Runner : mtf::ServerRunner
     NoCompositingServer config{1, &argv};
 };
  
-struct AndroidHardwareSanity : testing::Test
+struct AndroidMirDiagnostics : testing::Test
 {
     static void SetUpTestCase()
     {
@@ -106,10 +105,10 @@ struct AndroidHardwareSanity : testing::Test
     mg::BufferProperties hw_properties{size, pf, mg::BufferUsage::hardware};
 
 };
-std::unique_ptr<Runner> AndroidHardwareSanity::runner;
+std::unique_ptr<Runner> AndroidMirDiagnostics::runner;
 }
 
-TEST_F(AndroidHardwareSanity, client_can_draw_with_cpu)
+TEST_F(AndroidMirDiagnostics, client_can_draw_with_cpu)
 {
     auto connection = mir_connect_sync(runner->new_connection().c_str(), "test_renderer");
     EXPECT_THAT(connection, IsValid());
@@ -144,7 +143,7 @@ TEST_F(AndroidHardwareSanity, client_can_draw_with_cpu)
     mir_connection_release(connection);
 }
 
-TEST_F(AndroidHardwareSanity, client_can_draw_with_gpu)
+TEST_F(AndroidMirDiagnostics, client_can_draw_with_gpu)
 {
     auto connection = mir_connect_sync(runner->new_connection().c_str(), "test_renderer");
     EXPECT_THAT(connection, IsValid());
@@ -202,7 +201,7 @@ TEST_F(AndroidHardwareSanity, client_can_draw_with_gpu)
     mir_connection_release(connection);
 }
 
-TEST_F(AndroidHardwareSanity, display_can_post)
+TEST_F(AndroidMirDiagnostics, display_can_post)
 {
     auto display = runner->config.the_display();
     display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
@@ -224,7 +223,7 @@ TEST_F(AndroidHardwareSanity, display_can_post)
     });
 }
 
-TEST_F(AndroidHardwareSanity, display_can_post_overlay)
+TEST_F(AndroidMirDiagnostics, display_can_post_overlay)
 {
     auto buffer = runner->config.the_buffer_allocator()->alloc_buffer(sw_properties);
     struct BasicRenderable : mg::Renderable
@@ -280,7 +279,7 @@ TEST_F(AndroidHardwareSanity, display_can_post_overlay)
     });
 }
 
-TEST_F(AndroidHardwareSanity, can_allocate_sw_buffer)
+TEST_F(AndroidMirDiagnostics, can_allocate_sw_buffer)
 {
     using namespace testing;
 
@@ -308,7 +307,7 @@ TEST_F(AndroidHardwareSanity, can_allocate_sw_buffer)
     EXPECT_TRUE(valid_content);
 }
 
-TEST_F(AndroidHardwareSanity, can_allocate_hw_buffer)
+TEST_F(AndroidMirDiagnostics, can_allocate_hw_buffer)
 {
     using namespace testing;
 
