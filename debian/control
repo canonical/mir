@@ -285,7 +285,7 @@ Description: Display Server for Ubuntu - android platform diagnostics utility
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
- Contains a tool for checking the operation of mir on android devices.
+ Contains a tool for checking the graphics components of android devices.
 
 Package: libmircommon5
 Section: libs
