@@ -52,7 +52,7 @@ void null_alloc_dev_deleter(alloc_device_t*)
 
 }
 
-mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(
+mga::GraphicBufferAllocator::GraphicBufferAllocator(
     std::shared_ptr<CommandStreamSyncFactory> const& cmdstream_sync_factory,
     std::shared_ptr<DeviceQuirks> const& quirks)
     : egl_extensions(std::make_shared<mg::EGLExtensions>()),
@@ -75,17 +75,29 @@ mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(
     std::shared_ptr<struct alloc_device_t> alloc_dev_ptr(
         alloc_dev,
         quirks->gralloc_cannot_be_closed_safely() ? null_alloc_dev_deleter : alloc_dev_deleter);
-    alloc_device = std::shared_ptr<mga::GraphicAllocAdaptor>(new AndroidAllocAdaptor(alloc_dev_ptr, cmdstream_sync_factory, quirks));
+    alloc_device = std::make_shared<mga::GrallocAllocationModule>(
+        alloc_dev_ptr, cmdstream_sync_factory, quirks);
 }
 
-std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer(
-    mg::BufferProperties const& buffer_properties)
+std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_buffer(
+    mg::BufferProperties const& properties)
 {
-    auto usage = convert_from_compositor_usage(buffer_properties.usage);
-    return alloc_buffer_platform(buffer_properties.size, buffer_properties.format, usage);
+    return std::make_shared<Buffer>(
+        reinterpret_cast<gralloc_module_t const*>(hw_module),
+        alloc_device->alloc_buffer(properties.size, properties.format, properties.usage),
+        egl_extensions);
 }
 
-std::unique_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::reconstruct_from(
+std::shared_ptr<mg::Buffer> mga::GraphicBufferAllocator::alloc_framebuffer(
+    geometry::Size sz, MirPixelFormat pf)
+{
+    return std::make_shared<Buffer>(
+        reinterpret_cast<gralloc_module_t const*>(hw_module),
+        alloc_device->alloc_framebuffer(sz, pf),
+        egl_extensions);
+}
+
+std::unique_ptr<mg::Buffer> mga::GraphicBufferAllocator::reconstruct_from(
     ANativeWindowBuffer* anwb, MirPixelFormat)
 {
     if (!anwb->common.incRef || !anwb->common.decRef)
@@ -104,16 +116,7 @@ std::unique_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::reconstruct_from
         reinterpret_cast<gralloc_module_t const*>(hw_module), native_handle, egl_extensions);
 }
 
-std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_platform(
-    geom::Size sz, MirPixelFormat pf, mga::BufferUsage use)
-{
-    auto native_handle = alloc_device->alloc_buffer(sz, pf, use);
-    auto buffer = std::make_shared<Buffer>(reinterpret_cast<gralloc_module_t const*>(hw_module), native_handle, egl_extensions);
-
-    return buffer;
-}
-
-std::vector<MirPixelFormat> mga::AndroidGraphicBufferAllocator::supported_pixel_formats()
+std::vector<MirPixelFormat> mga::GraphicBufferAllocator::supported_pixel_formats()
 {
     static std::vector<MirPixelFormat> const pixel_formats{
         mir_pixel_format_abgr_8888,
@@ -123,16 +126,4 @@ std::vector<MirPixelFormat> mga::AndroidGraphicBufferAllocator::supported_pixel_
     };
 
     return pixel_formats;
-}
-
-mga::BufferUsage mga::AndroidGraphicBufferAllocator::convert_from_compositor_usage(mg::BufferUsage usage)
-{
-    switch (usage)
-    {
-        case mg::BufferUsage::software:
-            return mga::BufferUsage::use_software;
-        case mg::BufferUsage::hardware:
-        default:
-            return mga::BufferUsage::use_hardware;
-    }
 }

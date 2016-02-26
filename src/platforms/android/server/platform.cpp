@@ -176,10 +176,10 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
         sync_factory = std::make_shared<mga::EGLSyncFactory>();
     else
         sync_factory = std::make_shared<mga::NullCommandStreamSyncFactory>();
+    auto const buffer_allocator = std::make_shared<mga::GraphicBufferAllocator>(sync_factory, quirks);
 
     //TODO: remove nullptr parameter once platform classes are sorted.
     //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder
-    auto const buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(sync_factory, quirks);
     return mir::make_module_ptr<mga::Platform>(buffer_allocator, nullptr, display_report, mga::OverlayOptimization::disabled, quirks);
 }
 

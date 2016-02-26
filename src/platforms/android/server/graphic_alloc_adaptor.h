@@ -19,9 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
 #define MIR_GRAPHICS_ANDROID_GRAPHIC_ALLOC_ADAPTOR_H_
 
-#include "mir/geometry/size.h"
-#include "mir_toolkit/common.h"
-#include "buffer_usage.h"
+#include "mir/graphics/buffer_properties.h"
 #include <memory>
 
 namespace mir
@@ -33,16 +31,20 @@ class NativeBuffer;
 namespace android
 {
 
-class GraphicAllocAdaptor
+class Gralloc
 {
 public:
-    virtual std::shared_ptr<NativeBuffer> alloc_buffer(geometry::Size size,
-        MirPixelFormat, BufferUsage usage) = 0;
+    virtual std::shared_ptr<NativeBuffer> alloc_buffer(
+        geometry::Size size, MirPixelFormat, unsigned int usage_bitmask) = 0;
+    virtual std::shared_ptr<NativeBuffer> alloc_framebuffer(
+        geometry::Size size, MirPixelFormat) = 0;
+    virtual std::shared_ptr<NativeBuffer> alloc_buffer(
+        geometry::Size size, MirPixelFormat, BufferUsage usage) = 0;
 protected:
-    GraphicAllocAdaptor() = default;
-    virtual ~GraphicAllocAdaptor() {}
-    GraphicAllocAdaptor(const GraphicAllocAdaptor&) = delete;
-    GraphicAllocAdaptor& operator=(const GraphicAllocAdaptor&) = delete;
+    Gralloc() = default;
+    virtual ~Gralloc() {}
+    Gralloc(const Gralloc&) = delete;
+    Gralloc& operator=(const Gralloc&) = delete;
 };
 
 }

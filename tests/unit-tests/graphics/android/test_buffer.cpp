@@ -52,7 +52,6 @@ protected:
         anwb->stride = anwb->width * MIR_BYTES_PER_PIXEL(pf);
         anwb->format = HAL_PIXEL_FORMAT_RGBA_8888;
 
-        default_use = mga::BufferUsage::use_hardware;
         size = geom::Size{anwb->width, anwb->height};
         extensions = std::make_shared<mg::EGLExtensions>();
     }
@@ -62,7 +61,6 @@ protected:
     std::shared_ptr<mtd::MockAndroidNativeBuffer> mock_native_buffer;
     MirPixelFormat pf;
     geom::Size size;
-    mga::BufferUsage default_use;
     std::shared_ptr<mg::EGLExtensions> extensions;
     testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
     mtd::MockGrallocModule gralloc;

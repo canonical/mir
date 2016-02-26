@@ -37,7 +37,7 @@ class HwcWrapper;
 class HwcReport;
 class DeviceQuirks;
 class CommandStreamSyncFactory;
-class AndroidGraphicBufferAllocator;
+class GraphicBufferAllocator;
 
 
 //NOTE: this should be the only class that inspects the HWC version and assembles
@@ -72,7 +72,7 @@ private:
     std::shared_ptr<framebuffer_device_t> fb_native;
     HwcVersion hwc_version;
 
-    std::shared_ptr<graphics::android::AndroidGraphicBufferAllocator> buffer_allocator;
+    std::shared_ptr<GraphicBufferAllocator> buffer_allocator;
     std::shared_ptr<CommandStreamSyncFactory> command_stream_sync_factory;
 };
 

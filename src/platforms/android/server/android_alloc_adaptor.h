@@ -33,23 +33,25 @@ namespace android
 class DeviceQuirks;
 class CommandStreamSyncFactory;
 
-class AndroidAllocAdaptor : public GraphicAllocAdaptor
+class GrallocAllocationModule : public Gralloc
 {
 public:
-    explicit AndroidAllocAdaptor(
+    explicit GrallocAllocationModule(
         std::shared_ptr<struct alloc_device_t> const& alloc_device,
         std::shared_ptr<CommandStreamSyncFactory> const& cmdstream_sync_factory,
         std::shared_ptr<DeviceQuirks> const& quirks);
     std::shared_ptr<NativeBuffer> alloc_buffer(geometry::Size,
-            MirPixelFormat, BufferUsage usage);
-
-    /* note: alloc_device_t has a third method (dump) that isn't needed by us. it can be used to check buffer contents */
+            MirPixelFormat, unsigned int usage_bitmask) override;
+    std::shared_ptr<NativeBuffer> alloc_buffer(geometry::Size size,
+        MirPixelFormat, BufferUsage usage) override;
+    std::shared_ptr<NativeBuffer> alloc_framebuffer(
+        geometry::Size size, MirPixelFormat) override;
 
 private:
     std::shared_ptr<struct alloc_device_t> alloc_dev;
     std::shared_ptr<CommandStreamSyncFactory> const sync_factory;
     std::shared_ptr<DeviceQuirks> const quirks;
-    int convert_to_android_usage(BufferUsage usage);
+    unsigned int convert_to_android_usage(BufferUsage usage);
 };
 
 }

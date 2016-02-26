@@ -30,14 +30,14 @@ namespace test
 {
 namespace doubles
 {
-
+#if 0
 class MockAllocAdaptor : public graphics::android::GraphicAllocAdaptor
 {
 public:
     MOCK_METHOD3(alloc_buffer,
         std::shared_ptr<graphics::NativeBuffer>(geometry::Size, MirPixelFormat, graphics::android::BufferUsage));
 };
-
+#endif
 }
 }
 }

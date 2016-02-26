@@ -38,31 +38,23 @@ namespace mtd = mir::test::doubles;
 class AdaptorICSTest : public ::testing::Test
 {
 public:
-    AdaptorICSTest()
+    AdaptorICSTest():
+        mock_alloc_device(std::make_shared<testing::NiceMock<mtd::MockAllocDevice>>()),
+        alloc_adaptor(std::make_shared<mga::GrallocAllocationModule>(
+            mock_alloc_device, sync_factory, std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}))),
+        pf(mir_pixel_format_abgr_8888),
+        size{300, 200}
     {
-    }
-
-    virtual void SetUp()
-    {
-        using namespace testing;
-        mock_alloc_device = std::make_shared<NiceMock<mtd::MockAllocDevice>>();
-
-        auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
-        alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device, sync_factory, quirks);
-
-        pf = mir_pixel_format_abgr_8888;
-        size = geom::Size{300, 200};
-        usage = mga::BufferUsage::use_hardware;
     }
 
     mtd::MockEGL mock_egl;
     std::shared_ptr<mga::CommandStreamSyncFactory> sync_factory{std::make_shared<mga::EGLSyncFactory>()};
     std::shared_ptr<mtd::MockAllocDevice> mock_alloc_device;
-    std::shared_ptr<mga::AndroidAllocAdaptor> alloc_adaptor;
+    std::shared_ptr<mga::GrallocAllocationModule> alloc_adaptor;
 
     MirPixelFormat pf;
     geom::Size size;
-    mga::BufferUsage usage;
+    mg::BufferUsage usage = mg::BufferUsage::hardware;
     int const fb_usage_flags
         {GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER | GRALLOC_USAGE_HW_FB};
     int const fb_usage_flags_broken_device
@@ -176,7 +168,7 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_sw_usage_conversion)
     EXPECT_CALL(*mock_alloc_device, alloc_interface(_,_,_,_,sw_usage_flags,_,_));
     EXPECT_CALL(*mock_alloc_device, free_interface(_,_));
 
-    alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_software);
+    alloc_adaptor->alloc_buffer(size, pf, mg::BufferUsage::software);
 }
 
 TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion_fb_gles)
@@ -186,7 +178,7 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion_fb_gles)
     EXPECT_CALL(*mock_alloc_device, alloc_interface(_,_,_,_,fb_usage_flags,_,_));
     EXPECT_CALL(*mock_alloc_device, free_interface(_,_));
 
-    alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer_gles);
+    alloc_adaptor->alloc_framebuffer(size, pf);
 }
 
 TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion_fb_gles_with_quirk)
@@ -201,12 +193,12 @@ TEST_F(AdaptorICSTest, adaptor_gralloc_usage_conversion_fb_gles_with_quirk)
     options.parse_arguments(description, args.size(), args.data());
     auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}, options);
 
-    alloc_adaptor = std::make_shared<mga::AndroidAllocAdaptor>(mock_alloc_device, sync_factory, quirks);
+    alloc_adaptor = std::make_shared<mga::GrallocAllocationModule>(mock_alloc_device, sync_factory, quirks);
 
     EXPECT_CALL(*mock_alloc_device, alloc_interface(_,_,_,_,fb_usage_flags_broken_device,_,_));
     EXPECT_CALL(*mock_alloc_device, free_interface(_,_));
 
-    alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer_gles);
+    alloc_adaptor->alloc_framebuffer(size, pf);
 }
 
 TEST_F(AdaptorICSTest, handle_size_is_correct)
@@ -241,7 +233,7 @@ TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_hw)
 
 TEST_F(AdaptorICSTest, handle_buffer_usage_is_converted_to_android_use_fb)
 {
-    auto native_handle = alloc_adaptor->alloc_buffer(size, pf, mga::BufferUsage::use_framebuffer_gles);
+    auto native_handle = alloc_adaptor->alloc_framebuffer(size, pf);
     auto anwb = native_handle->anwb();
     EXPECT_EQ(fb_usage_flags, anwb->usage);
 }

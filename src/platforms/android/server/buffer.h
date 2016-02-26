@@ -22,7 +22,6 @@
 
 #include "mir/graphics/buffer_basic.h"
 #include "mir/renderer/gl/texture_source.h"
-#include "buffer_usage.h"
 
 #include <hardware/gralloc.h>
 

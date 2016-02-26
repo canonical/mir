@@ -25,7 +25,6 @@
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "graphic_buffer_allocator.h"
 
 namespace mir
 {
@@ -37,14 +36,14 @@ class EGLExtensions;
 namespace android
 {
 
-class GraphicAllocAdaptor;
+class Gralloc;
 class DeviceQuirks;
 class CommandStreamSyncFactory;
 
-class AndroidGraphicBufferAllocator: public GraphicBufferAllocator, public graphics::GraphicBufferAllocator
+class GraphicBufferAllocator: public graphics::GraphicBufferAllocator
 {
 public:
-    AndroidGraphicBufferAllocator(
+    GraphicBufferAllocator(
         std::shared_ptr<CommandStreamSyncFactory> const& cmdstream_sync_factory,
         std::shared_ptr<DeviceQuirks> const& quirks);
 
@@ -53,16 +52,14 @@ public:
 
     std::unique_ptr<graphics::Buffer> reconstruct_from(MirNativeBuffer* anwb, MirPixelFormat);
 
-    std::shared_ptr<graphics::Buffer> alloc_buffer_platform(
-        geometry::Size sz, MirPixelFormat pf, BufferUsage use) override;
+    std::shared_ptr<graphics::Buffer> alloc_framebuffer(
+        geometry::Size sz, MirPixelFormat pf);
 
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 
-    static BufferUsage convert_from_compositor_usage(graphics::BufferUsage usage);
-
 private:
     const hw_module_t    *hw_module;
-    std::shared_ptr<GraphicAllocAdaptor> alloc_device;
+    std::shared_ptr<Gralloc> alloc_device;
     std::shared_ptr<EGLExtensions> const egl_extensions;
     std::shared_ptr<CommandStreamSyncFactory> const cmdstream_sync_factory;
 };
