@@ -21,12 +21,15 @@
 
 #include "mir_toolkit/mir_buffer.h"
 #include <memory>
+#include <chrono>
+#include <mutex>
 
 namespace mir
 {
 namespace client
 {
 class ClientBuffer;
+class MemoryRegion;
 //this is the type backing MirBuffer* 
 class Buffer
 {
@@ -39,12 +42,23 @@ public:
 
     void submitted();
     void received();
+
+    MirNativeBuffer* as_mir_native_buffer() const;
+    MirGraphicsRegion map_region();
+
+    void set_fence(MirNativeFence*, MirBufferAccess);
+    MirNativeFence* get_fence() const;
+    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds);
+
 private:
     mir_buffer_callback cb;
     void* cb_context;
     int const buffer_id;
     std::shared_ptr<ClientBuffer> buffer;
+
+    std::mutex mutex;
     bool owned;
+    std::shared_ptr<MemoryRegion> mapped_region;
 };
 }
 }

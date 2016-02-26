@@ -97,7 +97,6 @@ public:
     testing::NiceMock<mtd::MockFBHalDevice> fb_hal_mock;
     std::shared_ptr<MockResourceFactory> mock_resource_factory;
     testing::NiceMock<mtd::MockDisplayReport> mock_display_report;
-    testing::NiceMock<MockGraphicBufferAllocator> mock_buffer_allocator;
     std::shared_ptr<mtd::MockHwcReport> mock_hwc_report{
         std::make_shared<testing::NiceMock<mtd::MockHwcReport>>()};
     std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_wrapper;
@@ -114,7 +113,6 @@ TEST_F(HalComponentFactory, builds_hwc_version_10)
     EXPECT_CALL(*mock_hwc_report, report_hwc_version(mga::HwcVersion::hwc10));
 
     mga::HalComponentFactory factory(
-        mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
         mock_hwc_report,
         quirks);
@@ -129,7 +127,6 @@ TEST_F(HalComponentFactory, builds_hwc_version_11_and_later)
     EXPECT_CALL(*mock_hwc_report, report_hwc_version(mga::HwcVersion::hwc11));
 
     mga::HalComponentFactory factory(
-        mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
         mock_hwc_report,
         quirks);
@@ -143,7 +140,6 @@ TEST_F(HalComponentFactory, allocates_correct_hwc_configuration)
         .WillOnce(Return(std::make_tuple(mock_wrapper, mga::HwcVersion::hwc14)));
 
     mga::HalComponentFactory factory(
-        mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
         mock_hwc_report,
         quirks);
@@ -160,7 +156,6 @@ TEST_F(HalComponentFactory, hwc_failure_falls_back_to_fb)
     EXPECT_CALL(*mock_hwc_report, report_legacy_fb_module());
 
     mga::HalComponentFactory factory(
-        mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
         mock_hwc_report,
         quirks);
@@ -177,7 +172,6 @@ TEST_F(HalComponentFactory, hwc_and_fb_failure_fatal)
 
     EXPECT_THROW({
         mga::HalComponentFactory factory(
-            mt::fake_shared(mock_buffer_allocator),
             mock_resource_factory,
             mock_hwc_report,
             quirks);
@@ -193,13 +187,16 @@ TEST_F(HalComponentFactory, determine_fbnum_always_reports_2_minimum)
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
         .WillOnce(Return(std::make_shared<mtd::MockFBHalDevice>(
             0, 0, mir_pixel_format_abgr_8888, 0, 0.0, 0.0)));
-    EXPECT_CALL(mock_buffer_allocator, alloc_buffer_platform(_,_,_))
-        .Times(2);
 
     mga::HalComponentFactory factory(
-        mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
         mock_hwc_report,
         quirks);
-    factory.create_framebuffers(mtd::StubDisplayConfig(1).outputs[0]);
+    auto fbs = factory.create_framebuffers(mtd::StubDisplayConfig(1).outputs[0]);
+    std::vector<mg::BufferID> buffer_list;
+    for(auto i = 0u; i < 10u; i++)
+        buffer_list.push_back(fbs->buffer_for_render()->id());
+    std::sort(buffer_list.begin(), buffer_list.end());
+    buffer_list.erase(std::unique(buffer_list.begin(), buffer_list.end()), buffer_list.end());
+    EXPECT_THAT(buffer_list.size(), Eq(2));
 }

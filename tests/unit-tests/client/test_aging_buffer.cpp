@@ -63,6 +63,26 @@ struct MyAgingBuffer : public mcl::AgingBuffer
     void fill_update_msg(MirBufferPackage&) override
     {
     }
+
+    MirNativeBuffer* as_mir_native_buffer() const
+    {
+        exit(1);
+    }
+
+    void set_fence(MirNativeFence*, MirBufferAccess)
+    {
+        exit(1);
+    }
+
+    MirNativeFence* get_fence() const
+    {
+        exit(1);
+    }
+
+    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds)
+    {
+        exit(1);
+    }
 };
 
 TEST(MirClientAgingBufferTest, buffer_age_starts_at_zero)

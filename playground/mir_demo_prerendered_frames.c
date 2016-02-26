@@ -30,21 +30,20 @@
 void fill_buffer(MirBuffer* buffer, int shade, int min, int max)
 {
     unsigned char val = (unsigned char) (((float) shade / (max-min)) + min) * 0xFF;
-    
-    MirGraphicsRegion* region = mir_buffer_acquire_region(buffer, mir_read_write);
-    if (!region)
+
+    MirGraphicsRegion region = mir_buffer_get_graphics_region(buffer, mir_read_write);
+    if (!region.vaddr)
         return;
 
-    unsigned char* px = (unsigned char*) region->vaddr;
-    for(int i = 0; i < region->height; i++)
+    unsigned char* px = (unsigned char*) region.vaddr;
+    for(int i = 0; i < region.height; i++)
     {
-        px += region->stride; 
-        for(int j = 0; j < region->width; j++)
+        px += region.stride; 
+        for(int j = 0; j < region.width; j++)
         {
             px[j] = val;
         }
     }
-    mir_buffer_release_region(region);
 }
 
 typedef struct SubmissionInfo
@@ -83,27 +82,25 @@ int main(int argc, char** argv)
 
     int width = 20;
     int height = 25;
+    int displacement_x = 0;
+    int displacement_y = 0;
     MirPixelFormat format = mir_pixel_format_abgr_8888;
 
     MirConnection* connection = mir_connect_sync(NULL, "prerendered_frames");
-
-    MirSurfaceSpec* spec =
-        mir_connection_create_spec_for_normal_surface(connection, width, height, format);
-    MirSurface* surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
-
     MirPresentationChain* chain =  mir_connection_create_presentation_chain_sync(connection);
     if (!mir_presentation_chain_is_valid(chain))
         return -1;
 
+    MirSurfaceSpec* spec =
+         mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+    MirSurface* surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
     //reassociate for advanced control
-    MirBufferStreamInfo info;
-    info.displacement_x = 0;
-    info.displacement_y = 0;
-    //will make this a union.
-    info.stream = (MirBufferStream*) chain;
     spec = mir_create_surface_spec(connection);
-    mir_surface_spec_set_streams(spec, &info, 1);
+    mir_surface_spec_add_presentation_chain(
+        spec, width, height, displacement_x, displacement_y, chain);
+    mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
 
     int num_prerendered_frames = 20;

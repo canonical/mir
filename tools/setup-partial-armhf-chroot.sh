@@ -132,7 +132,8 @@ suite=${dist}
 " >> mstrap.conf
 done
 
-multistrap -f mstrap.conf 
+# Fakeroot is required to stop the apt update command giving up
+fakeroot multistrap -f mstrap.conf 
 
 rm -f var/cache/apt/archives/lock
 

@@ -23,6 +23,7 @@
 #include "mir_toolkit/common.h"
 #include "mir/geometry/size.h"
 #include "mir/test/fake_shared.h"
+#include "mir/test/doubles/mock_client_buffer.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -30,25 +31,7 @@
 
 namespace geom=mir::geometry;
 namespace mcl=mir::client;
-
-struct MockBuffer : public mcl::AgingBuffer
-{
-    MockBuffer()
-    {
-        using namespace testing;
-        ON_CALL(*this, mark_as_submitted())
-            .WillByDefault(Invoke([this](){this->AgingBuffer::mark_as_submitted();}));
-    }
-
-    MOCK_METHOD0(mark_as_submitted, void());
-    MOCK_METHOD0(secure_for_cpu_write, std::shared_ptr<mcl::MemoryRegion>());
-    MOCK_CONST_METHOD0(size, geom::Size());
-    MOCK_CONST_METHOD0(stride, geom::Stride());
-    MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
-    MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mir::graphics::NativeBuffer>());
-    MOCK_METHOD1(update_from, void(MirBufferPackage const&));
-    MOCK_METHOD1(fill_update_msg, void(MirBufferPackage&));
-};
+namespace mtd = mir::test::doubles;
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory
 {
@@ -61,13 +44,21 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
             .WillByDefault(InvokeWithoutArgs([this]()
             {
                 alloc_count++;
-                auto buffer = std::shared_ptr<mcl::ClientBuffer>(
-                    new NiceMock<MockBuffer>(),
+                auto buffer = std::shared_ptr<mtd::MockClientBuffer>(
+                    new NiceMock<mtd::MockClientBuffer>(),
                     [this](mcl::ClientBuffer* buffer)
                     {
                         free_count++;
                         delete buffer;
                     });
+                std::weak_ptr<mtd::MockClientBuffer> wb (buffer);
+                ON_CALL(*buffer, mark_as_submitted())
+                    .WillByDefault(Invoke([wb]{ if (auto buffer = wb.lock()) buffer->age_ = 1; }));
+                ON_CALL(*buffer, increment_age())
+                    .WillByDefault(Invoke([wb]{ if (auto buffer = wb.lock()) if (buffer->age_) buffer->age_++; }));
+                ON_CALL(*buffer, age())
+                    .WillByDefault(Invoke([wb]{ if (auto buffer = wb.lock()) return buffer->age_; return 0; }));
+
                 if (alloc_count == 1)
                     first_allocated_buffer = buffer;
                 return buffer;
@@ -307,7 +298,7 @@ TEST_F(ClientBufferDepository, implicitly_submits_current_buffer_on_deposit)
     auto package2 = std::make_shared<MirBufferPackage>();
 
     depository.deposit_package(package1, 1, size, pf);
-    EXPECT_CALL(*static_cast<MockBuffer *>(depository.current_buffer().get()), mark_as_submitted());
+    EXPECT_CALL(*static_cast<mtd::MockClientBuffer*>(depository.current_buffer().get()), mark_as_submitted());
     depository.deposit_package(package2, 2, size, pf);
 }
 
@@ -344,7 +335,7 @@ TEST_F(ClientBufferDepository, caches_recently_seen_buffer)
     auto package1 = std::make_shared<MirBufferPackage>();
     auto package2 = std::make_shared<MirBufferPackage>();
     auto package3 = std::make_shared<MirBufferPackage>();
-    NiceMock<MockBuffer> mock_buffer;
+    NiceMock<mtd::MockClientBuffer> mock_buffer;
     Sequence seq;
     EXPECT_CALL(*mock_factory, create_buffer(Ref(package1),_,_))
         .InSequence(seq)

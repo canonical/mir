@@ -501,14 +501,26 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
             handle->release_buffer();
     } while (!blocking);
 
+    int throttled_count = 0;
+
     for (int f = 0; f < 100; ++f)
     {
         ASSERT_FALSE(handle->has_acquired_buffer());
         q.compositor_release(onscreen);
-        ASSERT_TRUE(handle->has_acquired_buffer()) << "frame# " << f;
-        handle->release_buffer();
-        onscreen = q.compositor_acquire(this);
-        handle = client_acquire_async(q);
+        if (handle->has_acquired_buffer())
+        { // This should always happen if dynamic queue scaling is disabled...
+            handle->release_buffer();
+            onscreen = q.compositor_acquire(this);
+            handle = client_acquire_async(q);
+            throttled_count = 0;
+        }
+        else
+        {
+            ASSERT_THAT(q.scaling_delay(), Ge(0));
+            ++throttled_count;
+            ASSERT_THAT(throttled_count, Le(nbuffers));
+            onscreen = q.compositor_acquire(this);
+        }
     }
 }
 
@@ -542,15 +554,19 @@ TEST_P(WithTwoOrMoreBuffers, short_buffer_holds_dont_overclock_multimonitor)
 
     for (int f = 0; f < 100; ++f)
     {
+        // These two assertions are the important ones:
         ASSERT_FALSE(handle->has_acquired_buffer());
         q.compositor_release(left);
         q.compositor_release(right);
         ASSERT_FALSE(handle->has_acquired_buffer());
         left = q.compositor_acquire(leftid);
         right = q.compositor_acquire(rightid);
-        ASSERT_TRUE(handle->has_acquired_buffer());
-        handle->release_buffer();
-        handle = client_acquire_async(q);
+        // Note: This is only reliably true when queue scaling is disabled:
+        if (handle->has_acquired_buffer())
+        {
+            handle->release_buffer();
+            handle = client_acquire_async(q);
+        } // else dynamic queue scaling is throttling us.
     }
 }
 
@@ -1842,7 +1858,7 @@ TEST_P(WithThreeOrMoreBuffers, greedy_compositors_need_triple_buffers)
     std::unordered_set<mg::Buffer *> buffers_acquired;
     int const delay = q.scaling_delay();
 
-    for (int frame = 0; frame < 10; frame++)
+    for (int frame = 0; frame < delay+10; frame++)
     {
         auto handle = client_acquire_async(q);
         handle->wait_for(std::chrono::seconds(1));

@@ -906,6 +906,17 @@ MATCHER(ConfigEq, "stream configurations are equivalent")
            (std::get<0>(arg).displacement == std::get<1>(arg).displacement);
 }
 
+namespace mir
+{
+namespace shell
+{
+void PrintTo(msh::StreamSpecification const& s, std::ostream* os)
+{
+    *os << "streams with id: " << s.stream_id.as_value(); 
+}
+}
+}
+
 MATCHER_P(StreamsAre, value, "configuration streams match")
 {
     if(!arg.streams.is_set())
@@ -940,8 +951,8 @@ TEST_F(SessionMediator, arranges_bufferstreams_via_shell)
     EXPECT_CALL(*shell, modify_surface(_,
         mf::SurfaceId{surface_response.id().value()},
         StreamsAre(std::vector<msh::StreamSpecification>{
-            {mf::BufferStreamId(streams[0].id().value()), displacement[0]},
-            {mf::BufferStreamId(streams[1].id().value()), displacement[1]}
+            {mf::BufferStreamId(streams[0].id().value()), displacement[0], {}},
+            {mf::BufferStreamId(streams[1].id().value()), displacement[1], {}},
         })));
 
     mediator.modify_surface(&mods, &null, null_callback.get());

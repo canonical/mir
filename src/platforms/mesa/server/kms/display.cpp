@@ -96,6 +96,7 @@ mgm::Display::Display(std::shared_ptr<helpers::DRMHelper> const& drm,
       output_container{drm->fd,
                        std::make_shared<KMSPageFlipper>(drm->fd, listener)},
       current_display_configuration{drm->fd},
+      dirty_configuration{false},
       bypass_option(bypass_option),
       gl_config{gl_config}
 {
@@ -133,8 +134,12 @@ std::unique_ptr<mg::DisplayConfiguration> mgm::Display::configuration() const
 {
     std::lock_guard<std::mutex> lg{configuration_mutex};
 
-    /* Give back a copy of the latest configuration information */
-    current_display_configuration.update();
+    if (dirty_configuration)
+    {
+        /* Give back a copy of the latest configuration information */
+        current_display_configuration.update();
+        dirty_configuration = false;
+    }
     return std::unique_ptr<mg::DisplayConfiguration>(
         new mgm::RealKMSDisplayConfiguration(current_display_configuration)
         );
@@ -268,9 +273,10 @@ void mgm::Display::register_configuration_change_handler(
         make_module_ptr<std::function<void(int)>>(
             [conf_change_handler, this](int)
             {
-                monitor.process_events([conf_change_handler]
+                monitor.process_events([conf_change_handler, this]
                                        (mir::udev::Monitor::EventType, mir::udev::Device const&)
                                        {
+                                            dirty_configuration = true;
                                             conf_change_handler();
                                        });
             }));
