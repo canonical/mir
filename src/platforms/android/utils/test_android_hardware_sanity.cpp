@@ -100,6 +100,11 @@ struct AndroidHardwareSanity : testing::Test
         runner.reset();
     }
     static std::unique_ptr<Runner> runner;
+    geom::Size size{334, 122};
+    MirPixelFormat pf = mir_pixel_format_abgr_8888;
+    mg::BufferProperties sw_properties{size, pf, mg::BufferUsage::software};
+    mg::BufferProperties hw_properties{size, pf, mg::BufferUsage::hardware};
+
 };
 std::unique_ptr<Runner> AndroidHardwareSanity::runner;
 }
@@ -221,6 +226,41 @@ TEST_F(AndroidHardwareSanity, display_can_post)
 
 TEST_F(AndroidHardwareSanity, display_can_post_overlay)
 {
+    auto buffer = runner->config.the_buffer_allocator()->alloc_buffer(sw_properties);
+    struct BasicRenderable : mg::Renderable
+    {
+        BasicRenderable(std::shared_ptr<mg::Buffer> const& buffer) :
+            buffer_(buffer)
+        {
+        }
+        ID id() const override
+        {
+            return this;
+        }
+        std::shared_ptr<mg::Buffer> buffer() const override
+        {
+            return buffer_;
+        }
+        geom::Rectangle screen_position() const override
+        {
+            return {{0,0}, buffer_->size()} ;
+        }
+        float alpha() const override
+        {
+            return 1.0f;
+        }
+        glm::mat4 transformation() const override
+        {
+            return trans;
+        }
+        bool shaped() const override
+        {
+            return false;
+        }
+        std::shared_ptr<mg::Buffer> const buffer_;
+        glm::mat4 const trans;
+    };
+
     auto display = runner->config.the_display();
     display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([](mg::DisplayBuffer& db)
@@ -231,7 +271,7 @@ TEST_F(AndroidHardwareSanity, display_can_post_overlay)
                 area.size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
             auto buffer = runner->config.the_buffer_allocator()->alloc_buffer(properties);
             mg::RenderableList list{
-//                std::make_shared<mt::doubles::StubRenderable>(buffer, area)
+                std::make_shared<BasicRenderable>(buffer)
             };
 
             db.post_renderables_if_optimizable(list);
@@ -244,9 +284,6 @@ TEST_F(AndroidHardwareSanity, can_allocate_sw_buffer)
 {
     using namespace testing;
 
-    auto size = geom::Size{334, 122};
-    auto pf  = mir_pixel_format_abgr_8888;
-    mg::BufferProperties sw_properties{size, pf, mg::BufferUsage::software};
     auto buffer = runner->config.the_buffer_allocator()->alloc_buffer(sw_properties);
     EXPECT_NE(nullptr, buffer);
 
@@ -274,10 +311,6 @@ TEST_F(AndroidHardwareSanity, can_allocate_sw_buffer)
 TEST_F(AndroidHardwareSanity, can_allocate_hw_buffer)
 {
     using namespace testing;
-
-    auto size = geom::Size{334, 122};
-    auto pf  = mir_pixel_format_abgr_8888;
-    mg::BufferProperties hw_properties{size, pf, mg::BufferUsage::hardware};
 
     //TODO: kdub it is a bit trickier to test that a gpu can render... just check creation for now
     auto test_buffer = runner->config.the_buffer_allocator()->alloc_buffer(hw_properties);
