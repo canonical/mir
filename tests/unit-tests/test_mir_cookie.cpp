@@ -119,7 +119,7 @@ TEST(MirCookieAuthority, optimal_secret_size_is_larger_than_minimum_size)
         Ge(mir::cookie::Authority::minimum_secret_size));
 }
 
-TEST(MirCookieAuthority, DISABLED_does_not_hang_or_crash)
+TEST(MirCookieAuthority, DISABLED_given_low_entropy_does_not_hang_or_crash)
 {   // Regression test for LP: #1536662 and LP: #1541188
     using namespace testing;
 
@@ -136,5 +136,5 @@ TEST(MirCookieAuthority, DISABLED_does_not_hang_or_crash)
 
     auto duration = std::chrono::high_resolution_clock::now() - start;
     int seconds = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
-    EXPECT_THAT(seconds, Lt(20));
+    EXPECT_THAT(seconds, Lt(15));
 }

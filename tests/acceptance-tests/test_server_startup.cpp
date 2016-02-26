@@ -68,7 +68,7 @@ TEST_F(ServerStartup, after_server_sigkilled_can_start_new_instance)
         });
 }
 
-TEST(ServerStartupReliability, DISABLED_starts_with_low_entropy)
+TEST(ServerStartupReliability, DISABLED_can_start_with_low_entropy)
 {   // Regression test for LP: #1536662 and LP: #1541188
     using namespace ::testing;
 
@@ -90,7 +90,7 @@ TEST(ServerStartupReliability, DISABLED_starts_with_low_entropy)
 
     auto duration = std::chrono::high_resolution_clock::now() - start;
     int seconds = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
-    EXPECT_THAT(seconds, Lt(20));
+    EXPECT_THAT(seconds, Lt(15));
 
     server.TearDown();
 }
