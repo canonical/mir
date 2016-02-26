@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -84,63 +84,115 @@ typedef unsigned int MirInputDeviceCapabilities;
 /**
  * Retrieve the number of available input devices.
  *
- * \param [in] devices  The input devices
+ * \param [in] config   The input configuration snapshot
  *
  * \return              Number of input devices
  */
-size_t mir_input_devices_count(MirInputDevices const* devices);
+size_t mir_input_config_device_count(MirInputConfig const* config);
+
+/**
+ * Retrieve the input device at given \a index.
+ *
+ * The pointer returned stays valid until mir_input_config_destroy
+ * is called with \a config.
+ *
+ * \param [in] config   The input configuration snapshot
+ * \param [in] index    The index of the input device to return.
+ * \return              input device
+ */
+MirInputDevice const* mir_input_config_get_device(
+    MirInputConfig const* config,
+    size_t index);
+
+/**
+ * Retrieve the input device by \a id.
+ *
+ * The MirInputDevice returned stays valid until mir_input_config_destroy
+ * is called with \a config. If no device with the given \a id is found
+ * NULL will be returned.
+ *
+ * \param [in] config   The input configuration snapshot
+ * \param [in] id       The input device id to search for
+ *
+ * \return              input device
+ */
+MirInputDevice const* mir_input_config_get_device_by_id(
+    MirInputConfig const* config,
+    MirInputDeviceId id);
+
+/**
+ * Retrieve the input device at given \a index.
+ *
+ * The pointer returned stays valid until mir_input_config_destroy
+ * is called with \a config.
+ *
+ * \param [in] config   The input configuration snapshot
+ * \param [in] index    The index of the input device to return.
+ * \return              input device
+ */
+MirInputDevice* mir_input_config_get_mutable_device(
+    MirInputConfig* config,
+    size_t index);
+
+/**
+ * Retrieve the input device by \a id.
+ *
+ * The MirInputDevice returned stays valid until mir_input_config_destroy
+ * is called with \a config. If no device with the given \a id is found
+ * NULL will be returned.
+ *
+ * \param [in] config   The input configuration snapshot
+ * \param [in] id       The input device id to search for
+ *
+ * \return              input device
+ */
+MirInputDevice* mir_input_config_get_mutable_device_by_id(
+    MirInputConfig* config,
+    MirInputDeviceId id);
 
 /**
  * Retrieve the capabilities of the input device at the given index.
  *
- * \param [in] devices  The input devices
- * \param [in] index    The device index. Must be less than
- *                      (mir_input_devices_count - 1).
+ * \param [in] device   The input device
  *
- * \return              The capability flags of the input device at index.
+ * \return              The capability flags of the input device
  */
-MirInputDeviceCapabilities mir_input_devices_get_capabilities(
-    MirInputDevices const* devices, size_t index);
+MirInputDeviceCapabilities mir_input_device_get_capabilities(
+    MirInputDevice const* device);
 
 /**
- * Retrieve the device id of the input device at the given index.
+ * Retrieve the device id of the input device.
  * The device id is a unique integer value, only valid while the device is
- * attached. The device id matches the device ids attached to input events.
+ * attached. The device id matches the device id attached every input event.
  *
- * \param [in] devices  The input devices
- * \param [in] index    The device index. Must be less than
- *                      (mir_input_devices_count - 1).
+ * \param [in] device   The input device
  *
- * \return              The device id of the input device at the given index.
+ * \return              The device id of the input device
  */
-MirInputDeviceId mir_input_devices_get_id(MirInputDevices const* devices, size_t index);
+MirInputDeviceId mir_input_device_get_id(MirInputDevice const* device);
 
 /**
- * Retrieve the name of the input device at the given index.
- * The string pointed to will be valid as long as MirInputDevices is valid.
+ * Retrieve the name of the input device.
+ * The string pointed to will be valid as long as MirInputDevice is valid.
  * The name may be empty but never NULL.
  *
- * \param [in] devices  The input devices
- * \param [in] index    The device index. Must be less than
- *                      (mir_input_devices_count - 1).
+ * \param [in] device   The input device
  *
- * \return              The name of the input device at the given index.
+ * \return              The name of the input device
  */
-char const* mir_input_devices_get_name(MirInputDevices const* devices, size_t index);
+char const* mir_input_device_get_name(MirInputDevice const* device);
 
 /**
- * Retrieve the unique id of the input device at the given index.
- * The string pointed to will be valid as long as MirInputDevices is valid.
+ * Retrieve the unique id of the input device.
+ * The string pointed to will be valid as long as \a device is valid.
  * The value of the unique id of a given device should be valid across mir
  * connections session and servers of the same version.
  *
- * \param [in] devices  The input devices
- * \param [in] index    The device index. Must be less than
- *                      (mir_input_devices_count - 1).
+ * \param [in] device   The input device
  *
- * \return              The unique id of the input device at the given index.
+ * \return              The unique id of the input device
  */
-char const* mir_input_devices_get_unique_id(MirInputDevices const* devices, size_t index);
+char const* mir_input_device_get_unique_id(MirInputDevice const* device);
 
 #ifdef __cplusplus
 }

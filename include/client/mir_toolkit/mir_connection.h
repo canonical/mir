@@ -267,35 +267,35 @@ MirWaitHandle* mir_connection_platform_operation(
     mir_platform_operation_callback callback, void* context);
 
 /**
- * Query the attached input devices
- *   \warning return value must be destroyed via mir_input_devices_destroy()
- *   \warning may return null if connection is invalid
- *   \param [in]  connection        The connection
- *   \return                        structure that describes the display configuration
+ * Create a snapshot of the attached input devices and device configurations.
+ * \warning return value must be destroyed via mir_input_config_destroy()
+ * \warning may return null if connection is invalid
+ * \param [in]  connection        The connection
+ * \return      structure that describes the input configuration
  */
-MirInputDevices* mir_connection_create_input_devices(MirConnection *connection);
+MirInputConfig* mir_connection_create_input_config(MirConnection *connection);
 
 /**
- * Release this copy of the available input devices.
- * This invalidates any pointers retrieved from this set of input devices.
+ * Release this snapshot of the input configuration.
+ * This invalidates any pointers retrieved from this structure.
  *
- * \param [in] devices  The input devices
+ * \param [in] devices  The input configuration
  */
-void mir_input_devices_destroy(MirInputDevices const* devices);
+void mir_input_config_destroy(MirInputConfig const* config);
 
 /**
  * Register a callback to be called when the input devices change.
  *
- * Once a change has occurred, you can use mir_connection_create_input_config to
- * see the new input devices.
+ * Once a change has occurred, you can use mir_connection_create_input_config
+ * to get an updated snapshot of the input device configuration.
  *
- *   \param [in] connection  The connection
- *   \param [in] callback    The function to be called when a change occurs
- *   \param [in,out] context User data passed to the callback function
+ * \param [in] connection  The connection
+ * \param [in] callback    The function to be called when a change occurs
+ * \param [in,out] context User data passed to the callback function
  */
-void mir_connection_set_input_devices_change_callback(
+void mir_connection_set_input_config_change_callback(
     MirConnection* connection,
-    mir_input_devices_callback callback, void* context);
+    mir_input_config_callback callback, void* context);
 
 
 #ifdef __cplusplus

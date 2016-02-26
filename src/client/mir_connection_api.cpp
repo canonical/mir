@@ -233,18 +233,18 @@ MirDisplayConfiguration* mir_connection_create_display_config(
     return nullptr;
 }
 
-MirInputDevices* mir_connection_create_input_devices(
+MirInputConfig* mir_connection_create_input_config(
     MirConnection* connection)
 {
     if (!connection)
         return nullptr;
     auto devices = connection->the_input_devices();
-    return reinterpret_cast<MirInputDevices*>(new std::vector<mir::input::DeviceData>(devices->copy_devices()));
+    return reinterpret_cast<MirInputConfig*>(new std::vector<mir::input::DeviceData>(devices->copy_devices()));
 }
 
-void mir_connection_set_input_devices_change_callback(
+void mir_connection_set_input_config_change_callback(
     MirConnection* connection,
-    mir_input_devices_callback callback,
+    mir_input_config_callback callback,
     void* context)
 {
     if (!connection)
@@ -253,9 +253,9 @@ void mir_connection_set_input_devices_change_callback(
     devices->set_change_callback([connection, context, callback]{callback(connection, context);});
 }
 
-void mir_input_devices_destroy(MirInputDevices const* devices)
+void mir_input_config_destroy(MirInputConfig const* config)
 {
-    auto device_vector = reinterpret_cast<std::vector<mir::input::DeviceData>const*>(devices);
+    auto device_vector = reinterpret_cast<std::vector<mir::input::DeviceData>const*>(config);
     delete device_vector;
 }
 

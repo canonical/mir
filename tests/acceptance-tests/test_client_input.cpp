@@ -766,30 +766,31 @@ TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client
 MATCHER_P3(ADeviceMatches, name, unique_id, caps, "")
 {
     auto one_of_the_devices_matched = false;
-    for (size_t i = 0, e = mir_input_devices_count(arg); i != e; ++i)
+    for (size_t i = 0, e = mir_input_config_device_count(arg); i != e; ++i)
     {
-        if (mir_input_devices_get_name(arg, i) == name &&
-            mir_input_devices_get_unique_id(arg, i) == unique_id &&
-            mir_input_devices_get_capabilities(arg, i) == caps)
+        auto dev = mir_input_config_get_device(arg, i);
+        if (mir_input_device_get_name(dev) == name &&
+            mir_input_device_get_unique_id(dev) == unique_id &&
+            mir_input_device_get_capabilities(dev) == caps)
             one_of_the_devices_matched = true;
     }
     return one_of_the_devices_matched;
 }
 
-TEST_F(TestClientInput, client_request_input_devices_on_connect_receives_all_attached_devices)
+TEST_F(TestClientInput, client_input_config_request_on_connect_receives_all_attached_devices)
 {
     auto con = mir_connect_sync(new_connection().c_str(), first.c_str());
-    auto devices = mir_connection_create_input_devices(con);
+    auto config = mir_connection_create_input_config(con);
 
-    EXPECT_THAT(mir_input_devices_count(devices), Eq(3));
+    EXPECT_THAT(mir_input_config_device_count(config), Eq(3));
 
-    EXPECT_THAT(devices, ADeviceMatches(keyboard_name, keyboard_unique_id, mir_input_device_capability_keyboard));
-    EXPECT_THAT(devices, ADeviceMatches(mouse_name, mouse_unique_id, mir_input_device_capability_pointer));
-    EXPECT_THAT(devices, ADeviceMatches(touchscreen_name, touchscreen_unique_id,
+    EXPECT_THAT(config, ADeviceMatches(keyboard_name, keyboard_unique_id, mir_input_device_capability_keyboard));
+    EXPECT_THAT(config, ADeviceMatches(mouse_name, mouse_unique_id, mir_input_device_capability_pointer));
+    EXPECT_THAT(config, ADeviceMatches(touchscreen_name, touchscreen_unique_id,
                                         uint32_t(mir_input_device_capability_touchscreen |
                                                  mir_input_device_capability_multitouch)));
 
-    mir_input_devices_destroy(devices);
+    mir_input_config_destroy(config);
     mir_connection_release(con);
 }
 
@@ -798,7 +799,7 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_addition)
 {
     Client a_client(new_connection(), first);
     mt::WaitCondition callback_triggered;
-    mir_connection_set_input_devices_change_callback(
+    mir_connection_set_input_config_change_callback(
         a_client.connection,
         [](MirConnection*, void* cond)
         {
@@ -808,26 +809,26 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_addition)
 
     std::string const touchpad{"touchpad"};
     std::string const touchpad_uid{"touchpad"};
-    std::unique_ptr<mtf::FakeInputDevice> fake_touchpas{mtf::add_fake_input_device(
+    std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
         mi::InputDeviceInfo{touchpad, touchpad_uid,
                             mi::DeviceCapability::touchpad | mi::DeviceCapability::pointer})};
 
     callback_triggered.wait_for_at_most_seconds(1);
     EXPECT_THAT(callback_triggered.woken(), Eq(true));
 
-    auto devices = mir_connection_create_input_devices(a_client.connection);
-    EXPECT_THAT(mir_input_devices_count(devices), Eq(4));
-    EXPECT_THAT(devices, ADeviceMatches(touchpad, touchpad_uid, uint32_t(mir_input_device_capability_touchpad |
+    auto config = mir_connection_create_input_config(a_client.connection);
+    EXPECT_THAT(mir_input_config_device_count(config), Eq(4));
+    EXPECT_THAT(config, ADeviceMatches(touchpad, touchpad_uid, uint32_t(mir_input_device_capability_touchpad |
                                                                          mir_input_device_capability_pointer)));
 
-    mir_input_devices_destroy(devices);
+    mir_input_config_destroy(config);
 }
 
 TEST_F(TestClientInput, callback_function_triggered_on_input_device_removal)
 {
     Client a_client(new_connection(), first);
     mt::WaitCondition callback_triggered;
-    mir_connection_set_input_devices_change_callback(
+    mir_connection_set_input_config_change_callback(
         a_client.connection,
         [](MirConnection*, void* cond)
         {
@@ -840,7 +841,7 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_removal)
 
     EXPECT_THAT(callback_triggered.woken(), Eq(true));
 
-    auto devices = mir_connection_create_input_devices(a_client.connection);
-    EXPECT_THAT(mir_input_devices_count(devices), Eq(2));
-    mir_input_devices_destroy(devices);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    EXPECT_THAT(mir_input_config_device_count(config), Eq(2));
+    mir_input_config_destroy(config);
 }

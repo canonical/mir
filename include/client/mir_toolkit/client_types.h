@@ -335,7 +335,8 @@ typedef struct MirRectangle
     unsigned int height;
 } MirRectangle;
 
-typedef struct MirInputDevices MirInputDevices;
+typedef struct MirInputConfig MirInputConfig;
+typedef struct MirInputDevice MirInputDevice;
 
 /**
  * MirScreencastParameters is the structure of required information that
@@ -399,15 +400,13 @@ typedef void (*mir_platform_operation_callback)(
 
 /**
  * Callback called when a change of input devices has occurred
- *   \param [in] connection     The connection associated with the input device change
- *   \param [in,out] context    The context provided by client
+ *   \param [in] connection   The connection associated with the input device
+ *                            change
+ *   \param [in,out] context  The context provided by client
  */
 
-typedef void (*mir_input_devices_callback)(
+typedef void (*mir_input_config_callback)(
     MirConnection* connection, void* context);
-
-
-
 
 #ifdef __cplusplus
 }

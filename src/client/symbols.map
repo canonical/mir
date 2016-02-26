@@ -224,14 +224,18 @@ MIR_CLIENT_9v19 {
 
 MIR_CLIENT_9_unreleased {
   global:
-    mir_connection_create_input_devices;
-    mir_connection_set_input_devices_change_callback;
-    mir_input_devices_destroy;
-    mir_input_devices_count;
-    mir_input_devices_get_name;
-    mir_input_devices_get_id;
-    mir_input_devices_get_unique_id;
-    mir_input_devices_get_capabilities;
+    mir_connection_create_input_config;
+    mir_connection_set_input_config_change_callback;
+    mir_input_config_destroy;
+    mir_input_config_device_count;
+    mir_input_config_get_device;
+    mir_input_config_get_mutable_device;
+    mir_input_config_get_device_by_id;
+    mir_input_config_get_mutable_device_by_id;
+    mir_input_device_get_name;
+    mir_input_device_get_id;
+    mir_input_device_get_unique_id;
+    mir_input_device_get_capabilities;
 } MIR_CLIENT_9v19;
 
 MIR_CLIENT_DETAIL_9 {
