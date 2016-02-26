@@ -110,6 +110,7 @@ elseif(cmake_build_type_lower MATCHES "threadsanitizer")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread -fno-omit-frame-pointer")
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=thread")
+  link_libraries(tsan) # Workaround for LP:1413474
 elseif(cmake_build_type_lower MATCHES "ubsanitizer")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
@@ -214,6 +215,13 @@ endmacro()
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
+# This copy is used by users of mirplatforminputevdev
+if ("${LIBINPUT_VERSION}" VERSION_LESS "1.1")
+  add_definitions(-DMIR_LIBINPUT_HAS_ACCEL_PROFILE=0)
+else ()
+  add_definitions(-DMIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
+endif ()
+
 option(MIR_ENABLE_TESTS "Build tests" ON)
 
 add_subdirectory(benchmarks/)
@@ -243,8 +251,6 @@ endif ()
 enable_coverage_report(mirserver)
 include (cmake/Doxygen.cmake)
 include (cmake/ABICheck.cmake)
-
-add_subdirectory(snappy)
 
 add_custom_target(ptest
     COMMAND "${CMAKE_SOURCE_DIR}/tools/run_ctests.sh" "--cost-file" "${CMAKE_BINARY_DIR}/ptest_ctest_cost_data.txt" "sh ${CMAKE_BINARY_DIR}/discover_all_tests.sh" "--" "$$ARGS"

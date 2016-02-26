@@ -47,7 +47,7 @@ class SharedLibraryProber : public testing::Test
 {
 public:
     SharedLibraryProber()
-        : library_path{mtf::executable_path() + "/test_data"}
+        : library_path{mtf::test_data_path() + "/shared-libraries"}
     {
         // Can't use std::string, as mkdtemp mutates its argument.
         auto tmp_name = std::unique_ptr<char[], std::function<void(char*)>>{strdup("/tmp/mir_empty_directory_XXXXXX"),

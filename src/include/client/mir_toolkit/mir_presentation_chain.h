@@ -59,9 +59,8 @@ char const *mir_presentation_chain_get_error_message(
  *                                 MirPresentationChain*, but the chain may be
  *                                 invalid in case of an error.
  * \param [in] presentation_chain  Userdata to pass to callback function
- * \return                         A handle that can be supplied to mir_wait_for
  */
-MirWaitHandle* mir_connection_create_presentation_chain(
+void mir_connection_create_presentation_chain(
     MirConnection* connection,
     mir_presentation_chain_callback callback,
     void* context);
@@ -118,6 +117,55 @@ void mir_presentation_chain_allocate_buffer(
  **/
 void mir_presentation_chain_submit_buffer(
     MirPresentationChain* presentation_chain, MirBuffer* buffer);
+
+/**
+ * Set the MirSurfaceContent to display a MirPresentationChain.
+ *
+ * The width and height can be different from the physical dimensions
+ * of the MirBuffer's in the MirPresentationChain. If the two differ,
+ * the content will be scaled to fit width and height.
+ *
+ * The initial call to mir_surface_spec_add_presentation_chain or
+ * mir_surface_spec_add_buffer_stream will set the bottom-most content,
+ * and subsequent calls to either will stack the content on top.
+ *
+ * \warning         Setting the dimensions or displacements to exceed the 
+ *                  bounds of MirSurface may result in clipping to the size
+ *                  of the MirSurface, at the server's discretion.
+ *
+ * \param spec             The surface_spec to be updated.
+ * \param width            The width that the content will displayed at.
+ * \param height           The height that the content will be displayed at.
+ * \param displacement_x   The x displacement from the top-left corner of the MirSurface.
+ * \param displacement_y   The y displacement from the top-left corner of the MirSurface.
+ * \param chain            The chain containing the content to be displayed.
+ */
+void mir_surface_spec_add_presentation_chain(
+    MirSurfaceSpec* spec,
+    int width, int height,
+    int displacement_x, int displacement_y,
+    MirPresentationChain* chain);
+
+/**
+ * Set the MirSurfaceContent to display a MirBufferStream.
+ *
+ * The initial call to mir_surface_spec_add_presentation_chain or
+ * mir_surface_spec_add_buffer_stream will set the bottom-most content,
+ * and subsequent calls to either will stack the content on top.
+ *
+ * \warning         Setting the displacements to exceed the 
+ *                  bounds of MirSurface may result in clipping to the size
+ *                  of the MirSurface, at the server's discretion.
+ *
+ * \param spec             The surface_spec to be updated.
+ * \param displacement_x   The x displacement from the top-left corner of the MirSurface.
+ * \param displacement_y   The y displacement from the top-left corner of the MirSurface.
+ * \param stream           The stream containing the content to be displayed.
+ */
+void mir_surface_spec_add_buffer_stream(
+    MirSurfaceSpec* spec,
+    int displacement_x, int displacement_y,
+    MirBufferStream* stream);
 
 #ifdef __cplusplus
 }

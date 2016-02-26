@@ -771,26 +771,6 @@ TEST_F(MirConnectionTest, create_wait_handle_really_blocks)
     EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
 }
 
-TEST_F(MirConnectionTest, wait_handle_is_signalled_during_chain_creation_error)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
-        .WillOnce(Invoke([](mp::BufferStream& bs, google::protobuf::Closure*){ bs.set_error("bad"); }));
-    EXPECT_FALSE(connection->create_presentation_chain(nullptr, nullptr)->is_pending()); 
-}
-
-TEST_F(MirConnectionTest, wait_handle_is_signalled_during_chain_creation_exception)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
-        .WillOnce(DoAll(
-            Invoke([](mp::BufferStream&, google::protobuf::Closure* c){ c->Run(); }),
-            Throw(std::runtime_error("pay no attention to the man behind the curtain"))));
-    auto wh = connection->create_presentation_chain(nullptr, nullptr);
-    ASSERT_THAT(wh, Ne(nullptr));
-    EXPECT_FALSE(wh->is_pending()); 
-}
-
 TEST_F(MirConnectionTest, callback_is_invoked_after_chain_creation_error)
 {
     using namespace testing;

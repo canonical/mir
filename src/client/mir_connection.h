@@ -31,6 +31,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/client_types_nbs.h"
 #include "mir_surface.h"
+#include "display_configuration.h"
 
 #include <atomic>
 #include <memory>
@@ -132,6 +133,7 @@ public:
     void populate(MirPlatformPackage& platform_package);
     void populate_graphics_module(MirModuleProperties& properties);
     MirDisplayConfiguration* create_copy_of_display_config();
+    std::shared_ptr<mir::client::DisplayConfiguration::Config> snapshot_display_configuration() const;
     void available_surface_formats(MirPixelFormat* formats,
                                    unsigned int formats_size, unsigned int& valid_formats);
 
@@ -149,7 +151,7 @@ public:
         mir_buffer_stream_callback callback,
         void *context);
 
-    MirWaitHandle* create_presentation_chain(
+    void create_presentation_chain(
         mir_presentation_chain_callback callback,
         void *context);
     void release_presentation_chain(MirPresentationChain* context);
@@ -219,15 +221,13 @@ private:
     {
         ChainCreationRequest(mir_presentation_chain_callback cb, void* context) :
             callback(cb), context(context),
-            response(std::make_shared<mir::protobuf::BufferStream>()),
-            wh(std::make_shared<MirWaitHandle>())
+            response(std::make_shared<mir::protobuf::BufferStream>())
         {
         }
 
         mir_presentation_chain_callback callback;
         void* context;
         std::shared_ptr<mir::protobuf::BufferStream> response;
-        std::shared_ptr<MirWaitHandle> const wh;
     };
     std::vector<std::shared_ptr<ChainCreationRequest>> context_requests;
     void context_created(ChainCreationRequest*);

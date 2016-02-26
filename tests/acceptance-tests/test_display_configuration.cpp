@@ -103,7 +103,7 @@ void wait_for_server_actions_to_finish(mir::ServerActionQueue& server_action_que
 }
 }
 
-struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
+struct LegacyDisplayConfigurationTest : mtf::ConnectedClientWithASurface
 {
     void SetUp() override
     {
@@ -116,7 +116,7 @@ struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
     StubAuthorizer stub_authorizer;
 };
 
-TEST_F(DisplayConfigurationTest, display_configuration_reaches_client)
+TEST_F(LegacyDisplayConfigurationTest, display_configuration_reaches_client)
 {
     auto configuration = mir_connection_create_display_config(connection);
 
@@ -141,7 +141,7 @@ void display_change_handler(MirConnection* connection, void* context)
 }
 }
 
-TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clients)
+TEST_F(LegacyDisplayConfigurationTest, hw_display_change_notification_reaches_all_clients)
 {
     std::atomic<bool> callback_called{false};
 
@@ -175,7 +175,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
     mir_connection_release(unsubscribed_connection);
 }
 
-TEST_F(DisplayConfigurationTest, display_change_request_for_unauthorized_client_fails)
+TEST_F(LegacyDisplayConfigurationTest, display_change_request_for_unauthorized_client_fails)
 {
     stub_authorizer.allow_configure_display = false;
 
@@ -250,7 +250,7 @@ struct DisplayClient : SimpleClient
 };
 }
 
-TEST_F(DisplayConfigurationTest, changing_config_for_focused_client_configures_display)
+TEST_F(LegacyDisplayConfigurationTest, changing_config_for_focused_client_configures_display)
 {
     EXPECT_CALL(mock_display, configure(_)).Times(0);
 
@@ -271,7 +271,7 @@ TEST_F(DisplayConfigurationTest, changing_config_for_focused_client_configures_d
     display_client.disconnect();
 }
 
-TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_display)
+TEST_F(LegacyDisplayConfigurationTest, focusing_client_with_display_config_configures_display)
 {
     EXPECT_CALL(mock_display, configure(_)).Times(0);
 
@@ -300,7 +300,7 @@ TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_
     testing::Mock::VerifyAndClearExpectations(&mock_display);
 }
 
-TEST_F(DisplayConfigurationTest, changing_focus_from_client_with_config_to_client_without_config_configures_display)
+TEST_F(LegacyDisplayConfigurationTest, changing_focus_from_client_with_config_to_client_without_config_configures_display)
 {
     DisplayClient display_client{new_connection()};
     SimpleClient simple_client{new_connection()};
@@ -331,7 +331,7 @@ TEST_F(DisplayConfigurationTest, changing_focus_from_client_with_config_to_clien
     simple_client.disconnect();
 }
 
-TEST_F(DisplayConfigurationTest, hw_display_change_doesnt_apply_base_config_if_per_session_config_is_active)
+TEST_F(LegacyDisplayConfigurationTest, hw_display_change_doesnt_apply_base_config_if_per_session_config_is_active)
 {
     DisplayClient display_client{new_connection()};
 
@@ -373,7 +373,7 @@ void new_display_config_matches(MirConnection* connection, void* ctx)
 }
 }
 
-TEST_F(DisplayConfigurationTest, shell_initiated_display_configuration_notifies_clients)
+TEST_F(LegacyDisplayConfigurationTest, shell_initiated_display_configuration_notifies_clients)
 {
     using namespace testing;
 
@@ -415,7 +415,7 @@ TEST_F(DisplayConfigurationTest, shell_initiated_display_configuration_notifies_
     client.disconnect();
 }
 
-TEST_F(DisplayConfigurationTest,
+TEST_F(LegacyDisplayConfigurationTest,
        client_setting_base_config_configures_display_if_a_session_config_is_not_applied)
 {
     DisplayClient display_client{new_connection()};
@@ -434,7 +434,7 @@ TEST_F(DisplayConfigurationTest,
     display_client.disconnect();
 }
 
-TEST_F(DisplayConfigurationTest,
+TEST_F(LegacyDisplayConfigurationTest,
        client_setting_base_config_does_not_configure_display_if_a_session_config_is_applied)
 {
     DisplayClient display_client{new_connection()};
@@ -468,7 +468,7 @@ void display_config_change_handler(MirConnection*, void* context)
 }
 }
 
-TEST_F(DisplayConfigurationTest,
+TEST_F(LegacyDisplayConfigurationTest,
        client_is_notified_of_new_base_config_eventually_after_set_base_configuration)
 {
     DisplayClient display_client{new_connection()};
@@ -492,7 +492,7 @@ TEST_F(DisplayConfigurationTest,
     display_client.disconnect();
 }
 
-TEST_F(DisplayConfigurationTest,
+TEST_F(LegacyDisplayConfigurationTest,
        set_base_configuration_for_unauthorized_client_fails)
 {
     stub_authorizer.allow_set_base_display_configuration = false;
@@ -508,7 +508,7 @@ TEST_F(DisplayConfigurationTest,
     mir_connection_release(connection);
 }
 
-TEST_F(DisplayConfigurationTest, disconnection_of_client_with_display_config_reconfigures_display)
+TEST_F(LegacyDisplayConfigurationTest, disconnection_of_client_with_display_config_reconfigures_display)
 {
     EXPECT_CALL(mock_display, configure(_)).Times(0);
 
@@ -534,7 +534,7 @@ TEST_F(DisplayConfigurationTest, disconnection_of_client_with_display_config_rec
     testing::Mock::VerifyAndClearExpectations(&mock_display);
 }
 
-TEST_F(DisplayConfigurationTest,
+TEST_F(LegacyDisplayConfigurationTest,
        disconnection_without_releasing_surfaces_of_client_with_display_config_reconfigures_display)
 {
     EXPECT_CALL(mock_display, configure(_)).Times(0);

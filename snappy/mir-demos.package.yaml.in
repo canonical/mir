@@ -1,5 +1,0 @@
-name: mir-demos
-version: @MIR_VERSION@
-architecture: @MIR_PKG_ARCH@
-# frameworks: mir  # FIXME: LP: #1433489
-

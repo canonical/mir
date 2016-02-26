@@ -578,10 +578,22 @@ void mf::SessionMediator::modify_surface(
         std::vector<msh::StreamSpecification> stream_spec;
         for (auto& stream : surface_specification.stream())
         {
-            stream_spec.emplace_back(
-                msh::StreamSpecification{
-                    mf::BufferStreamId{stream.id().value()},
-                    geom::Displacement{stream.displacement_x(), stream.displacement_y()}});
+            if (stream.has_width() && stream.has_height())
+            {
+                stream_spec.emplace_back(
+                    msh::StreamSpecification{
+                        mf::BufferStreamId{stream.id().value()},
+                        geom::Displacement{stream.displacement_x(), stream.displacement_y()},
+                        geom::Size{stream.width(), stream.height()}});
+            }
+            else
+            {
+                stream_spec.emplace_back(
+                    msh::StreamSpecification{
+                        mf::BufferStreamId{stream.id().value()},
+                        geom::Displacement{stream.displacement_x(), stream.displacement_y()},
+                        {}});
+            }
         }
         mods.streams = std::move(stream_spec);
     }

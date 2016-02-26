@@ -32,7 +32,6 @@ class ErrorChain : public MirPresentationChain
 public:
     ErrorChain(
         MirConnection* connection,
-        std::shared_ptr<MirWaitHandle> const&,
         int id,
         std::string const& error_msg);
     void allocate_buffer(
@@ -46,7 +45,6 @@ public:
     char const* error_msg() const override;
 private:
     MirConnection* const connection_;
-    std::shared_ptr<MirWaitHandle> const wait_handle;
     int const stream_id;
     std::string const error;
 };
