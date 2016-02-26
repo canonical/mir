@@ -2,6 +2,7 @@ include(CMakeDependentOption)
 
 include_directories(
   ${CMAKE_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/tests/include  # Use for mir/test/death.h only
 )
 
 set(
@@ -66,11 +67,6 @@ mir_add_wrapped_executable(
 
   ${SOURCES}
   $<TARGET_OBJECTS:acceptance-test-throwback>
-)
-
-# Normally acceptance tests don't see private headers. Except this one:
-target_compile_options(mir_acceptance_tests PRIVATE
-  -include ${PROJECT_SOURCE_DIR}/tests/include/mir/test/death.h
 )
 
 mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)

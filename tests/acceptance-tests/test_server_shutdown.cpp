@@ -24,6 +24,7 @@
 #include "mir_test_framework/temporary_environment_value.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir/test/doubles/null_logger.h"
+#include "mir/test/death.h"
 
 #include <gtest/gtest.h>
 
