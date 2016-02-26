@@ -81,6 +81,11 @@ option(MIR_LINK_TIME_OPTIMIZATION "Enables the linker to optimize binaries." OFF
 if(MIR_LINK_TIME_OPTIMIZATION)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+  if(${CMAKE_COMPILER_IS_GNUCXX})
+    set(CMAKE_NM "gcc-nm")
+    set(CMAKE_AR "gcc-ar")
+    set(CMAKE_RANLIB "gcc-ranlib")
+  endif()
 endif()
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_lower)
