@@ -94,26 +94,35 @@ int main(int argc, char** argv)
     int arg = -1;
     int width = 400;
     int height = 400;
-    while ((arg = getopt (argc, argv, "m:w:h:")) != -1)
+    while ((arg = getopt (argc, argv, "m:s:h:")) != -1)
     {
         switch (arg)
         {
         case 'm':
             socket_file = optarg;
             break;
+        case 's':
+        {
+            unsigned int w, h;
+            if (sscanf(optarg, "%ux%u", &w, &h) == 2)
+            {
+                width = w;
+                height = h;
+            }
+            else
+            {
+                printf("Invalid size: %s, using default size\n", optarg);
+            }
+            break;
+        }
         case 'h':
-            height = atoi(optarg);
-            break;
-        case 'w':
-            width = atoi(optarg);
-            break;
         case '?':
         default:
             puts(argv[0]);
-            puts("Usage:");
-            puts("    -m <Mir server socket>");
-            puts("    -w width of window");
-            puts("    -h height of window");
+            printf("Usage:\n");
+            printf("    -m <Mir server socket>\n");
+            printf("    -s WIDTHxHEIGHT of window\n");
+            printf("    -h help dialog\n");
             return -1;
         }
     }
