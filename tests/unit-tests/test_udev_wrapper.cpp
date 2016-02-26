@@ -18,6 +18,7 @@
 
 #include "mir_test_framework/udev_environment.h"
 #include "mir/udev/wrapper.h"
+#include "mir/test/death.h"
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -293,7 +294,11 @@ TEST_F(UdevWrapperDeathTest, DereferencingEndReturnsInvalidObject)
 
     devices.scan_devices();
 
-    EXPECT_EXIT((*devices.end()).subsystem(), KilledByInvalidMemoryAccess, "");
+    EXPECT_EXIT(
+    {
+        mir::test::disable_core_dump();
+        (*devices.end()).subsystem();
+    }, KilledByInvalidMemoryAccess, "");
 
     auto iter = devices.begin();
 
@@ -301,7 +306,11 @@ TEST_F(UdevWrapperDeathTest, DereferencingEndReturnsInvalidObject)
     {
         iter++;
     }
-    EXPECT_EXIT((*iter).subsystem(), KilledByInvalidMemoryAccess, "");
+    EXPECT_EXIT(
+    {
+        mir::test::disable_core_dump();
+        (*iter).subsystem();
+    }, KilledByInvalidMemoryAccess, "");
 }
 
 TEST_F(UdevWrapperTest, MemberDereferenceWorks)
@@ -328,7 +337,11 @@ TEST_F(UdevWrapperDeathTest, MemberDereferenceOfEndDies)
 
     devices.scan_devices();
 
-    EXPECT_EXIT(devices.end()->subsystem(), KilledByInvalidMemoryAccess, "");
+    EXPECT_EXIT(
+    {
+        mir::test::disable_core_dump();
+        devices.end()->subsystem();
+    }, KilledByInvalidMemoryAccess, "");
 
     auto iter = devices.begin();
 
@@ -336,7 +349,11 @@ TEST_F(UdevWrapperDeathTest, MemberDereferenceOfEndDies)
     {
         iter++;
     }
-    EXPECT_EXIT(iter->subsystem(), KilledByInvalidMemoryAccess, "");
+    EXPECT_EXIT(
+    {
+        mir::test::disable_core_dump();
+        iter->subsystem();
+    }, KilledByInvalidMemoryAccess, "");
 }
 
 TEST_F(UdevWrapperTest, UdevMonitorDoesNotTriggerBeforeEnabling)
