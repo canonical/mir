@@ -66,10 +66,11 @@ static mir::cookie::Secret get_random_data(unsigned size)
 
     mir::cookie::Secret buffer(size);
     auto got = read(fd, buffer.data(), size);
+    int error = errno;
     close(fd);
     
     if (got != size)
-        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(),
+        BOOST_THROW_EXCEPTION(std::system_error(error, std::system_category(),
                                                 "read failed on urandom"));
 
     return buffer;
