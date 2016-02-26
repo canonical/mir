@@ -17,7 +17,10 @@
  *
  */
 
-#include <mir_toolkit/mir_buffer_stream_nbs.h>
+#include <mir_toolkit/mir_connection.h>
+#include <mir_toolkit/mir_buffer_stream.h>
+#include <mir_toolkit/mir_surface.h>
+#include <mir_toolkit/mir_presentation_chain.h>
 #include <mir_toolkit/mir_buffer.h>
 #include <sys/types.h>
 #include <signal.h>
@@ -27,21 +30,20 @@
 void fill_buffer(MirBuffer* buffer, int shade, int min, int max)
 {
     unsigned char val = (unsigned char) (((float) shade / (max-min)) + min) * 0xFF;
-    
-    MirGraphicsRegion* region = mir_buffer_acquire_region(buffer, mir_read_write);
-    if (!region)
+
+    MirGraphicsRegion region = mir_buffer_get_graphics_region(buffer, mir_read_write);
+    if (!region.vaddr)
         return;
 
-    unsigned char* px = (unsigned char*) region->vaddr;
-    for(int i = 0; i < region->height; i++)
+    unsigned char* px = (unsigned char*) region.vaddr;
+    for(int i = 0; i < region.height; i++)
     {
-        px += region->stride; 
-        for(int j = 0; j < region->width; j++)
+        px += region.stride; 
+        for(int j = 0; j < region.width; j++)
         {
             px[j] = val;
         }
     }
-    mir_buffer_release_region(region);
 }
 
 typedef struct SubmissionInfo
@@ -52,7 +54,7 @@ typedef struct SubmissionInfo
     pthread_cond_t cv;
 } SubmissionInfo;
 
-static void available_callback(MirBufferStream* stream, MirBuffer* buffer, void* client_context)
+static void available_callback(MirPresentationChain* stream, MirBuffer* buffer, void* client_context)
 {
     (void) stream;
     SubmissionInfo* info = (SubmissionInfo*) client_context;
@@ -78,15 +80,31 @@ int main(int argc, char** argv)
     signal(SIGTERM, shutdown);
     signal(SIGINT, shutdown);
 
-    //TODO: add connection stuff
-    MirBufferStream* stream = NULL;
-
-    int num_prerendered_frames = 20;
     int width = 20;
     int height = 25;
-    MirBufferUsage usage = mir_buffer_usage_software;
+    int displacement_x = 0;
+    int displacement_y = 0;
     MirPixelFormat format = mir_pixel_format_abgr_8888;
 
+    MirConnection* connection = mir_connect_sync(NULL, "prerendered_frames");
+    MirPresentationChain* chain =  mir_connection_create_presentation_chain_sync(connection);
+    if (!mir_presentation_chain_is_valid(chain))
+        return -1;
+
+    MirSurfaceSpec* spec =
+         mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+    MirSurface* surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    //reassociate for advanced control
+    spec = mir_create_surface_spec(connection);
+    mir_surface_spec_add_presentation_chain(
+        spec, width, height, displacement_x, displacement_y, chain);
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
+
+    int num_prerendered_frames = 20;
+    MirBufferUsage usage = mir_buffer_usage_software;
     SubmissionInfo buffer_available[num_prerendered_frames];
 
     for (int i = 0u; i < num_prerendered_frames; i++)
@@ -96,8 +114,8 @@ int main(int argc, char** argv)
         buffer_available[i].available = 0;
         buffer_available[i].buffer = NULL;
 
-        mir_buffer_stream_allocate_buffer(
-            stream, width, height, format, usage, available_callback, &buffer_available[i]);
+        mir_presentation_chain_allocate_buffer(
+            chain, width, height, format, usage, available_callback, &buffer_available[i]);
 
         pthread_mutex_lock(&buffer_available[i].lock);
         while(!buffer_available[i].buffer)
@@ -117,15 +135,15 @@ int main(int argc, char** argv)
         b = buffer_available[i].buffer;
         pthread_mutex_unlock(&buffer_available[i].lock);
 
-        if (!mir_buffer_stream_submit_buffer(stream, b))
-            rendering = false;
+        mir_presentation_chain_submit_buffer(chain, b);
 
         i = (i + 1) % num_prerendered_frames;
     }
 
     for (i = 0u; i < num_prerendered_frames; i++)
-        mir_buffer_stream_release_buffer(stream, buffer_available[i].buffer);
-
-    //TODO: connection shutdown stuff
+        mir_buffer_release(buffer_available[i].buffer);
+    mir_presentation_chain_release(chain);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
     return 0;
 }

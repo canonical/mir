@@ -18,6 +18,7 @@
 
 #include "connection_surface_map.h"
 #include "mir_surface.h"
+#include "presentation_chain.h"
 
 #include <boost/throw_exception.hpp>
 #include <sstream>
@@ -56,7 +57,7 @@ void mcl::ConnectionSurfaceMap::erase(mf::SurfaceId surface_id)
 }
 
 void mcl::ConnectionSurfaceMap::with_stream_do(
-    mf::BufferStreamId stream_id, std::function<void(ClientBufferStream*)> const& exec) const
+    mf::BufferStreamId stream_id, std::function<void(BufferReceiver*)> const& exec) const
 {
     std::shared_lock<decltype(guard)> lk(guard);
     auto const it = streams.find(stream_id);
@@ -73,7 +74,7 @@ void mcl::ConnectionSurfaceMap::with_stream_do(
     }
 }
 
-void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBufferStream*)> const& fn) const
+void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(BufferReceiver*)> const& fn) const
 {
     std::shared_lock<decltype(guard)> lk(guard);
     for(auto const& stream : streams)
@@ -81,7 +82,7 @@ void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBuf
 }
 
 void mcl::ConnectionSurfaceMap::insert(
-    mf::BufferStreamId stream_id, std::shared_ptr<ClientBufferStream> const& stream)
+    mf::BufferStreamId stream_id, std::shared_ptr<BufferReceiver> const& stream)
 {
     std::lock_guard<decltype(guard)> lk(guard);
     streams[stream_id] = stream;

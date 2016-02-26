@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HAL_COMPONENT_FACTORY_H_
 #define MIR_GRAPHICS_ANDROID_HAL_COMPONENT_FACTORY_H_
 
+#include "cmdstream_sync_factory.h"
 #include "display_component_factory.h"
 #include "display_resource_factory.h"
 
@@ -31,40 +32,48 @@ namespace android
 {
 class FramebufferBundle;
 class DisplayResourceFactory;
-class GraphicBufferAllocator;
 class DisplayDevice;
 class HwcWrapper;
 class HwcReport;
 class DeviceQuirks;
+class CommandStreamSyncFactory;
+class AndroidGraphicBufferAllocator;
+
 
 //NOTE: this should be the only class that inspects the HWC version and assembles
 //the components accordingly
-class HalComponentFactory : public DisplayComponentFactory
+class HalComponentFactory : public DisplayComponentFactory, public CommandStreamSyncFactory
 {
 public:
     HalComponentFactory(
-        std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<DisplayResourceFactory> const& res_factory,
         std::shared_ptr<HwcReport> const& hwc_report,
         std::shared_ptr<DeviceQuirks> const& quirks);
 
+    std::unique_ptr<CommandStreamSync> create_command_stream_sync() override;
     std::unique_ptr<FramebufferBundle> create_framebuffers(DisplayConfigurationOutput const&) override;
     std::unique_ptr<DisplayDevice> create_display_device() override;
     std::unique_ptr<HwcConfiguration> create_hwc_configuration() override;
     std::unique_ptr<LayerList> create_layer_list() override;
+    std::shared_ptr<graphics::GraphicBufferAllocator> the_buffer_allocator() override;
 
 private:
-    std::shared_ptr<GraphicBufferAllocator> const buffer_allocator;
+    std::unique_ptr<CommandStreamSyncFactory> create_command_stream_sync_factory();
+
     std::shared_ptr<DisplayResourceFactory> const res_factory;
     std::shared_ptr<HwcReport> const hwc_report;
 
     std::shared_ptr<FramebufferBundle> framebuffers;
     bool force_backup_display;
     size_t num_framebuffers;
+    bool working_egl_sync;
 
     std::shared_ptr<HwcWrapper> hwc_wrapper;
     std::shared_ptr<framebuffer_device_t> fb_native;
     HwcVersion hwc_version;
+
+    std::shared_ptr<graphics::android::AndroidGraphicBufferAllocator> buffer_allocator;
+    std::shared_ptr<CommandStreamSyncFactory> command_stream_sync_factory;
 };
 
 }

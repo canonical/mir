@@ -38,14 +38,6 @@ struct EGLExtensions
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC const glEGLImageTargetTexture2DOES;
 };
 
-struct EGLSyncExtensions
-{
-    EGLSyncExtensions();
-    PFNEGLCREATESYNCKHRPROC const eglCreateSyncKHR;
-    PFNEGLDESTROYIMAGEKHRPROC const eglDestroySyncKHR;
-    PFNEGLCLIENTWAITSYNCKHRPROC const eglClientWaitSyncKHR;
-};
-
 }
 }
 

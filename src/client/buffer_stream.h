@@ -65,12 +65,6 @@ class ClientPlatform;
 class PerfReport;
 struct MemoryRegion;
 
-enum BufferStreamMode
-{
-Producer, // As in surfaces
-Consumer // As in screencasts
-};
-
 class ServerBufferSemantics;
 class BufferStream : public EGLNativeSurface, public ClientBufferStream
 {
@@ -79,7 +73,6 @@ public:
         MirConnection* connection,
         std::shared_ptr<MirWaitHandle> creation_wait_handle,
         mir::client::rpc::DisplayServer& server,
-        BufferStreamMode mode,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
         mir::protobuf::BufferStream const& protobuf_bs,
         std::shared_ptr<PerfReport> const& perf_report,
@@ -136,34 +129,26 @@ protected:
 private:
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>&);
-    void screencast_buffer_received(std::function<void()> done);
     void on_swap_interval_set(int interval);
     void on_scale_set(float scale);
     void release_cpu_region();
     MirWaitHandle* force_swap_interval(int interval);
+    void init_swap_interval();
 
     mutable std::mutex mutex; // Protects all members of *this
 
     MirConnection* connection_;
     mir::client::rpc::DisplayServer& display_server;
-
-    BufferStreamMode const mode;
     std::shared_ptr<ClientPlatform> const client_platform;
-
     std::unique_ptr<mir::protobuf::BufferStream> protobuf_bs;
 
-    void init_swap_interval();
     bool fixed_swap_interval;
     int swap_interval_;
     float scale_;
 
     std::shared_ptr<mir::client::PerfReport> const perf_report;
-
     std::shared_ptr<EGLNativeWindowType> egl_native_window_;
 
-    MirWaitHandle create_wait_handle;
-    MirWaitHandle release_wait_handle;
-    MirWaitHandle screencast_wait_handle;
     MirWaitHandle interval_wait_handle;
     std::unique_ptr<mir::protobuf::Void> protobuf_void;
 

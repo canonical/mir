@@ -33,6 +33,7 @@ namespace android
 class GraphicBufferAllocator;
 class FramebufferFactory;
 class DisplayComponentFactory;
+class CommandStreamSyncFactory;
 
 class Platform : public graphics::Platform
 {

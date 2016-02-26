@@ -94,6 +94,11 @@ struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
     {
     }
 
+    std::shared_ptr<graphics::GraphicBufferAllocator> the_buffer_allocator()
+    {
+        return nullptr;
+    }
+
     std::unique_ptr<graphics::android::LayerList> create_layer_list()
     {
         return std::unique_ptr<graphics::android::LayerList>(
@@ -124,6 +129,11 @@ struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
             new testing::NiceMock<MockHwcConfiguration>()};
         fn(*mock_config);
         config = std::move(mock_config); 
+    }
+
+    std::unique_ptr<graphics::CommandStreamSync> create_command_stream_sync()
+    {
+        return std::make_unique<graphics::NullCommandSync>();
     }
 
     geometry::Size sz;

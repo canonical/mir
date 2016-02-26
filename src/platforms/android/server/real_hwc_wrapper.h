@@ -25,6 +25,7 @@
 
 #include <mutex>
 #include <unordered_map>
+#include <atomic>
 
 namespace mir
 {
@@ -86,6 +87,7 @@ private:
         std::function<void()> invalidate;
     };
     std::unordered_map<void const*, Callbacks> callback_map;
+    std::atomic<bool> is_plugged[HWC_NUM_DISPLAY_TYPES];
 };
 
 }

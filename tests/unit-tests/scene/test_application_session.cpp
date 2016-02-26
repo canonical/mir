@@ -574,15 +574,15 @@ TEST_F(ApplicationSession, sets_and_looks_up_surface_streams)
     auto stream_id2 = session->create_buffer_stream(stream_properties);
 
     std::list<ms::StreamInfo> info {
-        {streams[2], geom::Displacement{0,3}},
-        {streams[0], geom::Displacement{-1,1}},
-        {streams[1], geom::Displacement{0,2}}
+        {streams[2], geom::Displacement{0,3}, {}},
+        {streams[0], geom::Displacement{-1,1}, {}},
+        {streams[1], geom::Displacement{0,2}, {}}
     };
     EXPECT_CALL(*mock_surface, set_streams(Pointwise(StreamEq(), info)));
     session->configure_streams(*mock_surface, {
-        {stream_id2, geom::Displacement{0,3}},
-        {stream_id0, geom::Displacement{-1,1}},
-        {stream_id1, geom::Displacement{0,2}}
+        {stream_id2, geom::Displacement{0,3}, {}},
+        {stream_id0, geom::Displacement{-1,1}, {}},
+        {stream_id1, geom::Displacement{0,2}, {}}
     });
 }
 
@@ -610,6 +610,27 @@ TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
     EXPECT_THROW({
             session->get_buffer_stream(id);
     }, std::runtime_error);
+}
+
+TEST_F(ApplicationSession, buffer_stream_constructed_with_swapinterval_1)
+{
+    using namespace ::testing;
+    
+    geom::Size const buffer_size{geom::Width{1}, geom::Height{1}};
+
+    mtd::MockBufferStream stream;
+    MockBufferStreamFactory factory;
+
+    mg::BufferProperties properties(buffer_size, mir_pixel_format_argb_8888, mg::BufferUsage::software);
+
+    EXPECT_CALL(stream, allow_framedropping(true))
+        .Times(0); 
+    EXPECT_CALL(factory, create_buffer_stream(_,_,properties)).Times(1)
+        .WillOnce(Return(mt::fake_shared(stream)));
+
+    auto session = make_application_session_with_buffer_stream_factory(mt::fake_shared(factory));
+    auto id = session->create_buffer_stream(properties);
+    session->destroy_buffer_stream(id);
 }
 
 TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)

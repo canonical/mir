@@ -18,7 +18,9 @@
 
 #include "src/client/connection_surface_map.h"
 #include "src/client/mir_surface.h"
+#include "src/client/presentation_chain.h"
 #include "mir/test/doubles/mock_client_buffer_stream.h"
+#include "mir/test/doubles/mock_protobuf_server.h"
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
@@ -30,6 +32,10 @@ struct ConnectionResourceMap : testing::Test
     std::shared_ptr<MirWaitHandle> wh { std::make_shared<MirWaitHandle>() };
     std::shared_ptr<MirSurface> surface{std::make_shared<MirSurface>("a string", nullptr, mf::SurfaceId{2}, wh)};
     std::shared_ptr<mcl::ClientBufferStream> stream{ std::make_shared<mtd::MockClientBufferStream>() }; 
+    mtd::MockProtobufServer mock_server;
+    std::shared_ptr<mcl::PresentationChain> chain{ std::make_shared<mcl::PresentationChain>(
+        nullptr, 0, mock_server, nullptr) };
+
     mf::SurfaceId const surface_id{43};
     mf::BufferStreamId const stream_id{43};
 };
@@ -55,7 +61,7 @@ TEST_F(ConnectionResourceMap, removes_surface_when_surface_removed)
     map.insert(surface_id, surface);
     map.erase(surface_id);
     EXPECT_THROW({
-        map.with_stream_do(stream_id, [](mcl::ClientBufferStream*){});
+        map.with_stream_do(stream_id, [](mcl::BufferReceiver*){});
     }, std::runtime_error);
 }
 
@@ -65,10 +71,24 @@ TEST_F(ConnectionResourceMap, maps_streams)
     auto stream_called = false;
     mcl::ConnectionSurfaceMap map;
     map.insert(stream_id, stream);
-    map.with_stream_do(stream_id, [&](mcl::ClientBufferStream* str) {
+    map.with_stream_do(stream_id, [&](mcl::BufferReceiver* str) {
         EXPECT_THAT(str, Eq(stream.get()));
         stream_called = true;
     });
     EXPECT_TRUE(stream_called);
+    map.erase(stream_id);
+}
+
+TEST_F(ConnectionResourceMap, maps_chains)
+{
+    using namespace testing;
+    auto chain_called = false;
+    mcl::ConnectionSurfaceMap map;
+    map.insert(stream_id, chain);
+    map.with_stream_do(stream_id, [&](mcl::BufferReceiver* str) {
+        EXPECT_THAT(str, Eq(chain.get()));
+        chain_called = true;
+    });
+    EXPECT_TRUE(chain_called);
     map.erase(stream_id);
 }

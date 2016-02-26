@@ -40,7 +40,7 @@ struct LibInputDeviceDeleter
 };
 using LibInputDevicePtr = std::unique_ptr<libinput_device, LibInputDeviceDeleter>;
 
-LibInputDevicePtr make_libinput_device(std::shared_ptr<::libinput> const& lib, char const* path);
+LibInputDevicePtr make_libinput_device(std::shared_ptr<::libinput> const& lib, libinput_device* dev);
 }
 }
 }

@@ -360,7 +360,6 @@ mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProper
 {
     auto const id = static_cast<mf::BufferStreamId>(next_id().as_value());
     auto stream = buffer_stream_factory->create_buffer_stream(id, event_sink, props);
-    stream->allow_framedropping(true);
     
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     streams[id] = stream;
@@ -378,7 +377,10 @@ void ms::ApplicationSession::configure_streams(
 {
     std::list<ms::StreamInfo> list;
     for (auto& stream : streams)
-        list.emplace_back(ms::StreamInfo{checked_find(stream.stream_id)->second, stream.displacement});
+    {
+        auto s = checked_find(stream.stream_id)->second;
+        list.emplace_back(ms::StreamInfo{s, stream.displacement, stream.size});
+    }
     surface.set_streams(list); 
 }
 

@@ -31,10 +31,10 @@ void shutdown(int)
     stop.set_value(true);
 }
 
-auto make_input_devices(MirConnection* con)
+auto query_input_config(MirConnection* con)
 {
-    return std::unique_ptr<MirInputDevices, void (*)(MirInputDevices const*)>(mir_connection_create_input_devices(con),
-                                                                              &mir_input_devices_destroy);
+    return std::unique_ptr<MirInputConfig, void (*)(MirInputConfig const*)>(mir_connection_create_input_config(con),
+                                                                            &mir_input_config_destroy);
 }
 
 std::string capability_to_string(MirInputDeviceCapabilities caps)
@@ -51,23 +51,27 @@ std::string capability_to_string(MirInputDeviceCapabilities caps)
     return cap_string;
 }
 
-std::ostream& operator<<(std::ostream& out, MirInputDevices const& devs)
+std::ostream& operator<<(std::ostream& out, MirInputDevice const& dev)
 {
-    out << "Attached input devices:" << std::endl;
-    for (size_t i = 0; i != mir_input_devices_count(&devs); ++i)
-        out << mir_input_devices_get_id(&devs, i)
-            << ':' << mir_input_devices_get_name(&devs, i)
-            << ':' << mir_input_devices_get_unique_id(&devs, i)
-            << ' ' << capability_to_string(mir_input_devices_get_capabilities(&devs, i))
-            << std::endl;
-
-    return out<< std::endl;
+    return out << mir_input_device_get_id(&dev)
+            << ':' << mir_input_device_get_name(&dev)
+            << ':' << mir_input_device_get_unique_id(&dev)
+            << ' ' << capability_to_string(mir_input_device_get_capabilities(&dev));
 }
 
-void on_devices(MirConnection* connection, void*)
+std::ostream& operator<<(std::ostream& out, MirInputConfig const& config)
 {
-    auto devices = make_input_devices(connection);
-    std::cout << *devices;
+    out << "Attached input devices:" << std::endl;
+    for (size_t i = 0; i != mir_input_config_device_count(&config); ++i)
+        out << *mir_input_config_get_device(&config, i) << std::endl;
+
+    return out << std::endl;
+}
+
+void on_config_change(MirConnection* connection, void*)
+{
+    auto config = query_input_config(connection);
+    std::cout << *config;
 }
 
 int main(int argc, char const* argv[])
@@ -104,8 +108,8 @@ int main(int argc, char const* argv[])
         return 1;
     }
 
-    on_devices(conn, nullptr);
-    mir_connection_set_input_devices_change_callback(conn, on_devices, nullptr);
+    on_config_change(conn, nullptr);
+    mir_connection_set_input_config_change_callback(conn, on_config_change, nullptr);
     wait_for_stop.get();
     return 0;
 }

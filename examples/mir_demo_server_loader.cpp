@@ -19,11 +19,25 @@
 #include <dlfcn.h>
 #include <stdexcept>
 #include <iostream>
+#include <pthread.h>
 
 namespace
 {
 const char* const library = "libmir_demo_server_loadable.so";
 const char* const entry = "main";
+
+// Work around gold (or gcc/libstdc++-4.9 bug, it's not yet clear) bug
+// https://sourceware.org/bugzilla/show_bug.cgi?id=16417 by ensuring the
+// executable links with libpthread.
+struct GoldBug16417Workaround
+{
+    GoldBug16417Workaround()
+    {
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_attr_destroy(&attr);
+    }
+} gold_bug_16417_workaround;
 }
 
 int main(int argc, char const* argv[])

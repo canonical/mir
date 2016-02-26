@@ -103,6 +103,16 @@ struct DisplayHotplug : ::testing::Test
                 new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}, geom::Displacement{}));
         }
 
+        std::unique_ptr<mg::CommandStreamSync> create_command_stream_sync()
+        {
+            return nullptr;
+        }
+
+        std::shared_ptr<mg::GraphicBufferAllocator> the_buffer_allocator()
+        {
+            return nullptr;
+        }
+
         StubHwcConfig stub_config;
     };
 
