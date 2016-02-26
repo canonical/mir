@@ -34,6 +34,7 @@ mtd::FakeX11Resources::FakeX11Resources()
     visual_info.depth = 24;
     keypress_event_return.type = KeyPress;
     button_release_event_return.type = ButtonRelease;
+    button_release_event_return.xbutton.button = 0;
     expose_event_return.type = Expose;
     focus_in_event_return.type = FocusIn;
     focus_out_event_return.type = FocusOut;

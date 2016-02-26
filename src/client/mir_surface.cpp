@@ -605,10 +605,14 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
         for(auto const& stream : spec.streams.value())
         {
             auto const new_stream = surface_specification->add_stream();
-            new_stream->set_displacement_x(stream.displacement_x);
-            new_stream->set_displacement_y(stream.displacement_y);
-            new_stream->mutable_id()->set_value(
-                reinterpret_cast<mcl::ClientBufferStream*>(stream.stream)->rpc_id().as_value());
+            new_stream->set_displacement_x(stream.displacement.dx.as_int());
+            new_stream->set_displacement_y(stream.displacement.dy.as_int());
+            new_stream->mutable_id()->set_value(stream.stream_id);
+            if (stream.size.is_set())
+            {
+                new_stream->set_width(stream.size.value().width.as_int());
+                new_stream->set_height(stream.size.value().height.as_int());
+            }
         }
     }
 

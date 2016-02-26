@@ -141,3 +141,23 @@ void mclm::ClientBuffer::fill_update_msg(MirBufferPackage& package)
     package.data_items = 0;
     package.fd_items = 0;
 }
+
+MirNativeBuffer* mclm::ClientBuffer::as_mir_native_buffer() const
+{
+    //mesa has a POD native type for now. can return it directly to client API.
+    return native_buffer_handle().get();
+}
+
+void mclm::ClientBuffer::set_fence(MirNativeFence*, MirBufferAccess)
+{
+}
+
+MirNativeFence* mclm::ClientBuffer::get_fence() const
+{
+    return nullptr;
+}
+
+bool mclm::ClientBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
+{
+    return true;
+}
