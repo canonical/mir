@@ -26,6 +26,11 @@ extern "C" {
 #endif
 
 /**
+ * \addtogroup mir_toolkit
+ * @{
+ */
+
+/**
  * A descriptor for a display mode.
  *
  * A display mode contains all the information necessary to drive a display.  It
@@ -75,13 +80,14 @@ int mir_display_config_get_max_simultaneous_outputs(
 int mir_display_config_get_num_outputs(MirDisplayConfig const* config);
 
 /**
- * Get a read-only handle to the \param index 'th output of this configuration
+ * Get a read-only handle to the index 'th output of this configuration
  *
- * \note The MirOutput handle is only valid while \param config is valid.  \pre
- * 0 <= index < mir_display_config_get_num_outputs(config) \param [in]  config
- * The configuration to query \param [in]  index   The index of the output to
- * get.  \returns     A read-only handle to a MirOutput within \param config
- * which is valid until mir_display_config_release(config) is called.
+ * \note The MirOutput handle is only valid while config is valid.
+ * \pre 0 <= index < mir_display_config_get_num_outputs(config)
+ * \param [in]  config  The configuration to query
+ * \param [in]  index   The index of the output to get
+ * \returns     A read-only handle to a MirOutput within config which is valid
+ *              until mir_display_config_release(config) is called.
  */
 MirOutput const* mir_display_config_get_output(MirDisplayConfig const* config,
     size_t index);
@@ -93,7 +99,7 @@ MirOutput const* mir_display_config_get_output(MirDisplayConfig const* config,
  * by any applicable quirk tables, and may not be exhaustive.
  *
  * \param [in]  output  The MirOutput to query
- * \returns     The number of modes in the supported mode list of \param output.
+ * \returns     The number of modes in the supported mode list of output.
  */
 int mir_output_get_num_modes(MirOutput const* output);
 
@@ -104,13 +110,12 @@ int mir_output_get_num_modes(MirOutput const* output);
  * by any applicable quirk tables, and may not be exhaustive.
  *
  * \pre 0 <= index < mir_output_get_num_modes(output)
- * \note    The handle remains valid as long as \param output is valid.
+ * \note    The handle remains valid as long as output is valid.
  *
  * \param [in]  output  The MirOutput to query
  * \param [in]  index   The index of the mode to retrieve.
  * \returns     A handle for a description of the supported mode. This is valid
- *              for as long as \param output is valid. The return value is
- *              never null.
+ *              for as long as output is valid. The return value is never null.
  */
 MirOutputMode const* mir_output_get_mode(MirOutput const* output, size_t index);
 
@@ -123,12 +128,12 @@ MirOutputMode const* mir_output_get_mode(MirOutput const* output, size_t index);
  * An output may not have a preferred mode, in which case this call will return
  * NULL.
  *
- * \note    The handle remains valid as long as \param output is valid.
+ * \note    The handle remains valid as long as output is valid.
  *
  * \param [in]  output  The MirOutput to query
  * \returns     A handle for a description of the supported mode. This is valid
- *              for as long as \param output is valid. If the output does not
- *              have a preferred mode, it returns NULL.
+ *              for as long as output is valid. If the output does not have a
+ *              preferred mode, it returns NULL.
  */
 MirOutputMode const* mir_output_get_preferred_mode(MirOutput const* output);
 
@@ -138,12 +143,12 @@ MirOutputMode const* mir_output_get_preferred_mode(MirOutput const* output);
  * An output may not have a current mode (for example, if it is disabled), in
  * which case this call will return NULL.
  *
- * \note    The handle remains valid as long as \param output is valid.
+ * \note    The handle remains valid as long as output is valid.
  *
  * \param [in]  output  The MirOutput to query
  * \returns     A handle for a description of the supported mode. This is valid
- *              for as long as \param output is valid. If the output does not
- *              have a current mode, it returns NULL.
+ *              for as long as output is valid. If the output does not have a
+ *              current mode, it returns NULL.
  */
 MirOutputMode const* mir_output_get_current_mode(MirOutput const* output);
 
@@ -151,7 +156,7 @@ MirOutputMode const* mir_output_get_current_mode(MirOutput const* output);
  * Get the number of pixel formats supported by this output
  *
  * \param [in]  output  The MirOutput to query
- * \returns     The number of pixel formats for \param output.
+ * \returns     The number of pixel formats for output.
  */
 int mir_output_get_num_pixel_formats(MirOutput const* output);
 
@@ -162,10 +167,10 @@ int mir_output_get_num_pixel_formats(MirOutput const* output);
  *
  * \param [in] output  The MirOutput to query
  * \param [in] index   The index of the format to query
- * \returns    The \param index 'th supported pixel format.
+ * \returns    The index 'th supported pixel format.
  */
-MirPixelFormat mir_output_get_pixel_format(MirOutput const* output, size_t
-index);
+MirPixelFormat mir_output_get_pixel_format(MirOutput const* output,
+    size_t index);
 
 /**
  * Get the current pixel format.
@@ -191,8 +196,8 @@ void mir_output_set_pixel_format(MirOutput* output, MirPixelFormat format);
  * mir_surface_spec_set_fullscreen_on_output().
  *
  * \param [in]  output  The MirOutput to query.
- * \returns     The ID of \param output, which may be used to refer to it in
- *              other parts of the API.
+ * \returns     The ID of output, which may be used to refer to it in other
+ *              parts of the API.
  */
 int mir_output_get_id(MirOutput const* output);
 
@@ -308,7 +313,7 @@ int mir_output_get_physical_height_mm(MirOutput const* output);
  * connected.
  *
  * \param [in]  output  The MirOutput to query
- * \returns     The power state of the display connected to \param output.
+ * \returns     The power state of the display connected to output.
  */
 MirPowerMode mir_output_get_power_mode(MirOutput const* output);
 
@@ -316,7 +321,7 @@ MirPowerMode mir_output_get_power_mode(MirOutput const* output);
  * Get the orientation of a display.
  *
  * \param [in]  output  The MirOutput to query
- * \returns     The orientation of \param output
+ * \returns     The orientation of output
  */
 MirOrientation mir_output_get_orientation(MirOutput const* output);
 
@@ -326,7 +331,7 @@ MirOrientation mir_output_get_orientation(MirOutput const* output);
  * \note    This is unaffected by the orientation of the output
  *
  * \param [in] mode    The MirOutputMode to query
- * \returns     The width, in pixels, of \param mode.
+ * \returns     The width, in pixels, of mode.
  */
 int mir_output_mode_get_width(MirOutputMode const* mode);
 
@@ -335,16 +340,18 @@ int mir_output_mode_get_width(MirOutputMode const* mode);
  * \note    This is unaffected by the orientation of the output
  *
  * \param [in] mode    The MirOutputMode to query
- * \returns     The height, in pixels, of \param mode.
+ * \returns     The height, in pixels, of mode.
  */
 int mir_output_mode_get_height(MirOutputMode const* mode);
 
 /** Get the refresh rate, in Hz, of a MirOutputMode
  *
  * \param [in]  mode    The MirOutputMode to query
- * \returns     The refresh rate, in Hz, of \param mode
+ * \returns     The refresh rate, in Hz, of mode
  */
 double mir_output_mode_get_refresh_rate(MirOutputMode const* mode);
+
+/**@}*/
 
 #ifdef __cplusplus
 }
