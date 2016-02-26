@@ -46,13 +46,16 @@ void ml::DumbConsoleLogger::log(ml::Severity severity,
 
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
-    char now[32];
-    auto offset = strftime(now, sizeof(now), "%F %T", localtime(&ts.tv_sec));
-    snprintf(now+offset, sizeof(now)-offset, ".%06ld", ts.tv_nsec / 1000);
 
-    auto line = std::string{"["} + now + "] " +
-                lut[static_cast<int>(severity)] + component + ": " +
-                message + "\n";
-    auto written = write(fd, line.data(), line.size());
+    char line[2048];
+    auto len = strftime(line, sizeof(line), "[%F %T", localtime(&ts.tv_sec));
+    len += snprintf(line+len, sizeof(line)-len, ".%06ld] %s%s: %s\n",
+                    ts.tv_nsec / 1000,
+                    lut[static_cast<int>(severity)],
+                    component.c_str(), message.c_str());
+    if (len > sizeof(line))
+        len = sizeof(line);
+
+    auto written = write(fd, line, len);
     (void)written;
 }
