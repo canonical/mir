@@ -28,6 +28,7 @@
 #include "mir/frontend/surface_id.h"
 #include "mir/optional_value.h"
 #include "mir/geometry/dimensions.h"
+#include "mir/geometry/displacement.h"
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/graphics/native_buffer.h"
@@ -75,6 +76,13 @@ struct MemoryRegion;
 }
 }
 
+struct ContentInfo
+{
+    mir::geometry::Displacement displacement;
+    int stream_id;
+    mir::optional_value<mir::geometry::Size> size;
+};
+
 struct MirSurfaceSpec
 {
     MirSurfaceSpec();
@@ -112,7 +120,7 @@ struct MirSurfaceSpec
     mir::optional_value<int> height_inc;
     mir::optional_value<AspectRatio> min_aspect;
     mir::optional_value<AspectRatio> max_aspect;
-    mir::optional_value<std::vector<MirBufferStreamInfo>> streams;
+    mir::optional_value<std::vector<ContentInfo>> streams;
     mir::optional_value<std::vector<MirRectangle>> input_shape;
 
     struct EventHandler

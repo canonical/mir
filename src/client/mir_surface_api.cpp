@@ -20,10 +20,12 @@
 
 #include "mir_toolkit/mir_surface.h"
 #include "mir_toolkit/mir_wait.h"
+#include "mir_toolkit/mir_presentation_chain.h"
 #include "mir/require.h"
 
 #include "mir_connection.h"
 #include "mir_surface.h"
+#include "presentation_chain.h"
 #include "error_connections.h"
 #include "mir/uncaught.h"
 
@@ -554,13 +556,58 @@ try
 {
     mir::require(spec);
 
-    std::vector<MirBufferStreamInfo> copy;
+    std::vector<ContentInfo> copy;
     for (auto i = 0u; i < size; i++)
     {
         mir::require(mir_buffer_stream_is_valid(streams[i].stream));
-        copy.emplace_back(streams[i]);
+        copy.emplace_back(ContentInfo{
+            mir::geometry::Displacement{streams[i].displacement_x, streams[i].displacement_y},
+            reinterpret_cast<mcl::ClientBufferStream*>(streams[i].stream)->rpc_id().as_value(),
+            {}});
     }
     spec->streams = copy;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_add_presentation_chain(
+    MirSurfaceSpec* spec,
+    int width, int height,
+    int displacement_x, int displacement_y,
+    MirPresentationChain* client_chain)
+try
+{
+    mir::require(spec && client_chain);
+    auto chain = reinterpret_cast<mcl::PresentationChain*>(client_chain);
+
+    ContentInfo info{
+        {displacement_x, displacement_y}, chain->rpc_id(), mir::geometry::Size{width, height}};
+    if (spec->streams.is_set())
+        spec->streams.value().push_back(info);
+    else
+        spec->streams = std::vector<ContentInfo>{info}; 
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void mir_surface_spec_add_buffer_stream(
+    MirSurfaceSpec* spec,
+    int displacement_x, int displacement_y,
+    MirBufferStream* stream)
+try
+{
+    mir::require(spec && stream);
+    auto bs = reinterpret_cast<mcl::ClientBufferStream*>(stream);
+    ContentInfo info{{displacement_x, displacement_y}, bs->rpc_id().as_value(), {}};
+
+    if (spec->streams.is_set())
+        spec->streams.value().push_back(info);
+    else
+        spec->streams = std::vector<ContentInfo>{info}; 
 }
 catch (std::exception const& ex)
 {

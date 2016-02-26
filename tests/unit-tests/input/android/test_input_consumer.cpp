@@ -25,6 +25,7 @@
 #include "mir/geometry/point.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <chrono>
 #include <vector>
 #include <cstring>
