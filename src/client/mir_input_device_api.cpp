@@ -39,12 +39,6 @@ inline auto as_device(mir::input::DeviceData* data)
     return reinterpret_cast<MirInputDevice*>(data);
 }
 
-inline auto as_data(MirInputDevice* device)
-{
-    mir::require(device);
-    return reinterpret_cast<mir::input::DeviceData*>(device);
-}
-
 inline auto as_device(mir::input::DeviceData const* data)
 {
     mir::require(data);
