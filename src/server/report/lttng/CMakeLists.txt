@@ -5,6 +5,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LTTNG_UST_INCLUDE_DIRS})
 # harmless; it concerns a padding field)
 add_compile_options(-Wno-error=missing-field-initializers -Wno-error=unused-function)
 
+# Using LTO on the lttng DSO causes a gcc ICE.
+# Since LTO is reasonably uninteresting for the lttng tracer, disable it.
+string(REPLACE "-flto" "" NO_LTO_FLAGS ${CMAKE_C_FLAGS})
+set(CMAKE_C_FLAGS ${NO_LTO_FLAGS})
+
 set(
   LTTNG_SOURCES
 
