@@ -1009,6 +1009,11 @@ void MirConnection::release_consumer_stream(mir::client::ClientBufferStream* str
     surface_map->erase(stream->rpc_id());
 }
 
+std::shared_ptr<mcl::DisplayConfiguration::Config> MirConnection::snapshot_display_configuration() const
+{
+    return display_configuration->take_snapshot();
+}
+
 void MirConnection::create_presentation_chain(
     mir_presentation_chain_callback callback,
     void *context)

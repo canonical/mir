@@ -232,6 +232,20 @@ MirDisplayConfiguration* mir_connection_create_display_config(
     return nullptr;
 }
 
+MirDisplayConfig* mir_connection_create_display_configuration(
+    MirConnection* connection)
+{
+    mir::require(mir_connection_is_valid(connection));
+
+    return reinterpret_cast<MirDisplayConfig*>(new std::shared_ptr<mcl::DisplayConfiguration::Config>{connection->snapshot_display_configuration()});
+}
+
+void mir_display_config_release(MirDisplayConfig* user_config)
+{
+    auto config = reinterpret_cast<std::shared_ptr<mcl::DisplayConfiguration::Config>*>(user_config);
+    delete config;
+}
+
 void mir_connection_set_display_config_change_callback(
     MirConnection* connection,
     mir_display_config_callback callback,
