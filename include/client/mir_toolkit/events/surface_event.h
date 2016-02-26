@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-/*
+/**
  * Retrieve the attribute index configured with a given MirSurfaceEvent
  *
  * \param [in] Event The event
@@ -37,7 +37,7 @@ extern "C" {
  */
 MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev);
 
-/*
+/**
  * Retrieve the new value of the associated attribute for a given MirSurfaceEvent
  *
  * \param [in] Event The event
