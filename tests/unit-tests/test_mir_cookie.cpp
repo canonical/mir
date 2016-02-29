@@ -149,10 +149,8 @@ TEST(MirCookieAuthority, given_low_entropy_does_not_hang_or_crash)
     EXPECT_THAT(seconds, Lt(15));
 }
 
-TEST(MirCookieAuthority, DISABLED_makes_cookies_quickly)
+TEST(MirCookieAuthority, makes_cookies_quickly)
 {   // Regression test for LP: #1536662 and LP: #1541188
-    // Disabled: While it passes in isolation, it will cause later tests to
-    // fail unless the aforementioned bugs are fixed.
     using namespace testing;
 
     uint64_t timestamp = 23;
