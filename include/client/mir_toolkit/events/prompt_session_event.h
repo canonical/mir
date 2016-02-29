@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-/*
+/**
  * Retrieve the new prompt session state reported by a given MirPromptSessionEvent
  *
  * \param [in] event The prompt session event

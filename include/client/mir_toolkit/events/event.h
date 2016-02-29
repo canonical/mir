@@ -84,7 +84,7 @@ typedef union MirEvent MirEvent;
 extern "C" {
 #endif
 
-/*
+/**
  * Retrieves the type of a MirEvent. Now preferred over direct access to ev->type.
  * In particular ev->type will never be mir_event_type_input and mir_event_get_type
  * is the only way to ensure mir_event_get_input_event will succeed.
@@ -94,7 +94,7 @@ extern "C" {
  */
 MirEventType mir_event_get_type(MirEvent const* ev);
 
-/*
+/**
  * Retrieve the MirInputEvent associated with a MirEvent of 
  * type mir_event_type_input. See <mir_toolkit/events/input/input_event.h>
  * for accessors.
@@ -104,7 +104,7 @@ MirEventType mir_event_get_type(MirEvent const* ev);
  */
 MirInputEvent const* mir_event_get_input_event(MirEvent const* ev);
 
-/*
+/**
  * Retrieve the MirSurfaceEvent associated with a MirEvent of
  * type mir_event_type_surface. See <mir_toolkit/events/surface_event.h>
  * for accessors.
@@ -114,7 +114,7 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* ev);
  */
 MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* ev);
 
-/*
+/**
  * Retrieve the MirResizeEvent associated with a MirEvent of
  * type mir_event_type_resize. See <mir_toolkits/events/resize_event.h>
  * for accessors.
@@ -124,7 +124,7 @@ MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* ev);
  */
 MirResizeEvent const* mir_event_get_resize_event(MirEvent const* ev);
 
-/*
+/**
  * Retrieve the MirPromptSessionEvent associated with a MirEvent of
  * type mir_event_type_prompt_session_state_change. See <mir_toolkits/events/prompt_session_event.h>
  * for accessors.
@@ -134,7 +134,7 @@ MirResizeEvent const* mir_event_get_resize_event(MirEvent const* ev);
  */
 MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* ev);
 
-/*
+/**
  * Retrieve the MirOrientationEvent associated with a MirEvent of
  * type mir_event_type_orientation. See <mir_toolkit/events/orientation_event.h>
  * for accessors.
@@ -144,7 +144,7 @@ MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* 
  */
 MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev);
 
-/*
+/**
  * Retrieve the MirCloseSurfaceEvent associated with a MirEvent of
  * type mir_event_type_close_surface. The event is a request to close
  * the surface it is delivered to and has no accessors.
@@ -160,7 +160,7 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev);
 __attribute__ ((deprecated))
 MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev);
 
-/*
+/**
  * Retrieve the MirKeymapEvent associated with a MirEvent of
  * type mir_event_type_keymap. The event signifies that the keymap
  * applied for the relevant surface has changed.
@@ -170,7 +170,7 @@ MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev
  */
 MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev);
 
-/*
+/**
  * Retrieve the MirInputConfiguration associated with a MirEvent of
  * type mir_event_type_input_configuration. The event signifies that the
  * input device configuration has changed.
@@ -213,7 +213,7 @@ MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* 
  *
  */
 
-/*
+/**
  * Reference this MirEvent and return a pointer to the
  * newly referenced instance
  *
@@ -222,7 +222,7 @@ MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* 
  */
 MirEvent const* mir_event_ref(MirEvent const* ev) __attribute__((warn_unused_result));
 
-/*
+/**
  * Release a reference to a MirEvent.
  *
  * \param[in] The event to un-reference
