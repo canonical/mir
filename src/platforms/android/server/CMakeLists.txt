@@ -13,7 +13,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
 
 add_library(mirplatformgraphicsandroidobjects OBJECT
   platform.cpp
-  android_buffer_allocator.cpp
+  graphic_buffer_allocator.cpp
   buffer.cpp
   display.cpp
   display_group.cpp
@@ -25,7 +25,7 @@ add_library(mirplatformgraphicsandroidobjects OBJECT
   hwc_fb_device.cpp
   hwc_loggers.cpp
   hwc_device.cpp
-  android_alloc_adaptor.cpp
+  gralloc_module.cpp
   server_render_window.cpp
   resource_factory.cpp
   framebuffers.cpp
