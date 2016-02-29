@@ -28,10 +28,10 @@ add_subdirectory(renderers/)
 add_subdirectory(gl/)
 
 add_executable(wrapper wrapper.c)
-set_property(TARGET wrapper
-             APPEND_STRING PROPERTY COMPILE_FLAGS " -DEXECUTABLE_FORMAT=\\\"%s.bin\\\"")
-set_property(TARGET wrapper
-             APPEND_STRING PROPERTY COMPILE_FLAGS " -D_DEFAULT_SOURCE -D_BSD_SOURCE")
+target_compile_definitions(wrapper PUBLIC
+    EXECUTABLE_FORMAT=\"%s.bin\"
+    _DEFAULT_SOURCE
+    _BSD_SOURCE)
 
 set(
   MIR_GENERATED_INCLUDE_DIRECTORIES
