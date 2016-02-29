@@ -52,7 +52,7 @@ public:
     auto handle_place_new_surface(
         std::shared_ptr<scene::Session> const& session,
         scene::SurfaceCreationParameters const& request_parameters)
-    -> scene::SurfaceCreationParameters;
+    -> scene::SurfaceCreationParameters override;
 
     void handle_new_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface) override;
 
