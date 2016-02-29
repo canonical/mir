@@ -29,14 +29,16 @@
 extern "C" {
 #endif
 
-/* Queries the size needed to serialize a given cookie
+/**
+ * Queries the size needed to serialize a given cookie
  *
  * \params[in] cookie A cookie instance
  * \return            The size of the serialized representation of the given cookie
  */
 size_t mir_cookie_buffer_size(MirCookie const* cookie);
 
-/* Serializes a cookie into the given buffer
+/**
+ * Serializes a cookie into the given buffer
  *
  * \pre The size must be equal to mir_cookie_size
  * \params[in] cookie A cookie instance
@@ -46,7 +48,8 @@ size_t mir_cookie_buffer_size(MirCookie const* cookie);
  */
 void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size);
 
-/* Create a cookie from a serialized representation
+/**
+ * Create a cookie from a serialized representation
  *
  * \params[in] buffer The buffer containing a serialized cookie.
  *                    The buffer may be freed immediately after this call.
@@ -57,7 +60,8 @@ void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size);
  */
 MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size);
 
-/* Release the MirCookie
+/**
+ * Release the MirCookie
  *
  * \params[in] cookie The cookie to release
  */
