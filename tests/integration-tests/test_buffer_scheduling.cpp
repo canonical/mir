@@ -1001,11 +1001,12 @@ TEST_P(WithTwoOrMoreBuffers, buffers_ready_eventually_reaches_zero)
     {
         ASSERT_NE(0, stream->buffers_ready_for_compositor(consumer));
 
-        // Double consume to account for the +1 that
+        // Multi-consume to account for the extra that
         // buffers_ready_for_compositor adds to do dynamic performance
         // detection.
-        consumer->consume();
-        consumer->consume();
+        int const max_extra_scheduling = 50;
+        for (int c = 0; c < max_extra_scheduling; ++c)
+            consumer->consume();
 
         ASSERT_EQ(0, stream->buffers_ready_for_compositor(consumer));
     }
@@ -1054,14 +1055,26 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
             client_release();
     } while (!blocking);
 
+    int throttled_count = 0;
+
     for (int f = 0; f < 100; ++f)
     {
         ASSERT_FALSE(client_buffer);
         queue.compositor_release(onscreen);
-        ASSERT_TRUE(client_buffer) << "frame# " << f;
-        client_release();
-        onscreen = queue.compositor_acquire(this);
-        client_try_acquire();
+        if (client_buffer)
+        { // This should always happen if dynamic queue scaling is disabled...
+            client_release();
+            onscreen = queue.compositor_acquire(this);
+            client_try_acquire();
+            throttled_count = 0;
+        }
+        else
+        {
+            ASSERT_THAT(queue.scaling_delay(), Ge(0));
+            ++throttled_count;
+            ASSERT_THAT(throttled_count, Le(nbuffers));
+            onscreen = queue.compositor_acquire(this);
+        }
     }
 }
 
@@ -1114,15 +1127,19 @@ TEST_P(WithTwoOrMoreBuffers, short_buffer_holds_dont_overclock_multimonitor)
 
     for (int f = 0; f < 100; ++f)
     {
+        // These two assertions are the important ones
         ASSERT_FALSE(client_buffer);
         queue.compositor_release(left);
         queue.compositor_release(right);
         ASSERT_FALSE(client_buffer);
         left = queue.compositor_acquire(leftid);
         right = queue.compositor_acquire(rightid);
-        ASSERT_TRUE(client_buffer);
-        client_release();
-        client_try_acquire();
+        // Note: This is only reliably true when queue scaling is disabled:
+        if (client_buffer)
+        {
+            client_release();
+            client_try_acquire();
+        } // else dynamic queue scaling is throttling us.
     }
 }
 
@@ -1392,7 +1409,7 @@ TEST_P(WithThreeOrMoreBuffers, greedy_compositors_scale_to_triple_buffers)
     std::shared_ptr<mg::Buffer> second;
     producer->produce();
     producer->produce();
-    for (auto i = 0u; i < 20u; i++)
+    for (auto i = 0u; i < 100u; i++)
     {
         first = consumer->consume_resource();
         second = consumer->consume_resource();

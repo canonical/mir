@@ -46,7 +46,7 @@ typedef enum
     mir_input_configuration_action_device_reset
 } MirInputConfigurationAction;
 
-/*
+/**
  * Retrieve the input configuration action which occurred.
  *
  * \param[in] ev The input configuration event
@@ -54,7 +54,7 @@ typedef enum
  */
 MirInputConfigurationAction mir_input_configuration_event_get_action(MirInputConfigurationEvent const* ev);
 
-/*
+/**
  * Retreive the time associated with a MirInputConfiguration event
 
  * \param[in] ev The input configuration event
@@ -62,7 +62,7 @@ MirInputConfigurationAction mir_input_configuration_event_get_action(MirInputCon
  */
 int64_t mir_input_configuration_event_get_time(MirInputConfigurationEvent const* ev);
 
-/*
+/**
  * Retreive the device id associated with a MirInputConfiguration event
 
  * \param[in] ev The input configuration event

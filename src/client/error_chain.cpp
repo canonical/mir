@@ -25,11 +25,9 @@ namespace mp = mir::protobuf;
 
 mcl::ErrorChain::ErrorChain(
     MirConnection* connection,
-    std::shared_ptr<MirWaitHandle> const& wh,
     int id,
     std::string const& error_msg) :
     connection_(connection),
-    wait_handle(wh),
     stream_id(id),
     error(error_msg)
 {

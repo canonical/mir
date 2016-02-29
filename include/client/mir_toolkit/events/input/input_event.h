@@ -82,7 +82,7 @@ typedef unsigned int MirInputEventModifiers;
 extern "C" {
 #endif
 
-/*
+/**
  * Retrieves the device id responsible for generating an input event.
  *
  * \param [in] event The input event
@@ -90,7 +90,7 @@ extern "C" {
  */
 MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev);
 
-/*
+/**
  * Retrieve the time at which an input event occured.
  *
  * \param [in] event The input event
@@ -98,7 +98,7 @@ MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev);
  */
 int64_t mir_input_event_get_event_time(MirInputEvent const* ev);
 
-/*
+/**
  * Retrieve the type of an input event (e.g. key, touch...)
  *
  * \param [in] event The input event
@@ -106,7 +106,7 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev);
  */
 MirInputEventType mir_input_event_get_type(MirInputEvent const* ev);
 
-/*
+/**
  * Retrieve the MirKeyboardEvent associated with a given input event.
  *
  * \param[in] event The input event
@@ -115,7 +115,7 @@ MirInputEventType mir_input_event_get_type(MirInputEvent const* ev);
  */
 MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* ev);
 
-/*
+/**
  * Retrieve the MirTouchEvent associated with a given input event.
  *
  * \param[in] event The input event
@@ -124,7 +124,7 @@ MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* 
  */
 MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev);
 
-/*
+/**
  * Retrieve the MirPointerEvent associated with a given input event.
  *
  * \param[in] event The input event
@@ -133,14 +133,16 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev);
  */
 MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev);
 
-/* Query if an input event contains a cookie
+/**
+ * Query if an input event contains a cookie
  *
  * \params[in] ev The input event
  * \return        True if the input event contains a cookie
  */
 bool mir_input_event_has_cookie(MirInputEvent const* ev);
 
-/* Returns the cookie associated with an input event.
+/**
+ * Returns the cookie associated with an input event.
  *
  * \pre The input event must have a MirCookie
  * \params[in] ev An input event

@@ -20,21 +20,25 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics//default_display_configuration_policy.h"
+#include "mir/time/steady_clock.h"
+#include "mir/glib_main_loop.h"
 #include "src/platforms/mesa/server/kms/platform.h"
 #include "src/platforms/mesa/server/kms/kms_display_configuration.h"
-#include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/test/doubles/null_virtual_terminal.h"
+
+#include "mir/test/signal.h"
+#include "mir/test/auto_unblock_thread.h"
 
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/mock_gbm.h"
+#include "mir/test/doubles/null_emergency_cleanup.h"
+#include "mir/test/doubles/null_virtual_terminal.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/stub_gl_program_factory.h"
 
 #include "mir_test_framework/udev_environment.h"
-
-#include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/mock_gbm.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -44,6 +48,7 @@
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
+namespace mt  = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
@@ -64,6 +69,24 @@ mg::DisplayConfigurationMode conf_mode_from_drm_mode(drmModeModeInfo const& mode
 
     return mg::DisplayConfigurationMode{size, vrefresh_hz};
 }
+
+struct MainLoop
+{
+    MainLoop()
+    {
+        int const owner{0};
+        mt::Signal mainloop_started;
+        ml.enqueue(&owner, [&] { mainloop_started.raise(); });
+        mt::AutoUnblockThread t([this]{ml.stop();}, [this]{ml.run();});
+        bool const started = mainloop_started.wait_for(std::chrono::seconds(10));
+        if (!started)
+            throw std::runtime_error("Failed to start main loop");
+
+        ml_thread = std::move(t);
+    }
+    mir::GLibMainLoop ml{std::make_shared<mir::time::SteadyClock>()};
+    mt::AutoUnblockThread ml_thread;
+};
 
 class MesaDisplayConfigurationTest : public ::testing::Test
 {
@@ -362,6 +385,7 @@ TEST_F(MesaDisplayConfigurationTest, get_kms_connector_id_throws_on_invalid_id)
 TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
 {
     using namespace ::testing;
+    using namespace std::chrono_literals;
 
     uint32_t const invalid_id{0};
     std::vector<uint32_t> const crtc_ids{10, 11};
@@ -468,6 +492,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
 
     /* Set up DRM resources and check */
     mtd::FakeDRMResources& resources(mock_drm.fake_drm);
+    auto const syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
 
     resources.reset();
 
@@ -530,6 +555,13 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
 
     resources.prepare();
 
+    /* Fake a device change so display can fetch updated configuration*/
+    MainLoop ml;
+    mt::Signal handler_signal;
+    display->register_configuration_change_handler(ml.ml, [&handler_signal]{handler_signal.raise();});
+    fake_devices.emit_device_changed(syspath);
+    ASSERT_TRUE(handler_signal.wait_for(10s));
+
     conf = display->configuration();
 
     card_count = 0;
@@ -556,6 +588,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
 TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
 {
     using namespace ::testing;
+    using namespace std::chrono_literals;
 
     uint32_t const crtc_ids[1] = {10};
     uint32_t const encoder_ids[2] = {20, 21};
@@ -612,6 +645,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
     };
 
     mtd::FakeDRMResources& resources(mock_drm.fake_drm);
+    auto const syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
 
     resources.reset();
     resources.add_crtc(crtc_ids[0], modes0[1]);
@@ -644,6 +678,12 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
                             connector_physical_sizes_mm_after);
     resources.prepare();
 
+    MainLoop ml;
+    mt::Signal handler_signal;
+    display->register_configuration_change_handler(ml.ml, [&handler_signal]{handler_signal.raise();});
+    fake_devices.emit_device_changed(syspath);
+    ASSERT_TRUE(handler_signal.wait_for(10s));
+
     conf = display->configuration();
     output_count = 0;
     conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
@@ -653,4 +693,45 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
         ++output_count;
     });
     EXPECT_EQ(noutputs, output_count);
+}
+
+TEST_F(MesaDisplayConfigurationTest, does_not_query_drm_unnecesarily)
+{
+    using namespace ::testing;
+    using namespace std::chrono_literals;
+
+    uint32_t const crtc_id{10};
+    uint32_t const encoder_id{20};
+    uint32_t const connector_id{30};
+    geom::Size const connector_physical_sizes_mm{480, 270};
+    std::vector<uint32_t> possible_encoder_ids_empty;
+
+    uint32_t const possible_crtcs_mask_empty{0};
+    mtd::FakeDRMResources& resources(mock_drm.fake_drm);
+    resources.reset();
+    resources.add_crtc(crtc_id, modes0[1]);
+    resources.add_encoder(encoder_id, crtc_id, possible_crtcs_mask_empty);
+    resources.add_connector(connector_id, DRM_MODE_CONNECTOR_Composite,
+                            DRM_MODE_CONNECTED, encoder_id,
+                            modes0, possible_encoder_ids_empty,
+                            connector_physical_sizes_mm);
+    resources.prepare();
+
+    auto const syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
+
+    auto display = create_display(create_platform());
+
+    // No display change reported yet so display should not query drm
+    EXPECT_CALL(mock_drm, drmModeGetConnector(_,_)).Times(0);
+    display->configuration();
+
+    // Now signal a device change
+    MainLoop ml;
+    mt::Signal handler_signal;
+    display->register_configuration_change_handler(ml.ml, [&handler_signal]{handler_signal.raise();});
+    fake_devices.emit_device_changed(syspath);
+    ASSERT_TRUE(handler_signal.wait_for(10s));
+
+    EXPECT_CALL(mock_drm, drmModeGetConnector(_,_)).Times(1);
+    display->configuration();
 }

@@ -26,25 +26,40 @@
 #include <signal.h>
 #include <string.h>
 #include <pthread.h>
+#include <math.h>
+#include <stdlib.h>
+#include <getopt.h>
 
-void fill_buffer(MirBuffer* buffer, int shade, int min, int max)
+float distance(int x0, int y0, int x1, int y1)
 {
-    unsigned char val = (unsigned char) (((float) shade / (max-min)) + min) * 0xFF;
-    
-    MirGraphicsRegion* region = mir_buffer_acquire_region(buffer, mir_read_write);
-    if (!region)
-        return;
+    float dx = x1 - x0;
+    float dy = y1 - y0; 
+    return sqrt((dx * dx +  dy * dy));
+}
 
-    unsigned char* px = (unsigned char*) region->vaddr;
-    for(int i = 0; i < region->height; i++)
+void fill_buffer_with_centered_circle_abgr(
+    MirBuffer* buffer, float radius, unsigned int fg, unsigned int bg)
+{
+    MirGraphicsRegion region = mir_buffer_get_graphics_region(buffer, mir_read_write);
+    if ((!region.vaddr) || (region.pixel_format != mir_pixel_format_abgr_8888))
+        return;
+    int const center_x = region.width / 2;
+    int const center_y = region.height / 2; 
+    unsigned char* vaddr = (unsigned char*) region.vaddr;
+    for(int i = 0; i < region.height; i++)
     {
-        px += region->stride; 
-        for(int j = 0; j < region->width; j++)
+        unsigned int* pixel = (unsigned int*) vaddr;
+        for(int j = 0; j < region.width ; j++)
         {
-            px[j] = val;
+            int const centered_i = i - center_y;
+            int const centered_j = j - center_x; 
+            if (distance(0,0, centered_i, centered_j) > radius)
+                pixel[j] = bg;
+            else
+                pixel[j] = fg;
         }
+        vaddr += region.stride; 
     }
-    mir_buffer_release_region(region);
 }
 
 typedef struct SubmissionInfo
@@ -55,9 +70,9 @@ typedef struct SubmissionInfo
     pthread_cond_t cv;
 } SubmissionInfo;
 
-static void available_callback(MirPresentationChain* stream, MirBuffer* buffer, void* client_context)
+static void available_callback(MirPresentationChain* chain, MirBuffer* buffer, void* client_context)
 {
-    (void) stream;
+    (void)chain;
     SubmissionInfo* info = (SubmissionInfo*) client_context;
     pthread_mutex_lock(&info->lock);
     info->available = 1;
@@ -75,35 +90,75 @@ static void shutdown(int signum)
 
 int main(int argc, char** argv)
 {
-    (void) argc;
-    (void) argv;
+    static char const *socket_file = NULL;
+    int arg = -1;
+    int width = 400;
+    int height = 400;
+    while ((arg = getopt (argc, argv, "m:s:h:")) != -1)
+    {
+        switch (arg)
+        {
+        case 'm':
+            socket_file = optarg;
+            break;
+        case 's':
+        {
+            unsigned int w, h;
+            if (sscanf(optarg, "%ux%u", &w, &h) == 2)
+            {
+                width = w;
+                height = h;
+            }
+            else
+            {
+                printf("Invalid size: %s, using default size\n", optarg);
+            }
+            break;
+        }
+        case 'h':
+        case '?':
+        default:
+            puts(argv[0]);
+            printf("Usage:\n");
+            printf("    -m <Mir server socket>\n");
+            printf("    -s WIDTHxHEIGHT of window\n");
+            printf("    -h help dialog\n");
+            return -1;
+        }
+    }
 
     signal(SIGTERM, shutdown);
     signal(SIGINT, shutdown);
 
-    int width = 20;
-    int height = 25;
+    int displacement_x = 0;
+    int displacement_y = 0;
+    unsigned int fg = 0xFF1448DD;
+    unsigned int bg = 0xFF6F2177;
     MirPixelFormat format = mir_pixel_format_abgr_8888;
 
-    MirConnection* connection = mir_connect_sync(NULL, "prerendered_frames");
-
-    MirSurfaceSpec* spec =
-        mir_connection_create_spec_for_normal_surface(connection, width, height, format);
-    MirSurface* surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
+    MirConnection* connection = mir_connect_sync(socket_file, "prerendered_frames");
+    if (!mir_connection_is_valid(connection))
+    {
+        printf("could not connect to server file at: %s\n", socket_file);
+        return -1;
+    }
 
     MirPresentationChain* chain =  mir_connection_create_presentation_chain_sync(connection);
     if (!mir_presentation_chain_is_valid(chain))
+    {
+        printf("could not create MirPresentationChain\n");
         return -1;
+    }
+
+    MirSurfaceSpec* spec = mir_connection_create_spec_for_normal_surface(connection, width, height, format);
+    MirSurface* surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
 
     //reassociate for advanced control
-    MirBufferStreamInfo info;
-    info.displacement_x = 0;
-    info.displacement_y = 0;
-    //will make this a union.
-    info.stream = (MirBufferStream*) chain;
     spec = mir_create_surface_spec(connection);
-    mir_surface_spec_set_streams(spec, &info, 1);
+    mir_surface_spec_add_presentation_chain(
+        spec, width, height, displacement_x, displacement_y, chain);
+    mir_surface_apply_spec(surface, spec);
     mir_surface_spec_release(spec);
 
     int num_prerendered_frames = 20;
@@ -123,11 +178,16 @@ int main(int argc, char** argv)
         pthread_mutex_lock(&buffer_available[i].lock);
         while(!buffer_available[i].buffer)
             pthread_cond_wait(&buffer_available[i].cv, &buffer_available[i].lock);
-        fill_buffer(buffer_available[i].buffer, i, 0, num_prerendered_frames);
+
+        float max_radius = distance(0, 0, width, height) / 2.0f;
+        float radius_i = ((float) i + 1) / num_prerendered_frames * max_radius;
+        fill_buffer_with_centered_circle_abgr(buffer_available[i].buffer, radius_i, fg, bg);
+
         pthread_mutex_unlock(&buffer_available[i].lock);
     }
 
     int i = 0;
+    int inc = -1;
     while (rendering)
     {
         MirBuffer* b;
@@ -140,7 +200,9 @@ int main(int argc, char** argv)
 
         mir_presentation_chain_submit_buffer(chain, b);
 
-        i = (i + 1) % num_prerendered_frames;
+        if ((i == num_prerendered_frames - 1) || (i == 0))
+            inc *= -1; 
+        i = i + inc;
     }
 
     for (i = 0u; i < num_prerendered_frames; i++)
