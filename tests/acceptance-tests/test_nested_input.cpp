@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,6 +17,8 @@
  */
 
 #include "mir/input/input_device_info.h"
+#include "mir/input/input_device_hub.h"
+#include "mir/input/device.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/composite_event_filter.h"
 
@@ -27,9 +29,10 @@
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/doubles/nested_mock_egl.h"
+#include "mir/test/doubles/mock_input_device_observer.h"
 #include "mir/test/event_factory.h"
 #include "mir/test/event_matchers.h"
-#include "mir/test/fake_shared.h"
+#include "mir/test/wait_condition.h"
 #include "mir/test/wait_condition.h"
 #include "mir/test/spin_wait.h"
 
@@ -68,7 +71,7 @@ std::vector<geom::Rectangle> const display_geometry
     {{  0, 0}, { 640,  480}},
     {{480, 0}, {1920, 1080}}
 };
-    
+
 struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
 {
     NestedServerWithMockEventFilter(std:: string const& connection_string)
@@ -76,7 +79,6 @@ struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
     {
         start_server();
         server.the_composite_event_filter()->append(mock_event_filter);
-        
     }
     ~NestedServerWithMockEventFilter()
     {
@@ -88,7 +90,6 @@ struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
 
 struct NestedInput : public mtf::HeadlessInProcessServer
 {
-
     void SetUp()
     {
         initial_display_layout(display_geometry);
@@ -103,6 +104,10 @@ struct NestedInput : public mtf::HeadlessInProcessServer
     };
 
     mir::test::WaitCondition all_events_received;
+    mir::test::WaitCondition input_device_changes_complete;
+
+    std::shared_ptr<NiceMock<mtd::MockInputDeviceObserver>> mock_observer{
+        std::make_shared<NiceMock<mtd::MockInputDeviceObserver>>()};
 };
 
 struct ExposedSurface
@@ -171,4 +176,53 @@ TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_RIGHTSHIFT));
 
     all_events_received.wait_for_at_most_seconds(10);
+}
+
+TEST_F(NestedInput, nested_input_device_hub_lists_keyboard)
+{
+    NestedServerWithMockEventFilter nested_mir{new_connection()};
+    auto nested_hub = nested_mir.server.the_input_device_hub();
+
+    nested_hub->for_each_input_device(
+        [](auto const& dev)
+        {
+            EXPECT_THAT(dev->name(), StrEq("keyboard"));
+            EXPECT_THAT(dev->unique_id(), StrEq("keyboard-uid"));
+            EXPECT_THAT(dev->capabilities(), Eq(mi::DeviceCapability::keyboard));
+        });
+}
+
+TEST_F(NestedInput, on_add_device_observer_gets_device_added_calls_on_existing_devices)
+{
+    NestedServerWithMockEventFilter nested_mir{new_connection()};
+    auto nested_hub = nested_mir.server.the_input_device_hub();
+
+    EXPECT_CALL(*mock_observer, device_added(_)).Times(1);
+    EXPECT_CALL(*mock_observer, changes_complete())
+        .Times(1)
+        .WillOnce(mt::WakeUp(&input_device_changes_complete));
+
+    nested_hub->add_observer(mock_observer);
+    input_device_changes_complete.wait_for_at_most_seconds(10);
+}
+
+TEST_F(NestedInput, device_added_on_host_triggeres_nested_device_observer)
+{
+    NestedServerWithMockEventFilter nested_mir{new_connection()};
+    auto nested_hub = nested_mir.server.the_input_device_hub();
+
+    EXPECT_CALL(*mock_observer, changes_complete()).Times(1)
+        .WillOnce(mt::WakeUp(&input_device_changes_complete));
+    nested_hub->add_observer(mock_observer);
+
+    input_device_changes_complete.wait_for_at_most_seconds(10);
+    EXPECT_THAT(input_device_changes_complete.woken(), Eq(true));
+    input_device_changes_complete.reset();
+
+    EXPECT_CALL(*mock_observer, changes_complete())
+        .WillOnce(mt::WakeUp(&input_device_changes_complete));
+
+    auto mouse = mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer});
+
+    input_device_changes_complete.wait_for_at_most_seconds(10);
 }

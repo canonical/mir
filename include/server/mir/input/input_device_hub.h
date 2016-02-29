@@ -25,6 +25,7 @@ namespace mir
 {
 namespace input
 {
+class Device;
 class InputDeviceInfo;
 class InputDeviceObserver;
 

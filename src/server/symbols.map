@@ -682,6 +682,7 @@ MIR_SERVER_0.20 {
     mir::DefaultServerConfiguration::the_surface_input_dispatcher;
     mir::DefaultServerConfiguration::the_compositor*;
     mir::DefaultServerConfiguration::the_compositor_report*;
+    mir::DefaultServerConfiguration::the_connection*;
     mir::DefaultServerConfiguration::the_connection_creator*;
     mir::DefaultServerConfiguration::the_connector*;
     mir::DefaultServerConfiguration::the_connector_report*;

@@ -31,6 +31,7 @@
 #include "builtin_cursor_images.h"
 #include "null_input_channel_factory.h"
 #include "default_input_device_hub.h"
+#include "nested_input_device_hub.h"
 #include "default_input_manager.h"
 #include "surface_input_dispatcher.h"
 #include "basic_seat.h"
@@ -297,14 +298,26 @@ std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_in
 
 std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_device_hub()
 {
-    return default_input_device_hub(
-        [this]()
-        {
-            return std::make_shared<mi::DefaultInputDeviceHub>(
-                the_global_event_sink(),
-                the_seat(),
-                the_input_reading_multiplexer(),
-                the_main_loop(),
-                the_cookie_authority());
-        });
+    auto options = the_options();
+    if (options->is_set(options::host_socket_opt))
+        return input_device_hub(
+            [this]()
+            {
+                return std::make_shared<mi::NestedInputDeviceHub>(
+                    the_connection(),
+                    the_global_event_sink(),
+                    the_main_loop()
+                    );
+            });
+    else
+        return default_input_device_hub(
+            [this]()
+            {
+                return std::make_shared<mi::DefaultInputDeviceHub>(
+                    the_global_event_sink(),
+                    the_seat(),
+                    the_input_reading_multiplexer(),
+                    the_main_loop(),
+                    the_cookie_authority());
+            });
 }

@@ -17,6 +17,7 @@ set(
   input_modifier_utils.cpp
   input_probe.cpp
   key_repeat_dispatcher.cpp
+  nested_input_device_hub.cpp
   null_input_channel_factory.cpp
   null_input_dispatcher.cpp
   seat_input_device_tracker.cpp
