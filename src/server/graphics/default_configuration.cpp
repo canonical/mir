@@ -256,7 +256,7 @@ auto mir::DefaultServerConfiguration::the_connection()
 
                 BOOST_THROW_EXCEPTION(mir::AbnormalExit(msg));
             }
-            return con;
+            return std::shared_ptr<MirConnection>(std::move(con));// gcc-4.9 workaround
         });
 
 }
