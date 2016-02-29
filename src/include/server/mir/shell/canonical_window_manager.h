@@ -29,73 +29,27 @@ namespace shell
 {
 class DisplayLayout;
 
-struct CanonicalSessionInfo
-{
-    int surfaces{0};
-};
-
-struct CanonicalSurfaceInfo
-{
-    CanonicalSurfaceInfo(
-        std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface,
-        scene::SurfaceCreationParameters const& params);
-
-    bool can_be_active() const;
-
-    bool can_morph_to(MirSurfaceType new_type) const;
-    bool must_have_parent() const;
-    bool must_not_have_parent() const;
-    bool is_visible() const;
-
-    void constrain_resize(
-        std::shared_ptr<scene::Surface> const& surface,
-        geometry::Point& requested_pos,
-        geometry::Size& requested_size,
-        const bool left_resize,
-        const bool top_resize,
-        geometry::Rectangle const& bounds) const;
-
-    MirSurfaceType type;
-    MirSurfaceState state;
-    geometry::Rectangle restore_rect;
-    std::weak_ptr<scene::Session> session;
-    std::weak_ptr<scene::Surface> parent;
-    std::vector<std::weak_ptr<scene::Surface>> children;
-    geometry::Width min_width;
-    geometry::Height min_height;
-    geometry::Width max_width;
-    geometry::Height max_height;
-    mir::optional_value<geometry::DeltaX> width_inc;
-    mir::optional_value<geometry::DeltaY> height_inc;
-    mir::optional_value<SurfaceAspectRatio> min_aspect;
-    mir::optional_value<SurfaceAspectRatio> max_aspect;
-};
-
 // standard window management algorithm:
 //  o Switch apps: tap or click on the corresponding tile
-//  o Move window: Alt-leftmousebutton drag
-//  o Resize window: Alt-middle_button drag
+//  o Move window: Alt-leftmousebutton drag (three finger drag)
+//  o Resize window: Alt-middle_button drag (two finger drag)
 //  o Maximize/restore current window (to display size): Alt-F11
 //  o Maximize/restore current window (to display height): Shift-F11
 //  o Maximize/restore current window (to display width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
-class CanonicalWindowManagerPolicy
+class CanonicalWindowManagerPolicy: public WindowManagementPolicy
 {
 public:
-    using Tools = BasicWindowManagerTools<CanonicalSessionInfo, CanonicalSurfaceInfo>;
-    using CanonicalSessionInfoMap = typename SessionTo<CanonicalSessionInfo>::type;
-    using CanonicalSurfaceInfoMap = typename SurfaceTo<CanonicalSurfaceInfo>::type;
 
     explicit CanonicalWindowManagerPolicy(
-        Tools* const tools,
+        WindowManagerTools* const tools,
         std::shared_ptr<shell::DisplayLayout> const& display_layout);
 
     void click(geometry::Point cursor);
 
-    void handle_session_info_updated(CanonicalSessionInfoMap& session_info, geometry::Rectangles const& displays);
+    void handle_session_info_updated(SessionInfoMap& session_info, geometry::Rectangles const& displays);
 
-    void handle_displays_updated(CanonicalSessionInfoMap& session_info, geometry::Rectangles const& displays);
+    void handle_displays_updated(SessionInfoMap& session_info, geometry::Rectangles const& displays);
 
     void resize(geometry::Point cursor);
 
@@ -148,21 +102,23 @@ private:
     bool resize(std::shared_ptr<scene::Surface> const& surface, geometry::Point cursor, geometry::Point old_cursor, geometry::Rectangle bounds);
     bool drag(std::shared_ptr<scene::Surface> surface, geometry::Point to, geometry::Point from, geometry::Rectangle bounds);
     void move_tree(std::shared_ptr<scene::Surface> const& root, geometry::Displacement movement) const;
-    void raise_tree(std::shared_ptr<scene::Surface> const& root) const;
     void apply_resize(
         std::shared_ptr<mir::scene::Surface> const& surface,
         geometry::Point const& new_pos,
         geometry::Size const& new_size) const;
 
-    Tools* const tools;
+    WindowManagerTools* const tools;
     std::shared_ptr<DisplayLayout> const display_layout;
 
     geometry::Rectangle display_area;
     geometry::Point old_cursor{};
     std::weak_ptr<scene::Surface> active_surface_;
+    using FullscreenSurfaces = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;
+
+    FullscreenSurfaces fullscreen_surfaces;
 };
 
-using CanonicalWindowManager = BasicWindowManager<CanonicalWindowManagerPolicy, CanonicalSessionInfo, CanonicalSurfaceInfo>;
+using CanonicalWindowManager = WindowManagerConstructor<CanonicalWindowManagerPolicy>;
 }
 }
 

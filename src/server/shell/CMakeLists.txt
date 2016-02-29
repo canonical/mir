@@ -2,7 +2,8 @@ set(
   SHELL_SOURCES
 
   abstract_shell.cpp
-  canonical_window_manager.cpp
+  basic_window_manager.cpp  ${CMAKE_SOURCE_DIR}/src/include/server/mir/shell/basic_window_manager.h
+  canonical_window_manager.cpp  ${CMAKE_SOURCE_DIR}/src/include/server/mir/shell/canonical_window_manager.h
   frontend_shell.cpp
   graphics_display_layout.cpp
   graphics_display_layout.h
@@ -16,6 +17,7 @@ set(
   ${CMAKE_SOURCE_DIR}/include/server/mir/shell/display_configuration_controller.h
   surface_specification.cpp
   surface_stack_wrapper.cpp ${CMAKE_SOURCE_DIR}/include/server/mir/shell/surface_stack_wrapper.h
+  window_management_info.cpp   ${CMAKE_SOURCE_DIR}/src/include/server/mir/shell/window_management_info.h
 )
 
 add_library(
