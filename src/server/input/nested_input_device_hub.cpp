@@ -97,7 +97,6 @@ private:
     mi::DeviceCapabilities caps;
     mir::optional_value<mi::PointerConfiguration> pointer_conf;
     mir::optional_value<mi::TouchpadConfiguration> touchpad_conf;
-    mi::NestedInputDeviceHub* hub;
 };
 }
 
