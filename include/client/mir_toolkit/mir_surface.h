@@ -494,6 +494,17 @@ void mir_surface_spec_set_input_shape(MirSurfaceSpec* spec,
                                       MirRectangle const *rectangles,
                                       size_t n_rects);
 
+/**
+ * Set the event handler to be called when events arrive for a surface.
+ *   \warning event_handler could be called from another thread. You must do
+ *            any locking appropriate to protect your data accessed in the
+ *            callback. There is also a chance that different events will be
+ *            called back in different threads, for the same surface,
+ *            simultaneously.
+ * \param [in] spec       The spec to accumulate the request in.
+ * \param [in] callback   The callback function
+ * \param [in] context    Additional argument to be passed to callback
+ */
 void mir_surface_spec_set_event_handler(
     MirSurfaceSpec* spec,
     mir_surface_event_callback callback,
@@ -766,13 +777,13 @@ char const* mir_persistent_id_as_string(MirPersistentId* id);
  */
 MirPersistentId* mir_persistent_id_from_string(char const* string_representation);
 
-/*
-* Attempts to raise the surface to the front.
-*
-* \param [in] surface The surface to raise
-* \param [in] cookie  A cookie instance obtained from an input event.
-*                     An invalid cookie will terminate the client connection.
-*/
+/**
+ * Attempts to raise the surface to the front.
+ *
+ * \param [in] surface The surface to raise
+ * \param [in] cookie  A cookie instance obtained from an input event.
+ *                     An invalid cookie will terminate the client connection.
+ */
 void mir_surface_raise(MirSurface* surface, MirCookie const* cookie);
 
 #ifdef __cplusplus
