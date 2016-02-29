@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -45,44 +45,35 @@ public:
         WindowManagerTools* const tools,
         std::shared_ptr<shell::DisplayLayout> const& display_layout);
 
-    void click(geometry::Point cursor);
+    void handle_session_info_updated(SessionInfoMap& session_info, geometry::Rectangles const& displays) override;
 
-    void handle_session_info_updated(SessionInfoMap& session_info, geometry::Rectangles const& displays);
-
-    void handle_displays_updated(SessionInfoMap& session_info, geometry::Rectangles const& displays);
-
-    void resize(geometry::Point cursor);
+    void handle_displays_updated(SessionInfoMap& session_info, geometry::Rectangles const& displays) override;
 
     auto handle_place_new_surface(
         std::shared_ptr<scene::Session> const& session,
         scene::SurfaceCreationParameters const& request_parameters)
     -> scene::SurfaceCreationParameters;
 
-    void handle_new_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
+    void handle_new_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface) override;
 
     void handle_modify_surface(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
-        SurfaceSpecification const& modifications);
+        SurfaceSpecification const& modifications) override;
 
-    void handle_delete_surface(std::shared_ptr<scene::Session> const& session, std::weak_ptr<scene::Surface> const& surface);
+    void handle_delete_surface(std::shared_ptr<scene::Session> const& session, std::weak_ptr<scene::Surface> const& surface) override;
 
-    int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value);
+    int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value) override;
 
-    void drag(geometry::Point cursor);
+    bool handle_keyboard_event(MirKeyboardEvent const* event) override;
 
-    bool handle_keyboard_event(MirKeyboardEvent const* event);
+    bool handle_touch_event(MirTouchEvent const* event) override;
 
-    bool handle_touch_event(MirTouchEvent const* event);
-
-    bool handle_pointer_event(MirPointerEvent const* event);
-
-    std::vector<std::shared_ptr<scene::Surface>> generate_decorations_for(
-        std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
+    bool handle_pointer_event(MirPointerEvent const* event) override;
 
     void handle_raise_surface(
         std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface);
+        std::shared_ptr<scene::Surface> const& surface) override;
 
 private:
     static const int modifier_mask =
@@ -93,6 +84,9 @@ private:
         mir_input_event_modifier_meta;
 
     void toggle(MirSurfaceState state);
+    void click(geometry::Point cursor);
+    void resize(geometry::Point cursor);
+    void drag(geometry::Point cursor);
 
     // "Mir and Unity: Surfaces, input, and displays (v0.3)" talks about active
     //  *window*,but Mir really only understands surfaces
