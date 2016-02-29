@@ -1,4 +1,4 @@
-mir (0.20.1-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.20.1+16.04.20160225.1-0ubuntu1) xenial; urgency=medium
 
   [ Kevin DuBois ]
   * New upstream release 0.20.1 (https://launchpad.net/mir/+milestone/0.20.1)
@@ -10,7 +10,10 @@ mir (0.20.1-0ubuntu1) UNRELEASED; urgency=medium
         device that broke android quirk detection (LP: #1549226)
       . Crash when side mouse buttons are pressed (LP: #1544878)
 
- -- Kevin DuBois <kevin.dubois@canonical.com>  Wed, 24 Feb 2016 08:33:20 -0500
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Thu, 25 Feb 2016 12:03:41 +0000
 
 mir (0.20.0+16.04.20160219-0ubuntu1) xenial; urgency=medium
 
