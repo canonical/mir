@@ -19,7 +19,6 @@
 #include "src/platforms/android/server/hal_component_factory.h"
 #include "android_format_conversion-inl.h"
 #include "src/platforms/android/server/resource_factory.h"
-#include "src/platforms/android/server/graphic_buffer_allocator.h"
 #include "src/platforms/android/server/hwc_loggers.h"
 #include "src/platforms/android/server/hwc_configuration.h"
 #include "src/platforms/android/server/device_quirks.h"
@@ -47,19 +46,6 @@ namespace geom=mir::geometry;
 
 namespace
 {
-
-struct MockGraphicBufferAllocator : public mga::GraphicBufferAllocator
-{
-    MockGraphicBufferAllocator()
-    {
-        using namespace testing;
-        ON_CALL(*this, alloc_buffer_platform(_,_,_))
-            .WillByDefault(Return(nullptr));
-    }
-    MOCK_METHOD3(alloc_buffer_platform,
-        std::shared_ptr<mg::Buffer>(geom::Size, MirPixelFormat, mga::BufferUsage));
-};
-
 struct MockResourceFactory: public mga::DisplayResourceFactory
 {
     ~MockResourceFactory() noexcept {}
