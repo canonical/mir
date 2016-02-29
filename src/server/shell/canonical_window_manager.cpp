@@ -715,20 +715,6 @@ bool msh::CanonicalWindowManagerPolicy::handle_pointer_event(MirPointerEvent con
             consumes_event = true;
         }
     }
-    else if (action == mir_pointer_action_motion && !modifiers)
-    {
-        if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
-        {
-            if (auto const possible_titlebar = tools->surface_at(old_cursor))
-            {
-                if (tools->info_for(possible_titlebar).is_titlebar)
-                {
-                    drag(cursor);
-                    consumes_event = true;
-                }
-            }
-        }
-    }
 
     old_cursor = cursor;
     return consumes_event;
