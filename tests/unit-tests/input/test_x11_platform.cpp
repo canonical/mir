@@ -174,6 +174,28 @@ TEST_F(X11PlatformTest, button4_button5_converted_to_vscroll)
     process_input_event();
 }
 
+TEST_F(X11PlatformTest, motion_event_trigger_pointer_movement)
+{
+    prepare_event_processing();
+
+    InSequence seq;
+    mock_x11.fake_x11.motion_event_return.xmotion.x = 20;
+    mock_x11.fake_x11.motion_event_return.xmotion.y = 20;
+    EXPECT_CALL(mock_x11, XNextEvent(_,_))
+        .WillOnce(DoAll(SetArgPointee<1>(mock_x11.fake_x11.motion_event_return),
+                       Return(1)));
+    EXPECT_CALL(mock_pointer_sink, handle_input(mt::PointerEventWithDiff(20, 20)));
+    mock_x11.fake_x11.motion_event_return.xmotion.x = 40;
+    mock_x11.fake_x11.motion_event_return.xmotion.y = 25;
+    EXPECT_CALL(mock_x11, XNextEvent(_,_))
+        .WillOnce(DoAll(SetArgPointee<1>(mock_x11.fake_x11.motion_event_return),
+                       Return(1)));
+    EXPECT_CALL(mock_pointer_sink, handle_input(mt::PointerEventWithDiff(20, 5)));
+
+    process_input_event();
+    process_input_event();
+}
+
 TEST_F(X11PlatformTest, grabs_keyboard)
 {
     prepare_event_processing();

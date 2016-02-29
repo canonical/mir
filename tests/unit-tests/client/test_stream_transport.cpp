@@ -631,7 +631,7 @@ public:
             throw std::system_error{errno, std::system_category(), "Failed to set signal handler"};
         }
     }
-    ~TemporarySignalHandler()
+    ~TemporarySignalHandler() noexcept(false)
     {
         if (sigaction(signo, &old_handler, nullptr) < 0)
         {
