@@ -685,7 +685,7 @@ MIR_SERVER_0.20 {
     virtual?thunk?to?mir::shell::BasicWindowManager::remove_session*;
     virtual?thunk?to?mir::shell::BasicWindowManager::remove_surface*;
     virtual?thunk?to?mir::shell::BasicWindowManager::set_surface_attribute*;
-    VTT?for?mir::mir::shell::BasicWindowManager;
+    VTT?for?mir::shell::BasicWindowManager;
 
 # these symbols are needed by the test framework but are not intended to be public
     mir::shell::CanonicalWindowManagerPolicy::handle_set_state*;
@@ -811,7 +811,8 @@ MIR_SERVER_0.20 {
     mir::run_mir*;
     mir::DisplayServer::stop*;
     vtable?for?mir::shell::CanonicalWindowManagerPolicy;
-    VTT?for?mir::shell::CanonicalWindowManagerPolicy;
+    VTT?for?mir::shell::CanonicalWindowManagerPolicy
+    ;
   };
  local: *;
 };
