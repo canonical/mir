@@ -34,22 +34,6 @@ namespace mo = mir::options;
 
 namespace
 {
-auto probe_input_platform(mir::SharedLibrary const& lib, mir::options::Option const& options)
-{
-    auto probe = lib.load_function<mi::ProbePlatform>("probe_input_platform", MIR_SERVER_INPUT_PLATFORM_VERSION);
-
-    return probe(options);
-}
-
-void describe_input_platform(mir::SharedLibrary const& lib)
-{
-    auto describe =
-        lib.load_function<mi::DescribeModule>("describe_input_module", MIR_SERVER_INPUT_PLATFORM_VERSION);
-    auto desc = describe();
-    mir::log_info("Selected input driver: %s (version: %d.%d.%d)", desc->name, desc->major_version, desc->minor_version,
-                  desc->micro_version);
-}
-
 mir::UniqueModulePtr<mi::Platform> create_input_platform(
     mir::SharedLibrary const& lib, mir::options::Option const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& cleanup_registry,
@@ -70,17 +54,31 @@ std::vector<mir::UniqueModulePtr<mi::Platform>> mi::probe_input_platforms(
     auto reject_platform_priority = mi::PlatformPriority::dummy;
 
     std::vector<UniqueModulePtr<Platform>> platforms;
+    std::vector<std::string> module_names;
 
     auto const module_selector = [&](std::shared_ptr<mir::SharedLibrary> const& module)
         {
             try
             {
-                if (probe_input_platform(*module, options) > reject_platform_priority)
+                auto const probe = module->load_function<mi::ProbePlatform>(
+                    "probe_input_platform", MIR_SERVER_INPUT_PLATFORM_VERSION);
+                auto const desc = module->load_function<mi::DescribeModule>(
+                    "describe_input_module", MIR_SERVER_INPUT_PLATFORM_VERSION)();
+
+                // We only take the first found of duplicate modules, as that will be the most recent.
+                // This is a huristic that assumes we're always looking for the most up-to-date driver,
+                // TODO find a way to coordinate the selection of mesa-x11 and input platforms
+                auto const duplicate = find(begin(module_names), end(module_names), desc->name) != end(module_names);
+
+                if (probe(options) > reject_platform_priority && !duplicate)
                 {
                     platforms.emplace_back(
                         create_input_platform(*module, options, emergency_cleanup, device_registry, input_report));
 
-                    describe_input_platform(*module);
+                    module_names.push_back(desc->name);
+
+                    mir::log_info("Selected input driver: %s (version: %d.%d.%d)",
+                        desc->name, desc->major_version, desc->minor_version, desc->micro_version);
                 }
             }
             catch (std::runtime_error const&)
