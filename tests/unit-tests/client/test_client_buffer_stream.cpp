@@ -68,9 +68,9 @@ struct StubClientPlatform : public mcl::ClientPlatform
     void populate(MirPlatformPackage& /* package */) const override
     {
     }
-    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::EGLNativeSurface * /* surface */) override
+    std::shared_ptr<void> create_egl_native_window(mcl::EGLNativeSurface * /* surface */) override
     {
-        return std::make_shared<EGLNativeWindowType>(egl_native_window);
+        return mt::fake_shared(egl_native_window);
     }
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override
     {

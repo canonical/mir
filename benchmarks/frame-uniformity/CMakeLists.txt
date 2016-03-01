@@ -15,6 +15,12 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/tests/include/
 )
 
+# We use mir-test-{doubles,framework}, which builds differently based on
+# the primary test platform.
+if (MIR_TEST_PLATFORM STREQUAL "android")
+    add_definitions(-DANDROID)
+endif()
+
 mir_add_wrapped_executable(frame_uniformity_test_client NOINSTALL
   touch_measuring_client.cpp
   touch_producing_server.cpp

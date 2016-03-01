@@ -45,7 +45,7 @@ public:
     void populate(MirPlatformPackage& package) const override;
     MirPlatformMessage* platform_operation(MirPlatformMessage const* request) override;
     std::shared_ptr<ClientBufferFactory> create_buffer_factory() override;
-    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(EGLNativeSurface *surface) override;
+    std::shared_ptr<void> create_egl_native_window(EGLNativeSurface *surface) override;
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override;
     MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const override;
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;

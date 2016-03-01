@@ -395,7 +395,7 @@ TEST_F(StartedBufferVault, scaling_resizes_buffers_right_away)
     EXPECT_THAT(b3->size(), Eq(new_size));
 }
 
-TEST_F(BufferVault, waiting_threads_give_future_error_if_disconnected)
+TEST_F(BufferVault, waiting_threads_give_error_if_disconnected)
 {
     mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
         size, format, usage, initial_nbuffers);

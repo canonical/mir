@@ -27,6 +27,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <sstream>
+#include <vector>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;

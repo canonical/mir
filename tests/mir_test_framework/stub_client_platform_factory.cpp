@@ -55,10 +55,9 @@ std::shared_ptr<mir::client::ClientBufferFactory> mtf::StubClientPlatform::creat
     return std::make_shared<mtd::StubClientBufferFactory>();
 }
 
-std::shared_ptr<EGLNativeWindowType> mtf::StubClientPlatform::create_egl_native_window(mir::client::EGLNativeSurface* surface)
+std::shared_ptr<void> mtf::StubClientPlatform::create_egl_native_window(mir::client::EGLNativeSurface* surface)
 {
-    auto fake_window = reinterpret_cast<EGLNativeWindowType>(surface);
-    return std::make_shared<EGLNativeWindowType>(fake_window);
+    return std::shared_ptr<void>{surface, [](void*){}};
 }
 
 std::shared_ptr<EGLNativeDisplayType> mtf::StubClientPlatform::create_egl_native_display()
