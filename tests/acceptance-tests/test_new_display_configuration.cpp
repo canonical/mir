@@ -669,3 +669,34 @@ TEST_F(DisplayConfigurationTest, client_receives_correct_output_positions)
 
     client.disconnect();
 }
+
+TEST_F(DisplayConfigurationTest, client_sees_server_set_scale_factor)
+{
+    std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
+    current_config->for_each_output(
+        [](mg::UserDisplayConfigurationOutput& output)
+        {
+            static int output_num{0};
+
+            output.scale = 1 + 0.25f * output_num;
+            ++output_num;
+        });
+
+    server.the_display_configuration_controller()->set_base_configuration(current_config);
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto client_config = client.get_base_config();
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(client_config.get()); ++i)
+    {
+        auto output = mir_display_config_get_output(client_config.get(), i);
+
+        EXPECT_THAT(mir_output_get_scale_factor(output), Eq(1 + 0.25 * i));
+    }
+
+    client.disconnect();
+}
+
