@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -233,7 +233,7 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
 
         server.override_the_window_manager_builder([this](msh::FocusController* focus_controller)
             {
-                using PlacementWindowManager = msh::BasicWindowManager<mtf::DeclarativePlacementWindowManagerPolicy, msh::CanonicalSessionInfo, msh::CanonicalSurfaceInfo>;
+                using PlacementWindowManager = msh::WindowManagerConstructor<mtf::DeclarativePlacementWindowManagerPolicy>;
                 return std::make_shared<PlacementWindowManager>(
                     focus_controller,
                     client_geometries,

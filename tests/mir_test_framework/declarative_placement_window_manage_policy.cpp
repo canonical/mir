@@ -24,7 +24,7 @@ namespace ms = mir::scene;
 namespace mtf = mir_test_framework;
 
 mtf::DeclarativePlacementWindowManagerPolicy::DeclarativePlacementWindowManagerPolicy(
-    Tools* const tools,
+    mir::shell::WindowManagerTools* const tools,
     SurfaceGeometries const& positions_by_name,
     std::shared_ptr<mir::shell::DisplayLayout> const& display_layout) :
     mir::shell::CanonicalWindowManagerPolicy{tools, display_layout},
