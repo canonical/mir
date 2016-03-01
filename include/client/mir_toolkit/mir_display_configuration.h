@@ -330,8 +330,11 @@ MirOrientation mir_output_get_orientation(MirOutput const* output);
  *
  * The scale-factor specifies the conversion between logical pixels and physical pixels on this output.
  *
- * A surface with dimensions 200×100 on an output with scale-factor 2.0 will have a physical size of
- * 400x200 pixels, a physical size of 300x150 pixels on an output with scale-factor 1.5, and so on.
+ * A surface with dimensions 200×100 on an output with scale-factor 2.0 will display 400x200 pixels
+ * on this output, will display 300x150 pixels on an output with scale-factor 1.5, and so on.
+ *
+ * Where this calculation would result in a fractional number of pixels the floor is used, so a surface with
+ * dimensions 101x100 on an output with scale-factor of 1.5 will display 151x150 pixels, not 152x150.
  *
  * \param [in]  output  The MirOutput to query
  * \returns     The scale-factor of this monitor
