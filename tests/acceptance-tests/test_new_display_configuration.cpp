@@ -670,6 +670,16 @@ TEST_F(DisplayConfigurationTest, client_receives_correct_output_positions)
     client.disconnect();
 }
 
+namespace
+{
+void signal_when_config_received(MirConnection* /*unused*/, void* ctx)
+{
+    auto signal = reinterpret_cast<mt::Signal*>(ctx);
+
+    signal->raise();
+}
+}
+
 TEST_F(DisplayConfigurationTest, client_sees_server_set_scale_factor)
 {
     std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
@@ -682,11 +692,19 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_scale_factor)
             ++output_num;
         });
 
-    server.the_display_configuration_controller()->set_base_configuration(current_config);
-
     DisplayClient client{new_connection()};
 
     client.connect();
+
+    mt::Signal configuration_received;
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &signal_when_config_received,
+        &configuration_received);
+
+    server.the_display_configuration_controller()->set_base_configuration(current_config);
+
+    EXPECT_TRUE(configuration_received.wait_for(std::chrono::seconds{10}));
 
     auto client_config = client.get_base_config();
 
@@ -718,11 +736,19 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
                 ++output_num;
             });
 
-    server.the_display_configuration_controller()->set_base_configuration(current_config);
-
     DisplayClient client{new_connection()};
 
     client.connect();
+
+    mt::Signal configuration_received;
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &signal_when_config_received,
+        &configuration_received);
+
+    server.the_display_configuration_controller()->set_base_configuration(current_config);
+
+    EXPECT_TRUE(configuration_received.wait_for(std::chrono::seconds{10}));
 
     auto client_config = client.get_base_config();
 
