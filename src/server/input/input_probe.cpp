@@ -67,37 +67,38 @@ std::vector<mir::UniqueModulePtr<mi::Platform>> mi::probe_input_platforms(
     std::shared_ptr<mi::InputDeviceRegistry> const& device_registry, std::shared_ptr<mi::InputReport> const& input_report,
     mir::SharedLibraryProberReport& prober_report)
 {
+    auto reject_platform_priority = mi::PlatformPriority::dummy;
+
     std::vector<UniqueModulePtr<Platform>> platforms;
 
-    if (options.is_set(mo::platform_input_lib))
-    {
-        mir::SharedLibrary lib(options.get<std::string>(mo::platform_input_lib));
-
-        platforms.emplace_back(create_input_platform(lib, options, emergency_cleanup, device_registry, input_report));
-
-        describe_input_platform(lib);
-    }
-    else
-    {
-        auto const& path = options.get<std::string>(mo::platform_path);
-        auto platforms_libs = mir::libraries_for_path(path, prober_report);
-
-        for (auto const& platform_lib : platforms_libs)
+    auto const module_selector = [&](std::shared_ptr<mir::SharedLibrary> const& module)
         {
             try
             {
-                if (probe_input_platform(*platform_lib, options) > mi::PlatformPriority::dummy)
+                if (probe_input_platform(*module, options) > reject_platform_priority)
                 {
                     platforms.emplace_back(
-                        create_input_platform(*platform_lib, options, emergency_cleanup, device_registry, input_report));
+                        create_input_platform(*module, options, emergency_cleanup, device_registry, input_report));
 
-                    describe_input_platform(*platform_lib);
+                    describe_input_platform(*module);
                 }
             }
             catch (std::runtime_error const&)
             {
+                // Assume we were handed a SharedLibrary that's not an input module of the correct vintage.
             }
-        }
+
+            return Selection::persist;
+        };
+
+    if (options.is_set(mo::platform_input_lib))
+    {
+        reject_platform_priority = PlatformPriority::unsupported;
+        module_selector(std::make_shared<mir::SharedLibrary>(options.get<std::string>(mo::platform_input_lib)));
+    }
+    else
+    {
+        select_libraries_for_path(options.get<std::string>(mo::platform_path), module_selector, prober_report);
     }
 
     return platforms;
