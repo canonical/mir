@@ -165,4 +165,3 @@ TEST(MirCookieAuthority, makes_cookies_quickly)
     int seconds = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
     EXPECT_THAT(seconds, Lt(5));
 }
-
