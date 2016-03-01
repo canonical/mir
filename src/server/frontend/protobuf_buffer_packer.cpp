@@ -68,6 +68,7 @@ void pack_protobuf_display_output(mp::DisplayOutput& protobuf_output,
     protobuf_output.set_power_mode(static_cast<uint32_t>(display_output.power_mode));
     protobuf_output.set_orientation(display_output.orientation);
     protobuf_output.set_scale_factor(display_output.scale);
+    protobuf_output.set_form_factor(display_output.form_factor);
 }
 
 }

@@ -195,6 +195,7 @@ message DisplayOutput {
   optional uint32 power_mode = 15;
   optional sint32 orientation = 16;
   optional float scale_factor = 17;
+  optional uint32 form_factor = 18;
 }
 
 message Connection {

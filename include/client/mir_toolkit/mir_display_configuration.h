@@ -339,6 +339,16 @@ MirOrientation mir_output_get_orientation(MirOutput const* output);
 float mir_output_get_scale_factor(MirOutput const* output);
 
 /**
+ * Get the form-factor of a connected output.
+ *
+ * This call succeeds even if the output is not connected, but may return nonsense values.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The form factor of this output
+ */
+MirFormFactor mir_output_get_form_factor(MirOutput const* output);
+
+/**
  * Get the width, in pixels, of a MirOutputMode
  *
  * \note    This is unaffected by the orientation of the output

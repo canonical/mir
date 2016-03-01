@@ -700,3 +700,38 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_scale_factor)
     client.disconnect();
 }
 
+TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
+{
+    std::array<MirFormFactor, 3> const form_factors = {
+        mir_form_factor_monitor,
+        mir_form_factor_projector,
+        mir_form_factor_unknown
+    };
+
+    std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
+    current_config->for_each_output(
+        [&form_factors](mg::UserDisplayConfigurationOutput& output)
+            {
+                static int output_num{0};
+
+                output.form_factor = form_factors[output_num];
+                ++output_num;
+            });
+
+    server.the_display_configuration_controller()->set_base_configuration(current_config);
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto client_config = client.get_base_config();
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(client_config.get()); ++i)
+    {
+        auto output = mir_display_config_get_output(client_config.get(), i);
+
+        EXPECT_THAT(mir_output_get_form_factor(output), Eq(form_factors[i]));
+    }
+
+    client.disconnect();
+}

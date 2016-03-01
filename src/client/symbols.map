@@ -250,6 +250,7 @@ MIR_CLIENT_9_unreleased {
     mir_output_get_pixel_format;
     mir_output_get_format;
     mir_output_get_scale_factor;
+    mir_output_get_form_factor;
     mir_output_mode_get_width;
     mir_output_mode_get_height;
     mir_output_mode_get_refresh_rate;
