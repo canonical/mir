@@ -18,7 +18,11 @@
 
 #include "src/platforms/android/server/framebuffers.h"
 #include "src/platforms/android/server/graphic_buffer_allocator.h"
+#include "src/platforms/android/server/cmdstream_sync_factory.h"
+#include "src/platforms/android/server/device_quirks.h"
+#include "mir/test/doubles/mock_android_hw.h"
 #include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/mock_egl.h"
 
 #include <future>
 #include <initializer_list>
@@ -30,59 +34,31 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
+using namespace testing;
 
 namespace
 {
-
-struct MockGraphicBufferAllocator : public mga::GraphicBufferAllocator
+struct Framebuffers : Test
 {
-    MOCK_METHOD3(alloc_buffer_platform, std::shared_ptr<mg::Buffer>(
-        geom::Size, MirPixelFormat, mga::BufferUsage use));
-};
-
-class PostingFBBundleTest : public ::testing::Test
-{
-public:
-    virtual void SetUp()
-    {
-        using namespace testing;
-        buffer1 = std::make_shared<mtd::MockBuffer>();
-        buffer2 = std::make_shared<mtd::MockBuffer>();
-        buffer3 = std::make_shared<mtd::MockBuffer>();
-        EXPECT_CALL(mock_allocator, alloc_buffer_platform(_,_,_))
-            .Times(AtLeast(0))
-            .WillOnce(Return(buffer1))
-            .WillOnce(Return(buffer2))
-            .WillRepeatedly(Return(buffer3));
-    }
-
+    NiceMock<mtd::MockEGL> mock_egl;
+    NiceMock<mtd::HardwareAccessMock> hw_access_mock;
+    mga::GraphicBufferAllocator allocator{
+        std::make_shared<mga::NullCommandStreamSyncFactory>(),
+        std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{})};
     MirPixelFormat format{mir_pixel_format_abgr_8888};
-    MockGraphicBufferAllocator mock_allocator;
-    std::shared_ptr<mg::Buffer> buffer1;
-    std::shared_ptr<mg::Buffer> buffer2;
-    std::shared_ptr<mg::Buffer> buffer3;
     geom::Size display_size{180, 222};
 };
 }
 
-TEST_F(PostingFBBundleTest, hwc_fb_size_allocation)
+TEST_F(Framebuffers, framebuffers_have_correct_size)
 {
-    using namespace testing;
-
-    EXPECT_CALL(mock_allocator, alloc_buffer_platform(display_size, _, mga::BufferUsage::use_framebuffer_gles))
-        .Times(2)
-        .WillRepeatedly(Return(nullptr));
-
-    mga::Framebuffers framebuffers(mock_allocator, display_size, format, 2u);
+    mga::Framebuffers framebuffers(allocator, display_size, format, 2u);
     EXPECT_EQ(display_size, framebuffers.fb_size());
 }
 
-TEST_F(PostingFBBundleTest, last_rendered_returns_valid)
+TEST_F(Framebuffers, last_rendered_returns_valid)
 {
-    mga::Framebuffers framebuffers(mock_allocator, display_size, format, 2u);
-
-    auto test_buffer = framebuffers.last_rendered_buffer();
-    EXPECT_TRUE((test_buffer == buffer1) || (test_buffer == buffer2));
+    mga::Framebuffers framebuffers(allocator, display_size, format, 2u);
 
     auto first_buffer = framebuffers.buffer_for_render();
     auto first_buffer_ptr = first_buffer.get();
@@ -91,26 +67,26 @@ TEST_F(PostingFBBundleTest, last_rendered_returns_valid)
     EXPECT_EQ(first_buffer_ptr, framebuffers.last_rendered_buffer().get());
 }
 
-TEST_F(PostingFBBundleTest, last_rendered_is_first_returned_from_driver)
+TEST_F(Framebuffers, last_rendered_is_first_returned_from_driver)
 {
-    mga::Framebuffers framebuffers(mock_allocator, display_size, format, 2u);
+    mga::Framebuffers framebuffers(allocator, display_size, format, 2u);
     auto buffer1 = framebuffers.buffer_for_render().get();
     EXPECT_EQ(buffer1, framebuffers.last_rendered_buffer().get());
     auto buffer2 = framebuffers.buffer_for_render().get();
     EXPECT_EQ(buffer2, framebuffers.last_rendered_buffer().get());
 }
 
-TEST_F(PostingFBBundleTest, no_rendering_returns_same_buffer)
+TEST_F(Framebuffers, no_rendering_returns_same_buffer)
 {
-    mga::Framebuffers framebuffers(mock_allocator, display_size, format, 2u);
+    mga::Framebuffers framebuffers(allocator, display_size, format, 2u);
     framebuffers.buffer_for_render().get();
     auto buffer = framebuffers.last_rendered_buffer();
     EXPECT_EQ(buffer, framebuffers.last_rendered_buffer());
 }
 
-TEST_F(PostingFBBundleTest, three_buffers_for_hwc)
+TEST_F(Framebuffers, three_buffers_for_hwc)
 {
-    mga::Framebuffers framebuffers(mock_allocator, display_size, format, 3u);
+    mga::Framebuffers framebuffers(allocator, display_size, format, 3u);
 
     auto buffer1 = framebuffers.buffer_for_render().get();
     framebuffers.buffer_for_render();
