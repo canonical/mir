@@ -30,8 +30,9 @@
 namespace mi = mir::input;
 
 mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
-                                 std::shared_ptr<InputDevice> const& device) :
-    device_id{id}, device{device}, info(device->get_device_info()), pointer{device->get_pointer_settings()}, touchpad{device->get_touchpad_settings()}, actions{actions}
+                                 InputDevice& device)
+    : device_id{id}, device{device}, info(device.get_device_info()), pointer{device.get_pointer_settings()},
+      touchpad{device.get_touchpad_settings()}, actions{actions}
 {
 }
 
@@ -96,7 +97,7 @@ void mi::DefaultDevice::apply_pointer_configuration(mi::PointerConfiguration con
 
     pointer = settings;
 
-    actions->enqueue([settings = std::move(settings), dev=device]
+    actions->enqueue([settings = std::move(settings), dev=&device]
                      {
                          dev->apply_settings(settings);
                      });
@@ -121,7 +122,7 @@ void mi::DefaultDevice::apply_touchpad_configuration(mi::TouchpadConfiguration c
 
     touchpad = settings;
 
-    actions->enqueue([settings = std::move(settings), dev=device]
+    actions->enqueue([settings = std::move(settings), dev=&device]
                      {
                          dev->apply_settings(settings);
                      });

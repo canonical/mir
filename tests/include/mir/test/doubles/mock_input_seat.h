@@ -31,11 +31,10 @@ namespace doubles
 {
 struct MockInputSeat : input::Seat
 {
-    MOCK_METHOD1(add_device, void(std::shared_ptr<input::Device> const& device));
-    MOCK_METHOD1(remove_device, void(std::shared_ptr<input::Device> const& device));
+    MOCK_METHOD1(add_device, void(input::Device const& device));
+    MOCK_METHOD1(remove_device, void(input::Device const& device));
     MOCK_METHOD1(dispatch_event, void(MirEvent& event));
-    MOCK_METHOD1(get_rectangle_for, geometry::Rectangle(std::shared_ptr<input::Device> const& dev));
-
+    MOCK_METHOD1(get_rectangle_for, geometry::Rectangle(input::Device const& dev));
 };
 }
 }

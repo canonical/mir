@@ -23,6 +23,7 @@
 #include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/doubles/mock_input_region.h"
 #include "mir/test/doubles/mock_input_seat.h"
+#include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/stub_cursor_listener.h"
 #include "mir/test/doubles/stub_touch_visualizer.h"
 #include "mir/test/doubles/triggered_main_loop.h"
@@ -35,6 +36,7 @@
 #include "mir/events/event_builders.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/cookie/authority.h"
+#include "mir/graphics/buffer.h"
 #include "mir/input/device.h"
 #include "mir/input/input_device.h"
 
@@ -48,25 +50,45 @@ namespace mt = mir::test;
 namespace mtd = mt::doubles;
 using namespace std::literals::chrono_literals;
 using namespace ::testing;
-template<typename Type>
-using Nice = ::testing::NiceMock<Type>;
+
+namespace
+{
+template<typename T>
+T const& const_ref(std::shared_ptr<T> const& ptr)
+{
+    return *ptr;
+}
+
+template<typename T>
+T const& const_ref(T const& value)
+{
+    return value;
+}
+MATCHER_P(WithName, name,
+          std::string(negation?"isn't":"is") +
+          " name:" + std::string(name))
+{
+    return const_ref(arg).name() == name;
+}
+}
 
 struct InputDeviceHubTest : ::testing::Test
 {
     mtd::TriggeredMainLoop observer_loop;
     std::shared_ptr<mir::cookie::Authority> cookie_authority = mir::cookie::Authority::create();
     mir::dispatch::MultiplexingDispatchable multiplexer;
-    Nice<mtd::MockInputSeat> mock_seat;
-    mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_seat), mt::fake_shared(multiplexer),
+    NiceMock<mtd::MockInputSeat> mock_seat;
+    NiceMock<mtd::MockEventSink> mock_sink;
+    mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_sink), mt::fake_shared(mock_seat), mt::fake_shared(multiplexer),
                                   mt::fake_shared(observer_loop), cookie_authority};
-    Nice<mtd::MockInputDeviceObserver> mock_observer;
-    Nice<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
-    Nice<mtd::MockInputDevice> another_device{"another_device","dev-2", mi::DeviceCapability::keyboard};
-    Nice<mtd::MockInputDevice> third_device{"third_device","dev-3", mi::DeviceCapability::keyboard};
+    NiceMock<mtd::MockInputDeviceObserver> mock_observer;
+    NiceMock<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
+    NiceMock<mtd::MockInputDevice> another_device{"another_device","dev-2", mi::DeviceCapability::keyboard};
+    NiceMock<mtd::MockInputDevice> third_device{"third_device","dev-3", mi::DeviceCapability::keyboard};
 
     std::chrono::nanoseconds arbitrary_timestamp;
 
-    void capture_input_sink(Nice<mtd::MockInputDevice>& dev, mi::InputSink*& sink, mi::EventBuilder*& builder)
+    void capture_input_sink(NiceMock<mtd::MockInputDevice>& dev, mi::InputSink*& sink, mi::EventBuilder*& builder)
     {
         ON_CALL(dev,start(_,_))
             .WillByDefault(Invoke([&sink,&builder](mi::InputSink* input_sink, mi::EventBuilder* event_builder)
@@ -118,13 +140,6 @@ TEST_F(InputDeviceHubTest, input_device_hub_start_stop_happens_in_order)
     hub.remove_device(mt::fake_shared(another_device));
     hub.remove_device(mt::fake_shared(device));
     hub.remove_device(mt::fake_shared(third_device));
-}
-
-MATCHER_P(WithName, name,
-          std::string(negation?"isn't":"is") +
-          " name:" + std::string(name))
-{
-    return arg->name() == name;
 }
 
 TEST_F(InputDeviceHubTest, observers_receive_devices_on_add)

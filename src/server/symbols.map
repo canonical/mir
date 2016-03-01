@@ -742,6 +742,7 @@ MIR_SERVER_0.20 {
     mir::DefaultServerConfiguration::the_scene*;
     mir::DefaultServerConfiguration::the_scene_report*;
     mir::DefaultServerConfiguration::the_screencast*;
+    mir::DefaultServerConfiguration::the_seat*;
     mir::DefaultServerConfiguration::the_server_action_queue*;
     mir::DefaultServerConfiguration::the_server_status_listener*;
     mir::DefaultServerConfiguration::the_session_authorizer*;
