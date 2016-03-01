@@ -3,7 +3,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LTTNG_UST_INCLUDE_DIRS})
 # Don't treat missing-field-initializers as an error, since
 # the LTTng macros contain code that triggers this (but it's
 # harmless; it concerns a padding field)
-add_compile_options(-Wno-error=missing-field-initializers -Wno-error=unused-function)
+add_compile_options(
+  -Wno-error=missing-field-initializers
+  -Wno-error=unused-function
+  -Wno-error=unused-parameter
+)
 
 set(
   LTTNG_SOURCES

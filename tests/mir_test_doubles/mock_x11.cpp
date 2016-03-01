@@ -20,6 +20,8 @@
 #include "mir/test/doubles/mock_x11.h"
 #include <gtest/gtest.h>
 
+#include <cstring>
+
 namespace mtd=mir::test::doubles;
 
 namespace
@@ -31,6 +33,13 @@ mtd::FakeX11Resources::FakeX11Resources()
     : display{reinterpret_cast<Display*>(0x12345678)},
       window{reinterpret_cast<Window>((long unsigned int)9876543210)}
 {
+    std::memset(&keypress_event_return, 0, sizeof(XEvent));
+    std::memset(&button_release_event_return, 0, sizeof(XEvent));
+    std::memset(&expose_event_return, 0, sizeof(XEvent));
+    std::memset(&focus_in_event_return, 0, sizeof(XEvent));
+    std::memset(&focus_out_event_return, 0, sizeof(XEvent));
+    std::memset(&vscroll_event_return, 0, sizeof(XEvent));
+    std::memset(&motion_event_return, 0, sizeof(XEvent));
     visual_info.depth = 24;
     keypress_event_return.type = KeyPress;
     button_release_event_return.type = ButtonRelease;
@@ -41,6 +50,7 @@ mtd::FakeX11Resources::FakeX11Resources()
     vscroll_event_return.type = ButtonPress;
     XButtonEvent& xbev = (XButtonEvent&)vscroll_event_return;
     xbev.button = Button4;
+    motion_event_return.type = MotionNotify;
 }
 
 mtd::MockX11::MockX11()
@@ -171,4 +181,9 @@ Status XInitThreads()
 int XSetWMHints(Display* display, Window window, XWMHints* wmhints)
 {
     return global_mock->XSetWMHints(display, window, wmhints);
+}
+
+int XPending(Display* display)
+{
+    return global_mock->XPending(display);
 }
