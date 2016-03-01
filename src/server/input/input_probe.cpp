@@ -66,7 +66,7 @@ std::vector<mir::UniqueModulePtr<mi::Platform>> mi::probe_input_platforms(
                     "describe_input_module", MIR_SERVER_INPUT_PLATFORM_VERSION)();
 
                 // We only take the first found of duplicate modules, as that will be the most recent.
-                // This is a huristic that assumes we're always looking for the most up-to-date driver,
+                // This is a heuristic that assumes we're always looking for the most up-to-date driver,
                 // TODO find a way to coordinate the selection of mesa-x11 and input platforms
                 auto const duplicate = find(begin(module_names), end(module_names), desc->name) != end(module_names);
 
