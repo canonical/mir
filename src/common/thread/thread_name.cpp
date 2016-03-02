@@ -18,9 +18,6 @@
 
 #include "mir/thread_name.h"
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
 #include <pthread.h>
 
 void mir::set_thread_name(std::string const& name)

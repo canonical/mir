@@ -572,7 +572,7 @@ std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
 EGLNativeWindowType mcl::BufferStream::egl_native_window()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    return *egl_native_window_;
+    return static_cast<EGLNativeWindowType>(egl_native_window_.get());
 }
 
 void mcl::BufferStream::release_cpu_region()

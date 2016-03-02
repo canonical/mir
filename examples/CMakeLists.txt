@@ -41,8 +41,6 @@ add_library(exampleserverconfig STATIC
   xcursor.h
 )
 
-SET_SOURCE_FILES_PROPERTIES(xcursor.c PROPERTIES COMPILE_FLAGS -D_GNU_SOURCE)
-
 target_link_libraries(eglapp
   mirclient
   ${EGL_LIBRARIES}

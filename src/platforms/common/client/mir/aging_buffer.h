@@ -31,9 +31,9 @@ class AgingBuffer : public ClientBuffer
 public:
     AgingBuffer();
 
-    virtual uint32_t age() const;
-    virtual void increment_age();
-    virtual void mark_as_submitted();
+    uint32_t age() const override;
+    void increment_age() override;
+    void mark_as_submitted() override;
 
 private:
     uint32_t buffer_age;
