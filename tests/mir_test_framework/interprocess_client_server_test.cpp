@@ -64,9 +64,6 @@ void mtf::InterprocessClientServerTest::run_in_server(
 {
     if (test_process_id != getpid()) return;
 
-    if (flags & disable_core_dump)
-        ::mir::test::disable_core_dump();
-
     mt::CrossProcessSync started_sync;
 
     pid_t pid = fork();
@@ -78,6 +75,9 @@ void mtf::InterprocessClientServerTest::run_in_server(
 
     if (pid == 0)
     {
+        if (flags & disable_core_dump)
+            ::mir::test::disable_core_dump();
+
         server_process_id = getpid();
         process_tag = "server";
         add_to_environment("MIR_SERVER_FILE", mir_test_socket);
