@@ -141,7 +141,7 @@ TEST_P(ClientPlatformTest, platform_creates_native_window)
     auto platform = create_client_platform(&context);
     auto mock_client_surface = std::make_shared<mtd::MockEGLNativeSurface>();
     auto native_window = platform->create_egl_native_window(mock_client_surface.get());
-    EXPECT_NE(*native_window, (EGLNativeWindowType) NULL);
+    EXPECT_THAT(native_window.get(), testing::Ne(nullptr));
 }
 
 TEST_P(ClientPlatformTest, platform_creates_egl_native_display)

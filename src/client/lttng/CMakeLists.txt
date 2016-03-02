@@ -10,6 +10,11 @@ add_library(
   perf_report.cpp
 )
 
+# Using LTO on the lttng DSO causes a gcc ICE.
+# Since LTO is reasonably uninteresting for the lttng tracer, disable it.
+string(REPLACE "-flto" "" NO_LTO_FLAGS ${CMAKE_C_FLAGS})
+set(CMAKE_C_FLAGS ${NO_LTO_FLAGS})
+
 add_library(mirclientlttng SHARED tracepoints.c)
 
 # Don't treat missing-field-initializers as an error, since

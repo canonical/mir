@@ -19,7 +19,7 @@
 
 #include "platform.h"
 
-#include "android_graphic_buffer_allocator.h"
+#include "graphic_buffer_allocator.h"
 #include "resource_factory.h"
 #include "display.h"
 #include "hal_component_factory.h"
@@ -179,7 +179,7 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
 
     //TODO: remove nullptr parameter once platform classes are sorted.
     //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder
-    auto const buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(sync_factory, quirks);
+    auto const buffer_allocator = std::make_shared<mga::GraphicBufferAllocator>(sync_factory, quirks);
     return mir::make_module_ptr<mga::Platform>(buffer_allocator, nullptr, display_report, mga::OverlayOptimization::disabled, quirks);
 }
 

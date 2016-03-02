@@ -148,7 +148,7 @@ std::shared_ptr<mcl::ClientBuffer> mcl::ScreencastStream::get_current_buffer()
 
 EGLNativeWindowType mcl::ScreencastStream::egl_native_window()
 {
-    return *egl_native_window_;
+    return static_cast<EGLNativeWindowType>(egl_native_window_.get());
 }
 
 std::shared_ptr<mcl::MemoryRegion> mcl::ScreencastStream::secure_for_cpu_write()

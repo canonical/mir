@@ -32,6 +32,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <tuple>
+#include <numeric>
 
 namespace mi = mir::input;
 namespace mev = mir::events;

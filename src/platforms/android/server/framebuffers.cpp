@@ -32,7 +32,7 @@ mga::Framebuffers::Framebuffers(
     size{size}
 {
     for(auto i = 0u; i < num_framebuffers; i++)
-        queue.push(buffer_allocator.alloc_buffer_platform(size, format, mga::BufferUsage::use_framebuffer_gles));
+        queue.push(buffer_allocator.alloc_framebuffer(size, format));
 }
 
 geom::Size mga::Framebuffers::fb_size()
