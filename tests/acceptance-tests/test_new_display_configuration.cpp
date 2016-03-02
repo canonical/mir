@@ -720,11 +720,11 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_scale_factor)
 
 TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
 {
-    std::array<MirFormFactor, 3> const form_factors = {
+    std::array<MirFormFactor, 3> const form_factors = {{
         mir_form_factor_monitor,
         mir_form_factor_projector,
         mir_form_factor_unknown
-    };
+    }};
 
     std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
     current_config->for_each_output(
