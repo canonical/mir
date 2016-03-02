@@ -146,7 +146,7 @@ TEST_F(InputPlatformProbe, x11_platform_found_and_used_when_display_connection_w
         mi::probe_input_platforms(mock_options, mt::fake_shared(stub_emergency), mt::fake_shared(mock_registry),
                                   mr::null_input_report(), *stub_prober_report);
 
-    EXPECT_THAT(platforms, UnorderedElementsAre(OfPtrType<mi::evdev::Platform>(), OfPtrType<mi::X::XInputPlatform>()));
+    EXPECT_THAT(platforms, UnorderedElementsAre(OfPtrType<mi::X::XInputPlatform>()));
 }
 
 TEST_F(InputPlatformProbe, when_multiple_x11_platforms_are_eligible_only_one_is_selected)
@@ -162,7 +162,7 @@ TEST_F(InputPlatformProbe, when_multiple_x11_platforms_are_eligible_only_one_is_
         mi::probe_input_platforms(mock_options, mt::fake_shared(stub_emergency), mt::fake_shared(mock_registry),
                                   mr::null_input_report(), *stub_prober_report);
 
-    EXPECT_THAT(platforms, UnorderedElementsAre(OfPtrType<mi::evdev::Platform>(), OfPtrType<mi::X::XInputPlatform>()));
+    EXPECT_THAT(platforms, UnorderedElementsAre(OfPtrType<mi::X::XInputPlatform>()));
 
     remove(fake_lib.c_str());
 }

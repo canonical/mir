@@ -53,7 +53,7 @@ std::vector<mir::UniqueModulePtr<mi::Platform>> mi::probe_input_platforms(
 {
     auto reject_platform_priority = mi::PlatformPriority::dummy;
 
-    std::vector<UniqueModulePtr<Platform>> platforms;
+    std::vector<std::shared_ptr<mir::SharedLibrary>> platform_modules;
     std::vector<std::string> module_names;
 
     auto const module_selector = [&](std::shared_ptr<mir::SharedLibrary> const& module)
@@ -71,15 +71,7 @@ std::vector<mir::UniqueModulePtr<mi::Platform>> mi::probe_input_platforms(
                 auto const duplicate = find(begin(module_names), end(module_names), desc->name) != end(module_names);
 
                 if (probe(options) > reject_platform_priority && !duplicate)
-                {
-                    platforms.emplace_back(
-                        create_input_platform(*module, options, emergency_cleanup, device_registry, input_report));
-
-                    module_names.push_back(desc->name);
-
-                    mir::log_info("Selected input driver: %s (version: %d.%d.%d)",
-                        desc->name, desc->major_version, desc->minor_version, desc->micro_version);
-                }
+                    platform_modules.push_back(module);
             }
             catch (std::runtime_error const&)
             {
@@ -99,5 +91,24 @@ std::vector<mir::UniqueModulePtr<mi::Platform>> mi::probe_input_platforms(
         select_libraries_for_path(options.get<std::string>(mo::platform_path), module_selector, prober_report);
     }
 
-    return platforms;
+    std::vector<UniqueModulePtr<Platform>> platforms;
+
+    for (auto& module : platform_modules)
+    {
+        auto const desc = module->load_function<mi::DescribeModule>(
+            "describe_input_module", MIR_SERVER_INPUT_PLATFORM_VERSION)();
+
+        platforms.emplace_back(
+            create_input_platform(*module, options, emergency_cleanup, device_registry, input_report));
+
+        module_names.push_back(desc->name);
+
+        mir::log_info(
+            "Selected input driver: %s (version: %d.%d.%d)",
+            desc->name, desc->major_version, desc->minor_version, desc->micro_version);
+
+        return platforms;
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error{"No appropriate input platform module found"});
 }
