@@ -16,8 +16,6 @@
  * Author: Robert Carr <robert.carr@canonical.com>
  */
 
-#define _GNU_SOURCE
-
 #include "eglapp.h"
 
 #include "mir_toolkit/mir_client_library.h"

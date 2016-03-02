@@ -25,9 +25,11 @@
 #include "mir/events/event_builders.h"
 
 #include "mir/test/display_config_matchers.h"
+#include "mir/test/input_devices_matcher.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_buffer.h"
+#include "mir/test/doubles/stub_input_device.h"
 #include "mir/test/doubles/mock_platform_ipc_operations.h"
 #include "mir/input/device.h"
 #include "mir/input/device_capability.h"
@@ -37,8 +39,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <algorithm>
-
 namespace mt = mir::test;
 namespace mi = mir::input;
 namespace mtd = mir::test::doubles;
@@ -47,29 +47,8 @@ namespace mfd = mf::detail;
 namespace mev = mir::events;
 namespace geom = mir::geometry;
 
-namespace mir
-{
-namespace protobuf
-{
-bool operator==(InputDeviceInfo const& info, std::shared_ptr<mi::Device> const& device)
-{
-    return
-        info.id() == device->id() &&
-        info.capabilities() == device->capabilities().value() &&
-        info.name() == device->name() &&
-        info.unique_id() == device->unique_id();
-}
-static void PrintTo(mir::protobuf::InputDeviceInfo const &, ::std::ostream*) __attribute__ ((unused));
-void PrintTo(mir::protobuf::InputDeviceInfo const&, ::std::ostream*) {}
-}
-}
 namespace
 {
-MATCHER_P(InputDevicesMatch, devices, "")
-{
-    return std::equal(std::begin(arg), std::end(arg), begin(devices), end(devices));
-}
-
 struct StubDevice : mi::Device
 {
     StubDevice(MirInputDeviceId id, mi::DeviceCapabilities caps, std::string const& name, std::string const& unique_id)
@@ -205,7 +184,7 @@ TEST_F(EventSender, sends_input_devices)
         std::string str = wire.events(0);
         mir::protobuf::EventSequence seq;
         seq.ParseFromString(str);
-        EXPECT_THAT(seq.input_devices(), InputDevicesMatch(devices));
+        EXPECT_THAT(seq.input_devices(), mt::InputDevicesMatch(devices));
     };
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
@@ -227,7 +206,7 @@ TEST_F(EventSender, sends_empty_sequence_of_devices)
         std::string str = wire.events(0);
         mir::protobuf::EventSequence seq;
         seq.ParseFromString(str);
-        EXPECT_THAT(seq.input_devices(), InputDevicesMatch(devices));
+        EXPECT_THAT(seq.input_devices(), mt::InputDevicesMatch(devices));
     };
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
