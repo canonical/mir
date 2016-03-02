@@ -46,7 +46,7 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
 }
 }
 
-std::vector<mir::UniqueModulePtr<mi::Platform>> mi::probe_input_platforms(
+mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
     mo::Option const& options, std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup,
     std::shared_ptr<mi::InputDeviceRegistry> const& device_registry, std::shared_ptr<mi::InputReport> const& input_report,
     mir::SharedLibraryProberReport& prober_report)
@@ -95,21 +95,21 @@ std::vector<mir::UniqueModulePtr<mi::Platform>> mi::probe_input_platforms(
         select_libraries_for_path(options.get<std::string>(mo::platform_path), module_selector, prober_report);
     }
 
-    std::vector<UniqueModulePtr<Platform>> platforms;
-
+    // We process the modules in decending .sonumber order so, luckily, we try mesa-x11 before evdev.
+    // But only because the graphics platform version is currently higher than the input platform version.
+    // TODO find a way to coordinate the selection of mesa-x11 and input platforms
     for (auto& module : platform_modules)
     {
         auto const desc = module->load_function<mi::DescribeModule>(
             "describe_input_module", MIR_SERVER_INPUT_PLATFORM_VERSION)();
 
-        platforms.emplace_back(
-            create_input_platform(*module, options, emergency_cleanup, device_registry, input_report));
+        auto result = create_input_platform(*module, options, emergency_cleanup, device_registry, input_report);
 
         mir::log_info(
             "Selected input driver: %s (version: %d.%d.%d)",
             desc->name, desc->major_version, desc->minor_version, desc->micro_version);
 
-        return platforms;
+        return result;
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error{"No appropriate input platform module found"});
