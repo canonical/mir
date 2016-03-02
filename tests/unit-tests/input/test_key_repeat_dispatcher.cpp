@@ -24,8 +24,10 @@
 #include "mir/time/alarm_factory.h"
 #include "mir/cookie/authority.h"
 
+#include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
+#include "mir/test/doubles/mock_input_device_hub.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -43,6 +45,12 @@ struct MockAlarm : public mir::time::Alarm
     MOCK_CONST_METHOD0(state, mir::time::Alarm::State());
     MOCK_METHOD1(reschedule_in, bool(std::chrono::milliseconds));
     MOCK_METHOD1(reschedule_for, bool(mir::time::Timestamp));
+
+    // destructor cancels the alarm
+    ~MockAlarm()
+    {
+        cancel();
+    }
 };
 
 struct MockAlarmFactory : public mir::time::AlarmFactory
@@ -64,13 +72,30 @@ struct KeyRepeatDispatcher : public testing::Test
     KeyRepeatDispatcher()
         : dispatcher(mock_next_dispatcher, mock_alarm_factory, cookie_authority, true, repeat_time, repeat_delay)
     {
+        dispatcher.set_input_device_hub(mt::fake_shared(hub));
     }
+    void simulate_device_removal()
+    {
+    }
+
+    const MirInputDeviceId test_device = 123;
     std::shared_ptr<mtd::MockInputDispatcher> mock_next_dispatcher = std::make_shared<mtd::MockInputDispatcher>();
     std::shared_ptr<MockAlarmFactory> mock_alarm_factory = std::make_shared<MockAlarmFactory>();
     std::shared_ptr<mir::cookie::Authority> cookie_authority = mir::cookie::Authority::create();
     std::chrono::milliseconds const repeat_time{2};
     std::chrono::milliseconds const repeat_delay{1};
+    ::testing::NiceMock<mtd::MockInputDeviceHub> hub;
     mi::KeyRepeatDispatcher dispatcher;
+
+    mir::EventUPtr a_key_down_event()
+    {
+        return mev::make_event(test_device, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, mir_keyboard_action_down, 0, 0, mir_input_event_modifier_alt);
+    }
+
+    mir::EventUPtr a_key_up_event()
+    {
+        return mev::make_event(test_device, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, mir_keyboard_action_up, 0, 0, mir_input_event_modifier_alt);
+    }
 };
 }
 
@@ -84,18 +109,6 @@ TEST_F(KeyRepeatDispatcher, forwards_start_stop)
 
     dispatcher.start();
     dispatcher.stop();
-}
-
-namespace
-{
-mir::EventUPtr a_key_down_event()
-{
-    return mev::make_event(0, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, mir_keyboard_action_down, 0, 0, mir_input_event_modifier_alt);
-}
-mir::EventUPtr a_key_up_event()
-{
-    return mev::make_event(0, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, mir_keyboard_action_up, 0, 0, mir_input_event_modifier_alt);
-}
 }
 
 TEST_F(KeyRepeatDispatcher, schedules_alarm_to_repeat_key_down)
@@ -121,4 +134,28 @@ TEST_F(KeyRepeatDispatcher, schedules_alarm_to_repeat_key_down)
     alarm_function();
     // Trigger the cancel
     dispatcher.dispatch(*a_key_up_event());
+}
+
+TEST_F(KeyRepeatDispatcher, stops_repeat_on_device_removal)
+{
+    using namespace ::testing;
+
+    MockAlarm *mock_alarm = new MockAlarm; // deleted by AlarmFactory
+    std::function<void()> alarm_function;
+
+    InSequence seq;
+    EXPECT_CALL(*mock_alarm_factory, create_alarm_adapter(_)).Times(1).
+        WillOnce(DoAll(SaveArg<0>(&alarm_function), Return(mock_alarm)));
+    // Once for initial down and again when invoked
+    EXPECT_CALL(*mock_alarm, reschedule_in(repeat_time)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyDownEvent())).Times(1);
+    EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyRepeatEvent())).Times(1);
+    EXPECT_CALL(*mock_alarm, reschedule_in(repeat_delay)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*mock_alarm, cancel()).Times(1).WillOnce(Return(true));
+
+    // Schedule the repeat
+    dispatcher.dispatch(*a_key_down_event());
+    // Trigger the repeat
+    alarm_function();
+    simulate_device_removal();
 }

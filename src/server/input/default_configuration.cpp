@@ -139,7 +139,7 @@ std::shared_ptr<mi::InputDispatcher>
 mir::DefaultServerConfiguration::the_input_dispatcher()
 {
     return input_dispatcher(
-        [this]()
+        [this]() -> std::shared_ptr<mi::InputDispatcher>
         {
             std::chrono::milliseconds const key_repeat_timeout{500};
             std::chrono::milliseconds const key_repeat_delay{50};
@@ -148,8 +148,8 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
             auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
-                the_event_filter_chain_dispatcher(), the_main_loop(), the_cookie_authority(),
-                enable_repeat, key_repeat_timeout, key_repeat_delay);
+                    the_event_filter_chain_dispatcher(), the_main_loop(), the_cookie_authority(),
+                    enable_repeat, key_repeat_timeout, key_repeat_delay);
         });
 }
 
@@ -270,33 +270,46 @@ mir::DefaultServerConfiguration::the_input_reading_multiplexer()
 
 std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_input_device_registry()
 {
-    return default_input_device_hub([this]()
-                                    {
-                                        return std::make_shared<mi::DefaultInputDeviceHub>(
-                                            std::make_shared<mi::BasicSeat>(
-                                                the_input_dispatcher(),
-                                                the_touch_visualizer(),
-                                                the_cursor_listener(),
-                                                the_input_region()),
-                                            the_input_reading_multiplexer(),
-                                            the_main_loop(),
-                                            the_cookie_authority());
-                                    });
+    return default_input_device_hub(
+        [this]()
+        {
+            auto input_dispatcher = the_input_dispatcher();
+            auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
+            auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
+                std::make_shared<mi::BasicSeat>(
+                    input_dispatcher,
+                    the_touch_visualizer(),
+                    the_cursor_listener(),
+                    the_input_region()),
+                the_input_reading_multiplexer(),
+                the_main_loop(),
+                the_cookie_authority());
+
+            if (key_repeater)
+                key_repeater->set_input_device_hub(hub);
+            return hub;
+        });
 }
 
 std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_device_hub()
 {
-    return default_input_device_hub([this]()
-                                    {
-                                        return std::make_shared<mi::DefaultInputDeviceHub>(
-std::make_shared<mi::BasicSeat>(
-                                                the_input_dispatcher(),
-                                                the_touch_visualizer(),
-                                                the_cursor_listener(),
-                                                the_input_region()),
+    return default_input_device_hub(
+        [this]()
+        {
+            auto input_dispatcher = the_input_dispatcher();
+            auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
+            auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
+                std::make_shared<mi::BasicSeat>(
+                    input_dispatcher,
+                    the_touch_visualizer(),
+                    the_cursor_listener(),
+                    the_input_region()),
+                the_input_reading_multiplexer(),
+                the_main_loop(),
+                the_cookie_authority());
 
-                                            the_input_reading_multiplexer(),
-                                            the_main_loop(),
-                                            the_cookie_authority());
-                                    });
+            if (key_repeater)
+                key_repeater->set_input_device_hub(hub);
+            return hub;
+        });
 }
