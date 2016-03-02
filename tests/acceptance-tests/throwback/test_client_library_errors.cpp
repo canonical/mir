@@ -40,7 +40,6 @@
 #include <boost/throw_exception.hpp>
 #include <cstring>
 
-namespace mt = mir::test;
 namespace mcl = mir::client;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
