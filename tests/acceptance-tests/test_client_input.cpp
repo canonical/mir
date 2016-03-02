@@ -162,9 +162,8 @@ struct TestClientInput : mtf::HeadlessInProcessServer
         server.wrap_shell(
             [this](std::shared_ptr<mir::shell::Shell> const& wrapped)
             {
-                return std::make_shared<mtf::PlacementApplyingShell>(
-                    wrapped,
-                    input_regions, positions);
+                shell = std::make_shared<mtf::PlacementApplyingShell>(wrapped, input_regions, positions);
+                return shell;
             });
 
         HeadlessInProcessServer::SetUp();
@@ -172,6 +171,7 @@ struct TestClientInput : mtf::HeadlessInProcessServer
         positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     }
 
+    std::shared_ptr<mtf::PlacementApplyingShell> shell;
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
         };
@@ -736,12 +736,7 @@ TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client
     mir_surface_apply_spec(client.surface, spec);
     mir_surface_spec_release(spec);
 
-    // There is no way for us to wait on the result of mir_surface_apply_spec.
-    // In order to avoid strange bespoke server objects to perform this synchronizastion
-    // we simply wait on the result of another IPC call and rely on the serialization
-    // in the frontend.
-    mir_buffer_stream_swap_buffers_sync(
-        mir_surface_get_buffer_stream(client.surface));
+    ASSERT_TRUE(shell->wait_for_modify_surface(std::chrono::seconds(5)));
 
     // We verify that we don't receive the first shaped out button event.
     EXPECT_CALL(client, handle_input(mt::PointerEnterEvent()));
