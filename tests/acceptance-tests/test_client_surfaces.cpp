@@ -24,6 +24,9 @@
 #include "mir/scene/session.h"
 #include "mir/geometry/rectangle.h"
 
+#include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test_framework/stub_client_connection_configuration.h" // XXX
+#include "mir_test_framework/using_client_platform.h" // XXX
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/validity_matchers.h"
@@ -345,6 +348,14 @@ TEST_F(ClientSurfaces, can_be_renamed)
 
 TEST_F(ClientSurfaces, reports_performance)
 {
+    class Conf : public mtf::StubConnectionConfiguration
+    {
+    public:
+        Conf() : mtf::StubConnectionConfiguration("TODO") {}
+    };
+
+    mtf::UsingClientPlatform<Conf> platform;
+
     mtf::TemporaryEnvironmentValue env("MIR_CLIENT_PERF_REPORT", "log");
     (void)env; // Avoid clang warning/error
     std::stringstream log;
