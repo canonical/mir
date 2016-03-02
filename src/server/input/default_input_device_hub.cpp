@@ -228,17 +228,23 @@ void mi::DefaultInputDeviceHub::add_device_handle(std::shared_ptr<DefaultDevice>
 
 void mi::DefaultInputDeviceHub::remove_device_handle(MirInputDeviceId id)
 {
-    auto handle_it = remove_if(begin(handles),
-                               end(handles),
-                               [&id](auto const& handle){return handle->id() == id;});
+    auto handle_it = remove_if(
+        begin(handles),
+        end(handles),
+        [this,&id](auto const& handle)
+        {
+            if (handle->id() != id)
+                return false;
+            for (auto const& observer : observers)
+            {
+                observer->device_removed(handle);
+                observer->changes_complete();
+            }
+            return true;
+        });
 
     if (handle_it == end(handles))
         return;
-    for (auto const& observer : observers)
-    {
-        observer->device_removed(*handle_it);
-        observer->changes_complete();
-    }
 
     handles.erase(handle_it, end(handles));
 }
