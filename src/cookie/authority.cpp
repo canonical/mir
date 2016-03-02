@@ -65,7 +65,7 @@ static mir::cookie::Secret get_random_data(unsigned size)
                                                 "open failed on urandom"));
 
     mir::cookie::Secret buffer(size);
-    auto got = read(fd, buffer.data(), size);
+    unsigned got = read(fd, buffer.data(), size);
     int error = errno;
     close(fd);
     
