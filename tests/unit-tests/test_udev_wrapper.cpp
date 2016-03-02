@@ -294,11 +294,7 @@ TEST_F(UdevWrapperDeathTest, DereferencingEndReturnsInvalidObject)
 
     devices.scan_devices();
 
-    EXPECT_EXIT(
-    {
-        mir::test::disable_core_dump();
-        (*devices.end()).subsystem();
-    }, KilledByInvalidMemoryAccess, "");
+    MIR_EXPECT_EXIT((*devices.end()).subsystem(), KilledByInvalidMemoryAccess, "");
 
     auto iter = devices.begin();
 
@@ -306,11 +302,7 @@ TEST_F(UdevWrapperDeathTest, DereferencingEndReturnsInvalidObject)
     {
         iter++;
     }
-    EXPECT_EXIT(
-    {
-        mir::test::disable_core_dump();
-        (*iter).subsystem();
-    }, KilledByInvalidMemoryAccess, "");
+    MIR_EXPECT_EXIT((*iter).subsystem(), KilledByInvalidMemoryAccess, "");
 }
 
 TEST_F(UdevWrapperTest, MemberDereferenceWorks)
@@ -337,11 +329,7 @@ TEST_F(UdevWrapperDeathTest, MemberDereferenceOfEndDies)
 
     devices.scan_devices();
 
-    EXPECT_EXIT(
-    {
-        mir::test::disable_core_dump();
-        devices.end()->subsystem();
-    }, KilledByInvalidMemoryAccess, "");
+    MIR_EXPECT_EXIT(devices.end()->subsystem(), KilledByInvalidMemoryAccess, "");
 
     auto iter = devices.begin();
 
@@ -349,11 +337,7 @@ TEST_F(UdevWrapperDeathTest, MemberDereferenceOfEndDies)
     {
         iter++;
     }
-    EXPECT_EXIT(
-    {
-        mir::test::disable_core_dump();
-        iter->subsystem();
-    }, KilledByInvalidMemoryAccess, "");
+    MIR_EXPECT_EXIT(iter->subsystem(), KilledByInvalidMemoryAccess, "");
 }
 
 TEST_F(UdevWrapperTest, UdevMonitorDoesNotTriggerBeforeEnabling)

@@ -31,4 +31,18 @@ inline void disable_core_dump()
 
 } } // namespace mir::test
 
+#define MIR_EXPECT_DEATH(statement, message) \
+    EXPECT_DEATH( \
+    { \
+        ::mir::test::disable_core_dump(); \
+        { statement ; } \
+    }, message);
+
+#define MIR_EXPECT_EXIT(statement, how, message) \
+    EXPECT_EXIT( \
+    { \
+        ::mir::test::disable_core_dump(); \
+        { statement ; } \
+    }, how, message);
+
 #endif /* MIR_TEST_DEATH_H_ */

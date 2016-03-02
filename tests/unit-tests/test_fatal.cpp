@@ -29,31 +29,25 @@ TEST(FatalErrorDeathTest, abort_formats_message_to_stderr)
 {
     mir::FatalErrorStrategy on_error{mir::fatal_error_abort};
 
-    EXPECT_DEATH(
-    {
-        mir::test::disable_core_dump();
-        mir::fatal_error("%s had %d %s %s", "Mary", 1, "little", "lamb");
-    }, "Mary had 1 little lamb");
+    MIR_EXPECT_DEATH(
+        mir::fatal_error("%s had %d %s %s", "Mary", 1, "little", "lamb"),
+        "Mary had 1 little lamb");
 }
 
 TEST(FatalErrorDeathTest, abort_raises_sigabrt)
 {
     mir::FatalErrorStrategy on_error{mir::fatal_error_abort};
 
-    EXPECT_EXIT(
-    {
-        mir::test::disable_core_dump();
-        mir::fatal_error("Hello world");
-    }, KilledBySignal(SIGABRT), "Hello world");
+    MIR_EXPECT_EXIT(mir::fatal_error("Hello world"),
+                    KilledBySignal(SIGABRT),
+                    "Hello world");
 }
 
 TEST(FatalErrorTest, throw_formats_message_to_what)
 {
     EXPECT_THROW(
-    {
-        mir::test::disable_core_dump();
-        mir::fatal_error("%s had %d %s %s", "Mary", 1, "little", "lamb");
-    }, std::runtime_error);
+        mir::fatal_error("%s had %d %s %s", "Mary", 1, "little", "lamb"),
+        std::runtime_error);
 
     try
     {
