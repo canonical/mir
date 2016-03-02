@@ -24,7 +24,6 @@
 #include "mir_test_framework/temporary_environment_value.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir/test/doubles/null_logger.h"
-#include "mir/test/death.h"
 
 #include <gtest/gtest.h>
 
@@ -80,9 +79,8 @@ TEST_F(ServerShutdownDeathTest, abort_removes_endpoint)
     run_in_server([&]
         {
             sync.wait_for_signal_ready_for();
-            mt::disable_core_dump();
             abort();
-        });
+        }, disable_core_dump);
 
     if (is_test_process())
     {
@@ -111,9 +109,8 @@ TEST_F(ServerShutdownDeathTest, fatal_error_abort_causes_abort_on_fatal_error)
     run_in_server([&]
         {
             sync.wait_for_signal_ready_for();
-            mt::disable_core_dump();
             mir::fatal_error("Bang");
-        });
+        }, disable_core_dump);
 
     if (is_test_process())
     {
@@ -137,9 +134,8 @@ TEST_F(ServerShutdownDeathTest, fatal_error_abort_removes_endpoint)
     run_in_server([&]
         {
             sync.wait_for_signal_ready_for();
-            mt::disable_core_dump();
             mir::fatal_error("Bang");
-        });
+        }, disable_core_dump);
 
     if (is_test_process())
     {
@@ -162,9 +158,8 @@ TEST_F(ServerShutdownDeathTest, on_fatal_error_abort_option_causes_abort_on_fata
     run_in_server([&]
         {
             sync.wait_for_signal_ready_for();
-            mt::disable_core_dump();
             mir::fatal_error("Bang");
-        });
+        }, disable_core_dump);
 
     if (is_test_process())
     {
@@ -215,9 +210,8 @@ TEST_P(OnSignalDeathTest, removes_endpoint)
     run_in_server([&]
         {
             sync.wait_for_signal_ready_for();
-            mt::disable_core_dump();
             raise(GetParam());
-        });
+        }, disable_core_dump);
 
     if (is_test_process())
     {

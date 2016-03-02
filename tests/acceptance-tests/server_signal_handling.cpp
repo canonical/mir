@@ -20,7 +20,6 @@
 
 #include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir/test/cross_process_sync.h"
-#include "mir/test/death.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -85,9 +84,8 @@ TEST_P(AbortDeathTest, cleanup_handler_is_called_for)
 
     run_in_server([&]
     {
-        mt::disable_core_dump();
         kill(getpid(), GetParam());
-    });
+    }, disable_core_dump);
 
     cleanup_done.wait_for_signal_ready_for(timeout);
 }
@@ -112,9 +110,8 @@ TEST_F(ServerSignalDeathTest, multiple_cleanup_handlers_are_called)
 
     run_in_server([&]
     {
-        mt::disable_core_dump();
         kill(getpid(), SIGABRT);
-    });
+    }, disable_core_dump);
 
     cleanup_done.wait_for_signal_ready_for(timeout);
     for (auto& cleanup : more_cleanup)
