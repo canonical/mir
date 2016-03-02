@@ -53,14 +53,9 @@ void mtf::InterprocessClientServerTest::init_server(std::function<void()> const&
     }
 }
 
-void mtf::InterprocessClientServerTest::run_in_server(std::function<void()> const& exec_code)
-{
-    run_in_server(exec_code, 0);
-}
-
 void mtf::InterprocessClientServerTest::run_in_server(
-    std::function<void()> const& exec_code,
-    mtf::InterprocessClientServerTest::RunFlags flags)
+        std::function<void()> const& exec_code,
+        mtf::InterprocessClientServerTest::RunFlags flags)
 {
     if (test_process_id != getpid()) return;
 
