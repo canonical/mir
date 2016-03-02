@@ -80,9 +80,8 @@ struct NativeWindowDeleter
     NativeWindowDeleter(mclm::NativeSurface* window)
      : window(window) {}
 
-    void operator()(EGLNativeWindowType* type)
+    void operator()(void*)
     {
-        delete type;
         delete window;
     }
 
@@ -91,14 +90,12 @@ private:
 };
 }
 
-std::shared_ptr<EGLNativeWindowType> mclm::ClientPlatform::create_egl_native_window(EGLNativeSurface* client_surface)
+std::shared_ptr<void> mclm::ClientPlatform::create_egl_native_window(EGLNativeSurface* client_surface)
 {
     //TODO: this is awkward on both android and gbm...
     auto native_window = new NativeSurface(*client_surface);
-    auto egl_native_window = new EGLNativeWindowType;
-    *egl_native_window = reinterpret_cast<EGLNativeWindowType>(native_window);
     NativeWindowDeleter deleter(native_window);
-    return std::shared_ptr<EGLNativeWindowType>(egl_native_window, deleter);
+    return std::shared_ptr<void>(native_window, deleter);
 }
 
 std::shared_ptr<EGLNativeDisplayType> mclm::ClientPlatform::create_egl_native_display()

@@ -202,6 +202,7 @@ message Connection {
   repeated DisplayOutput display_output = 3;
   optional DisplayConfiguration display_configuration = 4;
   repeated uint32 surface_pixel_format = 5;
+  repeated InputDeviceInfo input_devices = 6;
 
   optional string error = 127;
 }

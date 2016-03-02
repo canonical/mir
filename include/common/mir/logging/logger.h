@@ -45,7 +45,15 @@ public:
                      const std::string& message,
                      const std::string& component) = 0;
 
-    virtual void log(char const* component, Severity severity, char const* format, ...);
+    /*
+     * Those playing at home may wonder why we're saying the 4th argument is the format string,
+     * when it's the 3rd argument in the signature.
+     *
+     * The answer, of course, is that the attribute doesn't know about the implicit
+     * 'this' first parameter of C++!
+     */
+    virtual void log(char const* component, Severity severity, char const* format, ...)
+         __attribute__ ((format (printf, 4, 5)));
 
 protected:
     Logger() {}
