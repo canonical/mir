@@ -21,7 +21,10 @@
 #define MIR_BASIC_SEAT_H_
 
 #include "mir/input/seat.h"
+#include "mir/frontend/event_sink.h"
 #include "seat_input_device_tracker.h"
+
+#include <mutex>
 
 namespace mir
 {
@@ -40,16 +43,14 @@ public:
               std::shared_ptr<CursorListener> const& cursor_listener,
               std::shared_ptr<InputRegion> const& input_region);
     // Seat methods:
-    void add_device(std::shared_ptr<Device> const& device) override;
-    void remove_device(std::shared_ptr<Device> const& device) override;
+    void add_device(Device const& device) override;
+    void remove_device(Device const& device) override;
     void dispatch_event(MirEvent& event) override;
-    geometry::Rectangle get_rectangle_for(std::shared_ptr<Device> const& dev) override;
-
+    geometry::Rectangle get_rectangle_for(Device const& dev) override;
 
 private:
-    std::vector<std::shared_ptr<Device>> devices;
     SeatInputDeviceTracker input_state_tracker;
-    std::shared_ptr<InputRegion> input_region;
+    std::shared_ptr<InputRegion> const input_region;
 };
 }
 }

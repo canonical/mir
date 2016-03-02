@@ -20,7 +20,7 @@ set(GMOCK_PREFIX gmock)
 set(GMOCK_BINARY_DIR ${CMAKE_BINARY_DIR}/${GMOCK_PREFIX}/libs)
 set(GTEST_BINARY_DIR ${GMOCK_BINARY_DIR}/gtest)
 
-set(GTEST_CXX_FLAGS "-fPIC")
+set(GTEST_CXX_FLAGS "-fPIC -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64")
 if (cmake_build_type_lower MATCHES "threadsanitizer")
   set(GTEST_CXX_FLAGS "${GTEST_CXX_FLAGS} -fsanitize=thread")
 elseif (cmake_build_type_lower MATCHES "ubsanitizer")

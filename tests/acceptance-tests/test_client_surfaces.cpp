@@ -28,14 +28,12 @@
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/validity_matchers.h"
 #include "mir/test/fake_shared.h"
-#include "mir/test/pipe.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <condition_variable>
 #include <mutex>
-#include <fcntl.h>
 
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
@@ -340,67 +338,6 @@ TEST_F(ClientSurfaces, can_be_renamed)
     mir_surface_spec_set_name(spec, "Alice");
     mir_surface_apply_spec(surf, spec);
     mir_surface_spec_release(spec);
-
-    mir_surface_release_sync(surf);
-}
-
-TEST_F(ClientSurfaces, reports_performance)
-{
-    mt::Pipe log_pipe(O_NONBLOCK);
-    mtf::TemporaryEnvironmentValue env[] =
-    {
-        {"MIR_LOG_FD", std::to_string((int)log_pipe.write_fd()).c_str()},
-        {"MIR_CLIENT_PERF_REPORT", "log"}
-    };
-    std::stringstream log;
-
-    (void)env; // Avoid clang warning/error
-
-    auto spec = mir_connection_create_spec_for_normal_surface(
-                   connection, 123, 456, mir_pixel_format_abgr_8888);
-    ASSERT_THAT(spec, NotNull());
-    mir_surface_spec_set_name(spec, "Foo");
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
-    auto surf = mir_surface_create_sync(spec);
-    ASSERT_THAT(surf, NotNull());
-    mir_surface_spec_release(spec);
-
-    int const target_fps = 10;
-    int const nseconds = 3;
-    auto bs = mir_surface_get_buffer_stream(surf);
-    for (int s = 0; s < nseconds; ++s)
-    {
-        for (int f = 0; f < target_fps; ++f)
-            mir_buffer_stream_swap_buffers_sync(bs);
-
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-
-        char buf[1024];
-        ssize_t got;
-        while ((got = read(log_pipe.read_fd(), buf, sizeof(buf)-1)) > 0)
-            log.write(buf, got);
-    }
-
-    int reports = 0;
-    while (!log.eof())
-    {
-        std::string line;
-        std::getline(log, line);
-        auto perf = line.find(" perf: ");
-        if (perf != line.npos)
-        {
-            ++reports;
-            char name[256];
-            float fps;
-            int fields = sscanf(line.c_str() + perf,
-                                " perf: %255[^:]: %f FPS,", name, &fps);
-            ASSERT_EQ(2, fields) << "Log line = {" << line << "}";
-            EXPECT_STREQ("Foo", name);
-            EXPECT_NEAR(target_fps, fps, 3.0f);
-        }
-    }
-
-    EXPECT_THAT(reports, ::testing::Ge(nseconds-1));
 
     mir_surface_release_sync(surf);
 }

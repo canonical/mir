@@ -31,6 +31,22 @@ namespace mir_test_framework
 {
 std::shared_ptr<mir::SharedLibrary> platform_library;
 
+namespace
+{
+std::shared_ptr<mir::client::ClientPlatform> wrap_in_platform_library_cleanup(
+    std::shared_ptr<mir::client::ClientPlatform>&& platform)
+{
+    return std::shared_ptr<mir::client::ClientPlatform>{
+        platform.get(),
+        [platform](mir::client::ClientPlatform*) mutable
+        {
+            platform.reset();
+            platform_library.reset();
+        }
+    };
+}
+}
+
 std::shared_ptr<mir::client::ClientPlatform> create_android_client_platform()
 {
     using namespace testing;
@@ -39,7 +55,8 @@ std::shared_ptr<mir::client::ClientPlatform> create_android_client_platform()
         .WillByDefault(Invoke([](MirPlatformPackage& package) { ::memset(&package, 0, sizeof(package)); }));
     platform_library = std::make_shared<mir::SharedLibrary>(client_platform("android"));
     auto platform_factory = platform_library->load_function<mir::client::CreateClientPlatform>("create_client_platform");
-    return platform_factory(&ctx);
+
+    return wrap_in_platform_library_cleanup(platform_factory(&ctx));
 }
 
 std::shared_ptr<mir::client::ClientPlatform> create_mesa_client_platform(
@@ -48,7 +65,8 @@ std::shared_ptr<mir::client::ClientPlatform> create_mesa_client_platform(
     using namespace testing;
     platform_library = std::make_shared<mir::SharedLibrary>(client_platform("mesa"));
     auto platform_factory = platform_library->load_function<mir::client::CreateClientPlatform>("create_client_platform");
-    return platform_factory(client_context);
+
+    return wrap_in_platform_library_cleanup(platform_factory(client_context));
 }
 
 std::shared_ptr<mir::SharedLibrary>

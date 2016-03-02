@@ -27,10 +27,33 @@
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir_wait_handle.h"
 
-#include <EGL/eglplatform.h>
-
 #include <memory>
 #include <functional>
+#include <EGL/eglplatform.h>
+
+/*
+ * ClientBufferStream::egl_native_window() returns EGLNativeWindowType.
+ *
+ * EGLNativeWindowType is an EGL platform-specific type that is typically a
+ * (possibly slightly obfuscated) pointer. This makes our client module ABI
+ * technically EGL-platform dependent, which is awkward because we support
+ * multiple EGL platforms.
+ *
+ * On both the Mesa and the Android EGL platforms EGLNativeWindow is a
+ * pointer or a uintptr_t.
+ *
+ * In practise EGLNativeWindowType is always a typedef to a pointer-ish, but
+ * for paranoia's sake make sure the build will fail if we ever encounter a
+ * strange EGL platform where this isn't the case.
+ */
+#include <type_traits>
+static_assert(
+    sizeof(EGLNativeWindowType) == sizeof(void*) &&
+    std::is_pod<EGLNativeWindowType>::value,
+    "The ClientBufferStream requires that EGLNativeWindowType be no-op convertible to void*");
+
+#undef EGLNativeWindowType
+#define EGLNativeWindowType void*
 
 namespace mir
 {

@@ -132,6 +132,7 @@ class TouchVisualizer;
 class InputRegion;
 class InputSender;
 class CursorImages;
+class Seat;
 }
 
 namespace logging
@@ -302,6 +303,7 @@ public:
     virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
     virtual std::shared_ptr<input::InputSender>    the_input_sender();
+    virtual std::shared_ptr<input::Seat> the_seat();
 
     // new input reading related parts:
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
@@ -364,6 +366,7 @@ protected:
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<input::CursorListener> cursor_listener;
     CachedPtr<input::TouchVisualizer> touch_visualizer;
+    CachedPtr<input::Seat> seat;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::Display>      display;
