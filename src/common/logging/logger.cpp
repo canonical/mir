@@ -42,23 +42,16 @@ namespace
 {
 std::mutex log_mutex;
 std::shared_ptr<ml::Logger> the_logger;
+}
 
-std::shared_ptr<ml::Logger> get_logger()
+std::shared_ptr<ml::Logger> const& ml::get_logger()
 {
     std::lock_guard<decltype(log_mutex)> lock{log_mutex};
 
-    if (auto const result = the_logger)
-    {
-        return result;
-    }
-    else
-    {
-        if (!the_logger)
-            the_logger = std::make_shared<ml::DumbConsoleLogger>();
+    if (!the_logger)
+        the_logger = std::make_shared<ml::DumbConsoleLogger>();
 
-        return the_logger;
-    }
-}
+    return the_logger;
 }
 
 void ml::log(ml::Severity severity, const std::string& message, const std::string& component)
