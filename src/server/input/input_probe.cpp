@@ -63,7 +63,7 @@ mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
                 auto const probe = module->load_function<mi::ProbePlatform>(
                     "probe_input_platform", MIR_SERVER_INPUT_PLATFORM_VERSION);
 
-                // We process the modules in decending .sonumber order so, luckily, we try mesa-x11 before evdev.
+                // We process the modules in descending .sonumber order so, luckily, we try mesa-x11 before evdev.
                 // But only because the graphics platform version is currently higher than the input platform version.
                 // Similarly, We only take the first found of duplicate modules, as that will be the most recent.
                 // This is a heuristic that assumes we're always looking for the most up-to-date driver,
