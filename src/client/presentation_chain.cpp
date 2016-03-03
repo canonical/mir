@@ -36,7 +36,7 @@ mcl::PresentationChain::PresentationChain(
     connection_(connection),
     stream_id(stream_id),
     server(server),
-    factory(factory)
+    allocator(factory)
 {
 }
 
@@ -52,15 +52,29 @@ static void ignore_response(mp::Void* response)
     delete response;
 }
 
+mcl::PresentationChain::AsyncBufferAllocation::AsyncBufferAllocation(
+    std::shared_ptr<ClientBufferFactory> const& factory) :
+    factory(factory)
+{
+}
+
+void mcl::PresentationChain::AsyncBufferAllocation::expect_buffer(
+    geometry::Size size,
+    MirPixelFormat format,
+    MirBufferUsage usage,
+    mir_buffer_callback cb,
+    void* cb_context)
+{
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    allocation_requests.emplace_back(
+        std::make_unique<AllocationRequest>(size, format, usage, cb, cb_context));
+}
+
 void mcl::PresentationChain::allocate_buffer(
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback cb, void* cb_context)
 {
-    {
-        std::lock_guard<decltype(mutex)> lk(mutex);
-        allocation_requests.emplace_back(
-            std::make_unique<AllocationRequest>(size, format, usage, cb, cb_context));
-    }
+    allocator.expect_buffer(size, format, usage, cb, cb_context);
 
     mp::BufferAllocation request;
     request.mutable_id()->set_value(stream_id);
@@ -116,19 +130,9 @@ void mcl::PresentationChain::release_buffer(MirBuffer* buffer)
     server.release_buffers(&request, ignored, gp::NewCallback(ignore_response, ignored));
 }
 
-void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
+std::unique_ptr<mcl::Buffer> mcl::PresentationChain::AsyncBufferAllocation::generate_buffer(
+    mir::protobuf::Buffer const& buffer)
 {
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    //first see if this buffer has been here before
-    auto buffer_it = std::find_if(buffers.begin(), buffers.end(),
-        [&buffer](std::unique_ptr<Buffer> const& b)
-        { return buffer.buffer_id() == b->rpc_id(); });
-    if (buffer_it != buffers.end())
-    {
-        (*buffer_it)->received();
-        return;
-    }
-
     //must be new, allocate and send it.
     auto request_it = std::find_if(allocation_requests.begin(), allocation_requests.end(),
         [&buffer](std::unique_ptr<AllocationRequest> const& it)
@@ -150,12 +154,28 @@ void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
     package->flags = buffer.flags();
     package->width = buffer.width();
     package->height = buffer.height();
-    buffers.emplace_back(std::make_unique<Buffer>(
+    auto b = std::make_unique<Buffer>(
         (*request_it)->cb, (*request_it)->cb_context,
         buffer.buffer_id(),
-        factory->create_buffer(package, (*request_it)->size, (*request_it)->format)));
-
+        factory->create_buffer(package, (*request_it)->size, (*request_it)->format));
     allocation_requests.erase(request_it);
+    return std::move(b);
+}
+
+void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
+{
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    //first see if this buffer has been here before
+    auto buffer_it = std::find_if(buffers.begin(), buffers.end(),
+        [&buffer](std::unique_ptr<Buffer> const& b)
+        { return buffer.buffer_id() == b->rpc_id(); });
+    if (buffer_it != buffers.end())
+    {
+        (*buffer_it)->received();
+        return;
+    }
+
+    buffers.emplace_back(allocator.generate_buffer(buffer));
 }
 
 void mcl::PresentationChain::buffer_unavailable()
@@ -172,7 +192,7 @@ MirConnection* mcl::PresentationChain::connection() const
     return connection_;
 }
 
-mcl::PresentationChain::AllocationRequest::AllocationRequest(
+mcl::PresentationChain::AsyncBufferAllocation::AllocationRequest::AllocationRequest(
     geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback cb, void* cb_context) :
     size(size),

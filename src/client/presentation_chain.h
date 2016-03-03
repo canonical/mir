@@ -63,25 +63,41 @@ private:
     MirConnection* const connection_;
     int const stream_id;
     rpc::DisplayServer& server;
-    std::shared_ptr<ClientBufferFactory> const factory;
 
-    std::mutex mutex;
-    struct AllocationRequest
+    struct AsyncBufferAllocation
     {
-        AllocationRequest(
+        AsyncBufferAllocation(std::shared_ptr<ClientBufferFactory> const& factory);
+
+        std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer);
+        void expect_buffer(
             geometry::Size size,
             MirPixelFormat format,
             MirBufferUsage usage,
             mir_buffer_callback cb,
             void* cb_context);
 
-        geometry::Size size;
-        MirPixelFormat format;
-        MirBufferUsage usage;
-        mir_buffer_callback cb;
-        void* cb_context;
-    };
-    std::vector<std::unique_ptr<AllocationRequest>> allocation_requests;
+        std::mutex mutex;
+        struct AllocationRequest
+        {
+            AllocationRequest(
+                geometry::Size size,
+                MirPixelFormat format,
+                MirBufferUsage usage,
+                mir_buffer_callback cb,
+                void* cb_context);
+
+            geometry::Size size;
+            MirPixelFormat format;
+            MirBufferUsage usage;
+            mir_buffer_callback cb;
+            void* cb_context;
+        };
+        std::vector<std::unique_ptr<AllocationRequest>> allocation_requests;
+        std::shared_ptr<ClientBufferFactory> const factory;
+
+    } allocator;
+
+    std::mutex mutex;
     std::vector<std::unique_ptr<Buffer>> buffers;
 };
 }
