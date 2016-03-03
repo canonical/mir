@@ -261,8 +261,11 @@ public:
         buf_params->set_height(size.height.as_int());
         buf_params->set_pixel_format(format);
         buf_params->set_buffer_usage(usage);
-        server.allocate_buffers(&request, &protobuf_void, 
-            google::protobuf::NewCallback(google::protobuf::DoNothing));
+
+        //note, NewCallback will trigger on exception, deleting this object there
+        auto protobuf_void = new mp::Void;
+        server.allocate_buffers(&request,  protobuf_void,
+            google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
     void free_buffer(int buffer_id) override
@@ -270,8 +273,11 @@ public:
         mp::BufferRelease request;
         request.mutable_id()->set_value(stream_id);
         request.add_buffers()->set_buffer_id(buffer_id);
-        server.release_buffers(&request, &protobuf_void,
-            google::protobuf::NewCallback(google::protobuf::DoNothing));
+
+        //note, NewCallback will trigger on exception, deleting this object there
+        auto protobuf_void = new mp::Void;
+        server.release_buffers(&request, protobuf_void,
+            google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
     void submit_buffer(int id, mcl::ClientBuffer&) override
@@ -279,8 +285,16 @@ public:
         mp::BufferRequest request;
         request.mutable_id()->set_value(stream_id);
         request.mutable_buffer()->set_buffer_id(id);
-        server.submit_buffer(&request, &protobuf_void,
-            google::protobuf::NewCallback(google::protobuf::DoNothing));
+
+        //note, NewCallback will trigger on exception, deleting this object there
+        auto protobuf_void = new mp::Void;
+        server.submit_buffer(&request, protobuf_void,
+            google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
+    }
+
+    static void ignore_response(mp::Void* void_response)
+    {
+        delete void_response;
     }
 
 private:
@@ -425,10 +439,12 @@ mcl::BufferStream::BufferStream(
         }
         else
         {
+            cached_buffer_size = ideal_buffer_size;
             buffer_depository = std::make_unique<NewBufferSemantics>(
                 client_platform->create_buffer_factory(),
                 std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
-                ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
+                ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
+                protobuf_bs->buffer_usage(), nbuffers);
         }
 
 
@@ -552,8 +568,9 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
 
 MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 {
+    auto id = buffer_depository->current_buffer_id();
     std::unique_lock<decltype(mutex)> lock(mutex);
-    perf_report->end_frame(buffer_depository->current_buffer_id());
+    perf_report->end_frame(id);
 
     secured_region.reset();
 
@@ -633,7 +650,6 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
 
 uint32_t mcl::BufferStream::get_current_buffer_id()
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
     return buffer_depository->current_buffer_id();
 }
 

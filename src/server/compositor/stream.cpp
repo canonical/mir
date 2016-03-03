@@ -220,6 +220,6 @@ void mc::Stream::set_scale(float)
 
 void mc::Stream::drop_frame()
 {
-    if ((schedule->num_scheduled() > 1) && arbiter->has_buffer())
+    if (schedule->num_scheduled() > 1)
         buffers->send_buffer(schedule->next_buffer()->id());
 }
