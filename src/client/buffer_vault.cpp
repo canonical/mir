@@ -134,15 +134,27 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     auto it = buffers.find(protobuf_buffer.buffer_id());
     if (it == buffers.end())
     {
-        auto buffer = factory->create_buffer(package, geom::Size{package->width, package->height}, format);
-        buffers[protobuf_buffer.buffer_id()] = BufferEntry{ buffer, Owner::Self };
+        geom::Size sz{package->width, package->height};
+        if (sz != size)
+        {
+            lk.unlock();
+            server_requests->free_buffer(protobuf_buffer.buffer_id());
+            for (int i = 0; i != package->fd_items; ++i)
+                close(package->fd[i]);
+
+            server_requests->allocate_buffer(size, format, usage);
+            return;
+        }
+
+        buffers[protobuf_buffer.buffer_id()] = 
+            BufferEntry{ factory->create_buffer(package, sz, format), Owner::Self };
     }
     else
     {
+        it->second.buffer->update_from(*package);
         if (size == it->second.buffer->size())
         { 
             it->second.owner = Owner::Self;
-            it->second.buffer->update_from(*package);
         }
         else
         {
