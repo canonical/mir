@@ -346,37 +346,42 @@ TEST_F(ClientSurfaces, can_be_renamed)
     mir_surface_release_sync(surf);
 }
 
+namespace
+{
+    class StringStreamLogger : public mir::logging::Logger
+    {
+    public:
+        void log(mir::logging::Severity,
+                 std::string const& message,
+                 std::string const& component) override
+        {
+            ss << component << ": " << message << std::endl;
+        }
+        static std::stringstream ss;
+    };
+
+    std::stringstream StringStreamLogger::ss;
+} // namespace
+
 TEST_F(ClientSurfaces, reports_performance)
 {
     class Conf : public mtf::StubConnectionConfiguration
     {
     public:
-        Conf() : mtf::StubConnectionConfiguration("TODO") {}
+        Conf(std::string const& socket) :
+            mtf::StubConnectionConfiguration(socket)
+        {
+        }
+        virtual std::shared_ptr<mir::logging::Logger> the_logger() override
+        {
+            return std::make_shared<StringStreamLogger>();
+        }
     };
 
     mtf::UsingClientPlatform<Conf> platform;
 
     mtf::TemporaryEnvironmentValue env("MIR_CLIENT_PERF_REPORT", "log");
     (void)env; // Avoid clang warning/error
-    std::stringstream log;
-
-    class Logger : public mir::logging::Logger
-    {
-    public:
-        Logger(std::stringstream& the_log) : the_log{the_log} {}
-
-        void log(mir::logging::Severity,
-                 std::string const& message,
-                 std::string const& component) override
-        {
-            the_log << component << ": " << message << std::endl;
-        }
-    private:
-        std::stringstream& the_log;
-    };
-
-    auto old_logger = mir::logging::get_logger();
-    mir::logging::set_logger(std::make_shared<Logger>(log));
 
     auto spec = mir_connection_create_spec_for_normal_surface(
                    connection, 123, 456, mir_pixel_format_abgr_8888);
@@ -399,10 +404,10 @@ TEST_F(ClientSurfaces, reports_performance)
     }
 
     int reports = 0;
-    while (!log.eof())
+    while (!StringStreamLogger::ss.eof())
     {
         std::string line;
-        std::getline(log, line);
+        std::getline(StringStreamLogger::ss, line);
         auto perf = line.find(" perf: ");
         if (perf != line.npos)
         {
@@ -420,7 +425,6 @@ TEST_F(ClientSurfaces, reports_performance)
     EXPECT_THAT(reports, ::testing::Ge(nseconds-1));
 
     mir_surface_release_sync(surf);
-    mir::logging::set_logger(old_logger);
 }
 
 TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
