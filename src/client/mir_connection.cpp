@@ -1080,7 +1080,8 @@ void MirConnection::context_created(ChainCreationRequest* request_raw)
     try
     {
         auto chain = std::make_shared<mcl::PresentationChain>(
-            this, protobuf_bs->id().value(), server, platform->create_buffer_factory());
+            this, protobuf_bs->id().value(), server,
+            std::make_shared<mcl::AsyncBufferAllocation>(platform->create_buffer_factory()));
 
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), chain);
 

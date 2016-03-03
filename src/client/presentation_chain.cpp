@@ -32,11 +32,11 @@ mcl::PresentationChain::PresentationChain(
     MirConnection* connection,
     int stream_id,
     mir::client::rpc::DisplayServer& server,
-    std::shared_ptr<mcl::ClientBufferFactory> const& factory) :
+    std::shared_ptr<mcl::AsyncBufferAllocation> const& factory) :
     connection_(connection),
     stream_id(stream_id),
     server(server),
-    allocator(factory)
+    factory(factory)
 {
 }
 
@@ -52,29 +52,11 @@ static void ignore_response(mp::Void* response)
     delete response;
 }
 
-mcl::PresentationChain::AsyncBufferAllocation::AsyncBufferAllocation(
-    std::shared_ptr<ClientBufferFactory> const& factory) :
-    factory(factory)
-{
-}
-
-void mcl::PresentationChain::AsyncBufferAllocation::expect_buffer(
-    geometry::Size size,
-    MirPixelFormat format,
-    MirBufferUsage usage,
-    mir_buffer_callback cb,
-    void* cb_context)
-{
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    allocation_requests.emplace_back(
-        std::make_unique<AllocationRequest>(size, format, usage, cb, cb_context));
-}
-
 void mcl::PresentationChain::allocate_buffer(
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback cb, void* cb_context)
 {
-    allocator.expect_buffer(size, format, usage, cb, cb_context);
+    factory->expect_buffer(size, format, usage, cb, cb_context);
 
     mp::BufferAllocation request;
     request.mutable_id()->set_value(stream_id);
@@ -130,7 +112,78 @@ void mcl::PresentationChain::release_buffer(MirBuffer* buffer)
     server.release_buffers(&request, ignored, gp::NewCallback(ignore_response, ignored));
 }
 
-std::unique_ptr<mcl::Buffer> mcl::PresentationChain::AsyncBufferAllocation::generate_buffer(
+void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
+{
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    //first see if this buffer has been here before
+    auto buffer_it = std::find_if(buffers.begin(), buffers.end(),
+        [&buffer](std::unique_ptr<Buffer> const& b)
+        { return buffer.buffer_id() == b->rpc_id(); });
+    if (buffer_it != buffers.end())
+    {
+        (*buffer_it)->received();
+        return;
+    }
+
+    buffers.emplace_back(factory->generate_buffer(buffer));
+}
+
+void mcl::PresentationChain::buffer_unavailable()
+{
+}
+
+int mcl::PresentationChain::rpc_id() const
+{
+    return stream_id;
+}
+
+MirConnection* mcl::PresentationChain::connection() const
+{
+    return connection_;
+}
+
+char const* mcl::PresentationChain::error_msg() const
+{
+    return "";
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+mcl::AsyncBufferAllocation::AsyncBufferAllocation(
+    std::shared_ptr<ClientBufferFactory> const& factory) :
+    factory(factory)
+{
+}
+
+void mcl::AsyncBufferAllocation::expect_buffer(
+    geometry::Size size,
+    MirPixelFormat format,
+    MirBufferUsage usage,
+    mir_buffer_callback cb,
+    void* cb_context)
+{
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    allocation_requests.emplace_back(
+        std::make_unique<AllocationRequest>(size, format, usage, cb, cb_context));
+}
+
+std::unique_ptr<mcl::Buffer> mcl::AsyncBufferAllocation::generate_buffer(
     mir::protobuf::Buffer const& buffer)
 {
     //must be new, allocate and send it.
@@ -162,37 +215,7 @@ std::unique_ptr<mcl::Buffer> mcl::PresentationChain::AsyncBufferAllocation::gene
     return std::move(b);
 }
 
-void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
-{
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    //first see if this buffer has been here before
-    auto buffer_it = std::find_if(buffers.begin(), buffers.end(),
-        [&buffer](std::unique_ptr<Buffer> const& b)
-        { return buffer.buffer_id() == b->rpc_id(); });
-    if (buffer_it != buffers.end())
-    {
-        (*buffer_it)->received();
-        return;
-    }
-
-    buffers.emplace_back(allocator.generate_buffer(buffer));
-}
-
-void mcl::PresentationChain::buffer_unavailable()
-{
-}
-
-int mcl::PresentationChain::rpc_id() const
-{
-    return stream_id;
-}
-
-MirConnection* mcl::PresentationChain::connection() const
-{
-    return connection_;
-}
-
-mcl::PresentationChain::AsyncBufferAllocation::AllocationRequest::AllocationRequest(
+mcl::AsyncBufferAllocation::AllocationRequest::AllocationRequest(
     geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback cb, void* cb_context) :
     size(size),
@@ -203,7 +226,3 @@ mcl::PresentationChain::AsyncBufferAllocation::AllocationRequest::AllocationRequ
 {
 }
 
-char const* mcl::PresentationChain::error_msg() const
-{
-    return "";
-}
