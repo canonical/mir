@@ -130,7 +130,7 @@ private:
     }
 };
 
-struct TestMirBuffer : mtf::ConnectedClientHeadlessServer
+struct PresentationChain : mtf::ConnectedClientHeadlessServer
 {
     geom::Size const size {100, 20};
     MirPixelFormat const pf = mir_pixel_format_abgr_8888;
@@ -190,7 +190,7 @@ void buffer_callback(MirPresentationChain*, MirBuffer* buffer, void* context)
 }
 }
 
-TEST_F(TestMirBuffer, allocation_calls_callback)
+TEST_F(PresentationChain, allocation_calls_callback)
 {
     SurfaceWithChainFromStart surface(connection, size, pf);
 
@@ -204,7 +204,7 @@ TEST_F(TestMirBuffer, allocation_calls_callback)
     EXPECT_THAT(context.buffer(), Ne(nullptr));    
 }
 
-TEST_F(TestMirBuffer, has_native_buffer)
+TEST_F(PresentationChain, has_native_buffer)
 {
     SurfaceWithChainFromStart surface(connection, size, pf);
 
@@ -222,7 +222,7 @@ TEST_F(TestMirBuffer, has_native_buffer)
     EXPECT_THAT(mir_buffer_get_native_buffer(buffer, mir_none), Eq(nullptr));
 }
 
-TEST_F(TestMirBuffer, has_native_fence)
+TEST_F(PresentationChain, has_native_fence)
 {
     SurfaceWithChainFromStart surface(connection, size, pf);
 
@@ -240,7 +240,7 @@ TEST_F(TestMirBuffer, has_native_fence)
     EXPECT_THAT(mir_buffer_get_fence(buffer), Eq(nullptr));
 }
 
-TEST_F(TestMirBuffer, can_map_for_cpu_render)
+TEST_F(PresentationChain, can_map_for_cpu_render)
 {
     SurfaceWithChainFromStart surface(connection, size, pf);
 
@@ -262,7 +262,7 @@ TEST_F(TestMirBuffer, can_map_for_cpu_render)
 }
 
 //needs an ABI break to fix
-TEST_F(TestMirBuffer, DISABLED_submission_will_eventually_call_callback)
+TEST_F(PresentationChain, DISABLED_submission_will_eventually_call_callback)
 {
     SurfaceWithChainFromStart surface(connection, size, pf);
 
@@ -288,7 +288,7 @@ TEST_F(TestMirBuffer, DISABLED_submission_will_eventually_call_callback)
     }
 }
 
-TEST_F(TestMirBuffer, submission_will_eventually_call_callback_reassociated)
+TEST_F(PresentationChain, submission_will_eventually_call_callback_reassociated)
 {
     SurfaceWithChainFromReassociation surface(connection, size, pf);
 
@@ -314,7 +314,7 @@ TEST_F(TestMirBuffer, submission_will_eventually_call_callback_reassociated)
     }
 }
 
-TEST_F(TestMirBuffer, buffers_can_be_destroyed_before_theyre_returned)
+TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
 {
     SurfaceWithChainFromStart surface(connection, size, pf);
 

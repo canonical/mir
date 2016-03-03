@@ -11,5 +11,5 @@ add_library(acceptance-test-throwback OBJECT
   test_client_library_errors.cpp # uses UsingClientPlatform
   test_shell_control_of_surface_configuration.cpp # uses CanonicalWindowManager
 
-  test_mir_buffer.cpp
+  test_presentation_chain.cpp
 )
