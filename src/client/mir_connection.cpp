@@ -355,7 +355,6 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         std::string name{spec.surface_name.is_set() ?
                          spec.surface_name.value() : ""};
 
-        name = "";
         stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, platform,
             surface_proto->buffer_stream(), make_perf_report(logger), name,
