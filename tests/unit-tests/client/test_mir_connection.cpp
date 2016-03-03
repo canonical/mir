@@ -858,3 +858,33 @@ TEST_F(MirConnectionTest, release_error_chain_doesnt_call_server)
 
     connection->release_presentation_chain(callback.resulting_chain);
 }
+
+TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
+{
+    bool called {false};
+    geom::Size size { 32, 11 };
+    auto format = mir_pixel_format_abgr_8888;
+    auto usage = mir_buffer_usage_software;
+    mp::BufferAllocation mp_alloc;
+    auto params = mp_alloc.add_buffer_requests();
+    params->set_width(size.width.as_int());
+    params->set_height(size.height.as_int());
+    params->set_buffer_usage(usage);
+    params->set_pixel_format(format);
+    EXPECT_CALL(mock_server, allocate_buffers(BufferAllocationMatches(mp_alloc),_,_))
+        .WillOnce(mtd::RunProtobufClosure());
+    connection->allocate_buffer(size, format, usage, nullptr, nullptr);
+}
+
+TEST_F(MirConnectionTest, can_release_buffer_from_connection)
+{
+    int buffer_id = 1320;
+    mp::BufferRelease release_msg;
+    auto released_buffer = release_msg.add_buffers();
+    released_buffer->set_buffer_id(buffer_id);
+
+    EXPECT_CALL(mock_server, release_buffers(BufferReleaseMatches(release_msg),_,_))
+        .WillOnce(mtd::RunProtobufClosure());
+
+    connection->release_buffer(buffer_id);
+}
