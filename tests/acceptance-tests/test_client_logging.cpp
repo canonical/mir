@@ -30,8 +30,8 @@
 using namespace testing;
 using namespace mir_test_framework;
 
-namespace
-{
+namespace {
+
 class StringStreamLogger : public mir::logging::Logger
 {
 public:
@@ -64,10 +64,6 @@ struct ClientLogging : ConnectedClientHeadlessServer
 {
     UsingClientPlatform<Conf> with_custom_logger;
     std::stringstream& client_log{StringStreamLogger::ss};
-    void SetUp() override
-    {
-        ConnectedClientHeadlessServer::SetUp();
-    }
 };
 
 } // namespace
