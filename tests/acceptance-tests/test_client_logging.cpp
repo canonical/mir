@@ -49,8 +49,8 @@ std::stringstream StringStreamLogger::ss;
 class Conf : public StubConnectionConfiguration
 {
 public:
-    Conf(std::string const& socket) :
-        StubConnectionConfiguration(socket)
+    Conf(std::string const& socket)
+        : StubConnectionConfiguration(socket)
     {
     }
     virtual std::shared_ptr<mir::logging::Logger> the_logger() override
@@ -62,14 +62,13 @@ public:
 struct ClientLogging : ConnectedClientHeadlessServer
 {
     UsingClientPlatform<Conf> platform;
-
+    std::stringstream& client_log{StringStreamLogger::ss};
     void SetUp() override
     {
         ConnectedClientHeadlessServer::SetUp();
     }
-
-    std::stringstream& client_log{StringStreamLogger::ss};
 };
+
 } // namespace
 
 TEST_F(ClientLogging, reports_performance)
@@ -101,7 +100,6 @@ TEST_F(ClientLogging, reports_performance)
     while (!client_log.eof())
     {
         std::string line;
-        fprintf(stderr, "Here\n");
         std::getline(client_log, line);
         auto perf = line.find(" perf: ");
         if (perf != line.npos)
@@ -115,12 +113,9 @@ TEST_F(ClientLogging, reports_performance)
             EXPECT_STREQ("Foo", name);
             EXPECT_NEAR(target_fps, fps, 3.0f);
         }
-        fprintf(stderr, "There\n");
     }
 
     EXPECT_THAT(reports, Ge(nseconds-1));
 
-    fprintf(stderr, "aaa\n");
     mir_surface_release_sync(surf);
-    fprintf(stderr, "aaa\n");
 }
