@@ -53,3 +53,21 @@ mir::frontend::SurfaceId mtf::PlacementApplyingShell::create_surface(
 
     return id;
 }
+    
+void mtf::PlacementApplyingShell::modify_surface(
+    std::shared_ptr<mir::scene::Session> const& session,
+    std::shared_ptr<mir::scene::Surface> const& surface,
+    mir::shell::SurfaceSpecification const& modifications)
+{
+    mir::shell::ShellWrapper::modify_surface(session, surface, modifications);
+
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    modified = true;
+    cv.notify_all(); 
+}
+
+bool mtf::PlacementApplyingShell::wait_for_modify_surface(std::chrono::seconds timeout)
+{
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    return cv.wait_for(lk, timeout, [this] { return modified; }); 
+}
