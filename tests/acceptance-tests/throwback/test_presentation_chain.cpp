@@ -106,7 +106,6 @@ private:
 };
 
 struct SurfaceWithChainFromReassociation : SurfaceWithChain
-
 {
     SurfaceWithChainFromReassociation(MirConnection* connection, geom::Size size, MirPixelFormat pf) :
         SurfaceWithChain(connection,
@@ -140,11 +139,6 @@ struct PresentationChain : mtf::ConnectedClientHeadlessServer
         //test suite has to be run with the new semantics activated
         add_to_environment("MIR_SERVER_NBUFFERS", "0");
         ConnectedClientHeadlessServer::SetUp();
-    }
-
-    void TearDown() override
-    {
-        ConnectedClientHeadlessServer::TearDown();
     }
 };
 
