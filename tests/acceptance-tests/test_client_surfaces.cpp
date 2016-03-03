@@ -24,14 +24,10 @@
 #include "mir/scene/session.h"
 #include "mir/geometry/rectangle.h"
 
-#include "mir_test_framework/using_stub_client_platform.h"
-#include "mir_test_framework/stub_client_connection_configuration.h" // XXX
-#include "mir_test_framework/using_client_platform.h" // XXX
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/validity_matchers.h"
 #include "mir/test/fake_shared.h"
-#include "mir/logging/logger.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -344,101 +340,6 @@ TEST_F(ClientSurfaces, can_be_renamed)
     mir_surface_spec_release(spec);
 
     mir_surface_release_sync(surf);
-}
-
-namespace
-{
-    class StringStreamLogger : public mir::logging::Logger
-    {
-    public:
-        void log(mir::logging::Severity,
-                 std::string const& message,
-                 std::string const& component) override
-        {
-            ss << "[StringStreamLogger] "
-               << component << ": " << message << std::endl;
-        }
-        static std::stringstream ss;
-    };
-
-    std::stringstream StringStreamLogger::ss;
-} // namespace
-
-TEST(ClientSurfacesReports, reports_performance)
-{
-    class Conf : public mtf::StubConnectionConfiguration
-    {
-    public:
-        Conf(std::string const& socket) :
-            mtf::StubConnectionConfiguration(socket)
-        {
-        }
-        virtual std::shared_ptr<mir::logging::Logger> the_logger() override
-        {
-            return std::make_shared<StringStreamLogger>();
-        }
-    };
-
-    mtf::UsingClientPlatform<Conf> platform;
-
-    struct Server : mtf::ConnectedClientHeadlessServer
-    {
-        void TestBody() override {}
-    } server;
-
-    server.SetUp();
-
-    mtf::TemporaryEnvironmentValue env("MIR_CLIENT_PERF_REPORT", "log");
-    (void)env; // Avoid clang warning/error
-
-    auto spec = mir_connection_create_spec_for_normal_surface(
-                   server.connection, 123, 456, mir_pixel_format_abgr_8888);
-    ASSERT_THAT(spec, NotNull());
-    mir_surface_spec_set_name(spec, "Foo");
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
-    auto surf = mir_surface_create_sync(spec);
-    ASSERT_THAT(surf, NotNull());
-    mir_surface_spec_release(spec);
-
-    int const target_fps = 10;
-    int const nseconds = 3;
-    auto bs = mir_surface_get_buffer_stream(surf);
-    for (int s = 0; s < nseconds; ++s)
-    {
-        for (int f = 0; f < target_fps; ++f)
-            mir_buffer_stream_swap_buffers_sync(bs);
-
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
-
-    int reports = 0;
-    while (!StringStreamLogger::ss.eof() && reports < nseconds-1)
-    {
-        std::string line;
-        fprintf(stderr, "Here\n");
-        std::getline(StringStreamLogger::ss, line);
-        auto perf = line.find(" perf: ");
-        if (perf != line.npos)
-        {
-            ++reports;
-            char name[256];
-            float fps;
-            int fields = sscanf(line.c_str() + perf,
-                                " perf: %255[^:]: %f FPS,", name, &fps);
-            ASSERT_EQ(2, fields) << "Log line = {" << line << "}";
-            EXPECT_STREQ("Foo", name);
-            EXPECT_NEAR(target_fps, fps, 3.0f);
-        }
-        fprintf(stderr, "There\n");
-    }
-
-    EXPECT_THAT(reports, ::testing::Ge(nseconds-1));
-
-    fprintf(stderr, "aaa\n");
-    mir_surface_release_sync(surf);
-    fprintf(stderr, "aaa\n");
-    server.TearDown();
-    fprintf(stderr, "aaa\n");
 }
 
 TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
