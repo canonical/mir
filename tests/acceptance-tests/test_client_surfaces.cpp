@@ -355,7 +355,8 @@ namespace
                  std::string const& message,
                  std::string const& component) override
         {
-            ss << component << ": " << message << std::endl;
+            ss << "[StringStreamLogger] "
+               << component << ": " << message << std::endl;
         }
         static std::stringstream ss;
     };
@@ -363,7 +364,7 @@ namespace
     std::stringstream StringStreamLogger::ss;
 } // namespace
 
-TEST_F(ClientSurfaces, reports_performance)
+TEST(ClientSurfacesReports, reports_performance)
 {
     class Conf : public mtf::StubConnectionConfiguration
     {
@@ -380,11 +381,18 @@ TEST_F(ClientSurfaces, reports_performance)
 
     mtf::UsingClientPlatform<Conf> platform;
 
+    struct Server : mtf::ConnectedClientHeadlessServer
+    {
+        void TestBody() override {}
+    } server;
+
+    server.SetUp();
+
     mtf::TemporaryEnvironmentValue env("MIR_CLIENT_PERF_REPORT", "log");
     (void)env; // Avoid clang warning/error
 
     auto spec = mir_connection_create_spec_for_normal_surface(
-                   connection, 123, 456, mir_pixel_format_abgr_8888);
+                   server.connection, 123, 456, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
     mir_surface_spec_set_name(spec, "Foo");
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
@@ -404,9 +412,10 @@ TEST_F(ClientSurfaces, reports_performance)
     }
 
     int reports = 0;
-    while (!StringStreamLogger::ss.eof())
+    while (!StringStreamLogger::ss.eof() && reports < nseconds-1)
     {
         std::string line;
+        fprintf(stderr, "Here\n");
         std::getline(StringStreamLogger::ss, line);
         auto perf = line.find(" perf: ");
         if (perf != line.npos)
@@ -420,11 +429,16 @@ TEST_F(ClientSurfaces, reports_performance)
             EXPECT_STREQ("Foo", name);
             EXPECT_NEAR(target_fps, fps, 3.0f);
         }
+        fprintf(stderr, "There\n");
     }
 
     EXPECT_THAT(reports, ::testing::Ge(nseconds-1));
 
+    fprintf(stderr, "aaa\n");
     mir_surface_release_sync(surf);
+    fprintf(stderr, "aaa\n");
+    server.TearDown();
+    fprintf(stderr, "aaa\n");
 }
 
 TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
