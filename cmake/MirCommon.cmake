@@ -52,12 +52,17 @@ function (list_to_string LIST_VAR PREFIX STR_VAR)
   set(${STR_VAR} "${tmp_str}" PARENT_SCOPE)
 endfunction()
 
-function (mir_discover_tests_internal EXECUTABLE DETECT_FD_LEAKS)
+function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAKS )
   # Set vars
   set(test_cmd_no_memcheck "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE}")
   set(test_cmd "${test_cmd_no_memcheck}")
-  set(test_env ${ARGN})
-  set(test_name ${EXECUTABLE})
+  set(test_env ${ARGN} ${TEST_ENV_OPTIONS})
+
+  if (TEST_ENV_OPTIONS)
+      set(test_name ${EXECUTABLE}---${TEST_ENV_OPTIONS}---)
+  else()
+      set(test_name ${EXECUTABLE})
+  endif()
   set(test_no_memcheck_filter)
   set(test_exclusion_filter)
 
@@ -120,11 +125,15 @@ function (mir_discover_tests_internal EXECUTABLE DETECT_FD_LEAKS)
 endfunction ()
 
 function (mir_discover_tests EXECUTABLE)
-  mir_discover_tests_internal(${EXECUTABLE} FALSE ${ARGN})
+  mir_discover_tests_internal(${EXECUTABLE} "" FALSE ${ARGN})
 endfunction()
 
 function (mir_discover_tests_with_fd_leak_detection EXECUTABLE)
-  mir_discover_tests_internal(${EXECUTABLE} TRUE ${ARGN})
+  mir_discover_tests_internal(${EXECUTABLE} "" TRUE ${ARGN})
+endfunction()
+
+function (mir_discover_tests_with_fd_leak_detection_and_env EXECUTABLE TEST_ENV_OPTION)
+  mir_discover_tests_internal(${EXECUTABLE} ${TEST_ENV_OPTION} TRUE ${ARGN})
 endfunction()
 
 function (mir_add_memcheck_test)

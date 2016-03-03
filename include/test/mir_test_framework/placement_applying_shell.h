@@ -29,6 +29,8 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <mutex>
+#include <condition_variable>
 
 namespace mir_test_framework
 {
@@ -46,9 +48,19 @@ struct PlacementApplyingShell : mir::shell::ShellWrapper
         std::shared_ptr<mir::scene::Session> const& session,
         mir::scene::SurfaceCreationParameters const& params,
         std::shared_ptr<mir::frontend::EventSink> const& sink) override;
+
+    void modify_surface(
+        std::shared_ptr<mir::scene::Session> const& session,
+        std::shared_ptr<mir::scene::Surface> const& surface,
+        mir::shell::SurfaceSpecification const& modifications) override;
+
+    bool wait_for_modify_surface(std::chrono::seconds timeout);
 private:
     ClientInputRegions const& client_input_regions;
     ClientPositions const& client_positions;
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool modified {false};
 };
 
 }

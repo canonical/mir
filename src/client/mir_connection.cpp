@@ -591,6 +591,11 @@ MirWaitHandle* MirConnection::disconnect()
         std::lock_guard<decltype(mutex)> lock(mutex);
         disconnecting = true;
     }
+    surface_map->with_all_streams_do([](mcl::BufferReceiver* receiver)
+    {
+        receiver->buffer_unavailable();
+    });
+
     disconnect_wait_handle.expect_result();
     server.disconnect(ignored.get(), ignored.get(),
                       google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
@@ -786,7 +791,8 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
     {
         auto stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, platform,
-            *protobuf_bs, make_perf_report(logger), std::string{}, mir::geometry::Size{0,0}, nbuffers);
+            *protobuf_bs, make_perf_report(logger), std::string{},
+            mir::geometry::Size{request->parameters.width(), request->parameters.height()}, nbuffers);
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
 
         if (request->callback)
