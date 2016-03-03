@@ -25,7 +25,7 @@
 #include "mir/shared_library_prober.h"
 #include "mir/shared_library.h"
 #include "mir/log.h"
-#include "mir/module_deleter.h"
+#include "mir/libname.h"
 
 #include <stdexcept>
 
@@ -39,10 +39,16 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& cleanup_registry,
     std::shared_ptr<mi::InputDeviceRegistry> const& registry, std::shared_ptr<mi::InputReport> const& report)
 {
-
+    auto desc = lib.load_function<mi::DescribeModule>("describe_input_module", MIR_SERVER_INPUT_PLATFORM_VERSION)();
     auto create = lib.load_function<mi::CreatePlatform>("create_input_platform", MIR_SERVER_INPUT_PLATFORM_VERSION);
 
-    return create(options, cleanup_registry, registry, report);
+    auto result = create(options, cleanup_registry, registry, report);
+
+    mir::log_info(
+        "Selected input driver: %s (version: %d.%d.%d)",
+        desc->name, desc->major_version, desc->minor_version, desc->micro_version);
+
+    return result;
 }
 }
 
@@ -62,12 +68,6 @@ mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
             {
                 auto const probe = module->load_function<mi::ProbePlatform>(
                     "probe_input_platform", MIR_SERVER_INPUT_PLATFORM_VERSION);
-
-                // We process the modules in descending .sonumber order so, luckily, we try mesa-x11 before evdev.
-                // But only because the graphics platform version is currently higher than the input platform version.
-                // Similarly, We only take the first found of duplicate modules, as that will be the most recent.
-                // This is a heuristic that assumes we're always looking for the most up-to-date driver,
-                // TODO find a way to coordinate the selection of mesa-x11 and input platforms
 
                 if (probe(options) > reject_platform_priority)
                 {
@@ -97,14 +97,28 @@ mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
     if (!platform_module)
         BOOST_THROW_EXCEPTION(std::runtime_error{"No appropriate input platform module found"});
 
-    auto const desc = platform_module->load_function<mi::DescribeModule>(
-        "describe_input_module", MIR_SERVER_INPUT_PLATFORM_VERSION)();
+    return create_input_platform(*platform_module, options, emergency_cleanup, device_registry, input_report);
+}
 
-    auto result = create_input_platform(*platform_module, options, emergency_cleanup, device_registry, input_report);
+auto mi::input_platform_from_graphics_module(
+    graphics::Platform const& graphics_platform,
+    options::Option const& options,
+    std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup,
+    std::shared_ptr<InputDeviceRegistry> const& device_registry,
+    std::shared_ptr<InputReport> const& input_report)
+-> mir::UniqueModulePtr<Platform>
+{
+    try
+    {
+        // Yes, this is dirty code that assumes the object layout. Sorry!
+        auto* const vtab = (void*&)(graphics_platform);
+        SharedLibrary const platform_module{detail::libname_impl(vtab)};
 
-    mir::log_info(
-        "Selected input driver: %s (version: %d.%d.%d)",
-        desc->name, desc->major_version, desc->minor_version, desc->micro_version);
-
-    return result;
+        return create_input_platform(platform_module, options, emergency_cleanup, device_registry, input_report);
+    }
+    catch (std::runtime_error const&)
+    {
+        // Assume the graphics platform is not also an input module.
+        return {};
+    }
 }
