@@ -80,7 +80,7 @@ TEST_F(ClientLogging, reports_performance)
     auto spec = mir_connection_create_spec_for_normal_surface(
                    connection, 123, 456, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
-    mir_surface_spec_set_name(spec, "Foo");
+    mir_surface_spec_set_name(spec, "Rumpelstiltskin");
     mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     auto surf = mir_surface_create_sync(spec);
     ASSERT_THAT(surf, NotNull());
@@ -111,7 +111,7 @@ TEST_F(ClientLogging, reports_performance)
             int fields = sscanf(line.c_str() + perf,
                                 " perf: %255[^:]: %f FPS,", name, &fps);
             ASSERT_EQ(2, fields) << "Log line = {" << line << "}";
-            EXPECT_STREQ("Foo", name);
+            EXPECT_STREQ("Rumpelstiltskin", name);
             EXPECT_NEAR(target_fps, fps, 3.0f);
         }
     }
