@@ -24,6 +24,8 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <string>
+#include <sstream>
 
 using namespace testing;
 using namespace mir_test_framework;
@@ -46,14 +48,13 @@ public:
 
 std::stringstream StringStreamLogger::ss;
 
-class Conf : public StubConnectionConfiguration
+struct Conf : StubConnectionConfiguration
 {
-public:
     Conf(std::string const& socket)
         : StubConnectionConfiguration(socket)
     {
     }
-    virtual std::shared_ptr<mir::logging::Logger> the_logger() override
+    std::shared_ptr<mir::logging::Logger> the_logger() override
     {
         return std::make_shared<StringStreamLogger>();
     }
