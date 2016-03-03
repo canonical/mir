@@ -17,27 +17,17 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/debug/surface.h"
-
-#include "mir/scene/session.h"
-#include "mir/geometry/rectangle.h"
-
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/stub_client_connection_configuration.h" // XXX
 #include "mir_test_framework/using_client_platform.h" // XXX
 #include "mir_test_framework/connected_client_headless_server.h"
-#include "mir_test_framework/any_surface.h"
-#include "mir/test/validity_matchers.h"
-#include "mir/test/fake_shared.h"
 #include "mir/logging/logger.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <condition_variable>
-#include <mutex>
-
-namespace mtf = mir_test_framework;
+using namespace testing;
+using namespace mir_test_framework;
 
 namespace
 {
@@ -56,11 +46,11 @@ public:
 
 std::stringstream StringStreamLogger::ss;
 
-class Conf : public mtf::StubConnectionConfiguration
+class Conf : public StubConnectionConfiguration
 {
 public:
     Conf(std::string const& socket) :
-        mtf::StubConnectionConfiguration(socket)
+        StubConnectionConfiguration(socket)
     {
     }
     virtual std::shared_ptr<mir::logging::Logger> the_logger() override
@@ -69,9 +59,9 @@ public:
     }
 };
 
-struct ClientLogging : mtf::ConnectedClientHeadlessServer
+struct ClientLogging : ConnectedClientHeadlessServer
 {
-    mtf::UsingClientPlatform<Conf> platform;
+    UsingClientPlatform<Conf> platform;
 
     void SetUp() override
     {
@@ -84,7 +74,7 @@ struct ClientLogging : mtf::ConnectedClientHeadlessServer
 
 TEST_F(ClientLogging, reports_performance)
 {
-    mtf::TemporaryEnvironmentValue env("MIR_CLIENT_PERF_REPORT", "log");
+    TemporaryEnvironmentValue env("MIR_CLIENT_PERF_REPORT", "log");
     (void)env; // Avoid clang warning/error
 
     auto spec = mir_connection_create_spec_for_normal_surface(
@@ -128,7 +118,7 @@ TEST_F(ClientLogging, reports_performance)
         fprintf(stderr, "There\n");
     }
 
-    EXPECT_THAT(reports, ::testing::Ge(nseconds-1));
+    EXPECT_THAT(reports, Ge(nseconds-1));
 
     fprintf(stderr, "aaa\n");
     mir_surface_release_sync(surf);
