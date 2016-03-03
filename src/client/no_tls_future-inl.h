@@ -28,6 +28,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <future>
+#include <boost/throw_exception.hpp>
 
 namespace mir
 {
@@ -67,7 +68,10 @@ public:
         std::unique_lock<std::mutex> lk(mutex);
         cv.wait(lk, [this]{ return set || broken; });
         if (broken)
-            throw std::future_error(std::future_errc::broken_promise);
+        {
+            //clang has problems with std::future_error::what() on vivid+overlay
+            BOOST_THROW_EXCEPTION(std::runtime_error("broken_promise"));
+        }
         return value; 
     }
 
