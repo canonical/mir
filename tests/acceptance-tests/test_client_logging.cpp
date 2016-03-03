@@ -41,6 +41,7 @@ public:
         ss << "[StringStreamLogger] "
            << component << ": " << message << std::endl;
     }
+    // Awkwardly static. Because the instance is hidden in UsingClientPlatform
     static std::stringstream ss;
 };
 
@@ -61,7 +62,7 @@ public:
 
 struct ClientLogging : ConnectedClientHeadlessServer
 {
-    UsingClientPlatform<Conf> platform;
+    UsingClientPlatform<Conf> with_custom_logger;
     std::stringstream& client_log{StringStreamLogger::ss};
     void SetUp() override
     {
