@@ -17,9 +17,8 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_test_framework/using_stub_client_platform.h"
-#include "mir_test_framework/stub_client_connection_configuration.h" // XXX
-#include "mir_test_framework/using_client_platform.h" // XXX
+#include "mir_test_framework/stub_client_connection_configuration.h"
+#include "mir_test_framework/using_client_platform.h"
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir/logging/logger.h"
 
