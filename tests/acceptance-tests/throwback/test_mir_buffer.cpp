@@ -42,63 +42,99 @@ struct Chain
         chain(mir_connection_create_presentation_chain_sync(connection))
     {
     }
+
+    operator MirPresentationChain*()
+    {
+        return chain;
+    }
+
     ~Chain()
     {
         mir_presentation_chain_release(chain);
     }
+private:
     MirPresentationChain* chain;
 };
 
-struct SurfaceWithChain
+class SurfaceWithChain
 {
-    SurfaceWithChain(MirConnection* connection, geom::Size size, MirPixelFormat pf):
-        chain(connection)
+public:
+    operator MirSurface*()
     {
-        auto spec = mir_connection_create_spec_for_normal_surface(
-            connection, size.width.as_int(), size.height.as_int(), pf);
-        mir_surface_spec_add_presentation_chain(
-            spec, size.width.as_int(), size.height.as_int(), 0, 0, chain.chain);
-        surface = mir_surface_create_sync(spec);
-        mir_surface_spec_release(spec);
+        return surface;
+    }
+
+    Chain& chain()
+    {
+        return chain_;
     }
 
     ~SurfaceWithChain()
     {
         mir_surface_release_sync(surface);
     }
-
-    Chain chain;
+protected:
+    SurfaceWithChain(MirConnection* connection, std::function<MirSurface*(Chain&)> const& fn) :
+        chain_(connection),
+        surface(fn(chain_))
+    {
+    }
+private:
+    Chain chain_;
     MirSurface* surface;
 };
 
-struct ReassociatedSurfaceWithChain
+struct SurfaceWithChainFromStart : SurfaceWithChain
 {
-    ReassociatedSurfaceWithChain(MirConnection* connection, geom::Size size, MirPixelFormat pf):
-        chain(connection)
+    SurfaceWithChainFromStart(MirConnection* connection, geom::Size size, MirPixelFormat pf) :
+        SurfaceWithChain(connection,
+        std::bind(&SurfaceWithChainFromStart::create_surface, this,
+            std::placeholders::_1, connection, size, pf))
+    {
+    }
+private:
+    MirSurface* create_surface(Chain& chain, MirConnection* connection, geom::Size size, MirPixelFormat pf)
+    {
+        auto spec = mir_connection_create_spec_for_normal_surface(
+            connection, size.width.as_int(), size.height.as_int(), pf);
+        mir_surface_spec_add_presentation_chain(
+            spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
+        auto surface = mir_surface_create_sync(spec);
+        mir_surface_spec_release(spec);
+        return surface;
+    }
+};
+
+struct SurfaceWithChainFromReassociation : SurfaceWithChain
+
+{
+    SurfaceWithChainFromReassociation(MirConnection* connection, geom::Size size, MirPixelFormat pf) :
+        SurfaceWithChain(connection,
+        std::bind(&SurfaceWithChainFromReassociation::create_surface, this,
+            std::placeholders::_1, connection, size, pf))
+    {
+    }
+private:
+    MirSurface* create_surface(Chain& chain, MirConnection* connection, geom::Size size, MirPixelFormat pf)
     {
         MirSurfaceSpec* spec = mir_connection_create_spec_for_normal_surface(
             connection, size.width.as_int(), size.height.as_int(), pf);
-        surface = mir_surface_create_sync(spec);
+        auto surface = mir_surface_create_sync(spec);
         mir_surface_spec_release(spec);
         spec = mir_create_surface_spec(connection);
         mir_surface_spec_add_presentation_chain(
-            spec, size.width.as_int(), size.height.as_int(), 0, 0, chain.chain);
+            spec, size.width.as_int(), size.height.as_int(), 0, 0, chain);
         mir_surface_apply_spec(surface, spec);
         mir_surface_spec_release(spec);
+        return surface;
     }
-
-    ~ReassociatedSurfaceWithChain()
-    {
-        mir_surface_release_sync(surface);
-    }
-    Chain chain;
-    MirSurface* surface;
 };
 
 struct TestMirBuffer : mtf::ConnectedClientHeadlessServer
 {
     geom::Size const size {100, 20};
     MirPixelFormat const pf = mir_pixel_format_abgr_8888;
+    MirBufferUsage const usage = mir_buffer_usage_software;
     void SetUp() override
     {
         //test suite has to be run with the new semantics activated
@@ -139,13 +175,6 @@ struct MirBufferSync
     {
         return buffer_;
     }
-
-    unsigned int cb_count()
-    {
-        std::unique_lock<std::mutex> lk(mutex);
-        return callback_count;
-    }
-
 private:
     std::mutex mutex;
     std::condition_variable cv;
@@ -163,12 +192,12 @@ void buffer_callback(MirPresentationChain*, MirBuffer* buffer, void* context)
 
 TEST_F(TestMirBuffer, allocation_calls_callback)
 {
-    SurfaceWithChain surface(connection, size, pf);
+    SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
     mir_presentation_chain_allocate_buffer(
-        surface.chain.chain,
-        size.width.as_int(), size.height.as_int(), mir_pixel_format_abgr_8888, mir_buffer_usage_software,
+        surface.chain(),
+        size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
     EXPECT_TRUE(context.wait_for_buffer(10s));
@@ -177,12 +206,12 @@ TEST_F(TestMirBuffer, allocation_calls_callback)
 
 TEST_F(TestMirBuffer, has_native_buffer)
 {
-    SurfaceWithChain surface(connection, size, pf);
+    SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
     mir_presentation_chain_allocate_buffer(
-        surface.chain.chain,
-        size.width.as_int(), size.height.as_int(), mir_pixel_format_abgr_8888, mir_buffer_usage_software,
+        surface.chain(),
+        size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
     EXPECT_TRUE(context.wait_for_buffer(10s));
@@ -195,12 +224,12 @@ TEST_F(TestMirBuffer, has_native_buffer)
 
 TEST_F(TestMirBuffer, has_native_fence)
 {
-    SurfaceWithChain surface(connection, size, pf);
+    SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
     mir_presentation_chain_allocate_buffer(
-        surface.chain.chain,
-        size.width.as_int(), size.height.as_int(), mir_pixel_format_abgr_8888, mir_buffer_usage_software,
+        surface.chain(),
+        size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
     EXPECT_TRUE(context.wait_for_buffer(10s));
@@ -213,12 +242,12 @@ TEST_F(TestMirBuffer, has_native_fence)
 
 TEST_F(TestMirBuffer, can_map_for_cpu_render)
 {
-    SurfaceWithChain surface(connection, size, pf);
+    SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
     mir_presentation_chain_allocate_buffer(
-        surface.chain.chain,
-        size.width.as_int(), size.height.as_int(), mir_pixel_format_abgr_8888, mir_buffer_usage_software,
+        surface.chain(),
+        size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
     EXPECT_TRUE(context.wait_for_buffer(10s));
@@ -229,13 +258,13 @@ TEST_F(TestMirBuffer, can_map_for_cpu_render)
     EXPECT_THAT(region.width, Eq(size.width.as_int()));
     EXPECT_THAT(region.height, Eq(size.height.as_int()));
     EXPECT_THAT(region.stride, Eq(size.width.as_int() * MIR_BYTES_PER_PIXEL(pf)));
-    EXPECT_THAT(region.pixel_format, Eq(mir_pixel_format_abgr_8888));
+    EXPECT_THAT(region.pixel_format, Eq(pf));
 }
 
 //needs an ABI break to fix
 TEST_F(TestMirBuffer, DISABLED_submission_will_eventually_call_callback)
 {
-    SurfaceWithChain surface(connection, size, pf);
+    SurfaceWithChainFromStart surface(connection, size, pf);
 
     auto const num_buffers = 2u;
     std::array<MirBufferSync, num_buffers> contexts;
@@ -243,8 +272,8 @@ TEST_F(TestMirBuffer, DISABLED_submission_will_eventually_call_callback)
     for(auto& context : contexts)
     {
         mir_presentation_chain_allocate_buffer(
-            surface.chain.chain,
-            size.width.as_int(), size.height.as_int(), mir_pixel_format_abgr_8888, mir_buffer_usage_software,
+            surface.chain(),
+            size.width.as_int(), size.height.as_int(), pf, usage,
             buffer_callback, &context);
         ASSERT_TRUE(context.wait_for_buffer(10s));
         ASSERT_THAT(context.buffer(), Ne(nullptr));    
@@ -252,7 +281,7 @@ TEST_F(TestMirBuffer, DISABLED_submission_will_eventually_call_callback)
 
     for(auto i = 0u; i < num_iterations; i++)
     {
-        mir_presentation_chain_submit_buffer(surface.chain.chain, contexts[i % num_buffers].buffer());
+        mir_presentation_chain_submit_buffer(surface.chain(), contexts[i % num_buffers].buffer());
         contexts[i % num_buffers].unavailable();
         if (i != 0)
             ASSERT_TRUE(contexts[(i-1) % num_buffers].wait_for_buffer(10s)) << "iteration " << i;
@@ -261,7 +290,7 @@ TEST_F(TestMirBuffer, DISABLED_submission_will_eventually_call_callback)
 
 TEST_F(TestMirBuffer, submission_will_eventually_call_callback_reassociated)
 {
-    ReassociatedSurfaceWithChain surface(connection, size, pf);
+    SurfaceWithChainFromReassociation surface(connection, size, pf);
 
     auto const num_buffers = 2u;
     std::array<MirBufferSync, num_buffers> contexts;
@@ -269,8 +298,8 @@ TEST_F(TestMirBuffer, submission_will_eventually_call_callback_reassociated)
     for(auto& context : contexts)
     {
         mir_presentation_chain_allocate_buffer(
-            surface.chain.chain,
-            size.width.as_int(), size.height.as_int(), mir_pixel_format_abgr_8888, mir_buffer_usage_software,
+            surface.chain(),
+            size.width.as_int(), size.height.as_int(), pf, usage,
             buffer_callback, &context);
         ASSERT_TRUE(context.wait_for_buffer(10s));
         ASSERT_THAT(context.buffer(), Ne(nullptr));    
@@ -278,7 +307,7 @@ TEST_F(TestMirBuffer, submission_will_eventually_call_callback_reassociated)
 
     for(auto i = 0u; i < num_iterations; i++)
     {
-        mir_presentation_chain_submit_buffer(surface.chain.chain, contexts[i % num_buffers].buffer());
+        mir_presentation_chain_submit_buffer(surface.chain(), contexts[i % num_buffers].buffer());
         contexts[i % num_buffers].unavailable();
         if (i != 0)
             ASSERT_TRUE(contexts[(i-1) % num_buffers].wait_for_buffer(10s)) << "iteration " << i;
@@ -287,16 +316,16 @@ TEST_F(TestMirBuffer, submission_will_eventually_call_callback_reassociated)
 
 TEST_F(TestMirBuffer, buffers_can_be_destroyed_before_theyre_returned)
 {
-    SurfaceWithChain surface(connection, size, pf);
+    SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
     mir_presentation_chain_allocate_buffer(
-        surface.chain.chain,
-        size.width.as_int(), size.height.as_int(), mir_pixel_format_abgr_8888, mir_buffer_usage_software,
+        surface.chain(),
+        size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
     ASSERT_TRUE(context.wait_for_buffer(10s));
     ASSERT_THAT(context.buffer(), Ne(nullptr));
-    mir_presentation_chain_submit_buffer(surface.chain.chain, context.buffer());
+    mir_presentation_chain_submit_buffer(surface.chain(), context.buffer());
     mir_buffer_release(context.buffer());
 }
