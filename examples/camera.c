@@ -1,0 +1,444 @@
+/*
+ * Copyright © 2015-2016 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ */
+
+#define _POSIX_C_SOURCE 200112L  // for setenv() from stdlib.h
+#include "eglapp.h"
+#include <assert.h>
+#include <stdio.h>
+#include <math.h>
+#include <fcntl.h>
+#include <GLES2/gl2.h>
+#include <mir_toolkit/mir_surface.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <linux/videodev2.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+
+typedef struct
+{
+    pthread_mutex_t mutex;
+    pthread_cond_t change;
+    bool changed;
+    bool resized;
+} State;
+
+typedef struct
+{
+    int fd;
+    __u32 buffers;
+    struct
+    {
+        void *start;
+        size_t length;
+    } *buffer;
+} Camera;
+
+static GLuint load_shader(const char *src, GLenum type)
+{
+    GLuint shader = glCreateShader(type);
+    if (shader)
+    {
+        GLint compiled;
+        glShaderSource(shader, 1, &src, NULL);
+        glCompileShader(shader);
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+        if (!compiled)
+        {
+            GLchar log[1024];
+            glGetShaderInfoLog(shader, sizeof log - 1, NULL, log);
+            log[sizeof log - 1] = '\0';
+            printf("load_shader compile failed: %s\n", log);
+            glDeleteShader(shader);
+            shader = 0;
+        }
+    }
+    return shader;
+}
+
+GLuint generate_target_texture()
+{
+    const int width = 512, height = width;
+    typedef struct { GLubyte r, b, g, a; } Texel;
+    Texel image[height][width];
+    // Note the 0.5f to convert from pixel corner (GL) to middle (image)
+    const float centrex = width/2 - 0.5f, centrey = height/2 - 0.5f;
+    const Texel blank = {0, 0, 0, 0};
+    const int radius = centrex - 1;
+    const Texel ring[] =
+    {
+        {  0,   0,   0, 255},
+        {  0,   0, 255, 255},
+        {  0, 255,   0, 255},
+        {255, 255,   0, 255},
+        {255, 128,   0, 255},
+        {255,   0,   0, 255},
+    };
+    const int rings = sizeof(ring) / sizeof(ring[0]);
+
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            float dx = x - centrex, dy = y - centrey;
+            int layer = rings * sqrtf(dx * dx + dy * dy) / radius;
+            image[y][x] = layer < rings ? ring[layer] : blank;
+        }
+    }
+
+    GLuint tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                   GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    return tex;
+}
+
+static void on_event(MirSurface *surface, const MirEvent *event, void *context)
+{
+    (void)surface;
+    State *state = (State*)context;
+
+    // FIXME: We presently need to know that events come in on a different
+    //        thread to main (LP: #1194384). When that's resolved, simple
+    //        single-threaded apps like this won't need pthread.
+    pthread_mutex_lock(&state->mutex);
+
+    switch (mir_event_get_type(event))
+    {
+    case mir_event_type_input:
+        break;
+    case mir_event_type_resize:
+        state->resized = true;
+        break;
+    case mir_event_type_close_surface:
+        // TODO: eglapp.h needs a quit() function or different behaviour of
+        //       mir_eglapp_shutdown().
+        raise(SIGTERM);  // handled by eglapp
+        break;
+    default:
+        break;
+    }
+
+    state->changed = true;
+    pthread_cond_signal(&state->change);
+    pthread_mutex_unlock(&state->mutex);
+}
+
+void close_camera(Camera *cam)
+{
+    for (__u32 b = 0; b < cam->buffers; ++b)
+        munmap(cam->buffer[b].start, cam->buffer[b].length);
+    free(cam->buffer);
+    close(cam->fd);
+}
+
+bool open_camera(Camera *cam) /* TODO: selectable */
+{
+    const char *path = "/dev/video0";
+    printf("Opening device: %s\n", path);
+    cam->fd = open(path, O_RDWR);
+    if (cam->fd < 0)
+    {
+        perror("open");
+        return false;
+    }
+
+    struct v4l2_capability cap;
+    int ret = ioctl(cam->fd, VIDIOC_QUERYCAP, &cap);
+    if (ret == 0)
+    {
+        printf("Driver:    %s\n", cap.driver);
+        printf("Card:      %s\n", cap.card);
+        printf("Bus:       %s\n", cap.bus_info);
+        printf("Capture:   %s\n",
+            cap.capabilities & V4L2_CAP_VIDEO_CAPTURE ? "Yes" : "No");
+        printf("Streaming: %s\n",
+            cap.capabilities & V4L2_CAP_STREAMING ? "Yes" : "No");
+
+    }
+
+    const __u32 required = V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_STREAMING;
+    if (ret || (cap.capabilities & required) != required)
+    {
+        fprintf(stderr, "Can't get sufficient capabilities\n");
+        close(cam->fd);
+        return false;
+    }
+
+    struct v4l2_fmtdesc fmtdesc;
+    fmtdesc.index = 0;
+    fmtdesc.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    while (!ioctl(cam->fd, VIDIOC_ENUM_FMT, &fmtdesc))
+    {
+        printf("Supports pixel format `%s' %08lx\n",
+            fmtdesc.description, (long)fmtdesc.pixelformat);
+        fmtdesc.index++;
+    }
+
+    struct v4l2_format format;
+    format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    if (-1 == ioctl(cam->fd, VIDIOC_G_FMT, &format))
+    {
+         perror("VIDIOC_G_FMT");
+         close(cam->fd);
+         return false;
+    }
+
+    struct v4l2_pix_format *pix = &format.fmt.pix;
+    printf("Pixel format: %ux%u fmt %08lx, stride %u\n",
+        (unsigned)pix->width, (unsigned)pix->height,
+        (long)pix->pixelformat, (unsigned)pix->bytesperline);
+
+    struct v4l2_requestbuffers req =
+    {
+        2,
+        V4L2_BUF_TYPE_VIDEO_CAPTURE,
+        V4L2_MEMORY_MMAP,
+        {0,0}
+    };
+    if (-1 == ioctl(cam->fd, VIDIOC_REQBUFS, &req))
+    {
+        perror("VIDIOC_REQBUFS");
+        close(cam->fd);
+        return false;
+    }
+
+    cam->buffers = req.count;
+    cam->buffer = calloc(cam->buffers, sizeof(*cam->buffer));
+    assert(cam->buffer != NULL);
+            
+    for (__u32 b = 0; b < req.count; ++b)
+    {
+        struct v4l2_buffer buf;
+        memset(&buf, 0, sizeof(buf));
+        buf.index = b;
+        buf.type = req.type;
+        if (-1 == ioctl(cam->fd, VIDIOC_QUERYBUF, &buf))
+        {
+            perror("VIDIOC_QUERYBUF");
+            close(cam->fd);
+            return false;
+        }
+        cam->buffer[b].length = buf.length;
+        cam->buffer[b].start = mmap(NULL, buf.length,
+                                PROT_READ | PROT_WRITE,
+                                MAP_SHARED,
+                                cam->fd, buf.m.offset);
+
+        if (MAP_FAILED == cam->buffer[b].start)
+        {
+            perror("mmap");
+            free(cam->buffer);
+            close(cam->fd);
+            return false;
+        }
+    }
+
+    for (__u32 b = 0; b < req.count; ++b)
+    {
+        struct v4l2_buffer buf;
+        memset(&buf, 0, sizeof(buf));
+        buf.index = b;
+        buf.type = req.type;
+        buf.memory = V4L2_MEMORY_MMAP;
+        if (-1 == ioctl(cam->fd, VIDIOC_QBUF, &buf))
+        {
+             perror("VIDIOC_QBUF");
+             close_camera(cam);
+             return false;
+        }
+    }
+
+    struct v4l2_buffer frame;
+    memset(&frame, 0, sizeof(frame));
+    frame.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    frame.memory = V4L2_MEMORY_MMAP;
+    if (ioctl(cam->fd, VIDIOC_DQBUF, &frame))
+    {
+        perror("Get first frame");
+        free(cam->buffer);
+        close(cam->fd);
+        return false;
+    }
+
+    return true;
+}
+
+int main(int argc, char *argv[])
+{
+    const char vshadersrc[] =
+        "attribute vec2 position;\n"
+        "attribute vec2 texcoord;\n"
+        "uniform vec2 translate;\n"
+        "uniform mat4 projection;\n"
+        "varying vec2 v_texcoord;\n"
+        "\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = projection *\n"
+        "                  vec4(position + translate, 0.0, 1.0);\n"
+        "    v_texcoord = texcoord;\n"
+        "}\n";
+
+    const char fshadersrc[] =
+        "precision mediump float;\n"
+        "varying vec2 v_texcoord;\n"
+        "uniform sampler2D texture;\n"
+        "uniform float opacity;\n"
+        "\n"
+        "void main()\n"
+        "{\n"
+        "    vec4 f = texture2D(texture, v_texcoord);\n"
+        "    f.a *= opacity;\n"
+        "    gl_FragColor = f;\n"
+        "}\n";
+
+    Camera cam;
+    if (!open_camera(&cam))
+    {
+        fprintf(stderr, "Failed to set up camera device\n");
+        return -1;
+    }
+
+    static unsigned int width = 0, height = 0;
+    if (!mir_eglapp_init(argc, argv, &width, &height))
+        return 1;
+
+    GLuint vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);
+    assert(vshader);
+    GLuint fshader = load_shader(fshadersrc, GL_FRAGMENT_SHADER);
+    assert(fshader);
+    GLuint prog = glCreateProgram();
+    assert(prog);
+    glAttachShader(prog, vshader);
+    glAttachShader(prog, fshader);
+    glLinkProgram(prog);
+
+    GLint linked;
+    glGetProgramiv(prog, GL_LINK_STATUS, &linked);
+    if (!linked)
+    {
+        GLchar log[1024];
+        glGetProgramInfoLog(prog, sizeof log - 1, NULL, log);
+        log[sizeof log - 1] = '\0';
+        printf("Link failed: %s\n", log);
+        return 2;
+    }
+
+    glUseProgram(prog);
+
+    GLfloat dim = 500.0f; // TODO
+    const GLfloat box[] =
+    { // position      texcoord
+        0.0f, dim,  0.0f, 1.0f,
+        dim,  dim,  1.0f, 1.0f,
+        dim,  0.0f,  1.0f, 0.0f,
+        0.0f, 0.0f,  0.0f, 0.0f,
+    };
+    GLint position = glGetAttribLocation(prog, "position");
+    GLint texcoord = glGetAttribLocation(prog, "texcoord");
+    glVertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat),
+                          box);
+    glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat),
+                          box+2);
+    glEnableVertexAttribArray(position);
+    glEnableVertexAttribArray(texcoord);
+
+    GLint opacity = glGetUniformLocation(prog, "opacity");
+    glUniform1f(opacity, 1.0f);
+
+    GLint translate = glGetUniformLocation(prog, "translate");
+    glUniform2f(translate, 0.0f, 0.0f);
+
+    GLint projection = glGetUniformLocation(prog, "projection");
+
+    GLuint tex = generate_target_texture();
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glViewport(0, 0, width, height);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Behave like an accumulation buffer
+
+    State state =
+    {
+        PTHREAD_MUTEX_INITIALIZER,
+        PTHREAD_COND_INITIALIZER,
+        true,
+        true
+    };
+    MirSurface *surface = mir_eglapp_native_surface();
+    mir_surface_set_event_handler(surface, on_event, &state);
+
+    while (mir_eglapp_running())
+    {
+        pthread_mutex_lock(&state.mutex);
+
+        while (mir_eglapp_running() && !state.changed)
+            pthread_cond_wait(&state.change, &state.mutex);
+
+        if (state.resized)
+        {
+            // mir_eglapp_swap_buffers updates the viewport for us...
+            GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
+            int w = viewport[2], h = viewport[3];
+
+            // TRANSPOSED projection matrix to convert from the Mir input
+            // rectangle {{0,0},{w,h}} to GL screen rectangle {{-1,1},{2,2}}.
+            GLfloat matrix[16] = {2.0f/w, 0.0f,   0.0f, 0.0f,
+                                  0.0f,  -2.0f/h, 0.0f, 0.0f,
+                                  0.0f,   0.0f,   1.0f, 0.0f,
+                                 -1.0f,   1.0f,   0.0f, 1.0f};
+            // Note GL_FALSE: GLES does not support the transpose option
+            glUniformMatrix4fv(projection, 1, GL_FALSE, matrix);
+            state.resized = false;
+        }
+
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glUniform1f(opacity, 1.0f);
+        glUniform2f(translate, 0.0f, 0.0f);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+        // Put the event loop back to sleep:
+        state.changed = false;
+        pthread_mutex_unlock(&state.mutex);
+
+        mir_eglapp_swap_buffers();
+    }
+
+    mir_surface_set_event_handler(surface, NULL, NULL);
+    mir_eglapp_shutdown();
+    close_camera(&cam);
+
+    return 0;
+}
