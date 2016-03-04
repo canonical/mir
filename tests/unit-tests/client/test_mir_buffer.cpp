@@ -48,7 +48,7 @@ struct MirBufferTest : Test
     std::shared_ptr<mtd::MockClientBuffer> const mock_client_buffer {
         std::make_shared<NiceMock<mtd::MockClientBuffer>>() };
     std::chrono::nanoseconds timeout { 101 };
-    mir::protobuf::Buffer update_message;
+    MirBufferPackage update_message;
 };
 
 }

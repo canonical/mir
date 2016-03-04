@@ -45,7 +45,7 @@ public:
     int rpc_id() const;
 
     void submitted();
-    void received(protobuf::Buffer const& update_message);
+    void received(MirBufferPackage const& update_message);
 
     MirNativeBuffer* as_mir_native_buffer() const;
     MirGraphicsRegion map_region();

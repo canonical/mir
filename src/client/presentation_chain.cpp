@@ -116,16 +116,36 @@ void mcl::PresentationChain::release_buffer(MirBuffer* buffer)
     server.release_buffers(&request, ignored, gp::NewCallback(ignore_response, ignored));
 }
 
+namespace
+{
+std::shared_ptr<MirBufferPackage> to_buffer_package(mp::Buffer const& buffer)
+{
+    auto package = std::make_shared<MirBufferPackage>();
+    package->data_items = buffer.data_size();
+    package->fd_items = buffer.fd_size();
+    for (int i = 0; i != buffer.data_size(); ++i)
+        package->data[i] = buffer.data(i);
+    for (int i = 0; i != buffer.fd_size(); ++i)
+        package->fd[i] = buffer.fd(i);
+    package->stride = buffer.stride();
+    package->flags = buffer.flags();
+    package->width = buffer.width();
+    package->height = buffer.height();
+    return package;
+}
+}
+
 void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     //first see if this buffer has been here before
+    auto package = to_buffer_package(buffer);
     auto buffer_it = std::find_if(buffers.begin(), buffers.end(),
         [&buffer](std::unique_ptr<Buffer> const& b)
         { return buffer.buffer_id() == b->rpc_id(); });
     if (buffer_it != buffers.end())
     {
-        (*buffer_it)->received(buffer);
+        (*buffer_it)->received(*package);
         return;
     }
 
@@ -139,17 +159,6 @@ void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
     if (request_it == allocation_requests.end())
         BOOST_THROW_EXCEPTION(std::logic_error("unrequested buffer received"));
 
-    auto package = std::make_shared<MirBufferPackage>();
-    package->data_items = buffer.data_size();
-    package->fd_items = buffer.fd_size();
-    for (int i = 0; i != buffer.data_size(); ++i)
-        package->data[i] = buffer.data(i);
-    for (int i = 0; i != buffer.fd_size(); ++i)
-        package->fd[i] = buffer.fd(i);
-    package->stride = buffer.stride();
-    package->flags = buffer.flags();
-    package->width = buffer.width();
-    package->height = buffer.height();
     buffers.emplace_back(std::make_unique<Buffer>(
         (*request_it)->cb, (*request_it)->cb_context,
         buffer.buffer_id(),
