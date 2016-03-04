@@ -27,17 +27,25 @@ namespace mf = mir::frontend;
 namespace mcl = mir::client;
 namespace mtd = mir::test::doubles;
 
+namespace
+{
+void buffer_cb(MirPresentationChain*, MirBuffer*, void*)
+{
+}
+}
 struct ConnectionResourceMap : testing::Test
 {
     std::shared_ptr<MirWaitHandle> wh { std::make_shared<MirWaitHandle>() };
     std::shared_ptr<MirSurface> surface{std::make_shared<MirSurface>("a string", nullptr, mf::SurfaceId{2}, wh)};
     std::shared_ptr<mcl::ClientBufferStream> stream{ std::make_shared<mtd::MockClientBufferStream>() }; 
+    std::shared_ptr<mcl::Buffer> buffer { std::make_shared<mcl::Buffer>(buffer_cb, nullptr, 0, nullptr) };
     mtd::MockProtobufServer mock_server;
     std::shared_ptr<mcl::PresentationChain> chain{ std::make_shared<mcl::PresentationChain>(
         nullptr, 0, mock_server, nullptr, nullptr) };
 
     mf::SurfaceId const surface_id{43};
     mf::BufferStreamId const stream_id{43};
+    int const buffer_id{43};
 };
 
 TEST_F(ConnectionResourceMap, maps_surface_when_surface_inserted)
@@ -95,12 +103,13 @@ TEST_F(ConnectionResourceMap, maps_chains)
 
 TEST_F(ConnectionResourceMap, maps_buffers)
 {
+    using namespace testing;
     mcl::ConnectionSurfaceMap map;
     map.insert(buffer_id, buffer);
 
-    map.with_buffer_do(buffer_id, [](mcl::Buffer& b)
+    map.with_buffer_do(buffer_id, [this](mcl::Buffer& b)
     {
-        EXPECT_THAT(&b, Eq(buffer));
+        EXPECT_THAT(&b, Eq(buffer.get()));
     });
 
     map.erase(buffer_id);
