@@ -19,7 +19,6 @@
 #ifndef MIR_INPUT_PROBE_H_
 #define MIR_INPUT_PROBE_H_
 
-#include <vector>
 #include "mir/module_deleter.h"
 
 namespace mir
@@ -37,7 +36,7 @@ class InputReport;
 class Platform;
 class InputDeviceRegistry;
 
-std::vector<mir::UniqueModulePtr<Platform>> probe_input_platforms(
+mir::UniqueModulePtr<Platform> probe_input_platforms(
     options::Option const& options, std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup,
     std::shared_ptr<InputDeviceRegistry> const& device_registry, std::shared_ptr<InputReport> const& input_report,
     SharedLibraryProberReport & prober_report);
