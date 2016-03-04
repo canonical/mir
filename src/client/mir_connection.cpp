@@ -528,7 +528,6 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
             };
 
         platform = client_platform_factory->create_client_platform(this);
-        cbuffer_factory = platform->create_buffer_factory();
         native_display = platform->create_egl_native_display();
         display_configuration->set_configuration(connect_result->display_configuration());
         lifecycle_control->set_callback(default_lifecycle_event_handler);
@@ -539,6 +538,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
     }
     catch (std::exception const& e)
     {
+    printf("IN HER.\n");
         connect_result->set_error(std::string{"Failed to process connect response: "} +
                                  boost::diagnostic_information(e));
     }
@@ -1081,6 +1081,8 @@ void MirConnection::context_created(ChainCreationRequest* request_raw)
 
     try
     {
+        if (!cbuffer_factory)
+            cbuffer_factory = platform->create_buffer_factory();
         auto chain = std::make_shared<mcl::PresentationChain>(
             this, protobuf_bs->id().value(), server, cbuffer_factory, buffer_factory);
 
