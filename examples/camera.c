@@ -290,12 +290,10 @@ int main(int argc, char *argv[])
         "precision mediump float;\n"
         "varying vec2 v_texcoord;\n"
         "uniform sampler2D texture;\n"
-        "uniform float opacity;\n"
         "\n"
         "void main()\n"
         "{\n"
         "    vec4 f = texture2D(texture, v_texcoord);\n"
-        "    f.a *= opacity;\n"
         "    gl_FragColor = f;\n"
         "}\n";
 
@@ -350,9 +348,6 @@ int main(int argc, char *argv[])
     glEnableVertexAttribArray(position);
     glEnableVertexAttribArray(texcoord);
 
-    GLint opacity = glGetUniformLocation(prog, "opacity");
-    glUniform1f(opacity, 1.0f);
-
     GLint translate = glGetUniformLocation(prog, "translate");
     glUniform2f(translate, 0.0f, 0.0f);
 
@@ -363,10 +358,8 @@ int main(int argc, char *argv[])
     glBindTexture(GL_TEXTURE_2D, tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-    //             GL_UNSIGNED_BYTE, image);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glViewport(0, 0, width, height);
@@ -417,7 +410,6 @@ int main(int argc, char *argv[])
                      cam.buffer[index].start);
         release_frame(&cam, index);
 
-        glUniform1f(opacity, 1.0f);
         glUniform2f(translate, 0.0f, 0.0f);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
