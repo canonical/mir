@@ -671,5 +671,8 @@ TEST(LP, 1540731)
 #else
     EXPECT_THAT(recvmsg(socket_fd[server], &msgh, MSG_PEEK), Ne(-1))
         << strerror(errno);
+
+    close(socket_fd[server]);
+    close(socket_fd[client]);
 #endif
 }
