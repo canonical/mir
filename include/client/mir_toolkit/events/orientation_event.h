@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-/*
+/**
  * Retrieve the new orientation reported by this MirOrientationEvent
  *
  * \param[in] ev The orientation event

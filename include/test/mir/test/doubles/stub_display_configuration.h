@@ -22,6 +22,7 @@
 #include "mir/graphics/display_configuration.h"
 
 #include <vector>
+#include <mir_toolkit/client_types.h>
 
 namespace mir
 {
@@ -37,6 +38,9 @@ struct StubDisplayConfigurationOutput : public graphics::DisplayConfigurationOut
 
     StubDisplayConfigurationOutput(graphics::DisplayConfigurationOutputId id,
         geometry::Size px_size, geometry::Size mm_size, MirPixelFormat format, double vrefresh, bool connected);
+
+    StubDisplayConfigurationOutput(graphics::DisplayConfigurationOutputId id,
+        std::vector<graphics::DisplayConfigurationMode> modes, std::vector<MirPixelFormat> formats);
 };
 
 class StubDisplayConfig : public graphics::DisplayConfiguration

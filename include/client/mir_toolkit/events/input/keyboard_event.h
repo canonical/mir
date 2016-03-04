@@ -87,7 +87,7 @@ int mir_keyboard_event_scan_code(MirKeyboardEvent const* event);
  */
 MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* event);
 
-/*
+/**
  * Retrieve the corresponding input event.
  *
  * \param [in] event The keyboard event

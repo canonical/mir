@@ -22,7 +22,6 @@
 #include "buffer.h"
 #include "resource_factory.h"
 #include "fb_device.h"
-#include "graphic_buffer_allocator.h"
 #include "server_render_window.h"
 #include "hwc_device.h"
 #include "hwc_fb_device.h"

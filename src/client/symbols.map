@@ -222,6 +222,39 @@ MIR_CLIENT_9v19 {
     mir_surface_spec_set_shell_chrome;
 } MIR_CLIENT_9v18;
 
+MIR_CLIENT_9_unreleased {
+  global:
+    mir_connection_create_display_configuration;
+    mir_display_config_release;
+    mir_display_config_get_num_outputs;
+    mir_connection_apply_display_configuration;
+    mir_connection_set_base_display_configuration;
+    mir_display_config_get_output;
+    mir_output_is_enabled;
+    mir_display_config_get_max_simultaneous_outputs;
+    mir_output_get_id;
+    mir_output_get_type;
+    mir_output_get_preferred_mode;
+    mir_output_get_physical_width_mm;
+    mir_output_get_physical_height_mm;
+    mir_output_get_connection_state;
+    mir_output_get_position_x;
+    mir_output_get_position_y;
+    mir_output_get_current_mode;
+    mir_output_get_current_pixel_format;
+    mir_output_get_power_mode;
+    mir_output_get_orientation;
+    mir_output_get_num_modes;
+    mir_output_get_mode;
+    mir_output_get_num_pixel_formats;
+    mir_output_get_pixel_format;
+    mir_output_mode_get_width;
+    mir_output_mode_get_height;
+    mir_output_mode_get_refresh_rate;
+  local:
+    *;
+} MIR_CLIENT_9v19;
+
 MIR_CLIENT_DETAIL_9 {
   global:
     extern "C++" { 
@@ -293,6 +326,8 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_presentation_chain_allocate_buffer;
     mir_presentation_chain_submit_buffer;
     mir_presentation_chain_release;
+    mir_surface_spec_add_presentation_chain;
+    mir_surface_spec_add_buffer_stream;
   local:
     *;
 } MIR_CLIENT_DETAIL_9v19;

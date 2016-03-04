@@ -87,6 +87,9 @@ message StreamConfiguration {
   optional int32 swapinterval = 4;
   optional float scale = 5;
 
+  optional int32 width = 6;
+  optional int32 height = 7;
+
   optional string error = 127;
 };
 
@@ -199,6 +202,7 @@ message Connection {
   repeated DisplayOutput display_output = 3;
   optional DisplayConfiguration display_configuration = 4;
   repeated uint32 surface_pixel_format = 5;
+  repeated InputDeviceInfo input_devices = 6;
 
   optional string error = 127;
 }

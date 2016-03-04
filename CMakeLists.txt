@@ -34,6 +34,8 @@ set(MIR_VERSION_PATCH 0)
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
 add_definitions(-DMIR_VERSION_MINOR=${MIR_VERSION_MINOR})
 add_definitions(-DMIR_VERSION_MICRO=${MIR_VERSION_PATCH})
+add_definitions(-D_GNU_SOURCE)
+add_definitions(-D_FILE_OFFSET_BITS=64)
 
 set(MIR_VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH})
 
@@ -81,6 +83,11 @@ option(MIR_LINK_TIME_OPTIMIZATION "Enables the linker to optimize binaries." OFF
 if(MIR_LINK_TIME_OPTIMIZATION)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+  if(${CMAKE_COMPILER_IS_GNUCXX})
+    set(CMAKE_NM "gcc-nm")
+    set(CMAKE_AR "gcc-ar")
+    set(CMAKE_RANLIB "gcc-ranlib")
+  endif()
 endif()
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_lower)
@@ -110,6 +117,7 @@ elseif(cmake_build_type_lower MATCHES "threadsanitizer")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread -fno-omit-frame-pointer")
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=thread")
+  link_libraries(tsan) # Workaround for LP:1413474
 elseif(cmake_build_type_lower MATCHES "ubsanitizer")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")

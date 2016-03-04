@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,16 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_ALLOC_ADAPTOR_H_
-#define MIR_TEST_DOUBLES_MOCK_ALLOC_ADAPTOR_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_HUB_H_
+#define MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_HUB_H_
 
-#include "src/platforms/android/server/graphic_alloc_adaptor.h"
-
-#include <system/window.h>
-#include <gmock/gmock.h>
+#include "mir/input/input_device_hub.h"
 
 namespace mir
 {
@@ -31,15 +28,16 @@ namespace test
 namespace doubles
 {
 
-class MockAllocAdaptor : public graphics::android::GraphicAllocAdaptor
+struct MockInputDeviceHub : input::InputDeviceHub
 {
-public:
-    MOCK_METHOD3(alloc_buffer,
-        std::shared_ptr<graphics::NativeBuffer>(geometry::Size, MirPixelFormat, graphics::android::BufferUsage));
+    MOCK_METHOD1(add_observer, void(std::shared_ptr<input::InputDeviceObserver> const&));
+    MOCK_METHOD1(remove_observer, void(std::weak_ptr<input::InputDeviceObserver> const&));
+    MOCK_METHOD1(for_each_input_device, void(std::function<void(std::shared_ptr<input::Device>const&)> const&));
+
 };
 
 }
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_MOCK_ALLOC_ADAPTOR_H_ */
+#endif

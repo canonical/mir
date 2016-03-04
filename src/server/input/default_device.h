@@ -44,7 +44,7 @@ class DefaultDevice : public Device
 {
 public:
     DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
-                  std::shared_ptr<InputDevice> const& device);
+                  InputDevice& device);
     MirInputDeviceId id() const override;
     DeviceCapabilities capabilities() const override;
     std::string name() const override;
@@ -56,7 +56,7 @@ public:
     void apply_touchpad_configuration(TouchpadConfiguration const&) override;
 private:
     MirInputDeviceId const device_id;
-    std::shared_ptr<InputDevice> const device;
+    InputDevice& device;
     InputDeviceInfo const info;
     optional_value<PointerSettings> pointer;
     optional_value<TouchpadSettings> touchpad;
