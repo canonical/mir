@@ -3,12 +3,11 @@ Tracking ABI compatibility {#abi_compatibility_tools}
 
 A few make targets exist to help us track ABI compatibility across
 different Mir versions and ensure we increase the ABI version properly.
-These targets invoke the abi-compliance-checker tool for the actual ABI check
+These targets invoke the abi-compliance-checker tool for the actual ABI check.
 
 The targets are:
 
-* **make abi-check** (or abi-check-<library>, for a specific library
-  e.g., abi-check-mirclient)
+* **make abi-check**
 
   Compiles all the public libraries in the current tree and checks their ABI against the latest released archive version
 
