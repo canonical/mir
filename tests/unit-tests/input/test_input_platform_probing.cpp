@@ -149,6 +149,24 @@ TEST_F(InputPlatformProbe, x11_platform_found_and_used_when_display_connection_w
     EXPECT_THAT(platforms, UnorderedElementsAre(OfPtrType<mi::evdev::Platform>(), OfPtrType<mi::X::XInputPlatform>()));
 }
 
+TEST_F(InputPlatformProbe, when_multiple_x11_platforms_are_eligible_only_one_is_selected)
+{
+    auto const real_lib = mtf::server_platform_path() + "server-mesa-x11.so." MIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING;
+    auto const fake_lib = mtf::server_platform_path() + "server-mesa-x11.so.0";
+
+    ASSERT_THAT(real_lib, Ne(fake_lib));
+    remove(fake_lib.c_str());
+    ASSERT_THAT(link(real_lib.c_str(), fake_lib.c_str()), Eq(0));
+
+    auto platforms =
+        mi::probe_input_platforms(mock_options, mt::fake_shared(stub_emergency), mt::fake_shared(mock_registry),
+                                  mr::null_input_report(), *stub_prober_report);
+
+    EXPECT_THAT(platforms, UnorderedElementsAre(OfPtrType<mi::evdev::Platform>(), OfPtrType<mi::X::XInputPlatform>()));
+
+    remove(fake_lib.c_str());
+}
+
 TEST_F(InputPlatformProbe, x11_input_platform_not_used_when_vt_specified)
 {
     ON_CALL(mock_options, is_set(StrEq(vt))).WillByDefault(Return(true));
