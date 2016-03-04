@@ -108,7 +108,7 @@ TEST_F(ClientLogging, reports_performance)
                                 " perf: %255[^:]: %f FPS,", name, &fps);
             ASSERT_EQ(2, fields) << "Log line = {" << line << "}";
             EXPECT_STREQ("Rumpelstiltskin", name);
-            EXPECT_NEAR(target_fps, fps, 3.0f);
+            EXPECT_NEAR(target_fps, fps, 5.0f);
         }
     }
 
