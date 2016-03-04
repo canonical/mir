@@ -46,14 +46,14 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
 }
 }
 
-std::vector<mir::UniqueModulePtr<mi::Platform>> mi::probe_input_platforms(
+mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
     mo::Option const& options, std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup,
     std::shared_ptr<mi::InputDeviceRegistry> const& device_registry, std::shared_ptr<mi::InputReport> const& input_report,
     mir::SharedLibraryProberReport& prober_report)
 {
     auto reject_platform_priority = mi::PlatformPriority::dummy;
 
-    std::vector<UniqueModulePtr<Platform>> platforms;
+    std::shared_ptr<mir::SharedLibrary> platform_module;
     std::vector<std::string> module_names;
 
     auto const module_selector = [&](std::shared_ptr<mir::SharedLibrary> const& module)
@@ -62,23 +62,18 @@ std::vector<mir::UniqueModulePtr<mi::Platform>> mi::probe_input_platforms(
             {
                 auto const probe = module->load_function<mi::ProbePlatform>(
                     "probe_input_platform", MIR_SERVER_INPUT_PLATFORM_VERSION);
-                auto const desc = module->load_function<mi::DescribeModule>(
-                    "describe_input_module", MIR_SERVER_INPUT_PLATFORM_VERSION)();
 
-                // We only take the first found of duplicate modules, as that will be the most recent.
+                // We process the modules in descending .sonumber order so, luckily, we try mesa-x11 before evdev.
+                // But only because the graphics platform version is currently higher than the input platform version.
+                // Similarly, We only take the first found of duplicate modules, as that will be the most recent.
                 // This is a heuristic that assumes we're always looking for the most up-to-date driver,
                 // TODO find a way to coordinate the selection of mesa-x11 and input platforms
-                auto const duplicate = find(begin(module_names), end(module_names), desc->name) != end(module_names);
 
-                if (probe(options) > reject_platform_priority && !duplicate)
+                if (probe(options) > reject_platform_priority)
                 {
-                    platforms.emplace_back(
-                        create_input_platform(*module, options, emergency_cleanup, device_registry, input_report));
+                    platform_module = module;
 
-                    module_names.push_back(desc->name);
-
-                    mir::log_info("Selected input driver: %s (version: %d.%d.%d)",
-                        desc->name, desc->major_version, desc->minor_version, desc->micro_version);
+                    return Selection::quit;
                 }
             }
             catch (std::runtime_error const&)
@@ -99,5 +94,17 @@ std::vector<mir::UniqueModulePtr<mi::Platform>> mi::probe_input_platforms(
         select_libraries_for_path(options.get<std::string>(mo::platform_path), module_selector, prober_report);
     }
 
-    return platforms;
+    if (!platform_module)
+        BOOST_THROW_EXCEPTION(std::runtime_error{"No appropriate input platform module found"});
+
+    auto const desc = platform_module->load_function<mi::DescribeModule>(
+        "describe_input_module", MIR_SERVER_INPUT_PLATFORM_VERSION)();
+
+    auto result = create_input_platform(*platform_module, options, emergency_cleanup, device_registry, input_report);
+
+    mir::log_info(
+        "Selected input driver: %s (version: %d.%d.%d)",
+        desc->name, desc->major_version, desc->minor_version, desc->micro_version);
+
+    return result;
 }
