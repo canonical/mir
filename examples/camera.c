@@ -276,6 +276,14 @@ bool open_camera(Camera *cam) /* TODO: selectable */
         }
     }
 
+    int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    if (-1 == ioctl(cam->fd, VIDIOC_STREAMON, &type))
+    {
+        perror("VIDIOC_STREAMON");
+        close_camera(cam);
+        return false;
+    }
+
     struct v4l2_buffer frame;
     memset(&frame, 0, sizeof(frame));
     frame.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
