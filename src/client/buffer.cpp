@@ -49,7 +49,7 @@ void mcl::Buffer::submitted()
     owned = false;
 }
 
-void mcl::Buffer::received()
+void mcl::Buffer::received(protobuf::Buffer const& /*buffer*/)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     if (!owned)

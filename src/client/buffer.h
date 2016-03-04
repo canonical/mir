@@ -26,6 +26,10 @@
 
 namespace mir
 {
+namespace protobuf
+{
+class Buffer;
+}
 namespace client
 {
 class ClientBuffer;
@@ -41,7 +45,7 @@ public:
     int rpc_id() const;
 
     void submitted();
-    void received();
+    void received(protobuf::Buffer const& update_message);
 
     MirNativeBuffer* as_mir_native_buffer() const;
     MirGraphicsRegion map_region();

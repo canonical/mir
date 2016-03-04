@@ -125,7 +125,7 @@ void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
         { return buffer.buffer_id() == b->rpc_id(); });
     if (buffer_it != buffers.end())
     {
-        (*buffer_it)->received();
+        (*buffer_it)->received(buffer);
         return;
     }
 
