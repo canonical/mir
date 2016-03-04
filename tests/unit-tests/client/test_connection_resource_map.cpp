@@ -34,7 +34,7 @@ struct ConnectionResourceMap : testing::Test
     std::shared_ptr<mcl::ClientBufferStream> stream{ std::make_shared<mtd::MockClientBufferStream>() }; 
     mtd::MockProtobufServer mock_server;
     std::shared_ptr<mcl::PresentationChain> chain{ std::make_shared<mcl::PresentationChain>(
-        nullptr, 0, mock_server, nullptr) };
+        nullptr, 0, mock_server, nullptr, nullptr) };
 
     mf::SurfaceId const surface_id{43};
     mf::BufferStreamId const stream_id{43};

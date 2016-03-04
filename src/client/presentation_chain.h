@@ -38,12 +38,11 @@ namespace rpc
 class DisplayServer;
 }
 
-struct AsyncBufferAllocation
+struct AsyncBufferFactory
 {
-    AsyncBufferAllocation(std::shared_ptr<ClientBufferFactory> const& factory);
-
     std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer);
     void expect_buffer(
+        std::shared_ptr<ClientBufferFactory> const& factory,
         geometry::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
@@ -54,12 +53,14 @@ struct AsyncBufferAllocation
     struct AllocationRequest
     {
         AllocationRequest(
+            std::shared_ptr<ClientBufferFactory> const& factory,
             geometry::Size size,
             MirPixelFormat format,
             MirBufferUsage usage,
             mir_buffer_callback cb,
             void* cb_context);
 
+        std::shared_ptr<ClientBufferFactory> const factory;
         geometry::Size size;
         MirPixelFormat format;
         MirBufferUsage usage;
@@ -67,8 +68,6 @@ struct AsyncBufferAllocation
         void* cb_context;
     };
     std::vector<std::unique_ptr<AllocationRequest>> allocation_requests;
-    std::shared_ptr<ClientBufferFactory> const factory;
-
 };
 class PresentationChain : public MirPresentationChain
 {
@@ -77,7 +76,8 @@ public:
         MirConnection* connection,
         int rpc_id,
         rpc::DisplayServer& server,
-        std::shared_ptr<AsyncBufferAllocation> const& factory);
+        std::shared_ptr<ClientBufferFactory> const& cbfactory,
+        std::shared_ptr<AsyncBufferFactory> const& factory);
     void allocate_buffer(
         geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
         mir_buffer_callback callback, void* context) override;
@@ -95,7 +95,8 @@ private:
     MirConnection* const connection_;
     int const stream_id;
     rpc::DisplayServer& server;
-    std::shared_ptr<AsyncBufferAllocation> const factory;
+    std::shared_ptr<ClientBufferFactory> const cfactory;
+    std::shared_ptr<AsyncBufferFactory> const factory;
 
     std::mutex mutex;
     std::vector<std::unique_ptr<Buffer>> buffers;

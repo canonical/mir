@@ -241,6 +241,7 @@ MirConnection::MirConnection(
     mir::client::ConnectionConfiguration& conf) :
         deregisterer{this},
         surface_map(conf.the_surface_map()),
+        buffer_factory(conf.the_buffer_factory()),
         channel(conf.the_rpc_channel()),
         server(channel),
         debug(channel),
@@ -527,6 +528,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
             };
 
         platform = client_platform_factory->create_client_platform(this);
+        cbuffer_factory = platform->create_buffer_factory();
         native_display = platform->create_egl_native_display();
         display_configuration->set_configuration(connect_result->display_configuration());
         lifecycle_control->set_callback(default_lifecycle_event_handler);
@@ -1080,8 +1082,7 @@ void MirConnection::context_created(ChainCreationRequest* request_raw)
     try
     {
         auto chain = std::make_shared<mcl::PresentationChain>(
-            this, protobuf_bs->id().value(), server,
-            std::make_shared<mcl::AsyncBufferAllocation>(platform->create_buffer_factory()));
+            this, protobuf_bs->id().value(), server, cbuffer_factory, buffer_factory);
 
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), chain);
 

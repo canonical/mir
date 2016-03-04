@@ -32,10 +32,12 @@ mcl::PresentationChain::PresentationChain(
     MirConnection* connection,
     int stream_id,
     mir::client::rpc::DisplayServer& server,
-    std::shared_ptr<mcl::AsyncBufferAllocation> const& factory) :
+    std::shared_ptr<mcl::ClientBufferFactory> const& cfactory,
+    std::shared_ptr<mcl::AsyncBufferFactory> const& factory) :
     connection_(connection),
     stream_id(stream_id),
     server(server),
+    cfactory(cfactory),
     factory(factory)
 {
 }
@@ -56,7 +58,7 @@ void mcl::PresentationChain::allocate_buffer(
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback cb, void* cb_context)
 {
-    factory->expect_buffer(size, format, usage, cb, cb_context);
+    factory->expect_buffer(cfactory, size, format, usage, cb, cb_context);
 
     mp::BufferAllocation request;
     request.mutable_id()->set_value(stream_id);
@@ -165,13 +167,8 @@ char const* mcl::PresentationChain::error_msg() const
 
 
 
-mcl::AsyncBufferAllocation::AsyncBufferAllocation(
-    std::shared_ptr<ClientBufferFactory> const& factory) :
-    factory(factory)
-{
-}
-
-void mcl::AsyncBufferAllocation::expect_buffer(
+void mcl::AsyncBufferFactory::expect_buffer(
+    std::shared_ptr<mcl::ClientBufferFactory> const& factory,
     geometry::Size size,
     MirPixelFormat format,
     MirBufferUsage usage,
@@ -180,10 +177,10 @@ void mcl::AsyncBufferAllocation::expect_buffer(
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     allocation_requests.emplace_back(
-        std::make_unique<AllocationRequest>(size, format, usage, cb, cb_context));
+        std::make_unique<AllocationRequest>(factory, size, format, usage, cb, cb_context));
 }
 
-std::unique_ptr<mcl::Buffer> mcl::AsyncBufferAllocation::generate_buffer(
+std::unique_ptr<mcl::Buffer> mcl::AsyncBufferFactory::generate_buffer(
     mir::protobuf::Buffer const& buffer)
 {
     //must be new, allocate and send it.
@@ -210,14 +207,16 @@ std::unique_ptr<mcl::Buffer> mcl::AsyncBufferAllocation::generate_buffer(
     auto b = std::make_unique<Buffer>(
         (*request_it)->cb, (*request_it)->cb_context,
         buffer.buffer_id(),
-        factory->create_buffer(package, (*request_it)->size, (*request_it)->format));
+        (*request_it)->factory->create_buffer(package, (*request_it)->size, (*request_it)->format));
     allocation_requests.erase(request_it);
     return std::move(b);
 }
 
-mcl::AsyncBufferAllocation::AllocationRequest::AllocationRequest(
+mcl::AsyncBufferFactory::AllocationRequest::AllocationRequest(
+    std::shared_ptr<mcl::ClientBufferFactory> const& factory,
     geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback cb, void* cb_context) :
+    factory(factory),
     size(size),
     format(format),
     usage(usage),

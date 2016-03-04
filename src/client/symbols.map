@@ -311,6 +311,13 @@ MIR_CLIENT_DETAIL_9v19 {
     };
 } MIR_CLIENT_DETAIL_9v18;
 
+MIR_CLIENT_DETAIL_9v21 {
+  global:
+    extern "C++" { 
+      mir::client::DefaultConnectionConfiguration::the_buffer_factory*;
+    };
+} MIR_CLIENT_DETAIL_9v19;
+
 MIR_CLIENT_DETAIL_private_buffer_semantics {
   global:
     mir_buffer_get_fence;
