@@ -51,6 +51,7 @@ typedef struct
         void *start;
         size_t length;
     } *buffer;
+    struct v4l2_pix_format pix;
 } Camera;
 
 static GLuint load_shader(const char *src, GLenum type)
@@ -73,51 +74,6 @@ static GLuint load_shader(const char *src, GLenum type)
         }
     }
     return shader;
-}
-
-GLuint generate_target_texture()
-{
-    const int width = 512, height = width;
-    typedef struct { GLubyte r, b, g, a; } Texel;
-    Texel image[height][width];
-    // Note the 0.5f to convert from pixel corner (GL) to middle (image)
-    const float centrex = width/2 - 0.5f, centrey = height/2 - 0.5f;
-    const Texel blank = {0, 0, 0, 0};
-    const int radius = centrex - 1;
-    const Texel ring[] =
-    {
-        {  0,   0,   0, 255},
-        {  0,   0, 255, 255},
-        {  0, 255,   0, 255},
-        {255, 255,   0, 255},
-        {255, 128,   0, 255},
-        {255,   0,   0, 255},
-    };
-    const int rings = sizeof(ring) / sizeof(ring[0]);
-
-    for (int y = 0; y < height; ++y)
-    {
-        for (int x = 0; x < width; ++x)
-        {
-            float dx = x - centrex, dy = y - centrey;
-            int layer = rings * sqrtf(dx * dx + dy * dy) / radius;
-            image[y][x] = layer < rings ? ring[layer] : blank;
-        }
-    }
-
-    GLuint tex;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                                   GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, image);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    return tex;
 }
 
 static void on_event(MirSurface *surface, const MirEvent *event, void *context)
@@ -215,6 +171,7 @@ bool open_camera(Camera *cam) /* TODO: selectable */
     printf("Pixel format: %ux%u fmt %08lx, stride %u\n",
         (unsigned)pix->width, (unsigned)pix->height,
         (long)pix->pixelformat, (unsigned)pix->bytesperline);
+    cam->pix = *pix;
 
     struct v4l2_requestbuffers req =
     {
@@ -284,6 +241,11 @@ bool open_camera(Camera *cam) /* TODO: selectable */
         return false;
     }
 
+    return true;
+}
+
+int acquire_frame(Camera *cam)
+{
     struct v4l2_buffer frame;
     memset(&frame, 0, sizeof(frame));
     frame.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -293,10 +255,19 @@ bool open_camera(Camera *cam) /* TODO: selectable */
         perror("Get first frame");
         free(cam->buffer);
         close(cam->fd);
-        return false;
+        exit(-1);
     }
+    return frame.index;
+}
 
-    return true;
+void release_frame(Camera *cam, int index)
+{
+    struct v4l2_buffer frame;
+    memset(&frame, 0, sizeof(frame));
+    frame.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    frame.memory = V4L2_MEMORY_MMAP;
+    frame.index = index;
+    ioctl(cam->fd, VIDIOC_QBUF, &frame);
 }
 
 int main(int argc, char *argv[])
@@ -387,8 +358,15 @@ int main(int argc, char *argv[])
 
     GLint projection = glGetUniformLocation(prog, "projection");
 
-    GLuint tex = generate_target_texture();
+    GLuint tex;
+    glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+    //             GL_UNSIGNED_BYTE, image);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glViewport(0, 0, width, height);
@@ -432,6 +410,12 @@ int main(int argc, char *argv[])
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
+
+        int index = acquire_frame(&cam);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, cam.pix.width,
+                     cam.pix.height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5,
+                     cam.buffer[index].start);
+        release_frame(&cam, index);
 
         glUniform1f(opacity, 1.0f);
         glUniform2f(translate, 0.0f, 0.0f);
