@@ -27,6 +27,7 @@
 #include "../lifecycle_control.h"
 #include "../event_sink.h"
 #include "../make_protobuf_object.h"
+#include "../protobuf_to_native_buffer.h"
 #include "mir/input/input_devices.h"
 #include "mir/variable_length_array.h"
 #include "mir/events/event_builders.h"
@@ -319,7 +320,8 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                         seq.buffer_request().buffer().buffer_id(),
                         [&seq](mcl::Buffer& buffer)
                         {
-                            buffer.received(seq.buffer_request().buffer());
+                            buffer.received(
+                                *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
                         });
 
                     if (!had_buffer)

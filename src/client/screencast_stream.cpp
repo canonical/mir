@@ -22,6 +22,7 @@
 #include "rpc/mir_display_server.h"
 #include "mir_protobuf.pb.h"
 #include "buffer_vault.h"
+#include "protobuf_to_native_buffer.h"
 
 #include "mir/log.h"
 #include "mir/client_platform.h"
@@ -88,17 +89,7 @@ void mcl::ScreencastStream::process_buffer(protobuf::Buffer const& buffer, std::
     if (buffer.has_width() && buffer.has_height())
         buffer_size = geom::Size{buffer.width(), buffer.height()};
 
-    auto package = std::make_shared<MirBufferPackage>();
-    package->data_items = buffer.data_size();
-    package->fd_items = buffer.fd_size();
-    for (int i = 0; i != buffer.data_size(); ++i)
-        package->data[i] = buffer.data(i);
-    for (int i = 0; i != buffer.fd_size(); ++i)
-        package->fd[i] = buffer.fd(i);
-    package->stride = buffer.stride();
-    package->flags = buffer.flags();
-    package->width = buffer.width();
-    package->height = buffer.height();
+    auto package = mcl::protobuf_to_native_buffer(buffer);
     if (current_id != buffer.buffer_id())
     {
         try

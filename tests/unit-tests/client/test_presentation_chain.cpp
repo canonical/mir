@@ -18,6 +18,8 @@
 
 #include "mir/test/doubles/mock_protobuf_server.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
+#include "mir/test/doubles/mock_client_buffer.h"
+#include "mir/test/fake_shared.h"
 #include "src/client/presentation_chain.h"
 #include "mir/client_buffer_factory.h"
 
@@ -38,7 +40,7 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
     MockClientBufferFactory()
     {
         ON_CALL(*this, create_buffer(_,_,_))
-            .WillByDefault(Return(nullptr));
+            .WillByDefault(Return(std::make_shared<NiceMock<mtd::MockClientBuffer>>()));
     }
     MOCK_METHOD3(create_buffer, std::shared_ptr<mcl::ClientBuffer>(
         std::shared_ptr<MirBufferPackage> const&, geom::Size, MirPixelFormat));
@@ -291,6 +293,34 @@ TEST_F(PresentationChain, submits_buffer_when_asked)
     ASSERT_THAT(b, Ne(nullptr));
 
     chain.submit_buffer(b);
+} 
+
+TEST_F(PresentationChain, updates_buffer)
+{
+    mtd::MockClientBuffer mock_buffer;
+    BufferCallbackContext buffer;
+    mp::BufferRequest request;
+    request.mutable_id()->set_value(rpc_id);
+    request.mutable_buffer()->set_buffer_id(buffer_id);
+
+    EXPECT_CALL(mock_server, allocate_buffers(_,_,_))
+        .WillOnce(mtd::RunProtobufClosure());
+    EXPECT_CALL(mock_server, submit_buffer(BufferRequestMatches(request),_,_))
+        .WillOnce(mtd::RunProtobufClosure());
+    EXPECT_CALL(mock_buffer, update_from(_));
+    EXPECT_CALL(*factory, create_buffer(_,_,_))
+        .WillOnce(Return(mir::test::fake_shared(mock_buffer)));
+
+    mcl::PresentationChain chain(
+        connection, rpc_id, mock_server, factory,
+        std::make_shared<mcl::AsyncBufferFactory>());
+    chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
+    chain.buffer_available(ipc_buf);
+    auto b = buffer.wait_for_buffer();
+    ASSERT_THAT(b, Ne(nullptr));
+
+    chain.submit_buffer(b);
+    chain.buffer_available(ipc_buf);
 } 
 
 TEST_F(PresentationChain, double_submission_throws)

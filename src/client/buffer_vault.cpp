@@ -20,6 +20,7 @@
 #include "mir/client_buffer.h"
 #include "buffer_vault.h"
 #include "mir_protobuf.pb.h"
+#include "protobuf_to_native_buffer.h"
 #include <algorithm>
 #include <boost/throw_exception.hpp>
 
@@ -118,17 +119,7 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
 
 void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 {
-    auto package = std::make_shared<MirBufferPackage>();
-    package->data_items = protobuf_buffer.data_size();
-    package->fd_items = protobuf_buffer.fd_size();
-    for (int i = 0; i != protobuf_buffer.data_size(); ++i)
-        package->data[i] = protobuf_buffer.data(i);
-    for (int i = 0; i != protobuf_buffer.fd_size(); ++i)
-        package->fd[i] = protobuf_buffer.fd(i);
-    package->stride = protobuf_buffer.stride();
-    package->flags = protobuf_buffer.flags();
-    package->width = protobuf_buffer.width();
-    package->height = protobuf_buffer.height();
+    auto package = mcl::protobuf_to_native_buffer(protobuf_buffer);
 
     std::unique_lock<std::mutex> lk(mutex);
     auto it = buffers.find(protobuf_buffer.buffer_id());
