@@ -92,3 +92,19 @@ TEST_F(ConnectionResourceMap, maps_chains)
     EXPECT_TRUE(chain_called);
     map.erase(stream_id);
 }
+
+TEST_F(ConnectionResourceMap, maps_buffers)
+{
+    mcl::ConnectionSurfaceMap map;
+    map.insert(buffer_id, buffer);
+
+    map.with_buffer_do(buffer_id, [](mcl::Buffer& b)
+    {
+        EXPECT_THAT(&b, Eq(buffer));
+    });
+
+    map.erase(buffer_id);
+    EXPECT_THROW({
+        map.with_buffer_do(buffer_id, [](mcl::Buffer&){});
+    }, std::runtime_error);
+}
