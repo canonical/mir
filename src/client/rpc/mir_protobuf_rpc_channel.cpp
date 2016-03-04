@@ -20,6 +20,8 @@
 #include "rpc_report.h"
 
 #include "../surface_map.h"
+#include "../buffer.h"
+#include "../presentation_chain.h"
 #include "../mir_surface.h"
 #include "../display_configuration.h"
 #include "../lifecycle_control.h"
@@ -304,10 +306,28 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         {
             try
             {
-                map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
-                [&] (mcl::BufferReceiver* receiver) {
-                    receiver->buffer_available(seq.buffer_request().buffer());
-                });
+                if (seq.buffer_request().has_id())
+                {
+                    map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
+                    [&] (mcl::BufferReceiver* receiver) {
+                        receiver->buffer_available(seq.buffer_request().buffer());
+                    });
+                }
+                else
+                {
+                    auto had_buffer = map->with_buffer_do(
+                        seq.buffer_request().buffer().buffer_id(),
+                        [&seq](mcl::Buffer& buffer)
+                        {
+                            buffer.received(seq.buffer_request().buffer());
+                        });
+
+                    if (!had_buffer)
+                    {
+                        map->insert(seq.buffer_request().buffer().buffer_id(), 
+                            buffer_factory->generate_buffer(seq.buffer_request().buffer()));
+                    }
+                }
             }
             catch (std::exception& e)
             {

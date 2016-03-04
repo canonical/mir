@@ -106,7 +106,7 @@ void mcl::ConnectionSurfaceMap::erase(int buffer_id)
     buffers.erase(buffer_id);
 }
 
-void mcl::ConnectionSurfaceMap::with_buffer_do(
+bool mcl::ConnectionSurfaceMap::with_buffer_do(
     int buffer_id, std::function<void(mcl::Buffer&)> const& exec) const
 {
     std::lock_guard<decltype(guard)> lk(guard);
@@ -115,12 +115,10 @@ void mcl::ConnectionSurfaceMap::with_buffer_do(
     {
         auto const buffer = it->second;
         exec(*buffer);
+        return true;
     }
     else
     {
-        std::stringstream ss;
-        ss << __PRETTY_FUNCTION__ << "executed with non-existent buffer ID " << buffer_id;
-        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
+        return false;
     }
-
 }

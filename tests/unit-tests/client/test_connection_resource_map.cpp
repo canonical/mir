@@ -105,15 +105,13 @@ TEST_F(ConnectionResourceMap, maps_buffers)
 {
     using namespace testing;
     mcl::ConnectionSurfaceMap map;
+    EXPECT_FALSE(map.with_buffer_do(buffer_id, [](mcl::Buffer&){}));
     map.insert(buffer_id, buffer);
-
-    map.with_buffer_do(buffer_id, [this](mcl::Buffer& b)
+    EXPECT_TRUE(map.with_buffer_do(buffer_id, [this](mcl::Buffer& b)
     {
         EXPECT_THAT(&b, Eq(buffer.get()));
-    });
+    }));
 
     map.erase(buffer_id);
-    EXPECT_THROW({
-        map.with_buffer_do(buffer_id, [](mcl::Buffer&){});
-    }, std::runtime_error);
+    EXPECT_FALSE(map.with_buffer_do(buffer_id, [](mcl::Buffer&){}));
 }
