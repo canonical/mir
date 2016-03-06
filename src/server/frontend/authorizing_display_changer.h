@@ -26,6 +26,17 @@ namespace mir
 namespace frontend
 {
 
+/**
+ * Adaptor to selectively permit display configuration calls.
+ *
+ * Wraps an authorization layer around an existing frontend::DisplayChanger.
+ *
+ * Authorization is set at construction time, and is then immutable.
+ *
+ * Authorisation for client-specific "session" display changes is
+ * separate from authorization for system-wide default display changes.
+ * Neither imply the other.
+ */
 class AuthorizingDisplayChanger : public frontend::DisplayChanger
 {
 public:
