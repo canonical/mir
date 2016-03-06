@@ -26,10 +26,13 @@ namespace mir
 namespace frontend
 {
 
-class UnauthorizedDisplayChanger : public frontend::DisplayChanger
+class AuthorizingDisplayChanger : public frontend::DisplayChanger
 {
 public:
-    explicit UnauthorizedDisplayChanger(std::shared_ptr<frontend::DisplayChanger> const& changer);
+    AuthorizingDisplayChanger(
+        std::shared_ptr<frontend::DisplayChanger> const& changer,
+        bool configuration_is_authorized,
+        bool base_configuration_modification_is_authorized);
 
     std::shared_ptr<graphics::DisplayConfiguration> base_configuration() override;
     void configure(
@@ -38,14 +41,11 @@ public:
     void set_base_configuration(
         std::shared_ptr<graphics::DisplayConfiguration> const&) override;
 
-    void allow_configure_display();
-    void allow_set_base_configuration();
-
 private:
     std::shared_ptr<frontend::DisplayChanger> const changer;
 
-    bool configure_display_is_allowed;
-    bool set_base_configuration_is_allowed;
+    bool const configure_display_is_allowed;
+    bool const set_base_configuration_is_allowed;
 };
 
 }
