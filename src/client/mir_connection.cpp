@@ -983,11 +983,6 @@ mir::client::rpc::DisplayServer& MirConnection::display_server()
     return server;
 }
 
-std::shared_ptr<mir::logging::Logger> const& MirConnection::the_logger() const
-{
-    return logger;
-}
-
 MirWaitHandle* MirConnection::release_buffer_stream(
     mir::client::ClientBufferStream* stream,
     mir_buffer_stream_callback callback,
@@ -1017,7 +1012,7 @@ void MirConnection::release_consumer_stream(mir::client::ClientBufferStream* str
     surface_map->erase(stream->rpc_id());
 }
 
-std::shared_ptr<mcl::DisplayConfiguration::Config> MirConnection::snapshot_display_configuration() const
+std::unique_ptr<mir::protobuf::DisplayConfiguration> MirConnection::snapshot_display_configuration() const
 {
     return display_configuration->take_snapshot();
 }

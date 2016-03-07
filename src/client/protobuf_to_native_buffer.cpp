@@ -20,10 +20,10 @@
 #include "mir_protobuf.pb.h"
 #include "protobuf_to_native_buffer.h"
 
-std::shared_ptr<MirBufferPackage> mir::client::protobuf_to_native_buffer(
+std::unique_ptr<MirBufferPackage> mir::client::protobuf_to_native_buffer(
     mir::protobuf::Buffer const& buffer)
 {
-    auto package = std::make_shared<MirBufferPackage>();
+    auto package = std::make_unique<MirBufferPackage>();
     if (!buffer.has_error())
     {
         package->data_items = buffer.data_size();

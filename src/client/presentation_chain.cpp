@@ -119,7 +119,7 @@ void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     //first see if this buffer has been here before
-    auto package = mcl::protobuf_to_native_buffer(buffer);
+    std::shared_ptr<MirBufferPackage> package = mcl::protobuf_to_native_buffer(buffer);
     auto buffer_it = std::find_if(buffers.begin(), buffers.end(),
         [&buffer](std::unique_ptr<Buffer> const& b)
         { return buffer.buffer_id() == b->rpc_id(); });

@@ -81,6 +81,8 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
     output.output_id = msg.output_id();
     output.type = static_cast<MirDisplayOutputType>(msg.type());
 
+    output.num_modes = msg.mode_size();
+    output.modes = new MirDisplayMode[output.num_modes];
     for (auto i = 0u; i < output.num_modes; i++)
     {
         auto mode = msg.mode(i);
@@ -91,6 +93,8 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
     output.preferred_mode = msg.preferred_mode();
     output.current_mode = msg.current_mode();
 
+    output.num_output_formats = msg.pixel_format_size();
+    output.output_formats = new MirPixelFormat[output.num_output_formats];
     for (auto i = 0u; i < output.num_output_formats; i++)
     {
         output.output_formats[i] = static_cast<MirPixelFormat>(msg.pixel_format(i));
@@ -110,8 +114,7 @@ void fill_display_output(MirDisplayOutput& output, mp::DisplayOutput const& msg)
 }
 
 mcl::DisplayConfiguration::DisplayConfiguration()
-    : config{std::make_shared<Config>()},
-      notify_change([]{})
+    : notify_change([]{})
 {
 }
 
@@ -121,25 +124,8 @@ mcl::DisplayConfiguration::~DisplayConfiguration()
 
 void mcl::DisplayConfiguration::set_configuration(mp::DisplayConfiguration const& msg)
 {
-    auto new_config = std::make_shared<Config>();
-
-    for (auto i = 0; i < msg.display_card_size(); i++)
-    {
-        auto const& msg_card = msg.display_card(i);
-        MirDisplayCard card;
-        fill_display_card(card, msg_card);
-        new_config->cards.push_back(card);
-    }
-
-    for (auto i = 0; i < msg.display_output_size(); i++)
-    {
-        auto const& msg_output = msg.display_output(i);
-        new_config->outputs.emplace_back(msg_output.mode_size(), msg_output.pixel_format_size());
-        fill_display_output(new_config->outputs.back(), msg_output);
-    }
-
     std::lock_guard<std::mutex> lk{guard};
-    config = new_config;
+    config = msg;
 }
 
 void mcl::DisplayConfiguration::update_configuration(mp::DisplayConfiguration const& msg)
@@ -152,42 +138,35 @@ void mcl::DisplayConfiguration::update_configuration(mp::DisplayConfiguration co
 //user is responsible for freeing the returned value
 MirDisplayConfiguration* mcl::DisplayConfiguration::copy_to_client() const
 {
-    auto snapshot = take_snapshot();
+    std::lock_guard<std::mutex> lock{guard};
+
     auto new_config = new MirDisplayConfiguration;
 
-    /* Cards */
-    new_config->num_cards = snapshot->cards.size();
+    new_config->num_cards = config.display_card_size();
     new_config->cards = new MirDisplayCard[new_config->num_cards];
 
-    for (auto i = 0u; i < snapshot->cards.size(); i++)
-        new_config->cards[i] = snapshot->cards[i];
+    for (auto i = 0; i < config.display_card_size(); i++)
+    {
+        auto const& msg_card = config.display_card(i);
+        fill_display_card(new_config->cards[i], msg_card);
+    }
 
     /* Outputs */
-    new_config->num_outputs = snapshot->outputs.size();
+    new_config->num_outputs = config.display_output_size();
     new_config->outputs = new MirDisplayOutput[new_config->num_outputs];
-
-    for (auto i = 0u; i < snapshot->outputs.size(); i++)
+    for (auto i = 0; i < config.display_output_size(); i++)
     {
-        auto new_info = &new_config->outputs[i];
-        MirDisplayOutput* output = &snapshot->outputs[i];
-        std::memcpy(new_info, output, sizeof(MirDisplayOutput));
-
-        new_info->output_formats = new MirPixelFormat[new_info->num_output_formats];
-        auto format_size = sizeof(MirPixelFormat) * new_info->num_output_formats;
-        std::memcpy(new_info->output_formats, output->output_formats, format_size);
-
-        new_info->modes = new MirDisplayMode[new_info->num_modes];
-        auto mode_size = sizeof(MirDisplayMode)* new_info->num_modes;
-        std::memcpy(new_info->modes, output->modes, mode_size);
+        auto const& msg_output = config.display_output(i);
+        fill_display_output(new_config->outputs[i], msg_output);
     }
 
     return new_config;
 }
 
-auto mcl::DisplayConfiguration::take_snapshot() const -> std::shared_ptr<Config>
+auto mcl::DisplayConfiguration::take_snapshot() const -> std::unique_ptr<protobuf::DisplayConfiguration>
 {
     std::lock_guard<std::mutex> lk{guard};
-    return config;
+    return std::make_unique<protobuf::DisplayConfiguration>(config);
 }
 
 void mcl::DisplayConfiguration::set_display_change_handler(std::function<void()> const& fn)

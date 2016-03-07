@@ -28,7 +28,7 @@ class Buffer;
 }
 namespace client
 {
-std::shared_ptr<MirBufferPackage> protobuf_to_native_buffer(protobuf::Buffer const& buffer);
+std::unique_ptr<MirBufferPackage> protobuf_to_native_buffer(protobuf::Buffer const& buffer);
 }
 }
 #endif /* MIR_CLIENT_PROTOBUF_TO_NATIVE_BUFFER_H_ */
