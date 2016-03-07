@@ -147,7 +147,7 @@ private:
     float scale_;
 
     std::shared_ptr<mir::client::PerfReport> const perf_report;
-    std::shared_ptr<EGLNativeWindowType> egl_native_window_;
+    std::shared_ptr<void> egl_native_window_;
 
     MirWaitHandle interval_wait_handle;
     std::unique_ptr<mir::protobuf::Void> protobuf_void;

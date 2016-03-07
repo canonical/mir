@@ -40,14 +40,14 @@ auto query_input_config(MirConnection* con)
 std::string capability_to_string(MirInputDeviceCapabilities caps)
 {
     std::string cap_string;
-    if (caps&mir_input_device_capability_touchpad) cap_string += " touchpad";
-    else if (caps&mir_input_device_capability_pointer) cap_string += " pointer";
-    if (caps&mir_input_device_capability_alpha_numeric) cap_string += " full keyboard";
-    else if (caps&mir_input_device_capability_keyboard) cap_string += " keys";
-    if (caps&mir_input_device_capability_touchscreen) cap_string += " touchscreen";
-    if (caps&mir_input_device_capability_switch) cap_string += " switch";
-    if (caps&mir_input_device_capability_gamepad) cap_string += " gamepad";
-    if (caps&mir_input_device_capability_joystick) cap_string += " joystick";
+    if (caps & mir_input_device_capability_touchpad) cap_string += " touchpad";
+    else if (caps & mir_input_device_capability_pointer) cap_string += " pointer";
+    if (caps & mir_input_device_capability_alpha_numeric) cap_string += " full keyboard";
+    else if (caps & mir_input_device_capability_keyboard) cap_string += " keys";
+    if (caps & mir_input_device_capability_touchscreen) cap_string += " touchscreen";
+    if (caps & mir_input_device_capability_switch) cap_string += " switch";
+    if (caps & mir_input_device_capability_gamepad) cap_string += " gamepad";
+    if (caps & mir_input_device_capability_joystick) cap_string += " joystick";
     return cap_string;
 }
 

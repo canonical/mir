@@ -241,16 +241,12 @@ mir::DefaultServerConfiguration::the_input_manager()
             }
             else
             {
-                auto platforms = probe_input_platforms(*options, the_emergency_cleanup(), the_input_device_registry(),
+                auto platform = probe_input_platforms(*options, the_emergency_cleanup(), the_input_device_registry(),
                                                        the_input_report(), *the_shared_library_prober_report());
-
-                if (platforms.empty())
-                    BOOST_THROW_EXCEPTION(std::runtime_error("No input platforms found"));
 
                 auto const ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer());
 
-                for (auto & platform : platforms)
-                    ret->add_platform(std::move(platform));
+                ret->add_platform(std::move(platform));
 
                 return ret;
             }

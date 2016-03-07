@@ -182,7 +182,6 @@ public:
 
     mir::client::rpc::DisplayServer& display_server();
     mir::client::rpc::DisplayServerDebug& debug_display_server();
-    std::shared_ptr<mir::logging::Logger> const& the_logger() const;
     std::shared_ptr<mir::input::InputDevices> const& the_input_devices() const
     {
         return input_devices;

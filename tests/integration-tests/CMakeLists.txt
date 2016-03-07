@@ -52,10 +52,6 @@ add_subdirectory(shell/)
 add_subdirectory(process/)
 add_subdirectory(input/)
 
-if (MIR_TEST_PLATFORM STREQUAL "android")
-  add_subdirectory(graphics/android)
-endif()
-
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 mir_add_wrapped_executable(
   mir_integration_tests
