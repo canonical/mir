@@ -83,8 +83,9 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         wrapped{factory, max_buffers},
         display_server(server)
     {
-        auto buffer_package = mcl::protobuf_to_native_buffer(first_buffer);
-        wrapped.deposit_package(buffer_package, first_buffer.buffer_id(), first_size, first_pf);
+        wrapped.deposit_package(
+            mcl::protobuf_to_native_buffer(first_buffer),
+            first_buffer.buffer_id(), first_size, first_pf);
     }
 
     void deposit(mp::Buffer const& buffer, geom::Size size, MirPixelFormat pf) override
@@ -92,8 +93,9 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         std::unique_lock<std::mutex> lock(mutex);
         if (on_incoming_buffer)
         {
-            auto buffer_package = mcl::protobuf_to_native_buffer(buffer);
-            wrapped.deposit_package(buffer_package, buffer.buffer_id(), size, pf);
+            wrapped.deposit_package(
+                mcl::protobuf_to_native_buffer(buffer),
+                buffer.buffer_id(), size, pf);
             if (on_incoming_buffer)
             {
                 on_incoming_buffer();
@@ -149,8 +151,9 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         }
         else
         {
-            auto buffer_package = mcl::protobuf_to_native_buffer(incoming_buffers.front());
-            wrapped.deposit_package(buffer_package, incoming_buffers.front().buffer_id(), sz, pf);
+            wrapped.deposit_package(
+                mcl::protobuf_to_native_buffer(incoming_buffers.front()),
+                incoming_buffers.front().buffer_id(), sz, pf);
             incoming_buffers.pop();
             done();
         }

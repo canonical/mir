@@ -89,13 +89,13 @@ void mcl::ScreencastStream::process_buffer(protobuf::Buffer const& buffer, std::
     if (buffer.has_width() && buffer.has_height())
         buffer_size = geom::Size{buffer.width(), buffer.height()};
 
-    auto package = mcl::protobuf_to_native_buffer(buffer);
     if (current_id != buffer.buffer_id())
     {
         try
         {
             current_buffer = factory->create_buffer(
-                package, buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()));
+                mcl::protobuf_to_native_buffer(buffer),
+                buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()));
         }
         catch (const std::runtime_error& error)
         {
