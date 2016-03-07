@@ -38,6 +38,9 @@ namespace
 {
 struct Chain
 {
+    Chain(Chain const&) = delete;
+    Chain& operator=(Chain const&) = delete;
+
     Chain(MirConnection* connection) :
         chain(mir_connection_create_presentation_chain_sync(connection))
     {
@@ -59,6 +62,9 @@ private:
 class SurfaceWithChain
 {
 public:
+    SurfaceWithChain(SurfaceWithChain const&) = delete;
+    SurfaceWithChain& operator=(SurfaceWithChain const&) = delete;
+
     operator MirSurface*()
     {
         return surface;
@@ -86,6 +92,9 @@ private:
 
 struct SurfaceWithChainFromStart : SurfaceWithChain
 {
+    SurfaceWithChainFromStart(SurfaceWithChainFromStart const&) = delete;
+    SurfaceWithChainFromStart& operator=(SurfaceWithChainFromStart const&) = delete;
+
     SurfaceWithChainFromStart(MirConnection* connection, geom::Size size, MirPixelFormat pf) :
         SurfaceWithChain(connection,
         std::bind(&SurfaceWithChainFromStart::create_surface, this,
@@ -107,6 +116,8 @@ private:
 
 struct SurfaceWithChainFromReassociation : SurfaceWithChain
 {
+    SurfaceWithChainFromReassociation(SurfaceWithChainFromReassociation const&) = delete;
+    SurfaceWithChainFromReassociation& operator=(SurfaceWithChainFromReassociation const&) = delete;
     SurfaceWithChainFromReassociation(MirConnection* connection, geom::Size size, MirPixelFormat pf) :
         SurfaceWithChain(connection,
         std::bind(&SurfaceWithChainFromReassociation::create_surface, this,
