@@ -1,5 +1,6 @@
-mir (0.20.2) UNRELEASED; urgency=medium
+mir (0.20.2+16.04.20160307-0ubuntu1) xenial; urgency=medium
 
+  [ Andreas Pokorny ]
   * New upstream release 0.20.2 (https://launchpad.net/mir/+milestone/0.20.2)
     - ABI summary:
       . No ABI changes in any libraries. Bugfix release only.
@@ -7,7 +8,10 @@ mir (0.20.2) UNRELEASED; urgency=medium
       . On removal of USB and BT devices key repeat events of pressed keys
         are sent indefinitely. (LP:#1550050)
 
- -- Andreas Pokorny <andreas.pokorny@canonical.com>  Mon, 07 Mar 2016 10:03:45 +0100
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Andreas Pokorny <andreas.pokorny@canonical.com>  Mon, 07 Mar 2016 17:18:40 +0000
 
 mir (0.20.1+16.04.20160225.1-0ubuntu1) xenial; urgency=medium
 
