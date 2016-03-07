@@ -68,9 +68,9 @@ struct StubClientPlatform : public mcl::ClientPlatform
     void populate(MirPlatformPackage& /* package */) const override
     {
     }
-    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::EGLNativeSurface * /* surface */) override
+    std::shared_ptr<void> create_egl_native_window(mcl::EGLNativeSurface * /* surface */) override
     {
-        return std::make_shared<EGLNativeWindowType>(egl_native_window);
+        return mt::fake_shared(egl_native_window);
     }
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override
     {
@@ -481,6 +481,8 @@ TEST_P(ClientBufferStream, receives_unsolicited_buffer)
 
     mir::protobuf::Buffer another_buffer_package;
     another_buffer_package.set_buffer_id(id);
+    another_buffer_package.set_width(size.width.as_int());
+    another_buffer_package.set_height(size.height.as_int());
     EXPECT_CALL(mock_factory, create_buffer(_,_,_))
         .WillOnce(Return(mt::fake_shared(second_mock_client_buffer)));
     EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))

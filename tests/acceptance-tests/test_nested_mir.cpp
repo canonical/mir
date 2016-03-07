@@ -268,7 +268,7 @@ struct NestedServer : mtf::HeadlessInProcessServer
         preset_display(mt::fake_shared(display));
         server.override_the_session_mediator_report([this]
             {
-                mock_session_mediator_report = std::make_shared<MockSessionMediatorReport>();
+                mock_session_mediator_report = std::make_shared<NiceMock<MockSessionMediatorReport>>();
                 return mock_session_mediator_report;
             });
 
