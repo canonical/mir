@@ -48,6 +48,7 @@ struct ClientLogging : ConnectedClientHeadlessServer
 
     void SetUp() override
     {
+        add_to_environment("MIR_CLIENT_PERF_REPORT", "log");
         ConnectedClientHeadlessServer::SetUp();
         mir::logging::set_logger(mir::test::fake_shared(logger));
     }
@@ -56,9 +57,6 @@ struct ClientLogging : ConnectedClientHeadlessServer
 
 TEST_F(ClientLogging, reports_performance)
 {
-    TemporaryEnvironmentValue env("MIR_CLIENT_PERF_REPORT", "log");
-    (void)env; // Avoid clang warning/error
-
     auto spec = mir_connection_create_spec_for_normal_surface(
                    connection, 123, 456, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
