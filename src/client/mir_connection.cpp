@@ -981,11 +981,6 @@ mir::client::rpc::DisplayServer& MirConnection::display_server()
     return server;
 }
 
-std::shared_ptr<mir::logging::Logger> const& MirConnection::the_logger() const
-{
-    return logger;
-}
-
 MirWaitHandle* MirConnection::release_buffer_stream(
     mir::client::ClientBufferStream* stream,
     mir_buffer_stream_callback callback,

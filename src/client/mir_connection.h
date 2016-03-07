@@ -178,7 +178,6 @@ public:
 
     mir::client::rpc::DisplayServer& display_server();
     mir::client::rpc::DisplayServerDebug& debug_display_server();
-    std::shared_ptr<mir::logging::Logger> const& the_logger() const;
 
 private:
     //google cant have callbacks with more than 2 args
