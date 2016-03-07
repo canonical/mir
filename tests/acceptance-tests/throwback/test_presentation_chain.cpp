@@ -182,6 +182,7 @@ void buffer_callback(MirPresentationChain*, MirBuffer* buffer, void* context)
     auto sync = reinterpret_cast<MirBufferSync*>(context);
     sync->buffer_available(buffer);
 }
+
 }
 
 TEST_F(PresentationChain, allocation_calls_callback)
@@ -248,7 +249,8 @@ TEST_F(PresentationChain, can_map_for_cpu_render)
     auto buffer = context.buffer();
     EXPECT_THAT(context.buffer(), Ne(nullptr));
     auto region = mir_buffer_get_graphics_region(buffer, mir_none);
-    EXPECT_THAT(region.vaddr, Ne(nullptr));
+    //cast to int so gtest doesn't try to print a char* that isn't a string
+    EXPECT_THAT(reinterpret_cast<int*>(region.vaddr), Ne(nullptr));
     EXPECT_THAT(region.width, Eq(size.width.as_int()));
     EXPECT_THAT(region.height, Eq(size.height.as_int()));
     EXPECT_THAT(region.stride, Eq(size.width.as_int() * MIR_BYTES_PER_PIXEL(pf)));
