@@ -195,11 +195,12 @@ std::unique_ptr<mcl::Buffer> mcl::AsyncBufferFactory::generate_buffer(
     if (request_it == allocation_requests.end())
         BOOST_THROW_EXCEPTION(std::logic_error("unrequested buffer received"));
 
-    auto package = mcl::protobuf_to_native_buffer(buffer);
     auto b = std::make_unique<Buffer>(
         (*request_it)->cb, (*request_it)->cb_context,
         buffer.buffer_id(),
-        (*request_it)->factory->create_buffer(package, (*request_it)->size, (*request_it)->format));
+        (*request_it)->factory->create_buffer(
+            mcl::protobuf_to_native_buffer(buffer),
+            (*request_it)->size, (*request_it)->format));
     allocation_requests.erase(request_it);
     return std::move(b);
 }
