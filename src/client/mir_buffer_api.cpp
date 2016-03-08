@@ -121,3 +121,27 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return MirGraphicsRegion { 0, 0, 0, mir_pixel_format_invalid, nullptr };
 }
+
+unsigned int mir_buffer_get_width(MirBuffer* buffer)
+{
+    (void)buffer;
+    return 8;
+}
+
+unsigned int mir_buffer_get_height(MirBuffer* buffer)
+{
+    (void)buffer;
+    return 8;
+}
+
+MirPixelFormat mir_buffer_get_pixel_format(MirBuffer* buffer)
+{
+    (void)buffer;
+    return mir_pixel_format_invalid;
+}
+
+MirBufferUsage mir_buffer_get_buffer_usage(MirBuffer* buffer)
+{
+    (void)buffer;
+    return mir_buffer_usage_hardware;
+}

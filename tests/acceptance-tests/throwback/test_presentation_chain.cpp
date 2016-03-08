@@ -393,8 +393,8 @@ TEST_F(PresentationChain, can_figure_out_when_a_buffer_is_received)
     {
         for(auto& buffer : buffers)
         {
-            if ((context.size.width.as_int() == mir_buffer_get_width(buffer)) &&
-                (context.size.height.as_int() == mir_buffer_get_height(buffer)) &&
+            if ((context.size.width.as_uint32_t() == mir_buffer_get_width(buffer)) &&
+                (context.size.height.as_uint32_t() == mir_buffer_get_height(buffer)) &&
                 (context.format == mir_buffer_get_pixel_format(buffer)) &&
                 (context.usage == mir_buffer_get_buffer_usage(buffer)))
             {
@@ -403,7 +403,8 @@ TEST_F(PresentationChain, can_figure_out_when_a_buffer_is_received)
         }
     }
 
-    auto num_found = std::count_if(context.begin(), context.end(),
+    auto num_found = std::count_if(
+        differing_buffer_properties.begin(), differing_buffer_properties.end(),
         [](BufferContext& context) { return context.check; });
     EXPECT_THAT(num_found, Eq(num_buffers));
 }

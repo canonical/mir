@@ -108,6 +108,11 @@ int mir_buffer_wait_for_access(
     MirBufferAccess access,
     int timeout);
 
+unsigned int mir_buffer_get_width(MirBuffer* buffer);
+unsigned int mir_buffer_get_height(MirBuffer* buffer);
+MirPixelFormat mir_buffer_get_pixel_format(MirBuffer* buffer);
+MirBufferUsage mir_buffer_get_buffer_usage(MirBuffer* buffer);
+
 /** @} */
 
 /** release a MirBuffer
