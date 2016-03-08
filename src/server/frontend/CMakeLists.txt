@@ -16,7 +16,7 @@ set(
   socket_messenger.cpp
   event_sender.cpp
   buffer_stream_tracker.cpp
-  unauthorized_display_changer.cpp
+  authorizing_display_changer.cpp
   unauthorized_screencast.cpp
   session_credentials.cpp
   default_configuration.cpp
