@@ -290,9 +290,15 @@ function run_abi_check()
     local name=${1}
     local old_dump=${2}
     local new_dump=${3}
+    local skip_symbols_file=${4}
+
+    if [ -f ${skip_symbols_file} ];
+    then
+        local skip_symbols_opt="-skip-symbols ${skip_symbols_file}"
+    fi
 
     echo "Running abi-compliance-checker for ${name}"
-    abi-compliance-checker -l ${NAME} -old "${old_dump}" -new "${new_dump}"
+    abi-compliance-checker -l ${NAME} -old "${old_dump}" -new "${new_dump}" ${skip_symbols_opt}
 }
 
 if [ $# -ne 3 ];
@@ -306,11 +312,12 @@ SOURCE_DIR=${3}
 
 OLD_ABI_DUMP_FILE=${ABI_DUMP_DIR}/${NAME}_prev.abi.tar.gz
 NEW_ABI_DUMP_FILE=${ABI_DUMP_DIR}/${NAME}_next.abi.tar.gz
+SKIP_SYMBOLS_FILE=${SOURCE_DIR}/tools/abi-check-${NAME}-skip-symbols
 
 if needs_abi_check ${NAME} ${SOURCE_DIR};
 then
     dump_abi_for_prev_release ${NAME} ${ABI_DUMP_DIR} ${OLD_ABI_DUMP_FILE}
-    run_abi_check ${NAME} ${OLD_ABI_DUMP_FILE} ${NEW_ABI_DUMP_FILE}
+    run_abi_check ${NAME} ${OLD_ABI_DUMP_FILE} ${NEW_ABI_DUMP_FILE} ${SKIP_SYMBOLS_FILE}
 else
     echo "No need for abi-compliance-checker, ABI has already been bumped for ${NAME}"
 fi
