@@ -167,10 +167,10 @@ void mf::SessionMediator::connect(
         [response](auto const& dev)
         {
             auto dev_info = response->add_input_devices();
-            dev_info->set_name(dev->name());
-            dev_info->set_id(dev->id());
-            dev_info->set_unique_id(dev->unique_id());
-            dev_info->set_capabilities(dev->capabilities().value());
+            dev_info->set_name(dev.name());
+            dev_info->set_id(dev.id());
+            dev_info->set_unique_id(dev.unique_id());
+            dev_info->set_capabilities(dev.capabilities().value());
         });
 
     for (auto pf : surface_pixel_formats)
