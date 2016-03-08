@@ -26,6 +26,9 @@
 namespace mf = mir::frontend;
 namespace mcl = mir::client;
 namespace mtd = mir::test::doubles;
+namespace geom = mir::geometry;
+namespace mp = mir::protobuf;
+using namespace testing;
 
 namespace
 {

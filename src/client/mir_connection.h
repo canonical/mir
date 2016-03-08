@@ -180,6 +180,11 @@ public:
     mir::client::rpc::DisplayServer& display_server();
     mir::client::rpc::DisplayServerDebug& debug_display_server();
 
+    void allocate_buffer(
+        mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
+        mir_buffer_callback callback, void* context);
+    void release_buffer(int buffer_id);
+
 private:
     //google cant have callbacks with more than 2 args
     struct SurfaceCreationRequest

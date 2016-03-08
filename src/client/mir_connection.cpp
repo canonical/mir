@@ -58,6 +58,7 @@ namespace gp = google::protobuf;
 namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
 namespace ml = mir::logging;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -1125,4 +1126,31 @@ void MirConnection::release_presentation_chain(MirPresentationChain* chain)
     {
         surface_map->erase(mf::BufferStreamId(id));
     }
+}
+
+void MirConnection::allocate_buffer(
+    geom::Size size, MirPixelFormat format, MirBufferUsage usage,
+    mir_buffer_callback callback, void* context)
+{
+    (void)size;(void)format;(void)usage;(void)callback;(void)context;
+#if 0
+    {
+        std::lock_guard<decltype(mutex)> lk(mutex);
+        allocation_requests.emplace_back(
+            std::make_unique<AllocationRequest>(size, format, usage, callback, context));
+    }
+
+    mp::BufferAllocation request;
+    auto buffer_request = request.add_buffer_requests();
+    buffer_request->set_width(size.width.as_int());
+    buffer_request->set_height(size.height.as_int());
+    buffer_request->set_pixel_format(format);
+    buffer_request->set_buffer_usage(usage);
+    server.allocate_buffers(&request, ignored, gp::NewCallback(void_response.get(), ignored));
+#endif
+}
+
+void MirConnection::release_buffer(int buffer_id)
+{
+    (void)buffer_id;
 }

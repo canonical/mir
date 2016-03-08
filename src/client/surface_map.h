@@ -28,6 +28,10 @@ struct MirSurface;
 
 namespace mir
 {
+namespace protobuf
+{
+class Buffer;
+}
 namespace client
 {
 class Buffer;

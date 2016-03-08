@@ -52,6 +52,7 @@ namespace mev = mir::events;
 namespace md = mir::dispatch;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+using namespace testing;
 
 namespace
 {
@@ -125,6 +126,16 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
             auto const request_message = static_cast<mp::BufferStreamId const*>(parameters);
             buffer_stream_release(request_message);
         }
+        else if (name == "allocate_buffers")
+        {
+            auto const request_message = static_cast<mp::BufferAllocation const*>(parameters);
+            allocate_buffers(request_message);
+        }
+        else if (name == "release_buffers")
+        {
+            auto const request_message = static_cast<mp::BufferRelease const*>(parameters);
+            release_buffers(request_message);
+        }
 
         complete->Run();
     }
@@ -135,6 +146,8 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
     MOCK_METHOD2(platform_operation,
                  void(mp::PlatformOperationMessage const*, mp::PlatformOperationMessage*));
     MOCK_METHOD1(buffer_stream_release, void(mp::BufferStreamId const*));
+    MOCK_METHOD1(allocate_buffers, void(mp::BufferAllocation const*));
+    MOCK_METHOD1(release_buffers, void(mp::BufferRelease const*));
 
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());
     MOCK_METHOD1(dispatch, bool(md::FdEvents));
@@ -861,7 +874,6 @@ TEST_F(MirConnectionTest, release_error_chain_doesnt_call_server)
 
 TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
 {
-    bool called {false};
     geom::Size size { 32, 11 };
     auto format = mir_pixel_format_abgr_8888;
     auto usage = mir_buffer_usage_software;
@@ -871,8 +883,9 @@ TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
     params->set_height(size.height.as_int());
     params->set_buffer_usage(usage);
     params->set_pixel_format(format);
-    EXPECT_CALL(mock_server, allocate_buffers(BufferAllocationMatches(mp_alloc),_,_))
-        .WillOnce(mtd::RunProtobufClosure());
+//    EXPECT_CALL(*mock_channel, allocate_buffers(BufferAllocationMatches(mp_alloc),_,_))
+    EXPECT_CALL(*mock_channel, allocate_buffers(_));
+
     connection->allocate_buffer(size, format, usage, nullptr, nullptr);
 }
 
@@ -883,8 +896,8 @@ TEST_F(MirConnectionTest, can_release_buffer_from_connection)
     auto released_buffer = release_msg.add_buffers();
     released_buffer->set_buffer_id(buffer_id);
 
-    EXPECT_CALL(mock_server, release_buffers(BufferReleaseMatches(release_msg),_,_))
-        .WillOnce(mtd::RunProtobufClosure());
+//    EXPECT_CALL(*mock_channel, release_buffers(BufferReleaseMatches(release_msg),_,_))
+    EXPECT_CALL(*mock_channel, release_buffers(_));
 
     connection->release_buffer(buffer_id);
 }

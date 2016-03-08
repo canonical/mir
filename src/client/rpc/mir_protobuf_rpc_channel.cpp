@@ -305,6 +305,8 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
 
         if (auto map = surface_map.lock())
         {
+            //if(seq.buffer_request().id())
+            //{
             try
             {
                 if (seq.buffer_request().has_id())
@@ -337,6 +339,12 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     close(seq.buffer_request().buffer().fd(i));
                 throw e;
             }
+            //}
+            //else
+            //{
+            //      alloc->generate_buffer()
+            //      map->insert_buffer();
+            //}
         }
         else
         {

@@ -80,6 +80,7 @@ public:
     void with_all_streams_do(std::function<void(mcl::BufferReceiver*)> const&) const override
     {
     }
+
     bool with_buffer_do(int, std::function<void(mcl::Buffer&)> const&) const override
     {
         return true;
