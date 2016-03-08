@@ -669,3 +669,95 @@ TEST_F(DisplayConfigurationTest, client_receives_correct_output_positions)
 
     client.disconnect();
 }
+
+namespace
+{
+void signal_when_config_received(MirConnection* /*unused*/, void* ctx)
+{
+    auto signal = reinterpret_cast<mt::Signal*>(ctx);
+
+    signal->raise();
+}
+}
+
+TEST_F(DisplayConfigurationTest, client_sees_server_set_scale_factor)
+{
+    std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
+    current_config->for_each_output(
+        [](mg::UserDisplayConfigurationOutput& output)
+        {
+            static int output_num{0};
+
+            output.scale = 1 + 0.25f * output_num;
+            ++output_num;
+        });
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    mt::Signal configuration_received;
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &signal_when_config_received,
+        &configuration_received);
+
+    server.the_display_configuration_controller()->set_base_configuration(current_config);
+
+    EXPECT_TRUE(configuration_received.wait_for(std::chrono::seconds{10}));
+
+    auto client_config = client.get_base_config();
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(client_config.get()); ++i)
+    {
+        auto output = mir_display_config_get_output(client_config.get(), i);
+
+        EXPECT_THAT(mir_output_get_scale_factor(output), Eq(1 + 0.25 * i));
+    }
+
+    client.disconnect();
+}
+
+TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
+{
+    std::array<MirFormFactor, 3> const form_factors = {{
+        mir_form_factor_monitor,
+        mir_form_factor_projector,
+        mir_form_factor_unknown
+    }};
+
+    std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
+    current_config->for_each_output(
+        [&form_factors](mg::UserDisplayConfigurationOutput& output)
+            {
+                static int output_num{0};
+
+                output.form_factor = form_factors[output_num];
+                ++output_num;
+            });
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    mt::Signal configuration_received;
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &signal_when_config_received,
+        &configuration_received);
+
+    server.the_display_configuration_controller()->set_base_configuration(current_config);
+
+    EXPECT_TRUE(configuration_received.wait_for(std::chrono::seconds{10}));
+
+    auto client_config = client.get_base_config();
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(client_config.get()); ++i)
+    {
+        auto output = mir_display_config_get_output(client_config.get(), i);
+
+        EXPECT_THAT(mir_output_get_form_factor(output), Eq(form_factors[i]));
+    }
+
+    client.disconnect();
+}
