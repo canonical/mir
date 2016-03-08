@@ -354,9 +354,12 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
 
     try
     {
+        std::string name{spec.surface_name.is_set() ?
+                         spec.surface_name.value() : ""};
+
         stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, platform,
-            surface_proto->buffer_stream(), make_perf_report(logger), std::string{},
+            surface_proto->buffer_stream(), make_perf_report(logger), name,
             mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
     }
     catch (std::exception const& error)
