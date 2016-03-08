@@ -21,7 +21,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_test_framework/connected_client_headless_server.h"
-#include "mir/geometry/size.h"
+#include "mir/graphics/buffer_properties.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -335,4 +335,75 @@ TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
     ASSERT_THAT(context.buffer(), Ne(nullptr));
     mir_presentation_chain_submit_buffer(surface.chain(), context.buffer());
     mir_buffer_release(context.buffer());
+}
+
+TEST_F(PresentationChain, can_figure_out_when_a_buffer_is_received)
+{
+    SurfaceWithChainFromStart surface(connection, size, pf);
+    auto const num_buffers = 8u;
+
+    struct BufferContext
+    {
+        BufferContext(geom::Size size, MirPixelFormat pf, MirBufferUsage usage) :
+            size(size),
+            format(pf),
+            usage(usage),
+            check(false)
+        {
+        }
+        geom::Size size;
+        MirPixelFormat format;
+        MirBufferUsage usage;
+        MirBufferSync context;
+        bool check; 
+    };
+
+    std::array<BufferContext, num_buffers> differing_buffer_properties =
+    {
+        {
+            {{10, 10}, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware},
+            {{10, 10}, mir_pixel_format_abgr_8888, mir_buffer_usage_software},
+            {{10, 10}, mir_pixel_format_argb_8888, mir_buffer_usage_hardware},
+            {{10, 10}, mir_pixel_format_argb_8888, mir_buffer_usage_software},
+            {{10, 11}, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware},
+            {{10, 11}, mir_pixel_format_abgr_8888, mir_buffer_usage_software},
+            {{10, 11}, mir_pixel_format_argb_8888, mir_buffer_usage_hardware},
+            {{10, 11}, mir_pixel_format_argb_8888, mir_buffer_usage_software}
+        }
+    };
+
+    for (auto& context : differing_buffer_properties)
+    {
+        mir_presentation_chain_allocate_buffer(
+            surface.chain(),
+            context.size.width.as_int(), context.size.height.as_int(),
+            context.format, context.usage,
+            buffer_callback, &context.context);
+    }
+
+    std::array<MirBuffer*, num_buffers> buffers;
+    for (auto i = 0u; i < num_buffers; i++)
+    {
+        ASSERT_TRUE(differing_buffer_properties[i].context.wait_for_buffer(10s));
+        buffers[i] = differing_buffer_properties[i].context.buffer();
+        ASSERT_THAT(buffers[i], Ne(nullptr));
+    }
+
+    for (auto& context : differing_buffer_properties)
+    {
+        for(auto& buffer : buffers)
+        {
+            if ((context.size.width.as_int() == mir_buffer_get_width(buffer)) &&
+                (context.size.height.as_int() == mir_buffer_get_height(buffer)) &&
+                (context.format == mir_buffer_get_pixel_format(buffer)) &&
+                (context.usage == mir_buffer_get_buffer_usage(buffer)))
+            {
+                context.check = true;
+            }
+        }
+    }
+
+    auto num_found = std::count_if(context.begin(), context.end(),
+        [](BufferContext& context) { return context.check; });
+    EXPECT_THAT(num_found, Eq(num_buffers));
 }
