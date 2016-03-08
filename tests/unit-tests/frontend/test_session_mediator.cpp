@@ -1345,10 +1345,10 @@ TEST_F(SessionMediator, connect_sends_input_devices_at_seat)
     std::vector<std::shared_ptr<mir::input::Device>> devices{mt::fake_shared(dev1), mt::fake_shared(dev2)};
     ON_CALL(mock_hub, for_each_input_device(_))
         .WillByDefault(Invoke(
-            [&](std::function<void(std::shared_ptr<mir::input::Device> const&)> const& callback)
+            [&](std::function<void(mir::input::Device const&)> const& callback)
             {
                 for(auto const& dev : devices)
-                    callback(dev);
+                    callback(*dev);
             }));
 
     mediator.connect(&connect_parameters, &connection, null_callback.get());

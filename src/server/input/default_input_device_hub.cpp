@@ -209,11 +209,11 @@ void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver
         );
 }
 
-void mi::DefaultInputDeviceHub::for_each_input_device(std::function<void(std::shared_ptr<Device> const&)> const& callback)
+void mi::DefaultInputDeviceHub::for_each_input_device(std::function<void(Device const&)> const& callback)
 {
     std::unique_lock<std::mutex> lock(observer_guard);
     for (auto const& item : handles)
-        callback(item);
+        callback(*item);
 }
 
 void mi::DefaultInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserver> const& element)
