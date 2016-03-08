@@ -122,26 +122,54 @@ catch (std::exception const& ex)
     return MirGraphicsRegion { 0, 0, 0, mir_pixel_format_invalid, nullptr };
 }
 
-unsigned int mir_buffer_get_width(MirBuffer* buffer)
+unsigned int mir_buffer_get_width(MirBuffer* b)
+try
 {
-    (void)buffer;
-    return 8;
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->size().width.as_uint32_t();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return 0;
 }
 
-unsigned int mir_buffer_get_height(MirBuffer* buffer)
+unsigned int mir_buffer_get_height(MirBuffer* b)
+try
 {
-    (void)buffer;
-    return 8;
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->size().height.as_uint32_t();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return 0;
 }
 
-MirPixelFormat mir_buffer_get_pixel_format(MirBuffer* buffer)
+MirPixelFormat mir_buffer_get_pixel_format(MirBuffer* b)
+try
 {
-    (void)buffer;
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->pixel_format();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return mir_pixel_format_invalid;
 }
 
-MirBufferUsage mir_buffer_get_buffer_usage(MirBuffer* buffer)
+MirBufferUsage mir_buffer_get_buffer_usage(MirBuffer* b)
+try
 {
-    (void)buffer;
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->buffer_usage();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return mir_buffer_usage_hardware;
 }
