@@ -241,6 +241,7 @@ MirConnection::MirConnection(
     mir::client::ConnectionConfiguration& conf) :
         deregisterer{this},
         surface_map(conf.the_surface_map()),
+        buffer_factory(conf.the_buffer_factory()),
         channel(conf.the_rpc_channel()),
         server(channel),
         debug(channel),
@@ -537,6 +538,7 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
     }
     catch (std::exception const& e)
     {
+    printf("IN HER.\n");
         connect_result->set_error(std::string{"Failed to process connect response: "} +
                                  boost::diagnostic_information(e));
     }
@@ -981,11 +983,6 @@ mir::client::rpc::DisplayServer& MirConnection::display_server()
     return server;
 }
 
-std::shared_ptr<mir::logging::Logger> const& MirConnection::the_logger() const
-{
-    return logger;
-}
-
 MirWaitHandle* MirConnection::release_buffer_stream(
     mir::client::ClientBufferStream* stream,
     mir_buffer_stream_callback callback,
@@ -1015,7 +1012,7 @@ void MirConnection::release_consumer_stream(mir::client::ClientBufferStream* str
     surface_map->erase(stream->rpc_id());
 }
 
-std::shared_ptr<mcl::DisplayConfiguration::Config> MirConnection::snapshot_display_configuration() const
+std::unique_ptr<mir::protobuf::DisplayConfiguration> MirConnection::snapshot_display_configuration() const
 {
     return display_configuration->take_snapshot();
 }
@@ -1079,8 +1076,10 @@ void MirConnection::context_created(ChainCreationRequest* request_raw)
 
     try
     {
+        if (!cbuffer_factory)
+            cbuffer_factory = platform->create_buffer_factory();
         auto chain = std::make_shared<mcl::PresentationChain>(
-            this, protobuf_bs->id().value(), server, platform->create_buffer_factory());
+            this, protobuf_bs->id().value(), server, cbuffer_factory, buffer_factory);
 
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), chain);
 

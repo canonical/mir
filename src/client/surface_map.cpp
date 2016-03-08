@@ -93,3 +93,32 @@ void mcl::ConnectionSurfaceMap::erase(mf::BufferStreamId stream_id)
     std::lock_guard<decltype(guard)> lk(guard);
     streams.erase(stream_id);
 }
+
+void mcl::ConnectionSurfaceMap::insert(int buffer_id, std::shared_ptr<mcl::Buffer> const& buffer)
+{
+    std::lock_guard<decltype(guard)> lk(guard);
+    buffers[buffer_id] = buffer;
+}
+
+void mcl::ConnectionSurfaceMap::erase(int buffer_id)
+{
+    std::lock_guard<decltype(guard)> lk(guard);
+    buffers.erase(buffer_id);
+}
+
+bool mcl::ConnectionSurfaceMap::with_buffer_do(
+    int buffer_id, std::function<void(mcl::Buffer&)> const& exec) const
+{
+    std::lock_guard<decltype(guard)> lk(guard);
+    auto const it = buffers.find(buffer_id);
+    if (it != buffers.end())
+    {
+        auto const buffer = it->second;
+        exec(*buffer);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}

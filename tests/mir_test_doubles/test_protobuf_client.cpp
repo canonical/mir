@@ -23,6 +23,7 @@
 #include "src/client/connection_surface_map.h"
 #include "src/client/display_configuration.h"
 #include "src/client/lifecycle_control.h"
+#include "src/client/presentation_chain.h"
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "mir/input/input_devices.h"
@@ -44,6 +45,7 @@ mir::test::TestProtobufClient::TestProtobufClient(std::string socket_file, int t
     channel(mclr::make_rpc_channel(
         socket_file,
         std::make_shared<mir::client::ConnectionSurfaceMap>(),
+        std::make_shared<mir::client::AsyncBufferFactory>(),
         std::make_shared<mir::client::DisplayConfiguration>(),
         std::make_shared<mir::input::InputDevices>(),
         rpc_report,

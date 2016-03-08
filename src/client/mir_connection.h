@@ -60,6 +60,7 @@ class ClientBufferStreamFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class EventHandlerRegister;
+class AsyncBufferFactory;
 
 namespace rpc
 {
@@ -133,7 +134,7 @@ public:
     void populate(MirPlatformPackage& platform_package);
     void populate_graphics_module(MirModuleProperties& properties);
     MirDisplayConfiguration* create_copy_of_display_config();
-    std::shared_ptr<mir::client::DisplayConfiguration::Config> snapshot_display_configuration() const;
+    std::unique_ptr<mir::protobuf::DisplayConfiguration> snapshot_display_configuration() const;
     void available_surface_formats(MirPixelFormat* formats,
                                    unsigned int formats_size, unsigned int& valid_formats);
 
@@ -178,7 +179,6 @@ public:
 
     mir::client::rpc::DisplayServer& display_server();
     mir::client::rpc::DisplayServerDebug& debug_display_server();
-    std::shared_ptr<mir::logging::Logger> const& the_logger() const;
 
 private:
     //google cant have callbacks with more than 2 args
@@ -241,6 +241,7 @@ private:
     mutable std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
     std::shared_ptr<mir::client::ConnectionSurfaceMap> surface_map;
+    std::shared_ptr<mir::client::AsyncBufferFactory> buffer_factory;
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const channel;
     mir::client::rpc::DisplayServer server;
     mir::client::rpc::DisplayServerDebug debug;
@@ -260,6 +261,7 @@ private:
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;
+    std::shared_ptr<mir::client::ClientBufferFactory> cbuffer_factory;
     std::shared_ptr<EGLNativeDisplayType> native_display;
 
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;

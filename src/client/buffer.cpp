@@ -49,12 +49,13 @@ void mcl::Buffer::submitted()
     owned = false;
 }
 
-void mcl::Buffer::received()
+void mcl::Buffer::received(MirBufferPackage const& update_package)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     if (!owned)
     {
         owned = true;
+        buffer->update_from(update_package);
         cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
     }
 }

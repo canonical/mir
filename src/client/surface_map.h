@@ -30,6 +30,7 @@ namespace mir
 {
 namespace client
 {
+class Buffer;
 class BufferReceiver;
 
 class SurfaceMap
@@ -40,6 +41,8 @@ public:
     virtual void with_stream_do(
         frontend::BufferStreamId stream_id, std::function<void(BufferReceiver*)> const& exec) const = 0;
     virtual void with_all_streams_do(std::function<void(BufferReceiver*)> const&) const = 0;
+    virtual bool with_buffer_do(int buffer_id, std::function<void(Buffer&)> const& exec) const = 0;
+    virtual void insert(int buffer_id, std::shared_ptr<Buffer> const& buffer) = 0;
 
 protected:
     virtual ~SurfaceMap() = default;
