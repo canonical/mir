@@ -39,7 +39,6 @@ public:
     void handle_display_config_change(mg::DisplayConfiguration const& conf) override;
     void send_ping(int32_t serial) override;
     void send_buffer(mf::BufferStreamId id, mg::Buffer& buf, mg::BufferIpcMsgType type) override;
-    void send_buffer(mg::Buffer& buf, mg::BufferIpcMsgType type) override;
     void handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& devices) override;
 
 private:
@@ -89,13 +88,6 @@ void GloballyUniqueMockEventSink::send_buffer(
     mg::BufferIpcMsgType type)
 {
     underlying_sink->send_buffer(id, buf, type);
-}
-
-void GloballyUniqueMockEventSink::send_buffer(
-    mg::Buffer& buf,
-    mg::BufferIpcMsgType type)
-{
-    underlying_sink->send_buffer(buf, type);
 }
 
 mtd::MockEventSinkFactory::MockEventSinkFactory()

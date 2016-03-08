@@ -198,23 +198,6 @@ bool mc::Stream::has_submitted_buffer() const
     return first_frame_posted;
 }
 
-mg::BufferID mc::Stream::allocate_buffer(mg::BufferProperties const&)
-{
-    return mg::BufferID{2};
-//    return buffers->add_buffer(properties);
-}
-
-void mc::Stream::remove_buffer(mg::BufferID)
-{
-//    buffers->remove_buffer(id);
-}
-
-void mc::Stream::with_buffer(mg::BufferID, std::function<void(mg::Buffer&)> const&)
-{
-//    auto buffer = (*buffers)[id];
-//    fn(*buffer);
-}
-
 void mc::Stream::set_scale(float)
 {
 }

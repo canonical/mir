@@ -145,20 +145,3 @@ void mfd::EventSender::send_buffer(frontend::BufferStreamId id, graphics::Buffer
     request->mutable_buffer()->set_fds_on_side_channel(set.size());
     send_event_sequence(seq, {set});
 }
-
-void mfd::EventSender::send_buffer(graphics::Buffer& buffer, mg::BufferIpcMsgType type)
-{
-    mp::EventSequence seq;
-    auto request = seq.mutable_buffer_request();
-    request->mutable_buffer()->set_buffer_id(buffer.id().as_value());
-
-    mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(request->mutable_buffer())};
-    buffer_packer->pack_buffer(request_msg, buffer, type);
-
-    std::vector<mir::Fd> set;
-    for(auto& fd : request->buffer().fd())
-        set.emplace_back(mir::Fd(IntOwnedFd{fd}));
-
-    request->mutable_buffer()->set_fds_on_side_channel(set.size());
-    send_event_sequence(seq, {set});
-}

@@ -60,17 +60,14 @@ std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
 }
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
-    mf::BufferStreamId id, std::shared_ptr<mf::ClientBuffers> const& sink,
+    mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const& sink,
     int nbuffers, mg::BufferProperties const& buffer_properties)
 {
-    (void) id;
     if (nbuffers == 0)
     {
         return std::make_shared<mc::Stream>(
-            //id
             *policy_factory,
             sink,
-//            std::make_unique<mc::BufferMap>(id, sink, gralloc),
             buffer_properties.size, buffer_properties.format);
     }
     else
