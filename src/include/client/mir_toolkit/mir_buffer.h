@@ -108,9 +108,32 @@ int mir_buffer_wait_for_access(
     MirBufferAccess access,
     int timeout);
 
+/** Retreive the width of the buffer in pixels.
+ *
+ *   \param [in] buffer   The buffer
+ *   \return              The width of the buffer in pixels
+ **/
 unsigned int mir_buffer_get_width(MirBuffer* buffer);
+
+/** Retreive the height of the buffer in pixels.
+ *
+ *   \param [in] buffer   The buffer
+ *   \return              The height of the buffer in pixels
+ **/
 unsigned int mir_buffer_get_height(MirBuffer* buffer);
+
+/** Retreive the pixel format of the buffer.
+ *
+ *   \param [in] buffer   The buffer
+ *   \return              The pixel format of the buffer
+ **/
 MirPixelFormat mir_buffer_get_pixel_format(MirBuffer* buffer);
+
+/** Retreive the buffer usage of the buffer.
+ *
+ *   \param [in] buffer   The buffer
+ *   \return              The buffer usage of the buffer
+ **/
 MirBufferUsage mir_buffer_get_buffer_usage(MirBuffer* buffer);
 
 /** @} */
