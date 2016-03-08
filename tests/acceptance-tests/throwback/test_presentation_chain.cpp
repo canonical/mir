@@ -21,7 +21,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_test_framework/connected_client_headless_server.h"
-#include "mir/graphics/buffer_properties.h"
+#include "mir/geometry/size.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
