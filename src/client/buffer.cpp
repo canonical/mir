@@ -25,12 +25,14 @@ namespace mcl = mir::client;
 mcl::Buffer::Buffer(
     mir_buffer_callback cb, void* context,
     int buffer_id,
-    std::shared_ptr<ClientBuffer> const& buffer) :
+    std::shared_ptr<ClientBuffer> const& buffer,
+    MirPresentationChain* chain) :
     cb(cb),
     cb_context(context),
     buffer_id(buffer_id),
     buffer(buffer),
-    owned(true)
+    owned(true),
+    chain(chain)
 {
     cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
 }
@@ -90,4 +92,9 @@ MirNativeFence* mcl::Buffer::get_fence() const
 bool mcl::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds timeout)
 {
     return buffer->wait_fence(access, timeout);
+}
+
+MirPresentationChain* mcl::Buffer::allocating_chain() const
+{
+    return chain;
 }

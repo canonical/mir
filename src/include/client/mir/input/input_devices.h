@@ -35,7 +35,8 @@ struct DeviceData
     DeviceData() = default;
     DeviceData(MirInputDeviceId id, uint32_t caps, std::string const& name, std::string const& unique_id)
         : id(id), caps(caps), name(name), unique_id(unique_id)
-    {}
+    {
+    }
     MirInputDeviceId id;
     uint32_t caps;
     std::string name;
@@ -45,11 +46,14 @@ struct DeviceData
 class InputDevices
 {
 public:
-    InputDevices();
+    InputDevices() = default;
     void update_devices(std::vector<DeviceData> && data);
+    std::vector<DeviceData> copy_devices();
+    void set_change_callback(std::function<void()> const& callback);
 private:
     std::mutex devices_access;
     std::vector<DeviceData> devices;
+    std::function<void()> callback;
 };
 
 }

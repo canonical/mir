@@ -45,9 +45,12 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_buffer_release(MirBuffer* buffer) 
+void mir_buffer_release(MirBuffer* b) 
 {
-    delete reinterpret_cast<mcl::Buffer*>(buffer);
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    auto chain = buffer->allocating_chain();
+    chain->release_buffer(b);
 }
 
 MirNativeFence* mir_buffer_get_fence(MirBuffer* b)
