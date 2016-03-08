@@ -368,6 +368,7 @@ public:
             struct NullBufferSink : mf::BufferSink
             {
                 void send_buffer(mf::BufferStreamId, mg::Buffer&, mg::BufferIpcMsgType) override {}
+                void send_buffer(mg::Buffer&, mg::BufferIpcMsgType) override {}
             };
 
             auto const stream = buffer_stream_factory->create_buffer_stream(

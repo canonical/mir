@@ -63,3 +63,7 @@ void ms::GlobalEventSender::send_ping(int32_t)
 void ms::GlobalEventSender::send_buffer(mir::frontend::BufferStreamId, mg::Buffer&, mg::BufferIpcMsgType)
 {
 }
+
+void ms::GlobalEventSender::send_buffer(mg::Buffer&, mg::BufferIpcMsgType)
+{
+}

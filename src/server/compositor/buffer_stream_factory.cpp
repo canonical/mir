@@ -53,21 +53,24 @@ mc::BufferStreamFactory::BufferStreamFactory(
 
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
-    mf::BufferStreamId id, std::shared_ptr<mf::BufferSink> const& sink,
+    mf::BufferStreamId id, std::shared_ptr<mf::ClientBuffers> const& sink,
     mg::BufferProperties const& buffer_properties)
 {
     return create_buffer_stream(id, sink, nbuffers, buffer_properties);
 }
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
-    mf::BufferStreamId id, std::shared_ptr<mf::BufferSink> const& sink,
+    mf::BufferStreamId id, std::shared_ptr<mf::ClientBuffers> const& sink,
     int nbuffers, mg::BufferProperties const& buffer_properties)
 {
+    (void) id;
     if (nbuffers == 0)
     {
         return std::make_shared<mc::Stream>(
+            //id
             *policy_factory,
-            std::make_unique<mc::BufferMap>(id, sink, gralloc),
+            sink,
+//            std::make_unique<mc::BufferMap>(id, sink, gralloc),
             buffer_properties.size, buffer_properties.format);
     }
     else

@@ -50,7 +50,7 @@ struct StubBufferMap : mf::ClientBuffers
         sink{sink}
     {
     }
-    mg::BufferID add_buffer(mg::BufferProperties const&)
+    mg::BufferID add_buffer(mg::BufferProperties const&, mf::BufferStreamId)
     {
         return mg::BufferID{};
     }

@@ -140,6 +140,21 @@ void mtd::StubSession::send_input_device_change(std::vector<std::shared_ptr<mir:
 {
 }
 
+mir::graphics::BufferID mtd::StubSession::create_buffer(
+    mir::graphics::BufferProperties const&, mir::frontend::BufferStreamId)
+{
+    return mir::graphics::BufferID(3);
+}
+
+void mtd::StubSession::destroy_buffer(mir::graphics::BufferID)
+{
+}
+
+std::shared_ptr<mir::graphics::Buffer> mtd::StubSession::get_buffer(graphics::BufferID)
+{
+    return nullptr;
+}
+
 namespace
 {
 // Ensure we don't accidentally have an abstract class

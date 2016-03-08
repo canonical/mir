@@ -42,7 +42,7 @@ class Stream : public BufferStream
 public:
     Stream(
         FrameDroppingPolicyFactory const& policy_factory,
-        std::unique_ptr<frontend::ClientBuffers>, geometry::Size sz, MirPixelFormat format);
+        std::shared_ptr<frontend::ClientBuffers>, geometry::Size sz, MirPixelFormat format);
 
     void swap_buffers(
         graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;

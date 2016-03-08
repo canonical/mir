@@ -285,13 +285,17 @@ struct StubEventSink : public mf::EventSink
     {
     }
 
-    void send_buffer(mf::BufferStreamId, mg::Buffer& buffer, mg::BufferIpcMsgType)
+    void send_buffer(mg::Buffer& buffer, mg::BufferIpcMsgType)
     {
         mp::Buffer protobuffer;
         protobuffer.set_buffer_id(buffer.id().as_value());
         protobuffer.set_width(buffer.size().width.as_int());
         protobuffer.set_height(buffer.size().height.as_int());
         ipc->client_bound_transfer(protobuffer);
+    }
+    void send_buffer(mf::BufferStreamId, mg::Buffer& buffer, mg::BufferIpcMsgType type)
+    {
+        send_buffer(buffer, type);
     }
     void handle_event(MirEvent const&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
@@ -517,7 +521,6 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
             auto submit_stream = std::make_shared<mc::Stream>(
                 drop_policy,
                 std::make_unique<mc::BufferMap>(
-                    mf::BufferStreamId{2},
                     std::make_shared<StubEventSink>(ipc),
                     std::make_shared<mtd::StubBufferAllocator>()),
                 geom::Size{100,100},

@@ -31,10 +31,10 @@ namespace doubles
 struct StubBufferStreamFactory : public scene::BufferStreamFactory
 {
     std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        frontend::BufferStreamId i, std::shared_ptr<frontend::BufferSink> const& s,
+        frontend::BufferStreamId i, std::shared_ptr<frontend::ClientBuffers> const& s,
         int, graphics::BufferProperties const& p) { return create_buffer_stream(i, s, p); }
     std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        frontend::BufferStreamId, std::shared_ptr<frontend::BufferSink> const&,
+        frontend::BufferStreamId, std::shared_ptr<frontend::ClientBuffers> const&,
         graphics::BufferProperties const&) { return std::make_shared<StubBufferStream>(); }
 };
 }
