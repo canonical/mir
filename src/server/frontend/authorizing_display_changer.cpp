@@ -16,25 +16,28 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "unauthorized_display_changer.h"
+#include "authorizing_display_changer.h"
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 
-mf::UnauthorizedDisplayChanger::UnauthorizedDisplayChanger(std::shared_ptr<frontend::DisplayChanger> const& changer)
+mf::AuthorizingDisplayChanger::AuthorizingDisplayChanger(
+    std::shared_ptr<frontend::DisplayChanger> const& changer,
+    bool configuration_is_authorized,
+    bool base_configuration_modification_is_authorized)
     : changer(changer),
-      configure_display_is_allowed(false),
-      set_base_configuration_is_allowed(false)
+      configure_display_is_allowed{configuration_is_authorized},
+      set_base_configuration_is_allowed{base_configuration_modification_is_authorized}
 {
 }
 
-std::shared_ptr<mg::DisplayConfiguration> mf::UnauthorizedDisplayChanger::base_configuration()
+std::shared_ptr<mg::DisplayConfiguration> mf::AuthorizingDisplayChanger::base_configuration()
 {
     return changer->base_configuration();
 }
 
-void mf::UnauthorizedDisplayChanger::configure(
+void mf::AuthorizingDisplayChanger::configure(
     std::shared_ptr<mf::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& config)
 {
@@ -44,21 +47,11 @@ void mf::UnauthorizedDisplayChanger::configure(
         BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to apply display configurations"));
 }
 
-void mf::UnauthorizedDisplayChanger::set_base_configuration(
+void mf::AuthorizingDisplayChanger::set_base_configuration(
     std::shared_ptr<graphics::DisplayConfiguration> const& config)
 {
     if (set_base_configuration_is_allowed)
         changer->set_base_configuration(config);
     else
         BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to set base display configurations"));
-}
-
-void mf::UnauthorizedDisplayChanger::allow_configure_display()
-{
-    configure_display_is_allowed = true;
-}
-
-void mf::UnauthorizedDisplayChanger::allow_set_base_configuration()
-{
-    set_base_configuration_is_allowed = true;
 }

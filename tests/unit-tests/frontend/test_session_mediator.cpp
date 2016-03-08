@@ -177,7 +177,9 @@ public:
         return mock_streams[id];
     }
 
-    mf::SurfaceId create_surface(ms::SurfaceCreationParameters const&)
+    mf::SurfaceId create_surface(
+        ms::SurfaceCreationParameters const&,
+        std::shared_ptr<mf::EventSink> const&)
     {
         mf::SurfaceId id{last_surface_id};
         if (mock_surfaces.end() == mock_surfaces.find(id))
@@ -244,7 +246,7 @@ struct SessionMediator : public ::testing::Test
         ON_CALL(*shell, open_session(_, _, _)).WillByDefault(Return(stubbed_session));
 
         ON_CALL(*shell, create_surface( _, _, _)).WillByDefault(
-            WithArg<1>(Invoke(stubbed_session.get(), &StubbedSession::create_surface)));
+            WithArgs<1, 2>(Invoke(stubbed_session.get(), &StubbedSession::create_surface)));
 
         ON_CALL(*shell, destroy_surface( _, _)).WillByDefault(
             WithArg<1>(Invoke(stubbed_session.get(), &StubbedSession::destroy_surface)));
@@ -1234,7 +1236,7 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
             Invoke([session = stubbed_session.get()](auto, auto params, auto sink)
                    {
                        sink->send_ping(0xdeadbeef);
-                       return session->create_surface(params);
+                       return session->create_surface(params, sink);
                    }));
 
     InSequence seq;
