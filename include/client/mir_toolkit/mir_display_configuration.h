@@ -326,6 +326,32 @@ MirPowerMode mir_output_get_power_mode(MirOutput const* output);
 MirOrientation mir_output_get_orientation(MirOutput const* output);
 
 /**
+ * Get the scale-factor of a display
+ *
+ * The scale-factor specifies the conversion between logical pixels and physical pixels on this output.
+ *
+ * A surface with dimensions 200×100 on an output with scale-factor 2.0 will display 400x200 pixels
+ * on this output, will display 300x150 pixels on an output with scale-factor 1.5, and so on.
+ *
+ * Where this calculation would result in a fractional number of pixels the floor is used, so a surface with
+ * dimensions 101x100 on an output with scale-factor of 1.5 will display 151x150 pixels, not 152x150.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The scale-factor of this monitor
+ */
+float mir_output_get_scale_factor(MirOutput const* output);
+
+/**
+ * Get the form-factor of a connected output.
+ *
+ * This call succeeds even if the output is not connected, but may return nonsense values.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The form factor of this output
+ */
+MirFormFactor mir_output_get_form_factor(MirOutput const* output);
+
+/**
  * Get the width, in pixels, of a MirOutputMode
  *
  * \note    This is unaffected by the orientation of the output

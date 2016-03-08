@@ -772,7 +772,7 @@ MATCHER_P3(ADeviceMatches, name, unique_id, caps, "")
     return one_of_the_devices_matched;
 }
 
-TEST_F(TestClientInput, client_input_config_request_on_connect_receives_all_attached_devices)
+TEST_F(TestClientInput, client_input_config_request_receives_all_attached_devices)
 {
     auto con = mir_connect_sync(new_connection().c_str(), first.c_str());
     auto config = mir_connection_create_input_config(con);

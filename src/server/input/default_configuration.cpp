@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -244,11 +244,7 @@ mir::DefaultServerConfiguration::the_input_manager()
                 auto platform = probe_input_platforms(*options, the_emergency_cleanup(), the_input_device_registry(),
                                                        the_input_report(), *the_shared_library_prober_report());
 
-                auto const ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer());
-
-                ret->add_platform(std::move(platform));
-
-                return ret;
+                return std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), std::move(platform));
             }
         }
     );

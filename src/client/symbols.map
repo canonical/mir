@@ -246,6 +246,7 @@ MIR_CLIENT_9_unreleased {
     mir_output_get_connection_state;
     mir_output_get_current_mode;
     mir_output_get_current_pixel_format;
+    mir_output_get_form_factor;
     mir_output_get_id;
     mir_output_get_mode;
     mir_output_get_num_modes;
@@ -258,10 +259,12 @@ MIR_CLIENT_9_unreleased {
     mir_output_get_position_y;
     mir_output_get_power_mode;
     mir_output_get_preferred_mode;
+    mir_output_get_scale_factor;
     mir_output_get_type;
     mir_output_is_enabled;
     mir_output_mode_get_height;
     mir_output_mode_get_refresh_rate;
+    mir_output_mode_get_width;
     mir_output_mode_get_width;
   local:
     *;
