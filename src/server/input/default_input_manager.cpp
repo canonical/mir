@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -32,8 +32,13 @@
 
 namespace mi = mir::input;
 
-mi::DefaultInputManager::DefaultInputManager(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer)
-    : multiplexer{multiplexer}, queue{std::make_shared<mir::dispatch::ActionQueue>()}, state{State::stopped}
+mi::DefaultInputManager::DefaultInputManager(
+    std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
+    std::shared_ptr<Platform> const& platform) :
+    platforms{platform},
+    multiplexer{multiplexer},
+    queue{std::make_shared<mir::dispatch::ActionQueue>()},
+    state{State::stopped}
 {
 }
 
