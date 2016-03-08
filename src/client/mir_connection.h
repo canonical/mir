@@ -133,7 +133,7 @@ public:
     void populate(MirPlatformPackage& platform_package);
     void populate_graphics_module(MirModuleProperties& properties);
     MirDisplayConfiguration* create_copy_of_display_config();
-    std::shared_ptr<mir::client::DisplayConfiguration::Config> snapshot_display_configuration() const;
+    std::unique_ptr<mir::protobuf::DisplayConfiguration> snapshot_display_configuration() const;
     void available_surface_formats(MirPixelFormat* formats,
                                    unsigned int formats_size, unsigned int& valid_formats);
 
@@ -178,7 +178,6 @@ public:
 
     mir::client::rpc::DisplayServer& display_server();
     mir::client::rpc::DisplayServerDebug& debug_display_server();
-    std::shared_ptr<mir::logging::Logger> const& the_logger() const;
 
 private:
     //google cant have callbacks with more than 2 args

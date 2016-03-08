@@ -29,15 +29,15 @@
 extern "C" {
 #endif
 
-/** Fenced Buffer content access functions.
- *
- * Note: the following functions (mir_buffer_get_native_buffer, mir_buffer_lock, mir_buffer_unlock)
- * can only be used when the buffer is not submitted to the server.
+/** @name Fenced Buffer content access functions.
  *
  * These functions will wait until it is safe to access the buffer for the given purpose.
  * If used with mir_none, the buffer will be given the buffer immediately, and without synchronization.
  * It is then up to the user to ensure that the buffer contents are not accessed at inapproprate times.
- **/
+ *
+ * \note the following functions (mir_buffer_get_native_buffer, mir_buffer_get_graphics_region)
+ * can only be used when the buffer is not submitted to the server.
+ *  @{ */
 
 /** Access the native buffer associated with MirBuffer for a given purpose.
  *  This will synchronize the buffer for the given purpose.
@@ -69,7 +69,7 @@ MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirBufferAccess access
 MirGraphicsRegion mir_buffer_get_graphics_region(MirBuffer* buffer, MirBufferAccess access);
 
 /**
- * Retreive the native fence associated with this buffer
+ * Retrieve the native fence associated with this buffer
  *
  *   \param [in] buffer     The buffer
  *   \return                The fence associated with buffer 
@@ -107,6 +107,8 @@ int mir_buffer_wait_for_access(
     MirBuffer* buffer,
     MirBufferAccess access,
     int timeout);
+
+/** @} */
 
 /** release a MirBuffer
  *   \param [in] buffer              The buffer to be released

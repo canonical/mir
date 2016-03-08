@@ -260,11 +260,7 @@ mir::DefaultServerConfiguration::the_input_manager()
                                                      input_report, *the_shared_library_prober_report());
                 }
 
-                auto const ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer());
-
-                ret->add_platform(std::move(platform));
-
-                return ret;
+                return std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), std::move(platform));
             }
         }
     );

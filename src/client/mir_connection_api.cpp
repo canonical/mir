@@ -34,6 +34,7 @@
 #include <cstring>
 
 namespace mcl = mir::client;
+namespace mp = mir::protobuf;
 
 namespace
 {
@@ -237,12 +238,12 @@ MirDisplayConfig* mir_connection_create_display_configuration(
 {
     mir::require(mir_connection_is_valid(connection));
 
-    return reinterpret_cast<MirDisplayConfig*>(new std::shared_ptr<mcl::DisplayConfiguration::Config>{connection->snapshot_display_configuration()});
+    return reinterpret_cast<MirDisplayConfig*>(connection->snapshot_display_configuration().release());
 }
 
 void mir_display_config_release(MirDisplayConfig* user_config)
 {
-    auto config = reinterpret_cast<std::shared_ptr<mcl::DisplayConfiguration::Config>*>(user_config);
+    auto config = reinterpret_cast<mir::protobuf::DisplayConfiguration*>(user_config);
     delete config;
 }
 
