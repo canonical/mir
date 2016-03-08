@@ -57,7 +57,8 @@ ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionListener> const& session_listener,
     mg::DisplayConfiguration const& initial_config,
-    std::shared_ptr<mf::EventSink> const& sink) :
+    std::shared_ptr<mf::EventSink> const& sink,
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator) : 
     surface_stack(surface_stack),
     surface_factory(surface_factory),
     buffer_stream_factory(buffer_stream_factory),
@@ -66,7 +67,7 @@ ms::ApplicationSession::ApplicationSession(
     snapshot_strategy(snapshot_strategy),
     session_listener(session_listener),
     event_sink(sink),
-    buffers(std::make_shared<mc::BufferMap>(sink, nullptr)), //TODO: SHOLUD BE G RALLOC
+    buffers(std::make_shared<mc::BufferMap>(sink, allocator)),
     next_surface_id(0)
 {
     assert(surface_stack);

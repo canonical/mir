@@ -38,6 +38,7 @@ namespace compositor { class BufferStream; }
 namespace graphics
 {
 class DisplayConfiguration;
+class GraphicBufferAllocator;
 }
 namespace shell { class SurfaceStack; }
 namespace scene
@@ -60,7 +61,8 @@ public:
         std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
         std::shared_ptr<SessionListener> const& session_listener,
         graphics::DisplayConfiguration const& initial_config,
-        std::shared_ptr<frontend::EventSink> const& sink);
+        std::shared_ptr<frontend::EventSink> const& sink,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     ~ApplicationSession();
 

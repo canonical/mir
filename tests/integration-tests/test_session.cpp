@@ -124,7 +124,8 @@ TEST(ApplicationSession, stress_test_take_snapshot)
         conf.the_snapshot_strategy(),
         std::make_shared<ms::NullSessionListener>(),
         mtd::StubDisplayConfig{},
-        std::make_shared<mtd::NullEventSink>()
+        std::make_shared<mtd::NullEventSink>(),
+        conf.the_buffer_allocator()
     };
     session.create_surface(ms::a_surface(), std::make_shared<mtd::NullEventSink>());
 

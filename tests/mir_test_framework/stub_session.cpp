@@ -17,6 +17,7 @@
  */
 
 #include "mir/test/doubles/stub_session.h"
+#include "mir/test/doubles/stub_buffer.h"
 
 namespace mtd = mir::test::doubles;
 
@@ -152,7 +153,7 @@ void mtd::StubSession::destroy_buffer(mir::graphics::BufferID)
 
 std::shared_ptr<mir::graphics::Buffer> mtd::StubSession::get_buffer(graphics::BufferID)
 {
-    return nullptr;
+    return std::make_shared<mtd::StubBuffer>();
 }
 
 namespace

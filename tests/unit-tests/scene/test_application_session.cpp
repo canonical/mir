@@ -35,6 +35,7 @@
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/null_prompt_session.h"
 #include "mir/test/doubles/stub_display_configuration.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -148,7 +149,7 @@ struct ApplicationSession : public testing::Test
            null_snapshot_strategy,
            stub_session_listener,
            mtd::StubDisplayConfig{},
-           event_sink);
+           event_sink, allocator);
     }
     
     std::shared_ptr<ms::ApplicationSession> make_application_session(
@@ -161,7 +162,7 @@ struct ApplicationSession : public testing::Test
            null_snapshot_strategy,
            stub_session_listener,
            mtd::StubDisplayConfig{},
-           event_sink);
+           event_sink, allocator);
     }
 
     std::shared_ptr<ms::ApplicationSession> make_application_session(
@@ -174,7 +175,7 @@ struct ApplicationSession : public testing::Test
            null_snapshot_strategy,
            stub_session_listener,
            mtd::StubDisplayConfig{},
-           event_sink);
+           event_sink, allocator);
     }
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_coordinator(
         std::shared_ptr<msh::SurfaceStack> const& surface_stack)
@@ -185,7 +186,7 @@ struct ApplicationSession : public testing::Test
            null_snapshot_strategy,
            stub_session_listener,
            mtd::StubDisplayConfig{},
-           event_sink);
+           event_sink, allocator);
     }
     
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_listener(
@@ -197,7 +198,7 @@ struct ApplicationSession : public testing::Test
            null_snapshot_strategy,
            session_listener,
            mtd::StubDisplayConfig{},
-           event_sink);
+           event_sink, allocator);
     }
 
 
@@ -210,7 +211,7 @@ struct ApplicationSession : public testing::Test
            null_snapshot_strategy,
            stub_session_listener,
            mtd::StubDisplayConfig{},
-           event_sink);
+           event_sink, allocator);
     }
 
     std::shared_ptr<mtd::NullEventSink> const event_sink;
@@ -221,6 +222,8 @@ struct ApplicationSession : public testing::Test
         std::make_shared<mtd::StubBufferStreamFactory>();
     std::shared_ptr<mtd::StubSurfaceFactory> const stub_surface_factory{std::make_shared<mtd::StubSurfaceFactory>()};
     std::shared_ptr<mtd::StubBufferStream> const stub_buffer_stream{std::make_shared<mtd::StubBufferStream>()};
+    std::shared_ptr<mtd::StubBufferAllocator> const allocator{
+        std::make_shared<mtd::StubBufferAllocator>()};
     pid_t pid;
     std::string name;
 };
@@ -445,7 +448,7 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
         snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
         mtd::StubDisplayConfig{},
-        event_sink);
+        event_sink, allocator);
 
     auto surface = app_session.create_surface(ms::SurfaceCreationParameters{}, event_sink);
     app_session.take_snapshot(ms::SnapshotCallback());
@@ -466,7 +469,7 @@ TEST_F(ApplicationSession, returns_null_snapshot_if_no_default_surface)
         snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
         mtd::StubDisplayConfig{},
-        event_sink);
+        event_sink, allocator);
 
     EXPECT_CALL(*snapshot_strategy, take_snapshot_of(_,_)).Times(0);
     EXPECT_CALL(mock_snapshot_callback, operator_call(IsNullSnapshot()));
@@ -487,7 +490,7 @@ TEST_F(ApplicationSession, process_id)
         null_snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
         mtd::StubDisplayConfig{},
-        event_sink);
+        event_sink, allocator);
 
     EXPECT_THAT(app_session.process_id(), Eq(session_pid));
 }
@@ -684,7 +687,8 @@ struct ApplicationSessionSender : public ApplicationSession
             null_snapshot_strategy,
             stub_session_listener,
             mtd::StubDisplayConfig{},
-            mt::fake_shared(sender))
+            mt::fake_shared(sender),
+            allocator)
     {
     }
 
@@ -788,7 +792,7 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
             null_snapshot_strategy,
             stub_session_listener,
             mtd::StubDisplayConfig{},
-            sender)
+            sender, allocator)
     {
     }
 

@@ -263,12 +263,6 @@ TEST_F(Stream, reports_format)
     EXPECT_THAT(stream.pixel_format(), Eq(construction_format));
 }
 
-TEST_F(Stream, can_access_buffer_after_allocation)
-{
-    EXPECT_CALL(*this, called(testing::Ref(*buffers.front())));
-    stream.with_buffer(buffers.front()->id(), [this](mg::Buffer& b) { called(b); });
-}
-
 //confusingly, we have two framedrops. One is swapinterval zero, where old buffers are dropped as quickly as possible.
 //In non-framedropping mode, we drop based on a timeout according to a policy, mostly for screen-off scenarios.
 //
