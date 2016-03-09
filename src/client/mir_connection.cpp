@@ -1165,6 +1165,7 @@ void MirConnection::allocate_buffer(
         client_buffer_factory = platform->create_buffer_factory();
     buffer_factory->expect_buffer(
         client_buffer_factory,
+        nullptr,
         size, format, usage,
         callback, context);
     server.allocate_buffers(&request, ignored.get(), gp::NewCallback(this, &MirConnection::ignore));
