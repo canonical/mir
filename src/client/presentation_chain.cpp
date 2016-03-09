@@ -144,7 +144,7 @@ void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
     buffers.emplace_back(std::make_unique<Buffer>(
         (*request_it)->cb, (*request_it)->cb_context,
         buffer.buffer_id(),
-        factory->create_buffer(package, (*request_it)->size, (*request_it)->format)));
+        factory->create_buffer(package, (*request_it)->size, (*request_it)->format), this));
 
     allocation_requests.erase(request_it);
 }

@@ -30,8 +30,8 @@ class FakeInputDevice
 {
 public:
     /**
-     * Valid value range of simulated touch coordinates. The simulated coordinates will be remapped to the
-     * the coorindates of the given input sink.
+     * Valid value range of simulated touch coordinates. The simulated coordinates will be remapped to
+     * the coordinates of the given input sink.
      * \{
      */
     static const int maximum_touch_axis_value = 0xFFFF;
@@ -41,6 +41,8 @@ public:
     FakeInputDevice() = default;
     virtual ~FakeInputDevice() = default;
 
+
+    virtual void emit_device_removal() = 0;
     virtual void emit_runtime_error() = 0;
     virtual void emit_event(synthesis::KeyParameters const& key) = 0;
     virtual void emit_event(synthesis::ButtonParameters const& button) = 0;
