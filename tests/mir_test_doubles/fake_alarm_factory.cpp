@@ -22,6 +22,7 @@
 #include <algorithm>
 
 namespace mtd = mir::test::doubles;
+namespace mt = mir::time;
 
 class mtd::FakeAlarmFactory::FakeAlarm : public mt::Alarm
 {

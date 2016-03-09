@@ -26,26 +26,24 @@
 
 #include <vector>
 
-namespace mt = mir::time;
-
 namespace mir
 {
 namespace test
 {
 namespace doubles
 {
-class FakeAlarmFactory : public mt::AlarmFactory
+class FakeAlarmFactory : public time::AlarmFactory
 {
 public:
     FakeAlarmFactory();
 
-    std::unique_ptr<mt::Alarm> create_alarm(
+    std::unique_ptr<time::Alarm> create_alarm(
         std::function<void()> const& callback) override;
-    std::unique_ptr<mt::Alarm> create_alarm(
+    std::unique_ptr<time::Alarm> create_alarm(
         std::shared_ptr<mir::LockableCallback> const& callback) override;
 
-    void advance_by(mt::Duration step);
-    void advance_smoothly_by(mt::Duration step);
+    void advance_by(time::Duration step);
+    void advance_smoothly_by(time::Duration step);
     int wakeup_count() const;
 
 private:
