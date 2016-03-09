@@ -308,7 +308,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         {
             try
             {
-                if(seq.buffer_request().id().value() >= 0)
+                if (seq.buffer_request().id().value() >= 0)
                 {
                     map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
                     [&] (mcl::BufferReceiver* receiver) {
@@ -338,12 +338,6 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     close(seq.buffer_request().buffer().fd(i));
                 throw e;
             }
-            //}
-            //else
-            //{
-            //      alloc->generate_buffer()
-            //      map->insert_buffer();
-            //}
         }
         else
         {
