@@ -20,11 +20,14 @@
 #include "rpc_report.h"
 
 #include "../surface_map.h"
+#include "../buffer.h"
+#include "../presentation_chain.h"
 #include "../mir_surface.h"
 #include "../display_configuration.h"
 #include "../lifecycle_control.h"
 #include "../event_sink.h"
 #include "../make_protobuf_object.h"
+#include "../protobuf_to_native_buffer.h"
 #include "mir/input/input_devices.h"
 #include "mir/variable_length_array.h"
 #include "mir/events/event_builders.h"
@@ -55,6 +58,7 @@ std::chrono::milliseconds const timeout(200);
 mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     std::unique_ptr<mclr::StreamTransport> transport,
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
+    std::shared_ptr<mcl::AsyncBufferFactory> const& buffer_factory,
     std::shared_ptr<DisplayConfiguration> const& disp_config,
     std::shared_ptr<input::InputDevices> const& input_devices,
     std::shared_ptr<RpcReport> const& rpc_report,
@@ -64,6 +68,7 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     surface_map(surface_map),
+    buffer_factory(buffer_factory),
     display_configuration(disp_config),
     input_devices(input_devices),
     lifecycle_control(lifecycle_control),
@@ -302,10 +307,29 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         {
             try
             {
-                map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
-                [&] (mcl::BufferReceiver* receiver) {
-                    receiver->buffer_available(seq.buffer_request().buffer());
-                });
+                if (seq.buffer_request().has_id())
+                {
+                    map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
+                    [&] (mcl::BufferReceiver* receiver) {
+                        receiver->buffer_available(seq.buffer_request().buffer());
+                    });
+                }
+                else
+                {
+                    auto had_buffer = map->with_buffer_do(
+                        seq.buffer_request().buffer().buffer_id(),
+                        [&seq](mcl::Buffer& buffer)
+                        {
+                            buffer.received(
+                                *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
+                        });
+
+                    if (!had_buffer)
+                    {
+                        map->insert(seq.buffer_request().buffer().buffer_id(), 
+                            buffer_factory->generate_buffer(seq.buffer_request().buffer()));
+                    }
+                }
             }
             catch (std::exception& e)
             {
