@@ -62,7 +62,6 @@ public:
     virtual PlatformOperationMessage platform_operation(
         unsigned int op, PlatformOperationMessage const& request) override;
 
-    std::shared_ptr<MirConnection> connection() override;
 private:
     std::mutex surfaces_mutex;
 

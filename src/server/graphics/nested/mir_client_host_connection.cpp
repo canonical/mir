@@ -316,8 +316,3 @@ auto mgn::MirClientHostConnection::graphics_platform_library() -> std::string
 
     return properties.filename;
 }
-
-std::shared_ptr<MirConnection> mgn::MirClientHostConnection::connection()
-{
-    return mir_connection;
-}
