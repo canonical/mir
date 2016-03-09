@@ -34,29 +34,6 @@ namespace test
 {
 namespace doubles
 {
-class FakeAlarm : public mt::Alarm
-{
-public:
-    FakeAlarm(std::function<void()> const& callback,
-        std::shared_ptr<mir::time::Clock> const& clock);
-
-    void time_updated();
-    int wakeup_count() const;
-
-    bool cancel() override;
-    State state() const override;
-
-    bool reschedule_in(std::chrono::milliseconds delay) override;
-    bool reschedule_for(mir::time::Timestamp timeout) override;
-
-private:
-    int triggered_count;
-    std::function<void()> const callback;
-    State alarm_state;
-    mir::time::Timestamp triggers_at;
-    std::shared_ptr<mt::Clock> clock;
-};
-
 class FakeAlarmFactory : public mt::AlarmFactory
 {
 public:
@@ -72,6 +49,8 @@ public:
     int wakeup_count() const;
 
 private:
+    class FakeAlarm;
+
     std::vector<FakeAlarm*> alarms;
     std::shared_ptr<AdvanceableClock> const clock;
 };

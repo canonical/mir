@@ -22,7 +22,31 @@
 
 namespace mtd = mir::test::doubles;
 
-mtd::FakeAlarm::FakeAlarm(
+class mtd::FakeAlarmFactory::FakeAlarm : public mt::Alarm
+{
+public:
+    FakeAlarm(std::function<void()> const& callback,
+        std::shared_ptr<mir::time::Clock> const& clock);
+
+    void time_updated();
+    int wakeup_count() const;
+
+    bool cancel() override;
+    State state() const override;
+
+    bool reschedule_in(std::chrono::milliseconds delay) override;
+    bool reschedule_for(mir::time::Timestamp timeout) override;
+
+private:
+    int triggered_count;
+    std::function<void()> const callback;
+    State alarm_state;
+    mir::time::Timestamp triggers_at;
+    std::shared_ptr<mt::Clock> clock;
+};
+
+
+mtd::FakeAlarmFactory::FakeAlarm::FakeAlarm(
     std::function<void()> const& callback,
     std::shared_ptr<mir::time::Clock> const& clock)
     : triggered_count{0},
@@ -33,7 +57,7 @@ mtd::FakeAlarm::FakeAlarm(
 {
 }
 
-void mtd::FakeAlarm::time_updated()
+void mtd::FakeAlarmFactory::FakeAlarm::time_updated()
 {
     if (clock->now() > triggers_at)
     {
@@ -44,12 +68,12 @@ void mtd::FakeAlarm::time_updated()
     }
 }
 
-int mtd::FakeAlarm::wakeup_count() const
+int mtd::FakeAlarmFactory::FakeAlarm::wakeup_count() const
 {
     return triggered_count;
 }
 
-bool mtd::FakeAlarm::cancel()
+bool mtd::FakeAlarmFactory::FakeAlarm::cancel()
 {
     if (alarm_state == State::pending)
     {
@@ -60,12 +84,12 @@ bool mtd::FakeAlarm::cancel()
     return false;
 }
 
-mt::Alarm::State mtd::FakeAlarm::state() const
+mt::Alarm::State mtd::FakeAlarmFactory::FakeAlarm::state() const
 {
     return alarm_state;
 }
 
-bool mtd::FakeAlarm::reschedule_in(std::chrono::milliseconds delay)
+bool mtd::FakeAlarmFactory::FakeAlarm::reschedule_in(std::chrono::milliseconds delay)
 {
     bool rescheduled = alarm_state == State::pending;
     alarm_state = State::pending;
@@ -73,7 +97,7 @@ bool mtd::FakeAlarm::reschedule_in(std::chrono::milliseconds delay)
     return rescheduled;
 }
 
-bool mtd::FakeAlarm::reschedule_for(mir::time::Timestamp timeout)
+bool mtd::FakeAlarmFactory::FakeAlarm::reschedule_for(mir::time::Timestamp timeout)
 {
     bool rescheduled = alarm_state == State::pending;
     if (timeout > clock->now())
