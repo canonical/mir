@@ -22,6 +22,7 @@
 #include "../surface_map.h"
 #include "../buffer.h"
 #include "../presentation_chain.h"
+#include "../buffer_factory.h"
 #include "../mir_surface.h"
 #include "../display_configuration.h"
 #include "../lifecycle_control.h"
@@ -305,10 +306,13 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
 
         if (auto map = surface_map.lock())
         {
+            //if(seq.buffer_request().id())
+            //{
             try
             {
-                if (seq.buffer_request().has_id())
+                if (seq.buffer_request().id().value() >= 0)
                 {
+                    printf("BOUND TO STREAM (value %i)\n", seq.buffer_request().id().value());
                     map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
                     [&] (mcl::BufferReceiver* receiver) {
                         receiver->buffer_available(seq.buffer_request().buffer());
@@ -316,6 +320,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 }
                 else
                 {
+                    printf("UNBOUND<<<< to map\n");
                     auto had_buffer = map->with_buffer_do(
                         seq.buffer_request().buffer().buffer_id(),
                         [&seq](mcl::Buffer& buffer)
@@ -327,7 +332,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     if (!had_buffer)
                     {
                         map->insert(seq.buffer_request().buffer().buffer_id(), 
-                            buffer_factory->generate_buffer(seq.buffer_request().buffer()));
+                            buffer_factory->generate_buffer(seq.buffer_request().buffer(), nullptr));
                     }
                 }
             }
@@ -337,6 +342,12 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     close(seq.buffer_request().buffer().fd(i));
                 throw e;
             }
+            //}
+            //else
+            //{
+            //      alloc->generate_buffer()
+            //      map->insert_buffer();
+            //}
         }
         else
         {

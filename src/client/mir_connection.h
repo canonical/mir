@@ -188,6 +188,11 @@ public:
         return input_devices;
     }
 
+    void allocate_buffer(
+        mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
+        mir_buffer_callback callback, void* context);
+    void release_buffer(int buffer_id);
+
 private:
     //google cant have callbacks with more than 2 args
     struct SurfaceCreationRequest
@@ -242,6 +247,8 @@ private:
     void chain_error(std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request);
 
     void populate_server_package(MirPlatformPackage& platform_package) override;
+    void ignore();
+
     // MUST be first data member so it is destroyed last.
     struct Deregisterer
     { MirConnection* const self; ~Deregisterer(); } deregisterer;
@@ -269,7 +276,7 @@ private:
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;
-    std::shared_ptr<mir::client::ClientBufferFactory> cbuffer_factory;
+    std::shared_ptr<mir::client::ClientBufferFactory> client_buffer_factory;
     std::shared_ptr<EGLNativeDisplayType> native_display;
 
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;

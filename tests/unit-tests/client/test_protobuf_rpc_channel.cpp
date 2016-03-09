@@ -24,7 +24,7 @@
 #include "src/client/rpc/null_rpc_report.h"
 #include "src/client/lifecycle_control.h"
 #include "src/client/ping_handler.h"
-#include "src/client/presentation_chain.h"
+#include "src/client/buffer_factory.h"
 
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
@@ -80,6 +80,7 @@ public:
     void with_all_streams_do(std::function<void(mcl::BufferReceiver*)> const&) const override
     {
     }
+
     bool with_buffer_do(int, std::function<void(mcl::Buffer&)> const&) const override
     {
         return true;
@@ -229,7 +230,7 @@ public:
           channel{new mclr::MirProtobufRpcChannel{
                   std::unique_ptr<MockStreamTransport>{transport},
                   std::make_shared<StubSurfaceMap>(),
-                  std::make_shared<mcl::AsyncBufferFactory>(),
+                  std::make_shared<mcl::BufferFactory>(),
                   std::make_shared<mcl::DisplayConfiguration>(),
                   std::make_shared<mir::input::InputDevices>(),
                   std::make_shared<mclr::NullRpcReport>(),
@@ -383,7 +384,7 @@ TEST_F(MirProtobufRpcChannelTest, notifies_streams_of_disconnect)
     mclr::MirProtobufRpcChannel channel{
                   std::make_unique<NiceMock<MockStreamTransport>>(),
                   stream_map,
-                  std::make_shared<mcl::AsyncBufferFactory>(),
+                  std::make_shared<mcl::BufferFactory>(),
                   std::make_shared<mcl::DisplayConfiguration>(),
                   std::make_shared<mir::input::InputDevices>(),
                   std::make_shared<mclr::NullRpcReport>(),
