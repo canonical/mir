@@ -460,6 +460,61 @@ TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_overlay_scenario)
     arbiter.compositor_release(b2);
 } 
 
+TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_starvation_scenario)
+{
+    int comp_id1{0};
+    int comp_id2{0};
+    schedule.set_schedule({buffers[0], buffers[1], buffers[0], buffers[1]});
+
+    auto b1 = arbiter.compositor_acquire(&comp_id1);
+    auto b2 = arbiter.compositor_acquire(&comp_id1);
+    arbiter.compositor_release(b1);
+
+    auto b3 = arbiter.compositor_acquire(&comp_id2);
+    auto b4 = arbiter.compositor_acquire(&comp_id2);
+    arbiter.compositor_release(b3);
+
+    arbiter.compositor_release(b2);
+    arbiter.compositor_release(b4);
+
+    EXPECT_THAT(b1, Eq(buffers[0]));
+    EXPECT_THAT(b2, Eq(buffers[1]));
+    EXPECT_THAT(b3, Eq(buffers[1]));
+    EXPECT_THAT(b4, Eq(buffers[0]));
+
+} 
+
+TEST_F(MultiMonitorArbiter, will_ensure_smooth_monitor_production)
+{
+    int comp_id1{0};
+    int comp_id2{0};
+    schedule.set_schedule({
+        buffers[0], buffers[1], buffers[2],
+        buffers[0], buffers[1], buffers[2],
+        buffers[0], buffers[1], buffers[2]});
+
+    EXPECT_CALL(mock_map, send_buffer(buffers[0]->id()));
+
+    auto b1 = arbiter.compositor_acquire(&comp_id1);
+    auto b2 = arbiter.compositor_acquire(&comp_id2);
+    arbiter.compositor_release(b1); //send nothing
+
+    auto b3 = arbiter.compositor_acquire(&comp_id1);
+    arbiter.compositor_release(b3); //send nothing
+
+    auto b4 = arbiter.compositor_acquire(&comp_id2);
+    arbiter.compositor_release(b2); //send 0
+
+    auto b5 = arbiter.compositor_acquire(&comp_id1);
+    arbiter.compositor_release(b5); //send nothing
+
+    EXPECT_THAT(b1, Eq(buffers[0]));
+    EXPECT_THAT(b2, Eq(buffers[0]));
+    EXPECT_THAT(b3, Eq(buffers[1]));
+    EXPECT_THAT(b4, Eq(buffers[1]));
+    EXPECT_THAT(b5, Eq(buffers[2]));
+} 
+
 TEST_F(MultiMonitorArbiter, can_advance_buffer_manually)
 {
     int comp_id1{0};

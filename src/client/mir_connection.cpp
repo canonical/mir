@@ -27,6 +27,7 @@
 #include "rpc/mir_basic_rpc_channel.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/dispatch/threaded_dispatcher.h"
+#include "mir/input/input_devices.h"
 #include "connection_configuration.h"
 #include "display_configuration.h"
 #include "connection_surface_map.h"
@@ -256,6 +257,7 @@ MirConnection::MirConnection(
         client_platform_factory(conf.the_client_platform_factory()),
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
+        input_devices{conf.the_input_devices()},
         lifecycle_control(conf.the_lifecycle_control()),
         ping_handler{conf.the_ping_handler()},
         event_handler_register(conf.the_event_handler_register()),
@@ -537,6 +539,18 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
         {
             this->pong(serial);
         });
+
+        if (connect_result->input_devices_size())
+        {
+            std::vector<mir::input::DeviceData> devices;
+
+            devices.reserve(connect_result->input_devices_size());
+
+            for (auto const& dev : connect_result->input_devices())
+                devices.emplace_back(dev.id(), dev.capabilities(), dev.name(), dev.unique_id());
+
+            input_devices->update_devices(std::move(devices));
+        }
     }
     catch (std::exception const& e)
     {
@@ -984,11 +998,6 @@ mir::client::rpc::DisplayServer& MirConnection::display_server()
     return server;
 }
 
-std::shared_ptr<mir::logging::Logger> const& MirConnection::the_logger() const
-{
-    return logger;
-}
-
 MirWaitHandle* MirConnection::release_buffer_stream(
     mir::client::ClientBufferStream* stream,
     mir_buffer_stream_callback callback,
@@ -1018,7 +1027,7 @@ void MirConnection::release_consumer_stream(mir::client::ClientBufferStream* str
     surface_map->erase(stream->rpc_id());
 }
 
-std::shared_ptr<mcl::DisplayConfiguration::Config> MirConnection::snapshot_display_configuration() const
+std::unique_ptr<mir::protobuf::DisplayConfiguration> MirConnection::snapshot_display_configuration() const
 {
     return display_configuration->take_snapshot();
 }

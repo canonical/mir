@@ -194,6 +194,8 @@ message DisplayOutput {
   optional uint32 preferred_mode = 14;
   optional uint32 power_mode = 15;
   optional sint32 orientation = 16;
+  optional float scale_factor = 17;
+  optional uint32 form_factor = 18;
 }
 
 message Connection {
@@ -202,6 +204,7 @@ message Connection {
   repeated DisplayOutput display_output = 3;
   optional DisplayConfiguration display_configuration = 4;
   repeated uint32 surface_pixel_format = 5;
+  repeated InputDeviceInfo input_devices = 6;
 
   optional string error = 127;
 }

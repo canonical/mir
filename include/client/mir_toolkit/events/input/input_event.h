@@ -91,7 +91,7 @@ extern "C" {
 MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev);
 
 /**
- * Retrieve the time at which an input event occured.
+ * Retrieve the time at which an input event occurred.
  *
  * \param [in] event The input event
  * \return           A timestamp in nanoseconds-since-epoch
@@ -99,7 +99,7 @@ MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev);
 int64_t mir_input_event_get_event_time(MirInputEvent const* ev);
 
 /**
- * Retrieve the type of an input event (e.g. key, touch...)
+ * Retrieve the type of an input event. E.g. key, touch...
  *
  * \param [in] event The input event
  * \return           The input event type

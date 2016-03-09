@@ -52,6 +52,7 @@ add_library(mirclientobjects OBJECT
   mir_cookie.cpp
   mir_connection.cpp
   mir_connection_api.cpp
+  mir_input_device_api.cpp
   mir_wait_handle.cpp
   mir_wait_api.cpp
   mir_surface.cpp

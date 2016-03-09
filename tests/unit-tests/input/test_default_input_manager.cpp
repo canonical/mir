@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -47,7 +47,7 @@ struct DefaultInputManagerTest : ::testing::Test
     md::ActionQueue platform_dispatchable;
     NiceMock<mtd::MockInputPlatform> platform;
     mir::Fd event_hub_fd{eventfd(0, EFD_CLOEXEC|EFD_NONBLOCK)};
-    mir::input::DefaultInputManager input_manager{mt::fake_shared(multiplexer)};
+    mir::input::DefaultInputManager input_manager{mt::fake_shared(multiplexer), mt::fake_shared(platform)};
 
     DefaultInputManagerTest()
     {
@@ -76,7 +76,6 @@ TEST_F(DefaultInputManagerTest, starts_platforms_on_start)
     EXPECT_CALL(platform, start()).Times(1);
     EXPECT_CALL(platform, dispatchable()).Times(1);
 
-    input_manager.add_platform(mt::fake_shared(platform));
     input_manager.start();
 
     // start() is synchronous, all start-up operations should be finished at this point
@@ -92,7 +91,6 @@ TEST_F(DefaultInputManagerTest, starts_platforms_after_start)
     EXPECT_CALL(platform, stop()).Times(1);
 
     input_manager.start();
-    input_manager.add_platform(mt::fake_shared(platform));
 
     EXPECT_TRUE(wait_for_multiplexer_dispatch());
 }
@@ -102,7 +100,6 @@ TEST_F(DefaultInputManagerTest, stops_platforms_on_stop)
     EXPECT_CALL(platform, stop()).Times(1);
 
     input_manager.start();
-    input_manager.add_platform(mt::fake_shared(platform));
     input_manager.stop();
 }
 
@@ -111,7 +108,6 @@ TEST_F(DefaultInputManagerTest, ignores_spurious_starts)
     EXPECT_CALL(platform, start()).Times(1);
 
     input_manager.start();
-    input_manager.add_platform(mt::fake_shared(platform));
     input_manager.start();
 
     EXPECT_TRUE(wait_for_multiplexer_dispatch());
@@ -123,7 +119,6 @@ TEST_F(DefaultInputManagerTest, ignores_spurious_stops)
     EXPECT_CALL(platform, stop()).Times(1);
 
     input_manager.start();
-    input_manager.add_platform(mt::fake_shared(platform));
     input_manager.stop();
     input_manager.stop();
 }
@@ -132,7 +127,6 @@ TEST_F(DefaultInputManagerTest, deals_with_parallel_starts)
     EXPECT_CALL(platform, start()).Times(1);
     const int more_than_one_thread = 10;
 
-    input_manager.add_platform(mt::fake_shared(platform));
     std::list<std::thread> threads;
     for (int i = 0; i != more_than_one_thread; ++i)
     {
@@ -154,7 +148,6 @@ TEST_F(DefaultInputManagerTest, deals_with_parallel_stops)
     EXPECT_CALL(platform, stop()).Times(1);
     const int more_than_one_thread = 10;
 
-    input_manager.add_platform(mt::fake_shared(platform));
     input_manager.start();
     std::list<std::thread> threads;
     for (int i = 0; i != more_than_one_thread; ++i)
