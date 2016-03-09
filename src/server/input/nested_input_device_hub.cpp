@@ -122,8 +122,7 @@ mi::NestedInputDeviceHub::NestedInputDeviceHub(std::shared_ptr<MirConnection> co
 
 void mir::input::NestedInputDeviceHub::update_devices()
 {
-    /// lock this thing or not?
-    std::unique_lock<std::mutex> lock(devices_guard);
+    std::lock_guard<std::mutex> lock(devices_guard);
     config = make_input_config(connection.get());
 
     auto deleted = std::move(devices);
@@ -159,7 +158,7 @@ void mir::input::NestedInputDeviceHub::update_devices()
         this,
         [this, new_devs = std::move(new_devs), deleted = std::move(deleted)]
         {
-            std::unique_lock<std::mutex> lock(devices_guard);
+            std::lock_guard<std::mutex> lock(devices_guard);
             for (auto const observer : observers)
             {
                 for (auto const& item : new_devs)
@@ -177,7 +176,7 @@ void mi::NestedInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver>
         this,
         [observer,this]
         {
-            std::unique_lock<std::mutex> lock(devices_guard);
+            std::lock_guard<std::mutex> lock(devices_guard);
             observers.push_back(observer);
             for (auto const& item : devices)
             {
@@ -199,10 +198,10 @@ void mi::NestedInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserver
                             });
 }
 
-void mi::NestedInputDeviceHub::for_each_input_device(std::function<void(std::shared_ptr<Device>const& device)> const& callback)
+void mi::NestedInputDeviceHub::for_each_input_device(std::function<void(Device const& device)> const& callback)
 {
-    std::unique_lock<std::mutex> lock(devices_guard);
+    std::lock_guard<std::mutex> lock(devices_guard);
     for (auto const& item : devices)
-        callback(item);
+        callback(*item);
 
 }

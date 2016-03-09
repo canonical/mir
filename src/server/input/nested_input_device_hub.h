@@ -46,7 +46,7 @@ public:
                          std::shared_ptr<mir::ServerActionQueue> const& observer_queue);
     void add_observer(std::shared_ptr<InputDeviceObserver> const&) override;
     void remove_observer(std::weak_ptr<InputDeviceObserver> const&) override;
-    void for_each_input_device(std::function<void(std::shared_ptr<Device>const& device)> const& callback) override;
+    void for_each_input_device(std::function<void(Device const& device)> const& callback) override;
 
 private:
     void update_devices();

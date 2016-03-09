@@ -186,9 +186,9 @@ TEST_F(NestedInput, nested_input_device_hub_lists_keyboard)
     nested_hub->for_each_input_device(
         [](auto const& dev)
         {
-            EXPECT_THAT(dev->name(), StrEq("keyboard"));
-            EXPECT_THAT(dev->unique_id(), StrEq("keyboard-uid"));
-            EXPECT_THAT(dev->capabilities(), Eq(mi::DeviceCapability::keyboard));
+            EXPECT_THAT(dev.name(), StrEq("keyboard"));
+            EXPECT_THAT(dev.unique_id(), StrEq("keyboard-uid"));
+            EXPECT_THAT(dev.capabilities(), Eq(mi::DeviceCapability::keyboard));
         });
 }
 

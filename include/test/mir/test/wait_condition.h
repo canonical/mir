@@ -60,7 +60,7 @@ struct WaitCondition
 
     void reset()
     {
-        std::unique_lock<std::mutex> ul(guard);
+        std::lock_guard<std::mutex> ul(guard);
         woken_ = false;
     }
 
