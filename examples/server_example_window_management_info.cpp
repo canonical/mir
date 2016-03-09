@@ -173,6 +173,8 @@ struct mir::examples::SurfaceInfo::SwappingPainter
         buffer_stream{buffer_stream}, buffer{nullptr}
     {
         swap_buffers();
+        if (!buffer)
+            throw std::runtime_error("no buffer after swap");
     }
 
     void swap_buffers()
@@ -252,15 +254,14 @@ void mir::examples::SurfaceInfo::init_titlebar(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface)
 {
-    //FIXME FIXME BEFORE PROPOSING
     auto stream = surface->primary_buffer_stream();
     try
     {
-        stream_painter = std::make_shared<AllocatingPainter>(stream, session, surface->size());
+        stream_painter = std::make_shared<SwappingPainter>(stream);
     }
     catch (...)
     {
-        stream_painter = std::make_shared<SwappingPainter>(stream);
+        stream_painter = std::make_shared<AllocatingPainter>(stream, session, surface->size());
     }
 }
 
