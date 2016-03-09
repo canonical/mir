@@ -249,6 +249,24 @@ private:
     std::shared_ptr<mclr::MirBasicRpcChannel> const channel;
 };
 
+MATCHER_P(BufferAllocationMatches, val, "")
+{
+    return ((arg->id().value() == val.id().value()) &&
+        (arg->buffer_requests_size() == 1) &&
+        (val.buffer_requests_size() == 1) &&
+        (arg->buffer_requests(0).width() == val.buffer_requests(0).width()) &&
+        (arg->buffer_requests(0).height() == val.buffer_requests(0).height()) &&
+        (arg->buffer_requests(0).pixel_format() == val.buffer_requests(0).pixel_format()) &&
+        (arg->buffer_requests(0).buffer_usage() == val.buffer_requests(0).buffer_usage()));
+}
+
+MATCHER_P(BufferReleaseMatches, val, "")
+{
+    return ((arg->id().value() == val.id().value()) &&
+        (arg->buffers_size() == 1) &&
+        (val.buffers_size() == 1) &&
+        (arg->buffers(0).buffer_id() == val.buffers(0).buffer_id()));
+}
 }
 
 struct MirConnectionTest : public testing::Test
@@ -883,8 +901,7 @@ TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
     params->set_height(size.height.as_int());
     params->set_buffer_usage(usage);
     params->set_pixel_format(format);
-//    EXPECT_CALL(*mock_channel, allocate_buffers(BufferAllocationMatches(mp_alloc),_,_))
-    EXPECT_CALL(*mock_channel, allocate_buffers(_));
+    EXPECT_CALL(*mock_channel, allocate_buffers(BufferAllocationMatches(mp_alloc)));
 
     connection->allocate_buffer(size, format, usage, nullptr, nullptr);
 }
@@ -896,8 +913,7 @@ TEST_F(MirConnectionTest, can_release_buffer_from_connection)
     auto released_buffer = release_msg.add_buffers();
     released_buffer->set_buffer_id(buffer_id);
 
-//    EXPECT_CALL(*mock_channel, release_buffers(BufferReleaseMatches(release_msg),_,_))
-    EXPECT_CALL(*mock_channel, release_buffers(_));
+    EXPECT_CALL(*mock_channel, release_buffers(BufferReleaseMatches(release_msg)));
 
     connection->release_buffer(buffer_id);
 }
