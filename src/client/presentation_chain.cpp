@@ -21,6 +21,7 @@
 #include "rpc/mir_display_server.h"
 #include "presentation_chain.h"
 #include "protobuf_to_native_buffer.h"
+#include "buffer_factory.h"
 #include <boost/throw_exception.hpp>
 #include <algorithm>
 
@@ -33,13 +34,13 @@ mcl::PresentationChain::PresentationChain(
     MirConnection* connection,
     int stream_id,
     mir::client::rpc::DisplayServer& server,
-    std::shared_ptr<mcl::ClientBufferFactory> const& cfactory,
-    std::shared_ptr<mcl::AsyncBufferFactory> const& factory) :
+    std::shared_ptr<mcl::ClientBufferFactory> const& native_buffer_factory,
+    std::shared_ptr<mcl::AsyncBufferFactory> const& mir_buffer_factory) :
     connection_(connection),
     stream_id(stream_id),
     server(server),
-    cfactory(cfactory),
-    factory(factory)
+    native_buffer_factory(native_buffer_factory),
+    mir_buffer_factory(mir_buffer_factory)
 {
 }
 
@@ -59,7 +60,7 @@ void mcl::PresentationChain::allocate_buffer(
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback cb, void* cb_context)
 {
-    factory->expect_buffer(cfactory, size, format, usage, cb, cb_context);
+    mir_buffer_factory->expect_buffer(native_buffer_factory, size, format, usage, cb, cb_context);
 
     mp::BufferAllocation request;
     request.mutable_id()->set_value(stream_id);
@@ -129,7 +130,7 @@ void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
         return;
     }
 
-    buffers.emplace_back(factory->generate_buffer(buffer));
+    buffers.emplace_back(mir_buffer_factory->generate_buffer(buffer, this));
 }
 
 void mcl::PresentationChain::buffer_unavailable()
@@ -149,69 +150,4 @@ MirConnection* mcl::PresentationChain::connection() const
 char const* mcl::PresentationChain::error_msg() const
 {
     return "";
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-mcl::AsyncBufferFactory::AllocationRequest::AllocationRequest(
-    std::shared_ptr<mcl::ClientBufferFactory> const& factory,
-    geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
-    mir_buffer_callback cb, void* cb_context) :
-    factory(factory),
-    size(size),
-    format(format),
-    usage(usage),
-    cb(cb),
-    cb_context(cb_context)
-{
-}
-
-void mcl::AsyncBufferFactory::expect_buffer(
-    std::shared_ptr<mcl::ClientBufferFactory> const& factory,
-    geometry::Size size,
-    MirPixelFormat format,
-    MirBufferUsage usage,
-    mir_buffer_callback cb,
-    void* cb_context)
-{
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    allocation_requests.emplace_back(
-        std::make_unique<AllocationRequest>(factory, size, format, usage, cb, cb_context));
-}
-
-std::unique_ptr<mcl::Buffer> mcl::AsyncBufferFactory::generate_buffer(
-    mir::protobuf::Buffer const& buffer)
-{
-    //must be new, allocate and send it.
-    auto request_it = std::find_if(allocation_requests.begin(), allocation_requests.end(),
-        [&buffer](std::unique_ptr<AllocationRequest> const& it)
-        {
-            return geom::Size{buffer.width(), buffer.height()} == it->size;
-        });
-
-    if (request_it == allocation_requests.end())
-        BOOST_THROW_EXCEPTION(std::logic_error("unrequested buffer received"));
-
-    auto b = std::make_unique<Buffer>(
-        (*request_it)->cb, (*request_it)->cb_context,
-        buffer.buffer_id(),
-        (*request_it)->factory->create_buffer(
-            mcl::protobuf_to_native_buffer(buffer),
-            (*request_it)->size, (*request_it)->format), nullptr);
-
-    allocation_requests.erase(request_it);
-    return std::move(b);
 }

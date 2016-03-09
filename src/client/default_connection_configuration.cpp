@@ -37,7 +37,7 @@
 #include "mir/client_platform_factory.h"
 #include "probing_client_platform_factory.h"
 #include "mir_event_distributor.h"
-#include "presentation_chain.h"
+#include "buffer_factory.h"
 
 namespace mcl = mir::client;
 
@@ -241,6 +241,6 @@ std::shared_ptr<mir::client::AsyncBufferFactory> mir::client::DefaultConnectionC
     return async_buffer_factory(
         [this] () -> std::shared_ptr<mir::client::AsyncBufferFactory>
         {
-            return std::make_shared<mir::client::AsyncBufferFactory>();
+            return std::make_shared<mir::client::BufferFactory>();
         });
 }

@@ -555,7 +555,6 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
     }
     catch (std::exception const& e)
     {
-    printf("IN HER.\n");
         connect_result->set_error(std::string{"Failed to process connect response: "} +
                                  boost::diagnostic_information(e));
     }
@@ -1093,10 +1092,10 @@ void MirConnection::context_created(ChainCreationRequest* request_raw)
 
     try
     {
-        if (!cbuffer_factory)
-            cbuffer_factory = platform->create_buffer_factory();
+        if (!client_buffer_factory)
+            client_buffer_factory = platform->create_buffer_factory();
         auto chain = std::make_shared<mcl::PresentationChain>(
-            this, protobuf_bs->id().value(), server, cbuffer_factory, buffer_factory);
+            this, protobuf_bs->id().value(), server, client_buffer_factory, buffer_factory);
 
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), chain);
 
