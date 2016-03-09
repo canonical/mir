@@ -40,6 +40,7 @@ class FakeInputDeviceImpl : public FakeInputDevice
 {
 public:
     FakeInputDeviceImpl(mir::input::InputDeviceInfo const& info);
+    void emit_device_removal() override;
     void emit_runtime_error() override;
     void emit_event(synthesis::KeyParameters const& key_params) override;
     void emit_event(synthesis::ButtonParameters const& button) override;
