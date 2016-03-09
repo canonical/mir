@@ -261,7 +261,10 @@ public:
         return disp_config;
     }
 
-//    std::
+    std::shared_ptr<mcl::AsyncBufferFactory> the_buffer_factory() override
+    {
+        return factory;
+    }
 private:
     std::shared_ptr<mcl::DisplayConfiguration> disp_config;
     std::shared_ptr<mcl::ClientPlatform> const platform;
@@ -915,6 +918,8 @@ TEST_F(MirConnectionTest, release_error_chain_doesnt_call_server)
 
 TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
 {
+    connection->connect("MirClientSurfaceTest", connected_callback, 0)->wait_for_all();
+
     geom::Size size { 32, 11 };
     auto format = mir_pixel_format_abgr_8888;
     auto usage = mir_buffer_usage_software;
@@ -925,7 +930,7 @@ TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
     params->set_buffer_usage(usage);
     params->set_pixel_format(format);
     EXPECT_CALL(*mock_channel, allocate_buffers(BufferAllocationMatches(mp_alloc)));
-    EXPECT_CALL(*mock_buffer_allocator, generate_buffer(_,_));
+    EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, size, format, usage, nullptr, nullptr));
 
     connection->allocate_buffer(size, format, usage, nullptr, nullptr);
 }

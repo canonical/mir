@@ -40,6 +40,7 @@
 #include "error_chain.h"
 #include "logging/perf_report.h"
 #include "lttng/perf_report.h"
+#include "buffer_factory.h"
 
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
@@ -1144,29 +1145,36 @@ void MirConnection::release_presentation_chain(MirPresentationChain* chain)
     }
 }
 
+void MirConnection::ignore()
+{
+}
+
 void MirConnection::allocate_buffer(
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback callback, void* context)
 {
-    (void)size;(void)format;(void)usage;(void)callback;(void)context;
-#if 0
-    {
-        std::lock_guard<decltype(mutex)> lk(mutex);
-        allocation_requests.emplace_back(
-            std::make_unique<AllocationRequest>(size, format, usage, callback, context));
-    }
-
     mp::BufferAllocation request;
     auto buffer_request = request.add_buffer_requests();
     buffer_request->set_width(size.width.as_int());
     buffer_request->set_height(size.height.as_int());
     buffer_request->set_pixel_format(format);
     buffer_request->set_buffer_usage(usage);
-    server.allocate_buffers(&request, ignored, gp::NewCallback(void_response.get(), ignored));
-#endif
+
+    if (!client_buffer_factory)
+        client_buffer_factory = platform->create_buffer_factory();
+    buffer_factory->expect_buffer(
+        client_buffer_factory,
+        size, format, usage,
+        callback, context);
+    server.allocate_buffers(&request, ignored.get(), gp::NewCallback(this, &MirConnection::ignore));
 }
 
 void MirConnection::release_buffer(int buffer_id)
 {
-    (void)buffer_id;
+    surface_map->erase(buffer_id);
+
+    mp::BufferRelease request;
+    auto released_buffer = request.add_buffers();
+    released_buffer->set_buffer_id(buffer_id);
+    server.release_buffers(&request, ignored.get(), gp::NewCallback(this, &MirConnection::ignore));
 }
