@@ -60,7 +60,7 @@ void mcl::PresentationChain::allocate_buffer(
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback cb, void* cb_context)
 {
-    mir_buffer_factory->expect_buffer(native_buffer_factory, size, format, usage, cb, cb_context);
+    mir_buffer_factory->expect_buffer(native_buffer_factory, this, size, format, usage, cb, cb_context);
 
     mp::BufferAllocation request;
     request.mutable_id()->set_value(stream_id);
@@ -130,7 +130,7 @@ void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
         return;
     }
 
-    buffers.emplace_back(mir_buffer_factory->generate_buffer(buffer, this));
+    buffers.emplace_back(mir_buffer_factory->generate_buffer(buffer));
 }
 
 void mcl::PresentationChain::buffer_unavailable()
