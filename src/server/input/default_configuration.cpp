@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -233,21 +233,34 @@ mir::DefaultServerConfiguration::the_input_manager()
             auto const options = the_options();
             bool input_opt = options->get<bool>(options::enable_input_opt);
 
-            // TODO nested input handling (== host_socket) should fold into a platform
-            if (!input_opt || options->is_set(options::host_socket_opt))
+            if (!input_opt)
             {
+                return std::make_shared<mi::NullInputManager>();
+            }
+            else if (options->is_set(options::host_socket_opt))
+            {
+                // TODO nested input handling (== host_socket) should fold into a platform
                 return std::make_shared<mi::NullInputManager>();
             }
             else
             {
-                auto platform = probe_input_platforms(*options, the_emergency_cleanup(), the_input_device_registry(),
-                                                       the_input_report(), *the_shared_library_prober_report());
+                auto const emergency_cleanup = the_emergency_cleanup();
+                auto const device_registry = the_input_device_registry();
+                auto const input_report = the_input_report();
 
-                auto const ret = std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer());
+                // Maybe the graphics platform also supplies input (e.g. mesa-x11 or nested)
+                // NB this makes the (valid) assumption that graphics initializes before input
+                auto platform = mi::input_platform_from_graphics_module(
+                    *the_graphics_platform(), *options, emergency_cleanup, device_registry, input_report);
 
-                ret->add_platform(std::move(platform));
+                // otherwise (usually) we probe for it
+                if (!platform)
+                {
+                    platform = probe_input_platforms(*options, emergency_cleanup, device_registry,
+                                                     input_report, *the_shared_library_prober_report());
+                }
 
-                return ret;
+                return std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), std::move(platform));
             }
         }
     );

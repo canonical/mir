@@ -38,7 +38,7 @@ struct ConnectionResourceMap : testing::Test
     std::shared_ptr<MirWaitHandle> wh { std::make_shared<MirWaitHandle>() };
     std::shared_ptr<MirSurface> surface{std::make_shared<MirSurface>("a string", nullptr, mf::SurfaceId{2}, wh)};
     std::shared_ptr<mcl::ClientBufferStream> stream{ std::make_shared<mtd::MockClientBufferStream>() }; 
-    std::shared_ptr<mcl::Buffer> buffer { std::make_shared<mcl::Buffer>(buffer_cb, nullptr, 0, nullptr) };
+    std::shared_ptr<mcl::Buffer> buffer { std::make_shared<mcl::Buffer>(buffer_cb, nullptr, 0, nullptr, nullptr) };
     mtd::MockProtobufServer mock_server;
     std::shared_ptr<mcl::PresentationChain> chain{ std::make_shared<mcl::PresentationChain>(
         nullptr, 0, mock_server, nullptr, nullptr) };

@@ -166,8 +166,18 @@ char const* mcl::PresentationChain::error_msg() const
 
 
 
-
-
+mcl::AsyncBufferFactory::AllocationRequest::AllocationRequest(
+    std::shared_ptr<mcl::ClientBufferFactory> const& factory,
+    geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
+    mir_buffer_callback cb, void* cb_context) :
+    factory(factory),
+    size(size),
+    format(format),
+    usage(usage),
+    cb(cb),
+    cb_context(cb_context)
+{
+}
 
 void mcl::AsyncBufferFactory::expect_buffer(
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
@@ -200,21 +210,8 @@ std::unique_ptr<mcl::Buffer> mcl::AsyncBufferFactory::generate_buffer(
         buffer.buffer_id(),
         (*request_it)->factory->create_buffer(
             mcl::protobuf_to_native_buffer(buffer),
-            (*request_it)->size, (*request_it)->format));
+            (*request_it)->size, (*request_it)->format), nullptr);
+
     allocation_requests.erase(request_it);
     return std::move(b);
 }
-
-mcl::AsyncBufferFactory::AllocationRequest::AllocationRequest(
-    std::shared_ptr<mcl::ClientBufferFactory> const& factory,
-    geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
-    mir_buffer_callback cb, void* cb_context) :
-    factory(factory),
-    size(size),
-    format(format),
-    usage(usage),
-    cb(cb),
-    cb_context(cb_context)
-{
-}
-

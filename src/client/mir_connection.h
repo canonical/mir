@@ -42,6 +42,10 @@
 
 namespace mir
 {
+namespace input
+{
+class InputDevices;
+}
 namespace protobuf
 {
 class BufferStream;
@@ -179,6 +183,10 @@ public:
 
     mir::client::rpc::DisplayServer& display_server();
     mir::client::rpc::DisplayServerDebug& debug_display_server();
+    std::shared_ptr<mir::input::InputDevices> const& the_input_devices() const
+    {
+        return input_devices;
+    }
 
 private:
     //google cant have callbacks with more than 2 args
@@ -278,6 +286,7 @@ private:
     std::vector<MirWaitHandle*> release_wait_handles;
 
     std::shared_ptr<mir::client::DisplayConfiguration> const display_configuration;
+    std::shared_ptr<mir::input::InputDevices> const input_devices;
 
     std::shared_ptr<mir::client::LifecycleControl> const lifecycle_control;
 

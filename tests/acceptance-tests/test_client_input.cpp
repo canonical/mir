@@ -172,14 +172,19 @@ struct TestClientInput : mtf::HeadlessInProcessServer
     }
 
     std::shared_ptr<mtf::PlacementApplyingShell> shell;
-    std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
-        };
+    std::string const keyboard_name = "keyboard";
+    std::string const keyboard_unique_id = "keyboard-uid";
+    std::string const mouse_name = "mouse";
+    std::string const mouse_unique_id = "mouse-uid";
+    std::string const touchscreen_name = "touchscreen";
+    std::string const touchscreen_unique_id = "touchscreen-uid";
+    std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{mtf::add_fake_input_device(
+        mi::InputDeviceInfo{keyboard_name, keyboard_unique_id, mi::DeviceCapability::keyboard})};
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})
-        };
-    std::unique_ptr<mtf::FakeInputDevice> fake_touch_screen{mtf::add_fake_input_device(mi::InputDeviceInfo{
-        "touch screen", "touch-screen-uid", mi::DeviceCapability::touchscreen | mi::DeviceCapability::multitouch})};
+        mtf::add_fake_input_device(mi::InputDeviceInfo{mouse_name, mouse_unique_id, mi::DeviceCapability::pointer})};
+    std::unique_ptr<mtf::FakeInputDevice> fake_touch_screen{mtf::add_fake_input_device(
+        mi::InputDeviceInfo{touchscreen_name, touchscreen_unique_id,
+                            mi::DeviceCapability::touchscreen | mi::DeviceCapability::multitouch})};
 
     std::string first{"first"};
     std::string second{"second"};
@@ -753,4 +758,85 @@ TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client
     client.all_events_received.wait_for_at_most_seconds(10);
 }
 
+MATCHER_P3(ADeviceMatches, name, unique_id, caps, "")
+{
+    auto one_of_the_devices_matched = false;
+    for (size_t i = 0, e = mir_input_config_device_count(arg); i != e; ++i)
+    {
+        auto dev = mir_input_config_get_device(arg, i);
+        if (mir_input_device_get_name(dev) == name &&
+            mir_input_device_get_unique_id(dev) == unique_id &&
+            mir_input_device_get_capabilities(dev) == caps)
+            one_of_the_devices_matched = true;
+    }
+    return one_of_the_devices_matched;
+}
 
+TEST_F(TestClientInput, client_input_config_request_receives_all_attached_devices)
+{
+    auto con = mir_connect_sync(new_connection().c_str(), first.c_str());
+    auto config = mir_connection_create_input_config(con);
+
+    EXPECT_THAT(mir_input_config_device_count(config), Eq(3));
+
+    EXPECT_THAT(config, ADeviceMatches(keyboard_name, keyboard_unique_id, mir_input_device_capability_keyboard));
+    EXPECT_THAT(config, ADeviceMatches(mouse_name, mouse_unique_id, mir_input_device_capability_pointer));
+    EXPECT_THAT(config, ADeviceMatches(touchscreen_name, touchscreen_unique_id,
+                                        uint32_t(mir_input_device_capability_touchscreen |
+                                                 mir_input_device_capability_multitouch)));
+
+    mir_input_config_destroy(config);
+    mir_connection_release(con);
+}
+
+
+TEST_F(TestClientInput, callback_function_triggered_on_input_device_addition)
+{
+    Client a_client(new_connection(), first);
+    mt::WaitCondition callback_triggered;
+    mir_connection_set_input_config_change_callback(
+        a_client.connection,
+        [](MirConnection*, void* cond)
+        {
+            static_cast<mt::WaitCondition*>(cond)->wake_up_everyone();
+        },
+        static_cast<void*>(&callback_triggered));
+
+    std::string const touchpad{"touchpad"};
+    std::string const touchpad_uid{"touchpad"};
+    std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
+        mi::InputDeviceInfo{touchpad, touchpad_uid,
+                            mi::DeviceCapability::touchpad | mi::DeviceCapability::pointer})};
+
+    callback_triggered.wait_for_at_most_seconds(1);
+    EXPECT_THAT(callback_triggered.woken(), Eq(true));
+
+    auto config = mir_connection_create_input_config(a_client.connection);
+    EXPECT_THAT(mir_input_config_device_count(config), Eq(4));
+    EXPECT_THAT(config, ADeviceMatches(touchpad, touchpad_uid, uint32_t(mir_input_device_capability_touchpad |
+                                                                         mir_input_device_capability_pointer)));
+
+    mir_input_config_destroy(config);
+}
+
+TEST_F(TestClientInput, callback_function_triggered_on_input_device_removal)
+{
+    Client a_client(new_connection(), first);
+    mt::WaitCondition callback_triggered;
+    mir_connection_set_input_config_change_callback(
+        a_client.connection,
+        [](MirConnection*, void* cond)
+        {
+            static_cast<mt::WaitCondition*>(cond)->wake_up_everyone();
+        },
+        static_cast<void*>(&callback_triggered));
+
+    fake_keyboard->emit_device_removal();
+    callback_triggered.wait_for_at_most_seconds(1);
+
+    EXPECT_THAT(callback_triggered.woken(), Eq(true));
+
+    auto config = mir_connection_create_input_config(a_client.connection);
+    EXPECT_THAT(mir_input_config_device_count(config), Eq(2));
+    mir_input_config_destroy(config);
+}
