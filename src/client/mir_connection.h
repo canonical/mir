@@ -42,6 +42,10 @@
 
 namespace mir
 {
+namespace input
+{
+class InputDevices;
+}
 namespace protobuf
 {
 class BufferStream;
@@ -179,6 +183,10 @@ public:
 
     mir::client::rpc::DisplayServer& display_server();
     mir::client::rpc::DisplayServerDebug& debug_display_server();
+    std::shared_ptr<mir::input::InputDevices> const& the_input_devices() const
+    {
+        return input_devices;
+    }
 
     void allocate_buffer(
         mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
@@ -266,7 +274,7 @@ private:
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;
-    std::shared_ptr<mir::client::ClientBufferFactory> cbuffer_factory;
+    std::shared_ptr<mir::client::ClientBufferFactory> client_buffer_factory;
     std::shared_ptr<EGLNativeDisplayType> native_display;
 
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
@@ -283,6 +291,7 @@ private:
     std::vector<MirWaitHandle*> release_wait_handles;
 
     std::shared_ptr<mir::client::DisplayConfiguration> const display_configuration;
+    std::shared_ptr<mir::input::InputDevices> const input_devices;
 
     std::shared_ptr<mir::client::LifecycleControl> const lifecycle_control;
 

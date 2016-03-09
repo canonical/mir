@@ -46,6 +46,11 @@ mtf::FakeInputDeviceImpl::FakeInputDeviceImpl(mi::InputDeviceInfo const& info)
     mtf::StubInputPlatform::add(device);
 }
 
+void mtf::FakeInputDeviceImpl::emit_device_removal()
+{
+    mtf::StubInputPlatform::remove(device);
+}
+
 void mtf::FakeInputDeviceImpl::emit_runtime_error()
 {
     queue->enqueue([]()

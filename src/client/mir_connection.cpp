@@ -27,6 +27,7 @@
 #include "rpc/mir_basic_rpc_channel.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/dispatch/threaded_dispatcher.h"
+#include "mir/input/input_devices.h"
 #include "connection_configuration.h"
 #include "display_configuration.h"
 #include "connection_surface_map.h"
@@ -258,6 +259,7 @@ MirConnection::MirConnection(
         client_platform_factory(conf.the_client_platform_factory()),
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
+        input_devices{conf.the_input_devices()},
         lifecycle_control(conf.the_lifecycle_control()),
         ping_handler{conf.the_ping_handler()},
         event_handler_register(conf.the_event_handler_register()),
@@ -354,9 +356,12 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
 
     try
     {
+        std::string name{spec.surface_name.is_set() ?
+                         spec.surface_name.value() : ""};
+
         stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, platform,
-            surface_proto->buffer_stream(), make_perf_report(logger), std::string{},
+            surface_proto->buffer_stream(), make_perf_report(logger), name,
             mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
     }
     catch (std::exception const& error)
@@ -536,10 +541,21 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
         {
             this->pong(serial);
         });
+
+        if (connect_result->input_devices_size())
+        {
+            std::vector<mir::input::DeviceData> devices;
+
+            devices.reserve(connect_result->input_devices_size());
+
+            for (auto const& dev : connect_result->input_devices())
+                devices.emplace_back(dev.id(), dev.capabilities(), dev.name(), dev.unique_id());
+
+            input_devices->update_devices(std::move(devices));
+        }
     }
     catch (std::exception const& e)
     {
-    printf("IN HER.\n");
         connect_result->set_error(std::string{"Failed to process connect response: "} +
                                  boost::diagnostic_information(e));
     }
@@ -1077,10 +1093,10 @@ void MirConnection::context_created(ChainCreationRequest* request_raw)
 
     try
     {
-        if (!cbuffer_factory)
-            cbuffer_factory = platform->create_buffer_factory();
+        if (!client_buffer_factory)
+            client_buffer_factory = platform->create_buffer_factory();
         auto chain = std::make_shared<mcl::PresentationChain>(
-            this, protobuf_bs->id().value(), server, cbuffer_factory, buffer_factory);
+            this, protobuf_bs->id().value(), server, client_buffer_factory, buffer_factory);
 
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), chain);
 

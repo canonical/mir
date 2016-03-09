@@ -21,6 +21,7 @@
 #include "mir/test/doubles/mock_client_buffer.h"
 #include "mir/test/fake_shared.h"
 #include "src/client/presentation_chain.h"
+#include "src/client/buffer_factory.h"
 #include "mir/client_buffer_factory.h"
 
 #include <mutex>
@@ -149,7 +150,7 @@ TEST_F(PresentationChain, returns_associated_connection)
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
-        std::make_shared<mcl::AsyncBufferFactory>());
+        std::make_shared<mcl::BufferFactory>());
     EXPECT_THAT(chain.connection(), Eq(connection));
 }
 
@@ -158,7 +159,7 @@ TEST_F(PresentationChain, returns_associated_rpc_id)
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
-        std::make_shared<mcl::AsyncBufferFactory>());
+        std::make_shared<mcl::BufferFactory>());
     EXPECT_THAT(chain.rpc_id(), Eq(rpc_id));
 }
 
@@ -179,7 +180,7 @@ TEST_F(PresentationChain, creates_buffer_when_asked)
  
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
-        factory, std::make_shared<mcl::AsyncBufferFactory>());
+        factory, std::make_shared<mcl::BufferFactory>());
     chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
 
     EXPECT_FALSE(buffer.buffer_is_set());
@@ -226,7 +227,7 @@ TEST_F(PresentationChain, creates_correct_buffer_when_buffers_arrive)
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
-        std::make_shared<mcl::AsyncBufferFactory>());
+        std::make_shared<mcl::BufferFactory>());
 
     for (auto i = 0u; i < num_buffers; i++)
         chain.allocate_buffer(sizes[i], format, usage, buffer_callback, &buffer[i]);
@@ -260,7 +261,7 @@ TEST_F(PresentationChain, frees_buffer_when_asked)
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
-        std::make_shared<mcl::AsyncBufferFactory>());
+        std::make_shared<mcl::BufferFactory>());
 
     chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
     chain.buffer_available(ipc_buf);
@@ -286,7 +287,7 @@ TEST_F(PresentationChain, submits_buffer_when_asked)
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
-        std::make_shared<mcl::AsyncBufferFactory>());
+        std::make_shared<mcl::BufferFactory>());
     chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
     chain.buffer_available(ipc_buf);
     auto b = buffer.wait_for_buffer();
@@ -313,7 +314,7 @@ TEST_F(PresentationChain, updates_buffer)
 
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server, factory,
-        std::make_shared<mcl::AsyncBufferFactory>());
+        std::make_shared<mcl::BufferFactory>());
     chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
     chain.buffer_available(ipc_buf);
     auto b = buffer.wait_for_buffer();
@@ -335,7 +336,7 @@ TEST_F(PresentationChain, double_submission_throws)
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
-        std::make_shared<mcl::AsyncBufferFactory>());
+        std::make_shared<mcl::BufferFactory>());
     chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
     chain.buffer_available(ipc_buf);
     auto b = buffer.wait_for_buffer();
@@ -359,7 +360,7 @@ TEST_F(PresentationChain, callback_invoked_when_buffer_returned_from_allocation_
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
-        std::make_shared<mcl::AsyncBufferFactory>());
+        std::make_shared<mcl::BufferFactory>());
     chain.allocate_buffer(size, format, usage, counting_buffer_callback, &counter);
     chain.buffer_available(ipc_buf);
     std::unique_lock<std::mutex> lk(counter.mut);

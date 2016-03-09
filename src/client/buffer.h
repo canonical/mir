@@ -37,7 +37,8 @@ public:
     Buffer(
         mir_buffer_callback cb, void* context,
         int buffer_id,
-        std::shared_ptr<ClientBuffer> const& buffer);
+        std::shared_ptr<ClientBuffer> const& buffer,
+        MirPresentationChain* chain);
     int rpc_id() const;
 
     void submitted();
@@ -50,6 +51,7 @@ public:
     MirNativeFence* get_fence() const;
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds);
 
+    MirPresentationChain* allocating_chain() const;
 private:
     mir_buffer_callback cb;
     void* cb_context;
@@ -59,6 +61,7 @@ private:
     std::mutex mutex;
     bool owned;
     std::shared_ptr<MemoryRegion> mapped_region;
+    MirPresentationChain* const chain;
 };
 }
 }

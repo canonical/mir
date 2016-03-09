@@ -94,8 +94,17 @@ void mtf::StubInputPlatform::remove(std::shared_ptr<mir::input::InputDevice> con
     if (!input_platform)
         BOOST_THROW_EXCEPTION(std::runtime_error("No stub input platform available"));
 
+    std::lock_guard<decltype(device_store_guard)> lk{device_store_guard};
+    device_store.erase(
+        std::remove_if(begin(device_store),
+                       end(device_store),
+                       [dev](auto weak_dev)
+                       {
+                           return (weak_dev.lock() == dev);
+                       }),
+        end(device_store));
     input_platform->platform_queue->enqueue(
-        [registry=input_platform->registry,dev]
+        [ registry = input_platform->registry, dev ]
         {
             registry->remove_device(dev);
         });

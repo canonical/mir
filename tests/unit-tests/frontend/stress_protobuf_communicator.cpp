@@ -35,7 +35,7 @@
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "src/client/rpc/mir_display_server.h"
-#include "src/client/presentation_chain.h"
+#include "src/client/buffer_factory.h"
 #include "mir/input/input_devices.h"
 
 #include <gtest/gtest.h>
@@ -167,7 +167,7 @@ StubProtobufClient::StubProtobufClient(
     channel(mir::client::rpc::make_rpc_channel(
         socket_file,
         std::make_shared<mir::client::ConnectionSurfaceMap>(),
-        std::make_shared<mir::client::AsyncBufferFactory>(),
+        std::make_shared<mir::client::BufferFactory>(),
         std::make_shared<mir::client::DisplayConfiguration>(),
         std::make_shared<mir::input::InputDevices>(),
         rpc_report,
