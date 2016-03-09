@@ -252,6 +252,7 @@ void mir::examples::SurfaceInfo::init_titlebar(
     std::shared_ptr<scene::Session> const& session,
     std::shared_ptr<scene::Surface> const& surface)
 {
+    //FIXME FIXME BEFORE PROPOSING
     auto stream = surface->primary_buffer_stream();
     try
     {
