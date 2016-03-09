@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "presentation_chain.h"
+#include "mir_connection.h"
 #include "buffer.h"
 #include "mir/require.h"
 #include "mir/uncaught.h"
@@ -38,7 +39,8 @@ void mir_presentation_chain_allocate_buffer(
 try
 {
     mir::require(chain);
-    chain->allocate_buffer(mir::geometry::Size{width, height}, format, usage, cb, context);
+    chain->connection()->allocate_buffer(
+        mir::geometry::Size{width, height}, format, usage, cb, context);
 }
 catch (std::exception const& ex)
 {

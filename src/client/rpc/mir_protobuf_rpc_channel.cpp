@@ -306,11 +306,9 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
 
         if (auto map = surface_map.lock())
         {
-            //if(seq.buffer_request().id())
-            //{
             try
             {
-                if (seq.buffer_request().has_id())
+                if(seq.buffer_request().id().value() >= 0)
                 {
                     map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
                     [&] (mcl::BufferReceiver* receiver) {
