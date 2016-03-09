@@ -19,14 +19,18 @@
 #include "mir/test/doubles/fake_alarm_factory.h"
 
 #include <numeric>
+#include <algorithm>
 
 namespace mtd = mir::test::doubles;
 
 class mtd::FakeAlarmFactory::FakeAlarm : public mt::Alarm
 {
 public:
-    FakeAlarm(std::function<void()> const& callback,
-        std::shared_ptr<mir::time::Clock> const& clock);
+    FakeAlarm(
+        std::function<void()> const& callback,
+        std::shared_ptr<mir::time::Clock> const& clock,
+        std::function<void(FakeAlarm*)> const& on_destruction);
+    ~FakeAlarm() override;
 
     void time_updated();
     int wakeup_count() const;
@@ -43,18 +47,26 @@ private:
     State alarm_state;
     mir::time::Timestamp triggers_at;
     std::shared_ptr<mt::Clock> clock;
+    std::function<void(FakeAlarm*)> const on_destruction;
 };
 
 
 mtd::FakeAlarmFactory::FakeAlarm::FakeAlarm(
     std::function<void()> const& callback,
-    std::shared_ptr<mir::time::Clock> const& clock)
+    std::shared_ptr<mir::time::Clock> const& clock,
+    std::function<void(FakeAlarm*)> const& on_destruction)
     : triggered_count{0},
       callback{callback},
       alarm_state{State::cancelled},
       triggers_at{mir::time::Timestamp::max()},
-      clock{clock}
+      clock{clock},
+      on_destruction{on_destruction}
 {
+}
+
+mtd::FakeAlarmFactory::FakeAlarm::~FakeAlarm()
+{
+    on_destruction(this);
 }
 
 void mtd::FakeAlarmFactory::FakeAlarm::time_updated()
@@ -122,7 +134,13 @@ mtd::FakeAlarmFactory::FakeAlarmFactory()
 std::unique_ptr<mt::Alarm> mtd::FakeAlarmFactory::create_alarm(
     std::function<void()> const& callback)
 {
-    std::unique_ptr<mt::Alarm> alarm = std::make_unique<FakeAlarm>(callback, clock);
+    std::unique_ptr<mt::Alarm> alarm = std::make_unique<FakeAlarm>(
+        callback,
+        clock,
+        [this](FakeAlarm* destroying)
+        {
+            alarms.erase(std::remove(alarms.begin(), alarms.end(), destroying), alarms.end());
+        });
     alarms.push_back(static_cast<FakeAlarm*>(alarm.get()));
     return alarm;
 }
@@ -136,7 +154,9 @@ std::unique_ptr<mt::Alarm> mtd::FakeAlarmFactory::create_alarm(
 void mtd::FakeAlarmFactory::advance_by(mt::Duration step)
 {
     clock->advance_by(step);
-    for (auto& alarm : alarms)
+    // Guard against alarms deleting themselves from their callback...
+    auto temp_alarms = alarms;
+    for (auto& alarm : temp_alarms)
     {
         alarm->time_updated();
     }
