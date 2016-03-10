@@ -1,14 +1,14 @@
-#mir_add_wrapped_executable(mir_demo_standalone_render_surfaces
-#  render_surfaces.cpp
-#  buffer_render_target.cpp
-#  image_renderer.cpp
-#)
+mir_add_wrapped_executable(mir_demo_standalone_render_surfaces
+  render_surfaces.cpp
+  buffer_render_target.cpp
+  image_renderer.cpp
+)
 
-#target_link_libraries(mir_demo_standalone_render_surfaces
-#  mirserver
-#  exampleserverconfig
-#  ${Boost_LIBRARIES}
-#)
+target_link_libraries(mir_demo_standalone_render_surfaces
+  mirserver
+  exampleserverconfig
+  ${Boost_LIBRARIES}
+)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
