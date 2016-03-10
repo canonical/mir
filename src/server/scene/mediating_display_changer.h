@@ -81,7 +81,7 @@ public:
         std::chrono::seconds timeout) override;
     void confirm_base_configuration(
         std::shared_ptr<frontend::Session> const& session,
-        std::shared_ptr<graphics::DisplayConfiguration> const& confirmed_conf);
+        std::shared_ptr<graphics::DisplayConfiguration> const& confirmed_conf) override;
 
     /* From mir::DisplayChanger */
     void configure_for_hardware_change(
