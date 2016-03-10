@@ -70,9 +70,8 @@ typedef struct SubmissionInfo
     pthread_cond_t cv;
 } SubmissionInfo;
 
-static void available_callback(MirPresentationChain* chain, MirBuffer* buffer, void* client_context)
+static void available_callback(MirBuffer* buffer, void* client_context)
 {
-    (void)chain;
     SubmissionInfo* info = (SubmissionInfo*) client_context;
     pthread_mutex_lock(&info->lock);
     info->available = 1;

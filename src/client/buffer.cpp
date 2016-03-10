@@ -34,7 +34,7 @@ mcl::Buffer::Buffer(
     owned(true),
     connection(connection)
 {
-    cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
+    cb(reinterpret_cast<MirBuffer*>(this), cb_context);
 }
 
 int mcl::Buffer::rpc_id() const
@@ -58,7 +58,7 @@ void mcl::Buffer::received(MirBufferPackage const& update_package)
     {
         owned = true;
         buffer->update_from(update_package);
-        cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
+        cb(reinterpret_cast<MirBuffer*>(this), cb_context);
     }
 }
     

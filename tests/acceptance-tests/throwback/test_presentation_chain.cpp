@@ -188,7 +188,7 @@ private:
     unsigned int callback_count = 0;
 };
 
-void buffer_callback(MirPresentationChain*, MirBuffer* buffer, void* context)
+void buffer_callback(MirBuffer* buffer, void* context)
 {
     auto sync = reinterpret_cast<MirBufferSync*>(context);
     sync->buffer_available(buffer);
