@@ -165,7 +165,7 @@ TEST_F(MirBufferTest, callback_called_when_available_from_server_return)
 TEST_F(MirBufferTest, updates_package_when_server_returns)
 {
     EXPECT_CALL(*mock_client_buffer, update_from(Ref(update_message)));
-    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr);
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
     buffer.submitted();
     buffer.received(update_message);
 }
