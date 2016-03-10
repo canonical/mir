@@ -332,7 +332,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     {
                         printf("MAPPING.\n");
                         map->insert(seq.buffer_request().buffer().buffer_id(), 
-                            buffer_factory->generate_buffer(seq.buffer_request().buffer(), nullptr));
+                            buffer_factory->generate_buffer(seq.buffer_request().buffer()));
                     }
                 }
             }
@@ -342,12 +342,6 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     close(seq.buffer_request().buffer().fd(i));
                 throw e;
             }
-            //}
-            //else
-            //{
-            //      alloc->generate_buffer()
-            //      map->insert_buffer();
-            //}
         }
         else
         {

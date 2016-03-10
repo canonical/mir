@@ -20,8 +20,6 @@
 #define MIR_CLIENT_CONNECTION_SURFACE_MAP_H_
 
 #include "surface_map.h"
-#include "mir/geometry/size.h"
-#include "mir_toolkit/client_types_nbs.h"
 
 #include <shared_mutex>
 #include <unordered_map>

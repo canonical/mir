@@ -36,10 +36,10 @@ public:
     virtual ~AsyncBufferFactory() = default;
     AsyncBufferFactory() = default;
 
-    virtual std::unique_ptr<Buffer> generate_buffer(
-        mir::protobuf::Buffer const& buffer, MirConnection* connection) = 0;
+    virtual std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) = 0;
     virtual void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
+        MirConnection* connection,
         geometry::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
@@ -53,10 +53,10 @@ private:
 class BufferFactory : public AsyncBufferFactory
 {
 public:
-    std::unique_ptr<Buffer> generate_buffer(
-        mir::protobuf::Buffer const& buffer, MirConnection* connection) override;
+    std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) override;
     void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
+        MirConnection* connection,
         geometry::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
@@ -69,6 +69,7 @@ private:
     {
         AllocationRequest(
             std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
+            MirConnection* connection,
             geometry::Size size,
             MirPixelFormat format,
             MirBufferUsage usage,
@@ -76,6 +77,7 @@ private:
             void* cb_context);
 
         std::shared_ptr<ClientBufferFactory> const native_buffer_factory;
+        MirConnection* connection;
         geometry::Size size;
         MirPixelFormat format;
         MirBufferUsage usage;

@@ -27,9 +27,11 @@ namespace geom = mir::geometry;
 
 mcl::BufferFactory::AllocationRequest::AllocationRequest(
     std::shared_ptr<mcl::ClientBufferFactory> const& native_buffer_factory,
+    MirConnection* connection,
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback cb, void* cb_context) :
     native_buffer_factory(native_buffer_factory),
+    connection(connection),
     size(size),
     format(format),
     usage(usage),
@@ -40,6 +42,7 @@ mcl::BufferFactory::AllocationRequest::AllocationRequest(
 
 void mcl::BufferFactory::expect_buffer(
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
+    MirConnection* connection,
     geometry::Size size,
     MirPixelFormat format,
     MirBufferUsage usage,
@@ -48,12 +51,12 @@ void mcl::BufferFactory::expect_buffer(
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     allocation_requests.emplace_back(
-        std::make_unique<AllocationRequest>(factory, size, format, usage, cb, cb_context));
+        std::make_unique<AllocationRequest>(factory, connection, size, format, usage, cb, cb_context));
 }
 
-std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(
-    mir::protobuf::Buffer const& buffer, MirConnection* connection)
+std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(mir::protobuf::Buffer const& buffer)
 {
+    std::lock_guard<decltype(mutex)> lk(mutex);
     //must be new, allocate and send it.
     auto request_it = std::find_if(allocation_requests.begin(), allocation_requests.end(),
         [&buffer](std::unique_ptr<AllocationRequest> const& it)
@@ -69,7 +72,8 @@ std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(
         buffer.buffer_id(),
         (*request_it)->native_buffer_factory->create_buffer(
             mcl::protobuf_to_native_buffer(buffer),
-            (*request_it)->size, (*request_it)->format), connection);
+            (*request_it)->size, (*request_it)->format),
+            (*request_it)->connection);
 
     allocation_requests.erase(request_it);
     return std::move(b);

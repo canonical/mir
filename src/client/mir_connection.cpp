@@ -64,6 +64,10 @@ namespace geom = mir::geometry;
 
 namespace
 {
+void ignore()
+{
+}
+
 std::shared_ptr<mcl::PerfReport>
 make_perf_report(std::shared_ptr<ml::Logger> const& logger)
 {
@@ -1146,10 +1150,6 @@ void MirConnection::release_presentation_chain(MirPresentationChain* chain)
     }
 }
 
-void MirConnection::ignore()
-{
-}
-
 void MirConnection::allocate_buffer(
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback callback, void* context)
@@ -1166,9 +1166,10 @@ void MirConnection::allocate_buffer(
         client_buffer_factory = platform->create_buffer_factory();
     buffer_factory->expect_buffer(
         client_buffer_factory,
+        nullptr,
         size, format, usage,
         callback, context);
-    server.allocate_buffers(&request, ignored.get(), gp::NewCallback(this, &MirConnection::ignore));
+    server.allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }
 
 void MirConnection::release_buffer(int buffer_id)
@@ -1178,5 +1179,5 @@ void MirConnection::release_buffer(int buffer_id)
     mp::BufferRelease request;
     auto released_buffer = request.add_buffers();
     released_buffer->set_buffer_id(buffer_id);
-    server.release_buffers(&request, ignored.get(), gp::NewCallback(this, &MirConnection::ignore));
+    server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }

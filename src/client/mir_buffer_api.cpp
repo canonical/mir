@@ -39,8 +39,7 @@ void mir_presentation_chain_allocate_buffer(
 try
 {
     mir::require(chain);
-    chain->connection()->allocate_buffer(
-        mir::geometry::Size{width, height}, format, usage, cb, context);
+    chain->connection()->allocate_buffer(mir::geometry::Size{width, height}, format, usage, cb, context);
 }
 catch (std::exception const& ex)
 {

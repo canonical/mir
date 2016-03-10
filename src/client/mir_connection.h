@@ -247,8 +247,6 @@ private:
     void chain_error(std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request);
 
     void populate_server_package(MirPlatformPackage& platform_package) override;
-    void ignore();
-
     // MUST be first data member so it is destroyed last.
     struct Deregisterer
     { MirConnection* const self; ~Deregisterer(); } deregisterer;
