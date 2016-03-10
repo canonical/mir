@@ -18,6 +18,7 @@
 
 #include "mir/test/doubles/mock_client_buffer.h"
 #include "src/client/buffer.h"
+#include "mir_protobuf.pb.h"
 #include <gtest/gtest.h>
 
 namespace mcl = mir::client;
@@ -55,6 +56,7 @@ struct MirBufferTest : Test
     std::shared_ptr<mtd::MockClientBuffer> const mock_client_buffer {
         std::make_shared<NiceMock<mtd::MockClientBuffer>>() };
     std::chrono::nanoseconds timeout { 101 };
+    MirBufferPackage update_message;
 };
 
 }
@@ -156,8 +158,16 @@ TEST_F(MirBufferTest, callback_called_when_available_from_server_return)
     mcl::Buffer buffer(cb, &call_count, buffer_id, mock_client_buffer, nullptr, usage);
 
     buffer.submitted();
-    buffer.received();
+    buffer.received(update_message);
     EXPECT_THAT(call_count, Eq(2));
+}
+
+TEST_F(MirBufferTest, updates_package_when_server_returns)
+{
+    EXPECT_CALL(*mock_client_buffer, update_from(Ref(update_message)));
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr);
+    buffer.submitted();
+    buffer.received(update_message);
 }
 
 TEST_F(MirBufferTest, submitting_unowned_buffer_throws)
