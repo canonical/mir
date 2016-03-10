@@ -337,6 +337,23 @@ void mir_connection_preview_base_display_configuration(
     }
 }
 
+void mir_connection_confirm_base_display_configuration(
+    MirConnection* connection,
+    MirDisplayConfig const* config)
+{
+    mir::require(mir_connection_is_valid(connection));
+
+    try
+    {
+        connection->confirm_base_display_configuration(
+            *reinterpret_cast<mp::DisplayConfiguration const*>(config));
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+}
+
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(
     MirConnection* connection)
 {

@@ -225,6 +225,7 @@ MIR_CLIENT_9v19 {
 MIR_CLIENT_9_unreleased {
   global:
     mir_connection_apply_display_configuration;
+    mir_connection_confirm_base_display_configuration;
     mir_connection_create_display_configuration;
     mir_connection_create_input_config;
     mir_connection_preview_base_display_configuration;

@@ -176,6 +176,8 @@ public:
     void preview_base_display_configuration(
         mir::protobuf::DisplayConfiguration const& configuration,
         std::chrono::seconds timeout);
+    void confirm_base_display_configuration(
+        mir::protobuf::DisplayConfiguration const& configuration);
     void done_set_base_display_configuration();
 
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> rpc_channel() const

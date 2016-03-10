@@ -870,3 +870,59 @@ TEST_F(DisplayConfigurationTest, preview_base_display_configuration_reverts_afte
 
     client.disconnect();
 }
+
+TEST_F(DisplayConfigurationTest, display_configuration_sticks_after_confirmation)
+{
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    std::shared_ptr<MirDisplayConfig> old_config = client.get_base_config();
+    std::shared_ptr<MirDisplayConfig> new_config = client.get_base_config();
+
+    for (auto i = 0; i < mir_display_config_get_num_outputs(new_config.get()); ++i)
+    {
+        auto output = mir_display_config_get_mutable_output(new_config.get(), i);
+
+        for (auto j = 0; j < mir_output_get_num_modes(output); ++j)
+        {
+            auto mode = mir_output_get_mode(output, j);
+
+            if (mode != mir_output_get_current_mode(output))
+            {
+                mir_output_set_current_mode(output, mode);
+                break;
+            }
+        }
+    }
+
+    ASSERT_THAT(new_config.get(), Not(mt::DisplayConfigMatches(old_config.get())));
+
+    DisplayConfigMatchingContext context;
+    auto signalled_twice = std::make_shared<mt::Signal>();
+    context.matcher = [new_config, signalled_twice](MirDisplayConfig* conf)
+        {
+            static int call_count{0};
+            ++call_count;
+            EXPECT_THAT(conf, mt::DisplayConfigMatches(new_config.get()));
+            if (call_count == 2)
+            {
+                signalled_twice->raise();
+            }
+        };
+
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &new_display_config_matches,
+        &context);
+
+    mir_connection_preview_base_display_configuration(client.connection, new_config.get(), 10);
+
+    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{5}));
+
+    mir_connection_confirm_base_display_configuration(client.connection, new_config.get());
+
+    EXPECT_TRUE(signalled_twice->wait_for(std::chrono::seconds{10}));
+
+    client.disconnect();
+}
