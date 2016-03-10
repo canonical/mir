@@ -63,7 +63,7 @@ MATCHER_P(BufferRequestMatches, val, "")
         arg->buffer().buffer_id() == val.buffer().buffer_id());
 }
 
-void buffer_callback(MirPresentationChain*, MirBuffer*, void*)
+void buffer_callback(MirBuffer*, void*)
 {
 }
 }

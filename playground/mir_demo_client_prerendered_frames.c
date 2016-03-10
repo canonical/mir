@@ -171,8 +171,8 @@ int main(int argc, char** argv)
         buffer_available[i].available = 0;
         buffer_available[i].buffer = NULL;
 
-        mir_presentation_chain_allocate_buffer(
-            chain, width, height, format, usage, available_callback, &buffer_available[i]);
+        mir_connection_allocate_buffer(
+            connection, width, height, format, usage, available_callback, &buffer_available[i]);
 
         pthread_mutex_lock(&buffer_available[i].lock);
         while(!buffer_available[i].buffer)

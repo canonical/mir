@@ -201,8 +201,8 @@ TEST_F(PresentationChain, allocation_calls_callback)
     SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(),
+    mir_connection_allocate_buffer(
+        connection,
         size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
@@ -215,8 +215,8 @@ TEST_F(PresentationChain, has_native_buffer)
     SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(),
+    mir_connection_allocate_buffer(
+        connection,
         size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
@@ -233,8 +233,8 @@ TEST_F(PresentationChain, has_native_fence)
     SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(),
+    mir_connection_allocate_buffer(
+        connection,
         size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
@@ -251,8 +251,8 @@ TEST_F(PresentationChain, can_map_for_cpu_render)
     SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(),
+    mir_connection_allocate_buffer(
+        connection,
         size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
@@ -278,8 +278,8 @@ TEST_F(PresentationChain, DISABLED_submission_will_eventually_call_callback)
     auto num_iterations = 50u;
     for(auto& context : contexts)
     {
-        mir_presentation_chain_allocate_buffer(
-            surface.chain(),
+        mir_connection_allocate_buffer(
+            connection,
             size.width.as_int(), size.height.as_int(), pf, usage,
             buffer_callback, &context);
         ASSERT_TRUE(context.wait_for_buffer(10s));
@@ -304,8 +304,8 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback_reassociated)
     auto num_iterations = 50u;
     for(auto& context : contexts)
     {
-        mir_presentation_chain_allocate_buffer(
-            surface.chain(),
+        mir_connection_allocate_buffer(
+            connection,
             size.width.as_int(), size.height.as_int(), pf, usage,
             buffer_callback, &context);
         ASSERT_TRUE(context.wait_for_buffer(10s));
@@ -326,8 +326,8 @@ TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
     SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(),
+    mir_connection_allocate_buffer(
+        connection,
         size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 

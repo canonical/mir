@@ -29,7 +29,7 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-void buffer_cb(MirPresentationChain*, MirBuffer*, void*)
+void buffer_cb(MirBuffer*, void*)
 {
 }
 }
