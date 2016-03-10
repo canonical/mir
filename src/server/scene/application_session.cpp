@@ -242,13 +242,8 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::default_surface() const
 void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
-    auto p = checked_find(id);
-    auto const surface = p->second;
 
-    destroy_surface(
-        lock,
-        p,
-        surface, id);
+    destroy_surface(lock, checked_find(id));
 }
 
 std::string ms::ApplicationSession::name() const
@@ -390,28 +385,22 @@ void ms::ApplicationSession::destroy_surface(std::weak_ptr<Surface> const& surfa
     if (p == surfaces.end())
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid Surface"));
 
-    auto const id = p->first;
-
-    destroy_surface(
-        lock,
-        p,
-        ss, id);
+    destroy_surface(lock, p);
 }
 
-void ms::ApplicationSession::destroy_surface(
-    std::unique_lock<std::mutex>& lock,
-    Surfaces::const_iterator in_surfaces,
-    std::shared_ptr<Surface> const& surface,
-    frontend::SurfaceId id)
+void ms::ApplicationSession::destroy_surface(std::unique_lock<std::mutex>& lock, Surfaces::const_iterator in_surfaces)
 {
+    auto const surface = in_surfaces->second;
+    auto const id = in_surfaces->first;
+
     session_listener->destroying_surface(*this, surface);
     surfaces.erase(in_surfaces);
 
-    auto stream_it = this->streams.find(mir::frontend::BufferStreamId(id.as_value()));
-    if (stream_it != this->streams.end())
+    auto stream_it = streams.find(mir::frontend::BufferStreamId(id.as_value()));
+    if (stream_it != streams.end())
     {
         stream_it->second->force_requests_to_complete();
-        this->streams.erase(stream_it);
+        streams.erase(stream_it);
     }
 
     lock.unlock();
