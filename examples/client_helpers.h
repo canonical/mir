@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_EXAMLPES_CLIENT_HELPERS_H_
-#define MIR_EXAMLPES_CLIENT_HELPERS_H_
+#ifndef MIR_EXAMPLES_CLIENT_HELPERS_H_
+#define MIR_EXAMPLES_CLIENT_HELPERS_H_
 
 #include "mir_toolkit/mir_client_library.h"
 #include <EGL/egl.h>
