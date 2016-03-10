@@ -772,8 +772,8 @@ MATCHER_P3(ADeviceMatches, name, unique_id, caps, "")
     return one_of_the_devices_matched;
 }
 
-//FIXME: test will check multiple times for the expected config to workaround lp: #1555708.
-//       seems like we have some other synchronization problem.
+//Poll for the expected config to fix lp: #1555708. Client can't expect synchronization
+//with the server on the input config.
 TEST_F(TestClientInput, client_input_config_request_receives_all_attached_devices)
 {
     auto con = mir_connect_sync(new_connection().c_str(), first.c_str());
