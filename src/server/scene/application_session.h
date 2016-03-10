@@ -127,9 +127,9 @@ private:
     Streams streams;
 
     void destroy_surface(
-        std::shared_ptr<Surface> const& ss,
         std::unique_lock<std::mutex>& lock,
-        Surfaces::const_iterator p,
+        Surfaces::const_iterator in_surfaces,
+        std::shared_ptr<Surface> const& surface,
         frontend::SurfaceId id);
 };
 

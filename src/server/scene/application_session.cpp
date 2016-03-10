@@ -245,7 +245,10 @@ void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
     auto p = checked_find(id);
     auto const surface = p->second;
 
-    destroy_surface(surface, lock, p, id);
+    destroy_surface(
+        lock,
+        p,
+        surface, id);
 }
 
 std::string ms::ApplicationSession::name() const
@@ -389,17 +392,21 @@ void ms::ApplicationSession::destroy_surface(std::weak_ptr<Surface> const& surfa
 
     auto const id = p->first;
 
-    destroy_surface(ss, lock, p, id);
+    destroy_surface(
+        lock,
+        p,
+        ss, id);
 }
 
 void ms::ApplicationSession::destroy_surface(
-    std::shared_ptr<Surface> const& ss,
     std::unique_lock<std::mutex>& lock,
-    Surfaces::const_iterator p,
-    mf::SurfaceId id)
+    Surfaces::const_iterator in_surfaces,
+    std::shared_ptr<Surface> const& surface,
+    frontend::SurfaceId id)
 {
-    session_listener->destroying_surface(*this, ss);
-    surfaces.erase(p);
+    session_listener->destroying_surface(*this, surface);
+    surfaces.erase(in_surfaces);
+
     auto stream_it = this->streams.find(mir::frontend::BufferStreamId(id.as_value()));
     if (stream_it != this->streams.end())
     {
@@ -409,5 +416,5 @@ void ms::ApplicationSession::destroy_surface(
 
     lock.unlock();
 
-    surface_stack->remove_surface(ss);
+    surface_stack->remove_surface(surface);
 }
