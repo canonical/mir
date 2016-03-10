@@ -712,3 +712,32 @@ TEST_F(MediatingDisplayChangerTest, only_configuring_client_receives_preview_not
 
     alarm_factory.advance_smoothly_by(timeout + std::chrono::seconds{1});
 }
+
+TEST_F(MediatingDisplayChangerTest, only_one_client_can_preview_configuration_change_at_once)
+{
+    using namespace testing;
+
+    auto const mock_session1 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+    auto const mock_session2 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    auto new_config = std::make_shared<mtd::StubDisplayConfig>(1);
+
+    stub_session_container.insert_session(mock_session1);
+    stub_session_container.insert_session(mock_session2);
+
+    std::chrono::seconds const timeout{30};
+
+    changer->preview_base_configuration(
+        mock_session1,
+        new_config,
+        timeout);
+
+    EXPECT_THROW(
+        {
+            changer->preview_base_configuration(
+                mock_session2,
+                new_config,
+                timeout);
+        },
+        std::runtime_error);
+}

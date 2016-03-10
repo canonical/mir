@@ -17,6 +17,7 @@
  */
 
 #include <condition_variable>
+#include <boost/throw_exception.hpp>
 #include "mediating_display_changer.h"
 #include "session_container.h"
 #include "mir/scene/session.h"
@@ -159,23 +160,36 @@ ms::MediatingDisplayChanger::preview_base_configuration(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf,
     std::chrono::seconds timeout)
 {
+    {
+        std::lock_guard<std::mutex> lock{configuration_mutex};
+
+        if (preview_configuration_timeout)
+        {
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error{"Another client is currently changing base configuration"});
+        }
+
+        preview_configuration_timeout = alarm_factory->create_alarm(
+            [this, session]()
+                {
+                    if (auto live_session = session.lock())
+                    {
+                        apply_base_config(PauseResumeSystem);
+                        live_session->send_display_config(*base_configuration());
+                    }
+                });
+    }
+
     server_action_queue->enqueue(
         this,
         [this, conf, session, timeout]()
         {
             if (auto live_session = session.lock())
             {
-                preview_configuration_timeout = alarm_factory->create_alarm(
-                    [this, session]()
-                    {
-                        if (auto live_session = session.lock())
-                        {
-                            apply_base_config(PauseResumeSystem);
-                            live_session->send_display_config(*base_configuration());
-                        }
-                    });
-
-                preview_configuration_timeout->reschedule_in(timeout);
+                {
+                    std::lock_guard<std::mutex> lock{configuration_mutex};
+                    preview_configuration_timeout->reschedule_in(timeout);
+                }
 
                 apply_config(conf, PauseResumeSystem);
                 live_session->send_display_config(*conf);
