@@ -636,3 +636,79 @@ TEST_F(MediatingDisplayChangerTest, notifies_input_region_on_new_configuration)
     changer->configure(session,
                        mt::fake_shared(conf));
 }
+
+TEST_F(MediatingDisplayChangerTest, notifies_session_on_preview_base_configuration)
+{
+    using namespace testing;
+
+    mtd::NullDisplayConfiguration conf;
+    auto const mock_session = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    stub_session_container.insert_session(mock_session);
+
+    EXPECT_CALL(*mock_session, send_display_config(_));
+
+    changer->preview_base_configuration(
+        mock_session,
+        mt::fake_shared(conf),
+        std::chrono::seconds{1});
+}
+
+TEST_F(MediatingDisplayChangerTest, reverts_to_previous_configuration_on_timeout)
+{
+    using namespace testing;
+
+    auto new_config = std::make_shared<mtd::StubDisplayConfig>(1);
+    auto old_config = changer->base_configuration();
+
+    auto applied_config = old_config->clone();
+
+    ON_CALL(mock_display, configure(_))
+        .WillByDefault(Invoke([&applied_config](auto& conf) { applied_config = conf.clone(); }));
+
+    auto mock_session = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    stub_session_container.insert_session(mock_session);
+
+    std::chrono::seconds const timeout{30};
+
+    changer->preview_base_configuration(
+        mock_session,
+        new_config,
+        timeout);
+
+    EXPECT_THAT(*applied_config, mt::DisplayConfigMatches(std::cref(*new_config)));
+
+    alarm_factory.advance_smoothly_by(timeout - std::chrono::milliseconds{1});
+    EXPECT_THAT(*applied_config, mt::DisplayConfigMatches(std::cref(*new_config)));
+
+    alarm_factory.advance_smoothly_by(std::chrono::milliseconds{2});
+    alarm_factory.advance_smoothly_by(timeout);
+    EXPECT_THAT(*applied_config, mt::DisplayConfigMatches(std::cref(*old_config)));
+}
+
+TEST_F(MediatingDisplayChangerTest, only_configuring_client_receives_preview_notifications)
+{
+    using namespace testing;
+
+    mtd::NullDisplayConfiguration conf;
+    auto const mock_session1 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+    auto const mock_session2 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    auto new_config = std::make_shared<mtd::StubDisplayConfig>(1);
+    auto old_config = changer->base_configuration();
+
+    stub_session_container.insert_session(mock_session1);
+    stub_session_container.insert_session(mock_session2);
+
+    EXPECT_CALL(*mock_session2, send_display_config(_)).Times(0);
+
+    std::chrono::seconds const timeout{30};
+
+    changer->preview_base_configuration(
+        mock_session1,
+        new_config,
+        timeout);
+
+    alarm_factory.advance_smoothly_by(timeout + std::chrono::seconds{1});
+}
