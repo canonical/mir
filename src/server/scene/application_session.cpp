@@ -244,15 +244,8 @@ void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     auto p = checked_find(id);
     auto const surface = p->second;
-    session_listener->destroying_surface(*this, surface);
-    surfaces.erase(p);
-    auto stream_it = streams.find(mf::BufferStreamId(id.as_value()));
-    if (stream_it != streams.end())
-        streams.erase(stream_it);
 
-    lock.unlock();
-
-    surface_stack->remove_surface(surface);
+    destroy_surface(surface, lock, p, id);
 }
 
 std::string ms::ApplicationSession::name() const
@@ -396,14 +389,25 @@ void ms::ApplicationSession::destroy_surface(std::weak_ptr<Surface> const& surfa
 
     auto const id = p->first;
 
+    destroy_surface(ss, lock, p, id);
+}
+
+void ms::ApplicationSession::destroy_surface(
+    std::shared_ptr<Surface> const& ss,
+    std::unique_lock<std::mutex>& lock,
+    Surfaces::const_iterator p,
+    mf::SurfaceId id)
+{
     session_listener->destroying_surface(*this, ss);
     surfaces.erase(p);
-    auto stream_it = streams.find(mf::BufferStreamId(id.as_value()));
-    if (stream_it != streams.end())
-        streams.erase(stream_it);
+    auto stream_it = this->streams.find(mir::frontend::BufferStreamId(id.as_value()));
+    if (stream_it != this->streams.end())
+    {
+        stream_it->second->force_requests_to_complete();
+        this->streams.erase(stream_it);
+    }
 
     lock.unlock();
 
     surface_stack->remove_surface(ss);
-
 }

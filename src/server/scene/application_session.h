@@ -125,6 +125,12 @@ private:
     std::mutex mutable surfaces_and_streams_mutex;
     Surfaces surfaces;
     Streams streams;
+
+    void destroy_surface(
+        std::shared_ptr<Surface> const& ss,
+        std::unique_lock<std::mutex>& lock,
+        Surfaces::const_iterator p,
+        frontend::SurfaceId id);
 };
 
 }
