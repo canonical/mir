@@ -60,11 +60,11 @@ void mc::Stream::DroppingCallback::unlock()
 
 mc::Stream::Stream(
     mc::FrameDroppingPolicyFactory const& policy_factory,
-    std::unique_ptr<frontend::ClientBuffers> map, geom::Size size, MirPixelFormat pf) :
+    std::shared_ptr<frontend::ClientBuffers> map, geom::Size size, MirPixelFormat pf) :
     drop_policy(policy_factory.create_policy(std::make_shared<DroppingCallback>(this))),
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
-    buffers(std::move(map)),
+    buffers(map),
     arbiter(std::make_shared<mc::MultiMonitorArbiter>(
         mc::MultiMonitorMode::multi_monitor_sync, buffers, schedule)),
     size(size),
@@ -196,22 +196,6 @@ bool mc::Stream::has_submitted_buffer() const
 {
     std::lock_guard<decltype(mutex)> lk(mutex); 
     return first_frame_posted;
-}
-
-mg::BufferID mc::Stream::allocate_buffer(mg::BufferProperties const& properties)
-{
-    return buffers->add_buffer(properties);
-}
-
-void mc::Stream::remove_buffer(mg::BufferID id)
-{
-    buffers->remove_buffer(id);
-}
-
-void mc::Stream::with_buffer(mg::BufferID id, std::function<void(mg::Buffer&)> const& fn)
-{
-    auto buffer = (*buffers)[id];
-    fn(*buffer);
 }
 
 void mc::Stream::set_scale(float)

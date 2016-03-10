@@ -34,7 +34,7 @@ namespace
 
 struct MockBufferMap : mf::ClientBuffers
 {
-    MOCK_METHOD1(add_buffer, mg::BufferID(mg::BufferProperties const&));
+    MOCK_METHOD2(add_buffer, mg::BufferID(mg::BufferProperties const&, mf::BufferStreamId));
     MOCK_METHOD1(remove_buffer, void(mg::BufferID id));
     MOCK_METHOD1(send_buffer, void(mg::BufferID id));
     MOCK_METHOD1(receive_buffer, void(mg::BufferID id));

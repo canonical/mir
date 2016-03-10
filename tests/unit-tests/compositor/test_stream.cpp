@@ -50,7 +50,7 @@ struct StubBufferMap : mf::ClientBuffers
         sink{sink}
     {
     }
-    mg::BufferID add_buffer(mg::BufferProperties const&)
+    mg::BufferID add_buffer(mg::BufferProperties const&, mf::BufferStreamId)
     {
         return mg::BufferID{};
     }
@@ -261,12 +261,6 @@ TEST_F(Stream, reports_size)
 TEST_F(Stream, reports_format)
 {
     EXPECT_THAT(stream.pixel_format(), Eq(construction_format));
-}
-
-TEST_F(Stream, can_access_buffer_after_allocation)
-{
-    EXPECT_CALL(*this, called(testing::Ref(*buffers.front())));
-    stream.with_buffer(buffers.front()->id(), [this](mg::Buffer& b) { called(b); });
 }
 
 //confusingly, we have two framedrops. One is swapinterval zero, where old buffers are dropped as quickly as possible.

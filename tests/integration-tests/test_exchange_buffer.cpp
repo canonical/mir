@@ -109,11 +109,11 @@ struct StubBundleFactory : public msc::BufferStreamFactory
     {}
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId i, std::shared_ptr<mf::BufferSink> const& s,
+        mf::BufferStreamId i, std::shared_ptr<mf::ClientBuffers> const& s,
         int, mg::BufferProperties const& p) override
     { return create_buffer_stream(i, s, p); }
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId, std::shared_ptr<mf::BufferSink> const&, mg::BufferProperties const&) override
+        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const&, mg::BufferProperties const&) override
     { return std::make_shared<mc::BufferStreamSurfaces>(std::make_shared<StubBundle>(buffer_id_seq)); }
     std::vector<mg::BufferID> const buffer_id_seq;
 };

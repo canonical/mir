@@ -20,6 +20,7 @@
 #include "snapshot_strategy.h"
 #include "default_session_container.h"
 #include "output_properties_cache.h"
+#include "../compositor/buffer_map.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
@@ -45,6 +46,7 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mev = mir::events;
+namespace mc = mir::compositor;
 
 ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<msh::SurfaceStack> const& surface_stack,
@@ -55,7 +57,8 @@ ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionListener> const& session_listener,
     mg::DisplayConfiguration const& initial_config,
-    std::shared_ptr<mf::EventSink> const& sink) :
+    std::shared_ptr<mf::EventSink> const& sink,
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator) : 
     surface_stack(surface_stack),
     surface_factory(surface_factory),
     buffer_stream_factory(buffer_stream_factory),
@@ -64,6 +67,7 @@ ms::ApplicationSession::ApplicationSession(
     snapshot_strategy(snapshot_strategy),
     session_listener(session_listener),
     event_sink(sink),
+    buffers(std::make_shared<mc::BufferMap>(sink, allocator)),
     next_surface_id(0)
 {
     assert(surface_stack);
@@ -109,7 +113,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
                                                params.pixel_format,
                                                params.buffer_usage};
         buffer_stream = buffer_stream_factory->create_buffer_stream(
-            stream_id, surface_sink, buffer_properties);
+            stream_id, buffers, buffer_properties);
     }
     auto surface = surface_factory->create_surface(buffer_stream, params);
     surface_stack->add_surface(surface, params.input_mode);
@@ -359,7 +363,7 @@ std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::
 mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& props)
 {
     auto const id = static_cast<mf::BufferStreamId>(next_id().as_value());
-    auto stream = buffer_stream_factory->create_buffer_stream(id, event_sink, props);
+    auto stream = buffer_stream_factory->create_buffer_stream(id, buffers, props);
     
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     streams[id] = stream;
@@ -406,4 +410,20 @@ void ms::ApplicationSession::destroy_surface(std::weak_ptr<Surface> const& surfa
 
     surface_stack->remove_surface(ss);
 
+}
+
+mg::BufferID ms::ApplicationSession::create_buffer(
+    mg::BufferProperties const& properties, mf::BufferStreamId id)
+{
+    return buffers->add_buffer(properties, id);
+}
+
+void ms::ApplicationSession::destroy_buffer(mg::BufferID id)
+{
+    buffers->remove_buffer(id);
+}
+
+std::shared_ptr<mg::Buffer> ms::ApplicationSession::get_buffer(mg::BufferID id)
+{
+    return (*buffers)[id];
 }

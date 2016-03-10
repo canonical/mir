@@ -50,6 +50,20 @@ struct StubSession : public frontend::Session
     {
         return frontend::BufferStreamId();
     }
+    
+    graphics::BufferID create_buffer(graphics::BufferProperties const& properties, frontend:::BufferStreamId) override
+    {
+        return graphics::BufferID(3);
+    }
+
+    void destroy_buffer(graphics::BufferID) override
+    {
+    }
+
+    std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) override
+    {
+        return nullptr;
+    }
 };
 
 }

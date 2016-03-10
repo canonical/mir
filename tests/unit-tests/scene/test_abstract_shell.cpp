@@ -38,6 +38,7 @@
 #include "mir/test/doubles/null_prompt_session_manager.h"
 #include "mir/test/doubles/stub_input_targeter.h"
 #include "mir/test/doubles/stub_buffer_stream_factory.h"
+#include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/null_application_not_responding_detector.h"
 #include "mir/test/doubles/stub_display.h"
 
@@ -119,7 +120,8 @@ struct AbstractShell : Test
         mt::fake_shared(session_event_sink),
         std::make_shared<ms::NullSessionListener>(),
         mt::fake_shared(display),
-        std::make_shared<mtd::NullANRDetector>()};
+        std::make_shared<mtd::NullANRDetector>(),
+        std::make_shared<mtd::StubBufferAllocator>()};
 
     mtd::StubInputTargeter input_targeter;
     std::shared_ptr<NiceMockWindowManager> wm;
