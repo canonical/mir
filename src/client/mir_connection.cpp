@@ -984,6 +984,16 @@ MirWaitHandle* MirConnection::set_base_display_configuration(MirDisplayConfigura
     return &set_base_display_configuration_wait_handle;
 }
 
+void MirConnection::preview_base_display_configuration(
+    mp::DisplayConfiguration const& configuration,
+    std::chrono::seconds /*timeout*/)
+{
+    server.set_base_display_configuration(
+        &configuration,
+        set_base_display_configuration_response.get(),
+        google::protobuf::NewCallback(google::protobuf::DoNothing));
+}
+
 void MirConnection::done_set_base_display_configuration()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);

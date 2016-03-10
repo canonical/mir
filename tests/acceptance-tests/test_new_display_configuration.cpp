@@ -761,3 +761,47 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
 
     client.disconnect();
 }
+
+TEST_F(DisplayConfigurationTest, preview_base_display_configuration_sends_config_event)
+{
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    std::shared_ptr<MirDisplayConfig> config = client.get_base_config();
+
+    for (auto i = 0; i < mir_display_config_get_num_outputs(config.get()); ++i)
+    {
+        auto output = mir_display_config_get_mutable_output(config.get(), i);
+
+        for (auto j = 0; j < mir_output_get_num_modes(output); ++j)
+        {
+            auto mode = mir_output_get_mode(output, j);
+
+            if (mode != mir_output_get_current_mode(output))
+            {
+                mir_output_set_current_mode(output, mode);
+                break;
+            }
+        }
+    }
+
+    ASSERT_THAT(config.get(), Not(mt::DisplayConfigMatches(client.get_base_config().get())));
+
+    DisplayConfigMatchingContext context;
+    context.matcher = [config](MirDisplayConfig* conf)
+        {
+            EXPECT_THAT(conf, mt::DisplayConfigMatches(config.get()));
+        };
+
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &new_display_config_matches,
+        &context);
+
+    mir_connection_preview_base_display_configuration(client.connection, config.get(), 5);
+
+    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{10}));
+
+    client.disconnect();
+}

@@ -227,6 +227,7 @@ MIR_CLIENT_9_unreleased {
     mir_connection_apply_display_configuration;
     mir_connection_create_display_configuration;
     mir_connection_create_input_config;
+    mir_connection_preview_base_display_configuration;
     mir_connection_set_base_display_configuration;
     mir_connection_set_input_config_change_callback;
     mir_display_config_get_max_simultaneous_outputs;

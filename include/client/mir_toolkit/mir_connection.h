@@ -226,6 +226,12 @@ MirWaitHandle* mir_connection_set_base_display_config(
     MirConnection* connection,
     MirDisplayConfiguration const* display_configuration);
 
+
+void mir_connection_preview_base_display_configuration(
+    MirConnection* connection,
+    MirDisplayConfig const* configuration,
+    int timeout_seconds);
+
 /**
  * Get a display type that can be used for OpenGL ES 2.0 acceleration.
  *   \param [in] connection  The connection
