@@ -692,14 +692,13 @@ void mf::SessionMediator::preview_base_display_configuration(
 
     report->session_preview_base_display_configuration_called(session->name());
 
-    auto current_config = display_changer->base_configuration();
     auto const config = unpack_and_sanitize_display_configuration(&request->configuration());
-    display_changer->set_base_configuration(config);
+    display_changer->preview_base_configuration(
+        weak_session,
+        config,
+        std::chrono::seconds{request->timeout()});
 
     done->Run();
-
-    std::this_thread::sleep_for(std::chrono::milliseconds{100});
-    display_changer->set_base_configuration(current_config);
 }
 
 void mf::SessionMediator::create_screencast(

@@ -861,6 +861,11 @@ TEST_F(DisplayConfigurationTest, preview_base_display_configuration_reverts_afte
 
     mir_connection_preview_base_display_configuration(client.connection, new_config.get(), 5);
 
+    std::this_thread::sleep_for(std::chrono::seconds{3});
+    // Should still have the old config
+    EXPECT_TRUE(context.done.raised());
+    EXPECT_FALSE(reverted->raised());
+
     EXPECT_TRUE(reverted->wait_for(std::chrono::seconds{10}));
 
     client.disconnect();

@@ -33,6 +33,7 @@
 #include "mir/test/doubles/stub_session.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/display_config_matchers.h"
+#include "mir/test/doubles/fake_alarm_factory.h"
 
 #include <mutex>
 
@@ -138,7 +139,8 @@ struct MediatingDisplayChangerTest : public ::testing::Test
                       mt::fake_shared(session_event_sink),
                       mt::fake_shared(server_action_queue),
                       mt::fake_shared(display_configuration_report),
-                      mt::fake_shared(mock_input_region));
+                      mt::fake_shared(mock_input_region),
+                      mt::fake_shared(alarm_factory));
     }
 
     testing::NiceMock<MockDisplay> mock_display;
@@ -150,6 +152,7 @@ struct MediatingDisplayChangerTest : public ::testing::Test
     StubServerActionQueue server_action_queue;
     StubDisplayConfigurationReport display_configuration_report;
     testing::NiceMock<mtd::MockInputRegion> mock_input_region;
+    mtd::FakeAlarmFactory alarm_factory;
     std::shared_ptr<ms::MediatingDisplayChanger> changer;
 };
 
@@ -433,7 +436,8 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
       mt::fake_shared(session_event_sink),
       mt::fake_shared(mock_server_action_queue),
       mt::fake_shared(display_configuration_report),
-      mt::fake_shared(mock_input_region));
+      mt::fake_shared(mock_input_region),
+      mt::fake_shared(alarm_factory));
 
     void const* owner{nullptr};
 
@@ -489,7 +493,8 @@ TEST_F(MediatingDisplayChangerTest, does_not_block_IPC_thread_for_inactive_sessi
         mt::fake_shared(session_event_sink),
         mt::fake_shared(mock_server_action_queue),
         mt::fake_shared(display_configuration_report),
-        mt::fake_shared(mock_input_region));
+        mt::fake_shared(mock_input_region),
+        mt::fake_shared(alarm_factory));
 
     EXPECT_CALL(mock_server_action_queue, enqueue(_, _));
     session_event_sink.handle_focus_change(active_session);
@@ -614,7 +619,8 @@ TEST_F(MediatingDisplayChangerTest, input_region_receives_display_configuration_
         mt::fake_shared(session_event_sink),
         mt::fake_shared(server_action_queue),
         mt::fake_shared(display_configuration_report),
-        mt::fake_shared(mock_input_region));
+        mt::fake_shared(mock_input_region),
+        mt::fake_shared(alarm_factory));
 }
 
 TEST_F(MediatingDisplayChangerTest, notifies_input_region_on_new_configuration)

@@ -28,12 +28,15 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_report.h"
 #include "mir/server_action_queue.h"
+#include "mir/time/alarm_factory.h"
+#include "mir/time/alarm.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mi = mir::input;
+namespace mt = mir::time;
 
 namespace
 {
@@ -69,7 +72,8 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
     std::shared_ptr<ServerActionQueue> const& server_action_queue,
     std::shared_ptr<mg::DisplayConfigurationReport> const& report,
-    std::shared_ptr<mi::InputRegion> const& region)
+    std::shared_ptr<mi::InputRegion> const& region,
+    std::shared_ptr<mt::AlarmFactory> const& alarm_factory)
     : display{display},
       compositor{compositor},
       display_configuration_policy{display_configuration_policy},
@@ -79,7 +83,8 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
       report{report},
       base_configuration_{display->configuration()},
       base_configuration_applied{true},
-      region{region}
+      region{region},
+      alarm_factory{alarm_factory}
 {
     session_event_handler_register->register_focus_change_handler(
         [this](std::shared_ptr<ms::Session> const& session)
@@ -146,6 +151,24 @@ void ms::MediatingDisplayChanger::configure(
                     apply_config(conf, PauseResumeSystem);
             }
         });
+}
+
+void
+ms::MediatingDisplayChanger::preview_base_configuration(
+    std::weak_ptr<frontend::Session> const& /*session*/,
+    std::shared_ptr<graphics::DisplayConfiguration> const& conf,
+    std::chrono::seconds timeout)
+{
+    auto saved_configuration = base_configuration();
+    preview_configuration_timeout = alarm_factory->create_alarm(
+        [this, saved_configuration]()
+        {
+            set_base_configuration(saved_configuration);
+        });
+
+    preview_configuration_timeout->reschedule_in(timeout);
+
+    set_base_configuration(conf);
 }
 
 std::shared_ptr<mg::DisplayConfiguration>

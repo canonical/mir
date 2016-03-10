@@ -51,6 +51,11 @@ public:
         std::shared_ptr<graphics::DisplayConfiguration> const&) override;
     void set_base_configuration(
         std::shared_ptr<graphics::DisplayConfiguration> const&) override;
+    void preview_base_configuration(
+        std::weak_ptr<Session> const&,
+        std::shared_ptr<graphics::DisplayConfiguration> const&,
+        std::chrono::seconds) override;
+
 
 private:
     std::shared_ptr<frontend::DisplayChanger> const changer;
