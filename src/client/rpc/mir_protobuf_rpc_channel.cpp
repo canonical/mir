@@ -100,12 +100,10 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
         (*lifecycle_control)(mir_lifecycle_connection_lost);
     }
     pending_calls.force_completion();
-    //NB: once the old semantics are not around, this explicit call to notify 
-    //the streams of disconnection shouldn't be needed.
     if (auto map = surface_map.lock()) 
     {
         map->with_all_streams_do(
-            [](mcl::BufferReceiver* receiver) {
+            [](mcl::ClientBufferStream* receiver) {
                 if (receiver) receiver->buffer_unavailable();
             });
     }
@@ -311,7 +309,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 if (seq.buffer_request().id().value() >= 0)
                 {
                     map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
-                    [&] (mcl::BufferReceiver* receiver) {
+                    [&] (mcl::ClientBufferStream* receiver) {
                         receiver->buffer_available(seq.buffer_request().buffer());
                     });
                 }

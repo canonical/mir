@@ -69,7 +69,7 @@ TEST_F(ConnectionResourceMap, removes_surface_when_surface_removed)
     map.insert(surface_id, surface);
     map.erase(surface_id);
     EXPECT_THROW({
-        map.with_stream_do(stream_id, [](mcl::BufferReceiver*){});
+        map.with_stream_do(stream_id, [](mcl::ClientBufferStream*){});
     }, std::runtime_error);
 }
 
@@ -79,7 +79,7 @@ TEST_F(ConnectionResourceMap, maps_streams)
     auto stream_called = false;
     mcl::ConnectionSurfaceMap map;
     map.insert(stream_id, stream);
-    map.with_stream_do(stream_id, [&](mcl::BufferReceiver* str) {
+    map.with_stream_do(stream_id, [&](mcl::ClientBufferStream* str) {
         EXPECT_THAT(str, Eq(stream.get()));
         stream_called = true;
     });
@@ -87,18 +87,15 @@ TEST_F(ConnectionResourceMap, maps_streams)
     map.erase(stream_id);
 }
 
-TEST_F(ConnectionResourceMap, maps_chains)
+TEST_F(ConnectionResourceMap, holds_chain_reference)
 {
     using namespace testing;
-    auto chain_called = false;
     mcl::ConnectionSurfaceMap map;
+    auto use_count = chain.use_count();
     map.insert(stream_id, chain);
-    map.with_stream_do(stream_id, [&](mcl::BufferReceiver* str) {
-        EXPECT_THAT(str, Eq(chain.get()));
-        chain_called = true;
-    });
-    EXPECT_TRUE(chain_called);
+    EXPECT_THAT(chain.use_count(), Gt(use_count));
     map.erase(stream_id);
+    EXPECT_THAT(chain.use_count(), Eq(use_count));
 }
 
 TEST_F(ConnectionResourceMap, maps_buffers)

@@ -611,7 +611,7 @@ MirWaitHandle* MirConnection::disconnect()
         std::lock_guard<decltype(mutex)> lock(mutex);
         disconnecting = true;
     }
-    surface_map->with_all_streams_do([](mcl::BufferReceiver* receiver)
+    surface_map->with_all_streams_do([](mcl::ClientBufferStream* receiver)
     {
         receiver->buffer_unavailable();
     });

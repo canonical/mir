@@ -35,7 +35,7 @@ class Buffer;
 namespace client
 {
 class Buffer;
-class BufferReceiver;
+class ClientBufferStream;
 
 class SurfaceMap
 {
@@ -43,8 +43,8 @@ public:
     virtual void with_surface_do(
         frontend::SurfaceId surface_id, std::function<void(MirSurface*)> const& exec) const = 0;
     virtual void with_stream_do(
-        frontend::BufferStreamId stream_id, std::function<void(BufferReceiver*)> const& exec) const = 0;
-    virtual void with_all_streams_do(std::function<void(BufferReceiver*)> const&) const = 0;
+        frontend::BufferStreamId stream_id, std::function<void(ClientBufferStream*)> const& exec) const = 0;
+    virtual void with_all_streams_do(std::function<void(ClientBufferStream*)> const&) const = 0;
     virtual bool with_buffer_do(int buffer_id, std::function<void(Buffer&)> const& exec) const = 0;
     virtual void insert(int buffer_id, std::shared_ptr<Buffer> const& buffer) = 0;
 

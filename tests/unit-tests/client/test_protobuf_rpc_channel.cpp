@@ -59,11 +59,12 @@ struct MockSurfaceMap : mcl::SurfaceMap
     MOCK_CONST_METHOD2(with_surface_do,
         void(mir::frontend::SurfaceId, std::function<void(MirSurface*)> const&));
     MOCK_CONST_METHOD2(with_stream_do,
-        void(mir::frontend::BufferStreamId, std::function<void(mcl::BufferReceiver*)> const&));
+        void(mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&));
     MOCK_CONST_METHOD1(with_all_streams_do,
-        void(std::function<void(mcl::BufferReceiver*)> const&));
+        void(std::function<void(mcl::ClientBufferStream*)> const&));
     MOCK_CONST_METHOD2(with_buffer_do, bool(int, std::function<void(mcl::Buffer&)> const&));
     MOCK_METHOD2(insert, void(int, std::shared_ptr<mcl::Buffer> const&));
+    MOCK_METHOD2(insert, void(mir::frontend::BufferStreamId, std::shared_ptr<MirPresentationChain> const&));
 }; 
  
 class StubSurfaceMap : public mcl::SurfaceMap
@@ -74,10 +75,10 @@ public:
     {
     }
     void with_stream_do(
-        mir::frontend::BufferStreamId, std::function<void(mcl::BufferReceiver*)> const&) const override
+        mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&) const override
     {
     }
-    void with_all_streams_do(std::function<void(mcl::BufferReceiver*)> const&) const override
+    void with_all_streams_do(std::function<void(mcl::ClientBufferStream*)> const&) const override
     {
     }
     bool with_buffer_do(int, std::function<void(mcl::Buffer&)> const&) const override
@@ -85,6 +86,9 @@ public:
         return true;
     }
     void insert(int, std::shared_ptr<mcl::Buffer> const&)
+    {
+    }
+    void insert(mir::frontend::BufferStreamId, std::shared_ptr<MirPresentationChain> const&)
     {
     }
 };

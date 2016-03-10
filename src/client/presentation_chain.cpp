@@ -56,13 +56,6 @@ static void ignore_response(mp::Void* response)
     delete response;
 }
 
-void mcl::PresentationChain::allocate_buffer(
-    geom::Size, MirPixelFormat, MirBufferUsage,
-    mir_buffer_callback, void*)
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("remove this soon"));
-}
-
 void mcl::PresentationChain::submit_buffer(MirBuffer* buffer)
 {
     mp::BufferRequest request;
@@ -75,20 +68,6 @@ void mcl::PresentationChain::submit_buffer(MirBuffer* buffer)
 
     auto ignored = new mp::Void;
     server.submit_buffer(&request, ignored, gp::NewCallback(ignore_response, ignored));
-}
-
-void mcl::PresentationChain::release_buffer(MirBuffer*)
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("remove this soon"));
-}
-
-void mcl::PresentationChain::buffer_available(mp::Buffer const&)
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("remove this soon"));
-}
-
-void mcl::PresentationChain::buffer_unavailable()
-{
 }
 
 int mcl::PresentationChain::rpc_id() const
