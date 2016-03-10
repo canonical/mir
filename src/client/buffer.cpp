@@ -26,13 +26,13 @@ mcl::Buffer::Buffer(
     mir_buffer_callback cb, void* context,
     int buffer_id,
     std::shared_ptr<ClientBuffer> const& buffer,
-    MirPresentationChain* chain) :
+    MirConnection* connection) :
     cb(cb),
     cb_context(context),
     buffer_id(buffer_id),
     buffer(buffer),
     owned(true),
-    chain(chain)
+    connection(connection)
 {
     cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
 }
@@ -95,7 +95,7 @@ bool mcl::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds ti
     return buffer->wait_fence(access, timeout);
 }
 
-MirPresentationChain* mcl::Buffer::allocating_chain() const
+MirConnection* mcl::Buffer::allocating_connection() const
 {
-    return chain;
+    return connection;
 }

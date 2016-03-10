@@ -37,7 +37,7 @@ public:
     AsyncBufferFactory() = default;
 
     virtual std::unique_ptr<Buffer> generate_buffer(
-        mir::protobuf::Buffer const& buffer, MirPresentationChain* chain) = 0;
+        mir::protobuf::Buffer const& buffer, MirConnection* connection) = 0;
     virtual void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
         geometry::Size size,
@@ -54,7 +54,7 @@ class BufferFactory : public AsyncBufferFactory
 {
 public:
     std::unique_ptr<Buffer> generate_buffer(
-        mir::protobuf::Buffer const& buffer, MirPresentationChain* chain) override;
+        mir::protobuf::Buffer const& buffer, MirConnection* connection) override;
     void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
         geometry::Size size,

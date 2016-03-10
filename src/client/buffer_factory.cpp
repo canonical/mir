@@ -52,7 +52,7 @@ void mcl::BufferFactory::expect_buffer(
 }
 
 std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(
-    mir::protobuf::Buffer const& buffer, MirPresentationChain* chain)
+    mir::protobuf::Buffer const& buffer, MirConnection* connection)
 {
     //must be new, allocate and send it.
     auto request_it = std::find_if(allocation_requests.begin(), allocation_requests.end(),
@@ -69,7 +69,7 @@ std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(
         buffer.buffer_id(),
         (*request_it)->native_buffer_factory->create_buffer(
             mcl::protobuf_to_native_buffer(buffer),
-            (*request_it)->size, (*request_it)->format), chain);
+            (*request_it)->size, (*request_it)->format), connection);
 
     allocation_requests.erase(request_it);
     return std::move(b);

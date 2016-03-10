@@ -8,4 +8,4 @@ include_directories(
 add_subdirectory(server/)
 add_subdirectory(client/)
 add_subdirectory(common/)
-add_subdirectory(utils/)
+#add_subdirectory(utils/)
