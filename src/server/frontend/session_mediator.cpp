@@ -450,7 +450,6 @@ void mf::SessionMediator::allocate_buffers(
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     report->session_allocate_buffers_called(session->name());
-    printf("ALLOC REQ %i\n", request->id().value());
     mf::BufferStreamId stream_id{request->id().value()};
     for (auto i = 0; i < request->buffer_requests().size(); i++)
     {

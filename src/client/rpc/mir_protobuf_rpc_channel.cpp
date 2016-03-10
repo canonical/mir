@@ -310,7 +310,6 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
             {
                 if (seq.buffer_request().id().value() >= 0)
                 {
-                    printf("BOUND TO STREAM (value %i)\n", seq.buffer_request().id().value());
                     map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
                     [&] (mcl::BufferReceiver* receiver) {
                         receiver->buffer_available(seq.buffer_request().buffer());
@@ -318,19 +317,16 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 }
                 else
                 {
-                    printf("UNBOUND<<<< to map\n");
                     auto had_buffer = map->with_buffer_do(
                         seq.buffer_request().buffer().buffer_id(),
                         [&seq](mcl::Buffer& buffer)
                         {
-                            printf("ALREADY HAD< SENDING \n");
                             buffer.received(
                                 *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
                         });
 
                     if (!had_buffer)
                     {
-                        printf("MAPPING.\n");
                         map->insert(seq.buffer_request().buffer().buffer_id(), 
                             buffer_factory->generate_buffer(seq.buffer_request().buffer()));
                     }

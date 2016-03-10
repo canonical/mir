@@ -85,16 +85,10 @@ struct PresentationChainCallback
 
 struct MockAsyncBufferFactory : mcl::AsyncBufferFactory
 {
-<<<<<<< TREE
-    MOCK_METHOD2(generate_buffer,
-        std::unique_ptr<mcl::Buffer>(mp::Buffer const&, MirConnection* chain));
-    MOCK_METHOD6(expect_buffer, void(
-=======
     MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::Buffer>(mp::Buffer const&));
     MOCK_METHOD7(expect_buffer, void(
->>>>>>> MERGE-SOURCE
         std::shared_ptr<mcl::ClientBufferFactory> const& native_buffer_factory,
-        MirPresentationChain* chain,
+        MirConnection* connection,
         geom::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,

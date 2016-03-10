@@ -561,7 +561,6 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
     }
     catch (std::exception const& e)
     {
-    printf("IN HER.\n");
         connect_result->set_error(std::string{"Failed to process connect response: "} +
                                  boost::diagnostic_information(e));
     }
