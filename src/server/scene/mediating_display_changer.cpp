@@ -202,7 +202,10 @@ ms::MediatingDisplayChanger::confirm_base_configuration(
     std::shared_ptr<frontend::Session> const& /*session*/,
     std::shared_ptr<graphics::DisplayConfiguration> const& confirmed_conf)
 {
-    preview_configuration_timeout = std::unique_ptr<mt::Alarm>();
+    {
+        std::lock_guard<std::mutex> lock{configuration_mutex};
+        preview_configuration_timeout = std::unique_ptr<mt::Alarm>();
+    }
     set_base_configuration(confirmed_conf);
 }
 
