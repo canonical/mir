@@ -342,23 +342,21 @@ TEST_F(PresentationChain, can_figure_out_when_a_buffer_is_received)
     SurfaceWithChainFromStart surface(connection, size, pf);
     auto const num_buffers = 8u;
 
-    struct BufferContext
+    struct BufferProperties
     {
-        BufferContext(geom::Size size, MirPixelFormat pf, MirBufferUsage usage) :
+        BufferProperties(geom::Size size, MirPixelFormat pf, MirBufferUsage usage) :
             size(size),
             format(pf),
-            usage(usage),
-            check(false)
+            usage(usage)
         {
         }
         geom::Size size;
         MirPixelFormat format;
         MirBufferUsage usage;
         MirBufferSync context;
-        bool check; 
     };
 
-    std::array<BufferContext, num_buffers> differing_buffer_properties =
+    std::array<BufferProperties, num_buffers> properties =
     {
         {
             {{10, 10}, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware},
@@ -372,7 +370,7 @@ TEST_F(PresentationChain, can_figure_out_when_a_buffer_is_received)
         }
     };
 
-    for (auto& context : differing_buffer_properties)
+    for (auto& context : properties)
     {
         mir_presentation_chain_allocate_buffer(
             surface.chain(),
@@ -384,27 +382,12 @@ TEST_F(PresentationChain, can_figure_out_when_a_buffer_is_received)
     std::array<MirBuffer*, num_buffers> buffers;
     for (auto i = 0u; i < num_buffers; i++)
     {
-        ASSERT_TRUE(differing_buffer_properties[i].context.wait_for_buffer(10s));
-        buffers[i] = differing_buffer_properties[i].context.buffer();
+        ASSERT_TRUE(properties[i].context.wait_for_buffer(10s));
+        buffers[i] = properties[i].context.buffer();
         ASSERT_THAT(buffers[i], Ne(nullptr));
+        EXPECT_THAT(mir_buffer_get_width(buffers[i]), Eq(properties[i].size.width.as_uint32_t()));
+        EXPECT_THAT(mir_buffer_get_height(buffers[i]), Eq(properties[i].size.height.as_uint32_t()));
+        EXPECT_THAT(mir_buffer_get_buffer_usage(buffers[i]), Eq(properties[i].usage));
+        EXPECT_THAT(mir_buffer_get_pixel_format(buffers[i]), Eq(properties[i].format));
     }
-
-    for (auto& context : differing_buffer_properties)
-    {
-        for(auto& buffer : buffers)
-        {
-            if ((context.size.width.as_uint32_t() == mir_buffer_get_width(buffer)) &&
-                (context.size.height.as_uint32_t() == mir_buffer_get_height(buffer)) &&
-                (context.format == mir_buffer_get_pixel_format(buffer)) &&
-                (context.usage == mir_buffer_get_buffer_usage(buffer)))
-            {
-                context.check = true;
-            }
-        }
-    }
-
-    auto num_found = std::count_if(
-        differing_buffer_properties.begin(), differing_buffer_properties.end(),
-        [](BufferContext& context) { return context.check; });
-    EXPECT_THAT(num_found, Eq(num_buffers));
 }
