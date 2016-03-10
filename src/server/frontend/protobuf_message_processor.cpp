@@ -345,6 +345,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::preview_base_display_configuration, invocation);
         }
+        else if ("confirm_base_display_configuration" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::confirm_base_display_configuration, invocation);
+        }
         else
         {
             report->unknown_method(display_server.get(), invocation.id(), invocation.method_name());
