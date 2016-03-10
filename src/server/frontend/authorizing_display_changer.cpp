@@ -70,3 +70,17 @@ void mf::AuthorizingDisplayChanger::preview_base_configuration(
         BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to set base display configurations"));
     }
 }
+
+void mf::AuthorizingDisplayChanger::confirm_base_configuration(
+    std::shared_ptr<Session> const& session,
+    std::shared_ptr<graphics::DisplayConfiguration> const& config)
+{
+    if (set_base_configuration_is_allowed)
+    {
+        changer->confirm_base_configuration(session, config);
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to set base display configurations"));
+    }
+}
