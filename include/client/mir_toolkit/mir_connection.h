@@ -227,11 +227,54 @@ MirWaitHandle* mir_connection_set_base_display_config(
     MirDisplayConfiguration const* display_configuration);
 
 
+/**
+ * Preview a new base display configuration
+ *
+ * The base display configuration is the configuration the server applies when
+ * there is no active per-connection configuration.
+ *
+ * The display configuration will automatically revert to the previous
+ * settings after timeout_seconds unless confirmed by a call to
+ * mir_connection_confirm_base_display_configuration().
+ *
+ * If this request succeeds a configuration change event is sent to the
+ * client. Clients should register a callback with
+ * mir_connection_set_display_config_change_callback() in order to determine
+ * when this call succeeds.
+ *
+ * If the configuration is not confirmed before timeout_seconds have elapsed
+ * a second configuration change event is sent, with the old config.
+ *
+ * \param [in] connection       The connection
+ * \param [in] configuration    The MirDisplayConfig to set as base
+ * \param [in] timeout_seconds  The time the server should wait, in seconds,
+ *                                  for the change to be confirmed before
+ *                                  reverting to the previous configuration.
+ */
 void mir_connection_preview_base_display_configuration(
     MirConnection* connection,
     MirDisplayConfig const* configuration,
     int timeout_seconds);
 
+/**
+ * Confirm a base configuration change initiated by mir_connection_preview_base_display_configuration()
+ *
+ * The base display configuration is the configuration the server applies when
+ * there is no active per-connection configuration.
+ *
+ * If this request succeeds a second configuration change event is sent to the
+ * client, identical to the one sent after
+ * mir_connection_preview_base_display_configuration(). Clients should
+ * register a callback with mir_connection_set_display_config_change_callback()
+ * in order to determine when this call succeeds.
+ *
+ * The MirDisplayConfig must be the same as the one passed to
+ * mir_connection_preview_base_display_configuration().
+ *
+ * \param [in] connection       The connection
+ * \param [in] configuration    The MirDisplayConfig to confirm as base
+ *                                  configuration.
+ */
 void mir_connection_confirm_base_display_configuration(
     MirConnection* connection,
     MirDisplayConfig const* configuration);
