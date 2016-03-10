@@ -59,6 +59,7 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
     void session_configure_display_called(std::string const&) override {};
     void session_set_base_display_configuration_called(std::string const&) override {};
     void session_preview_base_display_configuration_called(std::string const&) override {};
+    void session_confirm_base_display_configuration_called(std::string const&) override {};
     void session_error(const std::string&, const char*, const std::string&) override {};
 };
 

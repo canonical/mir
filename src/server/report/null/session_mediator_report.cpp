@@ -74,6 +74,10 @@ void mir::report::null::SessionMediatorReport::session_preview_base_display_conf
 {
 }
 
+void mir::report::null::SessionMediatorReport::session_confirm_base_display_configuration_called(std::string const&)
+{
+}
+
 void mir::report::null::SessionMediatorReport::session_start_prompt_session_called(std::string const&, pid_t)
 {
 }
