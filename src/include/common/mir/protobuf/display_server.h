@@ -71,6 +71,10 @@ public:
         mir::protobuf::DisplayConfiguration const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) = 0;
+    virtual void preview_base_display_configuration(
+        mir::protobuf::PreviewConfiguration const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) = 0;
     virtual void create_screencast(
         mir::protobuf::ScreencastParameters const* request,
         mir::protobuf::Screencast* response,

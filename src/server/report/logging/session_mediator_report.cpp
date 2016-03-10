@@ -98,6 +98,11 @@ void mrl::SessionMediatorReport::session_set_base_display_configuration_called(s
     log->log(ml::Severity::informational, "session_set_base_display_configuration_called(\"" + app_name + "\")", component);
 }
 
+void mrl::SessionMediatorReport::session_preview_base_display_configuration_called(std::string const& app_name)
+{
+    log->log(ml::Severity::informational, "session_preview_base_display_configuration_called(\"" + app_name + "\"", component);
+}
+
 void mrl::SessionMediatorReport::session_start_prompt_session_called(std::string const& app_name, pid_t application_process)
 {
     log->log(ml::Severity::informational, "session_start_prompt_session_called(\"" + app_name + ", " + std::to_string(application_process) + ")", component);

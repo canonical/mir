@@ -98,6 +98,13 @@ void mclr::DisplayServer::set_base_display_configuration(
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
+void mclr::DisplayServer::preview_base_display_configuration(
+    mir::protobuf::PreviewConfiguration const* request,
+    mir::protobuf::Void* response,
+    google::protobuf::Closure* done)
+{
+    channel->call_method(std::string(__func__), request, response, done);
+}
 void mclr::DisplayServer::create_screencast(
     mir::protobuf::ScreencastParameters const* request,
     mir::protobuf::Screencast* response,

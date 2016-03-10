@@ -61,6 +61,8 @@ class SessionMediatorReport : public frontend::SessionMediatorReport
 
     void session_set_base_display_configuration_called(std::string const& app_name) override;
 
+    void session_preview_base_display_configuration_called(std::string const& app_name) override;
+
     void session_start_prompt_session_called(std::string const& app_name, pid_t application_process) override;
 
     void session_stop_prompt_session_called(std::string const& app_name) override;

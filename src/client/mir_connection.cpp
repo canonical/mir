@@ -986,10 +986,15 @@ MirWaitHandle* MirConnection::set_base_display_configuration(MirDisplayConfigura
 
 void MirConnection::preview_base_display_configuration(
     mp::DisplayConfiguration const& configuration,
-    std::chrono::seconds /*timeout*/)
+    std::chrono::seconds timeout)
 {
-    server.set_base_display_configuration(
-        &configuration,
+    mp::PreviewConfiguration request;
+
+    request.mutable_configuration()->CopyFrom(configuration);
+    request.set_timeout(timeout.count());
+
+    server.preview_base_display_configuration(
+        &request,
         set_base_display_configuration_response.get(),
         google::protobuf::NewCallback(google::protobuf::DoNothing));
 }
