@@ -65,6 +65,7 @@ struct MockSurfaceMap : mcl::SurfaceMap
     MOCK_CONST_METHOD2(with_buffer_do, bool(int, std::function<void(mcl::Buffer&)> const&));
     MOCK_METHOD2(insert, void(int, std::shared_ptr<mcl::Buffer> const&));
     MOCK_METHOD1(erase, void(int));
+    MOCK_CONST_METHOD1(buffer, std::shared_ptr<mcl::Buffer>(int));
 }; 
  
 class StubSurfaceMap : public mcl::SurfaceMap
@@ -89,6 +90,7 @@ public:
     {
     }
     void erase(int) {}
+    std::shared_ptr<mcl::Buffer> buffer(int) const { return nullptr; }
 };
 
 class MockStreamTransport : public mclr::StreamTransport

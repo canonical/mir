@@ -23,6 +23,7 @@
 #include "protobuf_to_native_buffer.h"
 #include "connection_surface_map.h"
 #include "buffer_factory.h"
+#include "buffer.h"
 #include <algorithm>
 #include <boost/throw_exception.hpp>
 
@@ -37,6 +38,15 @@ enum class mcl::BufferVault::Owner
     ContentProducer,
     Self
 };
+
+namespace
+{
+void incoming_buffer(MirPresentationChain*, MirBuffer* buffer, void* context)
+{
+    auto vault = static_cast<mcl::BufferVault*>(context);
+    vault->wire_transfer_inbound(reinterpret_cast<mcl::Buffer*>(buffer)->rpc_id());
+}
+}
 
 mcl::BufferVault::BufferVault(
     std::shared_ptr<ClientBufferFactory> const& client_buffer_factory,
@@ -53,7 +63,10 @@ mcl::BufferVault::BufferVault(
     disconnected_(false)
 {
     for (auto i = 0u; i < initial_nbuffers; i++)
+    {
+        mirfactory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage, incoming_buffer, this);
         server_requests->allocate_buffer(size, format, usage);
+    }
 }
 
 mcl::BufferVault::~BufferVault()
@@ -64,6 +77,7 @@ mcl::BufferVault::~BufferVault()
     for (auto& it : buffers)
     try
     {
+        map->erase(it.first);
         server_requests->free_buffer(it.first);
     }
     catch (...)
@@ -71,15 +85,6 @@ mcl::BufferVault::~BufferVault()
     }
 }
 
-
-namespace
-{
-void incoming_buffer(MirPresentationChain*, MirBuffer* buffer, void* context)
-{
-    auto vault = static_cast<mcl::BufferVault*>(context);
-    vault->wire_transfer_inbound(reinterpret_cast<mcl::Buffer*>(buffer)->rpc_id());
-}
-}
 
 void mcl::BufferVault::realloc(int free_id, geom::Size, MirPixelFormat format, int usage)
 {
@@ -91,10 +96,10 @@ void mcl::BufferVault::realloc(int free_id, geom::Size, MirPixelFormat format, i
     server_requests->allocate_buffer(size, format, usage);
 }
 
-mcl::NoTLSFuture<mcl::BufferInfo> mcl::BufferVault::withdraw()
+mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
 {
     std::lock_guard<std::mutex> lk(mutex);
-    mcl::NoTLSPromise<mcl::BufferInfo> promise;
+    mcl::NoTLSPromise<std::shared_ptr<mcl::Buffer>> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [this](std::pair<int, BufferEntry> const& entry) { 
             return ((entry.second.owner == Owner::Self) && (size == entry.second.buffer->size())); });
@@ -102,17 +107,19 @@ mcl::NoTLSFuture<mcl::BufferInfo> mcl::BufferVault::withdraw()
     auto future = promise.get_future();
     if (it != buffers.end())
     {
+        printf("HAD ONE\n");
         it->second.owner = Owner::ContentProducer;
-        promise.set_value({it->second.buffer, it->first});
+        promise.set_value(it->second.buffer);
     }
     else
     {
+        printf("PROMISE ONE\n");
         promises.emplace_back(std::move(promise));
     }
     return future;
 }
 
-void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
+void mcl::BufferVault::deposit(std::shared_ptr<mcl::Buffer> const& buffer)
 {
     std::lock_guard<std::mutex> lk(mutex);
     auto it = std::find_if(buffers.begin(), buffers.end(),
@@ -121,10 +128,10 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be deposited"));
 
     it->second.owner = Owner::Self;
-    it->second.buffer->increment_age();
+    it->second.buffer->client_buffer()->increment_age();
 }
 
-void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer> const& buffer)
+void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const& buffer)
 {
     int id;
     std::shared_ptr<mcl::ClientBuffer> submit_buffer;
@@ -135,8 +142,8 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be transferred"));
 
     it->second.owner = Owner::Server;
-    it->second.buffer->mark_as_submitted();
-    submit_buffer = it->second.buffer;
+    it->second.buffer->client_buffer()->mark_as_submitted();
+    submit_buffer = it->second.buffer->client_buffer();
     id = it->first;
     lk.unlock();
     server_requests->submit_buffer(id, *submit_buffer);
@@ -147,23 +154,23 @@ void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
     std::unique_lock<std::mutex> lk(mutex);
 
     auto buffer = map->buffer(buffer_id);
-
-    //figure out tracking
+    auto inbound_size = buffer->size();
     auto it = buffers.find(buffer_id);
     if (it == buffers.end())
     {
-        if (buffer->size != size)
+        if (inbound_size != size)
         {
             lk.unlock();
-            realloc(protobuf_buffer.buffer_id(), size, format, usage);
+            realloc(buffer_id, size, format, usage);
             return;
         }
 
-        buffers[protobuf_buffer.buffer_id()] = BufferEntry{ buffer_id, Owner::Self };
+        printf("PUT NEW BUFFER IN MAP\n");
+        buffers[buffer_id] = BufferEntry{ buffer, Owner::Self };
     }
     else
     {
-        if (size == it->second.buffer->size())
+        if (size == inbound_size)
         { 
             it->second.owner = Owner::Self;
         }
@@ -179,10 +186,10 @@ void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
     if (!promises.empty())
     {
         buffers[buffer_id].owner = Owner::ContentProducer;
-        promises.front().set_value({buffers[buffer_id].buffer, buffer});
+        promises.front().set_value(buffers[buffer_id].buffer);
         promises.pop_front();
     }
-
+}
 #if 0
     std::shared_ptr<MirBufferPackage> package = mcl::protobuf_to_native_buffer(protobuf_buffer);
 

@@ -35,6 +35,8 @@ namespace client
 class SurfaceMap;
 class AsyncBufferFactory;
 class ClientBuffer;
+class Buffer;
+
 class ServerBufferRequests
 {
 public:
@@ -50,12 +52,6 @@ protected:
 
 class ClientBufferFactory;
 
-struct BufferInfo
-{
-    std::shared_ptr<ClientBuffer> buffer;
-    int id;
-};
-
 class BufferVault
 {
 public:
@@ -68,10 +64,10 @@ public:
         unsigned int initial_nbuffers);
     ~BufferVault();
 
-    NoTLSFuture<BufferInfo> withdraw();
-    void deposit(std::shared_ptr<ClientBuffer> const& buffer);
+    NoTLSFuture<std::shared_ptr<Buffer>> withdraw();
+    void deposit(std::shared_ptr<Buffer> const& buffer);
     void wire_transfer_inbound(int buffer_id);
-    void wire_transfer_outbound(std::shared_ptr<ClientBuffer> const& buffer);
+    void wire_transfer_outbound(std::shared_ptr<Buffer> const& buffer);
     void set_size(geometry::Size);
     void disconnected();
     void set_scale(float scale);
@@ -89,13 +85,13 @@ private:
     enum class Owner;
     struct BufferEntry
     {
-        std::shared_ptr<ClientBuffer> buffer;
+        std::shared_ptr<Buffer> buffer;
         Owner owner;
     };
 
     std::mutex mutex;
     std::map<int, BufferEntry> buffers;
-    std::deque<NoTLSPromise<BufferInfo>> promises;
+    std::deque<NoTLSPromise<std::shared_ptr<Buffer>>> promises;
     geometry::Size size;
     bool disconnected_;
 };

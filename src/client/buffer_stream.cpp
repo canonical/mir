@@ -27,6 +27,7 @@
 #include "mir_protobuf.pb.h"
 #include "buffer_vault.h"
 #include "protobuf_to_native_buffer.h"
+#include "buffer.h"
 
 #include "mir/log.h"
 #include "mir/client_platform.h"
@@ -296,30 +297,30 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     std::shared_ptr<mir::client::ClientBuffer> current_buffer() override
     {
         std::unique_lock<std::mutex> lk(mutex);
-        if (!current.buffer)
+        if (!current)
             advance_current_buffer(lk);
-        return current.buffer;
+        return current->client_buffer();
     }
 
     uint32_t current_buffer_id() override
     {
         std::unique_lock<std::mutex> lk(mutex);
-        if (!current.buffer)
+        if (!current)
             advance_current_buffer(lk);
-        return current.id;
+        return current->rpc_id();
     }
 
     MirWaitHandle* submit(std::function<void()> const& done, geom::Size, MirPixelFormat, int) override
     {
         std::unique_lock<std::mutex> lk(mutex);
-        if (!current.buffer)
+        if (!current)
             advance_current_buffer(lk);
         lk.unlock();
 
-        vault.deposit(current.buffer);
+        vault.deposit(current);
 
         next_buffer_wait_handle.expect_result();
-        vault.wire_transfer_outbound(current.buffer);
+        vault.wire_transfer_outbound(current);
         next_buffer_wait_handle.result_received();
 
         lk.lock();
@@ -352,7 +353,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
     mcl::BufferVault vault;
     std::mutex mutex;
-    mcl::BufferInfo current{nullptr, 0};
+    std::shared_ptr<mcl::Buffer> current{nullptr};
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle scale_wait_handle;
 };

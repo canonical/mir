@@ -379,7 +379,7 @@ struct ScheduledProducer : ProducerSystem
     {
         ipc->on_client_bound_transfer([this](mp::Buffer& buffer){
             available++;
-            vault.wire_transfer_inbound(buffer);
+            vault.wire_transfer_inbound(buffer.buffer_id());
         });
         ipc->on_resize_event([this](geom::Size sz)
         {
@@ -401,7 +401,7 @@ struct ScheduledProducer : ProducerSystem
     {
         if (can_produce())
         {
-            auto buffer = vault.withdraw().get().buffer;
+            auto buffer = vault.withdraw().get();
             vault.deposit(buffer);
             vault.wire_transfer_outbound(buffer);
             last_size_ = buffer->size();

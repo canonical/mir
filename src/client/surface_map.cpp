@@ -122,3 +122,17 @@ bool mcl::ConnectionSurfaceMap::with_buffer_do(
         return false;
     }
 }
+
+std::shared_ptr<mcl::Buffer> mcl::ConnectionSurfaceMap::buffer(int buffer_id) const
+{
+    std::lock_guard<decltype(guard)> lk(guard);
+    auto const it = buffers.find(buffer_id);
+    if (it != buffers.end())
+    {
+        return it->second;
+    }
+    else
+    {
+        return nullptr;
+    }
+}
