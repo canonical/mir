@@ -772,12 +772,28 @@ MATCHER_P3(ADeviceMatches, name, unique_id, caps, "")
     return one_of_the_devices_matched;
 }
 
+//Poll for the expected config to fix lp: #1555708. Client can't expect synchronization
+//with the server on the input config.
 TEST_F(TestClientInput, client_input_config_request_receives_all_attached_devices)
 {
     auto con = mir_connect_sync(new_connection().c_str(), first.c_str());
     auto config = mir_connection_create_input_config(con);
+    int limit = 10;
+    int num_devices = 0;
+    int expected_devices = 3;
+ 
+    for(auto i = 0; i < limit; i++)
+    {
+        num_devices = mir_input_config_device_count(config);
+        if (num_devices == expected_devices)
+            break;
+ 
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        mir_input_config_destroy(config);
+        config = mir_connection_create_input_config(con);
+    }
 
-    EXPECT_THAT(mir_input_config_device_count(config), Eq(3));
+    ASSERT_THAT(mir_input_config_device_count(config), Eq(expected_devices));
 
     EXPECT_THAT(config, ADeviceMatches(keyboard_name, keyboard_unique_id, mir_input_device_capability_keyboard));
     EXPECT_THAT(config, ADeviceMatches(mouse_name, mouse_unique_id, mir_input_device_capability_pointer));
