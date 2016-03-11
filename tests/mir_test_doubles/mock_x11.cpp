@@ -71,6 +71,14 @@ mtd::MockX11::MockX11()
 
     ON_CALL(*this, XInitThreads())
     .WillByDefault(Return(1));
+
+    ON_CALL(*this, XPending(_))
+    .WillByDefault(DoAll(InvokeWithoutArgs([this]()
+                         {
+                             if (fake_x11.pending_events-- < 0)
+                                 fake_x11.pending_events = 0;
+                         }),
+                         ReturnPointee(&fake_x11.pending_events)));
 }
 
 mtd::MockX11::~MockX11()

@@ -30,7 +30,6 @@
 #include "mir/test/doubles/mock_input_sink.h"
 #include "mir/test/doubles/mock_input_device_registry.h"
 #include "mir/test/doubles/mock_x11.h"
-#include "mir/test/doubles/mock_x11.h"
 #include "mir/test/fake_shared.h"
 #include "mir/cookie/authority.h"
 #include "mir/test/event_matchers.h"
@@ -228,6 +227,19 @@ TEST_F(X11PlatformTest, ungrabs_keyboard)
         .Times(Exactly(0));
     EXPECT_CALL(mock_keyboard_sink, handle_input(_))
         .Times(Exactly(0));
+
+    process_input_event();
+}
+
+TEST_F(X11PlatformTest, does_not_block_on_events)
+{
+    prepare_event_processing();
+
+    ON_CALL(mock_x11, XPending(_))
+    .WillByDefault(Return(0));
+
+    EXPECT_CALL(mock_x11, XNextEvent(_,_))
+    .Times(Exactly(0));
 
     process_input_event();
 }
