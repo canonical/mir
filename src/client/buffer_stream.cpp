@@ -274,9 +274,11 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     NewBufferSemantics(
         std::shared_ptr<mcl::ClientBufferFactory> const& factory,
         std::shared_ptr<mcl::ServerBufferRequests> const& requests,
+        std::shared_ptr<mcl::SurfaceMap> const& map,
+        std::shared_ptr<mcl::AsyncBufferFactory> const& afactory,
         geom::Size size, MirPixelFormat format, int usage,
         unsigned int initial_nbuffers) :
-        vault(factory, requests, nullptr, nullptr, size, format, usage, initial_nbuffers)
+        vault(factory, requests, map, afactory, size, format, usage, initial_nbuffers)
     {
     }
 
@@ -365,6 +367,8 @@ mcl::BufferStream::BufferStream(
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
+    std::shared_ptr<mcl::SurfaceMap> const& map,
+    std::shared_ptr<mcl::AsyncBufferFactory> const& factory,
     mp::BufferStream const& a_protobuf_bs,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
     std::string const& surface_name,
@@ -379,7 +383,8 @@ mcl::BufferStream::BufferStream(
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
       ideal_buffer_size(ideal_size),
       nbuffers(nbuffers),
-      creation_wait_handle(creation_wait_handle)
+      creation_wait_handle(creation_wait_handle),
+      map(map), factory(factory)
 {
     init_swap_interval();
     if (!protobuf_bs->has_id())
@@ -410,6 +415,7 @@ mcl::BufferStream::BufferStream(
             buffer_depository = std::make_unique<NewBufferSemantics>(
                 client_platform->create_buffer_factory(),
                 std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
+                map, factory,
                 ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
                 protobuf_bs->buffer_usage(), nbuffers);
         }
@@ -462,6 +468,8 @@ mcl::BufferStream::BufferStream(
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
+    std::shared_ptr<mcl::SurfaceMap> const& map,
+    std::shared_ptr<mcl::AsyncBufferFactory> const& factory,
     mp::BufferStreamParameters const& parameters,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
     size_t nbuffers)
@@ -474,7 +482,8 @@ mcl::BufferStream::BufferStream(
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
       ideal_buffer_size(parameters.width(), parameters.height()),
       nbuffers(nbuffers),
-      creation_wait_handle(creation_wait_handle)
+      creation_wait_handle(creation_wait_handle),
+        map(map), factory(factory)
 {
     perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
 
@@ -494,6 +503,7 @@ mcl::BufferStream::BufferStream(
         buffer_depository = std::make_unique<NewBufferSemantics>(
             client_platform->create_buffer_factory(),
             std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
+            map, factory,
             ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
     }
 }

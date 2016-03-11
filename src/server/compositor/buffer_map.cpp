@@ -53,7 +53,7 @@ mg::BufferID mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto buffer = allocator->alloc_buffer(properties);
     buffers[buffer->id()] = {buffer, Owner::client};
-    sink->send_buffer(stream_id, *buffer, mg::BufferIpcMsgType::full_msg);
+    sink->send_buffer(mf::BufferStreamId{-1}, *buffer, mg::BufferIpcMsgType::full_msg);
     return buffer->id();
 }
 
@@ -72,7 +72,7 @@ void mc::BufferMap::send_buffer(mg::BufferID id)
         auto buffer = it->second.buffer;
         it->second.owner = Owner::client;
         lk.unlock();
-        sink->send_buffer(stream_id, *buffer, mg::BufferIpcMsgType::update_msg);
+        sink->send_buffer(mf::BufferStreamId{-1}, *buffer, mg::BufferIpcMsgType::update_msg);
     }
 }
 

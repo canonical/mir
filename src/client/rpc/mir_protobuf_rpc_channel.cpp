@@ -317,19 +317,17 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 }
                 else
                 {
-                    auto had_buffer = map->with_buffer_do(
-                        seq.buffer_request().buffer().buffer_id(),
-                        [&seq](mcl::Buffer& buffer)
-                        {
-                            buffer.received(
-                                *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
-                        });
-
-                    if (!had_buffer)
+                    auto b = map->buffer(seq.buffer_request().buffer().buffer_id());
+                    if(b)
                     {
-                        auto b =  buffer_factory->generate_buffer(seq.buffer_request().buffer());
-                        auto braw = b.get();
-                        map->insert(seq.buffer_request().buffer().buffer_id(), std::move(b)); 
+                        b->received(
+                            *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
+                    }
+                    else
+                    {
+                        auto bb = buffer_factory->generate_buffer(seq.buffer_request().buffer());
+                        auto braw = bb.get();
+                        map->insert(seq.buffer_request().buffer().buffer_id(), std::move(bb)); 
                         braw->received();
                     }
                 }
