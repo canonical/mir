@@ -26,52 +26,29 @@
 
 #include <vector>
 
-namespace mt = mir::time;
-
 namespace mir
 {
 namespace test
 {
 namespace doubles
 {
-class FakeAlarm : public mt::Alarm
-{
-public:
-    FakeAlarm(std::function<void()> const& callback,
-        std::shared_ptr<mir::time::Clock> const& clock);
-
-    void time_updated();
-    int wakeup_count() const;
-
-    bool cancel() override;
-    State state() const override;
-
-    bool reschedule_in(std::chrono::milliseconds delay) override;
-    bool reschedule_for(mir::time::Timestamp timeout) override;
-
-private:
-    int triggered_count;
-    std::function<void()> const callback;
-    State alarm_state;
-    mir::time::Timestamp triggers_at;
-    std::shared_ptr<mt::Clock> clock;
-};
-
-class FakeAlarmFactory : public mt::AlarmFactory
+class FakeAlarmFactory : public time::AlarmFactory
 {
 public:
     FakeAlarmFactory();
 
-    std::unique_ptr<mt::Alarm> create_alarm(
+    std::unique_ptr<time::Alarm> create_alarm(
         std::function<void()> const& callback) override;
-    std::unique_ptr<mt::Alarm> create_alarm(
+    std::unique_ptr<time::Alarm> create_alarm(
         std::shared_ptr<mir::LockableCallback> const& callback) override;
 
-    void advance_by(mt::Duration step);
-    void advance_smoothly_by(mt::Duration step);
+    void advance_by(time::Duration step);
+    void advance_smoothly_by(time::Duration step);
     int wakeup_count() const;
 
 private:
+    class FakeAlarm;
+
     std::vector<FakeAlarm*> alarms;
     std::shared_ptr<AdvanceableClock> const clock;
 };
