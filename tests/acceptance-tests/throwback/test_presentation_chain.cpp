@@ -337,57 +337,22 @@ TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
     mir_buffer_release(context.buffer());
 }
 
-TEST_F(PresentationChain, can_figure_out_when_a_buffer_is_received)
+TEST_F(PresentationChain, can_access_basic_buffer_properties)
 {
+    MirBufferSync context;
+    geom::Width width { 32 };
+    geom::Height height { 33 };
+    auto format = mir_pixel_format_abgr_8888;
+    auto usage = mir_buffer_usage_software;
+
     SurfaceWithChainFromStart surface(connection, size, pf);
-    auto const num_buffers = 8u;
-
-    struct BufferProperties
-    {
-        BufferProperties(geom::Size size, MirPixelFormat pf, MirBufferUsage usage) :
-            size(size),
-            format(pf),
-            usage(usage)
-        {
-        }
-        geom::Size size;
-        MirPixelFormat format;
-        MirBufferUsage usage;
-        MirBufferSync context;
-    };
-
-    std::array<BufferProperties, num_buffers> properties =
-    {
-        {
-            {{10, 10}, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware},
-            {{10, 10}, mir_pixel_format_abgr_8888, mir_buffer_usage_software},
-            {{10, 10}, mir_pixel_format_argb_8888, mir_buffer_usage_hardware},
-            {{10, 10}, mir_pixel_format_argb_8888, mir_buffer_usage_software},
-            {{10, 11}, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware},
-            {{10, 11}, mir_pixel_format_abgr_8888, mir_buffer_usage_software},
-            {{10, 11}, mir_pixel_format_argb_8888, mir_buffer_usage_hardware},
-            {{10, 11}, mir_pixel_format_argb_8888, mir_buffer_usage_software}
-        }
-    };
-
-    for (auto& context : properties)
-    {
-        mir_presentation_chain_allocate_buffer(
-            surface.chain(),
-            context.size.width.as_int(), context.size.height.as_int(),
-            context.format, context.usage,
-            buffer_callback, &context.context);
-    }
-
-    std::array<MirBuffer*, num_buffers> buffers;
-    for (auto i = 0u; i < num_buffers; i++)
-    {
-        ASSERT_TRUE(properties[i].context.wait_for_buffer(10s));
-        buffers[i] = properties[i].context.buffer();
-        ASSERT_THAT(buffers[i], Ne(nullptr));
-        EXPECT_THAT(mir_buffer_get_width(buffers[i]), Eq(properties[i].size.width.as_uint32_t()));
-        EXPECT_THAT(mir_buffer_get_height(buffers[i]), Eq(properties[i].size.height.as_uint32_t()));
-        EXPECT_THAT(mir_buffer_get_buffer_usage(buffers[i]), Eq(properties[i].usage));
-        EXPECT_THAT(mir_buffer_get_pixel_format(buffers[i]), Eq(properties[i].format));
-    }
+    mir_presentation_chain_allocate_buffer(
+        surface.chain(), width.as_int(), height.as_int(), format, usage,
+        buffer_callback, &context);
+    ASSERT_TRUE(context.wait_for_buffer(10s));
+    auto buffer = context.buffer();
+    EXPECT_THAT(mir_buffer_get_width(buffer), Eq(width.as_uint32_t()));
+    EXPECT_THAT(mir_buffer_get_height(buffer), Eq(height.as_uint32_t()));
+    EXPECT_THAT(mir_buffer_get_buffer_usage(buffer), Eq(usage));
+    EXPECT_THAT(mir_buffer_get_pixel_format(buffer), Eq(format));
 }
