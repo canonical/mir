@@ -70,13 +70,15 @@ public:
 
     NoTLSFuture<BufferInfo> withdraw();
     void deposit(std::shared_ptr<ClientBuffer> const& buffer);
-    void wire_transfer_inbound(protobuf::Buffer const&);
+    void wire_transfer_inbound(int buffer_id);
     void wire_transfer_outbound(std::shared_ptr<ClientBuffer> const& buffer);
     void set_size(geometry::Size);
     void disconnected();
     void set_scale(float scale);
 
 private:
+    void realloc(int free_id, geometry::Size, MirPixelFormat, int);
+
     std::shared_ptr<ClientBufferFactory> const factory;
     std::shared_ptr<ServerBufferRequests> const server_requests;
     std::shared_ptr<SurfaceMap> const map;
