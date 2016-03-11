@@ -64,6 +64,7 @@ mcl::BufferVault::BufferVault(
 {
     for (auto i = 0u; i < initial_nbuffers; i++)
     {
+    printf("EXPECT!\n");
         mirfactory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage, incoming_buffer, this);
         server_requests->allocate_buffer(size, format, usage);
     }
@@ -91,6 +92,7 @@ void mcl::BufferVault::realloc(int free_id, geom::Size, MirPixelFormat format, i
     map->erase(free_id);
     server_requests->free_buffer(free_id);
 
+    printf("EXPECT!\n");
     mirfactory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage,
         incoming_buffer, this);
     server_requests->allocate_buffer(size, format, usage);
@@ -142,6 +144,7 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be transferred"));
 
     it->second.owner = Owner::Server;
+    it->second.buffer->submitted();
     it->second.buffer->client_buffer()->mark_as_submitted();
     submit_buffer = it->second.buffer->client_buffer();
     id = it->first;

@@ -32,12 +32,10 @@ mcl::Buffer::Buffer(
     cb_context(context),
     buffer_id(buffer_id),
     buffer(buffer),
-    owned(true),
+    owned(false),
     chain(chain),
     usage(usage)
 {
-    if(cb)
-    cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
 }
 
 int mcl::Buffer::rpc_id() const
@@ -52,6 +50,17 @@ void mcl::Buffer::submitted()
         BOOST_THROW_EXCEPTION(std::logic_error("cannot submit unowned buffer"));
     mapped_region.reset();
     owned = false;
+}
+
+void mcl::Buffer::received()
+{
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    if (!owned)
+    {
+        owned = true;
+        cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
+    }
+
 }
 
 void mcl::Buffer::received(MirBufferPackage const& update_package)

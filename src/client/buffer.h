@@ -44,6 +44,7 @@ public:
     int rpc_id() const;
 
     void submitted();
+    void received();
     void received(MirBufferPackage const& update_message);
 
     MirNativeBuffer* as_mir_native_buffer() const;
