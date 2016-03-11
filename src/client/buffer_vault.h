@@ -32,6 +32,8 @@ namespace mir
 namespace protobuf { class Buffer; }
 namespace client
 {
+class SurfaceMap;
+class AsyncBufferFactory;
 class ClientBuffer;
 class ServerBufferRequests
 {
@@ -60,6 +62,8 @@ public:
     BufferVault(
         std::shared_ptr<ClientBufferFactory> const&,
         std::shared_ptr<ServerBufferRequests> const&,
+        std::shared_ptr<SurfaceMap> const&,
+        std::shared_ptr<AsyncBufferFactory> const&,
         geometry::Size size, MirPixelFormat format, int usage,
         unsigned int initial_nbuffers);
     ~BufferVault();
@@ -75,6 +79,8 @@ public:
 private:
     std::shared_ptr<ClientBufferFactory> const factory;
     std::shared_ptr<ServerBufferRequests> const server_requests;
+    std::shared_ptr<SurfaceMap> const map;
+    std::shared_ptr<AsyncBufferFactory> const mirfactory;
     MirPixelFormat const format;
     int const usage;
 

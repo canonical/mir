@@ -39,9 +39,12 @@ enum class mcl::BufferVault::Owner
 mcl::BufferVault::BufferVault(
     std::shared_ptr<ClientBufferFactory> const& client_buffer_factory,
     std::shared_ptr<ServerBufferRequests> const& server_requests,
+    std::shared_ptr<SurfaceMap> const& map,
+    std::shared_ptr<AsyncBufferFactory> const& mirfactory,
     geom::Size size, MirPixelFormat format, int usage, unsigned int initial_nbuffers) :
     factory(client_buffer_factory),
     server_requests(server_requests),
+    map(map), mirfactory(mirfactory),
     format(format),
     usage(usage),
     size(size),

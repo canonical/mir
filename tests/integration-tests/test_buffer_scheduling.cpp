@@ -21,6 +21,8 @@
 #include "mir/frontend/buffer_sink.h"
 #include "src/client/buffer_vault.h"
 #include "src/client/client_buffer_depository.h"
+#include "src/client/buffer_factory.h"
+#include "src/client/connection_surface_map.h"
 #include "src/server/compositor/buffer_queue.h"
 #include "src/server/compositor/stream.h"
 #include "src/server/compositor/buffer_map.h"
@@ -371,6 +373,8 @@ struct ScheduledProducer : ProducerSystem
         vault(
             std::make_shared<mtd::StubClientBufferFactory>(),
             std::make_shared<ServerRequests>(ipc),
+            std::make_shared<mcl::ConnectionSurfaceMap>(),
+            std::make_shared<mcl::BufferFactory>(),
             geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers)
     {
         ipc->on_client_bound_transfer([this](mp::Buffer& buffer){

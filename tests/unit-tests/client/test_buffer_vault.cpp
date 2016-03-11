@@ -19,6 +19,8 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "src/client/client_buffer_depository.h"
 #include "src/client/buffer_vault.h"
+#include "src/client/surface_map.h"
+#include "src/client/buffer_factory.h"
 #include "mir/client_buffer_factory.h"
 #include "mir/aging_buffer.h"
 #include "mir_toolkit/common.h"
@@ -30,6 +32,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include "mir/test/gmock_fixes.h"
 #include <stdexcept>
 #include <array>
 
@@ -43,9 +46,33 @@ using namespace testing;
 
 namespace
 {
-struct MockClientBufferFactory : public mcl::ClientBufferFactory
+
+struct MockSurfaceMap : mcl::SurfaceMap
 {
-    MockClientBufferFactory()
+    MOCK_CONST_METHOD2(with_surface_do,
+        void(mir::frontend::SurfaceId, std::function<void(MirSurface*)> const&));
+    MOCK_CONST_METHOD2(with_stream_do,
+        void(mir::frontend::BufferStreamId, std::function<void(mcl::BufferReceiver*)> const&));
+    MOCK_CONST_METHOD1(with_all_streams_do,
+        void(std::function<void(mcl::BufferReceiver*)> const&));
+    MOCK_CONST_METHOD2(with_buffer_do, bool(int, std::function<void(mcl::Buffer&)> const&));
+    MOCK_METHOD2(insert, void(int, std::shared_ptr<mcl::Buffer> const&));
+    MOCK_METHOD1(erase, void(int));
+}; 
+
+struct MockBufferFactory : mcl::AsyncBufferFactory
+{
+    MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::Buffer>(mp::Buffer const&));
+    MOCK_METHOD7(expect_buffer, void(
+        std::shared_ptr<mcl::ClientBufferFactory> const&,
+        MirPresentationChain*,
+        geom::Size, MirPixelFormat, MirBufferUsage,
+        mir_buffer_callback, void*));
+};
+
+struct NativeBufferFactory : public mcl::ClientBufferFactory
+{
+    NativeBufferFactory()
     {
         ON_CALL(*this, create_buffer(_,_,_))
             .WillByDefault(Invoke([](
@@ -90,7 +117,9 @@ struct BufferVault : public testing::Test
     int usage{0};
     mg::BufferProperties initial_properties{
         geom::Size{271,314}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
-    NiceMock<MockClientBufferFactory> mock_factory;
+    NiceMock<MockBufferFactory> mock_factory;
+    NiceMock<MockSurfaceMap> mock_map;
+    NiceMock<NativeBufferFactory> mock_native_factory;
     NiceMock<MockServerRequests> mock_requests;
     mp::Buffer package;
     mp::Buffer package2;
@@ -106,7 +135,8 @@ struct StartedBufferVault : BufferVault
         vault.wire_transfer_inbound(package3);
     }
     mcl::BufferVault vault{
-        mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+        mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
+        mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
         size, format, usage, initial_nbuffers};
 };
 }
@@ -115,7 +145,10 @@ TEST_F(BufferVault, creates_all_buffers_on_start)
 {
     EXPECT_CALL(mock_requests, allocate_buffer(size, format, usage))
         .Times(initial_nbuffers);
-    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+    EXPECT_CALL(mock_factory, expect_buffer(_,_,_,_,_,_,_))
+        .Times(initial_nbuffers);
+    mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
+        mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
         size, format, usage, initial_nbuffers);
 }
 
@@ -123,7 +156,9 @@ TEST_F(BufferVault, frees_the_buffers_we_actually_got)
 {
     EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
     EXPECT_CALL(mock_requests, free_buffer(package2.buffer_id()));
-    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+    EXPECT_CALL(mock_map, erase(An<int>())).Times(2);
+    mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
+        mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
         size, format, usage, initial_nbuffers);
     vault.wire_transfer_inbound(package);
     vault.wire_transfer_inbound(package2);
@@ -131,8 +166,9 @@ TEST_F(BufferVault, frees_the_buffers_we_actually_got)
 
 TEST_F(BufferVault, creates_buffer_on_first_insertion)
 {
-    EXPECT_CALL(mock_factory, create_buffer(_,initial_properties.size,initial_properties.format));
-    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+    EXPECT_CALL(mock_native_factory, create_buffer(_,initial_properties.size,initial_properties.format));
+    mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
+        mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
         size, format, usage, initial_nbuffers);
     vault.wire_transfer_inbound(package);
 }
@@ -143,10 +179,11 @@ TEST_F(BufferVault, updates_buffer_on_subsequent_insertions)
     EXPECT_CALL(*mock_buffer, update_from(_));
     ON_CALL(*mock_buffer, size())
         .WillByDefault(Return(size));
-    ON_CALL(mock_factory, create_buffer(_,_,_))
+    ON_CALL(mock_native_factory, create_buffer(_,_,_))
         .WillByDefault(Return(mock_buffer));
 
-    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+    mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
+        mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
         size, format, usage, initial_nbuffers);
     vault.wire_transfer_inbound(package);
     auto b = vault.withdraw().get().buffer;
@@ -159,7 +196,8 @@ TEST_F(BufferVault, withdrawing_and_never_filling_up_will_timeout)
 {
     using namespace std::literals::chrono_literals;
 
-    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+    mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
+        mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
         size, format, usage, initial_nbuffers);
     auto buffer_future = vault.withdraw();
     ASSERT_TRUE(buffer_future.valid());
@@ -211,10 +249,11 @@ TEST_F(StartedBufferVault, attempt_to_redeposit_throws)
 
 TEST_F(BufferVault, can_transfer_again_when_we_get_the_buffer)
 {
-    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+    mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
+        mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
         size, format, usage, initial_nbuffers);
 
-    EXPECT_CALL(mock_factory, create_buffer(_,initial_properties.size,initial_properties.format))
+    EXPECT_CALL(mock_native_factory, create_buffer(_,initial_properties.size,initial_properties.format))
         .Times(Exactly(1));
     vault.wire_transfer_inbound(package);
     auto buffer = vault.withdraw().get().buffer;
@@ -236,7 +275,8 @@ TEST_F(StartedBufferVault, multiple_draws_get_different_buffer)
 
 TEST_F(BufferVault, multiple_withdrawals_during_wait_period_get_differing_buffers)
 {
-    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+    mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
+        mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
         size, format, usage, initial_nbuffers);
 
     auto f_buffer1 = vault.withdraw();
@@ -254,7 +294,8 @@ TEST_F(BufferVault, destruction_signals_futures)
     using namespace std::literals::chrono_literals;
     mcl::NoTLSFuture<mcl::BufferInfo> fbuffer;
     {
-        mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+        mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
+            mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
             size, format, usage, initial_nbuffers);
         fbuffer = vault.withdraw();
     }
@@ -267,10 +308,11 @@ TEST_F(BufferVault, ages_buffer_on_deposit)
     ON_CALL(*mock_buffer, size())
         .WillByDefault(Return(size));
     EXPECT_CALL(*mock_buffer, increment_age());
-    ON_CALL(mock_factory, create_buffer(_,_,_))
+    ON_CALL(mock_native_factory, create_buffer(_,_,_))
         .WillByDefault(Return(mock_buffer));
 
-    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+    mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
+        mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
         size, format, usage, initial_nbuffers);
     vault.wire_transfer_inbound(package);
     vault.deposit(vault.withdraw().get().buffer);
@@ -282,10 +324,11 @@ TEST_F(BufferVault, marks_as_submitted_on_transfer)
     ON_CALL(*mock_buffer, size())
         .WillByDefault(Return(size));
     EXPECT_CALL(*mock_buffer, mark_as_submitted());
-    ON_CALL(mock_factory, create_buffer(_,_,_))
+    ON_CALL(mock_native_factory, create_buffer(_,_,_))
         .WillByDefault(Return(mock_buffer));
 
-    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+    mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
+        mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
         size, format, usage, initial_nbuffers);
     vault.wire_transfer_inbound(package);
 
@@ -313,6 +356,7 @@ TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_i
     mp::Buffer package4;
     geom::Size new_size{80, 100}; 
     EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
+    EXPECT_CALL(mock_map, erase(An<int>()));
     EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_))
         .WillOnce(Invoke(
         [&, this](geom::Size sz, MirPixelFormat, int)
@@ -322,6 +366,7 @@ TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_i
             package4.set_buffer_id(4);
             vault.wire_transfer_inbound(package4);
         }));
+    EXPECT_CALL(mock_factory, expect_buffer(_,_,_,_,_,_,_));
 
     vault.set_size(new_size);
     vault.wire_transfer_inbound(package);
@@ -338,6 +383,8 @@ TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_d
 
     EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
     EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_));
+    EXPECT_CALL(mock_factory, expect_buffer(_,_,_,_,_,_,_));
+    EXPECT_CALL(mock_map, erase(An<int>()));
 
     vault.set_size(new_size);
     vault.wire_transfer_inbound(package);
@@ -365,6 +412,7 @@ TEST_F(StartedBufferVault, simply_setting_size_triggers_no_server_interations)
 {
     EXPECT_CALL(mock_requests, free_buffer(_)).Times(0);
     EXPECT_CALL(mock_requests, allocate_buffer(_,_,_)).Times(0);
+    EXPECT_CALL(mock_factory, expect_buffer(_,_,_,_,_,_,_)).Times(0);
     auto const cycles = 30u;
     geom::Size new_size(80, 100);
     for(auto i = 0u; i < cycles; i++)
@@ -387,6 +435,7 @@ TEST_F(StartedBufferVault, scaling_resizes_buffers_right_away)
     EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
         .WillOnce(InvokeWithoutArgs(
             [&]{vault.wire_transfer_inbound(package4);}));
+    EXPECT_CALL(mock_factory, expect_buffer(_,_,_,_,_,_,_));
     auto b1 = vault.withdraw().get();
     auto b2 = vault.withdraw().get();
     vault.set_scale(scale);
@@ -397,7 +446,8 @@ TEST_F(StartedBufferVault, scaling_resizes_buffers_right_away)
 
 TEST_F(BufferVault, waiting_threads_give_error_if_disconnected)
 {
-    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+    mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
+        mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
         size, format, usage, initial_nbuffers);
 
     auto future = vault.withdraw();
@@ -413,7 +463,8 @@ TEST_F(BufferVault, makes_sure_rpc_calls_exceptions_are_caught_in_destructor)
         .Times(1)
         .WillOnce(Throw(std::runtime_error("")));
     EXPECT_NO_THROW({
-        mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+        mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
+            mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
             size, format, usage, initial_nbuffers);
         vault.wire_transfer_inbound(package);
     });
@@ -449,7 +500,11 @@ TEST_F(StartedBufferVault, buffer_count_remains_the_same_after_scaling)
             [&]{vault.wire_transfer_inbound(buffers[1]);}))
         .WillOnce(InvokeWithoutArgs(
             [&]{vault.wire_transfer_inbound(buffers[2]);}));
+    EXPECT_CALL(mock_factory, expect_buffer(_,_,_,_,_,_,_))
+        .Times(initial_nbuffers);
     EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(initial_nbuffers);
+    EXPECT_CALL(mock_map, erase(An<int>()))
         .Times(initial_nbuffers);
 
     auto buffer = vault.withdraw().get().buffer;
@@ -471,7 +526,8 @@ TEST_F(StartedBufferVault, buffer_count_remains_the_same_after_scaling)
 
 TEST_F(BufferVault, rescale_before_initial_buffers_are_serviced_frees_initial_buffers)
 {
-    mcl::BufferVault vault(mt::fake_shared(mock_factory), mt::fake_shared(mock_requests),
+    mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
+        mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
         size, format, usage, initial_nbuffers);
     vault.set_scale(2.0);
 
@@ -479,8 +535,11 @@ TEST_F(BufferVault, rescale_before_initial_buffers_are_serviced_frees_initial_bu
         .Times(initial_nbuffers);
     EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
         .Times(initial_nbuffers);
+    EXPECT_CALL(mock_factory, expect_buffer(_,_,_,_,_,_,_))
+        .Times(initial_nbuffers);
+    EXPECT_CALL(mock_map, erase(An<int>()))
+        .Times(initial_nbuffers);
     vault.wire_transfer_inbound(package);
     vault.wire_transfer_inbound(package2);
     vault.wire_transfer_inbound(package3);
-    
 }

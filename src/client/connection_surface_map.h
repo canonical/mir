@@ -45,7 +45,7 @@ public:
 
     //TODO: should have a mf::BufferID
     void insert(int buffer_id, std::shared_ptr<Buffer> const& buffer) override;
-    void erase(int buffer_id);
+    void erase(int buffer_id) override;
     bool with_buffer_do(int buffer_id, std::function<void(Buffer&)> const& exec) const override;
 
 private:
