@@ -45,7 +45,7 @@ typedef struct
 typedef struct
 {
     int fd;
-    __u32 buffers;
+    unsigned buffers;
     struct
     {
         void *start;
@@ -109,7 +109,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
 
 void close_camera(Camera *cam)
 {
-    for (__u32 b = 0; b < cam->buffers; ++b)
+    for (unsigned b = 0; b < cam->buffers; ++b)
         munmap(cam->buffer[b].start, cam->buffer[b].length);
     free(cam->buffer);
     close(cam->fd);
@@ -140,7 +140,7 @@ bool open_camera(Camera *cam) /* TODO: selectable */
 
     }
 
-    const __u32 required = V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_STREAMING;
+    const unsigned required = V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_STREAMING;
     if (ret || (cap.capabilities & required) != required)
     {
         fprintf(stderr, "Can't get sufficient capabilities\n");
@@ -191,7 +191,7 @@ bool open_camera(Camera *cam) /* TODO: selectable */
     cam->buffer = calloc(cam->buffers, sizeof(*cam->buffer));
     assert(cam->buffer != NULL);
             
-    for (__u32 b = 0; b < req.count; ++b)
+    for (unsigned b = 0; b < req.count; ++b)
     {
         struct v4l2_buffer buf;
         memset(&buf, 0, sizeof(buf));
@@ -218,7 +218,7 @@ bool open_camera(Camera *cam) /* TODO: selectable */
         }
     }
 
-    for (__u32 b = 0; b < req.count; ++b)
+    for (unsigned b = 0; b < req.count; ++b)
     {
         struct v4l2_buffer buf;
         memset(&buf, 0, sizeof(buf));
