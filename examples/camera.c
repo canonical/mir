@@ -37,8 +37,6 @@
 typedef struct
 {
     pthread_mutex_t mutex;
-    pthread_cond_t change;
-    bool changed;
     bool resized;
 } State;
 
@@ -102,8 +100,6 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         break;
     }
 
-    state->changed = true;
-    pthread_cond_signal(&state->change);
     pthread_mutex_unlock(&state->mutex);
 }
 
@@ -373,8 +369,6 @@ int main(int argc, char *argv[])
     State state =
     {
         PTHREAD_MUTEX_INITIALIZER,
-        PTHREAD_COND_INITIALIZER,
-        true,
         true
     };
     MirSurface *surface = mir_eglapp_native_surface();
@@ -383,9 +377,6 @@ int main(int argc, char *argv[])
     while (mir_eglapp_running())
     {
         pthread_mutex_lock(&state.mutex);
-
-        while (mir_eglapp_running() && !state.changed)
-            pthread_cond_wait(&state.change, &state.mutex);
 
         if (state.resized)
         {
@@ -408,6 +399,8 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT);
 
         int index = acquire_frame(&cam);
+        // FIXME: This is hardcoded to work with 16bpp YUYV (PlayStation Eye).
+        //        It will be wrong for other cameras.
         glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, cam.pix.width,
                      cam.pix.height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
                      cam.buffer[index].start);
@@ -416,8 +409,6 @@ int main(int argc, char *argv[])
         glUniform2f(translate, 0.0f, 0.0f);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-        // Put the event loop back to sleep:
-        state.changed = false;
         pthread_mutex_unlock(&state.mutex);
 
         mir_eglapp_swap_buffers();
