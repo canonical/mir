@@ -294,7 +294,10 @@ int main(int argc, char *argv[])
         "void main()\n"
         "{\n"
         "    vec4 f = texture2D(texture, v_texcoord);\n"
-        "    gl_FragColor = f;\n"
+        // TODO: Implement YUYV/whatever to RGB converstion.
+        //       For now we just display Y (luminance) which suffices for
+        //       a greyscale image.
+        "    gl_FragColor = vec4(f.r, f.g, f.b, 1.0);\n"
         "}\n";
 
     Camera cam;
@@ -358,8 +361,8 @@ int main(int argc, char *argv[])
     glBindTexture(GL_TEXTURE_2D, tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glViewport(0, 0, width, height);
@@ -405,8 +408,8 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT);
 
         int index = acquire_frame(&cam);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, cam.pix.width,
-                     cam.pix.height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5,
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, cam.pix.width,
+                     cam.pix.height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
                      cam.buffer[index].start);
         release_frame(&cam, index);
 
