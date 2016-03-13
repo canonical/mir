@@ -351,8 +351,8 @@ int main(int argc, char *argv[])
     GLuint tex;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -376,14 +376,38 @@ int main(int argc, char *argv[])
             // mir_eglapp_swap_buffers updates the viewport for us...
             GLint viewport[4];
             glGetIntegerv(GL_VIEWPORT, viewport);
-            int w = viewport[2], h = viewport[3];
+            GLfloat scalex = 2.0f / viewport[2];
+            GLfloat scaley = -2.0f / viewport[3];
+
+            // Expand image to fit:
+            GLfloat scalew = (GLfloat)viewport[2] / cam.pix.width;
+            GLfloat scaleh = (GLfloat)viewport[3] / cam.pix.height;
+
+            GLfloat scale;
+            GLfloat offsetx = -1.0f, offsety = 1.0f;
+            if (scalew <= scaleh)
+            {
+                scale = scalew;
+                offsety -= (GLfloat)(viewport[3] - scale*cam.pix.height) /
+                           viewport[3];
+            }
+            else
+            {
+                scale = scaleh;
+                offsetx += (GLfloat)(viewport[2] - scale*cam.pix.width) /
+                           viewport[2];
+            }
+
+            scalex *= scale;
+            scaley *= scale;
 
             // TRANSPOSED projection matrix to convert from the Mir input
             // rectangle {{0,0},{w,h}} to GL screen rectangle {{-1,1},{2,2}}.
-            GLfloat matrix[16] = {2.0f/w, 0.0f,   0.0f, 0.0f,
-                                  0.0f,  -2.0f/h, 0.0f, 0.0f,
+            GLfloat matrix[16] = {scalex, 0.0f,   0.0f, 0.0f,
+                                  0.0f,   scaley, 0.0f, 0.0f,
                                   0.0f,   0.0f,   1.0f, 0.0f,
-                                 -1.0f,   1.0f,   0.0f, 1.0f};
+                                  offsetx,offsety,0.0f, 1.0f};
+
             // Note GL_FALSE: GLES does not support the transpose option
             glUniformMatrix4fv(projection, 1, GL_FALSE, matrix);
             state.resized = false;
