@@ -111,9 +111,8 @@ void close_camera(Camera *cam)
     close(cam->fd);
 }
 
-bool open_camera(Camera *cam) /* TODO: selectable */
+bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
 {
-    const char *path = "/dev/video0";
     printf("Opening device: %s\n", path);
     cam->fd = open(path, O_RDWR);
     if (cam->fd < 0)
@@ -171,7 +170,7 @@ bool open_camera(Camera *cam) /* TODO: selectable */
 
     struct v4l2_requestbuffers req =
     {
-        2,
+        nbuffers,
         V4L2_BUF_TYPE_VIDEO_CAPTURE,
         V4L2_MEMORY_MMAP,
         {0,0}
@@ -305,7 +304,7 @@ int main(int argc, char *argv[])
         "}\n";
 
     Camera cam;
-    if (!open_camera(&cam))
+    if (!open_camera("/dev/video0", 1, &cam))
     {
         fprintf(stderr, "Failed to set up camera device\n");
         return -1;
