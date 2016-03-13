@@ -149,7 +149,7 @@ bool open_camera(Camera *cam) /* TODO: selectable */
     fmtdesc.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     while (!ioctl(cam->fd, VIDIOC_ENUM_FMT, &fmtdesc))
     {
-        printf("Supports pixel format `%s' %08lx\n",
+        printf("Supports pixel format `%s' 0x%08lx\n",
             fmtdesc.description, (long)fmtdesc.pixelformat);
         fmtdesc.index++;
     }
@@ -266,6 +266,15 @@ void release_frame(Camera *cam, int index)
     ioctl(cam->fd, VIDIOC_QBUF, &frame);
 }
 
+static void fourcc_string(__u32 x, char str[5])
+{
+    str[0] = (char)(x & 0xff);
+    str[1] = (char)(x >> 8 & 0xff);
+    str[2] = (char)(x >> 16 & 0xff);
+    str[3] = (char)(x >> 24);
+    str[4] = '\0';
+}
+
 int main(int argc, char *argv[])
 {
     const char vshadersrc[] =
@@ -289,7 +298,7 @@ int main(int argc, char *argv[])
         "void main()\n"
         "{\n"
         "    vec4 f = texture2D(texture, v_texcoord);\n"
-        // TODO: Implement YUYV/whatever to RGB converstion.
+        // TODO: Implement YUYV/whatever to RGB conversion.
         //       For now we just display Y (luminance) which suffices for
         //       a greyscale image.
         "    gl_FragColor = vec4(f.r, f.g, f.b, 1.0);\n"
@@ -331,11 +340,11 @@ int main(int argc, char *argv[])
 
     const GLfloat camw = cam.pix.width, camh = cam.pix.height;
     const GLfloat box[] =
-    { // position      texcoord
+    { // position   texcoord
         0.0f, camh, 0.0f, 1.0f,
         camw, camh, 1.0f, 1.0f,
-        camw, 0.0f,  1.0f, 0.0f,
-        0.0f, 0.0f,  0.0f, 0.0f,
+        camw, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f,
     };
     GLint position = glGetAttribLocation(prog, "position");
     GLint texcoord = glGetAttribLocation(prog, "texcoord");
@@ -416,11 +425,21 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT);
 
         int index = acquire_frame(&cam);
-        // FIXME: This is hardcoded to work with 16bpp YUYV (PlayStation Eye).
-        //        It will be wrong for other cameras.
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, cam.pix.width,
-                     cam.pix.height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
-                     cam.buffer[index].start);
+        if (cam.pix.pixelformat == V4L2_PIX_FMT_YUYV)
+        {
+            // 16bpp YUYV (PlayStation Eye), clumsily uploaded as
+            // luminance+alpha, because GLES gives us little choice...
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, cam.pix.width,
+                         cam.pix.height, 0, GL_LUMINANCE_ALPHA,
+                         GL_UNSIGNED_BYTE, cam.buffer[index].start);
+        }
+        else
+        {
+            char str[5];
+            fourcc_string(cam.pix.pixelformat, str);
+            fprintf(stderr, "FIXME: Unsupported camera pixel format 0x%08lx: %s\n",
+                    (long)cam.pix.pixelformat, str);
+        }
         release_frame(&cam, index);
 
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
