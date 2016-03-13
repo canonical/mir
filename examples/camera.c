@@ -271,14 +271,13 @@ int main(int argc, char *argv[])
     const char vshadersrc[] =
         "attribute vec2 position;\n"
         "attribute vec2 texcoord;\n"
-        "uniform vec2 translate;\n"
         "uniform mat4 projection;\n"
         "varying vec2 v_texcoord;\n"
         "\n"
         "void main()\n"
         "{\n"
         "    gl_Position = projection *\n"
-        "                  vec4(position + translate, 0.0, 1.0);\n"
+        "                  vec4(position, 0.0, 1.0);\n"
         "    v_texcoord = texcoord;\n"
         "}\n";
 
@@ -330,12 +329,12 @@ int main(int argc, char *argv[])
 
     glUseProgram(prog);
 
-    GLfloat dim = 500.0f; // TODO
+    const GLfloat camw = cam.pix.width, camh = cam.pix.height;
     const GLfloat box[] =
     { // position      texcoord
-        0.0f, dim,  0.0f, 1.0f,
-        dim,  dim,  1.0f, 1.0f,
-        dim,  0.0f,  1.0f, 0.0f,
+        0.0f, camh, 0.0f, 1.0f,
+        camw, camh, 1.0f, 1.0f,
+        camw, 0.0f,  1.0f, 0.0f,
         0.0f, 0.0f,  0.0f, 0.0f,
     };
     GLint position = glGetAttribLocation(prog, "position");
@@ -346,9 +345,6 @@ int main(int argc, char *argv[])
                           box+2);
     glEnableVertexAttribArray(position);
     glEnableVertexAttribArray(texcoord);
-
-    GLint translate = glGetUniformLocation(prog, "translate");
-    glUniform2f(translate, 0.0f, 0.0f);
 
     GLint projection = glGetUniformLocation(prog, "projection");
 
@@ -362,9 +358,6 @@ int main(int argc, char *argv[])
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glViewport(0, 0, width, height);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Behave like an accumulation buffer
 
     State state =
     {
@@ -406,7 +399,6 @@ int main(int argc, char *argv[])
                      cam.buffer[index].start);
         release_frame(&cam, index);
 
-        glUniform2f(translate, 0.0f, 0.0f);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
         pthread_mutex_unlock(&state.mutex);
