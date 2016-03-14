@@ -85,7 +85,7 @@ TEST_P(AbortDeathTest, cleanup_handler_is_called_for)
     run_in_server([&]
     {
         kill(getpid(), GetParam());
-    }, disable_core_dump);
+    }, RunFlag::disable_core_dump);
 
     cleanup_done.wait_for_signal_ready_for(timeout);
 }
@@ -111,7 +111,7 @@ TEST_F(ServerSignalDeathTest, multiple_cleanup_handlers_are_called)
     run_in_server([&]
     {
         kill(getpid(), SIGABRT);
-    }, disable_core_dump);
+    }, RunFlag::disable_core_dump);
 
     cleanup_done.wait_for_signal_ready_for(timeout);
     for (auto& cleanup : more_cleanup)

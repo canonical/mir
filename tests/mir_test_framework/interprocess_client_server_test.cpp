@@ -70,7 +70,7 @@ void mtf::InterprocessClientServerTest::run_in_server(
 
     if (pid == 0)
     {
-        if (flags & disable_core_dump)
+        if (flags & RunFlag::disable_core_dump)
             ::mir::test::disable_core_dump();
 
         server_process_id = getpid();

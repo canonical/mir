@@ -80,7 +80,7 @@ TEST_F(ServerShutdownDeathTest, abort_removes_endpoint)
         {
             sync.wait_for_signal_ready_for();
             abort();
-        }, disable_core_dump);
+        }, RunFlag::disable_core_dump);
 
     if (is_test_process())
     {
@@ -110,7 +110,7 @@ TEST_F(ServerShutdownDeathTest, fatal_error_abort_causes_abort_on_fatal_error)
         {
             sync.wait_for_signal_ready_for();
             mir::fatal_error("Bang");
-        }, disable_core_dump);
+        }, RunFlag::disable_core_dump);
 
     if (is_test_process())
     {
@@ -135,7 +135,7 @@ TEST_F(ServerShutdownDeathTest, fatal_error_abort_removes_endpoint)
         {
             sync.wait_for_signal_ready_for();
             mir::fatal_error("Bang");
-        }, disable_core_dump);
+        }, RunFlag::disable_core_dump);
 
     if (is_test_process())
     {
@@ -159,7 +159,7 @@ TEST_F(ServerShutdownDeathTest, on_fatal_error_abort_option_causes_abort_on_fata
         {
             sync.wait_for_signal_ready_for();
             mir::fatal_error("Bang");
-        }, disable_core_dump);
+        }, RunFlag::disable_core_dump);
 
     if (is_test_process())
     {
@@ -211,7 +211,7 @@ TEST_P(OnSignalDeathTest, removes_endpoint)
         {
             sync.wait_for_signal_ready_for();
             raise(GetParam());
-        }, disable_core_dump);
+        }, RunFlag::disable_core_dump);
 
     if (is_test_process())
     {

@@ -20,6 +20,7 @@
 #define MIR_TEST_DEATH_H_
 
 #include <sys/resource.h>
+#include <gtest/gtest.h>
 
 namespace mir { namespace test {
 
