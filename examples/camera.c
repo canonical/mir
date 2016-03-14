@@ -16,7 +16,6 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define _POSIX_C_SOURCE 200112L  // for setenv() from stdlib.h
 #include "eglapp.h"
 #include <assert.h>
 #include <stdio.h>
@@ -103,7 +102,16 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     pthread_mutex_unlock(&state->mutex);
 }
 
-void close_camera(Camera *cam)
+static void fourcc_string(__u32 x, char str[5])
+{
+    str[0] = (char)(x & 0xff);
+    str[1] = (char)(x >> 8 & 0xff);
+    str[2] = (char)(x >> 16 & 0xff);
+    str[3] = (char)(x >> 24);
+    str[4] = '\0';
+}
+
+static void close_camera(Camera *cam)
 {
     for (unsigned b = 0; b < cam->buffers; ++b)
         munmap(cam->buffer[b].start, cam->buffer[b].length);
@@ -111,7 +119,7 @@ void close_camera(Camera *cam)
     close(cam->fd);
 }
 
-bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
+static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
 {
     printf("Opening device: %s\n", path);
     cam->fd = open(path, O_RDWR);
@@ -143,16 +151,6 @@ bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
         return false;
     }
 
-    struct v4l2_fmtdesc fmtdesc;
-    fmtdesc.index = 0;
-    fmtdesc.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    while (!ioctl(cam->fd, VIDIOC_ENUM_FMT, &fmtdesc))
-    {
-        printf("Supports pixel format `%s' 0x%08lx\n",
-            fmtdesc.description, (long)fmtdesc.pixelformat);
-        fmtdesc.index++;
-    }
-
     struct v4l2_format format;
     format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     if (-1 == ioctl(cam->fd, VIDIOC_G_FMT, &format))
@@ -163,9 +161,11 @@ bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
     }
 
     struct v4l2_pix_format *pix = &format.fmt.pix;
-    printf("Pixel format: %ux%u fmt %08lx, stride %u\n",
+    char str[5];
+    fourcc_string(pix->pixelformat, str);
+    printf("Pixel format: %ux%u fmt %s, stride %u\n",
         (unsigned)pix->width, (unsigned)pix->height,
-        (long)pix->pixelformat, (unsigned)pix->bytesperline);
+        str, (unsigned)pix->bytesperline);
     cam->pix = *pix;
 
     struct v4l2_requestbuffers req =
@@ -239,7 +239,7 @@ bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
     return true;
 }
 
-int acquire_frame(Camera *cam)
+static int acquire_frame(Camera *cam)
 {
     struct v4l2_buffer frame;
     memset(&frame, 0, sizeof(frame));
@@ -247,15 +247,13 @@ int acquire_frame(Camera *cam)
     frame.memory = V4L2_MEMORY_MMAP;
     if (ioctl(cam->fd, VIDIOC_DQBUF, &frame))
     {
-        perror("Get first frame");
-        free(cam->buffer);
-        close(cam->fd);
-        exit(-1);
+        perror("VIDIOC_DQBUF");
+        return -1;
     }
     return frame.index;
 }
 
-void release_frame(Camera *cam, int index)
+static void release_frame(Camera *cam, int index)
 {
     struct v4l2_buffer frame;
     memset(&frame, 0, sizeof(frame));
@@ -263,15 +261,6 @@ void release_frame(Camera *cam, int index)
     frame.memory = V4L2_MEMORY_MMAP;
     frame.index = index;
     ioctl(cam->fd, VIDIOC_QBUF, &frame);
-}
-
-static void fourcc_string(__u32 x, char str[5])
-{
-    str[0] = (char)(x & 0xff);
-    str[1] = (char)(x >> 8 & 0xff);
-    str[2] = (char)(x >> 16 & 0xff);
-    str[3] = (char)(x >> 24);
-    str[4] = '\0';
 }
 
 int main(int argc, char *argv[])
