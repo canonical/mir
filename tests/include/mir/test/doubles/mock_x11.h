@@ -47,7 +47,7 @@ public:
     XEvent focus_out_event_return = { 0 };
     XEvent vscroll_event_return = { 0 };
     XEvent motion_event_return = { 0 };
-    int pending_events = 2; // Actually 1, but DoAll() semantics require 2
+    int pending_events = 1;
 };
 
 class MockX11

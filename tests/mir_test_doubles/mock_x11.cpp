@@ -73,12 +73,10 @@ mtd::MockX11::MockX11()
     .WillByDefault(Return(1));
 
     ON_CALL(*this, XPending(_))
-    .WillByDefault(DoAll(InvokeWithoutArgs([this]()
-                         {
-                             if (fake_x11.pending_events-- < 0)
-                                 fake_x11.pending_events = 0;
-                         }),
-                         ReturnPointee(&fake_x11.pending_events)));
+    .WillByDefault(InvokeWithoutArgs([this]()
+                                     {
+                                         return fake_x11.pending_events;
+                                     }));
 }
 
 mtd::MockX11::~MockX11()
@@ -143,7 +141,9 @@ int XConnectionNumber(Display* display)
 
 int XNextEvent(Display* display, XEvent* event_return)
 {
-    return global_mock->XNextEvent(display, event_return);
+    auto const result = global_mock->XNextEvent(display, event_return);
+    if (result) --global_mock->fake_x11.pending_events;
+    return result;
 }
 
 int XLookupString(XKeyEvent* event_struct, char* buffer_return, int bytes_buffer, KeySym* keysym_return, XComposeStatus* status_in_out)

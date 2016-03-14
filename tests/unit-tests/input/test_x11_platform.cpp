@@ -175,6 +175,8 @@ TEST_F(X11PlatformTest, button4_button5_converted_to_vscroll)
 
 TEST_F(X11PlatformTest, motion_event_trigger_pointer_movement)
 {
+    mock_x11.fake_x11.pending_events = 2;
+
     prepare_event_processing();
 
     InSequence seq;
