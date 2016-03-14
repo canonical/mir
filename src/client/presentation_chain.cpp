@@ -78,13 +78,6 @@ void mcl::PresentationChain::submit_buffer(MirBuffer* buffer)
 {
     mp::BufferRequest request;
     {
-        std::lock_guard<decltype(mutex)> lk(mutex);
-//        auto buffer_it = std::find_if(buffers.begin(), buffers.end(),
-//            [&buffer](std::unique_ptr<Buffer> const& it)
-//            { return reinterpret_cast<MirBuffer*>(it.get()) == buffer; });
-//        if (buffer_it == buffers.end())
-//            BOOST_THROW_EXCEPTION(std::logic_error("unknown buffer"));
-
         request.mutable_id()->set_value(stream_id);
         request.mutable_buffer()->set_buffer_id(reinterpret_cast<mcl::Buffer*>(buffer)->rpc_id());
         reinterpret_cast<mcl::Buffer*>(buffer)->submitted();
@@ -97,44 +90,16 @@ void mcl::PresentationChain::submit_buffer(MirBuffer* buffer)
 void mcl::PresentationChain::release_buffer(MirBuffer* buffer)
 {
     mp::BufferRelease request;
-    {
-        std::lock_guard<decltype(mutex)> lk(mutex);
-
-//        auto buffer_it = std::find_if(buffers.begin(), buffers.end(),
-//            [&buffer](std::unique_ptr<Buffer> const& it)
-//            { return reinterpret_cast<MirBuffer*>(it.get()) == buffer; });
-//        if (buffer_it == buffers.end())
-//            BOOST_THROW_EXCEPTION(std::logic_error("unknown buffer"));
-
-        request.mutable_id()->set_value(stream_id);
-        auto buffer_req = request.add_buffers();
-        buffer_req->set_buffer_id(reinterpret_cast<mcl::Buffer*>(buffer)->rpc_id());
-
-//        buffers.erase(buffer_it);
-    }
+    request.mutable_id()->set_value(stream_id);
+    auto buffer_req = request.add_buffers();
+    buffer_req->set_buffer_id(reinterpret_cast<mcl::Buffer*>(buffer)->rpc_id());
 
     auto ignored = new mp::Void;
     server.release_buffers(&request, ignored, gp::NewCallback(ignore_response, ignored));
 }
 
-void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
+void mcl::PresentationChain::buffer_available(mp::Buffer const&)
 {
-    (void) buffer;
-#if 0
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    //first see if this buffer has been here before
-    std::shared_ptr<MirBufferPackage> package = mcl::protobuf_to_native_buffer(buffer);
-    auto buffer_it = std::find_if(buffers.begin(), buffers.end(),
-        [&buffer](std::unique_ptr<Buffer> const& b)
-        { return buffer.buffer_id() == b->rpc_id(); });
-    if (buffer_it != buffers.end())
-    {
-        (*buffer_it)->received(*package);
-        return;
-    }
-
-    buffers.emplace_back(mir_buffer_factory->generate_buffer(buffer));
-#endif
 }
 
 void mcl::PresentationChain::buffer_unavailable()

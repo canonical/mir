@@ -1154,7 +1154,7 @@ void MirConnection::allocate_buffer(
     mir_buffer_callback callback, void* context)
 {
     mp::BufferAllocation request;
-    request.mutable_id()->set_value(-1);
+//    request.mutable_id()->set_value(-1);
     auto buffer_request = request.add_buffer_requests();
     buffer_request->set_width(size.width.as_int());
     buffer_request->set_height(size.height.as_int());
