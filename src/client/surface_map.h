@@ -43,6 +43,7 @@ public:
     virtual void with_all_streams_do(std::function<void(BufferReceiver*)> const&) const = 0;
     virtual std::shared_ptr<Buffer> buffer(int buffer_id) const = 0;
     virtual void insert(int buffer_id, std::shared_ptr<Buffer> const& buffer) = 0;
+    virtual void erase(int buffer_id) = 0;  
 
 protected:
     virtual ~SurfaceMap() = default;
