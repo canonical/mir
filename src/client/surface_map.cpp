@@ -106,19 +106,11 @@ void mcl::ConnectionSurfaceMap::erase(int buffer_id)
     buffers.erase(buffer_id);
 }
 
-bool mcl::ConnectionSurfaceMap::with_buffer_do(
-    int buffer_id, std::function<void(mcl::Buffer&)> const& exec) const
+std::shared_ptr<mcl::Buffer> mcl::ConnectionSurfaceMap::buffer(int buffer_id) const
 {
     std::lock_guard<decltype(guard)> lk(guard);
     auto const it = buffers.find(buffer_id);
     if (it != buffers.end())
-    {
-        auto const buffer = it->second;
-        exec(*buffer);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+        return it->second;
+    return nullptr;
 }
