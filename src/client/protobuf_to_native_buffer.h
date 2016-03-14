@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,20 +13,22 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_LIBRARY_H
-#define MIR_CLIENT_LIBRARY_H
-
-#include <mir_toolkit/mir_connection.h>
-#include <mir_toolkit/mir_surface.h>
-#include <mir_toolkit/mir_wait.h>
-#include <mir_toolkit/mir_buffer_stream.h>
-#include <mir_toolkit/version.h>
-#include <mir_toolkit/mir_platform_message.h>
-#include <mir_toolkit/cursors.h>
-#include <mir_toolkit/mir_cookie.h>
-#include <mir_toolkit/mir_display_configuration.h>
-#include <mir_toolkit/mir_input_device.h>
-
-#endif /* MIR_CLIENT_LIBRARY_H */
+#ifndef MIR_CLIENT_PROTOBUF_TO_NATIVE_BUFFER_H_
+#define MIR_CLIENT_PROTOBUF_TO_NATIVE_BUFFER_H_
+#include <memory>
+class MirBufferPackage;
+namespace mir
+{
+namespace protobuf
+{
+class Buffer;
+}
+namespace client
+{
+std::unique_ptr<MirBufferPackage> protobuf_to_native_buffer(protobuf::Buffer const& buffer);
+}
+}
+#endif /* MIR_CLIENT_PROTOBUF_TO_NATIVE_BUFFER_H_ */
