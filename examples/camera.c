@@ -289,7 +289,7 @@ int main(int argc, char *argv[])
         "    v_texcoord = texcoord;\n"
         "}\n";
 
-    const char fshadersrc[] =
+    const char raw_fshadersrc[] =
         "precision mediump float;\n"
         "varying vec2 v_texcoord;\n"
         "uniform sampler2D texture;\n"
@@ -297,11 +297,32 @@ int main(int argc, char *argv[])
         "void main()\n"
         "{\n"
         "    vec4 f = texture2D(texture, v_texcoord);\n"
-        // TODO: Implement YUYV/whatever to RGB conversion.
-        //       For now we just display Y (luminance) which suffices for
-        //       a greyscale image.
-        "    gl_FragColor = vec4(f.r, f.g, f.b, 1.0);\n"
+        "    gl_FragColor = vec4(f.rgb, 1.0);\n"
         "}\n";
+
+    const char * const yuyv_greyscale_fshadersrc = raw_fshadersrc;
+
+    // This is the Android YUV to RGB calculation.
+    // TODO: Vary the shader to match the camera's reported colour space
+    const char yuyv_quickcolour_fshadersrc[] =
+        "precision mediump float;\n"
+        "varying vec2 v_texcoord;\n"
+        "uniform sampler2D texture;\n"
+        "\n"
+        "void main()\n"
+        "{\n"
+        "    vec4 f = texture2D(texture, v_texcoord);\n"
+        "    float y = (f.r + f.b) / 2.0;\n"  // Y unsigned (from two pixels)
+        "    float u = f.g - 0.5;\n"       // U signed (same for both pixels)
+        "    float v = f.a - 0.5;\n"       // V signed (same for both pixels)
+        "    float r = clamp(y + 1.370705*v, 0.0, 1.0);\n"
+        "    float g = clamp(y - 0.698001*v - 0.337633*u, 0.0, 1.0);\n"
+        "    float b = clamp(y + 1.732446*u, 0.0, 1.0);\n"
+        "    gl_FragColor = vec4(r, g, b, 1.0);\n"
+        "}\n";
+
+    // TODO: Selectable between high-res grey vs half-res colour?
+    const char * const fshadersrc = yuyv_quickcolour_fshadersrc;
 
     Camera cam;
     if (!open_camera("/dev/video0", 1, &cam))
@@ -426,11 +447,23 @@ int main(int argc, char *argv[])
         int index = acquire_frame(&cam);
         if (cam.pix.pixelformat == V4L2_PIX_FMT_YUYV)
         {
-            // 16bpp YUYV (PlayStation Eye), clumsily uploaded as
-            // luminance+alpha, because GLES gives us little choice...
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, cam.pix.width,
-                         cam.pix.height, 0, GL_LUMINANCE_ALPHA,
-                         GL_UNSIGNED_BYTE, cam.buffer[index].start);
+            if (fshadersrc == yuyv_greyscale_fshadersrc)
+            {
+                // Greyscale, full resolution:
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
+                             cam.pix.width, cam.pix.height, 0,
+                             GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
+                             cam.buffer[index].start);
+            }
+            else if (fshadersrc == yuyv_quickcolour_fshadersrc)
+            {
+                // Colour, half resolution:
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+                             cam.pix.width/2, cam.pix.height, 0,
+                             GL_RGBA, GL_UNSIGNED_BYTE,
+                             cam.buffer[index].start);
+            }
+            // TODO: Colour, full resolution. But it will be slow :(
         }
         else
         {
