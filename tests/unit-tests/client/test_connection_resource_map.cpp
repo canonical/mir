@@ -106,9 +106,9 @@ TEST_F(ConnectionResourceMap, maps_buffers)
 {
     using namespace testing;
     mcl::ConnectionSurfaceMap map;
-    EXPECT_THAT(map.buffer(buffer_id, Eq(nullptr)));
+    EXPECT_THAT(map.buffer(buffer_id), Eq(nullptr));
     map.insert(buffer_id, buffer);
-    EXPECT_THAT(map.buffer(buffer_id, Eq(buffer)));
+    EXPECT_THAT(map.buffer(buffer_id), Eq(buffer));
     map.erase(buffer_id);
-    EXPECT_THAT(map.buffer(buffer_id, Eq(nullptr)));
+    EXPECT_THAT(map.buffer(buffer_id), Eq(nullptr));
 }
