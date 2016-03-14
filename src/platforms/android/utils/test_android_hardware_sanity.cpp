@@ -21,17 +21,17 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/graphics/renderable.h"
+#include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/buffer_properties.h"
 
 #include "mir_test_framework/server_runner.h"
-#include "mir/test/doubles/stub_display.h"
-#include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/validity_matchers.h"
 #include "mir/test/as_render_target.h"
 #include "patterns.h"
-#include "examples/graphics.h"
+#include "graphics.h"
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 
@@ -86,7 +86,7 @@ struct Runner : mtf::ServerRunner
     NoCompositingServer config{1, &argv};
 };
  
-struct AndroidHardwareSanity : testing::Test
+struct AndroidMirDiagnostics : testing::Test
 {
     static void SetUpTestCase()
     {
@@ -99,11 +99,16 @@ struct AndroidHardwareSanity : testing::Test
         runner.reset();
     }
     static std::unique_ptr<Runner> runner;
+    geom::Size size{334, 122};
+    MirPixelFormat pf = mir_pixel_format_abgr_8888;
+    mg::BufferProperties sw_properties{size, pf, mg::BufferUsage::software};
+    mg::BufferProperties hw_properties{size, pf, mg::BufferUsage::hardware};
+
 };
-std::unique_ptr<Runner> AndroidHardwareSanity::runner;
+std::unique_ptr<Runner> AndroidMirDiagnostics::runner;
 }
 
-TEST_F(AndroidHardwareSanity, client_can_draw_with_cpu)
+TEST_F(AndroidMirDiagnostics, client_can_draw_with_cpu)
 {
     auto connection = mir_connect_sync(runner->new_connection().c_str(), "test_renderer");
     EXPECT_THAT(connection, IsValid());
@@ -138,7 +143,7 @@ TEST_F(AndroidHardwareSanity, client_can_draw_with_cpu)
     mir_connection_release(connection);
 }
 
-TEST_F(AndroidHardwareSanity, client_can_draw_with_gpu)
+TEST_F(AndroidMirDiagnostics, client_can_draw_with_gpu)
 {
     auto connection = mir_connect_sync(runner->new_connection().c_str(), "test_renderer");
     EXPECT_THAT(connection, IsValid());
@@ -196,7 +201,7 @@ TEST_F(AndroidHardwareSanity, client_can_draw_with_gpu)
     mir_connection_release(connection);
 }
 
-TEST_F(AndroidHardwareSanity, display_can_post)
+TEST_F(AndroidMirDiagnostics, display_can_post)
 {
     auto display = runner->config.the_display();
     display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
@@ -218,8 +223,43 @@ TEST_F(AndroidHardwareSanity, display_can_post)
     });
 }
 
-TEST_F(AndroidHardwareSanity, display_can_post_overlay)
+TEST_F(AndroidMirDiagnostics, display_can_post_overlay)
 {
+    auto buffer = runner->config.the_buffer_allocator()->alloc_buffer(sw_properties);
+    struct BasicRenderable : mg::Renderable
+    {
+        BasicRenderable(std::shared_ptr<mg::Buffer> const& buffer) :
+            buffer_(buffer)
+        {
+        }
+        ID id() const override
+        {
+            return this;
+        }
+        std::shared_ptr<mg::Buffer> buffer() const override
+        {
+            return buffer_;
+        }
+        geom::Rectangle screen_position() const override
+        {
+            return {{0,0}, buffer_->size()} ;
+        }
+        float alpha() const override
+        {
+            return 1.0f;
+        }
+        glm::mat4 transformation() const override
+        {
+            return trans;
+        }
+        bool shaped() const override
+        {
+            return false;
+        }
+        std::shared_ptr<mg::Buffer> const buffer_;
+        glm::mat4 const trans;
+    };
+
     auto display = runner->config.the_display();
     display->for_each_display_sync_group([](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([](mg::DisplayBuffer& db)
@@ -230,7 +270,7 @@ TEST_F(AndroidHardwareSanity, display_can_post_overlay)
                 area.size, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
             auto buffer = runner->config.the_buffer_allocator()->alloc_buffer(properties);
             mg::RenderableList list{
-                std::make_shared<mt::doubles::StubRenderable>(buffer, area)
+                std::make_shared<BasicRenderable>(buffer)
             };
 
             db.post_renderables_if_optimizable(list);
@@ -239,13 +279,10 @@ TEST_F(AndroidHardwareSanity, display_can_post_overlay)
     });
 }
 
-TEST_F(AndroidHardwareSanity, can_allocate_sw_buffer)
+TEST_F(AndroidMirDiagnostics, can_allocate_sw_buffer)
 {
     using namespace testing;
 
-    auto size = geom::Size{334, 122};
-    auto pf  = mir_pixel_format_abgr_8888;
-    mg::BufferProperties sw_properties{size, pf, mg::BufferUsage::software};
     auto buffer = runner->config.the_buffer_allocator()->alloc_buffer(sw_properties);
     EXPECT_NE(nullptr, buffer);
 
@@ -270,13 +307,9 @@ TEST_F(AndroidHardwareSanity, can_allocate_sw_buffer)
     EXPECT_TRUE(valid_content);
 }
 
-TEST_F(AndroidHardwareSanity, can_allocate_hw_buffer)
+TEST_F(AndroidMirDiagnostics, can_allocate_hw_buffer)
 {
     using namespace testing;
-
-    auto size = geom::Size{334, 122};
-    auto pf  = mir_pixel_format_abgr_8888;
-    mg::BufferProperties hw_properties{size, pf, mg::BufferUsage::hardware};
 
     //TODO: kdub it is a bit trickier to test that a gpu can render... just check creation for now
     auto test_buffer = runner->config.the_buffer_allocator()->alloc_buffer(hw_properties);

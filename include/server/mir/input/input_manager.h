@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012, 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -32,6 +32,8 @@ class Platform;
 class InputManager
 {
 public:
+    // TODO Remove add_platform() when we next break mirserver ABI
+    __attribute__ ((deprecated))
     virtual void add_platform(std::shared_ptr<Platform> const& platform) = 0;
     virtual void start() = 0;
     virtual void stop() = 0;

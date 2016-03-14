@@ -20,7 +20,7 @@
 
 #include "no_prompt_shell.h"
 #include "session_mediator.h"
-#include "unauthorized_display_changer.h"
+#include "authorizing_display_changer.h"
 #include "unauthorized_screencast.h"
 #include "resource_cache.h"
 #include "mir/frontend/session_authorizer.h"
@@ -69,13 +69,14 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_serve
     std::shared_ptr<mf::MessageSender> const& message_sender,
     ConnectionContext const &connection_context)
 {
-    auto const changer = std::make_shared<UnauthorizedDisplayChanger>(display_changer);
-    std::shared_ptr<Screencast> effective_screencast;
+    bool configuration_is_authorized = session_authorizer->configure_display_is_allowed(creds);
+    bool base_configuration_is_authorized = session_authorizer->set_base_display_configuration_is_allowed(creds);
 
-    if (session_authorizer->configure_display_is_allowed(creds))
-        changer->allow_configure_display();
-    if (session_authorizer->set_base_display_configuration_is_allowed(creds))
-        changer->allow_set_base_configuration();
+    auto const changer = std::make_shared<AuthorizingDisplayChanger>(
+        display_changer,
+        configuration_is_authorized,
+        base_configuration_is_authorized);
+    std::shared_ptr<Screencast> effective_screencast;
 
     if (session_authorizer->screencast_is_allowed(creds))
     {

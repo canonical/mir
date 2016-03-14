@@ -37,7 +37,7 @@ public:
 
     virtual void add_observer(std::shared_ptr<InputDeviceObserver> const&) = 0;
     virtual void remove_observer(std::weak_ptr<InputDeviceObserver> const&) = 0;
-    virtual void for_each_input_device(std::function<void(std::shared_ptr<Device>const& device)> const& callback) = 0;
+    virtual void for_each_input_device(std::function<void(Device const& device)> const& callback) = 0;
 
     InputDeviceHub(InputDeviceHub const&) = delete;
     InputDeviceHub& operator=(InputDeviceHub const&) = delete;
