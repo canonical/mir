@@ -190,52 +190,6 @@ void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
         promises.pop_front();
     }
 }
-#if 0
-    std::shared_ptr<MirBufferPackage> package = mcl::protobuf_to_native_buffer(protobuf_buffer);
-
-    std::unique_lock<std::mutex> lk(mutex);
-    auto it = buffers.find(protobuf_buffer.buffer_id());
-    if (it == buffers.end())
-    {
-        geom::Size sz{package->width, package->height};
-        if (sz != size)
-        {
-            lk.unlock();
-            for (int i = 0; i != package->fd_items; ++i)
-                close(package->fd[i]);
-
-            realloc(protobuf_buffer.buffer_id(), size, format, usage);
-            return;
-        }
-
-        buffers[protobuf_buffer.buffer_id()] = 
-            BufferEntry{ factory->create_buffer(package, sz, format), Owner::Self };
-    }
-    else
-    {
-//        it->second.buffer->update_from(*package);
-        if (size == it->second.buffer->size())
-        { 
-            it->second.owner = Owner::Self;
-        }
-        else
-        {
-            int id = it->first;
-            buffers.erase(it);
-            lk.unlock();
-            realloc(id, size, format, usage);
-            return;
-        }
-    }
-
-    if (!promises.empty())
-    {
-        buffers[protobuf_buffer.buffer_id()].owner = Owner::ContentProducer;
-        promises.front().set_value({buffers[protobuf_buffer.buffer_id()].buffer, protobuf_buffer.buffer_id()});
-        promises.pop_front();
-    }
-}
-#endif
 
 //TODO: the server will currently spam us with a lot of resize messages at once,
 //      and we want to delay the IPC transactions for resize. If we could rate-limit
