@@ -64,6 +64,7 @@ struct MockSurfaceMap : mcl::SurfaceMap
         void(std::function<void(mcl::BufferReceiver*)> const&));
     MOCK_CONST_METHOD1(buffer, std::shared_ptr<mcl::Buffer>(int));
     MOCK_METHOD2(insert, void(int, std::shared_ptr<mcl::Buffer> const&));
+    MOCK_METHOD1(erase, void(int));
 }; 
  
 class StubSurfaceMap : public mcl::SurfaceMap
@@ -85,6 +86,9 @@ public:
         return nullptr;
     }
     void insert(int, std::shared_ptr<mcl::Buffer> const&)
+    {
+    }
+    void erase(int)
     {
     }
 };
