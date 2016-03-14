@@ -26,13 +26,15 @@ mcl::Buffer::Buffer(
     mir_buffer_callback cb, void* context,
     int buffer_id,
     std::shared_ptr<ClientBuffer> const& buffer,
-    MirPresentationChain* chain) :
+    MirPresentationChain* chain,
+    MirBufferUsage usage) :
     cb(cb),
     cb_context(context),
     buffer_id(buffer_id),
     buffer(buffer),
     owned(true),
-    chain(chain)
+    chain(chain),
+    usage(usage)
 {
     cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
 }
@@ -98,4 +100,19 @@ bool mcl::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds ti
 MirPresentationChain* mcl::Buffer::allocating_chain() const
 {
     return chain;
+}
+
+MirBufferUsage mcl::Buffer::buffer_usage() const
+{
+    return usage;
+}
+
+MirPixelFormat mcl::Buffer::pixel_format() const
+{
+    return buffer->pixel_format();
+}
+
+mir::geometry::Size mcl::Buffer::size() const
+{
+    return buffer->size();
 }
