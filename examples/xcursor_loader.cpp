@@ -27,7 +27,7 @@
 
 #include <mir_toolkit/cursors.h>
 
-// Unforunately this can not be compiled as C++...so we can not namespace
+// Unfortunately this can not be compiled as C++...so we can not namespace
 // these symbols. In order to differentiate from internal symbols
 //  we refer to them via their _ prefixed version, i.e. _XcursorImage
 extern "C"
