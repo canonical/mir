@@ -26,6 +26,7 @@
 #include "rpc/mir_display_server.h"
 #include "mir_protobuf.pb.h"
 #include "buffer_vault.h"
+#include "protobuf_to_native_buffer.h"
 
 #include "mir/log.h"
 #include "mir/client_platform.h"
@@ -73,42 +74,6 @@ struct ServerBufferSemantics
 namespace
 {
 
-void populate_buffer_package(
-    MirBufferPackage& buffer_package,
-    mir::protobuf::Buffer const& protobuf_buffer)
-{
-    if (!protobuf_buffer.has_error())
-    {
-        buffer_package.data_items = protobuf_buffer.data_size();
-        for (int i = 0; i != protobuf_buffer.data_size(); ++i)
-        {
-            buffer_package.data[i] = protobuf_buffer.data(i);
-        }
-
-        buffer_package.fd_items = protobuf_buffer.fd_size();
-
-        for (int i = 0; i != protobuf_buffer.fd_size(); ++i)
-        {
-            buffer_package.fd[i] = protobuf_buffer.fd(i);
-        }
-
-        buffer_package.stride = protobuf_buffer.stride();
-        buffer_package.flags = protobuf_buffer.flags();
-        buffer_package.width = protobuf_buffer.width();
-        buffer_package.height = protobuf_buffer.height();
-    }
-    else
-    {
-        buffer_package.data_items = 0;
-        buffer_package.fd_items = 0;
-        buffer_package.stride = 0;
-        buffer_package.flags = 0;
-        buffer_package.width = 0;
-        buffer_package.height = 0;
-    }
-}
-
-
 struct ExchangeSemantics : mcl::ServerBufferSemantics
 {
     ExchangeSemantics(
@@ -118,9 +83,9 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         wrapped{factory, max_buffers},
         display_server(server)
     {
-        auto buffer_package = std::make_shared<MirBufferPackage>();
-        populate_buffer_package(*buffer_package, first_buffer);
-        wrapped.deposit_package(buffer_package, first_buffer.buffer_id(), first_size, first_pf);
+        wrapped.deposit_package(
+            mcl::protobuf_to_native_buffer(first_buffer),
+            first_buffer.buffer_id(), first_size, first_pf);
     }
 
     void deposit(mp::Buffer const& buffer, geom::Size size, MirPixelFormat pf) override
@@ -128,9 +93,9 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         std::unique_lock<std::mutex> lock(mutex);
         if (on_incoming_buffer)
         {
-            auto buffer_package = std::make_shared<MirBufferPackage>();
-            populate_buffer_package(*buffer_package, buffer);
-            wrapped.deposit_package(buffer_package, buffer.buffer_id(), size, pf);
+            wrapped.deposit_package(
+                mcl::protobuf_to_native_buffer(buffer),
+                buffer.buffer_id(), size, pf);
             if (on_incoming_buffer)
             {
                 on_incoming_buffer();
@@ -186,9 +151,9 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         }
         else
         {
-            auto buffer_package = std::make_shared<MirBufferPackage>();
-            populate_buffer_package(*buffer_package, incoming_buffers.front());
-            wrapped.deposit_package(buffer_package, incoming_buffers.front().buffer_id(), sz, pf);
+            wrapped.deposit_package(
+                mcl::protobuf_to_native_buffer(incoming_buffers.front()),
+                incoming_buffers.front().buffer_id(), sz, pf);
             incoming_buffers.pop();
             done();
         }
