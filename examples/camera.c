@@ -396,8 +396,10 @@ int main(int argc, char *argv[])
     MirSurface *surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);
 
+    bool first_frame = true;
     while (mir_eglapp_running())
     {
+        bool wait_for_new_frame = true;
         pthread_mutex_lock(&state.mutex);
 
         if (state.resized)
@@ -440,40 +442,44 @@ int main(int argc, char *argv[])
             // Note GL_FALSE: GLES does not support the transpose option
             glUniformMatrix4fv(projection, 1, GL_FALSE, matrix);
             state.resized = false;
+            wait_for_new_frame = first_frame;
+            first_frame = false;
+        }
+
+        if (wait_for_new_frame)
+        {   // For fast resizing, only capture a new frame when not resizing.
+            int index = acquire_frame(&cam);
+            if (cam.pix.pixelformat == V4L2_PIX_FMT_YUYV)
+            {
+                if (fshadersrc == yuyv_greyscale_fshadersrc)
+                {
+                    // Greyscale, full resolution:
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
+                                 cam.pix.width, cam.pix.height, 0,
+                                 GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
+                                 cam.buffer[index].start);
+                }
+                else if (fshadersrc == yuyv_quickcolour_fshadersrc)
+                {
+                    // Colour, half resolution:
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+                                 cam.pix.width/2, cam.pix.height, 0,
+                                 GL_RGBA, GL_UNSIGNED_BYTE,
+                                 cam.buffer[index].start);
+                }
+                // TODO: Colour, full resolution. But it will be slow :(
+            }
+            else
+            {
+                char str[5];
+                fourcc_string(cam.pix.pixelformat, str);
+                fprintf(stderr, "FIXME: Unsupported camera pixel format 0x%08lx: %s\n",
+                        (long)cam.pix.pixelformat, str);
+            }
+            release_frame(&cam, index);
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
-
-        int index = acquire_frame(&cam);
-        if (cam.pix.pixelformat == V4L2_PIX_FMT_YUYV)
-        {
-            if (fshadersrc == yuyv_greyscale_fshadersrc)
-            {
-                // Greyscale, full resolution:
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
-                             cam.pix.width, cam.pix.height, 0,
-                             GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
-                             cam.buffer[index].start);
-            }
-            else if (fshadersrc == yuyv_quickcolour_fshadersrc)
-            {
-                // Colour, half resolution:
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                             cam.pix.width/2, cam.pix.height, 0,
-                             GL_RGBA, GL_UNSIGNED_BYTE,
-                             cam.buffer[index].start);
-            }
-            // TODO: Colour, full resolution. But it will be slow :(
-        }
-        else
-        {
-            char str[5];
-            fourcc_string(cam.pix.pixelformat, str);
-            fprintf(stderr, "FIXME: Unsupported camera pixel format 0x%08lx: %s\n",
-                    (long)cam.pix.pixelformat, str);
-        }
-        release_frame(&cam, index);
-
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
         pthread_mutex_unlock(&state.mutex);
