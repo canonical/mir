@@ -64,7 +64,6 @@ mcl::BufferVault::BufferVault(
 {
     for (auto i = 0u; i < initial_nbuffers; i++)
     {
-    printf("EXPECT!\n");
         mirfactory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage, incoming_buffer, this);
         server_requests->allocate_buffer(size, format, usage);
     }
@@ -92,7 +91,6 @@ void mcl::BufferVault::realloc(int free_id, geom::Size, MirPixelFormat format, i
     map->erase(free_id);
     server_requests->free_buffer(free_id);
 
-    printf("EXPECT!\n");
     mirfactory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage,
         incoming_buffer, this);
     server_requests->allocate_buffer(size, format, usage);
@@ -101,6 +99,8 @@ void mcl::BufferVault::realloc(int free_id, geom::Size, MirPixelFormat format, i
 mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
 {
     std::lock_guard<std::mutex> lk(mutex);
+    if (disconnected_)
+        BOOST_THROW_EXCEPTION(std::logic_error("server_disconnected"));
     mcl::NoTLSPromise<std::shared_ptr<mcl::Buffer>> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [this](std::pair<int, BufferEntry> const& entry) { 
@@ -109,13 +109,11 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
     auto future = promise.get_future();
     if (it != buffers.end())
     {
-        printf("HAD ONE\n");
         it->second.owner = Owner::ContentProducer;
         promise.set_value(it->second.buffer);
     }
     else
     {
-        printf("PROMISE ONE\n");
         promises.emplace_back(std::move(promise));
     }
     return future;
@@ -168,7 +166,6 @@ void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
             return;
         }
 
-        printf("PUT NEW BUFFER IN MAP\n");
         buffers[buffer_id] = BufferEntry{ buffer, Owner::Self };
     }
     else
