@@ -44,10 +44,9 @@ public:
     void erase(frontend::BufferStreamId surface_id);
 
     //TODO: should have a mf::BufferID
-    std::shared_ptr<Buffer> buffer(int buffer_id) const override;
     void insert(int buffer_id, std::shared_ptr<Buffer> const& buffer) override;
     void erase(int buffer_id) override;
-    bool with_buffer_do(int buffer_id, std::function<void(Buffer&)> const& exec) const override;
+    std::shared_ptr<Buffer> buffer(int buffer_id) const override;
 
 private:
     std::shared_timed_mutex mutable guard;
