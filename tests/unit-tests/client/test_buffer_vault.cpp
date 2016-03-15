@@ -20,6 +20,7 @@
 #include "src/client/client_buffer_depository.h"
 #include "src/client/buffer_vault.h"
 #include "src/client/surface_map.h"
+#include "src/client/connection_surface_map.h"
 #include "src/client/buffer_factory.h"
 #include "mir/client_buffer_factory.h"
 #include "mir/aging_buffer.h"
@@ -146,17 +147,42 @@ struct BufferVault : public testing::Test
     mp::Buffer package3;
 };
 
+void buffer_cb(MirPresentationChain*, MirBuffer*, void*)
+{
+}
+
 struct StartedBufferVault : BufferVault
 {
     StartedBufferVault()
     {
+        auto mb1 = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
+        auto mb2 = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
+        auto mb3 = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
+        ON_CALL(*mb1, size()).WillByDefault(Return(size));
+        ON_CALL(*mb2, size()).WillByDefault(Return(size));
+        ON_CALL(*mb3, size()).WillByDefault(Return(size));
+        auto b1 = std::make_shared<mcl::Buffer>(buffer_cb, nullptr, package.buffer_id(),
+            mb1, nullptr, mir_buffer_usage_software);
+        auto b2 = std::make_shared<mcl::Buffer>(buffer_cb, nullptr, package.buffer_id(),
+            mb2, nullptr, mir_buffer_usage_software);
+        auto b3 = std::make_shared<mcl::Buffer>(buffer_cb, nullptr, package.buffer_id(),
+            mb3, nullptr, mir_buffer_usage_software);
+        b1->received();
+        b2->received();
+        b3->received();
+        map->insert(package.buffer_id(),  b1);
+        map->insert(package2.buffer_id(), b2);
+        map->insert(package3.buffer_id(), b3);
+
+
         vault.wire_transfer_inbound(package.buffer_id());
         vault.wire_transfer_inbound(package2.buffer_id());
         vault.wire_transfer_inbound(package3.buffer_id());
     }
+    std::shared_ptr<mcl::ConnectionSurfaceMap> map{std::make_shared<mcl::ConnectionSurfaceMap>()};
     mcl::BufferVault vault{
         mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
-        mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
+        map, mt::fake_shared(mock_factory),
         size, format, usage, initial_nbuffers};
 };
 }
@@ -277,15 +303,26 @@ TEST_F(BufferVault, can_transfer_again_when_we_get_the_buffer)
     EXPECT_CALL(mock_factory, expect_buffer(_,_,_,_,_,_,_))
         .Times(Exactly(initial_nbuffers));
 
+    auto map = std::make_shared<mcl::ConnectionSurfaceMap>();
     mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
-        mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
+        map, mt::fake_shared(mock_factory),
         size, format, usage, initial_nbuffers);
 
+    
     //EXPECT_CALL(mock_native_factory, create_buffer(_,initial_properties.size,initial_properties.format))
     //    .Times(Exactly(1));
 
+    auto mb = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
+    ON_CALL(*mb, size()).WillByDefault(Return(size));
+    auto b = std::make_shared<mcl::Buffer>(buffer_cb, nullptr, package.buffer_id(),
+        mb, nullptr, mir_buffer_usage_software);
+    b->received();
+    map->insert(package.buffer_id(), b);
 
     vault.wire_transfer_inbound(package.buffer_id());
+
+
+
     auto buffer = vault.withdraw().get();
     vault.deposit(buffer);
     vault.wire_transfer_outbound(buffer);
@@ -364,8 +401,10 @@ TEST_F(BufferVault, marks_as_submitted_on_transfer)
         .WillByDefault(Invoke(
         [this, &mock_buffer](int id)
         {
-            return std::make_shared<mcl::Buffer>(
-                nullptr,nullptr, id , mock_buffer, nullptr, mir_buffer_usage_software);
+            auto b = std::make_shared<mcl::Buffer>(
+                buffer_cb ,nullptr, id , mock_buffer, nullptr, mir_buffer_usage_software);
+            b->received();
+            return b;
         })); 
 
     mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
