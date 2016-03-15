@@ -30,7 +30,7 @@
 #include "mir/test/event_factory.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 #include "mir/test/spin_wait.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -102,7 +102,7 @@ struct NestedInput : public mtf::HeadlessInProcessServer
         mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
     };
 
-    mir::test::WaitCondition all_events_received;
+    mir::test::Signal all_events_received;
 };
 
 struct ExposedSurface
@@ -170,5 +170,5 @@ TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_RIGHTSHIFT));
 
-    all_events_received.wait_for_at_most_seconds(10);
+    all_events_received.wait_for(std::chrono::seconds{10});
 }

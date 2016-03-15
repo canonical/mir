@@ -24,7 +24,7 @@
 #include "mir/test/doubles/null_pixel_buffer.h"
 #include "mir/test/doubles/stub_buffer_stream.h"
 #include "mir/test/fake_shared.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 #include "mir/test/current_thread_name.h"
 
 #include <gmock/gmock.h>
@@ -81,7 +81,7 @@ TEST_F(ThreadedSnapshotStrategyTest, takes_snapshot)
 
     ms::ThreadedSnapshotStrategy strategy{mt::fake_shared(pixel_buffer)};
 
-    mt::WaitCondition snapshot_taken;
+    mt::Signal snapshot_taken;
 
     ms::Snapshot snapshot;
 
@@ -90,10 +90,10 @@ TEST_F(ThreadedSnapshotStrategyTest, takes_snapshot)
         [&](ms::Snapshot const& s)
         {
             snapshot = s;
-            snapshot_taken.wake_up_everyone();
+            snapshot_taken.raise();
         });
 
-    snapshot_taken.wait_for_at_most_seconds(5);
+    snapshot_taken.wait_for(std::chrono::seconds{5});
 
     EXPECT_EQ(size,   snapshot.size);
     EXPECT_EQ(stride, snapshot.stride);
@@ -108,16 +108,16 @@ TEST_F(ThreadedSnapshotStrategyTest, names_snapshot_thread)
 
     ms::ThreadedSnapshotStrategy strategy{mt::fake_shared(pixel_buffer)};
 
-    mt::WaitCondition snapshot_taken;
+    mt::Signal snapshot_taken;
 
     strategy.take_snapshot_of(
         mt::fake_shared(buffer_access),
         [&](ms::Snapshot const&)
         {
-            snapshot_taken.wake_up_everyone();
+            snapshot_taken.raise();
         });
 
-    snapshot_taken.wait_for_at_most_seconds(5);
+    snapshot_taken.wait_for(std::chrono::seconds{5});
 
     EXPECT_THAT(buffer_access.thread_name, Eq("Mir/Snapshot"));
 }

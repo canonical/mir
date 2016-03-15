@@ -24,7 +24,7 @@
 #include "mir/shell/surface_stack.h"
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 
 #include <mutex>
 #include <condition_variable>
@@ -172,7 +172,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
     {
         using namespace testing;
 
-        mt::WaitCondition event_received;
+        mt::Signal event_received;
 
         Mock::VerifyAndClearExpectations(&mock_visibility_callback);
 
@@ -184,7 +184,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
 
         action();
 
-        event_received.wait_for_at_most_seconds(2);
+        event_received.wait_for(std::chrono::seconds{2});
 
         Mock::VerifyAndClearExpectations(&mock_visibility_callback);
     }
