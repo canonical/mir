@@ -65,7 +65,7 @@ struct MockEventFilter : public mi::EventFilter
         return true;
     }
 };
-
+    
 std::vector<geom::Rectangle> const display_geometry
 {
     {{  0, 0}, { 640,  480}},
@@ -79,6 +79,7 @@ struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
     {
         start_server();
         server.the_composite_event_filter()->append(mock_event_filter);
+        
     }
     ~NestedServerWithMockEventFilter()
     {
@@ -90,6 +91,7 @@ struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
 
 struct NestedInput : public mtf::HeadlessInProcessServer
 {
+
     void SetUp()
     {
         initial_display_layout(display_geometry);
