@@ -43,7 +43,8 @@ declare -A headers_for=(\
     ["mirplatforminputevdev"]="mirplatform/mir/input" )
 
 declare -A exclusions_for=(\
-    ["mirplatform"]="mir/input" )
+    ["mirplatform"]="mir/input" \
+    ["mirserver"]="mir/input/input_device_hub.h" )
 
 function print_help_and_exit()
 {
