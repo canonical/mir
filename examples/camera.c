@@ -120,7 +120,8 @@ static void close_camera(Camera *cam)
     for (unsigned b = 0; b < cam->buffers; ++b)
         if (cam->buffer[b].start)
             munmap(cam->buffer[b].start, cam->buffer[b].length);
-    close(cam->fd);
+    if (cam->fd >= 0)
+        close(cam->fd);
     free(cam);
 }
 
