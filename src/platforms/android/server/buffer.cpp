@@ -206,9 +206,14 @@ mg::NativeBufferBase* mga::Buffer::native_buffer_base()
 }
 
 void mga::Buffer::secure_for_render()
+try
 {
     std::unique_lock<std::mutex> lk(content_lock);
     secure_for_render(lk);
+}
+catch (std::exception& error)
+{
+    printf("error installing sync point %s\n", error.what());
 }
 
 void mga::Buffer::secure_for_render(std::unique_lock<std::mutex> const&)
