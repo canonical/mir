@@ -687,8 +687,31 @@ struct MockBufferFactory : mcl::AsyncBufferFactory
         mir_buffer_callback, void*));
 };
 
-namespace{
-void buffer_cb(MirPresentationChain*, MirBuffer*, void*){}
+namespace
+{
+void buffer_cb(MirPresentationChain*, MirBuffer*, void*)
+{
+}
+
+void set_async_buffer_message(
+    mir::protobuf::EventSequence& seq,
+    MockStreamTransport& transport)
+{
+    std::vector<uint8_t> send_buffer(static_cast<size_t>(seq.ByteSize()));
+    seq.SerializeToArray(send_buffer.data(), send_buffer.size());
+    mir::protobuf::wire::Result result;
+    result.add_events(send_buffer.data(), send_buffer.size());
+    send_buffer.resize(result.ByteSize());
+    result.SerializeToArray(send_buffer.data(), send_buffer.size());
+
+    size_t header_size = 2u;
+    std::vector<uint8_t> header(header_size);
+    header.data()[0] = static_cast<unsigned char>((result.ByteSize() >> 8) & 0xff);
+    header.data()[1] = static_cast<unsigned char>((result.ByteSize() >> 0) & 0xff);
+    transport.add_server_message(header);
+    transport.add_server_message(send_buffer);
+}
+
 }
 TEST_F(MirProtobufRpcChannelTest, creates_buffer_if_not_in_map)
 {
@@ -705,22 +728,11 @@ TEST_F(MirProtobufRpcChannelTest, creates_buffer_if_not_in_map)
             }));
     EXPECT_CALL(*stream_map, insert(buffer_id, _));
 
+    auto transport = std::make_unique<NiceMock<MockStreamTransport>>();
     mir::protobuf::EventSequence seq;
     auto request = seq.mutable_buffer_request();
     request->mutable_buffer()->set_buffer_id(buffer_id);
-
-    std::vector<uint8_t> send_buffer(static_cast<size_t>(seq.ByteSize()));
-    seq.SerializeToArray(send_buffer.data(), send_buffer.size());
-    mir::protobuf::wire::Result result;
-    result.add_events(send_buffer.data(), send_buffer.size());
-    send_buffer.resize(result.ByteSize());
-    result.SerializeToArray(send_buffer.data(), send_buffer.size());
-    std::vector<uint8_t> header(2u);
-    header.data()[0] = static_cast<unsigned char>((result.ByteSize() >> 8) & 0xff);
-    header.data()[1] = static_cast<unsigned char>((result.ByteSize() >> 0) & 0xff);
-    auto transport = std::make_unique<NiceMock<MockStreamTransport>>();
-    transport->add_server_message(header);
-    transport->add_server_message(send_buffer);
+    set_async_buffer_message(seq, *transport);
 
     mclr::MirProtobufRpcChannel channel{
                   std::move(transport),
@@ -751,22 +763,11 @@ TEST_F(MirProtobufRpcChannelTest, reuses_buffer_if_in_map)
     EXPECT_CALL(*mock_buffer_factory, generate_buffer(_))
         .Times(0);
 
+    auto transport = std::make_unique<NiceMock<MockStreamTransport>>();
     mir::protobuf::EventSequence seq;
     auto request = seq.mutable_buffer_request();
     request->mutable_buffer()->set_buffer_id(buffer_id);
-
-    std::vector<uint8_t> send_buffer(static_cast<size_t>(seq.ByteSize()));
-    seq.SerializeToArray(send_buffer.data(), send_buffer.size());
-    mir::protobuf::wire::Result result;
-    result.add_events(send_buffer.data(), send_buffer.size());
-    send_buffer.resize(result.ByteSize());
-    result.SerializeToArray(send_buffer.data(), send_buffer.size());
-    std::vector<uint8_t> header(2u);
-    header.data()[0] = static_cast<unsigned char>((result.ByteSize() >> 8) & 0xff);
-    header.data()[1] = static_cast<unsigned char>((result.ByteSize() >> 0) & 0xff);
-    auto transport = std::make_unique<NiceMock<MockStreamTransport>>();
-    transport->add_server_message(header);
-    transport->add_server_message(send_buffer);
+    set_async_buffer_message(seq, *transport);
 
     mclr::MirProtobufRpcChannel channel{
                   std::move(transport),
@@ -793,23 +794,12 @@ TEST_F(MirProtobufRpcChannelTest, sends_incoming_buffer_to_stream_if_stream_id_p
     EXPECT_CALL(*stream_map, with_stream_do(mir::frontend::BufferStreamId{stream_id},_))
         .Times(1);
 
+    auto transport = std::make_unique<NiceMock<MockStreamTransport>>();
     mir::protobuf::EventSequence seq;
     auto request = seq.mutable_buffer_request();
     request->mutable_id()->set_value(stream_id); 
     request->mutable_buffer()->set_buffer_id(buffer_id);
-
-    std::vector<uint8_t> send_buffer(static_cast<size_t>(seq.ByteSize()));
-    seq.SerializeToArray(send_buffer.data(), send_buffer.size());
-    mir::protobuf::wire::Result result;
-    result.add_events(send_buffer.data(), send_buffer.size());
-    send_buffer.resize(result.ByteSize());
-    result.SerializeToArray(send_buffer.data(), send_buffer.size());
-    std::vector<uint8_t> header(2u);
-    header.data()[0] = static_cast<unsigned char>((result.ByteSize() >> 8) & 0xff);
-    header.data()[1] = static_cast<unsigned char>((result.ByteSize() >> 0) & 0xff);
-    auto transport = std::make_unique<NiceMock<MockStreamTransport>>();
-    transport->add_server_message(header);
-    transport->add_server_message(send_buffer);
+    set_async_buffer_message(seq, *transport);
 
     mclr::MirProtobufRpcChannel channel{
                   std::move(transport),
