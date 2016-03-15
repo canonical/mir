@@ -41,14 +41,16 @@ typedef struct
 
 typedef struct
 {
+    void *start;
+    size_t length;
+} Buffer;
+
+typedef struct
+{
     int fd;
-    unsigned buffers;
-    struct
-    {
-        void *start;
-        size_t length;
-    } *buffer;
     struct v4l2_pix_format pix;
+    unsigned buffers;
+    Buffer buffer[];
 } Camera;
 
 static GLuint load_shader(const char *src, GLenum type)
@@ -113,14 +115,24 @@ static void fourcc_string(__u32 x, char str[5])
 
 static void close_camera(Camera *cam)
 {
+    if (!cam) return;
+
     for (unsigned b = 0; b < cam->buffers; ++b)
-        munmap(cam->buffer[b].start, cam->buffer[b].length);
-    free(cam->buffer);
+        if (cam->buffer[b].start)
+            munmap(cam->buffer[b].start, cam->buffer[b].length);
     close(cam->fd);
+    free(cam);
 }
 
-static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
+static Camera *open_camera(const char *path, unsigned nbuffers)
 {
+    Camera *cam = calloc(1, sizeof(*cam) + nbuffers*sizeof(cam->buffer[0]));
+    if (cam == NULL)
+    {
+        perror("malloc");
+        goto fail;
+    }
+
     printf("Opening device: %s\n", path);
     cam->fd = open(path, O_RDWR);
     if (cam->fd < 0)
@@ -147,13 +159,13 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
     if (ret || (cap.capabilities & required) != required)
     {
         fprintf(stderr, "Can't get sufficient capabilities\n");
-        goto close_and_fail;
+        goto fail;
     }
 
     struct v4l2_format format;
+    memset(&format, 0, sizeof(format));
     format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     struct v4l2_pix_format *pix = &format.fmt.pix;
-    memset(pix, 0, sizeof(*pix));
     // Driver will choose the best match
     pix->width = 1920;
     pix->height = 1080;
@@ -165,7 +177,7 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
         ioctl(cam->fd, VIDIOC_G_FMT, &format))
     {
         perror("VIDIOC_[SG]_FMT");
-        goto close_and_fail;
+        goto fail;
     }
     char str[5];
     fourcc_string(pix->pixelformat, str);
@@ -184,13 +196,11 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
     if (-1 == ioctl(cam->fd, VIDIOC_REQBUFS, &req))
     {
         perror("VIDIOC_REQBUFS");
-        goto close_and_fail;
+        goto fail;
     }
 
     cam->buffers = req.count;
-    cam->buffer = calloc(cam->buffers, sizeof(*cam->buffer));
-    assert(cam->buffer != NULL);
-            
+
     for (unsigned b = 0; b < req.count; ++b)
     {
         struct v4l2_buffer buf;
@@ -200,7 +210,7 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
         if (-1 == ioctl(cam->fd, VIDIOC_QUERYBUF, &buf))
         {
             perror("VIDIOC_QUERYBUF");
-            goto free_close_and_fail;
+            goto fail;
         }
         cam->buffer[b].length = buf.length;
         cam->buffer[b].start = mmap(NULL, buf.length,
@@ -211,7 +221,7 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
         if (MAP_FAILED == cam->buffer[b].start)
         {
             perror("mmap");
-            goto free_close_and_fail;
+            goto fail;
         }
     }
 
@@ -225,7 +235,7 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
         if (-1 == ioctl(cam->fd, VIDIOC_QBUF, &buf))
         {
             perror("VIDIOC_QBUF");
-            goto free_close_and_fail;
+            goto fail;
         }
     }
 
@@ -233,20 +243,16 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
     if (-1 == ioctl(cam->fd, VIDIOC_STREAMON, &type))
     {
         perror("VIDIOC_STREAMON");
-        goto free_close_and_fail;
+        goto fail;
     }
 
-    return true;
-
-free_close_and_fail:
-    free(cam->buffer);
-close_and_fail:
-    close(cam->fd);
+    return cam;
 fail:
-    return false;
+    close_camera(cam);
+    return NULL;
 }
 
-static int acquire_frame(Camera *cam)
+static const Buffer *acquire_frame(Camera *cam)
 {
     struct v4l2_buffer frame;
     memset(&frame, 0, sizeof(frame));
@@ -255,18 +261,18 @@ static int acquire_frame(Camera *cam)
     if (ioctl(cam->fd, VIDIOC_DQBUF, &frame))
     {
         perror("VIDIOC_DQBUF");
-        return -1;
+        return NULL;
     }
-    return frame.index;
+    return cam->buffer + frame.index;
 }
 
-static void release_frame(Camera *cam, int index)
+static void release_frame(Camera *cam, const Buffer *buf)
 {
     struct v4l2_buffer frame;
     memset(&frame, 0, sizeof(frame));
     frame.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     frame.memory = V4L2_MEMORY_MMAP;
-    frame.index = index;
+    frame.index = buf - cam->buffer;
     ioctl(cam->fd, VIDIOC_QBUF, &frame);
 }
 
@@ -320,15 +326,15 @@ int main(int argc, char *argv[])
     // TODO: Selectable between high-res grey vs half-res colour?
     const char * const fshadersrc = yuyv_quickcolour_fshadersrc;
 
-    Camera cam;
-    if (!open_camera("/dev/video0", 1, &cam))
+    Camera *cam = open_camera("/dev/video0", 1);
+    if (!cam)
     {
         fprintf(stderr, "Failed to set up camera device\n");
         return -1;
     }
 
-    unsigned int win_width = cam.pix.width;
-    unsigned int win_height = cam.pix.height;
+    unsigned int win_width = cam->pix.width;
+    unsigned int win_height = cam->pix.height;
     if (!mir_eglapp_init(argc, argv, &win_width, &win_height))
         return 1;
 
@@ -355,7 +361,7 @@ int main(int argc, char *argv[])
 
     glUseProgram(prog);
 
-    const GLfloat camw = cam.pix.width, camh = cam.pix.height;
+    const GLfloat camw = cam->pix.width, camh = cam->pix.height;
     const GLfloat box[] =
     { // position   texcoord
         0.0f, camh, 0.0f, 1.0f,
@@ -408,21 +414,21 @@ int main(int argc, char *argv[])
             GLfloat scaley = -2.0f / viewport[3];
 
             // Expand image to fit:
-            GLfloat scalew = (GLfloat)viewport[2] / cam.pix.width;
-            GLfloat scaleh = (GLfloat)viewport[3] / cam.pix.height;
+            GLfloat scalew = (GLfloat)viewport[2] / cam->pix.width;
+            GLfloat scaleh = (GLfloat)viewport[3] / cam->pix.height;
 
             GLfloat scale;
             GLfloat offsetx = -1.0f, offsety = 1.0f;
             if (scalew <= scaleh)
             {
                 scale = scalew;
-                offsety -= (GLfloat)(viewport[3] - scale*cam.pix.height) /
+                offsety -= (GLfloat)(viewport[3] - scale*cam->pix.height) /
                            viewport[3];
             }
             else
             {
                 scale = scaleh;
-                offsetx += (GLfloat)(viewport[2] - scale*cam.pix.width) /
+                offsetx += (GLfloat)(viewport[2] - scale*cam->pix.width) /
                            viewport[2];
             }
 
@@ -445,35 +451,35 @@ int main(int argc, char *argv[])
 
         if (wait_for_new_frame)
         {   // For fast resizing, only capture a new frame when not resizing.
-            int index = acquire_frame(&cam);
-            if (cam.pix.pixelformat == V4L2_PIX_FMT_YUYV)
+            const Buffer *buf = acquire_frame(cam);
+            if (cam->pix.pixelformat == V4L2_PIX_FMT_YUYV)
             {
                 if (fshadersrc == yuyv_greyscale_fshadersrc)
                 {
                     // Greyscale, full resolution:
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
-                                 cam.pix.width, cam.pix.height, 0,
+                                 cam->pix.width, cam->pix.height, 0,
                                  GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
-                                 cam.buffer[index].start);
+                                 buf->start);
                 }
                 else if (fshadersrc == yuyv_quickcolour_fshadersrc)
                 {
                     // Colour, half resolution:
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                                 cam.pix.width/2, cam.pix.height, 0,
+                                 cam->pix.width/2, cam->pix.height, 0,
                                  GL_RGBA, GL_UNSIGNED_BYTE,
-                                 cam.buffer[index].start);
+                                 buf->start);
                 }
                 // TODO: Colour, full resolution. But it will be slow :(
             }
             else
             {
                 char str[5];
-                fourcc_string(cam.pix.pixelformat, str);
+                fourcc_string(cam->pix.pixelformat, str);
                 fprintf(stderr, "FIXME: Unsupported camera pixel format 0x%08lx: %s\n",
-                        (long)cam.pix.pixelformat, str);
+                        (long)cam->pix.pixelformat, str);
             }
-            release_frame(&cam, index);
+            release_frame(cam, buf);
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
@@ -486,7 +492,7 @@ int main(int argc, char *argv[])
 
     mir_surface_set_event_handler(surface, NULL, NULL);
     mir_eglapp_shutdown();
-    close_camera(&cam);
+    close_camera(cam);
 
     return 0;
 }
