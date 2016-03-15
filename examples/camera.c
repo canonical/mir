@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <poll.h>
 
 typedef struct
 {
@@ -253,6 +254,12 @@ fail:
     return NULL;
 }
 
+static bool frame_ready(Camera *cam)
+{
+    struct pollfd pollfd = {cam->fd, POLLIN, 0};
+    return poll(&pollfd, 1, 0) == 1 && (pollfd.revents & POLLIN);
+}
+
 static const Buffer *acquire_frame(Camera *cam)
 {
     struct v4l2_buffer frame;
@@ -450,8 +457,8 @@ int main(int argc, char *argv[])
             first_frame = false;
         }
 
-        if (wait_for_new_frame)
-        {   // For fast resizing, only capture a new frame when not resizing.
+        if (wait_for_new_frame || frame_ready(cam))
+        {
             const Buffer *buf = acquire_frame(cam);
             if (cam->pix.pixelformat == V4L2_PIX_FMT_YUYV)
             {
