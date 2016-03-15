@@ -65,7 +65,7 @@ struct MockEventFilter : public mi::EventFilter
         return true;
     }
 };
-    
+
 std::vector<geom::Rectangle> const display_geometry
 {
     {{  0, 0}, { 640,  480}},
