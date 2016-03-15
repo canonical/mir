@@ -242,6 +242,7 @@ MirConnection::MirConnection(
     mir::client::ConnectionConfiguration& conf) :
         deregisterer{this},
         surface_map(conf.the_surface_map()),
+        buffer_factory(conf.the_buffer_factory()),
         channel(conf.the_rpc_channel()),
         server(channel),
         debug(channel),
@@ -1091,8 +1092,10 @@ void MirConnection::context_created(ChainCreationRequest* request_raw)
 
     try
     {
+        if (!client_buffer_factory)
+            client_buffer_factory = platform->create_buffer_factory();
         auto chain = std::make_shared<mcl::PresentationChain>(
-            this, protobuf_bs->id().value(), server, platform->create_buffer_factory());
+            this, protobuf_bs->id().value(), server, client_buffer_factory, buffer_factory);
 
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), chain);
 
