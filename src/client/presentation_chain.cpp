@@ -129,8 +129,11 @@ void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
         (*buffer_it)->received(*package);
         return;
     }
-
-    buffers.emplace_back(mir_buffer_factory->generate_buffer(buffer));
+    else
+    {
+        buffers.emplace_back(mir_buffer_factory->generate_buffer(buffer));
+        buffers.back()->received();
+    }
 }
 
 void mcl::PresentationChain::buffer_unavailable()

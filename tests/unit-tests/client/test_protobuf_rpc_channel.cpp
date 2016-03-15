@@ -679,7 +679,7 @@ TEST_F(MirProtobufRpcChannelTest, delays_messages_with_fds_not_requested)
 
 struct MockBufferFactory : mcl::AsyncBufferFactory
 {
-    MOCK_METHOD1(generate_buffer, std::shared_ptr<mcl::Buffer>(mir::protobuf::Buffer const&));
+    MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::Buffer>(mir::protobuf::Buffer const&));
     MOCK_METHOD7(expect_buffer, void(
         std::shared_ptr<mcl::ClientBufferFactory> const&,
         MirPresentationChain*,
@@ -696,18 +696,17 @@ TEST_F(MirProtobufRpcChannelTest, creates_buffer_if_not_in_map)
     int buffer_id(3);
     auto stream_map = std::make_shared<MockSurfaceMap>();
     auto mock_buffer_factory = std::make_shared<MockBufferFactory>();
-    auto buf = std::make_shared<mcl::Buffer>(buffer_cb, nullptr, buffer_id, nullptr, nullptr, mir_buffer_usage_software);
     EXPECT_CALL(*stream_map, buffer(buffer_id)).Times(1)
        .WillOnce(Return(nullptr));
     EXPECT_CALL(*mock_buffer_factory, generate_buffer(_))
-        .Times(1)
-        .WillOnce(Return(buf));
-    EXPECT_CALL(*stream_map, insert(buffer_id, buf))
-        .Times(1);
+        .WillOnce(InvokeWithoutArgs([&]{
+            return std::make_unique<mcl::Buffer>(
+                buffer_cb, nullptr, buffer_id, nullptr, nullptr, mir_buffer_usage_software);
+            }));
+    EXPECT_CALL(*stream_map, insert(buffer_id, _));
 
     mir::protobuf::EventSequence seq;
     auto request = seq.mutable_buffer_request();
-    request->mutable_id()->set_value(-1); 
     request->mutable_buffer()->set_buffer_id(buffer_id);
 
     std::vector<uint8_t> send_buffer(static_cast<size_t>(seq.ByteSize()));
@@ -754,7 +753,6 @@ TEST_F(MirProtobufRpcChannelTest, reuses_buffer_if_in_map)
 
     mir::protobuf::EventSequence seq;
     auto request = seq.mutable_buffer_request();
-    request->mutable_id()->set_value(-1); 
     request->mutable_buffer()->set_buffer_id(buffer_id);
 
     std::vector<uint8_t> send_buffer(static_cast<size_t>(seq.ByteSize()));

@@ -32,11 +32,10 @@ mcl::Buffer::Buffer(
     cb_context(context),
     buffer_id(buffer_id),
     buffer(buffer),
-    owned(true),
+    owned(false),
     chain(chain),
     usage(usage)
 {
-    cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
 }
 
 int mcl::Buffer::rpc_id() const
@@ -51,6 +50,17 @@ void mcl::Buffer::submitted()
         BOOST_THROW_EXCEPTION(std::logic_error("cannot submit unowned buffer"));
     mapped_region.reset();
     owned = false;
+}
+
+void mcl::Buffer::received()
+{
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    if (!owned)
+    {
+        owned = true;
+        cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
+    }
+
 }
 
 void mcl::Buffer::received(MirBufferPackage const& update_package)
@@ -115,4 +125,8 @@ MirPixelFormat mcl::Buffer::pixel_format() const
 mir::geometry::Size mcl::Buffer::size() const
 {
     return buffer->size();
+}
+std::shared_ptr<mcl::ClientBuffer> mcl::Buffer::client_buffer() const
+{
+    return buffer;
 }
