@@ -31,7 +31,6 @@
 #include "builtin_cursor_images.h"
 #include "null_input_channel_factory.h"
 #include "default_input_device_hub.h"
-#include "nested_input_device_hub.h"
 #include "default_input_manager.h"
 #include "surface_input_dispatcher.h"
 #include "basic_seat.h"

@@ -71,7 +71,7 @@ std::vector<geom::Rectangle> const display_geometry
     {{  0, 0}, { 640,  480}},
     {{480, 0}, {1920, 1080}}
 };
-
+    
 struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
 {
     NestedServerWithMockEventFilter(std:: string const& connection_string)
