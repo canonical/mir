@@ -90,6 +90,18 @@ static void fill_pattern(uint32_t pattern[2], MirPixelFormat pf)
     };
 }
 
+static volatile sig_atomic_t running = 1;
+
+static void shutdown(int signum)
+{
+    if (running)
+    {
+        running = 0;
+        printf("Signal %d received. Good night.\n", signum);
+    }
+}
+
+
 int main(int argc, char* argv[])
 {
     MirConnection *connection = 0;
@@ -164,7 +176,11 @@ int main(int argc, char* argv[])
     int i=0;
     MirBufferStream *bs = mir_surface_get_buffer_stream(surface);
 
-    while (1)
+    signal(SIGINT, shutdown);
+    signal(SIGTERM, shutdown);
+    signal(SIGHUP, shutdown);
+
+    while (running)
     {
         mir_buffer_stream_get_graphics_region(bs, &graphics_region);
         i++;

@@ -17,10 +17,9 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_test_framework/stub_client_connection_configuration.h"
-#include "mir_test_framework/using_client_platform.h"
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir/logging/logger.h"
+#include "mir/test/fake_shared.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -30,49 +29,34 @@
 using namespace testing;
 using namespace mir_test_framework;
 
-namespace {
-
+namespace
+{
 class StringStreamLogger : public mir::logging::Logger
 {
 public:
-    void log(mir::logging::Severity,
-             std::string const& message,
-             std::string const& component) override
+    void log(mir::logging::Severity, std::string const& message, std::string const& component) override
     {
-        ss << "[StringStreamLogger] "
-           << component << ": " << message << std::endl;
+        out << "[StringStreamLogger] " << component << ": " << message << std::endl;
     }
-    // Awkwardly static. Because the instance is hidden in UsingClientPlatform
-    static std::stringstream ss;
-};
 
-std::stringstream StringStreamLogger::ss;
-
-struct Conf : StubConnectionConfiguration
-{
-    Conf(std::string const& socket)
-        : StubConnectionConfiguration(socket)
-    {
-    }
-    std::shared_ptr<mir::logging::Logger> the_logger() override
-    {
-        return std::make_shared<StringStreamLogger>();
-    }
+    std::stringstream out;
 };
 
 struct ClientLogging : ConnectedClientHeadlessServer
 {
-    UsingClientPlatform<Conf> with_custom_logger;
-    std::stringstream& client_log{StringStreamLogger::ss};
-};
+    StringStreamLogger logger;
 
+    void SetUp() override
+    {
+        add_to_environment("MIR_CLIENT_PERF_REPORT", "log");
+        ConnectedClientHeadlessServer::SetUp();
+        mir::logging::set_logger(mir::test::fake_shared(logger));
+    }
+};
 } // namespace
 
 TEST_F(ClientLogging, reports_performance)
 {
-    TemporaryEnvironmentValue env("MIR_CLIENT_PERF_REPORT", "log");
-    (void)env; // Avoid clang warning/error
-
     auto spec = mir_connection_create_spec_for_normal_surface(
                    connection, 123, 456, mir_pixel_format_abgr_8888);
     ASSERT_THAT(spec, NotNull());
@@ -94,10 +78,10 @@ TEST_F(ClientLogging, reports_performance)
     }
 
     int reports = 0;
-    while (!client_log.eof())
+    while (!logger.out.eof())
     {
         std::string line;
-        std::getline(client_log, line);
+        std::getline(logger.out, line);
         auto perf = line.find(" perf: ");
         if (perf != line.npos)
         {

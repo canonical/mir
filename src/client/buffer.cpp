@@ -26,13 +26,15 @@ mcl::Buffer::Buffer(
     mir_buffer_callback cb, void* context,
     int buffer_id,
     std::shared_ptr<ClientBuffer> const& buffer,
-    MirPresentationChain* chain) :
+    MirPresentationChain* chain,
+    MirBufferUsage usage) :
     cb(cb),
     cb_context(context),
     buffer_id(buffer_id),
     buffer(buffer),
     owned(true),
-    chain(chain)
+    chain(chain),
+    usage(usage)
 {
     cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
 }
@@ -51,12 +53,13 @@ void mcl::Buffer::submitted()
     owned = false;
 }
 
-void mcl::Buffer::received()
+void mcl::Buffer::received(MirBufferPackage const& update_package)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     if (!owned)
     {
         owned = true;
+        buffer->update_from(update_package);
         cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
     }
 }
@@ -97,4 +100,19 @@ bool mcl::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds ti
 MirPresentationChain* mcl::Buffer::allocating_chain() const
 {
     return chain;
+}
+
+MirBufferUsage mcl::Buffer::buffer_usage() const
+{
+    return usage;
+}
+
+MirPixelFormat mcl::Buffer::pixel_format() const
+{
+    return buffer->pixel_format();
+}
+
+mir::geometry::Size mcl::Buffer::size() const
+{
+    return buffer->size();
 }

@@ -20,6 +20,7 @@
 #include "mir/client_buffer.h"
 #include "rpc/mir_display_server.h"
 #include "presentation_chain.h"
+#include "protobuf_to_native_buffer.h"
 #include <boost/throw_exception.hpp>
 #include <algorithm>
 
@@ -120,12 +121,13 @@ void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     //first see if this buffer has been here before
+    std::shared_ptr<MirBufferPackage> package = mcl::protobuf_to_native_buffer(buffer);
     auto buffer_it = std::find_if(buffers.begin(), buffers.end(),
         [&buffer](std::unique_ptr<Buffer> const& b)
         { return buffer.buffer_id() == b->rpc_id(); });
     if (buffer_it != buffers.end())
     {
-        (*buffer_it)->received();
+        (*buffer_it)->received(*package);
         return;
     }
 
@@ -139,21 +141,11 @@ void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
     if (request_it == allocation_requests.end())
         BOOST_THROW_EXCEPTION(std::logic_error("unrequested buffer received"));
 
-    auto package = std::make_shared<MirBufferPackage>();
-    package->data_items = buffer.data_size();
-    package->fd_items = buffer.fd_size();
-    for (int i = 0; i != buffer.data_size(); ++i)
-        package->data[i] = buffer.data(i);
-    for (int i = 0; i != buffer.fd_size(); ++i)
-        package->fd[i] = buffer.fd(i);
-    package->stride = buffer.stride();
-    package->flags = buffer.flags();
-    package->width = buffer.width();
-    package->height = buffer.height();
     buffers.emplace_back(std::make_unique<Buffer>(
         (*request_it)->cb, (*request_it)->cb_context,
         buffer.buffer_id(),
-        factory->create_buffer(package, (*request_it)->size, (*request_it)->format), this));
+        factory->create_buffer(package, (*request_it)->size, (*request_it)->format), this,
+        (*request_it)->usage));
 
     allocation_requests.erase(request_it);
 }

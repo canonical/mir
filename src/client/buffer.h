@@ -38,11 +38,12 @@ public:
         mir_buffer_callback cb, void* context,
         int buffer_id,
         std::shared_ptr<ClientBuffer> const& buffer,
-        MirPresentationChain* chain);
+        MirPresentationChain* chain,
+        MirBufferUsage usage);
     int rpc_id() const;
 
     void submitted();
-    void received();
+    void received(MirBufferPackage const& update_message);
 
     MirNativeBuffer* as_mir_native_buffer() const;
     MirGraphicsRegion map_region();
@@ -50,6 +51,10 @@ public:
     void set_fence(MirNativeFence*, MirBufferAccess);
     MirNativeFence* get_fence() const;
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds);
+
+    MirBufferUsage buffer_usage() const;
+    MirPixelFormat pixel_format() const;
+    geometry::Size size() const;
 
     MirPresentationChain* allocating_chain() const;
 private:
@@ -62,6 +67,7 @@ private:
     bool owned;
     std::shared_ptr<MemoryRegion> mapped_region;
     MirPresentationChain* const chain;
+    MirBufferUsage const usage;
 };
 }
 }

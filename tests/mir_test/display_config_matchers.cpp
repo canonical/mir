@@ -283,10 +283,13 @@ private:
 
 }
 
-bool mt::compare_display_configurations(mg::DisplayConfiguration const& config1,
-                                        mg::DisplayConfiguration const& config2)
+bool mt::compare_display_configurations(
+    testing::MatchResultListener* listener,
+    mg::DisplayConfiguration const& config1,
+    mg::DisplayConfiguration const& config2)
 {
-    bool result = true;
+    using namespace testing;
+    bool failure = false;
 
     /* cards */
     std::vector<mg::DisplayConfigurationCard> cards1;
@@ -303,22 +306,7 @@ bool mt::compare_display_configurations(mg::DisplayConfiguration const& config1,
             cards2.push_back(card);
         });
 
-    if (cards1.size() == cards2.size())
-    {
-        for (size_t i = 0; i < cards1.size(); i++)
-        {
-            if (cards1[i] != cards2[i])
-            {
-                EXPECT_EQ(cards1[i], cards2[i]);
-                result = false;
-            }
-        }
-    }
-    else
-    {
-        EXPECT_EQ(cards1.size(), cards2.size());
-        result = false;
-    }
+    failure |= !ExplainMatchResult(UnorderedElementsAreArray(cards1), cards2, listener);
 
     /* Outputs */
     std::vector<mg::DisplayConfigurationOutput> outputs1;
@@ -335,88 +323,91 @@ bool mt::compare_display_configurations(mg::DisplayConfiguration const& config1,
             outputs2.push_back(output);
         });
 
-    if (outputs1.size() == outputs2.size())
-    {
-        for (size_t i = 0; i < outputs1.size(); i++)
-        {
-            if (outputs1[i] != outputs2[i])
-            {
-                EXPECT_EQ(outputs1[i], outputs2[i]);
-                result = false;
-            }
-        }
-    }
-    else
-    {
-        EXPECT_EQ(outputs1.size(), outputs2.size());
-        result = false;
-    }
+    failure |= !ExplainMatchResult(UnorderedElementsAreArray(outputs1), outputs2, listener);
 
-    return result;
+    return !failure;
 }
 
-bool mt::compare_display_configurations(MirDisplayConfiguration const& client_config,
-                                        mg::DisplayConfiguration const& display_config)
+bool mt::compare_display_configurations(
+    testing::MatchResultListener* listener,
+    MirDisplayConfiguration const& client_config,
+    mg::DisplayConfiguration const& display_config)
 {
     TestDisplayConfiguration config1{client_config};
-    return compare_display_configurations(config1, display_config);
+    return compare_display_configurations(listener, config1, display_config);
 }
 
-bool mt::compare_display_configurations(mp::DisplayConfiguration const& protobuf_config,
-                                        mg::DisplayConfiguration const& display_config)
+bool mt::compare_display_configurations(
+    testing::MatchResultListener* listener,
+    mp::DisplayConfiguration const& protobuf_config,
+    mg::DisplayConfiguration const& display_config)
 {
     TestDisplayConfiguration config1{protobuf_config};
-    return compare_display_configurations(config1, display_config);
+    return compare_display_configurations(listener, config1, display_config);
 }
 
-bool mt::compare_display_configurations(MirDisplayConfiguration const* client_config1,
-                                        MirDisplayConfiguration const* client_config2)
+bool mt::compare_display_configurations(
+    testing::MatchResultListener* listener,
+    MirDisplayConfiguration const* client_config1,
+    MirDisplayConfiguration const* client_config2)
 {
     TestDisplayConfiguration config1{*client_config1};
     TestDisplayConfiguration config2{*client_config2};
-    return compare_display_configurations(config1, config2);
+    return compare_display_configurations(listener, config1, config2);
 }
 
-bool mt::compare_display_configurations(MirDisplayConfiguration const& client_config,
-                                        mp::DisplayConfiguration const& protobuf_config)
+bool mt::compare_display_configurations(
+    testing::MatchResultListener* listener,
+    MirDisplayConfiguration const& client_config,
+    mp::DisplayConfiguration const& protobuf_config)
 {
     TestDisplayConfiguration config1{client_config};
     TestDisplayConfiguration config2{protobuf_config};
-    return compare_display_configurations(config1, config2);
+    return compare_display_configurations(listener, config1, config2);
 }
 
-bool mt::compare_display_configurations(graphics::DisplayConfiguration const& display_config1,
-                                        MirDisplayConfiguration const* display_config2)
+bool mt::compare_display_configurations(
+    testing::MatchResultListener* listener,
+    graphics::DisplayConfiguration const& display_config1,
+    MirDisplayConfiguration const* display_config2)
 {
     TestDisplayConfiguration config2{*display_config2};
-    return compare_display_configurations(display_config1, config2);
+    return compare_display_configurations(listener, display_config1, config2);
 }
 
-bool mt::compare_display_configurations(MirDisplayConfiguration const* display_config2,
-                                        graphics::DisplayConfiguration const& display_config1)
+bool mt::compare_display_configurations(
+    testing::MatchResultListener* listener,
+    MirDisplayConfiguration const* display_config2,
+    graphics::DisplayConfiguration const& display_config1)
 {
     TestDisplayConfiguration config2{*display_config2};
-    return compare_display_configurations(display_config1, config2);
+    return compare_display_configurations(listener, display_config1, config2);
 }
 
-bool mt::compare_display_configurations(MirDisplayConfig const* client_config,
+bool mt::compare_display_configurations(
+    testing::MatchResultListener* listener,
+    MirDisplayConfig const* client_config,
     mg::DisplayConfiguration const& server_config)
 {
     TestDisplayConfiguration translated_config{client_config};
-    return compare_display_configurations(server_config, translated_config);
+    return compare_display_configurations(listener, server_config, translated_config);
 }
 
-bool mt::compare_display_configurations(mg::DisplayConfiguration const& server_config,
+bool mt::compare_display_configurations(
+    testing::MatchResultListener* listener,
+    mg::DisplayConfiguration const& server_config,
     MirDisplayConfig const* client_config)
 {
     TestDisplayConfiguration translated_config{client_config};
-    return compare_display_configurations(server_config, translated_config);
+    return compare_display_configurations(listener, server_config, translated_config);
 }
 
-bool mt::compare_display_configurations(MirDisplayConfig const* config1,
+bool mt::compare_display_configurations(
+    testing::MatchResultListener* listener,
+    MirDisplayConfig const* config1,
     MirDisplayConfig const* config2)
 {
     TestDisplayConfiguration translated_config_one{config1};
     TestDisplayConfiguration translated_config_two{config2};
-    return compare_display_configurations(translated_config_one, translated_config_two);
+    return compare_display_configurations(listener, translated_config_one, translated_config_two);
 }
