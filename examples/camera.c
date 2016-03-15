@@ -373,7 +373,7 @@ int main(int argc, char *argv[])
     if (!cam)
     {
         fprintf(stderr, "Failed to set up camera device\n");
-        return -1;
+        return 0;
     }
 
     unsigned int win_width = cam->pix.width;
