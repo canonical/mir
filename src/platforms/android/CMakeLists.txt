@@ -8,4 +8,6 @@ include_directories(
 add_subdirectory(server/)
 add_subdirectory(client/)
 add_subdirectory(common/)
-#add_subdirectory(utils/)
+if (MIR_ENABLE_TESTS)
+  add_subdirectory(utils/)
+endif()

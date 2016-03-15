@@ -80,7 +80,7 @@ void mix::XInputPlatform::stop()
 
 void mix::XInputPlatform::process_input_event()
 {
-    do
+    while(XPending(x11_connection.get()))
     {
         // This code is based on :
         // https://tronche.com/gui/x/xlib/events/keyboard-pointer/keyboard-pointer.html
@@ -248,5 +248,4 @@ void mix::XInputPlatform::process_input_event()
         else
             mir::log_error("input event received with no sink to handle it");
     }
-    while(XPending(x11_connection.get()));
 }
