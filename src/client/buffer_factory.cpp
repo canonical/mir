@@ -54,7 +54,7 @@ void mcl::BufferFactory::expect_buffer(
         std::make_unique<AllocationRequest>(factory, chain, size, format, usage, cb, cb_context));
 }
 
-std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(mir::protobuf::Buffer const& buffer)
+std::shared_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(mir::protobuf::Buffer const& buffer)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     //must be new, allocate and send it.
@@ -67,7 +67,7 @@ std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(mir::protobuf::
     if (request_it == allocation_requests.end())
         BOOST_THROW_EXCEPTION(std::logic_error("unrequested buffer received"));
 
-    auto b = std::make_unique<Buffer>(
+    auto b = std::make_shared<Buffer>(
         (*request_it)->cb, (*request_it)->cb_context,
         buffer.buffer_id(),
         (*request_it)->native_buffer_factory->create_buffer(

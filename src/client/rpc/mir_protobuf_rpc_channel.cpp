@@ -327,7 +327,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     {
                         auto bb = buffer_factory->generate_buffer(seq.buffer_request().buffer());
                         auto braw = bb.get();
-                        map->insert(seq.buffer_request().buffer().buffer_id(), std::move(bb)); 
+                        map->insert(seq.buffer_request().buffer().buffer_id(), bb); 
                         braw->received();
                     }
                 }
