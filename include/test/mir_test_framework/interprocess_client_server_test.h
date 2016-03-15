@@ -30,7 +30,7 @@ class Result;
 class InterprocessClientServerTest : public HeadlessTest
 {
 public:
-    typedef enum { disable_core_dump = 1 } RunFlag;
+    enum RunFlag { disable_core_dump = 1 };
     typedef unsigned int RunFlags;
 
     char const* const mir_test_socket = test_socket_file().c_str();
