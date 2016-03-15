@@ -40,6 +40,13 @@ typedef struct
     bool resized;
 } State;
 
+enum CameraPref
+{
+    camera_pref_defaults,
+    camera_pref_speed,
+    camera_pref_resolution
+};
+
 typedef struct
 {
     void *start;
@@ -126,7 +133,8 @@ static void close_camera(Camera *cam)
     free(cam);
 }
 
-static Camera *open_camera(const char *path, unsigned nbuffers)
+static Camera *open_camera(const char *path, enum CameraPref pref,
+                           unsigned nbuffers)
 {
     Camera *cam = calloc(1, sizeof(*cam) + nbuffers*sizeof(cam->buffer[0]));
     if (cam == NULL)
@@ -169,8 +177,16 @@ static Camera *open_camera(const char *path, unsigned nbuffers)
     format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     struct v4l2_pix_format *pix = &format.fmt.pix;
     // Driver will choose the best match
-    pix->width = 1920;
-    pix->height = 1080;
+    if (pref == camera_pref_speed)
+    {
+        pix->width = 1;
+        pix->height = 1;
+    }
+    else if (pref == camera_pref_resolution)
+    {
+        pix->width = 9999;
+        pix->height = 9999;
+    }
     // But we really only need it to honour these:
     pix->pixelformat = V4L2_PIX_FMT_YUYV;
     pix->field = V4L2_FIELD_NONE;
@@ -187,6 +203,24 @@ static Camera *open_camera(const char *path, unsigned nbuffers)
         (unsigned)pix->width, (unsigned)pix->height,
         str, (unsigned)pix->bytesperline);
     cam->pix = *pix;
+
+    // Always choose the highest frame rate. Although what you will get
+    // depends on the resolution vs speed set above.
+    struct v4l2_streamparm parm;
+    memset(&parm, 0, sizeof(parm));
+    parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    parm.parm.capture.timeperframe.numerator = 1;
+    parm.parm.capture.timeperframe.denominator = 1000;
+    if (ioctl(cam->fd, VIDIOC_S_PARM, &parm))
+    {
+        fprintf(stderr, "Setting frame rate is not supported.\n");
+    }
+    else
+    {
+        unsigned hz = parm.parm.capture.timeperframe.denominator /
+                      parm.parm.capture.timeperframe.numerator;
+        printf("Maximum frame rate requested: %u Hz (may be less)\n", hz);
+    }
 
     struct v4l2_requestbuffers req =
     {
@@ -335,7 +369,7 @@ int main(int argc, char *argv[])
     // TODO: Selectable between high-res grey vs half-res colour?
     const char * const fshadersrc = yuyv_quickcolour_fshadersrc;
 
-    Camera *cam = open_camera("/dev/video0", 1);
+    Camera *cam = open_camera("/dev/video0", camera_pref_resolution, 1);
     if (!cam)
     {
         fprintf(stderr, "Failed to set up camera device\n");
