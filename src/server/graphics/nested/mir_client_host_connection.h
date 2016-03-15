@@ -21,6 +21,7 @@
 
 #include "host_connection.h"
 #include "mir/shell/host_lifecycle_event_listener.h"
+#include "mir/input/input_device_hub.h"
 
 #include <string>
 #include <mutex>
@@ -31,20 +32,32 @@ namespace msh = mir::shell;
 
 namespace mir
 {
+class ServerActionQueue;
+namespace frontend
+{
+class EventSink;
+}
 namespace input
 {
-class DeviceChangeListener;
+class InputDeviceObserver;
+class Device;
 }
 namespace graphics
 {
 namespace nested
 {
 
-class MirClientHostConnection : public HostConnection
+using UniqueInputConfig = std::unique_ptr<MirInputConfig, void(*)(MirInputConfig const*)>;
+
+class MirClientHostConnection : public HostConnection, public input::InputDeviceHub
 {
 public:
-    MirClientHostConnection(std::shared_ptr<MirConnection> const& con,
-                            std::shared_ptr<msh::HostLifecycleEventListener> const& host_lifecycle_event_listener);
+    MirClientHostConnection(std::string const& host_socket,
+                            std::string const& name,
+                            std::shared_ptr<msh::HostLifecycleEventListener> const& host_lifecycle_event_listener,
+                            std::shared_ptr<frontend::EventSink> const& sink,
+                            std::shared_ptr<ServerActionQueue> const& observer_queue);
+    ~MirClientHostConnection();
 
     std::vector<int> platform_fd_items() override;
     EGLNativeDisplayType egl_native_display() override;
@@ -62,14 +75,28 @@ public:
     virtual PlatformOperationMessage platform_operation(
         unsigned int op, PlatformOperationMessage const& request) override;
 
+    // InputDeviceHub
+    void add_observer(std::shared_ptr<input::InputDeviceObserver> const&) override;
+    void remove_observer(std::weak_ptr<input::InputDeviceObserver> const&) override;
+    void for_each_input_device(std::function<void(input::Device const& device)> const& callback) override;
+
 private:
+    void update_input_devices();
     std::mutex surfaces_mutex;
 
-    std::shared_ptr<MirConnection> const mir_connection;
+    MirConnection* const mir_connection;
     std::function<void()> conf_change_callback;
     std::shared_ptr<msh::HostLifecycleEventListener> const host_lifecycle_event_listener;
 
     std::vector<HostSurface*> surfaces;
+
+    std::shared_ptr<frontend::EventSink> const sink;
+    std::shared_ptr<mir::ServerActionQueue> const observer_queue;
+    std::vector<std::shared_ptr<input::InputDeviceObserver>> observers;
+    std::mutex devices_guard;
+    std::vector<std::shared_ptr<input::Device>> devices;
+    UniqueInputConfig config;
+
 };
 
 }

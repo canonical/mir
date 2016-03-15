@@ -38,10 +38,10 @@
 #include "mir/abnormal_exit.h"
 #include "mir/emergency_cleanup.h"
 #include "mir/log.h"
+#include "mir/main_loop.h"
 #include "mir/report_exception.h"
 
 #include "mir_toolkit/common.h"
-#include "mir_toolkit/mir_connection.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -214,11 +214,11 @@ mir::DefaultServerConfiguration::wrap_cursor(std::shared_ptr<mg::Cursor> const& 
     return wrapped;
 }
 
-auto mir::DefaultServerConfiguration::the_connection()
--> std::shared_ptr<MirConnection>
+auto mir::DefaultServerConfiguration::the_host_connection()
+-> std::shared_ptr<graphics::nested::HostConnection>
 {
-    return connection(
-        [this]() -> std::shared_ptr<MirConnection>
+    return host_connection(
+        [this]()
         {
             auto const options = the_options();
 
@@ -245,31 +245,13 @@ auto mir::DefaultServerConfiguration::the_connection()
                 options->get<std::string>(options::name_opt) :
                 "nested-mir@:" + server_socket;
 
-            auto con = std::unique_ptr<MirConnection, decltype(&mir_connection_release)>(
-                mir_connect_sync(host_socket.c_str(), my_name.c_str()), mir_connection_release);
-
-            if (!mir_connection_is_valid(con.get()))
-            {
-                std::string const msg =
-                    "Exiting Mir! Reason: Nested Mir Platform Connection Error: " +
-                    std::string(mir_connection_get_error_message(con.get()));
-
-                BOOST_THROW_EXCEPTION(mir::AbnormalExit(msg));
-            }
-            return std::shared_ptr<MirConnection>(std::move(con));// gcc-4.9 workaround
-        });
-
-}
-
-auto mir::DefaultServerConfiguration::the_host_connection()
--> std::shared_ptr<graphics::nested::HostConnection>
-{
-    return host_connection(
-        [this]() -> std::shared_ptr<graphics::nested::HostConnection>
-        {
             return std::make_shared<graphics::nested::MirClientHostConnection>(
-                the_connection(),
-                the_host_lifecycle_event_listener());
+                host_socket,
+                my_name,
+                the_host_lifecycle_event_listener(),
+                the_global_event_sink(),
+                the_main_loop()
+                );
         });
 }
 

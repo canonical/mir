@@ -25,8 +25,6 @@
 #include <memory>
 #include <string>
 
-struct MirConnection;
-
 namespace mir
 {
 class ServerActionQueue;
@@ -115,7 +113,11 @@ class GraphicBufferAllocator;
 class Cursor;
 class CursorImage;
 class GLConfig;
-namespace nested { class HostConnection; }
+namespace nested
+{
+class HostConnection;
+class MirClientHostConnection;
+}
 }
 namespace input
 {
@@ -193,7 +195,6 @@ public:
     virtual std::shared_ptr<shell::DisplayConfigurationController> the_display_configuration_controller();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
-    virtual std::shared_ptr<MirConnection> the_connection();
     virtual std::shared_ptr<graphics::GLConfig> the_gl_config();
     /** @} */
 
@@ -362,7 +363,6 @@ protected:
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::SurfaceInputDispatcher>    surface_input_dispatcher;
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub;
-    CachedPtr<input::InputDeviceHub>    input_device_hub;
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;
     CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<input::InputSender>     input_sender;
@@ -409,8 +409,7 @@ protected:
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
-    CachedPtr<graphics::nested::HostConnection> host_connection;
-    CachedPtr<MirConnection> connection;
+    CachedPtr<graphics::nested::MirClientHostConnection> host_connection;
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<graphics::GLConfig> gl_config;
     CachedPtr<scene::PromptSessionListener> prompt_session_listener;
