@@ -281,7 +281,8 @@ static void release_frame(Camera *cam, const Buffer *buf)
     frame.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     frame.memory = V4L2_MEMORY_MMAP;
     frame.index = buf - cam->buffer;
-    ioctl(cam->fd, VIDIOC_QBUF, &frame);
+    if (ioctl(cam->fd, VIDIOC_QBUF, &frame))
+        perror("VIDIOC_QBUF");
 }
 
 int main(int argc, char *argv[])
