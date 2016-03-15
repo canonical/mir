@@ -36,7 +36,7 @@ public:
     virtual ~AsyncBufferFactory() = default;
     AsyncBufferFactory() = default;
 
-    virtual std::shared_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) = 0;
+    virtual std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) = 0;
     virtual void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
         MirPresentationChain* chain,
@@ -53,7 +53,7 @@ private:
 class BufferFactory : public AsyncBufferFactory
 {
 public:
-    std::shared_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) override;
+    std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) override;
     void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
         MirPresentationChain* chain,
