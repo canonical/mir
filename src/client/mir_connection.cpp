@@ -40,6 +40,7 @@
 #include "error_chain.h"
 #include "logging/perf_report.h"
 #include "lttng/perf_report.h"
+#include "buffer_factory.h"
 
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
@@ -59,9 +60,14 @@ namespace gp = google::protobuf;
 namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
 namespace ml = mir::logging;
+namespace geom = mir::geometry;
 
 namespace
 {
+void ignore()
+{
+}
+
 std::shared_ptr<mcl::PerfReport>
 make_perf_report(std::shared_ptr<ml::Logger> const& logger)
 {
@@ -1141,4 +1147,36 @@ void MirConnection::release_presentation_chain(MirPresentationChain* chain)
     {
         surface_map->erase(mf::BufferStreamId(id));
     }
+}
+
+void MirConnection::allocate_buffer(
+    geom::Size size, MirPixelFormat format, MirBufferUsage usage,
+    mir_buffer_callback callback, void* context)
+{
+    mp::BufferAllocation request;
+    request.mutable_id()->set_value(-1);
+    auto buffer_request = request.add_buffer_requests();
+    buffer_request->set_width(size.width.as_int());
+    buffer_request->set_height(size.height.as_int());
+    buffer_request->set_pixel_format(format);
+    buffer_request->set_buffer_usage(usage);
+
+    if (!client_buffer_factory)
+        client_buffer_factory = platform->create_buffer_factory();
+    buffer_factory->expect_buffer(
+        client_buffer_factory,
+        nullptr,
+        size, format, usage,
+        callback, context);
+    server.allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));
+}
+
+void MirConnection::release_buffer(int buffer_id)
+{
+    surface_map->erase(buffer_id);
+
+    mp::BufferRelease request;
+    auto released_buffer = request.add_buffers();
+    released_buffer->set_buffer_id(buffer_id);
+    server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }
