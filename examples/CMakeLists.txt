@@ -223,15 +223,6 @@ target_link_libraries(mir_demo_server
 mir_add_wrapped_executable(mir_demo_server_minimal server_minimal.cpp)
 target_link_libraries(mir_demo_server_minimal mirserver)
 
-mir_add_wrapped_executable(mir_demo_standalone_render_overlays
-    render_overlays.cpp
-)
-
-target_link_libraries(mir_demo_standalone_render_overlays
-    mirserver
-    mircommon
-)
-
 if (MIR_ENABLE_TESTS)
   add_executable(mir_symbol_test
       uses_non_client_symbol.cpp
