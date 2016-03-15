@@ -171,6 +171,8 @@ set(
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
 
+option(MIR_ENABLE_TESTS "Build tests" ON)
+
 foreach(platform IN LISTS MIR_PLATFORM)
   if (platform STREQUAL "mesa-kms")
     set(MIR_BUILD_PLATFORM_MESA_KMS TRUE)
@@ -228,8 +230,6 @@ if ("${LIBINPUT_VERSION}" VERSION_LESS "1.1")
 else ()
   add_definitions(-DMIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
 endif ()
-
-option(MIR_ENABLE_TESTS "Build tests" ON)
 
 add_subdirectory(benchmarks/)
 add_subdirectory(examples/)
