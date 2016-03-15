@@ -122,6 +122,15 @@ void create_and_run_scroll_surface(MirConnection *connection)
     puts("Surface released");
 }
 
+static void shutdown(int signum)
+{
+    // Exiting without closing surfaces and connection is impolite but should
+    // not kill the server. It actually did kill the server prior to -r 3385.
+    // Running this example in CI acts as a smoke test for that failure.
+    printf("Signal %d received. Good night.\n", signum);
+    exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char* argv[])
 {
     MirConnection *connection = 0;
@@ -151,6 +160,10 @@ int main(int argc, char* argv[])
     }
 
     puts("Starting");
+
+    signal(SIGINT, shutdown);
+    signal(SIGTERM, shutdown);
+    signal(SIGHUP, shutdown);
 
     connection = mir_connect_sync(socket_file, __PRETTY_FUNCTION__);
     assert(connection != NULL);
