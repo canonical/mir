@@ -335,8 +335,9 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    static unsigned int width = 0, height = 0;
-    if (!mir_eglapp_init(argc, argv, &width, &height))
+    unsigned int win_width = cam.pix.width;
+    unsigned int win_height = cam.pix.height;
+    if (!mir_eglapp_init(argc, argv, &win_width, &win_height))
         return 1;
 
     GLuint vshader = load_shader(vshadersrc, GL_VERTEX_SHADER);
@@ -390,7 +391,7 @@ int main(int argc, char *argv[])
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glViewport(0, 0, width, height);
+    glViewport(0, 0, win_width, win_height);
 
     State state =
     {
