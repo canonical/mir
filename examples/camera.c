@@ -153,29 +153,22 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
 
     struct v4l2_format format;
     format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    if (-1 == ioctl(cam->fd, VIDIOC_G_FMT, &format))
-    {
-         perror("VIDIOC_G_FMT");
-         close(cam->fd);
-         return false;
-    }
-
     struct v4l2_pix_format *pix = &format.fmt.pix;
-
-    if (pix->pixelformat != V4L2_PIX_FMT_YUYV)
+    memset(pix, 0, sizeof(*pix));
+    // Driver will choose the best match
+    pix->width = 1920;
+    pix->height = 1080;
+    // But we really only need it to honour these:
+    pix->pixelformat = V4L2_PIX_FMT_YUYV;
+    pix->field = V4L2_FIELD_NONE;
+    // Just try, best effort. This may fail.
+    if (ioctl(cam->fd, VIDIOC_S_FMT, &format) &&
+        ioctl(cam->fd, VIDIOC_G_FMT, &format))
     {
-        memset(pix, 0, sizeof(*pix));
-        // Driver will choose the best match
-        pix->width = 1920;
-        pix->height = 1080;
-        // But we really only need it to honour these:
-        pix->pixelformat = V4L2_PIX_FMT_YUYV;
-        pix->field = V4L2_FIELD_NONE;
-        // Just try, best effort. This may fail.
-        ioctl(cam->fd, VIDIOC_S_FMT, &format);
-        ioctl(cam->fd, VIDIOC_G_FMT, &format);
+        perror("VIDIOC_[SG]_FMT");
+        close(cam->fd);
+        return false;
     }
-
     char str[5];
     fourcc_string(pix->pixelformat, str);
     printf("Pixel format: %ux%u fmt %s, stride %u\n",
