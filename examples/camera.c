@@ -126,7 +126,7 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
     if (cam->fd < 0)
     {
         perror("open");
-        return false;
+        goto fail;
     }
 
     struct v4l2_capability cap;
@@ -147,8 +147,7 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
     if (ret || (cap.capabilities & required) != required)
     {
         fprintf(stderr, "Can't get sufficient capabilities\n");
-        close(cam->fd);
-        return false;
+        goto close_and_fail;
     }
 
     struct v4l2_format format;
@@ -166,8 +165,7 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
         ioctl(cam->fd, VIDIOC_G_FMT, &format))
     {
         perror("VIDIOC_[SG]_FMT");
-        close(cam->fd);
-        return false;
+        goto close_and_fail;
     }
     char str[5];
     fourcc_string(pix->pixelformat, str);
@@ -186,8 +184,7 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
     if (-1 == ioctl(cam->fd, VIDIOC_REQBUFS, &req))
     {
         perror("VIDIOC_REQBUFS");
-        close(cam->fd);
-        return false;
+        goto close_and_fail;
     }
 
     cam->buffers = req.count;
@@ -203,8 +200,7 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
         if (-1 == ioctl(cam->fd, VIDIOC_QUERYBUF, &buf))
         {
             perror("VIDIOC_QUERYBUF");
-            close(cam->fd);
-            return false;
+            goto free_close_and_fail;
         }
         cam->buffer[b].length = buf.length;
         cam->buffer[b].start = mmap(NULL, buf.length,
@@ -215,9 +211,7 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
         if (MAP_FAILED == cam->buffer[b].start)
         {
             perror("mmap");
-            free(cam->buffer);
-            close(cam->fd);
-            return false;
+            goto free_close_and_fail;
         }
     }
 
@@ -230,9 +224,8 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
         buf.memory = V4L2_MEMORY_MMAP;
         if (-1 == ioctl(cam->fd, VIDIOC_QBUF, &buf))
         {
-             perror("VIDIOC_QBUF");
-             close_camera(cam);
-             return false;
+            perror("VIDIOC_QBUF");
+            goto free_close_and_fail;
         }
     }
 
@@ -240,11 +233,17 @@ static bool open_camera(const char *path, unsigned nbuffers, Camera *cam)
     if (-1 == ioctl(cam->fd, VIDIOC_STREAMON, &type))
     {
         perror("VIDIOC_STREAMON");
-        close_camera(cam);
-        return false;
+        goto free_close_and_fail;
     }
 
     return true;
+
+free_close_and_fail:
+    free(cam->buffer);
+close_and_fail:
+    close(cam->fd);
+fail:
+    return false;
 }
 
 static int acquire_frame(Camera *cam)
