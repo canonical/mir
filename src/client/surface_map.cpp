@@ -94,16 +94,6 @@ void mcl::ConnectionSurfaceMap::erase(mf::BufferStreamId stream_id)
     streams.erase(stream_id);
 }
 
-
-
-
-
-
-
-
-
-
-
 void mcl::ConnectionSurfaceMap::insert(int buffer_id, std::shared_ptr<mcl::Buffer> const& buffer)
 {
     std::lock_guard<decltype(buffer_guard)> lk(buffer_guard);

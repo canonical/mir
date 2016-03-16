@@ -379,21 +379,19 @@ struct ScheduledProducer : ProducerSystem
             map, factory,
             geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers)
     {
-        ipc->on_client_bound_transfer([this](mp::Buffer& buffer){
+        ipc->on_client_bound_transfer([this](mp::Buffer& ipc_buffer){
             available++;
 
-            auto b = map->buffer(buffer.buffer_id());
-            if(b)
+            auto buffer = map->buffer(ipc_buffer.buffer_id());
+            if (buffer)
             {
-                b->received(
-                    *mcl::protobuf_to_native_buffer(buffer));
+                buffer->received(*mcl::protobuf_to_native_buffer(ipc_buffer));
             }
             else
             {
-                auto bb = factory->generate_buffer(buffer);
-                auto braw = bb.get();
-                map->insert(buffer.buffer_id(), std::move(bb)); 
-                braw->received();
+                buffer = factory->generate_buffer(ipc_buffer);
+                map->insert(ipc_buffer.buffer_id(), buffer); 
+                buffer->received();
             }
         });
         ipc->on_resize_event([this](geom::Size sz)
