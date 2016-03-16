@@ -127,7 +127,6 @@ void mcl::PresentationChain::buffer_available(mp::Buffer const& buffer)
     if (buffer_it != buffers.end())
     {
         (*buffer_it)->received(*package);
-        return;
     }
     else
     {
