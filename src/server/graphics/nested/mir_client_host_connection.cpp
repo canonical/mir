@@ -27,6 +27,7 @@
 #include "mir/input/pointer_configuration.h"
 #include "mir/input/touchpad_configuration.h"
 #include "mir/input/input_device_observer.h"
+#include "mir/frontend/event_sink.h"
 #include "mir/server_action_queue.h"
 
 #include <boost/throw_exception.hpp>
@@ -459,6 +460,8 @@ void mgn::MirClientHostConnection::update_input_devices()
         }
     }
 
+    sink->handle_input_device_change(devices);
+
     if ((deleted.empty() && new_devs.empty()) || observers.empty())
         return;
 
@@ -510,6 +513,8 @@ void mgn::MirClientHostConnection::for_each_input_device(std::function<void(mi::
 {
     std::lock_guard<std::mutex> lock(devices_guard);
     for (auto const& item : devices)
+    {
         callback(*item);
+    }
 
 }
