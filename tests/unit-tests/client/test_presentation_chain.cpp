@@ -66,6 +66,7 @@ MATCHER_P(BufferRequestMatches, val, "")
 void buffer_callback(MirBuffer*, void*)
 {
 }
+
 }
 
 TEST_F(PresentationChain, returns_associated_connection)
@@ -95,12 +96,16 @@ TEST_F(PresentationChain, submits_buffer_when_asked)
     EXPECT_CALL(mock_server, submit_buffer(BufferRequestMatches(request),_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    mcl::Buffer buffer(buffer_callback, nullptr, buffer_id, nullptr, nullptr);
+    mcl::Buffer buffer(buffer_callback, nullptr, buffer_id, nullptr, nullptr, mir_buffer_usage_software);
+    auto mir_buffer_factory = std::make_shared<mcl::BufferFactory>();
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
         std::make_shared<mcl::BufferFactory>());
-    chain.submit_buffer(reinterpret_cast<MirBuffer*>(&buffer));
+
+    auto client_buffer = mir_buffer_factory->generate_buffer(ipc_buf);
+    client_buffer->received();
+    chain.submit_buffer(reinterpret_cast<MirBuffer*>(client_buffer.get()));
 } 
 
 TEST_F(PresentationChain, double_submission_throws)
@@ -108,14 +113,18 @@ TEST_F(PresentationChain, double_submission_throws)
     EXPECT_CALL(mock_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    mcl::Buffer buffer(buffer_callback, nullptr, buffer_id, nullptr, nullptr);
+    mcl::Buffer buffer(buffer_callback, nullptr, buffer_id, nullptr, nullptr, mir_buffer_usage_software);
+    auto mir_buffer_factory = std::make_shared<mcl::BufferFactory>();
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
-        std::make_shared<mcl::BufferFactory>());
+        mir_buffer_factory);
 
-    chain.submit_buffer(reinterpret_cast<MirBuffer*>(&buffer));
+    auto client_buffer = mir_buffer_factory->generate_buffer(ipc_buf);
+    client_buffer->received();
+    chain.submit_buffer(reinterpret_cast<MirBuffer*>(client_buffer.get()));
+
     EXPECT_THROW({
-        chain.submit_buffer(reinterpret_cast<MirBuffer*>(&buffer));
+        chain.submit_buffer(reinterpret_cast<MirBuffer*>(client_buffer.get()));
     }, std::logic_error);
 }

@@ -306,7 +306,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         {
             try
             {
-                if (seq.buffer_request().id().value() >= 0)
+                if (seq.buffer_request().has_id())
                 {
                     map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
                     [&] (mcl::ClientBufferStream* receiver) {
@@ -315,18 +315,17 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 }
                 else
                 {
-                    auto had_buffer = map->with_buffer_do(
-                        seq.buffer_request().buffer().buffer_id(),
-                        [&seq](mcl::Buffer& buffer)
-                        {
-                            buffer.received(
-                                *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
-                        });
-
-                    if (!had_buffer)
+                    auto buffer = map->buffer(seq.buffer_request().buffer().buffer_id());
+                    if (buffer)
                     {
-                        map->insert(seq.buffer_request().buffer().buffer_id(), 
-                            buffer_factory->generate_buffer(seq.buffer_request().buffer()));
+                        buffer->received(
+                            *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
+                    }
+                    else
+                    {
+                        buffer = buffer_factory->generate_buffer(seq.buffer_request().buffer());
+                        map->insert(seq.buffer_request().buffer().buffer_id(), buffer); 
+                        buffer->received();
                     }
                 }
             }

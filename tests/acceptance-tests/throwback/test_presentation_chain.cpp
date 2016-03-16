@@ -336,3 +336,23 @@ TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
     mir_presentation_chain_submit_buffer(surface.chain(), context.buffer());
     mir_buffer_release(context.buffer());
 }
+
+TEST_F(PresentationChain, can_access_basic_buffer_properties)
+{
+    MirBufferSync context;
+    geom::Width width { 32 };
+    geom::Height height { 33 };
+    auto format = mir_pixel_format_abgr_8888;
+    auto usage = mir_buffer_usage_software;
+
+    SurfaceWithChainFromStart surface(connection, size, pf);
+    mir_connection_allocate_buffer(
+        connection, width.as_int(), height.as_int(), format, usage,
+        buffer_callback, &context);
+    ASSERT_TRUE(context.wait_for_buffer(10s));
+    auto buffer = context.buffer();
+    EXPECT_THAT(mir_buffer_get_width(buffer), Eq(width.as_uint32_t()));
+    EXPECT_THAT(mir_buffer_get_height(buffer), Eq(height.as_uint32_t()));
+    EXPECT_THAT(mir_buffer_get_buffer_usage(buffer), Eq(usage));
+    EXPECT_THAT(mir_buffer_get_pixel_format(buffer), Eq(format));
+}

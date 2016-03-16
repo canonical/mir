@@ -28,7 +28,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 20)
+set(MIR_VERSION_MINOR 21)
 set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
@@ -171,6 +171,8 @@ set(
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
 
+option(MIR_ENABLE_TESTS "Build tests" ON)
+
 foreach(platform IN LISTS MIR_PLATFORM)
   if (platform STREQUAL "mesa-kms")
     set(MIR_BUILD_PLATFORM_MESA_KMS TRUE)
@@ -228,8 +230,6 @@ if ("${LIBINPUT_VERSION}" VERSION_LESS "1.1")
 else ()
   add_definitions(-DMIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
 endif ()
-
-option(MIR_ENABLE_TESTS "Build tests" ON)
 
 add_subdirectory(benchmarks/)
 add_subdirectory(examples/)

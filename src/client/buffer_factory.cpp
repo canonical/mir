@@ -73,7 +73,7 @@ std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(mir::protobuf::
         (*request_it)->native_buffer_factory->create_buffer(
             mcl::protobuf_to_native_buffer(buffer),
             (*request_it)->size, (*request_it)->format),
-            (*request_it)->connection);
+            (*request_it)->connection, (*request_it)->usage);
 
     allocation_requests.erase(request_it);
     return std::move(b);

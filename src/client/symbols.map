@@ -350,6 +350,10 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_presentation_chain_release;
     mir_surface_spec_add_presentation_chain;
     mir_surface_spec_add_buffer_stream;
+    mir_buffer_get_width;
+    mir_buffer_get_height;
+    mir_buffer_get_pixel_format;
+    mir_buffer_get_buffer_usage;
   local:
     *;
 } MIR_CLIENT_DETAIL_9v19;

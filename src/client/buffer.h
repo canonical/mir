@@ -20,6 +20,7 @@
 #define MIR_CLIENT_BUFFER_H
 
 #include "mir_toolkit/mir_buffer.h"
+#include "mir/geometry/size.h"
 #include <memory>
 #include <chrono>
 #include <mutex>
@@ -38,13 +39,16 @@ public:
         mir_buffer_callback cb, void* context,
         int buffer_id,
         std::shared_ptr<ClientBuffer> const& buffer,
-        MirConnection* connection);
+        MirConnection* connection,
+        MirBufferUsage usage);
     int rpc_id() const;
 
     void submitted();
+    void received();
     void received(MirBufferPackage const& update_message);
 
     MirNativeBuffer* as_mir_native_buffer() const;
+    std::shared_ptr<ClientBuffer> client_buffer() const;
     MirGraphicsRegion map_region();
 
     void set_fence(MirNativeFence*, MirBufferAccess);
@@ -52,6 +56,10 @@ public:
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds);
 
     MirConnection* allocating_connection() const;
+    MirBufferUsage buffer_usage() const;
+    MirPixelFormat pixel_format() const;
+    geometry::Size size() const;
+
 private:
     mir_buffer_callback cb;
     void* cb_context;
@@ -62,6 +70,7 @@ private:
     bool owned;
     std::shared_ptr<MemoryRegion> mapped_region;
     MirConnection* const connection;
+    MirBufferUsage const usage;
 };
 }
 }

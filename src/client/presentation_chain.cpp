@@ -56,14 +56,14 @@ static void ignore_response(mp::Void* response)
     delete response;
 }
 
-void mcl::PresentationChain::submit_buffer(MirBuffer* buffer)
+void mcl::PresentationChain::submit_buffer(MirBuffer* mirbuffer)
 {
     mp::BufferRequest request;
     {
-        auto b = reinterpret_cast<mcl::Buffer*>(buffer);
+        auto buffer = reinterpret_cast<mcl::Buffer*>(mirbuffer);
         request.mutable_id()->set_value(stream_id);
-        request.mutable_buffer()->set_buffer_id(b->rpc_id());
-        b->submitted();
+        request.mutable_buffer()->set_buffer_id(buffer->rpc_id());
+        buffer->submitted();
     }
 
     auto ignored = new mp::Void;
