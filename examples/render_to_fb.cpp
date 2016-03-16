@@ -86,6 +86,13 @@ void render_loop(mir::Server& server)
 int main(int argc, char const** argv)
 try
 {
+    // We don't want to act as a server by providing an endpoint
+    setenv("MIR_SERVER_NO_FILE", "", 1);
+
+    // If there's a server available, try connecting to it
+    if (auto const socket = getenv("MIR_SOCKET"))
+        setenv("MIR_SERVER_HOST_SOCKET", socket, 0);
+
     mir::Server server;
     server.set_command_line(argc, argv);
     server.apply_settings();

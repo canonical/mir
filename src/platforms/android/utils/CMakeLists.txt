@@ -29,6 +29,15 @@ target_link_libraries(
   ${LIBHARDWARE_LIBRARIES}
 )
 
+mir_add_wrapped_executable(mir_demo_standalone_render_overlays
+  render_overlays.cpp
+)
+
+target_link_libraries(mir_demo_standalone_render_overlays
+  mirserver
+  mircommon
+)
+
 install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir_android_diagnostics
   DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
