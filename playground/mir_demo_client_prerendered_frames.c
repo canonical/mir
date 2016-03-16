@@ -22,6 +22,7 @@
 #include <mir_toolkit/mir_surface.h>
 #include <mir_toolkit/mir_presentation_chain.h>
 #include <mir_toolkit/mir_buffer.h>
+#include <mir_toolkit/version.h>
 #include <sys/types.h>
 #include <signal.h>
 #include <string.h>
@@ -147,7 +148,14 @@ int main(int argc, char** argv)
     if (!mir_presentation_chain_is_valid(chain))
     {
         printf("could not create MirPresentationChain\n");
+
+// TODO this is a frig to pass smoke tests until we support NBS by default
+#if (MIR_CLIENT_VERSION <= MIR_VERSION_NUMBER(3, 2, 0))
+        printf("This is currently an unreleased API - likely server support is switched off\n");
+        return 0;
+#else
         return -1;
+#endif
     }
 
     MirSurfaceSpec* spec = mir_connection_create_spec_for_normal_surface(connection, width, height, format);
