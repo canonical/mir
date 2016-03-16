@@ -218,8 +218,8 @@ struct mir::examples::SurfaceInfo::AllocatingPainter
             buffer_stream->pixel_format(),
             mg::BufferUsage::software
         }),
-        front_buffer(session->create_buffer(properties, frontend::BufferStreamId{-1})),
-        back_buffer(session->create_buffer(properties, frontend::BufferStreamId{-1}))
+        front_buffer(session->create_buffer(properties)),
+        back_buffer(session->create_buffer(properties))
     {
     }
 

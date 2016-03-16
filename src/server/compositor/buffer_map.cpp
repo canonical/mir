@@ -46,7 +46,7 @@ mc::BufferMap::BufferMap(
 {
 }
 
-mg::BufferID mc::BufferMap::add_buffer(mg::BufferProperties const& properties, mf::BufferStreamId)
+mg::BufferID mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto buffer = allocator->alloc_buffer(properties);

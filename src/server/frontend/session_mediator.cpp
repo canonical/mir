@@ -450,7 +450,6 @@ void mf::SessionMediator::allocate_buffers(
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     report->session_allocate_buffers_called(session->name());
-    mf::BufferStreamId stream_id{request->id().value()};
     for (auto i = 0; i < request->buffer_requests().size(); i++)
     {
         auto const& req = request->buffer_requests(i);
@@ -458,7 +457,7 @@ void mf::SessionMediator::allocate_buffers(
             geom::Size{req.width(), req.height()},
             static_cast<MirPixelFormat>(req.pixel_format()),
            static_cast<mg::BufferUsage>(req.buffer_usage()));
-        session->create_buffer(properties, stream_id);
+        session->create_buffer(properties);
     }
     done->Run();
 }
@@ -473,7 +472,6 @@ void mf::SessionMediator::release_buffers(
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     report->session_release_buffers_called(session->name());
-    mf::BufferStreamId stream_id{request->id().value()};
     for (auto i = 0; i < request->buffers().size(); i++)
         session->destroy_buffer(mg::BufferID{static_cast<uint32_t>(request->buffers(i).buffer_id())});
    done->Run();

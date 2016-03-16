@@ -51,7 +51,7 @@ struct StubSession : public frontend::Session
         return frontend::BufferStreamId();
     }
     
-    graphics::BufferID create_buffer(graphics::BufferProperties const& properties, frontend:::BufferStreamId) override
+    graphics::BufferID create_buffer(graphics::BufferProperties const&) override
     {
         return graphics::BufferID(3);
     }

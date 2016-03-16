@@ -52,9 +52,7 @@ public:
     virtual BufferStreamId create_buffer_stream(graphics::BufferProperties const& props) = 0;
     virtual void destroy_buffer_stream(BufferStreamId stream) = 0;
 
-    virtual graphics::BufferID create_buffer(
-        graphics::BufferProperties const& properties,
-        frontend::BufferStreamId) = 0;
+    virtual graphics::BufferID create_buffer(graphics::BufferProperties const& properties) = 0;
     virtual void destroy_buffer(graphics::BufferID) = 0;
     virtual std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) = 0;
 
