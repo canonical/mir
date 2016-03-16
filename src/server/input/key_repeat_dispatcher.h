@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -20,6 +20,7 @@
 #define MIR_INPUT_KEY_REPEAT_DISPATCHER_H_
 
 #include "mir/input/input_dispatcher.h"
+#include "mir/input/input_device_observer.h"
 
 #include <memory>
 #include <chrono>
@@ -39,8 +40,8 @@ class Alarm;
 }
 namespace input
 {
-
-class KeyRepeatDispatcher : public mir::input::InputDispatcher
+class InputDeviceHub;
+class KeyRepeatDispatcher : public InputDispatcher
 {
 public:
     KeyRepeatDispatcher(std::shared_ptr<InputDispatcher> const& next_dispatcher,
@@ -54,7 +55,9 @@ public:
     bool dispatch(MirEvent const& event) override;
     void start() override;
     void stop() override;
-    
+
+    void set_input_device_hub(std::shared_ptr<InputDeviceHub> const& hub);
+
 private:
     std::mutex repeat_state_mutex;
 
