@@ -40,6 +40,7 @@
 #include "error_chain.h"
 #include "logging/perf_report.h"
 #include "lttng/perf_report.h"
+#include "buffer_factory.h"
 
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
@@ -59,9 +60,14 @@ namespace gp = google::protobuf;
 namespace mf = mir::frontend;
 namespace mp = mir::protobuf;
 namespace ml = mir::logging;
+namespace geom = mir::geometry;
 
 namespace
 {
+void ignore()
+{
+}
+
 std::shared_ptr<mcl::PerfReport>
 make_perf_report(std::shared_ptr<ml::Logger> const& logger)
 {
@@ -242,6 +248,7 @@ MirConnection::MirConnection(
     mir::client::ConnectionConfiguration& conf) :
         deregisterer{this},
         surface_map(conf.the_surface_map()),
+        buffer_factory(conf.the_buffer_factory()),
         channel(conf.the_rpc_channel()),
         server(channel),
         debug(channel),
@@ -358,7 +365,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
                          spec.surface_name.value() : ""};
 
         stream = std::make_shared<mcl::BufferStream>(
-            this, request->wh, server, platform,
+            this, request->wh, server, platform, surface_map, buffer_factory,
             surface_proto->buffer_stream(), make_perf_report(logger), name,
             mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
     }
@@ -803,7 +810,7 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
     try
     {
         auto stream = std::make_shared<mcl::BufferStream>(
-            this, request->wh, server, platform,
+            this, request->wh, server, platform, surface_map, buffer_factory,
             *protobuf_bs, make_perf_report(logger), std::string{},
             mir::geometry::Size{request->parameters.width(), request->parameters.height()}, nbuffers);
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
@@ -1091,8 +1098,10 @@ void MirConnection::context_created(ChainCreationRequest* request_raw)
 
     try
     {
+        if (!client_buffer_factory)
+            client_buffer_factory = platform->create_buffer_factory();
         auto chain = std::make_shared<mcl::PresentationChain>(
-            this, protobuf_bs->id().value(), server, platform->create_buffer_factory());
+            this, protobuf_bs->id().value(), server, client_buffer_factory, buffer_factory);
 
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), chain);
 
@@ -1138,4 +1147,36 @@ void MirConnection::release_presentation_chain(MirPresentationChain* chain)
     {
         surface_map->erase(mf::BufferStreamId(id));
     }
+}
+
+void MirConnection::allocate_buffer(
+    geom::Size size, MirPixelFormat format, MirBufferUsage usage,
+    mir_buffer_callback callback, void* context)
+{
+    mp::BufferAllocation request;
+    request.mutable_id()->set_value(-1);
+    auto buffer_request = request.add_buffer_requests();
+    buffer_request->set_width(size.width.as_int());
+    buffer_request->set_height(size.height.as_int());
+    buffer_request->set_pixel_format(format);
+    buffer_request->set_buffer_usage(usage);
+
+    if (!client_buffer_factory)
+        client_buffer_factory = platform->create_buffer_factory();
+    buffer_factory->expect_buffer(
+        client_buffer_factory,
+        nullptr,
+        size, format, usage,
+        callback, context);
+    server.allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));
+}
+
+void MirConnection::release_buffer(int buffer_id)
+{
+    surface_map->erase(buffer_id);
+
+    mp::BufferRelease request;
+    auto released_buffer = request.add_buffers();
+    released_buffer->set_buffer_id(buffer_id);
+    server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }

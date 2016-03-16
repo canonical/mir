@@ -28,6 +28,7 @@ namespace mir
 {
 namespace client
 {
+class Buffer;
 class PresentationChain;
 class ConnectionSurfaceMap : public SurfaceMap
 {
@@ -42,10 +43,18 @@ public:
     void insert(frontend::BufferStreamId stream_id, std::shared_ptr<BufferReceiver> const& stream);
     void erase(frontend::BufferStreamId surface_id);
 
+    //TODO: should have a mf::BufferID
+    void insert(int buffer_id, std::shared_ptr<Buffer> const& buffer) override;
+    void erase(int buffer_id) override;
+    std::shared_ptr<Buffer> buffer(int buffer_id) const override;
+
 private:
-    std::shared_timed_mutex mutable guard;
+    std::shared_timed_mutex mutable surface_guard;
     std::unordered_map<frontend::SurfaceId, std::shared_ptr<MirSurface>> surfaces;
+    std::shared_timed_mutex mutable stream_guard;
     std::unordered_map<frontend::BufferStreamId, std::shared_ptr<BufferReceiver>> streams;
+    std::shared_timed_mutex mutable buffer_guard;
+    std::unordered_map<int, std::shared_ptr<Buffer>> buffers;
 };
 
 }

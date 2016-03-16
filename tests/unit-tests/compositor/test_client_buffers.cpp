@@ -60,11 +60,12 @@ struct StubBufferAllocator : public mg::GraphicBufferAllocator
 struct ClientBuffers : public Test
 {
     testing::NiceMock<mtd::MockEventSink> mock_sink;
+    mf::BufferStreamId stream_id{44};
+    mf::BufferStreamId expected_stream_id{-1};
     mg::BufferProperties properties{geom::Size{42,43}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
     MockBufferAllocator mock_allocator;
     StubBufferAllocator stub_allocator;
     mc::BufferMap map{mt::fake_shared(mock_sink), mt::fake_shared(stub_allocator)};
-    mf::BufferStreamId stream_id{21};
 };
 
 TEST_F(ClientBuffers, sends_full_buffer_on_allocation)
@@ -72,9 +73,9 @@ TEST_F(ClientBuffers, sends_full_buffer_on_allocation)
     auto stub_buffer = std::make_shared<mtd::StubBuffer>();
     EXPECT_CALL(mock_allocator, alloc_buffer(Ref(properties)))
         .WillOnce(Return(stub_buffer));
-    EXPECT_CALL(mock_sink, send_buffer(stream_id, Ref(*stub_buffer), mg::BufferIpcMsgType::full_msg));
+    EXPECT_CALL(mock_sink, send_buffer(expected_stream_id, Ref(*stub_buffer), mg::BufferIpcMsgType::full_msg));
     mc::BufferMap map{mt::fake_shared(mock_sink), mt::fake_shared(mock_allocator)};
-    EXPECT_THAT(map.add_buffer(properties, stream_id), Eq(stub_buffer->id()));
+    EXPECT_THAT(map.add_buffer(properties), Eq(stub_buffer->id()));
 }
 
 TEST_F(ClientBuffers, access_of_nonexistent_buffer_throws)
@@ -108,7 +109,7 @@ TEST_F(ClientBuffers, sends_update_msg_to_send_buffer)
     ASSERT_THAT(stub_allocator.map, SizeIs(1));
     ASSERT_THAT(stub_allocator.ids, SizeIs(1));
     auto buffer = map[stub_allocator.ids[0]];
-    EXPECT_CALL(mock_sink, send_buffer(stream_id, Ref(*buffer), mg::BufferIpcMsgType::update_msg));
+    EXPECT_CALL(mock_sink, send_buffer(expected_stream_id, Ref(*buffer), mg::BufferIpcMsgType::update_msg));
     map.send_buffer(stub_allocator.ids[0]);
 }
 

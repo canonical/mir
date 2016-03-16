@@ -21,6 +21,9 @@
 #include "mir/frontend/buffer_sink.h"
 #include "src/client/buffer_vault.h"
 #include "src/client/client_buffer_depository.h"
+#include "src/client/buffer_factory.h"
+#include "src/client/protobuf_to_native_buffer.h"
+#include "src/client/connection_surface_map.h"
 #include "src/server/compositor/buffer_queue.h"
 #include "src/server/compositor/stream.h"
 #include "src/server/compositor/buffer_map.h"
@@ -373,14 +376,28 @@ struct ScheduledProducer : ProducerSystem
 {
     ScheduledProducer(std::shared_ptr<StubIpcSystem> const& ipc_stub, int nbuffers) :
         ipc(ipc_stub),
+        map(std::make_shared<mcl::ConnectionSurfaceMap>()),
+        factory(std::make_shared<mcl::BufferFactory>()),
         vault(
             std::make_shared<mtd::StubClientBufferFactory>(),
             std::make_shared<ServerRequests>(ipc),
+            map, factory,
             geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers)
     {
-        ipc->on_client_bound_transfer([this](mp::Buffer& buffer){
+        ipc->on_client_bound_transfer([this](mp::Buffer& ipc_buffer){
             available++;
-            vault.wire_transfer_inbound(buffer);
+
+            auto buffer = map->buffer(ipc_buffer.buffer_id());
+            if (buffer)
+            {
+                buffer->received(*mcl::protobuf_to_native_buffer(ipc_buffer));
+            }
+            else
+            {
+                buffer = factory->generate_buffer(ipc_buffer);
+                map->insert(ipc_buffer.buffer_id(), buffer); 
+                buffer->received();
+            }
         });
         ipc->on_resize_event([this](geom::Size sz)
         {
@@ -402,7 +419,7 @@ struct ScheduledProducer : ProducerSystem
     {
         if (can_produce())
         {
-            auto buffer = vault.withdraw().get().buffer;
+            auto buffer = vault.withdraw().get();
             vault.deposit(buffer);
             vault.wire_transfer_outbound(buffer);
             last_size_ = buffer->size();
@@ -433,6 +450,8 @@ struct ScheduledProducer : ProducerSystem
     geom::Size last_size_;
     std::vector<BufferEntry> entries;
     std::shared_ptr<StubIpcSystem> ipc;
+    std::shared_ptr<mcl::ConnectionSurfaceMap> map;
+    std::shared_ptr<mcl::BufferFactory> factory;
     mcl::BufferVault vault;
     int max, cur;
     int available{0};
