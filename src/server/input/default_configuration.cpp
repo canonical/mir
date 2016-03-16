@@ -295,12 +295,18 @@ std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_in
     return default_input_device_hub(
         [this]()
         {
-            return std::make_shared<mi::DefaultInputDeviceHub>(
+            auto input_dispatcher = the_input_dispatcher();
+            auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
+            auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
                 the_global_event_sink(),
                 the_seat(),
                 the_input_reading_multiplexer(),
                 the_main_loop(),
                 the_cookie_authority());
+
+            if (key_repeater)
+                key_repeater->set_input_device_hub(hub);
+            return hub;
         });
 }
 
@@ -309,11 +315,17 @@ std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_d
     return default_input_device_hub(
         [this]()
         {
-            return std::make_shared<mi::DefaultInputDeviceHub>(
+            auto input_dispatcher = the_input_dispatcher();
+            auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
+            auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
                 the_global_event_sink(),
                 the_seat(),
                 the_input_reading_multiplexer(),
                 the_main_loop(),
                 the_cookie_authority());
+
+            if (key_repeater)
+                key_repeater->set_input_device_hub(hub);
+            return hub;
         });
 }
