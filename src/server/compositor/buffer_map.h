@@ -55,7 +55,6 @@ private:
     {
         std::shared_ptr<graphics::Buffer> buffer;
         Owner owner;
-        frontend::BufferStreamId stream_id;
     };
     typedef std::map<graphics::BufferID, MapEntry> Map;
     //used to keep strong reference

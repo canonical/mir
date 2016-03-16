@@ -75,7 +75,7 @@ TEST_F(ClientBuffers, sends_full_buffer_on_allocation)
         .WillOnce(Return(stub_buffer));
     EXPECT_CALL(mock_sink, send_buffer(expected_stream_id, Ref(*stub_buffer), mg::BufferIpcMsgType::full_msg));
     mc::BufferMap map{mt::fake_shared(mock_sink), mt::fake_shared(mock_allocator)};
-    EXPECT_THAT(map.add_buffer(properties, stream_id), Eq(stub_buffer->id()));
+    EXPECT_THAT(map.add_buffer(properties), Eq(stub_buffer->id()));
 }
 
 TEST_F(ClientBuffers, access_of_nonexistent_buffer_throws)
