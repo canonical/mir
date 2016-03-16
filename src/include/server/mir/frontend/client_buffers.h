@@ -19,6 +19,7 @@
 #ifndef MIR_FRONTEND_CLIENT_BUFFERS_H_
 #define MIR_FRONTEND_CLIENT_BUFFERS_H_
 
+#include "mir/frontend/buffer_stream_id.h"
 #include "mir/graphics/buffer_id.h"
 #include <memory>
 
@@ -30,7 +31,7 @@ namespace frontend
 class ClientBuffers
 {
 public:
-    virtual graphics::BufferID add_buffer(graphics::BufferProperties const& properties) = 0;
+    virtual graphics::BufferID add_buffer(graphics::BufferProperties const& properties, frontend::BufferStreamId) = 0;
     virtual void remove_buffer(graphics::BufferID id) = 0;
     virtual std::shared_ptr<graphics::Buffer>& operator[](graphics::BufferID) = 0;
     virtual void send_buffer(graphics::BufferID id) = 0;

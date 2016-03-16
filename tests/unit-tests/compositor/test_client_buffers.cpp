@@ -65,7 +65,8 @@ struct ClientBuffers : public Test
     mg::BufferProperties properties{geom::Size{42,43}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
     MockBufferAllocator mock_allocator;
     StubBufferAllocator stub_allocator;
-    mc::BufferMap map{stream_id, mt::fake_shared(mock_sink), mt::fake_shared(stub_allocator)};
+    mc::BufferMap map{mt::fake_shared(mock_sink), mt::fake_shared(stub_allocator)};
+    mf::BufferStreamId stream_id{21};
 };
 
 TEST_F(ClientBuffers, sends_full_buffer_on_allocation)
@@ -74,7 +75,7 @@ TEST_F(ClientBuffers, sends_full_buffer_on_allocation)
     EXPECT_CALL(mock_allocator, alloc_buffer(Ref(properties)))
         .WillOnce(Return(stub_buffer));
     EXPECT_CALL(mock_sink, send_buffer(expected_stream_id, Ref(*stub_buffer), mg::BufferIpcMsgType::full_msg));
-    mc::BufferMap map{stream_id, mt::fake_shared(mock_sink), mt::fake_shared(mock_allocator)};
+    mc::BufferMap map{mt::fake_shared(mock_sink), mt::fake_shared(mock_allocator)};
     EXPECT_THAT(map.add_buffer(properties), Eq(stub_buffer->id()));
 }
 
@@ -96,7 +97,7 @@ TEST_F(ClientBuffers, removal_of_nonexistent_buffer_throws)
 
 TEST_F(ClientBuffers, can_access_once_added)
 {
-    map.add_buffer(properties);
+    map.add_buffer(properties, stream_id);
     ASSERT_THAT(stub_allocator.map, SizeIs(1));
     ASSERT_THAT(stub_allocator.ids, SizeIs(1));
     auto buffer = map[stub_allocator.ids[0]];
@@ -105,7 +106,7 @@ TEST_F(ClientBuffers, can_access_once_added)
 
 TEST_F(ClientBuffers, sends_update_msg_to_send_buffer)
 {
-    map.add_buffer(properties);
+    map.add_buffer(properties, stream_id);
     ASSERT_THAT(stub_allocator.map, SizeIs(1));
     ASSERT_THAT(stub_allocator.ids, SizeIs(1));
     auto buffer = map[stub_allocator.ids[0]];
@@ -115,11 +116,11 @@ TEST_F(ClientBuffers, sends_update_msg_to_send_buffer)
 
 TEST_F(ClientBuffers, sends_no_update_msg_if_buffer_is_not_around)
 {
-    map.add_buffer(properties);
+    map.add_buffer(properties, stream_id);
     ASSERT_THAT(stub_allocator.map, SizeIs(1));
     ASSERT_THAT(stub_allocator.ids, SizeIs(1));
     auto buffer = map[stub_allocator.ids[0]];
-    EXPECT_CALL(mock_sink, send_buffer(stream_id, Ref(*buffer), mg::BufferIpcMsgType::update_msg))
+    EXPECT_CALL(mock_sink, send_buffer(Ref(*buffer), mg::BufferIpcMsgType::update_msg))
         .Times(0);
     map.remove_buffer(stub_allocator.ids[0]);
     map.send_buffer(stub_allocator.ids[0]);
@@ -127,7 +128,7 @@ TEST_F(ClientBuffers, sends_no_update_msg_if_buffer_is_not_around)
 
 TEST_F(ClientBuffers, can_remove_buffer_from_send_callback)
 {
-    map.add_buffer(properties);
+    map.add_buffer(properties, stream_id);
     ON_CALL(mock_sink, send_buffer(_,_,_))
         .WillByDefault(Invoke(
         [&] (mf::BufferStreamId, mg::Buffer& buffer, mg::BufferIpcMsgType)
@@ -140,7 +141,7 @@ TEST_F(ClientBuffers, can_remove_buffer_from_send_callback)
 
 TEST_F(ClientBuffers, removing_decreases_count)
 {
-    map.add_buffer(properties);
+    map.add_buffer(properties, stream_id);
     ASSERT_THAT(stub_allocator.map, SizeIs(1));
     ASSERT_THAT(stub_allocator.ids, SizeIs(1));
 
@@ -151,7 +152,7 @@ TEST_F(ClientBuffers, removing_decreases_count)
 
 TEST_F(ClientBuffers, ignores_unknown_receive)
 {
-    map.add_buffer(properties);
+    map.add_buffer(properties, stream_id);
     map.remove_buffer(stub_allocator.ids[0]);
     EXPECT_THAT(map.client_owned_buffer_count(), Eq(0));
     map.send_buffer(stub_allocator.ids[0]);
@@ -160,9 +161,9 @@ TEST_F(ClientBuffers, ignores_unknown_receive)
 
 TEST_F(ClientBuffers, can_track_how_many_buffers_client_owns)
 {
-    map.add_buffer(properties);
-    map.add_buffer(properties);
-    map.add_buffer(properties);
+    map.add_buffer(properties, stream_id);
+    map.add_buffer(properties, stream_id);
+    map.add_buffer(properties, stream_id);
     ASSERT_THAT(stub_allocator.map, SizeIs(3));
     ASSERT_THAT(stub_allocator.ids, SizeIs(3));
     EXPECT_THAT(map.client_owned_buffer_count(), Eq(3));
