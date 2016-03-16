@@ -215,6 +215,18 @@ TEST_F(PresentationChain, creates_correct_buffer_when_buffers_arrive)
         ipc_buf[i].set_height(sizes[i].height.as_int());
     }
 
+    std::array<std::shared_ptr<mtd::MockClientBuffer>, num_buffers> client_buffers {
+        std::make_shared<NiceMock<mtd::MockClientBuffer>>(),
+        std::make_shared<NiceMock<mtd::MockClientBuffer>>(),
+        std::make_shared<NiceMock<mtd::MockClientBuffer>>()
+    };
+
+    for(auto i = 0u; i < client_buffers.size(); i++)
+    {
+        EXPECT_CALL(*factory, create_buffer(_, sizes[i], _))
+            .WillOnce(Return(client_buffers[i])); 
+    }
+
     auto mir_buffer_factory = std::make_shared<mcl::BufferFactory>();
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
@@ -224,11 +236,11 @@ TEST_F(PresentationChain, creates_correct_buffer_when_buffers_arrive)
         chain.allocate_buffer(sizes[i], format, usage, buffer_callback, &buffer[i]);
 
     auto mirbuffer = mir_buffer_factory->generate_buffer(ipc_buf[1]);
-//    EXPECT_THAT(mirbuffer->size(), Eq(sizes[1]));
+    EXPECT_THAT(mirbuffer->client_buffer(), Eq(client_buffers[1]));
     mirbuffer = mir_buffer_factory->generate_buffer(ipc_buf[2]);
-//    EXPECT_THAT(mirbuffer->size(), Eq(sizes[2]));
+    EXPECT_THAT(mirbuffer->client_buffer(), Eq(client_buffers[2]));
     mirbuffer = mir_buffer_factory->generate_buffer(ipc_buf[0]);
-//    EXPECT_THAT(mirbuffer->size(), Eq(sizes[0]));
+    EXPECT_THAT(mirbuffer->client_buffer(), Eq(client_buffers[0]));
 }
 
 TEST_F(PresentationChain, frees_buffer_when_asked)
