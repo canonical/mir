@@ -150,7 +150,7 @@ int main(int argc, char** argv)
         printf("could not create MirPresentationChain\n");
 
 // TODO this is a frig to pass smoke tests until we support NBS by default
-#if (MIR_CLIENT_VERSION <= MIR_VERSION_NUMBER(3, 2, 0))
+#if (MIR_CLIENT_VERSION <= MIR_VERSION_NUMBER(3, 3, 0))
         printf("This is currently an unreleased API - likely server support is switched off\n");
         return 0;
 #else
