@@ -34,6 +34,7 @@
 #include "default_input_manager.h"
 #include "surface_input_dispatcher.h"
 #include "basic_seat.h"
+#include "../graphics/nested/mir_client_host_connection.h"
 
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_probe.h"
@@ -48,7 +49,6 @@
 #include "mir/glib_main_loop.h"
 #include "mir/log.h"
 #include "mir/dispatch/action_queue.h"
-#include "../graphics/nested/mir_client_host_connection.h"
 
 #include "mir_toolkit/cursors.h"
 
@@ -317,42 +317,7 @@ std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_d
     auto options = the_options();
     if (options->is_set(options::host_socket_opt))
     {
-        return host_connection(
-            [this]()
-            {
-                auto const options = the_options();
-
-                if (!options->is_set(options::host_socket_opt))
-                    BOOST_THROW_EXCEPTION(mir::AbnormalExit(
-                        std::string("Exiting Mir! Reason: Nested Mir needs either $MIR_SOCKET or --") +
-                        options::host_socket_opt));
-
-                auto host_socket = options->get<std::string>(options::host_socket_opt);
-
-                std::string server_socket{"none"};
-
-                if (!the_options()->is_set(options::no_server_socket_opt))
-                {
-                    server_socket = the_socket_file();
-
-                    if (server_socket == host_socket)
-                        BOOST_THROW_EXCEPTION(mir::AbnormalExit(
-                            "Exiting Mir! Reason: Nested Mir and Host Mir cannot use "
-                            "the same socket file to accept connections!"));
-                }
-
-                auto const my_name = options->is_set(options::name_opt) ?
-                    options->get<std::string>(options::name_opt) :
-                    "nested-mir@:" + server_socket;
-
-                return std::make_shared<graphics::nested::MirClientHostConnection>(
-                    host_socket,
-                    my_name,
-                    the_host_lifecycle_event_listener(),
-                    the_global_event_sink(),
-                    the_main_loop()
-                    );
-            });
+        return the_mir_client_host_connection();
     }
     else
     {

@@ -217,6 +217,12 @@ mir::DefaultServerConfiguration::wrap_cursor(std::shared_ptr<mg::Cursor> const& 
 auto mir::DefaultServerConfiguration::the_host_connection()
 -> std::shared_ptr<graphics::nested::HostConnection>
 {
+    return the_mir_client_host_connection();
+}
+
+auto mir::DefaultServerConfiguration::the_mir_client_host_connection()
+-> std::shared_ptr<graphics::nested::MirClientHostConnection>
+{
     return host_connection(
         [this]()
         {
