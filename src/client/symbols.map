@@ -222,9 +222,7 @@ MIR_CLIENT_9v19 {
     mir_surface_spec_set_shell_chrome;
 } MIR_CLIENT_9v18;
 
-# The bumps to protobuf::current_protocol_version() and MIR_CLIENT_MINOR_VERSION
-# corresponding to these APIs have been applied.
-MIR_CLIENT_9_unreleased {
+MIR_CLIENT_9v20 {
   global:
     mir_connection_apply_display_configuration;
     mir_connection_create_display_configuration;
