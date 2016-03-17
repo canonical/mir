@@ -28,7 +28,7 @@
 #include <errno.h>
 #include <poll.h>
 
-void camapp_describe_pixelformat(unsigned long x, char str[5])
+void camapp_describe_pixel_format(CamappPixelFormat x, char str[5])
 {
     str[0] = (char)(x & 0xff);
     str[1] = (char)(x >> 8 & 0xff);
@@ -115,13 +115,13 @@ CamappCamera* camapp_open_camera(char const* path, enum CamappPref pref,
         goto fail;
     }
     char str[5];
-    camapp_describe_pixelformat(pix->pixelformat, str);
+    camapp_describe_pixel_format(pix->pixelformat, str);
     printf("Pixel format: %ux%u fmt %s, stride %u\n",
         (unsigned)pix->width, (unsigned)pix->height,
         str, (unsigned)pix->bytesperline);
     cam->width = pix->width;
     cam->height = pix->height;
-    cam->pixelformat = pix->pixelformat;
+    cam->pixel_format = pix->pixelformat;
 
     // Always choose the highest frame rate. Although what you will get
     // depends on the resolution vs speed set above.

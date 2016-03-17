@@ -30,6 +30,12 @@ enum CamappPref
     camapp_pref_resolution
 };
 
+typedef unsigned long CamappPixelFormat;
+enum CamappSupportedPixelFormat
+{
+    camapp_pixel_format_yuyv = V4L2_PIX_FMT_YUYV
+};
+
 typedef struct
 {
     void* start;
@@ -41,12 +47,12 @@ typedef struct
     int fd;
     unsigned width;
     unsigned height;
-    unsigned long pixelformat;
+    CamappPixelFormat pixel_format;
     unsigned buffers;
     CamappBuffer buffer[];
 } CamappCamera;
 
-void camapp_describe_pixelformat(unsigned long pixelformat, char str[5]);
+void camapp_describe_pixel_format(CamappPixelFormat fmt, char str[5]);
 
 CamappCamera* camapp_open_camera(char const* path, enum CamappPref pref,
                                  unsigned nbuffers);

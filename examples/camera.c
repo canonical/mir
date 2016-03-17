@@ -261,7 +261,7 @@ int main(int argc, char *argv[])
         if (wait_for_new_frame || camapp_frame_ready(cam))
         {
             CamappBuffer const* buf = camapp_acquire_frame(cam);
-            if (cam->pixelformat == V4L2_PIX_FMT_YUYV)
+            if (cam->pixel_format == camapp_pixel_format_yuyv)
             {
                 if (fshadersrc == yuyv_greyscale_fshadersrc)
                 {
@@ -284,9 +284,9 @@ int main(int argc, char *argv[])
             else
             {
                 char str[5];
-                camapp_describe_pixelformat(cam->pixelformat, str);
+                camapp_describe_pixel_format(cam->pixel_format, str);
                 fprintf(stderr, "FIXME: Unsupported camera pixel format 0x%08lx: %s\n",
-                        (long)cam->pixelformat, str);
+                        (long)cam->pixel_format, str);
             }
             camapp_release_frame(cam, buf);
         }
