@@ -1,0 +1,9 @@
+_ZN3mir5scene19NullSessionListenerD0Ev@@MIR_SERVER_0.20
+_ZN3mir5scene19NullSessionListenerD1Ev@@MIR_SERVER_0.20
+_ZN3mir5scene19NullSessionListenerD2Ev@@MIR_SERVER_0.20
+_ZN3mir5scene19NullSurfaceObserverD0Ev@@MIR_SERVER_0.20
+_ZN3mir5scene19NullSurfaceObserverD1Ev@@MIR_SERVER_0.20
+_ZN3mir5scene19NullSurfaceObserverD2Ev@@MIR_SERVER_0.20
+_ZN3mir8frontend13PromptSessionD0Ev@@MIR_SERVER_0.20
+ _ZN3mir8frontend13PromptSessionD1Ev@@MIR_SERVER_0.20
+ _ZN3mir8frontend13PromptSessionD2Ev@@MIR_SERVER_0.20
