@@ -64,7 +64,8 @@ mcl::BufferVault::BufferVault(
 {
     for (auto i = 0u; i < initial_nbuffers; i++)
     {
-        reqs.push_back(mirfactory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage, incoming_buffer, this));
+        mirfactory->expect_buffer(
+            factory, nullptr, size, format, (MirBufferUsage)usage, incoming_buffer, this);
 
         server_requests->allocate_buffer(size, format, usage);
     }
@@ -77,9 +78,7 @@ mcl::BufferVault::~BufferVault()
         return;
     }
 
-    for(auto req : reqs)
-        mirfactory->cancel(req);
-
+    mirfactory->cancel_requests_with_context(this);
     for (auto& it : buffers)
     try
     {

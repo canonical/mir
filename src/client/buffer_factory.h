@@ -37,7 +37,7 @@ public:
     AsyncBufferFactory() = default;
 
     virtual std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) = 0;
-    virtual void* expect_buffer(
+    virtual void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
         MirPresentationChain* chain,
         geometry::Size size,
@@ -45,7 +45,7 @@ public:
         MirBufferUsage usage,
         mir_buffer_callback cb,
         void* cb_context) = 0;
-    virtual void cancel(void*) = 0;
+    virtual void cancel_requests_with_context(void*) = 0;
 
 private:
     AsyncBufferFactory(AsyncBufferFactory const&) = delete;
@@ -56,7 +56,7 @@ class BufferFactory : public AsyncBufferFactory
 {
 public:
     std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) override;
-    void* expect_buffer(
+    void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
         MirPresentationChain* chain,
         geometry::Size size,
@@ -64,7 +64,7 @@ public:
         MirBufferUsage usage,
         mir_buffer_callback cb,
         void* cb_context) override;
-    void cancel(void*);
+    void cancel_requests_with_context(void*);
 
 private:
     std::mutex mutex;
