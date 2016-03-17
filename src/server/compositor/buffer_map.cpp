@@ -61,7 +61,6 @@ void mc::BufferMap::remove_buffer(mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = checked_buffers_find(id, lk);
-    printf("ERASE BUFFER SERVER\n");
     sink->send_buffer(mf::BufferStreamId{-3}, *it->second.buffer, mg::BufferIpcMsgType::update_msg);
     buffers.erase(it); 
 }

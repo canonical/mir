@@ -364,7 +364,6 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         std::string name{spec.surface_name.is_set() ?
                          spec.surface_name.value() : ""};
 
-        printf("STREAM....\n");
         stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, platform, surface_map, buffer_factory,
             surface_proto->buffer_stream(), make_perf_report(logger), name,
@@ -385,7 +384,6 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
 
     if (surface_proto->has_error() || !surface_proto->has_id())
     {
-        printf("ERRORORORO\n");
         std::string reason;
         if (surface_proto->has_error())
             reason += surface_proto->error();
