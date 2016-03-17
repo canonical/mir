@@ -315,7 +315,10 @@ int main(int argc, char *argv[])
                 }
                 // TODO: Colour, full resolution. But it will be slow :(
                 float see = interpret(cam, buf);
-                printf("I see: %.1f\n", see);
+                printf("I see: %.1f [%c]\n", see,
+                       see <= 0.3f ? '^' :
+                       see >= 0.7f ? '_' :
+                       '-');
             }
             else
             {
