@@ -308,7 +308,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         {
             try
             {
-                if (seq.buffer_request().has_id())
+                if ((seq.buffer_request().has_id()) && (seq.buffer_request().id().value() >= 0))
                 {
                     map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
                     [&] (mcl::BufferReceiver* receiver) {
@@ -317,17 +317,27 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 }
                 else
                 {
-                    auto buffer = map->buffer(seq.buffer_request().buffer().buffer_id());
-                    if (buffer)
+                    if (seq.buffer_request().has_id())
                     {
-                        buffer->received(
-                            *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
+                        printf("BUFFER ERASE %i.\n", seq.buffer_request().buffer().buffer_id());
+                        map->erase(seq.buffer_request().buffer().buffer_id());
                     }
                     else
                     {
-                        buffer = buffer_factory->generate_buffer(seq.buffer_request().buffer());
-                        map->insert(seq.buffer_request().buffer().buffer_id(), buffer); 
-                        buffer->received();
+                        auto buffer = map->buffer(seq.buffer_request().buffer().buffer_id());
+                        if (buffer)
+                        {
+                            printf("UPDATED %i\n", seq.buffer_request().buffer().buffer_id());
+                            buffer->received(
+                                *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
+                        }
+                        else
+                        {
+                            printf("NEWRPC %i\n", seq.buffer_request().buffer().buffer_id());
+                            buffer = buffer_factory->generate_buffer(seq.buffer_request().buffer());
+                            map->insert(seq.buffer_request().buffer().buffer_id(), buffer); 
+                            buffer->received();
+                        }
                     }
                 }
             }

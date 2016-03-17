@@ -62,38 +62,55 @@ mcl::BufferVault::BufferVault(
     size(size),
     disconnected_(false)
 {
+    printf("CROEATE!!! nbuffers %i\n", initial_nbuffers);
     for (auto i = 0u; i < initial_nbuffers; i++)
     {
-        mirfactory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage, incoming_buffer, this);
+        reqs.push_back(mirfactory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage, incoming_buffer, this));
+
+        printf("ALLOCOA\n");
         server_requests->allocate_buffer(size, format, usage);
     }
 }
 
 mcl::BufferVault::~BufferVault()
 {
+    printf("VAULT DEAD.\n");
     if (disconnected_)
+    {
+        printf("DISOCNNECT\n");
         return;
+    }
 
+    for(auto req : reqs)
+        mirfactory->cancel(req);
+
+    printf("ERASING...\n");
     for (auto& it : buffers)
     try
     {
-        map->erase(it.first);
+        //map->erase(it.first);
+        printf("ERASE!\n");
         server_requests->free_buffer(it.first);
     }
     catch (...)
     {
     }
+    printf("END...\n");
 }
 
 
-void mcl::BufferVault::realloc(int free_id, geom::Size, MirPixelFormat format, int usage)
+void mcl::BufferVault::realloc(
+    std::unique_lock<std::mutex>& lk, int free_id, geom::Size, MirPixelFormat format, int usage)
 {
-    map->erase(free_id);
+//    map->erase(free_id);
+    lk.unlock();
+
     server_requests->free_buffer(free_id);
 
     mirfactory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage,
         incoming_buffer, this);
     server_requests->allocate_buffer(size, format, usage);
+    lk.lock();
 }
 
 mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
@@ -161,8 +178,7 @@ void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
     {
         if (inbound_size != size)
         {
-            lk.unlock();
-            realloc(buffer_id, size, format, usage);
+            realloc(lk, buffer_id, size, format, usage);
             return;
         }
 
@@ -177,8 +193,7 @@ void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
         else
         {
             buffers.erase(it);
-            lk.unlock();
-            realloc(buffer_id, size, format, usage);
+            realloc(lk, buffer_id, size, format, usage);
             return;
         }
     }
@@ -227,10 +242,9 @@ void mcl::BufferVault::set_scale(float scale)
             it++;
         }
     } 
-    lk.unlock();
 
     for(auto& id : free_ids)
     {
-        realloc(id, new_size, format, usage);
+        realloc(lk, id, new_size, format, usage);
     }
 }

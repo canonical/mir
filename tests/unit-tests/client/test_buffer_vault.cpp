@@ -83,11 +83,12 @@ struct MockSurfaceMap : mcl::SurfaceMap
 struct MockBufferFactory : mcl::AsyncBufferFactory
 {
     MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::Buffer>(mp::Buffer const&));
-    MOCK_METHOD7(expect_buffer, void(
+    MOCK_METHOD7(expect_buffer, void*(
         std::shared_ptr<mcl::ClientBufferFactory> const&,
         MirPresentationChain*,
         geom::Size, MirPixelFormat, MirBufferUsage,
         mir_buffer_callback, void*));
+    MOCK_METHOD1(cancel, void(void*));
 };
 
 struct NativeBufferFactory : public mcl::ClientBufferFactory

@@ -364,10 +364,12 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         std::string name{spec.surface_name.is_set() ?
                          spec.surface_name.value() : ""};
 
+        printf("STREAM....\n");
         stream = std::make_shared<mcl::BufferStream>(
             this, request->wh, server, platform, surface_map, buffer_factory,
             surface_proto->buffer_stream(), make_perf_report(logger), name,
             mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
+        surface_map->insert(mf::BufferStreamId{surface_proto->id().value()}, stream);
     }
     catch (std::exception const& error)
     {
@@ -383,6 +385,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
 
     if (surface_proto->has_error() || !surface_proto->has_id())
     {
+        printf("ERRORORORO\n");
         std::string reason;
         if (surface_proto->has_error())
             reason += surface_proto->error();
@@ -393,6 +396,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         auto id = next_error_id(lock);
         surf = std::make_shared<MirSurface>(reason, this, id, request->wh);
         surface_map->insert(id, surf);
+//        surface_map->remove(mf::BufferStreamId{surface_proto->id().value()});
     }
     else
     {
@@ -400,7 +404,6 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
             this, server, &debug, stream, input_platform, spec, *surface_proto, request->wh);
 
         surface_map->insert(mf::SurfaceId{surface_proto->id().value()}, surf);
-        surface_map->insert(mf::BufferStreamId{surface_proto->id().value()}, stream);
     }
 
     callback(surf.get(), context);
@@ -1173,8 +1176,6 @@ void MirConnection::allocate_buffer(
 
 void MirConnection::release_buffer(int buffer_id)
 {
-    surface_map->erase(buffer_id);
-
     mp::BufferRelease request;
     auto released_buffer = request.add_buffers();
     released_buffer->set_buffer_id(buffer_id);

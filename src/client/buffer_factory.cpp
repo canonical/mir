@@ -40,7 +40,7 @@ mcl::BufferFactory::AllocationRequest::AllocationRequest(
 {
 }
 
-void mcl::BufferFactory::expect_buffer(
+void* mcl::BufferFactory::expect_buffer(
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
     MirPresentationChain* chain,
     geometry::Size size,
@@ -52,6 +52,19 @@ void mcl::BufferFactory::expect_buffer(
     std::lock_guard<decltype(mutex)> lk(mutex);
     allocation_requests.emplace_back(
         std::make_unique<AllocationRequest>(factory, chain, size, format, usage, cb, cb_context));
+    return allocation_requests.back().get();
+}
+
+void mcl::BufferFactory::cancel(void* c)
+{
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    auto request_it = std::find_if(allocation_requests.begin(), allocation_requests.end(),
+        [&c](std::unique_ptr<AllocationRequest> const& it)
+        {
+            return it.get() == c;
+        });
+    if (request_it != allocation_requests.end())
+        allocation_requests.erase(request_it);
 }
 
 std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(mir::protobuf::Buffer const& buffer)

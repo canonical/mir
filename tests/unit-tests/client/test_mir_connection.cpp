@@ -85,8 +85,9 @@ struct PresentationChainCallback
 
 struct MockAsyncBufferFactory : mcl::AsyncBufferFactory
 {
+    MOCK_METHOD1(cancel, void(void*));
     MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::Buffer>(mp::Buffer const&));
-    MOCK_METHOD7(expect_buffer, void(
+    MOCK_METHOD7(expect_buffer, void*(
         std::shared_ptr<mcl::ClientBufferFactory> const& native_buffer_factory,
         MirPresentationChain* chain,
         geom::Size size,

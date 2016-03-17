@@ -468,7 +468,9 @@ void mf::SessionMediator::release_buffers(
     mir::protobuf::BufferRelease const* request,
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
+try
 {
+    printf("IN HERE.\n");
     auto session = weak_session.lock();
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
@@ -480,12 +482,18 @@ void mf::SessionMediator::release_buffers(
         stream->remove_buffer(mg::BufferID{static_cast<uint32_t>(request->buffers(i).buffer_id())});
    done->Run();
 }
- 
+catch(std::exception&e)
+{
+    printf("ERROR %s\n", e.what());
+    throw e;
+} 
+
 void mf::SessionMediator::release_surface(
     const mir::protobuf::SurfaceId* request,
     mir::protobuf::Void*,
     google::protobuf::Closure* done)
 {
+    printf("RELEASE SURFACE!!!\n");
     auto session = weak_session.lock();
 
     if (session.get() == nullptr)

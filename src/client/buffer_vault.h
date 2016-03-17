@@ -73,7 +73,7 @@ public:
     void set_scale(float scale);
 
 private:
-    void realloc(int free_id, geometry::Size, MirPixelFormat, int);
+    void realloc(std::unique_lock<std::mutex>& lk, int free_id, geometry::Size, MirPixelFormat, int);
 
     std::shared_ptr<ClientBufferFactory> const factory;
     std::shared_ptr<ServerBufferRequests> const server_requests;
@@ -94,6 +94,7 @@ private:
     std::deque<NoTLSPromise<std::shared_ptr<Buffer>>> promises;
     geometry::Size size;
     bool disconnected_;
+    std::deque<void*> reqs;
 };
 }
 }

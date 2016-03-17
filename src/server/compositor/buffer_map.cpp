@@ -60,7 +60,10 @@ mg::BufferID mc::BufferMap::add_buffer(mg::BufferProperties const& properties)
 void mc::BufferMap::remove_buffer(mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
-    buffers.erase(checked_buffers_find(id, lk));
+    auto it = checked_buffers_find(id, lk);
+    printf("ERASE BUFFER SERVER\n");
+    sink->send_buffer(mf::BufferStreamId{-2}, *it->second.buffer, mg::BufferIpcMsgType::update_msg);
+    buffers.erase(it); 
 }
 
 void mc::BufferMap::send_buffer(mg::BufferID id)
