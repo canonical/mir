@@ -85,20 +85,16 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     pthread_mutex_unlock(&state->mutex);
 }
 
-static void interpret(CamappCamera const* cam, CamappBuffer const* buf)
+static float interpret(CamappCamera const* cam, CamappBuffer const* buf)
 {
     if (cam->pixel_format == camapp_pixel_format_yuyv)
     {
-        unsigned int bpp = 2;
-        unsigned int const samples = 10;
-        unsigned int rows_per_sample = cam->height / samples;
-        unsigned int stride = cam->width * bpp;
-        char pretty[samples+1];
-        pretty[samples] = '\0';
-        char const alphabet[] = " .oO";
-        unsigned int alphabet_size = strlen(alphabet);
-
-        unsigned s = 0;
+        unsigned int const bpp = 2;
+        unsigned int const resolution = 10;
+        unsigned int const rows_per_sample = cam->height / resolution;
+        unsigned int const stride = cam->width * bpp;
+        unsigned s = 0, peak = 0;
+        unsigned long max_sum = 0;
         for (unsigned y = 0; y < cam->height; y += rows_per_sample, ++s)
         {
             unsigned char* p = (unsigned char*)buf->start +
@@ -110,11 +106,15 @@ static void interpret(CamappCamera const* cam, CamappBuffer const* buf)
                 sum += p[0];
                 p += stride;
             }
-            unsigned long const sum_max = rows_per_sample * 255;
-            pretty[s] = alphabet[sum * (alphabet_size-1) / sum_max];
+            if (sum > max_sum)
+            {
+                max_sum = sum;
+                peak = s;
+            }
         }
-        printf("I can see:  [%s]\n", pretty);
+        return (float)peak / (resolution - 1);
     }
+    return NAN;
 }
 
 int main(int argc, char *argv[])
@@ -314,7 +314,8 @@ int main(int argc, char *argv[])
                                  buf->start);
                 }
                 // TODO: Colour, full resolution. But it will be slow :(
-                interpret(cam, buf);
+                float see = interpret(cam, buf);
+                printf("I see: %.1f\n", see);
             }
             else
             {
