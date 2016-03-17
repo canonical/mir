@@ -2,13 +2,50 @@ mir (0.21.0-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release 0.21.0 (https://launchpad.net/mir/+milestone/0.21.0)
     - ABI summary:
-      . No ABI changes.
+      . mirclient ABI unchanged at 9
+      . mirserver ABI unchanged at 38
+      . mircommon ABI unchanged at 5
+      . mirplatform ABI unchanged at 11
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchaged at 8
+      . mirclientplatform ABI unchanged at 4
+      . mirinputplatform ABI unchanged at 5
     - Enhancements:
-      . TODO: Someone detail these
+      . New display enumeration API
+      . Added android diagnostic tests to assist during porting to
+        new devices
     - Bugs fixed:
-      . TODO: List these after branching lp:mir/0.21
+      . Mir crashed with exception 'failed to add sync point to command
+        buffer' (LP: #1554635)
+      . Mouse cursor is unusably slow in Unity 8 with a 1000Hz mouse
+        (LP: #1539009)
+      . Packaged mir_unit_tests binary is not suitable for general use
+        (LP: #1547015)
+      . [regression] Mir stops receiving input after a pause/resume
+        cycle (LP: #1548989)
+      . The server-side use of MIR_SOCKET is confusing (LP: #1290345)
+      . [regression] FTBFS with -DMIR_LINK_TIME_OPTIMIZATION=on
+        -Duse_debflags=on (LP: #1350343)
+      . Mir On X (mesa-x11) keeps receiving mouse movement events even
+        when not focused (LP: #1528110)
+      . x11 platform: mouse cursor moves strange (LP: #1546324)
+      . Cross compiling to wily/vivid doesn't work (LP: #1549152)
+      . Rendering stutters when a new client stablishes a connection
+        (LP: #1549359)
+      . 'mir_demo_server --test-client' crashes (SIGSEGV) when client
+        dies (LP: #1555620)
+      . [regression] Mir FTBFS when MIR_ENABLE_TESTS=no (LP: #1556080)
+      . Mir-on-X11 doesn't exit (until it gets an event) (LP: #1556210)
+      . [regression] MIR_CLIENT_PERF_REPORT is missing window/surface
+        names (LP: #1546933)
+      . Installed binaries fail to run with mir_demo_server 
+        --test-client XXXX (LP: #1556160)
+      . update mi::probe_input_platforms() to select the newest of
+        duplicate input modules (LP: #1543049)
+      . mir_demo_server --test-client [mir_demo_client_scroll|
+        mir_demo_client_flicker] fails (LP: #1556205)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 15 Mar 2016 15:22:57 +0800
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Thu, 17 Mar 2016 14:08:50 -0500
 
 mir (0.20.2+16.04.20160307-0ubuntu1) xenial; urgency=medium
 
