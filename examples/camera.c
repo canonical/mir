@@ -134,15 +134,16 @@ int main(int argc, char *argv[])
     // TODO: Selectable between high-res grey vs half-res colour?
     const char * const fshadersrc = yuyv_quickcolour_fshadersrc;
 
-    Camera *cam = open_camera("/dev/video0", camera_pref_resolution, 1);
+    CamappCamera *cam =
+        camapp_open_camera("/dev/video0", camapp_pref_resolution, 1);
     if (!cam)
     {
         fprintf(stderr, "Failed to set up camera device\n");
-        return 0;
+        return 0;  // Alan needs this to be success
     }
 
-    unsigned int win_width = cam->pix.width;
-    unsigned int win_height = cam->pix.height;
+    unsigned int win_width = cam->width;
+    unsigned int win_height = cam->height;
     if (!mir_eglapp_init(argc, argv, &win_width, &win_height))
         return 1;
 
@@ -169,7 +170,7 @@ int main(int argc, char *argv[])
 
     glUseProgram(prog);
 
-    const GLfloat camw = cam->pix.width, camh = cam->pix.height;
+    const GLfloat camw = cam->width, camh = cam->height;
     const GLfloat box[] =
     { // position   texcoord
         0.0f, camh, 0.0f, 1.0f,
@@ -222,21 +223,21 @@ int main(int argc, char *argv[])
             GLfloat scaley = -2.0f / viewport[3];
 
             // Expand image to fit:
-            GLfloat scalew = (GLfloat)viewport[2] / cam->pix.width;
-            GLfloat scaleh = (GLfloat)viewport[3] / cam->pix.height;
+            GLfloat scalew = (GLfloat)viewport[2] / cam->width;
+            GLfloat scaleh = (GLfloat)viewport[3] / cam->height;
 
             GLfloat scale;
             GLfloat offsetx = -1.0f, offsety = 1.0f;
             if (scalew <= scaleh)
             {
                 scale = scalew;
-                offsety -= (GLfloat)(viewport[3] - scale*cam->pix.height) /
+                offsety -= (GLfloat)(viewport[3] - scale*cam->height) /
                            viewport[3];
             }
             else
             {
                 scale = scaleh;
-                offsetx += (GLfloat)(viewport[2] - scale*cam->pix.width) /
+                offsetx += (GLfloat)(viewport[2] - scale*cam->width) /
                            viewport[2];
             }
 
@@ -257,16 +258,16 @@ int main(int argc, char *argv[])
             first_frame = false;
         }
 
-        if (wait_for_new_frame || frame_ready(cam))
+        if (wait_for_new_frame || camapp_frame_ready(cam))
         {
-            const Buffer *buf = acquire_frame(cam);
-            if (cam->pix.pixelformat == V4L2_PIX_FMT_YUYV)
+            CamappBuffer const* buf = camapp_acquire_frame(cam);
+            if (cam->pixelformat == V4L2_PIX_FMT_YUYV)
             {
                 if (fshadersrc == yuyv_greyscale_fshadersrc)
                 {
                     // Greyscale, full resolution:
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
-                                 cam->pix.width, cam->pix.height, 0,
+                                 cam->width, cam->height, 0,
                                  GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
                                  buf->start);
                 }
@@ -274,7 +275,7 @@ int main(int argc, char *argv[])
                 {
                     // Colour, half resolution:
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                                 cam->pix.width/2, cam->pix.height, 0,
+                                 cam->width/2, cam->height, 0,
                                  GL_RGBA, GL_UNSIGNED_BYTE,
                                  buf->start);
                 }
@@ -283,11 +284,11 @@ int main(int argc, char *argv[])
             else
             {
                 char str[5];
-                fourcc_string(cam->pix.pixelformat, str);
+                camapp_describe_pixelformat(cam->pixelformat, str);
                 fprintf(stderr, "FIXME: Unsupported camera pixel format 0x%08lx: %s\n",
-                        (long)cam->pix.pixelformat, str);
+                        (long)cam->pixelformat, str);
             }
-            release_frame(cam, buf);
+            camapp_release_frame(cam, buf);
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
@@ -300,7 +301,7 @@ int main(int argc, char *argv[])
 
     mir_surface_set_event_handler(surface, NULL, NULL);
     mir_eglapp_shutdown();
-    close_camera(cam);
+    camapp_close_camera(cam);
 
     return 0;
 }

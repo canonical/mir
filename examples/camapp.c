@@ -28,7 +28,7 @@
 #include <errno.h>
 #include <poll.h>
 
-void fourcc_string(__u32 x, char str[5])
+void camapp_describe_pixelformat(unsigned long x, char str[5])
 {
     str[0] = (char)(x & 0xff);
     str[1] = (char)(x >> 8 & 0xff);
@@ -37,7 +37,7 @@ void fourcc_string(__u32 x, char str[5])
     str[4] = '\0';
 }
 
-void close_camera(Camera *cam)
+void camapp_close_camera(CamappCamera* cam)
 {
     if (!cam) return;
 
@@ -49,10 +49,11 @@ void close_camera(Camera *cam)
     free(cam);
 }
 
-Camera *open_camera(const char *path, enum CameraPref pref,
-                           unsigned nbuffers)
+CamappCamera* camapp_open_camera(char const* path, enum CamappPref pref,
+                                 unsigned nbuffers)
 {
-    Camera *cam = calloc(1, sizeof(*cam) + nbuffers*sizeof(cam->buffer[0]));
+    CamappCamera* cam =
+        calloc(1, sizeof(*cam) + nbuffers*sizeof(cam->buffer[0]));
     if (cam == NULL)
     {
         perror("malloc");
@@ -91,14 +92,14 @@ Camera *open_camera(const char *path, enum CameraPref pref,
     struct v4l2_format format;
     memset(&format, 0, sizeof(format));
     format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    struct v4l2_pix_format *pix = &format.fmt.pix;
+    struct v4l2_pix_format* pix = &format.fmt.pix;
     // Driver will choose the best match
-    if (pref == camera_pref_speed)
+    if (pref == camapp_pref_speed)
     {
         pix->width = 1;
         pix->height = 1;
     }
-    else if (pref == camera_pref_resolution)
+    else if (pref == camapp_pref_resolution)
     {
         pix->width = 9999;
         pix->height = 9999;
@@ -114,11 +115,13 @@ Camera *open_camera(const char *path, enum CameraPref pref,
         goto fail;
     }
     char str[5];
-    fourcc_string(pix->pixelformat, str);
+    camapp_describe_pixelformat(pix->pixelformat, str);
     printf("Pixel format: %ux%u fmt %s, stride %u\n",
         (unsigned)pix->width, (unsigned)pix->height,
         str, (unsigned)pix->bytesperline);
-    cam->pix = *pix;
+    cam->width = pix->width;
+    cam->height = pix->height;
+    cam->pixelformat = pix->pixelformat;
 
     // Always choose the highest frame rate. Although what you will get
     // depends on the resolution vs speed set above.
@@ -200,17 +203,17 @@ Camera *open_camera(const char *path, enum CameraPref pref,
 
     return cam;
 fail:
-    close_camera(cam);
+    camapp_close_camera(cam);
     return NULL;
 }
 
-bool frame_ready(Camera *cam)
+bool camapp_frame_ready(CamappCamera* cam)
 {
     struct pollfd pollfd = {cam->fd, POLLIN, 0};
     return poll(&pollfd, 1, 0) == 1 && (pollfd.revents & POLLIN);
 }
 
-const Buffer *acquire_frame(Camera *cam)
+CamappBuffer const* camapp_acquire_frame(CamappCamera* cam)
 {
     struct v4l2_buffer frame;
     memset(&frame, 0, sizeof(frame));
@@ -224,7 +227,7 @@ const Buffer *acquire_frame(Camera *cam)
     return cam->buffer + frame.index;
 }
 
-void release_frame(Camera *cam, const Buffer *buf)
+void camapp_release_frame(CamappCamera* cam, CamappBuffer const* buf)
 {
     struct v4l2_buffer frame;
     memset(&frame, 0, sizeof(frame));
@@ -234,5 +237,3 @@ void release_frame(Camera *cam, const Buffer *buf)
     if (ioctl(cam->fd, VIDIOC_QBUF, &frame))
         perror("VIDIOC_QBUF");
 }
-
-

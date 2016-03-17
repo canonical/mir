@@ -23,32 +23,37 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-enum CameraPref
+enum CamappPref
 {
-    camera_pref_defaults,
-    camera_pref_speed,
-    camera_pref_resolution
+    camapp_pref_defaults,
+    camapp_pref_speed,
+    camapp_pref_resolution
 };
 
 typedef struct
 {
-    void *start;
+    void* start;
     size_t length;
-} Buffer;
+} CamappBuffer;
 
 typedef struct
 {
     int fd;
-    struct v4l2_pix_format pix;
+    unsigned width;
+    unsigned height;
+    unsigned long pixelformat;
     unsigned buffers;
-    Buffer buffer[];
-} Camera;
+    CamappBuffer buffer[];
+} CamappCamera;
 
-void fourcc_string(__u32 x, char str[5]);
-Camera *open_camera(const char *path, enum CameraPref pref, unsigned nbuffers);
-void close_camera(Camera *cam);
-bool frame_ready(Camera *cam);
-const Buffer *acquire_frame(Camera *cam);
-void release_frame(Camera *cam, const Buffer *buf);
+void camapp_describe_pixelformat(unsigned long pixelformat, char str[5]);
+
+CamappCamera* camapp_open_camera(char const* path, enum CamappPref pref,
+                                 unsigned nbuffers);
+void camapp_close_camera(CamappCamera* cam);
+
+bool camapp_frame_ready(CamappCamera* cam);
+CamappBuffer const* camapp_acquire_frame(CamappCamera* cam);
+void camapp_release_frame(CamappCamera* cam, CamappBuffer const* buf);
 
 #endif
