@@ -58,6 +58,12 @@ struct WaitCondition
         return woken_;
     }
 
+    void reset()
+    {
+        std::lock_guard<std::mutex> ul(guard);
+        woken_ = false;
+    }
+
     std::mutex guard;
     std::condition_variable condition;
     bool woken_;
