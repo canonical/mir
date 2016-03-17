@@ -18,6 +18,8 @@
 
 #include "key_repeat_dispatcher.h"
 
+#include "mir/input/device.h"
+#include "mir/input/input_device_hub.h"
 #include "mir/time/alarm_factory.h"
 #include "mir/time/alarm.h"
 #include "mir/events/event_private.h"
@@ -30,6 +32,34 @@
 #include <string.h>
 
 namespace mi = mir::input;
+
+namespace
+{
+struct DeviceRemovalFilter : mi::InputDeviceObserver
+{
+    DeviceRemovalFilter(std::function<void(MirInputDeviceId)> const& on_removal)
+        : on_removal(on_removal) {}
+
+    void device_added(std::shared_ptr<mi::Device> const&) override
+    {
+    }
+
+    void device_changed(std::shared_ptr<mi::Device> const&) override
+    {
+    }
+
+    void device_removed(std::shared_ptr<mi::Device> const& device) override
+    {
+        on_removal(device->id());
+    }
+
+    void changes_complete() override
+    {
+    }
+    std::function<void(MirInputDeviceId)> on_removal;
+};
+
+}
 
 mi::KeyRepeatDispatcher::KeyRepeatDispatcher(
     std::shared_ptr<mi::InputDispatcher> const& next_dispatcher,
@@ -45,6 +75,17 @@ mi::KeyRepeatDispatcher::KeyRepeatDispatcher(
       repeat_timeout(repeat_timeout),
       repeat_delay(repeat_delay)
 {
+}
+
+void mi::KeyRepeatDispatcher::set_input_device_hub(std::shared_ptr<InputDeviceHub> const& hub)
+{
+    hub->add_observer(std::make_shared<DeviceRemovalFilter>(
+            [this](MirInputDeviceId id)
+            {
+                std::unique_lock<std::mutex> lock(repeat_state_mutex);
+                repeat_state_by_device.erase(id); // destructor cancels alarms
+            }
+            ));
 }
 
 mi::KeyRepeatDispatcher::KeyboardState& mi::KeyRepeatDispatcher::ensure_state_for_device_locked(std::lock_guard<std::mutex> const&, MirInputDeviceId id)
