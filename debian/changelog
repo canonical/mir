@@ -1,3 +1,15 @@
+mir (0.21.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.21.0 (https://launchpad.net/mir/+milestone/0.21.0)
+    - ABI summary:
+      . No ABI changes.
+    - Enhancements:
+      . TODO: Someone detail these
+    - Bugs fixed:
+      . TODO: List these after branching lp:mir/0.21
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 15 Mar 2016 15:22:57 +0800
+
 mir (0.20.2+16.04.20160307-0ubuntu1) xenial; urgency=medium
 
   [ Andreas Pokorny ]
