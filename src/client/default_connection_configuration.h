@@ -62,6 +62,7 @@ public:
     std::shared_ptr<EventSink> the_event_sink() override;
     std::shared_ptr<EventHandlerRegister> the_event_handler_register() override;
     std::shared_ptr<mir::SharedLibraryProberReport> the_shared_library_prober_report();
+    std::shared_ptr<mir::client::AsyncBufferFactory> the_buffer_factory() override;
 
     virtual std::string the_socket_file();
     virtual std::shared_ptr<rpc::RpcReport> the_rpc_report();
@@ -82,6 +83,7 @@ protected:
     CachedPtr<rpc::RpcReport> rpc_report;
     CachedPtr<input::receiver::InputReceiverReport> input_receiver_report;
     CachedPtr<mir::SharedLibraryProberReport>  shared_library_prober_report;
+    CachedPtr<mir::client::AsyncBufferFactory> async_buffer_factory;
 
 private:
     std::string const socket_file;
