@@ -308,7 +308,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         {
             try
             {
-                if ((seq.buffer_request().has_id()) && (seq.buffer_request().id().value() >= 0))
+                if (seq.buffer_request().id().value() >= 0)
                 {
                     map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
                     [&] (mcl::BufferReceiver* receiver) {
@@ -317,27 +317,25 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 }
                 else
                 {
-                    if (seq.buffer_request().has_id())
+                    auto stream_cmd = seq.buffer_request().id().value();
+                    auto buffer_id = seq.buffer_request().buffer().buffer_id();
+                    std::shared_ptr<mcl::Buffer> buffer = nullptr;
+                    switch (stream_cmd)
                     {
-                        printf("BUFFER ERASE %i.\n", seq.buffer_request().buffer().buffer_id());
-                        map->erase(seq.buffer_request().buffer().buffer_id());
-                    }
-                    else
-                    {
-                        auto buffer = map->buffer(seq.buffer_request().buffer().buffer_id());
-                        if (buffer)
-                        {
-                            printf("UPDATED %i\n", seq.buffer_request().buffer().buffer_id());
-                            buffer->received(
-                                *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
-                        }
-                        else
-                        {
-                            printf("NEWRPC %i\n", seq.buffer_request().buffer().buffer_id());
-                            buffer = buffer_factory->generate_buffer(seq.buffer_request().buffer());
-                            map->insert(seq.buffer_request().buffer().buffer_id(), buffer); 
-                            buffer->received();
-                        }
+                    case -1:
+                        buffer = buffer_factory->generate_buffer(seq.buffer_request().buffer());
+                        map->insert(buffer_id, buffer); 
+                        buffer->received();
+                        break;
+                    case -2:
+                        map->buffer(buffer_id)->received(
+                            *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
+                        break;
+                    case -3:
+                        map->erase(buffer_id);
+                        break;
+                    default:
+                        throw std::runtime_error("");
                     }
                 }
             }

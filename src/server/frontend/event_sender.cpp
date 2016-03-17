@@ -133,8 +133,7 @@ void mfd::EventSender::send_buffer(frontend::BufferStreamId id, graphics::Buffer
     mp::EventSequence seq;
     auto request = seq.mutable_buffer_request();
 
-    if ((id.as_value() >= 0) || (id.as_value() == -2))
-        request->mutable_id()->set_value(id.as_value());
+    request->mutable_id()->set_value(id.as_value());
 
     request->mutable_buffer()->set_buffer_id(buffer.id().as_value());
 

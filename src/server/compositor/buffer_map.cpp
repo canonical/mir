@@ -62,7 +62,7 @@ void mc::BufferMap::remove_buffer(mg::BufferID id)
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = checked_buffers_find(id, lk);
     printf("ERASE BUFFER SERVER\n");
-    sink->send_buffer(mf::BufferStreamId{-2}, *it->second.buffer, mg::BufferIpcMsgType::update_msg);
+    sink->send_buffer(mf::BufferStreamId{-3}, *it->second.buffer, mg::BufferIpcMsgType::update_msg);
     buffers.erase(it); 
 }
 
@@ -75,7 +75,7 @@ void mc::BufferMap::send_buffer(mg::BufferID id)
         auto buffer = it->second.buffer;
         it->second.owner = Owner::client;
         lk.unlock();
-        sink->send_buffer(mf::BufferStreamId{-1}, *buffer, mg::BufferIpcMsgType::update_msg);
+        sink->send_buffer(mf::BufferStreamId{-2}, *buffer, mg::BufferIpcMsgType::update_msg);
     }
 }
 

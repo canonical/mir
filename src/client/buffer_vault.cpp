@@ -62,47 +62,38 @@ mcl::BufferVault::BufferVault(
     size(size),
     disconnected_(false)
 {
-    printf("CROEATE!!! nbuffers %i\n", initial_nbuffers);
     for (auto i = 0u; i < initial_nbuffers; i++)
     {
         reqs.push_back(mirfactory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage, incoming_buffer, this));
 
-        printf("ALLOCOA\n");
         server_requests->allocate_buffer(size, format, usage);
     }
 }
 
 mcl::BufferVault::~BufferVault()
 {
-    printf("VAULT DEAD.\n");
     if (disconnected_)
     {
-        printf("DISOCNNECT\n");
         return;
     }
 
     for(auto req : reqs)
         mirfactory->cancel(req);
 
-    printf("ERASING...\n");
     for (auto& it : buffers)
     try
     {
-        //map->erase(it.first);
-        printf("ERASE!\n");
         server_requests->free_buffer(it.first);
     }
     catch (...)
     {
     }
-    printf("END...\n");
 }
 
 
 void mcl::BufferVault::realloc(
     std::unique_lock<std::mutex>& lk, int free_id, geom::Size, MirPixelFormat format, int usage)
 {
-//    map->erase(free_id);
     lk.unlock();
 
     server_requests->free_buffer(free_id);
