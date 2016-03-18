@@ -84,6 +84,7 @@ add_library(mirclientobjects OBJECT
   mir_buffer_api.cpp
   display_configuration_api.cpp
   protobuf_to_native_buffer.cpp
+  buffer_factory.cpp
   ${MIR_CLIENT_SOURCES}
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/events/surface_output_event.h
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_display_configuration.h

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014,2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -22,6 +22,13 @@
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/input/device.h"
+#include "mir/input/device_capability.h"
+#include "mir/input/pointer_configuration.h"
+#include "mir/input/touchpad_configuration.h"
+#include "mir/input/input_device_observer.h"
+#include "mir/frontend/event_sink.h"
+#include "mir/server_action_queue.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -33,9 +40,83 @@
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
+namespace mi = mir::input;
+namespace mf = mir::frontend;
 
 namespace
 {
+
+mgn::UniqueInputConfig make_empty_config()
+{
+    return mgn::UniqueInputConfig(nullptr, [](MirInputConfig const*){});
+}
+
+mgn::UniqueInputConfig make_input_config(MirConnection* con)
+{
+    return mgn::UniqueInputConfig(mir_connection_create_input_config(con), mir_input_config_destroy);
+}
+
+class NestedDevice : public mi::Device
+{
+public:
+    NestedDevice(MirInputDevice const* dev)
+    {
+        update(dev);
+    }
+
+    void update(MirInputDevice const* dev)
+    {
+        device_id = mir_input_device_get_id(dev);
+        device_name = mir_input_device_get_name(dev);
+        unique_device_id = mir_input_device_get_unique_id(dev);
+        caps = mi::DeviceCapabilities(mir_input_device_get_capabilities(dev));
+    }
+
+    MirInputDeviceId id() const
+    {
+        return device_id;
+    }
+
+    mi::DeviceCapabilities capabilities() const
+    {
+        return caps;
+    }
+
+    std::string name() const
+    {
+        return device_name;
+    }
+    std::string unique_id() const
+    {
+        return unique_device_id;
+    }
+
+    mir::optional_value<mi::PointerConfiguration> pointer_configuration() const
+    {
+        return pointer_conf;
+    }
+    void apply_pointer_configuration(mi::PointerConfiguration const&)
+    {
+        // TODO requires c api support
+    }
+
+    mir::optional_value<mi::TouchpadConfiguration> touchpad_configuration() const
+    {
+        return touchpad_conf;
+    }
+    void apply_touchpad_configuration(mi::TouchpadConfiguration const&)
+    {
+        // TODO requires c api support
+    }
+private:
+    MirInputDeviceId device_id;
+    std::string device_name;
+    std::string unique_device_id;
+    mi::DeviceCapabilities caps;
+    mir::optional_value<mi::PointerConfiguration> pointer_conf;
+    mir::optional_value<mi::TouchpadConfiguration> touchpad_conf;
+};
+
 
 void display_config_callback_thunk(MirConnection* /*connection*/, void* context)
 {
@@ -178,10 +259,15 @@ private:
 mgn::MirClientHostConnection::MirClientHostConnection(
     std::string const& host_socket,
     std::string const& name,
-    std::shared_ptr<msh::HostLifecycleEventListener> const& host_lifecycle_event_listener)
+    std::shared_ptr<msh::HostLifecycleEventListener> const& host_lifecycle_event_listener,
+    std::shared_ptr<mf::EventSink> const& sink,
+    std::shared_ptr<mir::ServerActionQueue> const& input_observer_queue)
     : mir_connection{mir_connect_sync(host_socket.c_str(), name.c_str())},
       conf_change_callback{[]{}},
-      host_lifecycle_event_listener{host_lifecycle_event_listener}
+      host_lifecycle_event_listener{host_lifecycle_event_listener},
+      sink{sink},
+      observer_queue{input_observer_queue},
+      config{make_empty_config()}
 {
     if (!mir_connection_is_valid(mir_connection))
     {
@@ -196,6 +282,17 @@ mgn::MirClientHostConnection::MirClientHostConnection(
         mir_connection,
         nested_lifecycle_event_callback_thunk,
         std::static_pointer_cast<void>(host_lifecycle_event_listener).get());
+
+    mir_connection_set_input_config_change_callback(
+        mir_connection,
+        [](MirConnection*, void* context)
+        {
+            auto obj = static_cast<MirClientHostConnection*>(context);
+            obj->update_input_devices();
+        },
+        this);
+
+    update_input_devices();
 }
 
 mgn::MirClientHostConnection::~MirClientHostConnection()
@@ -330,4 +427,94 @@ auto mgn::MirClientHostConnection::graphics_platform_library() -> std::string
     }
 
     return properties.filename;
+}
+
+void mgn::MirClientHostConnection::update_input_devices()
+{
+    std::lock_guard<std::mutex> lock(devices_guard);
+    config = make_input_config(mir_connection);
+
+    auto deleted = std::move(devices);
+    std::vector<std::shared_ptr<mi::Device>> new_devs;
+    auto config_ptr = config.get();
+    for (size_t i = 0, e = mir_input_config_device_count(config_ptr); i!=e; ++i)
+    {
+        auto dev = mir_input_config_get_device(config_ptr, i);
+        auto it = std::find_if(
+            begin(deleted),
+            end(deleted),
+            [id = mir_input_device_get_id(dev)](auto const& dev)
+            {
+                return id == dev->id();
+            });
+        if (it != end(deleted))
+        {
+           std::static_pointer_cast<NestedDevice>(*it)->update(dev);
+           devices.push_back(*it);
+           deleted.erase(it);
+        }
+        else
+        {
+           devices.push_back(std::make_shared<NestedDevice>(dev));
+           new_devs.push_back(devices.back());
+        }
+    }
+
+    sink->handle_input_device_change(devices);
+
+    if ((deleted.empty() && new_devs.empty()) || observers.empty())
+        return;
+
+    observer_queue->enqueue(
+        this,
+        [this, new_devs = std::move(new_devs), deleted = std::move(deleted)]
+        {
+            std::lock_guard<std::mutex> lock(devices_guard);
+            for (auto const observer : observers)
+            {
+                for (auto const& item : new_devs)
+                    observer->device_added(item);
+                for (auto const& item : deleted)
+                    observer->device_removed(item);
+                observer->changes_complete();
+            }
+        });
+}
+
+void mgn::MirClientHostConnection::add_observer(std::shared_ptr<mi::InputDeviceObserver> const& observer)
+{
+    observer_queue->enqueue(
+        this,
+        [observer,this]
+        {
+            std::lock_guard<std::mutex> lock(devices_guard);
+            observers.push_back(observer);
+            for (auto const& item : devices)
+            {
+                observer->device_added(item);
+            }
+            observer->changes_complete();
+        }
+        );
+}
+
+void mgn::MirClientHostConnection::remove_observer(std::weak_ptr<mi::InputDeviceObserver> const& element)
+{
+    auto observer = element.lock();
+
+    observer_queue->enqueue(this,
+                            [observer, this]
+                            {
+                                observers.erase(remove(begin(observers), end(observers), observer), end(observers));
+                            });
+}
+
+void mgn::MirClientHostConnection::for_each_input_device(std::function<void(mi::Device const& device)> const& callback)
+{
+    std::lock_guard<std::mutex> lock(devices_guard);
+    for (auto const& item : devices)
+    {
+        callback(*item);
+    }
+
 }

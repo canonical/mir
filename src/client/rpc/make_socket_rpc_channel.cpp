@@ -41,14 +41,16 @@ struct Prefix
 }
 
 std::shared_ptr<mir::client::rpc::MirBasicRpcChannel>
-mclr::make_rpc_channel(std::string const& name,
-                       std::shared_ptr<mcl::SurfaceMap> const& map,
-                       std::shared_ptr<mcl::DisplayConfiguration> const& disp_conf,
-                       std::shared_ptr<input::InputDevices> const& input_devices,
-                       std::shared_ptr<RpcReport> const& rpc_report,
-                       std::shared_ptr<mcl::LifecycleControl> const& lifecycle_control,
-                       std::shared_ptr<mcl::PingHandler> const& ping_handler,
-                       std::shared_ptr<mcl::EventSink> const& event_sink)
+mclr::make_rpc_channel(
+    std::string const& name,
+    std::shared_ptr<mcl::SurfaceMap> const& map,
+    std::shared_ptr<AsyncBufferFactory> const buffer_factory,
+    std::shared_ptr<mcl::DisplayConfiguration> const& disp_conf,
+    std::shared_ptr<input::InputDevices> const& input_devices,
+    std::shared_ptr<RpcReport> const& rpc_report,
+    std::shared_ptr<mcl::LifecycleControl> const& lifecycle_control,
+    std::shared_ptr<mcl::PingHandler> const& ping_handler,
+    std::shared_ptr<mcl::EventSink> const& event_sink)
 {
     std::unique_ptr<mclr::StreamTransport> transport;
     if (fd_prefix.is_start_of(name))
@@ -60,5 +62,7 @@ mclr::make_rpc_channel(std::string const& name,
     {
         transport = std::make_unique<mclr::StreamSocketTransport>(name);
     }
-    return std::make_shared<MirProtobufRpcChannel>(std::move(transport), map, disp_conf, input_devices, rpc_report, lifecycle_control, ping_handler, event_sink);
+    return std::make_shared<MirProtobufRpcChannel>(
+        std::move(transport), map, buffer_factory, disp_conf,
+        input_devices, rpc_report, lifecycle_control, ping_handler, event_sink);
 }

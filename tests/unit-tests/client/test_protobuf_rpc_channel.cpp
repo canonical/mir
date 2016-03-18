@@ -24,6 +24,7 @@
 #include "src/client/rpc/null_rpc_report.h"
 #include "src/client/lifecycle_control.h"
 #include "src/client/ping_handler.h"
+#include "src/client/buffer_factory.h"
 
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
@@ -61,6 +62,9 @@ struct MockSurfaceMap : mcl::SurfaceMap
         void(mir::frontend::BufferStreamId, std::function<void(mcl::BufferReceiver*)> const&));
     MOCK_CONST_METHOD1(with_all_streams_do,
         void(std::function<void(mcl::BufferReceiver*)> const&));
+    MOCK_CONST_METHOD1(buffer, std::shared_ptr<mcl::Buffer>(int));
+    MOCK_METHOD2(insert, void(int, std::shared_ptr<mcl::Buffer> const&));
+    MOCK_METHOD1(erase, void(int));
 }; 
  
 class StubSurfaceMap : public mcl::SurfaceMap
@@ -75,6 +79,16 @@ public:
     {
     }
     void with_all_streams_do(std::function<void(mcl::BufferReceiver*)> const&) const override
+    {
+    }
+    std::shared_ptr<mcl::Buffer> buffer(int) const
+    {
+        return nullptr;
+    }
+    void insert(int, std::shared_ptr<mcl::Buffer> const&)
+    {
+    }
+    void erase(int)
     {
     }
 };
@@ -219,6 +233,7 @@ public:
           channel{new mclr::MirProtobufRpcChannel{
                   std::unique_ptr<MockStreamTransport>{transport},
                   std::make_shared<StubSurfaceMap>(),
+                  std::make_shared<mcl::BufferFactory>(),
                   std::make_shared<mcl::DisplayConfiguration>(),
                   std::make_shared<mir::input::InputDevices>(),
                   std::make_shared<mclr::NullRpcReport>(),
@@ -372,6 +387,7 @@ TEST_F(MirProtobufRpcChannelTest, notifies_streams_of_disconnect)
     mclr::MirProtobufRpcChannel channel{
                   std::make_unique<NiceMock<MockStreamTransport>>(),
                   stream_map,
+                  std::make_shared<mcl::BufferFactory>(),
                   std::make_shared<mcl::DisplayConfiguration>(),
                   std::make_shared<mir::input::InputDevices>(),
                   std::make_shared<mclr::NullRpcReport>(),
