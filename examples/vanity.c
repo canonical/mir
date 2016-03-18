@@ -149,14 +149,14 @@ static float interpret(const Camera *cam, const Buffer *buf)
      * Take a vertical line down the middle of the image, blur/smooth it
      * out, and return the y coordinate of the brightest spot...
      */
-    int const radius = 10;
-    int peak = 0;
+    int const radius = 20;
+    int peak_start = -1, peak_end = -1;
     long max_avg = 0;
     for (int y = 0; y < height; ++y)
     {
         int from = y - radius, to = y + radius;
         if (from < 0) from = 0;
-        if (to >= height) to = height;
+        if (to >= height) to = height - 1;
 
         unsigned char* p = (unsigned char*)buf->start +
                            from*stride + middle_luminance_x;
@@ -170,10 +170,15 @@ static float interpret(const Camera *cam, const Buffer *buf)
         if (avg > max_avg)
         {
             max_avg = avg;
-            peak = y;
+            peak_start = peak_end = y;
+        }
+        else if (avg == max_avg && y == peak_end+1)
+        {
+            if (peak_start < 0) peak_start = y;
+            if (y > peak_end) peak_end = y;
         }
     }
-    return (float)peak / (height - 1);
+    return (peak_end + peak_start) / (2.0f * (height - 1));
 }
 
 static void close_camera(Camera *cam)
