@@ -22,7 +22,6 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <sys/resource.h>
 
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
