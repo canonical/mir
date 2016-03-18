@@ -57,7 +57,6 @@ void mcl::BufferFactory::expect_buffer(
 std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(mir::protobuf::Buffer const& buffer)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-    //must be new, allocate and send it.
     auto request_it = std::find_if(allocation_requests.begin(), allocation_requests.end(),
         [&buffer](std::unique_ptr<AllocationRequest> const& it)
         {

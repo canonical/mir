@@ -720,8 +720,6 @@ TEST_F(MirProtobufRpcChannelTest, creates_buffer_if_not_in_map)
     int buffer_id(3);
     auto stream_map = std::make_shared<MockSurfaceMap>();
     auto mock_buffer_factory = std::make_shared<MockBufferFactory>();
-    EXPECT_CALL(*stream_map, buffer(buffer_id)).Times(1)
-       .WillOnce(Return(nullptr));
     EXPECT_CALL(*mock_buffer_factory, generate_buffer(_))
         .WillOnce(InvokeWithoutArgs([&]{
             return std::make_unique<mcl::Buffer>(
@@ -732,6 +730,7 @@ TEST_F(MirProtobufRpcChannelTest, creates_buffer_if_not_in_map)
     auto transport = std::make_unique<NiceMock<MockStreamTransport>>();
     mir::protobuf::EventSequence seq;
     auto request = seq.mutable_buffer_request();
+    request->mutable_id()->set_value(-1);
     request->mutable_buffer()->set_buffer_id(buffer_id);
     set_async_buffer_message(seq, *transport);
 
@@ -761,12 +760,11 @@ TEST_F(MirProtobufRpcChannelTest, reuses_buffer_if_in_map)
        .WillOnce(Return(buf));
     EXPECT_CALL(*mock_client_buffer, update_from(_))
         .Times(1);
-    EXPECT_CALL(*mock_buffer_factory, generate_buffer(_))
-        .Times(0);
 
     auto transport = std::make_unique<NiceMock<MockStreamTransport>>();
     mir::protobuf::EventSequence seq;
     auto request = seq.mutable_buffer_request();
+    request->mutable_id()->set_value(-2);
     request->mutable_buffer()->set_buffer_id(buffer_id);
     set_async_buffer_message(seq, *transport);
 

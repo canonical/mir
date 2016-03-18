@@ -202,7 +202,6 @@ TEST_F(BufferVault, frees_the_buffers_we_actually_got)
 {
     EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
     EXPECT_CALL(mock_requests, free_buffer(package2.buffer_id()));
-    EXPECT_CALL(mock_map, erase(An<int>())).Times(2);
     mcl::BufferVault vault(mt::fake_shared(mock_native_factory), mt::fake_shared(mock_requests),
         mt::fake_shared(mock_map), mt::fake_shared(mock_factory),
         size, format, usage, initial_nbuffers);
@@ -423,7 +422,6 @@ TEST_F(BufferVault, reallocates_incoming_buffers_of_incorrect_size_with_immediat
         size, format, usage, initial_nbuffers};
 
     EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
-    EXPECT_CALL(mock_map, erase(package.buffer_id()));
     EXPECT_CALL(mock_factory, expect_buffer(_,_,_,_,_,_,_));
     EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_))
         .WillOnce(Invoke(
@@ -462,7 +460,6 @@ TEST_F(BufferVault, reallocates_incoming_buffers_of_incorrect_size_with_delayed_
     ON_CALL(mock_map, buffer(4))
         .WillByDefault(Return(buf2));
 
-    EXPECT_CALL(mock_map, erase(An<int>()));
     EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
     EXPECT_CALL(mock_factory, expect_buffer(_,_,_,_,_,_,_));
     EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_));
@@ -652,8 +649,6 @@ TEST_F(BufferVault, rescale_before_initial_buffers_are_serviced_frees_initial_bu
     EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
         .Times(initial_nbuffers);
     EXPECT_CALL(mock_factory, expect_buffer(_,_,_,_,_,_,_))
-        .Times(initial_nbuffers);
-    EXPECT_CALL(mock_map, erase(An<int>()))
         .Times(initial_nbuffers);
     vault.wire_transfer_inbound(package.buffer_id());
     vault.wire_transfer_inbound(package2.buffer_id());

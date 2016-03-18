@@ -242,7 +242,6 @@ public:
 
         //note, NewCallback will trigger on exception, deleting this object there
         auto protobuf_void = new mp::Void;
-        printf("SEND FREE.\n");
         server.release_buffers(&request, protobuf_void,
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
@@ -509,7 +508,6 @@ mcl::BufferStream::BufferStream(
 
 mcl::BufferStream::~BufferStream()
 {
-    printf("BSTREAM DEAD.\n");
 }
 
 void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
