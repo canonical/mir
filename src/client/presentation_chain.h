@@ -33,6 +33,7 @@ namespace client
 {
 class ClientBufferFactory;
 class ClientBuffer;
+class AsyncBufferFactory;
 namespace rpc
 {
 class DisplayServer;
@@ -45,7 +46,8 @@ public:
         MirConnection* connection,
         int rpc_id,
         rpc::DisplayServer& server,
-        std::shared_ptr<ClientBufferFactory> const& factory);
+        std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
+        std::shared_ptr<AsyncBufferFactory> const& mir_buffer_factory);
     void allocate_buffer(
         geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
         mir_buffer_callback callback, void* context) override;
@@ -63,25 +65,10 @@ private:
     MirConnection* const connection_;
     int const stream_id;
     rpc::DisplayServer& server;
-    std::shared_ptr<ClientBufferFactory> const factory;
+    std::shared_ptr<ClientBufferFactory> const native_buffer_factory;
+    std::shared_ptr<AsyncBufferFactory> const mir_buffer_factory;
 
     std::mutex mutex;
-    struct AllocationRequest
-    {
-        AllocationRequest(
-            geometry::Size size,
-            MirPixelFormat format,
-            MirBufferUsage usage,
-            mir_buffer_callback cb,
-            void* cb_context);
-
-        geometry::Size size;
-        MirPixelFormat format;
-        MirBufferUsage usage;
-        mir_buffer_callback cb;
-        void* cb_context;
-    };
-    std::vector<std::unique_ptr<AllocationRequest>> allocation_requests;
     std::vector<std::unique_ptr<Buffer>> buffers;
 };
 }

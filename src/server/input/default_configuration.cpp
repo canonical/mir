@@ -34,6 +34,7 @@
 #include "default_input_manager.h"
 #include "surface_input_dispatcher.h"
 #include "basic_seat.h"
+#include "../graphics/nested/mir_client_host_connection.h"
 
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_probe.h"
@@ -44,6 +45,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/emergency_cleanup.h"
 #include "mir/main_loop.h"
+#include "mir/abnormal_exit.h"
 #include "mir/glib_main_loop.h"
 #include "mir/log.h"
 #include "mir/dispatch/action_queue.h"
@@ -295,25 +297,45 @@ std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_in
     return default_input_device_hub(
         [this]()
         {
-            return std::make_shared<mi::DefaultInputDeviceHub>(
+            auto input_dispatcher = the_input_dispatcher();
+            auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
+            auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
                 the_global_event_sink(),
                 the_seat(),
                 the_input_reading_multiplexer(),
                 the_main_loop(),
                 the_cookie_authority());
+
+            if (key_repeater)
+                key_repeater->set_input_device_hub(hub);
+            return hub;
         });
 }
 
 std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_device_hub()
 {
-    return default_input_device_hub(
-        [this]()
-        {
-            return std::make_shared<mi::DefaultInputDeviceHub>(
-                the_global_event_sink(),
-                the_seat(),
-                the_input_reading_multiplexer(),
-                the_main_loop(),
-                the_cookie_authority());
-        });
+    auto options = the_options();
+    if (options->is_set(options::host_socket_opt))
+    {
+        return the_mir_client_host_connection();
+    }
+    else
+    {
+        return default_input_device_hub(
+            [this]()
+            {
+                auto input_dispatcher = the_input_dispatcher();
+                auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
+                auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
+                    the_global_event_sink(),
+                    the_seat(),
+                    the_input_reading_multiplexer(),
+                    the_main_loop(),
+                    the_cookie_authority());
+
+                if (key_repeater)
+                    key_repeater->set_input_device_hub(hub);
+                return hub;
+            });
+    }
 }

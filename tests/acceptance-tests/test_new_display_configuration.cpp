@@ -571,7 +571,6 @@ TEST_F(DisplayConfigurationTest, output_position_is_independent_of_orientation)
             output.top_left = *position;
             ++position;
         });
-    server.the_display_configuration_controller()->set_base_configuration(server_config);
 
     DisplayClient client{new_connection()};
 
@@ -588,6 +587,9 @@ TEST_F(DisplayConfigurationTest, output_position_is_independent_of_orientation)
         &new_display_config_matches,
         &context);
 
+    server.the_display_configuration_controller()->set_base_configuration(server_config);
+    context.done.wait_for(std::chrono::seconds{10});
+
     for (auto const orientation :
         {mir_orientation_normal, mir_orientation_left, mir_orientation_inverted, mir_orientation_right})
     {
@@ -597,10 +599,11 @@ TEST_F(DisplayConfigurationTest, output_position_is_independent_of_orientation)
                 {
                     output.orientation = orientation;
                 });
+
+        context.done.reset();
         server.the_display_configuration_controller()->set_base_configuration(server_config);
 
         EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{10}));
-        context.done.reset();
 
         auto config = client.get_base_config();
 

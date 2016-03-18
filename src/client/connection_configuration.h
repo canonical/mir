@@ -52,6 +52,7 @@ class ClientPlatformFactory;
 class DisplayConfiguration;
 class EventSink;
 class EventHandlerRegister;
+class AsyncBufferFactory;
 
 class ConnectionConfiguration
 {
@@ -69,6 +70,7 @@ public:
     virtual std::shared_ptr<PingHandler> the_ping_handler() = 0;
     virtual std::shared_ptr<EventSink> the_event_sink() = 0;
     virtual std::shared_ptr<EventHandlerRegister> the_event_handler_register() = 0;
+    virtual std::shared_ptr<mir::client::AsyncBufferFactory> the_buffer_factory() = 0;
 
 protected:
     ConnectionConfiguration() = default;
