@@ -1,7 +1,7 @@
 mir (0.21.0-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release 0.21.0 (https://launchpad.net/mir/+milestone/0.21.0)
-    - ABI summary:
+    - ABI summary: There are no ABI breaks at all since Mir 0.20:
       . mirclient ABI unchanged at 9
       . mirserver ABI unchanged at 38
       . mircommon ABI unchanged at 5
@@ -12,8 +12,9 @@ mir (0.21.0-0ubuntu1) UNRELEASED; urgency=medium
       . mirinputplatform ABI unchanged at 5
     - Enhancements:
       . New display enumeration API
-      . Added android diagnostic tests to assist during porting to
+      . Added Android diagnostic tests to assist during porting to
         new devices
+      . Added mir_demo_client_camera: a Video4Linux2 client
     - Bugs fixed:
       . Mir crashed with exception 'failed to add sync point to command
         buffer' (LP: #1554635)
@@ -23,6 +24,13 @@ mir (0.21.0-0ubuntu1) UNRELEASED; urgency=medium
         (LP: #1547015)
       . [regression] Mir stops receiving input after a pause/resume
         cycle (LP: #1548989)
+      . NBS (--nbuffers=0) causes software clients to crash with
+        std::exception::what: Failed to mmap buffer 13, "Permission denied")
+        (LP: #1550432)
+      . Fullscreen clients freeze when using NBS with multiple monitors
+        (LP: #1551536)
+      . [ FAILED ] DisplayConfigurationTest.output_position_is_independent_of_
+        orientation (LP: #1552065)
       . The server-side use of MIR_SOCKET is confusing (LP: #1290345)
       . [regression] FTBFS with -DMIR_LINK_TIME_OPTIMIZATION=on
         -Duse_debflags=on (LP: #1350343)
@@ -30,20 +38,24 @@ mir (0.21.0-0ubuntu1) UNRELEASED; urgency=medium
         when not focused (LP: #1528110)
       . x11 platform: mouse cursor moves strange (LP: #1546324)
       . Cross compiling to wily/vivid doesn't work (LP: #1549152)
-      . Rendering stutters when a new client stablishes a connection
+      . Rendering stutters when a new client establishes a connection
         (LP: #1549359)
       . 'mir_demo_server --test-client' crashes (SIGSEGV) when client
         dies (LP: #1555620)
+      . [testfail] CI failure: TestClientInput.client_input_config_request_
+        receives_all_attached_devices (LP: #1555708)
       . [regression] Mir FTBFS when MIR_ENABLE_TESTS=no (LP: #1556080)
       . Mir-on-X11 doesn't exit (until it gets an event) (LP: #1556210)
+      . InputPlatformProbe.x11_platform_found_and_used_when_display_connection_
+        works breaks with old input drivers present (LP: #1543049)
       . [regression] MIR_CLIENT_PERF_REPORT is missing window/surface
         names (LP: #1546933)
-      . Installed binaries fail to run with mir_demo_server 
-        --test-client XXXX (LP: #1556160)
-      . update mi::probe_input_platforms() to select the newest of
-        duplicate input modules (LP: #1543049)
+      . Installed binaries fail to run with mir_demo_server --test-client XXXX
+        (LP: #1556160)
       . mir_demo_server --test-client [mir_demo_client_scroll|
         mir_demo_client_flicker] fails (LP: #1556205)
+      . The contents of debian/mir-demos.examples are out of date and useless
+        (LP: #1557446)
 
  -- Alberto Aguirre <alberto.aguirre@canonical.com>  Thu, 17 Mar 2016 14:08:50 -0500
 
