@@ -38,6 +38,7 @@
 #include "mir/abnormal_exit.h"
 #include "mir/emergency_cleanup.h"
 #include "mir/log.h"
+#include "mir/main_loop.h"
 #include "mir/report_exception.h"
 
 #include "mir_toolkit/common.h"
@@ -216,8 +217,14 @@ mir::DefaultServerConfiguration::wrap_cursor(std::shared_ptr<mg::Cursor> const& 
 auto mir::DefaultServerConfiguration::the_host_connection()
 -> std::shared_ptr<graphics::nested::HostConnection>
 {
+    return the_mir_client_host_connection();
+}
+
+auto mir::DefaultServerConfiguration::the_mir_client_host_connection()
+-> std::shared_ptr<graphics::nested::MirClientHostConnection>
+{
     return host_connection(
-        [this]() -> std::shared_ptr<graphics::nested::HostConnection>
+        [this]()
         {
             auto const options = the_options();
 
@@ -247,7 +254,10 @@ auto mir::DefaultServerConfiguration::the_host_connection()
             return std::make_shared<graphics::nested::MirClientHostConnection>(
                 host_socket,
                 my_name,
-                the_host_lifecycle_event_listener());
+                the_host_lifecycle_event_listener(),
+                the_global_event_sink(),
+                the_main_loop()
+                );
         });
 }
 
