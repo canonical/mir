@@ -57,13 +57,11 @@ void mtf::InterprocessClientServerTest::init_server(std::function<void()> const&
 void mtf::InterprocessClientServerTest::run_in_server_and_disable_core_dump(
         std::function<void()> const& exec_code)
 {
-    auto exec_without_core_dump = [exec_code]()
+    run_in_server([exec_code]()
     {
         mir::test::disable_core_dump();
         exec_code();
-    };
-
-    run_in_server(exec_without_core_dump);
+    });
 }
 
 void mtf::InterprocessClientServerTest::run_in_server(std::function<void()> const& exec_code)
