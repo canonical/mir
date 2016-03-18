@@ -574,15 +574,15 @@ TEST_F(ApplicationSession, sets_and_looks_up_surface_streams)
     auto stream_id2 = session->create_buffer_stream(stream_properties);
 
     std::list<ms::StreamInfo> info {
-        {streams[2], geom::Displacement{0,3}, {}},
-        {streams[0], geom::Displacement{-1,1}, {}},
-        {streams[1], geom::Displacement{0,2}, {}}
+        {streams[2], geom::Displacement{0,3}},
+        {streams[0], geom::Displacement{-1,1}},
+        {streams[1], geom::Displacement{0,2}}
     };
     EXPECT_CALL(*mock_surface, set_streams(Pointwise(StreamEq(), info)));
     session->configure_streams(*mock_surface, {
-        {stream_id2, geom::Displacement{0,3}, {}},
-        {stream_id0, geom::Displacement{-1,1}, {}},
-        {stream_id1, geom::Displacement{0,2}, {}}
+        {stream_id2, geom::Displacement{0,3}},
+        {stream_id0, geom::Displacement{-1,1}},
+        {stream_id1, geom::Displacement{0,2}}
     });
 }
 

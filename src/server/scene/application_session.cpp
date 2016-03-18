@@ -370,7 +370,7 @@ void ms::ApplicationSession::configure_streams(
     for (auto& stream : streams)
     {
         auto s = checked_find(stream.stream_id)->second;
-        list.emplace_back(ms::StreamInfo{s, stream.displacement, stream.size});
+        list.emplace_back(ms::StreamInfo{s, stream.displacement});
     }
     surface.set_streams(list); 
 }
