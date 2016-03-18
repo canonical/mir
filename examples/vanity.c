@@ -113,38 +113,6 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
     pthread_mutex_unlock(&state->mutex);
 }
 
-static float interpret(const Camera *cam, const Buffer *buf)
-{
-    if (cam->pix.pixelformat == V4L2_PIX_FMT_YUYV)
-    {
-        unsigned int const bpp = 2;
-        unsigned int const resolution = 10;
-        unsigned int const rows_per_sample = cam->pix.height / resolution;
-        unsigned int const stride = cam->pix.bytesperline;
-        unsigned s = 0, peak = 0;
-        unsigned long max_sum = 0;
-        for (unsigned y = 0; y < cam->pix.height; y += rows_per_sample, ++s)
-        {
-            unsigned char* p = (unsigned char*)buf->start +
-                               cam->pix.width/2 * bpp +
-                               y * stride;
-            unsigned long sum = 0;
-            for (unsigned z = y; z < y+rows_per_sample; ++z)
-            {
-                sum += p[0];
-                p += stride;
-            }
-            if (sum > max_sum)
-            {
-                max_sum = sum;
-                peak = s;
-            }
-        }
-        return (float)peak / (resolution - 1);
-    }
-    return NAN;
-}
-
 static void fourcc_string(__u32 x, char str[5])
 {
     str[0] = (char)(x & 0xff);
@@ -152,6 +120,60 @@ static void fourcc_string(__u32 x, char str[5])
     str[2] = (char)(x >> 16 & 0xff);
     str[3] = (char)(x >> 24);
     str[4] = '\0';
+}
+
+static float interpret(const Camera *cam, const Buffer *buf)
+{
+    int const stride = cam->pix.bytesperline;
+    int const width = cam->pix.width;
+    int const height = cam->pix.height;
+
+    int bpp = 0, middle_luminance_x = 0;
+    switch (cam->pix.pixelformat)
+    {
+    case V4L2_PIX_FMT_YUYV:
+        bpp = 2;
+        middle_luminance_x = width*bpp/2;
+        break;
+    default:
+        {
+        char fmt[5];
+        fourcc_string(cam->pix.pixelformat, fmt);
+        fprintf(stderr, "interpret: Unsupported pixel format %s\n",
+                fmt);
+        }
+        return NAN;
+    }
+
+    /*
+     * Take a vertical line down the middle of the image, blur/smooth it
+     * out, and return the y coordinate of the brightest spot...
+     */
+    int const radius = 10;
+    int peak = 0;
+    long max_avg = 0;
+    for (int y = 0; y < height; ++y)
+    {
+        int from = y - radius, to = y + radius;
+        if (from < 0) from = 0;
+        if (to >= height) to = height;
+
+        unsigned char* p = (unsigned char*)buf->start +
+                           from*stride + middle_luminance_x;
+        long sum = 0;
+        for (int z = from; z <= to; ++z)
+        {
+            sum += p[0];
+            p += stride;
+        }
+        long avg = sum / (to - from + 1);
+        if (avg > max_avg)
+        {
+            max_avg = avg;
+            peak = y;
+        }
+    }
+    return (float)peak / (height - 1);
 }
 
 static void close_camera(Camera *cam)
@@ -549,7 +571,7 @@ int main(int argc, char *argv[])
                 }
                 // TODO: Colour, full resolution. But it will be slow :(
                 float see = interpret(cam, buf);
-                printf("I see: %.1f [%c]\n", see,
+                printf("I see: %.3f [%c]\n", see,
                        see <= 0.3f ? '^' :
                        see >= 0.7f ? '_' :
                        '-');
