@@ -94,7 +94,6 @@ private:
     std::deque<NoTLSPromise<std::shared_ptr<Buffer>>> promises;
     geometry::Size size;
     bool disconnected_;
-    std::deque<void*> reqs;
 };
 }
 }

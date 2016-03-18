@@ -74,9 +74,7 @@ mcl::BufferVault::BufferVault(
 mcl::BufferVault::~BufferVault()
 {
     if (disconnected_)
-    {
         return;
-    }
 
     mirfactory->cancel_requests_with_context(this);
     for (auto& it : buffers)
