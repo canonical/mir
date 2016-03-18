@@ -18,6 +18,9 @@
 
 #include "egl_sync_fence.h"
 #include <boost/throw_exception.hpp>
+#define MIR_LOG_COMPONENT "egl sync fence"
+#include "mir/log.h"
+#include <sstream>
 
 namespace mg = mir::graphics;
 
@@ -52,9 +55,18 @@ void mg::EGLSyncFence::raise()
     wait_for(lk, default_timeout);
 
     fence_display = eglGetCurrentDisplay();
+    if (fence_display == EGL_NO_DISPLAY)
+    {
+        log_error("no current display");
+    }
+
     sync_point = egl->eglCreateSyncKHR(fence_display, EGL_SYNC_FENCE_KHR, NULL);
     if (sync_point == EGL_NO_SYNC_KHR)
-        BOOST_THROW_EXCEPTION(std::runtime_error("failed to add sync point to command buffer"));
+    {
+        std::stringstream str;
+        str << "failed to add sync point to command buffer: 0x" << std::hex << eglGetError(); 
+        log_error(str.str());
+    }
 }
 
 void mg::EGLSyncFence::reset()
