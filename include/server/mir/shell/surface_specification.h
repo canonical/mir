@@ -43,7 +43,6 @@ struct StreamSpecification
 {
     frontend::BufferStreamId stream_id;
     geometry::Displacement displacement;
-    optional_value<geometry::Size> size;
 };
 
 /// Specification of surface properties requested by client

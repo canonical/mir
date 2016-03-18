@@ -80,6 +80,7 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
         {
             std::lock_guard<decltype(mutex)> lk(mutex); 
             first_frame_posted = true;
+            size = buffer->size();
             buffers->receive_buffer(buffer->id());
             schedule->schedule((*buffers)[buffer->id()]);
             if (buffers->client_owned_buffer_count() == 0)
