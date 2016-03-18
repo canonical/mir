@@ -17,8 +17,6 @@ add_library(eglapp STATIC
   client_helpers.cpp
 )
 
-add_library(camapp STATIC camapp.c)
-
 add_library(exampleserverconfig STATIC
   server_example_basic_window_manager.cpp
   server_example_basic_window_manager.h
@@ -77,7 +75,7 @@ mir_add_wrapped_executable(mir_demo_client_camera
   camera.c
 )
 target_link_libraries(mir_demo_client_camera
-  eglapp camapp
+  eglapp
 )
 mir_add_wrapped_executable(mir_demo_client_vanity
   vanity.c
