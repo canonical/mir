@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <sys/resource.h>
 
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
@@ -53,9 +54,19 @@ void mtf::InterprocessClientServerTest::init_server(std::function<void()> const&
     }
 }
 
-void mtf::InterprocessClientServerTest::run_in_server(
-        std::function<void()> const& exec_code,
-        mtf::InterprocessClientServerTest::RunFlags flags)
+void mtf::InterprocessClientServerTest::run_in_server_and_disable_core_dump(
+        std::function<void()> const& exec_code)
+{
+    auto exec_without_core_dump = [exec_code]()
+    {
+        mir::test::disable_core_dump();
+        exec_code();
+    };
+
+    run_in_server(exec_without_core_dump);
+}
+
+void mtf::InterprocessClientServerTest::run_in_server(std::function<void()> const& exec_code)
 {
     if (test_process_id != getpid()) return;
 
@@ -70,9 +81,6 @@ void mtf::InterprocessClientServerTest::run_in_server(
 
     if (pid == 0)
     {
-        if (flags & RunFlag::disable_core_dump)
-            ::mir::test::disable_core_dump();
-
         server_process_id = getpid();
         process_tag = "server";
         add_to_environment("MIR_SERVER_FILE", mir_test_socket);

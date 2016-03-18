@@ -30,17 +30,15 @@ class Result;
 class InterprocessClientServerTest : public HeadlessTest
 {
 public:
-    enum RunFlag { disable_core_dump = 1 };
-    typedef unsigned int RunFlags;
-
     char const* const mir_test_socket = test_socket_file().c_str();
 
     ~InterprocessClientServerTest();
 
     void init_server(std::function<void()> const& init_code);
 
-    void run_in_server(std::function<void()> const& exec_code,
-                       RunFlags flags = 0);
+    void run_in_server(std::function<void()> const& exec_code);
+    void run_in_server_and_disable_core_dump(
+                       std::function<void()> const& exec_code);
 
     void run_in_client(std::function<void()> const& client_code);
 

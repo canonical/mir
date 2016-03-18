@@ -76,11 +76,11 @@ TEST_F(ServerShutdownDeathTest, abort_removes_endpoint)
 {
     mt::CrossProcessSync sync;
 
-    run_in_server([&]
+    run_in_server_and_disable_core_dump([&]
         {
             sync.wait_for_signal_ready_for();
             abort();
-        }, RunFlag::disable_core_dump);
+        });
 
     if (is_test_process())
     {
@@ -106,11 +106,11 @@ TEST_F(ServerShutdownDeathTest, fatal_error_abort_causes_abort_on_fatal_error)
 
     mt::CrossProcessSync sync;
 
-    run_in_server([&]
+    run_in_server_and_disable_core_dump([&]
         {
             sync.wait_for_signal_ready_for();
             mir::fatal_error("Bang");
-        }, RunFlag::disable_core_dump);
+        });
 
     if (is_test_process())
     {
@@ -131,11 +131,11 @@ TEST_F(ServerShutdownDeathTest, fatal_error_abort_removes_endpoint)
 
     mt::CrossProcessSync sync;
 
-    run_in_server([&]
+    run_in_server_and_disable_core_dump([&]
         {
             sync.wait_for_signal_ready_for();
             mir::fatal_error("Bang");
-        }, RunFlag::disable_core_dump);
+        });
 
     if (is_test_process())
     {
@@ -155,11 +155,11 @@ TEST_F(ServerShutdownDeathTest, on_fatal_error_abort_option_causes_abort_on_fata
 
     mt::CrossProcessSync sync;
 
-    run_in_server([&]
+    run_in_server_and_disable_core_dump([&]
         {
             sync.wait_for_signal_ready_for();
             mir::fatal_error("Bang");
-        }, RunFlag::disable_core_dump);
+        });
 
     if (is_test_process())
     {
@@ -207,11 +207,11 @@ TEST_P(OnSignalDeathTest, removes_endpoint)
 {
     mt::CrossProcessSync sync;
 
-    run_in_server([&]
+    run_in_server_and_disable_core_dump([&]
         {
             sync.wait_for_signal_ready_for();
             raise(GetParam());
-        }, RunFlag::disable_core_dump);
+        });
 
     if (is_test_process())
     {
