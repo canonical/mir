@@ -13,7 +13,10 @@ protobuf_generate_cpp(
   ${MIR_PROTOBUF_PROTOCOL_SPEC}
 )
 
-add_library(mirprotobuf SHARED
+set(symbol_map ${CMAKE_SOURCE_DIR}/src/protobuf/symbols.map)
+
+mir_add_library_with_symbols(mirprotobuf SHARED
+  ${symbol_map}
   google_protobuf_guard.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
@@ -25,8 +28,6 @@ target_link_libraries(
 )
 
 set(MIRPROTOBUF_ABI 3)
-
-set(symbol_map ${CMAKE_SOURCE_DIR}/src/protobuf/symbols.map)
 
 set_target_properties(
   mirprotobuf

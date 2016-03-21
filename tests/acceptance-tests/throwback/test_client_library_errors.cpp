@@ -24,6 +24,7 @@
 #include "src/include/client/mir/client_buffer_factory.h"
 
 #include "mir/test/validity_matchers.h"
+#include "mir/test/death.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_client_platform.h"
@@ -308,8 +309,7 @@ TEST_F(ClientLibraryErrorsDeathTest, creating_surface_on_garbage_connection_is_f
     auto connection = mir_connect_sync("garbage", __PRETTY_FUNCTION__);
 
     ASSERT_FALSE(mir_connection_is_valid(connection));
-    EXPECT_DEATH(
-        mtf::make_any_surface(connection), "");
+    MIR_EXPECT_DEATH(mtf::make_any_surface(connection), "");
 
     mir_connection_release(connection);
 }
@@ -322,7 +322,7 @@ TEST_F(ClientLibraryErrorsDeathTest, creating_surface_synchronosly_on_malconstru
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     ASSERT_FALSE(mir_connection_is_valid(connection));
-    EXPECT_DEATH(mtf::make_any_surface(connection), "");
+    MIR_EXPECT_DEATH(mtf::make_any_surface(connection), "");
 
     mir_connection_release(connection);
 }
@@ -334,7 +334,7 @@ TEST_F(ClientLibraryErrorsDeathTest, creating_surface_synchronosly_on_invalid_co
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     ASSERT_FALSE(mir_connection_is_valid(connection));
-    EXPECT_DEATH(mtf::make_any_surface(connection), "");
+    MIR_EXPECT_DEATH(mtf::make_any_surface(connection), "");
 
     mir_connection_release(connection);
 }
@@ -351,7 +351,11 @@ TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_parent_id)
         10,
         10
     };
-    EXPECT_DEATH(mir_surface_spec_attach_to_foreign_parent(spec, nullptr, &rect, mir_edge_attachment_any), "");
+    MIR_EXPECT_DEATH(
+    {
+        mir_surface_spec_attach_to_foreign_parent(spec, nullptr, &rect,
+                                                  mir_edge_attachment_any);
+    }, "");
 
     mir_connection_release(connection);
 }
@@ -364,7 +368,11 @@ TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_rectangle)
 
     auto id = mir_persistent_id_from_string("fa69b2e9-d507-4005-be61-5068f40a5aec");
 
-    EXPECT_DEATH(mir_surface_spec_attach_to_foreign_parent(spec, id, nullptr, mir_edge_attachment_any), "");
+    MIR_EXPECT_DEATH(
+    {
+        mir_surface_spec_attach_to_foreign_parent(spec, id, nullptr,
+                                                  mir_edge_attachment_any);
+    }, "");
 
     mir_persistent_id_release(id);
     mir_connection_release(connection);

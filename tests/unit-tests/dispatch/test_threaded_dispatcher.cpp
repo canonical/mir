@@ -19,6 +19,7 @@
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/fd.h"
+#include "mir/test/death.h"
 #include "mir/test/pipe.h"
 #include "mir/test/signal.h"
 #include "mir/test/test_dispatchable.h"
@@ -272,8 +273,11 @@ TEST_F(ThreadedDispatcherDeathTest, exceptions_in_threadpool_trigger_termination
     // Ideally we'd use terminate_with_current_exception, but that's in server
     // and we're going to be called from a C context anyway, so just using the default
     // std::terminate behaviour should be acceptable.
-    EXPECT_EXIT({ md::ThreadedDispatcher dispatcher("Die!", dispatchable); std::this_thread::sleep_for(10s); },
-                KilledBySignal(SIGABRT), (std::string{".*"} + exception_msg + ".*").c_str());
+    MIR_EXPECT_EXIT(
+    {
+        md::ThreadedDispatcher dispatcher("Die!", dispatchable);
+        std::this_thread::sleep_for(10s);
+    }, KilledBySignal(SIGABRT), (std::string{".*"} + exception_msg + ".*").c_str());
 }
 
 TEST_F(ThreadedDispatcherTest, sets_thread_names_appropriately)
@@ -387,7 +391,7 @@ TEST_F(ThreadedDispatcherDeathTest, destroying_dispatcher_from_a_callback_is_an_
     using namespace testing;
     using namespace std::literals::chrono_literals;
 
-    EXPECT_EXIT(
+    MIR_EXPECT_EXIT(
     {
         md::ThreadedDispatcher* dispatcher;
 
