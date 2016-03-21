@@ -33,6 +33,8 @@ namespace protobuf { class Buffer; }
 namespace client
 {
 class ClientBuffer;
+class Buffer;
+class AsyncBufferFactory;
 class ServerBufferRequests
 {
 public:
@@ -48,23 +50,18 @@ protected:
 
 class ClientBufferFactory;
 
-struct BufferInfo
-{
-    std::shared_ptr<ClientBuffer> buffer;
-    int id;
-};
-
 class BufferVault
 {
 public:
     BufferVault(
         std::shared_ptr<ClientBufferFactory> const&,
+        std::shared_ptr<AsyncBufferFactory> const&,
         std::shared_ptr<ServerBufferRequests> const&,
         geometry::Size size, MirPixelFormat format, int usage,
         unsigned int initial_nbuffers);
     ~BufferVault();
 
-    NoTLSFuture<BufferInfo> withdraw();
+    NoTLSFuture<std::shared_ptr<Buffer>> withdraw();
     void deposit(std::shared_ptr<ClientBuffer> const& buffer);
     void wire_transfer_inbound(protobuf::Buffer const&);
     void wire_transfer_outbound(std::shared_ptr<ClientBuffer> const& buffer);
@@ -74,6 +71,7 @@ public:
 
 private:
     std::shared_ptr<ClientBufferFactory> const factory;
+    std::shared_ptr<AsyncBufferFactory> const mb_factory;
     std::shared_ptr<ServerBufferRequests> const server_requests;
     MirPixelFormat const format;
     int const usage;
@@ -81,13 +79,13 @@ private:
     enum class Owner;
     struct BufferEntry
     {
-        std::shared_ptr<ClientBuffer> buffer;
+        std::shared_ptr<Buffer> buffer;
         Owner owner;
     };
 
     std::mutex mutex;
     std::map<int, BufferEntry> buffers;
-    std::deque<NoTLSPromise<BufferInfo>> promises;
+    std::deque<NoTLSPromise<std::shared_ptr<Buffer>>> promises;
     geometry::Size size;
     bool disconnected_;
 };

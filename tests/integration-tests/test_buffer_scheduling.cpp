@@ -20,6 +20,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/buffer_sink.h"
 #include "src/client/buffer_vault.h"
+#include "src/client/buffer_factory.h"
 #include "src/client/client_buffer_depository.h"
 #include "src/server/compositor/buffer_queue.h"
 #include "src/server/compositor/stream.h"
@@ -370,6 +371,7 @@ struct ScheduledProducer : ProducerSystem
         ipc(ipc_stub),
         vault(
             std::make_shared<mtd::StubClientBufferFactory>(),
+            std::make_shared<mcl::BufferFactory>(),
             std::make_shared<ServerRequests>(ipc),
             geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers)
     {
@@ -397,9 +399,9 @@ struct ScheduledProducer : ProducerSystem
     {
         if (can_produce())
         {
-            auto buffer = vault.withdraw().get().buffer;
-            vault.deposit(buffer);
-            vault.wire_transfer_outbound(buffer);
+            auto buffer = vault.withdraw().get();
+            vault.deposit(buffer->client_buffer());
+            vault.wire_transfer_outbound(buffer->client_buffer());
             last_size_ = buffer->size();
             entries.emplace_back(BufferEntry{mg::BufferID{(unsigned int)ipc->last_transferred_to_server()}, age, Access::unblocked});
             available--;

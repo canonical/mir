@@ -19,6 +19,8 @@
 #define MIR_LOG_COMPONENT "MirBufferStream"
 
 #include "buffer_stream.h"
+#include "buffer.h"
+#include "buffer_factory.h"
 #include "make_protobuf_object.h"
 #include "mir_connection.h"
 #include "perf_report.h"
@@ -272,10 +274,11 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 {
     NewBufferSemantics(
         std::shared_ptr<mcl::ClientBufferFactory> const& factory,
+        std::shared_ptr<mcl::AsyncBufferFactory> const& mirbuffer_factory,
         std::shared_ptr<mcl::ServerBufferRequests> const& requests,
         geom::Size size, MirPixelFormat format, int usage,
         unsigned int initial_nbuffers) :
-        vault(factory, requests, size, format, usage, initial_nbuffers)
+        vault(factory, mirbuffer_factory, requests, size, format, usage, initial_nbuffers)
     {
     }
 
@@ -295,30 +298,30 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     std::shared_ptr<mir::client::ClientBuffer> current_buffer() override
     {
         std::unique_lock<std::mutex> lk(mutex);
-        if (!current.buffer)
+        if (!current)
             advance_current_buffer(lk);
-        return current.buffer;
+        return current->client_buffer();
     }
 
     uint32_t current_buffer_id() override
     {
         std::unique_lock<std::mutex> lk(mutex);
-        if (!current.buffer)
+        if (!current)
             advance_current_buffer(lk);
-        return current.id;
+        return current->rpc_id();
     }
 
     MirWaitHandle* submit(std::function<void()> const& done, geom::Size, MirPixelFormat, int) override
     {
         std::unique_lock<std::mutex> lk(mutex);
-        if (!current.buffer)
+        if (!current)
             advance_current_buffer(lk);
         lk.unlock();
 
-        vault.deposit(current.buffer);
+        vault.deposit(current->client_buffer());
 
         next_buffer_wait_handle.expect_result();
-        vault.wire_transfer_outbound(current.buffer);
+        vault.wire_transfer_outbound(current->client_buffer());
         next_buffer_wait_handle.result_received();
 
         lk.lock();
@@ -351,7 +354,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
     mcl::BufferVault vault;
     std::mutex mutex;
-    mcl::BufferInfo current{nullptr, 0};
+    std::shared_ptr<mcl::Buffer> current{nullptr};
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle scale_wait_handle;
 };
@@ -407,6 +410,7 @@ mcl::BufferStream::BufferStream(
             cached_buffer_size = ideal_buffer_size;
             buffer_depository = std::make_unique<NewBufferSemantics>(
                 client_platform->create_buffer_factory(),
+                std::make_shared<mcl::BufferFactory>(),
                 std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
                 ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
                 protobuf_bs->buffer_usage(), nbuffers);
@@ -491,6 +495,7 @@ mcl::BufferStream::BufferStream(
     {
         buffer_depository = std::make_unique<NewBufferSemantics>(
             client_platform->create_buffer_factory(),
+            std::make_shared<mcl::BufferFactory>(),
             std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
             ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
     }

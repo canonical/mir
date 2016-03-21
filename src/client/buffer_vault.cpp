@@ -19,6 +19,8 @@
 #include "mir/client_buffer_factory.h"
 #include "mir/client_buffer.h"
 #include "buffer_vault.h"
+#include "buffer.h"
+#include "buffer_factory.h"
 #include "mir_protobuf.pb.h"
 #include "protobuf_to_native_buffer.h"
 #include <algorithm>
@@ -36,11 +38,20 @@ enum class mcl::BufferVault::Owner
     Self
 };
 
+namespace
+{
+void ignore(MirPresentationChain*, MirBuffer*, void*)
+{
+}
+}
+
 mcl::BufferVault::BufferVault(
     std::shared_ptr<ClientBufferFactory> const& client_buffer_factory,
+    std::shared_ptr<AsyncBufferFactory> const& mb_factory,
     std::shared_ptr<ServerBufferRequests> const& server_requests,
     geom::Size size, MirPixelFormat format, int usage, unsigned int initial_nbuffers) :
     factory(client_buffer_factory),
+    mb_factory(mb_factory),
     server_requests(server_requests),
     format(format),
     usage(usage),
@@ -48,7 +59,10 @@ mcl::BufferVault::BufferVault(
     disconnected_(false)
 {
     for (auto i = 0u; i < initial_nbuffers; i++)
+    {
+        mb_factory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage, ignore, nullptr);
         server_requests->allocate_buffer(size, format, usage);
+    }
 }
 
 mcl::BufferVault::~BufferVault()
@@ -66,10 +80,10 @@ mcl::BufferVault::~BufferVault()
     }
 }
 
-mcl::NoTLSFuture<mcl::BufferInfo> mcl::BufferVault::withdraw()
+mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
 {
     std::lock_guard<std::mutex> lk(mutex);
-    mcl::NoTLSPromise<mcl::BufferInfo> promise;
+    mcl::NoTLSPromise<std::shared_ptr<mcl::Buffer>> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [this](std::pair<int, BufferEntry> const& entry) { 
             return ((entry.second.owner == Owner::Self) && (size == entry.second.buffer->size())); });
@@ -78,7 +92,7 @@ mcl::NoTLSFuture<mcl::BufferInfo> mcl::BufferVault::withdraw()
     if (it != buffers.end())
     {
         it->second.owner = Owner::ContentProducer;
-        promise.set_value({it->second.buffer, it->first});
+        promise.set_value({it->second.buffer});
     }
     else
     {
@@ -91,12 +105,12 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
 {
     std::lock_guard<std::mutex> lk(mutex);
     auto it = std::find_if(buffers.begin(), buffers.end(),
-        [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
+        [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer->client_buffer(); });
     if (it == buffers.end() || it->second.owner != Owner::ContentProducer)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be deposited"));
 
     it->second.owner = Owner::Self;
-    it->second.buffer->increment_age();
+    it->second.buffer->client_buffer()->increment_age();
 }
 
 void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer> const& buffer)
@@ -105,13 +119,14 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
     std::shared_ptr<mcl::ClientBuffer> submit_buffer;
     std::unique_lock<std::mutex> lk(mutex);
     auto it = std::find_if(buffers.begin(), buffers.end(),
-        [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
+        [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer->client_buffer(); });
     if (it == buffers.end() || it->second.owner != Owner::Self)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be transferred"));
 
     it->second.owner = Owner::Server;
-    it->second.buffer->mark_as_submitted();
-    submit_buffer = it->second.buffer;
+    it->second.buffer->client_buffer()->mark_as_submitted();
+    it->second.buffer->submitted();
+    submit_buffer = it->second.buffer->client_buffer();
     id = it->first;
     lk.unlock();
     server_requests->submit_buffer(id, *submit_buffer);
@@ -133,16 +148,18 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
             for (int i = 0; i != package->fd_items; ++i)
                 close(package->fd[i]);
 
+            mb_factory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage, ignore, nullptr);
             server_requests->allocate_buffer(size, format, usage);
             return;
         }
 
         buffers[protobuf_buffer.buffer_id()] = 
-            BufferEntry{ factory->create_buffer(package, sz, format), Owner::Self };
+            BufferEntry{ mb_factory->generate_buffer(protobuf_buffer), Owner::Self };
+        buffers[protobuf_buffer.buffer_id()].buffer->received();
     }
     else
     {
-        it->second.buffer->update_from(*package);
+        it->second.buffer->received(*package);
         if (size == it->second.buffer->size())
         { 
             it->second.owner = Owner::Self;
@@ -153,6 +170,7 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
             buffers.erase(it);
             lk.unlock();
             server_requests->free_buffer(id);
+            mb_factory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage) usage, ignore, nullptr);
             server_requests->allocate_buffer(size, format, usage);
             return;
         }
@@ -161,7 +179,7 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     if (!promises.empty())
     {
         buffers[protobuf_buffer.buffer_id()].owner = Owner::ContentProducer;
-        promises.front().set_value({buffers[protobuf_buffer.buffer_id()].buffer, protobuf_buffer.buffer_id()});
+        promises.front().set_value({buffers[protobuf_buffer.buffer_id()].buffer});
         promises.pop_front();
     }
 }
@@ -206,6 +224,7 @@ void mcl::BufferVault::set_scale(float scale)
 
     for(auto& id : free_ids)
     {
+        mb_factory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage, ignore, nullptr);
         server_requests->allocate_buffer(new_size, format, usage);
         server_requests->free_buffer(id);
     }
