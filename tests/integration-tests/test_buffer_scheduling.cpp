@@ -375,25 +375,22 @@ struct ScheduledProducer : ProducerSystem
         map(std::make_shared<mcl::ConnectionSurfaceMap>()),
         factory(std::make_shared<mcl::BufferFactory>()),
         vault(
-            std::make_shared<mtd::StubClientBufferFactory>(),
-            std::make_shared<mcl::BufferFactory>(),
-            std::make_shared<ServerRequests>(ipc),
-            std::make_shared<mcl::ConnectionSurfaceMap>(),
+            std::make_shared<mtd::StubClientBufferFactory>(), factory,
+            std::make_shared<ServerRequests>(ipc), map,
             geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers)
     {
         ipc->on_client_bound_transfer([this](mp::Buffer& ipc_buffer){
             available++;
-
             auto buffer = map->buffer(ipc_buffer.buffer_id());
-            if (buffer)
-            {
-                buffer->received(*mcl::protobuf_to_native_buffer(ipc_buffer));
-            }
-            else
+            if (!buffer)
             {
                 buffer = factory->generate_buffer(ipc_buffer);
                 map->insert(ipc_buffer.buffer_id(), buffer); 
                 buffer->received();
+            }
+            else
+            {
+                buffer->received(*mcl::protobuf_to_native_buffer(ipc_buffer));
             }
         });
         ipc->on_resize_event([this](geom::Size sz)

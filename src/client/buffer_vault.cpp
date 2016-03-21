@@ -75,12 +75,7 @@ mcl::BufferVault::~BufferVault()
     if (disconnected_)
         return;
 
-    try{
     mirfactory->cancel_requests_with_context(this);
-    } catch(...)
-    {
-        printf("DEDEDAE\n");
-    }
     for (auto& it : buffers)
     try
     {
