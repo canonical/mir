@@ -47,27 +47,6 @@ mi::DefaultInputManager::~DefaultInputManager()
     stop();
 }
 
-void mi::DefaultInputManager::add_platform(std::shared_ptr<Platform> const& platform)
-{
-    if (state == State::started)
-    {
-        queue->enqueue([this, platform]()
-                       {
-                           platforms.push_back(platform);
-                           platform->start();
-                           multiplexer->add_watch(platform->dispatchable());
-                       });
-    }
-    else
-    {
-        queue->enqueue([this, platform]()
-                       {
-                           platforms.push_back(platform);
-                       });
-    }
-
-}
-
 void mi::DefaultInputManager::start()
 {
     auto expected = State::stopped;
