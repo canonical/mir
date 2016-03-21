@@ -136,7 +136,7 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::Buffer> const& buffer)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be deposited"));
 
     it->second = Owner::Self;
-    checked_buffer_from_map(it->first)->client_buffer()->increment_age();
+    checked_buffer_from_map(it->first)->increment_age();
 }
 
 void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const& buffer)
@@ -149,7 +149,6 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be transferred"));
 
     it->second = Owner::Server;
-    buffer->client_buffer()->mark_as_submitted();
     buffer->submitted();
     submit_buffer = buffer->client_buffer();
     id = it->first;
