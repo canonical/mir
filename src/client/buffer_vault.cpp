@@ -141,19 +141,15 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::Buffer> const& buffer)
 
 void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const& buffer)
 {
-    int id;
-    std::shared_ptr<mcl::ClientBuffer> submit_buffer;
     std::unique_lock<std::mutex> lk(mutex);
     auto it = buffers.find(buffer->rpc_id());
     if (it == buffers.end() || it->second != Owner::Self)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be transferred"));
-
     it->second = Owner::Server;
-    buffer->submitted();
-    submit_buffer = buffer->client_buffer();
-    id = it->first;
     lk.unlock();
-    server_requests->submit_buffer(id, *submit_buffer);
+
+    buffer->submitted();
+    server_requests->submit_buffer(*buffer);
 }
 
 void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)

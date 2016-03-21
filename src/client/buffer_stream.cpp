@@ -248,11 +248,11 @@ public:
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
-    void submit_buffer(int id, mcl::ClientBuffer&) override
+    void submit_buffer(mcl::Buffer& buffer) override
     {
         mp::BufferRequest request;
         request.mutable_id()->set_value(stream_id);
-        request.mutable_buffer()->set_buffer_id(id);
+        request.mutable_buffer()->set_buffer_id(buffer.rpc_id());
 
         //note, NewCallback will trigger on exception, deleting this object there
         auto protobuf_void = new mp::Void;

@@ -357,11 +357,11 @@ struct ServerRequests : mcl::ServerBufferRequests
     {
     }
 
-    void submit_buffer(int buffer_id, mcl::ClientBuffer&)
+    void submit_buffer(mcl::Buffer& buffer)
     {
-        mp::Buffer buffer;
-        buffer.set_buffer_id(buffer_id);
-        ipc->server_bound_transfer(buffer);   
+        mp::Buffer buffer_req;
+        buffer_req.set_buffer_id(buffer.rpc_id());
+        ipc->server_bound_transfer(buffer_req);
     }
     std::shared_ptr<StubIpcSystem> ipc;
 };
