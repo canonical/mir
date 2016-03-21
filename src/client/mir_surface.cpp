@@ -162,6 +162,7 @@ MirSurface::~MirSurface()
 
     std::lock_guard<decltype(mutex)> lock(mutex);
 
+    printf("ERASE!\n");
     input_thread.reset();
 
     for (auto i = 0, end = surface->fd_size(); i != end; ++i)

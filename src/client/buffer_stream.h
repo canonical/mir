@@ -76,7 +76,7 @@ public:
         std::shared_ptr<MirWaitHandle> creation_wait_handle,
         mir::client::rpc::DisplayServer& server,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
-        std::shared_ptr<SurfaceMap> const& map,
+        std::weak_ptr<SurfaceMap> const& map,
         std::shared_ptr<AsyncBufferFactory> const& factory,
         mir::protobuf::BufferStream const& protobuf_bs,
         std::shared_ptr<PerfReport> const& perf_report,
@@ -88,7 +88,7 @@ public:
         std::shared_ptr<MirWaitHandle> creation_wait_handle,
         mir::client::rpc::DisplayServer& server,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
-        std::shared_ptr<SurfaceMap> const& map,
+        std::weak_ptr<SurfaceMap> const& map,
         std::shared_ptr<AsyncBufferFactory> const& factory,
         mir::protobuf::BufferStreamParameters const& parameters,
         std::shared_ptr<PerfReport> const& perf_report,
@@ -167,7 +167,7 @@ private:
     size_t const nbuffers;
     std::string error_message;
     std::shared_ptr<MirWaitHandle> creation_wait_handle;
-    std::shared_ptr<SurfaceMap> const map;
+    std::weak_ptr<SurfaceMap> const map;
     std::shared_ptr<AsyncBufferFactory> const factory;
 };
 

@@ -55,7 +55,7 @@ mcl::BufferVault::BufferVault(
     std::shared_ptr<ClientBufferFactory> const& client_buffer_factory,
     std::shared_ptr<AsyncBufferFactory> const& mirfactory,
     std::shared_ptr<ServerBufferRequests> const& server_requests,
-    std::shared_ptr<SurfaceMap> const& surface_map,
+    std::weak_ptr<SurfaceMap> const& surface_map,
     geom::Size size, MirPixelFormat format, int usage, unsigned int initial_nbuffers) :
     factory(client_buffer_factory),
     server_requests(server_requests),
@@ -75,7 +75,12 @@ mcl::BufferVault::~BufferVault()
     if (disconnected_)
         return;
 
+    try{
     mirfactory->cancel_requests_with_context(this);
+    } catch(...)
+    {
+        printf("DEDEDAE\n");
+    }
     for (auto& it : buffers)
     try
     {
@@ -106,7 +111,10 @@ void mcl::BufferVault::realloc_buffer(int free_id, geom::Size size, MirPixelForm
 
 std::shared_ptr<mcl::Buffer> mcl::BufferVault::checked_buffer_from_map(int id)
 {
-    if (auto buffer = surface_map->buffer(id))
+    auto map = surface_map.lock();
+    if (!map)
+        BOOST_THROW_EXCEPTION(std::logic_error(""));
+    if (auto buffer = map->buffer(id))
         return buffer;
     else
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer in map"));
@@ -115,8 +123,8 @@ std::shared_ptr<mcl::Buffer> mcl::BufferVault::checked_buffer_from_map(int id)
 mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
 {
     std::lock_guard<std::mutex> lk(mutex);
-//    if (disconnected_)
-//        BOOST_THROW_EXCEPTION(std::logic_error("server_disconnected"));
+    if (disconnected_)
+        BOOST_THROW_EXCEPTION(std::logic_error("server_disconnected"));
     mcl::NoTLSPromise<std::shared_ptr<mcl::Buffer>> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [this](std::pair<int, Owner> const& entry) {
@@ -238,8 +246,8 @@ void mcl::BufferVault::set_scale(float scale)
             it++;
         }
     } 
-
     lk.unlock();
+
     for(auto& id : free_ids)
         realloc_buffer(id, new_size, format, usage);
 }

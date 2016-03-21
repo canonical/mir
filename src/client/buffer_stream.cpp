@@ -278,7 +278,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         std::shared_ptr<mcl::ClientBufferFactory> const& factory,
         std::shared_ptr<mcl::AsyncBufferFactory> const& mirbuffer_factory,
         std::shared_ptr<mcl::ServerBufferRequests> const& requests,
-        std::shared_ptr<mcl::SurfaceMap> const& surface_map,
+        std::weak_ptr<mcl::SurfaceMap> const& surface_map,
         geom::Size size, MirPixelFormat format, int usage,
         unsigned int initial_nbuffers) :
         vault(factory, mirbuffer_factory, requests, surface_map, size, format, usage, initial_nbuffers)
@@ -368,7 +368,7 @@ mcl::BufferStream::BufferStream(
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
-    std::shared_ptr<mcl::SurfaceMap> const& map,
+    std::weak_ptr<mcl::SurfaceMap> const& map,
     std::shared_ptr<mcl::AsyncBufferFactory> const& factory,
     mp::BufferStream const& a_protobuf_bs,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
@@ -415,9 +415,11 @@ mcl::BufferStream::BufferStream(
             cached_buffer_size = ideal_buffer_size;
             buffer_depository = std::make_unique<NewBufferSemantics>(
                 client_platform->create_buffer_factory(),
-                std::make_shared<mcl::BufferFactory>(),
+                factory,
+//                std::make_shared<mcl::BufferFactory>(),
                 std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
-                std::make_shared<mcl::ConnectionSurfaceMap>(),
+                map,
+//                std::make_shared<mcl::ConnectionSurfaceMap>(),
                 ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
                 protobuf_bs->buffer_usage(), nbuffers);
         }
@@ -470,7 +472,7 @@ mcl::BufferStream::BufferStream(
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
-    std::shared_ptr<mcl::SurfaceMap> const& map,
+    std::weak_ptr<mcl::SurfaceMap> const& map,
     std::shared_ptr<mcl::AsyncBufferFactory> const& factory,
     mp::BufferStreamParameters const& parameters,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
@@ -504,9 +506,9 @@ mcl::BufferStream::BufferStream(
     {
         buffer_depository = std::make_unique<NewBufferSemantics>(
             client_platform->create_buffer_factory(),
-            std::make_shared<mcl::BufferFactory>(),
+            factory,
             std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
-            std::make_shared<ConnectionSurfaceMap>(),
+            map,
             ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
     }
 }
