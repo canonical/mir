@@ -646,6 +646,7 @@ int main(int argc, char *argv[])
 
         pthread_mutex_unlock(&state.mutex);
 
+        glFinish();
         mir_eglapp_swap_buffers();
         if (mode != new_mode)
         {
