@@ -383,7 +383,7 @@ TEST_F(PromptSessionClientAPI,
     mir_prompt_session_release_sync(prompt_session);
 }
 
-TEST_F(PromptSessionClientAPI, client_pid_is_associated_with_session)
+TEST_F(PromptSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -624,7 +624,7 @@ TEST_F(PromptSessionClientAPI, when_application_pid_is_invalid_starting_a_prompt
 #ifndef TEST
 int main()
 #else
-TEST(LP, 1540731)
+TEST(LP, DISABLED_1540731)
 #endif
 {
     enum { server, client, size };
