@@ -114,10 +114,10 @@ struct BufferVault : public testing::Test
             ignore, nullptr, package3.buffer_id(), buffer3, nullptr, mir_buffer_usage_software);
         auto b4 = std::make_shared<mcl::Buffer>(
             ignore, nullptr, package4.buffer_id(), buffer4, nullptr, mir_buffer_usage_software);
-        surface_map.insert(package.buffer_id(), b1);
-        surface_map.insert(package2.buffer_id(), b2);
-        surface_map.insert(package3.buffer_id(), b3);
-        surface_map.insert(package4.buffer_id(), b4);
+        surface_map->insert(package.buffer_id(), b1);
+        surface_map->insert(package2.buffer_id(), b2);
+        surface_map->insert(package3.buffer_id(), b3);
+        surface_map->insert(package4.buffer_id(), b4);
         b1->received();
         b2->received();
         b3->received();
@@ -130,7 +130,7 @@ struct BufferVault : public testing::Test
             mt::fake_shared(mock_platform_factory),
             mt::fake_shared(buffer_factory),
             mt::fake_shared(mock_requests),
-            mt::fake_shared(surface_map),
+            surface_map,
             size, format, usage, initial_nbuffers);
     }
 
@@ -145,7 +145,7 @@ struct BufferVault : public testing::Test
     NiceMock<MockClientBufferFactory> mock_platform_factory;
     NiceMock<MockServerRequests> mock_requests;
     mcl::BufferFactory buffer_factory;
-    mcl::ConnectionSurfaceMap surface_map;
+    std::shared_ptr<mcl::ConnectionSurfaceMap> surface_map{ std::make_shared<mcl::ConnectionSurfaceMap>() };
     mp::Buffer package;
     mp::Buffer package2;
     mp::Buffer package3;
@@ -162,7 +162,7 @@ struct StartedBufferVault : BufferVault
     }
     mcl::BufferVault vault{
         mt::fake_shared(mock_platform_factory), mt::fake_shared(buffer_factory),
-        mt::fake_shared(mock_requests), mt::fake_shared(surface_map),
+        mt::fake_shared(mock_requests), surface_map,
         size, format, usage, initial_nbuffers};
 };
 
@@ -323,7 +323,7 @@ TEST_F(BufferVault, ages_buffer_on_deposit)
         .WillByDefault(Return(mock_buffer));
     auto b1 = std::make_shared<mcl::Buffer>(
         ignore, nullptr, package.buffer_id(), mock_buffer, nullptr, mir_buffer_usage_software);
-    surface_map.insert(package.buffer_id(), b1);
+    surface_map->insert(package.buffer_id(), b1);
 
     auto vault = make_vault();
     vault->wire_transfer_inbound(package.buffer_id());
@@ -340,7 +340,7 @@ TEST_F(BufferVault, marks_as_submitted_on_transfer)
         .WillByDefault(Return(mock_buffer));
     auto b1 = std::make_shared<mcl::Buffer>(
         ignore, nullptr, package.buffer_id(), mock_buffer, nullptr, mir_buffer_usage_software);
-    surface_map.insert(package.buffer_id(), b1);
+    surface_map->insert(package.buffer_id(), b1);
     b1->received();
 
     auto vault = make_vault();
@@ -475,7 +475,7 @@ TEST_F(StartedBufferVault, buffer_count_remains_the_same_after_scaling)
             .WillByDefault(Return(new_size));
         auto b = std::make_shared<mcl::Buffer>(
             ignore, nullptr, i, mcb, nullptr, mir_buffer_usage_software);
-        surface_map.insert(i, b);
+        surface_map->insert(i, b);
         b->received();
     }
 
