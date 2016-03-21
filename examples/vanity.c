@@ -363,12 +363,6 @@ fail:
     return NULL;
 }
 
-static bool frame_ready(Camera *cam)
-{
-    struct pollfd pollfd = {cam->fd, POLLIN, 0};
-    return poll(&pollfd, 1, 0) == 1 && (pollfd.revents & POLLIN);
-}
-
 static const Buffer *acquire_frame(Camera *cam)
 {
     struct v4l2_buffer frame;
@@ -394,10 +388,14 @@ static void release_frame(Camera *cam, const Buffer *buf)
         perror("VIDIOC_QBUF");
 }
 
+static void *preview_img = NULL;  // TODO: locking and cleaner
+
 static void *capture_thread_func(void *arg)
 {
     Camera *cam = (Camera*)arg;
     Time last_frame = now();
+    Time preview_interval = one_second / 10;
+    Time last_preview = last_frame - 2*preview_interval;
 
     while (mir_eglapp_running())
     {
@@ -415,6 +413,17 @@ static void *capture_thread_func(void *arg)
         printf("Frame time ~%lld.%03lldms\n",
                frame_time / 1000000,
                (frame_time / 1000) % 1000);
+
+        // We retain single buffering for minimal latency, so previews to
+        // hand back to OpenGL just need to be periodically copied from that.
+        if ((acquire_time - last_preview) > preview_interval)
+        {
+            size_t size = 2 * cam->pix.width * cam->pix.height;
+            if (!preview_img)
+                preview_img = malloc(size);
+            memcpy(preview_img, buf->start, size);
+            last_preview = acquire_time;
+        }
         release_frame(cam, buf);
     }
     return NULL;
@@ -553,11 +562,8 @@ int main(int argc, char *argv[])
     pthread_create(&capture_thread, NULL, capture_thread_func, cam);
 
     int mode = 0;
-    bool first_frame = true;
     while (mir_eglapp_running())
     {
-        bool wait_for_new_frame = true;
-
         glClear(GL_COLOR_BUFFER_BIT);
 
         pthread_mutex_lock(&state.mutex);
@@ -585,8 +591,6 @@ int main(int argc, char *argv[])
                                      -1.0f,   1.0f,   0.0f, 1.0f};
                 // Note GL_FALSE: GLES does not support the transpose option
                 glUniformMatrix4fv(projection, 1, GL_FALSE, matrix);
-                wait_for_new_frame = first_frame;
-                first_frame = false;
             }
         }
 
@@ -596,9 +600,8 @@ int main(int argc, char *argv[])
         glUniform4f(tint, BAR_TINT);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-        if (wait_for_new_frame || frame_ready(cam))
+        if (preview_img)  // TODO locking
         {
-            /*
             if (cam->pix.pixelformat == V4L2_PIX_FMT_YUYV)
             {
                 if (fshadersrc == yuyv_greyscale_fshadersrc)
@@ -607,7 +610,7 @@ int main(int argc, char *argv[])
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
                                  cam->pix.width, cam->pix.height, 0,
                                  GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
-                                 buf->start);
+                                 preview_img);
                 }
                 else if (fshadersrc == yuyv_quickcolour_fshadersrc)
                 {
@@ -615,14 +618,8 @@ int main(int argc, char *argv[])
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
                                  cam->pix.width/2, cam->pix.height, 0,
                                  GL_RGBA, GL_UNSIGNED_BYTE,
-                                 buf->start);
+                                 preview_img);
                 }
-                // TODO: Colour, full resolution. But it will be slow :(
-                float see = interpret(cam, buf);
-                printf("I see: %.3f [%c]\n", see,
-                       see <= 0.3f ? '^' :
-                       see >= 0.7f ? '_' :
-                       '-');
             }
             else
             {
@@ -631,7 +628,6 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "FIXME: Unsupported camera pixel format 0x%08lx: %s\n",
                         (long)cam->pix.pixelformat, str);
             }
-            */
         }
 
         glVertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE,
