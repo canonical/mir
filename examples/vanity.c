@@ -388,6 +388,7 @@ static void release_frame(Camera *cam, const Buffer *buf)
         perror("VIDIOC_QBUF");
 }
 
+static Time last_change_time = 0;
 static void *preview_img = NULL;  // TODO: locking and cleaner
 
 static void *capture_thread_func(void *arg)
@@ -396,6 +397,7 @@ static void *capture_thread_func(void *arg)
     Time last_frame = now();
     Time preview_interval = one_second / 10;
     Time last_preview = last_frame - 2*preview_interval;
+    int last_seen_value = -1;
 
     while (mir_eglapp_running())
     {
@@ -405,14 +407,18 @@ static void *capture_thread_func(void *arg)
         Time frame_time = acquire_time - last_frame;
         last_frame = acquire_time;
 
-        float see = interpret(cam, buf);
-        printf("I see: %.3f [%c]\n", see,
-               see <= 0.3f ? '^' :
-               see >= 0.7f ? '_' :
-               '-');
-        printf("Frame time ~%lld.%03lldms\n",
-               frame_time / 1000000,
-               (frame_time / 1000) % 1000);
+        int see = 10 * interpret(cam, buf);
+        if (see != last_seen_value)
+        {
+            Time latency = acquire_time - last_change_time;
+            // TODO check direction too
+            last_seen_value = see;
+            printf("I see: %d\n", see);
+            printf("Frame time ~%lld.%03lldms\n",
+                   frame_time / 1000000, (frame_time / 1000) % 1000);
+            printf("Latency: ~%lld.%03lldms\n",
+                   latency / 1000000, (latency / 1000) % 1000);
+        }
 
         // We retain single buffering for minimal latency, so previews to
         // hand back to OpenGL just need to be periodically copied from that.
@@ -580,7 +586,6 @@ int main(int argc, char *argv[])
             bar[2] = w; bar[3] = bot;
             bar[4] = w; bar[5] = top;
             bar[6] = 0; bar[7] = top;
-            mode = new_mode;
             if (state.resized)
             {
                 // TRANSPOSED projection matrix to convert from the Mir input
@@ -642,6 +647,11 @@ int main(int argc, char *argv[])
         pthread_mutex_unlock(&state.mutex);
 
         mir_eglapp_swap_buffers();
+        if (mode != new_mode)
+        {
+            last_change_time = now();
+            mode = new_mode;
+        }
     }
 
     mir_surface_set_event_handler(surface, NULL, NULL);
