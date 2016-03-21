@@ -49,10 +49,12 @@ mcl::BufferVault::BufferVault(
     std::shared_ptr<ClientBufferFactory> const& client_buffer_factory,
     std::shared_ptr<AsyncBufferFactory> const& mb_factory,
     std::shared_ptr<ServerBufferRequests> const& server_requests,
+    std::shared_ptr<SurfaceMap> const& surface_map,
     geom::Size size, MirPixelFormat format, int usage, unsigned int initial_nbuffers) :
     factory(client_buffer_factory),
     mb_factory(mb_factory),
     server_requests(server_requests),
+    surface_map(surface_map),
     format(format),
     usage(usage),
     size(size),

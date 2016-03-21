@@ -29,6 +29,7 @@
 #include "mir_protobuf.pb.h"
 #include "buffer_vault.h"
 #include "protobuf_to_native_buffer.h"
+#include "connection_surface_map.h"
 
 #include "mir/log.h"
 #include "mir/client_platform.h"
@@ -276,9 +277,10 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         std::shared_ptr<mcl::ClientBufferFactory> const& factory,
         std::shared_ptr<mcl::AsyncBufferFactory> const& mirbuffer_factory,
         std::shared_ptr<mcl::ServerBufferRequests> const& requests,
+        std::shared_ptr<mcl::SurfaceMap> const& surface_map,
         geom::Size size, MirPixelFormat format, int usage,
         unsigned int initial_nbuffers) :
-        vault(factory, mirbuffer_factory, requests, size, format, usage, initial_nbuffers)
+        vault(factory, mirbuffer_factory, requests, surface_map, size, format, usage, initial_nbuffers)
     {
     }
 
@@ -412,6 +414,7 @@ mcl::BufferStream::BufferStream(
                 client_platform->create_buffer_factory(),
                 std::make_shared<mcl::BufferFactory>(),
                 std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
+                std::make_shared<mcl::ConnectionSurfaceMap>(),
                 ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
                 protobuf_bs->buffer_usage(), nbuffers);
         }
@@ -497,6 +500,7 @@ mcl::BufferStream::BufferStream(
             client_platform->create_buffer_factory(),
             std::make_shared<mcl::BufferFactory>(),
             std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
+            std::make_shared<ConnectionSurfaceMap>(),
             ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
     }
 }

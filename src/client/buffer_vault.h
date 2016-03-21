@@ -35,6 +35,8 @@ namespace client
 class ClientBuffer;
 class Buffer;
 class AsyncBufferFactory;
+class SurfaceMap;
+
 class ServerBufferRequests
 {
 public:
@@ -57,6 +59,7 @@ public:
         std::shared_ptr<ClientBufferFactory> const&,
         std::shared_ptr<AsyncBufferFactory> const&,
         std::shared_ptr<ServerBufferRequests> const&,
+        std::shared_ptr<SurfaceMap> const&,
         geometry::Size size, MirPixelFormat format, int usage,
         unsigned int initial_nbuffers);
     ~BufferVault();
@@ -77,6 +80,7 @@ private:
     std::shared_ptr<ClientBufferFactory> const factory;
     std::shared_ptr<AsyncBufferFactory> const mb_factory;
     std::shared_ptr<ServerBufferRequests> const server_requests;
+    std::shared_ptr<SurfaceMap> const surface_map;
     MirPixelFormat const format;
     int const usage;
 

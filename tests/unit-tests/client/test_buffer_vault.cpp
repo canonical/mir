@@ -20,6 +20,7 @@
 #include "src/client/client_buffer_depository.h"
 #include "src/client/buffer_vault.h"
 #include "src/client/buffer_factory.h"
+#include "src/client/connection_surface_map.h"
 #include "mir/client_buffer_factory.h"
 #include "mir/aging_buffer.h"
 #include "mir_toolkit/common.h"
@@ -92,6 +93,7 @@ struct BufferVault : public testing::Test
             mt::fake_shared(mock_platform_factory),
             mt::fake_shared(buffer_factory),
             mt::fake_shared(mock_requests),
+            mt::fake_shared(surface_map),
             size, format, usage, initial_nbuffers);
     }
 
@@ -104,6 +106,7 @@ struct BufferVault : public testing::Test
     NiceMock<MockClientBufferFactory> mock_platform_factory;
     NiceMock<MockServerRequests> mock_requests;
     mcl::BufferFactory buffer_factory;
+    mcl::ConnectionSurfaceMap surface_map;
     mp::Buffer package;
     mp::Buffer package2;
     mp::Buffer package3;
@@ -118,7 +121,8 @@ struct StartedBufferVault : BufferVault
         vault.wire_transfer_inbound(package3);
     }
     mcl::BufferVault vault{
-        mt::fake_shared(mock_platform_factory), mt::fake_shared(buffer_factory), mt::fake_shared(mock_requests),
+        mt::fake_shared(mock_platform_factory), mt::fake_shared(buffer_factory),
+        mt::fake_shared(mock_requests), mt::fake_shared(surface_map),
         size, format, usage, initial_nbuffers};
 };
 
@@ -131,35 +135,23 @@ TEST_F(BufferVault, creates_all_buffers_on_start)
 {
     EXPECT_CALL(mock_requests, allocate_buffer(size, format, usage))
         .Times(initial_nbuffers);
-    mcl::BufferVault vault(
-        mt::fake_shared(mock_platform_factory),
-        mt::fake_shared(buffer_factory),
-        mt::fake_shared(mock_requests),
-        size, format, usage, initial_nbuffers);
+    make_vault();
 }
 
 TEST_F(BufferVault, frees_the_buffers_we_actually_got)
 {
     EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
     EXPECT_CALL(mock_requests, free_buffer(package2.buffer_id()));
-    mcl::BufferVault vault(
-        mt::fake_shared(mock_platform_factory),
-        mt::fake_shared(buffer_factory),
-        mt::fake_shared(mock_requests),
-        size, format, usage, initial_nbuffers);
-    vault.wire_transfer_inbound(package);
-    vault.wire_transfer_inbound(package2);
+    auto vault = make_vault();
+    vault->wire_transfer_inbound(package);
+    vault->wire_transfer_inbound(package2);
 }
 
 TEST_F(BufferVault, creates_buffer_on_first_insertion)
 {
     EXPECT_CALL(mock_platform_factory, create_buffer(_,initial_properties.size,initial_properties.format));
-    mcl::BufferVault vault(
-        mt::fake_shared(mock_platform_factory),
-        mt::fake_shared(buffer_factory),
-        mt::fake_shared(mock_requests),
-        size, format, usage, initial_nbuffers);
-    vault.wire_transfer_inbound(package);
+    auto vault = make_vault();
+    vault->wire_transfer_inbound(package);
 }
 
 TEST_F(BufferVault, updates_buffer_on_subsequent_insertions)
@@ -171,28 +163,20 @@ TEST_F(BufferVault, updates_buffer_on_subsequent_insertions)
     ON_CALL(mock_platform_factory, create_buffer(_,_,_))
         .WillByDefault(Return(mock_buffer));
 
-    mcl::BufferVault vault(
-        mt::fake_shared(mock_platform_factory),
-        mt::fake_shared(buffer_factory),
-        mt::fake_shared(mock_requests),
-        size, format, usage, initial_nbuffers);
-    vault.wire_transfer_inbound(package);
-    auto b = vault.withdraw().get();
-    vault.deposit(b);
-    vault.wire_transfer_outbound(b);
-    vault.wire_transfer_inbound(package);
+    auto vault = make_vault();
+    vault->wire_transfer_inbound(package);
+    auto b = vault->withdraw().get();
+    vault->deposit(b);
+    vault->wire_transfer_outbound(b);
+    vault->wire_transfer_inbound(package);
 }
 
 TEST_F(BufferVault, withdrawing_and_never_filling_up_will_timeout)
 {
     using namespace std::literals::chrono_literals;
 
-    mcl::BufferVault vault(
-        mt::fake_shared(mock_platform_factory),
-        mt::fake_shared(buffer_factory),
-        mt::fake_shared(mock_requests),
-        size, format, usage, initial_nbuffers);
-    auto buffer_future = vault.withdraw();
+    auto vault = make_vault();
+    auto buffer_future = vault->withdraw();
     ASSERT_TRUE(buffer_future.valid());
     EXPECT_THAT(buffer_future.wait_for(20ms), Eq(std::future_status::timeout));
 }
