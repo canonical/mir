@@ -26,10 +26,17 @@
 
 #include <mutex>
 #include <map>
+#include <mir/graphics/display_configuration.h>
 
 namespace mir
 {
 class ServerActionQueue;
+
+namespace time
+{
+class Alarm;
+class AlarmFactory;
+}
 
 namespace graphics
 {
@@ -61,12 +68,20 @@ public:
         std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
         std::shared_ptr<ServerActionQueue> const& server_action_queue,
         std::shared_ptr<graphics::DisplayConfigurationReport> const& report,
-        std::shared_ptr<input::InputRegion> const& region);
+        std::shared_ptr<input::InputRegion> const& region,
+        std::shared_ptr<time::AlarmFactory> const& alarm_factory);
 
     /* From mir::frontend::DisplayChanger */
     std::shared_ptr<graphics::DisplayConfiguration> base_configuration() override;
     void configure(std::shared_ptr<frontend::Session> const& session,
                    std::shared_ptr<graphics::DisplayConfiguration> const& conf) override;
+    void preview_base_configuration(
+        std::weak_ptr<frontend::Session> const& session,
+        std::shared_ptr<graphics::DisplayConfiguration> const& conf,
+        std::chrono::seconds timeout) override;
+    void confirm_base_configuration(
+        std::shared_ptr<frontend::Session> const& session,
+        std::shared_ptr<graphics::DisplayConfiguration> const& confirmed_conf) override;
 
     /* From mir::DisplayChanger */
     void configure_for_hardware_change(
@@ -106,6 +121,8 @@ private:
     std::shared_ptr<graphics::DisplayConfiguration> base_configuration_;
     bool base_configuration_applied;
     std::shared_ptr<input::InputRegion> const region;
+    std::shared_ptr<time::AlarmFactory> const alarm_factory;
+    std::unique_ptr<time::Alarm> preview_configuration_timeout;
 };
 
 }
