@@ -61,7 +61,7 @@ public:
 
     MirPresentationChain* allocating_chain() const;
 
-    bool client_owned() const;
+    void increment_age();
 private:
     mir_buffer_callback cb;
     void* cb_context;

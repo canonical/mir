@@ -132,3 +132,7 @@ std::shared_ptr<mcl::ClientBuffer> mcl::Buffer::client_buffer() const
 {
     return buffer;
 }
+
+void mcl::Buffer::increment_age()
+{
+}
