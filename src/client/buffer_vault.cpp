@@ -59,10 +59,7 @@ mcl::BufferVault::BufferVault(
     disconnected_(false)
 {
     for (auto i = 0u; i < initial_nbuffers; i++)
-    {
-        mb_factory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage, ignore, nullptr);
-        server_requests->allocate_buffer(size, format, usage);
-    }
+        alloc_buffer(size, format, usage);
 }
 
 mcl::BufferVault::~BufferVault()
@@ -73,11 +70,28 @@ mcl::BufferVault::~BufferVault()
     for (auto& it : buffers)
     try
     {
-        server_requests->free_buffer(it.first);
+        free_buffer(it.first);
     }
     catch (...)
     {
     }
+}
+
+void mcl::BufferVault::alloc_buffer(geom::Size size, MirPixelFormat format, int usage)
+{
+    mb_factory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage, ignore, nullptr);
+    server_requests->allocate_buffer(size, format, usage);
+}
+
+void mcl::BufferVault::free_buffer(int free_id)
+{
+    server_requests->free_buffer(free_id);
+}
+
+void mcl::BufferVault::realloc_buffer(int free_id, geom::Size size, MirPixelFormat format, int usage)
+{
+    free_buffer(free_id);
+    alloc_buffer(size, format, usage);
 }
 
 mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
@@ -104,8 +118,7 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
 void mcl::BufferVault::deposit(std::shared_ptr<mcl::Buffer> const& buffer)
 {
     std::lock_guard<std::mutex> lk(mutex);
-    auto it = std::find_if(buffers.begin(), buffers.end(),
-        [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
+    auto it = buffers.find(buffer->rpc_id());
     if (it == buffers.end() || it->second.owner != Owner::ContentProducer)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be deposited"));
 
@@ -118,8 +131,7 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const
     int id;
     std::shared_ptr<mcl::ClientBuffer> submit_buffer;
     std::unique_lock<std::mutex> lk(mutex);
-    auto it = std::find_if(buffers.begin(), buffers.end(),
-        [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
+    auto it = buffers.find(buffer->rpc_id());
     if (it == buffers.end() || it->second.owner != Owner::Self)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be transferred"));
 
@@ -144,12 +156,10 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
         if (sz != size)
         {
             lk.unlock();
-            server_requests->free_buffer(protobuf_buffer.buffer_id());
             for (int i = 0; i != package->fd_items; ++i)
                 close(package->fd[i]);
 
-            mb_factory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage, ignore, nullptr);
-            server_requests->allocate_buffer(size, format, usage);
+            realloc_buffer(protobuf_buffer.buffer_id(), size, format, usage);
             return;
         }
 
@@ -169,9 +179,8 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
             int id = it->first;
             buffers.erase(it);
             lk.unlock();
-            server_requests->free_buffer(id);
-            mb_factory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage) usage, ignore, nullptr);
-            server_requests->allocate_buffer(size, format, usage);
+
+            realloc_buffer(id, size, format, usage);
             return;
         }
     }
@@ -224,8 +233,6 @@ void mcl::BufferVault::set_scale(float scale)
 
     for(auto& id : free_ids)
     {
-        mb_factory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage, ignore, nullptr);
-        server_requests->allocate_buffer(new_size, format, usage);
-        server_requests->free_buffer(id);
+        realloc_buffer(id, new_size, format, usage);
     }
 }
