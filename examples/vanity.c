@@ -507,13 +507,12 @@ int main(int argc, char *argv[])
     mir_surface_set_event_handler(surface, on_event, &state);
 
     GLint tint = glGetUniformLocation(prog, "tint");
-    glUniform4f(tint, 1.0f, 0.0f, 0.0f, 0.5f);
 
-    bool up = false;
     GLfloat bar[8] = {0,0,0,0,0,0,0,0};
     glEnableVertexAttribArray(position);
     glDisableVertexAttribArray(texcoord);
 
+    int mode = 0;
     bool first_frame = true;
     while (mir_eglapp_running())
     {
@@ -523,32 +522,35 @@ int main(int argc, char *argv[])
 
         pthread_mutex_lock(&state.mutex);
 
-        if (state.resized)
+        int new_mode = time(NULL) & 1;
+        if (state.resized || mode != new_mode)
         {
-            // mir_eglapp_swap_buffers updates the viewport for us...
             GLint viewport[4];
             glGetIntegerv(GL_VIEWPORT, viewport);
             int w = viewport[2], h = viewport[3];
-
-            // TRANSPOSED projection matrix to convert from the Mir input
-            // rectangle {{0,0},{w,h}} to GL screen rectangle {{-1,1},{2,2}}.
-            GLfloat matrix[16] = {2.0f/w, 0.0f,   0.0f, 0.0f,
-                                  0.0f,  -2.0f/h, 0.0f, 0.0f,
-                                  0.0f,   0.0f,   1.0f, 0.0f,
-                                 -1.0f,   1.0f,   0.0f, 1.0f};
-            // Note GL_FALSE: GLES does not support the transpose option
-            glUniformMatrix4fv(projection, 1, GL_FALSE, matrix);
-            state.resized = false;
-            wait_for_new_frame = first_frame;
-            first_frame = false;
-
-            GLfloat top = up ? 0.0f : 2.0f*h/3.0f;
+            GLfloat top = mode ? 2.0f*h/3.0f : 0.0f;
             GLfloat bot = top + h/3.0f;
             bar[0] = 0; bar[1] = bot;
             bar[2] = w; bar[3] = bot;
             bar[4] = w; bar[5] = top;
             bar[6] = 0; bar[7] = top;
+            mode = new_mode;
+            if (state.resized)
+            {
+                // TRANSPOSED projection matrix to convert from the Mir input
+                // rectangle {{0,0},{w,h}} to GL screen rectangle {{-1,1},{2,2}}.
+                GLfloat matrix[16] = {2.0f/w, 0.0f,   0.0f, 0.0f,
+                                      0.0f,  -2.0f/h, 0.0f, 0.0f,
+                                      0.0f,   0.0f,   1.0f, 0.0f,
+                                     -1.0f,   1.0f,   0.0f, 1.0f};
+                // Note GL_FALSE: GLES does not support the transpose option
+                glUniformMatrix4fv(projection, 1, GL_FALSE, matrix);
+                wait_for_new_frame = first_frame;
+                first_frame = false;
+            }
         }
+
+        state.resized = false;
         glVertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE,
                               2*sizeof(GLfloat), bar);
         glUniform4f(tint, BAR_TINT);
