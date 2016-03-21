@@ -35,6 +35,11 @@
 #include <errno.h>
 #include <poll.h>
 
+#define WHITE        1.0f,1.0f,1.0f,1.0f
+#define TRANSPARENT  0.0f,0.0f,0.0f,0.0f
+#define BAR_TINT     WHITE
+#define PREVIEW_TINT TRANSPARENT
+
 typedef struct
 {
     pthread_mutex_t mutex;
@@ -398,11 +403,13 @@ int main(int argc, char *argv[])
         "precision mediump float;\n"
         "varying vec2 v_texcoord;\n"
         "uniform sampler2D texture;\n"
+        "uniform vec4 tint;\n"
         "\n"
         "void main()\n"
         "{\n"
         "    vec4 f = texture2D(texture, v_texcoord);\n"
-        "    gl_FragColor = vec4(f.rgb, 1.0);\n"
+        "    gl_FragColor = vec4(tint.a * tint.rgb + (1.0-tint.a) * f.rgb,\n"
+        "                        1.0);\n"
         "}\n";
 
     const char * const yuyv_greyscale_fshadersrc = raw_fshadersrc;
@@ -413,6 +420,7 @@ int main(int argc, char *argv[])
         "precision mediump float;\n"
         "varying vec2 v_texcoord;\n"
         "uniform sampler2D texture;\n"
+        "uniform vec4 tint;\n"
         "\n"
         "void main()\n"
         "{\n"
@@ -423,7 +431,8 @@ int main(int argc, char *argv[])
         "    float r = clamp(y + 1.370705*v, 0.0, 1.0);\n"
         "    float g = clamp(y - 0.698001*v - 0.337633*u, 0.0, 1.0);\n"
         "    float b = clamp(y + 1.732446*u, 0.0, 1.0);\n"
-        "    gl_FragColor = vec4(r, g, b, 1.0);\n"
+        "    gl_FragColor = vec4(tint.a * tint.rgb +\n"
+        "                        (1.0-tint.a) * vec3(r,g,b), 1.0);\n"
         "}\n";
 
     // TODO: Selectable between high-res grey vs half-res colour?
@@ -466,7 +475,7 @@ int main(int argc, char *argv[])
     glUseProgram(prog);
 
     const GLfloat camw = cam->pix.width, camh = cam->pix.height;
-    const GLfloat box[] =
+    const GLfloat preview[] =
     { // position   texcoord
         0.0f, camh, 0.0f, 1.0f,
         camw, camh, 1.0f, 1.0f,
@@ -475,12 +484,6 @@ int main(int argc, char *argv[])
     };
     GLint position = glGetAttribLocation(prog, "position");
     GLint texcoord = glGetAttribLocation(prog, "texcoord");
-    glVertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat),
-                          box);
-    glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat),
-                          box+2);
-    glEnableVertexAttribArray(position);
-    glEnableVertexAttribArray(texcoord);
 
     GLint projection = glGetUniformLocation(prog, "projection");
 
@@ -503,10 +506,21 @@ int main(int argc, char *argv[])
     MirSurface *surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);
 
+    GLint tint = glGetUniformLocation(prog, "tint");
+    glUniform4f(tint, 1.0f, 0.0f, 0.0f, 0.5f);
+
+    bool up = false;
+    GLfloat bar[8] = {0,0,0,0,0,0,0,0};
+    glEnableVertexAttribArray(position);
+    glDisableVertexAttribArray(texcoord);
+
     bool first_frame = true;
     while (mir_eglapp_running())
     {
         bool wait_for_new_frame = true;
+
+        glClear(GL_COLOR_BUFFER_BIT);
+
         pthread_mutex_lock(&state.mutex);
 
         if (state.resized)
@@ -527,7 +541,18 @@ int main(int argc, char *argv[])
             state.resized = false;
             wait_for_new_frame = first_frame;
             first_frame = false;
+
+            GLfloat top = up ? 0.0f : 2.0f*h/3.0f;
+            GLfloat bot = top + h/3.0f;
+            bar[0] = 0; bar[1] = bot;
+            bar[2] = w; bar[3] = bot;
+            bar[4] = w; bar[5] = top;
+            bar[6] = 0; bar[7] = top;
         }
+        glVertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE,
+                              2*sizeof(GLfloat), bar);
+        glUniform4f(tint, BAR_TINT);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
         if (wait_for_new_frame || frame_ready(cam))
         {
@@ -567,8 +592,14 @@ int main(int argc, char *argv[])
             release_frame(cam, buf);
         }
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        glVertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE,
+                              4*sizeof(GLfloat), preview);
+        glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE,
+                              4*sizeof(GLfloat), preview+2);
+        glEnableVertexAttribArray(texcoord);
+        glUniform4f(tint, PREVIEW_TINT);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        glDisableVertexAttribArray(texcoord);
 
         pthread_mutex_unlock(&state.mutex);
 
