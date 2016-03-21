@@ -276,7 +276,7 @@ Description: Display Server for Ubuntu - stress tests and other test tools
  Contains a tool for stress testing the Mir display server
 
 Package: mir-android-diagnostics
-Architecture: linux-any
+Architecture: i386 amd64 armhf
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
