@@ -20,6 +20,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/buffer_sink.h"
 #include "src/client/buffer_vault.h"
+#include "src/client/buffer_factory.h"
 #include "src/client/client_buffer_depository.h"
 #include "src/client/buffer_factory.h"
 #include "src/client/protobuf_to_native_buffer.h"
@@ -358,11 +359,11 @@ struct ServerRequests : mcl::ServerBufferRequests
     {
     }
 
-    void submit_buffer(int buffer_id, mcl::ClientBuffer&)
+    void submit_buffer(mcl::Buffer& buffer)
     {
-        mp::Buffer buffer;
-        buffer.set_buffer_id(buffer_id);
-        ipc->server_bound_transfer(buffer);   
+        mp::Buffer buffer_req;
+        buffer_req.set_buffer_id(buffer.rpc_id());
+        ipc->server_bound_transfer(buffer_req);
     }
     std::shared_ptr<StubIpcSystem> ipc;
 };
@@ -375,8 +376,9 @@ struct ScheduledProducer : ProducerSystem
         factory(std::make_shared<mcl::BufferFactory>()),
         vault(
             std::make_shared<mtd::StubClientBufferFactory>(),
+            std::make_shared<mcl::BufferFactory>(),
             std::make_shared<ServerRequests>(ipc),
-            map, factory,
+            std::make_shared<mcl::ConnectionSurfaceMap>(),
             geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers)
     {
         ipc->on_client_bound_transfer([this](mp::Buffer& ipc_buffer){

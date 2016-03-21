@@ -60,6 +60,8 @@ public:
     geometry::Size size() const;
 
     MirPresentationChain* allocating_chain() const;
+
+    void increment_age();
 private:
     mir_buffer_callback cb;
     void* cb_context;
