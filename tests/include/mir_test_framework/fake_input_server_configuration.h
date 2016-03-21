@@ -31,7 +31,8 @@ class FakeInputServerConfiguration : public TestingServerConfiguration
 {
 public:
     FakeInputServerConfiguration();
-    FakeInputServerConfiguration(std::vector<mir::geometry::Rectangle> const& display_rects);
+    explicit FakeInputServerConfiguration(std::vector<mir::geometry::Rectangle> const& display_rects);
+    ~FakeInputServerConfiguration();
 
     std::shared_ptr<mir::input::InputManager> the_input_manager() override;
     std::shared_ptr<mir::input::InputDispatcher> the_input_dispatcher() override;
