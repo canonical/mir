@@ -97,21 +97,29 @@ void mcl::BufferVault::realloc_buffer(int free_id, geom::Size size, MirPixelForm
     alloc_buffer(size, format, usage);
 }
 
+std::shared_ptr<mcl::Buffer> mcl::BufferVault::checked_buffer_from_map(int id)
+{
+    if (auto buffer = surface_map->buffer(id))
+        return buffer;
+    else
+        BOOST_THROW_EXCEPTION(std::logic_error("no buffer in map"));
+}
+
 mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
 {
     std::lock_guard<std::mutex> lk(mutex);
     mcl::NoTLSPromise<std::shared_ptr<mcl::Buffer>> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [this](std::pair<int, Owner> const& entry) {
-            auto buffer = surface_map->buffer(entry.first);
-            return ((entry.second == Owner::Self) && (buffer) && (size == buffer->size()));
+            return ((entry.second == Owner::Self) &&
+                    (checked_buffer_from_map(entry.first)->size() == size));
     });
 
     auto future = promise.get_future();
     if (it != buffers.end())
     {
         it->second = Owner::ContentProducer;
-        promise.set_value(surface_map->buffer(it->first));
+        promise.set_value(checked_buffer_from_map(it->first));
     }
     else
     {
@@ -128,7 +136,7 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::Buffer> const& buffer)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be deposited"));
 
     it->second = Owner::Self;
-    surface_map->buffer(it->first)->client_buffer()->increment_age();
+    checked_buffer_from_map(it->first)->client_buffer()->increment_age();
 }
 
 void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const& buffer)
@@ -175,7 +183,7 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     }
     else
     {
-        buffer = surface_map->buffer(protobuf_buffer.buffer_id());
+        buffer = checked_buffer_from_map(protobuf_buffer.buffer_id());
         buffer->received(*package);
         if (size == buffer->size())
         { 
@@ -226,7 +234,7 @@ void mcl::BufferVault::set_scale(float scale)
     size = new_size;
     for (auto it = buffers.begin(); it != buffers.end();)
     {
-        auto buffer = surface_map->buffer(it->first);
+        auto buffer = checked_buffer_from_map(it->first);
         if ((it->second == Owner::Self) && (buffer->size() != size)) 
         {
             free_ids.push_back(it->first);
@@ -240,7 +248,5 @@ void mcl::BufferVault::set_scale(float scale)
     lk.unlock();
 
     for(auto& id : free_ids)
-    {
         realloc_buffer(id, new_size, format, usage);
-    }
 }

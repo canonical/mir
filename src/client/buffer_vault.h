@@ -76,6 +76,7 @@ private:
     void alloc_buffer(geometry::Size size, MirPixelFormat format, int usage);
     void free_buffer(int free_id);
     void realloc_buffer(int free_id, geometry::Size size, MirPixelFormat format, int usage);
+    std::shared_ptr<Buffer> checked_buffer_from_map(int id);
 
     std::shared_ptr<ClientBufferFactory> const factory;
     std::shared_ptr<AsyncBufferFactory> const mb_factory;
