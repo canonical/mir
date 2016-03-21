@@ -54,24 +54,26 @@ void mcl::Buffer::submitted()
 
 void mcl::Buffer::received()
 {
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    if (!owned)
     {
-        owned = true;
-        cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
+        std::lock_guard<decltype(mutex)> lk(mutex);
+        if (!owned)
+            owned = true;
     }
+    cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
 
 }
 
 void mcl::Buffer::received(MirBufferPackage const& update_package)
 {
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    if (!owned)
     {
-        owned = true;
-        buffer->update_from(update_package);
-        cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
+        std::lock_guard<decltype(mutex)> lk(mutex);
+        if (!owned)
+        {
+            owned = true;
+            buffer->update_from(update_package);
+        }
     }
+    cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
 }
     
 MirGraphicsRegion mcl::Buffer::map_region()
