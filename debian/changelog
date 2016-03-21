@@ -8,7 +8,7 @@ mir (0.21.0-0ubuntu1) UNRELEASED; urgency=medium
       . mirplatform ABI unchanged at 11
       . mirprotobuf ABI unchanged at 3
       . mirplatformgraphics ABI unchaged at 8
-      . mirclientplatform ABI unchanged at 4
+      . mirclientplatform ABI bumped to 5
       . mirinputplatform ABI unchanged at 5
     - Enhancements:
       . New display enumeration API
