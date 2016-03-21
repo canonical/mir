@@ -21,7 +21,6 @@
 
 #include "mir/input/input_manager.h"
 
-#include <vector>
 #include <thread>
 #include <atomic>
 
@@ -52,7 +51,7 @@ public:
 private:
     void start_platforms();
     void stop_platforms();
-    std::vector<std::shared_ptr<Platform>> platforms;
+    std::shared_ptr<Platform> const platform;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
     std::shared_ptr<dispatch::ActionQueue> const queue;
     std::unique_ptr<dispatch::ThreadedDispatcher> input_thread;
