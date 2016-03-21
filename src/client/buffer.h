@@ -60,6 +60,8 @@ public:
     geometry::Size size() const;
 
     MirPresentationChain* allocating_chain() const;
+
+    bool client_owned() const;
 private:
     mir_buffer_callback cb;
     void* cb_context;

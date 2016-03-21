@@ -21,6 +21,7 @@
 #include "buffer_vault.h"
 #include "buffer.h"
 #include "buffer_factory.h"
+#include "surface_map.h"
 #include "mir_protobuf.pb.h"
 #include "protobuf_to_native_buffer.h"
 #include <algorithm>
@@ -101,14 +102,16 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
     std::lock_guard<std::mutex> lk(mutex);
     mcl::NoTLSPromise<std::shared_ptr<mcl::Buffer>> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
-        [this](std::pair<int, BufferEntry> const& entry) { 
-            return ((entry.second.owner == Owner::Self) && (size == entry.second.buffer->size())); });
+        [this](std::pair<int, Owner> const& entry) {
+            auto buffer = surface_map->buffer(entry.first);
+            return ((entry.second == Owner::Self) && (buffer) && (size == buffer->size()));
+    });
 
     auto future = promise.get_future();
     if (it != buffers.end())
     {
-        it->second.owner = Owner::ContentProducer;
-        promise.set_value({it->second.buffer});
+        it->second = Owner::ContentProducer;
+        promise.set_value(surface_map->buffer(it->first));
     }
     else
     {
@@ -121,11 +124,11 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::Buffer> const& buffer)
 {
     std::lock_guard<std::mutex> lk(mutex);
     auto it = buffers.find(buffer->rpc_id());
-    if (it == buffers.end() || it->second.owner != Owner::ContentProducer)
+    if (it == buffers.end() || it->second != Owner::ContentProducer)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be deposited"));
 
-    it->second.owner = Owner::Self;
-    it->second.buffer->client_buffer()->increment_age();
+    it->second = Owner::Self;
+    surface_map->buffer(it->first)->client_buffer()->increment_age();
 }
 
 void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const& buffer)
@@ -134,13 +137,13 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const
     std::shared_ptr<mcl::ClientBuffer> submit_buffer;
     std::unique_lock<std::mutex> lk(mutex);
     auto it = buffers.find(buffer->rpc_id());
-    if (it == buffers.end() || it->second.owner != Owner::Self)
+    if (it == buffers.end() || it->second != Owner::Self)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be transferred"));
 
-    it->second.owner = Owner::Server;
-    it->second.buffer->client_buffer()->mark_as_submitted();
-    it->second.buffer->submitted();
-    submit_buffer = it->second.buffer->client_buffer();
+    it->second = Owner::Server;
+    buffer->client_buffer()->mark_as_submitted();
+    buffer->submitted();
+    submit_buffer = buffer->client_buffer();
     id = it->first;
     lk.unlock();
     server_requests->submit_buffer(id, *submit_buffer);
@@ -149,7 +152,7 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const
 void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 {
     std::shared_ptr<MirBufferPackage> package = mcl::protobuf_to_native_buffer(protobuf_buffer);
-
+    std::shared_ptr<mcl::Buffer> buffer = nullptr;
     std::unique_lock<std::mutex> lk(mutex);
     auto it = buffers.find(protobuf_buffer.buffer_id());
     if (it == buffers.end())
@@ -165,16 +168,18 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
             return;
         }
 
-        buffers[protobuf_buffer.buffer_id()] = 
-            BufferEntry{ mb_factory->generate_buffer(protobuf_buffer), Owner::Self };
-        buffers[protobuf_buffer.buffer_id()].buffer->received();
+        buffer = mb_factory->generate_buffer(protobuf_buffer);
+        surface_map->insert(protobuf_buffer.buffer_id(), buffer);
+        buffers[protobuf_buffer.buffer_id()] = Owner::Self;
+        buffer->received();
     }
     else
     {
-        it->second.buffer->received(*package);
-        if (size == it->second.buffer->size())
+        buffer = surface_map->buffer(protobuf_buffer.buffer_id());
+        buffer->received(*package);
+        if (size == buffer->size())
         { 
-            it->second.owner = Owner::Self;
+            it->second = Owner::Self;
         }
         else
         {
@@ -189,8 +194,8 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 
     if (!promises.empty())
     {
-        buffers[protobuf_buffer.buffer_id()].owner = Owner::ContentProducer;
-        promises.front().set_value({buffers[protobuf_buffer.buffer_id()].buffer});
+        buffers[protobuf_buffer.buffer_id()] = Owner::ContentProducer;
+        promises.front().set_value(buffer);
         promises.pop_front();
     }
 }
@@ -221,7 +226,8 @@ void mcl::BufferVault::set_scale(float scale)
     size = new_size;
     for (auto it = buffers.begin(); it != buffers.end();)
     {
-        if ((it->second.owner == Owner::Self) && (it->second.buffer->size() != size)) 
+        auto buffer = surface_map->buffer(it->first);
+        if ((it->second == Owner::Self) && (buffer->size() != size)) 
         {
             free_ids.push_back(it->first);
             it = buffers.erase(it);

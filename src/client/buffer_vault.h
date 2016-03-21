@@ -85,14 +85,8 @@ private:
     int const usage;
 
     enum class Owner;
-    struct BufferEntry
-    {
-        std::shared_ptr<Buffer> buffer;
-        Owner owner;
-    };
-
     std::mutex mutex;
-    std::map<int, BufferEntry> buffers;
+    std::map<int, Owner> buffers;
     std::deque<NoTLSPromise<std::shared_ptr<Buffer>>> promises;
     geometry::Size size;
     bool disconnected_;
