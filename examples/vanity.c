@@ -34,6 +34,7 @@
 #include <string.h>
 #include <errno.h>
 #include <poll.h>
+#include <time.h>
 
 #define WHITE        1.0f,1.0f,1.0f,1.0f
 #define TRANSPARENT  0.0f,0.0f,0.0f,0.0f
@@ -66,6 +67,15 @@ typedef struct
     unsigned buffers;
     Buffer buffer[];
 } Camera;
+
+typedef long long Time;
+static const Time one_second = 1000000000LL;
+static Time now()
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * one_second + ts.tv_nsec;
+}
 
 static GLuint load_shader(const char *src, GLenum type)
 {
@@ -384,6 +394,32 @@ static void release_frame(Camera *cam, const Buffer *buf)
         perror("VIDIOC_QBUF");
 }
 
+static void *capture_thread_func(void *arg)
+{
+    Camera *cam = (Camera*)arg;
+    Time last_frame = now();
+
+    while (mir_eglapp_running())
+    {
+        const Buffer *buf = acquire_frame(cam);
+
+        Time acquire_time = now(); // TODO: Can we get more accurate?
+        Time frame_time = acquire_time - last_frame;
+        last_frame = acquire_time;
+
+        float see = interpret(cam, buf);
+        printf("I see: %.3f [%c]\n", see,
+               see <= 0.3f ? '^' :
+               see >= 0.7f ? '_' :
+               '-');
+        printf("Frame time ~%lld.%03lldms\n",
+               frame_time / 1000000,
+               (frame_time / 1000) % 1000);
+        release_frame(cam, buf);
+    }
+    return NULL;
+}
+
 int main(int argc, char *argv[])
 {
     const char vshadersrc[] =
@@ -413,6 +449,7 @@ int main(int argc, char *argv[])
         "}\n";
 
     const char * const yuyv_greyscale_fshadersrc = raw_fshadersrc;
+    (void)yuyv_greyscale_fshadersrc;
 
     // This is the Android YUV to RGB calculation.
     // TODO: Vary the shader to match the camera's reported colour space
@@ -512,6 +549,9 @@ int main(int argc, char *argv[])
     glEnableVertexAttribArray(position);
     glDisableVertexAttribArray(texcoord);
 
+    pthread_t capture_thread;
+    pthread_create(&capture_thread, NULL, capture_thread_func, cam);
+
     int mode = 0;
     bool first_frame = true;
     while (mir_eglapp_running())
@@ -522,7 +562,7 @@ int main(int argc, char *argv[])
 
         pthread_mutex_lock(&state.mutex);
 
-        int new_mode = time(NULL) & 1;
+        int new_mode = (now() / one_second) & 1;
         if (state.resized || mode != new_mode)
         {
             GLint viewport[4];
@@ -558,7 +598,7 @@ int main(int argc, char *argv[])
 
         if (wait_for_new_frame || frame_ready(cam))
         {
-            const Buffer *buf = acquire_frame(cam);
+            /*
             if (cam->pix.pixelformat == V4L2_PIX_FMT_YUYV)
             {
                 if (fshadersrc == yuyv_greyscale_fshadersrc)
@@ -591,7 +631,7 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "FIXME: Unsupported camera pixel format 0x%08lx: %s\n",
                         (long)cam->pix.pixelformat, str);
             }
-            release_frame(cam, buf);
+            */
         }
 
         glVertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE,
@@ -610,6 +650,8 @@ int main(int argc, char *argv[])
 
     mir_surface_set_event_handler(surface, NULL, NULL);
     mir_eglapp_shutdown();
+
+    pthread_join(capture_thread, NULL);
     close_camera(cam);
 
     return 0;
