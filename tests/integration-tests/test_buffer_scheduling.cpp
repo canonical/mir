@@ -400,8 +400,8 @@ struct ScheduledProducer : ProducerSystem
         if (can_produce())
         {
             auto buffer = vault.withdraw().get();
-            vault.deposit(buffer->client_buffer());
-            vault.wire_transfer_outbound(buffer->client_buffer());
+            vault.deposit(buffer);
+            vault.wire_transfer_outbound(buffer);
             last_size_ = buffer->size();
             entries.emplace_back(BufferEntry{mg::BufferID{(unsigned int)ipc->last_transferred_to_server()}, age, Access::unblocked});
             available--;

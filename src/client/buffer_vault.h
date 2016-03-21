@@ -62,9 +62,9 @@ public:
     ~BufferVault();
 
     NoTLSFuture<std::shared_ptr<Buffer>> withdraw();
-    void deposit(std::shared_ptr<ClientBuffer> const& buffer);
+    void deposit(std::shared_ptr<Buffer> const& buffer);
     void wire_transfer_inbound(protobuf::Buffer const&);
-    void wire_transfer_outbound(std::shared_ptr<ClientBuffer> const& buffer);
+    void wire_transfer_outbound(std::shared_ptr<Buffer> const& buffer);
     void set_size(geometry::Size);
     void disconnected();
     void set_scale(float scale);

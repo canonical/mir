@@ -318,10 +318,10 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
             advance_current_buffer(lk);
         lk.unlock();
 
-        vault.deposit(current->client_buffer());
+        vault.deposit(current);
 
         next_buffer_wait_handle.expect_result();
-        vault.wire_transfer_outbound(current->client_buffer());
+        vault.wire_transfer_outbound(current);
         next_buffer_wait_handle.result_received();
 
         lk.lock();

@@ -101,11 +101,11 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
     return future;
 }
 
-void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
+void mcl::BufferVault::deposit(std::shared_ptr<mcl::Buffer> const& buffer)
 {
     std::lock_guard<std::mutex> lk(mutex);
     auto it = std::find_if(buffers.begin(), buffers.end(),
-        [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer->client_buffer(); });
+        [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
     if (it == buffers.end() || it->second.owner != Owner::ContentProducer)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be deposited"));
 
@@ -113,13 +113,13 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
     it->second.buffer->client_buffer()->increment_age();
 }
 
-void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer> const& buffer)
+void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const& buffer)
 {
     int id;
     std::shared_ptr<mcl::ClientBuffer> submit_buffer;
     std::unique_lock<std::mutex> lk(mutex);
     auto it = std::find_if(buffers.begin(), buffers.end(),
-        [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer->client_buffer(); });
+        [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
     if (it == buffers.end() || it->second.owner != Owner::Self)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be transferred"));
 
