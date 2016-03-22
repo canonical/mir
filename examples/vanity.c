@@ -56,6 +56,7 @@ enum CameraPref
 
 typedef long long Time;
 static const Time one_second = 1000000000LL;
+static const Time one_millisecond = 1000000LL;
 
 typedef struct
 {
@@ -396,6 +397,7 @@ static void release_frame(Camera *cam, const Buffer *buf)
 
 static Time last_change_time = 0;
 static void *preview_img = NULL;  // TODO: locking and cleaner
+static Time display_frame_time = 0;
 
 static void *capture_thread_func(void *arg)
 {
@@ -410,6 +412,7 @@ static void *capture_thread_func(void *arg)
         const Buffer *buf = acquire_frame(cam);
 
         Time acquire_time = buf->timestamp;
+        Time exposure = now() - acquire_time;
         Time frame_time = acquire_time - last_frame;
         last_frame = acquire_time;
 
@@ -418,13 +421,24 @@ static void *capture_thread_func(void *arg)
         if (see != last_seen_value)
         {
             Time latency = acquire_time - last_change_time;
-            // TODO check direction too
+            // Check polarity too? Doesn't seem necessary right now.
             last_seen_value = see;
-            printf("I see: %d\n", see);
-            printf("Frame time ~%lld.%03lldms\n",
-                   frame_time / 1000000, (frame_time / 1000) % 1000);
-            printf("Latency: ~%lld.%03lldms\n",
-                   latency / 1000000, (latency / 1000) % 1000);
+
+            if (latency < 10*one_second && frame_time && display_frame_time)
+            {
+                // Nyquist–Shannon sampling theorem
+                if (display_frame_time < 2*frame_time)
+                    printf("YOUR CAMERA IS TOO SLOW. RESULTS NOT ACCURATE\n");
+
+                printf("Latency %lld-%lldms, camera interval %lldms (%lldHz), "
+                       "display interval %lldms (%lldHz)\n",
+                       (latency - exposure) / one_millisecond,
+                       latency / one_millisecond,
+                       frame_time / one_millisecond,
+                       one_second / frame_time,
+                       display_frame_time / one_millisecond,
+                       one_second / display_frame_time);
+            }
         }
 
         // We retain single buffering for minimal latency, so previews to
@@ -575,6 +589,8 @@ int main(int argc, char *argv[])
     pthread_create(&capture_thread, NULL, capture_thread_func, cam);
 
     int mode = 0;
+    Time last_swap_time = 0;
+
     while (mir_eglapp_running())
     {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -661,6 +677,10 @@ int main(int argc, char *argv[])
             mode = new_mode;
         }
         mir_eglapp_swap_buffers();
+
+        Time swap_time = now();
+        display_frame_time = swap_time - last_swap_time;
+        last_swap_time = swap_time;
     }
 
     mir_surface_set_event_handler(surface, NULL, NULL);
