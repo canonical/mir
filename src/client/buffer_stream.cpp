@@ -414,12 +414,8 @@ mcl::BufferStream::BufferStream(
         {
             cached_buffer_size = ideal_buffer_size;
             buffer_depository = std::make_unique<NewBufferSemantics>(
-                client_platform->create_buffer_factory(),
-                factory,
-//                std::make_shared<mcl::BufferFactory>(),
-                std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
-                map,
-//                std::make_shared<mcl::ConnectionSurfaceMap>(),
+                client_platform->create_buffer_factory(), factory,
+                std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
                 ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
                 protobuf_bs->buffer_usage(), nbuffers);
         }
@@ -487,7 +483,8 @@ mcl::BufferStream::BufferStream(
       ideal_buffer_size(parameters.width(), parameters.height()),
       nbuffers(nbuffers),
       creation_wait_handle(creation_wait_handle),
-        map(map), factory(factory)
+      map(map),
+      factory(factory)
 {
     perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
 
@@ -505,10 +502,8 @@ mcl::BufferStream::BufferStream(
     else
     {
         buffer_depository = std::make_unique<NewBufferSemantics>(
-            client_platform->create_buffer_factory(),
-            factory,
-            std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
-            map,
+            client_platform->create_buffer_factory(), factory,
+            std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
             ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
     }
 }
