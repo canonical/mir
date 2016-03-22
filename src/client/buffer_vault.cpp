@@ -50,7 +50,7 @@ mcl::BufferVault::BufferVault(
     std::shared_ptr<ClientBufferFactory> const& platform_factory,
     std::shared_ptr<AsyncBufferFactory> const& buffer_factory,
     std::shared_ptr<ServerBufferRequests> const& server_requests,
-    std::shared_ptr<SurfaceMap> const& surface_map,
+    std::weak_ptr<SurfaceMap> const& surface_map,
     geom::Size size, MirPixelFormat format, int usage, unsigned int initial_nbuffers) :
     platform_factory(platform_factory),
     buffer_factory(buffer_factory),
@@ -99,7 +99,11 @@ void mcl::BufferVault::realloc_buffer(int free_id, geom::Size size, MirPixelForm
 
 std::shared_ptr<mcl::Buffer> mcl::BufferVault::checked_buffer_from_map(int id)
 {
-    if (auto buffer = surface_map->buffer(id))
+    auto map = surface_map.lock();
+    if (!map)
+        BOOST_THROW_EXCEPTION(std::logic_error("connection resources lost; cannot access buffer"));
+    
+    if (auto buffer = map->buffer(id))
         return buffer;
     else
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer in map"));
@@ -172,7 +176,11 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
         }
 
         buffer = buffer_factory->generate_buffer(protobuf_buffer);
-        surface_map->insert(protobuf_buffer.buffer_id(), buffer);
+        if (auto map = surface_map.lock())
+            map->insert(protobuf_buffer.buffer_id(), buffer);
+        else
+            BOOST_THROW_EXCEPTION(std::logic_error("connection resources lost; cannot access buffer"));
+         
         buffers[protobuf_buffer.buffer_id()] = Owner::Self;
         buffer->received();
     }

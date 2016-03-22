@@ -64,7 +64,7 @@ class ClientBuffer;
 class ClientPlatform;
 class PerfReport;
 struct MemoryRegion;
-
+class SurfaceMap;
 class ServerBufferSemantics;
 class BufferStream : public EGLNativeSurface, public ClientBufferStream
 {
@@ -161,6 +161,7 @@ private:
     size_t const nbuffers;
     std::string error_message;
     std::shared_ptr<MirWaitHandle> creation_wait_handle;
+    std::shared_ptr<SurfaceMap> const surface_map;
 };
 
 }

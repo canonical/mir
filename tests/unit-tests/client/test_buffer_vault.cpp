@@ -73,7 +73,8 @@ struct MockServerRequests : mcl::ServerBufferRequests
 
 struct BufferVault : public testing::Test
 {
-    BufferVault()
+    BufferVault() :
+        surface_map(std::make_shared<mcl::ConnectionSurfaceMap>())
     {
         package.set_width(size.width.as_int());
         package.set_height(size.height.as_int());
@@ -93,7 +94,7 @@ struct BufferVault : public testing::Test
             mt::fake_shared(mock_platform_factory),
             mt::fake_shared(buffer_factory),
             mt::fake_shared(mock_requests),
-            mt::fake_shared(surface_map),
+            surface_map,
             size, format, usage, initial_nbuffers);
     }
 
@@ -106,7 +107,7 @@ struct BufferVault : public testing::Test
     NiceMock<MockClientBufferFactory> mock_platform_factory;
     NiceMock<MockServerRequests> mock_requests;
     mcl::BufferFactory buffer_factory;
-    mcl::ConnectionSurfaceMap surface_map;
+    std::shared_ptr<mcl::ConnectionSurfaceMap> surface_map;
     mp::Buffer package;
     mp::Buffer package2;
     mp::Buffer package3;
@@ -122,7 +123,7 @@ struct StartedBufferVault : BufferVault
     }
     mcl::BufferVault vault{
         mt::fake_shared(mock_platform_factory), mt::fake_shared(buffer_factory),
-        mt::fake_shared(mock_requests), mt::fake_shared(surface_map),
+        mt::fake_shared(mock_requests), surface_map,
         size, format, usage, initial_nbuffers};
 };
 

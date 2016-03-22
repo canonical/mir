@@ -370,11 +370,12 @@ struct ScheduledProducer : ProducerSystem
 {
     ScheduledProducer(std::shared_ptr<StubIpcSystem> const& ipc_stub, int nbuffers) :
         ipc(ipc_stub),
+        map(std::make_shared<mcl::ConnectionSurfaceMap>()),
         vault(
             std::make_shared<mtd::StubClientBufferFactory>(),
             std::make_shared<mcl::BufferFactory>(),
             std::make_shared<ServerRequests>(ipc),
-            std::make_shared<mcl::ConnectionSurfaceMap>(),
+            map,
             geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers)
     {
         ipc->on_client_bound_transfer([this](mp::Buffer& buffer){
@@ -432,6 +433,7 @@ struct ScheduledProducer : ProducerSystem
     geom::Size last_size_;
     std::vector<BufferEntry> entries;
     std::shared_ptr<StubIpcSystem> ipc;
+    std::shared_ptr<mcl::SurfaceMap> map;
     mcl::BufferVault vault;
     int max, cur;
     int available{0};
