@@ -60,6 +60,7 @@ void mcl::PresentationChain::allocate_buffer(
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback cb, void* cb_context)
 {
+    printf("EXPECT!\n");
     mir_buffer_factory->expect_buffer(native_buffer_factory, this, size, format, usage, cb, cb_context);
 
     mp::BufferAllocation request;

@@ -323,15 +323,24 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     switch (stream_cmd)
                     {
                     case -1:
+                        printf("ALLOC\n");
+                    try{
                         buffer = buffer_factory->generate_buffer(seq.buffer_request().buffer());
+                        printf("ALLOC\n");
                         map->insert(buffer_id, buffer); 
+                        printf("ALLOC\n");
                         buffer->received();
+                        printf("ALLOC\n");
+                    } catch (...)
+                    { printf("BOOBOB\n");}
                         break;
                     case -2:
+                        printf("receive\n");
                         map->buffer(buffer_id)->received(
                             *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
                         break;
                     case -3:
+                        printf("erase\n");
                         map->erase(buffer_id);
                         break;
                     default:

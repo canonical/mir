@@ -46,20 +46,21 @@ namespace
 {
 void incoming_buffer(MirPresentationChain*, MirBuffer* buffer, void* context)
 {
+    printf("BAD.\n");
     auto vault = static_cast<mcl::BufferVault*>(context);
     vault->wire_transfer_inbound(reinterpret_cast<mcl::Buffer*>(buffer)->rpc_id());
 }
 }
 
 mcl::BufferVault::BufferVault(
-    std::shared_ptr<ClientBufferFactory> const& client_buffer_factory,
-    std::shared_ptr<AsyncBufferFactory> const& mirfactory,
+    std::shared_ptr<ClientBufferFactory> const& platform_factory,
+    std::shared_ptr<AsyncBufferFactory> const& buffer_factory,
     std::shared_ptr<ServerBufferRequests> const& server_requests,
     std::weak_ptr<SurfaceMap> const& surface_map,
     geom::Size size, MirPixelFormat format, int usage, unsigned int initial_nbuffers) :
-    factory(client_buffer_factory),
+    platform_factory(platform_factory),
+    buffer_factory(buffer_factory),
     server_requests(server_requests),
-    mirfactory(mirfactory),
     surface_map(surface_map),
     format(format),
     usage(usage),
@@ -75,7 +76,7 @@ mcl::BufferVault::~BufferVault()
     if (disconnected_)
         return;
 
-    mirfactory->cancel_requests_with_context(this);
+    buffer_factory->cancel_requests_with_context(this);
     for (auto& it : buffers)
     try
     {
@@ -88,7 +89,7 @@ mcl::BufferVault::~BufferVault()
 
 void mcl::BufferVault::alloc_buffer(geom::Size size, MirPixelFormat format, int usage)
 {
-    mirfactory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage,
+    buffer_factory->expect_buffer(platform_factory, nullptr, size, format, static_cast<MirBufferUsage>(usage),
         incoming_buffer, this);
     server_requests->allocate_buffer(size, format, usage);
 }
