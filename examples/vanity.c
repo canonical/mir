@@ -407,7 +407,8 @@ static void *capture_thread_func(void *arg)
         Time frame_time = acquire_time - last_frame;
         last_frame = acquire_time;
 
-        int see = 10 * interpret(cam, buf);
+        int const resolution = 5;
+        int see = resolution * interpret(cam, buf);
         if (see != last_seen_value)
         {
             Time latency = acquire_time - last_change_time;
@@ -580,8 +581,9 @@ int main(int argc, char *argv[])
             GLint viewport[4];
             glGetIntegerv(GL_VIEWPORT, viewport);
             int w = viewport[2], h = viewport[3];
-            GLfloat top = mode ? 2.0f*h/3.0f : 0.0f;
-            GLfloat bot = top + h/3.0f;
+            GLfloat const bar_height = 0.25f;
+            GLfloat top = mode ? (1.0f - bar_height)*h : 0.0f;
+            GLfloat bot = top + h * bar_height;
             bar[0] = 0; bar[1] = bot;
             bar[2] = w; bar[3] = bot;
             bar[4] = w; bar[5] = top;
