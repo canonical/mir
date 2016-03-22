@@ -258,6 +258,11 @@ message DisplayConfiguration {
   optional string error = 127;
 }
 
+message PreviewConfiguration {
+  optional DisplayConfiguration configuration = 1;
+  optional int32 timeout = 2;
+}
+
 message LifecycleEvent {
   required uint32 new_state = 1; // State transition
   optional string error = 127;

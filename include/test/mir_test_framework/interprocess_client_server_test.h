@@ -37,6 +37,8 @@ public:
     void init_server(std::function<void()> const& init_code);
 
     void run_in_server(std::function<void()> const& exec_code);
+    void run_in_server_and_disable_core_dump(
+                       std::function<void()> const& exec_code);
 
     void run_in_client(std::function<void()> const& client_code);
 
