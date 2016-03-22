@@ -54,10 +54,14 @@ enum CameraPref
     camera_pref_resolution
 };
 
+typedef long long Time;
+static const Time one_second = 1000000000LL;
+
 typedef struct
 {
     void *start;
     size_t length;
+    Time timestamp;
 } Buffer;
 
 typedef struct
@@ -68,8 +72,6 @@ typedef struct
     Buffer buffer[];
 } Camera;
 
-typedef long long Time;
-static const Time one_second = 1000000000LL;
 static Time now()
 {
     struct timespec ts;
@@ -366,6 +368,7 @@ fail:
 static const Buffer *acquire_frame(Camera *cam)
 {
     struct v4l2_buffer frame;
+    Buffer *buf;
     memset(&frame, 0, sizeof(frame));
     frame.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     frame.memory = V4L2_MEMORY_MMAP;
@@ -374,7 +377,10 @@ static const Buffer *acquire_frame(Camera *cam)
         perror("VIDIOC_DQBUF");
         return NULL;
     }
-    return cam->buffer + frame.index;
+    buf = cam->buffer + frame.index;
+    buf->timestamp = frame.timestamp.tv_sec * one_second +
+                     frame.timestamp.tv_usec * (one_second / 1000000);
+    return buf;
 }
 
 static void release_frame(Camera *cam, const Buffer *buf)
@@ -403,7 +409,7 @@ static void *capture_thread_func(void *arg)
     {
         const Buffer *buf = acquire_frame(cam);
 
-        Time acquire_time = now(); // TODO: Can we get more accurate?
+        Time acquire_time = buf->timestamp;
         Time frame_time = acquire_time - last_frame;
         last_frame = acquire_time;
 
