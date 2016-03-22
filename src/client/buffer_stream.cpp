@@ -385,7 +385,8 @@ mcl::BufferStream::BufferStream(
       ideal_buffer_size(ideal_size),
       nbuffers(nbuffers),
       creation_wait_handle(creation_wait_handle),
-      map(map), factory(factory)
+      map(map),
+      factory(factory)
 {
     init_swap_interval();
     if (!protobuf_bs->has_id())

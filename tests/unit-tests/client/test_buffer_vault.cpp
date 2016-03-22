@@ -77,7 +77,8 @@ void ignore(MirPresentationChain*, MirBuffer*, void*)
 
 struct BufferVault : public testing::Test
 {
-    BufferVault()
+    BufferVault() :
+        surface_map(std::make_shared<mcl::ConnectionSurfaceMap>())
     {
         package.set_width(size.width.as_int());
         package.set_height(size.height.as_int());
@@ -145,7 +146,7 @@ struct BufferVault : public testing::Test
     NiceMock<MockClientBufferFactory> mock_platform_factory;
     NiceMock<MockServerRequests> mock_requests;
     mcl::BufferFactory buffer_factory;
-    std::shared_ptr<mcl::ConnectionSurfaceMap> surface_map{ std::make_shared<mcl::ConnectionSurfaceMap>() };
+    std::shared_ptr<mcl::ConnectionSurfaceMap> surface_map;
     mp::Buffer package;
     mp::Buffer package2;
     mp::Buffer package3;

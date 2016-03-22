@@ -66,7 +66,7 @@ class ClientBuffer;
 class ClientPlatform;
 class PerfReport;
 struct MemoryRegion;
-
+class SurfaceMap;
 class ServerBufferSemantics;
 class BufferStream : public EGLNativeSurface, public ClientBufferStream
 {

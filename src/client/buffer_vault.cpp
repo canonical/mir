@@ -109,7 +109,8 @@ std::shared_ptr<mcl::Buffer> mcl::BufferVault::checked_buffer_from_map(int id)
 {
     auto map = surface_map.lock();
     if (!map)
-        BOOST_THROW_EXCEPTION(std::logic_error(""));
+        BOOST_THROW_EXCEPTION(std::logic_error("connection resources lost; cannot access buffer"));
+    
     if (auto buffer = map->buffer(id))
         return buffer;
     else

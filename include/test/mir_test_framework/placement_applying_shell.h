@@ -44,6 +44,7 @@ struct PlacementApplyingShell : mir::shell::ShellWrapper
         ClientInputRegions const& client_input_regions,
         ClientPositions const& client_positions);
 
+    ~PlacementApplyingShell();
     mir::frontend::SurfaceId create_surface(
         std::shared_ptr<mir::scene::Session> const& session,
         mir::scene::SurfaceCreationParameters const& params,
