@@ -297,6 +297,18 @@ struct StubEventSink : public mf::EventSink
         protobuffer.set_height(buffer.size().height.as_int());
         ipc->client_bound_transfer(protobuffer);
     }
+    void add_buffer(mg::Buffer& buffer)
+    {
+        send_buffer(mf::BufferStreamId{-1}, buffer, mg::BufferIpcMsgType::full_msg);
+    }
+    void remove_buffer(mg::Buffer& buffer)
+    {
+        send_buffer(mf::BufferStreamId{-1}, buffer, mg::BufferIpcMsgType::update_msg);
+    }
+    void update_buffer(mg::Buffer& buffer)
+    {
+        send_buffer(mf::BufferStreamId{-1}, buffer, mg::BufferIpcMsgType::update_msg);
+    }
     void handle_event(MirEvent const&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
     void handle_display_config_change(mg::DisplayConfiguration const&) {}
