@@ -75,7 +75,7 @@ TEST_F(ClientBuffers, sends_full_buffer_on_allocation)
     auto stub_buffer = std::make_shared<mtd::StubBuffer>();
     EXPECT_CALL(mock_allocator, alloc_buffer(Ref(properties)))
         .WillOnce(Return(stub_buffer));
-    EXPECT_CALL(mock_sink, send_buffer(add_id, Ref(*stub_buffer), mg::BufferIpcMsgType::full_msg));
+    EXPECT_CALL(mock_sink, add_buffer(Ref(*stub_buffer)));
     mc::BufferMap map{stream_id, mt::fake_shared(mock_sink), mt::fake_shared(mock_allocator)};
     EXPECT_THAT(map.add_buffer(properties), Eq(stub_buffer->id()));
 }
@@ -111,7 +111,7 @@ TEST_F(ClientBuffers, sends_update_msg_to_send_buffer)
     ASSERT_THAT(stub_allocator.map, SizeIs(1));
     ASSERT_THAT(stub_allocator.ids, SizeIs(1));
     auto buffer = map[stub_allocator.ids[0]];
-    EXPECT_CALL(mock_sink, send_buffer(update_id, Ref(*buffer), mg::BufferIpcMsgType::update_msg));
+    EXPECT_CALL(mock_sink, update_buffer(Ref(*buffer)));
     map.send_buffer(stub_allocator.ids[0]);
 }
 
@@ -122,8 +122,7 @@ TEST_F(ClientBuffers, sends_no_update_msg_if_buffer_is_not_around)
     ASSERT_THAT(stub_allocator.ids, SizeIs(1));
     auto buffer = map[stub_allocator.ids[0]];
 
-    EXPECT_CALL(mock_sink, send_buffer(delete_id, Ref(*buffer), mg::BufferIpcMsgType::update_msg))
-        .Times(1);
+    EXPECT_CALL(mock_sink, remove_buffer(Ref(*buffer)));
     map.remove_buffer(stub_allocator.ids[0]);
     map.send_buffer(stub_allocator.ids[0]);
 }
@@ -131,9 +130,9 @@ TEST_F(ClientBuffers, sends_no_update_msg_if_buffer_is_not_around)
 TEST_F(ClientBuffers, DISABLED_can_remove_buffer_from_send_callback)
 {
     map.add_buffer(properties);
-    ON_CALL(mock_sink, send_buffer(_,_,_))
+    ON_CALL(mock_sink, add_buffer(_))
         .WillByDefault(Invoke(
-        [&] (mf::BufferStreamId, mg::Buffer& buffer, mg::BufferIpcMsgType)
+        [&] (mg::Buffer& buffer)
         {
             map.remove_buffer(buffer.id());
         }));
