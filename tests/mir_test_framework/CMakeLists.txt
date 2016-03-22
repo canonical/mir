@@ -68,6 +68,7 @@ add_library(mir-umock-test-framework OBJECT udev_environment.cpp)
 add_library(mir-test-framework-static STATIC
   $<TARGET_OBJECTS:mir-public-test-framework>
   $<TARGET_OBJECTS:mir-protected-test-framework>
+  $<TARGET_OBJECTS:mir-public-test>
 )
 
 add_dependencies(mir-test-framework-static GMock)

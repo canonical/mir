@@ -81,6 +81,8 @@ mtf::TestingServerConfiguration::TestingServerConfiguration(std::vector<geom::Re
 {
 }
 
+mtf::TestingServerConfiguration::~TestingServerConfiguration() = default;
+
 void mtf::TestingServerConfiguration::exec()
 {
 }
