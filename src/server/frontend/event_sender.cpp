@@ -132,8 +132,15 @@ void mfd::EventSender::send_buffer(frontend::BufferStreamId id, graphics::Buffer
 {
     mp::EventSequence seq;
     auto request = seq.mutable_buffer_request();
-    request->mutable_id()->set_value(id.as_value()); 
     request->mutable_buffer()->set_buffer_id(buffer.id().as_value());
+    if (id.as_value() >= 0)
+        request->mutable_id()->set_value(id.as_value()); 
+    else if (id.as_value() == -1)
+        request->set_operation(mir::protobuf::BufferOperation::add);
+    else if (id.as_value() == -2)
+        request->set_operation(mir::protobuf::BufferOperation::update);
+    else if (id.as_value() == -3)
+        request->set_operation(mir::protobuf::BufferOperation::remove);
 
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(request->mutable_buffer())};
     buffer_packer->pack_buffer(request_msg, buffer, type);

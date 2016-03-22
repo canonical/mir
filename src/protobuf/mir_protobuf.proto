@@ -129,9 +129,17 @@ message BufferRelease {
   optional BufferStreamId id = 2;
 };
 
+enum BufferOperation
+{
+    add = 0;
+    update = 1;
+    remove = 2;
+};
+
 message BufferRequest {
   optional BufferStreamId id = 1;
   optional Buffer buffer = 2;
+  optional BufferOperation operation = 3;
 };
 
 message Buffer {

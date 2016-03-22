@@ -308,39 +308,31 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         {
             try
             {
-                if (seq.buffer_request().id().value() >= 0)
+                if (seq.buffer_request().has_id())
                 {
                     map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
                     [&] (mcl::BufferReceiver* receiver) {
                         receiver->buffer_available(seq.buffer_request().buffer());
                     });
                 }
-                else
+                
+                if (seq.buffer_request().has_operation())
                 {
-                    auto stream_cmd = seq.buffer_request().id().value();
+                    auto stream_cmd = seq.buffer_request().operation();
                     auto buffer_id = seq.buffer_request().buffer().buffer_id();
                     std::shared_ptr<mcl::Buffer> buffer = nullptr;
                     switch (stream_cmd)
                     {
-                    case -1:
-                        printf("ALLOC\n");
-                    try{
+                    case mp::BufferOperation::add:
                         buffer = buffer_factory->generate_buffer(seq.buffer_request().buffer());
-                        printf("ALLOC\n");
                         map->insert(buffer_id, buffer); 
-                        printf("ALLOC\n");
                         buffer->received();
-                        printf("ALLOC\n");
-                    } catch (...)
-                    { printf("BOOBOB\n");}
                         break;
-                    case -2:
-                        printf("receive\n");
+                    case mp::BufferOperation::update:
                         map->buffer(buffer_id)->received(
                             *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
                         break;
-                    case -3:
-                        printf("erase\n");
+                    case mp::BufferOperation::remove:
                         map->erase(buffer_id);
                         break;
                     default:
