@@ -648,13 +648,13 @@ int main(int argc, char *argv[])
 
         pthread_mutex_unlock(&state.mutex);
 
-        glFinish();
-        mir_eglapp_swap_buffers();
         if (mode != new_mode)
         {
+            glFinish();
             last_change_time = now();
             mode = new_mode;
         }
+        mir_eglapp_swap_buffers();
     }
 
     mir_surface_set_event_handler(surface, NULL, NULL);
