@@ -411,8 +411,9 @@ static void *capture_thread_func(void *arg)
     {
         const Buffer *buf = acquire_frame(cam);
 
-        Time acquire_time = buf->timestamp;
-        Time exposure = now() - acquire_time;
+        Time acquire_start = buf->timestamp;
+        Time acquire_end = now();
+        Time acquire_time = (acquire_start + acquire_end) / 2;
         Time frame_time = acquire_time - last_frame;
         last_frame = acquire_time;
 
@@ -430,9 +431,8 @@ static void *capture_thread_func(void *arg)
                 if (display_frame_time < 2*frame_time)
                     printf("YOUR CAMERA IS TOO SLOW. RESULTS NOT ACCURATE\n");
 
-                printf("Latency %lld-%lldms, camera interval %lldms (%lldHz), "
+                printf("Latency %lldms, camera interval %lldms (%lldHz), "
                        "display interval %lldms (%lldHz)\n",
-                       (latency - exposure) / one_millisecond,
                        latency / one_millisecond,
                        frame_time / one_millisecond,
                        one_second / frame_time,
