@@ -30,6 +30,8 @@ mtf::PlacementApplyingShell::PlacementApplyingShell(
 {
 }
 
+mtf::PlacementApplyingShell::~PlacementApplyingShell() = default;
+
 mir::frontend::SurfaceId mtf::PlacementApplyingShell::create_surface(
     std::shared_ptr<mir::scene::Session> const& session,
     mir::scene::SurfaceCreationParameters const& params,
