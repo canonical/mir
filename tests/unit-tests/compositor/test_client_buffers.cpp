@@ -61,9 +61,6 @@ struct ClientBuffers : public Test
 {
     testing::NiceMock<mtd::MockEventSink> mock_sink;
     mf::BufferStreamId stream_id{44};
-    mf::BufferStreamId add_id{-1};
-    mf::BufferStreamId update_id{-2};
-    mf::BufferStreamId delete_id{-3};
     mg::BufferProperties properties{geom::Size{42,43}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
     MockBufferAllocator mock_allocator;
     StubBufferAllocator stub_allocator;
@@ -127,10 +124,10 @@ TEST_F(ClientBuffers, sends_no_update_msg_if_buffer_is_not_around)
     map.send_buffer(stub_allocator.ids[0]);
 }
 
-TEST_F(ClientBuffers, DISABLED_can_remove_buffer_from_send_callback)
+TEST_F(ClientBuffers, can_remove_buffer_from_send_callback)
 {
     map.add_buffer(properties);
-    ON_CALL(mock_sink, add_buffer(_))
+    ON_CALL(mock_sink, update_buffer(_))
         .WillByDefault(Invoke(
         [&] (mg::Buffer& buffer)
         {
