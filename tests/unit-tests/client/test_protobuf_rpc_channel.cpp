@@ -730,7 +730,7 @@ TEST_F(MirProtobufRpcChannelTest, creates_buffer_if_not_in_map)
     auto transport = std::make_unique<NiceMock<MockStreamTransport>>();
     mir::protobuf::EventSequence seq;
     auto request = seq.mutable_buffer_request();
-    request->mutable_id()->set_value(-1);
+    request->set_operation(mir::protobuf::BufferOperation::add);
     request->mutable_buffer()->set_buffer_id(buffer_id);
     set_async_buffer_message(seq, *transport);
 
@@ -764,7 +764,7 @@ TEST_F(MirProtobufRpcChannelTest, reuses_buffer_if_in_map)
     auto transport = std::make_unique<NiceMock<MockStreamTransport>>();
     mir::protobuf::EventSequence seq;
     auto request = seq.mutable_buffer_request();
-    request->mutable_id()->set_value(-2);
+    request->set_operation(mir::protobuf::BufferOperation::update);
     request->mutable_buffer()->set_buffer_id(buffer_id);
     set_async_buffer_message(seq, *transport);
 

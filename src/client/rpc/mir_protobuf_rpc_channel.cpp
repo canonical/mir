@@ -316,7 +316,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     });
                 }
                 
-                if (seq.buffer_request().has_operation())
+                else if (seq.buffer_request().has_operation())
                 {
                     auto stream_cmd = seq.buffer_request().operation();
                     auto buffer_id = seq.buffer_request().buffer().buffer_id();

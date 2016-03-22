@@ -46,7 +46,6 @@ namespace
 {
 void incoming_buffer(MirPresentationChain*, MirBuffer* buffer, void* context)
 {
-    printf("BAD.\n");
     auto vault = static_cast<mcl::BufferVault*>(context);
     vault->wire_transfer_inbound(reinterpret_cast<mcl::Buffer*>(buffer)->rpc_id());
 }

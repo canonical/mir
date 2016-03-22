@@ -190,7 +190,6 @@ private:
 
 void buffer_callback(MirPresentationChain*, MirBuffer* buffer, void* context)
 {
-    printf("CALLBACK!\n");
     auto sync = reinterpret_cast<MirBufferSync*>(context);
     sync->buffer_available(buffer);
 }

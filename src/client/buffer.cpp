@@ -55,13 +55,11 @@ void mcl::Buffer::submitted()
 
 void mcl::Buffer::received()
 {
-    printf("IN.\n");
     {
         std::lock_guard<decltype(mutex)> lk(mutex);
         if (!owned)
             owned = true;
     }
-    printf("TRIG.\n");
     cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
 
 }

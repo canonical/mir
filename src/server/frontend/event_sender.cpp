@@ -163,6 +163,7 @@ void mfd::EventSender::send_buffer(frontend::BufferStreamId id, graphics::Buffer
 void mfd::EventSender::send_buffer(mp::EventSequence& seq, graphics::Buffer& buffer, mg::BufferIpcMsgType type)
 {
     auto request = seq.mutable_buffer_request();
+    request->mutable_buffer()->set_buffer_id(buffer.id().as_value());
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(request->mutable_buffer())};
     buffer_packer->pack_buffer(request_msg, buffer, type);
     std::vector<mir::Fd> set;
