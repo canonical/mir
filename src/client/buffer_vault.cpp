@@ -47,13 +47,13 @@ void ignore(MirPresentationChain*, MirBuffer*, void*)
 }
 
 mcl::BufferVault::BufferVault(
-    std::shared_ptr<ClientBufferFactory> const& client_buffer_factory,
-    std::shared_ptr<AsyncBufferFactory> const& mb_factory,
+    std::shared_ptr<ClientBufferFactory> const& platform_factory,
+    std::shared_ptr<AsyncBufferFactory> const& buffer_factory,
     std::shared_ptr<ServerBufferRequests> const& server_requests,
     std::shared_ptr<SurfaceMap> const& surface_map,
     geom::Size size, MirPixelFormat format, int usage, unsigned int initial_nbuffers) :
-    factory(client_buffer_factory),
-    mb_factory(mb_factory),
+    platform_factory(platform_factory),
+    buffer_factory(buffer_factory),
     server_requests(server_requests),
     surface_map(surface_map),
     format(format),
@@ -82,7 +82,7 @@ mcl::BufferVault::~BufferVault()
 
 void mcl::BufferVault::alloc_buffer(geom::Size size, MirPixelFormat format, int usage)
 {
-    mb_factory->expect_buffer(factory, nullptr, size, format, (MirBufferUsage)usage, ignore, nullptr);
+    buffer_factory->expect_buffer(platform_factory, nullptr, size, format, (MirBufferUsage)usage, ignore, nullptr);
     server_requests->allocate_buffer(size, format, usage);
 }
 
@@ -171,7 +171,7 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
             return;
         }
 
-        buffer = mb_factory->generate_buffer(protobuf_buffer);
+        buffer = buffer_factory->generate_buffer(protobuf_buffer);
         surface_map->insert(protobuf_buffer.buffer_id(), buffer);
         buffers[protobuf_buffer.buffer_id()] = Owner::Self;
         buffer->received();

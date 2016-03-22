@@ -78,8 +78,8 @@ private:
     void realloc_buffer(int free_id, geometry::Size size, MirPixelFormat format, int usage);
     std::shared_ptr<Buffer> checked_buffer_from_map(int id);
 
-    std::shared_ptr<ClientBufferFactory> const factory;
-    std::shared_ptr<AsyncBufferFactory> const mb_factory;
+    std::shared_ptr<ClientBufferFactory> const platform_factory;
+    std::shared_ptr<AsyncBufferFactory> const buffer_factory;
     std::shared_ptr<ServerBufferRequests> const server_requests;
     std::shared_ptr<SurfaceMap> const surface_map;
     MirPixelFormat const format;
