@@ -78,6 +78,26 @@ TEST_P(AuthorizingDisplayChangerTest, set_base_configuration_throws_only_when_di
     }
 }
 
+TEST_P(AuthorizingDisplayChangerTest, preview_base_configuration_throws_only_when_disallowed)
+{
+    bool const base_configure_allowed = std::get<1>(GetParam());
+    std::weak_ptr<mf::Session> null_session;
+    std::chrono::seconds timeout;
+
+    if (base_configure_allowed)
+    {
+        EXPECT_NO_THROW({ changer.preview_base_configuration(null_session, conf, timeout); });
+    }
+    else
+    {
+        EXPECT_THROW(
+            {
+                changer.preview_base_configuration(null_session, conf, timeout);
+            },
+            std::runtime_error);
+    }
+}
+
 TEST_P(AuthorizingDisplayChangerTest, only_calls_configure_if_authorized)
 {
     using namespace testing;
@@ -106,6 +126,26 @@ TEST_P(AuthorizingDisplayChangerTest, only_calls_set_base_configuration_if_autho
     try
     {
         changer.set_base_configuration(conf);
+    }
+    catch (...)
+    {
+    }
+}
+
+TEST_P(AuthorizingDisplayChangerTest, only_calls_preview_base_configuration_if_authorized)
+{
+    using namespace testing;
+
+    bool const base_configure_allowed = std::get<1>(GetParam());
+
+    EXPECT_CALL(underlying_changer, preview_base_configuration(_,_,_)).Times(base_configure_allowed);
+
+    try
+    {
+        changer.preview_base_configuration(
+            std::weak_ptr<mf::Session>{},
+            conf,
+            std::chrono::seconds{1});
     }
     catch (...)
     {

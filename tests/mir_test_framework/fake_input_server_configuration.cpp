@@ -24,14 +24,15 @@ namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-mtf::FakeInputServerConfiguration::FakeInputServerConfiguration()
-{
-}
+mtf::FakeInputServerConfiguration::FakeInputServerConfiguration() = default;
 
 mtf::FakeInputServerConfiguration::FakeInputServerConfiguration(std::vector<mir::geometry::Rectangle> const& display_rects)
     : TestingServerConfiguration(display_rects)
 {
 }
+
+mtf::FakeInputServerConfiguration::~FakeInputServerConfiguration() = default;
+
 
 std::shared_ptr<mi::InputManager> mtf::FakeInputServerConfiguration::the_input_manager()
 {
