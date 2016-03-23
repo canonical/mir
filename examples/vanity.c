@@ -411,9 +411,10 @@ static void *capture_thread_func(void *arg)
     {
         const Buffer *buf = acquire_frame(cam);
 
-        Time acquire_start = buf->timestamp;
-        Time acquire_end = now();
-        Time acquire_time = (acquire_start + acquire_end) / 2;
+        // Let's be a bit optimistic and assume the timestamp of the
+        // capture is when it started, and not when it finished.
+        // On PlayStation Eye the difference between the start and end is 4ms.
+        Time acquire_time = buf->timestamp;
         Time frame_time = acquire_time - last_frame;
         last_frame = acquire_time;
 
