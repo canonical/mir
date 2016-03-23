@@ -322,7 +322,7 @@ TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
 {
     using namespace testing;
 
-    int const throttled_input_rate = 3 * refresh_rate / 4;
+    int const throttled_input_rate = refresh_rate * 3 / 4;
     std::chrono::microseconds const input_interval(1000000/throttled_input_rate);
     auto next_input_event = std::chrono::high_resolution_clock::now();
 
