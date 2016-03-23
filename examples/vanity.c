@@ -524,7 +524,7 @@ int main(int argc, char *argv[])
     // TODO: Selectable between high-res grey vs half-res colour?
     const char * const fshadersrc = yuyv_quickcolour_fshadersrc;
 
-    Camera *cam = open_camera("/dev/video0", camera_pref_speed, 2);
+    Camera *cam = open_camera("/dev/video0", camera_pref_speed, 3);
     if (!cam)
     {
         fprintf(stderr, "Failed to set up camera device\n");
