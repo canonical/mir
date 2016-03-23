@@ -79,10 +79,13 @@ struct BufferVault : public testing::Test
         package2.set_height(size.height.as_int());
         package3.set_width(size.width.as_int());
         package3.set_height(size.height.as_int());
+        package4.set_width(size.width.as_int());
+        package4.set_height(size.height.as_int());
 
         package.set_buffer_id(1);
         package2.set_buffer_id(2);
         package3.set_buffer_id(3);
+        package4.set_buffer_id(4);
     }
     unsigned int initial_nbuffers {3};
     geom::Size size{271, 314};
@@ -95,6 +98,7 @@ struct BufferVault : public testing::Test
     mp::Buffer package;
     mp::Buffer package2;
     mp::Buffer package3;
+    mp::Buffer package4;
 };
 
 struct StartedBufferVault : BufferVault
@@ -294,6 +298,7 @@ TEST_F(BufferVault, marks_as_submitted_on_transfer)
     vault.wire_transfer_outbound(buffer);
 }
 
+#if 0
 //handy for android's cancelbuffer
 TEST_F(StartedBufferVault, can_withdraw_and_deposit)
 {
@@ -306,7 +311,7 @@ TEST_F(StartedBufferVault, can_withdraw_and_deposit)
     }
     EXPECT_THAT(buffers, Each(buffers[0]));
 }
-
+#endif
 
 TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_immediate_response)
 {
@@ -483,4 +488,64 @@ TEST_F(BufferVault, rescale_before_initial_buffers_are_serviced_frees_initial_bu
     vault.wire_transfer_inbound(package2);
     vault.wire_transfer_inbound(package3);
     
+}
+
+TEST_F(StartedBufferVault, can_increase_allocation_count)
+{
+    EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
+        .Times(1);
+    vault.increase_buffer_count();
+
+    Mock::VerifyAndClearExpectations(&mock_requests);
+    //no buffers
+}
+
+TEST_F(StartedBufferVault, cannot_decrease_allocation_count_below_initial)
+{
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(0);
+    vault.decrease_buffer_count();
+    Mock::VerifyAndClearExpectations(&mock_requests);
+}
+
+TEST_F(StartedBufferVault, can_decrease_allocation_count)
+{
+    EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
+        .Times(1);
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(1);
+    vault.increase_buffer_count();
+    vault.decrease_buffer_count();
+    Mock::VerifyAndClearExpectations(&mock_requests);
+}
+
+TEST_F(StartedBufferVault, delayed_decrease_allocation_count)
+{
+    EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
+        .Times(1);
+    EXPECT_CALL(mock_requests, free_buffer(package2.buffer_id()))
+        .Times(1);
+
+    vault.increase_buffer_count();
+    vault.wire_transfer_inbound(package4);
+    auto b = vault.withdraw().get().buffer;
+    vault.deposit(b);
+    vault.wire_transfer_outbound(b);
+
+    b = vault.withdraw().get().buffer;
+    vault.deposit(b);
+    vault.wire_transfer_outbound(b);
+
+    b = vault.withdraw().get().buffer;
+    vault.deposit(b);
+    vault.wire_transfer_outbound(b);
+
+    b = vault.withdraw().get().buffer;
+    vault.deposit(b);
+    vault.wire_transfer_outbound(b);
+
+    vault.decrease_buffer_count();
+    vault.wire_transfer_inbound(package);
+    vault.wire_transfer_inbound(package2);
+    Mock::VerifyAndClearExpectations(&mock_requests);
 }
