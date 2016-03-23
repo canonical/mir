@@ -81,6 +81,8 @@ mtf::StubbedServerConfiguration::StubbedServerConfiguration(
 {
 }
 
+mtf::StubbedServerConfiguration::~StubbedServerConfiguration() = default;
+
 std::shared_ptr<mg::Platform> mtf::StubbedServerConfiguration::the_graphics_platform()
 {
     if (!graphics_platform)
