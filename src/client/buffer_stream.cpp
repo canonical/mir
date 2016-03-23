@@ -356,11 +356,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
     void set_interval(int interval) override
     {
-        if (interval > 1)
-            interval = 1;
-        if (interval < 0)
-            interval = 0;
-
+        interval = std::max(0, std::min(1, interval));
         if (current_swap_interval == interval)
             return;
         if (interval == 0)

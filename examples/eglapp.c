@@ -31,8 +31,6 @@ float mir_eglapp_background_opacity = 1.0f;
 
 static const char* appname = "egldemo";
 
-static int swap = 1;
-static int frames = 0;
 static MirConnection *connection;
 static MirSurface *surface;
 static EGLDisplay egldisplay;
@@ -77,22 +75,6 @@ void mir_eglapp_swap_buffers(void)
     if (!running)
         return;
 
-
-    frames++;
-    int fc = 60;
-    if (swap == 0) fc *= 20; 
-    if (frames % fc == 0)
-    {
-        printf("TOGGEL\n");
-        if (swap == 0)
-            swap = 1;
-        else
-            swap = 0;
-
-#if 1
-        eglSwapInterval(egldisplay, swap);
-#endif
-    }
     eglSwapBuffers(egldisplay, eglsurface);
 
     /*
