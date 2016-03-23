@@ -41,9 +41,6 @@
 
 namespace
 {
-std::string const random_device_path{"/dev/random"};
-std::string const urandom_device_path{"/dev/urandom"};
-uint32_t const wait_seconds{30};
 uint32_t const mac_byte_size{20};
 
 size_t cookie_size_from_format(mir::cookie::Format const& format)
@@ -62,55 +59,19 @@ size_t cookie_size_from_format(mir::cookie::Format const& format)
 
 static mir::cookie::Secret get_random_data(unsigned size)
 {
+    int fd = open("/dev/urandom", O_RDONLY);
+    if (fd < 0)
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(),
+                                                "open failed on urandom"));
+
     mir::cookie::Secret buffer(size);
-    int random_fd;
-    int retval;
-    fd_set rfds;
-
-    struct timeval tv;
-    tv.tv_sec  = wait_seconds;
-    tv.tv_usec = 0;
-
-    if ((random_fd = open(random_device_path.c_str(), O_RDONLY)) == -1)
-    {
-        int error = errno;
+    unsigned got = read(fd, buffer.data(), size);
+    int error = errno;
+    close(fd);
+    
+    if (got != size)
         BOOST_THROW_EXCEPTION(std::system_error(error, std::system_category(),
-                                                "open failed on device " + random_device_path));
-    }
-
-    FD_ZERO(&rfds);
-    FD_SET(random_fd, &rfds);
-
-    /* We want to block until *some* entropy exists on boot, then use urandom once we have some */
-    retval = select(random_fd + 1, &rfds, NULL, NULL, &tv);
-
-    /* We are done with /dev/random at this point, and it is either an error or ready to be read */
-    if (close(random_fd) == -1)
-    {
-        int error = errno;
-        BOOST_THROW_EXCEPTION(std::system_error(error, std::system_category(),
-                                                "close failed on device " + random_device_path));
-    }
-
-    if (retval == -1)
-    {
-        int error = errno;
-        BOOST_THROW_EXCEPTION(std::system_error(error, std::system_category(),
-                                                "select failed on file descriptor " + std::to_string(random_fd) +
-                                                " from device " + random_device_path));
-    }
-    else if (retval && FD_ISSET(random_fd, &rfds))
-    {
-        std::uniform_int_distribution<uint8_t> dist;
-        std::random_device rand_dev(urandom_device_path);
-
-        std::generate(std::begin(buffer), std::end(buffer), [&]() { return dist(rand_dev); });
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to read from device: " + random_device_path +
-                                                 " after: " + std::to_string(wait_seconds) + " seconds"));
-    }
+                                                "read failed on urandom"));
 
     return buffer;
 }
