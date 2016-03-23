@@ -89,6 +89,9 @@ private:
     bool first_frame_posted;
 
     scene::SurfaceObservers observers;
+
+    unsigned int total_buffer_count = 0;
+    unsigned int client_owned_buffer_count(std::lock_guard<decltype(mutex)> const&) const;
 };
 }
 }
