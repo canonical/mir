@@ -37,9 +37,10 @@
 #include <time.h>
 
 #define WHITE        1.0f,1.0f,1.0f,1.0f
+#define DARKENED     0.0f,0.0f,0.0f,0.6f
 #define TRANSPARENT  0.0f,0.0f,0.0f,0.0f
 #define BAR_TINT     WHITE
-#define PREVIEW_TINT TRANSPARENT
+#define PREVIEW_TINT DARKENED
 
 enum CameraPref
 {
@@ -549,7 +550,7 @@ int main(int argc, char *argv[])
     glUseProgram(prog);
 
     const GLfloat camw = cam->pix.width, camh = cam->pix.height;
-    const GLfloat preview[] =
+    GLfloat preview[] =
     { // position   texcoord
         0.0f, camh, 0.0f, 1.0f,
         camw, camh, 1.0f, 1.0f,
@@ -615,6 +616,16 @@ int main(int argc, char *argv[])
             bar[2] = w; bar[3] = bot;
             bar[4] = w; bar[5] = top;
             bar[6] = 0; bar[7] = top;
+
+            top = h / 3.0f;
+            bot = top + top;
+            GLfloat left = 0.0f;
+            GLfloat right = left +
+                            cam->pix.width * (bot-top) / cam->pix.height;
+            preview[0] =  left;  preview[1] =  bot;
+            preview[4] =  right; preview[5] =  bot;
+            preview[8] =  right; preview[9] =  top;
+            preview[12] = left;  preview[13] = top;
             if (state.resized)
             {
                 // TRANSPOSED projection matrix to convert from the Mir input
