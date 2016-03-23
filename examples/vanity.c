@@ -50,12 +50,12 @@ enum CameraPref
 };
 
 typedef long long Time;
-static const Time one_second = 1000000000LL;
-static const Time one_millisecond = 1000000LL;
+static Time const one_second = 1000000000LL;
+static Time const one_millisecond = 1000000LL;
 
 typedef struct
 {
-    void *start;
+    void* start;
     size_t length;
     Time timestamp;
 } Buffer;
@@ -72,11 +72,11 @@ typedef struct  // Things shared between threads
 {
     pthread_mutex_t mutex;
     bool resized;
-    Camera *camera;
+    Camera* camera;
     Time last_change_time;
     Time last_change_seen_time;
     Time display_frame_time;
-    const Buffer *preview;
+    Buffer const* preview;
     int expected_direction;
 } State;
 
@@ -87,7 +87,7 @@ static Time now()
     return ts.tv_sec * one_second + ts.tv_nsec;
 }
 
-static GLuint load_shader(const char *src, GLenum type)
+static GLuint load_shader(char const* src, GLenum type)
 {
     GLuint shader = glCreateShader(type);
     if (shader)
@@ -109,10 +109,10 @@ static GLuint load_shader(const char *src, GLenum type)
     return shader;
 }
 
-static void on_event(MirSurface *surface, const MirEvent *event, void *context)
+static void on_event(MirSurface* surface, MirEvent const* event, void* context)
 {
     (void)surface;
-    State *state = (State*)context;
+    State* state = (State*)context;
 
     // FIXME: We presently need to know that events come in on a different
     //        thread to main (LP: #1194384). When that's resolved, simple
@@ -147,7 +147,7 @@ static void fourcc_string(__u32 x, char str[5])
     str[4] = '\0';
 }
 
-static float interpret(const Camera *cam, const Buffer *buf)
+static float interpret(Camera const* cam, Buffer const* buf)
 {
     int const stride = cam->pix.bytesperline;
     int const width = cam->pix.width;
@@ -206,7 +206,7 @@ static float interpret(const Camera *cam, const Buffer *buf)
     return (peak_end + peak_start) / (2.0f * (height - 1));
 }
 
-static void close_camera(Camera *cam)
+static void close_camera(Camera* cam)
 {
     if (!cam) return;
 
@@ -218,10 +218,10 @@ static void close_camera(Camera *cam)
     free(cam);
 }
 
-static Camera *open_camera(const char *path, enum CameraPref pref,
+static Camera* open_camera(char const* path, enum CameraPref pref,
                            unsigned nbuffers)
 {
-    Camera *cam = calloc(1, sizeof(*cam) + nbuffers*sizeof(cam->buffer[0]));
+    Camera* cam = calloc(1, sizeof(*cam) + nbuffers*sizeof(cam->buffer[0]));
     if (cam == NULL)
     {
         perror("malloc");
@@ -260,7 +260,7 @@ static Camera *open_camera(const char *path, enum CameraPref pref,
     struct v4l2_format format;
     memset(&format, 0, sizeof(format));
     format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    struct v4l2_pix_format *pix = &format.fmt.pix;
+    struct v4l2_pix_format* pix = &format.fmt.pix;
     // Driver will choose the best match
     if (pref == camera_pref_speed)
     {
@@ -287,7 +287,7 @@ static Camera *open_camera(const char *path, enum CameraPref pref,
     printf("Pixel format: %ux%u fmt %s, stride %u\n",
         (unsigned)pix->width, (unsigned)pix->height,
         str, (unsigned)pix->bytesperline);
-    cam->pix = *pix;
+    cam->pix =* pix;
 
     // Always choose the highest frame rate. Although what you will get
     // depends on the resolution vs speed set above.
@@ -373,10 +373,10 @@ fail:
     return NULL;
 }
 
-static const Buffer *acquire_frame(Camera *cam)
+static Buffer const* acquire_frame(Camera* cam)
 {
     struct v4l2_buffer frame;
-    Buffer *buf;
+    Buffer* buf;
     memset(&frame, 0, sizeof(frame));
     frame.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     frame.memory = V4L2_MEMORY_MMAP;
@@ -391,7 +391,7 @@ static const Buffer *acquire_frame(Camera *cam)
     return buf;
 }
 
-static void release_frame(const Camera *cam, const Buffer *buf)
+static void release_frame(Camera const* cam, Buffer const* buf)
 {
     struct v4l2_buffer frame;
     memset(&frame, 0, sizeof(frame));
@@ -402,16 +402,16 @@ static void release_frame(const Camera *cam, const Buffer *buf)
         perror("VIDIOC_QBUF");
 }
 
-static void *capture_thread_func(void *arg)
+static void* capture_thread_func(void* arg)
 {
-    State *state = (State*)arg;
-    Camera *cam = state->camera;
+    State* state = (State*)arg;
+    Camera* cam = state->camera;
     Time last_frame = now();
     int last_seen_value = -1;
 
     while (mir_eglapp_running())
     {
-        const Buffer *buf = acquire_frame(cam);
+        Buffer const* buf = acquire_frame(cam);
         pthread_mutex_lock(&state->mutex);
 
         // Note using the buffer timestamp from the kernel means we're
@@ -431,9 +431,7 @@ static void *capture_thread_func(void *arg)
            )
         {
             Time latency = acquire_time - state->last_change_time;
-            // Check polarity too? Doesn't seem necessary right now.
             last_seen_value = see;
-
             state->last_change_seen_time = acquire_time;
             state->expected_direction = 0;
 
@@ -468,7 +466,7 @@ static void *capture_thread_func(void *arg)
     return NULL;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     const char vshadersrc[] =
         "attribute vec2 position;\n"
@@ -496,7 +494,7 @@ int main(int argc, char *argv[])
         "                        1.0);\n"
         "}\n";
 
-    const char * const yuyv_greyscale_fshadersrc = raw_fshadersrc;
+    char const* const yuyv_greyscale_fshadersrc = raw_fshadersrc;
     (void)yuyv_greyscale_fshadersrc;
 
     // This is the Android YUV to RGB calculation.
@@ -521,9 +519,9 @@ int main(int argc, char *argv[])
         "}\n";
 
     // TODO: Selectable between high-res grey vs half-res colour?
-    const char * const fshadersrc = yuyv_quickcolour_fshadersrc;
+    char const* const fshadersrc = yuyv_quickcolour_fshadersrc;
 
-    Camera *cam = open_camera("/dev/video0", camera_pref_speed, 3);
+    Camera* cam = open_camera("/dev/video0", camera_pref_speed, 3);
     if (!cam)
     {
         fprintf(stderr, "Failed to set up camera device\n");
@@ -559,7 +557,7 @@ int main(int argc, char *argv[])
 
     glUseProgram(prog);
 
-    const GLfloat camw = cam->pix.width, camh = cam->pix.height;
+    GLfloat const camw = cam->pix.width, camh = cam->pix.height;
     GLfloat preview[] =
     { // position   texcoord
         0.0f, camh, 0.0f, 1.0f,
@@ -594,7 +592,7 @@ int main(int argc, char *argv[])
         NULL,
         0
     };
-    MirSurface *surface = mir_eglapp_native_surface();
+    MirSurface* surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);
 
     GLint tint = glGetUniformLocation(prog, "tint");
