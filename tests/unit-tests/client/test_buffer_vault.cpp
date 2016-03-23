@@ -186,32 +186,6 @@ TEST_F(BufferVault, frees_the_buffers_we_actually_got)
     vault->wire_transfer_inbound(package2.buffer_id());
 }
 
-#if 0
-TEST_F(BufferVault, creates_buffer_on_first_insertion)
-{
-    EXPECT_CALL(mock_platform_factory, create_buffer(_,initial_properties.size,initial_properties.format));
-    auto vault = make_vault();
-    vault->wire_transfer_inbound(package.buffer_id());
-}
-
-TEST_F(BufferVault, updates_buffer_on_subsequent_insertions)
-{
-    auto mock_buffer = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
-    EXPECT_CALL(*mock_buffer, update_from(_));
-    ON_CALL(*mock_buffer, size())
-        .WillByDefault(Return(size));
-    ON_CALL(mock_platform_factory, create_buffer(_,_,_))
-        .WillByDefault(Return(mock_buffer));
-
-    auto vault = make_vault();
-    vault->wire_transfer_inbound(package.buffer_id());
-    auto b = vault->withdraw().get();
-    vault->deposit(b);
-    vault->wire_transfer_outbound(b);
-    vault->wire_transfer_inbound(package.buffer_id());
-}
-#endif
-
 TEST_F(BufferVault, withdrawing_and_never_filling_up_will_timeout)
 {
     using namespace std::literals::chrono_literals;
@@ -270,8 +244,6 @@ TEST_F(StartedBufferVault, attempt_to_redeposit_throws)
 TEST_F(BufferVault, can_transfer_again_when_we_get_the_buffer)
 {
     auto vault = make_vault();
-//    EXPECT_CALL(mock_platform_factory, create_buffer(_,initial_properties.size,initial_properties.format))
-//        .Times(Exactly(1));
     vault->wire_transfer_inbound(package.buffer_id());
     auto buffer = vault->withdraw().get();
     vault->deposit(buffer);

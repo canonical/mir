@@ -39,6 +39,7 @@
 #include "mir_protobuf_wire.pb.h"
 
 #include <boost/bind.hpp>
+#include <boost/throw_exception.hpp>
 #include <endian.h>
 
 #include <stdexcept>
@@ -336,7 +337,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                         map->erase(buffer_id);
                         break;
                     default:
-                        throw std::runtime_error("");
+                        BOOST_THROW_EXCEPTION(std::runtime_error("unknown buffer operation"));
                     }
                 }
             }
