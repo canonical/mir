@@ -59,6 +59,7 @@ bool exit_success(pid_t pid)
         if (exit_status == EXIT_SUCCESS)
         {
             ml::log(ml::Severity::informational, "Client exited successfully", component);
+            return true;
         }
         else
         {
@@ -83,8 +84,6 @@ bool exit_success(pid_t pid)
         ml::log(ml::Severity::informational, "Client died mysteriously", component);
         return false;
     }
-
-    return true;
 }
 }
 
