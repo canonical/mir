@@ -517,7 +517,6 @@ int main(int argc, char* argv[])
     (void)yuyv_greyscale_fshadersrc;
 
     // This is the Android YUV to RGB calculation.
-    // TODO: Vary the shader to match the camera's reported colour space
     const char yuyv_quickcolour_fshadersrc[] =
         "precision mediump float;\n"
         "varying vec2 v_texcoord;\n"
@@ -537,7 +536,6 @@ int main(int argc, char* argv[])
         "                        (1.0-tint.a) * vec3(r,g,b), 1.0);\n"
         "}\n";
 
-    // TODO: Selectable between high-res grey vs half-res colour?
     char const* const fshadersrc = yuyv_quickcolour_fshadersrc;
 
     Camera* cam = open_camera("/dev/video0", camera_pref_speed, 3);
