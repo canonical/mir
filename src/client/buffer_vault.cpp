@@ -121,17 +121,6 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
     server_requests->submit_buffer(id, *submit_buffer);
 }
 
-bool mcl::BufferVault::should_free_buffer() const
-{
-    auto count = std::count_if(buffers.begin(), buffers.end(),
-        [](std::pair<int, BufferEntry> const& entry) { return entry.second.owner == Owner::Self; });
-    if ((current_buffer_count > needed_buffer_count) && (count <= 1))
-        printf("HANGIN on\n");
-    
-    return (count > 0) && // don't free the only buffer we have
-           (current_buffer_count > needed_buffer_count);
-}
-
 void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 {
     std::shared_ptr<MirBufferPackage> package = mcl::protobuf_to_native_buffer(protobuf_buffer);

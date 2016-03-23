@@ -95,7 +95,6 @@ private:
     size_t current_buffer_count;
     size_t needed_buffer_count;
     size_t const initial_buffer_count;
-    bool should_free_buffer() const;
 };
 }
 }

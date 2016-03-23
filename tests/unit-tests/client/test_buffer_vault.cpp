@@ -298,21 +298,6 @@ TEST_F(BufferVault, marks_as_submitted_on_transfer)
     vault.wire_transfer_outbound(buffer);
 }
 
-#if 0
-//handy for android's cancelbuffer
-TEST_F(StartedBufferVault, can_withdraw_and_deposit)
-{
-    auto a_few_times = 5u;
-    std::vector<std::shared_ptr<mcl::ClientBuffer>> buffers(a_few_times);
-    for (auto i = 0u; i < a_few_times; i++)
-    {
-        buffers[i] = vault.withdraw().get().buffer;
-        vault.deposit(buffers[i]);
-    }
-    EXPECT_THAT(buffers, Each(buffers[0]));
-}
-#endif
-
 TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_immediate_response)
 {
     mp::Buffer package4;
