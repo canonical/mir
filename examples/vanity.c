@@ -78,6 +78,7 @@ typedef struct  // Things shared between threads
     Time last_change_seen_time;
     Time display_frame_time;
     const Buffer *preview;
+    int expected_direction;
 } State;
 
 static Time now()
@@ -423,13 +424,19 @@ static void *capture_thread_func(void *arg)
 
         int const resolution = 5;
         int see = resolution * interpret(cam, buf);
-        if (see != last_seen_value)
+        if ( (see != last_seen_value) &&
+             (acquire_time > state->last_change_time) &&
+             ( (see > last_seen_value && state->expected_direction > 0) || 
+               (see < last_seen_value && state->expected_direction < 0)
+             )
+           )
         {
             Time latency = acquire_time - state->last_change_time;
             // Check polarity too? Doesn't seem necessary right now.
             last_seen_value = see;
 
             state->last_change_seen_time = acquire_time;
+            state->expected_direction = 0;
 
             if (latency < 10*one_second &&
                 frame_time &&
@@ -585,7 +592,8 @@ int main(int argc, char *argv[])
         0,
         0,
         0,
-        NULL
+        NULL,
+        0
     };
     MirSurface *surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);
@@ -615,7 +623,7 @@ int main(int argc, char *argv[])
             glGetIntegerv(GL_VIEWPORT, viewport);
             int w = viewport[2], h = viewport[3];
             GLfloat const bar_height = 0.25f;
-            GLfloat top = mode ? (1.0f - bar_height)*h : 0.0f;
+            GLfloat top = new_mode ? (1.0f - bar_height)*h : 0.0f;
             GLfloat bot = top + h * bar_height;
             bar[0] = 0; bar[1] = bot;
             bar[2] = w; bar[3] = bot;
@@ -700,6 +708,7 @@ int main(int argc, char *argv[])
             glFinish();
             pthread_mutex_lock(&state.mutex);
             state.last_change_time = now();
+            state.expected_direction = new_mode - mode;
             pthread_mutex_unlock(&state.mutex);
             mode = new_mode;
         }
