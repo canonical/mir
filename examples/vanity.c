@@ -74,7 +74,7 @@ typedef struct  // Things shared between threads
     Camera *camera;
     Time last_change_time;
     Time display_frame_time;
-    void *preview_img;  // TODO: Try separate buffers instead
+    const Buffer *preview;
 } State;
 
 static Time now()
@@ -388,7 +388,7 @@ static const Buffer *acquire_frame(Camera *cam)
     return buf;
 }
 
-static void release_frame(Camera *cam, const Buffer *buf)
+static void release_frame(const Camera *cam, const Buffer *buf)
 {
     struct v4l2_buffer frame;
     memset(&frame, 0, sizeof(frame));
@@ -404,8 +404,6 @@ static void *capture_thread_func(void *arg)
     State *state = (State*)arg;
     Camera *cam = state->camera;
     Time last_frame = now();
-    Time preview_interval = one_second / 10;
-    Time last_preview = last_frame - 2*preview_interval;
     int last_seen_value = -1;
 
     while (mir_eglapp_running())
@@ -413,9 +411,9 @@ static void *capture_thread_func(void *arg)
         const Buffer *buf = acquire_frame(cam);
         pthread_mutex_lock(&state->mutex);
 
-        // Let's be a bit optimistic and assume the timestamp of the
-        // capture is when it started, and not when it finished.
-        // On PlayStation Eye the difference between the start and end is 4ms.
+        // Note using the buffer timestamp from the kernel means we're
+        // free to allocate multiple camera buffers without it adversely
+        // affecting the latency measurement (in fact it will improve it).
         Time acquire_time = buf->timestamp;
         Time frame_time = acquire_time - last_frame;
         last_frame = acquire_time;
@@ -446,19 +444,15 @@ static void *capture_thread_func(void *arg)
             }
         }
 
-        // We retain single buffering for minimal latency, so previews to
-        // hand back to OpenGL just need to be periodically copied from that.
-        if ((acquire_time - last_preview) > preview_interval)
+        bool release = true;
+        if (!state->preview)
         {
-            size_t size = 2 * cam->pix.width * cam->pix.height;
-            if (!state->preview_img)
-                state->preview_img = malloc(size);
-            memcpy(state->preview_img, buf->start, size);
-            last_preview = acquire_time;
+            state->preview = buf;
+            release = false;
         }
-
         pthread_mutex_unlock(&state->mutex);
-        release_frame(cam, buf);
+        if (release)
+            release_frame(cam, buf);
     }
     return NULL;
 }
@@ -518,7 +512,7 @@ int main(int argc, char *argv[])
     // TODO: Selectable between high-res grey vs half-res colour?
     const char * const fshadersrc = yuyv_quickcolour_fshadersrc;
 
-    Camera *cam = open_camera("/dev/video0", camera_pref_speed, 1);
+    Camera *cam = open_camera("/dev/video0", camera_pref_speed, 2);
     if (!cam)
     {
         fprintf(stderr, "Failed to set up camera device\n");
@@ -639,7 +633,7 @@ int main(int argc, char *argv[])
         glUniform4f(tint, BAR_TINT);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-        if (state.preview_img)
+        if (state.preview)
         {
             if (cam->pix.pixelformat == V4L2_PIX_FMT_YUYV)
             {
@@ -649,7 +643,7 @@ int main(int argc, char *argv[])
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
                                  cam->pix.width, cam->pix.height, 0,
                                  GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
-                                 state.preview_img);
+                                 state.preview->start);
                 }
                 else if (fshadersrc == yuyv_quickcolour_fshadersrc)
                 {
@@ -657,7 +651,7 @@ int main(int argc, char *argv[])
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
                                  cam->pix.width/2, cam->pix.height, 0,
                                  GL_RGBA, GL_UNSIGNED_BYTE,
-                                 state.preview_img);
+                                 state.preview->start);
                 }
             }
             else
@@ -667,6 +661,9 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "FIXME: Unsupported camera pixel format 0x%08lx: %s\n",
                         (long)cam->pix.pixelformat, str);
             }
+
+            release_frame(cam, state.preview);
+            state.preview = NULL;
         }
         pthread_mutex_unlock(&state.mutex);
 
