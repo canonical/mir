@@ -40,8 +40,7 @@
 #define DARKENED     0.0f,0.0f,0.0f,0.6f
 #define TRANSPARENT  0.0f,0.0f,0.0f,0.0f
 #define BAR_TINT     WHITE
-#define GOOD_PREVIEW_TINT 0.0f,0.2f,0.0f,0.6f
-#define BAD_PREVIEW_TINT  0.5f,0.0f,0.0f,0.6f
+#define PREVIEW_TINT 0.0f,0.0f,0.0f,0.6f
 
 enum CameraPref
 {
@@ -696,10 +695,7 @@ int main(int argc, char *argv[])
         glVertexAttribPointer(texcoord, 2, GL_FLOAT, GL_FALSE,
                               4*sizeof(GLfloat), preview+2);
         glEnableVertexAttribArray(texcoord);
-        if ((now() - state.last_change_seen_time) > 2*one_second)
-            glUniform4f(tint, BAD_PREVIEW_TINT);
-        else
-            glUniform4f(tint, GOOD_PREVIEW_TINT);
+        glUniform4f(tint, PREVIEW_TINT);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         glDisableVertexAttribArray(texcoord);
 
