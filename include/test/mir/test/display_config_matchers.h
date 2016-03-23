@@ -23,6 +23,7 @@
 
 #include <gmock/gmock.h>
 
+
 //avoid a valgrind complaint by defining printer for this type
 static void PrintTo(MirDisplayConfiguration const&, ::std::ostream*) __attribute__ ((unused));
 void PrintTo(MirDisplayConfiguration const&, ::std::ostream*)

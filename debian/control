@@ -244,7 +244,7 @@ Description: Display server for Ubuntu - demonstration programs
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
- Contains demo applications (with source) that use the Mir display server
+ Contains demo applications that use the Mir display server
 
 Package: mir-utils
 Architecture: linux-any
@@ -276,7 +276,7 @@ Description: Display Server for Ubuntu - stress tests and other test tools
  Contains a tool for stress testing the Mir display server
 
 Package: mir-android-diagnostics
-Architecture: linux-any
+Architecture: i386 amd64 armhf
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},

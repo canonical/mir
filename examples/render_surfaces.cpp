@@ -333,6 +333,7 @@ public:
 
     // New function to initialize moveables with surfaces
     void create_surfaces()
+    try
     {
         moveables.resize(get_options()->get<int>(surfaces_to_render));
         std::cout << "Rendering " << moveables.size() << " surfaces" << std::endl;
@@ -372,6 +373,9 @@ public:
             struct NullBufferSink : mf::BufferSink
             {
                 void send_buffer(mf::BufferStreamId, mg::Buffer&, mg::BufferIpcMsgType) override {}
+                void add_buffer(mg::Buffer&) override {}
+                void remove_buffer(mg::Buffer&) override {}
+                void update_buffer(mg::Buffer&) override {}
             };
 
             auto const stream = buffer_stream_factory->create_buffer_stream(
@@ -415,6 +419,11 @@ public:
         }
 
         created = true;
+    }
+    catch (...)
+    {
+        mir::report_exception();
+        exit(EXIT_FAILURE);
     }
 
 private:

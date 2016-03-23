@@ -45,6 +45,8 @@ public:
         MirBufferUsage usage,
         mir_buffer_callback cb,
         void* cb_context) = 0;
+    virtual void cancel_requests_with_context(void*) = 0;
+
 private:
     AsyncBufferFactory(AsyncBufferFactory const&) = delete;
     AsyncBufferFactory& operator=(AsyncBufferFactory const&) = delete;
@@ -62,6 +64,7 @@ public:
         MirBufferUsage usage,
         mir_buffer_callback cb,
         void* cb_context) override;
+    void cancel_requests_with_context(void*);
 
 private:
     std::mutex mutex;

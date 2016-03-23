@@ -39,6 +39,7 @@
 #include "mir_protobuf_wire.pb.h"
 
 #include <boost/bind.hpp>
+#include <boost/throw_exception.hpp>
 #include <endian.h>
 
 #include <stdexcept>
@@ -315,19 +316,28 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                         receiver->buffer_available(seq.buffer_request().buffer());
                     });
                 }
-                else
+                
+                else if (seq.buffer_request().has_operation())
                 {
-                    auto buffer = map->buffer(seq.buffer_request().buffer().buffer_id());
-                    if (buffer)
+                    auto stream_cmd = seq.buffer_request().operation();
+                    auto buffer_id = seq.buffer_request().buffer().buffer_id();
+                    std::shared_ptr<mcl::Buffer> buffer = nullptr;
+                    switch (stream_cmd)
                     {
-                        buffer->received(
-                            *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
-                    }
-                    else
-                    {
+                    case mp::BufferOperation::add:
                         buffer = buffer_factory->generate_buffer(seq.buffer_request().buffer());
-                        map->insert(seq.buffer_request().buffer().buffer_id(), buffer); 
+                        map->insert(buffer_id, buffer); 
                         buffer->received();
+                        break;
+                    case mp::BufferOperation::update:
+                        map->buffer(buffer_id)->received(
+                            *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
+                        break;
+                    case mp::BufferOperation::remove:
+                        map->erase(buffer_id);
+                        break;
+                    default:
+                        BOOST_THROW_EXCEPTION(std::runtime_error("unknown buffer operation"));
                     }
                 }
             }

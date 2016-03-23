@@ -203,7 +203,7 @@ public:
     }
 
     
-    mg::BufferID create_buffer(mg::BufferProperties const&, mf::BufferStreamId)
+    mg::BufferID create_buffer(mg::BufferProperties const&)
     {
         buffer_count++;
         return mg::BufferID{3};

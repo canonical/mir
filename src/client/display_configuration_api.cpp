@@ -291,6 +291,14 @@ MirOrientation mir_output_get_orientation(MirOutput const* client_output)
     return static_cast<MirOrientation>(output->orientation());
 }
 
+void mir_output_set_orientation(MirOutput* client_output, MirOrientation orientation)
+{
+    auto output = client_to_output(client_output);
+
+    output->set_orientation(orientation);
+}
+
+
 float mir_output_get_scale_factor(MirOutput const* client_output)
 {
     auto output = client_to_output(client_output);
