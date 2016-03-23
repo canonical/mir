@@ -408,6 +408,9 @@ static void* capture_thread_func(void* arg)
     Camera* cam = state->camera;
     Time last_frame = now();
     int last_seen_value = -1;
+    unsigned const max_history = 50;
+    unsigned nhistory = 0;
+    Time history[max_history];
 
     while (mir_eglapp_running())
     {
@@ -435,20 +438,36 @@ static void* capture_thread_func(void* arg)
             state->last_change_seen_time = acquire_time;
             state->expected_direction = 0;
 
+            history[nhistory % max_history] = latency;
+            ++nhistory;
+            unsigned size = nhistory < max_history ? nhistory : max_history;
+            Time avg = 0;
+            for (unsigned h = 0; h < size; ++h)
+                avg += history[h];
+            avg /= size;
+
             if (latency < 10*one_second &&
                 frame_time &&
                 state->display_frame_time)
             {
-                // Nyquist–Shannon sampling theorem
+                // TODO: Display messages on screen in future.
+
                 if (state->display_frame_time < 2*frame_time)
                     printf("YOUR CAMERA IS TOO SLOW. RESULTS NOT ACCURATE\n");
 
-                printf("Latency %lldms, camera interval %lldms (%lldHz), "
-                       "display interval %lldms (%lldHz)\n",
+                printf("Latency %lld.%1lldms, "
+                       "average %lld.%1lldms, "
+                       "camera %lld.%1lldms (%lldHz), "
+                       "display %lld.%1lldms (%lldHz)\n",
                        latency / one_millisecond,
+                       (latency % one_millisecond) / 100000,
+                       avg / one_millisecond,
+                       (avg % one_millisecond) / 100000,
                        frame_time / one_millisecond,
+                       (frame_time % one_millisecond) / 100000,
                        one_second / frame_time,
                        state->display_frame_time / one_millisecond,
+                       (state->display_frame_time % one_millisecond) / 100000,
                        one_second / state->display_frame_time);
             }
         }
