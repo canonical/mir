@@ -125,8 +125,10 @@ bool mcl::BufferVault::should_free_buffer() const
 {
     auto count = std::count_if(buffers.begin(), buffers.end(),
         [](std::pair<int, BufferEntry> const& entry) { return entry.second.owner == Owner::Self; });
-    printf("SELF OWNED EMPTY %i\n", (int)(long) count);
-    return (count > 1) && // don't free the only buffer we have
+    if ((current_buffer_count > needed_buffer_count) && (count <= 1))
+        printf("HANGIN on\n");
+    
+    return (count > 0) && // don't free the only buffer we have
            (current_buffer_count > needed_buffer_count);
 }
 
@@ -157,18 +159,17 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     {
         it->second.buffer->update_from(*package);
         it->second.owner = Owner::Self;
-        auto should_free = should_free_buffer();
-        if ((size != it->second.buffer->size()) || should_free)
+        auto should_decrease_count = (current_buffer_count > needed_buffer_count);
+        if ((size != it->second.buffer->size()) || should_decrease_count)
         {
             int id = it->first;
             buffers.erase(it);
             lk.unlock();
             server_requests->free_buffer(id);
-            if (!should_free)
-            {
+            if (should_decrease_count)
                 current_buffer_count--;
+            else
                 server_requests->allocate_buffer(size, format, usage);
-            }
             return;
         }
     }
@@ -251,6 +252,4 @@ void mcl::BufferVault::decrease_buffer_count()
         lk.unlock();
         server_requests->free_buffer(free_id);
     }
-
-
 }

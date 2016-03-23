@@ -523,7 +523,7 @@ TEST_F(StartedBufferVault, delayed_decrease_allocation_count)
 {
     EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
         .Times(1);
-    EXPECT_CALL(mock_requests, free_buffer(package2.buffer_id()))
+    EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()))
         .Times(1);
 
     vault.increase_buffer_count();
