@@ -41,12 +41,6 @@
 #define BAR_TINT     WHITE
 #define PREVIEW_TINT TRANSPARENT
 
-typedef struct
-{
-    pthread_mutex_t mutex;
-    bool resized;
-} State;
-
 enum CameraPref
 {
     camera_pref_defaults,
@@ -72,6 +66,16 @@ typedef struct
     unsigned buffers;
     Buffer buffer[];
 } Camera;
+
+typedef struct  // Things shared between threads
+{
+    pthread_mutex_t mutex;
+    bool resized;
+    Camera *camera;
+    Time last_change_time;
+    Time display_frame_time;
+    void *preview_img;  // TODO: Try separate buffers instead
+} State;
 
 static Time now()
 {
@@ -395,13 +399,10 @@ static void release_frame(Camera *cam, const Buffer *buf)
         perror("VIDIOC_QBUF");
 }
 
-static Time last_change_time = 0;
-static void *preview_img = NULL;  // TODO: locking and cleaner
-static Time display_frame_time = 0;
-
 static void *capture_thread_func(void *arg)
 {
-    Camera *cam = (Camera*)arg;
+    State *state = (State*)arg;
+    Camera *cam = state->camera;
     Time last_frame = now();
     Time preview_interval = one_second / 10;
     Time last_preview = last_frame - 2*preview_interval;
@@ -410,6 +411,7 @@ static void *capture_thread_func(void *arg)
     while (mir_eglapp_running())
     {
         const Buffer *buf = acquire_frame(cam);
+        pthread_mutex_lock(&state->mutex);
 
         // Let's be a bit optimistic and assume the timestamp of the
         // capture is when it started, and not when it finished.
@@ -422,14 +424,16 @@ static void *capture_thread_func(void *arg)
         int see = resolution * interpret(cam, buf);
         if (see != last_seen_value)
         {
-            Time latency = acquire_time - last_change_time;
+            Time latency = acquire_time - state->last_change_time;
             // Check polarity too? Doesn't seem necessary right now.
             last_seen_value = see;
 
-            if (latency < 10*one_second && frame_time && display_frame_time)
+            if (latency < 10*one_second &&
+                frame_time &&
+                state->display_frame_time)
             {
                 // Nyquist–Shannon sampling theorem
-                if (display_frame_time < 2*frame_time)
+                if (state->display_frame_time < 2*frame_time)
                     printf("YOUR CAMERA IS TOO SLOW. RESULTS NOT ACCURATE\n");
 
                 printf("Latency %lldms, camera interval %lldms (%lldHz), "
@@ -437,8 +441,8 @@ static void *capture_thread_func(void *arg)
                        latency / one_millisecond,
                        frame_time / one_millisecond,
                        one_second / frame_time,
-                       display_frame_time / one_millisecond,
-                       one_second / display_frame_time);
+                       state->display_frame_time / one_millisecond,
+                       one_second / state->display_frame_time);
             }
         }
 
@@ -447,11 +451,13 @@ static void *capture_thread_func(void *arg)
         if ((acquire_time - last_preview) > preview_interval)
         {
             size_t size = 2 * cam->pix.width * cam->pix.height;
-            if (!preview_img)
-                preview_img = malloc(size);
-            memcpy(preview_img, buf->start, size);
+            if (!state->preview_img)
+                state->preview_img = malloc(size);
+            memcpy(state->preview_img, buf->start, size);
             last_preview = acquire_time;
         }
+
+        pthread_mutex_unlock(&state->mutex);
         release_frame(cam, buf);
     }
     return NULL;
@@ -575,7 +581,11 @@ int main(int argc, char *argv[])
     State state =
     {
         PTHREAD_MUTEX_INITIALIZER,
-        true
+        true,
+        cam,
+        0,
+        0,
+        NULL
     };
     MirSurface *surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);
@@ -587,7 +597,7 @@ int main(int argc, char *argv[])
     glDisableVertexAttribArray(texcoord);
 
     pthread_t capture_thread;
-    pthread_create(&capture_thread, NULL, capture_thread_func, cam);
+    pthread_create(&capture_thread, NULL, capture_thread_func, &state);
 
     int mode = 0;
     Time last_swap_time = 0;
@@ -621,16 +631,15 @@ int main(int argc, char *argv[])
                                      -1.0f,   1.0f,   0.0f, 1.0f};
                 // Note GL_FALSE: GLES does not support the transpose option
                 glUniformMatrix4fv(projection, 1, GL_FALSE, matrix);
+                state.resized = false;
             }
         }
-
-        state.resized = false;
         glVertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE,
                               2*sizeof(GLfloat), bar);
         glUniform4f(tint, BAR_TINT);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-        if (preview_img)  // TODO locking
+        if (state.preview_img)
         {
             if (cam->pix.pixelformat == V4L2_PIX_FMT_YUYV)
             {
@@ -640,7 +649,7 @@ int main(int argc, char *argv[])
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
                                  cam->pix.width, cam->pix.height, 0,
                                  GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
-                                 preview_img);
+                                 state.preview_img);
                 }
                 else if (fshadersrc == yuyv_quickcolour_fshadersrc)
                 {
@@ -648,7 +657,7 @@ int main(int argc, char *argv[])
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
                                  cam->pix.width/2, cam->pix.height, 0,
                                  GL_RGBA, GL_UNSIGNED_BYTE,
-                                 preview_img);
+                                 state.preview_img);
                 }
             }
             else
@@ -659,6 +668,7 @@ int main(int argc, char *argv[])
                         (long)cam->pix.pixelformat, str);
             }
         }
+        pthread_mutex_unlock(&state.mutex);
 
         glVertexAttribPointer(position, 2, GL_FLOAT, GL_FALSE,
                               4*sizeof(GLfloat), preview);
@@ -669,18 +679,20 @@ int main(int argc, char *argv[])
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         glDisableVertexAttribArray(texcoord);
 
-        pthread_mutex_unlock(&state.mutex);
-
         if (mode != new_mode)
         {
             glFinish();
-            last_change_time = now();
+            pthread_mutex_lock(&state.mutex);
+            state.last_change_time = now();
+            pthread_mutex_unlock(&state.mutex);
             mode = new_mode;
         }
         mir_eglapp_swap_buffers();
 
         Time swap_time = now();
-        display_frame_time = swap_time - last_swap_time;
+        pthread_mutex_lock(&state.mutex);
+        state.display_frame_time = swap_time - last_swap_time;
+        pthread_mutex_unlock(&state.mutex);
         last_swap_time = swap_time;
     }
 
