@@ -222,12 +222,11 @@ MIR_CLIENT_9v19 {
     mir_surface_spec_set_shell_chrome;
 } MIR_CLIENT_9v18;
 
-MIR_CLIENT_9v20 {
+MIR_CLIENT_9v21 {
   global:
     mir_connection_apply_display_configuration;
     mir_connection_create_display_configuration;
     mir_connection_create_input_config;
-    mir_connection_set_base_display_configuration;
     mir_connection_set_input_config_change_callback;
     mir_display_config_get_max_simultaneous_outputs;
     mir_display_config_get_num_outputs;
@@ -264,7 +263,6 @@ MIR_CLIENT_9v20 {
     mir_output_is_enabled;
     mir_output_mode_get_height;
     mir_output_mode_get_refresh_rate;
-    mir_output_mode_get_width;
     mir_output_mode_get_width;
   local:
     *;
