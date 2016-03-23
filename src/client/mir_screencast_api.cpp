@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014,2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -22,7 +22,7 @@
 #include "mir_screencast.h"
 #include "mir_connection.h"
 #include "mir/raii.h"
-
+#include "mir/require.h"
 #include "mir/uncaught.h"
 
 #include <stdexcept>
@@ -31,53 +31,78 @@
 namespace
 {
 void null_callback(MirScreencast*, void*) {}
+MirScreencast* create_screencast(MirScreencastSpec* spec)
+{
+    auto& server = spec->connection->display_server();
+    auto screencast = std::make_unique<MirScreencast>(*spec, server, null_callback, nullptr);
+    screencast->creation_wait_handle()->wait_for_all();
+
+    auto raw_screencast = screencast.get();
+    screencast.release();
+    return raw_screencast;
 }
+}
+
+MirScreencastSpec* mir_create_screencast_spec(MirConnection* connection)
+{
+    mir::require(mir_connection_is_valid(connection));
+    return new MirScreencastSpec{connection};
+}
+
+void mir_screencast_spec_set_width(MirScreencastSpec* spec, unsigned width)
+{
+    spec->width = width;
+}
+
+void mir_screencast_spec_set_height(MirScreencastSpec* spec, unsigned height)
+{
+    spec->height = height;
+}
+
+void mir_screencast_spec_set_pixel_format(MirScreencastSpec* spec, MirPixelFormat format)
+{
+    spec->pixel_format = format;
+}
+
+void mir_screencast_spec_set_capture_region(MirScreencastSpec* spec, MirRectangle const* region)
+{
+    spec->capture_region = *region;
+}
+
+void mir_screencast_spec_release(MirScreencastSpec* spec)
+{
+    delete spec;
+}
+
+MirScreencast* mir_screencast_create_sync(MirScreencastSpec* spec)
+try
+{
+    return create_screencast(spec);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return new MirScreencast(ex.what());
+}
+
+bool mir_screencast_is_valid(MirScreencast *screencast)
+{
+    return screencast && screencast->valid();
+}
+
+char const *mir_screencast_get_error_message(MirScreencast *screencast)
+{
+    return screencast->get_error_message();
+}
+
 
 MirScreencast* mir_connection_create_screencast_sync(
     MirConnection* connection,
     MirScreencastParameters* parameters)
 {
-    if (!MirConnection::is_valid(connection))
-        return nullptr;
-
-    MirScreencast* screencast = nullptr;
-
-    try
-    {
-        auto const config = mir::raii::deleter_for(
-            mir_connection_create_display_config(connection),
-            &mir_display_config_destroy);
-
-        mir::geometry::Rectangle const region{
-            {parameters->region.left, parameters->region.top},
-            {parameters->region.width, parameters->region.height}
-        };
-        mir::geometry::Size const size{parameters->width, parameters->height};
-
-        std::unique_ptr<MirScreencast> screencast_uptr{
-            new MirScreencast{
-                region,
-                size,
-                parameters->pixel_format,
-                connection->display_server(),
-                connection,
-                null_callback, nullptr}};
-
-        screencast_uptr->creation_wait_handle()->wait_for_all();
-
-        if (screencast_uptr->valid())
-        {
-            screencast = screencast_uptr.get();
-            screencast_uptr.release();
-        }
-    }
-    catch (std::exception const& ex)
-    {
-        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-        return nullptr;
-    }
-
-    return screencast;
+    mir::require(mir_connection_is_valid(connection));
+    MirScreencastSpec spec{connection, *parameters};
+    return mir_screencast_create_sync(&spec);
 }
 
 void mir_screencast_release_sync(MirScreencast* screencast)

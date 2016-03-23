@@ -251,6 +251,15 @@ MIR_CLIENT_9_unreleased {
     mir_output_mode_get_width;
     mir_output_mode_get_height;
     mir_output_mode_get_refresh_rate;
+    mir_create_screencast_spec;
+    mir_screencast_spec_set_width;
+    mir_screencast_spec_set_height;
+    mir_screencast_spec_set_pixel_format;
+    mir_screencast_spec_set_capture_region;
+    mir_screencast_spec_release;
+    mir_screencast_create_sync;
+    mir_screencast_is_valid;
+    mir_screencast_get_error_message;
   local:
     *;
 } MIR_CLIENT_9v19;

@@ -21,6 +21,7 @@
 
 #include "mir_wait_handle.h"
 #include "mir_toolkit/client_types.h"
+#include "mir/optional_value.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
 
@@ -46,19 +47,34 @@ class ClientBufferStream;
 }
 }
 
+struct MirScreencastSpec
+{
+    MirScreencastSpec();
+    MirScreencastSpec(MirConnection* connection);
+    MirScreencastSpec(MirConnection* connection, MirScreencastParameters const& params);
+
+    // Required parameters
+    MirConnection* connection{nullptr};
+
+    // Optional parameters
+    mir::optional_value<unsigned int> width;
+    mir::optional_value<unsigned int> height;
+    mir::optional_value<MirPixelFormat> pixel_format;
+    mir::optional_value<MirRectangle> capture_region;
+};
+
 struct MirScreencast
 {
 public:
+    MirScreencast(std::string const& error);
     MirScreencast(
-        mir::geometry::Rectangle const& region,
-        mir::geometry::Size const& size,
-        MirPixelFormat pixel_format,
+        MirScreencastSpec const& spec,
         mir::client::rpc::DisplayServer& server,
-        MirConnection* connection,
         mir_screencast_callback callback, void* context);
 
     MirWaitHandle* creation_wait_handle();
     bool valid();
+    char const* get_error_message();
 
     MirWaitHandle* release(
         mir_screencast_callback callback, void* context);
@@ -75,16 +91,17 @@ private:
     void released(
         mir_screencast_callback callback, void* context);
 
-    mir::client::rpc::DisplayServer& server;
-    MirConnection* connection;
-    mir::geometry::Size const output_size;
+    mir::client::rpc::DisplayServer* const server{nullptr};
+    MirConnection* const connection{nullptr};
     std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;
 
-    std::unique_ptr<mir::protobuf::Screencast> protobuf_screencast;
-    std::unique_ptr<mir::protobuf::Void> protobuf_void;
+    std::unique_ptr<mir::protobuf::Screencast> const protobuf_screencast;
+    std::unique_ptr<mir::protobuf::Void> const protobuf_void;
 
     MirWaitHandle create_screencast_wait_handle;
     MirWaitHandle release_wait_handle;
+
+    std::string const empty_error_message;
 };
 
 #endif /* MIR_CLIENT_MIR_SCREENCAST_H_ */
