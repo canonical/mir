@@ -79,13 +79,10 @@ struct BufferVault : public testing::Test
         package2.set_height(size.height.as_int());
         package3.set_width(size.width.as_int());
         package3.set_height(size.height.as_int());
-        package4.set_width(size.width.as_int());
-        package4.set_height(size.height.as_int());
 
         package.set_buffer_id(1);
         package2.set_buffer_id(2);
         package3.set_buffer_id(3);
-        package4.set_buffer_id(4);
     }
     unsigned int initial_nbuffers {3};
     geom::Size size{271, 314};
@@ -98,7 +95,6 @@ struct BufferVault : public testing::Test
     mp::Buffer package;
     mp::Buffer package2;
     mp::Buffer package3;
-    mp::Buffer package4;
 };
 
 struct StartedBufferVault : BufferVault
@@ -506,13 +502,18 @@ TEST_F(StartedBufferVault, can_decrease_allocation_count)
 
 TEST_F(StartedBufferVault, delayed_decrease_allocation_count)
 {
+    mp::Buffer requested_buffer;
+    requested_buffer.set_width(size.width.as_int());
+    requested_buffer.set_height(size.height.as_int());
+    requested_buffer.set_buffer_id(4);
+
     EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
         .Times(1);
     EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()))
         .Times(1);
 
     vault.increase_buffer_count();
-    vault.wire_transfer_inbound(package4);
+    vault.wire_transfer_inbound(requested_buffer);
     auto b = vault.withdraw().get().buffer;
     vault.deposit(b);
     vault.wire_transfer_outbound(b);
