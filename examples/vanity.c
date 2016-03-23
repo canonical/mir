@@ -49,9 +49,9 @@ enum CameraPref
     camera_pref_resolution
 };
 
-typedef long long Time;
-static Time const one_second = 1000000000LL;
-static Time const one_millisecond = 1000000LL;
+typedef unsigned long long Time;
+static Time const one_second = 1000000000ULL;
+static Time const one_millisecond = 1000000ULL;
 
 typedef struct
 {
@@ -408,7 +408,7 @@ static void* capture_thread_func(void* arg)
     Camera* cam = state->camera;
     Time last_frame = now();
     int last_seen_value = -1;
-    unsigned const max_history = 50;
+    unsigned const max_history = 20;
     unsigned nhistory = 0;
     Time history[max_history];
 
@@ -438,27 +438,35 @@ static void* capture_thread_func(void* arg)
             state->last_change_seen_time = acquire_time;
             state->expected_direction = 0;
 
-            history[nhistory % max_history] = latency;
-            ++nhistory;
-            unsigned size = nhistory < max_history ? nhistory : max_history;
-            Time avg = 0;
-            for (unsigned h = 0; h < size; ++h)
-                avg += history[h];
-            avg /= size;
-
             if (latency < 10*one_second &&
                 frame_time &&
                 state->display_frame_time)
             {
+                history[nhistory % max_history] = latency;
+                ++nhistory;
+                unsigned size = nhistory < max_history ? nhistory : max_history;
+                Time min = ~0ULL, max = 0ULL, avg = 0;
+                unsigned h = nhistory > max_history ? 0 : 1;
+                for (; h < size; ++h)
+                {
+                    Time t = history[h];
+                    avg += t;
+                    if (t < min) min = t;
+                    if (t > max) max = t;
+                }
+                avg /= size;
+                Time observed_range = max - min;
+                Time expected_range = frame_time + state->display_frame_time;
+
                 // TODO: Display messages on screen in future.
 
                 if (state->display_frame_time < 2*frame_time)
                     printf("YOUR CAMERA IS TOO SLOW. RESULTS NOT ACCURATE\n");
 
-                printf("Latency %lld.%1lldms, "
-                       "average %lld.%1lldms, "
-                       "camera %lld.%1lldms (%lldHz), "
-                       "display %lld.%1lldms (%lldHz)\n",
+                printf("Latency %llu.%1llums, "
+                       "average %llu.%1llums, "
+                       "camera %llu.%1llums (%lluHz), "
+                       "display %llu.%1llums (%lluHz)\n",
                        latency / one_millisecond,
                        (latency % one_millisecond) / 100000,
                        avg / one_millisecond,
@@ -469,6 +477,12 @@ static void* capture_thread_func(void* arg)
                        state->display_frame_time / one_millisecond,
                        (state->display_frame_time % one_millisecond) / 100000,
                        one_second / state->display_frame_time);
+                printf("Aliasing wobble: expecting %llums, observed %llums variation\n",
+                       expected_range / one_millisecond,
+                       observed_range / one_millisecond);
+                printf("Synchronized latency (wobble removed): %llu.%1llums\n",
+                       min / one_millisecond,
+                       (min % one_millisecond) / 100000);
             }
         }
 
