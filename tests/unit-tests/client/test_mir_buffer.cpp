@@ -86,6 +86,7 @@ TEST_F(MirBufferTest, releases_buffer_refcount_implicitly_on_submit)
         .WillOnce(Return(region));
 
     mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
+    buffer.received();
 
     auto use_count_before = region.use_count();
     buffer.map_region();
@@ -149,6 +150,7 @@ TEST_F(MirBufferTest, callback_called_when_available_from_creation)
 {
     int call_count = 0;
     mcl::Buffer buffer(cb, &call_count, buffer_id, mock_client_buffer, nullptr, usage);
+    buffer.received();
     EXPECT_THAT(call_count, Eq(1));
 }
 
@@ -156,25 +158,20 @@ TEST_F(MirBufferTest, callback_called_when_available_from_server_return)
 {
     int call_count = 0;
     mcl::Buffer buffer(cb, &call_count, buffer_id, mock_client_buffer, nullptr, usage);
-
-    buffer.submitted();
     buffer.received(update_message);
-    EXPECT_THAT(call_count, Eq(2));
+    EXPECT_THAT(call_count, Eq(1));
 }
 
 TEST_F(MirBufferTest, updates_package_when_server_returns)
 {
     EXPECT_CALL(*mock_client_buffer, update_from(Ref(update_message)));
     mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    buffer.submitted();
     buffer.received(update_message);
 }
 
 TEST_F(MirBufferTest, submitting_unowned_buffer_throws)
 {
     mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    buffer.submitted();
-
     EXPECT_THROW({ 
         buffer.submitted();
     }, std::logic_error);
