@@ -1,3 +1,21 @@
+mir (0.22.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  [ Kevin DuBois ]
+  * New upstream release 0.20.0 (https://launchpad.net/mir/+milestone/0.22.0)
+    - ABI summary: Only servers need rebuilding
+      . mirclient ABI unchanged at 9
+      . mirserver ABI bumped to 39
+      . mircommon ABI unchanged at 5
+      . mirplatform ABI unchanged at 11
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 8
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 5
+    - Enhancements:
+    - Bug fixes:
+
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 21 Mar 2016 12:45:22 -0500
+
 mir (0.21.0-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release 0.21.0 (https://launchpad.net/mir/+milestone/0.21.0)
