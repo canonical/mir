@@ -220,7 +220,6 @@ TEST_F(Surface, emits_resize_events_only_on_change)
     EXPECT_CALL(*sink, handle_event(MirResizeEventEq(e2.get())))
         .Times(1);
 
-
     surface->resize(new_size);
     EXPECT_EQ(new_size, surface->size());
     surface->resize(new_size);
