@@ -6,6 +6,7 @@ set(MIR_COMMON_REFERENCES)
 
 add_subdirectory(fd)
 add_subdirectory(geometry)
+add_subdirectory(events)
 add_subdirectory(logging)
 add_subdirectory(report/lttng)
 add_subdirectory(env)

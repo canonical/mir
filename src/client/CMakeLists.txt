@@ -93,8 +93,8 @@ add_library(mirclientobjects OBJECT
 # trying to compile mirclientobjects
 add_dependencies(mirclientobjects mirprotobuf)
 
-mir_add_library_with_symbols(mirclient SHARED ${symbol_map} $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
-add_library(mirclient-static STATIC $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput>)
+mir_add_library_with_symbols(mirclient SHARED ${symbol_map} $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput> $<TARGET_OBJECTS:mirevents>)
+add_library(mirclient-static STATIC $<TARGET_OBJECTS:mirclientobjects> $<TARGET_OBJECTS:mirsharedinput> $<TARGET_OBJECTS:mirevents>)
 
 set_target_properties(mirclient
 

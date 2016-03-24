@@ -54,6 +54,19 @@ namespace mr = mir::report;
 namespace
 {
 
+MATCHER_P(MirResizeEventEq, event, "")
+{
+    if (arg.type != mir_event_type_resize ||
+        event->type != mir_event_type_resize)
+    {
+        return false;
+    }
+
+    return arg.to_resize()->width == event->to_resize()->width &&
+           arg.to_resize()->height == event->to_resize()->height &&
+           arg.to_resize()->surface_id == event->to_resize()->surface_id;
+}
+
 typedef testing::NiceMock<mtd::MockBufferStream> StubBufferStream;
 
 struct Surface : testing::Test
@@ -180,7 +193,7 @@ TEST_F(Surface, emits_resize_events)
     surface->add_observer(observer);
 
     auto e = mev::make_event(stub_id, new_size);
-    EXPECT_CALL(*sink, handle_event(*e))
+    EXPECT_CALL(*sink, handle_event(MirResizeEventEq(e.get())))
         .Times(1);
 
     surface->resize(new_size);
@@ -200,12 +213,13 @@ TEST_F(Surface, emits_resize_events_only_on_change)
     surface->add_observer(observer);
 
     auto e = mev::make_event(stub_id, new_size);
-    EXPECT_CALL(*sink, handle_event(*e))
+    EXPECT_CALL(*sink, handle_event(MirResizeEventEq(e.get())))
         .Times(1);
 
     auto e2 = mev::make_event(stub_id, new_size2);
-    EXPECT_CALL(*sink, handle_event(*e2))
+    EXPECT_CALL(*sink, handle_event(MirResizeEventEq(e2.get())))
         .Times(1);
+
 
     surface->resize(new_size);
     EXPECT_EQ(new_size, surface->size());
@@ -251,12 +265,12 @@ TEST_F(Surface, emits_client_close_events)
 
     surface->add_observer(observer);
 
-    MirEvent e;
+    MirCloseSurfaceEvent e;
     memset(&e, 0, sizeof e);
     e.type = mir_event_type_close_surface;
-    e.close_surface.surface_id = stub_id.as_value();
+    e.to_close_surface()->surface_id = stub_id.as_value();
 
-    EXPECT_CALL(*sink, handle_event(e)).Times(1);
+    EXPECT_CALL(*sink, handle_event(Eq(ByRef(e)))).Times(1);
 
     surface->request_client_surface_close();
 }
