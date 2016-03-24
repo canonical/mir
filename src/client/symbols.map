@@ -222,14 +222,18 @@ MIR_CLIENT_9v19 {
     mir_surface_spec_set_shell_chrome;
 } MIR_CLIENT_9v18;
 
+# The bumps to protobuf::current_protocol_version() and MIR_CLIENT_MINOR_VERSION
+# corresponding to these APIs have been applied.
 MIR_CLIENT_9_unreleased {
   global:
     mir_connection_apply_display_configuration;
+    mir_connection_confirm_base_display_configuration;
     mir_connection_create_display_configuration;
     mir_connection_create_input_config;
-    mir_connection_set_base_display_configuration;
+    mir_connection_preview_base_display_configuration;
     mir_connection_set_input_config_change_callback;
     mir_display_config_get_max_simultaneous_outputs;
+    mir_display_config_get_mutable_output;
     mir_display_config_get_num_outputs;
     mir_display_config_get_output;
     mir_display_config_release;
@@ -243,6 +247,8 @@ MIR_CLIENT_9_unreleased {
     mir_input_device_get_id;
     mir_input_device_get_name;
     mir_input_device_get_unique_id;
+    mir_output_disable;
+    mir_output_enable;
     mir_output_get_connection_state;
     mir_output_get_current_mode;
     mir_output_get_current_pixel_format;
@@ -265,7 +271,11 @@ MIR_CLIENT_9_unreleased {
     mir_output_mode_get_height;
     mir_output_mode_get_refresh_rate;
     mir_output_mode_get_width;
-    mir_output_mode_get_width;
+    mir_output_set_current_mode;
+    mir_output_set_orientation;
+    mir_output_set_pixel_format;
+    mir_output_set_position;
+    mir_output_set_power_mode;
   local:
     *;
 } MIR_CLIENT_9v19;
@@ -325,6 +335,13 @@ MIR_CLIENT_DETAIL_9v19 {
       mir::events::deserialize_event*;
     };
 } MIR_CLIENT_DETAIL_9v18;
+
+MIR_CLIENT_DETAIL_9v21 {
+  global:
+    extern "C++" { 
+      mir::client::DefaultConnectionConfiguration::the_buffer_factory*;
+    };
+} MIR_CLIENT_DETAIL_9v19;
 
 MIR_CLIENT_DETAIL_private_buffer_semantics {
   global:

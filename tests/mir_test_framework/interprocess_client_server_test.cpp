@@ -18,6 +18,7 @@
 
 #include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir_test_framework/process.h"
+#include "mir/test/death.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -50,6 +51,16 @@ void mtf::InterprocessClientServerTest::init_server(std::function<void()> const&
     {
         server_setup = init_code;
     }
+}
+
+void mtf::InterprocessClientServerTest::run_in_server_and_disable_core_dump(
+        std::function<void()> const& exec_code)
+{
+    run_in_server([exec_code]()
+    {
+        mir::test::disable_core_dump();
+        exec_code();
+    });
 }
 
 void mtf::InterprocessClientServerTest::run_in_server(std::function<void()> const& exec_code)

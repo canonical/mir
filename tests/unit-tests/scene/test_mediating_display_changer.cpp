@@ -33,6 +33,7 @@
 #include "mir/test/doubles/stub_session.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/display_config_matchers.h"
+#include "mir/test/doubles/fake_alarm_factory.h"
 
 #include <mutex>
 
@@ -138,7 +139,8 @@ struct MediatingDisplayChangerTest : public ::testing::Test
                       mt::fake_shared(session_event_sink),
                       mt::fake_shared(server_action_queue),
                       mt::fake_shared(display_configuration_report),
-                      mt::fake_shared(mock_input_region));
+                      mt::fake_shared(mock_input_region),
+                      mt::fake_shared(alarm_factory));
     }
 
     testing::NiceMock<MockDisplay> mock_display;
@@ -150,6 +152,7 @@ struct MediatingDisplayChangerTest : public ::testing::Test
     StubServerActionQueue server_action_queue;
     StubDisplayConfigurationReport display_configuration_report;
     testing::NiceMock<mtd::MockInputRegion> mock_input_region;
+    mtd::FakeAlarmFactory alarm_factory;
     std::shared_ptr<ms::MediatingDisplayChanger> changer;
 };
 
@@ -433,7 +436,8 @@ TEST_F(MediatingDisplayChangerTest, uses_server_action_queue_for_configuration_a
       mt::fake_shared(session_event_sink),
       mt::fake_shared(mock_server_action_queue),
       mt::fake_shared(display_configuration_report),
-      mt::fake_shared(mock_input_region));
+      mt::fake_shared(mock_input_region),
+      mt::fake_shared(alarm_factory));
 
     void const* owner{nullptr};
 
@@ -489,7 +493,8 @@ TEST_F(MediatingDisplayChangerTest, does_not_block_IPC_thread_for_inactive_sessi
         mt::fake_shared(session_event_sink),
         mt::fake_shared(mock_server_action_queue),
         mt::fake_shared(display_configuration_report),
-        mt::fake_shared(mock_input_region));
+        mt::fake_shared(mock_input_region),
+        mt::fake_shared(alarm_factory));
 
     EXPECT_CALL(mock_server_action_queue, enqueue(_, _));
     session_event_sink.handle_focus_change(active_session);
@@ -614,7 +619,8 @@ TEST_F(MediatingDisplayChangerTest, input_region_receives_display_configuration_
         mt::fake_shared(session_event_sink),
         mt::fake_shared(server_action_queue),
         mt::fake_shared(display_configuration_report),
-        mt::fake_shared(mock_input_region));
+        mt::fake_shared(mock_input_region),
+        mt::fake_shared(alarm_factory));
 }
 
 TEST_F(MediatingDisplayChangerTest, notifies_input_region_on_new_configuration)
@@ -629,4 +635,174 @@ TEST_F(MediatingDisplayChangerTest, notifies_input_region_on_new_configuration)
     session_event_sink.handle_focus_change(session);
     changer->configure(session,
                        mt::fake_shared(conf));
+}
+
+TEST_F(MediatingDisplayChangerTest, notifies_session_on_preview_base_configuration)
+{
+    using namespace testing;
+
+    mtd::NullDisplayConfiguration conf;
+    auto const mock_session = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    stub_session_container.insert_session(mock_session);
+
+    EXPECT_CALL(*mock_session, send_display_config(_));
+
+    changer->preview_base_configuration(
+        mock_session,
+        mt::fake_shared(conf),
+        std::chrono::seconds{1});
+}
+
+TEST_F(MediatingDisplayChangerTest, reverts_to_previous_configuration_on_timeout)
+{
+    using namespace testing;
+
+    auto new_config = std::make_shared<mtd::StubDisplayConfig>(1);
+    auto old_config = changer->base_configuration();
+
+    auto applied_config = old_config->clone();
+
+    ON_CALL(mock_display, configure(_))
+        .WillByDefault(Invoke([&applied_config](auto& conf) { applied_config = conf.clone(); }));
+
+    auto mock_session = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    stub_session_container.insert_session(mock_session);
+
+    std::chrono::seconds const timeout{30};
+
+    changer->preview_base_configuration(
+        mock_session,
+        new_config,
+        timeout);
+
+    EXPECT_THAT(*applied_config, mt::DisplayConfigMatches(std::cref(*new_config)));
+
+    alarm_factory.advance_smoothly_by(timeout - std::chrono::milliseconds{1});
+    EXPECT_THAT(*applied_config, mt::DisplayConfigMatches(std::cref(*new_config)));
+
+    alarm_factory.advance_smoothly_by(std::chrono::milliseconds{2});
+    alarm_factory.advance_smoothly_by(timeout);
+    EXPECT_THAT(*applied_config, mt::DisplayConfigMatches(std::cref(*old_config)));
+}
+
+TEST_F(MediatingDisplayChangerTest, only_configuring_client_receives_preview_notifications)
+{
+    using namespace testing;
+
+    mtd::NullDisplayConfiguration conf;
+    auto const mock_session1 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+    auto const mock_session2 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    auto new_config = std::make_shared<mtd::StubDisplayConfig>(1);
+    auto old_config = changer->base_configuration();
+
+    stub_session_container.insert_session(mock_session1);
+    stub_session_container.insert_session(mock_session2);
+
+    EXPECT_CALL(*mock_session2, send_display_config(_)).Times(0);
+
+    std::chrono::seconds const timeout{30};
+
+    changer->preview_base_configuration(
+        mock_session1,
+        new_config,
+        timeout);
+
+    alarm_factory.advance_smoothly_by(timeout + std::chrono::seconds{1});
+}
+
+TEST_F(MediatingDisplayChangerTest, only_one_client_can_preview_configuration_change_at_once)
+{
+    using namespace testing;
+
+    auto const mock_session1 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+    auto const mock_session2 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    auto new_config = std::make_shared<mtd::StubDisplayConfig>(1);
+
+    stub_session_container.insert_session(mock_session1);
+    stub_session_container.insert_session(mock_session2);
+
+    std::chrono::seconds const timeout{30};
+
+    changer->preview_base_configuration(
+        mock_session1,
+        new_config,
+        timeout);
+
+    EXPECT_THROW(
+        {
+            changer->preview_base_configuration(
+                mock_session2,
+                new_config,
+                timeout);
+        },
+        std::runtime_error);
+}
+
+TEST_F(MediatingDisplayChangerTest, confirmed_configuration_doesnt_revert_after_timeout)
+{
+    using namespace testing;
+
+    auto new_config = std::make_shared<mtd::StubDisplayConfig>(1);
+    auto old_config = changer->base_configuration();
+
+    auto applied_config = old_config->clone();
+
+    ASSERT_THAT(applied_config, Not(Eq(nullptr)));
+
+    ON_CALL(mock_display, configure(_))
+        .WillByDefault(Invoke([&applied_config](auto& conf) { applied_config = conf.clone(); }));
+
+    auto mock_session = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    stub_session_container.insert_session(mock_session);
+
+    std::chrono::seconds const timeout{30};
+
+    changer->preview_base_configuration(
+        mock_session,
+        new_config,
+        timeout);
+
+    EXPECT_THAT(*applied_config, mt::DisplayConfigMatches(std::cref(*new_config)));
+
+    changer->confirm_base_configuration(mock_session, new_config);
+
+    alarm_factory.advance_smoothly_by(timeout * 100);
+    EXPECT_THAT(*applied_config, mt::DisplayConfigMatches(std::cref(*new_config)));
+}
+
+TEST_F(MediatingDisplayChangerTest, all_sessions_get_notified_on_configuration_confirmation)
+{
+    using namespace testing;
+
+    mtd::NullDisplayConfiguration conf;
+    auto const mock_session1 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+    auto const mock_session2 = std::make_shared<NiceMock<mtd::MockSceneSession>>();
+
+    auto new_config = std::make_shared<mtd::StubDisplayConfig>(1);
+    auto old_config = changer->base_configuration();
+
+    stub_session_container.insert_session(mock_session1);
+    stub_session_container.insert_session(mock_session2);
+
+    std::unique_ptr<mg::DisplayConfiguration> received_configuration;
+
+    ON_CALL(*mock_session2, send_display_config(_))
+        .WillByDefault(Invoke([&received_configuration](auto& conf) { received_configuration = conf.clone(); }));
+
+    changer->preview_base_configuration(
+        mock_session1,
+        new_config,
+        std::chrono::seconds{1});
+
+    EXPECT_THAT(received_configuration, Eq(nullptr));
+
+    changer->confirm_base_configuration(mock_session1, new_config);
+
+    ASSERT_THAT(received_configuration, Not(Eq(nullptr)));
+    EXPECT_THAT(*received_configuration, mt::DisplayConfigMatches(std::cref(*new_config)));
 }

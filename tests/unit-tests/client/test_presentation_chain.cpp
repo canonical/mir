@@ -17,9 +17,11 @@
  */
 
 #include "mir/test/doubles/mock_protobuf_server.h"
+#include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/mock_client_buffer.h"
 #include "mir/test/fake_shared.h"
 #include "src/client/presentation_chain.h"
+#include "src/client/buffer_factory.h"
 #include "mir/client_buffer_factory.h"
 
 #include <mutex>
@@ -145,13 +147,19 @@ static void counting_buffer_callback(MirPresentationChain*, MirBuffer* buffer, v
 
 TEST_F(PresentationChain, returns_associated_connection)
 {
-    mcl::PresentationChain chain(connection, rpc_id, mock_server, factory);
+    mcl::PresentationChain chain(
+        connection, rpc_id, mock_server,
+        std::make_shared<mtd::StubClientBufferFactory>(),
+        std::make_shared<mcl::BufferFactory>());
     EXPECT_THAT(chain.connection(), Eq(connection));
 }
 
 TEST_F(PresentationChain, returns_associated_rpc_id)
 {
-    mcl::PresentationChain chain(connection, rpc_id, mock_server, factory);
+    mcl::PresentationChain chain(
+        connection, rpc_id, mock_server,
+        std::make_shared<mtd::StubClientBufferFactory>(),
+        std::make_shared<mcl::BufferFactory>());
     EXPECT_THAT(chain.rpc_id(), Eq(rpc_id));
 }
 
@@ -170,7 +178,9 @@ TEST_F(PresentationChain, creates_buffer_when_asked)
         .WillOnce(mtd::RunProtobufClosure());
     EXPECT_CALL(*factory, create_buffer(_, size, format));
  
-    mcl::PresentationChain chain(connection, rpc_id, mock_server, factory);
+    mcl::PresentationChain chain(
+        connection, rpc_id, mock_server,
+        factory, std::make_shared<mcl::BufferFactory>());
     chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
 
     EXPECT_FALSE(buffer.buffer_is_set());
@@ -214,7 +224,10 @@ TEST_F(PresentationChain, creates_correct_buffer_when_buffers_arrive)
         ipc_buf[i].set_height(sizes[i].height.as_int());
     }
 
-    mcl::PresentationChain chain(connection, rpc_id, mock_server, factory);
+    mcl::PresentationChain chain(
+        connection, rpc_id, mock_server,
+        std::make_shared<mtd::StubClientBufferFactory>(),
+        std::make_shared<mcl::BufferFactory>());
 
     for (auto i = 0u; i < num_buffers; i++)
         chain.allocate_buffer(sizes[i], format, usage, buffer_callback, &buffer[i]);
@@ -245,7 +258,11 @@ TEST_F(PresentationChain, frees_buffer_when_asked)
     EXPECT_CALL(mock_server, release_buffers(BufferReleaseMatches(release_msg),_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    mcl::PresentationChain chain(connection, rpc_id, mock_server, factory);
+    mcl::PresentationChain chain(
+        connection, rpc_id, mock_server,
+        std::make_shared<mtd::StubClientBufferFactory>(),
+        std::make_shared<mcl::BufferFactory>());
+
     chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
     chain.buffer_available(ipc_buf);
     auto b = buffer.wait_for_buffer();
@@ -267,7 +284,10 @@ TEST_F(PresentationChain, submits_buffer_when_asked)
     EXPECT_CALL(mock_server, submit_buffer(BufferRequestMatches(request),_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    mcl::PresentationChain chain(connection, rpc_id, mock_server, factory);
+    mcl::PresentationChain chain(
+        connection, rpc_id, mock_server,
+        std::make_shared<mtd::StubClientBufferFactory>(),
+        std::make_shared<mcl::BufferFactory>());
     chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
     chain.buffer_available(ipc_buf);
     auto b = buffer.wait_for_buffer();
@@ -292,7 +312,9 @@ TEST_F(PresentationChain, updates_buffer)
     EXPECT_CALL(*factory, create_buffer(_,_,_))
         .WillOnce(Return(mir::test::fake_shared(mock_buffer)));
 
-    mcl::PresentationChain chain(connection, rpc_id, mock_server, factory);
+    mcl::PresentationChain chain(
+        connection, rpc_id, mock_server, factory,
+        std::make_shared<mcl::BufferFactory>());
     chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
     chain.buffer_available(ipc_buf);
     auto b = buffer.wait_for_buffer();
@@ -311,7 +333,10 @@ TEST_F(PresentationChain, double_submission_throws)
     EXPECT_CALL(mock_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    mcl::PresentationChain chain(connection, rpc_id, mock_server, factory);
+    mcl::PresentationChain chain(
+        connection, rpc_id, mock_server,
+        std::make_shared<mtd::StubClientBufferFactory>(),
+        std::make_shared<mcl::BufferFactory>());
     chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
     chain.buffer_available(ipc_buf);
     auto b = buffer.wait_for_buffer();
@@ -332,7 +357,10 @@ TEST_F(PresentationChain, callback_invoked_when_buffer_returned_from_allocation_
     EXPECT_CALL(mock_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    mcl::PresentationChain chain(connection, rpc_id, mock_server, factory);
+    mcl::PresentationChain chain(
+        connection, rpc_id, mock_server,
+        std::make_shared<mtd::StubClientBufferFactory>(),
+        std::make_shared<mcl::BufferFactory>());
     chain.allocate_buffer(size, format, usage, counting_buffer_callback, &counter);
     chain.buffer_available(ipc_buf);
     std::unique_lock<std::mutex> lk(counter.mut);

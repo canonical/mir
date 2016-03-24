@@ -55,6 +55,7 @@ std::chrono::milliseconds const timeout(200);
 mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     std::unique_ptr<mclr::StreamTransport> transport,
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
+    std::shared_ptr<mcl::AsyncBufferFactory> const& buffer_factory,
     std::shared_ptr<DisplayConfiguration> const& disp_config,
     std::shared_ptr<input::InputDevices> const& input_devices,
     std::shared_ptr<RpcReport> const& rpc_report,
@@ -64,6 +65,7 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     surface_map(surface_map),
+    buffer_factory(buffer_factory),
     display_configuration(disp_config),
     input_devices(input_devices),
     lifecycle_control(lifecycle_control),
