@@ -408,7 +408,7 @@ static void* capture_thread_func(void* arg)
     Camera* cam = state->camera;
     Time last_frame = now();
     int last_seen_value = -1;
-    unsigned const max_history = 20;
+    unsigned const max_history = 50;
     unsigned nhistory = 0;
     Time history[max_history];
 
@@ -644,7 +644,7 @@ int main(int argc, char* argv[])
 
         pthread_mutex_lock(&state.mutex);
 
-        int new_mode = (now() / one_second) & 1;
+        int new_mode = (2*now() / one_second) & 1;
         if (state.resized || mode != new_mode)
         {
             GLint viewport[4];
