@@ -222,7 +222,7 @@ MIR_CLIENT_9v19 {
     mir_surface_spec_set_shell_chrome;
 } MIR_CLIENT_9v18;
 
-MIR_CLIENT_9v21 {
+MIR_CLIENT_0.21 {
   global:
     mir_connection_apply_display_configuration;
     mir_connection_create_display_configuration;
@@ -324,7 +324,7 @@ MIR_CLIENT_DETAIL_9v19 {
     };
 } MIR_CLIENT_DETAIL_9v18;
 
-MIR_CLIENT_DETAIL_9v21 {
+MIR_CLIENT_DETAIL_0.21 {
   global:
     extern "C++" { 
       mir::client::DefaultConnectionConfiguration::the_buffer_factory*;
