@@ -128,7 +128,7 @@ static void shutdown(int signum)
     // not kill the server. It actually did kill the server prior to -r 3385.
     // Running this example in CI acts as a smoke test for that failure.
     printf("Signal %d received. Good night.\n", signum);
-    exit(EXIT_SUCCESS);
+    quick_exit(EXIT_SUCCESS); // quick_exit() doesn't seem to hit lp:1560943
 }
 
 int main(int argc, char* argv[])
