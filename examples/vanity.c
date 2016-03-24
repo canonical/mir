@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2016 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -38,9 +38,8 @@
 
 #define WHITE        1.0f,1.0f,1.0f,1.0f
 #define DARKENED     0.0f,0.0f,0.0f,0.6f
-#define TRANSPARENT  0.0f,0.0f,0.0f,0.0f
 #define BAR_TINT     WHITE
-#define PREVIEW_TINT 0.0f,0.0f,0.0f,0.6f
+#define PREVIEW_TINT DARKENED
 
 enum CameraPref
 {
@@ -598,7 +597,6 @@ int main(int argc, char* argv[])
     };
     GLint position = glGetAttribLocation(prog, "position");
     GLint texcoord = glGetAttribLocation(prog, "texcoord");
-
     GLint projection = glGetUniformLocation(prog, "projection");
 
     GLuint tex;
