@@ -30,42 +30,99 @@ namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace geom = mir::geometry;
 
+namespace
+{
+mir::protobuf::ScreencastParameters serialize_spec(MirScreencastSpec const& spec)
+{
+    mp::ScreencastParameters message;
+
+#define SERIALIZE_OPTION_IF_SET(option) \
+    if (spec.option.is_set()) \
+        message.set_##option(spec.option.value());
+
+    SERIALIZE_OPTION_IF_SET(width);
+    SERIALIZE_OPTION_IF_SET(height);
+    SERIALIZE_OPTION_IF_SET(pixel_format);
+
+    if (spec.capture_region.is_set())
+    {
+        auto const region = spec.capture_region.value();
+        message.mutable_region()->set_left(region.left);
+        message.mutable_region()->set_top(region.top);
+        message.mutable_region()->set_width(region.width);
+        message.mutable_region()->set_height(region.height);
+    }
+
+    return message;
+}
+
+//TODO: it should be up to the server to decide if the parameters are acceptable
+void throw_if_invalid(MirScreencastSpec const& spec)
+{
+#define THROW_IF_UNSET(option) \
+    if (!spec.option.is_set()) \
+        BOOST_THROW_EXCEPTION(std::runtime_error("Unset "#option));
+
+#define THROW_IF_EQ(option, val) \
+    THROW_IF_UNSET(option); \
+    if (spec.option.is_set() && spec.option.value() == val) \
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid "#option));
+
+#define THROW_IF_ZERO(option) THROW_IF_EQ(option, 0)
+
+    THROW_IF_ZERO(width);
+    THROW_IF_ZERO(height);
+    THROW_IF_EQ(pixel_format, mir_pixel_format_invalid);
+    THROW_IF_UNSET(capture_region);
+
+    if (spec.capture_region.is_set())
+    {
+        auto const region = spec.capture_region.value();
+        if (region.width == 0)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Invalid capture region width"));
+        if (region.height == 0)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Invalid capture region height"));
+    }
+}
+}
+
+MirScreencastSpec::MirScreencastSpec() = default;
+
+MirScreencastSpec::MirScreencastSpec(MirConnection* connection)
+    : connection{connection}
+{
+}
+
+MirScreencastSpec::MirScreencastSpec(MirConnection* connection, MirScreencastParameters const& params)
+    : connection{connection},
+      width{params.width},
+      height{params.height},
+      pixel_format{params.pixel_format},
+      capture_region{params.region}
+{
+}
+
+MirScreencast::MirScreencast(std::string const& error)
+    : protobuf_screencast{mcl::make_protobuf_object<mir::protobuf::Screencast>()}
+{
+    protobuf_screencast->set_error(error);
+}
+
 MirScreencast::MirScreencast(
-    geom::Rectangle const& region,
-    geom::Size const& size,
-    MirPixelFormat pixel_format,
-    mir::client::rpc::DisplayServer& server,
-    MirConnection* connection,
+    MirScreencastSpec const& spec,
+    mir::client::rpc::DisplayServer& the_server,
     mir_screencast_callback callback, void* context)
-    : server(server),
-      connection{connection},
-      output_size{size},
+    : server{&the_server},
+      connection{spec.connection},
       protobuf_screencast{mcl::make_protobuf_object<mir::protobuf::Screencast>()},
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
 {
-    if (output_size.width.as_int()  == 0 ||
-        output_size.height.as_int() == 0 ||
-        region.size.width.as_int()  == 0 ||
-        region.size.height.as_int() == 0 ||
-        pixel_format == mir_pixel_format_invalid)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid parameters"));
-    }
-    protobuf_screencast->set_error("Not initialized");
-
-    mp::ScreencastParameters parameters;
-
-    parameters.mutable_region()->set_left(region.top_left.x.as_int());
-    parameters.mutable_region()->set_top(region.top_left.y.as_int());
-    parameters.mutable_region()->set_width(region.size.width.as_uint32_t());
-    parameters.mutable_region()->set_height(region.size.height.as_uint32_t());
-    parameters.set_width(output_size.width.as_uint32_t());
-    parameters.set_height(output_size.height.as_uint32_t());
-    parameters.set_pixel_format(pixel_format);
+    throw_if_invalid(spec);
+    auto const message = serialize_spec(spec);
 
     create_screencast_wait_handle.expect_result();
-    server.create_screencast(
-        &parameters,
+    server->create_screencast(
+        &message,
         protobuf_screencast.get(),
         google::protobuf::NewCallback(
             this, &MirScreencast::screencast_created,
@@ -82,18 +139,34 @@ bool MirScreencast::valid()
     return !protobuf_screencast->has_error();
 }
 
+char const* MirScreencast::get_error_message()
+{
+    if (protobuf_screencast->has_error())
+    {
+        return protobuf_screencast->error().c_str();
+    }
+    return empty_error_message.c_str();
+}
+
 MirWaitHandle* MirScreencast::release(
         mir_screencast_callback callback, void* context)
 {
-    mp::ScreencastId screencast_id;
-    screencast_id.set_value(protobuf_screencast->screencast_id().value());
-    
     release_wait_handle.expect_result();
-    server.release_screencast(
-        &screencast_id,
-        protobuf_void.get(),
-        google::protobuf::NewCallback(
-            this, &MirScreencast::released, callback, context));
+    if (valid() && server)
+    {
+        mp::ScreencastId screencast_id;
+        screencast_id.set_value(protobuf_screencast->screencast_id().value());
+        server->release_screencast(
+            &screencast_id,
+            protobuf_void.get(),
+            google::protobuf::NewCallback(
+                this, &MirScreencast::released, callback, context));
+    }
+    else
+    {
+        callback(this, context);
+        release_wait_handle.result_received();
+    }
 
     return &release_wait_handle;
 }
@@ -108,7 +181,7 @@ void MirScreencast::screencast_created(
     if (!protobuf_screencast->has_error() && connection)
     {
         buffer_stream = connection->make_consumer_stream(
-            protobuf_screencast->buffer_stream(), output_size);
+            protobuf_screencast->buffer_stream(), {});
     }
 
     callback(this, context);

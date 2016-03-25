@@ -150,6 +150,13 @@ void null_callback_func(MirScreencast*, void*)
 {
 }
 
+MirRectangle as_mir_rect(mir::geometry::Rectangle const& rect)
+{
+    return {rect.top_left.x.as_int(),
+            rect.top_left.y.as_int(),
+            rect.size.width.as_uint32_t(),
+            rect.size.height.as_uint32_t()};
+}
 
 
 class MirScreencastTest : public testing::Test
@@ -160,6 +167,10 @@ public:
           default_region{{0, 0}, {1, 1}},
           default_pixel_format{mir_pixel_format_xbgr_8888}
     {
+        default_spec.width = default_size.width.as_uint32_t();
+        default_spec.height = default_size.height.as_uint32_t();
+        default_spec.pixel_format = default_pixel_format;
+        default_spec.capture_region = as_mir_rect(default_region);
     }
 
     testing::NiceMock<MockProtobufServer> mock_server;
@@ -167,6 +178,7 @@ public:
     mir::geometry::Size default_size;
     mir::geometry::Rectangle default_region;
     MirPixelFormat default_pixel_format;
+    MirScreencastSpec default_spec;
     mtd::MockClientBufferStream mock_bs;
 };
 
@@ -180,12 +192,7 @@ TEST_F(MirScreencastTest, creates_screencast_on_construction)
                 create_screencast(WithParams(default_region, default_size, default_pixel_format),_,_))
         .WillOnce(RunClosure());
 
-    MirScreencast screencast{
-        default_region,
-        default_size,
-        default_pixel_format, mock_server,
-        nullptr,
-        null_callback_func, nullptr};
+    MirScreencast screencast{default_spec, mock_server, null_callback_func, nullptr};
 }
 
 TEST_F(MirScreencastTest, releases_screencast_on_release)
@@ -204,13 +211,7 @@ TEST_F(MirScreencastTest, releases_screencast_on_release)
                 release_screencast(WithScreencastId(screencast_id),_,_))
         .WillOnce(RunClosure());
 
-    MirScreencast screencast{
-        default_region,
-        default_size,
-        default_pixel_format,
-        mock_server,
-        nullptr,
-        null_callback_func, nullptr};
+    MirScreencast screencast{default_spec, mock_server, null_callback_func, nullptr};
 
     screencast.release(null_callback_func, nullptr);
 }
@@ -222,12 +223,7 @@ TEST_F(MirScreencastTest, executes_callback_on_creation)
     MockCallback mock_cb;
     EXPECT_CALL(mock_cb, call(_, &mock_cb));
 
-    MirScreencast screencast{
-        default_region,
-        default_size,
-        default_pixel_format, stub_server,
-        nullptr,
-        mock_callback_func, &mock_cb};
+    MirScreencast screencast{default_spec, stub_server, mock_callback_func, &mock_cb};
 
     screencast.creation_wait_handle()->wait_for_all();
 }
@@ -236,12 +232,7 @@ TEST_F(MirScreencastTest, executes_callback_on_release)
 {
     using namespace testing;
 
-    MirScreencast screencast{
-        default_region,
-        default_size,
-        default_pixel_format, stub_server,
-        nullptr,
-        null_callback_func, nullptr};
+    MirScreencast screencast{default_spec, stub_server, null_callback_func, nullptr};
 
     screencast.creation_wait_handle()->wait_for_all();
 
@@ -258,30 +249,22 @@ TEST_F(MirScreencastTest, construction_throws_on_invalid_params)
     mir::geometry::Rectangle const invalid_region{{0, 0}, {0, 0}};
 
     EXPECT_THROW({
-        MirScreencast screencast(
-            default_region,
-            invalid_size,
-            default_pixel_format, stub_server,
-            nullptr,
-            null_callback_func, nullptr);
+        MirScreencastSpec spec{default_spec};
+        spec.width = invalid_size.width.as_int();
+        spec.height = invalid_size.height.as_int();
+        MirScreencast screencast(spec, stub_server, null_callback_func, nullptr);
     }, std::runtime_error);
 
     EXPECT_THROW({
-        MirScreencast screencast(
-            invalid_region,
-            default_size,
-            default_pixel_format, stub_server,
-            nullptr,
-            null_callback_func, nullptr);
+        MirScreencastSpec spec{default_spec};
+        spec.capture_region = as_mir_rect(invalid_region);
+        MirScreencast screencast(spec, stub_server, null_callback_func, nullptr);
     }, std::runtime_error);
 
     EXPECT_THROW({
-        MirScreencast screencast(
-            default_region,
-            default_size,
-            mir_pixel_format_invalid, stub_server,
-            nullptr,
-            null_callback_func, nullptr);
+        MirScreencastSpec spec{default_spec};
+        spec.pixel_format = mir_pixel_format_invalid;
+        MirScreencast screencast(spec, stub_server, null_callback_func, nullptr);
     }, std::runtime_error);
 }
 
@@ -292,12 +275,7 @@ TEST_F(MirScreencastTest, is_invalid_if_server_create_screencast_fails)
     EXPECT_CALL(mock_server, create_screencast(_,_,_))
         .WillOnce(DoAll(SetCreateError(), RunClosure()));
 
-    MirScreencast screencast{
-        default_region,
-        default_size,
-        default_pixel_format, mock_server,
-        nullptr,
-        null_callback_func, nullptr};
+    MirScreencast screencast{default_spec, mock_server, null_callback_func, nullptr};
 
     screencast.creation_wait_handle()->wait_for_all();
 
@@ -313,14 +291,28 @@ TEST_F(MirScreencastTest, calls_callback_on_creation_failure)
         .WillOnce(DoAll(SetCreateError(), RunClosure()));
     EXPECT_CALL(mock_cb, call(_,&mock_cb));
 
-    MirScreencast screencast{
-        default_region,
-        default_size,
-        default_pixel_format, mock_server,
-        nullptr,
-        mock_callback_func, &mock_cb};
+    MirScreencast screencast{default_spec, mock_server, mock_callback_func, &mock_cb};
 
     screencast.creation_wait_handle()->wait_for_all();
 
     EXPECT_FALSE(screencast.valid());
+}
+
+TEST_F(MirScreencastTest, release_callsback_even_if_invalid)
+{
+    using namespace testing;
+
+
+    EXPECT_CALL(mock_server, create_screencast(_,_,_))
+        .WillOnce(DoAll(SetCreateError(), RunClosure()));
+
+
+    MirScreencast screencast{default_spec, mock_server, null_callback_func, nullptr};
+    screencast.creation_wait_handle()->wait_for_all();
+    EXPECT_FALSE(screencast.valid());
+
+    MockCallback mock_cb;
+    EXPECT_CALL(mock_cb, call(_,&mock_cb));
+
+    screencast.release(mock_callback_func, &mock_cb);
 }
