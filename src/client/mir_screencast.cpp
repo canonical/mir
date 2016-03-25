@@ -136,11 +136,13 @@ MirWaitHandle* MirScreencast::creation_wait_handle()
 
 bool MirScreencast::valid()
 {
+    std::lock_guard<decltype(mutex)> lock(mutex);
     return !protobuf_screencast->has_error();
 }
 
 char const* MirScreencast::get_error_message()
 {
+    std::lock_guard<decltype(mutex)> lock(mutex);
     if (protobuf_screencast->has_error())
     {
         return protobuf_screencast->error().c_str();
@@ -148,14 +150,16 @@ char const* MirScreencast::get_error_message()
     return empty_error_message.c_str();
 }
 
-MirWaitHandle* MirScreencast::release(
-        mir_screencast_callback callback, void* context)
+MirWaitHandle* MirScreencast::release(mir_screencast_callback callback, void* context)
 {
     release_wait_handle.expect_result();
     if (valid() && server)
     {
         mp::ScreencastId screencast_id;
-        screencast_id.set_value(protobuf_screencast->screencast_id().value());
+        {
+            std::lock_guard<decltype(mutex)> lock(mutex);
+            screencast_id.set_value(protobuf_screencast->screencast_id().value());
+        }
         server->release_screencast(
             &screencast_id,
             protobuf_void.get(),
@@ -176,6 +180,7 @@ void MirScreencast::screencast_created(
 {
     if (!protobuf_screencast->has_error() && connection)
     {
+        std::lock_guard<decltype(mutex)> lock(mutex);
         buffer_stream = connection->make_consumer_stream(
             protobuf_screencast->buffer_stream(), {});
     }
@@ -188,14 +193,18 @@ void MirScreencast::released(
     mir_screencast_callback callback, void* context)
 {
     callback(this, context);
-    if (connection)
-        connection->release_consumer_stream(buffer_stream.get());
-    buffer_stream.reset();
 
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        if (connection)
+            connection->release_consumer_stream(buffer_stream.get());
+        buffer_stream.reset();
+    }
     release_wait_handle.result_received();
 }
 
 mir::client::ClientBufferStream* MirScreencast::get_buffer_stream()
 {
+    std::lock_guard<decltype(mutex)> lock(mutex);
     return buffer_stream.get();
 }

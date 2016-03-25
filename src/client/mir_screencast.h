@@ -89,6 +89,7 @@ private:
     void released(
         mir_screencast_callback callback, void* context);
 
+    std::mutex mutable mutex;
     mir::client::rpc::DisplayServer* const server{nullptr};
     MirConnection* const connection{nullptr};
     std::shared_ptr<mir::client::ClientBufferStream> buffer_stream;

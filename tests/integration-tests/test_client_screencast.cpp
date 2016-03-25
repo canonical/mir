@@ -188,6 +188,7 @@ TEST_F(Screencast, fails_on_client_when_server_request_fails)
     ASSERT_FALSE(mir_screencast_is_valid(screencast));
 
     EXPECT_THAT(mir_screencast_get_error_message(screencast), HasSubstr(an_error_message));
+    mir_screencast_release_sync(screencast);
 }
 
 TEST_F(Screencast, uses_provided_spec_parameters)
