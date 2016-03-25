@@ -25,6 +25,16 @@
 //TODO Temp functions until we move to capnproto which will do this for us!
 namespace
 {
+void delete_keymap_event(MirEvent* e)
+{
+    if (e && e->to_keymap()->buffer)
+    {
+        std::free(const_cast<char*>(e->to_keymap()->buffer));
+    }
+
+    delete e;
+}
+
 // consume/encode needed for keymap!
 template<typename Data>
 char const* consume(char const* pos, Data& data)
@@ -39,9 +49,13 @@ void encode(std::string& encoded, Data const& data)
     encoded.append(reinterpret_cast<char const*>(&data), sizeof data);
 }
 
+// T needs to be trivially copyable
+// vivid wont allow a std::is_trivially_copyable
 template<typename T>
 mir::EventUPtr deserialize_from(std::string const& bytes)
 {
+    static_assert(__has_trivial_copy(T), "");
+
     T* t = new T;
     memcpy(t, bytes.data(), bytes.size());
 
@@ -51,6 +65,8 @@ mir::EventUPtr deserialize_from(std::string const& bytes)
 template<typename T>
 std::string serialize_from(MirEvent const* ev)
 {
+    static_assert(__has_trivial_copy(T), "");
+
     std::string encoded_bytes;
     encoded_bytes.append(reinterpret_cast<char const*>(ev), sizeof(T));
 
@@ -60,6 +76,8 @@ std::string serialize_from(MirEvent const* ev)
 template<typename T>
 MirEvent* deep_copy(MirEvent const* ev)
 {
+    static_assert(__has_trivial_copy(T), "");
+
     T* t = new T;
     memcpy(t, ev, sizeof(T));
 
@@ -115,7 +133,8 @@ MirEvent* MirKeymapEvent::clone() const
 mir::EventUPtr MirEvent::deserialize(std::string const& bytes)
 {
     // Just getting the type from the raw bytes, discard after
-    MirEvent event; auto minimal_event_size = sizeof event.type;
+    MirEvent event;
+    auto minimal_event_size = sizeof event.type;
     auto const stream_size = bytes.size();
     if (stream_size < minimal_event_size)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to deserialize event"));
@@ -155,8 +174,8 @@ mir::EventUPtr MirEvent::deserialize(std::string const& bytes)
 // Edge case where we have handle the char* buffer manually!
 mir::EventUPtr MirKeymapEvent::deserialize(std::string const& bytes)
 {
-    auto event = new MirKeymapEvent;
-    auto& keymap = *event;
+    auto event = mir::EventUPtr(new MirKeymapEvent, delete_keymap_event);
+    auto& keymap = *event->to_keymap();
     auto minimal_event_size = sizeof event->type;
     auto const stream_size = bytes.size();
     if (stream_size < minimal_event_size)
@@ -177,19 +196,11 @@ mir::EventUPtr MirKeymapEvent::deserialize(std::string const& bytes)
     if (stream_size < minimal_event_size)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to deserialize event"));
 
-    auto buffer = static_cast<char*>(malloc(keymap.size));
+    auto buffer = static_cast<char*>(std::malloc(keymap.size));
     std::memcpy(buffer, pos, keymap.size);
     keymap.buffer = buffer;
 
-    return mir::EventUPtr(event, [](MirEvent* e)
-    {
-        if (e && e->to_keymap()->buffer)
-        {
-            std::free(const_cast<char*>(e->to_keymap()->buffer));
-        }
-
-        delete e;
-    });
+    return event;
 }
 
 std::string MirEvent::serialize(MirEvent const* event)
@@ -245,130 +256,130 @@ std::string MirKeymapEvent::serialize(MirEvent const* event)
 
 MirInputEvent* MirEvent::to_input()
 {
-    return reinterpret_cast<MirInputEvent*>(this);
+    return static_cast<MirInputEvent*>(this);
 }
 
 MirInputEvent const* MirEvent::to_input() const
 {
-    return reinterpret_cast<MirInputEvent const*>(this);
+    return static_cast<MirInputEvent const*>(this);
 }
 
 MirInputConfigurationEvent* MirEvent::to_input_configuration()
 {
-    return reinterpret_cast<MirInputConfigurationEvent*>(this);
+    return static_cast<MirInputConfigurationEvent*>(this);
 }
 
 MirInputConfigurationEvent const* MirEvent::to_input_configuration() const
 {
-    return reinterpret_cast<MirInputConfigurationEvent const*>(this);
+    return static_cast<MirInputConfigurationEvent const*>(this);
 }
 
 MirSurfaceEvent* MirEvent::to_surface()
 {
-    return reinterpret_cast<MirSurfaceEvent*>(this);
+    return static_cast<MirSurfaceEvent*>(this);
 }
 
 MirSurfaceEvent const* MirEvent::to_surface() const
 {
-    return reinterpret_cast<MirSurfaceEvent const*>(this);
+    return static_cast<MirSurfaceEvent const*>(this);
 }
 
 MirResizeEvent* MirEvent::to_resize()
 {
-    return reinterpret_cast<MirResizeEvent*>(this);
+    return static_cast<MirResizeEvent*>(this);
 }
 
 MirResizeEvent const* MirEvent::to_resize() const
 {
-    return reinterpret_cast<MirResizeEvent const*>(this);
+    return static_cast<MirResizeEvent const*>(this);
 }
 
 MirPromptSessionEvent* MirEvent::to_prompt_session()
 {
-    return reinterpret_cast<MirPromptSessionEvent*>(this);
+    return static_cast<MirPromptSessionEvent*>(this);
 }
 
 MirPromptSessionEvent const* MirEvent::to_prompt_session() const
 {
-    return reinterpret_cast<MirPromptSessionEvent const*>(this);
+    return static_cast<MirPromptSessionEvent const*>(this);
 }
 
 MirOrientationEvent* MirEvent::to_orientation()
 {
-    return reinterpret_cast<MirOrientationEvent*>(this);
+    return static_cast<MirOrientationEvent*>(this);
 }
 
 MirOrientationEvent const* MirEvent::to_orientation() const
 {
-    return reinterpret_cast<MirOrientationEvent const*>(this);
+    return static_cast<MirOrientationEvent const*>(this);
 }
 
 MirCloseSurfaceEvent* MirEvent::to_close_surface()
 {
-    return reinterpret_cast<MirCloseSurfaceEvent*>(this);
+    return static_cast<MirCloseSurfaceEvent*>(this);
 }
 
 MirCloseSurfaceEvent const* MirEvent::to_close_surface() const
 {
-    return reinterpret_cast<MirCloseSurfaceEvent const*>(this);
+    return static_cast<MirCloseSurfaceEvent const*>(this);
 }
 
 MirKeymapEvent* MirEvent::to_keymap()
 {
-    return reinterpret_cast<MirKeymapEvent*>(this);
+    return static_cast<MirKeymapEvent*>(this);
 }
 
 MirKeymapEvent const* MirEvent::to_keymap() const
 {
-    return reinterpret_cast<MirKeymapEvent const*>(this);
+    return static_cast<MirKeymapEvent const*>(this);
 }
 
 MirSurfaceOutputEvent* MirEvent::to_surface_output()
 {
-    return reinterpret_cast<MirSurfaceOutputEvent*>(this);
+    return static_cast<MirSurfaceOutputEvent*>(this);
 }
 
 MirSurfaceOutputEvent const* MirEvent::to_surface_output() const
 {
-    return reinterpret_cast<MirSurfaceOutputEvent const*>(this);
+    return static_cast<MirSurfaceOutputEvent const*>(this);
 }
 
 MirKeyboardEvent* MirInputEvent::to_keyboard()
 {
-    return reinterpret_cast<MirKeyboardEvent*>(this);
+    return static_cast<MirKeyboardEvent*>(this);
 }
 
 MirKeyboardEvent const* MirInputEvent::to_keyboard() const
 {
-    return reinterpret_cast<MirKeyboardEvent const*>(this);
+    return static_cast<MirKeyboardEvent const*>(this);
 }
 
 MirMotionEvent* MirInputEvent::to_motion()
 {
-    return reinterpret_cast<MirMotionEvent*>(this);
+    return static_cast<MirMotionEvent*>(this);
 }
 
 MirMotionEvent const* MirInputEvent::to_motion() const
 {
-    return reinterpret_cast<MirMotionEvent const*>(this);
+    return static_cast<MirMotionEvent const*>(this);
 }
 
 MirTouchEvent* MirMotionEvent::to_touch()
 {
-    return reinterpret_cast<MirTouchEvent*>(this);
+    return static_cast<MirTouchEvent*>(this);
 }
 
 MirTouchEvent const* MirMotionEvent::to_touch() const
 {
-    return reinterpret_cast<MirTouchEvent const*>(this);
+    return static_cast<MirTouchEvent const*>(this);
 }
 
 MirPointerEvent* MirMotionEvent::to_pointer()
 {
-    return reinterpret_cast<MirPointerEvent*>(this);
+    return static_cast<MirPointerEvent*>(this);
 }
 
 MirPointerEvent const* MirMotionEvent::to_pointer() const
 {
-    return reinterpret_cast<MirPointerEvent const*>(this);
+    return static_cast<MirPointerEvent const*>(this);
 }
