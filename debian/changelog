@@ -59,6 +59,21 @@ mir (0.21.0-0ubuntu1) UNRELEASED; urgency=medium
 
  -- Alberto Aguirre <alberto.aguirre@canonical.com>  Thu, 17 Mar 2016 14:08:50 -0500
 
+mir (0.20.3+16.04.20160322-0ubuntu1) xenial; urgency=medium
+
+  [ Alberto Aguirre ]
+  * New upstream release 0.20.3 (https://launchpad.net/mir/+milestone/0.20.3)
+    - ABI summary:
+      . No ABI changes in any libraries. Bugfix release only.
+    - Bug fixed:
+      . Mir crashed with exception 'failed to add sync point to command
+        buffer' (LP: #1554635)
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Tue, 22 Mar 2016 15:42:36 +0000
+
 mir (0.20.2+16.04.20160307-0ubuntu1) xenial; urgency=medium
 
   [ Andreas Pokorny ]
