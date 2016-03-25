@@ -171,10 +171,6 @@ MirWaitHandle* MirScreencast::release(
     return &release_wait_handle;
 }
 
-void MirScreencast::request_and_wait_for_configure(MirSurfaceAttrib, int)
-{
-}
-
 void MirScreencast::screencast_created(
     mir_screencast_callback callback, void* context)
 {

@@ -81,8 +81,6 @@ public:
 
     EGLNativeWindowType egl_native_window();
 
-    void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
-
     mir::client::ClientBufferStream* get_buffer_stream();
 
 private:
