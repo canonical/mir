@@ -63,7 +63,6 @@ add_library(mirserverobjects OBJECT
 set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirserverobjects>
   $<TARGET_OBJECTS:mirinput>
-  $<TARGET_OBJECTS:mirevents>
   $<TARGET_OBJECTS:mirscene>
   $<TARGET_OBJECTS:mircompositor>
   $<TARGET_OBJECTS:mirgraphics>
