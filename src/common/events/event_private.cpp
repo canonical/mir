@@ -49,12 +49,22 @@ void encode(std::string& encoded, Data const& data)
     encoded.append(reinterpret_cast<char const*>(&data), sizeof data);
 }
 
+template<typename T>
+void assert_type_is_trivially_copyable()
+{
+#if __GNUC__ >= 5
+    static_assert(std::is_trivially_copyable<T>::value, "");
+#else
+    static_assert(__has_trivial_copy(T), "");
+#endif
+}
+
 // T needs to be trivially copyable
 // vivid wont allow a std::is_trivially_copyable
 template<typename T>
 mir::EventUPtr deserialize_from(std::string const& bytes)
 {
-    static_assert(__has_trivial_copy(T), "");
+    assert_type_is_trivially_copyable<T>();
 
     T* t = new T;
     memcpy(t, bytes.data(), bytes.size());
@@ -65,7 +75,7 @@ mir::EventUPtr deserialize_from(std::string const& bytes)
 template<typename T>
 std::string serialize_from(MirEvent const* ev)
 {
-    static_assert(__has_trivial_copy(T), "");
+    assert_type_is_trivially_copyable<T>();
 
     std::string encoded_bytes;
     encoded_bytes.append(reinterpret_cast<char const*>(ev), sizeof(T));
@@ -76,7 +86,7 @@ std::string serialize_from(MirEvent const* ev)
 template<typename T>
 MirEvent* deep_copy(MirEvent const* ev)
 {
-    static_assert(__has_trivial_copy(T), "");
+    assert_type_is_trivially_copyable<T>();
 
     T* t = new T;
     memcpy(t, ev, sizeof(T));
