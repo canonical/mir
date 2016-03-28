@@ -302,10 +302,8 @@ TEST_F(MirScreencastTest, release_callsback_even_if_invalid)
 {
     using namespace testing;
 
-
     EXPECT_CALL(mock_server, create_screencast(_,_,_))
         .WillOnce(DoAll(SetCreateError(), RunClosure()));
-
 
     MirScreencast screencast{default_spec, mock_server, null_callback_func, nullptr};
     screencast.creation_wait_handle()->wait_for_all();
