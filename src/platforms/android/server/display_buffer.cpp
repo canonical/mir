@@ -114,6 +114,11 @@ MirOrientation mga::DisplayBuffer::orientation() const
     return orientation_;
 }
 
+MirMirrorMode mga::DisplayBuffer::mirror_mode() const
+{
+    return mir_mirror_mode_none;
+}
+
 void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation, geom::Displacement offset)
 {
     power_mode_ = power_mode;

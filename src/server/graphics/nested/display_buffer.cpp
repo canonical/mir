@@ -87,6 +87,11 @@ MirOrientation mgn::detail::DisplayBuffer::orientation() const
     return mir_orientation_normal;
 }
 
+MirMirrorMode mgn::detail::DisplayBuffer::mirror_mode() const
+{
+    return mir_mirror_mode_none;
+}
+
 mgn::detail::DisplayBuffer::~DisplayBuffer() noexcept
 {
 }
