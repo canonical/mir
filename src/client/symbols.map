@@ -272,6 +272,7 @@ MIR_CLIENT_unreleased {
   global:
     mir_connection_confirm_base_display_configuration;
     mir_connection_preview_base_display_configuration;
+    mir_create_screencast_spec;
     mir_display_config_get_mutable_output;
     mir_output_disable;
     mir_output_enable;
@@ -280,6 +281,14 @@ MIR_CLIENT_unreleased {
     mir_output_set_pixel_format;
     mir_output_set_position;
     mir_output_set_power_mode;
+    mir_screencast_create_sync;
+    mir_screencast_get_error_message;
+    mir_screencast_is_valid;
+    mir_screencast_spec_release;
+    mir_screencast_spec_set_capture_region;
+    mir_screencast_spec_set_height;
+    mir_screencast_spec_set_pixel_format;
+    mir_screencast_spec_set_width;
 } MIR_CLIENT_0.21;
 
 MIR_CLIENT_DETAIL_9 {
