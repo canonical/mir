@@ -22,7 +22,6 @@
 #include "mir/compositor/frame_dropping_policy.h"
 #include "buffer_bundle.h"
 
-#include <atomic>
 #include <mutex>
 #include <condition_variable>
 #include <queue>
@@ -115,11 +114,13 @@ private:
     bool current_compositor_buffer_valid;
     graphics::BufferProperties the_properties;
     bool force_new_compositor_buffer;
-    std::atomic<bool> callbacks_allowed;
     bool single_compositor;
 
     std::condition_variable snapshot_released;
     std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
+
+    mutable std::mutex callbacks_guard;
+    bool callbacks_allowed;
 
     // Ensure framedrop_policy gets destroyed first so the callback installed
     // does not access dead objects.
