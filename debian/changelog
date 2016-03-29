@@ -16,6 +16,8 @@ mir (0.21.0-0ubuntu1) UNRELEASED; urgency=medium
         new devices
       . Added mir_demo_client_camera: a Video4Linux2 client
     - Bugs fixed:
+      . Sometimes devices don't suspend - display turns back on
+        immediately (LP: #1549701)
       . Mir crashed with exception 'failed to add sync point to command
         buffer' (LP: #1554635)
       . Mouse cursor is unusably slow in Unity 8 with a 1000Hz mouse
