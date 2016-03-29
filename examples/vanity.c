@@ -407,7 +407,7 @@ static void* capture_thread_func(void* arg)
     Camera* cam = state->camera;
     Time last_frame = now();
     int last_seen_value = -1;
-    unsigned const max_history = 50;
+    unsigned const max_history = 60;  // ~30 seconds worth of history
     unsigned nhistory = 0;
     Time history[max_history];
 
