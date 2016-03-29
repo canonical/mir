@@ -34,7 +34,10 @@ struct MirKeymapEvent : MirEvent
     void set_device_id(MirInputDeviceId id);
 
     char const* buffer() const;
-    /* Takes over ownership of the buffer pointer */
+    /* FIXME We takes over ownership of the buffer pointer, but we should not be.
+       Either user a unique_ptr here later (when we dont depend on is_trivially_copyable)
+       or copy it into a vector or do a deep copy.
+     */
     void set_buffer(char const* buffer);
     void free_buffer();
 
