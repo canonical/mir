@@ -37,11 +37,16 @@ namespace
 {
 struct DeviceRemovalFilter : mi::InputDeviceObserver
 {
-    DeviceRemovalFilter(std::function<void(MirInputDeviceId)> const& on_removal)
-        : on_removal(on_removal) {}
+    DeviceRemovalFilter(mi::KeyRepeatDispatcher* dispatcher)
+        : dispatcher{dispatcher} {}
 
-    void device_added(std::shared_ptr<mi::Device> const&) override
+    void device_added(std::shared_ptr<mi::Device> const& device) override
     {
+        if (device->name() == "mtk-tpd")
+        {
+            dispatcher->set_mtk_device(device->id());
+        }
+
     }
 
     void device_changed(std::shared_ptr<mi::Device> const&) override
@@ -50,13 +55,13 @@ struct DeviceRemovalFilter : mi::InputDeviceObserver
 
     void device_removed(std::shared_ptr<mi::Device> const& device) override
     {
-        on_removal(device->id());
+        dispatcher->remove_device(device->id());
     }
 
     void changes_complete() override
     {
     }
-    std::function<void(MirInputDeviceId)> on_removal;
+    mi::KeyRepeatDispatcher* dispatcher;
 };
 
 }
@@ -67,25 +72,35 @@ mi::KeyRepeatDispatcher::KeyRepeatDispatcher(
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
     bool repeat_enabled,
     std::chrono::milliseconds repeat_timeout,
-    std::chrono::milliseconds repeat_delay)
+    std::chrono::milliseconds repeat_delay,
+    bool disable_repeat_on_mtk_touchpad)
     : next_dispatcher(next_dispatcher),
       alarm_factory(factory),
       cookie_authority(cookie_authority),
       repeat_enabled(repeat_enabled),
       repeat_timeout(repeat_timeout),
-      repeat_delay(repeat_delay)
+      repeat_delay(repeat_delay),
+      disable_repeat_on_mtk_touchpad(disable_repeat_on_mtk_touchpad)
 {
 }
 
 void mi::KeyRepeatDispatcher::set_input_device_hub(std::shared_ptr<InputDeviceHub> const& hub)
 {
-    hub->add_observer(std::make_shared<DeviceRemovalFilter>(
-            [this](MirInputDeviceId id)
-            {
-                std::unique_lock<std::mutex> lock(repeat_state_mutex);
-                repeat_state_by_device.erase(id); // destructor cancels alarms
-            }
-            ));
+    hub->add_observer(std::make_shared<DeviceRemovalFilter>(this));
+}
+
+void mi::KeyRepeatDispatcher::set_mtk_device(MirInputDeviceId id)
+{
+    std::lock_guard<std::mutex> lock(repeat_state_mutex);
+    mtk_tpd_id = id;
+}
+
+void mi::KeyRepeatDispatcher::remove_device(MirInputDeviceId id)
+{
+    std::lock_guard<std::mutex> lock(repeat_state_mutex);
+    repeat_state_by_device.erase(id); // destructor cancels alarms
+    if (mtk_tpd_id.is_set() && mtk_tpd_id.value() == id)
+        mtk_tpd_id.consume();
 }
 
 mi::KeyRepeatDispatcher::KeyboardState& mi::KeyRepeatDispatcher::ensure_state_for_device_locked(std::lock_guard<std::mutex> const&, MirInputDeviceId id)
@@ -100,12 +115,16 @@ bool mi::KeyRepeatDispatcher::dispatch(MirEvent const& event)
     {
 	return next_dispatcher->dispatch(event);
     }
-    
+
     if (mir_event_get_type(&event) == mir_event_type_input)
     {
         auto iev = mir_event_get_input_event(&event);
         if (mir_input_event_get_type(iev) != mir_input_event_type_key)
             return next_dispatcher->dispatch(event);
+        auto device_id = mir_input_event_get_device_id(iev);
+        if (disable_repeat_on_mtk_touchpad && mtk_tpd_id.is_set() && device_id == mtk_tpd_id.value())
+            return next_dispatcher->dispatch(event);
+
         if (!handle_key_input(mir_input_event_get_device_id(iev), mir_input_event_get_keyboard_event(iev)))
             return next_dispatcher->dispatch(event);
         else
