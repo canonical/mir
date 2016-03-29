@@ -38,7 +38,6 @@ mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> con
 
 mc::BufferStreamSurfaces::~BufferStreamSurfaces()
 {
-    buffer_bundle->drop_client_requests();
     drop_outstanding_requests();
 }
 
@@ -79,6 +78,7 @@ void mc::BufferStreamSurfaces::resize(geom::Size const& size)
 
 void mc::BufferStreamSurfaces::drop_outstanding_requests()
 {
+    buffer_bundle->drop_client_requests();
     buffer_bundle->force_requests_to_complete();
 }
 
