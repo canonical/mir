@@ -390,8 +390,6 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
     viewport = rect;
 }
 
-#include <iostream>
-
 void mrg::Renderer::set_output_transform(MirOrientation new_orientation, MirMirrorMode new_mirror_mode)
 {
     if (new_orientation == orientation && new_mirror_mode == mirror_mode)
