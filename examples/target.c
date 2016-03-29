@@ -52,9 +52,11 @@ typedef struct
 
 typedef struct
 {
+    sigset_t sigs;
     pthread_mutex_t mutex;
-    pthread_cond_t change;
+    pthread_cond_t change_cv;
     bool changed;
+    bool running;
 
     bool resized;
     TouchState touch;
@@ -198,17 +200,32 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         state->resized = true;
         break;
     case mir_event_type_close_surface:
-        // TODO: eglapp.h needs a quit() function or different behaviour of
-        //       mir_eglapp_shutdown().
-        raise(SIGTERM);  // handled by eglapp
+        state->running = false;
         break;
     default:
         break;
     }
 
     state->changed = true;
-    pthread_cond_signal(&state->change);
+    pthread_cond_signal(&state->change_cv);
     pthread_mutex_unlock(&state->mutex);
+}
+
+static void* shutdown_handler(void* context)
+{
+    State *state = (State*)context;
+
+    int signum;
+    sigwait(&state->sigs, &signum);
+    printf("Signal %d received. Good night.\n", signum);
+
+    pthread_mutex_lock(&state->mutex);
+    state->running = false;
+    state->changed = true;
+    pthread_cond_signal(&state->change_cv);
+    pthread_mutex_unlock(&state->mutex);
+
+    return NULL;
 }
 
 int main(int argc, char *argv[])
@@ -240,6 +257,13 @@ int main(int argc, char *argv[])
         "    f.a *= opacity;\n"
         "    gl_FragColor = f;\n"
         "}\n";
+
+    sigset_t sigs;
+    sigemptyset(&sigs);
+    sigaddset(&sigs, SIGINT);
+    sigaddset(&sigs, SIGTERM);
+    sigaddset(&sigs, SIGHUP);
+    pthread_sigmask(SIG_BLOCK, &sigs, NULL);
 
     // Disable Mir's input resampling. We do our own here, in a way that
     // has even lower latency than Mir's default algorithm.
@@ -311,22 +335,38 @@ int main(int argc, char *argv[])
 
     State state =
     {
-        PTHREAD_MUTEX_INITIALIZER,
-        PTHREAD_COND_INITIALIZER,
-        true,
-        true,
-        {0, {{0, {{0.0f, 0.0f}}}}}
+        .mutex = PTHREAD_MUTEX_INITIALIZER,
+        .change_cv = PTHREAD_COND_INITIALIZER,
+        .changed = true,
+        .running = true,
+        .resized = true,
+        .touch = {0, {{0, {{0.0f, 0.0f}}}}}
     };
+    state.sigs = sigs;
+
+    pthread_t shutdown_handler_thread;
+    if (pthread_create(&shutdown_handler_thread, NULL, &shutdown_handler, &state))
+    {
+        printf("Failed creating shutdown handling thread\n");
+        return 3;
+    }
+
     MirSurface *surface = mir_eglapp_native_surface();
     mir_surface_set_event_handler(surface, on_event, &state);
 
-    while (mir_eglapp_running())
+    while (true)
     {
         pthread_mutex_lock(&state.mutex);
 
-        while (mir_eglapp_running() && !state.changed)
-            pthread_cond_wait(&state.change, &state.mutex);
-        
+        while (state.running && !state.changed)
+            pthread_cond_wait(&state.change_cv, &state.mutex);
+
+        if (!state.running)
+        {
+            pthread_mutex_unlock(&state.mutex);
+            break;
+        }
+
         if (state.resized)
         {
             // mir_eglapp_swap_buffers updates the viewport for us...
@@ -384,5 +424,6 @@ int main(int argc, char *argv[])
     mir_surface_set_event_handler(surface, NULL, NULL);
     mir_eglapp_shutdown();
 
+    pthread_join(shutdown_handler_thread, NULL);
     return 0;
 }
