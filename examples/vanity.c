@@ -455,20 +455,32 @@ static void* capture_thread_func(void* arg)
                 }
                 avg /= size;
 
-                //Time observed_range = max - min;
-                //Time expected_range = frame_time + state->display_frame_time;
-
                 // TODO: Display messages on screen in future.
 
                 if (state->display_frame_time < 2*frame_time)
                     printf("YOUR CAMERA IS TOO SLOW. RESULTS NOT ACCURATE\n");
 
+                Time observed_range = max - min;
+                Time expected_range = frame_time + state->display_frame_time;
+
+                printf("INTERVALS: camera %llu.%1llums (%lluHz), "
+                       "display %llu.%1llums (%lluHz), "
+                       "expected vary %llu.%1llums\n",
+                       frame_time / one_millisecond,
+                       (frame_time % one_millisecond) / 100000,
+                       one_second / frame_time,
+                       state->display_frame_time / one_millisecond,
+                       (state->display_frame_time % one_millisecond) / 100000,
+                       one_second / state->display_frame_time,
+                       expected_range / one_millisecond,
+                       (expected_range % one_millisecond) / 100000
+                       );
+
                 printf("LATENCY: min %llu.%1llums, "
                        "max %llu.%1llums, "
                        "avg %llu.%1llums, "
-                       "last %llu.%1llums\n"
-                       "INTERVALS: camera %llu.%1llums (%lluHz), "
-                       "display %llu.%1llums (%lluHz)\n",
+                       "last %llu.%1llums, "
+                       "vary %llu.%1llums\n",
                        min / one_millisecond,
                        (min % one_millisecond) / 100000,
                        max / one_millisecond,
@@ -477,12 +489,9 @@ static void* capture_thread_func(void* arg)
                        (avg % one_millisecond) / 100000,
                        latency / one_millisecond,
                        (latency % one_millisecond) / 100000,
-                       frame_time / one_millisecond,
-                       (frame_time % one_millisecond) / 100000,
-                       one_second / frame_time,
-                       state->display_frame_time / one_millisecond,
-                       (state->display_frame_time % one_millisecond) / 100000,
-                       one_second / state->display_frame_time);
+                       observed_range / one_millisecond,
+                       (observed_range % one_millisecond) / 100000
+                       );
             }
         }
 
