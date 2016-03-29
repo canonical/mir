@@ -19,6 +19,7 @@
 #ifndef MIR_FRONTEND_BUFFER_STREAM_TRACKER_H_
 #define MIR_FRONTEND_BUFFER_STREAM_TRACKER_H_
 
+#include "mir/frontend/surface_id.h"
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/graphics/buffer_id.h"
 
@@ -56,6 +57,9 @@ public:
     /* Access the buffer resource that the id corresponds to. */
     graphics::Buffer* buffer_from(graphics::BufferID) const;
 
+    void add_content_for(frontend::SurfaceId id, frontend::BufferStreamId);
+    frontend::BufferStreamId allocated_content_for(frontend::SurfaceId);
+
 private:
     size_t const client_cache_size;
     std::unordered_map<BufferStreamId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
@@ -67,6 +71,7 @@ public:
 private:
     mutable std::mutex mutex;
     std::unordered_map<BufferStreamId, graphics::Buffer*> client_buffer_resource;
+    std::unordered_map<SurfaceId, frontend::BufferStreamId> added_streams;
 };
 
 }

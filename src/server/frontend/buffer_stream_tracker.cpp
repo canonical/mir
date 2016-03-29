@@ -93,3 +93,22 @@ mg::Buffer* mf::BufferStreamTracker::buffer_from(mg::BufferID buffer_id) const
     }
     BOOST_THROW_EXCEPTION(std::logic_error("Buffer is not tracked"));
 }
+
+void mf::BufferStreamTracker::add_content_for(mf::SurfaceId id, mf::BufferStreamId content)
+{
+    std::lock_guard<decltype(mutex)> lock{mutex};
+    added_streams[id] = content;
+}
+
+mf::BufferStreamId mf::BufferStreamTracker::allocated_content_for(mf::SurfaceId id)
+{
+    std::lock_guard<decltype(mutex)> lock{mutex};
+    auto it = added_streams.find(id);
+    if (it != added_streams.end())
+    {
+        auto id = it->second;
+        added_streams.erase(it);
+        return id;
+    }
+    return mf::BufferStreamId{-1};
+}

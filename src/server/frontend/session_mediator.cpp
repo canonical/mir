@@ -286,11 +286,11 @@ void mf::SessionMediator::create_surface(
 
     #undef COPY_IF_SET
 
-    std::vector<msh::StreamSpecification> stream_spec;
     mf::BufferStreamId buffer_stream_id;
     std::shared_ptr<mf::BufferStream> legacy_stream = nullptr;
     if (request->stream_size() > 0)
     {
+        std::vector<msh::StreamSpecification> stream_spec;
         for (auto& stream : request->stream())
         {
             if (stream.has_width() && stream.has_height())
@@ -310,17 +310,16 @@ void mf::SessionMediator::create_surface(
                         {}});
             }
         }
+        params.streams = std::move(stream_spec);
     }
     else
     {
         buffer_stream_id = session->create_buffer_stream(
             {params.size, params.pixel_format, params.buffer_usage});
         legacy_stream = session->get_buffer_stream(buffer_stream_id);
-        stream_spec.emplace_back(
-            msh::StreamSpecification{buffer_stream_id, geom::Displacement{0, 0}, {}});
+
         params.content_id = buffer_stream_id;
     }
-    params.streams = std::move(stream_spec);
 
     if (request->has_min_aspect())
         params.min_aspect = { request->min_aspect().width(), request->min_aspect().height()};
@@ -363,6 +362,7 @@ void mf::SessionMediator::create_surface(
 
     if (legacy_stream)
     {
+        buffer_stream_tracker.add_content_for(surf_id, buffer_stream_id);
         response->mutable_buffer_stream()->mutable_id()->set_value(buffer_stream_id.as_value());
         advance_buffer(buffer_stream_id, *legacy_stream, buffer_stream_tracker.last_buffer(buffer_stream_id),
             [this, buffering_sender, response, done, session]
@@ -520,6 +520,10 @@ void mf::SessionMediator::release_surface(
 
     shell->destroy_surface(session, id);
     buffer_stream_tracker.remove_buffer_stream(BufferStreamId(request->value()));
+
+    auto allocated_stream = buffer_stream_tracker.allocated_content_for(id);
+    if (allocated_stream.as_value() >= 0)
+        session->destroy_buffer_stream(allocated_stream);
 
     // TODO: We rely on this sending responses synchronously.
     done->Run();

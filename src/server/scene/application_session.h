@@ -126,6 +126,8 @@ private:
     Surfaces surfaces;
     Streams streams;
 
+    std::map<frontend::SurfaceId, frontend::BufferStreamId> default_content_map;
+
     void destroy_surface(std::unique_lock<std::mutex>& lock, Surfaces::const_iterator in_surfaces);
 };
 
