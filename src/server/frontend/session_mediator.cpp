@@ -823,6 +823,7 @@ void mf::SessionMediator::create_buffer_stream(
         usage);
     
     auto const buffer_stream_id = session->create_buffer_stream(props);
+    printf("BBB %i\n", buffer_stream_id.as_value());
     auto stream = session->get_buffer_stream(buffer_stream_id);
     
     response->mutable_id()->set_value(buffer_stream_id.as_value());

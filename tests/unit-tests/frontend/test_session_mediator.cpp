@@ -766,7 +766,7 @@ TEST_F(SessionMediator, exchange_buffer_different_for_different_surfaces)
     mp::BufferRequest req1;
     mp::BufferRequest req2;
     auto mock_stream1 = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
-    auto mock_stream2 = stubbed_session->mock_stream_at(mf::BufferStreamId{1});
+    auto mock_stream2 = stubbed_session->mock_stream_at(mf::BufferStreamId{2});
     Sequence seq;
     EXPECT_CALL(*mock_stream1, swap_buffers(_,_))
         .InSequence(seq);
@@ -780,10 +780,10 @@ TEST_F(SessionMediator, exchange_buffer_different_for_different_surfaces)
     mediator.connect(&connect_parameters, &connection, null_callback.get());
 
     mediator.create_surface(&surface_request, &surface_response, null_callback.get());
-    req1.mutable_id()->set_value(surface_response.id().value());
+    req1.mutable_id()->set_value(surface_response.buffer_stream().id().value());
     *req1.mutable_buffer() = surface_response.buffer_stream().buffer();
     mediator.create_surface(&surface_request, &surface_response, null_callback.get());
-    req2.mutable_id()->set_value(surface_response.id().value());
+    req2.mutable_id()->set_value(surface_response.buffer_stream().id().value());
     *req2.mutable_buffer() = surface_response.buffer_stream().buffer();
     mediator.exchange_buffer(&req2, &buffer_response, null_callback.get());
     mediator.exchange_buffer(&req1, &buffer_response, null_callback.get());
