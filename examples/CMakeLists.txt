@@ -77,12 +77,6 @@ mir_add_wrapped_executable(mir_demo_client_camera
 target_link_libraries(mir_demo_client_camera
   eglapp
 )
-mir_add_wrapped_executable(mir_demo_client_vanity
-  vanity.c
-)
-target_link_libraries(mir_demo_client_vanity
-  eglapp
-)
 mir_add_wrapped_executable(mir_demo_client_eglcounter
   eglcounter.cpp
 )
