@@ -454,34 +454,35 @@ static void* capture_thread_func(void* arg)
                     if (t > max) max = t;
                 }
                 avg /= size;
-                Time observed_range = max - min;
-                Time expected_range = frame_time + state->display_frame_time;
+
+                //Time observed_range = max - min;
+                //Time expected_range = frame_time + state->display_frame_time;
 
                 // TODO: Display messages on screen in future.
 
                 if (state->display_frame_time < 2*frame_time)
                     printf("YOUR CAMERA IS TOO SLOW. RESULTS NOT ACCURATE\n");
 
-                printf("Latency %llu.%1llums, "
-                       "average %llu.%1llums, "
-                       "camera %llu.%1llums (%lluHz), "
+                printf("LATENCY: min %llu.%1llums, "
+                       "max %llu.%1llums, "
+                       "avg %llu.%1llums, "
+                       "last %llu.%1llums\n"
+                       "INTERVALS: camera %llu.%1llums (%lluHz), "
                        "display %llu.%1llums (%lluHz)\n",
-                       latency / one_millisecond,
-                       (latency % one_millisecond) / 100000,
+                       min / one_millisecond,
+                       (min % one_millisecond) / 100000,
+                       max / one_millisecond,
+                       (max % one_millisecond) / 100000,
                        avg / one_millisecond,
                        (avg % one_millisecond) / 100000,
+                       latency / one_millisecond,
+                       (latency % one_millisecond) / 100000,
                        frame_time / one_millisecond,
                        (frame_time % one_millisecond) / 100000,
                        one_second / frame_time,
                        state->display_frame_time / one_millisecond,
                        (state->display_frame_time % one_millisecond) / 100000,
                        one_second / state->display_frame_time);
-                printf("Aliasing wobble: expecting %llums, observed %llums variation\n",
-                       expected_range / one_millisecond,
-                       observed_range / one_millisecond);
-                printf("Synchronized latency (wobble removed): %llu.%1llums\n",
-                       min / one_millisecond,
-                       (min % one_millisecond) / 100000);
             }
         }
 
