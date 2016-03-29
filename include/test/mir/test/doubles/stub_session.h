@@ -37,7 +37,7 @@ struct StubSession : scene::Session
 
     std::string name() const override;
 
-    void force_requests_to_complete() override;
+    void drop_outstanding_requests() override;
 
     pid_t process_id() const override;
 
