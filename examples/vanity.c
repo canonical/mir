@@ -411,6 +411,8 @@ static void* capture_thread_func(void* arg)
     unsigned nhistory = 0;
     Time history[max_history];
 
+    printf("\n    *** Focus your camera on the screen ***\n\n");
+
     while (mir_eglapp_running())
     {
         Buffer const* buf = acquire_frame(cam);
