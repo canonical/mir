@@ -91,34 +91,29 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
 {
     auto const id = next_id();
 
-    mf::BufferStreamId stream_id;
-    if (the_params.content_id.is_set())
-        stream_id = mf::BufferStreamId{the_params.content_id.value().as_value()};
-    else
-        stream_id = mf::BufferStreamId{id.as_value()};
+    //TODO: we take either the content_id or the first streams content for now.
+    //      Once the surface factory interface takes more than one stream,
+    //      we can take all the streams as content.
+    if (!((the_params.content_id.is_set()) ||
+          (the_params.streams.is_set() && the_params.streams.value().size() > 0)))
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("surface must have content"));
+    }
 
     auto params = the_params;
+
+    mf::BufferStreamId stream_id;
+    if (params.content_id.is_set())
+        stream_id = params.content_id.value();
+    else
+        stream_id = params.streams.value()[0].stream_id;
 
     if (params.parent_id.is_set())
         params.parent = checked_find(the_params.parent_id.value())->second;
 
-    std::shared_ptr<compositor::BufferStream> buffer_stream;
-    bool created_buffer_stream = false;
-    if (params.content_id.is_set())
-    {
-        printf("NOT CREATED.\n");
-        buffer_stream = checked_find(params.content_id.value())->second;
-    }
-    else
-    {
-        printf("CREATED.\n");
-        created_buffer_stream = true;
-        mg::BufferProperties buffer_properties{params.size,
-                                               params.pixel_format,
-                                               params.buffer_usage};
-        buffer_stream = buffer_stream_factory->create_buffer_stream(
-            stream_id, surface_sink, buffer_properties);
-    }
+    auto buffer_stream = checked_find(params.content_id.value())->second;
+    if (params.size != buffer_stream->stream_size())
+        buffer_stream->resize(params.size);
 
     auto surface = surface_factory->create_surface(buffer_stream, params);
     surface_stack->add_surface(surface, params.input_mode);
@@ -142,10 +137,6 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     {
         std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
         surfaces[id] = surface;
-        if (created_buffer_stream)
-        {
-            streams[stream_id] = buffer_stream;
-        }
     }
 
     observer->moved_to(surface->top_left());
