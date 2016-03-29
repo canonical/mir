@@ -286,6 +286,41 @@ void mf::SessionMediator::create_surface(
 
     #undef COPY_IF_SET
 
+    std::vector<msh::StreamSpecification> stream_spec;
+    mf::BufferStreamId buffer_stream_id;
+    std::shared_ptr<mf::BufferStream> legacy_stream = nullptr;
+    if (request->stream_size() > 0)
+    {
+        for (auto& stream : request->stream())
+        {
+            if (stream.has_width() && stream.has_height())
+            {
+                stream_spec.emplace_back(
+                    msh::StreamSpecification{
+                        mf::BufferStreamId{stream.id().value()},
+                        geom::Displacement{stream.displacement_x(), stream.displacement_y()},
+                        geom::Size{stream.width(), stream.height()}});
+            }
+            else
+            {
+                stream_spec.emplace_back(
+                    msh::StreamSpecification{
+                        mf::BufferStreamId{stream.id().value()},
+                        geom::Displacement{stream.displacement_x(), stream.displacement_y()},
+                        {}});
+            }
+        }
+    }
+    else
+    {
+        buffer_stream_id = session->create_buffer_stream(
+            {params.size, params.pixel_format, params.buffer_usage});
+        legacy_stream = session->get_buffer_stream(buffer_stream_id);
+        stream_spec.emplace_back(
+            msh::StreamSpecification{buffer_stream_id, geom::Displacement{0, 0}, {}});
+    }
+    params.streams = std::move(stream_spec);
+
     if (request->has_min_aspect())
         params.min_aspect = { request->min_aspect().width(), request->min_aspect().height()};
 
@@ -298,10 +333,10 @@ void mf::SessionMediator::create_surface(
     std::shared_ptr<mf::EventSink> sink = sink_factory->create_sink(buffering_sender);
 
     auto const surf_id = shell->create_surface(session, params, sink);
-    auto stream_id = mf::BufferStreamId(surf_id.as_value());
+//    auto stream_id = mf::BufferStreamId(surf_id.as_value());
 
     auto surface = session->get_surface(surf_id);
-    auto stream = session->get_buffer_stream(stream_id);
+//    auto stream = session->get_buffer_stream(stream_id);
     auto const& client_size = surface->client_size();
     response->mutable_id()->set_value(surf_id.as_value());
     response->set_width(client_size.width.as_uint32_t());
@@ -326,48 +361,36 @@ void mf::SessionMediator::create_surface(
         setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirSurfaceAttrib>(i)));
     }
 
-    advance_buffer(stream_id, *stream, buffer_stream_tracker.last_buffer(stream_id),
-        [this, buffering_sender, surf_id, response, done, session]
-        (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
-        {
-            response->mutable_buffer_stream()->mutable_id()->set_value(surf_id.as_value());
-            if (client_buffer)
-                pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(), client_buffer, msg_type);
+    if (legacy_stream)
+    {
+        response->mutable_buffer_stream()->mutable_id()->set_value(buffer_stream_id.as_value());
+        advance_buffer(buffer_stream_id, *legacy_stream, buffer_stream_tracker.last_buffer(buffer_stream_id),
+            [this, buffering_sender, response, done, session]
+            (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
+            {
+                if (client_buffer)
+                    pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(), client_buffer, msg_type);
 
+                // Send the create_surface reply first...
+                done->Run();
 
-            // Send the create_surface reply first...
-            done->Run();
-
-            // ...then uncork the message sender, sending all buffered surface events.
-            buffering_sender->uncork();
-        });
+                // ...then uncork the message sender, sending all buffered surface events.
+                buffering_sender->uncork();
+            });
+    }
+    else
+    {
+        done->Run();
+        buffering_sender->uncork();
+    }
 }
 
 void mf::SessionMediator::next_buffer(
-    ::mir::protobuf::SurfaceId const* request,
-    ::mir::protobuf::Buffer* response,
-    ::google::protobuf::Closure* done)
+    ::mir::protobuf::SurfaceId const*,
+    ::mir::protobuf::Buffer*,
+    ::google::protobuf::Closure*)
 {
-    SurfaceId const surf_id{request->value()};
-
-    auto const session = weak_session.lock();
-
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-    report->session_next_buffer_called(session->name());
-
-    auto surface = session->get_surface(surf_id);
-    auto stream = surface->primary_buffer_stream();
-    auto stream_id = mf::BufferStreamId{surf_id.as_value()};
-
-    advance_buffer(stream_id, *stream, buffer_stream_tracker.last_buffer(stream_id),
-        [this, response, done]
-        (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
-        {
-            pack_protobuf_buffer(*response, client_buffer, msg_type);
-            done->Run();
-        });
+    BOOST_THROW_EXCEPTION(std::logic_error("next_buffer rpc call is deprecated."));
 }
 
 void mf::SessionMediator::exchange_buffer(

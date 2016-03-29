@@ -90,8 +90,12 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     std::shared_ptr<mf::EventSink> const& surface_sink)
 {
     auto const id = next_id();
-    mf::BufferStreamId const stream_id{the_params.content_id.is_set() ?
-        the_params.content_id.value().as_value() : id.as_value()};
+
+    mf::BufferStreamId stream_id;
+    if (the_params.content_id.is_set())
+        stream_id = mf::BufferStreamId{the_params.content_id.value().as_value()};
+    else
+        stream_id = mf::BufferStreamId{next_id().as_value()};
 
     auto params = the_params;
 
@@ -99,18 +103,23 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
         params.parent = checked_find(the_params.parent_id.value())->second;
 
     std::shared_ptr<compositor::BufferStream> buffer_stream;
+    bool created_buffer_stream = false;
     if (params.content_id.is_set())
     {
+        printf("NOT CREATED.\n");
         buffer_stream = checked_find(params.content_id.value())->second;
     }
     else
     {
+        printf("CREATED.\n");
+        created_buffer_stream = true;
         mg::BufferProperties buffer_properties{params.size,
                                                params.pixel_format,
                                                params.buffer_usage};
         buffer_stream = buffer_stream_factory->create_buffer_stream(
             stream_id, surface_sink, buffer_properties);
     }
+
     auto surface = surface_factory->create_surface(buffer_stream, params);
     surface_stack->add_surface(surface, params.input_mode);
 
@@ -133,7 +142,10 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     {
         std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
         surfaces[id] = surface;
-        streams[stream_id] = buffer_stream;
+        if (created_buffer_stream)
+        {
+            streams[stream_id] = buffer_stream;
+        }
     }
 
     observer->moved_to(surface->top_left());
@@ -154,7 +166,7 @@ ms::ApplicationSession::Streams::const_iterator ms::ApplicationSession::checked_
 {
     auto p = streams.find(id);
     if (p == streams.end())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SurfaceId"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid BufferStreamId"));
     return p;
 }
 
