@@ -48,6 +48,7 @@
 #include "mir/abnormal_exit.h"
 #include "mir/glib_main_loop.h"
 #include "mir/log.h"
+#include "mir/shared_library.h"
 #include "mir/dispatch/action_queue.h"
 
 #include "mir_toolkit/cursors.h"
@@ -59,6 +60,36 @@ namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace msh = mir::shell;
 namespace md = mir::dispatch;
+
+namespace
+{
+
+bool is_arale()
+{
+    try
+    {
+        mir::SharedLibrary android_properties("libandroid-properties.so.1");
+        int (*property_get)(char const*, char*, char const*) = nullptr;
+        property_get = android_properties.load_function<decltype(property_get)>("property_get");
+
+        const int property_value_max = 92;
+        char default_value[] = "";
+        char value[property_value_max];
+
+        if (property_get == nullptr)
+            return false;
+
+        property_get("ro.product.device", value, default_value);
+
+        return std::strcmp("arale", value) == 0;
+    }
+    catch(...)
+    {
+    }
+    return false;
+}
+
+}
 
 std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
 {
@@ -151,7 +182,7 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
                 the_event_filter_chain_dispatcher(), the_main_loop(), the_cookie_authority(),
-                enable_repeat, key_repeat_timeout, key_repeat_delay);
+                enable_repeat, key_repeat_timeout, key_repeat_delay, is_arale());
         });
 }
 
