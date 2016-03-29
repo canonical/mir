@@ -24,6 +24,54 @@
 
 #include <cstring>
 
+// Only MirPointerEvent and MirTouchEvent are typedefed in the public API
+typedef struct MirMotionEvent MirMotionEvent;
+
+struct MirEvent
+{
+    MirEventType type() const;
+
+    MirInputEvent* to_input();
+    MirInputEvent const* to_input() const;
+
+    MirInputConfigurationEvent* to_input_configuration();
+    MirInputConfigurationEvent const* to_input_configuration() const;
+
+    MirSurfaceEvent* to_surface();
+    MirSurfaceEvent const* to_surface() const;
+
+    MirResizeEvent* to_resize();
+    MirResizeEvent const* to_resize() const;
+
+    MirPromptSessionEvent* to_prompt_session();
+    MirPromptSessionEvent const* to_prompt_session() const;
+
+    MirOrientationEvent* to_orientation();
+    MirOrientationEvent const* to_orientation() const;
+
+    MirCloseSurfaceEvent* to_close_surface();
+    MirCloseSurfaceEvent const* to_close_surface() const;
+
+    MirKeymapEvent* to_keymap();
+    MirKeymapEvent const* to_keymap() const;
+
+    MirSurfaceOutputEvent* to_surface_output();
+    MirSurfaceOutputEvent const* to_surface_output() const;
+
+    MirEvent* clone() const;
+
+    static mir::EventUPtr deserialize(std::string const& bytes);
+    static std::string serialize(MirEvent const* event);
+
+protected:
+    MirEvent() = default;
+    explicit MirEvent(MirEventType type);
+    MirEvent(MirEvent const& event) = default;
+    MirEvent& operator=(MirEvent const& event) = default;
+
+    MirEventType type_;
+};
+
 namespace mir
 {
 namespace event
@@ -81,53 +129,5 @@ MirEvent* deep_copy(MirEvent const* ev)
 }
 }
 }
-
-// Only MirPointerEvent and MirTouchEvent are typedefed in the public API
-typedef struct MirMotionEvent MirMotionEvent;
-
-struct MirEvent
-{
-    MirEventType type() const;
-
-    MirInputEvent* to_input();
-    MirInputEvent const* to_input() const;
-
-    MirInputConfigurationEvent* to_input_configuration();
-    MirInputConfigurationEvent const* to_input_configuration() const;
-
-    MirSurfaceEvent* to_surface();
-    MirSurfaceEvent const* to_surface() const;
-
-    MirResizeEvent* to_resize();
-    MirResizeEvent const* to_resize() const;
-
-    MirPromptSessionEvent* to_prompt_session();
-    MirPromptSessionEvent const* to_prompt_session() const;
-
-    MirOrientationEvent* to_orientation();
-    MirOrientationEvent const* to_orientation() const;
-
-    MirCloseSurfaceEvent* to_close_surface();
-    MirCloseSurfaceEvent const* to_close_surface() const;
-
-    MirKeymapEvent* to_keymap();
-    MirKeymapEvent const* to_keymap() const;
-
-    MirSurfaceOutputEvent* to_surface_output();
-    MirSurfaceOutputEvent const* to_surface_output() const;
-
-    MirEvent* clone() const;
-
-    static mir::EventUPtr deserialize(std::string const& bytes);
-    static std::string serialize(MirEvent const* event);
-
-protected:
-    MirEvent() = default;
-    explicit MirEvent(MirEventType type);
-    MirEvent(MirEvent const& event) = default;
-    MirEvent& operator=(MirEvent const& event) = default;
-
-    MirEventType type_;
-};
 
 #endif /* MIR_COMMON_EVENT_H_ */
