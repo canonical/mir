@@ -21,6 +21,7 @@
 
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/frontend/session.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -100,15 +101,10 @@ void mf::BufferStreamTracker::add_content_for(mf::SurfaceId id, mf::BufferStream
     added_streams[id] = content;
 }
 
-mf::BufferStreamId mf::BufferStreamTracker::allocated_content_for(mf::SurfaceId id)
+void mf::BufferStreamTracker::remove_content_for(mf::SurfaceId id, mf::Session& session)
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
     auto it = added_streams.find(id);
     if (it != added_streams.end())
-    {
-        auto id = it->second;
-        added_streams.erase(it);
-        return id;
-    }
-    return mf::BufferStreamId{-1};
+        session.destroy_buffer_stream(it->second);
 }

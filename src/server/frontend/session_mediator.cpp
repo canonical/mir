@@ -317,7 +317,6 @@ void mf::SessionMediator::create_surface(
         buffer_stream_id = session->create_buffer_stream(
             {params.size, params.pixel_format, params.buffer_usage});
         legacy_stream = session->get_buffer_stream(buffer_stream_id);
-
         params.content_id = buffer_stream_id;
     }
 
@@ -521,9 +520,7 @@ void mf::SessionMediator::release_surface(
     shell->destroy_surface(session, id);
     buffer_stream_tracker.remove_buffer_stream(BufferStreamId(request->value()));
 
-    auto allocated_stream = buffer_stream_tracker.allocated_content_for(id);
-    if (allocated_stream.as_value() >= 0)
-        session->destroy_buffer_stream(allocated_stream);
+    buffer_stream_tracker.remove_content_for(id, *session);
 
     // TODO: We rely on this sending responses synchronously.
     done->Run();

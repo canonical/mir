@@ -35,6 +35,7 @@ class Buffer;
 }
 namespace frontend
 {
+class Session;
 class ClientBufferTracker;
 class BufferStreamTracker
 {
@@ -58,7 +59,7 @@ public:
     graphics::Buffer* buffer_from(graphics::BufferID) const;
 
     void add_content_for(frontend::SurfaceId id, frontend::BufferStreamId);
-    frontend::BufferStreamId allocated_content_for(frontend::SurfaceId);
+    void remove_content_for(frontend::SurfaceId, frontend::Session&);
 
 private:
     size_t const client_cache_size;
