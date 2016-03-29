@@ -314,6 +314,7 @@ MIR_COMMON_unreleased {
        MirMotionEvent::set_pointer_count*;
        MirMotionEvent::pointer_coordinates*;
        MirMotionEvent::to_touch*;
+       MirMotionEvent::to_pointer*;
        MirOrientationEvent::MirOrientationEvent*;
        MirOrientationEvent::surface_id*;
        MirOrientationEvent::set_surface_id*;
