@@ -75,16 +75,18 @@ void deliver(std::shared_ptr<mi::Surface> const& surface, T const* ev)
 {
     T to_deliver = *ev;
 
-    if (to_deliver.type == mir_event_type_motion)
+    if (to_deliver.type() == mir_event_type_motion)
     {
         auto sx = surface->input_bounds().top_left.x.as_int();
         auto sy = surface->input_bounds().top_left.y.as_int();
 
         auto mev = to_deliver.to_input()->to_motion();
-        for (unsigned i = 0; i < mev->pointer_count; i++)
+        for (unsigned i = 0; i < mev->pointer_count(); i++)
         {
-            mev->pointer_coordinates[i].x -= sx;
-            mev->pointer_coordinates[i].y -= sy;
+            auto x = mev->pointer_coordinates(i).x();
+            auto y = mev->pointer_coordinates(i).y();
+            mev->pointer_coordinates(i).set_x(x - sx);
+            mev->pointer_coordinates(i).set_y(y - sy);
         }
     }
     surface->consume(&to_deliver);

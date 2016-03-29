@@ -163,7 +163,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
                                    std::make_shared<mircv::XKBMapper>(),
                                    [&last_event](MirEvent* ev)
                                    {
-                                       if (ev->type == mir_event_type_key)
+                                       if (ev->type() == mir_event_type_key)
                                        {
                                            last_event = *ev->to_input()->to_keyboard();
                                        }
@@ -178,8 +178,8 @@ TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
     EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
 
-    EXPECT_EQ(mir_event_type_key, last_event.type);
-    EXPECT_EQ(producer.testing_key_event_scan_code, last_event.scan_code);
+    EXPECT_EQ(mir_event_type_key, last_event.type());
+    EXPECT_EQ(producer.testing_key_event_scan_code, last_event.scan_code());
 }
 
 TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
@@ -259,7 +259,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
     EXPECT_TRUE(handler_called);
-    ASSERT_EQ(mir_event_type_key, ev->type);
+    ASSERT_EQ(mir_event_type_key, ev->type());
 
     // The motion is still too new. Won't be reported yet, but is batched.
     auto start = high_resolution_clock::now();
@@ -286,7 +286,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     receiver.dispatch(md::FdEvent::readable);
 
     EXPECT_TRUE(handler_called);
-    EXPECT_EQ(mir_event_type_motion, ev->type);
+    EXPECT_EQ(mir_event_type_motion, ev->type());
 }
 
 TEST_F(AndroidInputReceiverSetup, finish_signalled_after_handler)
