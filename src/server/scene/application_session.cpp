@@ -95,7 +95,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     if (the_params.content_id.is_set())
         stream_id = mf::BufferStreamId{the_params.content_id.value().as_value()};
     else
-        stream_id = mf::BufferStreamId{next_id().as_value()};
+        stream_id = mf::BufferStreamId{id.as_value()};
 
     auto params = the_params;
 

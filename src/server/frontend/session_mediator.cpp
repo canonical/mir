@@ -318,6 +318,7 @@ void mf::SessionMediator::create_surface(
         legacy_stream = session->get_buffer_stream(buffer_stream_id);
         stream_spec.emplace_back(
             msh::StreamSpecification{buffer_stream_id, geom::Displacement{0, 0}, {}});
+        params.content_id = buffer_stream_id;
     }
     params.streams = std::move(stream_spec);
 
@@ -333,10 +334,9 @@ void mf::SessionMediator::create_surface(
     std::shared_ptr<mf::EventSink> sink = sink_factory->create_sink(buffering_sender);
 
     auto const surf_id = shell->create_surface(session, params, sink);
-//    auto stream_id = mf::BufferStreamId(surf_id.as_value());
 
     auto surface = session->get_surface(surf_id);
-//    auto stream = session->get_buffer_stream(stream_id);
+    auto stream = session->get_buffer_stream(buffer_stream_id);
     auto const& client_size = surface->client_size();
     response->mutable_id()->set_value(surf_id.as_value());
     response->set_width(client_size.width.as_uint32_t());
