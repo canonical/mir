@@ -33,7 +33,6 @@ namespace doubles
 
 struct MockInputManager : public input::InputManager
 {
-    MOCK_METHOD1(add_platform, void(std::shared_ptr<mir::input::Platform> const&));
     MOCK_METHOD0(start, void());
     MOCK_METHOD0(stop, void());
 };
