@@ -866,7 +866,8 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_events_to_surfaces)
     app_session.send_display_config(config);
 
     ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
-        .of_size({100, 100});
+        .of_size({100, 100})
+        .with_buffer_stream(app_session.create_buffer_stream(properties));
     auto surf_id = app_session.create_surface(params, sender);
     auto surface = app_session.surface(surf_id);
 
@@ -891,7 +892,8 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
                          }));
 
     ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
-        .of_size({100, 100});
+        .of_size({100, 100})
+        .with_buffer_stream(app_session.create_buffer_stream(properties));
 
     mf::SurfaceId ids[2];
     std::shared_ptr<ms::Surface> surfaces[2];
@@ -944,7 +946,8 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
                               }));
 
     ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
-        .of_size({100, 100});
+        .of_size({100, 100})
+        .with_buffer_stream(app_session.create_buffer_stream(properties));
 
     auto id = app_session.create_surface(params, sender);
     auto surface = app_session.surface(id);
@@ -1001,7 +1004,8 @@ TEST_F(ApplicationSessionSurfaceOutput, surfaces_on_edges_get_correct_values)
     app_session.send_display_config(config);
 
     ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
-        .of_size({640, 480});
+        .of_size({640, 480})
+        .with_buffer_stream(app_session.create_buffer_stream(properties));
 
     auto id = app_session.create_surface(params, sender);
     auto surface = app_session.surface(id);
@@ -1058,7 +1062,8 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     app_session.send_display_config(config);
 
     ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
-        .of_size({100, 100});
+        .of_size({100, 100})
+        .with_buffer_stream(app_session.create_buffer_stream(properties));
 
     auto id = app_session.create_surface(params, sender);
     auto surface = app_session.surface(id);
@@ -1122,7 +1127,8 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move_only_
     app_session.send_display_config(config);
 
     ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
-        .of_size({100, 100});
+        .of_size({100, 100})
+        .with_buffer_stream(app_session.create_buffer_stream(properties));
 
     auto id = app_session.create_surface(params, sender);
     auto surface = app_session.surface(id);
