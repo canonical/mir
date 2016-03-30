@@ -959,8 +959,8 @@ TEST_F(DisplayConfigurationTest, unauthorised_client_receives_error)
     ErrorValidator validator;
     validator.validate = [&config](MirError const* error)
         {
-            EXPECT_THAT(mir_error_get_domain(error), Eq(mir_error_domain_connection));
-            EXPECT_THAT(mir_error_get_code(error), Eq(mir_connection_error_unauthorized_display_configuration));
+            EXPECT_THAT(mir_error_get_domain(error), Eq(mir_error_domain_display_configuration));
+            EXPECT_THAT(mir_error_get_code(error), Eq(mir_display_configuration_error_unauthorized));
         };
     mir_connection_set_error_callback(client.connection, &validating_error_handler, &validator);
 

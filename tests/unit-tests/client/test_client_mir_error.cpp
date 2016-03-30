@@ -26,17 +26,17 @@ TEST(MirError, error_has_domain)
 {
     using namespace testing;
 
-    MirError error{mir_error_domain_connection, 0};
+    MirError error{mir_error_domain_display_configuration, 0};
 
-    EXPECT_THAT(mir_error_get_domain(&error), Eq(mir_error_domain_connection));
+    EXPECT_THAT(mir_error_get_domain(&error), Eq(mir_error_domain_display_configuration));
 }
 
 TEST(MirError, error_has_code)
 {
     using namespace testing;
 
-    MirError error{mir_error_domain_connection, mir_connection_error_unauthorized_display_configuration};
+    MirError error{mir_error_domain_display_configuration, mir_display_configuration_error_unauthorized};
 
-    EXPECT_THAT(mir_error_get_code(&error), mir_connection_error_unauthorized_display_configuration);
+    EXPECT_THAT(mir_error_get_code(&error), Eq(mir_display_configuration_error_unauthorized));
 }
 

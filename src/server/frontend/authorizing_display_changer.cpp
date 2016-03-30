@@ -35,11 +35,11 @@ public:
     }
     MirErrorDomain domain() const noexcept override
     {
-        return mir_error_domain_connection;
+        return mir_error_domain_display_configuration;
     }
     uint32_t code() const noexcept override
     {
-        return mir_connection_error_unauthorized_display_configuration;
+        return mir_display_configuration_error_unauthorized;
     }
 };
 }

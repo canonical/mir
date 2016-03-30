@@ -453,15 +453,23 @@ typedef void (*mir_input_config_callback)(
  */
 typedef enum MirErrorDomain
 {
-    mir_error_domain_connection,
+    /**
+     * Errors relating to display configuration.
+     *
+     * Associated error codes are found in \ref MirDisplayConfigurationError.
+     */
+    mir_error_domain_display_configuration,
 } MirErrorDomain;
 
 /**
- * Errors from the mir_error_domain_connection MirErrorDomain
+ * Errors from the \ref mir_error_domain_display_configuration \ref MirErrorDomain
  */
-typedef enum MirConnectionError {
-    mir_connection_error_unauthorized_display_configuration,
-} MirConnectionError;
+typedef enum MirDisplayConfigurationError {
+    /**
+     * Client in not permitted to change global display configuration
+     */
+    mir_display_configuration_error_unauthorized,
+} MirDisplayConfigurationError;
 
 typedef void (*mir_error_callback)(
     MirConnection* connection,
