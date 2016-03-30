@@ -47,6 +47,8 @@ typedef struct MirBufferStream MirBufferStream;
 typedef struct MirPersistentId MirPersistentId;
 typedef struct MirBlob MirBlob;
 typedef struct MirDisplayConfig MirDisplayConfig;
+typedef struct MirError MirError;
+
 
 /**
  * Descriptor for an output connection.
@@ -443,6 +445,11 @@ typedef void (*mir_platform_operation_callback)(
 
 typedef void (*mir_input_config_callback)(
     MirConnection* connection, void* context);
+
+typedef enum MirErrorDomain
+{
+    mir_error_domain_surface
+} MirErrorDomain;
 
 #ifdef __cplusplus
 }

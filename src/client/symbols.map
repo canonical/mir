@@ -232,6 +232,9 @@ MIR_CLIENT_0.21 {
     mir_display_config_get_num_outputs;
     mir_display_config_get_output;
     mir_display_config_release;
+    mir_error_get_debug_message;
+    mir_error_get_display_message;
+    mir_error_get_domain;
     mir_input_config_destroy;
     mir_input_config_device_count;
     mir_input_config_get_device;
