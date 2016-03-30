@@ -50,8 +50,8 @@ struct MirKeymapEvent : MirEvent
     MirEvent* clone() const;
 
 private:
-    int surface_id_{0};
-    MirInputDeviceId device_id_{0};
+    int surface_id_{-1};
+    MirInputDeviceId device_id_{UINT32_MAX};
     char const* buffer_{nullptr};
     size_t size_{0};
 };

@@ -39,7 +39,7 @@ struct MirInputConfigurationEvent : MirEvent
 private:
     MirInputConfigurationAction action_;
     std::chrono::nanoseconds when_{0};
-    MirInputDeviceId id_{0};
+    MirInputDeviceId id_{UINT32_MAX};
 };
 
 #endif /* MIR_COMMON_INPUT_CONFIGURATION_EVENT_H_ */

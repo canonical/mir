@@ -54,8 +54,8 @@ struct MirKeyboardEvent : MirInputEvent
     void set_cookie(mir::cookie::Blob const& cookie);
 
 private:
-    int32_t device_id_{0};
-    int32_t source_id_{0};
+    int32_t device_id_{-1};
+    int32_t source_id_{-1};
     MirKeyboardAction action_;
     MirInputEventModifiers modifiers_{0};
 

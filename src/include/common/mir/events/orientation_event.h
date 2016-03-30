@@ -32,7 +32,7 @@ struct MirOrientationEvent : MirEvent
     void set_direction(MirOrientation orientation);
 
 private:
-    int surface_id_{0};
+    int surface_id_{-1};
     MirOrientation direction_;
 };
 

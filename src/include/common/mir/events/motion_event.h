@@ -123,8 +123,8 @@ struct MirMotionEvent : MirInputEvent
     MirPointerEvent const* to_pointer() const;
 
 private:
-    int32_t device_id_{0};
-    int32_t source_id_{0};
+    int32_t device_id_{-1};
+    int32_t source_id_{-1};
 
     MirInputEventModifiers modifiers_{0};
 

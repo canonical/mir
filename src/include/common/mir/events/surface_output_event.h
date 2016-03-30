@@ -43,11 +43,11 @@ struct MirSurfaceOutputEvent : MirEvent
     void set_output_id(uint32_t id);
 
 private:
-    int surface_id_{0};
+    int surface_id_{-1};
     int dpi_{0};
     float scale_{0.0f};
     MirFormFactor form_factor_;
-    uint32_t output_id_{0};
+    uint32_t output_id_{UINT32_MAX};
 };
 
 #endif /* MIR_COMMON_SURFACE_OUTPUT_EVENT_H_ */

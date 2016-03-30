@@ -35,7 +35,7 @@ struct MirResizeEvent : MirEvent
     void set_height(int height);
 
 private:
-    int surface_id_{0};
+    int surface_id_{-1};
     int width_{0};
     int height_{0};
 };
