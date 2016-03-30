@@ -100,7 +100,7 @@ mgc::ShmBuffer::ShmBuffer(
       size_{size},
       pixel_format_{pixel_format},
       stride_{MIR_BYTES_PER_PIXEL(pixel_format_) * size_.width.as_uint32_t()},
-      pixels{shm_file->base_ptr()}
+      pixels{this->shm_file->base_ptr()}
 {
 }
 
