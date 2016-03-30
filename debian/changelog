@@ -1,5 +1,6 @@
-mir (0.21.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.21.0+16.04.20160330-0ubuntu1) xenial; urgency=medium
 
+  [ Alberto Aguirre ]
   * New upstream release 0.21.0 (https://launchpad.net/mir/+milestone/0.21.0)
     - ABI summary:
       . mirclient ABI unchanged at 9
@@ -59,7 +60,10 @@ mir (0.21.0-0ubuntu1) UNRELEASED; urgency=medium
       . The contents of debian/mir-demos.examples are out of date and useless
         (LP: #1557446)
 
- -- Alberto Aguirre <alberto.aguirre@canonical.com>  Thu, 17 Mar 2016 14:08:50 -0500
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Wed, 30 Mar 2016 00:23:20 +0000
 
 mir (0.20.3+16.04.20160322-0ubuntu1) xenial; urgency=medium
 
