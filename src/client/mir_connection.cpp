@@ -44,6 +44,7 @@
 
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
+#include "mir_error.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -906,6 +907,11 @@ void MirConnection::register_lifecycle_event_callback(mir_lifecycle_event_callba
 void MirConnection::register_ping_event_callback(mir_ping_event_callback callback, void* context)
 {
     ping_handler->set_callback(std::bind(callback, this, std::placeholders::_1, context));
+}
+
+void MirConnection::register_error_callback(mir_error_callback callback, void* context)
+{
+    error_handler.set_callback(std::bind(callback, this, std::placeholders::_1, context));
 }
 
 void MirConnection::pong(int32_t serial)

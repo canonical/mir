@@ -451,6 +451,11 @@ typedef enum MirErrorDomain
     mir_error_domain_surface
 } MirErrorDomain;
 
+typedef void (*mir_error_callback)(
+    MirConnection* connection,
+    MirError const* error,
+    void* context);
+
 #ifdef __cplusplus
 }
 /**@}*/
