@@ -32,8 +32,8 @@ namespace compositor
 
 enum class MultiMonitorMode
 {
-    multi_monitor_sync,
-    single_monitor_fast
+    multi_monitor_sync, // lower latency+framerate, and supports multi-monitor
+    single_monitor_fast // higher latency+framerate, no multi-monitor
 };
 
 class BufferAcquisition
