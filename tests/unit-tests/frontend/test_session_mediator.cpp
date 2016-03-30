@@ -210,6 +210,14 @@ struct StubScreencast : mtd::NullScreencast
     mtd::StubBuffer stub_buffer;
 };
 
+mp::BufferRequest request_from_surface_response(mp::Surface const& surface)
+{
+    mp::BufferRequest request;
+    request.mutable_id()->set_value(surface.buffer_stream().id().value());
+    request.mutable_buffer()->set_buffer_id(surface.buffer_stream().buffer().buffer_id());
+    return request;
+}
+
 struct SessionMediator : public ::testing::Test
 {
     SessionMediator()
@@ -281,14 +289,6 @@ struct SessionMediator : public ::testing::Test
     mp::BufferRequest buffer_request;
 };
 
-mp::BufferRequest request_from_surface_response(mp::Surface const& surface)
-{
-    mp::BufferRequest request;
-    request.mutable_id()->set_value(surface.buffer_stream().id().value());
-    request.mutable_buffer()->set_buffer_id(surface.buffer_stream().buffer().buffer_id());
-    return request;
-}
-
 }
 
 TEST_F(SessionMediator, disconnect_releases_session)
@@ -338,10 +338,6 @@ TEST_F(SessionMediator, calling_methods_before_connect_throws)
     }, std::logic_error);
 
     EXPECT_THROW({
-        mediator.submit_buffer(&buffer_request, &void_response, null_callback.get());
-    }, std::logic_error);
-
-    EXPECT_THROW({
         mediator.exchange_buffer(&buffer_request, &buffer_response, null_callback.get());
     }, std::logic_error);
 
@@ -361,7 +357,7 @@ TEST_F(SessionMediator, calling_methods_after_connect_works)
     EXPECT_NO_THROW({
         mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
         *buffer_request.mutable_buffer() = surface_response.buffer_stream().buffer();
-        buffer_request.mutable_id()->set_value(surface_response.buffer_stream().id().value());
+        buffer_request.mutable_id()->set_value(surface_response.id().value());
         mediator.exchange_buffer(&buffer_request, &buffer_response, null_callback.get());
         mediator.release_surface(&surface_id_request, nullptr, null_callback.get());
     });
