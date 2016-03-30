@@ -356,6 +356,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
     void set_interval(int interval) override
     {
+        std::unique_lock<decltype(mutex)> lk(mutex);
         interval = std::max(0, std::min(1, interval));
         if (current_swap_interval == interval)
             return;

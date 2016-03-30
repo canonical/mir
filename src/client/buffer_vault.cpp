@@ -221,6 +221,8 @@ void mcl::BufferVault::increase_buffer_count()
     std::unique_lock<std::mutex> lk(mutex);
     current_buffer_count++;
     needed_buffer_count++;
+    lk.unlock();
+
     server_requests->allocate_buffer(size, format, usage);
 }
 
