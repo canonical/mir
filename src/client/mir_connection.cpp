@@ -997,6 +997,24 @@ MirWaitHandle* MirConnection::set_base_display_configuration(MirDisplayConfigura
     return &set_base_display_configuration_wait_handle;
 }
 
+namespace
+{
+struct HandleErrorVoid
+{
+    std::unique_ptr<mp::Void> result;
+    std::function<void(mp::Void const&)> on_error;
+};
+
+void handle_structured_error(HandleErrorVoid* handler)
+{
+    if (handler->result->has_structured_error())
+    {
+        handler->on_error(*handler->result);
+    }
+    delete handler;
+}
+}
+
 void MirConnection::preview_base_display_configuration(
     mp::DisplayConfiguration const& configuration,
     std::chrono::seconds timeout)
@@ -1006,10 +1024,20 @@ void MirConnection::preview_base_display_configuration(
     request.mutable_configuration()->CopyFrom(configuration);
     request.set_timeout(timeout.count());
 
+    auto store_error_result = new HandleErrorVoid;
+    store_error_result->result = std::make_unique<mp::Void>();
+    store_error_result->on_error = [this](mp::Void const& message)
+    {
+        MirError const error{
+            static_cast<MirErrorDomain>(message.structured_error().domain()),
+            message.structured_error().code()};
+        error_handler(&error);
+    };
+
     server.preview_base_display_configuration(
         &request,
-        set_base_display_configuration_response.get(),
-        google::protobuf::NewCallback(google::protobuf::DoNothing));
+        store_error_result->result.get(),
+        google::protobuf::NewCallback(&handle_structured_error, store_error_result));
 }
 
 void MirConnection::confirm_base_display_configuration(

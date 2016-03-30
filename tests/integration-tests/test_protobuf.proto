@@ -6,8 +6,14 @@ message Parameters {
   required string name = 1;
 }
 
+message StructuredError {
+  optional uint32 domain = 1;
+  optional uint32 code = 2;
+}
+
 message Result {
   optional string error = 127;
+  optional StructuredError structured_error = 128;
   optional string value = 1;
 }
 

@@ -83,58 +83,18 @@ void invoke(
     {
         throw;
     }
+    catch (mir::ClientVisibleError const& error)
+    {
+        auto client_error = result_message.mutable_structured_error();
+        client_error->set_code(error.code());
+        client_error->set_domain(error.domain());
+        self->send_response(invocation.id(), &result_message);
+    }
     catch (std::exception const& x)
     {
         using namespace std::literals::string_literals;
         result_message.set_error("Error processing request: "s +
             x.what() + "\nInternal error details: " + boost::diagnostic_information(x));
-        self->send_response(invocation.id(), &result_message);
-    }
-}
-
-// Boiler plate for unpacking a parameter message, invoking a server function, and
-// sending the result message. Assumes the existence of Self::send_response().
-template<class Self, class Server, class ServerX, class ParameterMessage>
-void invoke(
-    Self* self,
-    Server* server,
-    void (ServerX::*function)(
-        ParameterMessage const* request,
-        mir::protobuf::Void* response,
-        ::google::protobuf::Closure* done),
-    Invocation const& invocation)
-{
-    ParameterMessage parameter_message;
-    if (!parameter_message.ParseFromString(invocation.parameters()))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to parse message parameters!"));
-    mir::protobuf::Void result_message;
-
-    try
-    {
-        std::unique_ptr<google::protobuf::Closure> callback(
-            google::protobuf::NewPermanentCallback<
-                Self,
-                ::google::protobuf::uint32,
-                typename result_ptr_t<mir::protobuf::Void>::type>(
-                self,
-                &Self::send_response,
-                invocation.id(),
-                &result_message));
-
-        (server->*function)(
-            &parameter_message,
-            &result_message,
-            callback.get());
-    }
-    catch (mir::cookie::SecurityCheckError const& /*err*/)
-    {
-        throw;
-    }
-    catch (std::exception const& x)
-    {
-        using namespace std::literals::string_literals;
-        result_message.set_error("Error processing request: "s +
-                                                             x.what() + "\nInternal error details: " + boost::diagnostic_information(x));
         self->send_response(invocation.id(), &result_message);
     }
 }

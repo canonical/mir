@@ -17,10 +17,32 @@
  */
 
 #include "authorizing_display_changer.h"
+#include "mir/client_visible_error.h"
+#include "mir_toolkit/client_types.h"
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+
+namespace
+{
+class UnauthorizedConfigurationRequest : public mir::ClientVisibleError
+{
+public:
+    UnauthorizedConfigurationRequest()
+        : mir::ClientVisibleError("Not authorized to set base display configuration")
+    {
+    }
+    MirErrorDomain domain() const noexcept override
+    {
+        return mir_error_domain_connection;
+    }
+    uint32_t code() const noexcept override
+    {
+        return mir_connection_error_unauthorized_display_configuration;
+    }
+};
+}
 
 mf::AuthorizingDisplayChanger::AuthorizingDisplayChanger(
     std::shared_ptr<frontend::DisplayChanger> const& changer,
@@ -67,7 +89,7 @@ void mf::AuthorizingDisplayChanger::preview_base_configuration(
     }
     else
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("not authorized to set base display configurations"));
+        BOOST_THROW_EXCEPTION(UnauthorizedConfigurationRequest{});
     }
 }
 
