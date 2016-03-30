@@ -32,7 +32,7 @@ namespace doubles
 struct MockRenderer : public compositor::Renderer
 {
     MOCK_METHOD1(set_viewport, void(geometry::Rectangle const&));
-    MOCK_METHOD1(set_rotation, void(float));
+    MOCK_METHOD2(set_output_transform, void(MirOrientation, MirMirrorMode));
     MOCK_CONST_METHOD1(render, void(graphics::RenderableList const&));
     MOCK_METHOD0(suspend, void());
 

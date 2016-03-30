@@ -79,6 +79,17 @@ public:
      */
     virtual MirOrientation orientation() const = 0;
 
+    /** Returns the mirror mode of the display buffer relative to orientation
+     *
+     *  If your DisplayBuffer can do the mirroring itself then this will
+     *  always return mir_mirror_mode_none. If the DisplayBuffer does not
+     *  implement the mirroring itself then this function will return the
+     *  mirror mode the renderer must do after rotation to make things
+     *  "look right".
+     *
+     */
+    virtual MirMirrorMode mirror_mode() const = 0;
+
     /** Returns a pointer to the native display buffer object backing this
      *  display buffer.
      *

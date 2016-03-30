@@ -642,7 +642,7 @@ MIR_SERVER_0.22 {
     mir::renderer::gl::Renderer::Program::Program*;
     mir::renderer::gl::Renderer::draw*;
     mir::renderer::gl::Renderer::render*;
-    mir::renderer::gl::Renderer::set_rotation*;
+    mir::renderer::gl::Renderer::set_output_transform*;
     mir::renderer::gl::Renderer::set_viewport*;
     mir::renderer::gl::Renderer::suspend*;
     mir::renderer::gl::Renderer::tessellate*;

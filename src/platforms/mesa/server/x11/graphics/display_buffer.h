@@ -53,6 +53,7 @@ public:
     void set_orientation(MirOrientation const new_orientation);
 
     MirOrientation orientation() const override;
+    MirMirrorMode mirror_mode() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
 private:

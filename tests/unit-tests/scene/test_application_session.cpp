@@ -95,7 +95,7 @@ MATCHER(IsNullSnapshot, "")
 }
 
 MATCHER_P(EqPromptSessionEventState, state, "") {
-  return arg.type == mir_event_type_prompt_session_state_change && arg.prompt_session.new_state == state;
+  return arg.type == mir_event_type_prompt_session_state_change && arg.to_prompt_session()->new_state == state;
 }
 
 MATCHER_P(HasParent, parent, "")
@@ -865,13 +865,14 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_events_to_surfaces)
 {
     using namespace ::testing;
 
-    MirEvent event;
+    //MirEvent* event;
+    std::unique_ptr<MirEvent> event;
     bool event_received{false};
 
     EXPECT_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
-        .WillOnce(Invoke([&event, &event_received](auto ev)
+        .WillOnce(Invoke([&event, &event_received](MirEvent const& ev)
                          {
-                             event = ev;
+                             event.reset(ev.clone());
                              event_received = true;
                          }));
 
@@ -888,7 +889,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_events_to_surfaces)
     auto surface = app_session.surface(surf_id);
 
     ASSERT_TRUE(event_received);
-    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
+    EXPECT_THAT(event.get(), SurfaceOutputEventFor(high_dpi));
 }
 
 TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface)
@@ -897,13 +898,13 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
 
     std::array<TestOutput const*, 2> outputs{{ &high_dpi, &projector }};
 
-    std::array<MirEvent, 2> event;
+    std::array<std::unique_ptr<MirEvent>, 2> event;
     int events_received{0};
 
     ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
-        .WillByDefault(Invoke([&event, &events_received](auto ev)
+        .WillByDefault(Invoke([&event, &events_received](MirEvent const& ev)
                          {
-                             event[events_received] = ev;
+                             event[events_received].reset(ev.clone());
                              ++events_received;
                          }));
 
@@ -939,8 +940,8 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
 
     for (int i = 0; i < 2 ; ++i)
     {
-        EXPECT_THAT(event[i].surface_output.surface_id, Eq(ids[i].as_value()));
-        EXPECT_THAT(&event[i], SurfaceOutputEventFor(*outputs[i]));
+        EXPECT_THAT(event[i]->to_surface_output()->surface_id, Eq(ids[i].as_value()));
+        EXPECT_THAT(event[i].get(), SurfaceOutputEventFor(*outputs[i]));
     }
 }
 
@@ -950,13 +951,13 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
 
     std::array<TestOutput const*, 2> outputs{{ &projector, &high_dpi }};
 
-    MirEvent event;
+    std::unique_ptr<MirEvent> event;
     bool event_received{false};
 
     ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
-        .WillByDefault(Invoke([&event, &event_received](auto ev)
+        .WillByDefault(Invoke([&event, &event_received](MirEvent const& ev)
                               {
-                                  event = ev;
+                                  event.reset(ev.clone());
                                   event_received = true;
                               }));
 
@@ -984,8 +985,8 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
 
     ASSERT_TRUE(event_received);
 
-    EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
-    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
+    EXPECT_THAT(event->to_surface_output()->surface_id, Eq(id.as_value()));
+    EXPECT_THAT(event.get(), SurfaceOutputEventFor(high_dpi));
 }
 
 TEST_F(ApplicationSessionSurfaceOutput, surfaces_on_edges_get_correct_values)
@@ -994,13 +995,13 @@ TEST_F(ApplicationSessionSurfaceOutput, surfaces_on_edges_get_correct_values)
 
     std::array<TestOutput const*, 2> outputs{{ &projector, &high_dpi }};
 
-    MirEvent event;
+    std::unique_ptr<MirEvent> event;
     bool event_received{false};
 
     ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
-        .WillByDefault(Invoke([&event, &event_received](auto ev)
+        .WillByDefault(Invoke([&event, &event_received](MirEvent const& ev)
                               {
-                                  event = ev;
+                                  event.reset(ev.clone());
                                   event_received = true;
                               }));
 
@@ -1027,21 +1028,21 @@ TEST_F(ApplicationSessionSurfaceOutput, surfaces_on_edges_get_correct_values)
     surface->move_to({outputs[0]->width - ((surface->size().width.as_uint32_t()) / 2), 100});
 
     ASSERT_TRUE(event_received);
-    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
+    EXPECT_THAT(event.get(), SurfaceOutputEventFor(high_dpi));
 
     event_received = false;
     // This should be *just* entirely on the projector
     surface->move_to({outputs[0]->width - surface->size().width.as_uint32_t(), 100});
 
     ASSERT_TRUE(event_received);
-    EXPECT_THAT(&event, SurfaceOutputEventFor(projector));
+    EXPECT_THAT(event.get(), SurfaceOutputEventFor(projector));
 
     event_received = false;
     // This should have a single pixel overlap on the high_dpi
     surface->move_to({outputs[0]->width - (surface->size().width.as_uint32_t() - 1), 100});
 
     ASSERT_TRUE(event_received);
-    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
+    EXPECT_THAT(event.get(), SurfaceOutputEventFor(high_dpi));
 }
 
 TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
@@ -1050,14 +1051,14 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
 
     std::array<TestOutput const*, 2> outputs {{ &projector, &high_dpi }};
 
-    MirEvent event;
+    std::unique_ptr<MirEvent> event;
     int events_received{0};
 
 
     ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
-        .WillByDefault(Invoke([&event, &events_received](auto ev)
+        .WillByDefault(Invoke([&event, &events_received](MirEvent const& ev)
                               {
-                                  event = ev;
+                                  event.reset(ev.clone());
                                   events_received++;
                               }));
 
@@ -1087,8 +1088,8 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ASSERT_THAT(events_received, Ge(1));
     auto events_expected = events_received + 1;
 
-    EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
-    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
+    EXPECT_THAT(event->to_surface_output()->surface_id, Eq(id.as_value()));
+    EXPECT_THAT(event.get(), SurfaceOutputEventFor(high_dpi));
 
     // Now solely on the left output
     surface->move_to({0, 0});
@@ -1096,8 +1097,8 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ASSERT_THAT(events_received, Eq(events_expected));
     events_expected++;
 
-    EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
-    EXPECT_THAT(&event, SurfaceOutputEventFor(projector));
+    EXPECT_THAT(event->to_surface_output()->surface_id, Eq(id.as_value()));
+    EXPECT_THAT(event.get(), SurfaceOutputEventFor(projector));
 
     // Now solely on the right output
     surface->move_to({outputs[0]->width + 100, 100});
@@ -1105,8 +1106,8 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ASSERT_THAT(events_received, Eq(events_expected));
     events_expected++;
 
-    EXPECT_THAT(event.surface_output.surface_id, Eq(id.as_value()));
-    EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
+    EXPECT_THAT(event->to_surface_output()->surface_id, Eq(id.as_value()));
+    EXPECT_THAT(event.get(), SurfaceOutputEventFor(high_dpi));
 }
 
 TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move_only_if_changed)
@@ -1115,13 +1116,11 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move_only_
 
     std::array<TestOutput const*, 2> outputs {{ &projector, &high_dpi }};
 
-    MirEvent event;
     int events_received{0};
 
     ON_CALL(*sender, handle_event(IsSurfaceOutputEvent()))
-        .WillByDefault(Invoke([&event, &events_received](auto ev)
+        .WillByDefault(Invoke([&events_received](MirEvent const&)
                               {
-                                  event = ev;
                                   events_received++;
                               }));
 
