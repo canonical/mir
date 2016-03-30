@@ -20,6 +20,7 @@
 #define MIR_COMMON_KEYMAP_EVENT_H_
 
 #include <xkbcommon/xkbcommon.h>
+#include <limits>
 
 #include "mir/events/event.h"
 
@@ -51,7 +52,7 @@ struct MirKeymapEvent : MirEvent
 
 private:
     int surface_id_{-1};
-    MirInputDeviceId device_id_{UINT32_MAX};
+    MirInputDeviceId device_id_{std::numeric_limits<MirInputDeviceId>::max()};
     char const* buffer_{nullptr};
     size_t size_{0};
 };

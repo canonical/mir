@@ -20,6 +20,7 @@
 #define MIR_COMMON_SURFACE_OUTPUT_EVENT_H_
 
 #include <cstdint>
+#include <limits>
 
 #include "mir/events/event.h"
 
@@ -47,7 +48,7 @@ private:
     int dpi_{0};
     float scale_{0.0f};
     MirFormFactor form_factor_;
-    uint32_t output_id_{UINT32_MAX};
+    uint32_t output_id_{std::numeric_limits<uint32_t>::max()};
 };
 
 #endif /* MIR_COMMON_SURFACE_OUTPUT_EVENT_H_ */
