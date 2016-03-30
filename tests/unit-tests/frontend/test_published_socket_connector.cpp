@@ -269,19 +269,16 @@ TEST_F(PublishedSocketConnector, disorderly_disconnection_handled)
     client->create_surface();
     client->wait_for_create_surface();
 
-    mt::Signal wc;
+    mt::Signal error_reported;
 
-    ON_CALL(*communicator_report, error(_)).WillByDefault(Invoke([&wc] (std::exception const&)
-        {
-            wc.raise();
-        }));
+    ON_CALL(*communicator_report, error(_)).WillByDefault(WakeUp(&error_reported));
 
     EXPECT_CALL(*communicator_report, error(_)).Times(1);
 
     client.reset();
 
-    wc.wait_for(std::chrono::seconds{1});
-    EXPECT_TRUE(wc.raised());
+    error_reported.wait_for(std::chrono::seconds{1});
+    EXPECT_TRUE(error_reported.raised());
 }
 
 TEST_F(PublishedSocketConnector, configure_display)
