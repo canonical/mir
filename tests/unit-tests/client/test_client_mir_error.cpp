@@ -22,32 +22,21 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-TEST(MirError, error_has_debug_message)
-{
-    using namespace testing;
-
-    auto const message = "Failed to frob";
-    MirError error{message};
-
-    EXPECT_THAT(mir_error_get_debug_message(&error), StrEq(message));
-}
-
-TEST(MirError, error_has_display_message)
-{
-    using namespace testing;
-
-    auto const message = "I'm sorry Dave, I can't do that";
-
-    MirError error{message};
-
-    EXPECT_THAT(mir_error_get_display_message(&error), StrEq(message));
-}
-
 TEST(MirError, error_has_domain)
 {
     using namespace testing;
 
-    MirError error{"Hello"};
+    MirError error{mir_error_domain_surface, 0};
 
     EXPECT_THAT(mir_error_get_domain(&error), Eq(mir_error_domain_surface));
 }
+
+TEST(MirError, error_has_code)
+{
+    using namespace testing;
+
+    MirError error{mir_error_domain_connection, mir_connection_error_unauthorized_display_configuration};
+
+    EXPECT_THAT(mir_error_get_code(&error), mir_connection_error_unauthorized_display_configuration);
+}
+

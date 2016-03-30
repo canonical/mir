@@ -25,11 +25,9 @@ extern "C" {
 
 #include "client_types.h"
 
-char const* mir_error_get_debug_message(MirError const* error);
-
-char const* mir_error_get_display_message(MirError const* error);
-
 MirErrorDomain mir_error_get_domain(MirError const* error);
+
+uint32_t mir_error_get_code(MirError const* error);
 
 #ifdef __cplusplus
 }

@@ -18,7 +18,18 @@
 
 #include "mir_error.h"
 
-MirError::MirError(std::string const& /*message*/)
+MirError::MirError(MirErrorDomain domain, uint32_t code)
+    : domain_{domain},
+      code_{code}
 {
+}
 
+MirErrorDomain MirError::domain() const noexcept
+{
+    return domain_;
+}
+
+uint32_t MirError::code() const noexcept
+{
+    return code_;
 }

@@ -16,15 +16,19 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_CLIENT_MIR_ERROR_H_
-#define MIR_CLIENT_MIR_ERROR_H_
+#pragma once
 
-#include <string>
+#include "mir_toolkit/client_types.h"
 
 struct MirError
 {
 public:
-    explicit MirError(std::string const& message);
-};
+    MirError(MirErrorDomain domain, uint32_t code);
 
-#endif //MIR_CLIENT_MIR_ERROR_H_
+    MirErrorDomain domain() const noexcept;
+    uint32_t code() const noexcept;
+
+private:
+    MirErrorDomain const domain_;
+    uint32_t const code_;
+};

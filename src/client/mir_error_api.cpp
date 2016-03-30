@@ -29,7 +29,12 @@ char const* mir_error_get_display_message(MirError const* /*error*/)
     return "I'm sorry Dave, I can't do that";
 }
 
-MirErrorDomain mir_error_get_domain(MirError const* /*error*/)
+MirErrorDomain mir_error_get_domain(MirError const* error)
 {
-    return mir_error_domain_surface;
+    return error->domain();
+}
+
+uint32_t mir_error_get_code(MirError const* error)
+{
+    return error->code();
 }
