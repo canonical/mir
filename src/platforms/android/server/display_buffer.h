@@ -66,6 +66,7 @@ public:
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 
     MirOrientation orientation() const override;
+    MirMirrorMode mirror_mode() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
     void configure(MirPowerMode power_mode, MirOrientation orientation, geometry::Displacement) override;

@@ -95,63 +95,63 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* ev)
         abort();
     }
 
-    return reinterpret_cast<MirInputEvent const*>(ev);
+    return ev->to_input();
 }
 
 MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_surface);
     
-    return &ev->surface;
+    return ev->to_surface();
 }
 
 MirResizeEvent const* mir_event_get_resize_event(MirEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_resize);
     
-    return &ev->resize;
+    return ev->to_resize();
 }
 
 MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_prompt_session_state_change);
     
-    return &ev->prompt_session;
+    return ev->to_prompt_session();
 }
 
 MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_orientation);
 
-    return &ev->orientation;
+    return ev->to_orientation();
 }
 
 MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_close_surface);
 
-    return &ev->close_surface;
+    return ev->to_close_surface();
 }
 
 MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_keymap);
 
-    return &ev->keymap;
+    return ev->to_keymap();
 }
 
 MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_input_configuration);
 
-    return &ev->input_configuration;
+    return ev->to_input_configuration();
 }
 
 MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_surface_output);
 
-    return &ev->surface_output;
+    return ev->to_surface_output();
 }
 
 /* Surface event accessors */
@@ -267,20 +267,15 @@ uint32_t mir_surface_output_event_get_output_id(MirSurfaceOutputEvent const *ev)
 // a ref count ref is implemented as copy.
 MirEvent const* mir_event_ref(MirEvent const* ev)
 {
-    MirEvent *new_ev = new MirEvent;
-    memcpy(new_ev, ev, sizeof(MirEvent));
-
-    if (mir_event_get_type(new_ev) == mir_event_type_keymap)
-    {
-        // malloc to match xkbcommons allocation behavior
-        auto buffer  = static_cast<char*>(malloc(new_ev->keymap.size));
-        std::memcpy(buffer, ev->keymap.buffer, new_ev->keymap.size);
-        new_ev->keymap.buffer = buffer;
-    }
-    return new_ev;
+    return ev->clone();
 }
 
 void mir_event_unref(MirEvent const* ev)
 {
+    if (mir_event_get_type(ev) == mir_event_type_keymap)
+    {
+        std::free(const_cast<char*>(ev->to_keymap()->buffer));
+    }
+
     delete const_cast<MirEvent*>(ev);
 }

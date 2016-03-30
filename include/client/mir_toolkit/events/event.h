@@ -60,7 +60,7 @@ typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent;
 
 typedef struct MirCookie MirCookie;
 
-typedef union MirEvent MirEvent;
+typedef struct MirEvent MirEvent;
 
 #ifdef __cplusplus
 }
