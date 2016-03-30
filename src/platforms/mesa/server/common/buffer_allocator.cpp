@@ -282,11 +282,11 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
         buffer_properties.size.width.as_uint32_t()};
     size_t const size_in_bytes = 
         stride.as_int() * buffer_properties.size.height.as_int();
-    auto const shm_file =
-        std::make_shared<mgc::AnonymousShmFile>(size_in_bytes);
+    auto shm_file =
+        std::make_unique<mgc::AnonymousShmFile>(size_in_bytes);
 
     auto const buffer =
-        std::make_shared<mgc::ShmBuffer>(shm_file, buffer_properties.size,
+        std::make_shared<mgc::ShmBuffer>(std::move(shm_file), buffer_properties.size,
                                     buffer_properties.format);
 
     return buffer;

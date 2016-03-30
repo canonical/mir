@@ -93,10 +93,10 @@ bool mgc::ShmBuffer::supports(MirPixelFormat mir_format)
 }
 
 mgc::ShmBuffer::ShmBuffer(
-    std::shared_ptr<ShmFile> const& shm_file,
+    std::unique_ptr<ShmFile> shm_file,
     geom::Size const& size,
     MirPixelFormat const& pixel_format)
-    : shm_file{shm_file},
+    : shm_file{std::move(shm_file)},
       size_{size},
       pixel_format_{pixel_format},
       stride_{MIR_BYTES_PER_PIXEL(pixel_format_) * size_.width.as_uint32_t()},
