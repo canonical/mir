@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platforms/mesa/server/common/shm_buffer.h"
-#include "src/platforms/mesa/server/common/shm_file.h"
+#include "src/platforms/common/server/shm_buffer.h"
+#include "src/platforms/common/server/shm_file.h"
 
 #include "mir/test/doubles/mock_gl.h"
 
