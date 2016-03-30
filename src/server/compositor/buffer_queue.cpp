@@ -140,7 +140,7 @@ mc::BufferQueue::BufferQueue(
       frame_deadlines_threshold{-1},  // Disable scaling by default
       frame_deadlines_met{0},
       scheduled_extra_frames{0},
-      mm_mode{MultiMonitorMode::single_monitor_fast},
+      mm_mode{MultiMonitorMode::multi_monitor_sync},
       frame_dropping_enabled{false},
       current_compositor_buffer_valid{false},
       the_properties{props},
