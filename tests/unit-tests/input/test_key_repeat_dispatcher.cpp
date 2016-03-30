@@ -33,8 +33,6 @@
 #include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/doubles/mock_input_device_hub.h"
 
-#include "linux/input-event-codes.h"
-
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -147,8 +145,9 @@ struct KeyRepeatDispatcherOnArale : KeyRepeatDispatcher
 
     mir::EventUPtr mtk_key_down_event()
     {
+        auto const home_button = 53;
         return mev::make_event(mtk_id, std::chrono::nanoseconds(0), std::vector<uint8_t>{}, mir_keyboard_action_down, 0,
-                               KEY_LEFTALT, mir_input_event_modifier_none);
+                               home_button, mir_input_event_modifier_none);
     }
 };
 }

@@ -68,11 +68,14 @@ bool is_arale()
 {
     try
     {
-        mir::SharedLibrary android_properties("libandroid-properties.so.1");
-        int (*property_get)(char const*, char*, char const*) = nullptr;
-        property_get = android_properties.load_function<decltype(property_get)>("property_get");
-
+        auto const android_properties = "libandroid-properties.so.1";
+        auto const arale_device_name = "arale";
         const int property_value_max = 92;
+
+        mir::SharedLibrary android_properties_lib(android_properties);
+        int (*property_get)(char const*, char*, char const*) = nullptr;
+        property_get = android_properties_lib.load_function<decltype(property_get)>("property_get");
+
         char default_value[] = "";
         char value[property_value_max];
 
@@ -81,7 +84,7 @@ bool is_arale()
 
         property_get("ro.product.device", value, default_value);
 
-        return std::strcmp("arale", value) == 0;
+        return std::strcmp(arale_device_name, value) == 0;
     }
     catch(...)
     {
