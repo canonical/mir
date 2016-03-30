@@ -59,14 +59,6 @@ struct Screencast : mtf::HeadlessInProcessServer
 
 // TODO test case(s) showing screencast works. lp:1396681
 
-TEST_F(Screencast, with_invalid_connection_fails)
-{
-    using namespace testing;
-
-    auto screencast = mir_connection_create_screencast_sync(nullptr, &default_screencast_params);
-    ASSERT_EQ(nullptr, screencast);
-}
-
 TEST_F(Screencast, with_invalid_params_fails)
 {
     using namespace testing;
@@ -79,19 +71,24 @@ TEST_F(Screencast, with_invalid_params_fails)
     MirScreencastParameters params = default_screencast_params;
     params.width = params.height = 0;
     auto screencast = mir_connection_create_screencast_sync(connection, &params);
-    ASSERT_EQ(nullptr, screencast);
+    EXPECT_FALSE(mir_screencast_is_valid(screencast));
+
+    mir_screencast_release_sync(screencast);
 
     params = default_screencast_params;
     params.region.width = params.region.height = 0;
     screencast = mir_connection_create_screencast_sync(connection, &params);
-    ASSERT_EQ(nullptr, screencast);
+    EXPECT_FALSE(mir_screencast_is_valid(screencast));
+
+    mir_screencast_release_sync(screencast);
 
     params = default_screencast_params;
     params.pixel_format = mir_pixel_format_invalid;
 
     screencast = mir_connection_create_screencast_sync(connection, &params);
-    ASSERT_EQ(nullptr, screencast);
+    EXPECT_FALSE(mir_screencast_is_valid(screencast));
 
+    mir_screencast_release_sync(screencast);
     mir_connection_release(connection);
 }
 
@@ -105,7 +102,8 @@ TEST_F(Screencast, when_unauthorized_fails)
     auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
-    ASSERT_EQ(nullptr, screencast);
+    EXPECT_FALSE(mir_screencast_is_valid(screencast));
 
+    mir_screencast_release_sync(screencast);
     mir_connection_release(connection);
 }

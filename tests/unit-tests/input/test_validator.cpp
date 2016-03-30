@@ -87,9 +87,9 @@ TEST_F(Validator, missing_touch_downs_are_inserted)
     add_another_touch(inserted_down_id1, 1, mir_touch_action_down);
 
     InSequence seq;
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*inserted_down_id0)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*inserted_down_id1)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch)));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*inserted_down_id0))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*inserted_down_id1))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch))));
     
     rewriter.validate_and_dispatch(*touch);
 }
@@ -108,10 +108,10 @@ TEST_F(Validator, missing_touch_releases_are_inserted)
     add_another_touch(inserted_release, 1, mir_touch_action_up);
 
     InSequence seq;
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_1)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_2)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*inserted_release)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_3)));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_1))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_2))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*inserted_release))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_3))));
 
     rewriter.validate_and_dispatch(*touch_1);
     rewriter.validate_and_dispatch(*touch_2);
@@ -138,12 +138,12 @@ TEST_F(Validator, multiple_missing_releases_are_inserted)
     add_another_touch(inserted_release_id0, 2, mir_touch_action_change);
 
     InSequence seq;
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_1)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_2)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_3)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*inserted_release_id1)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*inserted_release_id0)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_4)));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_1))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_2))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_3))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*inserted_release_id1))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*inserted_release_id0))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_4))));
 
     rewriter.validate_and_dispatch(*touch_1);
     rewriter.validate_and_dispatch(*touch_2);
@@ -169,12 +169,12 @@ TEST_F(Validator, missing_up_and_down_is_inserted)
     auto inserted_down_id2 = make_touch(0, mir_touch_action_change);
     add_another_touch(inserted_down_id2, 2, mir_touch_action_down);
 
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_1)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_2)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_3)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*inserted_release_id1)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*inserted_down_id2)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_4)));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_1))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_2))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_3))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*inserted_release_id1))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*inserted_down_id2))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_4))));
 
     rewriter.validate_and_dispatch(*touch_1);
     rewriter.validate_and_dispatch(*touch_2);
@@ -196,11 +196,11 @@ TEST_F(Validator, missing_up_and_down_and_up_is_inserted_variation)
     auto inserted_down_id2 = make_touch(1, mir_touch_action_change);
     add_another_touch(inserted_down_id2, 2, mir_touch_action_down);
 
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_1)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_2)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*inserted_up_id0)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*inserted_down_id2)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_3)));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_1))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_2))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*inserted_up_id0))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*inserted_down_id2))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_3))));
 
     rewriter.validate_and_dispatch(*touch_1);
     rewriter.validate_and_dispatch(*touch_2);
@@ -226,12 +226,12 @@ TEST_F(Validator, down_is_inserted_before_released_touch_reappears)
     add_another_touch(inserted_down_id1, 1, mir_touch_action_down);
 
     InSequence seq;
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_1)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_2)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_3)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_4)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*inserted_down_id1)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_5)));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_1))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_2))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_3))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_4))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*inserted_down_id1))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_5))));
 
     rewriter.validate_and_dispatch(*touch_1);
     rewriter.validate_and_dispatch(*touch_2);
@@ -252,10 +252,10 @@ TEST_F(Validator, up_and_down_inserted_when_id_changes)
     auto inserted_up_id0 = make_touch(0, mir_touch_action_up);
     auto inserted_down_id1 = make_touch(1, mir_touch_action_down);
 
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_1)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*inserted_up_id0)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*inserted_down_id1)));
-    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(*touch_2)));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_1))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*inserted_up_id0))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*inserted_down_id1))));
+    EXPECT_CALL(input_sink, handle(mt::MirTouchEventMatches(ByRef(*touch_2))));
 
     rewriter.validate_and_dispatch(*touch_1);
     rewriter.validate_and_dispatch(*touch_2);

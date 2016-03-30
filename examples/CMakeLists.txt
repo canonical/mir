@@ -166,14 +166,8 @@ mir_add_wrapped_executable(mir_demo_client_scroll
 )
 
 target_link_libraries(mir_demo_client_scroll
+  eglapp
   mirdraw
-  mirclient
-
-  ${Boost_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${EGL_LIBRARIES}
-  ${GLESv2_LIBRARIES}
-
 )
 
 mir_add_wrapped_executable(mir_demo_client_prompt_session prompt_session.c)

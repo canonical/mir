@@ -114,16 +114,6 @@ bool mi::KeyRepeatDispatcher::dispatch(MirEvent const& event)
     return next_dispatcher->dispatch(event);
 }
 
-namespace
-{
-MirEvent copy_to_repeat_ev(MirKeyboardEvent const* kev)
-{
-    MirEvent repeat_ev(*reinterpret_cast<MirEvent const*>(kev));
-    repeat_ev.key.action = mir_keyboard_action_repeat;
-    return repeat_ev;
-}
-}
-
 // Returns true if the original event has been handled, that is ::dispatch should not pass it on.
 bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardEvent const* kev)
 {
@@ -146,25 +136,26 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
     }
     case mir_keyboard_action_down:
     {
-        MirEvent ev = copy_to_repeat_ev(kev);
+        MirKeyboardEvent new_kev = *kev;
+        new_kev.action = mir_keyboard_action_repeat;
 
         auto it = device_state.repeat_alarms_by_scancode.find(scan_code);
         if (it != device_state.repeat_alarms_by_scancode.end())
         {
             // When we receive a duplicated down we just replace the action
-            next_dispatcher->dispatch(ev);
+            next_dispatcher->dispatch(new_kev);
             return true;
         }
         auto& capture_alarm = device_state.repeat_alarms_by_scancode[scan_code];
-        std::shared_ptr<mir::time::Alarm> alarm = alarm_factory->create_alarm([this, &capture_alarm, ev]() mutable
+        std::shared_ptr<mir::time::Alarm> alarm = alarm_factory->create_alarm([this, &capture_alarm, new_kev]() mutable
             {
                 std::lock_guard<std::mutex> lg(repeat_state_mutex);
 
-                ev.key.event_time = std::chrono::steady_clock::now().time_since_epoch();
-                auto const cookie = cookie_authority->make_cookie(ev.key.event_time.count());
+                new_kev.event_time = std::chrono::steady_clock::now().time_since_epoch();
+                auto const cookie = cookie_authority->make_cookie(new_kev.event_time.count());
                 auto const serialized_cookie = cookie->serialize();
-                std::copy_n(std::begin(serialized_cookie), ev.key.cookie.size(), std::begin(ev.key.cookie));
-                next_dispatcher->dispatch(ev);
+                std::copy_n(std::begin(serialized_cookie), new_kev.cookie.size(), std::begin(new_kev.cookie));
+                next_dispatcher->dispatch(new_kev);
 
                 capture_alarm->reschedule_in(repeat_delay);
             });

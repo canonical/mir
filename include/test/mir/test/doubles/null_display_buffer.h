@@ -34,6 +34,7 @@ public:
     geometry::Rectangle view_area() const override { return geometry::Rectangle(); }
     bool post_renderables_if_optimizable(graphics::RenderableList const&) override { return false; }
     MirOrientation orientation() const override { return mir_orientation_normal; }
+    MirMirrorMode mirror_mode() const override { return mir_mirror_mode_none; }
     NativeDisplayBuffer* native_display_buffer() override { return this; }
 };
 
