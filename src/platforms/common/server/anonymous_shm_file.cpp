@@ -21,8 +21,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/exception/errinfo_errno.hpp>
-#include <stdexcept>
+#include <system_error>
 
 #include <vector>
 
@@ -56,16 +55,18 @@ mir::Fd create_anonymous_file(size_t size)
     }
 
     if (raw_fd == -1)
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(
-            std::runtime_error("Failed to open temporary file"))
-               << boost::errinfo_errno(errno));
+    {
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "Failed to open temporary file"));
+    }
 
     mir::Fd fd = mir::Fd{raw_fd};
 
     if (ftruncate(fd, size) == -1)
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(
-            std::runtime_error("Failed to resize temporary file"))
-                << boost::errinfo_errno(errno));
+    {
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "Failed to resize temporary file"));
+    }
 
     return fd;
 }
@@ -82,7 +83,8 @@ mgc::detail::MapHandle::MapHandle(int fd, size_t size)
                    MAP_SHARED, fd, 0)}
 {
     if (mapping == MAP_FAILED)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to map file"));
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "Failed to map file"));
 }
 
 mgc::detail::MapHandle::~MapHandle() noexcept

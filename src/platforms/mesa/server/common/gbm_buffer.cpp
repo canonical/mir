@@ -24,10 +24,9 @@
 #include <fcntl.h>
 #include <xf86drm.h>
 
-#include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
-#include <stdexcept>
+#include <system_error>
 
 namespace mg=mir::graphics;
 namespace mgm=mir::graphics::mesa;
@@ -135,9 +134,7 @@ mgm::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
     if (ret)
     {
         std::string const msg("Failed to get PRIME fd from gbm bo");
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error(msg)) << boost::errinfo_errno(errno));
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), msg}));
     }
 }
 
