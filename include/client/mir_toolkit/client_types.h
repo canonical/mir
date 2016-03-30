@@ -446,11 +446,19 @@ typedef void (*mir_platform_operation_callback)(
 typedef void (*mir_input_config_callback)(
     MirConnection* connection, void* context);
 
+/**
+ * Specifies the origin of an error.
+ *
+ * This is required to interpret the other aspects of a MirError.
+ */
 typedef enum MirErrorDomain
 {
     mir_error_domain_connection,
 } MirErrorDomain;
 
+/**
+ * Errors from the mir_error_domain_connection MirErrorDomain
+ */
 typedef enum MirConnectionError {
     mir_connection_error_unauthorized_display_configuration,
 } MirConnectionError;
