@@ -1,6 +1,6 @@
 option optimize_for = LITE_RUNTIME;
 
-package mir.protobuf;
+package mir.protobuf.test;
 
 message Parameters {
   required string name = 1;
