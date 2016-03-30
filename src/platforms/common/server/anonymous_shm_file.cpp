@@ -31,7 +31,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
-namespace mgm = mir::graphics::mesa;
+namespace mgc = mir::graphics::common;
 
 namespace
 {
@@ -76,7 +76,7 @@ mir::Fd create_anonymous_file(size_t size)
  * MapHandle *
  *************/
 
-mgm::detail::MapHandle::MapHandle(int fd, size_t size)
+mgc::detail::MapHandle::MapHandle(int fd, size_t size)
     : size{size},
       mapping{mmap(nullptr, size, PROT_READ|PROT_WRITE,
                    MAP_SHARED, fd, 0)}
@@ -85,12 +85,12 @@ mgm::detail::MapHandle::MapHandle(int fd, size_t size)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to map file"));
 }
 
-mgm::detail::MapHandle::~MapHandle() noexcept
+mgc::detail::MapHandle::~MapHandle() noexcept
 {
     munmap(mapping, size);
 }
 
-mgm::detail::MapHandle::operator void*() const
+mgc::detail::MapHandle::operator void*() const
 {
     return mapping;
 
@@ -100,18 +100,18 @@ mgm::detail::MapHandle::operator void*() const
  * AnonymousShmFile *
  ********************/
 
-mgm::AnonymousShmFile::AnonymousShmFile(size_t size)
+mgc::AnonymousShmFile::AnonymousShmFile(size_t size)
     : fd_{create_anonymous_file(size)},
       mapping{fd_, size}
 {
 }
 
-void* mgm::AnonymousShmFile::base_ptr() const
+void* mgc::AnonymousShmFile::base_ptr() const
 {
     return mapping;
 }
 
-int mgm::AnonymousShmFile::fd() const
+int mgc::AnonymousShmFile::fd() const
 {
     return fd_;
 }

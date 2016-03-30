@@ -30,7 +30,7 @@ namespace mir
 {
 namespace graphics
 {
-namespace mesa
+namespace common
 {
 
 class ShmFile;

@@ -27,7 +27,7 @@
 #include <endian.h>
 
 namespace mg = mir::graphics;
-namespace mgm = mir::graphics::mesa;
+namespace mgc = mir::graphics::common;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
 using namespace testing;
@@ -35,7 +35,7 @@ using namespace testing;
 namespace
 {
 
-struct StubShmFile : public mgm::ShmFile
+struct StubShmFile : public mgc::ShmFile
 {
     void* base_ptr() const { return fake_mapping; }
     int fd() const { return fake_fd; }
@@ -57,7 +57,7 @@ struct ShmBufferTest : public testing::Test
     geom::Size const size;
     MirPixelFormat const pixel_format;
     std::shared_ptr<StubShmFile> const stub_shm_file;
-    mgm::ShmBuffer shm_buffer;
+    mgc::ShmBuffer shm_buffer;
     testing::NiceMock<mtd::MockGL> mock_gl;
 };
 
@@ -101,7 +101,7 @@ TEST_F(ShmBufferTest, cant_upload_bgr_888)
                                       stub_shm_file->fake_mapping))
                 .Times(0);
 
-    mgm::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_bgr_888);
+    mgc::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_bgr_888);
     buf.gl_bind_to_texture();
 }
 
@@ -113,7 +113,7 @@ TEST_F(ShmBufferTest, uploads_rgb_888_correctly)
                                       0, GL_RGB, GL_UNSIGNED_BYTE,
                                       stub_shm_file->fake_mapping));
 
-    mgm::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_rgb_888);
+    mgc::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_rgb_888);
     buf.gl_bind_to_texture();
 }
 
@@ -126,7 +126,7 @@ TEST_F(ShmBufferTest, uploads_rgb_565_correctly)
                                       0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5,
                                       stub_shm_file->fake_mapping));
 
-    mgm::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_rgb_565);
+    mgc::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_rgb_565);
     buf.gl_bind_to_texture();
 }
 
@@ -139,7 +139,7 @@ TEST_F(ShmBufferTest, uploads_rgba_5551_correctly)
                                       0, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1,
                                       stub_shm_file->fake_mapping));
 
-    mgm::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_rgba_5551);
+    mgc::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_rgba_5551);
     buf.gl_bind_to_texture();
 }
 
@@ -152,7 +152,7 @@ TEST_F(ShmBufferTest, uploads_rgba_4444_correctly)
                                       0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4,
                                       stub_shm_file->fake_mapping));
 
-    mgm::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_rgba_4444);
+    mgc::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_rgba_4444);
     buf.gl_bind_to_texture();
 }
 
@@ -164,7 +164,7 @@ TEST_F(ShmBufferTest, uploads_xrgb_8888_correctly)
                                       0, GL_BGRA_EXT, GL_UNSIGNED_BYTE,
                                       stub_shm_file->fake_mapping));
 #endif
-    mgm::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_xrgb_8888);
+    mgc::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_xrgb_8888);
     buf.gl_bind_to_texture();
 }
 
@@ -176,7 +176,7 @@ TEST_F(ShmBufferTest, uploads_argb_8888_correctly)
                                       0, GL_BGRA_EXT, GL_UNSIGNED_BYTE,
                                       stub_shm_file->fake_mapping));
 #endif
-    mgm::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_argb_8888);
+    mgc::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_argb_8888);
     buf.gl_bind_to_texture();
 }
 
@@ -188,7 +188,7 @@ TEST_F(ShmBufferTest, uploads_xbgr_8888_correctly)
                                       0, GL_RGBA, GL_UNSIGNED_BYTE,
                                       stub_shm_file->fake_mapping));
 #endif
-    mgm::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_xbgr_8888);
+    mgc::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_xbgr_8888);
     buf.gl_bind_to_texture();
 }
 
@@ -200,6 +200,6 @@ TEST_F(ShmBufferTest, uploads_abgr_8888_correctly)
                                       0, GL_RGBA, GL_UNSIGNED_BYTE,
                                       stub_shm_file->fake_mapping));
 #endif
-    mgm::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_abgr_8888);
+    mgc::ShmBuffer buf(stub_shm_file, size, mir_pixel_format_abgr_8888);
     buf.gl_bind_to_texture();
 }
