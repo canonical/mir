@@ -1,3 +1,51 @@
+mir (0.22.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  [ Kevin DuBois ]
+  * New upstream release 0.22.0 (https://launchpad.net/mir/+milestone/0.22.0)
+    - ABI summary: Only servers need rebuilding
+      . mirclient ABI unchanged at 9
+      . mirserver ABI bumped to 39
+      . mircommon ABI unchanged at 5
+      . mirplatform ABI unchanged at 11
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 8
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 5
+    - Enhancements:
+    - Bug fixes:
+
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 21 Mar 2016 12:45:22 -0500
+
+mir (0.20.3+16.04.20160322-0ubuntu1) xenial; urgency=medium
+
+  [ Alberto Aguirre ]
+  * New upstream release 0.20.3 (https://launchpad.net/mir/+milestone/0.20.3)
+    - ABI summary:
+      . No ABI changes in any libraries. Bugfix release only.
+    - Bug fixed:
+      . Mir crashed with exception 'failed to add sync point to command
+        buffer' (LP: #1554635)
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Tue, 22 Mar 2016 15:42:36 +0000
+
+mir (0.20.2+16.04.20160307-0ubuntu1) xenial; urgency=medium
+
+  [ Andreas Pokorny ]
+  * New upstream release 0.20.2 (https://launchpad.net/mir/+milestone/0.20.2)
+    - ABI summary:
+      . No ABI changes in any libraries. Bugfix release only.
+    - Bug fixed:
+      . On removal of USB and BT devices key repeat events of pressed keys
+        are sent indefinitely. (LP:#1550050)
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Andreas Pokorny <andreas.pokorny@canonical.com>  Mon, 07 Mar 2016 17:18:40 +0000
+
 mir (0.20.1+16.04.20160225.1-0ubuntu1) xenial; urgency=medium
 
   [ Kevin DuBois ]

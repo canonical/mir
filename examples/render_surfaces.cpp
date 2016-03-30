@@ -317,6 +317,10 @@ public:
         set_command_line(argc, argv);
         setenv("MIR_SERVER_NO_FILE", "", 1);
 
+        // If there's a server available, try connecting to it
+        if (auto const socket = getenv("MIR_SOCKET"))
+            setenv("MIR_SERVER_HOST_SOCKET", socket, 0);
+
         // Unless the compositor starts before we create the surfaces it won't respond to
         // the change notification that causes.
         callback_when_started(*this, [this] { create_surfaces(); });
@@ -329,6 +333,7 @@ public:
 
     // New function to initialize moveables with surfaces
     void create_surfaces()
+    try
     {
         moveables.resize(get_options()->get<int>(surfaces_to_render));
         std::cout << "Rendering " << moveables.size() << " surfaces" << std::endl;
@@ -411,6 +416,11 @@ public:
         }
 
         created = true;
+    }
+    catch (...)
+    {
+        mir::report_exception();
+        exit(EXIT_FAILURE);
     }
 
 private:

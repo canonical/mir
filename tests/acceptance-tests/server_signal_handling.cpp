@@ -82,7 +82,10 @@ TEST_P(AbortDeathTest, cleanup_handler_is_called_for)
 {
     expect_server_signalled(GetParam());
 
-    run_in_server([&]{ kill(getpid(), GetParam()); });
+    run_in_server_and_disable_core_dump([&]
+    {
+        kill(getpid(), GetParam());
+    });
 
     cleanup_done.wait_for_signal_ready_for(timeout);
 }
@@ -105,7 +108,10 @@ TEST_F(ServerSignalDeathTest, multiple_cleanup_handlers_are_called)
                 server.add_emergency_cleanup([&] { cleanup.signal_ready(); });
        });
 
-    run_in_server([&]{ kill(getpid(), SIGABRT); });
+    run_in_server_and_disable_core_dump([&]
+    {
+        kill(getpid(), SIGABRT);
+    });
 
     cleanup_done.wait_for_signal_ready_for(timeout);
     for (auto& cleanup : more_cleanup)

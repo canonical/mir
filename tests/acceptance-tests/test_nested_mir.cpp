@@ -93,6 +93,8 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
     void session_configure_surface_cursor_called(std::string const&) override {};
     void session_configure_display_called(std::string const&) override {};
     void session_set_base_display_configuration_called(std::string const&) override {};
+    void session_preview_base_display_configuration_called(std::string const&) override {};
+    void session_confirm_base_display_configuration_called(std::string const&) override {};
     void session_create_buffer_stream_called(std::string const&) override {}
     void session_release_buffer_stream_called(std::string const&) override {}
     void session_error(const std::string&, const char*, const std::string&) override {};
@@ -700,17 +702,17 @@ TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
         // Allow for the egl context getting rebuilt as a side-effect each iteration
         ignore_rebuild_of_egl_context();
 
-        mt::Signal condition;
+        mt::Signal config_reported;
 
         for(auto* output = configuration->outputs; output != configuration->outputs+configuration->num_outputs; ++ output)
             output->orientation = new_orientation;
 
         EXPECT_CALL(*the_mock_display_configuration_report(), new_configuration(mt::DisplayConfigMatches(configuration)))
-            .WillRepeatedly(InvokeWithoutArgs([&] { condition.raise(); }));
+            .WillRepeatedly(InvokeWithoutArgs([&] { config_reported.raise(); }));
 
         mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
 
-        condition.wait_for(std::chrono::seconds{1});
+        config_reported.wait_for(std::chrono::seconds{1});
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
     }
 

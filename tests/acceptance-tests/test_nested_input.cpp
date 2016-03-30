@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,6 +17,8 @@
  */
 
 #include "mir/input/input_device_info.h"
+#include "mir/input/input_device_hub.h"
+#include "mir/input/device.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/composite_event_filter.h"
 
@@ -27,6 +29,7 @@
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/doubles/nested_mock_egl.h"
+#include "mir/test/doubles/mock_input_device_observer.h"
 #include "mir/test/event_factory.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
@@ -49,6 +52,7 @@ namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
 
 using namespace ::testing;
+using namespace std::chrono_literals;
 
 namespace
 {
@@ -103,6 +107,10 @@ struct NestedInput : public mtf::HeadlessInProcessServer
     };
 
     mir::test::Signal all_events_received;
+    mir::test::Signal input_device_changes_complete;
+
+    std::shared_ptr<NiceMock<mtd::MockInputDeviceObserver>> mock_observer{
+        std::make_shared<NiceMock<mtd::MockInputDeviceObserver>>()};
 };
 
 struct ExposedSurface
@@ -171,4 +179,53 @@ TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_RIGHTSHIFT));
 
     all_events_received.wait_for(std::chrono::seconds{10});
+}
+
+TEST_F(NestedInput, nested_input_device_hub_lists_keyboard)
+{
+    NestedServerWithMockEventFilter nested_mir{new_connection()};
+    auto nested_hub = nested_mir.server.the_input_device_hub();
+
+    nested_hub->for_each_input_device(
+        [](auto const& dev)
+        {
+            EXPECT_THAT(dev.name(), StrEq("keyboard"));
+            EXPECT_THAT(dev.unique_id(), StrEq("keyboard-uid"));
+            EXPECT_THAT(dev.capabilities(), Eq(mi::DeviceCapability::keyboard));
+        });
+}
+
+TEST_F(NestedInput, on_add_device_observer_gets_device_added_calls_on_existing_devices)
+{
+    NestedServerWithMockEventFilter nested_mir{new_connection()};
+    auto nested_hub = nested_mir.server.the_input_device_hub();
+
+    EXPECT_CALL(*mock_observer, device_added(_)).Times(1);
+    EXPECT_CALL(*mock_observer, changes_complete())
+        .Times(1)
+        .WillOnce(mt::WakeUp(&input_device_changes_complete));
+
+    nested_hub->add_observer(mock_observer);
+    input_device_changes_complete.wait_for(10s);
+}
+
+TEST_F(NestedInput, device_added_on_host_triggeres_nested_device_observer)
+{
+    NestedServerWithMockEventFilter nested_mir{new_connection()};
+    auto nested_hub = nested_mir.server.the_input_device_hub();
+
+    EXPECT_CALL(*mock_observer, changes_complete()).Times(1)
+        .WillOnce(mt::WakeUp(&input_device_changes_complete));
+    nested_hub->add_observer(mock_observer);
+
+    input_device_changes_complete.wait_for(10s);
+    EXPECT_THAT(input_device_changes_complete.raised(), Eq(true));
+    input_device_changes_complete.reset();
+
+    EXPECT_CALL(*mock_observer, changes_complete())
+        .WillOnce(mt::WakeUp(&input_device_changes_complete));
+
+    auto mouse = mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer});
+
+    input_device_changes_complete.wait_for(10s);
 }

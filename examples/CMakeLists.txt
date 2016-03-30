@@ -71,6 +71,12 @@ mir_add_wrapped_executable(mir_demo_client_target
 target_link_libraries(mir_demo_client_target
   eglapp
 )
+mir_add_wrapped_executable(mir_demo_client_camera
+  camera.c
+)
+target_link_libraries(mir_demo_client_camera
+  eglapp
+)
 mir_add_wrapped_executable(mir_demo_client_eglcounter
   eglcounter.cpp
 )
@@ -160,14 +166,8 @@ mir_add_wrapped_executable(mir_demo_client_scroll
 )
 
 target_link_libraries(mir_demo_client_scroll
+  eglapp
   mirdraw
-  mirclient
-
-  ${Boost_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${EGL_LIBRARIES}
-  ${GLESv2_LIBRARIES}
-
 )
 
 mir_add_wrapped_executable(mir_demo_client_prompt_session prompt_session.c)
@@ -222,15 +222,6 @@ target_link_libraries(mir_demo_server
 
 mir_add_wrapped_executable(mir_demo_server_minimal server_minimal.cpp)
 target_link_libraries(mir_demo_server_minimal mirserver)
-
-mir_add_wrapped_executable(mir_demo_standalone_render_overlays
-    render_overlays.cpp
-)
-
-target_link_libraries(mir_demo_standalone_render_overlays
-    mirserver
-    mircommon
-)
 
 if (MIR_ENABLE_TESTS)
   add_executable(mir_symbol_test
