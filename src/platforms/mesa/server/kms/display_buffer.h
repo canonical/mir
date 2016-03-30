@@ -74,6 +74,7 @@ public:
     std::chrono::milliseconds recommended_sleep() const override;
 
     MirOrientation orientation() const override;
+    MirMirrorMode mirror_mode() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
     void set_orientation(MirOrientation const rot, geometry::Rectangle const& a);

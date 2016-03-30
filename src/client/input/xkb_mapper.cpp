@@ -103,7 +103,7 @@ void mircv::XKBMapper::update_state_and_map_event(MirEvent& ev)
 {
     std::lock_guard<std::mutex> lg(guard);
 
-    auto& key_ev = ev.key;
+    auto& key_ev = *ev.to_input()->to_keyboard();
 
     xkb_key_direction direction = XKB_KEY_DOWN;
 
