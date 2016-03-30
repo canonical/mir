@@ -156,8 +156,6 @@ void invoke(
     }
 }
 
-
-
 // A partial-specialisation to handle error cases.
 template<class Self, class ServerX, class ParameterMessage, class ResultMessage>
 void invoke(
