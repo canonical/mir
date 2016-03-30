@@ -19,16 +19,6 @@
 #include "mir_toolkit/mir_error.h"
 #include "mir_error.h"
 
-char const* mir_error_get_debug_message(MirError const* /*error*/)
-{
-    return "Failed to frob";
-}
-
-char const* mir_error_get_display_message(MirError const* /*error*/)
-{
-    return "I'm sorry Dave, I can't do that";
-}
-
 MirErrorDomain mir_error_get_domain(MirError const* error)
 {
     return error->domain();
