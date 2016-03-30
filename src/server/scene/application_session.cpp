@@ -400,8 +400,11 @@ void ms::ApplicationSession::destroy_surface(std::weak_ptr<Surface> const& surfa
 void ms::ApplicationSession::destroy_surface(std::unique_lock<std::mutex>& lock, Surfaces::const_iterator in_surfaces)
 {
     auto const surface = in_surfaces->second;
+    auto it = default_content_map.find(in_surfaces->first); 
     session_listener->destroying_surface(*this, surface);
     surfaces.erase(in_surfaces);
+    if (it != default_content_map.end())
+        default_content_map.erase(it); 
     lock.unlock();
 
     surface_stack->remove_surface(surface);

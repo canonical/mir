@@ -106,5 +106,8 @@ void mf::BufferStreamTracker::remove_content_for(mf::SurfaceId id, mf::Session& 
     std::lock_guard<decltype(mutex)> lock{mutex};
     auto it = added_streams.find(id);
     if (it != added_streams.end())
+    {
         session.destroy_buffer_stream(it->second);
+        added_streams.erase(it);
+    }
 }
