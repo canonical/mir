@@ -344,30 +344,11 @@ void mf::SessionMediator::create_surface(
 }
 
 void mf::SessionMediator::next_buffer(
-    ::mir::protobuf::SurfaceId const* request,
-    ::mir::protobuf::Buffer* response,
-    ::google::protobuf::Closure* done)
+    ::mir::protobuf::SurfaceId const*,
+    ::mir::protobuf::Buffer*,
+    ::google::protobuf::Closure*)
 {
-    SurfaceId const surf_id{request->value()};
-
-    auto const session = weak_session.lock();
-
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-    report->session_next_buffer_called(session->name());
-
-    auto surface = session->get_surface(surf_id);
-    auto stream = surface->primary_buffer_stream();
-    auto stream_id = mf::BufferStreamId{surf_id.as_value()};
-
-    advance_buffer(stream_id, *stream, buffer_stream_tracker.last_buffer(stream_id),
-        [this, response, done]
-        (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
-        {
-            pack_protobuf_buffer(*response, client_buffer, msg_type);
-            done->Run();
-        });
+    BOOST_THROW_EXCEPTION(std::logic_error("next_buffer rpc call is deprecated."));
 }
 
 void mf::SessionMediator::exchange_buffer(
