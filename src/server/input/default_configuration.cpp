@@ -70,7 +70,7 @@ bool is_arale()
     {
         auto const android_properties = "libandroid-properties.so.1";
         auto const arale_device_name = "arale";
-        const int property_value_max = 92;
+        int const property_value_max = 92;
 
         mir::SharedLibrary android_properties_lib(android_properties);
         int (*property_get)(char const*, char*, char const*) = nullptr;
