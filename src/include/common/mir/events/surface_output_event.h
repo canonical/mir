@@ -19,7 +19,7 @@
 #ifndef MIR_COMMON_SURFACE_OUTPUT_EVENT_H_
 #define MIR_COMMON_SURFACE_OUTPUT_EVENT_H_
 
-#include <stdint.h>
+#include <cstdint>
 
 #include "mir/events/event.h"
 

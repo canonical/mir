@@ -20,7 +20,7 @@
 #define MIR_COMMON_KEYBOARD_EVENT_H_
 
 #include <chrono>
-#include <stdint.h>
+#include <cstdint>
 
 #include "mir/events/input_event.h"
 #include "mir/cookie/blob.h"

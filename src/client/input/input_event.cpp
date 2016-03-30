@@ -228,7 +228,7 @@ MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index)
         abort();
     }
 
-    return event->to_motion()->pointer_coordinates(touch_index).id();
+    return event->to_motion()->id(touch_index);
 }
 
 MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_index)
@@ -239,7 +239,7 @@ MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_i
         abort();
     }
     
-    return static_cast<MirTouchAction>(event->to_motion()->pointer_coordinates(touch_index).action());
+    return static_cast<MirTouchAction>(event->to_motion()->action(touch_index));
 }
 
 MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
@@ -251,7 +251,7 @@ MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
         abort();
     }
 
-    return event->to_motion()->pointer_coordinates(touch_index).tool_type();
+    return event->to_motion()->tool_type(touch_index);
 }
 
 float mir_touch_event_axis_value(MirTouchEvent const* event,
@@ -263,21 +263,21 @@ float mir_touch_event_axis_value(MirTouchEvent const* event,
         abort();
     }
 
-    auto const& old_pc = event->to_motion()->pointer_coordinates(touch_index);
+    auto mev = event->to_motion();
     switch (axis)
     {
     case mir_touch_axis_x:
-        return old_pc.x();
+        return mev->x(touch_index);
     case mir_touch_axis_y:
-        return old_pc.y();
+        return mev->y(touch_index);
     case mir_touch_axis_pressure:
-        return old_pc.pressure();
+        return mev->pressure(touch_index);
     case mir_touch_axis_touch_major:
-        return old_pc.touch_major();
+        return mev->touch_major(touch_index);
     case mir_touch_axis_touch_minor:
-        return old_pc.touch_minor();
+        return mev->touch_minor(touch_index);
     case mir_touch_axis_size:
-        return old_pc.size();
+        return mev->size(touch_index);
     default:
         return -1;
     }
@@ -304,7 +304,7 @@ MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* pev)
 
 MirPointerAction mir_pointer_event_action(MirPointerEvent const* pev)
 {    
-    return static_cast<MirPointerAction>(pev->to_motion()->pointer_coordinates(0).action());
+    return static_cast<MirPointerAction>(pev->to_motion()->action(0));
 }
 
 bool mir_pointer_event_button_state(MirPointerEvent const* pev,
@@ -324,17 +324,17 @@ float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis ax
    switch (axis)
    {
    case mir_pointer_axis_x:
-       return mev->pointer_coordinates(0).x();
+       return mev->x(0);
    case mir_pointer_axis_y:
-       return mev->pointer_coordinates(0).y();
+       return mev->y(0);
    case mir_pointer_axis_relative_x:
-       return mev->pointer_coordinates(0).dx();
+       return mev->dx(0);
    case mir_pointer_axis_relative_y:
-       return mev->pointer_coordinates(0).dy();
+       return mev->dy(0);
    case mir_pointer_axis_vscroll:
-       return mev->pointer_coordinates(0).vscroll();
+       return mev->vscroll(0);
    case mir_pointer_axis_hscroll:
-       return mev->pointer_coordinates(0).hscroll();
+       return mev->hscroll(0);
    default:
        mir::log_critical("Invalid axis enumeration " + std::to_string(axis));
        abort();

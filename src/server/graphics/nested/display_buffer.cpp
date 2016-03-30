@@ -120,10 +120,10 @@ void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
 
             for (size_t i = 0; i != motion->pointer_count(); ++i)
             {
-                auto x = motion->pointer_coordinates(i).x();
-                auto y = motion->pointer_coordinates(i).y();
-                motion->pointer_coordinates(i).set_x(x + area.top_left.x.as_float());
-                motion->pointer_coordinates(i).set_y(y + area.top_left.y.as_float());
+                auto x = motion->x(i);
+                auto y = motion->y(i);
+                motion->set_x(i, x + area.top_left.x.as_float());
+                motion->set_y(i, y + area.top_left.y.as_float());
             }
 
             auto pev = mir_input_event_get_pointer_event(iev);

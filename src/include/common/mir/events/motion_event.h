@@ -23,75 +23,30 @@
 #define MIR_INPUT_EVENT_MAX_POINTER_COUNT 16
 
 #include <chrono>
-#include <stdint.h>
+#include <cstdint>
 
 #include "mir/events/input_event.h"
 #include "mir/cookie/blob.h"
 
 struct MirMotionPointer
 {
-    int id() const;
-    void set_id(int id);
-
-    float x() const;
-    void set_x(float x);
-
-    float y() const;
-    void set_y(float y);
-
-    float dx() const;
-    void set_dx(float dx);
-
-    float dy() const;
-    void set_dy(float dy);
-
-    float touch_major() const;
-    void set_touch_major(float major);
-
-    float touch_minor() const;
-    void set_touch_minor(float minor);
-
-    float size() const;
-    void set_size(float size);
-
-    float pressure() const;
-    void set_pressure(float pressure);
-
-    float orientation() const;
-    void set_orientation(float orientation);
-
-    float vscroll() const;
-    void set_vscroll(float vscroll);
-
-    float hscroll() const;
-    void set_hscroll(float hscroll);
-
-    MirTouchTooltype tool_type() const;
-    void set_tool_type(MirTouchTooltype tool_type);
+    int id;
+    float x;
+    float y;
+    float dx;
+    float dy;
+    float touch_major;
+    float touch_minor;
+    float size;
+    float pressure;
+    float orientation;
+    float vscroll;
+    float hscroll;
+    MirTouchTooltype tool_type;
 
     // TODO: We would like to store this as a MirTouchAction but we still encode pointer actions
     // here as well.
-    int action() const;
-    void set_action(int action);
-
-private:
-    int id_{0};
-    float x_{0.0f};
-    float y_{0.0f};
-    float dx_{0.0f};
-    float dy_{0.0f};
-    float touch_major_{0.0f};
-    float touch_minor_{0.0f};
-    float size_{0.0f};
-    float pressure_{0.0f};
-    float orientation_{0.0f};
-    float vscroll_{0.0f};
-    float hscroll_{0.0f};
-    MirTouchTooltype tool_type_;
-
-    // TODO: We would like to store this as a MirTouchAction but we still encode pointer actions
-    // here as well.
-    int action_{0};
+    int action;
 };
 
 struct MirMotionEvent : MirInputEvent
@@ -119,8 +74,47 @@ struct MirMotionEvent : MirInputEvent
     size_t pointer_count() const;
     void set_pointer_count(size_t count);
 
-    MirMotionPointer pointer_coordinates(size_t index) const;
-    MirMotionPointer& pointer_coordinates(size_t index);
+    int id(size_t index) const;
+    void set_id(size_t index, int id);
+
+    float x(size_t index) const;
+    void set_x(size_t index, float x);
+
+    float y(size_t index) const;
+    void set_y(size_t index, float y);
+
+    float dx(size_t index) const;
+    void set_dx(size_t index, float dx);
+
+    float dy(size_t index) const;
+    void set_dy(size_t index, float dy);
+
+    float touch_major(size_t index) const;
+    void set_touch_major(size_t index, float major);
+
+    float touch_minor(size_t index) const;
+    void set_touch_minor(size_t index, float minor);
+
+    float size(size_t index) const;
+    void set_size(size_t index, float size);
+
+    float pressure(size_t index) const;
+    void set_pressure(size_t index, float pressure);
+
+    float orientation(size_t index) const;
+    void set_orientation(size_t index, float orientation);
+
+    float vscroll(size_t index) const;
+    void set_vscroll(size_t index, float vscroll);
+
+    float hscroll(size_t index) const;
+    void set_hscroll(size_t index, float hscroll);
+
+    MirTouchTooltype tool_type(size_t index) const;
+    void set_tool_type(size_t index, MirTouchTooltype tool_type);
+
+    int action(size_t index) const;
+    void set_action(size_t index, int action);
 
     MirTouchEvent* to_touch();
     MirTouchEvent const* to_touch() const;

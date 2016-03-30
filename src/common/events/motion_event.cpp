@@ -95,20 +95,228 @@ void MirMotionEvent::set_pointer_count(size_t count)
     pointer_count_ = count;
 }
 
-MirMotionPointer MirMotionEvent::pointer_coordinates(size_t index) const
+int MirMotionEvent::id(size_t index) const
 {
     if (index > pointer_count_)
          BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
 
-    return pointer_coordinates_[index];
+    return pointer_coordinates_[index].id;
 }
 
-MirMotionPointer& MirMotionEvent::pointer_coordinates(size_t index)
+void MirMotionEvent::set_id(size_t index, int id)
 {
     if (index > pointer_count_)
          BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
 
-    return pointer_coordinates_[index];
+    pointer_coordinates_[index].id = id;
+}
+
+float MirMotionEvent::x(size_t index) const
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    return pointer_coordinates_[index].x;
+}
+
+void MirMotionEvent::set_x(size_t index, float x)
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    pointer_coordinates_[index].x = x;
+}
+
+float MirMotionEvent::y(size_t index) const
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    return pointer_coordinates_[index].y;
+}
+
+void MirMotionEvent::set_y(size_t index, float y)
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    pointer_coordinates_[index].y = y;
+}
+
+float MirMotionEvent::dx(size_t index) const
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    return pointer_coordinates_[index].dx;
+}
+
+void MirMotionEvent::set_dx(size_t index, float dx)
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    pointer_coordinates_[index].dx = dx;
+}
+
+float MirMotionEvent::dy(size_t index) const
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    return pointer_coordinates_[index].dy;
+}
+
+void MirMotionEvent::set_dy(size_t index, float dy)
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    pointer_coordinates_[index].dy = dy;
+}
+
+float MirMotionEvent::touch_major(size_t index) const
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    return pointer_coordinates_[index].touch_major;
+}
+
+void MirMotionEvent::set_touch_major(size_t index, float major)
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    pointer_coordinates_[index].touch_major = major;
+}
+
+float MirMotionEvent::touch_minor(size_t index) const
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    return pointer_coordinates_[index].touch_minor;
+}
+
+void MirMotionEvent::set_touch_minor(size_t index, float minor)
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    pointer_coordinates_[index].touch_minor = minor;
+}
+
+float MirMotionEvent::size(size_t index) const
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    return pointer_coordinates_[index].size;
+}
+
+void MirMotionEvent::set_size(size_t index, float size)
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    pointer_coordinates_[index].size = size;
+}
+
+float MirMotionEvent::pressure(size_t index) const
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    return pointer_coordinates_[index].pressure;
+}
+
+void MirMotionEvent::set_pressure(size_t index, float pressure)
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    pointer_coordinates_[index].pressure = pressure;
+}
+
+float MirMotionEvent::orientation(size_t index) const
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    return pointer_coordinates_[index].orientation;
+}
+
+void MirMotionEvent::set_orientation(size_t index, float orientation)
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    pointer_coordinates_[index].orientation = orientation;
+}
+
+float MirMotionEvent::vscroll(size_t index) const
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    return pointer_coordinates_[index].vscroll;
+}
+
+void MirMotionEvent::set_vscroll(size_t index, float vscroll)
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    pointer_coordinates_[index].vscroll = vscroll;
+}
+
+float MirMotionEvent::hscroll(size_t index) const
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    return pointer_coordinates_[index].hscroll;
+}
+
+void MirMotionEvent::set_hscroll(size_t index, float hscroll)
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    pointer_coordinates_[index].hscroll = hscroll;
+}
+
+MirTouchTooltype MirMotionEvent::tool_type(size_t index) const
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    return pointer_coordinates_[index].tool_type;
+}
+
+void MirMotionEvent::set_tool_type(size_t index, MirTouchTooltype tool_type)
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    pointer_coordinates_[index].tool_type = tool_type;
+}
+
+int MirMotionEvent::action(size_t index) const
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    return pointer_coordinates_[index].action;
+}
+
+void MirMotionEvent::set_action(size_t index, int action)
+{
+    if (index > pointer_count_)
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+
+    pointer_coordinates_[index].action = action;
 }
 
 MirTouchEvent* MirMotionEvent::to_touch()
@@ -129,144 +337,4 @@ MirPointerEvent* MirMotionEvent::to_pointer()
 MirPointerEvent const* MirMotionEvent::to_pointer() const
 {
     return static_cast<MirPointerEvent const*>(this);
-}
-
-int MirMotionPointer::id() const
-{
-    return id_;
-}
-
-void MirMotionPointer::set_id(int id)
-{
-    id_ = id;
-}
-
-float MirMotionPointer::x() const
-{
-    return x_;
-}
-
-void MirMotionPointer::set_x(float x)
-{
-    x_ = x;
-}
-
-float MirMotionPointer::y() const
-{
-    return y_;
-}
-
-void MirMotionPointer::set_y(float y)
-{
-    y_ = y;
-}
-
-float MirMotionPointer::dx() const
-{
-    return dx_;
-}
-
-void MirMotionPointer::set_dx(float dx)
-{
-    dx_ = dx;
-}
-
-float MirMotionPointer::dy() const
-{
-    return dy_;
-}
-
-void MirMotionPointer::set_dy(float dy)
-{
-    dy_ = dy;
-}
-
-float MirMotionPointer::touch_major() const
-{
-    return touch_major_;
-}
-
-void MirMotionPointer::set_touch_major(float major)
-{
-    touch_major_ = major;
-}
-
-float MirMotionPointer::touch_minor() const
-{
-    return touch_minor_;
-}
-
-void MirMotionPointer::set_touch_minor(float minor)
-{
-    touch_minor_ = minor;
-}
-
-float MirMotionPointer::size() const
-{
-    return size_;
-}
-
-void MirMotionPointer::set_size(float size)
-{
-    size_ = size;
-}
-
-float MirMotionPointer::pressure() const
-{
-    return pressure_;
-}
-
-void MirMotionPointer::set_pressure(float pressure)
-{
-    pressure_ = pressure;
-}
-
-float MirMotionPointer::orientation() const
-{
-    return orientation_;
-}
-
-void MirMotionPointer::set_orientation(float orientation)
-{
-    orientation_ = orientation;
-}
-
-float MirMotionPointer::vscroll() const
-{
-    return vscroll_;
-}
-
-void MirMotionPointer::set_vscroll(float vscroll)
-{
-    vscroll_ = vscroll;
-}
-
-float MirMotionPointer::hscroll() const
-{
-    return hscroll_;
-}
-
-void MirMotionPointer::set_hscroll(float hscroll)
-{
-    hscroll_ = hscroll;
-}
-
-MirTouchTooltype MirMotionPointer::tool_type() const
-{
-    return tool_type_;
-}
-
-void MirMotionPointer::set_tool_type(MirTouchTooltype tool_type)
-{
-    tool_type_ = tool_type;
-}
-
-int MirMotionPointer::action() const
-{
-    return action_;
-}
-
-void MirMotionPointer::set_action(int action)
-{
-    action_ = action;
 }

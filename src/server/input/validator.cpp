@@ -77,7 +77,7 @@ mir::EventUPtr convert_touch_actions_to_change(MirTouchEvent const* ev)
 
     for (size_t i = 0; i < ev->pointer_count(); i++)
     {
-        ret->to_input()->to_motion()->pointer_coordinates(i).set_action(mir_touch_action_change);
+        ret->to_input()->to_motion()->set_action(i, mir_touch_action_change);
     }
     return ret;
 }
@@ -86,10 +86,9 @@ mir::EventUPtr convert_touch_actions_to_change(MirTouchEvent const* ev)
 // TODO: Existence of this probably suggests a problem with TouchEvent API...
 int index_for_id(MirTouchEvent const* touch_ev, MirTouchId id)
 {
-    //MirEvent const* ev = reinterpret_cast<MirEvent const*>(touch_ev);
     for (size_t i = 0; i < touch_ev->pointer_count(); i++)
     {
-        if (touch_ev->pointer_coordinates(i).id() == id)
+        if (touch_ev->id(i) == id)
             return i;
     }
     return -1;
@@ -109,7 +108,7 @@ mir::EventUPtr add_missing_down(MirEvent const* valid_ev, MirTouchEvent const* e
     // add a new touch but merely replace the action in the last event.
     if (auto existing_index = index_for_id(ret->to_input()->to_motion()->to_touch(), missing_id) >= 0)
     {
-        ret->to_input()->to_motion()->pointer_coordinates(existing_index).set_action(mir_touch_action_down);
+        ret->to_input()->to_motion()->set_action(existing_index, mir_touch_action_down);
     }
     else
     {
@@ -136,7 +135,7 @@ mir::EventUPtr add_missing_up(MirEvent const* valid_ev, MirTouchId missing_an_up
     auto ret = convert_touch_actions_to_change(tev);
     auto index = index_for_id(tev, missing_an_up_id);
 
-    ret->to_input()->to_motion()->pointer_coordinates(index).set_action(mir_touch_action_up);
+    ret->to_input()->to_motion()->set_action(index, mir_touch_action_up);
 
     return ret;
 }

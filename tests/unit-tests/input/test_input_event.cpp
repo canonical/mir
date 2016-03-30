@@ -204,7 +204,7 @@ TEST(TouchEventProperties, touch_id_comes_from_pointer_coordinates)
     auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
 
     old_ev.set_pointer_count(1);
-    old_ev.pointer_coordinates(0).set_id(touch_id);
+    old_ev.set_id(0, touch_id);
 
     auto tev = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(touch_id, mir_touch_event_id(tev, 0));
@@ -215,7 +215,7 @@ TEST(TouchEventProperties, down_and_up_actions_are_taken_from_old_event)
 {
     auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
     old_ev.set_pointer_count(1);
-    old_ev.pointer_coordinates(0).set_action(mir_touch_action_change);
+    old_ev.set_action(0, mir_touch_action_change);
 
     auto tev = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(mir_touch_action_change, mir_touch_event_action(tev, 0));
@@ -226,9 +226,9 @@ TEST(TouchEventProperties, tool_type_copied_from_old_pc)
     auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
 
     old_ev.set_pointer_count(3);
-    old_ev.pointer_coordinates(0).set_tool_type(mir_touch_tooltype_unknown);
-    old_ev.pointer_coordinates(1).set_tool_type(mir_touch_tooltype_finger);
-    old_ev.pointer_coordinates(2).set_tool_type(mir_touch_tooltype_stylus);
+    old_ev.set_tool_type(0, mir_touch_tooltype_unknown);
+    old_ev.set_tool_type(1, mir_touch_tooltype_finger);
+    old_ev.set_tool_type(2, mir_touch_tooltype_stylus);
 
     auto tev = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(mir_touch_tooltype_unknown, mir_touch_event_tooltype(tev, 0));
@@ -241,13 +241,12 @@ TEST(TouchEventProperties, axis_values_used_by_qtmir_copied)
     float x_value = 19, y_value = 23, touch_major = .3, touch_minor = .2, pressure = .9, size = 1111;
     auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
     old_ev.set_pointer_count(1);
-    auto &old_pc = old_ev.pointer_coordinates(0);
-    old_pc.set_x(x_value);
-    old_pc.set_y(y_value);
-    old_pc.set_touch_major(touch_major);
-    old_pc.set_touch_minor(touch_minor);
-    old_pc.set_pressure(pressure);
-    old_pc.set_size(size);
+    old_ev.set_x(0, x_value);
+    old_ev.set_y(0, y_value);
+    old_ev.set_touch_major(0, touch_major);
+    old_ev.set_touch_minor(0, touch_minor);
+    old_ev.set_pressure(0, pressure);
+    old_ev.set_size(0, size);
 
     auto tev = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(x_value, mir_touch_event_axis_value(tev, 0, mir_touch_axis_x));
@@ -351,10 +350,10 @@ TEST(PointerInputEventProperties, axis_values_copied)
     float x = 7, y = 9.3, hscroll = 13, vscroll = 17;
     auto old_ev = a_motion_ev(AINPUT_SOURCE_MOUSE);
     old_ev.set_pointer_count(0);
-    old_ev.pointer_coordinates(0).set_x(x);
-    old_ev.pointer_coordinates(0).set_y(y);
-    old_ev.pointer_coordinates(0).set_vscroll(vscroll);
-    old_ev.pointer_coordinates(0).set_hscroll(hscroll);
+    old_ev.set_x(0, x);
+    old_ev.set_y(0, y);
+    old_ev.set_vscroll(0, vscroll);
+    old_ev.set_hscroll(0, hscroll);
 
     auto pev = mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(x, mir_pointer_event_axis_value(pev, mir_pointer_axis_x));

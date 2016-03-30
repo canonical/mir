@@ -216,8 +216,8 @@ void mev::set_cursor_position(MirEvent& event, mir::geometry::Point const& pos)
         event.to_input()->to_motion()->pointer_count() == 1)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor position is only valid for pointer events."));
 
-    event.to_input()->to_motion()->pointer_coordinates(0).set_x(pos.x.as_float());
-    event.to_input()->to_motion()->pointer_coordinates(0).set_y(pos.y.as_float());
+    event.to_input()->to_motion()->set_x(0, pos.x.as_float());
+    event.to_input()->to_motion()->set_y(0, pos.y.as_float());
 }
 
 void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
@@ -279,18 +279,18 @@ void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
     float pressure_value, float touch_major_value, float touch_minor_value, float size_value)
 {
     auto mev = event.to_input()->to_motion();
-    auto& pc = mev->pointer_coordinates(mev->pointer_count());
-    mev->set_pointer_count(mev->pointer_count() + 1);
+    auto current_index = mev->pointer_count();
+    mev->set_pointer_count(current_index + 1);
 
-    pc.set_id(touch_id);
-    pc.set_tool_type(tooltype);
-    pc.set_x(x_axis_value);
-    pc.set_y(y_axis_value);
-    pc.set_pressure(pressure_value);
-    pc.set_touch_major(touch_major_value);
-    pc.set_touch_minor(touch_minor_value);
-    pc.set_size(size_value);
-    pc.set_action(action);
+    mev->set_id(current_index, touch_id);
+    mev->set_tool_type(current_index, tooltype);
+    mev->set_x(current_index, x_axis_value);
+    mev->set_y(current_index, y_axis_value);
+    mev->set_pressure(current_index, pressure_value);
+    mev->set_touch_major(current_index, touch_major_value);
+    mev->set_touch_minor(current_index, touch_minor_value);
+    mev->set_size(current_index, size_value);
+    mev->set_action(current_index, action);
 }
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
@@ -311,14 +311,13 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     mev.set_buttons(buttons_pressed);
 
     mev.set_pointer_count(1);
-    auto& pc = mev.pointer_coordinates(0);
-    pc.set_action(action);
-    pc.set_x(x_axis_value);
-    pc.set_y(y_axis_value);
-    pc.set_dx(relative_x_value);
-    pc.set_dy(relative_y_value);
-    pc.set_hscroll(hscroll_value);
-    pc.set_vscroll(vscroll_value);
+    mev.set_action(0, action);
+    mev.set_x(0, x_axis_value);
+    mev.set_y(0, y_axis_value);
+    mev.set_dx(0, relative_x_value);
+    mev.set_dy(0, relative_y_value);
+    mev.set_hscroll(0, hscroll_value);
+    mev.set_vscroll(0, vscroll_value);
 
     return make_uptr_event(e);
 }

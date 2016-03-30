@@ -83,10 +83,10 @@ void deliver(std::shared_ptr<mi::Surface> const& surface, T const* ev)
         auto mev = to_deliver.to_input()->to_motion();
         for (unsigned i = 0; i < mev->pointer_count(); i++)
         {
-            auto x = mev->pointer_coordinates(i).x();
-            auto y = mev->pointer_coordinates(i).y();
-            mev->pointer_coordinates(i).set_x(x - sx);
-            mev->pointer_coordinates(i).set_y(y - sy);
+            auto x = mev->x(i);
+            auto y = mev->y(i);
+            mev->set_x(i, x - sx);
+            mev->set_y(i, y - sy);
         }
     }
     surface->consume(&to_deliver);
