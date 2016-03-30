@@ -9,6 +9,8 @@ list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_surfaceless_egl_context.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_overlapping_output_grouping.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_software_cursor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_anonymous_shm_file.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_shm_buffer.cpp
 )
 
 
