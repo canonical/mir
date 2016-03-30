@@ -44,7 +44,7 @@ struct DeviceRemovalFilter : mi::InputDeviceObserver
     {
         if (device->name() == "mtk-tpd")
         {
-            dispatcher->set_mtk_device(device->id());
+            dispatcher->set_touch_button_device(device->id());
         }
 
     }
@@ -73,14 +73,14 @@ mi::KeyRepeatDispatcher::KeyRepeatDispatcher(
     bool repeat_enabled,
     std::chrono::milliseconds repeat_timeout,
     std::chrono::milliseconds repeat_delay,
-    bool disable_repeat_on_mtk_touchpad)
+    bool disable_repeat_on_touchscreen)
     : next_dispatcher(next_dispatcher),
       alarm_factory(factory),
       cookie_authority(cookie_authority),
       repeat_enabled(repeat_enabled),
       repeat_timeout(repeat_timeout),
       repeat_delay(repeat_delay),
-      disable_repeat_on_mtk_touchpad(disable_repeat_on_mtk_touchpad)
+      disable_repeat_on_touchscreen(disable_repeat_on_touchscreen)
 {
 }
 
@@ -89,18 +89,18 @@ void mi::KeyRepeatDispatcher::set_input_device_hub(std::shared_ptr<InputDeviceHu
     hub->add_observer(std::make_shared<DeviceRemovalFilter>(this));
 }
 
-void mi::KeyRepeatDispatcher::set_mtk_device(MirInputDeviceId id)
+void mi::KeyRepeatDispatcher::set_touch_button_device(MirInputDeviceId id)
 {
     std::lock_guard<std::mutex> lock(repeat_state_mutex);
-    mtk_tpd_id = id;
+    touch_button_device = id;
 }
 
 void mi::KeyRepeatDispatcher::remove_device(MirInputDeviceId id)
 {
     std::lock_guard<std::mutex> lock(repeat_state_mutex);
     repeat_state_by_device.erase(id); // destructor cancels alarms
-    if (mtk_tpd_id.is_set() && mtk_tpd_id.value() == id)
-        mtk_tpd_id.consume();
+    if (touch_button_device.is_set() && touch_button_device.value() == id)
+        touch_button_device.consume();
 }
 
 mi::KeyRepeatDispatcher::KeyboardState& mi::KeyRepeatDispatcher::ensure_state_for_device_locked(std::lock_guard<std::mutex> const&, MirInputDeviceId id)
@@ -122,7 +122,7 @@ bool mi::KeyRepeatDispatcher::dispatch(MirEvent const& event)
         if (mir_input_event_get_type(iev) != mir_input_event_type_key)
             return next_dispatcher->dispatch(event);
         auto device_id = mir_input_event_get_device_id(iev);
-        if (disable_repeat_on_mtk_touchpad && mtk_tpd_id.is_set() && device_id == mtk_tpd_id.value())
+        if (disable_repeat_on_touchscreen && touch_button_device.is_set() && device_id == touch_button_device.value())
             return next_dispatcher->dispatch(event);
 
         if (!handle_key_input(mir_input_event_get_device_id(iev), mir_input_event_get_keyboard_event(iev)))

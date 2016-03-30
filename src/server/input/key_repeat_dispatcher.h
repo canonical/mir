@@ -51,7 +51,7 @@ public:
                         bool repeat_enabled,
                         std::chrono::milliseconds repeat_timeout, /* timeout before sending first repeat */
                         std::chrono::milliseconds repeat_delay, /* delay between repeated keys */
-                        bool disable_repeat_on_mtk_touchpad);
+                        bool disable_repeat_on_touchscreen);
 
     // InputDispatcher
     bool dispatch(MirEvent const& event) override;
@@ -60,7 +60,7 @@ public:
 
     void set_input_device_hub(std::shared_ptr<InputDeviceHub> const& hub);
 
-    void set_mtk_device(MirInputDeviceId id);
+    void set_touch_button_device(MirInputDeviceId id);
     void remove_device(MirInputDeviceId id);
 private:
     std::mutex repeat_state_mutex;
@@ -71,8 +71,8 @@ private:
     bool const repeat_enabled;
     std::chrono::milliseconds repeat_timeout;
     std::chrono::milliseconds repeat_delay;
-    bool const disable_repeat_on_mtk_touchpad;
-    optional_value<MirInputDeviceId> mtk_tpd_id;
+    bool const disable_repeat_on_touchscreen;
+    optional_value<MirInputDeviceId> touch_button_device;
 
     struct KeyboardState
     {
