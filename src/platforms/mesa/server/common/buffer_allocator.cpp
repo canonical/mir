@@ -20,8 +20,8 @@
 #include "buffer_allocator.h"
 #include "gbm_buffer.h"
 #include "buffer_texture_binder.h"
-#include "../../../common/server/anonymous_shm_file.h"
-#include "../../../common/server/shm_buffer.h"
+#include "anonymous_shm_file.h"
+#include "shm_buffer.h"
 #include "display_helpers.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/egl_error.h"
@@ -49,7 +49,7 @@ namespace geom = mir::geometry;
 namespace
 {
 
-class EGLImageBufferTextureBinder : public mgm::BufferTextureBinder
+class EGLImageBufferTextureBinder : public mgc::BufferTextureBinder
 {
 public:
     EGLImageBufferTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,

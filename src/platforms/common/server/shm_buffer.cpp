@@ -19,7 +19,7 @@
 
 #include "shm_file.h"
 #include "shm_buffer.h"
-#include "../../mesa/server/common/buffer_texture_binder.h"
+#include "buffer_texture_binder.h"
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 

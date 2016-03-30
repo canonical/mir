@@ -31,6 +31,7 @@
 
 namespace mg=mir::graphics;
 namespace mgm=mir::graphics::mesa;
+namespace mgc = mir::graphics::common;
 namespace geom=mir::geometry;
 
 MirPixelFormat mgm::gbm_format_to_mir_format(uint32_t format)
@@ -119,7 +120,7 @@ uint32_t mgm::mir_format_to_gbm_format(MirPixelFormat format)
 
 mgm::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
                           uint32_t bo_flags,
-                          std::unique_ptr<BufferTextureBinder> texture_binder)
+                          std::unique_ptr<mgc::BufferTextureBinder> texture_binder)
     : gbm_handle{handle},
       bo_flags{bo_flags},
       texture_binder{std::move(texture_binder)},
