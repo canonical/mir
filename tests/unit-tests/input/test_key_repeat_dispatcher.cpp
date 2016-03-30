@@ -33,7 +33,7 @@
 #include "mir/test/doubles/mock_input_dispatcher.h"
 #include "mir/test/doubles/mock_input_device_hub.h"
 
-#include "linux/input-event-codes.h"
+#include "linux/input.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
