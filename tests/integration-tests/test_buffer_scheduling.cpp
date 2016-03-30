@@ -899,6 +899,27 @@ TEST_P(WithThreeOrMoreBuffers, client_is_unblocked_after_policy_is_triggered)
     EXPECT_THAT(production_log[nbuffers + 1].blockage, Eq(Access::unblocked));
 }
 
+TEST_P(WithTwoOrMoreBuffers, client_is_not_woken_by_compositor_acquire)
+{ // Check the default is MultiMonitorMode::multi_monitor_sync
+    // Skip over the first frame. The early release optimization is too
+    // conservative to allow it to happen right at the start (so as to
+    // maintain correct multimonitor frame rates if required).
+    producer->produce();
+    auto onscreen = stream->lock_compositor_buffer(this);
+    onscreen.reset();
+
+    while (producer->can_produce())
+        producer->produce();
+
+    ASSERT_FALSE(producer->can_produce());
+    onscreen = stream->lock_compositor_buffer(this);
+    // single_monitor_fast -> can produce here
+    // multi_monitor_sync -> can't produce here
+    ASSERT_FALSE(producer->can_produce());
+    onscreen.reset();
+    ASSERT_TRUE(producer->can_produce());
+}
+
 // Regression test for LP: #1319765
 TEST_P(WithTwoBuffers, client_is_not_blocked_prematurely)
 {
@@ -1017,6 +1038,7 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
     mtd::MockFrameDroppingPolicyFactory policy_factory;
     mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory),
                           properties, policy_factory};
+    queue.set_mode(mc::MultiMonitorMode::single_monitor_fast);
     queue.allow_framedropping(false);
 
     mg::Buffer* client_buffer = nullptr;
@@ -1083,6 +1105,7 @@ TEST_P(WithTwoOrMoreBuffers, short_buffer_holds_dont_overclock_multimonitor)
     mtd::MockFrameDroppingPolicyFactory policy_factory;
     mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory),
                           properties, policy_factory};
+    queue.set_mode(mc::MultiMonitorMode::single_monitor_fast);
     queue.allow_framedropping(false);
 
     const void* const leftid = "left";
