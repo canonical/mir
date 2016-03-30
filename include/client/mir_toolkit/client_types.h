@@ -449,11 +449,10 @@ typedef void (*mir_input_config_callback)(
 typedef enum MirErrorDomain
 {
     mir_error_domain_connection,
-    mir_error_domain_surface
 } MirErrorDomain;
 
 typedef enum MirConnectionError {
-    mir_connection_error_unauthorized_display_configuration
+    mir_connection_error_unauthorized_display_configuration,
 } MirConnectionError;
 
 typedef void (*mir_error_callback)(
