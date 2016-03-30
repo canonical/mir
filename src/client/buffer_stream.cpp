@@ -26,6 +26,7 @@
 #include "rpc/mir_display_server.h"
 #include "mir_protobuf.pb.h"
 #include "buffer_vault.h"
+#include "protobuf_to_native_buffer.h"
 
 #include "mir/log.h"
 #include "mir/client_platform.h"
@@ -73,42 +74,6 @@ struct ServerBufferSemantics
 namespace
 {
 
-void populate_buffer_package(
-    MirBufferPackage& buffer_package,
-    mir::protobuf::Buffer const& protobuf_buffer)
-{
-    if (!protobuf_buffer.has_error())
-    {
-        buffer_package.data_items = protobuf_buffer.data_size();
-        for (int i = 0; i != protobuf_buffer.data_size(); ++i)
-        {
-            buffer_package.data[i] = protobuf_buffer.data(i);
-        }
-
-        buffer_package.fd_items = protobuf_buffer.fd_size();
-
-        for (int i = 0; i != protobuf_buffer.fd_size(); ++i)
-        {
-            buffer_package.fd[i] = protobuf_buffer.fd(i);
-        }
-
-        buffer_package.stride = protobuf_buffer.stride();
-        buffer_package.flags = protobuf_buffer.flags();
-        buffer_package.width = protobuf_buffer.width();
-        buffer_package.height = protobuf_buffer.height();
-    }
-    else
-    {
-        buffer_package.data_items = 0;
-        buffer_package.fd_items = 0;
-        buffer_package.stride = 0;
-        buffer_package.flags = 0;
-        buffer_package.width = 0;
-        buffer_package.height = 0;
-    }
-}
-
-
 struct ExchangeSemantics : mcl::ServerBufferSemantics
 {
     ExchangeSemantics(
@@ -118,9 +83,9 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         wrapped{factory, max_buffers},
         display_server(server)
     {
-        auto buffer_package = std::make_shared<MirBufferPackage>();
-        populate_buffer_package(*buffer_package, first_buffer);
-        wrapped.deposit_package(buffer_package, first_buffer.buffer_id(), first_size, first_pf);
+        wrapped.deposit_package(
+            mcl::protobuf_to_native_buffer(first_buffer),
+            first_buffer.buffer_id(), first_size, first_pf);
     }
 
     void deposit(mp::Buffer const& buffer, geom::Size size, MirPixelFormat pf) override
@@ -128,9 +93,9 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         std::unique_lock<std::mutex> lock(mutex);
         if (on_incoming_buffer)
         {
-            auto buffer_package = std::make_shared<MirBufferPackage>();
-            populate_buffer_package(*buffer_package, buffer);
-            wrapped.deposit_package(buffer_package, buffer.buffer_id(), size, pf);
+            wrapped.deposit_package(
+                mcl::protobuf_to_native_buffer(buffer),
+                buffer.buffer_id(), size, pf);
             if (on_incoming_buffer)
             {
                 on_incoming_buffer();
@@ -186,9 +151,9 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         }
         else
         {
-            auto buffer_package = std::make_shared<MirBufferPackage>();
-            populate_buffer_package(*buffer_package, incoming_buffers.front());
-            wrapped.deposit_package(buffer_package, incoming_buffers.front().buffer_id(), sz, pf);
+            wrapped.deposit_package(
+                mcl::protobuf_to_native_buffer(incoming_buffers.front()),
+                incoming_buffers.front().buffer_id(), sz, pf);
             incoming_buffers.pop();
             done();
         }
@@ -261,8 +226,11 @@ public:
         buf_params->set_height(size.height.as_int());
         buf_params->set_pixel_format(format);
         buf_params->set_buffer_usage(usage);
-        server.allocate_buffers(&request, &protobuf_void, 
-            google::protobuf::NewCallback(google::protobuf::DoNothing));
+
+        //note, NewCallback will trigger on exception, deleting this object there
+        auto protobuf_void = new mp::Void;
+        server.allocate_buffers(&request,  protobuf_void,
+            google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
     void free_buffer(int buffer_id) override
@@ -270,8 +238,11 @@ public:
         mp::BufferRelease request;
         request.mutable_id()->set_value(stream_id);
         request.add_buffers()->set_buffer_id(buffer_id);
-        server.release_buffers(&request, &protobuf_void,
-            google::protobuf::NewCallback(google::protobuf::DoNothing));
+
+        //note, NewCallback will trigger on exception, deleting this object there
+        auto protobuf_void = new mp::Void;
+        server.release_buffers(&request, protobuf_void,
+            google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
     void submit_buffer(int id, mcl::ClientBuffer&) override
@@ -279,8 +250,16 @@ public:
         mp::BufferRequest request;
         request.mutable_id()->set_value(stream_id);
         request.mutable_buffer()->set_buffer_id(id);
-        server.submit_buffer(&request, &protobuf_void,
-            google::protobuf::NewCallback(google::protobuf::DoNothing));
+
+        //note, NewCallback will trigger on exception, deleting this object there
+        auto protobuf_void = new mp::Void;
+        server.submit_buffer(&request, protobuf_void,
+            google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
+    }
+
+    static void ignore_response(mp::Void* void_response)
+    {
+        delete void_response;
     }
 
 private:
@@ -425,10 +404,12 @@ mcl::BufferStream::BufferStream(
         }
         else
         {
+            cached_buffer_size = ideal_buffer_size;
             buffer_depository = std::make_unique<NewBufferSemantics>(
                 client_platform->create_buffer_factory(),
                 std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
-                ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
+                ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
+                protobuf_bs->buffer_usage(), nbuffers);
         }
 
 
@@ -552,8 +533,9 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
 
 MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 {
+    auto id = buffer_depository->current_buffer_id();
     std::unique_lock<decltype(mutex)> lock(mutex);
-    perf_report->end_frame(buffer_depository->current_buffer_id());
+    perf_report->end_frame(id);
 
     secured_region.reset();
 
@@ -572,7 +554,7 @@ std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
 EGLNativeWindowType mcl::BufferStream::egl_native_window()
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    return *egl_native_window_;
+    return static_cast<EGLNativeWindowType>(egl_native_window_.get());
 }
 
 void mcl::BufferStream::release_cpu_region()
@@ -633,7 +615,6 @@ void mcl::BufferStream::request_and_wait_for_configure(MirSurfaceAttrib attrib, 
 
 uint32_t mcl::BufferStream::get_current_buffer_id()
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
     return buffer_depository->current_buffer_id();
 }
 

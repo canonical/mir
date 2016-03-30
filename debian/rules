@@ -20,7 +20,13 @@ else
 endif
 
 COMMON_CONFIGURE_OPTIONS = \
-  -DCMAKE_INSTALL_LIBEXECDIR="lib/$(DEB_HOST_MULTIARCH)/mir"
+  -DCMAKE_INSTALL_LIBEXECDIR="lib/$(DEB_HOST_MULTIARCH)/mir"\
+
+ifeq ($(filter noopt,$(DEB_BUILD_OPTIONS)),noopt)
+	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
+else
+	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=ON
+endif
 
 override_dh_auto_configure:
 ifeq ($(DEB_HOST_ARCH),armhf)
@@ -47,7 +53,7 @@ override_dh_auto_build-indep:
 
 # TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
-	dh_makeshlibs -V
+	dh_makeshlibs -V -Nmir-test-tools
 
 override_dh_install:
 # Nothing outside Mir should link to libmirprotobuf directly.
@@ -56,3 +62,11 @@ override_dh_install:
 	-rm debian/tmp/usr/lib/*/libmirprotobuf.so
 	dh_install -p libmirplatform-dev -Xmesa --fail-missing
 	dh_install --remaining-packages --fail-missing -Xjquery.js
+
+# Don't try to strip libraries used as test data
+override_dh_strip:
+	dh_strip -Xmir-test-data
+
+# Don't try to find dependencies of libraries used as test data
+override_dh_shlibdeps:
+	dh_shlibdeps -Xmir-test-data

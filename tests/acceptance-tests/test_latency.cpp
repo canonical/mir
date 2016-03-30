@@ -25,6 +25,9 @@
 #include "mir/test/doubles/null_display_buffer.h"
 #include "mir/test/doubles/null_display_sync_group.h"
 #include "mir/test/fake_shared.h"
+#include "mir_test_framework/visible_surface.h"
+#include "mir/options/option.h"
+#include "mir/test/doubles/null_logger.h"  // for mtd::logging_opt
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -185,6 +188,27 @@ public:
         return static_cast<float>(sum) / latency_list.size();
     }
 
+    void dump_latency()
+    {
+        FILE* file = stdout;  // gtest seems to use this
+        char const prefix[] = "[  debug   ] ";
+        unsigned const size = latency_list.size();
+        unsigned const cols = 10u;
+
+        fprintf(file, "%s%u frames sampled, averaging %.1f frames latency\n",
+                prefix, size, average_latency());
+        for (unsigned i = 0; i < size; ++i)
+        {
+            if ((i % cols) == 0)
+                fprintf(file, "%s%2u:", prefix, i);
+            fprintf(file, " %2d", latency_list[i]);
+            if ((i % cols) == cols-1)
+                fprintf(file, "\n");
+        }
+        if (size % cols)
+            fprintf(file, "\n");
+    }
+
     unsigned int max_latency() const
     {
         return max;
@@ -212,12 +236,26 @@ struct TimeTrackingDisplay : mtd::NullDisplay
     TimeTrackingGroup group;
 };
  
-struct ClientLatency : mtf::ConnectedClientWithASurface
+struct ClientLatency : mtf::ConnectedClientHeadlessServer
 {
     void SetUp() override
     {
         preset_display(mt::fake_shared(display));
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientHeadlessServer::SetUp();
+
+        auto del = [] (MirSurfaceSpec* spec) { mir_surface_spec_release(spec); };
+        std::unique_ptr<MirSurfaceSpec, decltype(del)> spec(
+            mir_connection_create_spec_for_normal_surface(
+                connection, 100, 100, mir_pixel_format_abgr_8888),
+            del);
+        visible_surface = std::make_unique<mtf::VisibleSurface>(spec.get());
+        surface =  *visible_surface;
+    }
+
+    void TearDown() override
+    {
+        visible_surface.reset();
+        mtf::ConnectedClientHeadlessServer::TearDown();
     }
 
     Stats stats;
@@ -229,10 +267,12 @@ struct ClientLatency : mtf::ConnectedClientWithASurface
     // affecting results will be the first few frames before the buffer
     // quere is full (during which there will be no buffer latency).
     float const error_margin = 0.4f;
+    std::unique_ptr<mtf::VisibleSurface> visible_surface;
+    MirSurface* surface;
 };
 }
 
-TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
+TEST_F(ClientLatency, triple_buffered_client_has_less_than_two_frames_latency)
 {
     using namespace testing;
 
@@ -251,11 +291,12 @@ TEST_F(ClientLatency, triple_buffered_client_uses_all_buffers)
     //       nbuffers instead of nbuffers-1. After dynamic queue scaling is
     //       enabled, the average will be lower than this.
     float const expected_max_latency = expected_client_buffers;
-    float const expected_min_latency = expected_client_buffers - 1;
+
+    if (server.get_options()->get<bool>(mtd::logging_opt))
+        display.group.dump_latency();
 
     auto observed_latency = display.group.average_latency();
 
-    EXPECT_THAT(observed_latency, Gt(expected_min_latency-error_margin));
     EXPECT_THAT(observed_latency, Lt(expected_max_latency+error_margin));
 }
 
@@ -298,6 +339,9 @@ TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
 
     ASSERT_TRUE(stats.wait_for_posts(test_submissions,
                                      std::chrono::seconds(60)));
+
+    if (server.get_options()->get<bool>(mtd::logging_opt))
+        display.group.dump_latency();
 
     // As the client is producing frames slower than the compositor consumes
     // them, the buffer queue never fills. So latency is low;

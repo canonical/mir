@@ -21,7 +21,7 @@
 #include "display_configuration.h"
 #include "rpc/make_rpc_channel.h"
 #include "rpc/null_rpc_report.h"
-#include "mir/logging/dumb_console_logger.h"
+#include "mir/logging/logger.h"
 #include "mir/input/input_platform.h"
 #include "mir/input/input_devices.h"
 #include "mir/input/null_input_receiver_report.h"
@@ -37,6 +37,7 @@
 #include "mir/client_platform_factory.h"
 #include "probing_client_platform_factory.h"
 #include "mir_event_distributor.h"
+#include "buffer_factory.h"
 
 namespace mcl = mir::client;
 
@@ -69,18 +70,24 @@ mcl::DefaultConnectionConfiguration::the_rpc_channel()
         [this]
         {
             return mcl::rpc::make_rpc_channel(
-                the_socket_file(), the_surface_map(), the_display_configuration(), the_input_devices(), the_rpc_report(), the_lifecycle_control(), the_ping_handler(), the_event_sink());
+                the_socket_file(), the_surface_map(), the_buffer_factory(),
+                the_display_configuration(), the_input_devices(), the_rpc_report(),
+                the_lifecycle_control(), the_ping_handler(), the_event_sink());
         });
 }
 
 std::shared_ptr<mir::logging::Logger>
 mcl::DefaultConnectionConfiguration::the_logger()
 {
-    return logger(
-        []
+    class ProxyLogger : public mir::logging::Logger
+    {
+        void log(mir::logging::Severity severity, const std::string& message, const std::string& component) override
         {
-            return std::make_shared<mir::logging::DumbConsoleLogger>();
-        });
+            mir::logging::log(severity, message, component);
+        }
+    };
+
+    return logger([]{ return std::make_shared<ProxyLogger>(); });
 }
 
 std::shared_ptr<mcl::ClientPlatformFactory>
@@ -226,5 +233,14 @@ std::shared_ptr<mir::SharedLibraryProberReport> mir::client::DefaultConnectionCo
                 return std::make_shared<mcl::lttng::SharedLibraryProberReport>();
             else
                 return std::make_shared<mir::logging::NullSharedLibraryProberReport>();
+        });
+}
+
+std::shared_ptr<mir::client::AsyncBufferFactory> mir::client::DefaultConnectionConfiguration::the_buffer_factory()
+{
+    return async_buffer_factory(
+        [this] () -> std::shared_ptr<mir::client::AsyncBufferFactory>
+        {
+            return std::make_shared<mir::client::BufferFactory>();
         });
 }

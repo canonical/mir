@@ -31,7 +31,7 @@
 extern "C" {
 #endif
 
-/*
+/**
  * Retrieve the new keymap reported by this MirKeymapEvent
  *
  * \deprecated keymap credentials are no longer available use
@@ -44,7 +44,7 @@ void mir_keymap_event_get_rules(MirKeymapEvent const* ev,
                                 struct xkb_rule_names* names)
     __attribute__ ((deprecated));
 
-/*
+/**
  * Retrieve the new keymap reported by this MirKeymapEvent
  *
  * The keymap buffer is only valid while the MirKeymapEvent is valid.
@@ -56,7 +56,7 @@ void mir_keymap_event_get_rules(MirKeymapEvent const* ev,
 void mir_keymap_event_get_keymap_buffer(MirKeymapEvent const* ev,
                                         char const** buffer, size_t *length);
 
-/*
+/**
  * Retrieve the device id the keymap reported by this MirKeymapEvent applies to
  *
  * \param[in] ev The keymap event

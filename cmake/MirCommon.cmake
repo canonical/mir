@@ -52,12 +52,17 @@ function (list_to_string LIST_VAR PREFIX STR_VAR)
   set(${STR_VAR} "${tmp_str}" PARENT_SCOPE)
 endfunction()
 
-function (mir_discover_tests_internal EXECUTABLE DETECT_FD_LEAKS)
+function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAKS )
   # Set vars
   set(test_cmd_no_memcheck "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE}")
   set(test_cmd "${test_cmd_no_memcheck}")
-  set(test_env ${ARGN})
-  set(test_name ${EXECUTABLE})
+  set(test_env ${ARGN} ${TEST_ENV_OPTIONS})
+
+  if (TEST_ENV_OPTIONS)
+      set(test_name ${EXECUTABLE}---${TEST_ENV_OPTIONS}---)
+  else()
+      set(test_name ${EXECUTABLE})
+  endif()
   set(test_no_memcheck_filter)
   set(test_exclusion_filter)
 
@@ -80,6 +85,11 @@ function (mir_discover_tests_internal EXECUTABLE DETECT_FD_LEAKS)
     # tsan "eats" SIGQUIT, so ignore two more tests that involve it
     set(test_exclusion_filter "${test_exclusion_filter}:ServerSignal/AbortDeathTest.cleanup_handler_is_called_for/0")
     set(test_exclusion_filter "${test_exclusion_filter}:ServerShutdown/OnSignalDeathTest.removes_endpoint/0")
+  endif()
+
+  if(cmake_build_type_lower MATCHES "ubsanitizer")
+    list(APPEND test_env "UBSAN_OPTIONS=\"suppressions=${CMAKE_SOURCE_DIR}/tools/ubsan-suppressions print_stacktrace=1 die_after_fork=0\"")
+    set(test_exclusion_filter "${test_exclusion_filter}:*DeathTest*")
   endif()
 
   if(SYSTEM_SUPPORTS_O_TMPFILE EQUAL 1)
@@ -115,11 +125,15 @@ function (mir_discover_tests_internal EXECUTABLE DETECT_FD_LEAKS)
 endfunction ()
 
 function (mir_discover_tests EXECUTABLE)
-  mir_discover_tests_internal(${EXECUTABLE} FALSE ${ARGN})
+  mir_discover_tests_internal(${EXECUTABLE} "" FALSE ${ARGN})
 endfunction()
 
 function (mir_discover_tests_with_fd_leak_detection EXECUTABLE)
-  mir_discover_tests_internal(${EXECUTABLE} TRUE ${ARGN})
+  mir_discover_tests_internal(${EXECUTABLE} "" TRUE ${ARGN})
+endfunction()
+
+function (mir_discover_tests_with_fd_leak_detection_and_env EXECUTABLE TEST_ENV_OPTION)
+  mir_discover_tests_internal(${EXECUTABLE} ${TEST_ENV_OPTION} TRUE ${ARGN})
 endfunction()
 
 function (mir_add_memcheck_test)
@@ -145,11 +159,15 @@ function (mir_add_detect_fd_leaks_test)
   endif()
 endfunction()
 
-
 function (mir_precompiled_header TARGET HEADER)
   if (MIR_USE_PRECOMPILED_HEADERS)
-    get_property(TARGET_COMPILE_FLAGS TARGET ${TARGET} PROPERTY COMPILE_FLAGS)
+    get_filename_component(HEADER_NAME ${HEADER} NAME)
+
     get_property(TARGET_INCLUDE_DIRECTORIES TARGET ${TARGET} PROPERTY INCLUDE_DIRECTORIES)
+
+    set(TARGET_COMPILE_DEFINITIONS "$<TARGET_PROPERTY:${TARGET},COMPILE_DEFINITIONS>")
+    set(TARGET_COMPILE_DEFINITIONS "$<$<BOOL:${TARGET_COMPILE_DEFINITIONS}>:-D$<JOIN:${TARGET_COMPILE_DEFINITIONS},\n-D>\n>")
+
     foreach(dir ${TARGET_INCLUDE_DIRECTORIES})
       if (${dir} MATCHES "usr/include")
         set(TARGET_INCLUDE_DIRECTORIES_STRING "${TARGET_INCLUDE_DIRECTORIES_STRING} -isystem ${dir}")
@@ -169,15 +187,44 @@ function (mir_precompiled_header TARGET HEADER)
     #
     # I'm unaware of a less roundabout method of getting the *actual* build flags for a target.
     string(TOUPPER "${CMAKE_BUILD_TYPE}" UC_BUILD_TYPE)
-    separate_arguments(
-      PCH_CXX_FLAGS UNIX_COMMAND
-      "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${UC_BUILD_TYPE}} ${TARGET_COMPILE_FLAGS} ${TARGET_INCLUDE_DIRECTORIES_STRING}"
+
+    # Lllloook at you, haaacker. A pa-pa-pathetic creature of meat and bone.
+    #
+    # It appears that we can *only* get the COMPILE_DEFINITIONS as a generator expression.
+    # This wouldn't be so bad if http://www.kwwidgets.org/Bug/view.php?id=14353#c33712 didn't mean
+    # that you can't use generator expressions in custom commands.
+    #
+    # So!
+    # What we *can* do is generate a file with the contents of the generator expressions,
+    # then use gcc's @file mechanism...
+    set(FLAGS_FILE "${CMAKE_CURRENT_BINARY_DIR}/${HEADER_NAME}.compileflags")
+
+    file(
+      GENERATE
+      OUTPUT "${FLAGS_FILE}"
+      CONTENT "
+        ${CMAKE_CXX_FLAGS}
+        ${CMAKE_CXX_FLAGS_${UC_BUILD_TYPE}}
+        ${TARGET_INCLUDE_DIRECTORIES_STRING}
+        ${TARGET_COMPILE_DEFINITIONS}"
     )
 
+    # HA HA!
+    #
+    # Of course, that has unescaped all the escaped \"s we have in the compile definitions.
+    # gcc treats the contents of @file exactly as if it came from the command line, so we need to
+    # re-escape them.
+    add_custom_command(
+      OUTPUT ${FLAGS_FILE}.processed
+      DEPENDS ${FLAGS_FILE}
+      # ESCAPE ALL THE THINGS!
+      COMMAND sh -c "sed s_\\\"_\\\\\\\\\\\"_g ${FLAGS_FILE} > ${FLAGS_FILE}.processed"
+      VERBATIM
+    )
     add_custom_command(
       OUTPUT ${TARGET}_precompiled.hpp.gch
-      DEPENDS ${HEADER}
-      COMMAND ${CMAKE_CXX_COMPILER} ${PCH_CXX_FLAGS} -x c++-header -c ${HEADER} -o ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_precompiled.hpp.gch
+      DEPENDS ${HEADER} ${FLAGS_FILE}.processed
+      COMMAND ${CMAKE_CXX_COMPILER} @${FLAGS_FILE}.processed -x c++-header -c ${HEADER} -o ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_precompiled.hpp.gch
     )
 
     set_property(TARGET ${TARGET} APPEND_STRING PROPERTY COMPILE_FLAGS " -include ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_precompiled.hpp -Winvalid-pch ")

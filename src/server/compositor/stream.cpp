@@ -80,6 +80,7 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
         {
             std::lock_guard<decltype(mutex)> lk(mutex); 
             first_frame_posted = true;
+            size = buffer->size();
             buffers->receive_buffer(buffer->id());
             schedule->schedule((*buffers)[buffer->id()]);
             if (buffers->client_owned_buffer_count() == 0)
@@ -220,6 +221,6 @@ void mc::Stream::set_scale(float)
 
 void mc::Stream::drop_frame()
 {
-    if ((schedule->num_scheduled() > 1) && arbiter->has_buffer())
+    if (schedule->num_scheduled() > 1)
         buffers->send_buffer(schedule->next_buffer()->id());
 }

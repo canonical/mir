@@ -46,6 +46,8 @@ public:
     XEvent focus_in_event_return = { 0 };
     XEvent focus_out_event_return = { 0 };
     XEvent vscroll_event_return = { 0 };
+    XEvent motion_event_return = { 0 };
+    int pending_events = 1;
 };
 
 class MockX11
@@ -56,6 +58,7 @@ public:
 
     MOCK_METHOD1(XOpenDisplay, Display*(const char*));
     MOCK_METHOD1(XCloseDisplay, int(Display*));
+    MOCK_METHOD1(XPending, int(Display*));
     MOCK_METHOD4(XGetVisualInfo, XVisualInfo*(Display*, long, XVisualInfo*, int*));
     MOCK_METHOD4(XCreateColormap, Colormap(Display*, Window, Visual*, int));
     /* Too long to mock, use wrapper instead.

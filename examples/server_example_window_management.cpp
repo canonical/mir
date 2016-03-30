@@ -58,14 +58,14 @@ public:
     FullscreenWindowManagerPolicy(me::WindowManagerTools* const /*tools*/, std::shared_ptr<msh::DisplayLayout> const& display_layout) :
         display_layout{display_layout} {}
 
-    void handle_session_info_updated(SessionInfoMap& /*session_info*/, Rectangles const& /*displays*/) {}
+    void handle_session_info_updated(SessionInfoMap& /*session_info*/, Rectangles const& /*displays*/) override {}
 
-    void handle_displays_updated(SessionInfoMap& /*session_info*/, Rectangles const& /*displays*/) {}
+    void handle_displays_updated(SessionInfoMap& /*session_info*/, Rectangles const& /*displays*/) override {}
 
     auto handle_place_new_surface(
         std::shared_ptr<ms::Session> const& /*session*/,
         ms::SurfaceCreationParameters const& request_parameters)
-    -> ms::SurfaceCreationParameters
+    -> ms::SurfaceCreationParameters override
     {
         auto placed_parameters = request_parameters;
 
@@ -78,29 +78,29 @@ public:
     void handle_modify_surface(
         std::shared_ptr<ms::Session> const& /*session*/,
         std::shared_ptr<ms::Surface> const& /*surface*/,
-        msh::SurfaceSpecification const& /*modifications*/)
+        msh::SurfaceSpecification const& /*modifications*/) override
     {
     }
 
-    void handle_new_surface(std::shared_ptr<ms::Session> const& /*session*/, std::shared_ptr<ms::Surface> const& /*surface*/)
+    void handle_new_surface(std::shared_ptr<ms::Session> const& /*session*/, std::shared_ptr<ms::Surface> const& /*surface*/) override
     {
     }
 
-    void handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
+    void handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface) override
         { session->destroy_surface(surface); }
 
-    int handle_set_state(std::shared_ptr<ms::Surface> const& /*surface*/, MirSurfaceState value)
+    int handle_set_state(std::shared_ptr<ms::Surface> const& /*surface*/, MirSurfaceState value) override
         { return value; }
 
-    bool handle_keyboard_event(MirKeyboardEvent const* /*event*/) { return false; }
+    bool handle_keyboard_event(MirKeyboardEvent const* /*event*/) override { return false; }
 
-    bool handle_touch_event(MirTouchEvent const* /*event*/) { return false; }
+    bool handle_touch_event(MirTouchEvent const* /*event*/) override { return false; }
 
-    bool handle_pointer_event(MirPointerEvent const* /*event*/) { return false; }
+    bool handle_pointer_event(MirPointerEvent const* /*event*/) override { return false; }
 
     void handle_raise_surface(
         std::shared_ptr<ms::Session> const& /*session*/,
-        std::shared_ptr<ms::Surface> const& /*surface*/)
+        std::shared_ptr<ms::Surface> const& /*surface*/) override
     {
     }
 
@@ -108,7 +108,7 @@ public:
         std::shared_ptr<ms::Session> const&,
         std::shared_ptr<ms::Surface> const&,
         SurfaceInfoMap&,
-        std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const&, ms::SurfaceCreationParameters const&)> const&)
+        std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const&, ms::SurfaceCreationParameters const&)> const&) override
     {
     }
 private:

@@ -244,7 +244,7 @@ Description: Display server for Ubuntu - demonstration programs
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
  .
- Contains demo applications (with source) that use the Mir display server
+ Contains demo applications that use the Mir display server
 
 Package: mir-utils
 Architecture: linux-any
@@ -274,6 +274,18 @@ Description: Display Server for Ubuntu - stress tests and other test tools
  robust operation and a well-defined driver model.
  .
  Contains a tool for stress testing the Mir display server
+
+Package: mir-android-diagnostics
+Architecture: i386 amd64 armhf
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Recommends: mir-demos,
+Description: Display Server for Ubuntu - android platform diagnostics utility
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains a tool for checking the graphics components of android devices.
 
 Package: libmircommon5
 Section: libs
@@ -345,7 +357,7 @@ Description: Display server for Ubuntu - input platform library
  Contains the shared libraries required for the Mir server to interact with
  the input hardware using the evdev interface.
 
-Package: mir-client-platform-mesa4
+Package: mir-client-platform-mesa5
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -373,7 +385,7 @@ Description: Display server for Ubuntu - client platform library for Mesa develo
  Contains header files required to use the platform specific capabilities of
  the Mir Mesa backend.
 
-Package: mir-client-platform-android4
+Package: mir-client-platform-android5
 Section: libs
 Architecture: i386 amd64 armhf
 Multi-Arch: same
@@ -395,7 +407,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          mir-platform-graphics-mesa-kms8,
          mir-platform-graphics-mesa-x8,
-         mir-client-platform-mesa4,
+         mir-client-platform-mesa5,
          mir-platform-input-evdev5,
 Description: Display server for Ubuntu - desktop driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
@@ -411,7 +423,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          mir-platform-graphics-android8,
-         mir-client-platform-android4,
+         mir-client-platform-android5,
          mir-platform-input-evdev5,
 Description: Display server for Ubuntu - android driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,

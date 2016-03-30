@@ -24,6 +24,7 @@
 #include "mir/geometry/point.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/dispatch/action_queue.h"
+#include "mir/frontend/event_sink.h"
 #include "mir/server_action_queue.h"
 #include "mir/cookie/authority.h"
 #define MIR_LOG_COMPONENT "Input"
@@ -35,13 +36,16 @@
 #include <atomic>
 
 namespace mi = mir::input;
+namespace mf = mir::frontend;
 
 mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
+    std::shared_ptr<mf::EventSink> const& sink,
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
     std::shared_ptr<mir::ServerActionQueue> const& observer_queue,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority)
     : seat{seat},
+      sink{sink},
       input_dispatchable{input_multiplexer},
       observer_queue(observer_queue),
       device_queue(std::make_shared<dispatch::ActionQueue>()),
@@ -66,14 +70,14 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
     if (it == end(devices))
     {
         auto id = create_new_device_id();
-        auto handle = std::make_shared<DefaultDevice>(id, device_queue, device);
+        auto handle = std::make_shared<DefaultDevice>(id, device_queue, *device);
         // send input device info to observer loop..
         devices.push_back(std::make_unique<RegisteredDevice>(
             device, id, input_dispatchable, cookie_authority, handle));
 
         auto const& dev = devices.back();
 
-        seat->add_device(handle);
+        seat->add_device(*handle);
         dev->start(seat);
 
         // pass input device handle to observer loop..
@@ -106,7 +110,7 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
                 auto seat = item->seat;
                 if (seat)
                 {
-                    seat->remove_device(item->handle);
+                    seat->remove_device(*item->handle);
                     item->stop();
                 }
                 // send input device info to observer queue..
@@ -185,7 +189,7 @@ mir::geometry::Rectangle mi::DefaultInputDeviceHub::RegisteredDevice::bounding_r
     if (!seat)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device not started and has no seat assigned"));
 
-    return seat->get_rectangle_for(handle);
+    return seat->get_rectangle_for(*handle);
 }
 
 void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver> const& observer)
@@ -194,6 +198,7 @@ void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver
         this,
         [observer,this]
         {
+            std::unique_lock<std::mutex> lock(observer_guard);
             observers.push_back(observer);
             for (auto const& item : handles)
             {
@@ -204,6 +209,13 @@ void mi::DefaultInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver
         );
 }
 
+void mi::DefaultInputDeviceHub::for_each_input_device(std::function<void(Device const&)> const& callback)
+{
+    std::unique_lock<std::mutex> lock(observer_guard);
+    for (auto const& item : handles)
+        callback(*item);
+}
+
 void mi::DefaultInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserver> const& element)
 {
     auto observer = element.lock();
@@ -211,13 +223,16 @@ void mi::DefaultInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserve
     observer_queue->enqueue(this,
                             [observer, this]
                             {
+                                std::unique_lock<std::mutex> lock(observer_guard);
                                 observers.erase(remove(begin(observers), end(observers), observer), end(observers));
                             });
 }
 
 void mi::DefaultInputDeviceHub::add_device_handle(std::shared_ptr<DefaultDevice> const& handle)
 {
+    std::unique_lock<std::mutex> lock(observer_guard);
     handles.push_back(handle);
+    sink->handle_input_device_change(handles);
 
     for (auto const& observer : observers)
     {
@@ -228,6 +243,7 @@ void mi::DefaultInputDeviceHub::add_device_handle(std::shared_ptr<DefaultDevice>
 
 void mi::DefaultInputDeviceHub::remove_device_handle(MirInputDeviceId id)
 {
+    std::unique_lock<std::mutex> lock(observer_guard);
     auto handle_it = remove_if(
         begin(handles),
         end(handles),
@@ -247,4 +263,5 @@ void mi::DefaultInputDeviceHub::remove_device_handle(MirInputDeviceId id)
         return;
 
     handles.erase(handle_it, end(handles));
+    sink->handle_input_device_change(handles);
 }

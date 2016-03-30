@@ -29,15 +29,15 @@
 extern "C" {
 #endif
 
-/** Fenced Buffer content access functions.
- *
- * Note: the following functions (mir_buffer_get_native_buffer, mir_buffer_lock, mir_buffer_unlock)
- * can only be used when the buffer is not submitted to the server.
+/** @name Fenced Buffer content access functions.
  *
  * These functions will wait until it is safe to access the buffer for the given purpose.
  * If used with mir_none, the buffer will be given the buffer immediately, and without synchronization.
  * It is then up to the user to ensure that the buffer contents are not accessed at inapproprate times.
- **/
+ *
+ * \note the following functions (mir_buffer_get_native_buffer, mir_buffer_get_graphics_region)
+ * can only be used when the buffer is not submitted to the server.
+ *  @{ */
 
 /** Access the native buffer associated with MirBuffer for a given purpose.
  *  This will synchronize the buffer for the given purpose.
@@ -58,23 +58,18 @@ MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirBufferAccess access
  *
  *   \param [in] buffer    The buffer
  *   \param [in] type      The type of fence to clear before returning.
- *   \return               The graphics region associated with the buffer.
- *   \warning  If mir_buffer_stream_submit_buffer() is called on a locked buffer,
- *             corruption may occur. Make sure to call mir_buffer_unlock()
- *             before submission.
+ *   \return     region   The graphics region associated with the buffer.
+ *   \warning  The returned region is only valid until the MirBuffer is
+ *             submitted to the server. When the buffer is available again,
+ *             this function must be called before accessing the region again.
  *   \warning  If mir_none is designated as access, this function will not
  *             wait for the fence. The user must wait for the fence explicitly
  *             before using the contents of the buffer.
  **/
-MirGraphicsRegion* mir_buffer_acquire_region(MirBuffer *buffer, MirBufferAccess access);
-
-/** relinquish access to a CPU-mapped region associated with a buffer.
- *   \param [in] region       The region
- **/
-void mir_buffer_release_region(MirGraphicsRegion* region);
+MirGraphicsRegion mir_buffer_get_graphics_region(MirBuffer* buffer, MirBufferAccess access);
 
 /**
- * Retreive the native fence associated with this buffer
+ * Retrieve the native fence associated with this buffer
  *
  *   \param [in] buffer     The buffer
  *   \return                The fence associated with buffer 
@@ -112,6 +107,36 @@ int mir_buffer_wait_for_access(
     MirBuffer* buffer,
     MirBufferAccess access,
     int timeout);
+
+/** Retrieve the width of the buffer in pixels.
+ *
+ *   \param [in] buffer   The buffer
+ *   \return              The width of the buffer in pixels
+ **/
+unsigned int mir_buffer_get_width(MirBuffer* buffer);
+
+/** Retrieve the height of the buffer in pixels.
+ *
+ *   \param [in] buffer   The buffer
+ *   \return              The height of the buffer in pixels
+ **/
+unsigned int mir_buffer_get_height(MirBuffer* buffer);
+
+/** Retrieve the pixel format of the buffer.
+ *
+ *   \param [in] buffer   The buffer
+ *   \return              The pixel format of the buffer
+ **/
+MirPixelFormat mir_buffer_get_pixel_format(MirBuffer* buffer);
+
+/** Retrieve the buffer usage of the buffer.
+ *
+ *   \param [in] buffer   The buffer
+ *   \return              The buffer usage of the buffer
+ **/
+MirBufferUsage mir_buffer_get_buffer_usage(MirBuffer* buffer);
+
+/** @} */
 
 /** release a MirBuffer
  *   \param [in] buffer              The buffer to be released

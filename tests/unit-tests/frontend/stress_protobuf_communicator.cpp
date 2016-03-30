@@ -35,6 +35,7 @@
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "src/client/rpc/mir_display_server.h"
+#include "src/client/buffer_factory.h"
 #include "mir/input/input_devices.h"
 
 #include <gtest/gtest.h>
@@ -66,29 +67,16 @@ struct StubProtobufClient
     mir::protobuf::Void ignored;
     mir::protobuf::Connection connection;
 
-    void connect_done();
     void create_surface_done();
     void exchange_buffer_done();
-    void release_surface_done();
     void disconnect_done();
-
-    void wait_for_connect_done();
 
     void wait_for_create_surface();
 
     void wait_for_exchange_buffer();
 
-    void wait_for_release_surface();
-
     void wait_for_disconnect_done();
 
-    void wait_for_surface_count(int count);
-
-    void wait_for_disconnect_count(int count);
-
-    void tfd_done();
-
-    void wait_for_tfd_done();
 
     const int maxwait;
     std::atomic<bool> connect_done_called;
@@ -179,6 +167,7 @@ StubProtobufClient::StubProtobufClient(
     channel(mir::client::rpc::make_rpc_channel(
         socket_file,
         std::make_shared<mir::client::ConnectionSurfaceMap>(),
+        std::make_shared<mir::client::BufferFactory>(),
         std::make_shared<mir::client::DisplayConfiguration>(),
         std::make_shared<mir::input::InputDevices>(),
         rpc_report,
@@ -203,15 +192,6 @@ StubProtobufClient::StubProtobufClient(
     surface_parameters.set_buffer_usage(0);
 }
 
-void StubProtobufClient::connect_done()
-{
-    connect_done_called.store(true);
-
-    auto old = connect_done_count.load();
-
-    while (!connect_done_count.compare_exchange_weak(old, old+1));
-}
-
 void StubProtobufClient::create_surface_done()
 {
     create_surface_called.store(true);
@@ -226,11 +206,6 @@ void StubProtobufClient::exchange_buffer_done()
     exchange_buffer_called.store(true);
 }
 
-void StubProtobufClient::release_surface_done()
-{
-    release_surface_called.store(true);
-}
-
 void StubProtobufClient::disconnect_done()
 {
     disconnect_done_called.store(true);
@@ -238,18 +213,6 @@ void StubProtobufClient::disconnect_done()
     auto old = disconnect_done_count.load();
 
     while (!disconnect_done_count.compare_exchange_weak(old, old+1));
-}
-
-void StubProtobufClient::wait_for_connect_done()
-{
-    for (int i = 0; !connect_done_called.load() && i < maxwait; ++i)
-    {
-        // TODO these sleeps and yields are silly (and in similar code around here)
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::this_thread::yield();
-    }
-
-    connect_done_called.store(false);
 }
 
 void StubProtobufClient::wait_for_create_surface()
@@ -272,16 +235,6 @@ void StubProtobufClient::wait_for_exchange_buffer()
     exchange_buffer_called.store(false);
 }
 
-void StubProtobufClient::wait_for_release_surface()
-{
-    for (int i = 0; !release_surface_called.load() && i < maxwait; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        std::this_thread::yield();
-    }
-    release_surface_called.store(false);
-}
-
 void StubProtobufClient::wait_for_disconnect_done()
 {
     for (int i = 0; !disconnect_done_called.load() && i < maxwait; ++i)
@@ -290,36 +243,4 @@ void StubProtobufClient::wait_for_disconnect_done()
         std::this_thread::yield();
     }
     disconnect_done_called.store(false);
-}
-
-void StubProtobufClient::wait_for_surface_count(int count)
-{
-    for (int i = 0; count != create_surface_done_count.load() && i < 10000; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        std::this_thread::yield();
-    }
-}
-
-void StubProtobufClient::wait_for_disconnect_count(int count)
-{
-    for (int i = 0; count != disconnect_done_count.load() && i < 10000; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        std::this_thread::yield();
-    }
-}
-
-void StubProtobufClient::tfd_done()
-{
-    tfd_done_called.store(true);
-}
-
-void StubProtobufClient::wait_for_tfd_done()
-{
-    for (int i = 0; !tfd_done_called.load() && i < maxwait; ++i)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    tfd_done_called.store(false);
 }

@@ -34,6 +34,7 @@ add_library(mir-public-test-framework OBJECT
   headless_test.cpp
   interprocess_client_server_test.cpp
   main.cpp
+  libinput_environment.cpp
   placement_applying_shell.cpp
   process.cpp
   server_runner.cpp
@@ -58,13 +59,16 @@ add_library(mir-protected-test-framework OBJECT
 
   fake_input_server_configuration.cpp
   input_testing_server_options.cpp
-  udev_environment.cpp
 )
+
+add_library(mir-libinput-test-framework OBJECT libinput_environment.cpp)
+add_library(mir-umock-test-framework OBJECT udev_environment.cpp)
 
 
 add_library(mir-test-framework-static STATIC
   $<TARGET_OBJECTS:mir-public-test-framework>
   $<TARGET_OBJECTS:mir-protected-test-framework>
+  $<TARGET_OBJECTS:mir-public-test>
 )
 
 add_dependencies(mir-test-framework-static GMock)
@@ -176,12 +180,12 @@ set_target_properties(
 
 add_custom_command(TARGET mir-test-framework-static POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/udev_recordings ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/udev_recordings
+  ${CMAKE_CURRENT_SOURCE_DIR}/udev-recordings ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/udev-recordings
   COMMENT "Copying umockdev recordings to build dir..."
 )
 add_custom_command(TARGET mir-test-framework-static POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_CURRENT_SOURCE_DIR}/testing-cursor-theme ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/testing-cursor-theme
+  ${CMAKE_CURRENT_SOURCE_DIR}/testing-cursor-theme ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/testing-cursor-theme
   COMMENT "Copying testing cursor themes to build dir..."
 )
 
@@ -192,4 +196,5 @@ install(TARGETS mirplatformgraphicsthrow LIBRARY DESTINATION ${MIR_SERVER_PLATFO
 
 install(TARGETS mirclientplatformstub LIBRARY DESTINATION ${MIR_CLIENT_PLATFORM_PATH})
 
-add_subdirectory(udev_recordings/)
+add_subdirectory(udev-recordings/)
+add_subdirectory(testing-cursor-theme/)

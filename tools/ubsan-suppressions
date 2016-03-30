@@ -1,0 +1,2 @@
+vptr_check:boost*
+vptr_check:*_Sp_counted_deleter*

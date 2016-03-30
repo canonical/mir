@@ -20,6 +20,7 @@
 #include "mir/client_buffer.h"
 #include "buffer_vault.h"
 #include "mir_protobuf.pb.h"
+#include "protobuf_to_native_buffer.h"
 #include <algorithm>
 #include <boost/throw_exception.hpp>
 
@@ -118,31 +119,33 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
 
 void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 {
-    auto package = std::make_shared<MirBufferPackage>();
-    package->data_items = protobuf_buffer.data_size();
-    package->fd_items = protobuf_buffer.fd_size();
-    for (int i = 0; i != protobuf_buffer.data_size(); ++i)
-        package->data[i] = protobuf_buffer.data(i);
-    for (int i = 0; i != protobuf_buffer.fd_size(); ++i)
-        package->fd[i] = protobuf_buffer.fd(i);
-    package->stride = protobuf_buffer.stride();
-    package->flags = protobuf_buffer.flags();
-    package->width = protobuf_buffer.width();
-    package->height = protobuf_buffer.height();
+    std::shared_ptr<MirBufferPackage> package = mcl::protobuf_to_native_buffer(protobuf_buffer);
 
     std::unique_lock<std::mutex> lk(mutex);
     auto it = buffers.find(protobuf_buffer.buffer_id());
     if (it == buffers.end())
     {
-        auto buffer = factory->create_buffer(package, geom::Size{package->width, package->height}, format);
-        buffers[protobuf_buffer.buffer_id()] = BufferEntry{ buffer, Owner::Self };
+        geom::Size sz{package->width, package->height};
+        if (sz != size)
+        {
+            lk.unlock();
+            server_requests->free_buffer(protobuf_buffer.buffer_id());
+            for (int i = 0; i != package->fd_items; ++i)
+                close(package->fd[i]);
+
+            server_requests->allocate_buffer(size, format, usage);
+            return;
+        }
+
+        buffers[protobuf_buffer.buffer_id()] = 
+            BufferEntry{ factory->create_buffer(package, sz, format), Owner::Self };
     }
     else
     {
+        it->second.buffer->update_from(*package);
         if (size == it->second.buffer->size())
         { 
             it->second.owner = Owner::Self;
-            it->second.buffer->update_from(*package);
         }
         else
         {

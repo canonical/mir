@@ -46,6 +46,8 @@
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
 #include "mir/frontend/buffer_stream.h"
+#include "mir/input/input_device_hub.h"
+#include "mir/input/device.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/fd.h"
 #include "mir/cookie/authority.h"
@@ -89,7 +91,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<mi::CursorImages> const& cursor_images,
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
-    std::shared_ptr<mir::cookie::Authority> const& cookie_authority) :
+    std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
+    std::shared_ptr<mir::input::InputDeviceHub> const& hub) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -106,6 +109,7 @@ mf::SessionMediator::SessionMediator(
     translator{translator},
     anr_detector{anr_detector},
     cookie_authority(cookie_authority),
+    hub(hub),
     buffer_stream_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
@@ -158,6 +162,16 @@ void mf::SessionMediator::connect(
     auto display_config = display_changer->base_configuration();
     auto protobuf_config = response->mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, *display_config);
+
+    hub->for_each_input_device(
+        [response](auto const& dev)
+        {
+            auto dev_info = response->add_input_devices();
+            dev_info->set_name(dev.name());
+            dev_info->set_id(dev.id());
+            dev_info->set_unique_id(dev.unique_id());
+            dev_info->set_capabilities(dev.capabilities().value());
+        });
 
     for (auto pf : surface_pixel_formats)
         response->add_surface_pixel_format(static_cast<::google::protobuf::uint32>(pf));

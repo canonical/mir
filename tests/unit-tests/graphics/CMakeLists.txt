@@ -8,9 +8,13 @@ list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_pixel_format_utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_surfaceless_egl_context.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_overlapping_output_grouping.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_platform_prober.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_software_cursor.cpp
 )
+
+
+list(APPEND UMOCK_UNIT_TEST_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_platform_prober.cpp
+    )
 
 add_subdirectory(nested/)
 add_subdirectory(offscreen/)
@@ -25,3 +29,4 @@ if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x1
 endif()
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)
+set(UMOCK_UNIT_TEST_SOURCES ${UMOCK_UNIT_TEST_SOURCES} PARENT_SCOPE)

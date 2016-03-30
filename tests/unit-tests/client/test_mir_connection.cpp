@@ -21,6 +21,8 @@
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "src/client/display_configuration.h"
 #include "src/client/mir_surface.h"
+#include "src/client/buffer_factory.h"
+#include "src/client/presentation_chain.h"
 
 #include "mir/client_platform.h"
 #include "mir/client_platform_factory.h"
@@ -29,6 +31,7 @@
 #include "mir/dispatch/dispatchable.h"
 #include "mir/events/event_builders.h"
 #include "mir/geometry/rectangle.h"
+#include "mir_toolkit/mir_presentation_chain.h"
 
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir/test/test_protobuf_server.h"
@@ -41,6 +44,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include "mir/test/gmock_fixes.h"
 
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
@@ -50,6 +54,7 @@ namespace mev = mir::events;
 namespace md = mir::dispatch;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+using namespace testing;
 
 namespace
 {
@@ -64,6 +69,31 @@ struct BufferStreamCallback
     }
     bool invoked = false;
     MirBufferStream* resulting_stream = nullptr;
+};
+
+struct PresentationChainCallback
+{
+    static void created(MirPresentationChain* c, void *client_context)
+    {
+        auto const context = reinterpret_cast<PresentationChainCallback*>(client_context);
+        context->invoked = true;
+        context->resulting_chain = c;
+    }
+    bool invoked = false;
+    MirPresentationChain* resulting_chain = nullptr;
+};
+
+struct MockAsyncBufferFactory : mcl::AsyncBufferFactory
+{
+    MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::Buffer>(mp::Buffer const&));
+    MOCK_METHOD7(expect_buffer, void(
+        std::shared_ptr<mcl::ClientBufferFactory> const& native_buffer_factory,
+        MirPresentationChain* chain,
+        geom::Size size,
+        MirPixelFormat format,
+        MirBufferUsage usage,
+        mir_buffer_callback cb,
+        void* cb_context));
 };
 
 struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
@@ -106,6 +136,21 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
             auto response_message = static_cast<mp::BufferStream*>(response);
             on_buffer_stream_create(*response_message, complete);
         }
+        else if (name == "release_buffer_stream")
+        {
+            auto const request_message = static_cast<mp::BufferStreamId const*>(parameters);
+            buffer_stream_release(request_message);
+        }
+        else if (name == "allocate_buffers")
+        {
+            auto const request_message = static_cast<mp::BufferAllocation const*>(parameters);
+            allocate_buffers(request_message);
+        }
+        else if (name == "release_buffers")
+        {
+            auto const request_message = static_cast<mp::BufferRelease const*>(parameters);
+            release_buffers(request_message);
+        }
 
         complete->Run();
     }
@@ -115,6 +160,9 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
     MOCK_METHOD1(configure_display_sent, void(mp::DisplayConfiguration const*));
     MOCK_METHOD2(platform_operation,
                  void(mp::PlatformOperationMessage const*, mp::PlatformOperationMessage*));
+    MOCK_METHOD1(buffer_stream_release, void(mp::BufferStreamId const*));
+    MOCK_METHOD1(allocate_buffers, void(mp::BufferAllocation const*));
+    MOCK_METHOD1(release_buffers, void(mp::BufferRelease const*));
 
     MOCK_CONST_METHOD0(watch_fd, mir::Fd());
     MOCK_METHOD1(dispatch, bool(md::FdEvents));
@@ -156,7 +204,7 @@ struct MockClientPlatform : public mcl::ClientPlatform
     MOCK_CONST_METHOD0(platform_type, MirPlatformType());
     MOCK_METHOD1(platform_operation, MirPlatformMessage*(MirPlatformMessage const*));
     MOCK_METHOD0(create_buffer_factory, std::shared_ptr<mcl::ClientBufferFactory>());
-    MOCK_METHOD1(create_egl_native_window, std::shared_ptr<EGLNativeWindowType>(mcl::EGLNativeSurface*));
+    MOCK_METHOD1(create_egl_native_window, std::shared_ptr<void>(mcl::EGLNativeSurface*));
     MOCK_METHOD0(create_egl_native_display, std::shared_ptr<EGLNativeDisplayType>());
     MOCK_CONST_METHOD2(get_egl_pixel_format,
         MirPixelFormat(EGLDisplay, EGLConfig));
@@ -188,11 +236,13 @@ class TestConnectionConfiguration : public mcl::DefaultConnectionConfiguration
 public:
     TestConnectionConfiguration(
         std::shared_ptr<mcl::ClientPlatform> const& platform,
-        std::shared_ptr<mclr::MirBasicRpcChannel> const& channel)
+        std::shared_ptr<mclr::MirBasicRpcChannel> const& channel,
+        std::shared_ptr<mcl::AsyncBufferFactory> const& factory)
         : DefaultConnectionConfiguration(""),
           disp_config(std::make_shared<mcl::DisplayConfiguration>()),
           platform{platform},
-          channel{channel}
+          channel{channel},
+          factory{factory}
     {
     }
 
@@ -210,12 +260,36 @@ public:
     {
         return disp_config;
     }
+
+    std::shared_ptr<mcl::AsyncBufferFactory> the_buffer_factory() override
+    {
+        return factory;
+    }
 private:
     std::shared_ptr<mcl::DisplayConfiguration> disp_config;
     std::shared_ptr<mcl::ClientPlatform> const platform;
     std::shared_ptr<mclr::MirBasicRpcChannel> const channel;
+    std::shared_ptr<mcl::AsyncBufferFactory> const factory;
 };
 
+MATCHER_P(BufferAllocationMatches, val, "")
+{
+    return ((arg->id().value() == val.id().value()) &&
+        (arg->buffer_requests_size() == 1) &&
+        (val.buffer_requests_size() == 1) &&
+        (arg->buffer_requests(0).width() == val.buffer_requests(0).width()) &&
+        (arg->buffer_requests(0).height() == val.buffer_requests(0).height()) &&
+        (arg->buffer_requests(0).pixel_format() == val.buffer_requests(0).pixel_format()) &&
+        (arg->buffer_requests(0).buffer_usage() == val.buffer_requests(0).buffer_usage()));
+}
+
+MATCHER_P(BufferReleaseMatches, val, "")
+{
+    return ((arg->id().value() == val.id().value()) &&
+        (arg->buffers_size() == 1) &&
+        (val.buffers_size() == 1) &&
+        (arg->buffers(0).buffer_id() == val.buffers(0).buffer_id()));
+}
 }
 
 struct MirConnectionTest : public testing::Test
@@ -223,7 +297,8 @@ struct MirConnectionTest : public testing::Test
     MirConnectionTest()
         : mock_platform{std::make_shared<testing::NiceMock<MockClientPlatform>>()},
           mock_channel{std::make_shared<testing::NiceMock<MockRpcChannel>>()},
-          conf{mock_platform, mock_channel},
+          mock_buffer_allocator{std::make_shared<testing::NiceMock<MockAsyncBufferFactory>>()},
+          conf{mock_platform, mock_channel, mock_buffer_allocator},
           connection{std::make_shared<MirConnection>(conf)}
     {
         mock_platform->set_client_context(connection.get());
@@ -231,6 +306,7 @@ struct MirConnectionTest : public testing::Test
 
     std::shared_ptr<testing::NiceMock<MockClientPlatform>> const mock_platform;
     std::shared_ptr<testing::NiceMock<MockRpcChannel>> const mock_channel;
+    std::shared_ptr<testing::NiceMock<MockAsyncBufferFactory>> const mock_buffer_allocator;
     TestConnectionConfiguration conf;
     std::shared_ptr<MirConnection> const connection;
 };
@@ -740,7 +816,8 @@ TEST_F(MirConnectionTest, create_wait_handle_really_blocks)
             delete closure;
         }
     };
-    TestConnectionConfiguration conf{mock_platform, std::make_shared<NiceMock<FakeRpcChannel>>()};
+    TestConnectionConfiguration conf{
+        mock_platform, std::make_shared<NiceMock<FakeRpcChannel>>(), mock_buffer_allocator };
     MirConnection connection(conf);
     MirSurfaceSpec const spec{&connection, 33, 45, mir_pixel_format_abgr_8888};
 
@@ -749,4 +826,124 @@ TEST_F(MirConnectionTest, create_wait_handle_really_blocks)
     wait_handle->wait_for_pending(pause_time);
 
     EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
+}
+
+TEST_F(MirConnectionTest, callback_is_invoked_after_chain_creation_error)
+{
+    using namespace testing;
+    PresentationChainCallback callback;
+    std::string error_msg = "danger will robertson";
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(Invoke([&](mp::BufferStream& bs, google::protobuf::Closure*)
+        { bs.set_error(error_msg); }));
+
+    connection->create_presentation_chain(
+        &PresentationChainCallback::created, &callback);
+    EXPECT_TRUE(callback.invoked);
+    ASSERT_TRUE(callback.resulting_chain);
+    EXPECT_THAT(mir_presentation_chain_get_error_message(callback.resulting_chain),
+        StrEq("Error creating MirPresentationChain: " + error_msg));
+}
+
+TEST_F(MirConnectionTest, callback_is_still_invoked_after_creation_exception_and_error_chain_created)
+{
+    using namespace testing;
+    PresentationChainCallback callback;
+
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(DoAll(
+            Invoke([](mp::BufferStream&, google::protobuf::Closure* c){ c->Run(); }),
+            Throw(std::runtime_error("pay no attention to the man behind the curtain"))));
+    connection->create_presentation_chain(
+        &PresentationChainCallback::created, &callback);
+
+    EXPECT_TRUE(callback.invoked);
+    ASSERT_TRUE(callback.resulting_chain);
+    EXPECT_THAT(mir_presentation_chain_get_error_message(callback.resulting_chain),
+        StrEq("Error creating MirPresentationChain: no ID in response"));
+}
+
+namespace
+{
+MATCHER_P(ReleaseRequestHasId, val, "")
+{
+    return arg->value() == val.value();
+}
+}
+
+TEST_F(MirConnectionTest, release_chain_calls_server)
+{
+    using namespace testing;
+    connection->connect("MirClientSurfaceTest", connected_callback, nullptr)->wait_for_all();
+    EXPECT_CALL(*mock_channel, on_buffer_stream_create(_,_))
+        .WillOnce(Invoke([](mp::BufferStream& stream, google::protobuf::Closure*)
+        {
+            stream.mutable_id()->set_value(0);
+        }));
+
+    PresentationChainCallback callback;
+    connection->create_presentation_chain(
+        &PresentationChainCallback::created, &callback);
+
+    EXPECT_TRUE(callback.invoked);
+    ASSERT_TRUE(callback.resulting_chain);
+
+    mp::BufferStreamId expected_request;
+    expected_request.set_value(
+        static_cast<MirPresentationChain*>(callback.resulting_chain)->rpc_id());
+
+    EXPECT_CALL(*mock_channel, buffer_stream_release(ReleaseRequestHasId(expected_request)))
+        .Times(0);
+
+    connection->release_presentation_chain(callback.resulting_chain);
+}
+
+TEST_F(MirConnectionTest, release_error_chain_doesnt_call_server)
+{
+    PresentationChainCallback callback;
+    connection->create_presentation_chain(
+        &PresentationChainCallback::created, &callback);
+    EXPECT_TRUE(callback.invoked);
+    ASSERT_TRUE(callback.resulting_chain);
+
+    mp::BufferStreamId expected_request;
+    expected_request.set_value(
+        static_cast<MirPresentationChain*>(callback.resulting_chain)->rpc_id());
+
+    EXPECT_CALL(*mock_channel, buffer_stream_release(ReleaseRequestHasId(expected_request)))
+        .Times(0);
+
+    connection->release_presentation_chain(callback.resulting_chain);
+}
+
+TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
+{
+    connection->connect("MirClientSurfaceTest", connected_callback, 0)->wait_for_all();
+
+    geom::Size size { 32, 11 };
+    auto format = mir_pixel_format_abgr_8888;
+    auto usage = mir_buffer_usage_software;
+    mp::BufferAllocation mp_alloc;
+    mp_alloc.mutable_id()->set_value(-1);
+    auto params = mp_alloc.add_buffer_requests();
+    params->set_width(size.width.as_int());
+    params->set_height(size.height.as_int());
+    params->set_buffer_usage(usage);
+    params->set_pixel_format(format);
+    EXPECT_CALL(*mock_channel, allocate_buffers(BufferAllocationMatches(mp_alloc)));
+    EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, nullptr, size, format, usage, nullptr, nullptr));
+
+    connection->allocate_buffer(size, format, usage, nullptr, nullptr);
+}
+
+TEST_F(MirConnectionTest, can_release_buffer_from_connection)
+{
+    int buffer_id = 1320;
+    mp::BufferRelease release_msg;
+    auto released_buffer = release_msg.add_buffers();
+    released_buffer->set_buffer_id(buffer_id);
+
+    EXPECT_CALL(*mock_channel, release_buffers(BufferReleaseMatches(release_msg)));
+
+    connection->release_buffer(buffer_id);
 }

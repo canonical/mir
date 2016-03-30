@@ -354,7 +354,7 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
                 dispatched->reset();
                 // The dispatcher shouldn't have been affected by the signal
                 dispatchable->trigger();
-                EXPECT_TRUE(dispatched->wait_for(1s));
+                EXPECT_TRUE(dispatched->wait_for(5s));
 
                 // Because we terminate this process with an explicit call to
                 // exit(), objects on the stack are not destroyed.

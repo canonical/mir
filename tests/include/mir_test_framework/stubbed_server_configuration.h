@@ -37,6 +37,7 @@ class StubbedServerConfiguration : public DefaultServerConfiguration
 public:
     StubbedServerConfiguration();
     explicit StubbedServerConfiguration(std::vector<geometry::Rectangle> const& display_rects);
+    ~StubbedServerConfiguration();
 
     std::shared_ptr<graphics::Platform> the_graphics_platform() override;
     std::shared_ptr<compositor::RendererFactory> the_renderer_factory() override;

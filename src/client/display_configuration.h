@@ -35,6 +35,9 @@ class DisplayOutput : public MirDisplayOutput
 {
 public:
     DisplayOutput(size_t num_modes_, size_t num_formats);
+
+    DisplayOutput(DisplayOutput const&) = delete;
+    DisplayOutput(DisplayOutput&& rhs);
     ~DisplayOutput();
 };
 
@@ -53,11 +56,12 @@ public:
 
     //copying to a c POD, so kinda kludgy
     MirDisplayConfiguration* copy_to_client() const;
+    std::unique_ptr<protobuf::DisplayConfiguration> take_snapshot() const;
 
 private:
     std::mutex mutable guard;
-    std::vector<MirDisplayCard> cards;
-    std::vector<std::shared_ptr<DisplayOutput>> outputs;
+    protobuf::DisplayConfiguration config;
+
     std::function<void()> notify_change;
 };
 

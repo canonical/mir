@@ -1,9 +1,16 @@
 pkg_check_modules(LIBINPUT REQUIRED libinput)
 
+if ("${LIBINPUT_VERSION}" VERSION_LESS "1.1")
+  add_definitions(-DMIR_LIBINPUT_HAS_ACCEL_PROFILE=0)
+else ()
+  add_definitions(-DMIR_LIBINPUT_HAS_ACCEL_PROFILE=1)
+endif ()
+
 include_directories(
   ${LIBINPUT_CFLAGS} 
   ${PROJECT_SOURCE_DIR}/include/platform
-  ${PROJECT_SOURCE_DIR}/src/include/platform # udev wrapper
+  ${PROJECT_SOURCE_DIR}/src/include/platform # udev Context
+  ${PROJECT_SOURCE_DIR}/src/include/common # raii.h
   ${PROJECT_SOURCE_DIR}/include/common
   ${PROJECT_SOURCE_DIR}/include/client
   )

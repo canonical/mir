@@ -83,6 +83,7 @@ void mtd::TriggeredMainLoop::trigger_server_actions()
 {
     for (auto const& action : actions)
         action();
+    actions.clear();
 }
 
 std::unique_ptr<mir::time::Alarm>

@@ -866,14 +866,19 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
 {
     {
         std::unique_lock<std::mutex> lk(guard);
-
-        if (s.end() == std::find_if(s.begin(), s.end(),
-            [this] (ms::StreamInfo const& info) { return info.stream == surface_buffer_stream; }))
-        {
-            BOOST_THROW_EXCEPTION(std::logic_error("cannot remove the created-with buffer stream yet"));
-        }
+        for(auto& layer : layers)
+            observers.for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
+            {
+                layer.stream->remove_observer(observer);
+            });
 
         layers = s;
+
+        for(auto& layer : layers)
+            observers.for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
+            {
+                layer.stream->add_observer(observer);
+            });
     }
     observers.moved_to(surface_rect.top_left);
 }
@@ -886,9 +891,11 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
     {
         if (info.stream->has_submitted_buffer())
         {
+            geom::Size size = info.stream->stream_size();
+
             list.emplace_back(std::make_shared<SurfaceSnapshot>(
                 info.stream, id,
-                geom::Rectangle{surface_rect.top_left + info.displacement, info.stream->stream_size()},
+                geom::Rectangle{surface_rect.top_left + info.displacement, std::move(size)},
                 transformation_matrix, surface_alpha, nonrectangular, info.stream.get()));
         }
     }

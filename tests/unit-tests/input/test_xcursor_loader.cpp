@@ -40,7 +40,7 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-std::string const test_cursor_path{mir_test_framework::executable_path() + std::string("/testing-cursor-theme")};
+std::string const test_cursor_path{mir_test_framework::test_data_path() + std::string("/testing-cursor-theme")};
 }
 
 // Warning, XCURSOR_PATH will only be checked ONCE by libxcursor due to static var

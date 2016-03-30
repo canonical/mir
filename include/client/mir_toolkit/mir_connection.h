@@ -145,6 +145,9 @@ void mir_connection_pong(MirConnection* connection, int32_t serial);
 
 /**
  * Query the display
+ *
+ *   \deprecated  Use mir_connection_create_display_configuration() instead.
+ *
  *   \warning return value must be destroyed via mir_display_config_destroy()
  *   \warning may return null if connection is invalid
  *   \param [in]  connection        The connection
@@ -153,9 +156,20 @@ void mir_connection_pong(MirConnection* connection, int32_t serial);
 MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection);
 
 /**
+ * Query the display
+ *
+ * \pre mir_connection_is_valid(connection) == true
+ * \warning return value must be destroyed via mir_display_config_release()
+ *
+ * \param [in]  connection        The connection
+ * \return                        structure that describes the display configuration
+ */
+MirDisplayConfig* mir_connection_create_display_configuration(MirConnection* connection);
+
+/**
  * Register a callback to be called when the hardware display configuration changes
  *
- * Once a change has occurred, you can use mir_connection_create_display_config to see
+ * Once a change has occurred, you can use mir_connection_create_display_configuration to see
  * the new configuration.
  *
  *   \param [in] connection  The connection
@@ -265,6 +279,38 @@ MirWaitHandle* mir_connection_platform_operation(
     MirConnection* connection,
     MirPlatformMessage const* request,
     mir_platform_operation_callback callback, void* context);
+
+/**
+ * Create a snapshot of the attached input devices and device configurations.
+ * \warning return value must be destroyed via mir_input_config_destroy()
+ * \warning may return null if connection is invalid
+ * \param [in]  connection        The connection
+ * \return      structure that describes the input configuration
+ */
+MirInputConfig* mir_connection_create_input_config(MirConnection *connection);
+
+/**
+ * Release this snapshot of the input configuration.
+ * This invalidates any pointers retrieved from this structure.
+ *
+ * \param [in] devices  The input configuration
+ */
+void mir_input_config_destroy(MirInputConfig const* config);
+
+/**
+ * Register a callback to be called when the input devices change.
+ *
+ * Once a change has occurred, you can use mir_connection_create_input_config
+ * to get an updated snapshot of the input device configuration.
+ *
+ * \param [in] connection  The connection
+ * \param [in] callback    The function to be called when a change occurs
+ * \param [in,out] context User data passed to the callback function
+ */
+void mir_connection_set_input_config_change_callback(
+    MirConnection* connection,
+    mir_input_config_callback callback, void* context);
+
 
 #ifdef __cplusplus
 }

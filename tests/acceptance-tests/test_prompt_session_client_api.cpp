@@ -383,7 +383,6 @@ TEST_F(PromptSessionClientAPI,
     mir_prompt_session_release_sync(prompt_session);
 }
 
-// TODO reinstate this test: We appear to hit lp:1540731 on the 4.2.0-27-generic arm64 and ppc64el silo builds
 TEST_F(PromptSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -611,4 +610,69 @@ TEST_F(PromptSessionClientAPI, when_application_pid_is_invalid_starting_a_prompt
         HasSubstr("Could not identify application"));
 
     mir_prompt_session_release_sync(prompt_session);
+}
+
+// Test canary for kernel regression (also compiles as a standalone C test)
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <assert.h>
+#include <errno.h>
+#include <string.h>
+
+#ifndef TEST
+int main()
+#else
+TEST(LP, DISABLED_1540731)
+#endif
+{
+    enum { server, client, size };
+    int socket_fd[size];
+    int const opt = 1;
+
+    assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fd) == 0);
+
+    char const msg[] = "A random message";
+    send(socket_fd[client], msg, sizeof msg, MSG_DONTWAIT | MSG_NOSIGNAL);
+
+    assert(setsockopt(socket_fd[server], SOL_SOCKET, SO_PASSCRED, &opt, sizeof(opt)) != -1);
+
+    union {
+        struct cmsghdr cmh;
+        char control[CMSG_SPACE(sizeof(ucred))];
+    } control_un;
+
+    control_un.cmh.cmsg_len = CMSG_LEN(sizeof(ucred));
+    control_un.cmh.cmsg_level = SOL_SOCKET;
+    control_un.cmh.cmsg_type = SCM_CREDENTIALS;
+
+    msghdr msgh;
+    msgh.msg_name = NULL;
+    msgh.msg_namelen = 0;
+    msgh.msg_iov = NULL;
+    msgh.msg_iovlen = 0;
+    msgh.msg_control = control_un.control;
+    msgh.msg_controllen = sizeof(control_un.control);
+
+    errno = 0;
+
+#ifndef EXPECT_THAT
+    if (recvmsg(socket_fd[server], &msgh, MSG_PEEK) == -1)
+    {
+        printf("Error: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    else
+    {
+        printf("Success!\n");
+        exit(EXIT_SUCCESS);
+    }
+#else
+    EXPECT_THAT(recvmsg(socket_fd[server], &msgh, MSG_PEEK), Ne(-1))
+        << strerror(errno);
+
+    close(socket_fd[server]);
+    close(socket_fd[client]);
+#endif
 }

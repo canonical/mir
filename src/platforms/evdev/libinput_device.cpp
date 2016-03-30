@@ -34,6 +34,7 @@
 #include "mir/fd.h"
 #define MIR_LOG_COMPONENT "evdev"
 #include "mir/log.h"
+#include "mir/raii.h"
 
 #include <libinput.h>
 #include <linux/input.h>  // only used to get constants for input reports
@@ -49,23 +50,16 @@ namespace mi = mir::input;
 namespace mie = mi::evdev;
 using namespace std::literals::chrono_literals;
 
-mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& report, char const* path,
-                                    LibInputDevicePtr dev)
+mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& report, LibInputDevicePtr dev)
     : report{report}, pointer_pos{0, 0}, button_state{0}
 {
-    add_device_of_group(path, std::move(dev));
+    add_device_of_group(std::move(dev));
 }
 
-void mie::LibInputDevice::add_device_of_group(char const* path, LibInputDevicePtr dev)
+void mie::LibInputDevice::add_device_of_group(LibInputDevicePtr dev)
 {
-    paths.emplace_back(path);
     devices.emplace_back(std::move(dev));
     update_device_info();
-}
-
-bool mie::LibInputDevice::is_in_group(char const* path)
-{
-    return end(paths) != find(begin(paths), end(paths), std::string{path});
 }
 
 mie::LibInputDevice::~LibInputDevice() = default;
@@ -324,8 +318,33 @@ void mie::LibInputDevice::update_device_info()
         libinput_device_get_id_product(dev);
     mi::DeviceCapabilities caps;
 
-    for (auto const& path : paths)
-        caps |= mie::detect_device_capabilities(path.c_str());
+    using Caps = mi::DeviceCapabilities;
+    using Mapping = std::pair<char const*, Caps>;
+    auto const mappings = {
+        Mapping{"ID_INPUT_MOUSE", mi::DeviceCapability::pointer},
+        Mapping{"ID_INPUT_TOUCHSCREEN", mi::DeviceCapability::touchscreen},
+        Mapping{"ID_INPUT_TOUCHPAD", Caps(mi::DeviceCapability::touchpad) | mi::DeviceCapability::pointer},
+        Mapping{"ID_INPUT_JOYSTICK", mi::DeviceCapability::joystick},
+        Mapping{"ID_INPUT_KEY", mi::DeviceCapability::keyboard},
+        Mapping{"ID_INPUT_KEYBOARD", mi::DeviceCapability::alpha_numeric},
+    };
+
+    for (auto const& dev : devices)
+    {
+        auto const u_dev = mir::raii::deleter_for(libinput_device_get_udev_device(dev.get()), &udev_device_unref);
+        for (auto const& mapping : mappings)
+        {
+            int detected = 0;
+            auto value = udev_device_get_property_value(u_dev.get(), mapping.first);
+            if (!value)
+                continue;
+
+            std::stringstream property_value(value);
+            property_value >> detected;
+            if (!property_value.fail() && detected)
+                caps |= mapping.second;
+        }
+    }
 
     info = mi::InputDeviceInfo{name, unique_id.str(), caps};
 }
@@ -349,11 +368,14 @@ mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settin
     auto dev = device();
     auto const left_handed = (libinput_device_config_left_handed_get(dev) == 1);
     settings.handedness = left_handed? mir_pointer_handedness_left : mir_pointer_handedness_right;
+#if MIR_LIBINPUT_HAS_ACCEL_PROFILE
     if (libinput_device_config_accel_get_profile(dev) == LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT)
+#endif
         settings.acceleration = mir_pointer_acceleration_none;
+#if MIR_LIBINPUT_HAS_ACCEL_PROFILE
     else
         settings.acceleration = mir_pointer_acceleration_adaptive;
-
+#endif
     settings.cursor_acceleration_bias = libinput_device_config_accel_get_speed(dev);
     settings.vertical_scroll_scale = vertical_scroll_scale;
     settings.horizontal_scroll_scale = horizontal_scroll_scale;
@@ -367,14 +389,18 @@ void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& sett
 
     auto dev = device();
 
+#if MIR_LIBINPUT_HAS_ACCEL_PROFILE
     auto accel_profile = settings.acceleration == mir_pointer_acceleration_adaptive ?
         LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE :
         LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT;
+#endif
     libinput_device_config_accel_set_speed(dev, settings.cursor_acceleration_bias);
     libinput_device_config_left_handed_set(dev, mir_pointer_handedness_left == settings.handedness);
     vertical_scroll_scale = settings.vertical_scroll_scale;
     horizontal_scroll_scale = settings.horizontal_scroll_scale;
+#if MIR_LIBINPUT_HAS_ACCEL_PROFILE
     libinput_device_config_accel_set_profile(dev, accel_profile);
+#endif
 }
 
 mir::optional_value<mi::TouchpadSettings> mie::LibInputDevice::get_touchpad_settings() const

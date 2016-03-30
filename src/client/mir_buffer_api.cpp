@@ -18,53 +18,158 @@
 
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "presentation_chain.h"
 #include "buffer.h"
+#include "mir/require.h"
 #include "mir/uncaught.h"
+#include "mir/require.h"
+#include <stdexcept>
+#include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
 
 //private NBS api under development
 void mir_presentation_chain_allocate_buffer(
-    MirPresentationChain*, 
-    int, int,
-    MirPixelFormat,
-    MirBufferUsage,
+    MirPresentationChain* chain, 
+    int width, int height,
+    MirPixelFormat format,
+    MirBufferUsage usage,
     mir_buffer_callback cb, void* context)
+try
 {
-    int fake_id = 3;
-    new mcl::Buffer(cb, context, fake_id, nullptr); 
+    mir::require(chain);
+    chain->allocate_buffer(mir::geometry::Size{width, height}, format, usage, cb, context);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-
-void mir_buffer_release(MirBuffer* buffer) 
+void mir_buffer_release(MirBuffer* b) 
 {
-    delete reinterpret_cast<mcl::Buffer*>(buffer);
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    auto chain = buffer->allocating_chain();
+    chain->release_buffer(b);
 }
 
-MirNativeFence* mir_buffer_get_fence(MirBuffer*)
+MirNativeFence* mir_buffer_get_fence(MirBuffer* b)
+try
 {
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->get_fence();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
 }
 
-void mir_buffer_associate_fence(MirBuffer*, MirNativeFence*, MirBufferAccess)
+void mir_buffer_associate_fence(MirBuffer* b, MirNativeFence* fence, MirBufferAccess access)
+try
 {
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    buffer->set_fence(fence, access);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-int mir_buffer_wait_fence(MirBuffer*, MirBufferAccess, int)
+int mir_buffer_wait_for_access(MirBuffer* b, MirBufferAccess access, int timeout)
+try
 {
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->wait_fence(access, std::chrono::nanoseconds(timeout));
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return -1;
+}
+
+MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer* b, MirBufferAccess access) 
+try
+{
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    if (!buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
+        BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffer"));
+    return buffer->as_mir_native_buffer();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
+MirGraphicsRegion mir_buffer_get_graphics_region(MirBuffer* b, MirBufferAccess access)
+try
+{
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    if (!buffer->wait_fence(access, std::chrono::nanoseconds(-1)))
+        BOOST_THROW_EXCEPTION(std::runtime_error("error accessing MirNativeBuffer"));
+
+    return buffer->map_region();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return MirGraphicsRegion { 0, 0, 0, mir_pixel_format_invalid, nullptr };
+}
+
+unsigned int mir_buffer_get_width(MirBuffer* b)
+try
+{
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->size().width.as_uint32_t();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return 0;
 }
 
-MirNativeBuffer* mir_buffer_get_native_buffer(MirBuffer*, MirBufferAccess) 
+unsigned int mir_buffer_get_height(MirBuffer* b)
+try
 {
-    return nullptr;
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->size().height.as_uint32_t();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return 0;
 }
 
-MirGraphicsRegion* mir_buffer_acquire_region(MirBuffer*, MirBufferAccess)
+MirPixelFormat mir_buffer_get_pixel_format(MirBuffer* b)
+try
 {
-    return nullptr;
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->pixel_format();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return mir_pixel_format_invalid;
 }
 
-void mir_buffer_release_region(MirGraphicsRegion*) 
+MirBufferUsage mir_buffer_get_buffer_usage(MirBuffer* b)
+try
 {
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    return buffer->buffer_usage();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return mir_buffer_usage_hardware;
 }

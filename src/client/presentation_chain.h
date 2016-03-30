@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_PRESENTATION_CHAIN_H
 #define MIR_CLIENT_PRESENTATION_CHAIN_H
 
-#include "buffer_receiver.h"
+#include "mir_presentation_chain.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_protobuf.pb.h"
@@ -33,55 +33,42 @@ namespace client
 {
 class ClientBufferFactory;
 class ClientBuffer;
+class AsyncBufferFactory;
 namespace rpc
 {
 class DisplayServer;
 }
-class PresentationChain : public BufferReceiver
+
+class PresentationChain : public MirPresentationChain
 {
 public:
     PresentationChain(
         MirConnection* connection,
-        std::shared_ptr<MirWaitHandle> const&,
         int rpc_id,
         rpc::DisplayServer& server,
-        std::shared_ptr<ClientBufferFactory> const& factory);
+        std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
+        std::shared_ptr<AsyncBufferFactory> const& mir_buffer_factory);
     void allocate_buffer(
         geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
-        mir_buffer_callback callback, void* context);
-    void submit_buffer(MirBuffer* buffer);
-    void release_buffer(MirBuffer* buffer);
+        mir_buffer_callback callback, void* context) override;
+    void submit_buffer(MirBuffer* buffer) override;
+    void release_buffer(MirBuffer* buffer) override;
 
     void buffer_available(mir::protobuf::Buffer const& buffer) override;
     void buffer_unavailable() override;
 
-    MirConnection* connection() const;
-    int rpc_id() const;
+    MirConnection* connection() const override;
+    int rpc_id() const override;
+    char const* error_msg() const override;
 private:
 
     MirConnection* const connection_;
-    std::shared_ptr<MirWaitHandle> const wait_handle;
     int const stream_id;
     rpc::DisplayServer& server;
-    std::shared_ptr<ClientBufferFactory> const factory;
+    std::shared_ptr<ClientBufferFactory> const native_buffer_factory;
+    std::shared_ptr<AsyncBufferFactory> const mir_buffer_factory;
 
     std::mutex mutex;
-    struct AllocationRequest
-    {
-        AllocationRequest(
-            geometry::Size size,
-            MirPixelFormat format,
-            MirBufferUsage usage,
-            mir_buffer_callback cb,
-            void* cb_context);
-
-        geometry::Size size;
-        MirPixelFormat format;
-        MirBufferUsage usage;
-        mir_buffer_callback cb;
-        void* cb_context;
-    };
-    std::vector<std::unique_ptr<AllocationRequest>> allocation_requests;
     std::vector<std::unique_ptr<Buffer>> buffers;
 };
 }

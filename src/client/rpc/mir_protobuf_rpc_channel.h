@@ -44,6 +44,7 @@ namespace client
 class DisplayConfiguration;
 class SurfaceMap;
 class EventSink;
+class AsyncBufferFactory;
 namespace rpc
 {
 
@@ -57,6 +58,7 @@ class MirProtobufRpcChannel :
 public:
     MirProtobufRpcChannel(std::unique_ptr<StreamTransport> transport,
                           std::shared_ptr<SurfaceMap> const& surface_map,
+                          std::shared_ptr<AsyncBufferFactory> const& buffer_factory,
                           std::shared_ptr<DisplayConfiguration> const& disp_config,
                           std::shared_ptr<input::InputDevices> const& input_devices,
                           std::shared_ptr<RpcReport> const& rpc_report,
@@ -116,6 +118,7 @@ private:
     void notify_disconnected();
 
     std::weak_ptr<SurfaceMap> surface_map;
+    std::shared_ptr<AsyncBufferFactory> const buffer_factory;
     std::shared_ptr<DisplayConfiguration> display_configuration;
     std::shared_ptr<input::InputDevices> input_devices;
     std::shared_ptr<LifecycleControl> lifecycle_control;

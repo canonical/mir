@@ -21,6 +21,7 @@
 #include "mir_connection_api.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir/default_configuration.h"
+#include "mir/input/input_devices.h"
 #include "mir/raii.h"
 #include "mir/require.h"
 
@@ -34,6 +35,7 @@
 #include <cstring>
 
 namespace mcl = mir::client;
+namespace mp = mir::protobuf;
 
 namespace
 {
@@ -232,6 +234,20 @@ MirDisplayConfiguration* mir_connection_create_display_config(
     return nullptr;
 }
 
+MirDisplayConfig* mir_connection_create_display_configuration(
+    MirConnection* connection)
+{
+    mir::require(mir_connection_is_valid(connection));
+
+    return reinterpret_cast<MirDisplayConfig*>(connection->snapshot_display_configuration().release());
+}
+
+void mir_display_config_release(MirDisplayConfig* user_config)
+{
+    auto config = reinterpret_cast<mir::protobuf::DisplayConfiguration*>(user_config);
+    delete config;
+}
+
 void mir_connection_set_display_config_change_callback(
     MirConnection* connection,
     mir_display_config_callback callback,
@@ -274,6 +290,32 @@ MirWaitHandle* mir_connection_set_base_display_config(
         MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
+}
+
+MirInputConfig* mir_connection_create_input_config(
+    MirConnection* connection)
+{
+    mir::require(mir_connection_is_valid(connection));
+
+    auto devices = connection->the_input_devices();
+    return reinterpret_cast<MirInputConfig*>(new std::vector<mir::input::DeviceData>(devices->copy_devices()));
+}
+
+void mir_connection_set_input_config_change_callback(
+    MirConnection* connection,
+    mir_input_config_callback callback,
+    void* context)
+{
+    if (!connection)
+        return;
+    auto devices = connection->the_input_devices();
+    devices->set_change_callback([connection, context, callback]{callback(connection, context);});
+}
+
+void mir_input_config_destroy(MirInputConfig const* config)
+{
+    auto device_vector = reinterpret_cast<std::vector<mir::input::DeviceData>const*>(config);
+    delete device_vector;
 }
 
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(

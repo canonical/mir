@@ -29,7 +29,9 @@
 #include "mir/frontend/surface_id.h"
 #include "mir/client_context.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/client_types_nbs.h"
 #include "mir_surface.h"
+#include "display_configuration.h"
 
 #include <atomic>
 #include <memory>
@@ -40,6 +42,10 @@
 
 namespace mir
 {
+namespace input
+{
+class InputDevices;
+}
 namespace protobuf
 {
 class BufferStream;
@@ -58,6 +64,7 @@ class ClientBufferStreamFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class EventHandlerRegister;
+class AsyncBufferFactory;
 
 namespace rpc
 {
@@ -131,6 +138,7 @@ public:
     void populate(MirPlatformPackage& platform_package);
     void populate_graphics_module(MirModuleProperties& properties);
     MirDisplayConfiguration* create_copy_of_display_config();
+    std::unique_ptr<mir::protobuf::DisplayConfiguration> snapshot_display_configuration() const;
     void available_surface_formats(MirPixelFormat* formats,
                                    unsigned int formats_size, unsigned int& valid_formats);
 
@@ -147,6 +155,11 @@ public:
         mir::client::ClientBufferStream*,
         mir_buffer_stream_callback callback,
         void *context);
+
+    void create_presentation_chain(
+        mir_presentation_chain_callback callback,
+        void *context);
+    void release_presentation_chain(MirPresentationChain* context);
 
     void release_consumer_stream(mir::client::ClientBufferStream*);
 
@@ -170,7 +183,15 @@ public:
 
     mir::client::rpc::DisplayServer& display_server();
     mir::client::rpc::DisplayServerDebug& debug_display_server();
-    std::shared_ptr<mir::logging::Logger> const& the_logger() const;
+    std::shared_ptr<mir::input::InputDevices> const& the_input_devices() const
+    {
+        return input_devices;
+    }
+
+    void allocate_buffer(
+        mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
+        mir_buffer_callback callback, void* context);
+    void release_buffer(int buffer_id);
 
 private:
     //google cant have callbacks with more than 2 args
@@ -209,6 +230,22 @@ private:
     void stream_created(StreamCreationRequest*);
     void stream_error(std::string const& error_msg, std::shared_ptr<StreamCreationRequest> const& request);
 
+    struct ChainCreationRequest
+    {
+        ChainCreationRequest(mir_presentation_chain_callback cb, void* context) :
+            callback(cb), context(context),
+            response(std::make_shared<mir::protobuf::BufferStream>())
+        {
+        }
+
+        mir_presentation_chain_callback callback;
+        void* context;
+        std::shared_ptr<mir::protobuf::BufferStream> response;
+    };
+    std::vector<std::shared_ptr<ChainCreationRequest>> context_requests;
+    void context_created(ChainCreationRequest*);
+    void chain_error(std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request);
+
     void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.
     struct Deregisterer
@@ -217,6 +254,7 @@ private:
     mutable std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
     std::shared_ptr<mir::client::ConnectionSurfaceMap> surface_map;
+    std::shared_ptr<mir::client::AsyncBufferFactory> buffer_factory;
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const channel;
     mir::client::rpc::DisplayServer server;
     mir::client::rpc::DisplayServerDebug debug;
@@ -236,6 +274,7 @@ private:
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;
+    std::shared_ptr<mir::client::ClientBufferFactory> client_buffer_factory;
     std::shared_ptr<EGLNativeDisplayType> native_display;
 
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
@@ -252,6 +291,7 @@ private:
     std::vector<MirWaitHandle*> release_wait_handles;
 
     std::shared_ptr<mir::client::DisplayConfiguration> const display_configuration;
+    std::shared_ptr<mir::input::InputDevices> const input_devices;
 
     std::shared_ptr<mir::client::LifecycleControl> const lifecycle_control;
 

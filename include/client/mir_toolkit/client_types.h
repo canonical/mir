@@ -45,6 +45,15 @@ typedef struct MirPromptSession MirPromptSession;
 typedef struct MirBufferStream MirBufferStream;
 typedef struct MirPersistentId MirPersistentId;
 typedef struct MirBlob MirBlob;
+typedef struct MirDisplayConfig MirDisplayConfig;
+
+/**
+ * Descriptor for an output connection.
+ *
+ *  Each MirOutput corresponds to a video output. This may be a physical connection on the system,
+ *  like HDMI or DisplayPort, or may be a virtual output such as a remote display or screencast display.
+ */
+typedef struct MirOutput MirOutput;
 
 /**
  * Returned by asynchronous functions. Must not be free'd by
@@ -272,6 +281,32 @@ typedef enum MirDisplayOutputType
     mir_display_output_type_edp
 } MirDisplayOutputType;
 
+typedef enum MirOutputType
+{
+    mir_output_type_unknown,
+    mir_output_type_vga,
+    mir_output_type_dvii,
+    mir_output_type_dvid,
+    mir_output_type_dvia,
+    mir_output_type_composite,
+    mir_output_type_svideo,
+    mir_output_type_lvds,
+    mir_output_type_component,
+    mir_output_type_ninepindin,
+    mir_output_type_displayport,
+    mir_output_type_hdmia,
+    mir_output_type_hdmib,
+    mir_output_type_tv,
+    mir_output_type_edp
+} MirOutputType;
+
+typedef enum MirOutputConnectionState
+{
+    mir_output_connection_state_disconnected = 0,
+    mir_output_connection_state_connected,
+    mir_output_connection_state_unknown
+} MirOutputConnectionState;
+
 typedef struct MirDisplayMode
 {
     uint32_t vertical_resolution;
@@ -335,6 +370,9 @@ typedef struct MirRectangle
     unsigned int height;
 } MirRectangle;
 
+typedef struct MirInputConfig MirInputConfig;
+typedef struct MirInputDevice MirInputDevice;
+
 /**
  * MirScreencastParameters is the structure of required information that
  * you must provide to Mir in order to create a MirScreencast.
@@ -394,6 +432,16 @@ typedef void (*mir_prompt_session_state_change_callback)(
  */
 typedef void (*mir_platform_operation_callback)(
     MirConnection* connection, MirPlatformMessage* reply, void* context);
+
+/**
+ * Callback called when a change of input devices has occurred
+ *   \param [in] connection   The connection associated with the input device
+ *                            change
+ *   \param [in,out] context  The context provided by client
+ */
+
+typedef void (*mir_input_config_callback)(
+    MirConnection* connection, void* context);
 
 #ifdef __cplusplus
 }

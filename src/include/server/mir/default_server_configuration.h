@@ -113,7 +113,11 @@ class GraphicBufferAllocator;
 class Cursor;
 class CursorImage;
 class GLConfig;
-namespace nested { class HostConnection; }
+namespace nested
+{
+class HostConnection;
+class MirClientHostConnection;
+}
 }
 namespace input
 {
@@ -132,6 +136,7 @@ class TouchVisualizer;
 class InputRegion;
 class InputSender;
 class CursorImages;
+class Seat;
 }
 
 namespace logging
@@ -302,6 +307,7 @@ public:
     virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
     virtual std::shared_ptr<input::InputSender>    the_input_sender();
+    virtual std::shared_ptr<input::Seat> the_seat();
 
     // new input reading related parts:
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
@@ -328,6 +334,7 @@ private:
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
+    std::shared_ptr<graphics::nested::MirClientHostConnection>  the_mir_client_host_connection();
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
@@ -364,6 +371,7 @@ protected:
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<input::CursorListener> cursor_listener;
     CachedPtr<input::TouchVisualizer> touch_visualizer;
+    CachedPtr<input::Seat> seat;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::Display>      display;
@@ -402,7 +410,7 @@ protected:
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
-    CachedPtr<graphics::nested::HostConnection> host_connection;
+    CachedPtr<graphics::nested::MirClientHostConnection> host_connection;
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<graphics::GLConfig> gl_config;
     CachedPtr<scene::PromptSessionListener> prompt_session_listener;
