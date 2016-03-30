@@ -45,6 +45,7 @@ struct MockBufferAcquisition : mc::BufferAcquisition
     MOCK_METHOD1(compositor_release, void(std::shared_ptr<mg::Buffer> const&));
     MOCK_METHOD0(snapshot_acquire, std::shared_ptr<mg::Buffer>());
     MOCK_METHOD1(snapshot_release, void(std::shared_ptr<mg::Buffer> const&));
+    MOCK_METHOD1(set_mode, void(mc::MultiMonitorMode));
 };
 
 class TemporaryBuffersTest : public ::testing::Test

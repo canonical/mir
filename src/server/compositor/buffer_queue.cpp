@@ -140,6 +140,7 @@ mc::BufferQueue::BufferQueue(
       frame_deadlines_threshold{-1},  // Disable scaling by default
       frame_deadlines_met{0},
       scheduled_extra_frames{0},
+      mm_mode{MultiMonitorMode::single_monitor_fast},
       frame_dropping_enabled{false},
       current_compositor_buffer_valid{false},
       the_properties{props},
@@ -379,7 +380,9 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
 
     if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
-    else if (!ready_to_composite_queue.empty() && single_compositor)
+    else if (mm_mode == MultiMonitorMode::single_monitor_fast &&
+             !ready_to_composite_queue.empty() &&
+             single_compositor)
     {
         /*
          * The "early release" optimisation: Note "single_compositor" above
@@ -424,6 +427,12 @@ mg::BufferProperties mc::BufferQueue::properties() const
 {
     std::lock_guard<decltype(guard)> lock(guard);
     return the_properties;
+}
+
+void mc::BufferQueue::set_mode(MultiMonitorMode mode)
+{
+    std::lock_guard<decltype(guard)> lock(guard);
+    mm_mode = mode;
 }
 
 void mc::BufferQueue::allow_framedropping(bool flag)
