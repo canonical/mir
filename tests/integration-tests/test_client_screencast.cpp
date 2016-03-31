@@ -41,6 +41,14 @@ namespace geom = mir::geometry;
 namespace
 {
 
+MirRectangle as_mir_rect(mir::geometry::Rectangle const& rect)
+{
+    return {rect.top_left.x.as_int(),
+            rect.top_left.y.as_int(),
+            rect.size.width.as_uint32_t(),
+            rect.size.height.as_uint32_t()};
+}
+
 class StubChanger : public mtd::NullDisplayChanger
 {
 public:
@@ -109,6 +117,8 @@ TEST_F(Screencast, contacts_server_screencast_for_create_and_release)
 
     auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
     ASSERT_NE(nullptr, screencast);
+    ASSERT_TRUE(mir_screencast_is_valid(screencast));
+
     mir_screencast_release_sync(screencast);
 }
 
@@ -137,6 +147,7 @@ TEST_F(Screencast, contacts_server_screencast_with_provided_params)
 
     auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
     ASSERT_NE(nullptr, screencast);
+    ASSERT_TRUE(mir_screencast_is_valid(screencast));
 
     mir_screencast_release_sync(screencast);
 }
@@ -156,6 +167,7 @@ TEST_F(Screencast, gets_valid_egl_native_window)
 
     auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
     ASSERT_NE(nullptr, screencast);
+    ASSERT_TRUE(mir_screencast_is_valid(screencast));
 
     auto egl_native_window =
         mir_buffer_stream_get_egl_native_window(mir_screencast_get_buffer_stream(screencast));
@@ -167,10 +179,54 @@ TEST_F(Screencast, gets_valid_egl_native_window)
 TEST_F(Screencast, fails_on_client_when_server_request_fails)
 {
     using namespace testing;
-
+    std::string const an_error_message{"boring error message"};
     EXPECT_CALL(mock_screencast(), create_session(_, _, _))
-        .WillOnce(Throw(std::runtime_error("")));
+        .WillOnce(Throw(std::runtime_error(an_error_message)));
 
     auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
-    ASSERT_EQ(nullptr, screencast);
+    ASSERT_NE(nullptr, screencast);
+    ASSERT_FALSE(mir_screencast_is_valid(screencast));
+
+    EXPECT_THAT(mir_screencast_get_error_message(screencast), HasSubstr(an_error_message));
+    mir_screencast_release_sync(screencast);
+}
+
+TEST_F(Screencast, uses_provided_spec_parameters)
+{
+    using namespace testing;
+
+    mf::ScreencastSessionId const screencast_session_id{99};
+
+    geom::Size const size{default_screencast_params.width, default_screencast_params.height};
+    geom::Rectangle const region {
+        {default_screencast_params.region.left, default_screencast_params.region.top},
+        {default_screencast_params.region.width, default_screencast_params.region.height}};
+    MirPixelFormat const pixel_format {default_screencast_params.pixel_format};
+
+    InSequence seq;
+
+    EXPECT_CALL(mock_screencast(),
+                create_session(region, size, pixel_format))
+        .WillOnce(Return(screencast_session_id));
+
+    EXPECT_CALL(mock_screencast(), capture(_))
+        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
+
+    EXPECT_CALL(mock_screencast(), destroy_session(_));
+
+    auto spec = mir_create_screencast_spec(connection);
+
+    mir_screencast_spec_set_width(spec, size.width.as_int());
+    mir_screencast_spec_set_height(spec, size.height.as_int());
+    mir_screencast_spec_set_pixel_format(spec, pixel_format);
+    MirRectangle const capture_region = as_mir_rect(region);
+    mir_screencast_spec_set_capture_region(spec, &capture_region);
+
+    auto screencast = mir_screencast_create_sync(spec);
+    ASSERT_NE(nullptr, screencast);
+    ASSERT_TRUE(mir_screencast_is_valid(screencast));
+    EXPECT_STREQ(mir_screencast_get_error_message(screencast), "");
+
+    mir_screencast_spec_release(spec);
+    mir_screencast_release_sync(screencast);
 }

@@ -255,7 +255,6 @@ MIRPLATFORM_11 {
     mir::graphics::tessellate_renderable_into_rectangle*;
     mir::udev::Context::?Context*;
     mir::udev::Context::Context*;
-    mir::udev::Context::ctx*;
     mir::udev::Enumerator::begin*;
     mir::udev::Enumerator::end*;
     mir::udev::Enumerator::?Enumerator*;
@@ -282,3 +281,10 @@ MIRPLATFORM_11 {
   };
  local: *;
 };
+
+MIR_PLATFORM_0.21 {  # New symbols in Mir 0.21
+ global:
+  extern "C++" {
+    mir::udev::Context::ctx*;
+  };
+} MIRPLATFORM_11;
