@@ -43,6 +43,40 @@ namespace mgl = mir::gl;
 namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
 
+namespace
+{
+float cos_for(MirOrientation orientation)
+{
+    switch(orientation)
+    {
+    case mir_orientation_normal:
+        return 1.0f;
+    case mir_orientation_inverted:
+        return -1.0f;
+    case mir_orientation_left:
+    case mir_orientation_right:
+        return 0.0f;
+    default:
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid orientation"));
+    }
+}
+
+float sine_for(MirOrientation orientation)
+{
+    switch(orientation)
+    {
+    case mir_orientation_left:
+        return 1.0f;
+    case mir_orientation_right:
+        return -1.0f;
+    case mir_orientation_normal:
+    case mir_orientation_inverted:
+        return 0.0f;
+    default:
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid orientation"));
+    }
+}
+}
 mrg::CurrentRenderTarget::CurrentRenderTarget(mg::DisplayBuffer* display_buffer)
     : render_target{
         dynamic_cast<renderer::gl::RenderTarget*>(display_buffer->native_display_buffer())}
@@ -126,7 +160,8 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
       texture_cache(mgl::DefaultProgramFactory().create_texture_cache()),
-      rotation(NAN) // ensure the first set_rotation succeeds
+      orientation(mir_orientation_normal),
+      mirror_mode(mir_mirror_mode_none)
 {
     EGLDisplay disp = eglGetCurrentDisplay();
     if (disp != EGL_NO_DISPLAY)
@@ -177,7 +212,6 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     set_viewport(display_buffer.view_area());
-    set_rotation(0.0f);
 }
 
 mrg::Renderer::~Renderer()
@@ -218,7 +252,7 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
         prog.last_used_frameno = frameno;
         glUniform1i(prog.tex_uniform, 0);
         glUniformMatrix4fv(prog.display_transform_uniform, 1, GL_FALSE,
-                           glm::value_ptr(screen_rotation));
+                           glm::value_ptr(display_transform));
         glUniformMatrix4fv(prog.screen_to_gl_coords_uniform, 1, GL_FALSE,
                            glm::value_ptr(screen_to_gl_coords));
     }
@@ -356,27 +390,28 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
     viewport = rect;
 }
 
-void mrg::Renderer::set_rotation(float degrees)
+void mrg::Renderer::set_output_transform(MirOrientation new_orientation, MirMirrorMode new_mirror_mode)
 {
-    if (degrees == rotation)
+    if (new_orientation == orientation && new_mirror_mode == mirror_mode)
         return;
 
-    float rad = degrees * M_PI / 180.0f;
-    GLfloat cos = cosf(rad);
-    GLfloat sin = sinf(rad);
+    GLfloat const cos = cos_for(new_orientation);
+    GLfloat const sin = sine_for(new_orientation);
 
-    /*
-     * Transposed rotation matrix. You're reading it as transposed just
-     * because the C language is row-major. OpenGL however will load it as
-     * column-major. This is necessary because glUniformMatrix4fv in ES
-     * does not support the 'transpose' parameter, requiring it be GL_FALSE.
-     */
-    screen_rotation = {cos,  sin,  0.0f, 0.0f,
-                       -sin, cos,  0.0f, 0.0f,
-                       0.0f, 0.0f, 1.0f, 0.0f,
-                       0.0f, 0.0f, 0.0f, 1.0f};
+    glm::mat2 rotation_matrix(cos, sin, -sin, cos);
+    glm::mat2 mirror_matrix;
+    if (new_mirror_mode == mir_mirror_mode_horizontal)
+    {
+        mirror_matrix[0][0] = -1.0f;
+    }
+    else if (new_mirror_mode == mir_mirror_mode_vertical)
+    {
+        mirror_matrix[1][1] = -1.0f;
+    }
 
-    rotation = degrees;
+    display_transform = glm::mat4(mirror_matrix*rotation_matrix);
+    orientation = new_orientation;
+    mirror_mode = new_mirror_mode;
 }
 
 void mrg::Renderer::suspend()
