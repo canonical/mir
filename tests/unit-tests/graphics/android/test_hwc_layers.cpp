@@ -79,6 +79,7 @@ public:
         expected_layer.acquireFenceFd = -1;
         expected_layer.releaseFenceFd = -1;
         expected_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
+        expected_layer.surfaceDamage = { 0, nullptr };
     }
 
     mga::LayerType type;

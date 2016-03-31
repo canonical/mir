@@ -84,20 +84,7 @@ CMAKE_DEPENDENT_OPTION(
   "MIR_BUILD_UNIT_TESTS"
   OFF)
 
-add_subdirectory(options/)
-add_subdirectory(client/)
-add_subdirectory(compositor/)
-add_subdirectory(frontend/)
-add_subdirectory(logging/)
-add_subdirectory(shell/)
-add_subdirectory(geometry/)
 add_subdirectory(graphics/)
-add_subdirectory(input/)
-add_subdirectory(android_input/)
-add_subdirectory(scene/)
-add_subdirectory(thread/)
-add_subdirectory(dispatch/)
-add_subdirectory(renderers/gl)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
