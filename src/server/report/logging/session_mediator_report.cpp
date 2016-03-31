@@ -43,11 +43,6 @@ void mrl::SessionMediatorReport::session_create_surface_called(std::string const
     log->log(ml::Severity::informational, "session_create_surface(\"" + app_name + "\")", component);
 }
 
-void mrl::SessionMediatorReport::session_next_buffer_called(std::string const& app_name)
-{
-    log->log(ml::Severity::informational, "session_next_buffer_called(\"" + app_name + "\")", component);
-}
-
 void mrl::SessionMediatorReport::session_exchange_buffer_called(std::string const& app_name)
 {
     log->log(ml::Severity::informational, "session_exchange_buffer_called(\"" + app_name + "\")", component);

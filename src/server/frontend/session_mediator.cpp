@@ -384,14 +384,6 @@ void mf::SessionMediator::create_surface(
     }
 }
 
-void mf::SessionMediator::next_buffer(
-    ::mir::protobuf::SurfaceId const*,
-    ::mir::protobuf::Buffer*,
-    ::google::protobuf::Closure*)
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("next_buffer rpc call is deprecated."));
-}
-
 void mf::SessionMediator::exchange_buffer(
     mir::protobuf::BufferRequest const* request,
     mir::protobuf::Buffer* response,
