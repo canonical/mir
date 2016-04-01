@@ -73,6 +73,14 @@ mc::Stream::Stream(
 {
 }
 
+unsigned int mc::Stream::client_owned_buffer_count(std::lock_guard<decltype(mutex)> const&) const
+{
+    auto server_count = schedule->num_scheduled();
+    if (arbiter->has_buffer())
+        server_count++;
+    return total_buffer_count - server_count;
+}
+
 void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer* new_buffer)> fn)
 {
     if (buffer)
@@ -82,7 +90,7 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
             first_frame_posted = true;
             buffers->receive_buffer(buffer->id());
             schedule->schedule((*buffers)[buffer->id()]);
-            if (buffers->client_owned_buffer_count() == 0)
+            if (client_owned_buffer_count(lk) == 0)
                 drop_policy->swap_now_blocking();
         }
         observers.frame_posted(1, buffer->size());
@@ -115,8 +123,10 @@ void mc::Stream::remove_observer(std::weak_ptr<ms::SurfaceObserver> const& obser
 
 std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const* id)
 {
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    drop_policy->swap_unblocked();
+    {
+        std::lock_guard<decltype(mutex)> lk(mutex);
+        drop_policy->swap_unblocked();
+    }
     return std::make_shared<mc::TemporaryCompositorBuffer>(arbiter, id);
 }
 
@@ -196,6 +206,24 @@ bool mc::Stream::has_submitted_buffer() const
 {
     std::lock_guard<decltype(mutex)> lk(mutex); 
     return first_frame_posted;
+}
+
+mg::BufferID mc::Stream::allocate_buffer(mg::BufferProperties const& properties)
+{
+    std::lock_guard<decltype(mutex)> lk(mutex); 
+    total_buffer_count++;
+}
+
+void mc::Stream::remove_buffer(mg::BufferID id)
+{
+    std::lock_guard<decltype(mutex)> lk(mutex); 
+    total_buffer_count--;
+}
+
+void mc::Stream::with_buffer(mg::BufferID id, std::function<void(mg::Buffer&)> const& fn)
+{
+    auto buffer = (*buffers)[id];
+    fn(*buffer);
 }
 
 void mc::Stream::set_scale(float)
