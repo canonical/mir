@@ -177,8 +177,7 @@ public:
     }
 
     void set_viewport(mir::geometry::Rectangle const&) override {}
-
-    void set_rotation(float) override {}
+    void set_output_transform(MirOrientation, MirMirrorMode) override {}
 
     void render(mir::graphics::RenderableList const& renderables) const override
     {

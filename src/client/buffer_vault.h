@@ -73,6 +73,8 @@ public:
     void set_size(geometry::Size);
     void disconnected();
     void set_scale(float scale);
+    void increase_buffer_count();
+    void decrease_buffer_count();
 
 private:
     void alloc_buffer(geometry::Size size, MirPixelFormat format, int usage);
@@ -93,6 +95,9 @@ private:
     std::deque<NoTLSPromise<std::shared_ptr<Buffer>>> promises;
     geometry::Size size;
     bool disconnected_;
+    size_t current_buffer_count;
+    size_t needed_buffer_count;
+    size_t const initial_buffer_count;
 };
 }
 }

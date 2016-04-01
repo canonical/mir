@@ -456,7 +456,7 @@ struct ScheduledProducer : ProducerSystem
     geom::Size last_size_;
     std::vector<BufferEntry> entries;
     std::shared_ptr<StubIpcSystem> ipc;
-    std::shared_ptr<mcl::SurfaceMap> map;
+    std::shared_ptr<mcl::SurfaceMap> const map;
     std::shared_ptr<mcl::BufferFactory> factory;
     mcl::BufferVault vault;
     int max, cur;

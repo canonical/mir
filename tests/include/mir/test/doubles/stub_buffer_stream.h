@@ -54,7 +54,7 @@ public:
     {
     }
 
-    void force_requests_to_complete() override
+    void drop_outstanding_requests() override
     {
     }
 
