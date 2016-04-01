@@ -71,6 +71,8 @@ public:
     void set_size(geometry::Size);
     void disconnected();
     void set_scale(float scale);
+    void increase_buffer_count();
+    void decrease_buffer_count();
 
 private:
     std::shared_ptr<ClientBufferFactory> const factory;
@@ -90,6 +92,9 @@ private:
     std::deque<NoTLSPromise<BufferInfo>> promises;
     geometry::Size size;
     bool disconnected_;
+    size_t current_buffer_count;
+    size_t needed_buffer_count;
+    size_t const initial_buffer_count;
 };
 }
 }

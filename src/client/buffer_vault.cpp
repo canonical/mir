@@ -32,8 +32,9 @@ namespace mp = mir::protobuf;
 enum class mcl::BufferVault::Owner
 {
     Server,
+    Self,
     ContentProducer,
-    Self
+    SelfWithContent
 };
 
 mcl::BufferVault::BufferVault(
@@ -45,9 +46,12 @@ mcl::BufferVault::BufferVault(
     format(format),
     usage(usage),
     size(size),
-    disconnected_(false)
+    disconnected_(false),
+    current_buffer_count(initial_nbuffers),
+    needed_buffer_count(initial_nbuffers),
+    initial_buffer_count(initial_nbuffers)
 {
-    for (auto i = 0u; i < initial_nbuffers; i++)
+    for (auto i = 0u; i < initial_buffer_count; i++)
         server_requests->allocate_buffer(size, format, usage);
 }
 
@@ -95,7 +99,7 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::ClientBuffer> const& buffer)
     if (it == buffers.end() || it->second.owner != Owner::ContentProducer)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be deposited"));
 
-    it->second.owner = Owner::Self;
+    it->second.owner = Owner::SelfWithContent;
     it->second.buffer->increment_age();
 }
 
@@ -106,7 +110,7 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::ClientBuffer>
     std::unique_lock<std::mutex> lk(mutex);
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [&buffer](std::pair<int, BufferEntry> const& entry) { return buffer == entry.second.buffer; });
-    if (it == buffers.end() || it->second.owner != Owner::Self)
+    if (it == buffers.end() || it->second.owner != Owner::SelfWithContent)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be transferred"));
 
     it->second.owner = Owner::Server;
@@ -143,17 +147,18 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
     else
     {
         it->second.buffer->update_from(*package);
-        if (size == it->second.buffer->size())
-        { 
-            it->second.owner = Owner::Self;
-        }
-        else
+        it->second.owner = Owner::Self;
+        auto should_decrease_count = (current_buffer_count > needed_buffer_count);
+        if ((size != it->second.buffer->size()) || should_decrease_count)
         {
             int id = it->first;
             buffers.erase(it);
             lk.unlock();
             server_requests->free_buffer(id);
-            server_requests->allocate_buffer(size, format, usage);
+            if (should_decrease_count)
+                current_buffer_count--;
+            else
+                server_requests->allocate_buffer(size, format, usage);
             return;
         }
     }
@@ -208,5 +213,34 @@ void mcl::BufferVault::set_scale(float scale)
     {
         server_requests->allocate_buffer(new_size, format, usage);
         server_requests->free_buffer(id);
+    }
+}
+
+void mcl::BufferVault::increase_buffer_count()
+{
+    std::unique_lock<std::mutex> lk(mutex);
+    current_buffer_count++;
+    needed_buffer_count++;
+    lk.unlock();
+
+    server_requests->allocate_buffer(size, format, usage);
+}
+
+void mcl::BufferVault::decrease_buffer_count()
+{
+    std::unique_lock<std::mutex> lk(mutex);
+    if (current_buffer_count == initial_buffer_count)
+        return;
+    needed_buffer_count--;
+
+    auto it = std::find_if(buffers.begin(), buffers.end(),
+        [](std::pair<int, BufferEntry> const& entry) { return entry.second.owner == Owner::Self; });
+    if (it != buffers.end())
+    {
+        current_buffer_count--;
+        int free_id = it->first;
+        buffers.erase(it);
+        lk.unlock();
+        server_requests->free_buffer(free_id);
     }
 }

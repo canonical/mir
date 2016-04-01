@@ -160,7 +160,7 @@ void mc::Stream::transition_schedule(
     arbiter->set_schedule(schedule);
 }
 
-void mc::Stream::force_requests_to_complete()
+void mc::Stream::drop_outstanding_requests()
 {
     //we dont block any requests in this system, nothing to force
 }
