@@ -378,7 +378,7 @@ TEST_F(BufferStreamTest, stress_test_distinct_buffers)
 
     done = true;
 
-    buffer_stream.force_requests_to_complete();
+    buffer_stream.drop_outstanding_requests();
 
     compositor.join();
 

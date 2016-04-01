@@ -306,20 +306,6 @@ TEST_F(BufferVault, marks_as_submitted_on_transfer)
     vault->wire_transfer_outbound(buffer);
 }
 
-//handy for android's cancelbuffer
-TEST_F(StartedBufferVault, can_withdraw_and_deposit)
-{
-    auto a_few_times = 5u;
-    std::vector<std::shared_ptr<mcl::Buffer>> buffers(a_few_times);
-    for (auto i = 0u; i < a_few_times; i++)
-    {
-        buffers[i] = vault.withdraw().get();
-        vault.deposit(buffers[i]);
-    }
-    EXPECT_THAT(buffers, Each(buffers[0]));
-}
-
-
 TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_immediate_response)
 {
     mp::Buffer package4;
@@ -493,4 +479,69 @@ TEST_F(BufferVault, rescale_before_initial_buffers_are_serviced_frees_initial_bu
     vault->wire_transfer_inbound(package2);
     vault->wire_transfer_inbound(package3);
     
+}
+
+TEST_F(StartedBufferVault, can_increase_allocation_count)
+{
+    EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
+        .Times(1);
+    vault.increase_buffer_count();
+
+    Mock::VerifyAndClearExpectations(&mock_requests);
+    //no buffers
+}
+
+TEST_F(StartedBufferVault, cannot_decrease_allocation_count_below_initial)
+{
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(0);
+    vault.decrease_buffer_count();
+    Mock::VerifyAndClearExpectations(&mock_requests);
+}
+
+TEST_F(StartedBufferVault, can_decrease_allocation_count)
+{
+    EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
+        .Times(1);
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(1);
+    vault.increase_buffer_count();
+    vault.decrease_buffer_count();
+    Mock::VerifyAndClearExpectations(&mock_requests);
+}
+
+TEST_F(StartedBufferVault, delayed_decrease_allocation_count)
+{
+    mp::Buffer requested_buffer;
+    requested_buffer.set_width(size.width.as_int());
+    requested_buffer.set_height(size.height.as_int());
+    requested_buffer.set_buffer_id(4);
+
+    EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
+        .Times(1);
+    EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()))
+        .Times(1);
+
+    vault.increase_buffer_count();
+    vault.wire_transfer_inbound(requested_buffer);
+    auto b = vault.withdraw().get();
+    vault.deposit(b);
+    vault.wire_transfer_outbound(b);
+
+    b = vault.withdraw().get();
+    vault.deposit(b);
+    vault.wire_transfer_outbound(b);
+
+    b = vault.withdraw().get();
+    vault.deposit(b);
+    vault.wire_transfer_outbound(b);
+
+    b = vault.withdraw().get();
+    vault.deposit(b);
+    vault.wire_transfer_outbound(b);
+
+    vault.decrease_buffer_count();
+    vault.wire_transfer_inbound(package);
+    vault.wire_transfer_inbound(package2);
+    Mock::VerifyAndClearExpectations(&mock_requests);
 }
