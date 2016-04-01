@@ -40,7 +40,7 @@ public:
     std::unique_ptr<time::Alarm> create_alarm(
         std::function<void()> const& callback) override;
     std::unique_ptr<time::Alarm> create_alarm(
-        std::shared_ptr<mir::LockableCallback> const& callback) override;
+        std::unique_ptr<mir::LockableCallback>&& callback) override;
 
     void advance_by(time::Duration step);
     void advance_smoothly_by(time::Duration step);

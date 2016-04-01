@@ -47,20 +47,20 @@ public:
     {
        clock = std::make_shared<mt::FakeClock>();
        timer = std::make_shared<mtd::FakeTimer>(clock);
-       handler = std::make_shared<mir::BasicCallback>([this]{ frame_dropped = true; });
+       handler = std::make_unique<mir::BasicCallback>([this]{ frame_dropped = true; });
     }
 
     auto create_default_policy()
     {
         mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-        return factory.create_policy(handler);
+        return factory.create_policy(std::move(handler));
     }
 
 protected:
     std::shared_ptr<mt::FakeClock> clock;
     std::shared_ptr<mtd::FakeTimer> timer;
     std::chrono::milliseconds const timeout = std::chrono::milliseconds(1000);
-    std::shared_ptr<mir::BasicCallback> handler;
+    std::unique_ptr<mir::BasicCallback> handler;
     bool frame_dropped = false;
 };
 }
@@ -181,15 +181,15 @@ TEST_F(TimeoutFrameDroppingPolicy, policy_calls_lock_unlock_functions)
     using namespace testing;
 
     mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
-    mtd::MockLockableCallback handler;
+    auto handler = std::make_unique<mtd::MockLockableCallback>();
     {
         InSequence s;
-        EXPECT_CALL(handler, lock());
-        EXPECT_CALL(handler, functor());
-        EXPECT_CALL(handler, unlock());
+        EXPECT_CALL(*handler, lock());
+        EXPECT_CALL(*handler, functor());
+        EXPECT_CALL(*handler, unlock());
     }
 
-    auto policy = factory.create_policy(mt::fake_shared(handler));
+    auto policy = factory.create_policy(std::move(handler));
 
     policy->swap_now_blocking();
     clock->advance_time(timeout + std::chrono::milliseconds{1});

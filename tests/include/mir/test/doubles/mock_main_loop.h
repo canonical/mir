@@ -61,7 +61,12 @@ public:
     MOCK_METHOD1(resume_processing_for,void (void const*));
 
     MOCK_METHOD1(create_alarm, std::unique_ptr<time::Alarm>(std::function<void()> const& callback));
-    MOCK_METHOD1(create_alarm, std::unique_ptr<time::Alarm>(std::shared_ptr<LockableCallback> const& callback));
+    MOCK_METHOD1(create_alarm, std::unique_ptr<time::Alarm>(LockableCallback* callback));
+
+    std::unique_ptr<time::Alarm> create_alarm(std::unique_ptr<LockableCallback>&& callback)
+    {
+        return create_alarm(callback.get());
+    }
 
     void register_signal_handler(
         std::initializer_list<int> signals,

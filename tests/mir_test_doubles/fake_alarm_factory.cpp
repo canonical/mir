@@ -147,7 +147,7 @@ std::unique_ptr<mt::Alarm> mtd::FakeAlarmFactory::create_alarm(
 }
 
 std::unique_ptr<mt::Alarm> mtd::FakeAlarmFactory::create_alarm(
-    std::shared_ptr<mir::LockableCallback> const& /*callback*/)
+    std::unique_ptr<mir::LockableCallback>&& /*callback*/)
 {
     throw std::logic_error{"Lockable alarm creation not implemented for fake alarms"};
 }
