@@ -67,7 +67,7 @@ public:
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        mir::optional_value<uint32_t> latency;
+        mir::optional_value<unsigned int> latency;
 
         for (auto i = submissions.begin(); i != submissions.end(); i++)
         {
@@ -112,7 +112,7 @@ private:
     struct Submission
     {
         uint32_t buffer_id;
-        uint32_t visible_frame_when_submitted;
+        unsigned int visible_frame_when_submitted;
     };
     std::deque<Submission> submissions;
 };
