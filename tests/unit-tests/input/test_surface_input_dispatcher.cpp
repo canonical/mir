@@ -264,7 +264,7 @@ TEST_F(SurfaceInputDispatcher, key_event_delivered_to_focused_surface)
     FakeKeyboard keyboard;
     auto event = keyboard.press();
 
-    EXPECT_CALL(*surface, consume(mt::MirKeyboardEventMatches(ByRef(*event)))).Times(1);
+    EXPECT_CALL(*surface, consume(mt::MirKeyboardEventMatches(event.get()))).Times(1);
 
     dispatcher.start();
 
@@ -307,7 +307,7 @@ TEST_F(SurfaceInputDispatcher, key_state_is_consistent_per_client)
     auto down_event = keyboard.press();
     auto up_event = keyboard.release();
 
-    EXPECT_CALL(*surface_1, consume(mt::MirKeyboardEventMatches(ByRef(*down_event)))).Times(1);
+    EXPECT_CALL(*surface_1, consume(mt::MirKeyboardEventMatches(down_event.get()))).Times(1);
     EXPECT_CALL(*surface_2, consume(_)).Times(0);
 
     dispatcher.start();
@@ -326,7 +326,7 @@ TEST_F(SurfaceInputDispatcher, inconsistent_key_down_dropped)
     auto event = keyboard.press();
 
     InSequence seq;
-    EXPECT_CALL(*surface, consume(mt::MirKeyboardEventMatches(ByRef(*event)))).Times(1);
+    EXPECT_CALL(*surface, consume(mt::MirKeyboardEventMatches(event.get()))).Times(1);
 
     dispatcher.start();
 

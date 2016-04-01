@@ -56,7 +56,8 @@ void mi::Validator::validate_and_dispatch(MirEvent const& event)
 
 namespace
 {
-void delete_event(MirEvent *e) { mir_event_unref(e); }
+void delete_event(MirEvent *e) { delete e; }
+
 mir::EventUPtr make_event_uptr(MirEvent *e)
 {
     return mir::EventUPtr(e, delete_event);
@@ -64,9 +65,7 @@ mir::EventUPtr make_event_uptr(MirEvent *e)
 
 mir::EventUPtr copy_event(MirTouchEvent const* ev)
 {
-    MirTouchEvent* ret = new MirTouchEvent;
-    memcpy(ret, ev, sizeof(MirTouchEvent));
-    return make_event_uptr(ret);
+    return make_event_uptr(new MirTouchEvent(*ev));
 }
 
 // Return a copy of ev with existing touch actions converted to change.

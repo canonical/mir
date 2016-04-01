@@ -239,7 +239,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
                                    std::make_shared<mircv::XKBMapper>(),
                                    [&ev, &handler_called](MirEvent* event)
                                    {
-                                       ev.reset(event->clone());
+                                       ev.reset(new MirEvent(*event));
                                        handler_called = true;
                                    },
                                    std::make_shared<mircv::NullInputReceiverReport>(),

@@ -37,4 +37,5 @@ add_library(
 include_directories(
     ${PROJECT_SOURCE_DIR}/include/client
     ${PROJECT_SOURCE_DIR}/src/include/cookie
+    ${MIR_GENERATED_INCLUDE_DIRECTORIES}
 )

@@ -495,7 +495,7 @@ void MirSurface::raise_surface(MirCookie const* cookie)
 
     auto const event_cookie = raise_request.mutable_cookie();
 
-    event_cookie->set_cookie(cookie->blob().data(), cookie->size());
+    event_cookie->set_cookie(cookie->cookie().data(), cookie->size());
 
     server->raise_surface(
         &raise_request,

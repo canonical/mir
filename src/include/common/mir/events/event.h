@@ -21,6 +21,9 @@
 
 #include "mir_toolkit/event.h"
 #include "mir/events/event_builders.h"
+#include "mir_event.capnp.h"
+
+#include <capnp/message.h>
 
 #include <cstring>
 
@@ -29,6 +32,9 @@ typedef struct MirMotionEvent MirMotionEvent;
 
 struct MirEvent
 {
+    MirEvent(MirEvent const& event);
+    MirEvent& operator=(MirEvent const& event);
+
     MirEventType type() const;
 
     MirInputEvent* to_input();
@@ -58,76 +64,14 @@ struct MirEvent
     MirSurfaceOutputEvent* to_surface_output();
     MirSurfaceOutputEvent const* to_surface_output() const;
 
-    MirEvent* clone() const;
-
     static mir::EventUPtr deserialize(std::string const& bytes);
-    static std::string serialize(MirEvent const* event);
+    static std::string serialize(MirEvent const* event); 
 
 protected:
     MirEvent() = default;
-    explicit MirEvent(MirEventType type);
-    MirEvent(MirEvent const& event) = default;
-    MirEvent& operator=(MirEvent const& event) = default;
 
-    MirEventType type_;
+    ::capnp::MallocMessageBuilder message;
+    mir::capnp::Event::Builder event{message.initRoot<mir::capnp::Event>()};
 };
-
-namespace mir
-{
-namespace event
-{
-template<typename Data>
-char const* consume(char const* pos, Data& data)
-{
-    std::memcpy(&data, pos, sizeof data);
-    return pos + sizeof data;
-}
-
-template<typename T>
-void assert_type_is_trivially_copyable()
-{
-#if __GNUC__ >= 5
-    static_assert(std::is_trivially_copyable<T>::value, "");
-#else
-    static_assert(__has_trivial_copy(T), "");
-#endif
-}
-
-// T needs to be trivially copyable
-// vivid wont allow a std::is_trivially_copyable
-template<typename T>
-mir::EventUPtr deserialize_from(std::string const& bytes)
-{
-    assert_type_is_trivially_copyable<T>();
-
-    T* t = new T;
-    memcpy(t, bytes.data(), bytes.size());
-
-    return mir::EventUPtr(t, [](MirEvent* e) { delete e; });
-}
-
-template<typename T>
-std::string serialize_from(MirEvent const* ev)
-{
-    assert_type_is_trivially_copyable<T>();
-
-    std::string encoded_bytes;
-    encoded_bytes.append(reinterpret_cast<char const*>(ev), sizeof(T));
-
-    return encoded_bytes;
-}
-
-template<typename T>
-MirEvent* deep_copy(MirEvent const* ev)
-{
-    assert_type_is_trivially_copyable<T>();
-
-    T* t = new T;
-    memcpy(t, ev, sizeof(T));
-
-    return t;
-}
-}
-}
 
 #endif /* MIR_COMMON_EVENT_H_ */

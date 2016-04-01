@@ -19,87 +19,92 @@
 #include "mir/events/input_event.h"
 #include "mir/events/keyboard_event.h"
 
-MirKeyboardEvent::MirKeyboardEvent() :
-    MirInputEvent(mir_event_type_key)
+MirKeyboardEvent::MirKeyboardEvent()
 {
+    event.initKey();
 }
 
 int32_t MirKeyboardEvent::device_id() const
 {
-    return device_id_;
+    return event.asReader().getKey().getDeviceId().getId();
 }
 
 void MirKeyboardEvent::set_device_id(int32_t id)
 {
-    device_id_ = id;
+    event.getKey().getDeviceId().setId(id);
 }
 
 int32_t MirKeyboardEvent::source_id() const
 {
-    return source_id_;
+    return event.asReader().getKey().getSourceId();
 }
 
 void MirKeyboardEvent::set_source_id(int32_t id)
 {
-    source_id_ = id;
+    event.getKey().setSourceId(id);
 }
 
 MirKeyboardAction MirKeyboardEvent::action() const
 {
-    return action_;
+    return static_cast<MirKeyboardAction>(event.asReader().getKey().getAction());
 }
 
 void MirKeyboardEvent::set_action(MirKeyboardAction action)
 {
-    action_ = action;
+    event.getKey().setAction(static_cast<mir::capnp::KeyboardEvent::Action>(action));
 }
 
 MirInputEventModifiers MirKeyboardEvent::modifiers() const
 {
-    return modifiers_;
+    return event.asReader().getKey().getModifiers();
 }
 
 void MirKeyboardEvent::set_modifiers(MirInputEventModifiers modifiers)
 {
-    modifiers_ = modifiers;
+    event.getKey().setModifiers(modifiers);
 }
 
 int32_t MirKeyboardEvent::key_code() const
 {
-    return key_code_;
+    return event.asReader().getKey().getKeyCode();
 }
 
 void MirKeyboardEvent::set_key_code(int32_t key_code)
 {
-    key_code_ = key_code;
+    event.getKey().setKeyCode(key_code);
 }
 
 int32_t MirKeyboardEvent::scan_code() const
 {
-    return scan_code_;
+    return event.asReader().getKey().getScanCode();
 }
 
 void MirKeyboardEvent::set_scan_code(int32_t scan_code)
 {
-    scan_code_ = scan_code;
+    event.getKey().setScanCode(scan_code);
 }
 
 std::chrono::nanoseconds MirKeyboardEvent::event_time() const
 {
-    return event_time_;
+    return std::chrono::nanoseconds{event.asReader().getKey().getEventTime().getCount()};
 }
 
 void MirKeyboardEvent::set_event_time(std::chrono::nanoseconds const& event_time)
 {
-    event_time_ = event_time;
+    event.getKey().getEventTime().setCount(event_time.count());
 }
 
-mir::cookie::Blob MirKeyboardEvent::cookie() const
+std::vector<uint8_t> MirKeyboardEvent::cookie() const
 {
-    return cookie_;
+    auto cookie = event.asReader().getKey().getCookie();
+    std::vector<uint8_t> vec_cookie(cookie.size());
+    std::copy(std::begin(cookie), std::end(cookie), std::begin(vec_cookie));
+
+    return vec_cookie;
 }
 
-void MirKeyboardEvent::set_cookie(mir::cookie::Blob const& cookie)
+void MirKeyboardEvent::set_cookie(std::vector<uint8_t> const& cookie)
 {
-    cookie_ = cookie;
+    ::capnp::Data::Reader cookie_data(cookie.data(), cookie.size());
+    event.getKey().setCookie(cookie_data);
 }

@@ -33,11 +33,6 @@ struct MirSurfaceEvent : MirEvent
 
     int value() const;
     void set_value(int value);
-
-private:
-    int id_{0};
-    MirSurfaceAttrib attrib_;
-    int value_{0};
 };
 
 #endif /* MIR_COMMON_SURFACE_EVENT_H_ */

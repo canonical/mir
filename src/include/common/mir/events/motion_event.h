@@ -19,35 +19,10 @@
 #ifndef MIR_COMMON_MOTION_EVENT_H_
 #define MIR_COMMON_MOTION_EVENT_H_
 
-/* TODO: To the moon. */
-#define MIR_INPUT_EVENT_MAX_POINTER_COUNT 16
-
 #include <chrono>
 #include <cstdint>
 
 #include "mir/events/input_event.h"
-#include "mir/cookie/blob.h"
-
-struct MirMotionPointer
-{
-    int id;
-    float x;
-    float y;
-    float dx;
-    float dy;
-    float touch_major;
-    float touch_minor;
-    float size;
-    float pressure;
-    float orientation;
-    float vscroll;
-    float hscroll;
-    MirTouchTooltype tool_type;
-
-    // TODO: We would like to store this as a MirTouchAction but we still encode pointer actions
-    // here as well.
-    int action;
-};
 
 struct MirMotionEvent : MirInputEvent
 {
@@ -68,8 +43,8 @@ struct MirMotionEvent : MirInputEvent
     std::chrono::nanoseconds event_time() const;
     void set_event_time(std::chrono::nanoseconds const& event_time);
 
-    mir::cookie::Blob cookie() const;
-    void set_cookie(mir::cookie::Blob const& blob);
+    std::vector<uint8_t> cookie() const;
+    void set_cookie(std::vector<uint8_t> const& cookie);
 
     size_t pointer_count() const;
     void set_pointer_count(size_t count);
@@ -123,19 +98,8 @@ struct MirMotionEvent : MirInputEvent
     MirPointerEvent const* to_pointer() const;
 
 private:
-    int32_t device_id_{-1};
-    int32_t source_id_{-1};
+    void throw_if_out_of_bounds(size_t index) const;
 
-    MirInputEventModifiers modifiers_{0};
-
-    MirPointerButtons buttons_{0};
-    std::chrono::nanoseconds event_time_{0};
-    mir::cookie::Blob cookie_;
-
-    size_t pointer_count_{0};
-    MirMotionPointer pointer_coordinates_[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
-    /* "_coordinates" is a misnomer here because there's plenty more info than
-       just coordinates, but renaming it accurately would be an API break */
 };
 
 // These are left empty as they are just aliases for a MirMotionEvent,

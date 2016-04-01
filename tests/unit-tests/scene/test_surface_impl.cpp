@@ -253,6 +253,10 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
     surface->configure(mir_surface_attrib_focus, mir_surface_focused);
     surface->configure(mir_surface_attrib_focus, mir_surface_unfocused);
 }
+MATCHER_P(MirCloseSurfaceEventMatches, event, "")
+{
+    return arg.type() == event->type();
+}
 
 TEST_F(Surface, emits_client_close_events)
 {
@@ -267,7 +271,7 @@ TEST_F(Surface, emits_client_close_events)
     MirCloseSurfaceEvent e;
     e.to_close_surface()->set_surface_id(stub_id.as_value());
 
-    EXPECT_CALL(*sink, handle_event(Eq(ByRef(e)))).Times(1);
+    EXPECT_CALL(*sink, handle_event(MirCloseSurfaceEventMatches(&e))).Times(1);
 
     surface->request_client_surface_close();
 }

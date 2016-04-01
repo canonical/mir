@@ -38,6 +38,23 @@ namespace mia = mi::android;
 
 namespace droidinput = android;
 
+namespace
+{
+// FIXME Temp, only needed to use the android input_sender/receiver
+mir::cookie::Blob convert_cookie_to_blob(std::vector<uint8_t> const& cookie)
+{
+    if (cookie.size() > mir::cookie::default_blob_size)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("The cookie size must be less the mir::cookie::default_blob_size"));
+    }
+
+    mir::cookie::Blob cookie_blob{0};
+    std::copy(std::begin(cookie), std::end(cookie), std::begin(cookie_blob));
+
+    return cookie_blob;
+}
+}
+
 mia::InputSender::InputSender(std::shared_ptr<mir::compositor::Scene> const& scene,
                               std::shared_ptr<mir::MainLoop> const& main_loop,
                               std::shared_ptr<InputReport> const& report)
@@ -247,7 +264,7 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t s
                                      mir_keyboard_event_scan_code(key_event),
                                      mia::android_modifiers_from_mir(mir_keyboard_event_modifiers(key_event)),
                                      repeat_count,
-                                     event.to_input()->to_keyboard()->cookie(),
+                                     convert_cookie_to_blob(event.to_input()->to_keyboard()->cookie()),
                                      event_time,
                                      event_time);
 }
@@ -255,8 +272,8 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t s
 droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t seq, MirEvent const& event)
 {
     droidinput::status_t ret = droidinput::OK;
-    droidinput::PointerCoords coords[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
-    droidinput::PointerProperties properties[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
+    droidinput::PointerCoords coords[mir::capnp::MotionEventSet::MAX_COUNT];
+    droidinput::PointerProperties properties[mir::capnp::MotionEventSet::MAX_COUNT];
     auto input_event = mir_event_get_input_event(&event);
     auto touch = mir_input_event_get_touch_event(input_event);
     std::chrono::nanoseconds const event_time{mir_input_event_get_event_time(input_event)};
@@ -324,7 +341,8 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t
         ret = publisher.publishMotionEvent(seq, mir_input_event_get_device_id(input_event), AINPUT_SOURCE_TOUCHSCREEN,
                                            state_change.android_action, flags, edge_flags,
                                            mia::android_modifiers_from_mir(mir_touch_event_modifiers(touch)),
-                                           button_state, x_offset, y_offset, x_precision, y_precision, event.to_input()->to_motion()->cookie(),
+                                           button_state, x_offset, y_offset, x_precision, y_precision,
+                                           convert_cookie_to_blob(event.to_input()->to_motion()->cookie()),
                                            event_time, event_time, contacts_in_event, properties, coords);
     }
 
@@ -361,7 +379,8 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_pointer_event(uint32
         mia::android_pointer_action_from_mir(mir_pointer_event_action(pointer), mir_pointer_event_buttons(pointer)),
         flags, edge_flags, mia::android_modifiers_from_mir(mir_pointer_event_modifiers(pointer)),
         mia::android_pointer_buttons_from_mir(mir_pointer_event_buttons(pointer)), x_offset, y_offset, x_precision,
-        y_precision, event.to_input()->to_motion()->cookie(), event_time, event_time, 1, &pointer_properties, &pointer_coord);
+        y_precision, convert_cookie_to_blob(event.to_input()->to_motion()->cookie()),
+        event_time, event_time, 1, &pointer_properties, &pointer_coord);
 }
 
 

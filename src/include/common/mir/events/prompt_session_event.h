@@ -27,9 +27,6 @@ struct MirPromptSessionEvent : MirEvent
 
     MirPromptSessionState new_state() const;
     void set_new_state(MirPromptSessionState state);
-
-private:
-    MirPromptSessionState new_state_;
 };
 
 #endif /* MIR_COMMON_PROMPT_SESSION_EVENT_H_ */

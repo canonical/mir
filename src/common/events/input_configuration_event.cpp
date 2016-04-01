@@ -18,37 +18,37 @@
 
 #include "mir/events/input_configuration_event.h"
 
-MirInputConfigurationEvent::MirInputConfigurationEvent() :
-    MirEvent(mir_event_type_input_configuration)
+MirInputConfigurationEvent::MirInputConfigurationEvent()
 {
+    event.initInputConfiguration();
 }
 
 MirInputConfigurationAction MirInputConfigurationEvent::action() const
 {
-    return action_;
+    return static_cast<MirInputConfigurationAction>(event.asReader().getInputConfiguration().getAction());
 }
 
 void MirInputConfigurationEvent::set_action(MirInputConfigurationAction action)
 {
-    action_ = action;
+    event.getInputConfiguration().setAction(static_cast<mir::capnp::InputConfigurationEvent::Action>(action));
 }
 
 std::chrono::nanoseconds MirInputConfigurationEvent::when() const
 {
-    return when_;
+    return std::chrono::nanoseconds{event.asReader().getInputConfiguration().getWhen().getCount()};
 }
 
 void MirInputConfigurationEvent::set_when(std::chrono::nanoseconds const& when)
 {
-    when_ = when;
+    event.getInputConfiguration().getWhen().setCount(when.count());
 }
 
 MirInputDeviceId MirInputConfigurationEvent::id() const
 {
-    return id_;
+    return event.asReader().getInputConfiguration().getId().getId();
 }
 
 void MirInputConfigurationEvent::set_id(MirInputDeviceId id)
 {
-    id_ = id;
+    event.getInputConfiguration().getId().setId(id);
 }

@@ -233,6 +233,7 @@ MIR_COMMON_unreleased {
        MirEvent::deserialize*;
        MirEvent::clone*;
        MirEvent::type*;
+       MirEvent::MirEvent*;
        MirCloseSurfaceEvent::MirCloseSurfaceEvent*;
        MirCloseSurfaceEvent::surface_id*;
        MirCloseSurfaceEvent::set_surface_id*;

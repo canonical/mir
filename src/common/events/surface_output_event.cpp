@@ -18,57 +18,57 @@
 
 #include "mir/events/surface_output_event.h"
 
-MirSurfaceOutputEvent::MirSurfaceOutputEvent() :
-    MirEvent(mir_event_type_surface_output)
+MirSurfaceOutputEvent::MirSurfaceOutputEvent()
 {
+    event.initSurfaceOutput();
 }
 
 int MirSurfaceOutputEvent::surface_id() const
 {
-    return surface_id_;
+    return event.asReader().getSurfaceOutput().getSurfaceId();
 }
 
 void MirSurfaceOutputEvent::set_surface_id(int id)
 {
-    surface_id_ = id;
+    event.getSurfaceOutput().setSurfaceId(id);
 }
 
 int MirSurfaceOutputEvent::dpi() const
 {
-    return dpi_;
+    return event.asReader().getSurfaceOutput().getDpi();
 }
 
 void MirSurfaceOutputEvent::set_dpi(int dpi)
 {
-    dpi_ = dpi;
+    event.getSurfaceOutput().setDpi(dpi);
 }
 
 float MirSurfaceOutputEvent::scale() const
 {
-    return scale_;
+    return event.asReader().getSurfaceOutput().getScale();
 }
 
 void MirSurfaceOutputEvent::set_scale(float scale)
 {
-    scale_ = scale;
+    event.getSurfaceOutput().setScale(scale);
 }
 
 MirFormFactor MirSurfaceOutputEvent::form_factor() const
 {
-    return form_factor_;
+    return static_cast<MirFormFactor>(event.asReader().getSurfaceOutput().getFormFactor());
 }
 
 void MirSurfaceOutputEvent::set_form_factor(MirFormFactor factor)
 {
-    form_factor_ = factor;
+    event.getSurfaceOutput().setFormFactor(static_cast<mir::capnp::SurfaceOutputEvent::FormFactor>(factor));
 }
 
 uint32_t MirSurfaceOutputEvent::output_id() const
 {
-    return output_id_;
+    return event.asReader().getSurfaceOutput().getOutputId();
 }
 
 void MirSurfaceOutputEvent::set_output_id(uint32_t id)
 {
-    output_id_ = id;
+    event.getSurfaceOutput().setOutputId(id);
 }

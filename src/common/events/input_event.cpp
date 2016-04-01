@@ -21,11 +21,6 @@
 #include "mir/events/keyboard_event.h"
 #include "mir/events/motion_event.h"
 
-MirInputEvent::MirInputEvent(MirEventType type) :
-    MirEvent(type)
-{
-}
-
 MirKeyboardEvent* MirInputEvent::to_keyboard()
 {
     return static_cast<MirKeyboardEvent*>(this);

@@ -20,303 +20,288 @@
 
 #include "mir/events/motion_event.h"
 
-MirMotionEvent::MirMotionEvent() :
-    MirInputEvent(mir_event_type_motion)
+MirMotionEvent::MirMotionEvent()
 {
+    event.initMotionSet();
+    event.getMotionSet().initMotions(mir::capnp::MotionEventSet::MAX_COUNT);
 }
 
 int32_t MirMotionEvent::device_id() const
 {
-    return device_id_;
+    return event.asReader().getMotionSet().getDeviceId().getId();
 }
 
 void MirMotionEvent::set_device_id(int32_t id)
 {
-    device_id_ = id;
+    event.getMotionSet().getDeviceId().setId(id);
 }
 
 int32_t MirMotionEvent::source_id() const
 {
-    return source_id_;
+    return event.asReader().getMotionSet().getSourceId();
 }
 
 void MirMotionEvent::set_source_id(int32_t id)
 {
-    source_id_ = id;
+    event.getMotionSet().setSourceId(id);
 }
 
 MirInputEventModifiers MirMotionEvent::modifiers() const
 {
-    return modifiers_;
+    return event.asReader().getMotionSet().getModifiers();
 }
 
 void MirMotionEvent::set_modifiers(MirInputEventModifiers modifiers)
 {
-    modifiers_ = modifiers;
+    event.getMotionSet().setModifiers(modifiers);
 }
 
 MirPointerButtons MirMotionEvent::buttons() const
 {
-    return buttons_;
+    return event.asReader().getMotionSet().getButtons();
 }
 
 void MirMotionEvent::set_buttons(MirPointerButtons buttons)
 {
-    buttons_ = buttons;
+    event.getMotionSet().setButtons(buttons);
 }
 
 std::chrono::nanoseconds MirMotionEvent::event_time() const
 {
-    return event_time_;
+    return std::chrono::nanoseconds{event.asReader().getMotionSet().getEventTime().getCount()};
 }
 
 void MirMotionEvent::set_event_time(std::chrono::nanoseconds const& event_time)
 {
-    event_time_ = event_time;
+    event.getMotionSet().getEventTime().setCount(event_time.count());
 }
 
-mir::cookie::Blob MirMotionEvent::cookie() const
+std::vector<uint8_t> MirMotionEvent::cookie() const
 {
-    return cookie_;
+    auto cookie = event.asReader().getMotionSet().getCookie();
+    std::vector<uint8_t> vec_cookie(cookie.size());
+    std::copy(std::begin(cookie), std::end(cookie), std::begin(vec_cookie));
+
+    return vec_cookie;
 }
 
-void MirMotionEvent::set_cookie(mir::cookie::Blob const& blob)
+void MirMotionEvent::set_cookie(std::vector<uint8_t> const& cookie)
 {
-    cookie_ = blob;
+    ::capnp::Data::Reader cookie_data(cookie.data(), cookie.size());
+    event.getMotionSet().setCookie(cookie_data);
 }
 
 size_t MirMotionEvent::pointer_count() const
 {
-    return pointer_count_;
+    return event.asReader().getMotionSet().getCount();
 }
 
 void MirMotionEvent::set_pointer_count(size_t count)
 {
-    pointer_count_ = count;
+    return event.getMotionSet().setCount(count);
+}
+
+void MirMotionEvent::throw_if_out_of_bounds(size_t index) const
+{
+    if (index > event.asReader().getMotionSet().getCount())
+         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
 }
 
 int MirMotionEvent::id(size_t index) const
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    return pointer_coordinates_[index].id;
+    return event.asReader().getMotionSet().getMotions()[index].getId();
 }
 
 void MirMotionEvent::set_id(size_t index, int id)
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    pointer_coordinates_[index].id = id;
+    event.getMotionSet().getMotions()[index].setId(id);
 }
 
 float MirMotionEvent::x(size_t index) const
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    return pointer_coordinates_[index].x;
+    return event.asReader().getMotionSet().getMotions()[index].getX();
 }
 
 void MirMotionEvent::set_x(size_t index, float x)
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    pointer_coordinates_[index].x = x;
+    event.getMotionSet().getMotions()[index].setX(x);
 }
 
 float MirMotionEvent::y(size_t index) const
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    return pointer_coordinates_[index].y;
+    return event.asReader().getMotionSet().getMotions()[index].getY();
 }
 
 void MirMotionEvent::set_y(size_t index, float y)
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    pointer_coordinates_[index].y = y;
+    event.getMotionSet().getMotions()[index].setY(y);
 }
 
 float MirMotionEvent::dx(size_t index) const
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    return pointer_coordinates_[index].dx;
+    return event.asReader().getMotionSet().getMotions()[index].getDx();
 }
 
 void MirMotionEvent::set_dx(size_t index, float dx)
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    pointer_coordinates_[index].dx = dx;
+    event.getMotionSet().getMotions()[index].setDx(dx);
 }
 
 float MirMotionEvent::dy(size_t index) const
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    return pointer_coordinates_[index].dy;
+    return event.asReader().getMotionSet().getMotions()[index].getDy();
 }
 
 void MirMotionEvent::set_dy(size_t index, float dy)
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    pointer_coordinates_[index].dy = dy;
+    event.getMotionSet().getMotions()[index].setDy(dy);
 }
 
 float MirMotionEvent::touch_major(size_t index) const
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    return pointer_coordinates_[index].touch_major;
+    return event.asReader().getMotionSet().getMotions()[index].getTouchMajor();
 }
 
 void MirMotionEvent::set_touch_major(size_t index, float major)
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    pointer_coordinates_[index].touch_major = major;
+    event.getMotionSet().getMotions()[index].setTouchMajor(major);
 }
 
 float MirMotionEvent::touch_minor(size_t index) const
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    return pointer_coordinates_[index].touch_minor;
+    return event.asReader().getMotionSet().getMotions()[index].getTouchMinor();
 }
 
 void MirMotionEvent::set_touch_minor(size_t index, float minor)
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    pointer_coordinates_[index].touch_minor = minor;
+    event.getMotionSet().getMotions()[index].setTouchMinor(minor);
 }
 
 float MirMotionEvent::size(size_t index) const
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    return pointer_coordinates_[index].size;
+    return event.asReader().getMotionSet().getMotions()[index].getSize();
 }
 
 void MirMotionEvent::set_size(size_t index, float size)
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    pointer_coordinates_[index].size = size;
+    event.getMotionSet().getMotions()[index].setSize(size);
 }
 
 float MirMotionEvent::pressure(size_t index) const
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    return pointer_coordinates_[index].pressure;
+    return event.asReader().getMotionSet().getMotions()[index].getPressure();
 }
 
 void MirMotionEvent::set_pressure(size_t index, float pressure)
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    pointer_coordinates_[index].pressure = pressure;
+    event.getMotionSet().getMotions()[index].setPressure(pressure);
 }
 
 float MirMotionEvent::orientation(size_t index) const
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    return pointer_coordinates_[index].orientation;
+    return event.asReader().getMotionSet().getMotions()[index].getOrientation();
 }
 
 void MirMotionEvent::set_orientation(size_t index, float orientation)
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    pointer_coordinates_[index].orientation = orientation;
+    event.getMotionSet().getMotions()[index].setOrientation(orientation);
 }
 
 float MirMotionEvent::vscroll(size_t index) const
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    return pointer_coordinates_[index].vscroll;
+    return event.asReader().getMotionSet().getMotions()[index].getVscroll();
 }
 
 void MirMotionEvent::set_vscroll(size_t index, float vscroll)
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    pointer_coordinates_[index].vscroll = vscroll;
+    event.getMotionSet().getMotions()[index].setVscroll(vscroll);
 }
 
 float MirMotionEvent::hscroll(size_t index) const
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    return pointer_coordinates_[index].hscroll;
+    return event.asReader().getMotionSet().getMotions()[index].getHscroll();
 }
 
 void MirMotionEvent::set_hscroll(size_t index, float hscroll)
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    pointer_coordinates_[index].hscroll = hscroll;
+    event.getMotionSet().getMotions()[index].setHscroll(hscroll);
 }
 
 MirTouchTooltype MirMotionEvent::tool_type(size_t index) const
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    return pointer_coordinates_[index].tool_type;
+    return static_cast<MirTouchTooltype>(event.asReader().getMotionSet().getMotions()[index].getToolType());
 }
 
 void MirMotionEvent::set_tool_type(size_t index, MirTouchTooltype tool_type)
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    pointer_coordinates_[index].tool_type = tool_type;
+    auto capnp_tool_type = static_cast<mir::capnp::MotionEventSet::Motion::ToolType>(tool_type);
+    event.getMotionSet().getMotions()[index].setToolType(capnp_tool_type);
 }
 
 int MirMotionEvent::action(size_t index) const
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    return pointer_coordinates_[index].action;
+    return event.asReader().getMotionSet().getMotions()[index].getAction();
 }
 
 void MirMotionEvent::set_action(size_t index, int action)
 {
-    if (index > pointer_count_)
-         BOOST_THROW_EXCEPTION(std::out_of_range("Out of bounds index in pointer coordinates"));
+    throw_if_out_of_bounds(index);
 
-    pointer_coordinates_[index].action = action;
+    event.getMotionSet().getMotions()[index].setAction(action);
 }
 
 MirTouchEvent* MirMotionEvent::to_touch()

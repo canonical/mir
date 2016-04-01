@@ -56,10 +56,8 @@ void mi::DefaultEventBuilder::add_touch(MirEvent& event, MirTouchId touch_id, Mi
         auto mev = event.to_input()->to_motion();
         auto const cookie = cookie_authority->make_cookie(mev->event_time().count());
         auto const serialized_cookie = cookie->serialize();
-        mir::cookie::Blob event_cookie;
-        std::copy_n(std::begin(serialized_cookie), event_cookie.size(), std::begin(event_cookie));
 
-        mev->set_cookie(event_cookie);
+        mev->set_cookie(serialized_cookie);
     }
 
     me::add_touch(event, touch_id, action, tooltype, x_axis_value, y_axis_value, pressure_value, touch_major_value,

@@ -22,28 +22,29 @@
 
 #include <string.h>
 
-MirCookie::MirCookie(void const* buffer, size_t size)
+MirCookie::MirCookie(void const* buffer, size_t size) :
+    cookie_(size)
 {
-    memcpy(blob_.data(), buffer, size);
+    memcpy(cookie_.data(), buffer, size);
 }
 
-MirCookie::MirCookie(mir::cookie::Blob const& blob) :
-    blob_(blob)
+MirCookie::MirCookie(std::vector<uint8_t> const& cookie) :
+    cookie_(cookie)
 {
 }
 
 void MirCookie::copy_to(void* buffer, size_t size) const
 {
-    mir::require(size == blob_.size());
-    memcpy(buffer, blob_.data(), size);
+    mir::require(size == cookie_.size());
+    memcpy(buffer, cookie_.data(), size);
 }
 
 size_t MirCookie::size() const
 {
-    return blob_.size();
+    return cookie_.size();
 }
 
-mir::cookie::Blob MirCookie::blob() const
+std::vector<uint8_t> MirCookie::cookie() const
 {
-    return blob_;
+    return cookie_;
 }

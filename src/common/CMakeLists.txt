@@ -1,6 +1,5 @@
 add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mircommon")
 
-set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 set(MIR_COMMON_SOURCES)
 set(MIR_COMMON_REFERENCES)
 
@@ -45,8 +44,11 @@ mir_add_library_with_symbols(mircommon SHARED
 )
 
 target_link_libraries(mircommon
+  mircapnproto
   ${MIR_COMMON_REFERENCES}
 )
+
+add_dependencies(mircommon mircapnproto)
 
 set_target_properties(mircommon
 

@@ -267,15 +267,10 @@ uint32_t mir_surface_output_event_get_output_id(MirSurfaceOutputEvent const *ev)
 // a ref count ref is implemented as copy.
 MirEvent const* mir_event_ref(MirEvent const* ev)
 {
-    return ev->clone();
+    return new MirEvent(*ev);
 }
 
 void mir_event_unref(MirEvent const* ev)
 {
-    if (mir_event_get_type(ev) == mir_event_type_keymap)
-    {
-        const_cast<MirEvent*>(ev)->to_keymap()->free_buffer();
-    }
-
     delete const_cast<MirEvent*>(ev);
 }

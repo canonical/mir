@@ -154,9 +154,7 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
                 new_kev.set_event_time(std::chrono::steady_clock::now().time_since_epoch());
                 auto const cookie = cookie_authority->make_cookie(new_kev.event_time().count());
                 auto const serialized_cookie = cookie->serialize();
-                mir::cookie::Blob event_cookie;
-                std::copy_n(std::begin(serialized_cookie), event_cookie.size(), std::begin(event_cookie));
-                new_kev.set_cookie(event_cookie);
+                new_kev.set_cookie(serialized_cookie);
                 next_dispatcher->dispatch(new_kev);
 
                 capture_alarm->reschedule_in(repeat_delay);

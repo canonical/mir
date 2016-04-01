@@ -32,118 +32,76 @@
 #include "mir/events/surface_event.h"
 #include "mir/events/surface_output_event.h"
 
-MirEvent::MirEvent(MirEventType type) :
-    type_(type)
+#include <capnp/serialize.h>
+
+MirEvent::MirEvent(MirEvent const& e)
 {
+    auto reader = e.event.asReader();
+    message.setRoot(reader);
+    event = message.getRoot<mir::capnp::Event>();
 }
 
-MirEvent* MirEvent::clone() const
+MirEvent& MirEvent::operator=(MirEvent const& e)
 {
-    switch (type_)
-    {
-    case mir_event_type_key:
-        return mir::event::deep_copy<MirKeyboardEvent>(this);
-    case mir_event_type_motion:
-        return mir::event::deep_copy<MirMotionEvent>(this);
-    case mir_event_type_surface:
-        return mir::event::deep_copy<MirSurfaceEvent>(this);
-    case mir_event_type_resize:
-        return mir::event::deep_copy<MirResizeEvent>(this);
-    case mir_event_type_prompt_session_state_change:
-        return mir::event::deep_copy<MirPromptSessionEvent>(this);
-    case mir_event_type_orientation:
-        return mir::event::deep_copy<MirOrientationEvent>(this);
-    case mir_event_type_close_surface:
-        return mir::event::deep_copy<MirCloseSurfaceEvent>(this);
-    case mir_event_type_input_configuration:
-        return mir::event::deep_copy<MirInputConfigurationEvent>(this);
-    case mir_event_type_surface_output:
-        return mir::event::deep_copy<MirSurfaceOutputEvent>(this);
-    case mir_event_type_keymap:
-        return to_keymap()->clone();
-    case mir_event_type_input:
-    default:
-        break;
-    }
-
-    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to clone event"));
+    auto reader = e.event.asReader();
+    message.setRoot(reader);
+    event = message.getRoot<mir::capnp::Event>();
+    return *this;
 }
 
 mir::EventUPtr MirEvent::deserialize(std::string const& bytes)
 {
-    auto minimal_event_size = sizeof(MirEventType);
-    auto const stream_size = bytes.size();
-    if (stream_size < minimal_event_size)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to deserialize event"));
+    auto e = mir::EventUPtr(new MirEvent, [](MirEvent* ev) { delete ev; });
+    kj::ArrayPtr<::capnp::word const> words(reinterpret_cast<::capnp::word const*>(
+        bytes.data()), bytes.size() / sizeof(::capnp::word));
 
-    MirEventType type;
-    mir::event::consume(bytes.data(), type);
+    initMessageBuilderFromFlatArrayCopy(words, e->message);
+    e->event = e->message.getRoot<mir::capnp::Event>();
 
-    switch (type)
-    {
-    case mir_event_type_key:
-        return mir::event::deserialize_from<MirKeyboardEvent>(bytes);
-    case mir_event_type_motion:
-        return mir::event::deserialize_from<MirMotionEvent>(bytes);
-    case mir_event_type_surface:
-        return mir::event::deserialize_from<MirSurfaceEvent>(bytes);
-    case mir_event_type_resize:
-        return mir::event::deserialize_from<MirResizeEvent>(bytes);
-    case mir_event_type_prompt_session_state_change:
-        return mir::event::deserialize_from<MirPromptSessionEvent>(bytes);
-    case mir_event_type_orientation:
-        return mir::event::deserialize_from<MirOrientationEvent>(bytes);
-    case mir_event_type_close_surface:
-        return mir::event::deserialize_from<MirCloseSurfaceEvent>(bytes);
-    case mir_event_type_input_configuration:
-        return mir::event::deserialize_from<MirInputConfigurationEvent>(bytes);
-    case mir_event_type_surface_output:
-        return mir::event::deserialize_from<MirSurfaceOutputEvent>(bytes);
-    case mir_event_type_keymap:
-        return MirKeymapEvent::deserialize(bytes);
-    case mir_event_type_input:
-    default:
-        break;
-    }
-
-    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to deserialize event"));
+    return e;
 }
 
 std::string MirEvent::serialize(MirEvent const* event)
 {
-    switch (event->type())
-    {
-    case mir_event_type_key:
-        return mir::event::serialize_from<MirKeyboardEvent>(event);
-    case mir_event_type_motion:
-        return mir::event::serialize_from<MirMotionEvent>(event);
-    case mir_event_type_surface:
-        return mir::event::serialize_from<MirSurfaceEvent>(event);
-    case mir_event_type_resize:
-        return mir::event::serialize_from<MirResizeEvent>(event);
-    case mir_event_type_prompt_session_state_change:
-        return mir::event::serialize_from<MirPromptSessionEvent>(event);
-    case mir_event_type_orientation:
-        return mir::event::serialize_from<MirOrientationEvent>(event);
-    case mir_event_type_close_surface:
-        return mir::event::serialize_from<MirCloseSurfaceEvent>(event);
-    case mir_event_type_input_configuration:
-        return mir::event::serialize_from<MirInputConfigurationEvent>(event);
-    case mir_event_type_surface_output:
-        return mir::event::serialize_from<MirSurfaceOutputEvent>(event);
-    case mir_event_type_keymap:
-        return MirKeymapEvent::serialize(event);
-    case mir_event_type_input:
-    default:
-        break;
-    }
+	std::string output;
+	auto event_segments = const_cast<MirEvent*>(event)->message.getSegmentsForOutput();
+	auto flat_event = ::capnp::messageToFlatArray(event_segments);
 
-    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to serialize event"));
+	for (auto const& c : flat_event.asBytes())
+	{
+		output += c;
+	}
+
+	return output;
 }
 
 MirEventType MirEvent::type() const
 {
-    return type_;
+    switch (event.asReader().which())
+    {
+    case mir::capnp::Event::Which::KEY:
+        return mir_event_type_key;
+    case mir::capnp::Event::Which::MOTION_SET:
+        return mir_event_type_motion;
+    case mir::capnp::Event::Which::SURFACE:
+        return mir_event_type_surface;
+    case mir::capnp::Event::Which::RESIZE:
+        return mir_event_type_resize;
+    case mir::capnp::Event::Which::PROMPT_SESSION:
+        return mir_event_type_prompt_session_state_change;
+    case mir::capnp::Event::Which::ORIENTATION:
+        return mir_event_type_orientation;
+    case mir::capnp::Event::Which::CLOSE_SURFACE:
+        return mir_event_type_close_surface;
+    case mir::capnp::Event::Which::KEYMAP:
+        return mir_event_type_keymap;
+    case mir::capnp::Event::Which::INPUT_CONFIGURATION:
+        return mir_event_type_input_configuration;
+    case mir::capnp::Event::Which::SURFACE_OUTPUT:
+        return mir_event_type_surface_output;
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error("Unknown type, major error"));
 }
 
 MirInputEvent* MirEvent::to_input()

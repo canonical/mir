@@ -18,37 +18,37 @@
 
 #include "mir/events/surface_event.h"
 
-MirSurfaceEvent::MirSurfaceEvent() :
-    MirEvent(mir_event_type_surface)
+MirSurfaceEvent::MirSurfaceEvent()
 {
+    event.initSurface();
 }
 
 int MirSurfaceEvent::id() const
 {
-    return id_;
+    return event.asReader().getSurface().getId();
 }
 
 void MirSurfaceEvent::set_id(int id)
 {
-    id_ = id;
+    event.getSurface().setId(id);
 }
 
 MirSurfaceAttrib MirSurfaceEvent::attrib() const
 {
-    return attrib_;
+    return static_cast<MirSurfaceAttrib>(event.asReader().getSurface().getAttrib());
 }
 
 void MirSurfaceEvent::set_attrib(MirSurfaceAttrib attrib)
 {
-    attrib_ = attrib;
+    event.getSurface().setAttrib(static_cast<mir::capnp::SurfaceEvent::Attrib>(attrib));
 }
 
 int MirSurfaceEvent::value() const
 {
-    return value_;
+    return event.asReader().getSurface().getValue();
 }
 
 void MirSurfaceEvent::set_value(int value)
 {
-    value_ = value;
+    event.getSurface().setValue(value);
 }
