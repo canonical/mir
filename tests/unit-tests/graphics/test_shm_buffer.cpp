@@ -73,6 +73,8 @@ TEST_F(ShmBufferTest, has_correct_properties)
     EXPECT_EQ(pixel_format, shm_buffer.pixel_format());
 }
 
+// The following two tests test parts of the the not-Android version of MirNativeBuffer
+#ifndef ANDROID
 TEST_F(ShmBufferTest, native_buffer_contains_correct_data)
 {
     size_t const bytes_per_pixel = MIR_BYTES_PER_PIXEL(pixel_format);
@@ -92,6 +94,7 @@ TEST_F(ShmBufferTest, cannot_be_used_for_bypass)
 {
     EXPECT_FALSE(shm_buffer.native_buffer_handle()->flags & mir_buffer_flag_can_scanout);
 }
+#endif // ANDROID
 
 TEST_F(ShmBufferTest, cant_upload_bgr_888)
 {
