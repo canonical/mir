@@ -39,10 +39,10 @@ namespace
 template <typename EventType>
 void expect_event_type(EventType const* ev, MirEventType t)
 {
-    if (ev->type != t)
+    if (ev->type() != t)
     {
         mir::log_critical("Expected " + mir::event_type_to_string(t) + " but event is of type " +
-            mir::event_type_to_string(ev->type));
+            mir::event_type_to_string(ev->type()));
         abort();
     }
 }
@@ -76,22 +76,22 @@ std::string mir::event_type_to_string(MirEventType t)
 
 MirEventType mir_event_get_type(MirEvent const* ev)
 {
-    switch (ev->type)
+    switch (ev->type())
     {
     case mir_event_type_key:
     case mir_event_type_motion:
         return mir_event_type_input;
     default:
-        return ev->type;
+        return ev->type();
     }
 }
 
 MirInputEvent const* mir_event_get_input_event(MirEvent const* ev)
 {
-    if (ev->type != mir_event_type_key && ev->type != mir_event_type_motion)
+    if (ev->type() != mir_event_type_key && ev->type() != mir_event_type_motion)
     {
         mir::log_critical("Expected input event but event is of type " +
-            mir::event_type_to_string(ev->type));
+            mir::event_type_to_string(ev->type()));
         abort();
     }
 
@@ -160,14 +160,14 @@ MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_surface);
 
-    return ev->attrib;
+    return ev->attrib();
 }
 
 int mir_surface_event_get_attribute_value(MirSurfaceEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_surface);
 
-    return ev->value;
+    return ev->value();
 }
 
 /* Resize event accessors */
@@ -175,13 +175,13 @@ int mir_surface_event_get_attribute_value(MirSurfaceEvent const* ev)
 int mir_resize_event_get_width(MirResizeEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_resize);
-    return ev->width;
+    return ev->width();
 }
 
 int mir_resize_event_get_height(MirResizeEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_resize);
-    return ev->height;
+    return ev->height();
 }
 
 /* Prompt session event accessors */
@@ -189,7 +189,7 @@ int mir_resize_event_get_height(MirResizeEvent const* ev)
 MirPromptSessionState mir_prompt_session_event_get_state(MirPromptSessionEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_prompt_session_state_change);
-    return ev->new_state;
+    return ev->new_state();
 }
 
 /* Orientation event accessors */
@@ -197,7 +197,7 @@ MirPromptSessionState mir_prompt_session_event_get_state(MirPromptSessionEvent c
 MirOrientation mir_orientation_event_get_direction(MirOrientationEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_orientation);
-    return ev->direction;
+    return ev->direction();
 }
 
 /* Keymap event accessors */
@@ -206,15 +206,15 @@ void mir_keymap_event_get_keymap_buffer(MirKeymapEvent const* ev, char const** b
 {
     expect_event_type(ev, mir_event_type_keymap);
 
-    *buffer = ev->buffer;
-    *length = ev->size;
+    *buffer = ev->buffer();
+    *length = ev->size();
 }
 
 MirInputDeviceId mir_keymap_event_get_device_id(MirKeymapEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_keymap);
 
-    return ev->device_id;
+    return ev->device_id();
 }
 
 /* Input configuration event accessors */
@@ -222,19 +222,19 @@ MirInputDeviceId mir_keymap_event_get_device_id(MirKeymapEvent const* ev)
 MirInputConfigurationAction mir_input_configuration_event_get_action(MirInputConfigurationEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_input_configuration);
-    return ev->action;
+    return ev->action();
 }
 
 int64_t mir_input_configuration_event_get_time(MirInputConfigurationEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_input_configuration);
-    return ev->when.count();
+    return ev->when().count();
 }
 
 MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurationEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_input_configuration);
-    return ev->id;
+    return ev->id();
 }
 
 /* Surface output event accessors */
@@ -242,25 +242,25 @@ MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurati
 int mir_surface_output_event_get_dpi(MirSurfaceOutputEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_surface_output);
-    return ev->dpi;
+    return ev->dpi();
 }
 
 MirFormFactor mir_surface_output_event_get_form_factor(MirSurfaceOutputEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_surface_output);
-    return ev->form_factor;
+    return ev->form_factor();
 }
 
 float mir_surface_output_event_get_scale(MirSurfaceOutputEvent const* ev)
 {
     expect_event_type(ev, mir_event_type_surface_output);
-    return ev->scale;
+    return ev->scale();
 }
 
 uint32_t mir_surface_output_event_get_output_id(MirSurfaceOutputEvent const *ev)
 {
     expect_event_type(ev, mir_event_type_surface_output);
-    return ev->output_id;
+    return ev->output_id();
 }
 
 // TODO: Until we opaquify the MirEvent structure and add
@@ -274,7 +274,7 @@ void mir_event_unref(MirEvent const* ev)
 {
     if (mir_event_get_type(ev) == mir_event_type_keymap)
     {
-        std::free(const_cast<char*>(ev->to_keymap()->buffer));
+        const_cast<MirEvent*>(ev)->to_keymap()->free_buffer();
     }
 
     delete const_cast<MirEvent*>(ev);
