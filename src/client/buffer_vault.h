@@ -32,8 +32,6 @@ namespace mir
 namespace protobuf { class Buffer; }
 namespace client
 {
-class SurfaceMap;
-class AsyncBufferFactory;
 class ClientBuffer;
 class Buffer;
 class AsyncBufferFactory;
