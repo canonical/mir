@@ -365,15 +365,6 @@ TEST_F(SessionMediator, calling_methods_after_connect_works)
     mediator.disconnect(nullptr, nullptr, null_callback.get());
 }
 
-TEST_F(SessionMediator, next_buffer_deprecated)
-{
-    mediator.connect(&connect_parameters, &connection, null_callback.get());
-
-    EXPECT_THROW({
-        mediator.next_buffer(&surface_id_request, &buffer_response, null_callback.get());
-    }, std::logic_error);
-}
-
 TEST_F(SessionMediator, calling_methods_after_disconnect_throws)
 {
     mediator.connect(&connect_parameters, &connection, null_callback.get());
