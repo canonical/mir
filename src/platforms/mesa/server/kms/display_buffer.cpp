@@ -186,6 +186,11 @@ MirOrientation mgm::DisplayBuffer::orientation() const
     return rotation;
 }
 
+MirMirrorMode mgm::DisplayBuffer::mirror_mode() const
+{
+    return mir_mirror_mode_none;
+}
+
 void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rectangle const& a)
 {
     rotation = rot;

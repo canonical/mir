@@ -38,7 +38,7 @@ struct SurfaceCreationParameters;
 class Session : public frontend::Session
 {
 public:
-    virtual void force_requests_to_complete() = 0;
+    virtual void drop_outstanding_requests() = 0;
     virtual pid_t process_id() const = 0;
 
     virtual void take_snapshot(SnapshotCallback const& snapshot_taken) = 0;

@@ -38,8 +38,7 @@ mc::BufferStreamSurfaces::BufferStreamSurfaces(std::shared_ptr<BufferBundle> con
 
 mc::BufferStreamSurfaces::~BufferStreamSurfaces()
 {
-    buffer_bundle->drop_client_requests();
-    force_requests_to_complete();
+    drop_outstanding_requests();
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_compositor_buffer(
@@ -77,8 +76,9 @@ void mc::BufferStreamSurfaces::resize(geom::Size const& size)
     buffer_bundle->resize(logical_size * scale);
 }
 
-void mc::BufferStreamSurfaces::force_requests_to_complete()
+void mc::BufferStreamSurfaces::drop_outstanding_requests()
 {
+    buffer_bundle->drop_client_requests();
     buffer_bundle->force_requests_to_complete();
 }
 

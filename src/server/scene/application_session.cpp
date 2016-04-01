@@ -260,12 +260,12 @@ pid_t ms::ApplicationSession::process_id() const
     return pid;
 }
 
-void ms::ApplicationSession::force_requests_to_complete()
+void ms::ApplicationSession::drop_outstanding_requests()
 {
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     for (auto& stream : streams)
     {
-        stream.second->force_requests_to_complete();
+        stream.second->drop_outstanding_requests();
     }
 }
 
@@ -403,7 +403,7 @@ void ms::ApplicationSession::destroy_surface(std::unique_lock<std::mutex>& lock,
     auto stream_it = streams.find(mir::frontend::BufferStreamId(id.as_value()));
     if (stream_it != streams.end())
     {
-        stream_it->second->force_requests_to_complete();
+        stream_it->second->drop_outstanding_requests();
         streams.erase(stream_it);
     }
 

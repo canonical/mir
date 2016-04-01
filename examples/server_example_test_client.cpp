@@ -46,6 +46,7 @@ bool exit_success(pid_t pid)
     {
         ml::log(ml::Severity::informational, "Terminating client", component);
         kill(pid, SIGKILL);
+        return false;
     }
     else if (wait_rc != pid)
     {
@@ -55,7 +56,12 @@ bool exit_success(pid_t pid)
     else if (WIFEXITED(status))
     {
         auto const exit_status = WEXITSTATUS(status);
-        if (exit_status != EXIT_SUCCESS)
+        if (exit_status == EXIT_SUCCESS)
+        {
+            ml::log(ml::Severity::informational, "Client exited successfully", component);
+            return true;
+        }
+        else
         {
             char const format[] = "Client has exited with status %d";
             char buffer[sizeof format + 10];
@@ -78,8 +84,6 @@ bool exit_success(pid_t pid)
         ml::log(ml::Severity::informational, "Client died mysteriously", component);
         return false;
     }
-
-    return true;
 }
 }
 

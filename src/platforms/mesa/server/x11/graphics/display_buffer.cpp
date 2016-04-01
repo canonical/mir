@@ -72,6 +72,11 @@ MirOrientation mgx::DisplayBuffer::orientation() const
     return orientation_;
 }
 
+MirMirrorMode mgx::DisplayBuffer::mirror_mode() const
+{
+    return mir_mirror_mode_none;
+}
+
 void mgx::DisplayBuffer::set_orientation(MirOrientation const new_orientation)
 {
     orientation_ = new_orientation;

@@ -131,7 +131,7 @@ void ms::SessionManager::close_session(std::shared_ptr<Session> const& session)
 {
     auto scene_session = std::dynamic_pointer_cast<Session>(session);
 
-    scene_session->force_requests_to_complete();
+    scene_session->drop_outstanding_requests();
 
     anr_detector->unregister_session(session.get());
 
