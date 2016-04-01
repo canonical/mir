@@ -46,7 +46,7 @@ public:
         lock_compositor_buffer(void const* user_id) = 0;
     virtual geometry::Size stream_size() = 0;
     virtual void resize(geometry::Size const& size) = 0;
-    virtual void force_requests_to_complete() = 0;
+    virtual void drop_outstanding_requests() = 0;
     virtual int buffers_ready_for_compositor(void const* user_id) const = 0;
     virtual void drop_old_buffers() = 0;
     virtual bool has_submitted_buffer() const = 0;

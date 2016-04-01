@@ -145,9 +145,9 @@ mc::BufferQueue::BufferQueue(
       current_compositor_buffer_valid{false},
       the_properties{props},
       force_new_compositor_buffer{false},
-      callbacks_allowed{true},
       single_compositor{false},  // When true we can optimize performance
-      gralloc{gralloc}
+      gralloc{gralloc},
+      callbacks_allowed{true}
 {
     if (nbuffers < 1)
     {
@@ -558,15 +558,15 @@ void mc::BufferQueue::give_buffer_to_client(
             [&]{ return !contains(buffer, pending_snapshots); });
     }
 
-    if (!callbacks_allowed)  // We're shutting down
-        return;
-
     buffers_owned_by_client.push_back(buffer);
 
     lock.unlock();
     try
     {
-        give_to_client_cb(buffer);
+        std::lock_guard<decltype(callbacks_guard)> lock(callbacks_guard);
+
+        if (callbacks_allowed)
+            give_to_client_cb(buffer);
     }
     catch (...)
     {
@@ -694,7 +694,6 @@ void mc::BufferQueue::drop_old_buffers()
 
 void mc::BufferQueue::drop_client_requests()
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<decltype(callbacks_guard)> lock(callbacks_guard);
     callbacks_allowed = false;
-    pending_client_notifications.clear();
 }
