@@ -83,7 +83,7 @@ private:
     ScheduleMode schedule_mode;
     std::shared_ptr<Schedule> schedule;
     std::shared_ptr<frontend::ClientBuffers> buffers;
-    std::shared_ptr<MultiMonitorArbiter> arbiter;
+    std::shared_ptr<MultiMonitorArbiter> const arbiter;
     geometry::Size size; 
     MirPixelFormat const pf;
     bool first_frame_posted;
