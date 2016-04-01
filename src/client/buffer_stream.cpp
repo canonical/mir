@@ -63,6 +63,7 @@ struct ServerBufferSemantics
     virtual void lost_connection() = 0;
     virtual void set_size(geom::Size) = 0;
     virtual MirWaitHandle* set_scale(float, mf::BufferStreamId) = 0;
+    virtual void set_interval(int interval) = 0;
     virtual ~ServerBufferSemantics() = default;
     ServerBufferSemantics() = default;
     ServerBufferSemantics(ServerBufferSemantics const&) = delete;
@@ -194,6 +195,10 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
             google::protobuf::NewCallback(this, &ExchangeSemantics::on_scale_set, scale));
         return &scale_wait_handle;
+    }
+
+    void set_interval(int) override
+    {
     }
 
     std::mutex mutex;
@@ -349,11 +354,25 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         return &scale_wait_handle;
     }
 
+    void set_interval(int interval) override
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        interval = std::max(0, std::min(1, interval));
+        if (current_swap_interval == interval)
+            return;
+        if (interval == 0)
+            vault.increase_buffer_count();
+        else
+            vault.decrease_buffer_count();
+        current_swap_interval = interval;
+    }
+
     mcl::BufferVault vault;
     std::mutex mutex;
     mcl::BufferInfo current{nullptr, 0};
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle scale_wait_handle;
+    int current_swap_interval = 1;
 };
 
 }
@@ -637,6 +656,8 @@ MirWaitHandle* mcl::BufferStream::force_swap_interval(int interval)
     mp::StreamConfiguration configuration;
     configuration.mutable_id()->set_value(protobuf_bs->id().value());
     configuration.set_swapinterval(interval);
+
+    buffer_depository->set_interval(interval);
 
     interval_wait_handle.expect_result();
     display_server.configure_buffer_stream(&configuration, protobuf_void.get(),
