@@ -12,5 +12,10 @@ add_library(
   drm_mode_resources.cpp
   gbm_buffer.cpp
   ipc_operations.cpp
-  $<TARGET_OBJECTS:server_platform_common>
+)
+
+target_link_libraries(
+  mirsharedmesaservercommon-static
+
+  server_platform_common
 )
