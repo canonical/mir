@@ -77,7 +77,7 @@ TEST_F(BufferStreamTest, force_requests_to_complete)
         .Times(2);  // Once explcit, once on destruction
 
     mc::BufferStreamSurfaces buffer_stream(mock_bundle);
-    buffer_stream.force_requests_to_complete();
+    buffer_stream.drop_outstanding_requests();
 }
 
 TEST_F(BufferStreamTest, requests_are_completed_before_destruction)
