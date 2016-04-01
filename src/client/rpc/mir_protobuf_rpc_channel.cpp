@@ -20,11 +20,15 @@
 #include "rpc_report.h"
 
 #include "../surface_map.h"
+#include "../buffer.h"
+#include "../presentation_chain.h"
+#include "../buffer_factory.h"
 #include "../mir_surface.h"
 #include "../display_configuration.h"
 #include "../lifecycle_control.h"
 #include "../event_sink.h"
 #include "../make_protobuf_object.h"
+#include "../protobuf_to_native_buffer.h"
 #include "mir/input/input_devices.h"
 #include "mir/variable_length_array.h"
 #include "mir/events/event_builders.h"
@@ -35,6 +39,7 @@
 #include "mir_protobuf_wire.pb.h"
 
 #include <boost/bind.hpp>
+#include <boost/throw_exception.hpp>
 #include <endian.h>
 
 #include <stdexcept>
@@ -304,10 +309,37 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
         {
             try
             {
-                map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
-                [&] (mcl::BufferReceiver* receiver) {
-                    receiver->buffer_available(seq.buffer_request().buffer());
-                });
+                if (seq.buffer_request().has_id())
+                {
+                    map->with_stream_do(mf::BufferStreamId(seq.buffer_request().id().value()),
+                    [&] (mcl::BufferReceiver* receiver) {
+                        receiver->buffer_available(seq.buffer_request().buffer());
+                    });
+                }
+                
+                else if (seq.buffer_request().has_operation())
+                {
+                    auto stream_cmd = seq.buffer_request().operation();
+                    auto buffer_id = seq.buffer_request().buffer().buffer_id();
+                    std::shared_ptr<mcl::Buffer> buffer;
+                    switch (stream_cmd)
+                    {
+                    case mp::BufferOperation::add:
+                        buffer = buffer_factory->generate_buffer(seq.buffer_request().buffer());
+                        map->insert(buffer_id, buffer); 
+                        buffer->received();
+                        break;
+                    case mp::BufferOperation::update:
+                        map->buffer(buffer_id)->received(
+                            *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
+                        break;
+                    case mp::BufferOperation::remove:
+                        map->erase(buffer_id);
+                        break;
+                    default:
+                        BOOST_THROW_EXCEPTION(std::runtime_error("unknown buffer operation"));
+                    }
+                }
             }
             catch (std::exception& e)
             {
