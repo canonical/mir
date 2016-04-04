@@ -48,7 +48,7 @@ class StubFrameDroppingPolicyFactory : public mc::FrameDroppingPolicyFactory
 {
 public:
     std::unique_ptr<mc::FrameDroppingPolicy> create_policy(
-        std::unique_ptr<mir::LockableCallback>&&) const override
+        std::unique_ptr<mir::LockableCallback>) const override
     {
        return std::unique_ptr<mc::FrameDroppingPolicy>{new StubFrameDroppingPolicy};
     }

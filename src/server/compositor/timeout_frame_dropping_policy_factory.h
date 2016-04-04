@@ -47,7 +47,7 @@ public:
         std::chrono::milliseconds timeout);
 
     std::unique_ptr<FrameDroppingPolicy> create_policy(
-        std::unique_ptr<LockableCallback>&& drop_frame) const override;
+        std::unique_ptr<LockableCallback> drop_frame) const override;
 private:
     std::shared_ptr<mir::time::AlarmFactory> const factory;
     std::chrono::milliseconds timeout;

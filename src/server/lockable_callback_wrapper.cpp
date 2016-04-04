@@ -19,7 +19,7 @@
 #include "mir/lockable_callback_wrapper.h"
 
 mir::LockableCallbackWrapper::LockableCallbackWrapper(
-    std::unique_ptr<LockableCallback>&& wrapped,
+    std::unique_ptr<LockableCallback> wrapped,
     std::function<void()> const& precall_hook,
     std::function<void()> const& postcall_hook)
     : wrapped_callback{std::move(wrapped)},
@@ -29,7 +29,7 @@ mir::LockableCallbackWrapper::LockableCallbackWrapper(
 }
 
 mir::LockableCallbackWrapper::LockableCallbackWrapper(
-    std::unique_ptr<LockableCallback>&& wrapped,
+    std::unique_ptr<LockableCallback> wrapped,
     std::function<void()> const& precall_hook)
     : LockableCallbackWrapper(std::move(wrapped), precall_hook, []{})
 {

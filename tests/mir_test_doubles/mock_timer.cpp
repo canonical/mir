@@ -33,7 +33,7 @@ namespace
 class FakeAlarm : public mir::time::Alarm
 {
 public:
-    FakeAlarm(std::unique_ptr<mir::LockableCallback>&& callback,
+    FakeAlarm(std::unique_ptr<mir::LockableCallback> callback,
               std::shared_ptr<mt::FakeClock> const& clock);
     ~FakeAlarm() override;
 
@@ -46,7 +46,7 @@ public:
 private:    
     struct InternalState
     {
-        explicit InternalState(std::unique_ptr<mir::LockableCallback>&& callback);
+        explicit InternalState(std::unique_ptr<mir::LockableCallback> callback);
         State state;
         std::unique_ptr<mir::LockableCallback> callback;
         mt::FakeClock::time_point threshold;
@@ -59,13 +59,13 @@ private:
 };
 
 FakeAlarm::InternalState::InternalState(
-    std::unique_ptr<mir::LockableCallback>&& callback)
+    std::unique_ptr<mir::LockableCallback> callback)
     : state{mir::time::Alarm::pending}, callback{std::move(callback)}
 {
 }
 
 FakeAlarm::FakeAlarm(
-    std::unique_ptr<mir::LockableCallback>&& callback,
+    std::unique_ptr<mir::LockableCallback> callback,
     std::shared_ptr<mt::FakeClock> const& clock)
     : internal_state{std::make_shared<InternalState>(std::move(callback))}, clock{clock}
 {

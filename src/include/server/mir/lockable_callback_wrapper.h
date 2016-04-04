@@ -29,10 +29,10 @@ namespace mir
 class LockableCallbackWrapper : public LockableCallback
 {
 public:
-    LockableCallbackWrapper(std::unique_ptr<LockableCallback>&& wrapped,
+    LockableCallbackWrapper(std::unique_ptr<LockableCallback> wrapped,
                             std::function<void()> const& precall_hook);
 
-    LockableCallbackWrapper(std::unique_ptr<LockableCallback>&& wrapped,
+    LockableCallbackWrapper(std::unique_ptr<LockableCallback> wrapped,
                             std::function<void()> const& precall_hook,
                             std::function<void()> const& postcall_hook);
 
