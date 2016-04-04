@@ -138,8 +138,10 @@ TEST_F(ClientBuffers, can_remove_buffer_from_send_callback)
 
 TEST_F(ClientBuffers, ignores_unknown_receive)
 {
-    EXPECT_CALL(mock_sink, send_buffer(_,_,_))
+    EXPECT_CALL(mock_sink, add_buffer(_))
         .Times(1);
+    EXPECT_CALL(mock_sink, update_buffer(_))
+        .Times(0);
     map.add_buffer(properties);
     map.remove_buffer(stub_allocator.ids[0]);
     map.send_buffer(stub_allocator.ids[0]);

@@ -147,11 +147,11 @@ void mc::BufferStreamSurfaces::remove_observer(std::weak_ptr<scene::SurfaceObser
         observers.remove(o);
 }
 
-mg::BufferID mc::BufferStreamSurfaces::allocate_buffer(graphics::BufferProperties const&)
+void mc::BufferStreamSurfaces::associate_buffer(graphics::BufferID)
 {
 }
 
-void mc::BufferStreamSurfaces::remove_buffer(graphics::BufferID)
+void mc::BufferStreamSurfaces::disassociate_buffer(graphics::BufferID)
 {
 }
 

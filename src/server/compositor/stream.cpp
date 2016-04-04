@@ -90,7 +90,7 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
             first_frame_posted = true;
             buffers->receive_buffer(buffer->id());
             schedule->schedule((*buffers)[buffer->id()]);
-            if (client_owned_buffer_count(lk) == 0)
+            if ((total_buffer_count > 0) && (client_owned_buffer_count(lk) == 0))
                 drop_policy->swap_now_blocking();
         }
         observers.frame_posted(1, buffer->size());
@@ -208,23 +208,16 @@ bool mc::Stream::has_submitted_buffer() const
     return first_frame_posted;
 }
 
-mg::BufferID mc::Stream::allocate_buffer(mg::BufferProperties const&)
+void mc::Stream::associate_buffer(mg::BufferID)
 {
     std::lock_guard<decltype(mutex)> lk(mutex); 
     total_buffer_count++;
-    return {};
 }
 
-void mc::Stream::remove_buffer(mg::BufferID)
+void mc::Stream::disassociate_buffer(mg::BufferID)
 {
     std::lock_guard<decltype(mutex)> lk(mutex); 
     total_buffer_count--;
-}
-
-void mc::Stream::with_buffer(mg::BufferID id, std::function<void(mg::Buffer&)> const& fn)
-{
-    auto buffer = (*buffers)[id];
-    fn(*buffer);
 }
 
 void mc::Stream::set_scale(float)

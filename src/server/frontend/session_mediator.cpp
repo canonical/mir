@@ -457,12 +457,13 @@ void mf::SessionMediator::allocate_buffers(
             geom::Size{req.width(), req.height()},
             static_cast<MirPixelFormat>(req.pixel_format()),
            static_cast<mg::BufferUsage>(req.buffer_usage()));
+
+        auto id = session->create_buffer(properties);
         if (request->has_id())
         {
             auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
-            stream->allocate_buffer(properties);
+            stream->associate_buffer(id);
         }
-        session->create_buffer(properties);
     }
     done->Run();
 }
@@ -483,7 +484,7 @@ void mf::SessionMediator::release_buffers(
         if (request->has_id())
         {
             auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
-            stream->remove_buffer(buffer_id);
+            stream->disassociate_buffer(buffer_id);
         }
         session->destroy_buffer(buffer_id);
     }
