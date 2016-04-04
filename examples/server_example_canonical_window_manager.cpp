@@ -371,7 +371,10 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
 
     if (modifications.input_shape.is_set())
     {
-        surface->set_input_region(modifications.input_shape.value());
+        auto rectangles = modifications.input_shape.value();
+        for(auto& rect : rectangles)
+            rect = rect.intersection_with({surface->top_left(), surface->size()});
+        surface->set_input_region(rectangles);
     }
 
     if (modifications.width.is_set() || modifications.height.is_set())
