@@ -43,7 +43,7 @@ class BufferStream
 {
 public:
     virtual ~BufferStream() = default;
-
+    
     virtual void swap_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) = 0;
 
     virtual void add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer) = 0;
@@ -62,7 +62,6 @@ public:
     //TODO: framedropping for swapinterval-0 can probably be effectively managed from the client
     //      side once we only support the NBS system.
     virtual void allow_framedropping(bool) = 0;
-
     virtual void set_scale(float scale) = 0;
 protected:
     BufferStream() = default;
