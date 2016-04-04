@@ -24,6 +24,7 @@
 #include "mir/geometry/displacement.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir_toolkit/common.h"
+#include "frame.h"
 
 #include <gbm.h>
 
@@ -54,7 +55,7 @@ public:
     virtual bool set_crtc(uint32_t fb_id) = 0;
     virtual void clear_crtc() = 0;
     virtual bool schedule_page_flip(uint32_t fb_id) = 0;
-    virtual void wait_for_page_flip() = 0;
+    virtual Frame wait_for_page_flip() = 0;
 
     virtual void set_cursor(gbm_bo* buffer) = 0;
     virtual void move_cursor(geometry::Point destination) = 0;

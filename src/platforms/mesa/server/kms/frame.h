@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,14 +13,13 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_PAGE_FLIPPER_H_
-#define MIR_GRAPHICS_MESA_PAGE_FLIPPER_H_
+#ifndef MIR_GRAPHICS_MESA_FRAME_H_
+#define MIR_GRAPHICS_MESA_FRAME_H_
 
 #include <cstdint>
-#include "frame.h"
 
 namespace mir
 {
@@ -29,22 +28,15 @@ namespace graphics
 namespace mesa
 {
 
-class PageFlipper
+typedef uint64_t Nanoseconds;
+struct Frame
 {
-public:
-    virtual ~PageFlipper() {}
-
-    virtual bool schedule_flip(uint32_t crtc_id, uint32_t fb_id) = 0;
-    virtual Frame wait_for_flip(uint32_t crtc_id) = 0;
-
-protected:
-    PageFlipper() = default;
-    PageFlipper(PageFlipper const&) = delete;
-    PageFlipper& operator=(PageFlipper const&) = delete;
+    Nanoseconds time = 0;
+    uint64_t seq = 0;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_MESA_PAGE_FLIPPER_H_ */
+#endif // MIR_GRAPHICS_MESA_FRAME_H_
