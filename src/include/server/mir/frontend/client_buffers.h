@@ -35,7 +35,6 @@ public:
     virtual std::shared_ptr<graphics::Buffer>& operator[](graphics::BufferID) = 0;
     virtual void send_buffer(graphics::BufferID id) = 0;
     virtual void receive_buffer(graphics::BufferID id) = 0;
-    virtual size_t client_owned_buffer_count() const = 0;
 
     ClientBuffers(ClientBuffers const&) = delete;
     ClientBuffers& operator=(ClientBuffers const&) = delete;
