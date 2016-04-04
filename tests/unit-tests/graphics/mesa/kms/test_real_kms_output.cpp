@@ -43,14 +43,14 @@ class NullPageFlipper : public mgm::PageFlipper
 {
 public:
     bool schedule_flip(uint32_t,uint32_t) { return true; }
-    mgm::Frame wait_for_flip(uint32_t) override { return {}; }
+    mg::Frame wait_for_flip(uint32_t) override { return {}; }
 };
 
 class MockPageFlipper : public mgm::PageFlipper
 {
 public:
     MOCK_METHOD2(schedule_flip, bool(uint32_t,uint32_t));
-    MOCK_METHOD1(wait_for_flip, mgm::Frame(uint32_t));
+    MOCK_METHOD1(wait_for_flip, mg::Frame(uint32_t));
 };
 
 class RealKMSOutputTest : public ::testing::Test
@@ -63,7 +63,7 @@ public:
           possible_encoder_ids2{encoder_ids[0], encoder_ids[1]}
     {
         ON_CALL(mock_page_flipper, wait_for_flip(_))
-            .WillByDefault(Return(mgm::Frame{}));
+            .WillByDefault(Return(mg::Frame{}));
     }
 
     void setup_outputs_connected_crtc()

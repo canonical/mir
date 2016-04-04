@@ -430,8 +430,8 @@ void mgm::DisplayBuffer::wait_for_page_flip()
         for (auto& output : outputs)
         {
             auto frame = output->wait_for_page_flip();
-            unsigned long long seq = frame.seq;
-            unsigned long long ns = frame.time;
+            unsigned long long seq = frame.msc;
+            unsigned long long ns = frame.ust;
             fprintf(stderr, "TODO - Frame #%llu at %llu.%03llus\n",
                     seq, ns/1000000000ULL, (ns%1000000000ULL)/1000000ULL);
         }

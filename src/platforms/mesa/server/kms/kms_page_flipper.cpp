@@ -26,6 +26,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
+namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 
 namespace
@@ -36,7 +37,7 @@ void page_flip_handler(int /*fd*/, unsigned int seq,
                        void* data)
 {
     auto page_flip_data = static_cast<mgm::PageFlipEventData*>(data);
-    mgm::Frame const frame = {(sec * 1000000000ULL) + (usec * 1000ULL), seq};
+    mg::Frame const frame = {(sec * 1000000000ULL) + (usec * 1000ULL), seq};
     page_flip_data->flipper->notify_page_flip(page_flip_data->crtc_id, frame);
 }
 
@@ -71,7 +72,7 @@ bool mgm::KMSPageFlipper::schedule_flip(uint32_t crtc_id, uint32_t fb_id)
     return (ret == 0);
 }
 
-mgm::Frame mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
+mg::Frame mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
 {
     static drmEventContext evctx =
     {

@@ -259,7 +259,7 @@ bool mgm::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
     return page_flipper->schedule_flip(current_crtc->crtc_id, fb_id);
 }
 
-mgm::Frame mgm::RealKMSOutput::wait_for_page_flip()
+mg::Frame mgm::RealKMSOutput::wait_for_page_flip()
 {
     std::unique_lock<std::mutex> lg(power_mutex);
     if (power_mode != mir_power_mode_on)

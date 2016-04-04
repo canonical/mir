@@ -16,8 +16,8 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_FRAME_H_
-#define MIR_GRAPHICS_MESA_FRAME_H_
+#ifndef MIR_GRAPHICS_FRAME_H_
+#define MIR_GRAPHICS_FRAME_H_
 
 #include <cstdint>
 
@@ -25,18 +25,19 @@ namespace mir
 {
 namespace graphics
 {
-namespace mesa
-{
 
-typedef uint64_t Nanoseconds;
+/*
+ * This weird terminology is actually pretty standard in graphics texts,
+ * OpenGL and Xorg. For more information see:
+ *   https://www.opengl.org/registry/specs/OML/glx_sync_control.txt
+ */
 struct Frame
 {
-    Nanoseconds time = 0;
-    uint64_t seq = 0;
+    uint64_t ust = 0;  // Unadjusted System Time
+    uint64_t msc = 0;  // Media Stream Counter
 };
 
 }
 }
-}
 
-#endif // MIR_GRAPHICS_MESA_FRAME_H_
+#endif // MIR_GRAPHICS_FRAME_H_
