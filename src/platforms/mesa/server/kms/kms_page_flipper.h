@@ -51,18 +51,19 @@ class KMSPageFlipper : public PageFlipper
 public:
     KMSPageFlipper(int drm_fd, std::shared_ptr<DisplayReport> const& report);
 
-    bool schedule_flip(uint32_t crtc_id, uint32_t fb_id);
-    void wait_for_flip(uint32_t crtc_id);
+    bool schedule_flip(uint32_t crtc_id, uint32_t fb_id) override;
+    Frame wait_for_flip(uint32_t crtc_id) override;
 
     std::thread::id debug_get_worker_tid();
 
-    void notify_page_flip(uint32_t crtc_id); 
+    void notify_page_flip(uint32_t crtc_id, Frame const& frame); 
 private:
     bool page_flip_is_done(uint32_t crtc_id);
 
     int const drm_fd;
     std::shared_ptr<DisplayReport> const report;
     std::unordered_map<uint32_t,PageFlipEventData> pending_page_flips;
+    std::unordered_map<uint32_t,Frame> completed_page_flips;
     std::mutex pf_mutex;
     std::condition_variable pf_cv;
     std::thread::id worker_tid;

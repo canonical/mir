@@ -31,12 +31,13 @@ namespace mgm = mir::graphics::mesa;
 namespace
 {
 
-void page_flip_handler(int /*fd*/, unsigned int /*frame*/,
-                       unsigned int /*sec*/, unsigned int /*usec*/,
+void page_flip_handler(int /*fd*/, unsigned int seq,
+                       unsigned int sec, unsigned int usec,
                        void* data)
 {
     auto page_flip_data = static_cast<mgm::PageFlipEventData*>(data);
-    page_flip_data->flipper->notify_page_flip(page_flip_data->crtc_id);
+    mgm::Frame const frame = {(sec * 1000000000ULL) + (usec * 1000ULL), seq};
+    page_flip_data->flipper->notify_page_flip(page_flip_data->crtc_id, frame);
 }
 
 }
@@ -70,7 +71,7 @@ bool mgm::KMSPageFlipper::schedule_flip(uint32_t crtc_id, uint32_t fb_id)
     return (ret == 0);
 }
 
-void mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
+mgm::Frame mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
 {
     static drmEventContext evctx =
     {
@@ -92,7 +93,7 @@ void mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
 
         /* If the page flip we are waiting for has arrived we are done. */
         if (page_flip_is_done(crtc_id))
-            return;
+            return completed_page_flips[crtc_id];
 
         /* ...otherwise we become the worker */
         worker_tid = std::this_thread::get_id();
@@ -142,6 +143,7 @@ void mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
          */
         pf_cv.notify_all();
     }
+    return completed_page_flips[crtc_id];
 }
 
 std::thread::id mgm::KMSPageFlipper::debug_get_worker_tid()
@@ -157,8 +159,9 @@ bool mgm::KMSPageFlipper::page_flip_is_done(uint32_t crtc_id)
     return pending_page_flips.find(crtc_id) == pending_page_flips.end();
 }
 
-void mgm::KMSPageFlipper::notify_page_flip(uint32_t crtc_id)
+void mgm::KMSPageFlipper::notify_page_flip(uint32_t crtc_id, Frame const& frame)
 {
     report->report_vsync(crtc_id);
+    completed_page_flips[crtc_id] = frame;
     pending_page_flips.erase(crtc_id);
 }

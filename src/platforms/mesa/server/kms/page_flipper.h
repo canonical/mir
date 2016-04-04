@@ -28,13 +28,21 @@ namespace graphics
 namespace mesa
 {
 
+// TODO: Move these:
+typedef uint64_t Nanoseconds;
+struct Frame
+{
+    Nanoseconds time = 0;
+    uint64_t seq = 0;
+};
+
 class PageFlipper
 {
 public:
     virtual ~PageFlipper() {}
 
     virtual bool schedule_flip(uint32_t crtc_id, uint32_t fb_id) = 0;
-    virtual void wait_for_flip(uint32_t crtc_id) = 0;
+    virtual Frame wait_for_flip(uint32_t crtc_id) = 0;
 
 protected:
     PageFlipper() = default;
