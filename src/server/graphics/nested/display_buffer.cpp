@@ -114,7 +114,7 @@ void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
     if (mir_event_get_type(&event) != mir_event_type_input)
         return;
 
-    if (event.type == mir_event_type_motion)
+    if (event.type() == mir_event_type_motion)
     {
         MirMotionEvent my_event = *event.to_input()->to_motion();
         auto iev = mir_event_get_input_event(&my_event);
@@ -123,10 +123,12 @@ void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
         {
             auto motion = my_event.to_input()->to_motion();
 
-            for (size_t i = 0; i != motion->pointer_count; ++i)
+            for (size_t i = 0; i != motion->pointer_count(); ++i)
             {
-                motion->pointer_coordinates[i].x += area.top_left.x.as_float();
-                motion->pointer_coordinates[i].y += area.top_left.y.as_float();
+                auto x = motion->x(i);
+                auto y = motion->y(i);
+                motion->set_x(i, x + area.top_left.x.as_float());
+                motion->set_y(i, y + area.top_left.y.as_float());
             }
 
             auto pev = mir_input_event_get_pointer_event(iev);

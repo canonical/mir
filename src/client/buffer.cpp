@@ -48,6 +48,7 @@ void mcl::Buffer::submitted()
     std::lock_guard<decltype(mutex)> lk(mutex);
     if (!owned)
         BOOST_THROW_EXCEPTION(std::logic_error("cannot submit unowned buffer"));
+    buffer->mark_as_submitted();
     mapped_region.reset();
     owned = false;
 }
@@ -131,4 +132,9 @@ mir::geometry::Size mcl::Buffer::size() const
 std::shared_ptr<mcl::ClientBuffer> mcl::Buffer::client_buffer() const
 {
     return buffer;
+}
+
+void mcl::Buffer::increment_age()
+{
+    buffer->increment_age();
 }

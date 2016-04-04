@@ -78,6 +78,21 @@ TEST_F(MirBufferTest, fills_region_with_correct_info_when_securing)
     EXPECT_THAT(out_region.vaddr, Eq(vaddr.get()));
 }
 
+TEST_F(MirBufferTest, notifies_client_buffer_when_submitted)
+{
+    EXPECT_CALL(*mock_client_buffer, mark_as_submitted());
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
+    buffer.received();
+    buffer.submitted();
+}
+
+TEST_F(MirBufferTest, increases_age)
+{
+    EXPECT_CALL(*mock_client_buffer, increment_age());
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
+    buffer.increment_age();
+}
+
 TEST_F(MirBufferTest, releases_buffer_refcount_implicitly_on_submit)
 {
     auto region = std::make_shared<mcl::MemoryRegion>(
