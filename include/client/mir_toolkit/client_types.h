@@ -466,7 +466,7 @@ typedef enum MirErrorDomain
  */
 typedef enum MirDisplayConfigurationError {
     /**
-     * Client in not permitted to change global display configuration
+     * Client is not permitted to change global display configuration
      */
     mir_display_configuration_error_unauthorized,
 } MirDisplayConfigurationError;
