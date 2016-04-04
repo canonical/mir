@@ -145,7 +145,8 @@ std::unique_ptr<mir::time::Alarm> mir::test::doubles::FakeTimer::create_alarm(st
     return std::unique_ptr<mir::time::Alarm>{new FakeAlarm{std::move(handler), clock}};
 }
 
-std::unique_ptr<mir::time::Alarm> mir::test::doubles::FakeTimer::create_alarm(std::unique_ptr<LockableCallback>&& callback)
+std::unique_ptr<mir::time::Alarm> mir::test::doubles::FakeTimer::create_alarm(
+    std::unique_ptr<LockableCallback> callback)
 {
     return std::unique_ptr<mir::time::Alarm>{new FakeAlarm{std::move(callback), clock}};
 }

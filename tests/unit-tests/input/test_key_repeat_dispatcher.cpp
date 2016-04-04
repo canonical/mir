@@ -67,7 +67,7 @@ struct MockAlarmFactory : public mir::time::AlarmFactory
         return std::unique_ptr<mir::time::Alarm>(create_alarm_adapter(cb));
     }
 
-    std::unique_ptr<mir::time::Alarm> create_alarm(std::unique_ptr<mir::LockableCallback>&&)
+    std::unique_ptr<mir::time::Alarm> create_alarm(std::unique_ptr<mir::LockableCallback>)
     {
         return nullptr;
     }

@@ -62,7 +62,7 @@ public:
      * \param callback Function to call when the Alarm signals
      * \return A handle to an Alarm that can later be scheduled
      */
-    virtual std::unique_ptr<Alarm> create_alarm(std::unique_ptr<LockableCallback>&& callback) = 0;
+    virtual std::unique_ptr<Alarm> create_alarm(std::unique_ptr<LockableCallback> callback) = 0;
 
 protected:
     AlarmFactory() = default;

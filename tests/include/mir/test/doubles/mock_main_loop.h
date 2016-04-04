@@ -63,7 +63,7 @@ public:
     MOCK_METHOD1(create_alarm, std::unique_ptr<time::Alarm>(std::function<void()> const& callback));
     MOCK_METHOD1(create_alarm, std::unique_ptr<time::Alarm>(LockableCallback* callback));
 
-    std::unique_ptr<time::Alarm> create_alarm(std::unique_ptr<LockableCallback>&& callback)
+    std::unique_ptr<time::Alarm> create_alarm(std::unique_ptr<LockableCallback> callback)
     {
         return create_alarm(callback.get());
     }

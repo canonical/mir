@@ -281,7 +281,7 @@ std::unique_ptr<mir::time::Alarm> mir::GLibMainLoop::create_alarm(
 }
 
 std::unique_ptr<mir::time::Alarm> mir::GLibMainLoop::create_alarm(
-    std::unique_ptr<LockableCallback>&& callback)
+    std::unique_ptr<LockableCallback> callback)
 {
     auto const exception_hander =
         [this]
