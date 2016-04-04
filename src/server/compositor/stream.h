@@ -28,6 +28,7 @@
 #include "multi_monitor_arbiter.h"
 #include <mutex>
 #include <memory>
+#include <set>
 
 namespace mir
 {
@@ -89,7 +90,7 @@ private:
 
     scene::SurfaceObservers observers;
 
-    unsigned int total_buffer_count = 0;
+    std::set<graphics::BufferID> associated_buffers;
     unsigned int client_owned_buffer_count(std::lock_guard<decltype(mutex)> const&) const;
 };
 }
