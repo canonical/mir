@@ -208,13 +208,14 @@ bool mc::Stream::has_submitted_buffer() const
     return first_frame_posted;
 }
 
-mg::BufferID mc::Stream::allocate_buffer(mg::BufferProperties const& properties)
+mg::BufferID mc::Stream::allocate_buffer(mg::BufferProperties const&)
 {
     std::lock_guard<decltype(mutex)> lk(mutex); 
     total_buffer_count++;
+    return {};
 }
 
-void mc::Stream::remove_buffer(mg::BufferID id)
+void mc::Stream::remove_buffer(mg::BufferID)
 {
     std::lock_guard<decltype(mutex)> lk(mutex); 
     total_buffer_count--;

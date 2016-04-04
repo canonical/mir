@@ -117,6 +117,7 @@ TEST_F(ClientBuffers, sends_no_update_msg_if_buffer_is_not_around)
     ASSERT_THAT(stub_allocator.map, SizeIs(1));
     ASSERT_THAT(stub_allocator.ids, SizeIs(1));
     auto buffer = map[stub_allocator.ids[0]];
+
     EXPECT_CALL(mock_sink, remove_buffer(Ref(*buffer)));
     map.remove_buffer(stub_allocator.ids[0]);
     map.send_buffer(stub_allocator.ids[0]);
