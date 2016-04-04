@@ -137,7 +137,7 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
     case mir_keyboard_action_down:
     {
         MirKeyboardEvent new_kev = *kev;
-        new_kev.action = mir_keyboard_action_repeat;
+        new_kev.set_action(mir_keyboard_action_repeat);
 
         auto it = device_state.repeat_alarms_by_scancode.find(scan_code);
         if (it != device_state.repeat_alarms_by_scancode.end())
@@ -151,10 +151,12 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
             {
                 std::lock_guard<std::mutex> lg(repeat_state_mutex);
 
-                new_kev.event_time = std::chrono::steady_clock::now().time_since_epoch();
-                auto const cookie = cookie_authority->make_cookie(new_kev.event_time.count());
+                new_kev.set_event_time(std::chrono::steady_clock::now().time_since_epoch());
+                auto const cookie = cookie_authority->make_cookie(new_kev.event_time().count());
                 auto const serialized_cookie = cookie->serialize();
-                std::copy_n(std::begin(serialized_cookie), new_kev.cookie.size(), std::begin(new_kev.cookie));
+                mir::cookie::Blob event_cookie;
+                std::copy_n(std::begin(serialized_cookie), event_cookie.size(), std::begin(event_cookie));
+                new_kev.set_cookie(event_cookie);
                 next_dispatcher->dispatch(new_kev);
 
                 capture_alarm->reschedule_in(repeat_delay);

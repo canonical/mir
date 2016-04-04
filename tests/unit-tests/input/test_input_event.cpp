@@ -64,9 +64,6 @@ enum
 MirKeyboardEvent a_key_ev()
 {
     MirKeyboardEvent key_ev;
-    memset(&key_ev, 0, sizeof(key_ev));
-    
-    key_ev.type = mir_event_type_key;
     
     return key_ev;
 }
@@ -74,10 +71,8 @@ MirKeyboardEvent a_key_ev()
 MirMotionEvent a_motion_ev(int device_class = AINPUT_SOURCE_UNKNOWN)
 {
     MirMotionEvent motion_ev;
-    memset(&motion_ev, 0, sizeof(motion_ev));
     
-    motion_ev.type = mir_event_type_motion;
-    motion_ev.source_id = device_class;
+    motion_ev.set_source_id(device_class);
     
     return motion_ev;
 }
@@ -87,7 +82,6 @@ MirMotionEvent a_motion_ev(int device_class = AINPUT_SOURCE_UNKNOWN)
 TEST(InputEvent, old_style_key_and_motion_events_are_input_events)
 {
     auto key_ev = a_key_ev();
-    key_ev.type = mir_event_type_key;
     
     EXPECT_EQ(mir_event_type_input, mir_event_get_type(&key_ev));
     EXPECT_EQ(mir_input_event_type_key, mir_input_event_get_type(mir_event_get_input_event(&key_ev)));
@@ -105,13 +99,12 @@ TEST(CommonInputEventProperties, device_id_taken_from_old_style_event)
     int64_t dev_id_1 = 17, dev_id_2 = 23;
     auto old_ev = a_motion_ev();
 
-    old_ev.type = mir_event_type_motion;
-    old_ev.device_id = dev_id_1;
+    old_ev.set_device_id(dev_id_1);
     EXPECT_EQ(dev_id_1, mir_input_event_get_device_id(
         mir_event_get_input_event(&old_ev)));
 
     auto kev = a_key_ev();
-    kev.device_id = dev_id_2;
+    kev.set_device_id(dev_id_2);
     EXPECT_EQ(dev_id_2, mir_input_event_get_device_id(
         mir_event_get_input_event(&kev)));
 }
@@ -121,12 +114,12 @@ TEST(CommonInputEventProperties, event_time_taken_from_old_style_event)
     std::chrono::nanoseconds event_time_1{79}, event_time_2{83};
     auto old_ev = a_motion_ev();
 
-    old_ev.event_time = event_time_1;
+    old_ev.set_event_time(event_time_1);
     EXPECT_EQ(event_time_1.count(), mir_input_event_get_event_time(
         mir_event_get_input_event(&old_ev)));
 
     auto kev = a_key_ev();
-    kev.event_time = event_time_2;
+    kev.set_event_time(event_time_2);
     EXPECT_EQ(event_time_2.count(), mir_input_event_get_event_time(
         mir_event_get_input_event(&kev)));
 }
@@ -139,7 +132,7 @@ TEST(KeyInputEventProperties, timestamp_taken_from_old_style_event)
 
     for (auto expected : {event_time_1, event_time_2})
     {
-        old_ev.event_time = expected;
+        old_ev.set_event_time(expected);
 
         auto const input_event = mir_keyboard_event_input_event(keyboard_event);
 
@@ -152,12 +145,12 @@ TEST(KeyInputEventProperties, up_and_down_actions_copied_from_old_style_event)
 {
     auto old_ev = a_key_ev();
 
-    old_ev.action = mir_keyboard_action_down;
+    old_ev.set_action(mir_keyboard_action_down);
     
     auto new_kev = mir_input_event_get_keyboard_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(mir_keyboard_action_down, mir_keyboard_event_action(new_kev));
 
-    old_ev.action = mir_keyboard_action_up;
+    old_ev.set_action(mir_keyboard_action_up);
     EXPECT_EQ(mir_keyboard_action_up, mir_keyboard_event_action(new_kev));
 }
 
@@ -168,9 +161,9 @@ TEST(KeyInputEventProperties, keycode_scancode_and_modifiers_taken_from_old_styl
     MirInputEventModifiers modifiers = mir_input_event_modifier_shift;
 
     auto old_ev = a_key_ev();
-    old_ev.key_code = key_code;
-    old_ev.scan_code = scan_code;
-    old_ev.modifiers = modifiers;
+    old_ev.set_key_code(key_code);
+    old_ev.set_scan_code(scan_code);
+    old_ev.set_modifiers(modifiers);
 
     auto new_kev = mir_input_event_get_keyboard_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(key_code, mir_keyboard_event_key_code(new_kev));
@@ -186,7 +179,7 @@ TEST(TouchEventProperties, timestamp_taken_from_old_style_event)
 
     for (auto expected : {event_time_1, event_time_2})
     {
-        old_ev.event_time = expected;
+        old_ev.set_event_time(expected);
 
         auto const input_event = mir_touch_event_input_event(touch_event);
 
@@ -199,7 +192,7 @@ TEST(TouchEventProperties, touch_count_taken_from_pointer_count)
     unsigned const pointer_count = 3;
     auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
 
-    old_ev.pointer_count = pointer_count;
+    old_ev.set_pointer_count(pointer_count);
     
     auto tev = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(pointer_count, mir_touch_event_point_count(tev));
@@ -210,8 +203,8 @@ TEST(TouchEventProperties, touch_id_comes_from_pointer_coordinates)
     unsigned const touch_id = 31;
     auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
 
-    old_ev.pointer_count = 1;
-    old_ev.pointer_coordinates[0].id = touch_id;
+    old_ev.set_pointer_count(1);
+    old_ev.set_id(0, touch_id);
 
     auto tev = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(touch_id, mir_touch_event_id(tev, 0));
@@ -221,8 +214,8 @@ TEST(TouchEventProperties, touch_id_comes_from_pointer_coordinates)
 TEST(TouchEventProperties, down_and_up_actions_are_taken_from_old_event)
 {
     auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
-    old_ev.pointer_count = 1;
-    old_ev.pointer_coordinates[0].action = mir_touch_action_change;
+    old_ev.set_pointer_count(1);
+    old_ev.set_action(0, mir_touch_action_change);
 
     auto tev = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(mir_touch_action_change, mir_touch_event_action(tev, 0));
@@ -232,10 +225,10 @@ TEST(TouchEventProperties, tool_type_copied_from_old_pc)
 {
     auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
 
-    old_ev.pointer_count = 3;
-    old_ev.pointer_coordinates[0].tool_type = mir_touch_tooltype_unknown;
-    old_ev.pointer_coordinates[1].tool_type = mir_touch_tooltype_finger;
-    old_ev.pointer_coordinates[2].tool_type = mir_touch_tooltype_stylus;
+    old_ev.set_pointer_count(3);
+    old_ev.set_tool_type(0, mir_touch_tooltype_unknown);
+    old_ev.set_tool_type(1, mir_touch_tooltype_finger);
+    old_ev.set_tool_type(2, mir_touch_tooltype_stylus);
 
     auto tev = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(mir_touch_tooltype_unknown, mir_touch_event_tooltype(tev, 0));
@@ -247,14 +240,13 @@ TEST(TouchEventProperties, axis_values_used_by_qtmir_copied)
 {
     float x_value = 19, y_value = 23, touch_major = .3, touch_minor = .2, pressure = .9, size = 1111;
     auto old_ev = a_motion_ev(AINPUT_SOURCE_TOUCHSCREEN);
-    old_ev.pointer_count = 1;
-    auto &old_pc = old_ev.pointer_coordinates[0];
-    old_pc.x = x_value;
-    old_pc.y = y_value;
-    old_pc.touch_major = touch_major;
-    old_pc.touch_minor = touch_minor;
-    old_pc.pressure = pressure;
-    old_pc.size = size;
+    old_ev.set_pointer_count(1);
+    old_ev.set_x(0, x_value);
+    old_ev.set_y(0, y_value);
+    old_ev.set_touch_major(0, touch_major);
+    old_ev.set_touch_minor(0, touch_minor);
+    old_ev.set_pressure(0, pressure);
+    old_ev.set_size(0, size);
 
     auto tev = mir_input_event_get_touch_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(x_value, mir_touch_event_axis_value(tev, 0, mir_touch_axis_x));
@@ -314,7 +306,7 @@ TEST(PointerInputEventProperties, timestamp_taken_from_old_style_event)
 
     for (auto expected : {event_time_1, event_time_2})
     {
-        old_ev.event_time = expected;
+        old_ev.set_event_time(expected);
 
         auto const input_event = mir_pointer_event_input_event(pointer_event);
 
@@ -326,7 +318,7 @@ TEST(PointerInputEventProperties, modifiers_taken_from_old_style_ev)
 {
     MirInputEventModifiers modifiers = mir_input_event_modifier_shift;
     auto old_ev = a_motion_ev(AINPUT_SOURCE_MOUSE);
-    old_ev.modifiers = modifiers;
+    old_ev.set_modifiers(modifiers);
     
     auto pointer_event = 
         mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
@@ -337,13 +329,13 @@ TEST(PointerInputEventProperties, button_state_translated)
 {
     auto old_ev = a_motion_ev(AINPUT_SOURCE_MOUSE);
 
-    old_ev.buttons = mir_pointer_button_primary;
+    old_ev.set_buttons(mir_pointer_button_primary);
     auto pev = mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
     
     EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_primary));
     EXPECT_FALSE(mir_pointer_event_button_state(pev, mir_pointer_button_secondary));
 
-    old_ev.buttons |=  mir_pointer_button_secondary;
+    old_ev.set_buttons(old_ev.buttons() | mir_pointer_button_secondary);
 
     EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_primary));
     EXPECT_TRUE(mir_pointer_event_button_state(pev, mir_pointer_button_secondary));
@@ -357,11 +349,11 @@ TEST(PointerInputEventProperties, axis_values_copied)
 {
     float x = 7, y = 9.3, hscroll = 13, vscroll = 17;
     auto old_ev = a_motion_ev(AINPUT_SOURCE_MOUSE);
-    old_ev.pointer_count = 0;
-    old_ev.pointer_coordinates[0].x = x;
-    old_ev.pointer_coordinates[0].y = y;
-    old_ev.pointer_coordinates[0].vscroll = vscroll;
-    old_ev.pointer_coordinates[0].hscroll = hscroll;
+    old_ev.set_pointer_count(0);
+    old_ev.set_x(0, x);
+    old_ev.set_y(0, y);
+    old_ev.set_vscroll(0, vscroll);
+    old_ev.set_hscroll(0, hscroll);
 
     auto pev = mir_input_event_get_pointer_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(x, mir_pointer_event_axis_value(pev, mir_pointer_axis_x));
