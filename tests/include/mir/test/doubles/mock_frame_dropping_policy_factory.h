@@ -48,7 +48,7 @@ class MockFrameDroppingPolicyFactory;
 class MockFrameDroppingPolicy : public mc::FrameDroppingPolicy
 {
 public:
-    MockFrameDroppingPolicy(std::shared_ptr<mir::LockableCallback> const& callback,
+    MockFrameDroppingPolicy(std::unique_ptr<mir::LockableCallback> callback,
                             MockFrameDroppingPolicyFactory const* parent);
     ~MockFrameDroppingPolicy();
 
@@ -69,7 +69,7 @@ class MockFrameDroppingPolicyFactory : public mc::FrameDroppingPolicyFactory
 {
 public:
     std::unique_ptr<mc::FrameDroppingPolicy> create_policy(
-        std::shared_ptr<mir::LockableCallback> const& callback) const override;
+        std::unique_ptr<mir::LockableCallback> callback) const override;
 
     ~MockFrameDroppingPolicyFactory();
 
@@ -86,8 +86,14 @@ class FrameDroppingPolicyFactoryMock : public mc::FrameDroppingPolicyFactory
 {
 public:
     MOCK_CONST_METHOD1(create_policy,
-                       std::unique_ptr<mc::FrameDroppingPolicy>(
-                           std::shared_ptr<mir::LockableCallback> const& callback));
+        std::unique_ptr<mc::FrameDroppingPolicy>(mir::LockableCallback* callback));
+
+    std::unique_ptr<mc::FrameDroppingPolicy> create_policy(
+        std::unique_ptr<mir::LockableCallback> callback) const override
+    {
+        return create_policy(callback.get());
+    }
+
 };
 
 }
