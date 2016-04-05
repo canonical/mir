@@ -215,11 +215,11 @@ TEST_F(PresentationChain, creates_correct_buffer_when_buffers_arrive)
         ipc_buf[i].set_height(sizes[i].height.as_int());
     }
 
-    std::array<std::shared_ptr<mtd::MockClientBuffer>, num_buffers> client_buffers {
+    std::array<std::shared_ptr<mtd::MockClientBuffer>, num_buffers> client_buffers { {
         std::make_shared<NiceMock<mtd::MockClientBuffer>>(),
         std::make_shared<NiceMock<mtd::MockClientBuffer>>(),
         std::make_shared<NiceMock<mtd::MockClientBuffer>>()
-    };
+    } };
 
     for(auto i = 0u; i < client_buffers.size(); i++)
     {
