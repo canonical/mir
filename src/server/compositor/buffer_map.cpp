@@ -100,10 +100,3 @@ mc::BufferMap::Map::iterator mc::BufferMap::checked_buffers_find(
         BOOST_THROW_EXCEPTION(std::logic_error("cannot find buffer by id"));
     return it;
 }
-
-size_t mc::BufferMap::client_owned_buffer_count() const
-{
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    return std::count_if(buffers.begin(), buffers.end(),
-        [](std::pair<mg::BufferID, MapEntry> const& entry) { return entry.second.owner == Owner::client; });
-}

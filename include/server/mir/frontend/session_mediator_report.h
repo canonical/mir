@@ -38,8 +38,6 @@ public:
 
     virtual void session_create_surface_called(std::string const& app_name) = 0;
 
-    virtual void session_next_buffer_called(std::string const& app_name) = 0;
-
     virtual void session_exchange_buffer_called(std::string const& app_name) = 0;
 
     virtual void session_submit_buffer_called(std::string const& app_name) = 0;

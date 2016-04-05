@@ -58,6 +58,8 @@ add_library(mirserverobjects OBJECT
   server.cpp
   lockable_callback_wrapper.cpp
   basic_callback.cpp
+  ${PROJECT_SOURCE_DIR}/include/server/mir/time/alarm_factory.h
+  ${PROJECT_SOURCE_DIR}/include/server/mir/time/alarm.h
 )
 
 set(MIR_SERVER_OBJECTS
