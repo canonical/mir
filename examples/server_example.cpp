@@ -71,7 +71,8 @@ void add_launcher_option_to(mir::Server& server)
             {
                 auto const j = find(i, end(value), '&');
 
-                auto const cmd = "MIR_SOCKET=" + connection(server.open_client_socket()) + " " + std::string{i, j} + "&";
+                auto const cmd = "GDK_BACKEND=mir MIR_SOCKET=" + connection(server.open_client_socket()) + " " +
+                    std::string{i, j} + "&";
 
                 auto ignore = std::system(cmd.c_str());
                 (void)(ignore);
