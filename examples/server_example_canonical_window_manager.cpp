@@ -369,14 +369,6 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
         session->configure_streams(*surface, l);
     }
 
-    if (modifications.input_shape.is_set())
-    {
-        auto rectangles = modifications.input_shape.value();
-        for(auto& rect : rectangles)
-            rect = rect.intersection_with({surface->top_left(), surface->size()});
-        surface->set_input_region(rectangles);
-    }
-
     if (modifications.width.is_set() || modifications.height.is_set())
     {
         auto new_size = surface->size();
@@ -399,6 +391,20 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
 
         apply_resize(surface, surface_info.titlebar, top_left, new_size);
     }
+
+    if (modifications.input_shape.is_set())
+    {
+        auto rectangles = modifications.input_shape.value();
+        auto displacement = surface->top_left() - Point{0, 0}; 
+        for(auto& rect : rectangles)
+        {
+            rect.top_left = rect.top_left + displacement;
+            rect = rect.intersection_with({surface->top_left(), surface->size()});
+            rect.top_left = rect.top_left - displacement;
+        }
+        surface->set_input_region(rectangles);
+    }
+
 
     if (modifications.state.is_set())
     {
