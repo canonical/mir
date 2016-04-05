@@ -169,7 +169,7 @@ mc::BufferQueue::BufferQueue(
         free_buffers.push_back(current_compositor_buffer);
 
     framedrop_policy = policy_provider.create_policy(
-        std::make_shared<BufferQueue::LockableCallback>(this));
+        std::make_unique<BufferQueue::LockableCallback>(this));
 }
 
 void mc::BufferQueue::set_scaling_delay(int nframes)
