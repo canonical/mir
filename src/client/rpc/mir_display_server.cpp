@@ -56,13 +56,6 @@ void mclr::DisplayServer::modify_surface(
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
-void mclr::DisplayServer::next_buffer(
-    mir::protobuf::SurfaceId const* request,
-    mir::protobuf::Buffer* response,
-    google::protobuf::Closure* done)
-{
-    channel->call_method(std::string(__func__), request, response, done);
-}
 void mclr::DisplayServer::release_surface(
     mir::protobuf::SurfaceId const* request,
     mir::protobuf::Void* response,
