@@ -401,6 +401,29 @@ static void release_frame(Camera const* cam, Buffer const* buf)
         perror("VIDIOC_QBUF");
 }
 
+static void print_status_bar(int percent)
+{
+    int const max = 50;
+    int len = percent * max / 100;
+    printf("%3d%% [", percent);
+    for (int x = 0; x < len; ++x)
+        printf("o");
+    len = max - len;
+    for (int x = 0; x < len; ++x)
+        printf(".");
+    printf("]");
+    fflush(stdout);
+}
+
+static void erase_line(void)
+{
+    printf("\r");
+    for (int x = 0; x < 79; ++x)
+        printf(" ");
+    printf("\r");
+    fflush(stdout);
+}
+
 static void* capture_thread_func(void* arg)
 {
     State* state = (State*)arg;
@@ -465,6 +488,9 @@ static void* capture_thread_func(void* arg)
                 Time observed_range = max - min;
                 Time expected_range = frame_time + state->display_frame_time;
 
+                erase_line();
+                printf("\n");
+
                 printf("INTERVALS: camera %llu.%1llums (%lluHz), "
                        "display %llu.%1llums (%lluHz), "
                        "expected vary %llu.%1llums\n",
@@ -494,6 +520,20 @@ static void* capture_thread_func(void* arg)
                        observed_range / one_millisecond,
                        (observed_range % one_millisecond) / 100000
                        );
+
+                if (expected_range)
+                {
+                    Time disparity = llabs(observed_range - expected_range);
+                    printf("             ^^^^-- with an estimated error "
+                           "of %llu.%1llums\n",
+                           disparity / one_millisecond,
+                           (disparity % one_millisecond) / 100000);
+                }
+
+                printf("COMPLETION: ");
+                int percent = nhistory * 100 / (2*max_history);
+                if (percent > 100) percent = 100;
+                print_status_bar(percent);
             }
         }
 
