@@ -523,7 +523,8 @@ static void* capture_thread_func(void* arg)
 
                 if (expected_range)
                 {
-                    Time disparity = (Time)llabs(observed_range - expected_range);
+                    Time disparity = (Time)llabs(
+                        (long long)(observed_range - expected_range));
                     printf("             ^^^^-- with an estimated error "
                            "of %llu.%1llums\n",
                            disparity / one_millisecond,
