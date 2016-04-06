@@ -64,7 +64,7 @@ public:
         MirBufferUsage usage,
         mir_buffer_callback cb,
         void* cb_context) override;
-    void cancel_requests_with_context(void*);
+    void cancel_requests_with_context(void*) override;
 
 private:
     std::mutex mutex;

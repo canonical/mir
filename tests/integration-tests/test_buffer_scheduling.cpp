@@ -927,6 +927,31 @@ TEST_P(WithThreeOrMoreBuffers, client_is_unblocked_after_policy_is_triggered)
     EXPECT_THAT(production_log[nbuffers + 1].blockage, Eq(Access::unblocked));
 }
 
+TEST_P(WithTwoOrMoreBuffers, client_is_not_woken_by_compositor_release)
+{
+    // If early release is accidentally active, make sure we see it. But it
+    // requires a dummy frame first:
+    producer->produce();
+    auto onscreen = stream->lock_compositor_buffer(this);
+    onscreen.reset();
+
+    while (producer->can_produce())
+        producer->produce();
+
+    ASSERT_FALSE(producer->can_produce());
+    onscreen = stream->lock_compositor_buffer(this);
+
+    // This varies between NBS and BufferQueue. Should it?
+    if (producer->can_produce())
+        producer->produce();
+    ASSERT_FALSE(producer->can_produce());
+
+    onscreen.reset();
+    // single_monitor_fast -> can produce here
+    // multi_monitor_sync -> can't produce here
+    ASSERT_FALSE(producer->can_produce());
+}
+
 // Regression test for LP: #1319765
 TEST_P(WithTwoBuffers, client_is_not_blocked_prematurely)
 {
@@ -1045,6 +1070,7 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
     mtd::MockFrameDroppingPolicyFactory policy_factory;
     mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory),
                           properties, policy_factory};
+    queue.set_mode(mc::MultiMonitorMode::single_monitor_fast);
     queue.allow_framedropping(false);
 
     mg::Buffer* client_buffer = nullptr;
@@ -1111,6 +1137,7 @@ TEST_P(WithTwoOrMoreBuffers, short_buffer_holds_dont_overclock_multimonitor)
     mtd::MockFrameDroppingPolicyFactory policy_factory;
     mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory),
                           properties, policy_factory};
+    queue.set_mode(mc::MultiMonitorMode::single_monitor_fast);
     queue.allow_framedropping(false);
 
     const void* const leftid = "left";

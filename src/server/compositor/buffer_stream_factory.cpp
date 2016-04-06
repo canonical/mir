@@ -77,3 +77,10 @@ std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
         return std::make_shared<mc::BufferStreamSurfaces>(switching_bundle);
     }
 }
+
+std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
+    std::shared_ptr<mf::BufferSink> const& sink, mg::BufferProperties const& properties)
+{
+    auto buffers = std::make_shared<mc::BufferMap>(sink, gralloc);
+    return create_buffer_stream({}, buffers, properties);
+}

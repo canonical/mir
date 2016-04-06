@@ -79,6 +79,12 @@ public:
         return std::make_shared<StubBufferStream>(framedropping_enabled);
     }
 
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(
+        std::shared_ptr<mf::BufferSink> const&, mg::BufferProperties const& p)
+    {
+        return create_buffer_stream({}, nullptr, p);
+    }
+
 private:
     std::atomic<bool>& framedropping_enabled;
 };

@@ -66,6 +66,8 @@ struct MockBufferStreamFactory : public ms::BufferStreamFactory
         mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const&, mg::BufferProperties const&));
     MOCK_METHOD4(create_buffer_stream, std::shared_ptr<mc::BufferStream>(
         mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const&, int, mg::BufferProperties const&));
+    MOCK_METHOD2(create_buffer_stream, std::shared_ptr<mc::BufferStream>(
+        std::shared_ptr<mf::BufferSink> const&, mg::BufferProperties const&));
 };
 
 
@@ -96,7 +98,7 @@ MATCHER(IsNullSnapshot, "")
 }
 
 MATCHER_P(EqPromptSessionEventState, state, "") {
-  return arg.type == mir_event_type_prompt_session_state_change && arg.to_prompt_session()->new_state == state;
+  return arg.type() == mir_event_type_prompt_session_state_change && arg.to_prompt_session()->new_state() == state;
 }
 
 MATCHER_P(HasParent, parent, "")
@@ -944,7 +946,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
 
     for (int i = 0; i < 2 ; ++i)
     {
-        EXPECT_THAT(event[i]->to_surface_output()->surface_id, Eq(ids[i].as_value()));
+        EXPECT_THAT(event[i]->to_surface_output()->surface_id(), Eq(ids[i].as_value()));
         EXPECT_THAT(event[i].get(), SurfaceOutputEventFor(*outputs[i]));
     }
 }
@@ -989,7 +991,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
 
     ASSERT_TRUE(event_received);
 
-    EXPECT_THAT(event->to_surface_output()->surface_id, Eq(id.as_value()));
+    EXPECT_THAT(event->to_surface_output()->surface_id(), Eq(id.as_value()));
     EXPECT_THAT(event.get(), SurfaceOutputEventFor(high_dpi));
 }
 
@@ -1092,7 +1094,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ASSERT_THAT(events_received, Ge(1));
     auto events_expected = events_received + 1;
 
-    EXPECT_THAT(event->to_surface_output()->surface_id, Eq(id.as_value()));
+    EXPECT_THAT(event->to_surface_output()->surface_id(), Eq(id.as_value()));
     EXPECT_THAT(event.get(), SurfaceOutputEventFor(high_dpi));
 
     // Now solely on the left output
@@ -1101,7 +1103,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ASSERT_THAT(events_received, Eq(events_expected));
     events_expected++;
 
-    EXPECT_THAT(event->to_surface_output()->surface_id, Eq(id.as_value()));
+    EXPECT_THAT(event->to_surface_output()->surface_id(), Eq(id.as_value()));
     EXPECT_THAT(event.get(), SurfaceOutputEventFor(projector));
 
     // Now solely on the right output
@@ -1110,7 +1112,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ASSERT_THAT(events_received, Eq(events_expected));
     events_expected++;
 
-    EXPECT_THAT(event->to_surface_output()->surface_id, Eq(id.as_value()));
+    EXPECT_THAT(event->to_surface_output()->surface_id(), Eq(id.as_value()));
     EXPECT_THAT(event.get(), SurfaceOutputEventFor(high_dpi));
 }
 

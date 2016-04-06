@@ -90,6 +90,7 @@ struct StubBundle : public mc::BufferBundle
     void snapshot_release(std::shared_ptr<mg::Buffer> const&) {}
     mg::BufferProperties properties() const { return mg::BufferProperties{}; }
     void allow_framedropping(bool) {}
+    void set_mode(mc::MultiMonitorMode) override {}
     void force_requests_to_complete() {}
     void resize(const geom::Size&) {}
     int buffers_ready_for_compositor(void const*) const { return 1; }
@@ -114,6 +115,9 @@ struct StubBundleFactory : public msc::BufferStreamFactory
     { return create_buffer_stream(i, s, p); }
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
         mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const&, mg::BufferProperties const&) override
+    { return std::make_shared<mc::BufferStreamSurfaces>(std::make_shared<StubBundle>(buffer_id_seq)); }
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(
+        std::shared_ptr<mf::BufferSink> const&, mg::BufferProperties const&)
     { return std::make_shared<mc::BufferStreamSurfaces>(std::make_shared<StubBundle>(buffer_id_seq)); }
     std::vector<mg::BufferID> const buffer_id_seq;
 };

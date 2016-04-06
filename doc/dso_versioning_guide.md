@@ -11,9 +11,6 @@ There are more detailed descriptions below, but as a general rule:
    next future Mir series in which the new symbol will first be released.
  - If you change the behaviour or signature of a symbol _and_ wish to preserve
    backward compatibility, see "Change symbols without breaking ABI" below.
- - At release time, rename the current `*_unversioned` stanzas to have the
-   version of the current release, like `MIR_CLIENT_0.17`, `MIR_PLATFORM_0.17`,
-   etc.
 
 Can I have some details?
 ------------------------

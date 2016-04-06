@@ -36,6 +36,9 @@ struct StubBufferStreamFactory : public scene::BufferStreamFactory
     std::shared_ptr<compositor::BufferStream> create_buffer_stream(
         frontend::BufferStreamId, std::shared_ptr<frontend::ClientBuffers> const&,
         graphics::BufferProperties const&) { return std::make_shared<StubBufferStream>(); }
+    std::shared_ptr<compositor::BufferStream> create_buffer_stream(
+        std::shared_ptr<frontend::BufferSink> const&,
+        graphics::BufferProperties const&) { return std::make_shared<StubBufferStream>(); }
 };
 }
 }

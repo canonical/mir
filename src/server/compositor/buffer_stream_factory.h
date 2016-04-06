@@ -50,6 +50,9 @@ public:
     virtual std::shared_ptr<BufferStream> create_buffer_stream(
         frontend::BufferStreamId, std::shared_ptr<frontend::ClientBuffers> const& sink,
         graphics::BufferProperties const&) override;
+    virtual std::shared_ptr<BufferStream> create_buffer_stream(
+        std::shared_ptr<frontend::BufferSink> const& sink,
+        graphics::BufferProperties const& buffer_properties) override;
 
 private:
     std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;

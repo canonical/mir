@@ -26,10 +26,6 @@ void mir::report::null::SessionMediatorReport::session_create_surface_called(std
 {
 }
 
-void mir::report::null::SessionMediatorReport::session_next_buffer_called(std::string const&)
-{
-}
-
 void mir::report::null::SessionMediatorReport::session_exchange_buffer_called(std::string const&)
 {
 }
