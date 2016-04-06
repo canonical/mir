@@ -90,6 +90,7 @@ struct StubBundle : public mc::BufferBundle
     void snapshot_release(std::shared_ptr<mg::Buffer> const&) {}
     mg::BufferProperties properties() const { return mg::BufferProperties{}; }
     void allow_framedropping(bool) {}
+    void set_mode(mc::MultiMonitorMode) override {}
     void force_requests_to_complete() {}
     void resize(const geom::Size&) {}
     int buffers_ready_for_compositor(void const*) const { return 1; }
