@@ -36,7 +36,7 @@ class FakeTimer : public mir::time::AlarmFactory
 public:
     FakeTimer(std::shared_ptr<FakeClock> const& clock);
     std::unique_ptr<time::Alarm> create_alarm(std::function<void()> const& callback) override;
-    std::unique_ptr<time::Alarm> create_alarm(std::shared_ptr<LockableCallback> const& callback) override;
+    std::unique_ptr<time::Alarm> create_alarm(std::unique_ptr<LockableCallback> callback) override;
 private:
     std::shared_ptr<FakeClock> const clock;
 };
