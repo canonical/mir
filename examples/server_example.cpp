@@ -71,7 +71,11 @@ void add_launcher_option_to(mir::Server& server)
             {
                 auto const j = find(i, end(value), '&');
 
-                auto const cmd = "MIR_SOCKET=" + connection(server.open_client_socket()) + " " + std::string{i, j} + "&";
+                auto const cmd ="DISPLAY= "             // Discourage toolkits from using X11
+                    "GDK_BACKEND=mir "                  // configure GTK to use Mir
+                    "QT_QPA_PLATFORM=ubuntumirclient "  // configure Qt to use Mir
+                    "MIR_SOCKET=" + connection(server.open_client_socket()) + " " +
+                    std::string{i, j} + "&";
 
                 auto ignore = std::system(cmd.c_str());
                 (void)(ignore);
