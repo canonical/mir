@@ -22,12 +22,37 @@
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/variables_map.hpp>
 
+#include <algorithm>
 #include <chrono>
 #include <iostream>
 #include <thread>
 
 using namespace boost::program_options;
 using namespace std::chrono;
+
+namespace
+{
+auto canonicalize(std::string search_path) -> std::string
+{
+    using namespace boost::filesystem;
+
+    std::string result;
+
+    for (auto i = begin(search_path); i != end(search_path); )
+    {
+        auto const j = find(i, end(search_path), ':');
+
+        auto element = canonical(path{i, j});
+
+        if (result.size()) result += ':';
+        result += element.string();
+
+        if ((i = j) != end(search_path)) ++i;
+    }
+
+    return result;
+}
+}
 
 auto main(int argc, char* argv[]) -> int
 try
@@ -60,6 +85,12 @@ try
     setenv("GDK_BACKEND", "mir", true);                 // configure GTK to use Mir
     setenv("QT_QPA_PLATFORM", "ubuntumirclient", true); // configure GTK to use Mir
     setenv("SDL_VIDEODRIVER", "mir", true);             // configure SDL to use Mir
+
+    if (auto const client_platform = getenv("MIR_CLIENT_PLATFORM_PATH"))
+        setenv("MIR_CLIENT_PLATFORM_PATH", canonicalize(client_platform).c_str(), true);
+
+    if (auto const library_path = getenv("LD_LIBRARY_PATH"))
+        setenv("LD_LIBRARY_PATH", canonicalize(library_path).c_str(), true);
 
     std::string mir_socket{mir::default_server_socket};
 
