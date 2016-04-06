@@ -33,23 +33,23 @@ TEST(LockableCallbackWrapper, forwards_calls_to_wrapper)
 {
     using namespace ::testing;
 
-    mtd::MockLockableCallback mock_lockable_callback;
+    auto mock_lockable_callback = new mtd::MockLockableCallback;
 
     bool pre_hook_called{false};
     bool post_hook_called{false};
 
     mir::LockableCallbackWrapper wrapper{
-        mt::fake_shared(mock_lockable_callback),
+        std::unique_ptr<mtd::MockLockableCallback>(mock_lockable_callback),
         [&pre_hook_called] {pre_hook_called = true;},
         [&post_hook_called] { post_hook_called = true; }};
 
-    EXPECT_CALL(mock_lockable_callback, lock());
+    EXPECT_CALL(*mock_lockable_callback, lock());
     wrapper.lock();
 
-    EXPECT_CALL(mock_lockable_callback, unlock());
+    EXPECT_CALL(*mock_lockable_callback, unlock());
     wrapper.unlock();
 
-    EXPECT_CALL(mock_lockable_callback, functor());
+    EXPECT_CALL(*mock_lockable_callback, functor());
     wrapper();
 
     EXPECT_THAT(pre_hook_called, Eq(true));

@@ -49,6 +49,7 @@ public:
     MOCK_METHOD0(snapshot_acquire, std::shared_ptr<graphics::Buffer>());
     MOCK_METHOD1(snapshot_release, void(std::shared_ptr<graphics::Buffer> const&));
     MOCK_METHOD1(allow_framedropping, void(bool));
+    MOCK_METHOD1(set_mode, void(compositor::MultiMonitorMode));
     MOCK_CONST_METHOD0(properties, graphics::BufferProperties());
     MOCK_METHOD0(force_client_abort, void());
     MOCK_METHOD0(force_requests_to_complete, void());
