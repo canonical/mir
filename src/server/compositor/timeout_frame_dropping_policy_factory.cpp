@@ -36,7 +36,7 @@ class TimeoutFrameDroppingPolicy : public mc::FrameDroppingPolicy
 public:
     TimeoutFrameDroppingPolicy(std::shared_ptr<mir::time::AlarmFactory> const& factory,
                                std::chrono::milliseconds timeout,
-                               std::shared_ptr<mir::LockableCallback> const& drop_frame);
+                               std::unique_ptr<mir::LockableCallback> drop_frame);
 
     void swap_now_blocking() override;
     void swap_unblocked() override;
@@ -52,11 +52,11 @@ private:
 
 TimeoutFrameDroppingPolicy::TimeoutFrameDroppingPolicy(std::shared_ptr<mir::time::AlarmFactory> const& factory,
                                                        std::chrono::milliseconds timeout,
-                                                       std::shared_ptr<mir::LockableCallback> const& callback)
+                                                       std::unique_ptr<mir::LockableCallback> callback)
     : timeout{timeout},
       pending_swaps{0},
       alarm{factory->create_alarm(
-          std::make_shared<mir::LockableCallbackWrapper>(callback,
+          std::make_unique<mir::LockableCallbackWrapper>(std::move(callback),
               [this] { assert(pending_swaps.load() > 0); },
               [this] { if (--pending_swaps > 0) alarm->reschedule_in(this->timeout);} ))}
 {
@@ -89,7 +89,7 @@ mc::TimeoutFrameDroppingPolicyFactory::TimeoutFrameDroppingPolicyFactory(
 }
 
 std::unique_ptr<mc::FrameDroppingPolicy>
-mc::TimeoutFrameDroppingPolicyFactory::create_policy(std::shared_ptr<LockableCallback> const& drop_frame) const
+mc::TimeoutFrameDroppingPolicyFactory::create_policy(std::unique_ptr<LockableCallback> drop_frame) const
 {
-    return std::make_unique<TimeoutFrameDroppingPolicy>(factory, timeout, drop_frame);
+    return std::make_unique<TimeoutFrameDroppingPolicy>(factory, timeout, std::move(drop_frame));
 }

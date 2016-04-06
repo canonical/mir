@@ -1069,15 +1069,15 @@ TEST_F(GLibMainLoopAlarmTest, alarm_callback_preserves_lock_ordering)
 {
     using namespace testing;
 
-    mtd::MockLockableCallback handler;
+    auto handler = std::make_unique<mtd::MockLockableCallback>();
     {
         InSequence s;
-        EXPECT_CALL(handler, lock());
-        EXPECT_CALL(handler, functor());
-        EXPECT_CALL(handler, unlock());
+        EXPECT_CALL(*handler, lock());
+        EXPECT_CALL(*handler, functor());
+        EXPECT_CALL(*handler, unlock());
     }
 
-    auto alarm = ml.create_alarm(mt::fake_shared(handler));
+    auto alarm = ml.create_alarm(std::move(handler));
 
     UnblockMainLoop unblocker(ml);
     alarm->reschedule_in(std::chrono::milliseconds{10});

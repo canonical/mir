@@ -61,7 +61,7 @@ void mc::Stream::DroppingCallback::unlock()
 mc::Stream::Stream(
     mc::FrameDroppingPolicyFactory const& policy_factory,
     std::unique_ptr<frontend::ClientBuffers> map, geom::Size size, MirPixelFormat pf) :
-    drop_policy(policy_factory.create_policy(std::make_shared<DroppingCallback>(this))),
+    drop_policy(policy_factory.create_policy(std::make_unique<DroppingCallback>(this))),
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
     buffers(std::move(map)),
