@@ -100,7 +100,7 @@ MirEventType MirEvent::type() const
         return mir_event_type_surface_output;
     }
 
-    BOOST_THROW_EXCEPTION(std::runtime_error("Unknown type, major error"));
+    BOOST_THROW_EXCEPTION(std::runtime_error("Unknown event type"));
 }
 
 MirInputEvent* MirEvent::to_input()

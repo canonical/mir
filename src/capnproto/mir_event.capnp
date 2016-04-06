@@ -52,7 +52,7 @@ struct KeyboardEvent
     }
 }
 
-struct MotionEventSet
+struct MotionSetEvent
 {
     struct Motion
     {
@@ -191,7 +191,7 @@ struct Event
     union
     {
         key @0 :KeyboardEvent;
-        motionSet @1 :MotionEventSet;
+        motionSet @1 :MotionSetEvent;
         surface @2 :SurfaceEvent;
         resize @3 :ResizeEvent;
         promptSession @4 :PromptSessionEvent;

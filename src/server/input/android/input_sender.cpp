@@ -272,8 +272,8 @@ droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t s
 droidinput::status_t mia::InputSender::ActiveTransfer::send_touch_event(uint32_t seq, MirEvent const& event)
 {
     droidinput::status_t ret = droidinput::OK;
-    droidinput::PointerCoords coords[mir::capnp::MotionEventSet::MAX_COUNT];
-    droidinput::PointerProperties properties[mir::capnp::MotionEventSet::MAX_COUNT];
+    droidinput::PointerCoords coords[mir::capnp::MotionSetEvent::MAX_COUNT];
+    droidinput::PointerProperties properties[mir::capnp::MotionSetEvent::MAX_COUNT];
     auto input_event = mir_event_get_input_event(&event);
     auto touch = mir_input_event_get_touch_event(input_event);
     std::chrono::nanoseconds const event_time{mir_input_event_get_event_time(input_event)};

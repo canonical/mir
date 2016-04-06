@@ -23,7 +23,7 @@
 MirMotionEvent::MirMotionEvent()
 {
     event.initMotionSet();
-    event.getMotionSet().initMotions(mir::capnp::MotionEventSet::MAX_COUNT);
+    event.getMotionSet().initMotions(mir::capnp::MotionSetEvent::MAX_COUNT);
 }
 
 int32_t MirMotionEvent::device_id() const
@@ -286,7 +286,7 @@ void MirMotionEvent::set_tool_type(size_t index, MirTouchTooltype tool_type)
 {
     throw_if_out_of_bounds(index);
 
-    auto capnp_tool_type = static_cast<mir::capnp::MotionEventSet::Motion::ToolType>(tool_type);
+    auto capnp_tool_type = static_cast<mir::capnp::MotionSetEvent::Motion::ToolType>(tool_type);
     event.getMotionSet().getMotions()[index].setToolType(capnp_tool_type);
 }
 
