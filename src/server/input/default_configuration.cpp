@@ -19,10 +19,10 @@
 #include "mir/default_server_configuration.h"
 
 #include "android/input_sender.h"
-#include "android/input_channel_factory.h"
 #include "key_repeat_dispatcher.h"
 #include "display_input_region.h"
 #include "event_filter_chain_dispatcher.h"
+#include "channel_factory.h"
 #include "cursor_controller.h"
 #include "touchspot_controller.h"
 #include "null_input_manager.h"
@@ -161,7 +161,7 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
     if (!options->get<bool>(options::enable_input_opt))
         return std::make_shared<mi::NullInputChannelFactory>();
     else
-        return std::make_shared<mia::InputChannelFactory>();
+        return std::make_shared<mi::ChannelFactory>();
 }
 
 std::shared_ptr<mi::CursorListener>
