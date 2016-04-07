@@ -49,7 +49,11 @@ public:
     bool set_crtc(uint32_t fb_id);
     void clear_crtc();
     bool schedule_page_flip(uint32_t fb_id);
-    Frame wait_for_page_flip() override;
+    void wait_for_page_flip();
+
+    // FrameClock
+    Frame last_frame() const override;
+    void  on_next_frame(FrameCallback const&) override;
 
     void set_cursor(gbm_bo* buffer);
     void move_cursor(geometry::Point destination);
@@ -78,6 +82,9 @@ private:
     int dpms_enum_id;
 
     std::mutex power_mutex;
+
+    Frame last_flip;
+    FrameCallback frame_callback;
 };
 
 }

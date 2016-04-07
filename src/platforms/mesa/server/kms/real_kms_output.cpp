@@ -220,6 +220,10 @@ bool mgm::RealKMSOutput::set_crtc(uint32_t fb_id)
         return false;
     }
 
+    // XXX A frame will occur in the near future, but calling set_crtc means
+    //     we don't care to wait around for it. So last_flip will be briefly
+    //     inaccurate (typically only for one frame during reconfigs).
+
     using_saved_crtc = false;
     return true;
 }
@@ -259,17 +263,23 @@ bool mgm::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
     return page_flipper->schedule_flip(current_crtc->crtc_id, fb_id);
 }
 
-mg::Frame mgm::RealKMSOutput::wait_for_page_flip()
+void mgm::RealKMSOutput::wait_for_page_flip()
 {
     std::unique_lock<std::mutex> lg(power_mutex);
     if (power_mode != mir_power_mode_on)
-        return {};
+        return;
     if (!current_crtc)
     {
         fatal_error("Output %s has no associated CRTC to wait on",
                    connector_name(connector.get()).c_str());
     }
-    return page_flipper->wait_for_flip(current_crtc->crtc_id);
+
+    last_flip = page_flipper->wait_for_flip(current_crtc->crtc_id);
+    if (frame_callback)
+    {
+        frame_callback(last_flip);
+        // XXX Remove callback now?
+    }
 }
 
 void mgm::RealKMSOutput::set_cursor(gbm_bo* buffer)
@@ -384,4 +394,14 @@ void mgm::RealKMSOutput::set_power_mode(MirPowerMode mode)
         drmModeConnectorSetProperty(drm_fd, connector_id,
                                    dpms_enum_id, mode);
     }
+}
+
+mg::Frame mgm::RealKMSOutput::last_frame() const
+{
+    return last_flip;
+}
+
+void mgm::RealKMSOutput::on_next_frame(FrameCallback const& cb)
+{
+    frame_callback = cb;
 }

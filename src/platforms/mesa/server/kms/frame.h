@@ -49,6 +49,8 @@ struct Frame
                             between msc values may be greater than one. */
 };
 
+typedef std::function<void(Frame const&)> FrameCallback;
+
 /**
  * An abstract frame clock, which may represent a single phyisical display
  * or a group of displays.
@@ -56,8 +58,6 @@ struct Frame
 class FrameClock
 {
 public:
-    typedef std::function<void(Frame const&)> FrameCallback;
-
     virtual ~FrameClock() = default;
     /**
      * Last frame in which the display was actually used by the FrameClock
