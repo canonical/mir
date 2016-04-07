@@ -101,6 +101,8 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
         (*lifecycle_control)(mir_lifecycle_connection_lost);
     }
     pending_calls.force_completion();
+    //NB: once the old semantics are not around, this explicit call to notify 
+    //the streams of disconnection shouldn't be needed.
     if (auto map = surface_map.lock()) 
     {
         map->with_all_streams_do(

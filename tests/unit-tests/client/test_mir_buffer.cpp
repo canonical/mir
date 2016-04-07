@@ -181,14 +181,12 @@ TEST_F(MirBufferTest, updates_package_when_server_returns)
 {
     EXPECT_CALL(*mock_client_buffer, update_from(Ref(update_message)));
     mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    buffer.submitted();
     buffer.received(update_message);
 }
 
 TEST_F(MirBufferTest, submitting_unowned_buffer_throws)
 {
     mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
-    buffer.submitted();
     EXPECT_THROW({ 
         buffer.submitted();
     }, std::logic_error);

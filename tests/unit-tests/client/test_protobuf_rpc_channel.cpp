@@ -760,9 +760,8 @@ TEST_F(MirProtobufRpcChannelTest, reuses_buffer_if_in_map)
     auto mock_buffer_factory = std::make_shared<MockBufferFactory>();
     auto mock_client_buffer = std::make_shared<mtd::MockClientBuffer>();
     auto buf = std::make_shared<mcl::Buffer>(buffer_cb, nullptr, buffer_id, mock_client_buffer, nullptr, mir_buffer_usage_software);
-    buf->submitted();
     EXPECT_CALL(*stream_map, buffer(buffer_id)).Times(1)
-       .WillOnce(DoAll(Invoke([](auto){ printf("INVOK\n"); }), Return(buf)));
+       .WillOnce(Return(buf));
     EXPECT_CALL(*mock_client_buffer, update_from(_))
         .Times(1);
 

@@ -53,6 +53,8 @@ struct PresentationChain : Test
     mtd::MockProtobufServer mock_server;
     int buffer_id {4312};
     mp::Buffer ipc_buf;
+    std::shared_ptr<mtd::StubClientBuffer> client_buffer = std::make_shared<mtd::StubClientBuffer>(
+        std::make_shared<MirBufferPackage>(), size, format);
 };
 
 MATCHER_P(BufferRequestMatches, val, "")
@@ -96,10 +98,7 @@ TEST_F(PresentationChain, submits_buffer_when_asked)
     EXPECT_CALL(mock_server, submit_buffer(BufferRequestMatches(request),_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    auto package = std::make_shared<MirBufferPackage>();
-    auto client_buffer = std::make_shared<mtd::StubClientBuffer>(package, size, format);
     mcl::Buffer buffer(buffer_callback, nullptr, buffer_id, client_buffer, nullptr, mir_buffer_usage_software);
-    auto mir_buffer_factory = std::make_shared<mcl::BufferFactory>();
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
@@ -114,14 +113,11 @@ TEST_F(PresentationChain, double_submission_throws)
     EXPECT_CALL(mock_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    auto package = std::make_shared<MirBufferPackage>();
-    auto client_buffer = std::make_shared<mtd::StubClientBuffer>(package, size, format);
     mcl::Buffer buffer(buffer_callback, nullptr, buffer_id, client_buffer, nullptr, mir_buffer_usage_software);
-    auto mir_buffer_factory = std::make_shared<mcl::BufferFactory>();
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
-        mir_buffer_factory);
+        std::make_shared<mcl::BufferFactory>());
 
     buffer.received();
     chain.submit_buffer(reinterpret_cast<MirBuffer*>(&buffer));

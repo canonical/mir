@@ -32,7 +32,7 @@ mcl::Buffer::Buffer(
     cb_context(context),
     buffer_id(buffer_id),
     buffer(buffer),
-    owned(true),
+    owned(false),
     connection(connection),
     usage(usage)
 {
