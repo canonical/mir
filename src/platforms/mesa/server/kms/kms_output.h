@@ -24,7 +24,7 @@
 #include "mir/geometry/displacement.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir_toolkit/common.h"
-#include "frame.h"
+#include "display_clock.h"
 
 #include <gbm.h>
 

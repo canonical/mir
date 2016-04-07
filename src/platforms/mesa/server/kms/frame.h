@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_FRAME_H_
 
 #include <cstdint>
-#include <functional>
 
 namespace mir
 {
@@ -47,28 +46,6 @@ struct Frame
                             increase by one. Because it's entirely possible
                             that you missed a frame or frames so the delta
                             between msc values may be greater than one. */
-};
-
-typedef std::function<void(Frame const&)> FrameCallback;
-
-/**
- * An abstract frame clock, which may represent a single phyisical display
- * or a group of displays.
- */
-class DisplayClock
-{
-public:
-    virtual ~DisplayClock() = default;
-    /**
-     * Last frame in which the display was actually used by the DisplayClock
-     * owner, which may be older than the last frame on the physical display.
-     */
-    virtual Frame last_frame() const = 0;
-    /**
-     * Make a callback next time a frame is displayed by us, which for a
-     * compositor may not be the next physical frame if the scene is idle.
-     */
-    virtual void on_next_frame(FrameCallback const&) = 0;
 };
 
 }
