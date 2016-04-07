@@ -272,7 +272,7 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
 };
 }
 
-TEST_F(ClientLatency, triple_buffered_client_has_less_than_three_frames_latency)
+TEST_F(ClientLatency, triple_buffered_client_has_less_than_two_frames_latency)
 {
     using namespace testing;
 
