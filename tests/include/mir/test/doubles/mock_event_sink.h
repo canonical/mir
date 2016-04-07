@@ -42,6 +42,7 @@ struct MockEventSink : public frontend::EventSink
     MOCK_METHOD1(add_buffer, void(graphics::Buffer&));
     MOCK_METHOD1(remove_buffer, void(graphics::Buffer&));
     MOCK_METHOD1(update_buffer, void(graphics::Buffer&));
+
     MOCK_METHOD1(handle_input_device_change, void(std::vector<std::shared_ptr<input::Device>> const&));
 };
 }

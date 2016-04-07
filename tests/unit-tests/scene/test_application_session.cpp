@@ -62,12 +62,17 @@ static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 
 struct MockBufferStreamFactory : public ms::BufferStreamFactory
 {
+    MockBufferStreamFactory()
+    {
+        ON_CALL(*this, create_buffer_map(testing::_))
+            .WillByDefault(testing::Return(std::make_shared<mtd::StubClientBuffers>()));
+    }
     MOCK_METHOD3(create_buffer_stream, std::shared_ptr<mc::BufferStream>(
         mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const&, mg::BufferProperties const&));
     MOCK_METHOD4(create_buffer_stream, std::shared_ptr<mc::BufferStream>(
         mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const&, int, mg::BufferProperties const&));
-    MOCK_METHOD2(create_buffer_stream, std::shared_ptr<mc::BufferStream>(
-        std::shared_ptr<mf::BufferSink> const&, mg::BufferProperties const&));
+    MOCK_METHOD1(create_buffer_map, std::shared_ptr<mf::ClientBuffers>(
+        std::shared_ptr<mf::BufferSink> const&));
 };
 
 

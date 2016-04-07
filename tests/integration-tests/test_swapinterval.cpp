@@ -79,10 +79,9 @@ public:
         return std::make_shared<StubBufferStream>(framedropping_enabled);
     }
 
-    std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        std::shared_ptr<mf::BufferSink> const&, mg::BufferProperties const& p)
+    std::shared_ptr<mf::ClientBuffers> create_buffer_map(std::shared_ptr<mf::BufferSink> const&)
     {
-        return create_buffer_stream({}, nullptr, p);
+        return nullptr;
     }
 
 private:

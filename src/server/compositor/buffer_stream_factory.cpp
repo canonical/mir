@@ -78,9 +78,8 @@ std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
     }
 }
 
-std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
-    std::shared_ptr<mf::BufferSink> const& sink, mg::BufferProperties const& properties)
+std::shared_ptr<mf::ClientBuffers> mc::BufferStreamFactory::create_buffer_map(
+        std::shared_ptr<mf::BufferSink> const& sink)
 {
-    auto buffers = std::make_shared<mc::BufferMap>(sink, gralloc);
-    return create_buffer_stream({}, buffers, properties);
+    return std::make_shared<mc::BufferMap>(sink, gralloc);
 }
