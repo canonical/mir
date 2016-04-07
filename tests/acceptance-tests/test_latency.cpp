@@ -157,8 +157,6 @@ public:
 
     void post() override
     {
-        stats.post();
-
         auto latency = stats.latency_for(db.last_id().as_value());
         if (latency.is_set())
         {
@@ -167,6 +165,8 @@ public:
             if (latency.value() > max)
                 max = latency.value();
         }
+
+        stats.post();
 
         /*
          * Sleep a little to make the test more realistic. This way the
