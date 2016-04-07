@@ -59,8 +59,15 @@ public:
     typedef std::function<void(Frame const&)> FrameCallback;
 
     virtual ~FrameClock() = default;
+    /**
+     * Last frame in which the display was actually used by the FrameClock
+     * owner, which may be older than the last frame on the physical display.
+     */
     virtual Frame last_frame() const = 0;
-    /// For simplicity you should assume only one callback is supported
+    /**
+     * Make a callback next time a frame is displayed by us, which for a
+     * compositor may not be the next physical frame if the scene is idle.
+     */
     virtual void on_next_frame(FrameCallback const&) = 0;
 };
 
