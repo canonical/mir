@@ -83,7 +83,7 @@ try
 
     unsetenv("DISPLAY");                                // Discourage toolkits from using X11
     setenv("GDK_BACKEND", "mir", true);                 // configure GTK to use Mir
-    setenv("QT_QPA_PLATFORM", "ubuntumirclient", true); // configure GTK to use Mir
+    setenv("QT_QPA_PLATFORM", "ubuntumirclient", true); // configure Qt to use Mir
     setenv("SDL_VIDEODRIVER", "mir", true);             // configure SDL to use Mir
 
     if (auto const client_platform = getenv("MIR_CLIENT_PLATFORM_PATH"))
