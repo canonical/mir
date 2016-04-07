@@ -38,7 +38,7 @@ struct Frame
 {
     uint64_t ust = 0;  /**< Unadjusted System Time in nanoseconds: This must
                             stay in its raw integer form so that (GLX) clients
-                            can match their CLOCK_MONOTONIC to it. */
+                            can compare their CLOCK_MONOTONIC to it. */
     uint64_t msc = 0;  /**< Media Stream Counter: The physical frame count
                             from the display hardware (or as close to it as
                             can be calculated).
@@ -49,6 +49,10 @@ struct Frame
                             between msc values may be greater than one. */
 };
 
+/**
+ * An abstract frame clock, which may represent a single phyisical display
+ * or a group of displays.
+ */
 class FrameClock
 {
 public:
