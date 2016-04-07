@@ -991,6 +991,30 @@ MirWaitHandle* MirConnection::set_base_display_configuration(MirDisplayConfigura
     return &set_base_display_configuration_wait_handle;
 }
 
+void MirConnection::preview_base_display_configuration(
+    mp::DisplayConfiguration const& configuration,
+    std::chrono::seconds timeout)
+{
+    mp::PreviewConfiguration request;
+
+    request.mutable_configuration()->CopyFrom(configuration);
+    request.set_timeout(timeout.count());
+
+    server.preview_base_display_configuration(
+        &request,
+        set_base_display_configuration_response.get(),
+        google::protobuf::NewCallback(google::protobuf::DoNothing));
+}
+
+void MirConnection::confirm_base_display_configuration(
+    mp::DisplayConfiguration const& configuration)
+{
+    server.confirm_base_display_configuration(
+        &configuration,
+        set_base_display_configuration_response.get(),
+        google::protobuf::NewCallback(google::protobuf::DoNothing));
+}
+
 void MirConnection::done_set_base_display_configuration()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
@@ -1164,8 +1188,7 @@ void MirConnection::allocate_buffer(
     if (!client_buffer_factory)
         client_buffer_factory = platform->create_buffer_factory();
     buffer_factory->expect_buffer(
-        client_buffer_factory,
-        nullptr,
+        client_buffer_factory, this,
         size, format, usage,
         callback, context);
     server.allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));
@@ -1173,8 +1196,6 @@ void MirConnection::allocate_buffer(
 
 void MirConnection::release_buffer(int buffer_id)
 {
-    surface_map->erase(buffer_id);
-
     mp::BufferRelease request;
     auto released_buffer = request.add_buffers();
     released_buffer->set_buffer_id(buffer_id);

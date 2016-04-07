@@ -29,7 +29,7 @@ namespace mf=mir::frontend;
 void mcl::ConnectionSurfaceMap::with_surface_do(
     mf::SurfaceId surface_id, std::function<void(MirSurface*)> const& exec) const
 {
-    std::shared_lock<decltype(surface_guard)> lk(surface_guard);
+    std::shared_lock<decltype(guard)> lk(guard);
     auto const it = surfaces.find(surface_id);
     if (it != surfaces.end())
     {
@@ -46,20 +46,20 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
 
 void mcl::ConnectionSurfaceMap::insert(mf::SurfaceId surface_id, std::shared_ptr<MirSurface> const& surface)
 {
-    std::lock_guard<decltype(surface_guard)> lk(surface_guard);
+    std::lock_guard<decltype(guard)> lk(guard);
     surfaces[surface_id] = surface;
 }
 
 void mcl::ConnectionSurfaceMap::erase(mf::SurfaceId surface_id)
 {
-    std::lock_guard<decltype(surface_guard)> lk(surface_guard);
+    std::lock_guard<decltype(guard)> lk(guard);
     surfaces.erase(surface_id);
 }
 
 void mcl::ConnectionSurfaceMap::with_stream_do(
     mf::BufferStreamId stream_id, std::function<void(ClientBufferStream*)> const& exec) const
 {
-    std::shared_lock<decltype(stream_guard)> lk(stream_guard);
+    std::shared_lock<decltype(guard)> lk(guard);
     auto const it = streams.find(stream_id);
     if (it != streams.end())
     {
@@ -76,7 +76,7 @@ void mcl::ConnectionSurfaceMap::with_stream_do(
 
 void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBufferStream*)> const& fn) const
 {
-    std::shared_lock<decltype(stream_guard)> lk(stream_guard);
+    std::shared_lock<decltype(guard)> lk(guard);
     for(auto const& stream : streams)
         fn(stream.second.get());
 }
@@ -84,7 +84,7 @@ void mcl::ConnectionSurfaceMap::with_all_streams_do(std::function<void(ClientBuf
 void mcl::ConnectionSurfaceMap::insert(
     mf::BufferStreamId stream_id, std::shared_ptr<ClientBufferStream> const& stream)
 {
-    std::lock_guard<decltype(stream_guard)> lk(stream_guard);
+    std::lock_guard<decltype(guard)> lk(guard);
     streams[stream_id] = stream;
 }
 
@@ -97,25 +97,30 @@ void mcl::ConnectionSurfaceMap::insert(
 
 void mcl::ConnectionSurfaceMap::erase(mf::BufferStreamId stream_id)
 {
-    std::lock_guard<decltype(stream_guard)> lk(stream_guard);
-    streams.erase(stream_id);
+    std::lock_guard<decltype(guard)> lk(guard);
+    auto stream_it = streams.find(stream_id);
+    auto chain_it = chains.find(stream_id);
+    if (stream_it != streams.end())
+        streams.erase(stream_it);
+    if (chain_it != chains.end())
+        chains.erase(chain_it);
 }
 
 void mcl::ConnectionSurfaceMap::insert(int buffer_id, std::shared_ptr<mcl::Buffer> const& buffer)
 {
-    std::lock_guard<decltype(buffer_guard)> lk(buffer_guard);
+    std::lock_guard<decltype(guard)> lk(guard);
     buffers[buffer_id] = buffer;
 }
 
 void mcl::ConnectionSurfaceMap::erase(int buffer_id)
 {
-    std::lock_guard<decltype(buffer_guard)> lk(buffer_guard);
+    std::lock_guard<decltype(guard)> lk(guard);
     buffers.erase(buffer_id);
 }
 
 std::shared_ptr<mcl::Buffer> mcl::ConnectionSurfaceMap::buffer(int buffer_id) const
 {
-    std::lock_guard<decltype(buffer_guard)> lk(buffer_guard);
+    std::lock_guard<decltype(guard)> lk(guard);
     auto const it = buffers.find(buffer_id);
     if (it != buffers.end())
         return it->second;

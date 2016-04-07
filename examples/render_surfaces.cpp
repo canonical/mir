@@ -33,6 +33,7 @@
 #include "mir/scene/surface_factory.h"
 #include "mir/shell/surface_stack.h"
 #include "mir/frontend/buffer_sink.h"
+#include "mir/frontend/client_buffers.h"
 #include "mir/server.h"
 #include "mir/report_exception.h"
 
@@ -333,6 +334,7 @@ public:
 
     // New function to initialize moveables with surfaces
     void create_surfaces()
+    try
     {
         moveables.resize(get_options()->get<int>(surfaces_to_render));
         std::cout << "Rendering " << moveables.size() << " surfaces" << std::endl;
@@ -372,17 +374,27 @@ public:
             struct NullBufferSink : mf::BufferSink
             {
                 void send_buffer(mf::BufferStreamId, mg::Buffer&, mg::BufferIpcMsgType) override {}
+                void add_buffer(mg::Buffer&) override {}
+                void remove_buffer(mg::Buffer&) override {}
+                void update_buffer(mg::Buffer&) override {}
             };
 
-            auto const stream = buffer_stream_factory->create_buffer_stream(
-                mf::BufferStreamId{}, nullptr, properties);
+            auto buffers = buffer_stream_factory->create_buffer_map(std::make_shared<NullBufferSink>());
+            auto const stream = buffer_stream_factory->create_buffer_stream({}, buffers, properties);
             auto const surface = surface_factory->create_surface(stream, params);
             surface_stack->add_surface(surface, params.input_mode);
 
             {
                 mg::Buffer* buffer{nullptr};
                 auto const complete = [&](mg::Buffer* new_buf){ buffer = new_buf; };
+
                 surface->primary_buffer_stream()->swap_buffers(buffer, complete); // Fetch buffer for rendering
+                if (!buffer)
+                {
+                    auto buffer_id = buffers->add_buffer(properties);
+                    buffer = (*buffers)[buffer_id].get();
+                }
+
                 {
                     gl_context->make_current();
 
@@ -415,6 +427,11 @@ public:
         }
 
         created = true;
+    }
+    catch (...)
+    {
+        mir::report_exception();
+        exit(EXIT_FAILURE);
     }
 
 private:

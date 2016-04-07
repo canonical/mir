@@ -286,11 +286,7 @@ TEST_F(ClientLatency, triple_buffered_client_has_less_than_two_frames_latency)
     ASSERT_TRUE(stats.wait_for_posts(test_submissions,
                                      std::chrono::seconds(60)));
 
-    // Note: Using the "early release" optimization without dynamic queue
-    //       scaling enabled makes the expected latency possibly up to
-    //       nbuffers instead of nbuffers-1. After dynamic queue scaling is
-    //       enabled, the average will be lower than this.
-    float const expected_max_latency = expected_client_buffers;
+    float const expected_max_latency = expected_client_buffers - 1;
 
     if (server.get_options()->get<bool>(mtd::logging_opt))
         display.group.dump_latency();
@@ -322,7 +318,7 @@ TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
 {
     using namespace testing;
 
-    int const throttled_input_rate = refresh_rate - 1;
+    int const throttled_input_rate = refresh_rate * 3 / 4;
     std::chrono::microseconds const input_interval(1000000/throttled_input_rate);
     auto next_input_event = std::chrono::high_resolution_clock::now();
 

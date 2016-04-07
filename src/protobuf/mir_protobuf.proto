@@ -129,9 +129,17 @@ message BufferRelease {
   optional BufferStreamId id = 2;
 };
 
+enum BufferOperation
+{
+    add = 0;
+    update = 1;
+    remove = 2;
+};
+
 message BufferRequest {
   optional BufferStreamId id = 1;
   optional Buffer buffer = 2;
+  optional BufferOperation operation = 3;
 };
 
 message Buffer {
@@ -256,6 +264,11 @@ message DisplayConfiguration {
   repeated DisplayOutput display_output = 1;
   repeated DisplayCard   display_card = 2;
   optional string error = 127;
+}
+
+message PreviewConfiguration {
+  optional DisplayConfiguration configuration = 1;
+  optional int32 timeout = 2;
 }
 
 message LifecycleEvent {

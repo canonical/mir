@@ -51,8 +51,8 @@ struct StubServerTool : doubles::StubDisplayServer
         done->Run();
     }
 
-    virtual void next_buffer(
-        mir::protobuf::SurfaceId const* /*request*/,
+    virtual void exchange_buffer(
+        mir::protobuf::BufferRequest const* /*request*/,
         mir::protobuf::Buffer* response,
         google::protobuf::Closure* done) override
     {

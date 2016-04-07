@@ -13,30 +13,23 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Author: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#include "make_empty_event.h"
-#include "mir/events/event_private.h"
+#ifndef MIR_COMMON_CLOSE_SURFACE_EVENT_H_
+#define MIR_COMMON_CLOSE_SURFACE_EVENT_H_
 
-#include <cstring>
-#include <cstdlib>
+#include "mir/events/event.h"
 
-namespace mev = mir::events;
-namespace
+struct MirCloseSurfaceEvent : MirEvent
 {
-    void delete_event(MirEvent *e)
-    {
-        // xkbcommon creates the keymap through malloc
-        if (e && e->type == mir_event_type_keymap)
-            std::free(const_cast<char*>(e->keymap.buffer));
-        delete e;
-    }
-}
+    MirCloseSurfaceEvent();
 
-mir::EventUPtr mev::make_empty_event()
-{
-    auto e = new MirEvent;
-    std::memset(e, 0, sizeof (MirEvent));
-    return mir::EventUPtr(e, delete_event);
-}
+    int surface_id() const;
+    void set_surface_id(int id);
+
+private:
+    int surface_id_{-1};
+};
+
+#endif /* MIR_COMMON_CLOSE_SURFACE_EVENT_H_ */

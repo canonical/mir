@@ -222,12 +222,11 @@ MIR_CLIENT_9v19 {
     mir_surface_spec_set_shell_chrome;
 } MIR_CLIENT_9v18;
 
-MIR_CLIENT_9_unreleased {
+MIR_CLIENT_0.21 {
   global:
     mir_connection_apply_display_configuration;
     mir_connection_create_display_configuration;
     mir_connection_create_input_config;
-    mir_connection_set_base_display_configuration;
     mir_connection_set_input_config_change_callback;
     mir_display_config_get_max_simultaneous_outputs;
     mir_display_config_get_num_outputs;
@@ -265,10 +264,32 @@ MIR_CLIENT_9_unreleased {
     mir_output_mode_get_height;
     mir_output_mode_get_refresh_rate;
     mir_output_mode_get_width;
-    mir_output_mode_get_width;
   local:
     *;
 } MIR_CLIENT_9v19;
+
+MIR_CLIENT_0.22 {  # New functions in Mir 0.22
+  global:
+    mir_connection_confirm_base_display_configuration;
+    mir_connection_preview_base_display_configuration;
+    mir_create_screencast_spec;
+    mir_display_config_get_mutable_output;
+    mir_output_disable;
+    mir_output_enable;
+    mir_output_set_current_mode;
+    mir_output_set_orientation;
+    mir_output_set_pixel_format;
+    mir_output_set_position;
+    mir_output_set_power_mode;
+    mir_screencast_create_sync;
+    mir_screencast_get_error_message;
+    mir_screencast_is_valid;
+    mir_screencast_spec_release;
+    mir_screencast_spec_set_capture_region;
+    mir_screencast_spec_set_height;
+    mir_screencast_spec_set_pixel_format;
+    mir_screencast_spec_set_width;
+} MIR_CLIENT_0.21;
 
 MIR_CLIENT_DETAIL_9 {
   global:
@@ -326,7 +347,7 @@ MIR_CLIENT_DETAIL_9v19 {
     };
 } MIR_CLIENT_DETAIL_9v18;
 
-MIR_CLIENT_DETAIL_9v21 {
+MIR_CLIENT_DETAIL_0.21 {
   global:
     extern "C++" { 
       mir::client::DefaultConnectionConfiguration::the_buffer_factory*;

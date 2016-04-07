@@ -20,6 +20,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/buffer_sink.h"
 #include "src/client/buffer_vault.h"
+#include "src/client/buffer_factory.h"
 #include "src/client/client_buffer_depository.h"
 #include "src/client/buffer_factory.h"
 #include "src/client/protobuf_to_native_buffer.h"
@@ -288,7 +289,7 @@ struct StubEventSink : public mf::EventSink
     {
     }
 
-    void send_buffer(mg::Buffer& buffer, mg::BufferIpcMsgType)
+    void send_buffer(mf::BufferStreamId, mg::Buffer& buffer, mg::BufferIpcMsgType)
     {
         mp::Buffer protobuffer;
         protobuffer.set_buffer_id(buffer.id().as_value());
@@ -296,11 +297,18 @@ struct StubEventSink : public mf::EventSink
         protobuffer.set_height(buffer.size().height.as_int());
         ipc->client_bound_transfer(protobuffer);
     }
-    void send_buffer(mf::BufferStreamId, mg::Buffer& buffer, mg::BufferIpcMsgType type)
+    void add_buffer(mg::Buffer& buffer)
     {
-        send_buffer(buffer, type);
+        send_buffer(mf::BufferStreamId{-1}, buffer, mg::BufferIpcMsgType::full_msg);
     }
-
+    void remove_buffer(mg::Buffer& buffer)
+    {
+        send_buffer(mf::BufferStreamId{-1}, buffer, mg::BufferIpcMsgType::update_msg);
+    }
+    void update_buffer(mg::Buffer& buffer)
+    {
+        send_buffer(mf::BufferStreamId{-1}, buffer, mg::BufferIpcMsgType::update_msg);
+    }
     void handle_event(MirEvent const&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
     void handle_display_config_change(mg::DisplayConfiguration const&) {}
@@ -363,11 +371,11 @@ struct ServerRequests : mcl::ServerBufferRequests
     {
     }
 
-    void submit_buffer(int buffer_id, mcl::ClientBuffer&)
+    void submit_buffer(mcl::Buffer& buffer)
     {
-        mp::Buffer buffer;
-        buffer.set_buffer_id(buffer_id);
-        ipc->server_bound_transfer(buffer);   
+        mp::Buffer buffer_req;
+        buffer_req.set_buffer_id(buffer.rpc_id());
+        ipc->server_bound_transfer(buffer_req);
     }
     std::shared_ptr<StubIpcSystem> ipc;
 };
@@ -379,24 +387,22 @@ struct ScheduledProducer : ProducerSystem
         map(std::make_shared<mcl::ConnectionSurfaceMap>()),
         factory(std::make_shared<mcl::BufferFactory>()),
         vault(
-            std::make_shared<mtd::StubClientBufferFactory>(),
-            std::make_shared<ServerRequests>(ipc),
-            map, factory,
+            std::make_shared<mtd::StubClientBufferFactory>(), factory,
+            std::make_shared<ServerRequests>(ipc), map,
             geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers)
     {
         ipc->on_client_bound_transfer([this](mp::Buffer& ipc_buffer){
             available++;
-
             auto buffer = map->buffer(ipc_buffer.buffer_id());
-            if (buffer)
-            {
-                buffer->received(*mcl::protobuf_to_native_buffer(ipc_buffer));
-            }
-            else
+            if (!buffer)
             {
                 buffer = factory->generate_buffer(ipc_buffer);
                 map->insert(ipc_buffer.buffer_id(), buffer); 
                 buffer->received();
+            }
+            else
+            {
+                buffer->received(*mcl::protobuf_to_native_buffer(ipc_buffer));
             }
         });
         ipc->on_resize_event([this](geom::Size sz)
@@ -450,7 +456,7 @@ struct ScheduledProducer : ProducerSystem
     geom::Size last_size_;
     std::vector<BufferEntry> entries;
     std::shared_ptr<StubIpcSystem> ipc;
-    std::shared_ptr<mcl::ConnectionSurfaceMap> map;
+    std::shared_ptr<mcl::SurfaceMap> const map;
     std::shared_ptr<mcl::BufferFactory> factory;
     mcl::BufferVault vault;
     int max, cur;
@@ -921,6 +927,31 @@ TEST_P(WithThreeOrMoreBuffers, client_is_unblocked_after_policy_is_triggered)
     EXPECT_THAT(production_log[nbuffers + 1].blockage, Eq(Access::unblocked));
 }
 
+TEST_P(WithTwoOrMoreBuffers, client_is_not_woken_by_compositor_release)
+{
+    // If early release is accidentally active, make sure we see it. But it
+    // requires a dummy frame first:
+    producer->produce();
+    auto onscreen = stream->lock_compositor_buffer(this);
+    onscreen.reset();
+
+    while (producer->can_produce())
+        producer->produce();
+
+    ASSERT_FALSE(producer->can_produce());
+    onscreen = stream->lock_compositor_buffer(this);
+
+    // This varies between NBS and BufferQueue. Should it?
+    if (producer->can_produce())
+        producer->produce();
+    ASSERT_FALSE(producer->can_produce());
+
+    onscreen.reset();
+    // single_monitor_fast -> can produce here
+    // multi_monitor_sync -> can't produce here
+    ASSERT_FALSE(producer->can_produce());
+}
+
 // Regression test for LP: #1319765
 TEST_P(WithTwoBuffers, client_is_not_blocked_prematurely)
 {
@@ -1039,6 +1070,7 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
     mtd::MockFrameDroppingPolicyFactory policy_factory;
     mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory),
                           properties, policy_factory};
+    queue.set_mode(mc::MultiMonitorMode::single_monitor_fast);
     queue.allow_framedropping(false);
 
     mg::Buffer* client_buffer = nullptr;
@@ -1105,6 +1137,7 @@ TEST_P(WithTwoOrMoreBuffers, short_buffer_holds_dont_overclock_multimonitor)
     mtd::MockFrameDroppingPolicyFactory policy_factory;
     mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory),
                           properties, policy_factory};
+    queue.set_mode(mc::MultiMonitorMode::single_monitor_fast);
     queue.allow_framedropping(false);
 
     const void* const leftid = "left";

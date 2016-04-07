@@ -68,7 +68,8 @@ struct MockBufferStream : public compositor::BufferStream
     MOCK_METHOD1(resize, void(geometry::Size const&));
     MOCK_METHOD0(force_client_completion, void());
     MOCK_METHOD1(allow_framedropping, void(bool));
-    MOCK_METHOD0(force_requests_to_complete, void());
+
+    MOCK_METHOD0(drop_outstanding_requests, void());
     MOCK_CONST_METHOD1(buffers_ready_for_compositor, int(void const*));
     MOCK_METHOD0(drop_old_buffers, void());
     MOCK_METHOD0(drop_client_requests, void());
@@ -77,9 +78,8 @@ struct MockBufferStream : public compositor::BufferStream
     MOCK_METHOD1(with_most_recent_buffer_do, void(std::function<void(graphics::Buffer&)> const&));
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
     MOCK_CONST_METHOD0(has_submitted_buffer, bool());
-    MOCK_METHOD1(allocate_buffer, graphics::BufferID(graphics::BufferProperties const&));
-    MOCK_METHOD1(remove_buffer, void(graphics::BufferID));
-    MOCK_METHOD2(with_buffer, void(graphics::BufferID, std::function<void(graphics::Buffer&)> const&));
+    MOCK_METHOD1(disassociate_buffer, void(graphics::BufferID));
+    MOCK_METHOD1(associate_buffer, void(graphics::BufferID));
     MOCK_METHOD1(set_scale, void(float));
 };
 }

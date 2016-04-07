@@ -57,7 +57,6 @@ void mcl::BufferFactory::expect_buffer(
 std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(mir::protobuf::Buffer const& buffer)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-    //must be new, allocate and send it.
     auto request_it = std::find_if(allocation_requests.begin(), allocation_requests.end(),
         [&buffer](std::unique_ptr<AllocationRequest> const& it)
         {
@@ -77,4 +76,17 @@ std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(mir::protobuf::
 
     allocation_requests.erase(request_it);
     return std::move(b);
+}
+
+void mcl::BufferFactory::cancel_requests_with_context(void* cancelled_context)
+{
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    auto it = allocation_requests.begin();
+    while (it != allocation_requests.end())
+    {
+        if ((*it)->cb_context == cancelled_context)
+            it = allocation_requests.erase(it);
+        else
+            it++;
+    }
 }

@@ -93,6 +93,8 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
     void session_configure_surface_cursor_called(std::string const&) override {};
     void session_configure_display_called(std::string const&) override {};
     void session_set_base_display_configuration_called(std::string const&) override {};
+    void session_preview_base_display_configuration_called(std::string const&) override {};
+    void session_confirm_base_display_configuration_called(std::string const&) override {};
     void session_create_buffer_stream_called(std::string const&) override {}
     void session_release_buffer_stream_called(std::string const&) override {}
     void session_error(const std::string&, const char*, const std::string&) override {};
@@ -710,7 +712,7 @@ TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
 
         mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
 
-        condition.wait_for_at_most_seconds(1);
+        condition.wait_for_at_most_seconds(3);
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
     }
 

@@ -343,33 +343,6 @@ void mf::SessionMediator::create_surface(
         });
 }
 
-void mf::SessionMediator::next_buffer(
-    ::mir::protobuf::SurfaceId const* request,
-    ::mir::protobuf::Buffer* response,
-    ::google::protobuf::Closure* done)
-{
-    SurfaceId const surf_id{request->value()};
-
-    auto const session = weak_session.lock();
-
-    if (session.get() == nullptr)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-    report->session_next_buffer_called(session->name());
-
-    auto surface = session->get_surface(surf_id);
-    auto stream = surface->primary_buffer_stream();
-    auto stream_id = mf::BufferStreamId{surf_id.as_value()};
-
-    advance_buffer(stream_id, *stream, buffer_stream_tracker.last_buffer(stream_id),
-        [this, response, done]
-        (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
-        {
-            pack_protobuf_buffer(*response, client_buffer, msg_type);
-            done->Run();
-        });
-}
-
 void mf::SessionMediator::exchange_buffer(
     mir::protobuf::BufferRequest const* request,
     mir::protobuf::Buffer* response,
@@ -457,7 +430,13 @@ void mf::SessionMediator::allocate_buffers(
             geom::Size{req.width(), req.height()},
             static_cast<MirPixelFormat>(req.pixel_format()),
            static_cast<mg::BufferUsage>(req.buffer_usage()));
-        session->create_buffer(properties);
+
+        auto id = session->create_buffer(properties);
+        if (request->has_id())
+        {
+            auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
+            stream->associate_buffer(id);
+        }
     }
     done->Run();
 }
@@ -473,7 +452,15 @@ void mf::SessionMediator::release_buffers(
 
     report->session_release_buffers_called(session->name());
     for (auto i = 0; i < request->buffers().size(); i++)
-        session->destroy_buffer(mg::BufferID{static_cast<uint32_t>(request->buffers(i).buffer_id())});
+    {
+        mg::BufferID buffer_id{static_cast<uint32_t>(request->buffers(i).buffer_id())};
+        if (request->has_id())
+        {
+            auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
+            stream->disassociate_buffer(buffer_id);
+        }
+        session->destroy_buffer(buffer_id);
+    }
    done->Run();
 }
  
@@ -672,6 +659,46 @@ void mf::SessionMediator::set_base_display_configuration(
 
     auto const config = unpack_and_sanitize_display_configuration(request);
     display_changer->set_base_configuration(config);
+
+    done->Run();
+}
+
+void mf::SessionMediator::preview_base_display_configuration(
+    mir::protobuf::PreviewConfiguration const* request,
+    mir::protobuf::Void* /*response*/,
+    google::protobuf::Closure* done)
+{
+    auto session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    report->session_preview_base_display_configuration_called(session->name());
+
+    auto const config = unpack_and_sanitize_display_configuration(&request->configuration());
+    display_changer->preview_base_configuration(
+        weak_session,
+        config,
+        std::chrono::seconds{request->timeout()});
+
+    done->Run();
+}
+
+void mf::SessionMediator::confirm_base_display_configuration(
+    mir::protobuf::DisplayConfiguration const* request,
+    mir::protobuf::Void* /*response*/,
+    google::protobuf::Closure* done)
+{
+    auto session = weak_session.lock();
+
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    report->session_confirm_base_display_configuration_called(session->name());
+
+    auto const config = unpack_and_sanitize_display_configuration(request);
+
+    display_changer->confirm_base_configuration(session, config);
 
     done->Run();
 }

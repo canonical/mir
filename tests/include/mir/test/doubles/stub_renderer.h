@@ -33,13 +33,9 @@ namespace doubles
 class StubRenderer : public compositor::Renderer
 {
 public:
-    void set_viewport(geometry::Rectangle const&) override
-    {
-    }
-
-    void set_rotation(float) override
-    {
-    }
+    void set_viewport(geometry::Rectangle const&) override {}
+    void set_output_transform(MirOrientation, MirMirrorMode) override {}
+    void suspend() override {}
 
     void render(graphics::RenderableList const& renderables) const override
     {
@@ -47,10 +43,6 @@ public:
             r->buffer(); // We need to consume a buffer to unblock client tests
         // Yield to reduce runtime under valgrind
         std::this_thread::yield();
-    }
-
-    void suspend() override
-    {
     }
 };
 

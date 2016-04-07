@@ -131,10 +131,6 @@ class AndroidInputReceiverSetup : public testing::Test
 {
 public:
     AndroidInputReceiverSetup()
-        : event_handler{[this](MirEvent* ev)
-                        {
-                            last_event = *ev;
-                        }}
     {
         auto status = droidinput::InputChannel::openInputFdPair(server_fd, client_fd);
         EXPECT_EQ(droidinput::OK, status);
@@ -154,8 +150,7 @@ public:
     int server_fd, client_fd;
 
     static std::chrono::milliseconds const next_event_timeout;
-    MirEvent last_event;
-    std::function<void(MirEvent*)> event_handler;
+    std::function<void(MirEvent*)> event_handler{[](MirEvent*){}};
 };
 
 std::chrono::milliseconds const AndroidInputReceiverSetup::next_event_timeout(1000);
@@ -163,9 +158,16 @@ std::chrono::milliseconds const AndroidInputReceiverSetup::next_event_timeout(10
 
 TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
 {
+    MirKeyboardEvent last_event;
     mircva::InputReceiver receiver{client_fd,
                                    std::make_shared<mircv::XKBMapper>(),
-                                   event_handler,
+                                   [&last_event](MirEvent* ev)
+                                   {
+                                       if (ev->type() == mir_event_type_key)
+                                       {
+                                           last_event = *ev->to_input()->to_keyboard();
+                                       }
+                                   },
                                    std::make_shared<mircv::NullInputReceiverReport>()};
     TestingInputProducer producer{server_fd};
 
@@ -176,8 +178,8 @@ TEST_F(AndroidInputReceiverSetup, receiver_receives_key_events)
     EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
 
-    EXPECT_EQ(mir_event_type_key, last_event.type);
-    EXPECT_EQ(producer.testing_key_event_scan_code, last_event.key.scan_code);
+    EXPECT_EQ(mir_event_type_key, last_event.type());
+    EXPECT_EQ(producer.testing_key_event_scan_code, last_event.scan_code());
 }
 
 TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
@@ -230,14 +232,14 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
 
     auto t = 0ns;
 
-    MirEvent ev;
+    std::unique_ptr<MirEvent> ev;
     bool handler_called{false};
 
     mircva::InputReceiver receiver{client_fd,
                                    std::make_shared<mircv::XKBMapper>(),
                                    [&ev, &handler_called](MirEvent* event)
                                    {
-                                       ev = *event;
+                                       ev.reset(event->clone());
                                        handler_called = true;
                                    },
                                    std::make_shared<mircv::NullInputReceiverReport>(),
@@ -257,7 +259,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     EXPECT_TRUE(mt::fd_becomes_readable(receiver.watch_fd(), next_event_timeout));
     receiver.dispatch(md::FdEvent::readable);
     EXPECT_TRUE(handler_called);
-    ASSERT_EQ(mir_event_type_key, ev.type);
+    ASSERT_EQ(mir_event_type_key, ev->type());
 
     // The motion is still too new. Won't be reported yet, but is batched.
     auto start = high_resolution_clock::now();
@@ -284,7 +286,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
     receiver.dispatch(md::FdEvent::readable);
 
     EXPECT_TRUE(handler_called);
-    EXPECT_EQ(mir_event_type_motion, ev.type);
+    EXPECT_EQ(mir_event_type_motion, ev->type());
 }
 
 TEST_F(AndroidInputReceiverSetup, finish_signalled_after_handler)

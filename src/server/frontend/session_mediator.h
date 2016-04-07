@@ -130,10 +130,6 @@ public:
         mir::protobuf::SurfaceModifications const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
-    void next_buffer(
-        mir::protobuf::SurfaceId const* request,
-        mir::protobuf::Buffer* response,
-        google::protobuf::Closure* done) override;
     void release_surface(
         mir::protobuf::SurfaceId const* request,
         mir::protobuf::Void* response,
@@ -151,6 +147,14 @@ public:
         mir::protobuf::DisplayConfiguration* response,
         google::protobuf::Closure* done) override;
     void set_base_display_configuration(
+        mir::protobuf::DisplayConfiguration const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
+    void preview_base_display_configuration(
+        mir::protobuf::PreviewConfiguration const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
+    void confirm_base_display_configuration(
         mir::protobuf::DisplayConfiguration const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;

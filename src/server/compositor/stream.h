@@ -28,6 +28,7 @@
 #include "multi_monitor_arbiter.h"
 #include <mutex>
 #include <memory>
+#include <set>
 
 namespace mir
 {
@@ -55,10 +56,12 @@ public:
     geometry::Size stream_size() override;
     void resize(geometry::Size const& size) override;
     void allow_framedropping(bool) override;
-    void force_requests_to_complete() override;
+    void drop_outstanding_requests() override;
     int buffers_ready_for_compositor(void const* user_id) const override;
     void drop_old_buffers() override;
     bool has_submitted_buffer() const override;
+    void associate_buffer(graphics::BufferID) override;
+    void disassociate_buffer(graphics::BufferID) override;
     void set_scale(float scale) override;
 
 private:
@@ -80,12 +83,15 @@ private:
     ScheduleMode schedule_mode;
     std::shared_ptr<Schedule> schedule;
     std::shared_ptr<frontend::ClientBuffers> buffers;
-    std::shared_ptr<MultiMonitorArbiter> arbiter;
+    std::shared_ptr<MultiMonitorArbiter> const arbiter;
     geometry::Size size; 
     MirPixelFormat const pf;
     bool first_frame_posted;
 
     scene::SurfaceObservers observers;
+
+    std::set<graphics::BufferID> associated_buffers;
+    unsigned int client_owned_buffer_count(std::lock_guard<decltype(mutex)> const&) const;
 };
 }
 }

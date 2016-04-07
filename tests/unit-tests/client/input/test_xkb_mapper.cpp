@@ -39,7 +39,7 @@ static int map_key(mircv::XKBMapper &mapper, MirKeyboardAction action, int scan_
                               0, scan_code, mir_input_event_modifier_none);
 
     mapper.update_state_and_map_event(*ev);
-    return ev->key.key_code;
+    return ev->to_input()->to_keyboard()->key_code();
 }
 
 }

@@ -21,6 +21,7 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/renderable.h"
+#include <mir_toolkit/common.h>
 
 namespace mir
 {
@@ -35,7 +36,8 @@ public:
     virtual ~Renderer() = default;
 
     virtual void set_viewport(geometry::Rectangle const& rect) = 0;
-    virtual void set_rotation(float degrees) = 0;
+    // Mirroring is to be applied after orientation
+    virtual void set_output_transform(MirOrientation orientation, MirMirrorMode mode) = 0;
     virtual void render(graphics::RenderableList const&) const = 0;
     virtual void suspend() = 0; // called when render() is skipped
 

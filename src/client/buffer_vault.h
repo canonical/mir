@@ -32,17 +32,17 @@ namespace mir
 namespace protobuf { class Buffer; }
 namespace client
 {
-class SurfaceMap;
-class AsyncBufferFactory;
 class ClientBuffer;
 class Buffer;
+class AsyncBufferFactory;
+class SurfaceMap;
 
 class ServerBufferRequests
 {
 public:
     virtual void allocate_buffer(geometry::Size size, MirPixelFormat format, int usage) = 0;
     virtual void free_buffer(int buffer_id) = 0;
-    virtual void submit_buffer(int buffer_id, ClientBuffer&) = 0;
+    virtual void submit_buffer(Buffer&) = 0;
     virtual ~ServerBufferRequests() = default;
 protected:
     ServerBufferRequests() = default;
@@ -57,9 +57,9 @@ class BufferVault
 public:
     BufferVault(
         std::shared_ptr<ClientBufferFactory> const&,
-        std::shared_ptr<ServerBufferRequests> const&,
-        std::shared_ptr<SurfaceMap> const&,
         std::shared_ptr<AsyncBufferFactory> const&,
+        std::shared_ptr<ServerBufferRequests> const&,
+        std::weak_ptr<SurfaceMap> const&,
         geometry::Size size, MirPixelFormat format, int usage,
         unsigned int initial_nbuffers);
     ~BufferVault();
@@ -71,29 +71,31 @@ public:
     void set_size(geometry::Size);
     void disconnected();
     void set_scale(float scale);
+    void increase_buffer_count();
+    void decrease_buffer_count();
 
 private:
-    void realloc(int free_id, geometry::Size, MirPixelFormat, int);
+    void alloc_buffer(geometry::Size size, MirPixelFormat format, int usage);
+    void free_buffer(int free_id);
+    void realloc_buffer(int free_id, geometry::Size size, MirPixelFormat format, int usage);
+    std::shared_ptr<Buffer> checked_buffer_from_map(int id);
 
-    std::shared_ptr<ClientBufferFactory> const factory;
+    std::shared_ptr<ClientBufferFactory> const platform_factory;
+    std::shared_ptr<AsyncBufferFactory> const buffer_factory;
     std::shared_ptr<ServerBufferRequests> const server_requests;
-    std::shared_ptr<SurfaceMap> const map;
-    std::shared_ptr<AsyncBufferFactory> const mirfactory;
+    std::weak_ptr<SurfaceMap> const surface_map;
     MirPixelFormat const format;
     int const usage;
 
     enum class Owner;
-    struct BufferEntry
-    {
-        std::shared_ptr<Buffer> buffer;
-        Owner owner;
-    };
-
     std::mutex mutex;
-    std::map<int, BufferEntry> buffers;
+    std::map<int, Owner> buffers;
     std::deque<NoTLSPromise<std::shared_ptr<Buffer>>> promises;
     geometry::Size size;
     bool disconnected_;
+    size_t current_buffer_count;
+    size_t needed_buffer_count;
+    size_t const initial_buffer_count;
 };
 }
 }

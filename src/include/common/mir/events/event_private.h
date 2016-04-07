@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -25,177 +25,17 @@
 #ifndef MIR_COMMON_EVENT_PRIVATE_H_
 #define MIR_COMMON_EVENT_PRIVATE_H_
 
-#include <stddef.h>
-#include <stdint.h>
-#include "mir_toolkit/event.h"
-#include "mir_toolkit/common.h"
-#include "mir/cookie/blob.h"
-
-#include <xkbcommon/xkbcommon.h>
-#include <array>
-#include <chrono>
-
-#ifdef __cplusplus
-/**
- * \addtogroup mir_toolkit
- * @{
- */
-extern "C" {
-#endif
-/* TODO: To the moon. */
-#define MIR_INPUT_EVENT_MAX_POINTER_COUNT 16
-
-// PRIVATE
-// Direct access to MirKeyboardEvent is deprecated. Please use mir_event_get_input_event
-// and the mir_input_event* family of functions.
-struct MirKeyboardEvent
-{
-    MirEventType type;
-
-    int32_t device_id;
-    int32_t source_id;
-    MirKeyboardAction action;
-    MirInputEventModifiers modifiers;
-
-    int32_t key_code;
-    int32_t scan_code;
-
-    std::chrono::nanoseconds event_time;
-    mir::cookie::Blob cookie;
-};
-
-typedef struct
-{
-    int id;
-    float x;
-    float y;
-    float dx;
-    float dy;
-    float touch_major;
-    float touch_minor;
-    float size;
-    float pressure;
-    float orientation;
-    float vscroll;
-    float hscroll;
-    MirTouchTooltype tool_type;
-
-    // TODO: We would like to store this as a MirTouchAction but we still encode pointer actions
-    // here as well.
-    int action;
-} MirMotionPointer;
-
-// PRIVATE
-// Direct access to MirMotionEvent is deprecated. Please use mir_event_get_input_event
-// and the mir_input_event* family of functions.
-typedef struct
-{
-    MirEventType type;
-
-    int32_t device_id;
-    int32_t source_id;
-
-    MirInputEventModifiers modifiers;
-
-    MirPointerButtons buttons;
-    std::chrono::nanoseconds event_time;
-    mir::cookie::Blob cookie;
-
-    size_t pointer_count;
-    MirMotionPointer pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
-    /* "_coordinates" is a misnomer here because there's plenty more info than
-       just coordinates, but renaming it accurately would be an API break */
-} MirMotionEvent;
- 
-struct MirInputConfigurationEvent
-{
-    MirEventType type;
-
-    MirInputConfigurationAction action;
-    std::chrono::nanoseconds when;
-    MirInputDeviceId id;
-};
-
-struct MirSurfaceEvent
-{
-    MirEventType type;
-
-    int id;
-    MirSurfaceAttrib attrib;
-    int value;
-};
-
-struct MirResizeEvent
-{
-    MirEventType type;
-
-    int surface_id;
-    int width;
-    int height;
-};
-
-struct MirPromptSessionEvent
-{
-    MirEventType type;
-
-    MirPromptSessionState new_state;
-};
-
-struct MirOrientationEvent
-{
-    MirEventType type;
-
-    int surface_id;
-    MirOrientation direction;
-};
-
-struct MirCloseSurfaceEvent
-{
-    MirEventType type;
-
-    int surface_id;
-};
-
-struct MirKeymapEvent
-{
-    MirEventType type;
-
-    int surface_id;
-    MirInputDeviceId device_id;
-    char const* buffer;
-    size_t size;
-};
-
-struct MirSurfaceOutputEvent
-{
-    MirEventType type;
-
-    int surface_id;
-    int dpi;
-    float scale;
-    MirFormFactor form_factor;
-    uint32_t output_id;
-};
-
-// Access to MirEvent is deprecated
-union MirEvent
-{
-    MirEventType     type;
-    MirKeyboardEvent key;
-    MirMotionEvent   motion;
-    MirSurfaceEvent  surface;
-    MirResizeEvent   resize;
-    MirPromptSessionEvent  prompt_session;
-    MirOrientationEvent orientation;
-    MirCloseSurfaceEvent   close_surface;
-    MirKeymapEvent keymap;
-    MirInputConfigurationEvent input_configuration;
-    MirSurfaceOutputEvent surface_output;
-};
-
-#ifdef __cplusplus
-}
-/**@}*/
-#endif
+#include "mir/events/event.h"
+#include "mir/events/close_surface_event.h"
+#include "mir/events/input_configuration_event.h"
+#include "mir/events/input_event.h"
+#include "mir/events/keyboard_event.h"
+#include "mir/events/keymap_event.h"
+#include "mir/events/motion_event.h"
+#include "mir/events/orientation_event.h"
+#include "mir/events/prompt_session_event.h"
+#include "mir/events/resize_event.h"
+#include "mir/events/surface_event.h"
+#include "mir/events/surface_output_event.h"
 
 #endif /* MIR_COMMON_EVENT_PRIVATE_H_ */

@@ -41,7 +41,6 @@ public:
 
     void receive_buffer(graphics::BufferID id) override;
     void send_buffer(graphics::BufferID id) override;
-    size_t client_owned_buffer_count() const override;
 
     std::shared_ptr<graphics::Buffer>& operator[](graphics::BufferID) override;
     

@@ -19,6 +19,8 @@
 #define MIR_LOG_COMPONENT "MirBufferStream"
 
 #include "buffer_stream.h"
+#include "buffer.h"
+#include "buffer_factory.h"
 #include "make_protobuf_object.h"
 #include "mir_connection.h"
 #include "perf_report.h"
@@ -28,6 +30,7 @@
 #include "buffer_vault.h"
 #include "protobuf_to_native_buffer.h"
 #include "buffer.h"
+#include "connection_surface_map.h"
 
 #include "mir/log.h"
 #include "mir/client_platform.h"
@@ -64,6 +67,7 @@ struct ServerBufferSemantics
     virtual void lost_connection() = 0;
     virtual void set_size(geom::Size) = 0;
     virtual MirWaitHandle* set_scale(float, mf::BufferStreamId) = 0;
+    virtual void set_interval(int interval) = 0;
     virtual ~ServerBufferSemantics() = default;
     ServerBufferSemantics() = default;
     ServerBufferSemantics(ServerBufferSemantics const&) = delete;
@@ -197,6 +201,10 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         return &scale_wait_handle;
     }
 
+    void set_interval(int) override
+    {
+    }
+
     std::mutex mutex;
     mcl::ClientBufferDepository wrapped;
     mir::protobuf::DisplayServer& display_server;
@@ -246,11 +254,11 @@ public:
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
 
-    void submit_buffer(int id, mcl::ClientBuffer&) override
+    void submit_buffer(mcl::Buffer& buffer) override
     {
         mp::BufferRequest request;
         request.mutable_id()->set_value(stream_id);
-        request.mutable_buffer()->set_buffer_id(id);
+        request.mutable_buffer()->set_buffer_id(buffer.rpc_id());
 
         //note, NewCallback will trigger on exception, deleting this object there
         auto protobuf_void = new mp::Void;
@@ -273,12 +281,12 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 {
     NewBufferSemantics(
         std::shared_ptr<mcl::ClientBufferFactory> const& factory,
+        std::shared_ptr<mcl::AsyncBufferFactory> const& mirbuffer_factory,
         std::shared_ptr<mcl::ServerBufferRequests> const& requests,
-        std::shared_ptr<mcl::SurfaceMap> const& map,
-        std::shared_ptr<mcl::AsyncBufferFactory> const& afactory,
+        std::weak_ptr<mcl::SurfaceMap> const& surface_map,
         geom::Size size, MirPixelFormat format, int usage,
         unsigned int initial_nbuffers) :
-        vault(factory, requests, map, afactory, size, format, usage, initial_nbuffers)
+        vault(factory, mirbuffer_factory, requests, surface_map, size, format, usage, initial_nbuffers)
     {
     }
 
@@ -351,11 +359,25 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         return &scale_wait_handle;
     }
 
+    void set_interval(int interval) override
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        interval = std::max(0, std::min(1, interval));
+        if (current_swap_interval == interval)
+            return;
+        if (interval == 0)
+            vault.increase_buffer_count();
+        else
+            vault.decrease_buffer_count();
+        current_swap_interval = interval;
+    }
+
     mcl::BufferVault vault;
     std::mutex mutex;
     std::shared_ptr<mcl::Buffer> current{nullptr};
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle scale_wait_handle;
+    int current_swap_interval = 1;
 };
 
 }
@@ -365,7 +387,7 @@ mcl::BufferStream::BufferStream(
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
-    std::shared_ptr<mcl::SurfaceMap> const& map,
+    std::weak_ptr<mcl::SurfaceMap> const& map,
     std::shared_ptr<mcl::AsyncBufferFactory> const& factory,
     mp::BufferStream const& a_protobuf_bs,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
@@ -382,7 +404,8 @@ mcl::BufferStream::BufferStream(
       ideal_buffer_size(ideal_size),
       nbuffers(nbuffers),
       creation_wait_handle(creation_wait_handle),
-      map(map), factory(factory)
+      map(map),
+      factory(factory)
 {
     init_swap_interval();
     if (!protobuf_bs->has_id())
@@ -411,9 +434,8 @@ mcl::BufferStream::BufferStream(
         {
             cached_buffer_size = ideal_buffer_size;
             buffer_depository = std::make_unique<NewBufferSemantics>(
-                client_platform->create_buffer_factory(),
-                std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
-                map, factory,
+                client_platform->create_buffer_factory(), factory,
+                std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
                 ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
                 protobuf_bs->buffer_usage(), nbuffers);
         }
@@ -466,7 +488,7 @@ mcl::BufferStream::BufferStream(
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
-    std::shared_ptr<mcl::SurfaceMap> const& map,
+    std::weak_ptr<mcl::SurfaceMap> const& map,
     std::shared_ptr<mcl::AsyncBufferFactory> const& factory,
     mp::BufferStreamParameters const& parameters,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
@@ -481,7 +503,8 @@ mcl::BufferStream::BufferStream(
       ideal_buffer_size(parameters.width(), parameters.height()),
       nbuffers(nbuffers),
       creation_wait_handle(creation_wait_handle),
-        map(map), factory(factory)
+      map(map),
+      factory(factory)
 {
     perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
 
@@ -499,9 +522,8 @@ mcl::BufferStream::BufferStream(
     else
     {
         buffer_depository = std::make_unique<NewBufferSemantics>(
-            client_platform->create_buffer_factory(),
-            std::make_shared<Requests>(display_server, protobuf_bs->id().value()),
-            map, factory,
+            client_platform->create_buffer_factory(), factory,
+            std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
             ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
     }
 }
@@ -647,6 +669,8 @@ MirWaitHandle* mcl::BufferStream::force_swap_interval(int interval)
     mp::StreamConfiguration configuration;
     configuration.mutable_id()->set_value(protobuf_bs->id().value());
     configuration.set_swapinterval(interval);
+
+    buffer_depository->set_interval(interval);
 
     interval_wait_handle.expect_result();
     display_server.configure_buffer_stream(&configuration, protobuf_void.get(),

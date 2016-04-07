@@ -45,7 +45,6 @@ struct MockSurfaceObserver : mir::scene::NullSurfaceObserver
 struct StubBufferMap : mf::ClientBuffers
 {
     StubBufferMap(mf::EventSink& sink, std::vector<std::shared_ptr<mg::Buffer>>& buffers) :
-        client_count{static_cast<int>(buffers.size())},
         buffers{buffers},
         sink{sink}
     {
@@ -62,11 +61,9 @@ struct StubBufferMap : mf::ClientBuffers
     }
     void receive_buffer(mg::BufferID)
     {
-        client_count--;
     }
     void send_buffer(mg::BufferID id)
     {
-        client_count++;
         sink.send_buffer(mf::BufferStreamId{33}, *operator[](id), mg::BufferIpcMsgType::update_msg);
     }
     std::shared_ptr<mg::Buffer>& operator[](mg::BufferID id)
@@ -80,11 +77,6 @@ struct StubBufferMap : mf::ClientBuffers
             throw std::logic_error("cannot find buffer in map");
         return *it;
     }
-    size_t client_owned_buffer_count() const
-    {
-        return client_count;
-    }
-    int client_count{0};
     std::vector<std::shared_ptr<mg::Buffer>>& buffers;
     mf::EventSink& sink;
 };
@@ -284,6 +276,24 @@ TEST_F(Stream, timer_starts_when_buffers_run_out_and_framedropping_disabled)
     mc::Stream stream{
         policy_factory,
         std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
+    for (auto const& buffer : buffers)
+        stream.associate_buffer(buffer->id());
+
+    for (auto& buffer : buffers)
+        stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
+}
+
+TEST_F(Stream, timer_does_not_start_when_no_associated_buffers)
+{
+    auto policy = std::make_unique<MockPolicy>();
+    mtd::FrameDroppingPolicyFactoryMock policy_factory;
+    EXPECT_CALL(*policy, swap_now_blocking())
+        .Times(0);
+    EXPECT_CALL(policy_factory, create_policy(_))
+        .WillOnce(InvokeWithoutArgs([&]{ return std::move(policy); }));
+    mc::Stream stream{
+        policy_factory,
+        std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
     for (auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
 }
@@ -299,6 +309,8 @@ TEST_F(Stream, timer_stops_if_a_buffer_is_available)
     mc::Stream stream{
         policy_factory,
         std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
+    for (auto const& buffer : buffers)
+        stream.associate_buffer(buffer->id());
     for (auto& buffer : buffers)
         stream.swap_buffers(buffer.get(), [](mg::Buffer*){});
     stream.lock_compositor_buffer(this);

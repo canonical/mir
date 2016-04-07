@@ -33,6 +33,9 @@ public:
     virtual ~BufferSink() = default;
 
     virtual void send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer, graphics::BufferIpcMsgType) = 0;
+    virtual void add_buffer(graphics::Buffer&) = 0;
+    virtual void remove_buffer(graphics::Buffer&) = 0;
+    virtual void update_buffer(graphics::Buffer&) = 0;
 
 protected:
     BufferSink() = default;

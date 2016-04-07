@@ -51,7 +51,7 @@ public:
     std::shared_ptr<Buffer> buffer(int buffer_id) const override;
 
 private:
-    std::shared_timed_mutex mutable surface_guard;
+    std::shared_timed_mutex mutable guard;
     std::unordered_map<frontend::SurfaceId, std::shared_ptr<MirSurface>> surfaces;
     std::shared_timed_mutex mutable stream_guard;
     std::unordered_map<frontend::BufferStreamId, std::shared_ptr<ClientBufferStream>> streams;

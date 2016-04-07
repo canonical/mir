@@ -210,11 +210,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::create_surface, invocation);
         }
-        else if ("next_buffer" == invocation.method_name())
-        {
-            auto request = parse_parameter<mir::protobuf::SurfaceId>(invocation);
-            invoke(shared_from_this(), display_server.get(), &DisplayServer::next_buffer, invocation.id(), &request);
-        }
         else if ("exchange_buffer" == invocation.method_name())
         {
             auto request = parse_parameter<mir::protobuf::BufferRequest>(invocation);
@@ -340,6 +335,14 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         else if ("request_persistent_surface_id" == invocation.method_name())
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::request_persistent_surface_id, invocation);
+        }
+        else if ("preview_base_display_configuration" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::preview_base_display_configuration, invocation);
+        }
+        else if ("confirm_base_display_configuration" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::confirm_base_display_configuration, invocation);
         }
         else
         {
