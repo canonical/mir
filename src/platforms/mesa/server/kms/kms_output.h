@@ -35,7 +35,7 @@ namespace graphics
 namespace mesa
 {
 
-class KMSOutput : public FrameClock
+class KMSOutput : public DisplayClock
 {
 public:
     virtual ~KMSOutput() = default;

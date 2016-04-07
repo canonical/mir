@@ -55,12 +55,12 @@ typedef std::function<void(Frame const&)> FrameCallback;
  * An abstract frame clock, which may represent a single phyisical display
  * or a group of displays.
  */
-class FrameClock
+class DisplayClock
 {
 public:
-    virtual ~FrameClock() = default;
+    virtual ~DisplayClock() = default;
     /**
-     * Last frame in which the display was actually used by the FrameClock
+     * Last frame in which the display was actually used by the DisplayClock
      * owner, which may be older than the last frame on the physical display.
      */
     virtual Frame last_frame() const = 0;

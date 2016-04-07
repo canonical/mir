@@ -51,7 +51,7 @@ public:
     bool schedule_page_flip(uint32_t fb_id);
     void wait_for_page_flip();
 
-    // FrameClock
+    // DisplayClock
     Frame last_frame() const override;
     void  on_next_frame(FrameCallback const&) override;
 
