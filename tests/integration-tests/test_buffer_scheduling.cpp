@@ -560,8 +560,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
                 [this](geom::Size sz)
                 {
                     map->add_buffer(
-                        mg::BufferProperties{sz, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware},
-                        mf::BufferStreamId{22});
+                        mg::BufferProperties{sz, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware});
                 });
 
             consumer = std::make_unique<ScheduledConsumer>(submit_stream);

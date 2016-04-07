@@ -412,10 +412,9 @@ void ms::ApplicationSession::destroy_surface(std::unique_lock<std::mutex>& lock,
     surface_stack->remove_surface(surface);
 }
 
-mg::BufferID ms::ApplicationSession::create_buffer(
-    mg::BufferProperties const& properties, mf::BufferStreamId id)
+mg::BufferID ms::ApplicationSession::create_buffer(mg::BufferProperties const& properties)
 {
-    return buffers->add_buffer(properties, id);
+    return buffers->add_buffer(properties);
 }
 
 void ms::ApplicationSession::destroy_buffer(mg::BufferID id)

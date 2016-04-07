@@ -1112,8 +1112,6 @@ TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_submit)
     request.mutable_buffer()->set_buffer_id(buffer1->id().as_value());
 
     InSequence seq;
-//    EXPECT_CALL(*mock_stream, with_buffer(buffer1->id(),_))
-//        .WillOnce(InvokeArgument<1>(*buffer1));
     EXPECT_CALL(mock_ipc_operations, unpack_buffer(_,_));
     EXPECT_CALL(*mock_stream, swap_buffers(_,_))
         .WillOnce(InvokeArgument<1>(nullptr));

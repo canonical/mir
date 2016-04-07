@@ -55,11 +55,11 @@ public:
     MirNativeFence* get_fence() const;
     bool wait_fence(MirBufferAccess, std::chrono::nanoseconds);
 
-    MirConnection* allocating_connection() const;
     MirBufferUsage buffer_usage() const;
     MirPixelFormat pixel_format() const;
     geometry::Size size() const;
 
+    MirConnection* allocating_connection() const;
 private:
     mir_buffer_callback cb;
     void* cb_context;

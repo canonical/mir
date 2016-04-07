@@ -141,8 +141,7 @@ void mtd::StubSession::send_input_device_change(std::vector<std::shared_ptr<mir:
 {
 }
 
-mir::graphics::BufferID mtd::StubSession::create_buffer(
-    mir::graphics::BufferProperties const&, mir::frontend::BufferStreamId)
+mir::graphics::BufferID mtd::StubSession::create_buffer(mir::graphics::BufferProperties const&)
 {
     return mir::graphics::BufferID(3);
 }
