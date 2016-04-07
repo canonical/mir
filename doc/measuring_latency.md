@@ -1,5 +1,6 @@
-Measuring Visual Latency
+Measuring Visual Latency {#latency}
 ========================
+
 Mir includes a utility called `mirvanity` that can use a high speed camera
 to measure the visual latency of your display (from client rendering to
 your eye).
@@ -12,6 +13,7 @@ need a high speed camera supported by Linux, such as a PlayStation Eye.
 
 How to use mirvanity
 --------------------
+
   1. Start your Mir server
   2. Plug in your camera
   3. Position the camera on a stable surface so that it does not move
