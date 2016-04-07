@@ -26,7 +26,7 @@
 #include "mir/events/event_private.h"
 
 #include "mir/test/pipe.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 #include "mir/test/auto_unblock_thread.h"
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir/test/doubles/mock_input_manager.h"
@@ -309,11 +309,11 @@ public:
 
     void wait_for_server_actions_to_finish()
     {
-        mt::WaitCondition last_action_done;
+        mt::Signal last_action_done;
         the_server_action_queue()->enqueue(&last_action_done,
-            [&] { last_action_done.wake_up_everyone(); });
+            [&] { last_action_done.raise(); });
 
-        last_action_done.wait_for_at_most_seconds(5);
+        last_action_done.wait_for(std::chrono::seconds{5});
     }
 
 private:
