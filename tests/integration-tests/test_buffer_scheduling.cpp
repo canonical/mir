@@ -415,7 +415,6 @@ struct ScheduledProducer : ProducerSystem
 
             if (request.has_id())
             {
-                printf("ZAZA\n");
                 auto& ipc_buffer = request.buffer();
                 auto buffer = map->buffer(ipc_buffer.buffer_id());
                 if (!buffer)
@@ -431,7 +430,6 @@ struct ScheduledProducer : ProducerSystem
             }
             else if (request.has_operation() && request.operation() == mp::BufferOperation::add)
             {
-                printf("ZeeZA\n");
                 auto& ipc_buffer = request.buffer();
                 std::shared_ptr<mcl::Buffer> buffer = factory->generate_buffer(ipc_buffer);
                 map->insert(request.buffer().buffer_id(), buffer); 
@@ -439,7 +437,6 @@ struct ScheduledProducer : ProducerSystem
             }
             else if (request.has_operation() && request.operation() == mp::BufferOperation::update)
             {
-                printf("ZuZA\n");
                 auto buffer = map->buffer(request.buffer().buffer_id());
                 buffer->received(*mcl::protobuf_to_native_buffer(request.buffer()));
             }            
