@@ -124,7 +124,6 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         std::unique_lock<std::mutex> lock(mutex);
         wrapped.set_max_buffers(sz);
     }
-
     std::shared_ptr<mir::client::ClientBuffer> current_buffer() override
     {
         std::unique_lock<std::mutex> lock(mutex);

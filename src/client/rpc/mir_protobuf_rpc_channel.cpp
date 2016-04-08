@@ -302,10 +302,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
             transport->receive_data(dummy.data(), dummy.size(), fds);
             seq.mutable_buffer_request()->mutable_buffer()->clear_fd();
             for(auto& fd : fds)
-            {
                 seq.mutable_buffer_request()->mutable_buffer()->add_fd(fd);
-            }
-                
         }
 
         if (auto map = surface_map.lock())
