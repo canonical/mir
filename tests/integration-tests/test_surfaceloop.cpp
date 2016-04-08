@@ -96,30 +96,30 @@ struct SurfaceSync
     {
         std::unique_lock<std::mutex> lock(guard);
         surface = new_surface;
-        wait_condition.notify_all();
+        signal.notify_all();
     }
 
     void surface_released(MirSurface * /*released_surface*/)
     {
         std::unique_lock<std::mutex> lock(guard);
         surface = NULL;
-        wait_condition.notify_all();
+        signal.notify_all();
     }
 
     void wait_for_surface_create()
     {
         std::unique_lock<std::mutex> lock(guard);
-        wait_condition.wait(lock, [&]{ return !!surface; });
+        signal.wait(lock, [&]{ return !!surface; });
     }
 
     void wait_for_surface_release()
     {
         std::unique_lock<std::mutex> lock(guard);
-        wait_condition.wait(lock, [&]{ return !surface; });
+        signal.wait(lock, [&]{ return !surface; });
     }
 
     std::mutex guard;
-    std::condition_variable wait_condition;
+    std::condition_variable signal;
     MirSurface * surface{nullptr};
 };
 

@@ -24,7 +24,7 @@
 #include "mir/frontend/session.h"
 #include "mir/input/composite_event_filter.h"
 
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -52,7 +52,7 @@ mtf::InputTestingServerConfiguration::InputTestingServerConfiguration(
 
 void mtf::InputTestingServerConfiguration::on_start()
 {
-    auto const start_input_injection = std::make_shared<mt::WaitCondition>();
+    auto const start_input_injection = std::make_shared<mt::Signal>();
 
     input_injection_thread = std::thread{
         [this, start_input_injection]
@@ -60,13 +60,13 @@ void mtf::InputTestingServerConfiguration::on_start()
             // We need to wait for the 'input_injection_thread' variable to be
             // assigned to before starting. Otherwise we may end up calling
             // on_exit() before assignment and try to join an unjoinable thread.
-            start_input_injection->wait_for_at_most_seconds(3);
-            if (!start_input_injection->woken())
+            start_input_injection->wait_for(std::chrono::seconds{3});
+            if (!start_input_injection->raised())
                 BOOST_THROW_EXCEPTION(std::runtime_error("Input injection thread start signal timed out"));
             inject_input();
         }};
 
-    start_input_injection->wake_up_everyone();
+    start_input_injection->raise();
 }
 
 void mtf::InputTestingServerConfiguration::on_exit()
