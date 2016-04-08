@@ -35,9 +35,6 @@ namespace graphics
  */
 struct Frame
 {
-    uint64_t ust = 0;  /**< Unadjusted System Time in nanoseconds: This must
-                            stay in its raw integer form so that (GLX) clients
-                            can compare their CLOCK_MONOTONIC to it. */
     uint64_t msc = 0;  /**< Media Stream Counter: The physical frame count
                             from the display hardware (or as close to it as
                             can be calculated).
@@ -46,6 +43,16 @@ struct Frame
                             increase by one. Because it's entirely possible
                             that you missed a frame or frames so the delta
                             between msc values may be greater than one. */
+    uint64_t ust = 0;  /**< Unadjusted System Time in nanoseconds: This must
+                            stay in its raw integer form so that (GLX) clients
+                            can compare their CLOCK_MONOTONIC to it. */
+
+    bool operator<(Frame const& rhs) const
+    {
+        // Wrap-around would take 9.7 billion years on a 60Hz display, so
+        // that's unlikely but handle it anyway: A>B iff 0 < A-B < (4.8B years)
+        return (int64_t)(rhs.msc - msc) > 0;
+    }
 };
 
 }
