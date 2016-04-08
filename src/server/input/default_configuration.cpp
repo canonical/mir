@@ -66,6 +66,7 @@ namespace
 
 bool is_arale()
 {
+#ifdef __ARM_EABI__
     try
     {
         auto const android_properties = "libandroid-properties.so.1";
@@ -89,6 +90,7 @@ bool is_arale()
     catch(...)
     {
     }
+#endif
     return false;
 }
 
