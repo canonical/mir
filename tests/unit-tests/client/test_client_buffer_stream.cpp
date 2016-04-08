@@ -192,12 +192,11 @@ struct ClientBufferStream : TestWithParam<bool>
         }
         else
         {
-            auto b = map->buffer(buffer.buffer_id());
-            if(b)
+            try
             {
-                b->received(*mcl::protobuf_to_native_buffer(buffer));
+                map->buffer(buffer.buffer_id())->received(*mcl::protobuf_to_native_buffer(buffer));
             }
-            else
+            catch (std::runtime_error& e)
             {
                 auto bb = factory->generate_buffer(buffer);
                 auto braw = bb.get();

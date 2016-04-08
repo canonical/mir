@@ -108,9 +108,10 @@ void mcl::ConnectionSurfaceMap::erase(int buffer_id)
 
 std::shared_ptr<mcl::Buffer> mcl::ConnectionSurfaceMap::buffer(int buffer_id) const
 {
-    std::lock_guard<decltype(guard)> lk(guard);
+    std::shared_lock<decltype(guard)> lk(guard);
     auto const it = buffers.find(buffer_id);
     if (it != buffers.end())
         return it->second;
-    return nullptr;
+    else
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not find buffer"));
 }
