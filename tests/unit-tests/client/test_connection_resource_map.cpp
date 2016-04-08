@@ -112,3 +112,16 @@ TEST_F(ConnectionResourceMap, maps_buffers)
     map.erase(buffer_id);
     EXPECT_THAT(map.buffer(buffer_id), Eq(nullptr));
 }
+
+TEST_F(ConnectionResourceMap, can_access_buffers_from_surface)
+{
+    using namespace testing;
+    mcl::ConnectionSurfaceMap map;
+    map.insert(buffer_id, buffer);
+    map.insert(surface_id, surface);
+
+    map.with_surface_do(surface_id,
+        [this, &map](auto) {
+            EXPECT_THAT(map.buffer(buffer_id), Eq(buffer));
+        });
+}

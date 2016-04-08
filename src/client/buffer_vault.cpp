@@ -104,6 +104,7 @@ void mcl::BufferVault::free_buffer(int free_id)
 
 void mcl::BufferVault::realloc_buffer(int free_id, geom::Size size, MirPixelFormat format, int usage)
 {
+    printf("REALLOC!\n");
     free_buffer(free_id);
     alloc_buffer(size, format, usage);
 }
@@ -140,6 +141,7 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
     }
     else
     {
+            printf("PROMISE.\n");
         promises.emplace_back(std::move(promise));
     }
     return future;

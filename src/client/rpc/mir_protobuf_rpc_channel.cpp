@@ -330,7 +330,10 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                         buffer->received();
                         break;
                     case mp::BufferOperation::update:
-                        map->buffer(buffer_id)->received(
+                        buffer = map->buffer(buffer_id);
+                        if (!buffer)
+                            BOOST_THROW_EXCEPTION(std::runtime_error("no."));
+                        buffer->received(
                             *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
                         break;
                     case mp::BufferOperation::remove:
@@ -343,6 +346,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
             }
             catch (std::exception& e)
             {
+                printf("UPCHUCK %s\n", e.what());
                 for(auto i = 0; i < seq.buffer_request().buffer().fd_size(); i++)
                     close(seq.buffer_request().buffer().fd(i));
                 throw e;
