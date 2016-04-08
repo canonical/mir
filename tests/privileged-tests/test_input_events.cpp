@@ -18,7 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 #include "mir/test/spin_wait.h"
 #include "mir/test/event_matchers.h"
 #include "mir_test_framework/process.h"
@@ -243,7 +243,7 @@ TEST_F(InputEvents, reach_host_client)
         mir_connection_release};
     auto surface = create_surface_with_input_handler(host_connection.get(), &handler);
 
-    mt::WaitCondition all_events_received;
+    mt::Signal all_events_received;
     InSequence seq;
     EXPECT_CALL(handler,
                 handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_a))));
@@ -255,7 +255,7 @@ TEST_F(InputEvents, reach_host_client)
     fake_keyboard.emit_event(EV_KEY, KEY_A, key_up);
     fake_keyboard.syn();
 
-    all_events_received.wait_for_at_most_seconds(5);
+    all_events_received.wait_for(std::chrono::seconds{5});
 }
 
 TEST_F(InputEvents, reach_nested_client)
@@ -274,7 +274,7 @@ TEST_F(InputEvents, reach_nested_client)
     // TODO: Find a more reliable way to wait for the nested server to gain focus
     std::this_thread::sleep_for(100ms);
 
-    mt::WaitCondition all_events_received;
+    mt::Signal all_events_received;
     InSequence seq;
     EXPECT_CALL(handler,
                 handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_a))));
@@ -286,5 +286,5 @@ TEST_F(InputEvents, reach_nested_client)
     fake_keyboard.emit_event(EV_KEY, KEY_A, key_up);
     fake_keyboard.syn();
 
-    all_events_received.wait_for_at_most_seconds(5);
+    all_events_received.wait_for(std::chrono::seconds{5});
 }

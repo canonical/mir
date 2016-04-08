@@ -141,12 +141,6 @@ protected:
 public:
     InputChannel(const String8& name, int fd);
 
-    /* Creates a pair of input channels.
-     *
-     * Returns OK on success.
-     */
-    static status_t openInputFdPair(int& server_fd, int& client_fd);
-
     inline String8 getName() const { return mName; }
     inline int getFd() const { return mFd; }
 

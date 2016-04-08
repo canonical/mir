@@ -22,7 +22,7 @@
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/any_surface.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 #include "mir/test/spin_wait.h"
 #include "mir/cookie/authority.h"
 
@@ -77,8 +77,8 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
             },
             std::chrono::seconds{max_wait});
 
-        ready_to_accept_events.wait_for_at_most_seconds(max_wait);
-        if (!ready_to_accept_events.woken())
+        ready_to_accept_events.wait_for(max_wait);
+        if (!ready_to_accept_events.raised())
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become focused and exposed"));
 
         EXPECT_TRUE(surface_fullscreen);
@@ -87,7 +87,7 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
     MirSurface* surface1;
     MirSurface* surface2;
 
-    mir::test::WaitCondition ready_to_accept_events;
+    mir::test::Signal ready_to_accept_events;
     std::vector<std::vector<uint8_t>> out_cookies;
     size_t event_count{0};
     mutable std::mutex mutex;
@@ -131,7 +131,7 @@ void cookie_capturing_callback(MirSurface* /*surface*/, MirEvent const* ev, void
         }
 
         if (raise_surfaces->exposed && raise_surfaces->focused)
-            raise_surfaces->ready_to_accept_events.wake_up_everyone();
+            raise_surfaces->ready_to_accept_events.raise();
     }
     else if (event_type == mir_event_type_input)
     {   
