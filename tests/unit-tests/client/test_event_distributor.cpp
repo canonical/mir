@@ -22,7 +22,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <mir/test/wait_condition.h>
+#include <mir/test/signal.h>
 
 #include <thread>
 
@@ -139,16 +139,16 @@ TEST_F(EventDistributorTest, succeeds_with_thread_delete_unregister)
         catchers.push_back(new EventCatcher(&event_distributor));
     }
 
-    mt::WaitCondition thread_done;
+    mt::Signal thread_done;
     auto thread = std::thread{
         [&]
         {
             for (auto catcher : catchers)
                 delete catcher;
-            thread_done.wake_up_everyone();
+            thread_done.raise();
         }};
 
-    while(!thread_done.woken()) {
+    while(!thread_done.raised()) {
         event_distributor.handle_event(e);
         std::this_thread::yield();
     }

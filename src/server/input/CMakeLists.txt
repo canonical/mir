@@ -6,6 +6,8 @@ set(
 
   basic_seat.cpp
   builtin_cursor_images.cpp
+  channel.cpp
+  channel_factory.cpp
   cursor_controller.cpp
   default_configuration.cpp
   default_device.cpp

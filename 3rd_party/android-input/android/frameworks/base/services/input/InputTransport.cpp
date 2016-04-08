@@ -32,12 +32,6 @@
 
 namespace android {
 
-// Socket buffer size.  The default is typically about 128KB, which is much larger than
-// we really need.  So we make it smaller.  It just needs to be big enough to hold
-// a few dozen large multi-finger motion events in the case where an application gets
-// behind processing touches.
-static const size_t SOCKET_BUFFER_SIZE = 32 * 1024;
-
 // Nanoseconds per milliseconds.
 static constexpr const std::chrono::nanoseconds NANOS_PER_MS = std::chrono::nanoseconds(1000000);
 
@@ -115,29 +109,6 @@ InputChannel::~InputChannel() {
     ALOGD("Input channel destroyed: name='%s', fd=%d",
         c_str(mName), mFd);
 #endif
-}
-
-status_t InputChannel::openInputFdPair(int& server_fd, int& client_fd) {
-    int sockets[2];
-    if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, sockets)) {
-        status_t result = -errno;
-        ALOGE("InputChannel ~ Could not create socket pair.  errno=%d",
-            errno);
-        server_fd = client_fd = 0;
-
-        return result;
-    }
-
-    int bufferSize = SOCKET_BUFFER_SIZE;
-    setsockopt(sockets[0], SOL_SOCKET, SO_SNDBUF, &bufferSize, sizeof(bufferSize));
-    setsockopt(sockets[0], SOL_SOCKET, SO_RCVBUF, &bufferSize, sizeof(bufferSize));
-    setsockopt(sockets[1], SOL_SOCKET, SO_SNDBUF, &bufferSize, sizeof(bufferSize));
-    setsockopt(sockets[1], SOL_SOCKET, SO_RCVBUF, &bufferSize, sizeof(bufferSize));
-
-    server_fd = sockets[0];
-    client_fd = sockets[1];
-    
-    return OK;
 }
 
 status_t InputChannel::sendMessage(const InputMessage* msg) {
