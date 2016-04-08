@@ -224,7 +224,7 @@ struct StubIpcSystem
         server_bound_fn = fn;
     }
 
-    void on_client_bound_transfer(std::function<void(mp::Buffer&)> fn)
+    void on_client_bound_transfer(std::function<void(mp::BufferRequest&)> fn)
     {
         client_bound_fn = fn;
         for(auto& b : buffers)
@@ -259,12 +259,12 @@ struct StubIpcSystem
         return last_submit;
     }
 
-    void client_bound_transfer(mp::Buffer& buffer)
+    void client_bound_transfer(mp::BufferRequest& request)
     {
         if (client_bound_fn)
-            client_bound_fn(buffer);
+            client_bound_fn(request);
         else
-            buffers.push_back(buffer);
+            buffers.push_back(request);
     }
 
     void allocate(geom::Size sz)
@@ -275,10 +275,10 @@ struct StubIpcSystem
 
     std::function<void(geom::Size)> allocate_fn;
     std::function<void(geom::Size)> resize_fn;
-    std::function<void(mp::Buffer&)> client_bound_fn;
+    std::function<void(mp::BufferRequest&)> client_bound_fn;
     std::function<void(mp::Buffer&)> server_bound_fn;
 
-    std::vector<mp::Buffer> buffers;
+    std::vector<mp::BufferRequest> buffers;
     int last_submit{0};
 };
 
@@ -289,25 +289,45 @@ struct StubEventSink : public mf::EventSink
     {
     }
 
-    void send_buffer(mf::BufferStreamId, mg::Buffer& buffer, mg::BufferIpcMsgType)
+    void send_buffer(mf::BufferStreamId id, mg::Buffer& buffer, mg::BufferIpcMsgType)
     {
-        mp::Buffer protobuffer;
-        protobuffer.set_buffer_id(buffer.id().as_value());
-        protobuffer.set_width(buffer.size().width.as_int());
-        protobuffer.set_height(buffer.size().height.as_int());
-        ipc->client_bound_transfer(protobuffer);
+        mp::BufferRequest request;
+        auto protobuffer = request.mutable_buffer();
+        request.mutable_id()->set_value(id.as_value()); 
+        protobuffer->set_buffer_id(buffer.id().as_value());
+        protobuffer->set_width(buffer.size().width.as_int());
+        protobuffer->set_height(buffer.size().height.as_int());
+        ipc->client_bound_transfer(request);
     }
     void add_buffer(mg::Buffer& buffer)
     {
-        send_buffer(mf::BufferStreamId{-1}, buffer, mg::BufferIpcMsgType::full_msg);
+        mp::BufferRequest request;
+        auto protobuffer = request.mutable_buffer();
+        request.set_operation(mp::BufferOperation::add);
+        protobuffer->set_buffer_id(buffer.id().as_value());
+        protobuffer->set_width(buffer.size().width.as_int());
+        protobuffer->set_height(buffer.size().height.as_int());
+        ipc->client_bound_transfer(request);
     }
     void remove_buffer(mg::Buffer& buffer)
     {
-        send_buffer(mf::BufferStreamId{-1}, buffer, mg::BufferIpcMsgType::update_msg);
+        mp::BufferRequest request;
+        auto protobuffer = request.mutable_buffer();
+        request.set_operation(mp::BufferOperation::remove);
+        protobuffer->set_buffer_id(buffer.id().as_value());
+        protobuffer->set_width(buffer.size().width.as_int());
+        protobuffer->set_height(buffer.size().height.as_int());
+        ipc->client_bound_transfer(request);
     }
     void update_buffer(mg::Buffer& buffer)
     {
-        send_buffer(mf::BufferStreamId{-1}, buffer, mg::BufferIpcMsgType::update_msg);
+        mp::BufferRequest request;
+        auto protobuffer = request.mutable_buffer();
+        request.set_operation(mp::BufferOperation::update);
+        protobuffer->set_buffer_id(buffer.id().as_value());
+        protobuffer->set_width(buffer.size().width.as_int());
+        protobuffer->set_height(buffer.size().height.as_int());
+        ipc->client_bound_transfer(request);
     }
     void handle_event(MirEvent const&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
@@ -391,19 +411,40 @@ struct ScheduledProducer : ProducerSystem
             std::make_shared<ServerRequests>(ipc), map,
             geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers)
     {
-        ipc->on_client_bound_transfer([this](mp::Buffer& ipc_buffer){
-            available++;
-            auto buffer = map->buffer(ipc_buffer.buffer_id());
-            if (!buffer)
+        ipc->on_client_bound_transfer([this](mp::BufferRequest& request){
+
+            if (request.has_id())
             {
-                buffer = factory->generate_buffer(ipc_buffer);
-                map->insert(ipc_buffer.buffer_id(), buffer); 
+                printf("ZAZA\n");
+                auto& ipc_buffer = request.buffer();
+                auto buffer = map->buffer(ipc_buffer.buffer_id());
+                if (!buffer)
+                {
+                    buffer = factory->generate_buffer(ipc_buffer);
+                    map->insert(ipc_buffer.buffer_id(), buffer); 
+                    buffer->received();
+                }
+                else
+                {
+                    buffer->received(*mcl::protobuf_to_native_buffer(ipc_buffer));
+                }
+            }
+            else if (request.has_operation() && request.operation() == mp::BufferOperation::add)
+            {
+                printf("ZeeZA\n");
+                auto& ipc_buffer = request.buffer();
+                std::shared_ptr<mcl::Buffer> buffer = factory->generate_buffer(ipc_buffer);
+                map->insert(request.buffer().buffer_id(), buffer); 
                 buffer->received();
             }
-            else
+            else if (request.has_operation() && request.operation() == mp::BufferOperation::update)
             {
-                buffer->received(*mcl::protobuf_to_native_buffer(ipc_buffer));
-            }
+                printf("ZuZA\n");
+                auto buffer = map->buffer(request.buffer().buffer_id());
+                buffer->received(*mcl::protobuf_to_native_buffer(request.buffer()));
+            }            
+            available++;
+
         });
         ipc->on_resize_event([this](geom::Size sz)
         {

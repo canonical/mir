@@ -112,5 +112,6 @@ std::shared_ptr<mcl::Buffer> mcl::ConnectionSurfaceMap::buffer(int buffer_id) co
     auto const it = buffers.find(buffer_id);
     if (it != buffers.end())
         return it->second;
-    return nullptr;
+    else
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not find buffer"));
 }
