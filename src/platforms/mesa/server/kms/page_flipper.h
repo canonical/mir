@@ -19,8 +19,8 @@
 #ifndef MIR_GRAPHICS_MESA_PAGE_FLIPPER_H_
 #define MIR_GRAPHICS_MESA_PAGE_FLIPPER_H_
 
+#include "mir/graphics/frame.h"
 #include <cstdint>
-#include "frame.h"
 
 namespace mir
 {
