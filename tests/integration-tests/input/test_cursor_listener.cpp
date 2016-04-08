@@ -25,7 +25,7 @@
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/temporary_environment_value.h"
 #include "mir/test/doubles/stub_touch_visualizer.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 #include "mir/test/event_factory.h"
 
 #include "mir/input/cursor_listener.h"
@@ -96,14 +96,14 @@ TEST_F(CursorListenerIntegrationTest, cursor_listener_receives_motion)
 {
     using namespace ::testing;
 
-    auto wait_condition = std::make_shared<mt::WaitCondition>();
+    auto signal = std::make_shared<mt::Signal>();
 
     static const float x = 100.f;
     static const float y = 100.f;
 
-    EXPECT_CALL(cursor_listener, cursor_moved_to(x, y)).Times(1).WillOnce(mt::WakeUp(wait_condition));
+    EXPECT_CALL(cursor_listener, cursor_moved_to(x, y)).Times(1).WillOnce(mt::WakeUp(signal));
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(x, y));
 
-    wait_condition->wait_for_at_most_seconds(10);
+    signal->wait_for(std::chrono::seconds{10});
 }

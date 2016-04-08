@@ -17,7 +17,7 @@
  */
 
 #include "mir/thread_name.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 
 #include <thread>
 #include <pthread.h>
@@ -48,26 +48,26 @@ struct MirThreadName : ::testing::Test
             [this,name]
             {
                 mir::set_thread_name(name);
-                thread_name_set.wake_up_everyone();
-                finish_thread.wait_for_at_most_seconds(5);
+                thread_name_set.raise();
+                finish_thread.wait_for(std::chrono::seconds{5});
             }};
 
-        thread_name_set.wait_for_at_most_seconds(5);
+        thread_name_set.wait_for(std::chrono::seconds{5});
 
         return thread;
     }
 
     ~MirThreadName()
     {
-        finish_thread.wake_up_everyone();
+        finish_thread.raise();
         if (thread.joinable())
             thread.join();
     }
 
 private:
     std::thread thread;
-    mt::WaitCondition finish_thread;
-    mt::WaitCondition thread_name_set;
+    mt::Signal finish_thread;
+    mt::Signal thread_name_set;
 };
 
 MATCHER_P(IsPrefixOf, value, "")
