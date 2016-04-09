@@ -18,8 +18,8 @@
 
 #include <boost/throw_exception.hpp>
 
+#include "mir/log.h"
 #include "mir/events/event.h"
-
 #include "mir/events/close_surface_event.h"
 #include "mir/events/input_configuration_event.h"
 #include "mir/events/input_event.h"
@@ -33,6 +33,8 @@
 #include "mir/events/surface_output_event.h"
 
 #include <capnp/serialize.h>
+
+namespace ml = mir::logging;
 
 MirEvent::MirEvent(MirEvent const& e)
 {
@@ -100,7 +102,8 @@ MirEventType MirEvent::type() const
         return mir_event_type_surface_output;
     }
 
-    BOOST_THROW_EXCEPTION(std::runtime_error("Unknown event type"));
+    mir::log_critical("unknown event type.");
+    abort();
 }
 
 MirInputEvent* MirEvent::to_input()
