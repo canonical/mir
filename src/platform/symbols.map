@@ -288,3 +288,14 @@ MIR_PLATFORM_0.21 {  # New symbols in Mir 0.21
     mir::udev::Context::ctx*;
   };
 } MIRPLATFORM_11;
+
+MIR_PLATFORM_0.22 {
+ global:
+  extern "C++" {
+   mir::graphics::MultiDisplayClock::last_frame*;
+   mir::graphics::MultiDisplayClock::on_next_frame*;
+   mir::graphics::MultiDisplayClock::add_child_clock*;
+   typeinfo?for?mir::graphics::MultiDisplayClock;
+   vtable?for?mir::graphics::MultiDisplayClock;
+  };
+} MIR_PLATFORM_0.21;

@@ -115,6 +115,9 @@ mgm::DisplayBuffer::DisplayBuffer(
       needs_set_crtc{false},
       page_flips_pending{false}
 {
+    for (auto const& output : outputs)
+        add_child_clock(output);
+
     uint32_t area_width = area.size.width.as_uint32_t();
     uint32_t area_height = area.size.height.as_uint32_t();
     if (rotation == mir_orientation_left || rotation == mir_orientation_right)

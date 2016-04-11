@@ -45,11 +45,12 @@ public:
     void on_next_frame(FrameCallback const&) override;
     void add_child_clock(std::weak_ptr<DisplayClock>);
 private:
-    void synchronize();
-    void hook_child_clock(DisplayClock& child_clock);
-    void on_child_frame(int child_index, Frame const&);
-
+    typedef std::lock_guard<std::mutex> Lock;
     mutable std::mutex mutex;
+
+    void synchronize(Lock const&);
+    void hook_child_clock(Lock const&, DisplayClock& child_clock, int idx);
+    void on_child_frame(int child_index, Frame const&);
 
     struct Child
     {

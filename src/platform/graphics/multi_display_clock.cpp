@@ -18,42 +18,41 @@
 
 #include "mir/graphics/multi_display_clock.h"
 
-using namespace mir::graphics;
+namespace mir { namespace graphics {
 
 Frame MultiDisplayClock::last_frame() const
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    Lock lock(mutex);
     return last_multi_frame;
 }
 
 void MultiDisplayClock::on_next_frame(FrameCallback const& cb)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    Lock lock(mutex);
     callback = cb;
 }
 
-void MultiDisplayClock::hook_child_clock(DisplayClock& child_clock)
+void MultiDisplayClock::hook_child_clock(Lock const&,
+                                         DisplayClock& child_clock, int idx)
 {
     child_clock.on_next_frame( std::bind(&MultiDisplayClock::on_child_frame,
-                                         this, children.size(),
-                                         std::placeholders::_1) );
+                                         this, idx, std::placeholders::_1) );
 }
 
 void MultiDisplayClock::add_child_clock(std::weak_ptr<DisplayClock> w)
 {
-    std::lock_guard<std::mutex> lock(mutex);
+    Lock lock(mutex);
     if (auto dc = w.lock())
     {
         children.emplace_back(Child{std::move(w), {}});
-        synchronize();
-        hook_child_clock(*dc);
+        synchronize(lock);
+        hook_child_clock(lock, *dc, children.size()-1);
     }
 }
 
-void MultiDisplayClock::synchronize()
+void MultiDisplayClock::synchronize(Lock const&)
 {
-    std::lock_guard<std::mutex> lock(mutex);
-    baseline = last_frame();
+    baseline = last_multi_frame;
     for (auto& child : children)
     {
         if (auto child_clock = child.clock.lock())
@@ -67,7 +66,7 @@ void MultiDisplayClock::on_child_frame(int child_index, Frame const& child_frame
     Frame cb_frame;
 
     {
-        std::lock_guard<std::mutex> lock(mutex);
+        Lock lock(mutex);
         auto& child = children.at(child_index);
         auto child_delta = child_frame.msc - child.baseline.msc;
         auto virtual_delta = last_multi_frame.msc - baseline.msc;
@@ -79,10 +78,11 @@ void MultiDisplayClock::on_child_frame(int child_index, Frame const& child_frame
             cb_frame = last_multi_frame;
         }
         if (auto child_clock = child.clock.lock())
-            hook_child_clock(*child_clock);
+            hook_child_clock(lock, *child_clock, child_index);
     }
 
     if (cb)
         cb(cb_frame);
 }
 
+}} // namespace mir::graphics
