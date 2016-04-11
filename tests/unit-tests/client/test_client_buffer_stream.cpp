@@ -186,24 +186,7 @@ struct ClientBufferStream : TestWithParam<bool>
 
     void async_buffer_arrives(mcl::ClientBufferStream& bs, mp::Buffer& buffer)
     {
-        if (legacy_exchange_buffer)
-        {
-            bs.buffer_available(buffer);
-        }
-        else
-        {
-            try
-            {
-                map->buffer(buffer.buffer_id())->received(*mcl::protobuf_to_native_buffer(buffer));
-            }
-            catch (std::runtime_error& e)
-            {
-                auto bb = factory->generate_buffer(buffer);
-                auto braw = bb.get();
-                map->insert(buffer.buffer_id(), std::move(bb)); 
-                braw->received();
-            }
-        }
+        bs.buffer_available(buffer);
     }
 
     std::shared_ptr<mcl::ConnectionSurfaceMap> map{std::make_shared<mcl::ConnectionSurfaceMap>()};
@@ -541,8 +524,6 @@ TEST_P(ClientBufferStream, waiting_client_can_unblock_on_shutdown)
 {
     using namespace std::literals::chrono_literals;
     NiceMock<mtd::MockClientBuffer> mock_client_buffer;
-    ON_CALL(mock_client_buffer, size())
-        .WillByDefault(Return(size));
     ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
     ON_CALL(mock_protobuf_server, submit_buffer(_,_,_))

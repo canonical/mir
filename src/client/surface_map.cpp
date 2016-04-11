@@ -113,5 +113,8 @@ std::shared_ptr<mcl::Buffer> mcl::ConnectionSurfaceMap::buffer(int buffer_id) co
     if (it != buffers.end())
         return it->second;
     else
+    {
+        printf("KABOOM.\n");
         BOOST_THROW_EXCEPTION(std::runtime_error("could not find buffer"));
+    }
 }

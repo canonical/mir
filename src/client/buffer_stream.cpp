@@ -303,8 +303,9 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     {
     }
 
-    void deposit(mp::Buffer const&, mir::optional_value<geom::Size>, MirPixelFormat) override
+    void deposit(mp::Buffer const& buffer, mir::optional_value<geom::Size>, MirPixelFormat) override
     {
+        vault.wire_transfer_inbound(buffer);
     }
 
     void advance_current_buffer(std::unique_lock<std::mutex>& lk)
