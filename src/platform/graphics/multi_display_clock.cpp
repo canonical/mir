@@ -22,28 +22,53 @@ using namespace mir::graphics;
 
 Frame MultiDisplayClock::last_frame() const
 {
-    return {};
+    return last_virtual_frame;
 }
 
-void MultiDisplayClock::on_next_frame(FrameCallback const& f)
+void MultiDisplayClock::on_next_frame(FrameCallback const& cb)
 {
-    (void)f;
+    callback = cb;
+}
+
+void MultiDisplayClock::hook_child_clock(DisplayClock& child_clock)
+{
+    child_clock.on_next_frame( std::bind(&MultiDisplayClock::on_child_frame,
+                                         this, children.size(),
+                                         std::placeholders::_1) );
 }
 
 void MultiDisplayClock::add_child_clock(std::weak_ptr<DisplayClock> w)
 {
-    auto dc = w.lock();
-    if (dc)
+    if (auto dc = w.lock())
     {
+        hook_child_clock(*dc);
+        children.emplace_back(Child{std::move(w), {}});
+        synchronize();
     }
 }
 
 void MultiDisplayClock::synchronize()
 {
+    baseline = last_frame();
+    for (auto& child : children)
+    {
+        if (auto child_clock = child.clock.lock())
+            child.baseline = child_clock->last_frame();
+    }
 }
 
-void MultiDisplayClock::on_child_frame(Frame const& f)
+void MultiDisplayClock::on_child_frame(int child_index, Frame const& child_frame)
 {
-    (void)f;
+    auto& child = children.at(child_index);
+    auto child_delta = child_frame.msc - child.baseline.msc;
+    auto virtual_delta = last_virtual_frame.msc - baseline.msc;
+    if (child_delta > virtual_delta)
+    {
+        last_virtual_frame.msc = baseline.msc + child_delta;
+        last_virtual_frame.ust = child_frame.ust;
+        callback(last_virtual_frame);
+    }
+    if (auto child_clock = child.clock.lock())
+        hook_child_clock(*child_clock);
 }
 

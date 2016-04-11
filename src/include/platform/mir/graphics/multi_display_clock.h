@@ -22,13 +22,20 @@
 #include "display_clock.h"
 #include <functional>
 #include <memory>
-#include <set>
+#include <vector>
 
 namespace mir
 {
 namespace graphics
 {
 
+/**
+ * MultiDisplayClock is a re-imagining of the timerless multi-monitor
+ * frame sync algorithm, implemented within the DisplayClock interface.
+ * This allows clients to sync to the virtual display(s) without needing
+ * to know about physical multiple displays. They all appear as a single
+ * DisplayClock.
+ */
 class MultiDisplayClock : public DisplayClock
 {
 public:
@@ -38,9 +45,18 @@ public:
     void add_child_clock(std::weak_ptr<DisplayClock>);
 private:
     void synchronize();
-    void on_child_frame(Frame const&);
-    std::set<std::weak_ptr<DisplayClock>> children;
-    FrameCallback cb;
+    void hook_child_clock(DisplayClock& child_clock);
+    void on_child_frame(int child_index, Frame const&);
+
+    struct Child
+    {
+        std::weak_ptr<DisplayClock> clock;
+        Frame baseline;
+    };
+    std::vector<Child> children;
+    FrameCallback callback;
+    Frame baseline;
+    Frame last_virtual_frame;
 };
 
 }
