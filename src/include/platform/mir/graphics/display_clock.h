@@ -42,7 +42,6 @@ class DisplayClock
 {
 public:
     virtual ~DisplayClock() = default;
-    virtual Frame last_frame() const = 0;
     virtual void set_frame_callback(FrameCallback const&) = 0;
 };
 

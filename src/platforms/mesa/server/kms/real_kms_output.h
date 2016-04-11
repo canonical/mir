@@ -52,8 +52,7 @@ public:
     void wait_for_page_flip();
 
     // DisplayClock
-    Frame last_frame() const override;
-    void  set_frame_callback(FrameCallback const&) override;
+    void set_frame_callback(FrameCallback const&) override;
 
     void set_cursor(gbm_bo* buffer);
     void move_cursor(geometry::Point destination);
@@ -83,7 +82,6 @@ private:
 
     std::mutex power_mutex;
 
-    Frame last_flip;
     FrameCallback frame_callback;
 };
 

@@ -220,10 +220,6 @@ bool mgm::RealKMSOutput::set_crtc(uint32_t fb_id)
         return false;
     }
 
-    // XXX A frame will occur in the near future, but calling set_crtc means
-    //     we don't care to wait around for it. So last_flip will be briefly
-    //     inaccurate (typically only for one frame during reconfigs).
-
     using_saved_crtc = false;
     return true;
 }
@@ -274,13 +270,12 @@ void mgm::RealKMSOutput::wait_for_page_flip()
                    connector_name(connector.get()).c_str());
     }
 
-    last_flip = page_flipper->wait_for_flip(current_crtc->crtc_id);
+    auto frame = page_flipper->wait_for_flip(current_crtc->crtc_id);
     if (frame_callback)
     {
         auto cb = frame_callback;
-        auto flip = last_flip;
         lg.unlock();
-        cb(flip);
+        cb(frame);
     }
 }
 
@@ -396,11 +391,6 @@ void mgm::RealKMSOutput::set_power_mode(MirPowerMode mode)
         drmModeConnectorSetProperty(drm_fd, connector_id,
                                    dpms_enum_id, mode);
     }
-}
-
-mg::Frame mgm::RealKMSOutput::last_frame() const
-{
-    return last_flip;
 }
 
 void mgm::RealKMSOutput::set_frame_callback(FrameCallback const& cb)

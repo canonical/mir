@@ -39,7 +39,6 @@ class MultiDisplayClock : public DisplayClock
 {
 public:
     virtual ~MultiDisplayClock() = default;
-    Frame last_frame() const override;
     void set_frame_callback(FrameCallback const&) override;
     void add_child_clock(std::weak_ptr<DisplayClock>);
 private:
@@ -54,6 +53,7 @@ private:
     {
         std::weak_ptr<DisplayClock> clock;
         Frame baseline;
+        Frame last_frame;
     };
     std::vector<Child> children;
     FrameCallback callback;
