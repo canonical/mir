@@ -30,8 +30,13 @@ namespace graphics
 typedef std::function<void(Frame const&)> FrameCallback;
 
 /**
- * An abstract frame clock, which may represent a single phyisical display
- * or a group of displays.
+ * An abstract frame clock, which may represent a single phyisical display,
+ * a logical display, or a group of displays.
+ *
+ * A DisplayClock provides Frame counters that a client can sync to.
+ *
+ * I would prefer to call this 'Display', but that name is taken. And the
+ * generic term 'Output' sounds less informative than 'DisplayClock'.
  */
 class DisplayClock
 {
@@ -42,10 +47,10 @@ public:
      * owner, which may be older than the last frame on the physical display.
      */
     virtual Frame last_frame() const = 0;
-
     /**
      * Make a callback next time a frame is displayed by us, which for a
-     * compositor may not be the next physical frame if the scene is idle.
+     * compositor may not be the next physical frame if the scene is
+     * presently idle.
      */
     virtual void on_next_frame(FrameCallback const&) = 0;
 };
