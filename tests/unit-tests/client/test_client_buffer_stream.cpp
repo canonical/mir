@@ -541,8 +541,11 @@ TEST_P(ClientBufferStream, waiting_client_can_unblock_on_shutdown)
 {
     using namespace std::literals::chrono_literals;
     NiceMock<mtd::MockClientBuffer> mock_client_buffer;
+<<<<<<< TREE
     ON_CALL(mock_client_buffer, size())
         .WillByDefault(Return(size));
+=======
+>>>>>>> MERGE-SOURCE
     ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
     ON_CALL(mock_protobuf_server, submit_buffer(_,_,_))
