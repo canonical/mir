@@ -488,7 +488,5 @@ MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size) try
 
 void mir_cookie_release(MirCookie const* cookie)
 {
-    // Static assert that no one changes this implicit noexcept
-    static_assert(noexcept(std::declval<MirCookie>), "");
     delete cookie;
 }

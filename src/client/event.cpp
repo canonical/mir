@@ -353,7 +353,5 @@ MirEvent const* mir_event_ref(MirEvent const* ev) try
 
 void mir_event_unref(MirEvent const* ev)
 {
-    // Static assert that no one changes this implicit noexcept
-    static_assert(noexcept(std::declval<MirEvent>), "");
     delete const_cast<MirEvent*>(ev);
 }
