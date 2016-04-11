@@ -34,6 +34,7 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
     if (it != surfaces.end())
     {
         auto const surface = it->second;
+        lk.unlock();
         exec(surface.get());
     }
     else
@@ -64,6 +65,7 @@ void mcl::ConnectionSurfaceMap::with_stream_do(
     if (it != streams.end())
     {
         auto const stream = it->second;
+        lk.unlock();
         exec(stream.get());
     }
     else
@@ -113,8 +115,5 @@ std::shared_ptr<mcl::Buffer> mcl::ConnectionSurfaceMap::buffer(int buffer_id) co
     if (it != buffers.end())
         return it->second;
     else
-    {
-        printf("KABOOM.\n");
         BOOST_THROW_EXCEPTION(std::runtime_error("could not find buffer"));
-    }
 }

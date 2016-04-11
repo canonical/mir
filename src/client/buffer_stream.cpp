@@ -412,7 +412,7 @@ mcl::BufferStream::BufferStream(
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
-    std::weak_ptr<mcl::SurfaceMap> const& map,
+    std::weak_ptr<mcl::SurfaceMap> const&,
     std::shared_ptr<mcl::AsyncBufferFactory> const& factory,
     mp::BufferStream const& a_protobuf_bs,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
@@ -429,7 +429,7 @@ mcl::BufferStream::BufferStream(
       ideal_buffer_size(ideal_size),
       nbuffers(nbuffers),
       creation_wait_handle(creation_wait_handle),
-      map(map),
+      map(std::make_shared<mcl::ConnectionSurfaceMap>()),
       factory(factory)
 {
     init_swap_interval();
@@ -457,7 +457,7 @@ mcl::BufferStream::BufferStream(
         else
         {
             buffer_depository = std::make_unique<NewBufferSemantics>(
-                client_platform->create_buffer_factory(), factory,
+                client_platform->create_buffer_factory(), std::make_shared<mcl::BufferFactory>(),
                 std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
                 ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
                 protobuf_bs->buffer_usage(), nbuffers);
