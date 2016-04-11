@@ -23,6 +23,7 @@
 #include <functional>
 #include <memory>
 #include <vector>
+#include <mutex>
 
 namespace mir
 {
@@ -47,6 +48,8 @@ private:
     void synchronize();
     void hook_child_clock(DisplayClock& child_clock);
     void on_child_frame(int child_index, Frame const&);
+
+    mutable std::mutex mutex;
 
     struct Child
     {

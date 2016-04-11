@@ -22,11 +22,13 @@ using namespace mir::graphics;
 
 Frame MultiDisplayClock::last_frame() const
 {
+    std::lock_guard<std::mutex> lock(mutex);
     return last_virtual_frame;
 }
 
 void MultiDisplayClock::on_next_frame(FrameCallback const& cb)
 {
+    std::lock_guard<std::mutex> lock(mutex);
     callback = cb;
 }
 
@@ -39,16 +41,18 @@ void MultiDisplayClock::hook_child_clock(DisplayClock& child_clock)
 
 void MultiDisplayClock::add_child_clock(std::weak_ptr<DisplayClock> w)
 {
+    std::lock_guard<std::mutex> lock(mutex);
     if (auto dc = w.lock())
     {
-        hook_child_clock(*dc);
         children.emplace_back(Child{std::move(w), {}});
         synchronize();
+        hook_child_clock(*dc);
     }
 }
 
 void MultiDisplayClock::synchronize()
 {
+    std::lock_guard<std::mutex> lock(mutex);
     baseline = last_frame();
     for (auto& child : children)
     {
@@ -59,16 +63,26 @@ void MultiDisplayClock::synchronize()
 
 void MultiDisplayClock::on_child_frame(int child_index, Frame const& child_frame)
 {
-    auto& child = children.at(child_index);
-    auto child_delta = child_frame.msc - child.baseline.msc;
-    auto virtual_delta = last_virtual_frame.msc - baseline.msc;
-    if (child_delta > virtual_delta)
+    FrameCallback cb;
+    Frame cb_frame;
+
     {
-        last_virtual_frame.msc = baseline.msc + child_delta;
-        last_virtual_frame.ust = child_frame.ust;
-        callback(last_virtual_frame);
+        std::lock_guard<std::mutex> lock(mutex);
+        auto& child = children.at(child_index);
+        auto child_delta = child_frame.msc - child.baseline.msc;
+        auto virtual_delta = last_virtual_frame.msc - baseline.msc;
+        if (child_delta > virtual_delta)
+        {
+            last_virtual_frame.msc = baseline.msc + child_delta;
+            last_virtual_frame.ust = child_frame.ust;
+            cb = callback;
+            cb_frame = last_virtual_frame;
+        }
+        if (auto child_clock = child.clock.lock())
+            hook_child_clock(*child_clock);
     }
-    if (auto child_clock = child.clock.lock())
-        hook_child_clock(*child_clock);
+
+    if (cb)
+        cb(cb_frame);
 }
 
