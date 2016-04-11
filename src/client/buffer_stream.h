@@ -165,7 +165,7 @@ private:
     size_t const nbuffers;
     std::string error_message;
     std::shared_ptr<MirWaitHandle> creation_wait_handle;
-    std::shared_ptr<SurfaceMap> const map;
+    std::weak_ptr<SurfaceMap> const map;
     std::shared_ptr<AsyncBufferFactory> const factory;
 };
 
