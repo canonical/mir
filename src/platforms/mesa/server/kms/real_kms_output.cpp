@@ -392,8 +392,3 @@ void mgm::RealKMSOutput::set_power_mode(MirPowerMode mode)
                                    dpms_enum_id, mode);
     }
 }
-
-void mgm::RealKMSOutput::set_frame_callback(FrameCallback const& cb)
-{
-    frame_callback = cb;
-}

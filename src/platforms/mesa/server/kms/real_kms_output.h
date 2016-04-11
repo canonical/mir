@@ -21,6 +21,7 @@
 
 #include "kms_output.h"
 #include "drm_mode_resources.h"
+#include "mir/graphics/simple_display_clock.h"
 
 #include <memory>
 #include <mutex>
@@ -34,7 +35,7 @@ namespace mesa
 
 class PageFlipper;
 
-class RealKMSOutput : public KMSOutput
+class RealKMSOutput : public SimpleDisplayClock, public KMSOutput
 {
 public:
     RealKMSOutput(int drm_fd, uint32_t connector_id,
@@ -50,9 +51,6 @@ public:
     void clear_crtc();
     bool schedule_page_flip(uint32_t fb_id);
     void wait_for_page_flip();
-
-    // DisplayClock
-    void set_frame_callback(FrameCallback const&) override;
 
     void set_cursor(gbm_bo* buffer);
     void move_cursor(geometry::Point destination);
@@ -81,8 +79,6 @@ private:
     int dpms_enum_id;
 
     std::mutex power_mutex;
-
-    FrameCallback frame_callback;
 };
 
 }

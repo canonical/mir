@@ -292,6 +292,10 @@ MIR_PLATFORM_0.21 {  # New symbols in Mir 0.21
 MIR_PLATFORM_0.22 {
  global:
   extern "C++" {
+   mir::graphics::SimpleDisplayClock::set_frame_callback*;
+   typeinfo?for?mir::graphics::SimpleDisplayClock;
+   vtable?for?mir::graphics::SimpleDisplayClock;
+
    mir::graphics::MultiDisplayClock::set_frame_callback*;
    mir::graphics::MultiDisplayClock::add_child_clock*;
    typeinfo?for?mir::graphics::MultiDisplayClock;

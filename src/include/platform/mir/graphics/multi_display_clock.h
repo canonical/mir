@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_MULTI_DISPLAY_CLOCK_H_
 #define MIR_GRAPHICS_MULTI_DISPLAY_CLOCK_H_
 
-#include "display_clock.h"
+#include "simple_display_clock.h"
 #include <functional>
 #include <memory>
 #include <vector>
@@ -35,15 +35,13 @@ namespace graphics
  * number of child clocks. It ticks at the rate of the fastest child,
  * providing the user (and hence client app) a single clock to sync to.
  */
-class MultiDisplayClock : public DisplayClock
+class MultiDisplayClock : public SimpleDisplayClock
 {
 public:
     virtual ~MultiDisplayClock() = default;
-    void set_frame_callback(FrameCallback const&) override;
     void add_child_clock(std::weak_ptr<DisplayClock>);
 private:
-    typedef std::lock_guard<std::mutex> Lock;
-    mutable std::mutex mutex;
+    typedef std::lock_guard<FrameMutex> Lock;
 
     void synchronize(Lock const&);
     void hook_child_clock(Lock const&, DisplayClock& child_clock, int idx);
@@ -56,7 +54,6 @@ private:
         Frame last_frame;
     };
     std::vector<Child> children;
-    FrameCallback callback;
     Frame baseline;
     Frame last_multi_frame;
 };

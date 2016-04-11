@@ -20,12 +20,6 @@
 
 namespace mir { namespace graphics {
 
-void MultiDisplayClock::set_frame_callback(FrameCallback const& cb)
-{
-    Lock lock(mutex);
-    callback = cb;
-}
-
 void MultiDisplayClock::hook_child_clock(Lock const&,
                                          DisplayClock& child_clock, int idx)
 {
@@ -35,7 +29,7 @@ void MultiDisplayClock::hook_child_clock(Lock const&,
 
 void MultiDisplayClock::add_child_clock(std::weak_ptr<DisplayClock> w)
 {
-    Lock lock(mutex);
+    Lock lock(frame_mutex);
     if (auto dc = w.lock())
     {
         children.emplace_back(Child{std::move(w), {}, {}});
@@ -60,7 +54,7 @@ void MultiDisplayClock::on_child_frame(int child_index, Frame const& child_frame
     Frame cb_frame;
 
     {
-        Lock lock(mutex);
+        Lock lock(frame_mutex);
         auto& child = children.at(child_index);
         child.last_frame = child_frame;
         auto child_delta = child_frame.msc - child.baseline.msc;
@@ -69,7 +63,7 @@ void MultiDisplayClock::on_child_frame(int child_index, Frame const& child_frame
         {
             last_multi_frame.msc = baseline.msc + child_delta;
             last_multi_frame.ust = child_frame.ust;
-            cb = callback;
+            cb = frame_callback;
             cb_frame = last_multi_frame;
         }
         if (auto child_clock = child.clock.lock())
