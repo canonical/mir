@@ -16,7 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#pragma once
+#ifndef MIR_CLIENT_MIR_ERROR_H_
+#define MIR_CLIENT_MIR_ERROR_H_
 
 #include "mir_toolkit/client_types.h"
 
@@ -32,3 +33,5 @@ private:
     MirErrorDomain const domain_;
     uint32_t const code_;
 };
+
+#endif //MIR_CLIENT_MIR_ERROR_H_

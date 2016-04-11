@@ -16,7 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#pragma once
+#ifndef MIR_COMMON_CLIENT_VISIBLE_ERROR_H_
+#define MIR_COMMON_CLIENT_VISIBLE_ERROR_H_
 
 #include "mir_toolkit/client_types.h"
 
@@ -50,3 +51,5 @@ public:
     virtual uint32_t code() const noexcept = 0;
 };
 }
+
+#endif //MIR_COMMON_CLIENT_VISIBLE_ERROR_H_
