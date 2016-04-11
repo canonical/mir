@@ -22,6 +22,7 @@
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/optional_value.h"
 
 #include <unordered_map>
 #include <memory>
@@ -35,7 +36,6 @@ class Buffer;
 }
 namespace frontend
 {
-class Session;
 class ClientBufferTracker;
 class BufferStreamTracker
 {
@@ -58,8 +58,9 @@ public:
     /* Access the buffer resource that the id corresponds to. */
     graphics::Buffer* buffer_from(graphics::BufferID) const;
 
-    void add_content_for(frontend::SurfaceId id, frontend::BufferStreamId);
-    void remove_content_for(frontend::SurfaceId, frontend::Session&);
+    void set_default_stream(frontend::SurfaceId id, frontend::BufferStreamId);
+    optional_value<BufferStreamId> default_stream(SurfaceId id);
+    void remove_default_stream(frontend::SurfaceId);
 
 private:
     size_t const client_cache_size;
@@ -72,7 +73,7 @@ public:
 private:
     mutable std::mutex mutex;
     std::unordered_map<BufferStreamId, graphics::Buffer*> client_buffer_resource;
-    std::unordered_map<SurfaceId, frontend::BufferStreamId> added_streams;
+    std::unordered_map<SurfaceId, frontend::BufferStreamId> default_streams;
 };
 
 }

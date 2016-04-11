@@ -361,7 +361,7 @@ void mf::SessionMediator::create_surface(
 
     if (legacy_stream)
     {
-        buffer_stream_tracker.add_content_for(surf_id, buffer_stream_id);
+        buffer_stream_tracker.set_default_stream(surf_id, buffer_stream_id);
         response->mutable_buffer_stream()->mutable_id()->set_value(buffer_stream_id.as_value());
         advance_buffer(buffer_stream_id, *legacy_stream, buffer_stream_tracker.last_buffer(buffer_stream_id),
             [this, buffering_sender, response, done, session]
@@ -510,9 +510,14 @@ void mf::SessionMediator::release_surface(
     auto const id = SurfaceId(request->value());
 
     shell->destroy_surface(session, id);
-    buffer_stream_tracker.remove_buffer_stream(BufferStreamId(request->value()));
 
-    buffer_stream_tracker.remove_content_for(id, *session);
+    auto default_stream = buffer_stream_tracker.default_stream(id);
+    if (default_stream.is_set())
+    {
+        session->destroy_buffer_stream(default_stream.value());
+        buffer_stream_tracker.remove_buffer_stream(default_stream.value());
+        buffer_stream_tracker.remove_default_stream(id);
+    }
 
     // TODO: We rely on this sending responses synchronously.
     done->Run();
