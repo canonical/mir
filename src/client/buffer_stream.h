@@ -160,8 +160,6 @@ private:
 
     std::shared_ptr<MemoryRegion> secured_region;
 
-    geometry::Size cached_buffer_size;
-
     std::unique_ptr<ServerBufferSemantics> buffer_depository;
     geometry::Size ideal_buffer_size;
     size_t const nbuffers;

@@ -23,7 +23,7 @@
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 #include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -47,8 +47,8 @@ struct MockInputDeviceObserver : public mi::InputDeviceObserver
 struct TestInputDeviceHub : mtf::HeadlessInProcessServer
 {
     MockInputDeviceObserver observer;
-    mt::WaitCondition observer_registered;
-    mt::WaitCondition callbacks_received;
+    mt::Signal observer_registered;
+    mt::Signal callbacks_received;
     std::shared_ptr<mtf::FakeInputDevice> keep_on_living;
 };
 
@@ -61,7 +61,7 @@ TEST_F(TestInputDeviceHub, calls_observers_with_changes_complete_on_registry)
         .WillOnce(mt::WakeUp(&observer_registered));
 
     server.the_input_device_hub()->add_observer(mt::fake_shared(observer));
-    observer_registered.wait_for_at_most_seconds(4);
+    observer_registered.wait_for(std::chrono::seconds{4});
 }
 
 TEST_F(TestInputDeviceHub, notifies_input_device_observer_about_available_devices)
@@ -76,9 +76,9 @@ TEST_F(TestInputDeviceHub, notifies_input_device_observer_about_available_device
         .WillOnce(mt::WakeUp(&callbacks_received));
 
     server.the_input_device_hub()->add_observer(mt::fake_shared(observer));
-    observer_registered.wait_for_at_most_seconds(4);
+    observer_registered.wait_for(std::chrono::seconds{4});
 
     keep_on_living = mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid", mir::input::DeviceCapability::keyboard});
 
-    callbacks_received.wait_for_at_most_seconds(4);
+    callbacks_received.wait_for(std::chrono::seconds{4});
 }

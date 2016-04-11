@@ -40,8 +40,8 @@ namespace
 class NullPageFlipper : public mgm::PageFlipper
 {
 public:
-    bool schedule_flip(uint32_t,uint32_t) { return true; }
-    void wait_for_flip(uint32_t) { }
+    bool schedule_flip(uint32_t,uint32_t) override { return true; }
+    void wait_for_flip(uint32_t) override { }
 };
 
 class MockPageFlipper : public mgm::PageFlipper
