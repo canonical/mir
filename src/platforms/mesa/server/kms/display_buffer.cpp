@@ -118,6 +118,14 @@ mgm::DisplayBuffer::DisplayBuffer(
     for (auto const& output : outputs)
         add_child_clock(output);
 
+    on_next_frame([this](Frame const& frame)
+    {
+        unsigned long long seq = frame.msc;
+        unsigned long long ns = frame.ust;
+        fprintf(stderr, "TODO - Frame #%llu at %llu.%03llus\n",
+                        seq, ns/1000000000ULL, (ns%1000000000ULL)/1000000ULL);
+    });
+
     uint32_t area_width = area.size.width.as_uint32_t();
     uint32_t area_height = area.size.height.as_uint32_t();
     if (rotation == mir_orientation_left || rotation == mir_orientation_right)
@@ -431,14 +439,7 @@ void mgm::DisplayBuffer::wait_for_page_flip()
     if (page_flips_pending)
     {
         for (auto& output : outputs)
-        {
             output->wait_for_page_flip();
-            auto frame = output->last_frame();
-            unsigned long long seq = frame.msc;
-            unsigned long long ns = frame.ust;
-            fprintf(stderr, "TODO - Frame #%llu at %llu.%03llus\n",
-                    seq, ns/1000000000ULL, (ns%1000000000ULL)/1000000ULL);
-        }
 
         page_flips_pending = false;
     }
