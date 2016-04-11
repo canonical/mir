@@ -74,6 +74,7 @@ void add_launcher_option_to(mir::Server& server)
                 auto const cmd ="DISPLAY= "             // Discourage toolkits from using X11
                     "GDK_BACKEND=mir "                  // configure GTK to use Mir
                     "QT_QPA_PLATFORM=ubuntumirclient "  // configure Qt to use Mir
+                    "SDL_VIDEODRIVER=mir "              // configure SDL to use Mir
                     "MIR_SOCKET=" + connection(server.open_client_socket()) + " " +
                     std::string{i, j} + "&";
 

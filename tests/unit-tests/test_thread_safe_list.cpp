@@ -17,7 +17,7 @@
  */
 
 #include "mir/thread_safe_list.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -89,8 +89,8 @@ TEST_F(ThreadSafeListTest,
     list.add(element1);
     list.add(element2);
 
-    mir::test::WaitCondition first_element_in_use;
-    mir::test::WaitCondition second_element_removed;
+    mir::test::Signal first_element_in_use;
+    mir::test::Signal second_element_removed;
 
     int elements_seen = 0;
 
@@ -100,16 +100,16 @@ TEST_F(ThreadSafeListTest,
             list.for_each(
                 [&] (Element const&)
                 {
-                    first_element_in_use.wake_up_everyone();
-                    second_element_removed.wait_for_at_most_seconds(3);
-                    EXPECT_TRUE(second_element_removed.woken());
+                    first_element_in_use.raise();
+                    second_element_removed.wait_for(std::chrono::seconds{3});
+                    EXPECT_TRUE(second_element_removed.raised());
                     ++elements_seen;
                 });
         }};
 
-    first_element_in_use.wait_for_at_most_seconds(3);
+    first_element_in_use.wait_for(std::chrono::seconds{3});
     list.remove(element2);
-    second_element_removed.wake_up_everyone();
+    second_element_removed.raise();
 
     t.join();
 

@@ -34,7 +34,7 @@
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/spin_wait.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -117,14 +117,14 @@ struct CursorClient
 
     virtual ~CursorClient()
     {
-        teardown.wake_up_everyone();
+        teardown.raise();
         if (client_thread.joinable())
             client_thread.join();
     }
 
     void run()
     {
-        mir::test::WaitCondition setup_done;
+        mir::test::Signal setup_done;
 
         client_thread = std::thread{
             [this,&setup_done]
@@ -145,14 +145,14 @@ struct CursorClient
 
                 setup_cursor(surface);
 
-                setup_done.wake_up_everyone();
+                setup_done.raise();
 
-                teardown.wait_for_at_most_seconds(10);
+                teardown.wait_for(std::chrono::seconds{10});
                 mir_surface_release_sync(surface);
                 mir_connection_release(connection);
             }};
 
-        setup_done.wait_for_at_most_seconds(5);
+        setup_done.wait_for(std::chrono::seconds{5});
     }
 
     virtual void setup_cursor(MirSurface*)
@@ -179,7 +179,7 @@ struct CursorClient
     MirConnection* connection;
 
     std::thread client_thread;
-    mir::test::WaitCondition teardown;
+    mir::test::Signal teardown;
 };
 
 struct DisabledCursorClient : CursorClient
@@ -256,7 +256,7 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
     std::string const client_cursor_1{"cursor-1"};
     std::string const client_cursor_2{"cursor-2"};
 
-    mir::test::WaitCondition expectations_satisfied;
+    mir::test::Signal expectations_satisfied;
     mtf::UsingStubClientPlatform using_stub_client_platform;
 
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
@@ -286,7 +286,7 @@ TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
 
-    expectations_satisfied.wait_for_at_most_seconds(5);
+    expectations_satisfied.wait_for(std::chrono::seconds{5});
 
     expect_client_shutdown();
 }
@@ -309,7 +309,7 @@ TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(2, 0));
 
-    expectations_satisfied.wait_for_at_most_seconds(5);
+    expectations_satisfied.wait_for(std::chrono::seconds{5});
 
     expect_client_shutdown();
 }
@@ -336,7 +336,7 @@ TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
 
-    expectations_satisfied.wait_for_at_most_seconds(5);
+    expectations_satisfied.wait_for(std::chrono::seconds{5});
 
     expect_client_shutdown();
 }
@@ -360,7 +360,7 @@ TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
 
-    expectations_satisfied.wait_for_at_most_seconds(5);
+    expectations_satisfied.wait_for(std::chrono::seconds{5});
 
     expect_client_shutdown();
 }
@@ -398,7 +398,7 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
 
     client.run();
 
-    expectations_satisfied.wait_for_at_most_seconds(5);
+    expectations_satisfied.wait_for(std::chrono::seconds{5});
 
     expect_client_shutdown();
 }
@@ -447,7 +447,7 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
 
     client.run();
 
-    expectations_satisfied.wait_for_at_most_seconds(500);
+    expectations_satisfied.wait_for(std::chrono::seconds{500});
 
     expect_client_shutdown();
 }
@@ -491,7 +491,7 @@ TEST_F(TestClientCursorAPI, cursor_passed_through_nested_server)
         FullscreenDisabledCursorClient client{nested_mir.new_connection(), client_name_1};
         client.run();
 
-        expectations_satisfied.wait_for_at_most_seconds(60);
+        expectations_satisfied.wait_for(std::chrono::seconds{60});
         expect_client_shutdown();
     }
     

@@ -18,7 +18,7 @@
 
 #include "androidfw/Input.h"
 #include "androidfw/InputTransport.h"
-#include "src/server/input/android/android_input_channel.h"
+#include "src/server/input/channel.h"
 #include "mir/input/android/event_conversion_helpers.h"
 #include "mir/input/android/android_input_lexicon.h"
 #include "mir/geometry/displacement.h"
@@ -32,6 +32,7 @@
 
 using namespace std::literals::chrono_literals;
 namespace mia = mir::input::android;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 namespace
@@ -58,7 +59,7 @@ struct InputConsumerTest : ::testing::Test
     mir::cookie::Blob default_cookie;
     EventFactory events;
     std::chrono::milliseconds current_frame_time = 0ms;
-    mia::AndroidInputChannel channel;
+    mi::Channel channel;
     geom::Displacement no_move{0,0};
     geom::Displacement no_scroll{0,0};
     geom::Point origin{0,0};

@@ -32,7 +32,7 @@
 #include "mir/test/stub_server_tool.h"
 #include "mir/test/test_protobuf_client.h"
 #include "mir/test/test_protobuf_server.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 #include "mir/test/doubles/stub_ipc_factory.h"
 #include "mir/test/doubles/stub_session_authorizer.h"
 #include "mir/test/doubles/mock_rpc_report.h"
@@ -269,19 +269,16 @@ TEST_F(PublishedSocketConnector, disorderly_disconnection_handled)
     client->create_surface();
     client->wait_for_create_surface();
 
-    mt::WaitCondition wc;
+    mt::Signal error_reported;
 
-    ON_CALL(*communicator_report, error(_)).WillByDefault(Invoke([&wc] (std::exception const&)
-        {
-            wc.wake_up_everyone();
-        }));
+    ON_CALL(*communicator_report, error(_)).WillByDefault(WakeUp(&error_reported));
 
     EXPECT_CALL(*communicator_report, error(_)).Times(1);
 
     client.reset();
 
-    wc.wait_for_at_most_seconds(1);
-    EXPECT_TRUE(wc.woken());
+    error_reported.wait_for(std::chrono::seconds{1});
+    EXPECT_TRUE(error_reported.raised());
 }
 
 TEST_F(PublishedSocketConnector, configure_display)

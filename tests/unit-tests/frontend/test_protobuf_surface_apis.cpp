@@ -68,7 +68,7 @@ struct StubServerSurfaceCounter : public StubServerTool
     {
         std::unique_lock<std::mutex> ul(guard);
         while (surface_count != expected_count)
-            wait_condition.wait(ul);
+            signal.wait(ul);
 
         EXPECT_EQ(expected_count, surface_count);
     }
