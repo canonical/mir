@@ -56,15 +56,15 @@ namespace
 
 MATCHER_P(MirResizeEventEq, event, "")
 {
-    if (arg.type != mir_event_type_resize ||
-        event->type != mir_event_type_resize)
+    if (arg.type() != mir_event_type_resize ||
+        event->type() != mir_event_type_resize)
     {
         return false;
     }
 
-    return arg.to_resize()->width == event->to_resize()->width &&
-           arg.to_resize()->height == event->to_resize()->height &&
-           arg.to_resize()->surface_id == event->to_resize()->surface_id;
+    return arg.to_resize()->width() == event->to_resize()->width() &&
+           arg.to_resize()->height() == event->to_resize()->height() &&
+           arg.to_resize()->surface_id() == event->to_resize()->surface_id();
 }
 
 typedef testing::NiceMock<mtd::MockBufferStream> StubBufferStream;
@@ -265,9 +265,7 @@ TEST_F(Surface, emits_client_close_events)
     surface->add_observer(observer);
 
     MirCloseSurfaceEvent e;
-    memset(&e, 0, sizeof e);
-    e.type = mir_event_type_close_surface;
-    e.to_close_surface()->surface_id = stub_id.as_value();
+    e.to_close_surface()->set_surface_id(stub_id.as_value());
 
     EXPECT_CALL(*sink, handle_event(Eq(ByRef(e)))).Times(1);
 

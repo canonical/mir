@@ -65,7 +65,7 @@ public:
      *                   after any internal locks are released.
      */
     virtual std::unique_ptr<FrameDroppingPolicy> create_policy(
-        std::shared_ptr<LockableCallback> const& drop_frame) const = 0;
+        std::unique_ptr<LockableCallback> drop_frame) const = 0;
 };
 
 }

@@ -19,6 +19,8 @@
 #ifndef MIR_TEST_SIGNAL_H_
 #define MIR_TEST_SIGNAL_H_
 
+#include <gmock/gmock.h>
+
 #include <condition_variable>
 #include <chrono>
 #include <mutex>
@@ -57,6 +59,17 @@ private:
     std::condition_variable cv;
     bool signalled{false};
 };
+
+ACTION_P(ReturnFalseAndWakeUp, signal)
+{
+    signal->raise();
+    return false;
+}
+ACTION_P(WakeUp, signal)
+{
+    signal->raise();
+}
+
 }
 }
 

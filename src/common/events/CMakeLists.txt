@@ -15,7 +15,18 @@
 # Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
 
 set(EVENT_SOURCES
-  event_private.cpp
+  close_surface_event.cpp
+  event.cpp
+  input_configuration_event.cpp
+  keyboard_event.cpp
+  motion_event.cpp
+  prompt_session_event.cpp
+  surface_event.cpp
+  input_event.cpp
+  keymap_event.cpp
+  orientation_event.cpp
+  resize_event.cpp
+  surface_output_event.cpp
 )
 
 add_library(
