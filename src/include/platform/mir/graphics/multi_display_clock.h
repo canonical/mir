@@ -59,7 +59,7 @@ private:
     std::vector<Child> children;
     FrameCallback callback;
     Frame baseline;
-    Frame last_virtual_frame;
+    Frame last_multi_frame;
 };
 
 }

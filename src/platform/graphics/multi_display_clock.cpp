@@ -23,7 +23,7 @@ using namespace mir::graphics;
 Frame MultiDisplayClock::last_frame() const
 {
     std::lock_guard<std::mutex> lock(mutex);
-    return last_virtual_frame;
+    return last_multi_frame;
 }
 
 void MultiDisplayClock::on_next_frame(FrameCallback const& cb)
@@ -70,13 +70,13 @@ void MultiDisplayClock::on_child_frame(int child_index, Frame const& child_frame
         std::lock_guard<std::mutex> lock(mutex);
         auto& child = children.at(child_index);
         auto child_delta = child_frame.msc - child.baseline.msc;
-        auto virtual_delta = last_virtual_frame.msc - baseline.msc;
+        auto virtual_delta = last_multi_frame.msc - baseline.msc;
         if (child_delta > virtual_delta)
         {
-            last_virtual_frame.msc = baseline.msc + child_delta;
-            last_virtual_frame.ust = child_frame.ust;
+            last_multi_frame.msc = baseline.msc + child_delta;
+            last_multi_frame.ust = child_frame.ust;
             cb = callback;
-            cb_frame = last_virtual_frame;
+            cb_frame = last_multi_frame;
         }
         if (auto child_clock = child.clock.lock())
             hook_child_clock(*child_clock);
