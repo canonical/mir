@@ -41,22 +41,22 @@ public:
                   std::shared_ptr<PageFlipper> const& page_flipper);
     ~RealKMSOutput();
 
-    void reset();
-    void configure(geometry::Displacement fb_offset, size_t kms_mode_index);
-    geometry::Size size() const;
-    int max_refresh_rate() const;
+    void reset() override;
+    void configure(geometry::Displacement fb_offset, size_t kms_mode_index) override;
+    geometry::Size size() const override;
+    int max_refresh_rate() const override;
 
-    bool set_crtc(uint32_t fb_id);
-    void clear_crtc();
-    bool schedule_page_flip(uint32_t fb_id);
-    void wait_for_page_flip();
+    bool set_crtc(uint32_t fb_id) override;
+    void clear_crtc() override;
+    bool schedule_page_flip(uint32_t fb_id) override;
+    void wait_for_page_flip() override;
 
-    void set_cursor(gbm_bo* buffer);
-    void move_cursor(geometry::Point destination);
-    void clear_cursor();
-    bool has_cursor() const;
+    void set_cursor(gbm_bo* buffer) override;
+    void move_cursor(geometry::Point destination) override;
+    void clear_cursor() override;
+    bool has_cursor() const override;
 
-    void set_power_mode(MirPowerMode mode);
+    void set_power_mode(MirPowerMode mode) override;
 
 private:
     bool ensure_crtc();
