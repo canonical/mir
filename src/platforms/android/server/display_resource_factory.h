@@ -46,6 +46,7 @@ enum HwcVersion
     hwc12,
     hwc13,
     hwc14,
+    hwc15,
     unknown
 };
 
