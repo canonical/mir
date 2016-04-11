@@ -57,7 +57,7 @@ public:
     virtual bool schedule_page_flip(uint32_t fb_id) = 0;
     virtual void wait_for_page_flip() = 0;
     virtual Frame last_frame() const = 0;
-    virtual void on_next_frame(FrameCallback const&) override = 0;
+    virtual void set_frame_callback(FrameCallback const&) override = 0;
 
     virtual void set_cursor(gbm_bo* buffer) = 0;
     virtual void move_cursor(geometry::Point destination) = 0;

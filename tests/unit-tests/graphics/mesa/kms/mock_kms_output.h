@@ -40,7 +40,7 @@ struct MockKMSOutput : public graphics::mesa::KMSOutput
     MOCK_METHOD0(wait_for_page_flip, void());
 
     MOCK_CONST_METHOD0(last_frame, graphics::Frame());
-    MOCK_METHOD1(on_next_frame, void(graphics::FrameCallback const&));
+    MOCK_METHOD1(set_frame_callback, void(graphics::FrameCallback const&));
 
     MOCK_METHOD1(set_cursor, void(gbm_bo*));
     MOCK_METHOD1(move_cursor, void(geometry::Point));

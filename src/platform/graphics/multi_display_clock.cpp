@@ -26,7 +26,7 @@ Frame MultiDisplayClock::last_frame() const
     return last_multi_frame;
 }
 
-void MultiDisplayClock::on_next_frame(FrameCallback const& cb)
+void MultiDisplayClock::set_frame_callback(FrameCallback const& cb)
 {
     Lock lock(mutex);
     callback = cb;
@@ -35,7 +35,7 @@ void MultiDisplayClock::on_next_frame(FrameCallback const& cb)
 void MultiDisplayClock::hook_child_clock(Lock const&,
                                          DisplayClock& child_clock, int idx)
 {
-    child_clock.on_next_frame( std::bind(&MultiDisplayClock::on_child_frame,
+    child_clock.set_frame_callback( std::bind(&MultiDisplayClock::on_child_frame,
                                          this, idx, std::placeholders::_1) );
 }
 

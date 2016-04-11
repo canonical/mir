@@ -277,8 +277,10 @@ void mgm::RealKMSOutput::wait_for_page_flip()
     last_flip = page_flipper->wait_for_flip(current_crtc->crtc_id);
     if (frame_callback)
     {
-        frame_callback(last_flip);
-        // XXX Remove callback now?
+        auto cb = frame_callback;
+        auto flip = last_flip;
+        lg.unlock();
+        cb(flip);
     }
 }
 
@@ -401,7 +403,7 @@ mg::Frame mgm::RealKMSOutput::last_frame() const
     return last_flip;
 }
 
-void mgm::RealKMSOutput::on_next_frame(FrameCallback const& cb)
+void mgm::RealKMSOutput::set_frame_callback(FrameCallback const& cb)
 {
     frame_callback = cb;
 }

@@ -42,7 +42,7 @@ class MultiDisplayClock : public DisplayClock
 public:
     virtual ~MultiDisplayClock() = default;
     Frame last_frame() const override;
-    void on_next_frame(FrameCallback const&) override;
+    void set_frame_callback(FrameCallback const&) override;
     void add_child_clock(std::weak_ptr<DisplayClock>);
 private:
     typedef std::lock_guard<std::mutex> Lock;

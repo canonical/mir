@@ -53,7 +53,7 @@ public:
 
     // DisplayClock
     Frame last_frame() const override;
-    void  on_next_frame(FrameCallback const&) override;
+    void  set_frame_callback(FrameCallback const&) override;
 
     void set_cursor(gbm_bo* buffer);
     void move_cursor(geometry::Point destination);

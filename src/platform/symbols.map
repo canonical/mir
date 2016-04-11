@@ -293,7 +293,7 @@ MIR_PLATFORM_0.22 {
  global:
   extern "C++" {
    mir::graphics::MultiDisplayClock::last_frame*;
-   mir::graphics::MultiDisplayClock::on_next_frame*;
+   mir::graphics::MultiDisplayClock::set_frame_callback*;
    mir::graphics::MultiDisplayClock::add_child_clock*;
    typeinfo?for?mir::graphics::MultiDisplayClock;
    vtable?for?mir::graphics::MultiDisplayClock;

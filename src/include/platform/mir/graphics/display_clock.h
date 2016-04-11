@@ -42,17 +42,8 @@ class DisplayClock
 {
 public:
     virtual ~DisplayClock() = default;
-    /**
-     * Last frame in which the display was actually used by the DisplayClock
-     * owner, which may be older than the last frame on the physical display.
-     */
     virtual Frame last_frame() const = 0;
-    /**
-     * Make a callback next time a frame is displayed by us, which for a
-     * compositor may not be the next physical frame if the scene is
-     * presently idle.
-     */
-    virtual void on_next_frame(FrameCallback const&) = 0;
+    virtual void set_frame_callback(FrameCallback const&) = 0;
 };
 
 }
