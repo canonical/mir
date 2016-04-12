@@ -254,6 +254,43 @@ TEST_F(ApplicationSession, adds_created_surface_to_coordinator)
     session->destroy_surface(surf);
 }
 
+TEST_F(ApplicationSession, attempt_to_destroy_non_existent_stream_throws)
+{
+    using namespace ::testing;
+    NiceMock<MockSurfaceFactory> mock_surface_factory;
+    NiceMock<mtd::MockSurfaceStack> surface_stack;
+    auto session = make_application_session(
+        mt::fake_shared(surface_stack), mt::fake_shared(mock_surface_factory));
+
+    mf::BufferStreamId made_up_id{332};
+    EXPECT_THROW({
+        session->destroy_buffer_stream(made_up_id);
+    }, std::runtime_error);
+}
+
+TEST_F(ApplicationSession, can_destroy_buffer_stream_after_destroying_surface)
+{
+    using namespace ::testing;
+
+    NiceMock<MockSurfaceFactory> mock_surface_factory;
+    NiceMock<mtd::MockSurfaceStack> surface_stack;
+    std::shared_ptr<ms::Surface> mock_surface = make_mock_surface();
+
+    EXPECT_CALL(mock_surface_factory, create_surface(_,_))
+        .WillOnce(Return(mock_surface));
+    EXPECT_CALL(surface_stack, add_surface(mock_surface,_));
+    auto session = make_application_session(
+        mt::fake_shared(surface_stack), mt::fake_shared(mock_surface_factory));
+
+    auto buffer_stream = session->create_buffer_stream(properties);
+    ms::SurfaceCreationParameters params = ms::a_surface()
+        .with_buffer_stream(buffer_stream);
+    auto surf = session->create_surface(params, event_sink);
+
+    session->destroy_surface(surf);
+    session->destroy_buffer_stream(buffer_stream);
+}
+
 TEST_F(ApplicationSession, notifies_listener_of_create_and_destroy_surface)
 {
     using namespace ::testing;
@@ -506,10 +543,10 @@ TEST_F(ApplicationSession, process_id)
 TEST_F(ApplicationSession, can_destroy_surface_bstream)
 {
     auto session = make_application_session_with_stubs();
+    mf::BufferStreamId stream_id = session->create_buffer_stream(properties);
     ms::SurfaceCreationParameters params = ms::a_surface()
-        .with_buffer_stream(session->create_buffer_stream(properties));
+        .with_buffer_stream(stream_id);
     auto id = session->create_surface(params, event_sink);
-    mf::BufferStreamId stream_id(id.as_value());
     session->destroy_buffer_stream(stream_id);
     EXPECT_THROW({
         session->get_buffer_stream(stream_id);

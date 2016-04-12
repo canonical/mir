@@ -206,8 +206,7 @@ std::shared_ptr<mc::BufferStream> default_stream(std::list<ms::StreamInfo> const
 {
     //There's not a good reason, other than soon-to-be-deprecated api to disallow contentless surfaces
     if (layers.empty())
-        return nullptr;
-//        BOOST_THROW_EXCEPTION(std::logic_error("Surface must have content"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Surface must have content"));
     else
         return layers.front().stream;
 }
@@ -231,13 +230,13 @@ ms::BasicSurface::BasicSurface(
     input_mode(mi::InputReceptionMode::normal),
     nonrectangular(nonrectangular),
     custom_input_rectangles(),
+    surface_buffer_stream(default_stream(layers)),
     server_input_channel(input_channel),
     input_sender(input_sender),
     cursor_image_(cursor_image),
     report(report),
     parent_(parent),
     layers(layers),
-    surface_buffer_stream(default_stream(layers)),
     cursor_stream_adapter{std::make_unique<ms::CursorStreamImageAdapter>(*this)},
     input_validator([this](MirEvent const& ev) { this->input_sender->send_event(ev, server_input_channel); })
 {
@@ -354,8 +353,7 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
      * not predictable here. Such critical exceptions would arise from
      * the platform buffer allocator as a runtime_error via:
      */
-    if (!layers.empty())
-        layers.front().stream->resize(new_size);
+    surface_buffer_stream->resize(new_size);
 
     // Now the buffer stream has successfully resized, update the state second;
     {

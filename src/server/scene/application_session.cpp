@@ -102,16 +102,16 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
 
     auto params = the_params;
 
-    mf::BufferStreamId default_stream_id;
+    mf::BufferStreamId stream_id;
     if (params.content_id.is_set())
-        default_stream_id = params.content_id.value();
+        stream_id = params.content_id.value();
     else
-        default_stream_id = params.streams.value()[0].stream_id;
+        stream_id = params.streams.value()[0].stream_id;
 
     if (params.parent_id.is_set())
         params.parent = checked_find(the_params.parent_id.value())->second;
 
-    auto buffer_stream = checked_find(default_stream_id)->second;
+    auto buffer_stream = checked_find(stream_id)->second;
     if (params.size != buffer_stream->stream_size())
         buffer_stream->resize(params.size);
 
@@ -149,7 +149,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     {
         std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
         surfaces[id] = surface;
-        default_content_map[id] = default_stream_id;
+        default_content_map[id] = stream_id;
     }
 
     observer->moved_to(surface->top_left());
@@ -377,11 +377,11 @@ void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     auto stream_it = streams.find(mir::frontend::BufferStreamId(id.as_value()));
-    if (stream_it != streams.end())
-    {
-        stream_it->second->drop_outstanding_requests();
-        streams.erase(stream_it);
-    }
+    if (stream_it == streams.end())
+        BOOST_THROW_EXCEPTION(std::runtime_error("cannot destroy stream: Invalid BufferStreamId"));
+
+    stream_it->second->drop_outstanding_requests();
+    streams.erase(stream_it);
 }
 
 void ms::ApplicationSession::configure_streams(
@@ -418,7 +418,7 @@ void ms::ApplicationSession::destroy_surface(std::unique_lock<std::mutex>& lock,
 
     if (it != default_content_map.end())
         default_content_map.erase(it);
- 
+
     lock.unlock();
 
     surface_stack->remove_surface(surface);
