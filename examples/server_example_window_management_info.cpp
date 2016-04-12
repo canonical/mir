@@ -19,6 +19,7 @@
 #include "server_example_window_management_info.h"
 
 #include "mir/scene/surface.h"
+#include "mir/scene/session.h"
 #include "mir/scene/surface_creation_parameters.h"
 
 #include "mir/graphics/buffer.h"
@@ -46,7 +47,9 @@ me::SurfaceInfo::SurfaceInfo(
     width_inc{params.width_inc},
     height_inc{params.height_inc},
     min_aspect{params.min_aspect},
-    max_aspect{params.max_aspect}
+    max_aspect{params.max_aspect},
+    input_shape{params.input_shape.is_set() ? params.input_shape.value() : std::vector<Rectangle>{}},
+    streams{params.streams.is_set() ? params.streams.value() : std::vector<shell::StreamSpecification>{}}
 {
     if (params.output_id != mir::graphics::DisplayConfigurationOutputId{0})
         output_id = params.output_id;
@@ -243,16 +246,19 @@ struct mir::examples::SurfaceInfo::AllocatingPainter
     mg::BufferID back_buffer; 
 };
 
-void mir::examples::SurfaceInfo::init_titlebar(std::shared_ptr<scene::Surface> const& surface)
+void mir::examples::SurfaceInfo::init_titlebar(Size titlebar_size)
 {
-    auto stream = surface->primary_buffer_stream();
-    try
+    if (auto s = session.lock())
     {
-        stream_painter = std::make_shared<AllocatingPainter>(stream, surface->size());
-    }
-    catch (...)
-    {
-        stream_painter = std::make_shared<SwappingPainter>(stream);
+        auto stream = s->get_buffer_stream(titlebar_id);
+        try
+        {
+            stream_painter = std::make_shared<AllocatingPainter>(stream, titlebar_size);
+        }
+        catch (...)
+        {
+            stream_painter = std::make_shared<SwappingPainter>(stream);
+        }
     }
 }
 

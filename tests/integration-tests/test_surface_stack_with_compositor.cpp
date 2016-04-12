@@ -122,11 +122,13 @@ struct SurfaceStackCompositor : public testing::Test
     SurfaceStackCompositor() :
         timeout{std::chrono::system_clock::now() + std::chrono::seconds(5)},
         mock_buffer_stream(std::make_shared<testing::NiceMock<mtd::MockBufferBundle>>()),
+        stream(std::make_shared<mc::BufferStreamSurfaces>(mock_buffer_stream)),
+        streams({ { stream, {0,0}, {} } }),
         stub_surface{std::make_shared<ms::BasicSurface>(
             std::string("stub"),
             geom::Rectangle{{0,0},{1,1}},
             false,
-            std::make_shared<mc::BufferStreamSurfaces>(mock_buffer_stream),
+            streams,
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<mtd::StubInputSender>(),
             std::shared_ptr<mg::CursorImage>(),
@@ -142,6 +144,8 @@ struct SurfaceStackCompositor : public testing::Test
     StubRendererFactory renderer_factory;
     std::chrono::system_clock::time_point timeout;
     std::shared_ptr<mtd::MockBufferBundle> mock_buffer_stream;
+    std::shared_ptr<mc::BufferStream> stream;
+    std::list<ms::StreamInfo> const streams;
     std::shared_ptr<ms::BasicSurface> stub_surface;
     ms::SurfaceCreationParameters default_params;
     mtd::StubBuffer stubbuf{geom::Size{1,1}};
@@ -197,12 +201,11 @@ TEST_F(SurfaceStackCompositor, swapping_a_surface_that_has_been_added_triggers_a
     mt_compositor.start();
 
     stack.add_surface(stub_surface, default_params.input_mode);
-    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    stream->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(1, timeout));
 }
-
 //test associated with lp:1290306, 1293896, 1294048, 1294051, 1294053
 TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_consumed)
 {
@@ -219,7 +222,7 @@ TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_co
     mt_compositor.start();
 
     stack.add_surface(stub_surface, default_params.input_mode);
-    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    streams.front().stream->swap_buffers(&stubbuf, [](auto){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(5, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(5, timeout));
@@ -242,7 +245,7 @@ TEST_F(SurfaceStackCompositor, bypassed_compositor_runs_until_all_surfaces_buffe
     mt_compositor.start();
 
     stack.add_surface(stub_surface, default_params.input_mode);
-    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    streams.front().stream->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(5, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(5, timeout));
@@ -263,7 +266,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
     mt_compositor.start();
 
     stack.add_surface(stub_surface, default_params.input_mode);
-    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    streams.front().stream->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(1, timeout));
@@ -276,7 +279,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
 
 TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
 {
-    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    streams.front().stream->swap_buffers(&stubbuf, [](mg::Buffer*){});
     stack.add_surface(stub_surface, default_params.input_mode);
 
     mc::MultiThreadedCompositor mt_compositor(
@@ -295,7 +298,7 @@ TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
 
 TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
 {
-    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    streams.front().stream->swap_buffers(&stubbuf, [](mg::Buffer*){});
     stack.add_surface(stub_surface, default_params.input_mode);
 
     mc::MultiThreadedCompositor mt_compositor(
@@ -318,7 +321,7 @@ TEST_F(SurfaceStackCompositor, buffer_updates_trigger_composition)
     ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor(_))
         .WillByDefault(testing::Return(1));
     stack.add_surface(stub_surface, default_params.input_mode);
-    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    streams.front().stream->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
@@ -328,7 +331,7 @@ TEST_F(SurfaceStackCompositor, buffer_updates_trigger_composition)
         null_comp_report, default_delay, false);
 
     mt_compositor.start();
-    stub_surface->primary_buffer_stream()->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    streams.front().stream->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(1, timeout));

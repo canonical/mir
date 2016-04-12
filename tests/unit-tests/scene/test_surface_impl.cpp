@@ -82,9 +82,10 @@ struct Surface : testing::Test
         ON_CALL(*buffer_stream, acquire_client_buffer(_))
             .WillByDefault(InvokeArgument<0>(nullptr));
         
-        surface = std::make_shared<ms::BasicSurface>(std::string("stub"), geom::Rectangle{{},{}}, false,
-            buffer_stream, nullptr /* input_channel */, stub_input_sender,
-            nullptr /* cursor_image */, report);
+        surface = std::make_shared<ms::BasicSurface>(
+            std::string("stub"), geom::Rectangle{{},{}}, false,
+            std::list<ms::StreamInfo> { { buffer_stream, {}, {} } },
+            nullptr, stub_input_sender, nullptr, report);
     }
 
     mf::SurfaceId stub_id;
@@ -280,7 +281,7 @@ TEST_F(Surface, preferred_orientation_mode_defaults_to_any)
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
-        buffer_stream,
+        std::list<ms::StreamInfo> { { buffer_stream, {}, {} } },
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
         std::shared_ptr<mg::CursorImage>(),

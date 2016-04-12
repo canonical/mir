@@ -229,7 +229,7 @@ struct ApplicationSession : public testing::Test
 struct MockSurfaceFactory : ms::SurfaceFactory
 {
     MOCK_METHOD2(create_surface, std::shared_ptr<ms::Surface>(
-        std::shared_ptr<mc::BufferStream> const&, ms::SurfaceCreationParameters const& params));
+        std::list<ms::StreamInfo> const&, ms::SurfaceCreationParameters const& params));
 };
 }
 
@@ -616,6 +616,15 @@ TEST_F(ApplicationSession, buffer_stream_constructed_with_swapinterval_1)
     session->destroy_buffer_stream(id);
 }
 
+MATCHER_P(HasSingleStream, value, "")
+{
+    using namespace testing;
+    EXPECT_THAT(arg.size(), Eq(1));
+    if (arg.size() < 1 ) return false;
+    EXPECT_THAT(arg.front().stream.get(), Eq(value.get())); 
+    return !(::testing::Test::HasFailure());
+}
+
 TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
 {
     using namespace testing;
@@ -632,25 +641,17 @@ TEST_F(ApplicationSession, surface_uses_prexisting_buffer_stream_if_set)
         mt::fake_shared(mock_surface_factory));
 
     auto id = session->create_buffer_stream(properties);
+    auto stream = session->get_buffer_stream(id);
 
-    EXPECT_CALL(mock_surface_factory, create_surface(Eq(session->get_buffer_stream(id)),_))
-        .WillOnce(Invoke([&](auto bs, auto)
-    {
-        auto surface = make_mock_surface();
-        ON_CALL(*surface, primary_buffer_stream())
-            .WillByDefault(Return(bs));
-        return surface;
-    }));
+    EXPECT_CALL(mock_surface_factory, create_surface(HasSingleStream(stream),_))
+        .WillOnce(Return(make_mock_surface()));
 
     ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
         .of_name("Aardavks")
         .of_type(mir_surface_type_normal)
         .with_buffer_stream(id);
 
-    auto surface_id = session->create_surface(params, event_sink);
-    auto surface = session->get_surface(surface_id);
-
-    EXPECT_THAT(surface->primary_buffer_stream(), Eq(session->get_buffer_stream(id)));
+    session->create_surface(params, event_sink);
 }
 
 namespace
@@ -733,7 +734,7 @@ class ObserverPreservingSurfaceFactory : public ms::SurfaceFactory
 {
 public:
     std::shared_ptr<ms::Surface> create_surface(
-        std::shared_ptr<mir::compositor::BufferStream> const&,
+        std::list<ms::StreamInfo> const&,
         mir::scene::SurfaceCreationParameters const& params) override
     {
         using namespace testing;

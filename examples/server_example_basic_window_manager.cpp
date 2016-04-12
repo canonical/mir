@@ -58,7 +58,7 @@ auto me::BasicWindowManager::add_surface(
     auto const surface = session->surface(result);
     surface_info.emplace(surface, SurfaceInfo{session, surface, placed_params});
     policy->handle_new_surface(session, surface);
-    policy->generate_decorations_for(session, surface, surface_info, build);
+    policy->generate_decorations_for(session, surface);
     return result;
 }
 

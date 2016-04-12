@@ -65,7 +65,7 @@ public:
         std::string const& name,
         geometry::Rectangle rect,
         bool nonrectangular,
-        std::shared_ptr<compositor::BufferStream> const& buffer_stream,
+        std::list<scene::StreamInfo> const& streams,
         std::shared_ptr<input::InputChannel> const& input_channel,
         std::shared_ptr<input::InputSender> const& sender,
         std::shared_ptr<graphics::CursorImage> const& cursor_image,
@@ -76,7 +76,7 @@ public:
         geometry::Rectangle rect,
         std::weak_ptr<Surface> const& parent,
         bool nonrectangular,
-        std::shared_ptr<compositor::BufferStream> const& buffer_stream,
+        std::list<scene::StreamInfo> const& streams,
         std::shared_ptr<input::InputChannel> const& input_channel,
         std::shared_ptr<input::InputSender> const& sender,
         std::shared_ptr<graphics::CursorImage> const& cursor_image,
@@ -168,14 +168,14 @@ private:
     input::InputReceptionMode input_mode;
     const bool nonrectangular;
     std::vector<geometry::Rectangle> custom_input_rectangles;
-    std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     std::shared_ptr<input::InputSender> const input_sender;
     std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
-
     std::list<StreamInfo> layers;
+    std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
+
     // Surface attributes:
     MirSurfaceType type_ = mir_surface_type_normal;
     MirSurfaceState state_ = mir_surface_state_restored;

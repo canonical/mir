@@ -43,7 +43,7 @@ struct MockSurface : public scene::BasicSurface
             {},
             {{},{}},
             true,
-            std::make_shared<testing::NiceMock<MockBufferStream>>(),
+            {},
             std::make_shared<StubInputChannel>(),
             {},
             {},
