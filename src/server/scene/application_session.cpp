@@ -365,11 +365,11 @@ void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     auto stream_it = streams.find(mir::frontend::BufferStreamId(id.as_value()));
-    if (stream_it != streams.end())
-    {
-        stream_it->second->drop_outstanding_requests();
-        streams.erase(stream_it);
-    }
+    if (stream_it == streams.end())
+        BOOST_THROW_EXCEPTION(std::runtime_error("cannot destroy stream: Invalid BufferStreamId"));
+
+    stream_it->second->drop_outstanding_requests();
+    streams.erase(stream_it);
 }
 
 void ms::ApplicationSession::configure_streams(
@@ -405,16 +405,8 @@ void ms::ApplicationSession::destroy_surface(std::unique_lock<std::mutex>& lock,
     surfaces.erase(in_surfaces);
 
     if (it != default_content_map.end())
-    {
-        auto stream_it = streams.find(it->second);
-        if (stream_it != streams.end())
-        {
-            stream_it->second->drop_outstanding_requests();
-            streams.erase(stream_it);
-        }
         default_content_map.erase(it);
-    }
- 
+
     lock.unlock();
 
     surface_stack->remove_surface(surface);
