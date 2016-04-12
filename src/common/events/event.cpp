@@ -66,7 +66,7 @@ mir::EventUPtr MirEvent::deserialize(std::string const& bytes)
 std::string MirEvent::serialize(MirEvent const* event)
 {
 	std::string output;
-	auto flat_event =::capnp::messageToFlatArray(const_cast<MirEvent*>(event)->message);
+	auto flat_event = ::capnp::messageToFlatArray(const_cast<MirEvent*>(event)->message);
 
 	for (auto const& c : flat_event.asBytes())
 	{

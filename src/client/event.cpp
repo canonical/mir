@@ -45,8 +45,9 @@ void expect_event_type(EventType const* ev, MirEventType t) try
             mir::event_type_to_string(ev->type()));
         abort();
     }
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 }
@@ -87,8 +88,9 @@ MirEventType mir_event_get_type(MirEvent const* ev) try
     default:
         return ev->type();
     }
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -102,8 +104,9 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* ev) try
     }
 
     return ev->to_input();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -112,8 +115,9 @@ MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* ev) try
     expect_event_type(ev, mir_event_type_surface);
     
     return ev->to_surface();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -122,8 +126,9 @@ MirResizeEvent const* mir_event_get_resize_event(MirEvent const* ev) try
     expect_event_type(ev, mir_event_type_resize);
     
     return ev->to_resize();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -132,8 +137,9 @@ MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* 
     expect_event_type(ev, mir_event_type_prompt_session_state_change);
     
     return ev->to_prompt_session();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -142,8 +148,9 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev) t
     expect_event_type(ev, mir_event_type_orientation);
 
     return ev->to_orientation();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -152,8 +159,9 @@ MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev
     expect_event_type(ev, mir_event_type_close_surface);
 
     return ev->to_close_surface();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -162,8 +170,9 @@ MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* ev) try
     expect_event_type(ev, mir_event_type_keymap);
 
     return ev->to_keymap();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -172,8 +181,9 @@ MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEve
     expect_event_type(ev, mir_event_type_input_configuration);
 
     return ev->to_input_configuration();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -182,8 +192,9 @@ MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* 
     expect_event_type(ev, mir_event_type_surface_output);
 
     return ev->to_surface_output();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -194,8 +205,9 @@ MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev) try
     expect_event_type(ev, mir_event_type_surface);
 
     return ev->attrib();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -204,8 +216,9 @@ int mir_surface_event_get_attribute_value(MirSurfaceEvent const* ev) try
     expect_event_type(ev, mir_event_type_surface);
 
     return ev->value();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -215,8 +228,9 @@ int mir_resize_event_get_width(MirResizeEvent const* ev) try
 {
     expect_event_type(ev, mir_event_type_resize);
     return ev->width();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -224,8 +238,9 @@ int mir_resize_event_get_height(MirResizeEvent const* ev) try
 {
     expect_event_type(ev, mir_event_type_resize);
     return ev->height();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -235,8 +250,9 @@ MirPromptSessionState mir_prompt_session_event_get_state(MirPromptSessionEvent c
 {
     expect_event_type(ev, mir_event_type_prompt_session_state_change);
     return ev->new_state();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -246,8 +262,9 @@ MirOrientation mir_orientation_event_get_direction(MirOrientationEvent const* ev
 {
     expect_event_type(ev, mir_event_type_orientation);
     return ev->direction();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -259,8 +276,9 @@ void mir_keymap_event_get_keymap_buffer(MirKeymapEvent const* ev, char const** b
 
     *buffer = ev->buffer();
     *length = ev->size();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -269,8 +287,9 @@ MirInputDeviceId mir_keymap_event_get_device_id(MirKeymapEvent const* ev) try
     expect_event_type(ev, mir_event_type_keymap);
 
     return ev->device_id();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -280,8 +299,9 @@ MirInputConfigurationAction mir_input_configuration_event_get_action(MirInputCon
 {
     expect_event_type(ev, mir_event_type_input_configuration);
     return ev->action();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -289,8 +309,9 @@ int64_t mir_input_configuration_event_get_time(MirInputConfigurationEvent const*
 {
     expect_event_type(ev, mir_event_type_input_configuration);
     return ev->when().count();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -298,8 +319,9 @@ MirInputDeviceId mir_input_configuration_event_get_device_id(MirInputConfigurati
 {
     expect_event_type(ev, mir_event_type_input_configuration);
     return ev->id();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -309,8 +331,9 @@ int mir_surface_output_event_get_dpi(MirSurfaceOutputEvent const* ev) try
 {
     expect_event_type(ev, mir_event_type_surface_output);
     return ev->dpi();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -318,8 +341,9 @@ MirFormFactor mir_surface_output_event_get_form_factor(MirSurfaceOutputEvent con
 {
     expect_event_type(ev, mir_event_type_surface_output);
     return ev->form_factor();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -327,8 +351,9 @@ float mir_surface_output_event_get_scale(MirSurfaceOutputEvent const* ev) try
 {
     expect_event_type(ev, mir_event_type_surface_output);
     return ev->scale();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -336,8 +361,9 @@ uint32_t mir_surface_output_event_get_output_id(MirSurfaceOutputEvent const *ev)
 {
     expect_event_type(ev, mir_event_type_surface_output);
     return ev->output_id();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -346,8 +372,9 @@ uint32_t mir_surface_output_event_get_output_id(MirSurfaceOutputEvent const *ev)
 MirEvent const* mir_event_ref(MirEvent const* ev) try
 {
     return new MirEvent(*ev);
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 

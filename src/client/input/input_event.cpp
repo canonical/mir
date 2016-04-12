@@ -111,8 +111,9 @@ MirInputEventType mir_input_event_get_type(MirInputEvent const* ev) try
     default:
         abort();
     }
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -133,8 +134,9 @@ MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev) try
     default:
         abort();
     }
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -155,8 +157,9 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev) try
     default:
         abort();
     }
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -192,32 +195,36 @@ MirKeyboardEvent const* mir_input_event_get_keyboard_event(MirInputEvent const* 
 MirKeyboardAction mir_keyboard_event_action(MirKeyboardEvent const* kev) try
 {
     return kev->action();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
 xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* kev) try
 {
     return kev->key_code();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
 int mir_keyboard_event_scan_code(MirKeyboardEvent const* kev) try
 {
     return kev->scan_code();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
 MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* kev) try
 {    
     return kev->modifiers();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 /* Touch event accessors */
@@ -225,8 +232,9 @@ MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* kev)
 MirInputEventModifiers mir_touch_event_modifiers(MirTouchEvent const* tev) try
 {    
     return tev->to_motion()->modifiers();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -240,16 +248,18 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* ev) tr
     }
 
     return reinterpret_cast<MirTouchEvent const*>(ev);
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
 unsigned int mir_touch_event_point_count(MirTouchEvent const* event) try
 {
     return event->to_motion()->pointer_count();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -262,8 +272,9 @@ MirTouchId mir_touch_event_id(MirTouchEvent const* event, size_t touch_index) tr
     }
 
     return event->to_motion()->id(touch_index);
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -276,8 +287,9 @@ MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_i
     }
     
     return static_cast<MirTouchAction>(event->to_motion()->action(touch_index));
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -291,8 +303,9 @@ MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
     }
 
     return event->to_motion()->tool_type(touch_index);
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -323,8 +336,9 @@ float mir_touch_event_axis_value(MirTouchEvent const* event,
     default:
         return -1;
     }
-}  catch (...)
+}  catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }                                                                           
 
@@ -340,24 +354,27 @@ MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev
     }
 
     return reinterpret_cast<MirPointerEvent const*>(ev);
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
 MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* pev) try
 {    
     return pev->to_motion()->modifiers();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
 MirPointerAction mir_pointer_event_action(MirPointerEvent const* pev) try
 {    
     return static_cast<MirPointerAction>(pev->to_motion()->action(0));
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -365,16 +382,18 @@ bool mir_pointer_event_button_state(MirPointerEvent const* pev,
     MirPointerButton button) try
 {
    return pev->to_motion()->buttons() & button;
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
 MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* pev) try
 {
    return pev->to_motion()->buttons();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -399,8 +418,9 @@ float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis ax
        mir::log_critical("Invalid axis enumeration " + std::to_string(axis));
        abort();
    }
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -435,16 +455,18 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev) try
     }
 
     return false;
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
 size_t mir_cookie_buffer_size(MirCookie const* cookie) try
 {
     return cookie->size();
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -462,16 +484,18 @@ MirCookie const* mir_input_event_get_cookie(MirInputEvent const* iev) try
         abort();
     }
     }
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
 void mir_cookie_to_buffer(MirCookie const* cookie, void* buffer, size_t size) try
 {
     return cookie->copy_to(buffer, size);
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
@@ -481,8 +505,9 @@ MirCookie const* mir_cookie_from_buffer(void const* buffer, size_t size) try
         return NULL;
 
     return new MirCookie(buffer, size);
-} catch (...)
+} catch (std::exception const& e)
 {
+    mir::log_critical(e.what());
     abort();
 }
 
