@@ -205,8 +205,9 @@ namespace
 std::shared_ptr<mc::BufferStream> default_stream(std::list<ms::StreamInfo> const& layers)
 {
     //There's not a good reason, other than soon-to-be-deprecated api to disallow contentless surfaces
-    if (layers.empty()) 
-        BOOST_THROW_EXCEPTION(std::logic_error("Surface must have content"));
+    if (layers.empty())
+        return nullptr;
+//        BOOST_THROW_EXCEPTION(std::logic_error("Surface must have content"));
     else
         return layers.front().stream;
 }

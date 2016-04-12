@@ -63,6 +63,10 @@ struct SurfaceInfo
     std::weak_ptr <scene::Session> session;
     std::weak_ptr <scene::Surface> parent;
     std::vector <std::weak_ptr<scene::Surface>> children;
+    std::shared_ptr <scene::Surface> titlebar;
+    frontend::SurfaceId titlebar_id;
+    frontend::BufferStreamId titlebar_stream_id;
+    bool is_titlebar = false;
     geometry::Width min_width;
     geometry::Height min_height;
     geometry::Width max_width;
@@ -72,15 +76,8 @@ struct SurfaceInfo
     mir::optional_value<shell::SurfaceAspectRatio> min_aspect;
     mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
     mir::optional_value<graphics::DisplayConfigurationOutputId> output_id;
-    mir::optional_value<std::vector<geometry::Rectangle>> input_shape;
-    mir::optional_value<geometry::Rectangle> titlebar_input_shape;
 
-    mir::optional_value<std::vector<shell::StreamSpecification>> streams;
-    frontend::BufferStreamId titlebar_id;
-    bool has_titlebar = false;
-    bool visible_titlebar = false;
-
-    void init_titlebar(geometry::Size titlebar_size);
+    void init_titlebar(std::shared_ptr <scene::Surface> const& surface);
 
     void paint_titlebar(int intensity);
 

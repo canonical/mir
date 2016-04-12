@@ -94,12 +94,19 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     //TODO: we take either the content_id or the first streams content for now.
     //      Once the surface factory interface takes more than one stream,
     //      we can take all the streams as content.
-    if (!(the_params.streams.is_set() && the_params.streams.value().size() > 0))
+    if (!((the_params.content_id.is_set()) ||
+          (the_params.streams.is_set() && the_params.streams.value().size() > 0)))
+    {
         BOOST_THROW_EXCEPTION(std::logic_error("surface must have content"));
+    }
 
     auto params = the_params;
 
-    mf::BufferStreamId default_stream_id = params.streams.value()[0].stream_id;
+    mf::BufferStreamId default_stream_id;
+    if (params.content_id.is_set())
+        default_stream_id = params.content_id.value();
+    else
+        default_stream_id = params.streams.value()[0].stream_id;
 
     if (params.parent_id.is_set())
         params.parent = checked_find(the_params.parent_id.value())->second;
@@ -109,8 +116,15 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
         buffer_stream->resize(params.size);
 
     std::list<StreamInfo> streams;
-    for (auto& stream : params.streams.value())
-        streams.push_back({checked_find(stream.stream_id)->second, stream.displacement, stream.size});
+    if (the_params.content_id.is_set())
+    {
+        streams.push_back({checked_find(the_params.content_id.value())->second, {0,0}, {}});
+    }
+    else
+    {
+        for (auto& stream : params.streams.value())
+            streams.push_back({checked_find(stream.stream_id)->second, stream.displacement, stream.size});
+    }
 
     auto surface = surface_factory->create_surface(streams, params);
 

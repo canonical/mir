@@ -138,7 +138,9 @@ auto me::TilingWindowManagerPolicy::handle_place_new_surface(
 
 void me::TilingWindowManagerPolicy::generate_decorations_for(
     std::shared_ptr<ms::Session> const&,
-    std::shared_ptr<ms::Surface> const&)
+    std::shared_ptr<ms::Surface> const&,
+    SurfaceInfoMap&,
+    std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const&, ms::SurfaceCreationParameters const&)> const&)
 {
 }
 

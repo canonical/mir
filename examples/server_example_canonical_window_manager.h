@@ -88,7 +88,9 @@ public:
 
     void generate_decorations_for(
         std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<scene::Surface> const& surface);
+        std::shared_ptr<scene::Surface> const& surface,
+        SurfaceInfoMap& surface_map,
+        std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build);
 
 private:
     static const int modifier_mask =
@@ -110,6 +112,7 @@ private:
     void move_tree(std::shared_ptr<scene::Surface> const& root, geometry::Displacement movement) const;
     void apply_resize(
         std::shared_ptr<mir::scene::Surface> const& surface,
+        std::shared_ptr<mir::scene::Surface> const& titlebar,
         geometry::Point const& new_pos,
         geometry::Size const& new_size) const;
 

@@ -104,7 +104,9 @@ public:
     virtual int handle_set_state(std::shared_ptr<scene::Surface> const& surface, MirSurfaceState value) = 0;
 
     virtual void generate_decorations_for(
-        std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface) = 0;
+        std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface,
+        SurfaceInfoMap& surface_info,
+        std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const&, scene::SurfaceCreationParameters const&)> const& build) = 0;
 
     virtual bool handle_keyboard_event(MirKeyboardEvent const* event) = 0;
 

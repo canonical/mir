@@ -30,7 +30,6 @@
 
 namespace me = mir::examples;
 namespace ms = mir::scene;
-namespace mg = mir::graphics;
 using namespace mir::geometry;
 
 ///\example server_example_canonical_window_manager.cpp
@@ -39,95 +38,18 @@ using namespace mir::geometry;
 namespace
 {
 int const title_bar_height = 10;
-Displacement const titlebar_displacement { 0, -10 };
-
 Size titlebar_size_for_window(Size window_size)
 {
     return {window_size.width, Height{title_bar_height}};
 }
 
-void constrain_input_to(std::vector<Rectangle>& rectangles, Rectangle constraint)
+Point titlebar_position_for_window(Point window_position)
 {
-    auto surface_displacement = constraint.top_left - Point{0, 0};
-    for(auto& rect : rectangles)
-    {
-        rect.top_left = rect.top_left + surface_displacement;
-        rect = rect.intersection_with(constraint);
-        rect.top_left = rect.top_left - surface_displacement;
-    }
-} 
-
-std::vector<Rectangle> input_content_area(me::SurfaceInfo& info, Rectangle surface_rect)
-{
-    std::vector<Rectangle> rectangles;
-    if (info.input_shape.is_set() && !info.input_shape.value().empty())
-        return info.input_shape.value();
-    else
-        return { { Point{0,0}, surface_rect.size } };
+    return {
+        window_position.x,
+        window_position.y - DeltaY(title_bar_height)
+    };
 }
-
-void apply_input_content_area(
-    me::SurfaceInfo& info, ms::Surface& surface, Rectangle surface_rect)
-{
-    surface.set_input_region(input_content_area(info, surface_rect));
-}
-
-void apply_input_titlebar_and_content_area(
-    me::SurfaceInfo& info, ms::Surface& surface,
-    Rectangle surface_rect)
-{
-    auto rectangles = input_content_area(info, surface_rect);
-    info.titlebar_input_shape =
-        { Point{0,0} + titlebar_displacement, titlebar_size_for_window(surface_rect.size) };
-    rectangles.emplace_back(info.titlebar_input_shape.value());
-    surface.set_input_region(rectangles);
-}
-
-void content_and_titlebar(me::SurfaceInfo& info, ms::Surface& surface, Size new_size)
-{
-    auto streams = info.streams.value();
-    auto titlebar = std::find_if(streams.begin(), streams.end(),
-        [&](mir::shell::StreamSpecification const& entry)
-        {
-            return entry.stream_id == info.titlebar_id;
-        });
-
-    if (titlebar == streams.end())
-    {
-        streams.push_back(
-            { info.titlebar_id, titlebar_displacement, {titlebar_size_for_window(new_size)}});
-    }
-    else
-    {
-        titlebar->size = titlebar_size_for_window(new_size);
-    }
-
-    if (auto session = info.session.lock())
-        session->configure_streams(surface, streams);
-
-    info.streams = streams;
-    info.visible_titlebar = true;
-}
-
-void content_only(me::SurfaceInfo& info, ms::Surface& surface)
-{
-    auto streams = info.streams.value();
-    for(auto it = streams.begin(); it != streams.end();)
-    {
-        if (it->stream_id == info.titlebar_id)
-            it = streams.erase(it);
-        else
-            it++;
-    }
-
-    if (auto session = info.session.lock())
-        session->configure_streams(surface, streams);
-
-    info.streams = streams;
-    info.visible_titlebar = false;
-}
-
-
 }
 
 me::CanonicalWindowManagerPolicyCopy::CanonicalWindowManagerPolicyCopy(
@@ -161,7 +83,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_displays_updated(SessionInfoMa
 
             display_layout->place_in_output(info.output_id.value(), rect);
             surface->move_to(rect.top_left);
-            apply_resize(surface, rect.top_left, rect.size); 
+            surface->resize(rect.size);
         }
     }
 }
@@ -180,6 +102,9 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
     auto parameters = request_parameters;
     auto surf_type = parameters.type.is_set() ? parameters.type.value() : mir_surface_type_normal;
     bool const needs_titlebar = SurfaceInfo::needs_titlebar(surf_type);
+
+    if (needs_titlebar)
+        parameters.size.height = parameters.size.height + DeltaY{title_bar_height};
 
     if (!parameters.state.is_set())
         parameters.state = mir_surface_state_restored;
@@ -313,34 +238,45 @@ auto me::CanonicalWindowManagerPolicyCopy::handle_place_new_surface(
         parameters.size.height = parameters.size.height - DeltaY{title_bar_height};
     }
 
-    if (parameters.input_shape.is_set())
-    {
-        auto rect = parameters.input_shape.value();
-        constrain_input_to(rect, {parameters.top_left, parameters.size});
-        parameters.input_shape = rect;
-    }
-
     return parameters;
 }
 
 void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     std::shared_ptr<scene::Session> const& session,
-    std::shared_ptr<scene::Surface> const& surface)
+    std::shared_ptr<scene::Surface> const& surface,
+    SurfaceInfoMap& surface_map,
+    std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build)
 {
     if (!SurfaceInfo::needs_titlebar(surface->type()))
         return;
 
     auto format = mir_pixel_format_xrgb_8888;
-    auto size = titlebar_size_for_window(surface->size());
-    auto usage = mir::graphics::BufferUsage::software;
-    auto& surface_info = tools->info_for(surface);
-    surface_info.has_titlebar = true;
-    surface_info.titlebar_id = session->create_buffer_stream(mg::BufferProperties{size, format, usage});
-    surface_info.init_titlebar(size);
-    surface_info.paint_titlebar(0xFF);
+    mir::graphics::BufferProperties properties(titlebar_size_for_window(surface->size()),
+        format, mir::graphics::BufferUsage::software);
+    auto stream_id = session->create_buffer_stream(properties);
+    auto params = ms::a_surface()
+        .of_size(titlebar_size_for_window(surface->size()))
+        .of_name("decoration")
+        .of_pixel_format(format)
+        .of_buffer_usage(mir::graphics::BufferUsage::software)
+        .of_position(titlebar_position_for_window(surface->top_left()))
+        .of_type(mir_surface_type_gloss)
+        .with_buffer_stream(stream_id);
+    auto id = build(session, params);
+    auto titlebar = session->surface(id);
+    titlebar->set_alpha(0.9);
 
-    content_and_titlebar(surface_info, *surface, size);
-    apply_input_titlebar_and_content_area(surface_info, *surface, {surface->top_left(), surface->size()});
+    auto& surface_info = tools->info_for(surface);
+    surface_info.titlebar = titlebar;
+    surface_info.titlebar_id = id;
+    surface_info.titlebar_stream_id = stream_id;
+    surface_info.children.push_back(titlebar);
+
+    SurfaceInfo& titlebar_info =
+            surface_map.emplace(titlebar, SurfaceInfo{session, titlebar, {}}).first->second;
+    titlebar_info.is_titlebar = true;
+    titlebar_info.parent = surface;
+    titlebar_info.init_titlebar(titlebar);
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)
@@ -352,6 +288,18 @@ void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms
     }
 
     tools->info_for(session).surfaces.push_back(surface);
+
+    if (surface_info.can_be_active())
+    {
+        surface->add_observer(std::make_shared<shell::SurfaceReadyObserver>(
+            [this](std::shared_ptr<scene::Session> const& /*session*/,
+                   std::shared_ptr<scene::Surface> const& surface)
+                {
+                    select_active_surface(surface);
+                },
+            session,
+            surface));
+    }
 
     if (surface_info.state == mir_surface_state_fullscreen)
         fullscreen_surfaces.insert(surface);
@@ -414,19 +362,6 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
 
     #undef COPY_IF_SET
 
-    if (modifications.input_shape.is_set())
-    {
-        auto rects = modifications.input_shape.value();
-        constrain_input_to(rects, {surface->top_left(), surface->size()} );
-        surface_info.input_shape = rects;
-
-        std::vector<Rectangle> input_area;
-        if (surface_info.visible_titlebar)
-            apply_input_titlebar_and_content_area(surface_info, *surface, {surface->top_left(), surface->size()});
-        else
-            apply_input_content_area(surface_info, *surface, {surface->top_left(), surface->size()});
-    }
-
     std::swap(surface_info, surface_info_old);
 
     if (modifications.name.is_set())
@@ -459,7 +394,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
             false,
             display_area);
 
-        apply_resize(surface, top_left, new_size);
+        apply_resize(surface, surface_info.titlebar, top_left, new_size);
     }
 
     if (modifications.input_shape.is_set())
@@ -504,8 +439,12 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
     }
 
     session->destroy_surface(surface);
-    if (info.has_titlebar)
-        session->destroy_buffer_stream(info.titlebar_id);
+    if (info.titlebar)
+    {
+        session->destroy_surface(info.titlebar_id);
+        session->destroy_buffer_stream(info.titlebar_stream_id);
+        tools->forget(info.titlebar);
+    }
 
     auto& surfaces = tools->info_for(session).surfaces;
 
@@ -572,28 +511,36 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
     {
     case mir_surface_state_restored:
         movement = info.restore_rect.top_left - old_pos;
-        info.visible_titlebar = true;
-        apply_resize(surface, surface->top_left() + movement, info.restore_rect.size);
+        surface->resize(info.restore_rect.size);
+        if (info.titlebar)
+        {
+            info.titlebar->resize(titlebar_size_for_window(info.restore_rect.size));
+            info.titlebar->show();
+        }
         break;
 
     case mir_surface_state_maximized:
         movement = display_area.top_left - old_pos;
-        movement.dy = movement.dy - titlebar_displacement.dy;
-        info.visible_titlebar = true;
-        apply_resize(surface, surface->top_left() + movement, display_area.size);
+        surface->resize(display_area.size);
+        if (info.titlebar)
+            info.titlebar->hide();
         break;
 
     case mir_surface_state_horizmaximized:
         movement = Point{display_area.top_left.x, info.restore_rect.top_left.y} - old_pos;
-        info.visible_titlebar = true;
-        apply_resize(surface, surface->top_left() + movement, {display_area.size.width, info.restore_rect.size.height});
+        surface->resize({display_area.size.width, info.restore_rect.size.height});
+        if (info.titlebar)
+        {
+            info.titlebar->resize(titlebar_size_for_window({display_area.size.width, info.restore_rect.size.height}));
+            info.titlebar->show();
+        }
         break;
 
     case mir_surface_state_vertmaximized:
         movement = Point{info.restore_rect.top_left.x, display_area.top_left.y} - old_pos;
-        movement.dy = movement.dy - titlebar_displacement.dy;
-        info.visible_titlebar = true;
-        apply_resize(surface, surface->top_left() + movement, {info.restore_rect.size.width, display_area.size.height});
+        surface->resize({info.restore_rect.size.width, display_area.size.height});
+        if (info.titlebar)
+            info.titlebar->hide();
         break;
 
     case mir_surface_state_fullscreen:
@@ -610,21 +557,25 @@ int me::CanonicalWindowManagerPolicyCopy::handle_set_state(std::shared_ptr<ms::S
         }
 
         movement = rect.top_left - old_pos;
-
-        //needs to be content only
-        info.visible_titlebar = false;
-        apply_resize(surface, surface->top_left() + movement, rect.size);
+        surface->resize(rect.size);
         break;
     }
 
     case mir_surface_state_hidden:
     case mir_surface_state_minimized:
+        if (info.titlebar)
+            info.titlebar->hide();
         surface->hide();
         return info.state = value;
 
     default:
         break;
     }
+
+    // TODO It is rather simplistic to move a tree WRT the top_left of the root
+    // TODO when resizing. But for more sophistication we would need to encode
+    // TODO some sensible layout rules.
+    move_tree(surface, movement);
 
     info.state = value;
 
@@ -806,9 +757,9 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_pointer_event(MirPointerEvent 
     {
         if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
         {
-            if (auto const surface = tools->surface_at(old_cursor))
+            if (auto const possible_titlebar = tools->surface_at(old_cursor))
             {
-                if (old_cursor.y < surface->top_left().y)
+                if (tools->info_for(possible_titlebar).is_titlebar)
                 {
                     drag(cursor);
                     consumes_event = true;
@@ -832,7 +783,6 @@ void me::CanonicalWindowManagerPolicyCopy::toggle(MirSurfaceState state)
 
         auto const value = handle_set_state(surface, MirSurfaceState(state));
         surface->configure(mir_surface_attrib_state, value);
-        handle_set_state(surface, state);
     }
 }
 
@@ -845,7 +795,10 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
     {
         if (auto const active_surface = active_surface_.lock())
         {
-            tools->info_for(active_surface).paint_titlebar(0x3F);
+            if (auto const titlebar = tools->info_for(active_surface).titlebar)
+            {
+                tools->info_for(titlebar).paint_titlebar(0x3F);
+            }
         }
 
         if (active_surface_.lock())
@@ -861,9 +814,15 @@ void me::CanonicalWindowManagerPolicyCopy::select_active_surface(std::shared_ptr
     {
         if (auto const active_surface = active_surface_.lock())
         {
-            tools->info_for(active_surface).paint_titlebar(0x3F);
+            if (auto const titlebar = tools->info_for(active_surface).titlebar)
+            {
+                tools->info_for(titlebar).paint_titlebar(0x3F);
+            }
         }
-        tools->info_for(surface).paint_titlebar(0xFF);
+        if (auto const titlebar = tools->info_for(surface).titlebar)
+        {
+            tools->info_for(titlebar).paint_titlebar(0xFF);
+        }
         tools->set_focus_to(info_for.session.lock(), surface);
         tools->raise_tree(surface);
         active_surface_ = surface;
@@ -893,7 +852,7 @@ auto me::CanonicalWindowManagerPolicyCopy::active_surface() const
 
 bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle bounds)
 {
-    if (!surface)
+    if (!surface || !surface->input_area_contains(old_cursor))
         return false;
 
     auto const top_left = surface->top_left();
@@ -924,38 +883,27 @@ bool me::CanonicalWindowManagerPolicyCopy::resize(std::shared_ptr<ms::Surface> c
 
     Point new_pos = top_left + left_resize*delta.dx + top_resize*delta.dy;
 
+
     auto const& surface_info = tools->info_for(surface);
 
     surface_info.constrain_resize(surface, new_pos, new_size, left_resize, top_resize, bounds);
 
-    apply_resize(surface, new_pos, new_size);
+    apply_resize(surface, surface_info.titlebar, new_pos, new_size);
 
     return true;
 }
 
 void me::CanonicalWindowManagerPolicyCopy::apply_resize(
     std::shared_ptr<ms::Surface> const& surface,
+    std::shared_ptr<ms::Surface> const& titlebar,
     Point const& new_pos,
     Size const& new_size) const
 {
-    auto& surface_info = tools->info_for(surface);
-
-    if (surface_info.visible_titlebar)
-    {
-        apply_input_titlebar_and_content_area(surface_info, *surface, {new_pos, new_size}); 
-        content_and_titlebar(surface_info, *surface, new_size);
-    }
-    else
-    {
-        apply_input_content_area(surface_info, *surface, {new_pos, new_size});
-        content_only(surface_info, *surface);
-    }
+    if (titlebar)
+        titlebar->resize({new_size.width, Height{title_bar_height}});
 
     surface->resize(new_size);
 
-    // TODO It is rather simplistic to move a tree WRT the top_left of the root
-    // TODO when resizing. But for more sophistication we would need to encode
-    // TODO some sensible layout rules.
     move_tree(surface, new_pos-surface->top_left());
 }
 
@@ -964,7 +912,7 @@ bool me::CanonicalWindowManagerPolicyCopy::drag(std::shared_ptr<ms::Surface> sur
     if (!surface)
         return false;
 
-    if (!surface->input_area_contains(from))
+    if (!surface->input_area_contains(from) && !tools->info_for(surface).titlebar)
         return false;
 
     auto movement = to - from;
