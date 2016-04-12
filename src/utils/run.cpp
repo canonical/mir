@@ -73,7 +73,7 @@ try
     store(parsed_command_line, options);
     notify(options);
 
-    auto const unparsed_tokens = collect_unrecognized(parsed_command_line.options, include_positional);
+    auto unparsed_tokens = collect_unrecognized(parsed_command_line.options, include_positional);
 
     if (options.count(help) || unparsed_tokens.size() < 1)
     {
@@ -115,8 +115,15 @@ try
         std::this_thread::sleep_for(milliseconds(10));
     }
 
-    for (auto arg : unparsed_tokens)
-        std::cout << "arg: " << arg << '\n';
+    // Special treatment for gnome-terminal (it's odd)
+    if (unparsed_tokens[0] == "gnome-terminal")
+    {
+        if (std::find(begin(unparsed_tokens), end(unparsed_tokens), "--app-id") == end(unparsed_tokens))
+        {
+            unparsed_tokens.emplace_back("--app-id");
+            unparsed_tokens.emplace_back("com.canonical.mir.Terminal");
+        }
+    }
 
     std::vector<char const*> exec_args{unparsed_tokens.size()+1};
 
