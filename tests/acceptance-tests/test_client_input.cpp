@@ -593,7 +593,7 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
     Client first_client(new_connection(), first);
 
     int const frame_rate = 60;
-    int const input_rate = 1000;
+    int const input_rate = 500;
     int const nframes = 10;
     int const nframes_error = 3;
     int const inputs_per_frame = input_rate / frame_rate;
@@ -613,6 +613,7 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
     fake_touch_screen->emit_event(mis::a_touch_event()
                                   .at_position({0,0}));
 
+    ASSERT_THAT(input_rate, Ge(2 * frame_rate));
     ASSERT_THAT(ninputs, Gt(2 * nframes));
     for (int i = 0; i < ninputs; ++i)
     {
@@ -621,11 +622,17 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
         fake_touch_screen->emit_event(mis::a_touch_event()
                                       .with_action(mis::TouchParameters::Action::Move)
                                       .at_position({x,y}));
-        if ((i > 0) && !(i % inputs_per_frame))
+
+        // I would like to:
+        //std::this_thread::sleep_for(1000ms/input_rate);
+        // but this is more robust under Valgrind:
+        if (i > 0 && !(i % inputs_per_frame))
             std::this_thread::sleep_for(frame_time);
     }
 
     std::this_thread::sleep_for(2 * frame_time);
+    // Remove reference to local received_input_events
+    Mock::VerifyAndClearExpectations(&first_client);
 
     float const client_input_events_per_frame = received_input_events / nframes;
     EXPECT_NEAR(client_input_events_per_frame, 1.0f, 0.5f);
