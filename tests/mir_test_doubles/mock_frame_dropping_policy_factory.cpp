@@ -27,9 +27,9 @@ namespace mc = mir::compositor;
 namespace mtd = mir::test::doubles;
 
 mtd::MockFrameDroppingPolicy::MockFrameDroppingPolicy(
-    std::unique_ptr<mir::LockableCallback> callback,
+    mir::LockableCallback* callback,
     MockFrameDroppingPolicyFactory const* parent)
-    : callback{std::move(callback)},
+    : callback{callback},
       parent{parent}
 {
 }
@@ -55,7 +55,7 @@ void mtd::MockFrameDroppingPolicy::parent_destroyed()
 std::unique_ptr<mc::FrameDroppingPolicy>
 mtd::MockFrameDroppingPolicyFactory::create_policy(std::unique_ptr<mir::LockableCallback> callback) const
 {
-    auto policy = new MockFrameDroppingPolicy{std::move(callback), this};
+    auto policy = new testing::NiceMock<MockFrameDroppingPolicy>{callback.release(), this};
     policies.insert(policy);
     return std::unique_ptr<mc::FrameDroppingPolicy>{policy};
 }
