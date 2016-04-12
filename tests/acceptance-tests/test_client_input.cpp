@@ -587,6 +587,50 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
     first_client.all_events_received.wait_for(2s);
 }
 
+TEST_F(TestClientInput, receives_one_touch_event_per_frame)
+{
+    positions[first] = screen_geometry;
+    Client first_client(new_connection(), first);
+
+    int const frame_rate = 60;
+    int const input_rate = 1000;
+    int const nframes = 10;
+    int const nframes_error = 3;
+    int const inputs_per_frame = input_rate / frame_rate;
+    int const ninputs = nframes * inputs_per_frame;
+    auto const frame_time = 1000ms / frame_rate;
+
+    int received_input_events = 0;
+
+    EXPECT_CALL(first_client, handle_input(_))
+        .Times(Between(nframes-nframes_error, nframes+nframes_error))
+        .WillRepeatedly(InvokeWithoutArgs(
+            [&received_input_events]()
+            {
+                ++received_input_events;
+            }));
+
+    fake_touch_screen->emit_event(mis::a_touch_event()
+                                  .at_position({0,0}));
+
+    ASSERT_THAT(ninputs, Gt(2 * nframes));
+    for (int i = 0; i < ninputs; ++i)
+    {
+        int const x = i;
+        int const y = 2 * i;
+        fake_touch_screen->emit_event(mis::a_touch_event()
+                                      .with_action(mis::TouchParameters::Action::Move)
+                                      .at_position({x,y}));
+        if ((i > 0) && !(i % inputs_per_frame))
+            std::this_thread::sleep_for(frame_time);
+    }
+
+    std::this_thread::sleep_for(2 * frame_time);
+
+    float const client_input_events_per_frame = received_input_events / nframes;
+    EXPECT_NEAR(client_input_events_per_frame, 1.0f, 0.5f);
+}
+
 TEST_F(TestClientInput, send_mir_input_events_through_surface)
 {
     Client first_client(new_connection(), first);
