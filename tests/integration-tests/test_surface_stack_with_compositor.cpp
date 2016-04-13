@@ -206,6 +206,7 @@ TEST_F(SurfaceStackCompositor, swapping_a_surface_that_has_been_added_triggers_a
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(1, timeout));
 }
+
 //test associated with lp:1290306, 1293896, 1294048, 1294051, 1294053
 TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_consumed)
 {

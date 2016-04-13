@@ -124,9 +124,6 @@ struct SurfaceStack : public ::testing::Test
         using namespace testing;
         default_params = ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}});
 
-        stub_buffer_stream1 = std::make_shared<mtd::StubBufferStream>();
-        stub_buffer_stream2 = std::make_shared<mtd::StubBufferStream>();
-        stub_buffer_stream3 = std::make_shared<mtd::StubBufferStream>();
         stub_surface1 = std::make_shared<ms::BasicSurface>(
             std::string("stub"),
             geom::Rectangle{{},{}},
@@ -172,9 +169,9 @@ struct SurfaceStack : public ::testing::Test
     }
 
     ms::SurfaceCreationParameters default_params;
-    std::shared_ptr<mc::BufferStream> stub_buffer_stream1;
-    std::shared_ptr<mc::BufferStream> stub_buffer_stream2;
-    std::shared_ptr<mc::BufferStream> stub_buffer_stream3;
+    std::shared_ptr<mc::BufferStream> stub_buffer_stream1 = std::make_shared<mtd::StubBufferStream>();
+    std::shared_ptr<mc::BufferStream> stub_buffer_stream2 = std::make_shared<mtd::StubBufferStream>();
+    std::shared_ptr<mc::BufferStream> stub_buffer_stream3 = std::make_shared<mtd::StubBufferStream>();
 
     std::shared_ptr<ms::BasicSurface> stub_surface1;
     std::shared_ptr<ms::BasicSurface> stub_surface2;
@@ -816,6 +813,7 @@ struct MockConfigureSurface : public ms::BasicSurface
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
 };
 }
+
 TEST_F(SurfaceStack, occludes_not_rendered_surface)
 {
     using namespace testing;
