@@ -21,6 +21,7 @@
 
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/input_device_observer.h"
+#include "mir/optional_value.h"
 
 #include <memory>
 #include <chrono>
@@ -49,7 +50,8 @@ public:
                         std::shared_ptr<cookie::Authority> const& cookie_authority,
                         bool repeat_enabled,
                         std::chrono::milliseconds repeat_timeout, /* timeout before sending first repeat */
-                        std::chrono::milliseconds repeat_delay /* delay between repeated keys */);
+                        std::chrono::milliseconds repeat_delay, /* delay between repeated keys */
+                        bool disable_repeat_on_touchscreen);
 
     // InputDispatcher
     bool dispatch(MirEvent const& event) override;
@@ -58,6 +60,8 @@ public:
 
     void set_input_device_hub(std::shared_ptr<InputDeviceHub> const& hub);
 
+    void set_touch_button_device(MirInputDeviceId id);
+    void remove_device(MirInputDeviceId id);
 private:
     std::mutex repeat_state_mutex;
 
@@ -67,6 +71,8 @@ private:
     bool const repeat_enabled;
     std::chrono::milliseconds repeat_timeout;
     std::chrono::milliseconds repeat_delay;
+    bool const disable_repeat_on_touchscreen;
+    optional_value<MirInputDeviceId> touch_button_device;
 
     struct KeyboardState
     {

@@ -362,6 +362,7 @@ geom::Rectangle ms::BasicSurface::input_bounds() const
     return surface_rect;
 }
 
+// TODO: Does not account for transformation().
 bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 {
     std::unique_lock<std::mutex> lock(guard);
@@ -369,22 +370,18 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
     if (!visible(lock))
         return false;
 
-    // Restrict to bounding rectangle
-    if (!surface_rect.contains(point))
-        return false;
-
-    // No custom input region means effective input region is whole surface
     if (custom_input_rectangles.empty())
-        return true;
-
-    // TODO: Perhaps creates some issues with transformation.
-    auto local_point = geom::Point{0, 0} + (point-surface_rect.top_left);
-
-    for (auto const& rectangle : custom_input_rectangles)
     {
-        if (rectangle.contains(local_point))
+        // no custom input, restrict to bounding rectangle
+        return surface_rect.contains(point);
+    }
+    else
+    {
+        auto local_point = geom::Point{0, 0} + (point-surface_rect.top_left);
+        for (auto const& rectangle : custom_input_rectangles)
         {
-            return true;
+            if (rectangle.contains(local_point))
+                return true;
         }
     }
     return false;

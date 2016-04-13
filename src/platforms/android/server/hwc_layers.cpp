@@ -220,6 +220,8 @@ bool mga::HWCLayer::setup_layer(
     geom::Rectangle crop_rect{{0,0}, buffer->size()};
     layer_adapter->fill_source_crop(*hwc_layer, crop_rect);
 
+    hwc_layer->surfaceDamage = { 0, nullptr };
+
     visible_rect = hwc_layer->displayFrame;
 
     auto const& native_buffer = buffer->native_buffer_handle();
