@@ -594,8 +594,8 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
 
     int const frame_rate = 60;
     int const input_rate = 500;
-    int const nframes = 10;
-    int const nframes_error = 3;
+    int const nframes = 100;
+    int const nframes_error = 50;
     int const inputs_per_frame = input_rate / frame_rate;
     int const ninputs = nframes * inputs_per_frame;
     auto const frame_time = 1000ms / frame_rate;
@@ -634,8 +634,11 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
     // Remove reference to local received_input_events
     Mock::VerifyAndClearExpectations(&first_client);
 
-    float const client_input_events_per_frame = received_input_events / nframes;
-    EXPECT_NEAR(client_input_events_per_frame, 1.0f, 0.5f);
+    float const client_input_events_per_frame =
+        (float)received_input_events / nframes;
+    // Slightly fewer input events than frames is optimal for latency:
+    EXPECT_THAT(client_input_events_per_frame, Lt(1.0f));
+    EXPECT_THAT(client_input_events_per_frame, Ge(0.7f));
 }
 
 TEST_F(TestClientInput, send_mir_input_events_through_surface)
