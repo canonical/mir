@@ -20,8 +20,6 @@
 
 #include "mir/log.h"
 
-#include "make_empty_event.h"
-
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
 #include "mir/cookie/blob.h"
@@ -56,56 +54,71 @@ namespace
 
         return blob;
     }
+
+template <class T>
+T* new_event()
+{
+    T* t = new T;
+
+    return t;
+}
+
+template <class T>
+mir::EventUPtr make_uptr_event(T* e)
+{
+    return mir::EventUPtr(e, ([](MirEvent* e) { delete reinterpret_cast<T*>(e); }));
+}
+
 }
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirOrientation orientation)
 {
-    auto e = make_empty_event();
+    auto e = new_event<MirOrientationEvent>();
 
-    e->type = mir_event_type_orientation;
-    e->orientation.surface_id = surface_id.as_value();
-    e->orientation.direction = orientation;
-    return e;
+    e->set_surface_id(surface_id.as_value());
+    e->set_direction(orientation);
+
+    return make_uptr_event(e);
 }
 
 mir::EventUPtr mev::make_event(MirPromptSessionState state)
 {
-    auto e = make_empty_event();
+    auto e = new_event<MirPromptSessionEvent>();
 
-    e->type = mir_event_type_prompt_session_state_change;
-    e->prompt_session.new_state = state;
-    return e;
+    e->set_new_state(state);
+
+    return make_uptr_event(e);
 }
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, geom::Size const& size)
 {
-    auto e = make_empty_event();
+    auto e = new_event<MirResizeEvent>();
 
-    e->type = mir_event_type_resize;
-    e->resize.surface_id = surface_id.as_value();
-    e->resize.width = size.width.as_int();
-    e->resize.height = size.height.as_int();
-    return e;
+    e->set_surface_id(surface_id.as_value());
+    e->set_width(size.width.as_int());
+    e->set_height(size.height.as_int());
+
+    return make_uptr_event(e);
 }
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value)
 {
-    auto e = make_empty_event();
+    auto e = new_event<MirSurfaceEvent>();
 
-    e->type = mir_event_type_surface;
-    e->surface.id = surface_id.as_value();
-    e->surface.attrib = attribute;
-    e->surface.value = value;
-    return e;
+    e->set_id(surface_id.as_value());
+    e->set_attrib(attribute);
+    e->set_value(value);
+
+    return make_uptr_event(e);
 }
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id)
 {
-    auto e = make_empty_event();
+    auto e = new_event<MirCloseSurfaceEvent>();
 
-    e->type = mir_event_type_close_surface;
-    e->close_surface.surface_id = surface_id.as_value();
-    return e;
+    e->set_surface_id(surface_id.as_value());
+
+    return make_uptr_event(e);
 }
 
 mir::EventUPtr mev::make_event(
@@ -115,16 +128,15 @@ mir::EventUPtr mev::make_event(
     MirFormFactor form_factor,
     uint32_t output_id)
 {
-    auto e = make_empty_event();
+    auto e = new_event<MirSurfaceOutputEvent>();
 
-    e->type = mir_event_type_surface_output;
-    e->surface_output.surface_id = surface_id.as_value();
-    e->surface_output.dpi = dpi;
-    e->surface_output.scale = scale;
-    e->surface_output.form_factor = form_factor;
-    e->surface_output.output_id = output_id;
+    e->set_surface_id(surface_id.as_value());
+    e->set_dpi(dpi);
+    e->set_scale(scale);
+    e->set_form_factor(form_factor);
+    e->set_output_id(output_id);
 
-    return e;
+    return make_uptr_event(e);
 }
 
 namespace
@@ -162,36 +174,34 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     std::vector<uint8_t> const& cookie, MirKeyboardAction action, xkb_keysym_t key_code,
     int scan_code, MirInputEventModifiers modifiers)
 {
-    auto e = make_empty_event();
+    auto e = new_event<MirKeyboardEvent>();
 
-    e->type = mir_event_type_key;
-    auto& kev = e->key;
-    kev.device_id = device_id;
-    kev.source_id = AINPUT_SOURCE_KEYBOARD;
-    kev.event_time = timestamp;
-    kev.cookie = vector_to_cookie_as_blob(cookie);
-    kev.action = action;
-    kev.key_code = key_code;
-    kev.scan_code = scan_code;
-    kev.modifiers = modifiers;
+    e->set_device_id(device_id);
+    e->set_source_id(AINPUT_SOURCE_KEYBOARD);
+    e->set_event_time(timestamp);
+    e->set_cookie(vector_to_cookie_as_blob(cookie));
+    e->set_action(action);
+    e->set_key_code(key_code);
+    e->set_scan_code(scan_code);
+    e->set_modifiers(modifiers);
 
-    return e;
+    return make_uptr_event(e);
 }
 
 void mev::set_modifier(MirEvent& event, MirInputEventModifiers modifiers)
 {
-    switch(event.type)
+    switch(event.type())
     {
     case mir_event_type_key:
         {
-            auto& kev = event.key;
-            kev.modifiers = modifiers;
+            auto& kev = *event.to_input()->to_keyboard();
+            kev.set_modifiers(modifiers);
             break;
         }
     case mir_event_type_motion:
         {
-            auto& mev = event.motion;
-            mev.modifiers = modifiers;
+            auto& mev = *event.to_input()->to_motion();
+            mev.set_modifiers(modifiers);
             break;
         }
     default:
@@ -201,23 +211,23 @@ void mev::set_modifier(MirEvent& event, MirInputEventModifiers modifiers)
 
 void mev::set_cursor_position(MirEvent& event, mir::geometry::Point const& pos)
 {
-    if (event.type != mir_event_type_motion &&
-        event.motion.source_id != AINPUT_SOURCE_MOUSE &&
-        event.motion.pointer_count == 1)
+    if (event.type() != mir_event_type_motion &&
+        event.to_input()->to_motion()->source_id() != AINPUT_SOURCE_MOUSE &&
+        event.to_input()->to_motion()->pointer_count() == 1)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor position is only valid for pointer events."));
 
-    event.motion.pointer_coordinates[0].x = pos.x.as_float();
-    event.motion.pointer_coordinates[0].y = pos.y.as_float();
+    event.to_input()->to_motion()->set_x(0, pos.x.as_float());
+    event.to_input()->to_motion()->set_y(0, pos.y.as_float());
 }
 
 void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
 {
-    if (event.type != mir_event_type_motion &&
-        event.motion.source_id != AINPUT_SOURCE_MOUSE &&
-        event.motion.pointer_count == 1)
+    if (event.type() != mir_event_type_motion &&
+        event.to_input()->to_motion()->source_id() != AINPUT_SOURCE_MOUSE &&
+        event.to_input()->to_motion()->pointer_count() == 1)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor position is only valid for pointer events."));
 
-    event.motion.buttons = button_state;
+    event.to_input()->to_motion()->set_buttons(button_state);
 }
 
 // Deprecated version with uint64_t mac
@@ -239,17 +249,15 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     std::vector<uint8_t> const& cookie, MirInputEventModifiers modifiers)
 {
-    auto e = make_empty_event();
+    auto e = new_event<MirMotionEvent>();
 
-    e->type = mir_event_type_motion;
-    auto& mev = e->motion;
-    mev.device_id = device_id;
-    mev.event_time = timestamp;
-    mev.cookie = vector_to_cookie_as_blob(cookie);
-    mev.modifiers = modifiers;
-    mev.source_id = AINPUT_SOURCE_TOUCHSCREEN;
+    e->set_device_id(device_id);
+    e->set_event_time(timestamp);
+    e->set_cookie(vector_to_cookie_as_blob(cookie));
+    e->set_modifiers(modifiers);
+    e->set_source_id(AINPUT_SOURCE_TOUCHSCREEN);
 
-    return e;
+    return make_uptr_event(e);
 }
 
 // Deprecated version with uint64_t mac
@@ -270,17 +278,19 @@ void mev::add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
     MirTouchTooltype tooltype, float x_axis_value, float y_axis_value,
     float pressure_value, float touch_major_value, float touch_minor_value, float size_value)
 {
-    auto& mev = event.motion;
-    auto& pc = mev.pointer_coordinates[mev.pointer_count++];
-    pc.id = touch_id;
-    pc.tool_type = tooltype;
-    pc.x = x_axis_value;
-    pc.y = y_axis_value;
-    pc.pressure = pressure_value;
-    pc.touch_major = touch_major_value;
-    pc.touch_minor = touch_minor_value;
-    pc.size = size_value;
-    pc.action = action;
+    auto mev = event.to_input()->to_motion();
+    auto current_index = mev->pointer_count();
+    mev->set_pointer_count(current_index + 1);
+
+    mev->set_id(current_index, touch_id);
+    mev->set_tool_type(current_index, tooltype);
+    mev->set_x(current_index, x_axis_value);
+    mev->set_y(current_index, y_axis_value);
+    mev->set_pressure(current_index, pressure_value);
+    mev->set_touch_major(current_index, touch_major_value);
+    mev->set_touch_minor(current_index, touch_minor_value);
+    mev->set_size(current_index, size_value);
+    mev->set_action(current_index, action);
 }
 
 mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
@@ -290,28 +300,26 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     float hscroll_value, float vscroll_value,
     float relative_x_value, float relative_y_value)
 {
-    auto e = make_empty_event();
+    auto e = new_event<MirMotionEvent>();
 
-    e->type = mir_event_type_motion;
-    auto& mev = e->motion;
-    mev.device_id = device_id;
-    mev.event_time = timestamp;
-    mev.cookie = vector_to_cookie_as_blob(cookie);
-    mev.modifiers = modifiers;
-    mev.source_id = AINPUT_SOURCE_MOUSE;
-    mev.buttons = buttons_pressed;
+    auto& mev = *e->to_input()->to_motion();
+    mev.set_device_id(device_id);
+    mev.set_event_time(timestamp);
+    mev.set_cookie(vector_to_cookie_as_blob(cookie));
+    mev.set_modifiers(modifiers);
+    mev.set_source_id(AINPUT_SOURCE_MOUSE);
+    mev.set_buttons(buttons_pressed);
 
-    mev.pointer_count = 1;
-    auto& pc = mev.pointer_coordinates[0];
-    mev.pointer_coordinates[0].action = action;
-    pc.x = x_axis_value;
-    pc.y = y_axis_value;
-    pc.dx = relative_x_value;
-    pc.dy = relative_y_value;
-    pc.hscroll = hscroll_value;
-    pc.vscroll = vscroll_value;
+    mev.set_pointer_count(1);
+    mev.set_action(0, action);
+    mev.set_x(0, x_axis_value);
+    mev.set_y(0, y_axis_value);
+    mev.set_dx(0, relative_x_value);
+    mev.set_dy(0, relative_y_value);
+    mev.set_hscroll(0, hscroll_value);
+    mev.set_vscroll(0, vscroll_value);
 
-    return e;
+    return make_uptr_event(e);
 }
 
 // Deprecated version with uint64_t mac
@@ -365,7 +373,16 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirInputDeviceId id, std::string const& model,
                                std::string const& layout, std::string const& variant, std::string const& options)
 {
-    auto e = make_empty_event();
+    auto e = new_event<MirKeymapEvent>();
+    auto ep = mir::EventUPtr(e, [](MirEvent* e) {
+        // xkbcommon creates the keymap through malloc
+        if (e && e->type() == mir_event_type_keymap)
+        {
+            e->to_keymap()->free_buffer();
+        }
+
+        delete e;
+    });
 
     auto ctx = mi::make_unique_context();
     auto map = mi::make_unique_keymap(ctx.get(), model, layout, variant, options);
@@ -373,24 +390,22 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirInputDeviceId
     if (!map.get())
         BOOST_THROW_EXCEPTION(std::runtime_error("failed to assemble keymap from given parameters"));
 
-    e->type = mir_event_type_keymap;
-    e->keymap.surface_id = surface_id.as_value();
-    e->keymap.device_id = id;
+    e->set_surface_id(surface_id.as_value());
+    e->set_device_id(id);
     // TODO consider caching compiled keymaps
-    e->keymap.buffer = xkb_keymap_get_as_string(map.get(), XKB_KEYMAP_FORMAT_TEXT_V1);
-    e->keymap.size = strlen(e->keymap.buffer);
+    e->set_buffer(xkb_keymap_get_as_string(map.get(), XKB_KEYMAP_FORMAT_TEXT_V1));
+    e->set_size(strlen(e->to_keymap()->buffer()));
 
-    return e;
+    return ep;
 }
 
 mir::EventUPtr mev::make_event(MirInputConfigurationAction action, MirInputDeviceId id, std::chrono::nanoseconds time)
 {
-    auto e = make_empty_event();
+    auto e = new_event<MirInputConfigurationEvent>();
 
-    e->type = mir_event_type_input_configuration;
-    e->input_configuration.action = action;
-    e->input_configuration.when = time;
-    e->input_configuration.id = id;
+    e->set_action(action);
+    e->set_when(time);
+    e->set_id(id);
 
-    return e;
+    return make_uptr_event(e);
 }

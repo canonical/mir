@@ -103,23 +103,23 @@ void mircv::XKBMapper::update_state_and_map_event(MirEvent& ev)
 {
     std::lock_guard<std::mutex> lg(guard);
 
-    auto& key_ev = ev.key;
+    auto& key_ev = *ev.to_input()->to_keyboard();
 
     xkb_key_direction direction = XKB_KEY_DOWN;
 
     bool update_state = true;
-    if (key_ev.action == mir_keyboard_action_up)
+    if (key_ev.action() == mir_keyboard_action_up)
         direction = XKB_KEY_UP;
-    else if (key_ev.action == mir_keyboard_action_down)
+    else if (key_ev.action() == mir_keyboard_action_down)
         direction = XKB_KEY_DOWN;
-    else if (key_ev.action == mir_keyboard_action_repeat)
+    else if (key_ev.action() == mir_keyboard_action_repeat)
         update_state = false;
 
-    uint32_t xkb_scan_code = to_xkb_scan_code(key_ev.scan_code);
+    uint32_t xkb_scan_code = to_xkb_scan_code(key_ev.scan_code());
     if (update_state)
         xkb_state_update_key(state.get(), xkb_scan_code, direction);
 
-    key_ev.key_code = keysym_for_scan_code(state.get(), xkb_scan_code);
+    key_ev.set_key_code(keysym_for_scan_code(state.get(), xkb_scan_code));
 }
 
 // id should be used in the future to implement per device keymaps

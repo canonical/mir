@@ -33,7 +33,7 @@
 #include "mir/test/doubles/stub_session_authorizer.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/pipe.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 #include "mir/test/signal.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -95,12 +95,12 @@ struct StubAuthorizer : mtd::StubSessionAuthorizer
 
 void wait_for_server_actions_to_finish(mir::ServerActionQueue& server_action_queue)
 {
-    mt::WaitCondition last_action_done;
+    mt::Signal last_action_done;
     server_action_queue.enqueue(
         &last_action_done,
-        [&] { last_action_done.wake_up_everyone(); });
+        [&] { last_action_done.raise(); });
 
-    last_action_done.wait_for_at_most_seconds(5);
+    last_action_done.wait_for(std::chrono::seconds{5});
 }
 }
 

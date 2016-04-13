@@ -37,11 +37,16 @@ namespace
 {
 struct DeviceRemovalFilter : mi::InputDeviceObserver
 {
-    DeviceRemovalFilter(std::function<void(MirInputDeviceId)> const& on_removal)
-        : on_removal(on_removal) {}
+    DeviceRemovalFilter(mi::KeyRepeatDispatcher* dispatcher)
+        : dispatcher{dispatcher} {}
 
-    void device_added(std::shared_ptr<mi::Device> const&) override
+    void device_added(std::shared_ptr<mi::Device> const& device) override
     {
+        if (device->name() == "mtk-tpd")
+        {
+            dispatcher->set_touch_button_device(device->id());
+        }
+
     }
 
     void device_changed(std::shared_ptr<mi::Device> const&) override
@@ -50,13 +55,13 @@ struct DeviceRemovalFilter : mi::InputDeviceObserver
 
     void device_removed(std::shared_ptr<mi::Device> const& device) override
     {
-        on_removal(device->id());
+        dispatcher->remove_device(device->id());
     }
 
     void changes_complete() override
     {
     }
-    std::function<void(MirInputDeviceId)> on_removal;
+    mi::KeyRepeatDispatcher* dispatcher;
 };
 
 }
@@ -67,25 +72,35 @@ mi::KeyRepeatDispatcher::KeyRepeatDispatcher(
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
     bool repeat_enabled,
     std::chrono::milliseconds repeat_timeout,
-    std::chrono::milliseconds repeat_delay)
+    std::chrono::milliseconds repeat_delay,
+    bool disable_repeat_on_touchscreen)
     : next_dispatcher(next_dispatcher),
       alarm_factory(factory),
       cookie_authority(cookie_authority),
       repeat_enabled(repeat_enabled),
       repeat_timeout(repeat_timeout),
-      repeat_delay(repeat_delay)
+      repeat_delay(repeat_delay),
+      disable_repeat_on_touchscreen(disable_repeat_on_touchscreen)
 {
 }
 
 void mi::KeyRepeatDispatcher::set_input_device_hub(std::shared_ptr<InputDeviceHub> const& hub)
 {
-    hub->add_observer(std::make_shared<DeviceRemovalFilter>(
-            [this](MirInputDeviceId id)
-            {
-                std::unique_lock<std::mutex> lock(repeat_state_mutex);
-                repeat_state_by_device.erase(id); // destructor cancels alarms
-            }
-            ));
+    hub->add_observer(std::make_shared<DeviceRemovalFilter>(this));
+}
+
+void mi::KeyRepeatDispatcher::set_touch_button_device(MirInputDeviceId id)
+{
+    std::lock_guard<std::mutex> lock(repeat_state_mutex);
+    touch_button_device = id;
+}
+
+void mi::KeyRepeatDispatcher::remove_device(MirInputDeviceId id)
+{
+    std::lock_guard<std::mutex> lock(repeat_state_mutex);
+    repeat_state_by_device.erase(id); // destructor cancels alarms
+    if (touch_button_device.is_set() && touch_button_device.value() == id)
+        touch_button_device.consume();
 }
 
 mi::KeyRepeatDispatcher::KeyboardState& mi::KeyRepeatDispatcher::ensure_state_for_device_locked(std::lock_guard<std::mutex> const&, MirInputDeviceId id)
@@ -100,28 +115,22 @@ bool mi::KeyRepeatDispatcher::dispatch(MirEvent const& event)
     {
 	return next_dispatcher->dispatch(event);
     }
-    
+
     if (mir_event_get_type(&event) == mir_event_type_input)
     {
         auto iev = mir_event_get_input_event(&event);
         if (mir_input_event_get_type(iev) != mir_input_event_type_key)
             return next_dispatcher->dispatch(event);
+        auto device_id = mir_input_event_get_device_id(iev);
+        if (disable_repeat_on_touchscreen && touch_button_device.is_set() && device_id == touch_button_device.value())
+            return next_dispatcher->dispatch(event);
+
         if (!handle_key_input(mir_input_event_get_device_id(iev), mir_input_event_get_keyboard_event(iev)))
             return next_dispatcher->dispatch(event);
         else
             return true;
     }
     return next_dispatcher->dispatch(event);
-}
-
-namespace
-{
-MirEvent copy_to_repeat_ev(MirKeyboardEvent const* kev)
-{
-    MirEvent repeat_ev(*reinterpret_cast<MirEvent const*>(kev));
-    repeat_ev.key.action = mir_keyboard_action_repeat;
-    return repeat_ev;
-}
 }
 
 // Returns true if the original event has been handled, that is ::dispatch should not pass it on.
@@ -146,25 +155,28 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
     }
     case mir_keyboard_action_down:
     {
-        MirEvent ev = copy_to_repeat_ev(kev);
+        MirKeyboardEvent new_kev = *kev;
+        new_kev.set_action(mir_keyboard_action_repeat);
 
         auto it = device_state.repeat_alarms_by_scancode.find(scan_code);
         if (it != device_state.repeat_alarms_by_scancode.end())
         {
             // When we receive a duplicated down we just replace the action
-            next_dispatcher->dispatch(ev);
+            next_dispatcher->dispatch(new_kev);
             return true;
         }
         auto& capture_alarm = device_state.repeat_alarms_by_scancode[scan_code];
-        std::shared_ptr<mir::time::Alarm> alarm = alarm_factory->create_alarm([this, &capture_alarm, ev]() mutable
+        std::shared_ptr<mir::time::Alarm> alarm = alarm_factory->create_alarm([this, &capture_alarm, new_kev]() mutable
             {
                 std::lock_guard<std::mutex> lg(repeat_state_mutex);
 
-                ev.key.event_time = std::chrono::steady_clock::now().time_since_epoch();
-                auto const cookie = cookie_authority->make_cookie(ev.key.event_time.count());
+                new_kev.set_event_time(std::chrono::steady_clock::now().time_since_epoch());
+                auto const cookie = cookie_authority->make_cookie(new_kev.event_time().count());
                 auto const serialized_cookie = cookie->serialize();
-                std::copy_n(std::begin(serialized_cookie), ev.key.cookie.size(), std::begin(ev.key.cookie));
-                next_dispatcher->dispatch(ev);
+                mir::cookie::Blob event_cookie;
+                std::copy_n(std::begin(serialized_cookie), event_cookie.size(), std::begin(event_cookie));
+                new_kev.set_cookie(event_cookie);
+                next_dispatcher->dispatch(new_kev);
 
                 capture_alarm->reschedule_in(repeat_delay);
             });

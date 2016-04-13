@@ -217,11 +217,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::create_surface, invocation);
         }
-        else if ("next_buffer" == invocation.method_name())
-        {
-            auto request = parse_parameter<mir::protobuf::SurfaceId>(invocation);
-            invoke(shared_from_this(), display_server.get(), &DisplayServer::next_buffer, invocation.id(), &request);
-        }
         else if ("exchange_buffer" == invocation.method_name())
         {
             auto request = parse_parameter<mir::protobuf::BufferRequest>(invocation);

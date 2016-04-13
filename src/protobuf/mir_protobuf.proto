@@ -44,6 +44,7 @@ message SurfaceParameters {
   optional PersistentSurfaceId parent_persistent_id = 21;
   repeated Rectangle input_shape = 22;
   optional int32 shell_chrome = 24;
+  repeated StreamConfiguration stream = 25; 
 }
 
 message SurfaceAspectRatio

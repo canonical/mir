@@ -16,6 +16,9 @@ target_link_libraries(mirout mirclient m)
 mir_add_wrapped_executable(mirin in.cpp)
 target_link_libraries(mirin mirclient)
 
+mir_add_wrapped_executable(mirrun run.cpp)
+target_link_libraries(mirrun mircommon ${Boost_LIBRARIES} )
+
 mir_add_wrapped_executable(mirscreencast screencast.cpp)
 target_link_libraries(mirscreencast
   mirclient

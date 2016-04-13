@@ -13,20 +13,23 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Author: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
-#ifndef MIR_EVENTS_MAKE_EMPTY_EVENTS_H_
-#define MIR_EVENTS_MAKE_EMPTY_EVENTS_H_
+#ifndef MIR_COMMON_PROMPT_SESSION_EVENT_H_
+#define MIR_COMMON_PROMPT_SESSION_EVENT_H_
 
-#include "mir/events/event_builders.h"
+#include "mir/events/event.h"
 
-namespace mir
+struct MirPromptSessionEvent : MirEvent
 {
-namespace events
-{
-mir::EventUPtr make_empty_event();
-}
-}
+    MirPromptSessionEvent();
 
-#endif
+    MirPromptSessionState new_state() const;
+    void set_new_state(MirPromptSessionState state);
+
+private:
+    MirPromptSessionState new_state_;
+};
+
+#endif /* MIR_COMMON_PROMPT_SESSION_EVENT_H_ */

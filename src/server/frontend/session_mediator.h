@@ -130,10 +130,6 @@ public:
         mir::protobuf::SurfaceModifications const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
-    void next_buffer(
-        mir::protobuf::SurfaceId const* request,
-        mir::protobuf::Buffer* response,
-        google::protobuf::Closure* done) override;
     void release_surface(
         mir::protobuf::SurfaceId const* request,
         mir::protobuf::Void* response,

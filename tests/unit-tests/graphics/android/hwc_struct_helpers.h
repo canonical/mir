@@ -104,6 +104,9 @@ MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
 {
     EXPECT_THAT(arg, MatchesCommonFields(value));
     EXPECT_THAT(arg.sourceCropf, MatchesRectf(value.sourceCropf, "sourceCrop (float)"));
+    EXPECT_THAT(arg.surfaceDamage.numRects, testing::Eq(value.surfaceDamage.numRects));
+    for(auto i = 0u; i < arg.surfaceDamage.numRects; i++)
+        EXPECT_THAT(arg.surfaceDamage.rects[i], MatchesRect(arg.surfaceDamage.rects[i], "surfaceDamage"));
 
     return !(::testing::Test::HasFailure());
 }

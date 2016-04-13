@@ -35,7 +35,6 @@ class SessionMediatorReport : public frontend::SessionMediatorReport
 public:
     void session_connect_called(std::string const& app_name) override;
     void session_create_surface_called(std::string const& app_name) override;
-    void session_next_buffer_called(std::string const& app_name) override;
     void session_exchange_buffer_called(std::string const& app_name) override;
     void session_submit_buffer_called(std::string const& app_name) override;
     void session_allocate_buffers_called(std::string const& app_name) override;
