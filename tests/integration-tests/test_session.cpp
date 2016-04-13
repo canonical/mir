@@ -126,7 +126,11 @@ TEST(ApplicationSession, stress_test_take_snapshot)
         mtd::StubDisplayConfig{},
         std::make_shared<mtd::NullEventSink>()
     };
-    session.create_surface(ms::a_surface(), std::make_shared<mtd::NullEventSink>());
+
+    mg::BufferProperties properties(geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software);
+    session.create_surface(
+        ms::a_surface().with_buffer_stream(session.create_buffer_stream(properties)),
+        std::make_shared<mtd::NullEventSink>());
 
     auto compositor = conf.the_compositor();
 

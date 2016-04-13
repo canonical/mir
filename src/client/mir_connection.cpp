@@ -172,6 +172,22 @@ mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
         }
     }
 
+    if (spec.streams.is_set())
+    {
+        for(auto const& stream : spec.streams.value())
+        {
+            auto const new_stream = message.add_stream();
+            new_stream->set_displacement_x(stream.displacement.dx.as_int());
+            new_stream->set_displacement_y(stream.displacement.dy.as_int());
+            new_stream->mutable_id()->set_value(stream.stream_id);
+            if (stream.size.is_set())
+            {
+                new_stream->set_width(stream.size.value().width.as_int());
+                new_stream->set_height(stream.size.value().height.as_int());
+            }
+        }
+    }
+
     return message;
 }
 
@@ -400,7 +416,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
             this, server, &debug, stream, input_platform, spec, *surface_proto, request->wh);
 
         surface_map->insert(mf::SurfaceId{surface_proto->id().value()}, surf);
-        surface_map->insert(mf::BufferStreamId{surface_proto->id().value()}, stream);
+        surface_map->insert(mf::BufferStreamId{surface_proto->buffer_stream().id().value()}, stream);
     }
 
     callback(surf.get(), context);

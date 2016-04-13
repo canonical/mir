@@ -111,11 +111,6 @@ public:
 class StubbedSession : public mtd::StubSession
 {
 public:
-    StubbedSession() :
-        last_surface_id{0}
-    {
-    }
-
     std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId surface) const
     {
         if (mock_surfaces.find(surface) == mock_surfaces.end())
@@ -126,7 +121,7 @@ public:
     std::shared_ptr<mf::BufferStream> get_buffer_stream(mf::BufferStreamId stream) const override
     {
         if (mock_streams.find(stream) == mock_streams.end())
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid SurfaceId"));
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid StreamId"));
         return mock_streams.at(stream);
     }
 
@@ -137,43 +132,37 @@ public:
         return mock_surfaces.at(id);
     }
 
-    std::shared_ptr<mtd::MockBufferStream> mock_primary_stream_at(mf::SurfaceId id)
+    std::shared_ptr<mtd::MockBufferStream> mock_stream_at(mf::BufferStreamId id)
     {
-        if (mock_surfaces.end() == mock_surfaces.find(id))
-            create_mock_surface(id);
-        return mock_streams.at(mf::BufferStreamId(id.as_value()));
+        if (mock_streams.end() == mock_streams.find(id))
+            return create_mock_stream(id); 
+        return mock_streams.at(id);
     }
 
     std::shared_ptr<mtd::MockFrontendSurface> create_mock_surface(mf::SurfaceId id)
     {
         using namespace testing;
+        mg::BufferProperties properties;
+        create_buffer_stream(properties);
         auto surface = std::make_shared<testing::NiceMock<mtd::MockFrontendSurface>>(testing_client_input_fd);
-        auto stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
-
-        auto buffer1 = std::make_shared<mtd::StubBuffer>();
-        auto buffer2 = std::make_shared<mtd::StubBuffer>();
-        ON_CALL(*stream, swap_buffers(testing::_,testing::_))
-            .WillByDefault(testing::Invoke(
-            [buffer1, buffer2](mg::Buffer* b, std::function<void(mg::Buffer* new_buffer)> complete)
-            {
-                if ((!b) || (b == buffer1.get()))
-                    complete(buffer2.get());
-                if (b == buffer2.get())
-                    complete(buffer1.get()); 
-            }));
-
-        ON_CALL(*surface, primary_buffer_stream())
-            .WillByDefault(Return(stream));
-
-
         mock_surfaces[id] = surface;
-        mock_streams[mf::BufferStreamId(id.as_value())] = stream;
         return surface;
     }
 
     std::shared_ptr<mtd::MockBufferStream> create_mock_stream(mf::BufferStreamId id)
     {
         mock_streams[id] = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
+        auto buffer1 = std::make_shared<mtd::StubBuffer>();
+        auto buffer2 = std::make_shared<mtd::StubBuffer>();
+        ON_CALL(*mock_streams[id], swap_buffers(testing::_,testing::_))
+            .WillByDefault(testing::Invoke(
+            [buffer1, buffer2](mg::Buffer* b, std::function<void(mg::Buffer* new_buffer)> complete)
+            {
+                if ((!b) || (b == buffer1.get()))
+                    complete(buffer2.get());
+                if (b == buffer2.get())
+                    complete(buffer1.get());
+            }));
         return mock_streams[id];
     }
 
@@ -190,10 +179,10 @@ public:
 
     mf::BufferStreamId create_buffer_stream(mg::BufferProperties const&)
     {
-        mf::BufferStreamId id{last_surface_id};
+        mf::BufferStreamId id{last_stream_id};
         if (mock_streams.end() == mock_streams.find(id))
             create_mock_stream(id);
-        last_surface_id++;
+        last_stream_id++;
         return id;
     }
 
@@ -205,7 +194,8 @@ public:
     std::map<mf::BufferStreamId, std::shared_ptr<mtd::MockBufferStream>> mock_streams;
     std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
     static int const testing_client_input_fd;
-    int last_surface_id;
+    int last_surface_id = 0;
+    int last_stream_id = 0;
 };
 
 int const StubbedSession::testing_client_input_fd{11};
@@ -298,6 +288,7 @@ struct SessionMediator : public ::testing::Test
     mp::Buffer buffer_response;
     mp::BufferRequest buffer_request;
 };
+
 }
 
 TEST_F(SessionMediator, disconnect_releases_session)
@@ -381,10 +372,6 @@ TEST_F(SessionMediator, calling_methods_after_disconnect_throws)
 
     EXPECT_THROW({
         mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
-    }, std::logic_error);
-
-    EXPECT_THROW({
-        mediator.exchange_buffer(&buffer_request, &buffer_response, null_callback.get());
     }, std::logic_error);
 
     EXPECT_THROW({
@@ -510,7 +497,7 @@ TEST_F(SessionMediator, buffer_resource_for_surface_unaffected_by_other_surfaces
     mp::SurfaceParameters surface_request;
     mp::Surface surface_response;
 
-    auto stream1 = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
+    auto stream1 = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
     ON_CALL(*stream1, swap_buffers(_,_))
         .WillByDefault(InvokeArgument<1>(&buffer));
 
@@ -653,7 +640,7 @@ TEST_F(SessionMediator, prompt_provider_fds_allocated_by_connector)
 TEST_F(SessionMediator, exchange_buffer)
 {
     using namespace testing;
-    auto const& mock_stream = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
+    auto mock_stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
     mp::Buffer exchanged_buffer;
     mtd::StubBuffer stub_buffer1;
     mtd::StubBuffer stub_buffer2;
@@ -682,10 +669,10 @@ TEST_F(SessionMediator, session_exchange_buffer_sends_minimum_information)
 {
     using namespace testing;
     mp::Buffer exchanged_buffer;
-    mf::SurfaceId surf_id{0};
+    mf::BufferStreamId stream_id{0};
     mtd::StubBuffer buffer1;
     mtd::StubBuffer buffer2;
-    auto stream = stubbed_session->mock_primary_stream_at(surf_id);
+    auto stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
     ON_CALL(*stream, swap_buffers(nullptr,_))
         .WillByDefault(InvokeArgument<1>(&buffer2));
     ON_CALL(*stream, swap_buffers(&buffer1,_))
@@ -732,7 +719,7 @@ TEST_F(SessionMediator, session_exchange_buffer_sends_minimum_information)
 TEST_F(SessionMediator, exchange_buffer_throws_if_client_submits_bad_request)
 {
     using namespace testing;
-    auto const& mock_stream = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
+    auto mock_stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
     mp::Buffer exchanged_buffer;
     mtd::StubBuffer stub_buffer1;
     mtd::StubBuffer stub_buffer2;
@@ -765,8 +752,8 @@ TEST_F(SessionMediator, exchange_buffer_different_for_different_surfaces)
     mp::SurfaceParameters surface_request;
     mp::BufferRequest req1;
     mp::BufferRequest req2;
-    auto const& mock_stream1 = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
-    auto const& mock_stream2 = stubbed_session->mock_primary_stream_at(mf::SurfaceId{1});
+    auto mock_stream1 = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
+    auto mock_stream2 = stubbed_session->mock_stream_at(mf::BufferStreamId{2});
     Sequence seq;
     EXPECT_CALL(*mock_stream1, swap_buffers(_,_))
         .InSequence(seq);
@@ -780,10 +767,10 @@ TEST_F(SessionMediator, exchange_buffer_different_for_different_surfaces)
     mediator.connect(&connect_parameters, &connection, null_callback.get());
 
     mediator.create_surface(&surface_request, &surface_response, null_callback.get());
-    req1.mutable_id()->set_value(surface_response.id().value());
+    req1.mutable_id()->set_value(surface_response.buffer_stream().id().value());
     *req1.mutable_buffer() = surface_response.buffer_stream().buffer();
     mediator.create_surface(&surface_request, &surface_response, null_callback.get());
-    req2.mutable_id()->set_value(surface_response.id().value());
+    req2.mutable_id()->set_value(surface_response.buffer_stream().id().value());
     *req2.mutable_buffer() = surface_response.buffer_stream().buffer();
     mediator.exchange_buffer(&req2, &buffer_response, null_callback.get());
     mediator.exchange_buffer(&req1, &buffer_response, null_callback.get());
@@ -840,7 +827,7 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
 TEST_F(SessionMediator, completes_exchange_buffer_when_completion_is_invoked_asynchronously_from_thread_that_initiated_exchange)
 {
     using namespace testing;
-    auto const& mock_stream = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
+    auto const& mock_stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
     mtd::StubBuffer stub_buffer1;
     mtd::StubBuffer stub_buffer2;
     std::function<void(mg::Buffer*)> completion_func;
@@ -954,7 +941,7 @@ TEST_F(SessionMediator, sends_a_buffer_when_submit_buffer_is_called)
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
 
-    auto mock_stream = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
+    auto mock_stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
     request.mutable_id()->set_value(surface_response.id().value());
     request.mutable_buffer()->set_buffer_id(buffer1->id().as_value());
 
@@ -989,7 +976,7 @@ TEST_F(SessionMediator, allocates_from_the_correct_stream)
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
 
-    auto mock_stream = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
+    auto mock_stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
     EXPECT_CALL(*mock_stream, allocate_buffer(properties))
         .Times(num_requests)
         .WillRepeatedly(Return(mg::BufferID{}));
@@ -1016,7 +1003,7 @@ TEST_F(SessionMediator, removes_buffer_from_the_correct_stream)
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
 
-    auto mock_stream = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
+    auto mock_stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
     EXPECT_CALL(*mock_stream, remove_buffer(mg::BufferID{buffer_id}))
         .Times(num_requests);
 
@@ -1026,7 +1013,7 @@ TEST_F(SessionMediator, removes_buffer_from_the_correct_stream)
 TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_submit)
 {
     using namespace testing;
-    auto mock_stream = stubbed_session->mock_primary_stream_at(mf::SurfaceId{0});
+    auto mock_stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
     ON_CALL(*mock_stream, swap_buffers(_,_))
         .WillByDefault(InvokeArgument<1>(nullptr));
     auto buffer1 = std::make_shared<mtd::StubBuffer>();
@@ -1062,10 +1049,9 @@ TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_submit)
 TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_create)
 {
     using namespace testing;
-    mf::SurfaceId surf_id{0};
     mtd::StubBuffer buffer;
 
-    auto stream = stubbed_session->mock_primary_stream_at(surf_id);
+    auto stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
     ON_CALL(*stream, swap_buffers(_,_))
         .WillByDefault(InvokeArgument<1>(nullptr));
 
@@ -1081,10 +1067,9 @@ TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_create)
 TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_bstream_create)
 {
     using namespace testing;
-    mf::SurfaceId surf_id{0};
     mtd::StubBuffer buffer;
 
-    auto stream = stubbed_session->mock_primary_stream_at(surf_id);
+    auto stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
     ON_CALL(*stream, swap_buffers(_,_))
         .WillByDefault(InvokeArgument<1>(nullptr));
 
@@ -1100,20 +1085,20 @@ TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_bstream_cr
 TEST_F(SessionMediator, configures_swap_intervals_on_streams)
 {
     using namespace testing;
-    mf::SurfaceId surf_id{0};
+    mf::BufferStreamId stream_id{0};
     mp::StreamConfiguration request;
     mp::Void response;
 
     auto interval = 0u;
     mtd::StubBuffer buffer;
 
-    auto stream = stubbed_session->mock_primary_stream_at(surf_id);
+    auto stream = stubbed_session->mock_stream_at(stream_id);
     EXPECT_CALL(*stream, allow_framedropping(true));
 
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
 
-    request.mutable_id()->set_value(surf_id.as_value());
+    request.mutable_id()->set_value(stream_id.as_value());
     request.set_swapinterval(interval);
     mediator.configure_buffer_stream(&request, &response, null_callback.get());
 }
@@ -1209,10 +1194,9 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
 TEST_F(SessionMediator, doesnt_inadventently_set_buffer_field_when_theres_no_buffer)
 {
     mp::Void null;
-    mf::SurfaceId surf_id{0};
     mp::BufferStreamParameters stream_request;
     mp::BufferStream stream_response;
-    auto stream = stubbed_session->mock_primary_stream_at(surf_id);
+    auto stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
     ON_CALL(*stream, swap_buffers(nullptr,testing::_))
         .WillByDefault(testing::InvokeArgument<1>(nullptr));
     mediator.connect(&connect_parameters, &connection, null_callback.get());
