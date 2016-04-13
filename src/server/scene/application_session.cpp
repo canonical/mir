@@ -107,17 +107,22 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     auto params = the_params;
 
     mf::BufferStreamId stream_id;
+    std::shared_ptr<mc::BufferStream> buffer_stream;
     if (params.content_id.is_set())
+    {
         stream_id = params.content_id.value();
+        buffer_stream = checked_find(stream_id)->second;
+        if (params.size != buffer_stream->stream_size())
+            buffer_stream->resize(params.size);
+    }
     else
+    {
         stream_id = params.streams.value()[0].stream_id;
+        buffer_stream = checked_find(stream_id)->second;
+    }
 
     if (params.parent_id.is_set())
         params.parent = checked_find(the_params.parent_id.value())->second;
-
-    auto buffer_stream = checked_find(stream_id)->second;
-    if (params.size != buffer_stream->stream_size())
-        buffer_stream->resize(params.size);
 
     auto surface = surface_factory->create_surface(buffer_stream, params);
     surface_stack->add_surface(surface, params.input_mode);
