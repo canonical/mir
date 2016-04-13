@@ -42,6 +42,7 @@ void PrintTo(const hwc_layer_1& layer , ::std::ostream* os)
     PrintTo(layer.displayFrame, os);
     *os << std::endl;
     *os << "\tvisibleRegionScreen.numRects: " << layer.visibleRegionScreen.numRects << std::endl
+    << "\tvisibleRegionScreen.surfaceDamage: " << layer.surfaceDamage.numRects << std::endl
     << "\tplaneAlpha: " << layer.planeAlpha << std::endl
     << "\tacquireFenceFd: " << layer.acquireFenceFd << std::endl
     << "\treleaseFenceFd: " << layer.releaseFenceFd << std::endl;

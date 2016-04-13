@@ -251,13 +251,17 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
         return;
 
     auto format = mir_pixel_format_xrgb_8888;
-    ms::SurfaceCreationParameters params;
-    params.of_size(titlebar_size_for_window(surface->size()))
+    mir::graphics::BufferProperties properties(titlebar_size_for_window(surface->size()),
+        format, mir::graphics::BufferUsage::software);
+    auto stream_id = session->create_buffer_stream(properties);
+    auto params = ms::a_surface()
+        .of_size(titlebar_size_for_window(surface->size()))
         .of_name("decoration")
         .of_pixel_format(format)
         .of_buffer_usage(mir::graphics::BufferUsage::software)
         .of_position(titlebar_position_for_window(surface->top_left()))
-        .of_type(mir_surface_type_gloss);
+        .of_type(mir_surface_type_gloss)
+        .with_buffer_stream(stream_id);
     auto id = build(session, params);
     auto titlebar = session->surface(id);
     titlebar->set_alpha(0.9);
@@ -265,6 +269,7 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
     auto& surface_info = tools->info_for(surface);
     surface_info.titlebar = titlebar;
     surface_info.titlebar_id = id;
+    surface_info.titlebar_stream_id = stream_id;
     surface_info.children.push_back(titlebar);
 
     SurfaceInfo& titlebar_info =
@@ -369,11 +374,6 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
         session->configure_streams(*surface, l);
     }
 
-    if (modifications.input_shape.is_set())
-    {
-        surface->set_input_region(modifications.input_shape.value());
-    }
-
     if (modifications.width.is_set() || modifications.height.is_set())
     {
         auto new_size = surface->size();
@@ -396,6 +396,20 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
 
         apply_resize(surface, surface_info.titlebar, top_left, new_size);
     }
+
+    if (modifications.input_shape.is_set())
+    {
+        auto rectangles = modifications.input_shape.value();
+        auto displacement = surface->top_left() - Point{0, 0}; 
+        for(auto& rect : rectangles)
+        {
+            rect.top_left = rect.top_left + displacement;
+            rect = rect.intersection_with({surface->top_left(), surface->size()});
+            rect.top_left = rect.top_left - displacement;
+        }
+        surface->set_input_region(rectangles);
+    }
+
 
     if (modifications.state.is_set())
     {
@@ -428,6 +442,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
     if (info.titlebar)
     {
         session->destroy_surface(info.titlebar_id);
+        session->destroy_buffer_stream(info.titlebar_stream_id);
         tools->forget(info.titlebar);
     }
 
