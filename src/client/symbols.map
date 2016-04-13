@@ -227,15 +227,11 @@ MIR_CLIENT_0.21 {
     mir_connection_apply_display_configuration;
     mir_connection_create_display_configuration;
     mir_connection_create_input_config;
-    mir_connection_preview_base_display_configuration;
-    mir_connection_set_error_callback;
     mir_connection_set_input_config_change_callback;
     mir_display_config_get_max_simultaneous_outputs;
     mir_display_config_get_num_outputs;
     mir_display_config_get_output;
     mir_display_config_release;
-    mir_error_get_code;
-    mir_error_get_domain;
     mir_input_config_destroy;
     mir_input_config_device_count;
     mir_input_config_get_device;
@@ -276,8 +272,11 @@ MIR_CLIENT_0.22 {  # New functions in Mir 0.22
   global:
     mir_connection_confirm_base_display_configuration;
     mir_connection_preview_base_display_configuration;
+    mir_connection_set_error_callback;
     mir_create_screencast_spec;
     mir_display_config_get_mutable_output;
+    mir_error_get_code;
+    mir_error_get_domain;
     mir_output_disable;
     mir_output_enable;
     mir_output_set_current_mode;
