@@ -79,6 +79,7 @@ public:
         expected_layer.acquireFenceFd = -1;
         expected_layer.releaseFenceFd = -1;
         expected_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
+        expected_layer.surfaceDamage = { 0, nullptr };
     }
 
     mga::LayerType type;
@@ -338,6 +339,7 @@ TEST_F(HWCLayersTest, has_float_sourcecrop)
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
     expected_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
+    expected_layer.surfaceDamage = { 0, nullptr };
 
     mga::HWCLayer layer(std::make_shared<mga::FloatSourceCrop>(), list, list_index);
     layer.setup_layer(
