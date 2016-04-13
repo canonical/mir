@@ -626,7 +626,7 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
         // I would like to:
         //std::this_thread::sleep_for(1000ms/input_rate);
         // but this is more robust under Valgrind:
-        if (i > 0 && !(i % inputs_per_frame))
+        if (!((i+1) % inputs_per_frame))
             std::this_thread::sleep_for(frame_time);
     }
 
@@ -636,9 +636,7 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
 
     float const client_input_events_per_frame =
         (float)received_input_events / nframes;
-    // Slightly fewer input events than frames is optimal for latency:
-    EXPECT_THAT(client_input_events_per_frame, Lt(1.0f));
-    EXPECT_THAT(client_input_events_per_frame, Ge(0.7f));
+    EXPECT_NEAR(1.0f, client_input_events_per_frame, 0.2f);
 }
 
 TEST_F(TestClientInput, send_mir_input_events_through_surface)
