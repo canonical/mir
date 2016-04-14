@@ -37,10 +37,7 @@ void MultiDisplayClock::synchronize(Lock const&)
 {
     baseline = last_multi_frame;
     for (auto& child : children)
-    {
-        if (auto child_clock = child.clock.lock())
-            child.baseline = child.last_frame;
-    }
+        child.baseline = child.last_frame;
 }
 
 void MultiDisplayClock::on_child_frame(int child_index, Frame const& child_frame)
