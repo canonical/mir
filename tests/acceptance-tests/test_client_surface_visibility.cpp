@@ -134,6 +134,22 @@ void expect_surface_visibility_event_after2(
     Mock::VerifyAndClearExpectations(&mock_callback);
 }
 
+struct Surface
+{
+    Surface(MirConnection* connection, geom::Size size) :
+        surface(create_surface(connection, size, callback))
+    {
+    }
+
+    ~Surface()
+    {
+        mir_surface_release_sync(surface);
+    }
+
+    testing::NiceMock<MockVisibilityCallback> callback;
+    MirSurface* surface;
+};
+
 struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
 {
     void SetUp() override
@@ -147,37 +163,33 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
 
         mtf::ConnectedClientHeadlessServer::SetUp();
 
-        surface = create_surface(connection, small_size, mock_callback);
-        expect_surface_visibility_event_after2(surface, mock_callback,
+        surface = std::make_unique<Surface>(connection, small_size);
+        expect_surface_visibility_event_after2(surface->surface, surface->callback,
             mir_surface_visibility_exposed,
                 [&]
                 {
-                    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+                    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface->surface));
                 });
     }
 
     void TearDown() override
     {
-        // Don't call ConnectedClientHeadlessServer::TearDown() - the sequence matters
-        mir_surface_release_sync(surface);
-        if (second_surface)
-            mir_surface_release_sync(second_surface);
-
+        surface = nullptr;
+        second_surface = nullptr;
         mtf::ConnectedClientHeadlessServer::TearDown();
     }
 
     void create_larger_surface_on_top()
     {
-        second_surface = create_surface(connection, large_size, mock_callback2);
-        ASSERT_TRUE(mir_surface_is_valid(second_surface));
+        second_surface = std::make_unique<Surface>(connection, large_size);
     
         shell.lock()->raise(1);
 
-        expect_surface_visibility_event_after2(second_surface, mock_callback2,
+        expect_surface_visibility_event_after2(second_surface->surface, second_surface->callback,
             mir_surface_visibility_exposed,
                 [&]
                 {
-                    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(second_surface));
+                    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(second_surface->surface));
                 });
     }
 
@@ -205,16 +217,13 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
         MirSurfaceVisibility visibility,
         std::function<void()> const& action)
     {
-        expect_surface_visibility_event_after2(surface, mock_callback, visibility, action);
+        expect_surface_visibility_event_after2(surface->surface, surface->callback, visibility, action);
     }
-
 
     geom::Size const small_size {640, 480};
     geom::Size const large_size {800, 600};
-    MirSurface* surface = nullptr;
-    MirSurface* second_surface = nullptr;
-    testing::NiceMock<MockVisibilityCallback> mock_callback;
-    testing::NiceMock<MockVisibilityCallback> mock_callback2;
+    std::unique_ptr<Surface> surface;
+    std::unique_ptr<Surface> second_surface;
     std::weak_ptr<StoringShell> shell;
 };
 
