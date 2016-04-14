@@ -109,41 +109,51 @@ MirSurface* create_surface(MirConnection* connection, geom::Size size,
     return surface;
 }
 
-void expect_surface_visibility_event_after2(
-    MirSurface* surface,
-    MockVisibilityCallback& mock_callback,
-    MirSurfaceVisibility visibility,
-    std::function<void()> const& action)
-{
-    using namespace testing;
-
-    mt::Signal event_received;
-
-    Mock::VerifyAndClearExpectations(&mock_callback);
-
-    EXPECT_CALL(mock_callback, handle(surface, visibility))
-        .WillOnce(DoAll(Invoke([&visibility](MirSurface *s, MirSurfaceVisibility)
-            {
-                EXPECT_EQ(visibility, mir_surface_get_visibility(s));
-            }), mt::WakeUp(&event_received)));
-
-    action();
-
-    event_received.wait_for(std::chrono::seconds{2});
-
-    Mock::VerifyAndClearExpectations(&mock_callback);
-}
-
 struct Surface
 {
     Surface(MirConnection* connection, geom::Size size) :
         surface(create_surface(connection, size, callback))
     {
+        wait_for_visible();
     }
 
     ~Surface()
     {
         mir_surface_release_sync(surface);
+    }
+
+    void expect_surface_visibility_event_after(
+        MirSurfaceVisibility visibility,
+        std::function<void()> const& action)
+    {
+        using namespace testing;
+
+        mt::Signal event_received;
+
+        Mock::VerifyAndClearExpectations(&callback);
+
+        EXPECT_CALL(callback, handle(surface, visibility))
+            .WillOnce(DoAll(Invoke([&visibility](MirSurface *s, MirSurfaceVisibility)
+                {
+                    EXPECT_EQ(visibility, mir_surface_get_visibility(s));
+                }), mt::WakeUp(&event_received)));
+
+        action();
+
+        event_received.wait_for(std::chrono::seconds{2});
+
+        Mock::VerifyAndClearExpectations(&callback);
+    }
+
+private:
+    void wait_for_visible()
+    {
+        expect_surface_visibility_event_after(
+            mir_surface_visibility_exposed,
+            [this]
+            {
+                mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+            });
     }
 
     testing::NiceMock<MockVisibilityCallback> callback;
@@ -162,35 +172,20 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
             });
 
         mtf::ConnectedClientHeadlessServer::SetUp();
-
         surface = std::make_unique<Surface>(connection, small_size);
-        expect_surface_visibility_event_after2(surface->surface, surface->callback,
-            mir_surface_visibility_exposed,
-                [&]
-                {
-                    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface->surface));
-                });
     }
 
     void TearDown() override
     {
-        surface = nullptr;
-        second_surface = nullptr;
+        surface.reset();
+        second_surface.reset();
         mtf::ConnectedClientHeadlessServer::TearDown();
     }
 
     void create_larger_surface_on_top()
     {
         second_surface = std::make_unique<Surface>(connection, large_size);
-    
         shell.lock()->raise(1);
-
-        expect_surface_visibility_event_after2(second_surface->surface, second_surface->callback,
-            mir_surface_visibility_exposed,
-                [&]
-                {
-                    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(second_surface->surface));
-                });
     }
 
     std::shared_ptr<ms::Surface> server_surface(size_t index)
@@ -217,7 +212,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
         MirSurfaceVisibility visibility,
         std::function<void()> const& action)
     {
-        expect_surface_visibility_event_after2(surface->surface, surface->callback, visibility, action);
+        surface->expect_surface_visibility_event_after(visibility, action);
     }
 
     geom::Size const small_size {640, 480};
