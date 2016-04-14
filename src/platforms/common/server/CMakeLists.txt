@@ -7,3 +7,9 @@ add_library(server_platform_common STATIC
   shm_buffer.cpp
   shm_file.h
 )
+
+target_link_libraries(
+  server_platform_common
+
+  ${Boost_SYSTEM_LIBRARY}  
+)
