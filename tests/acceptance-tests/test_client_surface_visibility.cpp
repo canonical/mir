@@ -46,8 +46,7 @@ class StoringShell : public msh::ShellWrapper
 {
 public:
     StoringShell(std::shared_ptr<msh::Shell> const& wrapped) :
-        msh::ShellWrapper{wrapped},
-        surface_stack{surface_stack}
+        msh::ShellWrapper{wrapped}
     {}
 
     mf::SurfaceId create_surface(
@@ -97,30 +96,40 @@ void event_callback(MirSurface* surface, MirEvent const* event, void* ctx)
         static_cast<MirSurfaceVisibility>(mir_surface_event_get_attribute_value(sev)));
 }
 
-struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
+struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
 {
+    MirSurface* surface;
+    geom::Size const surface_size {640, 480};
 
     void SetUp() override
     {
         server.wrap_shell([&](std::shared_ptr<msh::Shell> const& wrapped)
             {
-                auto const result = std::make_shared<StoringShell>(wrapped, server.the_surface_stack());
+                auto const result = std::make_shared<StoringShell>(wrapped);
                 shell = result;
                 return result;
             });
 
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientHeadlessServer::SetUp();
 
-        mir_surface_set_event_handler(surface, &event_callback, &mock_visibility_callback);
-
-        // Swap enough buffers to ensure compositor threads are into run loop
-        for (auto i = 0; i != 11; ++i)
-            mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+        auto const spec = mir_connection_create_spec_for_normal_surface(
+            connection, surface_size.width.as_int(), surface_size.height.as_int(), mir_pixel_format_abgr_8888);
+        mir_surface_spec_set_name(spec, "ConnectedClientWithASurfaceFixtureSurface");
+        mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+        mir_surface_spec_set_event_handler(spec, &event_callback, &mock_visibility_callback);
+        surface = mir_surface_create_sync(spec);
+        mir_surface_spec_release(spec);
+        expect_surface_visibility_event_after2(surface, mock_visibility_callback,
+            mir_surface_visibility_exposed,
+                [&]
+                {
+                    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
+                });
     }
 
     void TearDown() override
     {
-        // Don't call ConnectedClientWithASurface::TearDown() - the sequence matters
+        // Don't call ConnectedClientHeadlessServer::TearDown() - the sequence matters
         mir_surface_release_sync(surface);
         if (second_surface)
             mir_surface_release_sync(second_surface);
@@ -132,6 +141,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
     {
         auto spec = mir_connection_create_spec_for_normal_surface(connection, 800, 600, mir_pixel_format_bgr_888);
 
+        mir_surface_spec_set_event_handler(spec, &event_callback, &mock_visibility_callback2);
         second_surface = mir_surface_create_sync(spec);
         ASSERT_TRUE(mir_surface_is_valid(second_surface));
     
@@ -139,7 +149,12 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
 
         shell.lock()->raise(1);
 
-        mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(second_surface));
+        expect_surface_visibility_event_after2(second_surface, mock_visibility_callback2,
+            mir_surface_visibility_exposed,
+                [&]
+                {
+                    mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(second_surface));
+                });
     }
 
     std::shared_ptr<ms::Surface> server_surface(size_t index)
@@ -166,6 +181,15 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
         MirSurfaceVisibility visibility,
         std::function<void()> const& action)
     {
+        expect_surface_visibility_event_after2(surface, mock_visibility_callback, visibility, action);
+    }
+
+    void expect_surface_visibility_event_after2(
+        MirSurface* surface,
+        MockVisibilityCallback& mock_visibility_callback,
+        MirSurfaceVisibility visibility,
+        std::function<void()> const& action)
+    {
         using namespace testing;
 
         mt::Signal event_received;
@@ -187,6 +211,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
 
     MirSurface* second_surface = nullptr;
     testing::NiceMock<MockVisibilityCallback> mock_visibility_callback;
+    testing::NiceMock<MockVisibilityCallback> mock_visibility_callback2;
     std::weak_ptr<StoringShell> shell;
 };
 
