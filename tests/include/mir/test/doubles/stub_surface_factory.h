@@ -34,7 +34,7 @@ class StubSurfaceFactory : public scene::SurfaceFactory
 {
 public:
     std::shared_ptr<scene::Surface> create_surface(
-        std::shared_ptr<compositor::BufferStream> const&,
+        std::list<scene::StreamInfo> const&,
         scene::SurfaceCreationParameters const& params) override
     {
         using namespace testing;
