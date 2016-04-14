@@ -44,7 +44,6 @@ private:
     typedef std::lock_guard<FrameMutex> Lock;
 
     void synchronize(Lock const&);
-    void hook_child_clock(Lock const&, DisplayClock& child_clock, int idx);
     void on_child_frame(int child_index, Frame const&);
 
     struct Child
