@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_MESA_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/multi_display_clock.h"
+#include "mir/graphics/multi_source_frame_clock.h"
 #include "mir/graphics/display.h"
 #include "mir/renderer/gl/render_target.h"
 #include "display_helpers.h"
@@ -46,7 +46,7 @@ class BufferObject;
 class KMSOutput;
 
 class DisplayBuffer : public graphics::DisplayBuffer,
-                      public graphics::MultiDisplayClock,
+                      public graphics::MultiSourceFrameClock,
                       public graphics::DisplaySyncGroup,
                       public graphics::NativeDisplayBuffer,
                       public renderer::gl::RenderTarget

@@ -16,10 +16,10 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MULTI_DISPLAY_CLOCK_H_
-#define MIR_GRAPHICS_MULTI_DISPLAY_CLOCK_H_
+#ifndef MIR_GRAPHICS_MULTI_SOURCE_FRAME_CLOCK_H_
+#define MIR_GRAPHICS_MULTI_SOURCE_FRAME_CLOCK_H_
 
-#include "simple_display_clock.h"
+#include "simple_frame_clock.h"
 #include <functional>
 #include <memory>
 #include <unordered_map>
@@ -31,24 +31,22 @@ namespace graphics
 {
 
 /**
- * MultiDisplayClock is a virtual display clock that can represent any
+ * MultiSourceFrameClock is a virtual display clock that can represent any
  * number of child clocks. It ticks at the rate of the fastest child,
  * providing the user (and hence client app) a single clock to sync to.
  */
-class MultiDisplayClock : public SimpleDisplayClock
+class MultiSourceFrameClock : public SimpleFrameClock
 {
 public:
-    virtual ~MultiDisplayClock() = default;
-    void add_child_clock(std::weak_ptr<DisplayClock>);
+    virtual ~MultiSourceFrameClock() = default;
+    void add_child_clock(std::weak_ptr<FrameClock>);
 private:
     typedef std::lock_guard<FrameMutex> Lock;
-
     void synchronize(Lock const&);
     void on_child_frame(void const* child_id, Frame const&);
-
     struct Child
     {
-        std::weak_ptr<DisplayClock> clock;
+        std::weak_ptr<FrameClock> clock;
         Frame baseline;
         Frame last_frame;
     };
@@ -60,4 +58,4 @@ private:
 }
 }
 
-#endif // MIR_GRAPHICS_MULTI_DISPLAY_CLOCK_H_
+#endif // MIR_GRAPHICS_MULTI_SOURCE_FRAME_CLOCK_H_

@@ -16,11 +16,11 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/graphics/simple_display_clock.h"
+#include "mir/graphics/simple_frame_clock.h"
 
 namespace mir { namespace graphics {
 
-void SimpleDisplayClock::set_frame_callback(FrameCallback const& cb)
+void SimpleFrameClock::set_frame_callback(FrameCallback const& cb)
 {
     std::lock_guard<FrameMutex> lock(frame_mutex);
     frame_callback = cb;

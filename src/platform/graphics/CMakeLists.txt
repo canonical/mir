@@ -11,8 +11,8 @@ set(
   pixel_format_utils.cpp
   overlapping_output_grouping.cpp
   platform_probe.cpp
-  simple_display_clock.cpp
-  multi_display_clock.cpp
+  simple_frame_clock.cpp
+  multi_source_frame_clock.cpp
 )
 
 add_library(mirplatformgraphicscommon OBJECT

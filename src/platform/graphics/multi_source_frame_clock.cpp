@@ -16,11 +16,11 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/graphics/multi_display_clock.h"
+#include "mir/graphics/multi_source_frame_clock.h"
 
 namespace mir { namespace graphics {
 
-void MultiDisplayClock::add_child_clock(std::weak_ptr<DisplayClock> w)
+void MultiSourceFrameClock::add_child_clock(std::weak_ptr<FrameClock> w)
 {
     Lock lock(frame_mutex);
     if (auto dc = w.lock())
@@ -28,13 +28,13 @@ void MultiDisplayClock::add_child_clock(std::weak_ptr<DisplayClock> w)
         void const* id = dc.get();
         children[id] = Child{std::move(w), {}, {}};
         synchronize(lock);
-        dc->set_frame_callback( std::bind(&MultiDisplayClock::on_child_frame,
-                                         this, id,
-                                         std::placeholders::_1) );
+        dc->set_frame_callback(
+            std::bind(&MultiSourceFrameClock::on_child_frame,
+                      this, id, std::placeholders::_1) );
     }
 }
 
-void MultiDisplayClock::synchronize(Lock const&)
+void MultiSourceFrameClock::synchronize(Lock const&)
 {
     baseline = last_multi_frame;
 
@@ -57,8 +57,8 @@ void MultiDisplayClock::synchronize(Lock const&)
     }
 }
 
-void MultiDisplayClock::on_child_frame(void const* child_id,
-                                       Frame const& child_frame)
+void MultiSourceFrameClock::on_child_frame(void const* child_id,
+                                           Frame const& child_frame)
 {
     FrameCallback cb;
     Frame cb_frame;

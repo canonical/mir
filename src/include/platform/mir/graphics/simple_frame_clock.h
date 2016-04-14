@@ -16,10 +16,10 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_SIMPLE_DISPLAY_CLOCK_H_
-#define MIR_GRAPHICS_SIMPLE_DISPLAY_CLOCK_H_
+#ifndef MIR_GRAPHICS_SIMPLE_FRAME_CLOCK_H_
+#define MIR_GRAPHICS_SIMPLE_FRAME_CLOCK_H_
 
-#include "display_clock.h"
+#include "frame_clock.h"
 #include <mutex>
 
 namespace mir
@@ -27,10 +27,10 @@ namespace mir
 namespace graphics
 {
 
-class SimpleDisplayClock : virtual public DisplayClock
+class SimpleFrameClock : virtual public FrameClock
 {
 public:
-    virtual ~SimpleDisplayClock() = default;
+    virtual ~SimpleFrameClock() = default;
     virtual void set_frame_callback(FrameCallback const&) override;
 protected:
     typedef std::mutex FrameMutex;
@@ -41,4 +41,4 @@ protected:
 }
 }
 
-#endif // MIR_GRAPHICS_SIMPLE_DISPLAY_CLOCK_H_
+#endif // MIR_GRAPHICS_SIMPLE_FRAME_CLOCK_H_

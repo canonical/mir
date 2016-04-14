@@ -16,8 +16,8 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_DISPLAY_CLOCK_H_
-#define MIR_GRAPHICS_DISPLAY_CLOCK_H_
+#ifndef MIR_GRAPHICS_FRAME_CLOCK_H_
+#define MIR_GRAPHICS_FRAME_CLOCK_H_
 
 #include "frame.h"
 #include <functional>
@@ -30,22 +30,16 @@ namespace graphics
 typedef std::function<void(Frame const&)> FrameCallback;
 
 /**
- * An abstract frame clock, which may represent a single phyisical display,
- * a logical display, or a group of displays.
- *
- * A DisplayClock provides Frame counters that a client can sync to.
- *
- * I would prefer to call this 'Display', but that name is taken. And the
- * generic term 'Output' sounds less informative than 'DisplayClock'.
+ * A FrameClock is a source of 'Frame' counters to sync rendering to.
  */
-class DisplayClock
+class FrameClock
 {
 public:
-    virtual ~DisplayClock() = default;
+    virtual ~FrameClock() = default;
     virtual void set_frame_callback(FrameCallback const&) = 0;
 };
 
 }
 }
 
-#endif // MIR_GRAPHICS_DISPLAY_CLOCK_H_
+#endif // MIR_GRAPHICS_FRAME_CLOCK_H_

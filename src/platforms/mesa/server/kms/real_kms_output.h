@@ -21,7 +21,7 @@
 
 #include "kms_output.h"
 #include "drm_mode_resources.h"
-#include "mir/graphics/simple_display_clock.h"
+#include "mir/graphics/simple_frame_clock.h"
 
 #include <memory>
 #include <mutex>
@@ -35,7 +35,7 @@ namespace mesa
 
 class PageFlipper;
 
-class RealKMSOutput : public SimpleDisplayClock, public KMSOutput
+class RealKMSOutput : public SimpleFrameClock, public KMSOutput
 {
 public:
     RealKMSOutput(int drm_fd, uint32_t connector_id,
