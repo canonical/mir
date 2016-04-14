@@ -125,6 +125,7 @@ target_link_libraries(
   demo-shell
   mircommon
   client_platform_common
+  server_platform_common
 
   mirclient-static
   mirclientrpc-static
