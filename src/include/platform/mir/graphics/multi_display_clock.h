@@ -22,7 +22,7 @@
 #include "simple_display_clock.h"
 #include <functional>
 #include <memory>
-#include <vector>
+#include <unordered_map>
 #include <mutex>
 
 namespace mir
@@ -44,7 +44,7 @@ private:
     typedef std::lock_guard<FrameMutex> Lock;
 
     void synchronize(Lock const&);
-    void on_child_frame(int child_index, Frame const&);
+    void on_child_frame(void const* child_id, Frame const&);
 
     struct Child
     {
@@ -52,7 +52,7 @@ private:
         Frame baseline;
         Frame last_frame;
     };
-    std::vector<Child> children;
+    std::unordered_map<void const*, Child> children;
     Frame baseline;
     Frame last_multi_frame;
 };

@@ -25,10 +25,11 @@ void MultiDisplayClock::add_child_clock(std::weak_ptr<DisplayClock> w)
     Lock lock(frame_mutex);
     if (auto dc = w.lock())
     {
-        children.emplace_back(Child{std::move(w), {}, {}});
+        void const* id = dc.get();
+        children[id] = Child{std::move(w), {}, {}};
         synchronize(lock);
         dc->set_frame_callback( std::bind(&MultiDisplayClock::on_child_frame,
-                                         this, children.size()-1,
+                                         this, id,
                                          std::placeholders::_1) );
     }
 }
@@ -37,26 +38,31 @@ void MultiDisplayClock::synchronize(Lock const&)
 {
     baseline = last_multi_frame;
     for (auto& child : children)
-        child.baseline = child.last_frame;
+        child.second.baseline = child.second.last_frame;
 }
 
-void MultiDisplayClock::on_child_frame(int child_index, Frame const& child_frame)
+void MultiDisplayClock::on_child_frame(void const* child_id,
+                                       Frame const& child_frame)
 {
     FrameCallback cb;
     Frame cb_frame;
 
     {
         Lock lock(frame_mutex);
-        auto& child = children.at(child_index);
-        child.last_frame = child_frame;
-        auto child_delta = child_frame.msc - child.baseline.msc;
-        auto virtual_delta = last_multi_frame.msc - baseline.msc;
-        if (child_delta > virtual_delta)
+        auto found = children.find(child_id);
+        if (found != children.end())
         {
-            last_multi_frame.msc = baseline.msc + child_delta;
-            last_multi_frame.ust = child_frame.ust;
-            cb = frame_callback;
-            cb_frame = last_multi_frame;
+            auto& child{found->second};
+            child.last_frame = child_frame;
+            auto child_delta = child_frame.msc - child.baseline.msc;
+            auto virtual_delta = last_multi_frame.msc - baseline.msc;
+            if (child_delta > virtual_delta)
+            {
+                last_multi_frame.msc = baseline.msc + child_delta;
+                last_multi_frame.ust = child_frame.ust;
+                cb = frame_callback;
+                cb_frame = last_multi_frame;
+            }
         }
     }
 
