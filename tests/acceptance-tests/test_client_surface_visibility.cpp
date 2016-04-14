@@ -45,9 +45,7 @@ namespace
 class StoringShell : public msh::ShellWrapper
 {
 public:
-    StoringShell(
-        std::shared_ptr<msh::Shell> const& wrapped,
-        std::shared_ptr<msh::SurfaceStack> const surface_stack) :
+    StoringShell(std::shared_ptr<msh::Shell> const& wrapped) :
         msh::ShellWrapper{wrapped},
         surface_stack{surface_stack}
     {}
@@ -71,12 +69,10 @@ public:
 
     void raise(int index)
     {
-        surface_stack->raise(surface(index));
+        wrapped->raise_surface(nullptr, surface(index), 0);
     }
 
-    using msh::ShellWrapper::raise;
 private:
-    std::shared_ptr<msh::SurfaceStack> const surface_stack;
     std::vector<std::weak_ptr<ms::Surface>> surfaces;
 
 };
