@@ -56,7 +56,7 @@ void print_touch_event(MirInputEvent const* ev)
     auto tev = mir_input_event_get_touch_event(ev);
     auto tc = mir_touch_event_point_count(tev);
 
-    std::cout << "Handline touch event time=" << event_time
+    std::cout << "Handling touch event time=" << event_time
               << " touch_count=" << tc << std::endl;
     for (unsigned i = 0; i < tc; i++)
     {
@@ -78,7 +78,7 @@ void print_pointer_event(MirInputEvent const* ev)
     auto pev = mir_input_event_get_pointer_event(ev);
     auto action = mir_pointer_event_action(pev);
 
-    std::cout << "Handline pointer event time=" << event_time
+    std::cout << "Handling pointer event time=" << event_time
         << " action=";
     switch(action)
     {
