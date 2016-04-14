@@ -42,7 +42,7 @@ namespace
 class NullPageFlipper : public mgm::PageFlipper
 {
 public:
-    bool schedule_flip(uint32_t,uint32_t) { return true; }
+    bool schedule_flip(uint32_t,uint32_t) override { return true; }
     mg::Frame wait_for_flip(uint32_t) override { return {}; }
 };
 

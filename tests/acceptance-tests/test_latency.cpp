@@ -53,21 +53,21 @@ public:
     void post()
     {
         std::lock_guard<std::mutex> lock{mutex};
-        post_count++;
+        visible_frame++;
         posted.notify_one();
     }
 
     void record_submission(uint32_t submission_id)
     {
         std::lock_guard<std::mutex> lock{mutex};
-        submissions.push_back({submission_id, post_count});
+        submissions.push_back({submission_id, visible_frame});
     }
 
     auto latency_for(uint32_t submission_id)
     {
         std::lock_guard<std::mutex> lock{mutex};
 
-        mir::optional_value<uint32_t> latency;
+        mir::optional_value<unsigned int> latency;
 
         for (auto i = submissions.begin(); i != submissions.end(); i++)
         {
@@ -80,7 +80,7 @@ public:
                 if (i != submissions.begin())
                     i = submissions.erase(submissions.begin(), i);
 
-                latency = post_count - i->time;
+                latency = visible_frame - i->visible_frame_when_submitted;
                 submissions.erase(i);
                 break;
             }
@@ -93,7 +93,7 @@ public:
     {
         std::unique_lock<std::mutex> lock(mutex);
         auto const deadline = std::chrono::system_clock::now() + timeout;
-        while (post_count < count)
+        while (visible_frame < count)
         {
             if (posted.wait_until(lock, deadline) == std::cv_status::timeout)
                 return false;
@@ -104,7 +104,7 @@ public:
 private:
     std::mutex mutex;
     std::condition_variable posted;
-    unsigned int post_count{0};
+    unsigned int visible_frame{0};
 
     // Note that a buffer_id may appear twice in the list as the client is
     // faster than the compositor and can produce a new frame before the
@@ -112,7 +112,7 @@ private:
     struct Submission
     {
         uint32_t buffer_id;
-        uint32_t time;
+        unsigned int visible_frame_when_submitted;
     };
     std::deque<Submission> submissions;
 };
@@ -157,6 +157,8 @@ public:
 
     void post() override
     {
+        stats.post();
+
         auto latency = stats.latency_for(db.last_id().as_value());
         if (latency.is_set())
         {
@@ -165,8 +167,6 @@ public:
             if (latency.value() > max)
                 max = latency.value();
         }
-
-        stats.post();
 
         /*
          * Sleep a little to make the test more realistic. This way the

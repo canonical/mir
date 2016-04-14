@@ -101,6 +101,7 @@ struct SurfaceCreationParameters
 
     mir::optional_value<std::vector<geometry::Rectangle>> input_shape;
     mir::optional_value<MirShellChrome> shell_chrome;
+    mir::optional_value<std::vector<shell::StreamSpecification>> streams;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
