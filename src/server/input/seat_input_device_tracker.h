@@ -80,7 +80,8 @@ private:
         std::vector<TouchVisualizer::Spot> spots;
     };
 
-    mir::geometry::Point cursor_pos;
+    struct Vec2f { float x, y; };
+    Vec2f cursor_pos;
     MirInputEventModifiers modifier;
     MirPointerButtons buttons;
     std::unordered_map<MirInputDeviceId, DeviceData> device_data;
