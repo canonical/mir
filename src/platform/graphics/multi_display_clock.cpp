@@ -37,8 +37,24 @@ void MultiDisplayClock::add_child_clock(std::weak_ptr<DisplayClock> w)
 void MultiDisplayClock::synchronize(Lock const&)
 {
     baseline = last_multi_frame;
-    for (auto& child : children)
-        child.second.baseline = child.second.last_frame;
+
+    auto c = children.begin();
+    while (c != children.end())
+    {
+        auto& child{c->second};
+        if (child.clock.lock())
+        {
+            child.baseline = child.last_frame;
+            ++c;
+        }
+        else
+        {
+            // Lazy deferred clean-up. We don't need to do this any sooner
+            // because a deleted child (which no longer generates callbacks)
+            // doesn't affect results at all.
+            c = children.erase(c);
+        }
+    }
 }
 
 void MultiDisplayClock::on_child_frame(void const* child_id,
