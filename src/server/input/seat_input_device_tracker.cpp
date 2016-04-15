@@ -210,8 +210,8 @@ MirPointerButtons mi::SeatInputDeviceTracker::button_state() const
 
 void mi::SeatInputDeviceTracker::update_cursor(MirPointerEvent const* event)
 {
-    cursor_x += (int)mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x);
-    cursor_y += (int)mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y);
+    cursor_x += mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x);
+    cursor_y += mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y);
 
     mir::geometry::Point const old{cursor_x, cursor_y};
     auto confined{old};
