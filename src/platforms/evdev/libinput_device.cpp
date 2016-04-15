@@ -171,10 +171,10 @@ mir::EventUPtr mie::LibInputDevice::convert_motion_event(libinput_event_pointer*
 
     report->received_event_from_kernel(time.count(), EV_REL, 0, 0);
 
-    auto const dx = libinput_event_pointer_get_dx(pointer);
-    auto const dy = libinput_event_pointer_get_dy(pointer);
-
-    return builder->pointer_event(time, action, button_state, hscroll_value, vscroll_value, dx, dy);
+    return builder->pointer_event(time, action, button_state,
+                                  hscroll_value, vscroll_value,
+                                  libinput_event_pointer_get_dx(pointer),
+                                  libinput_event_pointer_get_dy(pointer));
 }
 
 mir::EventUPtr mie::LibInputDevice::convert_absolute_motion_event(libinput_event_pointer* pointer)
