@@ -712,7 +712,7 @@ TEST_F(NestedServer, display_orientation_changes_are_forwarded_to_host)
 
         mir_wait_for(mir_connection_apply_display_config(client.connection, configuration));
 
-        config_reported.wait_for(std::chrono::seconds{1});
+        config_reported.wait_for(std::chrono::seconds{3});
         Mock::VerifyAndClearExpectations(the_mock_display_configuration_report().get());
     }
 

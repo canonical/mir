@@ -21,6 +21,7 @@
 
 #include "mir/scene/surface_creation_parameters.h"
 #include <memory>
+#include <list>
 
 namespace mir
 {
@@ -28,6 +29,7 @@ namespace compositor { class BufferStream; }
 namespace scene
 {
 class Surface;
+class StreamInfo;
 
 class SurfaceFactory
 {
@@ -36,7 +38,7 @@ public:
     virtual ~SurfaceFactory() = default;
 
     virtual std::shared_ptr<Surface> create_surface(
-        std::shared_ptr<compositor::BufferStream> const&,
+        std::list<scene::StreamInfo> const& streams,
         SurfaceCreationParameters const& params) = 0;
 
 private:

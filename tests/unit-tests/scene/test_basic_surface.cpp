@@ -72,17 +72,6 @@ public:
     MOCK_METHOD0(cursor_image_removed, void());
 };
 
-void post_a_frame(ms::BasicSurface& surface)
-{
-    /*
-     * Make sure there's a frame ready. Otherwise visible()==false and the
-     * input_area will never report it containing anything for all the tests
-     * that use it.
-     */
-    mtd::StubBuffer buffer;
-    surface.primary_buffer_stream()->swap_buffers(&buffer, [&](mir::graphics::Buffer*){});
-}
-
 struct BasicSurfaceTest : public testing::Test
 {
     std::string const name{"aa"};
@@ -99,21 +88,17 @@ struct BasicSurfaceTest : public testing::Test
         std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb, [this](int){mock_change_cb();});
     std::shared_ptr<mi::InputSender> const stub_input_sender = std::make_shared<mtd::StubInputSender>();
     testing::NiceMock<mtd::MockInputSender> mock_sender;
+    std::list<ms::StreamInfo> streams { { mock_buffer_stream, {}, {} } };
 
     ms::BasicSurface surface{
         name,
         rect,
         false,
-        mock_buffer_stream,
+        streams,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
         std::shared_ptr<mg::CursorImage>(),
         report};
-
-    BasicSurfaceTest()
-    {
-        post_a_frame(surface);
-    }
 };
 
 }
@@ -127,11 +112,6 @@ TEST_F(BasicSurfaceTest, basics)
         EXPECT_FALSE(renderable->shaped());
 }
 
-TEST_F(BasicSurfaceTest, primary_buffer_stream)
-{
-    EXPECT_THAT(surface.primary_buffer_stream(), Eq(mock_buffer_stream));
-}
-
 TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
 {
     int const n = 10;
@@ -141,7 +121,9 @@ TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
     for (auto& surface : surfaces)
     {
         surface = std::make_unique<ms::BasicSurface>(
-                name, rect, false, std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(),
+                name, rect, false, 
+                std::list<ms::StreamInfo> {
+                    { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {}, {} } },
                 std::shared_ptr<mi::InputChannel>(), stub_input_sender,
                 std::shared_ptr<mg::CursorImage>(), report);
         for (auto& renderable : surface->generate_renderables(this))
@@ -160,7 +142,7 @@ TEST_F(BasicSurfaceTest, id_never_invalid)
     for (auto& surface : surfaces)
     {
         surface = std::make_unique<ms::BasicSurface>(
-                name, rect, false, mock_buffer_stream,
+                name, rect, false, streams,
                 std::shared_ptr<mi::InputChannel>(), stub_input_sender,
                 std::shared_ptr<mg::CursorImage>(), report);
 
@@ -175,7 +157,6 @@ TEST_F(BasicSurfaceTest, update_top_left)
         .Times(1);
 
     surface.add_observer(observer);
-    post_a_frame(surface);
 
     EXPECT_EQ(rect.top_left, surface.top_left());
 
@@ -192,7 +173,6 @@ TEST_F(BasicSurfaceTest, update_size)
         .Times(1);
 
     surface.add_observer(observer);
-    post_a_frame(surface);
 
     EXPECT_EQ(rect.size, surface.size());
     EXPECT_NE(new_size, surface.size());
@@ -233,7 +213,6 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
         .Times(1);
 
     surface.add_observer(observer);
-    post_a_frame(surface);
 
     auto renderables = surface.generate_renderables(compositor_id);
     ASSERT_THAT(renderables.size(), testing::Eq(1));
@@ -258,7 +237,6 @@ TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
         .Times(1);
 
     surface.add_observer(observer);
-    post_a_frame(surface);
 
     float alpha = 0.5f;
     surface.set_alpha(0.5f);
@@ -288,7 +266,7 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
         name,
         rect,
         false,
-        mock_buffer_stream,
+        streams,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
         std::shared_ptr<mg::CursorImage>(),
@@ -315,7 +293,6 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
         .Times(1);
 
     surface.add_observer(observer);
-    post_a_frame(surface);
 
     surface.set_hidden(true);
 }
@@ -329,14 +306,13 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
         name,
         geom::Rectangle{pt, one_by_one},
         false,
-        mock_buffer_stream,
+        streams,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
         std::shared_ptr<mg::CursorImage>(),
         report};
 
     surface.add_observer(observer);
-    post_a_frame(surface);
 
     std::vector<geom::Point> contained_pt
     {
@@ -371,7 +347,7 @@ TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
         name,
         geom::Rectangle{{0,0}, {100,100}},
         false,
-        mock_buffer_stream,
+        streams,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
         std::shared_ptr<mg::CursorImage>(),
@@ -511,7 +487,7 @@ TEST_F(BasicSurfaceTest, stores_parent)
         geom::Rectangle{{0,0}, {100,100}},
         parent,
         false,
-        mock_buffer_stream,
+        streams,
         std::shared_ptr<mi::InputChannel>(),
         stub_input_sender,
         std::shared_ptr<mg::CursorImage>(),
@@ -698,7 +674,7 @@ TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
         name,
         rect,
         false,
-        mock_buffer_stream,
+        streams,
         std::shared_ptr<mi::InputChannel>(),
         mt::fake_shared(mock_sender),
         nullptr,
@@ -1130,7 +1106,6 @@ TEST_F(BasicSurfaceTest, notifies_when_first_visible)
 
     EXPECT_THAT(observer->exposes(), Eq(0));
     EXPECT_THAT(observer->hides(), Eq(0));
-    post_a_frame(surface);
     surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
 
     EXPECT_THAT(observer->exposes(), Eq(1));

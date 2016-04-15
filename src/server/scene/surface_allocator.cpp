@@ -48,19 +48,17 @@ ms::SurfaceAllocator::SurfaceAllocator(
 }
 
 std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
-    std::shared_ptr<compositor::BufferStream> const& buffer_stream,
+    std::list<ms::StreamInfo> const& streams,
     SurfaceCreationParameters const& params)
 {
-    auto actual_size = geom::Rectangle{params.top_left, buffer_stream->stream_size()};
-
     bool nonrectangular = has_alpha(params.pixel_format);
     auto input_channel = input_factory->make_input_channel();
     auto const surface = std::make_shared<BasicSurface>(
         params.name,
-        actual_size,
+        geom::Rectangle{params.top_left, params.size},
         params.parent,
         nonrectangular,
-        buffer_stream,
+        streams,
         input_channel,
         input_sender,
         default_cursor_image,

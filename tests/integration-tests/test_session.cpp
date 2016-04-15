@@ -68,13 +68,13 @@ struct TestServerConfiguration : public mir_test_framework::StubbedServerConfigu
     }
 };
 
-void swap_buffers_blocking(mf::Surface& surf, mg::Buffer*& buffer)
+void swap_buffers_blocking(mf::BufferStream& stream, mg::Buffer*& buffer)
 {
     std::mutex mutex;
     std::condition_variable cv;
     bool done = false;
 
-    surf.primary_buffer_stream()->swap_buffers(buffer,
+    stream.swap_buffers(buffer,
         [&](mg::Buffer* new_buffer)
         {
             std::unique_lock<decltype(mutex)> lock(mutex);
@@ -128,8 +128,9 @@ TEST(ApplicationSession, stress_test_take_snapshot)
     };
 
     mg::BufferProperties properties(geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software);
+    auto stream_id = session.create_buffer_stream(properties);
     session.create_surface(
-        ms::a_surface().with_buffer_stream(session.create_buffer_stream(properties)),
+        ms::a_surface().with_buffer_stream(stream_id),
         std::make_shared<mtd::NullEventSink>());
 
     auto compositor = conf.the_compositor();
@@ -138,13 +139,13 @@ TEST(ApplicationSession, stress_test_take_snapshot)
     session.default_surface()->configure(mir_surface_attrib_swapinterval, 0);
 
     std::thread client_thread{
-        [&session]
+        [&session, stream_id]
         {
             mg::Buffer* buffer{nullptr};
             for (int i = 0; i < 500; ++i)
             {
-                auto surface = session.default_surface();
-                swap_buffers_blocking(*surface, buffer);
+                auto stream = session.get_buffer_stream(stream_id);
+                swap_buffers_blocking(*stream, buffer);
                 std::this_thread::sleep_for(std::chrono::microseconds{50});
             }
         }};
