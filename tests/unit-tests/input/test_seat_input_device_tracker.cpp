@@ -154,13 +154,13 @@ TEST_F(SeatInputDeviceTracker, slow_pointer_movement_updates_cursor)
     float const step = 0.25f;
     float const target = 3.0f;
 
-    for (float x = 0.0f; x <= target; x += step)
+    for (float x = step; x <= target; x += step)
         EXPECT_CALL(mock_cursor_listener,
                     cursor_moved_to(FloatEq(x), FloatEq(x))).Times(1);
 
     tracker.add_device(some_device);
 
-    for (float x = 0.0f; x <= target; x += step)
+    for (float x = step; x <= target; x += step)
         tracker.dispatch(*some_device_builder.pointer_event(
             arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f,
             step, step));
