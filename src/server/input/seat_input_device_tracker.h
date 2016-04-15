@@ -80,10 +80,8 @@ private:
         std::vector<TouchVisualizer::Spot> spots;
     };
 
-    // Libinput implements an acceleration curve by default that converts
-    // small evdev motion deltas of 1.0 to values less than 1.0. So we
-    // need to accumulate motion with sub-pixel precision, or else would
-    // lose motion information (LP: #1528109)
+    // Libinput's acceleration curve means the cursor moves by non-integer
+    // increments, and often less than 1.0, so float is required...
     float cursor_x = 0.0f, cursor_y = 0.0f;
 
     MirInputEventModifiers modifier;
