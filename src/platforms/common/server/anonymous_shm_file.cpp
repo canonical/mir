@@ -35,12 +35,20 @@ namespace mgc = mir::graphics::common;
 namespace
 {
 
+bool error_indicates_tmpfile_not_supported(int error)
+{
+    return
+        error == EISDIR ||  // Directory exists, but no support for O_TMPFILE
+        error == ENOENT ||  // Directory doesn't exist, and no support for O_TMPFILE
+        error == EOPNOTSUPP;    // Filesystem that directory resides on does not support O_TMPFILE
+}
+
 mir::Fd create_anonymous_file(size_t size)
 {
     auto raw_fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
 
     // Workaround for filesystems that don't support O_TMPFILE
-    if (raw_fd == -1 && errno == EINVAL)
+    if (raw_fd == -1 && error_indicates_tmpfile_not_supported(errno))
     {
         char template_filename[] = "/dev/shm/mir-buffer-XXXXXX";
         raw_fd = mkostemp(template_filename, O_CLOEXEC);
