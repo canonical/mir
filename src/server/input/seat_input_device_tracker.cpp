@@ -214,7 +214,7 @@ void mi::SeatInputDeviceTracker::update_cursor(MirPointerEvent const* event)
     cursor_y += mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y);
 
     mir::geometry::Point const old{cursor_x, cursor_y};
-    auto confined{old};
+    auto confined = old;
     input_region->confine(confined);
     if (confined.x != old.x) cursor_x = confined.x.as_int();
     if (confined.y != old.y) cursor_y = confined.y.as_int();
