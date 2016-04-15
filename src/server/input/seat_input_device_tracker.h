@@ -80,8 +80,12 @@ private:
         std::vector<TouchVisualizer::Spot> spots;
     };
 
-    // Libinput accumulates motion with sub-pixel 'double' precision:
-    double cursor_x=0.0, cursor_y=0.0;
+    // Libinput implements an acceleration curve by default that converts
+    // small evdev motion deltas of 1.0 to values less than 1.0. So we
+    // need to accumulate motion with sub-pixel precision, or else would
+    // lose motion information (LP: #1528109)
+    float cursor_x = 0.0f, cursor_y = 0.0f;
+
     MirInputEventModifiers modifier;
     MirPointerButtons buttons;
     std::unordered_map<MirInputDeviceId, DeviceData> device_data;
