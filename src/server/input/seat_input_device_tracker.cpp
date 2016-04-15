@@ -200,7 +200,7 @@ void mi::SeatInputDeviceTracker::update_states()
 
 mir::geometry::Point mi::SeatInputDeviceTracker::cursor_position() const
 {
-    return {cursor_pos.x, cursor_pos.y};
+    return {cursor_x, cursor_y};
 }
 
 MirPointerButtons mi::SeatInputDeviceTracker::button_state() const
@@ -210,17 +210,17 @@ MirPointerButtons mi::SeatInputDeviceTracker::button_state() const
 
 void mi::SeatInputDeviceTracker::update_cursor(MirPointerEvent const* event)
 {
-    cursor_pos.x +=
+    cursor_x +=
         mir_pointer_event_axis_value(event, mir_pointer_axis_relative_x);
-    cursor_pos.y +=
+    cursor_y +=
         mir_pointer_event_axis_value(event, mir_pointer_axis_relative_y);
 
-    mir::geometry::Point confines{cursor_pos.x, cursor_pos.y};
-    input_region->confine(confines);
-    if (confines.x.as_int() != truncf(cursor_pos.x))
-        cursor_pos.x = confines.x.as_int();
-    if (confines.y.as_int() != truncf(cursor_pos.y))
-        cursor_pos.y = confines.y.as_int();
+    mir::geometry::Point confined{cursor_x, cursor_y};
+    input_region->confine(confined);
+    if (confined.x.as_int() != trunc(cursor_x))
+        cursor_x = confined.x.as_int();
+    if (confined.y.as_int() != trunc(cursor_y))
+        cursor_y = confined.y.as_int();
 
-    cursor_listener->cursor_moved_to(cursor_pos.x, cursor_pos.y);
+    cursor_listener->cursor_moved_to(cursor_x, cursor_y);
 }

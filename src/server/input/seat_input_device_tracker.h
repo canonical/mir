@@ -80,8 +80,8 @@ private:
         std::vector<TouchVisualizer::Spot> spots;
     };
 
-    struct Vec2f { float x, y; };
-    Vec2f cursor_pos;
+    // Libinput accumulates motion with sub-pixel 'double' precision:
+    double cursor_x=0.0, cursor_y=0.0;
     MirInputEventModifiers modifier;
     MirPointerButtons buttons;
     std::unordered_map<MirInputDeviceId, DeviceData> device_data;
