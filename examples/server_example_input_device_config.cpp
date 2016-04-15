@@ -157,25 +157,37 @@ void me::InputDeviceConfig::device_added(std::shared_ptr<mi::Device> const& devi
 {
     if (contains(device->capabilities(), mi::DeviceCapability::touchpad))
     {
-        mi::PointerConfiguration pointer_config( device->pointer_configuration().value() );
-        pointer_config.cursor_acceleration_bias = touchpad_cursor_acceleration_bias;
-        pointer_config.vertical_scroll_scale  = touchpad_scroll_speed_scale;
-        pointer_config.horizontal_scroll_scale = touchpad_scroll_speed_scale;
-        device->apply_pointer_configuration(pointer_config);
+	auto optional_pointer_config = device->pointer_configuration();
+        if (optional_pointer_config.is_set())
+        {
+            mi::PointerConfiguration pointer_config( optional_pointer_config.value() );
+            pointer_config.cursor_acceleration_bias = touchpad_cursor_acceleration_bias;
+            pointer_config.vertical_scroll_scale  = touchpad_scroll_speed_scale;
+            pointer_config.horizontal_scroll_scale = touchpad_scroll_speed_scale;
+            device->apply_pointer_configuration(pointer_config);
+        }
 
-        mi::TouchpadConfiguration touch_config( device->touchpad_configuration().value() );
-        touch_config.disable_while_typing = disable_while_typing;
-        touch_config.click_mode = click_mode;
-        touch_config.scroll_mode = scroll_mode;
-        device->apply_touchpad_configuration(touch_config);
+	auto optional_touchpad_config = device->touchpad_configuration();
+        if (optional_touchpad_config.is_set())
+        {
+            mi::TouchpadConfiguration touch_config( optional_touchpad_config.value() );
+            touch_config.disable_while_typing = disable_while_typing;
+            touch_config.click_mode = click_mode;
+            touch_config.scroll_mode = scroll_mode;
+            device->apply_touchpad_configuration(touch_config);
+        }
     }
     else if (contains(device->capabilities(), mi::DeviceCapability::pointer))
     {
-        mi::PointerConfiguration pointer_config( device->pointer_configuration().value() );
-        pointer_config.acceleration = mouse_profile;
-        pointer_config.cursor_acceleration_bias = mouse_cursor_acceleration_bias;
-        pointer_config.vertical_scroll_scale  = mouse_scroll_speed_scale;
-        pointer_config.horizontal_scroll_scale = mouse_scroll_speed_scale;
-        device->apply_pointer_configuration(pointer_config);
+	auto optional_pointer_config = device->pointer_configuration();
+        if (optional_pointer_config.is_set())
+        {
+            mi::PointerConfiguration pointer_config( optional_pointer_config.value() );
+            pointer_config.acceleration = mouse_profile;
+            pointer_config.cursor_acceleration_bias = mouse_cursor_acceleration_bias;
+            pointer_config.vertical_scroll_scale  = mouse_scroll_speed_scale;
+            pointer_config.horizontal_scroll_scale = mouse_scroll_speed_scale;
+            device->apply_pointer_configuration(pointer_config);
+        }
     }
 }
