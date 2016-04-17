@@ -65,13 +65,13 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, geom::Size const
 {
     EGLint const att[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RED_SIZE, 1,
-        EGL_GREEN_SIZE, 1,
-        EGL_BLUE_SIZE, 1,
-        EGL_ALPHA_SIZE, 0,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
+        EGL_ALPHA_SIZE, 8,
         EGL_DEPTH_SIZE, 0,
         EGL_STENCIL_SIZE, 0,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
         EGL_NONE
     };
 
@@ -241,10 +241,8 @@ mgx::Display::Display(::Display* x_dpy, geom::Size const size)
                                 win)},
                                 orientation{mir_orientation_normal}
 {
-    if (win.color_depth() == 24)
-        pf = mir_pixel_format_xrgb_8888;
-    else
-        BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported pixel format"));
+    // We specifically asked for ARGB8888
+    pf = mir_pixel_format_argb_8888;
 
     display_group = std::make_unique<mgx::DisplayGroup>(
         std::make_unique<mgx::DisplayBuffer>(size,
