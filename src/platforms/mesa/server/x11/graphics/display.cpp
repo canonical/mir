@@ -71,7 +71,7 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, geom::Size const
         EGL_ALPHA_SIZE, 8,
         EGL_DEPTH_SIZE, 0,
         EGL_STENCIL_SIZE, 0,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE
     };
 
