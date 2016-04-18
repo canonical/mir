@@ -217,9 +217,6 @@ void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Se
             select_active_surface(session, surfaces[0].lock());
         }
     }
-    if (surfaces.empty() && session == tools->focused_session())
-    {
-    }
 }
 
 int me::TilingWindowManagerPolicy::handle_set_state(std::shared_ptr<ms::Surface> const& surface, MirSurfaceState value)
