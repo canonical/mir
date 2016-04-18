@@ -421,7 +421,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_modify_surface(
 void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
     fullscreen_surfaces.erase(surface);
-    bool const is_active_window{surface.lock() == active_surface()};
+    bool const is_active_surface{surface.lock() == active_surface()};
 
     auto& info = tools->info_for(surface);
 
@@ -458,7 +458,7 @@ void me::CanonicalWindowManagerPolicyCopy::handle_delete_surface(std::shared_ptr
         }
     }
 
-    if (is_active_window)
+    if (is_active_surface)
     {
         active_surface_.reset();
 
