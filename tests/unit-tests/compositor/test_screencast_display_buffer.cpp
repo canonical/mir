@@ -17,7 +17,9 @@
  */
 
 #include "src/server/compositor/screencast_display_buffer.h"
+#include "src/server/compositor/queueing_schedule.h"
 
+#include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_gl_buffer.h"
 #include "mir/test/doubles/stub_gl_buffer.h"
 #include "mir/test/doubles/mock_gl.h"
@@ -27,6 +29,7 @@
 #include <gmock/gmock.h>
 
 namespace mc = mir::compositor;
+namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
@@ -36,7 +39,17 @@ namespace
 
 struct ScreencastDisplayBufferTest : testing::Test
 {
+    void SetUp() override
+    {
+        free_queue.schedule(mt::fake_shared(stub_buffer));
+    }
     testing::NiceMock<mtd::MockGL> mock_gl;
+    mc::QueueingSchedule free_queue;
+    mc::QueueingSchedule ready_queue;
+    mtd::StubGLBuffer stub_buffer;
+    geom::Size const default_size{300,400};
+    geom::Rectangle const default_rect{{100,100}, {800,600}};
+    MirMirrorMode const default_mirror_mode{mir_mirror_mode_vertical};
 };
 
 }
@@ -59,10 +72,8 @@ TEST_F(ScreencastDisplayBufferTest, cleans_up_gl_resources)
     EXPECT_CALL(mock_gl, glDeleteRenderbuffers(1,Pointee(renderbuffer)));
     EXPECT_CALL(mock_gl, glDeleteFramebuffers(1,Pointee(framebuffer)));
 
-    geom::Rectangle const rect{{100,100}, {800,600}};
-    mtd::StubGLBuffer stub_buffer;
-
-    mc::ScreencastDisplayBuffer db{rect, stub_buffer};
+    mc::ScreencastDisplayBuffer db{
+        default_rect, default_size, default_mirror_mode, free_queue, ready_queue};
 }
 
 TEST_F(ScreencastDisplayBufferTest, cleans_up_gl_resources_on_construction_failure)
@@ -86,42 +97,39 @@ TEST_F(ScreencastDisplayBufferTest, cleans_up_gl_resources_on_construction_failu
     EXPECT_CALL(mock_gl, glDeleteRenderbuffers(1,Pointee(renderbuffer)));
     EXPECT_CALL(mock_gl, glDeleteFramebuffers(1,Pointee(framebuffer)));
 
-    geom::Rectangle const rect{{100,100}, {800,600}};
-    mtd::StubGLBuffer stub_buffer;
-
     EXPECT_THROW({
-        mc::ScreencastDisplayBuffer db(rect, stub_buffer);
+        mc::ScreencastDisplayBuffer db(
+            default_rect, default_size, default_mirror_mode, free_queue, ready_queue);
     }, std::runtime_error);
 }
 
-TEST_F(ScreencastDisplayBufferTest, sets_render_buffer_size_to_supplied_buffer_size)
+TEST_F(ScreencastDisplayBufferTest, sets_render_buffer_size_to_supplied_size)
 {
     using namespace testing;
 
-    geom::Rectangle const rect{{100,100}, {800,600}};
-    testing::NiceMock<mtd::MockGLBuffer> mock_buffer{
-        rect.size, geom::Stride{100}, mir_pixel_format_xbgr_8888};
-
     /* Set the buffer as rendering target */
     EXPECT_CALL(mock_gl,
-                glRenderbufferStorage(_, _,
-                           mock_buffer.size().width.as_int(),
-                           mock_buffer.size().height.as_int()));
+                    glRenderbufferStorage(_, _,
+                        default_size.width.as_int(),
+                        default_size.height.as_int()));
 
-    mc::ScreencastDisplayBuffer db{rect, mock_buffer};
+    mc::ScreencastDisplayBuffer db{
+        default_rect, default_size, default_mirror_mode, free_queue, ready_queue};
 }
 
 TEST_F(ScreencastDisplayBufferTest, renders_to_supplied_buffer)
 {
     using namespace testing;
 
-    geom::Rectangle const rect{{100,100}, {800,600}};
     testing::NiceMock<mtd::MockGLBuffer> mock_buffer{
-        rect.size, geom::Stride{100}, mir_pixel_format_xbgr_8888};
+        default_rect.size, geom::Stride{100}, mir_pixel_format_xbgr_8888};
+
+    mc::QueueingSchedule free_queue;
+    free_queue.schedule(mt::fake_shared(mock_buffer));
 
     InSequence s;
     /* Set the buffer as rendering target */
-    EXPECT_CALL(mock_buffer, gl_bind_to_texture());
+    EXPECT_CALL(mock_buffer, bind());
     EXPECT_CALL(mock_gl,
                 glViewport(0, 0,
                            mock_buffer.size().width.as_int(),
@@ -129,7 +137,8 @@ TEST_F(ScreencastDisplayBufferTest, renders_to_supplied_buffer)
     /* Restore previous viewport on exit */
     EXPECT_CALL(mock_gl, glViewport(0, 0, 0, 0));
 
-    mc::ScreencastDisplayBuffer db{rect, mock_buffer};
+    mc::ScreencastDisplayBuffer db{
+        default_rect, default_size, default_mirror_mode, free_queue, ready_queue};
     db.make_current();
 }
 
@@ -137,29 +146,64 @@ TEST_F(ScreencastDisplayBufferTest, forces_rendering_to_complete_on_swap)
 {
     using namespace testing;
 
-    geom::Rectangle const rect{{100,100}, {800,600}};
-    mtd::StubGLBuffer stub_buffer;
-
-    mc::ScreencastDisplayBuffer db{rect, stub_buffer};
+    mc::ScreencastDisplayBuffer db{
+        default_rect, default_size, default_mirror_mode, free_queue, ready_queue};
 
     Mock::VerifyAndClearExpectations(&mock_gl);
     EXPECT_CALL(mock_gl, glFinish());
 
+    db.make_current();
     db.swap_buffers();
 }
 
 TEST_F(ScreencastDisplayBufferTest, rejects_attempt_to_optimize)
 {
-    geom::Rectangle const rect{{100,100}, {800,600}};
-    mtd::StubGLBuffer stub_buffer;
-
     mg::RenderableList renderables{
         std::make_shared<mtd::StubRenderable>(),
         std::make_shared<mtd::StubRenderable>(),
         std::make_shared<mtd::StubRenderable>()};
 
-    mc::ScreencastDisplayBuffer db{rect, stub_buffer};
+    mc::ScreencastDisplayBuffer db{
+        default_rect, default_size, default_mirror_mode, free_queue, ready_queue};
 
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderables));
+}
+
+TEST_F(ScreencastDisplayBufferTest, does_not_throw_on_multiple_make_current_calls)
+{
+    mc::ScreencastDisplayBuffer db{
+        default_rect, default_size, default_mirror_mode, free_queue, ready_queue};
+
+    EXPECT_NO_THROW(db.make_current());
+    EXPECT_NO_THROW(db.make_current());
+}
+
+TEST_F(ScreencastDisplayBufferTest, schedules_onto_ready_queue)
+{
+    using namespace testing;
+
+    mc::ScreencastDisplayBuffer db{
+        default_rect, default_size, default_mirror_mode, free_queue, ready_queue};
+
+    db.make_current();
+    db.swap_buffers();
+
+    ASSERT_THAT(ready_queue.num_scheduled(), Gt(0));
+
+    auto ready_buffer = ready_queue.next_buffer();
+    auto const expected_buffer = mt::fake_shared(stub_buffer);
+
+    EXPECT_THAT(ready_buffer, Eq(expected_buffer));
+}
+
+TEST_F(ScreencastDisplayBufferTest, uses_requested_mirror_mode)
+{
+    using namespace testing;
+
+    MirMirrorMode const expected_mirror_mode{mir_mirror_mode_horizontal};
+    mc::ScreencastDisplayBuffer db{
+            default_rect, default_size, expected_mirror_mode, free_queue, ready_queue};
+
+    EXPECT_THAT(db.mirror_mode(), Eq(expected_mirror_mode));
 }
 

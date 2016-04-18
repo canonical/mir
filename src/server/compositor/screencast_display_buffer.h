@@ -29,6 +29,7 @@ namespace mir
 namespace renderer { namespace gl { class TextureSource; }}
 namespace compositor
 {
+class Schedule;
 namespace detail
 {
 
@@ -54,7 +55,10 @@ class ScreencastDisplayBuffer : public graphics::DisplayBuffer,
 public:
     ScreencastDisplayBuffer(
         geometry::Rectangle const& rect,
-        graphics::Buffer& buffer);
+        geometry::Size const& size,
+        MirMirrorMode mirror_mode,
+        Schedule& free_queue,
+        Schedule& ready_queue);
     ~ScreencastDisplayBuffer();
 
     geometry::Rectangle view_area() const override;
@@ -75,8 +79,12 @@ public:
 
 private:
     geometry::Rectangle const rect;
-    graphics::Buffer& buffer;
-    renderer::gl::TextureSource* texture_source;
+    MirMirrorMode const mirror_mode_;
+
+    Schedule& free_queue;
+    Schedule& ready_queue;
+    std::shared_ptr<graphics::Buffer> current_buffer;
+
     GLint old_fbo;
     GLint old_viewport[4];
     detail::GLResource<glGenTextures,glDeleteTextures> const color_tex;
