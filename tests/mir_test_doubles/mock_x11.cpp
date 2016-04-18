@@ -64,7 +64,8 @@ mtd::MockX11::MockX11()
     .WillByDefault(Return(fake_x11.display));
 
     ON_CALL(*this, XGetVisualInfo(fake_x11.display,_,_,_))
-    .WillByDefault(Return(&fake_x11.visual_info));
+    .WillByDefault(DoAll(SetArgPointee<3>(1),
+                         Return(&fake_x11.visual_info)));
 
     ON_CALL(*this, XCreateWindow_wrapper(fake_x11.display,_,_,_,_,_,_,_,_,_))
     .WillByDefault(Return(fake_x11.window));
