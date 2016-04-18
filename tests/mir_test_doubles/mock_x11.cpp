@@ -40,7 +40,8 @@ mtd::FakeX11Resources::FakeX11Resources()
     std::memset(&focus_out_event_return, 0, sizeof(XEvent));
     std::memset(&vscroll_event_return, 0, sizeof(XEvent));
     std::memset(&motion_event_return, 0, sizeof(XEvent));
-    visual_info.depth = 24;
+    std::memset(&visual_info, 0, sizeof(XVisualInfo));
+    visual_info.red_mask = 0xFF0000;
     keypress_event_return.type = KeyPress;
     button_release_event_return.type = ButtonRelease;
     button_release_event_return.xbutton.button = 0;
