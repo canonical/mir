@@ -107,7 +107,21 @@ void me::DefaultWindowManager::remove_surface(
     std::shared_ptr<scene::Session> const& session,
     std::weak_ptr<scene::Surface> const& surface)
 {
+    bool const is_active_window{surface.lock() == focus_controller->focused_surface()};
+
     session->destroy_surface(surface);
+
+    if (is_active_window)
+    {
+        if (auto const new_focus_in_session = session->default_surface())
+        {
+            focus_controller->set_focus_to(session, new_focus_in_session);
+        }
+        else
+        {
+            focus_controller->focus_next_session();
+        }
+    }
 }
 
 void me::DefaultWindowManager::add_display(geometry::Rectangle const& /*area*/)
