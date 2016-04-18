@@ -21,6 +21,7 @@
 
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/frontend/session.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -92,4 +93,27 @@ mg::Buffer* mf::BufferStreamTracker::buffer_from(mg::BufferID buffer_id) const
             return buffer;
     }
     BOOST_THROW_EXCEPTION(std::logic_error("Buffer is not tracked"));
+}
+
+void mf::BufferStreamTracker::set_default_stream(mf::SurfaceId id, mf::BufferStreamId content)
+{
+    std::lock_guard<decltype(mutex)> lock{mutex};
+    default_streams[id] = content;
+}
+
+mir::optional_value<mf::BufferStreamId> mf::BufferStreamTracker::default_stream(mf::SurfaceId id)
+{
+    std::lock_guard<decltype(mutex)> lock{mutex};
+    auto it = default_streams.find(id);
+    if (it != default_streams.end())
+        return it->second;
+    return {}; 
+}
+
+void mf::BufferStreamTracker::remove_default_stream(mf::SurfaceId id)
+{
+    std::lock_guard<decltype(mutex)> lock{mutex};
+    auto it = default_streams.find(id);
+    if (it != default_streams.end())
+        default_streams.erase(it);
 }

@@ -90,28 +90,44 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     std::shared_ptr<mf::EventSink> const& surface_sink)
 {
     auto const id = next_id();
-    mf::BufferStreamId const stream_id{the_params.content_id.is_set() ?
-        the_params.content_id.value().as_value() : id.as_value()};
+
+    //TODO: we take either the content_id or the first streams content for now.
+    //      Once the surface factory interface takes more than one stream,
+    //      we can take all the streams as content.
+    if (!((the_params.content_id.is_set()) ||
+          (the_params.streams.is_set() && the_params.streams.value().size() > 0)))
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("surface must have content"));
+    }
 
     auto params = the_params;
+
+    mf::BufferStreamId stream_id;
+    if (params.content_id.is_set())
+        stream_id = params.content_id.value();
+    else
+        stream_id = params.streams.value()[0].stream_id;
 
     if (params.parent_id.is_set())
         params.parent = checked_find(the_params.parent_id.value())->second;
 
-    std::shared_ptr<compositor::BufferStream> buffer_stream;
-    if (params.content_id.is_set())
+    auto buffer_stream = checked_find(stream_id)->second;
+    if (params.size != buffer_stream->stream_size())
+        buffer_stream->resize(params.size);
+
+    std::list<StreamInfo> streams;
+    if (the_params.content_id.is_set())
     {
-        buffer_stream = checked_find(params.content_id.value())->second;
+        streams.push_back({checked_find(the_params.content_id.value())->second, {0,0}, {}});
     }
     else
     {
-        mg::BufferProperties buffer_properties{params.size,
-                                               params.pixel_format,
-                                               params.buffer_usage};
-        buffer_stream = buffer_stream_factory->create_buffer_stream(
-            stream_id, surface_sink, buffer_properties);
+        for (auto& stream : params.streams.value())
+            streams.push_back({checked_find(stream.stream_id)->second, stream.displacement, stream.size});
     }
-    auto surface = surface_factory->create_surface(buffer_stream, params);
+
+    auto surface = surface_factory->create_surface(streams, params);
+
     surface_stack->add_surface(surface, params.input_mode);
 
     if (params.state.is_set())
@@ -133,7 +149,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     {
         std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
         surfaces[id] = surface;
-        streams[stream_id] = buffer_stream;
+        default_content_map[id] = stream_id;
     }
 
     observer->moved_to(surface->top_left());
@@ -154,7 +170,7 @@ ms::ApplicationSession::Streams::const_iterator ms::ApplicationSession::checked_
 {
     auto p = streams.find(id);
     if (p == streams.end())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SurfaceId"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid BufferStreamId"));
     return p;
 }
 
@@ -220,7 +236,7 @@ void ms::ApplicationSession::take_snapshot(SnapshotCallback const& snapshot_take
     {
         if (default_surface() == surface_it.second)
         {
-            auto id = mf::BufferStreamId(surface_it.first.as_value());
+            auto id = default_content_map[surface_it.first];
             snapshot_strategy->take_snapshot_of(checked_find(id)->second, snapshot_taken);
             return;
         }
@@ -360,7 +376,12 @@ mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProper
 void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
-    streams.erase(checked_find(id));
+    auto stream_it = streams.find(mir::frontend::BufferStreamId(id.as_value()));
+    if (stream_it == streams.end())
+        BOOST_THROW_EXCEPTION(std::runtime_error("cannot destroy stream: Invalid BufferStreamId"));
+
+    stream_it->second->drop_outstanding_requests();
+    streams.erase(stream_it);
 }
 
 void ms::ApplicationSession::configure_streams(
@@ -391,17 +412,12 @@ void ms::ApplicationSession::destroy_surface(std::weak_ptr<Surface> const& surfa
 void ms::ApplicationSession::destroy_surface(std::unique_lock<std::mutex>& lock, Surfaces::const_iterator in_surfaces)
 {
     auto const surface = in_surfaces->second;
-    auto const id = in_surfaces->first;
-
+    auto it = default_content_map.find(in_surfaces->first); 
     session_listener->destroying_surface(*this, surface);
     surfaces.erase(in_surfaces);
 
-    auto stream_it = streams.find(mir::frontend::BufferStreamId(id.as_value()));
-    if (stream_it != streams.end())
-    {
-        stream_it->second->drop_outstanding_requests();
-        streams.erase(stream_it);
-    }
+    if (it != default_content_map.end())
+        default_content_map.erase(it);
 
     lock.unlock();
 

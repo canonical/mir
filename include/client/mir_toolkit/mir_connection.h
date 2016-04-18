@@ -364,6 +364,17 @@ void mir_connection_set_input_config_change_callback(
     MirConnection* connection,
     mir_input_config_callback callback, void* context);
 
+/**
+ * Register a callback to be called on non-fatal errors
+ *
+ * \param [in] connection   The connection
+ * \param [in] callback     The function to be called when an error occurs
+ * \param [in,out] context  User data passed to the callback function
+ */
+void mir_connection_set_error_callback(
+    MirConnection* connection,
+    mir_error_callback callback,
+    void* context);
 
 #ifdef __cplusplus
 }
