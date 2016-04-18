@@ -217,5 +217,5 @@ void mi::SeatInputDeviceTracker::update_cursor(MirPointerEvent const* event)
     cursor_pos = cursor_pos + movement;
     input_region->confine(cursor_pos);
 
-    cursor_listener->cursor_moved_to(cursor_pos.x.as_float(), cursor_pos.y.as_float());
+    cursor_listener->cursor_moved_to(cursor_pos.x.as_int(), cursor_pos.y.as_int());
 }

@@ -100,8 +100,8 @@ struct InputConsumerTest : ::testing::Test
         int contacts_in_event = 0;
         for (auto const& contact : event.positions)
         {
-            coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_X, contact.x.as_float());
-            coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_Y, contact.y.as_float());
+            coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_X, contact.x.as_int());
+            coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_Y, contact.y.as_int());
             coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR, 5);
             coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR, 5);
             coords[contacts_in_event].setAxisValue(AMOTION_EVENT_AXIS_SIZE, 5);
@@ -132,12 +132,12 @@ struct InputConsumerTest : ::testing::Test
         std::memset(&pointer_coord, 0, sizeof(pointer_coord));
         std::memset(&pointer_properties, 0, sizeof(pointer_properties));
 
-        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_X, event.position.x.as_float());
-        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_Y, event.position.y.as_float());
-        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, event.scroll.dx.as_float());
-        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, event.scroll.dy.as_float());
-        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_RX, event.movement.dx.as_float());
-        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_RY, event.movement.dy.as_float());
+        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_X, event.position.x.as_int());
+        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_Y, event.position.y.as_int());
+        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, event.scroll.dx.as_int());
+        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, event.scroll.dy.as_int());
+        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_RX, event.movement.dx.as_int());
+        pointer_coord.setAxisValue(AMOTION_EVENT_AXIS_RY, event.movement.dy.as_int());
         pointer_properties.toolType = AMOTION_EVENT_TOOL_TYPE_MOUSE;
         pointer_properties.id = 0;
 

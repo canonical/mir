@@ -593,8 +593,10 @@ void me::TilingWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> surface,
         auto const old_displacement = old_cursor - top_left;
         auto const new_displacement = cursor - top_left;
 
-        auto const scale_x = new_displacement.dx.as_float()/std::max(1.0f, old_displacement.dx.as_float());
-        auto const scale_y = new_displacement.dy.as_float()/std::max(1.0f, old_displacement.dy.as_float());
+        auto const scale_x = new_displacement.dx.as_int() /
+            std::max(1.0f, static_cast<float>(old_displacement.dx.as_int()));
+        auto const scale_y = new_displacement.dy.as_int() /
+            std::max(1.0f, static_cast<float>(old_displacement.dy.as_int()));
 
         if (scale_x <= 0.0f || scale_y <= 0.0f) return;
 

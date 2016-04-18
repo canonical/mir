@@ -259,9 +259,9 @@ MATCHER_P2(ButtonDownEventWithButton, pos, button, "")
         return false;
     if (mir_pointer_event_button_state(pev, static_cast<MirPointerButton>(button)) == false)
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_float())
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_int())
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_float())
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_int())
         return false;
     return true;
 }
@@ -293,9 +293,9 @@ MATCHER_P2(ButtonUpEventWithButton, pos, button, "")
         return false;
     if (mir_pointer_event_button_state(pev, button) == true)
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_float())
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_x) != pos.x.as_int())
         return false;
-    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_float())
+    if (mir_pointer_event_axis_value(pev, mir_pointer_axis_y) != pos.y.as_int())
         return false;
     return true;
 }

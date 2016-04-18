@@ -166,10 +166,10 @@ void mix::XInputDevice::pointer_press(std::chrono::nanoseconds event_time, int b
             event_time,
             mir_pointer_action_button_down,
             button_state,
-            scroll.dx.as_float(),
-            scroll.dy.as_float(),
-            movement.dx.as_float(),
-            movement.dy.as_float()
+            scroll.dx.as_int(),
+            scroll.dy.as_int(),
+            movement.dx.as_int(),
+            movement.dy.as_int()
             )
         );
 }
@@ -185,10 +185,10 @@ void mix::XInputDevice::pointer_release(std::chrono::nanoseconds event_time, int
             event_time,
             mir_pointer_action_button_up,
             button_state,
-            scroll.dx.as_float(),
-            scroll.dy.as_float(),
-            movement.dx.as_float(),
-            movement.dy.as_float()
+            scroll.dx.as_int(),
+            scroll.dy.as_int(),
+            movement.dx.as_int(),
+            movement.dy.as_int()
             )
         );
 
@@ -203,10 +203,10 @@ void mix::XInputDevice::pointer_motion(std::chrono::nanoseconds event_time, mir:
             event_time,
             mir_pointer_action_motion,
             button_state,
-            scroll.dx.as_float(),
-            scroll.dy.as_float(),
-            movement.dx.as_float(),
-            movement.dy.as_float()
+            scroll.dx.as_int(),
+            scroll.dy.as_int(),
+            movement.dx.as_int(),
+            movement.dy.as_int()
             )
         );
 }
