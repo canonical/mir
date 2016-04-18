@@ -7,6 +7,11 @@ package mir.protobuf;
 // attributes or, in the case of an error, the error attribute. So the
 // attributes are all "optional" (or "repeated").
 
+message StructuredError {
+  optional uint32 domain = 1;
+  optional uint32 code = 2;
+}
+
 message ConnectParameters {
   required string application_name = 1;
 }
@@ -92,6 +97,7 @@ message StreamConfiguration {
   optional int32 height = 7;
 
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 };
 
 message SurfaceModifications {
@@ -107,6 +113,7 @@ message PersistentSurfaceId {
   optional string value = 1;
 
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 };
 
 message BufferStreamId {
@@ -154,6 +161,7 @@ message Buffer {
   optional int32  height = 8;
 
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message ModuleProperties
@@ -173,6 +181,7 @@ message Platform {
   optional ModuleProperties graphics_module = 4;
 
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message DisplayCard {
@@ -216,6 +225,7 @@ message Connection {
   repeated InputDeviceInfo input_devices = 6;
 
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message BufferStream {
@@ -225,6 +235,7 @@ message BufferStream {
   optional Buffer buffer = 4;
   
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message Surface {
@@ -243,10 +254,12 @@ message Surface {
   optional BufferStream buffer_stream = 10;
 
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message Void {
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message SurfaceSetting {
@@ -255,6 +268,7 @@ message SurfaceSetting {
   optional int32     ivalue = 3;
   // optional string    svalue = 4;  // Expected for future use
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message Event {
@@ -265,6 +279,7 @@ message DisplayConfiguration {
   repeated DisplayOutput display_output = 1;
   repeated DisplayCard   display_card = 2;
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message PreviewConfiguration {
@@ -275,6 +290,7 @@ message PreviewConfiguration {
 message LifecycleEvent {
   required uint32 new_state = 1; // State transition
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message PingEvent {
@@ -290,6 +306,7 @@ message EventSequence {
   repeated InputDeviceInfo input_devices = 6;
 
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message Rectangle {
@@ -315,6 +332,7 @@ message Screencast {
   optional Buffer buffer = 2;
   optional BufferStream buffer_stream = 3;
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message CursorSetting {
@@ -336,6 +354,7 @@ message SocketFD {
   optional int32  fds_on_side_channel = 2;
 
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message PromptSessionParameters {
@@ -349,6 +368,7 @@ message PlatformOperationMessage {
   optional int32  fds_on_side_channel = 4;
 
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message CoordinateTranslationRequest {
@@ -362,6 +382,7 @@ message CoordinateTranslationResponse {
   optional int32 y = 2;
 
   optional string error = 127;
+  optional StructuredError structured_error = 128;
 }
 
 message Cookie {

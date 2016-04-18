@@ -24,6 +24,7 @@
 #include "mir/frontend/template_protobuf_message_processor.h"
 #include "mir/frontend/unsupported_feature_exception.h"
 #include <mir/protobuf/display_server_debug.h>
+#include "mir/client_visible_error.h"
 
 #include "mir_protobuf_wire.pb.h"
 
@@ -139,6 +140,12 @@ void invoke(
     catch (mir::cookie::SecurityCheckError const& /*err*/)
     {
         throw;
+    }
+    catch (mir::ClientVisibleError const& error)
+    {
+        auto client_error = result_message->mutable_structured_error();
+        client_error->set_code(error.code());
+        client_error->set_domain(error.domain());
     }
     catch (std::exception const& x)
     {
