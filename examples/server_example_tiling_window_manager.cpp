@@ -176,7 +176,7 @@ void me::TilingWindowManagerPolicy::handle_modify_surface(
 void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
     auto& info = tools->info_for(surface);
-    bool const is_active_window{surface.lock() == tools->focused_surface()};
+    bool const is_active_surface{surface.lock() == tools->focused_surface()};
 
     if (auto const parent = info.parent.lock())
     {
@@ -205,7 +205,7 @@ void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Se
 
     session->destroy_surface(surface);
 
-    if (is_active_window)
+    if (is_active_surface)
     {
         if (surfaces.empty())
         {
