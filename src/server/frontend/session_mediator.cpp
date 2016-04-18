@@ -755,7 +755,15 @@ void mf::SessionMediator::create_screencast(
     geom::Size const size{parameters->width(), parameters->height()};
     MirPixelFormat const pixel_format = static_cast<MirPixelFormat>(parameters->pixel_format());
 
-    auto screencast_session_id = screencast->create_session(region, size, pixel_format);
+    int nbuffers = 1;
+    if (parameters->has_num_buffers())
+        nbuffers = parameters->num_buffers();
+
+    MirMirrorMode mirror_mode = mir_mirror_mode_none;
+    if (parameters->has_mirror_mode())
+        mirror_mode = static_cast<MirMirrorMode>(parameters->mirror_mode());
+
+    auto screencast_session_id = screencast->create_session(region, size, pixel_format, nbuffers, mirror_mode);
     auto buffer = screencast->capture(screencast_session_id);
 
     protobuf_screencast->mutable_screencast_id()->set_value(
@@ -786,7 +794,7 @@ void mf::SessionMediator::screencast_buffer(
     mir::protobuf::Buffer* protobuf_buffer,
     google::protobuf::Closure* done)
 {
-    static auto const msg_type = mg::BufferIpcMsgType::update_msg;
+    static auto const msg_type = mg::BufferIpcMsgType::full_msg;
     ScreencastSessionId const screencast_session_id{
         protobuf_screencast_id->value()};
 

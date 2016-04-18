@@ -78,6 +78,24 @@ void mir_screencast_spec_set_pixel_format(MirScreencastSpec* spec, MirPixelForma
 void mir_screencast_spec_set_capture_region(MirScreencastSpec* spec, MirRectangle const* region);
 
 /**
+ * Set the requested mirror mode.
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] mode     The mirroring mode to apply when screencasting
+ *
+ */
+void mir_screencast_spec_set_mirror_mode(MirScreencastSpec* spec, MirMirrorMode mode);
+
+/**
+ * Set the requested number of buffers to use.
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] nbuffers The number of buffers to allocate for screencasting
+ *
+ */
+void mir_screencast_spec_set_number_of_buffers(MirScreencastSpec* spec, int nbuffers);
+
+/**
  * Release the resources held by a MirScreencastSpec.
  *
  * \param [in] spec     Specification to release

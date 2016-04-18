@@ -145,7 +145,7 @@ public:
                                    unsigned int formats_size, unsigned int& valid_formats);
 
     std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
-       mir::protobuf::BufferStream const& protobuf_bs, mir::geometry::Size);
+       mir::protobuf::BufferStream const& protobuf_bs);
 
     MirWaitHandle* create_client_buffer_stream(
         int width, int height,

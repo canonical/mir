@@ -69,6 +69,16 @@ void mir_screencast_spec_set_capture_region(MirScreencastSpec* spec, MirRectangl
     spec->capture_region = *region;
 }
 
+void mir_screencast_spec_set_mirror_mode(MirScreencastSpec* spec, MirMirrorMode mode)
+{
+    spec->mirror_mode = mode;
+}
+
+void mir_screencast_spec_set_number_of_buffers(MirScreencastSpec* spec, int nbuffers)
+{
+    spec->num_buffers = nbuffers;
+}
+
 void mir_screencast_spec_release(MirScreencastSpec* spec)
 {
     delete spec;

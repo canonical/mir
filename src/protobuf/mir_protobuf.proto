@@ -313,6 +313,8 @@ message ScreencastParameters {
   required uint32 width = 2;
   required uint32 height = 3;
   required int32 pixel_format = 4;
+  optional uint32 num_buffers = 5;
+  optional int32 mirror_mode = 6;
 }
 
 message ScreencastId {

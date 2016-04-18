@@ -896,7 +896,7 @@ void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<S
 }
 
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
-   mp::BufferStream const& protobuf_bs, mir::geometry::Size)
+   mp::BufferStream const& protobuf_bs)
 {
     return std::make_shared<mcl::ScreencastStream>(
         this, server, platform, protobuf_bs);
