@@ -447,7 +447,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_aspect_ratio_is_respected)
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(bottom_left);
 
-    EXPECT_THAT(actual.width.as_int()/actual.height.as_int(), Ge(float(aspect_width)/aspect_height));
+    EXPECT_THAT(float(actual.width.as_int())/actual.height.as_int(), Ge(float(aspect_width)/aspect_height));
 }
 
 TEST_F(SurfaceSpecification, surface_spec_with_max_aspect_ratio_is_respected)
@@ -477,7 +477,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_max_aspect_ratio_is_respected)
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(top_right);
 
-    EXPECT_THAT(actual.width.as_int()/actual.height.as_int(), Le(float(aspect_width)/aspect_height));
+    EXPECT_THAT(float(actual.width.as_int())/actual.height.as_int(), Le(float(aspect_width)/aspect_height));
 }
 
 TEST_F(SurfaceSpecification, surface_spec_with_fixed_aspect_ratio_and_size_range_is_respected)
