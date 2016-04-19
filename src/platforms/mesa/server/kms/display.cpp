@@ -100,6 +100,14 @@ mgm::Display::Display(std::shared_ptr<helpers::DRMHelper> const& drm,
       bypass_option(bypass_option),
       gl_config{gl_config}
 {
+    frame_clock.set_frame_callback([](Frame const& frame)
+    {
+        unsigned long long seq = frame.msc;
+        unsigned long long ns = frame.ust;
+        fprintf(stderr, "TODO - Frame #%llu at %llu.%03llus\n",
+                        seq, ns/1000000000ULL, (ns%1000000000ULL)/1000000ULL);
+    });
+
     vt->set_graphics_mode();
 
     shared_egl.setup(*gbm);
@@ -208,6 +216,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                 {
                     kms_output->set_power_mode(conf_output.power_mode);
                     kms_outputs.push_back(kms_output);
+                    frame_clock.add_child_clock(kms_output);
                 }
 
                 /*

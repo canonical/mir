@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_MESA_DISPLAY_H_
 
 #include "mir/graphics/display.h"
+#include "mir/graphics/multi_source_frame_clock.h"
 #include "real_kms_output_container.h"
 #include "real_kms_display_configuration.h"
 #include "display_helpers.h"
@@ -111,6 +112,7 @@ private:
     BypassOption bypass_option;
     std::weak_ptr<Cursor> cursor;
     std::shared_ptr<GLConfig> const gl_config;
+    MultiSourceFrameClock frame_clock;
 };
 
 }
