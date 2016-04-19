@@ -32,48 +32,48 @@ class ShellReport : public shell::ShellReport
 public:
     ShellReport(std::shared_ptr<mir::logging::Logger> const& log);
 
-    void opened_session(scene::Session const& /*session*/) override;
+    void opened_session(scene::Session const& session) override;
 
-    void closing_session(scene::Session const& /*session*/) override;
+    void closing_session(scene::Session const& session) override;
 
     void created_surface(
-        scene::Session const& /*session*/,
-        frontend::SurfaceId /*surface_id*/) override;
+        scene::Session const& session,
+        frontend::SurfaceId surface_id) override;
 
     void update_surface(
-        scene::Session const& /*session*/,
-        scene::Surface const& /*surface*/,
-        shell::SurfaceSpecification const& /*modifications*/) override;
+        scene::Session const& session,
+        scene::Surface const& surface,
+        shell::SurfaceSpecification const& modifications) override;
 
     void update_surface(
-        scene::Session const& /*session*/,
-        scene::Surface const& /*surface*/,
-        MirSurfaceAttrib /*attrib*/, int /*value*/) override;
+        scene::Session const& session,
+        scene::Surface const& surface,
+        MirSurfaceAttrib attrib, int value) override;
 
     void destroying_surface(
-        scene::Session const& /*session*/,
-        frontend::SurfaceId /*surface*/) override;
+        scene::Session const& session,
+        frontend::SurfaceId surface) override;
 
     void started_prompt_session(
-        scene::PromptSession const& /*prompt_session*/,
-        scene::Session const& /*session*/) override;
+        scene::PromptSession const& prompt_session,
+        scene::Session const& session) override;
 
     void added_prompt_provider(
-        scene::PromptSession const& /*prompt_session*/,
-        scene::Session const& /*session*/) override;
+        scene::PromptSession const& prompt_session,
+        scene::Session const& session) override;
 
     void stopping_prompt_session(
-        scene::PromptSession const& /*prompt_session*/) override;
+        scene::PromptSession const& prompt_session) override;
 
-    void adding_display(geometry::Rectangle const& /*area*/) override;
+    void adding_display(geometry::Rectangle const& area) override;
 
-    void removing_display(geometry::Rectangle const& /*area*/) override;
+    void removing_display(geometry::Rectangle const& area) override;
 
     void input_focus_set_to(
-        scene::Session const* /*focus_session*/,
-        scene::Surface const* /*focus_surface*/) override;
+        scene::Session const* focus_session,
+        scene::Surface const* focus_surface) override;
 
-    void surfaces_raised(shell::SurfaceSet const& /*surfaces*/) override;
+    void surfaces_raised(shell::SurfaceSet const& surfaces) override;
 
 private:
     std::shared_ptr<mir::logging::Logger> const log;
