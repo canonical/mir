@@ -307,7 +307,7 @@ TEST_F(HWCLayersTest, check_layer_defaults_and_alpha)
 }
 
 //HWC 1.3 and later started using floats for the sourceCrop field, and ints for the displayFrame
-TEST_F(HWCLayersTest, has_int_sourcecrop)
+TEST_F(HWCLayersTest, has_float_sourcecrop)
 {
     hwc_frect_t crop
     {
