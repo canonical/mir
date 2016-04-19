@@ -23,12 +23,12 @@ namespace mir { namespace graphics {
 void MultiSourceFrameClock::add_child_clock(std::weak_ptr<FrameClock> w)
 {
     Lock lock(frame_mutex);
-    if (auto dc = w.lock())
+    if (auto clock = w.lock())
     {
-        void const* id = dc.get();
+        void const* id = clock.get();
         children[id] = Child{std::move(w), {}, {}};
         synchronize(lock);
-        dc->set_frame_callback(
+        clock->set_frame_callback(
             std::bind(&MultiSourceFrameClock::on_child_frame,
                       this, id, std::placeholders::_1) );
     }
@@ -41,7 +41,7 @@ void MultiSourceFrameClock::synchronize(Lock const&)
     auto c = children.begin();
     while (c != children.end())
     {
-        auto& child{c->second};
+        auto& child = c->second;
         if (child.clock.lock())
         {
             child.baseline = child.last_frame;
@@ -68,7 +68,7 @@ void MultiSourceFrameClock::on_child_frame(void const* child_id,
         auto found = children.find(child_id);
         if (found != children.end())
         {
-            auto& child{found->second};
+            auto& child = found->second;
             child.last_frame = child_frame;
             auto child_delta = child_frame.msc - child.baseline.msc;
             auto virtual_delta = last_multi_frame.msc - baseline.msc;
