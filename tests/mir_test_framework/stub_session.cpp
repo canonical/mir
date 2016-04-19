@@ -35,7 +35,7 @@ std::string mtd::StubSession::name() const
     return {};
 }
 
-void mtd::StubSession::force_requests_to_complete()
+void mtd::StubSession::drop_outstanding_requests()
 {
 }
 

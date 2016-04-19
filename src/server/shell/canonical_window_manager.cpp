@@ -366,11 +366,6 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
         session->configure_streams(*surface, l);
     }
 
-    if (modifications.input_shape.is_set())
-    {
-        surface->set_input_region(modifications.input_shape.value());
-    }
-
     if (modifications.width.is_set() || modifications.height.is_set())
     {
         auto new_size = surface->size();
@@ -392,6 +387,19 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
             display_area);
 
         apply_resize(surface, top_left, new_size);
+    }
+
+    if (modifications.input_shape.is_set())
+    {
+        auto rectangles = modifications.input_shape.value();
+        auto displacement = surface->top_left() - Point{0, 0}; 
+        for(auto& rect : rectangles)
+        {
+            rect.top_left = rect.top_left + displacement;
+            rect = rect.intersection_with({surface->top_left(), surface->size()});
+            rect.top_left = rect.top_left - displacement;
+        }
+        surface->set_input_region(rectangles);
     }
 
     if (modifications.state.is_set())

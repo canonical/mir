@@ -391,3 +391,21 @@ MirWaitHandle* mir_connection_platform_operation(
         return nullptr;
     }
 }
+
+void mir_connection_set_error_callback(
+    MirConnection* connection,
+    mir_error_callback callback,
+    void* context)
+{
+    mir::require(mir_connection_is_valid(connection));
+
+    try
+    {
+        connection->register_error_callback(callback, context);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+}
+

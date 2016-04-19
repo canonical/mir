@@ -1,7 +1,5 @@
 list(
   APPEND INPUT_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/android_input_channel.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/input_channel_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/input_sender.cpp
 )
 

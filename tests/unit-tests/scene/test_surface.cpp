@@ -193,7 +193,7 @@ struct SurfaceCreation : public ::testing::Test
 {
     SurfaceCreation()
         : surface(surface_name,
-            rect, false, mock_buffer_stream, 
+            rect, false, streams,
             std::make_shared<mtd::StubInputChannel>(),
             std::make_shared<mtd::StubInputSender>(),
             nullptr /* cursor_image */, report)
@@ -215,6 +215,7 @@ struct SurfaceCreation : public ::testing::Test
     }
 
     std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
+    std::list<ms::StreamInfo> streams{ { mock_buffer_stream, {}, {} } }; 
     std::function<void()> change_notification;
     int notification_count = 0;
     mtd::StubBuffer stub_buffer;
@@ -238,12 +239,6 @@ TEST_F(SurfaceCreation, test_surface_gets_right_name)
 TEST_F(SurfaceCreation, test_surface_queries_state_for_size)
 {
     EXPECT_EQ(size, surface.size());
-}
-
-TEST_F(SurfaceCreation, constructed_stream_is_primary)
-{
-    using namespace testing;
-    EXPECT_THAT(surface.primary_buffer_stream(), Eq(mock_buffer_stream));
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)
@@ -383,7 +378,7 @@ TEST_F(SurfaceCreation, input_fds)
         surface_name,
         rect,
         false,
-        mock_buffer_stream,
+        streams,
         mt::fake_shared(channel),
         std::make_shared<mtd::StubInputSender>(),
         std::shared_ptr<mg::CursorImage>(),
@@ -401,7 +396,7 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
         surface_name,
         rect,
         false,
-        mock_buffer_stream,
+        streams,
         std::make_shared<mtd::StubInputChannel>(),
         mt::fake_shared(mock_sender),
         std::shared_ptr<mg::CursorImage>(),

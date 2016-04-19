@@ -33,7 +33,7 @@
 #include "mir/test/doubles/stub_session_authorizer.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/pipe.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 #include "mir/test/signal.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -95,12 +95,12 @@ struct StubAuthorizer : mtd::StubSessionAuthorizer
 
 void wait_for_server_actions_to_finish(mir::ServerActionQueue& server_action_queue)
 {
-    mt::WaitCondition last_action_done;
+    mt::Signal last_action_done;
     server_action_queue.enqueue(
         &last_action_done,
-        [&] { last_action_done.wake_up_everyone(); });
+        [&] { last_action_done.raise(); });
 
-    last_action_done.wait_for_at_most_seconds(5);
+    last_action_done.wait_for(std::chrono::seconds{5});
 }
 }
 
@@ -926,6 +926,47 @@ TEST_F(DisplayConfigurationTest, display_configuration_sticks_after_confirmation
     mir_connection_confirm_base_display_configuration(client.connection, new_config.get());
 
     EXPECT_TRUE(signalled_twice->wait_for(std::chrono::seconds{10}));
+
+    client.disconnect();
+}
+
+namespace
+{
+struct ErrorValidator
+{
+    mt::Signal received;
+    std::function<void(MirError const*)> validate;
+};
+
+void validating_error_handler(MirConnection*, MirError const* error, void* context)
+{
+    auto& error_validator = *reinterpret_cast<ErrorValidator*>(context);
+    error_validator.validate(error);
+    error_validator.received.raise();
+}
+}
+
+TEST_F(DisplayConfigurationTest, unauthorised_client_receives_error)
+{
+    stub_authorizer.allow_set_base_display_configuration = false;
+
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto config = client.get_base_config();
+
+    ErrorValidator validator;
+    validator.validate = [&config](MirError const* error)
+        {
+            EXPECT_THAT(mir_error_get_domain(error), Eq(mir_error_domain_display_configuration));
+            EXPECT_THAT(mir_error_get_code(error), Eq(mir_display_configuration_error_unauthorized));
+        };
+    mir_connection_set_error_callback(client.connection, &validating_error_handler, &validator);
+
+    mir_connection_preview_base_display_configuration(client.connection, config.get(), 20);
+
+    EXPECT_TRUE(validator.received.wait_for(std::chrono::seconds{10}));
 
     client.disconnect();
 }

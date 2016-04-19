@@ -18,7 +18,7 @@
 
 #include "mir/events/event_private.h"
 
-#include "src/server/input/android/android_input_channel.h"
+#include "src/server/input/channel.h"
 #include "src/server/input/android/input_sender.h"
 #include "src/server/input/default_event_builder.h"
 #include "src/server/report/null_report_factory.h"
@@ -44,7 +44,6 @@
 
 #include <boost/exception/all.hpp>
 
-//#include <algorithm>
 #include <cstring>
 
 namespace mi = mir::input;
@@ -140,7 +139,7 @@ public:
         fake_scene.observer->surface_removed(&stub_surface);
     }
 
-    std::shared_ptr<mi::InputChannel> channel = std::make_shared<mia::AndroidInputChannel>();
+    std::shared_ptr<mi::InputChannel> channel = std::make_shared<mi::Channel>();
     mtd::StubSceneSurface stub_surface{channel->server_fd()};
     droidinput::sp<droidinput::InputChannel> client_channel{new droidinput::InputChannel(droidinput::String8("test"), channel->client_fd())};
     droidinput::InputConsumer consumer{client_channel};

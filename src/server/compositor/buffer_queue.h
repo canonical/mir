@@ -56,6 +56,7 @@ public:
 
     graphics::BufferProperties properties() const override;
     void allow_framedropping(bool dropping_allowed) override;
+    void set_mode(MultiMonitorMode mode) override;
     void force_requests_to_complete() override;
     void resize(const geometry::Size &newsize) override;
     int buffers_ready_for_compositor(void const* user_id) const override;
@@ -110,15 +111,18 @@ private:
     int frame_deadlines_threshold;
     int frame_deadlines_met;
     int scheduled_extra_frames;
+    MultiMonitorMode mm_mode;
     bool frame_dropping_enabled;
     bool current_compositor_buffer_valid;
     graphics::BufferProperties the_properties;
     bool force_new_compositor_buffer;
-    bool callbacks_allowed;
     bool single_compositor;
 
     std::condition_variable snapshot_released;
     std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
+
+    mutable std::mutex callbacks_guard;
+    bool callbacks_allowed;
 
     // Ensure framedrop_policy gets destroyed first so the callback installed
     // does not access dead objects.

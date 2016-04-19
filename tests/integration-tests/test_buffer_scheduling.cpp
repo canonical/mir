@@ -20,7 +20,9 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/buffer_sink.h"
 #include "src/client/buffer_vault.h"
+#include "src/client/buffer_factory.h"
 #include "src/client/client_buffer_depository.h"
+#include "src/client/connection_surface_map.h"
 #include "src/server/compositor/buffer_queue.h"
 #include "src/server/compositor/stream.h"
 #include "src/server/compositor/buffer_map.h"
@@ -355,11 +357,11 @@ struct ServerRequests : mcl::ServerBufferRequests
     {
     }
 
-    void submit_buffer(int buffer_id, mcl::ClientBuffer&)
+    void submit_buffer(mcl::Buffer& buffer)
     {
-        mp::Buffer buffer;
-        buffer.set_buffer_id(buffer_id);
-        ipc->server_bound_transfer(buffer);   
+        mp::Buffer buffer_req;
+        buffer_req.set_buffer_id(buffer.rpc_id());
+        ipc->server_bound_transfer(buffer_req);
     }
     std::shared_ptr<StubIpcSystem> ipc;
 };
@@ -368,9 +370,12 @@ struct ScheduledProducer : ProducerSystem
 {
     ScheduledProducer(std::shared_ptr<StubIpcSystem> const& ipc_stub, int nbuffers) :
         ipc(ipc_stub),
+        map(std::make_shared<mcl::ConnectionSurfaceMap>()),
         vault(
             std::make_shared<mtd::StubClientBufferFactory>(),
+            std::make_shared<mcl::BufferFactory>(),
             std::make_shared<ServerRequests>(ipc),
+            map,
             geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers)
     {
         ipc->on_client_bound_transfer([this](mp::Buffer& buffer){
@@ -397,7 +402,7 @@ struct ScheduledProducer : ProducerSystem
     {
         if (can_produce())
         {
-            auto buffer = vault.withdraw().get().buffer;
+            auto buffer = vault.withdraw().get();
             vault.deposit(buffer);
             vault.wire_transfer_outbound(buffer);
             last_size_ = buffer->size();
@@ -428,6 +433,7 @@ struct ScheduledProducer : ProducerSystem
     geom::Size last_size_;
     std::vector<BufferEntry> entries;
     std::shared_ptr<StubIpcSystem> ipc;
+    std::shared_ptr<mcl::SurfaceMap> const map;
     mcl::BufferVault vault;
     int max, cur;
     int available{0};
@@ -899,6 +905,31 @@ TEST_P(WithThreeOrMoreBuffers, client_is_unblocked_after_policy_is_triggered)
     EXPECT_THAT(production_log[nbuffers + 1].blockage, Eq(Access::unblocked));
 }
 
+TEST_P(WithTwoOrMoreBuffers, client_is_not_woken_by_compositor_release)
+{
+    // If early release is accidentally active, make sure we see it. But it
+    // requires a dummy frame first:
+    producer->produce();
+    auto onscreen = stream->lock_compositor_buffer(this);
+    onscreen.reset();
+
+    while (producer->can_produce())
+        producer->produce();
+
+    ASSERT_FALSE(producer->can_produce());
+    onscreen = stream->lock_compositor_buffer(this);
+
+    // This varies between NBS and BufferQueue. Should it?
+    if (producer->can_produce())
+        producer->produce();
+    ASSERT_FALSE(producer->can_produce());
+
+    onscreen.reset();
+    // single_monitor_fast -> can produce here
+    // multi_monitor_sync -> can't produce here
+    ASSERT_FALSE(producer->can_produce());
+}
+
 // Regression test for LP: #1319765
 TEST_P(WithTwoBuffers, client_is_not_blocked_prematurely)
 {
@@ -1017,6 +1048,7 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
     mtd::MockFrameDroppingPolicyFactory policy_factory;
     mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory),
                           properties, policy_factory};
+    queue.set_mode(mc::MultiMonitorMode::single_monitor_fast);
     queue.allow_framedropping(false);
 
     mg::Buffer* client_buffer = nullptr;
@@ -1083,6 +1115,7 @@ TEST_P(WithTwoOrMoreBuffers, short_buffer_holds_dont_overclock_multimonitor)
     mtd::MockFrameDroppingPolicyFactory policy_factory;
     mc::BufferQueue queue{nbuffers, mt::fake_shared(server_buffer_factory),
                           properties, policy_factory};
+    queue.set_mode(mc::MultiMonitorMode::single_monitor_fast);
     queue.allow_framedropping(false);
 
     const void* const leftid = "left";

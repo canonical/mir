@@ -24,6 +24,7 @@
 #include "mir/frontend/template_protobuf_message_processor.h"
 #include "mir/frontend/unsupported_feature_exception.h"
 #include <mir/protobuf/display_server_debug.h>
+#include "mir/client_visible_error.h"
 
 #include "mir_protobuf_wire.pb.h"
 
@@ -140,6 +141,12 @@ void invoke(
     {
         throw;
     }
+    catch (mir::ClientVisibleError const& error)
+    {
+        auto client_error = result_message->mutable_structured_error();
+        client_error->set_code(error.code());
+        client_error->set_domain(error.domain());
+    }
     catch (std::exception const& x)
     {
         using namespace std::literals;
@@ -209,11 +216,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         else if ("create_surface" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::create_surface, invocation);
-        }
-        else if ("next_buffer" == invocation.method_name())
-        {
-            auto request = parse_parameter<mir::protobuf::SurfaceId>(invocation);
-            invoke(shared_from_this(), display_server.get(), &DisplayServer::next_buffer, invocation.id(), &request);
         }
         else if ("exchange_buffer" == invocation.method_name())
         {

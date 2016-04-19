@@ -16,20 +16,20 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "src/server/input/android/android_input_channel.h"
-#include "src/server/input/android/input_channel_factory.h"
+#include "src/server/input/channel.h"
+#include "src/server/input/channel_factory.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include <initializer_list>
 
-namespace mia = mir::input::android;
+namespace mi = mir::input;
 
-TEST(AndroidInputChannelFactory, channel_factory_returns_input_channel_with_fds)
+TEST(InputChannelFactory, channel_factory_returns_input_channel_with_fds)
 {
-    mia::InputChannelFactory factory;
+    mi::ChannelFactory factory;
 
     auto package = factory.make_input_channel();
-    EXPECT_NE(nullptr, std::dynamic_pointer_cast<mia::AndroidInputChannel>(package));
+    EXPECT_NE(nullptr, std::dynamic_pointer_cast<mi::Channel>(package));
 }

@@ -107,6 +107,11 @@ MirOrientation mc::ScreencastDisplayBuffer::orientation() const
     return mir_orientation_normal;
 }
 
+MirMirrorMode mc::ScreencastDisplayBuffer::mirror_mode() const
+{
+    return mir_mirror_mode_none;
+}
+
 mg::NativeDisplayBuffer* mc::ScreencastDisplayBuffer::native_display_buffer()
 {
     return this;

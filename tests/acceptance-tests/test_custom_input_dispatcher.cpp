@@ -22,7 +22,7 @@
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/event_factory.h"
@@ -58,8 +58,8 @@ struct TestCustomInputDispatcher : mtf::HeadlessInProcessServer
     std::unique_ptr<mtf::FakeInputDevice> fake_pointer{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})
         };
-    mir::test::WaitCondition all_keys_received;
-    mir::test::WaitCondition all_pointer_events_received;
+    mir::test::Signal all_keys_received;
+    mir::test::Signal all_pointer_events_received;
 };
 }
 
@@ -93,6 +93,6 @@ TEST_F(TestCustomInputDispatcher, receives_input)
     fake_pointer->emit_event(mis::a_pointer_event().with_movement(1, 1));
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
 
-    all_keys_received.wait_for_at_most_seconds(10);
-    all_pointer_events_received.wait_for_at_most_seconds(10);
+    all_keys_received.wait_for(std::chrono::seconds{10});
+    all_pointer_events_received.wait_for(std::chrono::seconds{10});
 }

@@ -95,8 +95,6 @@ struct SessionManagement : Test
     std::shared_ptr<mf::EventSink> const event_sink = std::make_shared<mtd::NullEventSink>();
     std::shared_ptr<mf::Shell> const session_manager = builder.the_frontend_shell();
     std::shared_ptr<TestSurfaceStack> const& test_surface_stack = builder.test_surface_stack;
-    ms::SurfaceCreationParameters const params = ms::SurfaceCreationParameters().of_size(100,100).of_type(mir_surface_type_normal);
-
     void SetUp()
     {
         ASSERT_THAT(test_surface_stack, Ne(nullptr));
@@ -116,6 +114,13 @@ MATCHER_P(WeakPtrTo, p, "")
 TEST_F(SessionManagement, creating_a_surface_adds_it_to_scene)
 {
     auto const session = session_manager->open_session(0, __PRETTY_FUNCTION__, event_sink);
+
+    mir::graphics::BufferProperties properties(
+        mir::geometry::Size{1,1}, mir_pixel_format_abgr_8888, mir::graphics::BufferUsage::software);
+    ms::SurfaceCreationParameters const params = ms::SurfaceCreationParameters()
+        .of_size(100,100)
+        .of_type(mir_surface_type_normal)
+        .with_buffer_stream(session->create_buffer_stream(properties));
 
     EXPECT_CALL(*test_surface_stack, add_surface(_,_)).Times(1);
     session_manager->create_surface(session, params, event_sink);

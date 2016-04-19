@@ -41,11 +41,14 @@ typedef struct MirConnection MirConnection;
 typedef struct MirSurface MirSurface;
 typedef struct MirSurfaceSpec MirSurfaceSpec;
 typedef struct MirScreencast MirScreencast;
+typedef struct MirScreencastSpec MirScreencastSpec;
 typedef struct MirPromptSession MirPromptSession;
 typedef struct MirBufferStream MirBufferStream;
 typedef struct MirPersistentId MirPersistentId;
 typedef struct MirBlob MirBlob;
 typedef struct MirDisplayConfig MirDisplayConfig;
+typedef struct MirError MirError;
+
 
 /**
  * Descriptor for an output connection.
@@ -442,6 +445,36 @@ typedef void (*mir_platform_operation_callback)(
 
 typedef void (*mir_input_config_callback)(
     MirConnection* connection, void* context);
+
+/**
+ * Specifies the origin of an error.
+ *
+ * This is required to interpret the other aspects of a MirError.
+ */
+typedef enum MirErrorDomain
+{
+    /**
+     * Errors relating to display configuration.
+     *
+     * Associated error codes are found in \ref MirDisplayConfigurationError.
+     */
+    mir_error_domain_display_configuration,
+} MirErrorDomain;
+
+/**
+ * Errors from the \ref mir_error_domain_display_configuration \ref MirErrorDomain
+ */
+typedef enum MirDisplayConfigurationError {
+    /**
+     * Client is not permitted to change global display configuration
+     */
+    mir_display_configuration_error_unauthorized,
+} MirDisplayConfigurationError;
+
+typedef void (*mir_error_callback)(
+    MirConnection* connection,
+    MirError const* error,
+    void* context);
 
 #ifdef __cplusplus
 }

@@ -29,7 +29,7 @@ class optional_value
 {
 public:
     optional_value() = default;
-    optional_value(T const& value) : value_{value}, is_set_{true} {}
+    optional_value(T const& value) : value_(value), is_set_{true} {}
 
     optional_value& operator=(T const& value)
     {

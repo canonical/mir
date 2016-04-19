@@ -135,6 +135,8 @@ public:
 
     void register_display_change_callback(mir_display_config_callback callback, void* context);
 
+    void register_error_callback(mir_error_callback callback, void* context);
+
     void populate(MirPlatformPackage& platform_package);
     void populate_graphics_module(MirModuleProperties& properties);
     MirDisplayConfiguration* create_copy_of_display_config();
@@ -310,6 +312,8 @@ private:
     std::unique_ptr<mir::dispatch::ThreadedDispatcher> const eventloop;
     
     std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
+
+    mir::client::AtomicCallback<MirError const*> error_handler;
 
     struct SurfaceRelease;
     struct StreamRelease;

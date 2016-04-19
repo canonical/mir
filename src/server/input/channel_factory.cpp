@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014,2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,13 +16,12 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "input_channel_factory.h"
-#include "android_input_channel.h"
+#include "channel.h"
+#include "channel_factory.h"
 
 namespace mi = mir::input;
-namespace mia = mi::android;
 
-std::shared_ptr<mi::InputChannel> mia::InputChannelFactory::make_input_channel()
+std::shared_ptr<mi::InputChannel> mi::ChannelFactory::make_input_channel()
 {
-    return std::make_shared<mia::AndroidInputChannel>();
+    return std::make_shared<mi::Channel>();
 }
