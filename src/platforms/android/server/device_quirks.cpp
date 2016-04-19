@@ -87,7 +87,7 @@ bool device_has_working_egl_sync(std::string const& device_name, std::string con
     //TODO: we need a richer way to detect device classes
     //mali devices are have sync disabled due to high cost (500us) in hybris while using the
     //sync extensions. We should re-enable sync once the cost can be minimized.
-    if (device_name == "frieza" || device_name == "krillin" || device_name == "vegetahd")
+    if (device_name == "frieza" || device_name == "krillin" || device_name == "vegetahd" || device_name == "manta")
         return false;
     if (device_name == "arale")
         return false;
