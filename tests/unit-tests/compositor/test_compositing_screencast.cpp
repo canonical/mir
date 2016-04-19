@@ -36,6 +36,7 @@
 #include "mir/test/doubles/stub_scene_element.h"
 #include "mir/test/doubles/mock_scene.h"
 
+#include "mir/test/as_render_target.h"
 #include "mir/test/fake_shared.h"
 
 #include <boost/throw_exception.hpp>
@@ -133,7 +134,7 @@ class WrappingDisplayBufferCompositor : public mc::DisplayBufferCompositor
 public:
     WrappingDisplayBufferCompositor(mc::DisplayBufferCompositor& comp, mg::DisplayBuffer& db)
         : comp(comp),
-          render_target(dynamic_cast<mrgl::RenderTarget*>(db.native_display_buffer()))
+          render_target(mt::as_render_target(db))
     {
         //TODO: we shouldn't need to care if the display buffer is GL capable
         if (!render_target)
@@ -142,7 +143,7 @@ public:
 
     void composite(mc::SceneElementSequence&& elements)
     {
-        render_target->make_current();
+        render_target->bind();
         comp.composite(std::move(elements));
         render_target->swap_buffers();
     }

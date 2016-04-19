@@ -599,7 +599,7 @@ TEST_F(SessionMediator, fully_packs_buffer_for_create_screencast)
     EXPECT_EQ(stub_buffer.id().as_value(), screencast.buffer_stream().buffer().buffer_id());
 }
 
-TEST_F(SessionMediator, partially_packs_buffer_for_screencast_buffer)
+TEST_F(SessionMediator, fully_packs_screencast_buffer)
 {
     using namespace testing;
 
@@ -608,7 +608,7 @@ TEST_F(SessionMediator, partially_packs_buffer_for_screencast_buffer)
     auto const& stub_buffer = stub_screencast->stub_buffer;
 
     EXPECT_CALL(mock_ipc_operations,
-        pack_buffer(_, Ref(stub_buffer), mg::BufferIpcMsgType::update_msg))
+        pack_buffer(_, Ref(stub_buffer), mg::BufferIpcMsgType::full_msg))
         .Times(1);
 
     mediator.screencast_buffer(&screencast_id,

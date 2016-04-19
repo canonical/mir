@@ -67,6 +67,7 @@ public:
     void release_current() override;
     void swap_buffers() override;
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
+    void bind() override;
 
     void for_each_display_buffer(
         std::function<void(graphics::DisplayBuffer&)> const& f) override;
