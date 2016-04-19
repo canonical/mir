@@ -34,6 +34,48 @@ class GLContext;
 namespace renderer { namespace gl { class TextureSource; }}
 namespace compositor
 {
+
+namespace detail
+{
+
+template <void (*Delete)(GLsizei,GLuint const*)>
+class GLResource
+{
+public:
+    GLResource() {}
+    GLResource(GLuint resource) : resource{resource} {}
+    ~GLResource() { reset(); }
+
+    operator GLuint() const { return resource; }
+
+    void reset()
+    {
+        if (resource)
+        {
+            Delete(1, &resource);
+            resource = 0;
+        }
+    }
+
+    GLResource(GLResource&& other) : resource {other.resource}
+    {
+        other.resource = 0;
+    }
+
+    GLResource& operator=(GLResource&& other)
+    {
+        resource = other.resource;
+        other.resource = 0;
+        return *this;
+    }
+
+private:
+    GLResource(GLResource const&) = delete;
+    GLResource& operator=(GLResource const&) = delete;
+    GLuint resource{0};
+};
+}
+
 class Schedule;
 class ScreencastDisplayBuffer : public graphics::DisplayBuffer,
                                 public graphics::NativeDisplayBuffer,
@@ -68,7 +110,6 @@ public:
     NativeDisplayBuffer* native_display_buffer() override;
 
 private:
-    void delete_gl_resources();
     std::unique_ptr<graphics::GLContext> gl_context;
     geometry::Rectangle const rect;
     MirMirrorMode const mirror_mode_;
@@ -80,9 +121,9 @@ private:
     GLint old_fbo;
     GLint old_viewport[4];
 
-    GLuint color_tex;
-    GLuint depth_rbo;
-    GLuint fbo;
+    detail::GLResource<glDeleteTextures> color_tex;
+    detail::GLResource<glDeleteRenderbuffers> depth_rbo;
+    detail::GLResource<glDeleteFramebuffers> fbo;
 };
 
 }

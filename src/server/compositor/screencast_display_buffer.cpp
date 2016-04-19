@@ -23,7 +23,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/renderer/gl/texture_source.h"
-#include "mir/unwind_helpers.h"
+#include "mir/raii.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -41,6 +41,14 @@ auto as_texture_source(mg::Buffer* buffer)
         BOOST_THROW_EXCEPTION(std::logic_error("Buffer does not support GL rendering"));
     return tex;
 }
+
+template <void (*Generate)(GLsizei,GLuint*), void (*Delete)(GLsizei,GLuint const*)>
+mc::detail::GLResource<Delete> allocate_gl_resource()
+{
+    GLuint resource;
+    Generate(1, &resource);
+    return mc::detail::GLResource<Delete>{resource};
+}
 }
 
 mc::ScreencastDisplayBuffer::ScreencastDisplayBuffer(
@@ -53,57 +61,51 @@ mc::ScreencastDisplayBuffer::ScreencastDisplayBuffer(
     : gl_context(display.create_gl_context()),
       rect(rect), mirror_mode_(mirror_mode),
       free_queue(free_queue), ready_queue(ready_queue),
-      old_fbo(), old_viewport(),
-      color_tex(0), depth_rbo(0), fbo(0)
+      old_fbo(), old_viewport()
 {
-    gl_context->make_current();
-    auto unwinder = on_unwind([this] {
-        delete_gl_resources();
-        gl_context->release_current();
-    });
+    auto const gl_context_raii = mir::raii::paired_calls(
+        [this] { gl_context->make_current(); },
+        [this] { gl_context->release_current(); });
 
     glGetIntegerv(GL_VIEWPORT, old_viewport);
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &old_fbo);
 
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    auto texture = allocate_gl_resource<glGenTextures, glDeleteTextures>();
+    auto depth_buffer = allocate_gl_resource<glGenRenderbuffers, glDeleteRenderbuffers>();
+    auto framebuffer = allocate_gl_resource<glGenFramebuffers, glDeleteFramebuffers>();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
     /* Set up the color buffer... */
-    glGenTextures(1, &color_tex);
-    glBindTexture(GL_TEXTURE_2D, color_tex);
+    glBindTexture(GL_TEXTURE_2D, texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     /* and the depth buffer */
-    glGenRenderbuffers(1, &depth_rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, depth_rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
                           size.width.as_uint32_t(),
                           size.height.as_uint32_t());
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                              GL_RENDERBUFFER, depth_rbo);
+                              GL_RENDERBUFFER, depth_buffer);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create FBO for buffer"));
+
+    color_tex = std::move(texture);
+    depth_rbo =  std::move(depth_buffer);
+    fbo =  std::move(framebuffer);
 }
 
 mc::ScreencastDisplayBuffer::~ScreencastDisplayBuffer()
 {
     make_current();
-    delete_gl_resources();
+    color_tex.reset();
+    depth_rbo.reset();
+    fbo.reset();
     release_current();
-}
-
-void mc::ScreencastDisplayBuffer::delete_gl_resources()
-{
-    if (fbo)
-        glDeleteFramebuffers(1, &fbo);
-    if (depth_rbo)
-        glDeleteRenderbuffers(1, &depth_rbo);
-    if (color_tex)
-        glDeleteTextures(1, &color_tex);
 }
 
 geom::Rectangle mc::ScreencastDisplayBuffer::view_area() const
