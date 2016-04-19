@@ -407,6 +407,20 @@ TEST_F(LibInputDeviceOnMouse, process_event_motion_events_with_relative_changes)
     process_events(mouse);
 }
 
+TEST_F(LibInputDeviceOnMouse, notices_slow_relative_movements)
+{   // Regression test for LP: #1528109
+    float x1 = 0.5f, x2 = 0.6f;
+    float y1 = 1.7f, y2 = 1.8f;
+
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x1,y1)));
+    EXPECT_CALL(mock_sink, handle_input(mt::PointerEventWithDiff(x2,y2)));
+
+    mouse.start(&mock_sink, &mock_builder);
+    env.mock_libinput.setup_pointer_event(fake_device, event_time_1, x1, y1);
+    env.mock_libinput.setup_pointer_event(fake_device, event_time_2, x2, y2);
+    process_events(mouse);
+}
+
 TEST_F(LibInputDeviceOnMouse, process_event_handles_press_and_release)
 {
     float const x = 0;
