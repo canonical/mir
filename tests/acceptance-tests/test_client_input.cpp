@@ -605,9 +605,11 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
     EXPECT_CALL(first_client, handle_input(_))
         .Times(Between(nframes-nframes_error, nframes+nframes_error))
         .WillRepeatedly(InvokeWithoutArgs(
-            [&received_input_events]()
+            [&]()
             {
                 ++received_input_events;
+                if (received_input_events >= nframes-nframes_error)
+                    first_client.all_events_received.raise();
             }));
 
     fake_touch_screen->emit_event(mis::a_touch_event()
@@ -630,13 +632,20 @@ TEST_F(TestClientInput, receives_one_touch_event_per_frame)
             std::this_thread::sleep_for(frame_time);
     }
 
-    std::this_thread::sleep_for(2 * frame_time);
+    // Wait for the expected minimum number of events (should be quick)
+    ASSERT_TRUE(first_client.all_events_received.wait_for(20s));
+
+    // The main thing we're testing for is that too many events don't arrive
+    // so we wait a little to check the cooked event stream has stopped:
+    std::this_thread::sleep_for(100 * frame_time);
+
     // Remove reference to local received_input_events
     Mock::VerifyAndClearExpectations(&first_client);
 
     float const client_input_events_per_frame =
         (float)received_input_events / nframes;
-    EXPECT_NEAR(1.0f, client_input_events_per_frame, 0.2f);
+    EXPECT_THAT(client_input_events_per_frame, Gt(0.0f));
+    EXPECT_THAT(client_input_events_per_frame, Lt(1.5f));
 }
 
 TEST_F(TestClientInput, send_mir_input_events_through_surface)
