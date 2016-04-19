@@ -116,9 +116,9 @@ mgm::DisplayBuffer::DisplayBuffer(
       page_flips_pending{false}
 {
     for (auto const& output : outputs)
-        add_child_clock(output);
+        frame_clock.add_child_clock(output);
 
-    set_frame_callback([this](Frame const& frame)
+    frame_clock.set_frame_callback([](Frame const& frame)
     {
         unsigned long long seq = frame.msc;
         unsigned long long ns = frame.ust;
