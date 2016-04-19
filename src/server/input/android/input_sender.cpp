@@ -48,7 +48,7 @@ mir::cookie::Blob convert_cookie_to_blob(std::vector<uint8_t> const& cookie)
         BOOST_THROW_EXCEPTION(std::runtime_error("The cookie size must be less the mir::cookie::default_blob_size"));
     }
 
-    mir::cookie::Blob cookie_blob{0};
+    mir::cookie::Blob cookie_blob{{0}};
     std::copy(std::begin(cookie), std::end(cookie), std::begin(cookie_blob));
 
     return cookie_blob;
