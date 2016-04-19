@@ -312,8 +312,8 @@ TEST_F(HWCLayersTest, has_int_sourcecrop)
     hwc_frect_t crop
     {
         0.0f, 0.0f,
-        buffer_size.width.as_int(),
-        buffer_size.height.as_int()
+        static_cast<float>(buffer_size.width.as_int()),
+        static_cast<float>(buffer_size.height.as_int())
     };
 
     hwc_rect_t screen_pos
