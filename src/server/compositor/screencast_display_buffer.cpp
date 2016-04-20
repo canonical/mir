@@ -153,7 +153,6 @@ void mc::ScreencastDisplayBuffer::swap_buffers()
 {
     if (current_buffer)
     {
-
         //TODO: replace this with a fence which the client could use
         //to wait for rendering completion
         glFinish();
