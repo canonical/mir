@@ -165,12 +165,6 @@ TEST_F(Surface, states)
     EXPECT_EQ(mir_surface_state_fullscreen, surface->state());
 }
 
-bool operator==(MirEvent const& a, MirEvent const& b)
-{
-    // We will always fill unused bytes with zero, so memcmp is accurate...
-    return !memcmp(&a, &b, sizeof(MirEvent));
-}
-
 TEST_F(Surface, clamps_undersized_resize)
 {
     using namespace testing;

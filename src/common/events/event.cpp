@@ -51,6 +51,7 @@ MirEvent& MirEvent::operator=(MirEvent const& e)
     return *this;
 }
 
+// TODO Look at replacing the surface event serializer with a capnproto layer
 mir::EventUPtr MirEvent::deserialize(std::string const& bytes)
 {
     auto e = mir::EventUPtr(new MirEvent, [](MirEvent* ev) { delete ev; });
@@ -68,12 +69,7 @@ std::string MirEvent::serialize(MirEvent const* event)
 	std::string output;
 	auto flat_event = ::capnp::messageToFlatArray(const_cast<MirEvent*>(event)->message);
 
-	for (auto const& c : flat_event.asBytes())
-	{
-		output += c;
-	}
-
-	return output;
+    return {reinterpret_cast<char*>(flat_event.asBytes().begin()), flat_event.asBytes().size()};
 }
 
 MirEventType MirEvent::type() const
@@ -100,10 +96,10 @@ MirEventType MirEvent::type() const
         return mir_event_type_input_configuration;
     case mir::capnp::Event::Which::SURFACE_OUTPUT:
         return mir_event_type_surface_output;
+    default:
+        mir::log_critical("unknown event type.");
+        abort();
     }
-
-    mir::log_critical("unknown event type.");
-    abort();
 }
 
 MirInputEvent* MirEvent::to_input()
