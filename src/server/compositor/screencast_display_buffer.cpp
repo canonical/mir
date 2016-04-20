@@ -45,7 +45,7 @@ auto as_texture_source(mg::Buffer* buffer)
 template <void (*Generate)(GLsizei,GLuint*), void (*Delete)(GLsizei,GLuint const*)>
 mc::detail::GLResource<Delete> allocate_gl_resource()
 {
-    GLuint resource;
+    GLuint resource{0};
     Generate(1, &resource);
     return mc::detail::GLResource<Delete>{resource};
 }
