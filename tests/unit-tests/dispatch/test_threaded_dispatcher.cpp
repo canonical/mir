@@ -326,6 +326,7 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
 {
     using namespace std::chrono_literals;
     mt::CrossProcessAction stop_and_restart_process;
+    mt::CrossProcessSync exit_success_sync;
 
     auto child = mir_test_framework::fork_and_run_in_a_different_process(
         [&]
@@ -360,11 +361,14 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
                 dispatchable->trigger();
                 EXPECT_TRUE(dispatched->wait_for(5s));
 
+                if (!HasFailure())
+                    exit_success_sync.signal_ready();
+
                 // Because we terminate this process with an explicit call to
                 // exit(), objects on the stack are not destroyed.
-                // We need to destroy the stop_and_restart_process object 
-                // manually to avoid fd leaks.
+                // We need to destroy these objects manually to avoid fd leaks.
                 stop_and_restart_process.~CrossProcessAction();
+                exit_success_sync.~CrossProcessSync();
             }
 
             exit(HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
@@ -383,7 +387,17 @@ TEST(ThreadedDispatcherSignalTest, keeps_dispatching_after_signal_interruption)
         });
 
     auto const result = child->wait_for_termination(30s);
-    EXPECT_TRUE(result.succeeded());
+    EXPECT_TRUE(result.exited_normally());
+
+    // The test may run under valgrind which may change the exit code of the
+    // forked child if it detects any issues. Issues detected by valgrind are
+    // outside the scope of the test - they are for the parent caller to
+    // examine and determine their validity; hence here we ignore the exit
+    // code and instead use a sync object to determine if the child ran the
+    // test successfully.
+    // The child has already exited here so there's no reason to wait.
+    auto const exit_success = exit_success_sync.wait_for_signal_ready_for(0s);
+    EXPECT_TRUE(exit_success);
 }
 
 TEST_F(ThreadedDispatcherDeathTest, destroying_dispatcher_from_a_callback_is_an_error)
