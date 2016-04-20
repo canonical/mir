@@ -40,7 +40,9 @@ bool error_indicates_tmpfile_not_supported(int error)
     return
         error == EISDIR ||  // Directory exists, but no support for O_TMPFILE
         error == ENOENT ||  // Directory doesn't exist, and no support for O_TMPFILE
-        error == EOPNOTSUPP;    // Filesystem that directory resides on does not support O_TMPFILE
+        error == EOPNOTSUPP ||    // Filesystem that directory resides on does not support O_TMPFILE
+        error == EINVAL;    // There apparently exists at least one development board that has a kernel
+                            // that incorrectly returns EINVAL. Yay.
 }
 
 mir::Fd create_anonymous_file(size_t size)
