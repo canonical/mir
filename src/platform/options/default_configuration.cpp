@@ -172,7 +172,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the SharedLibraryProber report. [{log,lttng,off}]")
         (shell_report_opt, po::value<std::string>()->default_value(off_opt_value),
          "How to handle the Shell report. [{log,off}]")
-        (nbuffers_opt, po::value<int>()->default_value(0),
+        (nbuffers_opt, po::value<int>()->default_value(3),
             "Number of buffers per surface.")
         (composite_delay_opt, po::value<int>()->default_value(-1),
             "Compositor frame delay in milliseconds (how long to wait for new "

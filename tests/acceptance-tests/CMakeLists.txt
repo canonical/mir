@@ -93,5 +93,5 @@ CMAKE_DEPENDENT_OPTION(
 
 if (MIR_RUN_ACCEPTANCE_TESTS)
   mir_discover_tests_with_fd_leak_detection(mir_acceptance_tests)
-  mir_discover_tests_with_fd_leak_detection_and_env(mir_acceptance_tests "MIR_SERVER_NBUFFERS=3")
+  mir_discover_tests_with_fd_leak_detection_and_env(mir_acceptance_tests "MIR_SERVER_NBUFFERS=0")
 endif (MIR_RUN_ACCEPTANCE_TESTS)
