@@ -46,11 +46,6 @@ class NullPlatform : public graphics::Platform
         return mir::make_module_ptr<NullDisplay>();
     }
 
-    std::shared_ptr<graphics::PlatformIPCPackage> connection_ipc_package()
-    {
-        return std::make_shared<graphics::PlatformIPCPackage>();
-    }
-
     mir::UniqueModulePtr<graphics::PlatformIpcOperations> make_ipc_operations() const override
     {
         return mir::make_module_ptr<NullPlatformIpcOperations>();
