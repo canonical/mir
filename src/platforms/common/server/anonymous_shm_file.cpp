@@ -47,7 +47,7 @@ bool error_indicates_tmpfile_not_supported(int error)
 
 mir::Fd create_anonymous_file(size_t size)
 {
-    auto raw_fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
+    auto raw_fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, O_CLOEXEC, S_IRWXU);
 
     // Workaround for filesystems that don't support O_TMPFILE
     if (raw_fd == -1 && error_indicates_tmpfile_not_supported(errno))
