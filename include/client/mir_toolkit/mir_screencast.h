@@ -46,7 +46,7 @@ MirScreencastSpec* mir_create_screencast_spec(MirConnection* connection);
  * \param [in] width    Requested width.
  *
  */
-void mir_screencast_spec_set_width(MirScreencastSpec* spec, unsigned width);
+void mir_screencast_spec_set_width(MirScreencastSpec* spec, unsigned int width);
 
 /**
  * Set the requested height, in pixels
@@ -55,7 +55,7 @@ void mir_screencast_spec_set_width(MirScreencastSpec* spec, unsigned width);
  * \param [in] height   Requested height.
  *
  */
-void mir_screencast_spec_set_height(MirScreencastSpec* spec, unsigned height);
+void mir_screencast_spec_set_height(MirScreencastSpec* spec, unsigned int height);
 
 /**
  * Set the requested pixel format.
@@ -93,7 +93,7 @@ void mir_screencast_spec_set_mirror_mode(MirScreencastSpec* spec, MirMirrorMode 
  * \param [in] nbuffers The number of buffers to allocate for screencasting
  *
  */
-void mir_screencast_spec_set_number_of_buffers(MirScreencastSpec* spec, int nbuffers);
+void mir_screencast_spec_set_number_of_buffers(MirScreencastSpec* spec, unsigned int nbuffers);
 
 /**
  * Release the resources held by a MirScreencastSpec.

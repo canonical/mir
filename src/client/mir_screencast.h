@@ -63,7 +63,7 @@ struct MirScreencastSpec
     mir::optional_value<MirRectangle> capture_region;
 
     mir::optional_value<MirMirrorMode> mirror_mode;
-    mir::optional_value<int> num_buffers;
+    mir::optional_value<unsigned int> num_buffers;
 };
 
 struct MirScreencast

@@ -49,12 +49,12 @@ MirScreencastSpec* mir_create_screencast_spec(MirConnection* connection)
     return new MirScreencastSpec{connection};
 }
 
-void mir_screencast_spec_set_width(MirScreencastSpec* spec, unsigned width)
+void mir_screencast_spec_set_width(MirScreencastSpec* spec, unsigned int width)
 {
     spec->width = width;
 }
 
-void mir_screencast_spec_set_height(MirScreencastSpec* spec, unsigned height)
+void mir_screencast_spec_set_height(MirScreencastSpec* spec, unsigned int height)
 {
     spec->height = height;
 }
@@ -74,7 +74,7 @@ void mir_screencast_spec_set_mirror_mode(MirScreencastSpec* spec, MirMirrorMode 
     spec->mirror_mode = mode;
 }
 
-void mir_screencast_spec_set_number_of_buffers(MirScreencastSpec* spec, int nbuffers)
+void mir_screencast_spec_set_number_of_buffers(MirScreencastSpec* spec, unsigned int nbuffers)
 {
     spec->num_buffers = nbuffers;
 }

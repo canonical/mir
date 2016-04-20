@@ -202,7 +202,7 @@ TEST_F(Screencast, uses_provided_spec_parameters)
         {default_screencast_params.region.left, default_screencast_params.region.top},
         {default_screencast_params.region.width, default_screencast_params.region.height}};
     MirPixelFormat const pixel_format {default_screencast_params.pixel_format};
-    int const num_buffers{3};
+    unsigned int const num_buffers{3};
     MirMirrorMode const mirror_mode{mir_mirror_mode_vertical};
 
     InSequence seq;
