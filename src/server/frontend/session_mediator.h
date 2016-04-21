@@ -21,7 +21,7 @@
 
 #include "display_server.h"
 #include "buffer_stream_tracker.h"
-
+#include "screencast_buffer_tracker.h"
 #include "protobuf_ipc_factory.h"
 
 #include "mir/frontend/connection_context.h"
@@ -270,6 +270,7 @@ private:
     std::shared_ptr<input::InputDeviceHub> const hub;
 
     BufferStreamTracker buffer_stream_tracker;
+    ScreencastBufferTracker screencast_buffer_tracker;
 
     std::weak_ptr<Session> weak_session;
     std::weak_ptr<PromptSession> weak_prompt_session;

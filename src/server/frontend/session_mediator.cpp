@@ -746,7 +746,7 @@ void mf::SessionMediator::create_screencast(
     mir::protobuf::Screencast* protobuf_screencast,
     google::protobuf::Closure* done)
 {
-    static auto const msg_type = mg::BufferIpcMsgType::full_msg;
+    auto const msg_type = mg::BufferIpcMsgType::full_msg;
 
     geom::Rectangle const region{
         {parameters->region().left(), parameters->region().top()},
@@ -765,6 +765,7 @@ void mf::SessionMediator::create_screencast(
 
     auto screencast_session_id = screencast->create_session(region, size, pixel_format, nbuffers, mirror_mode);
     auto buffer = screencast->capture(screencast_session_id);
+    screencast_buffer_tracker.track_buffer(screencast_session_id, buffer.get());
 
     protobuf_screencast->mutable_screencast_id()->set_value(
         screencast_session_id.as_value());
@@ -786,6 +787,7 @@ void mf::SessionMediator::release_screencast(
     ScreencastSessionId const screencast_session_id{
         protobuf_screencast_id->value()};
     screencast->destroy_session(screencast_session_id);
+    screencast_buffer_tracker.remove_session(screencast_session_id);
     done->Run();
 }
 
@@ -794,12 +796,13 @@ void mf::SessionMediator::screencast_buffer(
     mir::protobuf::Buffer* protobuf_buffer,
     google::protobuf::Closure* done)
 {
-    static auto const msg_type = mg::BufferIpcMsgType::full_msg;
     ScreencastSessionId const screencast_session_id{
         protobuf_screencast_id->value()};
 
     auto buffer = screencast->capture(screencast_session_id);
-
+    bool const already_tracked = screencast_buffer_tracker.track_buffer(screencast_session_id, buffer.get());
+    auto const msg_type = already_tracked ?
+        mg::BufferIpcMsgType::update_msg : mg::BufferIpcMsgType::full_msg;
     pack_protobuf_buffer(*protobuf_buffer,
                          buffer.get(),
                          msg_type);
