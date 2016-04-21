@@ -16,6 +16,73 @@ mir (0.22.0-0ubuntu1) UNRELEASED; urgency=medium
 
  -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 21 Mar 2016 12:45:22 -0500
 
+mir (0.21.0+16.04.20160330-0ubuntu1) xenial; urgency=medium
+
+  [ Alberto Aguirre ]
+  * New upstream release 0.21.0 (https://launchpad.net/mir/+milestone/0.21.0)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . mirserver ABI unchanged at 38
+      . mircommon ABI unchanged at 5
+      . mirplatform ABI unchanged at 11
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchaged at 8
+      . mirclientplatform ABI bumped to 5
+      . mirinputplatform ABI unchanged at 5
+    - Enhancements:
+      . New display enumeration API
+      . Added Android diagnostic tests to assist during porting to
+        new devices
+      . Added mir_demo_client_camera: a Video4Linux2 client
+    - Bugs fixed:
+      . Sometimes devices don't suspend - display turns back on
+        immediately (LP: #1549701)
+      . Mir crashed with exception 'failed to add sync point to command
+        buffer' (LP: #1554635)
+      . Mouse cursor is unusably slow in Unity 8 with a 1000Hz mouse
+        (LP: #1539009)
+      . Packaged mir_unit_tests binary is not suitable for general use
+        (LP: #1547015)
+      . [regression] Mir stops receiving input after a pause/resume
+        cycle (LP: #1548989)
+      . NBS (--nbuffers=0) causes software clients to crash with
+        std::exception::what: Failed to mmap buffer 13, "Permission denied")
+        (LP: #1550432)
+      . Fullscreen clients freeze when using NBS with multiple monitors
+        (LP: #1551536)
+      . [ FAILED ] DisplayConfigurationTest.output_position_is_independent_of_
+        orientation (LP: #1552065)
+      . The server-side use of MIR_SOCKET is confusing (LP: #1290345)
+      . [regression] FTBFS with -DMIR_LINK_TIME_OPTIMIZATION=on
+        -Duse_debflags=on (LP: #1350343)
+      . Mir On X (mesa-x11) keeps receiving mouse movement events even
+        when not focused (LP: #1528110)
+      . x11 platform: mouse cursor moves strange (LP: #1546324)
+      . Cross compiling to wily/vivid doesn't work (LP: #1549152)
+      . Rendering stutters when a new client establishes a connection
+        (LP: #1549359)
+      . 'mir_demo_server --test-client' crashes (SIGSEGV) when client
+        dies (LP: #1555620)
+      . [testfail] CI failure: TestClientInput.client_input_config_request_
+        receives_all_attached_devices (LP: #1555708)
+      . [regression] Mir FTBFS when MIR_ENABLE_TESTS=no (LP: #1556080)
+      . Mir-on-X11 doesn't exit (until it gets an event) (LP: #1556210)
+      . InputPlatformProbe.x11_platform_found_and_used_when_display_connection_
+        works breaks with old input drivers present (LP: #1543049)
+      . [regression] MIR_CLIENT_PERF_REPORT is missing window/surface
+        names (LP: #1546933)
+      . Installed binaries fail to run with mir_demo_server --test-client XXXX
+        (LP: #1556160)
+      . mir_demo_server --test-client [mir_demo_client_scroll|
+        mir_demo_client_flicker] fails (LP: #1556205)
+      . The contents of debian/mir-demos.examples are out of date and useless
+        (LP: #1557446)
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Wed, 30 Mar 2016 00:23:20 +0000
+
 mir (0.20.3+16.04.20160322-0ubuntu1) xenial; urgency=medium
 
   [ Alberto Aguirre ]
