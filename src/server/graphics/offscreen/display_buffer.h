@@ -67,6 +67,7 @@ public:
 
     geometry::Rectangle view_area() const override;
     void make_current() override;
+    void bind() override;
     void release_current() override;
     void swap_buffers() override;
 
