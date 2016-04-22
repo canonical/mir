@@ -21,14 +21,22 @@
 
 bin_dir=`dirname $0`
 
+title_banner()
+{
+    echo "======================================================================="
+    echo "|  $*"
+    echo "======================================================================="
+}
+
 tests_run=0
 failures=0
-for perf_test in mir_glmark2_performance_test ; do
+for perf_test in mir_glmark2_performance_test
+do
+    title_banner "Mir Performance Tests now running: $perf_test"
     tests_run=$(($tests_run + 1))
-    ${bin_dir}/$perf_test || failures=$(($failures + 1))
+    $bin_dir/$perf_test || failures=$(($failures + 1))
 done
 
 passes=$(($tests_run - $failures))
-echo ""
-echo "Mir Performance Tests ran $tests_run tests: $passes passed, $failures failed."
+title_banner "Mir Performance Tests ran $tests_run tests: $passes passed, $failures failed."
 return $failures
