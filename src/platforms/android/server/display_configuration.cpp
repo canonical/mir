@@ -42,7 +42,7 @@ mg::DisplayConfigurationOutput make_virtual_config()
     size_t const preferred_format_index{0};
     size_t const preferred_mode_index{0};
     bool const connected{false};
-    auto const type = mg::DisplayConfigurationOutputType::lvds;
+    auto const type = mg::DisplayConfigurationOutputType::virt;
     auto const form_factor = mir_form_factor_monitor;
     float const scale{1.0f};
     std::vector<mg::DisplayConfigurationMode> external_modes;
