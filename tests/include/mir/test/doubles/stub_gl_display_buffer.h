@@ -38,6 +38,7 @@ public:
     void make_current() override {}
     void release_current() override {}
     void swap_buffers() override {}
+    void bind() override {}
 };
 
 }

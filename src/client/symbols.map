@@ -290,6 +290,8 @@ MIR_CLIENT_0.22 {  # New functions in Mir 0.22
     mir_screencast_spec_release;
     mir_screencast_spec_set_capture_region;
     mir_screencast_spec_set_height;
+    mir_screencast_spec_set_mirror_mode;
+    mir_screencast_spec_set_number_of_buffers;
     mir_screencast_spec_set_pixel_format;
     mir_screencast_spec_set_width;
 } MIR_CLIENT_0.21;

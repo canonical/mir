@@ -97,6 +97,12 @@ void mrg::CurrentRenderTarget::ensure_current()
     render_target->make_current();
 }
 
+void mrg::CurrentRenderTarget::bind()
+{
+    ensure_current();
+    render_target->bind();
+}
+
 void mrg::CurrentRenderTarget::swap_buffers()
 {
     render_target->swap_buffers();
@@ -228,7 +234,7 @@ void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
 
 void mrg::Renderer::render(mg::RenderableList const& renderables) const
 {
-    render_target.ensure_current();
+    render_target.bind();
 
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);

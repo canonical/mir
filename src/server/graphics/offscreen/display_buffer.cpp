@@ -130,6 +130,10 @@ geom::Rectangle mgo::DisplayBuffer::view_area() const
 void mgo::DisplayBuffer::make_current()
 {
     egl_context.make_current();
+}
+
+void mgo::DisplayBuffer::bind()
+{
     fbo.bind();
 }
 

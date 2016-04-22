@@ -73,6 +73,10 @@ void mgn::detail::DisplayBuffer::swap_buffers()
     eglSwapBuffers(egl_display, egl_surface);
 }
 
+void mgn::detail::DisplayBuffer::bind()
+{
+}
+
 bool mgn::detail::DisplayBuffer::post_renderables_if_optimizable(RenderableList const&)
 {
     return false;

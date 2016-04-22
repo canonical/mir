@@ -49,6 +49,7 @@ public:
     ~CurrentRenderTarget();
 
     void ensure_current();
+    void bind();
     void swap_buffers();
 
 private:

@@ -456,6 +456,10 @@ void mgm::DisplayBuffer::make_current()
     }
 }
 
+void mgm::DisplayBuffer::bind()
+{
+}
+
 void mgm::DisplayBuffer::release_current()
 {
     egl.release_current();

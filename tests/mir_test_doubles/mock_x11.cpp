@@ -40,7 +40,8 @@ mtd::FakeX11Resources::FakeX11Resources()
     std::memset(&focus_out_event_return, 0, sizeof(XEvent));
     std::memset(&vscroll_event_return, 0, sizeof(XEvent));
     std::memset(&motion_event_return, 0, sizeof(XEvent));
-    visual_info.depth = 24;
+    std::memset(&visual_info, 0, sizeof(XVisualInfo));
+    visual_info.red_mask = 0xFF0000;
     keypress_event_return.type = KeyPress;
     button_release_event_return.type = ButtonRelease;
     button_release_event_return.xbutton.button = 0;
@@ -64,7 +65,8 @@ mtd::MockX11::MockX11()
     .WillByDefault(Return(fake_x11.display));
 
     ON_CALL(*this, XGetVisualInfo(fake_x11.display,_,_,_))
-    .WillByDefault(Return(&fake_x11.visual_info));
+    .WillByDefault(DoAll(SetArgPointee<3>(1),
+                         Return(&fake_x11.visual_info)));
 
     ON_CALL(*this, XCreateWindow_wrapper(fake_x11.display,_,_,_,_,_,_,_,_,_))
     .WillByDefault(Return(fake_x11.window));
