@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,38 +13,34 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- *   Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_SHM_FILE_H_
-#define MIR_GRAPHICS_MESA_SHM_FILE_H_
-
-#include <cstddef>
+#ifndef MIR_GRAPHICS_MESA_BUFFER_TEXTURE_BINDER_H_
+#define MIR_GRAPHICS_MESA_BUFFER_TEXTURE_BINDER_H_
 
 namespace mir
 {
 namespace graphics
 {
-namespace mesa
+namespace common
 {
 
-class ShmFile
+class BufferTextureBinder
 {
 public:
-    virtual ~ShmFile() = default;
+    virtual ~BufferTextureBinder() {}
 
-    virtual void* base_ptr() const = 0;
-    virtual int fd() const = 0;
+    virtual void gl_bind_to_texture() = 0;
 
 protected:
-    ShmFile() = default;
-    ShmFile(ShmFile const&) = delete;
-    ShmFile& operator=(ShmFile const&) = delete;
+    BufferTextureBinder() = default;
+    BufferTextureBinder(BufferTextureBinder const&) = delete;
+    BufferTextureBinder& operator=(BufferTextureBinder const&) = delete;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_MESA_SHM_FILE_H_ */
+#endif /* MIR_GRAPHICS_MESA_BUFFER_TEXTURE_BINDER_H_ */
