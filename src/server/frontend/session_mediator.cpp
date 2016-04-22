@@ -121,6 +121,7 @@ mf::SessionMediator::~SessionMediator() noexcept
         report->session_error(session->name(), __PRETTY_FUNCTION__, "connection dropped without disconnect");
         shell->close_session(session);
     }
+    destroy_screencast_sessions();
 }
 
 void mf::SessionMediator::client_pid(int pid)
@@ -536,6 +537,7 @@ void mf::SessionMediator::disconnect(
     report->session_disconnect_called(session->name());
 
     shell->close_session(session);
+    destroy_screencast_sessions();
     weak_session.reset();
 
     done->Run();
@@ -1172,4 +1174,17 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
     });
 
     return config;
+}
+
+void mf::SessionMediator::destroy_screencast_sessions()
+{
+    std::vector<ScreencastSessionId> ids_to_untrack;
+    screencast_buffer_tracker.for_each_session([this, &ids_to_untrack](ScreencastSessionId id)
+    {
+        screencast->destroy_session(id);
+        ids_to_untrack.push_back(id);
+    });
+
+    for (auto const& id : ids_to_untrack)
+        screencast_buffer_tracker.remove_session(id);
 }

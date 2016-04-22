@@ -249,6 +249,8 @@ private:
 
     virtual std::function<void(std::shared_ptr<Session> const&)> prompt_session_connect_handler() const;
 
+    void destroy_screencast_sessions();
+
     pid_t client_pid_;
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::PlatformIpcOperations> const ipc_operations;
