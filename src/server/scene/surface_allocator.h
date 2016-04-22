@@ -47,7 +47,7 @@ public:
          std::shared_ptr<SceneReport> const& report);
 
     std::shared_ptr<Surface> create_surface(
-        std::shared_ptr<compositor::BufferStream> const& buffer_stream,
+        std::list<scene::StreamInfo> const& streams,
         SurfaceCreationParameters const& params) override;
 
 private:

@@ -41,7 +41,6 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
 {
     MOCK_METHOD1(session_connect_called, void (std::string const&));
     MOCK_METHOD1(session_create_surface_called, void (std::string const&));
-    MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_exchange_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_submit_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_allocate_buffers_called, void (std::string const&));
@@ -58,6 +57,8 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
     void session_configure_surface_cursor_called(std::string const&) override {};
     void session_configure_display_called(std::string const&) override {};
     void session_set_base_display_configuration_called(std::string const&) override {};
+    void session_preview_base_display_configuration_called(std::string const&) override {};
+    void session_confirm_base_display_configuration_called(std::string const&) override {};
     void session_error(const std::string&, const char*, const std::string&) override {};
 };
 

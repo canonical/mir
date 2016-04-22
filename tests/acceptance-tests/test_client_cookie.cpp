@@ -23,7 +23,7 @@
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/spin_wait.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 #include "mir/cookie/authority.h"
 #include "mir_test_framework/visible_surface.h"
 
@@ -67,8 +67,8 @@ public:
 
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
 
-        ready_to_accept_events.wait_for_at_most_seconds(max_wait);
-        if (!ready_to_accept_events.woken())
+        ready_to_accept_events.wait_for(max_wait);
+        if (!ready_to_accept_events.raised())
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become focused and exposed"));
     }
 
@@ -83,7 +83,7 @@ public:
        "touch screen", "touch-screen-uid", mi::DeviceCapability::touchscreen | mi::DeviceCapability::multitouch})
        };
 
-    mir::test::WaitCondition ready_to_accept_events;
+    mir::test::Signal ready_to_accept_events;
     std::vector<std::vector<uint8_t>> out_cookies;
     std::vector<uint8_t> cookie_secret;
     size_t event_count{0};
@@ -121,7 +121,7 @@ void cookie_capturing_callback(MirSurface*, MirEvent const* ev, void* ctx)
         }
 
         if (client_cookie->exposed && client_cookie->focused)
-            client_cookie->ready_to_accept_events.wake_up_everyone();
+            client_cookie->ready_to_accept_events.raise();
     }
     else if (event_type == mir_event_type_input)
     {

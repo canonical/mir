@@ -67,6 +67,7 @@ public:
     void release_current() override;
     void swap_buffers() override;
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
+    void bind() override;
 
     void for_each_display_buffer(
         std::function<void(graphics::DisplayBuffer&)> const& f) override;
@@ -74,6 +75,7 @@ public:
     std::chrono::milliseconds recommended_sleep() const override;
 
     MirOrientation orientation() const override;
+    MirMirrorMode mirror_mode() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
     void set_orientation(MirOrientation const rot, geometry::Rectangle const& a);

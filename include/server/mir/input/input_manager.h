@@ -21,20 +21,13 @@
 #ifndef MIR_INPUT_INPUT_MANAGER_H_
 #define MIR_INPUT_INPUT_MANAGER_H_
 
-#include <memory>
-
 namespace mir
 {
 namespace input
 {
-class Platform;
-
 class InputManager
 {
 public:
-    // TODO Remove add_platform() when we next break mirserver ABI
-    __attribute__ ((deprecated))
-    virtual void add_platform(std::shared_ptr<Platform> const& platform) = 0;
     virtual void start() = 0;
     virtual void stop() = 0;
 

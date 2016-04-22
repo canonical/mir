@@ -28,6 +28,7 @@ set(
   reordering_message_sender.cpp
   reordering_message_sender.h
   event_sink_factory.h
+  screencast_buffer_tracker.cpp
 )
 
 add_library(

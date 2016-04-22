@@ -27,9 +27,6 @@ namespace input
 {
 class NullInputManager : public input::InputManager
 {
-    void add_platform(std::shared_ptr<Platform> const&) override
-    {
-    }
     void start() override
     {
     }

@@ -21,7 +21,6 @@
 
 #include "mir/input/input_manager.h"
 
-#include <vector>
 #include <thread>
 #include <atomic>
 
@@ -50,14 +49,9 @@ public:
     void start() override;
     void stop() override;
 private:
-    // TODO Remove add_platform() when we next break mirserver ABI
-    // when we do that we can also convert platforms to a std::shared_ptr<Platform> const
-    // and simplify start_platforms() & stop_platforms()
-    void add_platform(std::shared_ptr<Platform> const& platform) override;
-
     void start_platforms();
     void stop_platforms();
-    std::vector<std::shared_ptr<Platform>> platforms;
+    std::shared_ptr<Platform> const platform;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
     std::shared_ptr<dispatch::ActionQueue> const queue;
     std::unique_ptr<dispatch::ThreadedDispatcher> input_thread;

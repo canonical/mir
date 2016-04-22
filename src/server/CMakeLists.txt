@@ -58,6 +58,8 @@ add_library(mirserverobjects OBJECT
   server.cpp
   lockable_callback_wrapper.cpp
   basic_callback.cpp
+  ${PROJECT_SOURCE_DIR}/include/server/mir/time/alarm_factory.h
+  ${PROJECT_SOURCE_DIR}/include/server/mir/time/alarm.h
 )
 
 set(MIR_SERVER_OBJECTS
@@ -123,7 +125,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
 )
 
-set(MIRSERVER_ABI 38) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 39) # Be sure to increment MIR_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(

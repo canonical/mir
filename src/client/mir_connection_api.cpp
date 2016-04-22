@@ -314,8 +314,44 @@ void mir_connection_set_input_config_change_callback(
 
 void mir_input_config_destroy(MirInputConfig const* config)
 {
-    auto device_vector = reinterpret_cast<std::vector<mir::input::DeviceData>const*>(config);
+    auto device_vector = reinterpret_cast<std::vector<mir::input::DeviceData> const*>(config);
     delete device_vector;
+}
+
+void mir_connection_preview_base_display_configuration(
+    MirConnection* connection,
+    MirDisplayConfig const* config,
+    int timeout_seconds)
+{
+    mir::require(mir_connection_is_valid(connection));
+
+    try
+    {
+        connection->preview_base_display_configuration(
+            *reinterpret_cast<mp::DisplayConfiguration const*>(config),
+            std::chrono::seconds{timeout_seconds});
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+}
+
+void mir_connection_confirm_base_display_configuration(
+    MirConnection* connection,
+    MirDisplayConfig const* config)
+{
+    mir::require(mir_connection_is_valid(connection));
+
+    try
+    {
+        connection->confirm_base_display_configuration(
+            *reinterpret_cast<mp::DisplayConfiguration const*>(config));
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
 }
 
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(
@@ -355,3 +391,21 @@ MirWaitHandle* mir_connection_platform_operation(
         return nullptr;
     }
 }
+
+void mir_connection_set_error_callback(
+    MirConnection* connection,
+    mir_error_callback callback,
+    void* context)
+{
+    mir::require(mir_connection_is_valid(connection));
+
+    try
+    {
+        connection->register_error_callback(callback, context);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+}
+

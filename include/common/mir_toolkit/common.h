@@ -169,6 +169,14 @@ typedef enum MirOrientation
     mir_orientation_right = 270
 } MirOrientation;
 
+/** Mirroring axis relative to the "natural" orientation of the display */
+typedef enum MirMirrorMode
+{
+    mir_mirror_mode_none,
+    mir_mirror_mode_vertical,
+    mir_mirror_mode_horizontal
+} MirMirrorMode;
+
 typedef enum MirOrientationMode
 {
     mir_orientation_mode_portrait = 1 << 0,

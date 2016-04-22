@@ -1,4 +1,4 @@
-MIR_SERVER_0.20 {
+MIR_SERVER_0.22 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -642,13 +642,50 @@ MIR_SERVER_0.20 {
     mir::renderer::gl::Renderer::Program::Program*;
     mir::renderer::gl::Renderer::draw*;
     mir::renderer::gl::Renderer::render*;
-    mir::renderer::gl::Renderer::set_rotation*;
+    mir::renderer::gl::Renderer::set_output_transform*;
     mir::renderer::gl::Renderer::set_viewport*;
     mir::renderer::gl::Renderer::suspend*;
     mir::renderer::gl::Renderer::tessellate*;
     mir::renderer::gl::Renderer::vshader;
+    mir::shell::BasicWindowManager::active_display*;
+    mir::shell::BasicWindowManager::add_display*;
+    mir::shell::BasicWindowManager::add_session*;
+    mir::shell::BasicWindowManager::add_surface*;
+    mir::shell::BasicWindowManager::BasicWindowManager*;
+    mir::shell::BasicWindowManager::find_session*;
+    mir::shell::BasicWindowManager::focused_session*;
+    mir::shell::BasicWindowManager::focused_surface*;
+    mir::shell::BasicWindowManager::focus_next_session*;
+    mir::shell::BasicWindowManager::forget*;
+    mir::shell::BasicWindowManager::handle_keyboard_event*;
+    mir::shell::BasicWindowManager::handle_pointer_event*;
+    mir::shell::BasicWindowManager::handle_raise_surface*;
+    mir::shell::BasicWindowManager::handle_touch_event*;
+    mir::shell::BasicWindowManager::info_for*;
+    mir::shell::BasicWindowManager::modify_surface*;
+    mir::shell::BasicWindowManager::raise_tree*;
+    mir::shell::BasicWindowManager::remove_display*;
+    mir::shell::BasicWindowManager::remove_session*;
+    mir::shell::BasicWindowManager::remove_surface*;
+    mir::shell::BasicWindowManager::set_focus_to*;
+    mir::shell::BasicWindowManager::set_surface_attribute*;
+    mir::shell::BasicWindowManager::surface_at*;
+    typeinfo?for?mir::shell::BasicWindowManager;
     typeinfo?for?mir::renderer::gl::Renderer;
     vtable?for?mir::renderer::gl::Renderer;
+    virtual?thunk?to?mir::shell::BasicWindowManager::add_display*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::add_session*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::add_surface*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::handle_keyboard_event*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::handle_pointer_event*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::handle_raise_surface*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::handle_touch_event*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::modify_surface*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::remove_display*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::remove_session*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::remove_surface*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::set_surface_attribute*;
+    VTT?for?mir::shell::BasicWindowManager;
 
 # these symbols are needed by the test framework but are not intended to be public
     mir::shell::CanonicalWindowManagerPolicy::handle_set_state*;
@@ -742,6 +779,7 @@ MIR_SERVER_0.20 {
     mir::DefaultServerConfiguration::the_scene*;
     mir::DefaultServerConfiguration::the_scene_report*;
     mir::DefaultServerConfiguration::the_screencast*;
+    mir::DefaultServerConfiguration::the_seat*;
     mir::DefaultServerConfiguration::the_server_action_queue*;
     mir::DefaultServerConfiguration::the_server_status_listener*;
     mir::DefaultServerConfiguration::the_session_authorizer*;
@@ -769,56 +807,13 @@ MIR_SERVER_0.20 {
     mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
     mir::DefaultServerConfiguration::wrap_shell*;
     mir::DefaultServerConfiguration::wrap_surface_stack*;
+    typeinfo?for?mir::shell::CanonicalWindowManagerPolicy;
     typeinfo?for?mir::DefaultServerConfiguration;
     mir::run_mir*;
     mir::DisplayServer::stop*;
+    vtable?for?mir::shell::CanonicalWindowManagerPolicy;
+    VTT?for?mir::shell::CanonicalWindowManagerPolicy
+    ;
   };
  local: *;
 };
-
-MIR_SERVER_0.21 {  # New symbols in Mir 0.21
- global:
-  extern "C++" {
-    mir::shell::BasicWindowManager::active_display*;
-    mir::shell::BasicWindowManager::add_display*;
-    mir::shell::BasicWindowManager::add_session*;
-    mir::shell::BasicWindowManager::add_surface*;
-    mir::shell::BasicWindowManager::BasicWindowManager*;
-    mir::shell::BasicWindowManager::find_session*;
-    mir::shell::BasicWindowManager::focused_session*;
-    mir::shell::BasicWindowManager::focused_surface*;
-    mir::shell::BasicWindowManager::focus_next_session*;
-    mir::shell::BasicWindowManager::forget*;
-    mir::shell::BasicWindowManager::handle_keyboard_event*;
-    mir::shell::BasicWindowManager::handle_pointer_event*;
-    mir::shell::BasicWindowManager::handle_raise_surface*;
-    mir::shell::BasicWindowManager::handle_touch_event*;
-    mir::shell::BasicWindowManager::info_for*;
-    mir::shell::BasicWindowManager::modify_surface*;
-    mir::shell::BasicWindowManager::raise_tree*;
-    mir::shell::BasicWindowManager::remove_display*;
-    mir::shell::BasicWindowManager::remove_session*;
-    mir::shell::BasicWindowManager::remove_surface*;
-    mir::shell::BasicWindowManager::set_focus_to*;
-    mir::shell::BasicWindowManager::set_surface_attribute*;
-    mir::shell::BasicWindowManager::surface_at*;
-    typeinfo?for?mir::shell::BasicWindowManager;
-    virtual?thunk?to?mir::shell::BasicWindowManager::add_display*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::add_session*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::add_surface*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::handle_keyboard_event*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::handle_pointer_event*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::handle_raise_surface*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::handle_touch_event*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::modify_surface*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::remove_display*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::remove_session*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::remove_surface*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::set_surface_attribute*;
-    VTT?for?mir::shell::BasicWindowManager;
-    mir::DefaultServerConfiguration::the_seat*;
-    typeinfo?for?mir::shell::CanonicalWindowManagerPolicy;
-    vtable?for?mir::shell::CanonicalWindowManagerPolicy;
-    VTT?for?mir::shell::CanonicalWindowManagerPolicy;
-  };
-} MIR_SERVER_0.20;

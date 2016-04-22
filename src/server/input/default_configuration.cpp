@@ -19,10 +19,10 @@
 #include "mir/default_server_configuration.h"
 
 #include "android/input_sender.h"
-#include "android/input_channel_factory.h"
 #include "key_repeat_dispatcher.h"
 #include "display_input_region.h"
 #include "event_filter_chain_dispatcher.h"
+#include "channel_factory.h"
 #include "cursor_controller.h"
 #include "touchspot_controller.h"
 #include "null_input_manager.h"
@@ -66,13 +66,17 @@ namespace
 
 bool is_arale()
 {
+#ifdef __ARM_EABI__
     try
     {
-        mir::SharedLibrary android_properties("libandroid-properties.so.1");
-        int (*property_get)(char const*, char*, char const*) = nullptr;
-        property_get = android_properties.load_function<decltype(property_get)>("property_get");
+        auto const android_properties = "libandroid-properties.so.1";
+        auto const arale_device_name = "arale";
+        int const property_value_max = 92;
 
-        const int property_value_max = 92;
+        mir::SharedLibrary android_properties_lib(android_properties);
+        int (*property_get)(char const*, char*, char const*) = nullptr;
+        property_get = android_properties_lib.load_function<decltype(property_get)>("property_get");
+
         char default_value[] = "";
         char value[property_value_max];
 
@@ -81,11 +85,12 @@ bool is_arale()
 
         property_get("ro.product.device", value, default_value);
 
-        return std::strcmp("arale", value) == 0;
+        return std::strcmp(arale_device_name, value) == 0;
     }
     catch(...)
     {
     }
+#endif
     return false;
 }
 
@@ -192,7 +197,7 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
     if (!options->get<bool>(options::enable_input_opt))
         return std::make_shared<mi::NullInputChannelFactory>();
     else
-        return std::make_shared<mia::InputChannelFactory>();
+        return std::make_shared<mi::ChannelFactory>();
 }
 
 std::shared_ptr<mi::CursorListener>

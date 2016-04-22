@@ -25,7 +25,7 @@
 #include "mir_test_framework/placement_applying_shell.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/temporary_environment_value.h"
-#include "mir/test/wait_condition.h"
+#include "mir/test/signal.h"
 #include "mir/test/spin_wait.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/event_factory.h"
@@ -48,6 +48,8 @@ namespace ms = mir::scene;
 namespace mis = mir::input::synthesis;
 namespace mtf = mir_test_framework;
 namespace geom = mir::geometry;
+
+using namespace std::chrono_literals;
 
 namespace
 {
@@ -100,8 +102,8 @@ struct Client
         mir_buffer_stream_swap_buffers_sync(
             mir_surface_get_buffer_stream(surface));
 
-        ready_to_accept_events.wait_for_at_most_seconds(4);
-        if (!ready_to_accept_events.woken())
+        ready_to_accept_events.wait_for(4s);
+        if (!ready_to_accept_events.raised())
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for surface to become focused and exposed"));
     }
 
@@ -119,7 +121,7 @@ struct Client
             focused = true;
 
         if (exposed && focused)
-            ready_to_accept_events.wake_up_everyone();
+            ready_to_accept_events.raise();
     }
 
     static void handle_event(MirSurface*, MirEvent const* ev, void* context)
@@ -147,8 +149,8 @@ struct Client
         mir_connection_release(connection);
     }
     MirConnection * connection;
-    mir::test::WaitCondition ready_to_accept_events;
-    mir::test::WaitCondition all_events_received;
+    mir::test::Signal ready_to_accept_events;
+    mir::test::Signal all_events_received;
     bool exposed = false;
     bool focused = false;
 };
@@ -223,7 +225,7 @@ TEST_F(TestClientInput, clients_receive_keys)
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_R));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_R));
 
-    first_client.all_events_received.wait_for_at_most_seconds(10);
+    first_client.all_events_received.wait_for(10s);
 }
 
 TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
@@ -237,7 +239,7 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_LEFTSHIFT));
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_4));
-    first_client.all_events_received.wait_for_at_most_seconds(10);
+    first_client.all_events_received.wait_for(10s);
 }
 
 TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_events)
@@ -256,7 +258,7 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window_and_crossing_event
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(surface_width - 1, surface_height - 1));
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(2, 2));
 
-    first_client.all_events_received.wait_for_at_most_seconds(120);
+    first_client.all_events_received.wait_for(120s);
 }
 
 TEST_F(TestClientInput, clients_receive_relative_pointer_events)
@@ -290,7 +292,7 @@ TEST_F(TestClientInput, clients_receive_relative_pointer_events)
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(-1, -1));
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(-1, -1));
 
-    first_client.all_events_received.wait_for_at_most_seconds(120);
+    first_client.all_events_received.wait_for(120s);
 }
 
 TEST_F(TestClientInput, clients_receive_button_events_inside_window)
@@ -304,7 +306,7 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
 
     fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
 
-    first_client.all_events_received.wait_for_at_most_seconds(10);
+    first_client.all_events_received.wait_for(10s);
 }
 
 TEST_F(TestClientInput, clients_receive_many_button_events_inside_window)
@@ -348,7 +350,7 @@ TEST_F(TestClientInput, clients_receive_many_button_events_inside_window)
     release_button(BTN_RIGHT);
     release_button(BTN_LEFT);
 
-    first_client.all_events_received.wait_for_at_most_seconds(10);
+    first_client.all_events_received.wait_for(10s);
 }
 
 TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
@@ -384,8 +386,8 @@ TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
     // In the bounds of the second surface
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(client_width, client_height));
 
-    first_client.all_events_received.wait_for_at_most_seconds(2);
-    second_client.all_events_received.wait_for_at_most_seconds(2);
+    first_client.all_events_received.wait_for(2s);
+    second_client.all_events_received.wait_for(2s);
 }
 
 TEST_F(TestClientInput, clients_do_not_receive_pointer_outside_input_region)
@@ -430,7 +432,7 @@ TEST_F(TestClientInput, clients_do_not_receive_pointer_outside_input_region)
     fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
 
-    first_client.all_events_received.wait_for_at_most_seconds(5);
+    first_client.all_events_received.wait_for(5s);
 }
 
 TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
@@ -477,8 +479,8 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
     fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_mouse->emit_event(mis::a_button_up_event().of_button(BTN_LEFT));
 
-    first_client.all_events_received.wait_for_at_most_seconds(5);
-    second_client.all_events_received.wait_for_at_most_seconds(5);
+    first_client.all_events_received.wait_for(5s);
+    second_client.all_events_received.wait_for(5s);
 }
 
 TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
@@ -502,12 +504,12 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
     // So we expect each of the two surfaces to receive one event
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1,1));
 
-    second_client.all_events_received.wait_for_at_most_seconds(2);
+    second_client.all_events_received.wait_for(2s);
 
     server.the_shell()->focused_session()->hide();
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1,1));
-    first_client.all_events_received.wait_for_at_most_seconds(2);
+    first_client.all_events_received.wait_for(2s);
 }
 
 TEST_F(TestClientInput, clients_receive_pointer_within_coordinate_system_of_window)
@@ -531,7 +533,7 @@ TEST_F(TestClientInput, clients_receive_pointer_within_coordinate_system_of_wind
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(screen_width / 2 + 40, screen_height / 2 + 90));
 
-    first_client.all_events_received.wait_for_at_most_seconds(2);
+    first_client.all_events_received.wait_for(2s);
 }
 
 // TODO: Consider tests for more input devices with custom mapping (i.e. joysticks...)
@@ -577,12 +579,73 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
                                   .at_position({abs_touch_x_1, abs_touch_y_1}));
     // Sleep here to trigger more failures (simulate slow machine)
     // TODO why would that cause failures?b
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(10ms);
     fake_touch_screen->emit_event(mis::a_touch_event()
                                   .with_action(mis::TouchParameters::Action::Move)
                                   .at_position({abs_touch_x_2, abs_touch_y_2}));
 
-    first_client.all_events_received.wait_for_at_most_seconds(2);
+    first_client.all_events_received.wait_for(2s);
+}
+
+TEST_F(TestClientInput, receives_one_touch_event_per_frame)
+{
+    positions[first] = screen_geometry;
+    Client first_client(new_connection(), first);
+
+    int const frame_rate = 60;
+    int const input_rate = 500;
+    int const nframes = 100;
+    int const nframes_error = 50;
+    int const inputs_per_frame = input_rate / frame_rate;
+    int const ninputs = nframes * inputs_per_frame;
+    auto const frame_time = 1000ms / frame_rate;
+
+    int received_input_events = 0;
+
+    EXPECT_CALL(first_client, handle_input(_))
+        .Times(Between(nframes-nframes_error, nframes+nframes_error))
+        .WillRepeatedly(InvokeWithoutArgs(
+            [&]()
+            {
+                ++received_input_events;
+                if (received_input_events >= nframes-nframes_error)
+                    first_client.all_events_received.raise();
+            }));
+
+    fake_touch_screen->emit_event(mis::a_touch_event()
+                                  .at_position({0,0}));
+
+    ASSERT_THAT(input_rate, Ge(2 * frame_rate));
+    ASSERT_THAT(ninputs, Gt(2 * nframes));
+    for (int i = 0; i < ninputs; ++i)
+    {
+        int const x = i;
+        int const y = 2 * i;
+        fake_touch_screen->emit_event(mis::a_touch_event()
+                                      .with_action(mis::TouchParameters::Action::Move)
+                                      .at_position({x,y}));
+
+        // I would like to:
+        //std::this_thread::sleep_for(1000ms/input_rate);
+        // but this is more robust under Valgrind:
+        if (!((i+1) % inputs_per_frame))
+            std::this_thread::sleep_for(frame_time);
+    }
+
+    // Wait for the expected minimum number of events (should be quick)
+    ASSERT_TRUE(first_client.all_events_received.wait_for(20s));
+
+    // The main thing we're testing for is that too many events don't arrive
+    // so we wait a little to check the cooked event stream has stopped:
+    std::this_thread::sleep_for(100 * frame_time);
+
+    // Remove reference to local received_input_events
+    Mock::VerifyAndClearExpectations(&first_client);
+
+    float const client_input_events_per_frame =
+        (float)received_input_events / nframes;
+    EXPECT_THAT(client_input_events_per_frame, Gt(0.0f));
+    EXPECT_THAT(client_input_events_per_frame, Lt(1.5f));
 }
 
 TEST_F(TestClientInput, send_mir_input_events_through_surface)
@@ -597,7 +660,7 @@ TEST_F(TestClientInput, send_mir_input_events_through_surface)
 
     server.the_shell()->focused_surface()->consume(key_event.get());
 
-    first_client.all_events_received.wait_for_at_most_seconds(2);
+    first_client.all_events_received.wait_for(2s);
 }
 
 TEST_F(TestClientInput, clients_receive_keymap_change_events)
@@ -613,7 +676,7 @@ TEST_F(TestClientInput, clients_receive_keymap_change_events)
         .WillOnce(mt::WakeUp(&first_client.all_events_received));
 
     server.the_shell()->focused_surface()->set_keymap(id, model, layout, "", "");
-    first_client.all_events_received.wait_for_at_most_seconds(2);
+    first_client.all_events_received.wait_for(2s);
 }
 
 TEST_F(TestClientInput, keymap_changes_change_keycode_received)
@@ -625,7 +688,7 @@ TEST_F(TestClientInput, keymap_changes_change_keycode_received)
     std::string const layout = "us";
     std::string const variant = "dvorak";
 
-    mt::WaitCondition first_event_received,
+    mt::Signal first_event_received,
         client_sees_keymap_change;
 
     InSequence seq;
@@ -642,16 +705,16 @@ TEST_F(TestClientInput, keymap_changes_change_keycode_received)
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_N));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_N));
 
-    first_event_received.wait_for_at_most_seconds(60);
+    first_event_received.wait_for(60s);
 
     server.the_shell()->focused_surface()->set_keymap(id, model, layout, variant, "");
 
-    client_sees_keymap_change.wait_for_at_most_seconds(60);
+    client_sees_keymap_change.wait_for(60s);
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_N));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_N));
 
-    first_client.all_events_received.wait_for_at_most_seconds(5);
+    first_client.all_events_received.wait_for(5s);
 }
 
 
@@ -663,7 +726,7 @@ TEST_F(TestClientInput, sends_no_wrong_keymaps_to_clients)
     std::string const model = "thargoid207";
     std::string const layout = "polaris";
 
-    mt::WaitCondition first_event_received,
+    mt::Signal first_event_received,
         client_sees_keymap_change;
 
     EXPECT_CALL(first_client, handle_keymap(mt::KeymapEventForDevice(id))).Times(0);
@@ -693,7 +756,7 @@ TEST_F(TestClientInput, event_filter_may_consume_events)
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_M));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_M));
 
-    first_client.all_events_received.wait_for_at_most_seconds(10);
+    first_client.all_events_received.wait_for(10s);
 }
 
 namespace
@@ -723,7 +786,7 @@ TEST_F(TestClientInputKeyRepeat, keys_are_repeated_to_clients)
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
 
-    first_client.all_events_received.wait_for_at_most_seconds(10);
+    first_client.all_events_received.wait_for(10s);
 }
 
 TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client)
@@ -741,7 +804,7 @@ TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client
     mir_surface_apply_spec(client.surface, spec);
     mir_surface_spec_release(spec);
 
-    ASSERT_TRUE(shell->wait_for_modify_surface(std::chrono::seconds(5)));
+    ASSERT_TRUE(shell->wait_for_modify_surface(5s));
 
     // We verify that we don't receive the first shaped out button event.
     EXPECT_CALL(client, handle_input(mt::PointerEnterEvent()));
@@ -755,7 +818,7 @@ TEST_F(TestClientInput, pointer_events_pass_through_shaped_out_regions_of_client
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 1));
     fake_mouse->emit_event(mis::a_button_down_event().of_button(BTN_LEFT));
 
-    client.all_events_received.wait_for_at_most_seconds(10);
+    client.all_events_received.wait_for(10s);
 }
 
 MATCHER_P3(ADeviceMatches, name, unique_id, caps, "")
@@ -788,7 +851,7 @@ TEST_F(TestClientInput, client_input_config_request_receives_all_attached_device
         if (num_devices == expected_devices)
             break;
  
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(10ms);
         mir_input_config_destroy(config);
         config = mir_connection_create_input_config(con);
     }
@@ -809,12 +872,12 @@ TEST_F(TestClientInput, client_input_config_request_receives_all_attached_device
 TEST_F(TestClientInput, callback_function_triggered_on_input_device_addition)
 {
     Client a_client(new_connection(), first);
-    mt::WaitCondition callback_triggered;
+    mt::Signal callback_triggered;
     mir_connection_set_input_config_change_callback(
         a_client.connection,
         [](MirConnection*, void* cond)
         {
-            static_cast<mt::WaitCondition*>(cond)->wake_up_everyone();
+            static_cast<mt::Signal*>(cond)->raise();
         },
         static_cast<void*>(&callback_triggered));
 
@@ -824,8 +887,8 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_addition)
         mi::InputDeviceInfo{touchpad, touchpad_uid,
                             mi::DeviceCapability::touchpad | mi::DeviceCapability::pointer})};
 
-    callback_triggered.wait_for_at_most_seconds(1);
-    EXPECT_THAT(callback_triggered.woken(), Eq(true));
+    callback_triggered.wait_for(1s);
+    EXPECT_THAT(callback_triggered.raised(), Eq(true));
 
     auto config = mir_connection_create_input_config(a_client.connection);
     EXPECT_THAT(mir_input_config_device_count(config), Eq(4));
@@ -838,19 +901,19 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_addition)
 TEST_F(TestClientInput, callback_function_triggered_on_input_device_removal)
 {
     Client a_client(new_connection(), first);
-    mt::WaitCondition callback_triggered;
+    mt::Signal callback_triggered;
     mir_connection_set_input_config_change_callback(
         a_client.connection,
         [](MirConnection*, void* cond)
         {
-            static_cast<mt::WaitCondition*>(cond)->wake_up_everyone();
+            static_cast<mt::Signal*>(cond)->raise();
         },
         static_cast<void*>(&callback_triggered));
 
     fake_keyboard->emit_device_removal();
-    callback_triggered.wait_for_at_most_seconds(1);
+    callback_triggered.wait_for(1s);
 
-    EXPECT_THAT(callback_triggered.woken(), Eq(true));
+    EXPECT_THAT(callback_triggered.raised(), Eq(true));
 
     auto config = mir_connection_create_input_config(a_client.connection);
     EXPECT_THAT(mir_input_config_device_count(config), Eq(2));

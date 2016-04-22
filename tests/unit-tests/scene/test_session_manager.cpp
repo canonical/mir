@@ -83,7 +83,7 @@ struct SessionManagerSetup : public testing::Test
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
-        std::make_shared<mtd::StubBufferStream>(),
+        std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
         std::shared_ptr<mi::InputChannel>(),
         std::shared_ptr<mi::InputSender>(),
         std::shared_ptr<mg::CursorImage>(),
@@ -129,9 +129,13 @@ TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
     EXPECT_CALL(container, insert_session(_)).Times(1);
     EXPECT_CALL(container, remove_session(_)).Times(1);
 
+    mg::BufferProperties properties {
+        geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software };
     auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", mt::fake_shared(event_sink));
     session->create_surface(
-        ms::a_surface().of_size(geom::Size{geom::Width{1024}, geom::Height{768}}),
+        ms::a_surface()
+            .of_size(geom::Size{geom::Width{1024}, geom::Height{768}})
+            .with_buffer_stream(session->create_buffer_stream(properties)),
         mt::fake_shared(event_sink));
 
     session_manager.close_session(session);

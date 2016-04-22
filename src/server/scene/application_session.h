@@ -77,7 +77,7 @@ public:
     std::string name() const override;
     pid_t process_id() const override;
 
-    void force_requests_to_complete() override;
+    void drop_outstanding_requests() override;
 
     void hide() override;
     void show() override;
@@ -125,6 +125,8 @@ private:
     std::mutex mutable surfaces_and_streams_mutex;
     Surfaces surfaces;
     Streams streams;
+
+    std::map<frontend::SurfaceId, frontend::BufferStreamId> default_content_map;
 
     void destroy_surface(std::unique_lock<std::mutex>& lock, Surfaces::const_iterator in_surfaces);
 };

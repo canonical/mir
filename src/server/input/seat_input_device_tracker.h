@@ -80,7 +80,10 @@ private:
         std::vector<TouchVisualizer::Spot> spots;
     };
 
-    mir::geometry::Point cursor_pos;
+    // Libinput's acceleration curve means the cursor moves by non-integer
+    // increments, and often less than 1.0, so float is required...
+    float cursor_x = 0.0f, cursor_y = 0.0f;
+
     MirInputEventModifiers modifier;
     MirPointerButtons buttons;
     std::unordered_map<MirInputDeviceId, DeviceData> device_data;

@@ -36,6 +36,13 @@ mcl::ClientBufferDepository::ClientBufferDepository(
     set_max_buffers(max_buffers);
 }
 
+mcl::ClientBufferDepository::ClientBufferDepository(
+    std::shared_ptr<ClientBufferFactory> const& factory) :
+    factory(factory),
+    max_buffers(0)
+{
+}
+
 void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPackage> const& package, int id, geometry::Size size, MirPixelFormat pf)
 {
     auto existing_buffer_id_pair = buffers.end();
@@ -61,7 +68,7 @@ void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPacka
         buffers.erase(existing_buffer_id_pair);
     }
 
-    if (buffers.size() > max_buffers)
+    if (max_buffers != 0 && buffers.size() > max_buffers)
         buffers.pop_back();
 }
 

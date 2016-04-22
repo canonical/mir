@@ -56,13 +56,6 @@ void mclr::DisplayServer::modify_surface(
 {
     channel->call_method(std::string(__func__), request, response, done);
 }
-void mclr::DisplayServer::next_buffer(
-    mir::protobuf::SurfaceId const* request,
-    mir::protobuf::Buffer* response,
-    google::protobuf::Closure* done)
-{
-    channel->call_method(std::string(__func__), request, response, done);
-}
 void mclr::DisplayServer::release_surface(
     mir::protobuf::SurfaceId const* request,
     mir::protobuf::Void* response,
@@ -92,6 +85,20 @@ void mclr::DisplayServer::configure_display(
     channel->call_method(std::string(__func__), request, response, done);
 }
 void mclr::DisplayServer::set_base_display_configuration(
+    mir::protobuf::DisplayConfiguration const* request,
+    mir::protobuf::Void* response,
+    google::protobuf::Closure* done)
+{
+    channel->call_method(std::string(__func__), request, response, done);
+}
+void mclr::DisplayServer::preview_base_display_configuration(
+    mir::protobuf::PreviewConfiguration const* request,
+    mir::protobuf::Void* response,
+    google::protobuf::Closure* done)
+{
+    channel->call_method(std::string(__func__), request, response, done);
+}
+void mclr::DisplayServer::confirm_base_display_configuration(
     mir::protobuf::DisplayConfiguration const* request,
     mir::protobuf::Void* response,
     google::protobuf::Closure* done)

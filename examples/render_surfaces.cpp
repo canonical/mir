@@ -333,6 +333,7 @@ public:
 
     // New function to initialize moveables with surfaces
     void create_surfaces()
+    try
     {
         moveables.resize(get_options()->get<int>(surfaces_to_render));
         std::cout << "Rendering " << moveables.size() << " surfaces" << std::endl;
@@ -376,7 +377,7 @@ public:
 
             auto const stream = buffer_stream_factory->create_buffer_stream(
                 mf::BufferStreamId{}, std::make_shared<NullBufferSink>(), properties);
-            auto const surface = surface_factory->create_surface(stream, params);
+            auto const surface = surface_factory->create_surface({ ms::StreamInfo{ stream, {0, 0}, {} } }, params);
             surface_stack->add_surface(surface, params.input_mode);
 
             {
@@ -415,6 +416,11 @@ public:
         }
 
         created = true;
+    }
+    catch (...)
+    {
+        mir::report_exception();
+        exit(EXIT_FAILURE);
     }
 
 private:

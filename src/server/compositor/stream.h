@@ -55,7 +55,7 @@ public:
     geometry::Size stream_size() override;
     void resize(geometry::Size const& size) override;
     void allow_framedropping(bool) override;
-    void force_requests_to_complete() override;
+    void drop_outstanding_requests() override;
     int buffers_ready_for_compositor(void const* user_id) const override;
     void drop_old_buffers() override;
     bool has_submitted_buffer() const override;
@@ -83,12 +83,15 @@ private:
     ScheduleMode schedule_mode;
     std::shared_ptr<Schedule> schedule;
     std::shared_ptr<frontend::ClientBuffers> buffers;
-    std::shared_ptr<MultiMonitorArbiter> arbiter;
+    std::shared_ptr<MultiMonitorArbiter> const arbiter;
     geometry::Size size; 
     MirPixelFormat const pf;
     bool first_frame_posted;
 
     scene::SurfaceObservers observers;
+
+    unsigned int total_buffer_count = 0;
+    unsigned int client_owned_buffer_count(std::lock_guard<decltype(mutex)> const&) const;
 };
 }
 }

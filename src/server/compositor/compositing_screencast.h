@@ -52,16 +52,20 @@ public:
     frontend::ScreencastSessionId create_session(
         geometry::Rectangle const& region,
         geometry::Size const& size,
-        MirPixelFormat pixel_format);
-    void destroy_session(frontend::ScreencastSessionId id);
-    std::shared_ptr<graphics::Buffer> capture(frontend::ScreencastSessionId id);
+        MirPixelFormat pixel_format,
+        int nbuffers,
+        MirMirrorMode mirror_mode) override;
+    void destroy_session(frontend::ScreencastSessionId id) override;
+    std::shared_ptr<graphics::Buffer> capture(frontend::ScreencastSessionId id) override;
 
 private:
     frontend::ScreencastSessionId next_available_session_id();
     std::shared_ptr<detail::ScreencastSessionContext>
         create_session_context(geometry::Rectangle const& rect,
             geometry::Size const& size,
-            MirPixelFormat pixel_format);
+            MirPixelFormat pixel_format,
+            int nbuffers,
+            MirMirrorMode mirror_mode);
 
     std::mutex session_mutex;
     std::shared_ptr<Scene> const scene;

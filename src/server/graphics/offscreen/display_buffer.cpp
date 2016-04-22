@@ -130,6 +130,10 @@ geom::Rectangle mgo::DisplayBuffer::view_area() const
 void mgo::DisplayBuffer::make_current()
 {
     egl_context.make_current();
+}
+
+void mgo::DisplayBuffer::bind()
+{
     fbo.bind();
 }
 
@@ -156,6 +160,11 @@ MirOrientation mgo::DisplayBuffer::orientation() const
      * so nothing more to do.
      */
     return mir_orientation_normal;
+}
+
+MirMirrorMode mgo::DisplayBuffer::mirror_mode() const
+{
+    return mir_mirror_mode_none;
 }
 
 mg::NativeDisplayBuffer* mgo::DisplayBuffer::native_display_buffer()

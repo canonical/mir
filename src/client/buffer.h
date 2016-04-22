@@ -20,6 +20,7 @@
 #define MIR_CLIENT_BUFFER_H
 
 #include "mir_toolkit/mir_buffer.h"
+#include "mir/geometry/size.h"
 #include <memory>
 #include <chrono>
 #include <mutex>
@@ -43,9 +44,11 @@ public:
     int rpc_id() const;
 
     void submitted();
+    void received();
     void received(MirBufferPackage const& update_message);
 
     MirNativeBuffer* as_mir_native_buffer() const;
+    std::shared_ptr<ClientBuffer> client_buffer() const;
     MirGraphicsRegion map_region();
 
     void set_fence(MirNativeFence*, MirBufferAccess);
@@ -57,6 +60,8 @@ public:
     geometry::Size size() const;
 
     MirPresentationChain* allocating_chain() const;
+
+    void increment_age();
 private:
     mir_buffer_callback cb;
     void* cb_context;

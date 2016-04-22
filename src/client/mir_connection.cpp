@@ -44,6 +44,7 @@
 
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
+#include "mir_error.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -169,6 +170,22 @@ mir::protobuf::SurfaceParameters serialize_spec(MirSurfaceSpec const& spec)
             new_shape->set_top(rect.top);
             new_shape->set_width(rect.width);
             new_shape->set_height(rect.height);
+        }
+    }
+
+    if (spec.streams.is_set())
+    {
+        for(auto const& stream : spec.streams.value())
+        {
+            auto const new_stream = message.add_stream();
+            new_stream->set_displacement_x(stream.displacement.dx.as_int());
+            new_stream->set_displacement_y(stream.displacement.dy.as_int());
+            new_stream->mutable_id()->set_value(stream.stream_id);
+            if (stream.size.is_set())
+            {
+                new_stream->set_width(stream.size.value().width.as_int());
+                new_stream->set_height(stream.size.value().height.as_int());
+            }
         }
     }
 
@@ -400,7 +417,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
             this, server, &debug, stream, input_platform, spec, *surface_proto, request->wh);
 
         surface_map->insert(mf::SurfaceId{surface_proto->id().value()}, surf);
-        surface_map->insert(mf::BufferStreamId{surface_proto->id().value()}, stream);
+        surface_map->insert(mf::BufferStreamId{surface_proto->buffer_stream().id().value()}, stream);
     }
 
     callback(surf.get(), context);
@@ -879,7 +896,7 @@ void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<S
 }
 
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
-   mp::BufferStream const& protobuf_bs, mir::geometry::Size)
+   mp::BufferStream const& protobuf_bs)
 {
     return std::make_shared<mcl::ScreencastStream>(
         this, server, platform, protobuf_bs);
@@ -906,6 +923,11 @@ void MirConnection::register_lifecycle_event_callback(mir_lifecycle_event_callba
 void MirConnection::register_ping_event_callback(mir_ping_event_callback callback, void* context)
 {
     ping_handler->set_callback(std::bind(callback, this, std::placeholders::_1, context));
+}
+
+void MirConnection::register_error_callback(mir_error_callback callback, void* context)
+{
+    error_handler.set_callback(std::bind(callback, this, std::placeholders::_1, context));
 }
 
 void MirConnection::pong(int32_t serial)
@@ -989,6 +1011,58 @@ MirWaitHandle* MirConnection::set_base_display_configuration(MirDisplayConfigura
         google::protobuf::NewCallback(this, &MirConnection::done_set_base_display_configuration));
 
     return &set_base_display_configuration_wait_handle;
+}
+
+namespace
+{
+struct HandleErrorVoid
+{
+    std::unique_ptr<mp::Void> result;
+    std::function<void(mp::Void const&)> on_error;
+};
+
+void handle_structured_error(HandleErrorVoid* handler)
+{
+    if (handler->result->has_structured_error())
+    {
+        handler->on_error(*handler->result);
+    }
+    delete handler;
+}
+}
+
+void MirConnection::preview_base_display_configuration(
+    mp::DisplayConfiguration const& configuration,
+    std::chrono::seconds timeout)
+{
+    mp::PreviewConfiguration request;
+
+    request.mutable_configuration()->CopyFrom(configuration);
+    request.set_timeout(timeout.count());
+
+    auto store_error_result = new HandleErrorVoid;
+    store_error_result->result = std::make_unique<mp::Void>();
+    store_error_result->on_error = [this](mp::Void const& message)
+    {
+        MirError const error{
+            static_cast<MirErrorDomain>(message.structured_error().domain()),
+            message.structured_error().code()};
+        error_handler(&error);
+    };
+
+    server.preview_base_display_configuration(
+        &request,
+        store_error_result->result.get(),
+        google::protobuf::NewCallback(&handle_structured_error, store_error_result));
+}
+
+void MirConnection::confirm_base_display_configuration(
+    mp::DisplayConfiguration const& configuration)
+{
+    server.confirm_base_display_configuration(
+        &configuration,
+        set_base_display_configuration_response.get(),
+        google::protobuf::NewCallback(google::protobuf::DoNothing));
 }
 
 void MirConnection::done_set_base_display_configuration()

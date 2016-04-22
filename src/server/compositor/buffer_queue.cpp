@@ -140,13 +140,14 @@ mc::BufferQueue::BufferQueue(
       frame_deadlines_threshold{-1},  // Disable scaling by default
       frame_deadlines_met{0},
       scheduled_extra_frames{0},
+      mm_mode{MultiMonitorMode::multi_monitor_sync},
       frame_dropping_enabled{false},
       current_compositor_buffer_valid{false},
       the_properties{props},
       force_new_compositor_buffer{false},
-      callbacks_allowed{true},
       single_compositor{false},  // When true we can optimize performance
-      gralloc{gralloc}
+      gralloc{gralloc},
+      callbacks_allowed{true}
 {
     if (nbuffers < 1)
     {
@@ -169,7 +170,7 @@ mc::BufferQueue::BufferQueue(
         free_buffers.push_back(current_compositor_buffer);
 
     framedrop_policy = policy_provider.create_policy(
-        std::make_shared<BufferQueue::LockableCallback>(this));
+        std::make_unique<BufferQueue::LockableCallback>(this));
 }
 
 void mc::BufferQueue::set_scaling_delay(int nframes)
@@ -379,7 +380,9 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
 
     if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
-    else if (!ready_to_composite_queue.empty() && single_compositor)
+    else if (mm_mode == MultiMonitorMode::single_monitor_fast &&
+             !ready_to_composite_queue.empty() &&
+             single_compositor)
     {
         /*
          * The "early release" optimisation: Note "single_compositor" above
@@ -424,6 +427,12 @@ mg::BufferProperties mc::BufferQueue::properties() const
 {
     std::lock_guard<decltype(guard)> lock(guard);
     return the_properties;
+}
+
+void mc::BufferQueue::set_mode(MultiMonitorMode mode)
+{
+    std::lock_guard<decltype(guard)> lock(guard);
+    mm_mode = mode;
 }
 
 void mc::BufferQueue::allow_framedropping(bool flag)
@@ -549,15 +558,15 @@ void mc::BufferQueue::give_buffer_to_client(
             [&]{ return !contains(buffer, pending_snapshots); });
     }
 
-    if (!callbacks_allowed)  // We're shutting down
-        return;
-
     buffers_owned_by_client.push_back(buffer);
 
     lock.unlock();
     try
     {
-        give_to_client_cb(buffer);
+        std::lock_guard<decltype(callbacks_guard)> lock(callbacks_guard);
+
+        if (callbacks_allowed)
+            give_to_client_cb(buffer);
     }
     catch (...)
     {
@@ -685,7 +694,6 @@ void mc::BufferQueue::drop_old_buffers()
 
 void mc::BufferQueue::drop_client_requests()
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<decltype(callbacks_guard)> lock(callbacks_guard);
     callbacks_allowed = false;
-    pending_client_notifications.clear();
 }

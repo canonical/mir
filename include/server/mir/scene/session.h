@@ -38,13 +38,12 @@ struct SurfaceCreationParameters;
 class Session : public frontend::Session
 {
 public:
-    virtual void force_requests_to_complete() = 0;
+    virtual void drop_outstanding_requests() = 0;
     virtual pid_t process_id() const = 0;
 
     virtual void take_snapshot(SnapshotCallback const& snapshot_taken) = 0;
     virtual std::shared_ptr<Surface> default_surface() const = 0;
     virtual void set_lifecycle_state(MirLifecycleState state) = 0;
-    virtual void send_display_config(graphics::DisplayConfiguration const&) = 0;
 
     virtual void hide() = 0;
     virtual void show() = 0;

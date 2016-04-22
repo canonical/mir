@@ -477,8 +477,37 @@ TEST_P(WithAnyNumberOfBuffers, compositor_can_acquire_and_release)
     EXPECT_NO_THROW(q.compositor_release(comp_buffer));
 }
 
+TEST_P(WithTwoOrMoreBuffers, clients_dont_get_new_buffers_on_compositor_release)
+{
+    q.set_mode(mc::MultiMonitorMode::multi_monitor_sync);
+    q.allow_framedropping(false);
+
+    // This is what tests should do instead of using buffers_free_for_client()
+    std::shared_ptr<AcquireWaitHandle> client;
+    bool blocking;
+    do
+    {
+        client = client_acquire_async(q);
+        blocking = !client->has_acquired_buffer();
+        if (!blocking)
+            client->release_buffer();
+    } while (!blocking);
+
+    for (int f = 0; f < 100; ++f)
+    {
+        ASSERT_FALSE(client->has_acquired_buffer());
+        auto onscreen = q.compositor_acquire(this);
+        ASSERT_TRUE(client->has_acquired_buffer());
+        client->release_buffer();
+        client = client_acquire_async(q);
+        q.compositor_release(onscreen);
+        ASSERT_FALSE(client->has_acquired_buffer());
+    }
+}
+
 TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
 {   // Regression test for LP: #1480164
+    q.set_mode(mc::MultiMonitorMode::single_monitor_fast);
     q.allow_framedropping(false);
 
     // Skip over the first frame. The early release optimization is too
@@ -526,6 +555,7 @@ TEST_P(WithTwoOrMoreBuffers, clients_get_new_buffers_on_compositor_release)
 
 TEST_P(WithTwoOrMoreBuffers, short_buffer_holds_dont_overclock_multimonitor)
 {   // Regression test related to LP: #1480164
+    q.set_mode(mc::MultiMonitorMode::single_monitor_fast);
     q.allow_framedropping(false);
 
     // Skip over the first frame. The early release optimization is too
@@ -572,6 +602,7 @@ TEST_P(WithTwoOrMoreBuffers, short_buffer_holds_dont_overclock_multimonitor)
 
 TEST_P(WithThreeOrMoreBuffers, greedy_clients_get_new_buffers_on_compositor_release)
 {   // Regression test for LP: #1480164
+    q.set_mode(mc::MultiMonitorMode::single_monitor_fast);
     q.allow_framedropping(false);
 
     // Skip over the first frame. The early release optimization is too

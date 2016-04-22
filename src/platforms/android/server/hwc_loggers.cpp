@@ -174,6 +174,7 @@ std::ostream& operator<<(std::ostream& str, mga::HwcVersion version)
         case mga::HwcVersion::hwc12: str << "1.2"; break;
         case mga::HwcVersion::hwc13: str << "1.3"; break;
         case mga::HwcVersion::hwc14: str << "1.4"; break;
+        case mga::HwcVersion::hwc15: str << "1.5"; break;
         default: break;
     }
     return str;

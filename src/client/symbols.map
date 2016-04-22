@@ -268,6 +268,34 @@ MIR_CLIENT_0.21 {
     *;
 } MIR_CLIENT_9v19;
 
+MIR_CLIENT_0.22 {  # New functions in Mir 0.22
+  global:
+    mir_connection_confirm_base_display_configuration;
+    mir_connection_preview_base_display_configuration;
+    mir_connection_set_error_callback;
+    mir_create_screencast_spec;
+    mir_display_config_get_mutable_output;
+    mir_error_get_code;
+    mir_error_get_domain;
+    mir_output_disable;
+    mir_output_enable;
+    mir_output_set_current_mode;
+    mir_output_set_orientation;
+    mir_output_set_pixel_format;
+    mir_output_set_position;
+    mir_output_set_power_mode;
+    mir_screencast_create_sync;
+    mir_screencast_get_error_message;
+    mir_screencast_is_valid;
+    mir_screencast_spec_release;
+    mir_screencast_spec_set_capture_region;
+    mir_screencast_spec_set_height;
+    mir_screencast_spec_set_mirror_mode;
+    mir_screencast_spec_set_number_of_buffers;
+    mir_screencast_spec_set_pixel_format;
+    mir_screencast_spec_set_width;
+} MIR_CLIENT_0.21;
+
 MIR_CLIENT_DETAIL_9 {
   global:
     extern "C++" { 

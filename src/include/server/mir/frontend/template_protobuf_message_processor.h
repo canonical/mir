@@ -22,6 +22,9 @@
 
 #include "mir/frontend/message_processor.h"
 #include "mir/cookie/authority.h"
+#include "mir/client_visible_error.h"
+
+#include "mir_protobuf.pb.h"
 
 #include <google/protobuf/stubs/common.h>
 #include <boost/exception/diagnostic_information.hpp>
@@ -80,6 +83,13 @@ void invoke(
     {
         throw;
     }
+    catch (mir::ClientVisibleError const& error)
+    {
+        auto client_error = result_message.mutable_structured_error();
+        client_error->set_code(error.code());
+        client_error->set_domain(error.domain());
+        self->send_response(invocation.id(), &result_message);
+    }
     catch (std::exception const& x)
     {
         using namespace std::literals::string_literals;
@@ -88,6 +98,7 @@ void invoke(
         self->send_response(invocation.id(), &result_message);
     }
 }
+
 }
 }
 }
