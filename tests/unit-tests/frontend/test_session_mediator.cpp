@@ -44,6 +44,7 @@
 #include "mir/test/doubles/mock_frontend_surface.h"
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/mock_event_sink_factory.h"
+#include "mir/test/doubles/mock_screencast.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/mock_buffer.h"
 #include "mir/test/doubles/stub_session.h"
@@ -261,6 +262,20 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<mtd::NullMessageSender>(),
             resource_cache, std::make_shared<mtd::NullScreencast>(),
             nullptr, nullptr, nullptr,
+            std::make_shared<mtd::NullANRDetector>(),
+            mir::cookie::Authority::create(),
+            mt::fake_shared(mock_hub));
+    }
+
+    std::shared_ptr<mf::SessionMediator> create_session_mediator_with_screencast(
+           std::shared_ptr<mf::Screencast> const& screencast)
+    {
+        return std::make_shared<mf::SessionMediator>(
+            shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
+            surface_pixel_formats, report,
+            std::make_shared<mtd::NullEventSinkFactory>(),
+            std::make_shared<mtd::NullMessageSender>(),
+            resource_cache, screencast, &connector, nullptr, nullptr,
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
             mt::fake_shared(mock_hub));
@@ -1320,4 +1335,49 @@ TEST_F(SessionMediator, connect_sends_input_devices_at_seat)
     mediator.connect(&connect_parameters, &connection, null_callback.get());
 
     EXPECT_THAT(connection.input_devices(), mt::InputDevicesMatch(devices));
+}
+
+TEST_F(SessionMediator, disconnect_removes_orphaned_screencast_sessions)
+{
+    using namespace ::testing;
+    auto mock_screencast = std::make_shared<NiceMock<mtd::MockScreencast>>();
+    auto mediator = create_session_mediator_with_screencast(mock_screencast);
+
+    mf::ScreencastSessionId expected_id{7};
+    mtd::StubBuffer stub_buffer;
+    ON_CALL(*mock_screencast, create_session(_,_,_,_,_))
+        .WillByDefault(Return(expected_id));
+    ON_CALL(*mock_screencast, capture(_))
+        .WillByDefault(Return(mt::fake_shared(stub_buffer)));
+
+    EXPECT_CALL(*mock_screencast, destroy_session(expected_id));
+
+    mp::ScreencastParameters screencast_parameters;
+    mp::Screencast screencast;
+    mediator->connect(&connect_parameters, &connection, null_callback.get());
+    mediator->create_screencast(&screencast_parameters, &screencast, null_callback.get());
+    mediator->disconnect(nullptr, nullptr, null_callback.get());
+}
+
+TEST_F(SessionMediator, destructor_removes_orphaned_screencast_sessions)
+{
+    using namespace ::testing;
+    auto mock_screencast = std::make_shared<NiceMock<mtd::MockScreencast>>();
+    auto mediator = create_session_mediator_with_screencast(mock_screencast);
+
+    mf::ScreencastSessionId expected_id{7};
+    mtd::StubBuffer stub_buffer;
+    ON_CALL(*mock_screencast, create_session(_,_,_,_,_))
+        .WillByDefault(Return(expected_id));
+    ON_CALL(*mock_screencast, capture(_))
+        .WillByDefault(Return(mt::fake_shared(stub_buffer)));
+
+    EXPECT_CALL(*mock_screencast, destroy_session(expected_id));
+
+    mp::ScreencastParameters screencast_parameters;
+    mp::Screencast screencast;
+    mediator->create_screencast(&screencast_parameters, &screencast, null_callback.get());
+
+    mediator.reset();
+
 }
