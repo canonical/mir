@@ -20,17 +20,12 @@
 ### This is a wrapper script that runs all Mir's performance tests ###
 
 bin_dir=`dirname $0`
-if [ "$bin_dir" = "." ]; then
-    bin_path=""
-else
-    bin_path="$bin_dir/"
-fi
 
 tests_run=0
 failures=0
 for perf_test in mir_glmark2_performance_test ; do
     tests_run=$(($tests_run + 1))
-    ${bin_path}$perf_test || failures=$(($failures + 1))
+    ${bin_dir}/$perf_test || failures=$(($failures + 1))
 done
 
 passes=$(($tests_run - $failures))
