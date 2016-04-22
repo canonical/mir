@@ -53,6 +53,9 @@ mir (0.22.0) UNRELEASED; urgency=medium
         named (LP: #1563148)
       . nested mir_demo_server crashes on mouse move when --print-input-events
         active (LP: #1570357)
+      . Virtual output is not removed when screencast client disappears
+        (LP: #1573572)
+      . Virtual display output configuration is set to LVDS (LP: #1573782)
 
  -- Alberto Aguirre <alberto.aguirre@canonical.com>  Thu, 21 Apr 2016 00:54:23 -0500
 
