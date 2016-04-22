@@ -27,8 +27,6 @@ mir (0.22.0) UNRELEASED; urgency=medium
         (LP: #1549701)
       . CI failure in NestedServer.display_orientation_changes_are_forwarded_to_
         host (LP: #1555074)
-      . CI failure in MirSurfaceVisibilityEvent.exposed_received_when_surface_
-        raised_over_occluding_surface (LP: #1556045)
       . NBS fullscreen overlay benchmark performance is much lower than 
         BufferQueue (LP: #1557962)
       . server crashes when shutting down in smoke tests (LP: #1560900)
