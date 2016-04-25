@@ -29,9 +29,6 @@
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/renderer_factory.h"
 #include "mir/options/option.h"
-#include "default_window_manager.h"
-#include "server_example_tiling_window_manager.h"
-#include "mir/shell/canonical_window_manager.h"
 #include "server_example_host_lifecycle_event_listener.h"
 
 #include <iostream>
@@ -100,32 +97,6 @@ public:
 
                 return composite_filter;
             });
-    }
-
-    auto the_window_manager_builder() -> shell::WindowManagerBuilder override
-    {
-        return [this](shell::FocusController* focus_controller)
-            -> std::shared_ptr<msh::WindowManager>
-            {
-                auto const options = the_options();
-                auto const selection = options->get<std::string>(wm_option);
-
-                if (selection == wm_tiling)
-                {
-                    return std::make_shared<TilingWindowManager>(focus_controller);
-                }
-                else if (selection == wm_canonical)
-                {
-                    return std::make_shared<msh::CanonicalWindowManager>(
-                        focus_controller,
-                        the_shell_display_layout());
-                }
-
-                return std::make_shared<DefaultWindowManager>(
-                    focus_controller,
-                    the_shell_display_layout(),
-                    the_session_coordinator());
-            };
     }
 
     std::shared_ptr<msh::HostLifecycleEventListener> the_host_lifecycle_event_listener() override
