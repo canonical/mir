@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012, 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -32,9 +32,9 @@ namespace geometry
 
 struct Rectangle
 {
-    Rectangle() = default;
+    constexpr Rectangle() = default;
 
-    Rectangle(Point const& top_left, Size const& size)
+    constexpr Rectangle(Point const& top_left, Size const& size)
         : top_left{top_left}, size{size}
     {
     }
@@ -66,12 +66,12 @@ struct Rectangle
     Rectangle intersection_with(Rectangle const& r) const;
 };
 
-inline bool operator == (Rectangle const& lhs, Rectangle const& rhs)
+inline constexpr bool operator == (Rectangle const& lhs, Rectangle const& rhs)
 {
     return lhs.top_left == rhs.top_left && lhs.size == rhs.size;
 }
 
-inline bool operator != (Rectangle const& lhs, Rectangle const& rhs)
+inline constexpr bool operator != (Rectangle const& lhs, Rectangle const& rhs)
 {
     return lhs.top_left != rhs.top_left || lhs.size != rhs.size;
 }
