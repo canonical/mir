@@ -59,6 +59,8 @@ namespace rpc
 {
 class DisplayServer;
 }
+class SurfaceMap;
+class AsyncBufferFactory;
 class ClientBufferFactory;
 class ClientBuffer;
 class ClientPlatform;
@@ -74,6 +76,8 @@ public:
         std::shared_ptr<MirWaitHandle> creation_wait_handle,
         mir::client::rpc::DisplayServer& server,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
+        std::weak_ptr<SurfaceMap> const& map,
+        std::shared_ptr<AsyncBufferFactory> const& factory,
         mir::protobuf::BufferStream const& protobuf_bs,
         std::shared_ptr<PerfReport> const& perf_report,
         std::string const& surface_name,
@@ -84,6 +88,8 @@ public:
         std::shared_ptr<MirWaitHandle> creation_wait_handle,
         mir::client::rpc::DisplayServer& server,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
+        std::weak_ptr<SurfaceMap> const& map,
+        std::shared_ptr<AsyncBufferFactory> const& factory,
         mir::protobuf::BufferStreamParameters const& parameters,
         std::shared_ptr<PerfReport> const& perf_report,
         size_t nbuffers);
@@ -154,14 +160,13 @@ private:
 
     std::shared_ptr<MemoryRegion> secured_region;
 
-    geometry::Size cached_buffer_size;
-
     std::unique_ptr<ServerBufferSemantics> buffer_depository;
     geometry::Size ideal_buffer_size;
     size_t const nbuffers;
     std::string error_message;
     std::shared_ptr<MirWaitHandle> creation_wait_handle;
-    std::shared_ptr<SurfaceMap> const surface_map;
+    std::shared_ptr<SurfaceMap> const map;
+    std::shared_ptr<AsyncBufferFactory> const factory;
 };
 
 }
