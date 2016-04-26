@@ -56,11 +56,11 @@ inline constexpr Point operator+(Point lhs, DeltaY rhs) { return{lhs.x, lhs.y + 
 inline constexpr Point operator-(Point lhs, DeltaX rhs) { return{lhs.x - rhs, lhs.y}; }
 inline constexpr Point operator-(Point lhs, DeltaY rhs) { return{lhs.x, lhs.y - rhs}; }
 
-inline constexpr Point& operator+=(Point& lhs, DeltaX rhs) { lhs.x += rhs; return lhs; }
-inline constexpr Point& operator+=(Point& lhs, DeltaY rhs) { lhs.y += rhs; return lhs; }
+inline Point& operator+=(Point& lhs, DeltaX rhs) { lhs.x += rhs; return lhs; }
+inline Point& operator+=(Point& lhs, DeltaY rhs) { lhs.y += rhs; return lhs; }
 
-inline constexpr Point& operator-=(Point& lhs, DeltaX rhs) { lhs.x -= rhs; return lhs; }
-inline constexpr Point& operator-=(Point& lhs, DeltaY rhs) { lhs.y -= rhs; return lhs; }
+inline Point& operator-=(Point& lhs, DeltaX rhs) { lhs.x -= rhs; return lhs; }
+inline Point& operator-=(Point& lhs, DeltaY rhs) { lhs.y -= rhs; return lhs; }
 
 std::ostream& operator<<(std::ostream& out, Point const& value);
 }
