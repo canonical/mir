@@ -31,3 +31,11 @@ void mf::ScreencastBufferTracker::remove_session(ScreencastSessionId id)
 {
     tracker.erase(id);
 }
+
+void mf::ScreencastBufferTracker::for_each_session(std::function<void(ScreencastSessionId)> f) const
+{
+    for (auto const& entry : tracker)
+    {
+        f(entry.first);
+    }
+}

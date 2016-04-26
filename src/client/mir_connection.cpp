@@ -382,7 +382,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
                          spec.surface_name.value() : ""};
 
         stream = std::make_shared<mcl::BufferStream>(
-            this, request->wh, server, platform,
+            this, request->wh, server, platform, surface_map, buffer_factory,
             surface_proto->buffer_stream(), make_perf_report(logger), name,
             mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
     }
@@ -827,7 +827,7 @@ void MirConnection::stream_created(StreamCreationRequest* request_raw)
     try
     {
         auto stream = std::make_shared<mcl::BufferStream>(
-            this, request->wh, server, platform,
+            this, request->wh, server, platform, surface_map, buffer_factory,
             *protobuf_bs, make_perf_report(logger), std::string{},
             mir::geometry::Size{request->parameters.width(), request->parameters.height()}, nbuffers);
         surface_map->insert(mf::BufferStreamId(protobuf_bs->id().value()), stream);
@@ -1247,8 +1247,6 @@ void MirConnection::allocate_buffer(
 
 void MirConnection::release_buffer(int buffer_id)
 {
-    surface_map->erase(buffer_id);
-
     mp::BufferRelease request;
     auto released_buffer = request.add_buffers();
     released_buffer->set_buffer_id(buffer_id);

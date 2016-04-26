@@ -43,4 +43,6 @@ TEST(ServerClientTypes, display_output_types_match)
     EXPECT_DISPLAY_OUTPUT_TYPES_MATCH(hdmib);
     EXPECT_DISPLAY_OUTPUT_TYPES_MATCH(tv);
     EXPECT_DISPLAY_OUTPUT_TYPES_MATCH(edp);
+    EXPECT_EQ(static_cast<mg::DisplayConfigurationOutputType>(mir_display_output_type_virtual),
+              mg::DisplayConfigurationOutputType::virt);
 }

@@ -20,6 +20,7 @@
 
 #include "mir/frontend/screencast.h"
 
+#include <functional>
 #include <unordered_set>
 #include <unordered_map>
 
@@ -48,6 +49,10 @@ public:
 
     /* removes all tracked buffers associated with id */
     void remove_session(ScreencastSessionId id);
+
+    /* Iterates over all tracked session ids */
+    void for_each_session(std::function<void(ScreencastSessionId)> f) const;
+
 
 private:
     ScreencastBufferTracker(ScreencastBufferTracker const&) = delete;

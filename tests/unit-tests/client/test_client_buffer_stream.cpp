@@ -19,6 +19,9 @@
 #include "src/client/buffer_stream.h"
 #include "src/client/perf_report.h"
 #include "src/client/rpc/mir_display_server.h"
+#include "src/client/connection_surface_map.h"
+#include "src/client/buffer_factory.h"
+#include "src/client/protobuf_to_native_buffer.h"
 
 #include "mir/client_platform.h"
 
@@ -176,10 +179,18 @@ struct ClientBufferStream : TestWithParam<bool>
             fill_protobuf_buffer_from_package(&buffer, a_buffer_package());
             buffer.set_width(size.width.as_int());
             buffer.set_height(size.height.as_int());
-            bs.buffer_available(buffer);
+
+            async_buffer_arrives(bs, buffer);
         }
     }
 
+    void async_buffer_arrives(mcl::ClientBufferStream& bs, mp::Buffer& buffer)
+    {
+        bs.buffer_available(buffer);
+    }
+
+    std::shared_ptr<mcl::ConnectionSurfaceMap> map{std::make_shared<mcl::ConnectionSurfaceMap>()};
+    std::shared_ptr<mcl::BufferFactory> factory{std::make_shared<mcl::BufferFactory>()};
     std::shared_ptr<MirWaitHandle> wait_handle;
     testing::NiceMock<mtd::MockClientBufferFactory> mock_factory;
     mtd::StubClientBufferFactory stub_factory;
@@ -236,14 +247,15 @@ TEST_P(ClientBufferStream, protobuf_requirements)
         mcl::BufferStream bs(
             nullptr, wait_handle, mock_protobuf_server,
             std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+            map, factory,
             valid_bs, perf_report, "", size, nbuffers);
     });
-
     valid_bs.clear_buffer();
     EXPECT_NO_THROW({
         mcl::BufferStream bs(
             nullptr, wait_handle, mock_protobuf_server,
             std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+            map, factory,
             valid_bs, perf_report, "", size, nbuffers);
     });
 
@@ -253,6 +265,7 @@ TEST_P(ClientBufferStream, protobuf_requirements)
         mcl::BufferStream bs(
             nullptr, wait_handle, mock_protobuf_server,
             std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+            map, factory,
             error_bs, perf_report, "", size, nbuffers);
     }, std::runtime_error);
     
@@ -262,6 +275,7 @@ TEST_P(ClientBufferStream, protobuf_requirements)
         mcl::BufferStream bs(
             nullptr, wait_handle, mock_protobuf_server,
             std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+            map, factory,
             no_id_bs, perf_report, "", size, nbuffers);
     }, std::runtime_error);
 }
@@ -273,6 +287,7 @@ TEST_P(ClientBufferStream, uses_buffer_message_from_server)
     mcl::BufferStream bs(
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers);
     service_requests_for(bs, 1);
 }
@@ -284,6 +299,7 @@ TEST_P(ClientBufferStream, producer_streams_call_submit_buffer_on_next_buffer)
     mcl::BufferStream bs{
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers};
     service_requests_for(bs, mock_protobuf_server.alloc_count);
 
@@ -296,6 +312,7 @@ TEST_P(ClientBufferStream, invokes_callback_on_next_buffer)
     mcl::BufferStream bs{
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers};
     service_requests_for(bs, mock_protobuf_server.alloc_count);
     ON_CALL(mock_protobuf_server, submit_buffer(_,_,_))
@@ -318,6 +335,7 @@ TEST_P(ClientBufferStream, returns_correct_surface_parameters)
     mcl::BufferStream bs(
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers);
     auto params = bs.get_parameters();
 
@@ -353,10 +371,12 @@ TEST_P(ClientBufferStream, returns_current_client_buffer)
     mcl::BufferStream bs(
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        map, factory,
         protobuf_bs, perf_report, "", size, nbuffers);
     service_requests_for(bs, 1);
     EXPECT_EQ(client_buffer_1, bs.get_current_buffer());
-    bs.buffer_available(protobuf_buffer_2);
+
+    async_buffer_arrives(bs, protobuf_buffer_2);
     bs.next_buffer([]{});
     EXPECT_EQ(client_buffer_2, bs.get_current_buffer());
 }
@@ -383,10 +403,11 @@ TEST_P(ClientBufferStream, caches_width_and_height_in_case_of_partial_updates)
     mcl::BufferStream bs(
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        map, factory,
         protobuf_bs, perf_report, "", size, nbuffers);
     service_requests_for(bs, 1);
     EXPECT_EQ(client_buffer_1, bs.get_current_buffer());
-    bs.buffer_available(protobuf_buffer_2);
+    async_buffer_arrives(bs, protobuf_buffer_2);
     bs.next_buffer([]{});
     EXPECT_EQ(client_buffer_2, bs.get_current_buffer());
 }
@@ -396,6 +417,7 @@ TEST_P(ClientBufferStream, gets_egl_native_window)
     mcl::BufferStream bs{
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers};
     EXPECT_EQ(StubClientPlatform::egl_native_window, bs.egl_native_window());
 }
@@ -411,6 +433,7 @@ TEST_P(ClientBufferStream, map_graphics_region)
     mcl::BufferStream bs(
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers);
     service_requests_for(bs, 1);
 
@@ -431,6 +454,7 @@ TEST_P(ClientBufferStream, maps_graphics_region_only_once_per_swapbuffers)
     mcl::BufferStream bs(
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers);
     service_requests_for(bs, 2);
 
@@ -458,6 +482,7 @@ TEST_P(ClientBufferStream, passes_name_to_perf_report)
     mcl::BufferStream bs(
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
         response, mt::fake_shared(mock_perf_report), name, size, nbuffers);
 }
 
@@ -476,6 +501,7 @@ TEST_P(ClientBufferStream, receives_unsolicited_buffer)
     mcl::BufferStream bs(
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers);
     service_requests_for(bs, 1);
 
@@ -487,7 +513,7 @@ TEST_P(ClientBufferStream, receives_unsolicited_buffer)
         .WillOnce(Return(mt::fake_shared(second_mock_client_buffer)));
     EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
-    bs.buffer_available(another_buffer_package);
+    async_buffer_arrives(bs, another_buffer_package);
     bs.next_buffer([]{});
 
     EXPECT_THAT(bs.get_current_buffer().get(), Eq(&second_mock_client_buffer));
@@ -497,7 +523,7 @@ TEST_P(ClientBufferStream, receives_unsolicited_buffer)
 TEST_P(ClientBufferStream, waiting_client_can_unblock_on_shutdown)
 {
     using namespace std::literals::chrono_literals;
-    mtd::MockClientBuffer mock_client_buffer;
+    NiceMock<mtd::MockClientBuffer> mock_client_buffer;
     ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
         .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
     ON_CALL(mock_protobuf_server, submit_buffer(_,_,_))
@@ -510,6 +536,7 @@ TEST_P(ClientBufferStream, waiting_client_can_unblock_on_shutdown)
     mcl::BufferStream bs(
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers);
     service_requests_for(bs, mock_protobuf_server.alloc_count);
 
@@ -542,6 +569,7 @@ TEST_P(ClientBufferStream, invokes_callback_on_buffer_available_before_wait_hand
     mcl::BufferStream bs{
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers};
     service_requests_for(bs, mock_protobuf_server.alloc_count);
 
@@ -563,6 +591,7 @@ TEST_P(ClientBufferStream, invokes_callback_on_buffer_unavailable_before_wait_ha
     mcl::BufferStream bs{
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers};
     service_requests_for(bs, mock_protobuf_server.alloc_count);
 
@@ -582,6 +611,7 @@ TEST_P(ClientBufferStream, configures_swap_interval)
     mcl::BufferStream bs{
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers};
     service_requests_for(bs, mock_protobuf_server.alloc_count);
 
@@ -594,6 +624,7 @@ TEST_P(ClientBufferStream, sets_swap_interval_requested)
     mcl::BufferStream bs{
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers};
     service_requests_for(bs, mock_protobuf_server.alloc_count);
 
@@ -610,6 +641,7 @@ TEST_P(ClientBufferStream, environment_overrides_requested_swap_interval)
     mcl::BufferStream bs{
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers};
     service_requests_for(bs, mock_protobuf_server.alloc_count);
 
@@ -636,6 +668,7 @@ TEST_P(ClientBufferStream, configures_scale)
     mcl::BufferStream bs{
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers};
     service_requests_for(bs, mock_protobuf_server.alloc_count);
 
@@ -656,6 +689,7 @@ TEST_P(ClientBufferStream, returns_correct_surface_parameters_with_nondefault_fo
     mcl::BufferStream bs(
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers);
     service_requests_for(bs, 1);
     auto params = bs.get_parameters();
@@ -669,6 +703,7 @@ TEST_P(ClientBufferStream, keeps_accurate_buffer_id)
     mcl::BufferStream stream(
         nullptr, wait_handle, mock_protobuf_server,
         std::make_shared<StubClientPlatform>(mt::fake_shared(mock_factory)),
+        map, factory,
         response, perf_report, "", size, nbuffers);
     for(auto i = 0u; i < 2; i++)
     {
@@ -677,7 +712,7 @@ TEST_P(ClientBufferStream, keeps_accurate_buffer_id)
         buffer.set_buffer_id(i+10);
         buffer.set_width(size.width.as_int());
         buffer.set_height(size.height.as_int());
-        stream.buffer_available(buffer);
+        async_buffer_arrives(stream, buffer);
     }
 
     EXPECT_THAT(stream.get_current_buffer_id(), Eq(10));
