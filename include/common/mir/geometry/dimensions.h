@@ -40,7 +40,7 @@ public:
 
     constexpr IntWrapper() : value(0) {}
     constexpr IntWrapper(IntWrapper const& that) = default;
-    constexpr IntWrapper& operator=(IntWrapper const& that) = default;
+    IntWrapper& operator=(IntWrapper const& that) = default;
 
     template<typename AnyInteger>
     explicit constexpr IntWrapper(AnyInteger value) : value(static_cast<ValueType>(value)) {}
