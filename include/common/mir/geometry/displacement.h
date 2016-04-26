@@ -38,7 +38,7 @@ struct Displacement
     template<typename DeltaXType, typename DeltaYType>
     constexpr Displacement(DeltaXType&& dx, DeltaYType&& dy) : dx{dx}, dy{dy} {}
 
-    constexpr long long length_squared() const
+    long long length_squared() const
     {
         long long x = dx.as_int(), y = dy.as_int();
         return x * x + y * y;
@@ -90,7 +90,7 @@ inline constexpr Displacement operator-(Point const& lhs, Point const& rhs)
     return Displacement{lhs.x - rhs.x, lhs.y - rhs.y};
 }
 
-inline constexpr bool operator<(Displacement const& lhs, Displacement const& rhs)
+inline bool operator<(Displacement const& lhs, Displacement const& rhs)
 {
     return lhs.length_squared() < rhs.length_squared();
 }
