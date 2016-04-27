@@ -303,9 +303,8 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     {
     }
 
-    void deposit(mp::Buffer const& buffer, mir::optional_value<geom::Size>, MirPixelFormat) override
+    void deposit(mp::Buffer const&, mir::optional_value<geom::Size>, MirPixelFormat) override
     {
-        vault.wire_transfer_inbound(buffer);
     }
 
     void advance_current_buffer(std::unique_lock<std::mutex>& lk)
@@ -412,7 +411,7 @@ mcl::BufferStream::BufferStream(
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
-    std::weak_ptr<mcl::SurfaceMap> const&,
+    std::weak_ptr<mcl::SurfaceMap> const& map,
     std::shared_ptr<mcl::AsyncBufferFactory> const& factory,
     mp::BufferStream const& a_protobuf_bs,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
@@ -429,7 +428,7 @@ mcl::BufferStream::BufferStream(
       ideal_buffer_size(ideal_size),
       nbuffers(nbuffers),
       creation_wait_handle(creation_wait_handle),
-      map(std::make_shared<mcl::ConnectionSurfaceMap>()),
+      map(map),
       factory(factory)
 {
     init_swap_interval();
@@ -457,7 +456,7 @@ mcl::BufferStream::BufferStream(
         else
         {
             buffer_depository = std::make_unique<NewBufferSemantics>(
-                client_platform->create_buffer_factory(), std::make_shared<mcl::BufferFactory>(),
+                client_platform->create_buffer_factory(), factory,
                 std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
                 ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
                 protobuf_bs->buffer_usage(), nbuffers);
