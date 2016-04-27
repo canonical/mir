@@ -1,5 +1,5 @@
 add_custom_target(mir_performance_tests ALL
-  cp ${CMAKE_CURRENT_SOURCE_DIR}/performance_tests.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir_performance_tests
+  cp --remove-destination ${CMAKE_CURRENT_SOURCE_DIR}/performance_tests.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir_performance_tests
 )
 install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir_performance_tests
   DESTINATION ${CMAKE_INSTALL_BINDIR}
