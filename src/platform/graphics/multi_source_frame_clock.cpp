@@ -25,7 +25,7 @@ void MultiSourceFrameClock::add_child_clock(std::weak_ptr<FrameClock> w)
     Lock lock(frame_mutex);
     if (auto clock = w.lock())
     {
-        void const* id = clock.get();
+        ChildId id = clock.get();
         children[id] = Child{std::move(w), {}, {}};
         synchronize(lock);
         clock->set_frame_callback(
@@ -57,7 +57,7 @@ void MultiSourceFrameClock::synchronize(Lock const&)
     }
 }
 
-void MultiSourceFrameClock::on_child_frame(void const* child_id,
+void MultiSourceFrameClock::on_child_frame(ChildId child_id,
                                            Frame const& child_frame)
 {
     FrameCallback cb;

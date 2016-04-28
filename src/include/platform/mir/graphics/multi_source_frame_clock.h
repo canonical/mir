@@ -42,15 +42,17 @@ public:
     void add_child_clock(std::weak_ptr<FrameClock>);
 private:
     typedef std::lock_guard<FrameMutex> Lock;
+    typedef void const* ChildId;
+
     void synchronize(Lock const&);
-    void on_child_frame(void const* child_id, Frame const&);
+    void on_child_frame(ChildId, Frame const&);
     struct Child
     {
         std::weak_ptr<FrameClock> clock;
         Frame baseline;
         Frame last_frame;
     };
-    std::unordered_map<void const*, Child> children;
+    std::unordered_map<ChildId, Child> children;
     Frame baseline;
     Frame last_multi_frame;
 };
