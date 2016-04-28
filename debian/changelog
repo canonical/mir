@@ -1,5 +1,6 @@
-mir (0.22.0) UNRELEASED; urgency=medium
+mir (0.22.0+16.04.20160422.2-0ubuntu1) xenial; urgency=medium
 
+  [ Alberto Aguirre ]
   * New upstream release 0.22.0 (https://launchpad.net/mir/+milestone/0.22.0)
     - ABI summary: Only servers need rebuilding
       . mirclient ABI unchanged at 9
@@ -57,7 +58,10 @@ mir (0.22.0) UNRELEASED; urgency=medium
         (LP: #1573572)
       . Virtual display output configuration is set to LVDS (LP: #1573782)
 
- -- Alberto Aguirre <alberto.aguirre@canonical.com>  Thu, 21 Apr 2016 00:54:23 -0500
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Fri, 22 Apr 2016 22:38:16 +0000
 
 mir (0.21.0+16.04.20160330-0ubuntu1) xenial; urgency=medium
 
