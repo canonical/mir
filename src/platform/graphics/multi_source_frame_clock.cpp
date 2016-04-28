@@ -42,17 +42,20 @@ void MultiSourceFrameClock::synchronize(Lock const&)
     while (c != children.end())
     {
         auto& child = c->second;
-        if (child.clock.lock())
+        if (child.clock.expired())
         {
-            child.last_sync = child.last_frame;
-            ++c;
+            /*
+             * Lazy deferred clean-up. We don't need to do this any sooner
+             * because a deleted child (which no longer generates callbacks)
+             * doesn't affect results at all. This means we don't need to
+             * ask graphics platforms to tell us when an output is removed.
+             */
+            c = children.erase(c);
         }
         else
         {
-            // Lazy deferred clean-up. We don't need to do this any sooner
-            // because a deleted child (which no longer generates callbacks)
-            // doesn't affect results at all.
-            c = children.erase(c);
+            child.last_sync = child.last_frame;
+            ++c;
         }
     }
 }
@@ -69,13 +72,14 @@ void MultiSourceFrameClock::on_child_frame(ChildId child_id,
         if (found != children.end())
         {
             auto& child = found->second;
-            child.last_frame = child_frame;
             if (child.contributed_to_multi_frame.msc == last_multi_frame.msc)
             {
-                // Primary/fastest display:
-                // Our last_multi_frame counters must remain monotonic, even
-                // if the primary display changes to a child display with
-                // lower counters...
+                /*
+                 * This is the primary/fastest display.
+                 * Note our last_multi_frame counters must remain monotonic,
+                 * even if the primary display changes to a child display with
+                 * lower counters...
+                 */
                 last_multi_frame.msc = last_sync.msc +
                                        child_frame.msc - child.last_sync.msc;
                 last_multi_frame.ust = last_sync.ust +
@@ -83,13 +87,16 @@ void MultiSourceFrameClock::on_child_frame(ChildId child_id,
                 callback = frame_callback;
                 callback_arg = last_multi_frame;
             }
-            // Secondary/slower display:
+
+            child.last_frame = child_frame;
             child.contributed_to_multi_frame = last_multi_frame;
 
-            // What happens when the primary display vanishes? A secondary
-            // display catches up next frame, and one frame later that
-            // secondary display now qualifies as the primary display (if
-            // statement).
+            /*
+             * So what happens when the primary display vanishes? A secondary
+             * display catches up next frame, and one frame later that
+             * secondary display now qualifies as the primary display (if
+             * statement).
+             */
         }
     }
 
