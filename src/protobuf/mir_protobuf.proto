@@ -137,9 +137,17 @@ message BufferRelease {
   optional BufferStreamId id = 2;
 };
 
+enum BufferOperation
+{
+    add = 0;
+    update = 1;
+    remove = 2;
+};
+
 message BufferRequest {
   optional BufferStreamId id = 1;
   optional Buffer buffer = 2;
+  optional BufferOperation operation = 3;
 };
 
 message Buffer {
@@ -313,6 +321,8 @@ message ScreencastParameters {
   required uint32 width = 2;
   required uint32 height = 3;
   required int32 pixel_format = 4;
+  optional uint32 num_buffers = 5;
+  optional int32 mirror_mode = 6;
 }
 
 message ScreencastId {

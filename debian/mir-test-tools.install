@@ -5,6 +5,7 @@ usr/bin/mir_acceptance_tests
 usr/bin/mir_umock_acceptance_tests
 usr/bin/mir_integration_tests*
 usr/bin/mir_performance_tests
+usr/bin/mir_glmark2_performance_test
 usr/bin/mir_privileged_tests
 usr/bin/mir_test_reload_protobuf
 usr/bin/mir_test_client_*

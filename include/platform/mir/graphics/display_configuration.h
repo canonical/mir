@@ -66,7 +66,8 @@ enum class DisplayConfigurationOutputType
     hdmia,
     hdmib,
     tv,
-    edp
+    edp,
+    virt,
 };
 
 /**

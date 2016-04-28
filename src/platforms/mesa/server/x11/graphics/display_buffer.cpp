@@ -67,6 +67,10 @@ void mgx::DisplayBuffer::swap_buffers()
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
 }
 
+void mgx::DisplayBuffer::bind()
+{
+}
+
 MirOrientation mgx::DisplayBuffer::orientation() const
 {
     return orientation_;

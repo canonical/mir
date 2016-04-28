@@ -281,7 +281,8 @@ typedef enum MirDisplayOutputType
     mir_display_output_type_hdmia,
     mir_display_output_type_hdmib,
     mir_display_output_type_tv,
-    mir_display_output_type_edp
+    mir_display_output_type_edp,
+    mir_display_output_type_virtual
 } MirDisplayOutputType;
 
 typedef enum MirOutputType
@@ -300,7 +301,8 @@ typedef enum MirOutputType
     mir_output_type_hdmia,
     mir_output_type_hdmib,
     mir_output_type_tv,
-    mir_output_type_edp
+    mir_output_type_edp,
+    mir_output_type_virtual
 } MirOutputType;
 
 typedef enum MirOutputConnectionState

@@ -6,12 +6,16 @@ include_directories(
 add_library(
   mirsharedmesaservercommon-static STATIC
 
-  anonymous_shm_file.cpp
   buffer_allocator.cpp
   display_helpers.cpp
   drm_close_threadsafe.cpp
   drm_mode_resources.cpp
   gbm_buffer.cpp
   ipc_operations.cpp
-  shm_buffer.cpp
+)
+
+target_link_libraries(
+  mirsharedmesaservercommon-static
+
+  server_platform_common
 )
