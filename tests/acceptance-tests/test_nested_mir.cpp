@@ -620,8 +620,10 @@ TEST_F(NestedServer, client_may_connect_to_nested_server_and_create_surface)
 
 TEST_F(NestedServer, posts_when_scene_has_visible_changes)
 {
-    // No post on surface creation
-    EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(0);
+    auto const number_of_nested_surfaces = 2;
+    auto const number_of_cursor_streams = number_of_nested_surfaces;
+    // No post on surface creation for the display surfaces - but preparing the cursor is fine
+    EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(number_of_cursor_streams);
     NestedMirRunner nested_mir{new_connection()};
 
     auto const connection = mir_connect_sync(nested_mir.new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -636,7 +638,7 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
     {
         mt::Signal wait;
 
-        EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(2)
+        EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(number_of_nested_surfaces)
             .WillOnce(InvokeWithoutArgs([]{}))
             .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
 
@@ -650,7 +652,7 @@ TEST_F(NestedServer, posts_when_scene_has_visible_changes)
     {
         mt::Signal wait;
 
-        EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(2)
+        EXPECT_CALL(*mock_session_mediator_report, session_submit_buffer_called(_)).Times(number_of_nested_surfaces)
             .WillOnce(InvokeWithoutArgs([]{}))
             .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
 

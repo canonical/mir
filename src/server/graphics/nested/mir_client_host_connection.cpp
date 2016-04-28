@@ -36,7 +36,7 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include <string.h>
+#include <cstring>
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
@@ -150,7 +150,7 @@ void copy_image(MirGraphicsRegion const& g, mg::CursorImage const& image)
 
     for (int row = 0; row != image_height; ++row)
     {
-        memcpy(dest, src, image_stride);
+        std::memcpy(dest, src, image_stride);
         dest += g.stride;
         src += image_stride;
     }
@@ -254,6 +254,31 @@ private:
     mir::geometry::Displacement cursor_hotspot;
 };
 
+}
+
+void const* mgn::MirClientHostConnection::NestedCursorImage::as_argb_8888() const
+{
+    return buffer.data();
+}
+
+mir::geometry::Size mgn::MirClientHostConnection::NestedCursorImage::size() const
+{
+    return size_;
+}
+
+mir::geometry::Displacement mgn::MirClientHostConnection::NestedCursorImage::hotspot() const
+{
+    return hotspot_;
+}
+
+mgn::MirClientHostConnection::NestedCursorImage& mgn::MirClientHostConnection::NestedCursorImage::operator=(mg::CursorImage const& other)
+{
+    hotspot_ = other.hotspot();
+    size_ = other.size();
+    buffer.resize(size_.width.as_int() * size_.height.as_int() * 4);
+    std::memcpy(buffer.data(), other.as_argb_8888(), buffer.size());
+
+    return *this;
 }
 
 mgn::MirClientHostConnection::MirClientHostConnection(
@@ -362,6 +387,9 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
             delete surf;
         });
 
+    if (stored_cursor_image.size().width.as_int() * stored_cursor_image.size().width.as_int())
+        surf->set_cursor_image(stored_cursor_image);
+
     surfaces.push_back(surf.get());
     return surf;
 }
@@ -398,10 +426,11 @@ mg::PlatformOperationMessage mgn::MirClientHostConnection::platform_operation(
 void mgn::MirClientHostConnection::set_cursor_image(mg::CursorImage const& image)
 {
     std::lock_guard<std::mutex> lg(surfaces_mutex);
+    stored_cursor_image = image;
     for (auto s : surfaces)
     {
         auto surface = static_cast<MirClientHostSurface*>(s);
-        surface->set_cursor_image(image);
+        surface->set_cursor_image(stored_cursor_image);
     }
 }
 
