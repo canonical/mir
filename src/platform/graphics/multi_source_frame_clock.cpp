@@ -26,7 +26,7 @@ void MultiSourceFrameClock::add_child_clock(std::weak_ptr<FrameClock> w)
     if (auto clock = w.lock())
     {
         ChildId id = clock.get();
-        children[id] = Child{std::move(w), {}, {}};
+        children[id].clock = std::move(w);
         synchronize(lock);
         clock->set_frame_callback(
             std::bind(&MultiSourceFrameClock::on_child_frame,
@@ -36,7 +36,7 @@ void MultiSourceFrameClock::add_child_clock(std::weak_ptr<FrameClock> w)
 
 void MultiSourceFrameClock::synchronize(Lock const&)
 {
-    baseline = last_multi_frame;
+    last_sync = last_multi_frame;
 
     auto c = children.begin();
     while (c != children.end())
@@ -44,7 +44,7 @@ void MultiSourceFrameClock::synchronize(Lock const&)
         auto& child = c->second;
         if (child.clock.lock())
         {
-            child.baseline = child.last_frame;
+            child.last_sync = child.last_frame;
             ++c;
         }
         else
@@ -60,8 +60,8 @@ void MultiSourceFrameClock::synchronize(Lock const&)
 void MultiSourceFrameClock::on_child_frame(ChildId child_id,
                                            Frame const& child_frame)
 {
-    FrameCallback cb;
-    Frame cb_frame;
+    FrameCallback callback;
+    Frame callback_arg;
 
     {
         Lock lock(frame_mutex);
@@ -70,20 +70,31 @@ void MultiSourceFrameClock::on_child_frame(ChildId child_id,
         {
             auto& child = found->second;
             child.last_frame = child_frame;
-            auto child_delta = child_frame.msc - child.baseline.msc;
-            auto virtual_delta = last_multi_frame.msc - baseline.msc;
-            if (child_delta > virtual_delta)
+            if (child.contributed_to_multi_frame.msc == last_multi_frame.msc)
             {
-                last_multi_frame.msc = baseline.msc + child_delta;
-                last_multi_frame.ust = child_frame.ust;
-                cb = frame_callback;
-                cb_frame = last_multi_frame;
+                // Primary/fastest display:
+                // Our last_multi_frame counters must remain monotonic, even
+                // if the primary display changes to a child display with
+                // lower counters...
+                last_multi_frame.msc = last_sync.msc +
+                                       child_frame.msc - child.last_sync.msc;
+                last_multi_frame.ust = last_sync.ust +
+                                       child_frame.ust - child.last_sync.ust;
+                callback = frame_callback;
+                callback_arg = last_multi_frame;
             }
+            // Secondary/slower display:
+            child.contributed_to_multi_frame = last_multi_frame;
+
+            // What happens when the primary display vanishes? A secondary
+            // display catches up next frame, and one frame later that
+            // secondary display now qualifies as the primary display (if
+            // statement).
         }
     }
 
-    if (cb)
-        cb(cb_frame);
+    if (callback)
+        callback(callback_arg);
 }
 
 }} // namespace mir::graphics

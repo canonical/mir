@@ -49,11 +49,12 @@ private:
     struct Child
     {
         std::weak_ptr<FrameClock> clock;
-        Frame baseline;
+        Frame last_sync;
         Frame last_frame;
+        Frame contributed_to_multi_frame;
     };
     std::unordered_map<ChildId, Child> children;
-    Frame baseline;
+    Frame last_sync;
     Frame last_multi_frame;
 };
 
