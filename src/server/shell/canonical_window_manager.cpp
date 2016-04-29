@@ -113,7 +113,7 @@ void msh::CanonicalWindowManagerPolicy::handle_displays_updated(SessionInfoMap& 
 
 void msh::CanonicalWindowManagerPolicy::resize(Point cursor)
 {
-    select_active_surface(tools->surface_at(old_cursor));
+    if (!resizing) select_active_surface(tools->surface_at(old_cursor));
     resize(active_surface(), cursor, old_cursor, display_area);
     old_cursor = cursor;
 }
@@ -703,6 +703,7 @@ bool msh::CanonicalWindowManagerPolicy::handle_pointer_event(MirPointerEvent con
         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
 
     bool consumes_event = false;
+    bool resize_event = false;
 
     if (action == mir_pointer_action_button_down)
     {
@@ -720,10 +721,12 @@ bool msh::CanonicalWindowManagerPolicy::handle_pointer_event(MirPointerEvent con
         if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
         {
             resize(cursor);
+            resize_event = active_surface_.lock().get();
             consumes_event = true;
         }
     }
 
+    resizing = resize_event;
     old_cursor = cursor;
     return consumes_event;
 }
@@ -786,39 +789,62 @@ auto msh::CanonicalWindowManagerPolicy::active_surface() const
 
 bool msh::CanonicalWindowManagerPolicy::resize(std::shared_ptr<ms::Surface> const& surface, Point cursor, Point old_cursor, Rectangle bounds)
 {
-    if (!surface || !surface->input_area_contains(old_cursor))
+    if (!surface)
         return false;
+
+    auto const& surface_info = tools->info_for(surface);
 
     auto const top_left = surface->top_left();
     Rectangle const old_pos{top_left, surface->size()};
 
-    auto anchor = top_left;
-
-    for (auto const& corner : {
-        old_pos.top_right(),
-        old_pos.bottom_left(),
-        old_pos.bottom_right()})
+    if (!resizing)
     {
-        if ((old_cursor - anchor).length_squared() <
-            (old_cursor - corner).length_squared())
+        auto anchor = old_pos.bottom_right();
+
+        for (auto const& corner : {
+            old_pos.top_right(),
+            old_pos.bottom_left(),
+            top_left})
         {
-            anchor = corner;
+            if ((old_cursor - anchor).length_squared() <
+                (old_cursor - corner).length_squared())
+            {
+                anchor = corner;
+            }
         }
+
+        left_resize = anchor.x != top_left.x;
+        top_resize  = anchor.y != top_left.y;
     }
 
-    bool const left_resize = anchor.x != top_left.x;
-    bool const top_resize  = anchor.y != top_left.y;
     int const x_sign = left_resize? -1 : 1;
     int const y_sign = top_resize?  -1 : 1;
 
-    auto const delta = cursor-old_cursor;
+    auto delta = cursor-old_cursor;
 
-    Size new_size{old_pos.size.width + x_sign*delta.dx, old_pos.size.height + y_sign*delta.dy};
+    auto new_width = old_pos.size.width + x_sign * delta.dx;
+    auto new_height = old_pos.size.height + y_sign * delta.dy;
 
+    auto const min_width  = std::max(surface_info.min_width, Width{5});
+    auto const min_height = std::max(surface_info.min_height, Height{5});
+
+    if (new_width < min_width)
+    {
+        new_width = min_width;
+        if (delta.dx > DeltaX{0})
+            delta.dx = DeltaX{0};
+    }
+
+    if (new_height < min_height)
+    {
+        new_height = min_height;
+        if (delta.dy > DeltaY{0})
+            delta.dy = DeltaY{0};
+    }
+
+    Size new_size{new_width, new_height};
     Point new_pos = top_left + left_resize*delta.dx + top_resize*delta.dy;
 
-
-    auto const& surface_info = tools->info_for(surface);
 
     surface_info.constrain_resize(surface, new_pos, new_size, left_resize, top_resize, bounds);
 

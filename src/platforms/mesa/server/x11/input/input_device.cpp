@@ -26,7 +26,6 @@
 #include "mir/input/input_sink.h"
 
 #include <X11/Xlib.h>
-#include <iostream>
 
 namespace mi = mir::input;
 namespace geom = mir::geometry;

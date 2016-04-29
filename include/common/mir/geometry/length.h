@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014. 2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -37,27 +37,27 @@ public:
         inches = 25400
     };
 
-    Length() : magnitude(0) {}
-    Length(Length const&) = default;
+    constexpr Length() : magnitude(0) {}
+    constexpr Length(Length const&) = default;
+    constexpr Length(float mag, Units units) : magnitude(mag * units) {}
     Length& operator=(Length const&) = default;
-    Length(float mag, Units units) : magnitude(mag * units) {}
 
-    float as(Units units) const
+    constexpr float as(Units units) const
     {
         return static_cast<float>(magnitude) / units;
     }
 
-    float as_pixels(float dpi) const
+    constexpr float as_pixels(float dpi) const
     {
         return as(inches) * dpi;
     }
 
-    bool operator==(Length const& rhs) const
+    constexpr bool operator==(Length const& rhs) const
     {
         return magnitude == rhs.magnitude;
     }
 
-    bool operator!=(Length const& rhs) const
+    constexpr bool operator!=(Length const& rhs) const
     {
         return magnitude != rhs.magnitude;
     }
@@ -66,32 +66,32 @@ private:
     float magnitude;
 };
 
-inline Length operator"" _mm(long double mag)
+inline constexpr Length operator"" _mm(long double mag)
 {
     return Length(mag, Length::millimetres);
 }
 
-inline Length operator"" _mm(unsigned long long mag)
+inline constexpr Length operator"" _mm(unsigned long long mag)
 {
     return Length(mag, Length::millimetres);
 }
 
-inline Length operator"" _cm(long double mag)
+inline constexpr Length operator"" _cm(long double mag)
 {
     return Length(mag, Length::centimetres);
 }
 
-inline Length operator"" _cm(unsigned long long mag)
+inline constexpr Length operator"" _cm(unsigned long long mag)
 {
     return Length(mag, Length::centimetres);
 }
 
-inline Length operator"" _in(long double mag)
+inline constexpr Length operator"" _in(long double mag)
 {
     return Length(mag, Length::inches);
 }
 
-inline Length operator"" _in(unsigned long long mag)
+inline constexpr Length operator"" _in(unsigned long long mag)
 {
     return Length(mag, Length::inches);
 }
