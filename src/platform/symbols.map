@@ -289,7 +289,7 @@ MIR_PLATFORM_0.21 {  # New symbols in Mir 0.21
   };
 } MIRPLATFORM_11;
 
-MIR_PLATFORM_0.22 {
+MIR_PLATFORM_0.23 {  # New symbols in Mir 0.23
  global:
   extern "C++" {
    mir::graphics::SimpleFrameClock::set_frame_callback*;
