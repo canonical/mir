@@ -3,8 +3,8 @@ mir (0.23.0) UNRELEASED; urgency=medium
   * New upstream release 0.23.0 (https://launchpad.net/mir/+milestone/0.23.0)
     - ABI summary:
       . mirclient ABI unchanged at 9
-      . mirserver ABI unchanged at 39
-      . mircommon ABI unchanged at 5
+      . mirserver ABI bumped to 40
+      . mircommon ABI bumped at 6
       . mirplatform ABI unchanged at 11
       . mirprotobuf ABI unchanged at 3
       . mirplatformgraphics ABI unchanged at 9

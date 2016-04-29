@@ -67,7 +67,7 @@ Description: Display server for Ubuntu - RPC definitions
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
-Package: libmirserver39
+Package: libmirserver40
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -99,7 +99,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircommon5 (= ${binary:Version}), 
+Depends: libmircommon6 (= ${binary:Version}), 
          libprotobuf-dev (>= 2.4.1),
          libxkbcommon-dev,
          ${misc:Depends},
@@ -133,7 +133,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver39 (= ${binary:Version}),
+Depends: libmirserver40 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -287,7 +287,7 @@ Description: Display Server for Ubuntu - android platform diagnostics utility
  .
  Contains a tool for checking the graphics components of android devices.
 
-Package: libmircommon5
+Package: libmircommon6
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
