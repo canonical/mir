@@ -32,6 +32,11 @@ namespace mir
 {
 namespace graphics
 {
+namespace common
+{
+class BufferTextureBinder;
+}
+
 namespace mesa
 {
 
@@ -44,15 +49,13 @@ MirPixelFormat gbm_format_to_mir_format(uint32_t format);
 uint32_t mir_format_to_gbm_format(MirPixelFormat format);
 enum : uint32_t { invalid_gbm_format = std::numeric_limits<uint32_t>::max() };
 
-class BufferTextureBinder;
-
 class GBMBuffer: public BufferBasic, public NativeBufferBase,
                  public renderer::gl::TextureSource
 {
 public:
     GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
               uint32_t bo_flags,
-              std::unique_ptr<BufferTextureBinder> texture_binder);
+              std::unique_ptr<common::BufferTextureBinder> texture_binder);
     GBMBuffer(const GBMBuffer&) = delete;
     ~GBMBuffer();
 
@@ -78,7 +81,7 @@ public:
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;
     uint32_t bo_flags;
-    std::unique_ptr<BufferTextureBinder> const texture_binder;
+    std::unique_ptr<common::BufferTextureBinder> const texture_binder;
     int prime_fd;
 };
 

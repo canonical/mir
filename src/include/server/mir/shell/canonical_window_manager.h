@@ -110,6 +110,10 @@ private:
     using FullscreenSurfaces = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;
 
     FullscreenSurfaces fullscreen_surfaces;
+
+    bool resizing = false;
+    bool left_resize = false;
+    bool top_resize = false;
 };
 
 using CanonicalWindowManager = WindowManagerConstructor<CanonicalWindowManagerPolicy>;

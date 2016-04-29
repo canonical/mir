@@ -138,13 +138,6 @@ static void buffer_callback(MirPresentationChain*, MirBuffer* buffer, void* cont
     static_cast<BufferCallbackContext*>(context)->set_buffer(buffer);
 }
 
-static void counting_buffer_callback(MirPresentationChain*, MirBuffer* buffer, void* context)
-{
-    BufferCount* c = static_cast<BufferCount*>(context);
-    c->buffer = buffer;
-    c->count = c->count + 1;
-}
-
 TEST_F(PresentationChain, returns_associated_connection)
 {
     mcl::PresentationChain chain(
@@ -177,20 +170,18 @@ TEST_F(PresentationChain, creates_buffer_when_asked)
     EXPECT_CALL(mock_server, allocate_buffers(BufferAllocationMatches(mp_alloc),_,_))
         .WillOnce(mtd::RunProtobufClosure());
     EXPECT_CALL(*factory, create_buffer(_, size, format));
- 
+
+    auto mir_buffer_factory = std::make_shared<mcl::BufferFactory>();
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
-        factory, std::make_shared<mcl::BufferFactory>());
+        factory, mir_buffer_factory);
     chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
-
-    EXPECT_FALSE(buffer.buffer_is_set());
 
     mp::Buffer ipc_buf;
     ipc_buf.set_width(size.width.as_int());
     ipc_buf.set_height(size.height.as_int());
-    chain.buffer_available(ipc_buf);
-
-    EXPECT_TRUE(buffer.wait_for_buffer());
+    auto mirbuffer = mir_buffer_factory->generate_buffer(ipc_buf);
+    EXPECT_THAT(mirbuffer, Ne(nullptr));
 }
 
 TEST_F(PresentationChain, creates_correct_buffer_when_buffers_arrive)
@@ -224,25 +215,32 @@ TEST_F(PresentationChain, creates_correct_buffer_when_buffers_arrive)
         ipc_buf[i].set_height(sizes[i].height.as_int());
     }
 
+    std::array<std::shared_ptr<mtd::MockClientBuffer>, num_buffers> client_buffers { {
+        std::make_shared<NiceMock<mtd::MockClientBuffer>>(),
+        std::make_shared<NiceMock<mtd::MockClientBuffer>>(),
+        std::make_shared<NiceMock<mtd::MockClientBuffer>>()
+    } };
+
+    for(auto i = 0u; i < client_buffers.size(); i++)
+    {
+        EXPECT_CALL(*factory, create_buffer(_, sizes[i], _))
+            .WillOnce(Return(client_buffers[i])); 
+    }
+
+    auto mir_buffer_factory = std::make_shared<mcl::BufferFactory>();
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
-        std::make_shared<mtd::StubClientBufferFactory>(),
-        std::make_shared<mcl::BufferFactory>());
+        factory, mir_buffer_factory);
 
     for (auto i = 0u; i < num_buffers; i++)
         chain.allocate_buffer(sizes[i], format, usage, buffer_callback, &buffer[i]);
 
-    chain.buffer_available(ipc_buf[1]);
-    EXPECT_FALSE(buffer[0].buffer_is_set());
-    EXPECT_TRUE(buffer[1].wait_for_buffer());
-    EXPECT_FALSE(buffer[2].buffer_is_set());
-
-    chain.buffer_available(ipc_buf[2]);
-    EXPECT_FALSE(buffer[0].buffer_is_set());
-    EXPECT_TRUE(buffer[2].wait_for_buffer());
-
-    chain.buffer_available(ipc_buf[0]);
-    EXPECT_TRUE(buffer[0].wait_for_buffer());
+    auto mirbuffer = mir_buffer_factory->generate_buffer(ipc_buf[1]);
+    EXPECT_THAT(mirbuffer->client_buffer(), Eq(client_buffers[1]));
+    mirbuffer = mir_buffer_factory->generate_buffer(ipc_buf[2]);
+    EXPECT_THAT(mirbuffer->client_buffer(), Eq(client_buffers[2]));
+    mirbuffer = mir_buffer_factory->generate_buffer(ipc_buf[0]);
+    EXPECT_THAT(mirbuffer->client_buffer(), Eq(client_buffers[0]));
 }
 
 TEST_F(PresentationChain, frees_buffer_when_asked)
@@ -258,18 +256,15 @@ TEST_F(PresentationChain, frees_buffer_when_asked)
     EXPECT_CALL(mock_server, release_buffers(BufferReleaseMatches(release_msg),_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
+    auto mir_buffer_factory = std::make_shared<mcl::BufferFactory>();
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
-        std::make_shared<mcl::BufferFactory>());
+        mir_buffer_factory);
 
     chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
-    chain.buffer_available(ipc_buf);
-    auto b = buffer.wait_for_buffer();
-    ASSERT_THAT(b, Ne(nullptr));
-
-    chain.release_buffer(b);
-
+    chain.release_buffer(reinterpret_cast<MirBuffer*>(
+        mir_buffer_factory->generate_buffer(ipc_buf).get()));
 } 
 
 TEST_F(PresentationChain, submits_buffer_when_asked)
@@ -284,44 +279,16 @@ TEST_F(PresentationChain, submits_buffer_when_asked)
     EXPECT_CALL(mock_server, submit_buffer(BufferRequestMatches(request),_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
+    auto mir_buffer_factory = std::make_shared<mcl::BufferFactory>();
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
-        std::make_shared<mcl::BufferFactory>());
+        mir_buffer_factory);
     chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
-    chain.buffer_available(ipc_buf);
-    auto b = buffer.wait_for_buffer();
-    ASSERT_THAT(b, Ne(nullptr));
 
-    chain.submit_buffer(b);
-} 
-
-TEST_F(PresentationChain, updates_buffer)
-{
-    mtd::MockClientBuffer mock_buffer;
-    BufferCallbackContext buffer;
-    mp::BufferRequest request;
-    request.mutable_id()->set_value(rpc_id);
-    request.mutable_buffer()->set_buffer_id(buffer_id);
-
-    EXPECT_CALL(mock_server, allocate_buffers(_,_,_))
-        .WillOnce(mtd::RunProtobufClosure());
-    EXPECT_CALL(mock_server, submit_buffer(BufferRequestMatches(request),_,_))
-        .WillOnce(mtd::RunProtobufClosure());
-    EXPECT_CALL(mock_buffer, update_from(_));
-    EXPECT_CALL(*factory, create_buffer(_,_,_))
-        .WillOnce(Return(mir::test::fake_shared(mock_buffer)));
-
-    mcl::PresentationChain chain(
-        connection, rpc_id, mock_server, factory,
-        std::make_shared<mcl::BufferFactory>());
-    chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
-    chain.buffer_available(ipc_buf);
-    auto b = buffer.wait_for_buffer();
-    ASSERT_THAT(b, Ne(nullptr));
-
-    chain.submit_buffer(b);
-    chain.buffer_available(ipc_buf);
+    auto client_buffer = mir_buffer_factory->generate_buffer(ipc_buf);
+    client_buffer->received();
+    chain.submit_buffer(reinterpret_cast<MirBuffer*>(client_buffer.get()));
 } 
 
 TEST_F(PresentationChain, double_submission_throws)
@@ -333,43 +300,17 @@ TEST_F(PresentationChain, double_submission_throws)
     EXPECT_CALL(mock_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
+    auto mir_buffer_factory = std::make_shared<mcl::BufferFactory>();
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
-        std::make_shared<mcl::BufferFactory>());
+        mir_buffer_factory);
+
     chain.allocate_buffer(size, format, usage, buffer_callback, &buffer);
-    chain.buffer_available(ipc_buf);
-    auto b = buffer.wait_for_buffer();
-    ASSERT_THAT(b, Ne(nullptr));
-
-    chain.submit_buffer(b);
+    auto client_buffer = mir_buffer_factory->generate_buffer(ipc_buf);
+    client_buffer->received();
+    chain.submit_buffer(reinterpret_cast<MirBuffer*>(client_buffer.get()));
     EXPECT_THROW({
-        chain.submit_buffer(b);
+        chain.submit_buffer(reinterpret_cast<MirBuffer*>(client_buffer.get()));
     }, std::logic_error);
-}
-
-TEST_F(PresentationChain, callback_invoked_when_buffer_returned_from_allocation_and_submission)
-{
-    BufferCount counter;
-
-    EXPECT_CALL(mock_server, allocate_buffers(_,_,_))
-        .WillOnce(mtd::RunProtobufClosure());
-    EXPECT_CALL(mock_server, submit_buffer(_,_,_))
-        .WillOnce(mtd::RunProtobufClosure());
-
-    mcl::PresentationChain chain(
-        connection, rpc_id, mock_server,
-        std::make_shared<mtd::StubClientBufferFactory>(),
-        std::make_shared<mcl::BufferFactory>());
-    chain.allocate_buffer(size, format, usage, counting_buffer_callback, &counter);
-    chain.buffer_available(ipc_buf);
-    std::unique_lock<std::mutex> lk(counter.mut);
-    EXPECT_TRUE(counter.cv.wait_for(lk, std::chrono::seconds(5), [&] { return counter.buffer; }));
-    lk.unlock();
-
-    chain.submit_buffer(counter.buffer);
-    chain.buffer_available(ipc_buf);
-
-    lk.lock();
-    EXPECT_THAT(counter.count, Eq(2));
 }

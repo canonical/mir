@@ -132,6 +132,7 @@ TEST_F(OffscreenDisplayTest, makes_fbo_current_rendering_target)
             EXPECT_CALL(mock_gl, glBindFramebuffer(_,Ne(0)));
 
             mt::as_render_target(db)->make_current();
+            mt::as_render_target(db)->bind();
 
             Mock::VerifyAndClearExpectations(&mock_egl);
             Mock::VerifyAndClearExpectations(&mock_gl);

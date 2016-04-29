@@ -55,10 +55,13 @@ TEST_F(ServerShutdown, normal_exit_removes_endpoint)
     }
 }
 
+using ServerShutdownWithGraphicsPlatformException = ::testing::TestWithParam<char const*>;
+
 // Regression test for LP: #1528135
-TEST(ServerShutdownWithException, clean_shutdown_on_plugin_construction_exception)
+TEST_P(ServerShutdownWithGraphicsPlatformException, clean_shutdown_on_exception)
 {
     char const* argv = "ServerShutdownWithException";
+    mtf::TemporaryEnvironmentValue exception_set("MIR_TEST_FRAMEWORK_THROWING_PLATFORM_EXCEPTIONS", GetParam());
     mtf::TemporaryEnvironmentValue graphics_platform("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-throw.so").c_str());
     mtf::TemporaryEnvironmentValue input_platform("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
     mir::Server server;
@@ -69,6 +72,17 @@ TEST(ServerShutdownWithException, clean_shutdown_on_plugin_construction_exceptio
     server.apply_settings();
     server.run();
 }
+
+INSTANTIATE_TEST_CASE_P(
+    PlatformExceptions,
+    ServerShutdownWithGraphicsPlatformException,
+    ::testing::Values(
+        "constructor",
+        "create_buffer_allocator",
+        "create_display",
+        "make_ipc_operations",
+        "egl_native_display"
+    ));
 
 using ServerShutdownDeathTest = ServerShutdown;
 

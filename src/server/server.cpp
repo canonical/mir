@@ -376,34 +376,44 @@ void mir::Server::apply_settings()
 }
 
 void mir::Server::run()
-try
 {
-    mir::log_info("Starting");
-    verify_accessing_allowed(self->server_config);
+    try
+    {
+        mir::log_info("Starting");
+        verify_accessing_allowed(self->server_config);
 
-    auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
+        auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
 
-    if (self->emergency_cleanup_handler)
-        emergency_cleanup->add(self->emergency_cleanup_handler);
+        if (self->emergency_cleanup_handler)
+            emergency_cleanup->add(self->emergency_cleanup_handler);
 
-    run_mir(
-        *self->server_config,
-        [&](DisplayServer&) { self->init_callback(); },
-        self->terminator);
+        run_mir(
+            *self->server_config,
+            [&](DisplayServer&)
+                { self->init_callback(); },
+            self->terminator);
 
-    self->exit_status = true;
+        self->exit_status = true;
+    }
+    catch (...)
+    {
+        if (self->exception_handler)
+            self->exception_handler();
+        else
+            mir::report_exception(std::cerr);
+    }
+    /*
+     * The server_config *must* outlive exception processing as it holds references to
+     * the loaded platforms, and those references are keeping the DSOs loaded.
+     *
+     * If exception has been thrown from a platform DSO then the DSO must not be unloaded
+     * before exception processing has finished.
+     *
+     * This is safe to have outside a try {} catch {} as shared_ptr<>::reset() is specified
+     * as noexcept.
+     */
     self->server_config.reset();
 }
-catch (...)
-{
-    self->server_config = nullptr;
-
-    if (self->exception_handler)
-        self->exception_handler();
-    else
-        mir::report_exception(std::cerr);
-}
-
 auto mir::Server::supported_pixel_formats() const -> std::vector<MirPixelFormat>
 {
     return self->server_config->the_buffer_allocator()->supported_pixel_formats();
