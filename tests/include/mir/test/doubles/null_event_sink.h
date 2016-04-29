@@ -41,7 +41,10 @@ struct NullEventSink : public frontend::EventSink
     void handle_display_config_change(graphics::DisplayConfiguration const&) override {}
     void send_ping(int32_t) override {}
     void send_buffer(frontend::BufferStreamId, graphics::Buffer&, graphics::BufferIpcMsgType) override {}
-    void handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const&) override {};
+    void handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const&) override {}
+    void add_buffer(graphics::Buffer&) override {}
+    void remove_buffer(graphics::Buffer&) override {}
+    void update_buffer(graphics::Buffer&) override {}
 };
 
 std::unique_ptr<frontend::EventSink> null_sink_factory(std::shared_ptr<frontend::MessageSender> const&);

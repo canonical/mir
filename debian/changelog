@@ -1,6 +1,29 @@
-mir (0.22.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.23.0) UNRELEASED; urgency=medium
 
-  [ Kevin DuBois ]
+  * New upstream release 0.23.0 (https://launchpad.net/mir/+milestone/0.23.0)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . mirserver ABI unchanged at 39
+      . mircommon ABI unchanged at 5
+      . mirplatform ABI unchanged at 11
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 9
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 5
+    - Enhancements:
+    - Bug fixes:
+      . Mir crashes with useless backtrace when mg::Platform methods throw
+        (LP: #1553549)
+      . Virtual output is not removed when screencast client disappears
+        (LP: #1573572)
+      . Virtual display output configuration is set to LVDS Edit (LP: #1573782)
+      . Resizing can crash mir_demo_server (LP: #1575211)
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Thu, 28 Apr 2016 09:24:21 -0500
+
+mir (0.22.0+16.04.20160422.2-0ubuntu1) xenial; urgency=medium
+
+  [ Alberto Aguirre ]
   * New upstream release 0.22.0 (https://launchpad.net/mir/+milestone/0.22.0)
     - ABI summary: Only servers need rebuilding
       . mirclient ABI unchanged at 9
@@ -8,13 +31,127 @@ mir (0.22.0-0ubuntu1) UNRELEASED; urgency=medium
       . mircommon ABI unchanged at 5
       . mirplatform ABI unchanged at 11
       . mirprotobuf ABI unchanged at 3
-      . mirplatformgraphics ABI unchanged at 8
+      . mirplatformgraphics ABI bumped to 9
       . mirclientplatform ABI unchanged at 5
       . mirinputplatform ABI unchanged at 5
     - Enhancements:
+      . New screencast creation API which allows a client to specify
+        number of capture buffers and mirroring mode
+      . HWC 1.5 support for android based platforms
     - Bug fixes:
+      . [regression] Black screen: Mir hangs and then crashes on startup/login
+        due to reading from /dev/random (LP: #1536662)
+      . CI test failures on xenial amd64 due to valgrind errors following system
+        upgrade to ld-2.23 (LP: #1560415)
+      . [regression] failure in CI on ThreadedDispatcherSignalTest.keeps_
+        dispatching_after_signal_interruption under Valgrind (LP: #1499229)
+      . [regression] Cursor mostly does not move at all in response to slow 
+        mouse movement, but then sometimes jumps (LP: #1528109)
+      . Sometimes devices don't suspend - display turns back on immediately
+        (LP: #1549701)
+      . CI failure in NestedServer.display_orientation_changes_are_forwarded_to_
+        host (LP: #1555074)
+      . NBS fullscreen overlay benchmark performance is much lower than 
+        BufferQueue (LP: #1557962)
+      . server crashes when shutting down in smoke tests (LP: #1560900)
+      . [regression] [OTA-10] Spread animation stutters badly with only a few
+        apps opened (LP: #1563287)
+      . nested mir_demo_server crashes on startup (LP: #1570362)
+      . mir_acceptance_tests & mir_unit_tests dump core files (even when 
+        everything passes) (LP: #1342092)
+      . [regression] Tests fail with: std::exception::what: Failed to read from
+        device: /dev/random after: 30 seconds (LP: #1541188)
+      . [testsfail] ClientLatency.throttled_input_rate_yields_lower_latency
+        (LP: #1554572)
+      . NBS causes sudden loss of performance after un-fullscreening a swap 
+        interval zero client (LP: #1557442)
+      . surface creation with non-default buffer streams is ignored by server
+        (LP: #1563278)
+      . [regression] mir_integration_tests take significantly longer (27x
+        longer) when running with ctest (LP: #1568966)
+      . CI failure in TestClientInput.receives_one_touch_event_per_frame 
+        (LP: #1570698)
+      . Racy shutdown in mir_demo_client_scroll causes SEGFAULT (LP: #1560943)
+      . mir_demo_client_target does not quit after SIGTERM/SIGINT (LP: #1562340)
+      . ClientLogging.reports_performance fails under moderate load, is badly
+        named (LP: #1563148)
+      . nested mir_demo_server crashes on mouse move when --print-input-events
+        active (LP: #1570357)
+      . Virtual output is not removed when screencast client disappears
+        (LP: #1573572)
+      . Virtual display output configuration is set to LVDS (LP: #1573782)
 
- -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 21 Mar 2016 12:45:22 -0500
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Fri, 22 Apr 2016 22:38:16 +0000
+
+mir (0.21.0+16.04.20160330-0ubuntu1) xenial; urgency=medium
+
+  [ Alberto Aguirre ]
+  * New upstream release 0.21.0 (https://launchpad.net/mir/+milestone/0.21.0)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . mirserver ABI unchanged at 38
+      . mircommon ABI unchanged at 5
+      . mirplatform ABI unchanged at 11
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchaged at 8
+      . mirclientplatform ABI bumped to 5
+      . mirinputplatform ABI unchanged at 5
+    - Enhancements:
+      . New display enumeration API
+      . Added Android diagnostic tests to assist during porting to
+        new devices
+      . Added mir_demo_client_camera: a Video4Linux2 client
+    - Bugs fixed:
+      . Sometimes devices don't suspend - display turns back on
+        immediately (LP: #1549701)
+      . Mir crashed with exception 'failed to add sync point to command
+        buffer' (LP: #1554635)
+      . Mouse cursor is unusably slow in Unity 8 with a 1000Hz mouse
+        (LP: #1539009)
+      . Packaged mir_unit_tests binary is not suitable for general use
+        (LP: #1547015)
+      . [regression] Mir stops receiving input after a pause/resume
+        cycle (LP: #1548989)
+      . NBS (--nbuffers=0) causes software clients to crash with
+        std::exception::what: Failed to mmap buffer 13, "Permission denied")
+        (LP: #1550432)
+      . Fullscreen clients freeze when using NBS with multiple monitors
+        (LP: #1551536)
+      . [ FAILED ] DisplayConfigurationTest.output_position_is_independent_of_
+        orientation (LP: #1552065)
+      . The server-side use of MIR_SOCKET is confusing (LP: #1290345)
+      . [regression] FTBFS with -DMIR_LINK_TIME_OPTIMIZATION=on
+        -Duse_debflags=on (LP: #1350343)
+      . Mir On X (mesa-x11) keeps receiving mouse movement events even
+        when not focused (LP: #1528110)
+      . x11 platform: mouse cursor moves strange (LP: #1546324)
+      . Cross compiling to wily/vivid doesn't work (LP: #1549152)
+      . Rendering stutters when a new client establishes a connection
+        (LP: #1549359)
+      . 'mir_demo_server --test-client' crashes (SIGSEGV) when client
+        dies (LP: #1555620)
+      . [testfail] CI failure: TestClientInput.client_input_config_request_
+        receives_all_attached_devices (LP: #1555708)
+      . [regression] Mir FTBFS when MIR_ENABLE_TESTS=no (LP: #1556080)
+      . Mir-on-X11 doesn't exit (until it gets an event) (LP: #1556210)
+      . InputPlatformProbe.x11_platform_found_and_used_when_display_connection_
+        works breaks with old input drivers present (LP: #1543049)
+      . [regression] MIR_CLIENT_PERF_REPORT is missing window/surface
+        names (LP: #1546933)
+      . Installed binaries fail to run with mir_demo_server --test-client XXXX
+        (LP: #1556160)
+      . mir_demo_server --test-client [mir_demo_client_scroll|
+        mir_demo_client_flicker] fails (LP: #1556205)
+      . The contents of debian/mir-demos.examples are out of date and useless
+        (LP: #1557446)
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Wed, 30 Mar 2016 00:23:20 +0000
 
 mir (0.20.3+16.04.20160322-0ubuntu1) xenial; urgency=medium
 

@@ -29,6 +29,7 @@
 #include "mir_protobuf.pb.h"
 #include "buffer_vault.h"
 #include "protobuf_to_native_buffer.h"
+#include "buffer.h"
 #include "connection_surface_map.h"
 
 #include "mir/log.h"
@@ -58,15 +59,16 @@ namespace client
 //the BufferStream response provided by the server
 struct ServerBufferSemantics
 {
-    virtual void deposit(protobuf::Buffer const&, geometry::Size, MirPixelFormat) = 0;
+    virtual void deposit(protobuf::Buffer const&, mir::optional_value<geometry::Size>, MirPixelFormat) = 0;
     virtual void set_buffer_cache_size(unsigned int) = 0;
     virtual std::shared_ptr<mir::client::ClientBuffer> current_buffer() = 0;
     virtual uint32_t current_buffer_id() = 0;
-    virtual MirWaitHandle* submit(std::function<void()> const&, geometry::Size sz, MirPixelFormat, int stream_id) = 0;
+    virtual MirWaitHandle* submit(std::function<void()> const&, MirPixelFormat, int stream_id) = 0;
     virtual void lost_connection() = 0;
     virtual void set_size(geom::Size) = 0;
     virtual MirWaitHandle* set_scale(float, mf::BufferStreamId) = 0;
     virtual void set_interval(int interval) = 0;
+    virtual geom::Size size() const = 0;
     virtual ~ServerBufferSemantics() = default;
     ServerBufferSemantics() = default;
     ServerBufferSemantics(ServerBufferSemantics const&) = delete;
@@ -85,21 +87,25 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         std::shared_ptr<mcl::ClientBufferFactory> const& factory, int max_buffers,
         mp::Buffer const& first_buffer, geom::Size first_size, MirPixelFormat first_pf) :
         wrapped{factory, max_buffers},
-        display_server(server)
+        display_server(server),
+        size_(first_size)
     {
         wrapped.deposit_package(
             mcl::protobuf_to_native_buffer(first_buffer),
             first_buffer.buffer_id(), first_size, first_pf);
     }
 
-    void deposit(mp::Buffer const& buffer, geom::Size size, MirPixelFormat pf) override
+    void deposit(mp::Buffer const& buffer, mir::optional_value<geom::Size> size, MirPixelFormat pf) override
     {
         std::unique_lock<std::mutex> lock(mutex);
+        if (size.is_set())
+            size_ = size.value(); 
+
         if (on_incoming_buffer)
         {
             wrapped.deposit_package(
                 mcl::protobuf_to_native_buffer(buffer),
-                buffer.buffer_id(), size, pf);
+                buffer.buffer_id(), size_, pf);
             if (on_incoming_buffer)
             {
                 on_incoming_buffer();
@@ -131,7 +137,7 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         return wrapped.current_buffer_id();
     }
 
-    MirWaitHandle* submit(std::function<void()> const& done, geom::Size sz, MirPixelFormat pf, int stream_id) override
+    MirWaitHandle* submit(std::function<void()> const& done, MirPixelFormat pf, int stream_id) override
     {
         std::unique_lock<std::mutex> lock(mutex);
         if (server_connection_lost)
@@ -157,7 +163,7 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         {
             wrapped.deposit_package(
                 mcl::protobuf_to_native_buffer(incoming_buffers.front()),
-                incoming_buffers.front().buffer_id(), sz, pf);
+                incoming_buffers.front().buffer_id(), size_, pf);
             incoming_buffers.pop();
             done();
         }
@@ -179,6 +185,12 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
 
     void set_size(geom::Size) override
     {
+    }
+
+    geom::Size size() const override
+    {
+        std::unique_lock<std::mutex> lk(mutex);
+        return size_;
     }
 
     void on_scale_set(float scale)
@@ -204,7 +216,7 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
     {
     }
 
-    std::mutex mutex;
+    std::mutex mutable mutex;
     mcl::ClientBufferDepository wrapped;
     mir::protobuf::DisplayServer& display_server;
     std::function<void()> on_incoming_buffer;
@@ -214,6 +226,7 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
     bool server_connection_lost {false};
     MirWaitHandle scale_wait_handle;
     float scale_;
+    geom::Size size_;
 };
 
 class Requests : public mcl::ServerBufferRequests
@@ -285,13 +298,13 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         std::weak_ptr<mcl::SurfaceMap> const& surface_map,
         geom::Size size, MirPixelFormat format, int usage,
         unsigned int initial_nbuffers) :
-        vault(factory, mirbuffer_factory, requests, surface_map, size, format, usage, initial_nbuffers)
+        vault(factory, mirbuffer_factory, requests, surface_map, size, format, usage, initial_nbuffers),
+        size_(size)
     {
     }
 
-    void deposit(mp::Buffer const& buffer, geom::Size, MirPixelFormat) override
+    void deposit(mp::Buffer const&, mir::optional_value<geom::Size>, MirPixelFormat) override
     {
-        vault.wire_transfer_inbound(buffer);
     }
 
     void advance_current_buffer(std::unique_lock<std::mutex>& lk)
@@ -318,7 +331,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         return current->rpc_id();
     }
 
-    MirWaitHandle* submit(std::function<void()> const& done, geom::Size, MirPixelFormat, int) override
+    MirWaitHandle* submit(std::function<void()> const& done, MirPixelFormat, int) override
     {
         std::unique_lock<std::mutex> lk(mutex);
         if (!current)
@@ -339,7 +352,17 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
     void set_size(geom::Size size) override
     {
+        {
+            std::unique_lock<std::mutex> lk(mutex);
+            size_ = size;
+        }
         vault.set_size(size);
+    }
+
+    geom::Size size() const override
+    {
+        std::unique_lock<std::mutex> lk(mutex);
+        return size_;
     }
 
     void lost_connection() override
@@ -373,11 +396,12 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     }
 
     mcl::BufferVault vault;
-    std::mutex mutex;
+    std::mutex mutable mutex;
     std::shared_ptr<mcl::Buffer> current{nullptr};
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle scale_wait_handle;
     int current_swap_interval = 1;
+    geom::Size size_;
 };
 
 }
@@ -387,6 +411,8 @@ mcl::BufferStream::BufferStream(
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
+    std::weak_ptr<mcl::SurfaceMap> const& map,
+    std::shared_ptr<mcl::AsyncBufferFactory> const& factory,
     mp::BufferStream const& a_protobuf_bs,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
     std::string const& surface_name,
@@ -402,7 +428,8 @@ mcl::BufferStream::BufferStream(
       ideal_buffer_size(ideal_size),
       nbuffers(nbuffers),
       creation_wait_handle(creation_wait_handle),
-      surface_map(std::make_shared<mcl::ConnectionSurfaceMap>())
+      map(map),
+      factory(factory)
 {
     init_swap_interval();
     if (!protobuf_bs->has_id())
@@ -418,21 +445,19 @@ mcl::BufferStream::BufferStream(
     {
         if (protobuf_bs->has_buffer())
         {
-            cached_buffer_size = geom::Size{protobuf_bs->buffer().width(), protobuf_bs->buffer().height()};
             buffer_depository = std::make_unique<ExchangeSemantics>(
                 display_server,
                 client_platform->create_buffer_factory(),
                 mir::frontend::client_buffer_cache_size,
                 protobuf_bs->buffer(),
-                cached_buffer_size,
+                geom::Size{protobuf_bs->buffer().width(), protobuf_bs->buffer().height()},
                 static_cast<MirPixelFormat>(protobuf_bs->pixel_format()));
         }
         else
         {
-            cached_buffer_size = ideal_buffer_size;
             buffer_depository = std::make_unique<NewBufferSemantics>(
-                client_platform->create_buffer_factory(), std::make_shared<mcl::BufferFactory>(),
-                std::make_shared<Requests>(display_server, protobuf_bs->id().value()), surface_map,
+                client_platform->create_buffer_factory(), factory,
+                std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
                 ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 
                 protobuf_bs->buffer_usage(), nbuffers);
         }
@@ -485,6 +510,8 @@ mcl::BufferStream::BufferStream(
     std::shared_ptr<MirWaitHandle> creation_wait_handle,
     mclr::DisplayServer& server,
     std::shared_ptr<mcl::ClientPlatform> const& client_platform,
+    std::weak_ptr<mcl::SurfaceMap> const& map,
+    std::shared_ptr<mcl::AsyncBufferFactory> const& factory,
     mp::BufferStreamParameters const& parameters,
     std::shared_ptr<mcl::PerfReport> const& perf_report,
     size_t nbuffers)
@@ -497,7 +524,9 @@ mcl::BufferStream::BufferStream(
       protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
       ideal_buffer_size(parameters.width(), parameters.height()),
       nbuffers(nbuffers),
-      creation_wait_handle(creation_wait_handle)
+      creation_wait_handle(creation_wait_handle),
+      map(map),
+      factory(factory)
 {
     perf_report->name_surface(std::to_string(reinterpret_cast<long int>(this)).c_str());
 
@@ -515,8 +544,8 @@ mcl::BufferStream::BufferStream(
     else
     {
         buffer_depository = std::make_unique<NewBufferSemantics>(
-            client_platform->create_buffer_factory(), std::make_shared<mcl::BufferFactory>(),
-            std::make_shared<Requests>(display_server, protobuf_bs->id().value()), surface_map,
+            client_platform->create_buffer_factory(), factory,
+            std::make_shared<Requests>(display_server, protobuf_bs->id().value()), map,
             ideal_buffer_size, static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), 0, nbuffers);
     }
 }
@@ -533,10 +562,9 @@ void mcl::BufferStream::process_buffer(mp::Buffer const& buffer)
 
 void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>& lk)
 {
+    mir::optional_value<geom::Size> size;
     if (buffer.has_width() && buffer.has_height())
-    {
-        cached_buffer_size = geom::Size{buffer.width(), buffer.height()};
-    }
+        size = geom::Size(buffer.width(), buffer.height());
 
     if (buffer.has_error())
     {
@@ -547,7 +575,7 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
     {
         auto pixel_format = static_cast<MirPixelFormat>(protobuf_bs->pixel_format());
         lk.unlock();
-        buffer_depository->deposit(buffer, geom::Size{buffer.width(), buffer.height()}, pixel_format);
+        buffer_depository->deposit(buffer, size, pixel_format);
         perf_report->begin_frame(buffer.buffer_id());
     }
     catch (const std::runtime_error& err)
@@ -567,7 +595,7 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
     // TODO: We can fix the strange "ID casting" used below in the second phase
     // of buffer stream which generalizes and clarifies the server side logic.
     lock.unlock();
-    return buffer_depository->submit(done, cached_buffer_size,
+    return buffer_depository->submit(done,
         static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), protobuf_bs->id().value());
 }
 
@@ -601,11 +629,12 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 /* mcl::EGLNativeSurface interface for EGLNativeWindow integration */
 MirSurfaceParameters mcl::BufferStream::get_parameters() const
 {
+    auto size = buffer_depository->size();
     std::unique_lock<decltype(mutex)> lock(mutex);
     return MirSurfaceParameters{
         "",
-        cached_buffer_size.width.as_int(),
-        cached_buffer_size.height.as_int(),
+        size.width.as_int(),
+        size.height.as_int(),
         static_cast<MirPixelFormat>(protobuf_bs->pixel_format()),
         static_cast<MirBufferUsage>(protobuf_bs->buffer_usage()),
         mir_display_output_id_invalid};

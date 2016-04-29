@@ -24,6 +24,9 @@
 #include "surface_map.h"
 #include "mir_protobuf.pb.h"
 #include "protobuf_to_native_buffer.h"
+#include "connection_surface_map.h"
+#include "buffer_factory.h"
+#include "buffer.h"
 #include <algorithm>
 #include <boost/throw_exception.hpp>
 
@@ -42,8 +45,10 @@ enum class mcl::BufferVault::Owner
 
 namespace
 {
-void ignore(MirPresentationChain*, MirBuffer*, void*)
+void incoming_buffer(MirPresentationChain*, MirBuffer* buffer, void* context)
 {
+    auto vault = static_cast<mcl::BufferVault*>(context);
+    vault->wire_transfer_inbound(reinterpret_cast<mcl::Buffer*>(buffer)->rpc_id());
 }
 }
 
@@ -74,6 +79,7 @@ mcl::BufferVault::~BufferVault()
     if (disconnected_)
         return;
 
+    buffer_factory->cancel_requests_with_context(this);
     for (auto& it : buffers)
     try
     {
@@ -86,7 +92,8 @@ mcl::BufferVault::~BufferVault()
 
 void mcl::BufferVault::alloc_buffer(geom::Size size, MirPixelFormat format, int usage)
 {
-    buffer_factory->expect_buffer(platform_factory, nullptr, size, format, (MirBufferUsage)usage, ignore, nullptr);
+    buffer_factory->expect_buffer(platform_factory, nullptr, size, format, static_cast<MirBufferUsage>(usage),
+        incoming_buffer, this);
     server_requests->allocate_buffer(size, format, usage);
 }
 
@@ -116,6 +123,8 @@ std::shared_ptr<mcl::Buffer> mcl::BufferVault::checked_buffer_from_map(int id)
 mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
 {
     std::lock_guard<std::mutex> lk(mutex);
+    if (disconnected_)
+        BOOST_THROW_EXCEPTION(std::logic_error("server_disconnected"));
     mcl::NoTLSPromise<std::shared_ptr<mcl::Buffer>> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [this](std::pair<int, Owner> const& entry) {
@@ -160,42 +169,29 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const
     server_requests->submit_buffer(*buffer);
 }
 
-void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
+void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
 {
-    std::shared_ptr<MirBufferPackage> package = mcl::protobuf_to_native_buffer(protobuf_buffer);
-    std::shared_ptr<mcl::Buffer> buffer;
     std::unique_lock<std::mutex> lk(mutex);
-    auto it = buffers.find(protobuf_buffer.buffer_id());
+
+    auto buffer = checked_buffer_from_map(buffer_id);
+    auto inbound_size = buffer->size();
+    auto it = buffers.find(buffer_id);
     if (it == buffers.end())
     {
-        geom::Size sz{package->width, package->height};
-        if (sz != size)
+        if (inbound_size != size)
         {
             lk.unlock();
-            for (int i = 0; i != package->fd_items; ++i)
-                close(package->fd[i]);
-
-            realloc_buffer(protobuf_buffer.buffer_id(), size, format, usage);
+            realloc_buffer(buffer_id, size, format, usage);
             return;
         }
-
-        buffer = buffer_factory->generate_buffer(protobuf_buffer);
-        if (auto map = surface_map.lock())
-            map->insert(protobuf_buffer.buffer_id(), buffer);
-        else
-            BOOST_THROW_EXCEPTION(std::logic_error("connection resources lost; cannot access buffer"));
-         
-        buffers[protobuf_buffer.buffer_id()] = Owner::Self;
-        buffer->received();
+        buffers[buffer_id] = Owner::Self;
     }
     else
     {
-        buffer = checked_buffer_from_map(protobuf_buffer.buffer_id());
-        buffer->received(*package);
         auto should_decrease_count = (current_buffer_count > needed_buffer_count);
         if (size != buffer->size() || should_decrease_count)
         {
-            int id = it->first;
+            auto id = it->first;
             buffers.erase(it);
             lk.unlock();
 
@@ -214,7 +210,7 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 
     if (!promises.empty())
     {
-        buffers[protobuf_buffer.buffer_id()] = Owner::ContentProducer;
+        buffers[buffer_id] = Owner::ContentProducer;
         promises.front().set_value(buffer);
         promises.pop_front();
     }
