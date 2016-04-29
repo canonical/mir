@@ -57,7 +57,9 @@ mix::XInputPlatform::XInputPlatform(std::shared_ptr<mi::InputDeviceRegistry> con
     core_keyboard(std::make_shared<mix::XInputDevice>(
             mi::InputDeviceInfo{"x11-keyboard-device", "x11-key-dev-1", mi::DeviceCapability::keyboard})),
     core_pointer(std::make_shared<mix::XInputDevice>(
-            mi::InputDeviceInfo{"x11-mouse-device", "x11-mouse-dev-1", mi::DeviceCapability::pointer}))
+            mi::InputDeviceInfo{"x11-mouse-device", "x11-mouse-dev-1", mi::DeviceCapability::pointer})),
+    kbd_grabbed{false},
+    ptr_grabbed{false}
 {
 }
 
@@ -95,18 +97,49 @@ void mix::XInputPlatform::process_input_event()
 #ifdef GRAB_KBD
             case FocusIn:
                 {
-                    auto const& xfiev = xev.xfocus;
-                    XGrabKeyboard(xfiev.display, xfiev.window, True, GrabModeAsync, GrabModeAsync, CurrentTime);
+                    if (!kbd_grabbed)
+                    {
+                        auto const& xfiev = xev.xfocus;
+                        XGrabKeyboard(xfiev.display, xfiev.window, True, GrabModeAsync, GrabModeAsync, CurrentTime);
+                        kbd_grabbed = true;
+                    }
                     break;
                 }
 
             case FocusOut:
                 {
-                    auto const& xfoev = xev.xfocus;
-                    XUngrabKeyboard(xfoev.display, CurrentTime);
+                    if (kbd_grabbed)
+                    {
+                        auto const& xfoev = xev.xfocus;
+                        XUngrabKeyboard(xfoev.display, CurrentTime);
+                        kbd_grabbed = false;
+                    }
                     break;
                 }
 #endif
+            case EnterNotify:
+                {
+                    if (!ptr_grabbed && kbd_grabbed)
+                    {
+                        auto const& xenev = xev.xcrossing;
+                        XGrabPointer(xenev.display, xenev.window, True, 0, GrabModeAsync,
+                                     GrabModeAsync, None, None, CurrentTime);
+                        ptr_grabbed = true;
+                    }
+                    break;
+                }
+
+            case LeaveNotify:
+                {
+                    if (ptr_grabbed)
+                    {
+                        auto const& xlnev = xev.xcrossing;
+                        XUngrabPointer(xlnev.display, CurrentTime);
+                        ptr_grabbed = false;
+                    }
+                    break;
+                }
+
             case KeyPress:
             case KeyRelease:
                 {
