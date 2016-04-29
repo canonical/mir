@@ -20,6 +20,8 @@
 #ifndef MIR_TEST_CLIENT_EVENT_MATCHERS_H_
 #define MIR_TEST_CLIENT_EVENT_MATCHERS_H_
 
+#include <cmath>
+
 #include "mir_toolkit/event.h"
 
 #include <xkbcommon/xkbcommon.h>
