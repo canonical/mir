@@ -68,13 +68,7 @@ private:
 class DemoServerConfiguration : public mir::examples::ServerConfiguration
 {
 public:
-    DemoServerConfiguration(int argc, char const* argv[],
-                            std::initializer_list<std::shared_ptr<mi::EventFilter>> const& filter_list)
-      : ServerConfiguration(argc, argv),
-        filter_list(filter_list)
-    {
-    }
-
+    using mir::examples::ServerConfiguration::ServerConfiguration;
 
     std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory() override
     {
@@ -86,19 +80,6 @@ public:
             });
     }
 
-    std::shared_ptr<mi::CompositeEventFilter> the_composite_event_filter() override
-    {
-        return composite_event_filter(
-            [this]() -> std::shared_ptr<mi::CompositeEventFilter>
-            {
-                auto composite_filter = ServerConfiguration::the_composite_event_filter();
-                for (auto const& filter : filter_list)
-                    composite_filter->append(filter);
-
-                return composite_filter;
-            });
-    }
-
     std::shared_ptr<msh::HostLifecycleEventListener> the_host_lifecycle_event_listener() override
     {
        return host_lifecycle_event_listener(
@@ -107,9 +88,6 @@ public:
                return std::make_shared<HostLifecycleEventListener>(the_logger());
            });
     }
-
-private:
-    std::vector<std::shared_ptr<mi::EventFilter>> const filter_list;
 };
 
 }
@@ -118,8 +96,9 @@ private:
 int main(int argc, char const* argv[])
 try
 {
+    me::DemoServerConfiguration config(argc, argv);
+
     auto wm = std::make_shared<me::WindowManager>();
-    me::DemoServerConfiguration config(argc, argv, {wm});
 
     mir::run_mir(config, [&config, &wm](mir::DisplayServer&)
         {
@@ -129,6 +108,8 @@ try
             wm->set_display(config.the_display());
             wm->set_compositor(config.the_compositor());
             wm->set_input_scene(config.the_input_scene());
+
+            config.the_composite_event_filter()->prepend(wm);
         });
     return 0;
 }
