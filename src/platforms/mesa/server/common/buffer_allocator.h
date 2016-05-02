@@ -50,12 +50,10 @@ class BufferAllocator: public graphics::GraphicBufferAllocator
 public:
     BufferAllocator(gbm_device* device, BypassOption bypass_option, BufferImportMethod const buffer_import_method);
 
-    virtual std::shared_ptr<Buffer> alloc_buffer(
-        graphics::BufferProperties const& buffer_properties);
+    std::shared_ptr<Buffer> alloc_buffer(graphics::BufferProperties const& buffer_properties) override;
+    std::vector<MirPixelFormat> supported_pixel_formats() override;
 
     std::unique_ptr<Buffer> reconstruct_from(MirBufferPackage* package, MirPixelFormat format);
-
-    std::vector<MirPixelFormat> supported_pixel_formats();
 
 private:
     std::shared_ptr<Buffer> alloc_hardware_buffer(

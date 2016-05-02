@@ -58,8 +58,8 @@ struct DemoMirServer
     }
 
     void function(
-        mir::protobuf::Parameters const* parameters,
-        mir::protobuf::Result* response,
+        mir::protobuf::test::Parameters const* parameters,
+        mir::protobuf::test::Result* response,
         google::protobuf::Closure* done)
     {
         response->set_value(on_call(parameters->name()));
@@ -75,8 +75,8 @@ struct AMirServer
     }
 
     void function(
-        mir::protobuf::Parameters const* parameters,
-        mir::protobuf::Result* response,
+        mir::protobuf::test::Parameters const* parameters,
+        mir::protobuf::test::Result* response,
         google::protobuf::Closure* done)
     {
         channel->call_method(std::string(__func__), parameters, response, done);
@@ -212,7 +212,7 @@ TEST_F(DemoPrivateProtobuf, client_calls_server)
 
     auto const rpc_channel = mir::client::the_rpc_channel(connection);
 
-    using namespace mir::protobuf;
+    using namespace mir::protobuf::test;
     using namespace google::protobuf;
 
     AMirServer server(rpc_channel);
@@ -271,7 +271,7 @@ TEST_F(DemoPrivateProtobuf, server_receives_function_call)
 
     auto const rpc_channel = mir::client::the_rpc_channel(connection);
 
-    using namespace mir::protobuf;
+    using namespace mir::protobuf::test;
     using namespace google::protobuf;
 
     AMirServer server(rpc_channel);
@@ -300,7 +300,7 @@ TEST_F(DemoPrivateProtobuf, client_receives_result)
 
     auto const rpc_channel = mir::client::the_rpc_channel(connection);
 
-    using namespace mir::protobuf;
+    using namespace mir::protobuf::test;
     using namespace google::protobuf;
 
     AMirServer server(rpc_channel);

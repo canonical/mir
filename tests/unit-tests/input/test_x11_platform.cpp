@@ -59,6 +59,8 @@ struct X11PlatformTest : ::testing::Test
             [](::Display* display) { XCloseDisplay(display); })};
 
     std::vector<std::shared_ptr<mi::InputDevice>> devices;
+    enum class GrabState { FOCUSIN, FOCUSOUT, ENTERNOTIFY, LEAVENOTIFY };
+    GrabState grab_state{GrabState::FOCUSIN};
 
     void capture_devices()
     {
@@ -217,11 +219,19 @@ TEST_F(X11PlatformTest, grabs_keyboard)
 
 TEST_F(X11PlatformTest, ungrabs_keyboard)
 {
+    mock_x11.fake_x11.pending_events = 2;
+
     prepare_event_processing();
 
     ON_CALL(mock_x11, XNextEvent(_,_))
-        .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.focus_out_event_return),
-                       Return(1)));
+        .WillByDefault(Invoke([this](Display*, XEvent* xev)
+                              {
+                                  *xev = (grab_state == GrabState::FOCUSIN)
+                                             ? mock_x11.fake_x11.focus_in_event_return
+                                             : mock_x11.fake_x11.focus_out_event_return;
+                                  grab_state = GrabState::FOCUSOUT;
+                                  return 1;
+                              }));
 
     EXPECT_CALL(mock_x11, XUngrabKeyboard(_,_))
         .Times(Exactly(1));
@@ -230,6 +240,129 @@ TEST_F(X11PlatformTest, ungrabs_keyboard)
     EXPECT_CALL(mock_keyboard_sink, handle_input(_))
         .Times(Exactly(0));
 
+    process_input_event();
+    process_input_event();
+}
+
+TEST_F(X11PlatformTest, does_not_ungrab_keyboard_without_grabbing_first)
+{
+    prepare_event_processing();
+
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.focus_out_event_return),
+                       Return(1)));
+
+    EXPECT_CALL(mock_x11, XUngrabKeyboard(_,_))
+        .Times(Exactly(0));
+    EXPECT_CALL(mock_pointer_sink, handle_input(_))
+        .Times(Exactly(0));
+    EXPECT_CALL(mock_keyboard_sink, handle_input(_))
+        .Times(Exactly(0));
+
+    process_input_event();
+}
+
+TEST_F(X11PlatformTest, does_not_grab_pointer_unfocussed)
+{
+    prepare_event_processing();
+
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.enter_notify_event_return),
+                       Return(1)));
+
+    EXPECT_CALL(mock_x11, XGrabPointer(_,_,_,_,_,_,_,_,_))
+        .Times(Exactly(0));
+    EXPECT_CALL(mock_pointer_sink, handle_input(_))
+        .Times(Exactly(0));
+    EXPECT_CALL(mock_keyboard_sink, handle_input(_))
+        .Times(Exactly(0));
+
+    process_input_event();
+}
+
+TEST_F(X11PlatformTest, grabs_pointer_when_focussed)
+{
+    mock_x11.fake_x11.pending_events = 2;
+
+    prepare_event_processing();
+
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(Invoke([this](Display*, XEvent* xev)
+                              {
+                                  *xev = (grab_state == GrabState::FOCUSIN)
+                                         ? mock_x11.fake_x11.focus_in_event_return
+                                         : mock_x11.fake_x11.enter_notify_event_return;
+                                  grab_state = GrabState::ENTERNOTIFY;
+                                  return 1;
+                              }));
+
+    EXPECT_CALL(mock_x11, XGrabPointer(_,_,_,_,_,_,_,_,_))
+        .Times(Exactly(1));
+    EXPECT_CALL(mock_pointer_sink, handle_input(_))
+        .Times(Exactly(0));
+    EXPECT_CALL(mock_keyboard_sink, handle_input(_))
+        .Times(Exactly(0));
+
+    process_input_event();
+    process_input_event();
+}
+
+TEST_F(X11PlatformTest, does_not_ungrab_pointer_without_grabbing_first)
+{
+    prepare_event_processing();
+
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(DoAll(SetArgPointee<1>(mock_x11.fake_x11.leave_notify_event_return),
+                       Return(1)));
+
+    EXPECT_CALL(mock_x11, XUngrabPointer(_,_))
+        .Times(Exactly(0));
+    EXPECT_CALL(mock_pointer_sink, handle_input(_))
+        .Times(Exactly(0));
+    EXPECT_CALL(mock_keyboard_sink, handle_input(_))
+        .Times(Exactly(0));
+
+    process_input_event();
+}
+
+TEST_F(X11PlatformTest, ungrabs_pointer)
+{
+    mock_x11.fake_x11.pending_events = 3;
+
+    prepare_event_processing();
+
+    ON_CALL(mock_x11, XNextEvent(_,_))
+        .WillByDefault(Invoke([this](Display*, XEvent* xev)
+                              {
+                                  switch(grab_state)
+                                  {
+                                  case GrabState::FOCUSIN:
+                                      *xev = mock_x11.fake_x11.focus_in_event_return;
+                                      grab_state = GrabState::ENTERNOTIFY;
+                                      break;
+                                  case GrabState::ENTERNOTIFY:
+                                      *xev = mock_x11.fake_x11.enter_notify_event_return;
+                                      grab_state = GrabState::LEAVENOTIFY;
+                                      break;
+                                  case GrabState::LEAVENOTIFY:
+                                      *xev = mock_x11.fake_x11.leave_notify_event_return;
+                                      break;
+                                  case GrabState::FOCUSOUT: //only needed to appease the compiler.
+                                      break;
+                                  }
+
+                                  return 1;
+                              }));
+
+    EXPECT_CALL(mock_x11, XUngrabKeyboard(_,_))
+        .Times(Exactly(1));
+    EXPECT_CALL(mock_pointer_sink, handle_input(_))
+        .Times(Exactly(0));
+    EXPECT_CALL(mock_keyboard_sink, handle_input(_))
+        .Times(Exactly(0));
+
+    process_input_event();
+    process_input_event();
     process_input_event();
 }
 

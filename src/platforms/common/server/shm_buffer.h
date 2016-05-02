@@ -30,7 +30,7 @@ namespace mir
 {
 namespace graphics
 {
-namespace mesa
+namespace common
 {
 
 class ShmFile;
@@ -41,7 +41,7 @@ class ShmBuffer : public BufferBasic, public NativeBufferBase,
 public:
     static bool supports(MirPixelFormat);
 
-    ShmBuffer(std::shared_ptr<ShmFile> const& shm_file,
+    ShmBuffer(std::unique_ptr<ShmFile> shm_file,
               geometry::Size const& size,
               MirPixelFormat const& pixel_format);
     ~ShmBuffer() noexcept;
@@ -61,7 +61,7 @@ private:
     ShmBuffer(ShmBuffer const&) = delete;
     ShmBuffer& operator=(ShmBuffer const&) = delete;
 
-    std::shared_ptr<ShmFile> const shm_file;
+    std::unique_ptr<ShmFile> const shm_file;
     geometry::Size const size_;
     MirPixelFormat const pixel_format_;
     geometry::Stride const stride_;

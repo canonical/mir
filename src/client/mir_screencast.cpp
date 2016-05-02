@@ -43,6 +43,8 @@ mir::protobuf::ScreencastParameters serialize_spec(MirScreencastSpec const& spec
     SERIALIZE_OPTION_IF_SET(width);
     SERIALIZE_OPTION_IF_SET(height);
     SERIALIZE_OPTION_IF_SET(pixel_format);
+    SERIALIZE_OPTION_IF_SET(mirror_mode);
+    SERIALIZE_OPTION_IF_SET(num_buffers);
 
     if (spec.capture_region.is_set())
     {
@@ -182,7 +184,7 @@ void MirScreencast::screencast_created(
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         buffer_stream = connection->make_consumer_stream(
-            protobuf_screencast->buffer_stream(), {});
+            protobuf_screencast->buffer_stream());
     }
 
     callback(this, context);

@@ -121,6 +121,7 @@ mf::SessionMediator::~SessionMediator() noexcept
         report->session_error(session->name(), __PRETTY_FUNCTION__, "connection dropped without disconnect");
         shell->close_session(session);
     }
+    destroy_screencast_sessions();
 }
 
 void mf::SessionMediator::client_pid(int pid)
@@ -286,6 +287,40 @@ void mf::SessionMediator::create_surface(
 
     #undef COPY_IF_SET
 
+    mf::BufferStreamId buffer_stream_id;
+    std::shared_ptr<mf::BufferStream> legacy_stream = nullptr;
+    if (request->stream_size() > 0)
+    {
+        std::vector<msh::StreamSpecification> stream_spec;
+        for (auto& stream : request->stream())
+        {
+            if (stream.has_width() && stream.has_height())
+            {
+                stream_spec.emplace_back(
+                    msh::StreamSpecification{
+                        mf::BufferStreamId{stream.id().value()},
+                        geom::Displacement{stream.displacement_x(), stream.displacement_y()},
+                        geom::Size{stream.width(), stream.height()}});
+            }
+            else
+            {
+                stream_spec.emplace_back(
+                    msh::StreamSpecification{
+                        mf::BufferStreamId{stream.id().value()},
+                        geom::Displacement{stream.displacement_x(), stream.displacement_y()},
+                        {}});
+            }
+        }
+        params.streams = std::move(stream_spec);
+    }
+    else
+    {
+        buffer_stream_id = session->create_buffer_stream(
+            {params.size, params.pixel_format, params.buffer_usage});
+        legacy_stream = session->get_buffer_stream(buffer_stream_id);
+        params.content_id = buffer_stream_id;
+    }
+
     if (request->has_min_aspect())
         params.min_aspect = { request->min_aspect().width(), request->min_aspect().height()};
 
@@ -298,10 +333,9 @@ void mf::SessionMediator::create_surface(
     std::shared_ptr<mf::EventSink> sink = sink_factory->create_sink(buffering_sender);
 
     auto const surf_id = shell->create_surface(session, params, sink);
-    auto stream_id = mf::BufferStreamId(surf_id.as_value());
 
     auto surface = session->get_surface(surf_id);
-    auto stream = session->get_buffer_stream(stream_id);
+    auto stream = session->get_buffer_stream(buffer_stream_id);
     auto const& client_size = surface->client_size();
     response->mutable_id()->set_value(surf_id.as_value());
     response->set_width(client_size.width.as_uint32_t());
@@ -326,21 +360,29 @@ void mf::SessionMediator::create_surface(
         setting->set_ivalue(shell->get_surface_attribute(session, surf_id, static_cast<MirSurfaceAttrib>(i)));
     }
 
-    advance_buffer(stream_id, *stream, buffer_stream_tracker.last_buffer(stream_id),
-        [this, buffering_sender, surf_id, response, done, session]
-        (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
-        {
-            response->mutable_buffer_stream()->mutable_id()->set_value(surf_id.as_value());
-            if (client_buffer)
-                pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(), client_buffer, msg_type);
+    if (legacy_stream)
+    {
+        buffer_stream_tracker.set_default_stream(surf_id, buffer_stream_id);
+        response->mutable_buffer_stream()->mutable_id()->set_value(buffer_stream_id.as_value());
+        advance_buffer(buffer_stream_id, *legacy_stream, buffer_stream_tracker.last_buffer(buffer_stream_id),
+            [this, buffering_sender, response, done, session]
+            (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
+            {
+                if (client_buffer)
+                    pack_protobuf_buffer(*response->mutable_buffer_stream()->mutable_buffer(), client_buffer, msg_type);
 
+                // Send the create_surface reply first...
+                done->Run();
 
-            // Send the create_surface reply first...
-            done->Run();
-
-            // ...then uncork the message sender, sending all buffered surface events.
-            buffering_sender->uncork();
-        });
+                // ...then uncork the message sender, sending all buffered surface events.
+                buffering_sender->uncork();
+            });
+    }
+    else
+    {
+        done->Run();
+        buffering_sender->uncork();
+    }
 }
 
 void mf::SessionMediator::exchange_buffer(
@@ -479,7 +521,14 @@ void mf::SessionMediator::release_surface(
     auto const id = SurfaceId(request->value());
 
     shell->destroy_surface(session, id);
-    buffer_stream_tracker.remove_buffer_stream(BufferStreamId(request->value()));
+
+    auto default_stream = buffer_stream_tracker.default_stream(id);
+    if (default_stream.is_set())
+    {
+        session->destroy_buffer_stream(default_stream.value());
+        buffer_stream_tracker.remove_buffer_stream(default_stream.value());
+        buffer_stream_tracker.remove_default_stream(id);
+    }
 
     // TODO: We rely on this sending responses synchronously.
     done->Run();
@@ -498,6 +547,7 @@ void mf::SessionMediator::disconnect(
     report->session_disconnect_called(session->name());
 
     shell->close_session(session);
+    destroy_screencast_sessions();
     weak_session.reset();
 
     done->Run();
@@ -708,7 +758,7 @@ void mf::SessionMediator::create_screencast(
     mir::protobuf::Screencast* protobuf_screencast,
     google::protobuf::Closure* done)
 {
-    static auto const msg_type = mg::BufferIpcMsgType::full_msg;
+    auto const msg_type = mg::BufferIpcMsgType::full_msg;
 
     geom::Rectangle const region{
         {parameters->region().left(), parameters->region().top()},
@@ -717,8 +767,17 @@ void mf::SessionMediator::create_screencast(
     geom::Size const size{parameters->width(), parameters->height()};
     MirPixelFormat const pixel_format = static_cast<MirPixelFormat>(parameters->pixel_format());
 
-    auto screencast_session_id = screencast->create_session(region, size, pixel_format);
+    int nbuffers = 1;
+    if (parameters->has_num_buffers())
+        nbuffers = parameters->num_buffers();
+
+    MirMirrorMode mirror_mode = mir_mirror_mode_none;
+    if (parameters->has_mirror_mode())
+        mirror_mode = static_cast<MirMirrorMode>(parameters->mirror_mode());
+
+    auto screencast_session_id = screencast->create_session(region, size, pixel_format, nbuffers, mirror_mode);
     auto buffer = screencast->capture(screencast_session_id);
+    screencast_buffer_tracker.track_buffer(screencast_session_id, buffer.get());
 
     protobuf_screencast->mutable_screencast_id()->set_value(
         screencast_session_id.as_value());
@@ -740,6 +799,7 @@ void mf::SessionMediator::release_screencast(
     ScreencastSessionId const screencast_session_id{
         protobuf_screencast_id->value()};
     screencast->destroy_session(screencast_session_id);
+    screencast_buffer_tracker.remove_session(screencast_session_id);
     done->Run();
 }
 
@@ -748,12 +808,13 @@ void mf::SessionMediator::screencast_buffer(
     mir::protobuf::Buffer* protobuf_buffer,
     google::protobuf::Closure* done)
 {
-    static auto const msg_type = mg::BufferIpcMsgType::update_msg;
     ScreencastSessionId const screencast_session_id{
         protobuf_screencast_id->value()};
 
     auto buffer = screencast->capture(screencast_session_id);
-
+    bool const already_tracked = screencast_buffer_tracker.track_buffer(screencast_session_id, buffer.get());
+    auto const msg_type = already_tracked ?
+        mg::BufferIpcMsgType::update_msg : mg::BufferIpcMsgType::full_msg;
     pack_protobuf_buffer(*protobuf_buffer,
                          buffer.get(),
                          msg_type);
@@ -1123,4 +1184,17 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
     });
 
     return config;
+}
+
+void mf::SessionMediator::destroy_screencast_sessions()
+{
+    std::vector<ScreencastSessionId> ids_to_untrack;
+    screencast_buffer_tracker.for_each_session([this, &ids_to_untrack](ScreencastSessionId id)
+    {
+        screencast->destroy_session(id);
+        ids_to_untrack.push_back(id);
+    });
+
+    for (auto const& id : ids_to_untrack)
+        screencast_buffer_tracker.remove_session(id);
 }

@@ -48,8 +48,8 @@ class MockFrameDroppingPolicyFactory;
 class MockFrameDroppingPolicy : public mc::FrameDroppingPolicy
 {
 public:
-    MockFrameDroppingPolicy(std::unique_ptr<mir::LockableCallback> callback,
-                            MockFrameDroppingPolicyFactory const* parent);
+    MockFrameDroppingPolicy(mir::LockableCallback* callback,
+        MockFrameDroppingPolicyFactory const* parent);
     ~MockFrameDroppingPolicy();
 
     MOCK_METHOD0(swap_now_blocking, void(void));

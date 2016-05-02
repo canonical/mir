@@ -56,6 +56,9 @@ public:
     /// passing. As such, this number needs to be shared between the server and client libraries.
     ClientBufferDepository(std::shared_ptr<ClientBufferFactory> const& factory, int max_buffers);
 
+    /// Creates a depository with no explicit limit
+    ClientBufferDepository(std::shared_ptr<ClientBufferFactory> const& factory);
+
     /// Construct a ClientBuffer from the IPC data, and use it as the current buffer.
 
     /// This also marks the previous current buffer (if any) as being submitted to the server.

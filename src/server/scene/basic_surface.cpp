@@ -199,12 +199,26 @@ private:
     geom::Displacement hotspot;
 };
 
+namespace
+{
+//TODO: the concept of default stream is going away very soon.
+std::shared_ptr<mc::BufferStream> default_stream(std::list<ms::StreamInfo> const& layers)
+{
+    //There's not a good reason, other than soon-to-be-deprecated api to disallow contentless surfaces
+    if (layers.empty())
+        BOOST_THROW_EXCEPTION(std::logic_error("Surface must have content"));
+    else
+        return layers.front().stream;
+}
+
+}
+
 ms::BasicSurface::BasicSurface(
     std::string const& name,
     geometry::Rectangle rect,
     std::weak_ptr<Surface> const& parent,
     bool nonrectangular,
-    std::shared_ptr<mc::BufferStream> const& buffer_stream,
+    std::list<StreamInfo> const& layers,
     std::shared_ptr<mi::InputChannel> const& input_channel,
     std::shared_ptr<input::InputSender> const& input_sender,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
@@ -216,13 +230,13 @@ ms::BasicSurface::BasicSurface(
     input_mode(mi::InputReceptionMode::normal),
     nonrectangular(nonrectangular),
     custom_input_rectangles(),
-    surface_buffer_stream(buffer_stream),
+    surface_buffer_stream(default_stream(layers)),
     server_input_channel(input_channel),
     input_sender(input_sender),
     cursor_image_(cursor_image),
     report(report),
     parent_(parent),
-    layers({StreamInfo{buffer_stream, {0,0}, {}}}),
+    layers(layers),
     cursor_stream_adapter{std::make_unique<ms::CursorStreamImageAdapter>(*this)},
     input_validator([this](MirEvent const& ev) { this->input_sender->send_event(ev, server_input_channel); })
 {
@@ -233,12 +247,12 @@ ms::BasicSurface::BasicSurface(
     std::string const& name,
     geometry::Rectangle rect,
     bool nonrectangular,
-    std::shared_ptr<mc::BufferStream> const& buffer_stream,
+    std::list<StreamInfo> const& layers,
     std::shared_ptr<mi::InputChannel> const& input_channel,
     std::shared_ptr<input::InputSender> const& input_sender,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
-    BasicSurface(name, rect, std::shared_ptr<Surface>{nullptr}, nonrectangular,buffer_stream,
+    BasicSurface(name, rect, std::shared_ptr<Surface>{nullptr}, nonrectangular, layers,
                  input_channel, input_sender, cursor_image, report)
 {
 }
@@ -362,6 +376,7 @@ geom::Rectangle ms::BasicSurface::input_bounds() const
     return surface_rect;
 }
 
+// TODO: Does not account for transformation().
 bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 {
     std::unique_lock<std::mutex> lock(guard);
@@ -369,22 +384,18 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
     if (!visible(lock))
         return false;
 
-    // Restrict to bounding rectangle
-    if (!surface_rect.contains(point))
-        return false;
-
-    // No custom input region means effective input region is whole surface
     if (custom_input_rectangles.empty())
-        return true;
-
-    // TODO: Perhaps creates some issues with transformation.
-    auto local_point = geom::Point{0, 0} + (point-surface_rect.top_left);
-
-    for (auto const& rectangle : custom_input_rectangles)
     {
-        if (rectangle.contains(local_point))
+        // no custom input, restrict to bounding rectangle
+        return surface_rect.contains(point);
+    }
+    else
+    {
+        auto local_point = geom::Point{0, 0} + (point-surface_rect.top_left);
+        for (auto const& rectangle : custom_input_rectangles)
         {
-            return true;
+            if (rectangle.contains(local_point))
+                return true;
         }
     }
     return false;

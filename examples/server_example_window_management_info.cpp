@@ -172,31 +172,31 @@ struct mir::examples::SurfaceInfo::SwappingPainter
     SwappingPainter(std::shared_ptr<frontend::BufferStream> const& buffer_stream) :
         buffer_stream{buffer_stream}, buffer{nullptr}
     {
-        swap_buffers();
+        swap_buffers(nullptr);
         if (!buffer)
             throw std::runtime_error("no buffer after swap");
     }
 
-    void swap_buffers()
+    void swap_buffers(graphics::Buffer* buf)
     {
         auto const callback = [this](mir::graphics::Buffer* new_buffer)
             {
                 buffer.store(new_buffer);
             };
 
-        buffer_stream->swap_buffers(buffer, callback);
+        buffer_stream->swap_buffers(buf, callback);
     }
 
     void paint(int intensity) override
     {
-        if (auto const buf = buffer.load())
+        if (graphics::Buffer* buf = buffer.exchange(nullptr))
         {
             auto const format = buffer_stream->pixel_format();
             auto const sz = buf->size().height.as_int() *
                             buf->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
             std::vector<unsigned char> pixels(sz, intensity);
             buf->write(pixels.data(), sz);
-            swap_buffers();
+            swap_buffers(buf);
         }
     }
 

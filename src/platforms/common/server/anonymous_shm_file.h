@@ -27,7 +27,7 @@ namespace mir
 {
 namespace graphics
 {
-namespace mesa
+namespace common
 {
 
 namespace detail

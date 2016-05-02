@@ -268,8 +268,7 @@ TEST_F(PresentationChain, can_map_for_cpu_render)
     EXPECT_THAT(region.pixel_format, Eq(pf));
 }
 
-//needs an ABI break to fix
-TEST_F(PresentationChain, DISABLED_submission_will_eventually_call_callback)
+TEST_F(PresentationChain, submission_will_eventually_call_callback)
 {
     SurfaceWithChainFromStart surface(connection, size, pf);
 

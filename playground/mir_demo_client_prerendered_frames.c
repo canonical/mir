@@ -158,14 +158,9 @@ int main(int argc, char** argv)
     }
 
     MirSurfaceSpec* spec = mir_connection_create_spec_for_normal_surface(connection, width, height, format);
-    MirSurface* surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
-
-    //reassociate for advanced control
-    spec = mir_create_surface_spec(connection);
     mir_surface_spec_add_presentation_chain(
         spec, width, height, displacement_x, displacement_y, chain);
-    mir_surface_apply_spec(surface, spec);
+    MirSurface* surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 
     int num_prerendered_frames = 20;

@@ -43,12 +43,6 @@ public:
 private:
     std::shared_ptr<input::EventFilter> quit_filter;
 };
-
-extern char const* const wm_option;
-extern char const* const wm_description;
-extern char const* const wm_tiling;
-extern char const* const wm_legacy;
-extern char const* const wm_canonical;
 }
 }
 
