@@ -42,14 +42,14 @@ namespace
 {
 struct SurfaceComposition : Test
 {
-    auto create_surface() const
+    auto create_surface(std::shared_ptr<mc::BufferStream> const& stream) const
     -> std::shared_ptr<ms::Surface>
     {
         return std::make_shared<ms::BasicSurface>(
             std::string("SurfaceComposition"),
             geom::Rectangle{{},{}},
             false,
-            create_buffer_stream(),
+            std::list<ms::StreamInfo> { { stream, {0,0}, {} } },
             create_input_channel(),
             create_input_sender(),
             create_cursor_image(),
@@ -98,7 +98,8 @@ struct SurfaceComposition : Test
 // Presumptive cause of lp:1376324
 TEST_F(SurfaceComposition, does_not_send_client_buffers_to_dead_surfaces)
 {
-    auto surface = create_surface();
+    auto stream = create_buffer_stream();
+    auto surface = create_surface(stream);
 
     mg::Buffer* old_buffer{nullptr};
 
@@ -117,7 +118,7 @@ TEST_F(SurfaceComposition, does_not_send_client_buffers_to_dead_surfaces)
     while (called_back)
     {
         called_back = false;
-        surface->primary_buffer_stream()->swap_buffers(old_buffer, callback);
+        stream->swap_buffers(old_buffer, callback);
     }
 
     auto const renderables = surface->generate_renderables(this);

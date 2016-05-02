@@ -43,14 +43,15 @@ struct MockSurface : public scene::BasicSurface
             {},
             {{},{}},
             true,
-            std::make_shared<testing::NiceMock<MockBufferStream>>(),
+            { { std::make_shared<testing::NiceMock<MockBufferStream>>(), {0, 0}, {} } },
             std::make_shared<StubInputChannel>(),
             {},
             {},
             mir::report::null_scene_report())
     {
         ON_CALL(*this, primary_buffer_stream())
-            .WillByDefault(testing::Return(std::make_shared<testing::NiceMock<MockBufferStream>>()));
+            .WillByDefault(testing::Invoke([this]
+                { return scene::BasicSurface::primary_buffer_stream(); }));
     }
 
     ~MockSurface() noexcept {}
@@ -76,6 +77,7 @@ struct MockSurface : public scene::BasicSurface
     MOCK_CONST_METHOD0(primary_buffer_stream, std::shared_ptr<frontend::BufferStream>());
     MOCK_METHOD1(set_streams, void(std::list<scene::StreamInfo> const&));
 
+    std::shared_ptr<MockBufferStream> const stream;
 };
 
 }

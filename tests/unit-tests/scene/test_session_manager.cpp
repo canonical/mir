@@ -84,7 +84,7 @@ struct SessionManagerSetup : public testing::Test
         std::string("stub"),
         geom::Rectangle{{},{}},
         false,
-        std::make_shared<mtd::StubBufferStream>(),
+        std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
         std::shared_ptr<mi::InputChannel>(),
         std::shared_ptr<mi::InputSender>(),
         std::shared_ptr<mg::CursorImage>(),

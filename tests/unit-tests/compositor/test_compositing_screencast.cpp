@@ -24,6 +24,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/rectangles.h"
+#include "mir/renderer/gl/render_target.h"
 
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/null_display_buffer_compositor_factory.h"
@@ -35,6 +36,7 @@
 #include "mir/test/doubles/stub_scene_element.h"
 #include "mir/test/doubles/mock_scene.h"
 
+#include "mir/test/as_render_target.h"
 #include "mir/test/fake_shared.h"
 
 #include <boost/throw_exception.hpp>
@@ -49,6 +51,7 @@ namespace mg = mir::graphics;
 namespace mf = mir::frontend;
 namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
+namespace mrgl = mir::renderer::gl;
 namespace geom = mir::geometry;
 
 namespace
@@ -129,20 +132,26 @@ struct MockDisplayBufferCompositor : mc::DisplayBufferCompositor
 class WrappingDisplayBufferCompositor : public mc::DisplayBufferCompositor
 {
 public:
-    WrappingDisplayBufferCompositor(mc::DisplayBufferCompositor& comp)
-        : comp(comp)
+    WrappingDisplayBufferCompositor(mc::DisplayBufferCompositor& comp, mg::DisplayBuffer& db)
+        : comp(comp),
+          render_target(mt::as_render_target(db))
     {
+        //TODO: we shouldn't need to care if the display buffer is GL capable
+        if (!render_target)
+            BOOST_THROW_EXCEPTION(std::logic_error("Display Buffer does not support GL rendering"));
     }
 
     void composite(mc::SceneElementSequence&& elements)
     {
+        render_target->bind();
         comp.composite(std::move(elements));
+        render_target->swap_buffers();
     }
 
 private:
     mc::DisplayBufferCompositor& comp;
+    mrgl::RenderTarget* render_target;
 };
-
 
 struct MockBufferAllocator : mg::GraphicBufferAllocator
 {
@@ -154,16 +163,29 @@ struct MockBufferAllocator : mg::GraphicBufferAllocator
 
 struct MockDisplayBufferCompositorFactory : mc::DisplayBufferCompositorFactory
 {
-    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer& db)
+    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer& db) override
     {
         create_compositor_mock(db);
-        return std::unique_ptr<WrappingDisplayBufferCompositor>(
-            new WrappingDisplayBufferCompositor{mock_db_compositor});
+        return std::make_unique<WrappingDisplayBufferCompositor>(mock_db_compositor, db);
     }
 
     MockDisplayBufferCompositor mock_db_compositor;
 
     MOCK_METHOD1(create_compositor_mock, void(mg::DisplayBuffer&));
+};
+
+struct StubDisplayBufferCompositor : mc::DisplayBufferCompositor
+{
+    void composite(mc::SceneElementSequence&&) override {}
+};
+
+struct StubDisplayBufferCompositorFactory : mc::DisplayBufferCompositorFactory
+{
+    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer& db) override
+    {
+        return std::make_unique<WrappingDisplayBufferCompositor>(stub_db_compositor, db);
+    }
+    StubDisplayBufferCompositor stub_db_compositor;
 };
 
 MATCHER_P(DisplayBufferCoversArea, output_extents, "")
@@ -193,11 +215,13 @@ struct CompositingScreencastTest : testing::Test
     mtd::StubScene stub_scene;
     StubDisplay stub_display;
     mtd::StubGLBufferAllocator stub_buffer_allocator;
-    mtd::NullDisplayBufferCompositorFactory stub_db_compositor_factory;
+    StubDisplayBufferCompositorFactory stub_db_compositor_factory;
     mc::CompositingScreencast screencast;
     geom::Size const default_size;
     geom::Rectangle const default_region;
-    MirPixelFormat default_pixel_format;
+    MirPixelFormat const default_pixel_format;
+    int const default_num_buffers{2};
+    MirMirrorMode const default_mirror_mode{mir_mirror_mode_vertical};
 };
 
 }
@@ -208,7 +232,9 @@ TEST_F(CompositingScreencastTest, produces_different_session_ids)
 
     for (int i = 0; i != 10; ++i)
     {
-        auto session_id = screencast.create_session(default_region, default_size, default_pixel_format);
+        auto session_id = screencast.create_session(
+            default_region, default_size, default_pixel_format,
+            default_num_buffers, default_mirror_mode);
         ASSERT_TRUE(session_ids.find(session_id) == session_ids.end())
             << "session_id: " << session_id << " iter: " << i;
         session_ids.insert(session_id);
@@ -221,9 +247,10 @@ TEST_F(CompositingScreencastTest, throws_on_creation_with_invalid_params)
     geom::Size invalid_size{0, 0};
     geom::Rectangle invalid_region{{0, 0}, {0, 0}};
 
-    EXPECT_THROW(screencast.create_session(invalid_region, default_size, default_pixel_format), std::runtime_error);
-    EXPECT_THROW(screencast.create_session(default_region, invalid_size, default_pixel_format), std::runtime_error);
-    EXPECT_THROW(screencast.create_session(default_region, default_size, mir_pixel_format_invalid), std::runtime_error);
+    EXPECT_THROW(screencast.create_session(invalid_region, default_size, default_pixel_format, default_num_buffers, default_mirror_mode), std::runtime_error);
+    EXPECT_THROW(screencast.create_session(default_region, invalid_size, default_pixel_format, default_num_buffers, default_mirror_mode), std::runtime_error);
+    EXPECT_THROW(screencast.create_session(default_region, default_size, mir_pixel_format_invalid, default_num_buffers, default_mirror_mode), std::runtime_error);
+    EXPECT_THROW(screencast.create_session(default_region, default_size, mir_pixel_format_invalid, 0, default_mirror_mode), std::runtime_error);
 }
 
 TEST_F(CompositingScreencastTest, throws_on_capture_with_invalid_session_id)
@@ -234,7 +261,9 @@ TEST_F(CompositingScreencastTest, throws_on_capture_with_invalid_session_id)
 
 TEST_F(CompositingScreencastTest, throws_on_capture_with_destroyed_session_id)
 {
-    auto session_id = screencast.create_session(default_region, default_size, default_pixel_format);
+    auto session_id = screencast.create_session(
+        default_region, default_size, default_pixel_format,
+        default_num_buffers, default_mirror_mode);
     screencast.destroy_session(session_id);
     EXPECT_THROW(screencast.capture(session_id), std::logic_error);
 }
@@ -262,7 +291,9 @@ TEST_F(CompositingScreencastTest, captures_by_compositing_with_provided_region)
         mt::fake_shared(stub_buffer_allocator),
         mt::fake_shared(mock_db_compositor_factory)};
 
-    auto session_id = screencast_local.create_session(default_region, default_size, default_pixel_format);
+    auto session_id = screencast_local.create_session(
+        default_region, default_size, default_pixel_format,
+        default_num_buffers, default_mirror_mode);
 
     screencast_local.capture(session_id);
 }
@@ -285,13 +316,15 @@ TEST_F(CompositingScreencastTest, allocates_and_uses_buffer_with_provided_size)
         mt::fake_shared(mock_buffer_allocator),
         mt::fake_shared(stub_db_compositor_factory)};
 
-    auto session_id = screencast_local.create_session(default_region, default_size, default_pixel_format);
+    auto session_id = screencast_local.create_session(
+        default_region, default_size, default_pixel_format,
+        1, default_mirror_mode);
 
     auto buffer = screencast_local.capture(session_id);
     ASSERT_EQ(&stub_buffer, buffer.get());
 }
 
-TEST_F(CompositingScreencastTest, uses_one_buffer_per_session)
+TEST_F(CompositingScreencastTest, allocates_different_buffers_per_session)
 {
     using namespace testing;
 
@@ -309,13 +342,17 @@ TEST_F(CompositingScreencastTest, uses_one_buffer_per_session)
         mt::fake_shared(mock_buffer_allocator),
         mt::fake_shared(stub_db_compositor_factory)};
 
-    auto session_id1 = screencast_local.create_session(default_region, default_size, default_pixel_format);
+    auto session_id1 = screencast_local.create_session(
+        default_region, default_size, default_pixel_format,
+        1, default_mirror_mode);
     auto buffer1 = screencast_local.capture(session_id1);
     ASSERT_EQ(&stub_buffer1, buffer1.get());
     buffer1 = screencast_local.capture(session_id1);
     ASSERT_EQ(&stub_buffer1, buffer1.get());
 
-    auto session_id2 = screencast_local.create_session(default_region, default_size, default_pixel_format);
+    auto session_id2 = screencast_local.create_session(
+        default_region, default_size, default_pixel_format,
+        1, default_mirror_mode);
     auto buffer2 = screencast_local.capture(session_id2);
     ASSERT_EQ(&stub_buffer2, buffer2.get());
     buffer2 = screencast_local.capture(session_id2);
@@ -327,6 +364,7 @@ TEST_F(CompositingScreencastTest, registers_and_unregisters_from_scene)
     using namespace testing;
     NiceMock<mtd::MockScene> mock_scene;
     NiceMock<MockBufferAllocator> mock_buffer_allocator;
+
     ON_CALL(mock_buffer_allocator, alloc_buffer(_))
         .WillByDefault(Return(std::make_shared<mtd::StubGLBuffer>()));
 
@@ -341,7 +379,9 @@ TEST_F(CompositingScreencastTest, registers_and_unregisters_from_scene)
         mt::fake_shared(mock_buffer_allocator),
         mt::fake_shared(stub_db_compositor_factory)};
 
-    auto session_id = screencast_local.create_session(default_region, default_size, default_pixel_format);
+    auto session_id = screencast_local.create_session(
+        default_region, default_size, default_pixel_format,
+        default_num_buffers, default_mirror_mode);
     screencast_local.destroy_session(session_id);
 }
 
@@ -357,7 +397,9 @@ TEST_F(CompositingScreencastTest, attempts_to_create_output_display_when_given_r
         mt::fake_shared(stub_buffer_allocator),
         mt::fake_shared(stub_db_compositor_factory)};
 
-    auto session_id = screencast_local.create_session(region_outside_display, default_size, default_pixel_format);
+    auto session_id = screencast_local.create_session(
+            region_outside_display, default_size, default_pixel_format,
+            default_num_buffers, default_mirror_mode);
     screencast_local.destroy_session(session_id);
 
     EXPECT_TRUE(stub_display.virtual_output_created);
@@ -376,11 +418,46 @@ TEST_F(CompositingScreencastTest, does_not_create_virtual_output_when_given_regi
         mt::fake_shared(stub_buffer_allocator),
         mt::fake_shared(stub_db_compositor_factory)};
 
-    auto session_id = screencast_local.create_session(region_inside_display, default_size, default_pixel_format);
+    auto session_id = screencast_local.create_session(
+            region_inside_display, default_size, default_pixel_format,
+            default_num_buffers, default_mirror_mode);
     screencast_local.destroy_session(session_id);
 
     EXPECT_FALSE(stub_display.virtual_output_created);
     EXPECT_FALSE(stub_display.virtual_output_enabled);
+}
+
+
+TEST_F(CompositingScreencastTest, uses_requested_number_of_buffers)
+{
+    using namespace testing;
+
+    MockBufferAllocator mock_buffer_allocator;
+    int const expected_num_buffers = 4;
+    std::vector<mtd::StubGLBuffer> buffers(expected_num_buffers);
+
+
+    EXPECT_CALL(mock_buffer_allocator, alloc_buffer(_))
+        .WillOnce(Return(mt::fake_shared(buffers[0])))
+        .WillOnce(Return(mt::fake_shared(buffers[1])))
+        .WillOnce(Return(mt::fake_shared(buffers[2])))
+        .WillOnce(Return(mt::fake_shared(buffers[3])));
+
+    mc::CompositingScreencast screencast_local{
+        mt::fake_shared(stub_scene),
+        mt::fake_shared(stub_display),
+        mt::fake_shared(mock_buffer_allocator),
+        mt::fake_shared(stub_db_compositor_factory)};
+
+    auto session_id = screencast_local.create_session(
+        default_region, default_size, default_pixel_format,
+        expected_num_buffers, default_mirror_mode);
+
+    for (int i = 0; i < expected_num_buffers; i++)
+    {
+        auto buffer = screencast_local.capture(session_id);
+        ASSERT_EQ(&buffers[i], buffer.get());
+    }
 }
 
 

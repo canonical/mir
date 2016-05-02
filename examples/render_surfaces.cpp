@@ -381,7 +381,8 @@ public:
 
             auto buffers = buffer_stream_factory->create_buffer_map(std::make_shared<NullBufferSink>());
             auto const stream = buffer_stream_factory->create_buffer_stream({}, buffers, properties);
-            auto const surface = surface_factory->create_surface(stream, params);
+            auto const surface = surface_factory->create_surface(
+                {ms::StreamInfo{stream, {}, {}}}, params);
             surface_stack->add_surface(surface, params.input_mode);
 
             {

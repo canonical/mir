@@ -55,13 +55,13 @@ public:
 
     operator Window() const;
     EGLConfig egl_config() const;
-    unsigned int color_depth() const;
+    unsigned long red_mask() const;
 
 private:
     ::Display* const x_dpy;
     Window win;
     EGLConfig config;
-    unsigned int depth;
+    unsigned long r_mask;
 };
 
 class X11EGLContext

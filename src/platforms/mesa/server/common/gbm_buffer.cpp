@@ -24,13 +24,13 @@
 #include <fcntl.h>
 #include <xf86drm.h>
 
-#include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
-#include <stdexcept>
+#include <system_error>
 
 namespace mg=mir::graphics;
 namespace mgm=mir::graphics::mesa;
+namespace mgc = mir::graphics::common;
 namespace geom=mir::geometry;
 
 MirPixelFormat mgm::gbm_format_to_mir_format(uint32_t format)
@@ -119,7 +119,7 @@ uint32_t mgm::mir_format_to_gbm_format(MirPixelFormat format)
 
 mgm::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
                           uint32_t bo_flags,
-                          std::unique_ptr<BufferTextureBinder> texture_binder)
+                          std::unique_ptr<mgc::BufferTextureBinder> texture_binder)
     : gbm_handle{handle},
       bo_flags{bo_flags},
       texture_binder{std::move(texture_binder)},
@@ -134,9 +134,7 @@ mgm::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
     if (ret)
     {
         std::string const msg("Failed to get PRIME fd from gbm bo");
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error(msg)) << boost::errinfo_errno(errno));
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), msg}));
     }
 }
 

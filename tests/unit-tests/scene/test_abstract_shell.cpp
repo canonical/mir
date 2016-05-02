@@ -96,8 +96,7 @@ struct MockSessionManager : ms::SessionManager
 struct MockSurfaceFactory : public ms::SurfaceFactory
 {
     MOCK_METHOD2(create_surface, std::shared_ptr<ms::Surface>(
-        std::shared_ptr<mir::compositor::BufferStream> const&,
-        ms::SurfaceCreationParameters const&));
+        std::list<ms::StreamInfo> const&, ms::SurfaceCreationParameters const&));
 };
 
 using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;

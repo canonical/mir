@@ -56,7 +56,7 @@ void print_touch_event(MirInputEvent const* ev)
     auto tev = mir_input_event_get_touch_event(ev);
     auto tc = mir_touch_event_point_count(tev);
 
-    std::cout << "Handline touch event time=" << event_time
+    std::cout << "Handling touch event time=" << event_time
               << " touch_count=" << tc << std::endl;
     for (unsigned i = 0; i < tc; i++)
     {
@@ -71,6 +71,38 @@ void print_touch_event(MirInputEvent const* ev)
     }
     std::cout << "----------------" << std::endl << std::endl;
 }
+
+void print_pointer_event(MirInputEvent const* ev)
+{
+    auto event_time = mir_input_event_get_event_time(ev);
+    auto pev = mir_input_event_get_pointer_event(ev);
+    auto action = mir_pointer_event_action(pev);
+
+    std::cout << "Handling pointer event time=" << event_time
+        << " action=";
+    switch(action)
+    {
+    case mir_pointer_action_motion:
+        std::cout << "motion";
+        break;
+    case mir_pointer_action_button_up:
+        std::cout << "up";
+        break;
+    case mir_pointer_action_button_down:
+        std::cout << "down";
+        break;
+    default:
+        break;
+    }
+
+    std::cout << "  "
+              << " pos=(" << mir_pointer_event_axis_value(pev, mir_pointer_axis_x) << ", "
+              << mir_pointer_event_axis_value(pev, mir_pointer_axis_y) << ")"
+              << " relative=(" << mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x) << ", "
+              << mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y) << ")" << std::endl;
+    std::cout << "----------------" << std::endl << std::endl;
+}
+
 
 struct PrintingEventFilter : public mi::EventFilter
 {
@@ -88,8 +120,12 @@ struct PrintingEventFilter : public mi::EventFilter
         case mir_input_event_type_touch:
             print_touch_event(input_event);
             break;
+        case mir_input_event_type_pointer:
+            print_pointer_event(input_event);
+            break;
         default:
-            abort();
+            std::cout << "unkown input event type: " << mir_input_event_get_type(input_event) << std::endl;
+            break;
         }
 
         return false;
@@ -220,4 +256,3 @@ auto me::make_screen_rotation_filter_for(mir::Server& server)
 
     return screen_rotation_filter;
 }
-

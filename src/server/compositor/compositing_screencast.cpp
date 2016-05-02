@@ -18,6 +18,7 @@
 
 #include "compositing_screencast.h"
 #include "screencast_display_buffer.h"
+#include "queueing_schedule.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/display.h"
@@ -65,22 +66,28 @@ std::unique_ptr<mg::VirtualOutput> make_virtual_output(mg::Display& display, geo
 }
 }
 
-struct mc::detail::ScreencastSessionContext
+class mc::detail::ScreencastSessionContext
 {
+public:
     ScreencastSessionContext(
         std::shared_ptr<Scene> const& scene,
-        std::shared_ptr<graphics::Buffer> const& buffer,
-        std::unique_ptr<graphics::GLContext> gl_context,
-        std::unique_ptr<graphics::DisplayBuffer> display_buffer,
-        std::unique_ptr<compositor::DisplayBufferCompositor> display_buffer_compositor,
-        std::unique_ptr<graphics::VirtualOutput> a_virtual_output) :
-    scene{scene},
-    buffer{buffer},
-    gl_context{std::move(gl_context)},
-    display_buffer{std::move(display_buffer)},
-    display_buffer_compositor{std::move(display_buffer_compositor)},
-    virtual_output{std::move(a_virtual_output)}
+        mg::Display& display,
+        mg::GraphicBufferAllocator& buffer_allocator,
+        DisplayBufferCompositorFactory& db_compositor_factory,
+        geom::Rectangle const& capture_region,
+        geom::Size const& capture_size,
+        MirPixelFormat pixel_format,
+        int nbuffers,
+        MirMirrorMode mirror_mode)
+    : scene{scene},
+      display_buffer{std::make_unique<ScreencastDisplayBuffer>(capture_region, capture_size, mirror_mode, free_queue, ready_queue, display)},
+      display_buffer_compositor{db_compositor_factory.create_compositor_for(*display_buffer)},
+      virtual_output{make_virtual_output(display, capture_region)}
     {
+        mg::BufferProperties const buffer_properties{capture_size, pixel_format, mg::BufferUsage::hardware};
+        for (int i = 0; i < nbuffers; i++)
+            free_queue.schedule(buffer_allocator.alloc_buffer(buffer_properties));
+
         scene->register_compositor(this);
         if (virtual_output)
             virtual_output->enable();
@@ -90,12 +97,28 @@ struct mc::detail::ScreencastSessionContext
         scene->unregister_compositor(this);
     }
 
+    std::shared_ptr<mg::Buffer> capture()
+    {
+        //FIXME:: the client needs a better way to express it is no longer
+        //using the last captured buffer
+        if (last_captured_buffer)
+            free_queue.schedule(last_captured_buffer);
+
+        display_buffer_compositor->composite(scene->scene_elements_for(this));
+
+        last_captured_buffer = ready_queue.next_buffer();
+        return last_captured_buffer;
+    }
+
+private:
     std::shared_ptr<Scene> const scene;
-    std::shared_ptr<graphics::Buffer> buffer;
-    std::unique_ptr<graphics::GLContext> gl_context;
-    std::unique_ptr<graphics::DisplayBuffer> display_buffer;
+    QueueingSchedule free_queue;
+    QueueingSchedule ready_queue;
+    std::unique_ptr<ScreencastDisplayBuffer> display_buffer;
+
     std::unique_ptr<compositor::DisplayBufferCompositor> display_buffer_compositor;
     std::unique_ptr<graphics::VirtualOutput> virtual_output;
+    std::shared_ptr<mg::Buffer> last_captured_buffer;
 };
 
 
@@ -114,19 +137,22 @@ mc::CompositingScreencast::CompositingScreencast(
 mf::ScreencastSessionId mc::CompositingScreencast::create_session(
     geom::Rectangle const& region,
     geom::Size const& size,
-    MirPixelFormat const pixel_format)
+    MirPixelFormat const pixel_format,
+    int nbuffers,
+    MirMirrorMode mirror_mode)
 {
     if (size.width.as_int() == 0 ||
         size.height.as_int() == 0 ||
         region.size.width.as_int() == 0 ||
         region.size.height.as_int() == 0 ||
-        pixel_format == mir_pixel_format_invalid)
+        pixel_format == mir_pixel_format_invalid ||
+        nbuffers < 1)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid parameters"));
     }
     std::lock_guard<decltype(session_mutex)> lock{session_mutex};
     auto const id = next_available_session_id();
-    session_contexts[id] = create_session_context(region, size, pixel_format);
+    session_contexts[id] = create_session_context(region, size, pixel_format, nbuffers, mirror_mode);
 
     return id;
 }
@@ -134,12 +160,6 @@ mf::ScreencastSessionId mc::CompositingScreencast::create_session(
 void mc::CompositingScreencast::destroy_session(mf::ScreencastSessionId id)
 {
     std::lock_guard<decltype(session_mutex)> lock{session_mutex};
-    auto gl_context = std::move(session_contexts.at(id)->gl_context);
-
-    auto using_gl_context = mir::raii::paired_calls(
-        [&] { gl_context->make_current(); },
-        [&] { gl_context->release_current(); });
-
     session_contexts.erase(id);
 }
 
@@ -152,14 +172,7 @@ std::shared_ptr<mg::Buffer> mc::CompositingScreencast::capture(mf::ScreencastSes
         session_context = session_contexts.at(id);
     }
 
-    auto using_gl_context = mir::raii::paired_calls(
-        [&] { session_context->gl_context->make_current(); },
-        [&] { session_context->gl_context->release_current(); });
-
-    session_context->display_buffer_compositor->composite(
-        session_context->scene->scene_elements_for(session_context.get()));
-
-    return session_context->buffer;
+    return session_context->capture();
 }
 
 mf::ScreencastSessionId mc::CompositingScreencast::next_available_session_id()
@@ -178,30 +191,12 @@ std::shared_ptr<mc::detail::ScreencastSessionContext>
 mc::CompositingScreencast::create_session_context(
     geometry::Rectangle const& rect,
     geometry::Size const& size,
-    MirPixelFormat pixel_format)
+    MirPixelFormat pixel_format,
+    int nbuffers,
+    MirMirrorMode mirror_mode)
 {
-    mg::BufferProperties buffer_properties{
-        size,
-        pixel_format,
-        mg::BufferUsage::hardware};
 
-    auto gl_context = display->create_gl_context();
-    auto gl_context_raw = gl_context.get();
-
-    auto using_gl_context = mir::raii::paired_calls(
-        [&] { gl_context_raw->make_current(); },
-        [&] { gl_context_raw->release_current(); });
-
-    auto buffer = buffer_allocator->alloc_buffer(buffer_properties);
-    auto display_buffer = std::make_unique<ScreencastDisplayBuffer>(rect, *buffer);
-    auto db_compositor = db_compositor_factory->create_compositor_for(*display_buffer);
-    auto virtual_output = make_virtual_output(*display, rect);
-    return std::shared_ptr<detail::ScreencastSessionContext>(
-        new detail::ScreencastSessionContext{
-            scene,
-            buffer,
-            std::move(gl_context),
-            std::move(display_buffer),
-            std::move(db_compositor),
-            std::move(virtual_output)});
+    return std::make_shared<detail::ScreencastSessionContext>(
+        scene, *display, *buffer_allocator, *db_compositor_factory,
+        rect, size, pixel_format, nbuffers, mirror_mode);
 }

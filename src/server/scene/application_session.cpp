@@ -124,7 +124,19 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     if (params.parent_id.is_set())
         params.parent = checked_find(the_params.parent_id.value())->second;
 
-    auto surface = surface_factory->create_surface(buffer_stream, params);
+    std::list<StreamInfo> streams;
+    if (the_params.content_id.is_set())
+    {
+        streams.push_back({checked_find(the_params.content_id.value())->second, {0,0}, {}});
+    }
+    else
+    {
+        for (auto& stream : params.streams.value())
+            streams.push_back({checked_find(stream.stream_id)->second, stream.displacement, stream.size});
+    }
+
+    auto surface = surface_factory->create_surface(streams, params);
+
     surface_stack->add_surface(surface, params.input_mode);
 
     if (params.state.is_set())

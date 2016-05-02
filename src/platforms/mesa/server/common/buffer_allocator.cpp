@@ -43,12 +43,13 @@
 
 namespace mg  = mir::graphics;
 namespace mgm = mg::mesa;
+namespace mgc = mg::common;
 namespace geom = mir::geometry;
 
 namespace
 {
 
-class EGLImageBufferTextureBinder : public mgm::BufferTextureBinder
+class EGLImageBufferTextureBinder : public mgc::BufferTextureBinder
 {
 public:
     EGLImageBufferTextureBinder(std::shared_ptr<gbm_bo> const& gbm_bo,
@@ -269,7 +270,7 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     BufferProperties const& buffer_properties)
 {
-    if (!ShmBuffer::supports(buffer_properties.format))
+    if (!mgc::ShmBuffer::supports(buffer_properties.format))
     {
         BOOST_THROW_EXCEPTION(
             std::runtime_error(
@@ -281,11 +282,11 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
         buffer_properties.size.width.as_uint32_t()};
     size_t const size_in_bytes = 
         stride.as_int() * buffer_properties.size.height.as_int();
-    auto const shm_file =
-        std::make_shared<mgm::AnonymousShmFile>(size_in_bytes);
+    auto shm_file =
+        std::make_unique<mgc::AnonymousShmFile>(size_in_bytes);
 
     auto const buffer =
-        std::make_shared<ShmBuffer>(shm_file, buffer_properties.size,
+        std::make_shared<mgc::ShmBuffer>(std::move(shm_file), buffer_properties.size,
                                     buffer_properties.format);
 
     return buffer;

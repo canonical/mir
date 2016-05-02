@@ -31,7 +31,7 @@
 #include <endian.h>
 
 namespace mg=mir::graphics;
-namespace mgm = mir::graphics::mesa;
+namespace mgc = mir::graphics::common;
 namespace geom = mir::geometry;
 
 namespace {
@@ -86,44 +86,44 @@ bool get_gl_pixel_format(MirPixelFormat mir_format,
 
 } // anonymous namespace
 
-bool mgm::ShmBuffer::supports(MirPixelFormat mir_format)
+bool mgc::ShmBuffer::supports(MirPixelFormat mir_format)
 {
     GLenum gl_format, gl_type;
     return get_gl_pixel_format(mir_format, gl_format, gl_type);
 }
 
-mgm::ShmBuffer::ShmBuffer(
-    std::shared_ptr<ShmFile> const& shm_file,
+mgc::ShmBuffer::ShmBuffer(
+    std::unique_ptr<ShmFile> shm_file,
     geom::Size const& size,
     MirPixelFormat const& pixel_format)
-    : shm_file{shm_file},
+    : shm_file{std::move(shm_file)},
       size_{size},
       pixel_format_{pixel_format},
       stride_{MIR_BYTES_PER_PIXEL(pixel_format_) * size_.width.as_uint32_t()},
-      pixels{shm_file->base_ptr()}
+      pixels{this->shm_file->base_ptr()}
 {
 }
 
-mgm::ShmBuffer::~ShmBuffer() noexcept
+mgc::ShmBuffer::~ShmBuffer() noexcept
 {
 }
 
-geom::Size mgm::ShmBuffer::size() const
+geom::Size mgc::ShmBuffer::size() const
 {
     return size_;
 }
 
-geom::Stride mgm::ShmBuffer::stride() const
+geom::Stride mgc::ShmBuffer::stride() const
 {
     return stride_;
 }
 
-MirPixelFormat mgm::ShmBuffer::pixel_format() const
+MirPixelFormat mgc::ShmBuffer::pixel_format() const
 {
     return pixel_format_;
 }
 
-void mgm::ShmBuffer::gl_bind_to_texture()
+void mgc::ShmBuffer::gl_bind_to_texture()
 {
     GLenum format, type;
 
@@ -144,7 +144,7 @@ void mgm::ShmBuffer::gl_bind_to_texture()
     }
 }
 
-std::shared_ptr<MirNativeBuffer> mgm::ShmBuffer::native_buffer_handle() const
+std::shared_ptr<MirNativeBuffer> mgc::ShmBuffer::native_buffer_handle() const
 {
     auto native_buffer = std::make_shared<MirNativeBuffer>();
 
@@ -160,28 +160,28 @@ std::shared_ptr<MirNativeBuffer> mgm::ShmBuffer::native_buffer_handle() const
     return native_buffer;
 }
 
-void mgm::ShmBuffer::write(unsigned char const* data, size_t data_size)
+void mgc::ShmBuffer::write(unsigned char const* data, size_t data_size)
 {
     if (data_size != stride_.as_uint32_t()*size().height.as_uint32_t())
         BOOST_THROW_EXCEPTION(std::logic_error("Size is not equal to number of pixels in buffer"));
     memcpy(pixels, data, data_size);
 }
 
-void mgm::ShmBuffer::read(std::function<void(unsigned char const*)> const& do_with_pixels)
+void mgc::ShmBuffer::read(std::function<void(unsigned char const*)> const& do_with_pixels)
 {
     do_with_pixels(static_cast<unsigned char const*>(pixels));
 }
 
-mg::NativeBufferBase* mgm::ShmBuffer::native_buffer_base()
+mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
 {
     return this;
 }
 
-void mgm::ShmBuffer::bind()
+void mgc::ShmBuffer::bind()
 {
     gl_bind_to_texture();
 }
 
-void mgm::ShmBuffer::secure_for_render()
+void mgc::ShmBuffer::secure_for_render()
 {
 }

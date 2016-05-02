@@ -135,6 +135,8 @@ public:
 
     void register_display_change_callback(mir_display_config_callback callback, void* context);
 
+    void register_error_callback(mir_error_callback callback, void* context);
+
     void populate(MirPlatformPackage& platform_package);
     void populate_graphics_module(MirModuleProperties& properties);
     MirDisplayConfiguration* create_copy_of_display_config();
@@ -143,7 +145,7 @@ public:
                                    unsigned int formats_size, unsigned int& valid_formats);
 
     std::shared_ptr<mir::client::ClientBufferStream> make_consumer_stream(
-       mir::protobuf::BufferStream const& protobuf_bs, mir::geometry::Size);
+       mir::protobuf::BufferStream const& protobuf_bs);
 
     MirWaitHandle* create_client_buffer_stream(
         int width, int height,
@@ -310,6 +312,8 @@ private:
     std::unique_ptr<mir::dispatch::ThreadedDispatcher> const eventloop;
     
     std::shared_ptr<mir::client::ClientBufferStreamFactory> buffer_stream_factory;
+
+    mir::client::AtomicCallback<MirError const*> error_handler;
 
     struct SurfaceRelease;
     struct StreamRelease;

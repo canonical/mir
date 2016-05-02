@@ -84,9 +84,13 @@ bool device_has_working_egl_sync(std::string const& device_name, std::string con
     if (option == egl_sync_force_off)
         return false;
 
-    if (device_name == "arale")
-        return false;
-    return true;
+    //TODO: we need a richer way to detect device classes
+    //mali devices are have sync disabled due to high cost (500us) in hybris while using the
+    //sync extensions. We should re-enable sync once the cost can be minimized.
+    //powervr devices have some problems with depth-buffer ordering once EGL_KHR_fence_sync
+    if (device_name == "flo" || device_name == "mako")
+        return true;
+    return false;
 }
 
 }

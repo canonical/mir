@@ -44,6 +44,7 @@
 
 #include "mir/events/event_builders.h"
 #include "mir/logging/logger.h"
+#include "mir_error.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -895,7 +896,7 @@ void MirConnection::stream_error(std::string const& error_msg, std::shared_ptr<S
 }
 
 std::shared_ptr<mir::client::ClientBufferStream> MirConnection::make_consumer_stream(
-   mp::BufferStream const& protobuf_bs, mir::geometry::Size)
+   mp::BufferStream const& protobuf_bs)
 {
     return std::make_shared<mcl::ScreencastStream>(
         this, server, platform, protobuf_bs);
@@ -922,6 +923,11 @@ void MirConnection::register_lifecycle_event_callback(mir_lifecycle_event_callba
 void MirConnection::register_ping_event_callback(mir_ping_event_callback callback, void* context)
 {
     ping_handler->set_callback(std::bind(callback, this, std::placeholders::_1, context));
+}
+
+void MirConnection::register_error_callback(mir_error_callback callback, void* context)
+{
+    error_handler.set_callback(std::bind(callback, this, std::placeholders::_1, context));
 }
 
 void MirConnection::pong(int32_t serial)
@@ -1007,6 +1013,24 @@ MirWaitHandle* MirConnection::set_base_display_configuration(MirDisplayConfigura
     return &set_base_display_configuration_wait_handle;
 }
 
+namespace
+{
+struct HandleErrorVoid
+{
+    std::unique_ptr<mp::Void> result;
+    std::function<void(mp::Void const&)> on_error;
+};
+
+void handle_structured_error(HandleErrorVoid* handler)
+{
+    if (handler->result->has_structured_error())
+    {
+        handler->on_error(*handler->result);
+    }
+    delete handler;
+}
+}
+
 void MirConnection::preview_base_display_configuration(
     mp::DisplayConfiguration const& configuration,
     std::chrono::seconds timeout)
@@ -1016,10 +1040,20 @@ void MirConnection::preview_base_display_configuration(
     request.mutable_configuration()->CopyFrom(configuration);
     request.set_timeout(timeout.count());
 
+    auto store_error_result = new HandleErrorVoid;
+    store_error_result->result = std::make_unique<mp::Void>();
+    store_error_result->on_error = [this](mp::Void const& message)
+    {
+        MirError const error{
+            static_cast<MirErrorDomain>(message.structured_error().domain()),
+            message.structured_error().code()};
+        error_handler(&error);
+    };
+
     server.preview_base_display_configuration(
         &request,
-        set_base_display_configuration_response.get(),
-        google::protobuf::NewCallback(google::protobuf::DoNothing));
+        store_error_result->result.get(),
+        google::protobuf::NewCallback(&handle_structured_error, store_error_result));
 }
 
 void MirConnection::confirm_base_display_configuration(
