@@ -39,10 +39,8 @@ enum class BufferMap::Owner
 }
 
 mc::BufferMap::BufferMap(
-    mf::BufferStreamId id,
     std::shared_ptr<mf::BufferSink> const& sink,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) :
-    stream_id(id),
     sink(sink),
     allocator(allocator)
 {

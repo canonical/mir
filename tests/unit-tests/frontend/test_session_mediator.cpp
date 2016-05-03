@@ -192,11 +192,35 @@ public:
         mock_surfaces.erase(surface);
     }
 
+    
+    mg::BufferID create_buffer(mg::BufferProperties const&)
+    {
+        buffer_count++;
+        return mg::BufferID{3};
+    }
+
+    void destroy_buffer(mg::BufferID)
+    {
+        destroy_buffers++;
+    }
+
+    int num_alloc_requests()
+    {
+        return buffer_count;
+    }
+
+    int num_destroy_requests()
+    {
+        return destroy_buffers;
+    }
+
     std::map<mf::BufferStreamId, std::shared_ptr<mtd::MockBufferStream>> mock_streams;
     std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
     static int const testing_client_input_fd;
-    int last_surface_id = 0;
     int last_stream_id = 0;
+    int last_surface_id = 0;
+    int buffer_count = 0;
+    int destroy_buffers = 0;
 };
 
 int const StubbedSession::testing_client_input_fd{11};
@@ -997,7 +1021,7 @@ TEST_F(SessionMediator, sends_a_buffer_when_submit_buffer_is_called)
     mediator.submit_buffer(&request, &null, null_callback.get());
 }
 
-TEST_F(SessionMediator, allocates_from_the_correct_stream)
+TEST_F(SessionMediator, allocates_from_the_session)
 {
     using namespace testing;
     auto num_requests = 3u;
@@ -1019,15 +1043,11 @@ TEST_F(SessionMediator, allocates_from_the_correct_stream)
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
 
-    auto mock_stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
-    EXPECT_CALL(*mock_stream, allocate_buffer(properties))
-        .Times(num_requests)
-        .WillRepeatedly(Return(mg::BufferID{}));
-
     mediator.allocate_buffers(&request, &null, null_callback.get());
+    EXPECT_THAT(stubbed_session->num_alloc_requests(), Eq(num_requests));
 }
 
-TEST_F(SessionMediator, removes_buffer_from_the_correct_stream)
+TEST_F(SessionMediator, removes_buffer_from_the_session)
 {
     using namespace testing;
     auto num_requests = 3u;
@@ -1046,11 +1066,8 @@ TEST_F(SessionMediator, removes_buffer_from_the_correct_stream)
     mediator.connect(&connect_parameters, &connection, null_callback.get());
     mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
 
-    auto mock_stream = stubbed_session->mock_stream_at(mf::BufferStreamId{0});
-    EXPECT_CALL(*mock_stream, remove_buffer(mg::BufferID{buffer_id}))
-        .Times(num_requests);
-
     mediator.release_buffers(&request, &null, null_callback.get());
+    EXPECT_THAT(stubbed_session->num_destroy_requests(), Eq(num_requests));
 }
 
 TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_submit)
@@ -1080,8 +1097,6 @@ TEST_F(SessionMediator, doesnt_mind_swap_buffers_returning_nullptr_in_submit)
     request.mutable_buffer()->set_buffer_id(buffer1->id().as_value());
 
     InSequence seq;
-    EXPECT_CALL(*mock_stream, with_buffer(buffer1->id(),_))
-        .WillOnce(InvokeArgument<1>(*buffer1));
     EXPECT_CALL(mock_ipc_operations, unpack_buffer(_,_));
     EXPECT_CALL(*mock_stream, swap_buffers(_,_))
         .WillOnce(InvokeArgument<1>(nullptr));

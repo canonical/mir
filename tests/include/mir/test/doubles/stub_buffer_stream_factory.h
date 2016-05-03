@@ -19,6 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_BUFFER_STREAM_FACTORY_H_
 #define MIR_TEST_DOUBLES_STUB_BUFFER_STREAM_FACTORY_H_
 
+#include "mir/frontend/client_buffers.h"
 #include "mir/scene/buffer_stream_factory.h"
 #include "stub_buffer_stream.h"
 
@@ -28,14 +29,42 @@ namespace test
 {
 namespace doubles
 {
+
+struct StubClientBuffers : frontend::ClientBuffers
+{
+    graphics::BufferID add_buffer(graphics::BufferProperties const&) override
+    {
+        return {};
+    }
+    void remove_buffer(graphics::BufferID) override
+    {
+    }
+    std::shared_ptr<graphics::Buffer>& operator[](graphics::BufferID) override
+    {
+        return buffer;
+    }
+    void send_buffer(graphics::BufferID) override
+    {
+    }
+    void receive_buffer(graphics::BufferID) override
+    {
+    }
+    std::shared_ptr<graphics::Buffer> buffer;
+};
+
 struct StubBufferStreamFactory : public scene::BufferStreamFactory
 {
     std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        frontend::BufferStreamId i, std::shared_ptr<frontend::BufferSink> const& s,
+        frontend::BufferStreamId i, std::shared_ptr<frontend::ClientBuffers> const& s,
         int, graphics::BufferProperties const& p) { return create_buffer_stream(i, s, p); }
     std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        frontend::BufferStreamId, std::shared_ptr<frontend::BufferSink> const&,
+        frontend::BufferStreamId, std::shared_ptr<frontend::ClientBuffers> const&,
         graphics::BufferProperties const&) { return std::make_shared<StubBufferStream>(); }
+    std::shared_ptr<frontend::ClientBuffers> create_buffer_map(
+        std::shared_ptr<frontend::BufferSink> const&)
+    {
+        return std::make_shared<StubClientBuffers>();
+    }
 };
 }
 }
