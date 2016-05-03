@@ -28,12 +28,6 @@
 namespace me = mir::examples;
 namespace mg = mir::graphics;
 
-char const* const me::wm_option = "window-manager";
-char const* const me::wm_description = "window management strategy [{legacy|canonical|tiling}]";
-char const* const me::wm_tiling = "tiling";
-char const* const me::wm_legacy = "legacy";
-char const* const me::wm_canonical = "canonical";
-
 me::ServerConfiguration::ServerConfiguration(std::shared_ptr<options::DefaultConfiguration> const& configuration_options) :
     DefaultServerConfiguration(configuration_options)
 {
@@ -42,8 +36,6 @@ me::ServerConfiguration::ServerConfiguration(std::shared_ptr<options::DefaultCon
     configuration_options->add_options()
         (me::display_config_opt, po::value<std::string>()->default_value(me::clone_opt_val),
             me::display_config_descr);
-    configuration_options->add_options()
-        (wm_option, po::value<std::string>()->default_value(wm_legacy), wm_description);
 }
 
 me::ServerConfiguration::ServerConfiguration(int argc, char const** argv) :
