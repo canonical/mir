@@ -276,7 +276,7 @@ void me::CanonicalWindowManagerPolicyCopy::generate_decorations_for(
             surface_map.emplace(titlebar, SurfaceInfo{session, titlebar, {}}).first->second;
     titlebar_info.is_titlebar = true;
     titlebar_info.parent = surface;
-    titlebar_info.init_titlebar(titlebar);
+    titlebar_info.init_titlebar(session, titlebar);
 }
 
 void me::CanonicalWindowManagerPolicyCopy::handle_new_surface(std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& surface)

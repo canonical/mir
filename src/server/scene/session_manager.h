@@ -30,6 +30,7 @@ namespace graphics
 {
 class DisplayConfiguration;
 class Display;
+class GraphicBufferAllocator;
 }
 
 namespace shell { class SurfaceStack; }
@@ -58,7 +59,8 @@ public:
         std::shared_ptr<SessionEventSink> const& session_event_sink,
         std::shared_ptr<SessionListener> const& session_listener,
         std::shared_ptr<graphics::Display const> const& display,
-        std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector);
+        std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator); 
 
     virtual ~SessionManager() noexcept;
 
@@ -88,6 +90,7 @@ private:
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<graphics::Display const> const display;
     std::shared_ptr<ApplicationNotRespondingDetector> const anr_detector;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
 };
 
 }

@@ -19,7 +19,6 @@
 #ifndef MIR_COMPOSITOR_BUFFER_MAP_H_
 #define MIR_COMPOSITOR_BUFFER_MAP_H_
 
-#include "mir/frontend/buffer_stream_id.h"
 #include "mir/frontend/client_buffers.h"
 #include <mutex>
 #include <map>
@@ -34,7 +33,6 @@ class BufferMap : public frontend::ClientBuffers
 {
 public:
     BufferMap(
-        frontend::BufferStreamId id,
         std::shared_ptr<frontend::BufferSink> const& sink,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
@@ -60,7 +58,6 @@ private:
     Map buffers;
     Map::iterator checked_buffers_find(graphics::BufferID, std::unique_lock<std::mutex> const&);
 
-    frontend::BufferStreamId const stream_id;
     std::shared_ptr<frontend::BufferSink> const sink;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
 };

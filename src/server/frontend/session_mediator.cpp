@@ -445,11 +445,11 @@ void mf::SessionMediator::submit_buffer(
     }
     else
     {
-        stream->with_buffer(buffer_id, [&, this](mg::Buffer& buffer)
-        {
-            ipc_operations->unpack_buffer(request_msg, buffer);
-            stream->swap_buffers(&buffer, [](mg::Buffer*) {});
-        });
+        auto b = session->get_buffer(buffer_id);
+        ipc_operations->unpack_buffer(request_msg, *b);
+
+        auto stream = session->get_buffer_stream(stream_id);
+        stream->swap_buffers(b.get(), [](mg::Buffer*) {});
     }
 
     done->Run();
@@ -465,8 +465,6 @@ void mf::SessionMediator::allocate_buffers(
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     report->session_allocate_buffers_called(session->name());
-    mf::BufferStreamId stream_id{request->id().value()};
-    auto stream = session->get_buffer_stream(stream_id);
     for (auto i = 0; i < request->buffer_requests().size(); i++)
     {
         auto const& req = request->buffer_requests(i);
@@ -474,7 +472,13 @@ void mf::SessionMediator::allocate_buffers(
             geom::Size{req.width(), req.height()},
             static_cast<MirPixelFormat>(req.pixel_format()),
            static_cast<mg::BufferUsage>(req.buffer_usage()));
-        stream->allocate_buffer(properties);
+
+        auto id = session->create_buffer(properties);
+        if (request->has_id())
+        {
+            auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
+            stream->associate_buffer(id);
+        }
     }
     done->Run();
 }
@@ -489,10 +493,16 @@ void mf::SessionMediator::release_buffers(
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     report->session_release_buffers_called(session->name());
-    mf::BufferStreamId stream_id{request->id().value()};
-    auto stream = session->get_buffer_stream(stream_id);
     for (auto i = 0; i < request->buffers().size(); i++)
-        stream->remove_buffer(mg::BufferID{static_cast<uint32_t>(request->buffers(i).buffer_id())});
+    {
+        mg::BufferID buffer_id{static_cast<uint32_t>(request->buffers(i).buffer_id())};
+        if (request->has_id())
+        {
+            auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
+            stream->disassociate_buffer(buffer_id);
+        }
+        session->destroy_buffer(buffer_id);
+    }
    done->Run();
 }
  

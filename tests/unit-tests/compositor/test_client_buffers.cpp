@@ -60,11 +60,10 @@ struct StubBufferAllocator : public mg::GraphicBufferAllocator
 struct ClientBuffers : public Test
 {
     testing::NiceMock<mtd::MockEventSink> mock_sink;
-    mf::BufferStreamId stream_id{44};
     mg::BufferProperties properties{geom::Size{42,43}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
     MockBufferAllocator mock_allocator;
     StubBufferAllocator stub_allocator;
-    mc::BufferMap map{stream_id, mt::fake_shared(mock_sink), mt::fake_shared(stub_allocator)};
+    mc::BufferMap map{mt::fake_shared(mock_sink), mt::fake_shared(stub_allocator)};
 };
 
 TEST_F(ClientBuffers, sends_full_buffer_on_allocation)
@@ -73,7 +72,7 @@ TEST_F(ClientBuffers, sends_full_buffer_on_allocation)
     EXPECT_CALL(mock_allocator, alloc_buffer(Ref(properties)))
         .WillOnce(Return(stub_buffer));
     EXPECT_CALL(mock_sink, add_buffer(Ref(*stub_buffer)));
-    mc::BufferMap map{stream_id, mt::fake_shared(mock_sink), mt::fake_shared(mock_allocator)};
+    mc::BufferMap map{mt::fake_shared(mock_sink), mt::fake_shared(mock_allocator)};
     EXPECT_THAT(map.add_buffer(properties), Eq(stub_buffer->id()));
 }
 
