@@ -176,6 +176,7 @@ void me::TilingWindowManagerPolicy::handle_modify_surface(
 void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
     auto& info = tools->info_for(surface);
+    bool const is_active_surface{surface.lock() == tools->focused_surface()};
 
     if (auto const parent = info.parent.lock())
     {
@@ -204,10 +205,17 @@ void me::TilingWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Se
 
     session->destroy_surface(surface);
 
-    if (surfaces.empty() && session == tools->focused_session())
+    if (is_active_surface)
     {
-        tools->focus_next_session();
-        select_active_surface(tools->focused_session(), tools->focused_surface());
+        if (surfaces.empty())
+        {
+            tools->focus_next_session();
+            select_active_surface(tools->focused_session(), tools->focused_surface());
+        }
+        else
+        {
+            select_active_surface(session, surfaces[0].lock());
+        }
     }
 }
 
