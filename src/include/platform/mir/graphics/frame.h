@@ -27,25 +27,26 @@ namespace graphics
 {
 
 /**
- * Unique identifier of a frame displayed to the user.
+ * Frame is a unique identifier for a frame displayed on a physical output.
  *
- * This weird terminology is actually pretty standard in graphics texts,
- * OpenGL and Xorg. For more information see:
+ * This weird terminology is actually very standard in graphics texts,
+ * OpenGL and Xorg. The basic design is best described in GLX_OML_sync_control:
  *   https://www.opengl.org/registry/specs/OML/glx_sync_control.txt
+ * which has also been copied by Google/Intel/Mesa into EGL as a simpler
+ * informal extension: EGL_CHROMIUM_sync_control
+ * What the GLX_OML_sync_control spec won't tell you is that UST is always
+ * measured in microseconds relative to CLOCK_MONOTONIC.
  */
 struct Frame
 {
-    uint64_t msc = 0;  /**< Media Stream Counter: The physical frame count
-                            from the display hardware (or as close to it as
-                            can be calculated).
-                            You should not make the assumption that this
-                            starts low, or that successive queries will
-                            increase by one. Because it's entirely possible
-                            that you missed a frame or frames so the delta
-                            between msc values may be greater than one. */
-    uint64_t ust = 0;  /**< Unadjusted System Time in nanoseconds: This must
-                            stay in its raw integer form so that (GLX) clients
-                            can compare their CLOCK_MONOTONIC to it. */
+    uint64_t msc = 0;  /**< Media Stream Counter: Counter of the frame
+                            displayed by the output (or as close to it as
+                            can be estimated). */
+    uint64_t ust = 0;  /**< Unadjusted System Time in microseconds (relative
+                            to the kernel's CLOCK_MONOTONIC) of the frame
+                            displayed by the output.
+                            This value should remain unmodified through to
+                            the client for accurate timing calculations. */
 
     bool operator<(Frame const& rhs) const
     {

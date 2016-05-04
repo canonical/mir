@@ -37,7 +37,7 @@ void page_flip_handler(int /*fd*/, unsigned int seq,
                        void* data)
 {
     auto page_flip_data = static_cast<mgm::PageFlipEventData*>(data);
-    mg::Frame const frame = {seq, (sec * 1000000000ULL) + (usec * 1000ULL)};
+    mg::Frame const frame = {seq, (sec * 1000000ULL) + usec};
     page_flip_data->flipper->notify_page_flip(page_flip_data->crtc_id, frame);
 }
 

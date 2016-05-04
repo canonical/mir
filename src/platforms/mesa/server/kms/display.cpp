@@ -103,9 +103,9 @@ mgm::Display::Display(std::shared_ptr<helpers::DRMHelper> const& drm,
     frame_clock.set_frame_callback([](Frame const& frame)
     {
         unsigned long long seq = frame.msc;
-        unsigned long long ns = frame.ust;
+        unsigned long long us = frame.ust;
         fprintf(stderr, "TODO - Frame #%llu at %llu.%03llus\n",
-                        seq, ns/1000000000ULL, (ns%1000000000ULL)/1000000ULL);
+                        seq, us/1000000ULL, us%1000000ULL);
     });
 
     vt->set_graphics_mode();
