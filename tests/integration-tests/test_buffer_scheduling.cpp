@@ -581,6 +581,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
         }
         else
         {
+            printf("NEW\n");
             ipc = std::make_shared<StubIpcSystem>();
             map = std::make_shared<mc::BufferMap>(
                     std::make_shared<StubEventSink>(ipc),
@@ -1530,6 +1531,24 @@ TEST_P(WithAnyNumberOfBuffers, can_snapshot_repeatedly_without_blocking)
     auto production_log = producer->production_log();
     ASSERT_THAT(production_log, SizeIs(1));
     EXPECT_THAT(snaps, Each(production_log.back().id));
+}
+
+//LP: #1578159
+//If given the choice best to prefer buffers that the compositor used furthest in the past
+//so that we avert any waits on synchronization internal to the buffers or platform.
+TEST_P(WithThreeOrMoreBuffers, prefers_fifo_ordering_when_distributing_buffers_to_driver)
+{ 
+    producer->produce();
+    producer->produce();
+    consumer->consume();
+    consumer->consume();
+    producer->produce();
+
+    auto production_log = producer->production_log();
+    auto consumption_log = consumer->consumption_log();
+    ASSERT_THAT(production_log, Not(IsEmpty()));
+    ASSERT_THAT(consumption_log, Not(IsEmpty()));
+    EXPECT_THAT(production_log.back().id, Ne(consumption_log.front().id));
 }
 
 int const max_buffers_to_test{5};

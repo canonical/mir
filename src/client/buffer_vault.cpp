@@ -173,6 +173,8 @@ void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
 {
     std::unique_lock<std::mutex> lk(mutex);
 
+    printf("INBOUND %i\n", buffer_id);
+
     auto buffer = checked_buffer_from_map(buffer_id);
     auto inbound_size = buffer->size();
     auto it = buffers.find(buffer_id);
