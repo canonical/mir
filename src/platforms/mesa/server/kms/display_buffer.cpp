@@ -115,6 +115,17 @@ mgm::DisplayBuffer::DisplayBuffer(
       needs_set_crtc{false},
       page_flips_pending{false}
 {
+    for (auto const& output : outputs)
+        frame_clock.add_child_clock(output);
+
+    frame_clock.set_frame_callback([](Frame const& frame)
+    {
+        unsigned long long seq = frame.msc;
+        unsigned long long usec = frame.ust;
+        fprintf(stderr, "TODO - Frame #%llu at %llu.%06llus\n",
+                        seq, usec/1000000ULL, usec%1000000ULL);
+    });
+
     uint32_t area_width = area.size.width.as_uint32_t();
     uint32_t area_height = area.size.height.as_uint32_t();
     if (rotation == mir_orientation_left || rotation == mir_orientation_right)
