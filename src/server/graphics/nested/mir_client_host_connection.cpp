@@ -271,11 +271,19 @@ mir::geometry::Displacement mgn::MirClientHostConnection::NestedCursorImage::hot
     return hotspot_;
 }
 
+mgn::MirClientHostConnection::NestedCursorImage::NestedCursorImage(mg::CursorImage const& other)
+    : hotspot_(other.hotspot()),
+      size_(other.size()),
+      buffer(size_.width.as_int() * size_.height.as_int() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888))
+{
+    std::memcpy(buffer.data(), other.as_argb_8888(), buffer.size());
+}
+
 mgn::MirClientHostConnection::NestedCursorImage& mgn::MirClientHostConnection::NestedCursorImage::operator=(mg::CursorImage const& other)
 {
     hotspot_ = other.hotspot();
     size_ = other.size();
-    buffer.resize(size_.width.as_int() * size_.height.as_int() * 4);
+    buffer.resize(size_.width.as_int() * size_.height.as_int() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888));
     std::memcpy(buffer.data(), other.as_argb_8888(), buffer.size());
 
     return *this;
@@ -387,7 +395,7 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
             delete surf;
         });
 
-    if (stored_cursor_image.size().width.as_int() * stored_cursor_image.size().width.as_int())
+    if (stored_cursor_image.size().width.as_int() * stored_cursor_image.size().height.as_int())
         surf->set_cursor_image(stored_cursor_image);
 
     surfaces.push_back(surf.get());

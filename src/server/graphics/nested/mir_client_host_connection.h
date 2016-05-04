@@ -103,14 +103,17 @@ private:
 
     struct NestedCursorImage : graphics::CursorImage
     {
+        NestedCursorImage() = default;
+        NestedCursorImage(graphics::CursorImage const& other);
+        NestedCursorImage& operator=(graphics::CursorImage const& other);
+
         void const* as_argb_8888() const override;
         geometry::Size size() const override;
         geometry::Displacement hotspot() const override;
-        NestedCursorImage& operator=(graphics::CursorImage const& other);
     private:
-        std::vector<uint8_t> buffer;
         geometry::Displacement hotspot_;
         geometry::Size size_;
+        std::vector<uint8_t> buffer;
     };
     NestedCursorImage stored_cursor_image;
 };
