@@ -37,6 +37,14 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
                                     egl_ctx{c},
                                     orientation_{o}
 {
+    set_frame_callback([](Frame const& frame)
+    {
+        unsigned long long seq = frame.msc;
+        unsigned long long usec = frame.ust;
+        fprintf(stderr, "TODO - Frame #%llu at %llu.%06llus\n",
+                        seq, usec/1000000ULL, usec%1000000ULL);
+    });
+
 }
 
 geom::Rectangle mgx::DisplayBuffer::view_area() const
@@ -72,6 +80,16 @@ void mgx::DisplayBuffer::swap_buffers()
 {
     if (!eglSwapBuffers(egl_dpy, egl_surf))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
+
+    Frame frame; // TODO: Populate
+
+    std::unique_lock<FrameMutex> lock(frame_mutex);
+    if (frame_callback)
+    {
+        auto cb = frame_callback;
+        lock.unlock();
+        cb(frame);
+    }
 }
 
 void mgx::DisplayBuffer::bind()
