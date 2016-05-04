@@ -19,7 +19,7 @@
 
 #include "mir/graphics/egl_error.h"
 #include "display_buffer.h"
-
+#include <cstring>
 #include <boost/throw_exception.hpp>
 
 namespace mg=mir::graphics;
@@ -45,6 +45,17 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
                         seq, usec/1000000ULL, usec%1000000ULL);
     });
 
+    auto extensions = eglQueryString(egl_dpy, EGL_EXTENSIONS);
+    /*
+     * EGL_CHROMIUM_sync_control is not an official standard, but Google
+     * invented it as a way to free Chromium from dependencies on GLX
+     * (GLX_OML_sync_control).
+     */
+    eglGetSyncValues =
+        (PFNEGLGETSYNCVALUESCHROMIUMPROC)(
+            strstr(extensions, "EGL_CHROMIUM_sync_control") ?
+            eglGetProcAddress("eglGetSyncValuesCHROMIUM") : NULL
+            );
 }
 
 geom::Rectangle mgx::DisplayBuffer::view_area() const
@@ -81,7 +92,10 @@ void mgx::DisplayBuffer::swap_buffers()
     if (!eglSwapBuffers(egl_dpy, egl_surf))
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
 
-    Frame frame; // TODO: Populate
+    Frame frame;
+    uint64_t sbc;
+    if (eglGetSyncValues)
+        eglGetSyncValues(egl_dpy, egl_surf, &frame.ust, &frame.msc, &sbc);
 
     std::unique_lock<FrameMutex> lock(frame_mutex);
     if (frame_callback)

@@ -27,6 +27,9 @@
 
 #include <EGL/egl.h>
 
+// Provided by Mesa, but if it goes away we can trivially replicate it...
+#include <EGL/eglextchromium.h>
+
 namespace mir
 {
 namespace graphics
@@ -65,6 +68,7 @@ private:
     EGLSurface const egl_surf;
     EGLContext const egl_ctx;
     MirOrientation orientation_;
+    PFNEGLGETSYNCVALUESCHROMIUMPROC eglGetSyncValues;
 };
 
 }
