@@ -28,7 +28,8 @@ add_subdirectory(udev)
 set(MIR_PLATFORM_OBJECTS ${MIR_PLATFORM_OBJECTS} PARENT_SCOPE)
 set(MIR_PLATFORM_REFERENCES ${MIR_PLATFORM_REFERENCES} PARENT_SCOPE)
 
-add_library(mirplatform SHARED
+mir_add_library_with_symbols(mirplatform SHARED
+  symbols.map
   ${MIR_PLATFORM_OBJECTS}
 )
 
