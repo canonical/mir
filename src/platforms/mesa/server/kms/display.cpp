@@ -104,7 +104,7 @@ mgm::Display::Display(std::shared_ptr<helpers::DRMHelper> const& drm,
     {
         unsigned long long seq = frame.msc;
         unsigned long long us = frame.ust;
-        fprintf(stderr, "TODO - Frame #%llu at %llu.%03llus\n",
+        fprintf(stderr, "TODO - Frame #%llu at %llu.%06llus\n",
                         seq, us/1000000ULL, us%1000000ULL);
     });
 

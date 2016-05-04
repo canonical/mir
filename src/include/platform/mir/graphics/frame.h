@@ -35,7 +35,8 @@ namespace graphics
  * which has also been copied by Google/Intel/Mesa into EGL as a simpler
  * informal extension: EGL_CHROMIUM_sync_control
  * What the GLX_OML_sync_control spec won't tell you is that UST is always
- * measured in microseconds relative to CLOCK_MONOTONIC.
+ * measured in microseconds relative to CLOCK_MONOTONIC, in all existing
+ * implementations.
  */
 struct Frame
 {
