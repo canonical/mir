@@ -412,6 +412,7 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
 {
     fullscreen_surfaces.erase(surface);
+    bool const is_active_surface{surface.lock() == active_surface()};
 
     auto& info = tools->info_for(surface);
 
@@ -442,11 +443,19 @@ void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms
         }
     }
 
-    if (surfaces.empty() && session == tools->focused_session())
+    if (is_active_surface)
     {
         active_surface_.reset();
-        tools->focus_next_session();
-        select_active_surface(tools->focused_surface());
+
+        if (surfaces.empty())
+        {
+            tools->focus_next_session();
+            select_active_surface(tools->focused_surface());
+        }
+        else
+        {
+            select_active_surface(surfaces[0].lock());
+        }
     }
 }
 

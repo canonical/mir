@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/common.h"
 #include "mir/frontend/surface_id.h"
+#include "mir/graphics/buffer_id.h"
 #include "mir/frontend/buffer_stream_id.h"
 
 #include <memory>
@@ -32,6 +33,7 @@ namespace graphics
 {
 class DisplayConfiguration;
 struct BufferProperties;
+class Buffer;
 }
 
 namespace frontend
@@ -49,6 +51,10 @@ public:
     virtual std::shared_ptr<BufferStream> get_buffer_stream(BufferStreamId stream) const = 0;
     virtual BufferStreamId create_buffer_stream(graphics::BufferProperties const& props) = 0;
     virtual void destroy_buffer_stream(BufferStreamId stream) = 0;
+
+    virtual graphics::BufferID create_buffer(graphics::BufferProperties const& properties) = 0;
+    virtual void destroy_buffer(graphics::BufferID) = 0;
+    virtual std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) = 0;
 
     virtual std::string name() const = 0;
 

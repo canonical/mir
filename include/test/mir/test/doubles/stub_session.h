@@ -89,6 +89,10 @@ struct StubSession : scene::Session
 
     void send_input_device_change(std::vector<std::shared_ptr<input::Device>> const& devices) override;
 
+    graphics::BufferID create_buffer(graphics::BufferProperties const& properties);
+    void destroy_buffer(graphics::BufferID);
+    std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID);
+
     pid_t pid;
 };
 }

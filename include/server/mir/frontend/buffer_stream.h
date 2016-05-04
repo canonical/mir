@@ -54,9 +54,13 @@ public:
 
     virtual MirPixelFormat pixel_format() const = 0;
 
-    virtual graphics::BufferID allocate_buffer(graphics::BufferProperties const&) = 0;
-    virtual void remove_buffer(graphics::BufferID) = 0;
-    virtual void with_buffer(graphics::BufferID id, std::function<void(graphics::Buffer&)> const& fn) = 0;
+    //TODO: associate/disassociate_buffer are only used for timeout framedropping policy decisions.
+    //      They will be removed once timeout framedropping policy moves to the client side. 
+    virtual void associate_buffer(graphics::BufferID) = 0;
+    virtual void disassociate_buffer(graphics::BufferID) = 0;
+
+    //TODO: framedropping for swapinterval-0 can probably be effectively managed from the client
+    //      side once we only support the NBS system.
     virtual void allow_framedropping(bool) = 0;
     virtual void set_scale(float scale) = 0;
 protected:

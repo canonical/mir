@@ -66,17 +66,22 @@ public:
     }
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId id, std::shared_ptr<mf::BufferSink> const& sink,
+        mf::BufferStreamId id, std::shared_ptr<mf::ClientBuffers> const& sink,
         int, mg::BufferProperties const& p) override
     {
         return create_buffer_stream(id, sink, p);
     }
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId, std::shared_ptr<mf::BufferSink> const&,
+        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const&,
         mg::BufferProperties const&) override
     {
         return std::make_shared<StubBufferStream>(framedropping_enabled);
+    }
+
+    std::shared_ptr<mf::ClientBuffers> create_buffer_map(std::shared_ptr<mf::BufferSink> const&)
+    {
+        return nullptr;
     }
 
 private:
