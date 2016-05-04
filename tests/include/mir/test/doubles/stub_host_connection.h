@@ -78,6 +78,16 @@ public:
     }
 
     auto graphics_platform_library() -> std::string { return {}; }
+
+    void set_input_device_change_callback(std::function<void(graphics::nested::UniqueInputConfig)> const&) override
+    {
+    }
+    void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const&) override
+    {
+    }
+    void emit_input_event(MirEvent const&, mir::geometry::Rectangle const&) override
+    {
+    }
 };
 
 

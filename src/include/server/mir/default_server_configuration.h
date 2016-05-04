@@ -335,6 +335,7 @@ private:
 protected:
     std::shared_ptr<options::Option> the_options() const;
     std::shared_ptr<graphics::nested::MirClientHostConnection>  the_mir_client_host_connection();
+    std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();

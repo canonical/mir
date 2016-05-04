@@ -33,11 +33,6 @@
 
 namespace mir
 {
-namespace input
-{
-class InputDispatcher;
-class CursorListener;
-}
 namespace geometry
 {
 struct Rectangle;
@@ -120,11 +115,9 @@ public:
     Display(
         std::shared_ptr<Platform> const& platform,
         std::shared_ptr<HostConnection> const& connection,
-        std::shared_ptr<input::InputDispatcher> const& dispatcher,
         std::shared_ptr<DisplayReport> const& display_report,
         std::shared_ptr<DisplayConfigurationPolicy> const& conf_policy,
-        std::shared_ptr<GLConfig> const& gl_config,
-        std::shared_ptr<input::CursorListener> const& cursor_listener);
+        std::shared_ptr<GLConfig> const& gl_config);
 
     ~Display() noexcept;
 
@@ -152,10 +145,8 @@ public:
 private:
     std::shared_ptr<Platform> const platform;
     std::shared_ptr<HostConnection> const connection;
-    std::shared_ptr<input::InputDispatcher> const dispatcher;
     std::shared_ptr<DisplayReport> const display_report;
     detail::EGLDisplayHandle egl_display;
-    std::shared_ptr<input::CursorListener> const cursor_listener;
 
     std::mutex outputs_mutex;
     std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::DisplaySyncGroup>> outputs;
