@@ -582,12 +582,12 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
         else
         {
             ipc = std::make_shared<StubIpcSystem>();
+            map = std::make_shared<mc::BufferMap>(
+                    std::make_shared<StubEventSink>(ipc),
+                    std::make_shared<mtd::StubBufferAllocator>());
             auto submit_stream = std::make_shared<mc::Stream>(
                 drop_policy,
-                std::make_unique<mc::BufferMap>(
-                    mf::BufferStreamId{2},
-                    std::make_shared<StubEventSink>(ipc),
-                    std::make_shared<mtd::StubBufferAllocator>()),
+                map,
                 geom::Size{100,100},
                 mir_pixel_format_abgr_8888);
             auto weak_stream = std::weak_ptr<mc::Stream>(submit_stream);
@@ -601,12 +601,9 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
                     submit_stream->swap_buffers(&b, [](mg::Buffer*){});
                 });
             ipc->on_allocate(
-                [weak_stream](geom::Size sz)
+                [this](geom::Size sz)
                 {
-                    auto submit_stream = weak_stream.lock();
-                    if (!submit_stream)
-                        return;
-                    submit_stream->allocate_buffer(
+                    map->add_buffer(
                         mg::BufferProperties{sz, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware});
                 });
 
@@ -665,6 +662,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
     std::unique_ptr<ConsumerSystem> consumer;
     std::unique_ptr<ConsumerSystem> second_consumer;
     std::unique_ptr<ConsumerSystem> third_consumer;
+    std::shared_ptr<mc::BufferMap> map;
 };
 
 struct WithAnyNumberOfBuffers : BufferScheduling {};

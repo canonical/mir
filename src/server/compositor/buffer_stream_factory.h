@@ -45,11 +45,13 @@ public:
     virtual ~BufferStreamFactory() {}
 
     virtual std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        frontend::BufferStreamId, std::shared_ptr<frontend::BufferSink> const& sink,
+        frontend::BufferStreamId, std::shared_ptr<frontend::ClientBuffers> const& sink,
         int nbuffers, graphics::BufferProperties const& buffer_properties) override;
     virtual std::shared_ptr<BufferStream> create_buffer_stream(
-        frontend::BufferStreamId, std::shared_ptr<frontend::BufferSink> const& sink,
+        frontend::BufferStreamId, std::shared_ptr<frontend::ClientBuffers> const& sink,
         graphics::BufferProperties const&) override;
+    virtual std::shared_ptr<frontend::ClientBuffers> create_buffer_map(
+        std::shared_ptr<frontend::BufferSink> const& sink) override;
 
 private:
     std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;

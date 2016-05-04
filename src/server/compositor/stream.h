@@ -28,6 +28,7 @@
 #include "multi_monitor_arbiter.h"
 #include <mutex>
 #include <memory>
+#include <set>
 
 namespace mir
 {
@@ -42,7 +43,7 @@ class Stream : public BufferStream
 public:
     Stream(
         FrameDroppingPolicyFactory const& policy_factory,
-        std::unique_ptr<frontend::ClientBuffers>, geometry::Size sz, MirPixelFormat format);
+        std::shared_ptr<frontend::ClientBuffers>, geometry::Size sz, MirPixelFormat format);
 
     void swap_buffers(
         graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
@@ -59,9 +60,8 @@ public:
     int buffers_ready_for_compositor(void const* user_id) const override;
     void drop_old_buffers() override;
     bool has_submitted_buffer() const override;
-    graphics::BufferID allocate_buffer(graphics::BufferProperties const&) override;
-    void remove_buffer(graphics::BufferID) override;
-    void with_buffer(graphics::BufferID id, std::function<void(graphics::Buffer&)> const& fn) override;
+    void associate_buffer(graphics::BufferID) override;
+    void disassociate_buffer(graphics::BufferID) override;
     void set_scale(float scale) override;
 
 private:
@@ -90,7 +90,7 @@ private:
 
     scene::SurfaceObservers observers;
 
-    unsigned int total_buffer_count = 0;
+    std::set<graphics::BufferID> associated_buffers;
     unsigned int client_owned_buffer_count(std::lock_guard<decltype(mutex)> const&) const;
 };
 }

@@ -77,7 +77,9 @@ struct SurfaceInfo
     mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
     mir::optional_value<graphics::DisplayConfigurationOutputId> output_id;
 
-    void init_titlebar(std::shared_ptr <scene::Surface> const& surface);
+    void init_titlebar(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface);
 
     void paint_titlebar(int intensity);
 

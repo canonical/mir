@@ -60,11 +60,11 @@ void mc::Stream::DroppingCallback::unlock()
 
 mc::Stream::Stream(
     mc::FrameDroppingPolicyFactory const& policy_factory,
-    std::unique_ptr<frontend::ClientBuffers> map, geom::Size size, MirPixelFormat pf) :
+    std::shared_ptr<frontend::ClientBuffers> map, geom::Size size, MirPixelFormat pf) :
     drop_policy(policy_factory.create_policy(std::make_unique<DroppingCallback>(this))),
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
-    buffers(std::move(map)),
+    buffers(map),
     arbiter(std::make_shared<mc::MultiMonitorArbiter>(
         mc::MultiMonitorMode::multi_monitor_sync, buffers, schedule)),
     size(size),
@@ -78,7 +78,7 @@ unsigned int mc::Stream::client_owned_buffer_count(std::lock_guard<decltype(mute
     auto server_count = schedule->num_scheduled();
     if (arbiter->has_buffer())
         server_count++;
-    return total_buffer_count - server_count;
+    return associated_buffers.size() - server_count;
 }
 
 void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer* new_buffer)> fn)
@@ -90,7 +90,7 @@ void mc::Stream::swap_buffers(mg::Buffer* buffer, std::function<void(mg::Buffer*
             first_frame_posted = true;
             buffers->receive_buffer(buffer->id());
             schedule->schedule((*buffers)[buffer->id()]);
-            if (client_owned_buffer_count(lk) == 0)
+            if (!associated_buffers.empty() && (client_owned_buffer_count(lk) == 0))
                 drop_policy->swap_now_blocking();
         }
         observers.frame_posted(1, buffer->size());
@@ -208,28 +208,18 @@ bool mc::Stream::has_submitted_buffer() const
     return first_frame_posted;
 }
 
-mg::BufferID mc::Stream::allocate_buffer(mg::BufferProperties const& properties)
+void mc::Stream::associate_buffer(mg::BufferID id)
 {
-    {
-        std::lock_guard<decltype(mutex)> lk(mutex); 
-        total_buffer_count++;
-    }
-    return buffers->add_buffer(properties);
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    associated_buffers.insert(id);
 }
 
-void mc::Stream::remove_buffer(mg::BufferID id)
+void mc::Stream::disassociate_buffer(mg::BufferID id)
 {
-    {
-        std::lock_guard<decltype(mutex)> lk(mutex); 
-        total_buffer_count--;
-    }
-    buffers->remove_buffer(id);
-}
-
-void mc::Stream::with_buffer(mg::BufferID id, std::function<void(mg::Buffer&)> const& fn)
-{
-    auto buffer = (*buffers)[id];
-    fn(*buffer);
+    std::lock_guard<decltype(mutex)> lk(mutex);
+    auto it = associated_buffers.find(id);
+    if (it != associated_buffers.end())
+        associated_buffers.erase(it);
 }
 
 void mc::Stream::set_scale(float)

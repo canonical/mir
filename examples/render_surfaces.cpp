@@ -33,6 +33,7 @@
 #include "mir/scene/surface_factory.h"
 #include "mir/shell/surface_stack.h"
 #include "mir/frontend/buffer_sink.h"
+#include "mir/frontend/client_buffers.h"
 #include "mir/server.h"
 #include "mir/report_exception.h"
 
@@ -378,15 +379,23 @@ public:
                 void update_buffer(mg::Buffer&) override {}
             };
 
-            auto const stream = buffer_stream_factory->create_buffer_stream(
-                mf::BufferStreamId{}, std::make_shared<NullBufferSink>(), properties);
-            auto const surface = surface_factory->create_surface({ ms::StreamInfo{ stream, {0, 0}, {} } }, params);
+            auto buffers = buffer_stream_factory->create_buffer_map(std::make_shared<NullBufferSink>());
+            auto const stream = buffer_stream_factory->create_buffer_stream({}, buffers, properties);
+            auto const surface = surface_factory->create_surface(
+                {ms::StreamInfo{stream, {}, {}}}, params);
             surface_stack->add_surface(surface, params.input_mode);
 
             {
                 mg::Buffer* buffer{nullptr};
                 auto const complete = [&](mg::Buffer* new_buf){ buffer = new_buf; };
+
                 surface->primary_buffer_stream()->swap_buffers(buffer, complete); // Fetch buffer for rendering
+                if (!buffer)
+                {
+                    auto buffer_id = buffers->add_buffer(properties);
+                    buffer = (*buffers)[buffer_id].get();
+                }
+
                 {
                     gl_context->make_current();
 
