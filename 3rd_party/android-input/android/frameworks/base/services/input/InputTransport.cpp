@@ -735,6 +735,8 @@ void InputConsumer::resampleTouchState(std::chrono::nanoseconds sampleTime, Moti
                     lerp(currentCoords.getX(), otherCoords.getX(), alpha));
             resampledCoords.setAxisValue(AMOTION_EVENT_AXIS_Y,
                     lerp(currentCoords.getY(), otherCoords.getY(), alpha));
+            // No coordinate resampling for tooltype mouse - if we intend to
+            // change that we must also resample RX, RY, HSCROLL, VSCROLL
 #if DEBUG_RESAMPLING
             ALOGD("[%d] - out (%0.3f, %0.3f), cur (%0.3f, %0.3f), "
                     "other (%0.3f, %0.3f), alpha %0.3f",
@@ -743,7 +745,10 @@ void InputConsumer::resampleTouchState(std::chrono::nanoseconds sampleTime, Moti
                     otherCoords.getX(), otherCoords.getY(),
                     alpha);
 #endif
+            event->addSample(sampleTime, touchState.lastResample.pointers);
         } else {
+            // Before calling this method currentCoords was already part of the
+            // event -> no need to add them to the event.
             resampledCoords.copyFrom(currentCoords);
 #if DEBUG_RESAMPLING
             ALOGD("[%d] - out (%0.3f, %0.3f), cur (%0.3f, %0.3f)",
@@ -752,8 +757,6 @@ void InputConsumer::resampleTouchState(std::chrono::nanoseconds sampleTime, Moti
 #endif
         }
     }
-
-    event->addSample(sampleTime, touchState.lastResample.pointers);
 }
 
 bool InputConsumer::shouldResampleTool(int32_t toolType) {
