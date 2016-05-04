@@ -129,8 +129,13 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [this](std::pair<int, Owner> const& entry) {
             return ((entry.second == Owner::Self) &&
-                    (checked_buffer_from_map(entry.first)->size() == size));
-    });
+                    (checked_buffer_from_map(entry.first)->size() == size) &&
+                    (entry.first != last_received_id)); });
+    if (it == buffers.end())
+        it = std::find_if(buffers.begin(), buffers.end(),
+        [this](std::pair<int, Owner> const& entry) {
+            return ((entry.second == Owner::Self) &&
+                    (checked_buffer_from_map(entry.first)->size() == size)); });
 
     auto future = promise.get_future();
     if (it != buffers.end())
@@ -172,9 +177,7 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const
 void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
 {
     std::unique_lock<std::mutex> lk(mutex);
-
-    printf("INBOUND %i\n", buffer_id);
-
+    last_received_id = buffer_id;
     auto buffer = checked_buffer_from_map(buffer_id);
     auto inbound_size = buffer->size();
     auto it = buffers.find(buffer_id);

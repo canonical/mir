@@ -144,7 +144,7 @@ struct BufferQueueProducer : ProducerSystem
         }
         else
         {
-            entries.emplace_back(BufferEntry{mg::BufferID{2}, 0u, Access::blocked});
+            entries.emplace_back(BufferEntry{mg::BufferID{INT_MAX}, 0u, Access::blocked});
         }
     }
 
@@ -565,6 +565,15 @@ size_t unique_ids_in(std::vector<BufferEntry> log)
     return std::distance(log.begin(), it);
 }
 
+MATCHER(NeverBlocks, "")
+{
+    bool never_blocks = true;
+    for(auto& e : arg)
+        never_blocks &= (e.blockage == Access::unblocked);
+    return never_blocks; 
+}
+
+
 //test infrastructure
 struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<int, TestType>>
 {
@@ -581,7 +590,6 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<
         }
         else
         {
-            printf("NEW\n");
             ipc = std::make_shared<StubIpcSystem>();
             map = std::make_shared<mc::BufferMap>(
                     std::make_shared<StubEventSink>(ipc),
@@ -1455,7 +1463,12 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     auto log = producer->production_log();
     ASSERT_THAT(log.size(), Gt(discard));  // avoid the below erase crashing
     log.erase(log.begin(), log.begin() + discard);
-    EXPECT_THAT(unique_ids_in(log), Eq(2));
+
+    if (std::get<1>(GetParam()) == TestType::SubmitSemantics)
+        EXPECT_THAT(log, NeverBlocks());
+    if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
+        EXPECT_THAT(unique_ids_in(log), Eq(2));
+
     producer->reset_log();
 
     //put server-side pressure on the buffer count
@@ -1486,7 +1499,10 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     // Expect double-buffers as the steady state for fast clients
     log = producer->production_log();
     log.erase(log.begin(), log.begin() + discard);
-    EXPECT_THAT(unique_ids_in(log), Eq(2));
+    if (std::get<1>(GetParam()) == TestType::SubmitSemantics)
+        EXPECT_THAT(log, NeverBlocks());
+    if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
+        EXPECT_THAT(unique_ids_in(log), Eq(2));
 }
 
 //NOTE: compositors need 2 buffers in overlay/bypass cases, as they 
