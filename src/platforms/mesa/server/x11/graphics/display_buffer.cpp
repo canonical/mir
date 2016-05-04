@@ -51,8 +51,8 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
      * invented it as a way to free Chromium from dependencies on GLX
      * (GLX_OML_sync_control).
      */
-    eglGetSyncValues =
-        (PFNEGLGETSYNCVALUESCHROMIUMPROC)(
+    eglGetSyncValuesCHROMIUM =
+        reinterpret_cast<EglGetSyncValuesCHROMIUM*>(
             strstr(extensions, "EGL_CHROMIUM_sync_control") ?
             eglGetProcAddress("eglGetSyncValuesCHROMIUM") : NULL
             );
@@ -93,9 +93,15 @@ void mgx::DisplayBuffer::swap_buffers()
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
 
     Frame frame;
-    uint64_t sbc;
-    if (eglGetSyncValues)
-        eglGetSyncValues(egl_dpy, egl_surf, &frame.ust, &frame.msc, &sbc);
+    if (eglGetSyncValuesCHROMIUM)
+    {
+        uint64_t ust, msc, sbc;
+        if (eglGetSyncValuesCHROMIUM(egl_dpy, egl_surf, &ust, &msc, &sbc))
+        {
+            frame.ust = ust;
+            frame.msc = msc;
+        }
+    }
 
     std::unique_lock<FrameMutex> lock(frame_mutex);
     if (frame_callback)
