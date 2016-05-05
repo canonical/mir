@@ -39,10 +39,17 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
 {
     set_frame_callback([](Frame const& frame)
     {
-        unsigned long long seq = frame.msc;
-        unsigned long long usec = frame.ust;
-        fprintf(stderr, "TODO - Frame #%llu at %llu.%06llus\n",
-                        seq, usec/1000000ULL, usec%1000000ULL);
+        unsigned long long frame_seq = frame.msc;
+        unsigned long long frame_usec = frame.ust;
+        struct timespec now;
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        unsigned long long now_usec = now.tv_sec*1000000ULL +
+                                      now.tv_nsec/1000;
+        long long age_usec = now_usec - frame_usec;
+        fprintf(stderr, "TODO - Frame #%llu at %llu.%06llus (%lldus ago)\n",
+                        frame_seq,
+                        frame_usec/1000000ULL, frame_usec%1000000ULL,
+                        age_usec);
     });
 
     /*
