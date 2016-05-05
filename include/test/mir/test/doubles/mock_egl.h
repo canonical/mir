@@ -151,6 +151,10 @@ public:
     MOCK_METHOD2(eglDestroySyncKHR, EGLBoolean(EGLDisplay, EGLSyncKHR));
     MOCK_METHOD4(eglClientWaitSyncKHR, EGLint(EGLDisplay, EGLSyncKHR, EGLint, EGLTimeKHR));
 
+    MOCK_METHOD5(eglGetSyncValuesCHROMIUM, EGLBoolean(EGLDisplay, EGLSurface,
+                                                      uint64_t*, uint64_t*,
+                                                      uint64_t*));
+
     EGLDisplay const fake_egl_display;
     EGLConfig const* const fake_configs;
     EGLint const fake_configs_num;

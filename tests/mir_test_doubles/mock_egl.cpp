@@ -49,6 +49,8 @@ void extension_glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image);
 EGLSyncKHR extension_eglCreateSyncKHR(EGLDisplay dpy, EGLenum type, const EGLint *attrib_list);
 EGLBoolean extension_eglDestroySyncKHR(EGLDisplay dpy, EGLSyncKHR sync);
 EGLint extension_eglClientWaitSyncKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLint flags, EGLTimeKHR timeout);
+EGLBoolean extension_eglGetSyncValuesCHROMIUM(EGLDisplay dpy,
+    EGLSurface surface, uint64_t *ust, uint64_t *msc, uint64_t *sbc);
 
 /* EGL{Surface,Display,Config,Context} are all opaque types, so we can put whatever
    we want in them for testing */
@@ -144,6 +146,10 @@ mtd::MockEGL::MockEGL()
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(extension_eglDestroySyncKHR)));
     ON_CALL(*this, eglGetProcAddress(StrEq("eglClientWaitSyncKHR")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(extension_eglClientWaitSyncKHR)));
+    ON_CALL(*this, eglGetProcAddress(StrEq("eglGetSyncValuesCHROMIUM")))
+        .WillByDefault(Return(
+            reinterpret_cast<func_ptr_t>(extension_eglGetSyncValuesCHROMIUM)
+            ));
 }
 
 void mtd::MockEGL::provide_egl_extensions()
@@ -415,4 +421,12 @@ EGLint extension_eglClientWaitSyncKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLint fl
 {
     CHECK_GLOBAL_MOCK(EGLint);
     return global_mock_egl->eglClientWaitSyncKHR(dpy, sync, flags, timeout);
+}
+
+EGLBoolean extension_eglGetSyncValuesCHROMIUM(EGLDisplay dpy,
+              EGLSurface surface, uint64_t *ust, uint64_t *msc, uint64_t *sbc)
+{
+    CHECK_GLOBAL_MOCK(EGLBoolean);
+    return global_mock_egl->eglGetSyncValuesCHROMIUM(dpy, surface,
+                                                     ust, msc, sbc);
 }
