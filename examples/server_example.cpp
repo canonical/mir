@@ -129,9 +129,12 @@ catch (std::exception const& error)
         fwrite(value.c_str(), value.size(), 1, output);
         pclose(output);
     }
+
+    mir::report_exception();
 }
 catch (...)
 {
+    mir::report_exception();
 }
 }
 
