@@ -118,7 +118,9 @@ catch (mir::AbnormalExit const& /*error*/)
 }
 catch (std::exception const& error)
 {
-    char const command[] = "/usr/share/apport/recoverable_problem";
+    char const command_fmt[] = "/usr/share/apport/recoverable_problem --pid %d";
+    char command[sizeof(command_fmt)+32];
+    snprintf(command, sizeof(command), command_fmt, getpid());
     char const options[] = "we";
     char const key[] = "UnhandledException";
     auto const value = boost::diagnostic_information(error);
