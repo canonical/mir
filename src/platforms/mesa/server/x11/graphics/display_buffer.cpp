@@ -48,10 +48,11 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
     auto extensions = eglQueryString(egl_dpy, EGL_EXTENSIONS);
     /*
      * EGL_CHROMIUM_sync_control is not an official standard, but Google
-     * invented it as a way to free Chromium from dependencies on GLX
-     * (GLX_OML_sync_control).
+     * invented it as a way to free Chromium from dependency on GLX
+     * (GLX_OML_sync_control). And Mesa/Intel implemented the backend for it
+     * (EGL on X11 only).
      */
-    eglGetSyncValuesCHROMIUM =
+    eglGetSyncValues =
         reinterpret_cast<EglGetSyncValuesCHROMIUM*>(
             strstr(extensions, "EGL_CHROMIUM_sync_control") ?
             eglGetProcAddress("eglGetSyncValuesCHROMIUM") : NULL
@@ -93,10 +94,10 @@ void mgx::DisplayBuffer::swap_buffers()
         BOOST_THROW_EXCEPTION(mg::egl_error("Cannot swap"));
 
     Frame frame;
-    if (eglGetSyncValuesCHROMIUM)
+    if (eglGetSyncValues)
     {
         uint64_t ust, msc, sbc;
-        if (eglGetSyncValuesCHROMIUM(egl_dpy, egl_surf, &ust, &msc, &sbc))
+        if (eglGetSyncValues(egl_dpy, egl_surf, &ust, &msc, &sbc))
         {
             frame.ust = ust;
             frame.msc = msc;
