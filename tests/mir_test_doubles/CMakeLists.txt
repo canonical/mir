@@ -41,7 +41,7 @@ set(
 
 if (MIR_BUILD_PLATFORM_MESA_X11)
   include_directories(
-    ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
+    ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
     ${DRM_INCLUDE_DIRS}
   )
   list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
@@ -53,7 +53,7 @@ endif()
 
 if (MIR_BUILD_PLATFORM_MESA_KMS)
   include_directories(
-    ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server/common
+    ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
     ${DRM_INCLUDE_DIRS}
     ${GBM_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
