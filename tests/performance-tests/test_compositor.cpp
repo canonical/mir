@@ -198,10 +198,9 @@ struct CompositorPerformance : testing::Test
         char line[256];
         while (fgets(line, sizeof(line), server_output))
         {
-            float fps, render_time;
-            char const* perf = strstr(line, "averaged ");
-            if (perf)
+            if (char const* perf = strstr(line, "averaged "))
             {
+                float fps, render_time;
                 if (2 == sscanf(perf, "averaged %f FPS, %f ms/frame",
                                 &fps, &render_time))
                 {
