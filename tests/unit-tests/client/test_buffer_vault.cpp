@@ -326,6 +326,8 @@ TEST_F(BufferVault, marks_as_submitted_on_transfer)
 
 TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_immediate_response)
 {
+    vault.set_size(new_size);
+
     EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
     EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_))
         .WillOnce(Invoke(
@@ -334,17 +336,17 @@ TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_i
             vault.wire_transfer_inbound(package4.buffer_id());
         }));
 
-    vault.set_size(new_size);
     vault.wire_transfer_inbound(package.buffer_id());
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
 TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_delayed_response)
 {
+    vault.set_size(new_size);
+
     EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
     EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_));
 
-    vault.set_size(new_size);
     vault.wire_transfer_inbound(package.buffer_id());
     vault.wire_transfer_inbound(package4.buffer_id());
     EXPECT_THAT(vault.withdraw().get()->size(), Eq(new_size));
@@ -572,8 +574,6 @@ TEST_F(StartedBufferVault, prefers_buffers_returned_further_in_the_past)
     vault.wire_transfer_inbound(first_id);
 
     EXPECT_THAT(vault.withdraw().get()->rpc_id(), Ne(first_id));
-
-
 }
 
 //LP: #1579076
@@ -585,7 +585,8 @@ TEST_F(StartedBufferVault, doesnt_let_buffers_stagnate_after_resize)
 
     EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_))
         .Times(1);
-
-    auto buffer = vault.withdraw().get();
-    EXPECT_THAT(buffer->size(), Eq(new_size));
+    auto buffer_future = vault.withdraw();
+    vault.wire_transfer_inbound(package4.buffer_id());
+    EXPECT_THAT(buffer_future.get()->size(), Eq(new_size));
+    Mock::VerifyAndClearExpectations(&mock_requests);
 }

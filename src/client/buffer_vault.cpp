@@ -122,7 +122,7 @@ std::shared_ptr<mcl::Buffer> mcl::BufferVault::checked_buffer_from_map(int id)
 
 mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
 {
-    std::lock_guard<std::mutex> lk(mutex);
+    std::unique_lock<std::mutex> lk(mutex);
     if (disconnected_)
         BOOST_THROW_EXCEPTION(std::logic_error("server_disconnected"));
     mcl::NoTLSPromise<std::shared_ptr<mcl::Buffer>> promise;
@@ -146,6 +146,14 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
     else
     {
         promises.emplace_back(std::move(promise));
+
+        lk.unlock();
+        if (current_buffer_count <  needed_buffer_count)
+        {
+            current_buffer_count++;
+            alloc_buffer(size, format, usage);
+        }
+
     }
     return future;
 }
@@ -226,8 +234,29 @@ void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
 //      the incoming messages, we should should consolidate the scale and size functions
 void mcl::BufferVault::set_size(geom::Size sz)
 {
-    std::lock_guard<std::mutex> lk(mutex);
+    std::unique_lock<std::mutex> lk(mutex);
     size = sz;
+
+    std::vector<int> ids;
+    for(auto it = buffers.begin(); it != buffers.end(); )
+    {
+        auto buffer = checked_buffer_from_map(it->first);
+        if ((buffer->size() != size) && (it->second == Owner::Self))
+        {
+            current_buffer_count--;
+            ids.push_back(it->first);
+            it = buffers.erase(it);
+        }
+        else
+        {
+            it++;
+        }
+
+    }
+    lk.unlock();
+
+    for(auto id : ids)
+        free_buffer(id);
 }
 
 void mcl::BufferVault::disconnected()
