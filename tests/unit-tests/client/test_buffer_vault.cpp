@@ -590,3 +590,48 @@ TEST_F(StartedBufferVault, doesnt_let_buffers_stagnate_after_resize)
     EXPECT_THAT(buffer_future.get()->size(), Eq(new_size));
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
+
+TEST_F(StartedBufferVault, doesnt_free_buffers_in_the_driver_after_resize)
+{
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(2);
+    auto buffer = vault.withdraw().get();
+    vault.set_size(new_size);
+    Mock::VerifyAndClearExpectations(&mock_requests);
+
+    vault.deposit(buffer);
+    vault.wire_transfer_outbound(buffer);
+
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(1);
+    vault.wire_transfer_inbound(buffer->rpc_id());
+    Mock::VerifyAndClearExpectations(&mock_requests);
+}
+
+TEST_F(StartedBufferVault, doesnt_free_buffers_with_content_after_resize)
+{
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(2);
+    auto buffer = vault.withdraw().get();
+    vault.deposit(buffer);
+    vault.set_size(new_size);
+    Mock::VerifyAndClearExpectations(&mock_requests);
+
+    vault.wire_transfer_outbound(buffer);
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(1);
+    vault.wire_transfer_inbound(buffer->rpc_id());
+    Mock::VerifyAndClearExpectations(&mock_requests);
+}
+
+TEST_F(StartedBufferVault, doesnt_free_buffers_if_size_is_the_same)
+{
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(0);
+    vault.set_size(size);
+    Mock::VerifyAndClearExpectations(&mock_requests);
+}
+
+TEST_F(StartedBufferVault, delays_allocation_if_not_needed)
+{
+}

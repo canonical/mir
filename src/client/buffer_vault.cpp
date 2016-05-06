@@ -147,13 +147,14 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
     {
         promises.emplace_back(std::move(promise));
 
-        lk.unlock();
-        if (current_buffer_count <  needed_buffer_count)
-        {
+        auto s = size;
+        bool allocate_buffer = (current_buffer_count <  needed_buffer_count);
+        if (allocate_buffer)
             current_buffer_count++;
-            alloc_buffer(size, format, usage);
-        }
+        lk.unlock();
 
+        if (allocate_buffer)
+            alloc_buffer(s, format, usage);
     }
     return future;
 }
