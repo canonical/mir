@@ -16,3 +16,10 @@ target_link_libraries(mir_glmark2_performance_test
   mirserver
   ${GTEST_BOTH_LIBRARIES}
 )
+
+mir_add_wrapped_executable(mir_compositor_performance_test
+  test_compositor.cpp
+)
+target_link_libraries(mir_compositor_performance_test
+  ${GTEST_BOTH_LIBRARIES}
+)
