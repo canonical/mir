@@ -18,6 +18,7 @@
 
 #include "mir/graphics/egl_error.h"
 #include <sstream>
+#include <EGL/eglext.h>
 
 namespace
 {
@@ -54,6 +55,9 @@ struct egl_category : std::error_category
             CASE_FOR_ERROR(EGL_BAD_PARAMETER)
             CASE_FOR_ERROR(EGL_BAD_SURFACE)
             CASE_FOR_ERROR(EGL_CONTEXT_LOST)
+            CASE_FOR_ERROR(EGL_BAD_DEVICE_EXT)
+            CASE_FOR_ERROR(EGL_BAD_STREAM_KHR)
+            CASE_FOR_ERROR(EGL_BAD_STATE_KHR)
 
             default:
                 return "Unknown error (" + to_hex_string(ev) + ")";
