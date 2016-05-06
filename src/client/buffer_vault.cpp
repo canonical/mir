@@ -149,7 +149,6 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
 
         auto s = size;
         bool allocate_buffer = (current_buffer_count <  needed_buffer_count);
-        
         if (allocate_buffer)
             current_buffer_count++;
         lk.unlock();
@@ -208,12 +207,12 @@ void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
         {
             auto id = it->first;
             buffers.erase(it);
+            if (should_decrease_count)
+                current_buffer_count--;
             lk.unlock();
 
             free_buffer(id);
-            if (should_decrease_count)
-                current_buffer_count--;
-            else
+            if (!should_decrease_count)
                 alloc_buffer(size, format, usage);
             return;
         }

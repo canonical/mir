@@ -624,3 +624,38 @@ TEST_F(StartedBufferVault, doesnt_free_buffers_if_size_is_the_same)
     vault.set_size(size);
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
+
+TEST_F(StartedBufferVault, delays_allocation_if_not_needed)
+{
+    vault.set_size(new_size);
+
+    EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_))
+        .Times(1)
+        .WillOnce(Invoke(
+        [&, this](geom::Size, MirPixelFormat, int)
+        {
+            vault.wire_transfer_inbound(package4.buffer_id());
+        }));
+
+    for(auto i = 0u; i < 10u; i++)
+    {
+        auto buffer = vault.withdraw().get();
+        vault.deposit(buffer);
+        buffer->received();
+        vault.wire_transfer_outbound(buffer);
+        vault.wire_transfer_inbound(buffer->rpc_id());
+    }
+}
+
+TEST_F(StartedBufferVault, can_increase_count_after_resize)
+{
+    auto num_allocations = 4u;
+    EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
+        .Times(num_allocations);
+
+    vault.increase_buffer_count();
+    vault.set_size(new_size);
+
+    for(auto i = 0u; i < num_allocations + 1; i++)
+        vault.withdraw();
+}
