@@ -161,11 +161,9 @@ bool wait_for_file(char const* path, std::chrono::seconds timeout)
 TEST(CompositorPerformance, stuff)
 {
     auto const bin_dir = mir_bin_dir();
-    printf("Mir bin dir {%s}\n", bin_dir.c_str());
-    auto const mir_sock = "/tmp/mir_socket_"+std::to_string(getpid());
-    auto const server_cmd = bin_dir+"/mir_demo_server "
-                          + "--compositor-report=log "
-                          + "-f " + mir_sock;
+    auto const mir_sock = "/tmp/mir_test_socket_"+std::to_string(getpid());
+    auto const server_cmd =
+        bin_dir+"/mir_demo_server --compositor-report=log -f "+mir_sock;
 
     auto server_output = popen_with_timeout(server_cmd.c_str(),
                                             std::chrono::seconds(5));
@@ -173,12 +171,36 @@ TEST(CompositorPerformance, stuff)
     ASSERT_TRUE(wait_for_file(mir_sock.c_str(), std::chrono::seconds(5)));
 
     setenv("MIR_SOCKET", mir_sock.c_str(), 1);
-    spawn_and_forget(bin_dir+"/mir_demo_client_egltriangle");
 
+    for (auto& client : { "mir_demo_client_flicker",
+                          "mir_demo_client_egltriangle -b0.5 -f",
+                          "mir_demo_client_progressbar",
+                          "mir_demo_client_scroll",
+                          "mir_demo_client_egltriangle -b0.5",
+                          "mir_demo_client_multiwin" })
+    {
+        spawn_and_forget(bin_dir+"/"+client);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+
+    float final_fps=-1.0f, final_render=-1.0f;
     char line[256];
     while (fgets(line, sizeof(line), server_output))
     {
+        float fps, render_time;
+        char const* perf = strstr(line, "averaged ");
+        if (perf)
+        {
+            if (2 == sscanf(perf, "averaged %f FPS, %f ms/frame",
+                            &fps, &render_time))
+            {
+                final_fps = fps;
+                final_render = render_time;
+            }
+        }
     }
-    printf("Server output ended.\n");
     fclose(server_output);
+
+    EXPECT_GE(final_fps, 58.0f);
+    EXPECT_LT(final_render, 17.0f);
 }
