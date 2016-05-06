@@ -361,9 +361,9 @@ TEST_F(StartedBufferVault, withdraw_gives_only_newly_sized_buffers_after_resize)
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
-TEST_F(StartedBufferVault, simply_setting_size_triggers_no_server_interations)
+TEST_F(StartedBufferVault, setting_size_frees_unneeded_buffers_right_away)
 {
-    EXPECT_CALL(mock_requests, free_buffer(_)).Times(0);
+    EXPECT_CALL(mock_requests, free_buffer(_)).Times(3);
     EXPECT_CALL(mock_requests, allocate_buffer(_,_,_)).Times(0);
     auto const cycles = 30u;
     geom::Size new_size(80, 100);
@@ -574,4 +574,18 @@ TEST_F(StartedBufferVault, prefers_buffers_returned_further_in_the_past)
     EXPECT_THAT(vault.withdraw().get()->rpc_id(), Ne(first_id));
 
 
+}
+
+//LP: #1579076
+TEST_F(StartedBufferVault, doesnt_let_buffers_stagnate_after_resize)
+{
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(3);
+    vault.set_size(new_size);
+
+    EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_))
+        .Times(1);
+
+    auto buffer = vault.withdraw().get();
+    EXPECT_THAT(buffer->size(), Eq(new_size));
 }
