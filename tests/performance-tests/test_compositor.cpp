@@ -177,12 +177,6 @@ struct CompositorPerformance : testing::Test
         fclose(server_output);
     }
 
-    struct CompositorReport
-    {
-        float fps = -1.0f;
-        float render_time = -1.0f;
-    };
-
     void spawn_clients(std::initializer_list<std::string> clients)
     {
         for (auto& client : clients)
@@ -191,6 +185,12 @@ struct CompositorPerformance : testing::Test
             std::this_thread::sleep_for(100ms);
         }
     }
+
+    struct CompositorReport
+    {
+        float fps = -1.0f;
+        float render_time = -1.0f;
+    };
 
     CompositorReport wait_for_compositor_report() const
     {
