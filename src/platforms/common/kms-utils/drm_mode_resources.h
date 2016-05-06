@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_DRM_MODE_RESOURCES_H_
-#define MIR_GRAPHICS_MESA_DRM_MODE_RESOURCES_H_
+#ifndef MIR_GRAPHICS_COMMON_KMS_UTILS_DRM_MODE_RESOURCES_H_
+#define MIR_GRAPHICS_COMMON_KMS_UTILS_DRM_MODE_RESOURCES_H_
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -63,4 +63,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_MESA_DRM_MODE_RESOURCES_H_ */
+#endif /* MIR_GRAPHICS_COMMON_KMS_UTILS_DRM_MODE_RESOURCES_H_ */
