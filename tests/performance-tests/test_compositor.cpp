@@ -23,6 +23,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <string>
+#include <initializer_list>
 
 using namespace std::literals::chrono_literals;
 
@@ -153,8 +154,8 @@ struct CompositorPerformance : testing::Test
             bin_dir+"/mir_demo_server --compositor-report=log -f "+mir_sock;
     
         server_output = popen_with_pid(server_cmd.c_str(), server_pid);
-        ASSERT_TRUE(server_output);
-        ASSERT_TRUE(wait_for_file(mir_sock.c_str(), 5s));
+        ASSERT_TRUE(server_output) << server_cmd;
+        ASSERT_TRUE(wait_for_file(mir_sock.c_str(), 5s)) << server_cmd;
         setenv("MIR_SOCKET", mir_sock.c_str(), 1);
     }
 
