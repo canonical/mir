@@ -20,6 +20,23 @@
 #include <sstream>
 #include <EGL/eglext.h>
 
+/*
+ * The version of eglext in vivid-overlay is too old to contain these
+ * defines, so provide them if missing
+ */
+#ifndef EGL_BAD_DEVICE_EXT
+#define EGL_BAD_DEVICE_EXT 0x322B
+#endif
+
+#ifndef EGL_BAD_STREAM_KHR
+#define EGL_BAD_STREAM_KHR 0x321B
+#endif
+
+#ifndef EGL_BAD_STATE_KHR
+#define EGL_BAD_STATE_KHR 0x321C
+#endif
+
+
 namespace
 {
 
