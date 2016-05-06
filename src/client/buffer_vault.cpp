@@ -149,6 +149,7 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
 
         auto s = size;
         bool allocate_buffer = (current_buffer_count <  needed_buffer_count);
+        
         if (allocate_buffer)
             current_buffer_count++;
         lk.unlock();
@@ -230,36 +231,6 @@ void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
     }
 }
 
-//TODO: the server will currently spam us with a lot of resize messages at once,
-//      and we want to delay the IPC transactions for resize. If we could rate-limit
-//      the incoming messages, we should should consolidate the scale and size functions
-void mcl::BufferVault::set_size(geom::Size sz)
-{
-    std::unique_lock<std::mutex> lk(mutex);
-    size = sz;
-
-    std::vector<int> ids;
-    for(auto it = buffers.begin(); it != buffers.end(); )
-    {
-        auto buffer = checked_buffer_from_map(it->first);
-        if ((buffer->size() != size) && (it->second == Owner::Self))
-        {
-            current_buffer_count--;
-            ids.push_back(it->first);
-            it = buffers.erase(it);
-        }
-        else
-        {
-            it++;
-        }
-
-    }
-    lk.unlock();
-
-    for(auto id : ids)
-        free_buffer(id);
-}
-
 void mcl::BufferVault::disconnected()
 {
     std::lock_guard<std::mutex> lk(mutex);
@@ -269,17 +240,28 @@ void mcl::BufferVault::disconnected()
 
 void mcl::BufferVault::set_scale(float scale)
 {
-    std::vector<int> free_ids;
     std::unique_lock<std::mutex> lk(mutex);
-    auto new_size = size * scale;
+    set_size(lk, size * scale);
+}
+
+void mcl::BufferVault::set_size(geom::Size new_size)
+{
+    std::unique_lock<std::mutex> lk(mutex);
+    set_size(lk, new_size);
+}
+
+void mcl::BufferVault::set_size(std::unique_lock<std::mutex>& lk, geometry::Size new_size)
+{
     if (new_size == size)
         return;
+    std::vector<int> free_ids;
     size = new_size;
     for (auto it = buffers.begin(); it != buffers.end();)
     {
         auto buffer = checked_buffer_from_map(it->first);
         if ((it->second == Owner::Self) && (buffer->size() != size)) 
         {
+            current_buffer_count--;
             free_ids.push_back(it->first);
             it = buffers.erase(it);
         }
@@ -291,7 +273,7 @@ void mcl::BufferVault::set_scale(float scale)
     lk.unlock();
 
     for(auto& id : free_ids)
-        realloc_buffer(id, new_size, format, usage);
+        free_buffer(id);
 }
 
 void mcl::BufferVault::increase_buffer_count()

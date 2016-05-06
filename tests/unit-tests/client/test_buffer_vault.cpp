@@ -452,21 +452,14 @@ TEST_F(StartedBufferVault, buffer_count_remains_the_same_after_scaling)
     EXPECT_CALL(mock_requests, free_buffer(_))
         .Times(initial_nbuffers);
 
-    auto buffer = vault.withdraw().get();
     vault.set_scale(scale);
-    vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
-    vault.wire_transfer_inbound(package.buffer_id());
 
-    for(auto i = 0; i < 100; i++)
+    for(auto i = 0u; i < initial_nbuffers; i++)
     {
         auto b = vault.withdraw().get();
-        EXPECT_THAT(b->size(), Eq(new_size));
         vault.deposit(b);
-        b->received();
-        vault.wire_transfer_outbound(b);
-        vault.wire_transfer_inbound(buffers[(i+1)%3].buffer_id());
     }
+
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
@@ -630,8 +623,4 @@ TEST_F(StartedBufferVault, doesnt_free_buffers_if_size_is_the_same)
         .Times(0);
     vault.set_size(size);
     Mock::VerifyAndClearExpectations(&mock_requests);
-}
-
-TEST_F(StartedBufferVault, delays_allocation_if_not_needed)
-{
 }
