@@ -156,22 +156,34 @@ bool wait_for_file(char const* path, std::chrono::seconds timeout)
     return ret == 0;
 }
 
+struct CompositorPerformance : testing::Test
+{
+    void SetUp() override
+    {
+        auto const mir_sock = "/tmp/mir_test_socket_"+std::to_string(getpid());
+        auto const server_cmd =
+            bin_dir+"/mir_demo_server --compositor-report=log -f "+mir_sock;
+    
+        server_output = popen_with_timeout(server_cmd.c_str(),
+                                                std::chrono::seconds(5));
+        ASSERT_TRUE(server_output);
+        ASSERT_TRUE(wait_for_file(mir_sock.c_str(), std::chrono::seconds(5)));
+        setenv("MIR_SOCKET", mir_sock.c_str(), 1);
+    }
+
+    void TearDown() override
+    {
+        fclose(server_output);
+    }
+
+    std::string const bin_dir{mir_bin_dir()};
+    FILE* server_output;
+};
+
 } // anonymous namespace
 
-TEST(CompositorPerformance, stuff)
+TEST_F(CompositorPerformance, regression_test_1563287)
 {
-    auto const bin_dir = mir_bin_dir();
-    auto const mir_sock = "/tmp/mir_test_socket_"+std::to_string(getpid());
-    auto const server_cmd =
-        bin_dir+"/mir_demo_server --compositor-report=log -f "+mir_sock;
-
-    auto server_output = popen_with_timeout(server_cmd.c_str(),
-                                            std::chrono::seconds(5));
-    ASSERT_TRUE(server_output);
-    ASSERT_TRUE(wait_for_file(mir_sock.c_str(), std::chrono::seconds(5)));
-
-    setenv("MIR_SOCKET", mir_sock.c_str(), 1);
-
     for (auto& client : { "mir_demo_client_flicker",
                           "mir_demo_client_egltriangle -b0.5 -f",
                           "mir_demo_client_progressbar",
@@ -199,7 +211,6 @@ TEST(CompositorPerformance, stuff)
             }
         }
     }
-    fclose(server_output);
 
     EXPECT_GE(final_fps, 58.0f);
     EXPECT_LT(final_render, 17.0f);
