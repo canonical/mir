@@ -110,22 +110,6 @@ FILE* popen_with_pid(char const* cmd, pid_t& pid)
     return fdopen(pipe_out, "r");
 }
 
-FILE* popen_with_timeout(char const* cmd, std::chrono::seconds timeout)
-{
-   pid_t pid;
-   FILE* out = popen_with_pid(cmd, pid);
-   if (out)
-   {
-       std::thread killer([timeout,pid]()
-       {
-           std::this_thread::sleep_for(timeout);
-           kill_nicely(pid);
-       });
-       killer.detach();
-   }
-   return out;
-}
-
 bool spawn_and_forget(char const* cmd)
 {
     int pid = fork();
@@ -162,11 +146,13 @@ struct CompositorPerformance : testing::Test
 {
     void SetUp() override
     {
+        compositor_fps = compositor_render_time = -1.0f;
+
         auto const mir_sock = "/tmp/mir_test_socket_"+std::to_string(getpid());
         auto const server_cmd =
             bin_dir+"/mir_demo_server --compositor-report=log -f "+mir_sock;
     
-        server_output = popen_with_timeout(server_cmd.c_str(), 10s);
+        server_output = popen_with_pid(server_cmd.c_str(), server_pid);
         ASSERT_TRUE(server_output);
         ASSERT_TRUE(wait_for_file(mir_sock.c_str(), 5s));
         setenv("MIR_SOCKET", mir_sock.c_str(), 1);
@@ -174,6 +160,7 @@ struct CompositorPerformance : testing::Test
 
     void TearDown() override
     {
+        kill_nicely(server_pid);
         fclose(server_output);
     }
 
@@ -186,15 +173,16 @@ struct CompositorPerformance : testing::Test
         }
     }
 
-    struct CompositorReport
+    void wait_for_server(std::chrono::seconds timeout)
     {
-        float fps = -1.0f;
-        float render_time = -1.0f;
-    };
+        pid_t pid = server_pid;
+        std::thread killer([timeout,pid]()
+        {
+            std::this_thread::sleep_for(timeout);
+            kill_nicely(pid);
+        });
+        killer.detach();
 
-    CompositorReport wait_for_compositor_report() const
-    {
-        CompositorReport rep;
         char line[256];
         while (fgets(line, sizeof(line), server_output))
         {
@@ -204,16 +192,17 @@ struct CompositorPerformance : testing::Test
                 if (2 == sscanf(perf, "averaged %f FPS, %f ms/frame",
                                 &fps, &render_time))
                 {
-                    rep.fps = fps;
-                    rep.render_time = render_time;
+                    compositor_fps = fps;
+                    compositor_render_time = render_time;
                 }
             }
         }
-        return rep;
     }
 
     std::string const bin_dir{mir_bin_dir()};
+    pid_t server_pid = 0;
     FILE* server_output;
+    float compositor_fps, compositor_render_time;
 };
 
 } // anonymous namespace
@@ -226,7 +215,7 @@ TEST_F(CompositorPerformance, regression_test_1563287)
                    "mir_demo_client_scroll",
                    "mir_demo_client_egltriangle -b0.5",
                    "mir_demo_client_multiwin"});
-    auto report = wait_for_compositor_report();
-    EXPECT_GE(report.fps, 58.0f);
-    EXPECT_LT(report.render_time, 17.0f);
+    wait_for_server(10s);
+    EXPECT_GE(compositor_fps, 58.0f);
+    EXPECT_LT(compositor_render_time, 17.0f);
 }
