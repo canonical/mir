@@ -18,116 +18,15 @@
 
 #include "real_kms_output.h"
 #include "page_flipper.h"
+#include "kms_connector.h"
 #include "mir/fatal.h"
 #include "mir/log.h"
 #include <string.h> // strcmp
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
+namespace mgk = mg::kms;
 namespace geom = mir::geometry;
-
-namespace
-{
-
-bool encoder_is_used(mgm::DRMModeResources const& resources, uint32_t encoder_id)
-{
-    bool encoder_used{false};
-
-    resources.for_each_connector([&](mgm::DRMModeConnectorUPtr connector)
-    {
-        if (connector->encoder_id == encoder_id &&
-            connector->connection == DRM_MODE_CONNECTED)
-        {
-            auto encoder = resources.encoder(connector->encoder_id);
-            if (encoder)
-            {
-                auto crtc = resources.crtc(encoder->crtc_id);
-                if (crtc)
-                    encoder_used = true;
-            }
-        }
-    });
-
-    return encoder_used;
-}
-
-bool crtc_is_used(mgm::DRMModeResources const& resources, uint32_t crtc_id)
-{
-    bool crtc_used{false};
-
-    resources.for_each_connector([&](mgm::DRMModeConnectorUPtr connector)
-    {
-        if (connector->connection == DRM_MODE_CONNECTED)
-        {
-            auto encoder = resources.encoder(connector->encoder_id);
-            if (encoder)
-            {
-                if (encoder->crtc_id == crtc_id)
-                    crtc_used = true;
-            }
-        }
-    });
-
-    return crtc_used;
-}
-
-std::vector<mgm::DRMModeEncoderUPtr>
-connector_available_encoders(mgm::DRMModeResources const& resources,
-                             drmModeConnector const* connector)
-{
-    std::vector<mgm::DRMModeEncoderUPtr> encoders;
-
-    for (int i = 0; i < connector->count_encoders; i++)
-    {
-        if (!encoder_is_used(resources, connector->encoders[i]))
-            encoders.push_back(resources.encoder(connector->encoders[i]));
-    }
-
-    return encoders;
-}
-
-bool encoder_supports_crtc_index(drmModeEncoder const* encoder, uint32_t crtc_index)
-{
-    return (encoder->possible_crtcs & (1 << crtc_index));
-}
-
-const char *connector_type_name(uint32_t type)
-{
-    static const int nnames = 15;
-    static const char * const names[nnames] =
-    {   // Ordered according to xf86drmMode.h
-        "Unknown",
-        "VGA",
-        "DVII",
-        "DVID",
-        "DVIA",
-        "Composite",
-        "SVIDEO",
-        "LVDS",
-        "Component",
-        "9PinDIN",
-        "DisplayPort",
-        "HDMIA",
-        "HDMIB",
-        "TV",
-        "eDP"
-    };
-
-    if (type >= nnames)
-        type = 0;
-
-    return names[type];
-}
-
-std::string connector_name(const drmModeConnector *conn)
-{
-    std::string name = connector_type_name(conn->connector_type);
-    name += '-';
-    name += std::to_string(conn->connector_type_id);
-    return name;
-}
-
-}
 
 mgm::RealKMSOutput::RealKMSOutput(int drm_fd, uint32_t connector_id,
                                   std::shared_ptr<PageFlipper> const& page_flipper)
@@ -208,7 +107,7 @@ bool mgm::RealKMSOutput::set_crtc(uint32_t fb_id)
     if (!ensure_crtc())
     {
         fatal_error("Output %s has no associated CRTC to set a framebuffer on",
-                    connector_name(connector.get()).c_str());
+                    mgk::connector_name(connector).c_str());
     }
 
     auto ret = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
@@ -227,21 +126,27 @@ bool mgm::RealKMSOutput::set_crtc(uint32_t fb_id)
 
 void mgm::RealKMSOutput::clear_crtc()
 {
-    /*
-     * In order to actually clear the output, we need to have a crtc
-     * connected to the output/connector so that we can disconnect
-     * it. However, not being able to get a crtc is OK, since it means
-     * that the output cannot be displaying anything anyway.
-     */
-    if (!ensure_crtc())
+    try
+    {
+        ensure_crtc();
+    }
+    catch (...)
+    {
+        /*
+         * In order to actually clear the output, we need to have a crtc
+         * connected to the output/connector so that we can disconnect
+         * it. However, not being able to get a crtc is OK, since it means
+         * that the output cannot be displaying anything anyway.
+         */
         return;
+    }
 
     auto result = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
                                  0, 0, 0, nullptr, 0, nullptr);
     if (result)
     {
         fatal_error("Couldn't clear output %s (drmModeSetCrtc = %d)",
-                   connector_name(connector.get()).c_str(), result);
+                   mgk::connector_name(connector).c_str(), result);
     }
 
     current_crtc = nullptr;
@@ -255,7 +160,7 @@ bool mgm::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
     if (!current_crtc)
     {
         fatal_error("Output %s has no associated CRTC to schedule page flips on",
-                   connector_name(connector.get()).c_str());
+                   mgk::connector_name(connector).c_str());
     }
     return page_flipper->schedule_flip(current_crtc->crtc_id, fb_id);
 }
@@ -268,7 +173,7 @@ void mgm::RealKMSOutput::wait_for_page_flip()
     if (!current_crtc)
     {
         fatal_error("Output %s has no associated CRTC to wait on",
-                   connector_name(connector.get()).c_str());
+                   mgk::connector_name(connector).c_str());
     }
     page_flipper->wait_for_flip(current_crtc->crtc_id);
 }
@@ -334,37 +239,8 @@ bool mgm::RealKMSOutput::ensure_crtc()
     if (connector->connection != DRM_MODE_CONNECTED)
         return false;
 
-    DRMModeResources resources{drm_fd};
+    current_crtc = mgk::find_crtc_for_connector(drm_fd, connector);
 
-    /* Check to see if there is a crtc already connected */
-    auto encoder = resources.encoder(connector->encoder_id);
-    if (encoder)
-        current_crtc = resources.crtc(encoder->crtc_id);
-
-    /* If we don't have a current crtc, try to find one */
-    if (!current_crtc)
-    {
-        auto available_encoders = connector_available_encoders(resources, connector.get());
-
-        int crtc_index = 0;
-
-        resources.for_each_crtc([&](DRMModeCrtcUPtr crtc)
-        {
-            if (!current_crtc && !crtc_is_used(resources, crtc->crtc_id))
-            {
-                for (auto& enc : available_encoders)
-                {
-                    if (encoder_supports_crtc_index(enc.get(), crtc_index))
-                    {
-                        current_crtc = std::move(crtc);
-                        break;
-                    }
-                }
-            }
-
-            crtc_index++;
-        });
-    }
 
     return (current_crtc != nullptr);
 }
