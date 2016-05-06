@@ -27,12 +27,15 @@
 #include "server_example_cursor_images.h"
 #include "server_example_input_device_config.h"
 
+#include "mir/abnormal_exit.h"
 #include "mir/server.h"
 #include "mir/main_loop.h"
 #include "mir/fd.h"
 
 #include "mir/report_exception.h"
 #include "mir/options/option.h"
+
+#include <boost/exception/diagnostic_information.hpp>
 
 #include <chrono>
 #include <cstdlib>
@@ -104,6 +107,37 @@ void add_timeout_option_to(mir::Server& server)
         }
     });
 }
+
+void exception_handler()
+try
+{
+    throw;
+}
+catch (mir::AbnormalExit const& /*error*/)
+{
+}
+catch (std::exception const& error)
+{
+    char const command_fmt[] = "/usr/share/apport/recoverable_problem --pid %d";
+    char command[sizeof(command_fmt)+32];
+    snprintf(command, sizeof(command), command_fmt, getpid());
+    char const options[] = "we";
+    char const key[] = "UnhandledException";
+    auto const value = boost::diagnostic_information(error);
+
+    if (auto const output = popen(command, options))
+    {
+        fwrite(key, sizeof(key), 1, output);            // the null terminator is used intentionally as a separator
+        fwrite(value.c_str(), value.size(), 1, output);
+        pclose(output);
+    }
+
+    mir::report_exception();
+}
+catch (...)
+{
+    mir::report_exception();
+}
 }
 
 int main(int argc, char const* argv[])
@@ -124,6 +158,8 @@ try
     add_launcher_option_to(server);
     add_timeout_option_to(server);
     me::add_x_cursor_images(server);
+
+    server.set_exception_handler(exception_handler);
 
     me::ClientContext context;
     me::add_test_client_option_to(server, context);
