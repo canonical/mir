@@ -554,3 +554,24 @@ TEST_F(StartedBufferVault, delayed_decrease_allocation_count)
     vault.wire_transfer_inbound(package2.buffer_id());
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
+
+//LP: #1578159
+TEST_F(StartedBufferVault, prefers_buffers_returned_further_in_the_past)
+{
+    auto buffer = vault.withdraw().get();
+    vault.deposit(buffer);
+    vault.wire_transfer_outbound(buffer);
+    auto first_id = buffer->rpc_id();
+
+    buffer = vault.withdraw().get();
+    vault.deposit(buffer);
+    vault.wire_transfer_outbound(buffer);
+    auto second_id = buffer->rpc_id();
+
+    vault.wire_transfer_inbound(second_id);
+    vault.wire_transfer_inbound(first_id);
+
+    EXPECT_THAT(vault.withdraw().get()->rpc_id(), Ne(first_id));
+
+
+}
