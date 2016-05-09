@@ -16,13 +16,13 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir_test_framework/async_server_runner.h"
 #include <gtest/gtest.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <unistd.h>
 #include <string>
+#include <thread>
 #include <initializer_list>
 
 using namespace std::literals::chrono_literals;
