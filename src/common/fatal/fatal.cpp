@@ -55,4 +55,4 @@ void mir::fatal_error_except(char const* reason, ...)
     BOOST_THROW_EXCEPTION(std::runtime_error(buffer));
 }
 
-void (*mir::fatal_error)(char const* reason, ...){&mir::fatal_error_except};
+void (*mir::fatal_error)(char const* reason, ...){&mir::fatal_error_abort};

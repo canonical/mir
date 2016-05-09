@@ -275,7 +275,7 @@ void mf::SessionMediator::create_surface(
 
     #define COPY_IF_SET(field)\
         if (request->has_##field())\
-            params.field = decltype(params.field.value())(request->field())
+            params.field = std::remove_reference<decltype(params.field.value())>::type(request->field())
 
     COPY_IF_SET(min_width);
     COPY_IF_SET(min_height);
@@ -595,7 +595,7 @@ void mf::SessionMediator::modify_surface(
 
 #define COPY_IF_SET(name)\
     if (surface_specification.has_##name())\
-    mods.name = decltype(mods.name.value())(surface_specification.name())
+    mods.name = std::remove_reference<decltype(mods.name.value())>::type(surface_specification.name())
 
     COPY_IF_SET(width);
     COPY_IF_SET(height);
