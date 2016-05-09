@@ -39,7 +39,14 @@ public:
     }
 
     bool is_set() const { return is_set_; }
-    T value() const
+
+    T const& value() const
+    {
+        die_if_unset();
+        return value_;
+    }
+
+    T& value()
     {
         die_if_unset();
         return value_;
