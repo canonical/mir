@@ -1,5 +1,6 @@
-mir (0.23.0) UNRELEASED; urgency=medium
+mir (0.23.0ubuntu1) UNRELEASED; urgency=medium
 
+  [ Kevin DuBois ]
   * New upstream release 0.23.0 (https://launchpad.net/mir/+milestone/0.23.0)
     - ABI summary:
       . mirclient ABI unchanged at 9
@@ -11,15 +12,25 @@ mir (0.23.0) UNRELEASED; urgency=medium
       . mirclientplatform ABI unchanged at 5
       . mirinputplatform ABI unchanged at 5
     - Enhancements:
+      . Enable internal usage of more flexible graphics buffer submission,
+        precursing mirclient api additions. 
     - Bug fixes:
+      . Potential NBS performance loss after resize (LP: #1579076)
+      . Performance loss with NBS and overlays on (LP: #1578159)
       . Mir crashes with useless backtrace when mg::Platform methods throw
         (LP: #1553549)
       . Virtual output is not removed when screencast client disappears
         (LP: #1573572)
-      . Virtual display output configuration is set to LVDS Edit (LP: #1573782)
-      . Resizing can crash mir_demo_server (LP: #1575211)
+      . Can't VT switch from mir_demo_server (any more) (LP: #1576260)
+      . mir_demo_server(_minimal): Window movement/resizing stops responding
+        when the cursor leaves the surface, and can lead to windows 1px wide
+        and unrecoverable. (LP: #1447886)
+      . Virtual display output configuration is set to LVDS (LP: #1573782)
+      . Mir-on-X11 doesn't pass Alt+primary button drag to Mir (LP: #1575765)
+      . Mir-on-X11 breaks mir_proving_server resize logic (LP: #1575192)
+      . Resizing can crash mir_demo_server (LP: #1575211) 
 
- -- Alberto Aguirre <alberto.aguirre@canonical.com>  Thu, 28 Apr 2016 09:24:21 -0500
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 09 May 2016 11:59:42 -0400
 
 mir (0.22.0+16.04.20160422.2-0ubuntu1) xenial; urgency=medium
 
