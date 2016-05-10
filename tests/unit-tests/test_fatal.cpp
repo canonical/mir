@@ -45,6 +45,8 @@ TEST(FatalErrorDeathTest, abort_raises_sigabrt)
 
 TEST(FatalErrorTest, throw_formats_message_to_what)
 {
+    mir::FatalErrorStrategy on_error{mir::fatal_error_except};
+
     EXPECT_THROW(
         mir::fatal_error("%s had %d %s %s", "Mary", 1, "little", "lamb"),
         std::runtime_error);
