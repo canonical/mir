@@ -138,3 +138,8 @@ void mcl::Buffer::increment_age()
 {
     buffer->increment_age();
 }
+
+void mcl::Buffer::set_callback(mir_buffer_callback cb, void* context)
+{
+    (void)cb;(void)context;
+}

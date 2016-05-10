@@ -62,6 +62,7 @@ public:
     MirConnection* allocating_connection() const;
 
     void increment_age();
+    void set_callback(mir_buffer_callback cb, void* context);
 private:
     mir_buffer_callback cb;
     void* cb_context;

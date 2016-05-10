@@ -177,6 +177,25 @@ TEST_F(MirBufferTest, callback_called_when_available_from_server_return)
     EXPECT_THAT(call_count, Eq(1));
 }
 
+TEST_F(MirBufferTest, callback_called_after_change_when_available_from_creation)
+{
+    int call_count = 0;
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
+    buffer.set_callback(cb, &call_count); 
+    buffer.received();
+    EXPECT_THAT(call_count, Eq(1));
+}
+
+TEST_F(MirBufferTest, callback_called_after_change_when_available_from_server_return)
+{
+    int call_count = 0;
+    mcl::Buffer buffer(cb, nullptr, buffer_id, mock_client_buffer, nullptr, usage);
+    buffer.set_callback(cb, &call_count); 
+    buffer.received(update_message);
+    EXPECT_THAT(call_count, Eq(1));
+}
+
+
 TEST_F(MirBufferTest, updates_package_when_server_returns)
 {
     EXPECT_CALL(*mock_client_buffer, update_from(Ref(update_message)));
