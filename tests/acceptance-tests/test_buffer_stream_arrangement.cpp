@@ -290,3 +290,24 @@ TEST_F(BufferStreamArrangement, surfaces_can_start_with_non_default_stream)
     EXPECT_THAT(mir_surface_get_error_message(surface), StrEq(""));
 }
 
+TEST_F(BufferStreamArrangement, when_non_default_streams_are_set_surface_get_stream_gives_null)
+{
+    using namespace testing;
+    EXPECT_TRUE(mir_buffer_stream_is_valid(mir_surface_get_buffer_stream(surface)));
+
+    std::vector<MirBufferStreamInfo> infos(streams.size());
+    auto i = 0u;
+    for (auto const& stream : streams)
+    {
+        infos[i++] = MirBufferStreamInfo{
+            stream->handle(),
+            stream->position().x.as_int(),
+            stream->position().y.as_int()};
+    }
+    auto change_spec = mir_connection_create_spec_for_changes(connection);
+    mir_surface_spec_set_streams(change_spec, infos.data(), infos.size());
+    mir_surface_apply_spec(surface, change_spec);
+    mir_surface_spec_release(change_spec);
+
+    EXPECT_THAT(mir_surface_get_buffer_stream(surface), Eq(nullptr));
+}

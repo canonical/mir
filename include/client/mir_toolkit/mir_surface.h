@@ -538,7 +538,11 @@ void mir_surface_set_event_handler(MirSurface *surface,
 /**
  * Retrieve the primary MirBufferStream associated with a surface (to advance buffers,
  * obtain EGLNativeWindow, etc...)
- * 
+ *
+ *   \warning If the surface was created with, or modified to have a
+ *            MirSurfaceSpec containing streams added through
+ *            mir_surface_spec_set_streams(), the default stream will
+ *            be removed, and this function will return NULL.
  *   \param[in] surface The surface
  */
 MirBufferStream* mir_surface_get_buffer_stream(MirSurface *surface);
@@ -618,9 +622,13 @@ MirWaitHandle* mir_surface_set_state(MirSurface *surface,
 MirSurfaceState mir_surface_get_state(MirSurface *surface);
 
 /**
- * Set the swapinterval for mir_surface_swap_buffers. EGL users should use
- * eglSwapInterval directly.
- * At the time being, only swapinterval of 0 or 1 is supported.
+ * Set the swapinterval for the default stream.
+ *   \warning EGL users should use eglSwapInterval directly.
+ *   \warning Only swapinterval of 0 or 1 is supported.
+ *   \warning If the surface was created with, or modified to have a
+ *            MirSurfaceSpec containing streams added through
+ *            mir_surface_spec_set_streams(), the default stream will
+ *            be removed, and this function will return NULL.
  *   \param [in] surface  The surface to operate on
  *   \param [in] interval The number of vblank signals that
  *                        mir_surface_swap_buffers will wait for
@@ -634,7 +642,8 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval);
  * The default interval is 1.
  *   \param [in] surface  The surface to operate on
  *   \return              The swapinterval value that the client is operating with.
- *                        Returns -1 if surface is invalid.
+ *                        Returns -1 if surface is invalid, or if the default stream
+ *                        was removed by use of mir_surface_spec_set_streams().
  */
 int mir_surface_get_swapinterval(MirSurface* surface);
 
