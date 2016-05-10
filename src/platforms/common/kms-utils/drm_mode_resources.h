@@ -43,12 +43,16 @@ public:
     explicit DRMModeResources(int drm_fd);
 
     void for_each_connector(std::function<void(DRMModeConnectorUPtr)> const& f) const;
+
     void for_each_encoder(std::function<void(DRMModeEncoderUPtr)> const& f) const;
+
     void for_each_crtc(std::function<void(DRMModeCrtcUPtr)> const& f) const;
 
-    size_t num_connectors();
-    size_t num_encoders();
-    size_t num_crtcs();
+    size_t num_connectors() const;
+
+    size_t num_encoders() const;
+
+    size_t num_crtcs() const;
 
     DRMModeConnectorUPtr connector(uint32_t id) const;
     DRMModeEncoderUPtr encoder(uint32_t id) const;
@@ -58,6 +62,12 @@ private:
     int const drm_fd;
     DRMModeResUPtr const resources;
 };
+
+
+DRMModeConnectorUPtr get_connector(int drm_fd, uint32_t id);
+DRMModeEncoderUPtr get_encoder(int drm_fd, uint32_t id);
+DRMModeCrtcUPtr get_crtc(int drm_fd, uint32_t id);
+
 
 }
 }

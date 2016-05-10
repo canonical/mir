@@ -19,7 +19,7 @@
 #include "drm_mode_resources.h"
 
 #include <boost/throw_exception.hpp>
-#include <stdexcept>
+#include <system_error>
 
 namespace mgm = mir::graphics::mesa;
 
@@ -46,26 +46,37 @@ struct ResourcesDeleter
     void operator()(drmModeRes* p) { if (p) drmModeFreeResources(p); }
 };
 
+mgm::DRMModeResUPtr resources_for_drm_node(int drm_fd)
+{
+    errno = 0;
+    mgm::DRMModeResUPtr resources{drmModeGetResources(drm_fd), ResourcesDeleter()};
+
+    if (!resources)
+    {
+        if (errno == 0)
+        {
+            // drmModeGetResources either sets errno, or has failed in malloc()
+            errno = ENOMEM;
+        }
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Couldn't get DRM resources"}));
+    }
+
+    return resources;
+}
+
 }
 
 mgm::DRMModeResources::DRMModeResources(int drm_fd)
     : drm_fd{drm_fd},
-      resources{DRMModeResUPtr{drmModeGetResources(drm_fd), ResourcesDeleter()}}
+      resources{resources_for_drm_node(drm_fd)}
 {
-    if (!resources)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Couldn't get DRM resources\n"));
 }
 
 void mgm::DRMModeResources::for_each_connector(std::function<void(DRMModeConnectorUPtr)> const& f) const
 {
     for (int i = 0; i < resources->count_connectors; i++)
     {
-        auto connector_ptr = connector(resources->connectors[i]);
-
-        if (!connector_ptr)
-            continue;
-
-        f(std::move(connector_ptr));
+        f(get_connector(drm_fd, resources->connectors[i]));
     }
 }
 
@@ -73,12 +84,7 @@ void mgm::DRMModeResources::for_each_encoder(std::function<void(DRMModeEncoderUP
 {
     for (int i = 0; i < resources->count_encoders; i++)
     {
-        auto encoder_ptr = encoder(resources->encoders[i]);
-
-        if (!encoder_ptr)
-            continue;
-
-        f(std::move(encoder_ptr));
+        f(get_encoder(drm_fd, resources->encoders[i]));
     }
 }
 
@@ -86,44 +92,105 @@ void mgm::DRMModeResources::for_each_crtc(std::function<void(DRMModeCrtcUPtr)> c
 {
     for (int i = 0; i < resources->count_crtcs; i++)
     {
-        auto crtc_ptr = crtc(resources->crtcs[i]);
-
-        if (!crtc_ptr)
-            continue;
-
-        f(std::move(crtc_ptr));
+        f(get_crtc(drm_fd, resources->crtcs[i]));
     }
 }
 
-size_t mgm::DRMModeResources::num_connectors()
+size_t mgm::DRMModeResources::num_connectors() const
 {
     return resources->count_connectors;
 }
 
-size_t mgm::DRMModeResources::num_encoders()
+size_t mgm::DRMModeResources::num_encoders() const
 {
     return resources->count_encoders;
 }
 
-size_t mgm::DRMModeResources::num_crtcs()
+size_t mgm::DRMModeResources::num_crtcs() const
 {
     return resources->count_crtcs;
 }
 
 mgm::DRMModeConnectorUPtr mgm::DRMModeResources::connector(uint32_t id) const
 {
-    auto connector_raw = drmModeGetConnector(drm_fd, id);
-    return DRMModeConnectorUPtr{connector_raw, ConnectorDeleter()};
+    return get_connector(drm_fd, id);
 }
 
 mgm::DRMModeEncoderUPtr mgm::DRMModeResources::encoder(uint32_t id) const
 {
-    auto encoder_raw = drmModeGetEncoder(drm_fd, id);
-    return DRMModeEncoderUPtr{encoder_raw, EncoderDeleter()};
+    return get_encoder(drm_fd, id);
 }
 
 mgm::DRMModeCrtcUPtr mgm::DRMModeResources::crtc(uint32_t id) const
 {
-    auto crtc_raw = drmModeGetCrtc(drm_fd, id);
-    return DRMModeCrtcUPtr{crtc_raw, CrtcDeleter()};
+    return get_crtc(drm_fd, id);
+}
+
+mgm::DRMModeConnectorUPtr mgm::get_connector(int drm_fd, uint32_t id)
+{
+    if (id == 0)
+    {
+        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get DRMModeConnector with invalid id 0"});
+    }
+
+    errno = 0;
+    DRMModeConnectorUPtr connector{drmModeGetConnector(drm_fd, id), ConnectorDeleter()};
+
+    if (!connector)
+    {
+        if (errno == 0)
+        {
+            // drmModeGetConnector either sets errno, or has failed in malloc()
+            errno = ENOMEM;
+        }
+        BOOST_THROW_EXCEPTION((
+            std::system_error{errno, std::system_category(), "Failed to get DRM connector"}));
+    }
+    return connector;
+}
+
+mgm::DRMModeEncoderUPtr mgm::get_encoder(int drm_fd, uint32_t id)
+{
+    if (id == 0)
+    {
+        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get DRMModeEncoder with invalid id 0"});
+    }
+
+    errno = 0;
+    DRMModeEncoderUPtr encoder{drmModeGetEncoder(drm_fd, id), EncoderDeleter()};
+
+    if (!encoder)
+    {
+        if (errno == 0)
+        {
+            // drmModeGetEncoder either sets errno, or has failed in malloc()
+            errno = ENOMEM;
+        }
+        BOOST_THROW_EXCEPTION((
+            std::system_error{errno, std::system_category(), "Failed to get DRM encoder"}));
+    }
+    return encoder;
+}
+
+mgm::DRMModeCrtcUPtr mgm::get_crtc(int drm_fd, uint32_t id)
+{
+    if (id == 0)
+    {
+        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get DRMModeCRTC with invalid id 0"});
+    }
+
+    errno = 0;
+    DRMModeCrtcUPtr crtc{drmModeGetCrtc(drm_fd, id), CrtcDeleter()};
+
+    if (!crtc)
+    {
+        if (errno == 0)
+        {
+            // drmModeGetCrtc either sets errno, or has failed in malloc()
+            errno = ENOMEM;
+        }
+        BOOST_THROW_EXCEPTION((
+            std::system_error{errno, std::system_category(), "Failed to get DRM crtc"}));
+    }
+    return crtc;
 }

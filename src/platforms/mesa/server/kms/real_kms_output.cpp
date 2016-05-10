@@ -39,12 +39,13 @@ mgm::RealKMSOutput::RealKMSOutput(int drm_fd, uint32_t connector_id,
 
     DRMModeResources resources{drm_fd};
 
-    auto encoder = resources.encoder(connector->encoder_id);
-    if (encoder)
+    if (connector->encoder_id)
     {
-        auto crtc = resources.crtc(encoder->crtc_id);
-        if (crtc)
-            saved_crtc = *crtc;
+        auto encoder = resources.encoder(connector->encoder_id);
+        if (encoder->crtc_id)
+        {
+            saved_crtc = *resources.crtc(encoder->crtc_id);
+        }
     }
 }
 
@@ -58,10 +59,14 @@ void mgm::RealKMSOutput::reset()
     DRMModeResources resources{drm_fd};
 
     /* Update the connector to ensure we have the latest information */
-    connector = resources.connector(connector_id);
-
-    if (!connector)
-        fatal_error("No DRM connector found");
+    try
+    {
+        connector = resources.connector(connector_id);
+    }
+    catch (std::exception const& e)
+    {
+        fatal_error(e.what());
+    }
 
     // TODO: What if we can't locate the DPMS property?
     for (int i = 0; i < connector->count_props; i++)

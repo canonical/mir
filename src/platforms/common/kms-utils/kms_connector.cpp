@@ -29,17 +29,20 @@ bool encoder_is_used(mgm::DRMModeResources const& resources, uint32_t encoder_id
 {
     bool encoder_used{false};
 
+    if (encoder_id == 0)
+    {
+        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to query an encoder with invalid ID 0"});
+    }
+
     resources.for_each_connector([&](mgm::DRMModeConnectorUPtr connector)
          {
              if (connector->encoder_id == encoder_id &&
                  connector->connection == DRM_MODE_CONNECTED)
              {
                  auto encoder = resources.encoder(connector->encoder_id);
-                 if (encoder)
+                 if (encoder->crtc_id)
                  {
-                     auto crtc = resources.crtc(encoder->crtc_id);
-                     if (crtc)
-                         encoder_used = true;
+                    encoder_used = true;
                  }
              }
          });
@@ -55,9 +58,9 @@ bool crtc_is_used(mgm::DRMModeResources const& resources, uint32_t crtc_id)
          {
              if (connector->connection == DRM_MODE_CONNECTED)
              {
-                 auto encoder = resources.encoder(connector->encoder_id);
-                 if (encoder)
+                 if (connector->encoder_id)
                  {
+                     auto encoder = resources.encoder(connector->encoder_id);
                      if (encoder->crtc_id == crtc_id)
                          crtc_used = true;
                  }

@@ -186,12 +186,11 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
     drmModeModeInfo current_mode_info = drmModeModeInfo();
 
     /* Get information about the current mode */
-    auto encoder = resources.encoder(connector.encoder_id);
-    if (encoder)
+    if (connector.encoder_id)
     {
-        auto crtc = resources.crtc(encoder->crtc_id);
-        if (crtc)
-            current_mode_info = crtc->mode;
+        auto encoder = resources.encoder(connector.encoder_id);
+        if (encoder->crtc_id)
+            current_mode_info = resources.crtc(encoder->crtc_id)->mode;
     }
 
     /* Add all the available modes and find the current and preferred one */
