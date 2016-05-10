@@ -721,6 +721,7 @@ void InputConsumer::resampleTouchState(std::chrono::nanoseconds sampleTime, Moti
     // Resample touch coordinates.
     touchState.lastResample.eventTime = sampleTime;
     touchState.lastResample.ids.clear();
+    bool coords_resampled = false;
     for (size_t i = 0; i < pointerCount; i++) {
         uint32_t id = event->getPointerId(i);
         touchState.lastResample.idToIndex[id] = i;
@@ -735,6 +736,7 @@ void InputConsumer::resampleTouchState(std::chrono::nanoseconds sampleTime, Moti
                     lerp(currentCoords.getX(), otherCoords.getX(), alpha));
             resampledCoords.setAxisValue(AMOTION_EVENT_AXIS_Y,
                     lerp(currentCoords.getY(), otherCoords.getY(), alpha));
+            coords_resampled = true;
             // No coordinate resampling for tooltype mouse - if we intend to
             // change that we must also resample RX, RY, HSCROLL, VSCROLL
 #if DEBUG_RESAMPLING
@@ -745,7 +747,6 @@ void InputConsumer::resampleTouchState(std::chrono::nanoseconds sampleTime, Moti
                     otherCoords.getX(), otherCoords.getY(),
                     alpha);
 #endif
-            event->addSample(sampleTime, touchState.lastResample.pointers);
         } else {
             // Before calling this method currentCoords was already part of the
             // event -> no need to add them to the event.
@@ -757,6 +758,9 @@ void InputConsumer::resampleTouchState(std::chrono::nanoseconds sampleTime, Moti
 #endif
         }
     }
+
+    if (coords_resampled)
+        event->addSample(sampleTime, touchState.lastResample.pointers);
 }
 
 bool InputConsumer::shouldResampleTool(int32_t toolType) {
