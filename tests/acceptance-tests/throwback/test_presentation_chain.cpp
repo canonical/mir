@@ -188,7 +188,7 @@ private:
     unsigned int callback_count = 0;
 };
 
-void buffer_callback(MirPresentationChain*, MirBuffer* buffer, void* context)
+void buffer_callback(MirBuffer* buffer, void* context)
 {
     auto sync = reinterpret_cast<MirBufferSync*>(context);
     sync->buffer_available(buffer);
@@ -201,8 +201,8 @@ TEST_F(PresentationChain, allocation_calls_callback)
     SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(),
+    mir_connection_allocate_buffer(
+        connection,
         size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
@@ -215,8 +215,8 @@ TEST_F(PresentationChain, has_native_buffer)
     SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(),
+    mir_connection_allocate_buffer(
+        connection,
         size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
@@ -233,8 +233,8 @@ TEST_F(PresentationChain, has_native_fence)
     SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(),
+    mir_connection_allocate_buffer(
+        connection,
         size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
@@ -251,8 +251,8 @@ TEST_F(PresentationChain, can_map_for_cpu_render)
     SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(),
+    mir_connection_allocate_buffer(
+        connection,
         size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
@@ -277,8 +277,8 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback)
     auto num_iterations = 50u;
     for(auto& context : contexts)
     {
-        mir_presentation_chain_allocate_buffer(
-            surface.chain(),
+        mir_connection_allocate_buffer(
+            connection,
             size.width.as_int(), size.height.as_int(), pf, usage,
             buffer_callback, &context);
         ASSERT_TRUE(context.wait_for_buffer(10s));
@@ -303,8 +303,8 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback_reassociated)
     auto num_iterations = 50u;
     for(auto& context : contexts)
     {
-        mir_presentation_chain_allocate_buffer(
-            surface.chain(),
+        mir_connection_allocate_buffer(
+            connection,
             size.width.as_int(), size.height.as_int(), pf, usage,
             buffer_callback, &context);
         ASSERT_TRUE(context.wait_for_buffer(10s));
@@ -325,8 +325,8 @@ TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
     SurfaceWithChainFromStart surface(connection, size, pf);
 
     MirBufferSync context;
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(),
+    mir_connection_allocate_buffer(
+        connection,
         size.width.as_int(), size.height.as_int(), pf, usage,
         buffer_callback, &context);
 
@@ -345,8 +345,8 @@ TEST_F(PresentationChain, can_access_basic_buffer_properties)
     auto usage = mir_buffer_usage_software;
 
     SurfaceWithChainFromStart surface(connection, size, pf);
-    mir_presentation_chain_allocate_buffer(
-        surface.chain(), width.as_int(), height.as_int(), format, usage,
+    mir_connection_allocate_buffer(
+        connection, width.as_int(), height.as_int(), format, usage,
         buffer_callback, &context);
     ASSERT_TRUE(context.wait_for_buffer(10s));
     auto buffer = context.buffer();

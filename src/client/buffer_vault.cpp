@@ -45,7 +45,7 @@ enum class mcl::BufferVault::Owner
 
 namespace
 {
-void incoming_buffer(MirPresentationChain*, MirBuffer* buffer, void* context)
+void incoming_buffer(MirBuffer* buffer, void* context)
 {
     auto vault = static_cast<mcl::BufferVault*>(context);
     vault->wire_transfer_inbound(reinterpret_cast<mcl::Buffer*>(buffer)->rpc_id());

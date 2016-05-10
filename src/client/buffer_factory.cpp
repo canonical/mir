@@ -27,11 +27,11 @@ namespace geom = mir::geometry;
 
 mcl::BufferFactory::AllocationRequest::AllocationRequest(
     std::shared_ptr<mcl::ClientBufferFactory> const& native_buffer_factory,
-    MirPresentationChain* chain,
+    MirConnection* connection,
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback cb, void* cb_context) :
     native_buffer_factory(native_buffer_factory),
-    chain(chain),
+    connection(connection),
     size(size),
     format(format),
     usage(usage),
@@ -42,7 +42,7 @@ mcl::BufferFactory::AllocationRequest::AllocationRequest(
 
 void mcl::BufferFactory::expect_buffer(
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
-    MirPresentationChain* chain,
+    MirConnection* connection,
     geometry::Size size,
     MirPixelFormat format,
     MirBufferUsage usage,
@@ -51,7 +51,7 @@ void mcl::BufferFactory::expect_buffer(
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     allocation_requests.emplace_back(
-        std::make_unique<AllocationRequest>(factory, chain, size, format, usage, cb, cb_context));
+        std::make_unique<AllocationRequest>(factory, connection, size, format, usage, cb, cb_context));
 }
 
 std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(mir::protobuf::Buffer const& buffer)
@@ -72,7 +72,7 @@ std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(mir::protobuf::
         (*request_it)->native_buffer_factory->create_buffer(
             mcl::protobuf_to_native_buffer(buffer),
             (*request_it)->size, (*request_it)->format),
-            (*request_it)->chain, (*request_it)->usage);
+            (*request_it)->connection, (*request_it)->usage);
 
     allocation_requests.erase(request_it);
     return std::move(b);

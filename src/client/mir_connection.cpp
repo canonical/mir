@@ -628,7 +628,7 @@ MirWaitHandle* MirConnection::disconnect()
         std::lock_guard<decltype(mutex)> lock(mutex);
         disconnecting = true;
     }
-    surface_map->with_all_streams_do([](mcl::BufferReceiver* receiver)
+    surface_map->with_all_streams_do([](mcl::ClientBufferStream* receiver)
     {
         receiver->buffer_unavailable();
     });
@@ -1238,8 +1238,7 @@ void MirConnection::allocate_buffer(
     if (!client_buffer_factory)
         client_buffer_factory = platform->create_buffer_factory();
     buffer_factory->expect_buffer(
-        client_buffer_factory,
-        nullptr,
+        client_buffer_factory, this,
         size, format, usage,
         callback, context);
     server.allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));

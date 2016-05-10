@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_toolkit/mir_buffer.h"
 #include "presentation_chain.h"
+#include "mir_connection.h"
 #include "buffer.h"
 #include "mir/require.h"
 #include "mir/uncaught.h"
@@ -29,16 +30,16 @@
 namespace mcl = mir::client;
 
 //private NBS api under development
-void mir_presentation_chain_allocate_buffer(
-    MirPresentationChain* chain, 
+void mir_connection_allocate_buffer(
+    MirConnection* connection, 
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage usage,
     mir_buffer_callback cb, void* context)
 try
 {
-    mir::require(chain);
-    chain->allocate_buffer(mir::geometry::Size{width, height}, format, usage, cb, context);
+    mir::require(connection);
+    connection->allocate_buffer(mir::geometry::Size{width, height}, format, usage, cb, context);
 }
 catch (std::exception const& ex)
 {
@@ -49,8 +50,8 @@ void mir_buffer_release(MirBuffer* b)
 {
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::Buffer*>(b);
-    auto chain = buffer->allocating_chain();
-    chain->release_buffer(b);
+    auto connection = buffer->allocating_connection();
+    connection->release_buffer(buffer->rpc_id());
 }
 
 MirNativeFence* mir_buffer_get_fence(MirBuffer* b)
