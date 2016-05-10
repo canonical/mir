@@ -50,6 +50,19 @@ void mir_connection_allocate_buffer(
     MirBufferUsage buffer_usage,
     mir_buffer_callback available_callback, void* available_context);
 
+
+/** Reassign the callback that the MirBuffer will call when the buffer is
+ *  available for use again
+ *  \param [in] buffer      The buffer
+ *  \param [in] available_callback    The callback called when the buffer
+ *                                     is available
+ *  \param [in] available_context     The context for the available_callback
+ **/
+
+void mir_buffer_set_callback(
+    MirBuffer* buffer,
+    mir_buffer_callback available_callback, void* available_context);
+
 /** @name Fenced Buffer content access functions.
  *
  * These functions will wait until it is safe to access the buffer for the given purpose.
