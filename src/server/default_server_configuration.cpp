@@ -196,8 +196,8 @@ std::shared_ptr<mir::cookie::Authority> mir::DefaultServerConfiguration::the_coo
 auto mir::DefaultServerConfiguration::the_fatal_error_strategy()
 -> void (*)(char const* reason, ...)
 {
-    if (the_options()->is_set(options::fatal_abort_opt))
-        return &fatal_error_abort;
+    if (the_options()->is_set(options::fatal_except_opt))
+        return &fatal_error_except;
     else
         return fatal_error;
 }

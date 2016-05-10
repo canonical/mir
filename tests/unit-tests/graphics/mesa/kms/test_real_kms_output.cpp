@@ -18,6 +18,7 @@
 
 #include "src/platforms/mesa/server/kms/real_kms_output.h"
 #include "src/platforms/mesa/server/kms/page_flipper.h"
+#include "mir/fatal.h"
 
 #include "mir/test/fake_shared.h"
 
@@ -202,6 +203,7 @@ TEST_F(RealKMSOutputTest, operations_use_possible_crtc)
 
 TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
 {
+    mir::FatalErrorStrategy on_error{mir::fatal_error_except};
     using namespace testing;
 
     uint32_t const fb_id{67};
@@ -324,6 +326,8 @@ TEST_F(RealKMSOutputTest, cursor_set_permission_failure_is_non_fatal)
 
 TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails)
 {
+    mir::FatalErrorStrategy on_error{mir::fatal_error_except};
+
     using namespace testing;
 
     setup_outputs_connected_crtc();
