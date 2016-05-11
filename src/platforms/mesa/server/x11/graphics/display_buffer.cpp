@@ -43,7 +43,7 @@ mgx::DisplayBuffer::DisplayBuffer(geom::Size const sz,
         unsigned long long frame_usec = frame.ust;
         static unsigned long long prev = frame.ust;
         struct timespec now;
-        clock_gettime(CLOCK_MONOTONIC, &now);
+        clock_gettime(frame.clock_id, &now);
         unsigned long long now_usec = now.tv_sec*1000000ULL +
                                       now.tv_nsec/1000;
         long long age_usec = now_usec - frame_usec;
@@ -109,6 +109,9 @@ void mgx::DisplayBuffer::swap_buffers()
         if (eglGetSyncValues(egl_dpy, egl_surf, &ust, &msc, &sbc))
         {
             frame.msc = msc;
+            // Always monotonic? The Chromium source suggests no. But the
+            // libdrm source says you can only find out with drmGetCap :(
+            // This appears to be correct for all modern systems though...
             frame.clock_id = CLOCK_MONOTONIC;
             frame.ust = ust;
         }

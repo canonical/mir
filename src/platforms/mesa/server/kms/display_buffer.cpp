@@ -124,7 +124,7 @@ mgm::DisplayBuffer::DisplayBuffer(
         unsigned long long frame_usec = frame.ust;
         static unsigned long long prev = frame.ust;
         struct timespec now;
-        clock_gettime(CLOCK_MONOTONIC, &now);
+        clock_gettime(frame.clock_id, &now);
         unsigned long long now_usec = now.tv_sec*1000000ULL +
                                       now.tv_nsec/1000;
         long long age_usec = now_usec - frame_usec;
