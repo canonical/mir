@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_FRAME_H_
 
 #include <cstdint>
+#include <ctime>
 
 namespace mir
 {
@@ -30,24 +31,33 @@ namespace graphics
  * Frame is a unique identifier for a frame displayed on a physical output.
  *
  * This weird terminology is actually very standard in graphics texts,
- * OpenGL and Xorg. The basic design is best described in GLX_OML_sync_control:
+ * OpenGL and Xorg. The basic design is best described in:
  *   https://www.opengl.org/registry/specs/OML/glx_sync_control.txt
- * which has also been copied by Google/Intel/Mesa into EGL as a simpler
- * informal extension: EGL_CHROMIUM_sync_control
- * What the GLX_OML_sync_control spec won't tell you is that UST is always
- * measured in microseconds relative to CLOCK_MONOTONIC, in all existing
- * implementations.
+ *
+ * The simplistic structure is intentional, as all these values need to
+ * be passed from the server to clients and clients of clients unmodified.
+ * Even clients of clients of clients (GLX app under Xmir under Unity8 under
+ * USC).
  */
 struct Frame
 {
     uint64_t msc = 0;  /**< Media Stream Counter: Counter of the frame
                             displayed by the output (or as close to it as
                             can be estimated). */
-    uint64_t ust = 0;  /**< Unadjusted System Time in microseconds (relative
-                            to the kernel's CLOCK_MONOTONIC) of the frame
-                            displayed by the output.
-                            This value should remain unmodified through to
-                            the client for accurate timing calculations. */
+    clockid_t clock_id = CLOCK_MONOTONIC;
+                       /**< The system clock identifier that 'ust' is measured
+                            by. Usually monotonic, but might not always be.
+                            To get the current time relative to ust just
+                            call: clock_gettime(clock_id, ...) */
+    uint64_t ust = 0;  /**< Unadjusted System Time in microseconds of the frame
+                            displayed by the output, relative to clock_id.
+                            NOTE that comparing 'ust' to the current system
+                            time (at least in the server process) you will
+                            often find that 'ust' is in the future by a few
+                            microseconds and not yet in the past. This is to be
+                            expected and simply represents the reality that
+                            scanning out a new frame takes longer than
+                            returning from the flip or swap function. */
 
     bool operator<(Frame const& rhs) const
     {

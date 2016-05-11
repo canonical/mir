@@ -82,6 +82,7 @@ void MultiSourceFrameClock::on_child_frame(ChildId child_id,
                  */
                 last_multi_frame.msc = last_sync.msc +
                                        child_frame.msc - child.last_sync.msc;
+                last_multi_frame.clock_id = last_sync.clock_id;
                 last_multi_frame.ust = last_sync.ust +
                                        child_frame.ust - child.last_sync.ust;
                 callback = frame_callback;
