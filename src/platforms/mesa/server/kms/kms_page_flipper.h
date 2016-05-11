@@ -26,7 +26,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
-
+#include <ctime>
 #include <sys/time.h>
 
 namespace mir
@@ -44,6 +44,7 @@ struct PageFlipEventData
 {
     uint32_t crtc_id;
     KMSPageFlipper* flipper;
+    clockid_t clock_id;
 };
 
 class KMSPageFlipper : public PageFlipper
@@ -67,6 +68,7 @@ private:
     std::mutex pf_mutex;
     std::condition_variable pf_cv;
     std::thread::id worker_tid;
+    clockid_t clock_id;
 };
 
 }

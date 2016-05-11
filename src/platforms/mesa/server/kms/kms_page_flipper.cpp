@@ -37,7 +37,7 @@ void page_flip_handler(int /*fd*/, unsigned int seq,
                        void* data)
 {
     auto page_flip_data = static_cast<mgm::PageFlipEventData*>(data);
-    mg::Frame const frame = {seq, CLOCK_MONOTONIC, sec*1000000ULL+usec};
+    mg::Frame const frame = {seq, page_flip_data->clock_id, sec*1000000ULL+usec};
     page_flip_data->flipper->notify_page_flip(page_flip_data->crtc_id, frame);
 }
 
@@ -51,6 +51,11 @@ mgm::KMSPageFlipper::KMSPageFlipper(
     pending_page_flips(),
     worker_tid()
 {
+    uint64_t mono = 0;
+    if (drmGetCap(drm_fd, DRM_CAP_TIMESTAMP_MONOTONIC, &mono) || !mono)
+        clock_id = CLOCK_REALTIME;
+    else
+        clock_id = CLOCK_MONOTONIC;
 }
 
 bool mgm::KMSPageFlipper::schedule_flip(uint32_t crtc_id, uint32_t fb_id)
@@ -60,7 +65,7 @@ bool mgm::KMSPageFlipper::schedule_flip(uint32_t crtc_id, uint32_t fb_id)
     if (pending_page_flips.find(crtc_id) != pending_page_flips.end())
         BOOST_THROW_EXCEPTION(std::logic_error("Page flip for crtc_id is already scheduled"));
 
-    pending_page_flips[crtc_id] = PageFlipEventData{crtc_id, this};
+    pending_page_flips[crtc_id] = PageFlipEventData{crtc_id, this, clock_id};
 
     auto ret = drmModePageFlip(drm_fd, crtc_id, fb_id,
                                DRM_MODE_PAGE_FLIP_EVENT,
