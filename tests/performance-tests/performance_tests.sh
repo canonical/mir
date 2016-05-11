@@ -30,7 +30,8 @@ title_banner()
 
 tests_run=0
 failures=0
-for perf_test in mir_glmark2_performance_test
+for perf_test in mir_glmark2_performance_test \
+                 mir_compositor_performance_test
 do
     title_banner "Mir Performance Tests now running: $perf_test"
     tests_run=$(($tests_run + 1))

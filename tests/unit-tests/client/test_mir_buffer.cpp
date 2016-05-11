@@ -29,7 +29,7 @@ using namespace testing;
 namespace
 {
 
-void buffer_callback(MirPresentationChain*, MirBuffer*, void* call_count_context)
+void buffer_callback(MirBuffer*, void* call_count_context)
 {
     if (call_count_context)
         (*static_cast<int*>(call_count_context))++;

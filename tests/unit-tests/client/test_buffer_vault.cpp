@@ -71,7 +71,7 @@ struct MockServerRequests : mcl::ServerBufferRequests
     MOCK_METHOD0(disconnected, void());
 };
 
-void ignore(MirPresentationChain*, MirBuffer*, void*)
+void ignore(MirBuffer*, void*)
 {
 }
 
