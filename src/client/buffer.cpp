@@ -28,10 +28,10 @@ mcl::Buffer::Buffer(
     std::shared_ptr<ClientBuffer> const& buffer,
     MirConnection* connection,
     MirBufferUsage usage) :
-    cb(cb),
-    cb_context(context),
     buffer_id(buffer_id),
     buffer(buffer),
+    cb(cb),
+    cb_context(context),
     owned(false),
     connection(connection),
     usage(usage)
@@ -60,8 +60,8 @@ void mcl::Buffer::received()
         if (!owned)
             owned = true;
     }
+    std::lock_guard<decltype(cb_mutex)> lk(cb_mutex);
     cb(reinterpret_cast<MirBuffer*>(this), cb_context);
-
 }
 
 void mcl::Buffer::received(MirBufferPackage const& update_package)
@@ -74,6 +74,7 @@ void mcl::Buffer::received(MirBufferPackage const& update_package)
             buffer->update_from(update_package);
         }
     }
+    std::lock_guard<decltype(cb_mutex)> lk(cb_mutex);
     cb(reinterpret_cast<MirBuffer*>(this), cb_context);
 }
     
@@ -139,7 +140,9 @@ void mcl::Buffer::increment_age()
     buffer->increment_age();
 }
 
-void mcl::Buffer::set_callback(mir_buffer_callback cb, void* context)
+void mcl::Buffer::set_callback(mir_buffer_callback callback, void* context)
 {
-    (void)cb;(void)context;
+    std::lock_guard<decltype(cb_mutex)> lk(cb_mutex);
+    cb = callback;
+    cb_context = context;
 }

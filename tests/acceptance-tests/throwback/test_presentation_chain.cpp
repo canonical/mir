@@ -386,6 +386,7 @@ TEST_F(PresentationChain, buffers_callback_can_be_reassigned)
 
     mir_buffer_set_callback(context.buffer(), another_buffer_callback, &another_context);
 
+    mir_presentation_chain_submit_buffer(surface.chain(), context.buffer());
     //flush the 1st buffer out
     mir_presentation_chain_submit_buffer(surface.chain(), second_buffer_context.buffer());
 

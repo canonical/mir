@@ -62,12 +62,14 @@ public:
     MirConnection* allocating_connection() const;
 
     void increment_age();
-    void set_callback(mir_buffer_callback cb, void* context);
+    void set_callback(mir_buffer_callback callback, void* context);
 private:
+    int const buffer_id;
+    std::shared_ptr<ClientBuffer> const buffer;
+
+    std::recursive_mutex cb_mutex;
     mir_buffer_callback cb;
     void* cb_context;
-    int const buffer_id;
-    std::shared_ptr<ClientBuffer> buffer;
 
     std::mutex mutex;
     bool owned;

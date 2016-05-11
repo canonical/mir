@@ -176,11 +176,12 @@ catch (std::exception const& ex)
 }
 
 void mir_buffer_set_callback(
-    MirBuffer* buffer,
-    mir_buffer_callback available_callback, void* available_context)
+    MirBuffer* b, mir_buffer_callback available_callback, void* available_context)
 try
 {
-    (void)buffer;(void)available_callback;(void)available_context;
+    mir::require(b);
+    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
+    buffer->set_callback(available_callback, available_context);
 }
 catch (std::exception const& ex)
 {
