@@ -23,6 +23,7 @@
 #include "mir/test/fake_shared.h"
 
 #include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/mock_gbm.h"
 
 #include <stdexcept>
 
@@ -102,6 +103,7 @@ public:
     }
 
     testing::NiceMock<mtd::MockDRM> mock_drm;
+    testing::NiceMock<mtd::MockGBM> mock_gbm;
     MockPageFlipper mock_page_flipper;
     NullPageFlipper null_page_flipper;
 
@@ -276,6 +278,50 @@ TEST_F(RealKMSOutputTest, clear_crtc_does_not_throw_if_no_crtc_is_found)
         .Times(0);
 
     output.clear_crtc();
+}
+
+TEST_F(RealKMSOutputTest, cursor_move_permission_failure_is_non_fatal)
+{   // Regression test for LP: #1579630
+    using namespace testing;
+
+    EXPECT_CALL(mock_drm, drmModeMoveCursor(_, _, _, _))
+        .Times(1)
+        .WillOnce(Return(-13));
+
+    setup_outputs_connected_crtc();
+
+    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                              mt::fake_shared(mock_page_flipper)};
+
+    EXPECT_TRUE(output.set_crtc(987));
+    EXPECT_NO_THROW({
+        output.move_cursor({123, 456});
+    });
+}
+
+TEST_F(RealKMSOutputTest, cursor_set_permission_failure_is_non_fatal)
+{   // Regression test for LP: #1579630
+    using namespace testing;
+
+    EXPECT_CALL(mock_drm, drmModeSetCursor(_, _, _, _, _))
+        .Times(1)
+        .WillOnce(Return(-13));
+    union gbm_bo_handle some_handle;
+    some_handle.u64 = 0xbaadf00d;
+    ON_CALL(mock_gbm, gbm_bo_get_handle(_)).WillByDefault(Return(some_handle));
+    ON_CALL(mock_gbm, gbm_bo_get_width(_)).WillByDefault(Return(34));
+    ON_CALL(mock_gbm, gbm_bo_get_height(_)).WillByDefault(Return(56));
+
+    setup_outputs_connected_crtc();
+
+    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
+                              mt::fake_shared(mock_page_flipper)};
+
+    EXPECT_TRUE(output.set_crtc(987));
+    struct gbm_bo *dummy = reinterpret_cast<struct gbm_bo*>(0x1234567);
+    EXPECT_NO_THROW({
+        output.set_cursor(dummy);
+    });
 }
 
 TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails)
