@@ -152,7 +152,6 @@ GLuint generate_frame_corner_texture(float corner_radius,
 
 static const GLchar inverse_fshader[] =
 {
-    "precision mediump float;\n"
     "uniform sampler2D tex;\n"
     "uniform float alpha;\n"
     "varying vec2 v_texcoord;\n"
@@ -164,7 +163,6 @@ static const GLchar inverse_fshader[] =
 };
 static const GLchar contrast_fshader[] =
 {
-    "precision mediump float;\n"
     "uniform sampler2D tex;\n"
     "uniform float alpha;\n"
     "varying vec2 v_texcoord;\n"
