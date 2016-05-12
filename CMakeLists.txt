@@ -201,20 +201,13 @@ include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
 
 if (TARGET_ARCH STREQUAL "x86_64-linux-gnu" OR
     TARGET_ARCH STREQUAL "i386-linux-gnu")
-  set(MIR_INTEL_ARCH TRUE)
+  set(DEFAULT_LIBGL "libGL")
 else()
-  set(MIR_INTEL_ARCH FALSE)
+  set(DEFAULT_LIBGL "libGLESv2")
 endif()
+set(MIR_SERVER_LIBGL ${DEFAULT_LIBGL} CACHE STRING "OpenGL library to use in Mir servers {libGL,libGLESv2}")
 
-if (MIR_INTEL_ARCH)
-  set(MIR_SERVER_GL "full")
-else()
-  set(MIR_SERVER_GL "GLESv2")
-endif()
-
-message(STATUS "Mir server OpenGL variant: " ${MIR_SERVER_GL})
-
-if (MIR_SERVER_GL STREQUAL "full")
+if (MIR_SERVER_LIBGL STREQUAL "libGL")
   pkg_check_modules(GL REQUIRED gl)
   add_definitions(
     -DGL_GLEXT_PROTOTYPES
@@ -223,7 +216,7 @@ if (MIR_SERVER_GL STREQUAL "full")
     -DMIR_SERVER_EGL_OPENGL_BIT=EGL_OPENGL_BIT
     -DMIR_SERVER_EGL_OPENGL_API=EGL_OPENGL_API
   )
-elseif (MIR_SERVER_GL STREQUAL "GLESv2")
+elseif (MIR_SERVER_LIBGL STREQUAL "libGLESv2")
   pkg_check_modules(GL REQUIRED glesv2)
   add_definitions(
     -DMIR_SERVER_GL_H=<GLES/gl2.h>
@@ -231,6 +224,8 @@ elseif (MIR_SERVER_GL STREQUAL "GLESv2")
     -DMIR_SERVER_EGL_OPENGL_BIT=EGL_OPENGL_ES2_BIT
     -DMIR_SERVER_EGL_OPENGL_API=EGL_OPENGL_ES_API
   )
+else()
+  message(FATAL_ERROR "Invalid MIR_SERVER_LIBGL value ${MIR_SERVER_LIBGL}")
 endif()
 
 if (MIR_BUILD_PLATFORM_ANDROID)
