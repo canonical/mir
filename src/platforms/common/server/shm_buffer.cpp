@@ -20,8 +20,8 @@
 #include "shm_file.h"
 #include "shm_buffer.h"
 #include "buffer_texture_binder.h"
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include MIR_SERVER_GL_H
+#include MIR_SERVER_GLEXT_H
 
 #include <boost/throw_exception.hpp>
 
