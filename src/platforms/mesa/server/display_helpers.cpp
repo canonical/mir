@@ -410,7 +410,7 @@ void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
         EGL_ALPHA_SIZE, 0,
         EGL_DEPTH_SIZE, depth_buffer_bits,
         EGL_STENCIL_SIZE, stencil_buffer_bits,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
         EGL_NONE
     };
 
@@ -440,7 +440,7 @@ void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
         should_terminate_egl = true;
     }
 
-    eglBindAPI(EGL_OPENGL_ES_API);
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
     if (eglChooseConfig(egl_display, config_attr, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||
         num_egl_configs != 1)
