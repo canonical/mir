@@ -357,7 +357,10 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
 
     setup_internal(gbm, false);
 
+    fprintf(stderr, "SETUP\n");
+
     egl_surface = eglCreateWindowSurface(egl_display, egl_config, surface_gbm, nullptr);
+    fprintf(stderr, "SETUP = %p\n", egl_surface);
     if(egl_surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL window surface"));
 
@@ -384,18 +387,21 @@ mgmh::EGLHelper::~EGLHelper() noexcept
 
 bool mgmh::EGLHelper::swap_buffers()
 {
+    fprintf(stderr, "SWAP %p, %p\n", egl_display, egl_surface);
     auto ret = eglSwapBuffers(egl_display, egl_surface);
     return (ret == EGL_TRUE);
 }
 
 bool mgmh::EGLHelper::make_current() const
 {
+    fprintf(stderr, "MAKE_CURRENT\n");
     auto ret = eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
     return (ret == EGL_TRUE);
 }
 
 bool mgmh::EGLHelper::release_current() const
 {
+    fprintf(stderr, "RELEASE_CURRENT\n");
     auto ret = eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     return (ret == EGL_TRUE);
 }

@@ -82,7 +82,10 @@ mg::EGLSurfaceStore::EGLSurfaceStore(EGLSurfaceStore&& other)
 mg::EGLSurfaceStore::~EGLSurfaceStore() noexcept
 {
     if (egl_surface_ != EGL_NO_SURFACE)
+    {
+        fprintf(stderr, "DESTROY %p %p\n", egl_display_, egl_surface_);
         eglDestroySurface(egl_display_, egl_surface_);
+    }
 }
 
 mg::EGLSurfaceStore::operator EGLSurface() const
