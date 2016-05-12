@@ -13,7 +13,7 @@ mir (0.23.0ubuntu1) UNRELEASED; urgency=medium
       . mirinputplatform ABI unchanged at 5
     - Enhancements:
       . Enable internal usage of more flexible graphics buffer submission,
-        precursing mirclient api additions. 
+        precursing client API additions. 
     - Bug fixes:
       . Potential NBS performance loss after resize (LP: #1579076)
       . Performance loss with NBS and overlays on (LP: #1578159)
