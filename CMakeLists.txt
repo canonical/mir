@@ -199,6 +199,36 @@ include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
 include_directories (SYSTEM ${EGL_INCLUDE_DIRS})
 include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
 
+if (TARGET_ARCH STREQUAL "x86_64-linux-gnu" OR
+    TARGET_ARCH STREQUAL "i386-linux-gnu")
+  set(MIR_INTEL_ARCH TRUE)
+else()
+  set(MIR_INTEL_ARCH FALSE)
+endif()
+
+if (MIR_INTEL_ARCH)
+  set(MIR_SERVER_GL "full")
+else()
+  set(MIR_SERVER_GL "GLESv2")
+endif()
+
+message(STATUS "Mir server OpenGL variant: " ${MIR_SERVER_GL})
+
+if (MIR_SERVER_GL STREQUAL "full")
+  pkg_check_modules(GL REQUIRED gl)
+  add_definitions(
+    -DGL_GLEXT_PROTOTYPES
+    -DMIR_SERVER_GL_H=<GL/gl.h>
+    -DMIR_SERVER_GLEXT_H=<GL/glext.h>
+  )
+elseif (MIR_SERVER_GL STREQUAL "GLESv2")
+  pkg_check_modules(GL REQUIRED glesv2)
+  add_definitions(
+    -DMIR_SERVER_GL_H=<GLES/gl2.h>
+    -DMIR_SERVER_GLEXT_H=<GLES/gl2ext.h>
+  )
+endif()
+
 if (MIR_BUILD_PLATFORM_ANDROID)
   find_package(AndroidProperties REQUIRED)
   find_package(LibHardware REQUIRED)
