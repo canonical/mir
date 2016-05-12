@@ -189,6 +189,10 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
             mir::log_info(std::string(s.label) + ": " + (val ? val : ""));
         }
     }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Renderer::Renderer - EGL_NO_DISPLAY"));
+    }
 
     struct {GLenum id; char const* label;} const glstrings[] =
     {
