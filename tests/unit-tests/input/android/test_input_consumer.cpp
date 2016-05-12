@@ -42,6 +42,7 @@ struct EventFactory : android::InputEventFactoryInterface
 {
     android::KeyEvent key;
     android::MotionEvent motion;
+    android::RawBufferEvent raw;
     android::KeyEvent* createKeyEvent()
     {
         return &key;
@@ -50,12 +51,17 @@ struct EventFactory : android::InputEventFactoryInterface
     {
         return &motion;
     }
+    android::RawBufferEvent* createRawBufferEvent()
+    {
+        return &raw;
+    }
 };
 }
 
 struct InputConsumerTest : ::testing::Test
 {
     MOCK_METHOD3(pointer_movement,void(geom::Point pos, geom::Displacement movement, geom::Displacement scroll));
+    MOCK_METHOD1(raw_buffer,void(std::string const& buffer));
     uint32_t seq{0};
     mir::cookie::Blob default_cookie;
     EventFactory events;
@@ -156,10 +162,20 @@ struct InputConsumerTest : ::testing::Test
                                      default_cookie, event.tp, event.tp, 1, &pointer_properties, &pointer_coord);
     }
 
+    void send_raw_event(std::string const& event)
+    {
+        publisher.publishEventBuffer(++seq, event);
+    }
+
     void handle_event(droidinput::InputEvent* event)
     {
         if (event->getType() == AINPUT_EVENT_TYPE_KEY)
         {
+        }
+        else if (event->getType() == AINPUT_EVENT_TYPE_BUFFER)
+        {
+            auto raw = static_cast<const droidinput::RawBufferEvent*>(event);
+            raw_buffer(raw->buffer);
         }
         else
         {
@@ -322,5 +338,14 @@ TEST_F(InputConsumerTest, emits_accumulated_scroll_event_on_old_messages)
     send_pointer_event({mir_pointer_action_motion, 0, origin, no_move, {2.0, 5.0}, 2ms});
 
     advance_frame_time_to(16ms);
+    receive_events();
+}
+
+TEST_F(InputConsumerTest, receives_raw_event_buffer)
+{
+    auto const buffer = "hello android";
+    EXPECT_CALL(*this, raw_buffer(buffer));
+
+    send_raw_event(buffer);
     receive_events();
 }

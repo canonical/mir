@@ -46,21 +46,26 @@ namespace android {
  */
 struct InputMessage {
     InputMessage();
+    InputMessage(uint32_t seq, std::string const& buffer);
+    InputMessage(InputMessage const& cp);
+    InputMessage& operator=(InputMessage const& cp);
+    ~InputMessage();
 
     enum {
         TYPE_KEY = 1,
         TYPE_MOTION = 2,
-        TYPE_FINISHED = 3
+        TYPE_FINISHED = 3,
+        TYPE_BUFFER = 4
     };
 
     struct Header {
         uint32_t type;
-        uint32_t padding; // 8 byte alignment for the body that follows
+        uint32_t seq;
+        uint32_t size; // size of the Body
     } header;
 
     union Body {
         struct Key {
-            uint32_t seq;
             int64_t eventTime;
             mir::cookie::Blob cookieBlob;
             int32_t deviceId;
@@ -79,7 +84,6 @@ struct InputMessage {
         } key;
 
         struct Motion {
-            uint32_t seq;
             int64_t eventTime;
             mir::cookie::Blob cookieBlob;
             int32_t deviceId;
@@ -113,17 +117,22 @@ struct InputMessage {
         } motion;
 
         struct Finished {
-            uint32_t seq;
             bool handled;
 
             inline size_t size() const {
                 return sizeof(Finished);
             }
         } finished;
+
+        struct Buffer {
+            uint8_t* buffer;
+        } buffer;
     } body;
 
     bool isValid(size_t actualSize) const;
     size_t size() const;
+    ssize_t send(int fd) const;
+    ssize_t receive(int fd);
 };
 
 /*
@@ -187,6 +196,8 @@ public:
 
     /* Gets the underlying input channel. */
     inline sp<InputChannel> getChannel() { return mChannel; }
+
+    status_t publishEventBuffer(uint32_t seq, std::string const& buffer);
 
     /* Publishes a key event to the input channel.
      *
@@ -430,6 +441,7 @@ private:
 
     static void initializeKeyEvent(KeyEvent* event, const InputMessage* msg);
     static void initializeMotionEvent(MotionEvent* event, const InputMessage* msg);
+    static void initializeBufferEvent(RawBufferEvent* event, const InputMessage* msg);
     static void addSample(MotionEvent* event, const InputMessage* msg);
     static bool canAddSample(const Batch& batch, const InputMessage* msg);
     static ssize_t findSampleNoLaterThan(const Batch& batch, std::chrono::nanoseconds time);

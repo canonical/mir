@@ -353,3 +353,11 @@ MIR_COMMON_0.22 {
        MirPromptSessionEvent::set_new_state*;
     };
 } MIR_COMMON_0.19.1;
+
+
+MIR_COMMON_0.24 {
+  global:
+    extern "C++" {
+      android::InputPublisher::publishEventBuffer*;
+    };
+} MIR_COMMON_0.22;
