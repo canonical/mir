@@ -33,6 +33,19 @@ namespace kms
 {
 std::string connector_name(DRMModeConnectorUPtr const& connector);
 
+/**
+ * Finds the first available CRTC that can drive Connector
+ *
+ * \note    This only finds the first available connector. It does not
+ *          check whether currently-assigned resources could be reassigned,
+ *          so it's possible for this to fail even if it would be possible for
+ *          the total configuration to be set given global knowledge.
+ * \param [in]  drm_fd      File descriptor to DRM node
+ * \param [in]  connector   Connector to find a CRTC for.
+ * \returns     The first available CRTC which can display an image on connector.
+ *              The returned UPtr is guaranteed non-null.
+ * \throws      A std::runtime_error if there are no available CRTCs.
+ */
 DRMModeCrtcUPtr find_crtc_for_connector(
     int drm_fd,
     DRMModeConnectorUPtr const& connector);
