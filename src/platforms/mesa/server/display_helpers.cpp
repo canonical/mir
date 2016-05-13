@@ -321,6 +321,8 @@ mgmh::EGLHelper::EGLHelper(GLConfig const& gl_config)
 
 void mgmh::EGLHelper::setup(GBMHelper const& gbm)
 {
+    fprintf(stderr, "SETUP 1\n");
+
     static const EGLint context_attr[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
         EGL_NONE
@@ -335,6 +337,8 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm)
 
 void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
 {
+    fprintf(stderr, "SETUP 2\n");
+
     static const EGLint context_attr[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
         EGL_NONE
@@ -350,14 +354,14 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
 void mgmh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
                             EGLContext shared_context)
 {
+    fprintf(stderr, "SETUP 3\n");
+
     static const EGLint context_attr[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
         EGL_NONE
     };
 
     setup_internal(gbm, false);
-
-    fprintf(stderr, "SETUP\n");
 
     egl_surface = eglCreateWindowSurface(egl_display, egl_config, surface_gbm, nullptr);
     fprintf(stderr, "SETUP = %p\n", egl_surface);
@@ -367,6 +371,7 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
     egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr);
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
+    fprintf(stderr, "SETUP egl_context = %p\n", egl_context);
 }
 
 mgmh::EGLHelper::~EGLHelper() noexcept
