@@ -33,7 +33,7 @@ namespace protobuf { class Buffer; }
 namespace client
 {
 class ClientBuffer;
-class Buffer;
+class MirBuffer;
 class AsyncBufferFactory;
 class SurfaceMap;
 
@@ -42,7 +42,7 @@ class ServerBufferRequests
 public:
     virtual void allocate_buffer(geometry::Size size, MirPixelFormat format, int usage) = 0;
     virtual void free_buffer(int buffer_id) = 0;
-    virtual void submit_buffer(Buffer&) = 0;
+    virtual void submit_buffer(MirBuffer&) = 0;
     virtual ~ServerBufferRequests() = default;
 protected:
     ServerBufferRequests() = default;
@@ -64,10 +64,10 @@ public:
         unsigned int initial_nbuffers);
     ~BufferVault();
 
-    NoTLSFuture<std::shared_ptr<Buffer>> withdraw();
-    void deposit(std::shared_ptr<Buffer> const& buffer);
+    NoTLSFuture<std::shared_ptr<MirBuffer>> withdraw();
+    void deposit(std::shared_ptr<MirBuffer> const& buffer);
     void wire_transfer_inbound(int buffer_id);
-    void wire_transfer_outbound(std::shared_ptr<Buffer> const& buffer);
+    void wire_transfer_outbound(std::shared_ptr<MirBuffer> const& buffer);
     void set_size(geometry::Size);
     void disconnected();
     void set_scale(float scale);
@@ -78,7 +78,7 @@ private:
     void alloc_buffer(geometry::Size size, MirPixelFormat format, int usage);
     void free_buffer(int free_id);
     void realloc_buffer(int free_id, geometry::Size size, MirPixelFormat format, int usage);
-    std::shared_ptr<Buffer> checked_buffer_from_map(int id);
+    std::shared_ptr<MirBuffer> checked_buffer_from_map(int id);
 
     std::shared_ptr<ClientBufferFactory> const platform_factory;
     std::shared_ptr<AsyncBufferFactory> const buffer_factory;
@@ -90,7 +90,7 @@ private:
     enum class Owner;
     std::mutex mutex;
     std::map<int, Owner> buffers;
-    std::deque<NoTLSPromise<std::shared_ptr<Buffer>>> promises;
+    std::deque<NoTLSPromise<std::shared_ptr<MirBuffer>>> promises;
     geometry::Size size;
     bool disconnected_;
     size_t current_buffer_count;

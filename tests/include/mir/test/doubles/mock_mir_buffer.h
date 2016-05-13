@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_MIR_BUFFER_H_
 #define MIR_TEST_DOUBLES_MOCK_MIR_BUFFER_H_
 
-#include "src/client/buffer.h"
+#include "src/client/mir_buffer.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -30,7 +30,7 @@ namespace test
 {
 namespace doubles
 {
-struct MockMirBuffer : client::Buffer
+struct MockMirBuffer : client::MirBuffer
 {
     MockMirBuffer() = default;
     MockMirBuffer(geometry::Size size, int id)

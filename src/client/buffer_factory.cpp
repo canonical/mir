@@ -67,7 +67,7 @@ std::unique_ptr<mcl::Buffer> mcl::BufferFactory::generate_buffer(mir::protobuf::
     if (request_it == allocation_requests.end())
         BOOST_THROW_EXCEPTION(std::logic_error("unrequested buffer received"));
 
-    auto b = std::make_unique<MirBuffer>(
+    auto b = std::make_unique<Buffer>(
         (*request_it)->cb, (*request_it)->cb_context,
         buffer.buffer_id(),
         (*request_it)->native_buffer_factory->create_buffer(

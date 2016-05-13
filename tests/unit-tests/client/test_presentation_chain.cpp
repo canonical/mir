@@ -99,14 +99,14 @@ TEST_F(PresentationChain, submits_buffer_when_asked)
     EXPECT_CALL(mock_server, submit_buffer(BufferRequestMatches(request),_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    mcl::MirBuffer buffer(buffer_callback, nullptr, buffer_id, client_buffer, nullptr, mir_buffer_usage_software);
+    mcl::Buffer buffer(buffer_callback, nullptr, buffer_id, client_buffer, nullptr, mir_buffer_usage_software);
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
         std::make_shared<mcl::BufferFactory>());
 
     buffer.received();
-    chain.submit_buffer(reinterpret_cast<MirBuffer*>(&buffer));
+    chain.submit_buffer(&buffer);
 } 
 
 TEST_F(PresentationChain, double_submission_throws)
@@ -114,16 +114,16 @@ TEST_F(PresentationChain, double_submission_throws)
     EXPECT_CALL(mock_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    mcl::MirBuffer buffer(buffer_callback, nullptr, buffer_id, client_buffer, nullptr, mir_buffer_usage_software);
+    mcl::Buffer buffer(buffer_callback, nullptr, buffer_id, client_buffer, nullptr, mir_buffer_usage_software);
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
         std::make_shared<mcl::BufferFactory>());
 
     buffer.received();
-    chain.submit_buffer(reinterpret_cast<MirBuffer*>(&buffer));
+    chain.submit_buffer(&buffer);
 
     EXPECT_THROW({
-        chain.submit_buffer(reinterpret_cast<MirBuffer*>(&buffer));
+        chain.submit_buffer(&buffer);
     }, std::logic_error);
 }

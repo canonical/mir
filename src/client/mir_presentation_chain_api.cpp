@@ -62,7 +62,7 @@ void mir_presentation_chain_submit_buffer(MirPresentationChain* chain, MirBuffer
 try
 {
     mir::require(chain && buffer && mir_presentation_chain_is_valid(chain));
-    chain->submit_buffer(buffer);
+    chain->submit_buffer(reinterpret_cast<mcl::MirBuffer*>(buffer));
 }
 catch (std::exception const& ex)
 {
