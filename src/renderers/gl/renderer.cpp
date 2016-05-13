@@ -191,6 +191,7 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
     }
     else
     {
+    fprintf(stderr, "Oh dear\n");
         BOOST_THROW_EXCEPTION(std::logic_error("Renderer::Renderer - EGL_NO_DISPLAY"));
     }
 
