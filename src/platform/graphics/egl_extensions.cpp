@@ -28,6 +28,13 @@ mg::EGLExtensions::EGLExtensions() :
         reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"))},
     eglDestroyImageKHR{
         reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"))},
+
+    /*
+     * TODO: Find a non-ES GL equivalent for glEGLImageTargetTexture2DOES
+     * It's the LAST remaining ES-specific function. Although Mesa lets you use
+     * it in full GL, it theoretically should not work. Mesa just lets you
+     * mix ES and GL code. But other drivers won't be so lenient.
+     */
     glEGLImageTargetTexture2DOES{
         reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"))}
 {
