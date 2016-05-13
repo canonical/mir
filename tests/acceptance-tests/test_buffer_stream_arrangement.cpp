@@ -225,6 +225,32 @@ struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
 };
 }
 
+TEST_F(BufferStreamArrangement, can_be_specified_when_creating_surface)
+{
+    using namespace testing;
+    std::vector<MirBufferStreamInfo> infos(streams.size());
+    auto i = 0u;
+    for (auto const& stream : streams)
+    {
+        infos[i++] = MirBufferStreamInfo{
+            stream->handle(),
+            stream->position().x.as_int(),
+            stream->position().y.as_int()};
+    }
+
+    mir_surface_release_sync(surface);
+
+    auto const spec = mir_connection_create_spec_for_normal_surface(
+        connection, surface_size.width.as_int(), surface_size.height.as_int(), mir_pixel_format_abgr_8888);
+    mir_surface_spec_set_name(spec, "BufferStreamArrangement.can_be_specified_when_creating_surface");
+    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+    mir_surface_spec_set_streams(spec, infos.data(), infos.size());
+
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+    EXPECT_TRUE(mir_surface_is_valid(surface)) << mir_surface_get_error_message(surface);
+}
+
 TEST_F(BufferStreamArrangement, arrangements_are_applied)
 {
     using namespace testing;
@@ -256,30 +282,4 @@ TEST_F(BufferStreamArrangement, arrangements_are_applied)
     using namespace std::literals::chrono_literals;
     EXPECT_TRUE(ordering->wait_for_positions_within(positions, 5s))
          << "timed out waiting to see the compositor post the streams in the right arrangement";
-}
-
-TEST_F(BufferStreamArrangement, can_be_specified_when_creating_surface)
-{
-    using namespace testing;
-    std::vector<MirBufferStreamInfo> infos(streams.size());
-    auto i = 0u;
-    for (auto const& stream : streams)
-    {
-        infos[i++] = MirBufferStreamInfo{
-            stream->handle(),
-            stream->position().x.as_int(),
-            stream->position().y.as_int()};
-    }
-
-    mir_surface_release_sync(surface);
-
-    auto const spec = mir_connection_create_spec_for_normal_surface(
-        connection, surface_size.width.as_int(), surface_size.height.as_int(), mir_pixel_format_abgr_8888);
-    mir_surface_spec_set_name(spec, "BufferStreamArrangement.can_be_specified_when_creating_surface");
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-    mir_surface_spec_set_streams(spec, infos.data(), infos.size());
-
-    surface = mir_surface_create_sync(spec);
-    mir_surface_spec_release(spec);
-    EXPECT_TRUE(mir_surface_is_valid(surface)) << mir_surface_get_error_message(surface);
 }
