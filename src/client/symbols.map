@@ -380,6 +380,8 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_get_height;
     mir_buffer_get_pixel_format;
     mir_buffer_get_buffer_usage;
+    mir_buffer_is_valid;
+    mir_buffer_get_error_message;
   local:
     *;
 } MIR_CLIENT_DETAIL_9v19;

@@ -174,3 +174,27 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return mir_buffer_usage_hardware;
 }
+
+bool mir_buffer_is_valid(MirBuffer* buffer)
+try
+{
+    (void)buffer;
+    return true;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
+}
+
+char const *mir_buffer_get_error_message(MirBuffer* buffer)
+try
+{
+    (void)buffer;
+    return "";
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return "";
+}
