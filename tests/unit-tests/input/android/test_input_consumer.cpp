@@ -30,6 +30,7 @@
 #include <vector>
 #include <cstring>
 
+using namespace testing;
 using namespace std::literals::chrono_literals;
 namespace mia = mir::input::android;
 namespace mi = mir::input;
@@ -162,7 +163,6 @@ struct InputConsumerTest : ::testing::Test
         }
         else
         {
-
             if (mia::android_source_id_is_pointer_device(event->getSource()))
             {
                 auto mev = static_cast<const droidinput::MotionEvent*>(event);
@@ -171,15 +171,12 @@ struct InputConsumerTest : ::testing::Test
                     {mev->getRawAxisValue(AMOTION_EVENT_AXIS_RX, 0),
                      mev->getRawAxisValue(AMOTION_EVENT_AXIS_RY, 0)},
                     {mev->getRawAxisValue(AMOTION_EVENT_AXIS_HSCROLL, 0),
-                     mev->getRawAxisValue(AMOTION_EVENT_AXIS_VSCROLL, 0)}
-                     );
+                     mev->getRawAxisValue(AMOTION_EVENT_AXIS_VSCROLL, 0)});
             }
         }
     }
     void receive_events()
     {
-        const auto fake_update_rate = 1ms;
-
         android::InputEvent *received_event = nullptr;
         uint32_t seq_id;
         do
@@ -194,6 +191,7 @@ struct InputConsumerTest : ::testing::Test
         } while(consumer.hasPendingBatch() || consumer.hasDeferredEvent());
     }
 
+    std::chrono::milliseconds fake_update_rate = 1ms;
     void advance_frame_time_to(std::chrono::milliseconds time)
     {
         current_frame_time = time;
@@ -226,6 +224,80 @@ TEST_F(InputConsumerTest, emits_move_events_on_recent_messages)
     advance_frame_time_to(2ms);
     receive_events();
 }
+
+
+TEST_F(InputConsumerTest, batched_and_resampled_events_contain_correct_relative_displacement)
+{
+    Sequence seq;
+    EXPECT_CALL(*this, pointer_movement(geom::Point{0, 0}, geom::Displacement{0, 0}, no_scroll));
+    EXPECT_CALL(*this, pointer_movement(geom::Point{27, 20}, geom::Displacement{27, 20}, no_scroll));
+    EXPECT_CALL(*this, pointer_movement(geom::Point{55, 62}, geom::Displacement{28, 42}, no_scroll));
+    EXPECT_CALL(*this, pointer_movement(geom::Point{67, 71}, geom::Displacement{12, 9}, no_scroll));
+    MirPointerButtons button_down = mir_pointer_button_primary;
+    fake_update_rate = 16ms;
+
+    send_pointer_event({mir_pointer_action_button_down, button_down, {0, 0}, {0, 0}, no_scroll, 0ns});
+    send_pointer_event({mir_pointer_action_motion, button_down, {10, 5}, {10, 5}, no_scroll, 2ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {18, 12}, {8, 7}, no_scroll, 4ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {27, 20}, {9, 8}, no_scroll, 8ms});
+
+    // 5 ms RESAMPLE_LATENCY
+    receive_events();
+
+    send_pointer_event({mir_pointer_action_motion, button_down, {39, 36}, {12, 16}, no_scroll, 12ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {43, 56}, {4, 20}, no_scroll, 16ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {51, 59}, {8, 3}, no_scroll, 20ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {55, 62}, {4, 3}, no_scroll, 24ms});
+
+    // 16 ms later
+    receive_events();
+    send_pointer_event({mir_pointer_action_motion, button_down, {59, 65}, {4, 3}, no_scroll, 28ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {63, 68}, {4, 3}, no_scroll, 32ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {67, 71}, {4, 3}, no_scroll, 36ms});
+
+    // 16 ms later
+    receive_events();
+}
+
+TEST_F(InputConsumerTest, correct_relative_displacement_when_switching_in_and_out_of_resampling)
+{
+    Sequence seq;
+    EXPECT_CALL(*this, pointer_movement(geom::Point{27, 20}, geom::Displacement{27, 20}, no_scroll));
+    // emitted due to press:
+    EXPECT_CALL(*this, pointer_movement(geom::Point{39, 36}, geom::Displacement{12, 16}, no_scroll));
+    EXPECT_CALL(*this, pointer_movement(geom::Point{55, 62}, geom::Displacement{16, 26}, no_scroll));
+    // emit due to release:
+    EXPECT_CALL(*this, pointer_movement(geom::Point{59, 65}, geom::Displacement{4, 3}, no_scroll));
+    EXPECT_CALL(*this, pointer_movement(geom::Point{70, 72}, geom::Displacement{11, 7}, no_scroll));
+    MirPointerButtons button_down = mir_pointer_button_primary;
+    fake_update_rate = 16ms;
+
+    send_pointer_event({mir_pointer_action_motion, 0, {10, 5}, {10, 5}, no_scroll, 0ns});
+    send_pointer_event({mir_pointer_action_motion, 0, {18, 12}, {8, 7}, no_scroll, 4ms});
+    send_pointer_event({mir_pointer_action_motion, 0, {27, 20}, {9, 8}, no_scroll, 8ms});
+
+    // 5ms RESAMPLE_LATENCY
+    receive_events();
+
+    send_pointer_event({mir_pointer_action_button_down, button_down, {39, 36}, {12, 16}, no_scroll, 12ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {43, 56}, {4, 20}, no_scroll, 16ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {51, 59}, {8, 3}, no_scroll, 20ms});
+    send_pointer_event({mir_pointer_action_motion, button_down, {55, 62}, {4, 3}, no_scroll, 24ms});
+
+    // update rate + 16 ms later
+    receive_events();
+
+    send_pointer_event({mir_pointer_action_button_up, 0, {59, 65}, {4, 3}, no_scroll, 28ms});
+    // handle release immediately..
+    receive_events();
+
+    send_pointer_event({mir_pointer_action_motion, 0, {63, 68}, {4, 3}, no_scroll, 32ms});
+    send_pointer_event({mir_pointer_action_motion, 0, {67, 71}, {4, 3}, no_scroll, 36ms});
+    send_pointer_event({mir_pointer_action_motion, 0, {70, 72}, {3, 1}, no_scroll, 40ms});
+
+    receive_events();
+}
+
 
 TEST_F(InputConsumerTest, emits_scroll_events_on_each_recent_scroll_messages)
 {
