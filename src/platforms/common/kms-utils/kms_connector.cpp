@@ -20,12 +20,11 @@
 
 #include <boost/throw_exception.hpp>
 
-namespace mgm = mir::graphics::mesa;
 namespace mgk = mir::graphics::kms;
 
 namespace
 {
-bool encoder_is_used(mgm::DRMModeResources const& resources, uint32_t encoder_id)
+bool encoder_is_used(mgk::DRMModeResources const& resources, uint32_t encoder_id)
 {
     bool encoder_used{false};
 
@@ -34,7 +33,7 @@ bool encoder_is_used(mgm::DRMModeResources const& resources, uint32_t encoder_id
         BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to query an encoder with invalid ID 0"});
     }
 
-    resources.for_each_connector([&](mgm::DRMModeConnectorUPtr connector)
+    resources.for_each_connector([&](mgk::DRMModeConnectorUPtr connector)
          {
              if (connector->encoder_id == encoder_id &&
                  connector->connection == DRM_MODE_CONNECTED)
@@ -50,11 +49,11 @@ bool encoder_is_used(mgm::DRMModeResources const& resources, uint32_t encoder_id
     return encoder_used;
 }
 
-bool crtc_is_used(mgm::DRMModeResources const& resources, uint32_t crtc_id)
+bool crtc_is_used(mgk::DRMModeResources const& resources, uint32_t crtc_id)
 {
     bool crtc_used{false};
 
-    resources.for_each_connector([&](mgm::DRMModeConnectorUPtr connector)
+    resources.for_each_connector([&](mgk::DRMModeConnectorUPtr connector)
          {
              if (connector->connection == DRM_MODE_CONNECTED)
              {
@@ -70,11 +69,11 @@ bool crtc_is_used(mgm::DRMModeResources const& resources, uint32_t crtc_id)
     return crtc_used;
 }
 
-std::vector<mgm::DRMModeEncoderUPtr>
-connector_available_encoders(mgm::DRMModeResources const& resources,
+std::vector<mgk::DRMModeEncoderUPtr>
+connector_available_encoders(mgk::DRMModeResources const& resources,
     drmModeConnector const* connector)
 {
-    std::vector<mgm::DRMModeEncoderUPtr> encoders;
+    std::vector<mgk::DRMModeEncoderUPtr> encoders;
 
     for (int i = 0; i < connector->count_encoders; i++)
     {
@@ -120,7 +119,7 @@ const char *connector_type_name(uint32_t type)
 
 }
 
-std::string mgk::connector_name(mgm::DRMModeConnectorUPtr const& connector)
+std::string mgk::connector_name(mgk::DRMModeConnectorUPtr const& connector)
 {
     std::string name = connector_type_name(connector->connector_type);
     name += '-';
@@ -128,9 +127,9 @@ std::string mgk::connector_name(mgm::DRMModeConnectorUPtr const& connector)
     return name;
 }
 
-mgm::DRMModeCrtcUPtr mgk::find_crtc_for_connector(int drm_fd, mgm::DRMModeConnectorUPtr const& connector)
+mgk::DRMModeCrtcUPtr mgk::find_crtc_for_connector(int drm_fd, mgk::DRMModeConnectorUPtr const& connector)
 {
-    mgm::DRMModeResources resources{drm_fd};
+    mgk::DRMModeResources resources{drm_fd};
 
     /* Check to see if there is a crtc already connected */
     if (connector->encoder_id)
@@ -142,13 +141,13 @@ mgm::DRMModeCrtcUPtr mgk::find_crtc_for_connector(int drm_fd, mgm::DRMModeConnec
         }
     }
 
-    mgm::DRMModeCrtcUPtr crtc;
+    mgk::DRMModeCrtcUPtr crtc;
 
     auto available_encoders = connector_available_encoders(resources, connector.get());
 
     int crtc_index = 0;
 
-    resources.for_each_crtc([&](mgm::DRMModeCrtcUPtr candidate_crtc)
+    resources.for_each_crtc([&](mgk::DRMModeCrtcUPtr candidate_crtc)
         {
             if (!crtc && !crtc_is_used(resources, candidate_crtc->crtc_id))
             {

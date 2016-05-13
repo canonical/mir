@@ -155,19 +155,19 @@ size_t mgm::RealKMSDisplayConfiguration::get_kms_mode_index(
 }
 void mgm::RealKMSDisplayConfiguration::update()
 {
-    DRMModeResources resources{drm_fd};
+    kms::DRMModeResources resources{drm_fd};
 
     size_t max_outputs = std::min(resources.num_crtcs(), resources.num_connectors());
     card = {DisplayConfigurationCardId{0}, max_outputs};
 
-    resources.for_each_connector([&](DRMModeConnectorUPtr connector)
+    resources.for_each_connector([&](kms::DRMModeConnectorUPtr connector)
     {
         add_or_update_output(resources, *connector);
     });
 }
 
 void mgm::RealKMSDisplayConfiguration::add_or_update_output(
-    DRMModeResources const& resources,
+    kms::DRMModeResources const& resources,
     drmModeConnector const& connector)
 {
     DisplayConfigurationOutputId id{static_cast<int>(connector.connector_id)};

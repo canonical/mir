@@ -66,10 +66,10 @@ private:
     uint32_t const connector_id;
     std::shared_ptr<PageFlipper> const page_flipper;
 
-    DRMModeConnectorUPtr connector;
+    kms::DRMModeConnectorUPtr connector;
     size_t mode_index;
     geometry::Displacement fb_offset;
-    DRMModeCrtcUPtr current_crtc;
+    kms::DRMModeCrtcUPtr current_crtc;
     drmModeCrtc saved_crtc;
     bool using_saved_crtc;
     bool has_cursor_;

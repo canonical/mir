@@ -37,7 +37,7 @@ mgm::RealKMSOutput::RealKMSOutput(int drm_fd, uint32_t connector_id,
 {
     reset();
 
-    DRMModeResources resources{drm_fd};
+    kms::DRMModeResources resources{drm_fd};
 
     if (connector->encoder_id)
     {
@@ -56,7 +56,7 @@ mgm::RealKMSOutput::~RealKMSOutput()
 
 void mgm::RealKMSOutput::reset()
 {
-    DRMModeResources resources{drm_fd};
+    kms::DRMModeResources resources{drm_fd};
 
     /* Update the connector to ensure we have the latest information */
     try

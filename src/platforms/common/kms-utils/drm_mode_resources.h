@@ -29,7 +29,7 @@ namespace mir
 {
 namespace graphics
 {
-namespace mesa
+namespace kms
 {
 
 typedef std::unique_ptr<drmModeCrtc,std::function<void(drmModeCrtc*)>> DRMModeCrtcUPtr;

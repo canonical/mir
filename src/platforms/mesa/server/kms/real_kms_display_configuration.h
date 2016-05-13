@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_MESA_REAL_KMS_DISPLAY_CONFIGURATION_H_
 
 #include "kms_display_configuration.h"
+#include "drm_mode_resources.h"
 
 #include <xf86drmMode.h>
 
@@ -49,7 +50,7 @@ public:
     void update() override;
 
 private:
-    void add_or_update_output(DRMModeResources const& resources, drmModeConnector const& connector);
+    void add_or_update_output(kms::DRMModeResources const& resources, drmModeConnector const& connector);
     std::vector<DisplayConfigurationOutput>::iterator find_output_with_id(DisplayConfigurationOutputId id);
     std::vector<DisplayConfigurationOutput>::const_iterator find_output_with_id(DisplayConfigurationOutputId id) const;
 

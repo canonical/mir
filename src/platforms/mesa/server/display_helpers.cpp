@@ -183,10 +183,10 @@ int mgmh::DRMHelper::is_appropriate_device(std::shared_ptr<mir::udev::Context> c
 
 int mgmh::DRMHelper::count_connections(int fd)
 {
-    DRMModeResources resources{fd};
+    kms::DRMModeResources resources{fd};
 
     int n_connected = 0;
-    resources.for_each_connector([&](DRMModeConnectorUPtr connector)
+    resources.for_each_connector([&](kms::DRMModeConnectorUPtr connector)
     {
         if (connector->connection == DRM_MODE_CONNECTED)
             n_connected++;

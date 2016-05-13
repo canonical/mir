@@ -31,11 +31,11 @@ namespace graphics
 {
 namespace kms
 {
-std::string connector_name(mesa::DRMModeConnectorUPtr const& connector);
+std::string connector_name(DRMModeConnectorUPtr const& connector);
 
-mesa::DRMModeCrtcUPtr find_crtc_for_connector(
+DRMModeCrtcUPtr find_crtc_for_connector(
     int drm_fd,
-    mesa::DRMModeConnectorUPtr const& connector);
+    DRMModeConnectorUPtr const& connector);
 
 }
 }
