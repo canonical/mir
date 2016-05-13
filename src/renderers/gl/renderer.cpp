@@ -127,7 +127,7 @@ const GLchar* const mrg::Renderer::vshader =
 
 const GLchar* const mrg::Renderer::alpha_fshader =
 {
-    "#if __VERSION__ >= 200\n"
+    "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
     "uniform sampler2D tex;\n"
@@ -141,7 +141,7 @@ const GLchar* const mrg::Renderer::alpha_fshader =
 
 const GLchar* const mrg::Renderer::default_fshader =
 {   // This is the fastest fragment shader. Use it when you can.
-    "#if __VERSION__ >= 200\n"
+    "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
     "uniform sampler2D tex;\n"
