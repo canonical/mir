@@ -20,12 +20,16 @@
 #include "mir/events/event_private.h" // only needed to validate motion_up/down mapping
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
+
+#include <linux/input.h>
 
 namespace mev = mir::events;
+using namespace ::testing;
 
 namespace
 {
-struct InputEventBuilder : public testing::Test
+struct InputEventBuilder : public Test
 {
     MirInputDeviceId const device_id = 7;
     std::chrono::nanoseconds const timestamp = std::chrono::nanoseconds(39);
@@ -177,4 +181,82 @@ TEST_F(InputEventBuilder, map_to_hover_if_no_button_pressed)
     auto pev = mir_input_event_get_pointer_event(ie);
     EXPECT_EQ(modifiers, mir_pointer_event_modifiers(pev));
     EXPECT_EQ(action, mir_pointer_event_action(pev));
+}
+
+TEST_F(InputEventBuilder, input_device_state_event)
+{
+    auto const button_state = mir_pointer_button_primary|mir_pointer_button_secondary;
+    auto ev = mev::make_event(timestamp,
+                              button_state,
+                              12.1f,
+                              53.2f,
+                              {mev::InputDeviceState{MirInputDeviceId{3}, {KEY_LEFTALT, KEY_M}, 0},
+                               mev::InputDeviceState{MirInputDeviceId{2}, {}, button_state}});
+
+    EXPECT_THAT(mir_event_get_type(ev.get()), Eq(mir_event_type_input_device_state));
+    auto ids_event = mir_event_get_input_device_state_event(ev.get());
+
+    EXPECT_THAT(mir_input_device_state_event_time(ids_event), Eq(timestamp.count()));
+    EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_x), Eq(12.1f));
+    EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_y), Eq(53.2f));
+    EXPECT_THAT(mir_input_device_state_event_pointer_buttons(ids_event), Eq(button_state));
+    EXPECT_THAT(mir_input_device_state_event_device_count(ids_event), Eq(2));
+
+    EXPECT_THAT(mir_input_device_state_event_device_id(ids_event, 0), Eq(MirInputDeviceId{3}));
+    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys_count(ids_event, 0), Eq(2));
+    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys(ids_event, 0)[0], Eq(KEY_LEFTALT));
+    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys(ids_event, 0)[1], Eq(KEY_M));
+    EXPECT_THAT(mir_input_device_state_event_device_pointer_buttons(ids_event, 0), Eq(0));
+
+    EXPECT_THAT(mir_input_device_state_event_device_id(ids_event, 1), Eq(MirInputDeviceId{2}));
+    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys_count(ids_event, 1), Eq(0));
+    EXPECT_THAT(mir_input_device_state_event_device_pointer_buttons(ids_event, 1), Eq(button_state));
+}
+
+TEST_F(InputEventBuilder, input_device_state_event_deserialized)
+{
+    auto const button_state = mir_pointer_button_primary;
+    auto ev = mev::make_event(timestamp,
+                              button_state,
+                              124.5f,
+                              91.2f,
+                              {});
+
+    auto encoded = MirEvent::serialize(ev.get());
+
+    auto deserialzed_event = MirEvent::deserialize(encoded);
+
+    EXPECT_THAT(mir_event_get_type(deserialzed_event.get()), Eq(mir_event_type_input_device_state));
+    auto ids_event = mir_event_get_input_device_state_event(deserialzed_event.get());
+
+    EXPECT_THAT(mir_input_device_state_event_time(ids_event), Eq(timestamp.count()));
+    EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_x), Eq(124.5f));
+    EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_y), Eq(91.2f));
+    EXPECT_THAT(mir_input_device_state_event_pointer_buttons(ids_event), Eq(button_state));
+    EXPECT_THAT(mir_input_device_state_event_device_count(ids_event), Eq(0));
+}
+
+TEST_F(InputEventBuilder, input_device_state_event_deserialized_with_pressed_keys)
+{
+    auto const button_state = mir_pointer_button_primary | mir_pointer_button_secondary;
+    auto ev = mev::make_event(timestamp,
+                              button_state,
+                              0.0f,
+                              0.0f,
+                              {mev::InputDeviceState{MirInputDeviceId{0}, {}, mir_pointer_button_primary},
+                               mev::InputDeviceState{MirInputDeviceId{2}, {}, mir_pointer_button_secondary},
+                               mev::InputDeviceState{MirInputDeviceId{3}, {KEY_RIGHTALT, KEY_LEFTSHIFT, KEY_Q}, 0}});
+
+    auto encoded = MirEvent::serialize(ev.get());
+
+    auto deserialzed_event = MirEvent::deserialize(encoded);
+
+    EXPECT_THAT(mir_event_get_type(deserialzed_event.get()), Eq(mir_event_type_input_device_state));
+    auto ids_event = mir_event_get_input_device_state_event(deserialzed_event.get());
+
+    EXPECT_THAT(mir_input_device_state_event_device_count(ids_event), Eq(3));
+    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys_count(ids_event, 2), Eq(3));
+    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys(ids_event, 2)[0], Eq(KEY_RIGHTALT));
+    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys(ids_event, 2)[1], Eq(KEY_LEFTSHIFT));
+    EXPECT_THAT(mir_input_device_state_event_device_pressed_keys(ids_event, 2)[2], Eq(KEY_Q));
 }
