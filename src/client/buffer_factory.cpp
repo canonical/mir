@@ -18,7 +18,6 @@
 
 #include "mir/client_buffer_factory.h"
 #include "buffer_factory.h"
-#include "mir_buffer.h"
 #include <algorithm>
 #include <boost/throw_exception.hpp>
 #include "protobuf_to_native_buffer.h"
