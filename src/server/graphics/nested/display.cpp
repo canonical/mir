@@ -44,7 +44,9 @@ namespace geom = mir::geometry;
 
 EGLint const mgn::detail::nested_egl_context_attribs[] =
 {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
     EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
     EGL_NONE
 };
 
@@ -86,6 +88,7 @@ void mgn::detail::EGLDisplayHandle::initialize(MirPixelFormat format)
         BOOST_THROW_EXCEPTION(mg::egl_error("Nested Mir Display Error: Failed to initialize EGL."));
     }
 
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     pixel_format = format;
     egl_context_ = eglCreateContext(egl_display, choose_windowed_config(format), EGL_NO_CONTEXT, detail::nested_egl_context_attribs);
 
@@ -311,6 +314,7 @@ void mgn::Display::create_surfaces(mg::DisplayConfiguration const& configuration
                     mir_buffer_usage_hardware,
                     static_cast<uint32_t>(best_output.id.as_value()));
 
+                eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
                 display_buffer = std::make_shared<mgn::detail::DisplaySyncGroup>(
                     std::make_shared<mgn::detail::DisplayBuffer>(
                         egl_display,

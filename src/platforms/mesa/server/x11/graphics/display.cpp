@@ -203,7 +203,9 @@ mgx::X11EGLContext::X11EGLContext(EGLDisplay egl_dpy, EGLConfig config)
     : egl_dpy{egl_dpy}
 {
     static const EGLint ctx_attribs[] = {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
         EGL_NONE };
 
     egl_ctx = eglCreateContext(egl_dpy, config, EGL_NO_CONTEXT, ctx_attribs);

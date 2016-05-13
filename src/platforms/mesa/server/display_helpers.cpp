@@ -322,9 +322,12 @@ mgmh::EGLHelper::EGLHelper(GLConfig const& gl_config)
 void mgmh::EGLHelper::setup(GBMHelper const& gbm)
 {
     fprintf(stderr, "SETUP 1\n");
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
     static const EGLint context_attr[] = {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
         EGL_NONE
     };
 
@@ -333,14 +336,18 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm)
     egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attr);
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
+    fprintf(stderr, "SETUP egl_context = %p\n", egl_context);
 }
 
 void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
 {
     fprintf(stderr, "SETUP 2\n");
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
     static const EGLint context_attr[] = {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
         EGL_NONE
     };
 
@@ -349,15 +356,19 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
     egl_context = eglCreateContext(egl_display, egl_config, shared_context, context_attr);
     if (egl_context == EGL_NO_CONTEXT)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
+    fprintf(stderr, "SETUP egl_context = %p\n", egl_context);
 }
 
 void mgmh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
                             EGLContext shared_context)
 {
     fprintf(stderr, "SETUP 3\n");
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
     static const EGLint context_attr[] = {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
         EGL_NONE
     };
 
@@ -392,15 +403,22 @@ mgmh::EGLHelper::~EGLHelper() noexcept
 
 bool mgmh::EGLHelper::swap_buffers()
 {
-    fprintf(stderr, "SWAP %p, %p\n", egl_display, egl_surface);
     auto ret = eglSwapBuffers(egl_display, egl_surface);
+    fprintf(stderr, "eglSwapBuffers(%p,%p) = %s\n",
+        egl_display, egl_surface,
+        ret ? "OK" : "FAILED");
     return (ret == EGL_TRUE);
 }
 
 bool mgmh::EGLHelper::make_current() const
 {
-    fprintf(stderr, "MAKE_CURRENT\n");
     auto ret = eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+    fprintf(stderr, "eglMakeCurrent(%p,%p,%p,%p) %s\n",
+        egl_display, egl_surface, egl_surface, egl_context,
+        ret ? "OK" : "FAILED");
+    if (!ret)
+        fprintf(stderr, "Error = 0x%x\n", eglGetError());
+    fprintf(stderr, "eglGetCurrentDisplay = %p\n", eglGetCurrentDisplay());
     return (ret == EGL_TRUE);
 }
 
@@ -450,8 +468,6 @@ void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
 
         should_terminate_egl = true;
     }
-
-    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
     if (eglChooseConfig(egl_display, config_attr, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||
         num_egl_configs != 1)

@@ -120,7 +120,9 @@ EGLSurface create_surface(EGLDisplay egl_display, EGLConfig egl_config)
 
 EGLint const default_egl_context_attr[] =
 {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
     EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
     EGL_NONE
 };
 
