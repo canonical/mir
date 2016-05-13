@@ -199,12 +199,17 @@ include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
 include_directories (SYSTEM ${EGL_INCLUDE_DIRS})
 include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
 
-if (TARGET_ARCH STREQUAL "x86_64-linux-gnu" OR
-    TARGET_ARCH STREQUAL "i386-linux-gnu")
-  set(DEFAULT_LIBGL "libGL")
-else()
+#
+# Full OpenGL support works with Mesa. Although it probably should not, and
+# is expected to fail in proprietary drivers due to one remaining "TODO" in:
+#   src/platform/graphics/egl_extensions.cpp
+#
+#if (TARGET_ARCH STREQUAL "x86_64-linux-gnu" OR
+#    TARGET_ARCH STREQUAL "i386-linux-gnu")
+#  set(DEFAULT_LIBGL "libGL")
+#else()
   set(DEFAULT_LIBGL "libGLESv2")
-endif()
+#endif()
 set(MIR_SERVER_LIBGL ${DEFAULT_LIBGL} CACHE STRING "OpenGL library to use in Mir servers {libGL,libGLESv2}")
 
 if (MIR_SERVER_LIBGL STREQUAL "libGL")
