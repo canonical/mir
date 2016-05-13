@@ -31,48 +31,33 @@ namespace client
 {
 class ClientBuffer;
 class MemoryRegion;
+
 //this is the type backing MirBuffer* 
 class Buffer
 {
 public:
-    Buffer(
-        mir_buffer_callback cb, void* context,
-        int buffer_id,
-        std::shared_ptr<ClientBuffer> const& buffer,
-        MirConnection* connection,
-        MirBufferUsage usage);
-    int rpc_id() const;
+    virtual ~Buffer() = default;
+    virtual int rpc_id() const = 0;
+    virtual void submitted() = 0;
+    virtual void received() = 0;
+    virtual void received(MirBufferPackage const& update_message) = 0;
+    virtual MirNativeBuffer* as_mir_native_buffer() const = 0;
+    virtual std::shared_ptr<ClientBuffer> client_buffer() const = 0;
+    virtual MirGraphicsRegion map_region() = 0;
 
-    void submitted();
-    void received();
-    void received(MirBufferPackage const& update_message);
+    virtual void set_fence(MirNativeFence*, MirBufferAccess) = 0;
+    virtual MirNativeFence* get_fence() const = 0;
+    virtual bool wait_fence(MirBufferAccess, std::chrono::nanoseconds) = 0;
 
-    MirNativeBuffer* as_mir_native_buffer() const;
-    std::shared_ptr<ClientBuffer> client_buffer() const;
-    MirGraphicsRegion map_region();
-
-    void set_fence(MirNativeFence*, MirBufferAccess);
-    MirNativeFence* get_fence() const;
-    bool wait_fence(MirBufferAccess, std::chrono::nanoseconds);
-
-    MirBufferUsage buffer_usage() const;
-    MirPixelFormat pixel_format() const;
-    geometry::Size size() const;
-
-    MirConnection* allocating_connection() const;
-
-    void increment_age();
-private:
-    mir_buffer_callback cb;
-    void* cb_context;
-    int const buffer_id;
-    std::shared_ptr<ClientBuffer> buffer;
-
-    std::mutex mutex;
-    bool owned;
-    std::shared_ptr<MemoryRegion> mapped_region;
-    MirConnection* const connection;
-    MirBufferUsage const usage;
+    virtual MirBufferUsage buffer_usage() const = 0;
+    virtual MirPixelFormat pixel_format() const = 0;
+    virtual geometry::Size size() const = 0;
+    virtual MirConnection* allocating_connection() const = 0;
+    virtual void increment_age() = 0;
+protected:
+    Buffer() = default;
+    Buffer(Buffer const&) = delete;
+    Buffer& operator=(Buffer const&) = delete;
 };
 }
 }

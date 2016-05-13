@@ -17,12 +17,12 @@
  */
 
 #include "mir/client_buffer.h"
-#include "buffer.h"
+#include "mir_buffer.h"
 #include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
 
-mcl::Buffer::Buffer(
+mcl::MirBuffer::MirBuffer(
     mir_buffer_callback cb, void* context,
     int buffer_id,
     std::shared_ptr<ClientBuffer> const& buffer,
@@ -38,12 +38,12 @@ mcl::Buffer::Buffer(
 {
 }
 
-int mcl::Buffer::rpc_id() const
+int mcl::MirBuffer::rpc_id() const
 {
     return buffer_id;
 }
 
-void mcl::Buffer::submitted()
+void mcl::MirBuffer::submitted()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     if (!owned)
@@ -53,18 +53,18 @@ void mcl::Buffer::submitted()
     owned = false;
 }
 
-void mcl::Buffer::received()
+void mcl::MirBuffer::received()
 {
     {
         std::lock_guard<decltype(mutex)> lk(mutex);
         if (!owned)
             owned = true;
     }
-    cb(reinterpret_cast<MirBuffer*>(this), cb_context);
+    cb(reinterpret_cast<::MirBuffer*>(static_cast<mcl::Buffer*>(this)), cb_context);
 
 }
 
-void mcl::Buffer::received(MirBufferPackage const& update_package)
+void mcl::MirBuffer::received(MirBufferPackage const& update_package)
 {
     {
         std::lock_guard<decltype(mutex)> lk(mutex);
@@ -74,10 +74,10 @@ void mcl::Buffer::received(MirBufferPackage const& update_package)
             buffer->update_from(update_package);
         }
     }
-    cb(reinterpret_cast<MirBuffer*>(this), cb_context);
+    cb(reinterpret_cast<::MirBuffer*>(static_cast<mcl::Buffer*>(this)), cb_context);
 }
     
-MirGraphicsRegion mcl::Buffer::map_region()
+MirGraphicsRegion mcl::MirBuffer::map_region()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     mapped_region = buffer->secure_for_cpu_write();
@@ -90,51 +90,51 @@ MirGraphicsRegion mcl::Buffer::map_region()
     };
 }
 
-MirNativeBuffer* mcl::Buffer::as_mir_native_buffer() const
+MirNativeBuffer* mcl::MirBuffer::as_mir_native_buffer() const
 {
     return buffer->as_mir_native_buffer();
 }
 
-void mcl::Buffer::set_fence(MirNativeFence* native_fence, MirBufferAccess access)
+void mcl::MirBuffer::set_fence(MirNativeFence* native_fence, MirBufferAccess access)
 {
     buffer->set_fence(native_fence, access);
 }
 
-MirNativeFence* mcl::Buffer::get_fence() const
+MirNativeFence* mcl::MirBuffer::get_fence() const
 {
     return buffer->get_fence();
 }
 
-bool mcl::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds timeout)
+bool mcl::MirBuffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds timeout)
 {
     return buffer->wait_fence(access, timeout);
 }
 
-MirConnection* mcl::Buffer::allocating_connection() const
+MirConnection* mcl::MirBuffer::allocating_connection() const
 {
     return connection;
 }
 
-MirBufferUsage mcl::Buffer::buffer_usage() const
+MirBufferUsage mcl::MirBuffer::buffer_usage() const
 {
     return usage;
 }
 
-MirPixelFormat mcl::Buffer::pixel_format() const
+MirPixelFormat mcl::MirBuffer::pixel_format() const
 {
     return buffer->pixel_format();
 }
 
-mir::geometry::Size mcl::Buffer::size() const
+mir::geometry::Size mcl::MirBuffer::size() const
 {
     return buffer->size();
 }
-std::shared_ptr<mcl::ClientBuffer> mcl::Buffer::client_buffer() const
+std::shared_ptr<mcl::ClientBuffer> mcl::MirBuffer::client_buffer() const
 {
     return buffer;
 }
 
-void mcl::Buffer::increment_age()
+void mcl::MirBuffer::increment_age()
 {
     buffer->increment_age();
 }

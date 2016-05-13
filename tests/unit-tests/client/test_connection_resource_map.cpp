@@ -19,6 +19,7 @@
 #include "src/client/connection_surface_map.h"
 #include "src/client/mir_surface.h"
 #include "src/client/presentation_chain.h"
+#include "src/client/mir_buffer.h"
 #include "mir/test/doubles/mock_client_buffer_stream.h"
 #include "mir/test/doubles/mock_protobuf_server.h"
 #include <gtest/gtest.h>
@@ -39,7 +40,7 @@ struct ConnectionResourceMap : testing::Test
     std::shared_ptr<MirSurface> surface{std::make_shared<MirSurface>("a string", nullptr, mf::SurfaceId{2}, wh)};
     std::shared_ptr<mcl::ClientBufferStream> stream{ std::make_shared<mtd::MockClientBufferStream>() }; 
     std::shared_ptr<mcl::Buffer> buffer {
-        std::make_shared<mcl::Buffer>(buffer_cb, nullptr, 0, nullptr, nullptr, mir_buffer_usage_software) };
+        std::make_shared<mcl::MirBuffer>(buffer_cb, nullptr, 0, nullptr, nullptr, mir_buffer_usage_software) };
     mtd::MockProtobufServer mock_server;
     std::shared_ptr<mcl::PresentationChain> chain{ std::make_shared<mcl::PresentationChain>(
         nullptr, 0, mock_server, nullptr, nullptr) };

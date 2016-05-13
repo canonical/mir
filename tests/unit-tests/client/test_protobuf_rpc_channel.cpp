@@ -25,6 +25,7 @@
 #include "src/client/lifecycle_control.h"
 #include "src/client/ping_handler.h"
 #include "src/client/buffer_factory.h"
+#include "src/client/mir_buffer.h"
 
 #include "mir/variable_length_array.h"
 #include "mir_protobuf.pb.h"
@@ -726,7 +727,7 @@ TEST_F(MirProtobufRpcChannelTest, creates_buffer_if_not_in_map)
     auto mock_buffer_factory = std::make_shared<MockBufferFactory>();
     EXPECT_CALL(*mock_buffer_factory, generate_buffer(_))
         .WillOnce(InvokeWithoutArgs([&]{
-            return std::make_unique<mcl::Buffer>(
+            return std::make_unique<mcl::MirBuffer>(
                 buffer_cb, nullptr, buffer_id, nullptr, nullptr, mir_buffer_usage_software);
             }));
     EXPECT_CALL(*stream_map, insert(buffer_id, _));
@@ -759,7 +760,7 @@ TEST_F(MirProtobufRpcChannelTest, reuses_buffer_if_in_map)
     auto stream_map = std::make_shared<MockSurfaceMap>();
     auto mock_buffer_factory = std::make_shared<MockBufferFactory>();
     auto mock_client_buffer = std::make_shared<mtd::MockClientBuffer>();
-    auto buf = std::make_shared<mcl::Buffer>(buffer_cb, nullptr, buffer_id, mock_client_buffer, nullptr, mir_buffer_usage_software);
+    auto buf = std::make_shared<mcl::MirBuffer>(buffer_cb, nullptr, buffer_id, mock_client_buffer, nullptr, mir_buffer_usage_software);
     EXPECT_CALL(*stream_map, buffer(buffer_id)).Times(1)
        .WillOnce(Return(buf));
     EXPECT_CALL(*mock_client_buffer, update_from(_))
@@ -793,7 +794,7 @@ TEST_F(MirProtobufRpcChannelTest, sends_incoming_buffer_to_stream_if_stream_id_p
     auto stream_map = std::make_shared<MockSurfaceMap>();
     auto mock_buffer_factory = std::make_shared<MockBufferFactory>();
     auto mock_client_buffer = std::make_shared<mtd::MockClientBuffer>();
-    auto buf = std::make_shared<mcl::Buffer>(buffer_cb, nullptr, buffer_id, mock_client_buffer, nullptr, mir_buffer_usage_software);
+    auto buf = std::make_shared<mcl::MirBuffer>(buffer_cb, nullptr, buffer_id, mock_client_buffer, nullptr, mir_buffer_usage_software);
     EXPECT_CALL(*stream_map, with_stream_do(mir::frontend::BufferStreamId{stream_id},_))
         .Times(1);
 

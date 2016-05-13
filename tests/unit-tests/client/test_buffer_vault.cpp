@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "src/client/client_buffer_depository.h"
 #include "src/client/buffer_vault.h"
+#include "src/client/mir_buffer.h"
 #include "src/client/buffer_factory.h"
 #include "src/client/connection_surface_map.h"
 #include "mir/client_buffer_factory.h"
@@ -29,6 +30,7 @@
 #include "mir/test/fake_shared.h"
 #include "mir_protobuf.pb.h"
 #include "mir/test/doubles/mock_client_buffer.h"
+#include "mir/test/doubles/mock_mir_buffer.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -88,41 +90,19 @@ struct BufferVault : public testing::Test
         package3.set_height(size.height.as_int());
         package4.set_width(new_size.width.as_int());
         package4.set_height(new_size.height.as_int());
-
         package.set_buffer_id(1);
         package2.set_buffer_id(2);
         package3.set_buffer_id(3);
         package4.set_buffer_id(4);
 
-        auto buffer1 = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
-        ON_CALL(*buffer1, size())
-            .WillByDefault(Return(size));
-        auto buffer2 = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
-        ON_CALL(*buffer2, size())
-            .WillByDefault(Return(size));
-        auto buffer3 = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
-        ON_CALL(*buffer3, size())
-            .WillByDefault(Return(size));
-        auto buffer4 = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
-        ON_CALL(*buffer4, size())
-            .WillByDefault(Return(new_size));
-
-        auto b1 = std::make_shared<mcl::Buffer>(
-            ignore, nullptr, package.buffer_id(), buffer1, nullptr, mir_buffer_usage_software);
-        auto b2 = std::make_shared<mcl::Buffer>(
-            ignore, nullptr, package2.buffer_id(), buffer2, nullptr, mir_buffer_usage_software);
-        auto b3 = std::make_shared<mcl::Buffer>(
-            ignore, nullptr, package3.buffer_id(), buffer3, nullptr, mir_buffer_usage_software);
-        auto b4 = std::make_shared<mcl::Buffer>(
-            ignore, nullptr, package4.buffer_id(), buffer4, nullptr, mir_buffer_usage_software);
+        auto b1 = std::make_shared<mtd::StubMirBuffer>(size, 1);
+        auto b2 = std::make_shared<mtd::StubMirBuffer>(size, 2);
+        auto b3 = std::make_shared<mtd::StubMirBuffer>(size, 3);
+        auto b4 = std::make_shared<mtd::StubMirBuffer>(new_size, 4);
         surface_map->insert(package.buffer_id(), b1);
         surface_map->insert(package2.buffer_id(), b2);
         surface_map->insert(package3.buffer_id(), b3);
         surface_map->insert(package4.buffer_id(), b4);
-        b1->received();
-        b2->received();
-        b3->received();
-        b4->received();
     }
 
     std::unique_ptr<mcl::BufferVault> make_vault()
@@ -224,7 +204,7 @@ TEST_F(StartedBufferVault, depositing_external_buffer_throws)
     auto platform_buffer = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
     ON_CALL(*platform_buffer, size())
         .WillByDefault(Return(size));
-    auto buffer = std::make_shared<mcl::Buffer>(
+    auto buffer = std::make_shared<mcl::MirBuffer>(
         ignore, nullptr, 0, platform_buffer, nullptr, mir_buffer_usage_software);
     EXPECT_THROW({ 
         vault.deposit(buffer);
@@ -294,7 +274,7 @@ TEST_F(BufferVault, ages_buffer_on_deposit)
     EXPECT_CALL(*mock_buffer, increment_age());
     ON_CALL(mock_platform_factory, create_buffer(_,_,_))
         .WillByDefault(Return(mock_buffer));
-    auto b1 = std::make_shared<mcl::Buffer>(
+    auto b1 = std::make_shared<mcl::MirBuffer>(
         ignore, nullptr, package.buffer_id(), mock_buffer, nullptr, mir_buffer_usage_software);
     surface_map->insert(package.buffer_id(), b1);
 
@@ -311,7 +291,7 @@ TEST_F(BufferVault, marks_as_submitted_on_transfer)
     EXPECT_CALL(*mock_buffer, mark_as_submitted());
     ON_CALL(mock_platform_factory, create_buffer(_,_,_))
         .WillByDefault(Return(mock_buffer));
-    auto b1 = std::make_shared<mcl::Buffer>(
+    auto b1 = std::make_shared<mcl::MirBuffer>(
         ignore, nullptr, package.buffer_id(), mock_buffer, nullptr, mir_buffer_usage_software);
     surface_map->insert(package.buffer_id(), b1);
     b1->received();
@@ -432,7 +412,7 @@ TEST_F(StartedBufferVault, buffer_count_remains_the_same_after_scaling)
         auto mcb = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
         ON_CALL(*mcb, size())
             .WillByDefault(Return(new_size));
-        auto b = std::make_shared<mcl::Buffer>(
+        auto b = std::make_shared<mcl::MirBuffer>(
             ignore, nullptr, i, mcb, nullptr, mir_buffer_usage_software);
         surface_map->insert(i, b);
         b->received();
@@ -521,7 +501,7 @@ TEST_F(StartedBufferVault, delayed_decrease_allocation_count)
     auto extra_native_buffer = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
     ON_CALL(*extra_native_buffer, size())
         .WillByDefault(Return(size));
-    auto extra_buffer = std::make_shared<mcl::Buffer>(
+    auto extra_buffer = std::make_shared<mcl::MirBuffer>(
         ignore, nullptr, package4.buffer_id(), extra_native_buffer, nullptr, mir_buffer_usage_software);
     surface_map->insert(package4.buffer_id(), extra_buffer);
     extra_buffer->received();

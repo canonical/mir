@@ -22,6 +22,7 @@
 #include "mir/test/fake_shared.h"
 #include "src/client/presentation_chain.h"
 #include "src/client/buffer_factory.h"
+#include "src/client/mir_buffer.h"
 #include "mir/client_buffer_factory.h"
 
 #include <mutex>
@@ -98,7 +99,7 @@ TEST_F(PresentationChain, submits_buffer_when_asked)
     EXPECT_CALL(mock_server, submit_buffer(BufferRequestMatches(request),_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    mcl::Buffer buffer(buffer_callback, nullptr, buffer_id, client_buffer, nullptr, mir_buffer_usage_software);
+    mcl::MirBuffer buffer(buffer_callback, nullptr, buffer_id, client_buffer, nullptr, mir_buffer_usage_software);
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
@@ -113,7 +114,7 @@ TEST_F(PresentationChain, double_submission_throws)
     EXPECT_CALL(mock_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
 
-    mcl::Buffer buffer(buffer_callback, nullptr, buffer_id, client_buffer, nullptr, mir_buffer_usage_software);
+    mcl::MirBuffer buffer(buffer_callback, nullptr, buffer_id, client_buffer, nullptr, mir_buffer_usage_software);
     mcl::PresentationChain chain(
         connection, rpc_id, mock_server,
         std::make_shared<mtd::StubClientBufferFactory>(),
