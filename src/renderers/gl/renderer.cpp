@@ -173,6 +173,7 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
       orientation(mir_orientation_normal),
       mirror_mode(mir_mirror_mode_none)
 {
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     EGLDisplay disp = eglGetCurrentDisplay();
     if (disp != EGL_NO_DISPLAY)
     {

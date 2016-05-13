@@ -208,6 +208,7 @@ mgn::Display::Display(
 
 mgn::Display::~Display() noexcept
 {
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     if (eglGetCurrentContext() == egl_display.egl_context())
         eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }

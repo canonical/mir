@@ -390,6 +390,7 @@ mgmh::EGLHelper::~EGLHelper() noexcept
     if (egl_display != EGL_NO_DISPLAY) {
         if (egl_context != EGL_NO_CONTEXT)
         {
+            eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
             if (eglGetCurrentContext() == egl_context)
                 eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
             eglDestroyContext(egl_display, egl_context);
@@ -413,6 +414,7 @@ bool mgmh::EGLHelper::swap_buffers()
 bool mgmh::EGLHelper::make_current() const
 {
     auto ret = eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     fprintf(stderr, "eglMakeCurrent(%p,%p,%p,%p) %s\n",
         egl_display, egl_surface, egl_surface, egl_context,
         ret ? "OK" : "FAILED");
