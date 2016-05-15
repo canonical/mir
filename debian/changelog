@@ -29,6 +29,7 @@ mir (0.23.0ubuntu1) UNRELEASED; urgency=medium
       . Mir-on-X11 doesn't pass Alt+primary button drag to Mir (LP: #1575765)
       . Mir-on-X11 breaks mir_proving_server resize logic (LP: #1575192)
       . Resizing can crash mir_demo_server (LP: #1575211) 
+      . [regression] Cursor stops at phantom edge on M10 and N7 (LP: 1580774)
 
  -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 09 May 2016 11:59:42 -0400
 
