@@ -45,11 +45,51 @@ namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
+namespace geom = mir::geometry;
 
 using namespace testing;
 
 namespace
 {
+
+auto display_output(
+    mg::DisplayConfigurationOutputId id, geom::Point pos, geom::Size size, bool connected, bool used, MirPowerMode mode)
+    -> mg::DisplayConfigurationOutput
+{
+        return mg::DisplayConfigurationOutput{id,
+                                              mg::DisplayConfigurationCardId{0},
+                                              mg::DisplayConfigurationOutputType::lvds,
+                                              std::vector<MirPixelFormat>{mir_pixel_format_abgr_8888},
+                                              {mg::DisplayConfigurationMode{size, 60}},
+                                              0,
+                                              geom::Size{40, 40},
+                                              connected,
+                                              used,
+                                              pos,
+                                              0,
+                                              mir_pixel_format_abgr_8888,
+                                              mode,
+                                              mir_orientation_normal,
+                                              1.0f,
+                                              mir_form_factor_phone
+        };
+}
+
+struct TestDisplayConfiguration : mtd::NullDisplayConfiguration
+{
+    std::vector<mg::DisplayConfigurationOutput> const outputs;
+    TestDisplayConfiguration(std::vector<mg::DisplayConfigurationOutput> const& items)
+        : outputs{items} {}
+    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> fun) const override
+    {
+        for (auto const& output : outputs)
+            fun(output);
+    }
+    std::unique_ptr<mg::DisplayConfiguration> clone() const override
+    {
+        return std::make_unique<TestDisplayConfiguration>(outputs);
+    }
+};
 
 class MockDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
 {
@@ -805,4 +845,70 @@ TEST_F(MediatingDisplayChangerTest, all_sessions_get_notified_on_configuration_c
 
     ASSERT_THAT(received_configuration, Not(Eq(nullptr)));
     EXPECT_THAT(*received_configuration, mt::DisplayConfigMatches(std::cref(*new_config)));
+}
+
+TEST_F(MediatingDisplayChangerTest, input_region_skipps_not_connected_displays)
+{
+    using namespace testing;
+
+    auto const connected = true;
+    auto const disconnected = false;
+    auto const used = true;
+    mir::geometry::Rectangles expected_rectangles;
+    expected_rectangles.add(geom::Rectangle{geom::Point{0,0}, geom::Size{100,100}});
+
+    TestDisplayConfiguration conf{{display_output(mg::DisplayConfigurationOutputId{0},
+                                                  geom::Point{0, 0},
+                                                  geom::Size{100, 100},
+                                                  connected,
+                                                  used,
+                                                  mir_power_mode_on),
+                                   display_output(mg::DisplayConfigurationOutputId{1},
+                                                  geom::Point{100, 0},
+                                                  geom::Size{100, 100},
+                                                  disconnected,
+                                                  used,
+                                                  mir_power_mode_on)}};
+
+    EXPECT_CALL(mock_input_region, set_input_rectangles(expected_rectangles));
+
+    auto session = std::make_shared<mtd::StubSession>();
+
+    session_event_sink.handle_focus_change(session);
+    changer->configure(session,
+                       mt::fake_shared(conf));
+}
+
+TEST_F(MediatingDisplayChangerTest, input_region_accumulates_powered_and_connected_displays)
+{
+    using namespace testing;
+
+    auto const connected = true;
+    auto const first_monitor = geom::Rectangle{geom::Point{0, 0}, geom::Size{ 40, 40 }};
+    auto const second_monitor = geom::Rectangle{geom::Point{40, 0}, geom::Size{ 10, 10}};
+    auto const used = true;
+    mir::geometry::Rectangles expected_rectangles;
+    expected_rectangles.add(first_monitor);
+    expected_rectangles.add(second_monitor);
+
+    TestDisplayConfiguration conf{{display_output(mg::DisplayConfigurationOutputId{0},
+                                                  first_monitor.top_left,
+                                                  first_monitor.size,
+                                                  connected,
+                                                  used,
+                                                  mir_power_mode_on),
+                                   display_output(mg::DisplayConfigurationOutputId{1},
+                                                  second_monitor.top_left,
+                                                  second_monitor.size,
+                                                  connected,
+                                                  used,
+                                                  mir_power_mode_on)}};
+
+    EXPECT_CALL(mock_input_region, set_input_rectangles(expected_rectangles));
+
+    auto session = std::make_shared<mtd::StubSession>();
+
+    session_event_sink.handle_focus_change(session);
+    changer->configure(session,
+                       mt::fake_shared(conf));
 }
