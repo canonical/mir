@@ -138,3 +138,13 @@ void mcl::Buffer::increment_age()
 {
     buffer->increment_age();
 }
+
+bool mcl::Buffer::valid() const
+{
+    return true;
+}
+
+char const* mcl::Buffer::error_message() const
+{
+    return "";
+}

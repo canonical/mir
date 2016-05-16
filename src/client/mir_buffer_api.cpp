@@ -175,13 +175,11 @@ catch (std::exception const& ex)
     return mir_buffer_usage_hardware;
 }
 
-bool mir_buffer_is_valid(MirBuffer* buffer)
+bool mir_buffer_is_valid(MirBuffer* b)
 try
 {
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-//    b->va 
-//    (void)buffer;
-    return true;
+    return buffer->valid();
 }
 catch (std::exception const& ex)
 {
@@ -189,14 +187,14 @@ catch (std::exception const& ex)
     return false;
 }
 
-char const *mir_buffer_get_error_message(MirBuffer* buffer)
+char const *mir_buffer_get_error_message(MirBuffer* b)
 try
 {
-    (void)buffer;
-    return "";
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    return buffer->error_message();
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return "";
+    return "error";
 }

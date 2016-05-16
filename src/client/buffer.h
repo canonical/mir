@@ -62,6 +62,8 @@ public:
     MirConnection* allocating_connection() const override;
 
     void increment_age() override;
+    bool valid() const override;
+    char const* error_message() const override;
 private:
     mir_buffer_callback cb;
     void* cb_context;
