@@ -912,3 +912,38 @@ TEST_F(MediatingDisplayChangerTest, input_region_accumulates_powered_and_connect
     changer->configure(session,
                        mt::fake_shared(conf));
 }
+
+
+TEST_F(MediatingDisplayChangerTest, input_region_accumulates_powered_connected_skips_unused_displays)
+{
+    using namespace testing;
+
+    auto const connected = true;
+    auto const first_monitor = geom::Rectangle{geom::Point{0, 0}, geom::Size{ 40, 40 }};
+    auto const second_monitor = geom::Rectangle{geom::Point{40, 0}, geom::Size{ 10, 10}};
+    auto const not_used = false;
+    auto const used = true;
+    mir::geometry::Rectangles expected_rectangles;
+    expected_rectangles.add(second_monitor);
+
+    TestDisplayConfiguration conf{{display_output(mg::DisplayConfigurationOutputId{0},
+                                                  first_monitor.top_left,
+                                                  first_monitor.size,
+                                                  connected,
+                                                  not_used,
+                                                  mir_power_mode_on),
+                                   display_output(mg::DisplayConfigurationOutputId{1},
+                                                  second_monitor.top_left,
+                                                  second_monitor.size,
+                                                  connected,
+                                                  used,
+                                                  mir_power_mode_on)}};
+
+    EXPECT_CALL(mock_input_region, set_input_rectangles(expected_rectangles));
+
+    auto session = std::make_shared<mtd::StubSession>();
+
+    session_event_sink.handle_focus_change(session);
+    changer->configure(session,
+                       mt::fake_shared(conf));
+}
