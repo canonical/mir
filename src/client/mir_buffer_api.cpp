@@ -178,7 +178,9 @@ catch (std::exception const& ex)
 bool mir_buffer_is_valid(MirBuffer* buffer)
 try
 {
-    (void)buffer;
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+//    b->va 
+//    (void)buffer;
     return true;
 }
 catch (std::exception const& ex)

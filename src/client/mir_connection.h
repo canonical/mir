@@ -199,8 +199,12 @@ public:
         mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
         mir_buffer_callback callback, void* context);
     void release_buffer(int buffer_id);
+    void error_buffer(void*);
+    void error_b();
 
 private:
+
+
     //google cant have callbacks with more than 2 args
     struct SurfaceCreationRequest
     {
@@ -252,6 +256,17 @@ private:
     std::vector<std::shared_ptr<ChainCreationRequest>> context_requests;
     void context_created(ChainCreationRequest*);
     void chain_error(std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request);
+
+    struct BufferCreationRequest
+    {
+        mir::geometry::Size size;
+        MirPixelFormat format;
+        MirBufferUsage usage;
+        std::shared_ptr<mir::protobuf::Void> resp;
+    };
+    std::vector<BufferCreationRequest> buffer_requests;
+
+    int error_buffer_id = -1;
 
     void populate_server_package(MirPlatformPackage& platform_package) override;
     // MUST be first data member so it is destroyed last.

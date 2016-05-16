@@ -691,6 +691,8 @@ struct MockBufferFactory : mcl::AsyncBufferFactory
         MirConnection*,
         mir::geometry::Size, MirPixelFormat, MirBufferUsage,
         mir_buffer_callback, void*));
+    MOCK_METHOD4(error_buffer, std::unique_ptr<mcl::MirBuffer>(
+        std::string const&, mir::geometry::Size, MirPixelFormat, MirBufferUsage));
 };
 
 namespace

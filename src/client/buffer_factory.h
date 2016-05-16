@@ -37,6 +37,12 @@ public:
     AsyncBufferFactory() = default;
 
     virtual std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) = 0;
+    virtual std::unique_ptr<MirBuffer> error_buffer(
+        std::string const& error_msg,
+        geometry::Size size,
+        MirPixelFormat format,
+        MirBufferUsage usage) = 0;
+
     virtual void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
         MirConnection* connection,
@@ -56,6 +62,11 @@ class BufferFactory : public AsyncBufferFactory
 {
 public:
     std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) override;
+    std::unique_ptr<MirBuffer> error_buffer(
+        std::string const& error_msg,
+        geometry::Size size,
+        MirPixelFormat format,
+        MirBufferUsage usage) override;
     void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
         MirConnection* connection,

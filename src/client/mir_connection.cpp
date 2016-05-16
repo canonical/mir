@@ -65,9 +65,11 @@ namespace geom = mir::geometry;
 
 namespace
 {
-void ignore()
-{
-}
+
+//void ignore(MirConnection* connection, void* r)
+//{
+//    connection->error_buffer(r);
+//}
 
 std::shared_ptr<mcl::PerfReport>
 make_perf_report(std::shared_ptr<ml::Logger> const& logger)
@@ -1228,7 +1230,6 @@ void MirConnection::allocate_buffer(
     mir_buffer_callback callback, void* context)
 {
     mp::BufferAllocation request;
-    request.mutable_id()->set_value(-1);
     auto buffer_request = request.add_buffer_requests();
     buffer_request->set_width(size.width.as_int());
     buffer_request->set_height(size.height.as_int());
@@ -1241,7 +1242,13 @@ void MirConnection::allocate_buffer(
         client_buffer_factory, this,
         size, format, usage,
         callback, context);
-    server.allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));
+
+    buffer_requests.push_back({size, format, usage, std::make_shared<mir::protobuf::Void>()});
+
+    auto aa = &buffer_requests[buffer_requests.size() - 1];
+    server.allocate_buffers(&request, buffer_requests.back().resp.get(),
+        gp::NewCallback(this, &MirConnection::error_buffer,
+            (void*)aa));
 }
 
 void MirConnection::release_buffer(int buffer_id)
@@ -1249,5 +1256,20 @@ void MirConnection::release_buffer(int buffer_id)
     mp::BufferRelease request;
     auto released_buffer = request.add_buffers();
     released_buffer->set_buffer_id(buffer_id);
-    server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
+    //server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore, ignored.get()));
+}
+
+void MirConnection::error_buffer(void* r)
+{
+    auto req = (BufferCreationRequest*)r;
+    auto it = std::find_if(buffer_requests.begin(), buffer_requests.end(),
+        [&](auto const& q) { return ((q.size == req->size) && (q.usage == req->usage) && (q.format == req->format)); });
+    if (it != buffer_requests.end())
+    {
+        auto msg = std::string(req->resp->error().c_str());
+        std::shared_ptr<mcl::MirBuffer> buffer = buffer_factory->error_buffer(msg, it->size, it->format, it->usage);
+        buffer_requests.erase(it);
+        surface_map->insert(error_buffer_id--, buffer);
+        buffer->received();
+    }
 }

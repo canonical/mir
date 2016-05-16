@@ -25,11 +25,11 @@ namespace mir
 {
 namespace client
 {
-class ErrorBuffer : MirBuffer
+class ErrorBuffer : public MirBuffer
 {
 public:
     ErrorBuffer(
-        mir_buffer_callback cb, void* context, std::string);
+        mir_buffer_callback cb, void* context, std::string const&);
 
     int rpc_id() const override;
     void submitted() override;

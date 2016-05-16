@@ -22,7 +22,7 @@
 namespace mcl = mir::client;
 namespace geom = mir::geometry;
 
-mcl::ErrorBuffer::ErrorBuffer(mir_buffer_callback cb, void* context, std::string msg) :
+mcl::ErrorBuffer::ErrorBuffer(mir_buffer_callback cb, void* context, std::string const& msg) :
     cb(cb),
     cb_context(context),
     error_msg(msg)
