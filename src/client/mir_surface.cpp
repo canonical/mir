@@ -122,7 +122,7 @@ MirSurface::MirSurface(
       void_response{mcl::make_protobuf_object<mir::protobuf::Void>()},
       modify_result{mcl::make_protobuf_object<mir::protobuf::Void>()},
       connection_(allocating_connection),
-      legacy_default_stream(buffer_stream),
+      default_stream(buffer_stream),
       input_platform(input_platform),
       keymapper(std::make_shared<mircv::XKBMapper>()),
       configure_result{mcl::make_protobuf_object<mir::protobuf::SurfaceSetting>()},
@@ -285,9 +285,9 @@ MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
     // possible to eliminate it in the second phase of buffer
     // stream where the existing MirSurface swap interval functions
     // may be deprecated in terms of mir_buffer_stream_ alternatives
-    if ((at == mir_surface_attrib_swapinterval) && legacy_default_stream)
+    if ((at == mir_surface_attrib_swapinterval) && default_stream)
     {
-        legacy_default_stream->set_swap_interval(value);
+        default_stream->set_swap_interval(value);
         return &configure_wait_handle;
     }
 
@@ -391,8 +391,8 @@ int MirSurface::attrib(MirSurfaceAttrib at) const
 
     if (at == mir_surface_attrib_swapinterval)
     {
-        if (legacy_default_stream)
-            return legacy_default_stream->swap_interval();
+        if (default_stream)
+            return default_stream->swap_interval();
         else // Surface creation is not finalized
             return 1;
     }
@@ -454,8 +454,8 @@ void MirSurface::handle_event(MirEvent const& e)
     {
         auto resize_event = mir_event_get_resize_event(&e);
         size = { mir_resize_event_get_width(resize_event), mir_resize_event_get_height(resize_event) };
-        if (legacy_default_stream)
-            legacy_default_stream->set_size(size);
+        if (default_stream)
+            default_stream->set_size(size);
         break;
     }
     default:
@@ -508,7 +508,7 @@ mir::client::ClientBufferStream* MirSurface::get_buffer_stream()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     
-    return legacy_default_stream.get();
+    return default_stream.get();
 }
 
 void MirSurface::on_modified()
@@ -602,7 +602,7 @@ MirWaitHandle* MirSurface::modify(MirSurfaceSpec const& spec)
 
     if (spec.streams.is_set())
     {
-        legacy_default_stream = nullptr;
+        default_stream = nullptr;
         for(auto const& stream : spec.streams.value())
         {
             auto const new_stream = surface_specification->add_stream();

@@ -539,6 +539,9 @@ void mir_surface_set_event_handler(MirSurface *surface,
  * Retrieve the primary MirBufferStream associated with a surface (to advance buffers,
  * obtain EGLNativeWindow, etc...)
  *
+ *   \deprecated Users should use mir_surface_spec_set_streams() to arrange
+ *               the content of a surface, instead of relying on a stream
+ *               being created by default.
  *   \warning If the surface was created with, or modified to have a
  *            MirSurfaceSpec containing streams added through
  *            mir_surface_spec_set_streams(), the default stream will

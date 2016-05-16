@@ -335,18 +335,14 @@ void mf::SessionMediator::create_surface(
     auto const surf_id = shell->create_surface(session, params, sink);
 
     auto surface = session->get_surface(surf_id);
-    auto stream = session->get_buffer_stream(buffer_stream_id);
     auto const& client_size = surface->client_size();
     response->mutable_id()->set_value(surf_id.as_value());
     response->set_width(client_size.width.as_uint32_t());
     response->set_height(client_size.height.as_uint32_t());
 
     // TODO: Deprecate
-    response->set_pixel_format(stream->pixel_format());
+    response->set_pixel_format(request->pixel_format());
     response->set_buffer_usage(request->buffer_usage());
-
-    response->mutable_buffer_stream()->set_pixel_format(stream->pixel_format());
-    response->mutable_buffer_stream()->set_buffer_usage(request->buffer_usage());
 
     if (surface->supports_input())
         response->add_fd(surface->client_input_fd());
@@ -364,6 +360,9 @@ void mf::SessionMediator::create_surface(
     {
         buffer_stream_tracker.set_default_stream(surf_id, buffer_stream_id);
         response->mutable_buffer_stream()->mutable_id()->set_value(buffer_stream_id.as_value());
+        response->mutable_buffer_stream()->set_pixel_format(legacy_stream->pixel_format());
+        response->mutable_buffer_stream()->set_buffer_usage(request->buffer_usage());
+
         advance_buffer(buffer_stream_id, *legacy_stream, buffer_stream_tracker.last_buffer(buffer_stream_id),
             [this, buffering_sender, response, done, session]
             (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)

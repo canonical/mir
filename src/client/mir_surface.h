@@ -227,7 +227,8 @@ private:
     MirWaitHandle configure_cursor_wait_handle;
     MirWaitHandle persistent_id_wait_handle;
 
-    std::shared_ptr<mir::client::ClientBufferStream> legacy_default_stream;
+    //Deprecated functions can cause MirSurfaces to be created with a default stream
+    std::shared_ptr<mir::client::ClientBufferStream> default_stream;
     std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
     std::shared_ptr<mir::input::receiver::XKBMapper> const keymapper;
 
