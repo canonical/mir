@@ -180,235 +180,145 @@ mgk::DRMModeCrtcUPtr mgk::get_crtc(int drm_fd, uint32_t id)
     return crtc;
 }
 
-auto mgk::DRMModeResources::connectors() const -> Connectors
+auto mgk::DRMModeResources::connectors() const -> ObjectCollection<DRMModeConnectorUPtr, &get_connector>
 {
-    return Connectors{drm_fd, resources->connectors, resources->connectors + resources->count_connectors};
+    return ObjectCollection<DRMModeConnectorUPtr, &get_connector>{drm_fd, resources->connectors, resources->connectors + resources->count_connectors};
 }
 
-mgk::DRMModeResources::Connectors::Connectors(int drm_fd, uint32_t* begin, uint32_t* end)
+auto mgk::DRMModeResources::encoders() const -> ObjectCollection<DRMModeEncoderUPtr, &get_encoder>
+{
+    return ObjectCollection<DRMModeEncoderUPtr, &get_encoder>{drm_fd, resources->encoders, resources->encoders + resources->count_encoders};
+}
+
+auto mgk::DRMModeResources::crtcs() const -> ObjectCollection<DRMModeCrtcUPtr, &get_crtc>
+{
+    return ObjectCollection<DRMModeCrtcUPtr, &get_crtc>{drm_fd, resources->crtcs, resources->encoders + resources->count_crtcs};
+}
+
+template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
+mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::ObjectCollection(int drm_fd, uint32_t* begin, uint32_t* end)
     : drm_fd{drm_fd},
       begin_{begin},
       end_{end}
 {
 }
 
-auto mgk::DRMModeResources::Connectors::begin() -> iterator
+template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
+auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::begin() -> iterator
 {
     return iterator(drm_fd, begin_);
 }
 
-auto mgk::DRMModeResources::Connectors::end() -> iterator
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::begin() -> iterator;
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::begin() -> iterator;
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::begin() -> iterator;
+
+template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
+auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::end() -> iterator
 {
     return iterator(drm_fd, end_);
 }
 
-mgk::DRMModeResources::Connectors::iterator::iterator(iterator const& from)
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::end() -> iterator;
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::end() -> iterator;
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::end() -> iterator;
+
+template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
+mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::iterator(iterator const& from)
     : drm_fd{from.drm_fd},
       id_ptr{from.id_ptr}
 {
 }
+template mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::iterator(iterator const&);
+template mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::iterator(iterator const&);
+template mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::iterator(iterator const&);
 
-auto mgk::DRMModeResources::Connectors::iterator::operator=(iterator const& rhs) -> iterator&
+
+template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
+auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator=(iterator const& rhs) -> iterator&
 {
     drm_fd = rhs.drm_fd;
     id_ptr = rhs.id_ptr;
     current.reset();
     return *this;
 }
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator=(iterator const&) -> iterator&;
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator=(iterator const&) -> iterator&;
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator=(iterator const&) -> iterator&;
 
-mgk::DRMModeResources::Connectors::iterator::iterator(
+template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
+mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::iterator(
     int drm_fd,
     uint32_t* id_ptr)
     : drm_fd{drm_fd},
       id_ptr{id_ptr}
 {
 }
+template mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::iterator(int, uint32_t*);
+template mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::iterator(int, uint32_t*);
+template mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::iterator(int, uint32_t*);
 
-auto mgk::DRMModeResources::Connectors::iterator::operator++() -> iterator&
+template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
+auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator++() -> iterator&
 {
     ++id_ptr;
     current.reset();
     return *this;
 }
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator++() -> iterator&;
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator++() -> iterator&;
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator++() -> iterator&;
 
-auto mgk::DRMModeResources::Connectors::iterator::operator++(int) -> iterator
+template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
+auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator++(int) -> iterator
 {
     iterator copy(drm_fd, id_ptr);
     ++id_ptr;
     current.reset();
     return copy;
 }
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator++(int) -> iterator;
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator++(int) -> iterator;
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator++(int) -> iterator;
 
-auto mgk::DRMModeResources::Connectors::iterator::operator*() const -> DRMModeConnectorUPtr&
+
+template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
+auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator*() const -> DRMUPtr&
 {
     if (!current)
     {
-        current = get_connector(drm_fd, *id_ptr);
+        current = (*object_constructor)(drm_fd, *id_ptr);
     }
     return current;
 }
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator*() const -> DRMModeConnectorUPtr&;
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator*() const -> DRMModeEncoderUPtr&;
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator*() const -> DRMModeCrtcUPtr&;
 
-auto mgk::DRMModeResources::Connectors::iterator::operator->() const -> DRMModeConnectorUPtr*
+template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
+auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator->() const -> DRMUPtr*
 {
     if (!current)
     {
-        current = get_connector(drm_fd, *id_ptr);
+        current = (*object_constructor)(drm_fd, *id_ptr);
     }
     return &current;
 }
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator->() const -> DRMModeConnectorUPtr*;
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator->() const -> DRMModeEncoderUPtr*;
+template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator->() const -> DRMModeCrtcUPtr*;
 
-bool mgk::DRMModeResources::Connectors::iterator::operator==(iterator const& rhs) const
+template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
+bool mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator==(iterator const& rhs) const
 {
     return rhs.id_ptr == id_ptr;
 }
 
-bool mgk::DRMModeResources::Connectors::iterator::operator!=(iterator const& rhs) const
+template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
+bool mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator!=(iterator const& rhs) const
 {
     return !(*this == rhs);
 }
-
-auto mgk::DRMModeResources::encoders() const -> Encoders
-{
-    return Encoders{drm_fd, resources->encoders, resources->encoders + resources->count_connectors};
-}
-
-mgk::DRMModeResources::Encoders::Encoders(int drm_fd, uint32_t* begin, uint32_t* end)
-    : drm_fd{drm_fd},
-      begin_{begin},
-      end_{end}
-{
-}
-
-auto mgk::DRMModeResources::Encoders::begin() -> iterator
-{
-    return iterator(drm_fd, begin_);
-}
-
-auto mgk::DRMModeResources::Encoders::end() -> iterator
-{
-    return iterator(drm_fd, end_);
-}
-
-mgk::DRMModeResources::Encoders::iterator::iterator(
-    int drm_fd,
-    uint32_t* id_ptr)
-    : drm_fd{drm_fd},
-      id_ptr{id_ptr}
-{
-}
-
-auto mgk::DRMModeResources::Encoders::iterator::operator++() -> iterator&
-{
-    ++id_ptr;
-    current.reset();
-    return *this;
-}
-
-auto mgk::DRMModeResources::Encoders::iterator::operator++(int) -> iterator
-{
-    iterator copy(drm_fd, id_ptr);
-    ++id_ptr;
-    current.reset();
-    return copy;
-}
-
-auto mgk::DRMModeResources::Encoders::iterator::operator*() const -> DRMModeEncoderUPtr&
-{
-    if (!current)
-    {
-        current = get_encoder(drm_fd, *id_ptr);
-    }
-    return current;
-}
-
-auto mgk::DRMModeResources::Encoders::iterator::operator->() const -> DRMModeEncoderUPtr*
-{
-    if (!current)
-    {
-        current = get_encoder(drm_fd, *id_ptr);
-    }
-    return &current;
-}
-
-bool mgk::DRMModeResources::Encoders::iterator::operator==(iterator const& rhs) const
-{
-    return rhs.id_ptr == id_ptr;
-}
-
-bool mgk::DRMModeResources::Encoders::iterator::operator!=(iterator const& rhs) const
-{
-    return !(*this == rhs);
-}
-
-auto mgk::DRMModeResources::crtcs() const -> CRTCs
-{
-    return CRTCs{drm_fd, resources->crtcs, resources->crtcs + resources->count_crtcs};
-}
-
-mgk::DRMModeResources::CRTCs::CRTCs(int drm_fd, uint32_t* begin, uint32_t* end)
-    : drm_fd{drm_fd},
-      begin_{begin},
-      end_{end}
-{
-}
-
-auto mgk::DRMModeResources::CRTCs::begin() -> iterator
-{
-    return iterator(drm_fd, begin_);
-}
-
-auto mgk::DRMModeResources::CRTCs::end() -> iterator
-{
-    return iterator(drm_fd, end_);
-}
-
-mgk::DRMModeResources::CRTCs::iterator::iterator(
-    int drm_fd,
-    uint32_t* id_ptr)
-    : drm_fd{drm_fd},
-      id_ptr{id_ptr}
-{
-}
-
-auto mgk::DRMModeResources::CRTCs::iterator::operator++() -> iterator&
-{
-    ++id_ptr;
-    current.reset();
-    return *this;
-}
-
-auto mgk::DRMModeResources::CRTCs::iterator::operator++(int) -> iterator
-{
-    iterator copy(drm_fd, id_ptr);
-    ++id_ptr;
-    current.reset();
-    return copy;
-}
-
-auto mgk::DRMModeResources::CRTCs::iterator::operator*() const -> DRMModeCrtcUPtr&
-{
-    if (!current)
-    {
-        current = get_crtc(drm_fd, *id_ptr);
-    }
-    return current;
-}
-
-auto mgk::DRMModeResources::CRTCs::iterator::operator->() const -> DRMModeCrtcUPtr*
-{
-    if (!current)
-    {
-        current = get_crtc(drm_fd, *id_ptr);
-    }
-    return &current;
-}
-
-bool mgk::DRMModeResources::CRTCs::iterator::operator==(iterator const& rhs) const
-{
-    return rhs.id_ptr == id_ptr;
-}
-
-bool mgk::DRMModeResources::CRTCs::iterator::operator!=(iterator const& rhs) const
-{
-    return !(*this == rhs);
-}
+template bool mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator!=(iterator const&) const;
+template bool mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator!=(iterator const&) const;
+template bool mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator!=(iterator const&) const;
