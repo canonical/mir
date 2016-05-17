@@ -62,6 +62,7 @@ void mcl::Buffer::received()
     }
     std::lock_guard<decltype(cb_mutex)> lk(cb_mutex);
     cb(reinterpret_cast<MirBuffer*>(this), cb_context);
+
 }
 
 void mcl::Buffer::received(MirBufferPackage const& update_package)
