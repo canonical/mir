@@ -23,7 +23,6 @@
 #include "mir/geometry/size.h"
 #include <memory>
 #include <chrono>
-#include <mutex>
 
 namespace mir
 {

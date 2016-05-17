@@ -58,11 +58,12 @@ void set_result(MirPresentationChain* result, ChainResult* context)
 }
 }
 //private NBS api under development
-void mir_presentation_chain_submit_buffer(MirPresentationChain* chain, MirBuffer* buffer)
+void mir_presentation_chain_submit_buffer(MirPresentationChain* chain, MirBuffer* b)
 try
 {
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
     mir::require(chain && buffer && mir_presentation_chain_is_valid(chain));
-    chain->submit_buffer(reinterpret_cast<mcl::MirBuffer*>(buffer));
+    chain->submit_buffer(buffer);
 }
 catch (std::exception const& ex)
 {

@@ -50,22 +50,6 @@ void mir_connection_allocate_buffer(
     MirBufferUsage buffer_usage,
     mir_buffer_callback available_callback, void* available_context);
 
-/** Test for a valid buffer
- *   \param [in] buffer    The buffer
- *   \return               True if the buffer is valid, or false otherwise.
- **/
-bool mir_buffer_is_valid(MirBuffer* buffer);
-
-/** Retrieve a text description an error associated with a MirBuffer.
- *  The returned string is owned by the library and remains valid until the
- *  buffer or the associated connection has been released.
- *   \param [in] buffer    The buffer
- *   \return               A text description of any error resulting in an
- *                         invalid buffer, or the empty string "" if the
- *                         connection is valid.
- **/
-char const *mir_buffer_get_error_message(MirBuffer* buffer);
-
 /** @name Fenced Buffer content access functions.
  *
  * These functions will wait until it is safe to access the buffer for the given purpose.

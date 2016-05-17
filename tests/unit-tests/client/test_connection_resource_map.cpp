@@ -19,7 +19,6 @@
 #include "src/client/connection_surface_map.h"
 #include "src/client/mir_surface.h"
 #include "src/client/presentation_chain.h"
-#include "src/client/mir_buffer.h"
 #include "mir/test/doubles/mock_client_buffer_stream.h"
 #include "mir/test/doubles/mock_protobuf_server.h"
 #include <gtest/gtest.h>
