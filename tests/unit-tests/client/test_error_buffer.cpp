@@ -43,26 +43,26 @@ struct ErrorBuffer : Test
 TEST_F(ErrorBuffer, calls_callback_when_received)
 {
     int call_count = 0;
-    mcl::ErrorBuffer buffer(buffer_callback, &call_count, error_message);
+    mcl::ErrorBuffer buffer(error_message, buffer_callback, &call_count);
     buffer.received();
     EXPECT_THAT(call_count, Eq(1));
 }
 
 TEST_F(ErrorBuffer, returns_correct_error_message)
 {
-    mcl::ErrorBuffer buffer(buffer_callback, nullptr, error_message);
+    mcl::ErrorBuffer buffer(error_message, buffer_callback, nullptr);
     EXPECT_THAT(buffer.error_message(), StrEq(error_message));
 }
 
 TEST_F(ErrorBuffer, is_invalid)
 {
-    mcl::ErrorBuffer buffer(buffer_callback, nullptr, error_message);
+    mcl::ErrorBuffer buffer(error_message, buffer_callback, nullptr);
     EXPECT_FALSE(buffer.valid());
 }
 
 TEST_F(ErrorBuffer, throws_on_rpc_id)
 {
-    mcl::ErrorBuffer buffer(buffer_callback, nullptr, error_message);
+    mcl::ErrorBuffer buffer(error_message, buffer_callback, nullptr);
     EXPECT_THROW({
         buffer.rpc_id();
     }, std::logic_error);
