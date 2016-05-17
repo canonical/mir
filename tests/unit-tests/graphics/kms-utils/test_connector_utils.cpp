@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "kms_connector.h"
+#include "kms-utils/kms_connector.h"
 
 #include "mir/geometry/size.h"
 #include "mir/test/doubles/mock_drm.h"

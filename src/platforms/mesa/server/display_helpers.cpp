@@ -19,6 +19,8 @@
 #include "display_helpers.h"
 #include "drm_close_threadsafe.h"
 
+#include "kms-utils/drm_mode_resources.h"
+
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/udev/wrapper.h"

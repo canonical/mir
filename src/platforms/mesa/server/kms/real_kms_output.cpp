@@ -18,7 +18,7 @@
 
 #include "real_kms_output.h"
 #include "page_flipper.h"
-#include "kms_connector.h"
+#include "kms-utils/kms_connector.h"
 #include "mir/fatal.h"
 #include "mir/log.h"
 #include <string.h> // strcmp

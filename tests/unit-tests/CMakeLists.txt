@@ -35,7 +35,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
   ${PROJECT_SOURCE_DIR}/src/platforms/mesa/server
   ${PROJECT_SOURCE_DIR}/src/platforms/android/include
-  ${PROJECT_SOURCE_DIR}/src/platforms/common/kms-utils
+  ${PROJECT_SOURCE_DIR}/src/platforms/common/server
   ${GLIB_INCLUDE_DIRS}
 )
 

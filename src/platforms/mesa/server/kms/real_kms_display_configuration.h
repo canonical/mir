@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_MESA_REAL_KMS_DISPLAY_CONFIGURATION_H_
 
 #include "kms_display_configuration.h"
-#include "drm_mode_resources.h"
+#include "kms-utils/drm_mode_resources.h"
 
 #include <xf86drmMode.h>
 

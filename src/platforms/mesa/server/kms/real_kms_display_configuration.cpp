@@ -17,7 +17,7 @@
  */
 
 #include "real_kms_display_configuration.h"
-#include "drm_mode_resources.h"
+#include "kms-utils/drm_mode_resources.h"
 #include "mir/graphics/pixel_format_utils.h"
 
 #include <cmath>
