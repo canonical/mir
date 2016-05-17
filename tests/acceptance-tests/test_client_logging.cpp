@@ -87,11 +87,23 @@ TEST_F(ClientLogging, reports_performance)
         {
             ++reports;
             char name[256];
-            float fps;
+            float fps, render, lag;
             int fields = sscanf(line.c_str() + perf,
-                                " perf: %255[^:]: %f FPS,", name, &fps);
-            ASSERT_EQ(2, fields) << "Log line = {" << line << "}";
-            EXPECT_STREQ("Rumpelstiltskin", name);
+                " perf: %255[^:]: %f FPS, render time %fms, buffer lag %fms",
+                name, &fps, &render, &lag);
+
+            EXPECT_EQ(4, fields) << "Log line = {" << line << "}";
+            if (fields >= 1)
+                EXPECT_STREQ("Rumpelstiltskin", name);
+
+            auto expect_frame_time = 1000.0f / target_fps;
+            if (fields >= 3)
+                EXPECT_THAT(render, Le(1.1f * expect_frame_time));
+
+            if (fields >= 4)
+                EXPECT_NEAR(3 * expect_frame_time, lag, 5.0f);
+
+            ASSERT_FALSE(Test::HasFailure()) << "Log line = {" << line << "}";
         }
     }
 
