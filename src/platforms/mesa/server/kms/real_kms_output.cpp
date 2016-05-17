@@ -19,6 +19,7 @@
 #include "real_kms_output.h"
 #include "page_flipper.h"
 #include "mir/fatal.h"
+#include "mir/log.h"
 #include <string.h> // strcmp
 
 namespace mg = mir::graphics;
@@ -283,7 +284,8 @@ void mgm::RealKMSOutput::set_cursor(gbm_bo* buffer)
                 gbm_bo_get_width(buffer),
                 gbm_bo_get_height(buffer)))
         {
-            fatal_error("drmModeSetCursor failed (returned %d)", result);
+            mir::log_warning("set_cursor: drmModeSetCursor failed (%s)",
+                             strerror(-result));
         }
 
         has_cursor_ = true;
@@ -298,7 +300,8 @@ void mgm::RealKMSOutput::move_cursor(geometry::Point destination)
                                             destination.x.as_uint32_t(),
                                             destination.y.as_uint32_t()))
         {
-            fatal_error("drmModeMoveCursor failed (returned %d)", result);
+            mir::log_warning("move_cursor: drmModeMoveCursor failed (%s)",
+                             strerror(-result));
         }
     }
 }
@@ -307,7 +310,11 @@ void mgm::RealKMSOutput::clear_cursor()
 {
     if (current_crtc)
     {
-        drmModeSetCursor(drm_fd, current_crtc->crtc_id, 0, 0, 0);
+        auto result = drmModeSetCursor(drm_fd, current_crtc->crtc_id, 0, 0, 0);
+
+        if (result)
+            mir::log_warning("clear_cursor: drmModeSetCursor failed (%s)",
+                             strerror(-result));
         has_cursor_ = false;
     }
 }
