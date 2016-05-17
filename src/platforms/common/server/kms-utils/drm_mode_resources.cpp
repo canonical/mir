@@ -180,3 +180,235 @@ mgk::DRMModeCrtcUPtr mgk::get_crtc(int drm_fd, uint32_t id)
     return crtc;
 }
 
+auto mgk::DRMModeResources::connectors() const -> Connectors
+{
+    return Connectors{drm_fd, resources->connectors, resources->connectors + resources->count_connectors};
+}
+
+mgk::DRMModeResources::Connectors::Connectors(int drm_fd, uint32_t* begin, uint32_t* end)
+    : drm_fd{drm_fd},
+      begin_{begin},
+      end_{end}
+{
+}
+
+auto mgk::DRMModeResources::Connectors::begin() -> iterator
+{
+    return iterator(drm_fd, begin_);
+}
+
+auto mgk::DRMModeResources::Connectors::end() -> iterator
+{
+    return iterator(drm_fd, end_);
+}
+
+mgk::DRMModeResources::Connectors::iterator::iterator(iterator const& from)
+    : drm_fd{from.drm_fd},
+      id_ptr{from.id_ptr}
+{
+}
+
+auto mgk::DRMModeResources::Connectors::iterator::operator=(iterator const& rhs) -> iterator&
+{
+    drm_fd = rhs.drm_fd;
+    id_ptr = rhs.id_ptr;
+    current.reset();
+    return *this;
+}
+
+mgk::DRMModeResources::Connectors::iterator::iterator(
+    int drm_fd,
+    uint32_t* id_ptr)
+    : drm_fd{drm_fd},
+      id_ptr{id_ptr}
+{
+}
+
+auto mgk::DRMModeResources::Connectors::iterator::operator++() -> iterator&
+{
+    ++id_ptr;
+    current.reset();
+    return *this;
+}
+
+auto mgk::DRMModeResources::Connectors::iterator::operator++(int) -> iterator
+{
+    iterator copy(drm_fd, id_ptr);
+    ++id_ptr;
+    current.reset();
+    return copy;
+}
+
+auto mgk::DRMModeResources::Connectors::iterator::operator*() const -> DRMModeConnectorUPtr&
+{
+    if (!current)
+    {
+        current = get_connector(drm_fd, *id_ptr);
+    }
+    return current;
+}
+
+auto mgk::DRMModeResources::Connectors::iterator::operator->() const -> DRMModeConnectorUPtr*
+{
+    if (!current)
+    {
+        current = get_connector(drm_fd, *id_ptr);
+    }
+    return &current;
+}
+
+bool mgk::DRMModeResources::Connectors::iterator::operator==(iterator const& rhs) const
+{
+    return rhs.id_ptr == id_ptr;
+}
+
+bool mgk::DRMModeResources::Connectors::iterator::operator!=(iterator const& rhs) const
+{
+    return !(*this == rhs);
+}
+
+auto mgk::DRMModeResources::encoders() const -> Encoders
+{
+    return Encoders{drm_fd, resources->encoders, resources->encoders + resources->count_connectors};
+}
+
+mgk::DRMModeResources::Encoders::Encoders(int drm_fd, uint32_t* begin, uint32_t* end)
+    : drm_fd{drm_fd},
+      begin_{begin},
+      end_{end}
+{
+}
+
+auto mgk::DRMModeResources::Encoders::begin() -> iterator
+{
+    return iterator(drm_fd, begin_);
+}
+
+auto mgk::DRMModeResources::Encoders::end() -> iterator
+{
+    return iterator(drm_fd, end_);
+}
+
+mgk::DRMModeResources::Encoders::iterator::iterator(
+    int drm_fd,
+    uint32_t* id_ptr)
+    : drm_fd{drm_fd},
+      id_ptr{id_ptr}
+{
+}
+
+auto mgk::DRMModeResources::Encoders::iterator::operator++() -> iterator&
+{
+    ++id_ptr;
+    current.reset();
+    return *this;
+}
+
+auto mgk::DRMModeResources::Encoders::iterator::operator++(int) -> iterator
+{
+    iterator copy(drm_fd, id_ptr);
+    ++id_ptr;
+    current.reset();
+    return copy;
+}
+
+auto mgk::DRMModeResources::Encoders::iterator::operator*() const -> DRMModeEncoderUPtr&
+{
+    if (!current)
+    {
+        current = get_encoder(drm_fd, *id_ptr);
+    }
+    return current;
+}
+
+auto mgk::DRMModeResources::Encoders::iterator::operator->() const -> DRMModeEncoderUPtr*
+{
+    if (!current)
+    {
+        current = get_encoder(drm_fd, *id_ptr);
+    }
+    return &current;
+}
+
+bool mgk::DRMModeResources::Encoders::iterator::operator==(iterator const& rhs) const
+{
+    return rhs.id_ptr == id_ptr;
+}
+
+bool mgk::DRMModeResources::Encoders::iterator::operator!=(iterator const& rhs) const
+{
+    return !(*this == rhs);
+}
+
+auto mgk::DRMModeResources::crtcs() const -> CRTCs
+{
+    return CRTCs{drm_fd, resources->crtcs, resources->crtcs + resources->count_crtcs};
+}
+
+mgk::DRMModeResources::CRTCs::CRTCs(int drm_fd, uint32_t* begin, uint32_t* end)
+    : drm_fd{drm_fd},
+      begin_{begin},
+      end_{end}
+{
+}
+
+auto mgk::DRMModeResources::CRTCs::begin() -> iterator
+{
+    return iterator(drm_fd, begin_);
+}
+
+auto mgk::DRMModeResources::CRTCs::end() -> iterator
+{
+    return iterator(drm_fd, end_);
+}
+
+mgk::DRMModeResources::CRTCs::iterator::iterator(
+    int drm_fd,
+    uint32_t* id_ptr)
+    : drm_fd{drm_fd},
+      id_ptr{id_ptr}
+{
+}
+
+auto mgk::DRMModeResources::CRTCs::iterator::operator++() -> iterator&
+{
+    ++id_ptr;
+    current.reset();
+    return *this;
+}
+
+auto mgk::DRMModeResources::CRTCs::iterator::operator++(int) -> iterator
+{
+    iterator copy(drm_fd, id_ptr);
+    ++id_ptr;
+    current.reset();
+    return copy;
+}
+
+auto mgk::DRMModeResources::CRTCs::iterator::operator*() const -> DRMModeCrtcUPtr&
+{
+    if (!current)
+    {
+        current = get_crtc(drm_fd, *id_ptr);
+    }
+    return current;
+}
+
+auto mgk::DRMModeResources::CRTCs::iterator::operator->() const -> DRMModeCrtcUPtr*
+{
+    if (!current)
+    {
+        current = get_crtc(drm_fd, *id_ptr);
+    }
+    return &current;
+}
+
+bool mgk::DRMModeResources::CRTCs::iterator::operator==(iterator const& rhs) const
+{
+    return rhs.id_ptr == id_ptr;
+}
+
+bool mgk::DRMModeResources::CRTCs::iterator::operator!=(iterator const& rhs) const
+{
+    return !(*this == rhs);
+}
