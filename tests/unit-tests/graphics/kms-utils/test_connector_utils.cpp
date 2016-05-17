@@ -46,7 +46,7 @@ TEST(KMSConnectorHelper, finds_compatible_crtc_for_connectors)
     // Add a bunch of CRTCs
     for (auto id : crtc_ids)
     {
-        resources.add_crtc(id, {});
+        resources.add_crtc(id, drmModeModeInfo());
     }
     // Add an encoder that can only drive any CRTC...
     resources.add_encoder(encoder_ids[0], 0, 1 << 0 | 1 << 1 | 1 << 2);
@@ -123,7 +123,7 @@ TEST(KMSConnectorHelper, ignores_currently_used_encoders)
     // Add an active CRTC...
     resources.add_crtc(crtc_ids[0], boring_mode);
     // ...and an inactive one.
-    resources.add_crtc(crtc_ids[1], {});
+    resources.add_crtc(crtc_ids[1], drmModeModeInfo());
 
     // Add an encoder hooked up to the active CRTC
     resources.add_encoder(encoder_ids[0], crtc_ids[0], 1 << 0 | 1 << 1);
@@ -177,7 +177,7 @@ TEST(KMSConnectorHelper, returns_current_crtc_if_it_exists)
     // Add an active CRTC...
     resources.add_crtc(crtc_ids[0], boring_mode);
     // ...and an inactive one.
-    resources.add_crtc(crtc_ids[1], {});
+    resources.add_crtc(crtc_ids[1], drmModeModeInfo());
 
     // Add an encoder hooked up to the active CRTC
     resources.add_encoder(encoder_ids[0], crtc_ids[0], 1 << 0 | 1 << 1);
