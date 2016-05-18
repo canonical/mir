@@ -68,11 +68,19 @@ TEST_F(ClientLogging, reports_performance)
 
     int const target_fps = 10;
     int const nseconds = 3;
+    auto const target_render_time = std::chrono::milliseconds(3);
     auto bs = mir_surface_get_buffer_stream(surf);
     for (int s = 0; s < nseconds; ++s)
     {
         for (int f = 0; f < target_fps; ++f)
+        {
+            MirGraphicsRegion region;
+            // Performance report sees this as the start of a frame:
+            mir_buffer_stream_get_graphics_region(bs, &region);
+            std::this_thread::sleep_for(target_render_time);
+            // Performance report sees this as the end of a frame:
             mir_buffer_stream_swap_buffers_sync(bs);
+        }
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
@@ -92,16 +100,19 @@ TEST_F(ClientLogging, reports_performance)
                 " perf: %255[^:]: %f FPS, render time %fms, buffer lag %fms",
                 name, &fps, &render, &lag);
 
-            EXPECT_EQ(4, fields) << "Log line = {" << line << "}";
+            EXPECT_EQ(4, fields);
+
             if (fields >= 1)
+            {
                 EXPECT_STREQ("Rumpelstiltskin", name);
-
-            auto expect_frame_time = 1000.0f / target_fps;
-            if (fields >= 3)
-                EXPECT_THAT(render, Le(1.1f * expect_frame_time));
-
-            if (fields >= 4)
-                EXPECT_NEAR(3 * expect_frame_time, lag, 5.0f);
+                auto expect_frame_time = 1000.0f / target_fps;
+                if (fields >= 3)
+                {
+                    EXPECT_THAT(render, Le(1.1f * expect_frame_time));
+                    if (fields >= 4)
+                        EXPECT_NEAR(3 * expect_frame_time, lag, 5.0f);
+                }
+            }
 
             ASSERT_FALSE(Test::HasFailure()) << "Log line = {" << line << "}";
         }
