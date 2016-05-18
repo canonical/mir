@@ -195,7 +195,6 @@ TEST_F(MirBufferTest, callback_called_after_change_when_available_from_server_re
     EXPECT_THAT(call_count, Eq(1));
 }
 
-
 TEST_F(MirBufferTest, updates_package_when_server_returns)
 {
     EXPECT_CALL(*mock_client_buffer, update_from(Ref(update_message)));

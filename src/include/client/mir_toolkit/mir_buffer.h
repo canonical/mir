@@ -50,7 +50,6 @@ void mir_connection_allocate_buffer(
     MirBufferUsage buffer_usage,
     mir_buffer_callback available_callback, void* available_context);
 
-
 /** Reassign the callback that the MirBuffer will call when the buffer is
  *  available for use again
  *  \param [in] buffer      The buffer
