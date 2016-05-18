@@ -576,6 +576,7 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
         auto pixel_format = static_cast<MirPixelFormat>(protobuf_bs->pixel_format());
         lk.unlock();
         buffer_depository->deposit(buffer, size, pixel_format);
+        perf_report->begin_frame(buffer.buffer_id());
     }
     catch (const std::runtime_error& err)
     {
@@ -600,8 +601,6 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 
 std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
 {
-    int current_id = buffer_depository->current_buffer_id();
-    perf_report->begin_frame(current_id);
     return buffer_depository->current_buffer();
 }
 
@@ -619,7 +618,7 @@ void mcl::BufferStream::release_cpu_region()
 
 std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 {
-    auto buffer = get_current_buffer();
+    auto buffer = buffer_depository->current_buffer();
     std::unique_lock<decltype(mutex)> lock(mutex);
 
     if (!secured_region)
