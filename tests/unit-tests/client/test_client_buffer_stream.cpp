@@ -540,7 +540,7 @@ TEST_P(ClientBufferStream, perf_report_starts_frame_at_securing)
 TEST_P(ClientBufferStream, perf_report_ends_frame_at_next_buffer)
 {
     NiceMock<MockPerfReport> mock_perf_report;
-    EXPECT_CALL(mock_perf_report, begin_frame(_)).Times(2);
+    EXPECT_CALL(mock_perf_report, begin_frame(_)).Times(1);
     EXPECT_CALL(mock_perf_report, end_frame(_)).Times(1);
 
     mcl::BufferStream bs(
