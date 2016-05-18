@@ -33,6 +33,20 @@ mir (0.23.0ubuntu1) UNRELEASED; urgency=medium
 
  -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 09 May 2016 11:59:42 -0400
 
+mir (0.22.1+16.04.20160516.2-0ubuntu1) xenial; urgency=medium
+
+  [ Andreas Pokorny ]
+  * New upstream release 0.22.1 (https://launchpad.net/mir/+milestone/0.22.1)
+    - ABI summary:
+      . No ABI changes in any libraries. Bugfix release only.
+    - Bugs fixed:
+      . [regression] Cursor stops at phantom edge on M10 and N7 (LP: 1580774)
+
+  [ CI Train Bot ]
+  * No-change rebuild.
+
+ -- Michał Sawicz <michal.sawicz@canonical.com>  Mon, 16 May 2016 15:36:50 +0000
+
 mir (0.22.0+16.04.20160422.2-0ubuntu1) xenial; urgency=medium
 
   [ Alberto Aguirre ]
