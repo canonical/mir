@@ -503,6 +503,58 @@ TEST_P(ClientBufferStream, passes_name_to_perf_report)
         response, mt::fake_shared(mock_perf_report), name, size, nbuffers);
 }
 
+TEST_P(ClientBufferStream, perf_report_starts_frame_at_get_current_buffer)
+{
+    NiceMock<MockPerfReport> mock_perf_report;
+    EXPECT_CALL(mock_perf_report, begin_frame(_)).Times(1);
+    EXPECT_CALL(mock_perf_report, end_frame(_)).Times(0);
+
+    mcl::BufferStream bs(
+        nullptr, wait_handle, mock_protobuf_server,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
+        response, mt::fake_shared(mock_perf_report), "Foo", size, nbuffers);
+
+    service_requests_for(bs, 1);
+
+    (void)bs.get_current_buffer();
+}
+
+TEST_P(ClientBufferStream, perf_report_starts_frame_at_securing)
+{
+    NiceMock<MockPerfReport> mock_perf_report;
+    EXPECT_CALL(mock_perf_report, begin_frame(_)).Times(1);
+    EXPECT_CALL(mock_perf_report, end_frame(_)).Times(0);
+
+    mcl::BufferStream bs(
+        nullptr, wait_handle, mock_protobuf_server,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
+        response, mt::fake_shared(mock_perf_report), "Foo", size, nbuffers);
+
+    service_requests_for(bs, 1);
+
+    (void)bs.secure_for_cpu_write();
+}
+
+TEST_P(ClientBufferStream, perf_report_ends_frame_at_next_buffer)
+{
+    NiceMock<MockPerfReport> mock_perf_report;
+    EXPECT_CALL(mock_perf_report, begin_frame(_)).Times(2);
+    EXPECT_CALL(mock_perf_report, end_frame(_)).Times(1);
+
+    mcl::BufferStream bs(
+        nullptr, wait_handle, mock_protobuf_server,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
+        response, mt::fake_shared(mock_perf_report), "Foo", size, nbuffers);
+
+    service_requests_for(bs, 2);
+
+    (void)bs.get_current_buffer();
+    bs.next_buffer([]{});
+}
+
 TEST_P(ClientBufferStream, receives_unsolicited_buffer)
 {
     int id = 88;
