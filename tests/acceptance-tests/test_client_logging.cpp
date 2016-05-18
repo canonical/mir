@@ -105,12 +105,21 @@ TEST_F(ClientLogging, reports_performance)
             if (fields >= 1)
             {
                 EXPECT_STREQ("Rumpelstiltskin", name);
-                auto expect_frame_time = 1000.0f / target_fps;
+                auto expected_frame_time = 1000.0f / target_fps;
                 if (fields >= 3)
                 {
-                    EXPECT_THAT(render, Le(1.1f * expect_frame_time));
+                    EXPECT_THAT(render, Gt(target_render_time.count() - 1));
+
+                    // Not a great test, but it will catch LP: #1581368 while
+                    // also dealing with the possibility that CI machines
+                    // are super slow:
+                    EXPECT_THAT(render, Lt(expected_frame_time));
+
                     if (fields >= 4)
-                        EXPECT_NEAR(3 * expect_frame_time, lag, 5.0f);
+                    {
+                        int const nbuffers = 3;
+                        EXPECT_NEAR(nbuffers * expected_frame_time, lag, 20.0f);
+                    }
                 }
             }
 
