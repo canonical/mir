@@ -201,5 +201,5 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return "error";
+    return "MirBuffer: unknown error";
 }

@@ -65,7 +65,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-
 void ignore()
 {
 }
@@ -1233,6 +1232,7 @@ void MirConnection::allocate_buffer(
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback callback, void* context)
 {
+    std::unique_lock<decltype(mutex)> lock(mutex);
     mp::BufferAllocation request;
     auto buffer_request = request.add_buffer_requests();
     buffer_request->set_width(size.width.as_int());
@@ -1246,10 +1246,12 @@ void MirConnection::allocate_buffer(
         client_buffer_factory, this,
         size, format, usage,
         callback, context);
-
+    
     buffer_requests.push_back({size, format, usage, std::make_shared<mir::protobuf::Void>()});
+    lock.unlock();
+
     server.allocate_buffers(&request, buffer_requests.back().resp.get(),
-        gp::NewCallback(this, &MirConnection::error_buffer, static_cast<void*>(&buffer_requests.back())));
+        gp::NewCallback(this, &MirConnection::buffer_allocation_request_complete, static_cast<void*>(&buffer_requests.back())));
 }
 
 void MirConnection::release_buffer(int buffer_id)
@@ -1258,15 +1260,16 @@ void MirConnection::release_buffer(int buffer_id)
     auto released_buffer = request.add_buffers();
     released_buffer->set_buffer_id(buffer_id);
     server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
+    if (buffer_id < 0)
+        surface_map->erase(buffer_id);
 }
-
 
 int MirConnection::next_error_buffer_id(std::unique_lock<std::mutex> const&)
 {
     return error_buffer_id--;
 }
 
-void MirConnection::error_buffer(void* req)
+void MirConnection::buffer_allocation_request_complete(void* req)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     auto request = static_cast<BufferCreationRequest*>(req);
@@ -1279,12 +1282,20 @@ void MirConnection::error_buffer(void* req)
         });
     if (it != buffer_requests.end())
     {
-        auto msg = std::string(request->resp->error().c_str());
-        auto id = next_error_buffer_id(lock);
-        std::shared_ptr<mcl::MirBuffer> buffer = buffer_factory->error_buffer(msg, id, it->size, it->format, it->usage);
+        auto size = it->size;
+        auto format = it->format;
+        auto usage = it->usage;
+        auto response = it->resp;
         buffer_requests.erase(it);
-        surface_map->insert(id, buffer);
-        lock.unlock();
-        buffer->received();
+        if (response->has_error())
+        {
+            auto msg = std::string(response->error().c_str());
+            auto id = next_error_buffer_id(lock);
+            std::shared_ptr<mcl::MirBuffer> buffer = 
+                buffer_factory->error_buffer(msg, id, size, format, usage);
+            surface_map->insert(id, buffer);
+            lock.unlock();
+            buffer->received();
+        }
     }
 }

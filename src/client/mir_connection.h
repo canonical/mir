@@ -199,7 +199,7 @@ public:
         mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
         mir_buffer_callback callback, void* context);
     void release_buffer(int buffer_id);
-    void error_buffer(void*);
+    void buffer_allocation_request_complete(void*);
 
 private:
     //google cant have callbacks with more than 2 args
