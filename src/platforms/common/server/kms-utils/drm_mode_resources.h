@@ -36,10 +36,19 @@ typedef std::unique_ptr<drmModeCrtc,std::function<void(drmModeCrtc*)>> DRMModeCr
 typedef std::unique_ptr<drmModeEncoder,std::function<void(drmModeEncoder*)>> DRMModeEncoderUPtr;
 typedef std::unique_ptr<drmModeConnector,std::function<void(drmModeConnector*)>> DRMModeConnectorUPtr;
 typedef std::unique_ptr<drmModeRes,std::function<void(drmModeRes*)>> DRMModeResUPtr;
+typedef std::unique_ptr<drmModePlaneRes,void(*)(drmModePlaneRes*)> DRMModePlaneResUPtr;
+typedef std::unique_ptr<drmModePlane,void(*)(drmModePlane*)> DRMModePlaneUPtr;
+typedef std::unique_ptr<drmModeObjectProperties,void(*)(drmModeObjectProperties*)> DRMModeObjectPropsUPtr;
+typedef std::unique_ptr<drmModePropertyRes,void(*)(drmModePropertyPtr)> DRMModePropertyUPtr;
+
 
 DRMModeConnectorUPtr get_connector(int drm_fd, uint32_t id);
 DRMModeEncoderUPtr get_encoder(int drm_fd, uint32_t id);
 DRMModeCrtcUPtr get_crtc(int drm_fd, uint32_t id);
+DRMModePlaneResUPtr get_planes(int drm_fd);
+DRMModePlaneUPtr get_plane(int drm_fd, uint32_t id);
+DRMModeObjectPropsUPtr get_object_properties(int drm_fd, uint32_t object_id, uint32_t object_type);
+DRMModePropertyUPtr get_property(int drm_fd, uint32_t id);
 
 class DRMModeResources
 {

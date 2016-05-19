@@ -180,6 +180,98 @@ mgk::DRMModeCrtcUPtr mgk::get_crtc(int drm_fd, uint32_t id)
     return crtc;
 }
 
+mgk::DRMModePlaneResUPtr mgk::get_planes(int drm_fd)
+{
+    errno = 0;
+    mgk::DRMModePlaneResUPtr resources{drmModeGetPlaneResources(drm_fd), &drmModeFreePlaneResources};
+
+    if (!resources)
+    {
+        if (errno == 0)
+        {
+            // drmModeGetPlaneResources either sets errno, or has failed in malloc()
+            errno = ENOMEM;
+        }
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Couldn't get DRM plane resources"}));
+    }
+
+    return resources;
+}
+
+mgk::DRMModePlaneUPtr mgk::get_plane(int drm_fd, uint32_t id)
+{
+    if (id == 0)
+    {
+        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get plane with invalid ID 0"});
+    }
+
+    errno = 0;
+    DRMModePlaneUPtr plane{drmModeGetPlane(drm_fd, id), &drmModeFreePlane};
+
+    if (!plane)
+    {
+        if (errno == 0)
+        {
+            // drmModeGetPlane either sets errno, or has failed in malloc()
+            errno = ENOMEM;
+        }
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to get DRM plane"}));
+    }
+    return plane;
+}
+
+mgk::DRMModeObjectPropsUPtr mgk::get_object_properties(
+    int drm_fd,
+    uint32_t object_id,
+    uint32_t object_type)
+{
+    if (object_id == 0)
+    {
+        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get properties of object with invalid ID 0"});
+    }
+    if (object_type == 0)
+    {
+        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get properties of object with invalid type 0"});
+    }
+
+    errno = 0;
+    DRMModeObjectPropsUPtr props{
+        drmModeObjectGetProperties(drm_fd, object_id, object_type), &drmModeFreeObjectProperties};
+
+    if (!props)
+    {
+        if (errno == 0)
+        {
+            // drmModeGetObjectProperties either sets errno, or has failed in malloc()
+            errno = ENOMEM;
+        }
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to get DRM object properties"}));
+    }
+    return props;
+}
+
+mgk::DRMModePropertyUPtr mgk::get_property(int drm_fd, uint32_t id)
+{
+    if (id == 0)
+    {
+        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get property with invalid ID 0"});
+    }
+
+    errno = 0;
+    DRMModePropertyUPtr prop{drmModeGetProperty(drm_fd, id), &drmModeFreeProperty};
+
+    if (!prop)
+    {
+        if (errno == 0)
+        {
+            // drmModeGetProperty either sets errno, or has failed in malloc()
+            errno = ENOMEM;
+        }
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to get DRM plane"}));
+    }
+    return prop;
+}
+
 auto mgk::DRMModeResources::connectors() const -> ObjectCollection<DRMModeConnectorUPtr, &get_connector>
 {
     return ObjectCollection<DRMModeConnectorUPtr, &get_connector>{drm_fd, resources->connectors, resources->connectors + resources->count_connectors};
