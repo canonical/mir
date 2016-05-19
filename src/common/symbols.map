@@ -352,7 +352,7 @@ MIR_COMMON_0.22 {
        MirPromptSessionEvent::new_state*;
        MirPromptSessionEvent::set_new_state*;
     };
-} MIR_COMMON_0.19.1;#
+} MIR_COMMON_0.19.1;
 
 MIR_COMMON_0.24 {
   global:

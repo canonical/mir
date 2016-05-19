@@ -183,13 +183,15 @@ TEST_F(InputEventBuilder, map_to_hover_if_no_button_pressed)
     EXPECT_EQ(action, mir_pointer_event_action(pev));
 }
 
-TEST_F(InputEventBuilder, input_device_state_event)
+TEST_F(InputEventBuilder, when_creating_input_device_state_event_it_has_supplied_properties)
 {
+    auto const pos_x = 12.1f;
+    auto const pos_y = 53.2f;
     auto const button_state = mir_pointer_button_primary|mir_pointer_button_secondary;
     auto ev = mev::make_event(timestamp,
                               button_state,
-                              12.1f,
-                              53.2f,
+                              pos_x,
+                              pos_y,
                               {mev::InputDeviceState{MirInputDeviceId{3}, {KEY_LEFTALT, KEY_M}, 0},
                                mev::InputDeviceState{MirInputDeviceId{2}, {}, button_state}});
 
@@ -197,8 +199,8 @@ TEST_F(InputEventBuilder, input_device_state_event)
     auto ids_event = mir_event_get_input_device_state_event(ev.get());
 
     EXPECT_THAT(mir_input_device_state_event_time(ids_event), Eq(timestamp.count()));
-    EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_x), Eq(12.1f));
-    EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_y), Eq(53.2f));
+    EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_x), Eq(pos_x));
+    EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_y), Eq(pos_y));
     EXPECT_THAT(mir_input_device_state_event_pointer_buttons(ids_event), Eq(button_state));
     EXPECT_THAT(mir_input_device_state_event_device_count(ids_event), Eq(2));
 
@@ -213,13 +215,15 @@ TEST_F(InputEventBuilder, input_device_state_event)
     EXPECT_THAT(mir_input_device_state_event_device_pointer_buttons(ids_event, 1), Eq(button_state));
 }
 
-TEST_F(InputEventBuilder, input_device_state_event_deserialized)
+TEST_F(InputEventBuilder, when_deserialized_input_device_state_event_has_supplied_properties)
 {
+    auto const pos_x = 124.5f;
+    auto const pos_y = 91.2f;
     auto const button_state = mir_pointer_button_primary;
     auto ev = mev::make_event(timestamp,
                               button_state,
-                              124.5f,
-                              91.2f,
+                              pos_x,
+                              pos_y,
                               {});
 
     auto encoded = MirEvent::serialize(ev.get());
@@ -230,19 +234,21 @@ TEST_F(InputEventBuilder, input_device_state_event_deserialized)
     auto ids_event = mir_event_get_input_device_state_event(deserialzed_event.get());
 
     EXPECT_THAT(mir_input_device_state_event_time(ids_event), Eq(timestamp.count()));
-    EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_x), Eq(124.5f));
-    EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_y), Eq(91.2f));
+    EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_x), Eq(pos_x));
+    EXPECT_THAT(mir_input_device_state_event_pointer_axis(ids_event, mir_pointer_axis_y), Eq(pos_y));
     EXPECT_THAT(mir_input_device_state_event_pointer_buttons(ids_event), Eq(button_state));
     EXPECT_THAT(mir_input_device_state_event_device_count(ids_event), Eq(0));
 }
 
-TEST_F(InputEventBuilder, input_device_state_event_deserialized_with_pressed_keys)
+TEST_F(InputEventBuilder, when_deserialized_input_device_state_event_has_supplied_key_presses)
 {
+    auto const pos_x = 0.0f;
+    auto const pos_y = 0.0f;
     auto const button_state = mir_pointer_button_primary | mir_pointer_button_secondary;
     auto ev = mev::make_event(timestamp,
                               button_state,
-                              0.0f,
-                              0.0f,
+                              pos_x,
+                              pos_y,
                               {mev::InputDeviceState{MirInputDeviceId{0}, {}, mir_pointer_button_primary},
                                mev::InputDeviceState{MirInputDeviceId{2}, {}, mir_pointer_button_secondary},
                                mev::InputDeviceState{MirInputDeviceId{3}, {KEY_RIGHTALT, KEY_LEFTSHIFT, KEY_Q}, 0}});

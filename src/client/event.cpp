@@ -32,7 +32,6 @@
 
 #include <cstdlib>
 #include <cstring>
-#include <chrono>
 
 namespace ml = mir::logging;
 

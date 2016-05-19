@@ -209,8 +209,6 @@ MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* 
  */
 MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent const* ev);
 
-
-
 /*
  * 
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

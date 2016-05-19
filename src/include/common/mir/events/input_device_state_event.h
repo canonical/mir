@@ -51,8 +51,6 @@ struct MirInputDeviceStateEvent : MirEvent
 
 private:
     std::chrono::nanoseconds when_{0};
-
-    // TODO consider not storing that but keeping it as separate values
     MirPointerButtons pointer_buttons_{0};
 
     float pointer_x{0.0f};
@@ -67,7 +65,7 @@ private:
         std::vector<uint32_t> pressed_keys;
         MirPointerButtons pointer_buttons;
     };
-    std::vector<DeviceState> devices; // I might not be allowed to do that
+    std::vector<DeviceState> devices;
 };
 
 #endif /* MIR_COMMON_INPUT_DEVICE_STATE_EVENT_H_*/
