@@ -37,15 +37,11 @@ public:
     AsyncBufferFactory() = default;
 
     virtual std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) = 0;
-    virtual std::unique_ptr<MirBuffer> error_buffer(
-        std::string const& error_msg,
-        int buffer_id,
-        geometry::Size size,
-        MirPixelFormat format,
-        MirBufferUsage usage) = 0;
+    virtual std::unique_ptr<MirBuffer> error_buffer(protobuf::Void* response, int) = 0;
 
     virtual void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
+        std::shared_ptr<protobuf::Void> const& response,
         MirConnection* connection,
         geometry::Size size,
         MirPixelFormat format,
@@ -63,14 +59,10 @@ class BufferFactory : public AsyncBufferFactory
 {
 public:
     std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) override;
-    std::unique_ptr<MirBuffer> error_buffer(
-        std::string const& error_msg,
-        int buffer_id,
-        geometry::Size size,
-        MirPixelFormat format,
-        MirBufferUsage usage) override;
+    std::unique_ptr<MirBuffer> error_buffer(protobuf::Void* response, int) override;
     void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
+        std::shared_ptr<protobuf::Void> const& response,
         MirConnection* connection,
         geometry::Size size,
         MirPixelFormat format,
@@ -85,6 +77,7 @@ private:
     {
         AllocationRequest(
             std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
+            std::shared_ptr<protobuf::Void> const& response,
             MirConnection* connection,
             geometry::Size size,
             MirPixelFormat format,
@@ -93,6 +86,7 @@ private:
             void* cb_context);
 
         std::shared_ptr<ClientBufferFactory> const native_buffer_factory;
+        std::shared_ptr<protobuf::Void> const response;
         MirConnection* connection;
         geometry::Size size;
         MirPixelFormat format;

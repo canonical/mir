@@ -87,16 +87,16 @@ struct MockAsyncBufferFactory : mcl::AsyncBufferFactory
 {
     MOCK_METHOD1(cancel_requests_with_context, void(void*));
     MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::Buffer>(mp::Buffer const&));
-    MOCK_METHOD7(expect_buffer, void(
+    MOCK_METHOD8(expect_buffer, void(
         std::shared_ptr<mcl::ClientBufferFactory> const& native_buffer_factory,
+        std::shared_ptr<mp::Void> const&,
         MirConnection* connection,
         geom::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
         mir_buffer_callback cb,
         void* cb_context));
-    MOCK_METHOD5(error_buffer, std::unique_ptr<mcl::MirBuffer>(
-        std::string const&, int, geom::Size, MirPixelFormat, MirBufferUsage));
+    MOCK_METHOD2(error_buffer, std::unique_ptr<mcl::MirBuffer>(mp::Void*, int));
 };
 
 struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,
@@ -927,14 +927,13 @@ TEST_F(MirConnectionTest, can_alloc_buffer_from_connection)
     auto format = mir_pixel_format_abgr_8888;
     auto usage = mir_buffer_usage_software;
     mp::BufferAllocation mp_alloc;
-    mp_alloc.mutable_id()->set_value(-1);
     auto params = mp_alloc.add_buffer_requests();
     params->set_width(size.width.as_int());
     params->set_height(size.height.as_int());
     params->set_buffer_usage(usage);
     params->set_pixel_format(format);
     EXPECT_CALL(*mock_channel, allocate_buffers(BufferAllocationMatches(mp_alloc)));
-    EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, connection.get(), size, format, usage, nullptr, nullptr));
+    EXPECT_CALL(*mock_buffer_allocator, expect_buffer(_, _, connection.get(), size, format, usage, nullptr, nullptr));
 
     connection->allocate_buffer(size, format, usage, nullptr, nullptr);
 }

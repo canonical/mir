@@ -199,7 +199,7 @@ public:
         mir::geometry::Size size, MirPixelFormat format, MirBufferUsage usage,
         mir_buffer_callback callback, void* context);
     void release_buffer(int buffer_id);
-    void buffer_allocation_request_complete(void*);
+    void buffer_allocation_request_complete(mir::protobuf::Void*);
 
 private:
     //google cant have callbacks with more than 2 args
@@ -254,16 +254,7 @@ private:
     void context_created(ChainCreationRequest*);
     void chain_error(std::string const& error_msg, std::shared_ptr<ChainCreationRequest> const& request);
 
-    struct BufferCreationRequest
-    {
-        mir::geometry::Size size;
-        MirPixelFormat format;
-        MirBufferUsage usage;
-        std::shared_ptr<mir::protobuf::Void> resp;
-    };
-    std::vector<BufferCreationRequest> buffer_requests;
-
-    int next_error_buffer_id(std::unique_lock<std::mutex> const&);
+    int next_error_buffer_id();
     int error_buffer_id = -1;
 
     void populate_server_package(MirPlatformPackage& platform_package) override;

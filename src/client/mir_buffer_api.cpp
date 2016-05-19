@@ -46,7 +46,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_buffer_release(MirBuffer* b)
+void mir_buffer_release(MirBuffer* b) 
 try
 {
     mir::require(b);

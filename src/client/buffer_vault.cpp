@@ -92,7 +92,7 @@ mcl::BufferVault::~BufferVault()
 
 void mcl::BufferVault::alloc_buffer(geom::Size size, MirPixelFormat format, int usage)
 {
-    buffer_factory->expect_buffer(platform_factory, nullptr, size, format, static_cast<MirBufferUsage>(usage),
+    buffer_factory->expect_buffer(platform_factory, nullptr, nullptr, size, format, static_cast<MirBufferUsage>(usage),
         incoming_buffer, this);
     server_requests->allocate_buffer(size, format, usage);
 }

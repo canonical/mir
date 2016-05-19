@@ -685,13 +685,13 @@ struct MockBufferFactory : mcl::AsyncBufferFactory
 {
     MOCK_METHOD1(cancel_requests_with_context, void(void*));
     MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::Buffer>(mir::protobuf::Buffer const&));
-    MOCK_METHOD7(expect_buffer, void(
+    MOCK_METHOD8(expect_buffer, void(
         std::shared_ptr<mcl::ClientBufferFactory> const&,
+        std::shared_ptr<mir::protobuf::Void> const&,
         MirConnection*,
         mir::geometry::Size, MirPixelFormat, MirBufferUsage,
         mir_buffer_callback, void*));
-    MOCK_METHOD5(error_buffer, std::unique_ptr<mcl::MirBuffer>(
-        std::string const&, int, mir::geometry::Size, MirPixelFormat, MirBufferUsage));
+    MOCK_METHOD2(error_buffer, std::unique_ptr<mcl::MirBuffer>(mir::protobuf::Void*, int));
 };
 
 namespace

@@ -1232,7 +1232,6 @@ void MirConnection::allocate_buffer(
     geom::Size size, MirPixelFormat format, MirBufferUsage usage,
     mir_buffer_callback callback, void* context)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
     mp::BufferAllocation request;
     auto buffer_request = request.add_buffer_requests();
     buffer_request->set_width(size.width.as_int());
@@ -1242,16 +1241,14 @@ void MirConnection::allocate_buffer(
 
     if (!client_buffer_factory)
         client_buffer_factory = platform->create_buffer_factory();
+
+    auto response = std::make_shared<mir::protobuf::Void>();
     buffer_factory->expect_buffer(
-        client_buffer_factory, this,
+        client_buffer_factory, response, this,
         size, format, usage,
         callback, context);
-    
-    buffer_requests.push_back({size, format, usage, std::make_shared<mir::protobuf::Void>()});
-    lock.unlock();
-
-    server.allocate_buffers(&request, buffer_requests.back().resp.get(),
-        gp::NewCallback(this, &MirConnection::buffer_allocation_request_complete, static_cast<void*>(&buffer_requests.back())));
+    server.allocate_buffers(&request, response.get(),
+        gp::NewCallback(this, &MirConnection::buffer_allocation_request_complete, response.get()));
 }
 
 void MirConnection::release_buffer(int buffer_id)
@@ -1264,38 +1261,20 @@ void MirConnection::release_buffer(int buffer_id)
         surface_map->erase(buffer_id);
 }
 
-int MirConnection::next_error_buffer_id(std::unique_lock<std::mutex> const&)
+int MirConnection::next_error_buffer_id()
 {
+    std::unique_lock<decltype(mutex)> lock(mutex);
     return error_buffer_id--;
 }
 
-void MirConnection::buffer_allocation_request_complete(void* req)
+void MirConnection::buffer_allocation_request_complete(mp::Void* response)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    auto request = static_cast<BufferCreationRequest*>(req);
-    auto it = std::find_if(buffer_requests.begin(), buffer_requests.end(),
-        [&](auto const& r)
-        {
-            return ((r.size == request->size) &&
-                    (r.usage == request->usage) &&
-                    (r.format == request->format));
-        });
-    if (it != buffer_requests.end())
+    if (response->has_error())
     {
-        auto size = it->size;
-        auto format = it->format;
-        auto usage = it->usage;
-        auto response = it->resp;
-        buffer_requests.erase(it);
-        if (response->has_error())
-        {
-            auto msg = std::string(response->error().c_str());
-            auto id = next_error_buffer_id(lock);
-            std::shared_ptr<mcl::MirBuffer> buffer = 
-                buffer_factory->error_buffer(msg, id, size, format, usage);
-            surface_map->insert(id, buffer);
-            lock.unlock();
-            buffer->received();
-        }
+        auto msg = std::string(response->error().c_str());
+        auto id = next_error_buffer_id();
+        std::shared_ptr<mcl::MirBuffer> buffer = buffer_factory->error_buffer(response, id);
+        surface_map->insert(id, buffer);
+        buffer->received();
     }
 }
