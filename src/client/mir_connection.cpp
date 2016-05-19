@@ -1280,9 +1280,10 @@ void MirConnection::error_buffer(void* req)
     if (it != buffer_requests.end())
     {
         auto msg = std::string(request->resp->error().c_str());
-        std::shared_ptr<mcl::MirBuffer> buffer = buffer_factory->error_buffer(msg, it->size, it->format, it->usage);
+        auto id = next_error_buffer_id(lock);
+        std::shared_ptr<mcl::MirBuffer> buffer = buffer_factory->error_buffer(msg, id, it->size, it->format, it->usage);
         buffer_requests.erase(it);
-        surface_map->insert(next_error_buffer_id(lock), buffer);
+        surface_map->insert(id, buffer);
         lock.unlock();
         buffer->received();
     }

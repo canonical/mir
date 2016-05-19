@@ -39,6 +39,7 @@ public:
     virtual std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) = 0;
     virtual std::unique_ptr<MirBuffer> error_buffer(
         std::string const& error_msg,
+        int buffer_id,
         geometry::Size size,
         MirPixelFormat format,
         MirBufferUsage usage) = 0;
@@ -64,6 +65,7 @@ public:
     std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) override;
     std::unique_ptr<MirBuffer> error_buffer(
         std::string const& error_msg,
+        int buffer_id,
         geometry::Size size,
         MirPixelFormat format,
         MirBufferUsage usage) override;

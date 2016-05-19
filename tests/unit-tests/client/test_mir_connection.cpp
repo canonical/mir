@@ -95,8 +95,8 @@ struct MockAsyncBufferFactory : mcl::AsyncBufferFactory
         MirBufferUsage usage,
         mir_buffer_callback cb,
         void* cb_context));
-    MOCK_METHOD4(error_buffer, std::unique_ptr<mcl::MirBuffer>(
-        std::string const&, geom::Size, MirPixelFormat, MirBufferUsage));
+    MOCK_METHOD5(error_buffer, std::unique_ptr<mcl::MirBuffer>(
+        std::string const&, int, geom::Size, MirPixelFormat, MirBufferUsage));
 };
 
 struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel,

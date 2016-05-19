@@ -57,6 +57,7 @@ void mcl::BufferFactory::expect_buffer(
 
 std::unique_ptr<mcl::MirBuffer> mcl::BufferFactory::error_buffer(
     std::string const& error_msg,
+    int buffer_id,
     geometry::Size size,
     MirPixelFormat format,
     MirBufferUsage usage)
@@ -69,7 +70,8 @@ std::unique_ptr<mcl::MirBuffer> mcl::BufferFactory::error_buffer(
         });
     if (request_it == allocation_requests.end())
         BOOST_THROW_EXCEPTION(std::logic_error("unrequested buffer received"));
-    auto buffer = std::make_unique<mcl::ErrorBuffer>(error_msg, (*request_it)->cb, (*request_it)->cb_context);
+    auto buffer = std::make_unique<mcl::ErrorBuffer>(
+        error_msg, buffer_id, (*request_it)->cb, (*request_it)->cb_context);
     allocation_requests.erase(request_it);
     return std::move(buffer);
 }
