@@ -350,7 +350,7 @@ TEST_F(InputConsumerTest, receives_raw_event_buffer)
     receive_events();
 }
 
-TEST_F(InputConsumerTest, )
+TEST_F(InputConsumerTest, buffer_exceeding_payload_not_transfered)
 {
     std::string too_big;
     too_big.resize(droidinput::InputMessage::raw_event_payload +1, 'I');
