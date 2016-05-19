@@ -349,3 +349,13 @@ TEST_F(InputConsumerTest, receives_raw_event_buffer)
     send_raw_event(buffer);
     receive_events();
 }
+
+TEST_F(InputConsumerTest, )
+{
+    std::string too_big;
+    too_big.resize(droidinput::InputMessage::raw_event_payload +1, 'I');
+    EXPECT_CALL(*this, raw_buffer(_)).Times(0);
+
+    EXPECT_THROW({send_raw_event(too_big);}, std::runtime_error);
+    receive_events();
+}

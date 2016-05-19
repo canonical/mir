@@ -49,7 +49,6 @@ struct InputMessage {
     InputMessage(uint32_t seq, std::string const& buffer);
     InputMessage(InputMessage const& cp);
     InputMessage& operator=(InputMessage const& cp);
-    ~InputMessage();
 
     enum {
         TYPE_KEY = 1,
@@ -62,6 +61,7 @@ struct InputMessage {
         uint32_t type;
         uint32_t seq;
         uint32_t size; // size of the Body
+        uint32_t padding; // padding for 8byte tokens in Body
     } header;
 
     union Body {
@@ -125,14 +125,14 @@ struct InputMessage {
         } finished;
 
         struct Buffer {
-            uint8_t* buffer;
+            uint8_t buffer[sizeof(Motion)];
         } buffer;
     } body;
 
     bool isValid(size_t actualSize) const;
     size_t size() const;
-    ssize_t send(int fd) const;
-    ssize_t receive(int fd);
+
+    static const size_t raw_event_payload = sizeof(body.buffer);
 };
 
 /*

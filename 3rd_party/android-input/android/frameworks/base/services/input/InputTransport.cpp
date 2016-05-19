@@ -29,6 +29,9 @@
 #include <sys/socket.h>
 #include <math.h>
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 
 namespace android {
 
@@ -67,38 +70,15 @@ InputMessage::InputMessage(uint32_t seq, std::string const& buffer)
     header.type = TYPE_BUFFER;
     header.seq = seq;
     header.size = buffer.size();
-    body.buffer.buffer = static_cast<uint8_t*>(malloc(header.size));
+    
+    if (raw_event_payload < buffer.size())
+        BOOST_THROW_EXCEPTION(std::runtime_error("raw buffer event exceed payload"));
     memcpy(body.buffer.buffer, buffer.data(), header.size);
 }
 
-InputMessage::InputMessage(InputMessage const& cp)
-{
-    memcpy(this, &cp, sizeof cp);
+InputMessage::InputMessage(InputMessage const& cp) = default;
 
-    if (header.type == TYPE_BUFFER)
-    {
-        body.buffer.buffer = static_cast<uint8_t*>(malloc(header.size));
-        memcpy(body.buffer.buffer, cp.body.buffer.buffer, header.size);
-    }
-}
-
-InputMessage& InputMessage::operator=(InputMessage const& cp)
-{
-    memcpy(this, &cp, sizeof cp);
-
-    if (header.type == TYPE_BUFFER)
-    {
-        body.buffer.buffer = static_cast<uint8_t*>(malloc(header.size));
-        memcpy(body.buffer.buffer, cp.body.buffer.buffer, header.size);
-    }
-    return *this;
-}
-
-InputMessage::~InputMessage()
-{
-    if (header.type == TYPE_BUFFER)
-        delete [] body.buffer.buffer;
-}
+InputMessage& InputMessage::operator=(InputMessage const& cp) = default;
 
 bool InputMessage::isValid(size_t actualSize) const {
     if (size() == actualSize) {
@@ -128,57 +108,6 @@ size_t InputMessage::size() const {
     }
     return sizeof(Header);
 }
-
-ssize_t InputMessage::send(int fd) const {
-    ssize_t nWrite = 0;
-
-    uint8_t const* buf = reinterpret_cast<uint8_t const*>(&body);
-
-    if (header.type == TYPE_BUFFER)
-        buf = body.buffer.buffer;
-
-    do {
-        nWrite = ::send(fd, &header, sizeof header, MSG_DONTWAIT | MSG_NOSIGNAL);
-    } while (nWrite == -1 && errno == EINTR);
-
-    if (nWrite != sizeof header)
-        return nWrite;
-
-    do {
-        nWrite = ::send(fd, buf, header.size, MSG_DONTWAIT | MSG_NOSIGNAL);
-    } while (nWrite == -1 && errno == EINTR);
-
-    if (nWrite > 0)
-        nWrite += sizeof header;
-
-    return nWrite;
-}
-
-ssize_t InputMessage::receive(int fd) {
-    ssize_t nRead;
-    do {
-        nRead = ::recv(fd, &header, sizeof header, MSG_DONTWAIT);
-    } while (nRead == -1 && errno == EINTR);
-
-    if (nRead != sizeof header)
-        return nRead;
-
-    uint8_t* dest = reinterpret_cast<uint8_t*>(&body);
-    if (header.type == TYPE_BUFFER) {
-        body.buffer.buffer = static_cast<uint8_t*>(malloc(header.size));
-        dest = body.buffer.buffer;
-    }
-
-    do {
-        nRead = ::recv(fd, dest, header.size, MSG_DONTWAIT);
-    } while (nRead == -1 && errno == EINTR);
-
-    if (nRead > 0)
-        nRead += sizeof header;
-
-    return nRead;
-}
-
 // --- InputChannel ---
 
 InputChannel::InputChannel(const String8& name, int fd) :
@@ -202,7 +131,11 @@ InputChannel::~InputChannel() {
 
 status_t InputChannel::sendMessage(const InputMessage* msg) {
     size_t msgLength = msg->size();
-    ssize_t nWrite = msg->send(mFd);
+    ssize_t nWrite;
+    do {
+        nWrite = ::send(mFd, msg, msgLength, MSG_DONTWAIT | MSG_NOSIGNAL);
+    } while (nWrite == -1 && errno == EINTR);
+
     if (nWrite < 0) {
         int error = errno;
 #if DEBUG_CHANNEL_MESSAGES
@@ -233,7 +166,10 @@ status_t InputChannel::sendMessage(const InputMessage* msg) {
 }
 
 status_t InputChannel::receiveMessage(InputMessage* msg) {
-    ssize_t nRead = msg->receive(mFd);
+    ssize_t nRead;
+    do {
+        nRead = ::recv(mFd, msg, sizeof(InputMessage), MSG_DONTWAIT);
+    } while (nRead == -1 && errno == EINTR);
 
     if (nRead < 0) {
         int error = errno;
