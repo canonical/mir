@@ -67,10 +67,11 @@ InputMessage::InputMessage()
 
 InputMessage::InputMessage(uint32_t seq, std::string const& buffer)
 {
+    memset(this, 0, sizeof(InputMessage));
     header.type = TYPE_BUFFER;
     header.seq = seq;
     header.size = buffer.size();
-    
+
     if (raw_event_payload < buffer.size())
         BOOST_THROW_EXCEPTION(std::runtime_error("raw buffer event exceed payload"));
     memcpy(body.buffer.buffer, buffer.data(), header.size);
