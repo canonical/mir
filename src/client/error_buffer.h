@@ -29,7 +29,7 @@ class ErrorBuffer : public MirBuffer
 {
 public:
     ErrorBuffer(
-        std::string const& error_msg,
+        std::string const& error_msg, int buffer_id,
         mir_buffer_callback cb, void* context);
 
     int rpc_id() const override;
@@ -52,6 +52,7 @@ public:
     char const* error_message() const override;
 private:
     std::string const error_msg;
+    int const buffer_id;
     mir_buffer_callback const cb;
     void* const cb_context;
 };
