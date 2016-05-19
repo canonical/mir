@@ -25,31 +25,10 @@ namespace mgk = mir::graphics::kms;
 
 namespace
 {
-
-struct CrtcDeleter
-{
-    void operator()(drmModeCrtc* p) { if (p) drmModeFreeCrtc(p); }
-};
-
-struct EncoderDeleter
-{
-    void operator()(drmModeEncoder* p) { if (p) drmModeFreeEncoder(p); }
-};
-
-struct ConnectorDeleter
-{
-    void operator()(drmModeConnector* p) { if (p) drmModeFreeConnector(p); }
-};
-
-struct ResourcesDeleter
-{
-    void operator()(drmModeRes* p) { if (p) drmModeFreeResources(p); }
-};
-
 mgk::DRMModeResUPtr resources_for_drm_node(int drm_fd)
 {
     errno = 0;
-    mgk::DRMModeResUPtr resources{drmModeGetResources(drm_fd), ResourcesDeleter()};
+    mgk::DRMModeResUPtr resources{drmModeGetResources(drm_fd), &drmModeFreeResources};
 
     if (!resources)
     {
@@ -129,7 +108,7 @@ mgk::DRMModeCrtcUPtr mgk::DRMModeResources::crtc(uint32_t id) const
 mgk::DRMModeConnectorUPtr mgk::get_connector(int drm_fd, uint32_t id)
 {
     errno = 0;
-    DRMModeConnectorUPtr connector{drmModeGetConnector(drm_fd, id), ConnectorDeleter()};
+    DRMModeConnectorUPtr connector{drmModeGetConnector(drm_fd, id), &drmModeFreeConnector};
 
     if (!connector)
     {
@@ -147,7 +126,7 @@ mgk::DRMModeConnectorUPtr mgk::get_connector(int drm_fd, uint32_t id)
 mgk::DRMModeEncoderUPtr mgk::get_encoder(int drm_fd, uint32_t id)
 {
     errno = 0;
-    DRMModeEncoderUPtr encoder{drmModeGetEncoder(drm_fd, id), EncoderDeleter()};
+    DRMModeEncoderUPtr encoder{drmModeGetEncoder(drm_fd, id), &drmModeFreeEncoder};
 
     if (!encoder)
     {
@@ -165,7 +144,7 @@ mgk::DRMModeEncoderUPtr mgk::get_encoder(int drm_fd, uint32_t id)
 mgk::DRMModeCrtcUPtr mgk::get_crtc(int drm_fd, uint32_t id)
 {
     errno = 0;
-    DRMModeCrtcUPtr crtc{drmModeGetCrtc(drm_fd, id), CrtcDeleter()};
+    DRMModeCrtcUPtr crtc{drmModeGetCrtc(drm_fd, id), &drmModeFreeCrtc};
 
     if (!crtc)
     {
