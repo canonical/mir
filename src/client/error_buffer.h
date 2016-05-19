@@ -29,7 +29,8 @@ class ErrorBuffer : public MirBuffer
 {
 public:
     ErrorBuffer(
-        mir_buffer_callback cb, void* context, std::string const&);
+        std::string const& error_msg,
+        mir_buffer_callback cb, void* context);
 
     int rpc_id() const override;
     void submitted() override;
@@ -50,9 +51,9 @@ public:
     bool valid() const override;
     char const* error_message() const override;
 private:
-    mir_buffer_callback cb;
-    void* cb_context;
-    std::string error_msg;
+    std::string const error_msg;
+    mir_buffer_callback const cb;
+    void* const cb_context;
 };
 }
 }

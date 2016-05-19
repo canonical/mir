@@ -66,10 +66,9 @@ namespace geom = mir::geometry;
 namespace
 {
 
-//void ignore(MirConnection* connection, void* r)
-//{
-//    connection->error_buffer(r);
-//}
+void ignore()
+{
+}
 
 std::shared_ptr<mcl::PerfReport>
 make_perf_report(std::shared_ptr<ml::Logger> const& logger)
@@ -383,10 +382,13 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         std::string name{spec.surface_name.is_set() ?
                          spec.surface_name.value() : ""};
 
-        stream = std::make_shared<mcl::BufferStream>(
-            this, request->wh, server, platform, surface_map, buffer_factory,
-            surface_proto->buffer_stream(), make_perf_report(logger), name,
-            mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
+        if (surface_proto->has_buffer_stream())
+        {
+            stream = std::make_shared<mcl::BufferStream>(
+                this, request->wh, server, platform, surface_map, buffer_factory,
+                surface_proto->buffer_stream(), make_perf_report(logger), name,
+                mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
+        }
     }
     catch (std::exception const& error)
     {
@@ -419,7 +421,9 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
             this, server, &debug, stream, input_platform, spec, *surface_proto, request->wh);
 
         surface_map->insert(mf::SurfaceId{surface_proto->id().value()}, surf);
-        surface_map->insert(mf::BufferStreamId{surface_proto->buffer_stream().id().value()}, stream);
+
+        if (stream)
+            surface_map->insert(mf::BufferStreamId{surface_proto->buffer_stream().id().value()}, stream);
     }
 
     callback(surf.get(), context);
@@ -1244,11 +1248,8 @@ void MirConnection::allocate_buffer(
         callback, context);
 
     buffer_requests.push_back({size, format, usage, std::make_shared<mir::protobuf::Void>()});
-
-    auto aa = &buffer_requests[buffer_requests.size() - 1];
     server.allocate_buffers(&request, buffer_requests.back().resp.get(),
-        gp::NewCallback(this, &MirConnection::error_buffer,
-            (void*)aa));
+        gp::NewCallback(this, &MirConnection::error_buffer, static_cast<void*>(&buffer_requests.back())));
 }
 
 void MirConnection::release_buffer(int buffer_id)
@@ -1256,20 +1257,33 @@ void MirConnection::release_buffer(int buffer_id)
     mp::BufferRelease request;
     auto released_buffer = request.add_buffers();
     released_buffer->set_buffer_id(buffer_id);
-    //server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore, ignored.get()));
+    server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }
 
-void MirConnection::error_buffer(void* r)
+
+int MirConnection::next_error_buffer_id(std::unique_lock<std::mutex> const&)
 {
-    auto req = (BufferCreationRequest*)r;
+    return error_buffer_id--;
+}
+
+void MirConnection::error_buffer(void* req)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    auto request = static_cast<BufferCreationRequest*>(req);
     auto it = std::find_if(buffer_requests.begin(), buffer_requests.end(),
-        [&](auto const& q) { return ((q.size == req->size) && (q.usage == req->usage) && (q.format == req->format)); });
+        [&](auto const& r)
+        {
+            return ((r.size == request->size) &&
+                    (r.usage == request->usage) &&
+                    (r.format == request->format));
+        });
     if (it != buffer_requests.end())
     {
-        auto msg = std::string(req->resp->error().c_str());
+        auto msg = std::string(request->resp->error().c_str());
         std::shared_ptr<mcl::MirBuffer> buffer = buffer_factory->error_buffer(msg, it->size, it->format, it->usage);
         buffer_requests.erase(it);
-        surface_map->insert(error_buffer_id--, buffer);
+        surface_map->insert(next_error_buffer_id(lock), buffer);
+        lock.unlock();
         buffer->received();
     }
 }

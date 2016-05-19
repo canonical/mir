@@ -22,10 +22,10 @@
 namespace mcl = mir::client;
 namespace geom = mir::geometry;
 
-mcl::ErrorBuffer::ErrorBuffer(mir_buffer_callback cb, void* context, std::string const& msg) :
+mcl::ErrorBuffer::ErrorBuffer(std::string const& msg, mir_buffer_callback cb, void* context) :
+    error_msg(msg),
     cb(cb),
-    cb_context(context),
-    error_msg(msg)
+    cb_context(context)
 {
 }
 
@@ -44,59 +44,21 @@ void mcl::ErrorBuffer::received()
     cb(reinterpret_cast<::MirBuffer*>(static_cast<mcl::MirBuffer*>(this)), cb_context);
 }
 
-int mcl::ErrorBuffer::rpc_id() const
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("invalid buffer"));
+#define THROW_EXCEPTION \
+{ \
+    BOOST_THROW_EXCEPTION(std::logic_error("error: use of MirBuffer when mir_buffer_is_valid() is false"));\
 }
-void mcl::ErrorBuffer::submitted()
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("invalid buffer"));
-}
-void mcl::ErrorBuffer::received(MirBufferPackage const&)
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("invalid buffer"));
-}
-MirNativeBuffer* mcl::ErrorBuffer::as_mir_native_buffer() const
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("invalid buffer"));
-}
-std::shared_ptr<mcl::ClientBuffer> mcl::ErrorBuffer::client_buffer() const
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("invalid buffer"));
-}
-MirGraphicsRegion mcl::ErrorBuffer::map_region()
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("invalid buffer"));
-}
-void mcl::ErrorBuffer::set_fence(MirNativeFence*, MirBufferAccess)
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("invalid buffer"));
-}
-MirNativeFence* mcl::ErrorBuffer::get_fence() const
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("invalid buffer"));
-}
-bool mcl::ErrorBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds)
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("invalid buffer"));
-}
-MirBufferUsage mcl::ErrorBuffer::buffer_usage() const
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("invalid buffer"));
-}
-MirPixelFormat mcl::ErrorBuffer::pixel_format() const
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("invalid buffer"));
-}
-geom::Size mcl::ErrorBuffer::size() const
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("invalid buffer"));
-}
-MirConnection* mcl::ErrorBuffer::allocating_connection() const
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("invalid buffer"));
-}
-void mcl::ErrorBuffer::increment_age()
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("invalid buffer"));
-}
+int mcl::ErrorBuffer::rpc_id() const THROW_EXCEPTION
+void mcl::ErrorBuffer::submitted() THROW_EXCEPTION
+void mcl::ErrorBuffer::received(MirBufferPackage const&) THROW_EXCEPTION
+MirNativeBuffer* mcl::ErrorBuffer::as_mir_native_buffer() const THROW_EXCEPTION
+std::shared_ptr<mcl::ClientBuffer> mcl::ErrorBuffer::client_buffer() const THROW_EXCEPTION
+MirGraphicsRegion mcl::ErrorBuffer::map_region() THROW_EXCEPTION
+void mcl::ErrorBuffer::set_fence(MirNativeFence*, MirBufferAccess) THROW_EXCEPTION
+MirNativeFence* mcl::ErrorBuffer::get_fence() const THROW_EXCEPTION
+bool mcl::ErrorBuffer::wait_fence(MirBufferAccess, std::chrono::nanoseconds) THROW_EXCEPTION
+MirBufferUsage mcl::ErrorBuffer::buffer_usage() const THROW_EXCEPTION
+MirPixelFormat mcl::ErrorBuffer::pixel_format() const THROW_EXCEPTION
+geom::Size mcl::ErrorBuffer::size() const THROW_EXCEPTION
+MirConnection* mcl::ErrorBuffer::allocating_connection() const THROW_EXCEPTION
+void mcl::ErrorBuffer::increment_age() THROW_EXCEPTION

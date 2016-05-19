@@ -378,4 +378,5 @@ TEST_F(PresentationChain, can_check_invalid_buffers)
     ASSERT_THAT(buffer, Ne(nullptr));
     EXPECT_FALSE(mir_buffer_is_valid(buffer));
     EXPECT_THAT(mir_buffer_get_error_message(buffer), Not(StrEq("")));
+    mir_buffer_release(buffer);
 }

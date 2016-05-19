@@ -22,7 +22,6 @@
 #include "mir/test/fake_shared.h"
 #include "src/client/presentation_chain.h"
 #include "src/client/buffer_factory.h"
-#include "src/client/mir_buffer.h"
 #include "mir/client_buffer_factory.h"
 
 #include <mutex>

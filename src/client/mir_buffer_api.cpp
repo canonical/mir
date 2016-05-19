@@ -46,12 +46,17 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_buffer_release(MirBuffer* b) 
+void mir_buffer_release(MirBuffer* b)
+try
 {
     mir::require(b);
     auto buffer = reinterpret_cast<mcl::Buffer*>(b);
     auto connection = buffer->allocating_connection();
     connection->release_buffer(buffer->rpc_id());
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 MirNativeFence* mir_buffer_get_fence(MirBuffer* b)

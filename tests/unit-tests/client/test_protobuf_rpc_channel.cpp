@@ -25,7 +25,6 @@
 #include "src/client/lifecycle_control.h"
 #include "src/client/ping_handler.h"
 #include "src/client/buffer_factory.h"
-#include "src/client/mir_buffer.h"
 
 #include "mir/variable_length_array.h"
 #include "mir_protobuf.pb.h"
