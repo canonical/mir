@@ -22,8 +22,10 @@
 namespace mcl = mir::client;
 namespace geom = mir::geometry;
 
-mcl::ErrorBuffer::ErrorBuffer(std::string const& msg, mir_buffer_callback cb, void* context) :
+mcl::ErrorBuffer::ErrorBuffer(
+    std::string const& msg, int buffer_id, mir_buffer_callback cb, void* context) :
     error_msg(msg),
+    buffer_id(buffer_id),
     cb(cb),
     cb_context(context)
 {
@@ -44,11 +46,15 @@ void mcl::ErrorBuffer::received()
     cb(reinterpret_cast<::MirBuffer*>(static_cast<mcl::MirBuffer*>(this)), cb_context);
 }
 
+int mcl::ErrorBuffer::rpc_id() const
+{
+    return buffer_id;
+}
+
 #define THROW_EXCEPTION \
 { \
     BOOST_THROW_EXCEPTION(std::logic_error("error: use of MirBuffer when mir_buffer_is_valid() is false"));\
 }
-int mcl::ErrorBuffer::rpc_id() const THROW_EXCEPTION
 void mcl::ErrorBuffer::submitted() THROW_EXCEPTION
 void mcl::ErrorBuffer::received(MirBufferPackage const&) THROW_EXCEPTION
 MirNativeBuffer* mcl::ErrorBuffer::as_mir_native_buffer() const THROW_EXCEPTION
