@@ -66,15 +66,6 @@ MirPixelFormat an_available_format(MirConnection* connection)
 
 struct Stream
 {
-    Stream(MirBufferStream* stream, geom::Point pt, geom::Size sz) :
-        stream(stream),
-        pos{pt},
-        stream_size{sz},
-        needs_release{false}
-    {
-        mir_buffer_stream_swap_buffers_sync(stream);
-    }
-
     Stream(MirConnection* connection, geom::Rectangle rect) :
         stream(mir_connection_create_buffer_stream_sync(
             connection,
@@ -212,8 +203,7 @@ struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
         ConnectedClientWithASurface::SetUp();
         server.the_cursor()->hide();
 
-        streams.emplace_back(
-            std::make_unique<Stream>(mir_surface_get_buffer_stream(surface), geom::Point{0,0}, surface_size));
+        streams.emplace_back(std::make_unique<Stream>(connection, geom::Rectangle{geom::Point{0,0}, surface_size}));
         int const additional_streams{3};
         for (auto i = 0; i < additional_streams; i++)
         {
@@ -233,6 +223,32 @@ struct BufferStreamArrangement : mtf::ConnectedClientWithASurface
     std::shared_ptr<OrderTrackingDBCFactory> order_tracker{nullptr};
     std::vector<std::unique_ptr<Stream>> streams;
 };
+}
+
+TEST_F(BufferStreamArrangement, can_be_specified_when_creating_surface)
+{
+    using namespace testing;
+    std::vector<MirBufferStreamInfo> infos(streams.size());
+    auto i = 0u;
+    for (auto const& stream : streams)
+    {
+        infos[i++] = MirBufferStreamInfo{
+            stream->handle(),
+            stream->position().x.as_int(),
+            stream->position().y.as_int()};
+    }
+
+    mir_surface_release_sync(surface);
+
+    auto const spec = mir_connection_create_spec_for_normal_surface(
+        connection, surface_size.width.as_int(), surface_size.height.as_int(), mir_pixel_format_abgr_8888);
+    mir_surface_spec_set_name(spec, "BufferStreamArrangement.can_be_specified_when_creating_surface");
+    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+    mir_surface_spec_set_streams(spec, infos.data(), infos.size());
+
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+    EXPECT_TRUE(mir_surface_is_valid(surface)) << mir_surface_get_error_message(surface);
 }
 
 TEST_F(BufferStreamArrangement, arrangements_are_applied)
