@@ -112,7 +112,7 @@ TEST_F(ClientLogging, reports_performance)
             // are super slow:
             auto expected_frame_time = 1000.0f / target_fps;
             EXPECT_THAT(render, Lt(expected_frame_time));
-            EXPECT_THAT(lag, Gt(expected_frame_time/2));
+            EXPECT_THAT(lag, Gt(0.0f));
             EXPECT_THAT(nbuffers, Eq(3));
             ASSERT_FALSE(Test::HasFailure()) << "Log line = {" << line << "}";
         }
