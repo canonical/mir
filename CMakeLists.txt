@@ -199,6 +199,40 @@ include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
 include_directories (SYSTEM ${EGL_INCLUDE_DIRS})
 include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
 
+#
+# Full OpenGL support works with Mesa. Although it probably should not, and
+# is expected to fail in proprietary drivers due to one remaining "TODO" in:
+#   src/platform/graphics/egl_extensions.cpp
+#
+#if (TARGET_ARCH STREQUAL "x86_64-linux-gnu" OR
+#    TARGET_ARCH STREQUAL "i386-linux-gnu")
+#  set(DEFAULT_LIBGL "libGL")
+#else()
+  set(DEFAULT_LIBGL "libGLESv2")
+#endif()
+set(MIR_SERVER_LIBGL ${DEFAULT_LIBGL} CACHE STRING "OpenGL library to use in Mir servers {libGL,libGLESv2}")
+
+if (MIR_SERVER_LIBGL STREQUAL "libGL")
+  pkg_check_modules(GL REQUIRED gl)
+  add_definitions(
+    -DGL_GLEXT_PROTOTYPES
+    -DMIR_SERVER_GL_H=<GL/gl.h>
+    -DMIR_SERVER_GLEXT_H=<GL/glext.h>
+    -DMIR_SERVER_EGL_OPENGL_BIT=EGL_OPENGL_BIT
+    -DMIR_SERVER_EGL_OPENGL_API=EGL_OPENGL_API
+  )
+elseif (MIR_SERVER_LIBGL STREQUAL "libGLESv2")
+  pkg_check_modules(GL REQUIRED glesv2)
+  add_definitions(
+    -DMIR_SERVER_GL_H=<GLES2/gl2.h>
+    -DMIR_SERVER_GLEXT_H=<GLES2/gl2ext.h>
+    -DMIR_SERVER_EGL_OPENGL_BIT=EGL_OPENGL_ES2_BIT
+    -DMIR_SERVER_EGL_OPENGL_API=EGL_OPENGL_ES_API
+  )
+else()
+  message(FATAL_ERROR "Invalid MIR_SERVER_LIBGL value ${MIR_SERVER_LIBGL}")
+endif()
+
 if (MIR_BUILD_PLATFORM_ANDROID)
   find_package(AndroidProperties REQUIRED)
   find_package(LibHardware REQUIRED)
