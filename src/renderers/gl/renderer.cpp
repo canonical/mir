@@ -127,7 +127,9 @@ const GLchar* const mrg::Renderer::vshader =
 
 const GLchar* const mrg::Renderer::alpha_fshader =
 {
+    "#ifdef GL_ES\n"
     "precision mediump float;\n"
+    "#endif\n"
     "uniform sampler2D tex;\n"
     "uniform float alpha;\n"
     "varying vec2 v_texcoord;\n"
@@ -139,7 +141,9 @@ const GLchar* const mrg::Renderer::alpha_fshader =
 
 const GLchar* const mrg::Renderer::default_fshader =
 {   // This is the fastest fragment shader. Use it when you can.
+    "#ifdef GL_ES\n"
     "precision mediump float;\n"
+    "#endif\n"
     "uniform sampler2D tex;\n"
     "varying vec2 v_texcoord;\n"
     "void main() {\n"
@@ -169,6 +173,7 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
       orientation(mir_orientation_normal),
       mirror_mode(mir_mirror_mode_none)
 {
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     EGLDisplay disp = eglGetCurrentDisplay();
     if (disp != EGL_NO_DISPLAY)
     {
