@@ -310,7 +310,7 @@ drmModePlanePtr drmModeGetPlane(int fd, uint32_t plane_id)
     return global_mock->drmModeGetPlane(fd, plane_id);
 }
 
-drmModeObjectPropertiesPtr drmModeGetObjectProperties(int fd, uint32_t id, uint32_t type)
+drmModeObjectPropertiesPtr drmModeObjectGetProperties(int fd, uint32_t id, uint32_t type)
 {
     return global_mock->drmModeObjectGetProperties(fd, id, type);
 }
