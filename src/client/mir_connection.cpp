@@ -381,10 +381,13 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
         std::string name{spec.surface_name.is_set() ?
                          spec.surface_name.value() : ""};
 
-        stream = std::make_shared<mcl::BufferStream>(
-            this, request->wh, server, platform, surface_map, buffer_factory,
-            surface_proto->buffer_stream(), make_perf_report(logger), name,
-            mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
+        if (surface_proto->has_buffer_stream())
+        {
+            stream = std::make_shared<mcl::BufferStream>(
+                this, request->wh, server, platform, surface_map, buffer_factory,
+                surface_proto->buffer_stream(), make_perf_report(logger), name,
+                mir::geometry::Size{surface_proto->width(), surface_proto->height()}, nbuffers);
+        }
     }
     catch (std::exception const& error)
     {
@@ -417,7 +420,9 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
             this, server, &debug, stream, input_platform, spec, *surface_proto, request->wh);
 
         surface_map->insert(mf::SurfaceId{surface_proto->id().value()}, surf);
-        surface_map->insert(mf::BufferStreamId{surface_proto->buffer_stream().id().value()}, stream);
+
+        if (stream)
+            surface_map->insert(mf::BufferStreamId{surface_proto->buffer_stream().id().value()}, stream);
     }
 
     callback(surf.get(), context);
@@ -628,7 +633,7 @@ MirWaitHandle* MirConnection::disconnect()
         std::lock_guard<decltype(mutex)> lock(mutex);
         disconnecting = true;
     }
-    surface_map->with_all_streams_do([](mcl::BufferReceiver* receiver)
+    surface_map->with_all_streams_do([](mcl::ClientBufferStream* receiver)
     {
         receiver->buffer_unavailable();
     });
@@ -1238,8 +1243,7 @@ void MirConnection::allocate_buffer(
     if (!client_buffer_factory)
         client_buffer_factory = platform->create_buffer_factory();
     buffer_factory->expect_buffer(
-        client_buffer_factory,
-        nullptr,
+        client_buffer_factory, this,
         size, format, usage,
         callback, context);
     server.allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));

@@ -39,7 +39,7 @@ public:
         mir_buffer_callback cb, void* context,
         int buffer_id,
         std::shared_ptr<ClientBuffer> const& buffer,
-        MirPresentationChain* chain,
+        MirConnection* connection,
         MirBufferUsage usage);
     int rpc_id() const;
 
@@ -59,7 +59,7 @@ public:
     MirPixelFormat pixel_format() const;
     geometry::Size size() const;
 
-    MirPresentationChain* allocating_chain() const;
+    MirConnection* allocating_connection() const;
 
     void increment_age();
 private:
@@ -71,7 +71,7 @@ private:
     std::mutex mutex;
     bool owned;
     std::shared_ptr<MemoryRegion> mapped_region;
-    MirPresentationChain* const chain;
+    MirConnection* const connection;
     MirBufferUsage const usage;
 };
 }

@@ -19,6 +19,7 @@ Build-Depends: cmake,
                libdrm-dev,
                libegl1-mesa-dev,
                libgles2-mesa-dev,
+               libgl1-mesa-dev [amd64 i386],
                libgbm-dev,
                libglm-dev,
                libprotobuf-dev,
@@ -80,7 +81,7 @@ Description: Display server for Ubuntu - server library
  .
  Contains the shared library needed by server applications for Mir.
 
-Package: libmirplatform11
+Package: libmirplatform12
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -116,7 +117,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirplatform11 (= ${binary:Version}),
+Depends: libmirplatform12 (= ${binary:Version}),
          libmircommon-dev,
          libboost-program-options-dev,
          ${misc:Depends},

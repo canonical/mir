@@ -38,7 +38,9 @@ static const GLchar *vtex_shader_src =
 
 static const GLchar *frag_shader_src =
 {
+    "#ifdef GL_ES\n"
     "precision mediump float;\n"
+    "#endif\n"
     "uniform sampler2D tex;\n"
     "varying vec2 texcoord;\n"
     "void main() {\n"

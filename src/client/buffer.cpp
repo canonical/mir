@@ -26,14 +26,14 @@ mcl::Buffer::Buffer(
     mir_buffer_callback cb, void* context,
     int buffer_id,
     std::shared_ptr<ClientBuffer> const& buffer,
-    MirPresentationChain* chain,
+    MirConnection* connection,
     MirBufferUsage usage) :
     cb(cb),
     cb_context(context),
     buffer_id(buffer_id),
     buffer(buffer),
     owned(false),
-    chain(chain),
+    connection(connection),
     usage(usage)
 {
 }
@@ -60,7 +60,7 @@ void mcl::Buffer::received()
         if (!owned)
             owned = true;
     }
-    cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
+    cb(reinterpret_cast<MirBuffer*>(this), cb_context);
 
 }
 
@@ -74,7 +74,7 @@ void mcl::Buffer::received(MirBufferPackage const& update_package)
             buffer->update_from(update_package);
         }
     }
-    cb(nullptr, reinterpret_cast<MirBuffer*>(this), cb_context);
+    cb(reinterpret_cast<MirBuffer*>(this), cb_context);
 }
     
 MirGraphicsRegion mcl::Buffer::map_region()
@@ -110,9 +110,9 @@ bool mcl::Buffer::wait_fence(MirBufferAccess access, std::chrono::nanoseconds ti
     return buffer->wait_fence(access, timeout);
 }
 
-MirPresentationChain* mcl::Buffer::allocating_chain() const
+MirConnection* mcl::Buffer::allocating_connection() const
 {
-    return chain;
+    return connection;
 }
 
 MirBufferUsage mcl::Buffer::buffer_usage() const

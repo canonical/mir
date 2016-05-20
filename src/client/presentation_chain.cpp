@@ -56,54 +56,18 @@ static void ignore_response(mp::Void* response)
     delete response;
 }
 
-void mcl::PresentationChain::allocate_buffer(
-    geom::Size size, MirPixelFormat format, MirBufferUsage usage,
-    mir_buffer_callback cb, void* cb_context)
-{
-    mir_buffer_factory->expect_buffer(native_buffer_factory, this, size, format, usage, cb, cb_context);
-
-    mp::BufferAllocation request;
-    request.mutable_id()->set_value(stream_id);
-    auto buffer_request = request.add_buffer_requests();
-    buffer_request->set_width(size.width.as_int());
-    buffer_request->set_height(size.height.as_int());
-    buffer_request->set_pixel_format(format);
-    buffer_request->set_buffer_usage(usage);
-
-    auto ignored = new mp::Void;
-    server.allocate_buffers(&request, ignored, gp::NewCallback(ignore_response, ignored));
-}
-
-void mcl::PresentationChain::submit_buffer(MirBuffer* buffer)
+void mcl::PresentationChain::submit_buffer(MirBuffer* mirbuffer)
 {
     mp::BufferRequest request;
     {
+        auto buffer = reinterpret_cast<mcl::Buffer*>(mirbuffer);
         request.mutable_id()->set_value(stream_id);
-        request.mutable_buffer()->set_buffer_id(reinterpret_cast<mcl::Buffer*>(buffer)->rpc_id());
-        reinterpret_cast<mcl::Buffer*>(buffer)->submitted();
+        request.mutable_buffer()->set_buffer_id(buffer->rpc_id());
+        buffer->submitted();
     }
 
     auto ignored = new mp::Void;
     server.submit_buffer(&request, ignored, gp::NewCallback(ignore_response, ignored));
-}
-
-void mcl::PresentationChain::release_buffer(MirBuffer* buffer)
-{
-    mp::BufferRelease request;
-    request.mutable_id()->set_value(stream_id);
-    auto buffer_req = request.add_buffers();
-    buffer_req->set_buffer_id(reinterpret_cast<mcl::Buffer*>(buffer)->rpc_id());
-
-    auto ignored = new mp::Void;
-    server.release_buffers(&request, ignored, gp::NewCallback(ignore_response, ignored));
-}
-
-void mcl::PresentationChain::buffer_available(mp::Buffer const&)
-{
-}
-
-void mcl::PresentationChain::buffer_unavailable()
-{
 }
 
 int mcl::PresentationChain::rpc_id() const

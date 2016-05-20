@@ -39,7 +39,7 @@ public:
     virtual std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) = 0;
     virtual void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
-        MirPresentationChain* chain,
+        MirConnection* connection,
         geometry::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
@@ -58,7 +58,7 @@ public:
     std::unique_ptr<Buffer> generate_buffer(mir::protobuf::Buffer const& buffer) override;
     void expect_buffer(
         std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
-        MirPresentationChain* chain,
+        MirConnection* connection,
         geometry::Size size,
         MirPixelFormat format,
         MirBufferUsage usage,
@@ -72,7 +72,7 @@ private:
     {
         AllocationRequest(
             std::shared_ptr<ClientBufferFactory> const& native_buffer_factory,
-            MirPresentationChain* chain,
+            MirConnection* connection,
             geometry::Size size,
             MirPixelFormat format,
             MirBufferUsage usage,
@@ -80,7 +80,7 @@ private:
             void* cb_context);
 
         std::shared_ptr<ClientBufferFactory> const native_buffer_factory;
-        MirPresentationChain* chain;
+        MirConnection* connection;
         geometry::Size size;
         MirPixelFormat format;
         MirBufferUsage usage;

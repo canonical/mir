@@ -772,7 +772,8 @@ TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
 
     // TODO workaround for lp:1523621
     // (I don't see a way to detect that the host has placed focus on "Mir nested display for output #1")
-    std::this_thread::sleep_for(10ms);
+    std::this_thread::sleep_for(1s);
+    Mock::VerifyAndClearExpectations(mock_cursor.get());
 
     for (auto const name : cursor_names)
     {
