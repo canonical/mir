@@ -38,9 +38,9 @@ TEST(KMSConnectorHelper, finds_compatible_crtc_for_connectors)
 
     auto& resources = drm.fake_drm;
 
-    std::array<uint32_t, 3> const crtc_ids = {21, 25, 30};
-    std::array<uint32_t, 3> const encoder_ids = {3, 5, 7};
-    std::array<uint32_t, 3> const connector_id = {9, 10, 11};
+    std::array<uint32_t, 3> const crtc_ids = {{21, 25, 30}};
+    std::array<uint32_t, 3> const encoder_ids = {{3, 5, 7}};
+    std::array<uint32_t, 3> const connector_id = {{9, 10, 11}};
 
     resources.reset();
     // Add a bunch of CRTCs
@@ -114,9 +114,9 @@ TEST(KMSConnectorHelper, ignores_currently_used_encoders)
 
     auto& resources = drm.fake_drm;
 
-    std::array<uint32_t, 2> const crtc_ids = {21, 25};
-    std::array<uint32_t, 2> const encoder_ids = {3, 5};
-    std::array<uint32_t, 2> const connector_id = {9, 10};
+    std::array<uint32_t, 2> const crtc_ids = {{21, 25}};
+    std::array<uint32_t, 2> const encoder_ids = {{3, 5}};
+    std::array<uint32_t, 2> const connector_id = {{9, 10}};
 
     resources.reset();
     auto boring_mode = resources.create_mode(1200, 1600, 138500, 1400, 1800, mtd::FakeDRMResources::ModePreference::PreferredMode);
@@ -168,9 +168,9 @@ TEST(KMSConnectorHelper, returns_current_crtc_if_it_exists)
 
     auto& resources = drm.fake_drm;
 
-    std::array<uint32_t, 2> const crtc_ids = {21, 25};
-    std::array<uint32_t, 2> const encoder_ids = {3, 5};
-    std::array<uint32_t, 2> const connector_id = {9, 10};
+    std::array<uint32_t, 2> const crtc_ids = {{21, 25}};
+    std::array<uint32_t, 2> const encoder_ids = {{3, 5}};
+    std::array<uint32_t, 2> const connector_id = {{9, 10}};
 
     resources.reset();
     auto boring_mode = resources.create_mode(1200, 1600, 138500, 1400, 1800, mtd::FakeDRMResources::ModePreference::PreferredMode);
