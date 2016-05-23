@@ -200,7 +200,31 @@ mgk::DRMModePlaneUPtr mgk::get_plane(int drm_fd, uint32_t id)
     return plane;
 }
 
-mgk::DRMModeObjectPropsUPtr mgk::get_object_properties(
+namespace
+{
+mgk::DRMModePropertyUPtr get_property(int drm_fd, uint32_t id)
+{
+    if (id == 0)
+    {
+        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get property with invalid ID 0"});
+    }
+
+    errno = 0;
+    mgk::DRMModePropertyUPtr prop{drmModeGetProperty(drm_fd, id), &drmModeFreeProperty};
+
+    if (!prop)
+    {
+        if (errno == 0)
+        {
+            // drmModeGetProperty either sets errno, or has failed in malloc()
+            errno = ENOMEM;
+        }
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to get DRM plane"}));
+    }
+    return prop;
+}
+
+mgk::DRMModeObjectPropsUPtr get_object_properties(
     int drm_fd,
     uint32_t object_id,
     uint32_t object_type)
@@ -215,7 +239,7 @@ mgk::DRMModeObjectPropsUPtr mgk::get_object_properties(
     }
 
     errno = 0;
-    DRMModeObjectPropsUPtr props{
+    mgk::DRMModeObjectPropsUPtr props{
         drmModeObjectGetProperties(drm_fd, object_id, object_type), &drmModeFreeObjectProperties};
 
     if (!props)
@@ -230,26 +254,56 @@ mgk::DRMModeObjectPropsUPtr mgk::get_object_properties(
     return props;
 }
 
-mgk::DRMModePropertyUPtr mgk::get_property(int drm_fd, uint32_t id)
+std::unordered_map<std::string, mgk::ObjectProperties::Prop> extract_properties(
+    int drm_fd,
+    mgk::DRMModeObjectPropsUPtr const& properties)
 {
-    if (id == 0)
+    std::unordered_map<std::string, mgk::ObjectProperties::Prop> property_map;
+    for (auto i = 0u; i < properties->count_props; ++i)
     {
-        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get property with invalid ID 0"});
+        auto prop = get_property(drm_fd, properties->props[i]);
+        property_map[prop->name] = {
+            prop->prop_id,
+            properties->prop_values[i]
+        };
     }
+    return property_map;
+}
+}
 
-    errno = 0;
-    DRMModePropertyUPtr prop{drmModeGetProperty(drm_fd, id), &drmModeFreeProperty};
+mgk::ObjectProperties::ObjectProperties(
+    int drm_fd,
+    uint32_t object_id,
+    uint32_t object_type)
+    : properties_table{extract_properties(drm_fd, get_object_properties(drm_fd, object_id, object_type))}
+{
+}
 
-    if (!prop)
-    {
-        if (errno == 0)
-        {
-            // drmModeGetProperty either sets errno, or has failed in malloc()
-            errno = ENOMEM;
-        }
-        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to get DRM plane"}));
-    }
-    return prop;
+mgk::ObjectProperties::ObjectProperties(
+    int drm_fd,
+    DRMModePlaneUPtr const& plane)
+    : ObjectProperties(drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE)
+{
+}
+
+uint64_t mgk::ObjectProperties::operator[](char const* name) const
+{
+    return properties_table.at(name).value;
+}
+
+uint32_t mgk::ObjectProperties::id_for(char const* property_name) const
+{
+    return properties_table.at(property_name).id;
+}
+
+auto mgk::ObjectProperties::begin() const -> std::unordered_map<std::string, Prop>::const_iterator
+{
+    return properties_table.begin();
+}
+
+auto mgk::ObjectProperties::end() const -> std::unordered_map<std::string, Prop>::const_iterator
+{
+    return properties_table.end();
 }
 
 auto mgk::DRMModeResources::connectors() const -> detail::ObjectCollection<DRMModeConnectorUPtr, &get_connector>

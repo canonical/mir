@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <functional>
+#include <unordered_map>
 
 namespace mir
 {
@@ -46,8 +47,6 @@ DRMModeEncoderUPtr get_encoder(int drm_fd, uint32_t id);
 DRMModeCrtcUPtr get_crtc(int drm_fd, uint32_t id);
 DRMModePlaneResUPtr get_planes(int drm_fd);
 DRMModePlaneUPtr get_plane(int drm_fd, uint32_t id);
-DRMModeObjectPropsUPtr get_object_properties(int drm_fd, uint32_t object_id, uint32_t object_type);
-DRMModePropertyUPtr get_property(int drm_fd, uint32_t id);
 
 class DRMModeResources;
 
@@ -93,6 +92,30 @@ private:
     uint32_t* const end_;
 };
 }
+
+class ObjectProperties
+{
+public:
+    struct Prop
+    {
+        uint32_t id;
+        uint64_t value;
+    };
+
+    ObjectProperties(int drm_fd, uint32_t object_id, uint32_t object_type);
+    ObjectProperties(int drm_fd, DRMModePlaneUPtr const& plane);
+    ObjectProperties(int drm_fd, DRMModeCrtcUPtr const& crtc);
+    ObjectProperties(int drm_fd, DRMModeConnectorUPtr const& connector);
+
+    uint64_t operator[](char const* name) const;
+    uint32_t id_for(char const* property_name) const;
+
+    std::unordered_map<std::string, Prop>::const_iterator begin() const;
+    std::unordered_map<std::string, Prop>::const_iterator end() const;
+
+private:
+    std::unordered_map<std::string, Prop> const properties_table;
+};
 
 class DRMModeResources
 {
