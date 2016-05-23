@@ -128,11 +128,6 @@ mgk::DRMModeCrtcUPtr mgk::DRMModeResources::crtc(uint32_t id) const
 
 mgk::DRMModeConnectorUPtr mgk::get_connector(int drm_fd, uint32_t id)
 {
-    if (id == 0)
-    {
-        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get DRMModeConnector with invalid id 0"});
-    }
-
     errno = 0;
     DRMModeConnectorUPtr connector{drmModeGetConnector(drm_fd, id), ConnectorDeleter()};
 
@@ -151,11 +146,6 @@ mgk::DRMModeConnectorUPtr mgk::get_connector(int drm_fd, uint32_t id)
 
 mgk::DRMModeEncoderUPtr mgk::get_encoder(int drm_fd, uint32_t id)
 {
-    if (id == 0)
-    {
-        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get DRMModeEncoder with invalid id 0"});
-    }
-
     errno = 0;
     DRMModeEncoderUPtr encoder{drmModeGetEncoder(drm_fd, id), EncoderDeleter()};
 
@@ -174,11 +164,6 @@ mgk::DRMModeEncoderUPtr mgk::get_encoder(int drm_fd, uint32_t id)
 
 mgk::DRMModeCrtcUPtr mgk::get_crtc(int drm_fd, uint32_t id)
 {
-    if (id == 0)
-    {
-        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get DRMModeCRTC with invalid id 0"});
-    }
-
     errno = 0;
     DRMModeCrtcUPtr crtc{drmModeGetCrtc(drm_fd, id), CrtcDeleter()};
 
