@@ -180,11 +180,6 @@ mgk::DRMModePlaneResUPtr mgk::get_planes(int drm_fd)
 
 mgk::DRMModePlaneUPtr mgk::get_plane(int drm_fd, uint32_t id)
 {
-    if (id == 0)
-    {
-        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get plane with invalid ID 0"});
-    }
-
     errno = 0;
     DRMModePlaneUPtr plane{drmModeGetPlane(drm_fd, id), &drmModeFreePlane};
 
@@ -204,11 +199,6 @@ namespace
 {
 mgk::DRMModePropertyUPtr get_property(int drm_fd, uint32_t id)
 {
-    if (id == 0)
-    {
-        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get property with invalid ID 0"});
-    }
-
     errno = 0;
     mgk::DRMModePropertyUPtr prop{drmModeGetProperty(drm_fd, id), &drmModeFreeProperty};
 
@@ -229,15 +219,6 @@ mgk::DRMModeObjectPropsUPtr get_object_properties(
     uint32_t object_id,
     uint32_t object_type)
 {
-    if (object_id == 0)
-    {
-        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get properties of object with invalid ID 0"});
-    }
-    if (object_type == 0)
-    {
-        BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to get properties of object with invalid type 0"});
-    }
-
     errno = 0;
     mgk::DRMModeObjectPropsUPtr props{
         drmModeObjectGetProperties(drm_fd, object_id, object_type), &drmModeFreeObjectProperties};
