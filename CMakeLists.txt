@@ -74,6 +74,8 @@ endif()
 
 if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-return-type-c-linkage -Wno-mismatched-tags")
+  # lttng-ust with clang-3.6 produces warnings
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-statement-expression")
 endif()
 
 # Link time optimization allows leaner, cleaner libraries
