@@ -233,7 +233,6 @@ TEST_F(XKBMapper, modifier_events_on_different_keyboards_contribute_to_pointer_e
 
 TEST_F(XKBMapper, device_removal_removes_modifier_flags)
 {
-
     auto keyboard_us_1 = MirInputDeviceId{0};
     auto keyboard_us_2 = MirInputDeviceId{1};
     auto pointer_device_id = MirInputDeviceId{2};
@@ -250,4 +249,20 @@ TEST_F(XKBMapper, device_removal_removes_modifier_flags)
     map_event(keyboard_us_2, mir_keyboard_action_down, KEY_RIGHTSHIFT);
     mapper.reset_keymap(keyboard_us_2);
     map_pointer_event(pointer_device_id, mir_pointer_action_motion, 0, 12, 40);
+}
+
+TEST_F(XKBMapper, modifier_attached_to_non_full_key_device)
+{
+    auto keyboard_us = MirInputDeviceId{0};
+    auto key_device = MirInputDeviceId{1};
+    const MirInputEventModifiers shift_left = mir_input_event_modifier_shift_left | mir_input_event_modifier_shift;
+    InSequence seq;
+    EXPECT_CALL(*this, mapped_event(mt::KeyWithModifiers(shift_left)));
+    EXPECT_CALL(*this, mapped_event(AllOf(
+                mt::KeyWithModifiers(shift_left),
+                mt::KeyOfScanCode(KEY_POWER))));
+
+    mapper.set_keymap(keyboard_us, mi::Keymap{});
+    map_event(keyboard_us, mir_keyboard_action_down, KEY_LEFTSHIFT);
+    map_event(key_device, mir_keyboard_action_down, KEY_POWER);
 }

@@ -167,13 +167,12 @@ void mircv::XKBMapper::map_event(MirEvent& ev)
         auto input_event = mir_event_get_input_event(&ev);
         auto input_type = mir_input_event_get_type(input_event);
         auto device_id = mir_input_event_get_device_id(input_event);
+        auto mapping_state = get_keymapping_state(device_id);
 
-        if (input_type == mir_input_event_type_key)
+        if (input_type == mir_input_event_type_key && mapping_state)
         {
-            auto mapping_state = get_keymapping_state(device_id);
-            if (mapping_state &&
-                mapping_state->update_and_map(ev))
-                    update_modifier();
+            if (mapping_state->update_and_map(ev))
+                update_modifier();
         }
         else if (modifier_state.is_set())
         {
