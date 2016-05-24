@@ -15,6 +15,15 @@ add_library(
 string(REPLACE "-flto" "" NO_LTO_FLAGS ${CMAKE_C_FLAGS})
 set(CMAKE_C_FLAGS ${NO_LTO_FLAGS})
 
+# lttng-ust uses urcu headers which contain code blocks inside expressions 
+# this is a gnu extension.
+string(REPLACE "-pedantic" "" NO_PEDANTIC_CHECK_FLAGS ${CMAKE_CXX_FLAGS})
+if("${CMAKE_CXX_COMPILER}" MATCHES "clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-statement-expression")
+else()
+    set(CMAKE_CXX_FLAGS "${NO_PEDANTIC_CHECK_FLAGS}")
+endif()
+
 add_library(mirclientlttng SHARED tracepoints.c)
 
 # Don't treat missing-field-initializers as an error, since
