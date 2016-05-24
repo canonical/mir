@@ -817,3 +817,12 @@ MIR_SERVER_0.22 {
   };
  local: *;
 };
+
+MIR_SERVER_0.24 {
+ global:
+  extern "C++" {
+    mir::DefaultServerConfiguration::the_key_mapper*;
+    typeinfo?for?mir::input::KeyboardConfiguration;
+    vtable?for?mir::input::KeyboardConfiguration;
+  };
+} MIR_SERVER_0.22;

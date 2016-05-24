@@ -17,7 +17,8 @@
  */
 
 #include "program_family.h"
-
+#include MIR_SERVER_GL_H
+#include MIR_SERVER_GLEXT_H
 #include <mutex>
 
 namespace mir

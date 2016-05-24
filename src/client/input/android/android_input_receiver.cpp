@@ -136,7 +136,7 @@ static void map_key_event(std::shared_ptr<mircv::XKBMapper> const& xkb_mapper, M
         mir_input_event_type_key)
         return;
 
-    xkb_mapper->update_state_and_map_event(ev);
+    xkb_mapper->map_event(ev);
 }
 
 }

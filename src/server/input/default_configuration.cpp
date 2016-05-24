@@ -34,11 +34,12 @@
 #include "default_input_manager.h"
 #include "surface_input_dispatcher.h"
 #include "basic_seat.h"
-#include "../graphics/nested/mir_client_host_connection.h"
+#include "../graphics/nested/input_platform.h"
 
 #include "mir/input/touch_visualizer.h"
 #include "mir/input/input_probe.h"
 #include "mir/input/platform.h"
+#include "mir/input/xkb_mapper.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -58,6 +59,7 @@ namespace mia = mi::android;
 namespace mr = mir::report;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
+namespace mgn = mg::nested;
 namespace msh = mir::shell;
 namespace md = mir::dispatch;
 
@@ -277,8 +279,13 @@ mir::DefaultServerConfiguration::the_input_manager()
             }
             else if (options->is_set(options::host_socket_opt))
             {
-                // TODO nested input handling (== host_socket) should fold into a platform
-                return std::make_shared<mi::NullInputManager>();
+                auto const device_registry = the_input_device_registry();
+                auto const input_report = the_input_report();
+
+                // TODO: move this into a nested graphics platform
+                auto platform = std::make_shared<mgn::InputPlatform>(the_host_connection(), device_registry, input_report);
+
+                return std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), std::move(platform));
             }
             else
             {
@@ -324,54 +331,47 @@ std::shared_ptr<mi::Seat> mir::DefaultServerConfiguration::the_seat()
                     the_input_dispatcher(),
                     the_touch_visualizer(),
                     the_cursor_listener(),
-                    the_input_region());
+                    the_input_region(),
+                    the_key_mapper());
         });
 }
 
 std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_input_device_registry()
 {
-    return default_input_device_hub(
-        [this]()
-        {
-            auto input_dispatcher = the_input_dispatcher();
-            auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
-            auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
-                the_global_event_sink(),
-                the_seat(),
-                the_input_reading_multiplexer(),
-                the_main_loop(),
-                the_cookie_authority());
-
-            if (key_repeater)
-                key_repeater->set_input_device_hub(hub);
-            return hub;
-        });
+    return the_default_input_device_hub();
 }
 
 std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_device_hub()
 {
-    auto options = the_options();
-    if (options->is_set(options::host_socket_opt))
-    {
-        return the_mir_client_host_connection();
-    }
-    else
-    {
-        return default_input_device_hub(
-            [this]()
-            {
-                auto input_dispatcher = the_input_dispatcher();
-                auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
-                auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
-                    the_global_event_sink(),
-                    the_seat(),
-                    the_input_reading_multiplexer(),
-                    the_main_loop(),
-                    the_cookie_authority());
+    return the_default_input_device_hub();
+}
 
-                if (key_repeater)
-                    key_repeater->set_input_device_hub(hub);
-                return hub;
-            });
-    }
+std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_default_input_device_hub()
+{
+   return default_input_device_hub(
+       [this]()
+       {
+           auto input_dispatcher = the_input_dispatcher();
+           auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
+           auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
+               the_global_event_sink(),
+               the_seat(),
+               the_input_reading_multiplexer(),
+               the_main_loop(),
+               the_cookie_authority(),
+               the_key_mapper());
+
+           if (key_repeater && !the_options()->is_set(options::host_socket_opt))
+               key_repeater->set_input_device_hub(hub);
+           return hub;
+       });
+}
+
+std::shared_ptr<mi::KeyMapper> mir::DefaultServerConfiguration::the_key_mapper()
+{
+    return key_mapper(
+       [this]()
+       {
+           return std::make_shared<mi::receiver::XKBMapper>();
+       });
 }

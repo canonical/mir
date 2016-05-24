@@ -30,6 +30,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <GLES2/gl2.h>
+
 namespace mg = mir::graphics;
 namespace mgl = mir::gl;
 namespace mga = mir::graphics::android;

@@ -137,6 +137,7 @@ class InputRegion;
 class InputSender;
 class CursorImages;
 class Seat;
+class KeyMapper;
 }
 
 namespace logging
@@ -308,6 +309,7 @@ public:
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
     virtual std::shared_ptr<input::InputSender>    the_input_sender();
     virtual std::shared_ptr<input::Seat> the_seat();
+    virtual std::shared_ptr<input::KeyMapper> the_key_mapper();
 
     // new input reading related parts:
     virtual std::shared_ptr<dispatch::MultiplexingDispatchable> the_input_reading_multiplexer();
@@ -335,6 +337,7 @@ private:
 protected:
     std::shared_ptr<options::Option> the_options() const;
     std::shared_ptr<graphics::nested::MirClientHostConnection>  the_mir_client_host_connection();
+    std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
 
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
@@ -425,6 +428,7 @@ protected:
     CachedPtr<shell::ShellReport> shell_report;
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::Authority> cookie_authority;
+    CachedPtr<input::KeyMapper> key_mapper;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

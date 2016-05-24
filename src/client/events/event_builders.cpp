@@ -24,6 +24,7 @@
 #include "mir/events/event_private.h"
 #include "mir/cookie/blob.h"
 #include "mir/input/xkb_mapper.h"
+#include "mir/input/keymap.h"
 
 #include <string.h>
 
@@ -385,7 +386,7 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirInputDeviceId
     });
 
     auto ctx = mi::make_unique_context();
-    auto map = mi::make_unique_keymap(ctx.get(), model, layout, variant, options);
+    auto map = mi::make_unique_keymap(ctx.get(), mi::Keymap{model, layout, variant, options});
 
     if (!map.get())
         BOOST_THROW_EXCEPTION(std::runtime_error("failed to assemble keymap from given parameters"));
