@@ -409,3 +409,20 @@ mir::EventUPtr mev::make_event(MirInputConfigurationAction action, MirInputDevic
 
     return make_uptr_event(e);
 }
+
+mir::EventUPtr mev::make_event(std::chrono::nanoseconds timestamp,
+                               MirPointerButtons pointer_buttons,
+                               float x_axis_value,
+                               float y_axis_value,
+                               std::vector<InputDeviceState>&& device_states)
+{
+    auto e = new_event<MirInputDeviceStateEvent>();
+    e->set_when(timestamp);
+    e->set_pointer_buttons(pointer_buttons);
+    e->set_pointer_axis(mir_pointer_axis_x, x_axis_value);
+    e->set_pointer_axis(mir_pointer_axis_y, y_axis_value);
+    for (auto& dev : device_states)
+        e->add_device(dev.id, std::move(dev.pressed_keys), dev.buttons);
+
+    return make_uptr_event(e);
+}
