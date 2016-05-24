@@ -383,3 +383,15 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
   local:
     *;
 } MIR_CLIENT_DETAIL_9v19;
+
+MIR_CLIENT_DETAIL_0.24 {
+  global:
+    extern "C++" { 
+      mir::input::receiver::XKBMapper::XKBMapper*;
+      mir::input::receiver::XKBMapper::?XKBMapper*;
+      mir::input::receiver::XKBMapper::set_key_state*;
+      mir::input::receiver::XKBMapper::set_keymap*;
+      mir::input::receiver::XKBMapper::reset_keymap*;
+      mir::input::receiver::XKBMapper::map_event*;
+    };
+} MIR_CLIENT_DETAIL_0.21;

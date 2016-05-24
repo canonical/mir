@@ -25,6 +25,7 @@
 #include "mir/input/input_device_info.h"
 #include "mir/input/pointer_settings.h"
 #include "mir/input/touchpad_settings.h"
+#include "mir/input/keyboard_configuration.h"
 #include "mir/optional_value.h"
 
 #include <memory>
@@ -38,13 +39,14 @@ class ActionQueue;
 namespace input
 {
 
+class KeyMapper;
 class InputDevice;
 
 class DefaultDevice : public Device
 {
 public:
     DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
-                  InputDevice& device);
+                  InputDevice& device, std::shared_ptr<KeyMapper> const& key_mapper);
     MirInputDeviceId id() const override;
     DeviceCapabilities capabilities() const override;
     std::string name() const override;
@@ -54,13 +56,17 @@ public:
     void apply_pointer_configuration(PointerConfiguration const&) override;
     optional_value<TouchpadConfiguration> touchpad_configuration() const override;
     void apply_touchpad_configuration(TouchpadConfiguration const&) override;
+    optional_value<KeyboardConfiguration> keyboard_configuration() const override;
+    void apply_keyboard_configuration(KeyboardConfiguration const&) override;
 private:
     MirInputDeviceId const device_id;
     InputDevice& device;
     InputDeviceInfo const info;
     optional_value<PointerSettings> pointer;
     optional_value<TouchpadSettings> touchpad;
+    optional_value<KeyboardConfiguration> keyboard;
     std::shared_ptr<dispatch::ActionQueue> const actions;
+    std::shared_ptr<KeyMapper> const key_mapper;
 };
 
 }

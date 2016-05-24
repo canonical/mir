@@ -86,6 +86,14 @@ struct StubDevice : mi::Device
     {
     }
 
+    mir::optional_value<mi::KeyboardConfiguration> keyboard_configuration() const override
+    {
+        return {};
+    }
+    void apply_keyboard_configuration(mi::KeyboardConfiguration const&) override
+    {
+    }
+
     MirInputDeviceId device_id;
     mi::DeviceCapabilities device_capabilities;
     std::string device_name;

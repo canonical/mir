@@ -23,6 +23,7 @@
 #include "mir/input/input_device.h"
 #include "mir/input/touchpad_configuration.h"
 #include "mir/input/pointer_configuration.h"
+#include "mir/input/key_mapper.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -30,10 +31,15 @@
 namespace mi = mir::input;
 
 mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
-                                 InputDevice& device)
+                                 InputDevice& device, std::shared_ptr<KeyMapper> const& key_mapper)
     : device_id{id}, device{device}, info(device.get_device_info()), pointer{device.get_pointer_settings()},
-      touchpad{device.get_touchpad_settings()}, actions{actions}
+      touchpad{device.get_touchpad_settings()}, actions{actions}, key_mapper{key_mapper}
 {
+    if (contains(info.capabilities, mi::DeviceCapability::keyboard))
+    {
+        keyboard = mi::KeyboardConfiguration{};
+        key_mapper->set_keymap(device_id, keyboard.value().device_keymap);
+    }
 }
 
 mi::DeviceCapabilities mi::DefaultDevice::capabilities() const
@@ -126,4 +132,24 @@ void mi::DefaultDevice::apply_touchpad_configuration(mi::TouchpadConfiguration c
                      {
                          dev->apply_settings(settings);
                      });
+}
+
+mir::optional_value<mi::KeyboardConfiguration> mi::DefaultDevice::keyboard_configuration() const
+{
+    if (contains(info.capabilities, mi::DeviceCapability::keyboard))
+        return keyboard;
+
+    return {};
+}
+
+void mi::DefaultDevice::apply_keyboard_configuration(mi::KeyboardConfiguration const& conf)
+{
+    if (!contains(info.capabilities, mi::DeviceCapability::keyboard))
+        return;
+
+    if (keyboard.value().device_keymap != conf.device_keymap)
+    {
+        keyboard = conf;
+        key_mapper->set_keymap(device_id, conf.device_keymap);
+    }
 }
