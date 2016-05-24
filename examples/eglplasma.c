@@ -61,40 +61,23 @@ int main(int argc, char *argv[])
 
     const char fshadersrc[] =
         "precision mediump float;                                \n"
-        "uniform float theta;                                    \n"
+        "uniform vec4 theta;                                     \n"
         "varying vec2 texcoord;                                  \n"
         "uniform vec3 low_color, high_color;                     \n"
-        "                                                        \n"
-        "vec3 gradient(float x)                                  \n"
-        "{                                                       \n"
-        "    vec3 col;                                           \n"
-        "    const vec3 white = vec3(1.0, 1.0, 1.0);             \n"
-        "    if (x < 0.333)                                      \n"
-        "        col = x * low_color / 0.333;                    \n"
-        "    else if (x < 0.666)                                 \n"
-        "        col = (x - 0.333) * (high_color - low_color) /  \n"
-        "              0.333 + low_color;                        \n"
-        "    else                                                \n"
-        "        col = (x - 0.666) * (white - high_color) /      \n"
-        "              0.333 + high_color;                       \n"
-        "    return col;                                         \n"
-        "}                                                       \n"
         "                                                        \n"
         "void main()                                             \n"
         "{                                                       \n"
         "    const float pi2 = 6.283185308;                      \n"
-        "    float u = texcoord.x * pi2;                         \n"
-        "    float v = texcoord.y * pi2;                         \n"
-        "    float us = (cos(1.1 * u + 7.0 * theta) +            \n"
-        "                cos(2.3 * v * cos(1.0 * theta)) +       \n"
-        "                cos(0.3 * u * cos(3.0 * theta))         \n"
-        "               ) / 3.0;                                 \n"
-        "    float vs = (cos(2.3 * v + 8.0 * theta) +            \n"
-        "                cos(1.3 * u * cos(3.0 * theta)) +       \n"
-        "                cos(1.7 * v * cos(2.0 * theta))         \n"
-        "               ) / 3.0;                                 \n"
-        "    float x = (us * vs + 1.0) / 2.0;                    \n"
-        "    gl_FragColor = vec4(gradient(x), 1.0);              \n"
+        "    float x = texcoord.x * pi2;                         \n"
+        "    float y = texcoord.y * pi2;                         \n"
+        "    float a = cos(1.0 * (x + theta.x));                 \n"
+        "    float b = cos(2.0 * (y + theta.y));                 \n"
+        "    float c = cos(2.0 * (x + theta.z));                 \n"
+        "    float d = cos(1.0 * (y + theta.w));                 \n"
+        "    float v = (a+b+c+d + 4.0) / 8.0;                    \n"
+        "    vec3 color = v * (high_color - low_color) +         \n"
+        "                 low_color;                             \n"
+        "    gl_FragColor = vec4(color, 1.0);                    \n"
         "}                                                       \n";
 
     const GLfloat vertices[] =
@@ -108,7 +91,7 @@ int main(int argc, char *argv[])
     GLuint vshader, fshader, prog;
     GLint linked, low_color, high_color, vpos, theta;
     unsigned int width = 0, height = 0;
-    GLfloat angle = 0.0f;
+    GLfloat angle[4] = {3.1f, 4.1f, 5.9f, 2.6f};
 
     if (!mir_eglapp_init(argc, argv, &width, &height))
         return 1;
@@ -149,10 +132,13 @@ int main(int argc, char *argv[])
 
     while (mir_eglapp_running())
     {
-        glUniform1f(theta, angle);
-        angle += 0.005f;
-        if (angle > pi2)
-            angle -= pi2;
+        glUniform4fv(theta, 1, angle);
+        angle[0] += 0.00345f;
+        angle[1] += 0.01947f;
+        angle[2] += 0.03758f;
+        angle[3] += 0.01711f;
+        for (int a = 0; a < 4; ++a)
+            if (angle[a] > pi2) angle[a] -= pi2;
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         mir_eglapp_swap_buffers();
     }
