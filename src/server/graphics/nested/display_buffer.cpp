@@ -40,7 +40,7 @@ mgn::detail::DisplayBuffer::DisplayBuffer(
     egl_display(egl_display),
     host_surface{host_surface},
     host_connection{host_connection},
-    egl_config{egl_display.choose_windowed_es_config(preferred_format)},
+    egl_config{egl_display.choose_windowed_config(preferred_format)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{area.top_left, area.size},
     egl_surface{egl_display, host_surface->egl_native_window(), egl_config}

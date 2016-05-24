@@ -29,7 +29,7 @@
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 
-#include <GLES2/gl2.h>
+#include MIR_SERVER_GL_H
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
@@ -85,7 +85,9 @@ me::AdorningDisplayBufferCompositor::AdorningDisplayBufferCompositor(
         "}"
     },
     frag_shader_src{
-        "precision mediump float;"
+        "#ifdef GL_ES\n"
+        "precision mediump float;\n"
+        "#endif\n"
         "varying vec2 texcoord;"
         "uniform sampler2D tex;"
         "uniform float alpha;"

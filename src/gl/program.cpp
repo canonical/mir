@@ -19,6 +19,8 @@
 #include "mir/gl/program.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include MIR_SERVER_GL_H
+#include MIR_SERVER_GLEXT_H
 
 namespace mgl = mir::gl;
 

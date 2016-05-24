@@ -68,11 +68,19 @@ TEST_F(ClientLogging, reports_performance)
 
     int const target_fps = 10;
     int const nseconds = 3;
+    auto const target_render_time = std::chrono::milliseconds(3);
     auto bs = mir_surface_get_buffer_stream(surf);
     for (int s = 0; s < nseconds; ++s)
     {
         for (int f = 0; f < target_fps; ++f)
+        {
+            MirGraphicsRegion region;
+            // Performance report sees this as the start of a frame:
+            mir_buffer_stream_get_graphics_region(bs, &region);
+            std::this_thread::sleep_for(target_render_time);
+            // Performance report sees this as the end of a frame:
             mir_buffer_stream_swap_buffers_sync(bs);
+        }
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
@@ -87,11 +95,26 @@ TEST_F(ClientLogging, reports_performance)
         {
             ++reports;
             char name[256];
-            float fps;
+            float fps, render, lag;
+            int nbuffers;
             int fields = sscanf(line.c_str() + perf,
-                                " perf: %255[^:]: %f FPS,", name, &fps);
-            ASSERT_EQ(2, fields) << "Log line = {" << line << "}";
+                " perf: %255[^:]: %f FPS, render time %fms, buffer lag %fms "
+                " (%d buffers)",
+                name, &fps, &render, &lag, &nbuffers);
+
+            ASSERT_THAT(fields, Eq(5)) << "Log line = {" << line << "}";
+
             EXPECT_STREQ("Rumpelstiltskin", name);
+            EXPECT_THAT(render, Gt(target_render_time.count() - 1));
+
+            // Not a great test, but it will catch LP: #1581368 while
+            // also dealing with the possibility that CI machines
+            // are super slow:
+            auto expected_frame_time = 1000.0f / target_fps;
+            EXPECT_THAT(render, Lt(expected_frame_time));
+            EXPECT_THAT(lag, Gt(expected_frame_time/2));
+            EXPECT_THAT(nbuffers, Eq(3));
+            ASSERT_FALSE(Test::HasFailure()) << "Log line = {" << line << "}";
         }
     }
 

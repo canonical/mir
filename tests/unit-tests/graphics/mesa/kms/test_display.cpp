@@ -26,6 +26,7 @@
 #include "mir/renderer/gl/render_target.h"
 #include "mir/time/steady_clock.h"
 #include "mir/glib_main_loop.h"
+#include "mir/fatal.h"
 
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
@@ -446,6 +447,7 @@ TEST_F(MesaDisplayTest, post_update)
 
 TEST_F(MesaDisplayTest, post_update_flip_failure)
 {
+    mir::FatalErrorStrategy on_error{mir::fatal_error_except};
     using namespace testing;
 
     auto const crtc_id = get_connected_crtc_id();
