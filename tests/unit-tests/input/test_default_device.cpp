@@ -71,7 +71,8 @@ struct DefaultDevice : Test
         ON_CALL(mouse, get_touchpad_settings()).WillByDefault(Return(optional_touchpad_settings{}));
 
         ON_CALL(keyboard, get_device_info())
-            .WillByDefault(Return(mi::InputDeviceInfo{"name", "unique", mi::DeviceCapability::keyboard}));
+            .WillByDefault(Return(mi::InputDeviceInfo{
+                "name", "unique", mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric}));
         ON_CALL(keyboard, get_pointer_settings()).WillByDefault(Return(optional_pointer_settings{}));
         ON_CALL(keyboard, get_touchpad_settings()).WillByDefault(Return(optional_touchpad_settings{}));
     }

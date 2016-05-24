@@ -35,7 +35,8 @@ mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::
     : device_id{id}, device{device}, info(device.get_device_info()), pointer{device.get_pointer_settings()},
       touchpad{device.get_touchpad_settings()}, actions{actions}, key_mapper{key_mapper}
 {
-    if (contains(info.capabilities, mi::DeviceCapability::keyboard))
+    if (contains(info.capabilities, mi::DeviceCapability::keyboard) &&
+        contains(info.capabilities, mi::DeviceCapability::alpha_numeric))
     {
         keyboard = mi::KeyboardConfiguration{};
         key_mapper->set_keymap(device_id, keyboard.value().device_keymap);
@@ -136,16 +137,13 @@ void mi::DefaultDevice::apply_touchpad_configuration(mi::TouchpadConfiguration c
 
 mir::optional_value<mi::KeyboardConfiguration> mi::DefaultDevice::keyboard_configuration() const
 {
-    if (contains(info.capabilities, mi::DeviceCapability::keyboard))
-        return keyboard;
-
-    return {};
+    return keyboard;
 }
 
 void mi::DefaultDevice::apply_keyboard_configuration(mi::KeyboardConfiguration const& conf)
 {
     if (!contains(info.capabilities, mi::DeviceCapability::keyboard))
-        return;
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a keyboard configuration"));
 
     if (keyboard.value().device_keymap != conf.device_keymap)
     {

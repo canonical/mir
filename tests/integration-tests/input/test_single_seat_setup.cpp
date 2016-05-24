@@ -86,10 +86,13 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     mi::DefaultInputDeviceHub hub{mt::fake_shared(mock_sink), mt::fake_shared(seat), mt::fake_shared(multiplexer), mt::fake_shared(observer_loop),
                                   cookie_authority, mt::fake_shared(key_mapper)};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
+
+    mi::DeviceCapabilities const keyboard_caps = mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric;
+    mi::DeviceCapabilities const touchpad_caps = mi::DeviceCapability::touchpad | mi::DeviceCapability::pointer;
     NiceMock<mtd::MockInputDevice> device{"device","dev-1", mi::DeviceCapability::unknown};
-    NiceMock<mtd::MockInputDevice> another_device{"another_device","dev-2", mi::DeviceCapability::keyboard};
-    NiceMock<mtd::MockInputDevice> third_device{"third_device","dev-3", mi::DeviceCapability::keyboard};
-    NiceMock<mtd::MockInputDevice> touchpad{"touchpad", "dev-4", mi::DeviceCapability::touchpad|mi::DeviceCapability::pointer};
+    NiceMock<mtd::MockInputDevice> another_device{"another_device","dev-2", keyboard_caps};
+    NiceMock<mtd::MockInputDevice> third_device{"third_device","dev-3", keyboard_caps};
+    NiceMock<mtd::MockInputDevice> touchpad{"touchpad", "dev-4", touchpad_caps};
 
     std::chrono::nanoseconds arbitrary_timestamp;
 
