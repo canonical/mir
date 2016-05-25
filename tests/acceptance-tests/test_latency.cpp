@@ -272,7 +272,7 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
 };
 }
 
-TEST_F(ClientLatency, triple_buffered_client_has_less_than_two_frames_latency)
+TEST_F(ClientLatency, average_latency_is_less_than_nbuffers)
 {
     using namespace testing;
 
@@ -286,17 +286,15 @@ TEST_F(ClientLatency, triple_buffered_client_has_less_than_two_frames_latency)
     ASSERT_TRUE(stats.wait_for_posts(test_submissions,
                                      std::chrono::seconds(60)));
 
-    float const expected_max_latency = expected_client_buffers - 1;
-
     if (server.get_options()->get<bool>(mtd::logging_opt))
         display.group.dump_latency();
 
-    auto observed_latency = display.group.average_latency();
+    auto average_latency = display.group.average_latency();
 
-    EXPECT_THAT(observed_latency, Lt(expected_max_latency+error_margin));
+    EXPECT_THAT(average_latency, Lt(expected_client_buffers));
 }
 
-TEST_F(ClientLatency, latency_is_limited_to_nbuffers)
+TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
 {
     using namespace testing;
 
