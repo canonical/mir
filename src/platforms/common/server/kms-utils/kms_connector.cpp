@@ -127,11 +127,40 @@ std::string mgk::connector_name(mgk::DRMModeConnectorUPtr const& connector)
     return name;
 }
 
+namespace
+{
+std::tuple<mgk::DRMModeCrtcUPtr, int> find_crtc_and_index_for_connector(
+    mgk::DRMModeResources const& resources,
+    mgk::DRMModeConnectorUPtr const& connector)
+{
+    int crtc_index = 0;
+
+    auto const encoders = connector_available_encoders(resources, connector.get());
+
+    for (auto& crtc : resources.crtcs())
+    {
+        if (!crtc_is_used(resources, crtc->crtc_id))
+        {
+            for (auto& enc : encoders)
+            {
+                if (encoder_supports_crtc_index(enc.get(), crtc_index))
+                {
+                    return {std::move(crtc), crtc_index};
+                }
+            }
+        }
+        crtc_index++;
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find CRTC"});
+}
+}
+
 mgk::DRMModeCrtcUPtr mgk::find_crtc_for_connector(int drm_fd, mgk::DRMModeConnectorUPtr const& connector)
 {
     mgk::DRMModeResources resources{drm_fd};
 
-    /* Check to see if there is a crtc already connected */
+    /* If there is already a CRTC connected we can just return it */
     if (connector->encoder_id)
     {
         auto encoder = resources.encoder(connector->encoder_id);
@@ -141,36 +170,24 @@ mgk::DRMModeCrtcUPtr mgk::find_crtc_for_connector(int drm_fd, mgk::DRMModeConnec
         }
     }
 
-    auto available_encoders = connector_available_encoders(resources, connector.get());
-
-    int crtc_index = 0;
-
-    for (auto& crtc : resources.crtcs())
-    {
-        if (!crtc_is_used(resources, crtc->crtc_id))
-        {
-            for (auto& enc : available_encoders)
-            {
-                if (encoder_supports_crtc_index(enc.get(), crtc_index))
-                {
-                    return std::move(crtc);
-                }
-            }
-        }
-        crtc_index++;
-    }
-
-    BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find CRTC"});
+    return std::get<0>(find_crtc_and_index_for_connector(resources, connector));
 }
 
 auto mgk::find_crtc_with_primary_plane(
     int drm_fd,
     mgk::DRMModeConnectorUPtr const& connector) -> std::pair<DRMModeCrtcUPtr, DRMModePlaneUPtr>
 {
+    /*
+     * TODO: This currently has a sequential find-crtc-then-find-primary-plane-for-it algorithm.
+     * This is needlessly restrictive - it will fail if the first available CRTC found doesn't have
+     * an appropriate primary plane, even if other CRTCs are available and do have an appropriate plane.
+     */
     DRMModeCrtcUPtr crtc;
 
     DRMModeResources resources{drm_fd};
     int crtc_index{-1};
+
+    /* If there's already a CRTC connected, find it */
     if (connector->encoder_id)
     {
         auto encoder = get_encoder(drm_fd, connector->encoder_id);
@@ -192,33 +209,10 @@ auto mgk::find_crtc_with_primary_plane(
             crtc_index = std::distance(resources.crtcs().begin(), our_crtc);
         }
     }
-    else
+
+    if (!crtc)
     {
-        /* No CRTC currently active, try to find a compatible one */
-        auto available_encoders = connector_available_encoders(resources, connector.get());
-        for (auto& candidate : resources.crtcs())
-        {
-            crtc_index++;
-            if (!crtc_is_used(resources, candidate->crtc_id))
-            {
-                for (auto& enc : available_encoders)
-                {
-                    if (encoder_supports_crtc_index(enc.get(), crtc_index))
-                    {
-                        crtc = std::move(candidate);
-                        break;
-                    }
-                }
-            }
-            if (crtc)
-            {
-                break;
-            }
-        }
-        if (static_cast<size_t>(crtc_index) == resources.num_crtcs())
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find available CRTC"});
-        }
+        std::tie(crtc, crtc_index) = find_crtc_and_index_for_connector(resources, connector);
     }
     
     mgk::PlaneResources plane_res{drm_fd};
