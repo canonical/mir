@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_DRM_MODE_RESOURCES_H_
-#define MIR_GRAPHICS_MESA_DRM_MODE_RESOURCES_H_
+#ifndef MIR_GRAPHICS_COMMON_KMS_UTILS_DRM_MODE_RESOURCES_H_
+#define MIR_GRAPHICS_COMMON_KMS_UTILS_DRM_MODE_RESOURCES_H_
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -29,7 +29,7 @@ namespace mir
 {
 namespace graphics
 {
-namespace mesa
+namespace kms
 {
 
 typedef std::unique_ptr<drmModeCrtc,std::function<void(drmModeCrtc*)>> DRMModeCrtcUPtr;
@@ -43,12 +43,16 @@ public:
     explicit DRMModeResources(int drm_fd);
 
     void for_each_connector(std::function<void(DRMModeConnectorUPtr)> const& f) const;
+
     void for_each_encoder(std::function<void(DRMModeEncoderUPtr)> const& f) const;
+
     void for_each_crtc(std::function<void(DRMModeCrtcUPtr)> const& f) const;
 
-    size_t num_connectors();
-    size_t num_encoders();
-    size_t num_crtcs();
+    size_t num_connectors() const;
+
+    size_t num_encoders() const;
+
+    size_t num_crtcs() const;
 
     DRMModeConnectorUPtr connector(uint32_t id) const;
     DRMModeEncoderUPtr encoder(uint32_t id) const;
@@ -59,8 +63,14 @@ private:
     DRMModeResUPtr const resources;
 };
 
+
+DRMModeConnectorUPtr get_connector(int drm_fd, uint32_t id);
+DRMModeEncoderUPtr get_encoder(int drm_fd, uint32_t id);
+DRMModeCrtcUPtr get_crtc(int drm_fd, uint32_t id);
+
+
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_MESA_DRM_MODE_RESOURCES_H_ */
+#endif /* MIR_GRAPHICS_COMMON_KMS_UTILS_DRM_MODE_RESOURCES_H_ */
