@@ -71,4 +71,4 @@ if (MIR_BUILD_PLATFORM_ANDROID)
   add_subdirectory(android/)
 endif()
 
-  add_subdirectory(evdev/)
+add_subdirectory(evdev/)
