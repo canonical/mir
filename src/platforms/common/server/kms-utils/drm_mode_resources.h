@@ -38,17 +38,17 @@ typedef std::unique_ptr<drmModeEncoder,std::function<void(drmModeEncoder*)>> DRM
 typedef std::unique_ptr<drmModeConnector,std::function<void(drmModeConnector*)>> DRMModeConnectorUPtr;
 typedef std::unique_ptr<drmModeRes,void(*)(drmModeRes*)> DRMModeResUPtr;
 typedef std::unique_ptr<drmModePlaneRes,void(*)(drmModePlaneRes*)> DRMModePlaneResUPtr;
-typedef std::unique_ptr<drmModePlane,void(*)(drmModePlane*)> DRMModePlaneUPtr;
+typedef std::unique_ptr<drmModePlane,std::function<void(drmModePlane*)>> DRMModePlaneUPtr;
 typedef std::unique_ptr<drmModeObjectProperties,void(*)(drmModeObjectProperties*)> DRMModeObjectPropsUPtr;
 typedef std::unique_ptr<drmModePropertyRes,void(*)(drmModePropertyPtr)> DRMModePropertyUPtr;
 
 DRMModeConnectorUPtr get_connector(int drm_fd, uint32_t id);
 DRMModeEncoderUPtr get_encoder(int drm_fd, uint32_t id);
 DRMModeCrtcUPtr get_crtc(int drm_fd, uint32_t id);
-DRMModePlaneResUPtr get_planes(int drm_fd);
 DRMModePlaneUPtr get_plane(int drm_fd, uint32_t id);
 
 class DRMModeResources;
+class PlaneResources;
 
 namespace detail
 {
@@ -85,6 +85,7 @@ public:
     iterator end();
 private:
     friend class mir::graphics::kms::DRMModeResources;
+    friend class mir::graphics::kms::PlaneResources;
     ObjectCollection(int drm_fd, uint32_t* begin, uint32_t* end);
 
     int const drm_fd;
@@ -115,6 +116,17 @@ public:
 
 private:
     std::unordered_map<std::string, Prop> const properties_table;
+};
+
+class PlaneResources
+{
+public:
+    explicit PlaneResources(int drm_fd);
+
+    detail::ObjectCollection<DRMModePlaneUPtr, &get_plane> planes() const;
+private:
+    int const drm_fd;
+    DRMModePlaneResUPtr const resources;
 };
 
 class DRMModeResources
