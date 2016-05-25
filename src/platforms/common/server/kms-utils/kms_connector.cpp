@@ -162,3 +162,78 @@ mgk::DRMModeCrtcUPtr mgk::find_crtc_for_connector(int drm_fd, mgk::DRMModeConnec
 
     BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find CRTC"});
 }
+
+auto mgk::find_crtc_with_primary_plane(
+    int drm_fd,
+    mgk::DRMModeConnectorUPtr const& connector) -> std::pair<DRMModeCrtcUPtr, DRMModePlaneUPtr>
+{
+    DRMModeCrtcUPtr crtc;
+
+    DRMModeResources resources{drm_fd};
+    int crtc_index{-1};
+    if (connector->encoder_id)
+    {
+        auto encoder = get_encoder(drm_fd, connector->encoder_id);
+        if (encoder->crtc_id)
+        {
+            /* There's already a CRTC connected; we only need to find its index */
+            auto our_crtc = std::find_if(
+                resources.crtcs().begin(),
+                resources.crtcs().end(),
+            [crtc_id = encoder->crtc_id](mgk::DRMModeCrtcUPtr& crtc)
+            {
+                return crtc_id == crtc->crtc_id;
+            });
+            if (our_crtc == resources.crtcs().end())
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find index of CRTC?!"});
+            }
+            crtc = std::move(*our_crtc);
+            crtc_index = std::distance(resources.crtcs().begin(), our_crtc);
+        }
+    }
+    else
+    {
+        /* No CRTC currently active, try to find a compatible one */
+        auto available_encoders = connector_available_encoders(resources, connector.get());
+        for (auto& candidate : resources.crtcs())
+        {
+            crtc_index++;
+            if (!crtc_is_used(resources, candidate->crtc_id))
+            {
+                for (auto& enc : available_encoders)
+                {
+                    if (encoder_supports_crtc_index(enc.get(), crtc_index))
+                    {
+                        crtc = std::move(candidate);
+                        break;
+                    }
+                }
+            }
+            if (crtc)
+            {
+                break;
+            }
+        }
+        if (static_cast<size_t>(crtc_index) == resources.num_crtcs())
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find available CRTC"});
+        }
+    }
+    
+    mgk::PlaneResources plane_res{drm_fd};
+
+    for (auto& plane : plane_res.planes())
+    {
+        if (plane->possible_crtcs & (1 << crtc_index))
+        {
+            ObjectProperties plane_props{drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE};
+            if (plane_props["type"] == DRM_PLANE_TYPE_PRIMARY)
+            {
+                return {std::move(crtc), std::move(plane)};
+            }
+        }
+    }
+
+    BOOST_THROW_EXCEPTION(std::runtime_error{"Could not find primary plane for CRTC"});
+}
