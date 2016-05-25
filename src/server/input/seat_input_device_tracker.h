@@ -28,6 +28,11 @@
 
 namespace mir
 {
+using EventUPtr = std::unique_ptr<MirEvent, void(*)(MirEvent*)>;
+namespace time
+{
+class Clock;
+}
 namespace input
 {
 class CursorListener;
@@ -49,7 +54,8 @@ public:
                            std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                            std::shared_ptr<CursorListener> const& cursor_listener,
                            std::shared_ptr<InputRegion> const& input_region,
-                           std::shared_ptr<KeyMapper> const& key_mapper);
+                           std::shared_ptr<KeyMapper> const& key_mapper,
+                           std::shared_ptr<time::Clock> const& clock);
     void add_device(MirInputDeviceId);
     void remove_device(MirInputDeviceId);
 
@@ -57,6 +63,7 @@ public:
 
     MirPointerButtons button_state() const;
     geometry::Point cursor_position() const;
+    EventUPtr create_device_state() const;
 private:
     void update_seat_properties(MirInputEvent const* event);
     void update_cursor(MirPointerEvent const* event);
@@ -68,15 +75,18 @@ private:
     std::shared_ptr<CursorListener> const cursor_listener;
     std::shared_ptr<InputRegion> const input_region;
     std::shared_ptr<KeyMapper> const key_mapper;
+    std::shared_ptr<time::Clock> const clock;
 
     struct DeviceData
     {
         DeviceData() {}
         bool update_button_state(MirPointerButtons button_state);
         bool update_spots(MirTouchEvent const* event);
+        void update_scan_codes(MirKeyboardEvent const* event);
 
         MirPointerButtons buttons{0};
         std::vector<TouchVisualizer::Spot> spots;
+        std::vector<uint32_t> scan_codes;
     };
 
     // Libinput's acceleration curve means the cursor moves by non-integer

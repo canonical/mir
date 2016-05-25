@@ -28,6 +28,10 @@
 
 namespace mir
 {
+namespace time
+{
+class Clock;
+}
 namespace input
 {
 class TouchVisualizer;
@@ -43,12 +47,14 @@ public:
               std::shared_ptr<TouchVisualizer> const& touch_visualizer,
               std::shared_ptr<CursorListener> const& cursor_listener,
               std::shared_ptr<InputRegion> const& input_region,
-              std::shared_ptr<KeyMapper> const& key_mapper);
+              std::shared_ptr<KeyMapper> const& key_mapper,
+              std::shared_ptr<time::Clock> const& clock);
     // Seat methods:
     void add_device(Device const& device) override;
     void remove_device(Device const& device) override;
     void dispatch_event(MirEvent& event) override;
     geometry::Rectangle get_rectangle_for(Device const& dev) override;
+    virtual EventUPtr create_device_state() override;
 
 private:
     SeatInputDeviceTracker input_state_tracker;

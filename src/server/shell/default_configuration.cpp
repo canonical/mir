@@ -41,7 +41,8 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
                 the_session_coordinator(),
                 the_prompt_session_manager(),
                 the_shell_report(),
-                the_window_manager_builder()));
+                the_window_manager_builder(),
+                the_seat()));
 
             the_composite_event_filter()->prepend(result);
 

@@ -20,8 +20,8 @@
 #define MIR_TEST_DOUBLES_MOCK_INPUT_SEAT_H_
 
 #include "mir/input/seat.h"
-
-#include <gmock/gmock.h>
+#include "mir/input/device.h"
+#include "mir/test/gmock_fixes.h"
 
 namespace mir
 {
@@ -35,6 +35,7 @@ struct MockInputSeat : input::Seat
     MOCK_METHOD1(remove_device, void(input::Device const& device));
     MOCK_METHOD1(dispatch_event, void(MirEvent& event));
     MOCK_METHOD1(get_rectangle_for, geometry::Rectangle(input::Device const& dev));
+    MOCK_METHOD0(create_device_state, mir::EventUPtr());
 };
 }
 }

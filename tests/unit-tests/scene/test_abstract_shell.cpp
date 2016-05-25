@@ -41,6 +41,7 @@
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/null_application_not_responding_detector.h"
 #include "mir/test/doubles/stub_display.h"
+#include "mir/test/doubles/mock_input_seat.h"
 
 #include "mir/test/fake_shared.h"
 
@@ -108,6 +109,7 @@ struct AbstractShell : Test
     NiceMock<MockSessionContainer> session_container;
     NiceMock<MockSessionEventSink> session_event_sink;
     NiceMock<MockSurfaceFactory> surface_factory;
+    NiceMock<mtd::MockInputSeat> seat;
     mtd::StubDisplay display{3};
 
     NiceMock<MockSessionManager> session_manager{
@@ -131,7 +133,8 @@ struct AbstractShell : Test
         mt::fake_shared(session_manager),
         std::make_shared<mtd::NullPromptSessionManager>(),
         std::make_shared<mir::report::null::ShellReport>(),
-        [this](msh::FocusController*) { return wm = std::make_shared<NiceMockWindowManager>(); }};
+        [this](msh::FocusController*) { return wm = std::make_shared<NiceMockWindowManager>(); },
+        mt::fake_shared(seat)};
 
     void SetUp() override
     {

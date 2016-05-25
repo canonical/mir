@@ -26,6 +26,10 @@
 
 namespace mir
 {
+namespace input
+{
+class Seat;
+}
 namespace shell
 {
 class ShellReport;
@@ -41,7 +45,8 @@ public:
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
         std::shared_ptr<ShellReport> const& report,
-        WindowManagerBuilder const& wm_builder);
+        WindowManagerBuilder const& wm_builder,
+        std::shared_ptr<input::Seat> const& seat);
 
     ~AbstractShell() noexcept;
 
@@ -122,6 +127,7 @@ protected:
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
     std::shared_ptr<scene::PromptSessionManager> const prompt_session_manager;
     std::shared_ptr<WindowManager> const window_manager;
+    std::shared_ptr<input::Seat> const seat;
 
 private:
     std::shared_ptr<ShellReport> const report;

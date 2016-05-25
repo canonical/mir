@@ -30,8 +30,9 @@ mi::BasicSeat::BasicSeat(std::shared_ptr<mi::InputDispatcher> const& dispatcher,
                          std::shared_ptr<mi::TouchVisualizer> const& touch_visualizer,
                          std::shared_ptr<mi::CursorListener> const& cursor_listener,
                          std::shared_ptr<mi::InputRegion> const& input_region,
-                         std::shared_ptr<mi::KeyMapper> const& key_mapper)
-    : input_state_tracker{dispatcher, touch_visualizer, cursor_listener, input_region, key_mapper}, input_region{input_region}
+                         std::shared_ptr<mi::KeyMapper> const& key_mapper,
+                         std::shared_ptr<time::Clock> const& clock)
+    : input_state_tracker{dispatcher, touch_visualizer, cursor_listener, input_region, key_mapper, clock}, input_region{input_region}
 {
 }
 
@@ -57,4 +58,9 @@ mir::geometry::Rectangle mi::BasicSeat::get_rectangle_for(input::Device const&)
     // we rely on the existing workaround in DisplayInputRegion::bounding_rectangle() which
     // assumes that only the first output may have a touch screen associated to it.
     return input_region->bounding_rectangle();
+}
+
+mir::EventUPtr mi::BasicSeat::create_device_state()
+{
+    return input_state_tracker.create_device_state();
 }

@@ -27,6 +27,7 @@
 
 namespace mir
 {
+using EventUPtr = std::unique_ptr<MirEvent, void(*)(MirEvent*)>;
 namespace input
 {
 class Device;
@@ -39,6 +40,7 @@ public:
     virtual void remove_device(Device const& device) = 0;
     virtual void dispatch_event(MirEvent& event) = 0;
     virtual geometry::Rectangle get_rectangle_for(Device const& dev) = 0;
+    virtual EventUPtr create_device_state() = 0;
 private:
     Seat(Seat const&) = delete;
     Seat& operator=(Seat const&) = delete;

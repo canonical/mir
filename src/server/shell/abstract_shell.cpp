@@ -27,9 +27,11 @@
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
+#include "mir/input/seat.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
+namespace mi = mir::input;
 namespace msh = mir::shell;
 
 msh::AbstractShell::AbstractShell(
@@ -38,12 +40,14 @@ msh::AbstractShell::AbstractShell(
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
     std::shared_ptr<ShellReport> const& report,
-    std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder) :
+    std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder,
+    std::shared_ptr<mi::Seat> const& seat) :
     input_targeter(input_targeter),
     surface_stack(surface_stack),
     session_coordinator(session_coordinator),
     prompt_session_manager(prompt_session_manager),
     window_manager(wm_builder(this)),
+    seat(seat),
     report(report)
 {
 }
@@ -232,6 +236,7 @@ void msh::AbstractShell::set_focus_to_locked(
         {
             // Ensure the surface has really taken the focus before notifying it that it is focused
             input_targeter->set_focus(surface);
+            surface->consume(seat->create_device_state().get());
             surface->configure(mir_surface_attrib_focus, mir_surface_focused);
         }
         else

@@ -26,6 +26,7 @@
 #include "mir/geometry/displacement.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
+#include "mir/time/clock.h"
 
 #include "input_modifier_utils.h"
 
@@ -43,9 +44,10 @@ mi::SeatInputDeviceTracker::SeatInputDeviceTracker(std::shared_ptr<InputDispatch
                                                    std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                                                    std::shared_ptr<CursorListener> const& cursor_listener,
                                                    std::shared_ptr<InputRegion> const& input_region,
-                                                   std::shared_ptr<KeyMapper> const& key_mapper)
+                                                   std::shared_ptr<KeyMapper> const& key_mapper,
+                                                   std::shared_ptr<time::Clock> const& clock)
     : dispatcher{dispatcher}, touch_visualizer{touch_visualizer}, cursor_listener{cursor_listener},
-      input_region{input_region}, key_mapper{key_mapper}, buttons{0}
+      input_region{input_region}, key_mapper{key_mapper}, clock{clock}, buttons{0}
 {
 }
 
@@ -181,4 +183,23 @@ void mi::SeatInputDeviceTracker::update_cursor(MirPointerEvent const* event)
     if (confined.y != old.y) cursor_y = confined.y.as_int();
 
     cursor_listener->cursor_moved_to(cursor_x, cursor_y);
+}
+
+mir::EventUPtr mi::SeatInputDeviceTracker::create_device_state() const
+{
+    std::vector<mev::InputDeviceState> devices;
+    devices.reserve(device_data.size());
+    for (auto const& item : device_data)
+        devices.push_back({item.first, item.second.scan_codes, item.second.buttons});
+    return mev::make_event(clock->now().time_since_epoch(), buttons, cursor_x, cursor_y, std::move(devices));
+}
+
+void mi::SeatInputDeviceTracker::DeviceData::update_scan_codes(MirKeyboardEvent const* event)
+{
+    auto const action = mir_keyboard_event_action(event);
+    auto const scan_code = mir_keyboard_event_scan_code(event);
+    if (action == mir_keyboard_action_down)
+        scan_codes.push_back(scan_code);
+    else if (action == mir_keyboard_action_up)
+        scan_codes.erase(remove(begin(scan_codes), end(scan_codes), scan_code));
 }

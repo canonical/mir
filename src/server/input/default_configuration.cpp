@@ -332,7 +332,8 @@ std::shared_ptr<mi::Seat> mir::DefaultServerConfiguration::the_seat()
                     the_touch_visualizer(),
                     the_cursor_listener(),
                     the_input_region(),
-                    the_key_mapper());
+                    the_key_mapper(),
+                    the_clock());
         });
 }
 

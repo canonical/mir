@@ -25,6 +25,7 @@
 #include "mir/test/doubles/mock_input_region.h"
 #include "mir/test/doubles/mock_cursor_listener.h"
 #include "mir/test/doubles/mock_touch_visualizer.h"
+#include "mir/test/doubles/advanceable_clock.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
 
@@ -56,13 +57,15 @@ struct SeatInputDeviceTracker : ::testing::Test
     MirInputDeviceId another_device{1246};
     MirInputDeviceId third_device{86};
     std::shared_ptr<mir::cookie::Authority> cookie_factory = mir::cookie::Authority::create();
+    mtd::AdvanceableClock clock;
 
     mi::DefaultEventBuilder some_device_builder{some_device, cookie_factory};
     mi::DefaultEventBuilder another_device_builder{another_device, cookie_factory};
     mi::DefaultEventBuilder third_device_builder{third_device, cookie_factory};
     mi::receiver::XKBMapper mapper;
-    mi::SeatInputDeviceTracker tracker{mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer),
-                       mt::fake_shared(mock_cursor_listener), mt::fake_shared(mock_region), mt::fake_shared(mapper)};
+    mi::SeatInputDeviceTracker tracker{
+        mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer), mt::fake_shared(mock_cursor_listener),
+        mt::fake_shared(mock_region),     mt::fake_shared(mapper),          mt::fake_shared(clock)};
 
     std::chrono::nanoseconds arbitrary_timestamp;
 };
