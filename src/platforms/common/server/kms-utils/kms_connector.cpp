@@ -19,6 +19,7 @@
 #include "kms_connector.h"
 
 #include <boost/throw_exception.hpp>
+#include <algorithm>
 
 namespace mgk = mir::graphics::kms;
 
@@ -26,47 +27,46 @@ namespace
 {
 bool encoder_is_used(mgk::DRMModeResources const& resources, uint32_t encoder_id)
 {
-    bool encoder_used{false};
-
     if (encoder_id == 0)
     {
         BOOST_THROW_EXCEPTION(std::invalid_argument{"Attempted to query an encoder with invalid ID 0"});
     }
 
-    resources.for_each_connector([&](mgk::DRMModeConnectorUPtr connector)
-         {
-             if (connector->encoder_id == encoder_id &&
-                 connector->connection == DRM_MODE_CONNECTED)
-             {
-                 auto encoder = resources.encoder(connector->encoder_id);
-                 if (encoder->crtc_id)
-                 {
-                    encoder_used = true;
-                 }
-             }
-         });
+    for (auto const& connector : resources.connectors())
+    {
+        if (connector->encoder_id == encoder_id &&
+            connector->connection == DRM_MODE_CONNECTED)
+        {
+            auto encoder = resources.encoder(connector->encoder_id);
+            if (encoder->crtc_id)
+            {
+                return true;
+            }
+        }
+    }
 
-    return encoder_used;
+    return false;
 }
 
 bool crtc_is_used(mgk::DRMModeResources const& resources, uint32_t crtc_id)
 {
-    bool crtc_used{false};
 
-    resources.for_each_connector([&](mgk::DRMModeConnectorUPtr connector)
-         {
-             if (connector->connection == DRM_MODE_CONNECTED)
-             {
-                 if (connector->encoder_id)
-                 {
-                     auto encoder = resources.encoder(connector->encoder_id);
-                     if (encoder->crtc_id == crtc_id)
-                         crtc_used = true;
-                 }
-             }
-         });
+    for (auto const& connector : resources.connectors())
+    {
+        if (connector->connection == DRM_MODE_CONNECTED)
+        {
+            if (connector->encoder_id)
+            {
+                auto encoder = resources.encoder(connector->encoder_id);
+                if (encoder->crtc_id == crtc_id)
+                {
+                    return true;
+                }
+            }
+        }
+    }
 
-    return crtc_used;
+    return false;
 }
 
 std::vector<mgk::DRMModeEncoderUPtr>
@@ -141,32 +141,24 @@ mgk::DRMModeCrtcUPtr mgk::find_crtc_for_connector(int drm_fd, mgk::DRMModeConnec
         }
     }
 
-    mgk::DRMModeCrtcUPtr crtc;
-
     auto available_encoders = connector_available_encoders(resources, connector.get());
 
     int crtc_index = 0;
 
-    resources.for_each_crtc([&](mgk::DRMModeCrtcUPtr candidate_crtc)
+    for (auto& crtc : resources.crtcs())
+    {
+        if (!crtc_is_used(resources, crtc->crtc_id))
         {
-            if (!crtc && !crtc_is_used(resources, candidate_crtc->crtc_id))
+            for (auto& enc : available_encoders)
             {
-                for (auto& enc : available_encoders)
+                if (encoder_supports_crtc_index(enc.get(), crtc_index))
                 {
-                    if (encoder_supports_crtc_index(enc.get(), crtc_index))
-                    {
-                        crtc = std::move(candidate_crtc);
-                        break;
-                    }
+                    return std::move(crtc);
                 }
             }
-
-            crtc_index++;
-        });
-
-    if (!crtc)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find CRTC"});
+        }
+        crtc_index++;
     }
-    return crtc;
+
+    BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find CRTC"});
 }

@@ -37,6 +37,10 @@ typedef std::unique_ptr<drmModeEncoder,std::function<void(drmModeEncoder*)>> DRM
 typedef std::unique_ptr<drmModeConnector,std::function<void(drmModeConnector*)>> DRMModeConnectorUPtr;
 typedef std::unique_ptr<drmModeRes,std::function<void(drmModeRes*)>> DRMModeResUPtr;
 
+DRMModeConnectorUPtr get_connector(int drm_fd, uint32_t id);
+DRMModeEncoderUPtr get_encoder(int drm_fd, uint32_t id);
+DRMModeCrtcUPtr get_crtc(int drm_fd, uint32_t id);
+
 class DRMModeResources
 {
 public:
@@ -58,16 +62,54 @@ public:
     DRMModeEncoderUPtr encoder(uint32_t id) const;
     DRMModeCrtcUPtr crtc(uint32_t id) const;
 
+    template<typename DRMUPtr, DRMUPtr(*)(int, uint32_t)>
+    class ObjectCollection
+    {
+    public:
+        class iterator :
+            public std::iterator<std::input_iterator_tag, DRMUPtr>
+        {
+        public:
+            iterator(iterator const& from);
+            iterator& operator=(iterator const& rhs);
+
+            iterator& operator++();
+            iterator operator++(int);
+
+            bool operator==(iterator const& rhs) const;
+            bool operator!=(iterator const& rhs) const;
+
+            DRMUPtr& operator*() const;
+            DRMUPtr* operator->() const;
+
+        private:
+            friend class ObjectCollection;
+            iterator(int drm_fd, uint32_t* id_ptr);
+
+            int drm_fd;
+            uint32_t* id_ptr;
+            DRMUPtr mutable current;
+        };
+
+        iterator begin();
+        iterator end();
+    private:
+        friend class DRMModeResources;
+        ObjectCollection(int drm_fd, uint32_t* begin, uint32_t* end);
+
+        int const drm_fd;
+        uint32_t* const begin_;
+        uint32_t* const end_;
+    };
+
+    ObjectCollection<DRMModeConnectorUPtr, &get_connector> connectors() const;
+    ObjectCollection<DRMModeEncoderUPtr, &get_encoder> encoders() const;
+    ObjectCollection<DRMModeCrtcUPtr, &get_crtc> crtcs() const;
+
 private:
     int const drm_fd;
     DRMModeResUPtr const resources;
 };
-
-
-DRMModeConnectorUPtr get_connector(int drm_fd, uint32_t id);
-DRMModeEncoderUPtr get_encoder(int drm_fd, uint32_t id);
-DRMModeCrtcUPtr get_crtc(int drm_fd, uint32_t id);
-
 
 }
 }
