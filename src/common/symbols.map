@@ -374,5 +374,6 @@ MIR_COMMON_0.24 {
        MirInputDeviceStateEvent::set_pointer_buttons*;
        MirInputDeviceStateEvent::set_when*;
        MirInputDeviceStateEvent::when*;
+      android::InputPublisher::publishEventBuffer*;
     };
 } MIR_COMMON_0.22;
