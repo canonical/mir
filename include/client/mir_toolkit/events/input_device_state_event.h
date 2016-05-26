@@ -69,6 +69,15 @@ int64_t mir_input_device_state_event_time(
     MirInputDeviceStateEvent const* ev);
 
 /**
+ * Retrieve the modifier keys currently active based on the keys currently pressed on all devices.
+ *
+ * \param[in] ev The input device state event
+ * \return       The modifier mask
+ */
+MirInputEventModifiers mir_input_device_state_event_modifiers(
+    MirInputDeviceStateEvent const* ev);
+
+/**
  * Retrieve the number of attached input devices.
  *
  * \param[in] ev The input device state event
