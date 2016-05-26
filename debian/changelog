@@ -29,7 +29,13 @@ mir (0.23.0ubuntu1) UNRELEASED; urgency=medium
       . Mir-on-X11 doesn't pass Alt+primary button drag to Mir (LP: #1575765)
       . Mir-on-X11 breaks mir_proving_server resize logic (LP: #1575192)
       . Resizing can crash mir_demo_server (LP: #1575211) 
-      . [regression] Cursor stops at phantom edge on M10 and N7 (LP: 1580774)
+      . [regression] Cursor stops at phantom edge on M10 and N7 (LP: #1580774)
+      . [regression] MIR_CLIENT_PERF_REPORT is showing bogus render times and
+        buffer lag (LP: #1581368)
+      . Test failures in ClientLogging.reports_performance due to the above
+        fix. (LP: #1583970, LP: #1584603, LP: #1584605)
+      . mirtest-dev is hard to use as the objects used are compiled with LTO
+        (LP: #1583536)
 
  -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 09 May 2016 11:59:42 -0400
 
