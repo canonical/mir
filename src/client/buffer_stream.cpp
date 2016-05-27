@@ -336,14 +336,12 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         std::unique_lock<std::mutex> lk(mutex);
         if (!current)
             advance_current_buffer(lk);
+        auto c = current;
+        current = nullptr;
         lk.unlock();
 
-        vault.deposit(current);
-
-        auto wh = vault.wire_transfer_outbound(current, done);
-
-        lk.lock();
-        current = nullptr;
+        vault.deposit(c);
+        auto wh = vault.wire_transfer_outbound(c, done);
         return wh;
     }
 
