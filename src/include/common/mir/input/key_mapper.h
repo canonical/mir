@@ -41,15 +41,38 @@ public:
     KeyMapper() = default;
     virtual ~KeyMapper() = default;
 
-    // update the key state of device \a id, with the given sequence of pressed keys.
-    virtual void set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& key_state) = 0; // used by seat
+    /// Update the key state of device \a id, with the given sequence of pressed scan codes.
+    virtual void set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& key_state) = 0;
 
+    /** 
+     * Per device keymap configuration
+     *
+     * A keymap can be set for individual input devices by specifying the
+     * MirInputDeviceId of that device. A keymap may be supplied as a buffer
+     * that can be parsed by xkbcommon, or as tuple of configuration strings
+     * used to select the Keymap.
+     * \{
+     */
     virtual void set_keymap(MirInputDeviceId id, Keymap const& map) = 0;
     virtual void set_keymap(MirInputDeviceId id, char const* buffer, size_t len) = 0;
+    virtual void reset_keymap(MirInputDeviceId id) = 0;
+    /**
+     * \}
+     */
+
+    /**
+     * Device independent keymap
+     *
+     * A keymap independent of the input device id can be specified and will
+     * override any per device keymaps.
+     * \{
+     */
     virtual void set_keymap(Keymap const& map) = 0;
     virtual void set_keymap(char const* buffer, size_t len) = 0;
-    virtual void reset_keymap(MirInputDeviceId id) = 0;
     virtual void reset_keymap() = 0;
+    /**
+     * \}
+     */
 
     virtual void map_event(MirEvent& event) = 0;
 
