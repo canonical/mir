@@ -31,6 +31,7 @@
 #include "mir/events/resize_event.h"
 #include "mir/events/surface_event.h"
 #include "mir/events/surface_output_event.h"
+#include "mir/events/input_device_state_event.h"
 
 MirEvent::MirEvent(MirEventType type) :
     type_(type)
@@ -101,6 +102,8 @@ mir::EventUPtr MirEvent::deserialize(std::string const& bytes)
         return mir::event::deserialize_from<MirSurfaceOutputEvent>(bytes);
     case mir_event_type_keymap:
         return MirKeymapEvent::deserialize(bytes);
+    case mir_event_type_input_device_state:
+        return MirInputDeviceStateEvent::deserialize(bytes);
     case mir_event_type_input:
     default:
         break;
@@ -133,6 +136,8 @@ std::string MirEvent::serialize(MirEvent const* event)
         return mir::event::serialize_from<MirSurfaceOutputEvent>(event);
     case mir_event_type_keymap:
         return MirKeymapEvent::serialize(event);
+    case mir_event_type_input_device_state:
+        return MirInputDeviceStateEvent::serialize(event);
     case mir_event_type_input:
     default:
         break;
@@ -234,4 +239,14 @@ MirSurfaceOutputEvent* MirEvent::to_surface_output()
 MirSurfaceOutputEvent const* MirEvent::to_surface_output() const
 {
     return static_cast<MirSurfaceOutputEvent const*>(this);
+}
+
+MirInputDeviceStateEvent* MirEvent::to_input_device_state()
+{
+    return static_cast<MirInputDeviceStateEvent*>(this);
+}
+
+MirInputDeviceStateEvent const* MirEvent::to_input_device_state() const
+{
+    return static_cast<MirInputDeviceStateEvent const*>(this);
 }

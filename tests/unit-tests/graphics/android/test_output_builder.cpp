@@ -22,6 +22,7 @@
 #include "src/platforms/android/server/hwc_loggers.h"
 #include "src/platforms/android/server/hwc_configuration.h"
 #include "src/platforms/android/server/device_quirks.h"
+#include "src/platforms/android/server/hwc_layerlist.h"
 #include "mir/test/doubles/mock_buffer.h"
 #include "mir/test/doubles/mock_display_report.h"
 #include "mir/test/fake_shared.h"
@@ -185,4 +186,27 @@ TEST_F(HalComponentFactory, determine_fbnum_always_reports_2_minimum)
     std::sort(buffer_list.begin(), buffer_list.end());
     buffer_list.erase(std::unique(buffer_list.begin(), buffer_list.end()), buffer_list.end());
     EXPECT_THAT(buffer_list.size(), Eq(2));
+}
+
+TEST_F(HalComponentFactory, doesnt_complain_if_version_is_supported)
+{
+    using namespace testing;
+    auto supported_versions = {
+        mga::HwcVersion::hwc10, 
+        mga::HwcVersion::hwc11, 
+        mga::HwcVersion::hwc12, 
+        mga::HwcVersion::hwc13, 
+        mga::HwcVersion::hwc14, 
+        mga::HwcVersion::hwc15 };
+    for (auto supported_version : supported_versions)
+    {
+        ON_CALL(*mock_resource_factory, create_hwc_wrapper(_))
+            .WillByDefault(Return(std::make_tuple(mock_wrapper, supported_version)));
+        mga::HalComponentFactory factory(
+            mock_resource_factory,
+            mock_hwc_report,
+            quirks);
+        EXPECT_THAT(factory.create_display_device(), Ne(nullptr));
+        EXPECT_THAT(factory.create_layer_list(), Ne(nullptr));
+    }
 }

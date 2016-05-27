@@ -78,7 +78,7 @@ public:
     ~EGLDisplayHandle() noexcept;
 
     void initialize(MirPixelFormat format);
-    EGLConfig choose_windowed_es_config(MirPixelFormat format) const;
+    EGLConfig choose_windowed_config(MirPixelFormat format) const;
     EGLContext egl_context() const;
     std::unique_ptr<graphics::GLContext> create_gl_context();
 

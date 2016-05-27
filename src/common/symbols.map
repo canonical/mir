@@ -354,10 +354,26 @@ MIR_COMMON_0.22 {
     };
 } MIR_COMMON_0.19.1;
 
-
 MIR_COMMON_0.24 {
   global:
     extern "C++" {
       android::InputPublisher::publishEventBuffer*;
+       MirEvent::to_input_device_state*;
+       MirInputDeviceStateEvent::MirInputDeviceStateEvent*;
+       MirInputDeviceStateEvent::add_device*;
+       MirInputDeviceStateEvent::clone*;
+       MirInputDeviceStateEvent::deserialize*;
+       MirInputDeviceStateEvent::device_count*;
+       MirInputDeviceStateEvent::device_id*;
+       MirInputDeviceStateEvent::device_pointer_buttons*;
+       MirInputDeviceStateEvent::device_pressed_keys*;
+       MirInputDeviceStateEvent::device_pressed_keys_count*;
+       MirInputDeviceStateEvent::pointer_axis*;
+       MirInputDeviceStateEvent::pointer_buttons*;
+       MirInputDeviceStateEvent::serialize*;
+       MirInputDeviceStateEvent::set_pointer_axis*;
+       MirInputDeviceStateEvent::set_pointer_buttons*;
+       MirInputDeviceStateEvent::set_when*;
+       MirInputDeviceStateEvent::when*;
     };
 } MIR_COMMON_0.22;
