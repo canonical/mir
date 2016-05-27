@@ -120,12 +120,9 @@ std::shared_ptr<mcl::Buffer> mcl::BufferVault::checked_buffer_from_map(int id)
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer in map"));
 }
 
-mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
+
+std::map<int, mcl::BufferVault::Owner>::iterator mcl::BufferVault::available_buffer()
 {
-    std::unique_lock<std::mutex> lk(mutex);
-    if (disconnected_)
-        BOOST_THROW_EXCEPTION(std::logic_error("server_disconnected"));
-    mcl::NoTLSPromise<std::shared_ptr<mcl::Buffer>> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [this](std::pair<int, Owner> const& entry) {
             return ((entry.second == Owner::Self) &&
@@ -136,7 +133,16 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
         [this](std::pair<int, Owner> const& entry) {
             return ((entry.second == Owner::Self) &&
                     (checked_buffer_from_map(entry.first)->size() == size)); });
+    return it;
+}
 
+mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
+{
+    std::unique_lock<std::mutex> lk(mutex);
+    if (disconnected_)
+        BOOST_THROW_EXCEPTION(std::logic_error("server_disconnected"));
+    mcl::NoTLSPromise<std::shared_ptr<mcl::Buffer>> promise;
+    auto it = available_buffer();
     auto future = promise.get_future();
     if (it != buffers.end())
     {
@@ -170,7 +176,8 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::Buffer> const& buffer)
     checked_buffer_from_map(it->first)->increment_age();
 }
 
-void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const& buffer)
+MirWaitHandle* mcl::BufferVault::wire_transfer_outbound(
+    std::shared_ptr<mcl::Buffer> const& buffer, std::function<void()> const& done)
 {
     std::unique_lock<std::mutex> lk(mutex);
     auto it = buffers.find(buffer->rpc_id());
@@ -179,8 +186,22 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const
     it->second = Owner::Server;
     lk.unlock();
 
+    next_buffer_wait_handle.expect_result();
     buffer->submitted();
     server_requests->submit_buffer(*buffer);
+
+    lk.lock();
+
+    if (buffers.end() != available_buffer())
+    {
+        next_buffer_wait_handle.result_received();
+        done();
+    }
+    else
+    {
+        deferred_cb = done;
+    }
+    return &next_buffer_wait_handle;
 }
 
 void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
@@ -228,12 +249,25 @@ void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
         promises.front().set_value(buffer);
         promises.pop_front();
     }
+
+    if (deferred_cb)
+    {
+        next_buffer_wait_handle.result_received();
+        deferred_cb();
+        deferred_cb = {};
+    }
 }
 
 void mcl::BufferVault::disconnected()
 {
     std::lock_guard<std::mutex> lk(mutex);
     disconnected_ = true;
+    if (deferred_cb)
+    {
+        next_buffer_wait_handle.result_received();
+        deferred_cb();
+        deferred_cb = {};
+    }
     promises.clear();
 }
 

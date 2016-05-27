@@ -22,6 +22,7 @@
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include "mir_wait_handle.h"
 #include <memory>
 #include "no_tls_future-inl.h"
 #include <deque>
@@ -67,7 +68,8 @@ public:
     NoTLSFuture<std::shared_ptr<Buffer>> withdraw();
     void deposit(std::shared_ptr<Buffer> const& buffer);
     void wire_transfer_inbound(int buffer_id);
-    void wire_transfer_outbound(std::shared_ptr<Buffer> const& buffer);
+    MirWaitHandle* wire_transfer_outbound(
+        std::shared_ptr<Buffer> const& buffer, std::function<void()> const&);
     void set_size(geometry::Size);
     void disconnected();
     void set_scale(float scale);
@@ -75,6 +77,9 @@ public:
     void decrease_buffer_count();
 
 private:
+    enum class Owner;
+    std::map<int, Owner>::iterator available_buffer();
+
     void alloc_buffer(geometry::Size size, MirPixelFormat format, int usage);
     void free_buffer(int free_id);
     void realloc_buffer(int free_id, geometry::Size size, MirPixelFormat format, int usage);
@@ -89,7 +94,6 @@ private:
     MirPixelFormat const format;
     int const usage;
 
-    enum class Owner;
     std::mutex mutex;
     std::map<int, Owner> buffers;
     std::deque<NoTLSPromise<std::shared_ptr<Buffer>>> promises;
@@ -99,6 +103,8 @@ private:
     size_t needed_buffer_count;
     size_t const initial_buffer_count;
     int last_received_id = 0;
+    MirWaitHandle next_buffer_wait_handle;
+    std::function<void()> deferred_cb;
 };
 }
 }

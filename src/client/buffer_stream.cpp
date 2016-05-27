@@ -340,14 +340,11 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
 
         vault.deposit(current);
 
-        next_buffer_wait_handle.expect_result();
-        vault.wire_transfer_outbound(current);
-        next_buffer_wait_handle.result_received();
+        auto wh = vault.wire_transfer_outbound(current, done);
 
         lk.lock();
-        advance_current_buffer(lk);
-        done();
-        return &next_buffer_wait_handle;
+        current = nullptr;
+        return wh;
     }
 
     void set_size(geom::Size size) override
@@ -398,7 +395,6 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
     mcl::BufferVault vault;
     std::mutex mutable mutex;
     std::shared_ptr<mcl::Buffer> current{nullptr};
-    MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle scale_wait_handle;
     int current_swap_interval = 1;
     geom::Size size_;
