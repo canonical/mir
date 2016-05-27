@@ -138,7 +138,7 @@ public:
     void register_error_callback(mir_error_callback callback, void* context);
 
     void populate(MirPlatformPackage& platform_package);
-    void populate_graphics_module(MirModuleProperties& properties);
+    void populate_graphics_module(MirModuleProperties& properties) override;
     MirDisplayConfiguration* create_copy_of_display_config();
     std::unique_ptr<mir::protobuf::DisplayConfiguration> snapshot_display_configuration() const;
     void available_surface_formats(MirPixelFormat* formats,
