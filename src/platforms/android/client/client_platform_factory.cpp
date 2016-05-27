@@ -24,6 +24,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <cstring>
 
 namespace mcl = mir::client;
 namespace mcla = mcl::android;
