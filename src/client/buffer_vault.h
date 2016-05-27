@@ -79,6 +79,7 @@ public:
 private:
     enum class Owner;
     std::map<int, Owner>::iterator available_buffer();
+    void trigger_callback(std::unique_lock<std::mutex> lk);
 
     void alloc_buffer(geometry::Size size, MirPixelFormat format, int usage);
     void free_buffer(int free_id);

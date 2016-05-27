@@ -183,23 +183,21 @@ MirWaitHandle* mcl::BufferVault::wire_transfer_outbound(
     auto it = buffers.find(buffer->rpc_id());
     if (it == buffers.end() || it->second != Owner::SelfWithContent)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be transferred"));
+
+    bool client_can_withdraw = (buffers.end() != available_buffer());
+    if (!client_can_withdraw)
+        deferred_cb = done;
+
     it->second = Owner::Server;
     lk.unlock();
 
     next_buffer_wait_handle.expect_result();
     buffer->submitted();
     server_requests->submit_buffer(*buffer);
-
-    lk.lock();
-
-    if (buffers.end() != available_buffer())
+    if (client_can_withdraw)
     {
         next_buffer_wait_handle.result_received();
         done();
-    }
-    else
-    {
-        deferred_cb = done;
     }
     return &next_buffer_wait_handle;
 }
@@ -250,25 +248,26 @@ void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
         promises.pop_front();
     }
 
-    if (deferred_cb)
-    {
-        next_buffer_wait_handle.result_received();
-        deferred_cb();
-        deferred_cb = {};
-    }
+    trigger_callback(std::move(lk));
 }
 
 void mcl::BufferVault::disconnected()
 {
-    std::lock_guard<std::mutex> lk(mutex);
+    std::unique_lock<std::mutex> lk(mutex);
     disconnected_ = true;
-    if (deferred_cb)
-    {
-        next_buffer_wait_handle.result_received();
-        deferred_cb();
-        deferred_cb = {};
-    }
     promises.clear();
+    trigger_callback(std::move(lk));
+}
+
+void mcl::BufferVault::trigger_callback(std::unique_lock<std::mutex> lk)
+{
+    if (auto cb = deferred_cb)
+    {
+        deferred_cb = {};
+        lk.unlock();
+        cb();
+        next_buffer_wait_handle.result_received();
+    }
 }
 
 void mcl::BufferVault::set_scale(float scale)
