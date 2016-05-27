@@ -107,13 +107,22 @@ TEST_F(ClientLogging, reports_performance)
             EXPECT_STREQ("Rumpelstiltskin", name);
             EXPECT_THAT(render, Gt(target_render_time.count() - 1));
 
-            // Not a great test, but it will catch LP: #1581368 while
-            // also dealing with the possibility that CI machines
-            // are super slow:
-            auto expected_frame_time = 1000.0f / target_fps;
-            EXPECT_THAT(render, Lt(expected_frame_time));
-            EXPECT_THAT(lag, Gt(expected_frame_time/2));
-            EXPECT_THAT(nbuffers, Eq(3));
+            // On a regular machine, render will be 3 (milliseconds) matching
+            // the above render loop. CI however is super-slow at times so
+            // we just check rendering completed in under one second.
+            // That's still easily enough to regression-test LP: #1581368
+            // where it had values in the millions.
+            EXPECT_THAT(render, Lt(1000));
+
+            EXPECT_THAT(lag, Gt(0.0f));
+
+            // In order to see all three buffers the client must be rendering
+            // at least in bursts faster than the compositor consumes them.
+            // On the surface of it the above render loop should appear to
+            // do that, but in reality we're feeding an unthottled fake
+            // compositor here so may never hit all three buffers...
+            EXPECT_THAT(nbuffers, Ge(2));
+
             ASSERT_FALSE(Test::HasFailure()) << "Log line = {" << line << "}";
         }
     }
