@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_MESA_REAL_KMS_OUTPUT_H_
 
 #include "kms_output.h"
-#include "drm_mode_resources.h"
+#include "kms-utils/drm_mode_resources.h"
 #include "mir/graphics/simple_frame_clock.h"
 
 #include <memory>
@@ -67,10 +67,10 @@ private:
     uint32_t const connector_id;
     std::shared_ptr<PageFlipper> const page_flipper;
 
-    DRMModeConnectorUPtr connector;
+    kms::DRMModeConnectorUPtr connector;
     size_t mode_index;
     geometry::Displacement fb_offset;
-    DRMModeCrtcUPtr current_crtc;
+    kms::DRMModeCrtcUPtr current_crtc;
     drmModeCrtc saved_crtc;
     bool using_saved_crtc;
     bool has_cursor_;
