@@ -45,10 +45,9 @@ bool
 is_appropriate_module(mcl::ClientContext* context)
 {
     mir::assert_entry_point_signature<mcl::ClientPlatformProbe>(&is_appropriate_module);
-    MirPlatformPackage platform;
-    context->populate_server_package(platform);
-    // TODO: Actually check what platform we're using, rather than blindly
-    //       hope we can distinguish them from the stuff they've put in the
-    //       PlatformPackage.
-    return platform.data_items == 0 && platform.fd_items == 0;
+
+    MirModuleProperties server_graphics_module;
+    context->populate_graphics_module(server_graphics_module);
+
+    return (strncmp("mir:android", server_graphics_module.name, strlen("mir:android")) == 0);
 }
