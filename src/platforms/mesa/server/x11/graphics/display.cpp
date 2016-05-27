@@ -71,7 +71,7 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, geom::Size const
         EGL_ALPHA_SIZE, 8,
         EGL_DEPTH_SIZE, 0,
         EGL_STENCIL_SIZE, 0,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
         EGL_NONE
     };
 
@@ -202,8 +202,12 @@ unsigned long mgx::X11Window::red_mask() const
 mgx::X11EGLContext::X11EGLContext(EGLDisplay egl_dpy, EGLConfig config)
     : egl_dpy{egl_dpy}
 {
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+
     static const EGLint ctx_attribs[] = {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
         EGL_NONE };
 
     egl_ctx = eglCreateContext(egl_dpy, config, EGL_NO_CONTEXT, ctx_attribs);

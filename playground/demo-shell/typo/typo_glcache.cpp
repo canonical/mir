@@ -17,7 +17,7 @@
  */
 
 #include "typo_glcache.h"
-#include <GLES2/gl2.h>  // TODO: Support plain OpenGL too
+#include MIR_SERVER_GL_H
 
 using namespace mir::examples::typo;
 

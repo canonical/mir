@@ -32,6 +32,7 @@ public:
     virtual ~ClientContext() {}
 
     virtual void populate_server_package(MirPlatformPackage& platform_package) = 0;
+    virtual void populate_graphics_module(MirModuleProperties& graphics_module) = 0;
 
 protected:
     ClientContext() = default;

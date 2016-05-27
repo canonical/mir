@@ -216,7 +216,7 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
-    EXPECT_THAT(description->name, HasSubstr("dummy"));
+    EXPECT_THAT(description->name, HasSubstr("mir:stub-graphics"));
 }
 
 #if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11) || defined(MIR_BUILD_PLATFORM_ANDROID)
