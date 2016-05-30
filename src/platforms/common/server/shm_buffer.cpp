@@ -138,9 +138,7 @@ void mgc::ShmBuffer::gl_bind_to_texture()
          */
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-        auto internal_format = (format == GL_BGRA_EXT) ? GL_RGBA : format;
-
-        glTexImage2D(GL_TEXTURE_2D, 0, internal_format,
+        glTexImage2D(GL_TEXTURE_2D, 0, format,
                      size_.width.as_int(), size_.height.as_int(),
                      0, format, type, pixels);
     }
