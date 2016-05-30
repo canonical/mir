@@ -36,7 +36,8 @@ mir (0.23.0ubuntu1) UNRELEASED; urgency=medium
         fix. (LP: #1583970, LP: #1584603, LP: #1584605)
       . mirtest-dev is hard to use as the objects used are compiled with LTO
         (LP: #1583536)
-      . do not throw when creating some objects under hwc 1.5 (LP: #1583086)
+      . Do not throw when creating some objects under HWC 1.5 (LP: #1583086)
+
  -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 09 May 2016 11:59:42 -0400
 
 mir (0.22.1+16.04.20160516.2-0ubuntu1) xenial; urgency=medium
