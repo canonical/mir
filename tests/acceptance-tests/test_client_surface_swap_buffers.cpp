@@ -21,13 +21,17 @@
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir/test/doubles/null_display_buffer_compositor_factory.h"
 #include "mir/test/signal.h"
+#include "mir/compositor/scene_element.h"
+#include "mir/graphics/renderable.h"
+#include "mir/graphics/cursor.h"
 
 #include <gtest/gtest.h>
 
 namespace mtf = mir_test_framework;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
-
+namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 using namespace testing;
 
 namespace
@@ -50,6 +54,7 @@ struct SurfaceSwapBuffers : mtf::ConnectedClientWithASurface
         ConnectedClientWithASurface::SetUp();
     }
 };
+
 }
 
 TEST_F(SurfaceSwapBuffers, does_not_block_when_surface_is_not_composited)
@@ -66,4 +71,53 @@ TEST_F(SurfaceSwapBuffers, does_not_block_when_surface_is_not_composited)
          */
         ASSERT_TRUE(buffers_swapped.wait_for(std::chrono::seconds{20}));
     }
+}
+
+namespace
+{
+struct BufferCollectingCompositorFactory : mc::DisplayBufferCompositorFactory
+{
+public:
+    auto create_compositor_for(mg::DisplayBuffer&)
+        -> std::unique_ptr<mc::DisplayBufferCompositor> override
+    {
+        struct CollectingDisplayBufferCompositor : mc::DisplayBufferCompositor
+        {
+            void composite(mc::SceneElementSequence&& seq)
+            {
+                for (auto& s : seq)
+                    buffers.insert(s->renderable()->buffer());
+            }
+            std::set<std::shared_ptr<mg::Buffer>> buffers;
+        };
+
+        return std::make_unique<CollectingDisplayBufferCompositor>();
+    }
+};
+
+struct SwapBuffersDoesntBlockOnSubmission : mtf::ConnectedClientWithASurface
+{
+    void SetUp() override
+    {
+        server.override_the_display_buffer_compositor_factory([]
+        {
+            return std::make_shared<BufferCollectingCompositorFactory>();
+        });
+
+        ConnectedClientWithASurface::SetUp();
+        server.the_cursor()->hide();
+    }
+
+    void TearDown() override
+    {
+        ConnectedClientWithASurface::TearDown();
+    }
+};
+}
+
+TEST_F(SwapBuffersDoesntBlockOnSubmission, can_swap_nbuffers_times_without_blocking)
+{
+    std::array<mt::Signal, 3> buffers_swapped;
+    for (int i = 0; i != 3; ++i)
+        mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surface), nullptr, nullptr);
 }
