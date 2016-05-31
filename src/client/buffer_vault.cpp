@@ -186,19 +186,19 @@ MirWaitHandle* mcl::BufferVault::wire_transfer_outbound(
 
     bool client_can_withdraw = (buffers.end() != available_buffer());
     if (!client_can_withdraw)
+    {
+        next_buffer_wait_handle.expect_result();
         deferred_cb = done;
+    }
 
     it->second = Owner::Server;
     lk.unlock();
 
-    next_buffer_wait_handle.expect_result();
     buffer->submitted();
     server_requests->submit_buffer(*buffer);
     if (client_can_withdraw)
-    {
-        next_buffer_wait_handle.result_received();
         done();
-    }
+
     return &next_buffer_wait_handle;
 }
 
