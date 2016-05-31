@@ -97,6 +97,22 @@ public:
 
 struct SwapBuffersDoesntBlockOnSubmission : mtf::ConnectedClientWithASurface
 {
+    unsigned int figure_out_nbuffers()
+    {
+        auto default_nbuffers = 3u;
+        if (auto server_nbuffers_switch = getenv("MIR_SERVER_NBUFFERS"))
+        {
+            if (server_nbuffers_switch && atoi(server_nbuffers_switch) > 0)
+                return atoi(server_nbuffers_switch);
+            else
+            {
+                auto client_nbuffers_switch = getenv("MIR_CLIENT_NBUFFERS");
+                if (client_nbuffers_switch)
+                    return atoi(client_nbuffers_switch);
+            }
+        }
+        return default_nbuffers;
+    }
     void SetUp() override
     {
         server.override_the_display_buffer_compositor_factory([]
@@ -112,12 +128,14 @@ struct SwapBuffersDoesntBlockOnSubmission : mtf::ConnectedClientWithASurface
     {
         ConnectedClientWithASurface::TearDown();
     }
+
+    unsigned int nbuffers = figure_out_nbuffers();
 };
 }
 
+//LP: #1584784
 TEST_F(SwapBuffersDoesntBlockOnSubmission, can_swap_nbuffers_times_without_blocking)
 {
-    std::array<mt::Signal, 3> buffers_swapped;
-    for (int i = 0; i != 3; ++i)
+    for (auto i = 0u; i != nbuffers; ++i)
         mir_buffer_stream_swap_buffers(mir_surface_get_buffer_stream(surface), nullptr, nullptr);
 }
