@@ -1,4 +1,4 @@
-mir (0.23.0ubuntu1) UNRELEASED; urgency=medium
+mir (0.23.0-0ubuntu1) UNRELEASED; urgency=medium
 
   [ Kevin DuBois ]
   * New upstream release 0.23.0 (https://launchpad.net/mir/+milestone/0.23.0)
