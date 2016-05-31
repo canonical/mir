@@ -71,4 +71,8 @@ if (MIR_BUILD_PLATFORM_ANDROID)
   add_subdirectory(android/)
 endif()
 
+if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+  add_subdirectory(eglstream-kms)
+endif()
+
 add_subdirectory(evdev/)
