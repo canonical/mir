@@ -21,10 +21,6 @@ add_definitions(
     -DMIR_BUILD_PREFIX="${CMAKE_BINARY_DIR}"
     )
 
-# We don't want LTO objects in a published archive (libmir-test-assist.a)
-string (REPLACE " -flto " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-string (REPLACE " -flto " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-
 add_library(mir-public-test-framework OBJECT
   any_surface.cpp
   async_server_runner.cpp
