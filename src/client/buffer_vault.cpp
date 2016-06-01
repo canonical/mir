@@ -183,22 +183,22 @@ MirWaitHandle* mcl::BufferVault::wire_transfer_outbound(
     auto it = buffers.find(buffer->rpc_id());
     if (it == buffers.end() || it->second != Owner::SelfWithContent)
         BOOST_THROW_EXCEPTION(std::logic_error("buffer cannot be transferred"));
-
-    bool client_can_withdraw = (buffers.end() != available_buffer());
-    if (!client_can_withdraw)
-    {
-        next_buffer_wait_handle.expect_result();
-        deferred_cb = done;
-    }
-
     it->second = Owner::Server;
     lk.unlock();
 
     buffer->submitted();
     server_requests->submit_buffer(*buffer);
-    if (client_can_withdraw)
-        done();
 
+    lk.lock();
+    if (buffers.end() != available_buffer())
+    {
+        done();
+    }
+    else
+    {
+        next_buffer_wait_handle.expect_result();
+        deferred_cb = done;
+    }
     return &next_buffer_wait_handle;
 }
 
