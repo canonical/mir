@@ -24,7 +24,6 @@
 #include "mir/events/event_builders.h"
 
 #include <boost/throw_exception.hpp>
-#include <iostream>
 
 namespace mi = mir::input;
 namespace mev = mir::events;
@@ -268,7 +267,7 @@ bool mircv::XKBMapper::XkbMappingState::update_and_map(MirEvent& event)
     // TODO test if key entry is start of a compose key sequence..
     // then use compose key API to map key..
     uint32_t xkb_scan_code = to_xkb_scan_code(key_ev.scan_code());
-    bool old_state = modifier_state;
+    auto old_state = modifier_state;
 
     key_ev.set_key_code(update_state(xkb_scan_code, key_ev.action()));
     // TODO we should also indicate effective/consumed modifier state to properly
