@@ -121,7 +121,7 @@ std::shared_ptr<mcl::Buffer> mcl::BufferVault::checked_buffer_from_map(int id)
 }
 
 
-std::map<int, mcl::BufferVault::Owner>::iterator mcl::BufferVault::available_buffer()
+mcl::BufferVault::BufferMap::iterator mcl::BufferVault::available_buffer()
 {
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [this](std::pair<int, Owner> const& entry) {

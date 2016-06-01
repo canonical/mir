@@ -78,7 +78,8 @@ public:
 
 private:
     enum class Owner;
-    std::map<int, Owner>::iterator available_buffer();
+    typedef std::map<int, Owner> BufferMap;
+    BufferMap::iterator available_buffer();
     void trigger_callback(std::unique_lock<std::mutex> lk);
 
     void alloc_buffer(geometry::Size size, MirPixelFormat format, int usage);
@@ -96,7 +97,7 @@ private:
     int const usage;
 
     std::mutex mutex;
-    std::map<int, Owner> buffers;
+    BufferMap buffers;
     std::deque<NoTLSPromise<std::shared_ptr<Buffer>>> promises;
     geometry::Size size;
     bool disconnected_;
