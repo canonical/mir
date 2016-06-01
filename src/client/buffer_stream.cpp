@@ -341,8 +341,7 @@ struct NewBufferSemantics : mcl::ServerBufferSemantics
         lk.unlock();
 
         vault.deposit(c);
-        auto wh = vault.wire_transfer_outbound(c, done);
-        return wh;
+        return vault.wire_transfer_outbound(c, done);
     }
 
     void set_size(geom::Size size) override
