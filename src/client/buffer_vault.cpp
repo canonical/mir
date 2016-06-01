@@ -190,6 +190,8 @@ MirWaitHandle* mcl::BufferVault::wire_transfer_outbound(
     server_requests->submit_buffer(*buffer);
 
     lk.lock();
+    if (disconnected_)
+        BOOST_THROW_EXCEPTION(std::logic_error("server_disconnected"));
     if (buffers.end() != available_buffer())
     {
         done();

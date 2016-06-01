@@ -181,6 +181,14 @@ struct ExchangeSemantics : mcl::ServerBufferSemantics
         }
         if (next_buffer_wait_handle.is_pending())
             next_buffer_wait_handle.result_received();
+
+        while (!incoming_buffers.empty())
+        {
+            auto b = incoming_buffers.front();
+            for (auto i = 0; i < b.fd_size(); i++)
+                close(b.fd(i));
+            incoming_buffers.pop();
+        }
     }
 
     void set_size(geom::Size) override
