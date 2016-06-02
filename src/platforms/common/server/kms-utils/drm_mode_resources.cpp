@@ -443,6 +443,10 @@ bool mgkd::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator==(i
 {
     return rhs.id_ptr == id_ptr;
 }
+template bool mgkd::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator==(iterator const&) const;
+template bool mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator==(iterator const&) const;
+template bool mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator==(iterator const&) const;
+template bool mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::iterator::operator==(iterator const&) const;
 
 template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
 bool mgkd::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator!=(iterator const& rhs) const
