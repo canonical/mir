@@ -28,7 +28,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 23)
+set(MIR_VERSION_MINOR 24)
 set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
@@ -200,9 +200,10 @@ include_directories (SYSTEM ${EGL_INCLUDE_DIRS})
 include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
 
 #
-# Full OpenGL support works with Mesa. Although it probably should not, and
-# is expected to fail in proprietary drivers due to one remaining "TODO" in:
-#   src/platform/graphics/egl_extensions.cpp
+# Full OpenGL support is possibly complete but not yet perfect. So is
+# presently disabled by default. See the TODOs in:
+#   src/platform/graphics/egl_extensions.cpp: glEGLImageTargetTexture2DOES
+#   src/platforms/common/server/shm_buffer.cpp: glTexImage2D
 #
 #if (TARGET_ARCH STREQUAL "x86_64-linux-gnu" OR
 #    TARGET_ARCH STREQUAL "i386-linux-gnu")

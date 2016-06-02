@@ -78,8 +78,8 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
     {
         auto const modifiers = mir_input_event_modifier_alt;
 
-        auto const x_axis_value = click_position.x.as_float();
-        auto const y_axis_value = click_position.y.as_float();
+        auto const x_axis_value = click_position.x.as_int();
+        auto const y_axis_value = click_position.y.as_int();
         auto const hscroll_value = 0.0;
         auto const vscroll_value = 0.0;
         auto const action = mir_pointer_action_button_down;
@@ -97,8 +97,8 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
     {
         auto const modifiers = mir_input_event_modifier_alt;
 
-        auto const x_axis_value = drag_position.x.as_float();
-        auto const y_axis_value = drag_position.y.as_float();
+        auto const x_axis_value = drag_position.x.as_int();
+        auto const y_axis_value = drag_position.y.as_int();
         auto const hscroll_value = 0.0;
         auto const vscroll_value = 0.0;
         auto const action = mir_pointer_action_motion;
@@ -431,7 +431,7 @@ TEST_F(SurfaceModifications, surface_spec_with_min_aspect_ratio_is_respected)
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(bottom_left);
 
-    EXPECT_THAT(actual.width.as_float()/actual.height.as_float(), Ge(float(aspect_width)/aspect_height));
+    EXPECT_THAT(float(actual.width.as_int())/actual.height.as_int(), Ge(float(aspect_width)/aspect_height));
 }
 
 TEST_F(SurfaceModifications, surface_spec_with_max_aspect_ratio_is_respected)
@@ -456,7 +456,7 @@ TEST_F(SurfaceModifications, surface_spec_with_max_aspect_ratio_is_respected)
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(top_right);
 
-    EXPECT_THAT(actual.width.as_float()/actual.height.as_float(), Le(float(aspect_width)/aspect_height));
+    EXPECT_THAT(float(actual.width.as_int())/actual.height.as_int(), Le(float(aspect_width)/aspect_height));
 }
 
 TEST_F(SurfaceModifications, surface_spec_with_fixed_aspect_ratio_and_size_range_is_respected)
@@ -495,7 +495,7 @@ TEST_F(SurfaceModifications, surface_spec_with_fixed_aspect_ratio_and_size_range
 
     auto const expected_aspect_ratio = FloatEq(float(aspect_width)/aspect_height);
 
-    EXPECT_THAT(actual.width.as_float()/actual.height.as_float(), expected_aspect_ratio);
+    EXPECT_THAT(static_cast<float>(actual.width.as_int())/actual.height.as_int(), expected_aspect_ratio);
     EXPECT_THAT(actual, Eq(Size{min_width, min_height}));
     
     for (int delta = 1; delta != 20; ++delta)
@@ -514,7 +514,7 @@ TEST_F(SurfaceModifications, surface_spec_with_fixed_aspect_ratio_and_size_range
             std::min(max_width,  min_width  + delta*width_inc),
             std::min(max_height, min_height + delta*height_inc)};
 
-        EXPECT_THAT(actual.width.as_float()/actual.height.as_float(), expected_aspect_ratio);
+        EXPECT_THAT(static_cast<float>(actual.width.as_int())/actual.height.as_int(), expected_aspect_ratio);
         EXPECT_THAT(actual, Eq(expected_size));
     };
 }
