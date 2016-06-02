@@ -122,8 +122,8 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
         auto const modifiers = mir_input_event_modifier_none;
         auto const depressed_buttons = mir_pointer_button_primary;
 
-        auto const x_axis_value = click_position.x.as_float();
-        auto const y_axis_value = click_position.y.as_float();
+        auto const x_axis_value = click_position.x.as_int();
+        auto const y_axis_value = click_position.y.as_int();
         auto const hscroll_value = 0.0;
         auto const vscroll_value = 0.0;
         auto const action = mir_pointer_action_button_down;
