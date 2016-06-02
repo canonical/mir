@@ -34,9 +34,8 @@ mir (0.23.0-0ubuntu1) UNRELEASED; urgency=medium
         buffer lag (LP: #1581368)
       . Test failures in ClientLogging.reports_performance due to the above
         fix. (LP: #1583970, LP: #1584603, LP: #1584605)
-      . mirtest-dev is hard to use as the objects used are compiled with LTO
-        (LP: #1583536)
       . Do not throw when creating some objects under HWC 1.5 (LP: #1583086)
+      . Correct black frame issue under Xmir (LP: #1584784)
 
  -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 09 May 2016 11:59:42 -0400
 
