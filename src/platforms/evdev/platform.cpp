@@ -190,6 +190,7 @@ auto mie::Platform::find_device(libinput_device_group const* devgroup) -> declty
 
 void mie::Platform::stop()
 {
+    platform_dispatchable->remove_watch(platform_actions);
     platform_dispatchable->remove_watch(libinput_dispatchable);
     while (!devices.empty())
     {
