@@ -1,4 +1,4 @@
-mir (0.23.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.23.0+16.10.20160602.1-0ubuntu1) yakkety; urgency=medium
 
   [ Kevin DuBois ]
   * New upstream release 0.23.0 (https://launchpad.net/mir/+milestone/0.23.0)
@@ -37,7 +37,10 @@ mir (0.23.0-0ubuntu1) UNRELEASED; urgency=medium
       . Do not throw when creating some objects under HWC 1.5 (LP: #1583086)
       . Correct black frame issue under Xmir (LP: #1584784)
 
- -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 09 May 2016 11:59:42 -0400
+  [ Tarmac, Kevin DuBois <kevin.dubois@canonical.com>, Daniel van Vugt <daniel.van.vugt@canonical.com>, Andreas Pokorny <andreas.pokorny@canonical.com>, Alberto Aguirre ]
+  * 0.23.0 Mir release
+
+ -- Kevin DuBois <kdub432@gmail.com>  Thu, 02 Jun 2016 13:18:03 +0000
 
 mir (0.22.1+16.04.20160516.2-0ubuntu1) xenial; urgency=medium
 
