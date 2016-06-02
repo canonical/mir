@@ -36,8 +36,8 @@ extern "C" {
  * a pause, or when the client just received the input focus.
  *
  * The event contains a single pointer button state and the current cursor
- * position. Additionally for key and pointer devices the pressed keys and
- * buttons are supplied individually.
+ * position and the pressed modifier keys. Additionally for key and pointer
+ * devices the pressed keys and buttons are supplied individually.
  */
 
 /**
@@ -69,7 +69,7 @@ int64_t mir_input_device_state_event_time(
     MirInputDeviceStateEvent const* ev);
 
 /**
- * Retrieve the combined modifier mask based on the key pressed input devices.
+ * Retrieve the modifier keys pressed on all input devices.
  *
  * \param[in] ev The input device state event
  * \return       The modifier mask
