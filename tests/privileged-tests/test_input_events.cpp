@@ -90,10 +90,9 @@ struct FakeInputDevice
     EvDevUInputUPtr uidev{nullptr, libevdev_uinput_destroy};
 };
 
-struct MockEventHandler
+struct MockInputHandler
 {
     MOCK_METHOD1(handle_input, void(MirEvent const*));
-    MOCK_METHOD1(handle_state_change, void(MirEvent const*));
 };
 
 // Template string:
@@ -164,14 +163,10 @@ struct InputEvents : testing::Test
 
     static void handle_input(MirSurface*, MirEvent const* ev, void* context)
     {
-        auto const handler = static_cast<MockEventHandler*>(context);
+        auto const handler = static_cast<MockInputHandler*>(context);
         auto const type = mir_event_get_type(ev);
         if (type == mir_event_type_input)
             handler->handle_input(ev);
-        if (type == mir_event_type_surface)
-        {
-            handler->handle_state_change(ev);
-        }
     }
 
     void wait_for_socket(std::string const& path)
@@ -207,7 +202,7 @@ struct InputEvents : testing::Test
 
     MirSurfaceUPtr create_surface_with_input_handler(
         MirConnection* connection,
-        MockEventHandler* handler)
+        MockInputHandler* handler)
     {
         MirPixelFormat pixel_format;
         unsigned int valid_formats;
@@ -241,7 +236,7 @@ TEST_F(InputEvents, reach_host_client)
 {
     using namespace testing;
 
-    MockEventHandler handler;
+    MockInputHandler handler;
 
     MirConnectionUPtr host_connection{
         mir_connect_sync(host_socket.c_str(), "test"),
@@ -267,24 +262,17 @@ TEST_F(InputEvents, reach_nested_client)
 {
     using namespace testing;
 
-    MockEventHandler handler;
-
-    mt::Signal surface_ready;
-    EXPECT_CALL(handler,
-                handle_state_change(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_focused)))
-        .WillOnce(mt::WakeUp(&surface_ready));
+    MockInputHandler handler;
 
     MirConnectionUPtr nested_connection{
         mir_connect_sync(nested_socket.c_str(), "test"),
         mir_connection_release};
     auto surface = create_surface_with_input_handler(nested_connection.get(), &handler);
 
-    //TODO we might be able to wait until the client is ready, but there
-    // is still a chance that the nested server is not yet ready to receive
-    // user input
+    // Give some time to the nested server to swap its framebuffer, so the nested
+    // server window becomes visible and focused and can accept input events.
+    // TODO: Find a more reliable way to wait for the nested server to gain focus
     std::this_thread::sleep_for(100ms);
-
-    surface_ready.wait_for(std::chrono::seconds{5});
 
     mt::Signal all_events_received;
     InSequence seq;
