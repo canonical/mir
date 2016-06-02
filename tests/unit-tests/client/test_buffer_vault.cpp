@@ -208,14 +208,14 @@ TEST_F(StartedBufferVault, can_deposit_buffer)
     auto buffer = vault.withdraw().get();
     EXPECT_CALL(mock_requests, submit_buffer(Ref(*buffer)));
     vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
 }
 
 TEST_F(StartedBufferVault, cant_transfer_if_not_in_acct)
 {
     auto buffer = vault.withdraw().get();
     EXPECT_THROW({ 
-        vault.wire_transfer_outbound(buffer);
+        vault.wire_transfer_outbound(buffer, []{});
     }, std::logic_error);
 }
 
@@ -235,7 +235,7 @@ TEST_F(StartedBufferVault, attempt_to_redeposit_throws)
 {
     auto buffer = vault.withdraw().get();
     vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
     EXPECT_THROW({
         vault.deposit(buffer);
     }, std::logic_error);
@@ -247,7 +247,7 @@ TEST_F(BufferVault, can_transfer_again_when_we_get_the_buffer)
     vault->wire_transfer_inbound(package.buffer_id());
     auto buffer = vault->withdraw().get();
     vault->deposit(buffer);
-    vault->wire_transfer_outbound(buffer);
+    vault->wire_transfer_outbound(buffer, []{});
 
     vault->wire_transfer_inbound(package.buffer_id());
     auto buffer2 = vault->withdraw().get();
@@ -321,7 +321,7 @@ TEST_F(BufferVault, marks_as_submitted_on_transfer)
 
     auto buffer = vault->withdraw().get();
     vault->deposit(buffer);
-    vault->wire_transfer_outbound(buffer);
+    vault->wire_transfer_outbound(buffer, []{});
 }
 
 TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_immediate_response)
@@ -530,19 +530,19 @@ TEST_F(StartedBufferVault, delayed_decrease_allocation_count)
     vault.wire_transfer_inbound(requested_buffer.buffer_id());
     auto b = vault.withdraw().get();
     vault.deposit(b);
-    vault.wire_transfer_outbound(b);
+    vault.wire_transfer_outbound(b, []{});
 
     b = vault.withdraw().get();
     vault.deposit(b);
-    vault.wire_transfer_outbound(b);
+    vault.wire_transfer_outbound(b, []{});
 
     b = vault.withdraw().get();
     vault.deposit(b);
-    vault.wire_transfer_outbound(b);
+    vault.wire_transfer_outbound(b, []{});
 
     b = vault.withdraw().get();
     vault.deposit(b);
-    vault.wire_transfer_outbound(b);
+    vault.wire_transfer_outbound(b, []{});
 
     vault.decrease_buffer_count();
     vault.wire_transfer_inbound(package.buffer_id());
@@ -555,12 +555,12 @@ TEST_F(StartedBufferVault, prefers_buffers_returned_further_in_the_past)
 {
     auto buffer = vault.withdraw().get();
     vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
     auto first_id = buffer->rpc_id();
 
     buffer = vault.withdraw().get();
     vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
     auto second_id = buffer->rpc_id();
 
     vault.wire_transfer_inbound(second_id);
@@ -593,7 +593,7 @@ TEST_F(StartedBufferVault, doesnt_free_buffers_in_the_driver_after_resize)
     Mock::VerifyAndClearExpectations(&mock_requests);
 
     vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
 
     EXPECT_CALL(mock_requests, free_buffer(_))
         .Times(1);
@@ -610,7 +610,7 @@ TEST_F(StartedBufferVault, doesnt_free_buffers_with_content_after_resize)
     vault.set_size(new_size);
     Mock::VerifyAndClearExpectations(&mock_requests);
 
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
     EXPECT_CALL(mock_requests, free_buffer(_))
         .Times(1);
     vault.wire_transfer_inbound(buffer->rpc_id());
@@ -642,7 +642,7 @@ TEST_F(StartedBufferVault, delays_allocation_if_not_needed)
         auto buffer = vault.withdraw().get();
         vault.deposit(buffer);
         buffer->received();
-        vault.wire_transfer_outbound(buffer);
+        vault.wire_transfer_outbound(buffer, []{});
         vault.wire_transfer_inbound(buffer->rpc_id());
     }
 }
