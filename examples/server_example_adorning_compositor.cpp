@@ -189,8 +189,8 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
     //      we'll always use GLES.
     render_target->make_current();
 
-    auto display_width  = db.view_area().size.width.as_float();
-    auto display_height = db.view_area().size.height.as_float();
+    auto display_width  = db.view_area().size.width.as_int();
+    auto display_height = db.view_area().size.height.as_int();
 
     glUseProgram(program.program);
     glViewport(0, 0, display_width, display_height);
@@ -208,10 +208,10 @@ void me::AdorningDisplayBufferCompositor::composite(compositor::SceneElementSequ
         auto const renderable = element->renderable();
         renderable_list.push_back(renderable);
 
-        float width  = renderable->screen_position().size.width.as_float();
-        float height = renderable->screen_position().size.height.as_float();
-        float x = renderable->screen_position().top_left.x.as_float() - db.view_area().top_left.x.as_float();
-        float y = renderable->screen_position().top_left.y.as_float() - db.view_area().top_left.y.as_float();
+        float width  = renderable->screen_position().size.width.as_int();
+        float height = renderable->screen_position().size.height.as_int();
+        float x = renderable->screen_position().top_left.x.as_int() - db.view_area().top_left.x.as_int();
+        float y = renderable->screen_position().top_left.y.as_int() - db.view_area().top_left.y.as_int();
         float scale[2] {
             width/display_width * 2,
             height/display_height * -2};
