@@ -22,6 +22,8 @@
 #include "src/client/buffer_vault.h"
 #include "src/client/buffer_factory.h"
 #include "src/client/client_buffer_depository.h"
+#include "src/client/buffer_factory.h"
+#include "src/client/protobuf_to_native_buffer.h"
 #include "src/client/connection_surface_map.h"
 #include "src/server/compositor/buffer_queue.h"
 #include "src/server/compositor/stream.h"
@@ -142,7 +144,7 @@ struct BufferQueueProducer : ProducerSystem
         }
         else
         {
-            entries.emplace_back(BufferEntry{mg::BufferID{2}, 0u, Access::blocked});
+            entries.emplace_back(BufferEntry{mg::BufferID{INT_MAX}, 0u, Access::blocked});
         }
     }
 
@@ -222,7 +224,7 @@ struct StubIpcSystem
         server_bound_fn = fn;
     }
 
-    void on_client_bound_transfer(std::function<void(mp::Buffer&)> fn)
+    void on_client_bound_transfer(std::function<void(mp::BufferRequest&)> fn)
     {
         client_bound_fn = fn;
         for(auto& b : buffers)
@@ -257,12 +259,12 @@ struct StubIpcSystem
         return last_submit;
     }
 
-    void client_bound_transfer(mp::Buffer& buffer)
+    void client_bound_transfer(mp::BufferRequest& request)
     {
         if (client_bound_fn)
-            client_bound_fn(buffer);
+            client_bound_fn(request);
         else
-            buffers.push_back(buffer);
+            buffers.push_back(request);
     }
 
     void allocate(geom::Size sz)
@@ -273,10 +275,10 @@ struct StubIpcSystem
 
     std::function<void(geom::Size)> allocate_fn;
     std::function<void(geom::Size)> resize_fn;
-    std::function<void(mp::Buffer&)> client_bound_fn;
+    std::function<void(mp::BufferRequest&)> client_bound_fn;
     std::function<void(mp::Buffer&)> server_bound_fn;
 
-    std::vector<mp::Buffer> buffers;
+    std::vector<mp::BufferRequest> buffers;
     int last_submit{0};
 };
 
@@ -287,13 +289,45 @@ struct StubEventSink : public mf::EventSink
     {
     }
 
-    void send_buffer(mf::BufferStreamId, mg::Buffer& buffer, mg::BufferIpcMsgType)
+    void send_buffer(mf::BufferStreamId id, mg::Buffer& buffer, mg::BufferIpcMsgType)
     {
-        mp::Buffer protobuffer;
-        protobuffer.set_buffer_id(buffer.id().as_value());
-        protobuffer.set_width(buffer.size().width.as_int());
-        protobuffer.set_height(buffer.size().height.as_int());
-        ipc->client_bound_transfer(protobuffer);
+        mp::BufferRequest request;
+        auto protobuffer = request.mutable_buffer();
+        request.mutable_id()->set_value(id.as_value()); 
+        protobuffer->set_buffer_id(buffer.id().as_value());
+        protobuffer->set_width(buffer.size().width.as_int());
+        protobuffer->set_height(buffer.size().height.as_int());
+        ipc->client_bound_transfer(request);
+    }
+    void add_buffer(mg::Buffer& buffer)
+    {
+        mp::BufferRequest request;
+        auto protobuffer = request.mutable_buffer();
+        request.set_operation(mp::BufferOperation::add);
+        protobuffer->set_buffer_id(buffer.id().as_value());
+        protobuffer->set_width(buffer.size().width.as_int());
+        protobuffer->set_height(buffer.size().height.as_int());
+        ipc->client_bound_transfer(request);
+    }
+    void remove_buffer(mg::Buffer& buffer)
+    {
+        mp::BufferRequest request;
+        auto protobuffer = request.mutable_buffer();
+        request.set_operation(mp::BufferOperation::remove);
+        protobuffer->set_buffer_id(buffer.id().as_value());
+        protobuffer->set_width(buffer.size().width.as_int());
+        protobuffer->set_height(buffer.size().height.as_int());
+        ipc->client_bound_transfer(request);
+    }
+    void update_buffer(mg::Buffer& buffer)
+    {
+        mp::BufferRequest request;
+        auto protobuffer = request.mutable_buffer();
+        request.set_operation(mp::BufferOperation::update);
+        protobuffer->set_buffer_id(buffer.id().as_value());
+        protobuffer->set_width(buffer.size().width.as_int());
+        protobuffer->set_height(buffer.size().height.as_int());
+        ipc->client_bound_transfer(request);
     }
     void handle_event(MirEvent const&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
@@ -371,16 +405,43 @@ struct ScheduledProducer : ProducerSystem
     ScheduledProducer(std::shared_ptr<StubIpcSystem> const& ipc_stub, int nbuffers) :
         ipc(ipc_stub),
         map(std::make_shared<mcl::ConnectionSurfaceMap>()),
+        factory(std::make_shared<mcl::BufferFactory>()),
         vault(
-            std::make_shared<mtd::StubClientBufferFactory>(),
-            std::make_shared<mcl::BufferFactory>(),
-            std::make_shared<ServerRequests>(ipc),
-            map,
+            std::make_shared<mtd::StubClientBufferFactory>(), factory,
+            std::make_shared<ServerRequests>(ipc), map,
             geom::Size(100,100), mir_pixel_format_abgr_8888, 0, nbuffers)
     {
-        ipc->on_client_bound_transfer([this](mp::Buffer& buffer){
+        ipc->on_client_bound_transfer([this](mp::BufferRequest& request){
+
+            if (request.has_id())
+            {
+                auto& ipc_buffer = request.buffer();
+                auto buffer = map->buffer(ipc_buffer.buffer_id());
+                if (!buffer)
+                {
+                    buffer = factory->generate_buffer(ipc_buffer);
+                    map->insert(ipc_buffer.buffer_id(), buffer); 
+                    buffer->received();
+                }
+                else
+                {
+                    buffer->received(*mcl::protobuf_to_native_buffer(ipc_buffer));
+                }
+            }
+            else if (request.has_operation() && request.operation() == mp::BufferOperation::add)
+            {
+                auto& ipc_buffer = request.buffer();
+                std::shared_ptr<mcl::Buffer> buffer = factory->generate_buffer(ipc_buffer);
+                map->insert(request.buffer().buffer_id(), buffer); 
+                buffer->received();
+            }
+            else if (request.has_operation() && request.operation() == mp::BufferOperation::update)
+            {
+                auto buffer = map->buffer(request.buffer().buffer_id());
+                buffer->received(*mcl::protobuf_to_native_buffer(request.buffer()));
+            }            
             available++;
-            vault.wire_transfer_inbound(buffer);
+
         });
         ipc->on_resize_event([this](geom::Size sz)
         {
@@ -404,7 +465,7 @@ struct ScheduledProducer : ProducerSystem
         {
             auto buffer = vault.withdraw().get();
             vault.deposit(buffer);
-            vault.wire_transfer_outbound(buffer);
+            vault.wire_transfer_outbound(buffer, []{});
             last_size_ = buffer->size();
             entries.emplace_back(BufferEntry{mg::BufferID{(unsigned int)ipc->last_transferred_to_server()}, age, Access::unblocked});
             available--;
@@ -434,6 +495,7 @@ struct ScheduledProducer : ProducerSystem
     std::vector<BufferEntry> entries;
     std::shared_ptr<StubIpcSystem> ipc;
     std::shared_ptr<mcl::SurfaceMap> const map;
+    std::shared_ptr<mcl::BufferFactory> factory;
     mcl::BufferVault vault;
     int max, cur;
     int available{0};
@@ -502,6 +564,15 @@ size_t unique_ids_in(std::vector<BufferEntry> log)
         [](BufferEntry const& a, BufferEntry const& b) { return a.id == b.id; } );
     return std::distance(log.begin(), it);
 }
+
+MATCHER(NeverBlocks, "")
+{
+    bool never_blocks = true;
+    for(auto& e : arg)
+        never_blocks &= (e.blockage == Access::unblocked);
+    return never_blocks; 
+}
+
 
 //test infrastructure
 struct BufferScheduling : public Test, ::testing::WithParamInterface<std::tuple<int, TestType>>
@@ -1394,7 +1465,12 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     auto log = producer->production_log();
     ASSERT_THAT(log.size(), Gt(discard));  // avoid the below erase crashing
     log.erase(log.begin(), log.begin() + discard);
-    EXPECT_THAT(unique_ids_in(log), Eq(2));
+
+    if (std::get<1>(GetParam()) == TestType::SubmitSemantics)
+        EXPECT_THAT(log, NeverBlocks());
+    if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
+        EXPECT_THAT(unique_ids_in(log), Eq(2));
+
     producer->reset_log();
 
     //put server-side pressure on the buffer count
@@ -1425,7 +1501,10 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
     // Expect double-buffers as the steady state for fast clients
     log = producer->production_log();
     log.erase(log.begin(), log.begin() + discard);
-    EXPECT_THAT(unique_ids_in(log), Eq(2));
+    if (std::get<1>(GetParam()) == TestType::SubmitSemantics)
+        EXPECT_THAT(log, NeverBlocks());
+    if (std::get<1>(GetParam()) == TestType::ExchangeSemantics)
+        EXPECT_THAT(unique_ids_in(log), Eq(2));
 }
 
 //NOTE: compositors need 2 buffers in overlay/bypass cases, as they 
@@ -1470,6 +1549,24 @@ TEST_P(WithAnyNumberOfBuffers, can_snapshot_repeatedly_without_blocking)
     auto production_log = producer->production_log();
     ASSERT_THAT(production_log, SizeIs(1));
     EXPECT_THAT(snaps, Each(production_log.back().id));
+}
+
+//LP: #1578159
+//If given the choice best to prefer buffers that the compositor used furthest in the past
+//so that we avert any waits on synchronization internal to the buffers or platform.
+TEST_P(WithThreeOrMoreBuffers, prefers_fifo_ordering_when_distributing_buffers_to_driver)
+{ 
+    producer->produce();
+    producer->produce();
+    consumer->consume();
+    consumer->consume();
+    producer->produce();
+
+    auto production_log = producer->production_log();
+    auto consumption_log = consumer->consumption_log();
+    ASSERT_THAT(production_log, Not(IsEmpty()));
+    ASSERT_THAT(consumption_log, Not(IsEmpty()));
+    EXPECT_THAT(production_log.back().id, Ne(consumption_log.front().id));
 }
 
 int const max_buffers_to_test{5};

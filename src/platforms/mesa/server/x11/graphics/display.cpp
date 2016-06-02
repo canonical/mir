@@ -122,6 +122,8 @@ mgx::X11Window::X11Window(::Display* x_dpy, EGLDisplay egl_dpy, geom::Size const
                       ButtonPressMask     |
                       ButtonReleaseMask   |
                       FocusChangeMask     |
+                      EnterWindowMask     |
+                      LeaveWindowMask     |
                       PointerMotionMask;
 
     auto mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;

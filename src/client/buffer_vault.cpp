@@ -24,6 +24,9 @@
 #include "surface_map.h"
 #include "mir_protobuf.pb.h"
 #include "protobuf_to_native_buffer.h"
+#include "connection_surface_map.h"
+#include "buffer_factory.h"
+#include "buffer.h"
 #include <algorithm>
 #include <boost/throw_exception.hpp>
 
@@ -42,8 +45,10 @@ enum class mcl::BufferVault::Owner
 
 namespace
 {
-void ignore(MirPresentationChain*, MirBuffer*, void*)
+void incoming_buffer(MirPresentationChain*, MirBuffer* buffer, void* context)
 {
+    auto vault = static_cast<mcl::BufferVault*>(context);
+    vault->wire_transfer_inbound(reinterpret_cast<mcl::Buffer*>(buffer)->rpc_id());
 }
 }
 
@@ -74,6 +79,7 @@ mcl::BufferVault::~BufferVault()
     if (disconnected_)
         return;
 
+    buffer_factory->cancel_requests_with_context(this);
     for (auto& it : buffers)
     try
     {
@@ -86,7 +92,8 @@ mcl::BufferVault::~BufferVault()
 
 void mcl::BufferVault::alloc_buffer(geom::Size size, MirPixelFormat format, int usage)
 {
-    buffer_factory->expect_buffer(platform_factory, nullptr, size, format, (MirBufferUsage)usage, ignore, nullptr);
+    buffer_factory->expect_buffer(platform_factory, nullptr, size, format, static_cast<MirBufferUsage>(usage),
+        incoming_buffer, this);
     server_requests->allocate_buffer(size, format, usage);
 }
 
@@ -113,16 +120,29 @@ std::shared_ptr<mcl::Buffer> mcl::BufferVault::checked_buffer_from_map(int id)
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer in map"));
 }
 
-mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
+
+mcl::BufferVault::BufferMap::iterator mcl::BufferVault::available_buffer()
 {
-    std::lock_guard<std::mutex> lk(mutex);
-    mcl::NoTLSPromise<std::shared_ptr<mcl::Buffer>> promise;
     auto it = std::find_if(buffers.begin(), buffers.end(),
         [this](std::pair<int, Owner> const& entry) {
             return ((entry.second == Owner::Self) &&
-                    (checked_buffer_from_map(entry.first)->size() == size));
-    });
+                    (checked_buffer_from_map(entry.first)->size() == size) &&
+                    (entry.first != last_received_id)); });
+    if (it == buffers.end())
+        it = std::find_if(buffers.begin(), buffers.end(),
+        [this](std::pair<int, Owner> const& entry) {
+            return ((entry.second == Owner::Self) &&
+                    (checked_buffer_from_map(entry.first)->size() == size)); });
+    return it;
+}
 
+mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
+{
+    std::unique_lock<std::mutex> lk(mutex);
+    if (disconnected_)
+        BOOST_THROW_EXCEPTION(std::logic_error("server_disconnected"));
+    mcl::NoTLSPromise<std::shared_ptr<mcl::Buffer>> promise;
+    auto it = available_buffer();
     auto future = promise.get_future();
     if (it != buffers.end())
     {
@@ -132,6 +152,15 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
     else
     {
         promises.emplace_back(std::move(promise));
+
+        auto s = size;
+        bool allocate_buffer = (current_buffer_count <  needed_buffer_count);
+        if (allocate_buffer)
+            current_buffer_count++;
+        lk.unlock();
+
+        if (allocate_buffer)
+            alloc_buffer(s, format, usage);
     }
     return future;
 }
@@ -147,7 +176,8 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::Buffer> const& buffer)
     checked_buffer_from_map(it->first)->increment_age();
 }
 
-void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const& buffer)
+MirWaitHandle* mcl::BufferVault::wire_transfer_outbound(
+    std::shared_ptr<mcl::Buffer> const& buffer, std::function<void()> const& done)
 {
     std::unique_lock<std::mutex> lk(mutex);
     auto it = buffers.find(buffer->rpc_id());
@@ -158,51 +188,52 @@ void mcl::BufferVault::wire_transfer_outbound(std::shared_ptr<mcl::Buffer> const
 
     buffer->submitted();
     server_requests->submit_buffer(*buffer);
-}
 
-void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
-{
-    std::shared_ptr<MirBufferPackage> package = mcl::protobuf_to_native_buffer(protobuf_buffer);
-    std::shared_ptr<mcl::Buffer> buffer;
-    std::unique_lock<std::mutex> lk(mutex);
-    auto it = buffers.find(protobuf_buffer.buffer_id());
-    if (it == buffers.end())
+    lk.lock();
+    if (disconnected_)
+        BOOST_THROW_EXCEPTION(std::logic_error("server_disconnected"));
+    if (buffers.end() != available_buffer())
     {
-        geom::Size sz{package->width, package->height};
-        if (sz != size)
-        {
-            lk.unlock();
-            for (int i = 0; i != package->fd_items; ++i)
-                close(package->fd[i]);
-
-            realloc_buffer(protobuf_buffer.buffer_id(), size, format, usage);
-            return;
-        }
-
-        buffer = buffer_factory->generate_buffer(protobuf_buffer);
-        if (auto map = surface_map.lock())
-            map->insert(protobuf_buffer.buffer_id(), buffer);
-        else
-            BOOST_THROW_EXCEPTION(std::logic_error("connection resources lost; cannot access buffer"));
-         
-        buffers[protobuf_buffer.buffer_id()] = Owner::Self;
-        buffer->received();
+        done();
     }
     else
     {
-        buffer = checked_buffer_from_map(protobuf_buffer.buffer_id());
-        buffer->received(*package);
+        next_buffer_wait_handle.expect_result();
+        deferred_cb = done;
+    }
+    return &next_buffer_wait_handle;
+}
+
+void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
+{
+    std::unique_lock<std::mutex> lk(mutex);
+    last_received_id = buffer_id;
+    auto buffer = checked_buffer_from_map(buffer_id);
+    auto inbound_size = buffer->size();
+    auto it = buffers.find(buffer_id);
+    if (it == buffers.end())
+    {
+        if (inbound_size != size)
+        {
+            lk.unlock();
+            realloc_buffer(buffer_id, size, format, usage);
+            return;
+        }
+        buffers[buffer_id] = Owner::Self;
+    }
+    else
+    {
         auto should_decrease_count = (current_buffer_count > needed_buffer_count);
         if (size != buffer->size() || should_decrease_count)
         {
-            int id = it->first;
+            auto id = it->first;
             buffers.erase(it);
+            if (should_decrease_count)
+                current_buffer_count--;
             lk.unlock();
 
             free_buffer(id);
-            if (should_decrease_count)
-                current_buffer_count--;
-            else
+            if (!should_decrease_count)
                 alloc_buffer(size, format, usage);
             return;
         }
@@ -214,41 +245,57 @@ void mcl::BufferVault::wire_transfer_inbound(mp::Buffer const& protobuf_buffer)
 
     if (!promises.empty())
     {
-        buffers[protobuf_buffer.buffer_id()] = Owner::ContentProducer;
+        buffers[buffer_id] = Owner::ContentProducer;
         promises.front().set_value(buffer);
         promises.pop_front();
     }
-}
 
-//TODO: the server will currently spam us with a lot of resize messages at once,
-//      and we want to delay the IPC transactions for resize. If we could rate-limit
-//      the incoming messages, we should should consolidate the scale and size functions
-void mcl::BufferVault::set_size(geom::Size sz)
-{
-    std::lock_guard<std::mutex> lk(mutex);
-    size = sz;
+    trigger_callback(std::move(lk));
 }
 
 void mcl::BufferVault::disconnected()
 {
-    std::lock_guard<std::mutex> lk(mutex);
+    std::unique_lock<std::mutex> lk(mutex);
     disconnected_ = true;
     promises.clear();
+    trigger_callback(std::move(lk));
+}
+
+void mcl::BufferVault::trigger_callback(std::unique_lock<std::mutex> lk)
+{
+    if (auto cb = deferred_cb)
+    {
+        deferred_cb = {};
+        lk.unlock();
+        cb();
+        next_buffer_wait_handle.result_received();
+    }
 }
 
 void mcl::BufferVault::set_scale(float scale)
 {
-    std::vector<int> free_ids;
     std::unique_lock<std::mutex> lk(mutex);
-    auto new_size = size * scale;
+    set_size(lk, size * scale);
+}
+
+void mcl::BufferVault::set_size(geom::Size new_size)
+{
+    std::unique_lock<std::mutex> lk(mutex);
+    set_size(lk, new_size);
+}
+
+void mcl::BufferVault::set_size(std::unique_lock<std::mutex>& lk, geometry::Size new_size)
+{
     if (new_size == size)
         return;
+    std::vector<int> free_ids;
     size = new_size;
     for (auto it = buffers.begin(); it != buffers.end();)
     {
         auto buffer = checked_buffer_from_map(it->first);
         if ((it->second == Owner::Self) && (buffer->size() != size)) 
         {
+            current_buffer_count--;
             free_ids.push_back(it->first);
             it = buffers.erase(it);
         }
@@ -260,7 +307,7 @@ void mcl::BufferVault::set_scale(float scale)
     lk.unlock();
 
     for(auto& id : free_ids)
-        realloc_buffer(id, new_size, format, usage);
+        free_buffer(id);
 }
 
 void mcl::BufferVault::increase_buffer_count()

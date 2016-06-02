@@ -21,8 +21,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/exception/errinfo_errno.hpp>
-#include <stdexcept>
+#include <system_error>
 
 #include <vector>
 
@@ -31,17 +30,27 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 
-namespace mgm = mir::graphics::mesa;
+namespace mgc = mir::graphics::common;
 
 namespace
 {
 
+bool error_indicates_tmpfile_not_supported(int error)
+{
+    return
+        error == EISDIR ||  // Directory exists, but no support for O_TMPFILE
+        error == ENOENT ||  // Directory doesn't exist, and no support for O_TMPFILE
+        error == EOPNOTSUPP ||    // Filesystem that directory resides on does not support O_TMPFILE
+        error == EINVAL;    // There apparently exists at least one development board that has a kernel
+                            // that incorrectly returns EINVAL. Yay.
+}
+
 mir::Fd create_anonymous_file(size_t size)
 {
-    auto raw_fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
+    auto raw_fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL | O_CLOEXEC, S_IRWXU);
 
     // Workaround for filesystems that don't support O_TMPFILE
-    if (raw_fd == -1 && errno == EINVAL)
+    if (raw_fd == -1 && error_indicates_tmpfile_not_supported(errno))
     {
         char template_filename[] = "/dev/shm/mir-buffer-XXXXXX";
         raw_fd = mkostemp(template_filename, O_CLOEXEC);
@@ -56,16 +65,18 @@ mir::Fd create_anonymous_file(size_t size)
     }
 
     if (raw_fd == -1)
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(
-            std::runtime_error("Failed to open temporary file"))
-               << boost::errinfo_errno(errno));
+    {
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "Failed to open temporary file"));
+    }
 
     mir::Fd fd = mir::Fd{raw_fd};
 
     if (ftruncate(fd, size) == -1)
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(
-            std::runtime_error("Failed to resize temporary file"))
-                << boost::errinfo_errno(errno));
+    {
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "Failed to resize temporary file"));
+    }
 
     return fd;
 }
@@ -76,21 +87,22 @@ mir::Fd create_anonymous_file(size_t size)
  * MapHandle *
  *************/
 
-mgm::detail::MapHandle::MapHandle(int fd, size_t size)
+mgc::detail::MapHandle::MapHandle(int fd, size_t size)
     : size{size},
       mapping{mmap(nullptr, size, PROT_READ|PROT_WRITE,
                    MAP_SHARED, fd, 0)}
 {
     if (mapping == MAP_FAILED)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to map file"));
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "Failed to map file"));
 }
 
-mgm::detail::MapHandle::~MapHandle() noexcept
+mgc::detail::MapHandle::~MapHandle() noexcept
 {
     munmap(mapping, size);
 }
 
-mgm::detail::MapHandle::operator void*() const
+mgc::detail::MapHandle::operator void*() const
 {
     return mapping;
 
@@ -100,18 +112,18 @@ mgm::detail::MapHandle::operator void*() const
  * AnonymousShmFile *
  ********************/
 
-mgm::AnonymousShmFile::AnonymousShmFile(size_t size)
+mgc::AnonymousShmFile::AnonymousShmFile(size_t size)
     : fd_{create_anonymous_file(size)},
       mapping{fd_, size}
 {
 }
 
-void* mgm::AnonymousShmFile::base_ptr() const
+void* mgc::AnonymousShmFile::base_ptr() const
 {
     return mapping;
 }
 
-int mgm::AnonymousShmFile::fd() const
+int mgc::AnonymousShmFile::fd() const
 {
     return fd_;
 }

@@ -1,3 +1,44 @@
+mir (0.23.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  [ Kevin DuBois ]
+  * New upstream release 0.23.0 (https://launchpad.net/mir/+milestone/0.23.0)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . mirserver ABI bumped to 40
+      . mircommon ABI bumped at 6
+      . mirplatform ABI unchanged at 11
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 9
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 5
+    - Enhancements:
+      . Enable internal usage of more flexible graphics buffer submission,
+        precursing client API additions. 
+    - Bug fixes:
+      . Potential NBS performance loss after resize (LP: #1579076)
+      . Performance loss with NBS and overlays on (LP: #1578159)
+      . Mir crashes with useless backtrace when mg::Platform methods throw
+        (LP: #1553549)
+      . Virtual output is not removed when screencast client disappears
+        (LP: #1573572)
+      . Can't VT switch from mir_demo_server (any more) (LP: #1576260)
+      . mir_demo_server(_minimal): Window movement/resizing stops responding
+        when the cursor leaves the surface, and can lead to windows 1px wide
+        and unrecoverable. (LP: #1447886)
+      . Virtual display output configuration is set to LVDS (LP: #1573782)
+      . Mir-on-X11 doesn't pass Alt+primary button drag to Mir (LP: #1575765)
+      . Mir-on-X11 breaks mir_proving_server resize logic (LP: #1575192)
+      . Resizing can crash mir_demo_server (LP: #1575211) 
+      . [regression] Cursor stops at phantom edge on M10 and N7 (LP: #1580774)
+      . [regression] MIR_CLIENT_PERF_REPORT is showing bogus render times and
+        buffer lag (LP: #1581368)
+      . Test failures in ClientLogging.reports_performance due to the above
+        fix. (LP: #1583970, LP: #1584603, LP: #1584605)
+      . Do not throw when creating some objects under HWC 1.5 (LP: #1583086)
+      . Correct black frame issue under Xmir (LP: #1584784)
+
+ -- Kevin DuBois <kevin.dubois@canonical.com>  Mon, 09 May 2016 11:59:42 -0400
+
 mir (0.22.1+16.04.20160516.2-0ubuntu1) xenial; urgency=medium
 
   [ Andreas Pokorny ]

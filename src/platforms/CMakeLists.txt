@@ -42,6 +42,7 @@ set(server_common_include_dirs
 # TODO platform implementations shouldn't depend on private APIs
 set(server_common_include_dirs
   ${server_common_include_dirs}
+  ${CMAKE_CURRENT_SOURCE_DIR}/common/server
   ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/platform
 )
