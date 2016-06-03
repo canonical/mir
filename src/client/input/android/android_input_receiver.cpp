@@ -132,9 +132,6 @@ static void map_key_event(std::shared_ptr<mircv::XKBMapper> const& xkb_mapper, M
     // of XKBMapper per device id (or modify XKBMapper semantics)
     if (mir_event_get_type(&ev) != mir_event_type_input)
         return;
-    if (mir_input_event_get_type(mir_event_get_input_event(&ev)) !=
-        mir_input_event_type_key)
-        return;
 
     xkb_mapper->map_event(ev);
 }

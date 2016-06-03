@@ -20,6 +20,7 @@
 #include "mir/input/android/android_input_lexicon.h"
 #include "mir/input/android/event_conversion_helpers.h"
 #include "mir/events/event_builders.h"
+#include "mir/events/event.h"
 #include "mir/cookie/blob.h"
 
 #include <androidfw/Input.h>
@@ -36,6 +37,11 @@ mir::EventUPtr mia::Lexicon::translate(droidinput::InputEvent const* android_eve
 {
     switch(android_event->getType())
     {
+        case AINPUT_EVENT_TYPE_BUFFER:
+        {
+            auto buf = static_cast<const droidinput::RawBufferEvent*>(android_event);
+            return MirEvent::deserialize(buf->buffer);
+        }
         case AINPUT_EVENT_TYPE_KEY:
         {
             auto kev = static_cast<const droidinput::KeyEvent*>(android_event);

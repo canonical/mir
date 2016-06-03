@@ -249,6 +249,14 @@ void mircv::XKBMapper::reset_keymap(MirInputDeviceId id)
     update_modifier();
 }
 
+MirInputEventModifiers mircv::XKBMapper::modifiers() const
+{
+    std::lock_guard<std::mutex> lg(guard);
+    if (modifier_state.is_set())
+        return expand_modifiers(modifier_state.value());
+    return mir_input_event_modifier_none;
+}
+
 mircv::XKBMapper::XkbMappingState::XkbMappingState(XKBKeymapPtr keymap)
     : keymap{std::move(keymap)}, state{make_unique_state(this->keymap.get())}
 {

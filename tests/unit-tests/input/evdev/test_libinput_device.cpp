@@ -30,7 +30,9 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/mock_libinput.h"
+#include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/gmock_fixes.h"
+#include "mir/test/fake_shared.h"
 #include "mir/udev/wrapper.h"
 #include "mir/cookie/authority.h"
 #include "mir_test_framework/libinput_environment.h"
@@ -71,12 +73,15 @@ struct MockInputSink : mi::InputSink
     MOCK_METHOD1(handle_input,void(MirEvent &));
     MOCK_METHOD1(confine_pointer, void(geom::Point&));
     MOCK_CONST_METHOD0(bounding_rectangle, geom::Rectangle());
+    MOCK_METHOD1(set_key_state, void(std::vector<uint32_t> const&));
+    MOCK_METHOD1(set_pointer_state, void(MirPointerButtons));
 };
 
 struct MockEventBuilder : mi::EventBuilder
 {
     std::shared_ptr<mir::cookie::Authority> const cookie_authority = mir::cookie::Authority::create();
-    mi::DefaultEventBuilder builder{MirInputDeviceId{3}, cookie_authority};
+    mtd::MockInputSeat seat;
+    mi::DefaultEventBuilder builder{MirInputDeviceId{3}, cookie_authority, mt::fake_shared(seat)};
     MockEventBuilder()
     {
         ON_CALL(*this, key_event(_,_,_,_))
@@ -119,6 +124,10 @@ struct MockEventBuilder : mi::EventBuilder
     MOCK_METHOD7(pointer_event,
                  mir::EventUPtr(Timestamp, MirPointerAction, MirPointerButtons, float, float, float, float));
     MOCK_METHOD2(configuration_event, mir::EventUPtr(Timestamp, MirInputConfigurationAction));
+    mir::EventUPtr device_state_event(float, float) override
+    {
+        return {nullptr,[](MirEvent*){}};
+    }
 };
 
 struct LibInputDevice : public ::testing::Test

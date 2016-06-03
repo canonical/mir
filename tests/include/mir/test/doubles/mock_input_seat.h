@@ -36,6 +36,9 @@ struct MockInputSeat : input::Seat
     MOCK_METHOD1(dispatch_event, void(MirEvent& event));
     MOCK_METHOD1(get_rectangle_for, geometry::Rectangle(input::Device const& dev));
     MOCK_METHOD0(create_device_state, mir::EventUPtr());
+    MOCK_METHOD2(set_key_state, void(input::Device const&, std::vector<uint32_t> const&));
+    MOCK_METHOD2(set_pointer_state, void (input::Device const&, MirPointerButtons));
+    MOCK_METHOD2(set_cursor_position, void (float, float));
 };
 }
 }

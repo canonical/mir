@@ -24,6 +24,7 @@
 #include "mir_toolkit/event.h"
 
 #include <memory>
+#include <vector>
 
 namespace mir
 {
@@ -41,6 +42,10 @@ public:
     virtual void dispatch_event(MirEvent& event) = 0;
     virtual geometry::Rectangle get_rectangle_for(Device const& dev) = 0;
     virtual EventUPtr create_device_state() = 0;
+
+    virtual void set_key_state(Device const& dev, std::vector<uint32_t> const& scan_codes) = 0;
+    virtual void set_pointer_state(Device const& dev, MirPointerButtons buttons) = 0;
+    virtual void set_cursor_position(float cursor_x, float cursor_y) = 0;
 private:
     Seat(Seat const&) = delete;
     Seat& operator=(Seat const&) = delete;

@@ -64,3 +64,18 @@ mir::EventUPtr mi::BasicSeat::create_device_state()
 {
     return input_state_tracker.create_device_state();
 }
+
+void mi::BasicSeat::set_key_state(Device const& dev, std::vector<uint32_t> const& scan_codes)
+{
+    input_state_tracker.set_key_state(dev.id(), scan_codes);
+}
+
+void mi::BasicSeat::set_pointer_state(Device const& dev, MirPointerButtons buttons)
+{
+    input_state_tracker.set_pointer_state(dev.id(), buttons);
+}
+
+void mi::BasicSeat::set_cursor_position(float cursor_x, float cursor_y)
+{
+    input_state_tracker.set_cursor_position(cursor_x, cursor_y);
+}

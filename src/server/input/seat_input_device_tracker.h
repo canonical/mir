@@ -64,6 +64,10 @@ public:
     MirPointerButtons button_state() const;
     geometry::Point cursor_position() const;
     EventUPtr create_device_state() const;
+
+    void set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& scan_codes);
+    void set_pointer_state(MirInputDeviceId id, MirPointerButtons buttons);
+    void set_cursor_position(float cursor_x, float cursor_y);
 private:
     void update_seat_properties(MirInputEvent const* event);
     void update_cursor(MirPointerEvent const* event);

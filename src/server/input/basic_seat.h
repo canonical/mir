@@ -56,6 +56,9 @@ public:
     geometry::Rectangle get_rectangle_for(Device const& dev) override;
     virtual EventUPtr create_device_state() override;
 
+    void set_key_state(Device const& dev, std::vector<uint32_t> const& scan_codes) override;
+    void set_pointer_state(Device const& dev, MirPointerButtons buttons) override;
+    void set_cursor_position(float cursor_x, float cursor_y) override;
 private:
     SeatInputDeviceTracker input_state_tracker;
     std::shared_ptr<InputRegion> const input_region;

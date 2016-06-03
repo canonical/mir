@@ -503,6 +503,37 @@ MATCHER(InputConfigurationEvent, "")
     return false;
 }
 
+MATCHER(InputDeviceStateEvent, "")
+{
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) == mir_event_type_input_device_state)
+        return true;
+    return false;
+}
+
+MATCHER_P(DeviceStateWithPressedKeys, keys, "")
+{
+    auto as_address = to_address(arg);
+    if (mir_event_get_type(as_address) != mir_event_type_input_device_state)
+        return false;
+    auto device_state = mir_event_get_input_device_state_event(as_address);
+    for (size_t index = 0, count = mir_input_device_state_event_device_count(device_state);
+         index != count; ++index)
+    {
+        auto key_count = mir_input_device_state_event_device_pressed_keys_count(device_state, index);
+        auto it_keys = begin(keys);
+        auto end_keys = end(keys);
+        if (distance(it_keys, end_keys) != key_count)
+            continue;
+
+        auto pressed_keys = mir_input_device_state_event_device_pressed_keys(device_state, index);
+        if (!std::equal(it_keys, end_keys, pressed_keys))
+            continue;
+        return true;
+    }
+    return false;
+}
+
 MATCHER(InputDeviceConfigurationChangedEvent, "")
 {
     auto as_address = to_address(arg);

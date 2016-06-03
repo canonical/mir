@@ -108,9 +108,13 @@ private:
         MirInputDeviceId id();
         std::shared_ptr<Seat> seat;
         const std::shared_ptr<DefaultDevice> handle;
+
+        void set_key_state(std::vector<uint32_t> const& scan_codes) override;
+        void set_pointer_state(MirPointerButtons buttons) override;
     private:
         MirInputDeviceId device_id;
-        DefaultEventBuilder builder;
+        std::unique_ptr<DefaultEventBuilder> builder;
+        std::shared_ptr<cookie::Authority> cookie_authority;
         std::shared_ptr<InputDevice> const device;
         std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
     };

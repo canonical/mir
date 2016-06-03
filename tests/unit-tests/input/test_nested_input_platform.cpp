@@ -31,6 +31,7 @@
 
 #include "mir/test/doubles/mock_input_device_registry.h"
 #include "mir/test/doubles/mock_input_sink.h"
+#include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/stub_host_connection.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"
@@ -73,6 +74,7 @@ struct TestNestedInputPlatform : Test
 {
     NiceMock<mtd::MockInputDeviceRegistry> mock_input_device_registry;
     NiceMock<MockHostConnection> mock_host_connection;
+    NiceMock<mtd::MockInputSeat> mock_seat;
     mgn::InputPlatform platform{mt::fake_shared(mock_host_connection), mt::fake_shared(mock_input_device_registry),
                                 mr::null_input_report()};
     mi::DeviceData a_keyboard{1, mir_input_device_capability_keyboard, "keys" , "keys-evdev2"};
@@ -143,7 +145,7 @@ TEST_F(TestNestedInputPlatform, devices_forward_input_events)
 {
     auto nested_input_device = capture_input_device(a_mouse);
     NiceMock<mtd::MockInputSink> event_sink;
-    mi::DefaultEventBuilder builder(MirInputDeviceId{12}, mir::cookie::Authority::create());
+    mi::DefaultEventBuilder builder(MirInputDeviceId{12}, mir::cookie::Authority::create(), mt::fake_shared(mock_seat));
 
     ASSERT_THAT(nested_input_device, Ne(nullptr));
     nested_input_device->start(&event_sink, &builder);
@@ -167,7 +169,7 @@ TEST_F(TestNestedInputPlatform, devices_forward_key_events)
     auto nested_input_device = capture_input_device(a_keyboard);
     auto const scan_code = 45;
     NiceMock<mtd::MockInputSink> event_sink;
-    mi::DefaultEventBuilder builder(MirInputDeviceId{18}, mir::cookie::Authority::create());
+    mi::DefaultEventBuilder builder(MirInputDeviceId{18}, mir::cookie::Authority::create(), mt::fake_shared(mock_seat));
 
     ASSERT_THAT(nested_input_device, Ne(nullptr));
     nested_input_device->start(&event_sink, &builder);
