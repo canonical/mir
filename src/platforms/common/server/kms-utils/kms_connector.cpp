@@ -145,7 +145,7 @@ std::tuple<mgk::DRMModeCrtcUPtr, int> find_crtc_and_index_for_connector(
             {
                 if (encoder_supports_crtc_index(enc.get(), crtc_index))
                 {
-                    return {std::move(crtc), crtc_index};
+                    return std::tuple<mgk::DRMModeCrtcUPtr, int>{std::move(crtc), crtc_index};
                 }
             }
         }
@@ -224,7 +224,7 @@ auto mgk::find_crtc_with_primary_plane(
             ObjectProperties plane_props{drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE};
             if (plane_props["type"] == DRM_PLANE_TYPE_PRIMARY)
             {
-                return {std::move(crtc), std::move(plane)};
+                return std::make_pair(std::move(crtc), std::move(plane));
             }
         }
     }
