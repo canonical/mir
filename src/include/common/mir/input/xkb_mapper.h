@@ -73,12 +73,11 @@ private:
 
     struct XkbMappingState
     {
-        explicit XkbMappingState(XKBKeymapPtr keymap);
-        XkbMappingState(Keymap const& keymap, char const* buffer, size_t size);
+        explicit XkbMappingState(std::shared_ptr<xkb_keymap> const& keymap);
         void set_key_state(std::vector<uint32_t> const& key_state);
         bool update_and_map(MirEvent& event);
         xkb_keysym_t update_state(uint32_t scan_code, MirKeyboardAction direction);
-        XKBKeymapPtr keymap;
+        std::shared_ptr<xkb_keymap> const keymap;
         XKBStatePtr state;
         MirInputEventModifiers modifier_state{0};
         // TODO optional compose key state..
@@ -87,9 +86,9 @@ private:
     XkbMappingState* get_keymapping_state(MirInputDeviceId id);
 
     XKBContextPtr context;
+    std::shared_ptr<xkb_keymap> default_keymap;
 
     mir::optional_value<MirInputEventModifiers> modifier_state;
-    std::unique_ptr<XkbMappingState> surface_mapping;
     std::unordered_map<MirInputDeviceId, XkbMappingState> device_mapping;
 };
 }
