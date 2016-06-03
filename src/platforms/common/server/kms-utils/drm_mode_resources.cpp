@@ -22,34 +22,14 @@
 #include <system_error>
 
 namespace mgk = mir::graphics::kms;
+namespace mgkd = mgk::detail;
 
 namespace
 {
-
-struct CrtcDeleter
-{
-    void operator()(drmModeCrtc* p) { if (p) drmModeFreeCrtc(p); }
-};
-
-struct EncoderDeleter
-{
-    void operator()(drmModeEncoder* p) { if (p) drmModeFreeEncoder(p); }
-};
-
-struct ConnectorDeleter
-{
-    void operator()(drmModeConnector* p) { if (p) drmModeFreeConnector(p); }
-};
-
-struct ResourcesDeleter
-{
-    void operator()(drmModeRes* p) { if (p) drmModeFreeResources(p); }
-};
-
 mgk::DRMModeResUPtr resources_for_drm_node(int drm_fd)
 {
     errno = 0;
-    mgk::DRMModeResUPtr resources{drmModeGetResources(drm_fd), ResourcesDeleter()};
+    mgk::DRMModeResUPtr resources{drmModeGetResources(drm_fd), &drmModeFreeResources};
 
     if (!resources)
     {
@@ -64,6 +44,38 @@ mgk::DRMModeResUPtr resources_for_drm_node(int drm_fd)
     return resources;
 }
 
+mgk::DRMModePlaneResUPtr planes_for_drm_node(int drm_fd)
+{
+    errno = 0;
+    mgk::DRMModePlaneResUPtr resources{drmModeGetPlaneResources(drm_fd), &drmModeFreePlaneResources};
+
+    if (!resources)
+    {
+        if (errno == 0)
+        {
+            // drmModeGetPlaneResources either sets errno, or has failed in malloc()
+            errno = ENOMEM;
+        }
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Couldn't get DRM plane resources"}));
+    }
+
+    return resources;
+}
+
+}
+
+mgk::PlaneResources::PlaneResources(int drm_fd)
+    : drm_fd{drm_fd},
+      resources{planes_for_drm_node(drm_fd)}
+{
+}
+
+auto mgk::PlaneResources::planes() const -> detail::ObjectCollection<DRMModePlaneUPtr, &get_plane>
+{
+    return detail::ObjectCollection<DRMModePlaneUPtr, &get_plane>{
+        drm_fd,
+        resources->planes,
+        resources->planes + resources->count_planes};
 }
 
 mgk::DRMModeResources::DRMModeResources(int drm_fd)
@@ -129,7 +141,7 @@ mgk::DRMModeCrtcUPtr mgk::DRMModeResources::crtc(uint32_t id) const
 mgk::DRMModeConnectorUPtr mgk::get_connector(int drm_fd, uint32_t id)
 {
     errno = 0;
-    DRMModeConnectorUPtr connector{drmModeGetConnector(drm_fd, id), ConnectorDeleter()};
+    DRMModeConnectorUPtr connector{drmModeGetConnector(drm_fd, id), &drmModeFreeConnector};
 
     if (!connector)
     {
@@ -147,7 +159,7 @@ mgk::DRMModeConnectorUPtr mgk::get_connector(int drm_fd, uint32_t id)
 mgk::DRMModeEncoderUPtr mgk::get_encoder(int drm_fd, uint32_t id)
 {
     errno = 0;
-    DRMModeEncoderUPtr encoder{drmModeGetEncoder(drm_fd, id), EncoderDeleter()};
+    DRMModeEncoderUPtr encoder{drmModeGetEncoder(drm_fd, id), &drmModeFreeEncoder};
 
     if (!encoder)
     {
@@ -165,7 +177,7 @@ mgk::DRMModeEncoderUPtr mgk::get_encoder(int drm_fd, uint32_t id)
 mgk::DRMModeCrtcUPtr mgk::get_crtc(int drm_fd, uint32_t id)
 {
     errno = 0;
-    DRMModeCrtcUPtr crtc{drmModeGetCrtc(drm_fd, id), CrtcDeleter()};
+    DRMModeCrtcUPtr crtc{drmModeGetCrtc(drm_fd, id), &drmModeFreeCrtc};
 
     if (!crtc)
     {
@@ -180,23 +192,132 @@ mgk::DRMModeCrtcUPtr mgk::get_crtc(int drm_fd, uint32_t id)
     return crtc;
 }
 
-auto mgk::DRMModeResources::connectors() const -> ObjectCollection<DRMModeConnectorUPtr, &get_connector>
+mgk::DRMModePlaneUPtr mgk::get_plane(int drm_fd, uint32_t id)
 {
-    return ObjectCollection<DRMModeConnectorUPtr, &get_connector>{drm_fd, resources->connectors, resources->connectors + resources->count_connectors};
+    errno = 0;
+    DRMModePlaneUPtr plane{drmModeGetPlane(drm_fd, id), &drmModeFreePlane};
+
+    if (!plane)
+    {
+        if (errno == 0)
+        {
+            // drmModeGetPlane either sets errno, or has failed in malloc()
+            errno = ENOMEM;
+        }
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to get DRM plane"}));
+    }
+    return plane;
 }
 
-auto mgk::DRMModeResources::encoders() const -> ObjectCollection<DRMModeEncoderUPtr, &get_encoder>
+namespace
 {
-    return ObjectCollection<DRMModeEncoderUPtr, &get_encoder>{drm_fd, resources->encoders, resources->encoders + resources->count_encoders};
+mgk::DRMModePropertyUPtr get_property(int drm_fd, uint32_t id)
+{
+    errno = 0;
+    mgk::DRMModePropertyUPtr prop{drmModeGetProperty(drm_fd, id), &drmModeFreeProperty};
+
+    if (!prop)
+    {
+        if (errno == 0)
+        {
+            // drmModeGetProperty either sets errno, or has failed in malloc()
+            errno = ENOMEM;
+        }
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to get DRM plane"}));
+    }
+    return prop;
 }
 
-auto mgk::DRMModeResources::crtcs() const -> ObjectCollection<DRMModeCrtcUPtr, &get_crtc>
+mgk::DRMModeObjectPropsUPtr get_object_properties(
+    int drm_fd,
+    uint32_t object_id,
+    uint32_t object_type)
 {
-    return ObjectCollection<DRMModeCrtcUPtr, &get_crtc>{drm_fd, resources->crtcs, resources->encoders + resources->count_crtcs};
+    errno = 0;
+    mgk::DRMModeObjectPropsUPtr props{
+        drmModeObjectGetProperties(drm_fd, object_id, object_type), &drmModeFreeObjectProperties};
+
+    if (!props)
+    {
+        if (errno == 0)
+        {
+            // drmModeGetObjectProperties either sets errno, or has failed in malloc()
+            errno = ENOMEM;
+        }
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to get DRM object properties"}));
+    }
+    return props;
+}
+
+std::unordered_map<std::string, mgk::ObjectProperties::Prop> extract_properties(
+    int drm_fd,
+    mgk::DRMModeObjectPropsUPtr const& properties)
+{
+    std::unordered_map<std::string, mgk::ObjectProperties::Prop> property_map;
+    for (auto i = 0u; i < properties->count_props; ++i)
+    {
+        auto prop = get_property(drm_fd, properties->props[i]);
+        property_map[prop->name] = {
+            prop->prop_id,
+            properties->prop_values[i]
+        };
+    }
+    return property_map;
+}
+}
+
+mgk::ObjectProperties::ObjectProperties(
+    int drm_fd,
+    uint32_t object_id,
+    uint32_t object_type)
+    : properties_table{extract_properties(drm_fd, get_object_properties(drm_fd, object_id, object_type))}
+{
+}
+
+mgk::ObjectProperties::ObjectProperties(
+    int drm_fd,
+    DRMModePlaneUPtr const& plane)
+    : ObjectProperties(drm_fd, plane->plane_id, DRM_MODE_OBJECT_PLANE)
+{
+}
+
+uint64_t mgk::ObjectProperties::operator[](char const* name) const
+{
+    return properties_table.at(name).value;
+}
+
+uint32_t mgk::ObjectProperties::id_for(char const* property_name) const
+{
+    return properties_table.at(property_name).id;
+}
+
+auto mgk::ObjectProperties::begin() const -> std::unordered_map<std::string, Prop>::const_iterator
+{
+    return properties_table.begin();
+}
+
+auto mgk::ObjectProperties::end() const -> std::unordered_map<std::string, Prop>::const_iterator
+{
+    return properties_table.end();
+}
+
+auto mgk::DRMModeResources::connectors() const -> detail::ObjectCollection<DRMModeConnectorUPtr, &get_connector>
+{
+    return detail::ObjectCollection<DRMModeConnectorUPtr, &get_connector>{drm_fd, resources->connectors, resources->connectors + resources->count_connectors};
+}
+
+auto mgk::DRMModeResources::encoders() const -> detail::ObjectCollection<DRMModeEncoderUPtr, &get_encoder>
+{
+    return detail::ObjectCollection<DRMModeEncoderUPtr, &get_encoder>{drm_fd, resources->encoders, resources->encoders + resources->count_encoders};
+}
+
+auto mgk::DRMModeResources::crtcs() const -> detail::ObjectCollection<DRMModeCrtcUPtr, &get_crtc>
+{
+    return detail::ObjectCollection<DRMModeCrtcUPtr, &get_crtc>{drm_fd, resources->crtcs, resources->encoders + resources->count_crtcs};
 }
 
 template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
-mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::ObjectCollection(int drm_fd, uint32_t* begin, uint32_t* end)
+mgkd::ObjectCollection<DRMUPtr, object_constructor>::ObjectCollection(int drm_fd, uint32_t* begin, uint32_t* end)
     : drm_fd{drm_fd},
       begin_{begin},
       end_{end}
@@ -204,86 +325,93 @@ mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::ObjectColl
 }
 
 template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
-auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::begin() -> iterator
+auto mgkd::ObjectCollection<DRMUPtr, object_constructor>::begin() -> iterator
 {
     return iterator(drm_fd, begin_);
 }
 
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::begin() -> iterator;
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::begin() -> iterator;
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::begin() -> iterator;
+template auto mgkd::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::begin() -> iterator;
+template auto mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::begin() -> iterator;
+template auto mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::begin() -> iterator;
+template auto mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::begin() -> iterator;
 
 template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
-auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::end() -> iterator
+auto mgkd::ObjectCollection<DRMUPtr, object_constructor>::end() -> iterator
 {
     return iterator(drm_fd, end_);
 }
 
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::end() -> iterator;
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::end() -> iterator;
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::end() -> iterator;
+template auto mgkd::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::end() -> iterator;
+template auto mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::end() -> iterator;
+template auto mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::end() -> iterator;
+template auto mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::end() -> iterator;
 
 template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
-mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::iterator(iterator const& from)
+mgkd::ObjectCollection<DRMUPtr, object_constructor>::iterator::iterator(iterator const& from)
     : drm_fd{from.drm_fd},
       id_ptr{from.id_ptr}
 {
 }
-template mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::iterator(iterator const&);
-template mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::iterator(iterator const&);
-template mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::iterator(iterator const&);
+template mgkd::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::iterator(iterator const&);
+template mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::iterator(iterator const&);
+template mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::iterator(iterator const&);
+template mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::iterator::iterator(iterator const&);
 
 
 template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
-auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator=(iterator const& rhs) -> iterator&
+auto mgkd::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator=(iterator const& rhs) -> iterator&
 {
     drm_fd = rhs.drm_fd;
     id_ptr = rhs.id_ptr;
     current.reset();
     return *this;
 }
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator=(iterator const&) -> iterator&;
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator=(iterator const&) -> iterator&;
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator=(iterator const&) -> iterator&;
+template auto mgkd::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator=(iterator const&) -> iterator&;
+template auto mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator=(iterator const&) -> iterator&;
+template auto mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator=(iterator const&) -> iterator&;
+template auto mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::iterator::operator=(iterator const&) -> iterator&;
 
 template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
-mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::iterator(
+mgkd::ObjectCollection<DRMUPtr, object_constructor>::iterator::iterator(
     int drm_fd,
     uint32_t* id_ptr)
     : drm_fd{drm_fd},
       id_ptr{id_ptr}
 {
 }
-template mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::iterator(int, uint32_t*);
-template mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::iterator(int, uint32_t*);
-template mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::iterator(int, uint32_t*);
+template mgkd::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::iterator(int, uint32_t*);
+template mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::iterator(int, uint32_t*);
+template mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::iterator(int, uint32_t*);
+template mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::iterator::iterator(int, uint32_t*);
 
 template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
-auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator++() -> iterator&
+auto mgkd::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator++() -> iterator&
 {
     ++id_ptr;
     current.reset();
     return *this;
 }
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator++() -> iterator&;
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator++() -> iterator&;
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator++() -> iterator&;
+template auto mgkd::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator++() -> iterator&;
+template auto mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator++() -> iterator&;
+template auto mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator++() -> iterator&;
+template auto mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::iterator::operator++() -> iterator&;
 
 template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
-auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator++(int) -> iterator
+auto mgkd::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator++(int) -> iterator
 {
     iterator copy(drm_fd, id_ptr);
     ++id_ptr;
     current.reset();
     return copy;
 }
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator++(int) -> iterator;
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator++(int) -> iterator;
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator++(int) -> iterator;
+template auto mgkd::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator++(int) -> iterator;
+template auto mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator++(int) -> iterator;
+template auto mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator++(int) -> iterator;
+template auto mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::iterator::operator++(int) -> iterator;
 
 
 template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
-auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator*() const -> DRMUPtr&
+auto mgkd::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator*() const -> DRMUPtr&
 {
     if (!current)
     {
@@ -291,12 +419,13 @@ auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::itera
     }
     return current;
 }
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator*() const -> DRMModeConnectorUPtr&;
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator*() const -> DRMModeEncoderUPtr&;
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator*() const -> DRMModeCrtcUPtr&;
+template auto mgkd::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator*() const -> DRMModeConnectorUPtr&;
+template auto mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator*() const -> DRMModeEncoderUPtr&;
+template auto mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator*() const -> DRMModeCrtcUPtr&;
+template auto mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::iterator::operator*() const -> DRMModePlaneUPtr&;
 
 template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
-auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator->() const -> DRMUPtr*
+auto mgkd::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator->() const -> DRMUPtr*
 {
     if (!current)
     {
@@ -304,21 +433,27 @@ auto mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::itera
     }
     return &current;
 }
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator->() const -> DRMModeConnectorUPtr*;
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator->() const -> DRMModeEncoderUPtr*;
-template auto mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator->() const -> DRMModeCrtcUPtr*;
+template auto mgkd::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator->() const -> DRMModeConnectorUPtr*;
+template auto mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator->() const -> DRMModeEncoderUPtr*;
+template auto mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator->() const -> DRMModeCrtcUPtr*;
+template auto mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::iterator::operator->() const -> DRMModePlaneUPtr*;
 
 template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
-bool mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator==(iterator const& rhs) const
+bool mgkd::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator==(iterator const& rhs) const
 {
     return rhs.id_ptr == id_ptr;
 }
+template bool mgkd::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator==(iterator const&) const;
+template bool mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator==(iterator const&) const;
+template bool mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator==(iterator const&) const;
+template bool mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::iterator::operator==(iterator const&) const;
 
 template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
-bool mgk::DRMModeResources::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator!=(iterator const& rhs) const
+bool mgkd::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator!=(iterator const& rhs) const
 {
     return !(*this == rhs);
 }
-template bool mgk::DRMModeResources::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator!=(iterator const&) const;
-template bool mgk::DRMModeResources::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator!=(iterator const&) const;
-template bool mgk::DRMModeResources::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator!=(iterator const&) const;
+template bool mgkd::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator!=(iterator const&) const;
+template bool mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator!=(iterator const&) const;
+template bool mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator!=(iterator const&) const;
+template bool mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::iterator::operator!=(iterator const&) const;
