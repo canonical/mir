@@ -321,6 +321,31 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceEvent const& event)
     return out << ')';
 }
 
+std::ostream& mir::operator<<(std::ostream& out, MirInputDeviceStateEvent const& event)
+{
+    out << "input_device_state(ts="
+        << mir_input_device_state_event_time(&event)
+        << ", mod=" << MirInputEventModifier(mir_input_device_state_event_modifiers(&event))
+        << ", btns=" << mir_input_device_state_event_pointer_buttons(&event)
+        << ", x=" << mir_input_device_state_event_pointer_axis(&event, mir_pointer_axis_x)
+        << ", x=" << mir_input_device_state_event_pointer_axis(&event, mir_pointer_axis_y)
+        << " [";
+
+    for (size_t size = mir_input_device_state_event_device_count(&event), index = 0; index != size; ++index)
+    {
+        out << mir_input_device_state_event_device_id(&event, index) 
+            << " btns=" << mir_input_device_state_event_device_pointer_buttons(&event, index)
+            << " pressed=(";
+        auto keys = mir_input_device_state_event_device_pressed_keys(&event, index);
+        for (size_t count_keys = mir_input_device_state_event_device_pressed_keys_count(&event, index), i = 0; i != count_keys; ++i)
+        {
+            out << uint32_t(keys[i]) << ", ";
+        }
+        out << "), ";
+    }
+    return out << "]";
+}
+
 #define PRINT_EVENT(type) case mir_event_type_ ## type : return out << *mir_event_get_ ## type ## _event(&event);
 
 std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
@@ -336,6 +361,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
         PRINT_EVENT(close_surface);
 #pragma GCC diagnostic pop
         PRINT_EVENT(input);
+        PRINT_EVENT(input_device_state);
         PRINT_EVENT(keymap);
     case mir_event_type_prompt_session_state_change:
         return out << *mir_event_get_prompt_session_event(&event);

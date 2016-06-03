@@ -78,6 +78,8 @@ std::string mir::event_type_to_string(MirEventType t)
         return "mir_event_type_close_surface";
     case mir_event_type_input:
         return "mir_event_type_input";
+    case mir_event_type_input_device_state:
+        return "mir_event_type_input_device_state";
     default:
         abort();
     }
