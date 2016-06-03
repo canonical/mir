@@ -129,23 +129,23 @@ TEST_F(XKBMapper, key_repeats_do_not_recurse_modifier_state)
     EXPECT_EQ(XKB_KEY_7, map_key(mir_keyboard_action_down, KEY_7));
 }
 
-TEST_F(XKBMapper, when_device_and_surface_keymap_set_surface_keymap_is_used)
+TEST_F(XKBMapper, default_keymap_replaces_device_keymap)
 {
-    mapper.set_keymap(mi::Keymap{"pc105","dvorak","",""});
     mapper.set_keymap(MirInputDeviceId{0}, mi::Keymap{});
+    mapper.set_keymap(mi::Keymap{"pc105","dvorak","",""});
 
     EXPECT_EQ(XKB_KEY_b, map_key(mir_keyboard_action_down, KEY_N));
     EXPECT_EQ(XKB_KEY_e, map_key(mir_keyboard_action_down, KEY_D));
 }
 
-TEST_F(XKBMapper, when_surface_keymap_is_removed_device_keymap_is_used)
+TEST_F(XKBMapper, when_default_keymap_is_reset_no_key_is_mapped)
 {
     mapper.set_keymap(mi::Keymap{"pc105","dvorak","",""});
     mapper.set_keymap(MirInputDeviceId{0}, mi::Keymap{});
     mapper.reset_keymap();
 
-    EXPECT_EQ(XKB_KEY_n, map_key(mir_keyboard_action_down, KEY_N));
-    EXPECT_EQ(XKB_KEY_d, map_key(mir_keyboard_action_down, KEY_D));
+    EXPECT_EQ(0, map_key(mir_keyboard_action_down, KEY_N));
+    EXPECT_EQ(0, map_key(mir_keyboard_action_down, KEY_D));
 }
 
 TEST_F(XKBMapper, keymapper_uses_device_id_to_pick_keymap)
@@ -251,18 +251,34 @@ TEST_F(XKBMapper, device_removal_removes_modifier_flags)
     map_pointer_event(pointer_device_id, mir_pointer_action_motion, 0, 12, 40);
 }
 
-TEST_F(XKBMapper, modifier_attached_to_non_full_key_device)
+TEST_F(XKBMapper, when_single_keymap_is_used_key_states_are_still_tracked_separately)
 {
-    auto keyboard_us = MirInputDeviceId{0};
-    auto key_device = MirInputDeviceId{1};
+    auto keyboard_us_1 = MirInputDeviceId{0};
+    auto keyboard_us_2 = MirInputDeviceId{1};
+    mapper.set_keymap(mi::Keymap{});
+
     const MirInputEventModifiers shift_left = mir_input_event_modifier_shift_left | mir_input_event_modifier_shift;
+
     InSequence seq;
     EXPECT_CALL(*this, mapped_event(mt::KeyWithModifiers(shift_left)));
-    EXPECT_CALL(*this, mapped_event(AllOf(
-                mt::KeyWithModifiers(shift_left),
-                mt::KeyOfScanCode(KEY_POWER))));
+    EXPECT_CALL(*this, mapped_event(mt::KeyOfSymbol(XKB_KEY_a)));
+    EXPECT_CALL(*this, mapped_event(mt::KeyOfSymbol(XKB_KEY_B)));
 
-    mapper.set_keymap(keyboard_us, mi::Keymap{});
-    map_event(keyboard_us, mir_keyboard_action_down, KEY_LEFTSHIFT);
-    map_event(key_device, mir_keyboard_action_down, KEY_POWER);
+    map_event(keyboard_us_1, mir_keyboard_action_down, KEY_LEFTSHIFT);
+    map_event(keyboard_us_2, mir_keyboard_action_down, KEY_A);
+    map_event(keyboard_us_1, mir_keyboard_action_down, KEY_B);
+}
+
+TEST_F(XKBMapper, injected_key_state_affects_mapping_of_key_code)
+{
+    const MirInputEventModifiers no_modifier = mir_input_event_modifier_none;
+    auto keyboard = MirInputDeviceId{0};
+    mapper.set_keymap(keyboard, mi::Keymap{"pc105", "de", "",""});
+
+    mapper.set_key_state(keyboard, {KEY_RIGHTALT});
+
+    InSequence seq;
+    EXPECT_CALL(*this, mapped_event(AllOf(mt::KeyWithModifiers(no_modifier),mt::KeyOfSymbol(XKB_KEY_at))));
+
+    map_event(keyboard, mir_keyboard_action_down, KEY_Q);
 }

@@ -119,7 +119,7 @@ public:
           motion_event(builder.touch_event(std::chrono::nanoseconds(-1))),
           pointer_event(builder.pointer_event(std::chrono::nanoseconds(123), mir_pointer_action_motion,
                                         mir_pointer_button_primary, 0.0f, 0.0f,
-                                        movement.dx.as_float(), movement.dy.as_float()))
+                                        movement.dx.as_int(), movement.dy.as_int()))
 
     {
         using namespace ::testing;
@@ -304,8 +304,8 @@ TEST_F(AndroidInputSender, sends_pointer_events)
 
     EXPECT_EQ(1, client_motion_event.getPointerCount());
 
-    EXPECT_EQ(movement.dx.as_float(), client_motion_event.getAxisValue(AMOTION_EVENT_AXIS_RX, 0));
-    EXPECT_EQ(movement.dy.as_float(), client_motion_event.getAxisValue(AMOTION_EVENT_AXIS_RY, 0));
+    EXPECT_EQ(movement.dx.as_int(), client_motion_event.getAxisValue(AMOTION_EVENT_AXIS_RX, 0));
+    EXPECT_EQ(movement.dy.as_int(), client_motion_event.getAxisValue(AMOTION_EVENT_AXIS_RY, 0));
     EXPECT_EQ(AMOTION_EVENT_TOOL_TYPE_MOUSE, client_motion_event.getToolType(0));
     EXPECT_EQ(AINPUT_SOURCE_MOUSE, client_motion_event.getSource());
 }

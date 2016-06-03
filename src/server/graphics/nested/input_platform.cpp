@@ -31,10 +31,8 @@
 #include "mir/dispatch/action_queue.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
-#include "mir/event_printer.h"
 
 #include <chrono>
-#include <iostream>
 
 namespace mi = mir::input;
 namespace mgn = mir::graphics::nested;
@@ -133,8 +131,8 @@ public:
 
                 auto x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x);
                 auto y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
-                new_event->to_input()->to_motion()->set_x(0, x + frame.top_left.x.as_float());
-                new_event->to_input()->to_motion()->set_y(0, y + frame.top_left.y.as_float());
+                new_event->to_input()->to_motion()->set_x(0, x + frame.top_left.x.as_int());
+                new_event->to_input()->to_motion()->set_y(0, y + frame.top_left.y.as_int());
                 destination->handle_input(*new_event);
                 break;
             }
@@ -216,8 +214,6 @@ void mgn::InputPlatform::start()
     connection->set_input_event_callback(
         [this](MirEvent const& event, mir::geometry::Rectangle const& area)
         {
-            using mir::operator<<;
-            std::cout << event << std::endl;
             auto const event_type = mir_event_get_type(&event);
 
             if (event_type == mir_event_type_input)
@@ -230,7 +226,6 @@ void mgn::InputPlatform::start()
             }
             else if (event_type == mir_event_type_input_device_state)
             {
-                std::cout << " handling device state now " << std::endl;
                 if (!devices.empty())
                 {
                     auto const* device_state = mir_event_get_input_device_state_event(&event);
@@ -257,10 +252,12 @@ void mgn::InputPlatform::start()
                     front->destination->handle_input(*device_state_event);
                 }
             }
-            else
-            {
-                std::cout << "impossible :" << event_type << " != " << mir_event_type_input_device_state << std::endl;
-            }
+
+            auto const* input_ev = mir_event_get_input_event(&event);
+            auto const id = mir_input_event_get_device_id(input_ev);
+            auto it = devices.find(id);
+            if (it != end(devices))
+                it->second->emit_event(input_ev, area);
         });
 }
 

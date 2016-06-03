@@ -140,11 +140,7 @@ void mircv::XKBMapper::set_key_state(MirInputDeviceId id, std::vector<uint32_t> 
 void mircv::XKBMapper::update_modifier()
 {
     modifier_state = mir::optional_value<MirInputEventModifiers>{};
-    if (surface_mapping)
-    {
-        modifier_state = surface_mapping->modifier_state;
-    }
-    else if (!device_mapping.empty())
+    if (!device_mapping.empty())
     {
         MirInputEventModifiers new_modifier = 0;
         for (auto const& mapping_state : device_mapping)
@@ -169,9 +165,9 @@ void mircv::XKBMapper::map_event(MirEvent& ev)
         auto device_id = mir_input_event_get_device_id(input_event);
         auto mapping_state = get_keymapping_state(device_id);
 
-        if (input_type == mir_input_event_type_key && mapping_state)
+        if (input_type == mir_input_event_type_key)
         {
-            if (mapping_state->update_and_map(ev))
+            if (mapping_state && mapping_state->update_and_map(ev))
                 update_modifier();
         }
         else if (modifier_state.is_set())
@@ -183,20 +179,19 @@ void mircv::XKBMapper::map_event(MirEvent& ev)
 
 mircv::XKBMapper::XkbMappingState* mircv::XKBMapper::get_keymapping_state(MirInputDeviceId id)
 {
-    if (surface_mapping)
-    {
-        return surface_mapping.get();
-    }
-    else
-    {
-        auto dev_keymap = device_mapping.find(id);
+    auto dev_keymap = device_mapping.find(id);
 
-        if (dev_keymap != end(device_mapping))
-        {
-            return &dev_keymap->second;
-        }
+    if (dev_keymap != end(device_mapping))
+    {
+        return &dev_keymap->second;
     }
-
+    if (default_keymap)
+    {
+        return
+            &device_mapping.emplace(std::piecewise_construct,
+                                    std::forward_as_tuple(id),
+                                    std::forward_as_tuple(default_keymap)).first->second;
+    }
     return nullptr;
 }
 
@@ -213,7 +208,8 @@ void mircv::XKBMapper::set_keymap(char const* buffer, size_t len)
 void mircv::XKBMapper::set_keymap(XKBKeymapPtr new_keymap)
 {
     std::lock_guard<std::mutex> lg(guard);
-    surface_mapping = std::make_unique<XkbMappingState>(std::move(new_keymap));
+    default_keymap = std::move(new_keymap);
+    device_mapping.clear();
 }
 
 void mircv::XKBMapper::set_keymap(MirInputDeviceId id, Keymap const& new_keymap)
@@ -238,7 +234,8 @@ void mircv::XKBMapper::set_keymap(MirInputDeviceId id, XKBKeymapPtr new_keymap)
 void mircv::XKBMapper::reset_keymap()
 {
     std::lock_guard<std::mutex> lg(guard);
-    surface_mapping.reset();
+    default_keymap.reset();
+    device_mapping.clear();
     update_modifier();
 }
 
@@ -257,8 +254,8 @@ MirInputEventModifiers mircv::XKBMapper::modifiers() const
     return mir_input_event_modifier_none;
 }
 
-mircv::XKBMapper::XkbMappingState::XkbMappingState(XKBKeymapPtr keymap)
-    : keymap{std::move(keymap)}, state{make_unique_state(this->keymap.get())}
+mircv::XKBMapper::XkbMappingState::XkbMappingState(std::shared_ptr<xkb_keymap> const& keymap)
+    : keymap{keymap}, state{make_unique_state(this->keymap.get())}
 {
 }
 
@@ -276,7 +273,7 @@ bool mircv::XKBMapper::XkbMappingState::update_and_map(MirEvent& event)
     // TODO test if key entry is start of a compose key sequence..
     // then use compose key API to map key..
     uint32_t xkb_scan_code = to_xkb_scan_code(key_ev.scan_code());
-    bool old_state = modifier_state;
+    auto old_state = modifier_state;
 
     key_ev.set_key_code(update_state(xkb_scan_code, key_ev.action()));
     // TODO we should also indicate effective/consumed modifier state to properly

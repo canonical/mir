@@ -217,8 +217,8 @@ void mev::set_cursor_position(MirEvent& event, mir::geometry::Point const& pos)
         event.to_input()->to_motion()->pointer_count() == 1)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor position is only valid for pointer events."));
 
-    event.to_input()->to_motion()->set_x(0, pos.x.as_float());
-    event.to_input()->to_motion()->set_y(0, pos.y.as_float());
+    event.to_input()->to_motion()->set_x(0, pos.x.as_int());
+    event.to_input()->to_motion()->set_y(0, pos.y.as_int());
 }
 
 void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)

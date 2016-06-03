@@ -41,6 +41,7 @@ namespace dispatch
 {
 class MultiplexingDispatchable;
 class ReadableFd;
+class ActionQueue;
 }
 namespace input
 {
@@ -73,6 +74,7 @@ private:
     std::shared_ptr<udev::Context> const udev_context;
     std::shared_ptr<InputDeviceRegistry> const input_device_registry;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const platform_dispatchable;
+    std::shared_ptr<dispatch::ActionQueue> const platform_actions;
     std::shared_ptr<::libinput> lib;
     std::shared_ptr<dispatch::ReadableFd> libinput_dispatchable;
 

@@ -35,8 +35,7 @@ mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::
     : device_id{id}, device{device}, info(device.get_device_info()), pointer{device.get_pointer_settings()},
       touchpad{device.get_touchpad_settings()}, actions{actions}, key_mapper{key_mapper}
 {
-    if (contains(info.capabilities, mi::DeviceCapability::keyboard) &&
-        contains(info.capabilities, mi::DeviceCapability::alpha_numeric))
+    if (contains(info.capabilities, mi::DeviceCapability::keyboard))
     {
         keyboard = mi::KeyboardConfiguration{};
         key_mapper->set_keymap(device_id, keyboard.value().device_keymap);

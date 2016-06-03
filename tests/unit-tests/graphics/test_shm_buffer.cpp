@@ -162,7 +162,7 @@ TEST_F(ShmBufferTest, uploads_rgba_4444_correctly)
 TEST_F(ShmBufferTest, uploads_xrgb_8888_correctly)
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-    EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+    EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT,
                                       size.width.as_int(), size.height.as_int(),
                                       0, GL_BGRA_EXT, GL_UNSIGNED_BYTE,
                                       stub_shm_file->fake_mapping));
@@ -174,7 +174,7 @@ TEST_F(ShmBufferTest, uploads_xrgb_8888_correctly)
 TEST_F(ShmBufferTest, uploads_argb_8888_correctly)
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-    EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+    EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA_EXT,
                                       size.width.as_int(), size.height.as_int(),
                                       0, GL_BGRA_EXT, GL_UNSIGNED_BYTE,
                                       stub_shm_file->fake_mapping));

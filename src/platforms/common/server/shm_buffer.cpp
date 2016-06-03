@@ -138,9 +138,17 @@ void mgc::ShmBuffer::gl_bind_to_texture()
          */
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-        auto internal_format = (format == GL_BGRA_EXT) ? GL_RGBA : format;
-
-        glTexImage2D(GL_TEXTURE_2D, 0, internal_format,
+        /*
+         * TODO: Get a fix for Mesa black windows bug:
+         * https://bugs.freedesktop.org/show_bug.cgi?id=92265
+         * Although this syntax works for GLES, Mesa will reject it
+         * if you switch to desktop GL. You can override internalformat
+         * to ((format == GL_BGRA_EXT) ? GL_RGBA : format) as a
+         * workaround but that's actually incorrect and won't work
+         * for other drivers (also shouldn't work for Mesa after the
+         * bug gets fixed).
+         */
+        glTexImage2D(GL_TEXTURE_2D, 0, format,
                      size_.width.as_int(), size_.height.as_int(),
                      0, format, type, pixels);
     }
