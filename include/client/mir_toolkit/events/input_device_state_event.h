@@ -32,19 +32,19 @@ extern "C" {
 /**
  * MirInputDeviceStateEvent informs clients about the current state of the
  * input devices. This is necessary when the client did not receive the most
- * recent input events. This happens when the server was resumed after a pause,
- * or when the client just received the input focus
+ * recent input events. The event is sent when the server was resumed after
+ * a pause, or when the client just received the input focus.
  *
  * The event contains a single pointer button state and the current cursor
- * position. Additionally for key and pointer devices the pressed keys and
- * buttons are supplied individually.
+ * position and the pressed modifier keys. Additionally for key and pointer
+ * devices the pressed keys and buttons are supplied individually.
  */
 
 /**
  * Retrieve the button state.
  *
  * \param[in] ev The input device state event
- * \return       The cumulative state of all modifiers
+ * \return       The combined pointer button state
  */
 MirPointerButtons mir_input_device_state_event_pointer_buttons(
     MirInputDeviceStateEvent const* ev);
@@ -69,7 +69,7 @@ int64_t mir_input_device_state_event_time(
     MirInputDeviceStateEvent const* ev);
 
 /**
- * Retrieve the modifier keys currently active based on the keys currently pressed on all devices.
+ * Retrieve the modifier keys pressed on all input devices.
  *
  * \param[in] ev The input device state event
  * \return       The modifier mask
@@ -87,41 +87,42 @@ uint32_t mir_input_device_state_event_device_count(
     MirInputDeviceStateEvent const* ev);
 
 /**
- * Retrieve the device id 
+ * Retrieve the device id
  *
  * \param[in] ev The input device state event
- * \param[in] index The index of the input device id
- * \return       The device id
+ * \param[in] index The index of the input device
+ * \return    The device id
  */
 MirInputDeviceId mir_input_device_state_event_device_id(
     MirInputDeviceStateEvent const* ev, uint32_t index);
 
 /**
- * Number of keys pressed on the device identified by the \a index.
+ * Retrieve an array of pressed keys on the device identified by the \a index.
+ * The keys are encoded as scan codes.
  *
  * \param[in] ev The input device state event
- * \param[in] index The index of the input device id
- * \return       The input event modifiers
+ * \param[in] index The index of the input device
+ * \return    An array of pressed keys
  */
 uint32_t const* mir_input_device_state_event_device_pressed_keys(
     MirInputDeviceStateEvent const* ev, uint32_t index);
 
 /**
- * Number of keys pressed on the device identified by the \a index.
+ * Retrieve the size of scan code array of the device identified by the \a index.
  *
  * \param[in] ev The input device state event
- * \param[in] index The index of the input device id
- * \return       The input event modifiers
+ * \param[in] index The index of the input device
+ * \return    Size of the pressed keys array
  */
 uint32_t mir_input_device_state_event_device_pressed_keys_count(
     MirInputDeviceStateEvent const* ev, uint32_t index);
 
 /**
- * Retrieve the pointer button state of the device
+ * Retrieve the pointer button state of the device identified by the \a index
  *
  * \param[in] ev The input device state event
- * \param[in] index The index of the input device id
- * \return       The pointer button state of the device
+ * \param[in] index The index of the input device
+ * \return    The pointer button state of the device
  */
 MirPointerButtons mir_input_device_state_event_device_pointer_buttons(
     MirInputDeviceStateEvent const* ev, uint32_t index);
