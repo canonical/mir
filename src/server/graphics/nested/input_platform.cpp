@@ -31,8 +31,10 @@
 #include "mir/dispatch/action_queue.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
+#include "mir/event_printer.h"
 
 #include <chrono>
+#include <iostream>
 
 namespace mi = mir::input;
 namespace mgn = mir::graphics::nested;
@@ -107,13 +109,16 @@ public:
         case mir_input_event_type_key:
             {
                 auto const* key_event = mir_input_event_get_keyboard_event(event);
-                destination->handle_input(*builder->key_event(
+
+                auto new_kev = builder->key_event(
                         event_time,
                         mir_keyboard_event_action(key_event),
                         mir_keyboard_event_key_code(key_event),
                         mir_keyboard_event_scan_code(key_event)
-                        ));
-
+                        );
+                using mir::operator<<;
+                std::cout << "now emitting " << *new_kev << std::endl;
+                destination->handle_input(*new_kev);
                 break;
             }
         case mir_input_event_type_pointer:
@@ -249,15 +254,11 @@ void mgn::InputPlatform::start()
                     auto device_state_event = front->builder->device_state_event(
                         mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_x),
                         mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_y));
+                    using mir::operator<<;
+                    std::cout << "now emitting " << *device_state_event << std::endl;
                     front->destination->handle_input(*device_state_event);
                 }
             }
-
-            auto const* input_ev = mir_event_get_input_event(&event);
-            auto const id = mir_input_event_get_device_id(input_ev);
-            auto it = devices.find(id);
-            if (it != end(devices))
-                it->second->emit_event(input_ev, area);
         });
 }
 

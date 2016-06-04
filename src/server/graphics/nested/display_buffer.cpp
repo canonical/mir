@@ -111,10 +111,9 @@ catch (std::exception const&)
 
 void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
 {
-    if (mir_event_get_type(&event) != mir_event_type_input)
-        return;
-
-    host_connection->emit_input_event(event, area);
+    if (mir_event_get_type(&event) == mir_event_type_input ||
+        mir_event_get_type(&event) == mir_event_type_input_device_state)
+        host_connection->emit_input_event(event, area);
 }
 
 mg::NativeDisplayBuffer* mgn::detail::DisplayBuffer::native_display_buffer()
