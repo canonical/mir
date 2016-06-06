@@ -362,11 +362,6 @@ void another_buffer_callback(MirBuffer* buffer, void* context)
 {
     buffer_callback(buffer, context);
 }
-void callback_setting_callback(MirBuffer* buffer, void* context)
-{
-    buffer_callback(buffer, context);
-    mir_buffer_set_callback(buffer, another_buffer_callback, context);
-}
 }
 TEST_F(PresentationChain, buffers_callback_can_be_reassigned)
 {
@@ -393,36 +388,6 @@ TEST_F(PresentationChain, buffers_callback_can_be_reassigned)
 
     mir_presentation_chain_submit_buffer(surface.chain(), context.buffer());
     //flush the 1st buffer out
-    mir_presentation_chain_submit_buffer(surface.chain(), second_buffer_context.buffer());
-
-    ASSERT_TRUE(another_context.wait_for_buffer(10s));
-    ASSERT_THAT(another_context.buffer(), Ne(nullptr));
-}
-
-TEST_F(PresentationChain, buffers_callback_can_be_reassigned_from_callback)
-{
-    SurfaceWithChainFromStart surface(connection, size, pf);
-
-    MirBufferSync second_buffer_context;
-    MirBufferSync context;
-    MirBufferSync another_context;
-    mir_connection_allocate_buffer(
-        connection,
-        size.width.as_int(), size.height.as_int(), pf, usage,
-        buffer_callback, &context);
-    mir_connection_allocate_buffer(
-        connection,
-        size.width.as_int(), size.height.as_int(), pf, usage,
-        buffer_callback, &second_buffer_context);
-
-    ASSERT_TRUE(context.wait_for_buffer(10s));
-    ASSERT_THAT(context.buffer(), Ne(nullptr));
-    ASSERT_TRUE(second_buffer_context.wait_for_buffer(10s));
-    ASSERT_THAT(second_buffer_context.buffer(), Ne(nullptr));
-
-    mir_buffer_set_callback(context.buffer(), callback_setting_callback, &another_context);
-
-    mir_presentation_chain_submit_buffer(surface.chain(), context.buffer());
     mir_presentation_chain_submit_buffer(surface.chain(), second_buffer_context.buffer());
 
     ASSERT_TRUE(another_context.wait_for_buffer(10s));
