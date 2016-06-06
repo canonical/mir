@@ -28,7 +28,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 23)
+set(MIR_VERSION_MINOR 24)
 set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
@@ -198,6 +198,41 @@ pkg_check_modules(GLIB REQUIRED glib-2.0)
 include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
 include_directories (SYSTEM ${EGL_INCLUDE_DIRS})
 include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
+
+#
+# Full OpenGL support is possibly complete but not yet perfect. So is
+# presently disabled by default. See the TODOs in:
+#   src/platform/graphics/egl_extensions.cpp: glEGLImageTargetTexture2DOES
+#   src/platforms/common/server/shm_buffer.cpp: glTexImage2D
+#
+#if (TARGET_ARCH STREQUAL "x86_64-linux-gnu" OR
+#    TARGET_ARCH STREQUAL "i386-linux-gnu")
+#  set(DEFAULT_LIBGL "libGL")
+#else()
+  set(DEFAULT_LIBGL "libGLESv2")
+#endif()
+set(MIR_SERVER_LIBGL ${DEFAULT_LIBGL} CACHE STRING "OpenGL library to use in Mir servers {libGL,libGLESv2}")
+
+if (MIR_SERVER_LIBGL STREQUAL "libGL")
+  pkg_check_modules(GL REQUIRED gl)
+  add_definitions(
+    -DGL_GLEXT_PROTOTYPES
+    -DMIR_SERVER_GL_H=<GL/gl.h>
+    -DMIR_SERVER_GLEXT_H=<GL/glext.h>
+    -DMIR_SERVER_EGL_OPENGL_BIT=EGL_OPENGL_BIT
+    -DMIR_SERVER_EGL_OPENGL_API=EGL_OPENGL_API
+  )
+elseif (MIR_SERVER_LIBGL STREQUAL "libGLESv2")
+  pkg_check_modules(GL REQUIRED glesv2)
+  add_definitions(
+    -DMIR_SERVER_GL_H=<GLES2/gl2.h>
+    -DMIR_SERVER_GLEXT_H=<GLES2/gl2ext.h>
+    -DMIR_SERVER_EGL_OPENGL_BIT=EGL_OPENGL_ES2_BIT
+    -DMIR_SERVER_EGL_OPENGL_API=EGL_OPENGL_ES_API
+  )
+else()
+  message(FATAL_ERROR "Invalid MIR_SERVER_LIBGL value ${MIR_SERVER_LIBGL}")
+endif()
 
 if (MIR_BUILD_PLATFORM_ANDROID)
   find_package(AndroidProperties REQUIRED)

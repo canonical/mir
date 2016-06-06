@@ -47,6 +47,10 @@ struct StubClientContext : mcl::ClientContext
         platform_package.fd_items = 1;
     }
 
+    void populate_graphics_module(MirModuleProperties& graphics_module) override
+    {
+        memset(&graphics_module, 0, sizeof(graphics_module));
+    }
 };
 
 struct MesaClientPlatformTest : testing::Test

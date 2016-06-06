@@ -25,7 +25,9 @@
 #include <thread>
 #include <unordered_map>
 
+#ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
+#endif
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
 #include <EGL/eglext.h>

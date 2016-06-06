@@ -8,6 +8,7 @@ configure_file(
 
 include_directories(
   ${CMAKE_SOURCE_DIR}/include/platforms/mesa
+  ${PROJECT_SOURCE_DIR}/src/platforms/common/kms-utils/
 )
 
 add_subdirectory(server/)
