@@ -49,7 +49,6 @@ char const* const mo::offscreen_opt               = "offscreen";
 char const* const mo::touchspots_opt              = "enable-touchspots";
 char const* const mo::fatal_except_opt            = "on-fatal-error-except";
 char const* const mo::debug_opt                   = "debug";
-char const* const mo::nbuffers_opt                = "nbuffers";
 char const* const mo::composite_delay_opt         = "composite-delay";
 char const* const mo::enable_key_repeat_opt       = "enable-key-repeat";
 
@@ -172,8 +171,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the SharedLibraryProber report. [{log,lttng,off}]")
         (shell_report_opt, po::value<std::string>()->default_value(off_opt_value),
          "How to handle the Shell report. [{log,off}]")
-        (nbuffers_opt, po::value<int>()->default_value(0),
-            "Number of buffers per surface.")
         (composite_delay_opt, po::value<int>()->default_value(-1),
             "Compositor frame delay in milliseconds (how long to wait for new "
             "frames from clients before compositing). Higher values result in "

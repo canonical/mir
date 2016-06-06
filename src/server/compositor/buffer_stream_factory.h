@@ -39,8 +39,7 @@ class BufferStreamFactory : public scene::BufferStreamFactory
 {
 public:
     BufferStreamFactory(std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc,
-                        std::shared_ptr<FrameDroppingPolicyFactory> const& policy_factory,
-                        unsigned int nbuffers);
+                        std::shared_ptr<FrameDroppingPolicyFactory> const& policy_factory);
 
     virtual ~BufferStreamFactory() {}
 
@@ -56,7 +55,6 @@ public:
 private:
     std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
     std::shared_ptr<FrameDroppingPolicyFactory> const policy_factory;
-    unsigned int const nbuffers;
 };
 
 }
