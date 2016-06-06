@@ -23,8 +23,8 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include MIR_SERVER_GL_H
+#include MIR_SERVER_GLEXT_H
 
 namespace mg = mir::graphics;
 namespace mgo = mg::offscreen;
@@ -57,11 +57,13 @@ mgo::detail::GLFramebufferObject::GLFramebufferObject(geom::Size const& size)
     GLenum gl_color_format{GL_RGBA4};
     GLenum const gl_depth_format{GL_DEPTH_COMPONENT16};
 
+#ifdef GL_RGBA8_OES
     if (extensions.support("GL_ARM_rgba8") ||
         extensions.support("GL_OES_rgb8_rgba8"))
     {
         gl_color_format = GL_RGBA8_OES;
     }
+#endif
 
     /* Create a renderbuffer for the color attachment */
     glGenRenderbuffers(1, &color_renderbuffer);

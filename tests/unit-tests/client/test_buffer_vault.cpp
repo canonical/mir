@@ -187,14 +187,14 @@ TEST_F(StartedBufferVault, can_deposit_buffer)
     auto buffer = vault.withdraw().get();
     EXPECT_CALL(mock_requests, submit_buffer(Ref(*buffer)));
     vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
 }
 
 TEST_F(StartedBufferVault, cant_transfer_if_not_in_acct)
 {
     auto buffer = vault.withdraw().get();
     EXPECT_THROW({ 
-        vault.wire_transfer_outbound(buffer);
+        vault.wire_transfer_outbound(buffer, []{});
     }, std::logic_error);
 }
 
@@ -214,7 +214,7 @@ TEST_F(StartedBufferVault, attempt_to_redeposit_throws)
 {
     auto buffer = vault.withdraw().get();
     vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
     EXPECT_THROW({
         vault.deposit(buffer);
     }, std::logic_error);
@@ -226,7 +226,7 @@ TEST_F(BufferVault, can_transfer_again_when_we_get_the_buffer)
     vault->wire_transfer_inbound(package.buffer_id());
     auto buffer = vault->withdraw().get();
     vault->deposit(buffer);
-    vault->wire_transfer_outbound(buffer);
+    vault->wire_transfer_outbound(buffer, []{});
 
     vault->wire_transfer_inbound(package.buffer_id());
     auto buffer2 = vault->withdraw().get();
@@ -300,11 +300,13 @@ TEST_F(BufferVault, marks_as_submitted_on_transfer)
 
     auto buffer = vault->withdraw().get();
     vault->deposit(buffer);
-    vault->wire_transfer_outbound(buffer);
+    vault->wire_transfer_outbound(buffer, []{});
 }
 
 TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_immediate_response)
 {
+    vault.set_size(new_size);
+
     EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
     EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_))
         .WillOnce(Invoke(
@@ -313,17 +315,17 @@ TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_i
             vault.wire_transfer_inbound(package4.buffer_id());
         }));
 
-    vault.set_size(new_size);
     vault.wire_transfer_inbound(package.buffer_id());
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
 TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_delayed_response)
 {
+    vault.set_size(new_size);
+
     EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
     EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_));
 
-    vault.set_size(new_size);
     vault.wire_transfer_inbound(package.buffer_id());
     vault.wire_transfer_inbound(package4.buffer_id());
     EXPECT_THAT(vault.withdraw().get()->size(), Eq(new_size));
@@ -340,9 +342,9 @@ TEST_F(StartedBufferVault, withdraw_gives_only_newly_sized_buffers_after_resize)
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
-TEST_F(StartedBufferVault, simply_setting_size_triggers_no_server_interations)
+TEST_F(StartedBufferVault, setting_size_frees_unneeded_buffers_right_away)
 {
-    EXPECT_CALL(mock_requests, free_buffer(_)).Times(0);
+    EXPECT_CALL(mock_requests, free_buffer(_)).Times(3);
     EXPECT_CALL(mock_requests, allocate_buffer(_,_,_)).Times(0);
     auto const cycles = 30u;
     geom::Size new_size(80, 100);
@@ -429,21 +431,14 @@ TEST_F(StartedBufferVault, buffer_count_remains_the_same_after_scaling)
     EXPECT_CALL(mock_requests, free_buffer(_))
         .Times(initial_nbuffers);
 
-    auto buffer = vault.withdraw().get();
     vault.set_scale(scale);
-    vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
-    vault.wire_transfer_inbound(package.buffer_id());
 
-    for(auto i = 0; i < 100; i++)
+    for(auto i = 0u; i < initial_nbuffers; i++)
     {
         auto b = vault.withdraw().get();
-        EXPECT_THAT(b->size(), Eq(new_size));
         vault.deposit(b);
-        b->received();
-        vault.wire_transfer_outbound(b);
-        vault.wire_transfer_inbound(buffers[(i+1)%3].buffer_id());
     }
+
     Mock::VerifyAndClearExpectations(&mock_requests);
 }
 
@@ -514,19 +509,19 @@ TEST_F(StartedBufferVault, delayed_decrease_allocation_count)
     vault.wire_transfer_inbound(requested_buffer.buffer_id());
     auto b = vault.withdraw().get();
     vault.deposit(b);
-    vault.wire_transfer_outbound(b);
+    vault.wire_transfer_outbound(b, []{});
 
     b = vault.withdraw().get();
     vault.deposit(b);
-    vault.wire_transfer_outbound(b);
+    vault.wire_transfer_outbound(b, []{});
 
     b = vault.withdraw().get();
     vault.deposit(b);
-    vault.wire_transfer_outbound(b);
+    vault.wire_transfer_outbound(b, []{});
 
     b = vault.withdraw().get();
     vault.deposit(b);
-    vault.wire_transfer_outbound(b);
+    vault.wire_transfer_outbound(b, []{});
 
     vault.decrease_buffer_count();
     vault.wire_transfer_inbound(package.buffer_id());
@@ -539,18 +534,107 @@ TEST_F(StartedBufferVault, prefers_buffers_returned_further_in_the_past)
 {
     auto buffer = vault.withdraw().get();
     vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
     auto first_id = buffer->rpc_id();
 
     buffer = vault.withdraw().get();
     vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
     auto second_id = buffer->rpc_id();
 
     vault.wire_transfer_inbound(second_id);
     vault.wire_transfer_inbound(first_id);
 
     EXPECT_THAT(vault.withdraw().get()->rpc_id(), Ne(first_id));
+}
 
+//LP: #1579076
+TEST_F(StartedBufferVault, doesnt_let_buffers_stagnate_after_resize)
+{
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(3);
+    vault.set_size(new_size);
 
+    EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_))
+        .Times(1);
+    auto buffer_future = vault.withdraw();
+    vault.wire_transfer_inbound(package4.buffer_id());
+    EXPECT_THAT(buffer_future.get()->size(), Eq(new_size));
+    Mock::VerifyAndClearExpectations(&mock_requests);
+}
+
+TEST_F(StartedBufferVault, doesnt_free_buffers_in_the_driver_after_resize)
+{
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(2);
+    auto buffer = vault.withdraw().get();
+    vault.set_size(new_size);
+    Mock::VerifyAndClearExpectations(&mock_requests);
+
+    vault.deposit(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
+
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(1);
+    vault.wire_transfer_inbound(buffer->rpc_id());
+    Mock::VerifyAndClearExpectations(&mock_requests);
+}
+
+TEST_F(StartedBufferVault, doesnt_free_buffers_with_content_after_resize)
+{
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(2);
+    auto buffer = vault.withdraw().get();
+    vault.deposit(buffer);
+    vault.set_size(new_size);
+    Mock::VerifyAndClearExpectations(&mock_requests);
+
+    vault.wire_transfer_outbound(buffer, []{});
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(1);
+    vault.wire_transfer_inbound(buffer->rpc_id());
+    Mock::VerifyAndClearExpectations(&mock_requests);
+}
+
+TEST_F(StartedBufferVault, doesnt_free_buffers_if_size_is_the_same)
+{
+    EXPECT_CALL(mock_requests, free_buffer(_))
+        .Times(0);
+    vault.set_size(size);
+    Mock::VerifyAndClearExpectations(&mock_requests);
+}
+
+TEST_F(StartedBufferVault, delays_allocation_if_not_needed)
+{
+    vault.set_size(new_size);
+
+    EXPECT_CALL(mock_requests, allocate_buffer(new_size,_,_))
+        .Times(1)
+        .WillOnce(Invoke(
+        [&, this](geom::Size, MirPixelFormat, int)
+        {
+            vault.wire_transfer_inbound(package4.buffer_id());
+        }));
+
+    for(auto i = 0u; i < 10u; i++)
+    {
+        auto buffer = vault.withdraw().get();
+        vault.deposit(buffer);
+        buffer->received();
+        vault.wire_transfer_outbound(buffer, []{});
+        vault.wire_transfer_inbound(buffer->rpc_id());
+    }
+}
+
+TEST_F(StartedBufferVault, can_increase_count_after_resize)
+{
+    auto num_allocations = 4u;
+    EXPECT_CALL(mock_requests, allocate_buffer(_,_,_))
+        .Times(num_allocations);
+
+    vault.increase_buffer_count();
+    vault.set_size(new_size);
+
+    for(auto i = 0u; i < num_allocations + 1; i++)
+        vault.withdraw();
 }

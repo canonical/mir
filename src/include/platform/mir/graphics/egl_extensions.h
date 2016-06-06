@@ -19,12 +19,11 @@
 #ifndef MIR_GRAPHICS_EGL_EXTENSIONS_H_
 #define MIR_GRAPHICS_EGL_EXTENSIONS_H_
 
-#define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include MIR_SERVER_GL_H
+#include MIR_SERVER_GLEXT_H
 
 namespace mir
 {
