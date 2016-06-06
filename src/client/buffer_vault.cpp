@@ -108,7 +108,7 @@ void mcl::BufferVault::realloc_buffer(int free_id, geom::Size size, MirPixelForm
     alloc_buffer(size, format, usage);
 }
 
-std::shared_ptr<mcl::Buffer> mcl::BufferVault::checked_buffer_from_map(int id)
+std::shared_ptr<mcl::MirBuffer> mcl::BufferVault::checked_buffer_from_map(int id)
 {
     auto map = surface_map.lock();
     if (!map)
@@ -119,7 +119,6 @@ std::shared_ptr<mcl::Buffer> mcl::BufferVault::checked_buffer_from_map(int id)
     else
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer in map"));
 }
-
 
 mcl::BufferVault::BufferMap::iterator mcl::BufferVault::available_buffer()
 {
@@ -136,12 +135,12 @@ mcl::BufferVault::BufferMap::iterator mcl::BufferVault::available_buffer()
     return it;
 }
 
-mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
+mcl::NoTLSFuture<std::shared_ptr<mcl::MirBuffer>> mcl::BufferVault::withdraw()
 {
     std::unique_lock<std::mutex> lk(mutex);
     if (disconnected_)
         BOOST_THROW_EXCEPTION(std::logic_error("server_disconnected"));
-    mcl::NoTLSPromise<std::shared_ptr<mcl::Buffer>> promise;
+    mcl::NoTLSPromise<std::shared_ptr<mcl::MirBuffer>> promise;
     auto it = available_buffer();
     auto future = promise.get_future();
     if (it != buffers.end())
@@ -165,7 +164,7 @@ mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> mcl::BufferVault::withdraw()
     return future;
 }
 
-void mcl::BufferVault::deposit(std::shared_ptr<mcl::Buffer> const& buffer)
+void mcl::BufferVault::deposit(std::shared_ptr<mcl::MirBuffer> const& buffer)
 {
     std::lock_guard<std::mutex> lk(mutex);
     auto it = buffers.find(buffer->rpc_id());
@@ -177,7 +176,7 @@ void mcl::BufferVault::deposit(std::shared_ptr<mcl::Buffer> const& buffer)
 }
 
 MirWaitHandle* mcl::BufferVault::wire_transfer_outbound(
-    std::shared_ptr<mcl::Buffer> const& buffer, std::function<void()> const& done)
+    std::shared_ptr<mcl::MirBuffer> const& buffer, std::function<void()> const& done)
 {
     std::unique_lock<std::mutex> lk(mutex);
     auto it = buffers.find(buffer->rpc_id());

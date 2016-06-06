@@ -60,7 +60,7 @@ void mcl::Buffer::received()
         if (!owned)
             owned = true;
     }
-    cb(reinterpret_cast<MirBuffer*>(this), cb_context);
+    cb(reinterpret_cast<::MirBuffer*>(static_cast<mcl::MirBuffer*>(this)), cb_context);
 
 }
 
@@ -74,7 +74,7 @@ void mcl::Buffer::received(MirBufferPackage const& update_package)
             buffer->update_from(update_package);
         }
     }
-    cb(reinterpret_cast<MirBuffer*>(this), cb_context);
+    cb(reinterpret_cast<::MirBuffer*>(static_cast<mcl::MirBuffer*>(this)), cb_context);
 }
     
 MirGraphicsRegion mcl::Buffer::map_region()
