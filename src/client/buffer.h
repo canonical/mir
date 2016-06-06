@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/mir_buffer.h"
 #include "mir/geometry/size.h"
+#include "atomic_callback.h"
 #include <memory>
 #include <chrono>
 #include <mutex>
@@ -67,9 +68,7 @@ private:
     int const buffer_id;
     std::shared_ptr<ClientBuffer> const buffer;
 
-    std::recursive_mutex cb_mutex;
-    mir_buffer_callback cb;
-    void* cb_context;
+    AtomicCallback<> cb;
 
     std::mutex mutex;
     bool owned;

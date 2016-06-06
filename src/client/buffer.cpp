@@ -30,8 +30,7 @@ mcl::Buffer::Buffer(
     MirBufferUsage usage) :
     buffer_id(buffer_id),
     buffer(buffer),
-    cb(cb),
-    cb_context(context),
+    cb([this, cb, context]{ (*cb)((MirBuffer*)this, context); }),
     owned(false),
     connection(connection),
     usage(usage)
@@ -60,9 +59,8 @@ void mcl::Buffer::received()
         if (!owned)
             owned = true;
     }
-    std::lock_guard<decltype(cb_mutex)> lk(cb_mutex);
-    cb(reinterpret_cast<MirBuffer*>(this), cb_context);
 
+    cb();
 }
 
 void mcl::Buffer::received(MirBufferPackage const& update_package)
@@ -75,8 +73,8 @@ void mcl::Buffer::received(MirBufferPackage const& update_package)
             buffer->update_from(update_package);
         }
     }
-    std::lock_guard<decltype(cb_mutex)> lk(cb_mutex);
-    cb(reinterpret_cast<MirBuffer*>(this), cb_context);
+
+    cb();
 }
     
 MirGraphicsRegion mcl::Buffer::map_region()
@@ -143,7 +141,5 @@ void mcl::Buffer::increment_age()
 
 void mcl::Buffer::set_callback(mir_buffer_callback callback, void* context)
 {
-    std::lock_guard<decltype(cb_mutex)> lk(cb_mutex);
-    cb = callback;
-    cb_context = context;
+    cb.set_callback([&, callback, context]{ (*callback)(reinterpret_cast<MirBuffer*>(this), context); });
 }

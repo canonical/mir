@@ -35,6 +35,11 @@ public:
     {
     }
 
+    AtomicCallback(std::function<void(Args...)> const& fn)
+        : callback(fn)
+    {
+    }
+
     ~AtomicCallback() = default;
 
     void set_callback(std::function<void(Args...)> const& fn)
