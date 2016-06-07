@@ -64,6 +64,7 @@ class MockInputEventFactory : public droidinput::InputEventFactoryInterface
 public:
     MOCK_METHOD0(createKeyEvent, droidinput::KeyEvent*());
     MOCK_METHOD0(createMotionEvent, droidinput::MotionEvent*());
+    MOCK_METHOD0(createRawBufferEvent, droidinput::RawBufferEvent*());
 };
 
 class MockInputReport : public mir::input::InputReport
