@@ -232,7 +232,7 @@ int main(int argc, char** argv)
             //just looks like a blur if we don't slow things down
             usleep(500000);
 
-            if (++spare_buffer > 4)
+            if (++spare_buffer > num_chains)
                 spare_buffer = 0;
         }
     }
