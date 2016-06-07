@@ -21,7 +21,10 @@
 
 #include "src/server/graphics/nested/host_connection.h"
 #include "src/server/graphics/nested/host_surface.h"
+#include "src/include/client/mir/input/input_devices.h"
 #include "mir/graphics/platform_operation_message.h"
+
+#include "mir_toolkit/mir_connection.h"
 
 namespace mir
 {
@@ -78,6 +81,13 @@ public:
     }
 
     auto graphics_platform_library() -> std::string { return {}; }
+
+
+    graphics::nested::UniqueInputConfig create_input_device_config()
+    {
+        return graphics::nested::UniqueInputConfig(reinterpret_cast<MirInputConfig*>(new std::vector<input::DeviceData>),
+                                                   mir_input_config_destroy);
+    }
 
     void set_input_device_change_callback(std::function<void(graphics::nested::UniqueInputConfig)> const&) override
     {

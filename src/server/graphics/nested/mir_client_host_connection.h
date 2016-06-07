@@ -75,6 +75,7 @@ public:
     virtual PlatformOperationMessage platform_operation(
         unsigned int op, PlatformOperationMessage const& request) override;
 
+    UniqueInputConfig create_input_device_config() override;
     void set_input_device_change_callback(std::function<void(UniqueInputConfig)> const& cb) override;
     void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb) override;
     void emit_input_event(MirEvent const& cb, mir::geometry::Rectangle const& source_frame) override;

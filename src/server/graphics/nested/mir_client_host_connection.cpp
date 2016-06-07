@@ -228,7 +228,8 @@ mgn::MirClientHostConnection::MirClientHostConnection(
     std::shared_ptr<msh::HostLifecycleEventListener> const& host_lifecycle_event_listener)
     : mir_connection{mir_connect_sync(host_socket.c_str(), name.c_str())},
       conf_change_callback{[]{}},
-      host_lifecycle_event_listener{host_lifecycle_event_listener}
+      host_lifecycle_event_listener{host_lifecycle_event_listener},
+      event_callback{[](MirEvent const&, mir::geometry::Rectangle const&){}}
 {
     if (!mir_connection_is_valid(mir_connection))
     {
@@ -393,11 +394,14 @@ auto mgn::MirClientHostConnection::graphics_platform_library() -> std::string
     return properties.filename;
 }
 
+mgn::UniqueInputConfig mgn::MirClientHostConnection::create_input_device_config()
+{
+    return make_input_config(mir_connection);
+}
+
 void mgn::MirClientHostConnection::set_input_device_change_callback(std::function<void(UniqueInputConfig)> const& cb)
 {
     input_config_callback = cb;
-    if (input_config_callback)
-        input_config_callback(make_input_config(mir_connection));
 }
 
 void mgn::MirClientHostConnection::set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb)
@@ -407,6 +411,5 @@ void mgn::MirClientHostConnection::set_input_event_callback(std::function<void(M
 
 void mgn::MirClientHostConnection::emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame)
 {
-    if (event_callback)
-        event_callback(event, source_frame);
+    event_callback(event, source_frame);
 }
