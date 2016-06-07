@@ -65,8 +65,8 @@ struct MockSurfaceMap : mcl::SurfaceMap
         void(mir::frontend::BufferStreamId, std::function<void(mcl::ClientBufferStream*)> const&));
     MOCK_CONST_METHOD1(with_all_streams_do,
         void(std::function<void(mcl::ClientBufferStream*)> const&));
-    MOCK_CONST_METHOD1(buffer, std::shared_ptr<mcl::Buffer>(int));
-    MOCK_METHOD2(insert, void(int, std::shared_ptr<mcl::Buffer> const&));
+    MOCK_CONST_METHOD1(buffer, std::shared_ptr<mcl::MirBuffer>(int));
+    MOCK_METHOD2(insert, void(int, std::shared_ptr<mcl::MirBuffer> const&));
     MOCK_METHOD2(insert, void(mir::frontend::BufferStreamId, std::shared_ptr<MirPresentationChain> const&));
     MOCK_METHOD1(erase, void(int));
 }; 
@@ -88,11 +88,11 @@ public:
     void insert(mir::frontend::BufferStreamId, std::shared_ptr<MirPresentationChain> const&)
     {
     }
-    std::shared_ptr<mcl::Buffer> buffer(int) const
+    std::shared_ptr<mcl::MirBuffer> buffer(int) const
     {
         return nullptr;
     }
-    void insert(int, std::shared_ptr<mcl::Buffer> const&)
+    void insert(int, std::shared_ptr<mcl::MirBuffer> const&)
     {
     }
     void erase(int)

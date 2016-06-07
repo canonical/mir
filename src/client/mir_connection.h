@@ -260,6 +260,7 @@ private:
 
     mutable std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
+    std::shared_ptr<mir::client::ClientPlatform> platform;
     std::shared_ptr<mir::client::ConnectionSurfaceMap> surface_map;
     std::shared_ptr<mir::client::AsyncBufferFactory> buffer_factory;
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> const channel;
@@ -280,7 +281,6 @@ private:
     int surface_error_id{-1};
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
-    std::shared_ptr<mir::client::ClientPlatform> platform;
     std::shared_ptr<mir::client::ClientBufferFactory> client_buffer_factory;
     std::shared_ptr<EGLNativeDisplayType> native_display;
 

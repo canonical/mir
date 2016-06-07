@@ -21,12 +21,13 @@
 
 #include "mir/geometry/size.h"
 #include "mir_toolkit/mir_presentation_chain.h"
+#include "mir_buffer.h"
 
 class MirPresentationChain
 {
 public:
     virtual ~MirPresentationChain() = default;
-    virtual void submit_buffer(MirBuffer* buffer) = 0;
+    virtual void submit_buffer(mir::client::MirBuffer* buffer) = 0;
     virtual MirConnection* connection() const = 0;
     virtual int rpc_id() const = 0;
     virtual char const* error_msg() const = 0;

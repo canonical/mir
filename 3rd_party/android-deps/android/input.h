@@ -141,7 +141,10 @@ enum {
     AINPUT_EVENT_TYPE_KEY = 1,
 
     /* Indicates that the input event is a motion event. */
-    AINPUT_EVENT_TYPE_MOTION = 2
+    AINPUT_EVENT_TYPE_MOTION = 2,
+
+    /* Indicates that the event contains a raw buffer. */
+    AINPUT_EVENT_TYPE_BUFFER = 3
 };
 
 /*
