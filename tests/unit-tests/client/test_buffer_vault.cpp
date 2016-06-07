@@ -29,6 +29,7 @@
 #include "mir/test/fake_shared.h"
 #include "mir_protobuf.pb.h"
 #include "mir/test/doubles/mock_client_buffer.h"
+#include "mir/test/doubles/mock_mir_buffer.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -67,7 +68,7 @@ struct MockServerRequests : mcl::ServerBufferRequests
 {
     MOCK_METHOD3(allocate_buffer, void(geom::Size size, MirPixelFormat format, int usage));
     MOCK_METHOD1(free_buffer, void(int));
-    MOCK_METHOD1(submit_buffer, void(mcl::Buffer&));
+    MOCK_METHOD1(submit_buffer, void(mcl::MirBuffer&));
     MOCK_METHOD0(disconnected, void());
 };
 
@@ -88,41 +89,19 @@ struct BufferVault : public testing::Test
         package3.set_height(size.height.as_int());
         package4.set_width(new_size.width.as_int());
         package4.set_height(new_size.height.as_int());
-
         package.set_buffer_id(1);
         package2.set_buffer_id(2);
         package3.set_buffer_id(3);
         package4.set_buffer_id(4);
 
-        auto buffer1 = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
-        ON_CALL(*buffer1, size())
-            .WillByDefault(Return(size));
-        auto buffer2 = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
-        ON_CALL(*buffer2, size())
-            .WillByDefault(Return(size));
-        auto buffer3 = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
-        ON_CALL(*buffer3, size())
-            .WillByDefault(Return(size));
-        auto buffer4 = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
-        ON_CALL(*buffer4, size())
-            .WillByDefault(Return(new_size));
-
-        auto b1 = std::make_shared<mcl::Buffer>(
-            ignore, nullptr, package.buffer_id(), buffer1, nullptr, mir_buffer_usage_software);
-        auto b2 = std::make_shared<mcl::Buffer>(
-            ignore, nullptr, package2.buffer_id(), buffer2, nullptr, mir_buffer_usage_software);
-        auto b3 = std::make_shared<mcl::Buffer>(
-            ignore, nullptr, package3.buffer_id(), buffer3, nullptr, mir_buffer_usage_software);
-        auto b4 = std::make_shared<mcl::Buffer>(
-            ignore, nullptr, package4.buffer_id(), buffer4, nullptr, mir_buffer_usage_software);
+        auto b1 = std::make_shared<mtd::StubMirBuffer>(size, 1);
+        auto b2 = std::make_shared<mtd::StubMirBuffer>(size, 2);
+        auto b3 = std::make_shared<mtd::StubMirBuffer>(size, 3);
+        auto b4 = std::make_shared<mtd::StubMirBuffer>(new_size, 4);
         surface_map->insert(package.buffer_id(), b1);
         surface_map->insert(package2.buffer_id(), b2);
         surface_map->insert(package3.buffer_id(), b3);
         surface_map->insert(package4.buffer_id(), b4);
-        b1->received();
-        b2->received();
-        b3->received();
-        b4->received();
     }
 
     std::unique_ptr<mcl::BufferVault> make_vault()
@@ -208,14 +187,14 @@ TEST_F(StartedBufferVault, can_deposit_buffer)
     auto buffer = vault.withdraw().get();
     EXPECT_CALL(mock_requests, submit_buffer(Ref(*buffer)));
     vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
 }
 
 TEST_F(StartedBufferVault, cant_transfer_if_not_in_acct)
 {
     auto buffer = vault.withdraw().get();
     EXPECT_THROW({ 
-        vault.wire_transfer_outbound(buffer);
+        vault.wire_transfer_outbound(buffer, []{});
     }, std::logic_error);
 }
 
@@ -235,7 +214,7 @@ TEST_F(StartedBufferVault, attempt_to_redeposit_throws)
 {
     auto buffer = vault.withdraw().get();
     vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
     EXPECT_THROW({
         vault.deposit(buffer);
     }, std::logic_error);
@@ -247,7 +226,7 @@ TEST_F(BufferVault, can_transfer_again_when_we_get_the_buffer)
     vault->wire_transfer_inbound(package.buffer_id());
     auto buffer = vault->withdraw().get();
     vault->deposit(buffer);
-    vault->wire_transfer_outbound(buffer);
+    vault->wire_transfer_outbound(buffer, []{});
 
     vault->wire_transfer_inbound(package.buffer_id());
     auto buffer2 = vault->withdraw().get();
@@ -278,7 +257,7 @@ TEST_F(BufferVault, multiple_withdrawals_during_wait_period_get_differing_buffer
 TEST_F(BufferVault, destruction_signals_futures)
 {
     using namespace std::literals::chrono_literals;
-    mcl::NoTLSFuture<std::shared_ptr<mcl::Buffer>> fbuffer;
+    mcl::NoTLSFuture<std::shared_ptr<mcl::MirBuffer>> fbuffer;
     {
         auto vault = make_vault();
         fbuffer = vault->withdraw();
@@ -321,7 +300,7 @@ TEST_F(BufferVault, marks_as_submitted_on_transfer)
 
     auto buffer = vault->withdraw().get();
     vault->deposit(buffer);
-    vault->wire_transfer_outbound(buffer);
+    vault->wire_transfer_outbound(buffer, []{});
 }
 
 TEST_F(StartedBufferVault, reallocates_incoming_buffers_of_incorrect_size_with_immediate_response)
@@ -530,19 +509,19 @@ TEST_F(StartedBufferVault, delayed_decrease_allocation_count)
     vault.wire_transfer_inbound(requested_buffer.buffer_id());
     auto b = vault.withdraw().get();
     vault.deposit(b);
-    vault.wire_transfer_outbound(b);
+    vault.wire_transfer_outbound(b, []{});
 
     b = vault.withdraw().get();
     vault.deposit(b);
-    vault.wire_transfer_outbound(b);
+    vault.wire_transfer_outbound(b, []{});
 
     b = vault.withdraw().get();
     vault.deposit(b);
-    vault.wire_transfer_outbound(b);
+    vault.wire_transfer_outbound(b, []{});
 
     b = vault.withdraw().get();
     vault.deposit(b);
-    vault.wire_transfer_outbound(b);
+    vault.wire_transfer_outbound(b, []{});
 
     vault.decrease_buffer_count();
     vault.wire_transfer_inbound(package.buffer_id());
@@ -555,12 +534,12 @@ TEST_F(StartedBufferVault, prefers_buffers_returned_further_in_the_past)
 {
     auto buffer = vault.withdraw().get();
     vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
     auto first_id = buffer->rpc_id();
 
     buffer = vault.withdraw().get();
     vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
     auto second_id = buffer->rpc_id();
 
     vault.wire_transfer_inbound(second_id);
@@ -593,7 +572,7 @@ TEST_F(StartedBufferVault, doesnt_free_buffers_in_the_driver_after_resize)
     Mock::VerifyAndClearExpectations(&mock_requests);
 
     vault.deposit(buffer);
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
 
     EXPECT_CALL(mock_requests, free_buffer(_))
         .Times(1);
@@ -610,7 +589,7 @@ TEST_F(StartedBufferVault, doesnt_free_buffers_with_content_after_resize)
     vault.set_size(new_size);
     Mock::VerifyAndClearExpectations(&mock_requests);
 
-    vault.wire_transfer_outbound(buffer);
+    vault.wire_transfer_outbound(buffer, []{});
     EXPECT_CALL(mock_requests, free_buffer(_))
         .Times(1);
     vault.wire_transfer_inbound(buffer->rpc_id());
@@ -642,7 +621,7 @@ TEST_F(StartedBufferVault, delays_allocation_if_not_needed)
         auto buffer = vault.withdraw().get();
         vault.deposit(buffer);
         buffer->received();
-        vault.wire_transfer_outbound(buffer);
+        vault.wire_transfer_outbound(buffer, []{});
         vault.wire_transfer_inbound(buffer->rpc_id());
     }
 }
