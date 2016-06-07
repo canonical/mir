@@ -194,14 +194,12 @@ std::shared_ptr<mir::dispatch::Dispatchable> mgn::InputPlatform::dispatchable()
 }
 
 void mgn::InputPlatform::start()
-{ 
-    connection->set_input_device_change_callback(
-        [this](mgn::UniqueInputConfig new_config)
-        {
-            std::lock_guard<std::mutex> lock(devices_guard);
-            input_config = std::move(new_config);
-            update_devices_locked();
-        });
+{
+    {
+        std::lock_guard<std::mutex> lock(devices_guard);
+        input_config = connection->create_input_device_config();
+        update_devices_locked();
+    }
 
     connection->set_input_device_change_callback(
         [this](mgn::UniqueInputConfig new_config)
@@ -211,15 +209,22 @@ void mgn::InputPlatform::start()
             action_queue->enqueue([this]{update_devices();});
         });
 
-    connection->set_input_event_callback(
-        [this](MirEvent const& event, mir::geometry::Rectangle const& area)
+    connection->set_input_event_callback([this](MirEvent const& event, mir::geometry::Rectangle const& area) {
+        auto const* input_ev = mir_event_get_input_event(&event);
+        auto const id = mir_input_event_get_device_id(input_ev);
+        auto it = devices.find(id);
+        if (it != end(devices))
         {
-            auto const* input_ev = mir_event_get_input_event(&event);
-            auto const id = mir_input_event_get_device_id(input_ev);
-            auto it = devices.find(id);
-            if (it != end(devices))
-                it->second->emit_event(input_ev, area);
-        });
+            it->second->emit_event(input_ev, area);
+        }
+        else // device was not advertised to us yet.
+        {
+            unknown_device_events[id].emplace_back(
+                std::piecewise_construct,
+                std::forward_as_tuple(event.clone(), [](MirEvent* e){delete e;}),
+                std::forward_as_tuple(area));
+        }
+    });
 }
 
 void mgn::InputPlatform::stop()
@@ -242,7 +247,7 @@ void mgn::InputPlatform::update_devices()
 void mgn::InputPlatform::update_devices_locked()
 {
     auto deleted = std::move(devices);
-    std::vector<std::shared_ptr<mgn::InputPlatform::InputDevice>> new_devs;
+    std::vector<std::pair<std::shared_ptr<mgn::InputPlatform::InputDevice>, MirInputDeviceId>> new_devs;
     auto config_ptr = input_config.get();
     for (size_t i = 0, e = mir_input_config_device_count(config_ptr); i!=e; ++i)
     {
@@ -257,13 +262,26 @@ void mgn::InputPlatform::update_devices_locked()
         }
         else
         {
-            new_devs.push_back(std::make_shared<InputDevice>(dev));
-            devices[id] = new_devs.back();
+            new_devs.emplace_back(std::make_shared<InputDevice>(dev), id);
+            devices[id] = new_devs.back().first;
         }
     }
 
     for (auto const& deleted_dev : deleted)
         input_device_registry->remove_device(deleted_dev.second);
     for (auto new_dev : new_devs)
-        input_device_registry->add_device(new_dev);
+    {
+        input_device_registry->add_device(new_dev.first);
+
+        auto early_event_queue = unknown_device_events.find(new_dev.second);
+        if (early_event_queue != end(unknown_device_events))
+        {
+            for (auto const& stored_event : early_event_queue->second)
+            {
+                auto const* input_ev = mir_event_get_input_event(stored_event.first.get());
+                new_dev.first->emit_event(input_ev, stored_event.second);
+            }
+        }
+    }
+    unknown_device_events.clear();
 }

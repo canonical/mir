@@ -102,7 +102,7 @@ struct TestNestedInputPlatform : Test
 
 TEST_F(TestNestedInputPlatform, registers_to_host_connection)
 {
-    EXPECT_CALL(mock_host_connection, set_input_device_change_callback(_)).Times(2);
+    EXPECT_CALL(mock_host_connection, set_input_device_change_callback(_)).Times(1);
     EXPECT_CALL(mock_host_connection, set_input_event_callback(_));
 
     platform.start();

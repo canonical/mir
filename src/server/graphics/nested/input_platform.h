@@ -62,7 +62,11 @@ private:
     std::shared_ptr<dispatch::ActionQueue> const action_queue;
     std::mutex devices_guard;
     UniqueInputConfig input_config;
+
+    using EventUPtr = std::unique_ptr<MirEvent, void(*)(MirEvent*)>;
     std::unordered_map<MirInputDeviceId, std::shared_ptr<InputDevice>> devices;
+    std::unordered_map<MirInputDeviceId, std::vector<std::pair<EventUPtr, mir::geometry::Rectangle>>>
+        unknown_device_events;
 };
 }
 }

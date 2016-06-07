@@ -21,7 +21,6 @@
 #include "libinput_ptr.h"
 #include "mir/udev/wrapper.h"
 #include "mir/dispatch/dispatchable.h"
-#include "mir/dispatch/action_queue.h"
 #include "mir/dispatch/readable_fd.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/module_properties.h"
@@ -74,8 +73,7 @@ mie::Platform::Platform(std::shared_ptr<InputDeviceRegistry> const& registry,
     report(report),
     udev_context(std::move(udev_context)),
     input_device_registry(registry),
-    platform_dispatchable{std::make_shared<md::MultiplexingDispatchable>()},
-    platform_actions{std::make_shared<md::ActionQueue>()}
+    platform_dispatchable{std::make_shared<md::MultiplexingDispatchable>()}
 {
 }
 
@@ -86,15 +84,13 @@ std::shared_ptr<mir::dispatch::Dispatchable> mie::Platform::dispatchable()
 
 void mie::Platform::start()
 {
-
     lib = make_libinput(udev_context->ctx());
     libinput_dispatchable =
         std::make_shared<md::ReadableFd>(
             Fd{IntOwnedFd{libinput_get_fd(lib.get())}}, [this]{process_input_events();}
         );
     platform_dispatchable->add_watch(libinput_dispatchable);
-    platform_dispatchable->add_watch(platform_actions);
-    platform_actions->enqueue([this]{process_input_events();});
+    process_input_events();
 }
 
 void mie::Platform::process_input_events()
@@ -190,7 +186,6 @@ auto mie::Platform::find_device(libinput_device_group const* devgroup) -> declty
 
 void mie::Platform::stop()
 {
-    platform_dispatchable->remove_watch(platform_actions);
     platform_dispatchable->remove_watch(libinput_dispatchable);
     while (!devices.empty())
     {
