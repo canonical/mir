@@ -248,6 +248,10 @@ if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
   pkg_check_modules( DRM REQUIRED libdrm )
 endif()
 
+if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+  pkg_check_modules(EPOXY REQUIRED epoxy)
+endif()
+
 set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
 set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)

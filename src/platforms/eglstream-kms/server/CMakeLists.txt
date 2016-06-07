@@ -1,5 +1,3 @@
-pkg_check_modules(EPOXY REQUIRED epoxy)
-
 include_directories(
   ${server_common_include_dirs}
   ${DRM_INCLUDE_DIRS}
