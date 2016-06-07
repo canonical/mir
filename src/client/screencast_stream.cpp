@@ -55,8 +55,7 @@ mcl::ScreencastStream::ScreencastStream(
     client_platform(client_platform),
     factory(client_platform->create_buffer_factory()),
     protobuf_bs{mcl::make_protobuf_object<mir::protobuf::BufferStream>(a_protobuf_bs)},
-    protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()},
-    buffer_depository{factory}
+    protobuf_void{mcl::make_protobuf_object<mir::protobuf::Void>()}
 {
     if (!protobuf_bs->has_id())
     {
@@ -93,17 +92,23 @@ void mcl::ScreencastStream::process_buffer(protobuf::Buffer const& buffer, std::
     try
     {
         auto const pixel_format = static_cast<MirPixelFormat>(protobuf_bs->pixel_format());
-        buffer_depository.deposit_package(mcl::protobuf_to_native_buffer(buffer),
-                                         buffer.buffer_id(), buffer_size,
-                                         pixel_format);
+        if (current_buffer_id != buffer.buffer_id())
+        {
+            current_buffer = factory->create_buffer(
+                mcl::protobuf_to_native_buffer(buffer), buffer_size, pixel_format);
+            current_buffer_id = buffer.buffer_id();
+        }
     }
     catch (const std::runtime_error& error)
     {
+        printf("FAIL.\n");
         for (int i = 0; i < buffer.fd_size(); i++)
             ::close(buffer.fd(i));
         protobuf_bs->set_error(
             std::string{"Error processing buffer stream creating response:"} +
             boost::diagnostic_information(error));
+        if (screencast_wait_handle.is_pending())
+            screencast_wait_handle.expect_result();
         throw error;
     }
 }
@@ -132,7 +137,7 @@ MirWaitHandle* mcl::ScreencastStream::next_buffer(std::function<void()> const& d
 std::shared_ptr<mcl::ClientBuffer> mcl::ScreencastStream::get_current_buffer()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    return buffer_depository.current_buffer();
+    return current_buffer;
 }
 
 EGLNativeWindowType mcl::ScreencastStream::egl_native_window()
@@ -143,9 +148,8 @@ EGLNativeWindowType mcl::ScreencastStream::egl_native_window()
 std::shared_ptr<mcl::MemoryRegion> mcl::ScreencastStream::secure_for_cpu_write()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    auto buffer = buffer_depository.current_buffer();
     if (!secured_region)
-        secured_region = buffer->secure_for_cpu_write();
+        secured_region = current_buffer->secure_for_cpu_write();
     return secured_region;
 }
 
@@ -179,7 +183,7 @@ void mcl::ScreencastStream::request_and_wait_for_next_buffer()
 uint32_t mcl::ScreencastStream::get_current_buffer_id()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    return buffer_depository.current_buffer_id();
+    return current_buffer_id;
 }
 
 int mcl::ScreencastStream::swap_interval() const

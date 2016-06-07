@@ -21,7 +21,6 @@
 #include "mir/frontend/buffer_sink.h"
 #include "src/client/buffer_vault.h"
 #include "src/client/buffer_factory.h"
-#include "src/client/client_buffer_depository.h"
 #include "src/client/buffer_factory.h"
 #include "src/client/protobuf_to_native_buffer.h"
 #include "src/client/connection_surface_map.h"
@@ -520,7 +519,6 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     mg::BufferProperties properties{geom::Size{3,3}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
     int nbuffers = GetParam();
 
-    mcl::ClientBufferDepository depository{mt::fake_shared(client_buffer_factory), nbuffers};
     std::shared_ptr<mc::BufferStream> stream;
     std::shared_ptr<StubIpcSystem> ipc;
     std::unique_ptr<ProducerSystem> producer;
