@@ -278,13 +278,11 @@ TEST_F(NestedInput, on_input_device_state_nested_server_emits_input_device_state
     ExposedSurface client_to_nested_mir(nested_mir.new_connection(), "client-to-nested");
 
     client_to_nested_mir.ready_to_accept_events.wait_for(1s);
-    ExposedSurface client(new_connection(), "client-to-host");
-    client.ready_to_accept_events.wait_for(1s);
+    ExposedSurface client_to_host(new_connection(), "client-to-host");
+    client_to_host.ready_to_accept_events.wait_for(1s);
 
-
-    EXPECT_CALL(client, handle_input(mt::KeyOfScanCode(KEY_LEFTALT)));
-    EXPECT_CALL(client, handle_input(mt::KeyOfScanCode(KEY_TAB)))
-        .WillOnce(InvokeWithoutArgs([focus_controller]() { focus_controller->focus_next_session(); }));
+    InSequence seq;
+    EXPECT_CALL(client_to_host, handle_input(mt::KeyOfScanCode(KEY_LEFTALT)));
     EXPECT_CALL(*nested_mir.mock_event_filter,
                 handle(mt::DeviceStateWithPressedKeys(std::vector<uint32_t>({KEY_LEFTALT, KEY_TAB}))))
         .WillOnce(DoAll(mt::WakeUp(&all_events_received), Return(true)));
@@ -292,5 +290,5 @@ TEST_F(NestedInput, on_input_device_state_nested_server_emits_input_device_state
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_LEFTALT));
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_TAB));
 
-    all_events_received.wait_for(50s);
+    all_events_received.wait_for(2s);
 }

@@ -57,6 +57,7 @@ public:
     virtual void hide_cursor() = 0;
     virtual auto graphics_platform_library() -> std::string = 0;
 
+    virtual UniqueInputConfig create_input_device_config() = 0;
     virtual void set_input_device_change_callback(std::function<void(UniqueInputConfig)> const& cb) = 0;
     virtual void set_input_event_callback(std::function<void(MirEvent const&, mir::geometry::Rectangle const&)> const& cb) = 0;
     virtual void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame) = 0;
