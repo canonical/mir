@@ -27,6 +27,8 @@
 
 #include "gmock/gmock.h"
 
+#include <mutex>
+
 namespace msh = mir::shell;
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
@@ -127,9 +129,11 @@ struct OverridenSystemCompositorWindowManager : msh::SystemCompositorWindowManag
         std::shared_ptr<mir::scene::Surface> const& /*surface*/,
         mir::shell::SurfaceSpecification const& modifications) override
     {
+        std::unique_lock<decltype(mutex)> lock(mutex);
         last_mod = modifications;
     }
 
+    std::mutex mutex;
     mir::shell::SurfaceSpecification last_mod;
 };
 
@@ -252,6 +256,7 @@ TEST_F(SystemCompositorWindowManager, surface_gets_confine_pointer_set)
 
     mt::spin_wait_for_condition_or_timeout([this]
     {
+        std::unique_lock<decltype(wm->mutex)> lock(wm->mutex);
         return wm->last_mod.confine_pointer.is_set();
     }, std::chrono::seconds{max_wait});
 }
