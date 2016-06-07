@@ -17,11 +17,13 @@
  */
 
 #include "mir/shell/system_compositor_window_manager.h"
+#include "mir/shell/surface_specification.h"
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir/geometry/rectangle.h"
 #include "mir_test_framework/headless_test.h"
 #include "mir/test/signal.h"
+#include "mir/test/spin_wait.h"
 
 #include "gmock/gmock.h"
 
@@ -34,6 +36,8 @@ using namespace std::chrono_literals;
 
 namespace
 {
+std::chrono::seconds const max_wait{4};
+
 class SurfaceHandle
 {
 public:
@@ -56,20 +60,20 @@ private:
 struct MockClient
 {
     explicit MockClient(char const* connect_string) :
-        connection{mir_connect_sync(connect_string, __PRETTY_FUNCTION__)}
+        connection_{mir_connect_sync(connect_string, __PRETTY_FUNCTION__)}
     {
     }
 
     MockClient(MockClient&& source) :
-        connection{nullptr}
+        connection_{nullptr}
     {
-        std::swap(connection, source.connection);
+        std::swap(connection_, source.connection_);
     }
 
     auto create_surface(int output_id) -> SurfaceHandle
     {
         auto const spec = mir_connection_create_spec_for_normal_surface(
-                connection, 800, 600, mir_pixel_format_bgr_888);
+                connection_, 800, 600, mir_pixel_format_bgr_888);
 
         mir_surface_spec_set_fullscreen_on_output(spec, output_id);
         auto const surface = mir_surface_create_sync(spec);
@@ -82,10 +86,15 @@ struct MockClient
 
     void disconnect()
     {
-        if (connection)
-            mir_connection_release(connection);
+        if (connection_)
+            mir_connection_release(connection_);
 
-        connection = nullptr;
+        connection_ = nullptr;
+    }
+
+    MirConnection* connection()
+    {
+        return connection_;
     }
 
     ~MockClient() noexcept
@@ -96,12 +105,32 @@ struct MockClient
     MOCK_METHOD2(surface_event, void(MirSurface* surface, const MirEvent* event));
 
 private:
-    MirConnection* connection{nullptr};
+    MirConnection* connection_{nullptr};
 
     static void on_surface_event(MirSurface* surface, const MirEvent* event, void* client_ptr)
     {
         static_cast<MockClient*>(client_ptr)->surface_event(surface, event);
     }
+};
+
+struct OverridenSystemCompositorWindowManager : msh::SystemCompositorWindowManager
+{
+    OverridenSystemCompositorWindowManager(msh::FocusController* focus_controller,
+            std::shared_ptr<msh::DisplayLayout> const& display_layout,
+            std::shared_ptr<mir::scene::SessionCoordinator> const& session_coordinator) :
+        SystemCompositorWindowManager(focus_controller, display_layout, session_coordinator)
+    {
+    }
+
+    void modify_surface(
+        std::shared_ptr<mir::scene::Session> const& /*session*/,
+        std::shared_ptr<mir::scene::Surface> const& /*surface*/,
+        mir::shell::SurfaceSpecification const& modifications) override
+    {
+        last_mod = modifications;
+    }
+
+    mir::shell::SurfaceSpecification last_mod;
 };
 
 struct SystemCompositorWindowManager : mtf::HeadlessTest
@@ -115,10 +144,12 @@ struct SystemCompositorWindowManager : mtf::HeadlessTest
         server.override_the_window_manager_builder(
             [this](msh::FocusController* focus_controller)
             {
-                return std::make_shared<msh::SystemCompositorWindowManager>(
-                    focus_controller,
-                    server.the_shell_display_layout(),
-                    server.the_session_coordinator());
+                wm = std::make_shared<OverridenSystemCompositorWindowManager>(
+                         focus_controller,
+                         server.the_shell_display_layout(),
+                         server.the_session_coordinator());
+
+                return wm;
             });
 
         start_server();
@@ -133,6 +164,8 @@ struct SystemCompositorWindowManager : mtf::HeadlessTest
     {
         return MockClient(new_connection().c_str());
     }
+
+    std::shared_ptr<OverridenSystemCompositorWindowManager> wm;
 };
 
 MATCHER_P(MirFocusEvent, expected, "")
@@ -203,4 +236,22 @@ TEST_F(SystemCompositorWindowManager, if_no_surface_posts_client_never_gets_focu
     auto surface = client.create_surface(1);
 
     EXPECT_FALSE(signal.wait_for(100ms)) << "Unexpected surface_focused event received";
+}
+
+TEST_F(SystemCompositorWindowManager, surface_gets_confine_pointer_set)
+{
+    auto client = connect_client();
+
+    auto surface = client.create_surface(1);
+
+    MirSurfaceSpec* spec = mir_connection_create_spec_for_changes(client.connection());
+    mir_surface_spec_set_pointer_confinement(spec, true);
+
+    mir_surface_apply_spec(surface, spec);
+    mir_surface_spec_release(spec);
+
+    mt::spin_wait_for_condition_or_timeout([this]
+    {
+        return wm->last_mod.confine_pointer.is_set();
+    }, std::chrono::seconds{max_wait});
 }

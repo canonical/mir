@@ -83,6 +83,7 @@ struct SurfaceSpecification
     //    it also has size instead of width + height
     // Maybe SurfaceCreationParameters /HasA/ SurfaceSpecification?
     mir::optional_value<MirShellChrome> shell_chrome;
+    optional_value<bool> confine_pointer;
 };
 }
 }

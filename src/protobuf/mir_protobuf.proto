@@ -84,6 +84,7 @@ message SurfaceSpecification {
   optional PersistentSurfaceId parent_persistent_id = 22;
   repeated Rectangle input_shape = 23;
   optional int32 shell_chrome = 24;
+  optional bool confine_pointer = 25;
 }
 
 message StreamConfiguration {

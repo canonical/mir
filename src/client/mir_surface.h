@@ -122,6 +122,7 @@ struct MirSurfaceSpec
     mir::optional_value<AspectRatio> max_aspect;
     mir::optional_value<std::vector<ContentInfo>> streams;
     mir::optional_value<std::vector<MirRectangle>> input_shape;
+    mir::optional_value<bool> confine_pointer;
 
     struct EventHandler
     {
