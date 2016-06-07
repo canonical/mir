@@ -28,3 +28,12 @@ target_link_libraries(mir_demo_client_prerendered_frames
     mirclient
     m
 )
+
+mir_add_wrapped_executable(mir_demo_client_chain_jumping_buffers
+    mir_demo_client_chain_jumping_buffers.c
+)
+
+target_link_libraries(mir_demo_client_chain_jumping_buffers
+    mirclient
+    m
+)
