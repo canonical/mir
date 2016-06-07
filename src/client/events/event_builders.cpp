@@ -216,8 +216,8 @@ void mev::set_cursor_position(MirEvent& event, mir::geometry::Point const& pos)
         event.to_input()->to_motion()->pointer_count() == 1)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor position is only valid for pointer events."));
 
-    event.to_input()->to_motion()->set_x(0, pos.x.as_float());
-    event.to_input()->to_motion()->set_y(0, pos.y.as_float());
+    event.to_input()->to_motion()->set_x(0, pos.x.as_int());
+    event.to_input()->to_motion()->set_y(0, pos.y.as_int());
 }
 
 void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
@@ -406,6 +406,23 @@ mir::EventUPtr mev::make_event(MirInputConfigurationAction action, MirInputDevic
     e->set_action(action);
     e->set_when(time);
     e->set_id(id);
+
+    return make_uptr_event(e);
+}
+
+mir::EventUPtr mev::make_event(std::chrono::nanoseconds timestamp,
+                               MirPointerButtons pointer_buttons,
+                               float x_axis_value,
+                               float y_axis_value,
+                               std::vector<InputDeviceState>&& device_states)
+{
+    auto e = new_event<MirInputDeviceStateEvent>();
+    e->set_when(timestamp);
+    e->set_pointer_buttons(pointer_buttons);
+    e->set_pointer_axis(mir_pointer_axis_x, x_axis_value);
+    e->set_pointer_axis(mir_pointer_axis_y, y_axis_value);
+    for (auto& dev : device_states)
+        e->add_device(dev.id, std::move(dev.pressed_keys), dev.buttons);
 
     return make_uptr_event(e);
 }

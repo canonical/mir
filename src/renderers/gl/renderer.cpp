@@ -127,7 +127,9 @@ const GLchar* const mrg::Renderer::vshader =
 
 const GLchar* const mrg::Renderer::alpha_fshader =
 {
+    "#ifdef GL_ES\n"
     "precision mediump float;\n"
+    "#endif\n"
     "uniform sampler2D tex;\n"
     "uniform float alpha;\n"
     "varying vec2 v_texcoord;\n"
@@ -139,7 +141,9 @@ const GLchar* const mrg::Renderer::alpha_fshader =
 
 const GLchar* const mrg::Renderer::default_fshader =
 {   // This is the fastest fragment shader. Use it when you can.
+    "#ifdef GL_ES\n"
     "precision mediump float;\n"
+    "#endif\n"
     "uniform sampler2D tex;\n"
     "varying vec2 v_texcoord;\n"
     "void main() {\n"
@@ -169,6 +173,7 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
       orientation(mir_orientation_normal),
       mirror_mode(mir_mirror_mode_none)
 {
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     EGLDisplay disp = eglGetCurrentDisplay();
     if (disp != EGL_NO_DISPLAY)
     {
@@ -380,17 +385,17 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
 
     float const vertical_fov_degrees = 30.0f;
     float const near =
-        (rect.size.height.as_float() / 2.0f) /
+        (rect.size.height.as_int() / 2.0f) /
         std::tan((vertical_fov_degrees * M_PI / 180.0f) / 2.0f);
     float const far = -near;
 
     screen_to_gl_coords = glm::scale(screen_to_gl_coords,
-            glm::vec3{2.0f / rect.size.width.as_float(),
-                      -2.0f / rect.size.height.as_float(),
+            glm::vec3{2.0f / rect.size.width.as_int(),
+                      -2.0f / rect.size.height.as_int(),
                       2.0f / (near - far)});
     screen_to_gl_coords = glm::translate(screen_to_gl_coords,
-            glm::vec3{-rect.top_left.x.as_float(),
-                      -rect.top_left.y.as_float(),
+            glm::vec3{-rect.top_left.x.as_int(),
+                      -rect.top_left.y.as_int(),
                       0.0f});
 
     viewport = rect;

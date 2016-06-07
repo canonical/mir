@@ -27,22 +27,108 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <dlfcn.h>
+#include <unordered_map>
 
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
 namespace
 {
-std::vector<std::string>
-all_available_modules()
+
+void populate_graphics_module_for(MirModuleProperties& props, mir::SharedLibrary const& server_library)
 {
-    std::vector<std::string> modules;
-#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
-    modules.push_back(mtf::client_platform("mesa"));
+    auto server_description =
+        server_library.load_function<MirModuleProperties const*(*)()>("describe_graphics_module");
+
+    ::memcpy(&props, server_description(), sizeof(props));
+}
+
+void populate_valid_mesa_platform_package(MirPlatformPackage& pkg)
+{
+    memset(&pkg, 0, sizeof(MirPlatformPackage));
+    pkg.fd_items = 1;
+    pkg.fd[0] = 23;
+}
+
+void populate_valid_android_platform_package(MirPlatformPackage& pkg)
+{
+    memset(&pkg, 0, sizeof(pkg));
+}
+
+class ModuleContext
+{
+public:
+    ModuleContext(
+        std::string const& client_name,
+        std::string const& server_name,
+        std::function<void(MirPlatformPackage&)> const& populate_platform)
+        : client_module_filename{mtf::client_platform(client_name)},
+          server_library{std::make_shared<mir::SharedLibrary>(mtf::server_platform(server_name))},
+          populate_platform{populate_platform}
+    {
+    }
+
+    std::string client_module_filename;
+    void setup_context(mtd::MockClientContext& context) const
+    {
+        using namespace testing;
+        ON_CALL(context, populate_server_package(_))
+            .WillByDefault(Invoke(populate_platform));
+        // We need to keep the server platform DSO loaded, so shared-ptr-copy it into
+        // the MockClientContext closure.
+        ON_CALL(context, populate_graphics_module(_))
+            .WillByDefault(Invoke(
+                [server_module = server_library](auto& prop)
+                {
+                    populate_graphics_module_for(prop, *server_module);
+                }));
+    }
+
+private:
+    std::shared_ptr<mir::SharedLibrary> server_library;
+    std::function<void(MirPlatformPackage&)> populate_platform;
+};
+
+ModuleContext dummy_fixture()
+{
+    return { "dummy.so", "graphics-dummy.so", &mtf::create_stub_platform_package };
+}
+
+std::unordered_map<std::string, ModuleContext>
+all_available_fixtures()
+{
+    using namespace testing;
+    std::unordered_map<std::string, ModuleContext> modules;
+
+#if defined(MIR_BUILD_PLATFORM_MESA_KMS)
+    modules.emplace(
+        std::make_pair<std::string, ModuleContext>(
+            "mesa-kms", { "mesa", "graphics-mesa-kms", &populate_valid_mesa_platform_package }));
+#endif
+#if defined(MIR_BUILD_PLATFORM_MESA_X11)
+    modules.emplace(
+        std::make_pair<std::string, ModuleContext>(
+            "mesa-x11", { "mesa", "server-mesa-x11", &populate_valid_mesa_platform_package }));
 #endif
 #ifdef MIR_BUILD_PLATFORM_ANDROID
-    modules.push_back(mtf::client_platform("android"));
+    modules.emplace(
+        std::make_pair<std::string, ModuleContext>(
+            "android", { "android", "graphics-android", &populate_valid_android_platform_package }));
 #endif
+    return modules;
+}
+
+std::vector<std::string> all_available_modules()
+{
+    std::vector<std::string> modules;
+    auto const fixtures = all_available_fixtures();
+    for (auto const& fixture : fixtures)
+    {
+        if (std::find(modules.begin(), modules.end(), fixture.second.client_module_filename) == modules.end())
+        {
+            modules.push_back(fixture.second.client_module_filename);
+        }
+    }
     return modules;
 }
 
@@ -52,13 +138,6 @@ bool loaded(std::string const& path)
     if (x)
         dlclose(x);
     return !!x;
-}
-
-void populate_valid(MirPlatformPackage& pkg)
-{
-    memset(&pkg, 0, sizeof(MirPlatformPackage));
-    pkg.fd_items = 1;
-    pkg.fd[0] = 23;
 }
 
 }
@@ -81,7 +160,7 @@ TEST(ProbingClientPlatformFactory, ThrowsErrorWhenNoPlatformPluginProbesSuccessf
         all_available_modules(),
         {});
 
-    mtd::MockClientContext context;
+    NiceMock<mtd::MockClientContext> context;
     ON_CALL(context, populate_server_package(_))
             .WillByDefault(Invoke([](MirPlatformPackage& pkg)
                            {
@@ -91,6 +170,18 @@ TEST(ProbingClientPlatformFactory, ThrowsErrorWhenNoPlatformPluginProbesSuccessf
                                pkg.fd_items = 0xdeadbeef;
                                pkg.data_items = -23;
                            }));
+    MirModuleProperties const dummy_properties = {
+        "mir:not-actually-a-platform",
+        0,
+        0,
+        0,
+        "No, I'm also not a filename"
+    };
+    ON_CALL(context, populate_graphics_module(_))
+        .WillByDefault(Invoke([&dummy_properties](MirModuleProperties& props)
+                              {
+                                  ::memcpy(&props, &dummy_properties, sizeof(props));
+                              }));
 
     EXPECT_THROW(factory.create_client_platform(&context),
                  std::runtime_error);
@@ -99,9 +190,9 @@ TEST(ProbingClientPlatformFactory, ThrowsErrorWhenNoPlatformPluginProbesSuccessf
 TEST(ProbingClientPlatformFactory, DoesNotLeakTheUsedDriverModuleOnShutdown)
 {   // Regression test for LP: #1527449
     using namespace testing;
-    auto const modules = all_available_modules();
-    ASSERT_FALSE(modules.empty());
-    std::string const preferred_module = modules.front();
+    auto const fixtures = all_available_fixtures();
+    ASSERT_FALSE(fixtures.empty());
+    std::string const preferred_module = fixtures.begin()->second.client_module_filename;
 
     mir::client::ProbingClientPlatformFactory factory(
         mir::report::null_shared_library_prober_report(),
@@ -109,9 +200,8 @@ TEST(ProbingClientPlatformFactory, DoesNotLeakTheUsedDriverModuleOnShutdown)
         {});
 
     std::shared_ptr<mir::client::ClientPlatform> platform;
-    mtd::MockClientContext context;
-    ON_CALL(context, populate_server_package(_))
-            .WillByDefault(Invoke(populate_valid));
+    NiceMock<mtd::MockClientContext> context;
+    fixtures.begin()->second.setup_context(context);
 
     ASSERT_FALSE(loaded(preferred_module));
     platform = factory.create_client_platform(&context);
@@ -124,6 +214,7 @@ TEST(ProbingClientPlatformFactory, DoesNotLeakUnusedDriverModulesOnStartup)
 {   // Regression test for LP: #1527449 and LP: #1526658
     using namespace testing;
     auto const modules = all_available_modules();
+    auto const fixtures = all_available_fixtures();
     ASSERT_FALSE(modules.empty());
 
     // Note: This test is only really effective with nmodules>1, which many of
@@ -135,9 +226,8 @@ TEST(ProbingClientPlatformFactory, DoesNotLeakUnusedDriverModulesOnStartup)
         {});
 
     std::shared_ptr<mir::client::ClientPlatform> platform;
-    mtd::MockClientContext context;
-    ON_CALL(context, populate_server_package(_))
-            .WillByDefault(Invoke(populate_valid));
+    NiceMock<mtd::MockClientContext> context;
+    fixtures.begin()->second.setup_context(context);
 
     int nloaded = 0;
     for (auto const& m : modules)
@@ -159,10 +249,10 @@ TEST(ProbingClientPlatformFactory, DoesNotLeakUnusedDriverModulesOnStartup)
     ASSERT_EQ(0, nloaded);
 }
 
-#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
-TEST(ProbingClientPlatformFactory, CreatesMesaPlatformWhenAppropriate)
+#if defined(MIR_BUILD_PLATFORM_MESA_KMS)
+TEST(ProbingClientPlatformFactory, CreatesMesaPlatformOnMesaKMS)
 #else
-TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformWhenAppropriate)
+TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformOnMesaKMS)
 #endif
 {
     using namespace testing;
@@ -172,16 +262,29 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformWhenAppropriate)
         all_available_modules(),
         {});
 
-    mtd::MockClientContext context;
-    ON_CALL(context, populate_server_package(_))
-            .WillByDefault(Invoke([](MirPlatformPackage& pkg)
-                           {
-                               ::memset(&pkg, 0, sizeof(MirPlatformPackage));
-                               // Mock up something that looks like a GBM platform package,
-                               // until we send the actual platform type over the wire!
-                               pkg.fd_items = 1;
-                               pkg.fd[0] = 23;
-                           }));
+    NiceMock<mtd::MockClientContext> context;
+    all_available_fixtures().at("mesa-kms").setup_context(context);
+
+    auto platform = factory.create_client_platform(&context);
+    EXPECT_EQ(mir_platform_type_gbm, platform->platform_type());
+}
+
+#if defined(MIR_BUILD_PLATFORM_MESA_X11)
+TEST(ProbingClientPlatformFactory, CreatesMesaPlatformOnMesaX11)
+#else
+TEST(ProbingClientPlatformFactory, DISABLED_CreatesMesaPlatformOnMesaX11)
+#endif
+{
+    using namespace testing;
+
+    mir::client::ProbingClientPlatformFactory factory(
+        mir::report::null_shared_library_prober_report(),
+        all_available_modules(),
+        {});
+
+    NiceMock<mtd::MockClientContext> context;
+    all_available_fixtures().at("mesa-x11").setup_context(context);
+
     auto platform = factory.create_client_platform(&context);
     EXPECT_EQ(mir_platform_type_gbm, platform->platform_type());
 }
@@ -199,14 +302,8 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesAndroidPlatformWhenAppropriat
         all_available_modules(),
         {});
 
-    mtd::MockClientContext context;
-    ON_CALL(context, populate_server_package(_))
-            .WillByDefault(Invoke([](MirPlatformPackage& pkg)
-                           {
-                               // Mock up something that looks like a Android platform package,
-                               // until we send the actual platform type over the wire!
-                               ::memset(&pkg, 0, sizeof(MirPlatformPackage));
-                           }));
+    NiceMock<mtd::MockClientContext> context;
+    all_available_fixtures().at("android").setup_context(context);
 
     auto platform = factory.create_client_platform(&context);
     EXPECT_EQ(mir_platform_type_android, platform->platform_type());
@@ -219,19 +316,15 @@ TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
     auto modules = all_available_modules();
     // NOTE: For minimum fuss, load something that has minimal side-effects...
     modules.push_back("libc.so.6");
-    modules.push_back(mtf::client_platform("dummy.so"));
+    modules.push_back(dummy_fixture().client_module_filename);
 
     mir::client::ProbingClientPlatformFactory factory(
         mir::report::null_shared_library_prober_report(),
         modules,
         {});
 
-    mtd::MockClientContext context;
-    ON_CALL(context, populate_server_package(_))
-            .WillByDefault(Invoke([](MirPlatformPackage& pkg)
-                           {
-                               mtf::create_stub_platform_package(pkg);
-                           }));
+    NiceMock<mtd::MockClientContext> context;
+    dummy_fixture().setup_context(context);
 
     auto platform = factory.create_client_platform(&context);
 }

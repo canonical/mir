@@ -30,6 +30,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <GLES2/gl2.h>
+
 namespace mg = mir::graphics;
 namespace mgl = mir::gl;
 namespace mga = mir::graphics::android;
@@ -66,8 +68,8 @@ void set_display_transform(GLint uniform_loc, geom::Rectangle const& rect)
     disp_transform = glm::translate(disp_transform, glm::vec3{-1.0, 1.0, 0.0});
     disp_transform = glm::scale(
                         disp_transform,
-                        glm::vec3{2.0/rect.size.width.as_float(),
-                                  -2.0/rect.size.height.as_float(),
+                        glm::vec3{2.0/rect.size.width.as_int(),
+                                  -2.0/rect.size.height.as_int(),
                                   1.0});
     glUniformMatrix4fv(uniform_loc, 1, GL_FALSE, glm::value_ptr(disp_transform));
 }

@@ -129,6 +129,8 @@ struct BufferDepository
         geom::Size size, MirPixelFormat format, int usage,
         unsigned int initial_nbuffers) :
         vault(factory, mirbuffer_factory, requests, surface_map, size, format, usage, initial_nbuffers),
+        current(nullptr),
+        future(vault.withdraw()),
         size_(size)
     {
     }
@@ -140,9 +142,9 @@ struct BufferDepository
     void advance_current_buffer(std::unique_lock<std::mutex>& lk)
     {
         lk.unlock();
-        auto buffer = vault.withdraw().get();
+        auto c = future.get();
         lk.lock();
-        current = buffer;
+        current = c;
     }
 
     std::shared_ptr<mir::client::ClientBuffer> current_buffer()
@@ -166,18 +168,16 @@ struct BufferDepository
         std::unique_lock<std::mutex> lk(mutex);
         if (!current)
             advance_current_buffer(lk);
+        auto c = current;
+        current = nullptr;
         lk.unlock();
 
-        vault.deposit(current);
-
-        next_buffer_wait_handle.expect_result();
-        vault.wire_transfer_outbound(current);
-        next_buffer_wait_handle.result_received();
-
+        vault.deposit(c);
+        auto wh = vault.wire_transfer_outbound(c, done);
+        auto f = vault.withdraw();
         lk.lock();
-        advance_current_buffer(lk);
-        done();
-        return &next_buffer_wait_handle;
+        future = std::move(f);
+        return wh;
     }
 
     void set_size(geom::Size size)
@@ -228,7 +228,7 @@ struct BufferDepository
     mcl::BufferVault vault;
     std::mutex mutable mutex;
     std::shared_ptr<mcl::Buffer> current{nullptr};
-    MirWaitHandle next_buffer_wait_handle;
+    mir::client::NoTLSFuture<std::shared_ptr<mcl::Buffer>> future;
     MirWaitHandle scale_wait_handle;
     int current_swap_interval = 1;
     geom::Size size_;
@@ -379,7 +379,6 @@ void mcl::BufferStream::process_buffer(protobuf::Buffer const& buffer, std::uniq
         auto pixel_format = static_cast<MirPixelFormat>(protobuf_bs->pixel_format());
         lk.unlock();
         buffer_depository->deposit(buffer, size, pixel_format);
-        perf_report->begin_frame(buffer.buffer_id());
     }
     catch (const std::runtime_error& err)
     {
@@ -404,6 +403,8 @@ MirWaitHandle* mcl::BufferStream::next_buffer(std::function<void()> const& done)
 
 std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
 {
+    int current_id = buffer_depository->current_buffer_id();
+    perf_report->begin_frame(current_id);
     return buffer_depository->current_buffer();
 }
 
@@ -421,7 +422,7 @@ void mcl::BufferStream::release_cpu_region()
 
 std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 {
-    auto buffer = buffer_depository->current_buffer();
+    auto buffer = get_current_buffer();
     std::unique_lock<decltype(mutex)> lock(mutex);
 
     if (!secured_region)
