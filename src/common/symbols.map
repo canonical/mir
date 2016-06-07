@@ -357,6 +357,7 @@ MIR_COMMON_0.22 {
 MIR_COMMON_0.24 {
   global:
     extern "C++" {
+      android::InputPublisher::publishEventBuffer*;
        MirEvent::to_input_device_state*;
        MirInputDeviceStateEvent::MirInputDeviceStateEvent*;
        MirInputDeviceStateEvent::add_device*;

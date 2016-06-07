@@ -22,6 +22,7 @@
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include "mir_wait_handle.h"
 #include <memory>
 #include "no_tls_future-inl.h"
 #include <deque>
@@ -33,7 +34,7 @@ namespace protobuf { class Buffer; }
 namespace client
 {
 class ClientBuffer;
-class Buffer;
+class MirBuffer;
 class AsyncBufferFactory;
 class SurfaceMap;
 
@@ -42,7 +43,7 @@ class ServerBufferRequests
 public:
     virtual void allocate_buffer(geometry::Size size, MirPixelFormat format, int usage) = 0;
     virtual void free_buffer(int buffer_id) = 0;
-    virtual void submit_buffer(Buffer&) = 0;
+    virtual void submit_buffer(MirBuffer&) = 0;
     virtual ~ServerBufferRequests() = default;
 protected:
     ServerBufferRequests() = default;
@@ -64,10 +65,11 @@ public:
         unsigned int initial_nbuffers);
     ~BufferVault();
 
-    NoTLSFuture<std::shared_ptr<Buffer>> withdraw();
-    void deposit(std::shared_ptr<Buffer> const& buffer);
+    NoTLSFuture<std::shared_ptr<MirBuffer>> withdraw();
+    void deposit(std::shared_ptr<MirBuffer> const& buffer);
     void wire_transfer_inbound(int buffer_id);
-    void wire_transfer_outbound(std::shared_ptr<Buffer> const& buffer);
+    MirWaitHandle* wire_transfer_outbound(
+        std::shared_ptr<MirBuffer> const& buffer, std::function<void()> const&);
     void set_size(geometry::Size);
     void disconnected();
     void set_scale(float scale);
@@ -75,12 +77,17 @@ public:
     void decrease_buffer_count();
 
 private:
+    enum class Owner;
+    typedef std::map<int, Owner> BufferMap;
+    BufferMap::iterator available_buffer();
+    void trigger_callback(std::unique_lock<std::mutex> lk);
+
     void alloc_buffer(geometry::Size size, MirPixelFormat format, int usage);
     void free_buffer(int free_id);
     void realloc_buffer(int free_id, geometry::Size size, MirPixelFormat format, int usage);
+    std::shared_ptr<MirBuffer> checked_buffer_from_map(int id);
     void set_size(std::unique_lock<std::mutex>& lk, geometry::Size new_size);
 
-    std::shared_ptr<Buffer> checked_buffer_from_map(int id);
 
     std::shared_ptr<ClientBufferFactory> const platform_factory;
     std::shared_ptr<AsyncBufferFactory> const buffer_factory;
@@ -89,16 +96,17 @@ private:
     MirPixelFormat const format;
     int const usage;
 
-    enum class Owner;
     std::mutex mutex;
-    std::map<int, Owner> buffers;
-    std::deque<NoTLSPromise<std::shared_ptr<Buffer>>> promises;
+    BufferMap buffers;
+    std::deque<NoTLSPromise<std::shared_ptr<MirBuffer>>> promises;
     geometry::Size size;
     bool disconnected_;
     size_t current_buffer_count;
     size_t needed_buffer_count;
     size_t const initial_buffer_count;
     int last_received_id = 0;
+    MirWaitHandle next_buffer_wait_handle;
+    std::function<void()> deferred_cb;
 };
 }
 }
