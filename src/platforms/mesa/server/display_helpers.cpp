@@ -19,6 +19,8 @@
 #include "display_helpers.h"
 #include "drm_close_threadsafe.h"
 
+#include "kms-utils/drm_mode_resources.h"
+
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/udev/wrapper.h"
@@ -183,10 +185,10 @@ int mgmh::DRMHelper::is_appropriate_device(std::shared_ptr<mir::udev::Context> c
 
 int mgmh::DRMHelper::count_connections(int fd)
 {
-    DRMModeResources resources{fd};
+    kms::DRMModeResources resources{fd};
 
     int n_connected = 0;
-    resources.for_each_connector([&](DRMModeConnectorUPtr connector)
+    resources.for_each_connector([&](kms::DRMModeConnectorUPtr connector)
     {
         if (connector->connection == DRM_MODE_CONNECTED)
             n_connected++;
@@ -321,8 +323,12 @@ mgmh::EGLHelper::EGLHelper(GLConfig const& gl_config)
 
 void mgmh::EGLHelper::setup(GBMHelper const& gbm)
 {
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+
     static const EGLint context_attr[] = {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
         EGL_NONE
     };
 
@@ -335,8 +341,12 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm)
 
 void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
 {
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+
     static const EGLint context_attr[] = {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
         EGL_NONE
     };
 
@@ -350,8 +360,12 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, EGLContext shared_context)
 void mgmh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
                             EGLContext shared_context)
 {
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+
     static const EGLint context_attr[] = {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
         EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
         EGL_NONE
     };
 
@@ -371,6 +385,7 @@ mgmh::EGLHelper::~EGLHelper() noexcept
     if (egl_display != EGL_NO_DISPLAY) {
         if (egl_context != EGL_NO_CONTEXT)
         {
+            eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
             if (eglGetCurrentContext() == egl_context)
                 eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
             eglDestroyContext(egl_display, egl_context);
@@ -391,6 +406,7 @@ bool mgmh::EGLHelper::swap_buffers()
 bool mgmh::EGLHelper::make_current() const
 {
     auto ret = eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     return (ret == EGL_TRUE);
 }
 
@@ -410,7 +426,7 @@ void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
         EGL_ALPHA_SIZE, 0,
         EGL_DEPTH_SIZE, depth_buffer_bits,
         EGL_STENCIL_SIZE, stencil_buffer_bits,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
         EGL_NONE
     };
 
@@ -439,8 +455,6 @@ void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
 
         should_terminate_egl = true;
     }
-
-    eglBindAPI(EGL_OPENGL_ES_API);
 
     if (eglChooseConfig(egl_display, config_attr, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||
         num_egl_configs != 1)

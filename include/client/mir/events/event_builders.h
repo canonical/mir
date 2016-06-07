@@ -133,6 +133,19 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
 // Input configuration event
 EventUPtr make_event(MirInputConfigurationAction action,
     MirInputDeviceId id, std::chrono::nanoseconds time);
+
+struct InputDeviceState
+{
+    MirInputDeviceId id;
+    std::vector<uint32_t> pressed_keys;
+    MirPointerButtons buttons;
+};
+
+EventUPtr make_event(std::chrono::nanoseconds timestamp,
+                     MirPointerButtons pointer_buttons,
+                     float x_axis_value,
+                     float y_axis_value,
+                     std::vector<InputDeviceState>&& device_states);
 }
 }
 

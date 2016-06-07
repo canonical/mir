@@ -9,7 +9,7 @@ include_directories(
     ${DRM_INCLUDE_DIRS}
     ${GBM_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
-    ${GLESv2_INCLUDE_DIRS}
+    ${GL_INCLUDE_DIRS}
     ${UDEV_INCLUDE_DIRS}
 )
 

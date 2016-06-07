@@ -385,3 +385,17 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
   local:
     *;
 } MIR_CLIENT_DETAIL_9v19;
+
+MIR_CLIENT_0.24 {  # New functions in Mir 0.24
+  global:
+    mir_event_get_input_device_state_event;
+    mir_input_device_state_event_device_count;
+    mir_input_device_state_event_device_id;
+    mir_input_device_state_event_device_pointer_buttons;
+    mir_input_device_state_event_device_pressed_keys;
+    mir_input_device_state_event_device_pressed_count;
+    mir_input_device_state_event_pointer_axis;
+    mir_input_device_state_event_pointer_buttons;
+    mir_input_device_state_event_time;
+    mir_input_device_state_event_device_pointer_buttons;
+} MIR_CLIENT_0.22;

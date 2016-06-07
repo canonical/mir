@@ -1,6 +1,8 @@
+add_subdirectory(kms-utils/)
+
 include_directories(
   ${server_common_include_dirs}
-  ${GLESv2_INCLUDE_DIRS}
+  ${GL_INCLUDE_DIRS}
 )
 
 add_library(server_platform_common STATIC
@@ -13,5 +15,5 @@ target_link_libraries(
   server_platform_common
 
   ${Boost_SYSTEM_LIBRARY}
-  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
+  ${GL_LDFLAGS} ${GL_LIBRARIES}
 )

@@ -22,8 +22,12 @@
 #include "host_connection.h"
 #include "mir/shell/host_lifecycle_event_listener.h"
 #include "mir/input/input_device_hub.h"
+#include "mir/geometry/size.h"
+#include "mir/geometry/displacement.h"
+#include "mir/graphics/cursor_image.h"
 
 #include <string>
+#include <vector>
 #include <mutex>
 
 struct MirConnection;
@@ -97,6 +101,21 @@ private:
     std::vector<std::shared_ptr<input::Device>> devices;
     UniqueInputConfig config;
 
+    struct NestedCursorImage : graphics::CursorImage
+    {
+        NestedCursorImage() = default;
+        NestedCursorImage(graphics::CursorImage const& other);
+        NestedCursorImage& operator=(graphics::CursorImage const& other);
+
+        void const* as_argb_8888() const override;
+        geometry::Size size() const override;
+        geometry::Displacement hotspot() const override;
+    private:
+        geometry::Displacement hotspot_;
+        geometry::Size size_;
+        std::vector<uint8_t> buffer;
+    };
+    NestedCursorImage stored_cursor_image;
 };
 
 }

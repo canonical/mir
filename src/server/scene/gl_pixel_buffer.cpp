@@ -23,8 +23,8 @@
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
-
-#include <GLES2/gl2ext.h>
+#include MIR_SERVER_GL_H
+#include MIR_SERVER_GLEXT_H
 
 namespace mg = mir::graphics;
 namespace ms = mir::scene;

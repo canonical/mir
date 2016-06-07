@@ -541,8 +541,8 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
 {
     float const minimum_touch = mtf::FakeInputDevice::minimum_touch_axis_value;
     float const maximum_touch = mtf::FakeInputDevice::maximum_touch_axis_value;
-    auto const display_width = screen_geometry.size.width.as_float();
-    auto const display_height = screen_geometry.size.height.as_float();
+    auto const display_width = screen_geometry.size.width.as_int();
+    auto const display_height = screen_geometry.size.height.as_int();
 
     // We place a click 10% in to the touchscreens space in both axis,
     // and a second at 0,0. Thus we expect to see a click at
