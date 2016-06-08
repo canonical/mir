@@ -131,8 +131,8 @@ void mgn::detail::DisplayBuffer::mir_event(MirEvent const& event)
             {
                 auto x = motion->x(i);
                 auto y = motion->y(i);
-                motion->set_x(i, x + area.top_left.x.as_float());
-                motion->set_y(i, y + area.top_left.y.as_float());
+                motion->set_x(i, x + area.top_left.x.as_int());
+                motion->set_y(i, y + area.top_left.y.as_int());
             }
 
             auto pev = mir_input_event_get_pointer_event(iev);

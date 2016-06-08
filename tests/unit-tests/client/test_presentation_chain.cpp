@@ -105,7 +105,7 @@ TEST_F(PresentationChain, submits_buffer_when_asked)
         std::make_shared<mcl::BufferFactory>());
 
     buffer.received();
-    chain.submit_buffer(reinterpret_cast<MirBuffer*>(&buffer));
+    chain.submit_buffer(&buffer);
 } 
 
 TEST_F(PresentationChain, double_submission_throws)
@@ -120,9 +120,9 @@ TEST_F(PresentationChain, double_submission_throws)
         std::make_shared<mcl::BufferFactory>());
 
     buffer.received();
-    chain.submit_buffer(reinterpret_cast<MirBuffer*>(&buffer));
+    chain.submit_buffer(&buffer);
 
     EXPECT_THROW({
-        chain.submit_buffer(reinterpret_cast<MirBuffer*>(&buffer));
+        chain.submit_buffer(&buffer);
     }, std::logic_error);
 }

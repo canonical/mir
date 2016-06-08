@@ -1,3 +1,5 @@
+add_subdirectory(kms-utils/)
+
 include_directories(
   ${server_common_include_dirs}
   ${GL_INCLUDE_DIRS}

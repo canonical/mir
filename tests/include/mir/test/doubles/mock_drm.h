@@ -96,6 +96,9 @@ public:
     MOCK_METHOD1(drmModeGetResources, drmModeResPtr(int fd));
     MOCK_METHOD2(drmModeGetConnector, drmModeConnectorPtr(int fd, uint32_t connectorId));
     MOCK_METHOD2(drmModeGetEncoder, drmModeEncoderPtr(int fd, uint32_t encoder_id));
+    MOCK_METHOD1(drmModeGetPlaneResources, drmModePlaneResPtr(int fd));
+    MOCK_METHOD2(drmModeGetPlane, drmModePlanePtr(int fd, uint32_t plane_id));
+    MOCK_METHOD3(drmModeObjectGetProperties, drmModeObjectPropertiesPtr(int fd, uint32_t id, uint32_t type));
     MOCK_METHOD2(drmModeGetCrtc, drmModeCrtcPtr(int fd, uint32_t crtcId));
     MOCK_METHOD8(drmModeSetCrtc, int(int fd, uint32_t crtcId, uint32_t bufferId,
                                      uint32_t x, uint32_t y, uint32_t *connectors,
@@ -105,6 +108,9 @@ public:
     MOCK_METHOD1(drmModeFreeConnector, void(drmModeConnectorPtr ptr));
     MOCK_METHOD1(drmModeFreeEncoder, void(drmModeEncoderPtr ptr));
     MOCK_METHOD1(drmModeFreeCrtc, void(drmModeCrtcPtr ptr));
+    MOCK_METHOD1(drmModeFreePlaneResources, void(drmModePlaneResPtr ptr));
+    MOCK_METHOD1(drmModeFreePlane, void(drmModePlanePtr ptr));
+    MOCK_METHOD1(drmModeFreeObjectProperties, void(drmModeObjectPropertiesPtr));
 
     MOCK_METHOD8(drmModeAddFB, int(int fd, uint32_t width, uint32_t height,
                                    uint8_t depth, uint8_t bpp, uint32_t pitch,
@@ -120,6 +126,7 @@ public:
     MOCK_METHOD2(drmHandleEvent, int(int fd, drmEventContextPtr evctx));
 
     MOCK_METHOD3(drmGetCap, int(int fd, uint64_t capability, uint64_t *value));
+    MOCK_METHOD3(drmSetClientCap, int(int fd, uint64_t capability, uint64_t value));
     MOCK_METHOD2(drmModeGetProperty, drmModePropertyPtr(int fd, uint32_t propertyId));
     MOCK_METHOD1(drmModeFreeProperty, void(drmModePropertyPtr));
     MOCK_METHOD4(drmModeConnectorSetProperty, int(int fd, uint32_t connector_id, uint32_t property_id, uint64_t value));
@@ -139,6 +146,7 @@ public:
     MOCK_METHOD2(drmSetInterfaceVersion, int (int fd, drmSetVersion* sv));
     MOCK_METHOD1(drmGetBusid, char* (int fd));
     MOCK_METHOD1(drmFreeBusid, void (const char*));
+    MOCK_METHOD1(drmGetDeviceNameFromFd, char*(int fd));
 
     FakeDRMResources fake_drm;
 };
