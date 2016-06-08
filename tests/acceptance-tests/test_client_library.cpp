@@ -292,7 +292,7 @@ TEST_F(ClientLibrary, can_set_surface_state)
     mir_connection_release(connection);
 }
 
-TEST_F(ClientLibrary, can_set_pointer_confienment)
+TEST_F(ClientLibrary, can_set_pointer_confinement)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     int const width = 640;

@@ -227,8 +227,8 @@ typedef enum MirShellChrome
 
 typedef enum MirPointerConfinementState
 {
-    mir_pointer_confined_to_surface,
-    mir_pointer_unconfined
+    mir_pointer_unconfined,
+    mir_pointer_confined_to_surface<
 } MirPointerConfinementState;
 
 /**@}*/
