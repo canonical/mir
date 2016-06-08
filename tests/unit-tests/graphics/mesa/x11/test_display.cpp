@@ -22,6 +22,7 @@
 #include "src/platforms/mesa/server/x11/graphics/display.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_x11.h"
+#include "mir/test/doubles/stub_gl_config.h"
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
@@ -78,7 +79,10 @@ public:
 
     std::shared_ptr<mgx::Display> create_display()
     {
-        return std::make_shared<mgx::Display>(mock_x11.fake_x11.display, size);
+        return std::make_shared<mgx::Display>(
+                   mock_x11.fake_x11.display,
+                   size,
+                   std::make_shared<mtd::StubGLConfig>());
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
