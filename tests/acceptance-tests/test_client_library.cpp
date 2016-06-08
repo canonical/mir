@@ -300,7 +300,7 @@ TEST_F(ClientLibrary, can_set_pointer_confienment)
     auto const format = mir_pixel_format_abgr_8888;
     auto const spec =
         mir_connection_create_spec_for_normal_surface(connection, width, height, format);
-    mir_surface_spec_set_pointer_confinement(spec, true);
+    mir_surface_spec_set_pointer_confinement(spec, mir_pointer_confined_to_surface);
     surface = mir_surface_create_sync(spec);
     mir_surface_spec_release(spec);
 

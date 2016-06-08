@@ -693,10 +693,10 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, bool enable)
+void mir_surface_spec_set_pointer_confinement(MirSurfaceSpec* spec, MirPointerConfinementState state)
 try
 {
-    spec->confine_pointer = enable;
+    spec->confine_pointer = state;
 }
 catch (std::exception const& ex)
 {

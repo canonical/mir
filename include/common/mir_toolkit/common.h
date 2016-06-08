@@ -229,7 +229,7 @@ typedef enum MirPointerConfinementState
 {
     mir_pointer_confined_to_surface,
     mir_pointer_unconfined
-};
+} MirPointerConfinementState;
 
 /**@}*/
 
