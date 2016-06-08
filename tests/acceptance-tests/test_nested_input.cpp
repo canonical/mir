@@ -21,7 +21,6 @@
 #include "mir/input/device.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/composite_event_filter.h"
-#include "mir/shell/focus_controller.h"
 
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
@@ -117,9 +116,10 @@ struct NestedInput : public mtf::HeadlessInProcessServer
 struct ExposedSurface
 {
 public:
-    ExposedSurface(std::string const& connect_string, std::string const& name = __PRETTY_FUNCTION__)
+    ExposedSurface(std::string const& connect_string)
     {
-        connection = mir_connect_sync(connect_string.c_str(), name.c_str());
+        // Ensure the nested server posts a frame
+        connection = mir_connect_sync(connect_string.c_str(), __PRETTY_FUNCTION__);
         surface = mtf::make_any_surface(connection);
         mir_surface_set_event_handler(surface, handle_event, this);
         mir_buffer_stream_swap_buffers_sync(mir_surface_get_buffer_stream(surface));
@@ -170,7 +170,7 @@ public:
 protected:
     ExposedSurface(ExposedSurface const&) = delete;
     ExposedSurface& operator=(ExposedSurface const&) = delete;
-
+    
 private:
     MirConnection *connection;
     MirSurface *surface;
@@ -273,12 +273,11 @@ TEST_F(NestedInput, device_added_on_host_triggeres_nested_device_observer)
 
 TEST_F(NestedInput, on_input_device_state_nested_server_emits_input_device_state)
 {
-    auto focus_controller = server.the_focus_controller();
     NestedServerWithMockEventFilter nested_mir{new_connection()};
-    ExposedSurface client_to_nested_mir(nested_mir.new_connection(), "client-to-nested");
+    ExposedSurface client_to_nested_mir(nested_mir.new_connection());
 
     client_to_nested_mir.ready_to_accept_events.wait_for(1s);
-    ExposedSurface client_to_host(new_connection(), "client-to-host");
+    ExposedSurface client_to_host(new_connection());
     client_to_host.ready_to_accept_events.wait_for(1s);
 
     InSequence seq;
