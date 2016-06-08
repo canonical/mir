@@ -63,7 +63,7 @@ MirEvent* MirEvent::clone() const
     case mir_event_type_keymap:
         return to_keymap()->clone();
     case mir_event_type_input_device_state:
-        return mir::event::deep_copy<MirInputDeviceStateEvent>(this);
+        return to_input_device_state()->clone();
     case mir_event_type_input:
     default:
         break;
